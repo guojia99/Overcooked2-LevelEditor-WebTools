@@ -15,6 +15,7 @@
 ### 安装和开始方法
 1. 将本仓库下载到你的本地
 2. 将`LayoutEditor` 放到`Overcooked2-LevelEditor/Assets/Editor`中
+- 
 3. 将`layout-editor` 放到`Overcooked2-LevelEditor/` 目录下即可
 4. 点击菜单`Tool`菜单Open Bridge 即可使用
 ![img.png](img.png)
