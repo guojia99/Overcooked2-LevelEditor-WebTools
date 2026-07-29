@@ -1,4 +1,5 @@
-﻿using LevelEditor;
+﻿using System.Reflection;
+using LevelEditor;
 using UnityEditor;
 
 public static class LayoutEditorPseudoReload
@@ -24,8 +25,21 @@ public static class LayoutEditorPseudoReload
         if (manager == null)
             return;
 
-        // Prepare For Building already DeInit'd bundles; only refresh scene placeholders.
-        manager.ReloadSceneLayoutPrefabs();
+        // ReloadSceneLayoutPrefabs is added by the project patch; call it via
+        // reflection so this compiles against an unpatched decompiled PseudoPrefabManager.
+        var mi = manager.GetType().GetMethod(
+            "ReloadSceneLayoutPrefabs",
+            BindingFlags.Public | BindingFlags.Instance);
+        if (mi != null)
+        {
+            mi.Invoke(manager, null);
+            return;
+        }
+
+        // Fallback for unpatched environments: full reload.
+        manager.DeInit();
+        manager.prepareForBuilding = false;
+        manager.Init();
     }
 
     /// <summary>Full Tools → Reload Pseudo Assets (bootstrap + recipes + scene).</summary>
