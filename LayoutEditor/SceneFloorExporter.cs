@@ -1,0 +1,185 @@
+﻿using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+/// <summary>
+/// Collects the scene's editable floor/background surface objects.
+/// These are plain (non-prefab) GameObjects using a built-in Plane/Quad mesh
+/// plus a MeshRenderer - the real kitchen floor that the regular prefab
+/// exporter skips. Themed floor-tile prefabs (ice_floor_01, alien_floor_tile, ...)
+/// are NOT collected here: they already round-trip through the items[] export
+/// and are classified into the floor layer by the catalog surfaceTier.
+/// </summary>
+public static class SceneFloorExporter
+{
+    private const int PlaneMeshFileId = 10209;
+    private const int QuadMeshFileId = 10210;
+
+    public static List<FloorDto> ExportFromScene()
+    {
+        var floors = new List<FloorDto>();
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return floors;
+
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            CollectRecursive(rootGo.transform, floors);
+        }
+
+        return floors;
+    }
+
+    private static void CollectRecursive(Transform root, List<FloorDto> floors)
+    {
+        var stack = new Stack<Transform>();
+        stack.Push(root);
+
+        while (stack.Count > 0)
+        {
+            var t = stack.Pop();
+            for (int i = 0; i < t.childCount; i++)
+                stack.Push(t.GetChild(i));
+
+            var go = t.gameObject;
+            if ((go.hideFlags & HideFlags.HideAndDontSave) != 0)
+                continue;
+
+            if (IsPrefabInstance(go))
+                continue;
+
+            TryAddFloor(go, t, floors);
+        }
+    }
+
+    private static bool IsPrefabInstance(GameObject go)
+    {
+        var type = PrefabUtility.GetPrefabType(go);
+        return type == PrefabType.PrefabInstance || type == PrefabType.DisconnectedPrefabInstance;
+    }
+
+    private static void TryAddFloor(GameObject go, Transform t, List<FloorDto> floors)
+    {
+        var mf = go.GetComponent<MeshFilter>();
+        var mr = go.GetComponent<MeshRenderer>();
+        if (mf == null || mr == null)
+            return;
+
+        var mesh = mf.sharedMesh;
+        if (mesh == null)
+            return;
+
+        int meshId = GetBuiltinMeshFileId(mesh);
+        if (meshId != PlaneMeshFileId && meshId != QuadMeshFileId)
+            return;
+
+        if (!LooksLikeFloor(go.name, t))
+            return;
+
+        float baseX, baseZ;
+        string meshType;
+        if (meshId == PlaneMeshFileId)
+        {
+            baseX = 10f;
+            baseZ = 10f;
+            meshType = "plane";
+        }
+        else
+        {
+            baseX = 1f;
+            baseZ = 1f;
+            meshType = "quad";
+        }
+
+        var scale = t.localScale;
+        var rotY = t.localEulerAngles.y;
+
+        // World-space size from the renderer bounds (axis-aligned; floor planes
+        // are rotated only about Y so this equals the true footprint).
+        var bounds = mr.bounds;
+        float widthUnits = bounds.size.x;
+        float depthUnits = bounds.size.z;
+        if (widthUnits <= 0.001f)
+        {
+            widthUnits = baseX * scale.x;
+            depthUnits = baseZ * scale.z;
+        }
+
+        var mat = mr.sharedMaterial;
+        string matGuid = null;
+        string matPath = null;
+        string matName = null;
+        if (mat != null)
+        {
+            matPath = AssetDatabase.GetAssetPath(mat);
+            if (!string.IsNullOrEmpty(matPath))
+            {
+                matGuid = AssetDatabase.AssetPathToGUID(matPath);
+                matName = System.IO.Path.GetFileNameWithoutExtension(matPath);
+            }
+            else
+            {
+                matName = mat.name;
+            }
+        }
+
+        var path = LayoutEditorHierarchy.GetHierarchyPath(t);
+        var parentPath = t.parent != null
+            ? LayoutEditorHierarchy.GetHierarchyPath(t.parent)
+            : string.Empty;
+
+        floors.Add(new FloorDto
+        {
+            instanceId = "u:" + go.GetInstanceID(),
+            hierarchyPath = path,
+            parentPath = parentPath,
+            displayName = go.name,
+            surfaceKind = "solid",
+            meshType = meshType,
+            meshFileId = meshId,
+            materialGuid = matGuid,
+            materialAssetPath = matPath,
+            materialName = matName,
+            localPosition = LayoutVector3.From(t.localPosition),
+            worldPosition = LayoutVector3.From(t.position),
+            localRotationY = rotY,
+            localScale = LayoutVector3.From(scale),
+            widthUnits = widthUnits,
+            depthUnits = depthUnits,
+            widthCells = Mathf.RoundToInt(widthUnits / LayoutEditorCatalogLookup.GridCellSize),
+            depthCells = Mathf.RoundToInt(depthUnits / LayoutEditorCatalogLookup.GridCellSize),
+        });
+    }
+
+    private static bool LooksLikeFloor(string name, Transform t)
+    {
+        var n = name == null ? "" : name.ToLowerInvariant();
+        if (n.Contains("floor"))
+            return true;
+
+        // Also accept generic plane/quad surfaces that live under a Ground/Floor group.
+        var p = t.parent;
+        while (p != null)
+        {
+            var pn = p.name == null ? "" : p.name.ToLowerInvariant();
+            if (pn == "ground" || pn.Contains("floor"))
+                return true;
+            p = p.parent;
+        }
+
+        return false;
+    }
+
+    private static int GetBuiltinMeshFileId(Mesh mesh)
+    {
+        if (mesh == null)
+            return 0;
+        var n = mesh.name;
+        if (n == "Plane")
+            return PlaneMeshFileId;
+        if (n == "Quad")
+            return QuadMeshFileId;
+        return 0;
+    }
+}
