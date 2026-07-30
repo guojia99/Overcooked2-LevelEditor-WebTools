@@ -58,6 +58,42 @@ public class LayoutFoodSpawnerStubDto
 }
 
 [Serializable]
+public class LayoutCookingUtensilStubDto
+{
+    public int capacity;
+    public string[] allowedIngredientGuids;
+}
+
+[Serializable]
+public class LayoutTravelatorStubDto
+{
+    public float speed = 2.5f;
+}
+
+[Serializable]
+public class LayoutFlamethrowerStubDto
+{
+    public float cookingRate = 4f;
+}
+
+[Serializable]
+public class LayoutCleanPlateStackStubDto
+{
+    public int plateCount;
+    public string platePrefabGuid;
+}
+
+[Serializable]
+public class LayoutBurnerStubDto
+{
+    /** ProjectileSpawner.FireMode enum value (int). */
+    public int fireMode;
+    public float airTime;
+    public bool randomTargetOrder;
+    public bool hideVisual;
+}
+
+[Serializable]
 public class LayoutItemDto
 {
     public string instanceId;
@@ -73,12 +109,17 @@ public class LayoutItemDto
     public LayoutFootprint footprint;
     /** True for surface-floor prefabs (raft planks, ice_floor, ...) → generate a walkable Col_Floor under them. */
     public bool walkable;
-    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | empty */
+    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | empty */
     public string stubKind;
     public LayoutDispenserStubDto dispenser;
     public LayoutConveyorStubDto conveyor;
     public LayoutTeleportalStubDto teleportal;
     public LayoutFoodSpawnerStubDto foodSpawner;
+    public LayoutCookingUtensilStubDto cookingUtensil;
+    public LayoutTravelatorStubDto travelator;
+    public LayoutFlamethrowerStubDto flamethrower;
+    public LayoutCleanPlateStackStubDto cleanPlateStack;
+    public LayoutBurnerStubDto burner;
 }
 
 [Serializable]

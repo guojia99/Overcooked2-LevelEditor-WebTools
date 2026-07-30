@@ -21,10 +21,10 @@ import { showBusy, hideBusy } from "./busy";
 import {
   closeModal,
   openFoodSpawnerEditor,
-  openIngredientPicker,
+  openIngredientMultiPicker,
   openModal,
 } from "./modals";
-import { ingredientNameZh } from "./ingredientLabels";
+import { ingredientNameZh, ingredientOptionLabel } from "./ingredientLabels";
 import { tidyCatalogNameZh } from "./displayLabels";
 import { paintStyleForItem } from "./itemColors";
 import {
@@ -141,32 +141,286 @@ function levelSetFromScenePath(assetPath: string): string {
   return i >= 0 && parts.length > i + 1 ? parts[i + 1] : "";
 }
 
-function openStubEditorForItem(item: EditorItem) {
-  const prefabId = prefabIdFromPath(item.prefabAssetPath);
-  const kind = item.stubKind || (prefabId === "Dispenser" ? "Dispenser" : prefabId === "AttachingFoodSpawner" ? "AttachingFoodSpawner" : "");
+const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
+  Dispenser: "Dispenser",
+  AttachingFoodSpawner: "AttachingFoodSpawner",
+  ConveyorStation: "Conveyor",
+  Teleportal: "Teleportal",
+  Pot: "CookingUtensil",
+  FryPan: "CookingUtensil",
+  Steamer: "CookingUtensil",
+  FrierBasket: "CookingUtensil",
+  MixerBowl: "CookingUtensil",
+  CleanPlateStack: "CleanPlateStack",
+  Travelator: "Travelator",
+  Flamethrower: "Flamethrower",
+  Burner: "Burner",
+};
 
-  if (kind === "Dispenser") {
-    openIngredientPicker(
-      ingredientsCache,
-      item.dispenser?.spawnerItemPrefabGuid,
-      (guid) => {
+function stubKindOf(item: EditorItem): string {
+  if (item.stubKind) return item.stubKind;
+  const prefabId = prefabIdFromPath(item.prefabAssetPath);
+  return STUB_KIND_BY_PREFAB_ID[prefabId] ?? "";
+}
+
+/** Prefab-serialized defaults (from common01/common02 prefabs) used when export data isn't available yet. */
+function defaultUtensilCapacity(item: EditorItem): number {
+  return prefabIdFromPath(item.prefabAssetPath) === "MixerBowl" ? 4 : 1;
+}
+
+const BURNER_FIRE_MODES = ["Direct（直射）", "Parabolic（抛物线）"];
+
+function stubControlsHtml(item: EditorItem): string {
+  const kind = stubKindOf(item);
+  switch (kind) {
+    case "Dispenser": {
+      const cur = item.dispenser?.spawnerItemPrefabGuid ?? "";
+      const opts = ['<option value="">— 未设置 —</option>']
+        .concat(
+          ingredientsCache.map(
+            (ing) =>
+              `<option value="${ing.guid}" ${ing.guid === cur ? "selected" : ""}>${escHtml(ingredientOptionLabel(ing))}</option>`
+          )
+        )
+        .join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">食材箱参数</div>
+        <label class="ctx-stub-row">食材 <select id="ctx-stub-ing" class="ctx-input">${opts}</select></label></div>`;
+    }
+    case "AttachingFoodSpawner": {
+      const fs = item.foodSpawner ?? {};
+      return `<div class="ctx-stub"><div class="ctx-stub-title">食材生成器参数</div>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-order" ${fs.spawnInOrder !== false ? "checked" : ""}/> 按顺序生成</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-start" ${fs.triggerAtStart !== false ? "checked" : ""}/> 开局触发</label>
+        <label class="ctx-stub-row">触发间隔 <input type="number" id="ctx-fs-time" class="ctx-input" step="0.5" min="0" value="${fs.triggerTime ?? 5}"/> 秒</label>
+        <button type="button" class="ctx-btn" id="ctx-fs-ings">食材列表 (${(fs.attachmentPrefabGuids ?? []).length})…</button></div>`;
+    }
+    case "CookingUtensil": {
+      const cu = item.cookingUtensil ?? {};
+      const allowed = (cu.allowedIngredientGuids ?? []).length;
+      return `<div class="ctx-stub"><div class="ctx-stub-title">锅具参数</div>
+        <label class="ctx-stub-row">最多食材数 <input type="number" id="ctx-cu-cap" class="ctx-input" min="0" step="1" value="${cu.capacity ?? defaultUtensilCapacity(item)}"/></label>
+        <button type="button" class="ctx-btn" id="ctx-cu-ings">允许的食材 (${allowed > 0 ? allowed : "全部"})…</button></div>`;
+    }
+    case "Conveyor": {
+      const sp = item.conveyor?.conveySpeed ?? 0.5;
+      return `<div class="ctx-stub"><div class="ctx-stub-title">传送带参数</div>
+        <label class="ctx-stub-row">速度 <input type="number" id="ctx-cv-speed" class="ctx-input" step="0.1" value="${sp}"/>（负值反向）</label></div>`;
+    }
+    case "Teleportal": {
+      const tp = item.teleportal ?? {};
+      teleportalLabels = computeTeleportalLabels();
+      const colorOpts = PORTAL_COLOR_NAMES.map(
+        (n, i) => `<option value="${i}" ${(tp.portalColor ?? 0) === i ? "selected" : ""}>${n}</option>`
+      ).join("");
+      const others = teleportals().filter((t) => t._editorKey !== item._editorKey);
+      const exitOpts = ['<option value="">— 未绑定 —</option>']
+        .concat(
+          others.map(
+            (t) =>
+              `<option value="${t.instanceId}" ${tp.exitPortalInstanceId === t.instanceId ? "selected" : ""}>传送门 ${teleportalLabels.get(t.instanceId) ?? "?"}（${escHtml(itemLabel(t))}）</option>`
+          )
+        )
+        .join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">传送门参数</div>
+        <label class="ctx-stub-row">颜色 <select id="ctx-tp-color" class="ctx-input">${colorOpts}</select></label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-tp-ds" ${tp.doubleSided ? "checked" : ""}/> 双向</label>
+        <label class="ctx-stub-row">出口 <select id="ctx-tp-exit" class="ctx-input">${exitOpts}</select></label></div>`;
+    }
+    case "Travelator": {
+      const sp = item.travelator?.speed ?? 2.5;
+      return `<div class="ctx-stub"><div class="ctx-stub-title">移动地板参数</div>
+        <label class="ctx-stub-row">速度 <input type="number" id="ctx-tv-speed" class="ctx-input" step="0.1" min="0" value="${sp}"/></label></div>`;
+    }
+    case "Flamethrower": {
+      const rate = item.flamethrower?.cookingRate ?? 4;
+      return `<div class="ctx-stub"><div class="ctx-stub-title">喷火器参数</div>
+        <label class="ctx-stub-row">烹饪速率 <input type="number" id="ctx-ft-rate" class="ctx-input" step="0.5" min="0" value="${rate}"/></label></div>`;
+    }
+    case "CleanPlateStack": {
+      const ps = item.cleanPlateStack ?? {};
+      return `<div class="ctx-stub"><div class="ctx-stub-title">盘子堆参数</div>
+        <label class="ctx-stub-row">盘子数量 <input type="number" id="ctx-ps-count" class="ctx-input" min="0" step="1" value="${ps.plateCount ?? 5}"/></label></div>`;
+    }
+    case "Burner": {
+      const b = item.burner ?? {};
+      const modeOpts = BURNER_FIRE_MODES.map(
+        (n, i) => `<option value="${i}" ${(b.fireMode ?? 1) === i ? "selected" : ""}>${n}</option>`
+      ).join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">火焰喷射器参数</div>
+        <label class="ctx-stub-row">开火模式 <select id="ctx-bn-mode" class="ctx-input">${modeOpts}</select></label>
+        <label class="ctx-stub-row">空中时间 <input type="number" id="ctx-bn-air" class="ctx-input" step="0.1" min="0" value="${b.airTime ?? 2}"/> 秒</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-rand" ${b.randomTargetOrder ? "checked" : ""}/> 随机目标顺序</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-hide" ${b.hideVisual ? "checked" : ""}/> 隐藏模型</label></div>`;
+    }
+    default:
+      return "";
+  }
+}
+
+function wireStubControls(item: EditorItem) {
+  const kind = stubKindOf(item);
+  if (!kind) return;
+
+  const num = (id: string): HTMLInputElement | null =>
+    document.getElementById(id) as HTMLInputElement | null;
+
+  switch (kind) {
+    case "Dispenser": {
+      num("ctx-stub-ing")?.addEventListener("change", (e) => {
         item.stubKind = "Dispenser";
-        item.dispenser = { spawnerItemPrefabGuid: guid };
+        item.dispenser = { spawnerItemPrefabGuid: (e.target as HTMLSelectElement).value };
         draw();
         setStatus("已设置食材箱食材（写回后生效）");
-      }
-    );
-    return;
-  }
-
-  if (kind === "AttachingFoodSpawner") {
-    item.stubKind = "AttachingFoodSpawner";
-    if (!item.foodSpawner) item.foodSpawner = {};
-    openFoodSpawnerEditor(item, ingredientsCache, (patch) => {
-      item.foodSpawner = patch;
-      draw();
-      setStatus("已更新食材生成器参数");
-    });
+      });
+      break;
+    }
+    case "AttachingFoodSpawner": {
+      const ensure = () => {
+        item.stubKind = "AttachingFoodSpawner";
+        if (!item.foodSpawner) item.foodSpawner = {};
+        return item.foodSpawner;
+      };
+      num("ctx-fs-order")?.addEventListener("change", (e) => {
+        ensure().spawnInOrder = (e.target as HTMLInputElement).checked;
+      });
+      num("ctx-fs-start")?.addEventListener("change", (e) => {
+        ensure().triggerAtStart = (e.target as HTMLInputElement).checked;
+      });
+      num("ctx-fs-time")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (isFinite(v) && v >= 0) ensure().triggerTime = v;
+      });
+      document.getElementById("ctx-fs-ings")?.addEventListener("click", () => {
+        ensure();
+        hideContextMenu();
+        openFoodSpawnerEditor(item, ingredientsCache, (patch) => {
+          item.foodSpawner = patch;
+          draw();
+          setStatus("已更新食材生成器参数（写回后生效）");
+        });
+      });
+      break;
+    }
+    case "CookingUtensil": {
+      const ensure = () => {
+        item.stubKind = "CookingUtensil";
+        if (!item.cookingUtensil) item.cookingUtensil = {};
+        if (item.cookingUtensil.capacity == null)
+          item.cookingUtensil.capacity = defaultUtensilCapacity(item);
+        return item.cookingUtensil;
+      };
+      num("ctx-cu-cap")?.addEventListener("change", (e) => {
+        const v = parseInt((e.target as HTMLInputElement).value, 10);
+        if (isFinite(v) && v >= 0) {
+          ensure().capacity = v;
+          setStatus(`锅具容量已设为 ${v}（写回后生效）`);
+        }
+      });
+      document.getElementById("ctx-cu-ings")?.addEventListener("click", () => {
+        ensure();
+        hideContextMenu();
+        openIngredientMultiPicker(
+          "锅具 · 允许的食材",
+          "allowedIngredientSOs（不勾选任何项 = 允许全部）",
+          ingredientsCache,
+          item.cookingUtensil?.allowedIngredientGuids ?? [],
+          (guids) => {
+            ensure().allowedIngredientGuids = guids;
+            draw();
+            setStatus("已更新锅具允许食材（写回后生效）");
+          }
+        );
+      });
+      break;
+    }
+    case "Conveyor": {
+      num("ctx-cv-speed")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!isFinite(v)) return;
+        item.stubKind = "Conveyor";
+        item.conveyor = { conveySpeed: v };
+        draw();
+        setStatus(`传送带速度已设为 ${v}（写回后生效）`);
+      });
+      break;
+    }
+    case "Teleportal": {
+      const ensure = () => {
+        item.stubKind = "Teleportal";
+        if (!item.teleportal) item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false };
+        return item.teleportal;
+      };
+      num("ctx-tp-color")?.addEventListener("change", (e) => {
+        ensure().portalColor = parseInt((e.target as HTMLSelectElement).value, 10) || 0;
+        draw();
+      });
+      num("ctx-tp-ds")?.addEventListener("change", (e) => {
+        ensure().doubleSided = (e.target as HTMLInputElement).checked;
+        draw();
+      });
+      num("ctx-tp-exit")?.addEventListener("change", (e) => {
+        ensure().exitPortalInstanceId = (e.target as HTMLSelectElement).value;
+        draw();
+        setStatus("已更新传送门配对（写回后生效）");
+      });
+      break;
+    }
+    case "Travelator": {
+      num("ctx-tv-speed")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!isFinite(v) || v < 0) return;
+        item.stubKind = "Travelator";
+        item.travelator = { speed: v };
+        setStatus(`移动地板速度已设为 ${v}（写回后生效）`);
+      });
+      break;
+    }
+    case "Flamethrower": {
+      num("ctx-ft-rate")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!isFinite(v) || v < 0) return;
+        item.stubKind = "Flamethrower";
+        item.flamethrower = { cookingRate: v };
+        setStatus(`喷火器烹饪速率已设为 ${v}（写回后生效）`);
+      });
+      break;
+    }
+    case "CleanPlateStack": {
+      num("ctx-ps-count")?.addEventListener("change", (e) => {
+        const v = parseInt((e.target as HTMLInputElement).value, 10);
+        if (!isFinite(v) || v < 0) return;
+        item.stubKind = "CleanPlateStack";
+        if (!item.cleanPlateStack) item.cleanPlateStack = {};
+        item.cleanPlateStack.plateCount = v;
+        setStatus(`盘子堆数量已设为 ${v}（写回后生效）`);
+      });
+      break;
+    }
+    case "Burner": {
+      const ensure = () => {
+        item.stubKind = "Burner";
+        if (!item.burner) item.burner = {};
+        if (item.burner.fireMode == null) item.burner.fireMode = 1;
+        if (item.burner.airTime == null) item.burner.airTime = 2;
+        if (item.burner.randomTargetOrder == null) item.burner.randomTargetOrder = false;
+        if (item.burner.hideVisual == null) item.burner.hideVisual = false;
+        return item.burner;
+      };
+      num("ctx-bn-mode")?.addEventListener("change", (e) => {
+        ensure().fireMode = parseInt((e.target as HTMLSelectElement).value, 10) || 0;
+      });
+      num("ctx-bn-air")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (isFinite(v) && v >= 0) ensure().airTime = v;
+      });
+      num("ctx-bn-rand")?.addEventListener("change", (e) => {
+        ensure().randomTargetOrder = (e.target as HTMLInputElement).checked;
+      });
+      num("ctx-bn-hide")?.addEventListener("change", (e) => {
+        ensure().hideVisual = (e.target as HTMLInputElement).checked;
+      });
+      break;
+    }
   }
 }
 
@@ -403,7 +657,7 @@ app.innerHTML = `
       <div id="item-detail" class="item-detail hidden" role="dialog"></div>
       <div id="ctx-menu" class="ctx-menu hidden" role="dialog"></div>
       <div id="floor-bar" class="floor-bar hidden"></div>
-      <div class="hint">拖拽空白框选 · Shift 加选 · Ctrl+C/V 复制粘贴 · 空格+拖动平移 · 右键微移 · Del 删除 · R 旋转 · 滚轮缩放</div>
+      <div class="hint">拖拽空白框选 · Shift 加选 · Ctrl+C/V 复制粘贴 · 空格+拖动平移 · 右键微移/旋转/改参数 · Del 删除 · R/Shift+R 旋转90° · 滚轮缩放</div>
     </div>
   </div>
 `;
@@ -1588,7 +1842,30 @@ function extraStubDetailHtml(item: EditorItem): string {
     const ds = item.teleportal?.doubleSided ? " · 双向" : "";
     return `<dt>传送门</dt><dd>${pairTxt} · 颜色 ${colorName}${ds}</dd>`;
   }
-  return "";
+  switch (stubKindOf(item)) {
+    case "AttachingFoodSpawner": {
+      const fs = item.foodSpawner ?? {};
+      const n = (fs.attachmentPrefabGuids ?? []).length;
+      return `<dt>食材生成器</dt><dd>${fs.spawnInOrder !== false ? "按顺序" : "随机"}生成 · ${fs.triggerAtStart !== false ? "开局触发" : "不开局触发"} · 间隔 ${fs.triggerTime ?? 5}s · ${n} 种食材（右键直接修改）</dd>`;
+    }
+    case "CookingUtensil": {
+      const cu = item.cookingUtensil ?? {};
+      const allowed = (cu.allowedIngredientGuids ?? []).length;
+      return `<dt>锅具</dt><dd>最多 ${cu.capacity ?? defaultUtensilCapacity(item)} 个食材 · 允许食材：${allowed > 0 ? `${allowed} 种` : "全部"}（右键直接修改）</dd>`;
+    }
+    case "Travelator":
+      return `<dt>移动地板</dt><dd>速度 ${(item.travelator?.speed ?? 2.5).toFixed(2)}（右键直接修改）</dd>`;
+    case "Flamethrower":
+      return `<dt>喷火器</dt><dd>烹饪速率 ${(item.flamethrower?.cookingRate ?? 4).toFixed(1)}（右键直接修改）</dd>`;
+    case "CleanPlateStack":
+      return `<dt>盘子堆</dt><dd>${item.cleanPlateStack?.plateCount ?? 5} 个盘子（右键直接修改）</dd>`;
+    case "Burner": {
+      const b = item.burner ?? {};
+      return `<dt>火焰喷射器</dt><dd>${BURNER_FIRE_MODES[b.fireMode ?? 1]} · 空中时间 ${b.airTime ?? 2}s${b.randomTargetOrder ? " · 随机目标" : ""}${b.hideVisual ? " · 隐藏模型" : ""}（右键直接修改）</dd>`;
+    }
+    default:
+      return "";
+  }
 }
 
 function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY: number) {
@@ -1608,7 +1885,7 @@ function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY: numbe
       <label>缩放 <input type="number" min="0.5" step="0.1" id="si-scale" value="${scale.toFixed(2)}" /></label>
       <span class="muted" style="align-self:center;font-size:11px">即时生效</span>
     </div>
-    <p class="close-hint">右键菜单可微移 · R 旋转 · Del 删除 · Esc 关闭</p>
+    <p class="close-hint">右键菜单可微移/旋转 · R/Shift+R 旋转90° · Del 删除 · Esc 关闭</p>
   `;
   detailEl.classList.remove("hidden");
   positionDetail(clientX, clientY);
@@ -1790,14 +2067,10 @@ function pasteClipboard() {
 }
 
 function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
-  const prefabId = prefabIdFromPath(item.prefabAssetPath);
   const cat = catalogByGuid.get(item.prefabGuid);
-  const isStub =
-    item.stubKind === "Dispenser" ||
-    item.stubKind === "AttachingFoodSpawner" ||
-    prefabId === "Dispenser" ||
-    prefabId === "AttachingFoodSpawner";
   const isSurface = isSurfaceItem(cat);
+  const stubHtml = stubControlsHtml(item);
+  const rot = normalizeRot(item.localRotationY);
 
   ctxMenuEl.innerHTML = `
     <div class="ctx-head">${itemLabel(item)}</div>
@@ -1809,6 +2082,14 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
         <button type="button" data-nudge="0,0.1" title="上移 0.1">↑</button>
         <button type="button" data-nudge="0,-0.1" title="下移 0.1">↓</button>
         <button type="button" data-nudge="0.1,0" title="右移 0.1">→</button>
+      </div>
+    </div>
+    <div class="ctx-nudge-row">
+      <span class="ctx-label">旋转 <span id="ctx-rot" class="ctx-scale-val">${rot}°</span></span>
+      <div class="ctx-nudge">
+        <button type="button" data-rot="-90" title="逆时针 90°">−90°</button>
+        <input type="number" id="ctx-rot-input" class="ctx-input ctx-rot-input" min="0" max="359" step="1" value="${rot}" title="任意角度 (0~359)" />
+        <button type="button" data-rot="90" title="顺时针 90°">+90°</button>
       </div>
     </div>
     ${
@@ -1823,12 +2104,11 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
     </div>`
         : ""
     }
+    ${stubHtml}
     <div class="ctx-actions">
-      ${isStub ? `<button type="button" class="ctx-btn" data-act="stub">编辑参数…</button>` : ""}
       <button type="button" class="ctx-btn" data-act="detail">详情…</button>
       <button type="button" class="ctx-btn" data-act="copy">复制 (Ctrl+C)</button>
       <button type="button" class="ctx-btn" data-act="paste">粘贴 (Ctrl+V)</button>
-      <button type="button" class="ctx-btn" data-act="rotate">旋转 90°</button>
       <button type="button" class="ctx-btn danger" data-act="delete">删除</button>
     </div>
     <p class="close-hint">点击外部或 Esc 关闭</p>
@@ -1868,11 +2148,24 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
       draw();
     });
   });
-  ctxMenuEl.querySelector('[data-act="rotate"]')?.addEventListener("click", () => {
-    item.localRotationY = (item.localRotationY + 90) % 360;
+  const applyRotation = (deg: number) => {
+    if (!isFinite(deg)) return;
+    item.localRotationY = normalizeRot(deg);
     syncLocalFromWorld(item);
+    const lbl = document.getElementById("ctx-rot");
+    if (lbl) lbl.textContent = `${normalizeRot(item.localRotationY)}°`;
+    const inp = document.getElementById("ctx-rot-input") as HTMLInputElement | null;
+    if (inp && document.activeElement !== inp) inp.value = String(normalizeRot(item.localRotationY));
     draw();
+  };
+  ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-rot]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      applyRotation(item.localRotationY + parseFloat(btn.dataset.rot!));
+    });
   });
+  const rotInput = document.getElementById("ctx-rot-input") as HTMLInputElement | null;
+  rotInput?.addEventListener("change", () => applyRotation(parseFloat(rotInput.value)));
+  wireStubControls(item);
   ctxMenuEl.querySelector('[data-act="detail"]')?.addEventListener("click", () => {
     if (currentLayer === "floor" && isSurface) {
       showSurfaceItemDetail(item, clientX, clientY);
@@ -1889,13 +2182,6 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
     hideContextMenu();
     pasteClipboard();
   });
-  if (isStub) {
-    ctxMenuEl.querySelector('[data-act="stub"]')?.addEventListener("click", () => {
-      const target = item;
-      hideContextMenu();
-      openStubEditorForItem(target);
-    });
-  }
 }
 
 function updateCtxCoord(item: EditorItem) {
@@ -2854,7 +3140,7 @@ function setupCanvas() {
             draw();
           }
           if (e.key === "r" || e.key === "R") {
-            f.localRotationY = (f.localRotationY + 90) % 360;
+            f.localRotationY = normalizeRot(f.localRotationY + (e.shiftKey ? -90 : 90));
             draw();
           }
         }
@@ -2870,7 +3156,7 @@ function setupCanvas() {
             draw();
           }
           if (e.key === "r" || e.key === "R") {
-            item.localRotationY = (item.localRotationY + 90) % 360;
+            item.localRotationY = normalizeRot(item.localRotationY + (e.shiftKey ? -90 : 90));
             syncLocalFromWorld(item);
             draw();
           }
@@ -2889,7 +3175,7 @@ function setupCanvas() {
       deleteSelected();
     }
     if (e.key === "r" || e.key === "R") {
-      item.localRotationY = (item.localRotationY + 90) % 360;
+      item.localRotationY = normalizeRot(item.localRotationY + (e.shiftKey ? -90 : 90));
       syncLocalFromWorld(item);
       draw();
     }

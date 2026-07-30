@@ -1,4 +1,5 @@
-﻿using LevelEditorStub;
+﻿using System;
+using LevelEditorStub;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,6 +15,11 @@ public static class LayoutEditorStubIO
         item.foodSpawner = null;
         item.conveyor = null;
         item.teleportal = null;
+        item.cookingUtensil = null;
+        item.travelator = null;
+        item.flamethrower = null;
+        item.cleanPlateStack = null;
+        item.burner = null;
 
         var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
         if (dispenser != null)
@@ -80,6 +86,74 @@ public static class LayoutEditorStubIO
             if (teleportal.exitPortal != null)
                 tdto.exitPortalInstanceId = "u:" + teleportal.exitPortal.gameObject.GetInstanceID();
             item.teleportal = tdto;
+            return;
+        }
+
+        var utensil = go.GetComponent<PseudoPrefabCookingUtensilStub>();
+        if (utensil != null)
+        {
+            item.stubKind = "CookingUtensil";
+            var udto = new LayoutCookingUtensilStubDto { capacity = utensil.capacity };
+            if (utensil.allowedIngredientSOs != null && utensil.allowedIngredientSOs.Length > 0)
+            {
+                var guids = new string[utensil.allowedIngredientSOs.Length];
+                for (int i = 0; i < utensil.allowedIngredientSOs.Length; i++)
+                {
+                    var so = utensil.allowedIngredientSOs[i];
+                    guids[i] = so != null
+                        ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so))
+                        : string.Empty;
+                }
+
+                udto.allowedIngredientGuids = guids;
+            }
+
+            item.cookingUtensil = udto;
+            return;
+        }
+
+        var travelator = go.GetComponent<PseudoPrefabTravelatorStub>();
+        if (travelator != null)
+        {
+            item.stubKind = "Travelator";
+            item.travelator = new LayoutTravelatorStubDto { speed = travelator.speed };
+            return;
+        }
+
+        var flamethrower = go.GetComponent<PseudoPrefabFlamethrowerStub>();
+        if (flamethrower != null)
+        {
+            item.stubKind = "Flamethrower";
+            item.flamethrower = new LayoutFlamethrowerStubDto { cookingRate = flamethrower.cookingRate };
+            return;
+        }
+
+        var plateStack = go.GetComponent<PseudoPrefabCleanPlateStackStub>();
+        if (plateStack != null)
+        {
+            item.stubKind = "CleanPlateStack";
+            var pdto = new LayoutCleanPlateStackStubDto { plateCount = plateStack.plateCount };
+            if (plateStack.platePseudoPrefabSO != null)
+            {
+                var path = AssetDatabase.GetAssetPath(plateStack.platePseudoPrefabSO);
+                pdto.platePrefabGuid = AssetDatabase.AssetPathToGUID(path);
+            }
+
+            item.cleanPlateStack = pdto;
+            return;
+        }
+
+        var burner = go.GetComponent<PseudoPrefabBurnerStub>();
+        if (burner != null)
+        {
+            item.stubKind = "Burner";
+            item.burner = new LayoutBurnerStubDto
+            {
+                fireMode = (int)burner.fireMode,
+                airTime = burner.airTime,
+                randomTargetOrder = burner.randomTargetOrder,
+                hideVisual = burner.hideVisual
+            };
         }
     }
 
@@ -95,18 +169,7 @@ public static class LayoutEditorStubIO
                 return;
 
             Undo.RecordObject(dispenser, "Layout Editor Dispenser");
-            if (!string.IsNullOrEmpty(item.dispenser.spawnerItemPrefabGuid))
-            {
-                var path = AssetDatabase.GUIDToAssetPath(item.dispenser.spawnerItemPrefabGuid);
-                dispenser.spawnerItemPrefabSO = string.IsNullOrEmpty(path)
-                    ? null
-                    : AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
-            }
-            else
-            {
-                dispenser.spawnerItemPrefabSO = null;
-            }
-
+            dispenser.spawnerItemPrefabSO = LoadPseudoPrefabSO(item.dispenser.spawnerItemPrefabGuid);
             return;
         }
 
@@ -123,21 +186,146 @@ public static class LayoutEditorStubIO
             spawner.triggerAtStart = dto.triggerAtStart;
 
             if (dto.attachmentPrefabGuids != null && dto.attachmentPrefabGuids.Length > 0)
-            {
-                var sos = new PseudoPrefabSO[dto.attachmentPrefabGuids.Length];
-                for (int i = 0; i < dto.attachmentPrefabGuids.Length; i++)
-                {
-                    var path = AssetDatabase.GUIDToAssetPath(dto.attachmentPrefabGuids[i]);
-                    sos[i] = string.IsNullOrEmpty(path)
-                        ? null
-                        : AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
-                }
-
-                spawner.attachmentPrefabSOs = sos;
-            }
+                spawner.attachmentPrefabSOs = LoadPseudoPrefabSOs(dto.attachmentPrefabGuids);
 
             if (dto.weights != null && dto.weights.Length > 0)
                 spawner.weights = dto.weights;
+            return;
         }
+
+        if (item.stubKind == "Conveyor" && item.conveyor != null)
+        {
+            var conveyor = go.GetComponent<PseudoPrefabConveyorStub>();
+            if (conveyor == null)
+                return;
+
+            Undo.RecordObject(conveyor, "Layout Editor Conveyor");
+            conveyor.conveySpeed = item.conveyor.conveySpeed;
+            return;
+        }
+
+        if (item.stubKind == "Teleportal" && item.teleportal != null)
+        {
+            var teleportal = go.GetComponent<PseudoPrefabTeleportalStub>();
+            if (teleportal == null)
+                return;
+
+            Undo.RecordObject(teleportal, "Layout Editor Teleportal");
+            teleportal.portalColor = (PseudoPrefabTeleportalStub.PortalColor)item.teleportal.portalColor;
+            teleportal.doubleSided = item.teleportal.doubleSided;
+            // exitPortal is resolved in a second pass by SceneLayoutApplier.
+            return;
+        }
+
+        if (item.stubKind == "CookingUtensil" && item.cookingUtensil != null)
+        {
+            var utensil = go.GetComponent<PseudoPrefabCookingUtensilStub>();
+            if (utensil == null)
+                return;
+
+            Undo.RecordObject(utensil, "Layout Editor Cooking Utensil");
+            utensil.capacity = item.cookingUtensil.capacity;
+            if (item.cookingUtensil.allowedIngredientGuids != null)
+                utensil.allowedIngredientSOs = LoadPseudoPrefabSOs(item.cookingUtensil.allowedIngredientGuids);
+            return;
+        }
+
+        if (item.stubKind == "Travelator" && item.travelator != null)
+        {
+            var travelator = go.GetComponent<PseudoPrefabTravelatorStub>();
+            if (travelator == null)
+                return;
+
+            Undo.RecordObject(travelator, "Layout Editor Travelator");
+            travelator.speed = item.travelator.speed;
+            return;
+        }
+
+        if (item.stubKind == "Flamethrower" && item.flamethrower != null)
+        {
+            var flamethrower = go.GetComponent<PseudoPrefabFlamethrowerStub>();
+            if (flamethrower == null)
+                return;
+
+            Undo.RecordObject(flamethrower, "Layout Editor Flamethrower");
+            flamethrower.cookingRate = item.flamethrower.cookingRate;
+            return;
+        }
+
+        if (item.stubKind == "CleanPlateStack" && item.cleanPlateStack != null)
+        {
+            var plateStack = go.GetComponent<PseudoPrefabCleanPlateStackStub>();
+            if (plateStack == null)
+                return;
+
+            Undo.RecordObject(plateStack, "Layout Editor Clean Plate Stack");
+            plateStack.plateCount = item.cleanPlateStack.plateCount;
+            if (!string.IsNullOrEmpty(item.cleanPlateStack.platePrefabGuid))
+                plateStack.platePseudoPrefabSO = LoadPseudoPrefabSO(item.cleanPlateStack.platePrefabGuid);
+            return;
+        }
+
+        if (item.stubKind == "Burner" && item.burner != null)
+        {
+            var burner = go.GetComponent<PseudoPrefabBurnerStub>();
+            if (burner == null)
+                return;
+
+            Undo.RecordObject(burner, "Layout Editor Burner");
+            burner.fireMode = (PseudoPrefabBurnerStub.FireMode)item.burner.fireMode;
+            burner.airTime = item.burner.airTime;
+            burner.randomTargetOrder = item.burner.randomTargetOrder;
+            burner.hideVisual = item.burner.hideVisual;
+        }
+    }
+
+    /// <summary>
+    /// Second pass: resolve Teleportal.exitPortal. exitPortalInstanceId is either
+    /// "u:<instanceID>" (existing scene object) or a document instanceId (e.g. "new:...")
+    /// mapped through createdObjects. Empty string clears the pairing.
+    /// </summary>
+    public static void ApplyTeleportalExit(GameObject go, string exitPortalInstanceId, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    {
+        if (go == null || exitPortalInstanceId == null)
+            return;
+
+        var teleportal = go.GetComponent<PseudoPrefabTeleportalStub>();
+        if (teleportal == null)
+            return;
+
+        GameObject target = null;
+        if (exitPortalInstanceId.StartsWith("u:", StringComparison.Ordinal))
+        {
+            int id;
+            if (int.TryParse(exitPortalInstanceId.Substring(2), out id))
+                target = EditorUtility.InstanceIDToObject(id) as GameObject;
+        }
+        else if (!string.IsNullOrEmpty(exitPortalInstanceId) && createdObjects != null)
+        {
+            createdObjects.TryGetValue(exitPortalInstanceId, out target);
+        }
+
+        var exitStub = target != null ? target.GetComponent<PseudoPrefabTeleportalStub>() : null;
+
+        Undo.RecordObject(teleportal, "Layout Editor Teleportal Exit");
+        teleportal.exitPortal = exitStub;
+    }
+
+    private static PseudoPrefabSO LoadPseudoPrefabSO(string guid)
+    {
+        if (string.IsNullOrEmpty(guid))
+            return null;
+        var path = AssetDatabase.GUIDToAssetPath(guid);
+        return string.IsNullOrEmpty(path)
+            ? null
+            : AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+    }
+
+    private static PseudoPrefabSO[] LoadPseudoPrefabSOs(string[] guids)
+    {
+        var sos = new PseudoPrefabSO[guids.Length];
+        for (int i = 0; i < guids.Length; i++)
+            sos[i] = LoadPseudoPrefabSO(guids[i]);
+        return sos;
     }
 }

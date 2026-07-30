@@ -78,6 +78,31 @@ export interface LayoutTeleportalStub {
   doubleSided?: boolean;
 }
 
+export interface LayoutCookingUtensilStub {
+  capacity?: number;
+  allowedIngredientGuids?: string[];
+}
+
+export interface LayoutTravelatorStub {
+  speed?: number;
+}
+
+export interface LayoutFlamethrowerStub {
+  cookingRate?: number;
+}
+
+export interface LayoutCleanPlateStackStub {
+  plateCount?: number;
+  platePrefabGuid?: string;
+}
+
+export interface LayoutBurnerStub {
+  fireMode?: number;
+  airTime?: number;
+  randomTargetOrder?: boolean;
+  hideVisual?: boolean;
+}
+
 export interface LayoutItem {
   instanceId: string;
   hierarchyPath: string;
@@ -96,6 +121,11 @@ export interface LayoutItem {
   conveyor?: LayoutConveyorStub;
   teleportal?: LayoutTeleportalStub;
   foodSpawner?: LayoutFoodSpawnerStub;
+  cookingUtensil?: LayoutCookingUtensilStub;
+  travelator?: LayoutTravelatorStub;
+  flamethrower?: LayoutFlamethrowerStub;
+  cleanPlateStack?: LayoutCleanPlateStackStub;
+  burner?: LayoutBurnerStub;
 }
 
 export interface LayoutDocument {

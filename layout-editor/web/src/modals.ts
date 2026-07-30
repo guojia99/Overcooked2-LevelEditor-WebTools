@@ -106,6 +106,39 @@ export function openFoodSpawnerEditor(
   });
 }
 
+export function openIngredientMultiPicker(
+  title: string,
+  hint: string,
+  ingredients: IngredientEntry[],
+  selectedGuids: string[],
+  onSave: (guids: string[]) => void
+) {
+  const selected = new Set(selectedGuids);
+  const list = ingredients
+    .map(
+      (ing) =>
+        `<label class="modal-check"><input type="checkbox" value="${ing.guid}" ${selected.has(ing.guid) ? "checked" : ""} /> ${ingredientOptionLabel(ing)}</label>`
+    )
+    .join("");
+
+  openModal(
+    title,
+    `<p class="modal-hint">${hint}</p><div class="modal-scroll">${list}</div>`,
+    `<button type="button" class="modal-btn" data-cancel>取消</button>
+     <button type="button" class="modal-btn primary" data-ok>确定</button>`
+  );
+
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", () => {
+    const guids: string[] = [];
+    document.querySelectorAll<HTMLInputElement>(".modal-scroll input:checked").forEach((el) => {
+      guids.push(el.value);
+    });
+    onSave(guids);
+    closeModal();
+  });
+}
+
 export function openRecipePicker(
   recipes: RecipeEntry[],
   selectedGuids: string[],

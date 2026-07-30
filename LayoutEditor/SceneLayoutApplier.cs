@@ -34,6 +34,7 @@ public static class SceneLayoutApplier
         RemoveUnmatchedSceneItems(before, document.items);
 
         var usedSceneObjectIds = new HashSet<int>();
+        var createdObjects = new Dictionary<string, GameObject>();
         foreach (var item in document.items)
         {
             if (item == null)
@@ -59,7 +60,9 @@ public static class SceneLayoutApplier
 
             if (item.instanceId != null && item.instanceId.StartsWith("new:", StringComparison.Ordinal))
             {
-                CreateInstance(item, prefab, assetPath, pos, rotY);
+                var created = CreateInstance(item, prefab, assetPath, pos, rotY);
+                if (created != null)
+                    createdObjects[item.instanceId] = created;
             }
             else
             {
@@ -78,12 +81,32 @@ public static class SceneLayoutApplier
                         t.localEulerAngles = new Vector3(t.localEulerAngles.x, rotY, t.localEulerAngles.z);
                         ApplyItemScale(t, item);
                         LayoutEditorStubIO.ApplyStub(t.gameObject, item);
+                        if (!string.IsNullOrEmpty(item.instanceId))
+                            createdObjects[item.instanceId] = t.gameObject;
                         continue;
                     }
                 }
 
-                CreateInstance(item, prefab, assetPath, pos, rotY);
+                var created = CreateInstance(item, prefab, assetPath, pos, rotY);
+                if (created != null && !string.IsNullOrEmpty(item.instanceId))
+                    createdObjects[item.instanceId] = created;
             }
+        }
+
+        // Second pass: teleportal exit pairing needs both portals to exist.
+        foreach (var item in document.items)
+        {
+            if (item == null || item.stubKind != "Teleportal" || item.teleportal == null)
+                continue;
+
+            GameObject go;
+            if (string.IsNullOrEmpty(item.instanceId) || !createdObjects.TryGetValue(item.instanceId, out go))
+            {
+                var t = FindItemTransform(item);
+                go = t != null ? t.gameObject : null;
+            }
+            if (go != null)
+                LayoutEditorStubIO.ApplyTeleportalExit(go, item.teleportal.exitPortalInstanceId ?? "", createdObjects);
         }
 
         ApplyFloors(document);
@@ -409,7 +432,7 @@ public static class SceneLayoutApplier
         return !string.IsNullOrEmpty(doc.instanceId) && scene.instanceId == doc.instanceId;
     }
 
-    private static void CreateInstance(LayoutItemDto item, GameObject prefab, string assetPath, Vector3 pos, float rotY)
+    private static GameObject CreateInstance(LayoutItemDto item, GameObject prefab, string assetPath, Vector3 pos, float rotY)
     {
         var parentPath = item.parentPath;
         if (string.IsNullOrEmpty(parentPath))
@@ -417,11 +440,11 @@ public static class SceneLayoutApplier
 
         var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
         if (parent == null)
-            return;
+            return null;
 
         var instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
         if (instance == null)
-            return;
+            return null;
 
         Undo.RegisterCreatedObjectUndo(instance, "Layout Editor Create");
         instance.transform.SetParent(parent, false);
@@ -433,6 +456,7 @@ public static class SceneLayoutApplier
             instance.name = item.displayName;
 
         LayoutEditorStubIO.ApplyStub(instance, item);
+        return instance;
     }
 
     private static void ApplyItemScale(Transform t, LayoutItemDto item)
