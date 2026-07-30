@@ -61,7 +61,7 @@ public static class LayoutEditorJson
         if (obj is double)
             return SanitizeFloat((float)(double)obj);
 
-        return "{}";
+        return JsonUtility.ToJson(obj);
     }
 
     public static LayoutDocumentDto ParseLayoutDocument(string json)

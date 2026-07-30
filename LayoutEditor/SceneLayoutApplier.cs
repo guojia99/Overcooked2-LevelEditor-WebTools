@@ -9,13 +9,17 @@ using LevelEditor;
 
 public static class SceneLayoutApplier
 {
-    public static string Apply(LayoutDocumentDto document, float snapStep)
+    private static readonly string[] ThemeBackgroundPrefabNames = { "Sky", "raft_water", "alien_gue" };
+
+    public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable)
     {
         if (document == null || document.items == null)
             return "Empty layout document.";
 
         if (!LayoutEditorSafety.PrepareSceneForApply())
             return LayoutEditorSafety.LastError;
+
+        document.items = PruneThemeBackgroundItems(document.items);
 
         var scene = EditorSceneManager.GetActiveScene();
         if (!string.IsNullOrEmpty(document.sceneAssetPath) && scene.path != document.sceneAssetPath)
@@ -72,6 +76,7 @@ public static class SceneLayoutApplier
                         posFull.z = SnapScalar(posFull.z, snapStep);
                         t.localPosition = posFull;
                         t.localEulerAngles = new Vector3(t.localEulerAngles.x, rotY, t.localEulerAngles.z);
+                        ApplyItemScale(t, item);
                         LayoutEditorStubIO.ApplyStub(t.gameObject, item);
                         continue;
                     }
@@ -82,10 +87,88 @@ public static class SceneLayoutApplier
         }
 
         ApplyFloors(document);
+        if (syncWalkable)
+            SyncWalkableToFloors(document);
 
         EditorSceneManager.MarkSceneDirty(scene);
         LayoutEditorPseudoReload.ReloadPseudoAssets();
         return null;
+    }
+
+    /// <summary>
+    /// Regenerate the Ground-layer "Col_Floor" walkable colliders under Design/Collision so
+    /// the walkable area matches the visible floor planes (gaps between floors become fall pits).
+    /// </summary>
+    private static void SyncWalkableToFloors(LayoutDocumentDto document)
+    {
+        var collision = LayoutEditorHierarchy.FindOrCreatePath("Design/Collision");
+        if (collision == null)
+            return;
+
+        var toRemove = new List<GameObject>();
+        for (int i = 0; i < collision.childCount; i++)
+        {
+            var c = collision.GetChild(i);
+            if (c != null && c.name == "Col_Floor")
+                toRemove.Add(c.gameObject);
+        }
+        foreach (var go in toRemove)
+            Undo.DestroyObjectImmediate(go);
+
+        int groundLayer = LayerMask.NameToLayer("Ground");
+        if (groundLayer < 0)
+            groundLayer = 9;
+
+        if (document == null || document.floors == null)
+            return;
+
+        foreach (var floor in document.floors)
+        {
+            if (floor == null)
+                continue;
+            // Background planes are visual only — no walkable collider.
+            if (floor.surfaceKind == "background")
+                continue;
+            float cx = floor.worldPosition != null ? floor.worldPosition.x : (floor.localPosition != null ? floor.localPosition.x : 0f);
+            float cz = floor.worldPosition != null ? floor.worldPosition.z : (floor.localPosition != null ? floor.localPosition.z : 0f);
+            float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
+            float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
+            CreateColFloor(collision, groundLayer, cx, cz, w, d, floor.localRotationY);
+        }
+
+        // Also make surface-floor prefab items (raft planks, floor tiles ...) walkable.
+        if (document.items != null)
+        {
+            foreach (var item in document.items)
+            {
+                if (item == null || !item.walkable)
+                    continue;
+                float cx = item.worldPosition != null ? item.worldPosition.x : (item.localPosition != null ? item.localPosition.x : 0f);
+                float cz = item.worldPosition != null ? item.worldPosition.z : (item.localPosition != null ? item.localPosition.z : 0f);
+                float scx = item.localScale != null ? item.localScale.x : 1f;
+                float scz = item.localScale != null ? item.localScale.z : 1f;
+                if (scx <= 0f) scx = 1f;
+                if (scz <= 0f) scz = 1f;
+                float w = (item.footprint != null && item.footprint.cellsX > 0 ? item.footprint.cellsX : 1) * LayoutEditorCatalogLookup.GridCellSize * scx;
+                float d = (item.footprint != null && item.footprint.cellsZ > 0 ? item.footprint.cellsZ : 1) * LayoutEditorCatalogLookup.GridCellSize * scz;
+                CreateColFloor(collision, groundLayer, cx, cz, w, d, item.localRotationY);
+            }
+        }
+    }
+
+    private static void CreateColFloor(Transform parent, int groundLayer, float cx, float cz, float w, float d, float rotY)
+    {
+        var go = new GameObject("Col_Floor");
+        Undo.RegisterCreatedObjectUndo(go, "Layout Editor Col_Floor");
+        go.layer = groundLayer;
+        var t = go.transform;
+        t.SetParent(parent, false);
+        t.localPosition = new Vector3(cx, 0f, cz);
+        t.localRotation = Quaternion.Euler(0f, rotY, 0f);
+        t.localScale = Vector3.one;
+        var col = go.AddComponent<BoxCollider>();
+        col.size = new Vector3(w, 0.4f, d);
+        col.center = new Vector3(0f, -0.2f, 0f);
     }
 
     private static void ApplyFloors(LayoutDocumentDto document)
@@ -344,11 +427,24 @@ public static class SceneLayoutApplier
         instance.transform.SetParent(parent, false);
         instance.transform.localPosition = pos;
         instance.transform.localEulerAngles = new Vector3(0f, rotY, 0f);
+        ApplyItemScale(instance.transform, item);
 
         if (!string.IsNullOrEmpty(item.displayName))
             instance.name = item.displayName;
 
         LayoutEditorStubIO.ApplyStub(instance, item);
+    }
+
+    private static void ApplyItemScale(Transform t, LayoutItemDto item)
+    {
+        if (item == null || item.localScale == null)
+            return;
+        var s = item.localScale.ToVector3();
+        if (s.x <= 0f) s.x = t.localScale.x;
+        if (s.y <= 0f) s.y = t.localScale.y;
+        if (s.z <= 0f) s.z = t.localScale.z;
+        if (Mathf.Abs(s.x - 1f) > 0.001f || Mathf.Abs(s.y - 1f) > 0.001f || Mathf.Abs(s.z - 1f) > 0.001f)
+            t.localScale = s;
     }
 
     private static Transform FindItemTransform(LayoutItemDto item)
@@ -379,6 +475,48 @@ public static class SceneLayoutApplier
         if (t == null)
             return;
         Undo.DestroyObjectImmediate(t.gameObject);
+    }
+
+    private static bool IsThemeBackgroundPrefab(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        var id = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+        for (int i = 0; i < ThemeBackgroundPrefabNames.Length; i++)
+        {
+            if (ThemeBackgroundPrefabNames[i] == id)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>Keep at most one theme-managed environment background in the layout document.</summary>
+    private static LayoutItemDto[] PruneThemeBackgroundItems(LayoutItemDto[] items)
+    {
+        if (items == null || items.Length == 0)
+            return items ?? new LayoutItemDto[0];
+
+        int lastBg = -1;
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] != null && IsThemeBackgroundPrefab(items[i].prefabAssetPath))
+                lastBg = i;
+        }
+
+        if (lastBg < 0)
+            return items;
+
+        var result = new List<LayoutItemDto>(items.Length);
+        for (int i = 0; i < items.Length; i++)
+        {
+            var it = items[i];
+            if (it == null)
+                continue;
+            if (IsThemeBackgroundPrefab(it.prefabAssetPath) && i != lastBg)
+                continue;
+            result.Add(it);
+        }
+        return result.ToArray();
     }
 
     private static Vector3 SnapVector(Vector3 v, float step)

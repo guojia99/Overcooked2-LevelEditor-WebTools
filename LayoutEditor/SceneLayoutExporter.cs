@@ -99,6 +99,7 @@ public static class SceneLayoutExporter
                 localPosition = LayoutVector3.From(t.localPosition),
                 worldPosition = LayoutVector3.From(t.position),
                 localRotationY = eulerY,
+                localScale = LayoutVector3.From(t.localScale),
                 footprint = LayoutEditorCatalogLookup.GetFootprint(prefabAsset.name)
             });
             LayoutEditorStubIO.ExportStub(go, items[items.Count - 1]);

@@ -9,6 +9,7 @@ export interface SurfacePaint {
 
 const SURFACE_PAINT: Record<string, SurfacePaint> = {
   solid: { fill: "rgba(150,136,110,0.55)", stroke: "rgba(110,99,80,0.95)", label: "#1a1d23", emoji: "" },
+  raft: { fill: "rgba(150,108,60,0.6)", stroke: "rgba(110,75,40,0.95)", label: "#1a1d23", emoji: "🪵" },
   ice: { fill: "rgba(120,200,235,0.5)", stroke: "rgba(80,160,205,0.95)", label: "#0d2a36", emoji: "❄" },
   snow: { fill: "rgba(225,232,240,0.6)", stroke: "rgba(170,185,200,0.95)", label: "#1a1d23", emoji: "❄" },
   sand: { fill: "rgba(225,205,140,0.55)", stroke: "rgba(180,150,90,0.95)", label: "#3a2c10", emoji: "" },
@@ -42,6 +43,103 @@ export function voidFill(deathType: string | undefined): string {
   }
 }
 
+export interface BgTheme {
+  key: string;
+  labelZh: string;
+  emoji: string;
+  /** Void / background fill color (floor layer). */
+  fill: string;
+  /** Faint hazard hatch color drawn over the void to signal a fall/death zone. */
+  hatch: string;
+  /** Editor death type this theme represents. */
+  deathType: "water" | "goo" | "fall";
+}
+
+export const BG_THEMES: BgTheme[] = [
+  { key: "void", labelZh: "空洞", emoji: "🕳️", fill: "#15171c", hatch: "rgba(130,132,142,0.10)", deathType: "fall" },
+  { key: "water", labelZh: "水", emoji: "💧", fill: "#0e2a47", hatch: "rgba(120,180,230,0.12)", deathType: "water" },
+  { key: "sky", labelZh: "天空", emoji: "☁️", fill: "#0d1830", hatch: "rgba(140,170,220,0.10)", deathType: "fall" },
+  { key: "goo", labelZh: "外星黏液", emoji: "🟢", fill: "#0f2e24", hatch: "rgba(120,220,140,0.12)", deathType: "goo" },
+];
+
+const BG_THEME_MAP: Record<string, BgTheme> = BG_THEMES.reduce(
+  (acc, t) => {
+    acc[t.key] = t;
+    return acc;
+  },
+  {} as Record<string, BgTheme>
+);
+
+export function bgTheme(key: string | undefined): BgTheme {
+  return (key && BG_THEME_MAP[key]) || BG_THEMES[0];
+}
+
+/** Prefab ids auto-placed when a theme is selected and missing from the scene. */
+export const THEME_BACKGROUND_PREFABS: Record<string, string[]> = {
+  sky: ["Sky"],
+  water: ["raft_water"],
+  goo: ["alien_gue"],
+};
+
+export function themeBackgroundPrefabIds(themeKey: string): string[] {
+  return THEME_BACKGROUND_PREFABS[themeKey] ?? [];
+}
+
+/** All environment prefabs managed by theme switching (mutually exclusive). */
+export function allThemeBackgroundPrefabIds(): string[] {
+  const ids = new Set<string>();
+  for (const list of Object.values(THEME_BACKGROUND_PREFABS)) {
+    for (const id of list) ids.add(id);
+  }
+  return [...ids];
+}
+
+export function isThemeBackgroundPrefabId(id: string | undefined): boolean {
+  if (!id) return false;
+  return allThemeBackgroundPrefabIds().includes(id);
+}
+
+/** True for theme-managed environment prefabs (mutually exclusive). */
+export function isGlobalBackgroundItem(cat: CatalogItem | undefined, prefabId?: string): boolean {
+  return isThemeBackgroundPrefabId(prefabId ?? cat?.id);
+}
+
+function prefabIdFromAssetPath(assetPath: string | undefined): string {
+  if (!assetPath) return "";
+  const name = assetPath.split("/").pop() ?? "";
+  return name.replace(/\.prefab$/i, "");
+}
+
+/** Infer theme from environment prefabs present in the layout. */
+export function inferBgThemeFromItems(
+  layoutItems: { prefabAssetPath?: string }[]
+): string | null {
+  const ids = new Set(layoutItems.map((i) => prefabIdFromAssetPath(i.prefabAssetPath)));
+  for (const [theme, prefs] of Object.entries(THEME_BACKGROUND_PREFABS)) {
+    for (const p of prefs) {
+      if (ids.has(p)) return theme;
+    }
+  }
+  return null;
+}
+
+export function bgThemeTooltip(theme: BgTheme): string {
+  const prefabs = THEME_BACKGROUND_PREFABS[theme.key];
+  if (prefabs?.length) {
+    return `${theme.labelZh}：写回时自动确保场景有 ${prefabs.join(" / ")} 环境 prefab`;
+  }
+  if (theme.key === "void") {
+    return `${theme.labelZh}：无背景 prefab，靠 KillPlane 扩大 + 地板间隙实现坠落区`;
+  }
+  return theme.labelZh;
+}
+
+export function bgThemeKeyForDeathType(dt: string | undefined): string {
+  if (dt === "water") return "water";
+  if (dt === "goo") return "goo";
+  return "void";
+}
+
 export function deathLabelZh(info: DeathInfo | null): string {
   switch (info?.deathType) {
     case "water":
@@ -60,6 +158,8 @@ export function isSurfaceItem(cat: CatalogItem | undefined): boolean {
 
 export function surfaceKindLabelZh(kind: string | undefined): string {
   switch (kind) {
+    case "raft":
+      return "木筏";
     case "ice":
       return "冰面（滑）";
     case "snow":

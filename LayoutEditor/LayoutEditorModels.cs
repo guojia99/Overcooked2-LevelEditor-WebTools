@@ -32,6 +32,22 @@ public class LayoutDispenserStubDto
 }
 
 [Serializable]
+public class LayoutConveyorStubDto
+{
+    public float conveySpeed = 0.5f;
+}
+
+[Serializable]
+public class LayoutTeleportalStubDto
+{
+    /** "u:<instanceID>" of the paired Teleportal's GameObject, or empty. */
+    public string exitPortalInstanceId;
+    /** PortalColor enum value (int). */
+    public int portalColor;
+    public bool doubleSided;
+}
+
+[Serializable]
 public class LayoutFoodSpawnerStubDto
 {
     public bool spawnInOrder = true;
@@ -53,10 +69,15 @@ public class LayoutItemDto
     public LayoutVector3 localPosition;
     public LayoutVector3 worldPosition;
     public float localRotationY;
+    public LayoutVector3 localScale;
     public LayoutFootprint footprint;
-    /** Dispenser | AttachingFoodSpawner | empty */
+    /** True for surface-floor prefabs (raft planks, ice_floor, ...) → generate a walkable Col_Floor under them. */
+    public bool walkable;
+    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | empty */
     public string stubKind;
     public LayoutDispenserStubDto dispenser;
+    public LayoutConveyorStubDto conveyor;
+    public LayoutTeleportalStubDto teleportal;
     public LayoutFoodSpawnerStubDto foodSpawner;
 }
 
@@ -123,6 +144,11 @@ public class KillPlaneInfoDto
     public string hierarchyPath;
     public string respawnType;
     public string deathEffectName;
+    /** World-space XZ bounds of the kill plane collider (the actual fall zone). */
+    public float cx;
+    public float cz;
+    public float sx;
+    public float sz;
 }
 
 [Serializable]
@@ -204,7 +230,11 @@ public class RecipeEntryDto
     public string guid;
     public string id;
     public string nameZh;
+    public string nameEn;
     public string assetPath;
+    public string cookingStep;
+    public string[] ingredients;
+    public bool isCustom;
 }
 
 [Serializable]
@@ -226,4 +256,236 @@ public class LevelRecipesUpdateDto
 {
     public string levelInfoAssetPath;
     public string[] recipeGuids;
+}
+
+// ---------- Audio catalogs ----------
+
+[Serializable]
+public class MusicEntryDto
+{
+    public string guid;
+    public string id;
+    public string assetPath;
+    public string bundleName;
+    public string nameZh;
+}
+
+[Serializable]
+public class MusicCatalogDto
+{
+    public MusicEntryDto[] music;
+}
+
+[Serializable]
+public class AudioDirectoryEntryDto
+{
+    public string guid;
+    public string id;
+    public string assetPath;
+    public string bundleName;
+    public string nameZh;
+}
+
+[Serializable]
+public class AudioDirectoryCatalogDto
+{
+    public AudioDirectoryEntryDto[] audioDirectories;
+}
+
+[Serializable]
+public class AmbienceCatalogDto
+{
+    public string[] ambiences;
+}
+
+[Serializable]
+public class DeathEffectEntryDto
+{
+    public string guid;
+    public string id;
+    public string assetPath;
+    public string nameZh;
+}
+
+[Serializable]
+public class DeathEffectCatalogDto
+{
+    public DeathEffectEntryDto[] deathEffects;
+}
+
+// ---------- Sets ----------
+
+[Serializable]
+public class LevelSetInfoDto
+{
+    public string setName;
+    public string assetPath;
+    public string dataDir;
+    public string levelSetName;
+    public string levelSetNameZH;
+    public string author;
+    public string version;
+    public string uid;
+    public int levelCount;
+}
+
+[Serializable]
+public class LevelSetListDto
+{
+    public LevelSetInfoDto[] sets;
+}
+
+[Serializable]
+public class LevelSetCreateDto
+{
+    public string setName;
+    public string levelSetName;
+    public string levelSetNameZH;
+    public string author;
+}
+
+[Serializable]
+public class LevelSetInfoUpdateDto
+{
+    public string setName;
+    public string levelSetName;
+    public string levelSetNameZH;
+    public string author;
+    public string version;
+}
+
+// ---------- Levels ----------
+
+[Serializable]
+public class LevelSummaryDto
+{
+    public string assetPath;
+    public string dataDir;
+    public string levelName;
+    public string levelNameZH;
+    public string sceneName;
+    public string sceneAssetPath;
+    public bool hasScreenshot;
+    public bool hasScene;
+}
+
+[Serializable]
+public class LevelListDto
+{
+    public LevelSummaryDto[] levels;
+}
+
+[Serializable]
+public class PerPlayerConfigDto
+{
+    public bool exists;
+    public int orderLifeTime;
+    public int timeBetweenOrders;
+    public int plateReturnTime;
+    public float survivalTimeMultiplier;
+    public int roundTime;
+    public int oneStarScore;
+    public int twoStarScore;
+    public int threeStarScore;
+    public int fourStarScore;
+}
+
+[Serializable]
+public class AudioConfigDto
+{
+    public string inLevelMusicGuid;
+    public string inLevelMusicId;
+    public string[] ambiences;
+    public string[] audioDirectoryGuids;
+    public string[] audioDirectoryIds;
+    public string onDeathEffectGuid;
+    public string onDeathEffectId;
+}
+
+[Serializable]
+public class LevelDetailDto
+{
+    public string levelInfoAssetPath;
+    public string levelName;
+    public string levelNameZH;
+    public string sceneName;
+    public string sceneAssetPath;
+    public bool hasScreenshot;
+    public int debugRecipeCount;
+    public bool disableDynamicParenting;
+    public string[] dependencies;
+    public PerPlayerConfigDto[] configs;
+    public AudioConfigDto audio;
+}
+
+[Serializable]
+public class LevelCreateDto
+{
+    public string setName;
+    public string levelId;
+    public string levelName;
+    public string levelNameZH;
+}
+
+[Serializable]
+public class LevelInfoUpdateDto
+{
+    public string assetPath;
+    public string levelName;
+    public string levelNameZH;
+    public string sceneName;
+    public int debugRecipeCount;
+    public bool disableDynamicParenting;
+    public string[] dependencies;
+}
+
+[Serializable]
+public class LevelConfigUpdateDto
+{
+    public string assetPath;
+    public PerPlayerConfigDto config_1p;
+    public PerPlayerConfigDto config_2p;
+    public PerPlayerConfigDto config_3p;
+    public PerPlayerConfigDto config_4p;
+}
+
+[Serializable]
+public class LevelAudioUpdateDto
+{
+    public string sceneAssetPath;
+    public string inLevelMusicGuid;
+    public string[] ambiences;
+    public string[] audioDirectoryGuids;
+    public string onDeathEffectGuid;
+}
+
+[Serializable]
+public class LevelDeleteDto
+{
+    public string setName;
+    public string levelId;
+}
+
+[Serializable]
+public class DeathThemeDto
+{
+    public string sceneAssetPath;
+    /** void | water | lava | sky | goo */
+    public string theme;
+}
+
+[Serializable]
+public class KillPlaneBoundsDto
+{
+    public string sceneAssetPath;
+    public float cx;
+    public float cz;
+    public float sx;
+    public float sz;
+}
+
+[Serializable]
+public class AssetPathListDto
+{
+    public string[] paths;
 }

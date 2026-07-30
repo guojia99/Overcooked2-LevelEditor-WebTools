@@ -20,6 +20,7 @@ export interface CatalogItem {
   surfaceTier?: "floor" | "background";
   surfaceKind?:
     | "solid"
+    | "raft"
     | "ice"
     | "snow"
     | "sand"
@@ -67,6 +68,16 @@ export interface LayoutFoodSpawnerStub {
   triggerAtStart?: boolean;
 }
 
+export interface LayoutConveyorStub {
+  conveySpeed?: number;
+}
+
+export interface LayoutTeleportalStub {
+  exitPortalInstanceId?: string;
+  portalColor?: number;
+  doubleSided?: boolean;
+}
+
 export interface LayoutItem {
   instanceId: string;
   hierarchyPath: string;
@@ -77,9 +88,13 @@ export interface LayoutItem {
   localPosition: LayoutVector3;
   worldPosition?: LayoutVector3;
   localRotationY: number;
+  localScale?: LayoutVector3;
   footprint?: { cellsX: number; cellsZ: number };
+  walkable?: boolean;
   stubKind?: string;
   dispenser?: LayoutDispenserStub;
+  conveyor?: LayoutConveyorStub;
+  teleportal?: LayoutTeleportalStub;
   foodSpawner?: LayoutFoodSpawnerStub;
 }
 
@@ -142,6 +157,10 @@ export interface KillPlaneInfo {
   hierarchyPath: string;
   respawnType: string;
   deathEffectName: string;
+  cx: number;
+  cz: number;
+  sx: number;
+  sz: number;
 }
 
 export interface DeathInfo {
@@ -189,11 +208,124 @@ export interface RecipeEntry {
   guid: string;
   id: string;
   nameZh: string;
+  nameEn?: string;
   assetPath: string;
+  cookingStep?: string;
+  ingredients?: string[];
+  isCustom?: boolean;
 }
 
 export interface LevelRecipes {
   levelInfoAssetPath: string;
   levelName: string;
   recipeGuids: string[];
+}
+
+// ---------- Level admin (sets / levels / audio) ----------
+
+export interface MusicEntry {
+  guid: string;
+  id: string;
+  assetPath: string;
+  bundleName: string;
+  nameZh: string;
+}
+
+export interface MusicCatalog {
+  music: MusicEntry[];
+}
+
+export interface AudioDirectoryEntry {
+  guid: string;
+  id: string;
+  assetPath: string;
+  bundleName: string;
+  nameZh: string;
+}
+
+export interface AudioDirectoryCatalog {
+  audioDirectories: AudioDirectoryEntry[];
+}
+
+export interface AmbienceCatalog {
+  ambiences: string[];
+}
+
+export interface DeathEffectEntry {
+  guid: string;
+  id: string;
+  assetPath: string;
+  nameZh: string;
+}
+
+export interface DeathEffectCatalog {
+  deathEffects: DeathEffectEntry[];
+}
+
+export interface LevelSetInfo {
+  setName: string;
+  assetPath: string;
+  dataDir: string;
+  levelSetName: string;
+  levelSetNameZH: string;
+  author: string;
+  version: string;
+  uid: string;
+  levelCount: number;
+}
+
+export interface LevelSetList {
+  sets: LevelSetInfo[];
+}
+
+export interface LevelSummary {
+  assetPath: string;
+  dataDir: string;
+  levelName: string;
+  levelNameZH: string;
+  sceneName: string;
+  sceneAssetPath: string;
+  hasScreenshot: boolean;
+  hasScene: boolean;
+}
+
+export interface LevelList {
+  levels: LevelSummary[];
+}
+
+export interface PerPlayerConfig {
+  exists: boolean;
+  orderLifeTime: number;
+  timeBetweenOrders: number;
+  plateReturnTime: number;
+  survivalTimeMultiplier: number;
+  roundTime: number;
+  oneStarScore: number;
+  twoStarScore: number;
+  threeStarScore: number;
+  fourStarScore: number;
+}
+
+export interface AudioConfig {
+  inLevelMusicGuid: string;
+  inLevelMusicId: string;
+  ambiences: string[];
+  audioDirectoryGuids: string[];
+  audioDirectoryIds: string[];
+  onDeathEffectGuid: string;
+  onDeathEffectId: string;
+}
+
+export interface LevelDetail {
+  levelInfoAssetPath: string;
+  levelName: string;
+  levelNameZH: string;
+  sceneName: string;
+  sceneAssetPath: string;
+  hasScreenshot: boolean;
+  debugRecipeCount: number;
+  disableDynamicParenting: boolean;
+  dependencies: string[];
+  configs: PerPlayerConfig[];
+  audio: AudioConfig;
 }

@@ -71,12 +71,40 @@ public static class LayoutEditorCatalogApi
                     continue;
 
                 var id = Path.GetFileNameWithoutExtension(path);
+                var custom = so as CustomRecipeSO;
+                var isCustom = custom != null;
+
+                string zh;
+                string en;
+                LayoutEditorManualLookup.TryGet(id, out zh, out en);
+
+                string step;
+                string[] ings;
+                if (isCustom)
+                {
+                    step = LayoutEditorRecipeKnowledge.CustomCookingStep(custom);
+                    ings = LayoutEditorRecipeKnowledge.CustomIngredients(custom).ToArray();
+                }
+                else if (LayoutEditorRecipeKnowledge.TryGetOriginal(id, out step, out ings))
+                {
+                    // known original recipe
+                }
+                else
+                {
+                    step = "";
+                    ings = new string[0];
+                }
+
                 list.Add(new RecipeEntryDto
                 {
                     guid = guid,
                     id = id,
-                    nameZh = RecipeDisplayName(so, id),
-                    assetPath = path
+                    nameZh = zh,
+                    nameEn = en,
+                    assetPath = path,
+                    cookingStep = step,
+                    ingredients = ings,
+                    isCustom = isCustom
                 });
             }
         }
@@ -144,16 +172,5 @@ public static class LayoutEditorCatalogApi
             EditorUtility.SetDirty(manager);
 
         return null;
-    }
-
-    private static string RecipeDisplayName(ScriptableObject so, string id)
-    {
-        var custom = so as CustomRecipeSO;
-        if (custom != null && !string.IsNullOrEmpty(custom.recipeName))
-            return custom.recipeName;
-
-        if (id.EndsWith("_SO", StringComparison.Ordinal))
-            return id.Substring(0, id.Length - 3).Replace('_', ' ');
-        return id;
     }
 }

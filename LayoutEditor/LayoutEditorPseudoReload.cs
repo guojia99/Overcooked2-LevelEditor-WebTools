@@ -1,6 +1,28 @@
-﻿using System.Reflection;
-using LevelEditor;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using LevelEditor;
+
+[InitializeOnLoad]
+static class LayoutEditorSceneCleanup
+{
+    static LayoutEditorSceneCleanup()
+    {
+        EditorSceneManager.sceneClosing += OnSceneClosing;
+    }
+
+    static void OnSceneClosing(Scene scene, bool removingScene)
+    {
+        if (!removingScene)
+            return;
+        RuntimePrefabManager.ClearAllRuntimePrefabs();
+    }
+}
 
 public static class LayoutEditorPseudoReload
 {

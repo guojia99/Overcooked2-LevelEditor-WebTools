@@ -39,6 +39,19 @@
 
 不修改 `LevelInfoSO`、AssetBundle 标记或 `common*` 资源。
 
+## 关卡管理（独立页面）
+
+顶栏 **关卡管理…** 进入独立的关卡管理页（URL `/#/manage`），与俯视图编排页相互独立，可随时通过页内按钮互跳。基于 `LevelSetInfoSO / LevelInfoSO / LevelConfigSetupPerPlayerCountSO` 这套 SO 管理关卡集与关卡：
+
+- **关卡集**：列表查看 / 新建关卡集（自动创建 `LevelSets/<set>/data`、`scenes/` 与 `LevelSetInfo.asset`）/ 编辑英文名·中文名·作者·版本（改 version 自动重算 uid）。**关卡集不可删除**。
+- **关卡**：在每个关卡集下列出，可**新建关卡**（自动生成 `config_1p~4p`（复制模板默认值）、`LevelInfo_<id>.asset`，并复制 `Template/s_template` 到 `scenes/s_<id>.unity`、绑定 `levelInfo`），**编辑基础信息**（表单提交，含 sceneName、dependencies、disableDynamicParenting、debugRecipeCount 等），以及**删除关卡**（连同其场景、配置与关卡目录内自定义资源，二次确认）。
+- **人数配置 (1P/2P/3P/4P)**：弹窗内 4 个 Tab 编辑订单超时/间隔、关卡时长、各星分数等，**统一一次性提交**写入 4 份 `LevelConfigSetupPerPlayerCountSO`。
+- **音频配置**：编辑场景 `PseudoPrefabManagerStub` 上的 BGM(`InLevelMusicSO`)、氛围音(`InLevelAmbiences`)、音效集(`AudioDirectorySOs`)、死亡特效(`OnDeathEffectSO`)；保存时自动打开并保存该场景。截图 `screenshot` 暂只读。
+- **菜谱**：复用编排页的菜谱选择写入 `LevelInfoSO.recipes`。
+- **Reload**：仅在表单提交时触发（刷新页面数据 + Unity Reload Pseudo Assets），编辑过程中不实时 reload。
+
+> 说明：音频字段位于场景的 `PseudoPrefabManagerStub` 组件（非 LevelInfoSO）。许多 BGM 所在 bundle 不在默认加载列表，需在关卡基础信息的 dependencies 额外添加（木筏主题 BGM 需 `bundle11`）。
+
 ---
 
 ## 维护者：更新目录或前端（需要 Node）
@@ -67,6 +80,8 @@ npm run build
 | POST | `/api/scene/layout?snap=1.2` | 写回布局（items + floors） |
 | GET | `/api/grid` | 网格参数 |
 | GET | `/api/catalog/floor-materials?levelSet=...` | 地板材质列表 |
+
+关卡管理 API（`/#/manage` 页面使用）：`GET /api/sets`、`GET /api/sets/<set>/levels`、`GET /api/level?assetPath=`、`GET /api/catalog/{music,audio-directories,ambiences,death-effects}`、`POST /api/{set/create,set/info,level/create,level/info,level/config,level/audio,level/delete,reload}`。
 
 ### 可选：Vite 开发模式
 

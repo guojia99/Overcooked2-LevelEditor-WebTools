@@ -60,7 +60,7 @@ export function paintStyleForItem(
   selected: boolean
 ): ItemPaintStyle {
   const category = resolveCategory(cat, parentPath);
-  const rgb = CATEGORY_RGB[category] ?? CATEGORY_RGB.other;
+  const rgb = cat?.id === "Dispenser" ? CATEGORY_RGB.mechanisms : CATEGORY_RGB[category] ?? CATEGORY_RGB.other;
   const transparent = isTransparentStackItem(cat, parentPath);
   const solid = isSolidCarrier(cat, parentPath);
 

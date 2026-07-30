@@ -116,7 +116,7 @@ export function openRecipePicker(
   const list = recipes
     .map(
       (r) =>
-        `<label class="modal-check"><input type="checkbox" value="${r.guid}" ${set.has(r.guid) ? "checked" : ""} /> ${r.nameZh} <span class="muted">(${r.id})</span></label>`
+        `<label class="modal-check"><input type="checkbox" value="${r.guid}" ${set.has(r.guid) ? "checked" : ""} /> ${r.nameZh}${r.nameEn ? ` <span class="muted">(${r.nameEn})</span>` : ""}</label>`
     )
     .join("");
 

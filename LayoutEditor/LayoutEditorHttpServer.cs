@@ -245,7 +245,8 @@ public class LayoutEditorHttpServer
                     float.TryParse(snapStr, System.Globalization.NumberStyles.Float,
                         System.Globalization.CultureInfo.InvariantCulture, out snap);
 
-                var err = SceneLayoutApplier.Apply(doc, snap);
+                bool syncWalkable = request.QueryString["syncWalkable"] == "1";
+                var err = SceneLayoutApplier.Apply(doc, snap, syncWalkable);
                 if (!string.IsNullOrEmpty(err))
                 {
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
@@ -253,6 +254,149 @@ public class LayoutEditorHttpServer
                 }
 
                 WriteJson(response, 200, "{\"ok\":true}");
+                return;
+            }
+
+            if (path == "/api/catalog/music" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanMusic()));
+                return;
+            }
+
+            if (path == "/api/catalog/audio-directories" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanAudioDirectories()));
+                return;
+            }
+
+            if (path == "/api/catalog/ambiences" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanAmbiences()));
+                return;
+            }
+
+            if (path == "/api/catalog/death-effects" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanDeathEffects()));
+                return;
+            }
+
+            if (path == "/api/sets" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanSets()));
+                return;
+            }
+
+            if (path.StartsWith("/api/sets/", StringComparison.Ordinal) && path.EndsWith("/levels", StringComparison.Ordinal) && request.HttpMethod == "GET")
+            {
+                var rest = path.Substring("/api/sets/".Length);
+                var setName = Uri.UnescapeDataString(rest.Substring(0, rest.Length - "/levels".Length));
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanLevels(setName)));
+                return;
+            }
+
+            if (path == "/api/set/create" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelSetCreateDto>(body);
+                var err = LayoutEditorLevelAdminApi.CreateSet(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/set/info" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelSetInfoUpdateDto>(body);
+                var err = LayoutEditorLevelAdminApi.UpdateSetInfo(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"];
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetLevel(assetPath)));
+                return;
+            }
+
+            if (path == "/api/level/delete-preview" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"];
+                var levelId = request.QueryString["levelId"];
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.PreviewDeleteLevel(setName, levelId)));
+                return;
+            }
+
+            if (path == "/api/level/create" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelCreateDto>(body);
+                var err = LayoutEditorLevelAdminApi.CreateLevel(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level/info" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelInfoUpdateDto>(body);
+                var err = LayoutEditorLevelAdminApi.UpdateLevelInfo(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level/config" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelConfigUpdateDto>(body);
+                var err = LayoutEditorLevelAdminApi.UpdateLevelConfig(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level/audio" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelAudioUpdateDto>(body);
+                var err = LayoutEditorLevelAdminApi.UpdateLevelAudio(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level/delete" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelDeleteDto>(body);
+                var err = LayoutEditorLevelAdminApi.DeleteLevel(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/reload" && request.HttpMethod == "POST")
+            {
+                LayoutEditorLevelAdminApi.Reload();
+                WriteJson(response, 200, "{\"ok\":true}");
+                return;
+            }
+
+            if (path == "/api/scene/death" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<DeathThemeDto>(body);
+                var err = LayoutEditorLevelAdminApi.SetDeathTheme(dto != null ? dto.sceneAssetPath : null, dto != null ? dto.theme : null);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/scene/killplane" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<KillPlaneBoundsDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.SetKillPlaneBounds(dto.sceneAssetPath, dto.cx, dto.cz, dto.sx, dto.sz);
+                WriteAdminResult(response, err);
                 return;
             }
 
@@ -381,5 +525,13 @@ public class LayoutEditorHttpServer
         response.ContentLength64 = bytes.Length;
         response.OutputStream.Write(bytes, 0, bytes.Length);
         response.OutputStream.Close();
+    }
+
+    private static void WriteAdminResult(HttpListenerResponse response, string error)
+    {
+        if (!string.IsNullOrEmpty(error))
+            WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = error }));
+        else
+            WriteJson(response, 200, "{\"ok\":true}");
     }
 }

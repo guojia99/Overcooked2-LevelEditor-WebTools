@@ -13,24 +13,33 @@ import {
   loadCatalog,
   saveLayout,
   saveLevelRecipes,
+  setDeathTheme,
+  setKillPlaneBounds,
 } from "./api";
+import { renderManageView, goManage, consumeTargetScene } from "./levels";
+import { showBusy, hideBusy } from "./busy";
 import {
   closeModal,
   openFoodSpawnerEditor,
   openIngredientPicker,
   openModal,
-  openRecipePicker,
 } from "./modals";
 import { ingredientNameZh } from "./ingredientLabels";
 import { tidyCatalogNameZh } from "./displayLabels";
 import { paintStyleForItem } from "./itemColors";
 import {
+  BG_THEMES,
+  bgTheme,
+  bgThemeKeyForDeathType,
+  bgThemeTooltip,
   deathLabelZh,
+  inferBgThemeFromItems,
   isSurfaceItem,
+  isThemeBackgroundPrefabId,
   materialBilingual,
   surfaceKindLabelZh,
   surfacePaint,
-  voidFill,
+  themeBackgroundPrefabIds,
 } from "./floorColors";
 import { snapFootprintCenter, snapValue } from "./snap";
 import {
@@ -48,6 +57,7 @@ import type {
   GridInfo,
   LayoutItem,
   LayoutDocument,
+  RecipeEntry,
   WalkableRect,
 } from "./types";
 
@@ -80,8 +90,13 @@ let items: EditorItem[] = [];
 let floors: EditorFloor[] = [];
 let walkable: WalkableRect[] = [];
 let deathInfo: DeathInfo | null = null;
+let bgThemeKey = "void";
+let bgThemeDirty = false;
+let autoKillPlane = false;
+let autoWalkable = true;
 let floorMaterials: FloorMaterial[] = [];
 let selectedKey: string | null = null;
+let selectedKeys = new Set<string>();
 let selectedFloorKey: string | null = null;
 let currentLayer: "items" | "floor" = "items";
 let scenePath = "";
@@ -97,6 +112,15 @@ let dragCatalog: CatalogItem | null = null;
 let dragItemKey: string | null = null;
 let dragOffsetX = 0;
 let dragOffsetZ = 0;
+let dragGroupKeys: string[] = [];
+let dragLastWx = 0;
+let dragLastWz = 0;
+let marqueeing = false;
+let marqueeAdd = false;
+let marqueeStartX = 0;
+let marqueeStartY = 0;
+let marqueeCurX = 0;
+let marqueeCurY = 0;
 let spaceHeld = false;
 let panning = false;
 let lastMx = 0;
@@ -156,25 +180,201 @@ async function openRecipesDialog() {
     setStatus(STALE_BRIDGE_MSG, false);
     return;
   }
+  let recipes: RecipeEntry[];
+  let level: { levelInfoAssetPath: string; levelName: string; recipeGuids: string[] };
   try {
-    const [recipes, level] = await Promise.all([
+    [recipes, level] = await Promise.all([
       fetchRecipeCatalog(currentLevelSet),
       fetchLevelRecipes(scenePath),
     ]);
-    if (!level.levelInfoAssetPath) {
-      setStatus("未找到该场景对应的 LevelInfoSO", false);
-      return;
-    }
-    openRecipePicker(recipes, level.recipeGuids ?? [], level.levelName, async (guids) => {
-      await saveLevelRecipes(level.levelInfoAssetPath, guids);
-      setStatus("菜谱已写入 LevelInfo（请在 Unity 保存资源）");
-    });
   } catch (e) {
     setStatus((e as Error).message, false);
+    return;
+  }
+  if (!level.levelInfoAssetPath) {
+    setStatus("未找到该场景对应的 LevelInfoSO", false);
+    return;
+  }
+
+  const selected = new Set<string>(level.recipeGuids ?? []);
+  const byGuid = new Map(recipes.map((r) => [r.guid, r]));
+
+  const listHtml = recipes
+    .map((r) => {
+      const checked = selected.has(r.guid) ? "checked" : "";
+      const en = r.nameEn ? ` <span class="muted">${escHtml(r.nameEn)}</span>` : "";
+      const cust = r.isCustom ? ' <span class="muted" title="自定义菜谱">🔧</span>' : "";
+      return `<label class="modal-check"><input type="checkbox" value="${r.guid}" ${checked}> ${escHtml(r.nameZh)}${en}${cust}</label>`;
+    })
+    .join("");
+
+  openModal(
+    `关卡菜谱 · ${level.levelName || "未命名"}`,
+    `<div class="rw">
+       <div class="rw-col">
+         <input type="search" id="rw-search" class="rw-search" placeholder="搜索菜谱…">
+         <div class="modal-scroll rw-list" id="rw-list">${listHtml}</div>
+       </div>
+       <div class="rw-col">
+         <div class="rw-analysis" id="rw-analysis"></div>
+       </div>
+     </div>`,
+    `<button type="button" class="modal-btn" data-cancel>取消</button>
+     <button type="button" class="modal-btn primary" data-ok>保存菜谱</button>`
+  );
+  document.querySelector(".modal-panel")?.classList.add("wide");
+
+  const listEl = document.getElementById("rw-list")!;
+  const analysisEl = document.getElementById("rw-analysis")!;
+  const searchEl = document.getElementById("rw-search") as HTMLInputElement;
+
+  const currentRecipes = (): RecipeEntry[] =>
+    [...selected].map((g) => byGuid.get(g)).filter((r): r is RecipeEntry => !!r);
+
+  const existingDispenserIngIds = (): Set<string> => {
+    const s = new Set<string>();
+    for (const it of items) {
+      if (it.stubKind === "Dispenser") {
+        const id = ingredientIdByGuid(it.dispenser?.spawnerItemPrefabGuid);
+        if (id) s.add(id);
+      }
+    }
+    return s;
+  };
+  const existingPrefabIds = (): Set<string> => new Set(items.map((it) => prefabIdFromPath(it.prefabAssetPath)));
+
+  const analysisHtml = (): string => {
+    const recs = currentRecipes();
+    if (recs.length === 0) return `<p class="modal-hint">未选择菜谱，勾选左侧菜谱后查看所需食材与锅具。</p>`;
+
+    const reqIngs = new Set<string>();
+    const steps = new Set<string>();
+    for (const r of recs) {
+      (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
+      if (r.cookingStep) steps.add(r.cookingStep);
+    }
+    const haveDisp = existingDispenserIngIds();
+    const havePref = existingPrefabIds();
+    const missingIngs = [...reqIngs].filter((i) => !haveDisp.has(i));
+    const reqUt = computeRequiredUtensils(reqIngs, steps);
+    const missingUt = reqUt.filter((u) => !havePref.has(u));
+
+    const ingRows = [...reqIngs]
+      .sort()
+      .map((i) => {
+        const ok = !missingIngs.includes(i);
+        return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span>${escHtml(ingredientNameById(i))} <span class="muted">${escHtml(i)}</span></div>`;
+      })
+      .join("");
+    const utRows = reqUt
+      .map((u) => {
+        const ok = !missingUt.includes(u);
+        const cat = catalogItemById(u);
+        const label = cat ? tidyCatalogNameZh(cat.nameZh) : u;
+        return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span>${escHtml(label)} <span class="muted">${escHtml(u)}</span></div>`;
+      })
+      .join("");
+
+    const ingFill = missingIngs.length
+      ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ing">一键补齐缺失食材箱 (${missingIngs.length})</button>`
+      : `<p class="modal-hint ok">食材箱已齐全</p>`;
+    const utFill = missingUt.length
+      ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ut">一键补齐缺失锅具/道具 (${missingUt.length})</button>`
+      : `<p class="modal-hint ok">锅具/道具已齐全</p>`;
+
+    return `
+      <p class="modal-hint">食材清单（✓ 已有对应食材箱 · ✗ 缺失）</p>
+      <div class="rw-rows">${ingRows || '<p class="muted">无</p>'}</div>
+      ${ingFill}
+      <p class="modal-hint" style="margin-top:10px">锅具 / 道具（据烹饪方式推断，✓ 已有 · ✗ 缺失）</p>
+      <div class="rw-rows">${utRows || '<p class="muted">无</p>'}</div>
+      ${utFill}
+      <p class="modal-hint" style="margin-top:10px">补齐的物体会放在画布上一排（互不堆叠），可拖动调整位置。</p>
+    `;
+  };
+
+  const rerender = () => {
+    analysisEl.innerHTML = analysisHtml();
+    document.getElementById("rw-fill-ing")?.addEventListener("click", () => {
+      fillMissingDispensers();
+      rerender();
+    });
+    document.getElementById("rw-fill-ut")?.addEventListener("click", () => {
+      fillMissingUtensils();
+      rerender();
+    });
+  };
+
+  listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) =>
+    cb.addEventListener("change", () => {
+      if (cb.checked) selected.add(cb.value);
+      else selected.delete(cb.value);
+      rerender();
+    })
+  );
+  searchEl.addEventListener("input", () => {
+    const q = searchEl.value.trim().toLowerCase();
+    listEl.querySelectorAll<HTMLLabelElement>("label.modal-check").forEach((lb) => {
+      const txt = lb.textContent?.toLowerCase() ?? "";
+      lb.style.display = !q || txt.includes(q) ? "" : "none";
+    });
+  });
+
+  rerender();
+
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+    try {
+      await saveLevelRecipes(level.levelInfoAssetPath, [...selected]);
+      closeModal();
+      setStatus("菜谱已写入 LevelInfo（请在 Unity 保存资源）");
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    }
+  });
+
+  function fillMissingDispensers() {
+    const reqIngs = new Set<string>();
+    for (const r of currentRecipes()) (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
+    const have = existingDispenserIngIds();
+    const missing = [...reqIngs].filter((i) => !have.has(i));
+    if (!missing.length) return;
+    const cat = catalogItemById("Dispenser");
+    if (!cat) return;
+    const base = placementBase();
+    let idx = 0;
+    for (const ing of missing) {
+      const it = addFromCatalog(cat, base.x + idx * CELL, base.z);
+      it.dispenser = { spawnerItemPrefabGuid: ingredientGuidById(ing) ?? "" };
+      idx++;
+    }
+  }
+
+  function fillMissingUtensils() {
+    const reqIngs = new Set<string>();
+    const steps = new Set<string>();
+    for (const r of currentRecipes()) {
+      (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
+      if (r.cookingStep) steps.add(r.cookingStep);
+    }
+    const have = existingPrefabIds();
+    const missing = computeRequiredUtensils(reqIngs, steps).filter((u) => !have.has(u));
+    if (!missing.length) return;
+    const base = placementBase();
+    let idx = 0;
+    for (const u of missing) {
+      const cat = catalogItemById(u);
+      if (!cat) continue;
+      addFromCatalog(cat, base.x + idx * CELL, base.z - 2 * CELL);
+      idx++;
+    }
   }
 }
 
 const app = document.getElementById("app")!;
+const MANAGE_ACTIVE = /^#\/manage/.test(location.hash);
+
+if (!MANAGE_ACTIVE) {
 app.innerHTML = `
   <div class="toolbar">
     <label>场景</label>
@@ -182,6 +382,7 @@ app.innerHTML = `
     <button id="btn-reload">重新加载</button>
     <button id="btn-save" class="primary">写回 Unity</button>
     <button id="btn-recipes" type="button">菜谱…</button>
+    <button id="btn-manage" type="button">关卡管理…</button>
     <div class="layer-tabs" id="layer-tabs">
       <button type="button" data-layer="items" class="layer-tab active">📦 物品层</button>
       <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板 / 背景层</button>
@@ -200,18 +401,21 @@ app.innerHTML = `
     <div class="canvas-wrap">
       <canvas id="canvas"></canvas>
       <div id="item-detail" class="item-detail hidden" role="dialog"></div>
+      <div id="ctx-menu" class="ctx-menu hidden" role="dialog"></div>
       <div id="floor-bar" class="floor-bar hidden"></div>
-      <div class="hint">空格+拖动平移 · 右键详情 · Del 删除 · R 旋转 · 滚轮缩放</div>
+      <div class="hint">拖拽空白框选 · Shift 加选 · Ctrl+C/V 复制粘贴 · 空格+拖动平移 · 右键微移 · Del 删除 · R 旋转 · 滚轮缩放</div>
     </div>
   </div>
 `;
+}
 
 const sceneSelect = document.getElementById("scene-select") as HTMLSelectElement;
 const statusEl = document.getElementById("status")!;
 const paletteCats = document.getElementById("palette-cats")!;
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-const ctx = canvas.getContext("2d")!;
+const ctx = (canvas && canvas.getContext("2d")) as CanvasRenderingContext2D;
 const detailEl = document.getElementById("item-detail")!;
+const ctxMenuEl = document.getElementById("ctx-menu")!;
 const floorBar = document.getElementById("floor-bar")!;
 
 function setStatus(text: string, ok = true) {
@@ -244,6 +448,25 @@ function resolveFootprint(item: LayoutItem): { cellsX: number; cellsZ: number } 
   if (known) return known;
 
   return { cellsX: 1, cellsZ: 1 };
+}
+
+function itemScaleX(item: LayoutItem): number {
+  const s = item.localScale?.x;
+  return s && s > 0 ? s : 1;
+}
+
+function itemScaleZ(item: LayoutItem): number {
+  const s = item.localScale?.z;
+  return s && s > 0 ? s : 1;
+}
+
+function itemUniformScale(item: LayoutItem): number {
+  return itemScaleX(item);
+}
+
+function setItemUniformScale(item: EditorItem, n: number) {
+  const y = item.localScale?.y ?? 1;
+  item.localScale = { x: n, y, z: n };
 }
 
 function worldToCanvas(wx: number, wz: number): { x: number; y: number } {
@@ -354,6 +577,81 @@ function drawLabelInBox(
   }
 }
 
+function drawVoidHatch(color: string) {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  const step = 26;
+  ctx.beginPath();
+  for (let x = -h; x < w; x += step) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + h, h);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawKillPlanes() {
+  const planes = deathInfo?.killPlanes ?? [];
+  for (const kp of planes) {
+    if ((kp.sx ?? 0) <= 0.001 || (kp.sz ?? 0) <= 0.001) continue;
+    const a = worldToCanvas(kp.cx - kp.sx / 2, kp.cz + kp.sz / 2);
+    const b = worldToCanvas(kp.cx + kp.sx / 2, kp.cz - kp.sz / 2);
+    const x = Math.min(a.x, b.x);
+    const y = Math.min(a.y, b.y);
+    const w = Math.abs(b.x - a.x);
+    const h = Math.abs(b.y - a.y);
+    ctx.save();
+    ctx.fillStyle = "rgba(242,139,130,0.10)";
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "rgba(242,139,130,0.95)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.strokeRect(x, y, w, h);
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(242,139,130,0.98)";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText(`坠落区 · ${kp.respawnType || "死亡"}`, x + 5, y + 5);
+    ctx.restore();
+  }
+}
+
+function computeLevelBounds(): { cx: number; cz: number; sx: number; sz: number } | null {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  const consider = (x: number, z: number, hx = 0, hz = 0) => {
+    minX = Math.min(minX, x - hx);
+    maxX = Math.max(maxX, x + hx);
+    minZ = Math.min(minZ, z - hz);
+    maxZ = Math.max(maxZ, z + hz);
+  };
+  for (const f of floors) {
+    if (f.surfaceKind === "background") continue;
+    consider(f._wx, f._wz, (f._wCells * CELL) / 2, (f._dCells * CELL) / 2);
+  }
+  for (const it of items) {
+    const cat = catalogByGuid.get(it.prefabGuid);
+    if (cat?.surfaceTier === "background") continue;
+    if (cat?.surfaceTier !== "floor" && cat?.layoutTier !== "core") continue;
+    const fp = resolveFootprint(it);
+    consider(it._wx, it._wz, (fp.cellsX * CELL) / 2 * itemScaleX(it), (fp.cellsZ * CELL) / 2 * itemScaleZ(it));
+  }
+  for (const r of walkable) consider(r.cx, r.cz, r.sx / 2, r.sz / 2);
+  if (!isFinite(minX)) return null;
+  const margin = CELL;
+  minX -= margin;
+  minZ -= margin;
+  maxX += margin;
+  maxZ += margin;
+  return { cx: (minX + maxX) / 2, cz: (minZ + maxZ) / 2, sx: maxX - minX, sz: maxZ - minZ };
+}
+
 function draw() {
   const w = canvas.clientWidth;
   const h = canvas.clientHeight;
@@ -363,8 +661,11 @@ function draw() {
   }
 
   const onFloor = currentLayer === "floor";
-  ctx.fillStyle = onFloor ? voidFill(deathInfo?.deathType) : "#1a1d23";
+  const theme = bgTheme(bgThemeKey);
+  ctx.fillStyle = onFloor ? theme.fill : "#1a1d23";
   ctx.fillRect(0, 0, w, h);
+
+  if (onFloor) drawVoidHatch(theme.hatch);
 
   if (showGrid) drawGrid();
 
@@ -374,20 +675,120 @@ function draw() {
     drawFloorAdjacentSeams();
     drawFloorPlanes(true);
     drawSurfaceItems(false);
-  } else {
-    const sorted = [...items].sort(
-      (a, b) => drawLayerForItem(a, catalogByGuid) - drawLayerForItem(b, catalogByGuid)
-    );
-    for (const item of sorted) {
-      const selected = item._editorKey === selectedKey;
-      drawItem(item, selected);
+    const ghostItems = items.filter((it) => !isSurfaceItem(catalogByGuid.get(it.prefabGuid)));
+    if (ghostItems.length > 0) {
+      teleportalLabels = computeTeleportalLabels();
+      const sortedGhost = [...ghostItems].sort(
+        (a, b) => drawLayerForItem(a, catalogByGuid) - drawLayerForItem(b, catalogByGuid)
+      );
+      ctx.save();
+      ctx.globalAlpha = 0.32;
+      for (const it of sortedGhost) drawItem(it, false);
+      ctx.restore();
     }
+    drawKillPlanes();
+  } else {
+    if (floors.length > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      drawFloorPlanes(false);
+      ctx.restore();
+    }
+    const ghostSurface = items.filter((it) => isSurfaceItem(catalogByGuid.get(it.prefabGuid)));
+    if (ghostSurface.length > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.32;
+      for (const it of ghostSurface) drawItem(it, false);
+      ctx.restore();
+    }
+    const sorted = [...items]
+      .filter((it) => !isSurfaceItem(catalogByGuid.get(it.prefabGuid)))
+      .sort((a, b) => drawLayerForItem(a, catalogByGuid) - drawLayerForItem(b, catalogByGuid));
+    teleportalLabels = computeTeleportalLabels();
+    for (const item of sorted) {
+      drawItem(item, isSelected(item._editorKey));
+    }
+    drawTeleportalLinks();
+    if (marqueeing) drawMarquee();
   }
 
   updateFloorBar();
 }
 
+function drawMarquee() {
+  const x = Math.min(marqueeStartX, marqueeCurX);
+  const y = Math.min(marqueeStartY, marqueeCurY);
+  const w = Math.abs(marqueeCurX - marqueeStartX);
+  const h = Math.abs(marqueeCurY - marqueeStartY);
+  ctx.save();
+  ctx.fillStyle = "rgba(61,107,243,0.12)";
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = "rgba(61,107,243,0.9)";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 3]);
+  ctx.strokeRect(x, y, w, h);
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+function updateMarqueeSelection() {
+  const minX = Math.min(marqueeStartX, marqueeCurX);
+  const maxX = Math.max(marqueeStartX, marqueeCurX);
+  const minY = Math.min(marqueeStartY, marqueeCurY);
+  const maxY = Math.max(marqueeStartY, marqueeCurY);
+  const next = marqueeAdd ? new Set(selectedKeys) : new Set<string>();
+  for (const it of items) {
+    if (currentLayer !== "floor" && isSurfaceItem(catalogByGuid.get(it.prefabGuid))) continue;
+    const p = worldToCanvas(it._wx, it._wz);
+    if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) next.add(it._editorKey);
+  }
+  selectedKeys = next;
+  const keys = selectionKeys();
+  selectedKey = keys.length ? keys[keys.length - 1] : null;
+}
+
+/** Union bbox of visible floor planes, or null if there are none. */
+function floorUnionBBox(): { x0: number; z0: number; x1: number; z1: number } | null {
+  let x0 = Infinity;
+  let z0 = Infinity;
+  let x1 = -Infinity;
+  let z1 = -Infinity;
+  for (const f of floors) {
+    if (f.surfaceKind === "background") continue;
+    const hw = (f._wCells * CELL) / 2;
+    const hh = (f._dCells * CELL) / 2;
+    x0 = Math.min(x0, f._wx - hw);
+    x1 = Math.max(x1, f._wx + hw);
+    z0 = Math.min(z0, f._wz - hh);
+    z1 = Math.max(z1, f._wz + hh);
+  }
+  if (!isFinite(x0)) return null;
+  return { x0, z0, x1, z1 };
+}
+
+/** Sub-rectangles of W that lie outside F (W \ F), as world XZ rects. */
+function rectMinus(
+  wx0: number,
+  wz0: number,
+  wx1: number,
+  wz1: number,
+  f: { x0: number; z0: number; x1: number; z1: number }
+): Array<{ x0: number; z0: number; x1: number; z1: number }> {
+  const ox0 = Math.max(wx0, f.x0);
+  const ox1 = Math.min(wx1, f.x1);
+  const oz0 = Math.max(wz0, f.z0);
+  const oz1 = Math.min(wz1, f.z1);
+  if (ox0 >= ox1 || oz0 >= oz1) return [{ x0: wx0, z0: wz0, x1: wx1, z1: wz1 }];
+  const out: Array<{ x0: number; z0: number; x1: number; z1: number }> = [];
+  if (wx0 < ox0) out.push({ x0: wx0, z0: wz0, x1: ox0, z1: wz1 });
+  if (ox1 < wx1) out.push({ x0: ox1, z0: wz0, x1: wx1, z1: wz1 });
+  if (wz0 < oz0) out.push({ x0: ox0, z0: wz0, x1: ox1, z1: oz0 });
+  if (oz1 < wz1) out.push({ x0: ox0, z0: oz1, x1: ox1, z1: wz1 });
+  return out;
+}
+
 function drawWalkable() {
+  const floorBox = floorUnionBBox();
   for (const r of walkable) {
     const a = worldToCanvas(r.cx - r.sx / 2, r.cz + r.sz / 2);
     const b = worldToCanvas(r.cx + r.sx / 2, r.cz - r.sz / 2);
@@ -403,6 +804,42 @@ function drawWalkable() {
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, bw, bh);
     ctx.setLineDash([]);
+
+    if (floorBox) {
+      const air = rectMinus(
+        r.cx - r.sx / 2,
+        r.cz - r.sz / 2,
+        r.cx + r.sx / 2,
+        r.cz + r.sz / 2,
+        floorBox
+      );
+      let labeled = false;
+      for (const seg of air) {
+        const sa = worldToCanvas(seg.x0, seg.z1);
+        const sb = worldToCanvas(seg.x1, seg.z0);
+        const sx = Math.min(sa.x, sb.x);
+        const sy = Math.min(sa.y, sb.y);
+        const sw = Math.abs(sb.x - sa.x);
+        const sh = Math.abs(sb.y - sa.y);
+        ctx.save();
+        ctx.fillStyle = "rgba(249,171,0,0.16)";
+        ctx.fillRect(sx, sy, sw, sh);
+        ctx.strokeStyle = "rgba(249,171,0,0.7)";
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(sx, sy, sw, sh);
+        ctx.setLineDash([]);
+        if (!labeled && sw > 24 && sh > 14) {
+          ctx.fillStyle = "rgba(249,171,0,0.98)";
+          ctx.font = "bold 11px sans-serif";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          ctx.fillText("空气地板（可行走但无可见地板）", sx + 4, sy + 4);
+          labeled = true;
+        }
+        ctx.restore();
+      }
+    }
   }
 }
 
@@ -418,6 +855,8 @@ function drawSurfaceItems(highlight: boolean) {
 
 function drawFloorPlanes(highlight: boolean) {
   for (const f of floors) {
+    // Backdrop planes (often huge, default-white in Unity) — theme fill shows the void color.
+    if (f.surfaceKind === "background") continue;
     const selected = highlight && f._key === selectedFloorKey;
     drawFloorPlane(f, selected, false);
   }
@@ -720,8 +1159,8 @@ function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
     <h3>${surfaceKindLabelZh(f.surfaceKind)} · ${f.displayName}</h3>
     <dl>
       <dt>类型</dt><dd>${surfaceKindLabelZh(f.surfaceKind)}${f.meshType === "plane" ? "（Plane 平面）" : f.meshType === "quad" ? "（Quad）" : ""}</dd>
-      <dt>尺寸</dt><dd>${f._wCells} × ${f._dCells} 格 (${(f._wCells * CELL).toFixed(1)} × ${(f._dCells * CELL).toFixed(1)} m，${areaCells} 格)</dd>
-      <dt>材质</dt><dd>${matchedMat?.nameZh ?? f.materialName ?? "无"}</dd>
+      <dt>尺寸</dt><dd id="fe-size">${f._wCells} × ${f._dCells} 格 (${(f._wCells * CELL).toFixed(1)} × ${(f._dCells * CELL).toFixed(1)} m，${areaCells} 格)</dd>
+      <dt>材质</dt><dd id="fe-mat">${matchedMat?.nameZh ?? f.materialName ?? "无"}</dd>
       <dt>坐标</dt><dd>x ${f._wx.toFixed(2)}, z ${f._wz.toFixed(2)}</dd>
       <dt>旋转</dt><dd>${normalizeRot(f.localRotationY)}°</dd>
       <dt>死亡类型</dt><dd>${deathLabelZh(deathInfo)}（只读）</dd>
@@ -729,24 +1168,38 @@ function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
     <div class="floor-edit-row">
       <label>宽(格) <input type="number" min="1" id="fe-w" value="${f._wCells}" /></label>
       <label>高(格) <input type="number" min="1" id="fe-d" value="${f._dCells}" /></label>
-      <button id="fe-apply">应用尺寸</button>
+      <span class="muted" style="align-self:center;font-size:11px">自动应用（仅页面）</span>
     </div>
     <div class="mat-pick-title">切换材质（点击应用）</div>
     <div class="mat-pick-list">${matRows || '<div class="mat-pick-empty">当前关卡集无材质</div>'}</div>
-    <p class="close-hint">左键拖动移动 · 拖角点缩放 · 右键此面板切换材质 · Esc 关闭</p>
+    <p class="close-hint">拖四角缩放 · 宽高输入即时生效 · 左键拖动移动 · 右键此面板切换材质 · Esc 关闭</p>
   `;
   detailEl.classList.remove("hidden");
   positionDetail(clientX, clientY);
 
-  document.getElementById("fe-apply")!.addEventListener("click", () => {
-    const wv = parseInt((document.getElementById("fe-w") as HTMLInputElement).value, 10);
-    const dv = parseInt((document.getElementById("fe-d") as HTMLInputElement).value, 10);
+  const feW = document.getElementById("fe-w") as HTMLInputElement;
+  const feD = document.getElementById("fe-d") as HTMLInputElement;
+  const applyFloorSizeLive = () => {
+    const wv = parseInt(feW.value, 10);
+    const dv = parseInt(feD.value, 10);
     if (wv > 0) f._wCells = wv;
     if (dv > 0) f._dCells = dv;
     finalizeFloor(f);
     draw();
-    showFloorDetail(f, clientX, clientY);
-  });
+    const sz = document.getElementById("fe-size");
+    if (sz)
+      sz.textContent = `${f._wCells} × ${f._dCells} 格 (${(f._wCells * CELL).toFixed(1)} × ${(f._dCells * CELL).toFixed(1)} m，${f._wCells * f._dCells} 格)`;
+    const m = floorMaterials.find((x) => x.guid === f.materialGuid);
+    const matEl = document.getElementById("fe-mat");
+    if (matEl) matEl.textContent = m?.nameZh ?? f.materialName ?? "无";
+    detailEl.querySelectorAll<HTMLButtonElement>(".mat-pick").forEach((b) =>
+      b.classList.toggle("active", b.dataset.guid === f.materialGuid)
+    );
+  };
+  feW.addEventListener("input", applyFloorSizeLive);
+  feD.addEventListener("input", applyFloorSizeLive);
+  feW.addEventListener("change", applyFloorSizeLive);
+  feD.addEventListener("change", applyFloorSizeLive);
 
   detailEl.querySelectorAll<HTMLButtonElement>(".mat-pick").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -823,14 +1276,199 @@ function drawGrid() {
   }
 }
 
-function drawItem(item: EditorItem, selected: boolean) {
+const PORTAL_COLORS = [
+  "#9ad7ff",
+  "#5b8def",
+  "#ef6f6f",
+  "#f0a847",
+  "#7bd889",
+  "#9c8a5a",
+  "#c792ea",
+  "#b15bd9",
+  "#e8945a",
+];
+
+let teleportalLabels = new Map<string, string>();
+
+function isConveyorItem(item: EditorItem): boolean {
+  return item.stubKind === "Conveyor" || prefabIdFromPath(item.prefabAssetPath) === "ConveyorStation";
+}
+
+function isTeleportalItem(item: EditorItem): boolean {
+  return item.stubKind === "Teleportal" || prefabIdFromPath(item.prefabAssetPath) === "Teleportal";
+}
+
+function teleportals(): EditorItem[] {
+  return items.filter(isTeleportalItem);
+}
+
+function computeTeleportalLabels(): Map<string, string> {
+  const tp = teleportals();
+  const byInst = new Map(tp.map((i) => [i.instanceId, i]));
+  const label = new Map<string, string>();
+  let n = 0;
+  for (const t of tp) {
+    if (label.has(t.instanceId)) continue;
+    const lab = (++n).toString();
+    label.set(t.instanceId, lab);
+    const exitId = t.teleportal?.exitPortalInstanceId;
+    if (exitId && byInst.has(exitId) && !label.has(exitId)) label.set(exitId, lab);
+  }
+  for (const t of tp) if (!label.has(t.instanceId)) label.set(t.instanceId, "?");
+  return label;
+}
+
+function drawConveyorArrow(center: { x: number; y: number }, rot: number, cellPx: number, speed: number) {
+  const rad = (rot * Math.PI) / 180;
+  let dx = Math.sin(rad);
+  let dy = -Math.cos(rad);
+  if (speed < 0) {
+    dx = -dx;
+    dy = -dy;
+  }
+  const L = cellPx * 0.42;
+  const x0 = center.x - dx * L;
+  const y0 = center.y - dy * L;
+  const x1 = center.x + dx * L;
+  const y1 = center.y + dy * L;
+  ctx.save();
+  ctx.strokeStyle = "#ffe49a";
+  ctx.fillStyle = "#ffe49a";
+  ctx.lineWidth = Math.max(2, cellPx * 0.12);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+  const ah = cellPx * 0.22;
+  const px = -dy;
+  const py = dx;
+  const bx = x1 - dx * ah;
+  const by = y1 - dy * ah;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(bx + px * ah * 0.65, by + py * ah * 0.65);
+  ctx.lineTo(bx - px * ah * 0.65, by - py * ah * 0.65);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawTeleportalBadge(item: EditorItem, center: { x: number; y: number }, cellPx: number) {
+  const color = PORTAL_COLORS[item.teleportal?.portalColor ?? 0] ?? "#c792ea";
+  const label = teleportalLabels.get(item.instanceId) ?? "?";
+  const r = cellPx * 0.46;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(2.5, cellPx * 0.1);
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  if (item.teleportal?.doubleSided) {
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, r * 0.7, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  const bx = center.x + r * 0.72;
+  const by = center.y - r * 0.72;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(bx, by, cellPx * 0.26, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#1a1d23";
+  ctx.font = `bold ${Math.max(10, Math.round(cellPx * 0.3))}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, bx, by);
+  ctx.restore();
+}
+
+function drawTeleportalLinks() {
+  const tp = teleportals();
+  const byInst = new Map(tp.map((i) => [i.instanceId, i]));
+  for (const t of tp) {
+    const exitId = t.teleportal?.exitPortalInstanceId;
+    if (!exitId || exitId === t.instanceId) continue;
+    const p = byInst.get(exitId);
+    if (!p) continue;
+    const a = worldToCanvas(t._wx, t._wz);
+    const b = worldToCanvas(p._wx, p._wz);
+    const color = PORTAL_COLORS[t.teleportal?.portalColor ?? 0] ?? "#c792ea";
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+}
+
+function drawSurfaceItem(item: EditorItem, selected: boolean) {
   const cat = catalogByGuid.get(item.prefabGuid);
   const fp = resolveFootprint(item);
   const rot = normalizeRot(item.localRotationY);
   const center = worldToCanvas(item._wx, item._wz);
   const cellPx = CELL * PX_PER_UNIT * scale;
-  const w = fp.cellsX * cellPx;
-  const h = fp.cellsZ * cellPx;
+  const sx = itemScaleX(item);
+  const sz = itemScaleZ(item);
+  const w = fp.cellsX * cellPx * sx;
+  const h = fp.cellsZ * cellPx * sz;
+  const paint = surfacePaint(cat?.surfaceKind, selected);
+
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.rotate((-rot * Math.PI) / 180);
+
+  const bw = Math.max(4, w);
+  const bh = Math.max(4, h);
+  ctx.fillStyle = paint.fill;
+  ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+  ctx.strokeStyle = paint.stroke;
+  ctx.lineWidth = selected ? 2 : 1;
+  ctx.setLineDash([5, 4]);
+  ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
+  ctx.setLineDash([]);
+
+  if (paint.emoji) {
+    ctx.font = `${Math.min(14, bh * 0.4)}px system-ui`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = paint.label;
+    ctx.fillText(paint.emoji, 0, 0);
+  } else {
+    ctx.beginPath();
+    ctx.rect(-bw / 2 + 2, -bh / 2 + 2, bw - 4, bh - 4);
+    ctx.clip();
+    ctx.fillStyle = paint.label;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    drawLabelInBox(ctx, itemLabel(item), bw - 4, bh - 4);
+  }
+
+  ctx.restore();
+}
+
+function drawItem(item: EditorItem, selected: boolean) {
+  const cat = catalogByGuid.get(item.prefabGuid);
+  if (isSurfaceItem(cat)) {
+    drawSurfaceItem(item, selected);
+    return;
+  }
+  const fp = resolveFootprint(item);
+  const rot = normalizeRot(item.localRotationY);
+  const center = worldToCanvas(item._wx, item._wz);
+  const cellPx = CELL * PX_PER_UNIT * scale;
+  const sx = itemScaleX(item);
+  const sz = itemScaleZ(item);
+  const w = fp.cellsX * cellPx * sx;
+  const h = fp.cellsZ * cellPx * sz;
   const isUtensil = isStackUtensilCatalog(cat);
   const paint = paintStyleForItem(cat, item.parentPath, selected);
 
@@ -878,6 +1516,12 @@ function drawItem(item: EditorItem, selected: boolean) {
   drawLabelInBox(ctx, itemLabel(item), bw - 4, bh - 4);
 
   ctx.restore();
+
+  if (isConveyorItem(item)) {
+    drawConveyorArrow(center, rot, cellPx, item.conveyor?.conveySpeed ?? 0.5);
+  } else if (isTeleportalItem(item)) {
+    drawTeleportalBadge(item, center, cellPx);
+  }
 }
 
 function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx: number; lz: number } {
@@ -893,14 +1537,15 @@ function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx: numbe
 }
 
 function hitTest(wx: number, wz: number): EditorItem | null {
-  const sorted = [...items].sort(
-    (a, b) => drawLayerForItem(b, catalogByGuid) - drawLayerForItem(a, catalogByGuid)
-  );
+  const includeSurface = currentLayer === "floor";
+  const sorted = [...items]
+    .filter((it) => includeSurface || !isSurfaceItem(catalogByGuid.get(it.prefabGuid)))
+    .sort((a, b) => drawLayerForItem(b, catalogByGuid) - drawLayerForItem(a, catalogByGuid));
   for (const item of sorted) {
     const fp = resolveFootprint(item);
     const { lx, lz } = worldToItemLocal(item, wx, wz);
-    const hw = (fp.cellsX * CELL) / 2;
-    const hh = (fp.cellsZ * CELL) / 2;
+    const hw = ((fp.cellsX * CELL) / 2) * itemScaleX(item);
+    const hh = ((fp.cellsZ * CELL) / 2) * itemScaleZ(item);
     if (Math.abs(lx) <= hw && Math.abs(lz) <= hh) return item;
   }
   return null;
@@ -923,6 +1568,65 @@ function stackDetailHtml(item: EditorItem, cat: CatalogItem | undefined): string
   return `<dt>叠放</dt><dd>应堆叠在${ruleLabel}上（当前未对齐到有效载体）；本地高度 Y=${cat.stack.y}</dd>`;
 }
 
+const PORTAL_COLOR_NAMES = ["天空", "蓝", "红", "橙", "绿", "树", "紫", "彩紫", "彩橙"];
+
+function extraStubDetailHtml(item: EditorItem): string {
+  if (isConveyorItem(item)) {
+    const sp = item.conveyor?.conveySpeed ?? 0.5;
+    return `<dt>传送带</dt><dd>速度 ${sp.toFixed(2)}（${sp < 0 ? "反向" : "正向"}，箭头指示传送方向）</dd>`;
+  }
+  if (isTeleportalItem(item)) {
+    const exitId = item.teleportal?.exitPortalInstanceId;
+    const partner = exitId ? items.find((i) => i.instanceId === exitId) : undefined;
+    const myLabel = teleportalLabels.get(item.instanceId) ?? "?";
+    const colorName = PORTAL_COLOR_NAMES[item.teleportal?.portalColor ?? 0] ?? String(item.teleportal?.portalColor ?? 0);
+    const pairTxt = partner
+      ? `已绑定 →「${itemLabel(partner)}」（同组 ${myLabel}）`
+      : exitId
+        ? "绑定目标不在当前场景"
+        : "未绑定";
+    const ds = item.teleportal?.doubleSided ? " · 双向" : "";
+    return `<dt>传送门</dt><dd>${pairTxt} · 颜色 ${colorName}${ds}</dd>`;
+  }
+  return "";
+}
+
+function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY: number) {
+  const cat = catalogByGuid.get(item.prefabGuid);
+  const fp = resolveFootprint(item);
+  const scale = itemUniformScale(item);
+  detailEl.innerHTML = `
+    <h3>${surfaceKindLabelZh(cat?.surfaceKind)} · ${itemLabel(item)}</h3>
+    <dl>
+      <dt>类型</dt><dd>${surfaceKindLabelZh(cat?.surfaceKind)}（地板层 prefab）</dd>
+      <dt>占地</dt><dd>${fp.cellsX} × ${fp.cellsZ} 格</dd>
+      <dt>坐标</dt><dd>x ${item._wx.toFixed(2)}, z ${item._wz.toFixed(2)}</dd>
+      <dt>旋转</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
+      <dt>缩放</dt><dd id="si-scale-val">${scale.toFixed(2)}×</dd>
+    </dl>
+    <div class="floor-edit-row">
+      <label>缩放 <input type="number" min="0.5" step="0.1" id="si-scale" value="${scale.toFixed(2)}" /></label>
+      <span class="muted" style="align-self:center;font-size:11px">即时生效</span>
+    </div>
+    <p class="close-hint">右键菜单可微移 · R 旋转 · Del 删除 · Esc 关闭</p>
+  `;
+  detailEl.classList.remove("hidden");
+  positionDetail(clientX, clientY);
+
+  const scaleInput = document.getElementById("si-scale") as HTMLInputElement;
+  const applyScale = () => {
+    const v = parseFloat(scaleInput.value);
+    if (!isFinite(v) || v < 0.5) return;
+    setItemUniformScale(item, v);
+    const el = document.getElementById("si-scale-val");
+    if (el) el.textContent = `${v.toFixed(2)}×`;
+    draw();
+    updateFloorBar();
+  };
+  scaleInput.addEventListener("input", applyScale);
+  scaleInput.addEventListener("change", applyScale);
+}
+
 function showDetail(item: EditorItem, clientX: number, clientY: number) {
   const cat = catalogByGuid.get(item.prefabGuid);
   const fp = resolveFootprint(item);
@@ -939,11 +1643,13 @@ function showDetail(item: EditorItem, clientX: number, clientY: number) {
       <dt>占地</dt><dd>${fp.cellsX} × ${fp.cellsZ} 格 (${(fp.cellsX * CELL).toFixed(1)} × ${(fp.cellsZ * CELL).toFixed(1)} m)</dd>
       <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(2)}, y ${item.localPosition.y.toFixed(2)}, z ${item.localPosition.z.toFixed(2)}</dd>
       <dt>旋转 Y</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
-      <dt>分类</dt><dd>${cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh) : cat?.category ?? "—"}</dd>
+      ${isSurfaceItem(cat) ? `<dt>缩放</dt><dd>${itemUniformScale(item).toFixed(2)}×（右键菜单可调整大小）</dd>` : ""}
+      <dt>分类</dt><dd>${isSurfaceItem(cat) ? surfaceKindLabelZh(cat?.surfaceKind) + "（地板层）" : cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh) : cat?.category ?? "—"}</dd>
       ${stackDetailHtml(item, cat)}
       ${item.stubKind === "Dispenser" ? `<dt>食材</dt><dd>${ingredientNameZh(ingredientsCache, item.dispenser?.spawnerItemPrefabGuid)}</dd>` : ""}
+      ${extraStubDetailHtml(item)}
     </dl>
-    <p class="close-hint">右键可配置食材箱/生成器 · Esc 关闭</p>
+    <p class="close-hint">Esc 关闭</p>
   `;
 
   const margin = 8;
@@ -993,6 +1699,214 @@ function syncLocalFromWorld(item: EditorItem) {
   }
 }
 
+function isSelected(key: string): boolean {
+  return selectedKeys.has(key);
+}
+
+function selectionKeys(): string[] {
+  return Array.from(selectedKeys);
+}
+
+function setSelection(keys: string[], primary?: string): void {
+  selectedKeys = new Set(keys);
+  selectedKey = keys.length ? primary ?? keys[keys.length - 1] : null;
+}
+
+function clearSelection(): void {
+  selectedKeys = new Set<string>();
+  selectedKey = null;
+}
+
+function nudgeItem(item: EditorItem, dx: number, dz: number) {
+  item._wx += dx;
+  item._wz += dz;
+  item.localPosition.x = item._wx - item._parentWx;
+  item.localPosition.z = item._wz - item._parentWz;
+  const cat = catalogByGuid.get(item.prefabGuid);
+  if (cat?.stack) trySnapUtensilToHost(item, cat, items, catalogByGuid);
+  updateCtxCoord(item);
+  draw();
+}
+
+function deleteSelected() {
+  const keys = selectionKeys();
+  if (keys.length === 0 && !selectedKey) return;
+  const kill = new Set(keys.length ? keys : selectedKey ? [selectedKey] : []);
+  if (kill.size === 0) return;
+  items = items.filter((i) => !kill.has(i._editorKey));
+  clearSelection();
+  hideDetail();
+  hideContextMenu();
+  draw();
+}
+
+let clipboard: EditorItem[] = [];
+let pasteRound = 0;
+
+function copySelection() {
+  const keys = selectionKeys();
+  if (!keys.length) {
+    setStatus("没有选中物品可复制");
+    return;
+  }
+  clipboard = keys
+    .map((k) => items.find((i) => i._editorKey === k))
+    .filter((i): i is EditorItem => !!i)
+    .map((i) => JSON.parse(JSON.stringify(i)) as EditorItem);
+  pasteRound = 0;
+  setStatus(`已复制 ${clipboard.length} 个物品（Ctrl/Cmd+V 粘贴）`);
+}
+
+function pasteClipboard() {
+  if (!clipboard.length) {
+    setStatus("剪贴板为空（先 Ctrl/Cmd+V 复制）", false);
+    return;
+  }
+  pasteRound++;
+  const off = CELL * pasteRound;
+  const pasted: string[] = [];
+  for (const src of clipboard) {
+    const editorKey = newEditorKey();
+    const copy = JSON.parse(JSON.stringify(src)) as EditorItem;
+    copy._editorKey = editorKey;
+    copy.instanceId = `new:copy:${crypto.randomUUID()}`;
+    copy.hierarchyPath = copy.instanceId;
+    copy._wx = src._wx + off;
+    copy._wz = src._wz + off;
+    copy.localPosition = {
+      x: copy._wx - copy._parentWx,
+      y: copy.localPosition.y,
+      z: copy._wz - copy._parentWz,
+    };
+    copy.worldPosition = { x: copy._wx, y: copy.localPosition.y, z: copy._wz };
+    items.push(copy);
+    pasted.push(editorKey);
+  }
+  setSelection(pasted);
+  hideDetail();
+  hideContextMenu();
+  draw();
+  setStatus(`已粘贴 ${pasted.length} 个物品`);
+}
+
+function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
+  const prefabId = prefabIdFromPath(item.prefabAssetPath);
+  const cat = catalogByGuid.get(item.prefabGuid);
+  const isStub =
+    item.stubKind === "Dispenser" ||
+    item.stubKind === "AttachingFoodSpawner" ||
+    prefabId === "Dispenser" ||
+    prefabId === "AttachingFoodSpawner";
+  const isSurface = isSurfaceItem(cat);
+
+  ctxMenuEl.innerHTML = `
+    <div class="ctx-head">${itemLabel(item)}</div>
+    <div class="ctx-coord" id="ctx-coord">x ${item.localPosition.x.toFixed(2)} · z ${item.localPosition.z.toFixed(2)}</div>
+    <div class="ctx-nudge-row">
+      <span class="ctx-label">微移 0.1</span>
+      <div class="ctx-nudge">
+        <button type="button" data-nudge="-0.1,0" title="左移 0.1">←</button>
+        <button type="button" data-nudge="0,0.1" title="上移 0.1">↑</button>
+        <button type="button" data-nudge="0,-0.1" title="下移 0.1">↓</button>
+        <button type="button" data-nudge="0.1,0" title="右移 0.1">→</button>
+      </div>
+    </div>
+    ${
+      isSurface
+        ? `<div class="ctx-nudge-row">
+      <span class="ctx-label">缩放</span>
+      <div class="ctx-nudge">
+        <button type="button" data-scale="-0.5" title="缩小">−</button>
+        <span id="ctx-scale" class="ctx-scale-val">${itemUniformScale(item).toFixed(1)}×</span>
+        <button type="button" data-scale="0.5" title="放大">+</button>
+      </div>
+    </div>`
+        : ""
+    }
+    <div class="ctx-actions">
+      ${isStub ? `<button type="button" class="ctx-btn" data-act="stub">编辑参数…</button>` : ""}
+      <button type="button" class="ctx-btn" data-act="detail">详情…</button>
+      <button type="button" class="ctx-btn" data-act="copy">复制 (Ctrl+C)</button>
+      <button type="button" class="ctx-btn" data-act="paste">粘贴 (Ctrl+V)</button>
+      <button type="button" class="ctx-btn" data-act="rotate">旋转 90°</button>
+      <button type="button" class="ctx-btn danger" data-act="delete">删除</button>
+    </div>
+    <p class="close-hint">点击外部或 Esc 关闭</p>
+  `;
+
+  const margin = 8;
+  let left = clientX + margin;
+  let top = clientY + margin;
+  ctxMenuEl.classList.remove("hidden");
+  ctxMenuEl.style.left = `${left}px`;
+  ctxMenuEl.style.top = `${top}px`;
+  requestAnimationFrame(() => {
+    const rect = ctxMenuEl.getBoundingClientRect();
+    if (rect.right > window.innerWidth - margin) {
+      left = Math.max(margin, clientX - rect.width - margin);
+      ctxMenuEl.style.left = `${left}px`;
+    }
+    if (rect.bottom > window.innerHeight - margin) {
+      top = Math.max(margin, clientY - rect.height - margin);
+      ctxMenuEl.style.top = `${top}px`;
+    }
+  });
+
+  ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-nudge]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const parts = btn.dataset.nudge!.split(",").map(Number);
+      nudgeItem(item, parts[0], parts[1]);
+    });
+  });
+  ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-scale]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const delta = parseFloat(btn.dataset.scale!);
+      const next = Math.max(0.5, +(itemUniformScale(item) + delta).toFixed(2));
+      setItemUniformScale(item, next);
+      const scaleEl = document.getElementById("ctx-scale");
+      if (scaleEl) scaleEl.textContent = `${next.toFixed(1)}×`;
+      draw();
+    });
+  });
+  ctxMenuEl.querySelector('[data-act="rotate"]')?.addEventListener("click", () => {
+    item.localRotationY = (item.localRotationY + 90) % 360;
+    syncLocalFromWorld(item);
+    draw();
+  });
+  ctxMenuEl.querySelector('[data-act="detail"]')?.addEventListener("click", () => {
+    if (currentLayer === "floor" && isSurface) {
+      showSurfaceItemDetail(item, clientX, clientY);
+    } else {
+      showDetail(item, clientX, clientY);
+    }
+    hideContextMenu();
+  });
+  ctxMenuEl.querySelector('[data-act="delete"]')?.addEventListener("click", () => deleteSelected());
+  ctxMenuEl.querySelector('[data-act="copy"]')?.addEventListener("click", () => {
+    copySelection();
+  });
+  ctxMenuEl.querySelector('[data-act="paste"]')?.addEventListener("click", () => {
+    hideContextMenu();
+    pasteClipboard();
+  });
+  if (isStub) {
+    ctxMenuEl.querySelector('[data-act="stub"]')?.addEventListener("click", () => {
+      const target = item;
+      hideContextMenu();
+      openStubEditorForItem(target);
+    });
+  }
+}
+
+function updateCtxCoord(item: EditorItem) {
+  const el = document.getElementById("ctx-coord");
+  if (el) el.textContent = `x ${item.localPosition.x.toFixed(2)} · z ${item.localPosition.z.toFixed(2)}`;
+}
+
+function hideContextMenu() {
+  ctxMenuEl.classList.add("hidden");
+}
+
 function countDuplicateInstanceIds(list: LayoutItem[]): number {
   const seen = new Set<string>();
   let dup = 0;
@@ -1005,12 +1919,111 @@ function countDuplicateInstanceIds(list: LayoutItem[]): number {
   return dup;
 }
 
+function removeBackgroundFloors(): number {
+  const before = floors.length;
+  floors = floors.filter((f) => f.surfaceKind !== "background");
+  if (selectedFloorKey && !floors.some((f) => f._key === selectedFloorKey)) {
+    selectedFloorKey = null;
+  }
+  return before - floors.length;
+}
+
+function syncBackgroundForTheme(themeKey: string) {
+  const wanted = themeBackgroundPrefabIds(themeKey);
+  const wantedSet = new Set(wanted);
+
+  // Drop theme-managed prefabs that don't match the selected theme.
+  const removedItemKeys: string[] = [];
+  items = items.filter((it) => {
+    const pid = prefabIdFromPath(it.prefabAssetPath);
+    if (!isThemeBackgroundPrefabId(pid)) return true;
+    if (wantedSet.has(pid)) return true;
+    removedItemKeys.push(it._editorKey);
+    return false;
+  });
+  if (removedItemKeys.some((k) => selectedKeys.has(k))) {
+    clearSelection();
+    hideDetail();
+  }
+
+  // Environment backdrop planes (e.g. Art/raft_water/sky) are replaced by theme prefabs.
+  const removedFloors = removeBackgroundFloors();
+
+  if (wanted.length === 0) {
+    if (removedFloors > 0) draw();
+    return;
+  }
+
+  const pid = wanted[0];
+  const exists = items.some((it) => prefabIdFromPath(it.prefabAssetPath) === pid);
+  if (exists) {
+    if (removedFloors > 0) draw();
+    return;
+  }
+
+  const bounds = computeLevelBounds();
+  const wx = bounds?.cx ?? 0;
+  const wz = bounds?.cz ?? 0;
+  const cat = catalogItemById(pid);
+  if (!cat) return;
+  addFromCatalog(cat, wx, wz);
+  setStatus(`已切换背景环境：${tidyCatalogNameZh(cat.nameZh)}（${pid}）`);
+  draw();
+}
+
+function matchesFloorPaletteFilter(it: CatalogItem, q: string): boolean {
+  if (!q) return true;
+  const kindZh = surfaceKindLabelZh(it.surfaceKind);
+  return (
+    it.id.toLowerCase().includes(q) ||
+    it.nameZh.toLowerCase().includes(q) ||
+    it.nameEn.toLowerCase().includes(q) ||
+    kindZh.includes(q) ||
+    (it.theme ?? "").toLowerCase().includes(q)
+  );
+}
+
+function appendPaletteTileGrid(parent: HTMLElement, list: CatalogItem[]) {
+  const tileGrid = document.createElement("div");
+  tileGrid.className = "palette-tile-grid";
+  for (const it of list) {
+    const row = document.createElement("div");
+    row.className = "palette-item palette-tile";
+    row.draggable = true;
+    row.dataset.guid = it.guid;
+    const sub =
+      it.surfaceTier === "background" && themeBackgroundPrefabIds("sky").includes(it.id)
+        ? `<div class="sub">天空主题自动补齐</div>`
+        : it.id === "raft_water"
+          ? `<div class="sub">水主题自动补齐</div>`
+          : it.id === "alien_gue"
+            ? `<div class="sub">黏液主题自动补齐</div>`
+            : "";
+    row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh)}</div><div class="id">${it.id}</div>${sub}`;
+    row.addEventListener("dragstart", (e) => {
+      dragCatalog = it;
+      e.dataTransfer?.setData("text/plain", it.guid);
+    });
+    row.addEventListener("dragend", () => {
+      dragCatalog = null;
+    });
+    tileGrid.appendChild(row);
+  }
+  parent.appendChild(tileGrid);
+}
+
 function buildDocument(): LayoutDocument {
   return {
     sceneAssetPath: scenePath,
     items: items.map(({ _editorKey, _wx, _wz, _parentWx, _parentWz, ...rest }) => {
       const fp = resolveFootprint(rest);
-      return { ...rest, footprint: fp };
+      const cat = catalogByGuid.get(rest.prefabGuid);
+      return {
+        ...rest,
+        footprint: fp,
+        worldPosition: { x: _wx, y: rest.localPosition?.y ?? 0, z: _wz },
+        walkable: !!(cat && cat.surfaceTier === "floor"),
+      };
     }),
     floors: floors.map(({ _key, _wx, _wz, _wCells, _dCells, ...rest }) => ({
       ...rest,
@@ -1093,8 +2106,9 @@ function buildPalette(catalog: import("./types").Catalog, filter: string) {
   }
 }
 
-function buildFloorPalette() {
+function buildFloorPalette(filter = "") {
   paletteCats.innerHTML = "";
+  const q = filter.trim().toLowerCase();
 
   const addBtn = document.createElement("button");
   addBtn.className = "palette-add-floor";
@@ -1106,33 +2120,45 @@ function buildFloorPalette() {
   });
   paletteCats.appendChild(addBtn);
 
-  // Surface catalog (floor/background prefabs) as draggable tiles.
-  const surfaceItems = [];
+  const surfaceItems: CatalogItem[] = [];
   for (const it of catalogByGuid.values()) if (isSurfaceItem(it)) surfaceItems.push(it);
-  surfaceItems.sort((a, b) => a.id.localeCompare(b.id));
-  if (surfaceItems.length > 0) {
-    const t2 = document.createElement("div");
-    t2.className = "palette-section-title";
-    t2.textContent = "地板拼块 / 背景道具（拖到画布放置）";
-    paletteCats.appendChild(t2);
-    const tileGrid = document.createElement("div");
-    tileGrid.className = "palette-tile-grid";
-    for (const it of surfaceItems) {
-      const row = document.createElement("div");
-      row.className = "palette-item palette-tile";
-      row.draggable = true;
-      row.dataset.guid = it.guid;
-      row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh)}</div><div class="id">${it.id}</div>`;
-      row.addEventListener("dragstart", (e) => {
-        dragCatalog = it;
-        e.dataTransfer?.setData("text/plain", it.guid);
-      });
-      row.addEventListener("dragend", () => {
-        dragCatalog = null;
-      });
-      tileGrid.appendChild(row);
-    }
-    paletteCats.appendChild(tileGrid);
+
+  const groups: { key: string; labelZh: string; match: (it: CatalogItem) => boolean }[] = [
+    { key: "raft", labelZh: "木筏拼块", match: (it) => it.surfaceKind === "raft" },
+    {
+      key: "themed",
+      labelZh: "主题地板",
+      match: (it) =>
+        it.surfaceTier === "floor" && it.surfaceKind !== "raft" && it.surfaceKind !== "conveyor",
+    },
+    { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
+    { key: "background", labelZh: "背景 / 环境", match: (it) => it.surfaceTier === "background" },
+  ];
+
+  let anyGroup = false;
+  for (const group of groups) {
+    const list = surfaceItems
+      .filter((it) => group.match(it))
+      .filter((it) => matchesFloorPaletteFilter(it, q))
+      .sort((a, b) => a.id.localeCompare(b.id));
+    if (list.length === 0) continue;
+    anyGroup = true;
+
+    const details = document.createElement("details");
+    details.className = "cat-group";
+    details.open = true;
+    const summary = document.createElement("summary");
+    summary.textContent = `${group.labelZh} (${list.length})`;
+    details.appendChild(summary);
+    appendPaletteTileGrid(details, list);
+    paletteCats.appendChild(details);
+  }
+
+  if (!anyGroup && q) {
+    const empty = document.createElement("div");
+    empty.className = "palette-empty";
+    empty.textContent = "无匹配的地板 / 木筏 / 背景项";
+    paletteCats.appendChild(empty);
   }
 }
 
@@ -1144,16 +2170,42 @@ function updateFloorBar() {
     return;
   }
   floorBar.classList.remove("hidden");
+  const themeBtns = BG_THEMES.map(
+    (t) =>
+      `<button type="button" class="fb-theme-btn${t.key === bgThemeKey ? " active" : ""}" data-bg="${t.key}" title="${bgThemeTooltip(t)}">${t.emoji} ${t.labelZh}</button>`
+  ).join("");
+  const themeRow = `<span class="fb-theme">背景主题：${themeBtns}</span>`;
+  const killToggle = `<label class="fb-check" title="回写 Unity 时把坠落区(KillPlane)扩大到覆盖整关，使所有非地板区域都会坠落"><input type="checkbox" id="fb-autokill" ${autoKillPlane ? "checked" : ""}/> 回写扩大坠落区</label>`;
+  const walkToggle = `<label class="fb-check" title="回写时按可见地板重新生成可行走碰撞体(Col_Floor)：可行走=地板，地板间空隙=坠落坑"><input type="checkbox" id="fb-autowalk" ${autoWalkable ? "checked" : ""}/> 同步可行走到地板</label>`;
   const f = floors.find((x) => x._key === selectedFloorKey);
-  if (!f) {
-    floorBar.innerHTML = `<span class="fb-info">${deathLabelZh(deathInfo)} · 共 ${floors.length} 块地板</span>`;
-    return;
+  const selItem = selectedKey ? items.find((i) => i._editorKey === selectedKey) : null;
+  const selCat = selItem ? catalogByGuid.get(selItem.prefabGuid) : undefined;
+  let info: string;
+  if (f) {
+    info = `<span class="fb-info"><b>${surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.materialName ?? "无材质"}</span>`;
+  } else if (selItem && isSurfaceItem(selCat)) {
+    info = `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
+  } else {
+    info = `<span class="fb-info">${deathLabelZh(deathInfo)} · 共 ${floors.length} 块地板</span>`;
   }
-  const areaCells = f._wCells * f._dCells;
-  floorBar.innerHTML = `
-    <span class="fb-info"><b>${surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 (${(f._wCells * CELL).toFixed(1)}×${(f._dCells * CELL).toFixed(1)}m, ${areaCells}格) · ${f.materialName ?? "无材质"}</span>
-    <span class="fb-hint">拖动移动 · 拖角点缩放 · 右键详情 · Del 删除</span>
-  `;
+  floorBar.innerHTML = `${themeRow}${killToggle}${walkToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+
+  floorBar.querySelectorAll<HTMLButtonElement>(".fb-theme-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      bgThemeKey = btn.dataset.bg ?? "void";
+      bgThemeDirty = true;
+      localStorage.setItem("bgTheme:" + scenePath, bgThemeKey);
+      syncBackgroundForTheme(bgThemeKey);
+      updateFloorBar();
+      setStatus(`背景主题：${bgTheme(bgThemeKey).labelZh}（写回 Unity 后生效）`);
+    });
+  });
+  document.getElementById("fb-autokill")?.addEventListener("change", (e) => {
+    autoKillPlane = (e.target as HTMLInputElement).checked;
+  });
+  document.getElementById("fb-autowalk")?.addEventListener("change", (e) => {
+    autoWalkable = (e.target as HTMLInputElement).checked;
+  });
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -1189,7 +2241,9 @@ async function init() {
   }
 
   document.getElementById("palette-search")!.addEventListener("input", (e) => {
-    buildPalette(catalog, (e.target as HTMLInputElement).value);
+    const q = (e.target as HTMLInputElement).value;
+    if (currentLayer === "floor") buildFloorPalette(q);
+    else buildPalette(catalog, q);
   });
 
   sceneSelect.addEventListener("change", () => {
@@ -1203,6 +2257,8 @@ async function init() {
   document.getElementById("btn-save")!.addEventListener("click", () => void saveToUnity());
 
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
+
+  document.getElementById("btn-manage")!.addEventListener("click", () => goManage());
 
   document.getElementById("snap-half")!.addEventListener("change", (e) => {
     snapStep = (e.target as HTMLInputElement).checked ? 0.6 : CELL;
@@ -1219,13 +2275,21 @@ async function init() {
       if (layer === currentLayer) return;
       currentLayer = layer;
       document.querySelectorAll(".layer-tab").forEach((b) => b.classList.toggle("active", b === btn));
-      selectedKey = null;
+      clearSelection();
+      marqueeing = false;
       selectedFloorKey = null;
       hideDetail();
+      hideContextMenu();
       pendingNewFloor = false;
       canvas.style.cursor = "";
-      if (layer === "floor") buildFloorPalette();
-      else buildPalette(catalog, (document.getElementById("palette-search") as HTMLInputElement)?.value ?? "");
+      const searchEl = document.getElementById("palette-search") as HTMLInputElement;
+      if (layer === "floor") {
+        searchEl.placeholder = "搜索木筏 / 地板 / 背景…";
+        buildFloorPalette(searchEl.value);
+      } else {
+        searchEl.placeholder = "搜索 prefab…";
+        buildPalette(catalog, searchEl.value);
+      }
       draw();
     });
   });
@@ -1234,8 +2298,10 @@ async function init() {
   requestAnimationFrame(draw);
 
   if (scenes.length > 0) {
+    const target = consumeTargetScene();
+    const match = target ? scenes.find((s) => s.assetPath === target) : null;
     const guojia = scenes.find((s) => s.assetPath.includes("guojia"));
-    const pick = guojia ?? scenes[0];
+    const pick = match ?? guojia ?? scenes[0];
     sceneSelect.value = pick.assetPath;
     await loadScene(pick.assetPath);
   }
@@ -1274,6 +2340,7 @@ function showBridgeStoppedModal() {
 }
 
 async function loadScene(assetPath: string) {
+  showBusy("加载场景…");
   try {
     setStatus("加载场景…");
     scenePath = assetPath;
@@ -1284,11 +2351,27 @@ async function loadScene(assetPath: string) {
     floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
     walkable = doc.walkable ?? [];
     deathInfo = doc.deathInfo ?? null;
+    const itemTheme = inferBgThemeFromItems(items);
+    const deathThemeKey = bgThemeKeyForDeathType(deathInfo?.deathType);
+    const sceneThemeKey = itemTheme ?? deathThemeKey;
+    const savedTheme = localStorage.getItem("bgTheme:" + scenePath);
+    const normalizedSaved =
+      savedTheme === "lava" ? "void" : savedTheme;
+    if (normalizedSaved && BG_THEMES.some((t) => t.key === normalizedSaved)) {
+      bgThemeKey = normalizedSaved;
+    } else {
+      bgThemeKey = sceneThemeKey;
+    }
+    if (bgThemeKey === "lava") bgThemeKey = "void";
+    bgThemeDirty = bgThemeKey !== sceneThemeKey;
     refreshUtensilStacks();
     gridInfo = await fetchGrid();
     floorMaterials = await fetchFloorMaterials(currentLevelSet).catch(() => []);
-    if (currentLayer === "floor") buildFloorPalette();
-    selectedKey = null;
+    if (currentLayer === "floor") {
+      buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "");
+    }
+    clearSelection();
+    marqueeing = false;
     selectedFloorKey = null;
     hideDetail();
     draw();
@@ -1303,21 +2386,132 @@ async function loadScene(assetPath: string) {
     }
   } catch (e) {
     setStatus((e as Error).message, false);
+  } finally {
+    hideBusy();
   }
 }
 
 async function saveToUnity() {
+  showBusy("写回 Unity…");
   try {
     setStatus("写回中…");
-    await saveLayout(buildDocument(), snapStep);
-    setStatus("写回成功：已 Prepare + Reload Pseudo，请在 Unity Ctrl+S 保存场景");
+    const itemTheme = inferBgThemeFromItems(items);
+    const deathThemeKey = bgThemeKeyForDeathType(deathInfo?.deathType);
+    const sceneThemeKey = itemTheme ?? deathThemeKey;
+    const expectedDeathType = bgTheme(bgThemeKey).deathType;
+    const needsDeathWrite = deathInfo?.deathType !== expectedDeathType;
+    const needsThemeWrite = bgThemeDirty || bgThemeKey !== sceneThemeKey || needsDeathWrite;
+
+    const itemsBeforeSync = items.length;
+    syncBackgroundForTheme(bgThemeKey);
+    const addedBg = items.length > itemsBeforeSync;
+
+    await saveLayout(buildDocument(), snapStep, autoWalkable);
+    if (needsThemeWrite) {
+      await setDeathTheme(scenePath, bgThemeKey);
+    }
+    const bounds = computeLevelBounds();
+    if (bounds && autoKillPlane) {
+      try {
+        await setKillPlaneBounds(scenePath, bounds.cx, bounds.cz, bounds.sx, bounds.sz);
+      } catch (kpErr) {
+        setStatus(`坠落区配置失败：${(kpErr as Error).message}`, false);
+      }
+    }
+    const themeNote = needsThemeWrite
+      ? `，背景死亡效果已应用（${bgTheme(bgThemeKey).labelZh}）`
+      : addedBg
+        ? `，已补齐背景环境 prefab（${bgTheme(bgThemeKey).labelZh}）`
+        : "";
+    const walkNote = autoWalkable ? "，可行走碰撞体已按地板重新生成（地板间空隙=坠落坑）" : "";
+    const killNote = bounds && autoKillPlane ? "：坠落区已覆盖整关，" : "：";
+    setStatus(
+      `写回成功${themeNote}${walkNote}${killNote}请在 Unity Ctrl+S 保存场景`
+    );
+    bgThemeDirty = false;
     await loadScene(scenePath);
   } catch (e) {
     setStatus((e as Error).message, false);
+  } finally {
+    hideBusy();
   }
 }
 
-function addFromCatalog(cat: CatalogItem, wx: number, wz: number) {
+function escHtml(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+const STEP_UTENSILS: Record<string, string[]> = {
+  Pot: ["Cooker", "Pot"],
+  FryingPan: ["Cooker", "FryPan"],
+  DeepFatFryer: ["FryingStation", "FrierBasket"],
+  OvenTray: ["Oven"],
+  Steamer: ["Cooker", "Steamer"],
+  Mixer: ["Mixer", "MixerBowl"],
+};
+
+const CHOPPABLE_INGREDIENTS = new Set([
+  "LettuceSO",
+  "TomatoSO",
+  "OnionSO",
+  "CarrotSO",
+  "CucumberSO",
+  "MushroomSO",
+]);
+
+const BASE_UTENSILS = ["ServingStation", "Bin", "CleanPlateStack"];
+
+function catalogItemById(id: string): CatalogItem | undefined {
+  for (const it of catalogByGuid.values()) if (it.id === id) return it;
+  return undefined;
+}
+
+function ingredientEntryById(id: string) {
+  return ingredientsCache.find((i) => i.id === id);
+}
+
+function ingredientGuidById(id: string): string | undefined {
+  return ingredientEntryById(id)?.guid;
+}
+
+function ingredientIdByGuid(guid: string | undefined): string | undefined {
+  if (!guid) return undefined;
+  return ingredientsCache.find((i) => i.guid === guid)?.id;
+}
+
+function ingredientNameById(id: string): string {
+  return ingredientEntryById(id)?.nameZh ?? id;
+}
+
+function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<string>): string[] {
+  const set = new Set<string>(BASE_UTENSILS);
+  for (const s of steps) (STEP_UTENSILS[s] ?? []).forEach((u) => set.add(u));
+  for (const ing of ingredientIds) {
+    if (CHOPPABLE_INGREDIENTS.has(ing)) set.add("ChoppingCounter");
+    if (ing === "FlourSO") {
+      set.add("Mixer");
+      set.add("MixerBowl");
+    }
+  }
+  return [...set];
+}
+
+function placementBase(): { x: number; z: number } {
+  if (items.length === 0) return { x: 0, z: 0 };
+  let minZ = Infinity;
+  let minX = Infinity;
+  for (const it of items) {
+    minZ = Math.min(minZ, it._wz);
+    minX = Math.min(minX, it._wx);
+  }
+  return { x: minX, z: minZ - 2 * CELL };
+}
+
+function addFromCatalog(cat: CatalogItem, wx: number, wz: number): EditorItem {
   const id = `new:${cat.guid}:${crypto.randomUUID()}`;
   const editorKey = newEditorKey();
   const snapped = snapFootprintCenter(wx, wz, cat.footprint.cellsX, cat.footprint.cellsZ, 0, CELL, snapStep);
@@ -1352,11 +2546,20 @@ function addFromCatalog(cat: CatalogItem, wx: number, wz: number) {
       weights: [],
     };
   }
+  if (cat.id === "ConveyorStation") {
+    item.stubKind = "Conveyor";
+    item.conveyor = { conveySpeed: 0.5 };
+  }
+  if (cat.id === "Teleportal") {
+    item.stubKind = "Teleportal";
+    item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false };
+  }
   items.push(item);
   trySnapUtensilToHost(item, cat, items, catalogByGuid);
-  selectedKey = editorKey;
+  setSelection([editorKey]);
   draw();
   warnItemVoid(item);
+  return item;
 }
 
 function setupCanvas() {
@@ -1395,7 +2598,7 @@ function setupCanvas() {
       const fHit = hitTestFloor(wx, wz);
       if (fHit) {
         selectedFloorKey = fHit.floor._key;
-        selectedKey = null;
+        clearSelection();
         dragFloorKey = fHit.floor._key;
         dragFloorMode = fHit.mode;
         dragFloorEdge = fHit.edge;
@@ -1405,12 +2608,13 @@ function setupCanvas() {
         selectedFloorKey = null;
         const itemHit = hitTest(wx, wz);
         if (itemHit && isSurfaceItem(catalogByGuid.get(itemHit.prefabGuid))) {
-          selectedKey = itemHit._editorKey;
+          setSelection([itemHit._editorKey]);
           dragItemKey = itemHit._editorKey;
+          dragGroupKeys = [];
           dragOffsetX = wx - itemHit._wx;
           dragOffsetZ = wz - itemHit._wz;
         } else {
-          selectedKey = null;
+          clearSelection();
           hideDetail();
         }
       }
@@ -1420,13 +2624,47 @@ function setupCanvas() {
 
     const hit = hitTest(wx, wz);
     if (hit) {
-      selectedKey = hit._editorKey;
-      dragItemKey = hit._editorKey;
-      dragOffsetX = wx - hit._wx;
-      dragOffsetZ = wz - hit._wz;
-    } else {
-      selectedKey = null;
       hideDetail();
+      hideContextMenu();
+      if (e.shiftKey) {
+        if (isSelected(hit._editorKey)) selectedKeys.delete(hit._editorKey);
+        else selectedKeys.add(hit._editorKey);
+        selectedKey = hit._editorKey;
+        dragItemKey = isSelected(hit._editorKey) ? hit._editorKey : null;
+        dragGroupKeys = selectedKeys.size > 1 && dragItemKey ? selectionKeys() : [];
+        if (dragItemKey) {
+          dragOffsetX = wx - hit._wx;
+          dragOffsetZ = wz - hit._wz;
+          dragLastWx = hit._wx;
+          dragLastWz = hit._wz;
+        }
+      } else if (selectedKeys.size > 1 && isSelected(hit._editorKey)) {
+        selectedKey = hit._editorKey;
+        dragItemKey = hit._editorKey;
+        dragGroupKeys = selectionKeys();
+        dragOffsetX = wx - hit._wx;
+        dragOffsetZ = wz - hit._wz;
+        dragLastWx = hit._wx;
+        dragLastWz = hit._wz;
+      } else {
+        setSelection([hit._editorKey]);
+        dragItemKey = hit._editorKey;
+        dragGroupKeys = [];
+        dragOffsetX = wx - hit._wx;
+        dragOffsetZ = wz - hit._wz;
+      }
+    } else {
+      marqueeing = true;
+      marqueeAdd = e.shiftKey;
+      marqueeStartX = mx;
+      marqueeStartY = my;
+      marqueeCurX = mx;
+      marqueeCurY = my;
+      if (!marqueeAdd) {
+        clearSelection();
+        hideDetail();
+        hideContextMenu();
+      }
     }
     draw();
   });
@@ -1441,23 +2679,33 @@ function setupCanvas() {
         selectedFloorKey = fHit.floor._key;
         showFloorDetail(fHit.floor, e.clientX, e.clientY);
         draw();
-      } else {
-        hideDetail();
+        return;
       }
+      const itemHit = hitTest(wx, wz);
+      if (itemHit && isSurfaceItem(catalogByGuid.get(itemHit.prefabGuid))) {
+        setSelection([itemHit._editorKey]);
+        hideDetail();
+        showContextMenu(itemHit, e.clientX, e.clientY);
+        draw();
+        return;
+      }
+      hideDetail();
+      hideContextMenu();
       return;
     }
     const hit = hitTest(wx, wz);
     if (hit) {
-      selectedKey = hit._editorKey;
-      const prefabId = prefabIdFromPath(hit.prefabAssetPath);
-      if (hit.stubKind === "Dispenser" || hit.stubKind === "AttachingFoodSpawner" || prefabId === "Dispenser" || prefabId === "AttachingFoodSpawner") {
-        openStubEditorForItem(hit);
+      if (!(selectedKeys.size > 1 && isSelected(hit._editorKey))) {
+        setSelection([hit._editorKey]);
       } else {
-        showDetail(hit, e.clientX, e.clientY);
+        selectedKey = hit._editorKey;
       }
+      hideDetail();
+      showContextMenu(hit, e.clientX, e.clientY);
       draw();
     } else {
       hideDetail();
+      hideContextMenu();
     }
   });
 
@@ -1465,6 +2713,14 @@ function setupCanvas() {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
+
+    if (marqueeing) {
+      marqueeCurX = mx;
+      marqueeCurY = my;
+      updateMarqueeSelection();
+      draw();
+      return;
+    }
 
     if (panning) {
       panX += mx - lastMx;
@@ -1486,9 +2742,25 @@ function setupCanvas() {
     const item = items.find((i) => i._editorKey === dragItemKey);
     if (!item) return;
     const { x: wx, z: wz } = canvasToWorld(mx, my);
-    item._wx = wx - dragOffsetX;
-    item._wz = wz - dragOffsetZ;
-    syncLocalFromWorld(item);
+    if (dragGroupKeys.length > 1) {
+      const newWx = wx - dragOffsetX;
+      const newWz = wz - dragOffsetZ;
+      const dx = newWx - dragLastWx;
+      const dz = newWz - dragLastWz;
+      for (const k of dragGroupKeys) {
+        const it = items.find((i) => i._editorKey === k);
+        if (it) {
+          it._wx += dx;
+          it._wz += dz;
+        }
+      }
+      dragLastWx = newWx;
+      dragLastWz = newWz;
+    } else {
+      item._wx = wx - dragOffsetX;
+      item._wz = wz - dragOffsetZ;
+      syncLocalFromWorld(item);
+    }
     draw();
   });
 
@@ -1502,7 +2774,22 @@ function setupCanvas() {
       if (f) finalizeFloor(f);
     }
     dragFloorKey = null;
-    if (dragItemKey) {
+    if (marqueeing) {
+      marqueeing = false;
+      const keys = selectionKeys();
+      selectedKey = keys.length ? keys[keys.length - 1] : null;
+      draw();
+    }
+    if (dragGroupKeys.length > 1) {
+      for (const k of dragGroupKeys) {
+        const it = items.find((i) => i._editorKey === k);
+        if (it) {
+          syncLocalFromWorld(it);
+          warnItemVoid(it);
+        }
+      }
+      dragGroupKeys = [];
+    } else if (dragItemKey) {
       const item = items.find((i) => i._editorKey === dragItemKey);
       if (item) {
         syncLocalFromWorld(item);
@@ -1537,9 +2824,22 @@ function setupCanvas() {
 
     if (e.key === "Escape") {
       hideDetail();
+      hideContextMenu();
       closeModal();
+      marqueeing = false;
       pendingNewFloor = false;
       canvas.style.cursor = "";
+    }
+
+    if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C") && !isTypingTarget(e.target)) {
+      copySelection();
+      e.preventDefault();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === "v" || e.key === "V") && !isTypingTarget(e.target)) {
+      pasteClipboard();
+      e.preventDefault();
+      return;
     }
 
     if (currentLayer === "floor") {
@@ -1586,10 +2886,7 @@ function setupCanvas() {
     if (isTypingTarget(e.target)) return;
 
     if (e.key === "Delete" || e.key === "Backspace") {
-      items = items.filter((i) => i._editorKey !== selectedKey);
-      selectedKey = null;
-      hideDetail();
-      draw();
+      deleteSelected();
     }
     if (e.key === "r" || e.key === "R") {
       item.localRotationY = (item.localRotationY + 90) % 360;
@@ -1616,9 +2913,16 @@ function setupCanvas() {
     if (!detailEl.classList.contains("hidden") && !detailEl.contains(e.target as Node)) {
       hideDetail();
     }
+    if (!ctxMenuEl.classList.contains("hidden") && !ctxMenuEl.contains(e.target as Node)) {
+      hideContextMenu();
+    }
   });
 
   window.addEventListener("resize", () => draw());
 }
 
-void init();
+if (MANAGE_ACTIVE) {
+  void renderManageView(app);
+} else {
+  void init();
+}

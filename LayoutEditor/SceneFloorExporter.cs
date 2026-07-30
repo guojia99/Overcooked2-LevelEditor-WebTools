@@ -135,7 +135,7 @@ public static class SceneFloorExporter
             hierarchyPath = path,
             parentPath = parentPath,
             displayName = go.name,
-            surfaceKind = "solid",
+            surfaceKind = InferSurfaceKind(go.name, matName, matPath),
             meshType = meshType,
             meshFileId = meshId,
             materialGuid = matGuid,
@@ -152,10 +152,30 @@ public static class SceneFloorExporter
         });
     }
 
+    private static string InferSurfaceKind(string objectName, string materialName, string materialPath)
+    {
+        var n = objectName == null ? "" : objectName.ToLowerInvariant();
+        var m = materialName == null ? "" : materialName.ToLowerInvariant();
+        var p = materialPath == null ? "" : materialPath.ToLowerInvariant();
+        if (n == "sky" || n.Contains("background") || m.Contains("sky") || m.Contains("background") || p.Contains("background"))
+            return "background";
+        if (m.Contains("ice"))
+            return "ice";
+        if (m.Contains("snow"))
+            return "snow";
+        if (m.Contains("sand"))
+            return "sand";
+        if (m.Contains("alien"))
+            return "alien";
+        if (m.Contains("carpet"))
+            return "carpet";
+        return "solid";
+    }
+
     private static bool LooksLikeFloor(string name, Transform t)
     {
         var n = name == null ? "" : name.ToLowerInvariant();
-        if (n.Contains("floor"))
+        if (n.Contains("floor") || n == "sky" || n.Contains("background"))
             return true;
 
         // Also accept generic plane/quad surfaces that live under a Ground/Floor group.

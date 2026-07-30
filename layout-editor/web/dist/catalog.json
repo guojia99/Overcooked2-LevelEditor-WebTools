@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T17:16:42.949Z",
+  "generatedAt": "2026-07-30T09:02:03.322Z",
   "gridCellSize": 1.2,
   "itemCount": 867,
   "items": [
@@ -449,7 +449,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "alien",
       "nameZh": "外星地板",
@@ -466,7 +466,9 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "外星黏液",
       "nameEn": "Alien Goo"
     },
@@ -496,7 +498,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
       "nameZh": "背景热气球",
@@ -2313,7 +2315,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "carpet",
       "nameZh": "传送门颜色",
@@ -2330,7 +2332,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
       "nameZh": "泳池地砖（转角/边）",
@@ -2347,7 +2349,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
       "nameZh": "悬崖（m 系列）",
@@ -2814,7 +2816,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "ice",
       "nameZh": "冰面地板",
@@ -8096,7 +8098,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "section",
       "nameZh": "地板段",
@@ -8113,7 +8115,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "section",
       "nameZh": "地板段",
@@ -8130,7 +8132,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "section",
       "nameZh": "地板段",
@@ -8147,7 +8149,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "section",
       "nameZh": "地板段",
@@ -8164,7 +8166,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "section",
       "nameZh": "地板段",
@@ -8571,7 +8573,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
       "nameZh": "背景特效",
@@ -9173,7 +9175,9 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "raft",
       "nameZh": "木筏段",
       "nameEn": "Raft Section"
     },
@@ -9188,7 +9192,9 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "raft",
       "nameZh": "raft_raft_front_01",
       "nameEn": "raft_raft_front_01"
     },
@@ -9203,7 +9209,9 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "raft",
       "nameZh": "raft_raft_middle_01",
       "nameEn": "raft_raft_middle_01"
     },
@@ -9218,7 +9226,9 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "raft",
       "nameZh": "raft_raft_middle_02",
       "nameEn": "raft_raft_middle_02"
     },
@@ -9233,7 +9243,9 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "raft",
       "nameZh": "raft_raft_middle_03",
       "nameEn": "raft_raft_middle_03"
     },
@@ -9368,7 +9380,9 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "水面",
       "nameEn": "Water"
     },
@@ -9383,7 +9397,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "carpet",
       "nameZh": "红地毯入口",
@@ -9910,7 +9924,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "sand",
       "nameZh": "沙/沙地",
@@ -10227,7 +10241,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
       "nameZh": "天空背景",
@@ -10334,7 +10348,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "snow",
       "nameZh": "雪地",
@@ -11596,7 +11610,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
       "nameZh": "栈道地板",
@@ -11613,7 +11627,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
       "nameZh": "栈道地板",
@@ -11630,7 +11644,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
       "nameZh": "栈道柱",
@@ -11647,7 +11661,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
       "nameZh": "walkway_pillars_01",
@@ -11664,7 +11678,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
       "nameZh": "栈道顶/绳",
@@ -11681,7 +11695,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
       "nameZh": "栈道顶/绳",
@@ -11698,7 +11712,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "layoutTier": "decor",
+      "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
       "nameZh": "walkway_rope_02",
@@ -13936,40 +13950,6 @@
         "nameEn": "Flag"
       },
       {
-        "id": "floor_corner_01",
-        "guid": "6ad4f571a8b3a424b8360d6cece3e44e",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/floor_corner_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "solid",
-        "nameZh": "泳池地砖（转角/边）",
-        "nameEn": "Pool Floor"
-      },
-      {
-        "id": "floor_edge_01",
-        "guid": "ad045c17f45ebf84a8f5c89ba08e6f70",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/floor_edge_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "solid",
-        "nameZh": "悬崖（m 系列）",
-        "nameEn": "Cliff"
-      },
-      {
         "id": "Flower_01",
         "guid": "2091ae6771c5a1242992698aebb69243",
         "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Flower_01.prefab",
@@ -14885,23 +14865,6 @@
         "nameEn": "Sand"
       },
       {
-        "id": "sand_floor_01",
-        "guid": "a22658b6127e9e345bceab8f372c906b",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/sand_floor_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "sand",
-        "nameZh": "沙/沙地",
-        "nameEn": "Sand"
-      },
-      {
         "id": "sanddecal_01",
         "guid": "cc629e8e188f48f468317d7da53d8837",
         "assetPath": "Assets/common02/prefabs/art/dlc02_beach/sanddecal_01.prefab",
@@ -15637,125 +15600,6 @@
         "nameEn": "Urn"
       },
       {
-        "id": "walkway_floor_01",
-        "guid": "36028bae063323e4c86e5f61f9904f53",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_floor_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "walkway",
-        "nameZh": "栈道地板",
-        "nameEn": "Walkway Floor"
-      },
-      {
-        "id": "walkway_floor_03_alt_01",
-        "guid": "0cf28a7642a517a40aed0723d45b9798",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_floor_03_alt_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "walkway",
-        "nameZh": "栈道地板",
-        "nameEn": "Walkway Floor"
-      },
-      {
-        "id": "walkway_pillar_01",
-        "guid": "e1f5238afdff0c44dae7f0c970d7be98",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_pillar_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "walkway",
-        "nameZh": "栈道柱",
-        "nameEn": "Walkway Pillar"
-      },
-      {
-        "id": "walkway_pillars_01",
-        "guid": "7faae133bb520b949972d87cf9f1ac54",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_pillars_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "walkway",
-        "nameZh": "walkway_pillars_01",
-        "nameEn": "walkway_pillars_01"
-      },
-      {
-        "id": "walkway_roof_01",
-        "guid": "c633ba08176a9df488830755f7398fc2",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_roof_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "walkway",
-        "nameZh": "栈道顶/绳",
-        "nameEn": "Walkway Roof / Rope"
-      },
-      {
-        "id": "walkway_roof_alt_01",
-        "guid": "d323ab4bfacd6094bb9684f814110679",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_roof_alt_01.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "walkway",
-        "nameZh": "栈道顶/绳",
-        "nameEn": "Walkway Roof / Rope"
-      },
-      {
-        "id": "walkway_rope_02",
-        "guid": "d28f3c299e0ff8e4c83eed23c97df99e",
-        "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_rope_02.prefab",
-        "category": "art",
-        "theme": "dlc02_beach",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "walkway",
-        "nameZh": "walkway_rope_02",
-        "nameEn": "walkway_rope_02"
-      },
-      {
         "id": "Wall_straight_top_01",
         "guid": "c8cdcaaa753fe51478c4c33ea7cf3c07",
         "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Wall_straight_top_01.prefab",
@@ -16266,75 +16110,9 @@
         "layoutTier": "decor",
         "nameZh": "顶部沙袋绳（带动画）",
         "nameEn": "Top Sandbag Rope"
-      },
-      {
-        "id": "background_balloon_01",
-        "guid": "3c1cdd404e14d9b4e881f05bce8cb120",
-        "assetPath": "Assets/common01/prefabs/art/air_balloon/background_balloon_01.prefab",
-        "category": "art",
-        "theme": "air_balloon",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "background",
-        "surfaceKind": "background",
-        "nameZh": "背景热气球",
-        "nameEn": "Background Balloon"
-      },
-      {
-        "id": "Sky",
-        "guid": "6bc6ab537d9e12b41964f64bb530b259",
-        "assetPath": "Assets/common01/prefabs/art/air_balloon/Sky.prefab",
-        "category": "art",
-        "theme": "air_balloon",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "background",
-        "surfaceKind": "background",
-        "nameZh": "天空背景",
-        "nameEn": "Sky"
       }
     ],
     "art/space": [
-      {
-        "id": "alien_floor_tile_01",
-        "guid": "ba183481254daed438cea101dd22c762",
-        "assetPath": "Assets/common01/prefabs/art/space/alien_floor_tile_01.prefab",
-        "category": "art",
-        "theme": "space",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "alien",
-        "nameZh": "外星地板",
-        "nameEn": "Alien Floor Tile"
-      },
-      {
-        "id": "alien_gue",
-        "guid": "f71f8914afef39d4d9bc02b63c2de1ad",
-        "assetPath": "Assets/common01/prefabs/art/space/alien_gue.prefab",
-        "category": "art",
-        "theme": "space",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "nameZh": "外星黏液",
-        "nameEn": "Alien Goo"
-      },
       {
         "id": "Alien_Tentacle_01",
         "guid": "236e3248bcdfbe54fb3203888ec7ca75",
@@ -17255,23 +17033,6 @@
         "nameEn": "Countertop"
       },
       {
-        "id": "PFX_background_wizardshool_01",
-        "guid": "9b724f7dc0555e64c98ae14a33e5aa1a",
-        "assetPath": "Assets/common01/prefabs/art/wizard/PFX_background_wizardshool_01.prefab",
-        "category": "art",
-        "theme": "wizard",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "background",
-        "surfaceKind": "background",
-        "nameZh": "背景特效",
-        "nameEn": "Background PFX"
-      },
-      {
         "id": "Step",
         "guid": "465a6cb0fe2191741b49ed9ab808bd63",
         "assetPath": "Assets/common01/prefabs/art/wizard/Step.prefab",
@@ -18174,23 +17935,6 @@
         "nameEn": "Fire Hazard"
       },
       {
-        "id": "floor_carpet_purple",
-        "guid": "9f67dfb56cc0a4842b2d6a568e278de1",
-        "assetPath": "Assets/common01/prefabs/art/city_sushi/floor_carpet_purple.prefab",
-        "category": "art",
-        "theme": "city_sushi",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "carpet",
-        "nameZh": "传送门颜色",
-        "nameEn": "Portal Color"
-      },
-      {
         "id": "kitchen_firepit_01",
         "guid": "25646e967fddc4b45a455add2553fe37",
         "assetPath": "Assets/common01/prefabs/art/city_sushi/kitchen_firepit_01.prefab",
@@ -18384,23 +18128,6 @@
         "layoutTier": "decor",
         "nameZh": "绕圈行走 NPC（47/67 秒一圈）",
         "nameEn": "Walking NPC"
-      },
-      {
-        "id": "Red Carpet Entrance",
-        "guid": "208fb099fac50a242b03678a23b3244f",
-        "assetPath": "Assets/common01/prefabs/art/city_sushi/Red Carpet Entrance.prefab",
-        "category": "art",
-        "theme": "city_sushi",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "carpet",
-        "nameZh": "红地毯入口",
-        "nameEn": "Red Carpet Entrance"
       },
       {
         "id": "restaurant_chair_01",
@@ -23402,91 +23129,6 @@
         "nameEn": "Wood Plank"
       },
       {
-        "id": "p_floor_section_01",
-        "guid": "767f47ee190332c43bbd0a3520cce337",
-        "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_floor_section_01.prefab",
-        "category": "art",
-        "theme": "dlc05_camping",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "section",
-        "nameZh": "地板段",
-        "nameEn": "Floor Section"
-      },
-      {
-        "id": "p_floor_section_02",
-        "guid": "b0f146f8ca32a44458891958143d6ff3",
-        "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_floor_section_02.prefab",
-        "category": "art",
-        "theme": "dlc05_camping",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "section",
-        "nameZh": "地板段",
-        "nameEn": "Floor Section"
-      },
-      {
-        "id": "p_floor_section_03",
-        "guid": "30d1d1c39fd51d44cb1ccbd70d35c416",
-        "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_floor_section_03.prefab",
-        "category": "art",
-        "theme": "dlc05_camping",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "section",
-        "nameZh": "地板段",
-        "nameEn": "Floor Section"
-      },
-      {
-        "id": "p_floor_section_04",
-        "guid": "d9505904469862649a19106b91f525dd",
-        "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_floor_section_04.prefab",
-        "category": "art",
-        "theme": "dlc05_camping",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "section",
-        "nameZh": "地板段",
-        "nameEn": "Floor Section"
-      },
-      {
-        "id": "p_floor_section_05",
-        "guid": "4cb483e9bb0d0184cada9052b71ba5bf",
-        "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_floor_section_05.prefab",
-        "category": "art",
-        "theme": "dlc05_camping",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "section",
-        "nameZh": "地板段",
-        "nameEn": "Floor Section"
-      },
-      {
         "id": "p_rope_fence_01",
         "guid": "3a145e53f3686154aa55244d99a05ddf",
         "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_rope_fence_01.prefab",
@@ -24318,23 +23960,6 @@
     ],
     "art/dlc03_christmas": [
       {
-        "id": "ice_floor_01",
-        "guid": "46d2e3289d9e97543b43ede1a072ccfc",
-        "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/ice_floor_01.prefab",
-        "category": "art",
-        "theme": "dlc03_christmas",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "ice",
-        "nameZh": "冰面地板",
-        "nameEn": "Ice Floor"
-      },
-      {
         "id": "m_dlc3_iceblock_01",
         "guid": "e7edce59c2dcfce4e8961659dc5644a6",
         "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/m_dlc3_iceblock_01.prefab",
@@ -24543,23 +24168,6 @@
         "layoutTier": "decor",
         "nameZh": "雪沿",
         "nameEn": "Snow Edge"
-      },
-      {
-        "id": "snow_floor_01",
-        "guid": "47ee35a1dc6245e4b8a6da98121b63fc",
-        "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/snow_floor_01.prefab",
-        "category": "art",
-        "theme": "dlc03_christmas",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "surfaceTier": "floor",
-        "surfaceKind": "snow",
-        "nameZh": "雪地",
-        "nameEn": "Snow Floor"
       },
       {
         "id": "snow_straight_01",
@@ -25348,81 +24956,6 @@
         "nameEn": "Lily Pad"
       },
       {
-        "id": "raft_raft_back_01",
-        "guid": "8cb07519309744a4eb4bb4450af6fbd5",
-        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_back_01.prefab",
-        "category": "art",
-        "theme": "raft",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "nameZh": "木筏段",
-        "nameEn": "Raft Section"
-      },
-      {
-        "id": "raft_raft_front_01",
-        "guid": "b458266b3848162489e77fa5a1d18c14",
-        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_front_01.prefab",
-        "category": "art",
-        "theme": "raft",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "nameZh": "raft_raft_front_01",
-        "nameEn": "raft_raft_front_01"
-      },
-      {
-        "id": "raft_raft_middle_01",
-        "guid": "7f7305fe1d2ee0d4596076bb99ff0c78",
-        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_middle_01.prefab",
-        "category": "art",
-        "theme": "raft",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "nameZh": "raft_raft_middle_01",
-        "nameEn": "raft_raft_middle_01"
-      },
-      {
-        "id": "raft_raft_middle_02",
-        "guid": "ff84eb3c30e1be144a8fab538b770390",
-        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_middle_02.prefab",
-        "category": "art",
-        "theme": "raft",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "nameZh": "raft_raft_middle_02",
-        "nameEn": "raft_raft_middle_02"
-      },
-      {
-        "id": "raft_raft_middle_03",
-        "guid": "900b63e4858f9644a94a944b520d683d",
-        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_middle_03.prefab",
-        "category": "art",
-        "theme": "raft",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "nameZh": "raft_raft_middle_03",
-        "nameEn": "raft_raft_middle_03"
-      },
-      {
         "id": "raft_rock_01",
         "guid": "8a827faf0bc02b54885b6dac0632b824",
         "assetPath": "Assets/common01/prefabs/art/raft/raft_rock_01.prefab",
@@ -25541,21 +25074,6 @@
         "layoutTier": "decor",
         "nameZh": "尾流",
         "nameEn": "Wake"
-      },
-      {
-        "id": "raft_water",
-        "guid": "a312fec52e14e1444ba46b71d26285d2",
-        "assetPath": "Assets/common01/prefabs/art/raft/raft_water.prefab",
-        "category": "art",
-        "theme": "raft",
-        "defaultParent": "Art",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "decor",
-        "nameZh": "水面",
-        "nameEn": "Water"
       }
     ],
     "art/mine": [
@@ -26014,23 +25532,6 @@
         "layoutTier": "core",
         "nameZh": "传送门",
         "nameEn": "Teleportal"
-      },
-      {
-        "id": "Travelator",
-        "guid": "cf5a87cb38aab8c41b64f174e8680a00",
-        "assetPath": "Assets/common01/prefabs/mechanisms/Travelator.prefab",
-        "category": "mechanisms",
-        "theme": null,
-        "defaultParent": "Design/Counters",
-        "footprint": {
-          "cellsX": 1,
-          "cellsZ": 1
-        },
-        "layoutTier": "core",
-        "surfaceTier": "floor",
-        "surfaceKind": "conveyor",
-        "nameZh": "地面传送带",
-        "nameEn": "Travelator"
       }
     ],
     "Player": [
@@ -26235,7 +25736,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "solid",
         "nameZh": "泳池地砖（转角/边）",
@@ -26252,7 +25753,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "solid",
         "nameZh": "悬崖（m 系列）",
@@ -26269,7 +25770,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "sand",
         "nameZh": "沙/沙地",
@@ -26286,7 +25787,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "walkway",
         "nameZh": "栈道地板",
@@ -26303,7 +25804,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "walkway",
         "nameZh": "栈道地板",
@@ -26320,7 +25821,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "walkway",
         "nameZh": "栈道柱",
@@ -26337,7 +25838,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "walkway",
         "nameZh": "walkway_pillars_01",
@@ -26354,7 +25855,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "walkway",
         "nameZh": "栈道顶/绳",
@@ -26371,7 +25872,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "walkway",
         "nameZh": "栈道顶/绳",
@@ -26388,7 +25889,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "walkway",
         "nameZh": "walkway_rope_02",
@@ -26405,7 +25906,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "background",
         "surfaceKind": "background",
         "nameZh": "背景热气球",
@@ -26422,7 +25923,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "background",
         "surfaceKind": "background",
         "nameZh": "天空背景",
@@ -26439,11 +25940,28 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "alien",
         "nameZh": "外星地板",
         "nameEn": "Alien Floor Tile"
+      },
+      {
+        "id": "alien_gue",
+        "guid": "f71f8914afef39d4d9bc02b63c2de1ad",
+        "assetPath": "Assets/common01/prefabs/art/space/alien_gue.prefab",
+        "category": "art",
+        "theme": "space",
+        "defaultParent": "Art",
+        "footprint": {
+          "cellsX": 1,
+          "cellsZ": 1
+        },
+        "layoutTier": "floor",
+        "surfaceTier": "background",
+        "surfaceKind": "background",
+        "nameZh": "外星黏液",
+        "nameEn": "Alien Goo"
       },
       {
         "id": "PFX_background_wizardshool_01",
@@ -26456,7 +25974,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "background",
         "surfaceKind": "background",
         "nameZh": "背景特效",
@@ -26473,7 +25991,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "carpet",
         "nameZh": "传送门颜色",
@@ -26490,7 +26008,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "carpet",
         "nameZh": "红地毯入口",
@@ -26507,7 +26025,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "section",
         "nameZh": "地板段",
@@ -26524,7 +26042,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "section",
         "nameZh": "地板段",
@@ -26541,7 +26059,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "section",
         "nameZh": "地板段",
@@ -26558,7 +26076,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "section",
         "nameZh": "地板段",
@@ -26575,7 +26093,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "section",
         "nameZh": "地板段",
@@ -26592,7 +26110,7 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "ice",
         "nameZh": "冰面地板",
@@ -26609,11 +26127,113 @@
           "cellsX": 1,
           "cellsZ": 1
         },
-        "layoutTier": "decor",
+        "layoutTier": "floor",
         "surfaceTier": "floor",
         "surfaceKind": "snow",
         "nameZh": "雪地",
         "nameEn": "Snow Floor"
+      },
+      {
+        "id": "raft_raft_back_01",
+        "guid": "8cb07519309744a4eb4bb4450af6fbd5",
+        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_back_01.prefab",
+        "category": "art",
+        "theme": "raft",
+        "defaultParent": "Art",
+        "footprint": {
+          "cellsX": 1,
+          "cellsZ": 1
+        },
+        "layoutTier": "floor",
+        "surfaceTier": "floor",
+        "surfaceKind": "raft",
+        "nameZh": "木筏段",
+        "nameEn": "Raft Section"
+      },
+      {
+        "id": "raft_raft_front_01",
+        "guid": "b458266b3848162489e77fa5a1d18c14",
+        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_front_01.prefab",
+        "category": "art",
+        "theme": "raft",
+        "defaultParent": "Art",
+        "footprint": {
+          "cellsX": 1,
+          "cellsZ": 1
+        },
+        "layoutTier": "floor",
+        "surfaceTier": "floor",
+        "surfaceKind": "raft",
+        "nameZh": "raft_raft_front_01",
+        "nameEn": "raft_raft_front_01"
+      },
+      {
+        "id": "raft_raft_middle_01",
+        "guid": "7f7305fe1d2ee0d4596076bb99ff0c78",
+        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_middle_01.prefab",
+        "category": "art",
+        "theme": "raft",
+        "defaultParent": "Art",
+        "footprint": {
+          "cellsX": 1,
+          "cellsZ": 1
+        },
+        "layoutTier": "floor",
+        "surfaceTier": "floor",
+        "surfaceKind": "raft",
+        "nameZh": "raft_raft_middle_01",
+        "nameEn": "raft_raft_middle_01"
+      },
+      {
+        "id": "raft_raft_middle_02",
+        "guid": "ff84eb3c30e1be144a8fab538b770390",
+        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_middle_02.prefab",
+        "category": "art",
+        "theme": "raft",
+        "defaultParent": "Art",
+        "footprint": {
+          "cellsX": 1,
+          "cellsZ": 1
+        },
+        "layoutTier": "floor",
+        "surfaceTier": "floor",
+        "surfaceKind": "raft",
+        "nameZh": "raft_raft_middle_02",
+        "nameEn": "raft_raft_middle_02"
+      },
+      {
+        "id": "raft_raft_middle_03",
+        "guid": "900b63e4858f9644a94a944b520d683d",
+        "assetPath": "Assets/common01/prefabs/art/raft/raft_raft_middle_03.prefab",
+        "category": "art",
+        "theme": "raft",
+        "defaultParent": "Art",
+        "footprint": {
+          "cellsX": 1,
+          "cellsZ": 1
+        },
+        "layoutTier": "floor",
+        "surfaceTier": "floor",
+        "surfaceKind": "raft",
+        "nameZh": "raft_raft_middle_03",
+        "nameEn": "raft_raft_middle_03"
+      },
+      {
+        "id": "raft_water",
+        "guid": "a312fec52e14e1444ba46b71d26285d2",
+        "assetPath": "Assets/common01/prefabs/art/raft/raft_water.prefab",
+        "category": "art",
+        "theme": "raft",
+        "defaultParent": "Art",
+        "footprint": {
+          "cellsX": 1,
+          "cellsZ": 1
+        },
+        "layoutTier": "floor",
+        "surfaceTier": "background",
+        "surfaceKind": "background",
+        "nameZh": "水面",
+        "nameEn": "Water"
       },
       {
         "id": "Travelator",
@@ -26654,7 +26274,7 @@
       "labelZh": "核心 · 机关",
       "labelEn": "Mechanisms",
       "layoutTier": "core",
-      "itemCount": 8
+      "itemCount": 7
     },
     {
       "key": "Player",
@@ -26668,7 +26288,7 @@
       "labelZh": "地板 / 背景",
       "labelEn": "Floor & background surfaces",
       "layoutTier": "floor",
-      "itemCount": 24
+      "itemCount": 31
     },
     {
       "key": "art/npc",
@@ -26682,35 +26302,35 @@
       "labelZh": "装饰 · 热气球",
       "labelEn": "Decor · air_balloon",
       "layoutTier": "decor",
-      "itemCount": 29
+      "itemCount": 27
     },
     {
       "key": "art/city_sushi",
       "labelZh": "装饰 · 寿司城市场景",
       "labelEn": "Decor · city_sushi",
       "layoutTier": "decor",
-      "itemCount": 101
+      "itemCount": 99
     },
     {
       "key": "art/dlc02_beach",
       "labelZh": "装饰 · dlc02_beach",
       "labelEn": "Decor · dlc02_beach",
       "layoutTier": "decor",
-      "itemCount": 183
+      "itemCount": 173
     },
     {
       "key": "art/dlc03_christmas",
       "labelZh": "装饰 · 圣诞 DLC",
       "labelEn": "Decor · dlc03_christmas",
       "layoutTier": "decor",
-      "itemCount": 29
+      "itemCount": 27
     },
     {
       "key": "art/dlc05_camping",
       "labelZh": "装饰 · dlc05_camping",
       "labelEn": "Decor · dlc05_camping",
       "layoutTier": "decor",
-      "itemCount": 192
+      "itemCount": 187
     },
     {
       "key": "art/dlc07_horde",
@@ -26759,14 +26379,14 @@
       "labelZh": "装饰 · 木筏",
       "labelEn": "Decor · raft",
       "layoutTier": "decor",
-      "itemCount": 30
+      "itemCount": 24
     },
     {
       "key": "art/space",
       "labelZh": "装饰 · 太空",
       "labelEn": "Decor · space",
       "layoutTier": "decor",
-      "itemCount": 53
+      "itemCount": 51
     },
     {
       "key": "art/throne",
@@ -26780,7 +26400,7 @@
       "labelZh": "装饰 · 魔法学校",
       "labelEn": "Decor · wizard",
       "layoutTier": "decor",
-      "itemCount": 31
+      "itemCount": 30
     }
   ]
 }

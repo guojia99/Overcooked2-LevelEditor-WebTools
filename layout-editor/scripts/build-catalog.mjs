@@ -118,7 +118,9 @@ function categorize(assetPath) {
 
 function layoutMetaFor(id, category) {
   if (category === "art" || category === "other") {
-    return { layoutTier: "decor", ...surfaceMeta(id) };
+    const surf = surfaceMeta(id);
+    if (surf.surfaceTier) return { layoutTier: "floor", ...surf };
+    return { layoutTier: "decor", ...surf };
   }
   const meta = { layoutTier: "core", ...surfaceMeta(id) };
   const stack = UTENSIL_STACK[id];
@@ -135,6 +137,12 @@ function surfaceMeta(id) {
   if (/^sky$|background/.test(lower)) {
     surfaceTier = "background";
     surfaceKind = "background";
+  } else if (id === "raft_water" || id === "alien_gue") {
+    surfaceTier = "background";
+    surfaceKind = "background";
+  } else if (/^raft_raft_/.test(lower)) {
+    surfaceTier = "floor";
+    surfaceKind = "raft";
   } else if (/floor|carpet|blacktiles|walkway/.test(lower)) {
     surfaceTier = "floor";
     if (/ice/.test(lower)) surfaceKind = "ice";
@@ -293,6 +301,19 @@ function main() {
     if (!byCategory[key]) byCategory[key] = [];
     byCategory[key].push(item);
   }
+
+  // Floor/background surface items belong ONLY to the floor palette, not their decor group.
+  const surfaceItems = [];
+  for (const key of Object.keys(byCategory)) {
+    byCategory[key] = byCategory[key].filter((it) => {
+      if (it.surfaceTier) {
+        surfaceItems.push(it);
+        return false;
+      }
+      return true;
+    });
+  }
+  if (surfaceItems.length > 0) byCategory["surface/floor"] = surfaceItems;
 
   const paletteGroups = buildPaletteGroups(byCategory);
 

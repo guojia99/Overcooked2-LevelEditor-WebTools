@@ -12,6 +12,8 @@ public static class LayoutEditorStubIO
         item.stubKind = null;
         item.dispenser = null;
         item.foodSpawner = null;
+        item.conveyor = null;
+        item.teleportal = null;
 
         var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
         if (dispenser != null)
@@ -55,6 +57,29 @@ public static class LayoutEditorStubIO
                 dto.weights = (float[])spawner.weights.Clone();
 
             item.foodSpawner = dto;
+            return;
+        }
+
+        var conveyor = go.GetComponent<PseudoPrefabConveyorStub>();
+        if (conveyor != null)
+        {
+            item.stubKind = "Conveyor";
+            item.conveyor = new LayoutConveyorStubDto { conveySpeed = conveyor.conveySpeed };
+            return;
+        }
+
+        var teleportal = go.GetComponent<PseudoPrefabTeleportalStub>();
+        if (teleportal != null)
+        {
+            item.stubKind = "Teleportal";
+            var tdto = new LayoutTeleportalStubDto
+            {
+                portalColor = (int)teleportal.portalColor,
+                doubleSided = teleportal.doubleSided
+            };
+            if (teleportal.exitPortal != null)
+                tdto.exitPortalInstanceId = "u:" + teleportal.exitPortal.gameObject.GetInstanceID();
+            item.teleportal = tdto;
         }
     }
 

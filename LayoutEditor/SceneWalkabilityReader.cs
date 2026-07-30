@@ -64,6 +64,22 @@ public static class SceneWalkabilityReader
             killPlanes = ReadKillPlanes(),
         };
 
+        // Primary source: the PseudoPrefabManagerStub's OnDeathEffectSO (what the
+        // death-theme editor writes, and the authoritative runtime binding).
+        var stub = UnityEngine.Object.FindObjectOfType<LevelEditorStub.PseudoPrefabManagerStub>();
+        if (stub != null)
+        {
+            var eff = stub.OnDeathEffectSO;
+            if (eff != null)
+            {
+                var path = AssetDatabase.GetAssetPath(eff);
+                var guid = AssetDatabase.AssetPathToGUID(path);
+                info.deathEffectName = eff.name;
+                info.deathType = ClassifyDeathGuid(guid, eff.name);
+            }
+            return info;
+        }
+
         var gs = FindFirstComponent("GameSession");
         if (gs != null)
         {
@@ -121,11 +137,26 @@ public static class SceneWalkabilityReader
                 break;
             }
 
+            float kcx = 0f, kcz = 0f, ksx = 0f, ksz = 0f;
+            var col = mb.GetComponent<Collider>();
+            if (col != null)
+            {
+                var b = col.bounds;
+                kcx = b.center.x;
+                kcz = b.center.z;
+                ksx = b.size.x;
+                ksz = b.size.z;
+            }
+
             list.Add(new KillPlaneInfoDto
             {
                 hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(mb.transform),
                 respawnType = typeLabel,
                 deathEffectName = effectName,
+                cx = kcx,
+                cz = kcz,
+                sx = ksx,
+                sz = ksz,
             });
         }
 
