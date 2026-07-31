@@ -508,7 +508,7 @@ public class LayoutEditorHttpServer
         if (!request.HasEntityBody)
             return "";
 
-        using (var reader = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8))
+        using (var reader = new StreamReader(request.InputStream, new UTF8Encoding(false)))
             return reader.ReadToEnd();
     }
 
