@@ -9,8 +9,10 @@ import type {
   PerPlayerConfig,
   RecipeEntry,
 } from "./types";
-import { closeModal, openModal, openRecipePicker } from "./modals";
+import { closeModal, openModal } from "./modals";
 import { showBusy, hideBusy } from "./busy";
+import { navHtml, wireNav } from "./nav";
+import { applyRatio, computeAutoScores, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
 
 const TARGET_SCENE_KEY = "layoutTargetScene";
 
@@ -30,6 +32,16 @@ export function consumeTargetScene(): string | null {
   const v = sessionStorage.getItem(TARGET_SCENE_KEY);
   if (v) sessionStorage.removeItem(TARGET_SCENE_KEY);
   return v;
+}
+
+const IDENT_RE = /^[A-Za-z0-9_]+$/;
+
+function wireIdentInput(id: string): void {
+  const el = document.getElementById(id) as HTMLInputElement | null;
+  el?.addEventListener("input", () => {
+    const v = el.value.replace(/[^A-Za-z0-9_]/g, "");
+    if (v !== el.value) el.value = v;
+  });
 }
 
 function esc(s: unknown): string {
@@ -62,17 +74,21 @@ function showError(e: unknown): void {
 }
 
 function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () => void): HTMLElement {
+  document.body.classList.add("manage-bg");
   app.innerHTML = `
+    ${navHtml("manage")}
     <div class="manage-bar">
       ${backLabel ? `<button class="m-btn" id="m-back">← ${esc(backLabel)}</button>` : ""}
       <h1 class="m-title">${esc(title)}</h1>
       <span class="status" id="m-status"></span>
       <span style="flex:1"></span>
       <button class="m-btn" id="m-reload" title="触发 Unity Reload Pseudo Assets">↻ Reload</button>
-      <button class="m-btn" id="m-layout">布局编辑器</button>
     </div>
     <div class="manage-content" id="manage-content"></div>
   `;
+  wireNav((target) => {
+    if (target === "layout") goLayout();
+  });
   const back = document.getElementById("m-back");
   if (back && onBack) back.addEventListener("click", onBack);
   document.getElementById("m-reload")?.addEventListener("click", async () => {
@@ -83,7 +99,6 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
       setStatus((e as Error).message, false);
     }
   });
-  document.getElementById("m-layout")?.addEventListener("click", () => goLayout());
   return document.getElementById("manage-content")!;
 }
 
@@ -156,11 +171,13 @@ function openCreateSetModal(app: HTMLElement): void {
     `,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`
   );
+  wireIdentInput("set-name");
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     try {
       const setName = (document.getElementById("set-name") as HTMLInputElement).value.trim();
       if (!setName) return setStatus("请填写关卡集标识", false);
+      if (!IDENT_RE.test(setName)) return setStatus("关卡集标识仅允许英文字母/数字/下划线", false);
       showBusy("创建关卡集…");
       await api.createSet({
         setName,
@@ -279,11 +296,13 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
     `,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`
   );
+  wireIdentInput("lv-id");
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     try {
       const levelId = (document.getElementById("lv-id") as HTMLInputElement).value.trim();
       if (!levelId) return setStatus("请填写关卡标识", false);
+      if (!IDENT_RE.test(levelId)) return setStatus("关卡标识仅允许英文字母/数字/下划线", false);
       showBusy("创建关卡（生成配置、复制场景）…");
       await api.createLevel({
         setName,
@@ -361,10 +380,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
   const deps = (detail.dependencies || []).join("\n");
   content.innerHTML = `
     <div class="m-actions-row">
-      <button class="m-btn" id="btn-config">人数配置 (1P/2P/3P/4P)</button>
-      <button class="m-btn" id="btn-audio">音频配置</button>
-      <button class="m-btn" id="btn-recipes">菜谱</button>
-      <button class="m-btn" id="btn-layout">打开俯视图编排</button>
+      <button class="m-btn" id="btn-layout">打开关卡编辑器</button>
     </div>
 
     <div class="m-block">
@@ -386,27 +402,9 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <button class="m-btn primary" id="save-info">保存基础信息</button>
       </div>
     </div>
-
-    <div class="m-block">
-      <h3>音频预览 (场景 PseudoPrefabManagerStub)</h3>
-      <div class="m-meta" id="audio-preview"></div>
-    </div>
   `;
 
-  renderAudioPreview(detail);
   wireDetailActions(app, setName, assetPath, detail);
-}
-
-function renderAudioPreview(detail: LevelDetail): void {
-  const el = document.getElementById("audio-preview");
-  if (!el) return;
-  const a = detail.audio;
-  el.innerHTML = `
-    BGM：${esc(a.inLevelMusicId || "—")}<br>
-    氛围音：${a.ambiences?.length ? esc(a.ambiences.join(", ")) : "—"}<br>
-    音效集：${a.audioDirectoryIds?.length ? esc(a.audioDirectoryIds.join(", ")) : "—"}<br>
-    死亡特效：${esc(a.onDeathEffectId || "—")}
-  `;
 }
 
 function wireDetailActions(app: HTMLElement, setName: string, assetPath: string, detail: LevelDetail): void {
@@ -435,43 +433,54 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
     }
   });
 
-  document.getElementById("btn-config")?.addEventListener("click", () =>
-    openConfigTabsModal(detail, () => void renderLevelDetail(app, setName, assetPath))
-  );
-  document.getElementById("btn-audio")?.addEventListener("click", () =>
-    void openAudioModal(detail, () => void renderLevelDetail(app, setName, assetPath))
-  );
-  document.getElementById("btn-recipes")?.addEventListener("click", () =>
-    void openRecipesForLevel(setName, detail)
-  );
   document.getElementById("btn-layout")?.addEventListener("click", () => goLayout(detail.sceneAssetPath));
 }
 
 // ==================== Config tab modal (1P/2P/3P/4P) ====================
 
-const CONFIG_FIELDS: Array<[keyof PerPlayerConfig, string, string]> = [
+const RHYTHM_FIELDS: Array<[keyof PerPlayerConfig, string, string]> = [
   ["orderLifeTime", "订单超时(秒)", "1"],
   ["timeBetweenOrders", "订单间隔(秒)", "1"],
   ["plateReturnTime", "回盘间隔(秒)", "1"],
   ["roundTime", "关卡时长(秒)", "1"],
   ["survivalTimeMultiplier", "生存倍率", "0.1"],
-  ["oneStarScore", "1星分数", "1"],
-  ["twoStarScore", "2星分数", "1"],
-  ["threeStarScore", "3星分数", "1"],
-  ["fourStarScore", "4星分数", "1"],
+];
+
+const STAR_FIELDS: Array<[keyof PerPlayerConfig, string]> = [
+  ["oneStarScore", "1★"],
+  ["twoStarScore", "2★"],
+  ["threeStarScore", "3★"],
+  ["fourStarScore", "4★"],
 ];
 
 const PLAYER_TABS = ["1p", "2p", "3p", "4p"] as const;
 const PLAYER_LABELS = ["单人 1P", "双人 2P", "三人 3P", "四人 4P"];
+const PLAYER_ROW_LABELS = ["1P", "2P", "3P", "4P"];
 
-function openConfigTabsModal(detail: LevelDetail, onSaved: () => void): void {
+export function openConfigTabsModal(detail: LevelDetail, setName: string, onSaved: () => void): void {
+  const starHead = STAR_FIELDS.map(([, label]) => `<th>${label}</th>`).join("");
+  const matrixRows = PLAYER_TABS.map((t, ti) => {
+    const cfg = detail.configs[ti] ?? ({ exists: false } as PerPlayerConfig);
+    const cells = STAR_FIELDS.map(([key]) => {
+      const val = (cfg[key] as number) ?? 0;
+      return `<td><input type="number" step="5" min="0" class="cfg-star-input" id="cfg-${t}-${key}" value="${val}"></td>`;
+    }).join("");
+    return `<tr>
+      <td class="cfg-row-label">${PLAYER_ROW_LABELS[ti]}</td>${cells}
+      <td class="cfg-ratio-cell">
+        <input type="range" id="cfg-ratio-${t}" min="${RATIO_MIN}" max="${RATIO_MAX}" step="${RATIO_STEP}" value="1">
+        <span class="cfg-ratio-val" id="cfg-ratio-val-${t}">1.0x</span>
+      </td>
+    </tr>`;
+  }).join("");
+
   const tabBtns = PLAYER_TABS.map(
     (t, i) => `<button type="button" class="cfg-tab-btn ${i === 0 ? "active" : ""}" data-tab="${t}">${PLAYER_LABELS[i]}</button>`
   ).join("");
 
   const panes = PLAYER_TABS.map((t, ti) => {
     const cfg = detail.configs[ti] ?? ({ exists: false } as PerPlayerConfig);
-    const inputs = CONFIG_FIELDS.map(([key, label, step]) => {
+    const inputs = RHYTHM_FIELDS.map(([key, label, step]) => {
       const val = (cfg[key] as number) ?? 0;
       return `<label class="m-field">${esc(label)}<input type="number" step="${step}" id="cfg-${t}-${key}" value="${val}"></label>`;
     }).join("");
@@ -480,7 +489,16 @@ function openConfigTabsModal(detail: LevelDetail, onSaved: () => void): void {
 
   openModal(
     `人数配置 · ${detail.levelName || detail.levelNameZH}`,
-    `<div class="cfg-tabs">${tabBtns}</div>${panes}<p class="modal-hint">切换各 Tab 修改后，点击保存将<b>一次性写入全部 1P/2P/3P/4P 配置</b>。</p>`,
+    `<div class="cfg-ai-bar">
+       <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ AI 一键定分</button>
+     </div>
+     <table class="cfg-matrix">
+       <thead><tr><th>人数</th>${starHead}<th>难度系数</th></tr></thead>
+       <tbody>${matrixRows}</tbody>
+     </table>
+     <div id="cfg-ai-detail"></div>
+     <p class="modal-hint">节奏参数</p>
+     <div class="cfg-tabs">${tabBtns}</div>${panes}`,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>保存全部</button>`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
@@ -493,6 +511,88 @@ function openConfigTabsModal(detail: LevelDetail, onSaved: () => void): void {
       });
     })
   );
+
+  const baseStars: number[][] = PLAYER_TABS.map((_t, ti) => {
+    const cfg = detail.configs[ti] ?? ({ exists: false } as PerPlayerConfig);
+    return STAR_FIELDS.map(([key]) => (cfg[key] as number) ?? 0);
+  });
+
+  const starInput = (t: string, j: number) =>
+    document.getElementById(`cfg-${t}-${STAR_FIELDS[j][0]}`) as HTMLInputElement;
+  const ratioSlider = (t: string) => document.getElementById(`cfg-ratio-${t}`) as HTMLInputElement;
+  const ratioLabel = (t: string) => document.getElementById(`cfg-ratio-val-${t}`)!;
+  const resetRatio = (t: string) => {
+    ratioSlider(t).value = "1";
+    ratioLabel(t).textContent = "1.0x";
+  };
+
+  PLAYER_TABS.forEach((t, ti) => {
+    ratioSlider(t).addEventListener("input", () => {
+      const ratio = parseFloat(ratioSlider(t).value);
+      ratioLabel(t).textContent = ratio.toFixed(1) + "x";
+      applyRatio(baseStars[ti], ratio).forEach((v, j) => {
+        starInput(t, j).value = String(v);
+      });
+    });
+    STAR_FIELDS.forEach(([,], j) => {
+      starInput(t, j).addEventListener("change", () => {
+        const v = round5(parseInt(starInput(t, j).value || "0", 10) || 0);
+        starInput(t, j).value = String(v);
+        baseStars[ti] = STAR_FIELDS.map((_, k) => parseInt(starInput(t, k).value || "0", 10) || 0);
+        resetRatio(t);
+      });
+    });
+  });
+
+  document.getElementById("cfg-ai-fill")?.addEventListener("click", async () => {
+    const detailEl = document.getElementById("cfg-ai-detail")!;
+    try {
+      showBusy("推算星级分数…");
+      const [catalog, level] = await Promise.all([
+        api.fetchRecipeCatalog(setName),
+        api.fetchLevelRecipes(detail.sceneAssetPath),
+      ]);
+      const byGuid = new Map(catalog.map((r) => [r.guid, r]));
+      const selected = (level.recipeGuids ?? [])
+        .map((g) => byGuid.get(g))
+        .filter((r): r is RecipeEntry => !!r);
+      if (!selected.length) {
+        detailEl.innerHTML = `<p class="modal-hint err">该关卡尚未配置菜谱，请先在详情页点击「菜谱…」选择菜谱。</p>`;
+        return;
+      }
+      const roundTimes = PLAYER_TABS.map(
+        (t) => parseInt((document.getElementById(`cfg-${t}-roundTime`) as HTMLInputElement).value || "240", 10) || 240
+      );
+      const result = computeAutoScores(selected, roundTimes);
+      if (!result) {
+        detailEl.innerHTML = `<p class="modal-hint err">所选菜谱缺少价格信息，无法推算。</p>`;
+        return;
+      }
+      PLAYER_TABS.forEach((t, ti) => {
+        baseStars[ti] = result.stars[ti].slice();
+        result.stars[ti].forEach((v, j) => {
+          starInput(t, j).value = String(v);
+        });
+        resetRatio(t);
+      });
+      const rows = result.details
+        .map(
+          (d) =>
+            `<tr><td>${esc(d.name)}</td><td>${d.ingredientCount}</td><td>${d.cookingStepCount > 0 ? "✓" : "—"}</td><td>${d.score}</td><td>${d.timeSec.toFixed(0)}s</td></tr>`
+        )
+        .join("");
+      detailEl.innerHTML = `
+        <p class="modal-hint ok">已按 ${result.details.length} 道菜谱推算：平均单菜约 ${result.avgTimeSec.toFixed(0)} 秒 · 平均菜价 ${result.avgPrice.toFixed(0)} 分</p>
+        <table class="cfg-ai-table">
+          <thead><tr><th>菜谱</th><th>食材数</th><th>需烹饪</th><th>菜价</th><th>估时</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    } catch (e) {
+      detailEl.innerHTML = `<p class="modal-hint err">${esc((e as Error).message)}</p>`;
+    } finally {
+      hideBusy();
+    }
+  });
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
@@ -509,10 +609,10 @@ function openConfigTabsModal(detail: LevelDetail, onSaved: () => void): void {
           plateReturnTime: getNum("plateReturnTime"),
           roundTime: getNum("roundTime"),
           survivalTimeMultiplier: getFloat("survivalTimeMultiplier"),
-          oneStarScore: getNum("oneStarScore"),
-          twoStarScore: getNum("twoStarScore"),
-          threeStarScore: getNum("threeStarScore"),
-          fourStarScore: getNum("fourStarScore"),
+          oneStarScore: round5(getNum("oneStarScore")),
+          twoStarScore: round5(getNum("twoStarScore")),
+          threeStarScore: round5(getNum("threeStarScore")),
+          fourStarScore: round5(getNum("fourStarScore")),
         };
       };
       showBusy("保存人数配置…");
@@ -536,7 +636,7 @@ function openConfigTabsModal(detail: LevelDetail, onSaved: () => void): void {
 
 // ==================== Audio modal ====================
 
-async function openAudioModal(detail: LevelDetail, onSaved: () => void): Promise<void> {
+export async function openAudioModal(detail: LevelDetail, onSaved: () => void): Promise<void> {
   if (!detail.sceneAssetPath) {
     setStatus("该关卡缺少场景路径，无法编辑音频", false);
     return;
@@ -627,30 +727,4 @@ async function openAudioModal(detail: LevelDetail, onSaved: () => void): Promise
       hideBusy();
     }
   });
-}
-
-// ==================== Recipes ====================
-
-async function openRecipesForLevel(setName: string, detail: LevelDetail): Promise<void> {
-  if (!detail.sceneAssetPath) {
-    setStatus("该关卡缺少场景路径", false);
-    return;
-  }
-  try {
-    const [recipes, level] = await Promise.all([
-      api.fetchRecipeCatalog(setName),
-      api.fetchLevelRecipes(detail.sceneAssetPath),
-    ]);
-    if (!level.levelInfoAssetPath) {
-      setStatus("未找到该场景对应的 LevelInfoSO", false);
-      return;
-    }
-    openRecipePicker(recipes as RecipeEntry[], level.recipeGuids ?? [], level.levelName, async (guids) => {
-      await api.saveLevelRecipes(level.levelInfoAssetPath, guids);
-      await api.reloadPseudo();
-      setStatus("菜谱已写入并 reload");
-    });
-  } catch (e) {
-    setStatus((e as Error).message, false);
-  }
 }

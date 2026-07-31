@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public static class SceneLayoutExporter
 {
-    private static readonly string[] ExportRootNames = { "Design", "Art" };
+    private static readonly string[] ExportRootNames = { "Design", "Art", "Chefs" };
     private static readonly HashSet<string> SkippedSubtrees = new HashSet<string>
     {
         "Design/Collision",

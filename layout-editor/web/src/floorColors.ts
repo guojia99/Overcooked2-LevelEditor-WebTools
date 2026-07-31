@@ -186,6 +186,7 @@ export function surfaceKindLabelZh(kind: string | undefined): string {
 /** Bilingual (zh / en) label for a floor material id, e.g. mat_kevin_floor_12x8. */
 const MAT_ZH: Record<string, string> = {
   kevin: "凯文",
+  raft: "木筏",
   airballoon: "热气球",
   city: "城市",
   path: "路面",
@@ -210,6 +211,7 @@ const MAT_ZH: Record<string, string> = {
 
 const MAT_EN: Record<string, string> = {
   kevin: "Kevin",
+  raft: "Raft",
   airballoon: "Air Balloon",
   city: "City",
   path: "Path",

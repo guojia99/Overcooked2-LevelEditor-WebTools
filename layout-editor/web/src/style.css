@@ -82,6 +82,43 @@ body {
   height: 100vh;
 }
 
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #1f232b;
+  border-bottom: 1px solid #3a3f4b;
+  flex-shrink: 0;
+}
+
+.topnav-brand {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-right: 12px;
+}
+
+.topnav-link {
+  background: transparent;
+  color: #9aa0a6;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.topnav-link:hover {
+  color: #e8eaed;
+  background: #2a2e37;
+}
+
+.topnav-link.active {
+  color: #fff;
+  background: #3d6bf3;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -111,6 +148,8 @@ body {
 
 .toolbar button {
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .toolbar button.primary {
@@ -657,6 +696,12 @@ canvas.pan-active {
 }
 
 /* ---------- Level management page ---------- */
+body.manage-bg {
+  background:
+    linear-gradient(rgba(15, 17, 21, 0.82), rgba(15, 17, 21, 0.82)),
+    url("/base_bg.png") center / cover no-repeat fixed;
+}
+
 .manage-bar {
   display: flex;
   align-items: center;
@@ -886,6 +931,89 @@ canvas.pan-active {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px 12px;
+}
+
+.cfg-ai-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cfg-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.cfg-matrix th,
+.cfg-matrix td {
+  padding: 4px 6px;
+  text-align: left;
+  font-size: 12px;
+  border-bottom: 1px solid #3a4048;
+}
+
+.cfg-matrix th {
+  color: #9aa0a6;
+  font-weight: normal;
+}
+
+.cfg-row-label {
+  font-weight: 600;
+  color: #e8eaed;
+  white-space: nowrap;
+}
+
+.cfg-star-input {
+  width: 72px;
+  background: #1a1d23;
+  border: 1px solid #4a5060;
+  border-radius: 4px;
+  color: #e8eaed;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.cfg-ratio-cell {
+  white-space: nowrap;
+}
+
+.cfg-ratio-cell input[type="range"] {
+  width: 110px;
+  vertical-align: middle;
+  accent-color: #3d6bf3;
+}
+
+.cfg-ratio-val {
+  display: inline-block;
+  min-width: 38px;
+  margin-left: 6px;
+  color: #f9ab00;
+  font-size: 12px;
+}
+
+.cfg-ai-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0 10px;
+}
+
+.cfg-ai-table th,
+.cfg-ai-table td {
+  padding: 3px 8px;
+  text-align: left;
+  font-size: 11px;
+  border-bottom: 1px solid #3a4048;
+}
+
+.cfg-ai-table th {
+  color: #9aa0a6;
+  font-weight: normal;
+}
+
+.modal-hint.err {
+  color: #f28b82;
 }
 
 .muted {
@@ -1118,4 +1246,52 @@ canvas.pan-active {
 .ctx-menu .ctx-stub-row select {
   flex: 1;
   min-width: 0;
+}
+
+/* ---------- Overlap pick tip ---------- */
+.pick-tip {
+  position: fixed;
+  z-index: 45;
+  background: #252830;
+  border: 1px solid #4a5060;
+  border-radius: 6px;
+  padding: 8px;
+  max-width: 280px;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.pick-tip.hidden {
+  display: none;
+}
+
+.pick-tip-head {
+  font-size: 12px;
+  color: #9aa0a6;
+  margin-bottom: 6px;
+}
+
+.pick-tip-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  background: #1a1d23;
+  color: #e8eaed;
+  border: 1px solid #4a5060;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pick-tip-item:hover {
+  border-color: #3d6bf3;
+}
+
+.pick-tip-item .pick-sub {
+  font-size: 11px;
+  color: #9aa0a6;
 }

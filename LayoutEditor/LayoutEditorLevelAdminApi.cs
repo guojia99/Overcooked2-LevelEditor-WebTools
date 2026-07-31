@@ -165,7 +165,18 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
+        SetAssetBundleName(setDir, setName + "/info_" + setName);
         return null;
+    }
+
+    private static void SetAssetBundleName(string assetPath, string bundleName)
+    {
+        var importer = AssetImporter.GetAtPath(assetPath);
+        if (importer != null && importer.assetBundleName != bundleName)
+        {
+            importer.assetBundleName = bundleName;
+            importer.SaveAndReimport();
+        }
     }
 
     public static string UpdateSetInfo(LevelSetInfoUpdateDto dto)
@@ -360,6 +371,7 @@ public static class LayoutEditorLevelAdminApi
             EditorSceneManager.SaveScene(newScene);
             if (!string.IsNullOrEmpty(prevActive) && File.Exists(AbsPath(prevActive)))
                 EditorSceneManager.OpenScene(prevActive);
+            SetAssetBundleName(scenePath, setName + "/" + sceneName);
         }
 
         var setInfoFresh = FindSetInfo(setName);
@@ -390,7 +402,13 @@ public static class LayoutEditorLevelAdminApi
         so.levelName = dto.levelName ?? so.levelName;
         so.levelNameZH = dto.levelNameZH ?? so.levelNameZH;
         if (!string.IsNullOrEmpty(dto.sceneName))
+        {
             so.sceneName = dto.sceneName;
+            var setName = SetNameFromPath(dto.assetPath);
+            var scenePath = LevelSetsRoot + "/" + setName + "/scenes/" + dto.sceneName + ".unity";
+            if (File.Exists(AbsPath(scenePath)))
+                SetAssetBundleName(scenePath, setName + "/" + dto.sceneName);
+        }
         so.debugRecipeCount = dto.debugRecipeCount;
         so.disableDynamicParenting = dto.disableDynamicParenting;
         so.dependencies = dto.dependencies != null ? (string[])dto.dependencies.Clone() : so.dependencies;

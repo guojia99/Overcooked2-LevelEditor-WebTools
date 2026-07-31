@@ -92,6 +92,47 @@ public static class LayoutEditorRecipeKnowledge
         return ids;
     }
 
+    private static readonly HashSet<string> CookSteps = new HashSet<string>
+    {
+        "FryingPan", "Pot", "OvenTray", "DeepFatFryer", "Steamer", "Mixer",
+    };
+
+    public static bool IsCookStep(string step)
+    {
+        return !string.IsNullOrEmpty(step) && CookSteps.Contains(step);
+    }
+
+    public static void CustomStats(CustomRecipeSO so, out int ingredientCount, out int cookingStepCount)
+    {
+        var ings = 0;
+        var cooks = 0;
+        CollectStats(so, ref ings, ref cooks, new HashSet<Object>());
+        ingredientCount = ings;
+        cookingStepCount = cooks;
+    }
+
+    private static void CollectStats(CustomRecipeSO so, ref int ings, ref int cooks, HashSet<Object> seen)
+    {
+        if (so == null || !seen.Add(so))
+            return;
+        if (so.cookingStepSO != null && IsCookStep(CustomCookingStep(so)))
+            cooks++;
+        if (so.compositionSOs == null)
+            return;
+        foreach (var c in so.compositionSOs)
+        {
+            if (c == null)
+                continue;
+            var sub = c as CustomRecipeSO;
+            if (sub != null)
+            {
+                CollectStats(sub, ref ings, ref cooks, seen);
+                continue;
+            }
+            ings++;
+        }
+    }
+
     public static string CustomCookingStep(CustomRecipeSO so)
     {
         if (so == null || so.cookingStepSO == null)

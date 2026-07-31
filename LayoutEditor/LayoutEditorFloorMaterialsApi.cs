@@ -67,6 +67,8 @@ public static class LayoutEditorFloorMaterialsApi
         var n = (id ?? "").ToLowerInvariant();
         if (n.Contains("floor"))
             return 100;
+        if (n.Contains("raft"))
+            return 95;
         if (n.Contains("blacktiles") || n.Contains("carpet"))
             return 90;
         if (n.Contains("path"))

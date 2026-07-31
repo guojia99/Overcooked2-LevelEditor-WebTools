@@ -7,6 +7,7 @@ import {
   fetchIngredients,
   STALE_BRIDGE_MSG,
   fetchLayout,
+  fetchLevelDetail,
   fetchLevelRecipes,
   fetchLevelSets,
   fetchRecipeCatalog,
@@ -16,8 +17,10 @@ import {
   setDeathTheme,
   setKillPlaneBounds,
 } from "./api";
-import { renderManageView, goManage, consumeTargetScene } from "./levels";
+import { renderManageView, goManage, consumeTargetScene, openConfigTabsModal, openAudioModal } from "./levels";
 import { showBusy, hideBusy } from "./busy";
+import { navHtml, wireNav } from "./nav";
+import { HistoryStack } from "./history";
 import {
   closeModal,
   openFoodSpawnerEditor,
@@ -42,6 +45,7 @@ import {
   themeBackgroundPrefabIds,
 } from "./floorColors";
 import { snapFootprintCenter, snapValue } from "./snap";
+import { raftPiecesForRect } from "./raft";
 import {
   drawLayerForItem,
   findStackHost,
@@ -57,6 +61,7 @@ import type {
   GridInfo,
   LayoutItem,
   LayoutDocument,
+  LevelDetail,
   RecipeEntry,
   WalkableRect,
 } from "./types";
@@ -98,6 +103,7 @@ let floorMaterials: FloorMaterial[] = [];
 let selectedKey: string | null = null;
 let selectedKeys = new Set<string>();
 let selectedFloorKey: string | null = null;
+let selectedFloorKeys = new Set<string>();
 let currentLayer: "items" | "floor" = "items";
 let scenePath = "";
 let snapStep = 0.6;
@@ -127,6 +133,7 @@ let lastMx = 0;
 let lastMy = 0;
 
 let dragFloorKey: string | null = null;
+let dragFloorGroupKeys: string[] = [];
 let dragFloorMode: "move" | "resize" = "move";
 let dragFloorEdge: string = "";
 let dragFloorAnchorX = 0;
@@ -134,6 +141,7 @@ let dragFloorAnchorZ = 0;
 
 let ingredientsCache: import("./types").IngredientEntry[] = [];
 let currentLevelSet = "";
+let sceneListCache: import("./types").LevelSetScene[] = [];
 
 function levelSetFromScenePath(assetPath: string): string {
   const parts = assetPath.replace(/\\/g, "/").split("/");
@@ -155,6 +163,9 @@ const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Travelator: "Travelator",
   Flamethrower: "Flamethrower",
   Burner: "Burner",
+  Player: "Player",
+  ServingStation: "ServingStation",
+  PlateReturn: "PlateReturn",
 };
 
 function stubKindOf(item: EditorItem): string {
@@ -192,7 +203,7 @@ function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-order" ${fs.spawnInOrder !== false ? "checked" : ""}/> 按顺序生成</label>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-start" ${fs.triggerAtStart !== false ? "checked" : ""}/> 开局触发</label>
         <label class="ctx-stub-row">触发间隔 <input type="number" id="ctx-fs-time" class="ctx-input" step="0.5" min="0" value="${fs.triggerTime ?? 5}"/> 秒</label>
-        <button type="button" class="ctx-btn" id="ctx-fs-ings">食材列表 (${(fs.attachmentPrefabGuids ?? []).length})…</button></div>`;
+        <button type="button" class="ctx-btn" id="ctx-fs-ings">食材列表…</button></div>`;
     }
     case "CookingUtensil": {
       const cu = item.cookingUtensil ?? {};
@@ -252,6 +263,37 @@ function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-rand" ${b.randomTargetOrder ? "checked" : ""}/> 随机目标顺序</label>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-hide" ${b.hideVisual ? "checked" : ""}/> 隐藏模型</label></div>`;
     }
+    case "Player": {
+      return `<div class="ctx-stub"><div class="ctx-stub-title">玩家</div>
+        <div class="ctx-stub-row">玩家固定在场景中，仅可拖动调整位置</div></div>`;
+    }
+    case "ServingStation": {
+      const ss = item.servingStation ?? {};
+      plateReturnLabels = computePlateReturnLabels();
+      const prs = plateReturns();
+      const opts = ['<option value="">— 未绑定 —</option>']
+        .concat(
+          prs.map(
+            (t) =>
+              `<option value="${t.instanceId}" ${ss.plateReturnInstanceId === t.instanceId ? "selected" : ""}>脏盘台 ${plateReturnLabels.get(t.instanceId) ?? "?"}（${escHtml(itemLabel(t))}）</option>`
+          )
+        )
+        .join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">上菜口参数</div>
+        <label class="ctx-stub-row">脏盘台 <select id="ctx-ss-pr" class="ctx-input">${opts}</select></label></div>`;
+    }
+    case "PlateReturn": {
+      plateReturnLabels = computePlateReturnLabels();
+      const bound = servingStations().filter((s) => s.servingStation?.plateReturnInstanceId === item.instanceId);
+      const rows = servingStations()
+        .map((s) => {
+          const checked = s.servingStation?.plateReturnInstanceId === item.instanceId ? "checked" : "";
+          return `<label class="ctx-stub-row"><input type="checkbox" class="ctx-pr-sv" value="${s.instanceId}" ${checked}/> ${escHtml(itemLabel(s))}</label>`;
+        })
+        .join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">脏盘台 · 绑定的上菜口 (${bound.length})</div>
+        ${rows || '<div class="ctx-stub-row">场景中无上菜口</div>'}</div>`;
+    }
     default:
       return "";
   }
@@ -267,6 +309,7 @@ function wireStubControls(item: EditorItem) {
   switch (kind) {
     case "Dispenser": {
       num("ctx-stub-ing")?.addEventListener("change", (e) => {
+        pushHistory();
         item.stubKind = "Dispenser";
         item.dispenser = { spawnerItemPrefabGuid: (e.target as HTMLSelectElement).value };
         draw();
@@ -281,19 +324,25 @@ function wireStubControls(item: EditorItem) {
         return item.foodSpawner;
       };
       num("ctx-fs-order")?.addEventListener("change", (e) => {
+        pushHistory();
         ensure().spawnInOrder = (e.target as HTMLInputElement).checked;
       });
       num("ctx-fs-start")?.addEventListener("change", (e) => {
+        pushHistory();
         ensure().triggerAtStart = (e.target as HTMLInputElement).checked;
       });
       num("ctx-fs-time")?.addEventListener("change", (e) => {
         const v = parseFloat((e.target as HTMLInputElement).value);
-        if (isFinite(v) && v >= 0) ensure().triggerTime = v;
+        if (isFinite(v) && v >= 0) {
+          pushHistory();
+          ensure().triggerTime = v;
+        }
       });
       document.getElementById("ctx-fs-ings")?.addEventListener("click", () => {
         ensure();
         hideContextMenu();
         openFoodSpawnerEditor(item, ingredientsCache, (patch) => {
+          pushHistory();
           item.foodSpawner = patch;
           draw();
           setStatus("已更新食材生成器参数（写回后生效）");
@@ -312,6 +361,7 @@ function wireStubControls(item: EditorItem) {
       num("ctx-cu-cap")?.addEventListener("change", (e) => {
         const v = parseInt((e.target as HTMLInputElement).value, 10);
         if (isFinite(v) && v >= 0) {
+          pushHistory();
           ensure().capacity = v;
           setStatus(`锅具容量已设为 ${v}（写回后生效）`);
         }
@@ -325,6 +375,7 @@ function wireStubControls(item: EditorItem) {
           ingredientsCache,
           item.cookingUtensil?.allowedIngredientGuids ?? [],
           (guids) => {
+            pushHistory();
             ensure().allowedIngredientGuids = guids;
             draw();
             setStatus("已更新锅具允许食材（写回后生效）");
@@ -337,6 +388,7 @@ function wireStubControls(item: EditorItem) {
       num("ctx-cv-speed")?.addEventListener("change", (e) => {
         const v = parseFloat((e.target as HTMLInputElement).value);
         if (!isFinite(v)) return;
+        pushHistory();
         item.stubKind = "Conveyor";
         item.conveyor = { conveySpeed: v };
         draw();
@@ -351,14 +403,17 @@ function wireStubControls(item: EditorItem) {
         return item.teleportal;
       };
       num("ctx-tp-color")?.addEventListener("change", (e) => {
+        pushHistory();
         ensure().portalColor = parseInt((e.target as HTMLSelectElement).value, 10) || 0;
         draw();
       });
       num("ctx-tp-ds")?.addEventListener("change", (e) => {
+        pushHistory();
         ensure().doubleSided = (e.target as HTMLInputElement).checked;
         draw();
       });
       num("ctx-tp-exit")?.addEventListener("change", (e) => {
+        pushHistory();
         ensure().exitPortalInstanceId = (e.target as HTMLSelectElement).value;
         draw();
         setStatus("已更新传送门配对（写回后生效）");
@@ -369,6 +424,7 @@ function wireStubControls(item: EditorItem) {
       num("ctx-tv-speed")?.addEventListener("change", (e) => {
         const v = parseFloat((e.target as HTMLInputElement).value);
         if (!isFinite(v) || v < 0) return;
+        pushHistory();
         item.stubKind = "Travelator";
         item.travelator = { speed: v };
         setStatus(`移动地板速度已设为 ${v}（写回后生效）`);
@@ -379,6 +435,7 @@ function wireStubControls(item: EditorItem) {
       num("ctx-ft-rate")?.addEventListener("change", (e) => {
         const v = parseFloat((e.target as HTMLInputElement).value);
         if (!isFinite(v) || v < 0) return;
+        pushHistory();
         item.stubKind = "Flamethrower";
         item.flamethrower = { cookingRate: v };
         setStatus(`喷火器烹饪速率已设为 ${v}（写回后生效）`);
@@ -389,6 +446,7 @@ function wireStubControls(item: EditorItem) {
       num("ctx-ps-count")?.addEventListener("change", (e) => {
         const v = parseInt((e.target as HTMLInputElement).value, 10);
         if (!isFinite(v) || v < 0) return;
+        pushHistory();
         item.stubKind = "CleanPlateStack";
         if (!item.cleanPlateStack) item.cleanPlateStack = {};
         item.cleanPlateStack.plateCount = v;
@@ -407,18 +465,56 @@ function wireStubControls(item: EditorItem) {
         return item.burner;
       };
       num("ctx-bn-mode")?.addEventListener("change", (e) => {
+        pushHistory();
         ensure().fireMode = parseInt((e.target as HTMLSelectElement).value, 10) || 0;
       });
       num("ctx-bn-air")?.addEventListener("change", (e) => {
         const v = parseFloat((e.target as HTMLInputElement).value);
-        if (isFinite(v) && v >= 0) ensure().airTime = v;
+        if (isFinite(v) && v >= 0) {
+          pushHistory();
+          ensure().airTime = v;
+        }
       });
       num("ctx-bn-rand")?.addEventListener("change", (e) => {
+        pushHistory();
         ensure().randomTargetOrder = (e.target as HTMLInputElement).checked;
       });
       num("ctx-bn-hide")?.addEventListener("change", (e) => {
+        pushHistory();
         ensure().hideVisual = (e.target as HTMLInputElement).checked;
       });
+      break;
+    }
+    case "Player": {
+      break;
+    }
+    case "ServingStation": {
+      num("ctx-ss-pr")?.addEventListener("change", (e) => {
+        pushHistory();
+        item.stubKind = "ServingStation";
+        item.servingStation = { plateReturnInstanceId: (e.target as HTMLSelectElement).value };
+        draw();
+        setStatus("已更新上菜口的脏盘台绑定（写回后生效）");
+      });
+      break;
+    }
+    case "PlateReturn": {
+      document.querySelectorAll<HTMLInputElement>(".ctx-pr-sv").forEach((cb) =>
+        cb.addEventListener("change", () => {
+          const sv = items.find((i) => i.instanceId === cb.value);
+          if (!sv) return;
+          pushHistory();
+          sv.stubKind = "ServingStation";
+          sv.servingStation = { plateReturnInstanceId: cb.checked ? item.instanceId : "" };
+          hideContextMenu();
+          draw();
+          setStatus(
+            cb.checked
+              ? `已把「${itemLabel(sv)}」绑定到该脏盘台（写回后生效）`
+              : `已解绑「${itemLabel(sv)}」（写回后生效）`
+          );
+        })
+      );
       break;
     }
   }
@@ -524,7 +620,7 @@ async function openRecipesDialog() {
       .map((u) => {
         const ok = !missingUt.includes(u);
         const cat = catalogItemById(u);
-        const label = cat ? tidyCatalogNameZh(cat.nameZh) : u;
+        const label = cat ? tidyCatalogNameZh(cat.nameZh, cat.id) : u;
         return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span>${escHtml(label)} <span class="muted">${escHtml(u)}</span></div>`;
       })
       .join("");
@@ -599,8 +695,10 @@ async function openRecipesDialog() {
     let idx = 0;
     for (const ing of missing) {
       const it = addFromCatalog(cat, base.x + idx * CELL, base.z);
-      it.dispenser = { spawnerItemPrefabGuid: ingredientGuidById(ing) ?? "" };
-      idx++;
+      if (it) {
+        it.dispenser = { spawnerItemPrefabGuid: ingredientGuidById(ing) ?? "" };
+        idx++;
+      }
     }
   }
 
@@ -627,16 +725,20 @@ async function openRecipesDialog() {
 
 const app = document.getElementById("app")!;
 const MANAGE_ACTIVE = /^#\/manage/.test(location.hash);
+if (!MANAGE_ACTIVE) document.body.classList.remove("manage-bg");
 
 if (!MANAGE_ACTIVE) {
 app.innerHTML = `
+  ${navHtml("layout")}
   <div class="toolbar">
     <label>场景</label>
     <select id="scene-select"><option value="">加载中…</option></select>
     <button id="btn-reload">重新加载</button>
     <button id="btn-save" class="primary">写回 Unity</button>
-    <button id="btn-recipes" type="button">菜谱…</button>
-    <button id="btn-manage" type="button">关卡管理…</button>
+    <button id="btn-recipes" type="button">菜谱</button>
+    <button id="btn-level-config" type="button">人数配置</button>
+    <button id="btn-level-audio" type="button">音频</button>
+    <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">同步布局…</button>
     <div class="layer-tabs" id="layer-tabs">
       <button type="button" data-layer="items" class="layer-tab active">📦 物品层</button>
       <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板 / 背景层</button>
@@ -656,8 +758,9 @@ app.innerHTML = `
       <canvas id="canvas"></canvas>
       <div id="item-detail" class="item-detail hidden" role="dialog"></div>
       <div id="ctx-menu" class="ctx-menu hidden" role="dialog"></div>
+      <div id="pick-tip" class="pick-tip hidden" role="dialog"></div>
       <div id="floor-bar" class="floor-bar hidden"></div>
-      <div class="hint">拖拽空白框选 · Shift 加选 · Ctrl+C/V 复制粘贴 · 空格+拖动平移 · 右键微移/旋转/改参数 · Del 删除 · R/Shift+R 旋转90° · 滚轮缩放</div>
+      <div class="hint">拖拽空白框选 · Shift 加选 · Ctrl+C/V/X 复制/粘贴/裁切 · Ctrl+Z 撤回 · Ctrl+Shift+Z 重做 · 重叠点击弹出选择 · 空格+拖动平移 · 右键微移/旋转/改参数 · Del 删除 · R/Shift+R 旋转90° · 滚轮缩放</div>
     </div>
   </div>
 `;
@@ -670,7 +773,114 @@ const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = (canvas && canvas.getContext("2d")) as CanvasRenderingContext2D;
 const detailEl = document.getElementById("item-detail")!;
 const ctxMenuEl = document.getElementById("ctx-menu")!;
+const pickTipEl = document.getElementById("pick-tip")!;
 const floorBar = document.getElementById("floor-bar")!;
+
+interface EditorSnapshot {
+  items: EditorItem[];
+  floors: EditorFloor[];
+  bgThemeKey: string;
+}
+
+const history = new HistoryStack<EditorSnapshot>(20);
+let dirty = false;
+let dragSnapshot: EditorSnapshot | null = null;
+
+function snapshotState(): EditorSnapshot {
+  return JSON.parse(JSON.stringify({ items, floors, bgThemeKey })) as EditorSnapshot;
+}
+
+function updateSaveIndicator(): void {
+  const btn = document.getElementById("btn-save");
+  if (btn) btn.textContent = dirty ? "写回 Unity *" : "写回 Unity";
+}
+
+function markDirty(): void {
+  dirty = true;
+  updateSaveIndicator();
+}
+
+function clearDirty(): void {
+  dirty = false;
+  updateSaveIndicator();
+}
+
+function pushHistory(): void {
+  history.push(snapshotState());
+  markDirty();
+}
+
+function applySnapshot(snap: EditorSnapshot): void {
+  items = snap.items;
+  floors = snap.floors;
+  bgThemeKey = snap.bgThemeKey;
+  clearSelection();
+  clearFloorSelection();
+  hideDetail();
+  hideContextMenu();
+  hidePickTip();
+  markDirty();
+  draw();
+}
+
+function undo(): void {
+  const snap = history.undo(snapshotState());
+  if (!snap) {
+    setStatus("没有可撤回的操作", false);
+    return;
+  }
+  applySnapshot(snap);
+  setStatus(`已撤回（还可撤回 ${history.size} 步，写回 Unity 后生效）`);
+}
+
+function redo(): void {
+  const snap = history.redo(snapshotState());
+  if (!snap) {
+    setStatus("没有可重做的操作", false);
+    return;
+  }
+  applySnapshot(snap);
+  setStatus(`已重做（还可重做 ${history.redoSize} 步，写回 Unity 后生效）`);
+}
+
+function commitDragSnapshot(): void {
+  if (!dragSnapshot) return;
+  const snap = dragSnapshot;
+  dragSnapshot = null;
+  if (JSON.stringify(snapshotState()) !== JSON.stringify(snap)) {
+    history.push(snap);
+    markDirty();
+  }
+}
+
+function confirmLeaveIfDirty(action: () => void): void {
+  if (!dirty) {
+    action();
+    return;
+  }
+  openModal(
+    "有未保存的修改",
+    `<p>当前关卡的布局修改尚未写回 Unity，离开后修改将丢失。</p>`,
+    `<button type="button" class="modal-btn" data-cancel>取消</button>
+     <button type="button" class="modal-btn danger" data-leave>直接离开</button>
+     <button type="button" class="modal-btn primary" data-save>写回并离开</button>`
+  );
+  document.querySelector("[data-cancel]")?.addEventListener("click", () => {
+    closeModal();
+    sceneSelect.value = scenePath;
+  });
+  document.querySelector("[data-leave]")?.addEventListener("click", () => {
+    closeModal();
+    action();
+  });
+  document.querySelector("[data-save]")?.addEventListener("click", () => {
+    closeModal();
+    void saveToUnity().then((ok) => {
+      if (ok) action();
+      else sceneSelect.value = scenePath;
+    });
+  });
+}
 
 function setStatus(text: string, ok = true) {
   statusEl.textContent = text;
@@ -775,9 +985,14 @@ function itemLabel(item: EditorItem): string {
     if (ingZh !== "未设置") return ingZh;
   }
 
+  if (item.stubKind === "Player" || id === "Player") {
+    const pid = item.player?.playerID ?? 11;
+    if (pid !== 11) return `玩家${pid + 1}`;
+  }
+
   const cat = catalogByGuid.get(item.prefabGuid);
-  if (cat?.nameZh) return tidyCatalogNameZh(cat.nameZh);
-  if (item.displayName) return tidyCatalogNameZh(item.displayName);
+  if (cat?.nameZh) return tidyCatalogNameZh(cat.nameZh, cat.id);
+  if (item.displayName) return tidyCatalogNameZh(item.displayName, item.displayName);
   return id || "?";
 }
 
@@ -959,12 +1174,15 @@ function draw() {
       .filter((it) => !isSurfaceItem(catalogByGuid.get(it.prefabGuid)))
       .sort((a, b) => drawLayerForItem(a, catalogByGuid) - drawLayerForItem(b, catalogByGuid));
     teleportalLabels = computeTeleportalLabels();
+    plateReturnLabels = computePlateReturnLabels();
     for (const item of sorted) {
       drawItem(item, isSelected(item._editorKey));
     }
     drawTeleportalLinks();
-    if (marqueeing) drawMarquee();
+    drawServingLinks();
   }
+
+  if (marqueeing) drawMarquee();
 
   updateFloorBar();
 }
@@ -990,11 +1208,30 @@ function updateMarqueeSelection() {
   const maxX = Math.max(marqueeStartX, marqueeCurX);
   const minY = Math.min(marqueeStartY, marqueeCurY);
   const maxY = Math.max(marqueeStartY, marqueeCurY);
+  const inRect = (wx: number, wz: number) => {
+    const p = worldToCanvas(wx, wz);
+    return p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY;
+  };
+  if (currentLayer === "floor") {
+    const nextFloors = marqueeAdd ? new Set(selectedFloorKeys) : new Set<string>();
+    for (const f of floors) {
+      if (inRect(f._wx, f._wz)) nextFloors.add(f._key);
+    }
+    setFloorSelection([...nextFloors]);
+    const next = marqueeAdd ? new Set(selectedKeys) : new Set<string>();
+    for (const it of items) {
+      if (!isSurfaceItem(catalogByGuid.get(it.prefabGuid))) continue;
+      if (inRect(it._wx, it._wz)) next.add(it._editorKey);
+    }
+    selectedKeys = next;
+    const keys = selectionKeys();
+    selectedKey = keys.length ? keys[keys.length - 1] : null;
+    return;
+  }
   const next = marqueeAdd ? new Set(selectedKeys) : new Set<string>();
   for (const it of items) {
-    if (currentLayer !== "floor" && isSurfaceItem(catalogByGuid.get(it.prefabGuid))) continue;
-    const p = worldToCanvas(it._wx, it._wz);
-    if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) next.add(it._editorKey);
+    if (isSurfaceItem(catalogByGuid.get(it.prefabGuid))) continue;
+    if (inRect(it._wx, it._wz)) next.add(it._editorKey);
   }
   selectedKeys = next;
   const keys = selectionKeys();
@@ -1111,7 +1348,7 @@ function drawFloorPlanes(highlight: boolean) {
   for (const f of floors) {
     // Backdrop planes (often huge, default-white in Unity) — theme fill shows the void color.
     if (f.surfaceKind === "background") continue;
-    const selected = highlight && f._key === selectedFloorKey;
+    const selected = highlight && selectedFloorKeys.has(f._key);
     drawFloorPlane(f, selected, false);
   }
 }
@@ -1166,8 +1403,8 @@ function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean) {
     ctx.setLineDash([]);
   }
 
-  // Resize handles when selected.
-  if (selected && !ghost) {
+  // Resize handles when exactly one floor is selected.
+  if (selected && !ghost && selectedFloorKeys.size === 1) {
     ctx.fillStyle = "#f9ab00";
     for (const hx of [-bw / 2, bw / 2]) {
       for (const hy of [-bh / 2, bh / 2]) {
@@ -1245,13 +1482,15 @@ function floorLocalPoint(f: EditorFloor, wx: number, wz: number): { lx: number; 
   return { lx: dx * cos + dz * sin, lz: -dx * sin + dz * cos };
 }
 
-function hitTestFloor(wx: number, wz: number): {
+interface FloorHit {
   floor: EditorFloor;
   mode: "move" | "resize";
   edge: string;
   anchorX: number;
   anchorZ: number;
-} | null {
+}
+
+function hitTestFloorsAll(wx: number, wz: number): FloorHit[] {  const hits: FloorHit[] = [];
   for (let i = floors.length - 1; i >= 0; i--) {
     const f = floors[i];
     const hw = (f._wCells * CELL) / 2;
@@ -1275,18 +1514,26 @@ function hitTestFloor(wx: number, wz: number): {
       const sin = Math.sin(rad);
       const anchorX = f._wx + ax * cos - az * sin;
       const anchorZ = f._wz + ax * sin + az * cos;
-      return { floor: f, mode: "resize", edge, anchorX, anchorZ };
+      hits.push({ floor: f, mode: "resize", edge, anchorX, anchorZ });
+      continue;
     }
-    return { floor: f, mode: "move", edge: "", anchorX: 0, anchorZ: 0 };
+    hits.push({ floor: f, mode: "move", edge: "", anchorX: 0, anchorZ: 0 });
   }
-  return null;
+  return hits;
 }
 
 function dragFloor(f: EditorFloor, mx: number, my: number) {
   const { x: wx, z: wz } = canvasToWorld(mx, my);
   if (dragFloorMode === "move") {
-    f._wx = snapValue(wx, snapStep);
-    f._wz = snapValue(wz, snapStep);
+    if (f.surfaceKind === "raft") {
+      f._wx = wx;
+      f._wz = wz;
+      snapRaftCenterToGrid(f);
+    } else {
+      const snapped = snapFootprintCenter(wx, wz, f._wCells, f._dCells, f.localRotationY ?? 0, CELL, snapStep);
+      f._wx = snapped.x;
+      f._wz = snapped.z;
+    }
   } else {
     // Resize: opposite corner (anchor) stays fixed; compute new width/depth.
     const rad = (normalizeRot(f.localRotationY) * Math.PI) / 180;
@@ -1310,9 +1557,39 @@ function dragFloor(f: EditorFloor, mx: number, my: number) {
   }
 }
 
+/** Snap a raft floor so its plank lattice sits on the global CELL grid (grid origin when known),
+ *  keeping rafts aligned with each other and with placed items across save/reload round trips. */
+function snapRaftCenterToGrid(f: EditorFloor): void {
+  if (f.surfaceKind !== "raft") return;
+  const ox = gridInfo?.found ? gridInfo.worldPosition.x : 0;
+  const oz = gridInfo?.found ? gridInfo.worldPosition.z : 0;
+  const minX = f._wx - ((f._wCells - 1) / 2) * CELL;
+  const minZ = f._wz - ((f._dCells - 1) / 2) * CELL;
+  const sMinX = ox + Math.round((minX - ox) / CELL) * CELL;
+  const sMinZ = oz + Math.round((minZ - oz) / CELL) * CELL;
+  f._wx = sMinX + ((f._wCells - 1) / 2) * CELL;
+  f._wz = sMinZ + ((f._dCells - 1) / 2) * CELL;
+}
+
 function finalizeFloor(f: EditorFloor) {
-  f._wx = snapValue(f._wx, snapStep);
-  f._wz = snapValue(f._wz, snapStep);
+  if (f.surfaceKind === "raft") {
+    // Raft floors snap their plank lattice to the global CELL grid instead of the half-cell step.
+    snapRaftCenterToGrid(f);
+  } else {
+    // Snap by footprint edges (same as items) so adjacent floors share a common grid edge
+    // instead of independently rounding centers, which can create half-cell overlaps/gaps.
+    const snapped = snapFootprintCenter(
+      f._wx,
+      f._wz,
+      f._wCells,
+      f._dCells,
+      f.localRotationY ?? 0,
+      CELL,
+      snapStep
+    );
+    f._wx = snapped.x;
+    f._wz = snapped.z;
+  }
   f.localPosition.x = f._wx;
   f.localPosition.z = f._wz;
   f.worldPosition.x = f._wx;
@@ -1320,7 +1597,7 @@ function finalizeFloor(f: EditorFloor) {
   f.widthUnits = f._wCells * CELL;
   f.depthUnits = f._dCells * CELL;
   // Smart material match by size tag.
-  if (f.surfaceKind !== "background") tryMatchFloorMaterialBySize(f);
+  if (f.surfaceKind !== "background" && f.surfaceKind !== "raft") tryMatchFloorMaterialBySize(f);
 }
 
 function tryMatchFloorMaterialBySize(f: EditorFloor) {
@@ -1362,12 +1639,13 @@ function warnItemVoid(item: EditorItem) {
   if (w) setStatus(w, false);
 }
 
-function addFloorAt(wx: number, wz: number) {  const snapped = snapValue(wx, snapStep);
-  const snappedZ = snapValue(wz, snapStep);
+function addFloorAt(wx: number, wz: number) {
+  pushHistory();
   const id = `new:floor:${crypto.randomUUID()}`;
   const key = newEditorKey();
   const w = 4;
   const d = 4;
+  const snapped = snapFootprintCenter(wx, wz, w, d, 0, CELL, snapStep);
   const defaultMat = floorMaterials.find((m) => /floor|blacktiles|path/i.test(m.id));
   const floor: EditorFloor = {
     instanceId: id,
@@ -1381,21 +1659,21 @@ function addFloorAt(wx: number, wz: number) {  const snapped = snapValue(wx, sna
     materialGuid: defaultMat?.guid,
     materialAssetPath: defaultMat?.assetPath,
     materialName: defaultMat?.id,
-    localPosition: { x: snapped, y: -0.05, z: snappedZ },
-    worldPosition: { x: snapped, y: -0.05, z: snappedZ },
+    localPosition: { x: snapped.x, y: -0.05, z: snapped.z },
+    worldPosition: { x: snapped.x, y: -0.05, z: snapped.z },
     localRotationY: 0,
     localScale: { x: (w * CELL) / 10, y: 1, z: (d * CELL) / 10 },
     widthUnits: w * CELL,
     depthUnits: d * CELL,
     widthCells: w,
     depthCells: d,
-    _wx: snapped,
-    _wz: snappedZ,
+    _wx: snapped.x,
+    _wz: snapped.z,
     _wCells: w,
     _dCells: d,
   };
   floors.push(floor);
-  selectedFloorKey = key;
+  setFloorSelection([key]);
   draw();
   setStatus("已新增地板（写回后生效）");
 }
@@ -1414,7 +1692,7 @@ function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
     <dl>
       <dt>类型</dt><dd>${surfaceKindLabelZh(f.surfaceKind)}${f.meshType === "plane" ? "（Plane 平面）" : f.meshType === "quad" ? "（Quad）" : ""}</dd>
       <dt>尺寸</dt><dd id="fe-size">${f._wCells} × ${f._dCells} 格 (${(f._wCells * CELL).toFixed(1)} × ${(f._dCells * CELL).toFixed(1)} m，${areaCells} 格)</dd>
-      <dt>材质</dt><dd id="fe-mat">${matchedMat?.nameZh ?? f.materialName ?? "无"}</dd>
+      <dt>材质</dt><dd id="fe-mat">${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : matchedMat?.nameZh ?? f.materialName ?? "无"}</dd>
       <dt>坐标</dt><dd>x ${f._wx.toFixed(2)}, z ${f._wz.toFixed(2)}</dd>
       <dt>旋转</dt><dd>${normalizeRot(f.localRotationY)}°</dd>
       <dt>死亡类型</dt><dd>${deathLabelZh(deathInfo)}（只读）</dd>
@@ -1423,6 +1701,10 @@ function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
       <label>宽(格) <input type="number" min="1" id="fe-w" value="${f._wCells}" /></label>
       <label>高(格) <input type="number" min="1" id="fe-d" value="${f._dCells}" /></label>
       <span class="muted" style="align-self:center;font-size:11px">自动应用（仅页面）</span>
+    </div>
+    <div class="mat-pick-title">特殊材质</div>
+    <div class="mat-pick-list">
+      <button type="button" class="mat-pick${f.surfaceKind === "raft" ? " active" : ""}" id="fe-to-raft"><span class="mat-id">🪵 木筏段</span><span class="mat-sub">作为木筏地板（写回时按尺寸铺满拼块）</span></button>
     </div>
     <div class="mat-pick-title">切换材质（点击应用）</div>
     <div class="mat-pick-list">${matRows || '<div class="mat-pick-empty">当前关卡集无材质</div>'}</div>
@@ -1433,9 +1715,15 @@ function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
 
   const feW = document.getElementById("fe-w") as HTMLInputElement;
   const feD = document.getElementById("fe-d") as HTMLInputElement;
+  let sizePushed = false;
   const applyFloorSizeLive = () => {
     const wv = parseInt(feW.value, 10);
     const dv = parseInt(feD.value, 10);
+    if (!(wv > 0) && !(dv > 0)) return;
+    if (!sizePushed) {
+      pushHistory();
+      sizePushed = true;
+    }
     if (wv > 0) f._wCells = wv;
     if (dv > 0) f._dCells = dv;
     finalizeFloor(f);
@@ -1445,7 +1733,9 @@ function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
       sz.textContent = `${f._wCells} × ${f._dCells} 格 (${(f._wCells * CELL).toFixed(1)} × ${(f._dCells * CELL).toFixed(1)} m，${f._wCells * f._dCells} 格)`;
     const m = floorMaterials.find((x) => x.guid === f.materialGuid);
     const matEl = document.getElementById("fe-mat");
-    if (matEl) matEl.textContent = m?.nameZh ?? f.materialName ?? "无";
+    if (matEl)
+      matEl.textContent =
+        f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : m?.nameZh ?? f.materialName ?? "无";
     detailEl.querySelectorAll<HTMLButtonElement>(".mat-pick").forEach((b) =>
       b.classList.toggle("active", b.dataset.guid === f.materialGuid)
     );
@@ -1455,37 +1745,84 @@ function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
   feW.addEventListener("change", applyFloorSizeLive);
   feD.addEventListener("change", applyFloorSizeLive);
 
-  detailEl.querySelectorAll<HTMLButtonElement>(".mat-pick").forEach((btn) => {
+  detailEl.querySelectorAll<HTMLButtonElement>(".mat-pick[data-guid]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const m = floorMaterials.find((x) => x.guid === btn.dataset.guid);
       if (!m) return;
+      pushHistory();
       f.materialGuid = m.guid;
       f.materialAssetPath = m.assetPath;
       f.materialName = m.id;
+      if (f.surfaceKind === "raft") f.surfaceKind = "solid";
       draw();
       setStatus(`已切换材质：${m.nameZh}（写回后生效）`);
       showFloorDetail(f, clientX, clientY);
     });
   });
+  document.getElementById("fe-to-raft")?.addEventListener("click", () => {
+    if (f.surfaceKind !== "raft") {
+      pushHistory();
+      f.surfaceKind = "raft";
+      snapRaftCenterToGrid(f);
+      finalizeFloor(f);
+      draw();
+      setStatus(`已设为木筏地板 ${f._wCells}×${f._dCells}（写回时按尺寸铺满木筏拼块，可 Ctrl+Z 撤回）`);
+    }
+    showFloorDetail(f, clientX, clientY);
+  });
 }
 
-function positionDetail(clientX: number, clientY: number) {
+function positionFloating(el: HTMLElement, clientX: number, clientY: number) {
   const margin = 8;
   let left = clientX + margin;
   let top = clientY + margin;
-  detailEl.style.left = `${left}px`;
-  detailEl.style.top = `${top}px`;
+  el.style.left = `${left}px`;
+  el.style.top = `${top}px`;
   requestAnimationFrame(() => {
-    const rect = detailEl.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
     if (rect.right > window.innerWidth - margin) {
       left = Math.max(margin, clientX - rect.width - margin);
-      detailEl.style.left = `${left}px`;
+      el.style.left = `${left}px`;
     }
     if (rect.bottom > window.innerHeight - margin) {
       top = Math.max(margin, clientY - rect.height - margin);
-      detailEl.style.top = `${top}px`;
+      el.style.top = `${top}px`;
     }
   });
+}
+
+function positionDetail(clientX: number, clientY: number) {
+  positionFloating(detailEl, clientX, clientY);
+}
+
+interface PickCandidate {
+  title: string;
+  sub: string;
+  onPick: () => void;
+}
+
+function showPickTip(candidates: PickCandidate[], clientX: number, clientY: number) {
+  pickTipEl.innerHTML =
+    `<div class="pick-tip-head">此处有 ${candidates.length} 个重叠对象，请选择要操作的对象：</div>` +
+    candidates
+      .map(
+        (c, i) =>
+          `<button type="button" class="pick-tip-item" data-idx="${i}"><span class="pick-title">${escHtml(c.title)}</span><span class="pick-sub">${escHtml(c.sub)}</span></button>`
+      )
+      .join("") +
+    `<p class="close-hint">点击外部或 Esc 关闭</p>`;
+  pickTipEl.classList.remove("hidden");
+  positionFloating(pickTipEl, clientX, clientY);
+  pickTipEl.querySelectorAll<HTMLButtonElement>(".pick-tip-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      hidePickTip();
+      candidates[Number(btn.dataset.idx)]?.onPick();
+    });
+  });
+}
+
+function hidePickTip() {
+  pickTipEl.classList.add("hidden");
 }
 
 function drawGrid() {
@@ -1556,6 +1893,72 @@ function teleportals(): EditorItem[] {
   return items.filter(isTeleportalItem);
 }
 
+function isPlayerItem(item: EditorItem): boolean {
+  return item.stubKind === "Player" || prefabIdFromPath(item.prefabAssetPath) === "Player";
+}
+
+function isServingStationItem(item: EditorItem): boolean {
+  return item.stubKind === "ServingStation" || prefabIdFromPath(item.prefabAssetPath) === "ServingStation";
+}
+
+function isPlateReturnItem(item: EditorItem): boolean {
+  return item.stubKind === "PlateReturn" || prefabIdFromPath(item.prefabAssetPath) === "PlateReturn";
+}
+
+function isFoodSpawnerItem(item: EditorItem): boolean {
+  return item.stubKind === "AttachingFoodSpawner" || prefabIdFromPath(item.prefabAssetPath) === "AttachingFoodSpawner";
+}
+
+function servingStations(): EditorItem[] {
+  return items.filter(isServingStationItem);
+}
+
+function plateReturns(): EditorItem[] {
+  return items.filter(isPlateReturnItem);
+}
+
+let plateReturnLabels = new Map<string, string>();
+
+function computePlateReturnLabels(): Map<string, string> {
+  const label = new Map<string, string>();
+  let n = 0;
+  for (const t of plateReturns()) label.set(t.instanceId, (++n).toString());
+  return label;
+}
+
+function itemHalfExtents(item: EditorItem): { hx: number; hz: number } {
+  const fp = resolveFootprint(item);
+  return {
+    hx: ((fp.cellsX * CELL) / 2) * itemScaleX(item),
+    hz: ((fp.cellsZ * CELL) / 2) * itemScaleZ(item),
+  };
+}
+
+function rectsOverlap(
+  ax: number, az: number, ahx: number, ahz: number,
+  bx: number, bz: number, bhx: number, bhz: number
+): boolean {
+  return Math.abs(ax - bx) < ahx + bhx - 1e-6 && Math.abs(az - bz) < ahz + bhz - 1e-6;
+}
+
+/** 玩家最高优先级：物品不允许与玩家重叠，玩家也不允许与任何非地板物品/其他玩家重叠。 */
+function moveBlockedAt(item: EditorItem, wx: number, wz: number, ignoreKeys?: Set<string>): boolean {
+  const { hx, hz } = itemHalfExtents(item);
+  const isPlayer = isPlayerItem(item);
+  for (const o of items) {
+    if (o._editorKey === item._editorKey) continue;
+    if (ignoreKeys?.has(o._editorKey)) continue;
+    if (isPlayer) {
+      if (isSurfaceItem(catalogByGuid.get(o.prefabGuid))) continue;
+    } else if (!isPlayerItem(o)) {
+      continue;
+    }
+    const oh = itemHalfExtents(o);
+    if (rectsOverlap(wx, wz, hx, hz, o._wx, o._wz, oh.hx, oh.hz)) return true;
+  }
+  return false;
+}
+
 function computeTeleportalLabels(): Map<string, string> {
   const tp = teleportals();
   const byInst = new Map(tp.map((i) => [i.instanceId, i]));
@@ -1572,7 +1975,7 @@ function computeTeleportalLabels(): Map<string, string> {
   return label;
 }
 
-function drawConveyorArrow(center: { x: number; y: number }, rot: number, cellPx: number, speed: number) {
+function drawConveyorArrow(center: { x: number; y: number }, rot: number, cellPx: number, speed: number, color = "#ffe49a") {
   const rad = (rot * Math.PI) / 180;
   let dx = Math.sin(rad);
   let dy = -Math.cos(rad);
@@ -1586,8 +1989,8 @@ function drawConveyorArrow(center: { x: number; y: number }, rot: number, cellPx
   const x1 = center.x + dx * L;
   const y1 = center.y + dy * L;
   ctx.save();
-  ctx.strokeStyle = "#ffe49a";
-  ctx.fillStyle = "#ffe49a";
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
   ctx.lineWidth = Math.max(2, cellPx * 0.12);
   ctx.lineCap = "round";
   ctx.beginPath();
@@ -1664,6 +2067,38 @@ function drawTeleportalLinks() {
   }
 }
 
+function drawServingLinks() {
+  const byInst = new Map(items.map((i) => [i.instanceId, i]));
+  for (const s of servingStations()) {
+    const prId = s.servingStation?.plateReturnInstanceId;
+    if (!prId) continue;
+    const p = byInst.get(prId);
+    if (!p) continue;
+    const a = worldToCanvas(s._wx, s._wz);
+    const b = worldToCanvas(p._wx, p._wz);
+    ctx.save();
+    ctx.strokeStyle = "#7bd889";
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const rad = Math.atan2(b.y - a.y, b.x - a.x);
+    const ah = 8 * Math.max(0.6, scale);
+    ctx.fillStyle = "#7bd889";
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - Math.cos(rad - 0.45) * ah, b.y - Math.sin(rad - 0.45) * ah);
+    ctx.lineTo(b.x - Math.cos(rad + 0.45) * ah, b.y - Math.sin(rad + 0.45) * ah);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 function drawSurfaceItem(item: EditorItem, selected: boolean) {
   const cat = catalogByGuid.get(item.prefabGuid);
   const fp = resolveFootprint(item);
@@ -1724,6 +2159,7 @@ function drawItem(item: EditorItem, selected: boolean) {
   const w = fp.cellsX * cellPx * sx;
   const h = fp.cellsZ * cellPx * sz;
   const isUtensil = isStackUtensilCatalog(cat);
+  const isPlayer = isPlayerItem(item);
   const paint = paintStyleForItem(cat, item.parentPath, selected);
 
   ctx.save();
@@ -1760,21 +2196,38 @@ function drawItem(item: EditorItem, selected: boolean) {
     }
   }
 
-  ctx.beginPath();
-  ctx.rect(-bw / 2 + 2, -bh / 2 + 2, bw - 4, bh - 4);
-  ctx.clip();
+  if (!isPlayer) {
+    ctx.beginPath();
+    ctx.rect(-bw / 2 + 2, -bh / 2 + 2, bw - 4, bh - 4);
+    ctx.clip();
 
-  ctx.fillStyle = paint.label;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  drawLabelInBox(ctx, itemLabel(item), bw - 4, bh - 4);
+    ctx.fillStyle = paint.label;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    drawLabelInBox(ctx, itemLabel(item), bw - 4, bh - 4);
+  }
 
   ctx.restore();
+
+  if (isPlayer) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(center.x - bw / 2 + 2, center.y - bh / 2 + 2, bw - 4, bh - 4);
+    ctx.clip();
+    ctx.fillStyle = paint.label;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.translate(center.x, center.y);
+    drawLabelInBox(ctx, itemLabel(item), bw - 4, bh - 4);
+    ctx.restore();
+  }
 
   if (isConveyorItem(item)) {
     drawConveyorArrow(center, rot, cellPx, item.conveyor?.conveySpeed ?? 0.5);
   } else if (isTeleportalItem(item)) {
     drawTeleportalBadge(item, center, cellPx);
+  } else if (isFoodSpawnerItem(item)) {
+    drawConveyorArrow(center, rot, cellPx, 1, "#7bd889");
   }
 }
 
@@ -1790,19 +2243,18 @@ function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx: numbe
   };
 }
 
-function hitTest(wx: number, wz: number): EditorItem | null {
+function hitTestAll(wx: number, wz: number): EditorItem[] {
   const includeSurface = currentLayer === "floor";
   const sorted = [...items]
     .filter((it) => includeSurface || !isSurfaceItem(catalogByGuid.get(it.prefabGuid)))
     .sort((a, b) => drawLayerForItem(b, catalogByGuid) - drawLayerForItem(a, catalogByGuid));
-  for (const item of sorted) {
+  return sorted.filter((item) => {
     const fp = resolveFootprint(item);
     const { lx, lz } = worldToItemLocal(item, wx, wz);
     const hw = ((fp.cellsX * CELL) / 2) * itemScaleX(item);
     const hh = ((fp.cellsZ * CELL) / 2) * itemScaleZ(item);
-    if (Math.abs(lx) <= hw && Math.abs(lz) <= hh) return item;
-  }
-  return null;
+    return Math.abs(lx) <= hw && Math.abs(lz) <= hh;
+  });
 }
 
 function hideDetail() {
@@ -1863,6 +2315,27 @@ function extraStubDetailHtml(item: EditorItem): string {
       const b = item.burner ?? {};
       return `<dt>火焰喷射器</dt><dd>${BURNER_FIRE_MODES[b.fireMode ?? 1]} · 空中时间 ${b.airTime ?? 2}s${b.randomTargetOrder ? " · 随机目标" : ""}${b.hideVisual ? " · 隐藏模型" : ""}（右键直接修改）</dd>`;
     }
+    case "Player": {
+      const pid = item.player?.playerID ?? 11;
+      return `<dt>玩家</dt><dd>${pid === 11 ? "自动（按加入顺序）" : `玩家 ${pid + 1}`} · 固定出生点，仅可拖动位置</dd>`;
+    }
+    case "ServingStation": {
+      const prId = item.servingStation?.plateReturnInstanceId;
+      const pr = prId ? items.find((i) => i.instanceId === prId) : undefined;
+      const txt = pr
+        ? `已绑定 → 脏盘台 ${plateReturnLabels.get(pr.instanceId) ?? "?"}（${itemLabel(pr)}）`
+        : prId
+          ? "绑定的脏盘台不在当前场景"
+          : "未绑定脏盘台";
+      return `<dt>上菜口</dt><dd>${txt}（右键直接修改）</dd>`;
+    }
+    case "PlateReturn": {
+      const bound = servingStations().filter((s) => s.servingStation?.plateReturnInstanceId === item.instanceId);
+      const txt = bound.length
+        ? `被 ${bound.length} 个上菜口绑定：${bound.map((s) => itemLabel(s)).join("、")}`
+        : "未被任何上菜口绑定";
+      return `<dt>脏盘台</dt><dd>${txt}（右键管理绑定）</dd>`;
+    }
     default:
       return "";
   }
@@ -1891,9 +2364,14 @@ function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY: numbe
   positionDetail(clientX, clientY);
 
   const scaleInput = document.getElementById("si-scale") as HTMLInputElement;
+  let scalePushed = false;
   const applyScale = () => {
     const v = parseFloat(scaleInput.value);
     if (!isFinite(v) || v < 0.5) return;
+    if (!scalePushed) {
+      pushHistory();
+      scalePushed = true;
+    }
     setItemUniformScale(item, v);
     const el = document.getElementById("si-scale-val");
     if (el) el.textContent = `${v.toFixed(2)}×`;
@@ -1913,7 +2391,7 @@ function showDetail(item: EditorItem, clientX: number, clientY: number) {
     <h3>${itemLabel(item)}</h3>
     <dl>
       <dt>Prefab ID</dt><dd>${id}</dd>
-      <dt>中文名</dt><dd>${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh) : "—"}</dd>
+      <dt>中文名</dt><dd>${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : "—"}</dd>
       <dt>资源路径</dt><dd>${item.prefabAssetPath || "—"}</dd>
       <dt>层级路径</dt><dd>${item.hierarchyPath}</dd>
       <dt>父节点</dt><dd>${item.parentPath || "—"}</dd>
@@ -1921,7 +2399,7 @@ function showDetail(item: EditorItem, clientX: number, clientY: number) {
       <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(2)}, y ${item.localPosition.y.toFixed(2)}, z ${item.localPosition.z.toFixed(2)}</dd>
       <dt>旋转 Y</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
       ${isSurfaceItem(cat) ? `<dt>缩放</dt><dd>${itemUniformScale(item).toFixed(2)}×（右键菜单可调整大小）</dd>` : ""}
-      <dt>分类</dt><dd>${isSurfaceItem(cat) ? surfaceKindLabelZh(cat?.surfaceKind) + "（地板层）" : cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh) : cat?.category ?? "—"}</dd>
+      <dt>分类</dt><dd>${isSurfaceItem(cat) ? surfaceKindLabelZh(cat?.surfaceKind) + "（地板层）" : cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : cat?.category ?? "—"}</dd>
       ${stackDetailHtml(item, cat)}
       ${item.stubKind === "Dispenser" ? `<dt>食材</dt><dd>${ingredientNameZh(ingredientsCache, item.dispenser?.spawnerItemPrefabGuid)}</dd>` : ""}
       ${extraStubDetailHtml(item)}
@@ -1994,7 +2472,22 @@ function clearSelection(): void {
   selectedKey = null;
 }
 
+function setFloorSelection(keys: string[], primary?: string): void {
+  selectedFloorKeys = new Set(keys);
+  selectedFloorKey = keys.length ? primary ?? keys[keys.length - 1] : null;
+}
+
+function clearFloorSelection(): void {
+  selectedFloorKeys = new Set<string>();
+  selectedFloorKey = null;
+}
+
 function nudgeItem(item: EditorItem, dx: number, dz: number) {
+  if (moveBlockedAt(item, item._wx + dx, item._wz + dz)) {
+    setStatus("目标位置与玩家重叠，不可放置", false);
+    return;
+  }
+  pushHistory();
   item._wx += dx;
   item._wz += dz;
   item.localPosition.x = item._wx - item._parentWx;
@@ -2009,7 +2502,15 @@ function deleteSelected() {
   const keys = selectionKeys();
   if (keys.length === 0 && !selectedKey) return;
   const kill = new Set(keys.length ? keys : selectedKey ? [selectedKey] : []);
-  if (kill.size === 0) return;
+  for (const k of [...kill]) {
+    const it = items.find((i) => i._editorKey === k);
+    if (it && isPlayerItem(it)) kill.delete(k);
+  }
+  if (kill.size === 0) {
+    setStatus("玩家不可删除", false);
+    return;
+  }
+  pushHistory();
   items = items.filter((i) => !kill.has(i._editorKey));
   clearSelection();
   hideDetail();
@@ -2028,10 +2529,25 @@ function copySelection() {
   }
   clipboard = keys
     .map((k) => items.find((i) => i._editorKey === k))
-    .filter((i): i is EditorItem => !!i)
+    .filter((i): i is EditorItem => !!i && !isPlayerItem(i))
     .map((i) => JSON.parse(JSON.stringify(i)) as EditorItem);
   pasteRound = 0;
+  if (!clipboard.length) {
+    setStatus("玩家不可复制", false);
+    return;
+  }
   setStatus(`已复制 ${clipboard.length} 个物品（Ctrl/Cmd+V 粘贴）`);
+}
+
+function cutSelection() {
+  const keys = selectionKeys();
+  if (!keys.length) {
+    setStatus("没有选中物品可裁切", false);
+    return;
+  }
+  copySelection();
+  deleteSelected();
+  setStatus(`已裁切 ${clipboard.length} 个物品（Ctrl/Cmd+V 粘贴，Ctrl/Cmd+Z 撤回）`);
 }
 
 function pasteClipboard() {
@@ -2039,17 +2555,29 @@ function pasteClipboard() {
     setStatus("剪贴板为空（先 Ctrl/Cmd+V 复制）", false);
     return;
   }
+  pushHistory();
   pasteRound++;
   const off = CELL * pasteRound;
   const pasted: string[] = [];
+  let skipped = 0;
   for (const src of clipboard) {
+    if (isPlayerItem(src)) {
+      skipped++;
+      continue;
+    }
+    const nx = src._wx + off;
+    const nz = src._wz + off;
+    if (moveBlockedAt(src, nx, nz)) {
+      skipped++;
+      continue;
+    }
     const editorKey = newEditorKey();
     const copy = JSON.parse(JSON.stringify(src)) as EditorItem;
     copy._editorKey = editorKey;
     copy.instanceId = `new:copy:${crypto.randomUUID()}`;
     copy.hierarchyPath = copy.instanceId;
-    copy._wx = src._wx + off;
-    copy._wz = src._wz + off;
+    copy._wx = nx;
+    copy._wz = nz;
     copy.localPosition = {
       x: copy._wx - copy._parentWx,
       y: copy.localPosition.y,
@@ -2063,12 +2591,13 @@ function pasteClipboard() {
   hideDetail();
   hideContextMenu();
   draw();
-  setStatus(`已粘贴 ${pasted.length} 个物品`);
+  setStatus(`已粘贴 ${pasted.length} 个物品${skipped ? `（${skipped} 个因与玩家重叠被跳过）` : ""}`);
 }
 
 function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
   const cat = catalogByGuid.get(item.prefabGuid);
   const isSurface = isSurfaceItem(cat);
+  const isPlayer = isPlayerItem(item);
   const stubHtml = stubControlsHtml(item);
   const rot = normalizeRot(item.localRotationY);
 
@@ -2084,14 +2613,18 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
         <button type="button" data-nudge="0.1,0" title="右移 0.1">→</button>
       </div>
     </div>
-    <div class="ctx-nudge-row">
+    ${
+      isPlayer
+        ? ""
+        : `<div class="ctx-nudge-row">
       <span class="ctx-label">旋转 <span id="ctx-rot" class="ctx-scale-val">${rot}°</span></span>
       <div class="ctx-nudge">
         <button type="button" data-rot="-90" title="逆时针 90°">−90°</button>
         <input type="number" id="ctx-rot-input" class="ctx-input ctx-rot-input" min="0" max="359" step="1" value="${rot}" title="任意角度 (0~359)" />
         <button type="button" data-rot="90" title="顺时针 90°">+90°</button>
       </div>
-    </div>
+    </div>`
+    }
     ${
       isSurface
         ? `<div class="ctx-nudge-row">
@@ -2107,9 +2640,10 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
     ${stubHtml}
     <div class="ctx-actions">
       <button type="button" class="ctx-btn" data-act="detail">详情…</button>
-      <button type="button" class="ctx-btn" data-act="copy">复制 (Ctrl+C)</button>
+      ${isPlayer ? "" : `<button type="button" class="ctx-btn" data-act="copy">复制 (Ctrl+C)</button>
+      <button type="button" class="ctx-btn" data-act="cut">裁切 (Ctrl+X)</button>`}
       <button type="button" class="ctx-btn" data-act="paste">粘贴 (Ctrl+V)</button>
-      <button type="button" class="ctx-btn danger" data-act="delete">删除</button>
+      ${isPlayer ? "" : `<button type="button" class="ctx-btn danger" data-act="delete">删除</button>`}
     </div>
     <p class="close-hint">点击外部或 Esc 关闭</p>
   `;
@@ -2142,6 +2676,7 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
     btn.addEventListener("click", () => {
       const delta = parseFloat(btn.dataset.scale!);
       const next = Math.max(0.5, +(itemUniformScale(item) + delta).toFixed(2));
+      pushHistory();
       setItemUniformScale(item, next);
       const scaleEl = document.getElementById("ctx-scale");
       if (scaleEl) scaleEl.textContent = `${next.toFixed(1)}×`;
@@ -2150,6 +2685,7 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
   });
   const applyRotation = (deg: number) => {
     if (!isFinite(deg)) return;
+    pushHistory();
     item.localRotationY = normalizeRot(deg);
     syncLocalFromWorld(item);
     const lbl = document.getElementById("ctx-rot");
@@ -2177,6 +2713,10 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
   ctxMenuEl.querySelector('[data-act="delete"]')?.addEventListener("click", () => deleteSelected());
   ctxMenuEl.querySelector('[data-act="copy"]')?.addEventListener("click", () => {
     copySelection();
+  });
+  ctxMenuEl.querySelector('[data-act="cut"]')?.addEventListener("click", () => {
+    hideContextMenu();
+    cutSelection();
   });
   ctxMenuEl.querySelector('[data-act="paste"]')?.addEventListener("click", () => {
     hideContextMenu();
@@ -2208,8 +2748,9 @@ function countDuplicateInstanceIds(list: LayoutItem[]): number {
 function removeBackgroundFloors(): number {
   const before = floors.length;
   floors = floors.filter((f) => f.surfaceKind !== "background");
-  if (selectedFloorKey && !floors.some((f) => f._key === selectedFloorKey)) {
-    selectedFloorKey = null;
+  const alive = new Set(floors.map((f) => f._key));
+  if ([...selectedFloorKeys].some((k) => !alive.has(k))) {
+    setFloorSelection([...selectedFloorKeys].filter((k) => alive.has(k)));
   }
   return before - floors.length;
 }
@@ -2249,11 +2790,11 @@ function syncBackgroundForTheme(themeKey: string) {
 
   const bounds = computeLevelBounds();
   const wx = bounds?.cx ?? 0;
-  const wz = bounds?.cz ?? 0;
+  const wz = (bounds?.cz ?? 0) + 2 * CELL;
   const cat = catalogItemById(pid);
   if (!cat) return;
-  addFromCatalog(cat, wx, wz);
-  setStatus(`已切换背景环境：${tidyCatalogNameZh(cat.nameZh)}（${pid}）`);
+  addFromCatalog(cat, wx, wz, false);
+  setStatus(`已切换背景环境：${tidyCatalogNameZh(cat.nameZh, cat.id)}（${pid}）`);
   draw();
 }
 
@@ -2285,7 +2826,7 @@ function appendPaletteTileGrid(parent: HTMLElement, list: CatalogItem[]) {
           : it.id === "alien_gue"
             ? `<div class="sub">黏液主题自动补齐</div>`
             : "";
-    row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh)}</div><div class="id">${it.id}</div>${sub}`;
+    row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}</div><div class="id">${it.id}</div>${sub}`;
     row.addEventListener("dragstart", (e) => {
       dragCatalog = it;
       e.dataTransfer?.setData("text/plain", it.guid);
@@ -2299,24 +2840,70 @@ function appendPaletteTileGrid(parent: HTMLElement, list: CatalogItem[]) {
 }
 
 function buildDocument(): LayoutDocument {
+  // Re-finalize so write-back coords match the active snap step (avoids drift vs Unity apply).
+  for (const f of floors) finalizeFloor(f);
+
+  const raftItems: LayoutItem[] = [];
+  const missingIds = new Set<string>();
+  for (const f of floors) {
+    if (f.surfaceKind !== "raft") continue;
+    for (const p of raftPiecesForRect(f._wCells, f._dCells)) {
+      const cat = catalogItemById(p.id);
+      if (!cat) {
+        missingIds.add(p.id);
+        continue;
+      }
+      const id = `new:raft:${crypto.randomUUID()}`;
+      const px = f._wx + p.dx;
+      const pz = f._wz + p.dz;
+      raftItems.push({
+        instanceId: id,
+        hierarchyPath: id,
+        prefabGuid: cat.guid,
+        prefabAssetPath: cat.assetPath,
+        parentPath: cat.defaultParent,
+        displayName: cat.id,
+        localPosition: { x: px, y: 0, z: pz },
+        worldPosition: { x: px, y: 0, z: pz },
+        localRotationY: p.rotY,
+        footprint: cat.footprint,
+        // Walkability comes from the retained raft floor rect (one Col_Floor),
+        // not per-plank — dual lattice would otherwise stack overlapping colliders.
+        walkable: false,
+      });
+    }
+  }
+  if (missingIds.size > 0) {
+    throw new Error(
+      `木筏拼块目录缺失：${[...missingIds].join(", ")}（请重新生成 catalog.json）`
+    );
+  }
   return {
     sceneAssetPath: scenePath,
-    items: items.map(({ _editorKey, _wx, _wz, _parentWx, _parentWz, ...rest }) => {
-      const fp = resolveFootprint(rest);
-      const cat = catalogByGuid.get(rest.prefabGuid);
-      return {
-        ...rest,
-        footprint: fp,
-        worldPosition: { x: _wx, y: rest.localPosition?.y ?? 0, z: _wz },
-        walkable: !!(cat && cat.surfaceTier === "floor"),
-      };
-    }),
+    items: items
+      .map(({ _editorKey, _wx, _wz, _parentWx, _parentWz, ...rest }): LayoutItem => {
+        const fp = resolveFootprint(rest);
+        const cat = catalogByGuid.get(rest.prefabGuid);
+        // Raft planks already expanded above are walkable:false; other floor prefabs stay walkable.
+        const isRaftPlank = cat?.surfaceKind === "raft";
+        return {
+          ...rest,
+          footprint: fp,
+          worldPosition: { x: _wx, y: rest.localPosition?.y ?? 0, z: _wz },
+          walkable: !isRaftPlank && !!(cat && cat.surfaceTier === "floor"),
+        };
+      })
+      .concat(raftItems),
+    // Keep raft floors in floors[] so Unity SyncWalkableToFloors builds one Col_Floor
+    // per raft rect. ApplyFloors skips surfaceKind=="raft" (no Plane mesh).
     floors: floors.map(({ _key, _wx, _wz, _wCells, _dCells, ...rest }) => ({
       ...rest,
       widthCells: _wCells,
       depthCells: _dCells,
       widthUnits: _wCells * CELL,
       depthUnits: _dCells * CELL,
+      worldPosition: { x: _wx, y: rest.localPosition?.y ?? -0.05, z: _wz },
+      localPosition: { x: _wx, y: rest.localPosition?.y ?? -0.05, z: _wz },
     })),
   };
 }
@@ -2338,7 +2925,9 @@ function buildPalette(catalog: import("./types").Catalog, filter: string) {
       }));
 
   for (const group of groups) {
+    if (group.key === "Player") continue;
     const list = (catalog.byCategory[group.key] ?? []).filter((it) => {
+      if (it.surfaceTier === "floor" || it.surfaceTier === "background") return false;
       if (!q) return true;
       return (
         it.id.toLowerCase().includes(q) ||
@@ -2358,9 +2947,7 @@ function buildPalette(catalog: import("./types").Catalog, filter: string) {
     summary.title = group.labelEn;
     details.appendChild(summary);
 
-    const max = group.layoutTier === "decor" ? 80 : list.length;
-    for (let i = 0; i < Math.min(max, list.length); i++) {
-      const it = list[i];
+    for (const it of list) {
       const row = document.createElement("div");
       row.className = "palette-item";
       if (it.layoutTier === "decor") row.classList.add("palette-decor");
@@ -2371,7 +2958,7 @@ function buildPalette(catalog: import("./types").Catalog, filter: string) {
         : it.layoutTier === "decor"
           ? `<div class="sub">装饰</div>`
           : "";
-      row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh)}</div><div class="id">${it.nameEn} · ${it.id}</div>${sub}`;
+      row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}</div><div class="id">${it.nameEn} · ${it.id}</div>${sub}`;
       row.addEventListener("dragstart", (e) => {
         dragCatalog = it;
         e.dataTransfer?.setData("text/plain", it.guid);
@@ -2380,13 +2967,6 @@ function buildPalette(catalog: import("./types").Catalog, filter: string) {
         dragCatalog = null;
       });
       details.appendChild(row);
-    }
-    if (list.length > max) {
-      const more = document.createElement("div");
-      more.className = "palette-item";
-      more.style.color = "#9aa0a6";
-      more.textContent = `… 还有 ${list.length - max} 项，请搜索缩小范围`;
-      details.appendChild(more);
     }
     paletteCats.appendChild(details);
   }
@@ -2418,7 +2998,11 @@ function buildFloorPalette(filter = "") {
         it.surfaceTier === "floor" && it.surfaceKind !== "raft" && it.surfaceKind !== "conveyor",
     },
     { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
-    { key: "background", labelZh: "背景 / 环境", match: (it) => it.surfaceTier === "background" },
+    {
+      key: "background",
+      labelZh: "背景 / 环境",
+      match: (it) => it.surfaceTier === "background" && !isThemeBackgroundPrefabId(it.id),
+    },
   ];
 
   let anyGroup = false;
@@ -2467,18 +3051,23 @@ function updateFloorBar() {
   const selItem = selectedKey ? items.find((i) => i._editorKey === selectedKey) : null;
   const selCat = selItem ? catalogByGuid.get(selItem.prefabGuid) : undefined;
   let info: string;
-  if (f) {
-    info = `<span class="fb-info"><b>${surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.materialName ?? "无材质"}</span>`;
+  if (selectedFloorKeys.size > 1) {
+    info = `<span class="fb-info">已选 ${selectedFloorKeys.size} 块地板（拖动整体移动 · Del 删除）</span>`;
+  } else if (f) {
+    info = `<span class="fb-info"><b>${surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : f.materialName ?? "无材质"}</span>`;
   } else if (selItem && isSurfaceItem(selCat)) {
     info = `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
   } else {
     info = `<span class="fb-info">${deathLabelZh(deathInfo)} · 共 ${floors.length} 块地板</span>`;
   }
-  floorBar.innerHTML = `${themeRow}${killToggle}${walkToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+  floorBar.innerHTML = `${themeRow}${killToggle}${walkToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
 
   floorBar.querySelectorAll<HTMLButtonElement>(".fb-theme-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      bgThemeKey = btn.dataset.bg ?? "void";
+      const nextTheme = btn.dataset.bg ?? "void";
+      if (nextTheme === bgThemeKey) return;
+      pushHistory();
+      bgThemeKey = nextTheme;
       bgThemeDirty = true;
       localStorage.setItem("bgTheme:" + scenePath, bgThemeKey);
       syncBackgroundForTheme(bgThemeKey);
@@ -2518,6 +3107,7 @@ async function init() {
   buildPalette(catalog, "");
 
   const scenes = await fetchLevelSets().catch(() => []);
+  sceneListCache = scenes;
   sceneSelect.innerHTML = '<option value="">— 选择场景 —</option>';
   for (const s of scenes) {
     const opt = document.createElement("option");
@@ -2533,18 +3123,57 @@ async function init() {
   });
 
   sceneSelect.addEventListener("change", () => {
-    if (sceneSelect.value) void loadScene(sceneSelect.value);
+    const target = sceneSelect.value;
+    if (!target || target === scenePath) return;
+    confirmLeaveIfDirty(() => void loadScene(target));
   });
 
   document.getElementById("btn-reload")!.addEventListener("click", () => {
-    if (scenePath) void loadScene(scenePath);
+    if (scenePath) confirmLeaveIfDirty(() => void loadScene(scenePath));
   });
 
   document.getElementById("btn-save")!.addEventListener("click", () => void saveToUnity());
 
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
 
-  document.getElementById("btn-manage")!.addEventListener("click", () => goManage());
+  const withLevelDetail = async (fn: (detail: LevelDetail) => void | Promise<void>) => {
+    if (!scenePath) {
+      setStatus("请先选择场景", false);
+      return;
+    }
+    try {
+      showBusy("加载关卡信息…");
+      const level = await fetchLevelRecipes(scenePath);
+      if (!level.levelInfoAssetPath) {
+        setStatus("未找到该场景对应的 LevelInfoSO", false);
+        return;
+      }
+      const detail = await fetchLevelDetail(level.levelInfoAssetPath);
+      await fn(detail);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    } finally {
+      hideBusy();
+    }
+  };
+  document.getElementById("btn-level-config")!.addEventListener("click", () =>
+    void withLevelDetail((detail) => openConfigTabsModal(detail, currentLevelSet, () => {}))
+  );
+  document.getElementById("btn-level-audio")!.addEventListener("click", () =>
+    void withLevelDetail((detail) => openAudioModal(detail, () => {}))
+  );
+
+  document.getElementById("btn-sync")!.addEventListener("click", () => openSyncLayoutDialog());
+
+  wireNav((target) => {
+    if (target === "manage") confirmLeaveIfDirty(() => goManage());
+  });
+
+  window.addEventListener("beforeunload", (e) => {
+    if (!dirty) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
 
   document.getElementById("snap-half")!.addEventListener("change", (e) => {
     snapStep = (e.target as HTMLInputElement).checked ? 0.6 : CELL;
@@ -2563,7 +3192,7 @@ async function init() {
       document.querySelectorAll(".layer-tab").forEach((b) => b.classList.toggle("active", b === btn));
       clearSelection();
       marqueeing = false;
-      selectedFloorKey = null;
+      clearFloorSelection();
       hideDetail();
       hideContextMenu();
       pendingNewFloor = false;
@@ -2585,7 +3214,10 @@ async function init() {
 
   if (scenes.length > 0) {
     const target = consumeTargetScene();
-    const match = target ? scenes.find((s) => s.assetPath === target) : null;
+    const urlScene = new URLSearchParams(location.search).get("scene") ?? "";
+    const match =
+      (target ? scenes.find((s) => s.assetPath === target) : null) ??
+      (urlScene ? scenes.find((s) => s.assetPath === urlScene) : null);
     const guojia = scenes.find((s) => s.assetPath.includes("guojia"));
     const pick = match ?? guojia ?? scenes[0];
     sceneSelect.value = pick.assetPath;
@@ -2625,16 +3257,135 @@ function showBridgeStoppedModal() {
   document.querySelector("[data-ok]")?.addEventListener("click", closeModal);
 }
 
+/** Merge raft plank items that form solid rectangles into raft floors,
+ *  so web-side raft editing uses the same logic as floor planes (write-back re-expands them).
+ *
+ *  Dual-lattice planks: middle_01 sits on the CELL primary lattice; back/front/middle_02/03
+ *  sit on half-cell diagonals. Clustering links both lattices; dimensions come from middle_01
+ *  when possible, with a fallback for older single-lattice saves. */
+function mergeRaftItemsIntoFloors(): void {
+  const raftOf = (it: EditorItem) => catalogByGuid.get(it.prefabGuid)?.surfaceKind === "raft";
+  const catalogId = (it: EditorItem) => catalogByGuid.get(it.prefabGuid)?.id ?? "";
+  const isPrimary = (it: EditorItem) => catalogId(it) === "raft_raft_middle_01";
+  const rafts = items.filter(raftOf);
+  if (rafts.length === 0) return;
+
+  const TOL = 0.05;
+  /** Secondary↔primary nearest distance in official scenes is ~0.82–0.86. */
+  const SECONDARY_LINK = 0.92;
+  const parent = rafts.map((_, i) => i);
+  const find = (a: number): number => {
+    while (parent[a] !== a) {
+      parent[a] = parent[parent[a]];
+      a = parent[a];
+    }
+    return a;
+  };
+  const union = (a: number, b: number) => {
+    parent[find(a)] = find(b);
+  };
+  for (let i = 0; i < rafts.length; i++) {
+    for (let j = i + 1; j < rafts.length; j++) {
+      const dx = Math.abs(rafts[i]._wx - rafts[j]._wx);
+      const dz = Math.abs(rafts[i]._wz - rafts[j]._wz);
+      if (Math.abs(dx - CELL) < TOL && dz < TOL) union(i, j);
+      else if (Math.abs(dz - CELL) < TOL && dx < TOL) union(i, j);
+      else if (Math.hypot(dx, dz) < SECONDARY_LINK) union(i, j);
+    }
+  }
+  const clusters = new Map<number, EditorItem[]>();
+  for (let i = 0; i < rafts.length; i++) {
+    const root = find(i);
+    const arr = clusters.get(root) ?? [];
+    arr.push(rafts[i]);
+    clusters.set(root, arr);
+  }
+
+  const trySolidRect = (
+    lattice: EditorItem[]
+  ): { w: number; d: number; cx: number; cz: number } | null => {
+    if (lattice.length < 1) return null;
+    const minPosX = Math.min(...lattice.map((it) => it._wx));
+    const maxPosX = Math.max(...lattice.map((it) => it._wx));
+    const minPosZ = Math.min(...lattice.map((it) => it._wz));
+    const maxPosZ = Math.max(...lattice.map((it) => it._wz));
+    const cells = new Set<string>();
+    for (const it of lattice) {
+      const fi = (it._wx - minPosX) / CELL;
+      const fj = (it._wz - minPosZ) / CELL;
+      if (Math.abs(fi - Math.round(fi)) > TOL / CELL || Math.abs(fj - Math.round(fj)) > TOL / CELL) {
+        return null;
+      }
+      cells.add(`${Math.round(fi)},${Math.round(fj)}`);
+    }
+    const w = Math.round((maxPosX - minPosX) / CELL) + 1;
+    const d = Math.round((maxPosZ - minPosZ) / CELL) + 1;
+    if (cells.size !== lattice.length || cells.size !== w * d) return null;
+    return {
+      w,
+      d,
+      cx: (minPosX + maxPosX) / 2,
+      cz: (minPosZ + maxPosZ) / 2,
+    };
+  };
+
+  for (const cluster of clusters.values()) {
+    if (cluster.length < 2) continue;
+
+    const primaries = cluster.filter(isPrimary);
+    let rect = trySolidRect(primaries);
+    // Fallback: older single-lattice saves (back/front/middle all on one CELL grid).
+    if (!rect) rect = trySolidRect(cluster);
+    if (!rect) continue;
+    // Require at least 2 lattice cells, or a dual-lattice cluster with secondaries.
+    if (rect.w * rect.d < 2 && cluster.length < 2) continue;
+
+    const removeKeys = new Set(cluster.map((it) => it._editorKey));
+    items = items.filter((it) => !removeKeys.has(it._editorKey));
+
+    const { w, d, cx: cxW, cz: czW } = rect;
+    const key = newEditorKey();
+    floors.push({
+      instanceId: `new:raft:${crypto.randomUUID()}`,
+      _key: key,
+      hierarchyPath: `raft:${key}`,
+      parentPath: "Art",
+      displayName: "Raft",
+      surfaceKind: "raft",
+      meshType: "plane",
+      meshFileId: 10209,
+      localPosition: { x: cxW, y: -0.05, z: czW },
+      worldPosition: { x: cxW, y: -0.05, z: czW },
+      localRotationY: 0,
+      localScale: { x: (w * CELL) / 10, y: 1, z: (d * CELL) / 10 },
+      widthUnits: w * CELL,
+      depthUnits: d * CELL,
+      widthCells: w,
+      depthCells: d,
+      _wx: cxW,
+      _wz: czW,
+      _wCells: w,
+      _dCells: d,
+    });
+  }
+}
+
 async function loadScene(assetPath: string) {
   showBusy("加载场景…");
   try {
     setStatus("加载场景…");
     scenePath = assetPath;
     currentLevelSet = levelSetFromScenePath(assetPath);
+    window.history.replaceState(
+      null,
+      "",
+      `${location.pathname}?scene=${encodeURIComponent(assetPath)}${location.hash}`
+    );
     const doc = await fetchLayout(assetPath);
     const dupIds = countDuplicateInstanceIds(doc.items);
     items = doc.items.map((raw, index) => enrichItem(raw, `i${index}`));
     floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
+    mergeRaftItemsIntoFloors();
     walkable = doc.walkable ?? [];
     deathInfo = doc.deathInfo ?? null;
     const itemTheme = inferBgThemeFromItems(items);
@@ -2658,8 +3409,10 @@ async function loadScene(assetPath: string) {
     }
     clearSelection();
     marqueeing = false;
-    selectedFloorKey = null;
+    clearFloorSelection();
     hideDetail();
+    history.clear();
+    clearDirty();
     draw();
     const floorNote = floors.length > 0 ? `、${floors.length} 块地板` : "";
     if (dupIds > 0) {
@@ -2677,7 +3430,7 @@ async function loadScene(assetPath: string) {
   }
 }
 
-async function saveToUnity() {
+async function saveToUnity(): Promise<boolean> {
   showBusy("写回 Unity…");
   try {
     setStatus("写回中…");
@@ -2715,7 +3468,99 @@ async function saveToUnity() {
       `写回成功${themeNote}${walkNote}${killNote}请在 Unity Ctrl+S 保存场景`
     );
     bgThemeDirty = false;
+    history.clear();
+    clearDirty();
     await loadScene(scenePath);
+    return true;
+  } catch (e) {
+    setStatus((e as Error).message, false);
+    return false;
+  } finally {
+    hideBusy();
+  }
+}
+
+function openSyncLayoutDialog(): void {
+  if (!scenePath) {
+    setStatus("请先选择场景", false);
+    return;
+  }
+  const others = sceneListCache.filter((s) => s.assetPath !== scenePath);
+  if (!others.length) {
+    setStatus("没有其他可同步的场景", false);
+    return;
+  }
+  const opts = others
+    .map(
+      (s) =>
+        `<option value="${escHtml(s.assetPath)}">${escHtml(s.levelSet)} / ${escHtml(s.sceneName)}</option>`
+    )
+    .join("");
+  openModal(
+    "同步其他关卡的布局",
+    `<label class="m-field">来源关卡<select id="sync-src">${opts}</select></label>
+     <p class="modal-hint" style="color:#f28b82">将把来源关卡的<b>道具、地板与背景主题</b>复制到当前图，<b>覆盖当前图的全部内容</b>。仅修改前端数据（写回 Unity 后才落盘），可用 Ctrl+Z 撤回一次。</p>`,
+    `<button type="button" class="modal-btn" data-cancel>取消</button>
+     <button type="button" class="modal-btn danger" data-ok>覆盖并同步</button>`
+  );
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", () => {
+    const sel = document.getElementById("sync-src") as HTMLSelectElement;
+    closeModal();
+    void syncLayoutFromScene(sel.value);
+  });
+}
+
+async function syncLayoutFromScene(otherPath: string): Promise<void> {
+  showBusy("读取来源场景布局…");
+  try {
+    const doc = await fetchLayout(otherPath);
+    pushHistory();
+    const keepPlayers = items.filter(isPlayerItem);
+    const idMap = new Map<string, string>();
+    items = doc.items
+      .filter((raw) => prefabIdFromPath(raw.prefabAssetPath) !== "Player")
+      .map((raw) => {
+        const it = enrichItem(JSON.parse(JSON.stringify(raw)) as LayoutItem, newEditorKey());
+        const nextId = `new:sync:${crypto.randomUUID()}`;
+        if (raw.instanceId) idMap.set(raw.instanceId, nextId);
+        it.instanceId = nextId;
+        it.hierarchyPath = nextId;
+        return it;
+      });
+    items.push(...keepPlayers);
+    for (const it of items) {
+      const exitId = it.teleportal?.exitPortalInstanceId;
+      if (exitId && idMap.has(exitId) && it.teleportal) {
+        it.teleportal.exitPortalInstanceId = idMap.get(exitId)!;
+      }
+      const prId = it.servingStation?.plateReturnInstanceId;
+      if (prId && idMap.has(prId) && it.servingStation) {
+        it.servingStation.plateReturnInstanceId = idMap.get(prId)!;
+      }
+    }
+    floors = (doc.floors ?? []).map((raw) => {
+      const f = enrichFloor(JSON.parse(JSON.stringify(raw)) as FloorObject, newEditorKey());
+      f.instanceId = `new:floor:${crypto.randomUUID()}`;
+      f.hierarchyPath = f.instanceId;
+      return f;
+    });
+    mergeRaftItemsIntoFloors();
+    const theme = inferBgThemeFromItems(items);
+    if (theme) {
+      bgThemeKey = theme;
+      bgThemeDirty = true;
+      localStorage.setItem("bgTheme:" + scenePath, bgThemeKey);
+    }
+    clearSelection();
+    clearFloorSelection();
+    hideDetail();
+    hideContextMenu();
+    markDirty();
+    draw();
+    setStatus(
+      `已同步 ${items.length} 个道具、${floors.length} 块地板（覆盖当前图，写回 Unity 后生效，可 Ctrl+Z 撤回）`
+    );
   } catch (e) {
     setStatus((e as Error).message, false);
   } finally {
@@ -2797,10 +3642,28 @@ function placementBase(): { x: number; z: number } {
   return { x: minX, z: minZ - 2 * CELL };
 }
 
-function addFromCatalog(cat: CatalogItem, wx: number, wz: number): EditorItem {
+function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordHistory = true): EditorItem | null {
+  if (cat.id === "Player") {
+    setStatus("玩家固定在场景中，不可添加", false);
+    return null;
+  }
+  const snapped = snapFootprintCenter(wx, wz, cat.footprint.cellsX, cat.footprint.cellsZ, 0, CELL, snapStep);
+  const probe = {
+    _editorKey: "",
+    _wx: snapped.x,
+    _wz: snapped.z,
+    prefabGuid: cat.guid,
+    prefabAssetPath: cat.assetPath,
+    footprint: cat.footprint,
+    stubKind: "",
+  } as unknown as EditorItem;
+  if (moveBlockedAt(probe, snapped.x, snapped.z)) {
+    setStatus("该位置与玩家重叠，无法放置", false);
+    return null;
+  }
+  if (recordHistory) pushHistory();
   const id = `new:${cat.guid}:${crypto.randomUUID()}`;
   const editorKey = newEditorKey();
-  const snapped = snapFootprintCenter(wx, wz, cat.footprint.cellsX, cat.footprint.cellsZ, 0, CELL, snapStep);
   const item: EditorItem = {
     instanceId: id,
     _editorKey: editorKey,
@@ -2874,6 +3737,8 @@ function setupCanvas() {
     if (e.button === 2) return;
     if (e.button !== 0) return;
 
+    hidePickTip();
+
     if (currentLayer === "floor") {
       if (pendingNewFloor) {
         pendingNewFloor = false;
@@ -2881,35 +3746,123 @@ function setupCanvas() {
         addFloorAt(wx, wz);
         return;
       }
-      const fHit = hitTestFloor(wx, wz);
+      const fHits = hitTestFloorsAll(wx, wz);
+      const surfaceHits = hitTestAll(wx, wz).filter((it) =>
+        isSurfaceItem(catalogByGuid.get(it.prefabGuid))
+      );
+      const keepFloor = selectedFloorKey
+        ? fHits.find((fh) => fh.floor._key === selectedFloorKey)
+        : undefined;
+      const keepItem = selectedKey
+        ? surfaceHits.find((it) => it._editorKey === selectedKey)
+        : undefined;
+      if (fHits.length + surfaceHits.length > 1 && !keepFloor && !keepItem) {
+        hideDetail();
+        hideContextMenu();
+        const candidates: PickCandidate[] = [];
+        for (const fh of fHits) {
+          candidates.push({
+            title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格`,
+            sub: `地板 · ${fh.floor.materialName ?? "无材质"}`,
+            onPick: () => {
+              setFloorSelection([fh.floor._key]);
+              clearSelection();
+              draw();
+            },
+          });
+        }
+        for (const it of surfaceHits) {
+          candidates.push({
+            title: itemLabel(it),
+            sub: `${surfaceKindLabelZh(catalogByGuid.get(it.prefabGuid)?.surfaceKind)} · ${prefabIdFromPath(it.prefabAssetPath)}`,
+            onPick: () => {
+              clearFloorSelection();
+              setSelection([it._editorKey]);
+              draw();
+            },
+          });
+        }
+        showPickTip(candidates, e.clientX, e.clientY);
+        draw();
+        return;
+      }
+      const fHit = keepFloor ?? fHits[0] ?? null;
       if (fHit) {
-        selectedFloorKey = fHit.floor._key;
+        dragSnapshot = snapshotState();
         clearSelection();
-        dragFloorKey = fHit.floor._key;
-        dragFloorMode = fHit.mode;
-        dragFloorEdge = fHit.edge;
-        dragFloorAnchorX = fHit.anchorX;
-        dragFloorAnchorZ = fHit.anchorZ;
+        if (e.shiftKey) {
+          const next = new Set(selectedFloorKeys);
+          if (next.has(fHit.floor._key)) next.delete(fHit.floor._key);
+          else next.add(fHit.floor._key);
+          setFloorSelection([...next], fHit.floor._key);
+        } else if (selectedFloorKeys.size > 1 && selectedFloorKeys.has(fHit.floor._key)) {
+          selectedFloorKey = fHit.floor._key;
+          dragFloorKey = fHit.floor._key;
+          dragFloorMode = "move";
+          dragFloorEdge = "";
+          dragFloorGroupKeys = [...selectedFloorKeys];
+          dragLastWx = wx;
+          dragLastWz = wz;
+        } else {
+          setFloorSelection([fHit.floor._key]);
+          dragFloorKey = fHit.floor._key;
+          dragFloorMode = fHit.mode;
+          dragFloorEdge = fHit.edge;
+          dragFloorAnchorX = fHit.anchorX;
+          dragFloorAnchorZ = fHit.anchorZ;
+          dragFloorGroupKeys = [];
+        }
       } else {
-        selectedFloorKey = null;
-        const itemHit = hitTest(wx, wz);
-        if (itemHit && isSurfaceItem(catalogByGuid.get(itemHit.prefabGuid))) {
+        clearFloorSelection();
+        const itemHit = keepItem ?? surfaceHits[0] ?? null;
+        if (itemHit) {
+          dragSnapshot = snapshotState();
           setSelection([itemHit._editorKey]);
           dragItemKey = itemHit._editorKey;
           dragGroupKeys = [];
           dragOffsetX = wx - itemHit._wx;
           dragOffsetZ = wz - itemHit._wz;
         } else {
-          clearSelection();
-          hideDetail();
+          marqueeing = true;
+          marqueeAdd = e.shiftKey;
+          marqueeStartX = mx;
+          marqueeStartY = my;
+          marqueeCurX = mx;
+          marqueeCurY = my;
+          if (!marqueeAdd) {
+            clearSelection();
+            hideDetail();
+            hideContextMenu();
+          }
         }
       }
       draw();
       return;
     }
 
-    const hit = hitTest(wx, wz);
+    const hits = hitTestAll(wx, wz);
+    const already = selectedKey ? hits.find((it) => it._editorKey === selectedKey) : undefined;
+    if (hits.length > 1 && !e.shiftKey && !already) {
+      hideDetail();
+      hideContextMenu();
+      showPickTip(
+        hits.map((it) => ({
+          title: itemLabel(it),
+          sub: prefabIdFromPath(it.prefabAssetPath) || "—",
+          onPick: () => {
+            setSelection([it._editorKey]);
+            draw();
+          },
+        })),
+        e.clientX,
+        e.clientY
+      );
+      draw();
+      return;
+    }
+    const hit = already ?? hits[0] ?? null;
     if (hit) {
+      dragSnapshot = snapshotState();
       hideDetail();
       hideContextMenu();
       if (e.shiftKey) {
@@ -2960,15 +3913,58 @@ function setupCanvas() {
     const rect = canvas.getBoundingClientRect();
     const { x: wx, z: wz } = canvasToWorld(e.clientX - rect.left, e.clientY - rect.top);
     if (currentLayer === "floor") {
-      const fHit = hitTestFloor(wx, wz);
+      const fHits = hitTestFloorsAll(wx, wz);
+      const surfaceHits = hitTestAll(wx, wz).filter((it) =>
+        isSurfaceItem(catalogByGuid.get(it.prefabGuid))
+      );
+      const keepFloor = selectedFloorKey
+        ? fHits.find((fh) => fh.floor._key === selectedFloorKey)
+        : undefined;
+      const keepItem = selectedKey
+        ? surfaceHits.find((it) => it._editorKey === selectedKey)
+        : undefined;
+      if (fHits.length + surfaceHits.length > 1 && !keepFloor && !keepItem) {
+        hideDetail();
+        hideContextMenu();
+        const candidates: PickCandidate[] = [];
+        for (const fh of fHits) {
+          candidates.push({
+            title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格`,
+            sub: `地板 · ${fh.floor.materialName ?? "无材质"}`,
+            onPick: () => {
+              setFloorSelection([fh.floor._key]);
+              clearSelection();
+              showFloorDetail(fh.floor, e.clientX, e.clientY);
+              draw();
+            },
+          });
+        }
+        for (const it of surfaceHits) {
+          candidates.push({
+            title: itemLabel(it),
+            sub: `${surfaceKindLabelZh(catalogByGuid.get(it.prefabGuid)?.surfaceKind)} · ${prefabIdFromPath(it.prefabAssetPath)}`,
+            onPick: () => {
+              clearFloorSelection();
+              setSelection([it._editorKey]);
+              hideDetail();
+              showContextMenu(it, e.clientX, e.clientY);
+              draw();
+            },
+          });
+        }
+        showPickTip(candidates, e.clientX, e.clientY);
+        draw();
+        return;
+      }
+      const fHit = keepFloor ?? fHits[0] ?? null;
       if (fHit) {
-        selectedFloorKey = fHit.floor._key;
+        setFloorSelection([fHit.floor._key]);
         showFloorDetail(fHit.floor, e.clientX, e.clientY);
         draw();
         return;
       }
-      const itemHit = hitTest(wx, wz);
-      if (itemHit && isSurfaceItem(catalogByGuid.get(itemHit.prefabGuid))) {
+      const itemHit = keepItem ?? surfaceHits[0] ?? null;
+      if (itemHit) {
         setSelection([itemHit._editorKey]);
         hideDetail();
         showContextMenu(itemHit, e.clientX, e.clientY);
@@ -2977,9 +3973,32 @@ function setupCanvas() {
       }
       hideDetail();
       hideContextMenu();
+      hidePickTip();
       return;
     }
-    const hit = hitTest(wx, wz);
+    const hits = hitTestAll(wx, wz);
+    const already = selectedKey ? hits.find((it) => it._editorKey === selectedKey) : undefined;
+    if (hits.length > 1 && !already) {
+      hideDetail();
+      hideContextMenu();
+      showPickTip(
+        hits.map((it) => ({
+          title: itemLabel(it),
+          sub: prefabIdFromPath(it.prefabAssetPath) || "—",
+          onPick: () => {
+            setSelection([it._editorKey]);
+            hideDetail();
+            showContextMenu(it, e.clientX, e.clientY);
+            draw();
+          },
+        })),
+        e.clientX,
+        e.clientY
+      );
+      draw();
+      return;
+    }
+    const hit = already ?? hits[0] ?? null;
     if (hit) {
       if (!(selectedKeys.size > 1 && isSelected(hit._editorKey))) {
         setSelection([hit._editorKey]);
@@ -2992,6 +4011,7 @@ function setupCanvas() {
     } else {
       hideDetail();
       hideContextMenu();
+      hidePickTip();
     }
   });
 
@@ -3018,8 +4038,23 @@ function setupCanvas() {
     }
 
     if (dragFloorKey) {
-      const f = floors.find((x) => x._key === dragFloorKey);
-      if (f) dragFloor(f, mx, my);
+      if (dragFloorGroupKeys.length > 1) {
+        const { x: wx, z: wz } = canvasToWorld(mx, my);
+        const dx = wx - dragLastWx;
+        const dz = wz - dragLastWz;
+        for (const k of dragFloorGroupKeys) {
+          const f = floors.find((x) => x._key === k);
+          if (f) {
+            f._wx += dx;
+            f._wz += dz;
+          }
+        }
+        dragLastWx = wx;
+        dragLastWz = wz;
+      } else {
+        const f = floors.find((x) => x._key === dragFloorKey);
+        if (f) dragFloor(f, mx, my);
+      }
       draw();
       return;
     }
@@ -3033,19 +4068,27 @@ function setupCanvas() {
       const newWz = wz - dragOffsetZ;
       const dx = newWx - dragLastWx;
       const dz = newWz - dragLastWz;
+      const groupSet = new Set(dragGroupKeys);
       for (const k of dragGroupKeys) {
         const it = items.find((i) => i._editorKey === k);
         if (it) {
-          it._wx += dx;
-          it._wz += dz;
+          const nx = it._wx + dx;
+          const nz = it._wz + dz;
+          if (moveBlockedAt(it, nx, nz, groupSet)) continue;
+          it._wx = nx;
+          it._wz = nz;
         }
       }
       dragLastWx = newWx;
       dragLastWz = newWz;
     } else {
-      item._wx = wx - dragOffsetX;
-      item._wz = wz - dragOffsetZ;
-      syncLocalFromWorld(item);
+      const nx = wx - dragOffsetX;
+      const nz = wz - dragOffsetZ;
+      if (!moveBlockedAt(item, nx, nz)) {
+        item._wx = nx;
+        item._wz = nz;
+        syncLocalFromWorld(item);
+      }
     }
     draw();
   });
@@ -3056,10 +4099,14 @@ function setupCanvas() {
       updateCanvasCursor();
     }
     if (dragFloorKey) {
-      const f = floors.find((x) => x._key === dragFloorKey);
-      if (f) finalizeFloor(f);
+      const keys = dragFloorGroupKeys.length > 1 ? dragFloorGroupKeys : [dragFloorKey];
+      for (const k of keys) {
+        const f = floors.find((x) => x._key === k);
+        if (f) finalizeFloor(f);
+      }
     }
     dragFloorKey = null;
+    dragFloorGroupKeys = [];
     if (marqueeing) {
       marqueeing = false;
       const keys = selectionKeys();
@@ -3083,6 +4130,7 @@ function setupCanvas() {
       }
     }
     dragItemKey = null;
+    commitDragSnapshot();
   });
 
   canvas.addEventListener("dragover", (e) => {
@@ -3111,12 +4159,24 @@ function setupCanvas() {
     if (e.key === "Escape") {
       hideDetail();
       hideContextMenu();
+      hidePickTip();
       closeModal();
       marqueeing = false;
       pendingNewFloor = false;
       canvas.style.cursor = "";
     }
 
+    if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !isTypingTarget(e.target)) {
+      if (e.shiftKey) redo();
+      else undo();
+      e.preventDefault();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === "x" || e.key === "X") && !isTypingTarget(e.target)) {
+      cutSelection();
+      e.preventDefault();
+      return;
+    }
     if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C") && !isTypingTarget(e.target)) {
       copySelection();
       e.preventDefault();
@@ -3130,32 +4190,37 @@ function setupCanvas() {
 
     if (currentLayer === "floor") {
       if (isTypingTarget(e.target)) return;
-      if (selectedFloorKey) {
-        const f = floors.find((x) => x._key === selectedFloorKey);
-        if (f) {
-          if (e.key === "Delete" || e.key === "Backspace") {
-            floors = floors.filter((x) => x._key !== selectedFloorKey);
-            selectedFloorKey = null;
-            hideDetail();
-            draw();
-          }
-          if (e.key === "r" || e.key === "R") {
+      if (e.key === "Delete" || e.key === "Backspace") {
+        const killItems = new Set(
+          selectionKeys().filter((k) => {
+            const it = items.find((i) => i._editorKey === k);
+            return it && isSurfaceItem(catalogByGuid.get(it.prefabGuid));
+          })
+        );
+        if (selectedFloorKeys.size === 0 && killItems.size === 0) return;
+        pushHistory();
+        floors = floors.filter((x) => !selectedFloorKeys.has(x._key));
+        items = items.filter((i) => !killItems.has(i._editorKey));
+        clearFloorSelection();
+        clearSelection();
+        hideDetail();
+        draw();
+        return;
+      }
+      if (e.key === "r" || e.key === "R") {
+        if (selectedFloorKeys.size === 1 && selectedFloorKey) {
+          const f = floors.find((x) => x._key === selectedFloorKey);
+          if (f) {
+            pushHistory();
             f.localRotationY = normalizeRot(f.localRotationY + (e.shiftKey ? -90 : 90));
             draw();
           }
+          return;
         }
-        return;
-      }
-      if (selectedKey) {
-        const item = items.find((i) => i._editorKey === selectedKey);
-        if (item && isSurfaceItem(catalogByGuid.get(item.prefabGuid))) {
-          if (e.key === "Delete" || e.key === "Backspace") {
-            items = items.filter((i) => i._editorKey !== selectedKey);
-            selectedKey = null;
-            hideDetail();
-            draw();
-          }
-          if (e.key === "r" || e.key === "R") {
+        if (selectedFloorKeys.size === 0 && selectedKey) {
+          const item = items.find((i) => i._editorKey === selectedKey);
+          if (item && isSurfaceItem(catalogByGuid.get(item.prefabGuid))) {
+            pushHistory();
             item.localRotationY = normalizeRot(item.localRotationY + (e.shiftKey ? -90 : 90));
             syncLocalFromWorld(item);
             draw();
@@ -3174,7 +4239,8 @@ function setupCanvas() {
     if (e.key === "Delete" || e.key === "Backspace") {
       deleteSelected();
     }
-    if (e.key === "r" || e.key === "R") {
+    if ((e.key === "r" || e.key === "R") && !isPlayerItem(item)) {
+      pushHistory();
       item.localRotationY = normalizeRot(item.localRotationY + (e.shiftKey ? -90 : 90));
       syncLocalFromWorld(item);
       draw();
@@ -3201,6 +4267,13 @@ function setupCanvas() {
     }
     if (!ctxMenuEl.classList.contains("hidden") && !ctxMenuEl.contains(e.target as Node)) {
       hideContextMenu();
+    }
+    if (
+      e.target !== canvas &&
+      !pickTipEl.classList.contains("hidden") &&
+      !pickTipEl.contains(e.target as Node)
+    ) {
+      hidePickTip();
     }
   });
 

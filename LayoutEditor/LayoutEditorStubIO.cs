@@ -20,6 +20,27 @@ public static class LayoutEditorStubIO
         item.flamethrower = null;
         item.cleanPlateStack = null;
         item.burner = null;
+        item.player = null;
+        item.servingStation = null;
+
+        var playerStub = go.GetComponent<PseudoPrefabPlayerStub>();
+        if (playerStub != null)
+        {
+            item.stubKind = "Player";
+            item.player = new LayoutPlayerStubDto { playerID = (int)playerStub.playerID };
+            return;
+        }
+
+        var serving = go.GetComponent<PseudoPrefabServingStationStub>();
+        if (serving != null)
+        {
+            item.stubKind = "ServingStation";
+            var sdto = new LayoutServingStationStubDto();
+            if (serving.plateReturn != null)
+                sdto.plateReturnInstanceId = "u:" + serving.plateReturn.gameObject.GetInstanceID();
+            item.servingStation = sdto;
+            return;
+        }
 
         var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
         if (dispenser != null)
@@ -265,6 +286,17 @@ public static class LayoutEditorStubIO
             return;
         }
 
+        if (item.stubKind == "Player" && item.player != null)
+        {
+            var playerStub = go.GetComponent<PseudoPrefabPlayerStub>();
+            if (playerStub == null)
+                return;
+
+            Undo.RecordObject(playerStub, "Layout Editor Player");
+            playerStub.playerID = (PseudoPrefabPlayerStub.Player)item.player.playerID;
+            return;
+        }
+
         if (item.stubKind == "Burner" && item.burner != null)
         {
             var burner = go.GetComponent<PseudoPrefabBurnerStub>();
@@ -309,6 +341,38 @@ public static class LayoutEditorStubIO
 
         Undo.RecordObject(teleportal, "Layout Editor Teleportal Exit");
         teleportal.exitPortal = exitStub;
+    }
+
+    /// <summary>
+    /// Second pass: resolve ServingStation.plateReturn. plateReturnInstanceId is either
+    /// "u:<instanceID>" (existing scene object) or a document instanceId (e.g. "new:...")
+    /// mapped through createdObjects. Empty string clears the binding.
+    /// </summary>
+    public static void ApplyServingStationPlateReturn(GameObject go, string plateReturnInstanceId, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    {
+        if (go == null || plateReturnInstanceId == null)
+            return;
+
+        var serving = go.GetComponent<PseudoPrefabServingStationStub>();
+        if (serving == null)
+            return;
+
+        GameObject target = null;
+        if (plateReturnInstanceId.StartsWith("u:", StringComparison.Ordinal))
+        {
+            int id;
+            if (int.TryParse(plateReturnInstanceId.Substring(2), out id))
+                target = EditorUtility.InstanceIDToObject(id) as GameObject;
+        }
+        else if (!string.IsNullOrEmpty(plateReturnInstanceId) && createdObjects != null)
+        {
+            createdObjects.TryGetValue(plateReturnInstanceId, out target);
+        }
+
+        var plateReturnStub = target != null ? target.GetComponent<PseudoPrefabPlateReturnStub>() : null;
+
+        Undo.RecordObject(serving, "Layout Editor ServingStation PlateReturn");
+        serving.plateReturn = plateReturnStub;
     }
 
     private static PseudoPrefabSO LoadPseudoPrefabSO(string guid)

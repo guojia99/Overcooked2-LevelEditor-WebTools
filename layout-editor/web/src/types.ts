@@ -103,6 +103,14 @@ export interface LayoutBurnerStub {
   hideVisual?: boolean;
 }
 
+export interface LayoutPlayerStub {
+  playerID?: number;
+}
+
+export interface LayoutServingStationStub {
+  plateReturnInstanceId?: string;
+}
+
 export interface LayoutItem {
   instanceId: string;
   hierarchyPath: string;
@@ -126,6 +134,8 @@ export interface LayoutItem {
   flamethrower?: LayoutFlamethrowerStub;
   cleanPlateStack?: LayoutCleanPlateStackStub;
   burner?: LayoutBurnerStub;
+  player?: LayoutPlayerStub;
+  servingStation?: LayoutServingStationStub;
 }
 
 export interface LayoutDocument {
@@ -242,6 +252,9 @@ export interface RecipeEntry {
   assetPath: string;
   cookingStep?: string;
   ingredients?: string[];
+  ingredientCount?: number;
+  cookingStepCount?: number;
+  score?: number;
   isCustom?: boolean;
 }
 

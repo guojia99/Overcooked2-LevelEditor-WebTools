@@ -94,6 +94,20 @@ public class LayoutBurnerStubDto
 }
 
 [Serializable]
+public class LayoutPlayerStubDto
+{
+    /** PseudoPrefabPlayerStub.Player enum value (int). 11 = Count (auto). */
+    public int playerID = 11;
+}
+
+[Serializable]
+public class LayoutServingStationStubDto
+{
+    /** "u:<instanceID>" of the bound PlateReturn's GameObject, or empty. */
+    public string plateReturnInstanceId;
+}
+
+[Serializable]
 public class LayoutItemDto
 {
     public string instanceId;
@@ -109,7 +123,7 @@ public class LayoutItemDto
     public LayoutFootprint footprint;
     /** True for surface-floor prefabs (raft planks, ice_floor, ...) → generate a walkable Col_Floor under them. */
     public bool walkable;
-    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | empty */
+    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | empty */
     public string stubKind;
     public LayoutDispenserStubDto dispenser;
     public LayoutConveyorStubDto conveyor;
@@ -120,6 +134,8 @@ public class LayoutItemDto
     public LayoutFlamethrowerStubDto flamethrower;
     public LayoutCleanPlateStackStubDto cleanPlateStack;
     public LayoutBurnerStubDto burner;
+    public LayoutPlayerStubDto player;
+    public LayoutServingStationStubDto servingStation;
 }
 
 [Serializable]
@@ -275,6 +291,9 @@ public class RecipeEntryDto
     public string assetPath;
     public string cookingStep;
     public string[] ingredients;
+    public int ingredientCount;
+    public int cookingStepCount;
+    public int score;
     public bool isCustom;
 }
 

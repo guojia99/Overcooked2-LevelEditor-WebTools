@@ -23,6 +23,16 @@ public static class LayoutEditorPaths
         get { return "http://127.0.0.1:" + LayoutEditorHttpServer.DefaultPort + "/"; }
     }
 
+    public static string WebUiUrlForActiveScene()
+    {
+        var url = WebUiUrl;
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+        var path = scene.path;
+        if (!string.IsNullOrEmpty(path) && path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
+            url += "?scene=" + Uri.EscapeDataString(path);
+        return url;
+    }
+
     public static bool IsPathUnderRoot(string filePath, string rootDirectory)
     {
         var root = Path.GetFullPath(rootDirectory);

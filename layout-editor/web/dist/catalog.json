@@ -12926,13 +12926,13 @@
       "assetPath": "Assets/common01/prefabs/Player.prefab",
       "category": "Player",
       "theme": null,
-      "defaultParent": "Design/Chefs",
+      "defaultParent": "Chefs",
       "footprint": {
         "cellsX": 1,
         "cellsZ": 1
       },
       "layoutTier": "core",
-      "nameZh": "玩家（`PseudoPrefabPlayerStub > playerID` 设置编号）",
+      "nameZh": "玩家",
       "nameEn": "Player"
     },
     {
@@ -25541,13 +25541,13 @@
         "assetPath": "Assets/common01/prefabs/Player.prefab",
         "category": "Player",
         "theme": null,
-        "defaultParent": "Design/Chefs",
+        "defaultParent": "Chefs",
         "footprint": {
           "cellsX": 1,
           "cellsZ": 1
         },
         "layoutTier": "core",
-        "nameZh": "玩家（`PseudoPrefabPlayerStub > playerID` 设置编号）",
+        "nameZh": "玩家",
         "nameEn": "Player"
       }
     ],

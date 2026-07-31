@@ -80,19 +80,25 @@ public static class LayoutEditorCatalogApi
 
                 string step;
                 string[] ings;
+                int ingCount;
+                int cookCount;
+                int score;
                 if (isCustom)
                 {
                     step = LayoutEditorRecipeKnowledge.CustomCookingStep(custom);
                     ings = LayoutEditorRecipeKnowledge.CustomIngredients(custom).ToArray();
-                }
-                else if (LayoutEditorRecipeKnowledge.TryGetOriginal(id, out step, out ings))
-                {
-                    // known original recipe
+                    LayoutEditorRecipeKnowledge.CustomStats(custom, out ingCount, out cookCount);
+                    if (ingCount == 0) ingCount = ings.Length;
+                    score = custom.score;
                 }
                 else
                 {
-                    step = "";
-                    ings = new string[0];
+                    var original = so as PseudoPrefabSORecipe;
+                    if (!LayoutEditorRecipeKnowledge.TryGetOriginal(id, out step, out ings) && original != null)
+                        LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out ings);
+                    ingCount = ings.Length;
+                    cookCount = LayoutEditorRecipeKnowledge.IsCookStep(step) ? 1 : 0;
+                    score = original != null ? original.score : 0;
                 }
 
                 list.Add(new RecipeEntryDto
@@ -104,6 +110,9 @@ public static class LayoutEditorCatalogApi
                     assetPath = path,
                     cookingStep = step,
                     ingredients = ings,
+                    ingredientCount = ingCount,
+                    cookingStepCount = cookCount,
+                    score = score,
                     isCustom = isCustom
                 });
             }

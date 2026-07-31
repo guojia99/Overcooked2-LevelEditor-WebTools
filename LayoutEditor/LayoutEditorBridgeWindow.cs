@@ -28,7 +28,7 @@ public class LayoutEditorBridgeWindow : EditorWindow
         var server = EnsureServer();
         if (!server.IsRunning)
             server.Start();
-        Application.OpenURL(LayoutEditorPaths.WebUiUrl);
+        Application.OpenURL(LayoutEditorPaths.WebUiUrlForActiveScene());
     }
 
     [MenuItem("Tools/Layout Editor/Start Server", false, 201)]
@@ -77,7 +77,7 @@ public class LayoutEditorBridgeWindow : EditorWindow
 
         GUI.enabled = server.IsRunning && hasStatic;
         if (GUILayout.Button("在浏览器中打开编排页", GUILayout.Height(32)))
-            Application.OpenURL(uiUrl);
+            Application.OpenURL(LayoutEditorPaths.WebUiUrlForActiveScene());
         GUI.enabled = true;
 
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();

@@ -30,7 +30,7 @@ public static class LayoutEditorCatalogLookup
         if (assetPath.Contains("/prefabs/mechanisms/"))
             return "Design/Counters";
         if (assetPath.Contains("/prefabs/Player"))
-            return "Design/Chefs";
+            return "Chefs";
         return "Art";
     }
 }

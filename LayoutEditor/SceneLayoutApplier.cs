@@ -93,10 +93,16 @@ public static class SceneLayoutApplier
             }
         }
 
-        // Second pass: teleportal exit pairing needs both portals to exist.
+        // Second pass: teleportal exit pairing and serving station plate return binding
+        // need both referenced objects to exist.
         foreach (var item in document.items)
         {
-            if (item == null || item.stubKind != "Teleportal" || item.teleportal == null)
+            if (item == null)
+                continue;
+
+            var isTeleportal = item.stubKind == "Teleportal" && item.teleportal != null;
+            var isServing = item.stubKind == "ServingStation" && item.servingStation != null;
+            if (!isTeleportal && !isServing)
                 continue;
 
             GameObject go;
@@ -105,13 +111,21 @@ public static class SceneLayoutApplier
                 var t = FindItemTransform(item);
                 go = t != null ? t.gameObject : null;
             }
-            if (go != null)
+            if (go == null)
+                continue;
+
+            if (isTeleportal)
                 LayoutEditorStubIO.ApplyTeleportalExit(go, item.teleportal.exitPortalInstanceId ?? "", createdObjects);
+            else
+                LayoutEditorStubIO.ApplyServingStationPlateReturn(go, item.servingStation.plateReturnInstanceId ?? "", createdObjects);
         }
 
-        ApplyFloors(document);
+        // Use the same snap step as items/web (often half-cell 0.6). Snapping floor
+        // centers to full GridCellSize (1.2) shifts even-sized floors by half a cell,
+        // breaking flush adjacency and desyncing Col_Floor (doc coords) from Plane meshes.
+        ApplyFloors(document, snapStep);
         if (syncWalkable)
-            SyncWalkableToFloors(document);
+            SyncWalkableToFloors(document, snapStep);
 
         EditorSceneManager.MarkSceneDirty(scene);
         LayoutEditorPseudoReload.ReloadPseudoAssets();
@@ -122,7 +136,7 @@ public static class SceneLayoutApplier
     /// Regenerate the Ground-layer "Col_Floor" walkable colliders under Design/Collision so
     /// the walkable area matches the visible floor planes (gaps between floors become fall pits).
     /// </summary>
-    private static void SyncWalkableToFloors(LayoutDocumentDto document)
+    private static void SyncWalkableToFloors(LayoutDocumentDto document, float snapStep)
     {
         var collision = LayoutEditorHierarchy.FindOrCreatePath("Design/Collision");
         if (collision == null)
@@ -154,12 +168,17 @@ public static class SceneLayoutApplier
                 continue;
             float cx = floor.worldPosition != null ? floor.worldPosition.x : (floor.localPosition != null ? floor.localPosition.x : 0f);
             float cz = floor.worldPosition != null ? floor.worldPosition.z : (floor.localPosition != null ? floor.localPosition.z : 0f);
+            // Same snap as ApplyFloorTransform so Col_Floor stays glued to the visible plane
+            // (otherwise the UI shows “空气地板” strips beside shifted floors).
+            cx = SnapScalar(cx, snapStep);
+            cz = SnapScalar(cz, snapStep);
             float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
             float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
             CreateColFloor(collision, groundLayer, cx, cz, w, d, floor.localRotationY);
         }
 
-        // Also make surface-floor prefab items (raft planks, floor tiles ...) walkable.
+        // Also make surface-floor prefab items (ice tiles, walkways, …) walkable.
+        // Raft planks are walkable:false; their solid Col_Floor comes from the raft floor rect above.
         if (document.items != null)
         {
             foreach (var item in document.items)
@@ -194,7 +213,7 @@ public static class SceneLayoutApplier
         col.center = new Vector3(0f, -0.2f, 0f);
     }
 
-    private static void ApplyFloors(LayoutDocumentDto document)
+    private static void ApplyFloors(LayoutDocumentDto document, float snapStep)
     {
         if (document == null)
             return;
@@ -211,12 +230,16 @@ public static class SceneLayoutApplier
         {
             if (floor == null)
                 continue;
+            // Raft floors are visualized via prefab planks in items[]; keep the floor
+            // entry only so SyncWalkableToFloors can emit one Col_Floor for the rect.
+            if (floor.surfaceKind == "raft")
+                continue;
             if (string.IsNullOrEmpty(floor.hierarchyPath) && string.IsNullOrEmpty(floor.instanceId))
                 continue;
 
             if (floor.instanceId != null && floor.instanceId.StartsWith("new:", StringComparison.Ordinal))
             {
-                CreateFloorInstance(floor);
+                CreateFloorInstance(floor, snapStep);
                 continue;
             }
 
@@ -226,21 +249,22 @@ public static class SceneLayoutApplier
                 var id = t.gameObject.GetInstanceID();
                 if (usedIds.Add(id))
                 {
-                    ApplyFloorTransform(t, floor);
+                    ApplyFloorTransform(t, floor, snapStep);
                     continue;
                 }
             }
 
-            CreateFloorInstance(floor);
+            CreateFloorInstance(floor, snapStep);
         }
     }
 
-    private static void ApplyFloorTransform(Transform t, FloorDto floor)
+    private static void ApplyFloorTransform(Transform t, FloorDto floor, float snapStep)
     {
         Undo.RecordObject(t, "Layout Editor Floor");
         var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : t.localPosition;
-        pos.x = SnapScalar(pos.x, LayoutEditorCatalogLookup.GridCellSize);
-        pos.z = SnapScalar(pos.z, LayoutEditorCatalogLookup.GridCellSize);
+        // Match web finalizeFloor / item snap — half-cell by default, not full cell.
+        pos.x = SnapScalar(pos.x, snapStep);
+        pos.z = SnapScalar(pos.z, snapStep);
         t.localPosition = pos;
         t.localEulerAngles = new Vector3(t.localEulerAngles.x, floor.localRotationY, t.localEulerAngles.z);
 
@@ -293,8 +317,11 @@ public static class SceneLayoutApplier
         }
     }
 
-    private static void CreateFloorInstance(FloorDto floor)
+    private static void CreateFloorInstance(FloorDto floor, float snapStep)
     {
+        if (floor != null && floor.surfaceKind == "raft")
+            return;
+
         var parentPath = !string.IsNullOrEmpty(floor.parentPath) ? floor.parentPath : "Art/Ground";
         var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
         if (parent == null)
@@ -312,8 +339,8 @@ public static class SceneLayoutApplier
         primitive.name = !string.IsNullOrEmpty(floor.displayName) ? floor.displayName : "Floor";
 
         var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : Vector3.zero;
-        pos.x = SnapScalar(pos.x, LayoutEditorCatalogLookup.GridCellSize);
-        pos.z = SnapScalar(pos.z, LayoutEditorCatalogLookup.GridCellSize);
+        pos.x = SnapScalar(pos.x, snapStep);
+        pos.z = SnapScalar(pos.z, snapStep);
         if (Mathf.Abs(pos.y) < 0.0001f)
             pos.y = -0.05f;
         primitive.transform.localPosition = pos;
