@@ -223,6 +223,7 @@ public static class LayoutEditorJson
             prefabAssetPath = ReadString(block, "prefabAssetPath"),
             parentPath = ReadString(block, "parentPath"),
             displayName = ReadString(block, "displayName"),
+            localRotationX = ReadFloat(block, "localRotationX"),
             localRotationY = ReadFloat(block, "localRotationY"),
             footprint = new LayoutFootprint()
         };

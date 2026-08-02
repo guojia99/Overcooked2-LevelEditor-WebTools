@@ -1,0 +1,528 @@
+{
+  "schemaVersion": 2,
+  "comment": "Recipe composition knowledge shared by build-catalog.mjs and LayoutEditorRecipeKnowledge.cs. recipes[]: id = recipe asset id (file name without extension); step = CookingSteps asset id, empty = no cooking; ingredients = leaf ingredient asset ids. skip[] lists runtime variants (score 0 optional/model assets) excluded from recipes.json. Recipes without an entry here and without statically parseable composition are skipped during generation.",
+  "cookSteps": [
+    "FryingPan",
+    "Pot",
+    "OvenTray",
+    "DeepFatFryer",
+    "Steamer",
+    "Mixer",
+    "Blender",
+    "GriddlePan",
+    "KebabSkewer",
+    "MixingBowl",
+    "OvenCakeTin",
+    "ToastingFork"
+  ],
+  "skip": [
+    "OptionalHawaiianBurger",
+    "OptionalSmores",
+    "DLC05_OptionalCookedPizza",
+    "DLC05_OptionalUncookedPizza",
+    "Smoothie_Mega"
+  ],
+  "recipes": [
+    {
+      "id": "Burger_Plain_SO",
+      "step": "FryingPan",
+      "ingredients": [
+        "ChoppedBunSO",
+        "MeatSO"
+      ]
+    },
+    {
+      "id": "Burger_Cheese_SO",
+      "step": "FryingPan",
+      "ingredients": [
+        "ChoppedBunSO",
+        "CheeseSO",
+        "MeatSO"
+      ]
+    },
+    {
+      "id": "Burger_LettuceTomato_SO",
+      "step": "FryingPan",
+      "ingredients": [
+        "ChoppedBunSO",
+        "LettuceSO",
+        "TomatoSO",
+        "MeatSO"
+      ]
+    },
+    {
+      "id": "Burger_CheeseLettuce_SO",
+      "step": "FryingPan",
+      "ingredients": [
+        "ChoppedBunSO",
+        "CheeseSO",
+        "LettuceSO",
+        "MeatSO"
+      ]
+    },
+    {
+      "id": "Burrito_Chicken_SO",
+      "step": "FryingPan",
+      "ingredients": [
+        "TortillaSO",
+        "BurritoChickenSO"
+      ]
+    },
+    {
+      "id": "Burrito_Meat_SO",
+      "step": "FryingPan",
+      "ingredients": [
+        "TortillaSO",
+        "BurritoMeatSO"
+      ]
+    },
+    {
+      "id": "Burrito_Mushroom_SO",
+      "step": "FryingPan",
+      "ingredients": [
+        "TortillaSO",
+        "MushroomSO"
+      ]
+    },
+    {
+      "id": "Cake_Plain_SO",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO"
+      ]
+    },
+    {
+      "id": "Cake_Honey_SO",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO"
+      ]
+    },
+    {
+      "id": "Cake_Chocolate_SO",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ]
+    },
+    {
+      "id": "Cake_HoneyCarrot_SO",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO",
+        "CarrotSO"
+      ]
+    },
+    {
+      "id": "Cake_HoneyChocolate_SO",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO",
+        "ChocolateSO"
+      ]
+    },
+    {
+      "id": "Fry_Chips_SO",
+      "step": "DeepFatFryer",
+      "ingredients": [
+        "PotatoSO"
+      ]
+    },
+    {
+      "id": "Fry_Chicken_SO",
+      "step": "DeepFatFryer",
+      "ingredients": [
+        "NuggetChickenSO"
+      ]
+    },
+    {
+      "id": "Fry_All_SO",
+      "step": "DeepFatFryer",
+      "ingredients": [
+        "PotatoSO",
+        "NuggetChickenSO"
+      ]
+    },
+    {
+      "id": "OnionCarrotPotatoSoup_SO",
+      "step": "Pot",
+      "ingredients": [
+        "OnionSO",
+        "CarrotSO",
+        "PotatoSO"
+      ]
+    },
+    {
+      "id": "Pasta_Marinara_SO",
+      "step": "Pot",
+      "ingredients": [
+        "PastaSO",
+        "TomatoSO"
+      ]
+    },
+    {
+      "id": "Pasta_MeatOnly_SO",
+      "step": "Pot",
+      "ingredients": [
+        "PastaSO",
+        "MeatSO"
+      ]
+    },
+    {
+      "id": "Pasta_MushroomOnly_SO",
+      "step": "Pot",
+      "ingredients": [
+        "PastaSO",
+        "MushroomSO"
+      ]
+    },
+    {
+      "id": "Pasta_TomatoOnly_SO",
+      "step": "Pot",
+      "ingredients": [
+        "PastaSO",
+        "TomatoSO"
+      ]
+    },
+    {
+      "id": "Pizza_Plain_SO",
+      "step": "OvenTray",
+      "ingredients": [
+        "DoughSO"
+      ]
+    },
+    {
+      "id": "Pizza_Peperoni_SO",
+      "step": "OvenTray",
+      "ingredients": [
+        "DoughSO",
+        "PepperoniSO"
+      ]
+    },
+    {
+      "id": "Pizza_Chicken_SO",
+      "step": "OvenTray",
+      "ingredients": [
+        "DoughSO",
+        "ChickenSO"
+      ]
+    },
+    {
+      "id": "Salad_Plain_SO",
+      "step": "",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "OnionSO"
+      ]
+    },
+    {
+      "id": "Salad_Cucumber_SO",
+      "step": "",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "CucumberSO"
+      ]
+    },
+    {
+      "id": "Salad_Tomato_SO",
+      "step": "",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO"
+      ]
+    },
+    {
+      "id": "Steamed_Carrot_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "CarrotSO"
+      ]
+    },
+    {
+      "id": "Steamed_Fish_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "FishSO"
+      ]
+    },
+    {
+      "id": "Steamed_Meat_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "MeatSO"
+      ]
+    },
+    {
+      "id": "Steamed_Prawns_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "PrawnSO"
+      ]
+    },
+    {
+      "id": "Sushi_PlainFish_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "SeaweedSO",
+        "SushiRiceSO",
+        "SushiFishSO"
+      ]
+    },
+    {
+      "id": "Sushi_PlainPrawn_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "SeaweedSO",
+        "SushiRiceSO",
+        "SushiPrawnSO"
+      ]
+    },
+    {
+      "id": "Sushi_Cucumber_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "SeaweedSO",
+        "SushiRiceSO",
+        "SushiFishSO",
+        "CucumberSO"
+      ]
+    },
+    {
+      "id": "Sushi_Fish_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "SeaweedSO",
+        "SushiRiceSO",
+        "SushiFishSO"
+      ]
+    },
+    {
+      "id": "Sushi_All_SO",
+      "step": "Steamer",
+      "ingredients": [
+        "SeaweedSO",
+        "SushiRiceSO",
+        "SushiFishSO",
+        "SushiPrawnSO",
+        "CucumberSO"
+      ]
+    },
+    {
+      "id": "Burger_Hawaiian",
+      "step": "FryingPan",
+      "ingredients": [
+        "DLC02_ChoppedBun",
+        "BurgerPineapple",
+        "MeatSO"
+      ]
+    },
+    {
+      "id": "Cake_StrawberryPancake",
+      "step": "GriddlePan",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "PancakeStrawberry"
+      ]
+    },
+    {
+      "id": "MixedFlourEggStrawberry",
+      "step": "MixingBowl",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "PancakeStrawberry"
+      ]
+    },
+    {
+      "id": "Kebob_ChickenMeatTomato",
+      "step": "KebabSkewer",
+      "ingredients": [
+        "KebobChicken",
+        "KebobMeat",
+        "KebobTomato"
+      ]
+    },
+    {
+      "id": "Kebob_ChickenTomato",
+      "step": "KebabSkewer",
+      "ingredients": [
+        "KebobChicken",
+        "KebobTomato"
+      ]
+    },
+    {
+      "id": "Kebob_MeatMushroomPineapple",
+      "step": "KebabSkewer",
+      "ingredients": [
+        "KebobMeat",
+        "KebobMushroom",
+        "KebobPineapple"
+      ]
+    },
+    {
+      "id": "Kebob_MushroomPineappleTomato",
+      "step": "KebabSkewer",
+      "ingredients": [
+        "KebobMushroom",
+        "KebobPineapple",
+        "KebobTomato"
+      ]
+    },
+    {
+      "id": "Smoothie_Banana",
+      "step": "Blender",
+      "ingredients": [
+        "Banana"
+      ]
+    },
+    {
+      "id": "Smoothie_BananaPineapple",
+      "step": "Blender",
+      "ingredients": [
+        "Banana",
+        "SmoothiePineapple"
+      ]
+    },
+    {
+      "id": "Smoothie_Melon",
+      "step": "Blender",
+      "ingredients": [
+        "Melon"
+      ]
+    },
+    {
+      "id": "Smoothie_Strawberry",
+      "step": "Blender",
+      "ingredients": [
+        "SmoothieStrawberry"
+      ]
+    },
+    {
+      "id": "Breakfast_Bacon_Egg",
+      "step": "FryingPan",
+      "ingredients": [
+        "Bacon",
+        "DLC05_Egg"
+      ]
+    },
+    {
+      "id": "Breakfast_Bacon_Egg_Sausage",
+      "step": "FryingPan",
+      "ingredients": [
+        "Bacon",
+        "DLC05_Egg",
+        "Sausage"
+      ]
+    },
+    {
+      "id": "Breakfast_Sausage_Beans",
+      "step": "FryingPan",
+      "ingredients": [
+        "Sausage",
+        "DLC05_Beans"
+      ]
+    },
+    {
+      "id": "Breakfast_Sausage_Beans_Egg",
+      "step": "FryingPan",
+      "ingredients": [
+        "Sausage",
+        "DLC05_Beans",
+        "DLC05_Egg"
+      ]
+    },
+    {
+      "id": "Breakfast_Sausage_Beans_Egg_Bacon",
+      "step": "FryingPan",
+      "ingredients": [
+        "Sausage",
+        "DLC05_Beans",
+        "DLC05_Egg",
+        "Bacon"
+      ]
+    },
+    {
+      "id": "Cake_BlueberryPancake",
+      "step": "GriddlePan",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "Blueberry"
+      ]
+    },
+    {
+      "id": "MixedFlourEggBlueberry",
+      "step": "MixingBowl",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "Blueberry"
+      ]
+    },
+    {
+      "id": "Pizza_Olives",
+      "step": "OvenTray",
+      "ingredients": [
+        "DLC05_Dough",
+        "Olive"
+      ]
+    },
+    {
+      "id": "Smores_Plain",
+      "step": "ToastingFork",
+      "ingredients": [
+        "DLC05_Crackers",
+        "DLC05_Marshmallow"
+      ]
+    },
+    {
+      "id": "Smores_Chocolate",
+      "step": "ToastingFork",
+      "ingredients": [
+        "DLC05_Crackers",
+        "DLC05_Marshmallow",
+        "DLC05_Chocolate"
+      ]
+    },
+    {
+      "id": "Smores_Banana",
+      "step": "ToastingFork",
+      "ingredients": [
+        "DLC05_Crackers",
+        "DLC05_Marshmallow",
+        "DLC05_Banana"
+      ]
+    },
+    {
+      "id": "Smores_Strawberry",
+      "step": "ToastingFork",
+      "ingredients": [
+        "DLC05_Crackers",
+        "DLC05_Marshmallow",
+        "DLC05_Strawberry"
+      ]
+    },
+    {
+      "id": "Smores_Strawberry_Banana",
+      "step": "ToastingFork",
+      "ingredients": [
+        "DLC05_Crackers",
+        "DLC05_Marshmallow",
+        "DLC05_Strawberry",
+        "DLC05_Banana"
+      ]
+    }
+  ]
+}

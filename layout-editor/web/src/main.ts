@@ -16,6 +16,8 @@ import {
   saveLevelRecipes,
   setDeathTheme,
   setKillPlaneBounds,
+  uploadImageFloor,
+  imageFloorUrl,
 } from "./api";
 import { renderManageView, goManage, consumeTargetScene, openConfigTabsModal, openAudioModal } from "./levels";
 import { showBusy, hideBusy } from "./busy";
@@ -27,7 +29,8 @@ import {
   openIngredientMultiPicker,
   openModal,
 } from "./modals";
-import { ingredientNameZh, ingredientOptionLabel } from "./ingredientLabels";
+import { foodGroupLabel, ingredientNameZh, ingredientOptionLabel } from "./ingredientLabels";
+import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { tidyCatalogNameZh } from "./displayLabels";
 import { paintStyleForItem } from "./itemColors";
 import {
@@ -40,10 +43,22 @@ import {
   isSurfaceItem,
   isThemeBackgroundPrefabId,
   materialBilingual,
+  floorMaterialGroup,
+  FLOOR_MATERIAL_GROUPS,
   surfaceKindLabelZh,
   surfacePaint,
   themeBackgroundPrefabIds,
 } from "./floorColors";
+
+/** Which editor layer a catalog/scene item belongs to: core items, decor props, or floor/background surfaces. */
+function itemLayerOf(cat: CatalogItem | undefined): LayerKey {
+  if (isSurfaceItem(cat)) return "floor";
+  return cat?.layoutTier === "decor" ? "decor" : "items";
+}
+
+function isActiveItemLayer(it: { prefabGuid: string }): boolean {
+  return itemLayerOf(catalogByGuid.get(it.prefabGuid)) === currentLayer;
+}
 import { snapFootprintCenter, snapValue } from "./snap";
 import { raftPiecesForRect } from "./raft";
 import {
@@ -68,6 +83,47 @@ import type {
 
 const CELL = 1.2;
 const PX_PER_UNIT = 48;
+
+/** Image-floor texture cache: texturePath → HTMLImageElement (loaded or loading).
+ *  On load completion we trigger a redraw so the image appears on the canvas. */
+const floorImageCache = new Map<string, HTMLImageElement>();
+function getFloorImage(texturePath: string): HTMLImageElement | null {
+  if (!texturePath) return null;
+  const existing = floorImageCache.get(texturePath);
+  if (existing) return existing.complete && existing.naturalWidth > 0 ? existing : null;
+  const img = new Image();
+  img.onload = () => draw();
+  img.src = imageFloorUrl(texturePath);
+  floorImageCache.set(texturePath, img);
+  return null;
+}
+
+/** Ingredient icon cache: ingredientId → HTMLImageElement. Used to draw the selected ingredient
+ *  icon on 食材箱 (Dispenser) items on the layout canvas. Triggers a redraw on load. */
+const ingredientIconCache = new Map<string, HTMLImageElement>();
+function getIngredientIcon(ingId: string): HTMLImageElement | null {
+  if (!ingId) return null;
+  const existing = ingredientIconCache.get(ingId);
+  if (existing) return existing.complete && existing.naturalWidth > 0 ? existing : null;
+  const img = new Image();
+  img.onload = () => draw();
+  img.src = `/icons/ingredients/${ingId}.png`;
+  ingredientIconCache.set(ingId, img);
+  return null;
+}
+
+/** Core-item (锅具/道具) icon cache: catalogId → HTMLImageElement. */
+const catalogIconCache = new Map<string, HTMLImageElement>();
+function getCatalogIcon(catId: string): HTMLImageElement | null {
+  if (!catId) return null;
+  const existing = catalogIconCache.get(catId);
+  if (existing) return existing.complete && existing.naturalWidth > 0 ? existing : null;
+  const img = new Image();
+  img.onload = () => draw();
+  img.src = `/icons/catalog/${catId}.png`;
+  catalogIconCache.set(catId, img);
+  return null;
+}
 
 const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }> = {
   ServingStation: { cellsX: 2, cellsZ: 1 },
@@ -99,12 +155,15 @@ let bgThemeKey = "void";
 let bgThemeDirty = false;
 let autoKillPlane = false;
 let autoWalkable = true;
+let backgroundEditable = false;
 let floorMaterials: FloorMaterial[] = [];
 let selectedKey: string | null = null;
 let selectedKeys = new Set<string>();
 let selectedFloorKey: string | null = null;
 let selectedFloorKeys = new Set<string>();
-let currentLayer: "items" | "floor" = "items";
+type LayerKey = "items" | "decor" | "floor";
+
+let currentLayer: LayerKey = "items";
 let scenePath = "";
 let snapStep = 0.6;
 let showGrid = true;
@@ -159,13 +218,18 @@ const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Steamer: "CookingUtensil",
   FrierBasket: "CookingUtensil",
   MixerBowl: "CookingUtensil",
+  ToastingFork: "CookingUtensil",
+  GriddlePan: "CookingUtensil",
+  Skewer: "CookingUtensil",
   CleanPlateStack: "CleanPlateStack",
+  CleanGlassStack: "CleanPlateStack",
   Travelator: "Travelator",
   Flamethrower: "Flamethrower",
   Burner: "Burner",
   Player: "Player",
   ServingStation: "ServingStation",
   PlateReturn: "PlateReturn",
+  GlassReturn: "GlassReturn",
 };
 
 function stubKindOf(item: EditorItem): string {
@@ -176,13 +240,17 @@ function stubKindOf(item: EditorItem): string {
 
 /** Prefab-serialized defaults (from common01/common02 prefabs) used when export data isn't available yet. */
 function defaultUtensilCapacity(item: EditorItem): number {
-  return prefabIdFromPath(item.prefabAssetPath) === "MixerBowl" ? 4 : 1;
+  const prefabId = prefabIdFromPath(item.prefabAssetPath);
+  if (prefabId === "MixerBowl" || prefabId === "GriddlePan") return 4;
+  if (prefabId === "Skewer") return 3;
+  return 1;
 }
 
 const BURNER_FIRE_MODES = ["Direct（直射）", "Parabolic（抛物线）"];
 
 function stubControlsHtml(item: EditorItem): string {
   const kind = stubKindOf(item);
+  computeParamLabels(); // refresh per-type sequence numbers so menus match the canvas
   switch (kind) {
     case "Dispenser": {
       const cur = item.dispenser?.spawnerItemPrefabGuid ?? "";
@@ -208,7 +276,7 @@ function stubControlsHtml(item: EditorItem): string {
     case "CookingUtensil": {
       const cu = item.cookingUtensil ?? {};
       const allowed = (cu.allowedIngredientGuids ?? []).length;
-      return `<div class="ctx-stub"><div class="ctx-stub-title">锅具参数</div>
+      return `<div class="ctx-stub"><div class="ctx-stub-title">厨具参数</div>
         <label class="ctx-stub-row">最多食材数 <input type="number" id="ctx-cu-cap" class="ctx-input" min="0" step="1" value="${cu.capacity ?? defaultUtensilCapacity(item)}"/></label>
         <button type="button" class="ctx-btn" id="ctx-cu-ings">允许的食材 (${allowed > 0 ? allowed : "全部"})…</button></div>`;
     }
@@ -249,8 +317,9 @@ function stubControlsHtml(item: EditorItem): string {
     }
     case "CleanPlateStack": {
       const ps = item.cleanPlateStack ?? {};
-      return `<div class="ctx-stub"><div class="ctx-stub-title">盘子堆参数</div>
-        <label class="ctx-stub-row">盘子数量 <input type="number" id="ctx-ps-count" class="ctx-input" min="0" step="1" value="${ps.plateCount ?? 5}"/></label></div>`;
+      const title = prefabIdFromPath(item.prefabAssetPath) === "CleanGlassStack" ? "杯堆参数" : "盘子堆参数";
+      return `<div class="ctx-stub"><div class="ctx-stub-title">${title}</div>
+        <label class="ctx-stub-row">数量 <input type="number" id="ctx-ps-count" class="ctx-input" min="0" step="1" value="${ps.plateCount ?? 5}"/></label></div>`;
     }
     case "Burner": {
       const b = item.burner ?? {};
@@ -268,31 +337,46 @@ function stubControlsHtml(item: EditorItem): string {
         <div class="ctx-stub-row">玩家固定在场景中，仅可拖动调整位置</div></div>`;
     }
     case "ServingStation": {
-      const ss = item.servingStation ?? {};
-      plateReturnLabels = computePlateReturnLabels();
-      const prs = plateReturns();
-      const opts = ['<option value="">— 未绑定 —</option>']
+      const myNum = paramLabels.get(item.instanceId) ?? "?";
+      const labels = computeReturnLabels();
+      const plateId = servingPlateReturn(item);
+      const glassId = servingGlassReturn(item);
+      const plateOpts = ['<option value="">— 未绑定 —</option>']
         .concat(
-          prs.map(
-            (t) =>
-              `<option value="${t.instanceId}" ${ss.plateReturnInstanceId === t.instanceId ? "selected" : ""}>脏盘台 ${plateReturnLabels.get(t.instanceId) ?? "?"}（${escHtml(itemLabel(t))}）</option>`
+          plateReturns().map(
+            (r) =>
+              `<option value="${r.instanceId}" ${plateId === r.instanceId ? "selected" : ""}>${labels.get(r.instanceId) ?? "?"}（${escHtml(itemLabel(r))}）</option>`
           )
         )
         .join("");
-      return `<div class="ctx-stub"><div class="ctx-stub-title">上菜口参数</div>
-        <label class="ctx-stub-row">脏盘台 <select id="ctx-ss-pr" class="ctx-input">${opts}</select></label></div>`;
+      const glassOpts = ['<option value="">— 未绑定 —</option>']
+        .concat(
+          glassReturns().map(
+            (r) =>
+              `<option value="${r.instanceId}" ${glassId === r.instanceId ? "selected" : ""}>${labels.get(r.instanceId) ?? "?"}（${escHtml(itemLabel(r))}）</option>`
+          )
+        )
+        .join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">上菜台${myNum} · 绑定回收台（各至多一个）</div>
+        <label class="ctx-stub-row">脏盘台 <select id="ctx-ss-plate" class="ctx-input">${plateOpts}</select></label>
+        <label class="ctx-stub-row">脏杯台 <select id="ctx-ss-glass" class="ctx-input">${glassOpts}</select></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">一个上菜台最多绑一个脏盘台 + 一个脏杯台；一个回收台可被多个上菜台共用</div></div>`;
     }
-    case "PlateReturn": {
-      plateReturnLabels = computePlateReturnLabels();
-      const bound = servingStations().filter((s) => s.servingStation?.plateReturnInstanceId === item.instanceId);
-      const rows = servingStations()
+    case "PlateReturn":
+    case "GlassReturn": {
+      const labels = computeReturnLabels();
+      const typeZh = isGlassReturnItem(item) ? "脏杯台" : "脏盘台";
+      const myNum = labels.get(item.instanceId) ?? "?";
+      const bound = servingStationsForReturn(item.instanceId);
+      const rows = bound
         .map((s) => {
-          const checked = s.servingStation?.plateReturnInstanceId === item.instanceId ? "checked" : "";
-          return `<label class="ctx-stub-row"><input type="checkbox" class="ctx-pr-sv" value="${s.instanceId}" ${checked}/> ${escHtml(itemLabel(s))}</label>`;
+          const sNum = paramLabels.get(s.instanceId) ?? "?";
+          return `<div class="ctx-stub-row">· 上菜台${sNum}（${escHtml(itemLabel(s))}）</div>`;
         })
         .join("");
-      return `<div class="ctx-stub"><div class="ctx-stub-title">脏盘台 · 绑定的上菜口 (${bound.length})</div>
-        ${rows || '<div class="ctx-stub-row">场景中无上菜口</div>'}</div>`;
+      return `<div class="ctx-stub"><div class="ctx-stub-title">${typeZh}${myNum} · 被上菜台绑定（可一对多）</div>
+        ${rows || '<div class="ctx-stub-row">未被任何上菜台绑定</div>'}
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">请在对应上菜台的右键菜单里设置绑定</div></div>`;
     }
     default:
       return "";
@@ -489,32 +573,25 @@ function wireStubControls(item: EditorItem) {
       break;
     }
     case "ServingStation": {
-      num("ctx-ss-pr")?.addEventListener("change", (e) => {
+      num("ctx-ss-plate")?.addEventListener("change", (e) => {
+        const id = (e.target as HTMLSelectElement).value;
         pushHistory();
-        item.stubKind = "ServingStation";
-        item.servingStation = { plateReturnInstanceId: (e.target as HTMLSelectElement).value };
+        setServingReturnOfType(item, id || undefined, false);
         draw();
-        setStatus("已更新上菜口的脏盘台绑定（写回后生效）");
+        setStatus("已更新脏盘台绑定（写回后生效）");
+      });
+      num("ctx-ss-glass")?.addEventListener("change", (e) => {
+        const id = (e.target as HTMLSelectElement).value;
+        pushHistory();
+        setServingReturnOfType(item, id || undefined, true);
+        draw();
+        setStatus("已更新脏杯台绑定（写回后生效）");
       });
       break;
     }
-    case "PlateReturn": {
-      document.querySelectorAll<HTMLInputElement>(".ctx-pr-sv").forEach((cb) =>
-        cb.addEventListener("change", () => {
-          const sv = items.find((i) => i.instanceId === cb.value);
-          if (!sv) return;
-          pushHistory();
-          sv.stubKind = "ServingStation";
-          sv.servingStation = { plateReturnInstanceId: cb.checked ? item.instanceId : "" };
-          hideContextMenu();
-          draw();
-          setStatus(
-            cb.checked
-              ? `已把「${itemLabel(sv)}」绑定到该脏盘台（写回后生效）`
-              : `已解绑「${itemLabel(sv)}」（写回后生效）`
-          );
-        })
-      );
+    case "PlateReturn":
+    case "GlassReturn": {
+      // Read-only: binding is configured from the serving-station side.
       break;
     }
   }
@@ -547,14 +624,35 @@ async function openRecipesDialog() {
   }
 
   const selected = new Set<string>(level.recipeGuids ?? []);
+  const orderable = recipes.filter((r) => !r.intermediate);
   const byGuid = new Map(recipes.map((r) => [r.guid, r]));
 
-  const listHtml = recipes
-    .map((r) => {
-      const checked = selected.has(r.guid) ? "checked" : "";
-      const en = r.nameEn ? ` <span class="muted">${escHtml(r.nameEn)}</span>` : "";
-      const cust = r.isCustom ? ' <span class="muted" title="自定义菜谱">🔧</span>' : "";
-      return `<label class="modal-check"><input type="checkbox" value="${r.guid}" ${checked}> ${escHtml(r.nameZh)}${en}${cust}</label>`;
+  const listHtml = groupRecipesByType(orderable)
+    .map(([type, items]) => {
+      const cards = items
+        .map((r) => {
+          const checked = selected.has(r.guid) ? "checked" : "";
+          const cust = r.isCustom ? ` <span class="pc-badge" title="自定义菜谱">🔧</span>` : "";
+          const grp =
+            r.group && r.group !== "core"
+              ? ` <span class="pc-badge">${escHtml(foodGroupLabel(r.group))}</span>`
+              : "";
+          const chips = (r.ingredients ?? [])
+            .map((ingId) => {
+              const ing = ingredientEntryById(ingId);
+              const name = ing?.nameZh ?? ingId;
+              return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("ingredients", ing?.id, ing?.icon)}${escHtml(name)}</span>`;
+            })
+            .join("");
+          const searchable = `${r.nameZh} ${r.nameEn ?? ""} ${r.id}`.toLowerCase();
+          return `<label class="pick-card recipe-card" data-name="${escHtml(searchable)}">
+            <input type="checkbox" value="${r.guid}" ${checked}>
+            <span class="rc-head">${foodIconImg("recipes", r.id, r.icon)}<span class="pc-name">${escHtml(r.nameZh)}${grp}${cust}</span></span>
+            <span class="rc-ings">${chips || '<span class="muted small">无食材</span>'}</span>
+          </label>`;
+        })
+        .join("");
+      return `<div class="rw-group" data-type="${escHtml(type)}"><div class="rw-group-header">${escHtml(recipeTypeLabel(type))}<span class="rw-group-count">${items.length}</span></div><div class="pick-grid recipe-grid">${cards}</div></div>`;
     })
     .join("");
 
@@ -655,18 +753,27 @@ async function openRecipesDialog() {
     });
   };
 
-  listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) =>
+  listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+    const card = cb.closest(".pick-card");
+    if (card) card.classList.toggle("selected", cb.checked); // init
     cb.addEventListener("change", () => {
       if (cb.checked) selected.add(cb.value);
       else selected.delete(cb.value);
+      card?.classList.toggle("selected", cb.checked);
       rerender();
-    })
-  );
+    });
+  });
   searchEl.addEventListener("input", () => {
     const q = searchEl.value.trim().toLowerCase();
-    listEl.querySelectorAll<HTMLLabelElement>("label.modal-check").forEach((lb) => {
-      const txt = lb.textContent?.toLowerCase() ?? "";
-      lb.style.display = !q || txt.includes(q) ? "" : "none";
+    listEl.querySelectorAll<HTMLDivElement>(".rw-group").forEach((grp) => {
+      let visible = 0;
+      grp.querySelectorAll<HTMLElement>(".recipe-card").forEach((card) => {
+        const txt = card.dataset.name ?? "";
+        const show = !q || txt.includes(q);
+        card.style.display = show ? "" : "none";
+        if (show) visible++;
+      });
+      grp.style.display = visible > 0 ? "" : "none";
     });
   });
 
@@ -723,6 +830,109 @@ async function openRecipesDialog() {
   }
 }
 
+/** Read-only "已选菜谱" modal: shows the level's currently selected recipes (3-per-row cards),
+ *  plus the full required-ingredient and required-utensil checklist (✓ already on canvas / ✗ missing). */
+async function openSelectedRecipesDialog() {
+  if (!scenePath) {
+    setStatus("请先选择场景", false);
+    return;
+  }
+  const health = await fetchHealthInfo();
+  if (!health.recipeApi) {
+    setStatus(STALE_BRIDGE_MSG, false);
+    return;
+  }
+  let recipes: RecipeEntry[];
+  let level: { levelInfoAssetPath: string; levelName: string; recipeGuids: string[] };
+  try {
+    [recipes, level] = await Promise.all([
+      fetchRecipeCatalog(currentLevelSet),
+      fetchLevelRecipes(scenePath),
+    ]);
+  } catch (e) {
+    setStatus((e as Error).message, false);
+    return;
+  }
+  if (!level.levelInfoAssetPath) {
+    setStatus("未找到该场景对应的 LevelInfoSO", false);
+    return;
+  }
+
+  const byGuid = new Map(recipes.map((r) => [r.guid, r]));
+  const selected = (level.recipeGuids ?? [])
+    .map((g) => byGuid.get(g))
+    .filter((r): r is RecipeEntry => !!r && !r.intermediate);
+
+  const reqIngs = new Set<string>();
+  const steps = new Set<string>();
+  for (const r of selected) {
+    (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
+    if (r.cookingStep) steps.add(r.cookingStep);
+  }
+  const haveDisp = new Set<string>();
+  for (const it of items) {
+    if (it.stubKind === "Dispenser") {
+      const id = ingredientIdByGuid(it.dispenser?.spawnerItemPrefabGuid);
+      if (id) haveDisp.add(id);
+    }
+  }
+  const havePref = new Set(items.map((it) => prefabIdFromPath(it.prefabAssetPath)));
+  const reqUt = computeRequiredUtensils(reqIngs, steps);
+
+  const cards = selected
+    .map((r) => {
+      const chips = (r.ingredients ?? [])
+        .map((ingId) => {
+          const ing = ingredientEntryById(ingId);
+          const name = ing?.nameZh ?? ingId;
+          return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("ingredients", ing?.id, ing?.icon)}${escHtml(name)}</span>`;
+        })
+        .join("");
+      const grp =
+        r.group && r.group !== "core"
+          ? ` <span class="pc-badge">${escHtml(foodGroupLabel(r.group))}</span>`
+          : "";
+      return `<div class="pick-card recipe-card static">
+        <div class="rc-head">${foodIconImg("recipes", r.id, r.icon)}<span class="pc-name">${escHtml(r.nameZh)}${grp}</span></div>
+        <div class="rc-ings">${chips || '<span class="muted small">无食材</span>'}</div>
+      </div>`;
+    })
+    .join("");
+
+  const ingRows =
+    [...reqIngs]
+      .sort()
+      .map((i) => {
+        const ok = haveDisp.has(i);
+        const ing = ingredientEntryById(i);
+        return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span>${foodIconImg("ingredients", ing?.id, ing?.icon)}<span>${escHtml(ingredientNameById(i))}</span><span class="muted">${escHtml(i)}</span></div>`;
+      })
+      .join("") || '<p class="muted">无</p>';
+
+  const utRows =
+    reqUt
+      .map((u) => {
+        const ok = havePref.has(u);
+        const cat = catalogItemById(u);
+        const label = cat ? tidyCatalogNameZh(cat.nameZh, cat.id) : u;
+        return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span><span>${escHtml(label)}</span><span class="muted">${escHtml(u)}</span></div>`;
+      })
+      .join("") || '<p class="muted">无</p>';
+
+  openModal(
+    `已选菜谱 · ${level.levelName || "未命名"}（${selected.length}）`,
+    `<p class="modal-hint">当前订单菜谱（写入 LevelInfoSO.recipes）</p>
+     <div class="sr-grid">${cards || '<p class="muted">未选择任何菜谱</p>'}</div>
+     <p class="modal-hint" style="margin-top:12px">所需食材（✓ 已有食材箱 · ✗ 缺失）</p>
+     <div class="rw-rows">${ingRows}</div>
+     <p class="modal-hint" style="margin-top:12px">所需锅具 / 道具（据烹饪方式推断）</p>
+     <div class="rw-rows">${utRows}</div>`,
+    `<button type="button" class="modal-btn primary" data-close>关闭</button>`
+  );
+  document.querySelector(".modal-panel")?.classList.add("wide");
+  document.querySelector("[data-close]")?.addEventListener("click", closeModal);
+}
+
 const app = document.getElementById("app")!;
 const MANAGE_ACTIVE = /^#\/manage/.test(location.hash);
 if (!MANAGE_ACTIVE) document.body.classList.remove("manage-bg");
@@ -736,10 +946,12 @@ app.innerHTML = `
     <button id="btn-reload">重新加载</button>
     <button id="btn-save" class="primary">写回 Unity</button>
     <button id="btn-recipes" type="button">菜谱</button>
+    <button id="btn-selected-recipes" type="button" title="查看当前已选菜谱、所需食材与锅具">已选菜谱</button>
     <button id="btn-level-config" type="button">人数配置</button>
     <button id="btn-level-audio" type="button">音频</button>
     <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">同步布局…</button>
     <div class="layer-tabs" id="layer-tabs">
+      <button type="button" data-layer="decor" class="layer-tab">🎀 装饰层</button>
       <button type="button" data-layer="items" class="layer-tab active">📦 物品层</button>
       <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板 / 背景层</button>
     </div>
@@ -885,6 +1097,21 @@ function confirmLeaveIfDirty(action: () => void): void {
 function setStatus(text: string, ok = true) {
   statusEl.textContent = text;
   statusEl.className = "status " + (ok ? "ok" : "err");
+}
+
+/** 桥接端共享数据文件缺失或版本落后时提醒升级（字典/知识 JSON 与前端静态目录同版本发布）。 */
+function warnIfBridgeOutdated(health: import("./api").HealthInfo, catalogSchemaVersion: number) {
+  if (!health.ok) return;
+  const reasons: string[] = [];
+  if ((health.schemaVersion ?? 1) < catalogSchemaVersion)
+    reasons.push(`桥接版本 v${health.schemaVersion ?? 1} < 资源目录 v${catalogSchemaVersion}`);
+  if (health.knowledgeLoaded === false) reasons.push("缺少 recipe-knowledge.json");
+  if (health.dictionaryLoaded === false) reasons.push("缺少 names-dictionary.json");
+  if (reasons.length === 0) return;
+  setStatus(
+    `桥接端资源数据过旧（${reasons.join("；")}），请升级 Unity 工程中的 layout-editor 文件并重启 Bridge`,
+    false
+  );
 }
 
 function normalizeRot(deg: number): number {
@@ -1046,6 +1273,66 @@ function drawLabelInBox(
   }
 }
 
+/** Draw an icon (top) + a text label (bottom) within a bw×bh box centered at the current origin.
+ *  Used by both 食材箱 (Dispenser, shows the selected ingredient) and core items with an icon. */
+function drawIconWithLabel(
+  ctx: CanvasRenderingContext2D,
+  icon: HTMLImageElement | null,
+  label: string,
+  bw: number,
+  bh: number
+): void {
+  const iconSize = Math.min(bw * 0.8, bh * 0.46, 30 * scale);
+  const iconCy = -bh / 4 - 1;
+  if (icon) {
+    ctx.drawImage(icon, -iconSize / 2, iconCy - iconSize / 2, iconSize, iconSize);
+  } else {
+    // subtle placeholder ring while the icon loads
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, iconCy, iconSize * 0.32, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.save();
+  ctx.translate(0, bh / 4 + 1);
+  drawLabelInBox(ctx, label, bw - 4, bh / 2);
+  ctx.restore();
+}
+
+function drawDispenserIngredient(
+  ctx: CanvasRenderingContext2D,
+  item: EditorItem,
+  bw: number,
+  bh: number
+): boolean {
+  // Draw the 食材箱 (Dispenser) selected ingredient: icon on top + name below. Returns false when
+  // the item isn't a dispenser with a set ingredient (caller falls back to the plain label).
+  const id = prefabIdFromPath(item.prefabAssetPath);
+  if (item.stubKind !== "Dispenser" && id !== "Dispenser") return false;
+  const guid = item.dispenser?.spawnerItemPrefabGuid;
+  if (!guid) return false;
+  const ingId = ingredientIdByGuid(guid);
+  const name = ingredientNameZh(ingredientsCache, guid);
+  if (!ingId || name === "未设置") return false;
+  drawIconWithLabel(ctx, getIngredientIcon(ingId), name, bw, bh);
+  return true;
+}
+
+/** Draw the catalog icon for a core item that has one (锅具/道具). Returns false when the item has
+ *  no extracted icon (caller falls back to the plain text label). */
+function drawCatalogItemIcon(
+  ctx: CanvasRenderingContext2D,
+  cat: CatalogItem | undefined,
+  item: EditorItem,
+  bw: number,
+  bh: number
+): boolean {
+  if (!cat?.icon) return false;
+  drawIconWithLabel(ctx, getCatalogIcon(cat.id), itemLabel(item), bw, bh);
+  return true;
+}
+
 function drawVoidHatch(color: string) {
   const w = canvas.clientWidth;
   const h = canvas.clientHeight;
@@ -1147,6 +1434,7 @@ function draw() {
     const ghostItems = items.filter((it) => !isSurfaceItem(catalogByGuid.get(it.prefabGuid)));
     if (ghostItems.length > 0) {
       teleportalLabels = computeTeleportalLabels();
+      computeParamLabels();
       const sortedGhost = [...ghostItems].sort(
         (a, b) => drawLayerForItem(a, catalogByGuid) - drawLayerForItem(b, catalogByGuid)
       );
@@ -1163,18 +1451,18 @@ function draw() {
       drawFloorPlanes(false);
       ctx.restore();
     }
-    const ghostSurface = items.filter((it) => isSurfaceItem(catalogByGuid.get(it.prefabGuid)));
-    if (ghostSurface.length > 0) {
+    const inactive = items.filter((it) => !isActiveItemLayer(it));
+    if (inactive.length > 0) {
       ctx.save();
       ctx.globalAlpha = 0.32;
-      for (const it of ghostSurface) drawItem(it, false);
+      for (const it of inactive) drawItem(it, false);
       ctx.restore();
     }
-    const sorted = [...items]
-      .filter((it) => !isSurfaceItem(catalogByGuid.get(it.prefabGuid)))
+    const sorted = items
+      .filter(isActiveItemLayer)
       .sort((a, b) => drawLayerForItem(a, catalogByGuid) - drawLayerForItem(b, catalogByGuid));
     teleportalLabels = computeTeleportalLabels();
-    plateReturnLabels = computePlateReturnLabels();
+    computeParamLabels();
     for (const item of sorted) {
       drawItem(item, isSelected(item._editorKey));
     }
@@ -1215,6 +1503,7 @@ function updateMarqueeSelection() {
   if (currentLayer === "floor") {
     const nextFloors = marqueeAdd ? new Set(selectedFloorKeys) : new Set<string>();
     for (const f of floors) {
+      if (f.surfaceKind === "background" && !backgroundEditable) continue;
       if (inRect(f._wx, f._wz)) nextFloors.add(f._key);
     }
     setFloorSelection([...nextFloors]);
@@ -1230,7 +1519,7 @@ function updateMarqueeSelection() {
   }
   const next = marqueeAdd ? new Set(selectedKeys) : new Set<string>();
   for (const it of items) {
-    if (isSurfaceItem(catalogByGuid.get(it.prefabGuid))) continue;
+    if (!isActiveItemLayer(it)) continue;
     if (inRect(it._wx, it._wz)) next.add(it._editorKey);
   }
   selectedKeys = next;
@@ -1362,16 +1651,51 @@ function floorRectPx(f: EditorFloor) {
   return { center, bw, bh, rot };
 }
 
+/** Convert "#rrggbb" (or rgb) hex + alpha to an rgba() string for canvas fills. */
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  if ([r, g, b].some((v) => Number.isNaN(v))) return hex;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean) {
   const { center, bw, bh, rot } = floorRectPx(f);
   const paint = surfacePaint(f.surfaceKind, selected);
+  const isImage = f.surfaceKind === "solid" && !!f.imageTexturePath;
+  const img = isImage ? getFloorImage(f.imageTexturePath!) : null;
+  // Manual tint overrides the fill (only when enabled) so the recolor is visible
+  // in the canvas immediately; disabled tint falls back to the kind/material color.
+  const fill = f.tintEnabled && f.tintColor ? hexToRgba(f.tintColor, selected ? 0.92 : 0.78) : paint.fill;
 
   ctx.save();
   ctx.translate(center.x, center.y);
   ctx.rotate((-rot * Math.PI) / 180);
 
-  ctx.fillStyle = paint.fill;
-  ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+  if (img) {
+    // Draw the uploaded image: "tile" repeats once per cell, "stretch" fills.
+    const cellPx = CELL * PX_PER_UNIT * scale;
+    const prevAlpha = ctx.globalAlpha;
+    ctx.globalAlpha = f.imageOpacity != null ? Math.max(0, Math.min(1, f.imageOpacity)) : 1;
+    if (f.imageMode === "tile" && cellPx > 2) {
+      const w = Math.max(1, f._wCells);
+      const d = Math.max(1, f._dCells);
+      for (let i = 0; i < w; i++) {
+        for (let j = 0; j < d; j++) {
+          ctx.drawImage(img, -bw / 2 + i * cellPx, -bh / 2 + j * cellPx, cellPx, cellPx);
+        }
+      }
+    } else {
+      ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh);
+    }
+    ctx.globalAlpha = prevAlpha;
+  } else {
+    ctx.fillStyle = fill;
+    ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+  }
 
   // Dashed outer border to convey the floor surface.
   ctx.strokeStyle = paint.stroke;
@@ -1380,9 +1704,10 @@ function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean) {
   ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
   ctx.setLineDash([]);
 
-  // Faint dashed internal cell grid → "perspective" tiling.
+  // Faint dashed internal cell grid → "perspective" tiling (skip for tiled
+  // images, whose own tiling already conveys the cells).
   const cellPx = CELL * PX_PER_UNIT * scale;
-  if (!ghost && cellPx > 6) {
+  if (!ghost && cellPx > 6 && !(img && f.imageMode === "tile")) {
     ctx.strokeStyle = "rgba(255,255,255,0.10)";
     ctx.lineWidth = 1;
     ctx.setLineDash([3, 4]);
@@ -1493,6 +1818,7 @@ interface FloorHit {
 function hitTestFloorsAll(wx: number, wz: number): FloorHit[] {  const hits: FloorHit[] = [];
   for (let i = floors.length - 1; i >= 0; i--) {
     const f = floors[i];
+    if (f.surfaceKind === "background" && !backgroundEditable) continue;
     const hw = (f._wCells * CELL) / 2;
     const hh = (f._dCells * CELL) / 2;
     const { lx, lz } = floorLocalPoint(f, wx, wz);
@@ -1558,7 +1884,7 @@ function dragFloor(f: EditorFloor, mx: number, my: number) {
 }
 
 /** Snap a raft floor so its plank lattice sits on the global CELL grid (grid origin when known),
- *  keeping rafts aligned with each other and with placed items across save/reload round trips. */
+ *  keeping tiled floors aligned with each other and with placed items across save/reload round trips. */
 function snapRaftCenterToGrid(f: EditorFloor): void {
   if (f.surfaceKind !== "raft") return;
   const ox = gridInfo?.found ? gridInfo.worldPosition.x : 0;
@@ -1573,7 +1899,7 @@ function snapRaftCenterToGrid(f: EditorFloor): void {
 
 function finalizeFloor(f: EditorFloor) {
   if (f.surfaceKind === "raft") {
-    // Raft floors snap their plank lattice to the global CELL grid instead of the half-cell step.
+    // Raft planks snap to the global CELL grid instead of the half-cell step.
     snapRaftCenterToGrid(f);
   } else {
     // Snap by footprint edges (same as items) so adjacent floors share a common grid edge
@@ -1597,7 +1923,8 @@ function finalizeFloor(f: EditorFloor) {
   f.widthUnits = f._wCells * CELL;
   f.depthUnits = f._dCells * CELL;
   // Smart material match by size tag.
-  if (f.surfaceKind !== "background" && f.surfaceKind !== "raft") tryMatchFloorMaterialBySize(f);
+  if (f.surfaceKind !== "background" && f.surfaceKind !== "raft" && !f.prefabGuid)
+    tryMatchFloorMaterialBySize(f);
 }
 
 function tryMatchFloorMaterialBySize(f: EditorFloor) {
@@ -1639,7 +1966,7 @@ function warnItemVoid(item: EditorItem) {
   if (w) setStatus(w, false);
 }
 
-function addFloorAt(wx: number, wz: number) {
+function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | null) {
   pushHistory();
   const id = `new:floor:${crypto.randomUUID()}`;
   const key = newEditorKey();
@@ -1651,16 +1978,18 @@ function addFloorAt(wx: number, wz: number) {
     instanceId: id,
     _key: key,
     hierarchyPath: id,
-    parentPath: "Art/Ground",
-    displayName: "Floor",
-    surfaceKind: "solid",
-    meshType: "plane",
-    meshFileId: 10209,
-    materialGuid: defaultMat?.guid,
-    materialAssetPath: defaultMat?.assetPath,
-    materialName: defaultMat?.id,
-    localPosition: { x: snapped.x, y: -0.05, z: snapped.z },
-    worldPosition: { x: snapped.x, y: -0.05, z: snapped.z },
+    parentPath: themedCat ? themedCat.defaultParent || "Art" : "Art/Ground",
+    displayName: themedCat ? themedCat.id : "Floor",
+    surfaceKind: themedCat ? (themedCat.surfaceKind ?? "solid") : "solid",
+    meshType: themedCat ? "prefab" : "plane",
+    meshFileId: themedCat ? 0 : 10209,
+    prefabGuid: themedCat?.guid,
+    prefabAssetPath: themedCat?.assetPath,
+    materialGuid: themedCat ? undefined : defaultMat?.guid,
+    materialAssetPath: themedCat ? undefined : defaultMat?.assetPath,
+    materialName: themedCat ? undefined : defaultMat?.id,
+    localPosition: { x: snapped.x, y: themedCat ? 0.01 : -0.05, z: snapped.z },
+    worldPosition: { x: snapped.x, y: themedCat ? 0.01 : -0.05, z: snapped.z },
     localRotationY: 0,
     localScale: { x: (w * CELL) / 10, y: 1, z: (d * CELL) / 10 },
     widthUnits: w * CELL,
@@ -1675,43 +2004,202 @@ function addFloorAt(wx: number, wz: number) {
   floors.push(floor);
   setFloorSelection([key]);
   draw();
-  setStatus("已新增地板（写回后生效）");
+  setStatus(
+    themedCat
+      ? `已新增主题地板：${tidyCatalogNameZh(themedCat.nameZh, themedCat.id)}（写回时生成单个缩放实例）`
+      : "已新增地板（写回后生效）"
+  );
 }
 
-function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
+/** Themed floor = a floor rect visualized by tiling a themed prefab (carpet,
+ *  ice, snow, …) at write-back time, instead of a single Plane + material. */
+function isThemedFloor(f: EditorFloor): boolean {
+  return !!f.prefabGuid && f.surfaceKind !== "raft";
+}
+
+/** Ids that are clearly NOT area floor surfaces and must stay out of themed
+ *  floor management: walkway pillars / roofs / ropes, the Red Carpet Entrance
+ *  piece, and beach floor corner/edge trims (stretching them over an N×M rect
+ *  makes no sense). They remain regular floor-layer items. */
+const THEMED_FLOOR_NOT_FLOOR_ID = /pillar|roof|rope|entrance|corner|edge|walkway/i;
+
+/** True for catalog prefabs that can back a themed floor (excludes raft planks,
+ *  conveyors, decals, floor sections and non-floor pieces like pillars/roofs). */
+function isThemedFloorPrefab(it: CatalogItem | undefined): boolean {
+  if (!it || it.surfaceTier !== "floor") return false;
+  const k = it.surfaceKind;
+  if (k === "raft" || k === "conveyor" || k === "decal" || k === "section") return false;
+  if (THEMED_FLOOR_NOT_FLOOR_ID.test(it.id)) return false;
+  return true;
+}
+
+/** Native geometry per themed floor prefab (extracted from its bundle).
+ *  The game's PseudoPrefab system spawns the real bundle prefab via
+ *  `Instantiate(prefab, position, rotation, parent)` — the prefab root's
+ *  baked ROTATION is discarded and replaced by the wrapper's world rotation;
+ *  only its local SCALE survives. Consequences per prefab family:
+ *  - Quad tiles (ice/snow/alien/carpet): the quad stands vertical at identity,
+ *    so the wrapper MUST carry rotX=90 to lie flat; wrapper scale.x=width,
+ *    scale.y=depth (the baked 1.2 scale makes wrapper scale 1 = one 1.2m cell).
+ *  - Flat meshes (sand): already lie in XZ, so the wrapper stays at
+ *    rotX=0 (rotX=90 would stand them up); wrapper scale.x=width, scale.z=depth.
+ *  cellsPerScaleX/Z: footprint in cells per unit of wrapper scale. */
+interface ThemedFloorNative {
+  rotX: number;
+  depthAxis: "y" | "z";
+  cellsPerScaleX: number;
+  cellsPerScaleZ: number;
+}
+const THEMED_FLOOR_NATIVE: Record<string, ThemedFloorNative> = {
+  ice_floor_01: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  snow_floor_01: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  alien_floor_tile_01: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  floor_carpet_purple: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  sand_floor_01: { rotX: 0, depthAxis: "z", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+};
+const THEMED_FLOOR_NATIVE_DEFAULT: ThemedFloorNative = {
+  rotX: 90,
+  depthAxis: "y",
+  cellsPerScaleX: 1,
+  cellsPerScaleZ: 1,
+};
+function themedFloorNative(cat: CatalogItem): ThemedFloorNative {
+  return THEMED_FLOOR_NATIVE[cat.id] ?? THEMED_FLOOR_NATIVE_DEFAULT;
+}
+
+/** All catalog prefabs usable as themed floor tiles (excludes raft planks,
+ *  conveyors and decals — those have their own workflows). */
+function themedFloorPrefabs(): CatalogItem[] {
+  const list: CatalogItem[] = [];
+  for (const it of catalogByGuid.values()) {
+    if (isThemedFloorPrefab(it)) list.push(it);
+  }
+  return list.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | undefined): string {
+  if (f.surfaceKind === "raft") return "木筏拼块（写回时生成）";
+  if (isThemedFloor(f)) {
+    const cat = catalogByGuid.get(f.prefabGuid!);
+    return `主题地板（${cat ? tidyCatalogNameZh(cat.nameZh, cat.id) : (f.materialName ?? f.prefabGuid)} · 写回时生成单个缩放实例）`;
+  }
+  if (f.imageMode || f.imageTexturePath)
+    return f.imageTexturePath
+      ? `图片地板（${f.imageMode === "tile" ? "一格平铺" : "全部铺开"} · ${f.imageTexturePath.split("/").pop() ?? ""}）`
+      : "图片地板（未上传图片）";
+  if (f.tintEnabled) return `染色地板（颜色 ${f.tintColor ?? "#ffffff"}）`;
+  return matchedMat?.nameZh ?? f.materialName ?? "无";
+}
+
+/** Large centered modal for full floor reconfiguration (right-click on a floor).
+ *  Floor types: 实心地板 (solid Plane + material), 染色地板 (solid Plane + tint
+ *  color, same solid-plane principle), 木筏地板 (tiled into real planks). */
+function openFloorEditorModal(f: EditorFloor) {
   const matchedMat = floorMaterials.find((m) => m.guid === f.materialGuid);
   const areaCells = f._wCells * f._dCells;
-  const matRows = floorMaterials
-    .map((m) => {
-      const bl = materialBilingual(m.id);
-      return `<button type="button" class="mat-pick${m.guid === f.materialGuid ? " active" : ""}" data-guid="${m.guid}"><span class="mat-id">${bl.zh}</span><span class="mat-sub">${bl.en}</span></button>`;
-    })
+  const isRaft = f.surfaceKind === "raft";
+  const isThemed = isThemedFloor(f);
+  const isImage = !isThemed && f.surfaceKind === "solid" && (!!f.imageTexturePath || !!f.imageMode);
+  const isTinted = !isThemed && f.surfaceKind === "solid" && !!f.tintEnabled && !isImage;
+  const isPlainSolid = !isThemed && f.surfaceKind === "solid" && !f.tintEnabled && !isImage;
+
+  const matRows = FLOOR_MATERIAL_GROUPS.map((g) => {
+    const groupMats = floorMaterials.filter((m) => floorMaterialGroup(m.id) === g.key);
+    if (groupMats.length === 0) return "";
+    const rows = groupMats
+      .map((m) => {
+        const bl = materialBilingual(m.id);
+        return `<button type="button" class="mat-pick${m.guid === f.materialGuid ? " active" : ""}" data-guid="${m.guid}"><span class="mat-id">${bl.zh}</span><span class="mat-sub">${bl.en}</span></button>`;
+      })
+      .join("");
+    return `<div class="mat-pick-group">${g.labelZh}</div>${rows}`;
+  }).join("");
+
+  // 主题地板: pick a themed prefab — the whole rect is tiled with it on write-back.
+  const themedRows = themedFloorPrefabs()
+    .map(
+      (it) =>
+        `<button type="button" class="mat-pick${f.prefabGuid === it.guid ? " active" : ""}" data-pguid="${it.guid}"><span class="mat-id">${escHtml(tidyCatalogNameZh(it.nameZh, it.id))}</span><span class="mat-sub">${surfaceKindLabelZh(it.surfaceKind)} · ${escHtml(it.id)}</span></button>`
+    )
     .join("");
-  detailEl.innerHTML = `
-    <h3>${surfaceKindLabelZh(f.surfaceKind)} · ${f.displayName}</h3>
-    <dl>
-      <dt>类型</dt><dd>${surfaceKindLabelZh(f.surfaceKind)}${f.meshType === "plane" ? "（Plane 平面）" : f.meshType === "quad" ? "（Quad）" : ""}</dd>
-      <dt>尺寸</dt><dd id="fe-size">${f._wCells} × ${f._dCells} 格 (${(f._wCells * CELL).toFixed(1)} × ${(f._dCells * CELL).toFixed(1)} m，${areaCells} 格)</dd>
-      <dt>材质</dt><dd id="fe-mat">${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : matchedMat?.nameZh ?? f.materialName ?? "无"}</dd>
-      <dt>坐标</dt><dd>x ${f._wx.toFixed(2)}, z ${f._wz.toFixed(2)}</dd>
-      <dt>旋转</dt><dd>${normalizeRot(f.localRotationY)}°</dd>
-      <dt>死亡类型</dt><dd>${deathLabelZh(deathInfo)}（只读）</dd>
-    </dl>
+  const themedBlock = `<div class="mat-pick-title">主题地板（整块区域 = 一个拉伸的 prefab 实例，写回后生效）</div>
+     <div class="mat-pick-list">${themedRows || '<div class="mat-pick-empty">catalog 中无主题地板 prefab</div>'}</div>`;
+
+  // 染色地板: pick a tint color (replaces the material list).
+  const colorBlock = `<div class="mat-pick-title">染色（染色地板 = 实心 Plane + 纯色）</div>
+     <div class="floor-edit-row"><label>颜色 <input type="color" id="fe-tint" value="${f.tintColor ?? "#ffffff"}"></label>
+     <button type="button" class="m-btn" id="fe-tint-clear" style="font-size:11px;padding:3px 8px;">清除颜色</button>
+     <span class="muted" style="align-self:center;font-size:11px">实时生效</span></div>`;
+
+  // 图片地板: upload an image + choose tile/stretch. Image data goes to the
+  // current level set's data dir.
+  const imgName = f.imageTexturePath ? f.imageTexturePath.split("/").pop() ?? "" : "";
+  const mode = f.imageMode === "tile" ? "tile" : "stretch";
+  const opacityPct = Math.round((f.imageOpacity != null ? f.imageOpacity : 1) * 100);
+  const previewHtml = f.imageTexturePath
+    ? `<img id="fe-img-preview" src="${imageFloorUrl(f.imageTexturePath)}" alt="" style="max-width:120px;max-height:80px;border:1px solid #4a5060;border-radius:4px;background:#1a1d23"/>`
+    : `<span class="muted" style="font-size:11px">（未上传图片）</span>`;
+  const imageBlock = `<div class="mat-pick-title">图片地板（实心 Plane + 贴图；图片存入当前关卡集 data 目录）</div>
+     <div class="floor-edit-row" style="align-items:center;gap:10px">
+       ${previewHtml}
+       <span class="muted" style="font-size:11px">当前贴图：${imgName || "未设置"}</span>
+     </div>
+     <div class="floor-edit-row">
+       <label class="modal-check"><input type="radio" name="fe-imgmode" value="stretch" ${mode === "stretch" ? "checked" : ""}/> 全部铺开（自动伸缩）</label>
+       <label class="modal-check"><input type="radio" name="fe-imgmode" value="tile" ${mode === "tile" ? "checked" : ""}/> 一格重复平铺</label>
+     </div>
+     <div class="floor-edit-row">
+       <label>不透明度 <input type="range" id="fe-img-opacity" min="0" max="100" step="1" value="${opacityPct}" style="width:160px"/></label>
+       <span id="fe-img-opacity-val" class="muted" style="font-size:11px;align-self:center">${opacityPct}%</span>
+     </div>
+     <div class="floor-edit-row">
+       <input type="file" id="fe-img-file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="font-size:11px;flex:1"/>
+       <button type="button" class="m-btn" id="fe-img-upload" style="font-size:11px;padding:3px 8px;">上传并应用</button>
+     </div>
+     <p class="modal-hint">修改宽高后铺开/平铺会自动重算 · 镜像已在 Unity 端修正 · 写回后生效</p>`;
+
+  const materialBlock = isThemed
+    ? `<p class="modal-hint">当前为主题地板：写回时整块区域生成一个拉伸的 prefab 实例，可在下方改选；切回其它类型请用上方「地板类型」。</p>${themedBlock}`
+    : isPlainSolid
+      ? `<div class="mat-pick-title">切换材质（实心地板）</div>
+         <div class="mat-pick-list">${matRows || '<div class="mat-pick-empty">当前关卡集无材质</div>'}</div>`
+      : isImage
+        ? imageBlock
+        : isTinted
+          ? colorBlock
+          : `<p class="modal-hint">木筏地板由写回时按尺寸铺满真实木筏拼块生成，无需材质。</p>`;
+
+  const meshTag = f.meshType === "plane" ? "（Plane）" : f.meshType === "quad" ? "（Quad）" : "";
+  const typeLabel = isRaft ? "木筏地板" : isThemed ? "主题地板" : isImage ? "图片地板" : isTinted ? "染色地板" : "实心地板";
+  const body = `
+    <div class="fm-summary fm-inline">
+      <span><b>类型</b> ${typeLabel}${meshTag}</span>
+      <span><b>尺寸</b> <span id="fe-size">${f._wCells}×${f._dCells}格 (${(f._wCells * CELL).toFixed(1)}×${(f._dCells * CELL).toFixed(1)}m，${areaCells}格)</span></span>
+      <span><b>材质</b> <span id="fe-mat">${floorMatSummary(f, matchedMat)}</span></span>
+      <span><b>坐标</b> x${f._wx.toFixed(2)}, z${f._wz.toFixed(2)}</span>
+      <span><b>死亡</b> ${deathLabelZh(deathInfo)}</span>
+    </div>
     <div class="floor-edit-row">
       <label>宽(格) <input type="number" min="1" id="fe-w" value="${f._wCells}" /></label>
       <label>高(格) <input type="number" min="1" id="fe-d" value="${f._dCells}" /></label>
-      <span class="muted" style="align-self:center;font-size:11px">自动应用（仅页面）</span>
+      <label>旋转(°) <input type="number" step="90" id="fe-rot" value="${normalizeRot(f.localRotationY)}" /></label>
+      <span class="muted" style="align-self:center;font-size:11px">实时应用 · 也可 R / Shift+R</span>
     </div>
-    <div class="mat-pick-title">特殊材质</div>
-    <div class="mat-pick-list">
-      <button type="button" class="mat-pick${f.surfaceKind === "raft" ? " active" : ""}" id="fe-to-raft"><span class="mat-id">🪵 木筏段</span><span class="mat-sub">作为木筏地板（写回时按尺寸铺满拼块）</span></button>
+    <div class="mat-pick-title">地板类型</div>
+    <div class="mat-pick-list type-row">
+      <button type="button" class="mat-pick${isPlainSolid ? " active" : ""}" data-kind="solid"><span class="mat-id">⬛ 实心地板</span><span class="mat-sub">单块 Plane + 材质</span></button>
+      <button type="button" class="mat-pick${isTinted ? " active" : ""}" data-kind="tinted"><span class="mat-id">🎨 染色地板</span><span class="mat-sub">实心 Plane + 纯色染色</span></button>
+      <button type="button" class="mat-pick${isImage ? " active" : ""}" data-kind="image"><span class="mat-id">🖼️ 图片地板</span><span class="mat-sub">实心 Plane + 上传图片（平铺/铺开）</span></button>
+      <button type="button" class="mat-pick${isRaft ? " active" : ""}" data-kind="raft"><span class="mat-id">🪵 木筏地板</span><span class="mat-sub">写回时按尺寸铺满真实木筏拼块</span></button>
+      <button type="button" class="mat-pick${isThemed ? " active" : ""}" data-kind="themed"><span class="mat-id">🧩 主题地板</span><span class="mat-sub">整块区域 = 一个拉伸 prefab（地毯/冰/雪…）</span></button>
     </div>
-    <div class="mat-pick-title">切换材质（点击应用）</div>
-    <div class="mat-pick-list">${matRows || '<div class="mat-pick-empty">当前关卡集无材质</div>'}</div>
-    <p class="close-hint">拖四角缩放 · 宽高输入即时生效 · 左键拖动移动 · 右键此面板切换材质 · Esc 关闭</p>
+    ${materialBlock}
+    <p class="modal-hint">提示：拖四角缩放 · 宽高输入即时生效 · 左键拖动移动 · Esc 关闭</p>
   `;
-  detailEl.classList.remove("hidden");
-  positionDetail(clientX, clientY);
+  const footer = `<button type="button" class="modal-btn" data-fm-copy>复制</button><button type="button" class="modal-btn" data-fm-dup>克隆</button><button type="button" class="modal-btn" data-fm-delete>删除地板</button><button type="button" class="modal-btn primary" data-fm-close>关闭</button>`;
+
+  openModal(`${typeLabel} · ${f.displayName}`, body, footer);
+  document.querySelector(".modal-panel")?.classList.add("wide");
 
   const feW = document.getElementById("fe-w") as HTMLInputElement;
   const feD = document.getElementById("fe-d") as HTMLInputElement;
@@ -1730,45 +2218,250 @@ function showFloorDetail(f: EditorFloor, clientX: number, clientY: number) {
     draw();
     const sz = document.getElementById("fe-size");
     if (sz)
-      sz.textContent = `${f._wCells} × ${f._dCells} 格 (${(f._wCells * CELL).toFixed(1)} × ${(f._dCells * CELL).toFixed(1)} m，${f._wCells * f._dCells} 格)`;
-    const m = floorMaterials.find((x) => x.guid === f.materialGuid);
-    const matEl = document.getElementById("fe-mat");
-    if (matEl)
-      matEl.textContent =
-        f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : m?.nameZh ?? f.materialName ?? "无";
-    detailEl.querySelectorAll<HTMLButtonElement>(".mat-pick").forEach((b) =>
-      b.classList.toggle("active", b.dataset.guid === f.materialGuid)
-    );
+      sz.textContent = `${f._wCells}×${f._dCells}格 (${(f._wCells * CELL).toFixed(1)}×${(f._dCells * CELL).toFixed(1)}m，${f._wCells * f._dCells}格)`;
   };
   feW.addEventListener("input", applyFloorSizeLive);
   feD.addEventListener("input", applyFloorSizeLive);
   feW.addEventListener("change", applyFloorSizeLive);
   feD.addEventListener("change", applyFloorSizeLive);
 
-  detailEl.querySelectorAll<HTMLButtonElement>(".mat-pick[data-guid]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const m = floorMaterials.find((x) => x.guid === btn.dataset.guid);
-      if (!m) return;
+  const feRot = document.getElementById("fe-rot") as HTMLInputElement | null;
+  let rotPushed = false;
+  const applyRotLive = () => {
+    const v = parseInt(feRot?.value ?? "", 10);
+    if (!Number.isFinite(v)) return;
+    if (!rotPushed) {
       pushHistory();
-      f.materialGuid = m.guid;
-      f.materialAssetPath = m.assetPath;
-      f.materialName = m.id;
-      if (f.surfaceKind === "raft") f.surfaceKind = "solid";
-      draw();
-      setStatus(`已切换材质：${m.nameZh}（写回后生效）`);
-      showFloorDetail(f, clientX, clientY);
-    });
+      rotPushed = true;
+    }
+    f.localRotationY = normalizeRot(v);
+    finalizeFloor(f);
+    draw();
+  };
+  feRot?.addEventListener("input", applyRotLive);
+  feRot?.addEventListener("change", applyRotLive);
+
+  document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="solid"]')?.addEventListener("click", () => {
+    if (isPlainSolid) return; // already solid
+    pushHistory();
+    f.surfaceKind = "solid";
+    f.tintEnabled = false;
+    f.imageTexturePath = undefined;
+    f.imageMode = undefined;
+    f.prefabGuid = undefined;
+    f.prefabAssetPath = undefined;
+    finalizeFloor(f);
+    draw();
+    setStatus("已设为实心地板（可在下方切换材质）");
+    openFloorEditorModal(f);
   });
-  document.getElementById("fe-to-raft")?.addEventListener("click", () => {
-    if (f.surfaceKind !== "raft") {
+  document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="tinted"]')?.addEventListener("click", () => {
+    if (isTinted) return; // already tinted
+    pushHistory();
+    f.surfaceKind = "solid";
+    f.tintEnabled = true;
+    f.imageTexturePath = undefined;
+    f.imageMode = undefined;
+    f.prefabGuid = undefined;
+    f.prefabAssetPath = undefined;
+    if (!f.tintColor) f.tintColor = "#9aa0a6";
+    finalizeFloor(f);
+    draw();
+    setStatus("已设为染色地板（实心 Plane + 纯色，写回后生效）");
+    openFloorEditorModal(f);
+  });
+  document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="image"]')?.addEventListener("click", () => {
+    if (isImage) return; // already image
+    pushHistory();
+    f.surfaceKind = "solid";
+    f.tintEnabled = false;
+    f.prefabGuid = undefined;
+    f.prefabAssetPath = undefined;
+    if (!f.imageMode) f.imageMode = "stretch";
+    finalizeFloor(f);
+    draw();
+    setStatus("已设为图片地板，请在下方上传图片");
+    openFloorEditorModal(f);
+  });
+  document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="raft"]')?.addEventListener("click", () => {
+    if (isRaft) return; // already raft
+    pushHistory();
+    f.surfaceKind = "raft";
+    f.tintEnabled = false;
+    f.imageTexturePath = undefined;
+    f.imageMode = undefined;
+    f.prefabGuid = undefined;
+    f.prefabAssetPath = undefined;
+    snapRaftCenterToGrid(f);
+    finalizeFloor(f);
+    draw();
+    setStatus(`已设为木筏地板 ${f._wCells}×${f._dCells}（写回时铺满拼块，可 Ctrl+Z 撤回）`);
+    openFloorEditorModal(f);
+  });
+  document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="themed"]')?.addEventListener("click", () => {
+    if (isThemed) return; // already themed
+    const cat = (f.prefabGuid ? catalogByGuid.get(f.prefabGuid) : undefined) ?? themedFloorPrefabs()[0];
+    if (!cat) {
+      setStatus("catalog 中无可用主题地板 prefab", false);
+      return;
+    }
+    pushHistory();
+    f.prefabGuid = cat.guid;
+    f.prefabAssetPath = cat.assetPath;
+    f.surfaceKind = cat.surfaceKind ?? "solid";
+    f.displayName = cat.id;
+    f.tintEnabled = false;
+    f.imageTexturePath = undefined;
+    f.imageMode = undefined;
+    finalizeFloor(f);
+    draw();
+    setStatus(`已设为主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}（写回时生成单个缩放实例，可 Ctrl+Z 撤回）`);
+    openFloorEditorModal(f);
+  });
+  // 主题地板: pick a themed prefab → whole rect tiles it on write-back.
+  document.querySelectorAll<HTMLButtonElement>(".mat-pick[data-pguid]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const cat = catalogByGuid.get(btn.dataset.pguid ?? "");
+      if (!cat) return;
+      if (f.prefabGuid === cat.guid) return;
       pushHistory();
-      f.surfaceKind = "raft";
-      snapRaftCenterToGrid(f);
+      f.prefabGuid = cat.guid;
+      f.prefabAssetPath = cat.assetPath;
+      f.surfaceKind = cat.surfaceKind ?? "solid";
+      f.displayName = cat.id;
+      f.tintEnabled = false;
+      f.imageTexturePath = undefined;
+      f.imageMode = undefined;
       finalizeFloor(f);
       draw();
-      setStatus(`已设为木筏地板 ${f._wCells}×${f._dCells}（写回时按尺寸铺满木筏拼块，可 Ctrl+Z 撤回）`);
+      setStatus(`已设为主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}（写回时生成单个缩放实例，可 Ctrl+Z 撤回）`);
+      openFloorEditorModal(f);
+    });
+  });
+  // 染色地板 color picker (only present for the tinted type).
+  const feTint = document.getElementById("fe-tint") as HTMLInputElement | null;
+  let tintPushed = false;
+  feTint?.addEventListener("input", () => {
+    if (!tintPushed) {
+      pushHistory();
+      tintPushed = true;
     }
-    showFloorDetail(f, clientX, clientY);
+    f.tintColor = feTint.value;
+    f.tintEnabled = true;
+    draw();
+  });
+  document.getElementById("fe-tint-clear")?.addEventListener("click", () => {
+    pushHistory();
+    f.tintColor = "#ffffff";
+    f.tintEnabled = true;
+    draw();
+    openFloorEditorModal(f);
+  });
+
+  // 图片地板: mode toggle + upload.
+  document.querySelectorAll<HTMLInputElement>('input[name="fe-imgmode"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (!radio.checked) return;
+      pushHistory();
+      f.imageMode = radio.value === "tile" ? "tile" : "stretch";
+      finalizeFloor(f);
+      draw();
+    });
+  });
+  const feImgOpacity = document.getElementById("fe-img-opacity") as HTMLInputElement | null;
+  const feImgOpacityVal = document.getElementById("fe-img-opacity-val");
+  feImgOpacity?.addEventListener("input", () => {
+    const pct = parseInt(feImgOpacity.value, 10);
+    if (!Number.isFinite(pct)) return;
+    if (!tintPushed) {
+      pushHistory();
+      tintPushed = true;
+    }
+    f.imageOpacity = Math.max(0, Math.min(1, pct / 100));
+    if (feImgOpacityVal) feImgOpacityVal.textContent = `${pct}%`;
+    draw();
+  });
+  const feImgFile = document.getElementById("fe-img-file") as HTMLInputElement | null;
+  document.getElementById("fe-img-upload")?.addEventListener("click", async () => {
+    const file = feImgFile?.files?.[0];
+    if (!file) {
+      setStatus("请先选择一张图片", false);
+      return;
+    }
+    if (!currentLevelSet) {
+      setStatus("未识别当前关卡集，无法保存图片", false);
+      return;
+    }
+    showBusy("上传图片…");
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const s = r.result as string;
+          const comma = s.indexOf(",");
+          resolve(comma >= 0 ? s.slice(comma + 1) : s);
+        };
+        r.onerror = () => reject(new Error("读取图片失败"));
+        r.readAsDataURL(file);
+      });
+      const texturePath = await uploadImageFloor(currentLevelSet, file.name, base64);
+      if (!texturePath) {
+        setStatus("上传失败（请确认 Bridge 已连接且关卡集存在）", false);
+        return;
+      }
+      pushHistory();
+      f.surfaceKind = "solid";
+      f.tintEnabled = false;
+      f.imageTexturePath = texturePath;
+      f.imageMode = f.imageMode ?? "stretch";
+      if (f.imageOpacity == null) f.imageOpacity = 1;
+      floorImageCache.delete(texturePath);
+      finalizeFloor(f);
+      draw();
+      setStatus(`图片地板已应用：${texturePath.split("/").pop() ?? ""}（写回后生效）`);
+      openFloorEditorModal(f);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    } finally {
+      hideBusy();
+    }
+  });
+
+  if (isPlainSolid) {
+    document.querySelectorAll<HTMLButtonElement>(".mat-pick[data-guid]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const m = floorMaterials.find((x) => x.guid === btn.dataset.guid);
+        if (!m) return;
+        pushHistory();
+        f.materialGuid = m.guid;
+        f.materialAssetPath = m.assetPath;
+        f.materialName = m.id;
+        f.surfaceKind = "solid";
+        draw();
+        setStatus(`已切换材质：${m.nameZh}（写回后生效）`);
+        openFloorEditorModal(f);
+      });
+    });
+  }
+
+  document.querySelector("[data-fm-close]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-fm-copy]")?.addEventListener("click", () => {
+    setFloorSelection([f._key]);
+    copyFloors();
+  });
+  document.querySelector("[data-fm-dup]")?.addEventListener("click", () => {
+    setFloorSelection([f._key]);
+    duplicateFloors();
+  });
+  document.querySelector("[data-fm-delete]")?.addEventListener("click", () => {
+    pushHistory();
+    floors = floors.filter((x) => x._key !== f._key);
+    selectedFloorKeys.delete(f._key);
+    selectedFloorKey = null;
+    closeModal();
+    draw();
+    updateFloorBar();
+    setStatus("已删除地板");
   });
 }
 
@@ -1902,7 +2595,17 @@ function isServingStationItem(item: EditorItem): boolean {
 }
 
 function isPlateReturnItem(item: EditorItem): boolean {
-  return item.stubKind === "PlateReturn" || prefabIdFromPath(item.prefabAssetPath) === "PlateReturn";
+  return prefabIdFromPath(item.prefabAssetPath) === "PlateReturn";
+}
+
+function isGlassReturnItem(item: EditorItem): boolean {
+  return prefabIdFromPath(item.prefabAssetPath) === "GlassReturn";
+}
+
+/** A return station = 脏盘台 (PlateReturn) or 脏杯台 (GlassReturn). Both share the
+ *  PseudoPrefabPlateReturnStub type and bind to a ServingStation one-to-many. */
+function isReturnStationItem(item: EditorItem): boolean {
+  return isPlateReturnItem(item) || isGlassReturnItem(item);
 }
 
 function isFoodSpawnerItem(item: EditorItem): boolean {
@@ -1913,17 +2616,77 @@ function servingStations(): EditorItem[] {
   return items.filter(isServingStationItem);
 }
 
+/** All return stations (plates + glasses). */
+function returnStations(): EditorItem[] {
+  return items.filter(isReturnStationItem);
+}
+
 function plateReturns(): EditorItem[] {
   return items.filter(isPlateReturnItem);
 }
 
-let plateReturnLabels = new Map<string, string>();
+function glassReturns(): EditorItem[] {
+  return items.filter(isGlassReturnItem);
+}
 
-function computePlateReturnLabels(): Map<string, string> {
+/** Per-return labels grouped by type: 脏盘台1/2… and 脏杯台1/2… */
+function computeReturnLabels(): Map<string, string> {
   const label = new Map<string, string>();
-  let n = 0;
-  for (const t of plateReturns()) label.set(t.instanceId, (++n).toString());
+  let p = 0;
+  let g = 0;
+  for (const t of returnStations()) {
+    label.set(t.instanceId, isGlassReturnItem(t) ? `脏杯台${++g}` : `脏盘台${++p}`);
+  }
   return label;
+}
+
+/** Bound return instance ids for a serving station (migrates the legacy single field). */
+function servingBoundReturns(s: EditorItem): string[] {
+  const ss = s.servingStation;
+  if (!ss) return [];
+  if (ss.plateReturnInstanceIds && ss.plateReturnInstanceIds.length) return [...ss.plateReturnInstanceIds];
+  if (ss.plateReturnInstanceId) return [ss.plateReturnInstanceId];
+  return [];
+}
+
+function setServingReturns(s: EditorItem, ids: string[]): void {
+  s.stubKind = "ServingStation";
+  s.servingStation = {
+    plateReturnInstanceIds: ids,
+    plateReturnInstanceId: ids[0] ?? "",
+  };
+}
+
+/** The single PlateReturn (脏盘台) bound to a serving station, if any. */
+function servingPlateReturn(s: EditorItem): string | undefined {
+  return servingBoundReturns(s).find((id) => {
+    const r = items.find((i) => i.instanceId === id);
+    return r && isPlateReturnItem(r);
+  });
+}
+
+/** The single GlassReturn (脏杯台) bound to a serving station, if any. */
+function servingGlassReturn(s: EditorItem): string | undefined {
+  return servingBoundReturns(s).find((id) => {
+    const r = items.find((i) => i.instanceId === id);
+    return r && isGlassReturnItem(r);
+  });
+}
+
+/** Set the serving station's bound return of one type (plate or glass). A serving
+ *  holds at most one of each type; setting replaces the previous one. Pass
+ *  undefined to clear. The other type is preserved. */
+function setServingReturnOfType(s: EditorItem, returnId: string | undefined, isGlass: boolean): void {
+  const plate = isGlass ? servingPlateReturn(s) : returnId;
+  const glass = isGlass ? returnId : servingGlassReturn(s);
+  const ids = [plate, glass].filter((x): x is string => !!x);
+  setServingReturns(s, ids);
+}
+
+/** All serving stations that reference a given return station (a return may be
+ *  bound to many serving stations — one-to-many from the return side). */
+function servingStationsForReturn(returnInstanceId: string): EditorItem[] {
+  return servingStations().filter((s) => servingBoundReturns(s).includes(returnInstanceId));
 }
 
 function itemHalfExtents(item: EditorItem): { hx: number; hz: number } {
@@ -1974,6 +2737,75 @@ function computeTeleportalLabels(): Map<string, string> {
   for (const t of tp) if (!label.has(t.instanceId)) label.set(t.instanceId, "?");
   return label;
 }
+
+// ---- Per-type sequence badges for parameterized workstations (web-only) ----
+const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: string; color: string }[] = [
+  { match: isServingStationItem, type: "上菜台", color: "#f9ab00" },
+  { match: isPlateReturnItem, type: "脏盘台", color: "#7bd889" },
+  { match: isGlassReturnItem, type: "脏杯台", color: "#5ec8e0" },
+  { match: (it) => stubKindOf(it) === "CookingUtensil", type: "锅具", color: "#e8915b" },
+  { match: (it) => stubKindOf(it) === "Dispenser", type: "食材箱", color: "#5b9be8" },
+  { match: isFoodSpawnerItem, type: "生成器", color: "#9be88a" },
+  { match: (it) => stubKindOf(it) === "Travelator", type: "移动板", color: "#c792ea" },
+  { match: isConveyorItem, type: "传送带", color: "#e8d24e" },
+  { match: (it) => stubKindOf(it) === "Flamethrower", type: "喷火器", color: "#e85b5b" },
+  { match: (it) => stubKindOf(it) === "Burner", type: "喷射器", color: "#d97742" },
+  { match: (it) => stubKindOf(it) === "CleanPlateStack", type: "盘堆", color: "#8db8e8" },
+];
+
+function paramBadgeInfo(item: EditorItem): { type: string; color: string } | null {
+  for (const t of PARAM_BADGE_TYPES) if (t.match(item)) return { type: t.type, color: t.color };
+  return null;
+}
+
+let paramLabels = new Map<string, string>();
+let paramColors = new Map<string, string>();
+
+/** Number parameterized workstations per type (1, 2, 3…) in a stable spatial
+ *  order (top→bottom, left→right). Web-only display; not written to Unity. */
+function computeParamLabels(): void {
+  paramLabels = new Map();
+  paramColors = new Map();
+  const counters = new Map<string, number>();
+  const sorted = [...items]
+    .filter((it) => paramBadgeInfo(it) != null)
+    .sort((a, b) => (a._wz - b._wz) || (a._wx - b._wx));
+  for (const it of sorted) {
+    const info = paramBadgeInfo(it)!;
+    const n = (counters.get(info.type) ?? 0) + 1;
+    counters.set(info.type, n);
+    paramLabels.set(it.instanceId, n.toString());
+    paramColors.set(it.instanceId, info.color);
+  }
+}
+
+function drawNumberBadge(
+  center: { x: number; y: number },
+  w: number,
+  h: number,
+  cellPx: number,
+  label: string,
+  color: string
+) {
+  const r = Math.max(7, cellPx * 0.26);
+  const bx = center.x + w / 2 - r * 0.5;
+  const by = center.y - h / 2 + r * 0.5;
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(bx, by, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#1a1d23";
+  ctx.font = `bold ${Math.max(9, Math.round(cellPx * 0.28))}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, bx, by);
+  ctx.restore();
+}
+
 
 function drawConveyorArrow(center: { x: number; y: number }, rot: number, cellPx: number, speed: number, color = "#ffe49a") {
   const rad = (rot * Math.PI) / 180;
@@ -2070,12 +2902,11 @@ function drawTeleportalLinks() {
 function drawServingLinks() {
   const byInst = new Map(items.map((i) => [i.instanceId, i]));
   for (const s of servingStations()) {
-    const prId = s.servingStation?.plateReturnInstanceId;
-    if (!prId) continue;
-    const p = byInst.get(prId);
-    if (!p) continue;
-    const a = worldToCanvas(s._wx, s._wz);
-    const b = worldToCanvas(p._wx, p._wz);
+    for (const prId of servingBoundReturns(s)) {
+      const p = byInst.get(prId);
+      if (!p) continue;
+      const a = worldToCanvas(s._wx, s._wz);
+      const b = worldToCanvas(p._wx, p._wz);
     ctx.save();
     ctx.strokeStyle = "#7bd889";
     ctx.globalAlpha = 0.5;
@@ -2096,6 +2927,7 @@ function drawServingLinks() {
     ctx.closePath();
     ctx.fill();
     ctx.restore();
+    }
   }
 }
 
@@ -2204,7 +3036,10 @@ function drawItem(item: EditorItem, selected: boolean) {
     ctx.fillStyle = paint.label;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    drawLabelInBox(ctx, itemLabel(item), bw - 4, bh - 4);
+    const drawn = drawDispenserIngredient(ctx, item, bw, bh) || drawCatalogItemIcon(ctx, cat, item, bw, bh);
+    if (!drawn) {
+      drawLabelInBox(ctx, itemLabel(item), bw - 4, bh - 4);
+    }
   }
 
   ctx.restore();
@@ -2229,6 +3064,11 @@ function drawItem(item: EditorItem, selected: boolean) {
   } else if (isFoodSpawnerItem(item)) {
     drawConveyorArrow(center, rot, cellPx, 1, "#7bd889");
   }
+
+  // Per-type sequence badge for parameterized workstations (web-only).
+  const pBadge = paramLabels.get(item.instanceId);
+  if (pBadge)
+    drawNumberBadge(center, w, h, cellPx, pBadge, paramColors.get(item.instanceId) ?? "#f9ab00");
 }
 
 function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx: number; lz: number } {
@@ -2244,9 +3084,8 @@ function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx: numbe
 }
 
 function hitTestAll(wx: number, wz: number): EditorItem[] {
-  const includeSurface = currentLayer === "floor";
-  const sorted = [...items]
-    .filter((it) => includeSurface || !isSurfaceItem(catalogByGuid.get(it.prefabGuid)))
+  const sorted = items
+    .filter(isActiveItemLayer)
     .sort((a, b) => drawLayerForItem(b, catalogByGuid) - drawLayerForItem(a, catalogByGuid));
   return sorted.filter((item) => {
     const fp = resolveFootprint(item);
@@ -2320,21 +3159,20 @@ function extraStubDetailHtml(item: EditorItem): string {
       return `<dt>玩家</dt><dd>${pid === 11 ? "自动（按加入顺序）" : `玩家 ${pid + 1}`} · 固定出生点，仅可拖动位置</dd>`;
     }
     case "ServingStation": {
-      const prId = item.servingStation?.plateReturnInstanceId;
-      const pr = prId ? items.find((i) => i.instanceId === prId) : undefined;
-      const txt = pr
-        ? `已绑定 → 脏盘台 ${plateReturnLabels.get(pr.instanceId) ?? "?"}（${itemLabel(pr)}）`
-        : prId
-          ? "绑定的脏盘台不在当前场景"
-          : "未绑定脏盘台";
-      return `<dt>上菜口</dt><dd>${txt}（右键直接修改）</dd>`;
+      const labels = computeReturnLabels();
+      const byInst = new Map(items.map((i) => [i.instanceId, i]));
+      const nameOf = (id: string | undefined) =>
+        id ? (byInst.get(id) ? `${labels.get(id) ?? "?"}（${itemLabel(byInst.get(id)!)}）` : "（回收台不在场景）") : "未绑定";
+      return `<dt>上菜口</dt><dd>脏盘台：${nameOf(servingPlateReturn(item))} · 脏杯台：${nameOf(servingGlassReturn(item))}（右键直接修改）</dd>`;
     }
-    case "PlateReturn": {
-      const bound = servingStations().filter((s) => s.servingStation?.plateReturnInstanceId === item.instanceId);
+    case "PlateReturn":
+    case "GlassReturn": {
+      const typeZh = isGlassReturnItem(item) ? "脏杯台" : "脏盘台";
+      const bound = servingStationsForReturn(item.instanceId);
       const txt = bound.length
-        ? `被 ${bound.length} 个上菜口绑定：${bound.map((s) => itemLabel(s)).join("、")}`
-        : "未被任何上菜口绑定";
-      return `<dt>脏盘台</dt><dd>${txt}（右键管理绑定）</dd>`;
+        ? `被 ${bound.length} 个上菜台共用：${bound.map((s) => `上菜台${paramLabels.get(s.instanceId) ?? "?"}`).join("、")}`
+        : "未被任何上菜台绑定";
+      return `<dt>${typeZh}</dt><dd>${txt}（在上菜台右键菜单里设置绑定）</dd>`;
     }
     default:
       return "";
@@ -2594,15 +3432,104 @@ function pasteClipboard() {
   setStatus(`已粘贴 ${pasted.length} 个物品${skipped ? `（${skipped} 个因与玩家重叠被跳过）` : ""}`);
 }
 
+// ---- Floor copy / cut / paste / duplicate (floor layer only, isolated from
+// the item clipboard so layers never affect each other) ----
+let floorClipboard: EditorFloor[] = [];
+let floorPasteRound = 0;
+
+function copyFloors(): void {
+  const keys = [...selectedFloorKeys];
+  if (!keys.length) {
+    setStatus("没有选中地板可复制");
+    return;
+  }
+  floorClipboard = keys
+    .map((k) => floors.find((f) => f._key === k))
+    .filter((f): f is EditorFloor => !!f)
+    .map((f) => JSON.parse(JSON.stringify(f)) as EditorFloor);
+  floorPasteRound = 0;
+  if (!floorClipboard.length) {
+    setStatus("没有选中地板可复制", false);
+    return;
+  }
+  setStatus(`已复制 ${floorClipboard.length} 块地板（Ctrl/Cmd+V 粘贴）`);
+}
+
+function cutFloors(): void {
+  if (!selectedFloorKeys.size) {
+    setStatus("没有选中地板可裁切", false);
+    return;
+  }
+  copyFloors();
+  pushHistory();
+  floors = floors.filter((f) => !selectedFloorKeys.has(f._key));
+  clearFloorSelection();
+  closeModal();
+  draw();
+  updateFloorBar();
+  setStatus(`已裁切 ${floorClipboard.length} 块地板（Ctrl/Cmd+V 粘贴）`);
+}
+
+function pasteFloors(): void {
+  if (!floorClipboard.length) {
+    setStatus("地板剪贴板为空（先 Ctrl/Cmd+C 复制）", false);
+    return;
+  }
+  pushHistory();
+  floorPasteRound++;
+  const off = CELL * floorPasteRound;
+  const pastedKeys: string[] = [];
+  for (const src of floorClipboard) {
+    const key = newEditorKey();
+    const copy = JSON.parse(JSON.stringify(src)) as EditorFloor;
+    copy._key = key;
+    copy.instanceId = `new:floor:${crypto.randomUUID()}`;
+    copy.hierarchyPath = copy.instanceId;
+    copy._wx = src._wx + off;
+    copy._wz = src._wz + off;
+    copy.localPosition = { x: copy._wx, y: copy.localPosition?.y ?? -0.05, z: copy._wz };
+    copy.worldPosition = { x: copy._wx, y: copy.localPosition.y, z: copy._wz };
+    floors.push(copy);
+    pastedKeys.push(key);
+  }
+  for (const k of pastedKeys) {
+    const f = floors.find((x) => x._key === k);
+    if (f) finalizeFloor(f);
+  }
+  clearSelection();
+  setFloorSelection(pastedKeys);
+  closeModal();
+  hideDetail();
+  draw();
+  updateFloorBar();
+  setStatus(`已粘贴 ${pastedKeys.length} 块地板`);
+}
+
+function duplicateFloors(): void {
+  if (!selectedFloorKeys.size) {
+    setStatus("没有选中地板可复制", false);
+    return;
+  }
+  copyFloors();
+  if (floorClipboard.length) pasteFloors();
+}
+
 function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
   const cat = catalogByGuid.get(item.prefabGuid);
   const isSurface = isSurfaceItem(cat);
   const isPlayer = isPlayerItem(item);
   const stubHtml = stubControlsHtml(item);
   const rot = normalizeRot(item.localRotationY);
+  // Prepend the per-type sequence badge (e.g. 上菜台1) to the header for parameterized items.
+  const pInfo = paramBadgeInfo(item);
+  const pNum = pInfo ? paramLabels.get(item.instanceId) : undefined;
+  const headBadge =
+    pInfo && pNum
+      ? `<span class="ctx-num-tag" style="color:${paramColors.get(item.instanceId) ?? "#f9ab00"}">${pInfo.type}${pNum}</span> `
+      : "";
 
   ctxMenuEl.innerHTML = `
-    <div class="ctx-head">${itemLabel(item)}</div>
+    <div class="ctx-head">${headBadge}${itemLabel(item)}</div>
     <div class="ctx-coord" id="ctx-coord">x ${item.localPosition.x.toFixed(2)} · z ${item.localPosition.z.toFixed(2)}</div>
     <div class="ctx-nudge-row">
       <span class="ctx-label">微移 0.1</span>
@@ -2843,6 +3770,8 @@ function buildDocument(): LayoutDocument {
   // Re-finalize so write-back coords match the active snap step (avoids drift vs Unity apply).
   for (const f of floors) finalizeFloor(f);
 
+  // Only raft floors are expanded into planks on write-back. Every other floor
+  // (solid / background / ...) stays a single walkable plane with its own material.
   const raftItems: LayoutItem[] = [];
   const missingIds = new Set<string>();
   for (const f of floors) {
@@ -2878,6 +3807,47 @@ function buildDocument(): LayoutDocument {
       `木筏拼块目录缺失：${[...missingIds].join(", ")}（请重新生成 catalog.json）`
     );
   }
+
+  // Themed floors (carpet / ice / snow / …) are written back as ONE prefab
+  // instance scaled to the whole rect — matching how official scenes author
+  // them (one wrapper instance per rect; quad tiles rotX=90 + scale=(w, d, 1),
+  // flat-mesh prefabs rotX=0 + scale=(w, 1, d) — all in cell units).
+  // The floor entry itself stays in floors[] (prefabGuid set) so Unity skips plane creation
+  // but still emits one Col_Floor for the rect.
+  const themedItems: LayoutItem[] = [];
+  for (const f of floors) {
+    if (!isThemedFloor(f)) continue;
+    const cat = catalogByGuid.get(f.prefabGuid!);
+    if (!cat) {
+      throw new Error(`主题地板 prefab 不在 catalog 中：${f.prefabGuid}（请重新生成 catalog.json）`);
+    }
+    // Preserve the exact original instance scale/rotation while the rect is
+    // unchanged; after a resize, recompute from the prefab's native geometry.
+    const nat = themedFloorNative(cat);
+    const keepOrig =
+      f.prefabScale && f._wCells === f.prefabScaleCellsW && f._dCells === f.prefabScaleCellsD;
+    const sc = keepOrig
+      ? f.prefabScale!
+      : nat.depthAxis === "y"
+        ? { x: f._wCells / nat.cellsPerScaleX, y: f._dCells / nat.cellsPerScaleZ, z: 1 }
+        : { x: f._wCells / nat.cellsPerScaleX, y: 1, z: f._dCells / nat.cellsPerScaleZ };
+    const id = `new:themed:${crypto.randomUUID()}`;
+    themedItems.push({
+      instanceId: id,
+      hierarchyPath: id,
+      prefabGuid: cat.guid,
+      prefabAssetPath: cat.assetPath,
+      parentPath: cat.defaultParent,
+      displayName: cat.id,
+      localPosition: { x: f._wx, y: f.localPosition?.y ?? 0, z: f._wz },
+      worldPosition: { x: f._wx, y: f.localPosition?.y ?? 0, z: f._wz },
+      localRotationX: keepOrig ? (f.prefabRotX ?? nat.rotX) : nat.rotX,
+      localRotationY: normalizeRot(f.localRotationY),
+      localScale: sc,
+      footprint: cat.footprint,
+      walkable: false,
+    });
+  }
   return {
     sceneAssetPath: scenePath,
     items: items
@@ -2893,7 +3863,8 @@ function buildDocument(): LayoutDocument {
           walkable: !isRaftPlank && !!(cat && cat.surfaceTier === "floor"),
         };
       })
-      .concat(raftItems),
+      .concat(raftItems)
+      .concat(themedItems),
     // Keep raft floors in floors[] so Unity SyncWalkableToFloors builds one Col_Floor
     // per raft rect. ApplyFloors skips surfaceKind=="raft" (no Plane mesh).
     floors: floors.map(({ _key, _wx, _wz, _wCells, _dCells, ...rest }) => ({
@@ -2926,6 +3897,8 @@ function buildPalette(catalog: import("./types").Catalog, filter: string) {
 
   for (const group of groups) {
     if (group.key === "Player") continue;
+    // 物品层只显示核心玩法物品，装饰层只显示装饰物（地板/背景在地板层调色板）。
+    if (currentLayer === "decor" ? group.layoutTier !== "decor" : group.layoutTier !== "core") continue;
     const list = (catalog.byCategory[group.key] ?? []).filter((it) => {
       if (it.surfaceTier === "floor" || it.surfaceTier === "background") return false;
       if (!q) return true;
@@ -2954,7 +3927,7 @@ function buildPalette(catalog: import("./types").Catalog, filter: string) {
       row.draggable = true;
       row.dataset.guid = it.guid;
       const sub = it.stack
-        ? `<div class="sub">叠放 · 高度 ${it.stack.y}m</div>`
+        ? `<div class="sub">配套${hostRuleLabelZh(it.stack.hostRule)} · 高度 ${it.stack.y}m</div>`
         : it.layoutTier === "decor"
           ? `<div class="sub">装饰</div>`
           : "";
@@ -2981,22 +3954,49 @@ function buildFloorPalette(filter = "") {
   addBtn.textContent = "+ 新增地板（在画布点击放置）";
   addBtn.addEventListener("click", () => {
     pendingNewFloor = true;
+    pendingNewFloorCat = null;
     setStatus("在画布上点击以放置新地板");
     canvas.style.cursor = "crosshair";
   });
   paletteCats.appendChild(addBtn);
 
+  // 新增主题地板: pick a themed prefab, then click the canvas to place a floor
+  // that tiles it on write-back (a standalone floor type, not a solid plane).
+  const themedList = themedFloorPrefabs().filter((it) => matchesFloorPaletteFilter(it, q));
+  if (themedList.length > 0) {
+    const themedRow = document.createElement("div");
+    themedRow.className = "palette-add-themed";
+    const sel = document.createElement("select");
+    for (const it of themedList) {
+      const opt = document.createElement("option");
+      opt.value = it.guid;
+      opt.textContent = `${tidyCatalogNameZh(it.nameZh, it.id)}（${surfaceKindLabelZh(it.surfaceKind)}）`;
+      sel.appendChild(opt);
+    }
+    const addThemedBtn = document.createElement("button");
+    addThemedBtn.className = "palette-add-floor";
+    addThemedBtn.textContent = "+ 新增主题地板";
+    addThemedBtn.title = "写回时整块区域生成一个拉伸的 prefab 实例";
+    addThemedBtn.addEventListener("click", () => {
+      const cat = catalogByGuid.get(sel.value);
+      if (!cat) {
+        setStatus("请先选择主题地板 prefab", false);
+        return;
+      }
+      pendingNewFloor = true;
+      pendingNewFloorCat = cat;
+      setStatus(`在画布上点击以放置主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}`);
+      canvas.style.cursor = "crosshair";
+    });
+    themedRow.appendChild(sel);
+    themedRow.appendChild(addThemedBtn);
+    paletteCats.appendChild(themedRow);
+  }
+
   const surfaceItems: CatalogItem[] = [];
   for (const it of catalogByGuid.values()) if (isSurfaceItem(it)) surfaceItems.push(it);
 
   const groups: { key: string; labelZh: string; match: (it: CatalogItem) => boolean }[] = [
-    { key: "raft", labelZh: "木筏拼块", match: (it) => it.surfaceKind === "raft" },
-    {
-      key: "themed",
-      labelZh: "主题地板",
-      match: (it) =>
-        it.surfaceTier === "floor" && it.surfaceKind !== "raft" && it.surfaceKind !== "conveyor",
-    },
     { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
     {
       key: "background",
@@ -3027,12 +4027,13 @@ function buildFloorPalette(filter = "") {
   if (!anyGroup && q) {
     const empty = document.createElement("div");
     empty.className = "palette-empty";
-    empty.textContent = "无匹配的地板 / 木筏 / 背景项";
+    empty.textContent = "无匹配的传送带 / 背景项";
     paletteCats.appendChild(empty);
   }
 }
 
 let pendingNewFloor = false;
+let pendingNewFloorCat: CatalogItem | null = null;
 
 function updateFloorBar() {
   if (currentLayer !== "floor") {
@@ -3040,13 +4041,14 @@ function updateFloorBar() {
     return;
   }
   floorBar.classList.remove("hidden");
-  const themeBtns = BG_THEMES.map(
+  const themeOpts = BG_THEMES.map(
     (t) =>
-      `<button type="button" class="fb-theme-btn${t.key === bgThemeKey ? " active" : ""}" data-bg="${t.key}" title="${bgThemeTooltip(t)}">${t.emoji} ${t.labelZh}</button>`
+      `<option value="${t.key}"${t.key === bgThemeKey ? " selected" : ""}>${t.emoji} ${t.labelZh}</option>`
   ).join("");
-  const themeRow = `<span class="fb-theme">背景主题：${themeBtns}</span>`;
+  const themeRow = `<label class="fb-theme" title="${bgThemeTooltip(bgTheme(bgThemeKey))}">背景：<select id="fb-bg-theme">${themeOpts}</select></label>`;
   const killToggle = `<label class="fb-check" title="回写 Unity 时把坠落区(KillPlane)扩大到覆盖整关，使所有非地板区域都会坠落"><input type="checkbox" id="fb-autokill" ${autoKillPlane ? "checked" : ""}/> 回写扩大坠落区</label>`;
   const walkToggle = `<label class="fb-check" title="回写时按可见地板重新生成可行走碰撞体(Col_Floor)：可行走=地板，地板间空隙=坠落坑"><input type="checkbox" id="fb-autowalk" ${autoWalkable ? "checked" : ""}/> 同步可行走到地板</label>`;
+  const bgEditToggle = `<label class="fb-check" title="默认锁定：背景板只显示，不参与点选/框选/拖动/缩放。勾选后可像普通地板一样操作背景"><input type="checkbox" id="fb-bgedit" ${backgroundEditable ? "checked" : ""}/> 解锁背景操作</label>`;
   const f = floors.find((x) => x._key === selectedFloorKey);
   const selItem = selectedKey ? items.find((i) => i._editorKey === selectedKey) : null;
   const selCat = selItem ? catalogByGuid.get(selItem.prefabGuid) : undefined;
@@ -3054,32 +4056,42 @@ function updateFloorBar() {
   if (selectedFloorKeys.size > 1) {
     info = `<span class="fb-info">已选 ${selectedFloorKeys.size} 块地板（拖动整体移动 · Del 删除）</span>`;
   } else if (f) {
-    info = `<span class="fb-info"><b>${surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : f.materialName ?? "无材质"}</span>`;
+    info = `<span class="fb-info"><b>${f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : "全部铺开"} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : f.materialName ?? "无材质"}</span>`;
   } else if (selItem && isSurfaceItem(selCat)) {
     info = `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
   } else {
     info = `<span class="fb-info">${deathLabelZh(deathInfo)} · 共 ${floors.length} 块地板</span>`;
   }
-  floorBar.innerHTML = `${themeRow}${killToggle}${walkToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+  floorBar.innerHTML = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
 
-  floorBar.querySelectorAll<HTMLButtonElement>(".fb-theme-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const nextTheme = btn.dataset.bg ?? "void";
-      if (nextTheme === bgThemeKey) return;
-      pushHistory();
-      bgThemeKey = nextTheme;
-      bgThemeDirty = true;
-      localStorage.setItem("bgTheme:" + scenePath, bgThemeKey);
-      syncBackgroundForTheme(bgThemeKey);
-      updateFloorBar();
-      setStatus(`背景主题：${bgTheme(bgThemeKey).labelZh}（写回 Unity 后生效）`);
-    });
+  document.getElementById("fb-bg-theme")?.addEventListener("change", (e) => {
+    const nextTheme = (e.target as HTMLSelectElement).value || "void";
+    if (nextTheme === bgThemeKey) return;
+    pushHistory();
+    bgThemeKey = nextTheme;
+    bgThemeDirty = true;
+    localStorage.setItem("bgTheme:" + scenePath, bgThemeKey);
+    syncBackgroundForTheme(bgThemeKey);
+    updateFloorBar();
+    setStatus(`背景主题：${bgTheme(bgThemeKey).labelZh}（写回 Unity 后生效）`);
   });
   document.getElementById("fb-autokill")?.addEventListener("change", (e) => {
     autoKillPlane = (e.target as HTMLInputElement).checked;
   });
   document.getElementById("fb-autowalk")?.addEventListener("change", (e) => {
     autoWalkable = (e.target as HTMLInputElement).checked;
+  });
+  document.getElementById("fb-bgedit")?.addEventListener("change", (e) => {
+    backgroundEditable = (e.target as HTMLInputElement).checked;
+    if (!backgroundEditable) {
+      const alive = new Set(
+        floors.filter((x) => x.surfaceKind !== "background").map((x) => x._key)
+      );
+      if ([...selectedFloorKeys].some((k) => !alive.has(k))) {
+        setFloorSelection([...selectedFloorKeys].filter((k) => alive.has(k)));
+      }
+    }
+    draw();
   });
 }
 
@@ -3102,6 +4114,7 @@ async function init() {
   );
 
   const catalog = await loadCatalog();
+  warnIfBridgeOutdated(healthInfo, catalog.schemaVersion ?? 1);
   for (const it of catalog.items) catalogByGuid.set(it.guid, it);
   ingredientsCache = await fetchIngredients().catch(() => []);
   buildPalette(catalog, "");
@@ -3135,6 +4148,7 @@ async function init() {
   document.getElementById("btn-save")!.addEventListener("click", () => void saveToUnity());
 
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
+  document.getElementById("btn-selected-recipes")!.addEventListener("click", () => void openSelectedRecipesDialog());
 
   const withLevelDetail = async (fn: (detail: LevelDetail) => void | Promise<void>) => {
     if (!scenePath) {
@@ -3160,7 +4174,17 @@ async function init() {
     void withLevelDetail((detail) => openConfigTabsModal(detail, currentLevelSet, () => {}))
   );
   document.getElementById("btn-level-audio")!.addEventListener("click", () =>
-    void withLevelDetail((detail) => openAudioModal(detail, () => {}))
+    void withLevelDetail((detail) => {
+      const themes = new Set<string>();
+      for (const it of items) {
+        const cat = catalogByGuid.get(it.prefabGuid);
+        if (cat?.theme) themes.add(cat.theme);
+      }
+      const raft = floors.some((f) => f.surfaceKind === "raft");
+      const dt = deathInfo?.deathType;
+      const deathTheme = dt === "water" ? "water" : dt === "goo" ? "goo" : "";
+      openAudioModal(detail, { themes, raft, deathTheme }, () => {});
+    })
   );
 
   document.getElementById("btn-sync")!.addEventListener("click", () => openSyncLayoutDialog());
@@ -3186,7 +4210,7 @@ async function init() {
 
   document.querySelectorAll<HTMLButtonElement>(".layer-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const layer = btn.dataset.layer as "items" | "floor";
+      const layer = btn.dataset.layer as LayerKey;
       if (layer === currentLayer) return;
       currentLayer = layer;
       document.querySelectorAll(".layer-tab").forEach((b) => b.classList.toggle("active", b === btn));
@@ -3196,11 +4220,15 @@ async function init() {
       hideDetail();
       hideContextMenu();
       pendingNewFloor = false;
+      pendingNewFloorCat = null;
       canvas.style.cursor = "";
       const searchEl = document.getElementById("palette-search") as HTMLInputElement;
       if (layer === "floor") {
         searchEl.placeholder = "搜索木筏 / 地板 / 背景…";
         buildFloorPalette(searchEl.value);
+      } else if (layer === "decor") {
+        searchEl.placeholder = "搜索装饰…";
+        buildPalette(catalog, searchEl.value);
       } else {
         searchEl.placeholder = "搜索 prefab…";
         buildPalette(catalog, searchEl.value);
@@ -3370,6 +4398,68 @@ function mergeRaftItemsIntoFloors(): void {
   }
 }
 
+/** Convert themed floor tile items (carpet / ice / snow / alien / …) into
+ *  themed floors — one prefab instance = one N×M floor. Official scenes author
+ *  these as single quad instances stretched over a rect (x=90 rotation +
+ *  arbitrary scale), so no clustering: each item maps to exactly one floor and
+ *  its exact scale/rotation is preserved for lossless write-back. */
+function mergeThemedItemsIntoFloors(): void {
+  const consumed = new Set<string>();
+  for (const it of items) {
+    const cat = catalogByGuid.get(it.prefabGuid);
+    if (!isThemedFloorPrefab(cat)) continue;
+    const c = cat!;
+
+    // Instance scale is in the prefab's native units (cells, not meters — see
+    // THEMED_FLOOR_NATIVE): quad tiles use scale.x=width / scale.y=depth with
+    // rotX=90; flat meshes (sand / walkway) use scale.x=width / scale.z=depth.
+    const nat = themedFloorNative(c);
+    const sx = Math.abs(it.localScale?.x ?? 1) || 1;
+    const sy = Math.abs(it.localScale?.y ?? 1) || 1;
+    const sz = Math.abs(it.localScale?.z ?? 1) || 1;
+    const rotX = it.localRotationX ?? nat.rotX;
+    const w = Math.max(1, Math.round(sx * nat.cellsPerScaleX));
+    const d = Math.max(
+      1,
+      Math.round((nat.depthAxis === "y" ? sy : sz) * nat.cellsPerScaleZ)
+    );
+
+    const key = newEditorKey();
+    const y = it.localPosition?.y ?? 0;
+    floors.push({
+      instanceId: `new:themed:${crypto.randomUUID()}`,
+      _key: key,
+      hierarchyPath: `themed:${key}`,
+      parentPath: c.defaultParent || "Art",
+      displayName: c.id,
+      surfaceKind: c.surfaceKind ?? "solid",
+      meshType: "prefab",
+      prefabGuid: c.guid,
+      prefabAssetPath: c.assetPath,
+      prefabScale: { x: sx, y: sy, z: sz },
+      prefabScaleCellsW: w,
+      prefabScaleCellsD: d,
+      prefabRotX: rotX,
+      localPosition: { x: it._wx, y, z: it._wz },
+      worldPosition: { x: it._wx, y, z: it._wz },
+      localRotationY: normalizeRot(it.localRotationY),
+      localScale: { x: (w * CELL) / 10, y: 1, z: (d * CELL) / 10 },
+      widthUnits: w * CELL,
+      depthUnits: d * CELL,
+      widthCells: w,
+      depthCells: d,
+      _wx: it._wx,
+      _wz: it._wz,
+      _wCells: w,
+      _dCells: d,
+    });
+    consumed.add(it._editorKey);
+  }
+  if (consumed.size > 0) {
+    items = items.filter((it) => !consumed.has(it._editorKey));
+  }
+}
+
 async function loadScene(assetPath: string) {
   showBusy("加载场景…");
   try {
@@ -3386,6 +4476,7 @@ async function loadScene(assetPath: string) {
     items = doc.items.map((raw, index) => enrichItem(raw, `i${index}`));
     floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
     mergeRaftItemsIntoFloors();
+    mergeThemedItemsIntoFloors();
     walkable = doc.walkable ?? [];
     deathInfo = doc.deathInfo ?? null;
     const itemTheme = inferBgThemeFromItems(items);
@@ -3538,6 +4629,13 @@ async function syncLayoutFromScene(otherPath: string): Promise<void> {
       if (prId && idMap.has(prId) && it.servingStation) {
         it.servingStation.plateReturnInstanceId = idMap.get(prId)!;
       }
+      // Remap one-to-many return bindings.
+      if (it.servingStation?.plateReturnInstanceIds) {
+        it.servingStation.plateReturnInstanceIds = it.servingStation.plateReturnInstanceIds.map(
+          (id) => (idMap.has(id) ? idMap.get(id)! : id)
+        );
+        it.servingStation.plateReturnInstanceId = it.servingStation.plateReturnInstanceIds[0] ?? "";
+      }
     }
     floors = (doc.floors ?? []).map((raw) => {
       const f = enrichFloor(JSON.parse(JSON.stringify(raw)) as FloorObject, newEditorKey());
@@ -3546,6 +4644,7 @@ async function syncLayoutFromScene(otherPath: string): Promise<void> {
       return f;
     });
     mergeRaftItemsIntoFloors();
+    mergeThemedItemsIntoFloors();
     const theme = inferBgThemeFromItems(items);
     if (theme) {
       bgThemeKey = theme;
@@ -3603,6 +4702,13 @@ function catalogItemById(id: string): CatalogItem | undefined {
 
 function ingredientEntryById(id: string) {
   return ingredientsCache.find((i) => i.id === id);
+}
+
+function foodIconImg(kind: "ingredients" | "recipes", id: string | undefined, hasIcon?: boolean): string {
+  // Try the real icon whenever we have an id and the flag isn't explicitly false (the live bridge
+  // catalog omits the flag, so we rely on onerror to fall back to the placeholder for missing PNGs).
+  const src = id && hasIcon !== false ? `/icons/${kind}/${id}.png` : "/icons/_placeholder.png";
+  return `<img class="pc-img" loading="lazy" src="${src}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
 }
 
 function ingredientGuidById(id: string): string | undefined {
@@ -3741,9 +4847,11 @@ function setupCanvas() {
 
     if (currentLayer === "floor") {
       if (pendingNewFloor) {
+        const cat = pendingNewFloorCat;
         pendingNewFloor = false;
+        pendingNewFloorCat = null;
         canvas.style.cursor = "";
-        addFloorAt(wx, wz);
+        addFloorAt(wx, wz, cat);
         return;
       }
       const fHits = hitTestFloorsAll(wx, wz);
@@ -3763,7 +4871,7 @@ function setupCanvas() {
         for (const fh of fHits) {
           candidates.push({
             title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格`,
-            sub: `地板 · ${fh.floor.materialName ?? "无材质"}`,
+            sub: `地板 · ${isThemedFloor(fh.floor) ? fh.floor.displayName : (fh.floor.materialName ?? "无材质")}`,
             onPick: () => {
               setFloorSelection([fh.floor._key]);
               clearSelection();
@@ -3930,11 +5038,11 @@ function setupCanvas() {
         for (const fh of fHits) {
           candidates.push({
             title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格`,
-            sub: `地板 · ${fh.floor.materialName ?? "无材质"}`,
+            sub: `地板 · ${isThemedFloor(fh.floor) ? fh.floor.displayName : (fh.floor.materialName ?? "无材质")}`,
             onPick: () => {
               setFloorSelection([fh.floor._key]);
               clearSelection();
-              showFloorDetail(fh.floor, e.clientX, e.clientY);
+              openFloorEditorModal(fh.floor);
               draw();
             },
           });
@@ -3959,7 +5067,7 @@ function setupCanvas() {
       const fHit = keepFloor ?? fHits[0] ?? null;
       if (fHit) {
         setFloorSelection([fHit.floor._key]);
-        showFloorDetail(fHit.floor, e.clientX, e.clientY);
+        openFloorEditorModal(fHit.floor);
         draw();
         return;
       }
@@ -4163,6 +5271,7 @@ function setupCanvas() {
       closeModal();
       marqueeing = false;
       pendingNewFloor = false;
+      pendingNewFloorCat = null;
       canvas.style.cursor = "";
     }
 
@@ -4173,17 +5282,25 @@ function setupCanvas() {
       return;
     }
     if ((e.ctrlKey || e.metaKey) && (e.key === "x" || e.key === "X") && !isTypingTarget(e.target)) {
-      cutSelection();
+      if (currentLayer === "floor") cutFloors();
+      else cutSelection();
       e.preventDefault();
       return;
     }
     if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C") && !isTypingTarget(e.target)) {
-      copySelection();
+      if (currentLayer === "floor") copyFloors();
+      else copySelection();
       e.preventDefault();
       return;
     }
     if ((e.ctrlKey || e.metaKey) && (e.key === "v" || e.key === "V") && !isTypingTarget(e.target)) {
-      pasteClipboard();
+      if (currentLayer === "floor") pasteFloors();
+      else pasteClipboard();
+      e.preventDefault();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === "d" || e.key === "D") && !isTypingTarget(e.target)) {
+      if (currentLayer === "floor") duplicateFloors();
       e.preventDefault();
       return;
     }

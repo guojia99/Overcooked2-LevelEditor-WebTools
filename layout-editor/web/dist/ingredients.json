@@ -1,0 +1,511 @@
+{
+  "generatedAt": "2026-08-02T08:22:16.206Z",
+  "schemaVersion": 3,
+  "itemCount": 56,
+  "ingredients": [
+    {
+      "guid": "6207742210e05564daf15e9c5d4c727b",
+      "id": "SmoothiePineapple",
+      "nameZh": "菠萝（冰沙）",
+      "nameEn": "Smoothie Pineapple",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/SmoothiePineapple.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "ff0a377cca6a00a45a5a5f13ac30098d",
+      "id": "BurgerPineapple",
+      "nameZh": "菠萝（汉堡）",
+      "nameEn": "Burger Pineapple",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/BurgerPineapple.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "e1e6338f70e25804d8a1081909bcb066",
+      "id": "SmoothieStrawberry",
+      "nameZh": "草莓（冰沙）",
+      "nameEn": "Smoothie Strawberry",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/SmoothieStrawberry.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "01bdf18c64f2c5b41ab41a9c898397a1",
+      "id": "PancakeStrawberry",
+      "nameZh": "草莓（松饼）",
+      "nameEn": "Pancake Strawberry",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/PancakeStrawberry.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "de4f19d5464ae7149a090a4cea5b6cf5",
+      "id": "DLC05_Strawberry",
+      "nameZh": "草莓（DLC5）",
+      "nameEn": "Strawberry (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Strawberry.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "2424b9e5c9152d247a579cbd8020343a",
+      "id": "DLC05_Crackers",
+      "nameZh": "脆饼干",
+      "nameEn": "Crackers (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Crackers.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "8a928e5055585f34c89f8535c40fea3f",
+      "id": "TomatoSO",
+      "nameZh": "番茄",
+      "nameEn": "Tomato",
+      "assetPath": "Assets/common01/food/Ingredients/TomatoSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "c4c6ab478c937f14f8269ff080ba7206",
+      "id": "PastaTomatoSO",
+      "nameZh": "番茄意面",
+      "nameEn": "Pasta Tomato",
+      "assetPath": "Assets/common01/food/Ingredients/PastaTomatoSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "122895ac50bba48499d9a8ad16e03582",
+      "id": "HoneycombSO",
+      "nameZh": "蜂蜜",
+      "nameEn": "Honey",
+      "assetPath": "Assets/common01/food/Ingredients/HoneycombSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "e967eab522af0e642b3d6cfbe694c06b",
+      "id": "Olive",
+      "nameZh": "橄榄",
+      "nameEn": "Olive",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/Olive.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "5eed196a512449c439f00bc8757ed190",
+      "id": "SeaweedSO",
+      "nameZh": "海苔",
+      "nameEn": "Seaweed",
+      "assetPath": "Assets/common01/food/Ingredients/SeaweedSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "81232e654b602714098c1a440b66ddd5",
+      "id": "ChoppedBunSO",
+      "nameZh": "汉堡面包",
+      "nameEn": "Chopped Bun",
+      "assetPath": "Assets/common01/food/Ingredients/ChoppedBunSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "7e3070b091a402f42be328cc261adff3",
+      "id": "DLC02_ChoppedBun",
+      "nameZh": "汉堡面包（DLC2）",
+      "nameEn": "Chopped Bun (DLC2)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/DLC02_ChoppedBun.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "a02996980ffbb23499219aa012ea9ca1",
+      "id": "CarrotSO",
+      "nameZh": "胡萝卜",
+      "nameEn": "Carrot",
+      "assetPath": "Assets/common01/food/Ingredients/CarrotSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "09a8ff9ede819e14e9f89df70f935402",
+      "id": "CucumberSO",
+      "nameZh": "黄瓜",
+      "nameEn": "Cucumber",
+      "assetPath": "Assets/common01/food/Ingredients/CucumberSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "f16eb735da1f7ec44a2a5a0b02d1fd77",
+      "id": "TurkeySO",
+      "nameZh": "火鸡",
+      "nameEn": "Turkey",
+      "assetPath": "Assets/common01/food/Ingredients/TurkeySO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "95b82bda2a24c4942ac723feb92fc147",
+      "id": "EggSO",
+      "nameZh": "鸡蛋",
+      "nameEn": "Egg",
+      "assetPath": "Assets/common01/food/Ingredients/EggSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "ad56741d152e35d459da75d1531b494c",
+      "id": "DLC05_Egg",
+      "nameZh": "鸡蛋（DLC5）",
+      "nameEn": "Egg (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Egg.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "fb531a6ac7ad9a24aa4f2a806350b1e4",
+      "id": "NuggetChickenSO",
+      "nameZh": "鸡块",
+      "nameEn": "Chicken Nugget",
+      "assetPath": "Assets/common01/food/Ingredients/NuggetChickenSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "f5e2ed0b5f84bfb4da375a513302084e",
+      "id": "ChickenSO",
+      "nameZh": "鸡肉",
+      "nameEn": "Chicken",
+      "assetPath": "Assets/common01/food/Ingredients/ChickenSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "1d180e6bcff709d4d9abc1d3420346e4",
+      "id": "DLC05_Beans",
+      "nameZh": "焗豆",
+      "nameEn": "Beans (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Beans.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "85bd4a3b88782714091204aeb3e85e6d",
+      "id": "BurritoChickenSO",
+      "nameZh": "卷饼鸡肉",
+      "nameEn": "Burrito Chicken",
+      "assetPath": "Assets/common01/food/Ingredients/BurritoChickenSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "4c54ee4dbc00db742a827110f1aea22d",
+      "id": "BurritoMeatSO",
+      "nameZh": "卷饼肉馅",
+      "nameEn": "Burrito Meat",
+      "assetPath": "Assets/common01/food/Ingredients/BurritoMeatSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "24db4b587e15e92458a05516d4c84bad",
+      "id": "KebobPineapple",
+      "nameZh": "烤串菠萝",
+      "nameEn": "Kebab Pineapple",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/KebobPineapple.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "9f37a90546adba743b3b44e893f5912a",
+      "id": "KebobTomato",
+      "nameZh": "烤串番茄",
+      "nameEn": "Kebab Tomato",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/KebobTomato.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "bea5e20c34dbde846a1728adecc9f3a8",
+      "id": "KebobChicken",
+      "nameZh": "烤串鸡肉",
+      "nameEn": "Kebab Chicken",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/KebobChicken.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "1163b73ff1565244787b2a59f8bbca10",
+      "id": "KebobMushroom",
+      "nameZh": "烤串蘑菇",
+      "nameEn": "Kebab Mushroom",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/KebobMushroom.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "dc32be47fbff96049b0555160a9015c1",
+      "id": "KebobMeat",
+      "nameZh": "烤串肉",
+      "nameEn": "Kebab Meat",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/KebobMeat.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "a192356a1fd01504eadf0d90ffa2de62",
+      "id": "Blueberry",
+      "nameZh": "蓝莓",
+      "nameEn": "Blueberry",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/Blueberry.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "d628cc1cba14ca24f927c76c83ae9463",
+      "id": "RiceSO",
+      "nameZh": "米饭",
+      "nameEn": "Rice",
+      "assetPath": "Assets/common01/food/Ingredients/RiceSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "2a88d8f3685df8144b0c7b1ab3c6f87f",
+      "id": "DLC05_Marshmallow",
+      "nameZh": "棉花糖",
+      "nameEn": "Marshmallow (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Marshmallow.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "03519de205ed57142ac8e4686730babf",
+      "id": "FlourSO",
+      "nameZh": "面粉",
+      "nameEn": "Flour",
+      "assetPath": "Assets/common01/food/Ingredients/FlourSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "72928b14d0bc3de44843e321fcca23a7",
+      "id": "DoughSO",
+      "nameZh": "面团",
+      "nameEn": "Dough",
+      "assetPath": "Assets/common01/food/Ingredients/DoughSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "07ddbb4392cfa5b47b83abc476c435da",
+      "id": "DLC05_Dough",
+      "nameZh": "面团（DLC5）",
+      "nameEn": "Dough (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Dough.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "2b710142f4f6a0a4f8ad21e3170ad9b3",
+      "id": "MushroomSO",
+      "nameZh": "蘑菇",
+      "nameEn": "Mushroom",
+      "assetPath": "Assets/common01/food/Ingredients/MushroomSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "2d89a2cd05903554b8aabd5617534acf",
+      "id": "DLC05_Wood",
+      "nameZh": "木柴",
+      "nameEn": "Wood (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Wood.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "5e15cf0dda7163a48901aa33a88e993d",
+      "id": "Bacon",
+      "nameZh": "培根",
+      "nameEn": "Bacon",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/Bacon.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "d2a417e941d3a3f4181cfadf039d720d",
+      "id": "ChocolateSO",
+      "nameZh": "巧克力",
+      "nameEn": "Chocolate",
+      "assetPath": "Assets/common01/food/Ingredients/ChocolateSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "9107a2832a94d894e83ae22aae1c764d",
+      "id": "DLC05_Chocolate",
+      "nameZh": "巧克力（DLC5）",
+      "nameEn": "Chocolate (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Chocolate.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "c14c19bf0f3fa884bb60dee315a91b18",
+      "id": "MeatSO",
+      "nameZh": "肉排",
+      "nameEn": "Meat",
+      "assetPath": "Assets/common01/food/Ingredients/MeatSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "45f00e942534da143a3e94855455b50b",
+      "id": "LettuceSO",
+      "nameZh": "生菜",
+      "nameEn": "Lettuce",
+      "assetPath": "Assets/common01/food/Ingredients/LettuceSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "da6efd0b90360e34b9443171826d5c12",
+      "id": "SushiRiceSO",
+      "nameZh": "寿司米",
+      "nameEn": "Sushi Rice",
+      "assetPath": "Assets/common01/food/Ingredients/SushiRiceSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "df4a04d1549f9ee41a991153bd723110",
+      "id": "SushiPrawnSO",
+      "nameZh": "寿司虾",
+      "nameEn": "Sushi Prawn",
+      "assetPath": "Assets/common01/food/Ingredients/SushiPrawnSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "bbf0e92641aa4ab49bda6bc68117e01f",
+      "id": "SushiFishSO",
+      "nameZh": "寿司鱼",
+      "nameEn": "Sushi Fish",
+      "assetPath": "Assets/common01/food/Ingredients/SushiFishSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "f57c067108d7dd543873dd5df1414aea",
+      "id": "Melon",
+      "nameZh": "甜瓜",
+      "nameEn": "Melon",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/Melon.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "091a84ec23abdeb4199567f108341d56",
+      "id": "PotatoSO",
+      "nameZh": "土豆",
+      "nameEn": "Potato",
+      "assetPath": "Assets/common01/food/Ingredients/PotatoSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "dcc2cc58768a02345a47efe3f0cdf788",
+      "id": "PrawnSO",
+      "nameZh": "虾",
+      "nameEn": "Prawn",
+      "assetPath": "Assets/common01/food/Ingredients/PrawnSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "0bac7a72dc228024fb5f36278fab79d6",
+      "id": "Sausage",
+      "nameZh": "香肠",
+      "nameEn": "Sausage",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/Sausage.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "b6f2aa157beed2140a12c5cc8a66f8c1",
+      "id": "Banana",
+      "nameZh": "香蕉",
+      "nameEn": "Banana",
+      "assetPath": "Assets/common02/food/Ingredients/dlc02/Banana.asset",
+      "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "fd102576fe1c8ff40abbdb5f2f64a0c9",
+      "id": "DLC05_Banana",
+      "nameZh": "香蕉（DLC5）",
+      "nameEn": "Banana (DLC5)",
+      "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Banana.asset",
+      "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "1d97426e890100348ac91825774d1184",
+      "id": "OnionSO",
+      "nameZh": "洋葱",
+      "nameEn": "Onion",
+      "assetPath": "Assets/common01/food/Ingredients/OnionSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "7ac8ffa91f182f14c8d14bfe5badd2ac",
+      "id": "PastaSO",
+      "nameZh": "意面",
+      "nameEn": "Pasta",
+      "assetPath": "Assets/common01/food/Ingredients/PastaSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "c6dc7f3809c18fd46bc41d15afb7cb9a",
+      "id": "PepperoniSO",
+      "nameZh": "意式辣香肠",
+      "nameEn": "Pepperoni",
+      "assetPath": "Assets/common01/food/Ingredients/PepperoniSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "797864ae4f61afc4f80a85c4c3d8b552",
+      "id": "FishSO",
+      "nameZh": "鱼",
+      "nameEn": "Fish",
+      "assetPath": "Assets/common01/food/Ingredients/FishSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "eba97984fecfb8940a72e730a55ea89f",
+      "id": "TortillaSO",
+      "nameZh": "玉米薄饼",
+      "nameEn": "Tortilla",
+      "assetPath": "Assets/common01/food/Ingredients/TortillaSO.asset",
+      "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "b785cb39803b3be40b7d7052d54595fd",
+      "id": "CheeseSO",
+      "nameZh": "芝士",
+      "nameEn": "Cheese",
+      "assetPath": "Assets/common01/food/Ingredients/CheeseSO.asset",
+      "group": "core",
+      "icon": true
+    }
+  ]
+}

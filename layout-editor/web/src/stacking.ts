@@ -34,6 +34,9 @@ export function hostMatchesRule(hostPrefabId: string, rule: string): boolean {
   if (rule === "cooker") return id === "Cooker";
   if (rule === "frying_station") return id === "FryingStation";
   if (rule === "mixer") return id === "Mixer" || id.startsWith("Mixer");
+  if (rule === "blender") return id === "Blender";
+  if (rule === "barbeque") return id === "Barbeque";
+  if (rule === "campfire") return id === "Campfire";
   return false;
 }
 
@@ -55,7 +58,13 @@ export function hostRuleLabelZh(rule: CatalogStackMeta["hostRule"]): string {
     case "frying_station":
       return "煎炸台";
     case "mixer":
+      return "搅拌台";
+    case "blender":
       return "搅拌机";
+    case "barbeque":
+      return "烧烤架";
+    case "campfire":
+      return "篝火";
     default:
       return rule;
   }

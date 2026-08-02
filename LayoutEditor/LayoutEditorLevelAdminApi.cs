@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using LevelEditorStub;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -30,18 +31,41 @@ public static class LayoutEditorLevelAdminApi
 
     public static AudioDirectoryCatalogDto ScanAudioDirectories()
     {
-        var raw = ScanPseudoPrefabs(new[] { "Assets/common02/pseudo_prefab_so/audio/AudioDirectories" });
+        // Scan both common01 (the *SO.asset variants that scenes actually reference, incl.
+        // the 5 mandatory directories) and common02 (the non-SO variants). Mirrors build-catalog.mjs.
+        var raw = ScanPseudoPrefabs(new[]
+        {
+            "Assets/common01/pseudo_prefab_so/audio/AudioDirectories",
+            "Assets/common02/pseudo_prefab_so/audio/AudioDirectories"
+        });
         var list = new List<AudioDirectoryEntryDto>();
         foreach (var m in raw)
             list.Add(new AudioDirectoryEntryDto { guid = m.guid, id = m.id, assetPath = m.assetPath, bundleName = m.bundleName, nameZh = m.nameZh });
-        return new AudioDirectoryCatalogDto { audioDirectories = list.ToArray() };
+
+        var k = LoadAudioKnowledge();
+        return new AudioDirectoryCatalogDto
+        {
+            audioDirectories = list.ToArray(),
+            baseBundles = k.baseBundles,
+            alwaysLoadedBundles = k.alwaysLoadedBundles,
+            mandatoryDirectoryIds = k.mandatoryDirectoryIds,
+            directoryEvents = k.directoryEvents,
+            themes = k.themes,
+            deathThemes = k.deathThemes,
+            ambienceLabels = k.ambienceLabels
+        };
     }
 
     public static AmbienceCatalogDto ScanAmbiences()
     {
         var names = new List<string>(Enum.GetNames(typeof(PseudoPrefabManagerStub.GameLoopingAudioTag)));
         names.RemoveAll(n => n == "COUNT");
-        return new AmbienceCatalogDto { ambiences = names.ToArray() };
+        var k = LoadAudioKnowledge();
+        return new AmbienceCatalogDto
+        {
+            ambiences = names.ToArray(),
+            ambienceLabels = k.ambienceLabels
+        };
     }
 
     public static DeathEffectCatalogDto ScanDeathEffects()
@@ -99,6 +123,64 @@ public static class LayoutEditorLevelAdminApi
         }
         list.Sort((a, b) => string.Compare(a.id, b.id, StringComparison.Ordinal));
         return list;
+    }
+
+    // ==================== Audio knowledge (shared JSON) ====================
+
+    private static AudioDirectoryCatalogDto _audioKnowledge;
+    private static bool _audioKnowledgeLoaded;
+
+    /// <summary>Reload audio-knowledge.json (e.g. after editing the shared data file).</summary>
+    public static void InvalidateAudioKnowledgeCache()
+    {
+        _audioKnowledgeLoaded = false;
+    }
+
+    /// <summary>Returns the shared audio knowledge (mandatory dirs, event legend, theme matrix,
+    /// death themes, base/always-loaded bundles). Empty arrays when the JSON is missing.</summary>
+    public static AudioDirectoryCatalogDto LoadAudioKnowledge()
+    {
+        if (_audioKnowledgeLoaded)
+            return _audioKnowledge ?? (_audioKnowledge = EmptyKnowledge());
+        _audioKnowledgeLoaded = true;
+
+        var kPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../layout-editor/scripts/data/audio-knowledge.json"));
+        string text = null;
+        if (File.Exists(kPath))
+        {
+            try { text = File.ReadAllText(kPath); } catch { }
+        }
+        if (string.IsNullOrEmpty(text))
+        {
+            _audioKnowledge = EmptyKnowledge();
+            return _audioKnowledge;
+        }
+
+        try
+        {
+            var dto = JsonUtility.FromJson<AudioDirectoryCatalogDto>(text);
+            _audioKnowledge = dto ?? EmptyKnowledge();
+        }
+        catch
+        {
+            _audioKnowledge = EmptyKnowledge();
+        }
+        return _audioKnowledge;
+    }
+
+    private static AudioDirectoryCatalogDto EmptyKnowledge()
+    {
+        return new AudioDirectoryCatalogDto
+        {
+            audioDirectories = new AudioDirectoryEntryDto[0],
+            baseBundles = new string[0],
+            alwaysLoadedBundles = new string[0],
+            mandatoryDirectoryIds = new string[0],
+            directoryEvents = new DirectoryEventDto[0],
+            themes = new AudioThemeDto[0],
+            deathThemes = new AudioDeathThemeDto[0],
+            ambienceLabels = new AmbienceLabelDto[0]
+        };
     }
 
     // ==================== Sets ====================
@@ -166,6 +248,39 @@ public static class LayoutEditorLevelAdminApi
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         SetAssetBundleName(setDir, setName + "/info_" + setName);
+        return null;
+    }
+
+    /** Permanently delete a level set folder (and all its levels/scenes/assets).
+     *  The web UI requires the user to type the setName to confirm. */
+    public static string DeleteSet(string setName)
+    {
+        if (string.IsNullOrEmpty(setName))
+            return "缺少关卡集标识。";
+        var safe = SanitizeName(setName);
+        if (string.IsNullOrEmpty(safe) || safe != setName)
+            return "关卡集标识非法。";
+        var setDir = LevelSetsRoot + "/" + safe;
+        if (!AssetDatabase.IsValidFolder(setDir))
+            return "关卡集不存在：" + safe;
+
+        // Clear asset-bundle names on the folder's assets first so the bundle
+        // manifest does not keep stale references after the folder is gone.
+        foreach (var guid in AssetDatabase.FindAssets("", new[] { setDir }))
+        {
+            var p = AssetDatabase.GUIDToAssetPath(guid);
+            var imp = AssetImporter.GetAtPath(p);
+            if (imp != null && !string.IsNullOrEmpty(imp.assetBundleName))
+            {
+                imp.SetAssetBundleNameAndVariant("", "");
+                imp.SaveAndReimport();
+            }
+        }
+
+        if (!AssetDatabase.DeleteAsset(setDir))
+            return "删除失败（文件夹可能被占用，请关闭相关场景后重试）。";
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
         return null;
     }
 
@@ -295,6 +410,243 @@ public static class LayoutEditorLevelAdminApi
                 : new AudioConfigDto { ambiences = new string[0], audioDirectoryGuids = new string[0], audioDirectoryIds = new string[0] }
         };
         return dto;
+    }
+
+    // ==================== Bundle dependency analysis ====================
+
+    private static readonly HashSet<string> PseudoScriptGuids = new HashSet<string>
+    {
+        "0cff7c13895ab9e47a5e02d4619cc3b9", // PseudoPrefabSO
+        "753d9e70603f6a140b05f30f176ec2dd", // PseudoPrefabSORecipe
+        "83fb008bcc8e793429b02c178c430815", // CustomRecipeSO
+        "60297950c88d0d646ac0eca5dc831262"  // CustomRecipeOptionalPizzaSO
+    };
+
+    private static Dictionary<string, List<string>> _bundleManifest;
+    private static bool _bundleManifestLoaded;
+
+    /// <summary>Loads the AssetBundle dependency graph (layout-editor/scripts/data/bundle-manifest.json,
+    /// extracted from the game's Windows AssetBundleManifest). Empty graph when the file is missing.</summary>
+    public static Dictionary<string, List<string>> LoadBundleManifest()
+    {
+        if (_bundleManifestLoaded)
+            return _bundleManifest ?? (_bundleManifest = new Dictionary<string, List<string>>(StringComparer.Ordinal));
+        _bundleManifestLoaded = true;
+        var path = Path.GetFullPath(Path.Combine(Application.dataPath, "../layout-editor/scripts/data/bundle-manifest.json"));
+        string text = null;
+        if (File.Exists(path))
+        {
+            try { text = File.ReadAllText(path); } catch { }
+        }
+        _bundleManifest = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        if (string.IsNullOrEmpty(text))
+            return _bundleManifest;
+        try
+        {
+            var dto = JsonUtility.FromJson<BundleManifestDto>(text);
+            if (dto != null && dto.dependencies != null)
+            {
+                foreach (var e in dto.dependencies)
+                {
+                    if (e == null || string.IsNullOrEmpty(e.name))
+                        continue;
+                    _bundleManifest[e.name] = new List<string>(e.deps ?? new string[0]);
+                }
+            }
+        }
+        catch
+        {
+            // leave empty graph
+        }
+        return _bundleManifest;
+    }
+
+    /// <summary>Transitive closure of a set of bundle names following the manifest's dependency edges
+    /// (LoadAssetBundle loads each bundle's GetAllDependencies recursively, so this mirrors what the
+    /// editor/game actually loads for the given declared dependencies).</summary>
+    private static HashSet<string> BundleClosure(IEnumerable<string> seeds)
+    {
+        var manifest = LoadBundleManifest();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var stack = new Stack<string>();
+        foreach (var s in seeds)
+            if (!string.IsNullOrEmpty(s))
+                stack.Push(s);
+        while (stack.Count > 0)
+        {
+            var b = stack.Pop();
+            if (!seen.Add(b))
+                continue;
+            List<string> ds;
+            if (manifest.TryGetValue(b, out ds) && ds != null)
+                foreach (var d in ds)
+                    if (!seen.Contains(d))
+                        stack.Push(d);
+        }
+        return seen;
+    }
+
+    /// <summary>Scans ALL PseudoPrefabSO references in a level (LevelInfoSO recipe/ingredient/
+    /// cooking-step/match-list arrays + every asset referenced by the scene) and reconciles against
+    /// the TRANSITIVE closure of the declared LevelInfoSO.dependencies. A bundle is only "missing"
+    /// (genuinely must-add) if the level references it directly and it is NOT reachable from the
+    /// declared dependencies. baseBundles are always required; alwaysLoadedBundles are never flagged.</summary>
+    public static BundleAnalysisDto AnalyzeBundles(string assetPath)
+    {
+        var k = LoadAudioKnowledge();
+        var always = new HashSet<string>(k.alwaysLoadedBundles ?? new string[0], StringComparer.Ordinal);
+        var baseBundles = new HashSet<string>(k.baseBundles ?? new string[0], StringComparer.Ordinal);
+        var referenced = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var b in k.baseBundles ?? new string[0])
+            referenced.Add(b);
+
+        var current = new List<string>();
+        var so = string.IsNullOrEmpty(assetPath) ? null : AssetDatabase.LoadAssetAtPath<LevelInfoSO>(assetPath);
+        if (so != null)
+        {
+            if (so.dependencies != null)
+                current.AddRange(so.dependencies);
+            CollectBundleNames(so.recipes, referenced);
+            CollectBundleNames(so.allIngredients, referenced);
+            CollectBundleNames(so.allCookingSteps, referenced);
+            CollectBundleNames(so.includeRecipeMatchLists, referenced);
+            CollectBundleNames(so.optionalRecipeMatchListItems, referenced);
+
+            if (!string.IsNullOrEmpty(so.sceneName))
+            {
+                var setName = SetNameFromPath(assetPath);
+                var scenePath = LevelSetsRoot + "/" + setName + "/scenes/" + so.sceneName + ".unity";
+                if (File.Exists(AbsPath(scenePath)))
+                    CollectSceneBundleNames(scenePath, referenced);
+            }
+        }
+
+        referenced.RemoveWhere(b => always.Contains(b) || string.IsNullOrEmpty(b));
+
+        // What actually loads = transitive closure of the declared dependencies (LoadAssetBundle
+        // pulls each bundle's GetAllDependencies recursively). A bundle is only "missing" if the
+        // level references it AND it is not reachable from the declared dependencies.
+        var loaded = BundleClosure(current);
+
+        var missing = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var b in referenced)
+            if (!loaded.Contains(b))
+                missing.Add(b);
+
+        // A declared (non-base) dependency is "extra" if removing it still keeps every referenced
+        // bundle within the closure — i.e. nothing the level uses actually needs it.
+        var declaredDistinct = new List<string>();
+        var seenD = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var b in current)
+        {
+            if (string.IsNullOrEmpty(b) || !seenD.Add(b))
+                continue;
+            declaredDistinct.Add(b);
+        }
+        var extras = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var d in declaredDistinct)
+        {
+            if (baseBundles.Contains(d))
+                continue;
+            var without = new List<string>(declaredDistinct);
+            without.Remove(d);
+            var reclo = BundleClosure(without);
+            bool stillCovers = true;
+            foreach (var b in referenced)
+                if (!reclo.Contains(b)) { stillCovers = false; break; }
+            if (stillCovers)
+                extras.Add(d);
+        }
+
+        return new BundleAnalysisDto
+        {
+            @base = (k.baseBundles ?? new string[0]),
+            alwaysLoaded = (k.alwaysLoadedBundles ?? new string[0]),
+            required = SortedArray(referenced),
+            current = DedupedArray(current),
+            missing = SortedArray(missing),
+            extras = SortedArray(extras)
+        };
+    }
+
+    private static void CollectBundleNames(System.Collections.IList refs, HashSet<string> set)
+    {
+        if (refs == null)
+            return;
+        foreach (var obj in refs)
+        {
+            if (obj == null)
+                continue;
+            var bn = ReadBundleNameField(obj);
+            if (!string.IsNullOrEmpty(bn))
+                set.Add(bn);
+        }
+    }
+
+    private static string ReadBundleNameField(object obj)
+    {
+        if (obj == null)
+            return null;
+        var f = obj.GetType().GetField("bundleName", BindingFlags.Public | BindingFlags.Instance);
+        return f != null ? f.GetValue(obj) as string : null;
+    }
+
+    private static void CollectSceneBundleNames(string sceneAssetPath, HashSet<string> set)
+    {
+        string text;
+        try { text = File.ReadAllText(AbsPath(sceneAssetPath)); }
+        catch { return; }
+        if (string.IsNullOrEmpty(text))
+            return;
+
+        var guids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Match m in Regex.Matches(text, @"guid:\s*([a-f0-9]{32})"))
+            guids.Add(m.Groups[1].Value);
+
+        foreach (var g in guids)
+        {
+            var p = AssetDatabase.GUIDToAssetPath(g);
+            if (string.IsNullOrEmpty(p) || !p.EndsWith(".asset", StringComparison.OrdinalIgnoreCase))
+                continue;
+            var bn = BundleNameFromAsset(p);
+            if (!string.IsNullOrEmpty(bn))
+                set.Add(bn);
+        }
+    }
+
+    private static string BundleNameFromAsset(string assetPath)
+    {
+        string text;
+        try { text = File.ReadAllText(AbsPath(assetPath)); }
+        catch { return null; }
+        if (string.IsNullOrEmpty(text))
+            return null;
+
+        bool isPseudo = false;
+        foreach (var g in PseudoScriptGuids)
+            if (text.IndexOf("guid: " + g, StringComparison.Ordinal) >= 0) { isPseudo = true; break; }
+        if (!isPseudo)
+            return null;
+
+        var m = Regex.Match(text, @"bundleName:\s*(\S*)");
+        return m.Success ? m.Groups[1].Value.Trim() : null;
+    }
+
+    private static string[] SortedArray(HashSet<string> set)
+    {
+        var list = new List<string>(set);
+        list.Sort(StringComparer.Ordinal);
+        return list.ToArray();
+    }
+
+    private static string[] DedupedArray(List<string> list)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var result = new List<string>();
+        foreach (var b in list)
+            if (!string.IsNullOrEmpty(b) && seen.Add(b))
+                result.Add(b);
+        return result.ToArray();
     }
 
     // ==================== Levels (create / update / delete) ====================
@@ -487,6 +839,8 @@ public static class LayoutEditorLevelAdminApi
 
         stub.OnDeathEffectSO = LoadPseudoByGuid(dto.onDeathEffectGuid);
 
+        AutoMergeAudioDependencies(stub);
+
         EditorUtility.SetDirty(stub);
         ForcePrepareForBuilding();
         var scene = EditorSceneManager.GetActiveScene();
@@ -494,6 +848,58 @@ public static class LayoutEditorLevelAdminApi
         EditorSceneManager.SaveScene(scene);
         ReloadPseudo();
         return null;
+    }
+
+    /// <summary>Ensures LevelInfoSO.dependencies can actually load the bundles required by the currently
+    /// referenced audio SOs (BGM + directories + death effect). Only adds a bundle when it is NOT already
+    /// reachable via the transitive closure of the existing dependencies (so commonly-loaded bundles like
+    /// bundle9/16/18/47 and DLC bundles that already fall inside closure(bundle47) are NOT added). Authoritative
+    /// bundle names are read directly from each PseudoPrefabSO.bundleName. Additive only.</summary>
+    private static void AutoMergeAudioDependencies(PseudoPrefabManagerStub stub)
+    {
+        if (stub == null || stub.levelInfo == null)
+            return;
+        var k = LoadAudioKnowledge();
+        var always = new HashSet<string>(k.alwaysLoadedBundles ?? new string[0], StringComparer.Ordinal);
+
+        var referenced = new HashSet<string>(StringComparer.Ordinal);
+        // bundle47 (and any other baseBundles) is the foundation that every level must load; always ensure it.
+        foreach (var b in k.baseBundles ?? new string[0])
+            referenced.Add(b);
+        if (stub.InLevelMusicSO != null && !string.IsNullOrEmpty(stub.InLevelMusicSO.bundleName))
+            referenced.Add(stub.InLevelMusicSO.bundleName);
+        if (stub.OnDeathEffectSO != null && !string.IsNullOrEmpty(stub.OnDeathEffectSO.bundleName))
+            referenced.Add(stub.OnDeathEffectSO.bundleName);
+        if (stub.AudioDirectorySOs != null)
+            foreach (var d in stub.AudioDirectorySOs)
+                if (d != null && !string.IsNullOrEmpty(d.bundleName))
+                    referenced.Add(d.bundleName);
+        referenced.RemoveWhere(b => always.Contains(b) || string.IsNullOrEmpty(b));
+        if (referenced.Count == 0)
+            return;
+
+        var deps = new List<string>(stub.levelInfo.dependencies ?? new string[0]);
+        var loaded = BundleClosure(deps);
+        bool changed = false;
+        foreach (var b in referenced)
+        {
+            // Add only when the bundle is genuinely NOT reachable from the current dependencies.
+            // Thanks to bundle47's transitive closure this is usually a no-op; the typical
+            // exceptions are bundle47 itself (if removed) and bundle11 (raft BGM, not in closure(bundle47)).
+            if (loaded.Contains(b) || deps.Contains(b))
+                continue;
+            deps.Add(b);
+            // extending the dependency list can only grow the closure; add this bundle's own closure.
+            foreach (var c in BundleClosure(new[] { b }))
+                loaded.Add(c);
+            changed = true;
+        }
+        if (changed)
+        {
+            Undo.RecordObject(stub.levelInfo, "Auto-merge audio dependencies");
+            stub.levelInfo.dependencies = deps.ToArray();
+            EditorUtility.SetDirty(stub.levelInfo);
+        }
     }
 
     public static AssetPathListDto PreviewDeleteLevel(string setName, string levelId)
@@ -612,10 +1018,9 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(stub);
         ForcePrepareForBuilding();
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
-        // Reload Pseudo Assets so the new death effect is actually loaded (per manual),
-        // then strip temp objects again so the user's Ctrl+S won't trip the save validator.
+        // Reload Pseudo Assets to actually load the new death effect, restoring the editor UI
+        // (matches the Tools workflow: Toggle Prepare For Building -> Save -> Reload Pseudo Assets).
         ReloadPseudo();
-        ForcePrepareForBuilding();
         return null;
     }
 
@@ -672,7 +1077,11 @@ public static class LayoutEditorLevelAdminApi
         t.position = new Vector3(newPivotX, t.position.y, newPivotZ);
 
         EditorUtility.SetDirty(t);
+        // Persist with the canonical workflow: Prepare (strip temp objects) -> Save -> Reload (restore UI).
+        ForcePrepareForBuilding();
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        ReloadPseudo();
         return null;
     }
 
@@ -996,5 +1405,106 @@ public static class LayoutEditorLevelAdminApi
                 list.Add(id);
         }
         return list.ToArray();
+    }
+
+    // ==================== Image floors ====================
+
+    /** Write a base64-encoded image into Assets/LevelSets/<setName>/data/<fileName>,
+     *  import it as a Texture2D, and return the texture's asset path. */
+    public static string UploadImageFloor(string setName, string fileName, string base64, out string texturePath)
+    {
+        texturePath = null;
+        setName = SanitizeName(setName);
+        if (string.IsNullOrEmpty(setName))
+            return "缺少关卡集名称。";
+        if (string.IsNullOrEmpty(fileName))
+            return "缺少图片文件名。";
+
+        // Keep only the file name + sanitize; force a supported image extension.
+        var rawName = Path.GetFileNameWithoutExtension(fileName);
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+            ext = ".png";
+        foreach (var ch in System.IO.Path.GetInvalidFileNameChars())
+            rawName = rawName.Replace(ch, '_');
+        if (string.IsNullOrEmpty(rawName))
+            rawName = "floor_image";
+        var safeName = SanitizeName(rawName);
+        if (string.IsNullOrEmpty(safeName))
+            safeName = "floor_image";
+
+        var setDir = LevelSetsRoot + "/" + setName;
+        if (!AssetDatabase.IsValidFolder(setDir))
+            return "关卡集不存在：" + setName;
+        var dataDir = setDir + "/data";
+        if (!AssetDatabase.IsValidFolder(dataDir))
+            AssetDatabase.CreateFolder(setDir, "data");
+
+        byte[] bytes;
+        try
+        {
+            // Strip an optional data URL prefix, then decode.
+            var b64 = base64 == null ? "" : base64.Trim();
+            var comma = b64.IndexOf(',');
+            if (comma >= 0 && b64.StartsWith("data:", StringComparison.Ordinal))
+                b64 = b64.Substring(comma + 1);
+            bytes = Convert.FromBase64String(b64);
+        }
+        catch
+        {
+            return "图片 base64 解码失败。";
+        }
+        if (bytes.Length == 0)
+            return "图片数据为空。";
+
+        var assetPath = dataDir + "/" + safeName + ext;
+        var absPath = Path.Combine(Application.dataPath, assetPath.Substring("Assets/".Length));
+        File.WriteAllBytes(absPath, bytes);
+        AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+
+        // Make the texture suitable for floor use (readable not required, but
+        // ensure it is not a normal-map / is sRGB).
+        var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+        if (importer != null)
+        {
+            importer.textureType = TextureImporterType.Default;
+            importer.sRGBTexture = true;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+
+        texturePath = assetPath;
+        return null;
+    }
+
+    /** Resolve a project-relative asset path (e.g. Assets/LevelSets/x/data/y.png)
+     *  to an absolute file path + content type. Only allows paths under the
+     *  project Assets folder, to avoid arbitrary file reads. */
+    public static string ResolveProjectFile(string relPath, out string absPath, out string contentType)
+    {
+        absPath = null;
+        contentType = "application/octet-stream";
+        if (string.IsNullOrEmpty(relPath))
+            return "缺少路径。";
+        relPath = relPath.Replace('\\', '/').Trim();
+        if (!relPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+            return "只允许访问 Assets 目录下的文件。";
+        // Block path traversal.
+        if (relPath.Contains(".."))
+            return "非法路径。";
+
+        absPath = Path.GetFullPath(Path.Combine(Path.Combine(Application.dataPath, ".."), relPath));
+        var ext = Path.GetExtension(absPath).ToLowerInvariant();
+        switch (ext)
+        {
+            case ".png": contentType = "image/png"; break;
+            case ".jpg":
+            case ".jpeg": contentType = "image/jpeg"; break;
+            case ".svg": contentType = "image/svg+xml"; break;
+            case ".gif": contentType = "image/gif"; break;
+            case ".webp": contentType = "image/webp"; break;
+            default: contentType = "application/octet-stream"; break;
+        }
+        return null;
     }
 }

@@ -98,6 +98,7 @@ public static class SceneLayoutExporter
                 displayName = go.name,
                 localPosition = LayoutVector3.From(t.localPosition),
                 worldPosition = LayoutVector3.From(t.position),
+                localRotationX = t.localEulerAngles.x,
                 localRotationY = eulerY,
                 localScale = LayoutVector3.From(t.localScale),
                 footprint = LayoutEditorCatalogLookup.GetFootprint(prefabAsset.name)

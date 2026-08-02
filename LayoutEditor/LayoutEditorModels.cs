@@ -103,8 +103,12 @@ public class LayoutPlayerStubDto
 [Serializable]
 public class LayoutServingStationStubDto
 {
-    /** "u:<instanceID>" of the bound PlateReturn's GameObject, or empty. */
+    /** "u:<instanceID>" of the bound PlateReturn's GameObject, or empty. (Legacy
+     *  single binding; superseded by plateReturnInstanceIds.) */
     public string plateReturnInstanceId;
+    /** One-to-many binding: "u:<instanceID>" (or doc instanceId) of each bound
+     *  return station (PlateReturn / GlassReturn). */
+    public string[] plateReturnInstanceIds;
 }
 
 [Serializable]
@@ -118,6 +122,8 @@ public class LayoutItemDto
     public string displayName;
     public LayoutVector3 localPosition;
     public LayoutVector3 worldPosition;
+    /** Euler X in degrees — needed for quad-based floor tiles that lie flat via x=90. */
+    public float localRotationX;
     public float localRotationY;
     public LayoutVector3 localScale;
     public LayoutFootprint footprint;
@@ -181,6 +187,18 @@ public class FloorDto
     /** For prefab-typed floors, the prefab guid/assetPath. */
     public string prefabGuid;
     public string prefabAssetPath;
+    /** Optional manual tint color (html hex, e.g. "#88aabb") for a solid floor —
+     *  a user-driven recolor feature independent of the floor's material. */
+    public string tintColor;
+    /** Whether the tint is active. When false the floor keeps its real material
+     *  even if tintColor is set. */
+    public bool tintEnabled;
+    /** Image floor: asset path of an uploaded texture in the level's data dir. */
+    public string imageTexturePath;
+    /** Image tiling mode: "tile" (repeat per cell) or "stretch" (fill the rect). */
+    public string imageMode;
+    /** Image opacity 0..1 (0 = transparent, 1 = opaque). */
+    public float imageOpacity;
 }
 
 [Serializable]
@@ -273,6 +291,8 @@ public class IngredientEntryDto
     public string nameZh;
     public string nameEn;
     public string assetPath;
+    /** "core" / "dlc02" / "dlc05" — matches ingredients.json. */
+    public string group;
 }
 
 [Serializable]
@@ -295,6 +315,12 @@ public class RecipeEntryDto
     public int cookingStepCount;
     public int score;
     public bool isCustom;
+    /** "core" / "custom" / "dlc02" / "dlc05" — matches recipes.json. */
+    public string group;
+    /** Recipe family: burger / pizza / sushi / kebab / smoothie … — matches recipes.json. */
+    public string type;
+    /** True for score-0 half-finished products (batter, fried parts, optional pizza parts) — not orderable. */
+    public bool intermediate;
 }
 
 [Serializable]
@@ -350,12 +376,77 @@ public class AudioDirectoryEntryDto
 public class AudioDirectoryCatalogDto
 {
     public AudioDirectoryEntryDto[] audioDirectories;
+    public string[] baseBundles;
+    public string[] alwaysLoadedBundles;
+    public string[] mandatoryDirectoryIds;
+    public DirectoryEventDto[] directoryEvents;
+    public AudioThemeDto[] themes;
+    public AudioDeathThemeDto[] deathThemes;
+    public AmbienceLabelDto[] ambienceLabels;
+}
+
+[Serializable]
+public class DirectoryEventDto
+{
+    public string id;
+    public string[] eventsZh;
+    public string desc;
+}
+
+[Serializable]
+public class AudioThemeDto
+{
+    public string key;
+    public string[] directories;
+    public string[] ambiences;
+    public string[] bgm;
+    public string deathTheme;
+}
+
+[Serializable]
+public class AudioDeathThemeDto
+{
+    public string key;
+    public string effectIdHint;
+    public string note;
+}
+
+[Serializable]
+public class BundleAnalysisDto
+{
+    public string[] @base;
+    public string[] alwaysLoaded;
+    public string[] required;
+    public string[] current;
+    public string[] missing;
+    public string[] extras;
+}
+
+[Serializable]
+public class BundleManifestEntryDto
+{
+    public string name;
+    public string[] deps;
+}
+
+[Serializable]
+public class BundleManifestDto
+{
+    public BundleManifestEntryDto[] dependencies;
+}
+
+[Serializable]
+public class AmbienceLabelDto
+{
+    public string name;
+    public string zh;
 }
 
 [Serializable]
 public class AmbienceCatalogDto
 {
     public string[] ambiences;
+    public AmbienceLabelDto[] ambienceLabels;
 }
 
 [Serializable]
@@ -542,6 +633,21 @@ public class KillPlaneBoundsDto
     public float cz;
     public float sx;
     public float sz;
+}
+
+[Serializable]
+public class ImageUploadDto
+{
+    public string setName;
+    public string fileName;
+    /** Base64-encoded image bytes (no data: prefix). */
+    public string base64;
+}
+
+[Serializable]
+public class ImageUploadResultDto
+{
+    public string texturePath;
 }
 
 [Serializable]

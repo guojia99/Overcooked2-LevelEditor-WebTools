@@ -38,6 +38,22 @@ public static class LayoutEditorStubIO
             var sdto = new LayoutServingStationStubDto();
             if (serving.plateReturn != null)
                 sdto.plateReturnInstanceId = "u:" + serving.plateReturn.gameObject.GetInstanceID();
+
+            // Collect all bound returns (array + legacy single), de-duplicated.
+            var ids = new System.Collections.Generic.List<string>();
+            if (serving.plateReturns != null)
+            {
+                foreach (var pr in serving.plateReturns)
+                    if (pr != null)
+                    {
+                        var pid = "u:" + pr.gameObject.GetInstanceID();
+                        if (!ids.Contains(pid)) ids.Add(pid);
+                    }
+            }
+            if (!string.IsNullOrEmpty(sdto.plateReturnInstanceId) && !ids.Contains(sdto.plateReturnInstanceId))
+                ids.Add(sdto.plateReturnInstanceId);
+            sdto.plateReturnInstanceIds = ids.ToArray();
+
             item.servingStation = sdto;
             return;
         }
@@ -344,35 +360,51 @@ public static class LayoutEditorStubIO
     }
 
     /// <summary>
-    /// Second pass: resolve ServingStation.plateReturn. plateReturnInstanceId is either
-    /// "u:<instanceID>" (existing scene object) or a document instanceId (e.g. "new:...")
-    /// mapped through createdObjects. Empty string clears the binding.
+    /// Second pass: resolve a ServingStation's bound return stations (one-to-many).
+    /// Each id is either "u:<instanceID>" (existing scene object) or a document
+    /// instanceId (e.g. "new:...") mapped through createdObjects. Resolved stubs
+    /// (PlateReturn / GlassReturn share PseudoPrefabPlateReturnStub) are written to
+    /// serving.plateReturns; the first also mirrors to the legacy single field.
     /// </summary>
-    public static void ApplyServingStationPlateReturn(GameObject go, string plateReturnInstanceId, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    public static void ApplyServingStationPlateReturns(GameObject go, string[] plateReturnInstanceIds, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
     {
-        if (go == null || plateReturnInstanceId == null)
+        if (go == null)
             return;
 
         var serving = go.GetComponent<PseudoPrefabServingStationStub>();
         if (serving == null)
             return;
 
-        GameObject target = null;
-        if (plateReturnInstanceId.StartsWith("u:", StringComparison.Ordinal))
+        var resolved = new System.Collections.Generic.List<PseudoPrefabPlateReturnStub>();
+        if (plateReturnInstanceIds != null)
         {
-            int id;
-            if (int.TryParse(plateReturnInstanceId.Substring(2), out id))
-                target = EditorUtility.InstanceIDToObject(id) as GameObject;
-        }
-        else if (!string.IsNullOrEmpty(plateReturnInstanceId) && createdObjects != null)
-        {
-            createdObjects.TryGetValue(plateReturnInstanceId, out target);
+            foreach (var rid in plateReturnInstanceIds)
+            {
+                if (string.IsNullOrEmpty(rid))
+                    continue;
+
+                GameObject target = null;
+                if (rid.StartsWith("u:", StringComparison.Ordinal))
+                {
+                    int id;
+                    if (int.TryParse(rid.Substring(2), out id))
+                        target = EditorUtility.InstanceIDToObject(id) as GameObject;
+                }
+                else if (createdObjects != null)
+                {
+                    createdObjects.TryGetValue(rid, out target);
+                }
+
+                var stub = target != null ? target.GetComponent<PseudoPrefabPlateReturnStub>() : null;
+                if (stub != null && !resolved.Contains(stub))
+                    resolved.Add(stub);
+            }
         }
 
-        var plateReturnStub = target != null ? target.GetComponent<PseudoPrefabPlateReturnStub>() : null;
-
-        Undo.RecordObject(serving, "Layout Editor ServingStation PlateReturn");
-        serving.plateReturn = plateReturnStub;
+        Undo.RecordObject(serving, "Layout Editor ServingStation Returns");
+        serving.plateReturns = resolved.ToArray();
+        // Mirror the first binding to the legacy single field for older runtime paths.
+        serving.plateReturn = resolved.Count > 0 ? resolved[0] : null;
     }
 
     private static PseudoPrefabSO LoadPseudoPrefabSO(string guid)

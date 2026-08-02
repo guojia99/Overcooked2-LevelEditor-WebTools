@@ -23,6 +23,19 @@ public class LayoutEditorHttpServer
         get { return _running; }
     }
 
+    /// <summary>True when running and the listener thread is alive (false = unexpected interruption).</summary>
+    public bool IsHealthy
+    {
+        get
+        {
+            return _running
+                && _listener != null
+                && _listener.IsListening
+                && _listenerThread != null
+                && _listenerThread.IsAlive;
+        }
+    }
+
     public int Port { get; private set; }
 
     public static bool HasBundledWebUi()
@@ -164,7 +177,11 @@ public class LayoutEditorHttpServer
                 var staticReady = LayoutEditorPaths.IsWebDistReady();
                 WriteJson(response, 200,
                     "{\"ok\":true,\"port\":" + Port + ",\"static\":" + (staticReady ? "true" : "false") +
-                    ",\"recipeApi\":true}");
+                    ",\"recipeApi\":true" +
+                    ",\"schemaVersion\":" + LayoutEditorRecipeKnowledge.BridgeSchemaVersion +
+                    ",\"knowledgeLoaded\":" + (LayoutEditorRecipeKnowledge.KnowledgeFileLoaded ? "true" : "false") +
+                    ",\"dictionaryLoaded\":" + (LayoutEditorManualLookup.DictionaryLoaded ? "true" : "false") +
+                    "}");
                 return;
             }
 
@@ -313,10 +330,26 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/set/delete" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelSetCreateDto>(body);
+                var err = LayoutEditorLevelAdminApi.DeleteSet(dto != null ? dto.setName : null);
+                WriteAdminResult(response, err);
+                return;
+            }
+
             if (path == "/api/level" && request.HttpMethod == "GET")
             {
                 var assetPath = request.QueryString["assetPath"];
                 WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetLevel(assetPath)));
+                return;
+            }
+
+            if (path == "/api/level/bundles" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"];
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.AnalyzeBundles(assetPath)));
                 return;
             }
 
@@ -397,6 +430,45 @@ public class LayoutEditorHttpServer
                     ? "缺少参数。"
                     : LayoutEditorLevelAdminApi.SetKillPlaneBounds(dto.sceneAssetPath, dto.cx, dto.cz, dto.sx, dto.sz);
                 WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level/image-upload" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<ImageUploadDto>(body);
+                string texturePath;
+                var err = LayoutEditorLevelAdminApi.UploadImageFloor(
+                    dto != null ? dto.setName : null,
+                    dto != null ? dto.fileName : null,
+                    dto != null ? dto.base64 : null,
+                    out texturePath);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new ImageUploadResultDto { texturePath = texturePath }));
+                return;
+            }
+
+            if (path == "/api/level/data-file" && request.HttpMethod == "GET")
+            {
+                // Serve a raw file from the project (used to preview image-floor
+                // textures stored in a level set's data dir).
+                var rel = request.QueryString["path"];
+                string abs;
+                string contentType;
+                var err = LayoutEditorLevelAdminApi.ResolveProjectFile(rel, out abs, out contentType);
+                if (!string.IsNullOrEmpty(err) || !File.Exists(abs))
+                {
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = err ?? "文件不存在。" }));
+                    return;
+                }
+                var bytes = File.ReadAllBytes(abs);
+                response.ContentType = contentType;
+                response.StatusCode = 200;
+                response.ContentLength64 = bytes.Length;
+                response.OutputStream.Write(bytes, 0, bytes.Length);
+                response.OutputStream.Close();
                 return;
             }
 

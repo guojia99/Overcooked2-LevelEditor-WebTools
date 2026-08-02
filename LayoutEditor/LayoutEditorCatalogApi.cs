@@ -10,39 +10,108 @@ public static class LayoutEditorCatalogApi
     public static IngredientCatalogDto ScanIngredients()
     {
         var list = new List<IngredientEntryDto>();
-        var root = "Assets/common01/food/Ingredients";
-        if (!AssetDatabase.IsValidFolder(root))
-            return new IngredientCatalogDto { ingredients = new IngredientEntryDto[0] };
+        var roots = new[] { "Assets/common01/food/Ingredients", "Assets/common02/food/Ingredients" };
+        var seen = new HashSet<string>();
 
-        foreach (var guid in AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { root }))
+        foreach (var root in roots)
         {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
-            if (so == null)
+            if (!AssetDatabase.IsValidFolder(root))
                 continue;
 
-            var id = Path.GetFileNameWithoutExtension(path);
-            string nameZh;
-            string nameEn;
-            LayoutEditorManualLookup.TryGet(id, out nameZh, out nameEn);
-            list.Add(new IngredientEntryDto
+            foreach (var guid in AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { root }))
             {
-                guid = guid,
-                id = id,
-                nameZh = nameZh,
-                nameEn = nameEn,
-                assetPath = path
-            });
+                if (!seen.Add(guid))
+                    continue;
+
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+                if (so == null)
+                    continue;
+
+                var id = Path.GetFileNameWithoutExtension(path);
+                string nameZh;
+                string nameEn;
+                LayoutEditorManualLookup.TryGet(id, out nameZh, out nameEn);
+                list.Add(new IngredientEntryDto
+                {
+                    guid = guid,
+                    id = id,
+                    nameZh = nameZh,
+                    nameEn = nameEn,
+                    assetPath = path,
+                    group = FoodGroupOf(path)
+                });
+            }
         }
 
         list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
         return new IngredientCatalogDto { ingredients = list.ToArray() };
     }
 
+    /** "core" / "custom" / "dlc02" / "dlc05" — mirrors foodGroupOf in build-catalog.mjs. */
+    internal static string FoodGroupOf(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return "core";
+        if (assetPath.IndexOf("/CustomRecipes/", StringComparison.Ordinal) >= 0)
+            return "custom";
+        var m = System.Text.RegularExpressions.Regex.Match(assetPath, @"/(dlc\d+)/");
+        if (m.Success)
+            return m.Groups[1].Value;
+        return "core";
+    }
+
+    /** Recipe family derived from the recipe id (mirrors recipeTypeOf in build-catalog.mjs). */
+    internal static string RecipeTypeOf(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return "other";
+        var head = id.Split('_')[0];
+        string mapped = null;
+        switch (head)
+        {
+            case "Burger": mapped = "burger"; break;
+            case "Burrito": mapped = "burrito"; break;
+            case "Cake": mapped = "cake"; break;
+            case "Fry":
+            case "Fried": mapped = "fry"; break;
+            case "Pasta": mapped = "pasta"; break;
+            case "Pizza": mapped = "pizza"; break;
+            case "Salad": mapped = "salad"; break;
+            case "Steamed": mapped = "steamed"; break;
+            case "Sushi": mapped = "sushi"; break;
+            case "Kebob": mapped = "kebab"; break;
+            case "Smoothie": mapped = "smoothie"; break;
+            case "Breakfast": mapped = "breakfast"; break;
+            case "Smores": mapped = "smores"; break;
+            case "Mixed": mapped = "batter"; break;
+            case "Mushroom": mapped = "pizza"; break;
+            case "Soup": mapped = "soup"; break;
+        }
+        if (mapped == "cake" && id.IndexOf("Pancake", StringComparison.Ordinal) >= 0)
+            return "pancake";
+        if (mapped != null)
+            return mapped;
+        if (id.StartsWith("Fried", StringComparison.Ordinal) || id.StartsWith("Fry", StringComparison.Ordinal))
+            return "fry";
+        if (id.StartsWith("Mixed", StringComparison.Ordinal))
+            return "batter";
+        if (id.IndexOf("Pancake", StringComparison.Ordinal) >= 0)
+            return "pancake";
+        if (id.IndexOf("Soup", StringComparison.Ordinal) >= 0)
+            return "soup";
+        return "other";
+    }
+
     public static RecipeCatalogDto ScanRecipes(string levelSet)
     {
         var list = new List<RecipeEntryDto>();
-        var folders = new List<string> { "Assets/common01/food/Recipes", "Assets/common01/food/CustomRecipes" };
+        var folders = new List<string>
+        {
+            "Assets/common01/food/Recipes",
+            "Assets/common01/food/CustomRecipes",
+            "Assets/common02/food/Recipes",
+        };
 
         if (!string.IsNullOrEmpty(levelSet))
         {
@@ -94,8 +163,12 @@ public static class LayoutEditorCatalogApi
                 else
                 {
                     var original = so as PseudoPrefabSORecipe;
-                    if (!LayoutEditorRecipeKnowledge.TryGetOriginal(id, out step, out ings) && original != null)
-                        LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out ings);
+                    if (LayoutEditorRecipeKnowledge.IsSkipped(id) ||
+                        (original != null && LayoutEditorRecipeKnowledge.IsSkipped(original.prefabName)))
+                        continue;
+                    if (!LayoutEditorRecipeKnowledge.TryGetOriginal(id, out step, out ings) &&
+                        (original == null || !LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out ings)))
+                        continue;
                     ingCount = ings.Length;
                     cookCount = LayoutEditorRecipeKnowledge.IsCookStep(step) ? 1 : 0;
                     score = original != null ? original.score : 0;
@@ -113,7 +186,10 @@ public static class LayoutEditorCatalogApi
                     ingredientCount = ingCount,
                     cookingStepCount = cookCount,
                     score = score,
-                    isCustom = isCustom
+                    isCustom = isCustom,
+                    group = FoodGroupOf(path),
+                    type = RecipeTypeOf(id),
+                    intermediate = score <= 0
                 });
             }
         }

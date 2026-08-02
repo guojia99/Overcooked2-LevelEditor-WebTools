@@ -1,0 +1,14 @@
+{
+  "_comment": "Curated core-item (锅具/道具/桌台) id -> icon sprite name. Most core items (Counter, Sink, Conveyor, etc.) have NO 2D icon in the bundles (they are 3D models) and are left out — the layout canvas falls back to a text label for those. id = catalog item id (prefab filename without extension). icon-overrides.json[catalog] takes precedence. Edit freely; re-run extract-icons.py.",
+  "Pot": "Pot",
+  "FryPan": "FryingPan",
+  "FryingStation": "DeepFatFryer",
+  "FrierBasket": "DeepFatFryer",
+  "Mixer": "Mixer",
+  "MixerBowl": "Mixer",
+  "Blender": "Blender",
+  "BlenderCup": "Blender",
+  "Steamer": "Steamer",
+  "Oven": "OvenPot",
+  "Campfire": "Campfire"
+}

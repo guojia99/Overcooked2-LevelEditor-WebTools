@@ -78,7 +78,8 @@ public static class SceneLayoutApplier
                         posFull.x = SnapScalar(posFull.x, snapStep);
                         posFull.z = SnapScalar(posFull.z, snapStep);
                         t.localPosition = posFull;
-                        t.localEulerAngles = new Vector3(t.localEulerAngles.x, rotY, t.localEulerAngles.z);
+                        var rotX = item.localRotationX != 0f ? item.localRotationX : t.localEulerAngles.x;
+                        t.localEulerAngles = new Vector3(rotX, rotY, t.localEulerAngles.z);
                         ApplyItemScale(t, item);
                         LayoutEditorStubIO.ApplyStub(t.gameObject, item);
                         if (!string.IsNullOrEmpty(item.instanceId))
@@ -117,7 +118,7 @@ public static class SceneLayoutApplier
             if (isTeleportal)
                 LayoutEditorStubIO.ApplyTeleportalExit(go, item.teleportal.exitPortalInstanceId ?? "", createdObjects);
             else
-                LayoutEditorStubIO.ApplyServingStationPlateReturn(go, item.servingStation.plateReturnInstanceId ?? "", createdObjects);
+                LayoutEditorStubIO.ApplyServingStationPlateReturns(go, item.servingStation.plateReturnInstanceIds, createdObjects);
         }
 
         // Use the same snap step as items/web (often half-cell 0.6). Snapping floor
@@ -127,8 +128,13 @@ public static class SceneLayoutApplier
         if (syncWalkable)
             SyncWalkableToFloors(document, snapStep);
 
+        // After mutating placeholder transforms, persist with the canonical Tools workflow:
+        // Toggle Prepare For Building (strip temp-loaded children so they aren't baked into the
+        // saved scene) -> Save to disk -> Reload Pseudo Assets (re-load children, restore UI).
+        LayoutEditorPseudoReload.EnsurePrepareForBuilding();
         EditorSceneManager.MarkSceneDirty(scene);
-        LayoutEditorPseudoReload.ReloadPseudoAssets();
+        EditorSceneManager.SaveScene(scene);
+        LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
         return null;
     }
 
@@ -230,10 +236,25 @@ public static class SceneLayoutApplier
         {
             if (floor == null)
                 continue;
-            // Raft floors are visualized via prefab planks in items[]; keep the floor
+            // Raft floors are visualized via planks in items[]; keep the floor
             // entry only so SyncWalkableToFloors can emit one Col_Floor for the rect.
             if (floor.surfaceKind == "raft")
                 continue;
+            // Themed floors (carpet / ice / snow / …) are likewise visualized via
+            // tiled prefab tiles in items[] — no Plane mesh is created for them.
+            if (!string.IsNullOrEmpty(floor.prefabGuid))
+            {
+                // Converting solid -> themed: actively remove the old Plane so it
+                // never lingers next to the prefab visualization (belt & braces —
+                // RemoveUnmatchedFloors above already covers the common path).
+                if (floor.instanceId == null || !floor.instanceId.StartsWith("new:", StringComparison.Ordinal))
+                {
+                    var oldPlane = FindFloorTransform(floor);
+                    if (oldPlane != null)
+                        Undo.DestroyObjectImmediate(oldPlane.gameObject);
+                }
+                continue;
+            }
             if (string.IsNullOrEmpty(floor.hierarchyPath) && string.IsNullOrEmpty(floor.instanceId))
                 continue;
 
@@ -261,6 +282,7 @@ public static class SceneLayoutApplier
     private static void ApplyFloorTransform(Transform t, FloorDto floor, float snapStep)
     {
         Undo.RecordObject(t, "Layout Editor Floor");
+        Undo.RecordObject(t.gameObject, "Layout Editor Floor");
         var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : t.localPosition;
         // Match web finalizeFloor / item snap — half-cell by default, not full cell.
         pos.x = SnapScalar(pos.x, snapStep);
@@ -271,7 +293,66 @@ public static class SceneLayoutApplier
         var scale = FloorScaleFromCells(floor, t.localScale.y);
         t.localScale = scale;
 
+        // Authoritatively encode the surface kind into the GameObject name so a
+        // type-corrected floor (ice/sand/...) survives save/reload — otherwise
+        // InferSurfaceKind can only guess from the material and reverts to solid.
+        t.gameObject.name = FloorGameObjectName(floor);
+
         ApplyFloorMaterial(t, floor);
+    }
+
+    /** GameObject name for a floor, encoding an optional tint color suffix so
+     *  the tint survives save/reload. Image floors encode their texture path +
+     *  mode so the image-floor state also round-trips. */
+    public const string ImageFloorPrefix = "imgfloor|";
+
+    private static string FloorGameObjectName(FloorDto floor)
+    {
+        // Image floor: encode texture path (with '|' for '/') + mode + opacity.
+        if (floor != null && !string.IsNullOrEmpty(floor.imageTexturePath))
+        {
+            var mode = string.IsNullOrEmpty(floor.imageMode) ? "stretch" : floor.imageMode;
+            var op = floor.imageOpacity > 0f ? floor.imageOpacity : 1f;
+            return ImageFloorPrefix
+                + floor.imageTexturePath.Replace('/', '|') + "|" + mode + "|"
+                + op.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        var baseName = !string.IsNullOrEmpty(floor.displayName) ? floor.displayName : "Floor";
+        // Strip a stale tint marker from the incoming display name first.
+        var hash = baseName.IndexOf('#');
+        if (hash >= 0) baseName = baseName.Substring(0, hash);
+        if (string.IsNullOrEmpty(baseName)) baseName = "Floor";
+        // Append the manual tint color as "#rrggbb" so the tint round-trips —
+        // but only while enabled (disabled tint must not persist to the name).
+        if (floor != null && floor.tintEnabled && !string.IsNullOrEmpty(floor.tintColor))
+            baseName += "#" + floor.tintColor.TrimStart('#');
+        return baseName;
+    }
+
+    /** Parse an image-floor name back into (texturePath, mode, opacity). The name
+     *  shape is: imgfloor|<path with | for />|<mode>|<opacity> — the last field is
+     *  optional; if absent opacity defaults to 1. */
+    public static bool TryParseImageFloorName(string name, out string texturePath, out string mode, out float opacity)
+    {
+        texturePath = null;
+        mode = null;
+        opacity = 1f;
+        if (string.IsNullOrEmpty(name) || !name.StartsWith(ImageFloorPrefix, StringComparison.Ordinal))
+            return false;
+        var rest = name.Substring(ImageFloorPrefix.Length);
+        var parts = rest.Split('|');
+        if (parts.Length < 2) return false;
+
+        int last = parts.Length - 1;
+        float parsedOp;
+        bool hasOpacity = float.TryParse(parts[last], System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out parsedOp);
+        int modeIndex = hasOpacity ? parts.Length - 2 : parts.Length - 1;
+        mode = parts[modeIndex];
+        texturePath = string.Join("/", parts, 0, modeIndex);
+        if (hasOpacity) opacity = Mathf.Clamp01(parsedOp);
+        return true;
     }
 
     private static Vector3 FloorScaleFromCells(FloorDto floor, float preserveY)
@@ -298,6 +379,52 @@ public static class SceneLayoutApplier
         if (mr == null)
             return;
 
+        // Image floor: a shared material with the uploaded texture + per-floor
+        // tiling via MaterialPropertyBlock (tile = repeat per cell, stretch = fill).
+        // The V axis is flipped (negative tiling + offset) because Unity's Plane UVs
+        // render the texture upside-down when viewed from above.
+        if (!string.IsNullOrEmpty(floor.imageTexturePath))
+        {
+            var texMat = ImageFloorMaterial(floor.imageTexturePath);
+            if (texMat != null)
+            {
+                Undo.RecordObject(mr, "Layout Editor Floor Material");
+                mr.sharedMaterial = texMat;
+                float tileX = 1f, tileY = 1f;
+                if (floor.imageMode == "tile")
+                {
+                    tileX = floor.widthCells > 0 ? floor.widthCells : 1;
+                    tileY = floor.depthCells > 0 ? floor.depthCells : 1;
+                }
+                float opacity = floor.imageOpacity > 0f ? Mathf.Clamp01(floor.imageOpacity) : 1f;
+                var block = new MaterialPropertyBlock();
+                // Unity's Plane UVs mirror the texture horizontally; flip U (negative
+                // tiling + compensating offset) so the image renders upright/correct.
+                block.SetVector("_MainTex_ST", new Vector4(-tileX, tileY, tileX, 0f));
+                // Per-floor opacity via the material color alpha (shader must be in a
+                // transparent/fade mode — set on the shared material in ImageFloorMaterial).
+                block.SetVector("_Color", new Vector4(1f, 1f, 1f, opacity));
+                block.SetVector("_BaseColor", new Vector4(1f, 1f, 1f, opacity));
+                mr.SetPropertyBlock(block);
+                return;
+            }
+        }
+
+        // Non-image floors never use a texture-tiling block — clear any stale one
+        // left from a previous image-floor state.
+        mr.SetPropertyBlock(null);
+
+        // Manual tint feature: only when explicitly enabled does an explicit
+        // tintColor recolor the floor (flat color). Disabled tint keeps the real
+        // material, so you can switch materials without the tint overriding.
+        Color tint;
+        if (floor.tintEnabled && !string.IsNullOrEmpty(floor.tintColor) && ColorUtility.TryParseHtmlString(floor.tintColor, out tint))
+        {
+            Undo.RecordObject(mr, "Layout Editor Floor Material");
+            mr.sharedMaterial = ColoredMaterial(tint);
+            return;
+        }
+
         Material mat = null;
         if (!string.IsNullOrEmpty(floor.materialGuid))
         {
@@ -315,6 +442,83 @@ public static class SceneLayoutApplier
             Undo.RecordObject(mr, "Layout Editor Floor Material");
             mr.sharedMaterial = mat;
         }
+    }
+
+    private static readonly System.Collections.Generic.Dictionary<string, Material> _imageFloorMats =
+        new System.Collections.Generic.Dictionary<string, Material>();
+
+    /** Shared runtime material for an image floor (one per uploaded texture),
+     *  with the texture assigned. Per-floor tiling is set on each renderer via a
+     *  MaterialPropertyBlock, so one shared material serves floors of any size. */
+    private static Material ImageFloorMaterial(string texturePath)
+    {
+        Material m;
+        if (_imageFloorMats.TryGetValue(texturePath, out m) && m != null)
+            return m;
+        var tex = AssetDatabase.LoadAssetAtPath<Texture>(texturePath);
+        if (tex == null) return null;
+        var shader = Shader.Find("Standard")
+            ?? Shader.Find("Universal Render Pipeline/Lit")
+            ?? Shader.Find("UI/Default");
+        m = new Material(shader);
+        m.mainTexture = tex;
+        m.name = "img_floor_" + System.IO.Path.GetFileNameWithoutExtension(texturePath);
+        // Put the material in a transparent render mode so the per-floor opacity
+        // (set via MaterialPropertyBlock _Color/_BaseColor alpha) is respected.
+        SetupTransparentMode(m);
+        _imageFloorMats[texturePath] = m;
+        return m;
+    }
+
+    /** Switch a Standard (or URP/Lit) material into Fade/Transparent mode so that
+     *  the color alpha controls opacity. No-op for unknown shaders. */
+    private static void SetupTransparentMode(Material m)
+    {
+        if (m == null) return;
+        // Built-in Standard shader.
+        if (m.HasProperty("_Mode"))
+        {
+            m.SetFloat("_Mode", 2f); // Fade
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetInt("_ZWrite", 0);
+            m.DisableKeyword("_ALPHATEST_ON");
+            m.EnableKeyword("_ALPHABLEND_ON");
+            m.renderQueue = 3000;
+            return;
+        }
+        // Universal RP / Lit: toggle the _Surface property + surface options keyword.
+        if (m.HasProperty("_Surface"))
+        {
+            m.SetFloat("_Surface", 1f); // 1 = Transparent
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetInt("_ZWrite", 0);
+            m.renderQueue = 3000;
+        }
+    }
+
+    private static readonly System.Collections.Generic.Dictionary<string, Material> _tintedFloorMats =
+        new System.Collections.Generic.Dictionary<string, Material>();
+
+    /** A shared runtime flat-color material for the manual floor-tint feature,
+     *  cached by hex color so all floors of the same tint share one instance. */
+    private static Material ColoredMaterial(Color c)
+    {
+        var key = ColorUtility.ToHtmlStringRGBA(c);
+        Material m;
+        if (!_tintedFloorMats.TryGetValue(key, out m) || m == null)
+        {
+            var shader = Shader.Find("Standard")
+                ?? Shader.Find("Universal Render Pipeline/Lit")
+                ?? Shader.Find("UI/Default");
+            m = new Material(shader);
+            m.color = c;
+            m.name = "floor_tint_" + key;
+            _tintedFloorMats[key] = m;
+        }
+        return m;
     }
 
     private static void CreateFloorInstance(FloorDto floor, float snapStep)
@@ -336,7 +540,7 @@ public static class SceneLayoutApplier
 
         Undo.RegisterCreatedObjectUndo(primitive, "Layout Editor Floor Create");
         primitive.transform.SetParent(parent, false);
-        primitive.name = !string.IsNullOrEmpty(floor.displayName) ? floor.displayName : "Floor";
+        primitive.name = FloorGameObjectName(floor);
 
         var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : Vector3.zero;
         pos.x = SnapScalar(pos.x, snapStep);
@@ -383,6 +587,15 @@ public static class SceneLayoutApplier
             if (doc == null)
                 continue;
             if (doc.instanceId != null && doc.instanceId.StartsWith("new:", StringComparison.Ordinal))
+                continue;
+            // Raft floors carry no Plane mesh (visualized via planks in items[]),
+            // so a raft floor must NOT rescue a pre-existing solid Plane — otherwise
+            // converting solid -> raft leaves the old Plane behind as a stray floor.
+            if (doc.surfaceKind == "raft")
+                continue;
+            // Themed floors are also visualized via tiled prefabs (no Plane) — same
+            // reasoning when converting solid -> themed.
+            if (!string.IsNullOrEmpty(doc.prefabGuid))
                 continue;
 
             for (int i = 0; i < unmatched.Count; i++)
@@ -476,7 +689,9 @@ public static class SceneLayoutApplier
         Undo.RegisterCreatedObjectUndo(instance, "Layout Editor Create");
         instance.transform.SetParent(parent, false);
         instance.transform.localPosition = pos;
-        instance.transform.localEulerAngles = new Vector3(0f, rotY, 0f);
+        // Preserve the doc's euler X (quad floor tiles lie flat via x=90) instead
+        // of forcing identity — otherwise recreated tiles render standing up.
+        instance.transform.localEulerAngles = new Vector3(item.localRotationX, rotY, 0f);
         ApplyItemScale(instance.transform, item);
 
         if (!string.IsNullOrEmpty(item.displayName))

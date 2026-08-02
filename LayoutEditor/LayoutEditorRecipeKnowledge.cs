@@ -1,18 +1,139 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using LevelEditorStub;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// Recipe composition knowledge. Primary source: layout-editor/scripts/data/recipe-knowledge.json
+/// (shared with build-catalog.mjs). Hardcoded tables below are a fallback when the file is missing.
+/// </summary>
 public static class LayoutEditorRecipeKnowledge
 {
+    /// <summary>Bumped together with SCHEMA_VERSION in build-catalog.mjs.</summary>
+    public const int BridgeSchemaVersion = 3;
+
     private struct Entry
     {
         public string Step;
         public string[] Ingredients;
     }
 
-    private static readonly Dictionary<string, Entry> Originals = BuildOriginals();
+#pragma warning disable 0649 // fields assigned by JsonUtility deserialization
+    [Serializable]
+    private class KnowledgeDoc
+    {
+        public int schemaVersion;
+        public string[] cookSteps;
+        public string[] skip;
+        public KnowledgeEntry[] recipes;
+    }
+
+    [Serializable]
+    private class KnowledgeEntry
+    {
+        public string id;
+        public string step;
+        public string[] ingredients;
+    }
+#pragma warning restore 0649
+
+    private static Dictionary<string, Entry> _originals;
+    private static HashSet<string> _skip;
+    private static HashSet<string> _cookSteps;
+    private static bool _loaded;
+    private static bool _knowledgeFileLoaded;
+
+    /// <summary>False when the shared JSON is missing/unreadable and hardcoded fallback tables are in use.</summary>
+    public static bool KnowledgeFileLoaded
+    {
+        get
+        {
+            EnsureLoaded();
+            return _knowledgeFileLoaded;
+        }
+    }
+
+    private static void EnsureLoaded()
+    {
+        if (_loaded)
+            return;
+        _loaded = true;
+
+        if (TryLoadFromJson(out _originals, out _skip, out _cookSteps))
+        {
+            _knowledgeFileLoaded = true;
+            return;
+        }
+        _knowledgeFileLoaded = false;
+
+        _originals = BuildOriginals();
+        _skip = new HashSet<string>();
+        _cookSteps = new HashSet<string>
+        {
+            "FryingPan", "Pot", "OvenTray", "DeepFatFryer", "Steamer", "Mixer",
+        };
+    }
+
+    private static string KnowledgePath()
+    {
+        return Path.GetFullPath(Path.Combine(Application.dataPath, "../layout-editor/scripts/data/recipe-knowledge.json"));
+    }
+
+    private static bool TryLoadFromJson(out Dictionary<string, Entry> originals, out HashSet<string> skip, out HashSet<string> cookSteps)
+    {
+        originals = null;
+        skip = null;
+        cookSteps = null;
+
+        var path = KnowledgePath();
+        if (!File.Exists(path))
+            return false;
+
+        string text;
+        try
+        {
+            text = File.ReadAllText(path);
+        }
+        catch
+        {
+            return false;
+        }
+
+        KnowledgeDoc doc;
+        try
+        {
+            doc = JsonUtility.FromJson<KnowledgeDoc>(text);
+        }
+        catch
+        {
+            return false;
+        }
+        if (doc == null)
+            return false;
+
+        originals = new Dictionary<string, Entry>(StringComparer.Ordinal);
+        if (doc.recipes != null)
+        {
+            foreach (var r in doc.recipes)
+            {
+                if (r == null || string.IsNullOrEmpty(r.id))
+                    continue;
+                originals[r.id] = new Entry { Step = r.step ?? "", Ingredients = r.ingredients ?? new string[0] };
+            }
+        }
+
+        skip = new HashSet<string>(doc.skip ?? new string[0]);
+        cookSteps = new HashSet<string>(doc.cookSteps ?? new string[0]);
+        return true;
+    }
+
+    /// <summary>Reload the JSON knowledge file (e.g. after editing it).</summary>
+    public static void InvalidateCache()
+    {
+        _loaded = false;
+    }
 
     private static Dictionary<string, Entry> BuildOriginals()
     {
@@ -73,8 +194,9 @@ public static class LayoutEditorRecipeKnowledge
 
     public static bool TryGetOriginal(string id, out string step, out string[] ingredients)
     {
+        EnsureLoaded();
         Entry e;
-        if (id != null && Originals.TryGetValue(id, out e))
+        if (id != null && _originals.TryGetValue(id, out e))
         {
             step = e.Step;
             ingredients = e.Ingredients;
@@ -85,33 +207,36 @@ public static class LayoutEditorRecipeKnowledge
         return false;
     }
 
+    /// <summary>Recipes listed in knowledge skip[] (score-0 optional/model variants) are excluded from catalogs.</summary>
+    public static bool IsSkipped(string id)
+    {
+        EnsureLoaded();
+        return id != null && _skip.Contains(id);
+    }
+
     public static List<string> CustomIngredients(CustomRecipeSO so)
     {
         var ids = new List<string>();
-        Collect(so, ids, new HashSet<Object>());
+        Collect(so, ids, new HashSet<UnityEngine.Object>());
         return ids;
     }
 
-    private static readonly HashSet<string> CookSteps = new HashSet<string>
-    {
-        "FryingPan", "Pot", "OvenTray", "DeepFatFryer", "Steamer", "Mixer",
-    };
-
     public static bool IsCookStep(string step)
     {
-        return !string.IsNullOrEmpty(step) && CookSteps.Contains(step);
+        EnsureLoaded();
+        return !string.IsNullOrEmpty(step) && _cookSteps.Contains(step);
     }
 
     public static void CustomStats(CustomRecipeSO so, out int ingredientCount, out int cookingStepCount)
     {
         var ings = 0;
         var cooks = 0;
-        CollectStats(so, ref ings, ref cooks, new HashSet<Object>());
+        CollectStats(so, ref ings, ref cooks, new HashSet<UnityEngine.Object>());
         ingredientCount = ings;
         cookingStepCount = cooks;
     }
 
-    private static void CollectStats(CustomRecipeSO so, ref int ings, ref int cooks, HashSet<Object> seen)
+    private static void CollectStats(CustomRecipeSO so, ref int ings, ref int cooks, HashSet<UnityEngine.Object> seen)
     {
         if (so == null || !seen.Add(so))
             return;
@@ -141,7 +266,7 @@ public static class LayoutEditorRecipeKnowledge
         return string.IsNullOrEmpty(path) ? "" : Path.GetFileNameWithoutExtension(path);
     }
 
-    private static void Collect(CustomRecipeSO so, List<string> ids, HashSet<Object> seen)
+    private static void Collect(CustomRecipeSO so, List<string> ids, HashSet<UnityEngine.Object> seen)
     {
         if (so == null || !seen.Add(so))
             return;

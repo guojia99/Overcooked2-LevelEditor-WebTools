@@ -1,0 +1,331 @@
+{
+  "generatedAt": "2026-08-02T08:22:16.269Z",
+  "schemaVersion": 3,
+  "itemCount": 36,
+  "materials": [
+    {
+      "guid": "531c9b7e1aadccc448da5969d378cb28",
+      "id": "mat_wizard_woodfloor_tile_2x3",
+      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_woodfloor_tile_2x3.mat",
+      "nameZh": "魔法学校木地板砖 2×3",
+      "nameEn": "wizard wood floor tile 2x3",
+      "sizeTag": "2x3",
+      "source": "test"
+    },
+    {
+      "guid": "b5bb0b69a2422624187812668f893e67",
+      "id": "mat_wizard_stonefloor_tile_03",
+      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_03.mat",
+      "nameZh": "魔法学校石地板砖 03",
+      "nameEn": "wizard stone floor tile 03",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "fbeb1f610964b1847be6ea4f6cbf2c51",
+      "id": "mat_wizard_stonefloor_tile_04",
+      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_04.mat",
+      "nameZh": "魔法学校石地板砖 04",
+      "nameEn": "wizard stone floor tile 04",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "883a54ac74a33314292e55f09d097ee0",
+      "id": "mat_wizard_stonefloor_tile_05",
+      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_05.mat",
+      "nameZh": "魔法学校石地板砖 05",
+      "nameEn": "wizard stone floor tile 05",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "78aeccbc049bea946ae339f444c55ca9",
+      "id": "mat_airballoon_floor_01",
+      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_01.mat",
+      "nameZh": "热气球地板 1",
+      "nameEn": "air balloon floor 1",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "2de46e4ca11253149b801ae68e0ace87",
+      "id": "mat_airballoon_floor_02",
+      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_02.mat",
+      "nameZh": "热气球地板 2",
+      "nameEn": "air balloon floor 2",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "965dc41046ca35c48841be89c4e0250d",
+      "id": "mat_airballoon_floor_tile_05",
+      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_tile_05.mat",
+      "nameZh": "热气球地板砖 05",
+      "nameEn": "air balloon floor tile 05",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "b0fc584fedd6a1542a1e8f77f595c4ba",
+      "id": "mat_airballoon_floor_tile_08",
+      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_tile_08.mat",
+      "nameZh": "热气球地板砖 08",
+      "nameEn": "air balloon floor tile 08",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "335108659516380429dbf8841580462b",
+      "id": "mat_kevin_floor_12x8",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_kevin_floor_12x8.mat",
+      "nameZh": "Kevin 地板 12×8",
+      "nameEn": "kevin floor 12x8",
+      "sizeTag": "12x8",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "393adaed86353aa4190674e51654efe1",
+      "id": "mat_kevin_floor_14x6",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_kevin_floor_14x6.mat",
+      "nameZh": "Kevin 地板 14×6",
+      "nameEn": "kevin floor 14x6",
+      "sizeTag": "14x6",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "0e3ba25ecc3d1ac48933ae23d43e9756",
+      "id": "mat_kevin_floor_3x15",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_kevin_floor_3x15.mat",
+      "nameZh": "Kevin 地板 3×15",
+      "nameEn": "kevin floor 3x15",
+      "sizeTag": "3x15",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "8f9241d62e0f0574dbd3e6d46077e9b6",
+      "id": "mat_kevin_floor_3x5_ni",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_kevin_floor_3x5_ni.mat",
+      "nameZh": "Kevin 地板 3×5",
+      "nameEn": "kevin floor 3x5",
+      "sizeTag": "3x5",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "be2ddbc7b4436b945b4380958b99b5b9",
+      "id": "mat_kevin_floor_5x8",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_kevin_floor_5x8.mat",
+      "nameZh": "Kevin 地板 5×8",
+      "nameEn": "kevin floor 5x8",
+      "sizeTag": "5x8",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "342d3e07e8cb90f4e8223ad4dfc2ea06",
+      "id": "mat_kevin_floor_6x4",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_kevin_floor_6x4.mat",
+      "nameZh": "Kevin 地板 6×4",
+      "nameEn": "kevin floor 6x4",
+      "sizeTag": "6x4",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "1be52d52d36440a418c00fc0ea4a1615",
+      "id": "mat_sp_blacktiles_1_11x3",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_11x3.mat",
+      "nameZh": "黑色瓷砖 11×3",
+      "nameEn": "black tiles 11x3",
+      "sizeTag": "11x3",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "9f213de7c9c8d5f40b4642f5f880c73a",
+      "id": "mat_sp_blacktiles_1_11x7",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_11x7.mat",
+      "nameZh": "黑色瓷砖 11×7",
+      "nameEn": "black tiles 11x7",
+      "sizeTag": "11x7",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "d99c8d26d1aa0aa43861b86f199a2c63",
+      "id": "mat_sp_blacktiles_1_15x10",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_15x10.mat",
+      "nameZh": "黑色瓷砖 15×10",
+      "nameEn": "black tiles 15x10",
+      "sizeTag": "15x10",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "2ac48d2c677589140a00277f695f5675",
+      "id": "mat_sp_blacktiles_1_15x6",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_15x6.mat",
+      "nameZh": "黑色瓷砖 15×6",
+      "nameEn": "black tiles 15x6",
+      "sizeTag": "15x6",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "3947a057bf57f4646a31008150d8c569",
+      "id": "mat_sp_blacktiles_1_18x5",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_18x5.mat",
+      "nameZh": "黑色瓷砖 18×5",
+      "nameEn": "black tiles 18x5",
+      "sizeTag": "18x5",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "0cbb729f012e53940b1163837ee063da",
+      "id": "mat_sp_blacktiles_1_18x6",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_18x6.mat",
+      "nameZh": "黑色瓷砖 18×6",
+      "nameEn": "black tiles 18x6",
+      "sizeTag": "18x6",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "d54e23239d94eca4099b91142715579d",
+      "id": "mat_sp_blacktiles_1_2x1",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_2x1.mat",
+      "nameZh": "黑色瓷砖 2×1",
+      "nameEn": "black tiles 2x1",
+      "sizeTag": "2x1",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "5498d7dd4eae7644c8f23d1ce0fd5e79",
+      "id": "mat_sp_blacktiles_1_3x5",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_3x5.mat",
+      "nameZh": "黑色瓷砖 3×5",
+      "nameEn": "black tiles 3x5",
+      "sizeTag": "3x5",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "ffcda9ee7975e9347968548f74d6991d",
+      "id": "mat_sp_blacktiles_3x5",
+      "assetPath": "Assets/LevelSets/test/materials/mat_sp_blacktiles_3x5.mat",
+      "nameZh": "黑色瓷砖 3×5",
+      "nameEn": "black tiles 3x5",
+      "sizeTag": "3x5",
+      "source": "test"
+    },
+    {
+      "guid": "c72106051638ce84187c2d80868e809d",
+      "id": "mat_sp_blacktiles_1_7x3",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_7x3.mat",
+      "nameZh": "黑色瓷砖 7×3",
+      "nameEn": "black tiles 7x3",
+      "sizeTag": "7x3",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "cd67674a0b93b3244a4cee9ec82a40b2",
+      "id": "mat_sp_blacktiles_1_7x5",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_7x5.mat",
+      "nameZh": "黑色瓷砖 7×5",
+      "nameEn": "black tiles 7x5",
+      "sizeTag": "7x5",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "63c056970b6802540bb4e82e9340e0e5",
+      "id": "mat_sp_blacktiles_1_7x7",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_7x7.mat",
+      "nameZh": "黑色瓷砖 7×7",
+      "nameEn": "black tiles 7x7",
+      "sizeTag": "7x7",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "61dac17caa3c9cc4683a4a1e57f9d2f0",
+      "id": "mat_sp_blacktiles_1_8x4",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_8x4.mat",
+      "nameZh": "黑色瓷砖 8×4",
+      "nameEn": "black tiles 8x4",
+      "sizeTag": "8x4",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "224956dff54a33549a348b9d5b0f0990",
+      "id": "mat_sp_blacktiles_1_9x11",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_9x11.mat",
+      "nameZh": "黑色瓷砖 9×11",
+      "nameEn": "black tiles 9x11",
+      "sizeTag": "9x11",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "8cdbf935788332641a1fe5ca546fdcae",
+      "id": "mat_sp_blacktiles_1_9x3",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_9x3.mat",
+      "nameZh": "黑色瓷砖 9×3",
+      "nameEn": "black tiles 9x3",
+      "sizeTag": "9x3",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "822cea760c6cc794689e227881586afa",
+      "id": "mat_sp_blacktiles_1_9x5",
+      "assetPath": "Assets/LevelSets/oc1_story/materials/mat_sp_blacktiles_1_9x5.mat",
+      "nameZh": "黑色瓷砖 9×5",
+      "nameEn": "black tiles 9x5",
+      "sizeTag": "9x5",
+      "source": "oc1_story"
+    },
+    {
+      "guid": "95421bb5d33862447984095e4ac1eabb",
+      "id": "mat_city_path_01",
+      "assetPath": "Assets/LevelSets/test/materials/mat_city_path_01.mat",
+      "nameZh": "城市路径 1",
+      "nameEn": "city path 1",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "8335081f7e341fb4781b21a56f6e8285",
+      "id": "mat_city_path_02",
+      "assetPath": "Assets/LevelSets/test/materials/mat_city_path_02.mat",
+      "nameZh": "城市路径 2",
+      "nameEn": "city path 2",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "81091d99d5574cf4097b0e3e89b2605a",
+      "id": "mat_sunny3_skybox",
+      "assetPath": "Assets/common01/materials/mat_sunny3_skybox.mat",
+      "nameZh": "晴天天空盒",
+      "nameEn": "sunny3 skybox",
+      "sizeTag": "",
+      "source": "common01"
+    },
+    {
+      "guid": "96593a1841f16a94cbb2f9c6b8f14a6e",
+      "id": "mat_dlc3_skybox",
+      "assetPath": "Assets/common01/materials/mat_dlc3_skybox.mat",
+      "nameZh": "DLC3 天空盒",
+      "nameEn": "dlc3 skybox",
+      "sizeTag": "",
+      "source": "common01"
+    },
+    {
+      "guid": "c75d25a05768d4a4081772c73c9ea6e0",
+      "id": "mat_pfx_glow",
+      "assetPath": "Assets/common01/materials/mat_pfx_glow.mat",
+      "nameZh": "发光特效材质",
+      "nameEn": "pfx glow",
+      "sizeTag": "",
+      "source": "common01"
+    },
+    {
+      "guid": "c035789f5dc78a64c8cd9b63607aaa67",
+      "id": "mat_space_starscape",
+      "assetPath": "Assets/common01/materials/mat_space_starscape.mat",
+      "nameZh": "太空星景",
+      "nameEn": "space starscape",
+      "sizeTag": "",
+      "source": "common01"
+    }
+  ]
+}

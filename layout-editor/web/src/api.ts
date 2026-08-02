@@ -1,6 +1,11 @@
 import type {
   AmbienceCatalog,
+  AudioCatalog,
   AudioDirectoryCatalog,
+  AudioKnowledge,
+  BundleAnalysis,
+  CookingStepCatalog,
+  CookingStepEntry,
   DeathEffectCatalog,
   FloorMaterial,
   FloorMaterialCatalog,
@@ -40,7 +45,13 @@ async function readApiJson<T>(r: Response): Promise<T> {
   return data;
 }
 
-export type HealthInfo = { ok: boolean; recipeApi?: boolean };
+export type HealthInfo = {
+  ok: boolean;
+  recipeApi?: boolean;
+  schemaVersion?: number;
+  knowledgeLoaded?: boolean;
+  dictionaryLoaded?: boolean;
+};
 
 export async function fetchHealth(): Promise<boolean> {
   try {
@@ -95,24 +106,57 @@ export async function loadCatalog(): Promise<import("./types").Catalog> {
   return r.json();
 }
 
+/** Static catalog JSON fallback (build-catalog.mjs output) when the Unity bridge is offline. */
+async function fetchStaticCatalog<T>(fileName: string): Promise<T> {
+  const r = await fetch(`/${fileName}`);
+  if (!r.ok) throw new Error(`无法加载 ${fileName}，请先运行 build-catalog`);
+  return r.json() as Promise<T>;
+}
+
 export async function fetchIngredients(): Promise<IngredientEntry[]> {
-  const r = await fetch("/api/catalog/ingredients");
-  const data = await readApiJson<{ ingredients?: IngredientEntry[] }>(r);
-  return data.ingredients ?? [];
+  try {
+    const r = await fetch("/api/catalog/ingredients");
+    const data = await readApiJson<{ ingredients?: IngredientEntry[] }>(r);
+    return data.ingredients ?? [];
+  } catch {
+    const data = await fetchStaticCatalog<{ ingredients?: IngredientEntry[] }>("ingredients.json");
+    return data.ingredients ?? [];
+  }
 }
 
 export async function fetchFloorMaterials(levelSet: string): Promise<FloorMaterial[]> {
-  const q = new URLSearchParams({ levelSet });
-  const r = await fetch(`/api/catalog/floor-materials?${q}`);
-  const data = await readApiJson<FloorMaterialCatalog>(r);
-  return data.materials ?? [];
+  try {
+    const q = new URLSearchParams({ levelSet });
+    const r = await fetch(`/api/catalog/floor-materials?${q}`);
+    const data = await readApiJson<FloorMaterialCatalog>(r);
+    return data.materials ?? [];
+  } catch {
+    const data = await fetchStaticCatalog<FloorMaterialCatalog>("floor-materials.json");
+    const all = data.materials ?? [];
+    if (!levelSet) return all;
+    return [...all].sort((a, b) => {
+      const ra = a.source === levelSet ? 1 : 0;
+      const rb = b.source === levelSet ? 1 : 0;
+      return rb - ra;
+    });
+  }
 }
 
 export async function fetchRecipeCatalog(levelSet: string): Promise<RecipeEntry[]> {
-  const q = new URLSearchParams({ levelSet });
-  const r = await fetch(`/api/recipes?${q}`);
-  const data = await readApiJson<{ recipes?: RecipeEntry[] }>(r);
-  return data.recipes ?? [];
+  try {
+    const q = new URLSearchParams({ levelSet });
+    const r = await fetch(`/api/recipes?${q}`);
+    const data = await readApiJson<{ recipes?: RecipeEntry[] }>(r);
+    return data.recipes ?? [];
+  } catch {
+    const data = await fetchStaticCatalog<{ recipes?: RecipeEntry[] }>("recipes.json");
+    return data.recipes ?? [];
+  }
+}
+
+export async function fetchCookingSteps(): Promise<CookingStepEntry[]> {
+  const data = await fetchStaticCatalog<CookingStepCatalog>("cooking-steps.json");
+  return data.cookingSteps ?? [];
 }
 
 export async function fetchLevelRecipes(assetPath: string): Promise<LevelRecipes> {
@@ -155,15 +199,25 @@ export async function fetchLevelDetail(assetPath: string): Promise<LevelDetail> 
 }
 
 export async function fetchMusicCatalog(): Promise<MusicCatalog["music"]> {
-  const r = await fetch("/api/catalog/music");
-  const data = await readApiJson<MusicCatalog>(r);
-  return data.music ?? [];
+  try {
+    const r = await fetch("/api/catalog/music");
+    const data = await readApiJson<MusicCatalog>(r);
+    return data.music ?? [];
+  } catch {
+    const data = await fetchStaticCatalog<AudioCatalog>("audio-catalog.json");
+    return data.music ?? [];
+  }
 }
 
 export async function fetchAudioDirectoryCatalog(): Promise<AudioDirectoryCatalog["audioDirectories"]> {
-  const r = await fetch("/api/catalog/audio-directories");
-  const data = await readApiJson<AudioDirectoryCatalog>(r);
-  return data.audioDirectories ?? [];
+  try {
+    const r = await fetch("/api/catalog/audio-directories");
+    const data = await readApiJson<AudioDirectoryCatalog>(r);
+    return data.audioDirectories ?? [];
+  } catch {
+    const data = await fetchStaticCatalog<AudioCatalog>("audio-catalog.json");
+    return data.audioDirectories ?? [];
+  }
 }
 
 export async function fetchAmbiences(): Promise<string[]> {
@@ -173,9 +227,91 @@ export async function fetchAmbiences(): Promise<string[]> {
 }
 
 export async function fetchDeathEffects(): Promise<DeathEffectCatalog["deathEffects"]> {
-  const r = await fetch("/api/catalog/death-effects");
-  const data = await readApiJson<DeathEffectCatalog>(r);
-  return data.deathEffects ?? [];
+  try {
+    const r = await fetch("/api/catalog/death-effects");
+    const data = await readApiJson<DeathEffectCatalog>(r);
+    return data.deathEffects ?? [];
+  } catch {
+    const data = await fetchStaticCatalog<AudioCatalog>("audio-catalog.json");
+    return data.deathEffects ?? [];
+  }
+}
+
+export async function fetchAudioKnowledge(): Promise<AudioKnowledge> {
+  const empty: AudioKnowledge = {
+    baseBundles: ["bundle47"],
+    alwaysLoadedBundles: ["bundle18"],
+    mandatoryDirectoryIds: [],
+    directoryEvents: [],
+    themes: [],
+    deathThemes: [],
+    ambienceLabels: [],
+  };
+  try {
+    const r = await fetch("/api/catalog/audio-directories");
+    const data = await readApiJson<AudioDirectoryCatalog>(r);
+    return {
+      baseBundles: data.baseBundles ?? empty.baseBundles,
+      alwaysLoadedBundles: data.alwaysLoadedBundles ?? empty.alwaysLoadedBundles,
+      mandatoryDirectoryIds: data.mandatoryDirectoryIds ?? [],
+      directoryEvents: data.directoryEvents ?? [],
+      themes: data.themes ?? [],
+      deathThemes: data.deathThemes ?? [],
+      ambienceLabels: data.ambienceLabels ?? [],
+    };
+  } catch {
+    const data = await fetchStaticCatalog<AudioCatalog>("audio-catalog.json");
+    return {
+      baseBundles: data.baseBundles ?? empty.baseBundles,
+      alwaysLoadedBundles: data.alwaysLoadedBundles ?? empty.alwaysLoadedBundles,
+      mandatoryDirectoryIds: data.mandatoryDirectoryIds ?? [],
+      directoryEvents: data.directoryEvents ?? [],
+      themes: data.themes ?? [],
+      deathThemes: data.deathThemes ?? [],
+      ambienceLabels: data.ambienceLabels ?? [],
+    };
+  }
+}
+
+export async function fetchBundleAnalysis(assetPath: string): Promise<BundleAnalysis> {
+  const q = new URLSearchParams({ assetPath });
+  const r = await fetch(`/api/level/bundles?${q}`);
+  return readApiJson<BundleAnalysis>(r);
+}
+
+export interface BundleManifest {
+  dependencies: { name: string; deps: string[] }[];
+}
+
+let _bundleGraph: Map<string, string[]> | null = null;
+
+/** Loads the static AssetBundle dependency graph (bundle-manifest.json). Empty map on failure. */
+export async function fetchBundleGraph(): Promise<Map<string, string[]>> {
+  if (_bundleGraph) return _bundleGraph;
+  try {
+    const r = await fetch("/bundle-manifest.json");
+    const data = await readApiJson<BundleManifest>(r);
+    _bundleGraph = new Map(
+      (data.dependencies ?? []).map((e) => [e.name, e.deps ?? []])
+    );
+  } catch {
+    _bundleGraph = new Map();
+  }
+  return _bundleGraph;
+}
+
+/** Transitive closure of bundle seeds following the manifest dependency graph. */
+export function bundleClosure(graph: Map<string, string[]>, seeds: Iterable<string>): Set<string> {
+  const seen = new Set<string>();
+  const stack: string[] = [];
+  for (const s of seeds) if (s) stack.push(s);
+  while (stack.length) {
+    const b = stack.pop()!;
+    if (!seen.add(b)) continue;
+    const ds = graph.get(b);
+    if (ds) for (const d of ds) if (!seen.has(d)) stack.push(d);
+  }
+  return seen;
 }
 
 export interface SetCreateBody {
@@ -198,6 +334,16 @@ export async function createSet(body: SetCreateBody): Promise<void> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+/** Permanently delete a level set folder and all its contents. */
+export async function deleteSet(setName: string): Promise<void> {
+  const r = await fetch("/api/set/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName }),
   });
   await readApiJson<{ ok?: boolean }>(r);
 }
@@ -323,6 +469,28 @@ export async function setKillPlaneBounds(
     body: JSON.stringify({ sceneAssetPath, cx, cz, sx, sz }),
   });
   await readApiJson<{ ok?: boolean }>(r);
+}
+
+/** Upload an image-floor texture (base64) into the level set's data dir.
+ *  Returns the asset path of the imported texture, e.g.
+ *  "Assets/LevelSets/<set>/data/<fileName>". */
+export async function uploadImageFloor(
+  setName: string,
+  fileName: string,
+  base64: string
+): Promise<string> {
+  const r = await fetch("/api/level/image-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, fileName, base64 }),
+  });
+  const data = await readApiJson<{ texturePath?: string; error?: string }>(r);
+  return data.texturePath ?? "";
+}
+
+/** URL that serves the raw bytes of a data-dir asset (for canvas preview). */
+export function imageFloorUrl(texturePath: string): string {
+  return `/api/level/data-file?path=${encodeURIComponent(texturePath)}`;
 }
 
 export { STALE_BRIDGE_MSG };

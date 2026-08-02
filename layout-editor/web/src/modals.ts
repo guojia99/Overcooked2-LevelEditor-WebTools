@@ -1,5 +1,40 @@
 import type { IngredientEntry, LayoutItem, RecipeEntry } from "./types";
-import { ingredientOptionLabel } from "./ingredientLabels";
+import { foodGroupLabel } from "./ingredientLabels";
+import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
+
+/** Inline <img> for an ingredient/recipe: try the extracted icon PNG (unless explicitly known
+ *  missing), else / on error fall back to the shared placeholder (MissingIngredient_Icon). */
+function iconImg(kind: "ingredients" | "recipes", id: string | undefined, hasIcon?: boolean): string {
+  const src = id && hasIcon !== false ? `/icons/${kind}/${id}.png` : "/icons/_placeholder.png";
+  return `<img class="food-icon" loading="lazy" src="${src}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
+}
+
+/** A clickable ingredient tile (image + name). Wraps a visually-hidden checkbox so the existing
+ *  `input:checked` gathering still works; selected tiles get a green border via :has(). */
+function ingredientCard(ing: IngredientEntry, checked: boolean): string {
+  const badge =
+    ing.group && ing.group !== "core" ? ` <span class="pc-badge">${foodGroupLabel(ing.group)}</span>` : "";
+  const en = (ing.nameEn && ing.nameEn.trim()) || "";
+  return `<label class="pick-card">
+    <input type="checkbox" value="${ing.guid}" ${checked ? "checked" : ""}>
+    <span class="pc-head">${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${badge}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
+  </label>`;
+}
+
+/** Grid of ingredient cards. */
+function ingredientGrid(ingredients: IngredientEntry[], selected: Set<string>): string {
+  return `<div class="pick-grid">${ingredients.map((i) => ingredientCard(i, selected.has(i.guid))).join("")}</div>`;
+}
+
+/** Sync the `.selected` class on every pick-card with its checkbox state (visual green border,
+ *  works even without CSS :has() support). Call after the modal body is in the DOM. */
+function syncPickCards(root: ParentNode): void {
+  root.querySelectorAll<HTMLInputElement>(".pick-card input[type=checkbox]").forEach((cb) => {
+    const card = cb.closest(".pick-card");
+    if (card) card.classList.toggle("selected", cb.checked);
+    cb.addEventListener("change", () => card?.classList.toggle("selected", cb.checked));
+  });
+}
 
 export function ensureModalRoot(): HTMLElement {
   let root = document.getElementById("modal-root");
@@ -38,24 +73,37 @@ export function openIngredientPicker(
   currentGuid: string | undefined,
   onSave: (guid: string) => void
 ) {
-  const options = ingredients
-    .map(
-      (ing) =>
-        `<option value="${ing.guid}" ${ing.guid === currentGuid ? "selected" : ""}>${ingredientOptionLabel(ing)}</option>`
-    )
-    .join("");
+  const grid = `<div class="pick-grid" id="ing-pick-grid">${ingredients
+    .map((ing) => {
+      const sel = ing.guid === currentGuid;
+      const badge = ing.group && ing.group !== "core" ? ` <span class="pc-badge">${foodGroupLabel(ing.group)}</span>` : "";
+      const en = (ing.nameEn && ing.nameEn.trim()) || "";
+      return `<label class="pick-card${sel ? " selected" : ""}" data-guid="${ing.guid}">
+        <input type="radio" name="ing-pick" value="${ing.guid}" ${sel ? "checked" : ""}>
+        <span class="pc-head">${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${badge}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
+      </label>`;
+    })
+    .join("")}</div>`;
 
   openModal(
     "食材箱 · 选择食材",
-    `<label class="modal-field">食材 (spawnerItemPrefabSO)<select id="modal-ingredient" class="modal-select">${options}</select></label>`,
+    `<p class="modal-hint">点击选择食材 (spawnerItemPrefabSO)</p>${grid}`,
     `<button type="button" class="modal-btn" data-cancel>取消</button>
      <button type="button" class="modal-btn primary" data-ok>确定</button>`
   );
 
+  // toggle .selected on click (single-select)
+  document.querySelectorAll<HTMLElement>("#ing-pick-grid .pick-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      document.querySelectorAll("#ing-pick-grid .pick-card.selected").forEach((c) => c.classList.remove("selected"));
+      card.classList.add("selected");
+    });
+  });
+
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", () => {
-    const sel = document.getElementById("modal-ingredient") as HTMLSelectElement;
-    onSave(sel.value);
+    const checked = document.querySelector<HTMLInputElement>("#ing-pick-grid input:checked");
+    if (checked) onSave(checked.value);
     closeModal();
   });
 }
@@ -67,12 +115,7 @@ export function openFoodSpawnerEditor(
 ) {
   const fs = item.foodSpawner ?? {};
   const selected = new Set(fs.attachmentPrefabGuids ?? []);
-  const list = ingredients
-    .map(
-      (ing) =>
-        `<label class="modal-check"><input type="checkbox" value="${ing.guid}" ${selected.has(ing.guid) ? "checked" : ""} /> ${ingredientOptionLabel(ing)}</label>`
-    )
-    .join("");
+  const grid = ingredientGrid(ingredients, selected);
 
   openModal(
     "食材生成器 · 参数",
@@ -81,7 +124,7 @@ export function openFoodSpawnerEditor(
     <label class="modal-check"><input type="checkbox" id="modal-trigger-start" ${fs.triggerAtStart !== false ? "checked" : ""} /> 开局触发 (triggerAtStart)</label>
     <label class="modal-field">触发间隔 triggerTime (秒)<input type="number" id="modal-trigger-time" step="0.5" min="0" value="${fs.triggerTime ?? 5}" /></label>
     <p class="modal-hint">attachmentPrefabSOs（勾选食材，权重均分）</p>
-    <div class="modal-scroll">${list}</div>
+    <div class="modal-scroll">${grid}</div>
     `,
     `<button type="button" class="modal-btn" data-cancel>取消</button>
      <button type="button" class="modal-btn primary" data-ok>确定</button>`
@@ -104,6 +147,7 @@ export function openFoodSpawnerEditor(
     });
     closeModal();
   });
+  syncPickCards(document);
 }
 
 export function openIngredientMultiPicker(
@@ -114,16 +158,11 @@ export function openIngredientMultiPicker(
   onSave: (guids: string[]) => void
 ) {
   const selected = new Set(selectedGuids);
-  const list = ingredients
-    .map(
-      (ing) =>
-        `<label class="modal-check"><input type="checkbox" value="${ing.guid}" ${selected.has(ing.guid) ? "checked" : ""} /> ${ingredientOptionLabel(ing)}</label>`
-    )
-    .join("");
+  const grid = ingredientGrid(ingredients, selected);
 
   openModal(
     title,
-    `<p class="modal-hint">${hint}</p><div class="modal-scroll">${list}</div>`,
+    `<p class="modal-hint">${hint}</p><div class="modal-scroll">${grid}</div>`,
     `<button type="button" class="modal-btn" data-cancel>取消</button>
      <button type="button" class="modal-btn primary" data-ok>确定</button>`
   );
@@ -137,6 +176,7 @@ export function openIngredientMultiPicker(
     onSave(guids);
     closeModal();
   });
+  syncPickCards(document);
 }
 
 export function openRecipePicker(
@@ -146,11 +186,17 @@ export function openRecipePicker(
   onSave: (guids: string[]) => void
 ) {
   const set = new Set(selectedGuids);
-  const list = recipes
-    .map(
-      (r) =>
-        `<label class="modal-check"><input type="checkbox" value="${r.guid}" ${set.has(r.guid) ? "checked" : ""} /> ${r.nameZh}${r.nameEn ? ` <span class="muted">(${r.nameEn})</span>` : ""}</label>`
-    )
+  const list = groupRecipesByType(recipes.filter((r) => !r.intermediate))
+    .map(([type, items]) => {
+      const header = `<p class="modal-group-header">${recipeTypeLabel(type)} (${items.length})</p>`;
+      const rows = items
+        .map((r) => {
+          const src = r.group && r.group !== "core" ? ` <span class="muted">[${foodGroupLabel(r.group)}]</span>` : "";
+          return `<label class="modal-check"><input type="checkbox" value="${r.guid}" ${set.has(r.guid) ? "checked" : ""} /> ${iconImg("recipes", r.id, r.icon)}${r.nameZh}${r.nameEn ? ` <span class="muted">(${r.nameEn})</span>` : ""}${src}</label>`;
+        })
+        .join("");
+      return header + rows;
+    })
     .join("");
 
   openModal(

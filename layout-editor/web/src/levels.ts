@@ -1,7 +1,10 @@
 import * as api from "./api";
 import type {
   AudioDirectoryEntry,
+  AudioKnowledge,
+  BundleAnalysis,
   DeathEffectEntry,
+  DirectoryEvent,
   LevelDetail,
   LevelSetInfo,
   LevelSummary,
@@ -133,6 +136,7 @@ async function renderSetList(app: HTMLElement): Promise<void> {
         <div class="m-actions">
           <button class="m-btn primary" data-open="${esc(s.setName)}">打开</button>
           <button class="m-btn" data-edit="${esc(s.setName)}">编辑信息</button>
+          <button class="m-btn danger" data-del="${esc(s.setName)}">删除</button>
         </div>
       </div>`
     )
@@ -157,6 +161,47 @@ async function renderSetList(app: HTMLElement): Promise<void> {
       if (s) openEditSetModal(app, s);
     })
   );
+  content.querySelectorAll<HTMLButtonElement>("[data-del]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const s = setMap.get(b.dataset.del!);
+      if (s) confirmDeleteSet(app, s);
+    })
+  );
+}
+
+function confirmDeleteSet(app: HTMLElement, s: LevelSetInfo): void {
+  const setName = s.setName;
+  const display = s.levelSetNameZH || s.levelSetName || setName;
+  openModal(
+    `删除关卡集 · ${esc(display)}`,
+    `<p>将永久删除关卡集 <b>${esc(display)}</b>（目录 <code>${esc(setName)}</code>）及其所有关卡、场景、资源与 AssetBundle 引用，且<b>不可恢复</b>。</p>
+     <p class="modal-hint">为防止误删，请输入关卡集标识 <b>${esc(setName)}</b> 以确认：</p>
+     <label class="m-field">确认标识 <input type="text" id="del-set-confirm" autocomplete="off" placeholder="${esc(setName)}"></label>`,
+    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn danger" data-ok disabled>确认删除</button>`
+  );
+  const input = document.getElementById("del-set-confirm") as HTMLInputElement | null;
+  const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  const sync = () => {
+    if (okBtn) okBtn.disabled = (input?.value.trim() ?? "") !== setName;
+  };
+  input?.addEventListener("input", sync);
+  input?.addEventListener("change", sync);
+  sync();
+  okBtn?.addEventListener("click", async () => {
+    if ((input?.value.trim() ?? "") !== setName) return;
+    showBusy("删除关卡集…");
+    try {
+      await api.deleteSet(setName);
+      closeModal();
+      setStatus("已删除关卡集");
+      await renderSetList(app);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    } finally {
+      hideBusy();
+    }
+  });
 }
 
 function openCreateSetModal(app: HTMLElement): void {
@@ -204,7 +249,7 @@ function openEditSetModal(app: HTMLElement, s: LevelSetInfo): void {
     <label class="m-field">中文名 levelSetNameZH<input type="text" id="se-zh" value="${esc(s.levelSetNameZH)}"></label>
     <label class="m-field">作者 author<input type="text" id="se-author" value="${esc(s.author)}"></label>
     <label class="m-field">版本 version<input type="text" id="se-version" value="${esc(s.version)}"></label>
-    <p class="modal-hint">修改 version 会自动重算 uid（街机大厅检索用）。关卡集不可删除。</p>
+    <p class="modal-hint">修改 version 会自动重算 uid（街机大厅检索用）。如需删除整个关卡集，请在列表卡片点击「删除」。</p>
     `,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>保存</button>`
   );
@@ -578,13 +623,13 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
       const rows = result.details
         .map(
           (d) =>
-            `<tr><td>${esc(d.name)}</td><td>${d.ingredientCount}</td><td>${d.cookingStepCount > 0 ? "✓" : "—"}</td><td>${d.score}</td><td>${d.timeSec.toFixed(0)}s</td></tr>`
+            `<tr><td>${esc(d.name)}</td><td>${esc(d.groupLabel)}</td><td>${d.ingredientCount}</td><td>${d.cookingStepCount > 0 ? "✓" : "—"}</td><td>${d.score}</td><td>${d.timeSec.toFixed(0)}s</td></tr>`
         )
         .join("");
       detailEl.innerHTML = `
         <p class="modal-hint ok">已按 ${result.details.length} 道菜谱推算：平均单菜约 ${result.avgTimeSec.toFixed(0)} 秒 · 平均菜价 ${result.avgPrice.toFixed(0)} 分</p>
         <table class="cfg-ai-table">
-          <thead><tr><th>菜谱</th><th>食材数</th><th>需烹饪</th><th>菜价</th><th>估时</th></tr></thead>
+          <thead><tr><th>菜谱</th><th>来源</th><th>食材数</th><th>需烹饪</th><th>菜价</th><th>估时</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>`;
     } catch (e) {
@@ -636,22 +681,72 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
 
 // ==================== Audio modal ====================
 
-export async function openAudioModal(detail: LevelDetail, onSaved: () => void): Promise<void> {
+export interface ThemeSignals {
+  /** art theme keys present in the scene (e.g. "wizard", "space", "raft"). */
+  themes: Set<string>;
+  /** true when a raft/water floor is present. */
+  raft: boolean;
+  /** "" | "water" | "goo" — inferred death theme. */
+  deathTheme: string;
+}
+
+interface AudioRec {
+  dirIds: Set<string>;
+  ambiences: Set<string>;
+  bgmId: string;
+  deathTheme: string;
+}
+
+function detectAudioRecommendations(
+  signals: ThemeSignals,
+  knowledge: AudioKnowledge
+): AudioRec {
+  const dirIds = new Set<string>();
+  const ambiences = new Set<string>();
+  const bgmCandidates: string[] = [];
+  let deathTheme = "";
+
+  const active = new Set<string>(signals.themes);
+  if (signals.raft) active.add("raft");
+
+  for (const t of knowledge.themes) {
+    if (!active.has(t.key)) continue;
+    t.directories.forEach((d) => dirIds.add(d));
+    t.ambiences.forEach((a) => ambiences.add(a));
+    t.bgm.forEach((b) => bgmCandidates.push(b));
+    if (t.deathTheme) deathTheme = t.deathTheme;
+  }
+  if (signals.deathTheme) deathTheme = signals.deathTheme;
+  return { dirIds, ambiences, bgmId: bgmCandidates[0] ?? "", deathTheme };
+}
+
+export async function openAudioModal(
+  detail: LevelDetail,
+  themeSignals: ThemeSignals,
+  onSaved: () => void
+): Promise<void> {
   if (!detail.sceneAssetPath) {
     setStatus("该关卡缺少场景路径，无法编辑音频", false);
     return;
   }
   setStatus("加载音频资源…");
+
   let music: MusicEntry[];
   let dirs: AudioDirectoryEntry[];
   let ambiances: string[];
   let deaths: DeathEffectEntry[];
+  let knowledge: AudioKnowledge;
+  let analysis: BundleAnalysis | null;
+  let bundleGraph: Map<string, string[]>;
   try {
-    [music, dirs, ambiances, deaths] = await Promise.all([
+    [music, dirs, ambiances, deaths, knowledge, analysis, bundleGraph] = await Promise.all([
       api.fetchMusicCatalog(),
       api.fetchAudioDirectoryCatalog(),
       api.fetchAmbiences(),
       api.fetchDeathEffects(),
+      api.fetchAudioKnowledge(),
+      api.fetchBundleAnalysis(detail.levelInfoAssetPath).catch(() => null),
+      api.fetchBundleGraph(),
     ]);
   } catch (e) {
     showError(e);
@@ -659,67 +754,413 @@ export async function openAudioModal(detail: LevelDetail, onSaved: () => void): 
   }
 
   const cur = detail.audio;
-  const musicOpts =
-    `<option value="" ${!cur.inLevelMusicGuid ? "selected" : ""}>(无)</option>` +
-    music
-      .map(
-        (m) =>
-          `<option value="${esc(m.guid)}" ${m.guid === cur.inLevelMusicGuid ? "selected" : ""}>${esc(m.id)}${m.bundleName ? ` (${esc(m.bundleName)})` : ""}</option>`
-      )
-      .join("");
-  const deathOpts =
-    `<option value="" ${!cur.onDeathEffectGuid ? "selected" : ""}>(无)</option>` +
-    deaths
-      .map(
-        (d) =>
-          `<option value="${esc(d.guid)}" ${d.guid === cur.onDeathEffectGuid ? "selected" : ""}>${esc(d.id)}</option>`
-      )
+  const alwaysLoaded = new Set(knowledge.alwaysLoadedBundles);
+  const baseBundles = new Set(knowledge.baseBundles);
+  const mandatoryIds = new Set(knowledge.mandatoryDirectoryIds);
+
+  const dirById = new Map<string, AudioDirectoryEntry>();
+  for (const d of dirs) dirById.set(d.id, d);
+  const dirByGuid = new Map<string, AudioDirectoryEntry>();
+  for (const d of dirs) dirByGuid.set(d.guid, d);
+  const musicByGuid = new Map<string, MusicEntry>();
+  for (const m of music) musicByGuid.set(m.guid, m);
+  const eventsByDir = new Map<string, DirectoryEvent>();
+  for (const e of knowledge.directoryEvents) eventsByDir.set(e.id, e);
+
+  // ---- mutable state ----
+  const state = {
+    musicGuid: cur.inLevelMusicGuid || "",
+    deathGuid: cur.onDeathEffectGuid || "",
+    dirGuids: new Set<string>((cur.audioDirectoryGuids || []).filter((g) => dirByGuid.has(g))),
+    ambiences: new Set<string>((cur.ambiences || []).filter((a) => ambiances.includes(a))),
+    cleanExtras: false,
+  };
+
+  // always force the mandatory directories in
+  const mandatoryGuids: string[] = [];
+  for (const id of knowledge.mandatoryDirectoryIds) {
+    const e = dirById.get(id);
+    if (e) mandatoryGuids.push(e.guid);
+  }
+  const effectiveDirGuids = (): string[] => {
+    const out = new Set<string>(mandatoryGuids);
+    state.dirGuids.forEach((g) => out.add(g));
+    return [...out];
+  };
+
+  const rec = detectAudioRecommendations(themeSignals, knowledge);
+
+  // ---- BGM options grouped by theme ----
+  const themeOfMusic = new Map<string, string>();
+  for (const t of knowledge.themes)
+    for (const b of t.bgm) if (!themeOfMusic.has(b)) themeOfMusic.set(b, t.key);
+  const themeLabelZh = (k: string): string =>
+    ({
+      city_sushi: "城市 / 厨房",
+      raft: "木筏 / 急流",
+      wizard: "魔法学校",
+      space: "太空",
+      air_balloon: "热气球",
+      mine: "矿洞",
+      camping: "露营 (DLC5)",
+      dlc03_christmas: "圣诞 (DLC3)",
+      throne: "王座 (DLC2)",
+      circus: "马戏团 (DLC8)",
+      dlc08_circus: "马戏团 (DLC8)",
+      dlc07_horde: "部落 (DLC7)",
+      dlc09_wonderland: "仙境 (DLC9)",
+      graveyard: "墓地",
+    } as Record<string, string>)[k] || k;
+
+  const ambLabelZh = new Map<string, string>(
+    (knowledge.ambienceLabels || []).map((a) => [a.name, a.zh])
+  );
+  const ambZh = (name: string): string => ambLabelZh.get(name) || name;
+
+  const bgmGroups = new Map<string, MusicEntry[]>();
+  for (const m of music) {
+    const tk = themeOfMusic.get(m.id) || "_other";
+    if (!bgmGroups.has(tk)) bgmGroups.set(tk, []);
+    bgmGroups.get(tk)!.push(m);
+  }
+  const bgmGroupKeys = [...bgmGroups.keys()].sort((a, b) => (a === "_other" ? 1 : a < b ? -1 : 1));
+  const bgmOptHtml = `<option value="" ${!state.musicGuid ? "selected" : ""}>(无)</option>` +
+    bgmGroupKeys
+      .map((tk) => {
+        const label = tk === "_other" ? "其他" : themeLabelZh(tk);
+        const opts = bgmGroups
+          .get(tk)!
+          .map(
+            (m) =>
+              `<option value="${esc(m.guid)}" ${m.guid === state.musicGuid ? "selected" : ""}>${esc(m.nameZh)}${m.bundleName ? ` (${esc(m.bundleName)})` : ""}</option>`
+          )
+          .join("");
+        return `<optgroup label="${esc(label)}">${opts}</optgroup>`;
+      })
       .join("");
 
-  const ambSet = new Set(cur.ambiences || []);
-  const ambChecks = ambiances
-    .map((n) => `<label class="modal-check"><input type="checkbox" value="${esc(n)}" data-amb ${ambSet.has(n) ? "checked" : ""}> ${esc(n)}</label>`)
+  // ---- death options ----
+  const deathOptHtml = `<option value="" ${!state.deathGuid ? "selected" : ""}>(无)</option>` +
+    deaths
+      .map((d) => `<option value="${esc(d.guid)}" ${d.guid === state.deathGuid ? "selected" : ""}>${esc(d.id)}</option>`)
+      .join("");
+
+  // ---- mandatory dirs (locked) ----
+  const legendHtml = (id: string): string => {
+    const ev = eventsByDir.get(id);
+    if (!ev) return "";
+    const tag = ev.eventsZh.length ? `<span class="muted">[${ev.eventsZh.map(esc).join("／")}]</span>` : "";
+    const desc = ev.desc ? `<span class="muted">${esc(ev.desc)}</span>` : "";
+    return ` ${desc}${tag}`;
+  };
+  const mandatoryHtml = mandatoryGuids
+    .map((g) => {
+      const d = dirByGuid.get(g);
+      const id = d?.id || "";
+      return `<label class="modal-check"><input type="checkbox" checked disabled data-mand value="${esc(g)}"> ${esc(d?.nameZh || id)}${legendHtml(id)}</label>`;
+    })
     .join("");
-  const dirSet = new Set(cur.audioDirectoryGuids || []);
-  const dirChecks = dirs
-    .map(
-      (d) =>
-        `<label class="modal-check"><input type="checkbox" value="${esc(d.guid)}" data-dir ${dirSet.has(d.guid) ? "checked" : ""}> ${esc(d.id)}${d.bundleName ? ` <span class="muted">(${esc(d.bundleName)})</span>` : ""}</label>`
-    )
+
+  // ---- themed dirs grouped ----
+  const dirThemeOf = new Map<string, string>();
+  for (const t of knowledge.themes) for (const d of t.directories) dirThemeOf.set(d, t.key);
+  const nonMandatoryDirs = dirs.filter((d) => !mandatoryIds.has(d.id));
+  const dirGroups = new Map<string, AudioDirectoryEntry[]>();
+  for (const d of nonMandatoryDirs) {
+    const tk = dirThemeOf.get(d.id) || "_other";
+    if (!dirGroups.has(tk)) dirGroups.set(tk, []);
+    dirGroups.get(tk)!.push(d);
+  }
+  const dirGroupKeys = [...dirGroups.keys()].sort((a, b) => (a === "_other" ? 1 : a < b ? -1 : 1));
+  const isDirRecommended = (id: string) => rec.dirIds.has(id);
+  const dirGroupsHtml = dirGroupKeys
+    .map((tk) => {
+      const label = tk === "_other" ? "其他" : themeLabelZh(tk);
+      const items = dirGroups
+        .get(tk)!
+        .map((d) => {
+          const checked = state.dirGuids.has(d.guid) || isDirRecommended(d.id) ? "checked" : "";
+          const rec2 = isDirRecommended(d.id) ? `<span class="rec-tag">推荐</span>` : "";
+          return `<label class="modal-check"><input type="checkbox" value="${esc(d.guid)}" data-dir ${checked}> ${esc(d.nameZh)}${rec2} <span class="muted">(${esc(d.bundleName || "?")})</span>${legendHtml(d.id)}</label>`;
+        })
+        .join("");
+      return `<div class="amb-group"><div class="amb-group-title">${esc(label)}</div>${items}</div>`;
+    })
     .join("");
+
+  // ---- ambiences grouped ----
+  const ambThemeOf = new Map<string, string>();
+  for (const t of knowledge.themes) for (const a of t.ambiences) ambThemeOf.set(a, t.key);
+  const ambGroups = new Map<string, string[]>();
+  for (const a of ambiances) {
+    const tk = ambThemeOf.get(a) || "_other";
+    if (!ambGroups.has(tk)) ambGroups.set(tk, []);
+    ambGroups.get(tk)!.push(a);
+  }
+  const ambGroupKeys = [...ambGroups.keys()].sort((a, b) => (a === "_other" ? 1 : a < b ? -1 : 1));
+  const isAmbRecommended = (a: string) => rec.ambiences.has(a);
+  const ambGroupsHtml = ambGroupKeys
+    .map((tk) => {
+      const label = tk === "_other" ? "其他" : themeLabelZh(tk);
+      const items = ambGroups
+        .get(tk)!
+        .map((a) => {
+          const checked = state.ambiences.has(a) || isAmbRecommended(a) ? "checked" : "";
+          const rec2 = isAmbRecommended(a) ? `<span class="rec-tag">推荐</span>` : "";
+          return `<label class="modal-check"><input type="checkbox" value="${esc(a)}" data-amb ${checked}> ${esc(ambZh(a))}${rec2} <span class="muted">(${esc(a)})</span></label>`;
+        })
+        .join("");
+      return `<div class="amb-group"><div class="amb-group-title">${esc(label)}</div>${items}</div>`;
+    })
+    .join("");
+
+  // ---- coverage check: which themed directories / ambiences are MISSING for placed decor ----
+  const curDirIdSet = new Set<string>(cur.audioDirectoryIds || []);
+  const curAmbSet = new Set<string>(cur.ambiences || []);
+  const detectedThemeKeys = new Set<string>(themeSignals.themes);
+  if (themeSignals.raft) detectedThemeKeys.add("raft");
+  const gaps: { theme: string; missingDirs: string[]; missingAmb: string[] }[] = [];
+  for (const t of knowledge.themes) {
+    if (!detectedThemeKeys.has(t.key)) continue;
+    const missingDirs = (t.directories || []).filter((id) => {
+      const e = dirById.get(id);
+      return e && !state.dirGuids.has(e.guid) && !curDirIdSet.has(id);
+    });
+    const missingAmb = (t.ambiences || []).filter((a) => !state.ambiences.has(a) && !curAmbSet.has(a));
+    if (missingDirs.length || missingAmb.length)
+      gaps.push({ theme: t.key, missingDirs, missingAmb });
+  }
+  const gapHtml = gaps.length
+    ? gaps
+        .map(
+          (g) =>
+            `<div class="amb-group"><div class="amb-group-title">${esc(themeLabelZh(g.theme))}</div>` +
+            (g.missingDirs.length
+              ? `<div class="dep-warn dep-miss">缺音效集：${g.missingDirs.map((id) => esc(dirById.get(id)?.nameZh || id)).join("、")}</div>`
+              : "") +
+            (g.missingAmb.length
+              ? `<div class="dep-warn dep-miss">缺氛围音：${g.missingAmb.map((a) => esc(ambZh(a))).join("、")}</div>`
+              : "") +
+            `</div>`
+        )
+        .join("")
+    : `<div class="dep-ok">已覆盖所有已放置装饰的主题音效集与氛围音。</div>`;
+
+  // ---- dependencies panel ----
+  let depsHtml = "";
+  if (analysis) {
+    const miss = analysis.missing.filter((b) => !alwaysLoaded.has(b));
+    const extras = analysis.extras;
+    const missHtml = miss.length
+      ? `<div class="dep-warn dep-miss">🔴 缺失（保存时自动加入）：<b>${miss.map(esc).join(", ")}</b></div>`
+      : `<div class="dep-ok">依赖资源包完整。</div>`;
+    const extrasHtml = extras.length
+      ? `<div class="dep-warn dep-extra">🟡 检测到未使用 bundle：${extras.map(esc).join(", ")} <label class="modal-check inline"><input type="checkbox" id="au-clean"> 清理未用 bundle</label></div>`
+      : "";
+    const cur2 = analysis.current.length ? analysis.current.map(esc).join(", ") : "<i class='muted'>（无）</i>";
+    depsHtml = `
+      <p class="modal-hint" style="margin-top:8px">依赖资源包 <code>LevelInfoSO.dependencies</code></p>
+      <div class="dep-box">
+        <div class="muted">当前：${cur2}</div>
+        ${missHtml}
+        ${extrasHtml}
+      </div>`;
+  }
+
+  // ---- render ----
+  const detectedThemes = [...themeSignals.themes, ...(themeSignals.raft ? ["raft"] : [])];
+  const recHint = detectedThemes.length
+    ? `检测到主题：${detectedThemes.map((t) => esc(themeLabelZh(t))).join("、")}`
+    : "未检测到明显主题（可手动选择）";
 
   openModal(
     `音频配置 · ${detail.levelName || detail.levelNameZH}`,
     `
-    <p class="modal-hint">这些字段写入场景的 <code>PseudoPrefabManagerStub</code>。保存后会自动打开/保存该场景并触发 Reload。许多 BGM 所在 bundle 不在默认加载列表，需在基础信息的 dependencies 额外添加（如木筏 BGM 需 bundle11）。</p>
-    <label class="m-field">关卡 BGM (InLevelMusicSO)<select id="au-music">${musicOpts}</select></label>
-    <label class="m-field">死亡特效 (OnDeathEffectSO)<select id="au-death">${deathOpts}</select></label>
-    <p class="modal-hint">氛围音 InLevelAmbiences</p>
-    <div class="modal-scroll">${ambChecks || '<p class="muted">无</p>'}</div>
-    <p class="modal-hint" style="margin-top:8px">音效集 AudioDirectorySOs</p>
-    <div class="modal-scroll">${dirChecks || '<p class="muted">无</p>'}</div>
+    <p class="modal-hint">写入场景的 <code>PseudoPrefabManagerStub</code>。保存时会自动打开/保存场景、Reload，并<b>自动把所选 BGM / 音效集所需 bundle 并入 <code>LevelInfoSO.dependencies</code></b>（只增不删）。</p>
+    <div class="audio-grid">
+      <label class="m-field">关卡 BGM (InLevelMusicSO)<select id="au-music">${bgmOptHtml}</select></label>
+      <div id="au-music-warn" class="dep-warn dep-miss" style="display:none"></div>
+      <label class="m-field">死亡特效 (OnDeathEffectSO)<select id="au-death">${deathOptHtml}</select>
+        <span class="muted small">快捷：<button type="button" class="link-btn" data-death-theme="water">水面</button> / <button type="button" class="link-btn" data-death-theme="goo">黏液</button></span>
+      </label>
+    </div>
+    <div class="modal-actions"><button type="button" class="m-btn small" id="au-apply-rec">✨ 应用主题推荐</button> <span class="muted small">${recHint}</span></div>
+
+    <p class="modal-hint" style="margin-top:8px">覆盖检查（根据已放置装饰的主题）${gaps.length ? ` · <span class="dep-miss">有 ${gaps.length} 个主题存在缺失</span>` : ""} <button type="button" class="link-btn" id="au-fix-gaps" ${gaps.length ? "" : "disabled"}>添加所有缺失</button></p>
+    <div class="dep-box">${gapHtml}</div>
+
+    <p class="modal-hint" style="margin-top:8px">强制音效集（5，锁定）—— 全局玩法 / 脚步 / 语音 / 厨房氛围 / UI</p>
+    <div class="modal-scroll locked">${mandatoryHtml || '<p class="muted">未找到强制音效集（请检查 audio-knowledge.json 与 common01 目录）</p>'}</div>
+
+    <p class="modal-hint" style="margin-top:8px">主题音效集 AudioDirectorySOs（叠加在强制 5 之上）</p>
+    <div class="modal-scroll">${dirGroupsHtml || '<p class="muted">无</p>'}</div>
+
+    <p class="modal-hint" style="margin-top:8px">氛围音 InLevelAmbiences</p>
+    <div class="modal-scroll">${ambGroupsHtml || '<p class="muted">无</p>'}</div>
+    ${depsHtml}
     `,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>保存</button>`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
 
+  // ---- helpers to refresh derived UI ----
+  const musicBundleMissing = (): string | null => {
+    const m = musicByGuid.get(state.musicGuid);
+    if (!m || !m.bundleName) return null;
+    if (alwaysLoaded.has(m.bundleName) || baseBundles.has(m.bundleName)) return null;
+    // accurate check: is the BGM's bundle reachable from the declared dependencies?
+    const loaded = api.bundleClosure(bundleGraph, detail.dependencies || []);
+    if (loaded.has(m.bundleName)) return null;
+    return m.bundleName;
+  };
+  const refreshMusicWarn = (): void => {
+    const el = document.getElementById("au-music-warn");
+    if (!el) return;
+    const missing = musicBundleMissing();
+    if (missing) {
+      el.style.display = "";
+      el.innerHTML = `⚠️ 该 BGM 需要 <b>${esc(missing)}</b>，当前 dependencies 未包含——保存时会自动加入。`;
+    } else {
+      el.style.display = "none";
+    }
+  };
+
+  // ---- wire events ----
+  document.getElementById("au-music")?.addEventListener("change", (e) => {
+    state.musicGuid = (e.target as HTMLSelectElement).value;
+    refreshMusicWarn();
+  });
+  document.getElementById("au-death")?.addEventListener("change", (e) => {
+    state.deathGuid = (e.target as HTMLSelectElement).value;
+  });
+  document.querySelectorAll<HTMLInputElement>("[data-dir]").forEach((el) =>
+    el.addEventListener("change", () => {
+      if (el.checked) state.dirGuids.add(el.value);
+      else state.dirGuids.delete(el.value);
+    })
+  );
+  document.querySelectorAll<HTMLInputElement>("[data-amb]").forEach((el) =>
+    el.addEventListener("change", () => {
+      if (el.checked) state.ambiences.add(el.value);
+      else state.ambiences.delete(el.value);
+    })
+  );
+
+  // death theme quick buttons
+  document.querySelectorAll<HTMLButtonElement>("[data-death-theme]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const themeKey = btn.dataset.deathTheme || "";
+      const dt = knowledge.deathThemes.find((t) => t.key === themeKey);
+      if (!dt) return;
+      const hit = [...deaths].find((d) => d.id.includes(dt.effectIdHint));
+      if (hit) {
+        state.deathGuid = hit.guid;
+        const sel = document.getElementById("au-death") as HTMLSelectElement | null;
+        if (sel) sel.value = hit.guid;
+        setStatus(`已选死亡特效：${hit.id}`);
+      }
+    });
+  });
+
+  // apply recommendations
+  document.getElementById("au-apply-rec")?.addEventListener("click", () => {
+    rec.dirIds.forEach((id) => {
+      const e = dirById.get(id);
+      if (e) {
+        state.dirGuids.add(e.guid);
+        const cb = document.querySelector<HTMLInputElement>(`[data-dir][value="${e.guid}"]`);
+        if (cb) cb.checked = true;
+      }
+    });
+    rec.ambiences.forEach((a) => {
+      if (ambiances.includes(a)) {
+        state.ambiences.add(a);
+        const cb = document.querySelector<HTMLInputElement>(`[data-amb][value="${a}"]`);
+        if (cb) cb.checked = true;
+      }
+    });
+    if (!state.musicGuid && rec.bgmId) {
+      const m = music.find((x) => x.id === rec.bgmId);
+      if (m) {
+        state.musicGuid = m.guid;
+        const sel = document.getElementById("au-music") as HTMLSelectElement | null;
+        if (sel) sel.value = m.guid;
+        refreshMusicWarn();
+      }
+    }
+    if (rec.deathTheme) {
+      const dt = knowledge.deathThemes.find((t) => t.key === rec.deathTheme);
+      if (dt) {
+        const hit = [...deaths].find((d) => d.id.includes(dt.effectIdHint));
+        if (hit) {
+          state.deathGuid = hit.guid;
+          const sel = document.getElementById("au-death") as HTMLSelectElement | null;
+          if (sel) sel.value = hit.guid;
+        }
+      }
+    }
+    setStatus("已套用主题推荐（可继续手动调整）");
+  });
+
+  // fix all detected coverage gaps (check the missing themed dirs + ambiences)
+  document.getElementById("au-fix-gaps")?.addEventListener("click", () => {
+    let n = 0;
+    for (const g of gaps) {
+      for (const id of g.missingDirs) {
+        const e = dirById.get(id);
+        if (!e) continue;
+        state.dirGuids.add(e.guid);
+        const cb = document.querySelector<HTMLInputElement>(`[data-dir][value="${e.guid}"]`);
+        if (cb) cb.checked = true;
+        n++;
+      }
+      for (const a of g.missingAmb) {
+        if (!ambiances.includes(a)) continue;
+        state.ambiences.add(a);
+        const cb = document.querySelector<HTMLInputElement>(`[data-amb][value="${a}"]`);
+        if (cb) cb.checked = true;
+        n++;
+      }
+    }
+    setStatus(n ? `已补齐 ${n} 项缺失音效集/氛围音` : "无缺失需要补齐");
+  });
+
+  refreshMusicWarn();
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     try {
-      const ambiences: string[] = [];
-      document.querySelectorAll<HTMLInputElement>("[data-amb]:checked").forEach((el) => ambiences.push(el.value));
-      const audioDirectoryGuids: string[] = [];
-      document.querySelectorAll<HTMLInputElement>("[data-dir]:checked").forEach((el) => audioDirectoryGuids.push(el.value));
+      state.cleanExtras =
+        (document.getElementById("au-clean") as HTMLInputElement | null)?.checked ?? false;
+      const ambiences = [...state.ambiences];
+      const audioDirectoryGuids = effectiveDirGuids();
+
+      // optional cleanup first (trim confirmed-unused bundles), then audio save auto-merges required.
+      if (state.cleanExtras && analysis && analysis.extras.length) {
+        const cur2 = new Set(analysis.current);
+        analysis.extras.forEach((b) => cur2.delete(b));
+        const kept = [...cur2];
+        showBusy("清理未用 bundle…");
+        await api.updateLevelInfo({
+          assetPath: detail.levelInfoAssetPath,
+          levelName: detail.levelName,
+          levelNameZH: detail.levelNameZH,
+          sceneName: detail.sceneName,
+          debugRecipeCount: detail.debugRecipeCount,
+          disableDynamicParenting: detail.disableDynamicParenting,
+          dependencies: kept,
+        });
+      }
+
       showBusy("保存音频配置（打开并保存场景）…");
       await api.updateLevelAudio({
         sceneAssetPath: detail.sceneAssetPath,
-        inLevelMusicGuid: (document.getElementById("au-music") as HTMLSelectElement).value,
+        inLevelMusicGuid: state.musicGuid,
         ambiences,
         audioDirectoryGuids,
-        onDeathEffectGuid: (document.getElementById("au-death") as HTMLSelectElement).value,
+        onDeathEffectGuid: state.deathGuid,
       });
       closeModal();
-      setStatus("音频配置已保存（已 reload）");
+      setStatus("音频配置已保存（已 reload，所需 bundle 已自动补齐）");
       onSaved();
     } catch (e) {
       setStatus((e as Error).message, false);

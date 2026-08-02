@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 /**
- * Scans common01/common02 prefabs and 使用手册.md for Chinese names.
- * Output: layout-editor/web/public/catalog.json
+ * Scans common01/common02 assets and 使用手册.md for Chinese names.
+ * Outputs (layout-editor/web/public/, synced to web/dist/):
+ *   catalog.json         prefab layout palette
+ *   ingredients.json     food ingredients (incl. dlc02/dlc05)
+ *   recipes.json         recipes (original / custom / dlc, composition resolved)
+ *   cooking-steps.json   cooking & plating steps
+ *   audio-catalog.json   music / audio directories / death effects
+ *   floor-materials.json swappable floor materials per level set
+ * Recipe compositions come from data/recipe-knowledge.json (shared with the
+ * Unity editor C# bridge) plus statically parsed CustomRecipeSO references.
  */
 import fs from "fs";
 import path from "path";
@@ -16,11 +24,33 @@ const PREFAB_ROOTS = [
 ];
 
 const MANUAL_PATH = path.join(repoRoot, "使用手册.md");
-const OUT_PATH = path.join(repoRoot, "layout-editor/web/public/catalog.json");
+const KNOWLEDGE_PATH = path.join(__dirname, "data", "recipe-knowledge.json");
+const AUDIO_KNOWLEDGE_PATH = path.join(__dirname, "data", "audio-knowledge.json");
+const DICTIONARY_PATH = path.join(__dirname, "data", "names-dictionary.json");
+const OUT_DIR = path.join(repoRoot, "layout-editor/web/public");
+const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
+
+/** Bumped when output schema / shared data files change; the Unity bridge reports
+ *  its own version via /api/health so the web UI can warn about outdated bridges. */
+const SCHEMA_VERSION = 3;
+
+/** Unity script guids (Assets/Scripts/LevelEditorStub/*.cs.meta). */
+const SCRIPT_GUID = {
+  PseudoPrefabSO: "0cff7c13895ab9e47a5e02d4619cc3b9",
+  PseudoPrefabSORecipe: "753d9e70603f6a140b05f30f176ec2dd",
+  CustomRecipeSO: "83fb008bcc8e793429b02c178c430815",
+  CustomRecipeOptionalPizzaSO: "60297950c88d0d646ac0eca5dc831262",
+};
 
 const FOOTPRINT_OVERRIDES = {
   ServingStation: { cellsX: 2, cellsZ: 1 },
   Sink: { cellsX: 2, cellsZ: 1 },
+  SinkGlass: { cellsX: 2, cellsZ: 1 },
+  // multi-cell decor (by naming convention: xN = N 格长, Nunit = N 格)
+  crate_raft_x2_01: { cellsX: 2, cellsZ: 1 },
+  Crate_raft_x3_01: { cellsX: 3, cellsZ: 1 },
+  Crate_raft_x10_01: { cellsX: 10, cellsZ: 1 },
+  barrier_rope_2unit_01: { cellsX: 2, cellsZ: 1 },
 };
 
 const DEFAULT_PARENT = {
@@ -57,18 +87,90 @@ const ART_THEME_ZH = {
   dlc09_wonderland: "仙境 DLC",
 };
 
-/** Utensil stack rules (使用手册 §3.3). */
+/** Utensil stack rules (使用手册 §3.3, extended with DLC stations). */
 const UTENSIL_STACK = {
   Plate: { y: 1, hostRule: "counter_standard" },
   CleanPlateStack: { y: 1, hostRule: "counter_standard" },
+  Glass: { y: 1, hostRule: "counter_standard" },
+  CleanGlassStack: { y: 1, hostRule: "counter_standard" },
   FireExtinguisher: { y: 1, hostRule: "counter_standard" },
   Flamethrower: { y: 1, hostRule: "counter_standard" },
+  WaterGun: { y: 1, hostRule: "counter_standard" },
   Pot: { y: 0.6, hostRule: "cooker" },
   Steamer: { y: 0.6, hostRule: "cooker" },
   FryPan: { y: 0.6, hostRule: "cooker" },
   FrierBasket: { y: 0.6, hostRule: "frying_station" },
   MixerBowl: { y: 0.6, hostRule: "mixer" },
+  BlenderCup: { y: 0.6, hostRule: "blender" },
+  GriddlePan: { y: 0.6, hostRule: "campfire" },
+  Skewer: { y: 0.6, hostRule: "barbeque" },
+  ToastingFork: { y: 0.6, hostRule: "campfire" },
+  Bellows: { y: 0.6, hostRule: "campfire" },
 };
+
+/** Palette ordering: utensils cluster by paired workstation, counters by workflow. */
+const HOST_SORT_ORDER = [
+  "cooker",
+  "frying_station",
+  "mixer",
+  "blender",
+  "barbeque",
+  "campfire",
+  "counter_standard",
+];
+
+const COUNTER_SORT_ORDER = [
+  "Counter",
+  "CounterCorner",
+  "ChoppingCounter",
+  "Dispenser",
+  "Cooker",
+  "FryingStation",
+  "Oven",
+  "Mixer",
+  "Blender",
+  "Barbeque",
+  "Campfire",
+  "Sink",
+  "SinkGlass",
+  "Bin",
+  "ServingStation",
+  "PlateReturn",
+  "GlassReturn",
+  "ConveyorStation",
+];
+
+/** Recipe family derived from the recipe id (mirrors LayoutEditorCatalogApi.RecipeTypeOf). */
+function recipeTypeOf(id) {
+  const head = id.split("_")[0];
+  const map = {
+    Burger: "burger",
+    Burrito: "burrito",
+    Cake: "cake",
+    Fry: "fry",
+    Fried: "fry",
+    Pasta: "pasta",
+    Pizza: "pizza",
+    Salad: "salad",
+    Steamed: "steamed",
+    Sushi: "sushi",
+    Kebob: "kebab",
+    Smoothie: "smoothie",
+    Breakfast: "breakfast",
+    Smores: "smores",
+    Mixed: "batter",
+    Mushroom: "pizza",
+    Soup: "soup",
+  };
+  const mapped = map[head];
+  if (mapped === "cake" && id.includes("Pancake")) return "pancake";
+  if (mapped) return mapped;
+  if (id.startsWith("Fried") || id.startsWith("Fry")) return "fry";
+  if (id.startsWith("Mixed")) return "batter";
+  if (id.includes("Pancake")) return "pancake";
+  if (id.includes("Soup")) return "soup";
+  return "other";
+}
 
 function readGuid(metaPath) {
   if (!fs.existsSync(metaPath)) return null;
@@ -137,7 +239,13 @@ function surfaceMeta(id) {
   if (/^sky$|background/.test(lower)) {
     surfaceTier = "background";
     surfaceKind = "background";
-  } else if (id === "raft_water" || id === "alien_gue") {
+  } else if (id === "raft_water" || id === "alien_gue" || id === "sand_01") {
+    // Theme background planes (water / alien goo / sand), placed as backdrops
+    // and switched via the background-theme dropdown.
+    surfaceTier = "background";
+    surfaceKind = "background";
+  } else if (id === "p_dlc5_camp_water" || id === "p_dlc5_camp_river") {
+    // DLC5 camping water/river backdrop planes (analogous to raft_water).
     surfaceTier = "background";
     surfaceKind = "background";
   } else if (/^raft_raft_/.test(lower)) {
@@ -163,6 +271,7 @@ function surfaceMeta(id) {
   if (surfaceKind) out.surfaceKind = surfaceKind;
   return out;
 }
+
 
 function walkPrefabs(dir, baseAssetsPath, out) {
   const baseAbs = path.resolve(repoRoot, baseAssetsPath);
@@ -273,9 +382,494 @@ function tidyCatalogNameZh(zh) {
   return zh.replace(/\s*[×xX]\d+\s*$/u, "").trim();
 }
 
+// ---------------------------------------------------------------------------
+// Shared asset index + Unity YAML field parsing
+// ---------------------------------------------------------------------------
+
+function listFilesRecursive(dir, filter) {
+  const out = [];
+  if (!fs.existsSync(dir)) return out;
+  for (const name of fs.readdirSync(dir)) {
+    const full = path.join(dir, name);
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) out.push(...listFilesRecursive(full, filter));
+    else if (filter(name)) out.push(full);
+  }
+  return out;
+}
+
+function toAssetPath(absPath) {
+  return path.relative(repoRoot, absPath).replace(/\\/g, "/");
+}
+
+/** guid -> { id, assetPath } for every asset under the given roots. */
+function buildGuidIndex(roots) {
+  const index = new Map();
+  for (const root of roots) {
+    const abs = path.join(repoRoot, root);
+    for (const meta of listFilesRecursive(abs, (n) => n.endsWith(".meta"))) {
+      const guid = readGuid(meta);
+      if (!guid) continue;
+      const assetPath = toAssetPath(meta.replace(/\.meta$/, ""));
+      index.set(guid, { id: path.basename(assetPath).replace(/\.[^.]+$/, ""), assetPath });
+    }
+  }
+  return index;
+}
+
+const REF_RE = /\{fileID:\s*\d+,\s*guid:\s*([a-f0-9]+),/;
+
+function parseRefGuid(line) {
+  const m = line.match(REF_RE);
+  return m ? m[1] : null;
+}
+
+/** Minimal field extractor for PseudoPrefabSO / recipe ScriptableObject YAML. */
+function parseUnityAsset(filePath) {
+  const text = fs.readFileSync(filePath, "utf8");
+  const lines = text.split("\n");
+  const out = { compositionGuids: [], optionalGuids: [] };
+  let listTarget = null;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    let m;
+    if ((m = trimmed.match(/^m_Script:\s*\{fileID:\s*\d+,\s*guid:\s*([a-f0-9]+)/))) {
+      out.scriptGuid = m[1];
+    } else if ((m = trimmed.match(/^(\w+):\s*(.*)$/))) {
+      const key = m[1];
+      const value = m[2];
+      listTarget = null;
+      if (key === "score") out.score = Number(value) || 0;
+      else if (key === "uID") out.uID = Number(value) || 0;
+      else if (key === "type") out.recipeType = Number(value) || 0;
+      else if (key === "prefabName") out.prefabName = value;
+      else if (key === "bundleName") out.bundleName = value;
+      else if (key === "recipeName") out.recipeName = value;
+      else if (key === "cookingStepSO") out.cookingStepGuid = parseRefGuid(value);
+      else if (key === "platingStepSO") out.platingStepGuid = parseRefGuid(value);
+      else if (key === "compositionSOs") listTarget = out.compositionGuids;
+      else if (key === "optionalSOs") listTarget = out.optionalGuids;
+    } else if (listTarget && trimmed.startsWith("- ")) {
+      const guid = parseRefGuid(trimmed);
+      if (guid) listTarget.push(guid);
+    } else if (!trimmed.startsWith("-")) {
+      listTarget = null;
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Name fallbacks (mirror LayoutEditorManualLookup)
+// ---------------------------------------------------------------------------
+
+function fallbackNameZh(id) {
+  if (!id) return "—";
+  return id.endsWith("SO") ? id.slice(0, -2) : id;
+}
+
+function fallbackNameEn(id) {
+  if (!id) return "—";
+  const base = id.endsWith("SO") ? id.slice(0, -2) : id;
+  return base.replace(/([a-z])([A-Z])/g, "$1 $2");
+}
+
+function loadDictionary() {
+  if (!fs.existsSync(DICTIONARY_PATH)) {
+    console.warn(`WARN: dictionary file missing: ${DICTIONARY_PATH}`);
+    return new Map();
+  }
+  const raw = JSON.parse(fs.readFileSync(DICTIONARY_PATH, "utf8"));
+  const map = new Map();
+  for (const entry of raw.names || []) {
+    if (entry && entry.id) map.set(entry.id, { zh: entry.zh, en: entry.en });
+  }
+  return map;
+}
+
+/** Lookup order: names-dictionary.json -> 使用手册.md -> id fallback. */
+function lookupName(dictionary, idToRow, id) {
+  const dict = dictionary.get(id) || dictionary.get(id.replace(/SO$/, ""));
+  if (dict?.zh) {
+    // Dictionary entries are curated; do NOT strip "xN" (can be a real size tag like 1x28).
+    return { nameZh: dict.zh, nameEn: dict.en || fallbackNameEn(id) };
+  }
+  const row = idToRow.get(id) || idToRow.get(id.replace(/SO$/, ""));
+  return {
+    nameZh: tidyCatalogNameZh(row?.zh || fallbackNameZh(id)),
+    nameEn: row?.en || fallbackNameEn(id),
+  };
+}
+
+/** "core" / "custom" / "dlc02" / "dlc05" from an asset path. */
+function foodGroupOf(assetPath) {
+  if (assetPath.includes("/CustomRecipes/")) return "custom";
+  const m = assetPath.match(/\/(dlc\d+)\//);
+  if (m) return m[1];
+  return "core";
+}
+
+// ---------------------------------------------------------------------------
+// Food scans
+// ---------------------------------------------------------------------------
+
+function scanIngredients(dictionary, idToRow) {
+  const roots = ["Assets/common01/food/Ingredients", "Assets/common02/food/Ingredients"];
+  const list = [];
+  const seen = new Set();
+  for (const root of roots) {
+    for (const file of listFilesRecursive(path.join(repoRoot, root), (n) => n.endsWith(".asset"))) {
+      const fields = parseUnityAsset(file);
+      if (fields.scriptGuid !== SCRIPT_GUID.PseudoPrefabSO) continue;
+      const guid = readGuid(file + ".meta");
+      if (!guid || !seen.add(guid)) continue;
+      const assetPath = toAssetPath(file);
+      const id = path.basename(file, ".asset");
+      list.push({
+        guid,
+        id,
+        ...lookupName(dictionary, idToRow, id),
+        assetPath,
+        group: foodGroupOf(assetPath),
+      });
+    }
+  }
+  list.sort((a, b) => a.nameZh.localeCompare(b.nameZh));
+  return list;
+}
+
+function loadKnowledge() {
+  if (!fs.existsSync(KNOWLEDGE_PATH)) {
+    console.warn(`WARN: knowledge file missing: ${KNOWLEDGE_PATH}`);
+    return { recipes: {}, skip: [], cookSteps: [] };
+  }
+  const raw = JSON.parse(fs.readFileSync(KNOWLEDGE_PATH, "utf8"));
+  const recipes = {};
+  for (const entry of raw.recipes || []) recipes[entry.id] = entry;
+  return {
+    recipes,
+    skip: new Set(raw.skip || []),
+    cookSteps: new Set(raw.cookSteps || []),
+  };
+}
+
+function loadAudioKnowledge() {
+  const empty = {
+    baseBundles: ["bundle47"],
+    alwaysLoadedBundles: ["bundle18"],
+    mandatoryDirectoryIds: [],
+    directoryEvents: [],
+    themes: [],
+    deathThemes: [],
+    ambienceLabels: [],
+  };
+  if (!fs.existsSync(AUDIO_KNOWLEDGE_PATH)) {
+    console.warn(`WARN: audio knowledge file missing: ${AUDIO_KNOWLEDGE_PATH}`);
+    return empty;
+  }
+  try {
+    const raw = JSON.parse(fs.readFileSync(AUDIO_KNOWLEDGE_PATH, "utf8"));
+    return {
+      baseBundles: raw.baseBundles || empty.baseBundles,
+      alwaysLoadedBundles: raw.alwaysLoadedBundles || empty.alwaysLoadedBundles,
+      mandatoryDirectoryIds: raw.mandatoryDirectoryIds || [],
+      directoryEvents: raw.directoryEvents || [],
+      themes: raw.themes || [],
+      deathThemes: raw.deathThemes || [],
+      ambienceLabels: raw.ambienceLabels || [],
+    };
+  } catch (e) {
+    console.warn(`WARN: audio knowledge file unreadable: ${e.message}`);
+    return empty;
+  }
+}
+
+function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
+  const roots = [
+    "Assets/common01/food/Recipes",
+    "Assets/common01/food/CustomRecipes",
+    "Assets/common02/food/Recipes",
+  ];
+  const customByGuid = new Map();
+  const originals = [];
+  for (const root of roots) {
+    for (const file of listFilesRecursive(path.join(repoRoot, root), (n) => n.endsWith(".asset"))) {
+      const fields = parseUnityAsset(file);
+      const isCustom =
+        fields.scriptGuid === SCRIPT_GUID.CustomRecipeSO ||
+        fields.scriptGuid === SCRIPT_GUID.CustomRecipeOptionalPizzaSO;
+      const isOriginal = fields.scriptGuid === SCRIPT_GUID.PseudoPrefabSORecipe;
+      if (!isCustom && !isOriginal) continue;
+      const guid = readGuid(file + ".meta");
+      if (!guid) continue;
+      const entry = { file, guid, id: path.basename(file, ".asset"), assetPath: toAssetPath(file), fields, isCustom };
+      if (isCustom) customByGuid.set(guid, entry);
+      else originals.push(entry);
+    }
+  }
+
+  const list = [];
+  const skipped = [];
+
+  for (const entry of customByGuid.values()) {
+    const { fields } = entry;
+    const ingredientIds = [];
+    const stats = { ings: 0, cooks: 0 };
+    const seenCustom = new Set();
+    const expand = (guid) => {
+      const sub = customByGuid.get(guid);
+      if (sub) {
+        if (seenCustom.has(guid)) return;
+        seenCustom.add(guid);
+        const stepId = sub.fields.cookingStepGuid ? guidIndex.get(sub.fields.cookingStepGuid)?.id || "" : "";
+        if (sub.fields.cookingStepGuid && knowledge.cookSteps.has(stepId)) stats.cooks++;
+        for (const g of sub.fields.compositionGuids) expand(g);
+        return;
+      }
+      stats.ings++;
+      const leaf = guidIndex.get(guid);
+      const leafId = leaf ? leaf.id : guid;
+      if (!ingredientIds.includes(leafId)) ingredientIds.push(leafId);
+    };
+    if (fields.cookingStepGuid) {
+      const stepId = guidIndex.get(fields.cookingStepGuid)?.id || "";
+      if (knowledge.cookSteps.has(stepId)) stats.cooks++;
+    }
+    seenCustom.add(entry.guid);
+    for (const g of fields.compositionGuids) expand(g);
+
+    const step = fields.cookingStepGuid ? guidIndex.get(fields.cookingStepGuid)?.id || "" : "";
+    const ingredientCount = stats.ings > 0 ? stats.ings : ingredientIds.length;
+    list.push({
+      guid: entry.guid,
+      id: entry.id,
+      ...lookupName(dictionary, idToRow, entry.id),
+      assetPath: entry.assetPath,
+      cookingStep: step,
+      ingredients: ingredientIds,
+      ingredientCount,
+      cookingStepCount: stats.cooks,
+      score: fields.score || 0,
+      isCustom: true,
+      group: foodGroupOf(entry.assetPath),
+      type: recipeTypeOf(entry.id),
+      intermediate: (fields.score || 0) <= 0,
+    });
+  }
+
+  for (const entry of originals) {
+    const { fields, id } = entry;
+    if (knowledge.skip.has(id) || knowledge.skip.has(fields.prefabName)) {
+      skipped.push(`${id} (knowledge skip)`);
+      continue;
+    }
+    const k = knowledge.recipes[id] || knowledge.recipes[`${fields.prefabName}_SO`];
+    if (!k) {
+      skipped.push(`${id} (no composition info)`);
+      continue;
+    }
+    const step = k.step || "";
+    const ings = k.ingredients || [];
+    for (const ing of ings) {
+      if (![...guidIndex.values()].some((v) => v.id === ing))
+        console.warn(`WARN: knowledge ${id}: unknown ingredient id ${ing}`);
+    }
+    list.push({
+      guid: entry.guid,
+      id,
+      ...lookupName(dictionary, idToRow, id),
+      assetPath: entry.assetPath,
+      cookingStep: step,
+      ingredients: ings,
+      ingredientCount: ings.length,
+      cookingStepCount: step && knowledge.cookSteps.has(step) ? 1 : 0,
+      score: fields.score || 0,
+      isCustom: false,
+      group: foodGroupOf(entry.assetPath),
+      type: recipeTypeOf(id),
+      intermediate: (fields.score || 0) <= 0,
+    });
+  }
+
+  list.sort((a, b) => a.nameZh.localeCompare(b.nameZh));
+  return { list, skipped };
+}
+
+function scanCookingSteps(dictionary, idToRow) {
+  const dirs = [
+    { root: "Assets/common01/food/CookingSteps", kind: "cooking" },
+    { root: "Assets/common02/food/CookingSteps", kind: "cooking" },
+    { root: "Assets/common01/food/PlatingSteps", kind: "plating" },
+    { root: "Assets/common02/food/PlatingSteps", kind: "plating" },
+  ];
+  const list = [];
+  const seen = new Set();
+  for (const { root, kind } of dirs) {
+    for (const file of listFilesRecursive(path.join(repoRoot, root), (n) => n.endsWith(".asset"))) {
+      const fields = parseUnityAsset(file);
+      if (fields.scriptGuid !== SCRIPT_GUID.PseudoPrefabSO) continue;
+      const guid = readGuid(file + ".meta");
+      if (!guid || !seen.add(guid)) continue;
+      const id = path.basename(file, ".asset");
+      list.push({
+        guid,
+        id,
+        ...lookupName(dictionary, idToRow, id),
+        kind,
+        assetPath: toAssetPath(file),
+        bundleName: fields.bundleName || "",
+        group: foodGroupOf(toAssetPath(file)),
+      });
+    }
+  }
+  list.sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
+  return list;
+}
+
+// ---------------------------------------------------------------------------
+// Audio + floor material scans
+// ---------------------------------------------------------------------------
+
+function scanPseudoSoFolder(roots) {
+  const list = [];
+  const seen = new Set();
+  for (const root of roots) {
+    for (const file of listFilesRecursive(path.join(repoRoot, root), (n) => n.endsWith(".asset"))) {
+      const guid = readGuid(file + ".meta");
+      if (!guid || !seen.add(guid)) continue;
+      const fields = parseUnityAsset(file);
+      list.push({
+        guid,
+        id: path.basename(file, ".asset"),
+        assetPath: toAssetPath(file),
+        bundleName: fields.bundleName || "",
+      });
+    }
+  }
+  return list;
+}
+
+function scanAudioCatalog(dictionary, idToRow) {
+  const musicRoots = [
+    "Assets/common01/pseudo_prefab_so/audio/music",
+    "Assets/common02/pseudo_prefab_so/audio/music",
+  ];
+  const dirRoots = [
+    "Assets/common01/pseudo_prefab_so/audio/AudioDirectories",
+    "Assets/common02/pseudo_prefab_so/audio/AudioDirectories",
+  ];
+  const soRoots = ["Assets/common01/pseudo_prefab_so", "Assets/common02/pseudo_prefab_so"];
+
+  const music = scanPseudoSoFolder(musicRoots).map((m) => ({
+    ...m,
+    nameZh: tidyCatalogNameZh(dictionary.get(m.id)?.zh || idToRow.get(m.id)?.zh || m.id),
+  }));
+  music.sort((a, b) => a.id.localeCompare(b.id));
+
+  const audioDirectories = scanPseudoSoFolder(dirRoots).map((m) => ({
+    ...m,
+    nameZh: tidyCatalogNameZh(dictionary.get(m.id)?.zh || idToRow.get(m.id)?.zh || m.id),
+  }));
+  audioDirectories.sort((a, b) => a.id.localeCompare(b.id));
+
+  const deathEffects = scanPseudoSoFolder(soRoots)
+    .filter((m) => m.id.includes("WaterSplash") || m.id.includes("DeathEffect"))
+    .map((m) => {
+      const names = lookupName(dictionary, idToRow, m.id);
+      return {
+        guid: m.guid,
+        id: m.id,
+        assetPath: m.assetPath,
+        nameZh: names.nameZh,
+        nameEn: names.nameEn,
+      };
+    });
+  deathEffects.sort((a, b) => a.id.localeCompare(b.id));
+
+  return { music, audioDirectories, deathEffects };
+}
+
+const SIZE_TAG_RE = /_(\d+)x(\d+)(?:_|$)/;
+
+function floorRelevance(id) {
+  const n = id.toLowerCase();
+  if (n.includes("floor")) return 100;
+  if (n.includes("raft")) return 95;
+  if (n.includes("blacktiles") || n.includes("carpet")) return 90;
+  if (n.includes("path")) return 80;
+  if (n.includes("sky") || n.includes("background")) return 70;
+  return 0;
+}
+
+function scanFloorMaterials(dictionary, idToRow) {
+  const roots = [];
+  const setsRoot = path.join(repoRoot, "Assets/LevelSets");
+  if (fs.existsSync(setsRoot)) {
+    for (const setName of fs.readdirSync(setsRoot)) {
+      const matDir = path.join(setsRoot, setName, "materials");
+      if (fs.existsSync(matDir) && fs.statSync(matDir).isDirectory())
+        roots.push({ root: matDir, source: setName });
+    }
+  }
+  for (const shared of ["Assets/common01/materials", "Assets/common02/materials"]) {
+    const abs = path.join(repoRoot, shared);
+    if (fs.existsSync(abs)) roots.push({ root: abs, source: path.basename(path.dirname(shared)) });
+  }
+
+  const list = [];
+  const seen = new Set();
+  for (const { root, source } of roots) {
+    for (const file of listFilesRecursive(root, (n) => n.endsWith(".mat"))) {
+      const guid = readGuid(file + ".meta");
+      if (!guid || !seen.add(guid)) continue;
+      const id = path.basename(file, ".mat");
+      const size = id.match(SIZE_TAG_RE);
+      const names = lookupName(dictionary, idToRow, id);
+      list.push({
+        guid,
+        id,
+        assetPath: toAssetPath(file),
+        nameZh: names.nameZh,
+        nameEn: names.nameEn,
+        sizeTag: size ? `${size[1]}x${size[2]}` : "",
+        source,
+      });
+    }
+  }
+  list.sort((a, b) => floorRelevance(b.id) - floorRelevance(a.id) || a.nameZh.localeCompare(b.nameZh));
+  return list;
+}
+
+// ---------------------------------------------------------------------------
+
+/** Stamps `icon: true` on entries that have an extracted PNG under web/public/icons/<sub>/<id>.png.
+ *  Icons are produced by scripts/extract-icons.py (run separately). */
+function stampIcons(list, sub) {
+  const dir = path.join(OUT_DIR, "icons", sub);
+  let count = 0;
+  for (const it of list) {
+    const has = !!it.id && fs.existsSync(path.join(dir, it.id + ".png"));
+    it.icon = has;
+    if (has) count++;
+  }
+  if (list.length) console.log(`Icons: ${count}/${list.length} ${sub} have a PNG`);
+}
+
+function writeCatalogFile(fileName, payload) {
+  const outPath = path.join(OUT_DIR, fileName);
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, JSON.stringify(payload, null, 2), "utf8");
+  console.log(`Wrote ${payload.itemCount ?? "?"} entries to ${outPath}`);
+  if (fs.existsSync(DIST_DIR)) {
+    fs.copyFileSync(outPath, path.join(DIST_DIR, fileName));
+    console.log(`Synced ${fileName} to ${DIST_DIR}`);
+  }
+}
+
 function main() {
   const manual = fs.existsSync(MANUAL_PATH) ? fs.readFileSync(MANUAL_PATH, "utf8") : "";
   const idToRow = parseManualTable(manual);
+  const dictionary = loadDictionary();
 
   const items = [];
   for (const root of PREFAB_ROOTS) {
@@ -284,14 +878,24 @@ function main() {
   }
 
   for (const item of items) {
-    const row = idToRow.get(item.id) || idToRow.get(item.id.replace(/SO$/, ""));
-    item.nameZh = tidyCatalogNameZh(row?.zh || item.id);
-    item.nameEn = row?.en || item.id;
+    const names = lookupName(dictionary, idToRow, item.id);
+    item.nameZh = names.nameZh;
+    item.nameEn = names.nameEn;
   }
 
   items.sort((a, b) => {
     const c = a.category.localeCompare(b.category);
     if (c !== 0) return c;
+    if (a.category === "utensils") {
+      const ha = HOST_SORT_ORDER.indexOf(a.stack?.hostRule ?? "counter_standard");
+      const hb = HOST_SORT_ORDER.indexOf(b.stack?.hostRule ?? "counter_standard");
+      if (ha !== hb) return ha - hb;
+    }
+    if (a.category === "counters") {
+      const ca = COUNTER_SORT_ORDER.indexOf(a.id);
+      const cb = COUNTER_SORT_ORDER.indexOf(b.id);
+      if (ca !== cb) return (ca < 0 ? 99 : ca) - (cb < 0 ? 99 : cb);
+    }
     return a.id.localeCompare(b.id);
   });
 
@@ -317,24 +921,85 @@ function main() {
 
   const paletteGroups = buildPaletteGroups(byCategory);
 
-  const catalog = {
+  stampIcons(items, "catalog");
+  writeCatalogFile("catalog.json", {
     generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
     gridCellSize: 1.2,
     itemCount: items.length,
     items,
     byCategory,
     paletteGroups,
-  };
+  });
 
-  fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify(catalog, null, 2), "utf8");
-  console.log(`Wrote ${items.length} prefabs to ${OUT_PATH}`);
+  const guidIndex = buildGuidIndex([
+    "Assets/common01/food",
+    "Assets/common02/food",
+  ]);
+  const knowledge = loadKnowledge();
 
-  const distDir = path.join(repoRoot, "layout-editor/web/dist");
-  if (fs.existsSync(distDir)) {
-    const distCatalog = path.join(distDir, "catalog.json");
-    fs.copyFileSync(OUT_PATH, distCatalog);
-    console.log(`Synced catalog to ${distCatalog}`);
+  const ingredients = scanIngredients(dictionary, idToRow);
+  stampIcons(ingredients, "ingredients");
+  writeCatalogFile("ingredients.json", {
+    generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    itemCount: ingredients.length,
+    ingredients,
+  });
+
+  const { list: recipes, skipped } = scanRecipes(dictionary, idToRow, guidIndex, knowledge);
+  stampIcons(recipes, "recipes");
+  writeCatalogFile("recipes.json", {
+    generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    itemCount: recipes.length,
+    recipes,
+  });
+  if (skipped.length > 0) console.log(`Skipped ${skipped.length} recipes:\n  ${skipped.join("\n  ")}`);
+
+  const cookingSteps = scanCookingSteps(dictionary, idToRow);
+  writeCatalogFile("cooking-steps.json", {
+    generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    itemCount: cookingSteps.length,
+    cookingSteps,
+  });
+
+  const audio = scanAudioCatalog(dictionary, idToRow);
+  const audioKnowledge = loadAudioKnowledge();
+  writeCatalogFile("audio-catalog.json", {
+    generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    itemCount: audio.music.length + audio.audioDirectories.length + audio.deathEffects.length,
+    music: audio.music,
+    audioDirectories: audio.audioDirectories,
+    deathEffects: audio.deathEffects,
+    baseBundles: audioKnowledge.baseBundles,
+    alwaysLoadedBundles: audioKnowledge.alwaysLoadedBundles,
+    mandatoryDirectoryIds: audioKnowledge.mandatoryDirectoryIds,
+    directoryEvents: audioKnowledge.directoryEvents,
+    themes: audioKnowledge.themes,
+    deathThemes: audioKnowledge.deathThemes,
+    ambienceLabels: audioKnowledge.ambienceLabels,
+  });
+
+  const materials = scanFloorMaterials(dictionary, idToRow);
+  writeCatalogFile("floor-materials.json", {
+    generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    itemCount: materials.length,
+    materials,
+  });
+
+  // Copy the AssetBundle dependency graph (extracted from the game manifest) so the web UI can
+  // compute transitive closures client-side for accurate BGM bundle-missing warnings.
+  const manifestSrc = path.join(__dirname, "data", "bundle-manifest.json");
+  if (fs.existsSync(manifestSrc)) {
+    for (const dir of [OUT_DIR, DIST_DIR]) {
+      if (!fs.existsSync(dir)) continue;
+      fs.copyFileSync(manifestSrc, path.join(dir, "bundle-manifest.json"));
+    }
+    console.log(`Copied bundle-manifest.json to ${path.basename(OUT_DIR)}`);
   }
 }
 

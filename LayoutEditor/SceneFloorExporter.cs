@@ -49,6 +49,14 @@ public static class SceneFloorExporter
             if (IsPrefabInstance(go))
                 continue;
 
+            // Skip real bundle prefabs spawned at edit-time by the PseudoPrefab
+            // system: they appear as plain (non-prefab) GameObjects under a
+            // placeholder carrying a PseudoPrefabStub, and their quad/mesh would
+            // otherwise be exported as a duplicate "floor" next to the wrapper
+            // instance that the items exporter already round-trips.
+            if (go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>() != null)
+                continue;
+
             TryAddFloor(go, t, floors);
         }
     }
@@ -129,18 +137,31 @@ public static class SceneFloorExporter
             ? LayoutEditorHierarchy.GetHierarchyPath(t.parent)
             : string.Empty;
 
+        // Image-floor state is encoded in the GameObject name (imgfloor|...|mode|opacity).
+        string imgPath;
+        string imgMode;
+        float imgOpacity;
+        SceneLayoutApplier.TryParseImageFloorName(go.name, out imgPath, out imgMode, out imgOpacity);
+
         floors.Add(new FloorDto
         {
             instanceId = "u:" + go.GetInstanceID(),
             hierarchyPath = path,
             parentPath = parentPath,
-            displayName = go.name,
+            displayName = imgPath != null
+                ? System.IO.Path.GetFileName(imgPath)
+                : StripTintFromName(go.name),
             surfaceKind = InferSurfaceKind(go.name, matName, matPath),
             meshType = meshType,
             meshFileId = meshId,
             materialGuid = matGuid,
             materialAssetPath = matPath,
             materialName = matName,
+            tintColor = ExtractTintFromName(go.name),
+            tintEnabled = !string.IsNullOrEmpty(ExtractTintFromName(go.name)),
+            imageTexturePath = imgPath,
+            imageMode = imgMode,
+            imageOpacity = imgOpacity,
             localPosition = LayoutVector3.From(t.localPosition),
             worldPosition = LayoutVector3.From(t.position),
             localRotationY = rotY,
@@ -152,13 +173,36 @@ public static class SceneFloorExporter
         });
     }
 
+    /** Extract a "#rrggbb" tint encoded in the floor name, or null. */
+    private static string ExtractTintFromName(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return null;
+        var i = name.IndexOf('#');
+        if (i < 0) return null;
+        var hex = name.Substring(i + 1);
+        return hex.Length >= 6 ? ("#" + hex.Substring(0, 6).ToLowerInvariant()) : null;
+    }
+
+    /** Floor display name with any trailing "#rrggbb" tint marker removed. */
+    private static string StripTintFromName(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+        var i = name.IndexOf('#');
+        return i < 0 ? name : name.Substring(0, i);
+    }
+
     private static string InferSurfaceKind(string objectName, string materialName, string materialPath)
     {
         var n = objectName == null ? "" : objectName.ToLowerInvariant();
         var m = materialName == null ? "" : materialName.ToLowerInvariant();
         var p = materialPath == null ? "" : materialPath.ToLowerInvariant();
+        // Image floors encode their state in the name; they are solid planes
+        // textured by an image (the path may contain themed words like "ice").
+        if (n.StartsWith(SceneLayoutApplier.ImageFloorPrefix, System.StringComparison.Ordinal))
+            return "solid";
         if (n == "sky" || n.Contains("background") || m.Contains("sky") || m.Contains("background") || p.Contains("background"))
             return "background";
+        // Infer from material name (e.g. themed floor materials authored in Unity).
         if (m.Contains("ice"))
             return "ice";
         if (m.Contains("snow"))

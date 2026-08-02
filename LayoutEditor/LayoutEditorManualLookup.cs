@@ -4,7 +4,10 @@ using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-/// <summary>Chinese / English display names from 使用手册.md tables (same IDs as build-catalog.mjs).</summary>
+/// <summary>
+/// Chinese / English display names. Lookup order: layout-editor/scripts/data/names-dictionary.json
+/// (shared with build-catalog.mjs) -> 使用手册.md tables -> id fallback.
+/// </summary>
 public static class LayoutEditorManualLookup
 {
     private struct NameRow
@@ -13,8 +16,42 @@ public static class LayoutEditorManualLookup
         public string En;
     }
 
+#pragma warning disable 0649 // fields assigned by JsonUtility deserialization
+    [Serializable]
+    private class DictionaryDoc
+    {
+        public int schemaVersion;
+        public DictionaryName[] names;
+    }
+
+    [Serializable]
+    private class DictionaryName
+    {
+        public string id;
+        public string zh;
+        public string en;
+    }
+#pragma warning restore 0649
+
     private static Dictionary<string, NameRow> _byId;
     private static bool _loaded;
+    private static bool _dictionaryLoaded;
+
+    /// <summary>False when names-dictionary.json is missing/unreadable (bridge likely outdated).</summary>
+    public static bool DictionaryLoaded
+    {
+        get
+        {
+            EnsureLoaded();
+            return _dictionaryLoaded;
+        }
+    }
+
+    /// <summary>Reload dictionary + manual (e.g. after editing the JSON files).</summary>
+    public static void InvalidateCache()
+    {
+        _loaded = false;
+    }
 
     public static bool TryGet(string id, out string nameZh, out string nameEn)
     {
@@ -39,6 +76,50 @@ public static class LayoutEditorManualLookup
         _loaded = true;
         _byId = new Dictionary<string, NameRow>(StringComparer.Ordinal);
 
+        LoadDictionaryJson();
+        LoadManual();
+    }
+
+    private static void LoadDictionaryJson()
+    {
+        _dictionaryLoaded = false;
+        var dictPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../layout-editor/scripts/data/names-dictionary.json"));
+        if (!File.Exists(dictPath))
+            return;
+
+        string text;
+        try
+        {
+            text = File.ReadAllText(dictPath);
+        }
+        catch
+        {
+            return;
+        }
+
+        DictionaryDoc doc;
+        try
+        {
+            doc = JsonUtility.FromJson<DictionaryDoc>(text);
+        }
+        catch
+        {
+            return;
+        }
+        if (doc == null || doc.names == null)
+            return;
+
+        foreach (var n in doc.names)
+        {
+            if (n == null || string.IsNullOrEmpty(n.id) || string.IsNullOrEmpty(n.zh))
+                continue;
+            _byId[n.id] = new NameRow { Zh = n.zh, En = string.IsNullOrEmpty(n.en) ? n.id : n.en };
+        }
+        _dictionaryLoaded = true;
+    }
+
+    private static void LoadManual()
+    {
         var manualPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../\u4F7F\u7528\u624B\u518C.md"));
         if (!File.Exists(manualPath))
             return;
@@ -77,7 +158,9 @@ public static class LayoutEditorManualLookup
             if (zh.StartsWith("`", StringComparison.Ordinal))
                 continue;
 
-            _byId[id] = new NameRow { Zh = zh, En = string.IsNullOrEmpty(en) ? id : en };
+            // names-dictionary.json wins over the manual table.
+            if (!_byId.ContainsKey(id))
+                _byId[id] = new NameRow { Zh = zh, En = string.IsNullOrEmpty(en) ? id : en };
         }
     }
 

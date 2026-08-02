@@ -1,4 +1,5 @@
 import type { RecipeEntry } from "./types";
+import { foodGroupLabel } from "./ingredientLabels";
 
 // 拟合常量：用 oc1_story 全部 28 张官方图（448 个星级数据点，3 组随机种子各 30 万次
 // 坐标下降取最优）最小二乘拟合，每关带独立难度系数 d 时平均相对误差约 11.9%。模型：
@@ -17,6 +18,7 @@ export const RATIO_STEP = 0.1;
 
 export interface AutoScoreRecipeDetail {
   name: string;
+  groupLabel: string;
   ingredientCount: number;
   cookingStepCount: number;
   score: number;
@@ -52,6 +54,7 @@ export function computeAutoScores(recipes: RecipeEntry[], roundTimes: number[]):
     const t = recipeTimeSec(r);
     return {
       name: r.nameZh || r.id,
+      groupLabel: foodGroupLabel(r.group),
       ingredientCount: t.ing,
       cookingStepCount: t.cook,
       score: r.score ?? 0,

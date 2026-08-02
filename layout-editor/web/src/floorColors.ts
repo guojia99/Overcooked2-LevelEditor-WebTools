@@ -59,6 +59,7 @@ export const BG_THEMES: BgTheme[] = [
   { key: "void", labelZh: "空洞", emoji: "🕳️", fill: "#15171c", hatch: "rgba(130,132,142,0.10)", deathType: "fall" },
   { key: "water", labelZh: "水", emoji: "💧", fill: "#0e2a47", hatch: "rgba(120,180,230,0.12)", deathType: "water" },
   { key: "sky", labelZh: "天空", emoji: "☁️", fill: "#0d1830", hatch: "rgba(140,170,220,0.10)", deathType: "fall" },
+  { key: "sand", labelZh: "沙地", emoji: "🏜️", fill: "#2a2010", hatch: "rgba(200,170,100,0.10)", deathType: "fall" },
   { key: "goo", labelZh: "外星黏液", emoji: "🟢", fill: "#0f2e24", hatch: "rgba(120,220,140,0.12)", deathType: "goo" },
 ];
 
@@ -78,6 +79,7 @@ export function bgTheme(key: string | undefined): BgTheme {
 export const THEME_BACKGROUND_PREFABS: Record<string, string[]> = {
   sky: ["Sky"],
   water: ["raft_water"],
+  sand: ["sand_01"],
   goo: ["alien_gue"],
 };
 
@@ -182,6 +184,46 @@ export function surfaceKindLabelZh(kind: string | undefined): string {
       return "实心地板";
   }
 }
+
+/** Group key for the solid-floor material picker, by level theme. Sky /
+ *  background and particle-FX materials return keys absent from
+ *  FLOOR_MATERIAL_GROUPS so they are excluded from the picker entirely. */
+export function floorMaterialGroup(id: string): string {
+  const n = (id ?? "").toLowerCase();
+  if (/skybox|starscape|sky|background/.test(n)) return "sky";
+  if (/pfx|glow|particle|effect/.test(n)) return "fx";
+  if (/airballoon/.test(n)) return "airballoon";
+  if (/blacktiles/.test(n)) return "blacktiles";
+  if (/wizard/.test(n)) return "wizard";
+  if (/kevin/.test(n)) return "kevin";
+  if (/city/.test(n)) return "city";
+  if (/alien/.test(n)) return "alien";
+  if (/raft/.test(n)) return "raft";
+  if (/snow/.test(n)) return "snow";
+  if (/ice/.test(n)) return "ice";
+  if (/sand/.test(n)) return "sand";
+  if (/walkway/.test(n)) return "walkway";
+  if (/carpet/.test(n)) return "carpet";
+  return "other";
+}
+
+/** Ordered theme groups for the solid-floor material picker. Sky/FX materials
+ *  have no entry here and are therefore hidden from the list. */
+export const FLOOR_MATERIAL_GROUPS: { key: string; labelZh: string }[] = [
+  { key: "kevin", labelZh: "凯文（故事厨房）" },
+  { key: "airballoon", labelZh: "热气球" },
+  { key: "blacktiles", labelZh: "太空黑砖" },
+  { key: "wizard", labelZh: "魔法学校" },
+  { key: "city", labelZh: "城市" },
+  { key: "alien", labelZh: "外星地板" },
+  { key: "raft", labelZh: "木筏" },
+  { key: "snow", labelZh: "雪地" },
+  { key: "ice", labelZh: "冰面" },
+  { key: "sand", labelZh: "沙地" },
+  { key: "walkway", labelZh: "栈道" },
+  { key: "carpet", labelZh: "地毯" },
+  { key: "other", labelZh: "其他" },
+];
 
 /** Bilingual (zh / en) label for a floor material id, e.g. mat_kevin_floor_12x8. */
 const MAT_ZH: Record<string, string> = {

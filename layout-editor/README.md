@@ -21,11 +21,14 @@
 ### 操作说明
 
 - **场景**：顶栏下拉选择关卡场景并加载  
-- **层（Tab）**：顶栏「📦 物品层」/「🗺️ 地板·背景层」切换；非活动层以半透明鬼影显示、不可点击  
+- **层（Tab）**：顶栏「📦 物品层」/「🎀 装饰层」/「🗺️ 地板·背景层」切换；非活动层以半透明鬼影显示、不可点击  
+  - 物品层：只编辑核心玩法物品（桌台/厨具/机关/厨师），调色板只显示核心分组  
+  - 装饰层：只编辑装饰物（art/NPC 道具），调色板只显示装饰分组；装饰物不再与核心道具混杂  
   - 地板层：编辑场景内 `Floor` 平面（拖动移动、拖角点缩放、右键改尺寸/材质、`Del` 删除、`+ 新增地板` 放置）；显示当前尺寸（格/米）；相邻地板接缝画淡虚线；空洞/水域按死亡类型着色（水=蓝、坠落=暗）；冰面标记「❄」
   - 地板材质来自 `LevelSets/<set>/materials/`（`mat_*floor*` 等），改尺寸时自动按 `*_<W>x<H>` 匹配材质
   - 地板/背景类 prefab（ice_floor、alien_floor、Sky…）拖入画布即归入地板层
-- **目录**：左侧按 **核心**（桌台 / 器具 / 机关 / 厨师）与 **装饰**（含 NPC）分组；中文名 + 英文 ID  
+- **目录**：左侧按 **核心**（桌台 / 器具 / 机关 / 厨师）与 **装饰**（含 NPC）分组；中文名 + 英文 ID。桌台按工作流排序（备餐→烹饪→出餐/回收），厨具按**配套设备**聚类（锅具↔灶台、炸篮↔煎炸台、搅拌碗↔搅拌台、搅拌杯↔搅拌机、烤签↔烧烤架、烤叉/风箱/煎烤盘↔篝火、盘杯↔桌台），条目下方标注「配套XX · 高度」
+- **菜谱**：顶栏 **菜谱…** 按**菜谱类型**分组选择（汉堡/卷饼/披萨/意面/寿司/沙拉/汤/炸物/蒸菜/蛋糕/松饼/冰沙/烤串/早餐/棉花糖饼干/面糊），DLC/自定义来源以徽标标注  
 - **叠放**：盘、杯、搅拌碗等拖到桌台格上会自动对齐桌心（`Design/Utensils`，本地 Y≈1）；锅/蒸笼/煎锅对齐灶台（Y≈0.6）；画布上叠放物为半透明小方块，桌台/灶台等为实色块（按分类配色）  
 - **半格 (0.6)**：默认开启，用于两格宽桌台对齐  
 - **旋转**：选中后 **R**；**删除**：**Del**  
@@ -56,10 +59,10 @@
 
 ## 维护者：更新目录或前端（需要 Node）
 
-仅在修改 `layout-editor/web` 源码或需要刷新 prefab 目录时，在**有 Node.js 的机器**上执行：
+仅在修改 `layout-editor/web` 源码或需要刷新资源目录时，在**有 Node.js 的机器**上执行：
 
 ```bash
-# 刷新 catalog（会同步到 web/public 与 web/dist）
+# 刷新全部资源目录（会同步到 web/public 与 web/dist）
 node layout-editor/scripts/build-catalog.mjs
 
 # 重新打包前端
@@ -68,7 +71,44 @@ npm install
 npm run build
 ```
 
+### 提取食材 / 菜谱图标（需要 Python）
+
+图标（食材 `*_Icon`、菜谱 `ui_*` 成品图）存在游戏 AssetBundle 内，用一次性 Python 脚本批量解包：
+
+```bash
+pip install UnityPy Pillow
+python3 layout-editor/scripts/extract-icons.py            # 解包到 web/public/icons/{ingredients,recipes}/
+python3 layout-editor/scripts/extract-icons.py --check    # 只统计覆盖率，不写文件
+```
+
+- **食材**：按 `<id>` 命名，通过 `<base>_Icon`（大小写无关）自动匹配；不规则的（如 `SushiRiceSO→Rice_Icon`、`DLC05_Wood→Firewood_Icon`）写在 `scripts/data/ingredient-icons.json`。
+- **菜谱**：菜谱资源不直接引用成品图，故用人工对照表 `scripts/data/recipe-icons.json`（`id → ui_*` 精灵名，`null`=无合适图）。
+- **自定义 / 纠错**：在 `scripts/data/icon-overrides.json` 里加 `{ "ingredients": {...}, "recipes": {...} }`（精灵名或 `null`），优先级最高。
+- 游戏更新后重跑脚本；末尾会列出未匹配的 id，提示去对照表里补。
+- 跑完后再执行 `node layout-editor/scripts/build-catalog.mjs`，会在 `ingredients.json` / `recipes.json` 上盖 `icon: true` 标记，前端挑选器随即显示缩略图。
+
 将 `layout-editor/web/dist/` 一并提交，供无 npm 环境使用。
+
+### 资源目录（统一脚本输出）
+
+`build-catalog.mjs` 一次生成以下 JSON（前端在 Unity 桥离线时自动 fallback 到对应静态文件；桥在线时由 C# 动态扫描输出相同 schema）：
+
+| 文件 | 内容 | 来源 |
+|------|------|------|
+| `catalog.json` | prefab 布局目录 | `common01/02/prefabs/**` |
+| `ingredients.json` | 食材（含 dlc02/dlc05，按 `group` 分组） | `common01/02/food/Ingredients` |
+| `recipes.json` | 菜谱（原始/自定义/DLC，含食材组成与烹饪步骤） | `common01/02/food/Recipes`、`CustomRecipes/**` |
+| `cooking-steps.json` | 烹饪步骤 + 装盘步骤 | `common01/02/food/{CookingSteps,PlatingSteps}` |
+| `audio-catalog.json` | music / audioDirectories / deathEffects | `common01/02/pseudo_prefab_so` |
+| `floor-materials.json` | 地板材质（按关卡集分组） | `LevelSets/*/materials`、`common01/02/materials` |
+
+菜谱组成数据来源：`layout-editor/scripts/data/recipe-knowledge.json`（Unity 端 `LayoutEditorRecipeKnowledge` 共用同一文件）。CustomRecipeSO 的组成由脚本直接解析 `compositionSOs` guid 引用；原始/DLC 菜谱查知识表；**组成信息不全的菜谱会被跳过**（脚本输出跳过清单）。新增 DLC 菜谱时在 `recipes[]` 中补一条 `{id, step, ingredients}` 即可；score-0 的运行时变体（Optional*/model_*）列入 `skip[]`。
+
+中英文显示名来源：`layout-editor/scripts/data/names-dictionary.json`（Unity 端 `LayoutEditorManualLookup` 共用同一文件），查找顺序为 **字典 JSON → 使用手册.md → ID 回退**。覆盖全部资源：核心桌台/厨具/机关/厨师、装饰/NPC/地板 prefab、食材/菜谱/烹饪步骤、音频与音效集（1100+ 条）。**后续新增资源时只需维护该文件**：在 `names[]` 中补 `{id, zh, en}` 后重跑 build-catalog 即可；也可先运行 `node layout-editor/scripts/scaffold-dictionary.mjs` 为新 ID 生成草稿翻译（词元规则），再在字典中人工修订。
+
+### 版本与升级提醒
+
+每个生成的 JSON 与 `recipe-knowledge.json` / `names-dictionary.json` 都带 `schemaVersion`（当前 v2）。`/api/health` 会返回桥接端的 `schemaVersion`、`knowledgeLoaded`、`dictionaryLoaded`；前端发现桥接端版本落后或共享数据文件缺失时，会在状态栏提示「桥接端资源数据过旧，请升级」。两端 schema 变更时需同步提高 `build-catalog.mjs` 的 `SCHEMA_VERSION` 与 `LayoutEditorRecipeKnowledge.BridgeSchemaVersion`。
 
 ### API 速查
 
@@ -95,7 +135,10 @@ cd layout-editor/web && npm run dev
 
 ```
 layout-editor/
-  scripts/build-catalog.mjs
+  scripts/build-catalog.mjs        # 统一资源目录生成（单入口）
+  scripts/scaffold-dictionary.mjs  # 新 ID 草稿翻译生成（合并进字典）
+  scripts/data/recipe-knowledge.json  # 菜谱组成知识表（Node 与 Unity C# 共用）
+  scripts/data/names-dictionary.json  # 全资源中英文名称字典（Node 与 Unity C# 共用）
   web/dist/          # 预构建静态站（提交到 Git）
   web/src/           # 源码
 Assets/Editor/LayoutEditor/

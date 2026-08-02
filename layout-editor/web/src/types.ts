@@ -1,7 +1,14 @@
 export interface CatalogStackMeta {
   /** Vertical local Y when parented under Design/Utensils (plate ≈ 1, pot ≈ 0.6). */
   y: number;
-  hostRule: "counter_standard" | "cooker" | "frying_station" | "mixer";
+  hostRule:
+    | "counter_standard"
+    | "cooker"
+    | "frying_station"
+    | "mixer"
+    | "blender"
+    | "barbeque"
+    | "campfire";
 }
 
 export interface CatalogItem {
@@ -29,8 +36,11 @@ export interface CatalogItem {
     | "carpet"
     | "section"
     | "conveyor"
+    | "decal"
     | "background";
   stack?: CatalogStackMeta;
+  /** True when an extracted icon PNG exists under web/public/icons/catalog/<id>.png. */
+  icon?: boolean;
 }
 
 export interface CatalogPaletteGroup {
@@ -43,6 +53,7 @@ export interface CatalogPaletteGroup {
 
 export interface Catalog {
   generatedAt: string;
+  schemaVersion?: number;
   gridCellSize: number;
   itemCount: number;
   items: CatalogItem[];
@@ -108,7 +119,13 @@ export interface LayoutPlayerStub {
 }
 
 export interface LayoutServingStationStub {
+  /** Legacy single binding (one PlateReturn). Kept for back-compat; superseded
+   *  by plateReturnInstanceIds. */
   plateReturnInstanceId?: string;
+  /** One-to-many binding to return stations (PlateReturn 脏盘台 and/or
+   *  GlassReturn 脏杯台 — they share the same stub type). A serving station may
+   *  bind to many returns; a return belongs to at most one serving station. */
+  plateReturnInstanceIds?: string[];
 }
 
 export interface LayoutItem {
@@ -120,6 +137,8 @@ export interface LayoutItem {
   displayName: string;
   localPosition: LayoutVector3;
   worldPosition?: LayoutVector3;
+  /** Euler X in degrees — quad-based floor tiles lie flat via x=90. */
+  localRotationX?: number;
   localRotationY: number;
   localScale?: LayoutVector3;
   footprint?: { cellsX: number; cellsZ: number };
@@ -182,6 +201,29 @@ export interface FloorObject {
   depthCells: number;
   prefabGuid?: string;
   prefabAssetPath?: string;
+  /** Themed floor: exact prefab-instance scale/rotation captured at merge time,
+   *  reused on write-back while the rect size is unchanged (official scenes use
+   *  non-cell-aligned scales like 4×2.5m — quantizing them would shift visuals). */
+  prefabScale?: LayoutVector3;
+  prefabScaleCellsW?: number;
+  prefabScaleCellsD?: number;
+  /** Euler X of the source prefab instance (default 90 for flat quads). */
+  prefabRotX?: number;
+  /** Optional manual tint color (hex) for a solid floor — a user-driven recolor
+   *  feature independent of the floor's material / surface kind. */
+  tintColor?: string;
+  /** Whether the tint is active. When false the floor uses its real material
+   *  even if tintColor is set (so you can switch materials without the tint
+   *  overriding). */
+  tintEnabled?: boolean;
+  /** Image floor: a solid Plane textured by an image uploaded into the level's
+   *  data dir (Assets/LevelSets/<set>/data/). Set together with imageMode. */
+  imageTexturePath?: string;
+  /** Image tiling mode: "tile" repeats the image once per cell; "stretch"
+   *  stretches one copy across the whole floor rect. */
+  imageMode?: "tile" | "stretch";
+  /** Image opacity 0..1 (default 1 = fully opaque). */
+  imageOpacity?: number;
 }
 
 export interface WalkableRect {
@@ -215,6 +257,8 @@ export interface FloorMaterial {
   assetPath: string;
   nameZh: string;
   sizeTag?: string;
+  /** Level set name or "common01"/"common02" (static floor-materials.json only). */
+  source?: string;
 }
 
 export interface FloorMaterialCatalog {
@@ -236,12 +280,16 @@ export interface LevelSetScene {
   sceneName: string;
 }
 
+export type FoodGroup = "core" | "custom" | "dlc02" | "dlc05" | string;
+
 export interface IngredientEntry {
   guid: string;
   id: string;
   nameZh: string;
   nameEn?: string;
   assetPath: string;
+  group?: FoodGroup;
+  icon?: boolean;
 }
 
 export interface RecipeEntry {
@@ -256,6 +304,77 @@ export interface RecipeEntry {
   cookingStepCount?: number;
   score?: number;
   isCustom?: boolean;
+  group?: FoodGroup;
+  /** Recipe family: burger / pizza / sushi / kebab / smoothie / … */
+  type?: string;
+  /** score-0 半成品（面糊/炸物部件/自选披萨部件），不可作为关卡菜谱 */
+  intermediate?: boolean;
+  icon?: boolean;
+}
+
+export interface CookingStepEntry {
+  guid: string;
+  id: string;
+  nameZh: string;
+  nameEn?: string;
+  kind: "cooking" | "plating";
+  assetPath: string;
+  bundleName?: string;
+  group?: FoodGroup;
+}
+
+export interface CookingStepCatalog {
+  cookingSteps: CookingStepEntry[];
+}
+
+export interface DirectoryEvent {
+  id: string;
+  eventsZh: string[];
+  desc: string;
+}
+
+export interface AudioTheme {
+  key: string;
+  directories: string[];
+  ambiences: string[];
+  bgm: string[];
+  deathTheme: string;
+}
+
+export interface DeathTheme {
+  key: string;
+  effectIdHint: string;
+  note: string;
+}
+
+export interface AmbienceLabel {
+  name: string;
+  zh: string;
+}
+
+export interface AudioKnowledge {
+  baseBundles: string[];
+  alwaysLoadedBundles: string[];
+  mandatoryDirectoryIds: string[];
+  directoryEvents: DirectoryEvent[];
+  themes: AudioTheme[];
+  deathThemes: DeathTheme[];
+  ambienceLabels: AmbienceLabel[];
+}
+
+export interface AudioCatalog extends AudioKnowledge {
+  music: MusicEntry[];
+  audioDirectories: AudioDirectoryEntry[];
+  deathEffects: DeathEffectEntry[];
+}
+
+export interface BundleAnalysis {
+  base: string[];
+  alwaysLoaded: string[];
+  required: string[];
+  current: string[];
+  missing: string[];
+  extras: string[];
 }
 
 export interface LevelRecipes {
@@ -286,12 +405,14 @@ export interface AudioDirectoryEntry {
   nameZh: string;
 }
 
-export interface AudioDirectoryCatalog {
+export interface AudioDirectoryCatalog extends AudioKnowledge {
   audioDirectories: AudioDirectoryEntry[];
 }
 
+
 export interface AmbienceCatalog {
   ambiences: string[];
+  ambienceLabels: AmbienceLabel[];
 }
 
 export interface DeathEffectEntry {
