@@ -137,11 +137,12 @@ public static class SceneFloorExporter
             ? LayoutEditorHierarchy.GetHierarchyPath(t.parent)
             : string.Empty;
 
-        // Image-floor state is encoded in the GameObject name (imgfloor|...|mode|opacity).
+        // Image-floor state is encoded in the GameObject name (imgfloor|...|mode|opacity[|rotation]).
         string imgPath;
         string imgMode;
         float imgOpacity;
-        SceneLayoutApplier.TryParseImageFloorName(go.name, out imgPath, out imgMode, out imgOpacity);
+        int imgRotation;
+        SceneLayoutApplier.TryParseImageFloorName(go.name, out imgPath, out imgMode, out imgOpacity, out imgRotation);
 
         floors.Add(new FloorDto
         {
@@ -162,6 +163,7 @@ public static class SceneFloorExporter
             imageTexturePath = imgPath,
             imageMode = imgMode,
             imageOpacity = imgOpacity,
+            imageRotation = imgRotation,
             localPosition = LayoutVector3.From(t.localPosition),
             worldPosition = LayoutVector3.From(t.position),
             localRotationY = rotY,

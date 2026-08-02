@@ -118,6 +118,11 @@ export interface LayoutPlayerStub {
   playerID?: number;
 }
 
+export interface LayoutPlateReturnStub {
+  /** True = return clean plates/glasses directly; false (default) = dirty ones. */
+  returnClean?: boolean;
+}
+
 export interface LayoutServingStationStub {
   /** Legacy single binding (one PlateReturn). Kept for back-compat; superseded
    *  by plateReturnInstanceIds. */
@@ -155,6 +160,7 @@ export interface LayoutItem {
   burner?: LayoutBurnerStub;
   player?: LayoutPlayerStub;
   servingStation?: LayoutServingStationStub;
+  plateReturn?: LayoutPlateReturnStub;
 }
 
 export interface LayoutDocument {
@@ -224,6 +230,9 @@ export interface FloorObject {
   imageMode?: "tile" | "stretch";
   /** Image opacity 0..1 (default 1 = fully opaque). */
   imageOpacity?: number;
+  /** Image rotation in degrees, snapped to 90° steps (0/90/180/270, clockwise
+   *  viewed from above). Default 0. */
+  imageRotation?: number;
 }
 
 export interface WalkableRect {

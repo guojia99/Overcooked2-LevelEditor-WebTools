@@ -167,6 +167,9 @@ let currentLayer: LayerKey = "items";
 let scenePath = "";
 let snapStep = 0.6;
 let showGrid = true;
+let showCoords = true;
+let hoverCx = -1;
+let hoverCy = -1;
 let gridInfo: GridInfo | null = null;
 
 let scale = 1;
@@ -365,7 +368,8 @@ function stubControlsHtml(item: EditorItem): string {
     case "PlateReturn":
     case "GlassReturn": {
       const labels = computeReturnLabels();
-      const typeZh = isGlassReturnItem(item) ? "脏杯台" : "脏盘台";
+      const isGlass = isGlassReturnItem(item);
+      const typeZh = isGlass ? "脏杯台" : "脏盘台";
       const myNum = labels.get(item.instanceId) ?? "?";
       const bound = servingStationsForReturn(item.instanceId);
       const rows = bound
@@ -376,6 +380,7 @@ function stubControlsHtml(item: EditorItem): string {
         .join("");
       return `<div class="ctx-stub"><div class="ctx-stub-title">${typeZh}${myNum} · 被上菜台绑定（可一对多）</div>
         ${rows || '<div class="ctx-stub-row">未被任何上菜台绑定</div>'}
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-pr-clean" ${item.plateReturn?.returnClean ? "checked" : ""}/> 直接返回干净${isGlass ? "杯子" : "盘子"}（returnClean）</label>
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">请在对应上菜台的右键菜单里设置绑定</div></div>`;
     }
     default:
@@ -591,10 +596,132 @@ function wireStubControls(item: EditorItem) {
     }
     case "PlateReturn":
     case "GlassReturn": {
-      // Read-only: binding is configured from the serving-station side.
+      num("ctx-pr-clean")?.addEventListener("change", (e) => {
+        pushHistory();
+        item.stubKind = isGlassReturnItem(item) ? "GlassReturn" : "PlateReturn";
+        if (!item.plateReturn) item.plateReturn = {};
+        item.plateReturn.returnClean = (e.target as HTMLInputElement).checked;
+        draw();
+        setStatus(`已${item.plateReturn.returnClean ? "开启" : "关闭"}直接返回干净${isGlassReturnItem(item) ? "杯子" : "盘子"}（写回后生效）`);
+      });
       break;
     }
   }
+}
+
+function openUtensilManager() {
+  const utensils = items.filter((it) => stubKindOf(it) === "CookingUtensil");
+  if (!utensils.length) {
+    setStatus("当前关卡没有锅具", false);
+    return;
+  }
+
+  const groups = new Map<string, EditorItem[]>();
+  for (const it of utensils) {
+    const pid = prefabIdFromPath(it.prefabAssetPath);
+    const arr = groups.get(pid) ?? [];
+    arr.push(it);
+    groups.set(pid, arr);
+  }
+  const sortedGroups = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+  const body = sortedGroups
+    .map(([pid, arr]) => {
+      arr.sort((a, b) => a._wz - b._wz || a._wx - b._wx);
+      const rows = arr
+        .map((it, idx) => {
+          const cu = it.cookingUtensil ?? {};
+          const cap = cu.capacity ?? defaultUtensilCapacity(it);
+          const allowed = cu.allowedIngredientGuids ?? [];
+          const allowedTxt = allowed.length > 0 ? `允许食材：${allowed.length} 种` : "允许食材：全部";
+          const dis = arr.length < 2 ? "disabled" : "";
+          return `<div class="utm-row">
+            <span class="utm-name">${escHtml(itemLabel(it))}${idx + 1}</span>
+            <label class="utm-cap-label">容量 <input type="number" class="utm-cap" data-key="${it._editorKey}" min="0" step="1" value="${cap}"/></label>
+            <button type="button" class="modal-btn utm-ings" data-key="${it._editorKey}">${allowedTxt}…</button>
+            <button type="button" class="modal-btn utm-sync" data-key="${it._editorKey}" ${dis}>同步给其他 ${arr.length - 1} 个</button>
+          </div>`;
+        })
+        .join("");
+      return `<div class="utm-group"><div class="utm-group-title">${escHtml(itemLabel(arr[0]))}（${escHtml(pid)}）× ${arr.length}</div>${rows}</div>`;
+    })
+    .join("");
+
+  openModal(
+    "锅具管理 · 参数同步",
+    `<p class="modal-hint">可直接修改每个锅具的容量与允许食材，或一键把它的参数同步给所有相同类型的锅具。仅修改前端数据，写回 Unity 后生效。</p><div class="modal-scroll">${body}</div>`,
+    `<button type="button" class="modal-btn" data-cancel>关闭</button>`
+  );
+  document.querySelector(".modal-panel")?.classList.add("wide");
+
+  const utensilByKey = (key: string | undefined) => items.find((i) => i._editorKey === key);
+  const ensureUtensil = (it: EditorItem) => {
+    it.stubKind = "CookingUtensil";
+    if (!it.cookingUtensil) it.cookingUtensil = {};
+    return it.cookingUtensil;
+  };
+  const reopen = () => {
+    closeModal();
+    openUtensilManager();
+  };
+
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+
+  document.querySelectorAll<HTMLInputElement>(".utm-cap").forEach((input) => {
+    input.addEventListener("change", () => {
+      const it = utensilByKey(input.dataset.key);
+      const v = parseInt(input.value, 10);
+      if (!it || !isFinite(v) || v < 0) return;
+      pushHistory();
+      ensureUtensil(it).capacity = v;
+      draw();
+      setStatus(`${itemLabel(it)} 容量已设为 ${v}（写回后生效）`);
+      reopen();
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>(".utm-ings").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const it = utensilByKey(btn.dataset.key);
+      if (!it) return;
+      openIngredientMultiPicker(
+        `锅具 · 允许的食材（${itemLabel(it)}）`,
+        "allowedIngredientSOs（不勾选任何项 = 允许全部）",
+        ingredientsCache,
+        it.cookingUtensil?.allowedIngredientGuids ?? [],
+        (guids) => {
+          pushHistory();
+          ensureUtensil(it).allowedIngredientGuids = guids;
+          draw();
+          setStatus(`${itemLabel(it)} 允许食材已更新（写回后生效）`);
+          setTimeout(reopen, 0);
+        }
+      );
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>(".utm-sync").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const src = utensilByKey(btn.dataset.key);
+      if (!src) return;
+      const pid = prefabIdFromPath(src.prefabAssetPath);
+      const cu = src.cookingUtensil ?? {};
+      const cap = cu.capacity ?? defaultUtensilCapacity(src);
+      const allowed = [...(cu.allowedIngredientGuids ?? [])];
+      pushHistory();
+      let n = 0;
+      for (const it of items) {
+        if (it === src || stubKindOf(it) !== "CookingUtensil") continue;
+        if (prefabIdFromPath(it.prefabAssetPath) !== pid) continue;
+        it.stubKind = "CookingUtensil";
+        it.cookingUtensil = { capacity: cap, allowedIngredientGuids: [...allowed] };
+        n++;
+      }
+      draw();
+      setStatus(`已把 ${itemLabel(src)} 的参数同步给 ${n} 个相同锅具（写回后生效）`);
+      reopen();
+    });
+  });
 }
 
 async function openRecipesDialog() {
@@ -947,6 +1074,7 @@ app.innerHTML = `
     <button id="btn-save" class="primary">写回 Unity</button>
     <button id="btn-recipes" type="button">菜谱</button>
     <button id="btn-selected-recipes" type="button" title="查看当前已选菜谱、所需食材与锅具">已选菜谱</button>
+    <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">锅具管理</button>
     <button id="btn-level-config" type="button">人数配置</button>
     <button id="btn-level-audio" type="button">音频</button>
     <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">同步布局…</button>
@@ -957,6 +1085,7 @@ app.innerHTML = `
     </div>
     <label><input type="checkbox" id="snap-half" checked /> 半格 (0.6)</label>
     <label><input type="checkbox" id="show-grid" checked /> 显示网格</label>
+    <label><input type="checkbox" id="show-coords" checked /> 坐标系</label>
     <span id="status" class="status">连接中…</span>
   </div>
   <div class="main">
@@ -1470,6 +1599,8 @@ function draw() {
     drawServingLinks();
   }
 
+  if (showCoords) drawCoordAxes();
+
   if (marqueeing) drawMarquee();
 
   updateFloorBar();
@@ -1677,7 +1808,11 @@ function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean) {
 
   if (img) {
     // Draw the uploaded image: "tile" repeats once per cell, "stretch" fills.
+    // imageRotation rotates the texture itself in 90° steps (clockwise from above).
     const cellPx = CELL * PX_PER_UNIT * scale;
+    const imgRot = normalizeRot(f.imageRotation ?? 0);
+    const imgRad = (imgRot * Math.PI) / 180;
+    const swapImg = imgRot === 90 || imgRot === 270;
     const prevAlpha = ctx.globalAlpha;
     ctx.globalAlpha = f.imageOpacity != null ? Math.max(0, Math.min(1, f.imageOpacity)) : 1;
     if (f.imageMode === "tile" && cellPx > 2) {
@@ -1685,9 +1820,26 @@ function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean) {
       const d = Math.max(1, f._dCells);
       for (let i = 0; i < w; i++) {
         for (let j = 0; j < d; j++) {
-          ctx.drawImage(img, -bw / 2 + i * cellPx, -bh / 2 + j * cellPx, cellPx, cellPx);
+          const ccx = -bw / 2 + (i + 0.5) * cellPx;
+          const ccy = -bh / 2 + (j + 0.5) * cellPx;
+          if (imgRot) {
+            ctx.save();
+            ctx.translate(ccx, ccy);
+            ctx.rotate(imgRad);
+            ctx.drawImage(img, -cellPx / 2, -cellPx / 2, cellPx, cellPx);
+            ctx.restore();
+          } else {
+            ctx.drawImage(img, ccx - cellPx / 2, ccy - cellPx / 2, cellPx, cellPx);
+          }
         }
       }
+    } else if (imgRot) {
+      ctx.save();
+      ctx.rotate(imgRad);
+      const rw = swapImg ? bh : bw;
+      const rh = swapImg ? bw : bh;
+      ctx.drawImage(img, -rw / 2, -rh / 2, rw, rh);
+      ctx.restore();
     } else {
       ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh);
     }
@@ -2083,10 +2235,13 @@ function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | undefined):
     const cat = catalogByGuid.get(f.prefabGuid!);
     return `主题地板（${cat ? tidyCatalogNameZh(cat.nameZh, cat.id) : (f.materialName ?? f.prefabGuid)} · 写回时生成单个缩放实例）`;
   }
-  if (f.imageMode || f.imageTexturePath)
+  if (f.imageMode || f.imageTexturePath) {
+    const rot = normalizeRot(f.imageRotation ?? 0);
+    const rotTxt = rot ? ` · 旋转${rot}°` : "";
     return f.imageTexturePath
-      ? `图片地板（${f.imageMode === "tile" ? "一格平铺" : "全部铺开"} · ${f.imageTexturePath.split("/").pop() ?? ""}）`
+      ? `图片地板（${f.imageMode === "tile" ? "一格平铺" : "全部铺开"}${rotTxt} · ${f.imageTexturePath.split("/").pop() ?? ""}）`
       : "图片地板（未上传图片）";
+  }
   if (f.tintEnabled) return `染色地板（颜色 ${f.tintColor ?? "#ffffff"}）`;
   return matchedMat?.nameZh ?? f.materialName ?? "无";
 }
@@ -2136,8 +2291,12 @@ function openFloorEditorModal(f: EditorFloor) {
   const imgName = f.imageTexturePath ? f.imageTexturePath.split("/").pop() ?? "" : "";
   const mode = f.imageMode === "tile" ? "tile" : "stretch";
   const opacityPct = Math.round((f.imageOpacity != null ? f.imageOpacity : 1) * 100);
+  const imgRot = normalizeRot(f.imageRotation ?? 0);
+  const imgRotOpts = [0, 90, 180, 270]
+    .map((r) => `<option value="${r}"${r === imgRot ? " selected" : ""}>${r}°</option>`)
+    .join("");
   const previewHtml = f.imageTexturePath
-    ? `<img id="fe-img-preview" src="${imageFloorUrl(f.imageTexturePath)}" alt="" style="max-width:120px;max-height:80px;border:1px solid #4a5060;border-radius:4px;background:#1a1d23"/>`
+    ? `<img id="fe-img-preview" src="${imageFloorUrl(f.imageTexturePath)}" alt="" style="max-width:120px;max-height:80px;border:1px solid #4a5060;border-radius:4px;background:#1a1d23;transform:rotate(${imgRot}deg)"/>`
     : `<span class="muted" style="font-size:11px">（未上传图片）</span>`;
   const imageBlock = `<div class="mat-pick-title">图片地板（实心 Plane + 贴图；图片存入当前关卡集 data 目录）</div>
      <div class="floor-edit-row" style="align-items:center;gap:10px">
@@ -2147,6 +2306,10 @@ function openFloorEditorModal(f: EditorFloor) {
      <div class="floor-edit-row">
        <label class="modal-check"><input type="radio" name="fe-imgmode" value="stretch" ${mode === "stretch" ? "checked" : ""}/> 全部铺开（自动伸缩）</label>
        <label class="modal-check"><input type="radio" name="fe-imgmode" value="tile" ${mode === "tile" ? "checked" : ""}/> 一格重复平铺</label>
+     </div>
+     <div class="floor-edit-row">
+       <label>图片旋转 <select id="fe-img-rot">${imgRotOpts}</select></label>
+       <span class="muted" style="font-size:11px;align-self:center">以 90° 为单位（俯视顺时针）· 实时预览</span>
      </div>
      <div class="floor-edit-row">
        <label>不透明度 <input type="range" id="fe-img-opacity" min="0" max="100" step="1" value="${opacityPct}" style="width:160px"/></label>
@@ -2248,6 +2411,7 @@ function openFloorEditorModal(f: EditorFloor) {
     f.tintEnabled = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
+    f.imageRotation = undefined;
     f.prefabGuid = undefined;
     f.prefabAssetPath = undefined;
     finalizeFloor(f);
@@ -2262,6 +2426,7 @@ function openFloorEditorModal(f: EditorFloor) {
     f.tintEnabled = true;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
+    f.imageRotation = undefined;
     f.prefabGuid = undefined;
     f.prefabAssetPath = undefined;
     if (!f.tintColor) f.tintColor = "#9aa0a6";
@@ -2290,6 +2455,7 @@ function openFloorEditorModal(f: EditorFloor) {
     f.tintEnabled = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
+    f.imageRotation = undefined;
     f.prefabGuid = undefined;
     f.prefabAssetPath = undefined;
     snapRaftCenterToGrid(f);
@@ -2313,6 +2479,7 @@ function openFloorEditorModal(f: EditorFloor) {
     f.tintEnabled = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
+    f.imageRotation = undefined;
     finalizeFloor(f);
     draw();
     setStatus(`已设为主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}（写回时生成单个缩放实例，可 Ctrl+Z 撤回）`);
@@ -2332,6 +2499,7 @@ function openFloorEditorModal(f: EditorFloor) {
       f.tintEnabled = false;
       f.imageTexturePath = undefined;
       f.imageMode = undefined;
+      f.imageRotation = undefined;
       finalizeFloor(f);
       draw();
       setStatus(`已设为主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}（写回时生成单个缩放实例，可 Ctrl+Z 撤回）`);
@@ -2367,6 +2535,17 @@ function openFloorEditorModal(f: EditorFloor) {
       finalizeFloor(f);
       draw();
     });
+  });
+  const feImgRot = document.getElementById("fe-img-rot") as HTMLSelectElement | null;
+  feImgRot?.addEventListener("change", () => {
+    const v = parseInt(feImgRot.value, 10);
+    if (!Number.isFinite(v)) return;
+    pushHistory();
+    f.imageRotation = normalizeRot(v);
+    const preview = document.getElementById("fe-img-preview") as HTMLImageElement | null;
+    if (preview) preview.style.transform = `rotate(${f.imageRotation}deg)`;
+    draw();
+    setStatus(`图片旋转已设为 ${f.imageRotation}°（写回后生效）`);
   });
   const feImgOpacity = document.getElementById("fe-img-opacity") as HTMLInputElement | null;
   const feImgOpacityVal = document.getElementById("fe-img-opacity-val");
@@ -2544,14 +2723,16 @@ function drawGrid() {
 
   ctx.strokeStyle = "rgba(255,255,255,0.06)";
   ctx.lineWidth = 1;
-  const startX = (ox % step) - step;
+  // Shift the lattice half a cell left/up so the grid lines match Unity's
+  // actual physics grid (Unity cell corners land on the old line centers).
+  const startX = ((ox - step / 2) % step) - step;
   for (let x = startX; x < w; x += step) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
     ctx.lineTo(x, h);
     ctx.stroke();
   }
-  const startY = (oy % step) - step;
+  const startY = ((oy - step / 2) % step) - step;
   for (let y = startY; y < h; y += step) {
     ctx.beginPath();
     ctx.moveTo(0, y);
@@ -2560,8 +2741,127 @@ function drawGrid() {
   }
 }
 
-const PORTAL_COLORS = [
-  "#9ad7ff",
+/** Origin offset in cells: the map midpoint sits where the unshifted system
+ *  reads (4, -2); the extra half cell (left/up) aligns integer coords with
+ *  Unity's physics lattice, whose item positions sit on half-cell points. */
+const COORD_ORIGIN_OFFSET = { x: 3.5, z: -1.5 };
+
+/** Coordinate-system origin (world units): the grid center when known, else
+ *  the level-content center snapped to the CELL lattice, else world (0,0);
+ *  shifted by COORD_ORIGIN_OFFSET cells. */
+function coordOrigin(): { x: number; z: number } {
+  let base: { x: number; z: number };
+  if (gridInfo?.found) base = { x: gridInfo.worldPosition.x, z: gridInfo.worldPosition.z };
+  else {
+    const b = computeLevelBounds();
+    base = b ? { x: Math.round(b.cx / CELL) * CELL, z: Math.round(b.cz / CELL) * CELL } : { x: 0, z: 0 };
+  }
+  return { x: base.x + COORD_ORIGIN_OFFSET.x * CELL, z: base.z + COORD_ORIGIN_OFFSET.z * CELL };
+}
+
+/** Draw a cell-based coordinate system (1 worktable = 1×1) centered on the map
+ *  midpoint: X/Z axes with integer tick labels, origin marker, and a hover
+ *  coordinate readout. */
+function drawCoordAxes() {
+  const w = canvas.width;
+  const h = canvas.height;
+  const o = coordOrigin();
+  const oc = worldToCanvas(o.x, o.z);
+  const cellPx = CELL * PX_PER_UNIT * scale;
+  if (cellPx < 3) return;
+  const labelEvery = cellPx >= 16 ? 1 : cellPx >= 8 ? 2 : 5;
+
+  const xMin = Math.ceil((0 - oc.x) / cellPx);
+  const xMax = Math.floor((w - oc.x) / cellPx);
+  const zMin = Math.ceil((oc.y - h) / cellPx);
+  const zMax = Math.floor(oc.y / cellPx);
+
+  const X_COL = "rgba(239,111,111,";
+  const Z_COL = "rgba(123,216,137,";
+
+  ctx.save();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = `${X_COL}0.85)`;
+  ctx.beginPath();
+  ctx.moveTo(0, oc.y);
+  ctx.lineTo(w, oc.y);
+  ctx.stroke();
+  ctx.strokeStyle = `${Z_COL}0.85)`;
+  ctx.beginPath();
+  ctx.moveTo(oc.x, 0);
+  ctx.lineTo(oc.x, h);
+  ctx.stroke();
+
+  ctx.lineWidth = 1;
+  ctx.font = "10px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  for (let cx = xMin; cx <= xMax; cx++) {
+    const px = oc.x + cx * cellPx;
+    ctx.strokeStyle = `${X_COL}0.5)`;
+    ctx.beginPath();
+    ctx.moveTo(px, oc.y - 4);
+    ctx.lineTo(px, oc.y + 4);
+    ctx.stroke();
+    if (cx !== 0 && cx % labelEvery === 0) {
+      ctx.fillStyle = `${X_COL}0.95)`;
+      ctx.fillText(String(cx), px, oc.y + 6);
+    }
+  }
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  for (let cz = zMin; cz <= zMax; cz++) {
+    const py = oc.y - cz * cellPx;
+    ctx.strokeStyle = `${Z_COL}0.5)`;
+    ctx.beginPath();
+    ctx.moveTo(oc.x - 4, py);
+    ctx.lineTo(oc.x + 4, py);
+    ctx.stroke();
+    if (cz !== 0 && cz % labelEvery === 0) {
+      ctx.fillStyle = `${Z_COL}0.95)`;
+      ctx.fillText(String(cz), oc.x + 6, py);
+    }
+  }
+
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.beginPath();
+  ctx.arc(oc.x, oc.y, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = "10px sans-serif";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "top";
+  ctx.fillText("0", oc.x - 4, oc.y + 4);
+
+  ctx.font = "bold 11px sans-serif";
+  ctx.fillStyle = `${X_COL}0.95)`;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("x", w - 6, oc.y - 4);
+  ctx.fillStyle = `${Z_COL}0.95)`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText("z", oc.x + 6, 4);
+
+  if (hoverCx >= 0 && hoverCy >= 0) {
+    const wp = canvasToWorld(hoverCx, hoverCy);
+    const cx = Math.round((wp.x - o.x) / CELL);
+    const cz = Math.round((wp.z - o.z) / CELL);
+    const txt = `(${cx}, ${cz})`;
+    ctx.font = "11px sans-serif";
+    const tw = ctx.measureText(txt).width;
+    const bx = w - tw - 18;
+    const by = h - 26;
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(bx - 6, by - 4, tw + 12, 20);
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(txt, bx, by + 6);
+  }
+  ctx.restore();
+}
+
+const PORTAL_COLORS = [  "#9ad7ff",
   "#5b8def",
   "#ef6f6f",
   "#f0a847",
@@ -3058,11 +3358,15 @@ function drawItem(item: EditorItem, selected: boolean) {
   }
 
   if (isConveyorItem(item)) {
-    drawConveyorArrow(center, rot, cellPx, item.conveyor?.conveySpeed ?? 0.5);
+    // Conveyor: in-game direction is 90° CCW from the naive web reading
+    // (web left = game down), so shift the arrow -90° to match the game.
+    drawConveyorArrow(center, rot - 90, cellPx, item.conveyor?.conveySpeed ?? 0.5);
   } else if (isTeleportalItem(item)) {
     drawTeleportalBadge(item, center, cellPx);
   } else if (isFoodSpawnerItem(item)) {
-    drawConveyorArrow(center, rot, cellPx, 1, "#7bd889");
+    // Food spawner exit: in-game direction is 90° CW from the naive web
+    // reading (web up = game right), so shift the arrow +90°.
+    drawConveyorArrow(center, rot + 90, cellPx, 1, "#7bd889");
   }
 
   // Per-type sequence badge for parameterized workstations (web-only).
@@ -3167,12 +3471,14 @@ function extraStubDetailHtml(item: EditorItem): string {
     }
     case "PlateReturn":
     case "GlassReturn": {
-      const typeZh = isGlassReturnItem(item) ? "脏杯台" : "脏盘台";
+      const isGlass = isGlassReturnItem(item);
+      const typeZh = isGlass ? "脏杯台" : "脏盘台";
       const bound = servingStationsForReturn(item.instanceId);
       const txt = bound.length
         ? `被 ${bound.length} 个上菜台共用：${bound.map((s) => `上菜台${paramLabels.get(s.instanceId) ?? "?"}`).join("、")}`
         : "未被任何上菜台绑定";
-      return `<dt>${typeZh}</dt><dd>${txt}（在上菜台右键菜单里设置绑定）</dd>`;
+      const cleanTxt = item.plateReturn?.returnClean ? ` · 直接返回干净${isGlass ? "杯子" : "盘子"}` : "";
+      return `<dt>${typeZh}</dt><dd>${txt}${cleanTxt}（右键直接修改，绑定在上菜台右键菜单里设置）</dd>`;
     }
     default:
       return "";
@@ -4056,13 +4362,18 @@ function updateFloorBar() {
   if (selectedFloorKeys.size > 1) {
     info = `<span class="fb-info">已选 ${selectedFloorKeys.size} 块地板（拖动整体移动 · Del 删除）</span>`;
   } else if (f) {
-    info = `<span class="fb-info"><b>${f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : "全部铺开"} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : f.materialName ?? "无材质"}</span>`;
+    info = `<span class="fb-info"><b>${f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : f.materialName ?? "无材质"}</span>`;
   } else if (selItem && isSurfaceItem(selCat)) {
     info = `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
   } else {
     info = `<span class="fb-info">${deathLabelZh(deathInfo)} · 共 ${floors.length} 块地板</span>`;
   }
-  floorBar.innerHTML = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+  const html = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+  const active = document.activeElement;
+  const editing =
+    !!active && floorBar.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT");
+  if (editing || floorBar.innerHTML === html) return;
+  floorBar.innerHTML = html;
 
   document.getElementById("fb-bg-theme")?.addEventListener("change", (e) => {
     const nextTheme = (e.target as HTMLSelectElement).value || "void";
@@ -4149,6 +4460,7 @@ async function init() {
 
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
   document.getElementById("btn-selected-recipes")!.addEventListener("click", () => void openSelectedRecipesDialog());
+  document.getElementById("btn-utensils")!.addEventListener("click", () => openUtensilManager());
 
   const withLevelDetail = async (fn: (detail: LevelDetail) => void | Promise<void>) => {
     if (!scenePath) {
@@ -4205,6 +4517,15 @@ async function init() {
 
   document.getElementById("show-grid")!.addEventListener("change", (e) => {
     showGrid = (e.target as HTMLInputElement).checked;
+    draw();
+  });
+
+  document.getElementById("show-coords")!.addEventListener("change", (e) => {
+    showCoords = (e.target as HTMLInputElement).checked;
+    if (!showCoords) {
+      hoverCx = -1;
+      hoverCy = -1;
+    }
     draw();
   });
 
@@ -5127,6 +5448,17 @@ function setupCanvas() {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
+
+    if (showCoords) {
+      const inCanvas = mx >= 0 && my >= 0 && mx <= rect.width && my <= rect.height;
+      const nx = inCanvas ? mx : -1;
+      const ny = inCanvas ? my : -1;
+      if (nx !== hoverCx || ny !== hoverCy) {
+        hoverCx = nx;
+        hoverCy = ny;
+        if (!marqueeing && !panning && !dragFloorKey && !dragItemKey) draw();
+      }
+    }
 
     if (marqueeing) {
       marqueeCurX = mx;

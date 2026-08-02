@@ -303,19 +303,23 @@ public static class SceneLayoutApplier
 
     /** GameObject name for a floor, encoding an optional tint color suffix so
      *  the tint survives save/reload. Image floors encode their texture path +
-     *  mode so the image-floor state also round-trips. */
+     *  mode + opacity (+ rotation when non-zero) so the state round-trips. */
     public const string ImageFloorPrefix = "imgfloor|";
 
     private static string FloorGameObjectName(FloorDto floor)
     {
-        // Image floor: encode texture path (with '|' for '/') + mode + opacity.
+        // Image floor: encode texture path (with '|' for '/') + mode + opacity
+        // (+ rotation as a trailing field when non-zero).
         if (floor != null && !string.IsNullOrEmpty(floor.imageTexturePath))
         {
             var mode = string.IsNullOrEmpty(floor.imageMode) ? "stretch" : floor.imageMode;
             var op = floor.imageOpacity > 0f ? floor.imageOpacity : 1f;
-            return ImageFloorPrefix
+            var name = ImageFloorPrefix
                 + floor.imageTexturePath.Replace('/', '|') + "|" + mode + "|"
                 + op.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+            var rot = NormalizeImageRotation(floor.imageRotation);
+            if (rot != 0) name += "|" + rot;
+            return name;
         }
 
         var baseName = !string.IsNullOrEmpty(floor.displayName) ? floor.displayName : "Floor";
@@ -330,14 +334,23 @@ public static class SceneLayoutApplier
         return baseName;
     }
 
-    /** Parse an image-floor name back into (texturePath, mode, opacity). The name
-     *  shape is: imgfloor|<path with | for />|<mode>|<opacity> — the last field is
-     *  optional; if absent opacity defaults to 1. */
-    public static bool TryParseImageFloorName(string name, out string texturePath, out string mode, out float opacity)
+    /** Snap an image rotation to the supported 90° steps (0/90/180/270). */
+    public static int NormalizeImageRotation(int rotation)
+    {
+        var r = ((rotation % 360) + 360) % 360;
+        return ((r + 45) / 90 * 90) % 360;
+    }
+
+    /** Parse an image-floor name back into (texturePath, mode, opacity, rotation).
+     *  The name shape is: imgfloor|<path with | for />|<mode>|<opacity>[|<rotation>]
+     *  — opacity and rotation are optional trailing numeric fields; a single
+     *  trailing number is opacity, two trailing numbers are opacity + rotation. */
+    public static bool TryParseImageFloorName(string name, out string texturePath, out string mode, out float opacity, out int rotation)
     {
         texturePath = null;
         mode = null;
         opacity = 1f;
+        rotation = 0;
         if (string.IsNullOrEmpty(name) || !name.StartsWith(ImageFloorPrefix, StringComparison.Ordinal))
             return false;
         var rest = name.Substring(ImageFloorPrefix.Length);
@@ -345,13 +358,31 @@ public static class SceneLayoutApplier
         if (parts.Length < 2) return false;
 
         int last = parts.Length - 1;
-        float parsedOp;
-        bool hasOpacity = float.TryParse(parts[last], System.Globalization.NumberStyles.Float,
-            System.Globalization.CultureInfo.InvariantCulture, out parsedOp);
-        int modeIndex = hasOpacity ? parts.Length - 2 : parts.Length - 1;
+        float parsedLast = 0f, parsedPrev = 0f;
+        bool lastIsNum = float.TryParse(parts[last], System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out parsedLast);
+        bool prevIsNum = last >= 1 && float.TryParse(parts[last - 1], System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out parsedPrev);
+
+        int modeIndex;
+        if (lastIsNum && prevIsNum && parts.Length >= 4)
+        {
+            rotation = NormalizeImageRotation(Mathf.RoundToInt(parsedLast));
+            opacity = Mathf.Clamp01(parsedPrev);
+            modeIndex = last - 2;
+        }
+        else if (lastIsNum)
+        {
+            opacity = Mathf.Clamp01(parsedLast);
+            modeIndex = last - 1;
+        }
+        else
+        {
+            modeIndex = last;
+        }
+        if (modeIndex < 1) return false;
         mode = parts[modeIndex];
         texturePath = string.Join("/", parts, 0, modeIndex);
-        if (hasOpacity) opacity = Mathf.Clamp01(parsedOp);
         return true;
     }
 
@@ -385,7 +416,7 @@ public static class SceneLayoutApplier
         // render the texture upside-down when viewed from above.
         if (!string.IsNullOrEmpty(floor.imageTexturePath))
         {
-            var texMat = ImageFloorMaterial(floor.imageTexturePath);
+            var texMat = ImageFloorMaterial(floor.imageTexturePath, NormalizeImageRotation(floor.imageRotation));
             if (texMat != null)
             {
                 Undo.RecordObject(mr, "Layout Editor Floor Material");
@@ -447,27 +478,120 @@ public static class SceneLayoutApplier
     private static readonly System.Collections.Generic.Dictionary<string, Material> _imageFloorMats =
         new System.Collections.Generic.Dictionary<string, Material>();
 
-    /** Shared runtime material for an image floor (one per uploaded texture),
-     *  with the texture assigned. Per-floor tiling is set on each renderer via a
-     *  MaterialPropertyBlock, so one shared material serves floors of any size. */
-    private static Material ImageFloorMaterial(string texturePath)
+    /** Shared runtime material for an image floor (one per uploaded texture +
+     *  rotation), with the texture assigned. Per-floor tiling is set on each
+     *  renderer via a MaterialPropertyBlock, so one shared material serves
+     *  floors of any size. 90°-step rotations are baked into a rotated texture
+     *  asset (_MainTex_ST cannot express a 90° rotation). */
+    private static Material ImageFloorMaterial(string texturePath, int rotation)
     {
+        // In-game the plane renders the texture rotated 180° relative to the
+        // editor preview, so bake a 180° compensation into every rotation.
+        rotation = NormalizeImageRotation(rotation + 180);
+        var key = texturePath + "|rot" + rotation;
         Material m;
-        if (_imageFloorMats.TryGetValue(texturePath, out m) && m != null)
+        if (_imageFloorMats.TryGetValue(key, out m) && m != null)
             return m;
-        var tex = AssetDatabase.LoadAssetAtPath<Texture>(texturePath);
+        var tex = rotation == 0
+            ? AssetDatabase.LoadAssetAtPath<Texture>(texturePath)
+            : RotatedImageTexture(texturePath, rotation);
         if (tex == null) return null;
         var shader = Shader.Find("Standard")
             ?? Shader.Find("Universal Render Pipeline/Lit")
             ?? Shader.Find("UI/Default");
         m = new Material(shader);
         m.mainTexture = tex;
-        m.name = "img_floor_" + System.IO.Path.GetFileNameWithoutExtension(texturePath);
+        m.name = "img_floor_" + System.IO.Path.GetFileNameWithoutExtension(texturePath)
+            + (rotation != 0 ? "_rot" + rotation : "");
         // Put the material in a transparent render mode so the per-floor opacity
         // (set via MaterialPropertyBlock _Color/_BaseColor alpha) is respected.
         SetupTransparentMode(m);
-        _imageFloorMats[texturePath] = m;
+        _imageFloorMats[key] = m;
         return m;
+    }
+
+    /** Asset path of the rotated copy of an uploaded floor texture. */
+    private static string RotatedTexturePath(string texturePath, int rotation)
+    {
+        var dir = System.IO.Path.GetDirectoryName(texturePath);
+        dir = string.IsNullOrEmpty(dir) ? "" : dir.Replace('\\', '/') + "/";
+        var stem = System.IO.Path.GetFileNameWithoutExtension(texturePath);
+        return dir + stem + "_rot" + rotation + ".png";
+    }
+
+    /** Load-or-create a clockwise-rotated (90° steps) copy of an uploaded floor
+     *  texture as a real asset next to the source, so scene-saved materials keep
+     *  a persistent texture reference. Decodes from file bytes, so the source
+     *  import settings (read/write) don't matter. */
+    private static Texture RotatedImageTexture(string texturePath, int rotation)
+    {
+        var rotPath = RotatedTexturePath(texturePath, rotation);
+        var existing = AssetDatabase.LoadAssetAtPath<Texture>(rotPath);
+        if (existing != null) return existing;
+
+        try
+        {
+            var bytes = System.IO.File.ReadAllBytes(System.IO.Path.GetFullPath(texturePath));
+            var src = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!src.LoadImage(bytes))
+            {
+                UnityEngine.Object.DestroyImmediate(src);
+                return null;
+            }
+            var dst = RotateTextureClockwise(src, rotation);
+            UnityEngine.Object.DestroyImmediate(src);
+            if (dst == null) return null;
+            var png = dst.EncodeToPNG();
+            UnityEngine.Object.DestroyImmediate(dst);
+            System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(rotPath), png);
+            AssetDatabase.ImportAsset(rotPath);
+            return AssetDatabase.LoadAssetAtPath<Texture>(rotPath);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("[LayoutEditor] Failed to rotate image floor texture: " + e.Message);
+            return null;
+        }
+    }
+
+    /** Rotate a texture clockwise by 90/180/270 degrees (viewed upright). */
+    private static Texture2D RotateTextureClockwise(Texture2D src, int rotation)
+    {
+        var pix = src.GetPixels32();
+        int w = src.width, h = src.height;
+        Texture2D dst;
+        Color32[] outp;
+        if (rotation == 180)
+        {
+            dst = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            outp = new Color32[pix.Length];
+            for (int i = 0; i < pix.Length; i++)
+                outp[i] = pix[pix.Length - 1 - i];
+        }
+        else if (rotation == 90 || rotation == 270)
+        {
+            dst = new Texture2D(h, w, TextureFormat.RGBA32, false);
+            outp = new Color32[pix.Length];
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    // Pixel rows are bottom-up. 90 CW (upright): x' = y, y' = w-1-x.
+                    // 270 CW: x' = h-1-y, y' = x.
+                    int di = rotation == 90
+                        ? (w - 1 - x) * h + y
+                        : x * h + (h - 1 - y);
+                    outp[di] = pix[y * w + x];
+                }
+            }
+        }
+        else
+        {
+            return null;
+        }
+        dst.SetPixels32(outp);
+        dst.Apply();
+        return dst;
     }
 
     /** Switch a Standard (or URP/Lit) material into Fade/Transparent mode so that

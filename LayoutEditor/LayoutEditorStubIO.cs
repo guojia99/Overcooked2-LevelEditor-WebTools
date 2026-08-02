@@ -22,6 +22,7 @@ public static class LayoutEditorStubIO
         item.burner = null;
         item.player = null;
         item.servingStation = null;
+        item.plateReturn = null;
 
         var playerStub = go.GetComponent<PseudoPrefabPlayerStub>();
         if (playerStub != null)
@@ -165,6 +166,16 @@ public static class LayoutEditorStubIO
             return;
         }
 
+        var returnStation = go.GetComponent<PseudoPrefabPlateReturnStub>();
+        if (returnStation != null)
+        {
+            item.stubKind = !string.IsNullOrEmpty(item.prefabAssetPath) && item.prefabAssetPath.Contains("GlassReturn")
+                ? "GlassReturn"
+                : "PlateReturn";
+            item.plateReturn = new LayoutPlateReturnStubDto { returnClean = returnStation.returnClean };
+            return;
+        }
+
         var plateStack = go.GetComponent<PseudoPrefabCleanPlateStackStub>();
         if (plateStack != null)
         {
@@ -286,6 +297,17 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(flamethrower, "Layout Editor Flamethrower");
             flamethrower.cookingRate = item.flamethrower.cookingRate;
+            return;
+        }
+
+        if ((item.stubKind == "PlateReturn" || item.stubKind == "GlassReturn") && item.plateReturn != null)
+        {
+            var returnStation = go.GetComponent<PseudoPrefabPlateReturnStub>();
+            if (returnStation == null)
+                return;
+
+            Undo.RecordObject(returnStation, "Layout Editor Plate Return");
+            returnStation.returnClean = item.plateReturn.returnClean;
             return;
         }
 

@@ -101,6 +101,13 @@ public class LayoutPlayerStubDto
 }
 
 [Serializable]
+public class LayoutPlateReturnStubDto
+{
+    /** True = the station returns clean plates/glasses; false = dirty ones. */
+    public bool returnClean;
+}
+
+[Serializable]
 public class LayoutServingStationStubDto
 {
     /** "u:<instanceID>" of the bound PlateReturn's GameObject, or empty. (Legacy
@@ -129,7 +136,7 @@ public class LayoutItemDto
     public LayoutFootprint footprint;
     /** True for surface-floor prefabs (raft planks, ice_floor, ...) → generate a walkable Col_Floor under them. */
     public bool walkable;
-    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | empty */
+    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | empty */
     public string stubKind;
     public LayoutDispenserStubDto dispenser;
     public LayoutConveyorStubDto conveyor;
@@ -142,6 +149,7 @@ public class LayoutItemDto
     public LayoutBurnerStubDto burner;
     public LayoutPlayerStubDto player;
     public LayoutServingStationStubDto servingStation;
+    public LayoutPlateReturnStubDto plateReturn;
 }
 
 [Serializable]
@@ -199,6 +207,8 @@ public class FloorDto
     public string imageMode;
     /** Image opacity 0..1 (0 = transparent, 1 = opaque). */
     public float imageOpacity;
+    /** Image rotation in degrees (0/90/180/270, clockwise viewed from above). */
+    public int imageRotation;
 }
 
 [Serializable]

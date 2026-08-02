@@ -555,6 +555,55 @@ canvas.pan-active {
   margin: 0 0 8px;
 }
 
+/* ---- Utensil manager ---- */
+.utm-group {
+  margin-bottom: 12px;
+}
+.utm-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8915b;
+  margin-bottom: 4px;
+}
+.utm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.utm-name {
+  min-width: 96px;
+  font-weight: 600;
+}
+.utm-cap-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #9aa0a6;
+}
+.utm-cap {
+  width: 56px;
+  background: #12141a;
+  border: 1px solid #3a3f4a;
+  border-radius: 4px;
+  color: #e8eaed;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+.utm-params {
+  flex: 1;
+  color: #9aa0a6;
+}
+.utm-sync {
+  font-size: 11px;
+  padding: 2px 8px;
+}
+.utm-sync:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* ---- Audio modal ---- */
 .audio-grid {
   display: grid;
