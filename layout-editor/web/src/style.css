@@ -119,15 +119,68 @@ body {
   background: #3d6bf3;
 }
 
+.nav-scene-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.nav-label {
+  font-size: 12px;
+  color: #9aa0a6;
+  white-space: nowrap;
+}
+
+.nav-select {
+  background: #1a1d23;
+  color: #e8eaed;
+  border: 1px solid #4a5060;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 13px;
+  min-width: 0;
+}
+
 .toolbar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  padding: 8px 12px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 12px;
   background: #252830;
   border-bottom: 1px solid #3a3f4b;
   flex-shrink: 0;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px 10px;
+  flex-wrap: wrap;
+}
+
+.toolbar-sep {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: #4a5060;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.toolbar-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: #9aa0a6;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toolbar-check input[type="checkbox"] {
+  margin: 0;
+  accent-color: #3d6bf3;
 }
 
 .toolbar label {
@@ -458,7 +511,7 @@ canvas.pan-active {
   gap: 6px;
 }
 .recipe-grid {
-  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
 }
 .pick-card {
   position: relative;
@@ -1243,7 +1296,7 @@ body.manage-bg {
 }
 
 .modal-panel.wide {
-  max-width: 760px;
+  max-width: 1100px;
 }
 
 .cfg-tabs {
@@ -1367,7 +1420,7 @@ body.manage-bg {
 /* Recipe workspace (selection + analysis) */
 .rw {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 14px;
 }
 
@@ -1388,7 +1441,7 @@ body.manage-bg {
 }
 
 .rw-list {
-  max-height: min(72vh, 640px);
+  max-height: min(78vh, 720px);
 }
 
 .rw-group {
@@ -1401,7 +1454,6 @@ body.manage-bg {
   z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 5px 8px;
   margin: 0 0 2px;
   font-size: 12px;
@@ -1410,15 +1462,63 @@ body.manage-bg {
   background: linear-gradient(90deg, #2d3a52, #1a1d23);
   border-left: 3px solid #8ab4f8;
   border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+  width: 30%;
+}
+
+.rw-group-name {
+  flex: 1;
 }
 
 .rw-group-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
   font-size: 11px;
   font-weight: 400;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.rw-group-sel {
+  color: #34d36f;
+}
+
+.rw-group-total {
+  color: #9aa0a6;
+}
+
+.rw-collapse-all {
+  display: inline-block;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
   color: #9aa0a6;
   background: #1a1d23;
-  border-radius: 8px;
-  padding: 1px 8px;
+  border: 1px solid #4a5060;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.rw-collapse-all:hover {
+  color: #e8eaed;
+  border-color: #8ab4f8;
+}
+
+.rw-group-header::after {
+  content: "▼";
+  font-size: 10px;
+  color: #9aa0a6;
+  transition: transform 0.15s;
+}
+
+.rw-group.collapsed .rw-group-header::after {
+  transform: rotate(-90deg);
+}
+
+.rw-group.collapsed .pick-grid {
+  display: none;
 }
 
 .rw-analysis {
@@ -1477,6 +1577,35 @@ body.manage-bg {
 
 .rw-fill {
   margin-top: 4px;
+}
+
+.rw-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.rw-sel-all,
+.rw-sel-none {
+  padding: 3px 8px;
+  font-size: 11px;
+  border: 1px solid var(--border, #5f6368);
+  border-radius: 3px;
+  background: var(--bg-panel, #2d2f34);
+  color: var(--text, #c4c7cc);
+  cursor: pointer;
+}
+
+.rw-sel-all:hover,
+.rw-sel-none:hover {
+  border-color: var(--accent, #8ab4f8);
+  color: var(--accent, #8ab4f8);
+}
+
+.rw-row input[type="checkbox"] {
+  flex-shrink: 0;
+  accent-color: var(--accent, #8ab4f8);
 }
 
 .modal-hint.ok {

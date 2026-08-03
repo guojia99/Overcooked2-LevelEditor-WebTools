@@ -143,15 +143,26 @@ export async function fetchFloorMaterials(levelSet: string): Promise<FloorMateri
 }
 
 export async function fetchRecipeCatalog(levelSet: string): Promise<RecipeEntry[]> {
+  let recipes: RecipeEntry[];
   try {
     const q = new URLSearchParams({ levelSet });
     const r = await fetch(`/api/recipes?${q}`);
     const data = await readApiJson<{ recipes?: RecipeEntry[] }>(r);
-    return data.recipes ?? [];
+    recipes = data.recipes ?? [];
   } catch {
     const data = await fetchStaticCatalog<{ recipes?: RecipeEntry[] }>("recipes.json");
-    return data.recipes ?? [];
+    recipes = data.recipes ?? [];
   }
+  for (const r of recipes) {
+    if (r.type === "sushi" && r.cookingStep === "Steamer") {
+      r.cookingStep = "Pot";
+    }
+    if (r.type === "pizza" && r.id !== "Pizza_Olives" && r.ingredients) {
+      const idx = r.ingredients.indexOf("DLC05_Dough");
+      if (idx >= 0) r.ingredients[idx] = "DoughSO";
+    }
+  }
+  return recipes;
 }
 
 export async function fetchCookingSteps(): Promise<CookingStepEntry[]> {

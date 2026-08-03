@@ -204,6 +204,7 @@ let dragFloorAnchorZ = 0;
 let ingredientsCache: import("./types").IngredientEntry[] = [];
 let currentLevelSet = "";
 let sceneListCache: import("./types").LevelSetScene[] = [];
+let fillIncludeMainDough = false;
 
 function levelSetFromScenePath(assetPath: string): string {
   const parts = assetPath.replace(/\\/g, "/").split("/");
@@ -831,7 +832,7 @@ async function openRecipesDialog() {
           </label>`;
         })
         .join("");
-      return `<div class="rw-group" data-type="${escHtml(type)}"><div class="rw-group-header">${escHtml(recipeTypeLabel(type))}<span class="rw-group-count">${items.length}</span></div><div class="pick-grid recipe-grid">${cards}</div></div>`;
+      return `<div class="rw-group" data-type="${escHtml(type)}"><div class="rw-group-header"><span class="rw-group-name">${escHtml(recipeTypeLabel(type))}</span><span class="rw-group-count"><span class="rw-group-sel">0</span>/<span class="rw-group-total">${items.length}</span></span></div><div class="pick-grid recipe-grid">${cards}</div></div>`;
     })
     .join("");
 
@@ -840,6 +841,7 @@ async function openRecipesDialog() {
     `<div class="rw">
        <div class="rw-col">
          <input type="search" id="rw-search" class="rw-search" placeholder="搜索菜谱…">
+         <button type="button" class="rw-collapse-all" id="rw-collapse-all">收起全部</button>
          <div class="modal-scroll rw-list" id="rw-list">${listHtml}</div>
        </div>
        <div class="rw-col">
@@ -847,6 +849,7 @@ async function openRecipesDialog() {
        </div>
      </div>`,
     `<button type="button" class="modal-btn" data-cancel>取消</button>
+     <button type="button" class="modal-btn" id="rw-clear-all">清空已选</button>
      <button type="button" class="modal-btn primary" data-ok>保存菜谱</button>`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
@@ -890,21 +893,30 @@ async function openRecipesDialog() {
       .sort()
       .map((i) => {
         const ok = !missingIngs.includes(i);
-        return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span>${escHtml(ingredientNameById(i))} <span class="muted">${escHtml(i)}</span></div>`;
+        let checked = !ok;
+        // Main story dough/bun: default unchecked when DLC counterpart also present
+        if (i === "DoughSO" && reqIngs.has("DLC05_Dough")) checked = false;
+        if (i === "ChoppedBunSO" && reqIngs.has("DLC02_ChoppedBun")) checked = false;
+        return `<label class="rw-row ${ok ? "" : "miss"}"><input type="checkbox" class="rw-ing-cb" value="${i}" ${checked ? "checked" : ""}/> <span>${escHtml(ingredientNameById(i))}</span> <span class="muted">${escHtml(i)}</span></label>`;
       })
       .join("");
+
     const utRows = reqUt
       .map((u) => {
         const ok = !missingUt.includes(u);
         const cat = catalogItemById(u);
         const label = cat ? tidyCatalogNameZh(cat.nameZh, cat.id) : u;
-        return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span>${escHtml(label)} <span class="muted">${escHtml(u)}</span></div>`;
+        return `<label class="rw-row ${ok ? "" : "miss"}"><input type="checkbox" class="rw-ut-cb" value="${u}" ${ok ? "" : "checked"}/> <span>${escHtml(label)}</span> <span class="muted">${escHtml(u)}</span></label>`;
       })
       .join("");
 
     const ingFill = missingIngs.length
-      ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ing">一键补齐缺失食材箱 (${missingIngs.length})</button>
-         <label class="ctx-stub-row" style="display:block;margin-top:6px"><input type="checkbox" id="rw-include-main-dough"/> 同时补齐主线面团/面包皮（DoughSO / ChoppedBunSO）</label>`
+      ? `<div class="rw-toolbar">
+           <button type="button" class="rw-sel-all" id="rw-sel-all-ing">全选缺失</button>
+           <button type="button" class="rw-sel-none" id="rw-sel-none-ing">全不选</button>
+           <button type="button" class="modal-btn primary rw-fill" id="rw-fill-ing">一键补齐选中食材</button>
+         </div>
+         <label class="ctx-stub-row" style="display:block;margin-top:6px"><input type="checkbox" id="rw-include-main-dough" ${fillIncludeMainDough ? "checked" : ""}/> 同时补齐主线面团/面包皮（DoughSO / ChoppedBunSO）</label>`
       : `<p class="modal-hint ok">食材箱已齐全</p>`;
     const utFill = missingUt.length
       ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ut">一键补齐缺失锅具/道具 (${missingUt.length})</button>`
@@ -923,14 +935,43 @@ async function openRecipesDialog() {
 
   const rerender = () => {
     analysisEl.innerHTML = analysisHtml();
-    document.getElementById("rw-fill-ing")?.addEventListener("click", () => {
-      fillMissingDispensers();
-      rerender();
+    const fillBtn = document.getElementById("rw-fill-ing");
+    if (fillBtn) {
+      fillBtn.onclick = () => {
+        const cb = document.getElementById("rw-include-main-dough") as HTMLInputElement | null;
+        fillIncludeMainDough = cb?.checked ?? false;
+        fillMissingDispensers();
+        rerender();
+      };
+    }
+    const cbEl = document.getElementById("rw-include-main-dough") as HTMLInputElement | null;
+    if (cbEl) {
+      cbEl.onchange = () => { fillIncludeMainDough = cbEl.checked; };
+    }
+    document.getElementById("rw-sel-all-ing")?.addEventListener("click", () => {
+      document.querySelectorAll<HTMLInputElement>(".rw-ing-cb").forEach(cb => { cb.checked = true; });
     });
-    document.getElementById("rw-fill-ut")?.addEventListener("click", () => {
-      fillMissingUtensils();
-      rerender();
+    document.getElementById("rw-sel-none-ing")?.addEventListener("click", () => {
+      document.querySelectorAll<HTMLInputElement>(".rw-ing-cb").forEach(cb => { cb.checked = false; });
     });
+    const utBtn = document.getElementById("rw-fill-ut");
+    if (utBtn) {
+      utBtn.onclick = () => {
+        const cbs = document.querySelectorAll<HTMLInputElement>(".rw-ut-cb:checked");
+        const selected = new Set<string>();
+        for (const cb of cbs) selected.add(cb.value);
+        if (selected.size === 0) return;
+        const base = placementBase();
+        let idx = 0;
+        for (const u of selected) {
+          const cat = catalogItemById(u);
+          if (!cat) continue;
+          addFromCatalog(cat, base.x + idx * CELL, base.z - 2 * CELL);
+          idx++;
+        }
+        rerender();
+      };
+    }
   };
 
   listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
@@ -940,9 +981,23 @@ async function openRecipesDialog() {
       if (cb.checked) selected.add(cb.value);
       else selected.delete(cb.value);
       card?.classList.toggle("selected", cb.checked);
+      updateGroupCounts();
       rerender();
     });
   });
+
+  function updateGroupCounts(): void {
+    listEl.querySelectorAll<HTMLElement>(".rw-group").forEach((grp) => {
+      const selEl = grp.querySelector<HTMLElement>(".rw-group-sel");
+      if (!selEl) return;
+      let selectedCount = 0;
+      grp.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+        if (cb.checked) selectedCount++;
+      });
+      selEl.textContent = String(selectedCount);
+    });
+  }
+  updateGroupCounts();
   searchEl.addEventListener("input", () => {
     const q = searchEl.value.trim().toLowerCase();
     listEl.querySelectorAll<HTMLDivElement>(".rw-group").forEach((grp) => {
@@ -957,7 +1012,33 @@ async function openRecipesDialog() {
     });
   });
 
+  listEl.querySelectorAll<HTMLElement>(".rw-group-header").forEach((hdr) => {
+    hdr.addEventListener("click", () => {
+      hdr.parentElement?.classList.toggle("collapsed");
+    });
+  });
+
+  document.getElementById("rw-collapse-all")?.addEventListener("click", () => {
+    const allCollapsed = [...listEl.querySelectorAll<HTMLElement>(".rw-group")].every((g) => g.classList.contains("collapsed"));
+    listEl.querySelectorAll<HTMLElement>(".rw-group").forEach((g) => {
+      g.classList.toggle("collapsed", !allCollapsed);
+    });
+    const btn = document.getElementById("rw-collapse-all");
+    if (btn) btn.textContent = allCollapsed ? "收起全部" : "展开全部";
+  });
+
   rerender();
+
+  document.getElementById("rw-clear-all")?.addEventListener("click", () => {
+    selected.clear();
+    listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+      cb.checked = false;
+      const card = cb.closest(".pick-card");
+      card?.classList.remove("selected");
+    });
+    updateGroupCounts();
+    rerender();
+  });
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
@@ -971,21 +1052,19 @@ async function openRecipesDialog() {
   });
 
   function fillMissingDispensers() {
-    const reqIngs = new Set<string>();
-    for (const r of currentRecipes()) (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
-    const includeMain = (document.getElementById("rw-include-main-dough") as HTMLInputElement)?.checked ?? false;
-    if (includeMain) {
-      if (reqIngs.has("DLC05_Dough")) reqIngs.add("DoughSO");
-      if (reqIngs.has("DLC02_ChoppedBun")) reqIngs.add("ChoppedBunSO");
+    const cbs = document.querySelectorAll<HTMLInputElement>(".rw-ing-cb:checked");
+    const selectedIngs = new Set<string>();
+    for (const cb of cbs) selectedIngs.add(cb.value);
+    if (fillIncludeMainDough) {
+      if (selectedIngs.has("DLC05_Dough")) selectedIngs.add("DoughSO");
+      if (selectedIngs.has("DLC02_ChoppedBun")) selectedIngs.add("ChoppedBunSO");
     }
-    const have = existingDispenserIngIds();
-    const missing = [...reqIngs].filter((i) => !have.has(i));
-    if (!missing.length) return;
+    if (selectedIngs.size === 0) return;
     const cat = catalogItemById("Dispenser");
     if (!cat) return;
     const base = placementBase();
     let idx = 0;
-    for (const ing of missing) {
+    for (const ing of selectedIngs) {
       const it = addFromCatalog(cat, base.x + idx * CELL, base.z);
       if (it) {
         it.dispenser = { spawnerItemPrefabGuid: ingredientGuidById(ing) ?? "" };
@@ -1126,25 +1205,29 @@ if (!MANAGE_ACTIVE) {
 app.innerHTML = `
   ${navHtml("layout")}
   <div class="toolbar">
-    <label>场景</label>
-    <select id="scene-select"><option value="">加载中…</option></select>
-    <button id="btn-reload">重新加载</button>
-    <button id="btn-save" class="primary">写回 Unity</button>
-    <button id="btn-recipes" type="button">菜谱</button>
-    <button id="btn-selected-recipes" type="button" title="查看当前已选菜谱、所需食材与锅具">已选菜谱</button>
-    <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">锅具管理</button>
-    <button id="btn-level-config" type="button">人数配置</button>
-    <button id="btn-level-audio" type="button">音频</button>
-    <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">同步布局…</button>
-    <div class="layer-tabs" id="layer-tabs">
-      <button type="button" data-layer="decor" class="layer-tab">🎀 装饰层</button>
-      <button type="button" data-layer="items" class="layer-tab active">📦 物品层</button>
-      <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板 / 背景层</button>
+    <div class="toolbar-row">
+      <button id="btn-reload" title="重新加载当前场景">🔄 重新加载</button>
+      <button id="btn-save" class="primary" title="将布局写回 Unity">💾 写回 Unity</button>
+      <span class="toolbar-sep"></span>
+      <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
+      <button id="btn-selected-recipes" type="button" title="查看当前已选菜谱、所需食材与锅具">✅ 已选菜谱</button>
+      <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
+      <button id="btn-level-config" type="button" title="配置各玩家分数">📊 分数配置</button>
+      <button id="btn-level-audio" type="button" title="配置关卡音频">🔊 音频</button>
+      <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">📥 同步布局…</button>
+      <span id="status" class="status">连接中…</span>
     </div>
-    <label><input type="checkbox" id="snap-half" checked /> 半格 (0.6)</label>
-    <label><input type="checkbox" id="show-grid" checked /> 显示网格</label>
-    <label><input type="checkbox" id="show-coords" checked /> 坐标系</label>
-    <span id="status" class="status">连接中…</span>
+    <div class="toolbar-row">
+      <div class="layer-tabs" id="layer-tabs">
+        <button type="button" data-layer="decor" class="layer-tab">🎀 装饰层</button>
+        <button type="button" data-layer="items" class="layer-tab active">📦 物品层</button>
+        <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板 / 背景层</button>
+      </div>
+      <span class="toolbar-sep"></span>
+      <label class="toolbar-check"><input type="checkbox" id="snap-half" checked /> 📐 半格 (0.6)</label>
+      <label class="toolbar-check"><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
+      <label class="toolbar-check"><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
+    </div>
   </div>
   <div class="main">
     <aside class="palette">
@@ -1166,6 +1249,26 @@ app.innerHTML = `
 }
 
 const sceneSelect = document.getElementById("scene-select") as HTMLSelectElement;
+
+function selectSceneInDropdowns(assetPath: string): void {
+  if (!assetPath) return;
+  const scene = sceneListCache.find((s) => s.assetPath === assetPath);
+  if (!scene) return;
+  const setSelect = document.getElementById("set-select") as HTMLSelectElement | null;
+  if (setSelect) {
+    setSelect.value = scene.levelSet;
+    const filtered = sceneListCache.filter((s) => s.levelSet === scene.levelSet);
+    sceneSelect.innerHTML = '<option value="">— 选择关卡 —</option>';
+    for (const s of filtered) {
+      const opt = document.createElement("option");
+      opt.value = s.assetPath;
+      opt.textContent = s.sceneName;
+      sceneSelect.appendChild(opt);
+    }
+  }
+  sceneSelect.value = assetPath;
+}
+
 const statusEl = document.getElementById("status")!;
 const paletteCats = document.getElementById("palette-cats")!;
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -1266,7 +1369,7 @@ function confirmLeaveIfDirty(action: () => void): void {
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", () => {
     closeModal();
-    sceneSelect.value = scenePath;
+    selectSceneInDropdowns(scenePath);
   });
   document.querySelector("[data-leave]")?.addEventListener("click", () => {
     closeModal();
@@ -1276,7 +1379,7 @@ function confirmLeaveIfDirty(action: () => void): void {
     closeModal();
     void saveToUnity().then((ok) => {
       if (ok) action();
-      else sceneSelect.value = scenePath;
+      else selectSceneInDropdowns(scenePath);
     });
   });
 }
@@ -4503,24 +4606,44 @@ async function init() {
 
   const scenes = await fetchLevelSets().catch(() => []);
   sceneListCache = scenes;
-  sceneSelect.innerHTML = '<option value="">— 选择场景 —</option>';
-  for (const s of scenes) {
+  const setSelect = document.getElementById("set-select") as HTMLSelectElement;
+
+  const setNames = [...new Set(scenes.map((s) => s.levelSet))].sort();
+  setSelect.innerHTML = '<option value="">— 选择关卡集 —</option>';
+  for (const name of setNames) {
     const opt = document.createElement("option");
-    opt.value = s.assetPath;
-    opt.textContent = `${s.levelSet} / ${s.sceneName}`;
-    sceneSelect.appendChild(opt);
+    opt.value = name;
+    opt.textContent = name;
+    setSelect.appendChild(opt);
   }
 
-  document.getElementById("palette-search")!.addEventListener("input", (e) => {
-    const q = (e.target as HTMLInputElement).value;
-    if (currentLayer === "floor") buildFloorPalette(q);
-    else buildPalette(catalog, q);
+  function populateSceneSelect(setName: string): void {
+    const filtered = scenes.filter((s) => s.levelSet === setName);
+    sceneSelect.innerHTML = '<option value="">— 选择关卡 —</option>';
+    for (const s of filtered) {
+      const opt = document.createElement("option");
+      opt.value = s.assetPath;
+      opt.textContent = s.sceneName;
+      sceneSelect.appendChild(opt);
+    }
+  }
+
+  setSelect.addEventListener("change", () => {
+    const setName = setSelect.value;
+    populateSceneSelect(setName);
+    sceneSelect.value = "";
   });
 
   sceneSelect.addEventListener("change", () => {
     const target = sceneSelect.value;
     if (!target || target === scenePath) return;
     confirmLeaveIfDirty(() => void loadScene(target));
+  });
+
+  document.getElementById("palette-search")!.addEventListener("input", (e) => {
+    const q = (e.target as HTMLInputElement).value;
+    if (currentLayer === "floor") buildFloorPalette(q);
+    else buildPalette(catalog, q);
   });
 
   document.getElementById("btn-reload")!.addEventListener("click", () => {
@@ -4640,7 +4763,7 @@ async function init() {
       (urlScene ? scenes.find((s) => s.assetPath === urlScene) : null);
     const guojia = scenes.find((s) => s.assetPath.includes("guojia"));
     const pick = match ?? guojia ?? scenes[0];
-    sceneSelect.value = pick.assetPath;
+    selectSceneInDropdowns(pick.assetPath);
     await loadScene(pick.assetPath);
   }
 

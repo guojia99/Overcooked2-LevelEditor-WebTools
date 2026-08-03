@@ -252,7 +252,18 @@ public static class LayoutEditorCatalogApi
         info.recipes = recipes.ToArray();
 
         // Auto-populate allIngredients from selected recipes
+        // Only register ingredients NOT in the core/original RecipeMatchList
+        // (DLC/custom-exclusive ingredients only — core ingredients are already in the game's built-in matching)
         {
+            var coreIngs = new HashSet<string>(StringComparer.Ordinal)
+            {
+                "ChoppedBunSO", "DoughSO", "MeatSO", "CheeseSO", "LettuceSO", "TomatoSO",
+                "TortillaSO", "BurritoChickenSO", "BurritoMeatSO",
+                "FlourSO", "EggSO", "HoneycombSO", "ChocolateSO", "CarrotSO",
+                "PotatoSO", "NuggetChickenSO", "OnionSO", "PastaSO",
+                "PepperoniSO", "ChickenSO", "CucumberSO", "FishSO", "PrawnSO",
+                "SeaweedSO", "SushiRiceSO", "SushiFishSO", "SushiPrawnSO",
+            };
             var allIngs = new List<PseudoPrefabSO>();
             var seenIngIds = new HashSet<string>(StringComparer.Ordinal);
             var ingLookup = new Dictionary<string, PseudoPrefabSO>(StringComparer.Ordinal);
@@ -272,7 +283,9 @@ public static class LayoutEditorCatalogApi
                     {
                         string step;
                         string[] originalIngs;
-                        if (LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out originalIngs) ||
+                        var pathKey = System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(original));
+                        if (LayoutEditorRecipeKnowledge.TryGetOriginal(pathKey, out step, out originalIngs) ||
+                            LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out originalIngs) ||
                             LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName, out step, out originalIngs))
                         {
                             ingIds = new List<string>(originalIngs);
@@ -283,7 +296,12 @@ public static class LayoutEditorCatalogApi
                     continue;
                 foreach (var ingId in ingIds)
                 {
-                    if (string.IsNullOrEmpty(ingId) || !seenIngIds.Add(ingId))
+                    if (string.IsNullOrEmpty(ingId))
+                        continue;
+                    // Skip core ingredients already covered by the game's built-in RecipeMatchList
+                    if (coreIngs.Contains(ingId))
+                        continue;
+                    if (!seenIngIds.Add(ingId))
                         continue;
                     PseudoPrefabSO ingSO;
                     if (!ingLookup.TryGetValue(ingId, out ingSO))

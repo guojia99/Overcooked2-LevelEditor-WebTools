@@ -340,7 +340,7 @@
       "nameZh": "黄瓜寿司",
       "nameEn": "Cucumber Sushi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_Cucumber_SO.asset",
-      "cookingStep": "Steamer",
+      "cookingStep": "Pot",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -404,7 +404,7 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Chicken_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO",
         "ChickenSO"
@@ -466,7 +466,7 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Peperoni_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO",
         "PepperoniSO"
@@ -488,7 +488,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Peperoni_80_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO",
         "PepperoniSO"
@@ -593,7 +593,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Mushroom_80_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO"
@@ -837,7 +837,7 @@
       "nameZh": "什锦寿司",
       "nameEn": "Sushi All",
       "assetPath": "Assets/common01/food/Recipes/Sushi_All_SO.asset",
-      "cookingStep": "Steamer",
+      "cookingStep": "Pot",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -1024,7 +1024,7 @@
       "nameZh": "鲜虾寿司",
       "nameEn": "Prawn Sushi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_PlainPrawn_SO.asset",
-      "cookingStep": "Steamer",
+      "cookingStep": "Pot",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -1165,7 +1165,7 @@
       "nameZh": "鱼肉寿司",
       "nameEn": "Fish Sushi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_PlainFish_SO.asset",
-      "cookingStep": "Steamer",
+      "cookingStep": "Pot",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -1186,7 +1186,7 @@
       "nameZh": "鱼生寿司",
       "nameEn": "Sushi Fish",
       "assetPath": "Assets/common01/food/Recipes/Sushi_Fish_SO.asset",
-      "cookingStep": "Steamer",
+      "cookingStep": "Pot",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -1249,7 +1249,7 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Plain_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO"
       ],
@@ -1270,7 +1270,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Plain_60_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO"
       ],
@@ -1506,7 +1506,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Uncooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO",
@@ -1530,7 +1530,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Cooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO",

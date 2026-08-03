@@ -337,7 +337,7 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
     <label class="m-field">关卡标识（仅字母/数字/下划线，用于目录/场景名 s_&lt;标识&gt;）<input type="text" id="lv-id" placeholder="level_1"></label>
     <label class="m-field">英文名 levelName<input type="text" id="lv-en" placeholder="Level 1"></label>
     <label class="m-field">中文名 levelNameZH<input type="text" id="lv-zh" placeholder="第一关"></label>
-    <p class="modal-hint">将自动生成 4 份人数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景 s_template 到 scenes/。</p>
+    <p class="modal-hint">将自动生成 4 份分数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景 s_template 到 scenes/。</p>
     `,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`
   );
@@ -383,7 +383,7 @@ async function confirmDeleteLevel(app: HTMLElement, setName: string, levelId: st
 
   openModal(
     `删除关卡 · ${esc(levelId)}`,
-    `<p>将永久删除以下 <b>${paths.length}</b> 个文件/资源（含场景、LevelInfo、人数配置及关卡目录内自定义菜谱/模型），且<b>不可恢复</b>：</p>
+    `<p>将永久删除以下 <b>${paths.length}</b> 个文件/资源（含场景、LevelInfo、分数配置及关卡目录内自定义菜谱/模型），且<b>不可恢复</b>：</p>
      <div class="del-file-list">${fileList}</div>
      <p class="modal-hint">关卡集本身不会被删除。如该关卡已分配 AssetBundle，删除后请重新构建 AssetBundle。</p>`,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn danger" data-ok>确认删除</button>`
@@ -533,7 +533,7 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
   }).join("");
 
   openModal(
-    `人数配置 · ${detail.levelName || detail.levelNameZH}`,
+    `分数配置 · ${detail.levelName || detail.levelNameZH}`,
     `<div class="cfg-ai-bar">
        <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ AI 一键定分</button>
      </div>
@@ -660,7 +660,7 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
           fourStarScore: round5(getNum("fourStarScore")),
         };
       };
-      showBusy("保存人数配置…");
+      showBusy("保存分数配置…");
       await api.updateLevelConfig({
         assetPath: detail.levelInfoAssetPath,
         config_1p: build("1p"),
@@ -669,7 +669,7 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
         config_4p: build("4p"),
       });
       closeModal();
-      setStatus("人数配置已保存（已 reload）");
+      setStatus("分数配置已保存（已 reload）");
       onSaved();
     } catch (e) {
       setStatus((e as Error).message, false);
