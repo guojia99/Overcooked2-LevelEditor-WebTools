@@ -280,9 +280,11 @@
       "cookingStep": "OvenTray",
       "ingredients": [
         "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
         "Olive"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 4,
       "cookingStepCount": 1,
       "score": 100,
       "isCustom": false,
@@ -299,7 +301,7 @@
       "assetPath": "Assets/common01/food/Recipes/Burger_Plain_SO.asset",
       "cookingStep": "FryingPan",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "MeatSO"
       ],
       "ingredientCount": 2,
@@ -402,10 +404,12 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Chicken_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
         "ChickenSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 4,
       "cookingStepCount": 1,
       "score": 100,
       "isCustom": false,
@@ -462,10 +466,12 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Peperoni_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
         "PepperoniSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 4,
       "cookingStepCount": 1,
       "score": 100,
       "isCustom": false,
@@ -482,10 +488,12 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Peperoni_80_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
         "PepperoniSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 4,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
@@ -585,7 +593,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Mushroom_80_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO"
@@ -854,7 +862,7 @@
       "assetPath": "Assets/common01/food/Recipes/Burger_LettuceTomato_SO.asset",
       "cookingStep": "FryingPan",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "LettuceSO",
         "TomatoSO",
         "MeatSO"
@@ -876,7 +884,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Burger/Burger_Lettuce_SO.asset",
       "cookingStep": "",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "LettuceSO",
         "MeatSO"
       ],
@@ -1241,9 +1249,11 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Plain_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO"
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO"
       ],
-      "ingredientCount": 1,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
@@ -1260,9 +1270,11 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Plain_60_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO"
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO"
       ],
-      "ingredientCount": 1,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 60,
       "isCustom": false,
@@ -1451,7 +1463,7 @@
       "assetPath": "Assets/common01/food/Recipes/Burger_Cheese_SO.asset",
       "cookingStep": "FryingPan",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "CheeseSO",
         "MeatSO"
       ],
@@ -1472,7 +1484,7 @@
       "assetPath": "Assets/common01/food/Recipes/Burger_CheeseLettuce_SO.asset",
       "cookingStep": "FryingPan",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "CheeseSO",
         "LettuceSO",
         "MeatSO"
@@ -1494,7 +1506,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Uncooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO",
@@ -1518,7 +1530,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Cooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO",

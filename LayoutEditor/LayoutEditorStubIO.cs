@@ -23,6 +23,9 @@ public static class LayoutEditorStubIO
         item.player = null;
         item.servingStation = null;
         item.plateReturn = null;
+        item.switchStub = null;
+        item.pressureSwitch = null;
+        item.terminal = null;
 
         var playerStub = go.GetComponent<PseudoPrefabPlayerStub>();
         if (playerStub != null)
@@ -202,6 +205,44 @@ public static class LayoutEditorStubIO
                 randomTargetOrder = burner.randomTargetOrder,
                 hideVisual = burner.hideVisual
             };
+            return;
+        }
+
+        var switchStub = go.GetComponent<PseudoPrefabSwitchStub>();
+        if (switchStub != null)
+        {
+            item.stubKind = "Switch";
+            var sdto = new LayoutSwitchStubDto { startEnabled = switchStub.startEnabled };
+            if (switchStub.activeMaterial != null)
+                sdto.activeMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(switchStub.activeMaterial));
+            if (switchStub.inactiveMaterial != null)
+                sdto.inactiveMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(switchStub.inactiveMaterial));
+            item.switchStub = sdto;
+            return;
+        }
+
+        var pressureSwitch = go.GetComponent<PseudoPrefabPressureSwitchStub>();
+        if (pressureSwitch != null)
+        {
+            item.stubKind = "PressureSwitch";
+            var pdto = new LayoutPressureSwitchStubDto();
+            if (pressureSwitch.occupiedMaterialSO != null)
+                pdto.occupiedMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(pressureSwitch.occupiedMaterialSO));
+            if (pressureSwitch.unoccupiedMaterialSO != null)
+                pdto.unoccupiedMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(pressureSwitch.unoccupiedMaterialSO));
+            item.pressureSwitch = pdto;
+            return;
+        }
+
+        var terminal = go.GetComponent<PseudoPrefabTerminalStub>();
+        if (terminal != null)
+        {
+            item.stubKind = "Terminal";
+            var tdto = new LayoutTerminalStubDto();
+            if (terminal.pilotableObject != null)
+                tdto.pilotableObjectInstanceId = "u:" + terminal.pilotableObject.GetInstanceID();
+            item.terminal = tdto;
+            return;
         }
     }
 
@@ -346,6 +387,58 @@ public static class LayoutEditorStubIO
             burner.airTime = item.burner.airTime;
             burner.randomTargetOrder = item.burner.randomTargetOrder;
             burner.hideVisual = item.burner.hideVisual;
+        }
+
+        if (item.stubKind == "Switch" && item.switchStub != null)
+        {
+            var sw = go.GetComponent<PseudoPrefabSwitchStub>();
+            if (sw == null)
+                return;
+
+            Undo.RecordObject(sw, "Layout Editor Switch");
+            sw.startEnabled = item.switchStub.startEnabled;
+            if (!string.IsNullOrEmpty(item.switchStub.activeMaterialGuid))
+                sw.activeMaterial = LoadPseudoPrefabSO(item.switchStub.activeMaterialGuid);
+            if (!string.IsNullOrEmpty(item.switchStub.inactiveMaterialGuid))
+                sw.inactiveMaterial = LoadPseudoPrefabSO(item.switchStub.inactiveMaterialGuid);
+            return;
+        }
+
+        if (item.stubKind == "PressureSwitch" && item.pressureSwitch != null)
+        {
+            var ps = go.GetComponent<PseudoPrefabPressureSwitchStub>();
+            if (ps == null)
+                return;
+
+            Undo.RecordObject(ps, "Layout Editor Pressure Switch");
+            if (!string.IsNullOrEmpty(item.pressureSwitch.occupiedMaterialGuid))
+                ps.occupiedMaterialSO = LoadPseudoPrefabSO(item.pressureSwitch.occupiedMaterialGuid);
+            if (!string.IsNullOrEmpty(item.pressureSwitch.unoccupiedMaterialGuid))
+                ps.unoccupiedMaterialSO = LoadPseudoPrefabSO(item.pressureSwitch.unoccupiedMaterialGuid);
+            return;
+        }
+
+        if (item.stubKind == "Terminal" && item.terminal != null)
+        {
+            var terminal = go.GetComponent<PseudoPrefabTerminalStub>();
+            if (terminal == null)
+                return;
+
+            Undo.RecordObject(terminal, "Layout Editor Terminal");
+            if (!string.IsNullOrEmpty(item.terminal.pilotableObjectInstanceId))
+            {
+                var rid = item.terminal.pilotableObjectInstanceId;
+                if (rid.StartsWith("u:", StringComparison.Ordinal))
+                {
+                    int id;
+                    if (int.TryParse(rid.Substring(2), out id))
+                        terminal.pilotableObject = EditorUtility.InstanceIDToObject(id) as GameObject;
+                }
+            }
+            else
+            {
+                terminal.pilotableObject = null;
+            }
         }
     }
 

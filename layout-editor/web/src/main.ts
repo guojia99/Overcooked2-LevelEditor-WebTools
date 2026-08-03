@@ -233,6 +233,9 @@ const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   ServingStation: "ServingStation",
   PlateReturn: "PlateReturn",
   GlassReturn: "GlassReturn",
+  Switch: "Switch",
+  PressureSwitch: "PressureSwitch",
+  MultiControlTerminal: "Terminal",
 };
 
 function stubKindOf(item: EditorItem): string {
@@ -334,6 +337,31 @@ function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row">空中时间 <input type="number" id="ctx-bn-air" class="ctx-input" step="0.1" min="0" value="${b.airTime ?? 2}"/> 秒</label>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-rand" ${b.randomTargetOrder ? "checked" : ""}/> 随机目标顺序</label>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-hide" ${b.hideVisual ? "checked" : ""}/> 隐藏模型</label></div>`;
+    }
+    case "Switch": {
+      const sw = item.switchStub ?? {};
+      return `<div class="ctx-stub"><div class="ctx-stub-title">开关参数</div>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-sw-start" ${sw.startEnabled !== false ? "checked" : ""}/> 初始开启</label></div>`;
+    }
+    case "PressureSwitch": {
+      return `<div class="ctx-stub"><div class="ctx-stub-title">压力开关</div>
+        <div class="ctx-stub-row">此物件无用户可配置参数，配置内置于预制件中</div></div>`;
+    }
+    case "Terminal": {
+      const t = item.terminal ?? {};
+      const targetId = t.pilotableObjectInstanceId;
+      const target = targetId ? items.find((i) => i.instanceId === targetId) : undefined;
+      const targetName = target ? itemLabel(target) : (targetId ? "不在当前场景" : "未绑定");
+      let targetOpts = ['<option value="">— 未绑定 —</option>'];
+      for (const i of items) {
+        const kind = stubKindOf(i);
+        if (kind === "Player") continue;
+        if (!i.instanceId) continue;
+        targetOpts.push(`<option value="${i.instanceId}" ${targetId === i.instanceId ? "selected" : ""}>${escHtml(itemLabel(i))}</option>`);
+      }
+      return `<div class="ctx-stub"><div class="ctx-stub-title">控制终端参数</div>
+        <label class="ctx-stub-row">控制目标 <select id="ctx-tm-target" class="ctx-input">${targetOpts.join("")}</select></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">选择一个场景物件作为控制终端的目标</div></div>`;
     }
     case "Player": {
       return `<div class="ctx-stub"><div class="ctx-stub-title">玩家</div>
@@ -606,6 +634,30 @@ function wireStubControls(item: EditorItem) {
       });
       break;
     }
+    case "Switch": {
+      num("ctx-sw-start")?.addEventListener("change", (e) => {
+        pushHistory();
+        item.stubKind = "Switch";
+        if (!item.switchStub) item.switchStub = {};
+        item.switchStub.startEnabled = (e.target as HTMLInputElement).checked;
+        setStatus(`开关初始状态已设为 ${item.switchStub.startEnabled ? "开启" : "关闭"}（写回后生效）`);
+      });
+      break;
+    }
+    case "PressureSwitch": {
+      break;
+    }
+    case "Terminal": {
+      num("ctx-tm-target")?.addEventListener("change", (e) => {
+        pushHistory();
+        item.stubKind = "Terminal";
+        if (!item.terminal) item.terminal = {};
+        item.terminal.pilotableObjectInstanceId = (e.target as HTMLSelectElement).value;
+        draw();
+        setStatus("已更新控制终端目标（写回后生效）");
+      });
+      break;
+    }
   }
 }
 
@@ -851,7 +903,8 @@ async function openRecipesDialog() {
       .join("");
 
     const ingFill = missingIngs.length
-      ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ing">一键补齐缺失食材箱 (${missingIngs.length})</button>`
+      ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ing">一键补齐缺失食材箱 (${missingIngs.length})</button>
+         <label class="ctx-stub-row" style="display:block;margin-top:6px"><input type="checkbox" id="rw-include-main-dough"/> 同时补齐主线面团/面包皮（DoughSO / ChoppedBunSO）</label>`
       : `<p class="modal-hint ok">食材箱已齐全</p>`;
     const utFill = missingUt.length
       ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ut">一键补齐缺失锅具/道具 (${missingUt.length})</button>`
@@ -920,6 +973,11 @@ async function openRecipesDialog() {
   function fillMissingDispensers() {
     const reqIngs = new Set<string>();
     for (const r of currentRecipes()) (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
+    const includeMain = (document.getElementById("rw-include-main-dough") as HTMLInputElement)?.checked ?? false;
+    if (includeMain) {
+      if (reqIngs.has("DLC05_Dough")) reqIngs.add("DoughSO");
+      if (reqIngs.has("DLC02_ChoppedBun")) reqIngs.add("ChoppedBunSO");
+    }
     const have = existingDispenserIngIds();
     const missing = [...reqIngs].filter((i) => !have.has(i));
     if (!missing.length) return;
@@ -3051,6 +3109,9 @@ const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: string; col
   { match: (it) => stubKindOf(it) === "Flamethrower", type: "喷火器", color: "#e85b5b" },
   { match: (it) => stubKindOf(it) === "Burner", type: "喷射器", color: "#d97742" },
   { match: (it) => stubKindOf(it) === "CleanPlateStack", type: "盘堆", color: "#8db8e8" },
+  { match: (it) => stubKindOf(it) === "Switch", type: "开关", color: "#e8cf5b" },
+  { match: (it) => stubKindOf(it) === "PressureSwitch", type: "压力开关", color: "#5be8b5" },
+  { match: (it) => stubKindOf(it) === "Terminal", type: "终端", color: "#c75be8" },
 ];
 
 function paramBadgeInfo(item: EditorItem): { type: string; color: string } | null {
@@ -3479,6 +3540,16 @@ function extraStubDetailHtml(item: EditorItem): string {
         : "未被任何上菜台绑定";
       const cleanTxt = item.plateReturn?.returnClean ? ` · 直接返回干净${isGlass ? "杯子" : "盘子"}` : "";
       return `<dt>${typeZh}</dt><dd>${txt}${cleanTxt}（右键直接修改，绑定在上菜台右键菜单里设置）</dd>`;
+    }
+    case "Switch":
+      return `<dt>开关</dt><dd>初始状态：${item.switchStub?.startEnabled !== false ? "开启" : "关闭"}（右键直接修改）</dd>`;
+    case "PressureSwitch":
+      return "<dt>压力开关</dt><dd>配置内置于预制件中</dd>";
+    case "Terminal": {
+      const targetId = item.terminal?.pilotableObjectInstanceId;
+      const target = targetId ? items.find((i) => i.instanceId === targetId) : undefined;
+      const name = target ? itemLabel(target) : (targetId ? "不在当前场景" : "未绑定");
+      return `<dt>控制终端</dt><dd>控制目标：${name}（右键直接修改）</dd>`;
     }
     default:
       return "";
@@ -4856,6 +4927,14 @@ async function saveToUnity(): Promise<boolean> {
     const itemsBeforeSync = items.length;
     syncBackgroundForTheme(bgThemeKey);
     const addedBg = items.length > itemsBeforeSync;
+
+    const emptyDispensers = items.filter(
+      (it) => stubKindOf(it) === "Dispenser" && !it.dispenser?.spawnerItemPrefabGuid
+    );
+    if (emptyDispensers.length > 0) {
+      const names = emptyDispensers.map((it) => itemLabel(it)).join("、");
+      setStatus(`以下食材箱未设置食材，将配置为空食材箱（不报错）：${names}`, true);
+    }
 
     await saveLayout(buildDocument(), snapStep, autoWalkable);
     if (needsThemeWrite) {

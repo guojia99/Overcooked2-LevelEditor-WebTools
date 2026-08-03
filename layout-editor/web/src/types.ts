@@ -133,6 +133,21 @@ export interface LayoutServingStationStub {
   plateReturnInstanceIds?: string[];
 }
 
+export interface LayoutSwitchStub {
+  startEnabled?: boolean;
+  activeMaterialGuid?: string;
+  inactiveMaterialGuid?: string;
+}
+
+export interface LayoutPressureSwitchStub {
+  occupiedMaterialGuid?: string;
+  unoccupiedMaterialGuid?: string;
+}
+
+export interface LayoutTerminalStub {
+  pilotableObjectInstanceId?: string;
+}
+
 export interface LayoutItem {
   instanceId: string;
   hierarchyPath: string;
@@ -161,6 +176,9 @@ export interface LayoutItem {
   player?: LayoutPlayerStub;
   servingStation?: LayoutServingStationStub;
   plateReturn?: LayoutPlateReturnStub;
+  switchStub?: LayoutSwitchStub;
+  pressureSwitch?: LayoutPressureSwitchStub;
+  terminal?: LayoutTerminalStub;
 }
 
 export interface LayoutDocument {

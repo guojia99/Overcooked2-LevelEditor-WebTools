@@ -139,10 +139,10 @@ public static class LayoutEditorRecipeKnowledge
     {
         var d = new Dictionary<string, Entry>();
 
-        Put(d, "Burger_Plain_SO", "FryingPan", "ChoppedBunSO", "MeatSO");
-        Put(d, "Burger_Cheese_SO", "FryingPan", "ChoppedBunSO", "CheeseSO", "MeatSO");
-        Put(d, "Burger_LettuceTomato_SO", "FryingPan", "ChoppedBunSO", "LettuceSO", "TomatoSO", "MeatSO");
-        Put(d, "Burger_CheeseLettuce_SO", "FryingPan", "ChoppedBunSO", "CheeseSO", "LettuceSO", "MeatSO");
+        Put(d, "Burger_Plain_SO", "FryingPan", "DLC02_ChoppedBun", "MeatSO");
+        Put(d, "Burger_Cheese_SO", "FryingPan", "DLC02_ChoppedBun", "CheeseSO", "MeatSO");
+        Put(d, "Burger_LettuceTomato_SO", "FryingPan", "DLC02_ChoppedBun", "LettuceSO", "TomatoSO", "MeatSO");
+        Put(d, "Burger_CheeseLettuce_SO", "FryingPan", "DLC02_ChoppedBun", "CheeseSO", "LettuceSO", "MeatSO");
 
         Put(d, "Burrito_Chicken_SO", "FryingPan", "TortillaSO", "BurritoChickenSO");
         Put(d, "Burrito_Meat_SO", "FryingPan", "TortillaSO", "BurritoMeatSO");
@@ -165,9 +165,9 @@ public static class LayoutEditorRecipeKnowledge
         Put(d, "Pasta_MushroomOnly_SO", "Pot", "PastaSO", "MushroomSO");
         Put(d, "Pasta_TomatoOnly_SO", "Pot", "PastaSO", "TomatoSO");
 
-        Put(d, "Pizza_Plain_SO", "OvenTray", "DoughSO");
-        Put(d, "Pizza_Peperoni_SO", "OvenTray", "DoughSO", "PepperoniSO");
-        Put(d, "Pizza_Chicken_SO", "OvenTray", "DoughSO", "ChickenSO");
+        Put(d, "Pizza_Plain_SO", "OvenTray", "DLC05_Dough", "TomatoSO", "CheeseSO");
+        Put(d, "Pizza_Peperoni_SO", "OvenTray", "DLC05_Dough", "TomatoSO", "CheeseSO", "PepperoniSO");
+        Put(d, "Pizza_Chicken_SO", "OvenTray", "DLC05_Dough", "TomatoSO", "CheeseSO", "ChickenSO");
 
         Put(d, "Salad_Plain_SO", "", "LettuceSO", "TomatoSO", "OnionSO");
         Put(d, "Salad_Cucumber_SO", "", "LettuceSO", "TomatoSO", "CucumberSO");

@@ -119,6 +119,28 @@ public class LayoutServingStationStubDto
 }
 
 [Serializable]
+public class LayoutSwitchStubDto
+{
+    public bool startEnabled = true;
+    public string activeMaterialGuid;
+    public string inactiveMaterialGuid;
+}
+
+[Serializable]
+public class LayoutPressureSwitchStubDto
+{
+    public string occupiedMaterialGuid;
+    public string unoccupiedMaterialGuid;
+}
+
+[Serializable]
+public class LayoutTerminalStubDto
+{
+    /** "u:<instanceID>" of the pilotable GameObject, or empty. */
+    public string pilotableObjectInstanceId;
+}
+
+[Serializable]
 public class LayoutItemDto
 {
     public string instanceId;
@@ -136,7 +158,7 @@ public class LayoutItemDto
     public LayoutFootprint footprint;
     /** True for surface-floor prefabs (raft planks, ice_floor, ...) → generate a walkable Col_Floor under them. */
     public bool walkable;
-    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | empty */
+    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | PressureSwitch | Terminal | empty */
     public string stubKind;
     public LayoutDispenserStubDto dispenser;
     public LayoutConveyorStubDto conveyor;
@@ -150,6 +172,9 @@ public class LayoutItemDto
     public LayoutPlayerStubDto player;
     public LayoutServingStationStubDto servingStation;
     public LayoutPlateReturnStubDto plateReturn;
+    public LayoutSwitchStubDto switchStub;
+    public LayoutPressureSwitchStubDto pressureSwitch;
+    public LayoutTerminalStubDto terminal;
 }
 
 [Serializable]

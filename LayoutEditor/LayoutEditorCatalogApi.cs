@@ -250,6 +250,102 @@ public static class LayoutEditorCatalogApi
 
         Undo.RecordObject(info, "Layout Editor Recipes");
         info.recipes = recipes.ToArray();
+
+        // Auto-populate allIngredients from selected recipes
+        {
+            var allIngs = new List<PseudoPrefabSO>();
+            var seenIngIds = new HashSet<string>(StringComparer.Ordinal);
+            var ingLookup = new Dictionary<string, PseudoPrefabSO>(StringComparer.Ordinal);
+
+            foreach (var r in recipes)
+            {
+                List<string> ingIds = null;
+                var custom = r as CustomRecipeSO;
+                if (custom != null)
+                {
+                    ingIds = LayoutEditorRecipeKnowledge.CustomIngredients(custom);
+                }
+                else
+                {
+                    var original = r as PseudoPrefabSORecipe;
+                    if (original != null)
+                    {
+                        string step;
+                        string[] originalIngs;
+                        if (LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out originalIngs) ||
+                            LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName, out step, out originalIngs))
+                        {
+                            ingIds = new List<string>(originalIngs);
+                        }
+                    }
+                }
+                if (ingIds == null)
+                    continue;
+                foreach (var ingId in ingIds)
+                {
+                    if (string.IsNullOrEmpty(ingId) || !seenIngIds.Add(ingId))
+                        continue;
+                    PseudoPrefabSO ingSO;
+                    if (!ingLookup.TryGetValue(ingId, out ingSO))
+                    {
+                        var ingGuids = AssetDatabase.FindAssets(ingId + " t:PseudoPrefabSO");
+                        if (ingGuids.Length > 0)
+                        {
+                            var ingPath = AssetDatabase.GUIDToAssetPath(ingGuids[0]);
+                            ingSO = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(ingPath);
+                            ingLookup[ingId] = ingSO;
+                        }
+                    }
+                    if (ingSO != null)
+                        allIngs.Add(ingSO);
+                }
+            }
+            info.allIngredients = allIngs.ToArray();
+        }
+
+        // Auto-populate optionalRecipeMatchListItems for pizza levels
+        {
+            bool hasPizza = false;
+            foreach (var r in recipes)
+            {
+                var id = r.name;
+                if (string.IsNullOrEmpty(id))
+                {
+                    var path = AssetDatabase.GetAssetPath(r);
+                    id = string.IsNullOrEmpty(path) ? "" : System.IO.Path.GetFileNameWithoutExtension(path);
+                }
+                var type = RecipeTypeOf(id);
+                if (type == "pizza")
+                {
+                    hasPizza = true;
+                    break;
+                }
+            }
+            if (hasPizza)
+            {
+                var existing = info.optionalRecipeMatchListItems != null
+                    ? new HashSet<ScriptableObject>(info.optionalRecipeMatchListItems)
+                    : new HashSet<ScriptableObject>();
+                var optionalGuids = new[]
+                {
+                    "c8a3b9520d25f674a89e274226dee7cf", // Pizza_Optional_Uncooked_SO
+                    "b38643b6c45e859479f6105f5d0ec839", // Pizza_Optional_Cooked_SO
+                };
+                foreach (var g in optionalGuids)
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(g);
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+                        if (so != null)
+                            existing.Add(so);
+                    }
+                }
+                info.optionalRecipeMatchListItems = new ScriptableObject[existing.Count];
+                existing.CopyTo(info.optionalRecipeMatchListItems);
+            }
+        }
+
         EditorUtility.SetDirty(info);
 
         var manager = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();

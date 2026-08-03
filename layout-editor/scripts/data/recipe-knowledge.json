@@ -27,7 +27,7 @@
       "id": "Burger_Plain_SO",
       "step": "FryingPan",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "MeatSO"
       ]
     },
@@ -35,7 +35,7 @@
       "id": "Burger_Cheese_SO",
       "step": "FryingPan",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "CheeseSO",
         "MeatSO"
       ]
@@ -44,7 +44,7 @@
       "id": "Burger_LettuceTomato_SO",
       "step": "FryingPan",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "LettuceSO",
         "TomatoSO",
         "MeatSO"
@@ -54,7 +54,7 @@
       "id": "Burger_CheeseLettuce_SO",
       "step": "FryingPan",
       "ingredients": [
-        "ChoppedBunSO",
+        "DLC02_ChoppedBun",
         "CheeseSO",
         "LettuceSO",
         "MeatSO"
@@ -197,14 +197,18 @@
       "id": "Pizza_Plain_SO",
       "step": "OvenTray",
       "ingredients": [
-        "DoughSO"
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO"
       ]
     },
     {
       "id": "Pizza_Peperoni_SO",
       "step": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
         "PepperoniSO"
       ]
     },
@@ -212,7 +216,9 @@
       "id": "Pizza_Chicken_SO",
       "step": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
         "ChickenSO"
       ]
     },
@@ -476,6 +482,8 @@
       "step": "OvenTray",
       "ingredients": [
         "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
         "Olive"
       ]
     },
