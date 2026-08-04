@@ -141,6 +141,19 @@ public class LayoutTerminalStubDto
 }
 
 [Serializable]
+public class LayoutMeshWithMaterialStubDto
+{
+    public string pseudoPrefabGuid;
+    public string materialGuid;
+}
+
+[Serializable]
+public class LayoutSOArrayStubDto
+{
+    public string[] pseudoPrefabGuids;
+}
+
+[Serializable]
 public class LayoutItemDto
 {
     public string instanceId;
@@ -160,6 +173,8 @@ public class LayoutItemDto
     public bool walkable;
     /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | PressureSwitch | Terminal | empty */
     public string stubKind;
+    /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
+    public string pseudoPrefabGuid;
     public LayoutDispenserStubDto dispenser;
     public LayoutConveyorStubDto conveyor;
     public LayoutTeleportalStubDto teleportal;
@@ -175,6 +190,8 @@ public class LayoutItemDto
     public LayoutSwitchStubDto switchStub;
     public LayoutPressureSwitchStubDto pressureSwitch;
     public LayoutTerminalStubDto terminal;
+    public LayoutMeshWithMaterialStubDto meshWithMaterial;
+    public LayoutSOArrayStubDto soArray;
 }
 
 [Serializable]
@@ -686,7 +703,137 @@ public class ImageUploadResultDto
 }
 
 [Serializable]
+public class ScreenshotUploadDto
+{
+    /** LevelInfoSO asset path, e.g. Assets/LevelSets/my_set/data/my_level/LevelInfo_my_level.asset */
+    public string assetPath;
+    public string fileName;
+    /** Base64-encoded image bytes (no data: prefix). */
+    public string base64;
+}
+
+[Serializable]
+public class ScreenshotUploadResultDto
+{
+    public string texturePath;
+}
+
+[Serializable]
 public class AssetPathListDto
 {
     public string[] paths;
+}
+
+// ---------- Custom Recipe Management ----------
+
+[Serializable]
+public class CustomRecipeCategoryDto
+{
+    public string id;
+    public string zh;
+    public string en;
+}
+
+[Serializable]
+public class CustomRecipeConfigDto
+{
+    public int uidPrefix;
+    public int nextSequence;
+    public CustomRecipeCategoryDto[] categories;
+}
+
+[Serializable]
+public class CustomRecipeSummaryDto
+{
+    public string guid;
+    public string id;
+    public string assetPath;
+    public string recipeName;
+    public string nameZh;
+    public string nameEn;
+    public int uID;
+    public int score;
+    public string category;
+    public string type;
+    public string[] compositionIds;
+    public string cookingStepId;
+    public string platingStepId;
+    public bool hasIcon;
+    public bool hasModel;
+}
+
+[Serializable]
+public class CustomRecipeEditDto
+{
+    public string setName;
+    public string assetPath;
+    public string recipeName;
+    public string nameZh;
+    public string nameEn;
+    public string category;
+    public int score;
+    public string type;
+    public string[] compositionIds;
+    public string cookingStepId;
+    public string cookingStepIconId;
+    public string platingStepId;
+    public string mixingIconId;
+    public string modelPrefabId;
+    public int cookingProgress;
+    public int mixingProgress;
+}
+
+[Serializable]
+public class CustomRecipeUploadDto
+{
+    public string setName;
+    public string recipeAssetPath;
+    public string fileName;
+    public string base64;
+}
+
+[Serializable]
+public class CustomRecipeReferenceEntryDto
+{
+    public string guid;
+    public string id;
+    public string nameZh;
+    public string nameEn;
+    public string assetPath;
+}
+
+[Serializable]
+public class CustomRecipeReferencesDto
+{
+    public CustomRecipeReferenceEntryDto[] cookingSteps;
+    public CustomRecipeReferenceEntryDto[] platingSteps;
+    public CustomRecipeReferenceEntryDto[] icons;
+    public CustomRecipeReferenceEntryDto[] reusableModels;
+    public string[] ingredients;
+}
+
+[Serializable]
+public class CustomRecipeCategoryDeleteDto
+{
+    public string setName;
+    public string category;
+}
+
+[Serializable]
+public class CustomRecipeCategoryCreateDto
+{
+    public string setName;
+    public string id;
+    public string zh;
+    public string en;
+}
+
+[Serializable]
+public class CustomRecipeCategoryRenameDto
+{
+    public string setName;
+    public string oldId;
+    public string newId;
+    public string newZh;
+    public string newEn;
 }

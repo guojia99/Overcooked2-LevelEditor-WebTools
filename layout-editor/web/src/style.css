@@ -316,6 +316,91 @@ body {
   min-width: 0;
 }
 
+/* Collapsible side panels (palette left, scene item list right). */
+.panel-collapse {
+  width: 14px;
+  flex-shrink: 0;
+  border: none;
+  border-right: 1px solid #3a3f4b;
+  background: #262a33;
+  color: #9aa0a6;
+  cursor: pointer;
+  padding: 0;
+  font-size: 9px;
+}
+
+.panel-collapse:hover {
+  background: #2d323c;
+  color: #e8eaed;
+}
+
+#btn-collapse-items {
+  border-right: none;
+  border-left: 1px solid #3a3f4b;
+}
+
+.palette.hidden,
+.scene-items.hidden,
+.panel-collapse.hidden {
+  display: none;
+}
+
+.scene-items {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #3a3f4b;
+  background: #22262e;
+}
+
+.scene-items-header {
+  padding: 8px 10px;
+  border-bottom: 1px solid #3a3f4b;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8eaed;
+}
+
+.scene-items-count {
+  color: #9aa0a6;
+  font-weight: 400;
+}
+
+.scene-items-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.scene-item-row {
+  padding: 4px 10px 4px 18px;
+  font-size: 12px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scene-item-row:hover {
+  background: #2d323c;
+}
+
+.scene-item-row.active {
+  background: #31435f;
+  border-left-color: #5b9be8;
+}
+
+.scene-item-row .zh {
+  color: #e8eaed;
+}
+
+.scene-item-row .id {
+  color: #9aa0a6;
+  font-size: 10px;
+}
+
 canvas {
   display: block;
   width: 100%;
@@ -1299,6 +1384,63 @@ body.manage-bg {
   max-width: 1100px;
 }
 
+.ing-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ing-search {
+  flex: 1;
+  min-width: 160px;
+  padding: 5px 9px;
+  border: 1px solid #4a5060;
+  border-radius: 5px;
+  background: #1a1d23;
+  color: #e8eaed;
+  font-size: 12px;
+  outline: none;
+}
+
+.ing-search:focus {
+  border-color: #f9ab00;
+}
+
+.ing-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.ing-group-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid #3a3f4b;
+  border-radius: 4px;
+  background: #1a1d23;
+  color: #9aa0a6;
+  cursor: pointer;
+  transition: border-color 0.1s, color 0.1s, background 0.1s;
+  white-space: nowrap;
+}
+
+.ing-group-btn:hover {
+  border-color: #5a6070;
+  color: #c6cad1;
+}
+
+.ing-group-btn.active {
+  border-color: #f9ab00;
+  color: #f9ab00;
+  background: rgba(249, 171, 0, 0.1);
+}
+
+#ing-pick-container .pick-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .cfg-tabs {
   display: inline-flex;
   gap: 2px;
@@ -1814,4 +1956,99 @@ body.manage-bg {
 .pick-tip-item .pick-sub {
   font-size: 11px;
   color: #9aa0a6;
+}
+
+/* ---------- Custom Recipe Management ---------- */
+
+.cr-layout {
+  display: flex;
+  gap: 16px;
+  min-height: 300px;
+}
+
+.cr-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.cr-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cr-cat-item {
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.cr-cat-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cr-card {
+  position: relative;
+}
+
+.cr-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cr-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: #1e2028;
+}
+
+.cr-type-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #3d4048;
+  color: #b0b8c1;
+  text-transform: uppercase;
+}
+
+#cr-grid {
+  flex: 1;
+  min-width: 0;
+}
+
+.m-select {
+  width: 100%;
+  padding: 6px 8px;
+  background: #1e2028;
+  color: #e0e0e0;
+  border: 1px solid #3d4048;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.m-select:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+/* Levelset recipe group in recipe dialog */
+.rw-group-levelset .rw-group-header {
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 6px 6px 0 0;
+}
+
+.cr-warn-banner {
+  padding: 10px 16px;
+  background: #f59e0b;
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
 }

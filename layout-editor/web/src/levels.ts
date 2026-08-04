@@ -91,6 +91,10 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
   `;
   wireNav((target) => {
     if (target === "layout") goLayout();
+    else if (target === "custom-recipes") {
+      location.hash = "#/custom-recipes";
+      location.reload();
+    }
   });
   const back = document.getElementById("m-back");
   if (back && onBack) back.addEventListener("click", onBack);
@@ -436,7 +440,12 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <label class="m-field">场景名 sceneName<input type="text" id="f-sceneName" value="${esc(detail.sceneName)}"></label>
         <label class="m-field">调试菜谱数 debugRecipeCount<input type="number" id="f-debugRecipeCount" value="${detail.debugRecipeCount}"></label>
         <label class="m-field">截图
-          <span class="muted">${detail.hasScreenshot ? "已设置 screenshot" : "未设置（暂不支持上传）"}</span>
+          <span class="muted" id="ss-status">${detail.hasScreenshot ? "已设置 screenshot" : "未设置"}</span>
+          <div class="m-actions-row" style="margin-top:4px">
+            <input type="file" id="ss-file" accept="image/png,image/jpeg" style="display:none">
+            <button type="button" class="m-btn small" id="ss-upload">上传截图</button>
+            ${detail.hasScreenshot ? '<button type="button" class="m-btn small" id="ss-preview">预览</button>' : ""}
+          </div>
         </label>
         <label class="m-field">动态父挂载 disableDynamicParenting
           <label class="modal-check"><input type="checkbox" id="f-disableDynamicParenting" ${detail.disableDynamicParenting ? "checked" : ""}> 勾选=禁用（含移动/升降平台关卡应取消）</label>
@@ -479,6 +488,45 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
   });
 
   document.getElementById("btn-layout")?.addEventListener("click", () => goLayout(detail.sceneAssetPath));
+
+  const ssFile = document.getElementById("ss-file") as HTMLInputElement | null;
+  const ssUpload = document.getElementById("ss-upload");
+  const ssPreview = document.getElementById("ss-preview");
+  const ssStatus = document.getElementById("ss-status");
+
+  ssUpload?.addEventListener("click", () => ssFile?.click());
+
+  ssFile?.addEventListener("change", async () => {
+    const file = ssFile.files?.[0];
+    if (!file) return;
+    showBusy("上传截图…");
+    try {
+      const reader = new FileReader();
+      await new Promise<void>((resolve, reject) => {
+        reader.onload = () => resolve();
+        reader.onerror = () => reject(new Error("读取文件失败"));
+        reader.readAsDataURL(file);
+      });
+      const base64 = (reader.result as string).split(",")[1] || (reader.result as string);
+      await api.uploadScreenshot(assetPath, file.name, base64);
+      setStatus("截图已上传");
+      await renderLevelDetail(app, setName, assetPath);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    } finally {
+      hideBusy();
+    }
+  });
+
+  ssPreview?.addEventListener("click", async () => {
+    try {
+      // Fetch the level detail again to get screenshot info, then open in new tab
+      // We don't have a direct URL for the sprite, but we can try to look it up
+      setStatus("截图已保存在关卡数据目录中，可在 Unity 中查看。");
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    }
+  });
 }
 
 // ==================== Config tab modal (1P/2P/3P/4P) ====================
@@ -535,7 +583,7 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
   openModal(
     `分数配置 · ${detail.levelName || detail.levelNameZH}`,
     `<div class="cfg-ai-bar">
-       <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ AI 一键定分</button>
+        <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ 一键定分</button>
      </div>
      <table class="cfg-matrix">
        <thead><tr><th>人数</th>${starHead}<th>难度系数</th></tr></thead>

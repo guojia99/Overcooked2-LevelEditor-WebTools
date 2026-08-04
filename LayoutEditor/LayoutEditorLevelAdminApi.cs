@@ -235,6 +235,7 @@ public static class LayoutEditorLevelAdminApi
         AssetDatabase.CreateFolder(LevelSetsRoot, setName);
         AssetDatabase.CreateFolder(setDir, "data");
         AssetDatabase.CreateFolder(setDir, "scenes");
+        AssetDatabase.CreateFolder(setDir, "custom_recipes");
 
         var so = ScriptableObject.CreateInstance<LevelSetInfoSO>();
         so.levelSetName = dto.levelSetName ?? setName;
@@ -1475,6 +1476,1067 @@ public static class LayoutEditorLevelAdminApi
 
         texturePath = assetPath;
         return null;
+    }
+
+    // ==================== Screenshot upload ====================
+
+    /** Upload a screenshot image for a level. Saves the image into the level's
+     *  data directory, imports as a Sprite, and assigns it to LevelInfoSO.screenshot. */
+    public static string UploadScreenshot(string assetPath, string fileName, string base64, out string texturePath)
+    {
+        texturePath = null;
+        if (string.IsNullOrEmpty(assetPath))
+            return "缺少关卡资源路径。";
+        if (string.IsNullOrEmpty(fileName))
+            return "缺少截图文件名。";
+
+        var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(assetPath);
+        if (so == null)
+            return "未找到 LevelInfoSO：" + assetPath;
+
+        var rawName = Path.GetFileNameWithoutExtension(fileName);
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+            ext = ".png";
+        foreach (var ch in System.IO.Path.GetInvalidFileNameChars())
+            rawName = rawName.Replace(ch, '_');
+        if (string.IsNullOrEmpty(rawName))
+            rawName = "screenshot";
+        var safeName = SanitizeName(rawName);
+        if (string.IsNullOrEmpty(safeName))
+            safeName = "screenshot";
+
+        var levelDataDir = DirectoryName(assetPath);
+        if (!AssetDatabase.IsValidFolder(levelDataDir))
+            return "关卡数据目录不存在：" + levelDataDir;
+
+        byte[] bytes;
+        try
+        {
+            var b64 = base64 == null ? "" : base64.Trim();
+            var comma = b64.IndexOf(',');
+            if (comma >= 0 && b64.StartsWith("data:", StringComparison.Ordinal))
+                b64 = b64.Substring(comma + 1);
+            bytes = Convert.FromBase64String(b64);
+        }
+        catch
+        {
+            return "截图 base64 解码失败。";
+        }
+        if (bytes.Length == 0)
+            return "截图数据为空。";
+
+        var imgAssetPath = levelDataDir + "/" + safeName + ext;
+        var absPath = Path.Combine(Application.dataPath, imgAssetPath.Substring("Assets/".Length));
+        File.WriteAllBytes(absPath, bytes);
+        AssetDatabase.ImportAsset(imgAssetPath, ImportAssetOptions.ForceUpdate);
+
+        var importer = AssetImporter.GetAtPath(imgAssetPath) as TextureImporter;
+        if (importer != null)
+        {
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.sRGBTexture = true;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+
+        AssetDatabase.Refresh();
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(imgAssetPath);
+        if (sprite == null)
+            return "截图导入后无法加载为 Sprite。";
+
+        Undo.RecordObject(so, "Set Level Screenshot");
+        so.screenshot = sprite;
+        EditorUtility.SetDirty(so);
+        AssetDatabase.SaveAssets();
+        ReloadPseudo();
+
+        texturePath = imgAssetPath;
+        return null;
+    }
+
+    // ==================== Custom Recipe Management ====================
+
+    private const string CustomRecipesDir = "custom_recipes";
+    private const int ProjectUidPrefix = 1000000;
+
+    public static CustomRecipeConfigDto GetOrCreateCustomRecipeConfig(string setName)
+    {
+        if (string.IsNullOrEmpty(setName))
+            return new CustomRecipeConfigDto { uidPrefix = 0, nextSequence = 1, categories = new CustomRecipeCategoryDto[0] };
+
+        var setDir = LevelSetsRoot + "/" + setName;
+        var recipesDir = setDir + "/" + CustomRecipesDir;
+        var configPath = recipesDir + "/CustomRecipeConfig.asset";
+        var namesPath = recipesDir + "/names.json";
+
+        if (!AssetDatabase.IsValidFolder(recipesDir))
+        {
+            AssetDatabase.CreateFolder(setDir, CustomRecipesDir);
+            var importer = AssetImporter.GetAtPath(recipesDir);
+            if (importer != null)
+            {
+                importer.SetAssetBundleNameAndVariant(setName + "/custom_recipes", "");
+                importer.SaveAndReimport();
+            }
+        }
+
+        var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
+        if (config == null)
+        {
+            config = ScriptableObject.CreateInstance<CustomRecipeConfigSO>();
+            var random = new System.Random();
+            int prefix;
+            do
+            {
+                prefix = ProjectUidPrefix + random.Next(100000, 999999);
+                config.uidPrefix = prefix;
+            } while (IsUidPrefixConflicting(prefix));
+
+            config.nextSequence = 1;
+            config.categories = new CustomRecipeConfigSO.CustomRecipeCategoryEntry[0];
+            AssetDatabase.CreateAsset(config, configPath);
+            EditorUtility.SetDirty(config);
+            AssetDatabase.SaveAssets();
+        }
+
+        if (!File.Exists(AbsPath(namesPath)))
+        {
+            var emptyJson = "{\"schemaVersion\":1,\"names\":[]}";
+            File.WriteAllText(AbsPath(namesPath), emptyJson, System.Text.Encoding.UTF8);
+            AssetDatabase.Refresh();
+        }
+
+        var catDtos = new List<CustomRecipeCategoryDto>();
+        if (config.categories != null)
+        {
+            foreach (var c in config.categories)
+            {
+                catDtos.Add(new CustomRecipeCategoryDto { id = c.id, zh = c.zh ?? c.id, en = c.en ?? c.id });
+            }
+        }
+
+        return new CustomRecipeConfigDto
+        {
+            uidPrefix = config.uidPrefix,
+            nextSequence = config.nextSequence,
+            categories = catDtos.ToArray()
+        };
+    }
+
+    private static bool IsUidPrefixConflicting(int prefix)
+    {
+        var allGuids = AssetDatabase.FindAssets("t:CustomRecipeSO");
+        foreach (var guid in allGuids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+            if (so != null && so.uID / 1000 == prefix)
+                return true;
+        }
+        return false;
+    }
+
+    public static CustomRecipeSummaryDto[] ScanCustomRecipes(string setName)
+    {
+        var list = new List<CustomRecipeSummaryDto>();
+        if (string.IsNullOrEmpty(setName))
+            return list.ToArray();
+
+        var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
+        if (!AssetDatabase.IsValidFolder(recipesDir))
+            return list.ToArray();
+
+        var namesDict = LoadCustomRecipeNames(setName);
+
+        foreach (var guid in AssetDatabase.FindAssets("t:CustomRecipeSO", new[] { recipesDir }))
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+            if (so == null)
+                continue;
+
+            var id = Path.GetFileNameWithoutExtension(path);
+            var category = "";
+            var rel = path.Substring(recipesDir.Length + 1).Replace('\\', '/');
+            var slash = rel.IndexOf('/');
+            if (slash >= 0)
+                category = rel.Substring(0, slash);
+
+            var compIds = new List<string>();
+            if (so.compositionSOs != null)
+            {
+                foreach (var c in so.compositionSOs)
+                {
+                    if (c == null) continue;
+                    var cp = AssetDatabase.GetAssetPath(c);
+                    if (!string.IsNullOrEmpty(cp))
+                        compIds.Add(Path.GetFileNameWithoutExtension(cp));
+                }
+            }
+
+            string stepId = "";
+            if (so.cookingStepSO != null)
+            {
+                var sp = AssetDatabase.GetAssetPath(so.cookingStepSO);
+                if (!string.IsNullOrEmpty(sp))
+                    stepId = Path.GetFileNameWithoutExtension(sp);
+            }
+
+            string plateId = "";
+            if (so.platingStepSO != null)
+            {
+                var pp = AssetDatabase.GetAssetPath(so.platingStepSO);
+                if (!string.IsNullOrEmpty(pp))
+                    plateId = Path.GetFileNameWithoutExtension(pp);
+            }
+
+            bool hasIcon = so.icon != null;
+            bool hasModel = so.model != null;
+
+            string nameZh = id;
+            string nameEn = id;
+            NameRow nr;
+            if (namesDict.TryGetValue(id, out nr))
+            {
+                nameZh = nr.Zh;
+                nameEn = nr.En;
+            }
+
+            list.Add(new CustomRecipeSummaryDto
+            {
+                guid = guid,
+                id = id,
+                assetPath = path,
+                recipeName = so.recipeName ?? id,
+                nameZh = nameZh,
+                nameEn = nameEn,
+                uID = so.uID,
+                score = so.score,
+                category = category,
+                type = so.type.ToString(),
+                compositionIds = compIds.ToArray(),
+                cookingStepId = stepId,
+                platingStepId = plateId,
+                hasIcon = hasIcon,
+                hasModel = hasModel
+            });
+        }
+
+        list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
+        return list.ToArray();
+    }
+
+    private static Dictionary<string, NameRow> LoadCustomRecipeNames(string setName)
+    {
+        var dict = new Dictionary<string, NameRow>(StringComparer.Ordinal);
+        var namesPath = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir + "/names.json";
+        var abs = AbsPath(namesPath);
+        if (!File.Exists(abs))
+            return dict;
+
+        try
+        {
+            var text = File.ReadAllText(abs);
+            var doc = JsonUtility.FromJson<CustomNamesDoc>(text);
+            if (doc != null && doc.names != null)
+            {
+                foreach (var n in doc.names)
+                {
+                    if (n == null || string.IsNullOrEmpty(n.id))
+                        continue;
+                    dict[n.id] = new NameRow { Zh = n.zh ?? "", En = n.en ?? n.id };
+                }
+            }
+        }
+        catch { }
+
+        return dict;
+    }
+
+    private struct NameRow
+    {
+        public string Zh;
+        public string En;
+    }
+
+    [Serializable]
+    private class CustomNamesDoc
+    {
+        public int schemaVersion;
+        public CustomNamesEntry[] names;
+    }
+
+    [Serializable]
+    private class CustomNamesEntry
+    {
+        public string id;
+        public string zh;
+        public string en;
+    }
+
+    public static CustomRecipeReferencesDto GetCustomRecipeReferences(string setName)
+    {
+        var dto = new CustomRecipeReferencesDto();
+
+        var cookingSteps = new List<CustomRecipeReferenceEntryDto>();
+        var platingSteps = new List<CustomRecipeReferenceEntryDto>();
+        var iconSoList = new List<CustomRecipeReferenceEntryDto>();
+        var seen = new HashSet<string>();
+
+        var stepFolders = new[]
+        {
+            "Assets/common01/food/CookingSteps",
+            "Assets/common02/food/CookingSteps"
+        };
+
+        foreach (var folder in stepFolders)
+        {
+            if (!AssetDatabase.IsValidFolder(folder))
+                continue;
+            foreach (var guid in AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { folder }))
+            {
+                if (!seen.Add(guid))
+                    continue;
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var id = Path.GetFileNameWithoutExtension(path);
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+                if (so == null)
+                    continue;
+
+                string zh, en;
+                LayoutEditorManualLookup.TryGet(id, out zh, out en);
+
+                var entry = new CustomRecipeReferenceEntryDto
+                {
+                    guid = guid,
+                    id = id,
+                    nameZh = zh,
+                    nameEn = en,
+                    assetPath = path
+                };
+
+                bool isIcon = id.EndsWith("Icon", StringComparison.Ordinal);
+                bool isPlating = !isIcon && !LayoutEditorRecipeKnowledge.IsCookStep(id);
+
+                if (isPlating)
+                    platingSteps.Add(entry);
+                else if (!isIcon)
+                    cookingSteps.Add(entry);
+
+                if (isIcon)
+                    iconSoList.Add(entry);
+            }
+        }
+
+        dto.cookingSteps = cookingSteps.ToArray();
+        dto.platingSteps = platingSteps.ToArray();
+        dto.icons = iconSoList.ToArray();
+
+        var modelList = new List<CustomRecipeReferenceEntryDto>();
+        var modelSeen = new HashSet<string>();
+
+        var modelFolders = new List<string>
+        {
+            "Assets/common01/food/CustomRecipes",
+        };
+
+        if (!string.IsNullOrEmpty(setName))
+        {
+            var setRecipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
+            if (AssetDatabase.IsValidFolder(setRecipesDir))
+                modelFolders.Add(setRecipesDir);
+        }
+
+        foreach (var folder in modelFolders)
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:CustomRecipeSO", new[] { folder }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+                if (so == null || so.modelSO == null)
+                    continue;
+
+                var modelPath = AssetDatabase.GetAssetPath(so.modelSO);
+                if (string.IsNullOrEmpty(modelPath) || !modelSeen.Add(modelPath))
+                    continue;
+
+                var id = Path.GetFileNameWithoutExtension(modelPath);
+                string zh, en;
+                LayoutEditorManualLookup.TryGet(id, out zh, out en);
+
+                if (string.IsNullOrEmpty(zh) || zh == id)
+                    zh = so.recipeName ?? id;
+
+                modelList.Add(new CustomRecipeReferenceEntryDto
+                {
+                    guid = AssetDatabase.AssetPathToGUID(modelPath),
+                    id = id,
+                    nameZh = zh,
+                    nameEn = en,
+                    assetPath = modelPath
+                });
+            }
+        }
+
+        dto.reusableModels = modelList.ToArray();
+        dto.ingredients = new string[0];
+
+        return dto;
+    }
+
+    public static string CreateCustomRecipe(CustomRecipeEditDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.recipeName))
+            return "缺少必要参数。";
+
+        var setName = SanitizeName(dto.setName);
+        var recipeName = SanitizeName(dto.recipeName);
+        if (string.IsNullOrEmpty(setName) || string.IsNullOrEmpty(recipeName))
+            return "标识只能包含字母数字和下划线。";
+
+        if (!GloballyUniqueRecipeName(recipeName))
+            return "菜谱名称「" + recipeName + "」已被其他关卡集使用。";
+
+        var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
+        if (!AssetDatabase.IsValidFolder(recipesDir))
+            return "请先访问自定义菜谱页面以初始化配置。";
+
+        var configPath = recipesDir + "/CustomRecipeConfig.asset";
+        var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
+        if (config == null)
+            return "配置文件丢失，请重新进入自定义菜谱页面。";
+
+        var category = SanitizeName(dto.category ?? "Uncategorized");
+        if (string.IsNullOrEmpty(category))
+            category = "Uncategorized";
+
+        var categoryDir = recipesDir + "/" + category;
+        if (!AssetDatabase.IsValidFolder(categoryDir))
+        {
+            AssetDatabase.CreateFolder(recipesDir, category);
+            var cats = config.categories != null ? new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>(config.categories) : new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>();
+            if (!cats.Exists(c => c.id == category))
+            {
+                cats.Add(new CustomRecipeConfigSO.CustomRecipeCategoryEntry { id = category, zh = category, en = category });
+                config.categories = cats.ToArray();
+                EditorUtility.SetDirty(config);
+            }
+        }
+
+        int uid;
+        do
+        {
+            uid = config.uidPrefix * 1000 + config.nextSequence;
+            config.nextSequence++;
+        } while (IsUidConflicting(uid));
+        EditorUtility.SetDirty(config);
+
+        var so = ScriptableObject.CreateInstance<CustomRecipeSO>();
+        so.recipeName = recipeName;
+        so.uID = uid;
+        so.score = dto.score;
+
+        if (dto.type == "Composite")
+            so.type = CustomRecipeSO.RecipeType.Composite;
+        else if (dto.type == "Mixed")
+            so.type = CustomRecipeSO.RecipeType.Mixed;
+        else
+            so.type = CustomRecipeSO.RecipeType.Cooked;
+
+        so.cookingProgress = (CustomRecipeSO.CookingProgress)(dto.cookingProgress >= 0 && dto.cookingProgress <= 2 ? dto.cookingProgress : 1);
+        so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
+
+        if (dto.compositionIds != null && dto.compositionIds.Length > 0)
+        {
+            var comps = new List<ScriptableObject>();
+            foreach (var compId in dto.compositionIds)
+            {
+                if (string.IsNullOrEmpty(compId))
+                    continue;
+                var soFound = FindPseudoPrefabOrCustomRecipe(compId);
+                if (soFound != null)
+                    comps.Add(soFound);
+            }
+            so.compositionSOs = comps.ToArray();
+        }
+
+        if (!string.IsNullOrEmpty(dto.cookingStepId))
+            so.cookingStepSO = FindPseudoPrefabById(dto.cookingStepId);
+
+        if (!string.IsNullOrEmpty(dto.cookingStepIconId))
+            so.cookingStepIconSO = FindPseudoPrefabById(dto.cookingStepIconId);
+
+        if (!string.IsNullOrEmpty(dto.platingStepId))
+            so.platingStepSO = FindPseudoPrefabById(dto.platingStepId);
+
+        if (!string.IsNullOrEmpty(dto.mixingIconId))
+            so.mixingIconSO = FindPseudoPrefabById(dto.mixingIconId);
+
+        if (!string.IsNullOrEmpty(dto.modelPrefabId))
+        {
+            var modelSO = FindPseudoPrefabById(dto.modelPrefabId);
+            if (modelSO != null)
+            {
+                so.modelSO = modelSO;
+                var prefabPath = modelSO.assetPath;
+                if (!string.IsNullOrEmpty(prefabPath))
+                {
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                    if (prefab != null)
+                        so.model = prefab;
+                }
+            }
+        }
+
+        var assetPath = categoryDir + "/" + recipeName + ".asset";
+        AssetDatabase.CreateAsset(so, assetPath);
+        EditorUtility.SetDirty(so);
+
+        var modelsDir = categoryDir + "/models";
+        if (!AssetDatabase.IsValidFolder(modelsDir))
+            AssetDatabase.CreateFolder(categoryDir, "models");
+
+        AssetDatabase.SaveAssets();
+
+        AddCustomRecipeName(setName, recipeName, dto.nameZh, dto.nameEn);
+
+        return null;
+    }
+
+    public static string UpdateCustomRecipe(CustomRecipeEditDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.assetPath))
+            return "缺少资源路径。";
+
+        var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(dto.assetPath);
+        if (so == null)
+            return "未找到菜谱资源。";
+
+        Undo.RecordObject(so, "Edit Custom Recipe");
+        so.score = dto.score;
+
+        if (dto.type == "Composite")
+            so.type = CustomRecipeSO.RecipeType.Composite;
+        else if (dto.type == "Mixed")
+            so.type = CustomRecipeSO.RecipeType.Mixed;
+        else
+            so.type = CustomRecipeSO.RecipeType.Cooked;
+
+        so.cookingProgress = (CustomRecipeSO.CookingProgress)(dto.cookingProgress >= 0 && dto.cookingProgress <= 2 ? dto.cookingProgress : 1);
+        so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
+
+        if (dto.compositionIds != null)
+        {
+            var comps = new List<ScriptableObject>();
+            foreach (var compId in dto.compositionIds)
+            {
+                if (string.IsNullOrEmpty(compId))
+                    continue;
+                var soFound = FindPseudoPrefabOrCustomRecipe(compId);
+                if (soFound != null)
+                    comps.Add(soFound);
+            }
+            so.compositionSOs = comps.ToArray();
+        }
+
+        if (!string.IsNullOrEmpty(dto.cookingStepId))
+            so.cookingStepSO = FindPseudoPrefabById(dto.cookingStepId);
+
+        if (!string.IsNullOrEmpty(dto.cookingStepIconId))
+            so.cookingStepIconSO = FindPseudoPrefabById(dto.cookingStepIconId);
+
+        if (!string.IsNullOrEmpty(dto.platingStepId))
+            so.platingStepSO = FindPseudoPrefabById(dto.platingStepId);
+
+        if (!string.IsNullOrEmpty(dto.mixingIconId))
+            so.mixingIconSO = FindPseudoPrefabById(dto.mixingIconId);
+
+        if (!string.IsNullOrEmpty(dto.modelPrefabId))
+        {
+            var modelSO = FindPseudoPrefabById(dto.modelPrefabId);
+            if (modelSO != null)
+            {
+                so.modelSO = modelSO;
+                var prefabPath = modelSO.assetPath;
+                if (!string.IsNullOrEmpty(prefabPath))
+                {
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                    if (prefab != null)
+                        so.model = prefab;
+                }
+            }
+        }
+
+        EditorUtility.SetDirty(so);
+
+        var setName = SetNameFromPath(dto.assetPath);
+        var id = Path.GetFileNameWithoutExtension(dto.assetPath);
+        UpdateCustomRecipeName(setName, id, dto.nameZh, dto.nameEn);
+
+        AssetDatabase.SaveAssets();
+        return null;
+    }
+
+    public static string DeleteCustomRecipe(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return "缺少资源路径。";
+
+        var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(assetPath);
+        if (so == null)
+            return "未找到菜谱资源。";
+
+        var setName = SetNameFromPath(assetPath);
+        var id = Path.GetFileNameWithoutExtension(assetPath);
+
+        var dir = DirectoryName(assetPath);
+        var modelsDir = dir + "/models";
+
+        if (!AssetDatabase.DeleteAsset(assetPath))
+            return "删除资源失败。";
+
+        if (AssetDatabase.IsValidFolder(modelsDir))
+            AssetDatabase.DeleteAsset(modelsDir);
+
+        RemoveCustomRecipeName(setName, id);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        return null;
+    }
+
+    public static string UploadCustomRecipeIcon(CustomRecipeUploadDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.recipeAssetPath) || string.IsNullOrEmpty(dto.base64))
+            return "缺少上传参数。";
+
+        var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(dto.recipeAssetPath);
+        if (so == null)
+            return "未找到菜谱资源。";
+
+        var dir = DirectoryName(dto.recipeAssetPath);
+        var modelsDir = dir + "/models";
+        if (!AssetDatabase.IsValidFolder(modelsDir))
+            AssetDatabase.CreateFolder(DirectoryName(dir), "models");
+
+        var safeName = SanitizeName(dto.fileName ?? "icon");
+        if (!safeName.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            safeName += ".png";
+
+        var imgAssetPath = modelsDir + "/" + safeName;
+        byte[] bytes;
+        try
+        {
+            bytes = System.Convert.FromBase64String(dto.base64);
+        }
+        catch
+        {
+            return "图片数据解码失败。";
+        }
+
+        File.WriteAllBytes(AbsPath(imgAssetPath), bytes);
+        AssetDatabase.Refresh();
+
+        var texImporter = AssetImporter.GetAtPath(imgAssetPath) as TextureImporter;
+        if (texImporter != null)
+        {
+            texImporter.textureType = TextureImporterType.Sprite;
+            texImporter.SaveAndReimport();
+        }
+
+        AssetDatabase.Refresh();
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(imgAssetPath);
+        if (sprite == null)
+            return "图标导入后无法加载为 Sprite。";
+
+        Undo.RecordObject(so, "Set Recipe Icon");
+        so.icon = sprite;
+
+        var iconSOId = Path.GetFileNameWithoutExtension(dto.recipeAssetPath) + "IconSO";
+        var iconSOPath = modelsDir + "/" + iconSOId + ".asset";
+        var existingIconSO = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(iconSOPath);
+        if (existingIconSO == null)
+        {
+            var newIconSO = ScriptableObject.CreateInstance<PseudoPrefabSO>();
+            newIconSO.prefabName = safeName;
+            newIconSO.bundleName = SetNameFromPath(dto.recipeAssetPath);
+            newIconSO.assetPath = imgAssetPath;
+            AssetDatabase.CreateAsset(newIconSO, iconSOPath);
+            so.iconSO = newIconSO;
+        }
+        else
+        {
+            so.iconSO = existingIconSO;
+        }
+
+        EditorUtility.SetDirty(so);
+        AssetDatabase.SaveAssets();
+        return null;
+    }
+
+    public static string UploadCustomRecipeModel(CustomRecipeUploadDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.recipeAssetPath) || string.IsNullOrEmpty(dto.base64))
+            return "缺少上传参数。";
+
+        var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(dto.recipeAssetPath);
+        if (so == null)
+            return "未找到菜谱资源。";
+
+        var dir = DirectoryName(dto.recipeAssetPath);
+        var modelsDir = dir + "/models";
+        if (!AssetDatabase.IsValidFolder(modelsDir))
+            AssetDatabase.CreateFolder(DirectoryName(dir), "models");
+
+        var safeName = SanitizeName(dto.fileName ?? "model");
+        var ext = ".fbx";
+        if (dto.fileName != null && dto.fileName.EndsWith(".obj", StringComparison.OrdinalIgnoreCase))
+            ext = ".obj";
+        if (!safeName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+            safeName += ext;
+
+        var modelAssetPath = modelsDir + "/" + safeName;
+        byte[] bytes;
+        try
+        {
+            bytes = System.Convert.FromBase64String(dto.base64);
+        }
+        catch
+        {
+            return "模型数据解码失败。";
+        }
+
+        File.WriteAllBytes(AbsPath(modelAssetPath), bytes);
+        AssetDatabase.Refresh();
+
+        var importedRoot = AssetDatabase.LoadAssetAtPath<GameObject>(modelAssetPath);
+        if (importedRoot == null)
+            return "模型导入失败，请确认文件格式为 FBX 或 OBJ。";
+
+        var prefabPath = modelAssetPath.Substring(0, modelAssetPath.Length - ext.Length) + ".prefab";
+        var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (existingPrefab == null)
+        {
+            var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, importedRoot);
+            if (prefabInstance == null)
+                return "创建预制体失败。";
+        }
+
+        var modelSOId = Path.GetFileNameWithoutExtension(dto.recipeAssetPath) + "ModelSO";
+        var modelSOPath = modelsDir + "/" + modelSOId + ".asset";
+        var existingModelSO = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(modelSOPath);
+        if (existingModelSO == null)
+        {
+            var newModelSO = ScriptableObject.CreateInstance<PseudoPrefabSO>();
+            newModelSO.prefabName = Path.GetFileNameWithoutExtension(safeName);
+            newModelSO.bundleName = SetNameFromPath(dto.recipeAssetPath);
+            newModelSO.assetPath = prefabPath;
+            AssetDatabase.CreateAsset(newModelSO, modelSOPath);
+            existingModelSO = newModelSO;
+        }
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+
+        Undo.RecordObject(so, "Set Recipe Model");
+        so.modelSO = existingModelSO;
+        so.model = prefab;
+        EditorUtility.SetDirty(so);
+        AssetDatabase.SaveAssets();
+        return null;
+    }
+
+    public static string AddCustomRecipeCategory(CustomRecipeCategoryCreateDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.id))
+            return "缺少参数。";
+
+        var safeId = SanitizeName(dto.id);
+        if (string.IsNullOrEmpty(safeId))
+            return "分类ID只能包含字母数字和下划线。";
+
+        var recipesDir = LevelSetsRoot + "/" + dto.setName + "/" + CustomRecipesDir;
+        if (!AssetDatabase.IsValidFolder(recipesDir))
+            return "请先访问自定义菜谱页面。";
+
+        var configPath = recipesDir + "/CustomRecipeConfig.asset";
+        var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
+        if (config == null)
+            return "配置文件丢失。";
+
+        var cats = config.categories != null ? new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>(config.categories) : new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>();
+        if (cats.Exists(c => c.id == safeId))
+            return "分类已存在。";
+
+        AssetDatabase.CreateFolder(recipesDir, safeId);
+        cats.Add(new CustomRecipeConfigSO.CustomRecipeCategoryEntry { id = safeId, zh = dto.zh ?? safeId, en = dto.en ?? safeId });
+        config.categories = cats.ToArray();
+        EditorUtility.SetDirty(config);
+        AssetDatabase.SaveAssets();
+        return null;
+    }
+
+    public static string RenameCustomRecipeCategory(CustomRecipeCategoryRenameDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.oldId) || string.IsNullOrEmpty(dto.newId))
+            return "缺少参数。";
+
+        var recipesDir = LevelSetsRoot + "/" + dto.setName + "/" + CustomRecipesDir;
+        var oldDir = recipesDir + "/" + dto.oldId;
+        if (!AssetDatabase.IsValidFolder(oldDir))
+            return "原分类不存在。";
+
+        var newSafe = SanitizeName(dto.newId);
+        if (string.IsNullOrEmpty(newSafe))
+            return "新分类ID非法。";
+
+        if (dto.oldId == newSafe)
+        {
+            UpdateCategoryDisplay(dto.setName, dto.oldId, dto.newZh, dto.newEn);
+            return null;
+        }
+
+        var newDir = recipesDir + "/" + newSafe;
+        if (AssetDatabase.IsValidFolder(newDir))
+            return "新分类ID已存在。";
+
+        var err = AssetDatabase.MoveAsset(oldDir, newDir);
+        if (!string.IsNullOrEmpty(err))
+            return err;
+
+        var configPath = recipesDir + "/CustomRecipeConfig.asset";
+        var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
+        if (config != null)
+        {
+            var cats = new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>(config.categories ?? new CustomRecipeConfigSO.CustomRecipeCategoryEntry[0]);
+            for (int i = 0; i < cats.Count; i++)
+            {
+                if (cats[i].id == dto.oldId)
+                {
+                    cats[i] = new CustomRecipeConfigSO.CustomRecipeCategoryEntry
+                    {
+                        id = newSafe,
+                        zh = dto.newZh ?? newSafe,
+                        en = dto.newEn ?? newSafe
+                    };
+                    break;
+                }
+            }
+            config.categories = cats.ToArray();
+            EditorUtility.SetDirty(config);
+        }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        return null;
+    }
+
+    private static void UpdateCategoryDisplay(string setName, string catId, string zh, string en)
+    {
+        var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
+        var configPath = recipesDir + "/CustomRecipeConfig.asset";
+        var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
+        if (config == null)
+            return;
+
+        var cats = new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>(config.categories ?? new CustomRecipeConfigSO.CustomRecipeCategoryEntry[0]);
+        for (int i = 0; i < cats.Count; i++)
+        {
+            if (cats[i].id == catId)
+            {
+                cats[i] = new CustomRecipeConfigSO.CustomRecipeCategoryEntry { id = catId, zh = zh ?? catId, en = en ?? catId };
+                break;
+            }
+        }
+        config.categories = cats.ToArray();
+        EditorUtility.SetDirty(config);
+        AssetDatabase.SaveAssets();
+    }
+
+    public static string DeleteCustomRecipeCategory(CustomRecipeCategoryDeleteDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.category))
+            return "缺少参数。";
+
+        var recipesDir = LevelSetsRoot + "/" + dto.setName + "/" + CustomRecipesDir;
+        var categoryDir = recipesDir + "/" + dto.category;
+        if (!AssetDatabase.IsValidFolder(categoryDir))
+            return "分类不存在。";
+
+        var usingLevels = new List<string>();
+        var dataDir = LevelSetsRoot + "/" + dto.setName + "/data";
+        if (AssetDatabase.IsValidFolder(dataDir))
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { dataDir }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(path);
+                if (info == null || info.recipes == null)
+                    continue;
+
+                foreach (var r in info.recipes)
+                {
+                    if (r == null) continue;
+                    var rp = AssetDatabase.GetAssetPath(r);
+                    if (rp == null) continue;
+                    if (rp.StartsWith(categoryDir + "/", StringComparison.Ordinal))
+                    {
+                        usingLevels.Add(info.levelName ?? Path.GetFileName(DirectoryName(path)));
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (usingLevels.Count > 0)
+            return "分类「" + dto.category + "」正被以下关卡使用：\n" + string.Join("、", usingLevels.ToArray());
+
+        if (!AssetDatabase.DeleteAsset(categoryDir))
+            return "删除分类文件夹失败。";
+
+        var configPath = recipesDir + "/CustomRecipeConfig.asset";
+        var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
+        if (config != null)
+        {
+            var cats = new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>(config.categories ?? new CustomRecipeConfigSO.CustomRecipeCategoryEntry[0]);
+            cats.RemoveAll(c => c.id == dto.category);
+            config.categories = cats.ToArray();
+            EditorUtility.SetDirty(config);
+        }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        return null;
+    }
+
+    private static bool GloballyUniqueRecipeName(string recipeName)
+    {
+        if (string.IsNullOrEmpty(recipeName))
+            return false;
+
+        var allGuids = AssetDatabase.FindAssets("t:CustomRecipeSO");
+        foreach (var guid in allGuids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var id = Path.GetFileNameWithoutExtension(path);
+            if (string.Equals(id, recipeName, StringComparison.Ordinal))
+                return false;
+        }
+        return true;
+    }
+
+    private static bool IsUidConflicting(int uid)
+    {
+        var allGuids = AssetDatabase.FindAssets("t:CustomRecipeSO");
+        foreach (var guid in allGuids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+            if (so != null && so.uID == uid)
+                return true;
+        }
+        return false;
+    }
+
+    private static ScriptableObject FindPseudoPrefabOrCustomRecipe(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+
+        var guids = AssetDatabase.FindAssets(id + " t:PseudoPrefabSO");
+        if (guids.Length > 0)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+        }
+
+        guids = AssetDatabase.FindAssets(id + " t:CustomRecipeSO");
+        if (guids.Length > 0)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            return AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+        }
+
+        return null;
+    }
+
+    private static PseudoPrefabSO FindPseudoPrefabById(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+
+        var guids = AssetDatabase.FindAssets(id + " t:PseudoPrefabSO");
+        foreach (var guid in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+            if (so != null)
+                return so;
+        }
+        return null;
+    }
+
+    private static void AddCustomRecipeName(string setName, string id, string zh, string en)
+    {
+        var namesPath = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir + "/names.json";
+        var abs = AbsPath(namesPath);
+        CustomNamesDoc doc;
+        try
+        {
+            if (File.Exists(abs))
+            {
+                var text = File.ReadAllText(abs);
+                doc = JsonUtility.FromJson<CustomNamesDoc>(text) ?? new CustomNamesDoc { schemaVersion = 1, names = new CustomNamesEntry[0] };
+            }
+            else
+            {
+                doc = new CustomNamesDoc { schemaVersion = 1, names = new CustomNamesEntry[0] };
+            }
+        }
+        catch
+        {
+            doc = new CustomNamesDoc { schemaVersion = 1, names = new CustomNamesEntry[0] };
+        }
+
+        var list = new List<CustomNamesEntry>(doc.names ?? new CustomNamesEntry[0]);
+        list.RemoveAll(e => e.id == id);
+        list.Add(new CustomNamesEntry { id = id, zh = zh ?? "", en = en ?? id });
+        list.Sort((a, b) => string.Compare(a.id, b.id, StringComparison.Ordinal));
+
+        doc.names = list.ToArray();
+        var json = JsonUtility.ToJson(doc, true);
+        File.WriteAllText(abs, json, System.Text.Encoding.UTF8);
+        AssetDatabase.Refresh();
+    }
+
+    private static void UpdateCustomRecipeName(string setName, string id, string zh, string en)
+    {
+        AddCustomRecipeName(setName, id, zh, en);
+    }
+
+    private static void RemoveCustomRecipeName(string setName, string id)
+    {
+        var namesPath = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir + "/names.json";
+        var abs = AbsPath(namesPath);
+        if (!File.Exists(abs))
+            return;
+
+        try
+        {
+            var text = File.ReadAllText(abs);
+            var doc = JsonUtility.FromJson<CustomNamesDoc>(text);
+            if (doc == null || doc.names == null)
+                return;
+
+            var list = new List<CustomNamesEntry>(doc.names);
+            list.RemoveAll(e => e.id == id);
+            doc.names = list.ToArray();
+
+            var json = JsonUtility.ToJson(doc, true);
+            File.WriteAllText(abs, json, System.Text.Encoding.UTF8);
+            AssetDatabase.Refresh();
+        }
+        catch { }
     }
 
     /** Resolve a project-relative asset path (e.g. Assets/LevelSets/x/data/y.png)

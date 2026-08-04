@@ -48,11 +48,13 @@ public static class LayoutEditorCatalogApi
         return new IngredientCatalogDto { ingredients = list.ToArray() };
     }
 
-    /** "core" / "custom" / "dlc02" / "dlc05" — mirrors foodGroupOf in build-catalog.mjs. */
+    /** "core" / "custom" / "dlc02" / "dlc05" / "levelset" — mirrors foodGroupOf in build-catalog.mjs. */
     internal static string FoodGroupOf(string assetPath)
     {
         if (string.IsNullOrEmpty(assetPath))
             return "core";
+        if (assetPath.IndexOf("/custom_recipes/", StringComparison.Ordinal) >= 0)
+            return "levelset";
         if (assetPath.IndexOf("/CustomRecipes/", StringComparison.Ordinal) >= 0)
             return "custom";
         var m = System.Text.RegularExpressions.Regex.Match(assetPath, @"/(dlc\d+)/");
@@ -118,6 +120,10 @@ public static class LayoutEditorCatalogApi
             var levelData = "Assets/LevelSets/" + levelSet + "/data";
             if (AssetDatabase.IsValidFolder(levelData))
                 folders.Add(levelData);
+
+            var customRecipesDir = "Assets/LevelSets/" + levelSet + "/custom_recipes";
+            if (AssetDatabase.IsValidFolder(customRecipesDir))
+                folders.Add(customRecipesDir);
         }
 
         var seen = new HashSet<string>();
@@ -145,7 +151,11 @@ public static class LayoutEditorCatalogApi
 
                 string zh;
                 string en;
-                LayoutEditorManualLookup.TryGet(id, out zh, out en);
+                var group = FoodGroupOf(path);
+                if (group == "levelset")
+                    LayoutEditorManualLookup.TryGetLevelSetName(levelSet, id, out zh, out en);
+                else
+                    LayoutEditorManualLookup.TryGet(id, out zh, out en);
 
                 string step;
                 string[] ings;

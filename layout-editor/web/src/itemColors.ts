@@ -38,7 +38,7 @@ export function isTransparentStackItem(
   parentPath: string
 ): boolean {
   if (isStackUtensilCatalog(cat)) return true;
-  if (cat?.category === "utensils" && cat.stack) return true;
+  if ((cat?.category === "utensils" || cat?.category?.startsWith("utensils/")) && cat.stack) return true;
   if (parentPath.includes("Utensils") && cat?.stack) return true;
   return false;
 }

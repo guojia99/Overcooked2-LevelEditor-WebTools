@@ -42,11 +42,11 @@ export function hostMatchesRule(hostPrefabId: string, rule: string): boolean {
 
 export function isStackHostCatalog(cat: CatalogItem | undefined): boolean {
   if (!cat) return false;
-  return cat.category === "counters" || cat.category === "mechanisms";
+  return cat.category === "counters" || cat.category === "mechanisms" || cat.category?.startsWith("counters/") || false;
 }
 
 export function isStackUtensilCatalog(cat: CatalogItem | undefined): boolean {
-  return cat?.category === "utensils" && Boolean(cat.stack?.hostRule);
+  return (cat?.category === "utensils" || cat?.category?.startsWith("utensils/")) && Boolean(cat.stack?.hostRule);
 }
 
 export function hostRuleLabelZh(rule: CatalogStackMeta["hostRule"]): string {

@@ -157,26 +157,63 @@ export function openIngredientMultiPicker(
   selectedGuids: string[],
   onSave: (guids: string[]) => void
 ) {
-  const selected = new Set(selectedGuids);
-  const grid = ingredientGrid(ingredients, selected);
+  const groups = [...new Set(ingredients.map((i) => i.group ?? "other"))]
+    .filter((g) => g !== "core")
+    .sort();
+
+  const filterBar = `
+    <div class="ing-filter-bar">
+      <input type="search" id="ing-pick-search" class="ing-search" placeholder="搜索食材…" />
+      <div class="ing-groups">
+        <button type="button" class="ing-group-btn active" data-group="">全部</button>
+        ${groups.map((g) => `<button type="button" class="ing-group-btn" data-group="${g}">${foodGroupLabel(g)}</button>`).join("")}
+      </div>
+    </div>`;
+
+  const buildGrid = (filtered: IngredientEntry[]) =>
+    ingredientGrid(filtered, new Set(selectedGuids));
+
+  function applyFilter(): void {
+    const q = (document.getElementById("ing-pick-search") as HTMLInputElement).value.trim().toLowerCase();
+    const activeGroup = (document.querySelector(".ing-group-btn.active") as HTMLElement)?.dataset.group ?? "";
+    let filtered = ingredients;
+    if (activeGroup) filtered = filtered.filter((i) => (i.group ?? "other") === activeGroup);
+    if (q) filtered = filtered.filter((i) => i.nameZh.toLowerCase().includes(q) || (i.nameEn ?? "").toLowerCase().includes(q) || i.id.toLowerCase().includes(q));
+    const container = document.getElementById("ing-pick-container");
+    if (container) container.innerHTML = buildGrid(filtered);
+    syncPickCards(container ?? document);
+  }
 
   openModal(
     title,
-    `<p class="modal-hint">${hint}</p><div class="modal-scroll">${grid}</div>`,
+    `<p class="modal-hint">${hint}</p>
+     ${filterBar}
+     <div class="modal-scroll" id="ing-pick-container">${buildGrid(ingredients)}</div>`,
     `<button type="button" class="modal-btn" data-cancel>取消</button>
      <button type="button" class="modal-btn primary" data-ok>确定</button>`
   );
 
+  const panel = document.querySelector(".modal-panel");
+  if (panel) panel.classList.add("wide");
+
+  document.getElementById("ing-pick-search")?.addEventListener("input", applyFilter);
+  document.querySelectorAll(".ing-group-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".ing-group-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilter();
+    });
+  });
+
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", () => {
     const guids: string[] = [];
-    document.querySelectorAll<HTMLInputElement>(".modal-scroll input:checked").forEach((el) => {
+    document.querySelectorAll<HTMLInputElement>("#ing-pick-container input:checked").forEach((el) => {
       guids.push(el.value);
     });
     onSave(guids);
     closeModal();
   });
-  syncPickCards(document);
 }
 
 export function openRecipePicker(

@@ -144,6 +144,15 @@ export interface LayoutPressureSwitchStub {
   unoccupiedMaterialGuid?: string;
 }
 
+export interface LayoutMeshWithMaterialStub {
+  pseudoPrefabGuid?: string;
+  materialGuid?: string;
+}
+
+export interface LayoutSOArrayStub {
+  pseudoPrefabGuids?: string[];
+}
+
 export interface LayoutTerminalStub {
   pilotableObjectInstanceId?: string;
 }
@@ -179,6 +188,10 @@ export interface LayoutItem {
   switchStub?: LayoutSwitchStub;
   pressureSwitch?: LayoutPressureSwitchStub;
   terminal?: LayoutTerminalStub;
+  /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
+  pseudoPrefabGuid?: string;
+  meshWithMaterial?: LayoutMeshWithMaterialStub;
+  soArray?: LayoutSOArrayStub;
 }
 
 export interface LayoutDocument {
@@ -519,4 +532,105 @@ export interface LevelDetail {
   dependencies: string[];
   configs: PerPlayerConfig[];
   audio: AudioConfig;
+}
+
+// ---------- Custom Recipe Management ----------
+
+export interface CustomRecipeCategory {
+  id: string;
+  zh: string;
+  en: string;
+}
+
+export interface CustomRecipeConfig {
+  uidPrefix: number;
+  nextSequence: number;
+  categories: CustomRecipeCategory[];
+}
+
+export interface CustomRecipeSummary {
+  guid: string;
+  id: string;
+  assetPath: string;
+  recipeName: string;
+  nameZh: string;
+  nameEn: string;
+  uID: number;
+  score: number;
+  category: string;
+  type: string;
+  compositionIds: string[];
+  cookingStepId: string;
+  platingStepId: string;
+  hasIcon: boolean;
+  hasModel: boolean;
+}
+
+export interface CustomRecipeEdit {
+  setName?: string;
+  assetPath?: string;
+  recipeName: string;
+  nameZh: string;
+  nameEn: string;
+  category: string;
+  score: number;
+  type: string;
+  compositionIds: string[];
+  cookingStepId: string;
+  cookingStepIconId: string;
+  platingStepId: string;
+  mixingIconId: string;
+  modelPrefabId: string;
+  cookingProgress: number;
+  mixingProgress: number;
+}
+
+export interface CustomRecipeReferenceEntry {
+  guid: string;
+  id: string;
+  nameZh: string;
+  nameEn: string;
+  assetPath: string;
+}
+
+export interface CustomRecipeReferences {
+  cookingSteps: CustomRecipeReferenceEntry[];
+  platingSteps: CustomRecipeReferenceEntry[];
+  icons: CustomRecipeReferenceEntry[];
+  reusableModels: CustomRecipeReferenceEntry[];
+  ingredients: string[];
+}
+
+// ---------- Counter Appearance ----------
+
+export interface CounterAppearanceOption {
+  guid: string;
+  id: string;
+  assetPath: string;
+  nameZh: string;
+  nameEn: string;
+  theme: string;
+  themeName: string;
+}
+
+export interface CounterAppearanceCatalog {
+  generatedAt: string;
+  schemaVersion?: number;
+  typeNames: Record<string, string>;
+  themeNames: Record<string, string>;
+  byType: Record<string, CounterAppearanceOption[]>;
+}
+
+export interface SwitchMaterialOption {
+  guid: string;
+  id: string;
+  assetPath: string;
+  nameZh: string;
+  nameEn: string;
+}
+
+export interface SwitchMaterialCatalog {
+  generatedAt: string;
+  schemaVersion?: number;
+  materials: SwitchMaterialOption[];
 }

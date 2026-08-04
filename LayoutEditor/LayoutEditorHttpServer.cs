@@ -263,7 +263,11 @@ public class LayoutEditorHttpServer
                         System.Globalization.CultureInfo.InvariantCulture, out snap);
 
                 bool syncWalkable = request.QueryString["syncWalkable"] == "1";
-                var err = SceneLayoutApplier.Apply(doc, snap, syncWalkable);
+                // Layer-scoped write-back: only = items | decor | floors (default: full).
+                var only = request.QueryString["only"];
+                if (string.IsNullOrEmpty(only) && request.QueryString["itemsOnly"] == "1")
+                    only = "items";
+                var err = SceneLayoutApplier.Apply(doc, snap, syncWalkable, only);
                 if (!string.IsNullOrEmpty(err))
                 {
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
@@ -450,6 +454,23 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/level/screenshot-upload" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<ScreenshotUploadDto>(body);
+                string texturePath;
+                var err = LayoutEditorLevelAdminApi.UploadScreenshot(
+                    dto != null ? dto.assetPath : null,
+                    dto != null ? dto.fileName : null,
+                    dto != null ? dto.base64 : null,
+                    out texturePath);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new ScreenshotUploadResultDto { texturePath = texturePath }));
+                return;
+            }
+
             if (path == "/api/level/data-file" && request.HttpMethod == "GET")
             {
                 // Serve a raw file from the project (used to preview image-floor
@@ -469,6 +490,101 @@ public class LayoutEditorHttpServer
                 response.ContentLength64 = bytes.Length;
                 response.OutputStream.Write(bytes, 0, bytes.Length);
                 response.OutputStream.Close();
+                return;
+            }
+
+            // ---------- Custom Recipe Management ----------
+
+            if (path == "/api/custom-recipes/config" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetOrCreateCustomRecipeConfig(setName)));
+                return;
+            }
+
+            if (path == "/api/custom-recipes" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(new { recipes = LayoutEditorLevelAdminApi.ScanCustomRecipes(setName) }));
+                return;
+            }
+
+            if (path == "/api/custom-recipes/references" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetCustomRecipeReferences(setName)));
+                return;
+            }
+
+            if (path == "/api/custom-recipes/create" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomRecipeEditDto>(body);
+                var err = LayoutEditorLevelAdminApi.CreateCustomRecipe(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-recipes/update" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomRecipeEditDto>(body);
+                var err = LayoutEditorLevelAdminApi.UpdateCustomRecipe(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-recipes/delete" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomRecipeEditDto>(body);
+                var err = LayoutEditorLevelAdminApi.DeleteCustomRecipe(dto != null ? dto.assetPath : null);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-recipes/upload-icon" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomRecipeUploadDto>(body);
+                var err = LayoutEditorLevelAdminApi.UploadCustomRecipeIcon(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-recipes/upload-model" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomRecipeUploadDto>(body);
+                var err = LayoutEditorLevelAdminApi.UploadCustomRecipeModel(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-recipes/category/add" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomRecipeCategoryCreateDto>(body);
+                var err = LayoutEditorLevelAdminApi.AddCustomRecipeCategory(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-recipes/category/rename" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomRecipeCategoryRenameDto>(body);
+                var err = LayoutEditorLevelAdminApi.RenameCustomRecipeCategory(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-recipes/category/delete" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomRecipeCategoryDeleteDto>(body);
+                var err = LayoutEditorLevelAdminApi.DeleteCustomRecipeCategory(dto);
+                WriteAdminResult(response, err);
                 return;
             }
 

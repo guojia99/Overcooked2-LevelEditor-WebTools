@@ -221,7 +221,7 @@ public static class SceneFloorExporter
     private static bool LooksLikeFloor(string name, Transform t)
     {
         var n = name == null ? "" : name.ToLowerInvariant();
-        if (n.Contains("floor") || n == "sky" || n.Contains("background"))
+        if (n.Contains("floor") || n == "sky" || n.Contains("background") || n.Contains("ground"))
             return true;
 
         // Also accept generic plane/quad surfaces that live under a Ground/Floor group.
@@ -229,7 +229,9 @@ public static class SceneFloorExporter
         while (p != null)
         {
             var pn = p.name == null ? "" : p.name.ToLowerInvariant();
-            if (pn == "ground" || pn.Contains("floor"))
+            if (pn == "ground" || pn.Contains("floor")
+                || pn.Contains("city") || pn.Contains("exterior")
+                || pn.Contains("terrain") || pn.Contains("environment"))
                 return true;
             p = p.parent;
         }

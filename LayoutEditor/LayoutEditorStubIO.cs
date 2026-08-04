@@ -26,6 +26,9 @@ public static class LayoutEditorStubIO
         item.switchStub = null;
         item.pressureSwitch = null;
         item.terminal = null;
+        item.pseudoPrefabGuid = null;
+        item.meshWithMaterial = null;
+        item.soArray = null;
 
         var playerStub = go.GetComponent<PseudoPrefabPlayerStub>();
         if (playerStub != null)
@@ -244,11 +247,64 @@ public static class LayoutEditorStubIO
             item.terminal = tdto;
             return;
         }
+
+        var soArray = go.GetComponent<PseudoPrefabSOArray>();
+        if (soArray != null && soArray.pseudoPrefabSOs != null && soArray.pseudoPrefabSOs.Length > 0)
+        {
+            var guids = new string[soArray.pseudoPrefabSOs.Length];
+            for (int i = 0; i < soArray.pseudoPrefabSOs.Length; i++)
+                guids[i] = soArray.pseudoPrefabSOs[i] != null
+                    ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(soArray.pseudoPrefabSOs[i]))
+                    : string.Empty;
+            item.soArray = new LayoutSOArrayStubDto { pseudoPrefabGuids = guids };
+        }
+
+        var mmStub = go.GetComponent<PseudoPrefabMeshWithMaterialStub>();
+        if (mmStub != null)
+        {
+            item.stubKind = "MeshWithMaterial";
+            var mdto = new LayoutMeshWithMaterialStubDto();
+            if (mmStub.pseudoPrefabSO != null)
+                mdto.pseudoPrefabGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(mmStub.pseudoPrefabSO));
+            if (mmStub.materialSO != null)
+                mdto.materialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(mmStub.materialSO));
+            item.meshWithMaterial = mdto;
+            return;
+        }
+
+        var pseudoStub = go.GetComponent<PseudoPrefabStub>();
+        if (pseudoStub != null && pseudoStub.pseudoPrefabSO != null)
+        {
+            item.pseudoPrefabGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(pseudoStub.pseudoPrefabSO));
+        }
     }
 
     public static void ApplyStub(GameObject go, LayoutItemDto item)
     {
-        if (go == null || item == null || string.IsNullOrEmpty(item.stubKind))
+        if (go == null || item == null)
+            return;
+
+        if (!string.IsNullOrEmpty(item.pseudoPrefabGuid))
+        {
+            var pseudoStub = go.GetComponent<PseudoPrefabStub>();
+            if (pseudoStub != null)
+            {
+                Undo.RecordObject(pseudoStub, "Layout Editor PseudoPrefab");
+                pseudoStub.pseudoPrefabSO = LoadPseudoPrefabSO(item.pseudoPrefabGuid);
+            }
+        }
+
+        if (item.soArray != null && item.soArray.pseudoPrefabGuids != null)
+        {
+            var soArray = go.GetComponent<PseudoPrefabSOArray>();
+            if (soArray != null)
+            {
+                Undo.RecordObject(soArray, "Layout Editor SOArray");
+                soArray.pseudoPrefabSOs = LoadPseudoPrefabSOs(item.soArray.pseudoPrefabGuids);
+            }
+        }
+
+        if (string.IsNullOrEmpty(item.stubKind))
             return;
 
         if (item.stubKind == "Dispenser" && item.dispenser != null)
@@ -315,7 +371,7 @@ public static class LayoutEditorStubIO
             Undo.RecordObject(utensil, "Layout Editor Cooking Utensil");
             utensil.capacity = item.cookingUtensil.capacity;
             if (item.cookingUtensil.allowedIngredientGuids != null)
-                utensil.allowedIngredientSOs = LoadPseudoPrefabSOs(item.cookingUtensil.allowedIngredientGuids);
+                utensil.allowedIngredientSOs = LoadIngredientSOs(item.cookingUtensil.allowedIngredientGuids);
             return;
         }
 
@@ -440,6 +496,21 @@ public static class LayoutEditorStubIO
                 terminal.pilotableObject = null;
             }
         }
+
+        if (item.stubKind == "MeshWithMaterial" && item.meshWithMaterial != null)
+        {
+            var mm = go.GetComponent<PseudoPrefabMeshWithMaterialStub>();
+            if (mm == null)
+                return;
+
+            Undo.RecordObject(mm, "Layout Editor MeshWithMaterial");
+            if (!string.IsNullOrEmpty(item.meshWithMaterial.pseudoPrefabGuid))
+                mm.pseudoPrefabSO = LoadPseudoPrefabSO(item.meshWithMaterial.pseudoPrefabGuid);
+            if (!string.IsNullOrEmpty(item.meshWithMaterial.materialGuid))
+                mm.materialSO = LoadPseudoPrefabSO(item.meshWithMaterial.materialGuid);
+            return;
+        }
+
     }
 
     /// <summary>
@@ -537,6 +608,26 @@ public static class LayoutEditorStubIO
         var sos = new PseudoPrefabSO[guids.Length];
         for (int i = 0; i < guids.Length; i++)
             sos[i] = LoadPseudoPrefabSO(guids[i]);
+        return sos;
+    }
+
+    /// <summary>allowedIngredientSOs is ScriptableObject[] and may hold CustomRecipeSO
+    ///  (not a PseudoPrefabSO) — load with the base type so custom recipes survive.</summary>
+    private static ScriptableObject LoadIngredientSO(string guid)
+    {
+        if (string.IsNullOrEmpty(guid))
+            return null;
+        var path = AssetDatabase.GUIDToAssetPath(guid);
+        return string.IsNullOrEmpty(path)
+            ? null
+            : AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+    }
+
+    private static ScriptableObject[] LoadIngredientSOs(string[] guids)
+    {
+        var sos = new ScriptableObject[guids.Length];
+        for (int i = 0; i < guids.Length; i++)
+            sos[i] = LoadIngredientSO(guids[i]);
         return sos;
     }
 }

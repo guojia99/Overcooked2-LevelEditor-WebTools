@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-02T08:22:16.212Z",
+  "generatedAt": "2026-08-04T04:03:22.674Z",
   "schemaVersion": 3,
-  "itemCount": 75,
+  "itemCount": 76,
   "recipes": [
     {
       "guid": "33ae6e311fad09147a11dfaeed918dce",
@@ -340,7 +340,7 @@
       "nameZh": "黄瓜寿司",
       "nameEn": "Cucumber Sushi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_Cucumber_SO.asset",
-      "cookingStep": "Pot",
+      "cookingStep": "Steamer",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -404,7 +404,7 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Chicken_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "ChickenSO"
@@ -466,7 +466,7 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Peperoni_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "PepperoniSO"
@@ -488,7 +488,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Peperoni_80_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "PepperoniSO"
@@ -593,7 +593,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Mushroom_80_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO"
@@ -832,12 +832,34 @@
       "icon": true
     },
     {
+      "guid": "2d19841c5faf85f4ea9b7c8cecc22dc9",
+      "id": "Smoothie_Mega",
+      "nameZh": "什锦冰沙",
+      "nameEn": "Mega Smoothie",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Mega.asset",
+      "cookingStep": "Blender",
+      "ingredients": [
+        "SmoothieStrawberry",
+        "Banana",
+        "Melon",
+        "SmoothiePineapple"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "smoothie",
+      "intermediate": false,
+      "icon": true
+    },
+    {
       "guid": "956d0cf781ea09740814e8f80a4621bf",
       "id": "Sushi_All_SO",
       "nameZh": "什锦寿司",
       "nameEn": "Sushi All",
       "assetPath": "Assets/common01/food/Recipes/Sushi_All_SO.asset",
-      "cookingStep": "Pot",
+      "cookingStep": "Steamer",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -884,7 +906,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Burger/Burger_Lettuce_SO.asset",
       "cookingStep": "",
       "ingredients": [
-        "DLC02_ChoppedBun",
+        "ChoppedBunSO",
         "LettuceSO",
         "MeatSO"
       ],
@@ -894,6 +916,25 @@
       "isCustom": true,
       "group": "custom",
       "type": "burger",
+      "intermediate": false,
+      "icon": true
+    },
+    {
+      "guid": "5f0dafdeee03521408c2363448b9fd98",
+      "id": "Salad_Plain_SO",
+      "nameZh": "生菜沙拉",
+      "nameEn": "Lettuce Salad",
+      "assetPath": "Assets/common01/food/Recipes/Salad_Plain_SO.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "LettuceSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 0,
+      "score": 20,
+      "isCustom": false,
+      "group": "core",
+      "type": "salad",
       "intermediate": false,
       "icon": true
     },
@@ -958,27 +999,6 @@
       "icon": false
     },
     {
-      "guid": "5f0dafdeee03521408c2363448b9fd98",
-      "id": "Salad_Plain_SO",
-      "nameZh": "田园沙拉",
-      "nameEn": "Plain Salad",
-      "assetPath": "Assets/common01/food/Recipes/Salad_Plain_SO.asset",
-      "cookingStep": "",
-      "ingredients": [
-        "LettuceSO",
-        "TomatoSO",
-        "OnionSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 0,
-      "score": 20,
-      "isCustom": false,
-      "group": "core",
-      "type": "salad",
-      "intermediate": false,
-      "icon": true
-    },
-    {
       "guid": "aeb56bd1de590f74282da06e14ef5a25",
       "id": "Smoothie_Melon",
       "nameZh": "甜瓜冰沙",
@@ -1024,7 +1044,7 @@
       "nameZh": "鲜虾寿司",
       "nameEn": "Prawn Sushi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_PlainPrawn_SO.asset",
-      "cookingStep": "Pot",
+      "cookingStep": "Steamer",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -1165,7 +1185,7 @@
       "nameZh": "鱼肉寿司",
       "nameEn": "Fish Sushi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_PlainFish_SO.asset",
-      "cookingStep": "Pot",
+      "cookingStep": "Steamer",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -1186,7 +1206,7 @@
       "nameZh": "鱼生寿司",
       "nameEn": "Sushi Fish",
       "assetPath": "Assets/common01/food/Recipes/Sushi_Fish_SO.asset",
-      "cookingStep": "Pot",
+      "cookingStep": "Steamer",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -1249,7 +1269,7 @@
       "assetPath": "Assets/common01/food/Recipes/Pizza_Plain_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO"
       ],
@@ -1270,7 +1290,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Plain_60_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO"
       ],
@@ -1506,7 +1526,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Uncooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO",
@@ -1530,7 +1550,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Cooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
+        "DLC05_Dough",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO",

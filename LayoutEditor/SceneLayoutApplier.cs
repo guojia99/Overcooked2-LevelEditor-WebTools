@@ -11,13 +11,20 @@ public static class SceneLayoutApplier
 {
     private static readonly string[] ThemeBackgroundPrefabNames = { "Sky", "raft_water", "alien_gue" };
 
-    public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable)
+    public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, bool itemsOnly = false)
+    {
+        return Apply(document, snapStep, syncWalkable, itemsOnly ? "items" : null);
+    }
+
+    /// <summary>
+    /// <paramref name="only"/> scopes the write-back to one layer:
+    /// null = full, "items" = gameplay items only, "decor" = decor only,
+    /// "floors" = floors/background + surface items only.
+    /// </summary>
+    public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, string only)
     {
         if (document == null || document.items == null)
             return "Empty layout document.";
-
-        if (!LayoutEditorSafety.PrepareSceneForApply())
-            return LayoutEditorSafety.LastError;
 
         document.items = PruneThemeBackgroundItems(document.items);
 
@@ -30,8 +37,11 @@ public static class SceneLayoutApplier
             scene = EditorSceneManager.GetActiveScene();
         }
 
+        if (!LayoutEditorSafety.PrepareSceneForApply())
+            return LayoutEditorSafety.LastError;
+
         var before = SceneLayoutExporter.ExportFromScene();
-        RemoveUnmatchedSceneItems(before, document.items);
+        RemoveUnmatchedSceneItems(before, document.items, only);
 
         var usedSceneObjectIds = new HashSet<int>();
         var createdObjects = new Dictionary<string, GameObject>();
@@ -40,27 +50,56 @@ public static class SceneLayoutApplier
             if (item == null)
                 continue;
 
-            if (string.IsNullOrEmpty(item.prefabAssetPath) && string.IsNullOrEmpty(item.prefabGuid))
+            if (item.stubKind == "Collision")
+            {
+                ApplyCollisionItem(item, snapStep, usedSceneObjectIds, createdObjects);
                 continue;
+            }
+
+            if (string.IsNullOrEmpty(item.prefabAssetPath) && string.IsNullOrEmpty(item.prefabGuid))
+            {
+                Debug.LogWarning("[LayoutEditor] Apply: item skipped — no prefabAssetPath or prefabGuid (displayName: " + (item.displayName ?? "?") + ")");
+                continue;
+            }
 
             var assetPath = item.prefabAssetPath;
             if (string.IsNullOrEmpty(assetPath) && !string.IsNullOrEmpty(item.prefabGuid))
                 assetPath = AssetDatabase.GUIDToAssetPath(item.prefabGuid);
 
             if (string.IsNullOrEmpty(assetPath))
+            {
+                Debug.LogWarning("[LayoutEditor] Apply: item skipped — cannot resolve asset path (displayName: " + (item.displayName ?? "?") + ", guid: " + (item.prefabGuid ?? "?") + ")");
                 continue;
+            }
 
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
             if (prefab == null)
+            {
+                Debug.LogWarning("[LayoutEditor] Apply: item skipped — prefab not found at " + assetPath + " (displayName: " + (item.displayName ?? "?") + ")");
                 continue;
+            }
 
+            var itemSnap = SnapStepForItem(item, snapStep);
             var pos = item.localPosition != null ? item.localPosition.ToVector3() : Vector3.zero;
-            pos = SnapVector(pos, snapStep);
+            pos = SnapVector(pos, itemSnap);
             var rotY = item.localRotationY;
+
+            // New instances are placed by world position: the doc's parentPath
+            // may resolve to a parent whose offset differs from the source scene
+            // (e.g. Art/Ground/Left at x=-12.8) or was just created at the origin
+            // by FindOrCreatePath — localPosition alone would shift the item.
+            Vector3? worldPos = null;
+            if (item.worldPosition != null)
+            {
+                var wp = item.worldPosition.ToVector3();
+                wp.x = SnapScalar(wp.x, itemSnap);
+                wp.z = SnapScalar(wp.z, itemSnap);
+                worldPos = wp;
+            }
 
             if (item.instanceId != null && item.instanceId.StartsWith("new:", StringComparison.Ordinal))
             {
-                var created = CreateInstance(item, prefab, assetPath, pos, rotY);
+                var created = CreateInstance(item, prefab, assetPath, pos, rotY, worldPos);
                 if (created != null)
                     createdObjects[item.instanceId] = created;
             }
@@ -75,8 +114,8 @@ public static class SceneLayoutApplier
                         usedSceneObjectIds.Add(objectId);
                         Undo.RecordObject(t, "Layout Editor Move");
                         var posFull = item.localPosition != null ? item.localPosition.ToVector3() : t.localPosition;
-                        posFull.x = SnapScalar(posFull.x, snapStep);
-                        posFull.z = SnapScalar(posFull.z, snapStep);
+                        posFull.x = SnapScalar(posFull.x, itemSnap);
+                        posFull.z = SnapScalar(posFull.z, itemSnap);
                         t.localPosition = posFull;
                         var rotX = item.localRotationX != 0f ? item.localRotationX : t.localEulerAngles.x;
                         t.localEulerAngles = new Vector3(rotX, rotY, t.localEulerAngles.z);
@@ -88,7 +127,7 @@ public static class SceneLayoutApplier
                     }
                 }
 
-                var created = CreateInstance(item, prefab, assetPath, pos, rotY);
+                var created = CreateInstance(item, prefab, assetPath, pos, rotY, worldPos);
                 if (created != null && !string.IsNullOrEmpty(item.instanceId))
                     createdObjects[item.instanceId] = created;
             }
@@ -124,9 +163,12 @@ public static class SceneLayoutApplier
         // Use the same snap step as items/web (often half-cell 0.6). Snapping floor
         // centers to full GridCellSize (1.2) shifts even-sized floors by half a cell,
         // breaking flush adjacency and desyncing Col_Floor (doc coords) from Plane meshes.
-        ApplyFloors(document, snapStep);
-        if (syncWalkable)
-            SyncWalkableToFloors(document, snapStep);
+        if (only == null || only == "floors")
+        {
+            ApplyFloors(document, snapStep);
+            if (syncWalkable)
+                SyncWalkableToFloors(document, snapStep);
+        }
 
         // After mutating placeholder transforms, persist with the canonical Tools workflow:
         // Toggle Prepare For Building (strip temp-loaded children so they aren't baked into the
@@ -750,7 +792,7 @@ public static class SceneLayoutApplier
         return !string.IsNullOrEmpty(docPath) && scene.hierarchyPath == docPath;
     }
 
-    private static void RemoveUnmatchedSceneItems(List<LayoutItemDto> before, LayoutItemDto[] documentItems)
+    private static void RemoveUnmatchedSceneItems(List<LayoutItemDto> before, LayoutItemDto[] documentItems, string only = null)
     {
         var unmatched = new List<LayoutItemDto>(before);
         if (documentItems == null)
@@ -777,8 +819,91 @@ public static class SceneLayoutApplier
                 unmatched.RemoveAt(matchedIndex);
         }
 
+        var deletedCount = 0;
+        var skippedCount = 0;
         for (int i = 0; i < unmatched.Count; i++)
+        {
+            if (only == "items" && !IsGameplayItem(unmatched[i]))
+            {
+                skippedCount++;
+                continue;
+            }
+            if (only == "decor" && !IsDecorSceneItem(unmatched[i]))
+            {
+                skippedCount++;
+                continue;
+            }
+            if (only == "floors" && !IsSurfaceLikeSceneItem(unmatched[i]))
+            {
+                skippedCount++;
+                continue;
+            }
             DeleteItem(unmatched[i]);
+            deletedCount++;
+        }
+
+        if (deletedCount > 0 || skippedCount > 0)
+            Debug.Log("[LayoutEditor] RemoveUnmatchedSceneItems: deleted " + deletedCount
+                + " unmatched items" + (skippedCount > 0 ? ", skipped " + skippedCount + " non-gameplay items" : "")
+                + " (total before: " + before.Count + ", doc: " + documentItems.Length + ")");
+    }
+
+    private static bool IsGameplayItem(LayoutItemDto item)
+    {
+        if (item == null)
+            return false;
+        var path = item.hierarchyPath ?? "";
+        return path.StartsWith("Design/", StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Decor-scope deletion candidate: a prefab item under Art/ that is not a
+    /// collision stub and not a surface item (themed floor tiles / background
+    /// prefabs / travelators belong to the floor layer and must survive a
+    /// decor-only write-back).
+    /// </summary>
+    private static bool IsDecorSceneItem(LayoutItemDto item)
+    {
+        if (item == null)
+            return false;
+        var path = item.hierarchyPath ?? "";
+        if (!path.StartsWith("Art/", StringComparison.Ordinal))
+            return false;
+        if (item.stubKind == "Collision")
+            return false;
+        return !IsSurfaceLikeSceneItem(item);
+    }
+
+    /// <summary>
+    /// Surface (floor-layer) prefab item, mirroring build-catalog.mjs surfaceMeta:
+    /// themed floor tiles, background/environment prefabs, travelators.
+    /// </summary>
+    private static bool IsSurfaceLikeSceneItem(LayoutItemDto item)
+    {
+        if (item == null)
+            return false;
+        var id = "";
+        if (!string.IsNullOrEmpty(item.prefabAssetPath))
+            id = System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath);
+        if (string.IsNullOrEmpty(id))
+            id = item.displayName ?? "";
+        if (string.IsNullOrEmpty(id))
+            return false;
+
+        var n = id.ToLowerInvariant();
+        if (n == "sky" || n.Contains("background"))
+            return true;
+        if (id == "raft_water" || id == "alien_gue" || id == "sand_01")
+            return true;
+        if (id == "p_dlc5_camp_water" || id == "p_dlc5_camp_river")
+            return true;
+        if (n.StartsWith("raft_raft_", StringComparison.Ordinal))
+            return true;
+        if (n.Contains("floor") || n.Contains("carpet") || n.Contains("blacktiles") || n.Contains("walkway"))
+            return true;
+        if (id == "Travelator")
+            return true;
+        return false;
     }
 
     private static bool SceneItemMatchesDocumentItem(LayoutItemDto scene, LayoutItemDto doc)
@@ -796,7 +921,75 @@ public static class SceneLayoutApplier
         return !string.IsNullOrEmpty(doc.instanceId) && scene.instanceId == doc.instanceId;
     }
 
-    private static GameObject CreateInstance(LayoutItemDto item, GameObject prefab, string assetPath, Vector3 pos, float rotY)
+    private static void ApplyCollisionItem(LayoutItemDto item, float snapStep, HashSet<int> usedSceneObjectIds, Dictionary<string, GameObject> createdObjects)
+    {
+        var itemSnap = SnapStepForItem(item, snapStep);
+        if (item.instanceId != null && item.instanceId.StartsWith("new:", StringComparison.Ordinal))
+        {
+            var parentPath = !string.IsNullOrEmpty(item.parentPath)
+                ? item.parentPath
+                : "Design/Collision";
+            var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
+            if (parent == null)
+            {
+                Debug.LogWarning("[LayoutEditor] ApplyCollisionItem: parent path not found \"" + parentPath + "\" for " + (item.displayName ?? "?"));
+                return;
+            }
+
+            var go = new GameObject(item.displayName ?? "Collision");
+            Undo.RegisterCreatedObjectUndo(go, "Layout Editor Create Collision");
+            go.transform.SetParent(parent, false);
+            if (item.worldPosition != null)
+            {
+                var wp = item.worldPosition.ToVector3();
+                wp.x = SnapScalar(wp.x, itemSnap);
+                wp.z = SnapScalar(wp.z, itemSnap);
+                go.transform.position = wp;
+            }
+            else
+            {
+                var pos = item.localPosition != null ? item.localPosition.ToVector3() : Vector3.zero;
+                pos.x = SnapScalar(pos.x, itemSnap);
+                pos.z = SnapScalar(pos.z, itemSnap);
+                go.transform.localPosition = pos;
+            }
+            go.transform.localEulerAngles = new Vector3(0f, item.localRotationY, 0f);
+            var col = go.AddComponent<BoxCollider>();
+            col.size = new Vector3(1.2f, 2f, 1.2f);
+            if (!string.IsNullOrEmpty(item.instanceId))
+                createdObjects[item.instanceId] = go;
+            return;
+        }
+
+        var t = FindItemTransform(item);
+        if (t != null)
+        {
+            var objectId = t.gameObject.GetInstanceID();
+            if (usedSceneObjectIds.Contains(objectId))
+                return;
+            usedSceneObjectIds.Add(objectId);
+            Undo.RecordObject(t, "Layout Editor Move");
+            var pos = item.localPosition != null ? item.localPosition.ToVector3() : t.localPosition;
+            pos.x = SnapScalar(pos.x, itemSnap);
+            pos.z = SnapScalar(pos.z, itemSnap);
+            t.localPosition = pos;
+            t.localEulerAngles = new Vector3(t.localEulerAngles.x, item.localRotationY, t.localEulerAngles.z);
+        }
+    }
+
+    /// <summary>
+    /// Decor items (parented under Art/) snap at 0.01 so the web's free
+    /// placement survives write-back; everything else uses the UI snap step.
+    /// </summary>
+    private static float SnapStepForItem(LayoutItemDto item, float snapStep)
+    {
+        var p = item != null ? item.parentPath : null;
+        if (!string.IsNullOrEmpty(p) && (p == "Art" || p.StartsWith("Art/", StringComparison.Ordinal)))
+            return 0.01f;
+        return snapStep;
+    }
+
+    private static GameObject CreateInstance(LayoutItemDto item, GameObject prefab, string assetPath, Vector3 pos, float rotY, Vector3? worldPos = null)
     {
         var parentPath = item.parentPath;
         if (string.IsNullOrEmpty(parentPath))
@@ -804,15 +997,26 @@ public static class SceneLayoutApplier
 
         var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
         if (parent == null)
+        {
+            Debug.LogWarning("[LayoutEditor] CreateInstance: parent path not found \"" + parentPath
+                + "\" for " + assetPath + " (displayName: " + (item.displayName ?? "?") + ")");
             return null;
+        }
 
         var instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
         if (instance == null)
+        {
+            Debug.LogWarning("[LayoutEditor] CreateInstance: InstantiatePrefab returned null for "
+                + assetPath + " (displayName: " + (item.displayName ?? "?") + ")");
             return null;
+        }
 
         Undo.RegisterCreatedObjectUndo(instance, "Layout Editor Create");
         instance.transform.SetParent(parent, false);
-        instance.transform.localPosition = pos;
+        if (worldPos.HasValue)
+            instance.transform.position = worldPos.Value;
+        else
+            instance.transform.localPosition = pos;
         // Preserve the doc's euler X (quad floor tiles lie flat via x=90) instead
         // of forcing identity — otherwise recreated tiles render standing up.
         instance.transform.localEulerAngles = new Vector3(item.localRotationX, rotY, 0f);

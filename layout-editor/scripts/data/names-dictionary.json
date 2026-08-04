@@ -4579,8 +4579,8 @@
     },
     {
       "id": "Salad_Plain_SO",
-      "zh": "田园沙拉",
-      "en": "Plain Salad"
+      "zh": "生菜沙拉",
+      "en": "Lettuce Salad"
     },
     {
       "id": "Salad_Tomato_SO",
@@ -4776,6 +4776,11 @@
       "id": "Smoothie_Strawberry",
       "zh": "草莓冰沙",
       "en": "Strawberry Smoothie"
+    },
+    {
+      "id": "Smoothie_Mega",
+      "zh": "什锦冰沙",
+      "en": "Mega Smoothie"
     },
     {
       "id": "SmoothiePineapple",

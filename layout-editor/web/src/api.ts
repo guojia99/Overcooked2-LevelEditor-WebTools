@@ -6,6 +6,11 @@ import type {
   BundleAnalysis,
   CookingStepCatalog,
   CookingStepEntry,
+  CounterAppearanceCatalog,
+  CustomRecipeConfig,
+  CustomRecipeEdit,
+  CustomRecipeReferences,
+  CustomRecipeSummary,
   DeathEffectCatalog,
   FloorMaterial,
   FloorMaterialCatalog,
@@ -21,6 +26,8 @@ import type {
   MusicCatalog,
   PerPlayerConfig,
   RecipeEntry,
+  SwitchMaterialCatalog,
+  SwitchMaterialOption,
 } from "./types";
 
 const STALE_BRIDGE_MSG =
@@ -80,9 +87,11 @@ export async function fetchLayout(assetPath: string): Promise<LayoutDocument> {
   return r.json();
 }
 
-export async function saveLayout(doc: LayoutDocument, snap: number, syncWalkable = false): Promise<void> {
+/** only scopes the write-back to one layer: "" = full, "items" / "decor" / "floors". */
+export async function saveLayout(doc: LayoutDocument, snap: number, syncWalkable = false, only = ""): Promise<void> {
   const q = new URLSearchParams({ snap: String(snap) });
   if (syncWalkable) q.set("syncWalkable", "1");
+  if (only) q.set("only", only);
   const r = await fetch(`/api/scene/layout?${q}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -502,6 +511,137 @@ export async function uploadImageFloor(
 /** URL that serves the raw bytes of a data-dir asset (for canvas preview). */
 export function imageFloorUrl(texturePath: string): string {
   return `/api/level/data-file?path=${encodeURIComponent(texturePath)}`;
+}
+
+/** Upload a level screenshot image (base64) into the level's data dir.
+ *  Assigns the imported Sprite to LevelInfoSO.screenshot. */
+export async function uploadScreenshot(
+  assetPath: string,
+  fileName: string,
+  base64: string
+): Promise<string> {
+  const r = await fetch("/api/level/screenshot-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath, fileName, base64 }),
+  });
+  const data = await readApiJson<{ texturePath?: string; error?: string }>(r);
+  return data.texturePath ?? "";
+}
+
+// ---------- Custom Recipe Management ----------
+
+export async function fetchCustomRecipeConfig(setName: string): Promise<CustomRecipeConfig> {
+  const q = new URLSearchParams({ setName });
+  const r = await fetch(`/api/custom-recipes/config?${q}`);
+  return readApiJson<CustomRecipeConfig>(r);
+}
+
+export async function fetchCustomRecipes(setName: string): Promise<CustomRecipeSummary[]> {
+  const q = new URLSearchParams({ setName });
+  const r = await fetch(`/api/custom-recipes?${q}`);
+  const data = await readApiJson<{ recipes?: CustomRecipeSummary[] }>(r);
+  return data.recipes ?? [];
+}
+
+export async function fetchCustomRecipeReferences(setName: string): Promise<CustomRecipeReferences> {
+  const q = new URLSearchParams({ setName });
+  const r = await fetch(`/api/custom-recipes/references?${q}`);
+  return readApiJson<CustomRecipeReferences>(r);
+}
+
+export async function createCustomRecipe(body: CustomRecipeEdit): Promise<void> {
+  const r = await fetch("/api/custom-recipes/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export async function updateCustomRecipe(body: CustomRecipeEdit): Promise<void> {
+  const r = await fetch("/api/custom-recipes/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export async function deleteCustomRecipe(assetPath: string): Promise<void> {
+  const r = await fetch("/api/custom-recipes/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export async function uploadCustomRecipeIcon(
+  setName: string,
+  recipeAssetPath: string,
+  fileName: string,
+  base64: string
+): Promise<string> {
+  const r = await fetch("/api/custom-recipes/upload-icon", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, recipeAssetPath, fileName, base64 }),
+  });
+  const data = await readApiJson<{ texturePath?: string; error?: string }>(r);
+  return data.texturePath ?? "";
+}
+
+export async function uploadCustomRecipeModel(
+  setName: string,
+  recipeAssetPath: string,
+  fileName: string,
+  base64: string
+): Promise<string> {
+  const r = await fetch("/api/custom-recipes/upload-model", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, recipeAssetPath, fileName, base64 }),
+  });
+  const data = await readApiJson<{ texturePath?: string; error?: string }>(r);
+  return data.texturePath ?? "";
+}
+
+export async function addCustomRecipeCategory(setName: string, id: string, zh: string, en: string): Promise<void> {
+  const r = await fetch("/api/custom-recipes/category/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, id, zh, en }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export async function renameCustomRecipeCategory(setName: string, oldId: string, newId: string, newZh: string, newEn: string): Promise<void> {
+  const r = await fetch("/api/custom-recipes/category/rename", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, oldId, newId, newZh, newEn }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export async function deleteCustomRecipeCategory(setName: string, category: string): Promise<void> {
+  const r = await fetch("/api/custom-recipes/category/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, category }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export async function fetchCounterAppearances(): Promise<CounterAppearanceCatalog> {
+  const data = await fetchStaticCatalog<CounterAppearanceCatalog>("counter-appearances.json");
+  return data;
+}
+
+export async function fetchSwitchMaterials(): Promise<SwitchMaterialOption[]> {
+  const data = await fetchStaticCatalog<SwitchMaterialCatalog>("switch-materials.json");
+  return data.materials ?? [];
 }
 
 export { STALE_BRIDGE_MSG };

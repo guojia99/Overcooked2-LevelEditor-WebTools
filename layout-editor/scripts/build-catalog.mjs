@@ -53,6 +53,30 @@ const FOOTPRINT_OVERRIDES = {
   barrier_rope_2unit_01: { cellsX: 2, cellsZ: 1 },
 };
 
+/** Measured native footprints for art decor prefabs, generated inside Unity via
+ *  "Layout Editor/导出装饰实测尺寸" (LayoutEditorFootprintDump.cs). Keyed by prefab id. */
+function loadMeasuredFootprints() {
+  const file = path.join(__dirname, "data", "measured-footprints.json");
+  if (!fs.existsSync(file)) {
+    console.warn("WARN: measured-footprints.json missing; decor footprints fall back to 1x1.");
+    return new Map();
+  }
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+    const map = new Map();
+    for (const it of raw.items || []) {
+      if (it && it.id && it.cellsX > 0 && it.cellsZ > 0) {
+        map.set(it.id, { cellsX: it.cellsX, cellsZ: it.cellsZ });
+      }
+    }
+    console.log(`Measured footprints: ${map.size} entries`);
+    return map;
+  } catch (e) {
+    console.warn(`WARN: measured-footprints.json unreadable: ${e.message}`);
+    return new Map();
+  }
+}
+
 const DEFAULT_PARENT = {
   counters: "Design/Counters",
   utensils: "Design/Utensils",
@@ -62,8 +86,14 @@ const DEFAULT_PARENT = {
 
 /** Core palette sections (strict order). */
 const CORE_PALETTE = [
-  { key: "counters", labelZh: "核心 · 桌台 / 工作站", labelEn: "Counters & stations" },
-  { key: "utensils", labelZh: "核心 · 厨房器具（叠放在桌台上）", labelEn: "Utensils (stack on counters)" },
+  { key: "counters/prep", labelZh: "核心 · 台面 / 准备", labelEn: "Countertops & prep" },
+  { key: "counters/cooking", labelZh: "核心 · 烤制工作站", labelEn: "Cooking stations" },
+  { key: "counters/sinks", labelZh: "核心 · 水槽 / 清洁", labelEn: "Sinks & cleaning" },
+  { key: "counters/service", labelZh: "核心 · 出餐 / 加工", labelEn: "Serving & processing" },
+  { key: "utensils/plates", labelZh: "核心 · 盘杯器具", labelEn: "Plates & glassware" },
+  { key: "utensils/cooking", labelZh: "核心 · 锅具烤具", labelEn: "Cooking utensils" },
+  { key: "utensils/mixing", labelZh: "核心 · 搅拌器具", labelEn: "Mixing & blending" },
+  { key: "utensils/tools", labelZh: "核心 · 工具 / 其他", labelEn: "Tools & misc" },
   { key: "mechanisms", labelZh: "核心 · 机关", labelEn: "Mechanisms" },
   { key: "Player", labelZh: "核心 · 厨师出生点", labelEn: "Chef spawns" },
 ];
@@ -89,10 +119,10 @@ const ART_THEME_ZH = {
 
 /** Utensil stack rules (使用手册 §3.3, extended with DLC stations). */
 const UTENSIL_STACK = {
-  Plate: { y: 1, hostRule: "counter_standard" },
-  CleanPlateStack: { y: 1, hostRule: "counter_standard" },
-  Glass: { y: 1, hostRule: "counter_standard" },
-  CleanGlassStack: { y: 1, hostRule: "counter_standard" },
+  Plate: { y: 0.5, hostRule: "counter_standard" },
+  CleanPlateStack: { y: 0.5, hostRule: "counter_standard" },
+  Glass: { y: 0.5, hostRule: "counter_standard" },
+  CleanGlassStack: { y: 0.5, hostRule: "counter_standard" },
   FireExtinguisher: { y: 1, hostRule: "counter_standard" },
   Flamethrower: { y: 1, hostRule: "counter_standard" },
   WaterGun: { y: 1, hostRule: "counter_standard" },
@@ -106,6 +136,55 @@ const UTENSIL_STACK = {
   Skewer: { y: 0.6, hostRule: "barbeque" },
   ToastingFork: { y: 0.6, hostRule: "campfire" },
   Bellows: { y: 0.6, hostRule: "campfire" },
+};
+
+/** Utensil subcategory assignment for finer palette grouping. */
+const UTENSIL_SUBCATEGORY = {
+  Plate: "utensils/plates",
+  Glass: "utensils/plates",
+  CleanPlateStack: "utensils/plates",
+  CleanGlassStack: "utensils/plates",
+
+  Pot: "utensils/cooking",
+  FryPan: "utensils/cooking",
+  Steamer: "utensils/cooking",
+  FrierBasket: "utensils/cooking",
+  GriddlePan: "utensils/cooking",
+  Skewer: "utensils/cooking",
+  ToastingFork: "utensils/cooking",
+
+  MixerBowl: "utensils/mixing",
+  BlenderCup: "utensils/mixing",
+
+  FireExtinguisher: "utensils/tools",
+  Flamethrower: "utensils/tools",
+  WaterGun: "utensils/tools",
+  Bellows: "utensils/tools",
+};
+
+/** Counter subcategory assignment for finer palette grouping. */
+const COUNTER_SUBCATEGORY = {
+  Cooker: "counters/cooking",
+  FryingStation: "counters/cooking",
+  Oven: "counters/cooking",
+  Barbeque: "counters/cooking",
+  Campfire: "counters/cooking",
+
+  Sink: "counters/sinks",
+  SinkGlass: "counters/sinks",
+  GlassReturn: "counters/sinks",
+  PlateReturn: "counters/sinks",
+  Bin: "counters/sinks",
+
+  Counter: "counters/prep",
+  CounterCorner: "counters/prep",
+  ChoppingCounter: "counters/prep",
+
+  Mixer: "counters/service",
+  Blender: "counters/service",
+  ServingStation: "counters/service",
+  Dispenser: "counters/service",
+  ConveyorStation: "counters/service",
 };
 
 /** Palette ordering: utensils cluster by paired workstation, counters by workflow. */
@@ -209,8 +288,15 @@ function parseManualTable(md) {
 function categorize(assetPath) {
   const rel = assetPath.replace(/^Assets\/common0[12]\/prefabs\/?/, "");
   const seg = rel.split("/");
-  if (seg[0] === "counters") return { category: "counters", theme: null };
-  if (seg[0] === "utensils") return { category: "utensils", theme: null };
+  const id = seg[seg.length - 1].replace(/\.prefab$/, "");
+  if (seg[0] === "counters") {
+    const sub = COUNTER_SUBCATEGORY[id] || "counters/service";
+    return { category: sub, theme: null };
+  }
+  if (seg[0] === "utensils") {
+    const sub = UTENSIL_SUBCATEGORY[id] || "utensils/tools";
+    return { category: sub, theme: null };
+  }
   if (seg[0] === "mechanisms") return { category: "mechanisms", theme: null };
   if (seg[0] === "Player" || rel === "Player.prefab") return { category: "Player", theme: null };
   if (seg[0] === "art" && seg.length > 1) return { category: "art", theme: seg[1] };
@@ -273,14 +359,14 @@ function surfaceMeta(id) {
 }
 
 
-function walkPrefabs(dir, baseAssetsPath, out) {
+function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
   const baseAbs = path.resolve(repoRoot, baseAssetsPath);
   if (!fs.existsSync(dir)) return;
   for (const name of fs.readdirSync(dir)) {
     const full = path.join(dir, name);
     const stat = fs.statSync(full);
     if (stat.isDirectory()) {
-      walkPrefabs(full, baseAssetsPath, out);
+      walkPrefabs(full, baseAssetsPath, out, measuredFootprints);
     } else if (name.endsWith(".prefab")) {
       const assetPath = path
         .join(baseAssetsPath, path.relative(baseAbs, path.resolve(full)))
@@ -289,14 +375,19 @@ function walkPrefabs(dir, baseAssetsPath, out) {
       const guid = readGuid(full + ".meta");
       if (!guid) continue;
       const { category, theme } = categorize(assetPath);
-      const fp = FOOTPRINT_OVERRIDES[id] || { cellsX: 1, cellsZ: 1 };
+      // Priority: hand-authored override > Unity-measured (decor only) > 1x1.
+      const isDecorCategory = category === "art" || category === "other";
+      const fp =
+        FOOTPRINT_OVERRIDES[id] ||
+        (isDecorCategory ? measuredFootprints.get(id) : undefined) ||
+        { cellsX: 1, cellsZ: 1 };
       out.push({
         id,
         guid,
         assetPath,
         category,
         theme,
-        defaultParent: DEFAULT_PARENT[category] || "Art",
+        defaultParent: DEFAULT_PARENT[category] || DEFAULT_PARENT[category.split("/")[0]] || "Art",
         footprint: fp,
         ...layoutMetaFor(id, category),
       });
@@ -801,6 +892,145 @@ function floorRelevance(id) {
   return 0;
 }
 
+// ---------------------------------------------------------------------------
+// Counter appearance catalog
+// ---------------------------------------------------------------------------
+
+const THEME_NAMES_ZH = {
+  "": "默认",
+  Camping: "露营",
+  Camping1: "露营 1",
+  Camping2: "露营 2",
+  Circus: "马戏团",
+  Circus01: "马戏团 1",
+  Circus02: "马戏团 2",
+  Dark: "暗黑",
+  Edge: "边缘",
+  Gold: "黄金",
+  Old: "旧式",
+  Space: "太空",
+  Space02: "太空 2",
+  Slim: "窄式",
+  SlimNoBlock: "窄式·无障碍",
+  Airballoon: "热气球",
+  Wizard: "魔法",
+  Beach: "海滩",
+  Beach01: "海滩 1",
+  Beach02: "海滩 2",
+  BeachGlass: "海滩·玻璃",
+};
+
+const COUNTER_TYPE_NAMES_ZH = {
+  Counter: "普通桌台",
+  CounterCorner: "角落桌台",
+  ChoppingCounter: "切菜台",
+  Sink: "洗碗池",
+  ServingStation: "上菜口",
+  Dispenser: "食材箱",
+  Bin: "垃圾桶",
+  Cooker: "灶台",
+  FryingStation: "油炸台",
+  Oven: "烤箱",
+  Mixer: "搅拌台",
+  PlateReturn: "脏盘台",
+  ConveyorStation: "传送带",
+};
+
+function scanCounterAppearances(dictionary, idToRow) {
+  const roots = [
+    "Assets/common01/pseudo_prefab_so/counters",
+    "Assets/common02/pseudo_prefab_so/counters",
+  ];
+  const byType = {};
+  const seen = new Set();
+
+  for (const root of roots) {
+    for (const file of listFilesRecursive(path.join(repoRoot, root), (n) => n.endsWith(".asset"))) {
+      const guid = readGuid(file + ".meta");
+      if (!guid || !seen.add(guid)) continue;
+      const fields = parseUnityAsset(file);
+      if (fields.scriptGuid !== SCRIPT_GUID.PseudoPrefabSO) continue;
+      const id = path.basename(file, ".asset");
+
+      let counterType = null;
+      const sortedTypes = Object.keys(COUNTER_TYPE_NAMES_ZH).sort((a, b) => b.length - a.length);
+      for (const ct of sortedTypes) {
+        if (id.startsWith(ct)) {
+          counterType = ct;
+          break;
+        }
+      }
+      if (!counterType) continue;
+
+      const themeSuffix = id.slice(counterType.length).replace(/SO$/, "");
+      const themeName = THEME_NAMES_ZH[themeSuffix] ?? themeSuffix;
+
+      if (!byType[counterType]) byType[counterType] = [];
+      const dict = dictionary.get(id);
+      const enDefault = `${counterType} ${themeSuffix || "Default"}`.replace(/([a-z])([A-Z])/g, "$1 $2").trim();
+      const zhDefault = `${COUNTER_TYPE_NAMES_ZH[counterType] || counterType} · ${themeName}`;
+      const nameZh = dict?.zh || zhDefault;
+      const nameEn = dict?.en || enDefault;
+      const displayZh = `${nameZh}（${nameEn}）`;
+      byType[counterType].push({
+        guid,
+        id,
+        assetPath: toAssetPath(file),
+        nameZh: displayZh,
+        nameEn,
+        theme: themeSuffix,
+        themeName,
+      });
+    }
+  }
+
+  for (const ct of Object.keys(byType)) {
+    byType[ct].sort((a, b) => a.nameZh.localeCompare(b.nameZh));
+  }
+  return byType;
+}
+
+const SWITCH_MATERIAL_NAMES_ZH = {
+  Grey: "灰色",
+  mat_sk_switch_01: "开关材质 01",
+  mat_sk_switch_02: "开关材质 02",
+  mat_sk_switch_unoccupied: "未占用开关材质",
+};
+
+function scanSwitchMaterials(dictionary, idToRow) {
+  const roots = [
+    "Assets/common01/pseudo_prefab_so/mechanisms/Switch",
+    "Assets/common02/pseudo_prefab_so/mechanisms/Switch",
+  ];
+  const list = [];
+  const seen = new Set();
+
+  for (const root of roots) {
+    if (!fs.existsSync(path.join(repoRoot, root))) continue;
+    for (const file of listFilesRecursive(path.join(repoRoot, root), (n) => n.endsWith(".asset"))) {
+      const guid = readGuid(file + ".meta");
+      if (!guid || !seen.add(guid)) continue;
+      const fields = parseUnityAsset(file);
+      if (fields.scriptGuid !== SCRIPT_GUID.PseudoPrefabSO) continue;
+      const id = path.basename(file, ".asset");
+      const dict = dictionary.get(id);
+      const swZh = SWITCH_MATERIAL_NAMES_ZH[id];
+      const nameZh = dict?.zh || swZh || fallbackNameZh(id);
+      const nameEn = dict?.en || fallbackNameEn(id);
+      const displayZh = `${nameZh}（${nameEn}）`;
+      list.push({
+        guid,
+        id,
+        assetPath: toAssetPath(file),
+        nameZh: displayZh,
+        nameEn,
+      });
+    }
+  }
+  list.sort((a, b) => a.nameZh.localeCompare(b.nameZh));
+  return list;
+}
+
 function scanFloorMaterials(dictionary, idToRow) {
   const roots = [];
   const setsRoot = path.join(repoRoot, "Assets/LevelSets");
@@ -872,9 +1102,10 @@ function main() {
   const dictionary = loadDictionary();
 
   const items = [];
+  const measuredFootprints = loadMeasuredFootprints();
   for (const root of PREFAB_ROOTS) {
     const base = root.includes("common01") ? "Assets/common01/prefabs" : "Assets/common02/prefabs";
-    walkPrefabs(root, base, items);
+    walkPrefabs(root, base, items, measuredFootprints);
   }
 
   for (const item of items) {
@@ -886,12 +1117,12 @@ function main() {
   items.sort((a, b) => {
     const c = a.category.localeCompare(b.category);
     if (c !== 0) return c;
-    if (a.category === "utensils") {
+    if (a.category === "utensils" || a.category.startsWith("utensils/")) {
       const ha = HOST_SORT_ORDER.indexOf(a.stack?.hostRule ?? "counter_standard");
       const hb = HOST_SORT_ORDER.indexOf(b.stack?.hostRule ?? "counter_standard");
       if (ha !== hb) return ha - hb;
     }
-    if (a.category === "counters") {
+    if (a.category === "counters" || a.category.startsWith("counters/")) {
       const ca = COUNTER_SORT_ORDER.indexOf(a.id);
       const cb = COUNTER_SORT_ORDER.indexOf(b.id);
       if (ca !== cb) return (ca < 0 ? 99 : ca) - (cb < 0 ? 99 : cb);
@@ -989,6 +1220,26 @@ function main() {
     schemaVersion: SCHEMA_VERSION,
     itemCount: materials.length,
     materials,
+  });
+
+  const counterAppearances = scanCounterAppearances(dictionary, idToRow);
+  let caCount = 0;
+  for (const v of Object.values(counterAppearances)) caCount += v.length;
+  console.log(`Counter appearance options: ${caCount} across ${Object.keys(counterAppearances).length} types`);
+  writeCatalogFile("counter-appearances.json", {
+    generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    typeNames: COUNTER_TYPE_NAMES_ZH,
+    themeNames: THEME_NAMES_ZH,
+    byType: counterAppearances,
+  });
+
+  const switchMaterials = scanSwitchMaterials(dictionary, idToRow);
+  console.log(`Switch materials: ${switchMaterials.length}`);
+  writeCatalogFile("switch-materials.json", {
+    generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    materials: switchMaterials,
   });
 
   // Copy the AssetBundle dependency graph (extracted from the game manifest) so the web UI can

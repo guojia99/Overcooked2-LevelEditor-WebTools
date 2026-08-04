@@ -8,6 +8,7 @@ public static class LayoutEditorCatalogLookup
     {
         { "ServingStation", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "Sink", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        { "SinkGlass", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
     };
 
     public static LayoutFootprint GetFootprint(string prefabId)
@@ -16,6 +17,19 @@ public static class LayoutEditorCatalogLookup
         if (Footprints.TryGetValue(prefabId, out fp))
             return new LayoutFootprint { cellsX = fp.cellsX, cellsZ = fp.cellsZ };
         return new LayoutFootprint { cellsX = 1, cellsZ = 1 };
+    }
+
+    /** True when prefabId has an explicit (hand-authored) footprint entry. */
+    public static bool TryGetFootprint(string prefabId, out LayoutFootprint fp)
+    {
+        LayoutFootprint found;
+        if (Footprints.TryGetValue(prefabId, out found))
+        {
+            fp = new LayoutFootprint { cellsX = found.cellsX, cellsZ = found.cellsZ };
+            return true;
+        }
+        fp = null;
+        return false;
     }
 
     public static string DefaultParentForAssetPath(string assetPath)

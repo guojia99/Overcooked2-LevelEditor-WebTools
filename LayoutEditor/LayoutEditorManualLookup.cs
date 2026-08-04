@@ -69,6 +69,37 @@ public static class LayoutEditorManualLookup
         return false;
     }
 
+    public static bool TryGetLevelSetName(string setName, string id, out string nameZh, out string nameEn)
+    {
+        if (!string.IsNullOrEmpty(setName) && !string.IsNullOrEmpty(id))
+        {
+            var namesPath = System.IO.Path.GetFullPath(
+                System.IO.Path.Combine(Application.dataPath, "../Assets/LevelSets/" + setName + "/custom_recipes/names.json"));
+            if (System.IO.File.Exists(namesPath))
+            {
+                try
+                {
+                    var text = System.IO.File.ReadAllText(namesPath);
+                    var doc = JsonUtility.FromJson<DictionaryDoc>(text);
+                    if (doc != null && doc.names != null)
+                    {
+                        foreach (var n in doc.names)
+                        {
+                            if (n != null && n.id == id && !string.IsNullOrEmpty(n.zh))
+                            {
+                                nameZh = n.zh;
+                                nameEn = string.IsNullOrEmpty(n.en) ? id : n.en;
+                                return true;
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+        return TryGet(id, out nameZh, out nameEn);
+    }
+
     private static void EnsureLoaded()
     {
         if (_loaded)

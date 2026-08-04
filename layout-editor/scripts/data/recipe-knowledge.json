@@ -19,8 +19,7 @@
     "OptionalHawaiianBurger",
     "OptionalSmores",
     "DLC05_OptionalCookedPizza",
-    "DLC05_OptionalUncookedPizza",
-    "Smoothie_Mega"
+    "DLC05_OptionalUncookedPizza"
   ],
   "recipes": [
     {
@@ -226,9 +225,7 @@
       "id": "Salad_Plain_SO",
       "step": "",
       "ingredients": [
-        "LettuceSO",
-        "TomatoSO",
-        "OnionSO"
+        "LettuceSO"
       ]
     },
     {
@@ -413,6 +410,16 @@
       "step": "Blender",
       "ingredients": [
         "SmoothieStrawberry"
+      ]
+    },
+    {
+      "id": "Smoothie_Mega",
+      "step": "Blender",
+      "ingredients": [
+        "SmoothieStrawberry",
+        "Banana",
+        "Melon",
+        "SmoothiePineapple"
       ]
     },
     {

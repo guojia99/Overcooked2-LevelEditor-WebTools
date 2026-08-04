@@ -40,6 +40,8 @@ public static class SceneLayoutExporter
             CollectUnderTransform(rootGo.transform, items);
         }
 
+        CollectCollisionObjects(items);
+
         return items;
     }
 
@@ -77,6 +79,14 @@ public static class SceneLayoutExporter
             if (!IsPrefabInstanceRoot(go))
                 continue;
 
+            // Skip temp-loaded bundle content spawned under a PseudoPrefab
+            // placeholder: it moves with the placeholder and must not appear
+            // as a separate item. The placeholder root itself carries the
+            // stub, so the check must exclude the GameObject itself.
+            var stub = go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>();
+            if (stub != null && stub.gameObject != go)
+                continue;
+
             var prefabAsset = PrefabUtility.GetPrefabParent(go) as GameObject;
             if (prefabAsset == null)
                 continue;
@@ -101,7 +111,7 @@ public static class SceneLayoutExporter
                 localRotationX = t.localEulerAngles.x,
                 localRotationY = eulerY,
                 localScale = LayoutVector3.From(t.localScale),
-                footprint = LayoutEditorCatalogLookup.GetFootprint(prefabAsset.name)
+                footprint = ResolveFootprint(go, path, prefabAsset.name)
             });
             LayoutEditorStubIO.ExportStub(go, items[items.Count - 1]);
         }
@@ -126,5 +136,92 @@ public static class SceneLayoutExporter
 
         var root = PrefabUtility.FindPrefabRoot(go);
         return root == go;
+    }
+
+    /// <summary>
+    /// Footprint priority: hand-authored catalog override (gameplay-critical,
+    /// e.g. ServingStation 2x1) > measured renderer bounds (decor only, items
+    /// under Art/) > 1x1 fallback. Gameplay items (Design/, Chefs/) keep the
+    /// catalog/default footprint untouched.
+    /// </summary>
+    private static LayoutFootprint ResolveFootprint(GameObject go, string hierarchyPath, string prefabId)
+    {
+        LayoutFootprint fp;
+        if (LayoutEditorCatalogLookup.TryGetFootprint(prefabId, out fp))
+            return fp;
+
+        if (!string.IsNullOrEmpty(hierarchyPath) && hierarchyPath.StartsWith("Art/", System.StringComparison.Ordinal))
+            return LayoutEditorFootprintMeasure.MeasureCells(go);
+
+        return new LayoutFootprint { cellsX = 1, cellsZ = 1 };
+    }
+
+    /// <summary>
+    /// Collect standalone (non-prefab) collision-only GameObjects — BoxCollider
+    /// objects without MeshRenderer/MeshFilter — that would otherwise be invisible
+    /// to the export pipeline and lost during sync or write-back. These include
+    /// Col_Wall under Design/Collision and collidor_* helpers under Art/Decoration.
+    /// </summary>
+    private static void CollectCollisionObjects(List<LayoutItemDto> items)
+    {
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return;
+
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            if (rootGo.name != "Design" && rootGo.name != "Art")
+                continue;
+
+            var stack = new Stack<Transform>();
+            stack.Push(rootGo.transform);
+
+            while (stack.Count > 0)
+            {
+                var t = stack.Pop();
+                for (int i = 0; i < t.childCount; i++)
+                    stack.Push(t.GetChild(i));
+
+                var go = t.gameObject;
+                if ((go.hideFlags & HideFlags.HideAndDontSave) != 0)
+                    continue;
+
+                if (IsPrefabInstanceRoot(go))
+                    continue;
+
+                // Skip PseudoPrefab-spawned temp content (see CollectUnderTransform).
+                var stub = go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>();
+                if (stub != null && stub.gameObject != go)
+                    continue;
+
+                var mr = go.GetComponent<MeshRenderer>();
+                var mf = go.GetComponent<MeshFilter>();
+                var col = go.GetComponent<BoxCollider>();
+                if (mr != null || mf != null || col == null)
+                    continue;
+
+                var path = LayoutEditorHierarchy.GetHierarchyPath(t);
+                var parentPath = t.parent != null
+                    ? LayoutEditorHierarchy.GetHierarchyPath(t.parent)
+                    : string.Empty;
+
+                items.Add(new LayoutItemDto
+                {
+                    instanceId = "u:" + go.GetInstanceID(),
+                    hierarchyPath = path,
+                    prefabGuid = "",
+                    prefabAssetPath = "",
+                    parentPath = parentPath,
+                    displayName = go.name,
+                    localPosition = LayoutVector3.From(t.localPosition),
+                    worldPosition = LayoutVector3.From(t.position),
+                    localRotationY = t.localEulerAngles.y,
+                    localScale = LayoutVector3.From(t.localScale),
+                    footprint = new LayoutFootprint(),
+                    stubKind = "Collision",
+                    walkable = false
+                });
+            }
+        }
     }
 }

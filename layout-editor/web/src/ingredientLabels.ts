@@ -5,6 +5,7 @@ const FOOD_GROUP_ZH: Record<string, string> = {
   custom: "自定义",
   dlc02: "DLC2 海滩",
   dlc05: "DLC5 露营",
+  levelset: "本关卡集",
 };
 
 export function foodGroupLabel(group: FoodGroup | undefined): string {
