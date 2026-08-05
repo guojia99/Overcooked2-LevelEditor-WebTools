@@ -92,6 +92,8 @@ public static class LayoutEditorCatalogApi
         }
         if (mapped == "cake" && id.IndexOf("Pancake", StringComparison.Ordinal) >= 0)
             return "pancake";
+        if (mapped == "cake" && id == "Cake_Chocolate_SO")
+            return "pancake";
         if (mapped != null)
             return mapped;
         if (id.StartsWith("Fried", StringComparison.Ordinal) || id.StartsWith("Fry", StringComparison.Ordinal))
@@ -261,10 +263,14 @@ public static class LayoutEditorCatalogApi
         Undo.RecordObject(info, "Layout Editor Recipes");
         info.recipes = recipes.ToArray();
 
-        // Auto-populate allIngredients from selected recipes
+        // Auto-populate allIngredients: run the same "Auto Fill All Ingredients" logic
+        // as the LevelInfoSO inspector button (story/include match lists + scene dispensers).
+        LayoutEditorAllIngredientsFill.AutoFillIngredients(info);
+
+        // (Disabled) Auto-populate allIngredients from selected recipes
         // Only register ingredients NOT in the core/original RecipeMatchList
         // (DLC/custom-exclusive ingredients only — core ingredients are already in the game's built-in matching)
-        {
+        /*{
             var coreIngs = new HashSet<string>(StringComparer.Ordinal)
             {
                 "ChoppedBunSO", "DoughSO", "MeatSO", "CheeseSO", "LettuceSO", "TomatoSO",
@@ -329,49 +335,51 @@ public static class LayoutEditorCatalogApi
                 }
             }
             info.allIngredients = allIngs.ToArray();
-        }
+        }*/
 
-        // Auto-populate optionalRecipeMatchListItems for pizza levels
+        // Auto-populate optionalRecipeMatchListItems: add DLC/custom recipes and their intermediates
         {
-            bool hasPizza = false;
+            var existing = info.optionalRecipeMatchListItems != null
+                ? new HashSet<ScriptableObject>(info.optionalRecipeMatchListItems)
+                : new HashSet<ScriptableObject>();
             foreach (var r in recipes)
             {
-                var id = r.name;
+                string id = null;
+                var path = AssetDatabase.GetAssetPath(r);
+                if (!string.IsNullOrEmpty(path))
+                    id = System.IO.Path.GetFileNameWithoutExtension(path);
                 if (string.IsNullOrEmpty(id))
-                {
-                    var path = AssetDatabase.GetAssetPath(r);
-                    id = string.IsNullOrEmpty(path) ? "" : System.IO.Path.GetFileNameWithoutExtension(path);
-                }
+                    continue;
                 var type = RecipeTypeOf(id);
-                if (type == "pizza")
+                var group = FoodGroupOf(path);
+                var custom = r as CustomRecipeSO;
+                List<string> customIngs = custom != null
+                    ? LayoutEditorRecipeKnowledge.CustomIngredients(custom)
+                    : null;
+
+                // DLC recipes and custom recipes (built-in + levelset) must be registered here,
+                // otherwise the game's built-in RecipeMatchList cannot match them
+                if (group == "custom" || group == "levelset" ||
+                    group.StartsWith("dlc", StringComparison.Ordinal))
                 {
-                    hasPizza = true;
-                    break;
+                    existing.Add(r);
+                }
+
+                // Pizza: add 自选披萨 optionals; mushroom pizza additionally needs 蘑菇披萨
+                bool isPizza = type == "pizza";
+                if (!isPizza && customIngs != null)
+                    isPizza = customIngs.Contains("DLC05_Dough") || customIngs.Contains("DoughSO");
+                if (isPizza)
+                {
+                    AddOptionalGuids(existing, new[] { "c8a3b9520d25f674a89e274226dee7cf", "b38643b6c45e859479f6105f5d0ec839" });
+                    bool mushroom = id.IndexOf("Mushroom", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        (customIngs != null && customIngs.Contains("MushroomSO"));
+                    if (mushroom)
+                        AddOptionalGuids(existing, new[] { "1072f0ef3ba328546a7a5bb84d983d6e" });
                 }
             }
-            if (hasPizza)
-            {
-                var existing = info.optionalRecipeMatchListItems != null
-                    ? new HashSet<ScriptableObject>(info.optionalRecipeMatchListItems)
-                    : new HashSet<ScriptableObject>();
-                var optionalGuids = new[]
-                {
-                    "c8a3b9520d25f674a89e274226dee7cf", // Pizza_Optional_Uncooked_SO
-                    "b38643b6c45e859479f6105f5d0ec839", // Pizza_Optional_Cooked_SO
-                };
-                foreach (var g in optionalGuids)
-                {
-                    var path = AssetDatabase.GUIDToAssetPath(g);
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
-                        if (so != null)
-                            existing.Add(so);
-                    }
-                }
-                info.optionalRecipeMatchListItems = new ScriptableObject[existing.Count];
-                existing.CopyTo(info.optionalRecipeMatchListItems);
-            }
+            info.optionalRecipeMatchListItems = new ScriptableObject[existing.Count];
+            existing.CopyTo(info.optionalRecipeMatchListItems);
         }
 
         EditorUtility.SetDirty(info);
@@ -381,5 +389,19 @@ public static class LayoutEditorCatalogApi
             EditorUtility.SetDirty(manager);
 
         return null;
+    }
+
+    private static void AddOptionalGuids(HashSet<ScriptableObject> existing, string[] guids)
+    {
+        foreach (var g in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(g);
+            if (!string.IsNullOrEmpty(path))
+            {
+                var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+                if (so != null)
+                    existing.Add(so);
+            }
+        }
     }
 }

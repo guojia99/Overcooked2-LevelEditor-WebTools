@@ -52,7 +52,8 @@ public static class LayoutEditorLevelAdminApi
             directoryEvents = k.directoryEvents,
             themes = k.themes,
             deathThemes = k.deathThemes,
-            ambienceLabels = k.ambienceLabels
+            ambienceLabels = k.ambienceLabels,
+            itemAudioRules = k.itemAudioRules
         };
     }
 
@@ -179,7 +180,8 @@ public static class LayoutEditorLevelAdminApi
             directoryEvents = new DirectoryEventDto[0],
             themes = new AudioThemeDto[0],
             deathThemes = new AudioDeathThemeDto[0],
-            ambienceLabels = new AmbienceLabelDto[0]
+            ambienceLabels = new AmbienceLabelDto[0],
+            itemAudioRules = new AudioItemRuleDto[0]
         };
     }
 

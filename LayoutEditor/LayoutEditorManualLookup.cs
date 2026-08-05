@@ -36,6 +36,8 @@ public static class LayoutEditorManualLookup
     private static Dictionary<string, NameRow> _byId;
     private static bool _loaded;
     private static bool _dictionaryLoaded;
+    private static DateTime _lastDictWriteTime;
+    private static DateTime _lastManualWriteTime;
 
     /// <summary>False when names-dictionary.json is missing/unreadable (bridge likely outdated).</summary>
     public static bool DictionaryLoaded
@@ -102,9 +104,16 @@ public static class LayoutEditorManualLookup
 
     private static void EnsureLoaded()
     {
-        if (_loaded)
+        var dictPath = Path.Combine(Application.dataPath, "../layout-editor/scripts/data/names-dictionary.json");
+        var manualPath = Path.Combine(Application.dataPath, "../\u4F7F\u7528\u624B\u518C.md");
+        var dictTime = File.Exists(dictPath) ? File.GetLastWriteTimeUtc(dictPath) : DateTime.MinValue;
+        var manualTime = File.Exists(manualPath) ? File.GetLastWriteTimeUtc(manualPath) : DateTime.MinValue;
+
+        if (_loaded && dictTime == _lastDictWriteTime && manualTime == _lastManualWriteTime)
             return;
         _loaded = true;
+        _lastDictWriteTime = dictTime;
+        _lastManualWriteTime = manualTime;
         _byId = new Dictionary<string, NameRow>(StringComparer.Ordinal);
 
         LoadDictionaryJson();

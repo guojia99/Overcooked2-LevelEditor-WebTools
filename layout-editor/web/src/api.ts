@@ -2,6 +2,7 @@ import type {
   AmbienceCatalog,
   AudioCatalog,
   AudioDirectoryCatalog,
+  AudioExportManifest,
   AudioKnowledge,
   BundleAnalysis,
   CookingStepCatalog,
@@ -266,6 +267,7 @@ export async function fetchAudioKnowledge(): Promise<AudioKnowledge> {
     themes: [],
     deathThemes: [],
     ambienceLabels: [],
+    itemAudioRules: [],
   };
   try {
     const r = await fetch("/api/catalog/audio-directories");
@@ -278,6 +280,7 @@ export async function fetchAudioKnowledge(): Promise<AudioKnowledge> {
       themes: data.themes ?? [],
       deathThemes: data.deathThemes ?? [],
       ambienceLabels: data.ambienceLabels ?? [],
+      itemAudioRules: data.itemAudioRules ?? [],
     };
   } catch {
     const data = await fetchStaticCatalog<AudioCatalog>("audio-catalog.json");
@@ -289,6 +292,7 @@ export async function fetchAudioKnowledge(): Promise<AudioKnowledge> {
       themes: data.themes ?? [],
       deathThemes: data.deathThemes ?? [],
       ambienceLabels: data.ambienceLabels ?? [],
+      itemAudioRules: data.itemAudioRules ?? [],
     };
   }
 }
@@ -332,6 +336,33 @@ export function bundleClosure(graph: Map<string, string[]>, seeds: Iterable<stri
     if (ds) for (const d of ds) if (!seen.has(d)) stack.push(d);
   }
   return seen;
+}
+
+// ---------- Audio export manifest ----------
+
+let _audioExports: AudioExportManifest | null = null;
+
+export async function fetchAudioExports(): Promise<AudioExportManifest | null> {
+  if (_audioExports) return _audioExports;
+  try {
+    const r = await fetch("/api/audio/exports");
+    if (r.ok) {
+      _audioExports = await readApiJson<AudioExportManifest>(r);
+      return _audioExports;
+    }
+  } catch { /* ignore */ }
+  try {
+    const r = await fetch("/audio-exports.json");
+    if (r.ok) {
+      _audioExports = await r.json();
+      return _audioExports;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+export function getAudioStreamUrl(relPath: string): string {
+  return `/api/audio/stream?path=${encodeURIComponent(relPath)}`;
 }
 
 export interface SetCreateBody {

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T04:03:22.674Z",
+  "generatedAt": "2026-08-05T04:27:55.610Z",
   "schemaVersion": 3,
   "itemCount": 76,
   "recipes": [
@@ -70,7 +70,7 @@
       "nameZh": "草莓松饼",
       "nameEn": "Strawberry Pancake",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Cake_StrawberryPancake.asset",
-      "cookingStep": "GriddlePan",
+      "cookingStep": "FryingPan",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -126,26 +126,6 @@
       "type": "soup",
       "intermediate": false,
       "icon": false
-    },
-    {
-      "guid": "b29c18f5745b6fe4cb39282fc85a851d",
-      "id": "Pasta_Marinara_SO",
-      "nameZh": "番茄酱意面",
-      "nameEn": "Pasta Marinara",
-      "assetPath": "Assets/common01/food/Recipes/Pasta_Marinara_SO.asset",
-      "cookingStep": "Pot",
-      "ingredients": [
-        "PastaSO",
-        "TomatoSO"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "pasta",
-      "intermediate": false,
-      "icon": true
     },
     {
       "guid": "37f84c2a617aa264b8f8bebb5fc8c55b",
@@ -294,6 +274,27 @@
       "icon": true
     },
     {
+      "guid": "b29c18f5745b6fe4cb39282fc85a851d",
+      "id": "Pasta_Marinara_SO",
+      "nameZh": "海鲜意面",
+      "nameEn": "Seafood Pasta",
+      "assetPath": "Assets/common01/food/Recipes/Pasta_Marinara_SO.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "PastaSO",
+        "FishSO",
+        "PrawnSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "core",
+      "type": "pasta",
+      "intermediate": false,
+      "icon": true
+    },
+    {
       "guid": "b98d38299de379745b64461474cd7943",
       "id": "Burger_Plain_SO",
       "nameZh": "汉堡",
@@ -344,10 +345,9 @@
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
-        "SushiFishSO",
         "CucumberSO"
       ],
-      "ingredientCount": 4,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 60,
       "isCustom": false,
@@ -385,9 +385,10 @@
       "cookingStep": "FryingPan",
       "ingredients": [
         "TortillaSO",
+        "SushiRiceSO",
         "BurritoChickenSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
@@ -529,7 +530,7 @@
       "nameZh": "蓝莓松饼",
       "nameEn": "Blueberry Pancake",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Cake_BlueberryPancake.asset",
-      "cookingStep": "GriddlePan",
+      "cookingStep": "FryingPan",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -574,9 +575,10 @@
       "cookingStep": "FryingPan",
       "ingredients": [
         "TortillaSO",
+        "SushiRiceSO",
         "MushroomSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
@@ -593,7 +595,7 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Mushroom_80_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO",
         "MushroomSO"
@@ -652,7 +654,7 @@
       "nameZh": "培根煎蛋香肠早餐",
       "nameEn": "Bacon Egg Sausage Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Bacon_Egg_Sausage.asset",
-      "cookingStep": "FryingPan",
+      "cookingStep": "GriddlePan",
       "ingredients": [
         "Bacon",
         "DLC05_Egg",
@@ -673,7 +675,7 @@
       "nameZh": "培根煎蛋早餐",
       "nameEn": "Bacon Egg Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Bacon_Egg.asset",
-      "cookingStep": "FryingPan",
+      "cookingStep": "GriddlePan",
       "ingredients": [
         "Bacon",
         "DLC05_Egg"
@@ -707,27 +709,6 @@
       "icon": true
     },
     {
-      "guid": "41f46c9d3978bd8488503aee9fe9dbaa",
-      "id": "Cake_Chocolate_SO",
-      "nameZh": "巧克力蛋糕",
-      "nameEn": "Chocolate Cake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_Chocolate_SO.asset",
-      "cookingStep": "Mixer",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "ChocolateSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "core",
-      "type": "cake",
-      "intermediate": false,
-      "icon": true
-    },
-    {
       "guid": "3134ebc710e6ab14680f8d891997b311",
       "id": "Smores_Chocolate",
       "nameZh": "巧克力棉花糖饼干",
@@ -749,12 +730,33 @@
       "icon": true
     },
     {
+      "guid": "41f46c9d3978bd8488503aee9fe9dbaa",
+      "id": "Cake_Chocolate_SO",
+      "nameZh": "巧克力松饼",
+      "nameEn": "Chocolate Pancake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_Chocolate_SO.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "core",
+      "type": "pancake",
+      "intermediate": false,
+      "icon": true
+    },
+    {
       "guid": "69bf42c2b4dcad440902ac2d25bc4bc6",
       "id": "Breakfast_Sausage_Beans_Egg_Bacon",
       "nameZh": "全餐早餐",
       "nameEn": "Full Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Sausage_Beans_Egg_Bacon.asset",
-      "cookingStep": "FryingPan",
+      "cookingStep": "GriddlePan",
       "ingredients": [
         "Sausage",
         "DLC05_Beans",
@@ -820,9 +822,10 @@
       "cookingStep": "FryingPan",
       "ingredients": [
         "TortillaSO",
+        "SushiRiceSO",
         "BurritoMeatSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
@@ -1065,7 +1068,7 @@
       "nameZh": "香肠焗豆煎蛋早餐",
       "nameEn": "Sausage Beans Egg Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Sausage_Beans_Egg.asset",
-      "cookingStep": "FryingPan",
+      "cookingStep": "GriddlePan",
       "ingredients": [
         "Sausage",
         "DLC05_Beans",
@@ -1086,7 +1089,7 @@
       "nameZh": "香肠焗豆早餐",
       "nameEn": "Sausage Beans Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Sausage_Beans.asset",
-      "cookingStep": "FryingPan",
+      "cookingStep": "GriddlePan",
       "ingredients": [
         "Sausage",
         "DLC05_Beans"
@@ -1407,9 +1410,10 @@
       "assetPath": "Assets/common01/food/Recipes/Steamed_Carrot_SO.asset",
       "cookingStep": "Steamer",
       "ingredients": [
+        "FlourSO",
         "CarrotSO"
       ],
-      "ingredientCount": 1,
+      "ingredientCount": 2,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
@@ -1426,9 +1430,10 @@
       "assetPath": "Assets/common01/food/Recipes/Steamed_Meat_SO.asset",
       "cookingStep": "Steamer",
       "ingredients": [
+        "FlourSO",
         "MeatSO"
       ],
-      "ingredientCount": 1,
+      "ingredientCount": 2,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
@@ -1445,9 +1450,10 @@
       "assetPath": "Assets/common01/food/Recipes/Steamed_Prawns_SO.asset",
       "cookingStep": "Steamer",
       "ingredients": [
+        "FlourSO",
         "PrawnSO"
       ],
-      "ingredientCount": 1,
+      "ingredientCount": 2,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
@@ -1526,14 +1532,9 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Uncooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
-        "TomatoSO",
-        "CheeseSO",
-        "MushroomSO",
-        "ChickenSO",
-        "PepperoniSO"
+        "DoughSO"
       ],
-      "ingredientCount": 6,
+      "ingredientCount": 1,
       "cookingStepCount": 1,
       "score": 0,
       "isCustom": true,
@@ -1550,14 +1551,9 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Cooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DLC05_Dough",
-        "TomatoSO",
-        "CheeseSO",
-        "MushroomSO",
-        "ChickenSO",
-        "PepperoniSO"
+        "DoughSO"
       ],
-      "ingredientCount": 6,
+      "ingredientCount": 1,
       "cookingStepCount": 1,
       "score": 0,
       "isCustom": true,

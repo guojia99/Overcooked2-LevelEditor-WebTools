@@ -435,6 +435,7 @@ public class AudioDirectoryCatalogDto
     public AudioThemeDto[] themes;
     public AudioDeathThemeDto[] deathThemes;
     public AmbienceLabelDto[] ambienceLabels;
+    public AudioItemRuleDto[] itemAudioRules;
 }
 
 [Serializable]
@@ -492,6 +493,16 @@ public class AmbienceLabelDto
 {
     public string name;
     public string zh;
+}
+
+[Serializable]
+public class AudioItemRuleDto
+{
+    public string[] items;
+    public string theme;
+    public string[] directories;
+    public string[] ambiences;
+    public string labelZh;
 }
 
 [Serializable]
@@ -836,4 +847,49 @@ public class CustomRecipeCategoryRenameDto
     public string newId;
     public string newZh;
     public string newEn;
+}
+
+// ==================== Audio export manifest ====================
+
+[Serializable]
+public class AudioExportManifestDto
+{
+    public string generatedAt;
+    public AudioExportBgmDto[] bgm;
+    public AudioExportSfxDirDto[] sfx;
+    public AudioExportAmbienceDto[] ambiences;
+}
+
+[Serializable]
+public class AudioExportBgmDto
+{
+    public string guid;
+    public string id;
+    public string nameZh;
+    public string filename;
+}
+
+[Serializable]
+public class AudioExportSfxDirDto
+{
+    public string id;
+    public string nameZh;
+    public AudioExportSfxClipDto[] clips;
+}
+
+[Serializable]
+public class AudioExportSfxClipDto
+{
+    public string tag;
+    public string type; // "oneshot", "looping", "looping_start", "looping_end"
+    public string filename;
+}
+
+[Serializable]
+public class AudioExportAmbienceDto
+{
+    public string tag;
+    public bool found;
+    public string filename;
+    public string dirId;
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T04:03:22.718Z",
+  "generatedAt": "2026-08-05T04:27:55.660Z",
   "schemaVersion": 3,
   "itemCount": 110,
   "music": [
@@ -8,392 +8,448 @@
       "id": "AnOldSchoolHouse",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/overcooked_legacy/AnOldSchoolHouse.asset",
       "bundleName": "bundle19",
-      "nameZh": "古老校舍（BGM）"
+      "nameZh": "古老校舍（BGM）",
+      "nameEn": "An Old School House"
     },
     {
       "guid": "ec35a0f9297e6cb418a8bc5e42b8669e",
       "id": "ASparklingWonder",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/overcooked_legacy/ASparklingWonder.asset",
       "bundleName": "bundle19",
-      "nameZh": "闪耀仙境（BGM）"
+      "nameZh": "闪耀仙境（BGM）",
+      "nameEn": "ASparkling Wonder"
     },
     {
       "guid": "ff4b2f759b9f30342b141d2baac5563a",
       "id": "ChrismasTunes",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/overcooked_legacy/ChrismasTunes.asset",
       "bundleName": "bundle20",
-      "nameZh": "圣诞旋律（BGM）"
+      "nameZh": "圣诞旋律（BGM）",
+      "nameEn": "Chrismas Tunes"
     },
     {
       "guid": "8f76070eb16bb5d40a69126e2dc28e78",
       "id": "CityLivingSO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/CityLivingSO.asset",
       "bundleName": "bundle9",
-      "nameZh": "城市生活（BGM）"
+      "nameZh": "城市生活（BGM）",
+      "nameEn": "City Living"
     },
     {
       "guid": "847e2ce6bf7967a4e875894711908166",
       "id": "DLC_02_Generic",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_02_Generic.asset",
       "bundleName": "bundle158",
-      "nameZh": "DLC2 通用（BGM）"
+      "nameZh": "DLC2 通用（BGM）",
+      "nameEn": "DLC 2 Generic"
     },
     {
       "guid": "99420bb7d09b1604cb4f9a250789e38b",
       "id": "DLC_02_Generic_Alt",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_02_Generic_Alt.asset",
       "bundleName": "bundle158",
-      "nameZh": "DLC2 通用变体（BGM）"
+      "nameZh": "DLC2 通用变体（BGM）",
+      "nameEn": "DLC 2 Generic Alt"
     },
     {
       "guid": "3ee30a8f7a560f647b6e6780bfeee65d",
       "id": "DLC_02_HiddenTrack",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_02_HiddenTrack.asset",
       "bundleName": "bundle159",
-      "nameZh": "DLC2 隐藏曲目（BGM）"
+      "nameZh": "DLC2 隐藏曲目（BGM）",
+      "nameEn": "DLC 2 Hidden Track"
     },
     {
       "guid": "4e8d01edc3ca645408ab77ae460f072f",
       "id": "DLC_02_ThroneRoom",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_02_ThroneRoom.asset",
       "bundleName": "bundle159",
-      "nameZh": "DLC2 王座厅（BGM）"
+      "nameZh": "DLC2 王座厅（BGM）",
+      "nameEn": "DLC 2 Throne Room"
     },
     {
       "guid": "fcf4421e2041a1548973a23f998d5cd5",
       "id": "DLC_02_WorldMap",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_02_WorldMap.asset",
       "bundleName": "bundle160",
-      "nameZh": "DLC2 世界地图（BGM）"
+      "nameZh": "DLC2 世界地图（BGM）",
+      "nameEn": "DLC 2 World Map"
     },
     {
       "guid": "9cac75a7d02624e4eaeacfaaf541b661",
       "id": "DLC_03_InGame_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_03_InGame_Music.asset",
       "bundleName": "bundle206",
-      "nameZh": "DLC3 关卡音乐"
+      "nameZh": "DLC3 关卡音乐",
+      "nameEn": "DLC 3 In Game Music"
     },
     {
       "guid": "e7478bf2c298f4543868f5f42a972711",
       "id": "DLC_03_InGame_Music_SO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/DLC_03_InGame_Music_SO.asset",
       "bundleName": "bundle206",
-      "nameZh": "DLC3 关卡音乐"
+      "nameZh": "DLC3 关卡音乐",
+      "nameEn": "DLC 3 In Game Music"
     },
     {
       "guid": "70fb8ed10ab8eb64ca5bd3fb5ff275c5",
       "id": "DLC_03_MapScreen_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_03_MapScreen_Music.asset",
       "bundleName": "bundle207",
-      "nameZh": "DLC3 地图界面音乐"
+      "nameZh": "DLC3 地图界面音乐",
+      "nameEn": "DLC 3 Map Screen Music"
     },
     {
       "guid": "fab82ba2a9b93f54886ac99b0d2c9111",
       "id": "DLC_04_InGame_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_04_InGame_Music.asset",
       "bundleName": "bundle222",
-      "nameZh": "DLC4 关卡音乐"
+      "nameZh": "DLC4 关卡音乐",
+      "nameEn": "DLC 4 In Game Music"
     },
     {
       "guid": "9fed6e7d2b6b83e44a71b2902dbcf936",
       "id": "DLC_04_InGame_Music_Alt",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_04_InGame_Music_Alt.asset",
       "bundleName": "bundle223",
-      "nameZh": "DLC4 关卡音乐变体"
+      "nameZh": "DLC4 关卡音乐变体",
+      "nameEn": "DLC 4 In Game Music Alt"
     },
     {
       "guid": "fd3f4790112dcd84eb223ff5f4f0b22e",
       "id": "DLC_04_Map_Screen",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_04_Map_Screen.asset",
       "bundleName": "bundle223",
-      "nameZh": "DLC4 地图界面音乐"
+      "nameZh": "DLC4 地图界面音乐",
+      "nameEn": "DLC 4 Map Screen"
     },
     {
       "guid": "40caee8036f6dc04bae9c69975a0c13e",
       "id": "DLC_05_City",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_05_City.asset",
       "bundleName": "bundle242",
-      "nameZh": "DLC5 城市（BGM）"
+      "nameZh": "DLC5 城市（BGM）",
+      "nameEn": "DLC 5 City"
     },
     {
       "guid": "d6c2c207795d2bf47ba40dcfd3a0569b",
       "id": "DLC_05_Level",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_05_Level.asset",
       "bundleName": "bundle242",
-      "nameZh": "DLC5 关卡（BGM）"
+      "nameZh": "DLC5 关卡（BGM）",
+      "nameEn": "DLC 5 Level"
     },
     {
       "guid": "072452f8ed91bdf409495166241dcf2e",
       "id": "DLC_05_Level_Alt",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_05_Level_Alt.asset",
       "bundleName": "bundle243",
-      "nameZh": "DLC5 关卡变体（BGM）"
+      "nameZh": "DLC5 关卡变体（BGM）",
+      "nameEn": "DLC 5 Level Alt"
     },
     {
       "guid": "7c8a67ef1bc2e8b4d8a2d1f51e710b89",
       "id": "DLC_05_ThroneRoom",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_05_ThroneRoom.asset",
       "bundleName": "bundle243",
-      "nameZh": "DLC5 王座厅（BGM）"
+      "nameZh": "DLC5 王座厅（BGM）",
+      "nameEn": "DLC 5 Throne Room"
     },
     {
       "guid": "ced6b1367976bec4485a918580bff3e9",
       "id": "DLC_05_WorldMap",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_05_WorldMap.asset",
       "bundleName": "bundle244",
-      "nameZh": "DLC5 世界地图（BGM）"
+      "nameZh": "DLC5 世界地图（BGM）",
+      "nameEn": "DLC 5 World Map"
     },
     {
       "guid": "534f2d7cabf24fe419f377548e74cdd1",
       "id": "DLC_05_WorldMap_Alt",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_05_WorldMap_Alt.asset",
       "bundleName": "bundle244",
-      "nameZh": "DLC5 世界地图变体（BGM）"
+      "nameZh": "DLC5 世界地图变体（BGM）",
+      "nameEn": "DLC 5 World Map Alt"
     },
     {
       "guid": "b61faba79e3eac949a4cf78206d8625e",
       "id": "DLC_07_Battlements",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_07_Battlements.asset",
       "bundleName": "bundle289",
-      "nameZh": "DLC7 城垛（BGM）"
+      "nameZh": "DLC7 城垛（BGM）",
+      "nameEn": "DLC 7 Battlements"
     },
     {
       "guid": "26d58262a1adc454a910dc5f04de7f04",
       "id": "DLC_07_City",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_07_City.asset",
       "bundleName": "bundle290",
-      "nameZh": "DLC7 城市（BGM）"
+      "nameZh": "DLC7 城市（BGM）",
+      "nameEn": "DLC 7 City"
     },
     {
       "guid": "0117787c0a4be3d4db462615706bfdd7",
       "id": "DLC_07_Courtyard",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_07_Courtyard.asset",
       "bundleName": "bundle290",
-      "nameZh": "DLC7 庭院（BGM）"
+      "nameZh": "DLC7 庭院（BGM）",
+      "nameEn": "DLC 7 Courtyard"
     },
     {
       "guid": "9ddb927bd15a1784e9be9f28c329e8ac",
       "id": "DLC_07_Keep",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_07_Keep.asset",
       "bundleName": "bundle291",
-      "nameZh": "DLC7 城堡（BGM）"
+      "nameZh": "DLC7 城堡（BGM）",
+      "nameEn": "DLC 7 Keep"
     },
     {
       "guid": "96fe6975277e2c546a5c5ae3fbc6bc5c",
       "id": "DLC_07_ThroneRoom",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_07_ThroneRoom.asset",
       "bundleName": "bundle291",
-      "nameZh": "DLC7 王座厅（BGM）"
+      "nameZh": "DLC7 王座厅（BGM）",
+      "nameEn": "DLC 7 Throne Room"
     },
     {
       "guid": "016574f2fed9d4d4cbe96cf785206369",
       "id": "DLC_07_WorldMap",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_07_WorldMap.asset",
       "bundleName": "bundle291",
-      "nameZh": "DLC7 世界地图（BGM）"
+      "nameZh": "DLC7 世界地图（BGM）",
+      "nameEn": "DLC 7 World Map"
     },
     {
       "guid": "149d2d6ac4cefe4459dd5bd8fea0c35c",
       "id": "DLC_08_BigTop_Theme",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_08_BigTop_Theme.asset",
       "bundleName": "bundle351",
-      "nameZh": "DLC8 马戏团主篷主题曲"
+      "nameZh": "DLC8 马戏团主篷主题曲",
+      "nameEn": "DLC 8 Big Top Theme"
     },
     {
       "guid": "f1f170a0915bee14e9f6bdce4a176f97",
       "id": "DLC_08_City_Theme",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_08_City_Theme.asset",
       "bundleName": "bundle351",
-      "nameZh": "DLC8 城市主题曲"
+      "nameZh": "DLC8 城市主题曲",
+      "nameEn": "DLC 8 City Theme"
     },
     {
       "guid": "129785b3a01f3034e963a255012db1c4",
       "id": "DLC_08_FairgroundDay_Theme",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_08_FairgroundDay_Theme.asset",
       "bundleName": "bundle351",
-      "nameZh": "DLC8 游乐场白天主题曲"
+      "nameZh": "DLC8 游乐场白天主题曲",
+      "nameEn": "DLC 8 Fairground Day Theme"
     },
     {
       "guid": "42a457c7a237cd341ac2f699fd66a1c7",
       "id": "DLC_08_FairgroundNight_Theme",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_08_FairgroundNight_Theme.asset",
       "bundleName": "bundle352",
-      "nameZh": "DLC8 游乐场夜晚主题曲"
+      "nameZh": "DLC8 游乐场夜晚主题曲",
+      "nameEn": "DLC 8 Fairground Night Theme"
     },
     {
       "guid": "a8e5ce7252878fc419d31589920adc08",
       "id": "DLC_08_ThroneRoom_Theme",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_08_ThroneRoom_Theme.asset",
       "bundleName": "bundle352",
-      "nameZh": "DLC8 王座厅主题曲"
+      "nameZh": "DLC8 王座厅主题曲",
+      "nameEn": "DLC 8 Throne Room Theme"
     },
     {
       "guid": "e7fe10de106b70142a3b6f3aeebad93e",
       "id": "DLC_08_WorldMap_Theme",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_08_WorldMap_Theme.asset",
       "bundleName": "bundle353",
-      "nameZh": "DLC8 世界地图主题曲"
+      "nameZh": "DLC8 世界地图主题曲",
+      "nameEn": "DLC 8 World Map Theme"
     },
     {
       "guid": "f919bf84d75dad54da1efdb9dc242464",
       "id": "DLC_08_WorldMap_Theme_Alt",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_08_WorldMap_Theme_Alt.asset",
       "bundleName": "bundle353",
-      "nameZh": "DLC8 世界地图主题曲变体"
+      "nameZh": "DLC8 世界地图主题曲变体",
+      "nameEn": "DLC 8 World Map Theme Alt"
     },
     {
       "guid": "df6346f1577c80e46a59a8e7378bbd1c",
       "id": "DLC_09_Battlements_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_09_Battlements_Music.asset",
       "bundleName": "bundle403",
-      "nameZh": "DLC9 城垛音乐"
+      "nameZh": "DLC9 城垛音乐",
+      "nameEn": "DLC 9 Battlements Music"
     },
     {
       "guid": "44f9aab353136564bb7820e4d3d64b18",
       "id": "DLC_09_Camping_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_09_Camping_Music.asset",
       "bundleName": "bundle404",
-      "nameZh": "DLC9 露营音乐"
+      "nameZh": "DLC9 露营音乐",
+      "nameEn": "DLC 9 Camping Music"
     },
     {
       "guid": "cd82507b44db61c4681aed0c22f9cbcb",
       "id": "DLC_09_Fairground_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_09_Fairground_Music.asset",
       "bundleName": "bundle403",
-      "nameZh": "DLC9 游乐场音乐"
+      "nameZh": "DLC9 游乐场音乐",
+      "nameEn": "DLC 9 Fairground Music"
     },
     {
       "guid": "c0147821a7c1f8c44b7245d5c18acd21",
       "id": "DLC_10_InGame_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_10_InGame_Music.asset",
       "bundleName": "bundle417",
-      "nameZh": "DLC10 关卡音乐"
+      "nameZh": "DLC10 关卡音乐",
+      "nameEn": "DLC 10 In Game Music"
     },
     {
       "guid": "91d4106040681bd41b8bc36f8be147b4",
       "id": "DLC_10_InGame_Music_Alt",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_10_InGame_Music_Alt.asset",
       "bundleName": "bundle418",
-      "nameZh": "DLC10 关卡音乐变体"
+      "nameZh": "DLC10 关卡音乐变体",
+      "nameEn": "DLC 10 In Game Music Alt"
     },
     {
       "guid": "d44f33177035c3043813b66d982d11f2",
       "id": "DLC_10_Map_Screen",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_10_Map_Screen.asset",
       "bundleName": "bundle418",
-      "nameZh": "DLC10 地图界面音乐"
+      "nameZh": "DLC10 地图界面音乐",
+      "nameEn": "DLC 10 Map Screen"
     },
     {
       "guid": "b8b48e5ad677f7a40bbebce8a3e37eb7",
       "id": "DLC_11_Summer_Levels",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_11_Summer_Levels.asset",
       "bundleName": "bundle426",
-      "nameZh": "DLC11 夏日关卡（BGM）"
+      "nameZh": "DLC11 夏日关卡（BGM）",
+      "nameEn": "DLC 11 Summer Levels"
     },
     {
       "guid": "1ab521fb9643d1a418881a83ad5fd981",
       "id": "DLC_11_Summer_WorldMap",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_11_Summer_WorldMap.asset",
       "bundleName": "bundle426",
-      "nameZh": "DLC11 夏日世界地图（BGM）"
+      "nameZh": "DLC11 夏日世界地图（BGM）",
+      "nameEn": "DLC 11 Summer World Map"
     },
     {
       "guid": "eeabfa76da749f548ad7beafc1d9b9d3",
       "id": "DLC_13_InGame_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_13_InGame_Music.asset",
       "bundleName": "bundle446",
-      "nameZh": "DLC13 关卡音乐"
+      "nameZh": "DLC13 关卡音乐",
+      "nameEn": "DLC 13 In Game Music"
     },
     {
       "guid": "1657d7717647ee84f94456088d1b5c87",
       "id": "DLC_13_WorldMap_Music",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_13_WorldMap_Music.asset",
       "bundleName": "bundle447",
-      "nameZh": "DLC13 世界地图音乐"
+      "nameZh": "DLC13 世界地图音乐",
+      "nameEn": "DLC 13 World Map Music"
     },
     {
       "guid": "73e9275a87ac1e748b5f509f9aa76d7e",
       "id": "DLC_WorldMap",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/overcooked_legacy/DLC_WorldMap.asset",
       "bundleName": "bundle18",
-      "nameZh": "DLC 世界地图（BGM）"
+      "nameZh": "DLC 世界地图（BGM）",
+      "nameEn": "DLC World Map"
     },
     {
       "guid": "074d6a985ea749d4b9992b5cdfdee02a",
       "id": "DLC11_Summer_Levels_SO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/DLC11_Summer_Levels_SO.asset",
       "bundleName": "bundle426",
-      "nameZh": "DLC11 夏日关卡（BGM）"
+      "nameZh": "DLC11 夏日关卡（BGM）",
+      "nameEn": "DLC 11 Summer Levels"
     },
     {
       "guid": "0889874564c5eba4fbc287cf6b69568d",
       "id": "DLC2_EnchantedForest",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/overcooked_legacy/DLC2_EnchantedForest.asset",
       "bundleName": "bundle20",
-      "nameZh": "魔法森林（DLC2 BGM）"
+      "nameZh": "魔法森林（DLC2 BGM）",
+      "nameEn": "DLC2 Enchanted Forest"
     },
     {
       "guid": "09b190422880e1d4da2166862cf43761",
       "id": "DownTheRiverSO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/DownTheRiverSO.asset",
       "bundleName": "bundle11",
-      "nameZh": "顺流而下（BGM）"
+      "nameZh": "顺流而下（BGM）",
+      "nameEn": "Down The River"
     },
     {
       "guid": "cd18d98571e68dc45952824e8dc2f433",
       "id": "Festive-Medley",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/overcooked_legacy/Festive-Medley.asset",
       "bundleName": "bundle21",
-      "nameZh": "节日组曲（BGM）"
+      "nameZh": "节日组曲（BGM）",
+      "nameEn": "Festive-Medley"
     },
     {
       "guid": "03297fdfa1d892d44a21907219fd5bd2",
       "id": "OuterSpaceSO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/OuterSpaceSO.asset",
       "bundleName": "bundle15",
-      "nameZh": "外太空（BGM）"
+      "nameZh": "外太空（BGM）",
+      "nameEn": "Outer Space"
     },
     {
       "guid": "b8950437572293e468df0643b8b3810f",
       "id": "Overcooked_02_DLC_05_Level_SO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/Overcooked_02_DLC_05_Level_SO.asset",
       "bundleName": "bundle242",
-      "nameZh": "DLC5 关卡（BGM）"
+      "nameZh": "DLC5 关卡（BGM）",
+      "nameEn": "Overcooked 2 DLC 5 Level"
     },
     {
       "guid": "ce0ac62b06f18ce46861ec8f710f8f99",
       "id": "SpellboundSO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/SpellboundSO.asset",
       "bundleName": "bundle16",
-      "nameZh": "魔咒（BGM）"
+      "nameZh": "魔咒（BGM）",
+      "nameEn": "Spellbound"
     },
     {
       "guid": "d7121698e768b9d49b102fa519dca2a0",
       "id": "TheMineSO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/TheMineSO.asset",
       "bundleName": "bundle16",
-      "nameZh": "矿洞（BGM）"
+      "nameZh": "矿洞（BGM）",
+      "nameEn": "The Mine"
     },
     {
       "guid": "4821c699814fc6246853b9500ac41e8a",
       "id": "TheNeonCitySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/TheNeonCitySO.asset",
       "bundleName": "bundle16",
-      "nameZh": "霓虹城市（BGM）"
+      "nameZh": "霓虹城市（BGM）",
+      "nameEn": "The Neon City"
     },
     {
       "guid": "1e193a12602fcb546abba860ddfe0b9c",
       "id": "TheWalkingBreadSO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/TheWalkingBreadSO.asset",
       "bundleName": "bundle17",
-      "nameZh": "行走的面包（BGM）"
+      "nameZh": "行走的面包（BGM）",
+      "nameEn": "The Walking Bread"
     },
     {
       "guid": "5edc186d16a22244db986b0c34115e3c",
       "id": "Up&AwaySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/music/Up&AwaySO.asset",
       "bundleName": "bundle17",
-      "nameZh": "飞屋环游（BGM）"
+      "nameZh": "飞屋环游（BGM）",
+      "nameEn": "Up&Away"
     }
   ],
   "audioDirectories": [
@@ -402,357 +458,408 @@
       "id": "BoatAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/BoatAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "木筏音效集"
+      "nameZh": "木筏音效集",
+      "nameEn": "Boat Audio Directory"
     },
     {
       "guid": "908e7ffaca822d1439e2f47e01f0e809",
       "id": "BoatAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/BoatAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "木筏音效集"
+      "nameZh": "木筏音效集",
+      "nameEn": "Boat Audio Directory"
     },
     {
       "guid": "318aba72e60547641adf426e9dbf82da",
       "id": "CutsceneTutorialAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/CutsceneTutorialAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "过场教程音效集"
+      "nameZh": "过场教程音效集",
+      "nameEn": "Cutscene Tutorial Audio Directory"
     },
     {
       "guid": "74fc50ee18756c7418c9bdc6dd2b9983",
       "id": "DLC02AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC02AudioDirectory.asset",
       "bundleName": "bundle161",
-      "nameZh": "DLC02 音效集"
+      "nameZh": "DLC02 音效集",
+      "nameEn": "DLC 2 Audio Directory"
     },
     {
       "guid": "1e0a31a7d9dc8ec419e69701fef59706",
       "id": "DLC03AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC03AudioDirectory.asset",
       "bundleName": "bundle208",
-      "nameZh": "DLC03 音效集"
+      "nameZh": "DLC03 音效集",
+      "nameEn": "DLC 3 Audio Directory"
     },
     {
       "guid": "aa38a95c4fb9f494782208c45b9c28f4",
       "id": "DLC03AudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/DLC03AudioDirectorySO.asset",
       "bundleName": "bundle208",
-      "nameZh": "DLC03 音效集"
+      "nameZh": "DLC03 音效集",
+      "nameEn": "DLC 3 Audio Directory"
     },
     {
       "guid": "8801a95ce9abb874399416aba54cbd6a",
       "id": "DLC04AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC04AudioDirectory.asset",
       "bundleName": "bundle224",
-      "nameZh": "DLC04 音效集"
+      "nameZh": "DLC04 音效集",
+      "nameEn": "DLC 4 Audio Directory"
     },
     {
       "guid": "70cc983ca843d8344abddcdfd0098500",
       "id": "DLC05AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC05AudioDirectory.asset",
       "bundleName": "bundle247",
-      "nameZh": "DLC05 音效集"
+      "nameZh": "DLC05 音效集",
+      "nameEn": "DLC 5 Audio Directory"
     },
     {
       "guid": "126755661d3f0dd43a82184c8cf6c36f",
       "id": "DLC07AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC07AudioDirectory.asset",
       "bundleName": "bundle293",
-      "nameZh": "DLC07 音效集"
+      "nameZh": "DLC07 音效集",
+      "nameEn": "DLC 7 Audio Directory"
     },
     {
       "guid": "ff93496191fddcb47afd915ba83d456d",
       "id": "DLC07AudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/DLC07AudioDirectorySO.asset",
       "bundleName": "bundle293",
-      "nameZh": "DLC07 音效集"
+      "nameZh": "DLC07 音效集",
+      "nameEn": "DLC 7 Audio Directory"
     },
     {
       "guid": "7d84a49d4f2448a498a57c752112b832",
       "id": "DLC08AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC08AudioDirectory.asset",
       "bundleName": "bundle354",
-      "nameZh": "DLC08 音效集"
+      "nameZh": "DLC08 音效集",
+      "nameEn": "DLC 8 Audio Directory"
     },
     {
       "guid": "c20a57303b3b1d149a8555505f48b939",
       "id": "DLC09AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC09AudioDirectory.asset",
       "bundleName": "bundle404",
-      "nameZh": "DLC09 音效集"
+      "nameZh": "DLC09 音效集",
+      "nameEn": "DLC 9 Audio Directory"
     },
     {
       "guid": "c093c3f89973a9342a38eb9c46a925c1",
       "id": "DLC09AudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/DLC09AudioDirectorySO.asset",
       "bundleName": "bundle404",
-      "nameZh": "DLC09 音效集"
+      "nameZh": "DLC09 音效集",
+      "nameEn": "DLC 9 Audio Directory"
     },
     {
       "guid": "168505b62aeb9f74eb27a72f0a0211ee",
       "id": "DLC10AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC10AudioDirectory.asset",
       "bundleName": "bundle419",
-      "nameZh": "DLC10 音效集"
+      "nameZh": "DLC10 音效集",
+      "nameEn": "DLC 10 Audio Directory"
     },
     {
       "guid": "4e46a7567e38afa47a4c89cb512ad669",
       "id": "DLC11AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC11AudioDirectory.asset",
       "bundleName": "bundle427",
-      "nameZh": "DLC11 音效集"
+      "nameZh": "DLC11 音效集",
+      "nameEn": "DLC 11 Audio Directory"
     },
     {
       "guid": "c3f00c37698e2c34ea20e0bfff840ec5",
       "id": "DLC11AudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/DLC11AudioDirectorySO.asset",
       "bundleName": "bundle427",
-      "nameZh": "DLC11 音效集"
+      "nameZh": "DLC11 音效集",
+      "nameEn": "DLC 11 Audio Directory"
     },
     {
       "guid": "da3e8485074cd504489bff4b57460fbc",
       "id": "DLC13AudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DLC13AudioDirectory.asset",
       "bundleName": "bundle448",
-      "nameZh": "DLC13 音效集"
+      "nameZh": "DLC13 音效集",
+      "nameEn": "DLC 13 Audio Directory"
     },
     {
       "guid": "38a45ae7efc1f6c4d922ae0c11d884d2",
       "id": "DynamicStage01",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DynamicStage01.asset",
       "bundleName": "bundle18",
-      "nameZh": "动态关卡 1（BGM）"
+      "nameZh": "动态关卡 1（BGM）",
+      "nameEn": "Dynamic Stage 1"
     },
     {
       "guid": "a05578b42b030fa449983088434d2525",
       "id": "DynamicStage01AudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/DynamicStage01AudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "动态关卡 1 音效集"
+      "nameZh": "动态关卡 1 音效集",
+      "nameEn": "Dynamic Stage 1 Audio Directory"
     },
     {
       "guid": "ec6ab70c1ed8c1545b3722f22f1c58ac",
       "id": "DynamicStage02",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DynamicStage02.asset",
       "bundleName": "bundle18",
-      "nameZh": "动态关卡 2（BGM）"
+      "nameZh": "动态关卡 2（BGM）",
+      "nameEn": "Dynamic Stage 2"
     },
     {
       "guid": "09979640a24b3114a827460529b4af47",
       "id": "DynamicStage03",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DynamicStage03.asset",
       "bundleName": "bundle18",
-      "nameZh": "动态关卡 3（BGM）"
+      "nameZh": "动态关卡 3（BGM）",
+      "nameEn": "Dynamic Stage 3"
     },
     {
       "guid": "cd700b7f711e6c84685b0cad775bd396",
       "id": "DynamicStage04",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/DynamicStage04.asset",
       "bundleName": "bundle18",
-      "nameZh": "动态关卡 4（BGM）"
+      "nameZh": "动态关卡 4（BGM）",
+      "nameEn": "Dynamic Stage 4"
     },
     {
       "guid": "aef3c0a0f6bbacd4690f5b17b381a64c",
       "id": "FlamethrowerAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/FlamethrowerAudioDirectory.asset",
       "bundleName": "bundle21",
-      "nameZh": "喷火器音效集"
+      "nameZh": "喷火器音效集",
+      "nameEn": "Flamethrower Audio Directory"
     },
     {
       "guid": "80ec1d5dc08b393418f42e3d2a241a07",
       "id": "FlamethrowerAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/FlamethrowerAudioDirectorySO.asset",
       "bundleName": "bundle21",
-      "nameZh": "喷火器音效集"
+      "nameZh": "喷火器音效集",
+      "nameEn": "Flamethrower Audio Directory"
     },
     {
       "guid": "db18471e5dc49a8468e9e01a119bb301",
       "id": "HotAirBalloon",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/HotAirBalloon.asset",
       "bundleName": "bundle18",
-      "nameZh": "热气球（BGM）"
+      "nameZh": "热气球（BGM）",
+      "nameEn": "Hot Air Balloon"
     },
     {
       "guid": "3045c5db7ad46be45a8578bfcca4c81c",
       "id": "HotAirBalloonAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/HotAirBalloonAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "热气球音效集"
+      "nameZh": "热气球音效集",
+      "nameEn": "Hot Air Balloon Audio Directory"
     },
     {
       "guid": "8864c704d2b95cd4cbd9f383240ddd73",
       "id": "MineAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/MineAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "矿洞音效集"
+      "nameZh": "矿洞音效集",
+      "nameEn": "Mine Audio Directory"
     },
     {
       "guid": "3d4388d3af5c72646a4ab6b7fa5141a0",
       "id": "MineAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/MineAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "矿洞音效集"
+      "nameZh": "矿洞音效集",
+      "nameEn": "Mine Audio Directory"
     },
     {
       "guid": "1fbb7708cd48fc543bc823da88068d16",
       "id": "OnionKingVO",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/OnionKingVO.asset",
       "bundleName": "bundle18",
-      "nameZh": "洋葱国王语音"
+      "nameZh": "洋葱国王语音",
+      "nameEn": "Onion King VO"
     },
     {
       "guid": "77c278f0283d13642b0c764aa2ee81ae",
       "id": "PeckoningAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/PeckoningAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "禽鸟音效集"
+      "nameZh": "禽鸟音效集",
+      "nameEn": "Peckoning Audio Directory"
     },
     {
       "guid": "6601c8856e290ab4d9f9b8469382092f",
       "id": "RapidsAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/RapidsAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "急流音效集"
+      "nameZh": "急流音效集",
+      "nameEn": "Rapids Audio Directory"
     },
     {
       "guid": "4405e9492c6f1a84984fe1ca6d94995b",
       "id": "RapidsAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/RapidsAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "急流音效集"
+      "nameZh": "急流音效集",
+      "nameEn": "Rapids Audio Directory"
     },
     {
       "guid": "bc0e57f0492c9f34d8434ea98b7e9221",
       "id": "RatsAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/RatsAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "老鼠音效集"
+      "nameZh": "老鼠音效集",
+      "nameEn": "Rats Audio Directory"
     },
     {
       "guid": "3d0fe9c3ffd17b94d831f68866d6de6d",
       "id": "RatsAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/RatsAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "老鼠音效集"
+      "nameZh": "老鼠音效集",
+      "nameEn": "Rats Audio Directory"
     },
     {
       "guid": "19922e9a5fe2a1447a090c5338e48ca3",
       "id": "SharedAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/SharedAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "共享音效集"
+      "nameZh": "共享音效集",
+      "nameEn": "Shared Audio Directory"
     },
     {
       "guid": "45abe9378aa684144b655a71d85d422a",
       "id": "SharedAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/SharedAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "共享音效集"
+      "nameZh": "共享音效集",
+      "nameEn": "Shared Audio Directory"
     },
     {
       "guid": "39fb679b7f449c743b4c3aad956283f2",
       "id": "SpaceAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/SpaceAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "太空音效集"
+      "nameZh": "太空音效集",
+      "nameEn": "Space Audio Directory"
     },
     {
       "guid": "70386ece709b4d642900649d518300a1",
       "id": "SpaceAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/SpaceAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "太空音效集"
+      "nameZh": "太空音效集",
+      "nameEn": "Space Audio Directory"
     },
     {
       "guid": "aadba8d3634c47d4c84799385c7e5e6f",
       "id": "StartScreenDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/StartScreenDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "开始界面音效集"
+      "nameZh": "开始界面音效集",
+      "nameEn": "Start Screen Directory"
     },
     {
       "guid": "dcf3b448e45a90a42ab26195a947a3da",
       "id": "StepAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/StepAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "脚步声音效集"
+      "nameZh": "脚步声音效集",
+      "nameEn": "Step Audio Directory"
     },
     {
       "guid": "b298262cebf31cc41ad9e3d8eef6104a",
       "id": "StepAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/StepAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "脚步声音效集"
+      "nameZh": "脚步声音效集",
+      "nameEn": "Step Audio Directory"
     },
     {
       "guid": "558ba4520aa08d34b83c64a76355d31e",
       "id": "SushiAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/SushiAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "寿司音效集"
+      "nameZh": "寿司音效集",
+      "nameEn": "Sushi Audio Directory"
     },
     {
       "guid": "c3d1d7d9880429247949bfc85cb265cd",
       "id": "SushiAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/SushiAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "寿司音效集"
+      "nameZh": "寿司音效集",
+      "nameEn": "Sushi Audio Directory"
     },
     {
       "guid": "e3ac1647c93526e42961a031b08a0e5b",
       "id": "TutorialAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/TutorialAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "教程音效集"
+      "nameZh": "教程音效集",
+      "nameEn": "Tutorial Audio Directory"
     },
     {
       "guid": "5e4c5b9e53ea39945b4223389aebdfd0",
       "id": "UIAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/UIAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "UI 音效集"
+      "nameZh": "UI 音效集",
+      "nameEn": "UIAudio Directory"
     },
     {
       "guid": "193b2f9bf726f474bbcad5946bf20392",
       "id": "UIAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/UIAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "UI 音效集"
+      "nameZh": "UI 音效集",
+      "nameEn": "UIAudio Directory"
     },
     {
       "guid": "1fcaeb229df6ea646a43c7eb8608c8c3",
       "id": "VOAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/VOAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "语音音效集"
+      "nameZh": "语音音效集",
+      "nameEn": "VOAudio Directory"
     },
     {
       "guid": "4c50268f8f711f0478ed2afe1fe04148",
       "id": "VOAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/VOAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "语音音效集"
+      "nameZh": "语音音效集",
+      "nameEn": "VOAudio Directory"
     },
     {
       "guid": "405596569424da740a7454f6f7ecf48f",
       "id": "WizardAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/WizardAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "魔法学校音效集"
+      "nameZh": "魔法学校音效集",
+      "nameEn": "Wizard Audio Directory"
     },
     {
       "guid": "427e0b2543c379b479901029760f5eb0",
       "id": "WizardAudioDirectorySO",
       "assetPath": "Assets/common01/pseudo_prefab_so/audio/AudioDirectories/WizardAudioDirectorySO.asset",
       "bundleName": "bundle18",
-      "nameZh": "魔法学校音效集"
+      "nameZh": "魔法学校音效集",
+      "nameEn": "Wizard Audio Directory"
     },
     {
       "guid": "d771e354c26adbc48a6799eada36f284",
       "id": "WorldMapAudioDirectory",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/AudioDirectories/WorldMapAudioDirectory.asset",
       "bundleName": "bundle18",
-      "nameZh": "世界地图音效集"
+      "nameZh": "世界地图音效集",
+      "nameEn": "World Map Audio Directory"
     }
   ],
   "deathEffects": [
@@ -1689,6 +1796,58 @@
     {
       "name": "DLC_13_Amb_Crowd_Loop",
       "zh": "DLC13 人群环境循环"
+    }
+  ],
+  "itemAudioRules": [
+    {
+      "items": [
+        "DrinksMachine",
+        "CondimentDispenser",
+        "Cannon"
+      ],
+      "theme": "circus",
+      "labelZh": "饮料机（DLC8 马戏团）"
+    },
+    {
+      "items": [
+        "Barbeque"
+      ],
+      "theme": "throne",
+      "labelZh": "烧烤架（DLC2 沙滩）"
+    },
+    {
+      "items": [
+        "Campfire"
+      ],
+      "theme": "camping",
+      "labelZh": "篝火（DLC5 露营）"
+    },
+    {
+      "items": [
+        "Furnace"
+      ],
+      "theme": "dlc07_horde",
+      "labelZh": "熔炉（DLC7 部落）"
+    },
+    {
+      "items": [
+        "Flamethrower",
+        "FireExtinguisher",
+        "Burner"
+      ],
+      "directories": [
+        "FlamethrowerAudioDirectorySO"
+      ],
+      "labelZh": "喷火器"
+    },
+    {
+      "items": [
+        "Wok"
+      ],
+      "directories": [
+        "DLC04AudioDirectory"
+      ],
+      "labelZh": "炒锅（DLC4 新年）"
     }
   ]
 }

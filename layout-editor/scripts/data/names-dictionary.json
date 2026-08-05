@@ -479,8 +479,8 @@
     },
     {
       "id": "Cake_Chocolate_SO",
-      "zh": "巧克力蛋糕",
-      "en": "Chocolate Cake"
+      "zh": "巧克力松饼",
+      "en": "Chocolate Pancake"
     },
     {
       "id": "Cake_Honey_SO",
@@ -2073,11 +2073,6 @@
       "en": "pfx glow"
     },
     {
-      "id": "mat_space_starscape",
-      "zh": "太空星景",
-      "en": "space starscape"
-    },
-    {
       "id": "mat_sp_blacktiles_1_11x3",
       "zh": "黑色瓷砖 11×3",
       "en": "black tiles 11x3"
@@ -2156,6 +2151,11 @@
       "id": "mat_sp_blacktiles_3x5",
       "zh": "黑色瓷砖 3×5",
       "en": "black tiles 3x5"
+    },
+    {
+      "id": "mat_space_starscape",
+      "zh": "太空星景",
+      "en": "space starscape"
     },
     {
       "id": "mat_sunny3_skybox",
@@ -3984,8 +3984,8 @@
     },
     {
       "id": "Pasta_Marinara_SO",
-      "zh": "番茄酱意面",
-      "en": "Pasta Marinara"
+      "zh": "海鲜意面",
+      "en": "Seafood Pasta"
     },
     {
       "id": "Pasta_MeatOnly_SO",
@@ -4768,6 +4768,11 @@
       "en": "Banana Pineapple Smoothie"
     },
     {
+      "id": "Smoothie_Mega",
+      "zh": "什锦冰沙",
+      "en": "Mega Smoothie"
+    },
+    {
       "id": "Smoothie_Melon",
       "zh": "甜瓜冰沙",
       "en": "Melon Smoothie"
@@ -4776,11 +4781,6 @@
       "id": "Smoothie_Strawberry",
       "zh": "草莓冰沙",
       "en": "Strawberry Smoothie"
-    },
-    {
-      "id": "Smoothie_Mega",
-      "zh": "什锦冰沙",
-      "en": "Mega Smoothie"
     },
     {
       "id": "SmoothiePineapple",

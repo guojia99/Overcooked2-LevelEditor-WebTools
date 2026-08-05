@@ -64,6 +64,7 @@
       "step": "FryingPan",
       "ingredients": [
         "TortillaSO",
+        "SushiRiceSO",
         "BurritoChickenSO"
       ]
     },
@@ -72,6 +73,7 @@
       "step": "FryingPan",
       "ingredients": [
         "TortillaSO",
+        "SushiRiceSO",
         "BurritoMeatSO"
       ]
     },
@@ -80,6 +82,7 @@
       "step": "FryingPan",
       "ingredients": [
         "TortillaSO",
+        "SushiRiceSO",
         "MushroomSO"
       ]
     },
@@ -102,7 +105,7 @@
     },
     {
       "id": "Cake_Chocolate_SO",
-      "step": "Mixer",
+      "step": "FryingPan",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -165,7 +168,8 @@
       "step": "Pot",
       "ingredients": [
         "PastaSO",
-        "TomatoSO"
+        "FishSO",
+        "PrawnSO"
       ]
     },
     {
@@ -249,6 +253,7 @@
       "id": "Steamed_Carrot_SO",
       "step": "Steamer",
       "ingredients": [
+        "FlourSO",
         "CarrotSO"
       ]
     },
@@ -263,6 +268,7 @@
       "id": "Steamed_Meat_SO",
       "step": "Steamer",
       "ingredients": [
+        "FlourSO",
         "MeatSO"
       ]
     },
@@ -270,6 +276,7 @@
       "id": "Steamed_Prawns_SO",
       "step": "Steamer",
       "ingredients": [
+        "FlourSO",
         "PrawnSO"
       ]
     },
@@ -297,7 +304,6 @@
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
-        "SushiFishSO",
         "CucumberSO"
       ]
     },
@@ -332,7 +338,7 @@
     },
     {
       "id": "Cake_StrawberryPancake",
-      "step": "GriddlePan",
+      "step": "FryingPan",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -424,7 +430,7 @@
     },
     {
       "id": "Breakfast_Bacon_Egg",
-      "step": "FryingPan",
+      "step": "GriddlePan",
       "ingredients": [
         "Bacon",
         "DLC05_Egg"
@@ -432,7 +438,7 @@
     },
     {
       "id": "Breakfast_Bacon_Egg_Sausage",
-      "step": "FryingPan",
+      "step": "GriddlePan",
       "ingredients": [
         "Bacon",
         "DLC05_Egg",
@@ -441,7 +447,7 @@
     },
     {
       "id": "Breakfast_Sausage_Beans",
-      "step": "FryingPan",
+      "step": "GriddlePan",
       "ingredients": [
         "Sausage",
         "DLC05_Beans"
@@ -449,7 +455,7 @@
     },
     {
       "id": "Breakfast_Sausage_Beans_Egg",
-      "step": "FryingPan",
+      "step": "GriddlePan",
       "ingredients": [
         "Sausage",
         "DLC05_Beans",
@@ -458,7 +464,7 @@
     },
     {
       "id": "Breakfast_Sausage_Beans_Egg_Bacon",
-      "step": "FryingPan",
+      "step": "GriddlePan",
       "ingredients": [
         "Sausage",
         "DLC05_Beans",
@@ -468,7 +474,7 @@
     },
     {
       "id": "Cake_BlueberryPancake",
-      "step": "GriddlePan",
+      "step": "FryingPan",
       "ingredients": [
         "FlourSO",
         "EggSO",

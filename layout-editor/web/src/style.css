@@ -506,7 +506,8 @@ canvas.pan-active {
 
 .modal-body {
   padding: 12px 14px;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   flex: 1;
 }
 
@@ -684,6 +685,8 @@ canvas.pan-active {
 .modal-scroll {
   max-height: 240px;
   overflow-y: auto;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
   margin-top: 6px;
 }
 
@@ -810,12 +813,23 @@ canvas.pan-active {
 .modal-scroll.locked .modal-check {
   opacity: 0.85;
 }
+.mand-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8ab4f8;
+  margin: -6px -8px 6px -8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #2a3a52;
+  background: rgba(138, 180, 248, 0.08);
+}
 .dep-box {
   border: 1px solid #2a2f3a;
   border-radius: 4px;
   padding: 6px 8px;
   font-size: 11px;
   background: rgba(255, 255, 255, 0.02);
+  overflow-x: hidden;
+  overflow-wrap: break-word;
 }
 .dep-box .muted {
   display: block;
@@ -1472,6 +1486,13 @@ body.manage-bg {
   gap: 8px 12px;
 }
 
+.au-pane {
+  display: block;
+}
+.au-pane .modal-scroll {
+  max-height: 260px;
+}
+
 .cfg-ai-bar {
   display: flex;
   align-items: center;
@@ -1877,6 +1898,11 @@ body.manage-bg {
   text-align: center;
 }
 
+.ctx-menu .ctx-pos-input {
+  width: 64px;
+  text-align: center;
+}
+
 .ctx-menu .ctx-stub {
   border-top: 1px solid #4a5060;
   margin: 6px 0 8px;
@@ -2051,4 +2077,144 @@ body.manage-bg {
   font-weight: 600;
   font-size: 14px;
   text-align: center;
+}
+
+/* ---- Audio player bar ---- */
+
+.au-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  background: #252932;
+  border: 1px solid #3a4050;
+  border-radius: 8px;
+}
+
+.au-player-hidden {
+  display: none;
+}
+
+.au-player-label {
+  font-size: 13px;
+  color: #c8ccd4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.au-player-time {
+  font-size: 12px;
+  font-family: monospace;
+  color: #8a8f9a;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.au-player-progress {
+  flex-shrink: 0;
+  width: 160px;
+  height: 6px;
+  appearance: none;
+  background: #3a4050;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.au-player-progress::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #5b8af7;
+  cursor: pointer;
+}
+
+.au-player-progress::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #5b8af7;
+  cursor: pointer;
+  border: none;
+}
+
+/* ---- Audio play button ---- */
+
+.au-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #4a5060;
+  border-radius: 4px;
+  background: #333a45;
+  color: #c0c4cc;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.au-play-btn:hover {
+  background: #3d6bf3;
+  border-color: #3d6bf3;
+  color: #fff;
+}
+
+.au-play-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.au-play-btn.small {
+  width: 22px;
+  height: 18px;
+  font-size: 10px;
+}
+
+/* ---- Audio expand button ---- */
+
+.au-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px;
+  border: 1px solid #3a4050;
+  border-radius: 3px;
+  background: #2a2f38;
+  color: #a0a5b0;
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.au-expand-btn:hover {
+  background: #333a45;
+  color: #d0d4dc;
+}
+
+/* ---- Audio clips panel ---- */
+
+.au-clips {
+  margin: 4px 0 0 22px;
+  padding: 4px 8px;
+  background: #1c1f26;
+  border: 1px solid #2a3040;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.au-clip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  color: #c8ccd4;
 }

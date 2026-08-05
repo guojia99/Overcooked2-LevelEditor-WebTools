@@ -12,7 +12,7 @@ type Rgb = { r: number; g: number; b: number };
 /** Pale tints per catalog category (top-down canvas). */
 const CATEGORY_RGB: Record<string, Rgb> = {
   counters: { r: 118, g: 168, b: 255 },
-  utensils: { r: 255, g: 214, b: 128 },
+  utensils: { r: 255, g: 182, b: 193 },
   mechanisms: { r: 196, g: 148, b: 255 },
   Player: { r: 255, g: 168, b: 188 },
   art: { r: 128, g: 212, b: 168 },
@@ -23,8 +23,13 @@ function rgba(rgb: Rgb, alpha: number): string {
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 }
 
+function topCategory(category: string): string {
+  const slash = category.indexOf("/");
+  return slash === -1 ? category : category.slice(0, slash);
+}
+
 function resolveCategory(cat: CatalogItem | undefined, parentPath: string): string {
-  if (cat?.category) return cat.category;
+  if (cat?.category) return topCategory(cat.category);
   if (parentPath.includes("Counters")) return "counters";
   if (parentPath.includes("Utensils")) return "utensils";
   if (parentPath.includes("Mechanisms")) return "mechanisms";
@@ -50,7 +55,7 @@ export function isSolidCarrier(
   if (isTransparentStackItem(cat, parentPath)) return false;
   if (isStackHostCatalog(cat)) return true;
   if (parentPath.includes("Counters") || parentPath.includes("Mechanisms")) return true;
-  if (cat?.category === "counters" || cat?.category === "mechanisms") return true;
+  if (cat?.category?.startsWith("counters") || cat?.category?.startsWith("mechanisms")) return true;
   return false;
 }
 

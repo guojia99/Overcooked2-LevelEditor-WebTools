@@ -1,917 +1,969 @@
 {
- "schemaVersion": 1,
- "comment": "Audio configuration knowledge shared by build-catalog.mjs (-> audio-catalog.json) and the Unity bridge (LayoutEditorLevelAdminApi.LoadAudioKnowledge). Bundle names are NOT listed here: the authoritative bundle for each music/directory/recipe comes from the PseudoPrefabSO.bundleName field read at runtime. Lookup keys: directory ids use the *SO.asset file name without extension (the variants scenes actually reference).",
- "baseBundles": [
-  "bundle47"
- ],
- "alwaysLoadedBundles": [
-  "bundle18"
- ],
- "mandatoryDirectoryIds": [
-  "SharedAudioDirectorySO",
-  "StepAudioDirectorySO",
-  "VOAudioDirectorySO",
-  "SushiAudioDirectorySO",
-  "UIAudioDirectorySO"
- ],
- "directoryEvents": [
-  {
-   "id": "SharedAudioDirectorySO",
-   "eventsZh": [
-    "上菜正确",
-    "碰撞",
-    "错误/超时",
-    "死亡/滑倒",
-    "煮糊警告",
-    "切菜",
-    "拿取/放下"
-   ],
-   "desc": "全局玩法音效（上菜/碰撞/错误/死亡/煮糊均来自此处）"
-  },
-  {
-   "id": "StepAudioDirectorySO",
-   "eventsZh": [
-    "脚步声"
-   ],
-   "desc": "厨师脚步"
-  },
-  {
-   "id": "VOAudioDirectorySO",
-   "eventsZh": [
-    "洋葱国王语音",
-    "教程 VO"
-   ],
-   "desc": "过场与教程语音"
-  },
-  {
-   "id": "SushiAudioDirectorySO",
-   "eventsZh": [
-    "厨房环境氛围"
-   ],
-   "desc": "室内厨房循环氛围（强制）"
-  },
-  {
-   "id": "UIAudioDirectorySO",
-   "eventsZh": [
-    "UI 选择",
-    "倒计时",
-    "剩余30秒"
-   ],
-   "desc": "界面与计时"
-  },
-  {
-   "id": "WizardAudioDirectorySO",
-   "eventsZh": [
-    "魔法主题音效"
-   ],
-   "desc": "魔法学校主题"
-  },
-  {
-   "id": "SpaceAudioDirectorySO",
-   "eventsZh": [
-    "太空主题音效"
-   ],
-   "desc": "太空主题"
-  },
-  {
-   "id": "RapidsAudioDirectorySO",
-   "eventsZh": [
-    "急流/水花"
-   ],
-   "desc": "木筏急流主题"
-  },
-  {
-   "id": "BoatAudioDirectorySO",
-   "eventsZh": [
-    "木筏/船音效"
-   ],
-   "desc": "木筏主题"
-  },
-  {
-   "id": "MineAudioDirectorySO",
-   "eventsZh": [
-    "矿洞主题音效"
-   ],
-   "desc": "矿洞主题"
-  },
-  {
-   "id": "HotAirBalloonAudioDirectorySO",
-   "eventsZh": [
-    "热气球主题音效"
-   ],
-   "desc": "热气球主题"
-  },
-  {
-   "id": "FlamethrowerAudioDirectorySO",
-   "eventsZh": [
-    "喷火器音效"
-   ],
-   "desc": "喷火器/火焰"
-  },
-  {
-   "id": "RatsAudioDirectorySO",
-   "eventsZh": [
-    "老鼠主题音效"
-   ],
-   "desc": "老鼠主题"
-  },
-  {
-   "id": "DynamicStage01AudioDirectorySO",
-   "eventsZh": [
-    "动态舞台音效"
-   ],
-   "desc": "动态舞台"
-  },
-  {
-   "id": "OnionKingVO",
-   "eventsZh": [
-    "洋葱国王语音"
-   ],
-   "desc": "洋葱国王语音集"
-  },
-  {
-   "id": "DLC02AudioDirectory",
-   "eventsZh": [
-    "DLC2 王座音效"
-   ],
-   "desc": "DLC2 王座"
-  },
-  {
-   "id": "DLC03AudioDirectorySO",
-   "eventsZh": [
-    "圣诞 DLC 音效"
-   ],
-   "desc": "DLC3 圣诞"
-  },
-  {
-   "id": "DLC05AudioDirectory",
-   "eventsZh": [
-    "露营 DLC 音效"
-   ],
-   "desc": "DLC5 露营"
-  },
-  {
-   "id": "DLC07AudioDirectorySO",
-   "eventsZh": [
-    "部落 DLC 音效"
-   ],
-   "desc": "DLC7 部落"
-  },
-  {
-   "id": "DLC08AudioDirectory",
-   "eventsZh": [
-    "马戏团 DLC 音效"
-   ],
-   "desc": "DLC8 马戏团"
-  },
-  {
-   "id": "DLC09AudioDirectorySO",
-   "eventsZh": [
-    "仙境 DLC 音效"
-   ],
-   "desc": "DLC9 仙境"
-  }
- ],
- "themes": [
-  {
-   "key": "city_sushi",
-   "directories": [],
-   "ambiences": [
-    "SushiAmbience",
-    "SushiTrafficIdle"
-   ],
-   "bgm": [
-    "CityLivingSO",
-    "TheNeonCitySO"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "raft",
-   "directories": [
-    "RapidsAudioDirectorySO",
-    "BoatAudioDirectorySO"
-   ],
-   "ambiences": [
-    "RapidsAmbience",
-    "RapidsIntro"
-   ],
-   "bgm": [
-    "DownTheRiverSO"
-   ],
-   "deathTheme": "water"
-  },
-  {
-   "key": "wizard",
-   "directories": [
-    "WizardAudioDirectorySO"
-   ],
-   "ambiences": [
-    "WizardAmbience",
-    "WizardCrowd"
-   ],
-   "bgm": [
-    "SpellboundSO"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "space",
-   "directories": [
-    "SpaceAudioDirectorySO"
-   ],
-   "ambiences": [
-    "SpaceAmb"
-   ],
-   "bgm": [
-    "OuterSpaceSO"
-   ],
-   "deathTheme": "goo"
-  },
-  {
-   "key": "air_balloon",
-   "directories": [
-    "HotAirBalloonAudioDirectorySO"
-   ],
-   "ambiences": [
-    "HotAirBalloonAmb",
-    "HotAirBalloonMotor",
-    "HotAirBallonCrowd"
-   ],
-   "bgm": [
-    "Up&AwaySO"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "mine",
-   "directories": [
-    "MineAudioDirectorySO"
-   ],
-   "ambiences": [],
-   "bgm": [
-    "TheMineSO"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "camping",
-   "directories": [
-    "DLC05AudioDirectory"
-   ],
-   "ambiences": [
-    "DLC_05_Amb_Camp",
-    "DLC_05_Amb_River",
-    "DLC_05_Amb_Crowd"
-   ],
-   "bgm": [
-    "DLC_05_Level",
-    "Overcooked_02_DLC_05_Level_SO"
-   ],
-   "deathTheme": "water"
-  },
-  {
-   "key": "dlc03_christmas",
-   "directories": [
-    "DLC03AudioDirectorySO"
-   ],
-   "ambiences": [
-    "DLC_03_Amb"
-   ],
-   "bgm": [
-    "DLC_03_InGame_Music_SO"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "throne",
-   "directories": [
-    "DLC02AudioDirectory"
-   ],
-   "ambiences": [],
-   "bgm": [
-    "DLC_02_ThroneRoom"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "circus",
-   "directories": [
-    "DLC08AudioDirectory"
-   ],
-   "ambiences": [],
-   "bgm": [
-    "DLC_08_BigTop_Theme"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "dlc08_circus",
-   "directories": [
-    "DLC08AudioDirectory"
-   ],
-   "ambiences": [],
-   "bgm": [
-    "DLC_08_BigTop_Theme",
-    "DLC_08_FairgroundDay_Theme"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "dlc07_horde",
-   "directories": [
-    "DLC07AudioDirectorySO"
-   ],
-   "ambiences": [],
-   "bgm": [
-    "DLC_07_Keep",
-    "DLC_07_Battlements"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "dlc09_wonderland",
-   "directories": [
-    "DLC09AudioDirectorySO"
-   ],
-   "ambiences": [],
-   "bgm": [
-    "DLC_09_Fairground_Music"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "graveyard",
-   "directories": [],
-   "ambiences": [],
-   "bgm": [
-    "TheWalkingBreadSO"
-   ],
-   "deathTheme": ""
-  },
-  {
-   "key": "foodtruck",
-   "directories": [],
-   "ambiences": [],
-   "bgm": [],
-   "deathTheme": ""
-  },
-  {
-   "key": "npc",
-   "directories": [],
-   "ambiences": [],
-   "bgm": [],
-   "deathTheme": ""
-  }
- ],
- "deathThemes": [
-  {
-   "key": "water",
-   "effectIdHint": "WaterSplash_Particle",
-   "note": "普通水面死亡"
-  },
-  {
-   "key": "goo",
-   "effectIdHint": "WaterSplash_GooSplash",
-   "note": "外星黏液死亡"
-  }
- ],
- "ambienceLabels": [
-  {
-   "name": "RestaurantAmbience",
-   "zh": "餐厅环境音"
-  },
-  {
-   "name": "CityAmbience",
-   "zh": "城市环境音"
-  },
-  {
-   "name": "CityAmbience2",
-   "zh": "城市环境音 2"
-  },
-  {
-   "name": "WashingUp",
-   "zh": "洗刷声"
-  },
-  {
-   "name": "Sizzling",
-   "zh": "嗞嗞煎烤声"
-  },
-  {
-   "name": "PanSizzle",
-   "zh": "平底锅嗞嗞声"
-  },
-  {
-   "name": "FryingPanSizzle",
-   "zh": "煎锅嗞嗞声"
-  },
-  {
-   "name": "Flames",
-   "zh": "火焰声"
-  },
-  {
-   "name": "ExtinguisherSpray",
-   "zh": "灭火器喷射"
-  },
-  {
-   "name": "VanEngine",
-   "zh": "货车引擎"
-  },
-  {
-   "name": "KingVOLoop",
-   "zh": "国王语音循环"
-  },
-  {
-   "name": "PeckishDeathRumble",
-   "zh": "饥饿死亡低鸣"
-  },
-  {
-   "name": "Helicopter",
-   "zh": "直升机"
-  },
-  {
-   "name": "Flamethrower",
-   "zh": "喷火器"
-  },
-  {
-   "name": "DynamicStage01AmbInside",
-   "zh": "动态舞台1·室内环境"
-  },
-  {
-   "name": "HotAirBalloonAmb",
-   "zh": "热气球环境"
-  },
-  {
-   "name": "HotAirBalloonMotor",
-   "zh": "热气球马达"
-  },
-  {
-   "name": "HotAirBallonCrowd",
-   "zh": "热气球人群"
-  },
-  {
-   "name": "SushiAmbience",
-   "zh": "厨房/寿司店环境"
-  },
-  {
-   "name": "SushiTrafficIdle",
-   "zh": "寿司店交通怠速"
-  },
-  {
-   "name": "RapidsAmbience",
-   "zh": "急流环境"
-  },
-  {
-   "name": "RapidsIntro",
-   "zh": "急流开场"
-  },
-  {
-   "name": "WizardAmbience",
-   "zh": "魔法学校环境"
-  },
-  {
-   "name": "WizardCrowd",
-   "zh": "魔法学校人群"
-  },
-  {
-   "name": "SushiIntroAmbience",
-   "zh": "寿司店开场环境"
-  },
-  {
-   "name": "FrontendAmbience",
-   "zh": "前端界面环境"
-  },
-  {
-   "name": "TutorialAmbience",
-   "zh": "教程环境"
-  },
-  {
-   "name": "TutorialIntroAmbience",
-   "zh": "教程开场环境"
-  },
-  {
-   "name": "SushiNightAmbience",
-   "zh": "寿司店夜晚环境"
-  },
-  {
-   "name": "DeepFatFryLoop",
-   "zh": "深炸锅循环"
-  },
-  {
-   "name": "OvenLoop",
-   "zh": "烤箱循环"
-  },
-  {
-   "name": "SteamerLoop",
-   "zh": "蒸锅循环"
-  },
-  {
-   "name": "SpaceAmb",
-   "zh": "太空环境"
-  },
-  {
-   "name": "SpaceCameraShake",
-   "zh": "太空震屏"
-  },
-  {
-   "name": "DynamicStage02RiverDrums",
-   "zh": "动态舞台2·河流鼓声"
-  },
-  {
-   "name": "DynamicStage02MineAmb",
-   "zh": "动态舞台2·矿洞环境"
-  },
-  {
-   "name": "DynamicStage02Crowd",
-   "zh": "动态舞台2·人群"
-  },
-  {
-   "name": "DynamicStage02RapidsAmb",
-   "zh": "动态舞台2·急流环境"
-  },
-  {
-   "name": "TutorialBreadMoans",
-   "zh": "教程面包呻吟"
-  },
-  {
-   "name": "CutsceneAmbInside",
-   "zh": "过场·室内环境"
-  },
-  {
-   "name": "CutsceneAmbOutside",
-   "zh": "过场·室外环境"
-  },
-  {
-   "name": "CutsceneAmbCrypt",
-   "zh": "过场·地窖环境"
-  },
-  {
-   "name": "DynamicStage04Amb01",
-   "zh": "动态舞台4·环境 1"
-  },
-  {
-   "name": "DynamicStage04Amb02",
-   "zh": "动态舞台4·环境 2"
-  },
-  {
-   "name": "DynamicStage04AmbFlames",
-   "zh": "动态舞台4·火焰环境"
-  },
-  {
-   "name": "DynamicStage04AmbZombies",
-   "zh": "动态舞台4·丧尸环境"
-  },
-  {
-   "name": "SwampAmbience",
-   "zh": "沼泽环境"
-  },
-  {
-   "name": "MovingPlatform",
-   "zh": "移动平台"
-  },
-  {
-   "name": "OnionKingLoop_01",
-   "zh": "洋葱国王循环 1"
-  },
-  {
-   "name": "OnionKingLoop_Pooch",
-   "zh": "洋葱国王循环（狗）"
-  },
-  {
-   "name": "Tutorial_Amb_No_Rain",
-   "zh": "教程环境（无雨）"
-  },
-  {
-   "name": "Zombie_Wind",
-   "zh": "丧尸风声"
-  },
-  {
-   "name": "UI_Text_Loop",
-   "zh": "UI 文本循环"
-  },
-  {
-   "name": "OnionKingRadioLoop",
-   "zh": "洋葱国王电台循环"
-  },
-  {
-   "name": "WorldMapBoatEngine",
-   "zh": "世界地图·船引擎"
-  },
-  {
-   "name": "WorldMapPlaneEngine",
-   "zh": "世界地图·飞机引擎"
-  },
-  {
-   "name": "HotAirPropFast",
-   "zh": "热气球螺旋桨（快）"
-  },
-  {
-   "name": "WaterJet",
-   "zh": "喷水"
-  },
-  {
-   "name": "Space_Ship_Launch_Loop",
-   "zh": "太空飞船发射循环"
-  },
-  {
-   "name": "DLC_02_Amb",
-   "zh": "DLC2 环境"
-  },
-  {
-   "name": "DLC_02_Amb_Sweetner",
-   "zh": "DLC2 环境点缀"
-  },
-  {
-   "name": "DLC_02_Crowd",
-   "zh": "DLC2 人群"
-  },
-  {
-   "name": "DLC_02_SmoothieMaker",
-   "zh": "DLC2 奶昔机"
-  },
-  {
-   "name": "DLC_02_WaterFlow",
-   "zh": "DLC2 水流"
-  },
-  {
-   "name": "DLC_02_BBQ_Idle",
-   "zh": "DLC2 烧烤架怠速"
-  },
-  {
-   "name": "DLC_02_Seagulls",
-   "zh": "DLC2 海鸥"
-  },
-  {
-   "name": "DLC_02_Bellow_Blank",
-   "zh": "DLC2 风箱"
-  },
-  {
-   "name": "DLC_02_Resort_Amb",
-   "zh": "DLC2 度假区环境"
-  },
-  {
-   "name": "DLC_02_BBQ_Smoke",
-   "zh": "DLC2 烧烤烟"
-  },
-  {
-   "name": "DLC_02_ThroneRoomAmb",
-   "zh": "DLC2 王座厅环境"
-  },
-  {
-   "name": "DLC_03_Amb",
-   "zh": "DLC3 环境"
-  },
-  {
-   "name": "DLC_03_Market_Amb",
-   "zh": "DLC3 集市环境"
-  },
-  {
-   "name": "DLC_Cream_Gun",
-   "zh": "奶油枪"
-  },
-  {
-   "name": "DLC_04_Amb_City",
-   "zh": "DLC4 城市环境"
-  },
-  {
-   "name": "DLC_04_Amb_Garden",
-   "zh": "DLC4 花园环境"
-  },
-  {
-   "name": "DLC_04_Cooking_Pot_Drag",
-   "zh": "DLC4 烹饪锅拖拽"
-  },
-  {
-   "name": "DLC_04_HotPotBubble",
-   "zh": "DLC4 火锅冒泡"
-  },
-  {
-   "name": "DLC_04_Flames",
-   "zh": "DLC4 火焰"
-  },
-  {
-   "name": "DLC_04_Embers",
-   "zh": "DLC4 余烬"
-  },
-  {
-   "name": "DLC_04_Crowd",
-   "zh": "DLC4 人群"
-  },
-  {
-   "name": "DLC_05_Amb_Camp",
-   "zh": "DLC5 营地环境"
-  },
-  {
-   "name": "DLC_05_Amb_Tree",
-   "zh": "DLC5 树林环境"
-  },
-  {
-   "name": "DLC_05_Amb_Special",
-   "zh": "DLC5 特殊环境"
-  },
-  {
-   "name": "DLC_05_Amb_River",
-   "zh": "DLC5 河流环境"
-  },
-  {
-   "name": "DLC_05_Amb_Crowd",
-   "zh": "DLC5 人群"
-  },
-  {
-   "name": "DLC_05_Amb_Camp_Alt",
-   "zh": "DLC5 营地环境（变体）"
-  },
-  {
-   "name": "DLC_05_Amb_Tree_Alt",
-   "zh": "DLC5 树林环境（变体）"
-  },
-  {
-   "name": "DLC_05_Fire_Sml",
-   "zh": "DLC5 篝火（小）"
-  },
-  {
-   "name": "DLC_05_Fire_Med",
-   "zh": "DLC5 篝火（中）"
-  },
-  {
-   "name": "DLC_05_Fire_Lrg",
-   "zh": "DLC5 篝火（大）"
-  },
-  {
-   "name": "DLC_05_LakeLoop",
-   "zh": "DLC5 湖泊循环"
-  },
-  {
-   "name": "DLC_05_Campfire",
-   "zh": "DLC5 营火"
-  },
-  {
-   "name": "DLC_05_Owls",
-   "zh": "DLC5 猫头鹰"
-  },
-  {
-   "name": "DLC_07_Furnace_Burn_Lrg",
-   "zh": "DLC7 熔炉燃烧（大）"
-  },
-  {
-   "name": "DLC_07_Furnace_Burn_Med",
-   "zh": "DLC7 熔炉燃烧（中）"
-  },
-  {
-   "name": "DLC_07_Furnace_Burn_Sml",
-   "zh": "DLC7 熔炉燃烧（小）"
-  },
-  {
-   "name": "DLC_07_Battlements_Amb",
-   "zh": "DLC7 城垛环境"
-  },
-  {
-   "name": "DLC_07_Keep_Amb",
-   "zh": "DLC7 城堡环境"
-  },
-  {
-   "name": "DLC_07_Courtyard_Amb",
-   "zh": "DLC7 庭院环境"
-  },
-  {
-   "name": "DLC_07_Thunder_Loop",
-   "zh": "DLC7 雷声循环"
-  },
-  {
-   "name": "DLC_07_Rain_Loop",
-   "zh": "DLC7 雨声循环"
-  },
-  {
-   "name": "DLC_07_Water_Lap",
-   "zh": "DLC7 水浪"
-  },
-  {
-   "name": "DLC_07_Keep_Amb_Flames",
-   "zh": "DLC7 城堡火焰环境"
-  },
-  {
-   "name": "DLC_07_Generic_Crowd",
-   "zh": "DLC7 通用人群"
-  },
-  {
-   "name": "DLC_07_City_Amb",
-   "zh": "DLC7 城市环境"
-  },
-  {
-   "name": "MixerLoop",
-   "zh": "搅拌机循环"
-  },
-  {
-   "name": "DLC_07_Drone",
-   "zh": "DLC7 低鸣"
-  },
-  {
-   "name": "DLC_07_Drips",
-   "zh": "DLC7 滴水"
-  },
-  {
-   "name": "DLC_07_Wind",
-   "zh": "DLC7 风声"
-  },
-  {
-   "name": "DLC_07_Birds",
-   "zh": "DLC7 鸟鸣"
-  },
-  {
-   "name": "DLC_08_Cannon_Fuse",
-   "zh": "DLC8 大炮引信"
-  },
-  {
-   "name": "DLC_08_Cannon_Rotate",
-   "zh": "DLC8 大炮旋转"
-  },
-  {
-   "name": "DLC_08_FireBreather_Torch",
-   "zh": "DLC8 吞火手火炬"
-  },
-  {
-   "name": "DLC_08_Popcorn_Machine",
-   "zh": "DLC8 爆米花机"
-  },
-  {
-   "name": "DLC_08_Fairground_Day_Amb",
-   "zh": "DLC8 游乐场白天环境"
-  },
-  {
-   "name": "DLC_08_Fairground_Night_Amb",
-   "zh": "DLC8 游乐场夜晚环境"
-  },
-  {
-   "name": "DLC_08_BigTop_Amb",
-   "zh": "DLC8 主篷环境"
-  },
-  {
-   "name": "DLC_08_ThroneRoom_Amb_01",
-   "zh": "DLC8 王座厅环境 1"
-  },
-  {
-   "name": "DLC_08_ThroneRoom_Amb_02",
-   "zh": "DLC8 王座厅环境 2"
-  },
-  {
-   "name": "DLC_08_ThroneRoom_Amb_03",
-   "zh": "DLC8 王座厅环境 3"
-  },
-  {
-   "name": "DLC_08_ThroneRoom_Amb_04",
-   "zh": "DLC8 王座厅环境 4"
-  },
-  {
-   "name": "DLC_09_Water_Lap_Loop",
-   "zh": "DLC9 水浪循环"
-  },
-  {
-   "name": "DLC_09_Water_Move_Loop",
-   "zh": "DLC9 水流循环"
-  },
-  {
-   "name": "DLC_11_Amb_Loop_1_1",
-   "zh": "DLC11 环境循环 1-1"
-  },
-  {
-   "name": "DLC_11_Amb_Loop_1_2",
-   "zh": "DLC11 环境循环 1-2"
-  },
-  {
-   "name": "DLC_11_Amb_Loop_1_3",
-   "zh": "DLC11 环境循环 1-3"
-  },
-  {
-   "name": "DLC_11_Amb_Loop_1_4",
-   "zh": "DLC11 环境循环 1-4"
-  },
-  {
-   "name": "DLC_11_Amb_Loop_1_5",
-   "zh": "DLC11 环境循环 1-5"
-  },
-  {
-   "name": "DLC_11_Firework_Rattle_Loop",
-   "zh": "DLC11 烟花响环循环"
-  },
-  {
-   "name": "DLC_11_Firework_Sparkle_Loop",
-   "zh": "DLC11 烟花闪烁循环"
-  },
-  {
-   "name": "DLC_11_Firework_Rattle_Loop_FadeIn",
-   "zh": "DLC11 烟花响环循环（渐入）"
-  },
-  {
-   "name": "DLC_11_Firework_Fuse_Loop",
-   "zh": "DLC11 烟花引信循环"
-  },
-  {
-   "name": "DLC_13_Amb_Base_Loop",
-   "zh": "DLC13 基础环境循环"
-  },
-  {
-   "name": "DLC_13_Amb_Crowd_Loop",
-   "zh": "DLC13 人群环境循环"
-  }
- ]
+  "schemaVersion": 1,
+  "comment": "Audio configuration knowledge shared by build-catalog.mjs (-> audio-catalog.json) and the Unity bridge (LayoutEditorLevelAdminApi.LoadAudioKnowledge). Bundle names are NOT listed here: the authoritative bundle for each music/directory/recipe comes from the PseudoPrefabSO.bundleName field read at runtime. Lookup keys: directory ids use the *SO.asset file name without extension (the variants scenes actually reference).",
+  "baseBundles": [
+    "bundle47"
+  ],
+  "alwaysLoadedBundles": [
+    "bundle18"
+  ],
+  "mandatoryDirectoryIds": [
+    "SharedAudioDirectorySO",
+    "StepAudioDirectorySO",
+    "VOAudioDirectorySO",
+    "SushiAudioDirectorySO",
+    "UIAudioDirectorySO"
+  ],
+  "directoryEvents": [
+    {
+      "id": "SharedAudioDirectorySO",
+      "eventsZh": [
+        "上菜正确",
+        "碰撞",
+        "错误/超时",
+        "死亡/滑倒",
+        "煮糊警告",
+        "切菜",
+        "拿取/放下"
+      ],
+      "desc": "全局玩法音效（上菜/碰撞/错误/死亡/煮糊均来自此处）"
+    },
+    {
+      "id": "StepAudioDirectorySO",
+      "eventsZh": [
+        "脚步声"
+      ],
+      "desc": "厨师脚步"
+    },
+    {
+      "id": "VOAudioDirectorySO",
+      "eventsZh": [
+        "洋葱国王语音",
+        "教程 VO"
+      ],
+      "desc": "过场与教程语音"
+    },
+    {
+      "id": "SushiAudioDirectorySO",
+      "eventsZh": [
+        "厨房环境氛围"
+      ],
+      "desc": "室内厨房循环氛围（强制）"
+    },
+    {
+      "id": "UIAudioDirectorySO",
+      "eventsZh": [
+        "UI 选择",
+        "倒计时",
+        "剩余30秒"
+      ],
+      "desc": "界面与计时"
+    },
+    {
+      "id": "WizardAudioDirectorySO",
+      "eventsZh": [
+        "魔法主题音效"
+      ],
+      "desc": "魔法学校主题"
+    },
+    {
+      "id": "SpaceAudioDirectorySO",
+      "eventsZh": [
+        "太空主题音效"
+      ],
+      "desc": "太空主题"
+    },
+    {
+      "id": "RapidsAudioDirectorySO",
+      "eventsZh": [
+        "急流/水花"
+      ],
+      "desc": "木筏急流主题"
+    },
+    {
+      "id": "BoatAudioDirectorySO",
+      "eventsZh": [
+        "木筏/船音效"
+      ],
+      "desc": "木筏主题"
+    },
+    {
+      "id": "MineAudioDirectorySO",
+      "eventsZh": [
+        "矿洞主题音效"
+      ],
+      "desc": "矿洞主题"
+    },
+    {
+      "id": "HotAirBalloonAudioDirectorySO",
+      "eventsZh": [
+        "热气球主题音效"
+      ],
+      "desc": "热气球主题"
+    },
+    {
+      "id": "FlamethrowerAudioDirectorySO",
+      "eventsZh": [
+        "喷火器音效"
+      ],
+      "desc": "喷火器/火焰"
+    },
+    {
+      "id": "RatsAudioDirectorySO",
+      "eventsZh": [
+        "老鼠主题音效"
+      ],
+      "desc": "老鼠主题"
+    },
+    {
+      "id": "DynamicStage01AudioDirectorySO",
+      "eventsZh": [
+        "动态舞台音效"
+      ],
+      "desc": "动态舞台"
+    },
+    {
+      "id": "OnionKingVO",
+      "eventsZh": [
+        "洋葱国王语音"
+      ],
+      "desc": "洋葱国王语音集"
+    },
+    {
+      "id": "DLC02AudioDirectory",
+      "eventsZh": [
+        "DLC2 王座音效"
+      ],
+      "desc": "DLC2 王座"
+    },
+    {
+      "id": "DLC03AudioDirectorySO",
+      "eventsZh": [
+        "圣诞 DLC 音效"
+      ],
+      "desc": "DLC3 圣诞"
+    },
+    {
+      "id": "DLC05AudioDirectory",
+      "eventsZh": [
+        "露营 DLC 音效"
+      ],
+      "desc": "DLC5 露营"
+    },
+    {
+      "id": "DLC07AudioDirectorySO",
+      "eventsZh": [
+        "部落 DLC 音效"
+      ],
+      "desc": "DLC7 部落"
+    },
+    {
+      "id": "DLC08AudioDirectory",
+      "eventsZh": [
+        "马戏团 DLC 音效"
+      ],
+      "desc": "DLC8 马戏团"
+    },
+    {
+      "id": "DLC09AudioDirectorySO",
+      "eventsZh": [
+        "仙境 DLC 音效"
+      ],
+      "desc": "DLC9 仙境"
+    }
+  ],
+  "themes": [
+    {
+      "key": "city_sushi",
+      "directories": [],
+      "ambiences": [
+        "SushiAmbience",
+        "SushiTrafficIdle"
+      ],
+      "bgm": [
+        "CityLivingSO",
+        "TheNeonCitySO"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "raft",
+      "directories": [
+        "RapidsAudioDirectorySO",
+        "BoatAudioDirectorySO"
+      ],
+      "ambiences": [
+        "RapidsAmbience",
+        "RapidsIntro"
+      ],
+      "bgm": [
+        "DownTheRiverSO"
+      ],
+      "deathTheme": "water"
+    },
+    {
+      "key": "wizard",
+      "directories": [
+        "WizardAudioDirectorySO"
+      ],
+      "ambiences": [
+        "WizardAmbience",
+        "WizardCrowd"
+      ],
+      "bgm": [
+        "SpellboundSO"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "space",
+      "directories": [
+        "SpaceAudioDirectorySO"
+      ],
+      "ambiences": [
+        "SpaceAmb"
+      ],
+      "bgm": [
+        "OuterSpaceSO"
+      ],
+      "deathTheme": "goo"
+    },
+    {
+      "key": "air_balloon",
+      "directories": [
+        "HotAirBalloonAudioDirectorySO"
+      ],
+      "ambiences": [
+        "HotAirBalloonAmb",
+        "HotAirBalloonMotor",
+        "HotAirBallonCrowd"
+      ],
+      "bgm": [
+        "Up&AwaySO"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "mine",
+      "directories": [
+        "MineAudioDirectorySO"
+      ],
+      "ambiences": [],
+      "bgm": [
+        "TheMineSO"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "camping",
+      "directories": [
+        "DLC05AudioDirectory"
+      ],
+      "ambiences": [
+        "DLC_05_Amb_Camp",
+        "DLC_05_Amb_River",
+        "DLC_05_Amb_Crowd"
+      ],
+      "bgm": [
+        "DLC_05_Level",
+        "Overcooked_02_DLC_05_Level_SO"
+      ],
+      "deathTheme": "water"
+    },
+    {
+      "key": "dlc03_christmas",
+      "directories": [
+        "DLC03AudioDirectorySO"
+      ],
+      "ambiences": [
+        "DLC_03_Amb"
+      ],
+      "bgm": [
+        "DLC_03_InGame_Music_SO"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "throne",
+      "directories": [
+        "DLC02AudioDirectory"
+      ],
+      "ambiences": [],
+      "bgm": [
+        "DLC_02_ThroneRoom"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "circus",
+      "directories": [
+        "DLC08AudioDirectory"
+      ],
+      "ambiences": [],
+      "bgm": [
+        "DLC_08_BigTop_Theme"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "dlc08_circus",
+      "directories": [
+        "DLC08AudioDirectory"
+      ],
+      "ambiences": [],
+      "bgm": [
+        "DLC_08_BigTop_Theme",
+        "DLC_08_FairgroundDay_Theme"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "dlc07_horde",
+      "directories": [
+        "DLC07AudioDirectorySO"
+      ],
+      "ambiences": [],
+      "bgm": [
+        "DLC_07_Keep",
+        "DLC_07_Battlements"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "dlc09_wonderland",
+      "directories": [
+        "DLC09AudioDirectorySO"
+      ],
+      "ambiences": [],
+      "bgm": [
+        "DLC_09_Fairground_Music"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "graveyard",
+      "directories": [],
+      "ambiences": [],
+      "bgm": [
+        "TheWalkingBreadSO"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "foodtruck",
+      "directories": [],
+      "ambiences": [],
+      "bgm": [],
+      "deathTheme": ""
+    },
+    {
+      "key": "npc",
+      "directories": [],
+      "ambiences": [],
+      "bgm": [],
+      "deathTheme": ""
+    }
+  ],
+  "deathThemes": [
+    {
+      "key": "water",
+      "effectIdHint": "WaterSplash_Particle",
+      "note": "普通水面死亡"
+    },
+    {
+      "key": "goo",
+      "effectIdHint": "WaterSplash_GooSplash",
+      "note": "外星黏液死亡"
+    }
+  ],
+  "ambienceLabels": [
+    {
+      "name": "RestaurantAmbience",
+      "zh": "餐厅环境音"
+    },
+    {
+      "name": "CityAmbience",
+      "zh": "城市环境音"
+    },
+    {
+      "name": "CityAmbience2",
+      "zh": "城市环境音 2"
+    },
+    {
+      "name": "WashingUp",
+      "zh": "洗刷声"
+    },
+    {
+      "name": "Sizzling",
+      "zh": "嗞嗞煎烤声"
+    },
+    {
+      "name": "PanSizzle",
+      "zh": "平底锅嗞嗞声"
+    },
+    {
+      "name": "FryingPanSizzle",
+      "zh": "煎锅嗞嗞声"
+    },
+    {
+      "name": "Flames",
+      "zh": "火焰声"
+    },
+    {
+      "name": "ExtinguisherSpray",
+      "zh": "灭火器喷射"
+    },
+    {
+      "name": "VanEngine",
+      "zh": "货车引擎"
+    },
+    {
+      "name": "KingVOLoop",
+      "zh": "国王语音循环"
+    },
+    {
+      "name": "PeckishDeathRumble",
+      "zh": "饥饿死亡低鸣"
+    },
+    {
+      "name": "Helicopter",
+      "zh": "直升机"
+    },
+    {
+      "name": "Flamethrower",
+      "zh": "喷火器"
+    },
+    {
+      "name": "DynamicStage01AmbInside",
+      "zh": "动态舞台1·室内环境"
+    },
+    {
+      "name": "HotAirBalloonAmb",
+      "zh": "热气球环境"
+    },
+    {
+      "name": "HotAirBalloonMotor",
+      "zh": "热气球马达"
+    },
+    {
+      "name": "HotAirBallonCrowd",
+      "zh": "热气球人群"
+    },
+    {
+      "name": "SushiAmbience",
+      "zh": "厨房/寿司店环境"
+    },
+    {
+      "name": "SushiTrafficIdle",
+      "zh": "寿司店交通怠速"
+    },
+    {
+      "name": "RapidsAmbience",
+      "zh": "急流环境"
+    },
+    {
+      "name": "RapidsIntro",
+      "zh": "急流开场"
+    },
+    {
+      "name": "WizardAmbience",
+      "zh": "魔法学校环境"
+    },
+    {
+      "name": "WizardCrowd",
+      "zh": "魔法学校人群"
+    },
+    {
+      "name": "SushiIntroAmbience",
+      "zh": "寿司店开场环境"
+    },
+    {
+      "name": "FrontendAmbience",
+      "zh": "前端界面环境"
+    },
+    {
+      "name": "TutorialAmbience",
+      "zh": "教程环境"
+    },
+    {
+      "name": "TutorialIntroAmbience",
+      "zh": "教程开场环境"
+    },
+    {
+      "name": "SushiNightAmbience",
+      "zh": "寿司店夜晚环境"
+    },
+    {
+      "name": "DeepFatFryLoop",
+      "zh": "深炸锅循环"
+    },
+    {
+      "name": "OvenLoop",
+      "zh": "烤箱循环"
+    },
+    {
+      "name": "SteamerLoop",
+      "zh": "蒸锅循环"
+    },
+    {
+      "name": "SpaceAmb",
+      "zh": "太空环境"
+    },
+    {
+      "name": "SpaceCameraShake",
+      "zh": "太空震屏"
+    },
+    {
+      "name": "DynamicStage02RiverDrums",
+      "zh": "动态舞台2·河流鼓声"
+    },
+    {
+      "name": "DynamicStage02MineAmb",
+      "zh": "动态舞台2·矿洞环境"
+    },
+    {
+      "name": "DynamicStage02Crowd",
+      "zh": "动态舞台2·人群"
+    },
+    {
+      "name": "DynamicStage02RapidsAmb",
+      "zh": "动态舞台2·急流环境"
+    },
+    {
+      "name": "TutorialBreadMoans",
+      "zh": "教程面包呻吟"
+    },
+    {
+      "name": "CutsceneAmbInside",
+      "zh": "过场·室内环境"
+    },
+    {
+      "name": "CutsceneAmbOutside",
+      "zh": "过场·室外环境"
+    },
+    {
+      "name": "CutsceneAmbCrypt",
+      "zh": "过场·地窖环境"
+    },
+    {
+      "name": "DynamicStage04Amb01",
+      "zh": "动态舞台4·环境 1"
+    },
+    {
+      "name": "DynamicStage04Amb02",
+      "zh": "动态舞台4·环境 2"
+    },
+    {
+      "name": "DynamicStage04AmbFlames",
+      "zh": "动态舞台4·火焰环境"
+    },
+    {
+      "name": "DynamicStage04AmbZombies",
+      "zh": "动态舞台4·丧尸环境"
+    },
+    {
+      "name": "SwampAmbience",
+      "zh": "沼泽环境"
+    },
+    {
+      "name": "MovingPlatform",
+      "zh": "移动平台"
+    },
+    {
+      "name": "OnionKingLoop_01",
+      "zh": "洋葱国王循环 1"
+    },
+    {
+      "name": "OnionKingLoop_Pooch",
+      "zh": "洋葱国王循环（狗）"
+    },
+    {
+      "name": "Tutorial_Amb_No_Rain",
+      "zh": "教程环境（无雨）"
+    },
+    {
+      "name": "Zombie_Wind",
+      "zh": "丧尸风声"
+    },
+    {
+      "name": "UI_Text_Loop",
+      "zh": "UI 文本循环"
+    },
+    {
+      "name": "OnionKingRadioLoop",
+      "zh": "洋葱国王电台循环"
+    },
+    {
+      "name": "WorldMapBoatEngine",
+      "zh": "世界地图·船引擎"
+    },
+    {
+      "name": "WorldMapPlaneEngine",
+      "zh": "世界地图·飞机引擎"
+    },
+    {
+      "name": "HotAirPropFast",
+      "zh": "热气球螺旋桨（快）"
+    },
+    {
+      "name": "WaterJet",
+      "zh": "喷水"
+    },
+    {
+      "name": "Space_Ship_Launch_Loop",
+      "zh": "太空飞船发射循环"
+    },
+    {
+      "name": "DLC_02_Amb",
+      "zh": "DLC2 环境"
+    },
+    {
+      "name": "DLC_02_Amb_Sweetner",
+      "zh": "DLC2 环境点缀"
+    },
+    {
+      "name": "DLC_02_Crowd",
+      "zh": "DLC2 人群"
+    },
+    {
+      "name": "DLC_02_SmoothieMaker",
+      "zh": "DLC2 奶昔机"
+    },
+    {
+      "name": "DLC_02_WaterFlow",
+      "zh": "DLC2 水流"
+    },
+    {
+      "name": "DLC_02_BBQ_Idle",
+      "zh": "DLC2 烧烤架怠速"
+    },
+    {
+      "name": "DLC_02_Seagulls",
+      "zh": "DLC2 海鸥"
+    },
+    {
+      "name": "DLC_02_Bellow_Blank",
+      "zh": "DLC2 风箱"
+    },
+    {
+      "name": "DLC_02_Resort_Amb",
+      "zh": "DLC2 度假区环境"
+    },
+    {
+      "name": "DLC_02_BBQ_Smoke",
+      "zh": "DLC2 烧烤烟"
+    },
+    {
+      "name": "DLC_02_ThroneRoomAmb",
+      "zh": "DLC2 王座厅环境"
+    },
+    {
+      "name": "DLC_03_Amb",
+      "zh": "DLC3 环境"
+    },
+    {
+      "name": "DLC_03_Market_Amb",
+      "zh": "DLC3 集市环境"
+    },
+    {
+      "name": "DLC_Cream_Gun",
+      "zh": "奶油枪"
+    },
+    {
+      "name": "DLC_04_Amb_City",
+      "zh": "DLC4 城市环境"
+    },
+    {
+      "name": "DLC_04_Amb_Garden",
+      "zh": "DLC4 花园环境"
+    },
+    {
+      "name": "DLC_04_Cooking_Pot_Drag",
+      "zh": "DLC4 烹饪锅拖拽"
+    },
+    {
+      "name": "DLC_04_HotPotBubble",
+      "zh": "DLC4 火锅冒泡"
+    },
+    {
+      "name": "DLC_04_Flames",
+      "zh": "DLC4 火焰"
+    },
+    {
+      "name": "DLC_04_Embers",
+      "zh": "DLC4 余烬"
+    },
+    {
+      "name": "DLC_04_Crowd",
+      "zh": "DLC4 人群"
+    },
+    {
+      "name": "DLC_05_Amb_Camp",
+      "zh": "DLC5 营地环境"
+    },
+    {
+      "name": "DLC_05_Amb_Tree",
+      "zh": "DLC5 树林环境"
+    },
+    {
+      "name": "DLC_05_Amb_Special",
+      "zh": "DLC5 特殊环境"
+    },
+    {
+      "name": "DLC_05_Amb_River",
+      "zh": "DLC5 河流环境"
+    },
+    {
+      "name": "DLC_05_Amb_Crowd",
+      "zh": "DLC5 人群"
+    },
+    {
+      "name": "DLC_05_Amb_Camp_Alt",
+      "zh": "DLC5 营地环境（变体）"
+    },
+    {
+      "name": "DLC_05_Amb_Tree_Alt",
+      "zh": "DLC5 树林环境（变体）"
+    },
+    {
+      "name": "DLC_05_Fire_Sml",
+      "zh": "DLC5 篝火（小）"
+    },
+    {
+      "name": "DLC_05_Fire_Med",
+      "zh": "DLC5 篝火（中）"
+    },
+    {
+      "name": "DLC_05_Fire_Lrg",
+      "zh": "DLC5 篝火（大）"
+    },
+    {
+      "name": "DLC_05_LakeLoop",
+      "zh": "DLC5 湖泊循环"
+    },
+    {
+      "name": "DLC_05_Campfire",
+      "zh": "DLC5 营火"
+    },
+    {
+      "name": "DLC_05_Owls",
+      "zh": "DLC5 猫头鹰"
+    },
+    {
+      "name": "DLC_07_Furnace_Burn_Lrg",
+      "zh": "DLC7 熔炉燃烧（大）"
+    },
+    {
+      "name": "DLC_07_Furnace_Burn_Med",
+      "zh": "DLC7 熔炉燃烧（中）"
+    },
+    {
+      "name": "DLC_07_Furnace_Burn_Sml",
+      "zh": "DLC7 熔炉燃烧（小）"
+    },
+    {
+      "name": "DLC_07_Battlements_Amb",
+      "zh": "DLC7 城垛环境"
+    },
+    {
+      "name": "DLC_07_Keep_Amb",
+      "zh": "DLC7 城堡环境"
+    },
+    {
+      "name": "DLC_07_Courtyard_Amb",
+      "zh": "DLC7 庭院环境"
+    },
+    {
+      "name": "DLC_07_Thunder_Loop",
+      "zh": "DLC7 雷声循环"
+    },
+    {
+      "name": "DLC_07_Rain_Loop",
+      "zh": "DLC7 雨声循环"
+    },
+    {
+      "name": "DLC_07_Water_Lap",
+      "zh": "DLC7 水浪"
+    },
+    {
+      "name": "DLC_07_Keep_Amb_Flames",
+      "zh": "DLC7 城堡火焰环境"
+    },
+    {
+      "name": "DLC_07_Generic_Crowd",
+      "zh": "DLC7 通用人群"
+    },
+    {
+      "name": "DLC_07_City_Amb",
+      "zh": "DLC7 城市环境"
+    },
+    {
+      "name": "MixerLoop",
+      "zh": "搅拌机循环"
+    },
+    {
+      "name": "DLC_07_Drone",
+      "zh": "DLC7 低鸣"
+    },
+    {
+      "name": "DLC_07_Drips",
+      "zh": "DLC7 滴水"
+    },
+    {
+      "name": "DLC_07_Wind",
+      "zh": "DLC7 风声"
+    },
+    {
+      "name": "DLC_07_Birds",
+      "zh": "DLC7 鸟鸣"
+    },
+    {
+      "name": "DLC_08_Cannon_Fuse",
+      "zh": "DLC8 大炮引信"
+    },
+    {
+      "name": "DLC_08_Cannon_Rotate",
+      "zh": "DLC8 大炮旋转"
+    },
+    {
+      "name": "DLC_08_FireBreather_Torch",
+      "zh": "DLC8 吞火手火炬"
+    },
+    {
+      "name": "DLC_08_Popcorn_Machine",
+      "zh": "DLC8 爆米花机"
+    },
+    {
+      "name": "DLC_08_Fairground_Day_Amb",
+      "zh": "DLC8 游乐场白天环境"
+    },
+    {
+      "name": "DLC_08_Fairground_Night_Amb",
+      "zh": "DLC8 游乐场夜晚环境"
+    },
+    {
+      "name": "DLC_08_BigTop_Amb",
+      "zh": "DLC8 主篷环境"
+    },
+    {
+      "name": "DLC_08_ThroneRoom_Amb_01",
+      "zh": "DLC8 王座厅环境 1"
+    },
+    {
+      "name": "DLC_08_ThroneRoom_Amb_02",
+      "zh": "DLC8 王座厅环境 2"
+    },
+    {
+      "name": "DLC_08_ThroneRoom_Amb_03",
+      "zh": "DLC8 王座厅环境 3"
+    },
+    {
+      "name": "DLC_08_ThroneRoom_Amb_04",
+      "zh": "DLC8 王座厅环境 4"
+    },
+    {
+      "name": "DLC_09_Water_Lap_Loop",
+      "zh": "DLC9 水浪循环"
+    },
+    {
+      "name": "DLC_09_Water_Move_Loop",
+      "zh": "DLC9 水流循环"
+    },
+    {
+      "name": "DLC_11_Amb_Loop_1_1",
+      "zh": "DLC11 环境循环 1-1"
+    },
+    {
+      "name": "DLC_11_Amb_Loop_1_2",
+      "zh": "DLC11 环境循环 1-2"
+    },
+    {
+      "name": "DLC_11_Amb_Loop_1_3",
+      "zh": "DLC11 环境循环 1-3"
+    },
+    {
+      "name": "DLC_11_Amb_Loop_1_4",
+      "zh": "DLC11 环境循环 1-4"
+    },
+    {
+      "name": "DLC_11_Amb_Loop_1_5",
+      "zh": "DLC11 环境循环 1-5"
+    },
+    {
+      "name": "DLC_11_Firework_Rattle_Loop",
+      "zh": "DLC11 烟花响环循环"
+    },
+    {
+      "name": "DLC_11_Firework_Sparkle_Loop",
+      "zh": "DLC11 烟花闪烁循环"
+    },
+    {
+      "name": "DLC_11_Firework_Rattle_Loop_FadeIn",
+      "zh": "DLC11 烟花响环循环（渐入）"
+    },
+    {
+      "name": "DLC_11_Firework_Fuse_Loop",
+      "zh": "DLC11 烟花引信循环"
+    },
+    {
+      "name": "DLC_13_Amb_Base_Loop",
+      "zh": "DLC13 基础环境循环"
+    },
+    {
+      "name": "DLC_13_Amb_Crowd_Loop",
+      "zh": "DLC13 人群环境循环"
+    }
+  ],
+  "itemAudioRules": [
+    {
+      "items": [
+        "DrinksMachine",
+        "CondimentDispenser",
+        "Cannon"
+      ],
+      "theme": "circus",
+      "labelZh": "饮料机（DLC8 马戏团）"
+    },
+    {
+      "items": [
+        "Barbeque"
+      ],
+      "theme": "throne",
+      "labelZh": "烧烤架（DLC2 沙滩）"
+    },
+    {
+      "items": [
+        "Campfire"
+      ],
+      "theme": "camping",
+      "labelZh": "篝火（DLC5 露营）"
+    },
+    {
+      "items": [
+        "Furnace"
+      ],
+      "theme": "dlc07_horde",
+      "labelZh": "熔炉（DLC7 部落）"
+    },
+    {
+      "items": [
+        "Flamethrower",
+        "FireExtinguisher",
+        "Burner"
+      ],
+      "directories": [
+        "FlamethrowerAudioDirectorySO"
+      ],
+      "labelZh": "喷火器"
+    },
+    {
+      "items": [
+        "Wok"
+      ],
+      "directories": [
+        "DLC04AudioDirectory"
+      ],
+      "labelZh": "炒锅（DLC4 新年）"
+    }
+  ]
 }

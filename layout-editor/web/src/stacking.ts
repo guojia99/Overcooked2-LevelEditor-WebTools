@@ -150,7 +150,9 @@ export function applyStackOnHost(
 ): void {
   utensil._wx = host._wx;
   utensil._wz = host._wz;
-  utensil.localPosition.y = stackY;
+  if (utensil.localPosition.y <= 0.001) {
+    utensil.localPosition.y = stackY;
+  }
   utensil.localPosition.x = snapScalar(utensil._wx - utensil._parentWx);
   utensil.localPosition.z = snapScalar(utensil._wz - utensil._parentWz);
 }

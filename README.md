@@ -23,9 +23,9 @@
 1. 将本仓库下载到你的本地
 - https://github.com/guojia99/Overcooked2-LevelEditor-WebTools
 - 或者在QQ群 1091785437 获取
-2. 将`LayoutEditor` 放到`Overcooked2-LevelEditor/Assets/Editor`中
+2. 将`LayoutEditor` 放到`../Overcooked2-LevelEditor-20260804/Assets/Editor`中
 ![img_2.png](img/img_2.png)
-3. 将`layout-editor` 放到`Overcooked2-LevelEditor/` 目录下即可
+3. 将`layout-editor` 放到`../Overcooked2-LevelEditor-20260804/` 目录下即可
 ![img_1.png](img/img_1.png)
 4. 点击菜单`Tool`菜单Open Bridge 即可使用
    ![img.png](img/img.png)
@@ -110,6 +110,14 @@
     - 优化布局编辑页的UI
     - 支持了物品检视
     - 支持锅具食材搜索
-- 2026080x       v0.4.0
-  - todo 待开发
-  - 支持自定义菜单。
+- 20260805       v0.3.3
+  - bug
+    - 修复锅具最低高度被限制的问题。
+    - 修复默认模板玩家碰撞bug
+    - 修复菜单的错误食材、锅具。
+  - 功能
+    - 支持输入坐标、高度坐标。
+    - 支持音频查看。
+    - 支持菜单内容自动回写，支持编辑器v0.9的自动补全功能。
+    - 优化食材菜单UI
+    - 支持锅具可指定中间产物。

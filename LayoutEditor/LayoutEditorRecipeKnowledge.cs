@@ -44,6 +44,7 @@ public static class LayoutEditorRecipeKnowledge
     private static HashSet<string> _cookSteps;
     private static bool _loaded;
     private static bool _knowledgeFileLoaded;
+    private static DateTime _lastWriteTime;
 
     /// <summary>False when the shared JSON is missing/unreadable and hardcoded fallback tables are in use.</summary>
     public static bool KnowledgeFileLoaded
@@ -57,9 +58,12 @@ public static class LayoutEditorRecipeKnowledge
 
     private static void EnsureLoaded()
     {
-        if (_loaded)
+        var path = KnowledgePath();
+        var writeTime = File.Exists(path) ? File.GetLastWriteTimeUtc(path) : DateTime.MinValue;
+        if (_loaded && writeTime == _lastWriteTime)
             return;
         _loaded = true;
+        _lastWriteTime = writeTime;
 
         if (TryLoadFromJson(out _originals, out _skip, out _cookSteps))
         {
@@ -144,13 +148,13 @@ public static class LayoutEditorRecipeKnowledge
         Put(d, "Burger_LettuceTomato_SO", "FryingPan", "DLC02_ChoppedBun", "LettuceSO", "TomatoSO", "MeatSO");
         Put(d, "Burger_CheeseLettuce_SO", "FryingPan", "DLC02_ChoppedBun", "CheeseSO", "LettuceSO", "MeatSO");
 
-        Put(d, "Burrito_Chicken_SO", "FryingPan", "TortillaSO", "BurritoChickenSO");
-        Put(d, "Burrito_Meat_SO", "FryingPan", "TortillaSO", "BurritoMeatSO");
-        Put(d, "Burrito_Mushroom_SO", "FryingPan", "TortillaSO", "MushroomSO");
+        Put(d, "Burrito_Chicken_SO", "FryingPan", "TortillaSO", "SushiRiceSO", "BurritoChickenSO");
+        Put(d, "Burrito_Meat_SO", "FryingPan", "TortillaSO", "SushiRiceSO", "BurritoMeatSO");
+        Put(d, "Burrito_Mushroom_SO", "FryingPan", "TortillaSO", "SushiRiceSO", "MushroomSO");
 
         Put(d, "Cake_Plain_SO", "Mixer", "FlourSO", "EggSO");
         Put(d, "Cake_Honey_SO", "Mixer", "FlourSO", "EggSO", "HoneycombSO");
-        Put(d, "Cake_Chocolate_SO", "Mixer", "FlourSO", "EggSO", "ChocolateSO");
+        Put(d, "Cake_Chocolate_SO", "FryingPan", "FlourSO", "EggSO", "ChocolateSO");
         Put(d, "Cake_HoneyCarrot_SO", "Mixer", "FlourSO", "EggSO", "HoneycombSO", "CarrotSO");
         Put(d, "Cake_HoneyChocolate_SO", "Mixer", "FlourSO", "EggSO", "HoneycombSO", "ChocolateSO");
 
@@ -160,7 +164,7 @@ public static class LayoutEditorRecipeKnowledge
 
         Put(d, "OnionCarrotPotatoSoup_SO", "Pot", "OnionSO", "CarrotSO", "PotatoSO");
 
-        Put(d, "Pasta_Marinara_SO", "Pot", "PastaSO", "TomatoSO");
+        Put(d, "Pasta_Marinara_SO", "Pot", "PastaSO", "FishSO", "PrawnSO");
         Put(d, "Pasta_MeatOnly_SO", "Pot", "PastaSO", "MeatSO");
         Put(d, "Pasta_MushroomOnly_SO", "Pot", "PastaSO", "MushroomSO");
         Put(d, "Pasta_TomatoOnly_SO", "Pot", "PastaSO", "TomatoSO");
@@ -173,14 +177,14 @@ public static class LayoutEditorRecipeKnowledge
         Put(d, "Salad_Cucumber_SO", "", "LettuceSO", "TomatoSO", "CucumberSO");
         Put(d, "Salad_Tomato_SO", "", "LettuceSO", "TomatoSO");
 
-        Put(d, "Steamed_Carrot_SO", "Steamer", "CarrotSO");
+        Put(d, "Steamed_Carrot_SO", "Steamer", "FlourSO", "CarrotSO");
         Put(d, "Steamed_Fish_SO", "Steamer", "FishSO");
-        Put(d, "Steamed_Meat_SO", "Steamer", "MeatSO");
-        Put(d, "Steamed_Prawns_SO", "Steamer", "PrawnSO");
+        Put(d, "Steamed_Meat_SO", "Steamer", "FlourSO", "MeatSO");
+        Put(d, "Steamed_Prawns_SO", "Steamer", "FlourSO", "PrawnSO");
 
         Put(d, "Sushi_PlainFish_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiFishSO");
         Put(d, "Sushi_PlainPrawn_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiPrawnSO");
-        Put(d, "Sushi_Cucumber_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiFishSO", "CucumberSO");
+        Put(d, "Sushi_Cucumber_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "CucumberSO");
         Put(d, "Sushi_Fish_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiFishSO");
         Put(d, "Sushi_All_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiFishSO", "SushiPrawnSO", "CucumberSO");
 

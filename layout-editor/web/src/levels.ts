@@ -1,6 +1,9 @@
 import * as api from "./api";
 import type {
   AudioDirectoryEntry,
+  AudioExportManifest,
+  AudioExportSfxDir,
+  AudioItemRule,
   AudioKnowledge,
   BundleAnalysis,
   DeathEffectEntry,
@@ -736,6 +739,8 @@ export interface ThemeSignals {
   raft: boolean;
   /** "" | "water" | "goo" — inferred death theme. */
   deathTheme: string;
+  /** catalog ids of items placed on canvas, for item→audio rule matching. */
+  itemIds: Set<string>;
 }
 
 interface AudioRec {
@@ -768,6 +773,36 @@ function detectAudioRecommendations(
   return { dirIds, ambiences, bgmId: bgmCandidates[0] ?? "", deathTheme };
 }
 
+/** Expand itemAudioRules for the items present on canvas. */
+function detectItemAudioRequirements(
+  itemIds: Set<string>,
+  knowledge: AudioKnowledge
+): {
+  hits: { rule: AudioItemRule; itemIds: string[] }[];
+  dirIds: Set<string>;
+  ambiences: Set<string>;
+} {
+  const hits: { rule: AudioItemRule; itemIds: string[] }[] = [];
+  const dirIds = new Set<string>();
+  const ambiences = new Set<string>();
+  const themeMap = new Map(knowledge.themes.map((t) => [t.key, t]));
+  for (const rule of knowledge.itemAudioRules) {
+    const matched = rule.items.filter((id) => itemIds.has(id));
+    if (matched.length === 0) continue;
+    hits.push({ rule, itemIds: matched });
+    if (rule.theme) {
+      const t = themeMap.get(rule.theme);
+      if (t) {
+        t.directories.forEach((d) => dirIds.add(d));
+        t.ambiences.forEach((a) => ambiences.add(a));
+      }
+    }
+    if (rule.directories) rule.directories.forEach((d) => dirIds.add(d));
+    if (rule.ambiences) rule.ambiences.forEach((a) => ambiences.add(a));
+  }
+  return { hits, dirIds, ambiences };
+}
+
 export async function openAudioModal(
   detail: LevelDetail,
   themeSignals: ThemeSignals,
@@ -777,7 +812,7 @@ export async function openAudioModal(
     setStatus("该关卡缺少场景路径，无法编辑音频", false);
     return;
   }
-  setStatus("加载音频资源…");
+    setStatus("加载音频资源…");
 
   let music: MusicEntry[];
   let dirs: AudioDirectoryEntry[];
@@ -786,8 +821,9 @@ export async function openAudioModal(
   let knowledge: AudioKnowledge;
   let analysis: BundleAnalysis | null;
   let bundleGraph: Map<string, string[]>;
+  let exports: AudioExportManifest | null;
   try {
-    [music, dirs, ambiances, deaths, knowledge, analysis, bundleGraph] = await Promise.all([
+    [music, dirs, ambiances, deaths, knowledge, analysis, bundleGraph, exports] = await Promise.all([
       api.fetchMusicCatalog(),
       api.fetchAudioDirectoryCatalog(),
       api.fetchAmbiences(),
@@ -795,10 +831,16 @@ export async function openAudioModal(
       api.fetchAudioKnowledge(),
       api.fetchBundleAnalysis(detail.levelInfoAssetPath).catch(() => null),
       api.fetchBundleGraph(),
+      api.fetchAudioExports(),
     ]);
   } catch (e) {
     showError(e);
     return;
+  }
+
+  const sfxById = new Map<string, AudioExportSfxDir>();
+  if (exports) {
+    for (const d of exports.sfx) sfxById.set(d.id, d);
   }
 
   const cur = detail.audio;
@@ -837,6 +879,7 @@ export async function openAudioModal(
   };
 
   const rec = detectAudioRecommendations(themeSignals, knowledge);
+  const itemReq = detectItemAudioRequirements(themeSignals.itemIds, knowledge);
 
   // ---- BGM options grouped by theme ----
   const themeOfMusic = new Map<string, string>();
@@ -893,7 +936,7 @@ export async function openAudioModal(
       .map((d) => `<option value="${esc(d.guid)}" ${d.guid === state.deathGuid ? "selected" : ""}>${esc(d.id)}</option>`)
       .join("");
 
-  // ---- mandatory dirs (locked) ----
+  // ---- legend helper ----
   const legendHtml = (id: string): string => {
     const ev = eventsByDir.get(id);
     if (!ev) return "";
@@ -901,11 +944,17 @@ export async function openAudioModal(
     const desc = ev.desc ? `<span class="muted">${esc(ev.desc)}</span>` : "";
     return ` ${desc}${tag}`;
   };
+
+  // ---- mandatory dirs (locked) ----
   const mandatoryHtml = mandatoryGuids
     .map((g) => {
       const d = dirByGuid.get(g);
       const id = d?.id || "";
-      return `<label class="modal-check"><input type="checkbox" checked disabled data-mand value="${esc(g)}"> ${esc(d?.nameZh || id)}${legendHtml(id)}</label>`;
+      const hasClips = sfxById.has(id) && (sfxById.get(id)!.clips.length > 0);
+      const expandBtn = hasClips
+        ? ` <button type="button" class="au-expand-btn" data-au-expand="${esc(id)}" title="试听">▶ 试听</button><div class="au-clips" data-au-clips="${esc(id)}" style="display:none"></div>`
+        : "";
+      return `<label class="modal-check"><input type="checkbox" checked disabled data-mand value="${esc(g)}"> ${esc(d?.nameZh || id)}${legendHtml(id)}${expandBtn}</label>`;
     })
     .join("");
 
@@ -920,7 +969,7 @@ export async function openAudioModal(
     dirGroups.get(tk)!.push(d);
   }
   const dirGroupKeys = [...dirGroups.keys()].sort((a, b) => (a === "_other" ? 1 : a < b ? -1 : 1));
-  const isDirRecommended = (id: string) => rec.dirIds.has(id);
+  const isDirRecommended = (id: string) => rec.dirIds.has(id) || itemReq.dirIds.has(id);
   const dirGroupsHtml = dirGroupKeys
     .map((tk) => {
       const label = tk === "_other" ? "其他" : themeLabelZh(tk);
@@ -929,7 +978,11 @@ export async function openAudioModal(
         .map((d) => {
           const checked = state.dirGuids.has(d.guid) || isDirRecommended(d.id) ? "checked" : "";
           const rec2 = isDirRecommended(d.id) ? `<span class="rec-tag">推荐</span>` : "";
-          return `<label class="modal-check"><input type="checkbox" value="${esc(d.guid)}" data-dir ${checked}> ${esc(d.nameZh)}${rec2} <span class="muted">(${esc(d.bundleName || "?")})</span>${legendHtml(d.id)}</label>`;
+          const hasClips = sfxById.has(d.id) && (sfxById.get(d.id)!.clips.length > 0);
+          const expandBtn = hasClips
+            ? ` <button type="button" class="au-expand-btn" data-au-expand="${esc(d.id)}" title="试听">▶ 试听</button><div class="au-clips" data-au-clips="${esc(d.id)}" style="display:none"></div>`
+            : "";
+          return `<label class="modal-check"><input type="checkbox" value="${esc(d.guid)}" data-dir ${checked}> ${esc(d.nameZh)}${rec2} <span class="muted">(${esc(d.bundleName || "?")})</span>${legendHtml(d.id)}${expandBtn}</label>`;
         })
         .join("");
       return `<div class="amb-group"><div class="amb-group-title">${esc(label)}</div>${items}</div>`;
@@ -946,7 +999,7 @@ export async function openAudioModal(
     ambGroups.get(tk)!.push(a);
   }
   const ambGroupKeys = [...ambGroups.keys()].sort((a, b) => (a === "_other" ? 1 : a < b ? -1 : 1));
-  const isAmbRecommended = (a: string) => rec.ambiences.has(a);
+  const isAmbRecommended = (a: string) => rec.ambiences.has(a) || itemReq.ambiences.has(a);
   const ambGroupsHtml = ambGroupKeys
     .map((tk) => {
       const label = tk === "_other" ? "其他" : themeLabelZh(tk);
@@ -955,7 +1008,16 @@ export async function openAudioModal(
         .map((a) => {
           const checked = state.ambiences.has(a) || isAmbRecommended(a) ? "checked" : "";
           const rec2 = isAmbRecommended(a) ? `<span class="rec-tag">推荐</span>` : "";
-          return `<label class="modal-check"><input type="checkbox" value="${esc(a)}" data-amb ${checked}> ${esc(ambZh(a))}${rec2} <span class="muted">(${esc(a)})</span></label>`;
+          let playBtn = "";
+          if (exports) {
+            const ambExp = exports.ambiences.find((x) => x.tag === a);
+            if (ambExp && ambExp.found) {
+              playBtn = ` <button type="button" class="au-play-btn" data-au-play="ambience" data-au-tag="${esc(a)}" title="试听">▶</button>`;
+            } else if (ambExp) {
+              playBtn = ` <span class="muted" title="未找到音频">🔇</span>`;
+            }
+          }
+          return `<label class="modal-check"><input type="checkbox" value="${esc(a)}" data-amb ${checked}> ${esc(ambZh(a))}${rec2} <span class="muted">(${esc(a)})</span>${playBtn}</label>`;
         })
         .join("");
       return `<div class="amb-group"><div class="amb-group-title">${esc(label)}</div>${items}</div>`;
@@ -1015,6 +1077,52 @@ export async function openAudioModal(
       </div>`;
   }
 
+  // ---- item audio gaps ----
+  const itemGaps: { labelZh: string; itemIds: string[]; missingDirs: string[]; missingAmb: string[] }[] = [];
+  for (const { rule, itemIds: hitIds } of itemReq.hits) {
+    const missingDirs: string[] = [];
+    const missingAmb: string[] = [];
+    const resolveDirs = (ids: string[]) => {
+      for (const id of ids) {
+        const e = dirById.get(id);
+        if (e && !state.dirGuids.has(e.guid) && !curDirIdSet.has(id)) missingDirs.push(id);
+      }
+    };
+    if (rule.theme) {
+      const t = knowledge.themes.find((t2) => t2.key === rule.theme);
+      if (t) {
+        resolveDirs(t.directories);
+        for (const a of t.ambiences) {
+          if (!state.ambiences.has(a) && !curAmbSet.has(a)) missingAmb.push(a);
+        }
+      }
+    }
+    if (rule.directories) resolveDirs(rule.directories);
+    if (rule.ambiences) {
+      for (const a of rule.ambiences) {
+        if (!state.ambiences.has(a) && !curAmbSet.has(a)) missingAmb.push(a);
+      }
+    }
+    if (missingDirs.length || missingAmb.length)
+      itemGaps.push({ labelZh: rule.labelZh, itemIds: hitIds, missingDirs, missingAmb });
+  }
+  const allGapsCount = gaps.length + itemGaps.length;
+  const itemGapHtml = itemGaps.length
+    ? itemGaps
+        .map(
+          (g) =>
+            `<div class="amb-group"><div class="amb-group-title">🔧 ${esc(g.labelZh)} <span class="muted">(${g.itemIds.map(esc).join("、")})</span></div>` +
+            (g.missingDirs.length
+              ? `<div class="dep-warn dep-miss">缺音效集：${g.missingDirs.map((id) => esc(dirById.get(id)?.nameZh || id)).join("、")}</div>`
+              : "") +
+            (g.missingAmb.length
+              ? `<div class="dep-warn dep-miss">缺氛围音：${g.missingAmb.map((a) => esc(ambZh(a))).join("、")}</div>`
+              : "") +
+            `</div>`
+        )
+        .join("")
+    : "";
+
   // ---- render ----
   const detectedThemes = [...themeSignals.themes, ...(themeSignals.raft ? ["raft"] : [])];
   const recHint = detectedThemes.length
@@ -1025,31 +1133,76 @@ export async function openAudioModal(
     `音频配置 · ${detail.levelName || detail.levelNameZH}`,
     `
     <p class="modal-hint">写入场景的 <code>PseudoPrefabManagerStub</code>。保存时会自动打开/保存场景、Reload，并<b>自动把所选 BGM / 音效集所需 bundle 并入 <code>LevelInfoSO.dependencies</code></b>（只增不删）。</p>
-    <div class="audio-grid">
-      <label class="m-field">关卡 BGM (InLevelMusicSO)<select id="au-music">${bgmOptHtml}</select></label>
-      <div id="au-music-warn" class="dep-warn dep-miss" style="display:none"></div>
-      <label class="m-field">死亡特效 (OnDeathEffectSO)<select id="au-death">${deathOptHtml}</select>
-        <span class="muted small">快捷：<button type="button" class="link-btn" data-death-theme="water">水面</button> / <button type="button" class="link-btn" data-death-theme="goo">黏液</button></span>
-      </label>
+    <div class="cfg-tabs">
+      <button type="button" class="cfg-tab-btn active" data-tab="check">🔍 检查</button>
+      <button type="button" class="cfg-tab-btn" data-tab="music">🎵 音乐 / 特效</button>
+      <button type="button" class="cfg-tab-btn" data-tab="mand">📦 强制音效集</button>
+      <button type="button" class="cfg-tab-btn" data-tab="dirs">🔊 音效集</button>
+      <button type="button" class="cfg-tab-btn" data-tab="amb">🌬️ 氛围音</button>
     </div>
-    <div class="modal-actions"><button type="button" class="m-btn small" id="au-apply-rec">✨ 应用主题推荐</button> <span class="muted small">${recHint}</span></div>
 
-    <p class="modal-hint" style="margin-top:8px">覆盖检查（根据已放置装饰的主题）${gaps.length ? ` · <span class="dep-miss">有 ${gaps.length} 个主题存在缺失</span>` : ""} <button type="button" class="link-btn" id="au-fix-gaps" ${gaps.length ? "" : "disabled"}>添加所有缺失</button></p>
-    <div class="dep-box">${gapHtml}</div>
+    <!-- === TAB: 检查 === -->
+    <div class="au-pane" data-pane="check">
+      <div class="modal-actions"><button type="button" class="m-btn small" id="au-apply-rec">✨ 应用主题推荐</button> <span class="muted small">${recHint}</span></div>
 
-    <p class="modal-hint" style="margin-top:8px">强制音效集（5，锁定）—— 全局玩法 / 脚步 / 语音 / 厨房氛围 / UI</p>
-    <div class="modal-scroll locked">${mandatoryHtml || '<p class="muted">未找到强制音效集（请检查 audio-knowledge.json 与 common01 目录）</p>'}</div>
+      <p class="modal-hint" style="margin-top:8px">覆盖检查${allGapsCount ? ` · <span class="dep-miss">有 ${allGapsCount} 处缺失</span>` : ""} <button type="button" class="link-btn" id="au-fix-gaps" ${allGapsCount ? "" : "disabled"}>添加所有缺失</button></p>
+      <div class="dep-box">${gapHtml || itemGapHtml ? (gapHtml + itemGapHtml) : '<div class="dep-ok">所有主题与物品音频均已覆盖。</div>'}</div>
+      ${depsHtml}
+    </div>
 
-    <p class="modal-hint" style="margin-top:8px">主题音效集 AudioDirectorySOs（叠加在强制 5 之上）</p>
-    <div class="modal-scroll">${dirGroupsHtml || '<p class="muted">无</p>'}</div>
+    <!-- === TAB: 音乐 / 特效 === -->
+    <div class="au-pane" data-pane="music" style="display:none">
+      <div class="audio-grid">
+        <label class="m-field">关卡 BGM (InLevelMusicSO)<select id="au-music">${bgmOptHtml}</select></label>
+        <div id="au-music-warn" class="dep-warn dep-miss" style="display:none"></div>
+        <label class="m-field">死亡特效 (OnDeathEffectSO)<select id="au-death">${deathOptHtml}</select>
+          <span class="muted small">快捷：<button type="button" class="link-btn" data-death-theme="water">水面</button> / <button type="button" class="link-btn" data-death-theme="goo">黏液</button></span>
+        </label>
+      </div>
+    </div>
 
-    <p class="modal-hint" style="margin-top:8px">氛围音 InLevelAmbiences</p>
-    <div class="modal-scroll">${ambGroupsHtml || '<p class="muted">无</p>'}</div>
-    ${depsHtml}
+    <!-- === TAB: 强制音效集 === -->
+    <div class="au-pane" data-pane="mand" style="display:none">
+      <div class="modal-scroll">
+        <div class="mand-heading">强制音效集（5，锁定）—— 全局玩法 / 脚步 / 语音 / 厨房氛围 / UI</div>
+        ${mandatoryHtml || '<p class="muted">未找到强制音效集（请检查 audio-knowledge.json 与 common01 目录）</p>'}
+      </div>
+    </div>
+
+    <!-- === TAB: 音效集 === -->
+    <div class="au-pane" data-pane="dirs" style="display:none">
+      <div class="modal-scroll">
+        <div class="mand-heading">主题音效集 AudioDirectorySOs（叠加在强制 5 之上）</div>
+        ${dirGroupsHtml || '<p class="muted">无</p>'}
+      </div>
+    </div>
+
+    <!-- === TAB: 氛围音 === -->
+    <div class="au-pane" data-pane="amb" style="display:none">
+      <p class="modal-hint">氛围音 InLevelAmbiences</p>
+      <div class="modal-scroll">${ambGroupsHtml || '<p class="muted">无</p>'}</div>
+    </div>
+
+    <div class="au-player ${exports ? "" : "au-player-hidden"}" id="au-player">
+      <button type="button" class="au-play-btn" id="au-player-btn" title="播放/暂停">▶</button>
+      <span class="au-player-label" id="au-player-label"></span>
+      <span class="au-player-time" id="au-player-time">--:-- / --:--</span>
+      <input type="range" class="au-player-progress" id="au-player-progress" min="0" max="100" value="0" step="0.1" />
+    </div>
     `,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>保存</button>`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
+
+  // ---- tab switching ----
+  document.querySelectorAll<HTMLButtonElement>(".cfg-tab-btn").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".cfg-tab-btn").forEach((b) => b.classList.toggle("active", b === btn));
+      document.querySelectorAll<HTMLElement>(".au-pane").forEach((p) => {
+        p.style.display = p.dataset.pane === btn.dataset.tab ? "" : "none";
+      });
+    })
+  );
 
   // ---- helpers to refresh derived UI ----
   const musicBundleMissing = (): string | null => {
@@ -1150,30 +1303,223 @@ export async function openAudioModal(
     setStatus("已套用主题推荐（可继续手动调整）");
   });
 
-  // fix all detected coverage gaps (check the missing themed dirs + ambiences)
+  // fix all detected coverage gaps (theme + item gaps)
   document.getElementById("au-fix-gaps")?.addEventListener("click", () => {
     let n = 0;
+    const fixDir = (id: string) => {
+      const e = dirById.get(id);
+      if (!e) return false;
+      state.dirGuids.add(e.guid);
+      const cb = document.querySelector<HTMLInputElement>(`[data-dir][value="${e.guid}"]`);
+      if (cb) cb.checked = true;
+      return true;
+    };
+    const fixAmb = (a: string) => {
+      if (!ambiances.includes(a)) return false;
+      state.ambiences.add(a);
+      const cb = document.querySelector<HTMLInputElement>(`[data-amb][value="${a}"]`);
+      if (cb) cb.checked = true;
+      return true;
+    };
     for (const g of gaps) {
-      for (const id of g.missingDirs) {
-        const e = dirById.get(id);
-        if (!e) continue;
-        state.dirGuids.add(e.guid);
-        const cb = document.querySelector<HTMLInputElement>(`[data-dir][value="${e.guid}"]`);
-        if (cb) cb.checked = true;
-        n++;
-      }
-      for (const a of g.missingAmb) {
-        if (!ambiances.includes(a)) continue;
-        state.ambiences.add(a);
-        const cb = document.querySelector<HTMLInputElement>(`[data-amb][value="${a}"]`);
-        if (cb) cb.checked = true;
-        n++;
-      }
+      for (const id of g.missingDirs) if (fixDir(id)) n++;
+      for (const a of g.missingAmb) if (fixAmb(a)) n++;
+    }
+    for (const g of itemGaps) {
+      for (const id of g.missingDirs) if (fixDir(id)) n++;
+      for (const a of g.missingAmb) if (fixAmb(a)) n++;
     }
     setStatus(n ? `已补齐 ${n} 项缺失音效集/氛围音` : "无缺失需要补齐");
   });
 
   refreshMusicWarn();
+
+  // ---- Audio player ----
+  if (exports) {
+    const audio = document.createElement("audio");
+    audio.preload = "auto";
+    audio.style.display = "none";
+    document.body.appendChild(audio);
+    const playerEl = document.getElementById("au-player")!;
+    const playerBtn = document.getElementById("au-player-btn") as HTMLButtonElement;
+    const playerLabel = document.getElementById("au-player-label")!;
+    const playerTime = document.getElementById("au-player-time")!;
+    const playerProgress = document.getElementById("au-player-progress") as HTMLInputElement;
+    let currentPlaying: string | null = null;
+
+    const bgmByGuid = new Map<string, string>();
+    for (const b of exports.bgm) bgmByGuid.set(b.guid, b.filename);
+    const ambByTag = new Map<string, string>();
+    for (const a of exports.ambiences) if (a.found && a.filename) ambByTag.set(a.tag, a.filename);
+
+    function formatTime(s: number): string {
+      if (!isFinite(s) || s < 0) return "--:--";
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${sec.toString().padStart(2, "0")}`;
+    }
+
+    function showPlayer(label: string) {
+      playerEl.classList.remove("au-player-hidden");
+      playerLabel.textContent = label;
+      playerTime.textContent = "--:-- / --:--";
+      playerProgress.value = "0";
+    }
+
+    let pendingPlayResolve: (() => void) | null = null;
+
+    audio.addEventListener("canplay", () => {
+      if (pendingPlayResolve) {
+        pendingPlayResolve();
+        pendingPlayResolve = null;
+      }
+    });
+
+    audio.addEventListener("error", () => {
+      var code = audio.error ? audio.error.code : -1;
+      var msg = code === 4 ? "音频格式不支持" : code === 3 ? "音频解码失败" : code === 2 ? "网络错误" : "加载失败";
+      setStatus("音频 " + msg + " (code: " + code + ")", false);
+      playerBtn.textContent = "▶";
+      currentPlaying = null;
+      pendingPlayResolve = null;
+    });
+
+    function playUrl(url: string, label: string, key: string) {
+      if (currentPlaying === key) {
+        if (audio.paused) {
+          audio.play().catch(function(e) { setStatus("播放失败: " + e.message, false); });
+          playerBtn.textContent = "⏸";
+        } else {
+          audio.pause();
+          playerBtn.textContent = "▶";
+        }
+        return;
+      }
+      audio.src = "";
+      audio.load();
+      currentPlaying = key;
+      showPlayer(label);
+      playerBtn.textContent = "⏸";
+      pendingPlayResolve = null;
+      audio.src = url;
+      audio.load();
+      var playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(function(e) {
+          setStatus("自动播放被阻止，请再次点击播放", false);
+        });
+      }
+    }
+
+    audio.addEventListener("timeupdate", () => {
+      if (!audio.duration || !isFinite(audio.duration)) return;
+      const pct = (audio.currentTime / audio.duration) * 100;
+      playerProgress.value = String(Math.min(pct, 100));
+      playerTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    });
+
+    audio.addEventListener("ended", () => {
+      playerBtn.textContent = "▶";
+      currentPlaying = null;
+    });
+
+    audio.addEventListener("loadedmetadata", () => {
+      playerTime.textContent = `0:00 / ${formatTime(audio.duration)}`;
+    });
+
+    playerBtn.addEventListener("click", () => {
+      if (!audio.src && !currentPlaying) return;
+      if (audio.paused) {
+        audio.play().catch(() => {});
+        playerBtn.textContent = "⏸";
+      } else {
+        audio.pause();
+        playerBtn.textContent = "▶";
+      }
+    });
+
+    playerProgress.addEventListener("input", () => {
+      if (!audio.duration || !isFinite(audio.duration)) return;
+      const t = (Number(playerProgress.value) / 100) * audio.duration;
+      audio.currentTime = t;
+    });
+
+    // ---- BGM play button ----
+    // ---- BGM auto-play on selection change ----
+    let lastAutoPlayedGuid = state.musicGuid;
+    function tryPlayBgm() {
+      const guid = state.musicGuid;
+      if (!guid || guid === lastAutoPlayedGuid) return;
+      lastAutoPlayedGuid = guid;
+      const m = musicByGuid.get(guid);
+      const filename = bgmByGuid.get(guid);
+      if (!filename || !m) return;
+      playUrl(api.getAudioStreamUrl(filename), m.nameZh, `bgm:${guid}`);
+    }
+    document.getElementById("au-music")?.addEventListener("change", () => tryPlayBgm());
+
+    // Auto-play when switching to music tab
+    document.querySelector<HTMLButtonElement>('[data-tab="music"]')?.addEventListener("click", () => {
+      setTimeout(() => tryPlayBgm(), 0);
+    });
+
+    // ---- SFX expand/collapse ----
+    document.querySelectorAll<HTMLElement>("[data-au-expand]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.auExpand!;
+        const container = document.querySelector<HTMLElement>(`[data-au-clips="${id}"]`);
+        if (!container) return;
+        const sfx = sfxById.get(id);
+        if (!sfx) return;
+
+        const isOpen = container.style.display !== "none";
+        if (isOpen) {
+          container.style.display = "none";
+          btn.textContent = "▶ 试听";
+          return;
+        }
+
+        if (!container.innerHTML) {
+          const typeLabel: Record<string, string> = {
+            oneshot: "单次",
+            looping: "循环",
+            looping_start: "开始",
+            looping_end: "结尾",
+          };
+          container.innerHTML = sfx.clips
+            .map(
+              (c) =>
+                `<span class="au-clip-row"><span class="muted">[${typeLabel[c.type] || c.type}]</span> ${esc(c.tag)} <button type="button" class="au-play-btn small" data-au-play="sfx" data-au-path="${esc(c.filename)}" title="试听">▶</button></span>`
+            )
+            .join("");
+          // wire newly created play buttons
+          container.querySelectorAll<HTMLElement>("[data-au-play=\"sfx\"]").forEach((pb) => {
+            pb.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              const path = pb.dataset.auPath!;
+              playUrl(api.getAudioStreamUrl(path), path.split("/").pop() || path, `sfx:${path}`);
+            });
+          });
+        }
+        container.style.display = "";
+        btn.textContent = "▲ 收起";
+      });
+    });
+
+    // ---- Ambience play buttons ----
+    document.querySelectorAll<HTMLElement>("[data-au-play=\"ambience\"]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const tag = btn.dataset.auTag!;
+        const filename = ambByTag.get(tag);
+        if (!filename) { setStatus(`未找到 ${tag} 的音频`, false); return; }
+        const label = ambZh(tag);
+        playUrl(api.getAudioStreamUrl(filename), label, `ambience:${tag}`);
+      });
+    });
+  }
+
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     try {

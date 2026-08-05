@@ -218,6 +218,8 @@ let dragFloorAnchorX = 0;
 let dragFloorAnchorZ = 0;
 
 let ingredientsCache: import("./types").IngredientEntry[] = [];
+let intermediatesCache: import("./types").RecipeEntry[] = [];
+let autoIntermediates = true;
 let currentLevelSet = "";
 let sceneListCache: import("./types").LevelSetScene[] = [];
 let fillIncludeMainDough = false;
@@ -604,7 +606,8 @@ function wireStubControls(item: EditorItem) {
             ensure().allowedIngredientGuids = guids;
             draw();
             setStatus("已更新锅具额外食材（写回后生效）");
-          }
+          },
+          intermediatesCache
         );
       });
       break;
@@ -902,7 +905,8 @@ function openUtensilManager() {
           draw();
           setStatus(`${itemLabel(it)} 额外食材已更新（写回后生效）`);
           setTimeout(reopen, 0);
-        }
+        },
+        intermediatesCache
       );
     });
   });
@@ -959,6 +963,7 @@ async function openRecipesDialog() {
 
   const selected = new Set<string>(level.recipeGuids ?? []);
   const orderable = recipes.filter((r) => !r.intermediate);
+  intermediatesCache = recipes.filter((r) => r.intermediate);
   const byGuid = new Map(recipes.map((r) => [r.guid, r]));
 
   const levelSetRecipes = orderable.filter((r) => r.group === "levelset");
@@ -1093,7 +1098,8 @@ async function openRecipesDialog() {
          <label class="ctx-stub-row" style="display:block;margin-top:6px"><input type="checkbox" id="rw-include-main-dough" ${fillIncludeMainDough ? "checked" : ""}/> 同时补齐主线面团/面包皮（DoughSO / ChoppedBunSO）</label>`
       : `<p class="modal-hint ok">食材箱已齐全</p>`;
     const utFill = missingUt.length
-      ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ut">一键补齐缺失锅具/道具 (${missingUt.length})</button>`
+      ? `<button type="button" class="modal-btn primary rw-fill" id="rw-fill-ut">一键补齐缺失锅具/道具 (${missingUt.length})</button>
+         <label class="ctx-stub-row" style="display:block;margin-top:6px"><input type="checkbox" id="rw-auto-intermediates" ${autoIntermediates ? "checked" : ""} /> 自动分配中间产物到对应锅具</label>`
       : `<p class="modal-hint ok">锅具/道具已齐全</p>`;
 
     return `
@@ -1135,14 +1141,106 @@ async function openRecipesDialog() {
         const selected = new Set<string>();
         for (const cb of cbs) selected.add(cb.value);
         if (selected.size === 0) return;
+
+        // attachment -> base id (from STEP_UTENSILS)
+        const attachBase = new Map<string, string>();
+        for (const ids of Object.values(STEP_UTENSILS)) {
+          if (ids.length < 2) continue;
+          const base = ids[0];
+          for (let i = 1; i < ids.length; i++) attachBase.set(ids[i], base);
+        }
+
+        // items with counter_standard or other host rules auto-include their Counter base
+        const counterStdRule = "counter_standard";
+        const autoBases = new Set<string>();
+        for (const cat of catalogByGuid.values()) {
+          if (cat.stack?.hostRule === counterStdRule && !attachBase.has(cat.id)) {
+            attachBase.set(cat.id, "Counter");
+            autoBases.add("Counter");
+          }
+        }
+
+        // group selected items into clusters: base -> [attachments]; standalone items
+        const clusters = new Map<string, string[]>(); // baseId -> attachmentIds
+        const standalones: string[] = [];
+        const clustered = new Set<string>();
+
+        for (const u of selected) {
+          const baseId = attachBase.get(u);
+          if (baseId && (selected.has(baseId) || autoBases.has(baseId))) {
+            if (!clusters.has(baseId)) clusters.set(baseId, []);
+            clusters.get(baseId)!.push(u);
+            clustered.add(u);
+          }
+        }
+
+        for (const u of selected) {
+          if (!clustered.has(u) && !clusters.has(u)) standalones.push(u);
+        }
+
         const base = placementBase();
         let idx = 0;
-        for (const u of selected) {
+        const placedItemIds: string[] = []; // catalog ids of placed items
+
+        // place clusters
+        for (const [baseId, attachments] of clusters) {
+          const baseWx = base.x + idx * CELL;
+          const baseWz = base.z - 2 * CELL;
+          const baseCat = catalogItemById(baseId);
+          if (baseCat) { addFromCatalog(baseCat, baseWx, baseWz); placedItemIds.push(baseId); }
+          for (const attId of attachments) {
+            const attCat = catalogItemById(attId);
+            if (!attCat) continue;
+            const item = addFromCatalog(attCat, baseWx, baseWz);
+            if (item && attCat.stack?.y) item.localPosition.y = attCat.stack.y;
+            placedItemIds.push(attId);
+          }
+          idx++;
+        }
+
+        // place standalones
+        for (const u of standalones) {
           const cat = catalogItemById(u);
           if (!cat) continue;
           addFromCatalog(cat, base.x + idx * CELL, base.z - 2 * CELL);
+          placedItemIds.push(u);
           idx++;
         }
+
+        // auto-fill intermediates (use global flag; sync analysis panel checkbox back)
+        const autoIntCb = document.getElementById("rw-auto-intermediates") as HTMLInputElement | null;
+        if (autoIntCb) {
+          autoIntermediates = autoIntCb.checked;
+          const navCb = document.getElementById("chk-auto-intermediates") as HTMLInputElement | null;
+          if (navCb) navCb.checked = autoIntermediates;
+        }
+        if (autoIntermediates) {
+          const recs = currentRecipes();
+          const intermediateMap = computeIntermediatesForUtensils(recs);
+          const intByGuid = new Map(intermediatesCache.map((i) => [i.id, i.guid]));
+
+          for (const placedId of placedItemIds) {
+            const intIds = intermediateMap.get(placedId);
+            if (!intIds || intIds.length === 0) continue;
+            const itCat = catalogItemById(placedId);
+            if (!itCat) continue;
+            const guidsToAdd = intIds
+              .map((iid) => intByGuid.get(iid))
+              .filter((g): g is string => !!g);
+            if (guidsToAdd.length === 0) continue;
+            for (const it of items) {
+              if (it.prefabGuid !== itCat.guid) continue;
+              it.stubKind = "CookingUtensil";
+              if (!it.cookingUtensil) it.cookingUtensil = {};
+              if (it.cookingUtensil.capacity == null)
+                it.cookingUtensil.capacity = defaultUtensilCapacity(it);
+              const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
+              for (const g of guidsToAdd) existing.add(g);
+              it.cookingUtensil.allowedIngredientGuids = [...existing];
+            }
+          }
+        }
+
         rerender();
       };
     }
@@ -1297,6 +1395,7 @@ async function openSelectedRecipesDialog() {
   }
 
   const byGuid = new Map(recipes.map((r) => [r.guid, r]));
+  intermediatesCache = recipes.filter((r) => r.intermediate);
   const selected = (level.recipeGuids ?? [])
     .map((g) => byGuid.get(g))
     .filter((r): r is RecipeEntry => !!r && !r.intermediate);
@@ -1407,6 +1506,7 @@ app.innerHTML = `
       <label class="toolbar-check"><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
       <label class="toolbar-check"><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
       <label class="toolbar-check" title="勾选后允许工作台重叠时仍然写回"><input type="checkbox" id="allow-ws-overlap" /> ⚠ 允许工作台重叠</label>
+      <label class="toolbar-check" title="补齐锅具时自动分配中间产物（煎肉排/面糊/炸物等）到对应锅具的 allowedIngredientSOs"><input type="checkbox" id="chk-auto-intermediates" ${autoIntermediates ? "checked" : ""} /> 🧩 自动中间产物</label>
     </div>
   </div>
   <div class="main">
@@ -3370,10 +3470,10 @@ function occupiedCells(item: EditorItem): string[] {
   const minZ = item._wz - spanD / 2;
   const maxX = item._wx + spanW / 2;
   const maxZ = item._wz + spanD / 2;
-  const startIX = Math.floor(minX / CELL + 0.5);
-  const startIZ = Math.floor(minZ / CELL + 0.5);
-  const endIX = Math.floor((maxX - 0.001) / CELL + 0.5);
-  const endIZ = Math.floor((maxZ - 0.001) / CELL + 0.5);
+  const startIX = Math.floor((minX + 0.01) / CELL + 0.5);
+  const startIZ = Math.floor((minZ + 0.01) / CELL + 0.5);
+  const endIX = Math.floor((maxX - 0.01) / CELL + 0.5);
+  const endIZ = Math.floor((maxZ - 0.01) / CELL + 0.5);
   const cells: string[] = [];
   for (let ix = startIX; ix <= endIX; ix++)
     for (let iz = startIZ; iz <= endIZ; iz++)
@@ -3385,7 +3485,10 @@ function checkPlayerCollisions(): string[] {
   const result: string[] = [];
   const players = items.filter(isPlayerItem);
   const nonPlayerGameplay = items.filter(
-    (it) => !isPlayerItem(it) && itemLayerOf(catalogByGuid.get(it.prefabGuid)) === "items"
+    (it) =>
+      !isPlayerItem(it) &&
+      !isCollisionItem(it) &&
+      itemLayerOf(catalogByGuid.get(it.prefabGuid)) === "items"
   );
   const nonPlayerCells = new Map<string, EditorItem>();
   for (const o of nonPlayerGameplay) {
@@ -4058,9 +4161,6 @@ function syncLocalFromWorld(item: EditorItem) {
   }
   item.localPosition.x = snapValue(item._wx - item._parentWx, itemSnapStep(item));
   item.localPosition.z = snapValue(item._wz - item._parentWz, itemSnapStep(item));
-  if (cat?.stack) {
-    item.localPosition.y = cat.stack.y;
-  }
 }
 
 function isSelected(key: string): boolean {
@@ -4306,6 +4406,17 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
   ctxMenuEl.innerHTML = `
     <div class="ctx-head">${headBadge}${itemLabel(item)}</div>
     <div class="ctx-coord" id="ctx-coord">x ${item.localPosition.x.toFixed(2)} · z ${item.localPosition.z.toFixed(2)}</div>
+    ${
+      isPlayer
+        ? ""
+        : `<div class="ctx-nudge-row">
+      <span class="ctx-label">坐标(世界)</span>
+      <div class="ctx-nudge">
+        <input type="number" id="ctx-x-input" class="ctx-input ctx-pos-input" step="0.1" value="${item._wx.toFixed(2)}" title="世界坐标 X（回车生效）" />
+        <input type="number" id="ctx-z-input" class="ctx-input ctx-pos-input" step="0.1" value="${item._wz.toFixed(2)}" title="世界坐标 Z（回车生效）" />
+      </div>
+    </div>`
+    }
     <div class="ctx-nudge-row">
       <span class="ctx-label">微移 0.1</span>
       <div class="ctx-nudge">
@@ -4322,6 +4433,7 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
       <span class="ctx-label">高度 <span id="ctx-y-val" class="ctx-scale-val">${item.localPosition.y.toFixed(itemSnapStep(item) < 0.1 ? 2 : 1)}</span></span>
       <div class="ctx-nudge">
         <button type="button" data-nudge="0,0,-0.1" title="降低 0.1">−0.1</button>
+        <input type="number" id="ctx-y-input" class="ctx-input ctx-pos-input" step="0.1" value="${item.localPosition.y.toFixed(2)}" title="高度 Y（回车生效）" />
         <button type="button" data-nudge="0,0,0.1" title="升高 0.1">+0.1</button>
       </div>
     </div>
@@ -4376,13 +4488,51 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
     }
   });
 
+  const refreshCtxPosInputs = () => {
+    const xInp = document.getElementById("ctx-x-input") as HTMLInputElement | null;
+    const zInp = document.getElementById("ctx-z-input") as HTMLInputElement | null;
+    const yInp = document.getElementById("ctx-y-input") as HTMLInputElement | null;
+    if (xInp && document.activeElement !== xInp) xInp.value = item._wx.toFixed(2);
+    if (zInp && document.activeElement !== zInp) zInp.value = item._wz.toFixed(2);
+    if (yInp && document.activeElement !== yInp) yInp.value = item.localPosition.y.toFixed(2);
+  };
   ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-nudge]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const parts = btn.dataset.nudge!.split(",").map(Number);
       nudgeItem(item, parts[0] || 0, parts[1] || 0, parts[2] || 0);
       const yEl = document.getElementById("ctx-y-val");
       if (yEl) yEl.textContent = item.localPosition.y.toFixed(itemSnapStep(item) < 0.1 ? 2 : 1);
+      refreshCtxPosInputs();
     });
+  });
+  const applyWorldPos = () => {
+    const xInp = document.getElementById("ctx-x-input") as HTMLInputElement | null;
+    const zInp = document.getElementById("ctx-z-input") as HTMLInputElement | null;
+    if (!xInp || !zInp) return;
+    const x = parseFloat(xInp.value);
+    const z = parseFloat(zInp.value);
+    if (!isFinite(x) || !isFinite(z)) return;
+    pushHistory();
+    item._wx = x;
+    item._wz = z;
+    syncLocalFromWorld(item);
+    updateCtxCoord(item);
+    refreshCtxPosInputs();
+    draw();
+  };
+  document.getElementById("ctx-x-input")?.addEventListener("change", applyWorldPos);
+  document.getElementById("ctx-z-input")?.addEventListener("change", applyWorldPos);
+  const yInput = document.getElementById("ctx-y-input") as HTMLInputElement | null;
+  yInput?.addEventListener("change", () => {
+    const y = parseFloat(yInput.value);
+    if (!isFinite(y)) return;
+    pushHistory();
+    item.localPosition.y = snapValue(y, 0.01);
+    const yEl = document.getElementById("ctx-y-val");
+    if (yEl) yEl.textContent = item.localPosition.y.toFixed(itemSnapStep(item) < 0.1 ? 2 : 1);
+    updateCtxCoord(item);
+    refreshCtxPosInputs();
+    draw();
   });
   ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-scale]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -5067,6 +5217,7 @@ async function init() {
   warnIfBridgeOutdated(healthInfo, catalog.schemaVersion ?? 1);
   for (const it of catalog.items) catalogByGuid.set(it.guid, it);
   ingredientsCache = await fetchIngredients().catch(() => []);
+  intermediatesCache = await fetchRecipeCatalog("").then((r) => r.filter((x) => x.intermediate)).catch(() => []);
   counterAppearances = await fetchCounterAppearances().catch(() => null);
   switchMaterialsCache = await fetchSwitchMaterials().catch(() => []);
   buildPalette(catalog, "");
@@ -5138,6 +5289,9 @@ async function init() {
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
   document.getElementById("btn-selected-recipes")!.addEventListener("click", () => void openSelectedRecipesDialog());
   document.getElementById("btn-utensils")!.addEventListener("click", () => openUtensilManager());
+  document.getElementById("chk-auto-intermediates")!.addEventListener("change", (e) => {
+    autoIntermediates = (e.target as HTMLInputElement).checked;
+  });
 
   const withLevelDetail = async (fn: (detail: LevelDetail) => void | Promise<void>) => {
     if (!scenePath) {
@@ -5165,14 +5319,17 @@ async function init() {
   document.getElementById("btn-level-audio")!.addEventListener("click", () =>
     void withLevelDetail((detail) => {
       const themes = new Set<string>();
+      const itemIds = new Set<string>();
       for (const it of items) {
         const cat = catalogByGuid.get(it.prefabGuid);
         if (cat?.theme) themes.add(cat.theme);
+        const id = cat?.id ?? prefabIdFromPath(it.prefabAssetPath);
+        if (id) itemIds.add(id);
       }
       const raft = floors.some((f) => f.surfaceKind === "raft");
       const dt = deathInfo?.deathType;
       const deathTheme = dt === "water" ? "water" : dt === "goo" ? "goo" : "";
-      openAudioModal(detail, { themes, raft, deathTheme }, () => {});
+      openAudioModal(detail, { themes, raft, deathTheme, itemIds }, () => {});
     })
   );
 
@@ -5744,6 +5901,66 @@ const CHOPPABLE_INGREDIENTS = new Set([
 
 const BASE_UTENSILS = ["ServingStation", "Bin", "CleanPlateStack"];
 
+/** Recipe group -> intermediate ids -> target utensil container ids.
+ *  Note: Oven / FryingStation are stations (no utensil container), so fry intermediates
+ *  go to FrierBasket; pizza optionals (自选披萨/蘑菇披萨) are written into
+ *  LevelInfo.optionalRecipeMatchListItems by the Unity side instead. */
+const INTERMEDIATE_ASSIGN: Record<string, Record<string, string[]>> = {
+  pancake: { "FryPan": ["MixedFlourEggStrawberry", "MixedFlourEggBlueberry"], "MixerBowl": ["MixedFlourEggStrawberry", "MixedFlourEggBlueberry"] },
+  pancake_strawberry: { "FryPan": ["MixedFlourEggStrawberry"], "MixerBowl": ["MixedFlourEggStrawberry"] },
+  pancake_blueberry: { "FryPan": ["MixedFlourEggBlueberry"], "MixerBowl": ["MixedFlourEggBlueberry"] },
+  burger: { "FryPan": ["FriedMeat"] },
+  fry_chips: { "FrierBasket": ["FriedPotato"] },
+  fry_fish: { "FrierBasket": ["FriedFish"] },
+};
+
+function intermediateKeysForRecipe(r: RecipeEntry): string[] {
+  const keys = new Set<string>();
+  const id = r.id ?? "";
+  const type = r.type ?? "";
+  const ings = r.ingredients ?? [];
+  const step = r.cookingStep ?? "";
+
+  // 面糊（半成品）→ 煎锅 + 搅拌碗
+  const isPancake = type === "pancake" || id.includes("Pancake") || id === "Cake_Chocolate_SO";
+  if (isPancake) {
+    const strawberry = ings.includes("PancakeStrawberry") || id.includes("Strawberry");
+    const blueberry = ings.includes("Blueberry") || id.includes("Blueberry");
+    if (strawberry) keys.add("pancake_strawberry");
+    if (blueberry) keys.add("pancake_blueberry");
+    if (!strawberry && !blueberry) keys.add("pancake");
+  }
+  // 肉排 → 煎锅
+  if (type === "burger" || id.startsWith("Burger_") || (step === "FryingPan" && ings.includes("MeatSO"))) {
+    keys.add("burger");
+  }
+  // 炸薯条 / 炸鱼排 → 炸锅（炸篮）
+  const isFry = type === "fry" || step === "DeepFatFryer" || id.startsWith("Fry_");
+  if (isFry) {
+    if (ings.includes("PotatoSO") || id === "Fry_Chips_SO" || id === "Fry_All_SO") keys.add("fry_chips");
+    if (ings.includes("FishSO") || id.includes("Fish")) keys.add("fry_fish");
+  }
+  return [...keys];
+}
+
+function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  const add = (ut: string, iid: string) => {
+    if (!result.has(ut)) result.set(ut, []);
+    if (!result.get(ut)!.includes(iid)) result.get(ut)!.push(iid);
+  };
+  for (const r of recipes) {
+    for (const key of intermediateKeysForRecipe(r)) {
+      const assign = INTERMEDIATE_ASSIGN[key];
+      if (!assign) continue;
+      for (const [ut, iids] of Object.entries(assign)) {
+        for (const iid of iids) add(ut, iid);
+      }
+    }
+  }
+  return result;
+}
+
 function catalogItemById(id: string): CatalogItem | undefined {
   for (const it of catalogByGuid.values()) if (it.id === id) return it;
   return undefined;
@@ -5781,6 +5998,13 @@ function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<string>)
     if (ing === "FlourSO") {
       set.add("Mixer");
       set.add("MixerBowl");
+    }
+    if (ing === "SushiRiceSO" || ing === "RiceSO") {
+      set.add("Cooker");
+      set.add("Pot");
+    }
+    if (ing === "PastaSO") {
+      set.add("FryPan");
     }
   }
   return [...set];
@@ -5968,6 +6192,7 @@ function setupCanvas() {
           dragFloorAnchorX = fHit.anchorX;
           dragFloorAnchorZ = fHit.anchorZ;
           dragFloorGroupKeys = [];
+          if (fHit.mode === "resize") canvas.style.cursor = "grabbing";
         }
       } else {
         clearFloorSelection();
@@ -6209,6 +6434,7 @@ function setupCanvas() {
     }
 
     if (dragFloorKey) {
+      if (dragFloorMode === "resize") canvas.style.cursor = "grabbing";
       if (dragFloorGroupKeys.length > 1) {
         const { x: wx, z: wz } = canvasToWorld(mx, my);
         const dx = wx - dragLastWx;
@@ -6230,7 +6456,15 @@ function setupCanvas() {
       return;
     }
 
-    if (!dragItemKey) return;
+    if (!dragItemKey) {
+      if (currentLayer === "floor" && !pendingNewFloor) {
+        const { x: wx, z: wz } = canvasToWorld(mx, my);
+        const fHits = hitTestFloorsAll(wx, wz);
+        const cursor = fHits[0]?.mode === "resize" ? "grab" : "";
+        if (canvas.style.cursor !== cursor) canvas.style.cursor = cursor;
+      }
+      return;
+    }
     const item = items.find((i) => i._editorKey === dragItemKey);
     if (!item) return;
     const { x: wx, z: wz } = canvasToWorld(mx, my);
@@ -6270,6 +6504,7 @@ function setupCanvas() {
       updateCanvasCursor();
     }
     if (dragFloorKey) {
+      if (dragFloorMode === "resize") canvas.style.cursor = "";
       const keys = dragFloorGroupKeys.length > 1 ? dragFloorGroupKeys : [dragFloorKey];
       for (const k of keys) {
         const f = floors.find((x) => x._key === k);

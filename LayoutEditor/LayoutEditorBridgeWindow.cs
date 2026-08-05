@@ -13,7 +13,7 @@ public class LayoutEditorBridgeWindow : EditorWindow
     public static void OpenWindow()
     {
         var w = GetWindow<LayoutEditorBridgeWindow>(false, "Layout Editor", true);
-        w.minSize = new Vector2(360, 250);
+        w.minSize = new Vector2(360, 320);
         w.Show();
     }
 
@@ -147,5 +147,14 @@ public class LayoutEditorBridgeWindow : EditorWindow
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
         GUILayout.Space(8f);
         EditorGUILayout.LabelField("当前场景", scene.path);
+
+        GUILayout.Space(8f);
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
+        GUILayout.Space(4f);
+        if (GUILayout.Button("导出装饰实测尺寸 (measured-footprints.json)", GUILayout.Height(26)))
+            LayoutEditorFootprintDump.Dump();
+        if (GUILayout.Button("Export Audio for Web", GUILayout.Height(26)))
+            LayoutEditorAudioExporter.ExportAudioForWeb();
     }
 }

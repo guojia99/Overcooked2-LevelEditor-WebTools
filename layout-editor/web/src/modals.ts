@@ -155,11 +155,26 @@ export function openIngredientMultiPicker(
   hint: string,
   ingredients: IngredientEntry[],
   selectedGuids: string[],
-  onSave: (guids: string[]) => void
+  onSave: (guids: string[]) => void,
+  intermediates?: RecipeEntry[]
 ) {
   const groups = [...new Set(ingredients.map((i) => i.group ?? "other"))]
     .filter((g) => g !== "core")
     .sort();
+  const hasIntermediates = intermediates && intermediates.length > 0;
+
+  // card for intermediate recipe (uses recipe icons)
+  function recipeCard(r: RecipeEntry, checked: boolean): string {
+    const en = (r.nameEn && r.nameEn.trim()) || "";
+    return `<label class="pick-card">
+      <input type="checkbox" value="${r.guid}" ${checked ? "checked" : ""}>
+      <span class="pc-head">${iconImg("recipes", r.id, r.icon)}<span class="pc-name">${r.nameZh} <span class="pc-badge">中间产物</span>${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
+    </label>`;
+  }
+
+  function recipeGrid(recipes: RecipeEntry[], selected: Set<string>): string {
+    return `<div class="pick-grid">${recipes.map((r) => recipeCard(r, selected.has(r.guid))).join("")}</div>`;
+  }
 
   const filterBar = `
     <div class="ing-filter-bar">
@@ -167,20 +182,29 @@ export function openIngredientMultiPicker(
       <div class="ing-groups">
         <button type="button" class="ing-group-btn active" data-group="">全部</button>
         ${groups.map((g) => `<button type="button" class="ing-group-btn" data-group="${g}">${foodGroupLabel(g)}</button>`).join("")}
+        ${hasIntermediates ? '<button type="button" class="ing-group-btn" data-group="__intermediate__">中间产物</button>' : ""}
       </div>
     </div>`;
 
-  const buildGrid = (filtered: IngredientEntry[]) =>
-    ingredientGrid(filtered, new Set(selectedGuids));
-
-  function applyFilter(): void {
-    const q = (document.getElementById("ing-pick-search") as HTMLInputElement).value.trim().toLowerCase();
+  function buildFiltered(): string {
+    const selected = new Set(selectedGuids);
     const activeGroup = (document.querySelector(".ing-group-btn.active") as HTMLElement)?.dataset.group ?? "";
+
+    // intermediates group
+    if (activeGroup === "__intermediate__" && intermediates) {
+      return recipeGrid(intermediates, selected);
+    }
+
+    const q = (document.getElementById("ing-pick-search") as HTMLInputElement)?.value?.trim()?.toLowerCase() ?? "";
     let filtered = ingredients;
     if (activeGroup) filtered = filtered.filter((i) => (i.group ?? "other") === activeGroup);
     if (q) filtered = filtered.filter((i) => i.nameZh.toLowerCase().includes(q) || (i.nameEn ?? "").toLowerCase().includes(q) || i.id.toLowerCase().includes(q));
+    return ingredientGrid(filtered, selected);
+  }
+
+  function applyFilter(): void {
     const container = document.getElementById("ing-pick-container");
-    if (container) container.innerHTML = buildGrid(filtered);
+    if (container) container.innerHTML = buildFiltered();
     syncPickCards(container ?? document);
   }
 
@@ -188,7 +212,7 @@ export function openIngredientMultiPicker(
     title,
     `<p class="modal-hint">${hint}</p>
      ${filterBar}
-     <div class="modal-scroll" id="ing-pick-container">${buildGrid(ingredients)}</div>`,
+     <div class="modal-scroll" id="ing-pick-container">${buildFiltered()}</div>`,
     `<button type="button" class="modal-btn" data-cancel>取消</button>
      <button type="button" class="modal-btn primary" data-ok>确定</button>`
   );

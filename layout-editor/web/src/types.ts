@@ -392,6 +392,14 @@ export interface AmbienceLabel {
   zh: string;
 }
 
+export interface AudioItemRule {
+  items: string[];
+  theme?: string;
+  directories?: string[];
+  ambiences?: string[];
+  labelZh: string;
+}
+
 export interface AudioKnowledge {
   baseBundles: string[];
   alwaysLoadedBundles: string[];
@@ -400,6 +408,7 @@ export interface AudioKnowledge {
   themes: AudioTheme[];
   deathThemes: DeathTheme[];
   ambienceLabels: AmbienceLabel[];
+  itemAudioRules: AudioItemRule[];
 }
 
 export interface AudioCatalog extends AudioKnowledge {
@@ -464,6 +473,41 @@ export interface DeathEffectEntry {
 
 export interface DeathEffectCatalog {
   deathEffects: DeathEffectEntry[];
+}
+
+// ---------- Audio export manifest ----------
+
+export interface AudioExportManifest {
+  generatedAt: string;
+  bgm: AudioExportBgm[];
+  sfx: AudioExportSfxDir[];
+  ambiences: AudioExportAmbience[];
+}
+
+export interface AudioExportBgm {
+  guid: string;
+  id: string;
+  nameZh: string;
+  filename: string;
+}
+
+export interface AudioExportSfxDir {
+  id: string;
+  nameZh: string;
+  clips: AudioExportSfxClip[];
+}
+
+export interface AudioExportSfxClip {
+  tag: string;
+  type: "oneshot" | "looping" | "looping_start" | "looping_end";
+  filename: string;
+}
+
+export interface AudioExportAmbience {
+  tag: string;
+  found: boolean;
+  filename?: string;
+  dirId?: string;
 }
 
 export interface LevelSetInfo {

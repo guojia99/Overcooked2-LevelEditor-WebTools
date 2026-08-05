@@ -243,6 +243,7 @@ function recipeTypeOf(id) {
   };
   const mapped = map[head];
   if (mapped === "cake" && id.includes("Pancake")) return "pancake";
+  if (mapped === "cake" && id === "Cake_Chocolate_SO") return "pancake";
   if (mapped) return mapped;
   if (id.startsWith("Fried") || id.startsWith("Fry")) return "fry";
   if (id.startsWith("Mixed")) return "batter";
@@ -653,6 +654,7 @@ function loadAudioKnowledge() {
     themes: [],
     deathThemes: [],
     ambienceLabels: [],
+    itemAudioRules: [],
   };
   if (!fs.existsSync(AUDIO_KNOWLEDGE_PATH)) {
     console.warn(`WARN: audio knowledge file missing: ${AUDIO_KNOWLEDGE_PATH}`);
@@ -668,6 +670,7 @@ function loadAudioKnowledge() {
       themes: raw.themes || [],
       deathThemes: raw.deathThemes || [],
       ambienceLabels: raw.ambienceLabels || [],
+      itemAudioRules: raw.itemAudioRules || [],
     };
   } catch (e) {
     console.warn(`WARN: audio knowledge file unreadable: ${e.message}`);
@@ -851,16 +854,30 @@ function scanAudioCatalog(dictionary, idToRow) {
   ];
   const soRoots = ["Assets/common01/pseudo_prefab_so", "Assets/common02/pseudo_prefab_so"];
 
-  const music = scanPseudoSoFolder(musicRoots).map((m) => ({
-    ...m,
-    nameZh: tidyCatalogNameZh(dictionary.get(m.id)?.zh || idToRow.get(m.id)?.zh || m.id),
-  }));
+  const music = scanPseudoSoFolder(musicRoots).map((m) => {
+    const names = lookupName(dictionary, idToRow, m.id);
+    return {
+      guid: m.guid,
+      id: m.id,
+      assetPath: m.assetPath,
+      bundleName: m.bundleName,
+      nameZh: names.nameZh,
+      nameEn: names.nameEn,
+    };
+  });
   music.sort((a, b) => a.id.localeCompare(b.id));
 
-  const audioDirectories = scanPseudoSoFolder(dirRoots).map((m) => ({
-    ...m,
-    nameZh: tidyCatalogNameZh(dictionary.get(m.id)?.zh || idToRow.get(m.id)?.zh || m.id),
-  }));
+  const audioDirectories = scanPseudoSoFolder(dirRoots).map((m) => {
+    const names = lookupName(dictionary, idToRow, m.id);
+    return {
+      guid: m.guid,
+      id: m.id,
+      assetPath: m.assetPath,
+      bundleName: m.bundleName,
+      nameZh: names.nameZh,
+      nameEn: names.nameEn,
+    };
+  });
   audioDirectories.sort((a, b) => a.id.localeCompare(b.id));
 
   const deathEffects = scanPseudoSoFolder(soRoots)
@@ -1212,6 +1229,7 @@ function main() {
     themes: audioKnowledge.themes,
     deathThemes: audioKnowledge.deathThemes,
     ambienceLabels: audioKnowledge.ambienceLabels,
+    itemAudioRules: audioKnowledge.itemAudioRules ?? [],
   });
 
   const materials = scanFloorMaterials(dictionary, idToRow);

@@ -493,6 +493,22 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // ---------- Audio stream ----------
+
+            if (path == "/api/audio/exports" && request.HttpMethod == "GET")
+            {
+                try { ServeAudioExports(response); }
+                catch (System.Exception ex) { Debug.LogWarning("Layout Editor audio exports: " + ex.Message); }
+                return;
+            }
+
+            if (path == "/api/audio/stream" && request.HttpMethod == "GET")
+            {
+                try { ServeAudioStream(request, response); }
+                catch (System.Exception ex) { Debug.LogWarning("Layout Editor audio stream: " + ex.Message); }
+                return;
+            }
+
             // ---------- Custom Recipe Management ----------
 
             if (path == "/api/custom-recipes/config" && request.HttpMethod == "GET")
@@ -721,5 +737,105 @@ public class LayoutEditorHttpServer
             WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = error }));
         else
             WriteJson(response, 200, "{\"ok\":true}");
+    }
+
+    private static void ServeAudioExports(HttpListenerResponse response)
+    {
+        var manifestPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports/audio-exports.json"));
+        if (!File.Exists(manifestPath))
+        {
+            WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "audio-exports.json 不存在，请先在 Unity Editor 中导出音频。" }));
+            return;
+        }
+        var bytes = File.ReadAllBytes(manifestPath);
+        response.ContentType = "application/json; charset=utf-8";
+        response.StatusCode = 200;
+        response.ContentLength64 = bytes.Length;
+        response.OutputStream.Write(bytes, 0, bytes.Length);
+        response.OutputStream.Close();
+    }
+
+    private static void ServeAudioStream(HttpListenerRequest request, HttpListenerResponse response)
+    {
+        var rel = request.QueryString["path"];
+        if (string.IsNullOrEmpty(rel))
+        {
+            WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "缺少参数 path。" }));
+            return;
+        }
+
+        var audioRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports"));
+        var absPath = Path.GetFullPath(Path.Combine(audioRoot, rel));
+
+        if (!absPath.StartsWith(audioRoot, StringComparison.OrdinalIgnoreCase) || !File.Exists(absPath))
+        {
+            WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "音频文件不存在。" }));
+            return;
+        }
+
+        var ext = Path.GetExtension(absPath).ToLowerInvariant();
+        if (ext == ".wav")
+            response.ContentType = "audio/wav";
+        else if (ext == ".mp3")
+            response.ContentType = "audio/mpeg";
+        else if (ext == ".ogg")
+            response.ContentType = "audio/ogg";
+        else
+            response.ContentType = "application/octet-stream";
+
+        response.Headers.Add("Accept-Ranges", "bytes");
+
+        var fileInfo = new FileInfo(absPath);
+        long total = fileInfo.Length;
+
+        var rangeHeader = request.Headers["Range"];
+        if (!string.IsNullOrEmpty(rangeHeader) && rangeHeader.StartsWith("bytes=", StringComparison.OrdinalIgnoreCase))
+        {
+            var range = rangeHeader.Substring("bytes=".Length).Split('-');
+            long start = 0;
+            long end = total - 1;
+            if (!string.IsNullOrEmpty(range[0]))
+                long.TryParse(range[0], out start);
+            if (range.Length > 1 && !string.IsNullOrEmpty(range[1]))
+                long.TryParse(range[1], out end);
+
+            if (start < 0) start = 0;
+            if (end >= total) end = total - 1;
+            if (start > end)
+            {
+                response.StatusCode = 416;
+                response.Headers.Add("Content-Range", "bytes */" + total);
+                response.OutputStream.Close();
+                return;
+            }
+
+            long length = end - start + 1;
+            response.StatusCode = 206;
+            response.Headers.Add("Content-Range", "bytes " + start + "-" + end + "/" + total);
+            response.ContentLength64 = length;
+
+            using (var fs = File.OpenRead(absPath))
+            {
+                fs.Seek(start, SeekOrigin.Begin);
+                var buf = new byte[Math.Min(length, 65536)];
+                long remaining = length;
+                while (remaining > 0)
+                {
+                    int read = fs.Read(buf, 0, (int)Math.Min(remaining, buf.Length));
+                    if (read == 0) break;
+                    response.OutputStream.Write(buf, 0, read);
+                    remaining -= read;
+                }
+            }
+        }
+        else
+        {
+            response.StatusCode = 200;
+            response.ContentLength64 = total;
+            var bytes = File.ReadAllBytes(absPath);
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+        }
+
+        response.OutputStream.Close();
     }
 }
