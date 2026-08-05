@@ -1,4 +1,5 @@
 import "./style.css";
+import "./recipeList.css";
 import {
   fetchFloorMaterials,
   fetchGrid,
@@ -21,7 +22,7 @@ import {
   fetchCounterAppearances,
   fetchSwitchMaterials,
 } from "./api";
-import { renderManageView, goManage, consumeTargetScene, openConfigTabsModal, openAudioModal } from "./levels";
+import { renderManageView, goManage, consumeTargetScene, openConfigTabsModal, openAudioModal, renderLevelSummary } from "./levels";
 import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
 import { HistoryStack } from "./history";
@@ -33,6 +34,7 @@ import {
 } from "./modals";
 import { foodGroupLabel, ingredientNameZh, ingredientOptionLabel } from "./ingredientLabels";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
+import { rlCardHtml, rlSectionHtml, type RecipeWithGroups } from "./recipeCard";
 import { tidyCatalogNameZh } from "./displayLabels";
 import { paintStyleForItem } from "./itemColors";
 import {
@@ -460,8 +462,6 @@ function stubControlsHtml(item: EditorItem): string {
     case "Terminal": {
       const t = item.terminal ?? {};
       const targetId = t.pilotableObjectInstanceId;
-      const target = targetId ? items.find((i) => i.instanceId === targetId) : undefined;
-      const targetName = target ? itemLabel(target) : (targetId ? "不在当前场景" : "未绑定");
       let targetOpts = ['<option value="">— 未绑定 —</option>'];
       for (const i of items) {
         const kind = stubKindOf(i);
@@ -1028,6 +1028,7 @@ async function openRecipesDialog() {
        </div>
      </div>`,
     `<button type="button" class="modal-btn" data-cancel>取消</button>
+     <button type="button" class="modal-btn" id="rw-view-selected" title="查看当前已选菜谱（分类卡片）">✅ 已选菜谱</button>
      <button type="button" class="modal-btn" id="rw-clear-all">清空已选</button>
      <button type="button" class="modal-btn primary" data-ok>保存菜谱</button>`
   );
@@ -1301,6 +1302,11 @@ async function openRecipesDialog() {
 
   rerender();
 
+  document.getElementById("rw-view-selected")?.addEventListener("click", () => {
+    closeModal();
+    void openSelectedRecipesDialog();
+  });
+
   document.getElementById("rw-clear-all")?.addEventListener("click", () => {
     selected.clear();
     listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
@@ -1344,30 +1350,11 @@ async function openRecipesDialog() {
       }
     }
   }
-
-  function fillMissingUtensils() {
-    const reqIngs = new Set<string>();
-    const steps = new Set<string>();
-    for (const r of currentRecipes()) {
-      (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
-      if (r.cookingStep) steps.add(r.cookingStep);
-    }
-    const have = existingPrefabIds();
-    const missing = computeRequiredUtensils(reqIngs, steps).filter((u) => !have.has(u));
-    if (!missing.length) return;
-    const base = placementBase();
-    let idx = 0;
-    for (const u of missing) {
-      const cat = catalogItemById(u);
-      if (!cat) continue;
-      addFromCatalog(cat, base.x + idx * CELL, base.z - 2 * CELL);
-      idx++;
-    }
-  }
 }
 
-/** Read-only "已选菜谱" modal: shows the level's currently selected recipes (3-per-row cards),
- *  plus the full required-ingredient and required-utensil checklist (✓ already on canvas / ✗ missing). */
+/** Read-only "已选菜谱" modal: shows the level's currently selected recipes with the
+ *  "菜谱清单列表" card UI grouped by recipe family, plus the full required-ingredient
+ *  and required-utensil checklist (✓ already on canvas / ✗ missing). */
 async function openSelectedRecipesDialog() {
   if (!scenePath) {
     setStatus("请先选择场景", false);
@@ -1396,80 +1383,36 @@ async function openSelectedRecipesDialog() {
 
   const byGuid = new Map(recipes.map((r) => [r.guid, r]));
   intermediatesCache = recipes.filter((r) => r.intermediate);
-  const selected = (level.recipeGuids ?? [])
+  const selected: RecipeWithGroups[] = (level.recipeGuids ?? [])
     .map((g) => byGuid.get(g))
     .filter((r): r is RecipeEntry => !!r && !r.intermediate);
 
-  const reqIngs = new Set<string>();
-  const steps = new Set<string>();
-  for (const r of selected) {
-    (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
-    if (r.cookingStep) steps.add(r.cookingStep);
-  }
-  const haveDisp = new Set<string>();
-  for (const it of items) {
-    if (it.stubKind === "Dispenser") {
-      const id = ingredientIdByGuid(it.dispenser?.spawnerItemPrefabGuid);
-      if (id) haveDisp.add(id);
-    }
-  }
-  const havePref = new Set(items.map((it) => prefabIdFromPath(it.prefabAssetPath)));
-  const reqUt = computeRequiredUtensils(reqIngs, steps);
-
-  const cards = selected
-    .map((r) => {
-      const chips = (r.ingredients ?? [])
-        .map((ingId) => {
-          const ing = ingredientEntryById(ingId);
-          const name = ing?.nameZh ?? ingId;
-          return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("ingredients", ing?.id, ing?.icon)}${escHtml(name)}</span>`;
-        })
-        .join("");
-      const grp =
-        r.group && r.group !== "core" && r.group !== "levelset"
-          ? ` <span class="pc-badge">${escHtml(foodGroupLabel(r.group))}</span>`
-          : "";
-      const lsBadge = r.group === "levelset"
-        ? ` <span class="pc-badge" style="background:#3b82f6;color:#fff">本关</span>`
-        : "";
-      return `<div class="pick-card recipe-card static">
-        <div class="rc-head">${foodIconImg("recipes", r.id, r.icon)}<span class="pc-name">${escHtml(r.nameZh)}${grp}${lsBadge}</span></div>
-        <div class="rc-ings">${chips || '<span class="muted small">无食材</span>'}</div>
-      </div>`;
-    })
+  // "菜谱清单列表" card UI, grouped by recipe family (汉堡 / 卷饼 / …)
+  const sections = groupRecipesByType(selected)
+    .map(([type, arr]) =>
+      rlSectionHtml(
+        type,
+        arr
+          .map((r) =>
+            rlCardHtml(r, {
+              allRecipes: recipes as RecipeWithGroups[],
+              ingredientName: (id) => ingredientEntryById(id)?.nameZh ?? id,
+              extraBadge: r.group === "levelset" ? "本关" : undefined,
+            })
+          )
+          .join(""),
+        arr.length
+      )
+    )
     .join("");
-
-  const ingRows =
-    [...reqIngs]
-      .sort()
-      .map((i) => {
-        const ok = haveDisp.has(i);
-        const ing = ingredientEntryById(i);
-        return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span>${foodIconImg("ingredients", ing?.id, ing?.icon)}<span>${escHtml(ingredientNameById(i))}</span><span class="muted">${escHtml(i)}</span></div>`;
-      })
-      .join("") || '<p class="muted">无</p>';
-
-  const utRows =
-    reqUt
-      .map((u) => {
-        const ok = havePref.has(u);
-        const cat = catalogItemById(u);
-        const label = cat ? tidyCatalogNameZh(cat.nameZh, cat.id) : u;
-        return `<div class="rw-row ${ok ? "" : "miss"}"><span class="rw-mark">${ok ? "✓" : "✗"}</span><span>${escHtml(label)}</span><span class="muted">${escHtml(u)}</span></div>`;
-      })
-      .join("") || '<p class="muted">无</p>';
 
   openModal(
     `已选菜谱 · ${level.levelName || "未命名"}（${selected.length}）`,
     `<p class="modal-hint">当前订单菜谱（写入 LevelInfoSO.recipes）</p>
-     <div class="sr-grid">${cards || '<p class="muted">未选择任何菜谱</p>'}</div>
-     <p class="modal-hint" style="margin-top:12px">所需食材（✓ 已有食材箱 · ✗ 缺失）</p>
-     <div class="rw-rows">${ingRows}</div>
-     <p class="modal-hint" style="margin-top:12px">所需锅具 / 道具（据烹饪方式推断）</p>
-     <div class="rw-rows">${utRows}</div>`,
+     <div class="modal-scroll">${sections || '<p class="muted">未选择任何菜谱</p>'}</div>`,
     `<button type="button" class="modal-btn primary" data-close>关闭</button>`
   );
-  document.querySelector(".modal-panel")?.classList.add("wide");
+  document.querySelector(".modal-panel")?.classList.add("wide", "sel-recipes");
   document.querySelector("[data-close]")?.addEventListener("click", closeModal);
 }
 
@@ -1488,10 +1431,10 @@ app.innerHTML = `
       <button id="btn-save-items" class="primary" title="仅写回物品（不修改地板、背景、装饰）">🎯 仅物品</button>
       <span class="toolbar-sep"></span>
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
-      <button id="btn-selected-recipes" type="button" title="查看当前已选菜谱、所需食材与锅具">✅ 已选菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
       <button id="btn-level-config" type="button" title="配置各玩家分数">📊 分数配置</button>
       <button id="btn-level-audio" type="button" title="配置关卡音频">🔊 音频</button>
+      <button id="btn-summary" type="button" title="查看关卡菜谱汇总并一键导出图片">📋 汇总</button>
       <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">📥 同步布局…</button>
       <span id="status" class="status">连接中…</span>
     </div>
@@ -5287,7 +5230,6 @@ async function init() {
   applyPanelCollapse();
 
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
-  document.getElementById("btn-selected-recipes")!.addEventListener("click", () => void openSelectedRecipesDialog());
   document.getElementById("btn-utensils")!.addEventListener("click", () => openUtensilManager());
   document.getElementById("chk-auto-intermediates")!.addEventListener("change", (e) => {
     autoIntermediates = (e.target as HTMLInputElement).checked;
@@ -5333,6 +5275,12 @@ async function init() {
     })
   );
 
+  document.getElementById("btn-summary")!.addEventListener("click", () =>
+    confirmLeaveIfDirty(() =>
+      void withLevelDetail((detail) => renderLevelSummary(app, currentLevelSet, detail.levelInfoAssetPath))
+    )
+  );
+
   document.getElementById("btn-sync")!.addEventListener("click", () => openSyncLayoutDialog());
 
   wireNav((target) => {
@@ -5340,6 +5288,10 @@ async function init() {
     else if (target === "custom-recipes") {
       location.hash = "#/custom-recipes";
       location.reload();
+    } else if (target === "recipes") {
+      confirmLeaveIfDirty(() => {
+        location.href = "/recipes";
+      });
     }
   });
 
@@ -5922,7 +5874,7 @@ function intermediateKeysForRecipe(r: RecipeEntry): string[] {
   const step = r.cookingStep ?? "";
 
   // 面糊（半成品）→ 煎锅 + 搅拌碗
-  const isPancake = type === "pancake" || id.includes("Pancake") || id === "Cake_Chocolate_SO";
+  const isPancake = type === "pancake" || id.includes("Pancake") || id === "Cake_Chocolate_SO" || id === "Cake_Plain_SO";
   if (isPancake) {
     const strawberry = ings.includes("PancakeStrawberry") || id.includes("Strawberry");
     const blueberry = ings.includes("Blueberry") || id.includes("Blueberry");

@@ -46,7 +46,10 @@ export function isStackHostCatalog(cat: CatalogItem | undefined): boolean {
 }
 
 export function isStackUtensilCatalog(cat: CatalogItem | undefined): boolean {
-  return (cat?.category === "utensils" || cat?.category?.startsWith("utensils/")) && Boolean(cat.stack?.hostRule);
+  return (
+    (cat?.category === "utensils" || cat?.category?.startsWith("utensils/") === true) &&
+    Boolean(cat.stack?.hostRule)
+  );
 }
 
 export function hostRuleLabelZh(rule: CatalogStackMeta["hostRule"]): string {

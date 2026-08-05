@@ -16,6 +16,7 @@ import type {
   FloorMaterial,
   FloorMaterialCatalog,
   GridInfo,
+  IconStatusList,
   IngredientEntry,
   LayoutDocument,
   LevelDetail,
@@ -363,6 +364,13 @@ export async function fetchAudioExports(): Promise<AudioExportManifest | null> {
 
 export function getAudioStreamUrl(relPath: string): string {
   return `/api/audio/stream?path=${encodeURIComponent(relPath)}`;
+}
+
+// ---------- Icon status ----------
+
+export async function fetchIconsStatus(): Promise<IconStatusList> {
+  const r = await fetch("/api/icons/status");
+  return readApiJson<IconStatusList>(r);
 }
 
 export interface SetCreateBody {

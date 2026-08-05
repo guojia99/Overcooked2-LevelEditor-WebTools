@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>export-test</title>
+<style>
+.bg { width: 200px; height: 100px; background-image: url("/recipe-ui/recipe-bg-main.png"); background-size: 100% 100%; }
+</style>
+</head>
+<body>
+<div id="node" class="bg">
+  <img src="/icons/recipes/Burger_Plain_SO.png" width="60" height="60">
+  <img src="/icons/ingredients/MeatSO.png" width="40" height="40">
+</div>
+<script>
+async function fetchAsDataUrl(url) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const blob = await resp.blob();
+    return await new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = () => resolve(null);
+      fr.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+async function inlineImages(src, dst) {
+  const srcAll = [src, ...src.querySelectorAll("*")];
+  const dstAll = [dst, ...dst.querySelectorAll("*")];
+  for (let i = 0; i < srcAll.length; i++) {
+    const se = srcAll[i], de = dstAll[i];
+    if (se instanceof HTMLImageElement) {
+      const u = se.currentSrc || se.src;
+      const d = await fetchAsDataUrl(u);
+      if (d) de.src = d;
+    }
+    const bg = getComputedStyle(se).backgroundImage;
+    if (bg && bg.includes("url(")) {
+      let out = bg;
+      for (const m of [...bg.matchAll(/url\((["']?)(.*?)\1\)/g)]) {
+        const d = await fetchAsDataUrl(m[2]);
+        if (d) out = out.replace(m[0], `url("${d}")`);
+      }
+      de.style.setProperty("background-image", out);
+    }
+  }
+}
+async function run() {
+  try {
+    const node = document.getElementById("node");
+    const rect = node.getBoundingClientRect();
+    const w = Math.max(1, Math.round(rect.width));
+    const h = Math.max(1, Math.round(rect.height));
+    const clone = node.cloneNode(true);
+    await inlineImages(node, clone);
+    clone.style.width = w + "px";
+    clone.style.height = h + "px";
+    clone.style.background = "#22262e";
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+    wrapper.style.width = w + "px";
+    wrapper.style.height = h + "px";
+    wrapper.appendChild(clone);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", w); svg.setAttribute("height", h);
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+    fo.setAttribute("width", w); fo.setAttribute("height", h);
+    fo.appendChild(wrapper);
+    svg.appendChild(fo);
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml;charset=utf-8" }));
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error("svg load fail")); img.src = url; });
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#22262e";
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    document.body.innerHTML = "OK " + dataUrl.length;
+  } catch (e) {
+    document.body.innerHTML = "ERR " + (e && e.message ? e.message : String(e));
+  }
+}
+run();
+</script>
+</body>
+</html>

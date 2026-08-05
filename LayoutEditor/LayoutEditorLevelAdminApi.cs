@@ -368,6 +368,7 @@ public static class LayoutEditorLevelAdminApi
                 sceneName = sceneName,
                 sceneAssetPath = sceneAssetPath,
                 hasScreenshot = so.screenshot != null,
+                screenshotPath = so.screenshot != null ? AssetDatabase.GetAssetPath(so.screenshot) : "",
                 hasScene = File.Exists(AbsPath(sceneAssetPath))
             });
         }
@@ -398,6 +399,7 @@ public static class LayoutEditorLevelAdminApi
             sceneName = sceneName,
             sceneAssetPath = sceneAssetPath,
             hasScreenshot = so.screenshot != null,
+            screenshotPath = so.screenshot != null ? AssetDatabase.GetAssetPath(so.screenshot) : "",
             debugRecipeCount = so.debugRecipeCount,
             disableDynamicParenting = so.disableDynamicParenting,
             dependencies = so.dependencies != null ? (string[])so.dependencies.Clone() : new string[0],

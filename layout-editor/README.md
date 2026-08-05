@@ -55,6 +55,14 @@
 
 > 说明：音频字段位于场景的 `PseudoPrefabManagerStub` 组件（非 LevelInfoSO）。许多 BGM 所在 bundle 不在默认加载列表，需在关卡基础信息的 dependencies 额外添加（木筏主题 BGM 需 `bundle11`）。
 
+## 菜谱清单列表（独立页面）
+
+顶栏 **菜谱清单列表…** 进入独立的只读页面 **`/recipes`**（Vite 多入口构建，Unity 桥按 clean URL 映射到 `dist/recipes.html`），陈列全部菜谱并按菜谱类型（汉堡/卷饼/披萨/…）分组，卡片采用菜谱书 UI（成品背景 + 食材分组背景 + 锅具图标，背景图取自 `sprite-dump/` 的 `UI_DLC07_Recipe_Background_Main_01.png` 与 `Recipe_Background_2.png`）：
+
+- **筛选**：搜索（菜名/英文/ID/食材）、类型 chips、来源（基础/自定义/DLC2/DLC5）、「含半成品」开关（默认隐藏 score≤0 的半成品）。
+- **食材分组**：每个菜谱按烹饪步骤分组成组展示，有步骤的组底部居中显示锅具图标（`icons/catalog/<utensil>.png`）与步骤名（`cooking-steps.json`）；无锅具的食材（汉堡胚、生菜等）合并为生食材组。分组算法见 `recipes.json` 新增字段 `cookingGroups`（`LayoutEditorRecipeKnowledge.ComputeCookingGroups` 与 `build-catalog.mjs` 的 `computeCookingGroups` 镜像实现）：煎锅仅覆盖肉排类中间产物（面包胚保持生），其余烹饪步骤整锅入组；面糊→煎锅等两段式烹饪会在组尾追加一次最终锅具标记。旧数据缺字段时前端自动回退推导（`web/src/recipeGroups.ts`）。
+- **数据来源**：桥在线走 `/api/recipes`，离线回退静态 `recipes.json`。
+
 ---
 
 ## 维护者：更新目录或前端（需要 Node）

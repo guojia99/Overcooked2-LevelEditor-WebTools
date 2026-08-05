@@ -88,7 +88,7 @@
     },
     {
       "id": "Cake_Plain_SO",
-      "step": "Mixer",
+      "step": "FryingPan",
       "ingredients": [
         "FlourSO",
         "EggSO"
@@ -333,6 +333,7 @@
       "ingredients": [
         "DLC02_ChoppedBun",
         "BurgerPineapple",
+        "MeatSO",
         "MeatSO"
       ]
     },
@@ -393,6 +394,8 @@
       "id": "Smoothie_Banana",
       "step": "Blender",
       "ingredients": [
+        "Banana",
+        "Banana",
         "Banana"
       ]
     },
@@ -401,6 +404,7 @@
       "step": "Blender",
       "ingredients": [
         "Banana",
+        "Banana",
         "SmoothiePineapple"
       ]
     },
@@ -408,6 +412,8 @@
       "id": "Smoothie_Melon",
       "step": "Blender",
       "ingredients": [
+        "Melon",
+        "Melon",
         "Melon"
       ]
     },
@@ -415,6 +421,8 @@
       "id": "Smoothie_Strawberry",
       "step": "Blender",
       "ingredients": [
+        "SmoothieStrawberry",
+        "SmoothieStrawberry",
         "SmoothieStrawberry"
       ]
     },

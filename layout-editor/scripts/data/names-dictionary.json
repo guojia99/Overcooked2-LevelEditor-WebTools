@@ -484,23 +484,23 @@
     },
     {
       "id": "Cake_Honey_SO",
-      "zh": "蜂蜜蛋糕",
-      "en": "Honey Cake"
+      "zh": "原味蛋糕",
+      "en": "Plain Cake"
     },
     {
       "id": "Cake_HoneyCarrot_SO",
-      "zh": "蜂蜜胡萝卜蛋糕",
-      "en": "Honey Carrot Cake"
+      "zh": "胡萝卜蛋糕",
+      "en": "Carrot Cake"
     },
     {
       "id": "Cake_HoneyChocolate_SO",
-      "zh": "蜂蜜巧克力蛋糕",
-      "en": "Honey Chocolate Cake"
+      "zh": "巧克力蛋糕",
+      "en": "Chocolate Cake"
     },
     {
       "id": "Cake_Plain_SO",
-      "zh": "原味蛋糕",
-      "en": "Plain Cake"
+      "zh": "原味松饼",
+      "en": "Plain Pancake"
     },
     {
       "id": "Cake_StrawberryPancake",
@@ -5044,8 +5044,8 @@
     },
     {
       "id": "Steamed_Carrot_SO",
-      "zh": "蒸胡萝卜",
-      "en": "Steamed Carrot"
+      "zh": "胡萝卜饺",
+      "en": "Carrot Dumpling"
     },
     {
       "id": "Steamed_Fish_SO",
@@ -5054,13 +5054,13 @@
     },
     {
       "id": "Steamed_Meat_SO",
-      "zh": "蒸肉",
-      "en": "Steamed Meat"
+      "zh": "鲜肉饺",
+      "en": "Meat Dumpling"
     },
     {
       "id": "Steamed_Prawns_SO",
-      "zh": "蒸虾",
-      "en": "Steamed Prawns"
+      "zh": "虾饺",
+      "en": "Prawn Dumpling"
     },
     {
       "id": "Steamer",

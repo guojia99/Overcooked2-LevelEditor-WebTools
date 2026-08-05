@@ -373,6 +373,45 @@ public class RecipeEntryDto
     public string type;
     /** True for score-0 half-finished products (batter, fried parts, optional pizza parts) — not orderable. */
     public bool intermediate;
+    /** Ingredient cooking groups for the recipe-list UI (recipe book grouping rules):
+     *  raw group first (step = ""), then per-step groups, optional final-step marker last. */
+    public RecipeCookingGroupDto[] cookingGroups;
+}
+
+/** One ingredient group of a recipe for the recipe-list UI: ingredients cooked
+ *  together in the same step (step = "" means a raw group with no utensil),
+ *  plus the utensils/workstations used by that step. */
+[Serializable]
+public class RecipeCookingGroupDto
+{
+    /** CookingSteps asset id, "" = no cooking (raw ingredients). */
+    public string step;
+    /** Utensil / workstation ids for the step (e.g. "Cooker","FryPan"). */
+    public string[] utensils;
+    /** Ingredient asset ids in this group. */
+    public string[] ingredients;
+}
+
+[Serializable]
+public class IconStatusItemDto
+{
+    public string id;
+    public string nameZh;
+    public string nameEn;
+    public bool hasIcon;
+    public string group;
+    public string type;
+}
+
+[Serializable]
+public class IconStatusListDto
+{
+    public IconStatusItemDto[] missingRecipes;
+    public IconStatusItemDto[] missingIngredients;
+    public int totalRecipes;
+    public int totalIngredients;
+    public int recipesWithIcon;
+    public int ingredientsWithIcon;
 }
 
 [Serializable]
@@ -580,6 +619,8 @@ public class LevelSummaryDto
     public string sceneName;
     public string sceneAssetPath;
     public bool hasScreenshot;
+    /** Asset path of the screenshot texture ("" when none), for the web UI to preview. */
+    public string screenshotPath;
     public bool hasScene;
 }
 
@@ -625,6 +666,8 @@ public class LevelDetailDto
     public string sceneName;
     public string sceneAssetPath;
     public bool hasScreenshot;
+    /** Asset path of the screenshot texture ("" when none), for the web UI to preview. */
+    public string screenshotPath;
     public int debugRecipeCount;
     public bool disableDynamicParenting;
     public string[] dependencies;

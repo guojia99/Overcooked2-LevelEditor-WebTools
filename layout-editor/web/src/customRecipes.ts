@@ -50,6 +50,8 @@ function shell(app: HTMLElement, title: string): HTMLElement {
     } else if (target === "manage") {
       location.hash = "#/manage";
       location.reload();
+    } else if (target === "recipes") {
+      location.href = "/recipes";
     }
   });
   return document.getElementById("cr-content")!;

@@ -244,6 +244,7 @@ function recipeTypeOf(id) {
   const mapped = map[head];
   if (mapped === "cake" && id.includes("Pancake")) return "pancake";
   if (mapped === "cake" && id === "Cake_Chocolate_SO") return "pancake";
+  if (mapped === "cake" && id === "Cake_Plain_SO") return "pancake";
   if (mapped) return mapped;
   if (id.startsWith("Fried") || id.startsWith("Fry")) return "fry";
   if (id.startsWith("Mixed")) return "batter";
@@ -645,6 +646,135 @@ function loadKnowledge() {
   };
 }
 
+// Utensil / workstation sets per cooking step (mirrors StepUtensils in
+// LayoutEditorRecipeKnowledge.cs). First entry = station, last = cooking vessel.
+const STEP_UTENSILS = {
+  Pot: ["Cooker", "Pot"],
+  FryingPan: ["Cooker", "FryPan"],
+  DeepFatFryer: ["FryingStation", "FrierBasket"],
+  OvenTray: ["Oven"],
+  Steamer: ["Cooker", "Steamer"],
+  Mixer: ["Mixer", "MixerBowl", "Oven"],
+  Blender: ["Blender", "BlenderCup"],
+  GriddlePan: ["Campfire", "GriddlePan"],
+  KebabSkewer: ["Barbeque", "Skewer"],
+  ToastingFork: ["Campfire", "ToastingFork"],
+  MixingBowl: ["Mixer", "MixerBowl"],
+};
+
+/** Recipe-book ingredient grouping (mirrors ComputeCookingGroups in LayoutEditorRecipeKnowledge.cs).
+ *  Rules (evaluated in order):
+ *  - 半成品：直接按自身烹饪步骤成组。
+ *  - 煎锅中间产物覆盖：汉堡肉排 → FryingPan，面包胚/生菜保持生。
+ *  - 寿司：只有寿司米蒸，其余不处理。
+ *  - 卷饼：米饭煮，卷饼皮不处理，其余煎。
+ *  - 棉花糖饼干：只有棉花糖烤，其余不处理。
+ *  - 意面：意面煮，其余食材各自煎（分开成组）。
+ *  - 炸物：所有食材分别炸（分开成组）。
+ *  - 面糊/面团（含面粉）：面粉鸡蛋搅拌，其余进最终锅具；最终锅具图标作为标记组追加。 */
+function computeCookingGroups(recipe, allRecipes, cookSteps) {
+  const { cookingStep: finalStep, ingredients, type, intermediate } = recipe;
+  if (!ingredients || !ingredients.length) return [];
+  const isCookStep = (s) => !!s && cookSteps.has(s);
+
+  if (intermediate) {
+    const step = isCookStep(finalStep) ? finalStep : "";
+    return [{ step, utensils: STEP_UTENSILS[step] || [], ingredients }];
+  }
+
+  const prep = new Map(); // ingredient -> step ("" = raw)
+
+  if (finalStep === "FryingPan") {
+    const candidates = allRecipes
+      .filter(
+        (r) =>
+          r.intermediate &&
+          isCookStep(r.cookingStep) &&
+          (r.cookingStep === "FryingPan" || r.cookingStep === "MixingBowl") &&
+          (r.ingredients || []).length > 0 &&
+          (r.ingredients || []).every((ing) => ingredients.includes(ing))
+      )
+      .sort((a, b) => b.ingredients.length - a.ingredients.length || a.id.localeCompare(b.id));
+    for (const cand of candidates) {
+      for (const ing of cand.ingredients) {
+        if (!prep.has(ing)) prep.set(ing, cand.cookingStep);
+      }
+    }
+  }
+
+  let flourBranch = false;
+  if (type === "sushi") {
+    for (const ing of ingredients) {
+      prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Steamer" : "");
+    }
+  } else if (type === "burrito") {
+    for (const ing of ingredients) {
+      prep.set(ing, ing === "TortillaSO" ? "" : ing === "SushiRiceSO" || ing === "RiceSO" ? "Pot" : "FryingPan");
+    }
+  } else if (type === "smores") {
+    for (const ing of ingredients) {
+      prep.set(ing, ing === "DLC05_Marshmallow" ? "ToastingFork" : "");
+    }
+  } else if (finalStep === "Pot" && ingredients.includes("PastaSO")) {
+    for (const ing of ingredients) {
+      prep.set(ing, ing === "PastaSO" ? "Pot" : "FryingPan");
+    }
+  } else if (finalStep === "DeepFatFryer" || type === "fry") {
+    for (const ing of ingredients) prep.set(ing, "DeepFatFryer");
+  } else if (
+    type === "cake" ||
+    (ingredients.includes("FlourSO") && finalStep !== "Mixer" && finalStep !== "MixingBowl")
+  ) {
+    // 蛋糕：搅拌 + 烤箱；面糊/面团（松饼/饺子）：搅拌 + 最终锅具
+    flourBranch = type !== "cake";
+    const cookStep = type === "cake" ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
+    for (const ing of ingredients) {
+      if (!prep.has(ing)) {
+        prep.set(ing, ing === "FlourSO" || ing === "EggSO" ? "MixingBowl" : cookStep);
+      }
+    }
+  }
+
+  const anyAssigned = [...prep.values()].some((s) => s !== "");
+  const fallbackStep = anyAssigned ? "" : isCookStep(finalStep) ? finalStep : "";
+  for (const ing of ingredients) {
+    if (!prep.has(ing)) prep.set(ing, fallbackStep);
+  }
+
+  const groupMap = new Map();
+  const order = [];
+  for (const ing of ingredients) {
+    const st = prep.get(ing);
+    if (!groupMap.has(st)) {
+      groupMap.set(st, []);
+      order.push(st);
+    }
+    groupMap.get(st).push(ing);
+  }
+
+  const ordered = order.filter((s) => s !== "");
+  if (flourBranch && isCookStep(finalStep) && !groupMap.has(finalStep) && order.length > 0) {
+    ordered.push(finalStep);
+  }
+
+  const splitPerIngredient =
+    finalStep === "DeepFatFryer" || type === "fry" || (finalStep === "Pot" && ingredients.includes("PastaSO"));
+
+  const result = [];
+  if (groupMap.has("")) result.push({ step: "", utensils: [], ingredients: groupMap.get("") });
+  for (const st of ordered) {
+    const ings = groupMap.get(st) || [];
+    if (splitPerIngredient && st !== "" && ings.length > 1) {
+      for (const ing of ings) {
+        result.push({ step: st, utensils: STEP_UTENSILS[st] || [], ingredients: [ing] });
+      }
+    } else {
+      result.push({ step: st, utensils: STEP_UTENSILS[st] || [], ingredients: ings });
+    }
+  }
+  return result;
+}
+
 function loadAudioKnowledge() {
   const empty = {
     baseBundles: ["bundle47"],
@@ -723,7 +853,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
       stats.ings++;
       const leaf = guidIndex.get(guid);
       const leafId = leaf ? leaf.id : guid;
-      if (!ingredientIds.includes(leafId)) ingredientIds.push(leafId);
+      ingredientIds.push(leafId);
     };
     if (fields.cookingStepGuid) {
       const stepId = guidIndex.get(fields.cookingStepGuid)?.id || "";
@@ -783,6 +913,10 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
       type: recipeTypeOf(id),
       intermediate: (fields.score || 0) <= 0,
     });
+  }
+
+  for (const r of list) {
+    r.cookingGroups = computeCookingGroups(r, list, knowledge.cookSteps);
   }
 
   list.sort((a, b) => a.nameZh.localeCompare(b.nameZh));

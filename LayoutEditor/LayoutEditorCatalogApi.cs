@@ -94,6 +94,8 @@ public static class LayoutEditorCatalogApi
             return "pancake";
         if (mapped == "cake" && id == "Cake_Chocolate_SO")
             return "pancake";
+        if (mapped == "cake" && id == "Cake_Plain_SO")
+            return "pancake";
         if (mapped != null)
             return mapped;
         if (id.StartsWith("Fried", StringComparison.Ordinal) || id.StartsWith("Fry", StringComparison.Ordinal))
@@ -204,6 +206,11 @@ public static class LayoutEditorCatalogApi
                     intermediate = score <= 0
                 });
             }
+        }
+
+        foreach (var r in list)
+        {
+            r.cookingGroups = LayoutEditorRecipeKnowledge.ComputeCookingGroups(r, list);
         }
 
         list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));

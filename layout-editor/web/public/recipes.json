@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T04:27:55.610Z",
+  "generatedAt": "2026-08-05T16:21:19.630Z",
   "schemaVersion": 3,
   "itemCount": 76,
   "recipes": [
@@ -11,15 +11,31 @@
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Strawberry.asset",
       "cookingStep": "Blender",
       "ingredients": [
+        "SmoothieStrawberry",
+        "SmoothieStrawberry",
         "SmoothieStrawberry"
       ],
-      "ingredientCount": 1,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
       "group": "dlc02",
       "type": "smoothie",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "SmoothieStrawberry",
+            "SmoothieStrawberry",
+            "SmoothieStrawberry"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -41,6 +57,26 @@
       "group": "dlc05",
       "type": "smores",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC05_Crackers",
+            "DLC05_Strawberry"
+          ]
+        },
+        {
+          "step": "ToastingFork",
+          "utensils": [
+            "Campfire",
+            "ToastingFork"
+          ],
+          "ingredients": [
+            "DLC05_Marshmallow"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -62,6 +98,20 @@
       "group": "dlc02",
       "type": "batter",
       "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "PancakeStrawberry"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -83,6 +133,28 @@
       "group": "dlc02",
       "type": "pancake",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "PancakeStrawberry"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": []
+        }
+      ],
       "icon": true
     },
     {
@@ -105,6 +177,27 @@
       "group": "dlc05",
       "type": "smores",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC05_Crackers",
+            "DLC05_Strawberry",
+            "DLC05_Banana"
+          ]
+        },
+        {
+          "step": "ToastingFork",
+          "utensils": [
+            "Campfire",
+            "ToastingFork"
+          ],
+          "ingredients": [
+            "DLC05_Marshmallow"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -125,7 +218,20 @@
       "group": "custom",
       "type": "soup",
       "intermediate": false,
-      "icon": false
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "TomatoSO",
+            "EggSO"
+          ]
+        }
+      ],
+      "icon": true
     },
     {
       "guid": "37f84c2a617aa264b8f8bebb5fc8c55b",
@@ -145,6 +251,16 @@
       "group": "core",
       "type": "salad",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "LettuceSO",
+            "TomatoSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -155,6 +271,8 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Tomato_SO.asset",
       "cookingStep": "Pot",
       "ingredients": [
+        "TomatoSO",
+        "TomatoSO",
         "TomatoSO"
       ],
       "ingredientCount": 3,
@@ -164,7 +282,21 @@
       "group": "custom",
       "type": "soup",
       "intermediate": false,
-      "icon": false
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "TomatoSO",
+            "TomatoSO",
+            "TomatoSO"
+          ]
+        }
+      ],
+      "icon": true
     },
     {
       "guid": "fbce1bb14baa5b54e9c73399f9cad117",
@@ -184,71 +316,28 @@
       "group": "core",
       "type": "pasta",
       "intermediate": false,
-      "icon": true
-    },
-    {
-      "guid": "c7961809bf61ff247a47965c97348285",
-      "id": "Cake_Honey_SO",
-      "nameZh": "蜂蜜蛋糕",
-      "nameEn": "Honey Cake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_Honey_SO.asset",
-      "cookingStep": "Mixer",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "HoneycombSO"
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "PastaSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "TomatoSO"
+          ]
+        }
       ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "core",
-      "type": "cake",
-      "intermediate": false,
-      "icon": false
-    },
-    {
-      "guid": "dfbe8b5399972034391163ef9a6bf050",
-      "id": "Cake_HoneyCarrot_SO",
-      "nameZh": "蜂蜜胡萝卜蛋糕",
-      "nameEn": "Honey Carrot Cake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_HoneyCarrot_SO.asset",
-      "cookingStep": "Mixer",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "HoneycombSO",
-        "CarrotSO"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 120,
-      "isCustom": false,
-      "group": "core",
-      "type": "cake",
-      "intermediate": false,
-      "icon": true
-    },
-    {
-      "guid": "44cfb001bec2e9243bce5037c9ffe070",
-      "id": "Cake_HoneyChocolate_SO",
-      "nameZh": "蜂蜜巧克力蛋糕",
-      "nameEn": "Honey Chocolate Cake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_HoneyChocolate_SO.asset",
-      "cookingStep": "Mixer",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "HoneycombSO",
-        "ChocolateSO"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 120,
-      "isCustom": false,
-      "group": "core",
-      "type": "cake",
-      "intermediate": false,
       "icon": true
     },
     {
@@ -271,6 +360,20 @@
       "group": "dlc05",
       "type": "pizza",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO",
+            "Olive"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -292,6 +395,38 @@
       "group": "core",
       "type": "pasta",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "PastaSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "FishSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "PrawnSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -312,6 +447,112 @@
       "group": "core",
       "type": "burger",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC02_ChoppedBun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "dfbe8b5399972034391163ef9a6bf050",
+      "id": "Cake_HoneyCarrot_SO",
+      "nameZh": "胡萝卜蛋糕",
+      "nameEn": "Carrot Cake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_HoneyCarrot_SO.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO",
+        "CarrotSO"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "core",
+      "type": "cake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "HoneycombSO",
+            "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "576b3ced1e3ff084696b2948e18790a3",
+      "id": "Steamed_Carrot_SO",
+      "nameZh": "胡萝卜饺",
+      "nameEn": "Carrot Dumpling",
+      "assetPath": "Assets/common01/food/Recipes/Steamed_Carrot_SO.asset",
+      "cookingStep": "Steamer",
+      "ingredients": [
+        "FlourSO",
+        "CarrotSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "core",
+      "type": "steamed",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "CarrotSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -333,6 +574,17 @@
       "group": "core",
       "type": "salad",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "LettuceSO",
+            "TomatoSO",
+            "CucumberSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -354,6 +606,26 @@
       "group": "core",
       "type": "sushi",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "SeaweedSO",
+            "CucumberSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -374,6 +646,19 @@
       "group": "dlc02",
       "type": "kebab",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "KebabSkewer",
+          "utensils": [
+            "Barbeque",
+            "Skewer"
+          ],
+          "ingredients": [
+            "KebobChicken",
+            "KebobTomato"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -395,6 +680,35 @@
       "group": "core",
       "type": "burrito",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "TortillaSO"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "BurritoChickenSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -417,6 +731,20 @@
       "group": "core",
       "type": "pizza",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO",
+            "ChickenSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -438,6 +766,20 @@
       "group": "dlc02",
       "type": "kebab",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "KebabSkewer",
+          "utensils": [
+            "Barbeque",
+            "Skewer"
+          ],
+          "ingredients": [
+            "KebobChicken",
+            "KebobMeat",
+            "KebobTomato"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -457,6 +799,18 @@
       "group": "custom",
       "type": "fry",
       "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -479,6 +833,20 @@
       "group": "core",
       "type": "pizza",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO",
+            "PepperoniSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -501,6 +869,20 @@
       "group": "custom",
       "type": "pizza",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO",
+            "PepperoniSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -522,6 +904,20 @@
       "group": "dlc05",
       "type": "batter",
       "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "Blueberry"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -543,6 +939,28 @@
       "group": "dlc05",
       "type": "pancake",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "Blueberry"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": []
+        }
+      ],
       "icon": true
     },
     {
@@ -564,6 +982,20 @@
       "group": "dlc02",
       "type": "kebab",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "KebabSkewer",
+          "utensils": [
+            "Barbeque",
+            "Skewer"
+          ],
+          "ingredients": [
+            "KebobMushroom",
+            "KebobPineapple",
+            "KebobTomato"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -585,6 +1017,35 @@
       "group": "core",
       "type": "burrito",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "TortillaSO"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MushroomSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -607,6 +1068,20 @@
       "group": "custom",
       "type": "pizza",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DoughSO",
+            "TomatoSO",
+            "CheeseSO",
+            "MushroomSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -617,6 +1092,8 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Mushroom_SO.asset",
       "cookingStep": "Pot",
       "ingredients": [
+        "MushroomSO",
+        "MushroomSO",
         "MushroomSO"
       ],
       "ingredientCount": 3,
@@ -626,6 +1103,20 @@
       "group": "custom",
       "type": "soup",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "MushroomSO",
+            "MushroomSO",
+            "MushroomSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -646,6 +1137,28 @@
       "group": "core",
       "type": "pasta",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "PastaSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MushroomSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -667,6 +1180,20 @@
       "group": "dlc05",
       "type": "breakfast",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "GriddlePan",
+          "utensils": [
+            "Campfire",
+            "GriddlePan"
+          ],
+          "ingredients": [
+            "Bacon",
+            "DLC05_Egg",
+            "Sausage"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -687,6 +1214,19 @@
       "group": "dlc05",
       "type": "breakfast",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "GriddlePan",
+          "utensils": [
+            "Campfire",
+            "GriddlePan"
+          ],
+          "ingredients": [
+            "Bacon",
+            "DLC05_Egg"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -706,6 +1246,60 @@
       "group": "custom",
       "type": "pizza",
       "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "MushroomSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "44cfb001bec2e9243bce5037c9ffe070",
+      "id": "Cake_HoneyChocolate_SO",
+      "nameZh": "巧克力蛋糕",
+      "nameEn": "Chocolate Cake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_HoneyChocolate_SO.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO",
+        "ChocolateSO"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "core",
+      "type": "cake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "HoneycombSO",
+            "ChocolateSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -727,6 +1321,26 @@
       "group": "dlc05",
       "type": "smores",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC05_Crackers",
+            "DLC05_Chocolate"
+          ]
+        },
+        {
+          "step": "ToastingFork",
+          "utensils": [
+            "Campfire",
+            "ToastingFork"
+          ],
+          "ingredients": [
+            "DLC05_Marshmallow"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -748,6 +1362,29 @@
       "group": "core",
       "type": "pancake",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "ChocolateSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -770,6 +1407,21 @@
       "group": "dlc05",
       "type": "breakfast",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "GriddlePan",
+          "utensils": [
+            "Campfire",
+            "GriddlePan"
+          ],
+          "ingredients": [
+            "Sausage",
+            "DLC05_Beans",
+            "DLC05_Egg",
+            "Bacon"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -790,6 +1442,28 @@
       "group": "core",
       "type": "pasta",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "PastaSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -811,6 +1485,20 @@
       "group": "dlc02",
       "type": "kebab",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "KebabSkewer",
+          "utensils": [
+            "Barbeque",
+            "Skewer"
+          ],
+          "ingredients": [
+            "KebobMeat",
+            "KebobMushroom",
+            "KebobPineapple"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -832,6 +1520,35 @@
       "group": "core",
       "type": "burrito",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "TortillaSO"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "BurritoMeatSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -854,6 +1571,21 @@
       "group": "dlc02",
       "type": "smoothie",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "SmoothieStrawberry",
+            "Banana",
+            "Melon",
+            "SmoothiePineapple"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -877,6 +1609,28 @@
       "group": "core",
       "type": "sushi",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "SeaweedSO",
+            "SushiFishSO",
+            "SushiPrawnSO",
+            "CucumberSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -899,6 +1653,27 @@
       "group": "core",
       "type": "burger",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC02_ChoppedBun",
+            "LettuceSO",
+            "TomatoSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -920,6 +1695,17 @@
       "group": "custom",
       "type": "burger",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "ChoppedBunSO",
+            "LettuceSO",
+            "MeatSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -939,6 +1725,15 @@
       "group": "core",
       "type": "salad",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "LettuceSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -960,6 +1755,20 @@
       "group": "core",
       "type": "soup",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "OnionSO",
+            "CarrotSO",
+            "PotatoSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -979,7 +1788,19 @@
       "group": "core",
       "type": "fry",
       "intermediate": false,
-      "icon": false
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "PotatoSO"
+          ]
+        }
+      ],
+      "icon": true
     },
     {
       "guid": "f7af34e24cd6ac342933ac6e1eb3dfe3",
@@ -999,7 +1820,29 @@
       "group": "core",
       "type": "fry",
       "intermediate": false,
-      "icon": false
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "PotatoSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "NuggetChickenSO"
+          ]
+        }
+      ],
+      "icon": true
     },
     {
       "guid": "aeb56bd1de590f74282da06e14ef5a25",
@@ -1009,15 +1852,73 @@
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Melon.asset",
       "cookingStep": "Blender",
       "ingredients": [
+        "Melon",
+        "Melon",
         "Melon"
       ],
-      "ingredientCount": 1,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
       "group": "dlc02",
       "type": "smoothie",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "Melon",
+            "Melon",
+            "Melon"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d41b20c4dd4638942bf7476ee239a85a",
+      "id": "Steamed_Prawns_SO",
+      "nameZh": "虾饺",
+      "nameEn": "Prawn Dumpling",
+      "assetPath": "Assets/common01/food/Recipes/Steamed_Prawns_SO.asset",
+      "cookingStep": "Steamer",
+      "ingredients": [
+        "FlourSO",
+        "PrawnSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "core",
+      "type": "steamed",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "PrawnSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1030,15 +1931,79 @@
       "ingredients": [
         "DLC02_ChoppedBun",
         "BurgerPineapple",
+        "MeatSO",
         "MeatSO"
       ],
-      "ingredientCount": 3,
+      "ingredientCount": 4,
       "cookingStepCount": 1,
       "score": 100,
       "isCustom": false,
       "group": "dlc02",
       "type": "burger",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC02_ChoppedBun",
+            "BurgerPineapple"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO",
+            "MeatSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7ef61c9e0206c784cb28602c0d013a4b",
+      "id": "Steamed_Meat_SO",
+      "nameZh": "鲜肉饺",
+      "nameEn": "Meat Dumpling",
+      "assetPath": "Assets/common01/food/Recipes/Steamed_Meat_SO.asset",
+      "cookingStep": "Steamer",
+      "ingredients": [
+        "FlourSO",
+        "MeatSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "core",
+      "type": "steamed",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1060,6 +2025,26 @@
       "group": "core",
       "type": "sushi",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "SeaweedSO",
+            "SushiPrawnSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1081,6 +2066,20 @@
       "group": "dlc05",
       "type": "breakfast",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "GriddlePan",
+          "utensils": [
+            "Campfire",
+            "GriddlePan"
+          ],
+          "ingredients": [
+            "Sausage",
+            "DLC05_Beans",
+            "DLC05_Egg"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1101,6 +2100,19 @@
       "group": "dlc05",
       "type": "breakfast",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "GriddlePan",
+          "utensils": [
+            "Campfire",
+            "GriddlePan"
+          ],
+          "ingredients": [
+            "Sausage",
+            "DLC05_Beans"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1111,15 +2123,31 @@
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Banana.asset",
       "cookingStep": "Blender",
       "ingredients": [
+        "Banana",
+        "Banana",
         "Banana"
       ],
-      "ingredientCount": 1,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
       "group": "dlc02",
       "type": "smoothie",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "Banana",
+            "Banana",
+            "Banana"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1131,15 +2159,30 @@
       "cookingStep": "Blender",
       "ingredients": [
         "Banana",
+        "Banana",
         "SmoothiePineapple"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 100,
       "isCustom": false,
       "group": "dlc02",
       "type": "smoothie",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "Banana",
+            "Banana",
+            "SmoothiePineapple"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1161,6 +2204,26 @@
       "group": "dlc05",
       "type": "smores",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC05_Crackers",
+            "DLC05_Banana"
+          ]
+        },
+        {
+          "step": "ToastingFork",
+          "utensils": [
+            "Campfire",
+            "ToastingFork"
+          ],
+          "ingredients": [
+            "DLC05_Marshmallow"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1171,6 +2234,8 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Onion_SO.asset",
       "cookingStep": "Pot",
       "ingredients": [
+        "OnionSO",
+        "OnionSO",
         "OnionSO"
       ],
       "ingredientCount": 3,
@@ -1180,6 +2245,20 @@
       "group": "custom",
       "type": "soup",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "OnionSO",
+            "OnionSO",
+            "OnionSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1201,6 +2280,26 @@
       "group": "core",
       "type": "sushi",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "SeaweedSO",
+            "SushiFishSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1222,26 +2321,69 @@
       "group": "core",
       "type": "sushi",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "SeaweedSO",
+            "SushiFishSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
-      "guid": "295793044e219d34fab1527986132d98",
-      "id": "Cake_Plain_SO",
+      "guid": "c7961809bf61ff247a47965c97348285",
+      "id": "Cake_Honey_SO",
       "nameZh": "原味蛋糕",
       "nameEn": "Plain Cake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_Plain_SO.asset",
+      "assetPath": "Assets/common01/food/Recipes/Cake_Honey_SO.asset",
       "cookingStep": "Mixer",
       "ingredients": [
         "FlourSO",
-        "EggSO"
+        "EggSO",
+        "HoneycombSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
-      "score": 80,
+      "score": 100,
       "isCustom": false,
       "group": "core",
       "type": "cake",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "HoneycombSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1262,6 +2404,25 @@
       "group": "dlc05",
       "type": "smores",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC05_Crackers"
+          ]
+        },
+        {
+          "step": "ToastingFork",
+          "utensils": [
+            "Campfire",
+            "ToastingFork"
+          ],
+          "ingredients": [
+            "DLC05_Marshmallow"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1283,6 +2444,19 @@
       "group": "core",
       "type": "pizza",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1304,6 +2478,60 @@
       "group": "custom",
       "type": "pizza",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "295793044e219d34fab1527986132d98",
+      "id": "Cake_Plain_SO",
+      "nameZh": "原味松饼",
+      "nameEn": "Plain Pancake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_Plain_SO.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "FlourSO",
+        "EggSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "core",
+      "type": "pancake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": []
+        }
+      ],
       "icon": true
     },
     {
@@ -1323,7 +2551,19 @@
       "group": "core",
       "type": "fry",
       "intermediate": false,
-      "icon": false
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "NuggetChickenSO"
+          ]
+        }
+      ],
+      "icon": true
     },
     {
       "guid": "1126029fd26a66741a9f101d9ed07f6f",
@@ -1342,6 +2582,18 @@
       "group": "custom",
       "type": "fry",
       "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "PotatoSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1361,7 +2613,19 @@
       "group": "custom",
       "type": "fry",
       "intermediate": false,
-      "icon": false
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "SushiFishSO"
+          ]
+        }
+      ],
+      "icon": true
     },
     {
       "guid": "742d4dea22b18b24fb8321c7963c5811",
@@ -1380,6 +2644,18 @@
       "group": "custom",
       "type": "fry",
       "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "SushiFishSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1400,67 +2676,29 @@
       "group": "custom",
       "type": "fry",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "SushiFishSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "PotatoSO"
+          ]
+        }
+      ],
       "icon": true
-    },
-    {
-      "guid": "576b3ced1e3ff084696b2948e18790a3",
-      "id": "Steamed_Carrot_SO",
-      "nameZh": "蒸胡萝卜",
-      "nameEn": "Steamed Carrot",
-      "assetPath": "Assets/common01/food/Recipes/Steamed_Carrot_SO.asset",
-      "cookingStep": "Steamer",
-      "ingredients": [
-        "FlourSO",
-        "CarrotSO"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "steamed",
-      "intermediate": false,
-      "icon": false
-    },
-    {
-      "guid": "7ef61c9e0206c784cb28602c0d013a4b",
-      "id": "Steamed_Meat_SO",
-      "nameZh": "蒸肉",
-      "nameEn": "Steamed Meat",
-      "assetPath": "Assets/common01/food/Recipes/Steamed_Meat_SO.asset",
-      "cookingStep": "Steamer",
-      "ingredients": [
-        "FlourSO",
-        "MeatSO"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "steamed",
-      "intermediate": false,
-      "icon": false
-    },
-    {
-      "guid": "d41b20c4dd4638942bf7476ee239a85a",
-      "id": "Steamed_Prawns_SO",
-      "nameZh": "蒸虾",
-      "nameEn": "Steamed Prawns",
-      "assetPath": "Assets/common01/food/Recipes/Steamed_Prawns_SO.asset",
-      "cookingStep": "Steamer",
-      "ingredients": [
-        "FlourSO",
-        "PrawnSO"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "steamed",
-      "intermediate": false,
-      "icon": false
     },
     {
       "guid": "438e7bb16ab4b4845b058337c9b8acf2",
@@ -1479,6 +2717,18 @@
       "group": "core",
       "type": "steamed",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "FishSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1500,6 +2750,26 @@
       "group": "core",
       "type": "burger",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC02_ChoppedBun",
+            "CheeseSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1522,6 +2792,27 @@
       "group": "core",
       "type": "burger",
       "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC02_ChoppedBun",
+            "CheeseSO",
+            "LettuceSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
       "icon": true
     },
     {
@@ -1541,6 +2832,17 @@
       "group": "custom",
       "type": "pizza",
       "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DoughSO"
+          ]
+        }
+      ],
       "icon": false
     },
     {
@@ -1560,6 +2862,17 @@
       "group": "custom",
       "type": "pizza",
       "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DoughSO"
+          ]
+        }
+      ],
       "icon": true
     }
   ]

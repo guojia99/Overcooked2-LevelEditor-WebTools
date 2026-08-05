@@ -509,6 +509,15 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // ---------- Icon status ----------
+
+            if (path == "/api/icons/status" && request.HttpMethod == "GET")
+            {
+                try { ServeIconsStatus(response); }
+                catch (System.Exception ex) { Debug.LogWarning("Layout Editor icons status: " + ex.Message); }
+                return;
+            }
+
             // ---------- Custom Recipe Management ----------
 
             if (path == "/api/custom-recipes/config" && request.HttpMethod == "GET")
@@ -660,6 +669,10 @@ public class LayoutEditorHttpServer
 
         if (path == "/")
             path = "/index.html";
+
+        // 菜谱清单列表：clean URL（/recipes 与 /recipes/ 均指向 dist/recipes.html）
+        if (path == "/recipes" || path == "/recipes/")
+            path = "/recipes.html";
 
         var webRoot = LayoutEditorPaths.WebDistRoot;
         if (!Directory.Exists(webRoot))
@@ -837,5 +850,125 @@ public class LayoutEditorHttpServer
         }
 
         response.OutputStream.Close();
+    }
+
+    // ---------- Internal DTOs for icon status JSON parsing (not shared!) ----------
+
+    [Serializable]
+    private class IconRecipeEntry
+    {
+        public string id;
+        public string nameZh;
+        public string nameEn;
+        public bool icon;
+        public string group;
+        public string type;
+        public bool intermediate;
+    }
+
+    [Serializable]
+    private class IconRecipeCatalog
+    {
+        public IconRecipeEntry[] recipes;
+    }
+
+    [Serializable]
+    private class IconIngredientEntry
+    {
+        public string id;
+        public string nameZh;
+        public string nameEn;
+        public bool icon;
+        public string group;
+    }
+
+    [Serializable]
+    private class IconIngredientCatalog
+    {
+        public IconIngredientEntry[] ingredients;
+    }
+
+    private static void ServeIconsStatus(HttpListenerResponse response)
+    {
+        var result = new IconStatusListDto();
+        var webRoot = LayoutEditorPaths.WebDistRoot;
+
+        var recipesPath = Path.Combine(webRoot, "recipes.json");
+        if (File.Exists(recipesPath))
+        {
+            try
+            {
+                var json = File.ReadAllText(recipesPath);
+                var catalog = JsonUtility.FromJson<IconRecipeCatalog>(json);
+                if (catalog != null && catalog.recipes != null)
+                {
+                    var missing = new List<IconStatusItemDto>();
+                    int withIcon = 0;
+                    foreach (var r in catalog.recipes)
+                    {
+                        if (r.icon) withIcon++;
+                        else if (!r.intermediate)
+                        {
+                            missing.Add(new IconStatusItemDto
+                            {
+                                id = r.id,
+                                nameZh = r.nameZh,
+                                nameEn = r.nameEn,
+                                hasIcon = false,
+                                group = r.group,
+                                type = r.type
+                            });
+                        }
+                    }
+                    result.totalRecipes = catalog.recipes.Length;
+                    result.recipesWithIcon = withIcon;
+                    result.missingRecipes = missing.ToArray();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("Failed to read recipes.json for icon status: " + ex.Message);
+            }
+        }
+
+        var ingredientsPath = Path.Combine(webRoot, "ingredients.json");
+        if (File.Exists(ingredientsPath))
+        {
+            try
+            {
+                var json = File.ReadAllText(ingredientsPath);
+                var catalog = JsonUtility.FromJson<IconIngredientCatalog>(json);
+                if (catalog != null && catalog.ingredients != null)
+                {
+                    var missing = new List<IconStatusItemDto>();
+                    int withIcon = 0;
+                    foreach (var ing in catalog.ingredients)
+                    {
+                        if (ing.icon) withIcon++;
+                        else
+                        {
+                            missing.Add(new IconStatusItemDto
+                            {
+                                id = ing.id,
+                                nameZh = ing.nameZh,
+                                nameEn = ing.nameEn,
+                                hasIcon = false,
+                                group = "",
+                                type = ing.group ?? ""
+                            });
+                        }
+                    }
+                    result.totalIngredients = catalog.ingredients.Length;
+                    result.ingredientsWithIcon = withIcon;
+                    result.missingIngredients = missing.ToArray();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("Failed to read ingredients.json for icon status: " + ex.Message);
+            }
+        }
+
+        WriteJson(response, 200, LayoutEditorJson.ToJson(result));
     }
 }

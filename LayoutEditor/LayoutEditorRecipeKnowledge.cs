@@ -14,6 +14,229 @@ public static class LayoutEditorRecipeKnowledge
     /// <summary>Bumped together with SCHEMA_VERSION in build-catalog.mjs.</summary>
     public const int BridgeSchemaVersion = 3;
 
+    /// <summary>Utensil / workstation sets per cooking step (mirrors STEP_UTENSILS in build-catalog.mjs
+    ///  and the web frontend). First entry is the station, last entry the actual cooking vessel.</summary>
+    public static readonly Dictionary<string, string[]> StepUtensils = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        { "Pot", new[] { "Cooker", "Pot" } },
+        { "FryingPan", new[] { "Cooker", "FryPan" } },
+        { "DeepFatFryer", new[] { "FryingStation", "FrierBasket" } },
+        { "OvenTray", new[] { "Oven" } },
+        { "Steamer", new[] { "Cooker", "Steamer" } },
+        { "Mixer", new[] { "Mixer", "MixerBowl", "Oven" } },
+        { "Blender", new[] { "Blender", "BlenderCup" } },
+        { "GriddlePan", new[] { "Campfire", "GriddlePan" } },
+        { "KebabSkewer", new[] { "Barbeque", "Skewer" } },
+        { "ToastingFork", new[] { "Campfire", "ToastingFork" } },
+        { "MixingBowl", new[] { "Mixer", "MixerBowl" } },
+    };
+
+    public static string[] UtensilsForStep(string step)
+    {
+        string[] utensils;
+        if (!string.IsNullOrEmpty(step) && StepUtensils.TryGetValue(step, out utensils))
+            return utensils;
+        return new string[0];
+    }
+
+    /// <summary>Recipe-book ingredient grouping (mirrors computeCookingGroups in build-catalog.mjs).
+    ///  Rules (evaluated in order):
+    ///  - 半成品：直接按自身烹饪步骤成组。
+    ///  - 煎锅中间产物覆盖：汉堡肉排 → FryingPan，面包胚/生菜保持生。
+    ///  - 寿司：只有寿司米蒸，其余不处理。
+    ///  - 卷饼：米饭煮，卷饼皮不处理，其余煎。
+    ///  - 棉花糖饼干：只有棉花糖烤，其余不处理。
+    ///  - 意面：意面煮，其余食材各自煎（分开成组）。
+    ///  - 炸物：所有食材分别炸（分开成组）。
+    ///  - 面糊/面团（含面粉）：面粉鸡蛋搅拌，其余进最终锅具；最终锅具图标作为标记组追加。 </summary>
+    public static RecipeCookingGroupDto[] ComputeCookingGroups(RecipeEntryDto recipe, List<RecipeEntryDto> allRecipes)
+    {
+        var finalStep = recipe != null ? recipe.cookingStep : "";
+        var ingredients = recipe != null ? recipe.ingredients : null;
+        var type = recipe != null ? recipe.type : "";
+        var intermediate = recipe != null && recipe.intermediate;
+        if (ingredients == null || ingredients.Length == 0)
+            return new RecipeCookingGroupDto[0];
+
+        if (intermediate)
+        {
+            var step = IsCookStep(finalStep) ? finalStep : "";
+            return new[]
+            {
+                new RecipeCookingGroupDto { step = step, utensils = UtensilsForStep(step), ingredients = ingredients }
+            };
+        }
+
+        var prep = new Dictionary<string, string>(StringComparer.Ordinal); // ingredient -> step ("" = raw)
+
+        if (finalStep == "FryingPan")
+        {
+            var candidates = new List<RecipeEntryDto>();
+            if (allRecipes != null)
+            {
+                foreach (var r in allRecipes)
+                {
+                    if (!r.intermediate || !IsCookStep(r.cookingStep))
+                        continue;
+                    if (r.cookingStep != "FryingPan" && r.cookingStep != "MixingBowl")
+                        continue;
+                    if (r.ingredients == null || r.ingredients.Length == 0)
+                        continue;
+                    bool subset = true;
+                    foreach (var ing in r.ingredients)
+                    {
+                        if (Array.IndexOf(ingredients, ing) < 0)
+                        {
+                            subset = false;
+                            break;
+                        }
+                    }
+                    if (subset)
+                        candidates.Add(r);
+                }
+            }
+            candidates.Sort((a, b) =>
+            {
+                int c = b.ingredients.Length.CompareTo(a.ingredients.Length);
+                if (c != 0)
+                    return c;
+                return string.Compare(a.id, b.id, StringComparison.Ordinal);
+            });
+            foreach (var cand in candidates)
+            {
+                foreach (var ing in cand.ingredients)
+                {
+                    if (!prep.ContainsKey(ing))
+                        prep[ing] = cand.cookingStep;
+                }
+            }
+        }
+
+        bool flourBranch = false;
+        if (type == "sushi")
+        {
+            foreach (var ing in ingredients)
+                prep[ing] = (ing == "SushiRiceSO" || ing == "RiceSO") ? "Steamer" : "";
+        }
+        else if (type == "burrito")
+        {
+            foreach (var ing in ingredients)
+            {
+                prep[ing] = ing == "TortillaSO"
+                    ? ""
+                    : (ing == "SushiRiceSO" || ing == "RiceSO") ? "Pot" : "FryingPan";
+            }
+        }
+        else if (type == "smores")
+        {
+            foreach (var ing in ingredients)
+                prep[ing] = ing == "DLC05_Marshmallow" ? "ToastingFork" : "";
+        }
+        else if (finalStep == "Pot" && Array.IndexOf(ingredients, "PastaSO") >= 0)
+        {
+            foreach (var ing in ingredients)
+                prep[ing] = ing == "PastaSO" ? "Pot" : "FryingPan";
+        }
+        else if (finalStep == "DeepFatFryer" || type == "fry")
+        {
+            foreach (var ing in ingredients)
+                prep[ing] = "DeepFatFryer";
+        }
+        else if (type == "cake" ||
+            (Array.IndexOf(ingredients, "FlourSO") >= 0 && finalStep != "Mixer" && finalStep != "MixingBowl"))
+        {
+            // 蛋糕：搅拌 + 烤箱；面糊/面团（松饼/饺子）：搅拌 + 最终锅具
+            flourBranch = type != "cake";
+            var cookStep = type == "cake" ? "OvenTray" : (IsCookStep(finalStep) ? finalStep : "");
+            foreach (var ing in ingredients)
+            {
+                if (prep.ContainsKey(ing))
+                    continue;
+                prep[ing] = (ing == "FlourSO" || ing == "EggSO")
+                    ? "MixingBowl"
+                    : cookStep;
+            }
+        }
+
+        bool anyAssigned = false;
+        foreach (var kv in prep)
+        {
+            if (kv.Value != "")
+            {
+                anyAssigned = true;
+                break;
+            }
+        }
+        var fallbackStep = anyAssigned ? "" : (IsCookStep(finalStep) ? finalStep : "");
+        foreach (var ing in ingredients)
+        {
+            if (!prep.ContainsKey(ing))
+                prep[ing] = fallbackStep;
+        }
+
+        var groupMap = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        var order = new List<string>();
+        foreach (var ing in ingredients)
+        {
+            var st = prep[ing];
+            List<string> lst;
+            if (!groupMap.TryGetValue(st, out lst))
+            {
+                lst = new List<string>();
+                groupMap[st] = lst;
+                order.Add(st);
+            }
+            lst.Add(ing);
+        }
+
+        var ordered = new List<string>();
+        for (int i = 0; i < order.Count; i++)
+        {
+            if (order[i] != "")
+                ordered.Add(order[i]);
+        }
+        if (flourBranch && IsCookStep(finalStep) && !groupMap.ContainsKey(finalStep) && order.Count > 0)
+            ordered.Add(finalStep);
+
+        bool splitPerIngredient = finalStep == "DeepFatFryer" ||
+            type == "fry" ||
+            (finalStep == "Pot" && Array.IndexOf(ingredients, "PastaSO") >= 0);
+
+        var result = new List<RecipeCookingGroupDto>();
+        List<string> raw;
+        if (groupMap.TryGetValue("", out raw) && raw.Count > 0)
+            result.Add(new RecipeCookingGroupDto { step = "", utensils = new string[0], ingredients = raw.ToArray() });
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            var st = ordered[i];
+            List<string> lst;
+            groupMap.TryGetValue(st, out lst);
+            var ings = lst ?? new List<string>();
+            if (splitPerIngredient && st != "" && ings.Count > 1)
+            {
+                for (int j = 0; j < ings.Count; j++)
+                {
+                    result.Add(new RecipeCookingGroupDto
+                    {
+                        step = st,
+                        utensils = UtensilsForStep(st),
+                        ingredients = new[] { ings[j] }
+                    });
+                }
+            }
+            else
+            {
+                result.Add(new RecipeCookingGroupDto
+                {
+                    step = st,
+                    utensils = UtensilsForStep(st),
+                    ingredients = ings.ToArray()
+                });
+            }
+        }
+        return result.ToArray();
+    }
+
     private struct Entry
     {
         public string Step;
@@ -152,7 +375,7 @@ public static class LayoutEditorRecipeKnowledge
         Put(d, "Burrito_Meat_SO", "FryingPan", "TortillaSO", "SushiRiceSO", "BurritoMeatSO");
         Put(d, "Burrito_Mushroom_SO", "FryingPan", "TortillaSO", "SushiRiceSO", "MushroomSO");
 
-        Put(d, "Cake_Plain_SO", "Mixer", "FlourSO", "EggSO");
+        Put(d, "Cake_Plain_SO", "FryingPan", "FlourSO", "EggSO");
         Put(d, "Cake_Honey_SO", "Mixer", "FlourSO", "EggSO", "HoneycombSO");
         Put(d, "Cake_Chocolate_SO", "FryingPan", "FlourSO", "EggSO", "ChocolateSO");
         Put(d, "Cake_HoneyCarrot_SO", "Mixer", "FlourSO", "EggSO", "HoneycombSO", "CarrotSO");
@@ -290,7 +513,7 @@ public static class LayoutEditorRecipeKnowledge
             if (!string.IsNullOrEmpty(path))
             {
                 var iid = Path.GetFileNameWithoutExtension(path);
-                if (!string.IsNullOrEmpty(iid) && !ids.Contains(iid))
+                if (!string.IsNullOrEmpty(iid))
                     ids.Add(iid);
             }
         }

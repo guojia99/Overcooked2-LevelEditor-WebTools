@@ -534,6 +534,8 @@ export interface LevelSummary {
   sceneName: string;
   sceneAssetPath: string;
   hasScreenshot: boolean;
+  /** Asset path of the screenshot texture ("" when none), serve via api.imageFloorUrl. */
+  screenshotPath?: string;
   hasScene: boolean;
 }
 
@@ -571,6 +573,8 @@ export interface LevelDetail {
   sceneName: string;
   sceneAssetPath: string;
   hasScreenshot: boolean;
+  /** Asset path of the screenshot texture ("" when none), serve via api.imageFloorUrl. */
+  screenshotPath?: string;
   debugRecipeCount: number;
   disableDynamicParenting: boolean;
   dependencies: string[];
@@ -677,4 +681,24 @@ export interface SwitchMaterialCatalog {
   generatedAt: string;
   schemaVersion?: number;
   materials: SwitchMaterialOption[];
+}
+
+// ---------- Icon status ----------
+
+export interface IconStatusItem {
+  id: string;
+  nameZh: string;
+  nameEn: string;
+  hasIcon: boolean;
+  group: string;
+  type: string;
+}
+
+export interface IconStatusList {
+  missingRecipes: IconStatusItem[];
+  missingIngredients: IconStatusItem[];
+  totalRecipes: number;
+  totalIngredients: number;
+  recipesWithIcon: number;
+  ingredientsWithIcon: number;
 }

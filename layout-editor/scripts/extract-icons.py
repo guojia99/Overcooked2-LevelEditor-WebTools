@@ -15,6 +15,11 @@ DATA-DRIVEN & MAINTAINABLE
       Most core items have no 2D icon (3D models); only the mapped ones get an icon.
       icon-overrides.json[catalog] takes precedence.
   - Custom items: add an entry to icon-overrides.json (sprite name or null).
+  - Local PNG fallback: when a recipe sprite is not found in bundles, the script also
+    searches Assets/*/food/CustomRecipes/**/models/ for matching PNG files:
+      * `<recipe_id>_Icon.png` (exact match)
+      * `<sprite_name>.png` (match by the curated sprite name from recipe-icons.json)
+    Found local PNGs are copied directly to the web icons directory.
 
 RE-RUN AFTER A GAME UPDATE
   - Re-run `python3 extract-icons.py`. New ingredients matching <base>_Icon are picked up
@@ -28,7 +33,7 @@ USAGE
 
 Requires: UnityPy, Pillow  (pip install UnityPy Pillow)
 """
-import os, re, sys, json, glob
+import os, re, sys, json, glob, shutil
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 WIN = os.path.join(ROOT, "Assets/StreamingAssets/Windows")
@@ -61,7 +66,12 @@ def collect_ids(sub):
 
 
 def base_name(sid):
-    return sid[:-2] if sid.endswith("SO") else sid
+    if sid.endswith("SO"):
+        b = sid[:-2]
+        if b.endswith("_"):
+            b = b[:-1]
+        return b
+    return sid
 
 
 def ingredient_sprite_name(sid, overrides, curated):
@@ -98,6 +108,21 @@ def build_sprite_index(env):
     return idx
 
 
+def build_local_png_index():
+    """Scan Assets/*/food/CustomRecipes/**/models/ for local PNG files.
+    Returns dict: {lowercase_filename_without_ext: full_abspath}."""
+    idx = {}
+    patterns = [
+        "Assets/common01/food/CustomRecipes/**/models/*.png",
+        "Assets/common02/food/CustomRecipes/**/models/*.png",
+    ]
+    for pat in patterns:
+        for f in glob.glob(os.path.join(ROOT, pat), recursive=True):
+            key = os.path.splitext(os.path.basename(f))[0].lower()
+            idx[key] = f
+    return idx
+
+
 def extract(obj, dest):
     try:
         img = obj.read().image
@@ -106,6 +131,49 @@ def extract(obj, dest):
     except Exception as e:
         print(f"   WARN: failed to extract {dest}: {e}")
         return False
+
+
+def copy_local_png(src_path, dest):
+    """Copy a local PNG file to destination."""
+    try:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copy2(src_path, dest)
+        return True
+    except Exception as e:
+        print(f"   WARN: failed to copy {src_path} -> {dest}: {e}")
+        return False
+
+
+def try_local_png(local_idx, recipe_id, sprite_name, out_dir, check):
+    """Try to find a matching local PNG for a recipe.
+    Returns True if a local file was found and processed."""
+    dest = os.path.join(out_dir, recipe_id + ".png")
+
+    # 1) Direct <id>_Icon match: Soup_TomatoEgg_SO -> souptomatoegg_so_icon.png
+    key = (recipe_id + "_Icon").lower()
+    if key in local_idx:
+        if not check:
+            copy_local_png(local_idx[key], dest)
+        return True
+
+    # 1b) Strip _SO suffix: Soup_TomatoEgg_SO -> Soup_TomatoEgg -> Souptomatoegg_icon.png
+    base = base_name(recipe_id)
+    if base != recipe_id:
+        key_so = (base + "_Icon").lower()
+        if key_so in local_idx:
+            if not check:
+                copy_local_png(local_idx[key_so], dest)
+            return True
+
+    # 2) Match by sprite name: ui_soup_tomato_01 -> ui_soup_tomato_01.png
+    if sprite_name:
+        key2 = sprite_name.lower()
+        if key2 in local_idx:
+            if not check:
+                copy_local_png(local_idx[key2], dest)
+            return True
+
+    return False
 
 
 def main():
@@ -130,12 +198,19 @@ def main():
         + collect_ids("common01/food/CustomRecipes")
     )
 
+    # ---- AssetBundle sprites ----
     print(f"loading bundles from {WIN} ...")
     env = UnityPy.load(WIN)
     idx = build_sprite_index(env)
     print(f"sprite name index: {len(idx)} entries")
 
-    stats = {"ing_ok": 0, "ing_miss": [], "rec_ok": 0, "rec_miss": [], "cat_ok": 0, "cat_miss": []}
+    # ---- Local PNG index ----
+    local_idx = build_local_png_index()
+    if local_idx:
+        print(f"local PNG index: {len(local_idx)} files from CustomRecipes/models/")
+
+    stats = {"ing_ok": 0, "ing_miss": [], "rec_ok": 0, "rec_miss": [],
+             "rec_local": 0, "cat_ok": 0, "cat_miss": []}
 
     if do_ing:
         out_dir = os.path.join(OUT, "ingredients")
@@ -158,17 +233,29 @@ def main():
         for sid in rec_ids:
             nm = rec_overrides.get(sid, rec_curated.get(sid))
             if nm is None:
-                # explicit null or unmapped
-                if sid not in rec_curated and sid not in rec_overrides:
+                # explicit null or unmapped – try local PNG fallback
+                if try_local_png(local_idx, sid, None, out_dir, check):
+                    stats["rec_ok"] += 1
+                    stats["rec_local"] += 1
+                elif sid not in rec_curated and sid not in rec_overrides:
                     stats["rec_miss"].append(sid)
                 continue
-            obj = idx.get(nm.lower())
-            if obj is None:
-                stats["rec_miss"].append(f"{sid} (sprite {nm!r} not found)")
+
+            # Try local PNG first (higher priority than bundle)
+            if try_local_png(local_idx, sid, nm, out_dir, check):
+                stats["rec_ok"] += 1
+                stats["rec_local"] += 1
                 continue
-            stats["rec_ok"] += 1
-            if not check:
-                extract(obj, os.path.join(out_dir, sid + ".png"))
+
+            # Fallback: try bundle
+            obj = idx.get(nm.lower())
+            if obj is not None:
+                stats["rec_ok"] += 1
+                if not check:
+                    extract(obj, os.path.join(out_dir, sid + ".png"))
+                continue
+
+            stats["rec_miss"].append(f"{sid} (sprite {nm!r} not found)")
 
     if do_cat:
         out_dir = os.path.join(OUT, "catalog")
@@ -190,7 +277,8 @@ def main():
         print("  unmapped ingredients (add to ingredient-icons.json or icon-overrides.json):")
         for s in stats["ing_miss"]:
             print(f"    {s}")
-    print(f"recipes:     {stats['rec_ok']}/{len(rec_ids)} ok, {len(stats['rec_miss'])} unmapped")
+    print(f"recipes:     {stats['rec_ok']}/{len(rec_ids)} ok, {len(stats['rec_miss'])} unmapped"
+          + (f" ({stats['rec_local']} from local PNGs)" if stats.get("rec_local") else ""))
     if stats["rec_miss"]:
         print("  unmapped recipes (curate in recipe-icons.json):")
         for s in stats["rec_miss"]:

@@ -1398,6 +1398,27 @@ body.manage-bg {
   max-width: 1100px;
 }
 
+/* 已选菜谱弹窗：固定高度 640px，卡片区占满剩余空间 */
+.modal-panel.sel-recipes {
+  height: 640px;
+  max-height: 92vh;
+}
+
+.modal-panel.sel-recipes .modal-scroll {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.modal-panel.sel-recipes .modal-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-panel.sel-recipes .rl-section:last-child {
+  margin-bottom: 0;
+}
+
 .ing-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -2217,4 +2238,32 @@ body.manage-bg {
   gap: 6px;
   padding: 2px 0;
   color: #c8ccd4;
+}
+
+/* ---------- Icon status ---------- */
+
+.icon-status-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.icon-status-table th,
+.icon-status-table td {
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #3a3f4b);
+  vertical-align: middle;
+}
+
+.icon-status-table th {
+  color: #8892a0;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.icon-status-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
 }

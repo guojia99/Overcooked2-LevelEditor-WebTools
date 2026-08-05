@@ -8,6 +8,7 @@ import type {
   BundleAnalysis,
   DeathEffectEntry,
   DirectoryEvent,
+  IngredientEntry,
   LevelDetail,
   LevelSetInfo,
   LevelSummary,
@@ -19,6 +20,10 @@ import { closeModal, openModal } from "./modals";
 import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
 import { applyRatio, computeAutoScores, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
+import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
+import { foodGroupLabel } from "./ingredientLabels";
+import { computeCardGroups, rlCardHtml, rlSectionHtml, STEP_ICON_SRC, type RecipeWithGroups } from "./recipeCard";
+import { exportSummaryPng, type SummaryCard, type SummaryExportData } from "./summaryExport";
 
 const TARGET_SCENE_KEY = "layoutTargetScene";
 
@@ -97,6 +102,8 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
     else if (target === "custom-recipes") {
       location.hash = "#/custom-recipes";
       location.reload();
+    } else if (target === "recipes") {
+      location.href = "/recipes";
     }
   });
   const back = document.getElementById("m-back");
@@ -310,6 +317,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
           </div>
         </div>
         <button class="m-btn primary" data-edit="${esc(lv.assetPath)}">编辑</button>
+        <button class="m-btn" data-summary="${esc(lv.assetPath)}">📋 汇总</button>
         <button class="m-btn" data-layout="${esc(lv.sceneAssetPath)}">打开布局</button>
         <button class="m-btn danger" data-del="${esc(id)}">删除</button>
       </div>`;
@@ -328,6 +336,9 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
   document.getElementById("new-level")?.addEventListener("click", () => openCreateLevelModal(app, setName));
   content.querySelectorAll<HTMLButtonElement>("[data-edit]").forEach((b) =>
     b.addEventListener("click", () => void renderLevelDetail(app, setName, b.dataset.edit!))
+  );
+  content.querySelectorAll<HTMLButtonElement>("[data-summary]").forEach((b) =>
+    b.addEventListener("click", () => void renderLevelSummary(app, setName, b.dataset.summary!))
   );
   content.querySelectorAll<HTMLButtonElement>("[data-layout]").forEach((b) =>
     b.addEventListener("click", () => goLayout(b.dataset.layout!))
@@ -433,6 +444,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn" id="btn-layout">打开关卡编辑器</button>
+      <button class="m-btn" id="btn-summary">📋 汇总</button>
     </div>
 
     <div class="m-block">
@@ -491,11 +503,11 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
   });
 
   document.getElementById("btn-layout")?.addEventListener("click", () => goLayout(detail.sceneAssetPath));
+  document.getElementById("btn-summary")?.addEventListener("click", () => void renderLevelSummary(app, setName, assetPath));
 
   const ssFile = document.getElementById("ss-file") as HTMLInputElement | null;
   const ssUpload = document.getElementById("ss-upload");
   const ssPreview = document.getElementById("ss-preview");
-  const ssStatus = document.getElementById("ss-status");
 
   ssUpload?.addEventListener("click", () => ssFile?.click());
 
@@ -528,6 +540,148 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
       setStatus("截图已保存在关卡数据目录中，可在 Unity 中查看。");
     } catch (e) {
       setStatus((e as Error).message, false);
+    }
+  });
+}
+
+// ==================== Level recipe summary (汇总页) ====================
+
+/** 汇总页：中文名 → 作者 → 关卡截图 → 按菜系分类的菜谱卡片（一个分类一行），
+ *  支持按实际渲染大小一键导出 PNG。 */
+export async function renderLevelSummary(app: HTMLElement, setName: string, assetPath: string): Promise<void> {
+  const content = shell(app, `汇总 · ${setName}`, "返回关卡列表", () => void renderLevelList(app, setName));
+  setBusy("加载汇总…");
+  let detail: LevelDetail;
+  let sets: LevelSetInfo[];
+  try {
+    [sets, detail] = await Promise.all([api.fetchSets(), api.fetchLevelDetail(assetPath)]);
+  } catch (e) {
+    showError(e);
+    return;
+  }
+  if (!detail) {
+    content.innerHTML = '<p class="muted">未找到该关卡。</p>';
+    return;
+  }
+
+  let level: { recipeGuids: string[] };
+  let recipes: RecipeWithGroups[];
+  let ingredients: IngredientEntry[];
+  try {
+    [level, recipes, ingredients] = await Promise.all([
+      api.fetchLevelRecipes(detail.sceneAssetPath),
+      api.fetchRecipeCatalog(setName),
+      api.fetchIngredients().catch(() => [] as IngredientEntry[]),
+    ]);
+  } catch (e) {
+    showError(e);
+    return;
+  }
+
+  const set = sets.find((s) => s.setName === setName);
+  const ingredientName = (id: string): string => ingredients.find((i) => i.id === id)?.nameZh ?? id;
+
+  const byGuid = new Map(recipes.map((r) => [r.guid, r]));
+  const selected = (level.recipeGuids ?? [])
+    .map((g) => byGuid.get(g))
+    .filter((r): r is RecipeEntry => !!r && !r.intermediate);
+
+  const grouped = groupRecipesByType(selected).map(([type, arr]) => ({
+    type,
+    typeLabel: recipeTypeLabel(type),
+    count: arr.length,
+    recipes: arr,
+  }));
+
+  const summaryData: SummaryExportData = {
+    title: detail.levelNameZH || detail.levelName || "未命名",
+    sub: `${detail.levelName} · ${detail.sceneName}`,
+    author: `作者：${set?.author || "—"}`,
+    screenshotUrl: detail.screenshotPath ? api.imageFloorUrl(detail.screenshotPath) : "",
+    sections: grouped.map((g) => ({
+      typeLabel: g.typeLabel,
+      count: g.count,
+      cards: g.recipes.map((r): SummaryCard => {
+        const groups = computeCardGroups(r, { allRecipes: recipes });
+        const badges: string[] = [];
+        if (r.isCustom) badges.push("自定义");
+        if (r.group === "levelset") badges.push("本关");
+        if (r.group && r.group !== "core" && r.group !== "levelset") badges.push(foodGroupLabel(r.group));
+        badges.push(`⭐ ${r.score ?? 0}`);
+        return {
+          iconUrl: `/icons/recipes/${encodeURIComponent(r.id)}.png`,
+          nameZh: r.nameZh,
+          nameEn: r.nameEn || r.id,
+          badges,
+          groups: groups.map((cg) => ({
+            stepIcons: [cg.step, ...(cg.extraSteps ?? []).map((e) => e.step)]
+              .filter(Boolean)
+              .map((s) => STEP_ICON_SRC[s])
+              .filter((s): s is string => !!s),
+            ingredientUrls: (cg.ingredients ?? []).map((id) => `/icons/ingredients/${encodeURIComponent(id)}.png`),
+          })),
+        };
+      }),
+    })),
+  };
+
+  const sections = grouped
+    .map((g) =>
+      rlSectionHtml(
+        g.type,
+        g.recipes
+          .map((r) =>
+            rlCardHtml(r, {
+              allRecipes: recipes,
+              ingredientName,
+              extraBadge: r.group === "levelset" ? "本关" : undefined,
+            })
+          )
+          .join(""),
+        g.count
+      )
+    )
+    .join("");
+
+  const shotSrc = detail.screenshotPath ? api.imageFloorUrl(detail.screenshotPath) : "";
+  const shotHtml = shotSrc
+    ? `<img class="sum-shot-img" src="${esc(shotSrc)}" alt="关卡截图">`
+    : '<div class="sum-shot-empty">（未上传关卡截图）</div>';
+
+  content.innerHTML = `
+    <div class="m-actions-row">
+      <button class="m-btn primary" id="sum-export">🖼 一键导出图片</button>
+      <span class="status" id="sum-status"></span>
+    </div>
+    <div class="sum-page" id="sum-node">
+      <header class="sum-head">
+        <h1 class="sum-title">${esc(detail.levelNameZH || detail.levelName || "未命名")}</h1>
+        <div class="sum-sub">${esc(detail.levelName)} · ${esc(detail.sceneName)}</div>
+        <div class="sum-author">作者：${esc(set?.author || "—")}</div>
+      </header>
+      <div class="sum-shot">${shotHtml}</div>
+      <div class="sum-recipes">
+        ${sections || '<p class="muted">该关卡尚未配置菜谱</p>'}
+      </div>
+    </div>
+  `;
+
+  setStatus(`共 ${selected.length} 道菜谱 · 关卡截图${summaryData.screenshotUrl ? "" : "缺失"}`);
+  document.getElementById("sum-export")?.addEventListener("click", async () => {
+    const btn = document.getElementById("sum-export") as HTMLButtonElement | null;
+    const st = document.getElementById("sum-status")!;
+    if (btn) btn.disabled = true;
+    try {
+      const node = document.getElementById("sum-node");
+      const width = node ? node.getBoundingClientRect().width : 1200;
+      const fileName = `${detail.levelNameZH || detail.levelName || "level"}_汇总.png`;
+      await exportSummaryPng(summaryData, width, fileName);
+      st.textContent = "已导出 PNG";
+    } catch (e) {
+      st.textContent = (e as Error).message;
+      st.classList.add("err");
+    } finally {
+      if (btn) btn.disabled = false;
     }
   });
 }
@@ -1405,7 +1559,7 @@ export async function openAudioModal(
       audio.load();
       var playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(function(e) {
+        playPromise.catch(function() {
           setStatus("自动播放被阻止，请再次点击播放", false);
         });
       }

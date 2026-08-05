@@ -1,0 +1,390 @@
+/* ===================== 菜谱清单列表（/recipes） ===================== */
+
+.rl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: #20242d;
+  border-bottom: 1px solid #3a3f4b;
+  flex-shrink: 0;
+}
+
+.rl-search {
+  width: 250px;
+  background: #171a20;
+  border: 1px solid #3a3f4b;
+  border-radius: 6px;
+  color: #e8eaed;
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.rl-search:focus {
+  border-color: #3d6bf3;
+}
+
+.rl-search::placeholder {
+  color: #6d7480;
+}
+
+.rl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rl-chip-btn {
+  border: 1px solid #3a3f4b;
+  background: #1a1d23;
+  color: #b6bcc6;
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rl-chip-btn:hover {
+  color: #fff;
+  border-color: #5a6070;
+}
+
+.rl-chip-btn.active {
+  background: #3d6bf3;
+  border-color: #3d6bf3;
+  color: #fff;
+}
+
+.rl-chip-btn .rl-cnt {
+  opacity: 0.65;
+  margin-left: 4px;
+  font-size: 11px;
+}
+
+.rl-tool-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #b6bcc6;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rl-select {
+  background: #1a1d23;
+  color: #e8eaed;
+  border: 1px solid #3a3f4b;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  outline: none;
+}
+
+.rl-content {
+  padding-bottom: 48px;
+}
+
+.rl-section {
+  margin-bottom: 24px;
+}
+
+.rl-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0d9a8;
+  letter-spacing: 0.03em;
+}
+
+.rl-section-title::before {
+  content: "";
+  width: 4px;
+  height: 15px;
+  background: #e8b04b;
+  border-radius: 2px;
+}
+
+.rl-section-count {
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a909a;
+  background: #262b36;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
+/* 卡片按内容自适应宽度：食材横向铺开无上限（10 个食材即 10 列） */
+.rl-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.rl-card {
+  flex: 0 0 auto;
+  min-width: 250px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #232834, #1a1e28);
+  border: 1px solid #333a4a;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.rl-card:hover {
+  transform: translateY(-3px);
+  border-color: #556078;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+
+/* 成品区：UI_DLC07_Recipe_Background_Main_01.png 作背景，成品图标居中；
+ * 底部不留内边距，食材分组直接衔接成品背景图（无上下间隔） */
+.rl-product {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 12px 0;
+  background-image: url("/recipe-ui/recipe-bg-main.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  min-height: 152px;
+}
+
+.rl-product > img {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+}
+
+.rl-prod-name {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fdf3dd;
+  text-align: center;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.rl-prod-en {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(253, 243, 221, 0.72);
+}
+
+.rl-prod-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.rl-badge {
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(10, 12, 16, 0.72);
+  color: #ffd98a;
+  border: 1px solid rgba(255, 217, 138, 0.4);
+}
+
+.rl-badge-score {
+  color: #ffe9b0;
+  border-color: rgba(255, 217, 138, 0.35);
+}
+
+.rl-badge-dlc {
+  color: #9cc3ff;
+  border-color: rgba(97, 152, 255, 0.45);
+}
+
+.rl-badge-custom {
+  color: #7ee2a8;
+  border-color: rgba(126, 226, 168, 0.4);
+}
+
+.rl-badge-inter {
+  color: #c9c2b8;
+  border-color: rgba(200, 195, 185, 0.35);
+}
+
+/* 食材分组：Recipe_Background_2.png 拉伸铺底。
+ * 分组从左到右排列（update_ui.md 三.2），空间不足时换行；
+ * 与上方成品背景图之间无上下间距、无 padding。 */
+.rl-groups {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0;
+}
+
+.rl-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  background-image: url("/recipe-ui/recipe-bg-group.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 10px;
+}
+
+/* 有锅具步骤的组：仅底部保留容纳锅具胶囊所需空间 */
+.rl-group.has-step {
+  padding: 0 12px 8px;
+}
+
+/* 食材横向单行铺开：不换行，无上限（10 个食材即 10 列） */
+.rl-group-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 食材图标：只显示图标，名称仅存于 title 悬浮提示；
+ * 重复食材（如夏威夷汉堡双肉排）直接显示两个图标 */
+.rl-chip {
+  position: relative;
+  display: block;
+}
+
+.rl-chip img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+
+/* 锅具 / 烹饪方式：直接显示图标，无背景、无边框、无阴影；
+ * 多图标（如 搅拌碗+煎锅）横向并排 */
+.rl-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  line-height: 0;
+}
+
+.rl-step-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+
+.rl-empty {
+  color: #8a909a;
+  text-align: center;
+  padding: 60px 0;
+  font-size: 13px;
+}
+
+/* ===================== 汇总页 ===================== */
+
+.sum-page {
+  background: #22262e;
+  border: 1px solid #3a3f4b;
+  border-radius: 10px;
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sum-head {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.sum-title {
+  margin: 0 0 6px;
+  font-size: 52px;
+  font-weight: 700;
+  color: #fdf3dd;
+  letter-spacing: 0.04em;
+}
+
+.sum-sub {
+  font-size: 13px;
+  color: #9aa0a6;
+}
+
+.sum-author {
+  margin-top: 6px;
+  font-size: 32px;
+  font-weight: 600;
+  color: #e8eaed;
+}
+
+.sum-shot {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.sum-shot-img {
+  max-width: 100%;
+  max-height: 480px;
+  border-radius: 8px;
+  border: 1px solid #3a3f4b;
+  object-fit: contain;
+}
+
+.sum-shot-empty {
+  padding: 40px 60px;
+  border: 1px dashed #3a3f4b;
+  border-radius: 8px;
+  color: #8a909a;
+  font-size: 13px;
+}
+
+.sum-recipes .rl-section {
+  margin-bottom: 18px;
+}
+
+/* 汇总页内卡片略小，便于单分类一行 */
+.sum-recipes .rl-card {
+  min-width: 220px;
+}
+
+.sum-recipes .rl-card .rl-product {
+  min-height: 132px;
+  padding: 12px 10px 0;
+}
+
+.sum-recipes .rl-card .rl-product > img {
+  width: 72px;
+  height: 72px;
+}
+
+.sum-recipes .rl-group {
+  padding: 0 8px;
+}
+
+.sum-recipes .rl-chip img {
+  width: 34px;
+  height: 34px;
+}
