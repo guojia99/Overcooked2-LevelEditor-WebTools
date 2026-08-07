@@ -160,9 +160,10 @@ public static class SceneLayoutApplier
                 LayoutEditorStubIO.ApplyServingStationPlateReturns(go, item.servingStation.plateReturnInstanceIds, createdObjects);
         }
 
-        // Use the same snap step as items/web (often half-cell 0.6). Snapping floor
-        // centers to full GridCellSize (1.2) shifts even-sized floors by half a cell,
-        // breaking flush adjacency and desyncing Col_Floor (doc coords) from Plane meshes.
+        // Snap floors with the web-sent precision (default 0.01). Floor centers sit on
+        // half-cell (0.6) multiples, which are also multiples of that precision, so the
+        // round trip is lossless. Snapping to full GridCellSize (1.2) would shift
+        // even-sized floors by half a cell, breaking flush adjacency.
         if (only == null || only == "floors")
         {
             ApplyFloors(document, snapStep);
@@ -326,7 +327,8 @@ public static class SceneLayoutApplier
         Undo.RecordObject(t, "Layout Editor Floor");
         Undo.RecordObject(t.gameObject, "Layout Editor Floor");
         var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : t.localPosition;
-        // Match web finalizeFloor / item snap — half-cell by default, not full cell.
+        // Match web finalizeFloor — snap with the web-sent precision (lossless for
+        // half-cell aligned floor centers).
         pos.x = SnapScalar(pos.x, snapStep);
         pos.z = SnapScalar(pos.z, snapStep);
         t.localPosition = pos;
@@ -978,14 +980,13 @@ public static class SceneLayoutApplier
     }
 
     /// <summary>
-    /// Decor items (parented under Art/) snap at 0.01 so the web's free
-    /// placement survives write-back; everything else uses the UI snap step.
+    /// Snap step used when writing positions back. The web client sends the selected
+    /// placement precision (0.1 / 0.01 / 0.001) as the `snap` parameter; every web-side
+    /// position — grid-snapped (half-cell 0.6 lattice) or free-placed — is a multiple of
+    /// that precision, so snapping with it is lossless for all items.
     /// </summary>
     private static float SnapStepForItem(LayoutItemDto item, float snapStep)
     {
-        var p = item != null ? item.parentPath : null;
-        if (!string.IsNullOrEmpty(p) && (p == "Art" || p.StartsWith("Art/", StringComparison.Ordinal)))
-            return 0.01f;
         return snapStep;
     }
 

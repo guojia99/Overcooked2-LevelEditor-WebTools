@@ -340,6 +340,8 @@ export interface RecipeEntry {
   assetPath: string;
   cookingStep?: string;
   ingredients?: string[];
+  /** Direct composition ids for custom recipes (sub-recipe ids and/or ingredient ids). */
+  compositionIds?: string[];
   ingredientCount?: number;
   cookingStepCount?: number;
   score?: number;
@@ -607,11 +609,31 @@ export interface CustomRecipeSummary {
   score: number;
   category: string;
   type: string;
+  /** Direct composition ids (ingredient ids and/or sub-recipe ids). */
   compositionIds: string[];
+  /** Leaf ingredients, recursively expanded through sub-recipes. */
+  ingredients: string[];
+  /** Composition-aware cooking groups for the recipe-card UI. */
+  cookingGroups?: RecipeCookingGroup[];
+  /** True when score <= 0 (半成品), used for badges and the sub-recipe picker. */
+  intermediate: boolean;
+  /** "core" / "custom" / "dlc02" / "dlc05" / "levelset". */
+  group?: string;
   cookingStepId: string;
   platingStepId: string;
   hasIcon: boolean;
   hasModel: boolean;
+  /** 模型在游戏中的缩放与朝向（应用到 prefab 根节点，运行时直接生效）。 */
+  modelScale: number;
+  modelRotationY: number;
+}
+
+/** One ingredient group of a recipe card: ingredients cooked together in the
+ *  same step (step = "" means a raw group with no utensil). */
+export interface RecipeCookingGroup {
+  step: string;
+  utensils: string[];
+  ingredients: string[];
 }
 
 export interface CustomRecipeEdit {
@@ -631,11 +653,15 @@ export interface CustomRecipeEdit {
   modelPrefabId: string;
   cookingProgress: number;
   mixingProgress: number;
+  modelScale: number;
+  modelRotationY: number;
 }
 
 export interface CustomRecipeReferenceEntry {
   guid: string;
   id: string;
+  /** Source recipe id owning this model ("" for standalone entries). */
+  recipeId?: string;
   nameZh: string;
   nameEn: string;
   assetPath: string;
@@ -644,6 +670,8 @@ export interface CustomRecipeReferenceEntry {
 export interface CustomRecipeReferences {
   cookingSteps: CustomRecipeReferenceEntry[];
   platingSteps: CustomRecipeReferenceEntry[];
+  /** 装盘容器（盘子/杯子等），运行时映射为 PlatingStepData。 */
+  platingContainers: CustomRecipeReferenceEntry[];
   icons: CustomRecipeReferenceEntry[];
   reusableModels: CustomRecipeReferenceEntry[];
   ingredients: string[];

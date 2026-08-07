@@ -682,6 +682,39 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
     return [{ step, utensils: STEP_UTENSILS[step] || [], ingredients }];
   }
 
+  // 自定义菜谱的"工序"分组：自身无整体烹饪步骤（Composite/组装型）时，按直接组成展开
+  // —— 组成若是子菜谱（中间产物/半成品），以子菜谱自身的烹饪步骤成组并展开其叶食材；
+  // 普通食材归生组。组成顺序即组顺序。（镜像 LayoutEditorRecipeKnowledge.cs）
+  if (recipe.compositionIds && recipe.compositionIds.length > 0 && !isCookStep(finalStep)) {
+    const byId = new Map(allRecipes.map((r) => [r.id, r]));
+    const compResult = [];
+    const compRaw = [];
+    const compSteps = [];
+    const compStepIngs = new Map();
+    for (const compId of recipe.compositionIds) {
+      const sub = byId.get(compId);
+      if (sub && (sub.ingredients || []).length > 0) {
+        const subStep = isCookStep(sub.cookingStep) ? sub.cookingStep : "";
+        if (!subStep) {
+          for (const ing of sub.ingredients) compRaw.push(ing);
+          continue;
+        }
+        if (!compStepIngs.has(subStep)) {
+          compStepIngs.set(subStep, []);
+          compSteps.push(subStep);
+        }
+        for (const ing of sub.ingredients) compStepIngs.get(subStep).push(ing);
+      } else {
+        compRaw.push(compId);
+      }
+    }
+    if (compRaw.length) compResult.push({ step: "", utensils: [], ingredients: compRaw });
+    for (const st of compSteps) {
+      compResult.push({ step: st, utensils: STEP_UTENSILS[st] || [], ingredients: compStepIngs.get(st) });
+    }
+    return compResult;
+  }
+
   const prep = new Map(); // ingredient -> step ("" = raw)
 
   if (finalStep === "FryingPan") {
@@ -871,6 +904,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
       assetPath: entry.assetPath,
       cookingStep: step,
       ingredients: ingredientIds,
+      compositionIds: (fields.compositionGuids || []).map((g) => guidIndex.get(g)?.id || g),
       ingredientCount,
       cookingStepCount: stats.cooks,
       score: fields.score || 0,

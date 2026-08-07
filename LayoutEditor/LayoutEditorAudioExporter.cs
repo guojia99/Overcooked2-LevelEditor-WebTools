@@ -17,7 +17,6 @@ public static class LayoutEditorAudioExporter
         public string nameZh;
     }
 
-    [MenuItem("Tools/Layout Editor/Export Audio for Web", false, 210)]
     public static void ExportAudioForWeb()
     {
         string exportRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports"));

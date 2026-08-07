@@ -10,7 +10,9 @@ import type { RecipeEntry } from "./types";
 import { foodGroupLabel } from "./ingredientLabels";
 import { recipeTypeLabel } from "./recipeTypes";
 import {
+  deriveCompositionGroups,
   deriveCookingGroups,
+  isCookStepLike,
   mergeFinalMarkers,
   normalizeCookingGroups,
   type CookingGroup,
@@ -91,13 +93,19 @@ export interface RlCardOptions {
   extraBadge?: string;
   /** Ingredient id → Chinese name, used for chip tooltips. */
   ingredientName?: (id: string) => string;
+  /** Custom product icon src override (e.g. levelset custom recipe icons
+   *  served via the bridge instead of the static /icons/recipes/ folder). */
+  iconSrc?: (r: RecipeEntry) => string;
 }
 
 /** Compute the merged cooking groups for a card (backend data + fallback derivation). */
 export function computeCardGroups(r: RecipeWithGroups, opts: RlCardOptions = {}): CookingGroup[] {
+  const compOk = (r.compositionIds ?? []).length > 0 && !isCookStepLike(r.cookingStep);
   const groups = r.cookingGroups
     ? normalizeCookingGroups(r, r.cookingGroups)
-    : normalizeCookingGroups(r, deriveCookingGroups(r, opts.allRecipes ?? []));
+    : compOk
+      ? normalizeCookingGroups(r, deriveCompositionGroups(r, opts.allRecipes ?? []))
+      : normalizeCookingGroups(r, deriveCookingGroups(r, opts.allRecipes ?? []));
   return mergeFinalMarkers(groups);
 }
 
@@ -122,9 +130,13 @@ export function rlCardHtml(r: RecipeWithGroups, opts: RlCardOptions = {}): strin
         ? plainGroupHtml(r.ingredients ?? [], opts.ingredientName)
         : '<div class="rl-group"><span class="muted small">组成信息缺失</span></div>';
 
+  const prodIcon = opts.iconSrc
+    ? `<img loading="lazy" src="${esc(opts.iconSrc(r))}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`
+    : recipeImgHtml(r);
+
   return `<article class="rl-card" title="${esc(r.id)}">
     <div class="rl-product">
-      ${recipeImgHtml(r)}
+      ${prodIcon}
       <div class="rl-prod-name">${esc(r.nameZh)}<span class="rl-prod-en">${esc(r.nameEn || r.id)}</span></div>
       <div class="rl-prod-badges">${badges}</div>
     </div>

@@ -60,8 +60,22 @@
 顶栏 **菜谱清单列表…** 进入独立的只读页面 **`/recipes`**（Vite 多入口构建，Unity 桥按 clean URL 映射到 `dist/recipes.html`），陈列全部菜谱并按菜谱类型（汉堡/卷饼/披萨/…）分组，卡片采用菜谱书 UI（成品背景 + 食材分组背景 + 锅具图标，背景图取自 `sprite-dump/` 的 `UI_DLC07_Recipe_Background_Main_01.png` 与 `Recipe_Background_2.png`）：
 
 - **筛选**：搜索（菜名/英文/ID/食材）、类型 chips、来源（基础/自定义/DLC2/DLC5）、「含半成品」开关（默认隐藏 score≤0 的半成品）。
-- **食材分组**：每个菜谱按烹饪步骤分组成组展示，有步骤的组底部居中显示锅具图标（`icons/catalog/<utensil>.png`）与步骤名（`cooking-steps.json`）；无锅具的食材（汉堡胚、生菜等）合并为生食材组。分组算法见 `recipes.json` 新增字段 `cookingGroups`（`LayoutEditorRecipeKnowledge.ComputeCookingGroups` 与 `build-catalog.mjs` 的 `computeCookingGroups` 镜像实现）：煎锅仅覆盖肉排类中间产物（面包胚保持生），其余烹饪步骤整锅入组；面糊→煎锅等两段式烹饪会在组尾追加一次最终锅具标记。旧数据缺字段时前端自动回退推导（`web/src/recipeGroups.ts`）。
+- **食材分组**：每个菜谱按烹饪步骤分组成组展示，有步骤的组底部居中显示锅具图标（`icons/catalog/<utensil>.png`）与步骤名（`cooking-steps.json`）；无锅具的食材（汉堡胚、生菜等）合并为生食材组。分组算法见 `recipes.json` 新增字段 `cookingGroups`（`LayoutEditorRecipeKnowledge.ComputeCookingGroups` 与 `build-catalog.mjs` 的 `computeCookingGroups` 镜像实现）：煎锅仅覆盖肉排类中间产物（面包胚保持生），其余烹饪步骤整锅入组；面糊→煎锅等两段式烹饪会在组尾追加一次最终锅具标记。自定义菜谱若为**组装型（Composite）且无整体烹饪步骤**，则按其直接组成（子菜谱）分组成组——子菜谱以自身烹饪步骤成组并展开叶食材，普通食材归生组（`compositionIds` 字段 + `deriveCompositionGroups` 前端镜像）。旧数据缺字段时前端自动回退推导（`web/src/recipeGroups.ts`）。
 - **数据来源**：桥在线走 `/api/recipes`，离线回退静态 `recipes.json`。
+
+## 自定义菜谱管理（独立页面）
+
+顶栏 **自定义菜谱…** 进入 **`/#/custom-recipes`** 页：先选关卡集，再管理该关卡集 `custom_recipes/` 目录下的自定义菜谱（CustomRecipeSO）：
+
+- **统一模型**：中间产物（score=0，如煎鸡蛋）也是**完整菜谱**——图标、3D 模型、装盘容器全部可配，仅作为可被引用的工序而不会直接上桌。列表：顶部搜索（菜名/ID/食材）+ 成品/中间产物筛选 + 分类侧栏；每张菜谱以「菜谱清单列表」卡片展示组装效果，卡片底部信息条显示分类/装盘容器/UID/组成项数，操作按钮（👁 3D 预览 / 编辑 / 删除）置于底部；旧桥接数据自动用组成 id 反查食材名兜底。
+- **编辑/新建表单**：
+  - 顶部**组装效果实时预览**（同卡片样式），随组成选择即时刷新；
+  - **组成**：点击「＋ 添加食材 / 中间产物」弹出选择器（搜索 + 全部/食材/中间产物筛选）——同一项可**多次选用**（卡片与已选列表均有 −/＋ 数量调整，如双肉排汉堡）；中间产物含本关卡集自定义菜谱与官方中间产物（半成品徽标 + 来源标注）；
+  - 「**+ 新建中间产物**」直接进入完整新建表单（预填分数 0），保存后回到列表即可被引用；
+  - 烹饪设置（步骤/程度/搅拌）与**装盘容器**（盘子/杯子，运行时映射 `PlatingStepData`）配置；
+  - 模型区：复用已有模型 / 上传图标 / **上传 3D 模型（FBX/OBJ 可同时选择 PNG 贴图一并上传，主模型统一命名 `<recipeName>.fbx|.obj`，贴图保留原名写入 models 目录供 Unity 导入关联）**；
+  - **3D 在线预览**：列表卡片「👁 预览」或编辑页「预览当前模型」按钮，浏览器内用 three.js 渲染 FBX（自动加载内嵌贴图）/OBJ，支持旋转/平移/缩放（模型文件经 `/api/custom-recipes/model-files` 目录式端点服务）。
+- 锅具自动分配（主编排页「🧩 自动中间产物」）除内置硬编码表外，对用户自建的中间产物按「叶食材 ⊂ 菜谱叶食材 + 步骤匹配」泛化兜底（`main.ts computeIntermediatesForUtensils`）。
 
 ---
 
@@ -125,7 +139,7 @@ python3 layout-editor/scripts/extract-icons.py --check    # 只统计覆盖率�
 | GET | `/api/health` | `ok`、`port`、`static`（dist 是否存在） |
 | GET | `/api/level-sets` | 关卡场景列表 |
 | GET | `/api/scene/layout?assetPath=...` | 导出布局（items + floors + walkable + deathInfo） |
-| POST | `/api/scene/layout?snap=1.2` | 写回布局（items + floors） |
+| POST | `/api/scene/layout?snap=0.01` | 写回布局（items + floors）；snap 为所选摆放精度 |
 | GET | `/api/grid` | 网格参数 |
 | GET | `/api/catalog/floor-materials?levelSet=...` | 地板材质列表 |
 

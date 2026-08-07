@@ -67,6 +67,74 @@ public static class LayoutEditorRecipeKnowledge
             };
         }
 
+        // 自定义菜谱的"工序"分组：当菜谱自身没有整体烹饪步骤（Composite/组装型）时，
+        // 按其直接组成展开 —— 组成若是子菜谱（中间产物/半成品），以子菜谱自身的烹饪
+        // 步骤成组并展开其叶食材；普通食材归生组。组成顺序即组顺序。
+        if (recipe != null && recipe.compositionIds != null && recipe.compositionIds.Length > 0 &&
+            !IsCookStep(finalStep))
+        {
+            var byId = new Dictionary<string, RecipeEntryDto>(StringComparer.Ordinal);
+            if (allRecipes != null)
+            {
+                foreach (var r in allRecipes)
+                {
+                    if (r == null || string.IsNullOrEmpty(r.id))
+                        continue;
+                    if (!byId.ContainsKey(r.id))
+                        byId[r.id] = r;
+                }
+            }
+
+            var compResult = new List<RecipeCookingGroupDto>();
+            var compRaw = new List<string>();
+            var compSteps = new List<string>();
+            var compStepIngs = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            foreach (var compId in recipe.compositionIds)
+            {
+                if (string.IsNullOrEmpty(compId))
+                    continue;
+                RecipeEntryDto sub;
+                if (byId.TryGetValue(compId, out sub) && sub != null &&
+                    sub.ingredients != null && sub.ingredients.Length > 0)
+                {
+                    var subStep = IsCookStep(sub.cookingStep) ? sub.cookingStep : "";
+                    if (subStep == "")
+                    {
+                        foreach (var ing in sub.ingredients)
+                            compRaw.Add(ing);
+                        continue;
+                    }
+                    List<string> lst;
+                    if (!compStepIngs.TryGetValue(subStep, out lst))
+                    {
+                        lst = new List<string>();
+                        compStepIngs[subStep] = lst;
+                        compSteps.Add(subStep);
+                    }
+                    foreach (var ing in sub.ingredients)
+                        lst.Add(ing);
+                }
+                else
+                {
+                    compRaw.Add(compId);
+                }
+            }
+
+            if (compRaw.Count > 0)
+                compResult.Add(new RecipeCookingGroupDto { step = "", utensils = new string[0], ingredients = compRaw.ToArray() });
+            for (int i = 0; i < compSteps.Count; i++)
+            {
+                var st = compSteps[i];
+                compResult.Add(new RecipeCookingGroupDto
+                {
+                    step = st,
+                    utensils = UtensilsForStep(st),
+                    ingredients = compStepIngs[st].ToArray()
+                });
+            }
+            return compResult.ToArray();
+        }
+
         var prep = new Dictionary<string, string>(StringComparer.Ordinal); // ingredient -> step ("" = raw)
 
         if (finalStep == "FryingPan")

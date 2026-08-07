@@ -49,6 +49,16 @@
   color: #e8eaed;
 }
 
+/* 3D 预览弹窗内的行内加载转圈 */
+.mp-inline-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  margin-right: 8px;
+  vertical-align: -2px;
+}
+
 .del-file-list {
   max-height: 220px;
   overflow-y: auto;
@@ -1218,6 +1228,18 @@ body.manage-bg {
   margin-left: 0;
 }
 
+.cr-warn-banner {
+  margin: 10px 12px 0;
+  padding: 10px 14px;
+  border: 1px solid #f9ab00;
+  background: rgba(249, 171, 0, 0.12);
+  color: #fdd663;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 .m-btn {
   background: #1a1d23;
   color: #e8eaed;
@@ -2091,13 +2113,417 @@ body.manage-bg {
   border-radius: 6px 6px 0 0;
 }
 
-.cr-warn-banner {
-  padding: 10px 16px;
-  background: #f59e0b;
-  color: #1a1a1a;
-  font-weight: 600;
-  font-size: 14px;
+/* ---- Custom recipe form ---- */
+
+.cr-form {
+  max-width: 980px;
+}
+
+.cr-section {
+  background: #22262e;
+  border: 1px solid #3a3f4b;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.cr-section .m-section-title {
+  margin: 0 0 12px;
+}
+
+.cr-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 14px;
+}
+
+.cr-form > .cr-section > .m-field {
+  margin-bottom: 10px;
+}
+
+.cr-form-grid .m-field {
+  min-width: 0;
+}
+
+/* 组装效果预览 */
+.cr-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.cr-preview .rl-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* 组成 tabs */
+.cr-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.cr-tab {
+  border: 1px solid #3a3f4b;
+  background: #1a1d23;
+  color: #b6bcc6;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.cr-tab:hover {
+  color: #fff;
+  border-color: #5a6070;
+}
+
+.cr-tab.active {
+  background: #3d6bf3;
+  border-color: #3d6bf3;
+  color: #fff;
+}
+
+.cr-tab-count {
+  display: inline-block;
+  min-width: 16px;
   text-align: center;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-size: 10px;
+  margin-left: 4px;
+  padding: 0 4px;
+}
+
+/* 组成选择器 */
+.cr-comp-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.cr-comp-chip {
+  border: 1px solid #3a3f4b;
+  background: #1a1d23;
+  color: #b6bcc6;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.cr-comp-chip:hover {
+  color: #fff;
+  border-color: #5a6070;
+}
+
+.cr-comp-chip.active {
+  background: #3d6bf3;
+  border-color: #3d6bf3;
+  color: #fff;
+}
+
+/* 已选摘要 */
+.cr-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.cr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #1b1e23;
+  border: 1px solid #3a3f4b;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #e8eaed;
+}
+
+.cr-chip-sub {
+  border-color: rgba(61, 107, 243, 0.6);
+  background: rgba(61, 107, 243, 0.12);
+}
+
+.cr-chip-tag {
+  font-size: 10px;
+  color: #8ab4f8;
+}
+
+.cr-chip-x {
+  border: none;
+  background: none;
+  color: #9aa0a6;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.cr-chip-x:hover {
+  color: #ff6b6b;
+}
+
+/* 已选组成列表行 */
+.cr-comp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cr-comp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1b1e23;
+  border: 1px solid #333a48;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  color: #e8eaed;
+}
+
+.cr-comp-row-sub {
+  border-color: rgba(61, 107, 243, 0.55);
+  background: rgba(61, 107, 243, 0.08);
+}
+
+.cr-comp-row .food-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex: none;
+}
+
+.cr-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cr-row-stepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.cr-step {
+  width: 22px;
+  height: 22px;
+  border: 1px solid #4a5060;
+  background: #23262e;
+  color: #e8eaed;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.cr-step:hover {
+  border-color: #3d6bf3;
+}
+
+.cr-step-num {
+  min-width: 26px;
+  text-align: center;
+  font-size: 13px;
+  color: #fff;
+}
+
+.cr-step-del {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  color: #9aa0a6;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.cr-step-del:hover {
+  color: #ff6b6b;
+}
+
+/* 选择弹窗卡片数量 */
+.cp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cp-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cp-step {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #4a5060;
+  background: #23262e;
+  color: #e8eaed;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.cp-step:hover {
+  border-color: #3d6bf3;
+}
+
+.cp-num {
+  min-width: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #fff;
+}
+
+/* 子菜谱徽标 */
+.cr-badge-half,
+.cr-badge-score {
+  display: inline-block;
+  font-size: 9px;
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+.cr-badge-half {
+  color: #c9c2b8;
+  background: rgba(200, 195, 185, 0.14);
+}
+
+.cr-badge-done {
+  color: #7ee2a8;
+  background: rgba(126, 226, 168, 0.14);
+}
+
+.cr-badge-score {
+  color: #ffe9b0;
+  background: rgba(255, 217, 138, 0.12);
+}
+
+/* 列表页卡片包装 */
+.cr-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.cr-card-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.cr-card-inner .rl-card {
+  border-radius: 14px 14px 0 0;
+}
+
+.cr-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: #1b1e25;
+  border: 1px solid #333a4a;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  font-size: 12px;
+}
+
+.cr-half-tag {
+  color: #c9c2b8;
+  background: rgba(200, 195, 185, 0.14);
+}
+
+.cr-cat-tag {
+  font-size: 11px;
+  color: #8ab4f8;
+  background: rgba(138, 180, 248, 0.12);
+  border-radius: 3px;
+  padding: 1px 7px;
+}
+
+.cr-plate-tag {
+  color: #ffd98a;
+  background: rgba(255, 217, 138, 0.12);
+}
+
+/* ---- 3D 模型在线预览 ---- */
+
+.mp-panel {
+  max-width: 760px;
+}
+
+.mp-wrap {
+  width: 100%;
+  height: 420px;
+  border: 1px solid #3a3f4b;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1d23;
+}
+
+#mp-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mp-status {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.mp-status.err {
+  color: #ff6b6b;
+}
+
+.mp-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #1b1e25;
+  border: 1px solid #333a4a;
+  border-radius: 6px;
+}
+
+.mp-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #b6bcc6;
+}
+
+.mp-controls input {
+  width: 90px;
+  background: #171a20;
+  border: 1px solid #4a5060;
+  border-radius: 4px;
+  color: #e8eaed;
+  padding: 4px 8px;
+  font-size: 13px;
 }
 
 /* ---- Audio player bar ---- */

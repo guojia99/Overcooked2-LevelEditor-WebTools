@@ -33,7 +33,6 @@ public static class LayoutEditorFootprintDump
         public List<Entry> items;
     }
 
-    [MenuItem("Tools/Layout Editor/导出装饰实测尺寸 (measured-footprints.json)", false, 211)]
     public static void Dump()
     {
         var entries = new List<Entry>();

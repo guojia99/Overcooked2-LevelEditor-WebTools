@@ -19,6 +19,8 @@ export interface RecipeLike {
   type?: string;
   cookingStep?: string;
   ingredients?: string[];
+  /** Direct composition ids for custom recipes (sub-recipe ids and/or ingredient ids). */
+  compositionIds?: string[];
   intermediate?: boolean;
 }
 
@@ -40,6 +42,56 @@ const STEP_UTENSILS: Record<string, string[]> = {
 };
 
 const COOK_STEPS = new Set(Object.keys(STEP_UTENSILS));
+
+/** True when the step id is a real cooking step (pot, pan, steamer, …). */
+export function isCookStepLike(s: string | undefined): boolean {
+  return !!s && COOK_STEPS.has(s);
+}
+
+/** Custom recipe "工序" grouping (mirrors the backend composition branch):
+ *  the recipe has no overall cooking step (Composite/assembly), so its direct
+ *  compositions are expanded — sub-recipes group under their own cooking step
+ *  with their leaf ingredients, plain ingredients fall into the raw group.
+ *  Composition order defines the group order. */
+export function deriveCompositionGroups(
+  r: RecipeLike,
+  allRecipes: IntermediateLike[]
+): CookingGroup[] {
+  const compIds = r.compositionIds ?? [];
+  if (compIds.length === 0) return [];
+
+  const byId = new Map<string, RecipeLike>();
+  for (const x of allRecipes) {
+    if (x.id && !byId.has(x.id)) byId.set(x.id, x);
+  }
+
+  const raw: string[] = [];
+  const steps: string[] = [];
+  const stepIngs = new Map<string, string[]>();
+  for (const compId of compIds) {
+    const sub = byId.get(compId);
+    if (sub && (sub.ingredients ?? []).length > 0) {
+      const step = COOK_STEPS.has(sub.cookingStep ?? "") ? sub.cookingStep! : "";
+      if (!step) {
+        for (const ing of sub.ingredients!) raw.push(ing);
+        continue;
+      }
+      const lst = stepIngs.get(step) ?? [];
+      for (const ing of sub.ingredients!) lst.push(ing);
+      stepIngs.set(step, lst);
+      if (!steps.includes(step)) steps.push(step);
+    } else {
+      raw.push(compId);
+    }
+  }
+
+  const groups: CookingGroup[] = [];
+  if (raw.length > 0) groups.push({ step: "", utensils: [], ingredients: raw });
+  for (const st of steps) {
+    groups.push({ step: st, utensils: STEP_UTENSILS[st] ?? [], ingredients: stepIngs.get(st)! });
+  }
+  return groups;
+}
 
 /** Fallback derivation of ingredient cooking groups (mirrors the backend algorithm). */
 export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[]): CookingGroup[] {

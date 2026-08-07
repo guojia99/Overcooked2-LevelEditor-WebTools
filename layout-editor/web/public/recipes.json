@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T16:21:19.630Z",
+  "generatedAt": "2026-08-06T06:49:22.039Z",
   "schemaVersion": 3,
   "itemCount": 76,
   "recipes": [
@@ -211,6 +211,10 @@
         "TomatoSO",
         "EggSO"
       ],
+      "compositionIds": [
+        "TomatoSO",
+        "EggSO"
+      ],
       "ingredientCount": 2,
       "cookingStepCount": 1,
       "score": 40,
@@ -271,6 +275,11 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Tomato_SO.asset",
       "cookingStep": "Pot",
       "ingredients": [
+        "TomatoSO",
+        "TomatoSO",
+        "TomatoSO"
+      ],
+      "compositionIds": [
         "TomatoSO",
         "TomatoSO",
         "TomatoSO"
@@ -792,6 +801,9 @@
       "ingredients": [
         "MeatSO"
       ],
+      "compositionIds": [
+        "MeatSO"
+      ],
       "ingredientCount": 1,
       "cookingStepCount": 1,
       "score": 0,
@@ -1061,6 +1073,12 @@
         "CheeseSO",
         "MushroomSO"
       ],
+      "compositionIds": [
+        "DoughSO",
+        "TomatoSO",
+        "CheeseSO",
+        "MushroomSO"
+      ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
       "score": 80,
@@ -1092,6 +1110,11 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Mushroom_SO.asset",
       "cookingStep": "Pot",
       "ingredients": [
+        "MushroomSO",
+        "MushroomSO",
+        "MushroomSO"
+      ],
+      "compositionIds": [
         "MushroomSO",
         "MushroomSO",
         "MushroomSO"
@@ -1237,6 +1260,9 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Mushroom_For_Pizza_SO.asset",
       "cookingStep": "",
       "ingredients": [
+        "MushroomSO"
+      ],
+      "compositionIds": [
         "MushroomSO"
       ],
       "ingredientCount": 1,
@@ -1688,6 +1714,11 @@
         "LettuceSO",
         "MeatSO"
       ],
+      "compositionIds": [
+        "ChoppedBunSO",
+        "LettuceSO",
+        "FriedMeat"
+      ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 60,
@@ -1701,7 +1732,16 @@
           "utensils": [],
           "ingredients": [
             "ChoppedBunSO",
-            "LettuceSO",
+            "LettuceSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
             "MeatSO"
           ]
         }
@@ -2238,6 +2278,11 @@
         "OnionSO",
         "OnionSO"
       ],
+      "compositionIds": [
+        "OnionSO",
+        "OnionSO",
+        "OnionSO"
+      ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
       "score": 60,
@@ -2575,6 +2620,9 @@
       "ingredients": [
         "PotatoSO"
       ],
+      "compositionIds": [
+        "PotatoSO"
+      ],
       "ingredientCount": 1,
       "cookingStepCount": 1,
       "score": 0,
@@ -2606,6 +2654,9 @@
       "ingredients": [
         "SushiFishSO"
       ],
+      "compositionIds": [
+        "FriedFish"
+      ],
       "ingredientCount": 1,
       "cookingStepCount": 1,
       "score": 40,
@@ -2635,6 +2686,9 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Fry/FriedFish.asset",
       "cookingStep": "DeepFatFryer",
       "ingredients": [
+        "SushiFishSO"
+      ],
+      "compositionIds": [
         "SushiFishSO"
       ],
       "ingredientCount": 1,
@@ -2669,6 +2723,10 @@
         "SushiFishSO",
         "PotatoSO"
       ],
+      "compositionIds": [
+        "FriedFish",
+        "FriedPotato"
+      ],
       "ingredientCount": 2,
       "cookingStepCount": 2,
       "score": 60,
@@ -2684,16 +2742,7 @@
             "FrierBasket"
           ],
           "ingredients": [
-            "SushiFishSO"
-          ]
-        },
-        {
-          "step": "DeepFatFryer",
-          "utensils": [
-            "FryingStation",
-            "FrierBasket"
-          ],
-          "ingredients": [
+            "SushiFishSO",
             "PotatoSO"
           ]
         }
@@ -2825,6 +2874,9 @@
       "ingredients": [
         "DoughSO"
       ],
+      "compositionIds": [
+        "DoughSO"
+      ],
       "ingredientCount": 1,
       "cookingStepCount": 1,
       "score": 0,
@@ -2853,6 +2905,9 @@
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Cooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
+        "DoughSO"
+      ],
+      "compositionIds": [
         "DoughSO"
       ],
       "ingredientCount": 1,

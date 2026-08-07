@@ -34,7 +34,7 @@ import {
 } from "./modals";
 import { foodGroupLabel, ingredientNameZh, ingredientOptionLabel } from "./ingredientLabels";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
-import { rlCardHtml, rlSectionHtml, type RecipeWithGroups } from "./recipeCard";
+import { rlCardHtml, rlSectionHtml, type RlCardOptions, type RecipeWithGroups } from "./recipeCard";
 import { tidyCatalogNameZh } from "./displayLabels";
 import { paintStyleForItem } from "./itemColors";
 import {
@@ -64,9 +64,34 @@ function isActiveItemLayer(it: { prefabGuid: string }): boolean {
   return itemLayerOf(catalogByGuid.get(it.prefabGuid)) === currentLayer;
 }
 
-/** Decor items snap at 0.01 (free placement); gameplay items use the global snap step. */
-function itemSnapStep(it: { prefabGuid: string }): number {
-  return itemLayerOf(catalogByGuid.get(it.prefabGuid)) === "decor" ? 0.01 : snapStep;
+/** Placement precision for free (non-grid) placement. Selectable in the toolbar (0.1 / 0.01 / 0.001). */
+let freeSnapStep = 0.01;
+
+/** Decimal places needed to display positions at a given step (0.6 → 1, 0.1 → 1, 0.01 → 2, 0.001 → 3). */
+function stepDecimals(step: number): number {
+  return Math.min(3, Math.max(0, Math.ceil(-Math.log10(step))));
+}
+
+/** Decimals for coordinate displays: keep at least 2 so grid-snapped positions stay readable. */
+function stepDisplayDecimals(step: number): number {
+  return Math.max(2, stepDecimals(step));
+}
+
+/** Grid magnet: gameplay items snap to the half-cell (0.6) lattice only when within
+ *  MAGNET_THRESHOLD of it; otherwise they move freely at the selected precision.
+ *  Decor items always place freely, same as the decoration layer. */
+function snapPlacement(
+  cellsX: number,
+  cellsZ: number,
+  rotY: number,
+  prefabGuid: string,
+  wx: number,
+  wz: number
+): { x: number; z: number } {
+  const free = { x: snapValue(wx, freeSnapStep), z: snapValue(wz, freeSnapStep) };
+  if (!snapEnabled || itemLayerOf(catalogByGuid.get(prefabGuid)) === "decor") return free;
+  const snapped = snapFootprintCenter(wx, wz, cellsX, cellsZ, rotY, CELL, HALF_CELL);
+  return Math.hypot(snapped.x - wx, snapped.z - wz) <= MAGNET_THRESHOLD ? snapped : free;
 }
 import { snapFootprintCenter, snapValue } from "./snap";
 import { raftPiecesForRect } from "./raft";
@@ -95,6 +120,9 @@ import type {
 } from "./types";
 
 const CELL = 1.2;
+const HALF_CELL = CELL / 2;
+/** 磁吸半径：距半格网格 0.1 内才吸附到网格，其余位置按所选精度自由摆放。 */
+const MAGNET_THRESHOLD = 0.1;
 const PX_PER_UNIT = 48;
 
 /** Image-floor texture cache: texturePath → HTMLImageElement (loaded or loading).
@@ -183,7 +211,7 @@ type LayerKey = "items" | "decor" | "floor";
 
 let currentLayer: LayerKey = "items";
 let scenePath = "";
-let snapStep = 0.6;
+let snapEnabled = true;
 let showGrid = true;
 let showCoords = true;
 let hoverCx = -1;
@@ -963,7 +991,7 @@ async function openRecipesDialog() {
 
   const selected = new Set<string>(level.recipeGuids ?? []);
   const orderable = recipes.filter((r) => !r.intermediate);
-  intermediatesCache = recipes.filter((r) => r.intermediate);
+  intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
   const byGuid = new Map(recipes.map((r) => [r.guid, r]));
 
   const levelSetRecipes = orderable.filter((r) => r.group === "levelset");
@@ -987,9 +1015,10 @@ async function openRecipesDialog() {
       })
       .join("");
     const searchable = `${r.nameZh} ${r.nameEn ?? ""} ${r.id}`.toLowerCase();
+    const iconSrc = customRecipeIconUrl(r) ?? (r.id && r.icon !== false ? `/icons/recipes/${encodeURIComponent(r.id)}.png` : "/icons/_placeholder.png");
     return `<label class="pick-card recipe-card" data-name="${escHtml(searchable)}">
       <input type="checkbox" value="${r.guid}" ${checked}>
-      <span class="rc-head">${foodIconImg("recipes", r.id, r.icon)}<span class="pc-name">${escHtml(r.nameZh)}${grp}${cust}${lsBadge}</span></span>
+      <span class="rc-head"><img class="food-icon" loading="lazy" src="${escHtml(iconSrc)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'"><span class="pc-name">${escHtml(r.nameZh)}${grp}${cust}${lsBadge}</span></span>
       <span class="rc-ings">${chips || '<span class="muted small">无食材</span>'}</span>
     </label>`;
   }
@@ -1218,7 +1247,8 @@ async function openRecipesDialog() {
         if (autoIntermediates) {
           const recs = currentRecipes();
           const intermediateMap = computeIntermediatesForUtensils(recs);
-          const intByGuid = new Map(intermediatesCache.map((i) => [i.id, i.guid]));
+          // 锅具 allowedIngredientSOs 是食材（PseudoPrefabSO），用食材 guid 映射
+          const ingByGuid = new Map(ingredientsCache.map((i) => [i.id, i.guid]));
 
           for (const placedId of placedItemIds) {
             const intIds = intermediateMap.get(placedId);
@@ -1226,7 +1256,7 @@ async function openRecipesDialog() {
             const itCat = catalogItemById(placedId);
             if (!itCat) continue;
             const guidsToAdd = intIds
-              .map((iid) => intByGuid.get(iid))
+              .map((iid) => ingByGuid.get(iid))
               .filter((g): g is string => !!g);
             if (guidsToAdd.length === 0) continue;
             for (const it of items) {
@@ -1382,7 +1412,7 @@ async function openSelectedRecipesDialog() {
   }
 
   const byGuid = new Map(recipes.map((r) => [r.guid, r]));
-  intermediatesCache = recipes.filter((r) => r.intermediate);
+  intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
   const selected: RecipeWithGroups[] = (level.recipeGuids ?? [])
     .map((g) => byGuid.get(g))
     .filter((r): r is RecipeEntry => !!r && !r.intermediate);
@@ -1393,13 +1423,16 @@ async function openSelectedRecipesDialog() {
       rlSectionHtml(
         type,
         arr
-          .map((r) =>
-            rlCardHtml(r, {
+          .map((r) => {
+            const opts: RlCardOptions = {
               allRecipes: recipes as RecipeWithGroups[],
               ingredientName: (id) => ingredientEntryById(id)?.nameZh ?? id,
               extraBadge: r.group === "levelset" ? "本关" : undefined,
-            })
-          )
+            };
+            const iconUrl = customRecipeIconUrl(r);
+            if (iconUrl) opts.iconSrc = () => iconUrl;
+            return rlCardHtml(r, opts);
+          })
           .join(""),
         arr.length
       )
@@ -1445,7 +1478,14 @@ app.innerHTML = `
         <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板 / 背景层</button>
       </div>
       <span class="toolbar-sep"></span>
-      <label class="toolbar-check"><input type="checkbox" id="snap-half" checked /> 📐 半格 (0.6)</label>
+      <label class="toolbar-check" title="距半格网格 0.1 内自动吸附到网格，其余位置按所选精度自由摆放"><input type="checkbox" id="snap-grid" checked /> 🧲 吸附格子</label>
+      <label class="toolbar-check">🎯 精度
+        <select id="snap-free-step" title="自由摆放 / 微移的精度">
+          <option value="0.1">0.1</option>
+          <option value="0.01" selected>0.01</option>
+          <option value="0.001">0.001</option>
+        </select>
+      </label>
       <label class="toolbar-check"><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
       <label class="toolbar-check"><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
       <label class="toolbar-check" title="勾选后允许工作台重叠时仍然写回"><input type="checkbox" id="allow-ws-overlap" /> ⚠ 允许工作台重叠</label>
@@ -2413,7 +2453,7 @@ function dragFloor(f: EditorFloor, mx: number, my: number) {
       f._wz = wz;
       snapRaftCenterToGrid(f);
     } else {
-      const snapped = snapFootprintCenter(wx, wz, f._wCells, f._dCells, f.localRotationY ?? 0, CELL, snapStep);
+      const snapped = snapFootprintCenter(wx, wz, f._wCells, f._dCells, f.localRotationY ?? 0, CELL, HALF_CELL);
       f._wx = snapped.x;
       f._wz = snapped.z;
     }
@@ -2468,7 +2508,7 @@ function finalizeFloor(f: EditorFloor) {
       f._dCells,
       f.localRotationY ?? 0,
       CELL,
-      snapStep
+      HALF_CELL
     );
     f._wx = snapped.x;
     f._wz = snapped.z;
@@ -2529,7 +2569,7 @@ function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | null) {
   const key = newEditorKey();
   const w = 4;
   const d = 4;
-  const snapped = snapFootprintCenter(wx, wz, w, d, 0, CELL, snapStep);
+  const snapped = snapFootprintCenter(wx, wz, w, d, 0, CELL, HALF_CELL);
   const defaultMat = floorMaterials.find((m) => /floor|blacktiles|path/i.test(m.id));
   const floor: EditorFloor = {
     instanceId: id,
@@ -4051,7 +4091,7 @@ function showDetail(item: EditorItem, clientX: number, clientY: number) {
       <dt>层级路径</dt><dd>${item.hierarchyPath}</dd>
       <dt>父节点</dt><dd>${item.parentPath || "—"}</dd>
       <dt>占地</dt><dd>${fp.cellsX} × ${fp.cellsZ} 格 (${(fp.cellsX * CELL).toFixed(1)} × ${(fp.cellsZ * CELL).toFixed(1)} m)</dd>
-      <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(2)}, y ${item.localPosition.y.toFixed(2)}, z ${item.localPosition.z.toFixed(2)}</dd>
+      <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(stepDisplayDecimals(freeSnapStep))}, y ${item.localPosition.y.toFixed(stepDisplayDecimals(freeSnapStep))}, z ${item.localPosition.z.toFixed(stepDisplayDecimals(freeSnapStep))}</dd>
       <dt>旋转 Y</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
       ${isSurfaceItem(cat) ? `<dt>缩放</dt><dd>${itemUniformScale(item).toFixed(2)}×（右键菜单可调整大小）</dd>` : ""}
       <dt>分类</dt><dd>${isSurfaceItem(cat) ? surfaceKindLabelZh(cat?.surfaceKind) + "（地板层）" : cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : cat?.category ?? "—"}</dd>
@@ -4084,7 +4124,7 @@ function showDetail(item: EditorItem, clientX: number, clientY: number) {
 
 function snapItemWorld(item: EditorItem, wx: number, wz: number): { x: number; z: number } {
   const fp = resolveFootprint(item);
-  return snapFootprintCenter(wx, wz, fp.cellsX, fp.cellsZ, item.localRotationY, CELL, itemSnapStep(item));
+  return snapPlacement(fp.cellsX, fp.cellsZ, item.localRotationY, item.prefabGuid, wx, wz);
 }
 
 function refreshUtensilStacks() {
@@ -4102,8 +4142,8 @@ function syncLocalFromWorld(item: EditorItem) {
   if (cat?.stack) {
     trySnapUtensilToHost(item, cat, items, catalogByGuid);
   }
-  item.localPosition.x = snapValue(item._wx - item._parentWx, itemSnapStep(item));
-  item.localPosition.z = snapValue(item._wz - item._parentWz, itemSnapStep(item));
+  item.localPosition.x = snapValue(item._wx - item._parentWx, freeSnapStep);
+  item.localPosition.z = snapValue(item._wz - item._parentWz, freeSnapStep);
 }
 
 function isSelected(key: string): boolean {
@@ -4145,7 +4185,7 @@ function nudgeItem(item: EditorItem, dx: number, dz: number, dy = 0) {
   item.localPosition.x = item._wx - item._parentWx;
   item.localPosition.z = item._wz - item._parentWz;
   if (dy !== 0) {
-    item.localPosition.y = snapValue(item.localPosition.y + dy, 0.1);
+    item.localPosition.y = snapValue(item.localPosition.y + dy, freeSnapStep);
   }
   const cat = catalogByGuid.get(item.prefabGuid);
   if (cat?.stack) trySnapUtensilToHost(item, cat, items, catalogByGuid);
@@ -4348,36 +4388,36 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
 
   ctxMenuEl.innerHTML = `
     <div class="ctx-head">${headBadge}${itemLabel(item)}</div>
-    <div class="ctx-coord" id="ctx-coord">x ${item.localPosition.x.toFixed(2)} · z ${item.localPosition.z.toFixed(2)}</div>
+    <div class="ctx-coord" id="ctx-coord">x ${item.localPosition.x.toFixed(stepDisplayDecimals(freeSnapStep))} · z ${item.localPosition.z.toFixed(stepDisplayDecimals(freeSnapStep))}</div>
     ${
       isPlayer
         ? ""
         : `<div class="ctx-nudge-row">
       <span class="ctx-label">坐标(世界)</span>
       <div class="ctx-nudge">
-        <input type="number" id="ctx-x-input" class="ctx-input ctx-pos-input" step="0.1" value="${item._wx.toFixed(2)}" title="世界坐标 X（回车生效）" />
-        <input type="number" id="ctx-z-input" class="ctx-input ctx-pos-input" step="0.1" value="${item._wz.toFixed(2)}" title="世界坐标 Z（回车生效）" />
+        <input type="number" id="ctx-x-input" class="ctx-input ctx-pos-input" step="${freeSnapStep}" value="${item._wx.toFixed(stepDisplayDecimals(freeSnapStep))}" title="世界坐标 X（回车生效）" />
+        <input type="number" id="ctx-z-input" class="ctx-input ctx-pos-input" step="${freeSnapStep}" value="${item._wz.toFixed(stepDisplayDecimals(freeSnapStep))}" title="世界坐标 Z（回车生效）" />
       </div>
     </div>`
     }
     <div class="ctx-nudge-row">
-      <span class="ctx-label">微移 0.1</span>
+      <span class="ctx-label">微移 ${freeSnapStep.toFixed(stepDecimals(freeSnapStep))}</span>
       <div class="ctx-nudge">
-        <button type="button" data-nudge="-0.1,0" title="左移 0.1">←</button>
-        <button type="button" data-nudge="0,0.1" title="上移 0.1">↑</button>
-        <button type="button" data-nudge="0,-0.1" title="下移 0.1">↓</button>
-        <button type="button" data-nudge="0.1,0" title="右移 0.1">→</button>
+        <button type="button" data-nudge="-${freeSnapStep},0" title="左移 ${freeSnapStep}">←</button>
+        <button type="button" data-nudge="0,${freeSnapStep}" title="上移 ${freeSnapStep}">↑</button>
+        <button type="button" data-nudge="0,-${freeSnapStep}" title="下移 ${freeSnapStep}">↓</button>
+        <button type="button" data-nudge="${freeSnapStep},0" title="右移 ${freeSnapStep}">→</button>
       </div>
     </div>
     ${
       isPlayer
         ? ""
         : `<div class="ctx-nudge-row">
-      <span class="ctx-label">高度 <span id="ctx-y-val" class="ctx-scale-val">${item.localPosition.y.toFixed(itemSnapStep(item) < 0.1 ? 2 : 1)}</span></span>
+      <span class="ctx-label">高度 <span id="ctx-y-val" class="ctx-scale-val">${item.localPosition.y.toFixed(stepDisplayDecimals(freeSnapStep))}</span></span>
       <div class="ctx-nudge">
-        <button type="button" data-nudge="0,0,-0.1" title="降低 0.1">−0.1</button>
-        <input type="number" id="ctx-y-input" class="ctx-input ctx-pos-input" step="0.1" value="${item.localPosition.y.toFixed(2)}" title="高度 Y（回车生效）" />
-        <button type="button" data-nudge="0,0,0.1" title="升高 0.1">+0.1</button>
+        <button type="button" data-nudge="0,0,-${freeSnapStep}" title="降低 ${freeSnapStep}">−${freeSnapStep.toFixed(stepDecimals(freeSnapStep))}</button>
+        <input type="number" id="ctx-y-input" class="ctx-input ctx-pos-input" step="${freeSnapStep}" value="${item.localPosition.y.toFixed(stepDisplayDecimals(freeSnapStep))}" title="高度 Y（回车生效）" />
+        <button type="button" data-nudge="0,0,${freeSnapStep}" title="升高 ${freeSnapStep}">+${freeSnapStep.toFixed(stepDecimals(freeSnapStep))}</button>
       </div>
     </div>
     <div class="ctx-nudge-row">
@@ -4435,16 +4475,17 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
     const xInp = document.getElementById("ctx-x-input") as HTMLInputElement | null;
     const zInp = document.getElementById("ctx-z-input") as HTMLInputElement | null;
     const yInp = document.getElementById("ctx-y-input") as HTMLInputElement | null;
-    if (xInp && document.activeElement !== xInp) xInp.value = item._wx.toFixed(2);
-    if (zInp && document.activeElement !== zInp) zInp.value = item._wz.toFixed(2);
-    if (yInp && document.activeElement !== yInp) yInp.value = item.localPosition.y.toFixed(2);
+    const d = stepDisplayDecimals(freeSnapStep);
+    if (xInp && document.activeElement !== xInp) xInp.value = item._wx.toFixed(d);
+    if (zInp && document.activeElement !== zInp) zInp.value = item._wz.toFixed(d);
+    if (yInp && document.activeElement !== yInp) yInp.value = item.localPosition.y.toFixed(d);
   };
   ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-nudge]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const parts = btn.dataset.nudge!.split(",").map(Number);
       nudgeItem(item, parts[0] || 0, parts[1] || 0, parts[2] || 0);
       const yEl = document.getElementById("ctx-y-val");
-      if (yEl) yEl.textContent = item.localPosition.y.toFixed(itemSnapStep(item) < 0.1 ? 2 : 1);
+      if (yEl) yEl.textContent = item.localPosition.y.toFixed(stepDisplayDecimals(freeSnapStep));
       refreshCtxPosInputs();
     });
   });
@@ -4470,9 +4511,9 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
     const y = parseFloat(yInput.value);
     if (!isFinite(y)) return;
     pushHistory();
-    item.localPosition.y = snapValue(y, 0.01);
+    item.localPosition.y = snapValue(y, freeSnapStep);
     const yEl = document.getElementById("ctx-y-val");
-    if (yEl) yEl.textContent = item.localPosition.y.toFixed(itemSnapStep(item) < 0.1 ? 2 : 1);
+    if (yEl) yEl.textContent = item.localPosition.y.toFixed(stepDisplayDecimals(freeSnapStep));
     updateCtxCoord(item);
     refreshCtxPosInputs();
     draw();
@@ -4531,7 +4572,10 @@ function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
 
 function updateCtxCoord(item: EditorItem) {
   const el = document.getElementById("ctx-coord");
-  if (el) el.textContent = `x ${item.localPosition.x.toFixed(2)} · y ${item.localPosition.y.toFixed(2)} · z ${item.localPosition.z.toFixed(2)}`;
+  if (el) {
+    const d = stepDisplayDecimals(freeSnapStep);
+    el.textContent = `x ${item.localPosition.x.toFixed(d)} · y ${item.localPosition.y.toFixed(d)} · z ${item.localPosition.z.toFixed(d)}`;
+  }
 }
 
 function hideContextMenu() {
@@ -5160,7 +5204,9 @@ async function init() {
   warnIfBridgeOutdated(healthInfo, catalog.schemaVersion ?? 1);
   for (const it of catalog.items) catalogByGuid.set(it.guid, it);
   ingredientsCache = await fetchIngredients().catch(() => []);
-  intermediatesCache = await fetchRecipeCatalog("").then((r) => r.filter((x) => x.intermediate)).catch(() => []);
+  intermediatesCache = await fetchRecipeCatalog("")
+    .then((r) => r.filter((x) => x.intermediate || x.isCustom))
+    .catch(() => []);
   counterAppearances = await fetchCounterAppearances().catch(() => null);
   switchMaterialsCache = await fetchSwitchMaterials().catch(() => []);
   buildPalette(catalog, "");
@@ -5301,8 +5347,12 @@ async function init() {
     e.returnValue = "";
   });
 
-  document.getElementById("snap-half")!.addEventListener("change", (e) => {
-    snapStep = (e.target as HTMLInputElement).checked ? 0.6 : CELL;
+  document.getElementById("snap-grid")!.addEventListener("change", (e) => {
+    snapEnabled = (e.target as HTMLInputElement).checked;
+  });
+
+  document.getElementById("snap-free-step")!.addEventListener("change", (e) => {
+    freeSnapStep = parseFloat((e.target as HTMLSelectElement).value) || 0.01;
   });
 
   document.getElementById("show-grid")!.addEventListener("change", (e) => {
@@ -5656,7 +5706,7 @@ async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     }
 
     if (only) {
-      await saveLayout(buildDocument(only), snapStep, false, only);
+      await saveLayout(buildDocument(only), freeSnapStep, false, only);
       const scopeNote =
         only === "items"
           ? "仅物品，未修改地板/背景/装饰"
@@ -5689,7 +5739,7 @@ async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       setStatus(`以下食材箱未设置食材，将配置为空食材箱（不报错）：${names}`, true);
     }
 
-    await saveLayout(buildDocument(""), snapStep, autoWalkable, "");
+    await saveLayout(buildDocument(""), freeSnapStep, autoWalkable, "");
     if (needsThemeWrite) {
       await setDeathTheme(scenePath, bgThemeKey);
     }
@@ -5895,6 +5945,28 @@ function intermediateKeysForRecipe(r: RecipeEntry): string[] {
   return [...keys];
 }
 
+/** 烹饪步骤 → 锅具容器 id（泛化兜底，用户自建中间产物按此自动分配；
+ *  Oven 是台面（无容器），不参与。 */
+const STEP_CONTAINER: Record<string, string> = {
+  FryingPan: "FryPan",
+  MixingBowl: "MixerBowl",
+  DeepFatFryer: "FrierBasket",
+  Pot: "Pot",
+  Steamer: "Steamer",
+  GriddlePan: "GriddlePan",
+  KebabSkewer: "Skewer",
+  ToastingFork: "ToastingFork",
+  Mixer: "MixerBowl",
+};
+
+/** 锅具 allowedIngredientSOs 应填食材（PseudoPrefabSO）而非菜谱/中间产物（CustomRecipeSO）：
+ *  中间产物一律展开为叶食材 id 再分配。 */
+function leafIngredientIds(id: string): string[] {
+  const inter = intermediatesCache.find((x) => x.id === id);
+  const ings = inter?.ingredients;
+  return ings && ings.length > 0 ? ings : [id];
+}
+
 function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<string, string[]> {
   const result = new Map<string, string[]>();
   const add = (ut: string, iid: string) => {
@@ -5906,8 +5978,23 @@ function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<string, st
       const assign = INTERMEDIATE_ASSIGN[key];
       if (!assign) continue;
       for (const [ut, iids] of Object.entries(assign)) {
-        for (const iid of iids) add(ut, iid);
+        for (const iid of iids) {
+          for (const ing of leafIngredientIds(iid)) add(ut, ing);
+        }
       }
+    }
+  }
+  // 泛化兜底：用户自建的中间产物/自定义菜谱（如煎蛋）按「叶食材 ⊂ 菜谱叶食材 + 步骤匹配」
+  // 自动分配——同样只分配叶食材（鸡蛋），而非菜谱本身。
+  for (const r of recipes) {
+    const leafs = new Set(r.ingredients ?? []);
+    for (const inter of intermediatesCache) {
+      const step = inter.cookingStep ?? "";
+      const container = STEP_CONTAINER[step];
+      if (!container) continue;
+      const ings = inter.ingredients ?? [];
+      if (ings.length === 0 || !ings.every((i) => leafs.has(i))) continue;
+      for (const ing of ings) add(container, ing);
     }
   }
   return result;
@@ -5929,6 +6016,13 @@ function foodIconImg(kind: "ingredients" | "recipes", id: string | undefined, ha
   return `<img class="pc-img" loading="lazy" src="${src}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
 }
 
+/** 自定义菜谱（关卡集）的成品图标 URL（经桥接从 CustomRecipeSO.icon 资产读取）。 */
+function customRecipeIconUrl(r: { isCustom?: boolean; assetPath?: string }): string | undefined {
+  return r.isCustom && r.assetPath
+    ? `/api/custom-recipes/icon?assetPath=${encodeURIComponent(r.assetPath)}`
+    : undefined;
+}
+
 function ingredientGuidById(id: string): string | undefined {
   return ingredientEntryById(id)?.guid;
 }
@@ -5945,6 +6039,15 @@ function ingredientNameById(id: string): string {
 function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<string>): string[] {
   const set = new Set<string>(BASE_UTENSILS);
   for (const s of steps) (STEP_UTENSILS[s] ?? []).forEach((u) => set.add(u));
+  // 自定义菜谱/中间产物（递归组装策略）：其叶食材 ⊆ 已选菜谱叶食材时，
+  // 该菜谱自身的烹饪步骤也产生锅具需求（如鸡蛋汉堡 → 煎蛋 → 煎锅）。
+  for (const inter of intermediatesCache) {
+    const step = inter.cookingStep ?? "";
+    if (!step) continue;
+    const ings = inter.ingredients ?? [];
+    if (ings.length === 0 || !ings.every((i) => ingredientIds.has(i))) continue;
+    (STEP_UTENSILS[step] ?? []).forEach((u) => set.add(u));
+  }
   for (const ing of ingredientIds) {
     if (CHOPPABLE_INGREDIENTS.has(ing)) set.add("ChoppingCounter");
     if (ing === "FlourSO") {
@@ -5978,7 +6081,7 @@ function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordHistory 
     setStatus("玩家固定在场景中，不可添加", false);
     return null;
   }
-  const snapped = snapFootprintCenter(wx, wz, cat.footprint.cellsX, cat.footprint.cellsZ, 0, CELL, itemSnapStep({ prefabGuid: cat.guid }));
+  const snapped = snapPlacement(cat.footprint.cellsX, cat.footprint.cellsZ, 0, cat.guid, wx, wz);
   const probe = {
     _editorKey: "",
     _wx: snapped.x,

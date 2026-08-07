@@ -363,6 +363,9 @@ public class RecipeEntryDto
     public string assetPath;
     public string cookingStep;
     public string[] ingredients;
+    /** Direct composition ids for custom recipes (ingredient ids and/or sub-recipe ids,
+     *  "" / null for original recipes). Used by the composition-aware grouping branch. */
+    public string[] compositionIds;
     public int ingredientCount;
     public int cookingStepCount;
     public int score;
@@ -809,11 +812,23 @@ public class CustomRecipeSummaryDto
     public int score;
     public string category;
     public string type;
+    /** Direct composition ids (ingredient ids and/or sub-recipe ids). */
     public string[] compositionIds;
+    /** Leaf ingredients, recursively expanded through sub-recipes. */
+    public string[] ingredients;
+    /** Composition-aware cooking groups for the recipe-card UI ("" when not computable). */
+    public RecipeCookingGroupDto[] cookingGroups;
+    /** True when score <= 0 (半成品), used for badges and the sub-recipe picker. */
+    public bool intermediate;
+    /** "core" / "custom" / "dlc02" / "dlc05" / "levelset" — matches recipes.json. */
+    public string group;
     public string cookingStepId;
     public string platingStepId;
     public bool hasIcon;
     public bool hasModel;
+    /** 模型在游戏中的缩放与朝向（应用到 prefab 根节点，运行时直接生效）。 */
+    public float modelScale;
+    public float modelRotationY;
 }
 
 [Serializable]
@@ -835,6 +850,38 @@ public class CustomRecipeEditDto
     public string modelPrefabId;
     public int cookingProgress;
     public int mixingProgress;
+    public float modelScale;
+    public float modelRotationY;
+}
+
+[Serializable]
+public class CustomRecipeListDto
+{
+    public CustomRecipeSummaryDto[] recipes;
+}
+
+[Serializable]
+public class CustomRecipeModelFileListDto
+{
+    public string[] files;
+}
+
+[Serializable]
+public class CustomRecipeUploadFileDto
+{
+    public string fileName;
+    public string base64;
+}
+
+[Serializable]
+public class CustomRecipeScanDiagDto
+{
+    public string setName;
+    public string recipesDir;
+    public bool dirExists;
+    public int scannedCount;
+    public int loadedCount;
+    public string[] fsAssets;
 }
 
 [Serializable]
@@ -844,6 +891,8 @@ public class CustomRecipeUploadDto
     public string recipeAssetPath;
     public string fileName;
     public string base64;
+    /** 多文件上传（FBX/OBJ + PNG 贴图组合）：第一个模型文件作为主模型，其余为贴图等附属文件。 */
+    public CustomRecipeUploadFileDto[] files;
 }
 
 [Serializable]
@@ -851,6 +900,8 @@ public class CustomRecipeReferenceEntryDto
 {
     public string guid;
     public string id;
+    /** Source recipe id owning this model ("" for standalone entries). */
+    public string recipeId;
     public string nameZh;
     public string nameEn;
     public string assetPath;
@@ -861,6 +912,8 @@ public class CustomRecipeReferencesDto
 {
     public CustomRecipeReferenceEntryDto[] cookingSteps;
     public CustomRecipeReferenceEntryDto[] platingSteps;
+    /** 装盘容器（盘子/杯子等 PlatingSteps 目录资产），运行时映射为 PlatingStepData。 */
+    public CustomRecipeReferenceEntryDto[] platingContainers;
     public CustomRecipeReferenceEntryDto[] icons;
     public CustomRecipeReferenceEntryDto[] reusableModels;
     public string[] ingredients;

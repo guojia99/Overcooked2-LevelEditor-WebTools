@@ -15,15 +15,12 @@ public static class LayoutEditorCatalogApi
 
         foreach (var root in roots)
         {
-            if (!AssetDatabase.IsValidFolder(root))
-                continue;
-
-            foreach (var guid in AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { root }))
+            foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(root, LayoutEditorLevelAdminApi.PseudoPrefabScriptGuid))
             {
-                if (!seen.Add(guid))
+                if (!seen.Add(asset.guid))
                     continue;
 
-                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var path = asset.assetPath;
                 var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
                 if (so == null)
                     continue;
@@ -34,7 +31,7 @@ public static class LayoutEditorCatalogApi
                 LayoutEditorManualLookup.TryGet(id, out nameZh, out nameEn);
                 list.Add(new IngredientEntryDto
                 {
-                    guid = guid,
+                    guid = asset.guid,
                     id = id,
                     nameZh = nameZh,
                     nameEn = nameEn,
@@ -122,26 +119,31 @@ public static class LayoutEditorCatalogApi
         if (!string.IsNullOrEmpty(levelSet))
         {
             var levelData = "Assets/LevelSets/" + levelSet + "/data";
-            if (AssetDatabase.IsValidFolder(levelData))
+            if (LayoutEditorLevelAdminApi.AssetFolderExists(levelData))
                 folders.Add(levelData);
 
             var customRecipesDir = "Assets/LevelSets/" + levelSet + "/custom_recipes";
-            if (AssetDatabase.IsValidFolder(customRecipesDir))
+            if (LayoutEditorLevelAdminApi.AssetFolderExists(customRecipesDir))
                 folders.Add(customRecipesDir);
         }
 
         var seen = new HashSet<string>();
         for (int f = 0; f < folders.Count; f++)
         {
-            if (!AssetDatabase.IsValidFolder(folders[f]))
+            if (!LayoutEditorLevelAdminApi.AssetFolderExists(folders[f]))
                 continue;
 
-            foreach (var guid in AssetDatabase.FindAssets("t:ScriptableObject", new[] { folders[f] }))
+            // 自定义菜谱（CustomRecipeSO + Optional 子类）与原始菜谱（PseudoPrefabSORecipe）
+            // 分别按脚本 guid 扫描（不依赖 AssetDatabase 索引）。
+            var customAssets = LayoutEditorLevelAdminApi.ScanCustomRecipeAssets(folders[f]);
+            var originalAssets = LayoutEditorLevelAdminApi.ScanAssetsByScript(folders[f], LayoutEditorLevelAdminApi.OriginalRecipeScriptGuid);
+            for (int i = 0; i < customAssets.Count + originalAssets.Count; i++)
             {
-                if (!seen.Add(guid))
+                var asset = i < customAssets.Count ? customAssets[i] : originalAssets[i - customAssets.Count];
+                if (!seen.Add(asset.guid))
                     continue;
 
-                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var path = asset.assetPath;
                 var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
                 if (so == null)
                     continue;
@@ -163,6 +165,7 @@ public static class LayoutEditorCatalogApi
 
                 string step;
                 string[] ings;
+                string[] compositionIds = null;
                 int ingCount;
                 int cookCount;
                 int score;
@@ -170,6 +173,7 @@ public static class LayoutEditorCatalogApi
                 {
                     step = LayoutEditorRecipeKnowledge.CustomCookingStep(custom);
                     ings = LayoutEditorRecipeKnowledge.CustomIngredients(custom).ToArray();
+                    compositionIds = DirectCompositionIds(custom);
                     LayoutEditorRecipeKnowledge.CustomStats(custom, out ingCount, out cookCount);
                     if (ingCount == 0) ingCount = ings.Length;
                     score = custom.score;
@@ -190,13 +194,14 @@ public static class LayoutEditorCatalogApi
 
                 list.Add(new RecipeEntryDto
                 {
-                    guid = guid,
+                    guid = asset.guid,
                     id = id,
                     nameZh = zh,
                     nameEn = en,
                     assetPath = path,
                     cookingStep = step,
                     ingredients = ings,
+                    compositionIds = compositionIds,
                     ingredientCount = ingCount,
                     cookingStepCount = cookCount,
                     score = score,
@@ -269,6 +274,31 @@ public static class LayoutEditorCatalogApi
 
         Undo.RecordObject(info, "Layout Editor Recipes");
         info.recipes = recipes.ToArray();
+
+        // 自动把本关卡集的自定义菜谱 bundle 加入 dependencies：
+        // 运行时 PseudoPrefabManager 只加载 dependencies 中的 bundle，
+        // 缺少则自定义菜谱的模型/贴图引用无法解析（装盘空、材质红/灰）。
+        var pathParts = (update.levelInfoAssetPath ?? "").Replace('\\', '/').Split('/');
+        if (pathParts.Length > 2 && pathParts[1] == "LevelSets")
+        {
+            var deps = new List<string>(info.dependencies ?? new string[0]);
+            var customBundle = pathParts[2] + "/custom_recipes";
+            if (System.Array.IndexOf(deps.ToArray(), customBundle) < 0)
+                deps.Add(customBundle);
+
+            // 自定义菜谱引用的外部资产 bundle（装盘容器等，如 Glass=bundle162）一并确保加载
+            foreach (var r in recipes)
+            {
+                var custom = r as CustomRecipeSO;
+                if (custom == null || custom.platingStepSO == null)
+                    continue;
+                var b = custom.platingStepSO.bundleName;
+                if (!string.IsNullOrEmpty(b) && System.Array.IndexOf(deps.ToArray(), b) < 0)
+                    deps.Add(b);
+            }
+
+            info.dependencies = deps.ToArray();
+        }
 
         // Auto-populate allIngredients: run the same "Auto Fill All Ingredients" logic
         // as the LevelInfoSO inspector button (story/include match lists + scene dispensers).
@@ -344,11 +374,12 @@ public static class LayoutEditorCatalogApi
             info.allIngredients = allIngs.ToArray();
         }*/
 
-        // Auto-populate optionalRecipeMatchListItems: add DLC/custom recipes and their intermediates
+        // Auto-populate optionalRecipeMatchListItems: 每次保存自动重建。
+        // 规则：只有食材组成（无嵌套子菜谱）的菜谱（如煎蛋 = 鸡蛋）不需要注册——
+        // 其匹配由食材 + 烹饪步骤天然覆盖；组合了其他菜谱的（如鸡蛋汉堡 = 煎蛋 + 面包）
+        // 以及 DLC 原始菜谱必须注册，否则运行时内置 RecipeMatchList 无法匹配。
         {
-            var existing = info.optionalRecipeMatchListItems != null
-                ? new HashSet<ScriptableObject>(info.optionalRecipeMatchListItems)
-                : new HashSet<ScriptableObject>();
+            var existing = new HashSet<ScriptableObject>();
             foreach (var r in recipes)
             {
                 string id = null;
@@ -364,11 +395,15 @@ public static class LayoutEditorCatalogApi
                     ? LayoutEditorRecipeKnowledge.CustomIngredients(custom)
                     : null;
 
-                // DLC recipes and custom recipes (built-in + levelset) must be registered here,
-                // otherwise the game's built-in RecipeMatchList cannot match them
-                if (group == "custom" || group == "levelset" ||
-                    group.StartsWith("dlc", StringComparison.Ordinal))
+                if (custom != null)
                 {
+                    // 自定义菜谱：仅嵌套了其他菜谱（子菜谱/中间产物）的组合需要注册
+                    if (HasSubRecipe(custom))
+                        existing.Add(r);
+                }
+                else if (group.StartsWith("dlc", StringComparison.Ordinal))
+                {
+                    // DLC 原始菜谱：游戏内置匹配表不含，需注册
                     existing.Add(r);
                 }
 
@@ -410,5 +445,35 @@ public static class LayoutEditorCatalogApi
                     existing.Add(so);
             }
         }
+    }
+
+    /// <summary>自定义菜谱的组成里是否嵌套了其他菜谱（子菜谱/中间产物）。
+    ///  纯食材组成的菜谱（如煎蛋 = 鸡蛋）无需注册 optionalRecipeMatchListItems。</summary>
+    private static bool HasSubRecipe(CustomRecipeSO so)
+    {
+        if (so == null || so.compositionSOs == null)
+            return false;
+        foreach (var c in so.compositionSOs)
+        {
+            if (c is CustomRecipeSO)
+                return true;
+        }
+        return false;
+    }
+
+    private static string[] DirectCompositionIds(CustomRecipeSO so)
+    {
+        if (so == null || so.compositionSOs == null)
+            return null;
+        var ids = new List<string>();
+        foreach (var c in so.compositionSOs)
+        {
+            if (c == null)
+                continue;
+            var cp = AssetDatabase.GetAssetPath(c);
+            if (!string.IsNullOrEmpty(cp))
+                ids.Add(Path.GetFileNameWithoutExtension(cp));
+        }
+        return ids.ToArray();
     }
 }

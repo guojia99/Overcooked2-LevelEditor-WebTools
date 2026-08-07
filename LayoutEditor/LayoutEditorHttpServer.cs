@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
+using LevelEditorStub;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -43,17 +44,47 @@ public class LayoutEditorHttpServer
         return LayoutEditorPaths.IsWebDistReady();
     }
 
-    public void Start(int port = DefaultPort)
+    /// <summary>启动 HTTP 服务。端口被占用（如 domain reload 后残留的旧监听器）时自动重试绑定，绑定成功才返回 true。</summary>
+    public bool Start(int port = DefaultPort)
     {
         if (_running)
-            return;
+            return true;
 
         Port = port;
-        _listener = new HttpListener();
-        _listener.Prefixes.Add("http://127.0.0.1:" + port + "/");
-        _listener.Prefixes.Add("http://localhost:" + port + "/");
-        _listener.Start();
-        _running = true;
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            var listener = new HttpListener();
+            listener.Prefixes.Add("http://127.0.0.1:" + port + "/");
+            listener.Prefixes.Add("http://localhost:" + port + "/");
+            try
+            {
+                listener.Start();
+                _listener = listener;
+                _running = true;
+                break;
+            }
+            catch (HttpListenerException ex)
+            {
+                listener.Close();
+                if (attempt >= 4)
+                {
+                    _listener = null;
+                    Debug.LogError("Layout Editor: 无法绑定端口 " + port + "（可能被其他进程或残留监听器占用）：" + ex.Message);
+                    return false;
+                }
+                Debug.LogWarning("Layout Editor: 端口 " + port + " 暂时不可用，500ms 后重试绑定（" + (attempt + 1) + "/5）…");
+                Thread.Sleep(500);
+            }
+            catch (Exception ex)
+            {
+                _listener = null;
+                Debug.LogError("Layout Editor: 启动服务失败：" + ex.Message);
+                return false;
+            }
+        }
+
+        if (!_running)
+            return false;
 
         if (!LayoutEditorPaths.IsWebDistReady())
         {
@@ -71,6 +102,7 @@ public class LayoutEditorHttpServer
 
         EditorApplication.update -= PumpMainThread;
         EditorApplication.update += PumpMainThread;
+        return true;
     }
 
     public void Stop()
@@ -256,7 +288,7 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var doc = LayoutEditorJson.ParseLayoutDocument(body);
-                var snap = 1.2f;
+                var snap = 0.01f;
                 var snapStr = request.QueryString["snap"];
                 if (!string.IsNullOrEmpty(snapStr))
                     float.TryParse(snapStr, System.Globalization.NumberStyles.Float,
@@ -493,8 +525,76 @@ public class LayoutEditorHttpServer
                 return;
             }
 
-            // ---------- Audio stream ----------
+            // ---------- Custom recipe model files (3D 在线预览) ----------
 
+            // 列出菜谱 models 目录内的模型/贴图文件。
+            if (path == "/api/custom-recipes/model-files" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"] ?? string.Empty;
+                var files = LayoutEditorLevelAdminApi.ListCustomRecipeModelFiles(assetPath);
+                WriteJson(response, 200, LayoutEditorJson.ToJson(new CustomRecipeModelFileListDto { files = files }));
+                return;
+            }
+
+            // path-style 文件服务：/api/custom-recipes/model-files/<b64模型目录>/<文件名>
+            // （<文件名> 可含子目录，如 Textures/foo.png，供 FBX 内嵌贴图相对路径解析）。
+            if (path.StartsWith("/api/custom-recipes/model-files/", StringComparison.Ordinal) && request.HttpMethod == "GET")
+            {
+                var rest = path.Substring("/api/custom-recipes/model-files/".Length);
+                var slash = rest.IndexOf('/');
+                if (slash <= 0 || slash >= rest.Length - 1)
+                {
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "资源不存在。" }));
+                    return;
+                }
+                var dirAssetPath = "";
+                try
+                {
+                    var b64 = rest.Substring(0, slash).Replace('-', '+').Replace('_', '/');
+                    var pad = b64.Length % 4;
+                    if (pad > 0)
+                        b64 += new string('=', 4 - pad);
+                    dirAssetPath = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(b64));
+                }
+                catch { }
+                var relFile = rest.Substring(slash + 1);
+                if (string.IsNullOrEmpty(dirAssetPath) ||
+                    !dirAssetPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) ||
+                    dirAssetPath.Contains("..") || relFile.Contains(".."))
+                {
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "资源不存在。" }));
+                    return;
+                }
+                var rootAbs = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+                var fullAbs = Path.GetFullPath(Path.Combine(
+                    Path.Combine(rootAbs, dirAssetPath.Replace('/', Path.DirectorySeparatorChar)),
+                    relFile.Replace('/', Path.DirectorySeparatorChar)));
+                if (!fullAbs.StartsWith(rootAbs, StringComparison.OrdinalIgnoreCase) || !File.Exists(fullAbs))
+                {
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "资源不存在。" }));
+                    return;
+                }
+                var ext = Path.GetExtension(fullAbs).ToLowerInvariant();
+                var ct = "application/octet-stream";
+                switch (ext)
+                {
+                    case ".fbx":
+                    case ".obj": ct = "application/octet-stream"; break;
+                    case ".png": ct = "image/png"; break;
+                    case ".jpg":
+                    case ".jpeg": ct = "image/jpeg"; break;
+                    case ".tga": ct = "image/x-tga"; break;
+                }
+                var bytes = File.ReadAllBytes(fullAbs);
+                response.ContentType = ct;
+                response.StatusCode = 200;
+                response.ContentLength64 = bytes.Length;
+                response.OutputStream.Write(bytes, 0, bytes.Length);
+                response.OutputStream.Close();
+                return;
+            }
+
+            // ---------- Audio stream ----------
             if (path == "/api/audio/exports" && request.HttpMethod == "GET")
             {
                 try { ServeAudioExports(response); }
@@ -527,10 +627,88 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/custom-recipes/reference-model" && request.HttpMethod == "GET")
+            {
+                var prefabPath = request.QueryString["path"] ?? string.Empty;
+                string abs;
+                string contentType;
+                var err = LayoutEditorLevelAdminApi.ResolvePrefabMeshFile(prefabPath, out abs, out contentType);
+                if (!string.IsNullOrEmpty(err) || !File.Exists(abs))
+                {
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = err ?? "参考模型文件不存在。" }));
+                    return;
+                }
+                var bytes = File.ReadAllBytes(abs);
+                response.ContentType = contentType;
+                response.StatusCode = 200;
+                response.ContentLength64 = bytes.Length;
+                response.OutputStream.Write(bytes, 0, bytes.Length);
+                response.OutputStream.Close();
+                return;
+            }
+
+            if (path == "/api/custom-recipes/icon" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"] ?? string.Empty;
+                string abs;
+                string contentType;
+                var err = LayoutEditorLevelAdminApi.ResolveRecipeIconFile(assetPath, out abs, out contentType);
+                if (!string.IsNullOrEmpty(err) || !File.Exists(abs))
+                {
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = err ?? "图标文件不存在。" }));
+                    return;
+                }
+                var bytes = File.ReadAllBytes(abs);
+                response.ContentType = contentType;
+                response.StatusCode = 200;
+                response.ContentLength64 = bytes.Length;
+                response.OutputStream.Write(bytes, 0, bytes.Length);
+                response.OutputStream.Close();
+                return;
+            }
+
             if (path == "/api/custom-recipes" && request.HttpMethod == "GET")
             {
                 var setName = request.QueryString["setName"] ?? string.Empty;
-                WriteJson(response, 200, LayoutEditorJson.ToJson(new { recipes = LayoutEditorLevelAdminApi.ScanCustomRecipes(setName) }));
+                WriteJson(response, 200, LayoutEditorJson.ToJson(new CustomRecipeListDto { recipes = LayoutEditorLevelAdminApi.ScanCustomRecipes(setName) }));
+                return;
+            }
+
+            if (path == "/api/custom-recipes/debug-scan" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                var diag = new CustomRecipeScanDiagDto
+                {
+                    setName = setName,
+                    recipesDir = "Assets/LevelSets/" + setName + "/custom_recipes",
+                };
+                diag.dirExists = LayoutEditorLevelAdminApi.AssetFolderExists(diag.recipesDir);
+                var scanned = LayoutEditorLevelAdminApi.ScanCustomRecipeAssets(diag.recipesDir);
+                diag.scannedCount = scanned.Count;
+                var fileList = new List<string>();
+                var full = Path.GetFullPath(Path.Combine(Application.dataPath, "..")) +
+                    Path.DirectorySeparatorChar + diag.recipesDir.Replace('/', Path.DirectorySeparatorChar);
+                if (Directory.Exists(full))
+                {
+                    foreach (var f in Directory.GetFiles(full, "*.asset", SearchOption.AllDirectories))
+                    {
+                        var name = Path.GetFileName(f);
+                        // 排除配置文件（CustomRecipeConfig）与 models 目录下的辅助 SO（IconSO/ModelSO）
+                        if (name == "CustomRecipeConfig.asset" || name.EndsWith("IconSO.asset", StringComparison.Ordinal) || name.EndsWith("ModelSO.asset", StringComparison.Ordinal))
+                            continue;
+                        var n = f.Replace('\\', '/');
+                        fileList.Add(n.Substring(n.IndexOf("/custom_recipes/", StringComparison.Ordinal)));
+                    }
+                }
+                diag.fsAssets = fileList.ToArray();
+                var loaded = 0;
+                foreach (var a in scanned)
+                {
+                    if (AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(a.assetPath) != null)
+                        loaded++;
+                }
+                diag.loadedCount = loaded;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(diag));
                 return;
             }
 

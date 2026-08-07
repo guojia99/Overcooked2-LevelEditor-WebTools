@@ -637,13 +637,50 @@ export async function uploadCustomRecipeModel(
   fileName: string,
   base64: string
 ): Promise<string> {
+  return uploadCustomRecipeModelFiles(setName, recipeAssetPath, [{ fileName, base64 }]);
+}
+
+export interface CustomRecipeUploadFile {
+  fileName: string;
+  base64: string;
+}
+
+/** 上传模型 + 贴图组合（第一个 .fbx/.obj 为主模型，其余 PNG/JPG 为贴图）。 */
+export async function uploadCustomRecipeModelFiles(
+  setName: string,
+  recipeAssetPath: string,
+  files: CustomRecipeUploadFile[]
+): Promise<string> {
   const r = await fetch("/api/custom-recipes/upload-model", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ setName, recipeAssetPath, fileName, base64 }),
+    body: JSON.stringify({ setName, recipeAssetPath, files }),
   });
   const data = await readApiJson<{ texturePath?: string; error?: string }>(r);
   return data.texturePath ?? "";
+}
+
+/** 列出菜谱 models 目录内的模型/贴图文件（供 3D 在线预览）。 */
+export async function fetchCustomRecipeModelFiles(assetPath: string): Promise<string[]> {
+  const r = await fetch(`/api/custom-recipes/model-files?assetPath=${encodeURIComponent(assetPath)}`);
+  const data = await readApiJson<{ files?: string[] }>(r);
+  return data.files ?? [];
+}
+
+export interface CustomRecipeScanDiag {
+  setName: string;
+  recipesDir: string;
+  dirExists: boolean;
+  scannedCount: number;
+  loadedCount: number;
+  fsAssets: string[];
+}
+
+/** 诊断：文件系统上实际存在哪些菜谱资产（桥为新代码时可用）。 */
+export async function fetchCustomRecipeScanDiag(setName: string): Promise<CustomRecipeScanDiag> {
+  const r = await fetch(`/api/custom-recipes/debug-scan?setName=${encodeURIComponent(setName)}`);
+  const data = await readApiJson<CustomRecipeScanDiag>(r);
+  return data;
 }
 
 export async function addCustomRecipeCategory(setName: string, id: string, zh: string, en: string): Promise<void> {

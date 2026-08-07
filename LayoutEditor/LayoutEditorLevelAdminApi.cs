@@ -7,7 +7,6 @@ using LevelEditorStub;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-
 public static class LayoutEditorLevelAdminApi
 {
     private const string LevelSetsRoot = "Assets/LevelSets";
@@ -1563,7 +1562,113 @@ public static class LayoutEditorLevelAdminApi
     // ==================== Custom Recipe Management ====================
 
     private const string CustomRecipesDir = "custom_recipes";
+    private const string CommonCustomRecipesDir = "Assets/common01/food/CustomRecipes";
     private const int ProjectUidPrefix = 1000000;
+
+    // ---------- 文件系统扫描（不依赖 AssetDatabase 索引） ----------
+
+    public const string CustomRecipeScriptGuid = "83fb008bcc8e793429b02c178c430815";
+    public const string OptionalBurgerScriptGuid = "e7bb274eb901e2042b1c49a42ecec9df";
+    public const string OptionalPizzaScriptGuid = "60297950c88d0d646ac0eca5dc831262";
+    public const string PseudoPrefabScriptGuid = "0cff7c13895ab9e47a5e02d4619cc3b9";
+    public const string OriginalRecipeScriptGuid = "753d9e70603f6a140b05f30f176ec2dd";
+
+    public class AssetRef
+    {
+        public string guid;
+        public string assetPath;
+    }
+
+    /// <summary>CustomRecipeSO 及其 Optional 子类的全部脚本 guid。</summary>
+    public static string[] CustomRecipeScriptGuids
+    {
+        get
+        {
+            return new[] { CustomRecipeScriptGuid, OptionalBurgerScriptGuid, OptionalPizzaScriptGuid };
+        }
+    }
+
+    /// <summary>扫描目录下所有自定义菜谱资产（含 Optional 子类），按 guid 去重。</summary>
+    public static List<AssetRef> ScanCustomRecipeAssets(string dirAssetPath)
+    {
+        var list = new List<AssetRef>();
+        var seen = new HashSet<string>();
+        foreach (var g in CustomRecipeScriptGuids)
+        {
+            foreach (var a in ScanAssetsByScript(dirAssetPath, g))
+            {
+                if (seen.Add(a.guid))
+                    list.Add(a);
+            }
+        }
+        return list;
+    }
+
+    public static bool AssetFolderExists(string dirAssetPath)
+    {
+        return !string.IsNullOrEmpty(dirAssetPath) && Directory.Exists(AbsPath(dirAssetPath));
+    }
+
+    public static string ReadAssetGuid(string metaPath)
+    {
+        if (string.IsNullOrEmpty(metaPath) || !File.Exists(metaPath))
+            return null;
+        try
+        {
+            foreach (var line in File.ReadAllLines(metaPath))
+            {
+                var t = line.Trim();
+                if (t.StartsWith("guid: ", StringComparison.Ordinal))
+                    return t.Substring(6).Trim();
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    private static bool FileContainsGuid(string file, string guid)
+    {
+        try
+        {
+            using (var reader = new StreamReader(file))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.IndexOf(guid, StringComparison.Ordinal) >= 0)
+                        return true;
+                }
+            }
+        }
+        catch { }
+        return false;
+    }
+
+    /// <summary>按脚本 guid 递归扫描目录下的 .asset（meta guid + m_Script 校验）。
+    ///  不依赖 AssetDatabase 索引 —— 索引过期或跨机器拷贝 Library 时 FindAssets 可能失效。</summary>
+    public static List<AssetRef> ScanAssetsByScript(string dirAssetPath, string scriptGuid)
+    {
+        var list = new List<AssetRef>();
+        var abs = AbsPath(dirAssetPath);
+        if (!Directory.Exists(abs))
+            return list;
+        foreach (var file in Directory.GetFiles(abs, "*.asset", SearchOption.AllDirectories))
+        {
+            if (!FileContainsGuid(file, scriptGuid))
+                continue;
+            var metaPath = file + ".meta";
+            var guid = ReadAssetGuid(metaPath);
+            if (string.IsNullOrEmpty(guid))
+                continue;
+            var rel = file.Substring(abs.Length).Replace('\\', '/').TrimStart('/');
+            list.Add(new AssetRef
+            {
+                guid = guid,
+                assetPath = (dirAssetPath + "/" + rel).Replace("//", "/")
+            });
+        }
+        return list;
+    }
 
     public static CustomRecipeConfigDto GetOrCreateCustomRecipeConfig(string setName)
     {
@@ -1575,7 +1680,7 @@ public static class LayoutEditorLevelAdminApi
         var configPath = recipesDir + "/CustomRecipeConfig.asset";
         var namesPath = recipesDir + "/names.json";
 
-        if (!AssetDatabase.IsValidFolder(recipesDir))
+        if (!AssetFolderExists(recipesDir))
         {
             AssetDatabase.CreateFolder(setDir, CustomRecipesDir);
             var importer = AssetImporter.GetAtPath(recipesDir);
@@ -1631,11 +1736,13 @@ public static class LayoutEditorLevelAdminApi
 
     private static bool IsUidPrefixConflicting(int prefix)
     {
-        var allGuids = AssetDatabase.FindAssets("t:CustomRecipeSO");
-        foreach (var guid in allGuids)
+        var assets = new List<AssetRef>();
+        assets.AddRange(ScanCustomRecipeAssets(LevelSetsRoot));
+        if (AssetFolderExists(CommonCustomRecipesDir))
+            assets.AddRange(ScanCustomRecipeAssets(CommonCustomRecipesDir));
+        foreach (var asset in assets)
         {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+            var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
             if (so != null && so.uID / 1000 == prefix)
                 return true;
         }
@@ -1649,18 +1756,29 @@ public static class LayoutEditorLevelAdminApi
             return list.ToArray();
 
         var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
-        if (!AssetDatabase.IsValidFolder(recipesDir))
+        if (!AssetFolderExists(recipesDir))
             return list.ToArray();
 
         var namesDict = LoadCustomRecipeNames(setName);
 
-        foreach (var guid in AssetDatabase.FindAssets("t:CustomRecipeSO", new[] { recipesDir }))
+        // 全部候选条目（本关卡集 + common01 官方 CustomRecipes），
+        // 用于把组成里的子菜谱 id 解析为烹饪步骤与叶食材。
+        var allEntries = BuildCustomRecipeEntryDtos(setName);
+        var entryById = new Dictionary<string, RecipeEntryDto>(StringComparer.Ordinal);
+        foreach (var e in allEntries)
         {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
+            if (!string.IsNullOrEmpty(e.id) && !entryById.ContainsKey(e.id))
+                entryById[e.id] = e;
+        }
+
+        foreach (var asset in ScanCustomRecipeAssets(recipesDir))
+        {
+            var path = asset.assetPath;
             var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
             if (so == null)
                 continue;
 
+            var guid = asset.guid;
             var id = Path.GetFileNameWithoutExtension(path);
             var category = "";
             var rel = path.Substring(recipesDir.Length + 1).Replace('\\', '/');
@@ -1708,6 +1826,9 @@ public static class LayoutEditorLevelAdminApi
                 nameEn = nr.En;
             }
 
+            RecipeEntryDto entry;
+            entryById.TryGetValue(id, out entry);
+
             list.Add(new CustomRecipeSummaryDto
             {
                 guid = guid,
@@ -1721,15 +1842,76 @@ public static class LayoutEditorLevelAdminApi
                 category = category,
                 type = so.type.ToString(),
                 compositionIds = compIds.ToArray(),
+                ingredients = entry != null ? entry.ingredients : new string[0],
+                cookingGroups = entry != null ? LayoutEditorRecipeKnowledge.ComputeCookingGroups(entry, allEntries) : new RecipeCookingGroupDto[0],
+                intermediate = so.score <= 0,
+                group = LayoutEditorCatalogApi.FoodGroupOf(path),
                 cookingStepId = stepId,
                 platingStepId = plateId,
                 hasIcon = hasIcon,
-                hasModel = hasModel
+                hasModel = hasModel,
+                modelScale = so.modelScale > 0f ? so.modelScale : 1f,
+                modelRotationY = so.modelRotationY
             });
         }
 
         list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
         return list.ToArray();
+    }
+
+    /// <summary>CustomRecipeSO → RecipeEntryDto（叶食材展开 + 直接组成 + 步骤），
+    ///  覆盖本关卡集目录与 common01 官方 CustomRecipes，供工序分组解析子菜谱。</summary>
+    private static List<RecipeEntryDto> BuildCustomRecipeEntryDtos(string setName)
+    {
+        var list = new List<RecipeEntryDto>();
+        var folders = new List<string>();
+
+        var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
+        if (AssetFolderExists(recipesDir))
+            folders.Add(recipesDir);
+        if (AssetFolderExists(CommonCustomRecipesDir))
+            folders.Add(CommonCustomRecipesDir);
+
+        foreach (var folder in folders)
+        {
+            foreach (var asset in ScanCustomRecipeAssets(folder))
+            {
+                var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
+                if (so == null)
+                    continue;
+                list.Add(new RecipeEntryDto
+                {
+                    guid = asset.guid,
+                    id = Path.GetFileNameWithoutExtension(asset.assetPath),
+                    assetPath = asset.assetPath,
+                    cookingStep = LayoutEditorRecipeKnowledge.CustomCookingStep(so),
+                    ingredients = LayoutEditorRecipeKnowledge.CustomIngredients(so).ToArray(),
+                    compositionIds = DirectCompositionIds(so),
+                    score = so.score,
+                    isCustom = true,
+                    group = LayoutEditorCatalogApi.FoodGroupOf(asset.assetPath),
+                    type = so.type.ToString(),
+                    intermediate = so.score <= 0
+                });
+            }
+        }
+        return list;
+    }
+
+    private static string[] DirectCompositionIds(CustomRecipeSO so)
+    {
+        if (so == null || so.compositionSOs == null)
+            return new string[0];
+        var ids = new List<string>();
+        foreach (var c in so.compositionSOs)
+        {
+            if (c == null)
+                continue;
+            var cp = AssetDatabase.GetAssetPath(c);
+            if (!string.IsNullOrEmpty(cp))
+                ids.Add(Path.GetFileNameWithoutExtension(cp));
+        }
+        return ids.ToArray();
     }
 
     private static Dictionary<string, NameRow> LoadCustomRecipeNames(string setName)
@@ -1789,6 +1971,39 @@ public static class LayoutEditorLevelAdminApi
         var iconSoList = new List<CustomRecipeReferenceEntryDto>();
         var seen = new HashSet<string>();
 
+        // 装盘容器：PlatingSteps 目录（盘子/杯子…），运行时映射为 PlatingStepData。
+        var containers = new List<CustomRecipeReferenceEntryDto>();
+        var containerFolders = new[]
+        {
+            "Assets/common01/food/PlatingSteps",
+            "Assets/common02/food/PlatingSteps"
+        };
+        foreach (var folder in containerFolders)
+        {
+            if (!AssetFolderExists(folder))
+                continue;
+            foreach (var asset in ScanAssetsByScript(folder, PseudoPrefabScriptGuid))
+            {
+                if (!seen.Add(asset.guid))
+                    continue;
+                var cid = Path.GetFileNameWithoutExtension(asset.assetPath);
+                var cso = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(asset.assetPath);
+                if (cso == null)
+                    continue;
+                string czh, cen;
+                LayoutEditorManualLookup.TryGet(cid, out czh, out cen);
+                containers.Add(new CustomRecipeReferenceEntryDto
+                {
+                    guid = asset.guid,
+                    id = cid,
+                    nameZh = czh,
+                    nameEn = cen,
+                    assetPath = asset.assetPath
+                });
+            }
+        }
+        dto.platingContainers = containers.ToArray();
+
         var stepFolders = new[]
         {
             "Assets/common01/food/CookingSteps",
@@ -1797,13 +2012,13 @@ public static class LayoutEditorLevelAdminApi
 
         foreach (var folder in stepFolders)
         {
-            if (!AssetDatabase.IsValidFolder(folder))
+            if (!AssetFolderExists(folder))
                 continue;
-            foreach (var guid in AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { folder }))
+            foreach (var asset in ScanAssetsByScript(folder, PseudoPrefabScriptGuid))
             {
-                if (!seen.Add(guid))
+                if (!seen.Add(asset.guid))
                     continue;
-                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var path = asset.assetPath;
                 var id = Path.GetFileNameWithoutExtension(path);
                 var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
                 if (so == null)
@@ -1814,7 +2029,7 @@ public static class LayoutEditorLevelAdminApi
 
                 var entry = new CustomRecipeReferenceEntryDto
                 {
-                    guid = guid,
+                    guid = asset.guid,
                     id = id,
                     nameZh = zh,
                     nameEn = en,
@@ -1849,20 +2064,21 @@ public static class LayoutEditorLevelAdminApi
         if (!string.IsNullOrEmpty(setName))
         {
             var setRecipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
-            if (AssetDatabase.IsValidFolder(setRecipesDir))
+            if (AssetFolderExists(setRecipesDir))
                 modelFolders.Add(setRecipesDir);
         }
 
         foreach (var folder in modelFolders)
         {
-            foreach (var guid in AssetDatabase.FindAssets("t:CustomRecipeSO", new[] { folder }))
+            foreach (var asset in ScanCustomRecipeAssets(folder))
             {
-                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var path = asset.assetPath;
                 var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
-                if (so == null || so.modelSO == null)
+                // modelSO 已不再使用：可复用模型直接取 model 引用的 prefab
+                if (so == null || so.model == null)
                     continue;
 
-                var modelPath = AssetDatabase.GetAssetPath(so.modelSO);
+                var modelPath = AssetDatabase.GetAssetPath(so.model);
                 if (string.IsNullOrEmpty(modelPath) || !modelSeen.Add(modelPath))
                     continue;
 
@@ -1875,8 +2091,9 @@ public static class LayoutEditorLevelAdminApi
 
                 modelList.Add(new CustomRecipeReferenceEntryDto
                 {
-                    guid = AssetDatabase.AssetPathToGUID(modelPath),
+                    guid = ReadAssetGuid(modelPath + ".meta") ?? AssetDatabase.AssetPathToGUID(modelPath),
                     id = id,
+                    recipeId = Path.GetFileNameWithoutExtension(path),
                     nameZh = zh,
                     nameEn = en,
                     assetPath = modelPath
@@ -1888,6 +2105,129 @@ public static class LayoutEditorLevelAdminApi
         dto.ingredients = new string[0];
 
         return dto;
+    }
+
+    /// <summary>解析自定义菜谱图标文件的绝对路径（从 icon 资产取真实文件，不依赖命名约定）。</summary>
+    public static string ResolveRecipeIconFile(string recipeAssetPath, out string absPath, out string contentType)
+    {
+        absPath = null;
+        contentType = "image/png";
+        if (string.IsNullOrEmpty(recipeAssetPath))
+            return "缺少菜谱路径。";
+        var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(recipeAssetPath);
+        if (so == null)
+            return "未找到菜谱资源。";
+        if (so.icon == null)
+            return "该菜谱没有图标。";
+        var iconPath = AssetDatabase.GetAssetPath(so.icon);
+        if (string.IsNullOrEmpty(iconPath))
+            return "无法解析图标路径。";
+        absPath = AbsPath(iconPath);
+        var ext = Path.GetExtension(absPath).ToLowerInvariant();
+        switch (ext)
+        {
+            case ".jpg":
+            case ".jpeg": contentType = "image/jpeg"; break;
+            default: contentType = "image/png"; break;
+        }
+        return null;
+    }
+
+    /// <summary>把菜谱的 modelScale/modelRotationY 应用到 prefab 根节点（运行时直接生效）。</summary>
+    private static void ApplyModelTransform(CustomRecipeSO so)
+    {
+        if (so == null || so.model == null)
+            return;
+        so.model.transform.localScale = Vector3.one * Mathf.Max(0.001f, so.modelScale);
+        so.model.transform.localEulerAngles = new Vector3(0f, so.modelRotationY, 0f);
+        EditorUtility.SetDirty(so.model);
+    }
+
+    /// <summary>从 FBX 字节中提取内嵌纹理引用名（RelativeFilename，如 model.fbm/Image_0.jpg）。
+    ///  FBX 字符串属性格式：'S' 标记 + int32 长度 + 内容，按长度精确解析。</summary>
+    private static List<string> ExtractFbxTextureReferences(byte[] fbx)
+    {
+        var list = new List<string>();
+        if (fbx == null || fbx.Length < 64)
+            return list;
+        var marker = System.Text.Encoding.ASCII.GetBytes("RelativeFilename");
+        for (int i = 0; i + marker.Length < fbx.Length; i++)
+        {
+            bool match = true;
+            for (int j = 0; j < marker.Length; j++)
+            {
+                if (fbx[i + j] != marker[j])
+                {
+                    match = false;
+                    break;
+                }
+            }
+            if (!match)
+                continue;
+            int p = i + marker.Length;
+            if (p < fbx.Length && fbx[p] == 0x53) // 'S' 字符串类型标记
+                p++;
+            if (p + 4 > fbx.Length)
+                continue;
+            int len = BitConverter.ToInt32(fbx, p);
+            p += 4;
+            if (len <= 0 || len > 512 || p + len > fbx.Length)
+                continue;
+            var name = System.Text.Encoding.UTF8.GetString(fbx, p, len);
+            var lower = name.ToLowerInvariant();
+            if ((lower.EndsWith(".png") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg") || lower.EndsWith(".tga")) &&
+                !list.Contains(name))
+                list.Add(name);
+        }
+        return list;
+    }
+
+    /// <summary>图片字节转码（Unity Texture2D），供贴图按 FBX 引用扩展名写入。</summary>
+    private static byte[] ConvertImageBytes(byte[] src, string targetExt)
+    {
+        if (src == null || src.Length == 0)
+            return null;
+        var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        if (!tex.LoadImage(src))
+        {
+            UnityEngine.Object.DestroyImmediate(tex);
+            return null;
+        }
+        var lower = (targetExt ?? "").ToLowerInvariant();
+        byte[] result = lower == ".jpg" || lower == ".jpeg"
+            ? tex.EncodeToJPG(90)
+            : tex.EncodeToPNG();
+        UnityEngine.Object.DestroyImmediate(tex);
+        return result;
+    }
+
+    /// <summary>解析预制体的网格源文件（.obj/.fbx），供 3D 预览中作为大小参考
+    ///  （如披萨装盘 plated_mushroom_01 模型含盘子，可对比自定义模型的实际尺寸）。</summary>
+    public static string ResolvePrefabMeshFile(string prefabAssetPath, out string absPath, out string contentType)
+    {
+        absPath = null;
+        contentType = "application/octet-stream";
+        if (string.IsNullOrEmpty(prefabAssetPath))
+            return "缺少预制体路径。";
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabAssetPath);
+        if (prefab == null)
+            return "预制体不存在。";
+        var mf = prefab.GetComponentInChildren<MeshFilter>(true);
+        if (mf == null || mf.sharedMesh == null)
+            return "预制体没有网格（无法作为参考模型）。";
+        var meshPath = AssetDatabase.GetAssetPath(mf.sharedMesh);
+        if (string.IsNullOrEmpty(meshPath))
+            return "无法解析网格路径。";
+        var rootAbs = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+        absPath = Path.GetFullPath(Path.Combine(rootAbs, meshPath.Replace('/', Path.DirectorySeparatorChar)));
+        var ext = Path.GetExtension(meshPath).ToLowerInvariant();
+        if (ext == ".obj")
+            contentType = "text/plain";
+        else if (ext == ".fbx")
+            contentType = "application/octet-stream";
+        else
+            return "参考模型格式不支持（仅 .obj/.fbx）。";
+        return null;
     }
 
     public static string CreateCustomRecipe(CustomRecipeEditDto dto)
@@ -1904,7 +2244,7 @@ public static class LayoutEditorLevelAdminApi
             return "菜谱名称「" + recipeName + "」已被其他关卡集使用。";
 
         var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
-        if (!AssetDatabase.IsValidFolder(recipesDir))
+        if (!AssetFolderExists(recipesDir))
             return "请先访问自定义菜谱页面以初始化配置。";
 
         var configPath = recipesDir + "/CustomRecipeConfig.asset";
@@ -1917,7 +2257,7 @@ public static class LayoutEditorLevelAdminApi
             category = "Uncategorized";
 
         var categoryDir = recipesDir + "/" + category;
-        if (!AssetDatabase.IsValidFolder(categoryDir))
+        if (!AssetFolderExists(categoryDir))
         {
             AssetDatabase.CreateFolder(recipesDir, category);
             var cats = config.categories != null ? new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>(config.categories) : new List<CustomRecipeConfigSO.CustomRecipeCategoryEntry>();
@@ -1943,7 +2283,11 @@ public static class LayoutEditorLevelAdminApi
         so.score = dto.score;
 
         if (dto.type == "Composite")
+        {
             so.type = CustomRecipeSO.RecipeType.Composite;
+            so.cookingStepSO = null;
+            so.cookingStepIconSO = null;
+        }
         else if (dto.type == "Mixed")
             so.type = CustomRecipeSO.RecipeType.Mixed;
         else
@@ -1951,6 +2295,8 @@ public static class LayoutEditorLevelAdminApi
 
         so.cookingProgress = (CustomRecipeSO.CookingProgress)(dto.cookingProgress >= 0 && dto.cookingProgress <= 2 ? dto.cookingProgress : 1);
         so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
+        so.modelScale = dto.modelScale > 0f ? dto.modelScale : 1f;
+        so.modelRotationY = dto.modelRotationY;
 
         if (dto.compositionIds != null && dto.compositionIds.Length > 0)
         {
@@ -1973,25 +2319,24 @@ public static class LayoutEditorLevelAdminApi
             so.cookingStepIconSO = FindPseudoPrefabById(dto.cookingStepIconId);
 
         if (!string.IsNullOrEmpty(dto.platingStepId))
-            so.platingStepSO = FindPseudoPrefabById(dto.platingStepId);
+            so.platingStepSO = FindPlatingContainerById(dto.platingStepId);
 
         if (!string.IsNullOrEmpty(dto.mixingIconId))
             so.mixingIconSO = FindPseudoPrefabById(dto.mixingIconId);
 
         if (!string.IsNullOrEmpty(dto.modelPrefabId))
         {
-            var modelSO = FindPseudoPrefabById(dto.modelPrefabId);
-            if (modelSO != null)
+            // 复用已有模型：modelPrefabId = 菜谱 id / prefab 文件名；modelSO 不再使用
+            var model = FindCustomRecipeModelByRecipeId(dto.modelPrefabId);
+            if (model == null)
             {
-                so.modelSO = modelSO;
-                var prefabPath = modelSO.assetPath;
-                if (!string.IsNullOrEmpty(prefabPath))
-                {
-                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                    if (prefab != null)
-                        so.model = prefab;
-                }
+                // 旧数据兼容：modelSO 文件名查找
+                var oldSO = FindPseudoPrefabById(dto.modelPrefabId);
+                if (oldSO != null && !string.IsNullOrEmpty(oldSO.assetPath))
+                    model = AssetDatabase.LoadAssetAtPath<GameObject>(oldSO.assetPath);
             }
+            so.model = model;
+            so.modelSO = null;
         }
 
         var assetPath = categoryDir + "/" + recipeName + ".asset";
@@ -1999,10 +2344,11 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(so);
 
         var modelsDir = categoryDir + "/models";
-        if (!AssetDatabase.IsValidFolder(modelsDir))
+        if (!AssetFolderExists(modelsDir))
             AssetDatabase.CreateFolder(categoryDir, "models");
 
         AssetDatabase.SaveAssets();
+        ApplyModelTransform(so);
 
         AddCustomRecipeName(setName, recipeName, dto.nameZh, dto.nameEn);
 
@@ -2022,7 +2368,11 @@ public static class LayoutEditorLevelAdminApi
         so.score = dto.score;
 
         if (dto.type == "Composite")
+        {
             so.type = CustomRecipeSO.RecipeType.Composite;
+            so.cookingStepSO = null;
+            so.cookingStepIconSO = null;
+        }
         else if (dto.type == "Mixed")
             so.type = CustomRecipeSO.RecipeType.Mixed;
         else
@@ -2030,6 +2380,8 @@ public static class LayoutEditorLevelAdminApi
 
         so.cookingProgress = (CustomRecipeSO.CookingProgress)(dto.cookingProgress >= 0 && dto.cookingProgress <= 2 ? dto.cookingProgress : 1);
         so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
+        so.modelScale = dto.modelScale > 0f ? dto.modelScale : 1f;
+        so.modelRotationY = dto.modelRotationY;
 
         if (dto.compositionIds != null)
         {
@@ -2052,25 +2404,24 @@ public static class LayoutEditorLevelAdminApi
             so.cookingStepIconSO = FindPseudoPrefabById(dto.cookingStepIconId);
 
         if (!string.IsNullOrEmpty(dto.platingStepId))
-            so.platingStepSO = FindPseudoPrefabById(dto.platingStepId);
+            so.platingStepSO = FindPlatingContainerById(dto.platingStepId);
 
         if (!string.IsNullOrEmpty(dto.mixingIconId))
             so.mixingIconSO = FindPseudoPrefabById(dto.mixingIconId);
 
         if (!string.IsNullOrEmpty(dto.modelPrefabId))
         {
-            var modelSO = FindPseudoPrefabById(dto.modelPrefabId);
-            if (modelSO != null)
+            // 复用已有模型：modelPrefabId = 菜谱 id / prefab 文件名；modelSO 不再使用
+            var model = FindCustomRecipeModelByRecipeId(dto.modelPrefabId);
+            if (model == null)
             {
-                so.modelSO = modelSO;
-                var prefabPath = modelSO.assetPath;
-                if (!string.IsNullOrEmpty(prefabPath))
-                {
-                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                    if (prefab != null)
-                        so.model = prefab;
-                }
+                // 旧数据兼容：modelSO 文件名查找
+                var oldSO = FindPseudoPrefabById(dto.modelPrefabId);
+                if (oldSO != null && !string.IsNullOrEmpty(oldSO.assetPath))
+                    model = AssetDatabase.LoadAssetAtPath<GameObject>(oldSO.assetPath);
             }
+            so.model = model;
+            so.modelSO = null;
         }
 
         EditorUtility.SetDirty(so);
@@ -2080,6 +2431,7 @@ public static class LayoutEditorLevelAdminApi
         UpdateCustomRecipeName(setName, id, dto.nameZh, dto.nameEn);
 
         AssetDatabase.SaveAssets();
+        ApplyModelTransform(so);
         return null;
     }
 
@@ -2101,7 +2453,7 @@ public static class LayoutEditorLevelAdminApi
         if (!AssetDatabase.DeleteAsset(assetPath))
             return "删除资源失败。";
 
-        if (AssetDatabase.IsValidFolder(modelsDir))
+        if (AssetFolderExists(modelsDir))
             AssetDatabase.DeleteAsset(modelsDir);
 
         RemoveCustomRecipeName(setName, id);
@@ -2121,14 +2473,15 @@ public static class LayoutEditorLevelAdminApi
 
         var dir = DirectoryName(dto.recipeAssetPath);
         var modelsDir = dir + "/models";
-        if (!AssetDatabase.IsValidFolder(modelsDir))
+        if (!AssetFolderExists(modelsDir))
             AssetDatabase.CreateFolder(DirectoryName(dir), "models");
 
-        var safeName = SanitizeName(dto.fileName ?? "icon");
-        if (!safeName.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
-            safeName += ".png";
-
+        // 统一命名为 <recipeName>_Icon.png，与卡片图标 URL（…/models/<id>_Icon.png）一致。
+        var recipeId = Path.GetFileNameWithoutExtension(dto.recipeAssetPath);
+        var safeName = SanitizeName(recipeId) + "_Icon.png";
         var imgAssetPath = modelsDir + "/" + safeName;
+        if (File.Exists(AbsPath(imgAssetPath)))
+            AssetDatabase.DeleteAsset(imgAssetPath);
         byte[] bytes;
         try
         {
@@ -2156,23 +2509,13 @@ public static class LayoutEditorLevelAdminApi
 
         Undo.RecordObject(so, "Set Recipe Icon");
         so.icon = sprite;
+        so.iconSO = null;
 
+        // IconSO 不再需要：删除历史遗留的 <recipeName>IconSO.asset
         var iconSOId = Path.GetFileNameWithoutExtension(dto.recipeAssetPath) + "IconSO";
         var iconSOPath = modelsDir + "/" + iconSOId + ".asset";
-        var existingIconSO = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(iconSOPath);
-        if (existingIconSO == null)
-        {
-            var newIconSO = ScriptableObject.CreateInstance<PseudoPrefabSO>();
-            newIconSO.prefabName = safeName;
-            newIconSO.bundleName = SetNameFromPath(dto.recipeAssetPath);
-            newIconSO.assetPath = imgAssetPath;
-            AssetDatabase.CreateAsset(newIconSO, iconSOPath);
-            so.iconSO = newIconSO;
-        }
-        else
-        {
-            so.iconSO = existingIconSO;
-        }
+        if (AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(iconSOPath) != null)
+            AssetDatabase.DeleteAsset(iconSOPath);
 
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
@@ -2181,73 +2524,393 @@ public static class LayoutEditorLevelAdminApi
 
     public static string UploadCustomRecipeModel(CustomRecipeUploadDto dto)
     {
-        if (dto == null || string.IsNullOrEmpty(dto.recipeAssetPath) || string.IsNullOrEmpty(dto.base64))
+        if (dto == null || string.IsNullOrEmpty(dto.recipeAssetPath))
             return "缺少上传参数。";
 
         var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(dto.recipeAssetPath);
         if (so == null)
             return "未找到菜谱资源。";
 
+        // 兼容单文件旧格式：转成 files 数组。
+        var files = dto.files != null && dto.files.Length > 0
+            ? dto.files
+            : (!string.IsNullOrEmpty(dto.fileName) && !string.IsNullOrEmpty(dto.base64)
+                ? new[] { new CustomRecipeUploadFileDto { fileName = dto.fileName, base64 = dto.base64 } }
+                : null);
+        if (files == null || files.Length == 0)
+            return "缺少上传参数。";
+
+        CustomRecipeUploadFileDto modelFile = null;
+        foreach (var f in files)
+        {
+            if (f != null && IsModelFileName(f.fileName))
+            {
+                modelFile = f;
+                break;
+            }
+        }
+        if (modelFile == null)
+            return "请选择 FBX 或 OBJ 模型文件。";
+
         var dir = DirectoryName(dto.recipeAssetPath);
         var modelsDir = dir + "/models";
-        if (!AssetDatabase.IsValidFolder(modelsDir))
+        if (!AssetFolderExists(modelsDir))
             AssetDatabase.CreateFolder(DirectoryName(dir), "models");
 
-        var safeName = SanitizeName(dto.fileName ?? "model");
-        var ext = ".fbx";
-        if (dto.fileName != null && dto.fileName.EndsWith(".obj", StringComparison.OrdinalIgnoreCase))
-            ext = ".obj";
-        if (!safeName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
-            safeName += ext;
-
+        // 先清空旧模型/旧贴图（保留 <recipeName>_Icon.png 图标），再写入新文件。
+        var recipeId = SanitizeName(Path.GetFileNameWithoutExtension(dto.recipeAssetPath));
+        var ext = modelFile.fileName != null && modelFile.fileName.EndsWith(".obj", StringComparison.OrdinalIgnoreCase)
+            ? ".obj" : ".fbx";
+        var safeName = recipeId + ext;
         var modelAssetPath = modelsDir + "/" + safeName;
-        byte[] bytes;
-        try
+        var prefabPath = modelAssetPath.Substring(0, modelAssetPath.Length - ext.Length) + ".prefab";
+
+        ClearModelDirAssets(modelsDir, recipeId + "_Icon.png");
+
+        // 写入全部文件（主模型统一命名为 <recipeName>.fbx/.obj，贴图保留原文件名）。
+        string uploadedTexturePath = null;
+        foreach (var f in files)
         {
-            bytes = System.Convert.FromBase64String(dto.base64);
-        }
-        catch
-        {
-            return "模型数据解码失败。";
+            if (f == null || string.IsNullOrEmpty(f.fileName) || string.IsNullOrEmpty(f.base64))
+                continue;
+            byte[] bytes;
+            try
+            {
+                bytes = System.Convert.FromBase64String(f.base64);
+            }
+            catch
+            {
+                return "文件「" + f.fileName + "」数据解码失败。";
+            }
+            var targetName = ReferenceEquals(f, modelFile)
+                ? safeName
+                : SanitizeUploadFileName(f.fileName);
+            if (string.IsNullOrEmpty(targetName))
+                continue;
+            File.WriteAllBytes(AbsPath(modelsDir + "/" + targetName), bytes);
+            if (uploadedTexturePath == null && !ReferenceEquals(f, modelFile))
+                uploadedTexturePath = modelsDir + "/" + targetName;
         }
 
-        File.WriteAllBytes(AbsPath(modelAssetPath), bytes);
         AssetDatabase.Refresh();
+
+        // 把上传的贴图按 FBX 内嵌纹理引用名写入（如 model.fbm/Image_0.jpg）：
+        // 否则 three.js 预览与 Unity 导入都找不到贴图（灰色 / 红色材质）。
+        var fbxAbs = AbsPath(modelAssetPath);
+        if (File.Exists(fbxAbs) && ext == ".fbx")
+        {
+            var texRefs = ExtractFbxTextureReferences(File.ReadAllBytes(fbxAbs));
+            if (texRefs.Count > 0)
+            {
+                var uploadedTextures = new List<CustomRecipeUploadFileDto>();
+                foreach (var f in files)
+                {
+                    if (f == null || ReferenceEquals(f, modelFile))
+                        continue;
+                    if (f.fileName != null && !IsModelFileName(f.fileName))
+                        uploadedTextures.Add(f);
+                }
+                if (uploadedTextures.Count > 0)
+                {
+                    var tex = PickTextureFile(uploadedTextures);
+                    if (tex != null)
+                    {
+                        byte[] texBytes = null;
+                        try { texBytes = System.Convert.FromBase64String(tex.base64); }
+                        catch { }
+                        if (texBytes != null && texBytes.Length > 0)
+                        {
+                            var modelsAbs = AbsPath(modelsDir);
+                            foreach (var refName in texRefs)
+                            {
+                                var relName = refName.Replace('\\', '/');
+                                if (relName.StartsWith("/", StringComparison.Ordinal) || relName.Contains(".."))
+                                    continue;
+                                var targetAbs = Path.GetFullPath(Path.Combine(modelsAbs, relName));
+                                if (!targetAbs.StartsWith(modelsAbs, StringComparison.OrdinalIgnoreCase))
+                                    continue;
+                                var targetDir = Path.GetDirectoryName(targetAbs);
+                                if (string.IsNullOrEmpty(targetDir))
+                                    continue;
+                                Directory.CreateDirectory(targetDir);
+                                var refExt = Path.GetExtension(targetAbs).ToLowerInvariant();
+                                var uploadedExt = Path.GetExtension(tex.fileName).ToLowerInvariant();
+                                var outBytes = texBytes;
+                                if (!string.Equals(refExt, uploadedExt, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var converted = ConvertImageBytes(texBytes, refExt);
+                                    if (converted != null)
+                                        outBytes = converted;
+                                }
+                                File.WriteAllBytes(targetAbs, outBytes);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        AssetDatabase.Refresh();
+
+        // 贴图内嵌由前端在浏览器完成（fbxFuse：FBX + PNG 合成彩色 FBX 后上传）；
+        // 旧前端分开上传的贴图仍按 FBX 引用名写入（model.fbm）供预览与 Unity 导入。
 
         var importedRoot = AssetDatabase.LoadAssetAtPath<GameObject>(modelAssetPath);
         if (importedRoot == null)
-            return "模型导入失败，请确认文件格式为 FBX 或 OBJ。";
+            return "模型导入失败，请确认文件格式为 FBX 或 OBJ（贴图请使用 PNG/JPG）。";
 
-        var prefabPath = modelAssetPath.Substring(0, modelAssetPath.Length - ext.Length) + ".prefab";
+        // 覆盖上传时强制重建 prefab：旧 prefab 可能引用已删除的贴图/旧材质（导致灰色）
         var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-        if (existingPrefab == null)
+        if (existingPrefab != null)
+            AssetDatabase.DeleteAsset(prefabPath);
+
+        // 材质球（与参考做法一致：炒饭/芝士虾球的 prefab 内 MeshRenderer 直接引用 .mat，
+        // .mat 的 _MainTex 引用上传贴图）。先建好 .mat 再赋给模型实例。
+        Material mat = null;
+        if (!string.IsNullOrEmpty(uploadedTexturePath))
         {
-            var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, importedRoot);
+            var uploadedTex = AssetDatabase.LoadAssetAtPath<Texture2D>(uploadedTexturePath);
+            if (uploadedTex != null)
+                mat = EnsureRecipeMaterial(modelsDir, recipeId, uploadedTex);
+        }
+
+        // 必须先实例化到场景再 CreatePrefab：直接对模型资产 CreatePrefab 会丢失网格与子节点
+        // （生成只有根 Transform 的空 prefab，导致无渲染器、材质球与贴图都挂不上）。
+        var instance = UnityEngine.Object.Instantiate(importedRoot);
+        instance.name = recipeId;
+        try
+        {
+            if (mat != null)
+            {
+                foreach (var r in instance.GetComponentsInChildren<Renderer>(true))
+                    r.sharedMaterial = mat;
+            }
+            var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, instance);
             if (prefabInstance == null)
                 return "创建预制体失败。";
         }
-
-        var modelSOId = Path.GetFileNameWithoutExtension(dto.recipeAssetPath) + "ModelSO";
-        var modelSOPath = modelsDir + "/" + modelSOId + ".asset";
-        var existingModelSO = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(modelSOPath);
-        if (existingModelSO == null)
+        finally
         {
-            var newModelSO = ScriptableObject.CreateInstance<PseudoPrefabSO>();
-            newModelSO.prefabName = Path.GetFileNameWithoutExtension(safeName);
-            newModelSO.bundleName = SetNameFromPath(dto.recipeAssetPath);
-            newModelSO.assetPath = prefabPath;
-            AssetDatabase.CreateAsset(newModelSO, modelSOPath);
-            existingModelSO = newModelSO;
+            UnityEngine.Object.DestroyImmediate(instance);
         }
 
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
 
+        // modelSO 不再放数据：模型直接引用 prefab（model 字段），运行时 GetModel 优先用 model。
+        var modelSOId = Path.GetFileNameWithoutExtension(dto.recipeAssetPath) + "ModelSO";
+        var modelSOPath = modelsDir + "/" + modelSOId + ".asset";
+        if (AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(modelSOPath) != null)
+            AssetDatabase.DeleteAsset(modelSOPath);
+
         Undo.RecordObject(so, "Set Recipe Model");
-        so.modelSO = existingModelSO;
+        so.modelSO = null;
         so.model = prefab;
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
+
+        // 贴图做成材质球与模型做在一起：创建 Standard 材质（_MainTex = 上传贴图）并赋给模型
+        ApplyTextureMaterial(so, prefab, modelsDir, uploadedTexturePath);
+        // 上传的是带材质的 FBX：诊断材质贴图，缺失时用 FBX 导入的子资产贴图自动修复
+        EnsureModelTextures(so, prefab, modelsDir, modelAssetPath);
+        ApplyModelTransform(so);
         return null;
+    }
+
+    /// <summary>创建/更新菜谱材质球（Standard shader，_MainTex = 指定贴图，白色）。</summary>
+    private static Material EnsureRecipeMaterial(string modelsDir, string recipeId, Texture2D tex)
+    {
+        if (tex == null)
+            return null;
+        var matPath = modelsDir + "/" + SanitizeName(recipeId) + "_Mat.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+        if (mat == null)
+        {
+            var shader = Shader.Find("Standard");
+            if (shader == null)
+                shader = Shader.Find("Diffuse");
+            if (shader == null)
+                return null;
+            mat = new Material(shader);
+            AssetDatabase.CreateAsset(mat, matPath);
+        }
+        mat.SetTexture("_MainTex", tex);
+        mat.SetColor("_Color", Color.white);
+        EditorUtility.SetDirty(mat);
+        AssetDatabase.SaveAssets();
+        return mat;
+    }
+
+    /// <summary>上传带材质 FBX 后诊断：若模型材质贴图缺失（Unity 内嵌提取失败/引用断裂），
+    ///  用 FBX 导入的子资产贴图（内嵌数据）或 models 目录贴图创建材质修复，避免纯灰色。</summary>
+    private static void EnsureModelTextures(CustomRecipeSO so, GameObject prefab, string modelsDir, string modelAssetPath)
+    {
+        if (prefab == null || string.IsNullOrEmpty(modelAssetPath))
+            return;
+        var renderers = prefab.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0)
+            return;
+        bool needFix = false;
+        foreach (var r in renderers)
+        {
+            if (r.sharedMaterial == null || r.sharedMaterial.mainTexture == null)
+            {
+                needFix = true;
+                break;
+            }
+        }
+        if (!needFix)
+            return;
+
+        // 修复源 1：FBX 导入的子资产贴图（内嵌数据提取）
+        Texture2D tex = null;
+        foreach (var a in AssetDatabase.LoadAllAssetsAtPath(modelAssetPath))
+        {
+            var t = a as Texture2D;
+            if (t != null && t.width > 2)
+            {
+                tex = t;
+                break;
+            }
+        }
+        // 修复源 2：models 目录的贴图文件
+        if (tex == null && !string.IsNullOrEmpty(modelsDir) && Directory.Exists(AbsPath(modelsDir)))
+        {
+            foreach (var f in Directory.GetFiles(AbsPath(modelsDir)))
+            {
+                var ext = Path.GetExtension(f).ToLowerInvariant();
+                if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                    continue;
+                var name = Path.GetFileName(f);
+                if (name.EndsWith("_Icon.png", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                tex = AssetDatabase.LoadAssetAtPath<Texture2D>(modelsDir + "/" + name);
+                if (tex != null)
+                    break;
+            }
+        }
+        if (tex == null)
+            return;
+
+        var recipeId = SanitizeName(so.recipeName ?? "Recipe");
+        var mat = EnsureRecipeMaterial(modelsDir, recipeId, tex);
+        if (mat == null)
+            return;
+        foreach (var r in renderers)
+        {
+            r.sharedMaterial = mat;
+            EditorUtility.SetDirty(r);
+        }
+        EditorUtility.SetDirty(prefab);
+        AssetDatabase.SaveAssets();
+    }
+
+    /// <summary>把上传的贴图制成材质球（Standard shader，_MainTex）并赋给模型的全部 MeshRenderer，
+    ///  与参考菜谱（炒饭/芝士虾球）做法一致——模型自带材质，游戏内不再出现红/灰材质。</summary>
+    private static void ApplyTextureMaterial(CustomRecipeSO so, GameObject prefab, string modelsDir, string texturePath)
+    {
+        if (prefab == null || string.IsNullOrEmpty(texturePath))
+            return;
+        var renderers = prefab.GetComponentsInChildren<MeshRenderer>(true);
+        if (renderers.Length == 0)
+            return;
+        var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+        if (tex == null)
+            return;
+
+        var recipeId = SanitizeName(so.recipeName ?? "Recipe");
+        var mat = EnsureRecipeMaterial(modelsDir, recipeId, tex);
+        if (mat == null)
+            return;
+
+        foreach (var r in renderers)
+        {
+            r.sharedMaterial = mat;
+            EditorUtility.SetDirty(r);
+        }
+
+        EditorUtility.SetDirty(prefab);
+        AssetDatabase.SaveAssets();
+    }
+
+    private static bool IsModelFileName(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+            return false;
+        var n = fileName.ToLowerInvariant();
+        return n.EndsWith(".fbx") || n.EndsWith(".obj");
+    }
+
+    /// <summary>从上传的贴图文件中挑选彩色主贴图（优先 base_color/color/diffuse/albedo 命名，否则第一张）。</summary>
+    private static CustomRecipeUploadFileDto PickTextureFile(List<CustomRecipeUploadFileDto> textures)
+    {
+        if (textures == null || textures.Count == 0)
+            return null;
+        foreach (var t in textures)
+        {
+            var n = (t.fileName ?? "").ToLowerInvariant();
+            if (n.Contains("base_color") || n.Contains("color") || n.Contains("diffuse") || n.Contains("albedo") || n.Contains("_texture"))
+                return t;
+        }
+        return textures[0];
+    }
+
+    /// <summary>上传文件名白名单：仅保留安全的 base 名与图片/模型扩展名。</summary>
+    private static string SanitizeUploadFileName(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+            return null;
+        var name = Path.GetFileName(fileName.Replace('\\', '/'));
+        if (string.IsNullOrEmpty(name))
+            return null;
+        var ext = Path.GetExtension(name).ToLowerInvariant();
+        var allowed = new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga" };
+        if (System.Array.IndexOf(allowed, ext) < 0)
+            return null;
+        return SanitizeName(Path.GetFileNameWithoutExtension(name)) + ext;
+    }
+
+    /// <summary>删除 models 目录内旧模型/贴图（保留图标文件）。</summary>
+    private static void ClearModelDirAssets(string dirAssetPath, string keepFileName)
+    {
+        var abs = AbsPath(dirAssetPath);
+        if (!Directory.Exists(abs))
+            return;
+        var extensions = new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga" };
+        foreach (var file in Directory.GetFiles(abs))
+        {
+            var name = Path.GetFileName(file);
+            if (name.EndsWith(".meta", StringComparison.Ordinal))
+                continue;
+            if (string.Equals(name, keepFileName, StringComparison.OrdinalIgnoreCase))
+                continue;
+            var ext = Path.GetExtension(file).ToLowerInvariant();
+            if (System.Array.IndexOf(extensions, ext) < 0)
+                continue;
+            AssetDatabase.DeleteAsset(dirAssetPath + "/" + name);
+        }
+    }
+
+    /// <summary>列出菜谱 models 目录内的资源文件（供前端 3D 在线预览）。 */
+    public static string[] ListCustomRecipeModelFiles(string recipeAssetPath)
+    {
+        var list = new List<string>();
+        if (string.IsNullOrEmpty(recipeAssetPath))
+            return list.ToArray();
+        var dir = DirectoryName(recipeAssetPath) + "/models";
+        var abs = AbsPath(dir);
+        if (!Directory.Exists(abs))
+            return list.ToArray();
+        foreach (var file in Directory.GetFiles(abs))
+        {
+            var name = Path.GetFileName(file);
+            if (name.EndsWith(".meta", StringComparison.Ordinal))
+                continue;
+            var ext = Path.GetExtension(name).ToLowerInvariant();
+            if (System.Array.IndexOf(new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga" }, ext) >= 0)
+                list.Add(name);
+        }
+        list.Sort(StringComparer.Ordinal);
+        return list.ToArray();
     }
 
     public static string AddCustomRecipeCategory(CustomRecipeCategoryCreateDto dto)
@@ -2260,7 +2923,7 @@ public static class LayoutEditorLevelAdminApi
             return "分类ID只能包含字母数字和下划线。";
 
         var recipesDir = LevelSetsRoot + "/" + dto.setName + "/" + CustomRecipesDir;
-        if (!AssetDatabase.IsValidFolder(recipesDir))
+        if (!AssetFolderExists(recipesDir))
             return "请先访问自定义菜谱页面。";
 
         var configPath = recipesDir + "/CustomRecipeConfig.asset";
@@ -2277,6 +2940,7 @@ public static class LayoutEditorLevelAdminApi
         config.categories = cats.ToArray();
         EditorUtility.SetDirty(config);
         AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
         return null;
     }
 
@@ -2287,7 +2951,7 @@ public static class LayoutEditorLevelAdminApi
 
         var recipesDir = LevelSetsRoot + "/" + dto.setName + "/" + CustomRecipesDir;
         var oldDir = recipesDir + "/" + dto.oldId;
-        if (!AssetDatabase.IsValidFolder(oldDir))
+        if (!AssetFolderExists(oldDir))
             return "原分类不存在。";
 
         var newSafe = SanitizeName(dto.newId);
@@ -2301,7 +2965,7 @@ public static class LayoutEditorLevelAdminApi
         }
 
         var newDir = recipesDir + "/" + newSafe;
-        if (AssetDatabase.IsValidFolder(newDir))
+        if (AssetFolderExists(newDir))
             return "新分类ID已存在。";
 
         var err = AssetDatabase.MoveAsset(oldDir, newDir);
@@ -2364,12 +3028,12 @@ public static class LayoutEditorLevelAdminApi
 
         var recipesDir = LevelSetsRoot + "/" + dto.setName + "/" + CustomRecipesDir;
         var categoryDir = recipesDir + "/" + dto.category;
-        if (!AssetDatabase.IsValidFolder(categoryDir))
+        if (!AssetFolderExists(categoryDir))
             return "分类不存在。";
 
         var usingLevels = new List<string>();
         var dataDir = LevelSetsRoot + "/" + dto.setName + "/data";
-        if (AssetDatabase.IsValidFolder(dataDir))
+        if (AssetFolderExists(dataDir))
         {
             foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { dataDir }))
             {
@@ -2418,11 +3082,9 @@ public static class LayoutEditorLevelAdminApi
         if (string.IsNullOrEmpty(recipeName))
             return false;
 
-        var allGuids = AssetDatabase.FindAssets("t:CustomRecipeSO");
-        foreach (var guid in allGuids)
+        foreach (var asset in ScanCustomRecipeAssets(LevelSetsRoot))
         {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var id = Path.GetFileNameWithoutExtension(path);
+            var id = Path.GetFileNameWithoutExtension(asset.assetPath);
             if (string.Equals(id, recipeName, StringComparison.Ordinal))
                 return false;
         }
@@ -2431,15 +3093,64 @@ public static class LayoutEditorLevelAdminApi
 
     private static bool IsUidConflicting(int uid)
     {
-        var allGuids = AssetDatabase.FindAssets("t:CustomRecipeSO");
-        foreach (var guid in allGuids)
+        var assets = new List<AssetRef>();
+        assets.AddRange(ScanCustomRecipeAssets(LevelSetsRoot));
+        if (AssetFolderExists(CommonCustomRecipesDir))
+            assets.AddRange(ScanCustomRecipeAssets(CommonCustomRecipesDir));
+        foreach (var asset in assets)
         {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+            var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
             if (so != null && so.uID == uid)
                 return true;
         }
         return false;
+    }
+
+    /// <summary>PseudoPrefabSO 的查找目录（食材/烹饪步骤/装盘容器）。</summary>
+    private static readonly string[] PseudoPrefabSearchFolders =
+    {
+        "Assets/common01/food/Ingredients",
+        "Assets/common02/food/Ingredients",
+        "Assets/common01/food/CookingSteps",
+        "Assets/common02/food/CookingSteps",
+        "Assets/common01/food/PlatingSteps",
+        "Assets/common02/food/PlatingSteps",
+    };
+
+    /// <summary>全项目自定义菜谱查找目录（官方 + 全部关卡集）。</summary>
+    private static List<string> CustomRecipeSearchFolders()
+    {
+        var folders = new List<string>();
+        if (AssetFolderExists(CommonCustomRecipesDir))
+            folders.Add(CommonCustomRecipesDir);
+        var setsRoot = LevelSetsRoot;
+        if (Directory.Exists(AbsPath(setsRoot)))
+        {
+            foreach (var dir in Directory.GetDirectories(AbsPath(setsRoot)))
+            {
+                var setName = Path.GetFileName(dir);
+                var cr = setsRoot + "/" + setName + "/" + CustomRecipesDir;
+                if (AssetFolderExists(cr))
+                    folders.Add(cr);
+            }
+        }
+        return folders;
+    }
+
+    private static ScriptableObject FindAssetByIdInFolders(string id, string scriptGuid, IList<string> folders)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+        foreach (var folder in folders)
+        {
+            foreach (var asset in ScanAssetsByScript(folder, scriptGuid))
+            {
+                var name = Path.GetFileNameWithoutExtension(asset.assetPath);
+                if (string.Equals(name, id, StringComparison.Ordinal))
+                    return AssetDatabase.LoadAssetAtPath<ScriptableObject>(asset.assetPath);
+            }
+        }
+        return null;
     }
 
     private static ScriptableObject FindPseudoPrefabOrCustomRecipe(string id)
@@ -2447,35 +3158,61 @@ public static class LayoutEditorLevelAdminApi
         if (string.IsNullOrEmpty(id))
             return null;
 
-        var guids = AssetDatabase.FindAssets(id + " t:PseudoPrefabSO");
-        if (guids.Length > 0)
-        {
-            var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
-        }
+        var found = FindAssetByIdInFolders(id, PseudoPrefabScriptGuid, PseudoPrefabSearchFolders);
+        if (found != null)
+            return found;
 
-        guids = AssetDatabase.FindAssets(id + " t:CustomRecipeSO");
-        if (guids.Length > 0)
-        {
-            var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            return AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
-        }
-
-        return null;
+        return FindAssetByIdInFolders(id, CustomRecipeScriptGuid, CustomRecipeSearchFolders());
     }
 
     private static PseudoPrefabSO FindPseudoPrefabById(string id)
     {
         if (string.IsNullOrEmpty(id))
             return null;
+        var so = FindAssetByIdInFolders(id, PseudoPrefabScriptGuid, PseudoPrefabSearchFolders);
+        return so as PseudoPrefabSO;
+    }
 
-        var guids = AssetDatabase.FindAssets(id + " t:PseudoPrefabSO");
-        foreach (var guid in guids)
+    /// <summary>装盘容器专用查找：仅限 PlatingSteps 目录、精确文件名匹配，
+    ///  防止模糊匹配选到 pseudo_prefab_so 等目录的错误资产。</summary>
+    private static PseudoPrefabSO FindPlatingContainerById(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+        var folders = new[]
         {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
-            if (so != null)
-                return so;
+            "Assets/common01/food/PlatingSteps",
+            "Assets/common02/food/PlatingSteps"
+        };
+        var so = FindAssetByIdInFolders(id, PseudoPrefabScriptGuid, folders);
+        return so as PseudoPrefabSO;
+    }
+
+    /// <summary>按菜谱 id 找其模型（modelPrefabId 可能是 modelSO 名或来源菜谱 id，
+    ///  兼容历史上传的任意命名）。</summary>
+    /// <summary>按菜谱 id / prefab 文件名找其模型（modelPrefabId 可为菜谱 id 或 prefab 文件名）。</summary>
+    private static GameObject FindCustomRecipeModelByRecipeId(string recipeId)
+    {
+        if (string.IsNullOrEmpty(recipeId))
+            return null;
+
+        foreach (var folder in CustomRecipeSearchFolders())
+        {
+            foreach (var asset in ScanCustomRecipeAssets(folder))
+            {
+                var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
+                if (so == null || so.model == null)
+                    continue;
+                var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+                var modelPath = AssetDatabase.GetAssetPath(so.model);
+                var prefabName = string.IsNullOrEmpty(modelPath)
+                    ? null
+                    : Path.GetFileNameWithoutExtension(modelPath);
+                if (string.Equals(id, recipeId, StringComparison.Ordinal) ||
+                    string.Equals(so.recipeName, recipeId, StringComparison.Ordinal) ||
+                    (prefabName != null && string.Equals(prefabName, recipeId, StringComparison.Ordinal)))
+                    return so.model;
+            }
         }
         return null;
     }
