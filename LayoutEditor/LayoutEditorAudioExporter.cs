@@ -291,7 +291,7 @@ public static class LayoutEditorAudioExporter
                     if (bundle != null)
                         reused[name] = bundle;
                 }
-                catch (System.Collections.Generic.KeyNotFoundException)
+                catch (System.Exception)
                 {
                     // bundle not in manager's dict, will be missing
                 }

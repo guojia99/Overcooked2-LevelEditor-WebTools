@@ -1850,8 +1850,8 @@ public static class LayoutEditorLevelAdminApi
                 platingStepId = plateId,
                 hasIcon = hasIcon,
                 hasModel = hasModel,
-                modelScale = so.modelScale > 0f ? so.modelScale : 1f,
-                modelRotationY = so.modelRotationY
+                modelScale = RecipeModelScale(path),
+                modelRotationY = RecipeModelRotationY(path)
             });
         }
 
@@ -2133,13 +2133,147 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
-    /// <summary>把菜谱的 modelScale/modelRotationY 应用到 prefab 根节点（运行时直接生效）。</summary>
+    /// <summary>菜谱所在 custom_recipes 目录的配置文件路径（找不到返回 null）。</summary>
+    private static string CustomRecipeConfigPathFor(string recipeAssetPath)
+    {
+        if (string.IsNullOrEmpty(recipeAssetPath))
+            return null;
+        var dir = Path.GetDirectoryName(recipeAssetPath.Replace('\\', '/'));
+        while (!string.IsNullOrEmpty(dir))
+        {
+            if (string.Equals(Path.GetFileName(dir), CustomRecipesDir, StringComparison.OrdinalIgnoreCase))
+                return dir + "/CustomRecipeConfig.asset";
+            var parent = Path.GetDirectoryName(dir);
+            if (parent == dir)
+                break;
+            dir = parent;
+        }
+        return null;
+    }
+
+    private static CustomRecipeConfigSO LoadCustomRecipeConfigFor(string recipeAssetPath)
+    {
+        var configPath = CustomRecipeConfigPathFor(recipeAssetPath);
+        return string.IsNullOrEmpty(configPath)
+            ? null
+            : AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
+    }
+
+    private static CustomRecipeConfigSO.CustomRecipeTransformEntry FindModelTransform(
+        CustomRecipeConfigSO config, string recipeAssetPath)
+    {
+        if (config == null || config.modelTransforms == null)
+            return null;
+        foreach (var e in config.modelTransforms)
+            if (e != null && e.assetPath == recipeAssetPath)
+                return e;
+        return null;
+    }
+
+    /// <summary>从旧版 .asset YAML 中读取已序列化的 modelScale/modelRotationY 并迁移到配置
+    ///  （一次性；CustomRecipeSO 回退为宿主原版后这些字段为未知字段，仍保留在 YAML 中）。</summary>
+    private static void ImportLegacyModelTransform(CustomRecipeConfigSO config, string recipeAssetPath)
+    {
+        if (config == null || FindModelTransform(config, recipeAssetPath) != null)
+            return;
+        var abs = AbsPath(recipeAssetPath);
+        if (string.IsNullOrEmpty(abs) || !File.Exists(abs))
+            return;
+        string yaml;
+        try { yaml = File.ReadAllText(abs); }
+        catch { return; }
+        var scale = ParseYamlFloat(yaml, "modelScale:");
+        var rotationY = ParseYamlFloat(yaml, "modelRotationY:");
+        if (scale == null && rotationY == null)
+            return;
+        var list = new List<CustomRecipeConfigSO.CustomRecipeTransformEntry>(
+            config.modelTransforms ?? new CustomRecipeConfigSO.CustomRecipeTransformEntry[0]);
+        list.Add(new CustomRecipeConfigSO.CustomRecipeTransformEntry
+        {
+            assetPath = recipeAssetPath,
+            scale = scale ?? 1f,
+            rotationY = rotationY ?? 0f,
+        });
+        config.modelTransforms = list.ToArray();
+        EditorUtility.SetDirty(config);
+    }
+
+    private static float? ParseYamlFloat(string yaml, string key)
+    {
+        var m = Regex.Match(yaml, key + @"\s*([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)");
+        if (!m.Success)
+            return null;
+        float v;
+        return float.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out v) ? v : (float?)null;
+    }
+
+    private static float RecipeModelScale(string recipeAssetPath)
+    {
+        var config = LoadCustomRecipeConfigFor(recipeAssetPath);
+        ImportLegacyModelTransform(config, recipeAssetPath);
+        var e = FindModelTransform(config, recipeAssetPath);
+        return e != null && e.scale > 0f ? e.scale : 1f;
+    }
+
+    private static float RecipeModelRotationY(string recipeAssetPath)
+    {
+        var config = LoadCustomRecipeConfigFor(recipeAssetPath);
+        var e = FindModelTransform(config, recipeAssetPath);
+        return e != null ? e.rotationY : 0f;
+    }
+
+    private static void SetRecipeModelTransform(string recipeAssetPath, float scale, float rotationY)
+    {
+        var config = LoadCustomRecipeConfigFor(recipeAssetPath);
+        if (config == null)
+        {
+            // 配置不存在（如 common01 官方菜谱目录）时按需创建，仅用于存储模型变换。
+            var configPath = CustomRecipeConfigPathFor(recipeAssetPath);
+            if (string.IsNullOrEmpty(configPath) || !AssetFolderExists(Path.GetDirectoryName(configPath)))
+                return;
+            config = ScriptableObject.CreateInstance<CustomRecipeConfigSO>();
+            config.uidPrefix = 0;
+            config.nextSequence = 1;
+            config.categories = new CustomRecipeConfigSO.CustomRecipeCategoryEntry[0];
+            AssetDatabase.CreateAsset(config, configPath);
+        }
+        if (scale <= 0f)
+            scale = 1f;
+        var list = new List<CustomRecipeConfigSO.CustomRecipeTransformEntry>(
+            config.modelTransforms ?? new CustomRecipeConfigSO.CustomRecipeTransformEntry[0]);
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i] != null && list[i].assetPath == recipeAssetPath)
+            {
+                list[i].scale = scale;
+                list[i].rotationY = rotationY;
+                config.modelTransforms = list.ToArray();
+                EditorUtility.SetDirty(config);
+                return;
+            }
+        }
+        list.Add(new CustomRecipeConfigSO.CustomRecipeTransformEntry
+        {
+            assetPath = recipeAssetPath,
+            scale = scale,
+            rotationY = rotationY,
+        });
+        config.modelTransforms = list.ToArray();
+        EditorUtility.SetDirty(config);
+    }
+
+    /// <summary>把菜谱的 modelScale/modelRotationY 应用到 prefab 根节点（运行时直接生效）。
+    ///  数值存储在插件自己的 CustomRecipeConfigSO 中，不修改宿主 CustomRecipeSO。</summary>
     private static void ApplyModelTransform(CustomRecipeSO so)
     {
         if (so == null || so.model == null)
             return;
-        so.model.transform.localScale = Vector3.one * Mathf.Max(0.001f, so.modelScale);
-        so.model.transform.localEulerAngles = new Vector3(0f, so.modelRotationY, 0f);
+        var path = AssetDatabase.GetAssetPath(so);
+        if (string.IsNullOrEmpty(path))
+            return;
+        so.model.transform.localScale = Vector3.one * Mathf.Max(0.001f, RecipeModelScale(path));
+        so.model.transform.localEulerAngles = new Vector3(0f, RecipeModelRotationY(path), 0f);
         EditorUtility.SetDirty(so.model);
     }
 
@@ -2295,8 +2429,6 @@ public static class LayoutEditorLevelAdminApi
 
         so.cookingProgress = (CustomRecipeSO.CookingProgress)(dto.cookingProgress >= 0 && dto.cookingProgress <= 2 ? dto.cookingProgress : 1);
         so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
-        so.modelScale = dto.modelScale > 0f ? dto.modelScale : 1f;
-        so.modelRotationY = dto.modelRotationY;
 
         if (dto.compositionIds != null && dto.compositionIds.Length > 0)
         {
@@ -2348,6 +2480,7 @@ public static class LayoutEditorLevelAdminApi
             AssetDatabase.CreateFolder(categoryDir, "models");
 
         AssetDatabase.SaveAssets();
+        SetRecipeModelTransform(assetPath, dto.modelScale, dto.modelRotationY);
         ApplyModelTransform(so);
 
         AddCustomRecipeName(setName, recipeName, dto.nameZh, dto.nameEn);
@@ -2380,8 +2513,7 @@ public static class LayoutEditorLevelAdminApi
 
         so.cookingProgress = (CustomRecipeSO.CookingProgress)(dto.cookingProgress >= 0 && dto.cookingProgress <= 2 ? dto.cookingProgress : 1);
         so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
-        so.modelScale = dto.modelScale > 0f ? dto.modelScale : 1f;
-        so.modelRotationY = dto.modelRotationY;
+        SetRecipeModelTransform(dto.assetPath, dto.modelScale, dto.modelRotationY);
 
         if (dto.compositionIds != null)
         {

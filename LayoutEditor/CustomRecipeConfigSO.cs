@@ -12,6 +12,9 @@ namespace LevelEditorStub
         [SerializeField] public int uidPrefix;
         [SerializeField] public int nextSequence = 1;
         [SerializeField] public CustomRecipeCategoryEntry[] categories = new CustomRecipeCategoryEntry[0];
+        /// <summary>菜谱模型变换（modelScale/modelRotationY）。存放在插件自己的配置中，
+        ///  避免修改宿主项目 CustomRecipeSO 类定义。</summary>
+        [SerializeField] public CustomRecipeTransformEntry[] modelTransforms = new CustomRecipeTransformEntry[0];
 
         [Serializable]
         public class CustomRecipeCategoryEntry
@@ -19,6 +22,14 @@ namespace LevelEditorStub
             public string id;
             public string zh;
             public string en;
+        }
+
+        [Serializable]
+        public class CustomRecipeTransformEntry
+        {
+            public string assetPath;
+            public float scale = 1f;
+            public float rotationY;
         }
     }
 }

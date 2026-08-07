@@ -289,7 +289,7 @@ public static class LayoutEditorBundleDumper
             var bundle = LevelEditor.PseudoPrefabManager.GetAssetBundle(name);
             if (bundle != null) return bundle;
         }
-        catch (KeyNotFoundException) { }
+        catch (System.Exception) { }
 
         string path = Path.Combine(dir, name);
         if (!File.Exists(path)) return null;

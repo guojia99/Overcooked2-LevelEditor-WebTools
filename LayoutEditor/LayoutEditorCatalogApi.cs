@@ -249,6 +249,16 @@ public static class LayoutEditorCatalogApi
         };
     }
 
+    /// <summary>StreamingAssets/Windows 下是否存在该 bundle 文件（插件只把已构建的 bundle
+    ///  写入 dependencies，避免宿主原版 PseudoPrefabManager 因缺失 bundle 抛异常）。</summary>
+    private static bool BundleFileExists(string bundleName)
+    {
+        if (string.IsNullOrEmpty(bundleName))
+            return false;
+        var path = Path.Combine(Application.streamingAssetsPath, "Windows/" + bundleName).Replace('\\', '/');
+        return File.Exists(path);
+    }
+
     public static string SetLevelRecipes(LevelRecipesUpdateDto update)
     {
         if (update == null || string.IsNullOrEmpty(update.levelInfoAssetPath))
@@ -278,12 +288,14 @@ public static class LayoutEditorCatalogApi
         // 自动把本关卡集的自定义菜谱 bundle 加入 dependencies：
         // 运行时 PseudoPrefabManager 只加载 dependencies 中的 bundle，
         // 缺少则自定义菜谱的模型/贴图引用无法解析（装盘空、材质红/灰）。
+        // 只加入磁盘上已存在的 bundle：宿主原版 PseudoPrefabManager 对缺失 bundle 会抛
+        // KeyNotFoundException，未构建（如自定义菜谱 bundle 构建前）时不能写进 dependencies。
         var pathParts = (update.levelInfoAssetPath ?? "").Replace('\\', '/').Split('/');
         if (pathParts.Length > 2 && pathParts[1] == "LevelSets")
         {
             var deps = new List<string>(info.dependencies ?? new string[0]);
             var customBundle = pathParts[2] + "/custom_recipes";
-            if (System.Array.IndexOf(deps.ToArray(), customBundle) < 0)
+            if (System.Array.IndexOf(deps.ToArray(), customBundle) < 0 && BundleFileExists(customBundle))
                 deps.Add(customBundle);
 
             // 自定义菜谱引用的外部资产 bundle（装盘容器等，如 Glass=bundle162）一并确保加载
@@ -293,7 +305,7 @@ public static class LayoutEditorCatalogApi
                 if (custom == null || custom.platingStepSO == null)
                     continue;
                 var b = custom.platingStepSO.bundleName;
-                if (!string.IsNullOrEmpty(b) && System.Array.IndexOf(deps.ToArray(), b) < 0)
+                if (!string.IsNullOrEmpty(b) && System.Array.IndexOf(deps.ToArray(), b) < 0 && BundleFileExists(b))
                     deps.Add(b);
             }
 

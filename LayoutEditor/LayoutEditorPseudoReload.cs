@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -47,6 +48,8 @@ public static class LayoutEditorPseudoReload
         if (manager == null)
             return;
 
+        EnsureCustomBundleDependency(manager);
+
         // ReloadSceneLayoutPrefabs is added by the project patch; call it via
         // reflection so this compiles against an unpatched decompiled PseudoPrefabManager.
         var mi = manager.GetType().GetMethod(
@@ -59,9 +62,7 @@ public static class LayoutEditorPseudoReload
         }
 
         // Fallback for unpatched environments: full reload.
-        manager.DeInit();
-        manager.prepareForBuilding = false;
-        manager.Init();
+        SafeReinit(manager);
     }
 
     /// <summary>Full Tools → Reload Pseudo Assets (bootstrap + recipes + scene).</summary>
@@ -71,8 +72,49 @@ public static class LayoutEditorPseudoReload
         if (manager == null)
             return;
 
-        manager.DeInit();
-        manager.prepareForBuilding = false;
-        manager.Init();
+        EnsureCustomBundleDependency(manager);
+        SafeReinit(manager);
+    }
+
+    /// <summary>DeInit + Init，带 try/catch：宿主原版 PseudoPrefabManager 对缺失 bundle
+    ///  会抛 KeyNotFoundException，插件侧不能因此中断（缺失的应已被依赖写入守卫过滤，
+    ///  这里仅作最后防线）。</summary>
+    private static void SafeReinit(PseudoPrefabManager manager)
+    {
+        try
+        {
+            manager.DeInit();
+            manager.prepareForBuilding = false;
+            manager.Init();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] PseudoPrefabManager re-init failed: " + ex.Message);
+        }
+    }
+
+    /// <summary>若本关卡集的自定义菜谱 bundle 已构建，则补入 levelInfo.dependencies，
+    ///  保证宿主原版 PseudoPrefabManager 在 Init 时能加载它；未构建时不写入（避免异常）。</summary>
+    private static void EnsureCustomBundleDependency(PseudoPrefabManager manager)
+    {
+        var info = manager.stub != null ? manager.stub.levelInfo : null;
+        if (info == null)
+            return;
+        var assetPath = AssetDatabase.GetAssetPath(info);
+        var parts = (assetPath ?? "").Replace('\\', '/').Split('/');
+        if (parts.Length <= 2 || parts[1] != "LevelSets")
+            return;
+        var customBundle = parts[2] + "/custom_recipes";
+        var deps = info.dependencies != null ? new List<string>(info.dependencies) : new List<string>();
+        if (deps.Contains(customBundle))
+            return;
+        var bundlePath = Path.Combine(Application.streamingAssetsPath, "Windows/" + customBundle).Replace('\\', '/');
+        if (!File.Exists(bundlePath))
+            return;
+        Undo.RecordObject(info, "Layout Editor Ensure Custom Bundle");
+        deps.Add(customBundle);
+        info.dependencies = deps.ToArray();
+        EditorUtility.SetDirty(info);
+        AssetDatabase.SaveAssets();
     }
 }
