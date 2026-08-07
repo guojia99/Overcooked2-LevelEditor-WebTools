@@ -752,7 +752,8 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
     for (const ing of ingredients) {
       prep.set(ing, ing === "PastaSO" ? "Pot" : "FryingPan");
     }
-  } else if (finalStep === "DeepFatFryer" || type === "fry") {
+  } else if (finalStep === "DeepFatFryer" || (type === "fry" && !isCookStep(finalStep))) {
+    // 名称前缀推断的 fry（如 FriedEgg）不得覆盖显式烹饪步骤（FryingPan 等）
     for (const ing of ingredients) prep.set(ing, "DeepFatFryer");
   } else if (
     type === "cake" ||
@@ -791,7 +792,7 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
   }
 
   const splitPerIngredient =
-    finalStep === "DeepFatFryer" || type === "fry" || (finalStep === "Pot" && ingredients.includes("PastaSO"));
+    finalStep === "DeepFatFryer" || (type === "fry" && !isCookStep(finalStep)) || (finalStep === "Pot" && ingredients.includes("PastaSO"));
 
   const result = [];
   if (groupMap.has("")) result.push({ step: "", utensils: [], ingredients: groupMap.get("") });

@@ -15,8 +15,7 @@ public static class LayoutEditorLevelAdminApi
     private const string TemplateConfig2p = "Assets/Template/config_2p.asset";
     private const string TemplateConfig3p = "Assets/Template/config_3p.asset";
     private const string TemplateConfig4p = "Assets/Template/config_4p.asset";
-    private const string ManagerScriptGuid = "851e97368ab5cac468f2317c10d7f6c7";
-
+    private const string TemplateLevelInfo = "Assets/Template/levelinfo_template.asset";
     // ==================== Catalogs ====================
 
     public static MusicCatalogDto ScanMusic()
@@ -58,7 +57,7 @@ public static class LayoutEditorLevelAdminApi
 
     public static AmbienceCatalogDto ScanAmbiences()
     {
-        var names = new List<string>(Enum.GetNames(typeof(PseudoPrefabManagerStub.GameLoopingAudioTag)));
+        var names = new List<string>(Enum.GetNames(typeof(LevelInfoSO.GameLoopingAudioTag)));
         names.RemoveAll(n => n == "COUNT");
         var k = LoadAudioKnowledge();
         return new AmbienceCatalogDto
@@ -409,9 +408,7 @@ public static class LayoutEditorLevelAdminApi
                 ConfigToDto(so.config_3p),
                 ConfigToDto(so.config_4p)
             },
-            audio = !string.IsNullOrEmpty(sceneAssetPath) && File.Exists(AbsPath(sceneAssetPath))
-                ? ReadAudioFromScene(sceneAssetPath)
-                : new AudioConfigDto { ambiences = new string[0], audioDirectoryGuids = new string[0], audioDirectoryIds = new string[0] }
+            audio = ReadAudioFromLevelInfo(so)
         };
         return dto;
     }
@@ -705,6 +702,7 @@ public static class LayoutEditorLevelAdminApi
         info.config_3p = config3;
         info.config_4p = config4;
         info.dependencies = new[] { "bundle47" };
+        ApplyTemplateAudioDefaults(info);
         var infoPath = levelDataDir + "/LevelInfo_" + levelId + ".asset";
         AssetDatabase.CreateAsset(info, infoPath);
 
@@ -802,14 +800,15 @@ public static class LayoutEditorLevelAdminApi
         if (dto == null || string.IsNullOrEmpty(dto.sceneAssetPath))
             return "缺少场景路径。";
         OpenScene(dto.sceneAssetPath);
-        var stub = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();
-        if (stub == null)
-            return "场景中未找到 PseudoPrefabManagerStub。";
+        // 音频配置已迁移到 LevelInfoSO；场景里的 stub 仅保留 levelInfo 引用。
+        var info = LayoutEditorLevelInfoResolver.ResolveForScene(dto.sceneAssetPath);
+        if (info == null)
+            return "未找到该场景对应的 LevelInfoSO，请先为关卡绑定 LevelInfo。";
 
-        Undo.RecordObject(stub, "Edit Level Audio");
-        stub.InLevelMusicSO = LoadPseudoByGuid(dto.inLevelMusicGuid);
+        Undo.RecordObject(info, "Edit Level Audio");
+        info.inLevelMusicSO = LoadPseudoByGuid(dto.inLevelMusicGuid);
 
-        var ambList = new List<PseudoPrefabManagerStub.GameLoopingAudioTag>();
+        var ambList = new List<LevelInfoSO.GameLoopingAudioTag>();
         if (dto.ambiences != null)
         {
             foreach (var name in dto.ambiences)
@@ -818,8 +817,8 @@ public static class LayoutEditorLevelAdminApi
                     continue;
                 try
                 {
-                    var t = (PseudoPrefabManagerStub.GameLoopingAudioTag)Enum.Parse(
-                        typeof(PseudoPrefabManagerStub.GameLoopingAudioTag), name);
+                    var t = (LevelInfoSO.GameLoopingAudioTag)Enum.Parse(
+                        typeof(LevelInfoSO.GameLoopingAudioTag), name);
                     ambList.Add(t);
                 }
                 catch
@@ -827,7 +826,7 @@ public static class LayoutEditorLevelAdminApi
                 }
             }
         }
-        stub.InLevelAmbiences = ambList.ToArray();
+        info.inLevelAmbiences = ambList.ToArray();
 
         var dirList = new List<PseudoPrefabSO>();
         if (dto.audioDirectoryGuids != null)
@@ -839,17 +838,15 @@ public static class LayoutEditorLevelAdminApi
                     dirList.Add(p);
             }
         }
-        stub.AudioDirectorySOs = dirList.ToArray();
+        info.audioDirectorySOs = dirList.ToArray();
 
-        stub.OnDeathEffectSO = LoadPseudoByGuid(dto.onDeathEffectGuid);
+        info.onDeathEffectSO = LoadPseudoByGuid(dto.onDeathEffectGuid);
 
-        AutoMergeAudioDependencies(stub);
+        AutoMergeAudioDependencies(info);
 
-        EditorUtility.SetDirty(stub);
+        EditorUtility.SetDirty(info);
         ForcePrepareForBuilding();
-        var scene = EditorSceneManager.GetActiveScene();
-        EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene);
+        AssetDatabase.SaveAssets();
         ReloadPseudo();
         return null;
     }
@@ -859,9 +856,9 @@ public static class LayoutEditorLevelAdminApi
     /// reachable via the transitive closure of the existing dependencies (so commonly-loaded bundles like
     /// bundle9/16/18/47 and DLC bundles that already fall inside closure(bundle47) are NOT added). Authoritative
     /// bundle names are read directly from each PseudoPrefabSO.bundleName. Additive only.</summary>
-    private static void AutoMergeAudioDependencies(PseudoPrefabManagerStub stub)
+    private static void AutoMergeAudioDependencies(LevelInfoSO info)
     {
-        if (stub == null || stub.levelInfo == null)
+        if (info == null)
             return;
         var k = LoadAudioKnowledge();
         var always = new HashSet<string>(k.alwaysLoadedBundles ?? new string[0], StringComparer.Ordinal);
@@ -870,19 +867,20 @@ public static class LayoutEditorLevelAdminApi
         // bundle47 (and any other baseBundles) is the foundation that every level must load; always ensure it.
         foreach (var b in k.baseBundles ?? new string[0])
             referenced.Add(b);
-        if (stub.InLevelMusicSO != null && !string.IsNullOrEmpty(stub.InLevelMusicSO.bundleName))
-            referenced.Add(stub.InLevelMusicSO.bundleName);
-        if (stub.OnDeathEffectSO != null && !string.IsNullOrEmpty(stub.OnDeathEffectSO.bundleName))
-            referenced.Add(stub.OnDeathEffectSO.bundleName);
-        if (stub.AudioDirectorySOs != null)
-            foreach (var d in stub.AudioDirectorySOs)
+        // 旧关卡的 LevelInfoSO 可能缺少音频字段，全部做空值防御。
+        if (info.inLevelMusicSO != null && !string.IsNullOrEmpty(info.inLevelMusicSO.bundleName))
+            referenced.Add(info.inLevelMusicSO.bundleName);
+        if (info.onDeathEffectSO != null && !string.IsNullOrEmpty(info.onDeathEffectSO.bundleName))
+            referenced.Add(info.onDeathEffectSO.bundleName);
+        if (info.audioDirectorySOs != null)
+            foreach (var d in info.audioDirectorySOs)
                 if (d != null && !string.IsNullOrEmpty(d.bundleName))
                     referenced.Add(d.bundleName);
         referenced.RemoveWhere(b => always.Contains(b) || string.IsNullOrEmpty(b));
         if (referenced.Count == 0)
             return;
 
-        var deps = new List<string>(stub.levelInfo.dependencies ?? new string[0]);
+        var deps = new List<string>(info.dependencies ?? new string[0]);
         var loaded = BundleClosure(deps);
         bool changed = false;
         foreach (var b in referenced)
@@ -890,7 +888,8 @@ public static class LayoutEditorLevelAdminApi
             // Add only when the bundle is genuinely NOT reachable from the current dependencies.
             // Thanks to bundle47's transitive closure this is usually a no-op; the typical
             // exceptions are bundle47 itself (if removed) and bundle11 (raft BGM, not in closure(bundle47)).
-            if (loaded.Contains(b) || deps.Contains(b))
+            // 只补入磁盘上已存在的 bundle，避免宿主原版 PseudoPrefabManager 场景打开时崩溃。
+            if (loaded.Contains(b) || deps.Contains(b) || !LayoutEditorCatalogApi.BundleFileExists(b))
                 continue;
             deps.Add(b);
             // extending the dependency list can only grow the closure; add this bundle's own closure.
@@ -900,9 +899,9 @@ public static class LayoutEditorLevelAdminApi
         }
         if (changed)
         {
-            Undo.RecordObject(stub.levelInfo, "Auto-merge audio dependencies");
-            stub.levelInfo.dependencies = deps.ToArray();
-            EditorUtility.SetDirty(stub.levelInfo);
+            Undo.RecordObject(info, "Auto-merge audio dependencies");
+            info.dependencies = deps.ToArray();
+            EditorUtility.SetDirty(info);
         }
     }
 
@@ -1007,9 +1006,10 @@ public static class LayoutEditorLevelAdminApi
         if (string.IsNullOrEmpty(sceneAssetPath))
             return "缺少场景路径。";
         OpenScene(sceneAssetPath);
-        var stub = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();
-        if (stub == null)
-            return "场景中未找到 PseudoPrefabManagerStub。";
+        // onDeathEffectSO 已迁移到 LevelInfoSO。
+        var info = LayoutEditorLevelInfoResolver.ResolveForScene(sceneAssetPath);
+        if (info == null)
+            return "未找到该场景对应的 LevelInfoSO，请先为关卡绑定 LevelInfo。";
 
         PseudoPrefabSO effect = null;
         if (theme == "water")
@@ -1017,11 +1017,11 @@ public static class LayoutEditorLevelAdminApi
         else if (theme == "goo")
             effect = LoadPseudoByName("WaterSplash_Particle_004_alien_SO");
 
-        Undo.RecordObject(stub, "Death theme");
-        stub.OnDeathEffectSO = effect;
-        EditorUtility.SetDirty(stub);
+        Undo.RecordObject(info, "Death theme");
+        info.onDeathEffectSO = effect;
+        EditorUtility.SetDirty(info);
         ForcePrepareForBuilding();
-        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        AssetDatabase.SaveAssets();
         // Reload Pseudo Assets to actually load the new death effect, restoring the editor UI
         // (matches the Tools workflow: Toggle Prepare For Building -> Save -> Reload Pseudo Assets).
         ReloadPseudo();
@@ -1262,7 +1262,7 @@ public static class LayoutEditorLevelAdminApi
         return sb.ToString();
     }
 
-    private static AudioConfigDto ReadAudioFromScene(string sceneAssetPath)
+    private static AudioConfigDto ReadAudioFromLevelInfo(LevelInfoSO info)
     {
         var dto = new AudioConfigDto
         {
@@ -1270,79 +1270,33 @@ public static class LayoutEditorLevelAdminApi
             audioDirectoryGuids = new string[0],
             audioDirectoryIds = new string[0]
         };
-        var abs = AbsPath(sceneAssetPath);
-        if (!File.Exists(abs))
+        if (info == null)
             return dto;
 
-        string[] lines;
-        try
-        {
-            lines = File.ReadAllLines(abs);
-        }
-        catch
-        {
-            return dto;
-        }
+        // 旧关卡的 LevelInfoSO 可能缺少音频字段（反序列化为 null），全部做空值防御。
+        var musicGuid = GuidOf(info.inLevelMusicSO);
+        var deathGuid = GuidOf(info.onDeathEffectSO);
 
-        int managerIdx = -1;
-        for (int i = 0; i < lines.Length; i++)
-        {
-            if (lines[i].Contains("guid: " + ManagerScriptGuid) && lines[i].Contains("m_Script"))
-            {
-                managerIdx = i;
-                break;
-            }
-        }
-        if (managerIdx < 0)
-            return dto;
-
-        var musicGuid = "";
-        var deathGuid = "";
         var dirGuids = new List<string>();
-        var ambIndices = new List<int>();
-        var ambValueMap = BuildAmbienceValueMap();
-
-        for (int i = managerIdx + 1; i < lines.Length; i++)
+        if (info.audioDirectorySOs != null)
         {
-            var line = lines[i];
-            if (line.StartsWith("--- !u!", StringComparison.Ordinal))
-                break;
-            if (line.Length == 0 || line[0] != ' ')
-                continue;
-
-            var trimmed = line.Trim();
-            if (trimmed.StartsWith("InLevelMusicSO:", StringComparison.Ordinal))
-                musicGuid = ExtractGuid(trimmed);
-            else if (trimmed.StartsWith("OnDeathEffectSO:", StringComparison.Ordinal))
-                deathGuid = ExtractGuid(trimmed);
-            else if (trimmed.StartsWith("AudioDirectorySOs:", StringComparison.Ordinal))
+            foreach (var d in info.audioDirectorySOs)
             {
-                if (trimmed.Contains("[]"))
-                    continue;
-                for (int j = i + 1; j < lines.Length; j++)
-                {
-                    var sub = lines[j].TrimStart();
-                    if (!sub.StartsWith("- ", StringComparison.Ordinal) || !lines[j].StartsWith("  -", StringComparison.Ordinal))
-                        break;
-                    dirGuids.Add(ExtractGuid(sub));
-                    i = j - 1;
-                }
+                var g = GuidOf(d);
+                if (!string.IsNullOrEmpty(g))
+                    dirGuids.Add(g);
             }
-            else if (trimmed.StartsWith("InLevelAmbiences:", StringComparison.Ordinal))
+        }
+
+        var ambValueMap = BuildAmbienceValueMap();
+        var ambNames = new List<string>();
+        if (info.inLevelAmbiences != null)
+        {
+            foreach (var v in info.inLevelAmbiences)
             {
-                if (trimmed.Contains("[]"))
-                    continue;
-                for (int j = i + 1; j < lines.Length; j++)
-                {
-                    var sub = lines[j].TrimStart();
-                    if (!sub.StartsWith("- ", StringComparison.Ordinal) || !lines[j].StartsWith("  -", StringComparison.Ordinal))
-                        break;
-                    var valStr = sub.Substring(2).Trim();
-                    int val;
-                    if (int.TryParse(valStr, out val))
-                        ambIndices.Add(val);
-                    i = j - 1;
-                }
+                string nm;
+                if (ambValueMap.TryGetValue((int)v, out nm))
+                    ambNames.Add(nm);
             }
         }
 
@@ -1350,23 +1304,47 @@ public static class LayoutEditorLevelAdminApi
         dto.onDeathEffectGuid = deathGuid;
         dto.audioDirectoryGuids = dirGuids.ToArray();
         dto.audioDirectoryIds = IdsOf(dirGuids);
-        var ambNames = new List<string>();
-        foreach (var v in ambIndices)
-        {
-            string nm;
-            if (ambValueMap.TryGetValue(v, out nm))
-                ambNames.Add(nm);
-        }
         dto.ambiences = ambNames.ToArray();
         dto.inLevelMusicId = IdOf(musicGuid);
         dto.onDeathEffectId = IdOf(deathGuid);
         return dto;
     }
 
+    private static string GuidOf(UnityEngine.Object obj)
+    {
+        if (obj == null)
+            return "";
+        var path = AssetDatabase.GetAssetPath(obj);
+        return string.IsNullOrEmpty(path) ? "" : AssetDatabase.AssetPathToGUID(path);
+    }
+
+    /// <summary>新建关卡时从 levelinfo 模板拷贝默认音频配置（BGM / 环境音 / AudioDirectory / 死亡特效）。
+    /// 模板缺失或字段为空时退化为空数组，保证新资产音频字段不为 null。</summary>
+    private static void ApplyTemplateAudioDefaults(LevelInfoSO info)
+    {
+        var tpl = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(TemplateLevelInfo);
+        if (tpl != null)
+        {
+            info.inLevelMusicSO = tpl.inLevelMusicSO;
+            info.inLevelAmbiences = tpl.inLevelAmbiences != null
+                ? (LevelInfoSO.GameLoopingAudioTag[])tpl.inLevelAmbiences.Clone()
+                : new LevelInfoSO.GameLoopingAudioTag[0];
+            info.audioDirectorySOs = tpl.audioDirectorySOs != null
+                ? (PseudoPrefabSO[])tpl.audioDirectorySOs.Clone()
+                : new PseudoPrefabSO[0];
+            info.onDeathEffectSO = tpl.onDeathEffectSO;
+        }
+        else
+        {
+            info.inLevelAmbiences = new LevelInfoSO.GameLoopingAudioTag[0];
+            info.audioDirectorySOs = new PseudoPrefabSO[0];
+        }
+    }
+
     private static Dictionary<int, string> BuildAmbienceValueMap()
     {
         var map = new Dictionary<int, string>();
-        var type = typeof(PseudoPrefabManagerStub.GameLoopingAudioTag);
+        var type = typeof(LevelInfoSO.GameLoopingAudioTag);
         var values = (int[])Enum.GetValues(type);
         var names = Enum.GetNames(type);
         for (int i = 0; i < values.Length && i < names.Length; i++)
@@ -1376,19 +1354,6 @@ public static class LayoutEditorLevelAdminApi
             map[values[i]] = names[i];
         }
         return map;
-    }
-
-    private static string ExtractGuid(string line)
-    {
-        var key = "guid: ";
-        var idx = line.IndexOf(key, StringComparison.Ordinal);
-        if (idx < 0)
-            return "";
-        var start = idx + key.Length;
-        var end = start;
-        while (end < line.Length && line[end] != ',' && line[end] != '}' && line[end] != ' ' && line[end] != '\r')
-            end++;
-        return line.Substring(start, end - start);
     }
 
     private static string IdOf(string guid)
@@ -2277,64 +2242,6 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(so.model);
     }
 
-    /// <summary>从 FBX 字节中提取内嵌纹理引用名（RelativeFilename，如 model.fbm/Image_0.jpg）。
-    ///  FBX 字符串属性格式：'S' 标记 + int32 长度 + 内容，按长度精确解析。</summary>
-    private static List<string> ExtractFbxTextureReferences(byte[] fbx)
-    {
-        var list = new List<string>();
-        if (fbx == null || fbx.Length < 64)
-            return list;
-        var marker = System.Text.Encoding.ASCII.GetBytes("RelativeFilename");
-        for (int i = 0; i + marker.Length < fbx.Length; i++)
-        {
-            bool match = true;
-            for (int j = 0; j < marker.Length; j++)
-            {
-                if (fbx[i + j] != marker[j])
-                {
-                    match = false;
-                    break;
-                }
-            }
-            if (!match)
-                continue;
-            int p = i + marker.Length;
-            if (p < fbx.Length && fbx[p] == 0x53) // 'S' 字符串类型标记
-                p++;
-            if (p + 4 > fbx.Length)
-                continue;
-            int len = BitConverter.ToInt32(fbx, p);
-            p += 4;
-            if (len <= 0 || len > 512 || p + len > fbx.Length)
-                continue;
-            var name = System.Text.Encoding.UTF8.GetString(fbx, p, len);
-            var lower = name.ToLowerInvariant();
-            if ((lower.EndsWith(".png") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg") || lower.EndsWith(".tga")) &&
-                !list.Contains(name))
-                list.Add(name);
-        }
-        return list;
-    }
-
-    /// <summary>图片字节转码（Unity Texture2D），供贴图按 FBX 引用扩展名写入。</summary>
-    private static byte[] ConvertImageBytes(byte[] src, string targetExt)
-    {
-        if (src == null || src.Length == 0)
-            return null;
-        var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-        if (!tex.LoadImage(src))
-        {
-            UnityEngine.Object.DestroyImmediate(tex);
-            return null;
-        }
-        var lower = (targetExt ?? "").ToLowerInvariant();
-        byte[] result = lower == ".jpg" || lower == ".jpeg"
-            ? tex.EncodeToJPG(90)
-            : tex.EncodeToPNG();
-        UnityEngine.Object.DestroyImmediate(tex);
-        return result;
-    }
-
     /// <summary>解析预制体的网格源文件（.obj/.fbx），供 3D 预览中作为大小参考
     ///  （如披萨装盘 plated_mushroom_01 模型含盘子，可对比自定义模型的实际尺寸）。</summary>
     public static string ResolvePrefabMeshFile(string prefabAssetPath, out string absPath, out string contentType)
@@ -2700,7 +2607,7 @@ public static class LayoutEditorLevelAdminApi
         ClearModelDirAssets(modelsDir, recipeId + "_Icon.png");
 
         // 写入全部文件（主模型统一命名为 <recipeName>.fbx/.obj，贴图保留原文件名）。
-        string uploadedTexturePath = null;
+        var uploadedTexturePaths = new List<KeyValuePair<CustomRecipeUploadFileDto, string>>();
         foreach (var f in files)
         {
             if (f == null || string.IsNullOrEmpty(f.fileName) || string.IsNullOrEmpty(f.base64))
@@ -2720,72 +2627,28 @@ public static class LayoutEditorLevelAdminApi
             if (string.IsNullOrEmpty(targetName))
                 continue;
             File.WriteAllBytes(AbsPath(modelsDir + "/" + targetName), bytes);
-            if (uploadedTexturePath == null && !ReferenceEquals(f, modelFile))
-                uploadedTexturePath = modelsDir + "/" + targetName;
+            if (!ReferenceEquals(f, modelFile))
+                uploadedTexturePaths.Add(new KeyValuePair<CustomRecipeUploadFileDto, string>(f, modelsDir + "/" + targetName));
         }
 
         AssetDatabase.Refresh();
 
-        // 把上传的贴图按 FBX 内嵌纹理引用名写入（如 model.fbm/Image_0.jpg）：
-        // 否则 three.js 预览与 Unity 导入都找不到贴图（灰色 / 红色材质）。
-        var fbxAbs = AbsPath(modelAssetPath);
-        if (File.Exists(fbxAbs) && ext == ".fbx")
+        // normal 贴图标记为 NormalMap，避免 Unity 按默认贴图类型导入法线图。
+        foreach (var kv in uploadedTexturePaths)
         {
-            var texRefs = ExtractFbxTextureReferences(File.ReadAllBytes(fbxAbs));
-            if (texRefs.Count > 0)
+            var p = kv.Value;
+            if (p == null || p.IndexOf("_normal.", StringComparison.OrdinalIgnoreCase) < 0)
+                continue;
+            var imp = AssetImporter.GetAtPath(p) as TextureImporter;
+            if (imp != null && imp.textureType != TextureImporterType.NormalMap)
             {
-                var uploadedTextures = new List<CustomRecipeUploadFileDto>();
-                foreach (var f in files)
-                {
-                    if (f == null || ReferenceEquals(f, modelFile))
-                        continue;
-                    if (f.fileName != null && !IsModelFileName(f.fileName))
-                        uploadedTextures.Add(f);
-                }
-                if (uploadedTextures.Count > 0)
-                {
-                    var tex = PickTextureFile(uploadedTextures);
-                    if (tex != null)
-                    {
-                        byte[] texBytes = null;
-                        try { texBytes = System.Convert.FromBase64String(tex.base64); }
-                        catch { }
-                        if (texBytes != null && texBytes.Length > 0)
-                        {
-                            var modelsAbs = AbsPath(modelsDir);
-                            foreach (var refName in texRefs)
-                            {
-                                var relName = refName.Replace('\\', '/');
-                                if (relName.StartsWith("/", StringComparison.Ordinal) || relName.Contains(".."))
-                                    continue;
-                                var targetAbs = Path.GetFullPath(Path.Combine(modelsAbs, relName));
-                                if (!targetAbs.StartsWith(modelsAbs, StringComparison.OrdinalIgnoreCase))
-                                    continue;
-                                var targetDir = Path.GetDirectoryName(targetAbs);
-                                if (string.IsNullOrEmpty(targetDir))
-                                    continue;
-                                Directory.CreateDirectory(targetDir);
-                                var refExt = Path.GetExtension(targetAbs).ToLowerInvariant();
-                                var uploadedExt = Path.GetExtension(tex.fileName).ToLowerInvariant();
-                                var outBytes = texBytes;
-                                if (!string.Equals(refExt, uploadedExt, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    var converted = ConvertImageBytes(texBytes, refExt);
-                                    if (converted != null)
-                                        outBytes = converted;
-                                }
-                                File.WriteAllBytes(targetAbs, outBytes);
-                            }
-                        }
-                    }
-                }
+                imp.textureType = TextureImporterType.NormalMap;
+                imp.SaveAndReimport();
             }
         }
 
-        AssetDatabase.Refresh();
-
-        // 贴图内嵌由前端在浏览器完成（fbxFuse：FBX + PNG 合成彩色 FBX 后上传）；
-        // 旧前端分开上传的贴图仍按 FBX 引用名写入（model.fbm）供预览与 Unity 导入。
+        // FBX 内部贴图引用名已由前端在上传前改写为贴图落盘文件名（fbxTextureRename），
+        // 服务端不再按引用名复制贴图。
 
         var importedRoot = AssetDatabase.LoadAssetAtPath<GameObject>(modelAssetPath);
         if (importedRoot == null)
@@ -2796,27 +2659,14 @@ public static class LayoutEditorLevelAdminApi
         if (existingPrefab != null)
             AssetDatabase.DeleteAsset(prefabPath);
 
-        // 材质球（与参考做法一致：炒饭/芝士虾球的 prefab 内 MeshRenderer 直接引用 .mat，
-        // .mat 的 _MainTex 引用上传贴图）。先建好 .mat 再赋给模型实例。
-        Material mat = null;
-        if (!string.IsNullOrEmpty(uploadedTexturePath))
-        {
-            var uploadedTex = AssetDatabase.LoadAssetAtPath<Texture2D>(uploadedTexturePath);
-            if (uploadedTex != null)
-                mat = EnsureRecipeMaterial(modelsDir, recipeId, uploadedTex);
-        }
-
+        // 不创建额外材质球：FBX 内部贴图引用名已改写为贴图落盘文件名，
+        // Unity 导入 FBX 时自动把贴图链接进内嵌材质（与美术直接拖 FBX + 贴图使用一致）。
         // 必须先实例化到场景再 CreatePrefab：直接对模型资产 CreatePrefab 会丢失网格与子节点
-        // （生成只有根 Transform 的空 prefab，导致无渲染器、材质球与贴图都挂不上）。
+        // （生成只有根 Transform 的空 prefab，导致无渲染器）。
         var instance = UnityEngine.Object.Instantiate(importedRoot);
         instance.name = recipeId;
         try
         {
-            if (mat != null)
-            {
-                foreach (var r in instance.GetComponentsInChildren<Renderer>(true))
-                    r.sharedMaterial = mat;
-            }
             var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, instance);
             if (prefabInstance == null)
                 return "创建预制体失败。";
@@ -2840,128 +2690,8 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
 
-        // 贴图做成材质球与模型做在一起：创建 Standard 材质（_MainTex = 上传贴图）并赋给模型
-        ApplyTextureMaterial(so, prefab, modelsDir, uploadedTexturePath);
-        // 上传的是带材质的 FBX：诊断材质贴图，缺失时用 FBX 导入的子资产贴图自动修复
-        EnsureModelTextures(so, prefab, modelsDir, modelAssetPath);
         ApplyModelTransform(so);
         return null;
-    }
-
-    /// <summary>创建/更新菜谱材质球（Standard shader，_MainTex = 指定贴图，白色）。</summary>
-    private static Material EnsureRecipeMaterial(string modelsDir, string recipeId, Texture2D tex)
-    {
-        if (tex == null)
-            return null;
-        var matPath = modelsDir + "/" + SanitizeName(recipeId) + "_Mat.mat";
-        var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
-        if (mat == null)
-        {
-            var shader = Shader.Find("Standard");
-            if (shader == null)
-                shader = Shader.Find("Diffuse");
-            if (shader == null)
-                return null;
-            mat = new Material(shader);
-            AssetDatabase.CreateAsset(mat, matPath);
-        }
-        mat.SetTexture("_MainTex", tex);
-        mat.SetColor("_Color", Color.white);
-        EditorUtility.SetDirty(mat);
-        AssetDatabase.SaveAssets();
-        return mat;
-    }
-
-    /// <summary>上传带材质 FBX 后诊断：若模型材质贴图缺失（Unity 内嵌提取失败/引用断裂），
-    ///  用 FBX 导入的子资产贴图（内嵌数据）或 models 目录贴图创建材质修复，避免纯灰色。</summary>
-    private static void EnsureModelTextures(CustomRecipeSO so, GameObject prefab, string modelsDir, string modelAssetPath)
-    {
-        if (prefab == null || string.IsNullOrEmpty(modelAssetPath))
-            return;
-        var renderers = prefab.GetComponentsInChildren<Renderer>(true);
-        if (renderers.Length == 0)
-            return;
-        bool needFix = false;
-        foreach (var r in renderers)
-        {
-            if (r.sharedMaterial == null || r.sharedMaterial.mainTexture == null)
-            {
-                needFix = true;
-                break;
-            }
-        }
-        if (!needFix)
-            return;
-
-        // 修复源 1：FBX 导入的子资产贴图（内嵌数据提取）
-        Texture2D tex = null;
-        foreach (var a in AssetDatabase.LoadAllAssetsAtPath(modelAssetPath))
-        {
-            var t = a as Texture2D;
-            if (t != null && t.width > 2)
-            {
-                tex = t;
-                break;
-            }
-        }
-        // 修复源 2：models 目录的贴图文件
-        if (tex == null && !string.IsNullOrEmpty(modelsDir) && Directory.Exists(AbsPath(modelsDir)))
-        {
-            foreach (var f in Directory.GetFiles(AbsPath(modelsDir)))
-            {
-                var ext = Path.GetExtension(f).ToLowerInvariant();
-                if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
-                    continue;
-                var name = Path.GetFileName(f);
-                if (name.EndsWith("_Icon.png", StringComparison.OrdinalIgnoreCase))
-                    continue;
-                tex = AssetDatabase.LoadAssetAtPath<Texture2D>(modelsDir + "/" + name);
-                if (tex != null)
-                    break;
-            }
-        }
-        if (tex == null)
-            return;
-
-        var recipeId = SanitizeName(so.recipeName ?? "Recipe");
-        var mat = EnsureRecipeMaterial(modelsDir, recipeId, tex);
-        if (mat == null)
-            return;
-        foreach (var r in renderers)
-        {
-            r.sharedMaterial = mat;
-            EditorUtility.SetDirty(r);
-        }
-        EditorUtility.SetDirty(prefab);
-        AssetDatabase.SaveAssets();
-    }
-
-    /// <summary>把上传的贴图制成材质球（Standard shader，_MainTex）并赋给模型的全部 MeshRenderer，
-    ///  与参考菜谱（炒饭/芝士虾球）做法一致——模型自带材质，游戏内不再出现红/灰材质。</summary>
-    private static void ApplyTextureMaterial(CustomRecipeSO so, GameObject prefab, string modelsDir, string texturePath)
-    {
-        if (prefab == null || string.IsNullOrEmpty(texturePath))
-            return;
-        var renderers = prefab.GetComponentsInChildren<MeshRenderer>(true);
-        if (renderers.Length == 0)
-            return;
-        var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-        if (tex == null)
-            return;
-
-        var recipeId = SanitizeName(so.recipeName ?? "Recipe");
-        var mat = EnsureRecipeMaterial(modelsDir, recipeId, tex);
-        if (mat == null)
-            return;
-
-        foreach (var r in renderers)
-        {
-            r.sharedMaterial = mat;
-            EditorUtility.SetDirty(r);
-        }
-
-        EditorUtility.SetDirty(prefab);
-        AssetDatabase.SaveAssets();
     }
 
     private static bool IsModelFileName(string fileName)
@@ -2970,20 +2700,6 @@ public static class LayoutEditorLevelAdminApi
             return false;
         var n = fileName.ToLowerInvariant();
         return n.EndsWith(".fbx") || n.EndsWith(".obj");
-    }
-
-    /// <summary>从上传的贴图文件中挑选彩色主贴图（优先 base_color/color/diffuse/albedo 命名，否则第一张）。</summary>
-    private static CustomRecipeUploadFileDto PickTextureFile(List<CustomRecipeUploadFileDto> textures)
-    {
-        if (textures == null || textures.Count == 0)
-            return null;
-        foreach (var t in textures)
-        {
-            var n = (t.fileName ?? "").ToLowerInvariant();
-            if (n.Contains("base_color") || n.Contains("color") || n.Contains("diffuse") || n.Contains("albedo") || n.Contains("_texture"))
-                return t;
-        }
-        return textures[0];
     }
 
     /// <summary>上传文件名白名单：仅保留安全的 base 名与图片/模型扩展名。</summary>
@@ -3001,13 +2717,13 @@ public static class LayoutEditorLevelAdminApi
         return SanitizeName(Path.GetFileNameWithoutExtension(name)) + ext;
     }
 
-    /// <summary>删除 models 目录内旧模型/贴图（保留图标文件）。</summary>
+    /// <summary>删除 models 目录内旧模型/贴图/材质球（保留图标文件）。</summary>
     private static void ClearModelDirAssets(string dirAssetPath, string keepFileName)
     {
         var abs = AbsPath(dirAssetPath);
         if (!Directory.Exists(abs))
             return;
-        var extensions = new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga" };
+        var extensions = new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga", ".mat" };
         foreach (var file in Directory.GetFiles(abs))
         {
             var name = Path.GetFileName(file);

@@ -251,7 +251,7 @@ public static class LayoutEditorCatalogApi
 
     /// <summary>StreamingAssets/Windows 下是否存在该 bundle 文件（插件只把已构建的 bundle
     ///  写入 dependencies，避免宿主原版 PseudoPrefabManager 因缺失 bundle 抛异常）。</summary>
-    private static bool BundleFileExists(string bundleName)
+    public static bool BundleFileExists(string bundleName)
     {
         if (string.IsNullOrEmpty(bundleName))
             return false;

@@ -144,7 +144,8 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
     for (const ing of ingredients) prep.set(ing, ing === "DLC05_Marshmallow" ? "ToastingFork" : "");
   } else if (finalStep === "Pot" && has("PastaSO")) {
     for (const ing of ingredients) prep.set(ing, ing === "PastaSO" ? "Pot" : "FryingPan");
-  } else if (finalStep === "DeepFatFryer" || r.type === "fry") {
+  } else if (finalStep === "DeepFatFryer" || (r.type === "fry" && !isCookStep(finalStep))) {
+    // 名称前缀推断的 fry（如 FriedEgg）不得覆盖显式烹饪步骤（FryingPan 等）
     for (const ing of ingredients) prep.set(ing, "DeepFatFryer");
   } else if (
     r.type === "cake" ||
@@ -185,7 +186,7 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   }
 
   const splitPerIngredient =
-    finalStep === "DeepFatFryer" || r.type === "fry" || (finalStep === "Pot" && has("PastaSO"));
+    finalStep === "DeepFatFryer" || (r.type === "fry" && !isCookStep(finalStep)) || (finalStep === "Pot" && has("PastaSO"));
 
   const result: CookingGroup[] = [];
   const raw = groupMap.get("");

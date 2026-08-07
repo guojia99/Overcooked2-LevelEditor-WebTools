@@ -1,4 +1,4 @@
-import{o as Bh,c as Vh}from"./main-i-sB41AB.js";import"./recipeCard-D7GB0m9M.js";/**
+import{o as Bh,c as Vh}from"./main-DxdCj_ag.js";import"./recipeCard-CQ0LDvU6.js";/**
  * @license
  * Copyright 2010-2026 Three.js Authors
  * SPDX-License-Identifier: MIT

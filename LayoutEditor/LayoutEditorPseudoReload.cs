@@ -83,6 +83,9 @@ public static class LayoutEditorPseudoReload
     {
         try
         {
+            // 旧关卡的 LevelInfoSO 可能缺音频数组字段，宿主 Init 遍历时会是 null。
+            if (manager.stub != null)
+                LayoutEditorLevelInfoSanitizer.Sanitize(manager.stub.levelInfo);
             manager.DeInit();
             manager.prepareForBuilding = false;
             manager.Init();

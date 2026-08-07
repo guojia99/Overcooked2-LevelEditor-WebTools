@@ -7,8 +7,8 @@ using UnityEngine.SceneManagement;
 /// Read-only walkability & death configuration for the floor layer.
 /// - Walkable rectangles come from BoxColliders on the "Ground" layer (Col_Floor /
 ///   Col_Ice). Ice is detected via a PlayerPhysicsSurface component.
-/// - The void death type (water / goo / fall) is derived from the scene's
-///   GameSession.OnDeathEffectSO asset GUID.
+/// - The void death type (water / goo / fall) is derived from the level's
+///   LevelInfoSO.onDeathEffectSO asset GUID (fallback: GameSession component).
 /// </summary>
 public static class SceneWalkabilityReader
 {
@@ -64,12 +64,13 @@ public static class SceneWalkabilityReader
             killPlanes = ReadKillPlanes(),
         };
 
-        // Primary source: the PseudoPrefabManagerStub's OnDeathEffectSO (what the
-        // death-theme editor writes, and the authoritative runtime binding).
+        // Primary source: the LevelInfoSO's onDeathEffectSO referenced by the
+        // PseudoPrefabManagerStub (what the death-theme editor writes, and the
+        // authoritative runtime binding). 旧场景的 stub.levelInfo 可能为空，需回退。
         var stub = UnityEngine.Object.FindObjectOfType<LevelEditorStub.PseudoPrefabManagerStub>();
-        if (stub != null)
+        if (stub != null && stub.levelInfo != null)
         {
-            var eff = stub.OnDeathEffectSO;
+            var eff = stub.levelInfo.onDeathEffectSO;
             if (eff != null)
             {
                 var path = AssetDatabase.GetAssetPath(eff);

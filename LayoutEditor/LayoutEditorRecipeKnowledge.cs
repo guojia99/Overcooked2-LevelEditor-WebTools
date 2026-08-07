@@ -205,8 +205,9 @@ public static class LayoutEditorRecipeKnowledge
             foreach (var ing in ingredients)
                 prep[ing] = ing == "PastaSO" ? "Pot" : "FryingPan";
         }
-        else if (finalStep == "DeepFatFryer" || type == "fry")
+        else if (finalStep == "DeepFatFryer" || (type == "fry" && !IsCookStep(finalStep)))
         {
+            // 名称前缀推断的 fry（如 FriedEgg）不得覆盖显式烹饪步骤（FryingPan 等）
             foreach (var ing in ingredients)
                 prep[ing] = "DeepFatFryer";
         }
@@ -267,7 +268,7 @@ public static class LayoutEditorRecipeKnowledge
             ordered.Add(finalStep);
 
         bool splitPerIngredient = finalStep == "DeepFatFryer" ||
-            type == "fry" ||
+            (type == "fry" && !IsCookStep(finalStep)) ||
             (finalStep == "Pot" && Array.IndexOf(ingredients, "PastaSO") >= 0);
 
         var result = new List<RecipeCookingGroupDto>();

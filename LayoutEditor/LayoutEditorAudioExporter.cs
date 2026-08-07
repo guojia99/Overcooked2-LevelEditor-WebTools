@@ -178,7 +178,7 @@ public static class LayoutEditorAudioExporter
 
             var ambList = new List<AudioExportAmbienceDto>();
             foreach (var tagName in Enum.GetNames(
-                         typeof(PseudoPrefabManagerStub.GameLoopingAudioTag)))
+                         typeof(LevelInfoSO.GameLoopingAudioTag)))
             {
                 if (tagName == "COUNT") continue;
                 AudioExportAmbienceDto info;

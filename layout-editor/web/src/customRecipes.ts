@@ -1005,12 +1005,10 @@ async function renderRecipeForm(
       </div>
       <div class="cr-section">
         <div class="m-section-title">模型（3D）</div>
-        <p class="modal-hint">上传 <b>FBX 模型</b>（可不含材质，单独上传即可）；需要彩色时<b>补充一张 PNG 贴图</b>，保存时会将该 PNG 作为 FBX 的材质使用（内嵌进 FBX 并生成材质球）。选择文件后立即打开 3D 预览，调整方向/大小后保存提交。</p>
+        <p class="modal-hint">上传 <b>FBX 模型</b>（可不含材质，单独上传即可）；需要彩色时<b>补充贴图</b>：<b>base_color 彩色贴图必传</b>，roughness/metallic/normal 可选。保存时贴图会重命名为 <code>{菜名}_base_color.png</code> 等格式，并把 FBX 内部对应的贴图引用名一并改写，Unity 导入即可自动链接贴图（与美术直接拖 FBX + 贴图使用一致）。选择文件后立即打开 3D 预览，调整方向/大小后保存提交。</p>
         <div class="cr-form-grid">
           <label class="m-field">上传 3D 模型（仅 FBX）<input type="file" id="cr-model-file" accept=".fbx">
-            <span class="muted small">可单独上传；若预览显示为灰色，说明 FBX 未内嵌贴图，可补充 PNG 贴图</span></label>
-          <label class="m-field">补充贴图（PNG，可选）<input type="file" id="cr-model-texture" accept=".png,image/png">
-            <span class="muted small">作为 FBX 的材质贴图：选择后自动重新预览上色，保存时随 FBX 一起提交</span></label>
+            <span class="muted small">可单独上传；若预览显示为灰色，说明 FBX 未内嵌贴图，可补充贴图</span></label>
           <label class="m-field">复用已有模型 ${selectHtml(refs.reusableModels, modelPrefabId, "cr-model-ref")}</label>
           <label class="m-field">模型缩放<input type="number" id="cr-model-scale" value="${recipe?.modelScale ?? 1}" min="0.01" step="0.05">
             <span class="muted small">实际游戏中的大小（相对原模型尺寸）</span></label>
@@ -1018,6 +1016,27 @@ async function renderRecipeForm(
             <span class="muted small">修正模型朝向（如煎蛋面朝上）</span></label>
           <label class="m-field">在线预览<button type="button" class="m-btn" id="cr-preview-model">👁 预览并调整方向/大小</button>
             <span class="muted small">已保存的模型可随时预览调整；上传新文件则自动预览</span></label>
+        </div>
+        <div class="m-field cr-tex-field">补充贴图（点击格子选择/替换；base_color 必传）
+          <div class="cr-tex-slots">
+            <button type="button" class="cr-tex-slot" data-tex="base_color">
+              <span class="cr-tex-thumb" id="cr-tex-thumb-base_color">＋</span>
+              <span class="cr-tex-name">base_color <b>必传</b></span>
+            </button>
+            <button type="button" class="cr-tex-slot" data-tex="roughness">
+              <span class="cr-tex-thumb" id="cr-tex-thumb-roughness">＋</span>
+              <span class="cr-tex-name">roughness</span>
+            </button>
+            <button type="button" class="cr-tex-slot" data-tex="metallic">
+              <span class="cr-tex-thumb" id="cr-tex-thumb-metallic">＋</span>
+              <span class="cr-tex-name">metallic</span>
+            </button>
+            <button type="button" class="cr-tex-slot" data-tex="normal">
+              <span class="cr-tex-thumb" id="cr-tex-thumb-normal">＋</span>
+              <span class="cr-tex-name">normal</span>
+            </button>
+          </div>
+          <input type="file" id="cr-model-texture" accept=".png,.jpg,.jpeg,image/png,image/jpeg" hidden>
         </div>
       </div>
     </div>
@@ -1048,24 +1067,44 @@ async function renderRecipeForm(
   const modelFileInput = document.getElementById("cr-model-file") as HTMLInputElement | null;
   const modelTextureInput = document.getElementById("cr-model-texture") as HTMLInputElement | null;
 
-  /** 选择文件后待提交的原始 FBX（保存时若有贴图会先内嵌再上传）；null = 未选择新模型。 */
+  /** 选择文件后待提交的原始 FBX（保存时若有贴图会先改写内部贴图引用名再上传）；null = 未选择新模型。 */
   let rawFbx: Uint8Array | null = null;
   let rawFbxName = "";
-  /** 补充的 PNG 贴图（作为 FBX 材质）；null = 未选择。 */
-  let pendingTextureFile: File | null = null;
-  let pendingTextureBytes: Uint8Array | null = null;
+  /** 补充的贴图：按用途类别（base_color 必传，其余可选），点击格子选择/替换。 */
+  type TexClass = import("./fbxTextureRename").TextureClass;
+  interface PendingTexture { file: File; bytes: Uint8Array; url: string }
+  const pendingTextures: Partial<Record<TexClass, PendingTexture>> = {};
+  let currentTexSlot: TexClass | null = null;
 
   const writeAdjustBack = (s: number, r: number): void => {
     if (modelScaleInput) modelScaleInput.value = String(Math.round(s * 100) / 100);
     if (modelRotInput) modelRotInput.value = String(Math.round(r));
   };
 
-  /** 有补充贴图时把 PNG 内嵌进 FBX（浏览器端 fbxFuse），得到彩色 FBX。 */
-  const buildFusedFbx = async (): Promise<Uint8Array | null> => {
+  /** 贴图落盘文件名：{菜名}_{类别}{扩展名}（与后端 SanitizeUploadFileName 结果一致）。 */
+  const texDiskName = (recipeId: string, cls: TexClass, fileName: string): string => {
+    const m = /\.([^.]+)$/.exec(fileName);
+    let ext = m ? "." + m[1].toLowerCase() : ".png";
+    if (ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg") ext = ".png";
+    return `${recipeId}_${cls}${ext}`;
+  };
+
+  /** 当前各类别贴图的落盘文件名映射（菜名标识符为文件名前缀）。 */
+  const texDiskNames = (): Partial<Record<TexClass, string>> => {
+    const rname = (document.getElementById("cr-rec-name") as HTMLInputElement | null)?.value.trim() || "texture";
+    const out: Partial<Record<TexClass, string>> = {};
+    for (const cls of Object.keys(pendingTextures) as TexClass[]) {
+      const t = pendingTextures[cls];
+      if (t) out[cls] = texDiskName(rname, cls, t.file.name);
+    }
+    return out;
+  };
+
+  /** 有补充贴图时改写 FBX 内部贴图引用名为落盘文件名（浏览器端 fbxTextureRename）。 */
+  const buildRenamedFbx = async (): Promise<{ bytes: Uint8Array; renamed: number } | null> => {
     if (!rawFbx) return null;
-    if (!pendingTextureBytes) return rawFbx;
-    const { fuseTextureIntoFbx } = await import("./fbxFuse");
-    return fuseTextureIntoFbx(rawFbx, pendingTextureBytes);
+    const { renameFbxTextureRefs } = await import("./fbxTextureRename");
+    return renameFbxTextureRefs(rawFbx, texDiskNames());
   };
 
   /** 选择 FBX / 补充贴图后：加载中 → 自动打开 3D 预览（贴图作为材质注入）。 */
@@ -1077,15 +1116,16 @@ async function renderRecipeForm(
         rawFbx = new Uint8Array(await f.arrayBuffer());
         rawFbxName = f.name;
       }
-      const fused = await buildFusedFbx();
-      if (!fused) return;
+      const renamed = await buildRenamedFbx();
+      if (!renamed) return;
+      const baseTex = pendingTextures.base_color;
       const { openModelPreview } = await import("./modelPreview");
       openModelPreview({
         title: rawFbxName,
         resourceBase: "",
         modelFileName: rawFbxName,
-        localBuffer: fused.buffer.slice(fused.byteOffset, fused.byteOffset + fused.byteLength) as ArrayBuffer,
-        localTextures: pendingTextureFile ? [pendingTextureFile] : undefined,
+        localBuffer: renamed.bytes.buffer.slice(renamed.bytes.byteOffset, renamed.bytes.byteOffset + renamed.bytes.byteLength) as ArrayBuffer,
+        localTextures: baseTex ? [baseTex.file] : undefined,
         scale: Number(modelScaleInput?.value) || 1,
         rotationY: Number(modelRotInput?.value) || 0,
         onAdjust: writeAdjustBack,
@@ -1098,12 +1138,26 @@ async function renderRecipeForm(
 
   modelFileInput?.addEventListener("change", openLocalPreview);
 
-  // 补充 PNG 贴图：作为 FBX 材质；已选 FBX 时自动重新预览上色
+  // 补充贴图：4 个类别格子，点击选择/替换该类别贴图；已选 FBX 时自动重新预览上色
+  document.querySelectorAll<HTMLButtonElement>(".cr-tex-slot").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentTexSlot = (btn.dataset.tex as TexClass) ?? null;
+      if (!currentTexSlot || !modelTextureInput) return;
+      modelTextureInput.value = "";
+      modelTextureInput.click();
+    });
+  });
   modelTextureInput?.addEventListener("change", () => {
+    const file = modelTextureInput.files?.[0];
+    const cls = currentTexSlot;
+    if (!file || !cls) return;
     void withBusy("正在加载贴图…", async () => {
-      const tf = modelTextureInput.files?.[0] ?? null;
-      pendingTextureFile = tf;
-      pendingTextureBytes = tf ? new Uint8Array(await tf.arrayBuffer()) : null;
+      const old = pendingTextures[cls];
+      if (old) URL.revokeObjectURL(old.url);
+      const url = URL.createObjectURL(file);
+      pendingTextures[cls] = { file, bytes: new Uint8Array(await file.arrayBuffer()), url };
+      const thumb = document.getElementById("cr-tex-thumb-" + cls);
+      if (thumb) thumb.innerHTML = `<img src="${url}" alt="${cls}">`;
       if (rawFbx) openLocalPreview();
     });
   });
@@ -1214,12 +1268,23 @@ async function renderRecipeForm(
           rawFbx = new Uint8Array(await modelFile.arrayBuffer());
           rawFbxName = modelFile.name;
         }
-        // 有补充 PNG 贴图时先内嵌进 FBX（作为模型材质），再连同贴图一起上传；
-        // 服务端会用该 PNG 生成材质球并赋给模型（ApplyTextureMaterial）。
-        const fused = (await buildFusedFbx()) ?? rawFbx;
-        const uploads = [{ fileName: rawFbxName, base64: await bytesToBase64(fused) }];
-        if (pendingTextureFile && pendingTextureBytes) {
-          uploads.push({ fileName: pendingTextureFile.name, base64: await bytesToBase64(pendingTextureBytes) });
+        // base_color 彩色贴图必传（否则 Unity 丢失贴图索引、模型灰色）
+        if (!pendingTextures.base_color) {
+          setStatus("请先在 base_color 格子中选择彩色贴图。", false);
+          return;
+        }
+        // 贴图重命名为 {菜名}_{类别}.png，并把 FBX 内部贴图引用名一并改写，再连同贴图一起上传；
+        // Unity 导入 FBX 时按引用名自动把贴图链接进内嵌材质（无需额外材质球）。
+        const renamedRes = (await buildRenamedFbx()) ?? { bytes: rawFbx, renamed: 0 };
+        if (renamedRes.renamed === 0) {
+          alert("警告：FBX 中未找到可改写的贴图引用（可能不是二进制 FBX 或不含贴图引用），贴图引用名未修改。");
+        }
+        const uploads = [{ fileName: rawFbxName, base64: await bytesToBase64(renamedRes.bytes) }];
+        const diskNames = texDiskNames();
+        for (const cls of Object.keys(pendingTextures) as TexClass[]) {
+          const t = pendingTextures[cls];
+          const diskName = diskNames[cls];
+          if (t && diskName) uploads.push({ fileName: diskName, base64: await bytesToBase64(t.bytes) });
         }
         await api.uploadCustomRecipeModelFiles(setName, actualPath, uploads);
       }
