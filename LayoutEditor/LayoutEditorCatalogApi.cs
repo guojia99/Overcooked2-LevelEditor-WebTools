@@ -200,6 +200,9 @@ public static class LayoutEditorCatalogApi
                     nameEn = en,
                     assetPath = path,
                     cookingStep = step,
+                    platingStep = isCustom && custom.platingStepSO != null
+                        ? Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(custom.platingStepSO))
+                        : "",
                     ingredients = ings,
                     compositionIds = compositionIds,
                     ingredientCount = ingCount,

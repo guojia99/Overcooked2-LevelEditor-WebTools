@@ -1,0 +1,120 @@
+import { navHtml } from "../nav";
+import { S } from "./state";
+
+/** 布局视图路由标记（由 URL hash 决定，模块加载时计算）。 */
+export const MANAGE_ACTIVE = /^#\/manage/.test(location.hash);
+export const CUSTOM_RECIPES_ACTIVE = /^#\/custom-recipes/.test(location.hash);
+
+/** 全部 DOM 引用（buildLayoutDom 在布局视图填充；各模块禁止顶层访问 DOM，只在函数体内使用）。
+ *  与拆分前 `document.getElementById(...) as HTMLCanvasElement` 等价：视为非空，直接使用。 */
+export const dom = {
+  app: null as unknown as HTMLElement,
+  sceneSelect: null as unknown as HTMLSelectElement,
+  statusEl: null as unknown as HTMLElement,
+  paletteCats: null as unknown as HTMLElement,
+  canvas: null as unknown as HTMLCanvasElement,
+  ctx: null as unknown as CanvasRenderingContext2D,
+  detailEl: null as unknown as HTMLElement,
+  ctxMenuEl: null as unknown as HTMLElement,
+  pickTipEl: null as unknown as HTMLElement,
+  movePickBar: null as unknown as HTMLElement,
+  floorBar: null as unknown as HTMLElement,
+};
+
+/** 布局视图的完整 DOM 模板 + 元素引用填充（仅 layout 视图调用；manage/custom-recipes 返回空）。 */
+export function buildLayoutDom(): void {
+  dom.app = document.getElementById("app")!;
+  if (MANAGE_ACTIVE || CUSTOM_RECIPES_ACTIVE) return;
+  document.body.classList.remove("manage-bg");
+  dom.app.innerHTML = `
+  ${navHtml("layout")}
+  <div class="toolbar">
+    <div class="toolbar-row">
+      <button id="btn-reload" title="重新加载当前场景">🔄 重新加载</button>
+      <button id="btn-save" class="primary" title="将布局写回 Unity">💾 写回 Unity</button>
+      <button id="btn-save-items" class="primary" title="仅写回核心物品（不修改地板、背景、装饰）">🎯 仅核心物品</button>
+      <span class="toolbar-sep"></span>
+      <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
+      <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
+      <button id="btn-level-config" type="button" title="配置各玩家分数">📊 分数配置</button>
+      <button id="btn-level-audio" type="button" title="配置关卡音频">🔊 音频</button>
+      <button id="btn-summary" type="button" title="查看关卡菜谱汇总并一键导出图片">📋 汇总</button>
+      <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">📥 同步布局…</button>
+      <span id="status" class="status">连接中…</span>
+    </div>
+    <div class="toolbar-row">
+      <div class="layer-tabs" id="layer-tabs">
+        <button type="button" data-layer="decor" class="layer-tab">🎀 装饰层</button>
+        <button type="button" data-layer="items" class="layer-tab active">📦 核心层</button>
+        <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板层</button>
+        <button type="button" data-layer="background" class="layer-tab">🌊 背景层</button>
+        <button type="button" data-layer="move" class="layer-tab">🎬 移动层</button>
+      </div>
+      <span class="toolbar-sep"></span>
+      <div class="vis-wrap">
+        <button type="button" id="btn-visibility" title="控制当前层显示哪些类别的内容">👁 图层显示</button>
+        <div id="vis-popover" class="vis-popover hidden">
+          <div class="vis-title">当前层显示：</div>
+          <label><input type="checkbox" data-vcat="items" checked /> 🎯 核心物品</label>
+          <label><input type="checkbox" data-vcat="decor" checked /> 🎀 装饰</label>
+          <label><input type="checkbox" data-vcat="floors" checked /> 🗺️ 地板</label>
+          <label><input type="checkbox" data-vcat="background" checked /> 🌊 背景 / 水面</label>
+          <div class="vis-note">关闭的类别将不显示、也不可点选（仅影响当前层）</div>
+        </div>
+      </div>
+      <label class="toolbar-check" title="距半格网格 0.1 内自动吸附到网格，其余位置按所选精度自由摆放"><input type="checkbox" id="snap-grid" checked /> 🧲 吸附格子</label>
+      <label class="toolbar-check">🎯 精度
+        <select id="snap-free-step" title="自由摆放 / 微移的精度">
+          <option value="0.1">0.1</option>
+          <option value="0.01" selected>0.01</option>
+          <option value="0.001">0.001</option>
+        </select>
+      </label>
+      <label class="toolbar-check"><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
+      <label class="toolbar-check"><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
+      <label class="toolbar-check" title="勾选后允许工作台重叠时仍然写回"><input type="checkbox" id="allow-ws-overlap" /> ⚠ 允许工作台重叠</label>
+      <label class="toolbar-check" title="补齐锅具时自动分配中间产物（煎肉排/面糊/炸物等）到对应锅具的 allowedIngredientSOs"><input type="checkbox" id="chk-auto-intermediates" ${S.autoIntermediates ? "checked" : ""} /> 🧩 自动中间产物</label>
+    </div>
+  </div>
+  <div class="main">
+    <aside class="palette" id="palette-panel">
+      <div class="palette-header">
+        <input type="search" id="palette-search" placeholder="搜索 prefab…" />
+      </div>
+      <div class="palette-cats" id="palette-cats"></div>
+    </aside>
+    <button type="button" class="panel-collapse" id="btn-collapse-palette" title="收起 / 展开物品栏">◀</button>
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <div id="item-detail" class="item-detail hidden" role="dialog"></div>
+      <div id="ctx-menu" class="ctx-menu hidden" role="dialog"></div>
+      <div id="pick-tip" class="pick-tip hidden" role="dialog"></div>
+      <div id="move-pick-bar" class="move-pick-bar hidden" role="dialog"></div>
+      <div id="floor-bar" class="floor-bar hidden"></div>
+      <div class="hint">拖拽空白框选 · Shift 加选 · Ctrl+C/V/X 复制/粘贴/裁切 · Ctrl+Z 撤回 · Ctrl+Shift+Z 重做 · 重叠点击弹出选择 · 空格+拖动平移 · 右键微移/旋转/改参数 · Del 删除 · R/Shift+R 旋转90° · 滚轮缩放</div>
+    </div>
+    <button type="button" class="panel-collapse" id="btn-collapse-items" title="收起 / 展开物品清单">▶</button>
+    <div class="panel-resizer" id="panel-resizer" title="拖动调整宽度（最长占一半）"></div>
+    <aside class="scene-items" id="items-panel">
+      <div class="scene-items-header">
+        <div class="panel-tabs" id="panel-tabs">
+          <button type="button" data-tab="items" class="panel-tab active">📋 物品清单</button>
+          <button type="button" data-tab="move" class="panel-tab">🎯 移动控制 <span id="move-control-count" class="move-control-count"></span></button>
+        </div>
+        <span id="scene-items-count" class="scene-items-count"></span>
+      </div>
+      <div class="scene-items-body" id="scene-items-body"></div>
+    </aside>
+  </div>
+`;
+  dom.sceneSelect = document.getElementById("scene-select") as HTMLSelectElement;
+  dom.statusEl = document.getElementById("status")!;
+  dom.paletteCats = document.getElementById("palette-cats")!;
+  dom.canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  dom.ctx = (dom.canvas && dom.canvas.getContext("2d")) as CanvasRenderingContext2D;
+  dom.detailEl = document.getElementById("item-detail")!;
+  dom.ctxMenuEl = document.getElementById("ctx-menu")!;
+  dom.pickTipEl = document.getElementById("pick-tip")!;
+  dom.movePickBar = document.getElementById("move-pick-bar")!;
+  dom.floorBar = document.getElementById("floor-bar")!;
+}

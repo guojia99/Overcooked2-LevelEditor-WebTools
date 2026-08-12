@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-06T06:49:22.039Z",
+  "generatedAt": "2026-08-12T06:45:35.273Z",
   "schemaVersion": 3,
   "itemCount": 76,
   "recipes": [
@@ -2200,9 +2200,10 @@
       "ingredients": [
         "Banana",
         "Banana",
+        "SmoothiePineapple",
         "SmoothiePineapple"
       ],
-      "ingredientCount": 3,
+      "ingredientCount": 4,
       "cookingStepCount": 1,
       "score": 100,
       "isCustom": false,
@@ -2219,6 +2220,7 @@
           "ingredients": [
             "Banana",
             "Banana",
+            "SmoothiePineapple",
             "SmoothiePineapple"
           ]
         }

@@ -30,6 +30,11 @@ namespace LevelEditorStub
             public string assetPath;
             public float scale = 1f;
             public float rotationY;
+            public float rotationX;
+            public float rotationZ;
+            public float positionX;
+            public float positionY;
+            public float positionZ;
         }
     }
 }

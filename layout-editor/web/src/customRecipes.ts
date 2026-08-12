@@ -42,7 +42,6 @@ function shell(app: HTMLElement, title: string): HTMLElement {
       <span class="status" id="cr-status"></span>
       <span style="flex:1"></span>
     </div>
-    <div class="cr-warn-banner">⚠️ 自定义菜谱功能开发中，请勿在正式关卡中使用</div>
     <div class="manage-content" id="cr-content"></div>
   `;
   wireNav((target) => {
@@ -123,9 +122,10 @@ function foodIconImg(kind: "ingredients" | "recipes", id: string | undefined): s
 }
 
 /** 菜谱 models 目录的 3D 资源访问基地址（目录式，FBX 贴图按相对路径拼接）。
- *  目录结构：custom_recipes/<分类>/models/（models 与菜谱资产同级，在分类目录下）。 */
+ *  目录结构：custom_recipes/<分类>/models/<菜谱id>/（每个菜谱一个文件夹）。 */
 function modelResourceBase(recipeAssetPath: string): string {
-  const dir = recipeAssetPath.replace(/\/[^/]+\.asset$/, "") + "/models";
+  const id = recipeAssetPath.split("/").pop()?.replace(/\.asset$/, "") ?? "model";
+  const dir = recipeAssetPath.replace(/\/[^/]+\.asset$/, "") + "/models/" + encodeURIComponent(id);
   const b64 = btoa(unescape(encodeURIComponent(dir)))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
@@ -146,7 +146,10 @@ const REFERENCE_MODEL = {
 async function openRecipeModelPreview(
   recipeAssetPath: string,
   title: string,
-  extra?: { scale?: number; rotationY?: number; onAdjust?: (scale: number, rotationY: number) => void }
+  extra?: Partial<import("./modelPreview").ModelTransformValues> & {
+    onAdjust?: (t: import("./modelPreview").ModelTransformValues) => void
+    unitySize?: { x: number; y: number; z: number; minY: number }
+  }
 ): Promise<void> {
   try {
     const files = await api.fetchCustomRecipeModelFiles(recipeAssetPath);
@@ -164,7 +167,13 @@ async function openRecipeModelPreview(
       resourceBase: modelResourceBase(recipeAssetPath),
       modelFileName: model,
       scale: extra?.scale,
+      rotationX: extra?.rotationX,
       rotationY: extra?.rotationY,
+      rotationZ: extra?.rotationZ,
+      positionX: extra?.positionX,
+      positionY: extra?.positionY,
+      positionZ: extra?.positionZ,
+      unitySize: extra?.unitySize,
       onAdjust: extra?.onAdjust,
       remoteTextures: texUrls,
       referenceUrl: REFERENCE_MODEL.url,
@@ -451,7 +460,27 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     document.querySelectorAll<HTMLButtonElement>("[data-preview]").forEach((b) =>
       b.addEventListener("click", () => {
         const path = b.dataset.preview!;
-        void openRecipeModelPreview(path, path.split("/").pop() ?? path);
+        // 回显已保存的变换 + 按 Unity 实际尺寸校准自动适配
+        const r = recipes.find((x) => x.assetPath === path);
+        const s = r && r.modelScale > 0 ? r.modelScale : 1;
+        void openRecipeModelPreview(path, path.split("/").pop() ?? path, {
+          scale: r?.modelScale ?? 1,
+          rotationX: r?.modelRotationX ?? 0,
+          rotationY: r?.modelRotationY ?? 0,
+          rotationZ: r?.modelRotationZ ?? 0,
+          positionX: r?.modelPositionX ?? 0,
+          positionY: r?.modelPositionY ?? 0,
+          positionZ: r?.modelPositionZ ?? 0,
+          unitySize:
+            r && r.boundsSizeX != null && r.boundsSizeY != null && r.boundsSizeZ != null
+              ? {
+                  x: r.boundsSizeX / s,
+                  y: r.boundsSizeY / s,
+                  z: r.boundsSizeZ / s,
+                  minY: ((r.boundsMinY ?? 0) - (r.modelPositionY ?? 0)) / s,
+                }
+              : undefined,
+        });
       })
     );
     document.querySelectorAll<HTMLButtonElement>("[data-del]").forEach((b) =>
@@ -545,7 +574,7 @@ async function renderRecipeForm(
   const nameEn = recipe?.nameEn ?? "";
   const categoryId = recipe?.category ?? presets?.category ?? (config.categories?.length > 0 ? config.categories[0].id : "");
   const score = recipe?.score ?? presets?.score ?? 0;
-  const type = recipe?.type ?? (presets?.score === 0 ? "Cooked" : "Cooked");
+  const type = recipe?.type ?? (presets?.score === 0 ? "Cooked" : "Composite");
   const cookingStepId = recipe?.cookingStepId ?? "";
   const cookingStepIconId = "";
   const platingStepId = recipe?.platingStepId ?? "";
@@ -974,9 +1003,10 @@ async function renderRecipeForm(
       </div>
       <div class="cr-section">
         <div class="m-section-title">烹饪与装盘</div>
+        <p class="modal-hint" id="cr-step-hint">按类型配置：<b>Cooked（烹饪）</b>需烹饪步骤与装盘容器；<b>Mixed（搅拌）</b>只需搅拌与装盘容器；<b>Composite（组合）</b>纯组装，无需烹饪与装盘。</p>
         <div class="cr-form-grid">
           <label class="m-field" id="cr-cook-step-field">烹饪步骤 ${selectHtml(refs.cookingSteps, cookingStepId, "cr-cook-step")}</label>
-          <label class="m-field">烹饪图标 ${selectHtml(refs.icons, cookingStepIconId, "cr-cook-icon")}</label>
+          <label class="m-field" id="cr-cook-icon-field">烹饪图标 ${selectHtml(refs.icons, cookingStepIconId, "cr-cook-icon")}</label>
           <label class="m-field" id="cr-cook-prog-field">烹饪程度
             <select id="cr-cook-prog" class="m-select">
               <option value="0">Raw（生）</option>
@@ -984,7 +1014,7 @@ async function renderRecipeForm(
               <option value="2">Burnt（焦）</option>
             </select>
           </label>
-          <label class="m-field">装盘容器 ${selectHtml(
+          <label class="m-field" id="cr-plate-field">装盘容器 ${selectHtml(
             refs.platingContainers?.length
               ? refs.platingContainers
               : (refs.platingSteps ?? []).filter((e) => e.id === "Plate" || e.id === "Glass"),
@@ -1010,12 +1040,24 @@ async function renderRecipeForm(
           <label class="m-field">上传 3D 模型（仅 FBX）<input type="file" id="cr-model-file" accept=".fbx">
             <span class="muted small">可单独上传；若预览显示为灰色，说明 FBX 未内嵌贴图，可补充贴图</span></label>
           <label class="m-field">复用已有模型 ${selectHtml(refs.reusableModels, modelPrefabId, "cr-model-ref")}</label>
-          <label class="m-field">模型缩放<input type="number" id="cr-model-scale" value="${recipe?.modelScale ?? 1}" min="0.01" step="0.05">
-            <span class="muted small">实际游戏中的大小（相对原模型尺寸）</span></label>
-          <label class="m-field">Y 轴旋转（度）<input type="number" id="cr-model-rot" value="${recipe?.modelRotationY ?? 0}" step="5">
-            <span class="muted small">修正模型朝向（如煎蛋面朝上）</span></label>
+          <label class="m-field">模型缩放<input type="number" id="cr-model-scale" value="${recipe?.modelScale ?? 1}" min="0.0001" step="0.001">
+            <span class="muted small">实际游戏中的大小（相对原模型尺寸；单位制异常的模型可为极小值如 0.0037）</span></label>
+          <label class="m-field">旋转 X（度）<input type="number" id="cr-model-rot-x" value="${recipe?.modelRotationX ?? 0}" step="5">
+            <span class="muted small">前后翻转</span></label>
+          <label class="m-field">旋转 Y（度）<input type="number" id="cr-model-rot-y" value="${recipe?.modelRotationY ?? 0}" step="5">
+            <span class="muted small">俯视转向</span></label>
+          <label class="m-field">旋转 Z（度）<input type="number" id="cr-model-rot-z" value="${recipe?.modelRotationZ ?? 0}" step="5">
+            <span class="muted small">侧倒修正；模型竖立时（如煎蛋）用 X/Z 旋转摆平</span></label>
+          <label class="m-field">位置 X<input type="number" id="cr-model-pos-x" value="${recipe?.modelPositionX ?? 0}" step="0.05">
+            <span class="muted small">左右偏移</span></label>
+          <label class="m-field">位置 Y（底面高度）<input type="number" id="cr-model-pos-y" value="${recipe?.modelPositionY ?? 0}" step="0.05">
+            <span class="muted small">模型底面相对盘面的高度，向上为正</span></label>
+          <label class="m-field">位置 Z<input type="number" id="cr-model-pos-z" value="${recipe?.modelPositionZ ?? 0}" step="0.05">
+            <span class="muted small">前后偏移</span></label>
           <label class="m-field">在线预览<button type="button" class="m-btn" id="cr-preview-model">👁 预览并调整方向/大小</button>
             <span class="muted small">已保存的模型可随时预览调整；上传新文件则自动预览</span></label>
+          <label class="m-field">模型诊断<button type="button" class="m-btn" id="cr-diagnose">🔍 检查装盘链路</button>
+            <span class="muted small">模型在游戏中不显示时，检查引用/网格/材质与匹配链路</span></label>
         </div>
         <div class="m-field cr-tex-field">补充贴图（点击格子选择/替换；base_color 必传）
           <div class="cr-tex-slots">
@@ -1049,23 +1091,83 @@ async function renderRecipeForm(
 
   function updateTypeFields(): void {
     const sel = (document.getElementById("cr-type") as HTMLSelectElement)?.value ?? "Composite";
-    const cookStepField = document.getElementById("cr-cook-step-field");
-    const cookProgField = document.getElementById("cr-cook-prog-field");
-    const mixIconField = document.getElementById("cr-mix-icon-field");
-    const mixProgField = document.getElementById("cr-mix-prog-field");
-    if (cookStepField) cookStepField.style.display = sel === "Composite" ? "none" : "";
-    if (cookProgField) cookProgField.style.display = sel === "Composite" ? "none" : "";
-    if (mixIconField) mixIconField.style.display = sel === "Mixed" ? "" : "none";
-    if (mixProgField) mixProgField.style.display = sel === "Mixed" ? "" : "none";
+    const showCook = sel === "Cooked";
+    const showPlate = sel !== "Composite";
+    const showMix = sel === "Mixed";
+    const set = (id: string, show: boolean): void => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = show ? "" : "none";
+    };
+    set("cr-cook-step-field", showCook);
+    set("cr-cook-icon-field", showCook);
+    set("cr-cook-prog-field", showCook);
+    set("cr-plate-field", showPlate);
+    set("cr-mix-icon-field", showMix);
+    set("cr-mix-prog-field", showMix);
     renderPreview();
   }
 
   document.getElementById("cr-add-comp")?.addEventListener("click", () => openCompositionPicker());
 
   const modelScaleInput = document.getElementById("cr-model-scale") as HTMLInputElement | null;
-  const modelRotInput = document.getElementById("cr-model-rot") as HTMLInputElement | null;
+  const modelRotYInput = document.getElementById("cr-model-rot-y") as HTMLInputElement | null;
+  const modelRotXInput = document.getElementById("cr-model-rot-x") as HTMLInputElement | null;
+  const modelRotZInput = document.getElementById("cr-model-rot-z") as HTMLInputElement | null;
+  const modelPosXInput = document.getElementById("cr-model-pos-x") as HTMLInputElement | null;
+  const modelPosYInput = document.getElementById("cr-model-pos-y") as HTMLInputElement | null;
+  const modelPosZInput = document.getElementById("cr-model-pos-z") as HTMLInputElement | null;
   const modelFileInput = document.getElementById("cr-model-file") as HTMLInputElement | null;
   const modelTextureInput = document.getElementById("cr-model-texture") as HTMLInputElement | null;
+
+  /** 模型变换（缩放/三轴旋转/三轴位置）。 */
+  interface ModelTransform {
+    scale: number;
+    rotationX: number;
+    rotationY: number;
+    rotationZ: number;
+    positionX: number;
+    positionY: number;
+    positionZ: number;
+  }
+
+  const readModelTransform = (): ModelTransform => {
+    const num = (el: HTMLInputElement | null, fallback: number): number => {
+      const n = Number(el?.value);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    return {
+      scale: num(modelScaleInput, 1),
+      rotationX: num(modelRotXInput, 0),
+      rotationY: num(modelRotYInput, 0),
+      rotationZ: num(modelRotZInput, 0),
+      positionX: num(modelPosXInput, 0),
+      positionY: num(modelPosYInput, 0),
+      positionZ: num(modelPosZInput, 0),
+    };
+  };
+
+  const writeModelTransform = (t: ModelTransform): void => {
+    if (modelScaleInput) modelScaleInput.value = String(Math.round(t.scale * 10000) / 10000);
+    if (modelRotXInput) modelRotXInput.value = String(Math.round(t.rotationX));
+    if (modelRotYInput) modelRotYInput.value = String(Math.round(t.rotationY));
+    if (modelRotZInput) modelRotZInput.value = String(Math.round(t.rotationZ));
+    if (modelPosXInput) modelPosXInput.value = String(Math.round(t.positionX * 100) / 100);
+    if (modelPosYInput) modelPosYInput.value = String(Math.round(t.positionY * 100) / 100);
+    if (modelPosZInput) modelPosZInput.value = String(Math.round(t.positionZ * 100) / 100);
+  };
+
+  /** 按 Unity 实际导入尺寸（菜谱摘要的包围盒 ÷ 已保存缩放）反推模型原始尺寸，
+   *  供自动适配校准（three.js 预览尺寸可能与 Unity 不一致）。 */
+  const computeUnitySize = (): { x: number; y: number; z: number; minY: number } | undefined => {
+    if (!recipe || recipe.boundsSizeX == null || recipe.boundsSizeY == null || recipe.boundsSizeZ == null) return undefined;
+    const s = recipe.modelScale > 0 ? recipe.modelScale : 1;
+    return {
+      x: recipe.boundsSizeX / s,
+      y: recipe.boundsSizeY / s,
+      z: recipe.boundsSizeZ / s,
+      minY: ((recipe.boundsMinY ?? 0) - (recipe.modelPositionY ?? 0)) / s,
+    };
+  };
 
   /** 选择文件后待提交的原始 FBX（保存时若有贴图会先改写内部贴图引用名再上传）；null = 未选择新模型。 */
   let rawFbx: Uint8Array | null = null;
@@ -1076,9 +1178,8 @@ async function renderRecipeForm(
   const pendingTextures: Partial<Record<TexClass, PendingTexture>> = {};
   let currentTexSlot: TexClass | null = null;
 
-  const writeAdjustBack = (s: number, r: number): void => {
-    if (modelScaleInput) modelScaleInput.value = String(Math.round(s * 100) / 100);
-    if (modelRotInput) modelRotInput.value = String(Math.round(r));
+  const writeAdjustBack = (t: ModelTransform): void => {
+    writeModelTransform(t);
   };
 
   /** 贴图落盘文件名：{菜名}_{类别}{扩展名}（与后端 SanitizeUploadFileName 结果一致）。 */
@@ -1126,8 +1227,8 @@ async function renderRecipeForm(
         modelFileName: rawFbxName,
         localBuffer: renamed.bytes.buffer.slice(renamed.bytes.byteOffset, renamed.bytes.byteOffset + renamed.bytes.byteLength) as ArrayBuffer,
         localTextures: baseTex ? [baseTex.file] : undefined,
-        scale: Number(modelScaleInput?.value) || 1,
-        rotationY: Number(modelRotInput?.value) || 0,
+        ...readModelTransform(),
+        unitySize: computeUnitySize(),
         onAdjust: writeAdjustBack,
         referenceUrl: REFERENCE_MODEL.url,
         referenceFormat: REFERENCE_MODEL.format,
@@ -1171,12 +1272,68 @@ async function renderRecipeForm(
     if (!assetPath) return;
     void withBusy("正在加载 3D 预览（首次加载较慢）…", async () => {
       await openRecipeModelPreview(assetPath, recipeName || (assetPath.split("/").pop() ?? assetPath), {
-        scale: Number(modelScaleInput?.value) || 1,
-        rotationY: Number(modelRotInput?.value) || 0,
+        ...readModelTransform(),
+        unitySize: computeUnitySize(),
         onAdjust: writeAdjustBack,
       });
     });
   });
+  // 模型诊断：检查引用/渲染完整性/匹配链路（只读），结果用弹窗展示并支持复制
+  document.getElementById("cr-diagnose")?.addEventListener("click", () => {
+    if (!assetPath) {
+      alert("保存菜谱后才能诊断。");
+      return;
+    }
+    void withBusy("正在诊断…", async () => {
+      try {
+        const d = await api.diagnoseCustomRecipe(assetPath);
+        const lines: string[] = [];
+        if (d.error) lines.push(`错误：${d.error}`);
+        lines.push(`模型引用：${d.modelDirect ? "model 直引 ✓" : "无直引"}${d.modelSOBased ? "（另有 modelSO）" : ""}`);
+        lines.push(`模型路径：${d.modelPath || "—"}${d.modelPath ? `（${d.modelType}）` : ""}`);
+        lines.push(`模型结构：${d.modelStructure || "—"}`);
+        lines.push(`渲染器 ${d.rendererCount} 个 · 含网格 ${d.meshCount} 个 · 含材质 ${d.materialCount} 个（网格/材质齐全才可见）`);
+        if (d.boundsSizeX || d.boundsSizeY || d.boundsSizeZ) {
+          const sizes = [["X", d.boundsSizeX], ["Y", d.boundsSizeY], ["Z", d.boundsSizeZ]] as const;
+          const thin = [...sizes].sort((a, b) => a[1] - b[1])[0];
+          lines.push(`Unity 内模型包围盒（含变换）：X ${d.boundsSizeX.toFixed(3)} · Y ${d.boundsSizeY.toFixed(3)} · Z ${d.boundsSizeZ.toFixed(3)}`);
+          lines.push(`薄轴 = ${thin[0]}（${thin[1].toFixed(3)}）：${thin[0] === "Y" ? "模型平躺 ✓" : "模型竖立 ✗，需在预览中用「旋转 90°」或手动设 X/Z 旋转摆平"}；底面 Y = ${d.boundsMinY.toFixed(3)}`);
+        }
+        lines.push(`组成：${d.compositionCount} 项（≥1 才可装盘匹配）`);
+        lines.push(`烹饪步骤：${d.cookingStepSet ? "已配置 ✓" : "未配置"} · 装盘步骤：${d.platingStepSet ? "已配置 ✓" : "未配置"}`);
+        lines.push(`装盘模型 GetModel：${d.platingPrefabSet ? "非空 ✓" : "为空 ✗（游戏中会显示空盘子）"}`);
+        lines.push(`变换：缩放 ${d.modelScale} · 旋转 X/Y/Z ${d.modelRotationX}°/${d.modelRotationY}°/${d.modelRotationZ}° · 位置 ${d.modelPositionX}/${d.modelPositionY}/${d.modelPositionZ}`);
+        openDiagnoseModal(lines);
+      } catch (e) {
+        openDiagnoseModal([`诊断失败：${(e as Error).message || String(e)}`]);
+      }
+    });
+  });
+
+  /** 装盘链路诊断结果弹窗：支持一键复制全部数据。 */
+  function openDiagnoseModal(lines: string[]): void {
+    const text = lines.join("\n");
+    const body = `<div class="diag-scroll"><pre class="diag-text">${esc(text)}</pre></div>`;
+    openModal(
+      "装盘链路诊断",
+      body,
+      `<button type="button" class="m-btn" id="diag-copy">📋 复制链路数据</button>
+       <button type="button" class="m-btn primary" data-cancel>关闭</button>`
+    );
+    document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+    const copyBtn = document.getElementById("diag-copy");
+    copyBtn?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = "已复制 ✓";
+      } catch {
+        copyBtn.textContent = "复制失败";
+      }
+      setTimeout(() => {
+        if (copyBtn) copyBtn.textContent = "📋 复制链路数据";
+      }, 2000);
+    });
+  }
   // 「+ 新建中间产物」：中间产物也是完整菜谱（图标/模型/装盘容器均可配），
   // 直接进入完整新建表单（预填分数 0），保存后回到列表即可被引用。
   document.getElementById("cr-new-sub")?.addEventListener("click", () =>
@@ -1221,6 +1378,7 @@ async function renderRecipeForm(
     if (!IDENT_RE.test(rname)) return alert("标识符仅允许英文字母/数字/下划线，且不能以数字开头");
 
     const typeVal = (document.getElementById("cr-type") as HTMLSelectElement).value;
+    const modelT = readModelTransform();
     const dto: CustomRecipeEdit = {
       setName: isEdit ? undefined : setName,
       assetPath: isEdit ? assetPath! : undefined,
@@ -1238,8 +1396,13 @@ async function renderRecipeForm(
       modelPrefabId: (document.getElementById("cr-model-ref") as HTMLSelectElement)?.value ?? "",
       cookingProgress: Number((document.getElementById("cr-cook-prog") as HTMLSelectElement)?.value ?? "1") || 1,
       mixingProgress: Number((document.getElementById("cr-mix-prog") as HTMLSelectElement)?.value ?? "1") || 1,
-      modelScale: Number((document.getElementById("cr-model-scale") as HTMLInputElement)?.value) || 1,
-      modelRotationY: Number((document.getElementById("cr-model-rot") as HTMLInputElement)?.value) || 0,
+      modelScale: modelT.scale,
+      modelRotationX: modelT.rotationX,
+      modelRotationY: modelT.rotationY,
+      modelRotationZ: modelT.rotationZ,
+      modelPositionX: modelT.positionX,
+      modelPositionY: modelT.positionY,
+      modelPositionZ: modelT.positionZ,
     };
 
     showBusy("保存中…");
@@ -1289,7 +1452,9 @@ async function renderRecipeForm(
         await api.uploadCustomRecipeModelFiles(setName, actualPath, uploads);
       }
 
-      setStatus(isEdit ? "已更新菜谱" : "已创建菜谱");
+      setStatus(
+        `${isEdit ? "已更新菜谱" : "已创建菜谱"} · 模型变换已保存：缩放 ${modelT.scale} · 旋转 ${modelT.rotationX}°/${modelT.rotationY}°/${modelT.rotationZ}° · 位置 ${modelT.positionX}/${modelT.positionY}/${modelT.positionZ}（重新打开可回显，游戏内直接生效）`
+      );
       // 模型已在选择文件时预览并调整过，保存后直接返回列表
       void renderRecipeList(app, setName);
     } catch (e) {

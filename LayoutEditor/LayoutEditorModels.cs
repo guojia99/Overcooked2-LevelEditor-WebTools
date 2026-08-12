@@ -195,6 +195,139 @@ public class LayoutItemDto
 }
 
 [Serializable]
+public class MoveGroupWaypointDto
+{
+    public string id;
+    /** World XZ of the waypoint. The bakery converts to per-item local curve keys. */
+    public float x;
+    public float z;
+    /** Keyframe time in seconds inside the event clip (imported levels only;
+     * web-authored routes use uniform intervals). */
+    public bool hasTime;
+    public float t;
+    /** Dwell seconds after arriving at this waypoint before continuing (hold). */
+    public float wait;
+    /** Seconds to travel from this waypoint to the next (default: event interval). */
+    public float segmentSeconds;
+}
+
+[Serializable]
+public class MoveGroupEventDto
+{
+    public string id;
+    /** "move" | "wait" | "lift" | "drop" — waits bake as pure queue delays (no
+     * controller state); lift/drop are pure-Y clips (no route). */
+    public string type;
+    /** Auto-generated when empty ("Move1".."MoveN"), matching original level naming. */
+    public string triggerName;
+    /** Seconds between the previous trigger and this one (TriggerQueue delays[i]). */
+    public float delay;
+    /** Seconds per waypoint segment inside this event's move clip (uniform routes). */
+    public float intervalSeconds;
+    /** Ordered waypoint route (contiguous slice of the group waypoint list). */
+    public string[] waypointIds;
+    /** Loop the clip itself (loopTime=1, no exit transition) — scrolling patterns
+     * like 3_4/6_3 Islands. Only honored on the last move event. */
+    public bool loop;
+    /** Ping-pong loop: move to the end of the route, then back (wrapMode=PingPong).
+     * Mutually exclusive with loop; only honored on the last move event. */
+    public bool pingpong;
+    /** lift/drop: target Y members rise/fall to (absolute; drop default 0). */
+    public float yTo;
+    /** Vertical motion seconds: lift/drop clip duration, or move event rise time. */
+    public float liftSeconds;
+    /** move events: lift height above the base before moving (0 = no lift). */
+    public float liftHeight;
+    /** move events: seconds to lower back at the end (0 = stays up). */
+    public float dropSeconds;
+}
+
+[Serializable]
+public class MoveGroupMemberOffsetDto
+{
+    public string instanceId;
+    public float x;
+    public float z;
+    /** Phase shift in seconds (looping scroll patterns: the member follows the same
+     * route shifted in time, e.g. 3_4/6_3 islands). Exclusive with x/z. */
+    public float t;
+    /** Bind this member to a specific waypoint id: it holds at that point (+ offset)
+     * for the whole sequence instead of riding the route. */
+    public string followWaypointId;
+    /** Plain-object member display name (imported levels; web display only). */
+    public string displayName;
+    /** Full scene hierarchy path of the member (web shows its child items). */
+    public string hierarchyPath;
+}
+
+[Serializable]
+public class MoveGroupMemberDto
+{
+    public string instanceId;
+    /** Plain-object member display name (imported levels; web display only). */
+    public string displayName;
+    /** Full scene hierarchy path of the member (web shows its child items). */
+    public string hierarchyPath;
+}
+
+[Serializable]
+public class MoveGroupMemberGroupDto
+{
+    public string id;
+    public string name;
+    /** Instance ids of the members in this group (subset of item/floor/object ids). */
+    public string[] memberInstanceIds;
+}
+
+[Serializable]
+public class MoveGroupDto
+{
+    public string id;
+    public string displayName;
+    /** Unity instance ids ("u:xxx"/"new:xxx") of the items driven by this group. */
+    public string[] itemInstanceIds;
+    /** Unity instance ids of the floor (Plane/Quad) objects driven by this group. */
+    public string[] floorInstanceIds;
+    /** Unity instance ids of plain scene objects driven by this group (imported
+     * original levels: island roots, lorry parts, ...). */
+    public string[] objectInstanceIds;
+    /** Per-member local offset from the route (parallel tracks; imported levels). */
+    public MoveGroupMemberOffsetDto[] memberOffsets;
+    /** Member ids that hold still while the route moves (6_3 duplicate-cover trick). */
+    public MoveGroupMemberDto[] memberStatic;
+    /** User-created member groups (organizational; baked as named sub-roots under
+     *  the group root so a later scene import can reconstruct them). */
+    public MoveGroupMemberGroupDto[] memberGroups;
+    /** Seconds after round start before the queue begins (TriggerTimer). */
+    public float startDelay;
+    /** Loop the whole trigger queue (loopWhenFinished + loopDelay). */
+    public bool loop;
+    public float loopDelay;
+    /** Queue waits for the animator's finished trigger before advancing. */
+    public bool waitForFinished;
+    /** External trigger name that starts the queue (empty = auto start). */
+    public string startTrigger;
+    /** External trigger name that cancels the queue. */
+    public string cancelTrigger;
+    /** Trigger broadcast when the whole queue finishes (target = group root). */
+    public string endTrigger;
+    /** Trigger name the animator emits on clip completion (default "AnimationFinished"). */
+    public string finishedTrigger;
+    /** Animator.applyRootMotion. */
+    public bool applyRootMotion;
+    public MoveGroupWaypointDto[] waypoints;
+    public MoveGroupEventDto[] events;
+    /** Backend-owned: hierarchy path of the created "Animated Objects" group root. */
+    public string groupHierarchyPath;
+}
+
+[Serializable]
+public class MoveControlDataDto
+{
+    public MoveGroupDto[] groups;
+}
+
+[Serializable]
 public class LayoutDocumentDto
 {
     public string sceneAssetPath;
@@ -205,6 +338,8 @@ public class LayoutDocumentDto
     public WalkableRectDto[] walkable;
     /** Read-only death configuration (water / goo / fall). */
     public DeathInfoDto deathInfo;
+    /** Movable object movement control (decor + items layer). */
+    public MoveControlDataDto moveControls;
 }
 
 /** A floor/background surface object in the scene. */
@@ -362,6 +497,8 @@ public class RecipeEntryDto
     public string nameEn;
     public string assetPath;
     public string cookingStep;
+    /** 装盘容器 id（Plate / Glass / …；"" = 无），用于关卡编辑器推断容器堆（盘子堆/杯子堆）。 */
+    public string platingStep;
     public string[] ingredients;
     /** Direct composition ids for custom recipes (ingredient ids and/or sub-recipe ids,
      *  "" / null for original recipes). Used by the composition-aware grouping branch. */
@@ -826,9 +963,19 @@ public class CustomRecipeSummaryDto
     public string platingStepId;
     public bool hasIcon;
     public bool hasModel;
-    /** 模型在游戏中的缩放与朝向（应用到 prefab 根节点，运行时直接生效）。 */
+    /** 模型在游戏中的缩放/旋转/位置（应用到 prefab 根节点，运行时直接生效）。 */
     public float modelScale;
     public float modelRotationY;
+    public float modelRotationX;
+    public float modelRotationZ;
+    public float modelPositionX;
+    public float modelPositionY;
+    public float modelPositionZ;
+    /** Unity 导入后的模型包围盒（含配置变换；minY 为底面高度，用于前端按 Unity 实际尺寸校准缩放/朝向）。 */
+    public float boundsMinY;
+    public float boundsSizeX;
+    public float boundsSizeY;
+    public float boundsSizeZ;
 }
 
 [Serializable]
@@ -852,6 +999,11 @@ public class CustomRecipeEditDto
     public int mixingProgress;
     public float modelScale;
     public float modelRotationY;
+    public float modelRotationX;
+    public float modelRotationZ;
+    public float modelPositionX;
+    public float modelPositionY;
+    public float modelPositionZ;
 }
 
 [Serializable]
@@ -882,6 +1034,41 @@ public class CustomRecipeScanDiagDto
     public int scannedCount;
     public int loadedCount;
     public string[] fsAssets;
+}
+
+/// <summary>菜谱模型/装盘链路诊断结果（只读）。</summary>
+[Serializable]
+public class CustomRecipeDiagnoseDto
+{
+    public string assetPath;
+    public string error;
+    public bool modelDirect;
+    public bool modelSOBased;
+    public string modelPath;
+    public string modelType;
+    /** prefab 结构：single-node（旧结构）/ root+child（新结构）/ fbx-direct。 */
+    public string modelStructure;
+    public int rendererCount;
+    public int meshCount;
+    public int materialCount;
+    /** Unity 导入后的模型世界包围盒（min 与 size，用于判断实际朝向/薄轴）。 */
+    public float boundsMinX;
+    public float boundsMinY;
+    public float boundsMinZ;
+    public float boundsSizeX;
+    public float boundsSizeY;
+    public float boundsSizeZ;
+    public int compositionCount;
+    public bool cookingStepSet;
+    public bool platingStepSet;
+    public bool platingPrefabSet;
+    public float modelScale;
+    public float modelRotationY;
+    public float modelRotationX;
+    public float modelRotationZ;
+    public float modelPositionX;
+    public float modelPositionY;
+    public float modelPositionZ;
 }
 
 [Serializable]

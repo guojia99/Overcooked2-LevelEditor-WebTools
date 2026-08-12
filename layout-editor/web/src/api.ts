@@ -676,6 +676,42 @@ export interface CustomRecipeScanDiag {
   fsAssets: string[];
 }
 
+export interface CustomRecipeDiagnose {
+  assetPath: string;
+  error?: string;
+  modelDirect: boolean;
+  modelSOBased: boolean;
+  modelPath?: string;
+  modelType?: string;
+  modelStructure?: string;
+  rendererCount: number;
+  meshCount: number;
+  materialCount: number;
+  boundsMinX: number;
+  boundsMinY: number;
+  boundsMinZ: number;
+  boundsSizeX: number;
+  boundsSizeY: number;
+  boundsSizeZ: number;
+  compositionCount: number;
+  cookingStepSet: boolean;
+  platingStepSet: boolean;
+  platingPrefabSet: boolean;
+  modelScale: number;
+  modelRotationX: number;
+  modelRotationY: number;
+  modelRotationZ: number;
+  modelPositionX: number;
+  modelPositionY: number;
+  modelPositionZ: number;
+}
+
+/** 菜谱模型/装盘链路诊断（只读），排查"模型在游戏中不显示"。 */
+export async function diagnoseCustomRecipe(assetPath: string): Promise<CustomRecipeDiagnose> {
+  const r = await fetch(`/api/custom-recipes/diagnose?assetPath=${encodeURIComponent(assetPath)}`);
+  return readApiJson<CustomRecipeDiagnose>(r);
+}
+
 /** 诊断：文件系统上实际存在哪些菜谱资产（桥为新代码时可用）。 */
 export async function fetchCustomRecipeScanDiag(setName: string): Promise<CustomRecipeScanDiag> {
   const r = await fetch(`/api/custom-recipes/debug-scan?setName=${encodeURIComponent(setName)}`);

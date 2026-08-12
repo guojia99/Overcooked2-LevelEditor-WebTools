@@ -181,5 +181,24 @@ export function trySnapUtensilToHost(
   );
   if (!host) return false;
   applyStackOnHost(utensil, host, utensilCat.stack.y);
+  // 堆类物件（盘堆/杯堆）在同一工作台上自动错开一格并排，避免互相重叠遮挡
+  if (isStackId(utensilCat.id)) {
+    const occupied = sceneItems.some(
+      (o) =>
+        o !== utensil &&
+        isStackId(catalogByGuid.get(o.prefabGuid)?.id) &&
+        o._wx === host._wx &&
+        o._wz === host._wz
+    );
+    if (occupied) {
+      utensil._wx = host._wx + CELL;
+      utensil.localPosition.x = snapScalar(utensil._wx - utensil._parentWx);
+    }
+  }
   return true;
+}
+
+/** 堆类物件（盘子堆/杯子堆）：允许同一工作台上并排多个。 */
+function isStackId(id: string | undefined): boolean {
+  return id === "CleanPlateStack" || id === "CleanGlassStack";
 }

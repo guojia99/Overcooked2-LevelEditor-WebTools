@@ -166,19 +166,59 @@ public static class SceneLayoutApplier
         // even-sized floors by half a cell, breaking flush adjacency.
         if (only == null || only == "floors")
         {
-            ApplyFloors(document, snapStep);
+            ApplyFloors(document, snapStep, createdObjects);
             if (syncWalkable)
                 SyncWalkableToFloors(document, snapStep);
+        }
+
+        // Bake move controls into the scene — full writes only (scoped writes never
+        // touch the scene's existing move groups). The scene itself (group roots +
+        // Animator + TriggerQueue/TriggerTimer + controller/clips) is the single
+        // source of truth: no external JSON config is kept.
+        string bakeError = null;
+        if (only == null && document.moveControls != null)
+        {
+            // Remap "new:" group member IDs to the real Unity IDs of objects created this pass.
+            foreach (var group in document.moveControls.groups ?? new MoveGroupDto[0])
+            {
+                if (group == null) continue;
+                RemapNewIds(group.itemInstanceIds, createdObjects);
+                RemapNewIds(group.floorInstanceIds, createdObjects);
+                RemapNewIds(group.objectInstanceIds, createdObjects);
+            }
+
+            bakeError = MoveControlBakery.Sync(scene, document.moveControls);
+            if (!string.IsNullOrEmpty(bakeError))
+                LayoutEditorLog.LogWarning(bakeError);
         }
 
         // After mutating placeholder transforms, persist with the canonical Tools workflow:
         // Toggle Prepare For Building (strip temp-loaded children so they aren't baked into the
         // saved scene) -> Save to disk -> Reload Pseudo Assets (re-load children, restore UI).
+        // Groups that failed to bake are reported but never prevent the save — a write-back
+        // that does not persist to disk is worse than a partial one.
         LayoutEditorPseudoReload.EnsurePrepareForBuilding();
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
-        return null;
+        return string.IsNullOrEmpty(bakeError)
+            ? null
+            : "部分移动组写回失败（场景已保存）：" + bakeError;
+    }
+
+    /// <summary>Replace "new:" instance ids with the real Unity ids of objects created
+    /// during this apply pass.</summary>
+    private static void RemapNewIds(string[] ids, Dictionary<string, GameObject> createdObjects)
+    {
+        if (ids == null) return;
+        for (int i = 0; i < ids.Length; i++)
+        {
+            var id = ids[i];
+            if (string.IsNullOrEmpty(id) || !id.StartsWith("new:", StringComparison.Ordinal)) continue;
+            GameObject created;
+            if (createdObjects.TryGetValue(id, out created) && created != null)
+                ids[i] = "u:" + created.GetInstanceID();
+        }
     }
 
     /// <summary>
@@ -262,7 +302,8 @@ public static class SceneLayoutApplier
         col.center = new Vector3(0f, -0.2f, 0f);
     }
 
-    private static void ApplyFloors(LayoutDocumentDto document, float snapStep)
+    private static void ApplyFloors(LayoutDocumentDto document, float snapStep,
+        Dictionary<string, GameObject> createdObjects)
     {
         if (document == null)
             return;
@@ -303,7 +344,7 @@ public static class SceneLayoutApplier
 
             if (floor.instanceId != null && floor.instanceId.StartsWith("new:", StringComparison.Ordinal))
             {
-                CreateFloorInstance(floor, snapStep);
+                CreateFloorInstance(floor, snapStep, createdObjects);
                 continue;
             }
 
@@ -318,7 +359,7 @@ public static class SceneLayoutApplier
                 }
             }
 
-            CreateFloorInstance(floor, snapStep);
+            CreateFloorInstance(floor, snapStep, createdObjects);
         }
     }
 
@@ -689,7 +730,8 @@ public static class SceneLayoutApplier
         return m;
     }
 
-    private static void CreateFloorInstance(FloorDto floor, float snapStep)
+    private static void CreateFloorInstance(FloorDto floor, float snapStep,
+        Dictionary<string, GameObject> createdObjects)
     {
         if (floor != null && floor.surfaceKind == "raft")
             return;
@@ -720,6 +762,9 @@ public static class SceneLayoutApplier
         primitive.transform.localScale = FloorScaleFromCells(floor, 1f);
 
         ApplyFloorMaterial(primitive.transform, floor);
+
+        if (createdObjects != null && floor != null && !string.IsNullOrEmpty(floor.instanceId))
+            createdObjects[floor.instanceId] = primitive;
     }
 
     private static Transform FindFloorTransform(FloorDto floor)

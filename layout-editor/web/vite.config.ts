@@ -5,6 +5,9 @@ export default defineConfig({
   base: "./",
   root: ".",
   publicDir: "public",
+  define: {
+    __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   server: {
     port: 5173,
     proxy: {

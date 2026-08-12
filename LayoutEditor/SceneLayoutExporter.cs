@@ -14,13 +14,29 @@ public static class SceneLayoutExporter
     public static LayoutDocumentDto ExportActiveScene()
     {
         var scene = SceneManager.GetActiveScene();
+        var items = ExportFromScene();
+
+        // The scene itself is the single source of truth for move groups: rebuild
+        // them directly from the animated objects (Animator + TriggerQueue/Timer +
+        // controller/clips). No external JSON config is read.
+        var sceneName = System.IO.Path.GetFileNameWithoutExtension(scene.path);
+        var imported = MoveControlImporter.ImportFromScene(scene, sceneName,
+            MoveControlBakery.GetAnimationsFolder(scene.path));
+        MoveControlDataDto moveControls = null;
+        if (imported.Count > 0)
+            moveControls = new MoveControlDataDto { groups = imported.ToArray() };
+
+        LayoutEditorLog.Log("move control: export " + scene.name + " -> " +
+            (moveControls != null ? moveControls.groups.Length : 0) + " group(s)");
+
         var doc = new LayoutDocumentDto
         {
             sceneAssetPath = scene.path,
-            items = ExportFromScene().ToArray(),
+            items = items.ToArray(),
             floors = SceneFloorExporter.ExportFromScene().ToArray(),
             walkable = SceneWalkabilityReader.ReadWalkable().ToArray(),
-            deathInfo = SceneWalkabilityReader.ReadDeathInfo()
+            deathInfo = SceneWalkabilityReader.ReadDeathInfo(),
+            moveControls = moveControls
         };
         return doc;
     }

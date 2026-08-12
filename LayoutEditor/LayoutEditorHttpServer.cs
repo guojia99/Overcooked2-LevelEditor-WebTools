@@ -719,6 +719,13 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/custom-recipes/diagnose" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.DiagnoseCustomRecipe(assetPath)));
+                return;
+            }
+
             if (path == "/api/custom-recipes/create" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);

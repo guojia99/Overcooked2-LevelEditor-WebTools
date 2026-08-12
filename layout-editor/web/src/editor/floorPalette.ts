@@ -1,0 +1,237 @@
+import { S } from "./state";
+import type { CatalogItem } from "../types";
+import { dom } from "./dom";
+import { normalizeRot } from "./coords";
+import { setStatus } from "./status";
+import { draw } from "./render";
+import { pushHistory } from "./historyOps";
+import { setFloorSelection } from "./selection";
+import {
+  isThemedFloor,
+  themedFloorPrefabs,
+  syncBackgroundForTheme
+} from "./floors";
+import { itemLabel } from "./labels";
+import {
+  BG_THEMES,
+  bgTheme,
+  bgThemeTooltip,
+  deathLabelZh,
+  isSurfaceItem,
+  isThemeBackgroundPrefabId,
+  surfaceKindLabelZh,
+  themeBackgroundPrefabIds
+} from "../floorColors";
+import { tidyCatalogNameZh } from "../displayLabels";
+import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
+
+export function buildFloorPalette(filter = "", mode: "floor" | "background" = "floor") {
+  dom.paletteCats.innerHTML = "";
+  const q = filter.trim().toLowerCase();
+
+  if (mode === "floor") {
+    const addBtn = document.createElement("button");
+    addBtn.className = "palette-add-floor";
+    addBtn.textContent = "+ 新增地板（在画布点击放置）";
+    addBtn.addEventListener("click", () => {
+      S.pendingNewFloor = true;
+      S.pendingNewFloorCat = null;
+      setStatus("在画布上点击以放置新地板");
+      dom.canvas.style.cursor = "crosshair";
+    });
+    dom.paletteCats.appendChild(addBtn);
+
+    // 新增主题地板: pick a themed prefab, then click the canvas to place a floor
+    // that tiles it on write-back (a standalone floor type, not a solid plane).
+    const themedList = themedFloorPrefabs().filter((it) => matchesFloorPaletteFilter(it, q));
+    if (themedList.length > 0) {
+      const themedRow = document.createElement("div");
+      themedRow.className = "palette-add-themed";
+      const sel = document.createElement("select");
+      for (const it of themedList) {
+        const opt = document.createElement("option");
+        opt.value = it.guid;
+        opt.textContent = `${tidyCatalogNameZh(it.nameZh, it.id)}（${surfaceKindLabelZh(it.surfaceKind)}）`;
+        sel.appendChild(opt);
+      }
+      const addThemedBtn = document.createElement("button");
+      addThemedBtn.className = "palette-add-floor";
+      addThemedBtn.textContent = "+ 新增主题地板";
+      addThemedBtn.title = "写回时整块区域生成一个拉伸的 prefab 实例";
+      addThemedBtn.addEventListener("click", () => {
+        const cat = S.catalogByGuid.get(sel.value);
+        if (!cat) {
+          setStatus("请先选择主题地板 prefab", false);
+          return;
+        }
+        S.pendingNewFloor = true;
+        S.pendingNewFloorCat = cat;
+        setStatus(`在画布上点击以放置主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}`);
+        dom.canvas.style.cursor = "crosshair";
+      });
+      themedRow.appendChild(sel);
+      themedRow.appendChild(addThemedBtn);
+      dom.paletteCats.appendChild(themedRow);
+    }
+  }
+
+  const surfaceItems: CatalogItem[] = [];
+  for (const it of S.catalogByGuid.values()) if (isSurfaceItem(it)) surfaceItems.push(it);
+
+  const groups: { key: string; labelZh: string; match: (it: CatalogItem) => boolean }[] =
+    mode === "background"
+      ? [
+          {
+            key: "water",
+            labelZh: "水面 / 海洋",
+            match: (it) => isWaterBackgroundCat(it),
+          },
+          {
+            key: "ambient",
+            labelZh: "环境特效（落雪 / BGM）",
+            match: (it) => isAmbientBackgroundCat(it),
+          },
+          {
+            key: "background",
+            labelZh: "背景 / 环境",
+            match: (it) => it.surfaceTier === "background" && !isThemeBackgroundPrefabId(it.id),
+          },
+        ]
+      : [
+          { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
+        ];
+  // Background palette also lists ambient effects (they are not surface items).
+  const pool = mode === "background" ? [...S.catalogByGuid.values()] : surfaceItems;
+
+  let anyGroup = false;
+  for (const group of groups) {
+    const list = pool
+      .filter((it) => group.match(it))
+      .filter((it) => matchesFloorPaletteFilter(it, q))
+      .sort((a, b) => a.id.localeCompare(b.id));
+    if (list.length === 0) continue;
+    anyGroup = true;
+
+    const details = document.createElement("details");
+    details.className = "cat-group";
+    details.open = true;
+    const summary = document.createElement("summary");
+    summary.textContent = `${group.labelZh} (${list.length})`;
+    details.appendChild(summary);
+    appendPaletteTileGrid(details, list);
+    dom.paletteCats.appendChild(details);
+  }
+
+  if (!anyGroup && q) {
+    const empty = document.createElement("div");
+    empty.className = "palette-empty";
+    empty.textContent = "无匹配项";
+    dom.paletteCats.appendChild(empty);
+  }
+}
+
+export function updateFloorBar() {
+  if (S.currentLayer !== "floor" && S.currentLayer !== "background") {
+    dom.floorBar.classList.add("hidden");
+    return;
+  }
+  dom.floorBar.classList.remove("hidden");
+  const themeOpts = BG_THEMES.map(
+    (t) =>
+      `<option value="${t.key}"${t.key === S.bgThemeKey ? " selected" : ""}>${t.emoji} ${t.labelZh}</option>`
+  ).join("");
+  const themeRow = `<label class="fb-theme" title="${bgThemeTooltip(bgTheme(S.bgThemeKey))}">背景：<select id="fb-bg-theme">${themeOpts}</select></label>`;
+  const killToggle = `<label class="fb-check" title="回写 Unity 时把坠落区(KillPlane)扩大到覆盖整关，使所有非地板区域都会坠落"><input type="checkbox" id="fb-autokill" ${S.autoKillPlane ? "checked" : ""}/> 回写扩大坠落区</label>`;
+  const walkToggle = `<label class="fb-check" title="回写时按可见地板重新生成可行走碰撞体(Col_Floor)：可行走=地板，地板间空隙=坠落坑"><input type="checkbox" id="fb-autowalk" ${S.autoWalkable ? "checked" : ""}/> 同步可行走到地板</label>`;
+  const bgEditToggle = `<label class="fb-check" title="默认锁定：背景板只显示，不参与点选/框选/拖动/缩放。勾选后可像普通地板一样操作背景"><input type="checkbox" id="fb-bgedit" ${S.backgroundEditable ? "checked" : ""}/> 解锁背景操作</label>`;
+  const f = S.floors.find((x) => x._key === S.selectedFloorKey);
+  const selItem = S.selectedKey ? S.items.find((i) => i._editorKey === S.selectedKey) : null;
+  const selCat = selItem ? S.catalogByGuid.get(selItem.prefabGuid) : undefined;
+  let info: string;
+  if (S.selectedFloorKeys.size > 1) {
+    info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板（拖动整体移动 · Del 删除）</span>`;
+  } else if (f) {
+    info = `<span class="fb-info"><b>${f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(S.catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : f.materialName ?? "无材质"}</span>`;
+  } else if (selItem && isSurfaceItem(selCat)) {
+    info = `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
+  } else {
+    info = `<span class="fb-info">${deathLabelZh(S.deathInfo)} · 共 ${S.floors.length} 块地板</span>`;
+  }
+  const html = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+  const active = document.activeElement;
+  const editing =
+    !!active && dom.floorBar.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT");
+  if (editing || dom.floorBar.innerHTML === html) return;
+  dom.floorBar.innerHTML = html;
+
+  document.getElementById("fb-bg-theme")?.addEventListener("change", (e) => {
+    const nextTheme = (e.target as HTMLSelectElement).value || "void";
+    if (nextTheme === S.bgThemeKey) return;
+    pushHistory();
+    S.bgThemeKey = nextTheme;
+    S.bgThemeDirty = true;
+    localStorage.setItem("bgTheme:" + S.scenePath, S.bgThemeKey);
+    syncBackgroundForTheme(S.bgThemeKey);
+    updateFloorBar();
+    setStatus(`背景主题：${bgTheme(S.bgThemeKey).labelZh}（写回 Unity 后生效）`);
+  });
+  document.getElementById("fb-autokill")?.addEventListener("change", (e) => {
+    S.autoKillPlane = (e.target as HTMLInputElement).checked;
+  });
+  document.getElementById("fb-autowalk")?.addEventListener("change", (e) => {
+    S.autoWalkable = (e.target as HTMLInputElement).checked;
+  });
+  document.getElementById("fb-bgedit")?.addEventListener("change", (e) => {
+    S.backgroundEditable = (e.target as HTMLInputElement).checked;
+    if (!S.backgroundEditable) {
+      const alive = new Set(
+        S.floors.filter((x) => x.surfaceKind !== "background").map((x) => x._key)
+      );
+      if ([...S.selectedFloorKeys].some((k) => !alive.has(k))) {
+        setFloorSelection([...S.selectedFloorKeys].filter((k) => alive.has(k)));
+      }
+    }
+    draw();
+  });
+}
+
+export function matchesFloorPaletteFilter(it: CatalogItem, q: string): boolean {
+  if (!q) return true;
+  const kindZh = surfaceKindLabelZh(it.surfaceKind);
+  return (
+    it.id.toLowerCase().includes(q) ||
+    it.nameZh.toLowerCase().includes(q) ||
+    it.nameEn.toLowerCase().includes(q) ||
+    kindZh.includes(q) ||
+    (it.theme ?? "").toLowerCase().includes(q)
+  );
+}
+
+export function appendPaletteTileGrid(parent: HTMLElement, list: CatalogItem[]) {
+  const tileGrid = document.createElement("div");
+  tileGrid.className = "palette-tile-grid";
+  for (const it of list) {
+    const row = document.createElement("div");
+    row.className = "palette-item palette-tile";
+    row.draggable = true;
+    row.dataset.guid = it.guid;
+    const sub =
+      it.surfaceTier === "background" && themeBackgroundPrefabIds("sky").includes(it.id)
+        ? `<div class="sub">天空主题自动补齐</div>`
+        : it.id === "raft_water"
+          ? `<div class="sub">水主题自动补齐</div>`
+          : it.id === "alien_gue"
+            ? `<div class="sub">黏液主题自动补齐</div>`
+            : "";
+    row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}</div><div class="id">${it.id}</div>${sub}`;
+    row.addEventListener("dragstart", (e) => {
+      S.dragCatalog = it;
+      e.dataTransfer?.setData("text/plain", it.guid);
+    });
+    row.addEventListener("dragend", () => {
+      S.dragCatalog = null;
+    });
+    tileGrid.appendChild(row);
+  }
+  parent.appendChild(tileGrid);
+}

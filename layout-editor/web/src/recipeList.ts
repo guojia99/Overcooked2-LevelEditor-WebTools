@@ -8,6 +8,9 @@ import {
   rlSectionHtml,
   type RecipeWithGroups,
 } from "./recipeCard";
+import { mountVersionBadge } from "./version";
+
+mountVersionBadge();
 
 const app = document.getElementById("app")!;
 document.body.classList.add("manage-bg");

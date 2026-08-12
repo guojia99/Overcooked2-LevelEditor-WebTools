@@ -1794,6 +1794,7 @@ public static class LayoutEditorLevelAdminApi
             RecipeEntryDto entry;
             entryById.TryGetValue(id, out entry);
 
+            Vector3 bsz;
             list.Add(new CustomRecipeSummaryDto
             {
                 guid = guid,
@@ -1816,12 +1817,39 @@ public static class LayoutEditorLevelAdminApi
                 hasIcon = hasIcon,
                 hasModel = hasModel,
                 modelScale = RecipeModelScale(path),
-                modelRotationY = RecipeModelRotationY(path)
+                modelRotationY = RecipeModelRotationY(path),
+                modelRotationX = RecipeModelTransform(path).rotationX,
+                modelRotationZ = RecipeModelTransform(path).rotationZ,
+                modelPositionX = RecipeModelTransform(path).positionX,
+                modelPositionY = RecipeModelTransform(path).positionY,
+                modelPositionZ = RecipeModelTransform(path).positionZ,
+                boundsMinY = ModelBoundsOf(so.model, out bsz).min.y,
+                boundsSizeX = bsz.x,
+                boundsSizeY = bsz.y,
+                boundsSizeZ = bsz.z
             });
         }
 
         list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
         return list.ToArray();
+    }
+
+    /// <summary>计算模型（prefab/FBX 导入资产）在世界坐标的包围盒（含配置变换），
+    ///  供前端按 Unity 实际导入尺寸校准自动适配（three.js 预览尺寸可能与 Unity 不一致，
+    ///  如部分 FBX 的 Lcl Scaling 单位换算差异）。</summary>
+    private static Bounds ModelBoundsOf(GameObject model, out Vector3 size)
+    {
+        size = Vector3.zero;
+        if (model == null)
+            return new Bounds();
+        var renderers = model.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0)
+            return new Bounds();
+        var b = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            b.Encapsulate(renderers[i].bounds);
+        size = b.size;
+        return b;
     }
 
     /// <summary>CustomRecipeSO → RecipeEntryDto（叶食材展开 + 直接组成 + 步骤），
@@ -2098,6 +2126,32 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
+    /// <summary>菜谱专属 models 子目录：<分类>/models/<recipeId>/（每个菜谱一个文件夹，模型文件互不干扰）。</summary>
+    private static string RecipeModelsDir(string recipeAssetPath)
+    {
+        var id = Path.GetFileNameWithoutExtension(recipeAssetPath);
+        return DirectoryName(recipeAssetPath) + "/models/" + (string.IsNullOrEmpty(id) ? "model" : SanitizeName(id));
+    }
+
+    /// <summary>确保菜谱专属 models 子目录存在并返回其路径。</summary>
+    private static string EnsureRecipeModelsDir(string recipeAssetPath)
+    {
+        var dir = RecipeModelsDir(recipeAssetPath);
+        var parent = Path.GetDirectoryName(dir.Replace('\\', '/'));
+        if (string.IsNullOrEmpty(parent))
+            return dir;
+        if (!AssetFolderExists(parent))
+        {
+            var grand = Path.GetDirectoryName(parent.Replace('\\', '/'));
+            if (string.IsNullOrEmpty(grand) || !AssetFolderExists(grand))
+                return dir;
+            AssetDatabase.CreateFolder(grand, Path.GetFileName(parent));
+        }
+        if (!AssetFolderExists(dir))
+            AssetDatabase.CreateFolder(parent, Path.GetFileName(dir));
+        return dir;
+    }
+
     /// <summary>菜谱所在 custom_recipes 目录的配置文件路径（找不到返回 null）。</summary>
     private static string CustomRecipeConfigPathFor(string recipeAssetPath)
     {
@@ -2163,6 +2217,17 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(config);
     }
 
+    /// <summary>按配置条目构建完整变换（scale + 三轴旋转 + 三轴位置；无条目时取默认）。</summary>
+    private static CustomRecipeConfigSO.CustomRecipeTransformEntry RecipeModelTransform(string recipeAssetPath)
+    {
+        var config = LoadCustomRecipeConfigFor(recipeAssetPath);
+        ImportLegacyModelTransform(config, recipeAssetPath);
+        var e = FindModelTransform(config, recipeAssetPath);
+        if (e == null)
+            return new CustomRecipeConfigSO.CustomRecipeTransformEntry { assetPath = recipeAssetPath, scale = 1f };
+        return e;
+    }
+
     private static float? ParseYamlFloat(string yaml, string key)
     {
         var m = Regex.Match(yaml, key + @"\s*([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)");
@@ -2175,20 +2240,17 @@ public static class LayoutEditorLevelAdminApi
 
     private static float RecipeModelScale(string recipeAssetPath)
     {
-        var config = LoadCustomRecipeConfigFor(recipeAssetPath);
-        ImportLegacyModelTransform(config, recipeAssetPath);
-        var e = FindModelTransform(config, recipeAssetPath);
-        return e != null && e.scale > 0f ? e.scale : 1f;
+        var e = RecipeModelTransform(recipeAssetPath);
+        return e.scale > 0f ? e.scale : 1f;
     }
 
     private static float RecipeModelRotationY(string recipeAssetPath)
     {
-        var config = LoadCustomRecipeConfigFor(recipeAssetPath);
-        var e = FindModelTransform(config, recipeAssetPath);
-        return e != null ? e.rotationY : 0f;
+        return RecipeModelTransform(recipeAssetPath).rotationY;
     }
 
-    private static void SetRecipeModelTransform(string recipeAssetPath, float scale, float rotationY)
+    private static void SetRecipeModelTransform(string recipeAssetPath, float scale, float rotationY,
+        float rotationX, float rotationZ, float positionX, float positionY, float positionZ)
     {
         var config = LoadCustomRecipeConfigFor(recipeAssetPath);
         if (config == null)
@@ -2213,6 +2275,11 @@ public static class LayoutEditorLevelAdminApi
             {
                 list[i].scale = scale;
                 list[i].rotationY = rotationY;
+                list[i].rotationX = rotationX;
+                list[i].rotationZ = rotationZ;
+                list[i].positionX = positionX;
+                list[i].positionY = positionY;
+                list[i].positionZ = positionZ;
                 config.modelTransforms = list.ToArray();
                 EditorUtility.SetDirty(config);
                 return;
@@ -2223,23 +2290,191 @@ public static class LayoutEditorLevelAdminApi
             assetPath = recipeAssetPath,
             scale = scale,
             rotationY = rotationY,
+            rotationX = rotationX,
+            rotationZ = rotationZ,
+            positionX = positionX,
+            positionY = positionY,
+            positionZ = positionZ,
         });
         config.modelTransforms = list.ToArray();
         EditorUtility.SetDirty(config);
     }
 
-    /// <summary>把菜谱的 modelScale/modelRotationY 应用到 prefab 根节点（运行时直接生效）。
+    /// <summary>把菜谱的模型变换（缩放/旋转/位置）应用到装盘模型。
+    ///  游戏运行时（ClientAttachedOrderCosmeticDecisions）在实例化后会重置模型根节点的
+    ///  localPosition/localRotation，因此变换必须放在「子节点」上才能生效：
+    ///  这里把模型重建为「空根 + 子节点」结构，变换全部应用到子节点，
+    ///  等效于把修正烘焙进模型（与老师给的正常模型做法一致）。
+    ///  复用/共享模型会先克隆到本菜谱 models 目录，避免影响其他菜谱。
     ///  数值存储在插件自己的 CustomRecipeConfigSO 中，不修改宿主 CustomRecipeSO。</summary>
     private static void ApplyModelTransform(CustomRecipeSO so)
     {
         if (so == null || so.model == null)
             return;
-        var path = AssetDatabase.GetAssetPath(so);
-        if (string.IsNullOrEmpty(path))
+        var recipePath = AssetDatabase.GetAssetPath(so);
+        if (string.IsNullOrEmpty(recipePath))
             return;
-        so.model.transform.localScale = Vector3.one * Mathf.Max(0.001f, RecipeModelScale(path));
-        so.model.transform.localEulerAngles = new Vector3(0f, RecipeModelRotationY(path), 0f);
-        EditorUtility.SetDirty(so.model);
+        var t = RecipeModelTransform(recipePath);
+        var modelPath = AssetDatabase.GetAssetPath(so.model);
+        if (string.IsNullOrEmpty(modelPath))
+            return;
+
+        var modelsDir = RecipeModelsDir(recipePath);
+        if (!AssetFolderExists(modelsDir))
+            return;
+        var id = Path.GetFileNameWithoutExtension(recipePath);
+        var ownPrefabPath = modelsDir + "/" + id + ".prefab";
+        var isPrefab = modelPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase);
+        var isOwnPrefab = isPrefab && modelPath.StartsWith(modelsDir + "/", StringComparison.OrdinalIgnoreCase);
+
+        if (isOwnPrefab && so.model.GetComponent<Renderer>() == null && so.model.transform.childCount > 0)
+        {
+            // 已是本菜谱的「空根 + 子节点」结构：直接把变换应用到子节点并保存
+            ApplyTransformToChild(so.model.transform.GetChild(0), t);
+            EditorUtility.SetDirty(so.model);
+            AssetDatabase.SaveAssets();
+            return;
+        }
+
+        // 旧结构（单节点 prefab）、复用其他菜谱的模型、或 FBX/OBJ 直引：
+        // 统一重建为「空根 + 子节点」prefab（复用模型克隆到本菜谱目录，避免互相覆盖）
+        var targetPath = isOwnPrefab ? modelPath : ownPrefabPath;
+        var prefab = RebuildPlatingPrefab(targetPath, so.model, t);
+        if (prefab == null)
+            return;
+
+        Undo.RecordObject(so, "Apply Recipe Model Transform");
+        so.model = prefab;
+        so.modelSO = null;
+        EditorUtility.SetDirty(so);
+        AssetDatabase.SaveAssets();
+    }
+
+    /// <summary>把变换应用到子节点（游戏只重置根节点，子节点变换在运行时保留）。</summary>
+    private static void ApplyTransformToChild(Transform child, CustomRecipeConfigSO.CustomRecipeTransformEntry t)
+    {
+        child.localScale = Vector3.one * Mathf.Max(0.0001f, t.scale > 0f ? t.scale : 1f);
+        child.localEulerAngles = new Vector3(t.rotationX, t.rotationY, t.rotationZ);
+        child.localPosition = new Vector3(t.positionX, t.positionY, t.positionZ);
+    }
+
+    /// <summary>重建装盘 prefab：空根 + 原模型作为子节点，变换应用到子节点。
+    ///  覆盖同名 prefab（保留 guid，避免引用失效）。</summary>
+    private static GameObject RebuildPlatingPrefab(string prefabPath, GameObject source,
+        CustomRecipeConfigSO.CustomRecipeTransformEntry t)
+    {
+        if (source == null || string.IsNullOrEmpty(prefabPath))
+            return null;
+        var root = new GameObject(Path.GetFileNameWithoutExtension(prefabPath));
+        GameObject child;
+        try
+        {
+            child = UnityEngine.Object.Instantiate(source);
+            child.name = source.name;
+            child.transform.SetParent(root.transform, false);
+            ApplyTransformToChild(child.transform, t);
+            var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, root);
+            return prefabInstance;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] 重建装盘 prefab 失败: " + prefabPath + " - " + ex.Message);
+            return null;
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(root);
+        }
+    }
+
+    /// <summary>菜谱模型/装盘链路诊断（只读）：检查模型引用、prefab 渲染完整性、
+    ///  组成/步骤资产可解析性与模型变换值，用于排查"模型在游戏中不显示"。</summary>
+    public static CustomRecipeDiagnoseDto DiagnoseCustomRecipe(string assetPath)
+    {
+        var dto = new CustomRecipeDiagnoseDto { assetPath = assetPath };
+        if (string.IsNullOrEmpty(assetPath))
+        {
+            dto.error = "缺少资源路径。";
+            return dto;
+        }
+        var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(assetPath);
+        if (so == null)
+        {
+            dto.error = "未找到菜谱资源（CustomRecipeSO 无法加载）。";
+            return dto;
+        }
+
+        // 模型引用：运行时 GetModel() 优先 model 直引（modelSO 为 null 时即 so.model）
+        dto.modelDirect = so.model != null;
+        dto.modelSOBased = so.modelSO != null;
+        dto.platingPrefabSet = so.model != null || (so.modelSO != null && so.modelSO.assetPath != null);
+        if (so.model != null)
+        {
+            var modelPath = AssetDatabase.GetAssetPath(so.model);
+            dto.modelPath = modelPath;
+            dto.modelType = string.IsNullOrEmpty(modelPath) ? "unknown"
+                : modelPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) ? "prefab" : "asset";
+            if (dto.modelType == "prefab")
+            {
+                dto.modelStructure = so.model.GetComponent<Renderer>() != null
+                    ? "single-node（旧结构，保存后自动重建为 root+child）"
+                    : "root+child（新结构，变换在子节点上，游戏中生效）";
+            }
+            else
+            {
+                dto.modelStructure = "fbx-direct（保存后自动转为本菜谱 prefab）";
+            }
+            var renderers = so.model.GetComponentsInChildren<Renderer>(true);
+            dto.rendererCount = renderers.Length;
+            int meshOk = 0;
+            int matOk = 0;
+            foreach (var r in renderers)
+            {
+                if (r is SkinnedMeshRenderer)
+                {
+                    if (((SkinnedMeshRenderer)r).sharedMesh != null)
+                        meshOk++;
+                }
+                else
+                {
+                    var mf = r.GetComponent<MeshFilter>();
+                    if (mf != null && mf.sharedMesh != null)
+                        meshOk++;
+                }
+                if (r.sharedMaterials != null && r.sharedMaterials.Length > 0 && r.sharedMaterials[0] != null)
+                    matOk++;
+            }
+            dto.meshCount = meshOk;
+            dto.materialCount = matOk;
+            // Unity 导入后的模型世界包围盒（含当前 prefab 变换；判断实际朝向/薄轴）
+            if (renderers.Length > 0)
+            {
+                var b = renderers[0].bounds;
+                for (int i = 1; i < renderers.Length; i++)
+                    b.Encapsulate(renderers[i].bounds);
+                dto.boundsMinX = b.min.x;
+                dto.boundsMinY = b.min.y;
+                dto.boundsMinZ = b.min.z;
+                dto.boundsSizeX = b.size.x;
+                dto.boundsSizeY = b.size.y;
+                dto.boundsSizeZ = b.size.z;
+            }
+        }
+
+        if (so.compositionSOs != null)
+            dto.compositionCount = so.compositionSOs.Length;
+        dto.cookingStepSet = so.cookingStepSO != null;
+        dto.platingStepSet = so.platingStepSO != null;
+
+        var t = RecipeModelTransform(assetPath);
+        dto.modelScale = t.scale;
+        dto.modelRotationX = t.rotationX;
+        dto.modelRotationY = t.rotationY;
+        dto.modelRotationZ = t.rotationZ;
+        dto.modelPositionX = t.positionX;
+        dto.modelPositionY = t.positionY;
+        dto.modelPositionZ = t.positionZ;
+        return dto;
     }
 
     /// <summary>解析预制体的网格源文件（.obj/.fbx），供 3D 预览中作为大小参考
@@ -2382,12 +2617,10 @@ public static class LayoutEditorLevelAdminApi
         AssetDatabase.CreateAsset(so, assetPath);
         EditorUtility.SetDirty(so);
 
-        var modelsDir = categoryDir + "/models";
-        if (!AssetFolderExists(modelsDir))
-            AssetDatabase.CreateFolder(categoryDir, "models");
-
+        var modelsDir = EnsureRecipeModelsDir(assetPath);
         AssetDatabase.SaveAssets();
-        SetRecipeModelTransform(assetPath, dto.modelScale, dto.modelRotationY);
+        SetRecipeModelTransform(assetPath, dto.modelScale, dto.modelRotationY,
+            dto.modelRotationX, dto.modelRotationZ, dto.modelPositionX, dto.modelPositionY, dto.modelPositionZ);
         ApplyModelTransform(so);
 
         AddCustomRecipeName(setName, recipeName, dto.nameZh, dto.nameEn);
@@ -2409,18 +2642,26 @@ public static class LayoutEditorLevelAdminApi
 
         if (dto.type == "Composite")
         {
+            // 组合菜：纯组装，无需烹饪与装盘
             so.type = CustomRecipeSO.RecipeType.Composite;
             so.cookingStepSO = null;
             so.cookingStepIconSO = null;
+            so.platingStepSO = null;
         }
         else if (dto.type == "Mixed")
+        {
+            // 搅拌菜：只有搅拌步骤，无需烹饪
             so.type = CustomRecipeSO.RecipeType.Mixed;
+            so.cookingStepSO = null;
+            so.cookingStepIconSO = null;
+        }
         else
             so.type = CustomRecipeSO.RecipeType.Cooked;
 
         so.cookingProgress = (CustomRecipeSO.CookingProgress)(dto.cookingProgress >= 0 && dto.cookingProgress <= 2 ? dto.cookingProgress : 1);
         so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
-        SetRecipeModelTransform(dto.assetPath, dto.modelScale, dto.modelRotationY);
+        SetRecipeModelTransform(dto.assetPath, dto.modelScale, dto.modelRotationY,
+            dto.modelRotationX, dto.modelRotationZ, dto.modelPositionX, dto.modelPositionY, dto.modelPositionZ);
 
         if (dto.compositionIds != null)
         {
@@ -2487,11 +2728,12 @@ public static class LayoutEditorLevelAdminApi
         var id = Path.GetFileNameWithoutExtension(assetPath);
 
         var dir = DirectoryName(assetPath);
-        var modelsDir = dir + "/models";
+        var modelsDir = RecipeModelsDir(assetPath);
 
         if (!AssetDatabase.DeleteAsset(assetPath))
             return "删除资源失败。";
 
+        // 每个菜谱一个 models 子目录：直接删除本菜谱的子目录（其他菜谱不受影响）。
         if (AssetFolderExists(modelsDir))
             AssetDatabase.DeleteAsset(modelsDir);
 
@@ -2511,11 +2753,9 @@ public static class LayoutEditorLevelAdminApi
             return "未找到菜谱资源。";
 
         var dir = DirectoryName(dto.recipeAssetPath);
-        var modelsDir = dir + "/models";
-        if (!AssetFolderExists(modelsDir))
-            AssetDatabase.CreateFolder(DirectoryName(dir), "models");
+        var modelsDir = EnsureRecipeModelsDir(dto.recipeAssetPath);
 
-        // 统一命名为 <recipeName>_Icon.png，与卡片图标 URL（…/models/<id>_Icon.png）一致。
+        // 统一命名为 <recipeName>_Icon.png，与卡片图标 URL（…/models/<id>/<id>_Icon.png）一致。
         var recipeId = Path.GetFileNameWithoutExtension(dto.recipeAssetPath);
         var safeName = SanitizeName(recipeId) + "_Icon.png";
         var imgAssetPath = modelsDir + "/" + safeName;
@@ -2592,11 +2832,9 @@ public static class LayoutEditorLevelAdminApi
             return "请选择 FBX 或 OBJ 模型文件。";
 
         var dir = DirectoryName(dto.recipeAssetPath);
-        var modelsDir = dir + "/models";
-        if (!AssetFolderExists(modelsDir))
-            AssetDatabase.CreateFolder(DirectoryName(dir), "models");
+        var modelsDir = EnsureRecipeModelsDir(dto.recipeAssetPath);
 
-        // 先清空旧模型/旧贴图（保留 <recipeName>_Icon.png 图标），再写入新文件。
+        // 先清空本条菜谱子目录里的旧模型/旧贴图（保留 <recipeName>_Icon.png 图标），再写入新文件。
         var recipeId = SanitizeName(Path.GetFileNameWithoutExtension(dto.recipeAssetPath));
         var ext = modelFile.fileName != null && modelFile.fileName.EndsWith(".obj", StringComparison.OrdinalIgnoreCase)
             ? ".obj" : ".fbx";
@@ -2604,7 +2842,7 @@ public static class LayoutEditorLevelAdminApi
         var modelAssetPath = modelsDir + "/" + safeName;
         var prefabPath = modelAssetPath.Substring(0, modelAssetPath.Length - ext.Length) + ".prefab";
 
-        ClearModelDirAssets(modelsDir, recipeId + "_Icon.png");
+        ClearRecipeModelFiles(modelsDir, recipeId);
 
         // 写入全部文件（主模型统一命名为 <recipeName>.fbx/.obj，贴图保留原文件名）。
         var uploadedTexturePaths = new List<KeyValuePair<CustomRecipeUploadFileDto, string>>();
@@ -2661,19 +2899,30 @@ public static class LayoutEditorLevelAdminApi
 
         // 不创建额外材质球：FBX 内部贴图引用名已改写为贴图落盘文件名，
         // Unity 导入 FBX 时自动把贴图链接进内嵌材质（与美术直接拖 FBX + 贴图使用一致）。
+        // 直接生成「空根 + 子节点」结构（游戏运行时重置根节点变换，变换必须放子节点）。
         // 必须先实例化到场景再 CreatePrefab：直接对模型资产 CreatePrefab 会丢失网格与子节点
         // （生成只有根 Transform 的空 prefab，导致无渲染器）。
-        var instance = UnityEngine.Object.Instantiate(importedRoot);
-        instance.name = recipeId;
+        var t = RecipeModelTransform(dto.recipeAssetPath);
+        var root = new GameObject(recipeId);
+        GameObject child;
         try
         {
-            var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, instance);
+            child = UnityEngine.Object.Instantiate(importedRoot);
+            child.name = importedRoot.name;
+            child.transform.SetParent(root.transform, false);
+            ApplyTransformToChild(child.transform, t);
+            var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, root);
             if (prefabInstance == null)
                 return "创建预制体失败。";
         }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] 创建装盘 prefab 失败: " + prefabPath + " - " + ex.Message);
+            return "创建预制体失败。";
+        }
         finally
         {
-            UnityEngine.Object.DestroyImmediate(instance);
+            UnityEngine.Object.DestroyImmediate(root);
         }
 
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
@@ -2689,8 +2938,6 @@ public static class LayoutEditorLevelAdminApi
         so.model = prefab;
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
-
-        ApplyModelTransform(so);
         return null;
     }
 
@@ -2717,24 +2964,33 @@ public static class LayoutEditorLevelAdminApi
         return SanitizeName(Path.GetFileNameWithoutExtension(name)) + ext;
     }
 
-    /// <summary>删除 models 目录内旧模型/贴图/材质球（保留图标文件）。</summary>
-    private static void ClearModelDirAssets(string dirAssetPath, string keepFileName)
+    /// <summary>删除 models 子目录内本条菜谱（按 recipeId 前缀）的旧模型/贴图/材质球，
+    ///  保留 <recipeId>_Icon.png 图标。每个菜谱一个 models 子目录，不影响其他菜谱。</summary>
+    private static void ClearRecipeModelFiles(string dirAssetPath, string recipeId)
     {
         var abs = AbsPath(dirAssetPath);
-        if (!Directory.Exists(abs))
+        if (!Directory.Exists(abs) || string.IsNullOrEmpty(recipeId))
             return;
         var extensions = new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga", ".mat" };
+        var prefix = recipeId + "_";
         foreach (var file in Directory.GetFiles(abs))
         {
             var name = Path.GetFileName(file);
             if (name.EndsWith(".meta", StringComparison.Ordinal))
                 continue;
-            if (string.Equals(name, keepFileName, StringComparison.OrdinalIgnoreCase))
-                continue;
             var ext = Path.GetExtension(file).ToLowerInvariant();
             if (System.Array.IndexOf(extensions, ext) < 0)
                 continue;
-            AssetDatabase.DeleteAsset(dirAssetPath + "/" + name);
+            // 图标文件（<recipeId>_Icon.*）始终保留
+            if (name.StartsWith(prefix + "Icon", StringComparison.OrdinalIgnoreCase))
+                continue;
+            // 仅匹配本菜谱命名的文件：主模型 <recipeId>.fbx/.obj、贴图 <recipeId>_*.png 等
+            var baseName = Path.GetFileNameWithoutExtension(name);
+            if (string.Equals(baseName, recipeId, StringComparison.OrdinalIgnoreCase) ||
+                baseName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                AssetDatabase.DeleteAsset(dirAssetPath + "/" + name);
+            }
         }
     }
 
@@ -2744,7 +3000,7 @@ public static class LayoutEditorLevelAdminApi
         var list = new List<string>();
         if (string.IsNullOrEmpty(recipeAssetPath))
             return list.ToArray();
-        var dir = DirectoryName(recipeAssetPath) + "/models";
+        var dir = RecipeModelsDir(recipeAssetPath);
         var abs = AbsPath(dir);
         if (!Directory.Exists(abs))
             return list.ToArray();

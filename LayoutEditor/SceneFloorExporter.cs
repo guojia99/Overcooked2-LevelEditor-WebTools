@@ -225,11 +225,14 @@ public static class SceneFloorExporter
             return true;
 
         // Also accept generic plane/quad surfaces that live under a Ground/Floor group.
+        // "Animated Objects" is included so floors reparented into a move-control
+        // group keep round-tripping through the exporter.
         var p = t.parent;
         while (p != null)
         {
             var pn = p.name == null ? "" : p.name.ToLowerInvariant();
             if (pn == "ground" || pn.Contains("floor")
+                || pn == "animated objects"
                 || pn.Contains("city") || pn.Contains("exterior")
                 || pn.Contains("terrain") || pn.Contains("environment"))
                 return true;
