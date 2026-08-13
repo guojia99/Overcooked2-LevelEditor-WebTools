@@ -1779,6 +1779,22 @@ public static class LayoutEditorLevelAdminApi
                     plateId = Path.GetFileNameWithoutExtension(pp);
             }
 
+            string stepIconId = "";
+            if (so.cookingStepIconSO != null)
+            {
+                var sip = AssetDatabase.GetAssetPath(so.cookingStepIconSO);
+                if (!string.IsNullOrEmpty(sip))
+                    stepIconId = Path.GetFileNameWithoutExtension(sip);
+            }
+
+            string mixIconId = "";
+            if (so.mixingIconSO != null)
+            {
+                var mip = AssetDatabase.GetAssetPath(so.mixingIconSO);
+                if (!string.IsNullOrEmpty(mip))
+                    mixIconId = Path.GetFileNameWithoutExtension(mip);
+            }
+
             bool hasIcon = so.icon != null;
             bool hasModel = so.model != null;
 
@@ -1813,7 +1829,9 @@ public static class LayoutEditorLevelAdminApi
                 intermediate = so.score <= 0,
                 group = LayoutEditorCatalogApi.FoodGroupOf(path),
                 cookingStepId = stepId,
+                cookingStepIconId = stepIconId,
                 platingStepId = plateId,
+                mixingIconId = mixIconId,
                 hasIcon = hasIcon,
                 hasModel = hasModel,
                 modelScale = RecipeModelScale(path),
@@ -1823,6 +1841,9 @@ public static class LayoutEditorLevelAdminApi
                 modelPositionX = RecipeModelTransform(path).positionX,
                 modelPositionY = RecipeModelTransform(path).positionY,
                 modelPositionZ = RecipeModelTransform(path).positionZ,
+                modelPivotX = RecipeModelTransform(path).pivotX,
+                modelPivotY = RecipeModelTransform(path).pivotY,
+                modelPivotZ = RecipeModelTransform(path).pivotZ,
                 boundsMinY = ModelBoundsOf(so.model, out bsz).min.y,
                 boundsSizeX = bsz.x,
                 boundsSizeY = bsz.y,
@@ -2250,7 +2271,8 @@ public static class LayoutEditorLevelAdminApi
     }
 
     private static void SetRecipeModelTransform(string recipeAssetPath, float scale, float rotationY,
-        float rotationX, float rotationZ, float positionX, float positionY, float positionZ)
+        float rotationX, float rotationZ, float positionX, float positionY, float positionZ,
+        float pivotX, float pivotY, float pivotZ)
     {
         var config = LoadCustomRecipeConfigFor(recipeAssetPath);
         if (config == null)
@@ -2280,6 +2302,9 @@ public static class LayoutEditorLevelAdminApi
                 list[i].positionX = positionX;
                 list[i].positionY = positionY;
                 list[i].positionZ = positionZ;
+                list[i].pivotX = pivotX;
+                list[i].pivotY = pivotY;
+                list[i].pivotZ = pivotZ;
                 config.modelTransforms = list.ToArray();
                 EditorUtility.SetDirty(config);
                 return;
@@ -2295,16 +2320,19 @@ public static class LayoutEditorLevelAdminApi
             positionX = positionX,
             positionY = positionY,
             positionZ = positionZ,
+            pivotX = pivotX,
+            pivotY = pivotY,
+            pivotZ = pivotZ,
         });
         config.modelTransforms = list.ToArray();
         EditorUtility.SetDirty(config);
     }
 
-    /// <summary>把菜谱的模型变换（缩放/旋转/位置）应用到装盘模型。
+    /// <summary>把菜谱的模型变换（缩放/旋转/位置/原点）应用到装盘模型。
     ///  游戏运行时（ClientAttachedOrderCosmeticDecisions）在实例化后会重置模型根节点的
     ///  localPosition/localRotation，因此变换必须放在「子节点」上才能生效：
-    ///  这里把模型重建为「空根 + 子节点」结构，变换全部应用到子节点，
-    ///  等效于把修正烘焙进模型（与老师给的正常模型做法一致）。
+    ///  这里把模型重建为「空根 + 变换节点 + 模型」结构——变换（缩放/旋转/位置）应用到
+    ///  变换节点，模型原点偏移（pivot）应用到最内层模型节点，旋转/缩放绕偏移后的原点。
     ///  复用/共享模型会先克隆到本菜谱 models 目录，避免影响其他菜谱。
     ///  数值存储在插件自己的 CustomRecipeConfigSO 中，不修改宿主 CustomRecipeSO。</summary>
     private static void ApplyModelTransform(CustomRecipeSO so)
@@ -2327,17 +2355,23 @@ public static class LayoutEditorLevelAdminApi
         var isPrefab = modelPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase);
         var isOwnPrefab = isPrefab && modelPath.StartsWith(modelsDir + "/", StringComparison.OrdinalIgnoreCase);
 
+        // 三级结构判定：根无渲染器、其第一子节点也无渲染器且还有子节点（变换节点 → 模型节点）
         if (isOwnPrefab && so.model.GetComponent<Renderer>() == null && so.model.transform.childCount > 0)
         {
-            // 已是本菜谱的「空根 + 子节点」结构：直接把变换应用到子节点并保存
-            ApplyTransformToChild(so.model.transform.GetChild(0), t);
-            EditorUtility.SetDirty(so.model);
-            AssetDatabase.SaveAssets();
-            return;
+            var tx = so.model.transform.GetChild(0);
+            if (tx.GetComponent<Renderer>() == null && tx.childCount > 0)
+            {
+                // 已是「空根 + 变换节点 + 模型」结构：变换应用到变换节点，原点偏移应用到模型节点
+                ApplyTransformToChild(tx, t);
+                ApplyPivotToModel(tx.GetChild(0), t);
+                EditorUtility.SetDirty(so.model);
+                AssetDatabase.SaveAssets();
+                return;
+            }
         }
 
-        // 旧结构（单节点 prefab）、复用其他菜谱的模型、或 FBX/OBJ 直引：
-        // 统一重建为「空根 + 子节点」prefab（复用模型克隆到本菜谱目录，避免互相覆盖）
+        // 旧结构（单节点/双节点 prefab）、复用其他菜谱的模型、或 FBX/OBJ 直引：
+        // 统一重建为「空根 + 变换节点 + 模型」prefab（复用模型克隆到本菜谱目录，避免互相覆盖）
         var targetPath = isOwnPrefab ? modelPath : ownPrefabPath;
         var prefab = RebuildPlatingPrefab(targetPath, so.model, t);
         if (prefab == null)
@@ -2350,7 +2384,7 @@ public static class LayoutEditorLevelAdminApi
         AssetDatabase.SaveAssets();
     }
 
-    /// <summary>把变换应用到子节点（游戏只重置根节点，子节点变换在运行时保留）。</summary>
+    /// <summary>把变换（缩放/旋转/位置）应用到变换节点（游戏只重置根节点，子节点变换在运行时保留）。</summary>
     private static void ApplyTransformToChild(Transform child, CustomRecipeConfigSO.CustomRecipeTransformEntry t)
     {
         child.localScale = Vector3.one * Mathf.Max(0.0001f, t.scale > 0f ? t.scale : 1f);
@@ -2358,7 +2392,13 @@ public static class LayoutEditorLevelAdminApi
         child.localPosition = new Vector3(t.positionX, t.positionY, t.positionZ);
     }
 
-    /// <summary>重建装盘 prefab：空根 + 原模型作为子节点，变换应用到子节点。
+    /// <summary>把模型原点偏移应用到最内层模型节点：模型平移使旋转/缩放绕偏移后的原点。</summary>
+    private static void ApplyPivotToModel(Transform model, CustomRecipeConfigSO.CustomRecipeTransformEntry t)
+    {
+        model.localPosition = new Vector3(t.pivotX, t.pivotY, t.pivotZ);
+    }
+
+    /// <summary>重建装盘 prefab：空根 + 变换节点（缩放/旋转/位置）+ 模型节点（原点偏移）。
     ///  覆盖同名 prefab（保留 guid，避免引用失效）。</summary>
     private static GameObject RebuildPlatingPrefab(string prefabPath, GameObject source,
         CustomRecipeConfigSO.CustomRecipeTransformEntry t)
@@ -2366,13 +2406,15 @@ public static class LayoutEditorLevelAdminApi
         if (source == null || string.IsNullOrEmpty(prefabPath))
             return null;
         var root = new GameObject(Path.GetFileNameWithoutExtension(prefabPath));
-        GameObject child;
         try
         {
-            child = UnityEngine.Object.Instantiate(source);
-            child.name = source.name;
-            child.transform.SetParent(root.transform, false);
-            ApplyTransformToChild(child.transform, t);
+            var tx = new GameObject(source.name + "_Transform");
+            tx.transform.SetParent(root.transform, false);
+            ApplyTransformToChild(tx.transform, t);
+            var model = UnityEngine.Object.Instantiate(source);
+            model.name = source.name;
+            model.transform.SetParent(tx.transform, false);
+            ApplyPivotToModel(model.transform, t);
             var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, root);
             return prefabInstance;
         }
@@ -2474,6 +2516,9 @@ public static class LayoutEditorLevelAdminApi
         dto.modelPositionX = t.positionX;
         dto.modelPositionY = t.positionY;
         dto.modelPositionZ = t.positionZ;
+        dto.modelPivotX = t.pivotX;
+        dto.modelPivotY = t.pivotY;
+        dto.modelPivotZ = t.pivotZ;
         return dto;
     }
 
@@ -2620,7 +2665,8 @@ public static class LayoutEditorLevelAdminApi
         var modelsDir = EnsureRecipeModelsDir(assetPath);
         AssetDatabase.SaveAssets();
         SetRecipeModelTransform(assetPath, dto.modelScale, dto.modelRotationY,
-            dto.modelRotationX, dto.modelRotationZ, dto.modelPositionX, dto.modelPositionY, dto.modelPositionZ);
+            dto.modelRotationX, dto.modelRotationZ, dto.modelPositionX, dto.modelPositionY, dto.modelPositionZ,
+            dto.modelPivotX, dto.modelPivotY, dto.modelPivotZ);
         ApplyModelTransform(so);
 
         AddCustomRecipeName(setName, recipeName, dto.nameZh, dto.nameEn);
@@ -2661,7 +2707,8 @@ public static class LayoutEditorLevelAdminApi
         so.cookingProgress = (CustomRecipeSO.CookingProgress)(dto.cookingProgress >= 0 && dto.cookingProgress <= 2 ? dto.cookingProgress : 1);
         so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
         SetRecipeModelTransform(dto.assetPath, dto.modelScale, dto.modelRotationY,
-            dto.modelRotationX, dto.modelRotationZ, dto.modelPositionX, dto.modelPositionY, dto.modelPositionZ);
+            dto.modelRotationX, dto.modelRotationZ, dto.modelPositionX, dto.modelPositionY, dto.modelPositionZ,
+            dto.modelPivotX, dto.modelPivotY, dto.modelPivotZ);
 
         if (dto.compositionIds != null)
         {
@@ -2801,14 +2848,15 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
-    public static string UploadCustomRecipeModel(CustomRecipeUploadDto dto)
+    public static CustomRecipeUploadResultDto UploadCustomRecipeModel(CustomRecipeUploadDto dto)
     {
+        var okResult = new CustomRecipeUploadResultDto { ok = true };
         if (dto == null || string.IsNullOrEmpty(dto.recipeAssetPath))
-            return "缺少上传参数。";
+            return new CustomRecipeUploadResultDto { ok = false, error = "缺少上传参数。" };
 
         var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(dto.recipeAssetPath);
         if (so == null)
-            return "未找到菜谱资源。";
+            return new CustomRecipeUploadResultDto { ok = false, error = "未找到菜谱资源。" };
 
         // 兼容单文件旧格式：转成 files 数组。
         var files = dto.files != null && dto.files.Length > 0
@@ -2817,7 +2865,7 @@ public static class LayoutEditorLevelAdminApi
                 ? new[] { new CustomRecipeUploadFileDto { fileName = dto.fileName, base64 = dto.base64 } }
                 : null);
         if (files == null || files.Length == 0)
-            return "缺少上传参数。";
+            return new CustomRecipeUploadResultDto { ok = false, error = "缺少上传参数。" };
 
         CustomRecipeUploadFileDto modelFile = null;
         foreach (var f in files)
@@ -2829,7 +2877,7 @@ public static class LayoutEditorLevelAdminApi
             }
         }
         if (modelFile == null)
-            return "请选择 FBX 或 OBJ 模型文件。";
+            return new CustomRecipeUploadResultDto { ok = false, error = "请选择 FBX 或 OBJ 模型文件。" };
 
         var dir = DirectoryName(dto.recipeAssetPath);
         var modelsDir = EnsureRecipeModelsDir(dto.recipeAssetPath);
@@ -2857,7 +2905,7 @@ public static class LayoutEditorLevelAdminApi
             }
             catch
             {
-                return "文件「" + f.fileName + "」数据解码失败。";
+                return new CustomRecipeUploadResultDto { ok = false, error = "文件「" + f.fileName + "」数据解码失败。" };
             }
             var targetName = ReferenceEquals(f, modelFile)
                 ? safeName
@@ -2890,7 +2938,7 @@ public static class LayoutEditorLevelAdminApi
 
         var importedRoot = AssetDatabase.LoadAssetAtPath<GameObject>(modelAssetPath);
         if (importedRoot == null)
-            return "模型导入失败，请确认文件格式为 FBX 或 OBJ（贴图请使用 PNG/JPG）。";
+            return new CustomRecipeUploadResultDto { ok = false, error = "模型导入失败，请确认文件格式为 FBX 或 OBJ（贴图请使用 PNG/JPG）。" };
 
         // 覆盖上传时强制重建 prefab：旧 prefab 可能引用已删除的贴图/旧材质（导致灰色）
         var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
@@ -2899,26 +2947,29 @@ public static class LayoutEditorLevelAdminApi
 
         // 不创建额外材质球：FBX 内部贴图引用名已改写为贴图落盘文件名，
         // Unity 导入 FBX 时自动把贴图链接进内嵌材质（与美术直接拖 FBX + 贴图使用一致）。
-        // 直接生成「空根 + 子节点」结构（游戏运行时重置根节点变换，变换必须放子节点）。
+        // 直接生成「空根 + 变换节点 + 模型」结构（游戏运行时重置根节点变换，变换必须放子节点；
+        // 原点偏移 pivot 应用到最内层模型节点）。
         // 必须先实例化到场景再 CreatePrefab：直接对模型资产 CreatePrefab 会丢失网格与子节点
         // （生成只有根 Transform 的空 prefab，导致无渲染器）。
         var t = RecipeModelTransform(dto.recipeAssetPath);
         var root = new GameObject(recipeId);
-        GameObject child;
         try
         {
-            child = UnityEngine.Object.Instantiate(importedRoot);
-            child.name = importedRoot.name;
-            child.transform.SetParent(root.transform, false);
-            ApplyTransformToChild(child.transform, t);
+            var tx = new GameObject(recipeId + "_Transform");
+            tx.transform.SetParent(root.transform, false);
+            ApplyTransformToChild(tx.transform, t);
+            var model = UnityEngine.Object.Instantiate(importedRoot);
+            model.name = importedRoot.name;
+            model.transform.SetParent(tx.transform, false);
+            ApplyPivotToModel(model.transform, t);
             var prefabInstance = PrefabUtility.CreatePrefab(prefabPath, root);
             if (prefabInstance == null)
-                return "创建预制体失败。";
+                return new CustomRecipeUploadResultDto { ok = false, error = "创建预制体失败。" };
         }
         catch (Exception ex)
         {
             Debug.LogWarning("[LayoutEditor] 创建装盘 prefab 失败: " + prefabPath + " - " + ex.Message);
-            return "创建预制体失败。";
+            return new CustomRecipeUploadResultDto { ok = false, error = "创建预制体失败。" };
         }
         finally
         {
@@ -2938,7 +2989,23 @@ public static class LayoutEditorLevelAdminApi
         so.model = prefab;
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
-        return null;
+
+        // 返回 Unity 导入后的原始尺寸（不含配置变换），供前端按 Unity 实际尺寸自动校准。
+        // prefab 子节点已应用 t 的变换：原始尺寸 = 世界包围盒 ÷ 变换缩放（平移不影响 size；
+        // 旋转只交换 X/Z，max 不变）。
+        var scaleFactor = t.scale > 0f ? t.scale : 1f;
+        var renderers = prefab.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length > 0)
+        {
+            var b = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+                b.Encapsulate(renderers[i].bounds);
+            okResult.rawSizeX = b.size.x / scaleFactor;
+            okResult.rawSizeY = b.size.y / scaleFactor;
+            okResult.rawSizeZ = b.size.z / scaleFactor;
+            okResult.rawMinY = (b.min.y - t.positionY) / scaleFactor;
+        }
+        return okResult;
     }
 
     private static bool IsModelFileName(string fileName)
@@ -2958,7 +3025,7 @@ public static class LayoutEditorLevelAdminApi
         if (string.IsNullOrEmpty(name))
             return null;
         var ext = Path.GetExtension(name).ToLowerInvariant();
-        var allowed = new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga" };
+        var allowed = new[] { ".fbx", ".obj", ".mtl", ".png", ".jpg", ".jpeg", ".tga" };
         if (System.Array.IndexOf(allowed, ext) < 0)
             return null;
         return SanitizeName(Path.GetFileNameWithoutExtension(name)) + ext;
@@ -2971,7 +3038,7 @@ public static class LayoutEditorLevelAdminApi
         var abs = AbsPath(dirAssetPath);
         if (!Directory.Exists(abs) || string.IsNullOrEmpty(recipeId))
             return;
-        var extensions = new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga", ".mat" };
+        var extensions = new[] { ".fbx", ".obj", ".mtl", ".png", ".jpg", ".jpeg", ".tga", ".mat" };
         var prefix = recipeId + "_";
         foreach (var file in Directory.GetFiles(abs))
         {
@@ -3010,7 +3077,7 @@ public static class LayoutEditorLevelAdminApi
             if (name.EndsWith(".meta", StringComparison.Ordinal))
                 continue;
             var ext = Path.GetExtension(name).ToLowerInvariant();
-            if (System.Array.IndexOf(new[] { ".fbx", ".obj", ".png", ".jpg", ".jpeg", ".tga" }, ext) >= 0)
+            if (System.Array.IndexOf(new[] { ".fbx", ".obj", ".mtl", ".png", ".jpg", ".jpeg", ".tga" }, ext) >= 0)
                 list.Add(name);
         }
         list.Sort(StringComparer.Ordinal);

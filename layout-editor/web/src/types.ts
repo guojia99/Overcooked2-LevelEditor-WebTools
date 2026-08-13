@@ -742,7 +742,9 @@ export interface CustomRecipeSummary {
   /** "core" / "custom" / "dlc02" / "dlc05" / "levelset". */
   group?: string;
   cookingStepId: string;
+  cookingStepIconId?: string;
   platingStepId: string;
+  mixingIconId?: string;
   hasIcon: boolean;
   hasModel: boolean;
   /** 模型在游戏中的缩放/旋转/位置（应用到 prefab 根节点，运行时直接生效）。 */
@@ -753,6 +755,10 @@ export interface CustomRecipeSummary {
   modelPositionX: number;
   modelPositionY: number;
   modelPositionZ: number;
+  /** 模型原点偏移（模型节点 localPosition，Unity 单位）：旋转/缩放绕偏移后的原点。 */
+  modelPivotX?: number;
+  modelPivotY?: number;
+  modelPivotZ?: number;
   /** Unity 导入后的模型包围盒（含配置变换；minY 为底面高度），
    *  用于按 Unity 实际尺寸校准自动适配（three.js 预览尺寸可能与 Unity 不一致）。 */
   boundsMinY?: number;
@@ -793,6 +799,9 @@ export interface CustomRecipeEdit {
   modelPositionX: number;
   modelPositionY: number;
   modelPositionZ: number;
+  modelPivotX: number;
+  modelPivotY: number;
+  modelPivotZ: number;
 }
 
 export interface CustomRecipeReferenceEntry {

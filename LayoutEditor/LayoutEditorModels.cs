@@ -960,7 +960,9 @@ public class CustomRecipeSummaryDto
     /** "core" / "custom" / "dlc02" / "dlc05" / "levelset" — matches recipes.json. */
     public string group;
     public string cookingStepId;
+    public string cookingStepIconId;
     public string platingStepId;
+    public string mixingIconId;
     public bool hasIcon;
     public bool hasModel;
     /** 模型在游戏中的缩放/旋转/位置（应用到 prefab 根节点，运行时直接生效）。 */
@@ -971,6 +973,10 @@ public class CustomRecipeSummaryDto
     public float modelPositionX;
     public float modelPositionY;
     public float modelPositionZ;
+    /** 模型原点偏移（模型节点 localPosition），旋转/缩放绕偏移后的原点。 */
+    public float modelPivotX;
+    public float modelPivotY;
+    public float modelPivotZ;
     /** Unity 导入后的模型包围盒（含配置变换；minY 为底面高度，用于前端按 Unity 实际尺寸校准缩放/朝向）。 */
     public float boundsMinY;
     public float boundsSizeX;
@@ -1004,6 +1010,9 @@ public class CustomRecipeEditDto
     public float modelPositionX;
     public float modelPositionY;
     public float modelPositionZ;
+    public float modelPivotX;
+    public float modelPivotY;
+    public float modelPivotZ;
 }
 
 [Serializable]
@@ -1069,6 +1078,9 @@ public class CustomRecipeDiagnoseDto
     public float modelPositionX;
     public float modelPositionY;
     public float modelPositionZ;
+    public float modelPivotX;
+    public float modelPivotY;
+    public float modelPivotZ;
 }
 
 [Serializable]
@@ -1080,6 +1092,19 @@ public class CustomRecipeUploadDto
     public string base64;
     /** 多文件上传（FBX/OBJ + PNG 贴图组合）：第一个模型文件作为主模型，其余为贴图等附属文件。 */
     public CustomRecipeUploadFileDto[] files;
+}
+
+/// <summary>模型上传结果：成功时附带 Unity 导入后的原始尺寸（不含配置变换），
+///  供前端自动按 Unity 实际尺寸校准缩放/位置（three.js 预览尺寸可能与 Unity 不一致）。</summary>
+[Serializable]
+public class CustomRecipeUploadResultDto
+{
+    public bool ok;
+    public string error;
+    public float rawSizeX;
+    public float rawSizeY;
+    public float rawSizeZ;
+    public float rawMinY;
 }
 
 [Serializable]

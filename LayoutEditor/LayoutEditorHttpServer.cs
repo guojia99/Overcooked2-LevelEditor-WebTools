@@ -53,34 +53,29 @@ public class LayoutEditorHttpServer
         Port = port;
         for (int attempt = 0; attempt < 5; attempt++)
         {
-            var listener = new HttpListener();
-            listener.Prefixes.Add("http://127.0.0.1:" + port + "/");
-            listener.Prefixes.Add("http://localhost:" + port + "/");
-            try
+            // 优先通配前缀（支持 Mac 开发机经局域网访问虚拟机内的 Unity 服务）；
+            // Windows 非管理员无 URLACL 权限时会绑定失败，回退为仅本机绑定。
+            var listener = TryStartListener(new[] { "http://*:" + port + "/", "http://127.0.0.1:" + port + "/", "http://localhost:" + port + "/" });
+            if (listener == null)
             {
-                listener.Start();
+                listener = TryStartListener(new[] { "http://127.0.0.1:" + port + "/", "http://localhost:" + port + "/" });
+                if (listener != null && attempt == 0)
+                    Debug.LogWarning("Layout Editor: 通配前缀缺少权限，仅绑定本机 127.0.0.1:" + port + "（虚拟机/局域网无法直接访问）");
+            }
+            if (listener != null)
+            {
                 _listener = listener;
                 _running = true;
                 break;
             }
-            catch (HttpListenerException ex)
-            {
-                listener.Close();
-                if (attempt >= 4)
-                {
-                    _listener = null;
-                    Debug.LogError("Layout Editor: 无法绑定端口 " + port + "（可能被其他进程或残留监听器占用）：" + ex.Message);
-                    return false;
-                }
-                Debug.LogWarning("Layout Editor: 端口 " + port + " 暂时不可用，500ms 后重试绑定（" + (attempt + 1) + "/5）…");
-                Thread.Sleep(500);
-            }
-            catch (Exception ex)
+            if (attempt >= 4)
             {
                 _listener = null;
-                Debug.LogError("Layout Editor: 启动服务失败：" + ex.Message);
+                Debug.LogError("Layout Editor: 无法绑定端口 " + port + "（可能被其他进程或残留监听器占用）");
                 return false;
             }
+            Debug.LogWarning("Layout Editor: 端口 " + port + " 暂时不可用，500ms 后重试绑定（" + (attempt + 1) + "/5）…");
+            Thread.Sleep(500);
         }
 
         if (!_running)
@@ -103,6 +98,23 @@ public class LayoutEditorHttpServer
         EditorApplication.update -= PumpMainThread;
         EditorApplication.update += PumpMainThread;
         return true;
+    }
+
+    /// <summary>尝试按给定前缀绑定监听器；绑定成功返回 listener，失败返回 null（不抛异常）。</summary>
+    private static HttpListener TryStartListener(string[] prefixes)
+    {
+        try
+        {
+            var listener = new HttpListener();
+            foreach (var p in prefixes)
+                listener.Prefixes.Add(p);
+            listener.Start();
+            return listener;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public void Stop()
@@ -580,6 +592,7 @@ public class LayoutEditorHttpServer
                 {
                     case ".fbx":
                     case ".obj": ct = "application/octet-stream"; break;
+                    case ".mtl": ct = "text/plain"; break;
                     case ".png": ct = "image/png"; break;
                     case ".jpg":
                     case ".jpeg": ct = "image/jpeg"; break;
@@ -766,8 +779,11 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<CustomRecipeUploadDto>(body);
-                var err = LayoutEditorLevelAdminApi.UploadCustomRecipeModel(dto);
-                WriteAdminResult(response, err);
+                var result = LayoutEditorLevelAdminApi.UploadCustomRecipeModel(dto);
+                if (!result.ok)
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = result.error }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(result));
                 return;
             }
 

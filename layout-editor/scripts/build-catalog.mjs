@@ -133,7 +133,7 @@ const UTENSIL_STACK = {
   MixerBowl: { y: 0.6, hostRule: "mixer" },
   BlenderCup: { y: 0.6, hostRule: "blender" },
   GriddlePan: { y: 0.6, hostRule: "campfire" },
-  Skewer: { y: 0.6, hostRule: "barbeque" },
+  Skewer: { y: 1, hostRule: "barbeque" },
   ToastingFork: { y: 0.6, hostRule: "campfire" },
   Bellows: { y: 0.6, hostRule: "campfire" },
 };

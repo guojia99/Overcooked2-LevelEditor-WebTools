@@ -13973,7 +13973,7 @@
       },
       "layoutTier": "core",
       "stack": {
-        "y": 0.6,
+        "y": 1,
         "hostRule": "barbeque"
       },
       "nameZh": "烤串签",
@@ -27624,7 +27624,7 @@
         },
         "layoutTier": "core",
         "stack": {
-          "y": 0.6,
+          "y": 1,
           "hostRule": "barbeque"
         },
         "nameZh": "烤串签",

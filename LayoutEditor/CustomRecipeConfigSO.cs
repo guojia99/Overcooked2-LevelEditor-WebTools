@@ -35,6 +35,10 @@ namespace LevelEditorStub
             public float positionX;
             public float positionY;
             public float positionZ;
+            /** 模型原点偏移（模型节点 localPosition，Unity 单位）：旋转/缩放绕偏移后的原点。 */
+            public float pivotX;
+            public float pivotY;
+            public float pivotZ;
         }
     }
 }

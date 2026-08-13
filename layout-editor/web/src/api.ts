@@ -636,7 +636,7 @@ export async function uploadCustomRecipeModel(
   recipeAssetPath: string,
   fileName: string,
   base64: string
-): Promise<string> {
+): Promise<CustomRecipeUploadResult> {
   return uploadCustomRecipeModelFiles(setName, recipeAssetPath, [{ fileName, base64 }]);
 }
 
@@ -645,19 +645,29 @@ export interface CustomRecipeUploadFile {
   base64: string;
 }
 
-/** 上传模型 + 贴图组合（第一个 .fbx/.obj 为主模型，其余 PNG/JPG 为贴图）。 */
+export interface CustomRecipeUploadResult {
+  ok?: boolean;
+  error?: string;
+  /** Unity 导入后的模型原始尺寸（不含配置变换），用于按 Unity 实际尺寸校准缩放/位置。 */
+  rawSizeX?: number;
+  rawSizeY?: number;
+  rawSizeZ?: number;
+  rawMinY?: number;
+}
+
+/** 上传模型 + 贴图组合（第一个 .fbx/.obj 为主模型，其余 PNG/JPG 为贴图）。
+ *  返回 Unity 导入后的原始尺寸，前端据此自动校准缩放/位置。 */
 export async function uploadCustomRecipeModelFiles(
   setName: string,
   recipeAssetPath: string,
   files: CustomRecipeUploadFile[]
-): Promise<string> {
+): Promise<CustomRecipeUploadResult> {
   const r = await fetch("/api/custom-recipes/upload-model", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ setName, recipeAssetPath, files }),
   });
-  const data = await readApiJson<{ texturePath?: string; error?: string }>(r);
-  return data.texturePath ?? "";
+  return readApiJson<CustomRecipeUploadResult>(r);
 }
 
 /** 列出菜谱 models 目录内的模型/贴图文件（供 3D 在线预览）。 */

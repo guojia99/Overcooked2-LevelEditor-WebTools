@@ -14,6 +14,9 @@ import { navHtml, wireNav } from "./nav";
 import { foodGroupLabel } from "./ingredientLabels";
 import { closeModal, openModal } from "./modals";
 import { rlCardHtml, type RecipeWithGroups } from "./recipeCard";
+import { fmt4, fmtCm, footprintOf, u2cm } from "./modelUnits";
+import { sanitizeUploadFileName } from "./fbxTextureRename";
+import { ensureObjMtllib, renameMtlTextureRefs } from "./mtlTextureRename";
 
 function esc(s: unknown): string {
   return String(s ?? "")
@@ -133,22 +136,16 @@ function modelResourceBase(recipeAssetPath: string): string {
   return `/api/custom-recipes/model-files/${b64}/`;
 }
 
-/** 参考模型（披萨装盘模型，含盘子；OBJ 源文件为建模坐标，prefab 根 scale=0.7 才是游戏内尺寸）。 */
-const REFERENCE_MODEL = {
-  url:
-    "/api/custom-recipes/reference-model?path=" +
-    encodeURIComponent("Assets/common01/food/CustomRecipes/Pizza/models/plated_mushroom_01.prefab"),
-  format: "obj" as const,
-  scale: 0.7,
-};
-
-/** 打开菜谱 3D 模型在线预览（自动从 models 目录找 .fbx/.obj；three.js 按需加载）。 */
+/** 打开菜谱 3D 模型在线预览（自动从 models 目录找 .fbx/.obj；three.js 按需加载）。
+ *  预览显示参考容器标的物（盘子/玻璃杯，半透明、无碰撞），容器中心 = 原点 (0,0,0)，
+ *  「自动适配」按「适配目标」（fitTarget）缩放并把选中面放到容器承物面。 */
 async function openRecipeModelPreview(
   recipeAssetPath: string,
   title: string,
   extra?: Partial<import("./modelPreview").ModelTransformValues> & {
     onAdjust?: (t: import("./modelPreview").ModelTransformValues) => void
     unitySize?: { x: number; y: number; z: number; minY: number }
+    fitTarget?: "plate" | "cup"
   }
 ): Promise<void> {
   try {
@@ -159,13 +156,17 @@ async function openRecipeModelPreview(
       return;
     }
     const { openModelPreview } = await import("./modelPreview");
+    const base = modelResourceBase(recipeAssetPath);
     const texUrls = files
       .filter((f) => /\.(png|jpg|jpeg)$/i.test(f))
-      .map((f) => modelResourceBase(recipeAssetPath) + encodeURIComponent(f));
+      .map((f) => base + encodeURIComponent(f));
+    const mtl = files.find((f) => /\.mtl$/i.test(f));
     openModelPreview({
       title,
-      resourceBase: modelResourceBase(recipeAssetPath),
+      resourceBase: base,
       modelFileName: model,
+      mtlUrl: mtl ? base + encodeURIComponent(mtl) : undefined,
+      fitTarget: extra?.fitTarget,
       scale: extra?.scale,
       rotationX: extra?.rotationX,
       rotationY: extra?.rotationY,
@@ -173,12 +174,12 @@ async function openRecipeModelPreview(
       positionX: extra?.positionX,
       positionY: extra?.positionY,
       positionZ: extra?.positionZ,
+      pivotX: extra?.pivotX,
+      pivotY: extra?.pivotY,
+      pivotZ: extra?.pivotZ,
       unitySize: extra?.unitySize,
       onAdjust: extra?.onAdjust,
       remoteTextures: texUrls,
-      referenceUrl: REFERENCE_MODEL.url,
-      referenceFormat: REFERENCE_MODEL.format,
-      referenceScale: REFERENCE_MODEL.scale,
     });
   } catch (e) {
     alert((e as Error).message || "模型预览加载失败。");
@@ -464,6 +465,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         const r = recipes.find((x) => x.assetPath === path);
         const s = r && r.modelScale > 0 ? r.modelScale : 1;
         void openRecipeModelPreview(path, path.split("/").pop() ?? path, {
+          fitTarget: r?.platingStepId === "Glass" ? "cup" : "plate",
           scale: r?.modelScale ?? 1,
           rotationX: r?.modelRotationX ?? 0,
           rotationY: r?.modelRotationY ?? 0,
@@ -471,6 +473,9 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
           positionX: r?.modelPositionX ?? 0,
           positionY: r?.modelPositionY ?? 0,
           positionZ: r?.modelPositionZ ?? 0,
+          pivotX: r?.modelPivotX ?? 0,
+          pivotY: r?.modelPivotY ?? 0,
+          pivotZ: r?.modelPivotZ ?? 0,
           unitySize:
             r && r.boundsSizeX != null && r.boundsSizeY != null && r.boundsSizeZ != null
               ? {
@@ -576,9 +581,9 @@ async function renderRecipeForm(
   const score = recipe?.score ?? presets?.score ?? 0;
   const type = recipe?.type ?? (presets?.score === 0 ? "Cooked" : "Composite");
   const cookingStepId = recipe?.cookingStepId ?? "";
-  const cookingStepIconId = "";
+  const cookingStepIconId = recipe?.cookingStepIconId ?? "";
   const platingStepId = recipe?.platingStepId ?? "";
-  const mixingIconId = "";
+  const mixingIconId = recipe?.mixingIconId ?? "";
   const modelPrefabId = "";
 
   const categories = config.categories ?? [];
@@ -640,6 +645,19 @@ async function renderRecipeForm(
 
   function catDisplay(c: CustomRecipeCategory): string {
     return c.zh || c.id;
+  }
+
+  /** 按 Unity 实际导入尺寸（菜谱摘要的包围盒 ÷ 已保存缩放）反推模型原始尺寸（Unity 单位），
+   *  供 cm 尺寸输入与自动适配校准（three.js 预览尺寸可能与 Unity 不一致）。 */
+  function rawSizeOf(): { x: number; y: number; z: number; minY: number } | undefined {
+    if (!recipe || recipe.boundsSizeX == null || recipe.boundsSizeY == null || recipe.boundsSizeZ == null) return undefined;
+    const s = recipe.modelScale > 0 ? recipe.modelScale : 1;
+    return {
+      x: recipe.boundsSizeX / s,
+      y: recipe.boundsSizeY / s,
+      z: recipe.boundsSizeZ / s,
+      minY: ((recipe.boundsMinY ?? 0) - (recipe.modelPositionY ?? 0)) / s,
+    };
   }
 
   function catSelectHtml(): string {
@@ -993,7 +1011,6 @@ async function renderRecipeForm(
       </div>
       <div class="cr-section">
         <div class="m-section-title">组成（食材 / 菜谱）</div>
-        <p class="modal-hint">食材直接选用；<b>其他菜谱（成品菜或中间产物）也可作为本菜谱的组成工序</b>（如鸡蛋汉堡 = 煎蛋 + 面包 + 生菜）。点击「添加」弹出选择器。</p>
         <div class="cr-comp-list" id="cr-comp-list"></div>
         <div class="cr-comp-toolbar" style="margin-top:10px">
           <button type="button" class="m-btn primary" id="cr-add-comp">＋ 添加食材 / 菜谱</button>
@@ -1003,7 +1020,6 @@ async function renderRecipeForm(
       </div>
       <div class="cr-section">
         <div class="m-section-title">烹饪与装盘</div>
-        <p class="modal-hint" id="cr-step-hint">按类型配置：<b>Cooked（烹饪）</b>需烹饪步骤与装盘容器；<b>Mixed（搅拌）</b>只需搅拌与装盘容器；<b>Composite（组合）</b>纯组装，无需烹饪与装盘。</p>
         <div class="cr-form-grid">
           <label class="m-field" id="cr-cook-step-field">烹饪步骤 ${selectHtml(refs.cookingSteps, cookingStepId, "cr-cook-step")}</label>
           <label class="m-field" id="cr-cook-icon-field">烹饪图标 ${selectHtml(refs.icons, cookingStepIconId, "cr-cook-icon")}</label>
@@ -1035,52 +1051,43 @@ async function renderRecipeForm(
       </div>
       <div class="cr-section">
         <div class="m-section-title">模型（3D）</div>
-        <p class="modal-hint">上传 <b>FBX 模型</b>（可不含材质，单独上传即可）；需要彩色时<b>补充贴图</b>：<b>base_color 彩色贴图必传</b>，roughness/metallic/normal 可选。保存时贴图会重命名为 <code>{菜名}_base_color.png</code> 等格式，并把 FBX 内部对应的贴图引用名一并改写，Unity 导入即可自动链接贴图（与美术直接拖 FBX + 贴图使用一致）。选择文件后立即打开 3D 预览，调整方向/大小后保存提交。</p>
-        <div class="cr-form-grid">
-          <label class="m-field">上传 3D 模型（仅 FBX）<input type="file" id="cr-model-file" accept=".fbx">
-            <span class="muted small">可单独上传；若预览显示为灰色，说明 FBX 未内嵌贴图，可补充贴图</span></label>
-          <label class="m-field">复用已有模型 ${selectHtml(refs.reusableModels, modelPrefabId, "cr-model-ref")}</label>
-          <label class="m-field">模型缩放<input type="number" id="cr-model-scale" value="${recipe?.modelScale ?? 1}" min="0.0001" step="0.001">
-            <span class="muted small">实际游戏中的大小（相对原模型尺寸；单位制异常的模型可为极小值如 0.0037）</span></label>
-          <label class="m-field">旋转 X（度）<input type="number" id="cr-model-rot-x" value="${recipe?.modelRotationX ?? 0}" step="5">
-            <span class="muted small">前后翻转</span></label>
-          <label class="m-field">旋转 Y（度）<input type="number" id="cr-model-rot-y" value="${recipe?.modelRotationY ?? 0}" step="5">
-            <span class="muted small">俯视转向</span></label>
-          <label class="m-field">旋转 Z（度）<input type="number" id="cr-model-rot-z" value="${recipe?.modelRotationZ ?? 0}" step="5">
-            <span class="muted small">侧倒修正；模型竖立时（如煎蛋）用 X/Z 旋转摆平</span></label>
-          <label class="m-field">位置 X<input type="number" id="cr-model-pos-x" value="${recipe?.modelPositionX ?? 0}" step="0.05">
-            <span class="muted small">左右偏移</span></label>
-          <label class="m-field">位置 Y（底面高度）<input type="number" id="cr-model-pos-y" value="${recipe?.modelPositionY ?? 0}" step="0.05">
-            <span class="muted small">模型底面相对盘面的高度，向上为正</span></label>
-          <label class="m-field">位置 Z<input type="number" id="cr-model-pos-z" value="${recipe?.modelPositionZ ?? 0}" step="0.05">
-            <span class="muted small">前后偏移</span></label>
-          <label class="m-field">在线预览<button type="button" class="m-btn" id="cr-preview-model">👁 预览并调整方向/大小</button>
-            <span class="muted small">已保存的模型可随时预览调整；上传新文件则自动预览</span></label>
-          <label class="m-field">模型诊断<button type="button" class="m-btn" id="cr-diagnose">🔍 检查装盘链路</button>
-            <span class="muted small">模型在游戏中不显示时，检查引用/网格/材质与匹配链路</span></label>
-        </div>
-        <div class="m-field cr-tex-field">补充贴图（点击格子选择/替换；base_color 必传）
-          <div class="cr-tex-slots">
-            <button type="button" class="cr-tex-slot" data-tex="base_color">
-              <span class="cr-tex-thumb" id="cr-tex-thumb-base_color">＋</span>
-              <span class="cr-tex-name">base_color <b>必传</b></span>
-            </button>
-            <button type="button" class="cr-tex-slot" data-tex="roughness">
-              <span class="cr-tex-thumb" id="cr-tex-thumb-roughness">＋</span>
-              <span class="cr-tex-name">roughness</span>
-            </button>
-            <button type="button" class="cr-tex-slot" data-tex="metallic">
-              <span class="cr-tex-thumb" id="cr-tex-thumb-metallic">＋</span>
-              <span class="cr-tex-name">metallic</span>
-            </button>
-            <button type="button" class="cr-tex-slot" data-tex="normal">
-              <span class="cr-tex-thumb" id="cr-tex-thumb-normal">＋</span>
-              <span class="cr-tex-name">normal</span>
-            </button>
+        <div class="cr-model-block">
+          <div class="cr-model-upload">
+            <label class="m-field">上传 3D 模型（FBX / OBJ，可多选 .mtl 与贴图）<input type="file" id="cr-model-file" accept=".fbx,.obj,.mtl" multiple></label>
+            <label class="m-field">复用已有模型 ${selectHtml(refs.reusableModels, modelPrefabId, "cr-model-ref")}</label>
           </div>
-          <input type="file" id="cr-model-texture" accept=".png,.jpg,.jpeg,image/png,image/jpeg" hidden>
+          <div class="m-field cr-tex-field">补充贴图（点击格子选择/替换）
+            <div class="cr-tex-slots">
+              <button type="button" class="cr-tex-slot" data-tex="base_color">
+                <span class="cr-tex-thumb" id="cr-tex-thumb-base_color">＋</span>
+                <span class="cr-tex-name">base_color <b>必传</b></span>
+              </button>
+              <button type="button" class="cr-tex-slot" data-tex="roughness">
+                <span class="cr-tex-thumb" id="cr-tex-thumb-roughness">＋</span>
+                <span class="cr-tex-name">roughness</span>
+              </button>
+              <button type="button" class="cr-tex-slot" data-tex="metallic">
+                <span class="cr-tex-thumb" id="cr-tex-thumb-metallic">＋</span>
+                <span class="cr-tex-name">metallic</span>
+              </button>
+              <button type="button" class="cr-tex-slot" data-tex="normal">
+                <span class="cr-tex-thumb" id="cr-tex-thumb-normal">＋</span>
+                <span class="cr-tex-name">normal</span>
+              </button>
+            </div>
+            <input type="file" id="cr-model-texture" accept=".png,.jpg,.jpeg,image/png,image/jpeg" hidden>
+          </div>
+          <div class="cr-model-tools">
+            <label class="m-field">在线预览<button type="button" class="m-btn" id="cr-preview-model">👁 预览并调整方向/大小</button></label>
+            <label class="m-field">模型诊断<button type="button" class="m-btn" id="cr-diagnose">🔍 检查装盘链路</button></label>
+          </div>
         </div>
       </div>
+    </div>
+    <div class="cr-form-footer">
+      <button class="m-btn" id="cr-form-back2">← 返回菜谱列表</button>
+      <span style="flex:1"></span>
+      <button class="m-btn primary" id="cr-form-save2">💾 保存</button>
     </div>
   `;
 
@@ -1109,17 +1116,11 @@ async function renderRecipeForm(
 
   document.getElementById("cr-add-comp")?.addEventListener("click", () => openCompositionPicker());
 
-  const modelScaleInput = document.getElementById("cr-model-scale") as HTMLInputElement | null;
-  const modelRotYInput = document.getElementById("cr-model-rot-y") as HTMLInputElement | null;
-  const modelRotXInput = document.getElementById("cr-model-rot-x") as HTMLInputElement | null;
-  const modelRotZInput = document.getElementById("cr-model-rot-z") as HTMLInputElement | null;
-  const modelPosXInput = document.getElementById("cr-model-pos-x") as HTMLInputElement | null;
-  const modelPosYInput = document.getElementById("cr-model-pos-y") as HTMLInputElement | null;
-  const modelPosZInput = document.getElementById("cr-model-pos-z") as HTMLInputElement | null;
   const modelFileInput = document.getElementById("cr-model-file") as HTMLInputElement | null;
   const modelTextureInput = document.getElementById("cr-model-texture") as HTMLInputElement | null;
 
-  /** 模型变换（缩放/三轴旋转/三轴位置）。 */
+  /** 模型变换（缩放/三轴旋转/三轴位置 + 原点偏移 pivot）：仅在 3D 预览内调整
+   *  （「👁 预览并调整方向/大小」），保存时提交，不在表单直接设置。 */
   interface ModelTransform {
     scale: number;
     rotationX: number;
@@ -1128,50 +1129,46 @@ async function renderRecipeForm(
     positionX: number;
     positionY: number;
     positionZ: number;
+    pivotX: number;
+    pivotY: number;
+    pivotZ: number;
   }
 
-  const readModelTransform = (): ModelTransform => {
-    const num = (el: HTMLInputElement | null, fallback: number): number => {
-      const n = Number(el?.value);
-      return Number.isFinite(n) ? n : fallback;
-    };
-    return {
-      scale: num(modelScaleInput, 1),
-      rotationX: num(modelRotXInput, 0),
-      rotationY: num(modelRotYInput, 0),
-      rotationZ: num(modelRotZInput, 0),
-      positionX: num(modelPosXInput, 0),
-      positionY: num(modelPosYInput, 0),
-      positionZ: num(modelPosZInput, 0),
-    };
+  /** 当前模型变换状态（从已保存菜谱初始化，预览调整后更新）。 */
+  const modelT: ModelTransform = {
+    scale: recipe?.modelScale ?? 1,
+    rotationX: recipe?.modelRotationX ?? 0,
+    rotationY: recipe?.modelRotationY ?? 0,
+    rotationZ: recipe?.modelRotationZ ?? 0,
+    positionX: recipe?.modelPositionX ?? 0,
+    positionY: recipe?.modelPositionY ?? 0,
+    positionZ: recipe?.modelPositionZ ?? 0,
+    pivotX: recipe?.modelPivotX ?? 0,
+    pivotY: recipe?.modelPivotY ?? 0,
+    pivotZ: recipe?.modelPivotZ ?? 0,
   };
+  /** 最近一次上传返回的 Unity 实际原始尺寸（新菜谱无已保存 bounds 时供状态显示）。 */
+  let lastRawSize: { x: number; y: number; z: number } | null = null;
+
+  const readModelTransform = (): ModelTransform => ({ ...modelT });
 
   const writeModelTransform = (t: ModelTransform): void => {
-    if (modelScaleInput) modelScaleInput.value = String(Math.round(t.scale * 10000) / 10000);
-    if (modelRotXInput) modelRotXInput.value = String(Math.round(t.rotationX));
-    if (modelRotYInput) modelRotYInput.value = String(Math.round(t.rotationY));
-    if (modelRotZInput) modelRotZInput.value = String(Math.round(t.rotationZ));
-    if (modelPosXInput) modelPosXInput.value = String(Math.round(t.positionX * 100) / 100);
-    if (modelPosYInput) modelPosYInput.value = String(Math.round(t.positionY * 100) / 100);
-    if (modelPosZInput) modelPosZInput.value = String(Math.round(t.positionZ * 100) / 100);
+    Object.assign(modelT, t);
   };
 
   /** 按 Unity 实际导入尺寸（菜谱摘要的包围盒 ÷ 已保存缩放）反推模型原始尺寸，
    *  供自动适配校准（three.js 预览尺寸可能与 Unity 不一致）。 */
   const computeUnitySize = (): { x: number; y: number; z: number; minY: number } | undefined => {
-    if (!recipe || recipe.boundsSizeX == null || recipe.boundsSizeY == null || recipe.boundsSizeZ == null) return undefined;
-    const s = recipe.modelScale > 0 ? recipe.modelScale : 1;
-    return {
-      x: recipe.boundsSizeX / s,
-      y: recipe.boundsSizeY / s,
-      z: recipe.boundsSizeZ / s,
-      minY: ((recipe.boundsMinY ?? 0) - (recipe.modelPositionY ?? 0)) / s,
-    };
+    return rawSizeOf();
   };
 
-  /** 选择文件后待提交的原始 FBX（保存时若有贴图会先改写内部贴图引用名再上传）；null = 未选择新模型。 */
-  let rawFbx: Uint8Array | null = null;
-  let rawFbxName = "";
+  /** 选择文件后待提交的模型数据（保存时 FBX 会改写内部贴图引用、OBJ 会改写 mtllib/map_* 引用再上传）；null = 未选择新模型。 */
+  let rawModel: Uint8Array | null = null;
+  let rawModelName = "";
+  /** OBJ 的 MTL 文本（与 .obj 同时选择时读取；可选）。 */
+  let rawMtl: string | null = null;
+  /** OBJ 附带选择的贴图（不占贴图格子）：原名 → 落盘名（sanitizeUploadFileName）。 */
+  let rawModelImages: { orig: string; disk: string; bytes: Uint8Array; file: File }[] = [];
   /** 补充的贴图：按用途类别（base_color 必传，其余可选），点击格子选择/替换。 */
   type TexClass = import("./fbxTextureRename").TextureClass;
   interface PendingTexture { file: File; bytes: Uint8Array; url: string }
@@ -1201,43 +1198,84 @@ async function renderRecipeForm(
     return out;
   };
 
-  /** 有补充贴图时改写 FBX 内部贴图引用名为落盘文件名（浏览器端 fbxTextureRename）。 */
-  const buildRenamedFbx = async (): Promise<{ bytes: Uint8Array; renamed: number } | null> => {
-    if (!rawFbx) return null;
-    const { renameFbxTextureRefs } = await import("./fbxTextureRename");
-    return renameFbxTextureRefs(rawFbx, texDiskNames());
+  /** 从文件选择中提取：主模型（.fbx/.obj，取第一个）、MTL、附带图片，随后自动打开 3D 预览。 */
+  const collectModelFiles = (files: FileList | null): void => {
+    if (!files || files.length === 0) return;
+    const list = Array.from(files);
+    const model = list.find((f) => /\.(fbx|obj)$/i.test(f.name));
+    const mtl = list.find((f) => /\.mtl$/i.test(f.name));
+    if (!model) {
+      setStatus("请选择 FBX 或 OBJ 模型文件。", false);
+      return;
+    }
+    void withBusy("正在读取模型文件…", async () => {
+      rawModel = new Uint8Array(await model.arrayBuffer());
+      rawModelName = model.name;
+      rawMtl = mtl ? new TextDecoder("utf-8").decode(await mtl.arrayBuffer()) : null;
+      rawModelImages = [];
+      for (const f of list) {
+        if (f === model || f === mtl || !/\.(png|jpg|jpeg)$/i.test(f.name)) continue;
+        const disk = sanitizeUploadFileName(f.name);
+        if (!disk) continue;
+        rawModelImages.push({ orig: f.name, disk, bytes: new Uint8Array(await f.arrayBuffer()), file: f });
+      }
+      openLocalPreview();
+    });
   };
 
-  /** 选择 FBX / 补充贴图后：加载中 → 自动打开 3D 预览（贴图作为材质注入）。 */
+  /** 有补充贴图时改写模型内部贴图引用名为落盘文件名：
+   *  FBX → fbxTextureRename（二进制改写）；OBJ → 改写 MTL map_* 引用 + OBJ mtllib。 */
+  const buildRenamedModel = async (): Promise<{ bytes: Uint8Array; mtlText: string | null; renamed: number; fbx: boolean } | null> => {
+    if (!rawModel) return null;
+    const isFbx = /\.fbx$/i.test(rawModelName);
+    const diskNames = texDiskNames();
+    if (isFbx) {
+      const { renameFbxTextureRefs } = await import("./fbxTextureRename");
+      const r = renameFbxTextureRefs(rawModel, diskNames);
+      return { bytes: r.bytes, mtlText: null, renamed: r.renamed, fbx: true };
+    }
+    // OBJ：MTL 引用改写（附带图片原名→落盘名；贴图格子类别→落盘名）+ mtllib 指向 {菜名}.mtl
+    const id = (document.getElementById("cr-rec-name") as HTMLInputElement | null)?.value.trim() || "texture";
+    let mtlText = rawMtl ?? null;
+    let renamed = 0;
+    if (mtlText != null) {
+      const extra: Record<string, string> = {};
+      for (const img of rawModelImages) extra[img.orig] = img.disk;
+      const r = renameMtlTextureRefs(mtlText, diskNames, extra);
+      mtlText = r.mtl;
+      renamed += r.renamed;
+    }
+    const text = new TextDecoder("utf-8").decode(rawModel);
+    const objText = rawMtl != null ? ensureObjMtllib(text, id + ".mtl") : text;
+    if (objText !== text) renamed += 1;
+    return { bytes: new TextEncoder().encode(objText), mtlText, renamed, fbx: false };
+  };
+
+  /** 选择 FBX/OBJ / 补充贴图后：加载中 → 自动打开 3D 预览（贴图作为材质注入）。 */
   const openLocalPreview = (): void => {
-    const f = modelFileInput?.files?.[0];
-    if (!f && !rawFbx) return;
+    const model = rawModel;
+    if (!model) return;
     void withBusy("正在加载 3D 预览…", async () => {
-      if (f) {
-        rawFbx = new Uint8Array(await f.arrayBuffer());
-        rawFbxName = f.name;
-      }
-      const renamed = await buildRenamedFbx();
-      if (!renamed) return;
       const baseTex = pendingTextures.base_color;
       const { openModelPreview } = await import("./modelPreview");
+      const injectFiles = [...(baseTex ? [baseTex.file] : []), ...rawModelImages.map((i) => i.file)];
+      const plateSel = document.getElementById("cr-plate-step") as HTMLSelectElement | null;
       openModelPreview({
-        title: rawFbxName,
+        title: rawModelName,
         resourceBase: "",
-        modelFileName: rawFbxName,
-        localBuffer: renamed.bytes.buffer.slice(renamed.bytes.byteOffset, renamed.bytes.byteOffset + renamed.bytes.byteLength) as ArrayBuffer,
-        localTextures: baseTex ? [baseTex.file] : undefined,
+        modelFileName: rawModelName,
+        localBuffer: model.buffer.slice(model.byteOffset, model.byteOffset + model.byteLength) as ArrayBuffer,
+        localMtl: rawMtl ?? undefined,
+        localTextures: injectFiles.length > 0 ? injectFiles : undefined,
+        fitTarget: plateSel?.value === "Glass" ? "cup" : "plate",
         ...readModelTransform(),
         unitySize: computeUnitySize(),
         onAdjust: writeAdjustBack,
-        referenceUrl: REFERENCE_MODEL.url,
-        referenceFormat: REFERENCE_MODEL.format,
-        referenceScale: REFERENCE_MODEL.scale,
       });
     });
   };
 
-  modelFileInput?.addEventListener("change", openLocalPreview);
+  modelFileInput?.addEventListener("change", () => collectModelFiles(modelFileInput.files));
 
   // 补充贴图：4 个类别格子，点击选择/替换该类别贴图；已选 FBX 时自动重新预览上色
   document.querySelectorAll<HTMLButtonElement>(".cr-tex-slot").forEach((btn) => {
@@ -1259,7 +1297,7 @@ async function renderRecipeForm(
       pendingTextures[cls] = { file, bytes: new Uint8Array(await file.arrayBuffer()), url };
       const thumb = document.getElementById("cr-tex-thumb-" + cls);
       if (thumb) thumb.innerHTML = `<img src="${url}" alt="${cls}">`;
-      if (rawFbx) openLocalPreview();
+      if (rawModel) openLocalPreview();
     });
   });
 
@@ -1270,8 +1308,10 @@ async function renderRecipeForm(
       return;
     }
     if (!assetPath) return;
+    const plateSel = document.getElementById("cr-plate-step") as HTMLSelectElement | null;
     void withBusy("正在加载 3D 预览（首次加载较慢）…", async () => {
       await openRecipeModelPreview(assetPath, recipeName || (assetPath.split("/").pop() ?? assetPath), {
+        fitTarget: plateSel?.value === "Glass" ? "cup" : "plate",
         ...readModelTransform(),
         unitySize: computeUnitySize(),
         onAdjust: writeAdjustBack,
@@ -1296,13 +1336,13 @@ async function renderRecipeForm(
         if (d.boundsSizeX || d.boundsSizeY || d.boundsSizeZ) {
           const sizes = [["X", d.boundsSizeX], ["Y", d.boundsSizeY], ["Z", d.boundsSizeZ]] as const;
           const thin = [...sizes].sort((a, b) => a[1] - b[1])[0];
-          lines.push(`Unity 内模型包围盒（含变换）：X ${d.boundsSizeX.toFixed(3)} · Y ${d.boundsSizeY.toFixed(3)} · Z ${d.boundsSizeZ.toFixed(3)}`);
-          lines.push(`薄轴 = ${thin[0]}（${thin[1].toFixed(3)}）：${thin[0] === "Y" ? "模型平躺 ✓" : "模型竖立 ✗，需在预览中用「旋转 90°」或手动设 X/Z 旋转摆平"}；底面 Y = ${d.boundsMinY.toFixed(3)}`);
+          lines.push(`Unity 内模型包围盒（含变换）：X ${fmtCm(u2cm(d.boundsSizeX))} cm · Y ${fmtCm(u2cm(d.boundsSizeY))} cm · Z ${fmtCm(u2cm(d.boundsSizeZ))} cm`);
+          lines.push(`薄轴 = ${thin[0]}（${fmtCm(u2cm(thin[1]))} cm）：${thin[0] === "Y" ? "模型平躺 ✓" : "模型竖立 ✗，需在预览中用「旋转 90°」或手动设 X/Z 旋转摆平"}；底面 Y = ${fmtCm(u2cm(d.boundsMinY))} cm`);
         }
         lines.push(`组成：${d.compositionCount} 项（≥1 才可装盘匹配）`);
         lines.push(`烹饪步骤：${d.cookingStepSet ? "已配置 ✓" : "未配置"} · 装盘步骤：${d.platingStepSet ? "已配置 ✓" : "未配置"}`);
         lines.push(`装盘模型 GetModel：${d.platingPrefabSet ? "非空 ✓" : "为空 ✗（游戏中会显示空盘子）"}`);
-        lines.push(`变换：缩放 ${d.modelScale} · 旋转 X/Y/Z ${d.modelRotationX}°/${d.modelRotationY}°/${d.modelRotationZ}° · 位置 ${d.modelPositionX}/${d.modelPositionY}/${d.modelPositionZ}`);
+        lines.push(`变换：缩放 ${fmt4(d.modelScale)} · 旋转 X/Y/Z ${d.modelRotationX}°/${d.modelRotationY}°/${d.modelRotationZ}° · 位置 ${fmtCm(u2cm(d.modelPositionX))}/${fmtCm(u2cm(d.modelPositionY))}/${fmtCm(u2cm(d.modelPositionZ))} cm（1 单位 = 100 cm）`);
         openDiagnoseModal(lines);
       } catch (e) {
         openDiagnoseModal([`诊断失败：${(e as Error).message || String(e)}`]);
@@ -1371,14 +1411,15 @@ async function renderRecipeForm(
   }));
 
   document.getElementById("cr-form-back")?.addEventListener("click", () => void renderRecipeList(app, setName));
+  document.getElementById("cr-form-back2")?.addEventListener("click", () => void renderRecipeList(app, setName));
 
-  document.getElementById("cr-form-save")?.addEventListener("click", async () => {
+  const doSave = async (): Promise<void> => {
     const rname = (document.getElementById("cr-rec-name") as HTMLInputElement).value.trim();
     if (!rname) return alert("请填写标识符");
     if (!IDENT_RE.test(rname)) return alert("标识符仅允许英文字母/数字/下划线，且不能以数字开头");
 
     const typeVal = (document.getElementById("cr-type") as HTMLSelectElement).value;
-    const modelT = readModelTransform();
+    const savedT = readModelTransform();
     const dto: CustomRecipeEdit = {
       setName: isEdit ? undefined : setName,
       assetPath: isEdit ? assetPath! : undefined,
@@ -1396,13 +1437,16 @@ async function renderRecipeForm(
       modelPrefabId: (document.getElementById("cr-model-ref") as HTMLSelectElement)?.value ?? "",
       cookingProgress: Number((document.getElementById("cr-cook-prog") as HTMLSelectElement)?.value ?? "1") || 1,
       mixingProgress: Number((document.getElementById("cr-mix-prog") as HTMLSelectElement)?.value ?? "1") || 1,
-      modelScale: modelT.scale,
-      modelRotationX: modelT.rotationX,
-      modelRotationY: modelT.rotationY,
-      modelRotationZ: modelT.rotationZ,
-      modelPositionX: modelT.positionX,
-      modelPositionY: modelT.positionY,
-      modelPositionZ: modelT.positionZ,
+      modelScale: savedT.scale,
+      modelRotationX: savedT.rotationX,
+      modelRotationY: savedT.rotationY,
+      modelRotationZ: savedT.rotationZ,
+      modelPositionX: savedT.positionX,
+      modelPositionY: savedT.positionY,
+      modelPositionZ: savedT.positionZ,
+      modelPivotX: savedT.pivotX,
+      modelPivotY: savedT.pivotY,
+      modelPivotZ: savedT.pivotZ,
     };
 
     showBusy("保存中…");
@@ -1421,39 +1465,87 @@ async function renderRecipeForm(
         await api.uploadCustomRecipeIcon(setName, actualPath, iconFile.name, base64);
       }
 
-      const modelFile = (document.getElementById("cr-model-file") as HTMLInputElement).files?.[0];
+      const modelFiles = (document.getElementById("cr-model-file") as HTMLInputElement).files;
+      const modelFile =
+        modelFiles && modelFiles.length > 0
+          ? Array.from(modelFiles).find((f) => /\.(fbx|obj)$/i.test(f.name))
+          : undefined;
       if (modelFile) {
-        if (!/\.fbx$/i.test(modelFile.name)) {
-          setStatus("仅支持 FBX 模型文件。", false);
-          return;
+        const isFbx = /\.fbx$/i.test(modelFile.name);
+        // 选择文件后尚未预览过（如直接点保存）时补读模型与 MTL
+        if (!rawModel || !rawModelName) {
+          rawModel = new Uint8Array(await modelFile.arrayBuffer());
+          rawModelName = modelFile.name;
+          const mtlF = modelFiles ? Array.from(modelFiles).find((f) => /\.mtl$/i.test(f.name)) : undefined;
+          rawMtl = mtlF ? new TextDecoder("utf-8").decode(await mtlF.arrayBuffer()) : null;
         }
-        if (!rawFbx) {
-          rawFbx = new Uint8Array(await modelFile.arrayBuffer());
-          rawFbxName = modelFile.name;
-        }
-        // base_color 彩色贴图必传（否则 Unity 丢失贴图索引、模型灰色）
-        if (!pendingTextures.base_color) {
+        // FBX 需 base_color 彩色贴图（否则 Unity 丢失贴图索引、模型灰色）；OBJ 由 MTL 定义材质，不强制
+        if (isFbx && !pendingTextures.base_color) {
           setStatus("请先在 base_color 格子中选择彩色贴图。", false);
           return;
         }
-        // 贴图重命名为 {菜名}_{类别}.png，并把 FBX 内部贴图引用名一并改写，再连同贴图一起上传；
-        // Unity 导入 FBX 时按引用名自动把贴图链接进内嵌材质（无需额外材质球）。
-        const renamedRes = (await buildRenamedFbx()) ?? { bytes: rawFbx, renamed: 0 };
-        if (renamedRes.renamed === 0) {
-          alert("警告：FBX 中未找到可改写的贴图引用（可能不是二进制 FBX 或不含贴图引用），贴图引用名未修改。");
+        // 模型改名 + 贴图引用名改写（FBX 二进制 / OBJ MTL 文本），再连同贴图一起上传；
+        // Unity 导入时按引用名自动把贴图链接进内嵌材质（无需额外材质球）。
+        const renamedRes = (await buildRenamedModel()) ?? { bytes: rawModel, mtlText: rawMtl, renamed: 0, fbx: isFbx };
+        if (renamedRes.renamed === 0 && (isFbx || rawMtl)) {
+          alert(
+            isFbx
+              ? "警告：FBX 中未找到可改写的贴图引用（可能不是二进制 FBX 或不含贴图引用），贴图引用名未修改。"
+              : "警告：OBJ/MTL 中未找到可改写的贴图引用，贴图引用名未修改。"
+          );
         }
-        const uploads = [{ fileName: rawFbxName, base64: await bytesToBase64(renamedRes.bytes) }];
+        const uploads = [{ fileName: rname + (isFbx ? ".fbx" : ".obj"), base64: await bytesToBase64(renamedRes.bytes) }];
+        if (!isFbx && renamedRes.mtlText != null) {
+          uploads.push({ fileName: rname + ".mtl", base64: await bytesToBase64(new TextEncoder().encode(renamedRes.mtlText)) });
+        }
         const diskNames = texDiskNames();
         for (const cls of Object.keys(pendingTextures) as TexClass[]) {
           const t = pendingTextures[cls];
           const diskName = diskNames[cls];
           if (t && diskName) uploads.push({ fileName: diskName, base64: await bytesToBase64(t.bytes) });
         }
-        await api.uploadCustomRecipeModelFiles(setName, actualPath, uploads);
+        for (const img of rawModelImages) {
+          uploads.push({ fileName: img.disk, base64: await bytesToBase64(img.bytes) });
+        }
+        const uploadRes = await api.uploadCustomRecipeModelFiles(setName, actualPath, uploads);
+        // 上传成功后按 Unity 实际导入尺寸自动校准缩放/位置（three.js 预览尺寸可能与 Unity 相差百倍；
+        // 目标足迹：盘子 85 cm（对齐官方蛋炒饭参考 82~87 cm，游戏盘子直径 100 cm）、杯子 37 cm；
+        // 以容器中心为原点：盘子承物面在中心上方 4.77 cm、杯内底在中心下方 23.8 cm（模型底面放过去）
+        if (uploadRes && uploadRes.rawSizeX != null && uploadRes.rawSizeZ != null) {
+          lastRawSize = { x: uploadRes.rawSizeX, y: uploadRes.rawSizeY ?? 0, z: uploadRes.rawSizeZ };
+          const footprint = Math.max(Math.abs(uploadRes.rawSizeX), Math.abs(uploadRes.rawSizeZ)) || 1;
+          const isGlass = (document.getElementById("cr-plate-step") as HTMLSelectElement)?.value === "Glass";
+          const target = isGlass ? 0.37 : 0.85;
+          const calScale = Math.max(1e-6, target / footprint);
+          // Y 恒为 0（不自动下沉），高度在预览里手动调整
+          const calPosY = 0;
+          const calT = { ...savedT, scale: calScale, positionX: 0, positionY: calPosY, positionZ: 0 };
+          writeModelTransform(calT);
+          // 校准值重新保存（菜谱已创建/更新，直接按资产路径再更新一次变换）
+          await api.updateCustomRecipe({
+            ...dto,
+            setName: undefined,
+            assetPath: actualPath,
+            modelScale: calT.scale,
+            modelRotationX: calT.rotationX,
+            modelRotationY: calT.rotationY,
+            modelRotationZ: calT.rotationZ,
+            modelPositionX: calT.positionX,
+            modelPositionY: calT.positionY,
+            modelPositionZ: calT.positionZ,
+            modelPivotX: calT.pivotX,
+            modelPivotY: calT.pivotY,
+            modelPivotZ: calT.pivotZ,
+          });
+          setStatus(
+            `已按 Unity 实际尺寸自动校准：尺寸 ${fmtCm(u2cm(target))} cm（缩放 ${fmt4(calScale)}）· 位置Y ${fmtCm(u2cm(calPosY))} cm（${isGlass ? "杯子" : "盘子"}参照；可重新打开预览微调，游戏内直接生效）`
+          );
+        }
       }
 
+      const finalT = readModelTransform();
       setStatus(
-        `${isEdit ? "已更新菜谱" : "已创建菜谱"} · 模型变换已保存：缩放 ${modelT.scale} · 旋转 ${modelT.rotationX}°/${modelT.rotationY}°/${modelT.rotationZ}° · 位置 ${modelT.positionX}/${modelT.positionY}/${modelT.positionZ}（重新打开可回显，游戏内直接生效）`
+        `${isEdit ? "已更新菜谱" : "已创建菜谱"} · 模型变换已保存：足迹 ${fmtCm(u2cm((footprintOf(lastRawSize ?? rawSizeOf() ?? { x: 1, y: 1, z: 1 }) || 1) * finalT.scale))} cm · 旋转 ${finalT.rotationX}°/${finalT.rotationY}°/${finalT.rotationZ}° · 位置 ${fmtCm(u2cm(finalT.positionX))}/${fmtCm(u2cm(finalT.positionY))}/${fmtCm(u2cm(finalT.positionZ))} cm（重新打开可回显，游戏内直接生效）`
       );
       // 模型已在选择文件时预览并调整过，保存后直接返回列表
       void renderRecipeList(app, setName);
@@ -1462,7 +1554,10 @@ async function renderRecipeForm(
     } finally {
       hideBusy();
     }
-  });
+  };
+
+  document.getElementById("cr-form-save")?.addEventListener("click", () => void doSave());
+  document.getElementById("cr-form-save2")?.addEventListener("click", () => void doSave());
 
   function fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
