@@ -167,10 +167,15 @@ public class LayoutItemDto
     /** Euler X in degrees — needed for quad-based floor tiles that lie flat via x=90. */
     public float localRotationX;
     public float localRotationY;
+    public float localRotationZ;
     public LayoutVector3 localScale;
+    /** 空气墙碰撞盒中心（局部坐标）。空气墙导出时携带，写回时还原 col.center。 */
+    public LayoutVector3 colliderCenter;
     public LayoutFootprint footprint;
     /** True for surface-floor prefabs (raft planks, ice_floor, ...) → generate a walkable Col_Floor under them. */
     public bool walkable;
+    /** 空气墙（隐形碰撞块）：应用为 1×1×1.132 的 BoxCollider（1.132 为魔法数，导出据此识别），不生成 Col_Floor。 */
+    public bool airWall;
     /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | PressureSwitch | Terminal | empty */
     public string stubKind;
     /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
@@ -386,6 +391,9 @@ public class FloorDto
     public float imageOpacity;
     /** Image rotation in degrees (0/90/180/270, clockwise viewed from above). */
     public int imageRotation;
+    /** 空气地板：仅有可行走 Col_AirFloor 碰撞盒（Ground 层，几何与普通 Col_Floor
+     *  相同），无可见 Plane。导出时按名称 Col_AirFloor 识别，写回时不创建可见面。 */
+    public bool airFloor;
 }
 
 [Serializable]
@@ -566,6 +574,8 @@ public class LevelRecipesDto
     public string levelInfoAssetPath;
     public string levelName;
     public string[] recipeGuids;
+    /** 与 recipeGuids 对应的菜谱 id（文件名），前端据此按 id 兜底匹配勾选状态。 */
+    public string[] recipeIds;
 }
 
 [Serializable]
@@ -573,6 +583,67 @@ public class LevelRecipesUpdateDto
 {
     public string levelInfoAssetPath;
     public string[] recipeGuids;
+}
+
+// ---------- Web 内置菜谱库（内置菜谱管理） ----------
+
+[Serializable]
+public class WebRecipeEntryDto
+{
+    /** Import 源库 guid（安装时用于定位源资产）。 */
+    public string guid;
+    public string id;
+    public string nameZh;
+    public string nameEn;
+    public string assetPath;
+    public string cookingStep;
+    /** 去重后的叶食材 id 列表。 */
+    public string[] ingredients;
+    /** 难度估算分（20×食材+加成，20~120）。 */
+    public int score;
+    public string type;
+    /** 去重键（规范化中文名，去 DLC 后缀）。 */
+    public string dupKey;
+    /** 是否为本菜组代表（同组内取最高 DLC）。 */
+    public bool representative;
+    /** 本关卡集 custom_web 是否已有副本。 */
+    public bool installed;
+    /** 已装副本 guid（未装为空）。 */
+    public string installedGuid;
+    /** 是否被本关卡集任一关卡引用。 */
+    public bool referenced;
+    /** 引用它的关卡名列表。 */
+    public string[] referencedBy;
+}
+
+[Serializable]
+public class WebRecipeLibraryDto
+{
+    public string setName;
+    public WebRecipeEntryDto[] recipes;
+}
+
+[Serializable]
+public class WebRecipeInstallDto
+{
+    public string setName;
+    public string[] ids;
+}
+
+[Serializable]
+public class WebRecipeUninstallDto
+{
+    public string setName;
+    public string[] ids;
+}
+
+[Serializable]
+public class WebRecipeUninstallResultDto
+{
+    public bool ok;
+    public string error;
+    /** 被引用时列出使用关卡（此时拒绝移除）。 */
+    public string[] usedByLevels;
 }
 
 // ---------- Audio catalogs ----------
@@ -810,6 +881,8 @@ public class LevelDetailDto
     public string screenshotPath;
     public int debugRecipeCount;
     public bool disableDynamicParenting;
+    public int minOrderCount;
+    public int maxOrderCount;
     public string[] dependencies;
     public PerPlayerConfigDto[] configs;
     public AudioConfigDto audio;
@@ -833,6 +906,8 @@ public class LevelInfoUpdateDto
     public string sceneName;
     public int debugRecipeCount;
     public bool disableDynamicParenting;
+    public int minOrderCount;
+    public int maxOrderCount;
     public string[] dependencies;
 }
 

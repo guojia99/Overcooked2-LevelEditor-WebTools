@@ -2,6 +2,7 @@ import {
   S,
   EditorItem
 } from "./state";
+import type { IngredientEntry } from "../types";
 import { dom } from "./dom";
 import {
   prefabIdFromPath,
@@ -16,18 +17,24 @@ import {
   openFoodSpawnerEditor,
   openIngredientMultiPicker
 } from "../modals";
-import { ingredientOptionLabel } from "../ingredientLabels";
+import { ingredientOptionLabel, visibleIngredients } from "../ingredientLabels";
 import {
   counterTypeOfItem,
   counterAppearanceOptions
 } from "./catalog";
 import {
   isGlassReturnItem,
+  isMugReturnItem,
+  isTrayReturnItem,
   plateReturns,
   glassReturns,
+  mugReturns,
+  trayReturns,
   computeReturnLabels,
   servingPlateReturn,
   servingGlassReturn,
+  servingMugReturn,
+  servingTrayReturn,
   setServingReturnOfType,
   servingStationsForReturn
 } from "./servingLinks";
@@ -44,6 +51,10 @@ import {
 export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Dispenser: "Dispenser",
   Backpack: "Dispenser",
+  dlc08_drink_machine: "Dispenser",
+  dlc11_drink_dispenser: "Dispenser",
+  dlc08_condiment_dispenser: "Dispenser",
+  dlc11_condiment_dispenser: "Dispenser",
   AttachingFoodSpawner: "AttachingFoodSpawner",
   ConveyorStation: "Conveyor",
   Teleportal: "Teleportal",
@@ -70,6 +81,39 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   PressureSwitch: "PressureSwitch",
   MultiControlTerminal: "Terminal",
 };
+
+/** 酱料机可输出的酱料（芥末 / 番茄酱）。 */
+const CONDIMENT_INGREDIENT_IDS = new Set(["ketchup", "dlc11_ketchup", "mustard", "dlc11_mustard"]);
+/** 饮料机可输出的饮料（可乐 / 橙味汽水 / 香草 / 巧克力 / 牛奶 / 冰块等）。 */
+const DRINK_INGREDIENT_IDS = new Set([
+  "rootbeer",
+  "orangesoda",
+  "vanilla",
+  "ChocolateSO",
+  "dlc03_chocolate",
+  "dlc09_chocolate",
+  "dlc13_chocolate",
+  "DLC05_Chocolate",
+  "milk",
+  "dlc11_milk",
+  "dlc09_milk",
+  "icecube",
+  "drink01",
+  "drink02",
+  "drink03",
+  "orange",
+  "dlc04_orange",
+  "dlc09_orange",
+  "dlc10_orange",
+  "dlc13_orange",
+]);
+
+function specialDispenserType(item: EditorItem): "condiment" | "drink" | "" {
+  const pid = prefabIdFromPath(item.prefabAssetPath);
+  if (pid === "dlc08_condiment_dispenser" || pid === "dlc11_condiment_dispenser") return "condiment";
+  if (pid === "dlc08_drink_machine" || pid === "dlc11_drink_dispenser") return "drink";
+  return "";
+}
 
 export function stubKindOf(item: EditorItem): string {
   if (item.stubKind) return item.stubKind;
@@ -158,16 +202,27 @@ export function stubControlsHtml(item: EditorItem): string {
   switch (kind) {
     case "Dispenser": {
       const cur = item.dispenser?.spawnerItemPrefabGuid ?? "";
+      const stype = specialDispenserType(item);
+      let ings = visibleIngredients(S.ingredientsCache);
+      if (stype === "condiment") ings = ings.filter((i) => CONDIMENT_INGREDIENT_IDS.has(i.id));
+      else if (stype === "drink") ings = ings.filter((i) => DRINK_INGREDIENT_IDS.has(i.id));
+      // web 内置食材暂不可用：普通食材按名排序，web 内置单独成组置灰放在最后
+      const normal = ings.filter((i) => i.group !== "web").sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
+      const web = ings.filter((i) => i.group === "web").sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
+      const opt = (ing: IngredientEntry) =>
+        `<option value="${ing.guid}" ${ing.guid === cur ? "selected" : ""}>${escHtml(ingredientOptionLabel(ing))}</option>`;
+      const webGroup = web.length
+        ? `<optgroup label="Web 内置（暂不可用）" disabled>${web.map(opt).join("")}</optgroup>`
+        : "";
       const opts = ['<option value="">— 未设置 —</option>']
-        .concat(
-          S.ingredientsCache.map(
-            (ing) =>
-              `<option value="${ing.guid}" ${ing.guid === cur ? "selected" : ""}>${escHtml(ingredientOptionLabel(ing))}</option>`
-          )
-        )
+        .concat(normal.map(opt))
+        .concat(webGroup ? [webGroup] : [])
         .join("");
-      return `<div class="ctx-stub"><div class="ctx-stub-title">食材箱参数</div>
-        <label class="ctx-stub-row">食材 <select id="ctx-stub-ing" class="ctx-input">${opts}</select></label></div>`;
+      const title = stype === "condiment" ? "酱料机参数" : stype === "drink" ? "饮料机参数" : "食材箱参数";
+      const fieldLabel = stype === "condiment" ? "酱料" : stype === "drink" ? "饮料" : "食材";
+      return `<div class="ctx-stub"><div class="ctx-stub-title">${title}</div>
+        <label class="ctx-stub-row">${fieldLabel} <select id="ctx-stub-ing" class="ctx-input">${opts}</select></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">Web 内置食材暂不可用，已置灰</div></div>`;
     }
     case "AttachingFoodSpawner": {
       const fs = item.foodSpawner ?? {};
@@ -271,6 +326,8 @@ export function stubControlsHtml(item: EditorItem): string {
       const labels = computeReturnLabels();
       const plateId = servingPlateReturn(item);
       const glassId = servingGlassReturn(item);
+      const mugId = servingMugReturn(item);
+      const trayId = servingTrayReturn(item);
       const plateOpts = ['<option value="">— 未绑定 —</option>']
         .concat(
           plateReturns().map(
@@ -287,16 +344,36 @@ export function stubControlsHtml(item: EditorItem): string {
           )
         )
         .join("");
+      const mugOpts = ['<option value="">— 未绑定 —</option>']
+        .concat(
+          mugReturns().map(
+            (r) =>
+              `<option value="${r.instanceId}" ${mugId === r.instanceId ? "selected" : ""}>${labels.get(r.instanceId) ?? "?"}（${escHtml(itemLabel(r))}）</option>`
+          )
+        )
+        .join("");
+      const trayOpts = ['<option value="">— 未绑定 —</option>']
+        .concat(
+          trayReturns().map(
+            (r) =>
+              `<option value="${r.instanceId}" ${trayId === r.instanceId ? "selected" : ""}>${labels.get(r.instanceId) ?? "?"}（${escHtml(itemLabel(r))}）</option>`
+          )
+        )
+        .join("");
       return `<div class="ctx-stub"><div class="ctx-stub-title">上菜台${myNum} · 绑定回收台（各至多一个）</div>
         <label class="ctx-stub-row">脏盘台 <select id="ctx-ss-plate" class="ctx-input">${plateOpts}</select></label>
         <label class="ctx-stub-row">脏杯台 <select id="ctx-ss-glass" class="ctx-input">${glassOpts}</select></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">一个上菜台最多绑一个脏盘台 + 一个脏杯台；一个回收台可被多个上菜台共用</div></div>`;
+        <label class="ctx-stub-row">脏马克杯台 <select id="ctx-ss-mug" class="ctx-input">${mugOpts}</select></label>
+        <label class="ctx-stub-row">餐盘回收台 <select id="ctx-ss-tray" class="ctx-input">${trayOpts}</select></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">一个上菜台最多各绑一个脏盘/脏杯/马克杯/餐盘回收台；一个回收台可被多个上菜台共用</div></div>`;
     }
     case "PlateReturn":
     case "GlassReturn": {
       const labels = computeReturnLabels();
       const isGlass = isGlassReturnItem(item);
-      const typeZh = isGlass ? "脏杯台" : "脏盘台";
+      const isMug = isMugReturnItem(item);
+      const isTray = isTrayReturnItem(item);
+      const typeZh = isTray ? "餐盘回收台" : isMug ? "脏马克杯台" : isGlass ? "脏杯台" : "脏盘台";
       const myNum = labels.get(item.instanceId) ?? "?";
       const bound = servingStationsForReturn(item.instanceId);
       const rows = bound
@@ -305,9 +382,10 @@ export function stubControlsHtml(item: EditorItem): string {
           return `<div class="ctx-stub-row">· 上菜台${sNum}（${escHtml(itemLabel(s))}）</div>`;
         })
         .join("");
+      const cleanLabel = isTray ? "餐盘" : isMug ? "马克杯" : isGlass ? "杯子" : "盘子";
       return `<div class="ctx-stub"><div class="ctx-stub-title">${typeZh}${myNum} · 被上菜台绑定（可一对多）</div>
         ${rows || '<div class="ctx-stub-row">未被任何上菜台绑定</div>'}
-        <label class="ctx-stub-row"><input type="checkbox" id="ctx-pr-clean" ${item.plateReturn?.returnClean ? "checked" : ""}/> 直接返回干净${isGlass ? "杯子" : "盘子"}（returnClean）</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-pr-clean" ${item.plateReturn?.returnClean ? "checked" : ""}/> 直接返回干净${cleanLabel}（returnClean）</label>
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">请在对应上菜台的右键菜单里设置绑定</div></div>`;
     }
     default:
@@ -333,9 +411,9 @@ export function wireStubControls(item: EditorItem) {
       });
       break;
     }
-    case "AttackingFoodSpawner": {
+    case "AttachingFoodSpawner": {
       const ensure = () => {
-        item.stubKind = "AttackingFoodSpawner";
+        item.stubKind = "AttachingFoodSpawner";
         if (!item.foodSpawner) item.foodSpawner = {};
         return item.foodSpawner;
       };
@@ -509,16 +587,30 @@ export function wireStubControls(item: EditorItem) {
       num("ctx-ss-plate")?.addEventListener("change", (e) => {
         const id = (e.target as HTMLSelectElement).value;
         pushHistory();
-        setServingReturnOfType(item, id || undefined, false);
+        setServingReturnOfType(item, id || undefined, "plate");
         draw();
         setStatus("已更新脏盘台绑定（写回后生效）");
       });
       num("ctx-ss-glass")?.addEventListener("change", (e) => {
         const id = (e.target as HTMLSelectElement).value;
         pushHistory();
-        setServingReturnOfType(item, id || undefined, true);
+        setServingReturnOfType(item, id || undefined, "glass");
         draw();
         setStatus("已更新脏杯台绑定（写回后生效）");
+      });
+      num("ctx-ss-mug")?.addEventListener("change", (e) => {
+        const id = (e.target as HTMLSelectElement).value;
+        pushHistory();
+        setServingReturnOfType(item, id || undefined, "mug");
+        draw();
+        setStatus("已更新脏马克杯台绑定（写回后生效）");
+      });
+      num("ctx-ss-tray")?.addEventListener("change", (e) => {
+        const id = (e.target as HTMLSelectElement).value;
+        pushHistory();
+        setServingReturnOfType(item, id || undefined, "tray");
+        draw();
+        setStatus("已更新餐盘回收台绑定（写回后生效）");
       });
       break;
     }

@@ -828,6 +828,16 @@
       "en": "Dispenser"
     },
     {
+      "id": "dispenser_crate_04",
+      "zh": "食材箱（圣诞）",
+      "en": "Dispenser Crate (DLC3)"
+    },
+    {
+      "id": "dispenser_crate_05",
+      "zh": "食材箱（部落）",
+      "en": "Dispenser Crate (DLC7)"
+    },
+    {
       "id": "divingboard_01",
       "zh": "跳水板 1",
       "en": "divingboard 1"
@@ -1048,9 +1058,24 @@
       "en": "DLC 2 Audio Directory"
     },
     {
+      "id": "dlc03_chocolate",
+      "zh": "巧克力（DLC3）",
+      "en": "Chocolate (DLC3)"
+    },
+    {
       "id": "DLC03_NPC_02",
       "zh": "圣诞顾客",
       "en": "DLC03 NPC 2"
+    },
+    {
+      "id": "dlc03_utensil_mixer",
+      "zh": "搅拌碗（DLC3）",
+      "en": "Mixer Bowl (DLC3)"
+    },
+    {
+      "id": "dlc03_utensil_pot",
+      "zh": "汤锅（DLC3）",
+      "en": "Pot (DLC3)"
     },
     {
       "id": "DLC03AudioDirectory",
@@ -1061,6 +1086,11 @@
       "id": "DLC03AudioDirectorySO",
       "zh": "DLC03 音效集",
       "en": "DLC 3 Audio Directory"
+    },
+    {
+      "id": "dlc04_orange",
+      "zh": "橙子（DLC4）",
+      "en": "Orange (DLC4)"
     },
     {
       "id": "DLC04AudioDirectory",
@@ -1118,6 +1148,16 @@
       "en": "DLC 5 Audio Directory"
     },
     {
+      "id": "dlc07_cheese",
+      "zh": "芝士（DLC7）",
+      "en": "Cheese (DLC7)"
+    },
+    {
+      "id": "dlc07_coal",
+      "zh": "煤炭",
+      "en": "Coal"
+    },
+    {
       "id": "DLC07_NPCs_Ghost",
       "zh": "幽灵顾客",
       "en": "DLC07 NPCs Ghost"
@@ -1128,6 +1168,26 @@
       "en": "DLC07 NPCs Keep"
     },
     {
+      "id": "dlc07_potato",
+      "zh": "土豆（DLC7）",
+      "en": "Potato (DLC7)"
+    },
+    {
+      "id": "dlc07_utensil_frying_pan_01",
+      "zh": "煎锅（DLC7）",
+      "en": "Frying Pan (DLC7)"
+    },
+    {
+      "id": "dlc07_utensil_mixer_01",
+      "zh": "搅拌碗（DLC7）",
+      "en": "Mixer Bowl (DLC7)"
+    },
+    {
+      "id": "dlc07_utensil_pot_01",
+      "zh": "汤锅（DLC7）",
+      "en": "Pot (DLC7)"
+    },
+    {
       "id": "DLC07AudioDirectory",
       "zh": "DLC07 音效集",
       "en": "DLC 7 Audio Directory"
@@ -1136,6 +1196,66 @@
       "id": "DLC07AudioDirectorySO",
       "zh": "DLC07 音效集",
       "en": "DLC 7 Audio Directory"
+    },
+    {
+      "id": "dlc08_bun",
+      "zh": "汉堡胚（DLC8）",
+      "en": "Bun (DLC8)"
+    },
+    {
+      "id": "dlc08_cheesesticks",
+      "zh": "芝士条",
+      "en": "Cheese Sticks"
+    },
+    {
+      "id": "dlc08_chicken",
+      "zh": "鸡肉（DLC8）",
+      "en": "Chicken (DLC8)"
+    },
+    {
+      "id": "dlc08_cleantraystack",
+      "zh": "干净餐盘堆",
+      "en": "Clean Tray Stack"
+    },
+    {
+      "id": "dlc08_condiment_dispenser",
+      "zh": "酱料机（马戏团）",
+      "en": "Condiment Dispenser"
+    },
+    {
+      "id": "dlc08_dirtytray",
+      "zh": "脏餐盘",
+      "en": "Dirty Tray"
+    },
+    {
+      "id": "dlc08_dirtytraystack",
+      "zh": "脏餐盘堆",
+      "en": "Dirty Tray Stack"
+    },
+    {
+      "id": "dlc08_dispenser_crate_circus",
+      "zh": "食材箱（马戏团）",
+      "en": "Dispenser Crate (Circus)"
+    },
+    {
+      "id": "dlc08_drink_machine",
+      "zh": "饮料机（马戏团）",
+      "en": "Drink Machine"
+    },
+    {
+      "id": "dlc08_equipment_tray",
+      "zh": "餐盘",
+      "en": "Plate"
+    },
+    {
+      "id": "dlc08_friedchips",
+      "zh": "炸薯条",
+      "en": "Fried Chips"
+    },
+    {
+      "id": "dlc08_frierbasket",
+      "zh": "炸篮（马戏团）",
+      "en": "Frier Basket (Circus)"
     },
     {
       "id": "dlc08_NPC_FireBreather01",
@@ -1163,9 +1283,284 @@
       "en": "dlc08 NPC Strongman 2"
     },
     {
+      "id": "dlc08_onion",
+      "zh": "洋葱（DLC8）",
+      "en": "Onion (DLC8)"
+    },
+    {
+      "id": "dlc08_onion_ring",
+      "zh": "洋葱圈",
+      "en": "Onion Ring"
+    },
+    {
+      "id": "dlc08_oven_02",
+      "zh": "烤箱 2（马戏团）",
+      "en": "Oven 2 (Circus)"
+    },
+    {
+      "id": "dlc08_potato",
+      "zh": "土豆（DLC8）",
+      "en": "Potato (DLC8)"
+    },
+    {
+      "id": "dlc08_utensil_fire_extinguisher",
+      "zh": "灭火器（马戏团）",
+      "en": "Fire Extinguisher"
+    },
+    {
+      "id": "dlc08_utensil_frying_pan",
+      "zh": "煎锅（马戏团）",
+      "en": "Frying Pan (Circus)"
+    },
+    {
+      "id": "dlc08_utensil_mixer_01",
+      "zh": "搅拌碗（马戏团）",
+      "en": "Mixer Bowl (Circus)"
+    },
+    {
+      "id": "dlc08_utensil_pot_01",
+      "zh": "汤锅（马戏团）",
+      "en": "Pot (Circus)"
+    },
+    {
+      "id": "dlc08_workstation_mixer",
+      "zh": "搅拌台（马戏团）",
+      "en": "Mixer Station (Circus)"
+    },
+    {
+      "id": "dlc08_workstation_tray_return",
+      "zh": "餐盘回收台",
+      "en": "Tray Return Station"
+    },
+    {
       "id": "DLC08AudioDirectory",
       "zh": "DLC08 音效集",
       "en": "DLC 8 Audio Directory"
+    },
+    {
+      "id": "dlc09_beef_roast",
+      "zh": "烤牛肉（DLC9）",
+      "en": "Roast Beef (DLC9)"
+    },
+    {
+      "id": "dlc09_beefpotatocarrotbroccoliroast",
+      "zh": "烤牛肉什锦（DLC9）",
+      "en": "Roast Beef Roast (DLC9)"
+    },
+    {
+      "id": "dlc09_beefpotatocarrotroast",
+      "zh": "烤牛肉土豆胡萝卜（DLC9）",
+      "en": "Roast Beef Potato & Carrot (DLC9)"
+    },
+    {
+      "id": "dlc09_broccoli",
+      "zh": "西兰花（DLC9）",
+      "en": "Broccoli (DLC9)"
+    },
+    {
+      "id": "dlc09_carrot",
+      "zh": "胡萝卜（DLC9）",
+      "en": "Carrot (DLC9)"
+    },
+    {
+      "id": "dlc09_chicken_roast",
+      "zh": "烤鸡（DLC9）",
+      "en": "Roast Chicken (DLC9)"
+    },
+    {
+      "id": "dlc09_chickenpotatocarrotbroccoliroast",
+      "zh": "烤鸡什锦（DLC9）",
+      "en": "Roast Chicken Roast (DLC9)"
+    },
+    {
+      "id": "dlc09_chickenpotatocarrotroast",
+      "zh": "烤鸡土豆胡萝卜（DLC9）",
+      "en": "Roast Chicken Potato & Carrot (DLC9)"
+    },
+    {
+      "id": "dlc09_chocolate",
+      "zh": "巧克力（DLC9）",
+      "en": "Chocolate (DLC9)"
+    },
+    {
+      "id": "dlc09_christmaspudding",
+      "zh": "圣诞布丁（DLC9）",
+      "en": "Christmas Pudding (DLC9)"
+    },
+    {
+      "id": "dlc09_christmaspuddingwithorange",
+      "zh": "圣诞布丁（橙子·DLC9）",
+      "en": "Christmas Pudding & Orange (DLC9)"
+    },
+    {
+      "id": "dlc09_cleanmugstack",
+      "zh": "干净马克杯堆（DLC9）",
+      "en": "Clean Mug Stack (DLC9)"
+    },
+    {
+      "id": "dlc09_dirtymug",
+      "zh": "脏马克杯（DLC9）",
+      "en": "Dirty Mug (DLC9)"
+    },
+    {
+      "id": "dlc09_dirtymugstack",
+      "zh": "脏马克杯堆（DLC9）",
+      "en": "Dirty Mug Stack (DLC9)"
+    },
+    {
+      "id": "dlc09_dispenser_crate_winter",
+      "zh": "食材箱（仙境）",
+      "en": "Dispenser Crate (DLC9)"
+    },
+    {
+      "id": "dlc09_driedfruit",
+      "zh": "果干（DLC9）",
+      "en": "Dried Fruit (DLC9)"
+    },
+    {
+      "id": "dlc09_egg",
+      "zh": "鸡蛋（DLC9）",
+      "en": "Egg (DLC9)"
+    },
+    {
+      "id": "dlc09_equipment_mug_01",
+      "zh": "马克杯（DLC9）",
+      "en": "Mug (DLC9)"
+    },
+    {
+      "id": "dlc09_flour",
+      "zh": "面粉（DLC9）",
+      "en": "Flour (DLC9)"
+    },
+    {
+      "id": "dlc09_hotchocolate",
+      "zh": "热可可（DLC9）",
+      "en": "Hot Chocolate (DLC9)"
+    },
+    {
+      "id": "dlc09_hotchocolatecream",
+      "zh": "热可可（加奶油·DLC9）",
+      "en": "Hot Chocolate & Cream (DLC9)"
+    },
+    {
+      "id": "dlc09_hotchocolatemallow",
+      "zh": "热可可（加棉花糖·DLC9）",
+      "en": "Hot Chocolate & Marshmallows (DLC9)"
+    },
+    {
+      "id": "dlc09_hotchocolatemallowcream",
+      "zh": "热可可（奶油棉花糖·DLC9）",
+      "en": "Hot Chocolate Cream & Mallows (DLC9)"
+    },
+    {
+      "id": "dlc09_marshmallow",
+      "zh": "棉花糖（DLC9）",
+      "en": "Marshmallow (DLC9)"
+    },
+    {
+      "id": "dlc09_milk",
+      "zh": "牛奶（DLC9）",
+      "en": "Milk (DLC9)"
+    },
+    {
+      "id": "dlc09_mixedflouregg",
+      "zh": "面糊（DLC9）",
+      "en": "Batter (DLC9)"
+    },
+    {
+      "id": "dlc09_mixedfloureggchocolate",
+      "zh": "巧克力面糊（DLC9）",
+      "en": "Chocolate Batter (DLC9)"
+    },
+    {
+      "id": "dlc09_mixedfloureggdriedfruit",
+      "zh": "果干面糊（DLC9）",
+      "en": "Dried Fruit Batter (DLC9)"
+    },
+    {
+      "id": "dlc09_mixedfloureggdriedfruitorange",
+      "zh": "果干橙子面糊（DLC9）",
+      "en": "Dried Fruit & Orange Batter (DLC9)"
+    },
+    {
+      "id": "dlc09_mixedfloureggstrawberry",
+      "zh": "草莓面糊（DLC9）",
+      "en": "Strawberry Batter (DLC9)"
+    },
+    {
+      "id": "dlc09_orange",
+      "zh": "橙子（DLC9）",
+      "en": "Orange (DLC9)"
+    },
+    {
+      "id": "dlc09_oven",
+      "zh": "烤箱（仙境）",
+      "en": "Oven (Wonderland)"
+    },
+    {
+      "id": "dlc09_pancake_chocolate",
+      "zh": "巧克力松饼（DLC9）",
+      "en": "Chocolate Pancake (DLC9)"
+    },
+    {
+      "id": "dlc09_pancake_plain",
+      "zh": "原味松饼（DLC9）",
+      "en": "Plain Pancake (DLC9)"
+    },
+    {
+      "id": "dlc09_pancake_strawberry",
+      "zh": "草莓松饼（DLC9）",
+      "en": "Strawberry Pancake (DLC9)"
+    },
+    {
+      "id": "dlc09_pancakestrawberry",
+      "zh": "草莓（松饼·DLC9）",
+      "en": "Pancake Strawberry (DLC9)"
+    },
+    {
+      "id": "dlc09_potato",
+      "zh": "土豆（DLC9）",
+      "en": "Potato (DLC9)"
+    },
+    {
+      "id": "dlc09_utensil_frying_pan",
+      "zh": "煎锅（DLC9）",
+      "en": "Frying Pan (DLC9)"
+    },
+    {
+      "id": "dlc09_utensil_ingredient_spray",
+      "zh": "奶油喷罐（DLC9）",
+      "en": "Whipped Cream Spray (DLC9)"
+    },
+    {
+      "id": "dlc09_utensil_mixer",
+      "zh": "搅拌碗（DLC9）",
+      "en": "Mixer Bowl (DLC9)"
+    },
+    {
+      "id": "dlc09_utensil_pot",
+      "zh": "汤锅（DLC9）",
+      "en": "Pot (DLC9)"
+    },
+    {
+      "id": "dlc09_utensil_roasting_tray",
+      "zh": "烤盘（DLC9）",
+      "en": "Roasting Tray (DLC9)"
+    },
+    {
+      "id": "dlc09_whippedcream",
+      "zh": "发泡奶油（DLC9）",
+      "en": "Whipped Cream (DLC9)"
+    },
+    {
+      "id": "dlc09_workstation_mug_return_winter",
+      "zh": "马克杯回收台（冬季）",
+      "en": "Mug Return Station (Winter)"
+    },
+    {
+      "id": "dlc09_workstation_sink_mug_01_wood",
+      "zh": "马克杯水槽（木制）",
+      "en": "Mug Sink (Wooden)"
     },
     {
       "id": "DLC09AudioDirectory",
@@ -1178,9 +1573,29 @@
       "en": "DLC 9 Audio Directory"
     },
     {
+      "id": "dlc10_dispenser_crate",
+      "zh": "食材箱（火锅）",
+      "en": "Dispenser Crate (Hotpot)"
+    },
+    {
+      "id": "dlc10_orange",
+      "zh": "橙子（DLC10）",
+      "en": "Orange (DLC10)"
+    },
+    {
       "id": "DLC10AudioDirectory",
       "zh": "DLC10 音效集",
       "en": "DLC 10 Audio Directory"
+    },
+    {
+      "id": "dlc11_drink_dispenser",
+      "zh": "饮料机",
+      "en": "Drink Dispenser"
+    },
+    {
+      "id": "dlc11_onion",
+      "zh": "洋葱（DLC11）",
+      "en": "Onion (DLC11)"
     },
     {
       "id": "DLC11_Summer_Levels_SO",
@@ -1196,6 +1611,56 @@
       "id": "DLC11AudioDirectorySO",
       "zh": "DLC11 音效集",
       "en": "DLC 11 Audio Directory"
+    },
+    {
+      "id": "dlc13_dispenser_crate_camping_new",
+      "zh": "食材箱（巧克力节）",
+      "en": "Dispenser Crate (DLC13)"
+    },
+    {
+      "id": "dlc13_lotuspressureswitch_large",
+      "zh": "莲花压力开关（大）",
+      "en": "Lotus Pressure Switch (Large)"
+    },
+    {
+      "id": "dlc13_lotuspressureswitch_small",
+      "zh": "莲花压力开关（小）",
+      "en": "Lotus Pressure Switch (Small)"
+    },
+    {
+      "id": "dlc13_moonpie_strawberry",
+      "zh": "草莓月亮派",
+      "en": "Strawberry Moon Pie"
+    },
+    {
+      "id": "dlc13_orange",
+      "zh": "橙子（DLC13）",
+      "en": "Orange (DLC13)"
+    },
+    {
+      "id": "dlc13_strawberry",
+      "zh": "草莓（DLC13）",
+      "en": "Strawberry (DLC13)"
+    },
+    {
+      "id": "dlc13_workstation_bin_01",
+      "zh": "垃圾桶（DLC13）",
+      "en": "Bin (DLC13)"
+    },
+    {
+      "id": "dlc13_workstation_plate_return",
+      "zh": "脏盘台（DLC13）",
+      "en": "Plate Return (DLC13)"
+    },
+    {
+      "id": "dlc13_workstation_plate_station",
+      "zh": "餐盘台（DLC13）",
+      "en": "Plate Station (DLC13)"
+    },
+    {
+      "id": "dlc13_workstation_sink_01_wood",
+      "zh": "水槽（木制）",
+      "en": "Sink (Wooden)"
     },
     {
       "id": "DLC13AudioDirectory",
@@ -1253,6 +1718,21 @@
       "en": "Down The River"
     },
     {
+      "id": "drink01",
+      "zh": "饮料 1",
+      "en": "Drink 1"
+    },
+    {
+      "id": "drink02",
+      "zh": "饮料 2",
+      "en": "Drink 2"
+    },
+    {
+      "id": "drink03",
+      "zh": "饮料 3",
+      "en": "Drink 3"
+    },
+    {
       "id": "DynamicStage01",
       "zh": "动态关卡 1（BGM）",
       "en": "Dynamic Stage 1"
@@ -1286,6 +1766,11 @@
       "id": "EggSO",
       "zh": "鸡蛋",
       "en": "Egg"
+    },
+    {
+      "id": "equipment_mug_01",
+      "zh": "马克杯",
+      "en": "Mug"
     },
     {
       "id": "exterior_car_blue_01",
@@ -1854,8 +2339,8 @@
     },
     {
       "id": "m_dlc2_pineapple_plant_02NoFruit",
-      "zh": "DLC2 菠萝植物 2 No Fruit",
-      "en": "dlc2 pineapple plant 2 No Fruit"
+      "zh": "DLC2 无果菠萝植株 2",
+      "en": "Pineapple Plant 2 (No Fruit)"
     },
     {
       "id": "m_dlc2_sandcastle_01",
@@ -2813,6 +3298,11 @@
       "en": "Onion"
     },
     {
+      "id": "orange",
+      "zh": "橙子",
+      "en": "Orange"
+    },
+    {
       "id": "OuterSpaceSO",
       "zh": "外太空（BGM）",
       "en": "Outer Space"
@@ -2889,38 +3379,38 @@
     },
     {
       "id": "p_dlc07_keep_flagstone_set_01",
-      "zh": "DLC7 城堡石板 set 1",
-      "en": "dlc07 keep flagstone set 1"
+      "zh": "DLC7 城堡石板组 1",
+      "en": "Flagstone Set 1 (DLC7)"
     },
     {
       "id": "p_dlc07_keep_flagstone_set_02",
-      "zh": "DLC7 城堡石板 set 2",
-      "en": "dlc07 keep flagstone set 2"
+      "zh": "DLC7 城堡石板组 2",
+      "en": "Flagstone Set 2 (DLC7)"
     },
     {
       "id": "p_dlc07_keep_flagstone_set_03",
-      "zh": "DLC7 城堡石板 set 3",
-      "en": "dlc07 keep flagstone set 3"
+      "zh": "DLC7 城堡石板组 3",
+      "en": "Flagstone Set 3 (DLC7)"
     },
     {
       "id": "p_dlc07_keep_flagstone_set_04",
-      "zh": "DLC7 城堡石板 set 4",
-      "en": "dlc07 keep flagstone set 4"
+      "zh": "DLC7 城堡石板组 4",
+      "en": "Flagstone Set 4 (DLC7)"
     },
     {
       "id": "p_dlc07_keep_flagstone_set_05",
-      "zh": "DLC7 城堡石板 set 5",
-      "en": "dlc07 keep flagstone set 5"
+      "zh": "DLC7 城堡石板组 5",
+      "en": "Flagstone Set 5 (DLC7)"
     },
     {
       "id": "p_dlc07_keep_flagstone_set_06",
-      "zh": "DLC7 城堡石板 set 6",
-      "en": "dlc07 keep flagstone set 6"
+      "zh": "DLC7 城堡石板组 6",
+      "en": "Flagstone Set 6 (DLC7)"
     },
     {
       "id": "p_dlc07_keep_flagstone_set_07",
-      "zh": "DLC7 城堡石板 set 7",
-      "en": "dlc07 keep flagstone set 7"
+      "zh": "DLC7 城堡石板组 7",
+      "en": "Flagstone Set 7 (DLC7)"
     },
     {
       "id": "p_dlc07_shield_01",
@@ -2979,8 +3469,8 @@
     },
     {
       "id": "p_dlc08_standing_sign_01",
-      "zh": "DLC8 standing 招牌 1",
-      "en": "dlc08 standing sign 1"
+      "zh": "DLC8 立式招牌 1",
+      "en": "Standing Sign 1"
     },
     {
       "id": "p_dlc09_box_lid_01",
@@ -3139,18 +3629,18 @@
     },
     {
       "id": "p_dlc5_hanging_masonjar",
-      "zh": "DLC5 hanging 玻璃罐",
-      "en": "dlc5 hanging masonjar"
+      "zh": "DLC5 悬挂玻璃罐",
+      "en": "Hanging Mason Jar"
     },
     {
       "id": "p_dlc5_hanging_masonjar_02",
-      "zh": "DLC5 hanging 玻璃罐 2",
-      "en": "dlc5 hanging masonjar 2"
+      "zh": "DLC5 悬挂玻璃罐 2",
+      "en": "Hanging Mason Jar 2"
     },
     {
       "id": "p_dlc5_hanging_masonjar_03",
-      "zh": "DLC5 hanging 玻璃罐 3",
-      "en": "dlc5 hanging masonjar 3"
+      "zh": "DLC5 悬挂玻璃罐 3",
+      "en": "Hanging Mason Jar 3"
     },
     {
       "id": "p_dlc5_hatchet_01",
@@ -3254,8 +3744,8 @@
     },
     {
       "id": "p_dlc5_picnic_table_01",
-      "zh": "DLC5 picnic 桌 1",
-      "en": "dlc5 picnic table 1"
+      "zh": "DLC5 野餐桌 1",
+      "en": "Picnic Table 1"
     },
     {
       "id": "p_dlc5_plank_wall_01",
@@ -3816,6 +4306,11 @@
       "id": "p_dlc5_woodplank_large_03",
       "zh": "DLC5 木板大 3",
       "en": "dlc5 woodplank large 3"
+    },
+    {
+      "id": "p_dlc7_coal_bucket_coal_01",
+      "zh": "煤桶（带煤）",
+      "en": "Coal Bucket (Filled)"
     },
     {
       "id": "p_dlc7_cobweb_01",
@@ -4573,14 +5068,34 @@
       "en": "Rubber plant 3"
     },
     {
+      "id": "salad_corn_onion",
+      "zh": "玉米洋葱沙拉",
+      "en": "Corn & Onion Salad"
+    },
+    {
+      "id": "salad_cucumber_onion",
+      "zh": "黄瓜洋葱沙拉",
+      "en": "Cucumber & Onion Salad"
+    },
+    {
       "id": "Salad_Cucumber_SO",
       "zh": "黄瓜沙拉",
       "en": "Cucumber Salad"
     },
     {
+      "id": "salad_cucumber_tomato_onion",
+      "zh": "黄瓜番茄洋葱沙拉",
+      "en": "Cucumber Tomato & Onion Salad"
+    },
+    {
       "id": "Salad_Plain_SO",
       "zh": "生菜沙拉",
       "en": "Lettuce Salad"
+    },
+    {
+      "id": "salad_tomato_onion",
+      "zh": "番茄洋葱沙拉",
+      "en": "Tomato & Onion Salad"
     },
     {
       "id": "Salad_Tomato_SO",
@@ -4739,57 +5254,57 @@
     },
     {
       "id": "smoothie_01",
-      "zh": "冰沙 1",
+      "zh": "果汁 1",
       "en": "smoothie 1"
     },
     {
       "id": "smoothie_02",
-      "zh": "冰沙 2",
+      "zh": "果汁 2",
       "en": "smoothie 2"
     },
     {
       "id": "smoothie_03",
-      "zh": "冰沙 3",
+      "zh": "果汁 3",
       "en": "smoothie 3"
     },
     {
       "id": "smoothie_04",
-      "zh": "冰沙 4",
+      "zh": "果汁 4",
       "en": "smoothie 4"
     },
     {
       "id": "Smoothie_Banana",
-      "zh": "香蕉冰沙",
+      "zh": "香蕉果汁",
       "en": "Banana Smoothie"
     },
     {
       "id": "Smoothie_BananaPineapple",
-      "zh": "香蕉菠萝冰沙",
+      "zh": "香蕉菠萝果汁",
       "en": "Banana Pineapple Smoothie"
     },
     {
       "id": "Smoothie_Mega",
-      "zh": "什锦冰沙",
+      "zh": "什锦果汁",
       "en": "Mega Smoothie"
     },
     {
       "id": "Smoothie_Melon",
-      "zh": "甜瓜冰沙",
+      "zh": "甜瓜果汁",
       "en": "Melon Smoothie"
     },
     {
       "id": "Smoothie_Strawberry",
-      "zh": "草莓冰沙",
+      "zh": "草莓果汁",
       "en": "Strawberry Smoothie"
     },
     {
       "id": "SmoothiePineapple",
-      "zh": "菠萝（冰沙）",
+      "zh": "菠萝（果汁）",
       "en": "Smoothie Pineapple"
     },
     {
       "id": "SmoothieStrawberry",
-      "zh": "草莓（冰沙）",
+      "zh": "草莓（果汁）",
       "en": "Smoothie Strawberry"
     },
     {
@@ -5044,8 +5559,8 @@
     },
     {
       "id": "Steamed_Carrot_SO",
-      "zh": "胡萝卜饺",
-      "en": "Carrot Dumpling"
+      "zh": "胡萝卜烧麦",
+      "en": "Carrot Shumai"
     },
     {
       "id": "Steamed_Fish_SO",
@@ -5054,13 +5569,13 @@
     },
     {
       "id": "Steamed_Meat_SO",
-      "zh": "鲜肉饺",
-      "en": "Meat Dumpling"
+      "zh": "鲜肉烧麦",
+      "en": "Meat Shumai"
     },
     {
       "id": "Steamed_Prawns_SO",
-      "zh": "虾饺",
-      "en": "Prawn Dumpling"
+      "zh": "虾烧麦",
+      "en": "Prawn Shumai"
     },
     {
       "id": "Steamer",
@@ -5164,13 +5679,13 @@
     },
     {
       "id": "Sushi_PlainFish_SO",
-      "zh": "鱼肉寿司",
-      "en": "Fish Sushi"
+      "zh": "生鱼片",
+      "en": "Raw Fish Sashimi"
     },
     {
       "id": "Sushi_PlainPrawn_SO",
-      "zh": "鲜虾寿司",
-      "en": "Prawn Sushi"
+      "zh": "生虾片",
+      "en": "Raw Prawn Sashimi"
     },
     {
       "id": "sushi_side_step_1x28",
@@ -5338,6 +5853,16 @@
       "en": "Toasting Fork"
     },
     {
+      "id": "tomato_corn_onion",
+      "zh": "番茄玉米洋葱沙拉",
+      "en": "Tomato Corn & Onion Salad"
+    },
+    {
+      "id": "tomato_cucumber_onion",
+      "zh": "番茄黄瓜洋葱沙拉",
+      "en": "Tomato Cucumber & Onion Salad"
+    },
+    {
       "id": "TomatoSO",
       "zh": "番茄",
       "en": "Tomato"
@@ -5441,6 +5966,26 @@
       "id": "Urn_01",
       "zh": "瓮 1",
       "en": "Urn 1"
+    },
+    {
+      "id": "utensil_big_ol_spoon",
+      "zh": "大汤勺",
+      "en": "Big Spoon"
+    },
+    {
+      "id": "utensil_dlc10_big_ol_spoon",
+      "zh": "大汤勺（DLC10）",
+      "en": "Big Spoon (DLC10)"
+    },
+    {
+      "id": "utensil_dlc10_large_pot_01",
+      "zh": "火锅大锅（DLC10）",
+      "en": "Large Hot Pot (DLC10)"
+    },
+    {
+      "id": "utensil_large_pot_01",
+      "zh": "火锅大锅",
+      "en": "Large Hot Pot"
     },
     {
       "id": "VOAudioDirectory",
@@ -5813,9 +6358,864 @@
       "en": "woodenwall roof alt 1"
     },
     {
+      "id": "workstation_mug_return",
+      "zh": "马克杯回收台",
+      "en": "Mug Return Station"
+    },
+    {
+      "id": "workstation_sink_mug_01_wood",
+      "zh": "马克杯水槽（木制）",
+      "en": "Mug Sink (Wooden)"
+    },
+    {
       "id": "WorldMapAudioDirectory",
       "zh": "世界地图音效集",
       "en": "World Map Audio Directory"
+    },
+    {
+      "id": "milk",
+      "zh": "牛奶",
+      "en": "Milk"
+    },
+    {
+      "id": "whippedcream",
+      "zh": "发泡奶油",
+      "en": "Whipped Cream"
+    },
+    {
+      "id": "driedfruit",
+      "zh": "果干",
+      "en": "Dried Fruit"
+    },
+    {
+      "id": "marshmallow",
+      "zh": "棉花糖",
+      "en": "Marshmallow"
+    },
+    {
+      "id": "bokchoy",
+      "zh": "小白菜",
+      "en": "Bok Choy"
+    },
+    {
+      "id": "grapes",
+      "zh": "葡萄",
+      "en": "Grapes"
+    },
+    {
+      "id": "noodles",
+      "zh": "面条",
+      "en": "Noodles"
+    },
+    {
+      "id": "peach",
+      "zh": "桃子",
+      "en": "Peach"
+    },
+    {
+      "id": "dlc04_meat",
+      "zh": "涮肉（DLC4）",
+      "en": "Hotpot Meat (DLC4)"
+    },
+    {
+      "id": "dlc04_prawn",
+      "zh": "虾（DLC4）",
+      "en": "Prawn (DLC4)"
+    },
+    {
+      "id": "apple",
+      "zh": "苹果",
+      "en": "Apple"
+    },
+    {
+      "id": "blackberry",
+      "zh": "黑莓",
+      "en": "Blackberry"
+    },
+    {
+      "id": "broccoli",
+      "zh": "西兰花",
+      "en": "Broccoli"
+    },
+    {
+      "id": "cherry",
+      "zh": "樱桃",
+      "en": "Cherry"
+    },
+    {
+      "id": "leek",
+      "zh": "韭葱",
+      "en": "Leek"
+    },
+    {
+      "id": "beef_roast",
+      "zh": "烤牛肉",
+      "en": "Roast Beef"
+    },
+    {
+      "id": "chicken_roast",
+      "zh": "烤鸡",
+      "en": "Roast Chicken"
+    },
+    {
+      "id": "ketchup",
+      "zh": "番茄酱",
+      "en": "Ketchup"
+    },
+    {
+      "id": "mustard",
+      "zh": "芥末",
+      "en": "Mustard"
+    },
+    {
+      "id": "frankfurter",
+      "zh": "热狗肠",
+      "en": "Frankfurter"
+    },
+    {
+      "id": "hotdogbun",
+      "zh": "热狗面包",
+      "en": "Hot Dog Bun"
+    },
+    {
+      "id": "raspberry",
+      "zh": "覆盆子",
+      "en": "Raspberry"
+    },
+    {
+      "id": "dlc10_bokchoy",
+      "zh": "小白菜（DLC10）",
+      "en": "Bok Choy (DLC10)"
+    },
+    {
+      "id": "dlc10_grapes",
+      "zh": "葡萄（DLC10）",
+      "en": "Grapes (DLC10)"
+    },
+    {
+      "id": "dlc10_noodles",
+      "zh": "面条（DLC10）",
+      "en": "Noodles (DLC10)"
+    },
+    {
+      "id": "dlc10_peach",
+      "zh": "桃子（DLC10）",
+      "en": "Peach (DLC10)"
+    },
+    {
+      "id": "dlc10_meat",
+      "zh": "涮肉（DLC10）",
+      "en": "Hotpot Meat (DLC10)"
+    },
+    {
+      "id": "dlc10_prawn",
+      "zh": "虾（DLC10）",
+      "en": "Prawn (DLC10)"
+    },
+    {
+      "id": "icecube",
+      "zh": "冰块",
+      "en": "Ice Cube"
+    },
+    {
+      "id": "dlc11_milk",
+      "zh": "牛奶（DLC11）",
+      "en": "Milk (DLC11)"
+    },
+    {
+      "id": "orangesoda",
+      "zh": "橙味汽水",
+      "en": "Orange Soda"
+    },
+    {
+      "id": "rootbeer",
+      "zh": "可乐",
+      "en": "Cola"
+    },
+    {
+      "id": "vanilla",
+      "zh": "香草",
+      "en": "Vanilla"
+    },
+    {
+      "id": "corn",
+      "zh": "玉米",
+      "en": "Corn"
+    },
+    {
+      "id": "dlc11_cucumber",
+      "zh": "黄瓜（DLC11）",
+      "en": "Cucumber (DLC11)"
+    },
+    {
+      "id": "dlc11_lettuce",
+      "zh": "生菜（DLC11）",
+      "en": "Lettuce (DLC11)"
+    },
+    {
+      "id": "dlc11_tomato",
+      "zh": "番茄（DLC11）",
+      "en": "Tomato (DLC11)"
+    },
+    {
+      "id": "dlc11_frankfurter",
+      "zh": "热狗肠（DLC11）",
+      "en": "Frankfurter (DLC11)"
+    },
+    {
+      "id": "dlc11_hotdogbun",
+      "zh": "热狗面包（DLC11）",
+      "en": "Hot Dog Bun (DLC11)"
+    },
+    {
+      "id": "dlc11_ketchup",
+      "zh": "番茄酱（DLC11）",
+      "en": "Ketchup (DLC11)"
+    },
+    {
+      "id": "dlc11_mustard",
+      "zh": "芥末（DLC11）",
+      "en": "Mustard (DLC11)"
+    },
+    {
+      "id": "dlc11onion_salad",
+      "zh": "洋葱沙拉（DLC11）",
+      "en": "Onion Salad (DLC11)"
+    },
+    {
+      "id": "dlc13_chocolate",
+      "zh": "巧克力（DLC13）",
+      "en": "Chocolate (DLC13)"
+    },
+    {
+      "id": "dlc13_egg",
+      "zh": "鸡蛋（DLC13）",
+      "en": "Egg (DLC13)"
+    },
+    {
+      "id": "dlc13_flour",
+      "zh": "面粉（DLC13）",
+      "en": "Flour (DLC13)"
+    },
+    {
+      "id": "dlc13_grapes",
+      "zh": "葡萄（DLC13）",
+      "en": "Grapes (DLC13)"
+    },
+    {
+      "id": "dlc13_melon",
+      "zh": "甜瓜（DLC13）",
+      "en": "Melon (DLC13)"
+    },
+    {
+      "id": "dlc13_peach",
+      "zh": "桃子（DLC13）",
+      "en": "Peach (DLC13)"
+    },
+    {
+      "id": "mixedfloureggdriedfruit",
+      "zh": "果干面糊",
+      "en": "Dried Fruit Batter"
+    },
+    {
+      "id": "mixedfloureggdriedfruitorange",
+      "zh": "果干橙子面糊",
+      "en": "Dried Fruit & Orange Batter"
+    },
+    {
+      "id": "mixedfloureggapple",
+      "zh": "苹果面糊",
+      "en": "Apple Batter"
+    },
+    {
+      "id": "mixedfloureggappleblackberry",
+      "zh": "苹果黑莓面糊",
+      "en": "Apple & Blackberry Batter"
+    },
+    {
+      "id": "mixedfloureggapplecherry",
+      "zh": "苹果樱桃面糊",
+      "en": "Apple & Cherry Batter"
+    },
+    {
+      "id": "mixedfloureggblackberry",
+      "zh": "黑莓面糊",
+      "en": "Blackberry Batter"
+    },
+    {
+      "id": "mixedfloureggcherry",
+      "zh": "樱桃面糊",
+      "en": "Cherry Batter"
+    },
+    {
+      "id": "mixedfloureggraspberry",
+      "zh": "覆盆子面糊",
+      "en": "Raspberry Batter"
+    },
+    {
+      "id": "dlc13_mixedfloureggchocolate",
+      "zh": "巧克力面糊（DLC13）",
+      "en": "Chocolate Batter (DLC13)"
+    },
+    {
+      "id": "dlc13_mixedfloureggchocolatestrawberry",
+      "zh": "巧克力草莓面糊（DLC13）",
+      "en": "Chocolate & Strawberry Batter (DLC13)"
+    },
+    {
+      "id": "dlc13_mixedfloureggstrawberries",
+      "zh": "草莓面糊（DLC13）",
+      "en": "Strawberry Batter (DLC13)"
+    },
+    {
+      "id": "dlc13_mixedfloureggwatermelon",
+      "zh": "甜瓜面糊（DLC13）",
+      "en": "Melon Batter (DLC13)"
+    },
+    {
+      "id": "roastedmarshmallow",
+      "zh": "烤棉花糖",
+      "en": "Roasted Marshmallow"
+    },
+    {
+      "id": "boiledfrankfurter",
+      "zh": "煮热狗肠",
+      "en": "Boiled Frankfurter"
+    },
+    {
+      "id": "friedcheese_sticks",
+      "zh": "炸芝士条",
+      "en": "Fried Cheese Sticks"
+    },
+    {
+      "id": "friedchickenburger",
+      "zh": "炸鸡汉堡排",
+      "en": "Fried Chicken Burger"
+    },
+    {
+      "id": "friedonion_rings",
+      "zh": "炸洋葱圈",
+      "en": "Fried Onion Rings"
+    },
+    {
+      "id": "friedonions",
+      "zh": "炸洋葱",
+      "en": "Fried Onions"
+    },
+    {
+      "id": "dlc11_boiledfrankfurter",
+      "zh": "煮热狗肠（DLC11）",
+      "en": "Boiled Frankfurter (DLC11)"
+    },
+    {
+      "id": "dlc11_friedonions",
+      "zh": "炸洋葱（DLC11）",
+      "en": "Fried Onions (DLC11)"
+    },
+    {
+      "id": "chocolatesmoothie",
+      "zh": "巧克力果汁",
+      "en": "Chocolate Smoothie"
+    },
+    {
+      "id": "meatpineapplemushroomchickenkebob",
+      "zh": "四味烤串",
+      "en": "Meat Pineapple Mushroom Chicken Kebab"
+    },
+    {
+      "id": "hotchocolate",
+      "zh": "热可可",
+      "en": "Hot Chocolate"
+    },
+    {
+      "id": "hotchocolatecream",
+      "zh": "热可可（加奶油）",
+      "en": "Hot Chocolate & Cream"
+    },
+    {
+      "id": "hotchocolatemallow",
+      "zh": "热可可（加棉花糖）",
+      "en": "Hot Chocolate & Marshmallows"
+    },
+    {
+      "id": "hotchocolatemallowcream",
+      "zh": "热可可（奶油棉花糖）",
+      "en": "Hot Chocolate Cream & Mallows"
+    },
+    {
+      "id": "christmaspudding",
+      "zh": "圣诞布丁",
+      "en": "Christmas Pudding"
+    },
+    {
+      "id": "christmaspuddingwithorange",
+      "zh": "圣诞布丁（橙子）",
+      "en": "Christmas Pudding & Orange"
+    },
+    {
+      "id": "hotpot_meat",
+      "zh": "涮肉火锅",
+      "en": "Hotpot Meat"
+    },
+    {
+      "id": "hotpot_prawn",
+      "zh": "涮虾火锅",
+      "en": "Hotpot Prawn"
+    },
+    {
+      "id": "hotpot_doublemeat",
+      "zh": "双份涮肉火锅",
+      "en": "Hotpot Double Meat"
+    },
+    {
+      "id": "hotpot_doubleprawn",
+      "zh": "双份涮虾火锅",
+      "en": "Hotpot Double Prawn"
+    },
+    {
+      "id": "hotpot_mixed",
+      "zh": "什锦火锅",
+      "en": "Hotpot Mixed"
+    },
+    {
+      "id": "fruitplatter_grapespeach",
+      "zh": "葡萄桃子拼盘",
+      "en": "Grapes & Peach Platter"
+    },
+    {
+      "id": "fruitplatter_orangegrapes",
+      "zh": "橙子葡萄拼盘",
+      "en": "Orange & Grapes Platter"
+    },
+    {
+      "id": "fruitplatter_orangepeach",
+      "zh": "橙子桃子拼盘",
+      "en": "Orange & Peach Platter"
+    },
+    {
+      "id": "fruitplatter_orangepeachgrapes",
+      "zh": "三果拼盘",
+      "en": "Orange Peach & Grapes Platter"
+    },
+    {
+      "id": "beefpotatocarrotroast",
+      "zh": "烤牛肉土豆胡萝卜",
+      "en": "Roast Beef Potato & Carrot"
+    },
+    {
+      "id": "beefpotatocarrotbroccoliroast",
+      "zh": "烤牛肉什锦",
+      "en": "Roast Beef Potato Carrot & Broccoli"
+    },
+    {
+      "id": "chickenpotatocarrotroast",
+      "zh": "烤鸡土豆胡萝卜",
+      "en": "Roast Chicken Potato & Carrot"
+    },
+    {
+      "id": "chickenpotatocarrotbroccoliroast",
+      "zh": "烤鸡什锦",
+      "en": "Roast Chicken Potato Carrot & Broccoli"
+    },
+    {
+      "id": "fruitpie_apple",
+      "zh": "苹果水果派",
+      "en": "Apple Pie"
+    },
+    {
+      "id": "fruitpie_appleblackberry",
+      "zh": "苹果黑莓派",
+      "en": "Apple & Blackberry Pie"
+    },
+    {
+      "id": "fruitpie_applecherry",
+      "zh": "苹果樱桃派",
+      "en": "Apple & Cherry Pie"
+    },
+    {
+      "id": "fruitpie_blackberry",
+      "zh": "黑莓派",
+      "en": "Blackberry Pie"
+    },
+    {
+      "id": "fruitpie_cherry",
+      "zh": "樱桃派",
+      "en": "Cherry Pie"
+    },
+    {
+      "id": "onionbroccolicheesesoup",
+      "zh": "洋葱西兰花芝士汤",
+      "en": "Onion Broccoli & Cheese Soup"
+    },
+    {
+      "id": "onioncarrotpotatosoup",
+      "zh": "洋葱胡萝卜土豆汤",
+      "en": "Onion Carrot & Potato Soup"
+    },
+    {
+      "id": "onionpotatosoupleek",
+      "zh": "洋葱土豆韭葱汤",
+      "en": "Onion Potato & Leek Soup"
+    },
+    {
+      "id": "cheesesticks",
+      "zh": "炸芝士条",
+      "en": "Cheese Sticks"
+    },
+    {
+      "id": "chickenburger",
+      "zh": "鸡肉汉堡",
+      "en": "Chicken Burger"
+    },
+    {
+      "id": "donut_plain",
+      "zh": "原味甜甜圈",
+      "en": "Plain Donut"
+    },
+    {
+      "id": "donut_chocolate",
+      "zh": "巧克力甜甜圈",
+      "en": "Chocolate Donut"
+    },
+    {
+      "id": "donut_raspberry",
+      "zh": "覆盆子甜甜圈",
+      "en": "Raspberry Donut"
+    },
+    {
+      "id": "hotdog_plain",
+      "zh": "原味热狗",
+      "en": "Plain Hot Dog"
+    },
+    {
+      "id": "hotdog_ketchup",
+      "zh": "番茄酱热狗",
+      "en": "Hot Dog & Ketchup"
+    },
+    {
+      "id": "hotdog_mustard",
+      "zh": "芥末热狗",
+      "en": "Hot Dog & Mustard"
+    },
+    {
+      "id": "hotdog_ketchup_mustard",
+      "zh": "番茄酱芥末热狗",
+      "en": "Hot Dog Ketchup & Mustard"
+    },
+    {
+      "id": "hotdog_onions",
+      "zh": "洋葱热狗",
+      "en": "Hot Dog & Onions"
+    },
+    {
+      "id": "hotdog_onions_ketchup",
+      "zh": "洋葱番茄酱热狗",
+      "en": "Hot Dog Onions & Ketchup"
+    },
+    {
+      "id": "hotdog_onions_mustard",
+      "zh": "洋葱芥末热狗",
+      "en": "Hot Dog Onions & Mustard"
+    },
+    {
+      "id": "onionrings",
+      "zh": "炸洋葱圈",
+      "en": "Onion Rings"
+    },
+    {
+      "id": "dlc10_hotpot_meat",
+      "zh": "涮肉火锅（DLC10）",
+      "en": "Hotpot Meat (DLC10)"
+    },
+    {
+      "id": "dlc10_hotpot_prawn",
+      "zh": "涮虾火锅（DLC10）",
+      "en": "Hotpot Prawn (DLC10)"
+    },
+    {
+      "id": "dlc10_hotpot_doublemeat",
+      "zh": "双份涮肉火锅（DLC10）",
+      "en": "Hotpot Double Meat (DLC10)"
+    },
+    {
+      "id": "dlc10_hotpot_doubleprawn",
+      "zh": "双份涮虾火锅（DLC10）",
+      "en": "Hotpot Double Prawn (DLC10)"
+    },
+    {
+      "id": "dlc10_hotpot_mixed",
+      "zh": "什锦火锅（DLC10）",
+      "en": "Hotpot Mixed (DLC10)"
+    },
+    {
+      "id": "dlc10_fruitplatter_grapespeach",
+      "zh": "葡萄桃子拼盘（DLC10）",
+      "en": "Grapes & Peach Platter (DLC10)"
+    },
+    {
+      "id": "dlc10_fruitplatter_orangegrapes",
+      "zh": "橙子葡萄拼盘（DLC10）",
+      "en": "Orange & Grapes Platter (DLC10)"
+    },
+    {
+      "id": "dlc10_fruitplatter_orangepeach",
+      "zh": "橙子桃子拼盘（DLC10）",
+      "en": "Orange & Peach Platter (DLC10)"
+    },
+    {
+      "id": "dlc10_fruitplatter_orangepeachgrapes",
+      "zh": "三果拼盘（DLC10）",
+      "en": "Fruit Platter (DLC10)"
+    },
+    {
+      "id": "icecream_vanilla",
+      "zh": "香草冰淇淋",
+      "en": "Vanilla Ice Cream"
+    },
+    {
+      "id": "icecream_chocolate",
+      "zh": "巧克力冰淇淋",
+      "en": "Chocolate Ice Cream"
+    },
+    {
+      "id": "orangesodafloat_vanilla",
+      "zh": "香草橙味汽水冰淇淋",
+      "en": "Orange Soda Ice Cream Float (Vanilla)"
+    },
+    {
+      "id": "orangesodafloat_chocolate",
+      "zh": "巧克力橙味汽水冰淇淋",
+      "en": "Orange Soda Ice Cream Float (Chocolate)"
+    },
+    {
+      "id": "rootbeerfloat_vanilla",
+      "zh": "香草可乐冰淇淋",
+      "en": "Cola Ice Cream Float (Vanilla)"
+    },
+    {
+      "id": "rootbeerfloat_chocolate",
+      "zh": "巧克力可乐冰淇淋",
+      "en": "Cola Ice Cream Float (Chocolate)"
+    },
+    {
+      "id": "dlc11_hotdog_plain",
+      "zh": "原味热狗（DLC11）",
+      "en": "Plain Hot Dog (DLC11)"
+    },
+    {
+      "id": "dlc11_hotdog_ketchup",
+      "zh": "番茄酱热狗（DLC11）",
+      "en": "Hot Dog & Ketchup (DLC11)"
+    },
+    {
+      "id": "dlc11_hotdog_mustard",
+      "zh": "芥末热狗（DLC11）",
+      "en": "Hot Dog & Mustard (DLC11)"
+    },
+    {
+      "id": "dlc11_hotdog_ketchup_mustard",
+      "zh": "番茄酱芥末热狗（DLC11）",
+      "en": "Hot Dog Ketchup & Mustard (DLC11)"
+    },
+    {
+      "id": "dlc11_hotdog_onions",
+      "zh": "洋葱热狗（DLC11）",
+      "en": "Hot Dog & Onions (DLC11)"
+    },
+    {
+      "id": "dlc11_hotdog_onions_ketchup",
+      "zh": "洋葱番茄酱热狗（DLC11）",
+      "en": "Hot Dog Onions & Ketchup (DLC11)"
+    },
+    {
+      "id": "dlc11_hotdog_onions_mustard",
+      "zh": "洋葱芥末热狗（DLC11）",
+      "en": "Hot Dog Onions & Mustard (DLC11)"
+    },
+    {
+      "id": "dlc13_moonpie_chocolate",
+      "zh": "巧克力月亮派",
+      "en": "Chocolate Moon Pie"
+    },
+    {
+      "id": "dlc13_moonpie_chocolatestrawberry",
+      "zh": "巧克力草莓月亮派",
+      "en": "Chocolate & Strawberry Moon Pie"
+    },
+    {
+      "id": "dlc13_moonpie_watermelon",
+      "zh": "甜瓜月亮派",
+      "en": "Melon Moon Pie"
+    },
+    {
+      "id": "dlc13_fruitplatter_grapespeach",
+      "zh": "葡萄桃子拼盘（DLC13）",
+      "en": "Grapes & Peach Platter (DLC13)"
+    },
+    {
+      "id": "dlc13_fruitplatter_orangegrapes",
+      "zh": "橙子葡萄拼盘（DLC13）",
+      "en": "Orange & Grapes Platter (DLC13)"
+    },
+    {
+      "id": "dlc13_fruitplatter_orangepeach",
+      "zh": "橙子桃子拼盘（DLC13）",
+      "en": "Orange & Peach Platter (DLC13)"
+    },
+    {
+      "id": "dlc13_fruitplatter_orangepeachgrapes",
+      "zh": "三果拼盘（DLC13）",
+      "en": "Fruit Platter (DLC13)"
+    },
+    {
+      "id": "HotPot",
+      "zh": "火锅台",
+      "en": "Hot Pot"
+    },
+    {
+      "id": "RoastingTray",
+      "zh": "烤盘",
+      "en": "Roasting Tray"
+    },
+    {
+      "id": "utensil_ingredient_spray_01",
+      "zh": "奶油喷罐",
+      "en": "Whipped Cream Spray"
+    },
+    {
+      "id": "cleanmugstack",
+      "zh": "干净马克杯堆",
+      "en": "Clean Mug Stack"
+    },
+    {
+      "id": "dirtymug",
+      "zh": "脏马克杯",
+      "en": "Dirty Mug"
+    },
+    {
+      "id": "dirtymugstack",
+      "zh": "脏马克杯堆",
+      "en": "Dirty Mug Stack"
+    },
+    {
+      "id": "workstation_mixer_01",
+      "zh": "搅拌台（DLC3）",
+      "en": "Mixer Station (DLC3)"
+    },
+    {
+      "id": "dlc11_condiment_dispenser",
+      "zh": "酱料机",
+      "en": "Condiment Dispenser"
+    },
+    {
+      "id": "dlc11_equipment_glass_01",
+      "zh": "玻璃杯架",
+      "en": "Glass Equipment"
+    },
+    {
+      "id": "dlc11_cleanglassstack",
+      "zh": "干净玻璃杯堆",
+      "en": "Clean Glass Stack"
+    },
+    {
+      "id": "dlc11_dirtyglass",
+      "zh": "脏玻璃杯",
+      "en": "Dirty Glass"
+    },
+    {
+      "id": "dlc11_dirtyglassstack",
+      "zh": "脏玻璃杯堆",
+      "en": "Dirty Glass Stack"
+    },
+    {
+      "id": "dlc11_workstation_glass_return_01",
+      "zh": "玻璃杯回收台",
+      "en": "Glass Return Station"
+    },
+    {
+      "id": "workstation_sink_01_summer",
+      "zh": "水槽（夏季）",
+      "en": "Sink (Summer)"
+    },
+    {
+      "id": "cooking_region_floorburner",
+      "zh": "火锅灶台",
+      "en": "Hotpot Burner"
+    },
+    {
+      "id": "pushable_object",
+      "zh": "可推动大火锅",
+      "en": "Pushable Large Hot Pot"
+    },
+    {
+      "id": "dlc10_cooking_region_floorburner",
+      "zh": "火锅灶台（DLC10）",
+      "en": "Hotpot Burner (DLC10)"
+    },
+    {
+      "id": "dlc10_pushable_object",
+      "zh": "可推动大火锅（DLC10）",
+      "en": "Pushable Large Hot Pot (DLC10)"
+    },
+    {
+      "id": "dlc10_workstation_mixer",
+      "zh": "搅拌台（火锅）",
+      "en": "Mixer Station (Hotpot)"
+    },
+    {
+      "id": "oven_furnace_medieval",
+      "zh": "烤炉（石炉）",
+      "en": "Furnace Oven"
+    },
+    {
+      "id": "oven_medieval",
+      "zh": "烤箱（中世纪）",
+      "en": "Oven (Medieval)"
+    },
+    {
+      "id": "workstation_furnace_01",
+      "zh": "石炉台",
+      "en": "Furnace Station"
+    },
+    {
+      "id": "utensil_roasting_tray",
+      "zh": "烤盘",
+      "en": "Roasting Tray"
+    },
+    {
+      "id": "utensil_coalbucket_01",
+      "zh": "煤桶",
+      "en": "Coal Bucket"
+    },
+    {
+      "id": "workstation_mixer_03",
+      "zh": "搅拌台（中世纪）",
+      "en": "Mixer Station (Medieval)"
+    },
+    {
+      "id": "dispenser_coal_01",
+      "zh": "煤箱",
+      "en": "Coal Dispenser"
+    },
+    {
+      "id": "dlc13_workstation_cooker_01",
+      "zh": "灶台（DLC13）",
+      "en": "Cooker (DLC13)"
+    },
+    {
+      "id": "dlc13_utensil_mixer_01",
+      "zh": "搅拌碗（DLC13）",
+      "en": "Mixer Bowl (DLC13)"
+    },
+    {
+      "id": "dlc13_workstation_mixer_01",
+      "zh": "搅拌台（DLC13）",
+      "en": "Mixer Station (DLC13)"
+    },
+    {
+      "id": "AirWall",
+      "zh": "空气墙（隐形碰撞）",
+      "en": "Air Wall"
     }
   ]
 }

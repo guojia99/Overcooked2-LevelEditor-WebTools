@@ -15,6 +15,10 @@ public static class SceneFloorExporter
 {
     private const int PlaneMeshFileId = 10209;
     private const int QuadMeshFileId = 10210;
+    /// <summary>空气地板碰撞盒名称：仅此名称的 Ground 层 BoxCollider 被识别为空气地板
+    /// （无可见 Plane，只有可行走碰撞盒）。几何与普通 Col_Floor 相同。与空气墙的
+    /// 1×1×1.132 魔法数不同，空气地板仅靠名称识别，故不会被 items 导出器捡走。</summary>
+    public const string AirFloorColliderName = "Col_AirFloor";
 
     public static List<FloorDto> ExportFromScene()
     {
@@ -58,7 +62,58 @@ public static class SceneFloorExporter
                 continue;
 
             TryAddFloor(go, t, floors);
+            TryAddAirFloor(go, t, floors);
         }
+    }
+
+    /// <summary>识别空气地板：名称为 Col_AirFloor 的 Ground 层 BoxCollider
+    /// （仅有可行走碰撞盒，无可见 Plane）。仅靠名称区分——几何与普通 Col_Floor 相同，
+    /// 故不能像空气墙那样用高度魔法数识别。</summary>
+    private static void TryAddAirFloor(GameObject go, Transform t, List<FloorDto> floors)
+    {
+        if (go.name != AirFloorColliderName)
+            return;
+        var col = go.GetComponent<BoxCollider>();
+        if (col == null)
+            return;
+        if (!IsGroundLayer(go))
+            return;
+
+        var b = col.bounds;
+        if (b.size.x <= 0.001f || b.size.z <= 0.001f)
+            return;
+
+        var path = LayoutEditorHierarchy.GetHierarchyPath(t);
+        var parentPath = t.parent != null
+            ? LayoutEditorHierarchy.GetHierarchyPath(t.parent)
+            : string.Empty;
+
+        floors.Add(new FloorDto
+        {
+            instanceId = "u:" + go.GetInstanceID(),
+            hierarchyPath = path,
+            parentPath = parentPath,
+            displayName = "AirFloor",
+            surfaceKind = "solid",
+            meshType = "plane",
+            meshFileId = 0,
+            localPosition = LayoutVector3.From(t.localPosition),
+            worldPosition = LayoutVector3.From(t.position),
+            localRotationY = t.localEulerAngles.y,
+            localScale = LayoutVector3.From(UnityEngine.Vector3.one),
+            widthUnits = b.size.x,
+            depthUnits = b.size.z,
+            widthCells = Mathf.RoundToInt(b.size.x / LayoutEditorCatalogLookup.GridCellSize),
+            depthCells = Mathf.RoundToInt(b.size.z / LayoutEditorCatalogLookup.GridCellSize),
+            airFloor = true,
+        });
+    }
+
+    private static bool IsGroundLayer(GameObject go)
+    {
+        if (go == null)
+            return false;
+        return go.layer == 9 || LayerMask.LayerToName(go.layer) == "Ground";
     }
 
     private static bool IsPrefabInstance(GameObject go)

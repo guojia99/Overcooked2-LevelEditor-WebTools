@@ -105,7 +105,11 @@ export async function loadScene(assetPath: string) {
     );
     const doc = await fetchLayout(assetPath);
     const dupIds = countDuplicateInstanceIds(doc.items);
-    S.items = doc.items.map((raw, index) => enrichItem(raw, `i${index}`));
+    // 过滤通用碰撞块（Col_Wall / Col_Floor 等场景辅助对象）：只有空气墙
+    // （airWall=true，1×1×1.132）才作为核心层物品进入编辑器。
+    S.items = doc.items
+      .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true))
+      .map((raw, index) => enrichItem(raw, `i${index}`));
     S.floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
     mergeRaftItemsIntoFloors();
     mergeThemedItemsIntoFloors();
@@ -296,6 +300,7 @@ export async function syncLayoutFromScene(otherPath: string): Promise<void> {
     const idMap = new Map<string, string>();
     S.items = doc.items
       .filter((raw) => prefabIdFromPath(raw.prefabAssetPath) !== "Player")
+      .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true))
       .map((raw) => {
         const it = enrichItem(JSON.parse(JSON.stringify(raw)) as LayoutItem, newEditorKey());
         const nextId = `new:sync:${crypto.randomUUID()}`;
@@ -355,14 +360,19 @@ export async function syncLayoutFromScene(otherPath: string): Promise<void> {
 export function startBridgeWatch() {
   S.bridgeWasUp = true;
   S.bridgeStopAlerted = false;
+  S.bridgeFailCount = 0;
   window.setInterval(async () => {
     const up = await fetchHealth();
-    if (!up && S.bridgeWasUp && !S.bridgeStopAlerted) {
-      S.bridgeStopAlerted = true;
-      showBridgeStoppedModal();
-      setStatus("未连接 Unity（后台服务已停止）", false);
-    } else if (up) {
+    if (up) {
+      S.bridgeFailCount = 0;
       S.bridgeStopAlerted = false;
+    } else if (S.bridgeWasUp) {
+      S.bridgeFailCount++;
+      if (S.bridgeFailCount >= 3 && !S.bridgeStopAlerted) {
+        S.bridgeStopAlerted = true;
+        showBridgeStoppedModal();
+        setStatus("未连接 Unity（后台服务已停止）", false);
+      }
     }
     S.bridgeWasUp = up;
   }, 3000);

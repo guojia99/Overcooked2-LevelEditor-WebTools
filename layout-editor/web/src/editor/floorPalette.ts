@@ -25,6 +25,13 @@ import {
 import { tidyCatalogNameZh } from "../displayLabels";
 import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
 
+/** 特殊地板：压力开关（含莲花压力开关），在地板层放置。 */
+const PRESSURE_SWITCH_SURFACE_IDS = new Set([
+  "PressureSwitch",
+  "dlc13_lotuspressureswitch_large",
+  "dlc13_lotuspressureswitch_small",
+]);
+
 export function buildFloorPalette(filter = "", mode: "floor" | "background" = "floor") {
   dom.paletteCats.innerHTML = "";
   const q = filter.trim().toLowerCase();
@@ -73,6 +80,18 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
       themedRow.appendChild(addThemedBtn);
       dom.paletteCats.appendChild(themedRow);
     }
+
+    // 新增空气地板: only a walkable Col_AirFloor collider, no visible plane.
+    const airBtn = document.createElement("button");
+    airBtn.className = "palette-add-floor";
+    airBtn.textContent = "+ 新增空气地板";
+    airBtn.title = "仅有可行走碰撞盒（Col_AirFloor），无可见地板，写回后生效";
+    airBtn.addEventListener("click", () => {
+      S.pendingNewAirFloor = true;
+      setStatus("在画布上点击以放置空气地板（仅可行走，无可见地板）");
+      dom.canvas.style.cursor = "crosshair";
+    });
+    dom.paletteCats.appendChild(airBtn);
   }
 
   const surfaceItems: CatalogItem[] = [];
@@ -99,6 +118,7 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
         ]
       : [
           { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
+          { key: "pressure", labelZh: "压力开关（特殊地板）", match: (it) => PRESSURE_SWITCH_SURFACE_IDS.has(it.id) },
         ];
   // Background palette also lists ambient effects (they are not surface items).
   const pool = mode === "background" ? [...S.catalogByGuid.values()] : surfaceItems;
@@ -151,7 +171,7 @@ export function updateFloorBar() {
   if (S.selectedFloorKeys.size > 1) {
     info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板（拖动整体移动 · Del 删除）</span>`;
   } else if (f) {
-    info = `<span class="fb-info"><b>${f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(S.catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : f.materialName ?? "无材质"}</span>`;
+    info = `<span class="fb-info"><b>${f.airFloor ? "空气地板" : f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.airFloor ? "仅可行走（无可见地板）" : f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(S.catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : f.materialName ?? "无材质"}</span>`;
   } else if (selItem && isSurfaceItem(selCat)) {
     info = `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
   } else {

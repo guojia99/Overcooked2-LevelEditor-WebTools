@@ -26,6 +26,7 @@ import {
   updatePanelTabButtons
 } from "./panels";
 import { isCollisionItem } from "./stubControls";
+import { isAirFloor } from "./floors";
 import { openModal, closeModal } from "../modals";
 import { setLayer } from "./init";
 import type {
@@ -160,12 +161,14 @@ export function deleteWaypoint(group: MoveGroup, wpId: string): void {
 export function cleanOrphanedMoveControls(): void {
   const liveIds = new Set(S.items.map((it) => it.instanceId));
   const liveFloorIds = new Set(S.floors.map((f) => f.instanceId));
+  // 空气地板（仅碰撞盒）随写回重建，无法参与移动组烘焙 → 从组中剥离。
+  const airFloorIds = new Set(S.floors.filter((f) => isAirFloor(f)).map((f) => f.instanceId));
   S.moveControls = S.moveControls.filter((g) => {
     g.itemInstanceIds = g.itemInstanceIds.filter(
       (id) => liveIds.has(id) || id.startsWith("new:")
     );
     g.floorInstanceIds = g.floorInstanceIds.filter(
-      (id) => liveFloorIds.has(id) || id.startsWith("new:")
+      (id) => (liveFloorIds.has(id) || id.startsWith("new:")) && !airFloorIds.has(id)
     );
     // Drop dangling member-group references (grouping is organizational).
     if (g.memberGroups) {
@@ -283,7 +286,8 @@ function addSelectedToGroup(): void {
   }
   for (const key of S.selectedFloorKeys) {
     const f = S.floors.find((fl) => fl._key === key);
-    if (f && f.surfaceKind !== "background" && !group.floorInstanceIds.includes(f.instanceId)) {
+    // 空气地板（仅碰撞盒）随写回重建，加入移动组会在写回时失效 → 排除。
+    if (f && !isAirFloor(f) && f.surfaceKind !== "background" && !group.floorInstanceIds.includes(f.instanceId)) {
       group.floorInstanceIds.push(f.instanceId);
       targetAdd(f.instanceId);
       addedFloors++;
@@ -1800,8 +1804,9 @@ function renderMembersTab(group: MoveGroup): string {
       itemLayerOfIt(it) === "decor" &&
       !group.itemInstanceIds.includes(it.instanceId)
   );
+  // 空气地板（仅碰撞盒）随写回重建，无法参与移动组烘焙 → 不出现在添加候选里。
   const floorCandidates = S.floors.filter(
-    (f) => f.surfaceKind !== "background" && !group.floorInstanceIds.includes(f.instanceId)
+    (f) => !isAirFloor(f) && f.surfaceKind !== "background" && !group.floorInstanceIds.includes(f.instanceId)
   );
   html += `<div class="move-add-row">
     <button type="button" class="btn-small pick-add" id="btn-add-members" title="地图选点：点选 / 框选地图上的物品、装饰与地板加入本组（水面等背景不可选）">📐 地图选点</button>
@@ -2534,6 +2539,13 @@ function wireGroupEditor(body: HTMLElement, group: MoveGroup): void {
   body.querySelector<HTMLSelectElement>(".group-add-floor")?.addEventListener("change", (e) => {
     const id = (e.target as HTMLSelectElement).value;
     if (!id) return;
+    // 防御：空气地板（仅碰撞盒）不参与移动组烘焙。
+    const f = S.floors.find((fl) => fl.instanceId === id);
+    if (f && isAirFloor(f)) {
+      setStatus("空气地板（仅碰撞盒）无法加入移动组", false);
+      refresh();
+      return;
+    }
     pushHistory();
     group.floorInstanceIds.push(id);
     const tgt = pickTarget(group);

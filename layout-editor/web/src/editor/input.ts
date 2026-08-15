@@ -33,6 +33,7 @@ import { showContextMenu, showWaypointContextMenu } from "./ui/contextMenu";
 import { openFloorEditorModal } from "./floorEditorModal";
 import {
   addFloorAt,
+  addAirFloorAt,
   dragFloor,
   finalizeFloor,
   isThemedFloor
@@ -189,7 +190,8 @@ export function setupCanvas() {
             (it) => itemCategoryOf(it) !== "background"
           );
           const fHits = hitTestFloorsAll(wx, wz);
-          const fHit = fHits.length > 0 && fHits[0].floor.surfaceKind !== "background"
+          // 空气地板（仅碰撞盒）不参与移动组成员选点。
+          const fHit = fHits.length > 0 && fHits[0].floor.surfaceKind !== "background" && !fHits[0].floor.airFloor
             ? fHits[0].floor
             : null;
           if (hits.length > 0 || fHit) {
@@ -259,6 +261,12 @@ export function setupCanvas() {
     }
 
     if (S.currentLayer === "floor" || S.currentLayer === "background") {
+      if (S.pendingNewAirFloor) {
+        S.pendingNewAirFloor = false;
+        dom.canvas.style.cursor = "";
+        addAirFloorAt(wx, wz);
+        return;
+      }
       if (S.pendingNewFloor) {
         const cat = S.pendingNewFloorCat;
         S.pendingNewFloor = false;
@@ -866,6 +874,7 @@ export function setupCanvas() {
       S.marqueeing = false;
       S.pendingNewFloor = false;
       S.pendingNewFloorCat = null;
+      S.pendingNewAirFloor = false;
       dom.canvas.style.cursor = "";
       if (S.moveMode !== "none") exitMoveMode();
     }

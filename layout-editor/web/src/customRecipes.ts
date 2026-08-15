@@ -11,7 +11,7 @@ import type {
 } from "./types";
 import { showBusy, hideBusy, withBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
-import { foodGroupLabel } from "./ingredientLabels";
+import { foodGroupLabel, visibleIngredients } from "./ingredientLabels";
 import { closeModal, openModal } from "./modals";
 import { rlCardHtml, type RecipeWithGroups } from "./recipeCard";
 import { fmt4, fmtCm, footprintOf, u2cm } from "./modelUnits";
@@ -547,6 +547,7 @@ async function renderRecipeForm(
       api.fetchCustomRecipeReferences(setName).catch(() => EMPTY_REFS),
       api.fetchCustomRecipeConfig(setName),
     ]);
+    ingredients = visibleIngredients(ingredients);
     [levelsetRecipes, catalog] = await Promise.all([
       api.fetchCustomRecipes(setName).catch(() => [] as CustomRecipeSummary[]),
       api.fetchRecipeCatalog(setName).catch(() => [] as RecipeEntry[]),

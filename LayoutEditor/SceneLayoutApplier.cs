@@ -235,7 +235,7 @@ public static class SceneLayoutApplier
         for (int i = 0; i < collision.childCount; i++)
         {
             var c = collision.GetChild(i);
-            if (c != null && c.name == "Col_Floor")
+            if (c != null && IsEditorFloorCollider(c.gameObject))
                 toRemove.Add(c.gameObject);
         }
         foreach (var go in toRemove)
@@ -263,7 +263,8 @@ public static class SceneLayoutApplier
             cz = SnapScalar(cz, snapStep);
             float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
             float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
-            CreateColFloor(collision, groundLayer, cx, cz, w, d, floor.localRotationY);
+            CreateColFloor(collision, groundLayer, cx, cz, w, d, floor.localRotationY,
+                floor.airFloor ? SceneFloorExporter.AirFloorColliderName : "Col_Floor");
         }
 
         // Also make surface-floor prefab items (ice tiles, walkways, …) walkable.
@@ -287,9 +288,24 @@ public static class SceneLayoutApplier
         }
     }
 
-    private static void CreateColFloor(Transform parent, int groundLayer, float cx, float cz, float w, float d, float rotY)
+    /// <summary>True for walkable colliders this editor regenerates: Col_Floor (visible
+    /// floors / walkable items) and Col_AirFloor (air floors). Unity auto-suffixes
+    /// duplicate sibling names with " (N)", so prefix-matching avoids stale colliders
+    /// accumulating across write-backs.</summary>
+    private static bool IsEditorFloorCollider(GameObject go)
     {
-        var go = new GameObject("Col_Floor");
+        if (go == null)
+            return false;
+        return go.name == "Col_Floor"
+            || go.name == SceneFloorExporter.AirFloorColliderName
+            || go.name.StartsWith("Col_Floor (", StringComparison.Ordinal)
+            || go.name.StartsWith(SceneFloorExporter.AirFloorColliderName + " (", StringComparison.Ordinal);
+    }
+
+    private static void CreateColFloor(Transform parent, int groundLayer, float cx, float cz, float w, float d, float rotY, string colliderName = null)
+    {
+        var name = string.IsNullOrEmpty(colliderName) ? "Col_Floor" : colliderName;
+        var go = new GameObject(name);
         Undo.RegisterCreatedObjectUndo(go, "Layout Editor Col_Floor");
         go.layer = groundLayer;
         var t = go.transform;
@@ -300,6 +316,69 @@ public static class SceneLayoutApplier
         var col = go.AddComponent<BoxCollider>();
         col.size = new Vector3(w, 0.4f, d);
         col.center = new Vector3(0f, -0.2f, 0f);
+    }
+
+    /// <summary>空气地板没有可见 Plane，只有 Ground 层可行走碰撞盒（几何与普通
+    /// Col_Floor 相同：size=(w,0.4,d)、center=(0,-0.2,0)，仅名称 Col_AirFloor 不同）。
+    /// 无论 autoWalkable 开关都会创建/更新——否则空气地板没有任何作用。</summary>
+    private static void ApplyAirFloorCollider(FloorDto floor, float snapStep,
+        Dictionary<string, GameObject> createdObjects)
+    {
+        var parentPath = !string.IsNullOrEmpty(floor.parentPath) ? floor.parentPath : "Design/Collision";
+        var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
+        if (parent == null)
+        {
+            Debug.LogWarning("[LayoutEditor] ApplyAirFloorCollider: parent path not found \"" + parentPath + "\"");
+            return;
+        }
+
+        float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
+        float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
+
+        var t = FindFloorTransform(floor);
+        if (t != null)
+        {
+            Undo.RecordObject(t, "Layout Editor Air Floor");
+            Undo.RecordObject(t.gameObject, "Layout Editor Air Floor");
+            var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : t.localPosition;
+            pos.x = SnapScalar(pos.x, snapStep);
+            pos.z = SnapScalar(pos.z, snapStep);
+            t.localPosition = pos;
+            t.localEulerAngles = new Vector3(0f, floor.localRotationY, 0f);
+            t.localScale = Vector3.one;
+            var col = t.GetComponent<BoxCollider>();
+            if (col != null)
+            {
+                Undo.RecordObject(col, "Layout Editor Air Floor");
+                col.size = new Vector3(w, 0.4f, d);
+                col.center = new Vector3(0f, -0.2f, 0f);
+            }
+            if (!string.IsNullOrEmpty(floor.instanceId))
+                createdObjects[floor.instanceId] = t.gameObject;
+            return;
+        }
+
+        int groundLayer = LayerMask.NameToLayer("Ground");
+        if (groundLayer < 0)
+            groundLayer = 9;
+
+        var go = new GameObject(SceneFloorExporter.AirFloorColliderName);
+        Undo.RegisterCreatedObjectUndo(go, "Layout Editor Air Floor");
+        go.layer = groundLayer;
+        var gt = go.transform;
+        gt.SetParent(parent, false);
+        var newPos = floor.localPosition != null ? floor.localPosition.ToVector3() : Vector3.zero;
+        newPos.x = SnapScalar(newPos.x, snapStep);
+        newPos.z = SnapScalar(newPos.z, snapStep);
+        gt.localPosition = newPos;
+        gt.localEulerAngles = new Vector3(0f, floor.localRotationY, 0f);
+        gt.localScale = Vector3.one;
+        var newCol = go.AddComponent<BoxCollider>();
+        newCol.size = new Vector3(w, 0.4f, d);
+        newCol.center = new Vector3(0f, -0.2f, 0f);
+
+        if (createdObjects != null && !string.IsNullOrEmpty(floor.instanceId))
+            createdObjects[floor.instanceId] = go;
     }
 
     private static void ApplyFloors(LayoutDocumentDto document, float snapStep,
@@ -320,6 +399,14 @@ public static class SceneLayoutApplier
         {
             if (floor == null)
                 continue;
+            // 空气地板：无可见 Plane，只维护可行走碰撞盒（几何同普通 Col_Floor，仅名称
+            // 不同）。此处无条件创建/更新——否则关闭 autoWalkable 时空气地板没有碰撞盒
+            // 就毫无作用；开启时随后由 SyncWalkableToFloors 重建，终态一致。
+            if (floor.airFloor)
+            {
+                ApplyAirFloorCollider(floor, snapStep, createdObjects);
+                continue;
+            }
             // Raft floors are visualized via planks in items[]; keep the floor
             // entry only so SyncWalkableToFloors can emit one Col_Floor for the rect.
             if (floor.surfaceKind == "raft")
@@ -1000,9 +1087,23 @@ public static class SceneLayoutApplier
                 pos.z = SnapScalar(pos.z, itemSnap);
                 go.transform.localPosition = pos;
             }
-            go.transform.localEulerAngles = new Vector3(0f, item.localRotationY, 0f);
+            go.transform.localEulerAngles = new Vector3(
+                item.localRotationX != 0f ? item.localRotationX : 0f,
+                item.localRotationY,
+                item.localRotationZ != 0f ? item.localRotationZ : 0f);
+            if (item.localScale != null)
+            {
+                var sc = item.localScale.ToVector3();
+                if (sc.x > 0f && sc.y > 0f && sc.z > 0f)
+                    go.transform.localScale = sc;
+            }
             var col = go.AddComponent<BoxCollider>();
-            col.size = new Vector3(1.2f, 2f, 1.2f);
+            // 空气墙：1×1 占地、高 1.132（魔法数，导出时据此识别，避免与其他碰撞混淆）
+            col.size = item.airWall
+                ? new Vector3(1f, 1.132f, 1f)
+                : new Vector3(1.2f, 2f, 1.2f);
+            if (item.colliderCenter != null)
+                col.center = item.colliderCenter.ToVector3();
             if (!string.IsNullOrEmpty(item.instanceId))
                 createdObjects[item.instanceId] = go;
             return;
@@ -1020,7 +1121,23 @@ public static class SceneLayoutApplier
             pos.x = SnapScalar(pos.x, itemSnap);
             pos.z = SnapScalar(pos.z, itemSnap);
             t.localPosition = pos;
-            t.localEulerAngles = new Vector3(t.localEulerAngles.x, item.localRotationY, t.localEulerAngles.z);
+            t.localEulerAngles = new Vector3(
+                item.localRotationX != 0f ? item.localRotationX : t.localEulerAngles.x,
+                item.localRotationY,
+                item.localRotationZ != 0f ? item.localRotationZ : t.localEulerAngles.z);
+            ApplyItemScale(t, item);
+            // 修复空气墙碰撞几何：确保 size 为魔法数 1×1×1.132，center 与文档一致。
+            if (item.airWall)
+            {
+                var col = t.GetComponent<BoxCollider>();
+                if (col != null)
+                {
+                    Undo.RecordObject(col, "Layout Editor Collision");
+                    col.size = new Vector3(1f, 1.132f, 1f);
+                    if (item.colliderCenter != null)
+                        col.center = item.colliderCenter.ToVector3();
+                }
+            }
         }
     }
 

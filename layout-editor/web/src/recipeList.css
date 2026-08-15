@@ -388,3 +388,52 @@
   width: 34px;
   height: 34px;
 }
+
+/* 菜谱 / 食材清单 视图切换 */
+.rl-view-switch {
+  display: flex;
+  gap: 4px;
+}
+.rl-view-btn {
+  background: #1a1d23;
+  color: #c6cad1;
+  border: 1px solid #4a5060;
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.rl-view-btn:hover {
+  border-color: #8ab4f8;
+}
+.rl-view-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+.rl-ing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.rl-ing-card {
+  background: #232834;
+  border: 1px solid #333a4a;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  min-width: 0;
+}
+.rl-ing-card .food-icon {
+  width: 48px;
+  height: 48px;
+}
+.rl-ing-name {
+  font-size: 13px;
+  color: #e8eaed;
+  line-height: 1.35;
+}

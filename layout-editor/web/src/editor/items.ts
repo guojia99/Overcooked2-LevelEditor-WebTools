@@ -183,31 +183,6 @@ export function moveBlockedAt(_item: EditorItem, _wx: number, _wz: number, _igno
   return false;
 }
 
-export function occupiedCells(item: EditorItem): string[] {
-  const fp = resolveFootprint(item);
-  const rot = normalizeRot(item.localRotationY);
-  const swapped = rot === 90 || rot === 270;
-  const cw = swapped ? fp.cellsZ : fp.cellsX;
-  const cd = swapped ? fp.cellsX : fp.cellsZ;
-  const sx = itemScaleX(item);
-  const sz = itemScaleZ(item);
-  const spanW = cw * CELL * sx;
-  const spanD = cd * CELL * sz;
-  const minX = item._wx - spanW / 2;
-  const minZ = item._wz - spanD / 2;
-  const maxX = item._wx + spanW / 2;
-  const maxZ = item._wz + spanD / 2;
-  const startIX = Math.floor((minX + 0.01) / CELL + 0.5);
-  const startIZ = Math.floor((minZ + 0.01) / CELL + 0.5);
-  const endIX = Math.floor((maxX - 0.01) / CELL + 0.5);
-  const endIZ = Math.floor((maxZ - 0.01) / CELL + 0.5);
-  const cells: string[] = [];
-  for (let ix = startIX; ix <= endIX; ix++)
-    for (let iz = startIZ; iz <= endIZ; iz++)
-      cells.push(`${ix},${iz}`);
-  return cells;
-}
-
 export function checkPlayerCollisions(): string[] {
   const result: string[] = [];
   const players = S.items.filter(isPlayerItem);
@@ -217,18 +192,17 @@ export function checkPlayerCollisions(): string[] {
       !isCollisionItem(it) &&
       itemLayerOfIt(it) === "items"
   );
-  const nonPlayerCells = new Map<string, EditorItem>();
-  for (const o of nonPlayerGameplay) {
-    for (const k of occupiedCells(o)) {
-      if (!nonPlayerCells.has(k)) nonPlayerCells.set(k, o);
-    }
-  }
+  // 精确 AABB 相交（与 checkWorkstationCollisions 一致），而不是网格离散化：
+  // 网格化在物体不在格子正中心时会多算相邻格子，造成假重叠。
+  const EPS = 0.02;
   for (const p of players) {
-    for (const k of occupiedCells(p)) {
-      const o = nonPlayerCells.get(k);
-      if (o) {
+    const a = itemWorldAABB(p);
+    for (const o of nonPlayerGameplay) {
+      const b = itemWorldAABB(o);
+      const overlapX = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX);
+      const overlapZ = Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ);
+      if (overlapX > EPS && overlapZ > EPS) {
         result.push(`${itemLabel(p)} 与 ${itemLabel(o)} 重叠`);
-        break;
       }
     }
   }
@@ -316,8 +290,8 @@ export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordH
     item.stubKind = "Dispenser";
     item.dispenser = {};
   }
-  if (cat.id === "AttackingFoodSpawner") {
-    item.stubKind = "AttackingFoodSpawner";
+  if (cat.id === "AttachingFoodSpawner") {
+    item.stubKind = "AttachingFoodSpawner";
     item.foodSpawner = {
       spawnInOrder: true,
       triggerAtStart: true,
@@ -333,6 +307,15 @@ export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordH
   if (cat.id === "Teleportal") {
     item.stubKind = "Teleportal";
     item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false };
+  }
+  if (cat.id === "AirWall") {
+    // 空气墙：核心层隐形碰撞块（无 prefab，场景应用时生成 1×1×1.132 BoxCollider 空气墙）。
+    // prefabGuid 保留 catalog guid 供分层识别；应用走 stubKind=Collision 分支，不使用 prefab。
+    item.stubKind = "Collision";
+    item.airWall = true;
+    item.prefabAssetPath = "";
+    item.parentPath = cat.defaultParent;
+    item.walkable = false;
   }
   S.items.push(item);
   trySnapUtensilToHost(item, cat, S.items, S.catalogByGuid);

@@ -13,15 +13,26 @@ export function isServingStationItem(item: EditorItem): boolean {
 }
 
 export function isPlateReturnItem(item: EditorItem): boolean {
-  return prefabIdFromPath(item.prefabAssetPath) === "PlateReturn";
+  const id = prefabIdFromPath(item.prefabAssetPath);
+  return id === "PlateReturn" || id === "dlc13_workstation_plate_return";
 }
 
 export function isGlassReturnItem(item: EditorItem): boolean {
-  return prefabIdFromPath(item.prefabAssetPath) === "GlassReturn";
+  const id = prefabIdFromPath(item.prefabAssetPath);
+  return id === "GlassReturn" || id === "dlc11_workstation_glass_return_01";
+}
+
+export function isMugReturnItem(item: EditorItem): boolean {
+  const id = prefabIdFromPath(item.prefabAssetPath);
+  return id === "workstation_mug_return" || id === "dlc09_workstation_mug_return_winter";
+}
+
+export function isTrayReturnItem(item: EditorItem): boolean {
+  return prefabIdFromPath(item.prefabAssetPath) === "dlc08_workstation_tray_return";
 }
 
 export function isReturnStationItem(item: EditorItem): boolean {
-  return isPlateReturnItem(item) || isGlassReturnItem(item);
+  return isPlateReturnItem(item) || isGlassReturnItem(item) || isMugReturnItem(item) || isTrayReturnItem(item);
 }
 
 export function servingStations(): EditorItem[] {
@@ -40,12 +51,25 @@ export function glassReturns(): EditorItem[] {
   return S.items.filter(isGlassReturnItem);
 }
 
+export function mugReturns(): EditorItem[] {
+  return S.items.filter(isMugReturnItem);
+}
+
+export function trayReturns(): EditorItem[] {
+  return S.items.filter(isTrayReturnItem);
+}
+
 export function computeReturnLabels(): Map<string, string> {
   const label = new Map<string, string>();
   let p = 0;
   let g = 0;
-  for (const t of returnStations()) {
-    label.set(t.instanceId, isGlassReturnItem(t) ? `脏杯台${++g}` : `脏盘台${++p}`);
+  let m = 0;
+  let t = 0;
+  for (const r of returnStations()) {
+    if (isMugReturnItem(r)) label.set(r.instanceId, `脏马克杯台${++m}`);
+    else if (isTrayReturnItem(r)) label.set(r.instanceId, `餐盘回收台${++t}`);
+    else if (isGlassReturnItem(r)) label.set(r.instanceId, `脏杯台${++g}`);
+    else label.set(r.instanceId, `脏盘台${++p}`);
   }
   return label;
 }
@@ -80,10 +104,31 @@ export function servingGlassReturn(s: EditorItem): string | undefined {
   });
 }
 
-export function setServingReturnOfType(s: EditorItem, returnId: string | undefined, isGlass: boolean): void {
-  const plate = isGlass ? servingPlateReturn(s) : returnId;
-  const glass = isGlass ? returnId : servingGlassReturn(s);
-  const ids = [plate, glass].filter((x): x is string => !!x);
+export function servingMugReturn(s: EditorItem): string | undefined {
+  return servingBoundReturns(s).find((id) => {
+    const r = S.items.find((i) => i.instanceId === id);
+    return r && isMugReturnItem(r);
+  });
+}
+
+export function servingTrayReturn(s: EditorItem): string | undefined {
+  return servingBoundReturns(s).find((id) => {
+    const r = S.items.find((i) => i.instanceId === id);
+    return r && isTrayReturnItem(r);
+  });
+}
+
+export type ServingReturnKind = "plate" | "glass" | "mug" | "tray";
+
+export function setServingReturnOfType(s: EditorItem, returnId: string | undefined, kind: ServingReturnKind): void {
+  const keep = (kind2: ServingReturnKind): string | undefined => {
+    if (kind === kind2) return returnId;
+    if (kind2 === "plate") return servingPlateReturn(s);
+    if (kind2 === "glass") return servingGlassReturn(s);
+    if (kind2 === "mug") return servingMugReturn(s);
+    return servingTrayReturn(s);
+  };
+  const ids = [keep("plate"), keep("glass"), keep("mug"), keep("tray")].filter((x): x is string => !!x);
   setServingReturns(s, ids);
 }
 

@@ -78,6 +78,17 @@ public static class LayoutEditorStubIO
             return;
         }
 
+        // 酱料机 / 饮料机：编辑器按食材箱处理（可绑定特定酱料/饮料）
+        var dispenserPrefabId = !string.IsNullOrEmpty(item.prefabAssetPath)
+            ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+            : "";
+        if (IsSpecialDispenserPrefabId(dispenserPrefabId))
+        {
+            item.stubKind = "Dispenser";
+            item.dispenser = new LayoutDispenserStubDto();
+            return;
+        }
+
         var spawner = go.GetComponent<PseudoPrefabAttachingFoodSpawnerStub>();
         if (spawner != null)
         {
@@ -289,8 +300,14 @@ public static class LayoutEditorStubIO
             var pseudoStub = go.GetComponent<PseudoPrefabStub>();
             if (pseudoStub != null)
             {
-                Undo.RecordObject(pseudoStub, "Layout Editor PseudoPrefab");
-                pseudoStub.pseudoPrefabSO = LoadPseudoPrefabSO(item.pseudoPrefabGuid);
+                // 仅当 guid 能解析才写入；解析失败时保留 prefab 继承的 SO，
+                // 避免把 pseudoPrefabSO 置空 → 宿主 PseudoPrefabManager 空引用抛异常。
+                var so = LoadPseudoPrefabSO(item.pseudoPrefabGuid);
+                if (so != null)
+                {
+                    Undo.RecordObject(pseudoStub, "Layout Editor PseudoPrefab");
+                    pseudoStub.pseudoPrefabSO = so;
+                }
             }
         }
 
@@ -311,10 +328,27 @@ public static class LayoutEditorStubIO
         {
             var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
             if (dispenser == null)
-                return;
+            {
+                // 酱料机/饮料机原 prefab 无 PseudoPrefabDispenserStub：写回时补加（并复用基础 stub 的 pseudoPrefabSO）
+                var pid = !string.IsNullOrEmpty(item.prefabAssetPath)
+                    ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+                    : "";
+                if (!IsSpecialDispenserPrefabId(pid))
+                {
+                    Debug.LogWarning("[LayoutEditor] Apply Dispenser: 场景对象缺少 PseudoPrefabDispenserStub: " + go.name);
+                    return;
+                }
+                dispenser = Undo.AddComponent<PseudoPrefabDispenserStub>(go);
+                var baseStub = go.GetComponent<PseudoPrefabStub>();
+                if (baseStub != null && dispenser.pseudoPrefabSO == null)
+                    dispenser.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+            }
 
             Undo.RecordObject(dispenser, "Layout Editor Dispenser");
-            dispenser.spawnerItemPrefabSO = LoadPseudoPrefabSO(item.dispenser.spawnerItemPrefabGuid);
+            var so = LoadPseudoPrefabSO(item.dispenser.spawnerItemPrefabGuid);
+            Debug.Log("[LayoutEditor] Apply Dispenser: guid=" + (item.dispenser.spawnerItemPrefabGuid ?? "<empty>")
+                + " -> " + (so != null ? so.name : "NULL"));
+            dispenser.spawnerItemPrefabSO = so;
             return;
         }
 
@@ -601,6 +635,13 @@ public static class LayoutEditorStubIO
         return string.IsNullOrEmpty(path)
             ? null
             : AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+    }
+
+    /// <summary>酱料机 / 饮料机：编辑器按食材箱处理，可绑定特定酱料/饮料。</summary>
+    private static bool IsSpecialDispenserPrefabId(string prefabId)
+    {
+        return prefabId == "dlc08_drink_machine" || prefabId == "dlc11_drink_dispenser"
+            || prefabId == "dlc08_condiment_dispenser" || prefabId == "dlc11_condiment_dispenser";
     }
 
     private static PseudoPrefabSO[] LoadPseudoPrefabSOs(string[] guids)

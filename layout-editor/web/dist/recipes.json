@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-08-12T06:45:35.273Z",
+  "generatedAt": "2026-08-14T16:23:54.408Z",
   "schemaVersion": 3,
-  "itemCount": 76,
+  "itemCount": 192,
   "recipes": [
     {
       "guid": "33ae6e311fad09147a11dfaeed918dce",
       "id": "Smoothie_Strawberry",
-      "nameZh": "草莓冰沙",
+      "nameZh": "草莓果汁",
       "nameEn": "Strawberry Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Strawberry.asset",
       "cookingStep": "Blender",
@@ -85,7 +85,7 @@
       "nameZh": "草莓面糊",
       "nameEn": "Strawberry Batter",
       "assetPath": "Assets/common02/food/Recipes/dlc02/MixedFlourEggStrawberry.asset",
-      "cookingStep": "MixingBowl",
+      "cookingStep": "Mixer",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -100,15 +100,88 @@
       "intermediate": true,
       "cookingGroups": [
         {
-          "step": "MixingBowl",
+          "step": "Mixer",
           "utensils": [
             "Mixer",
-            "MixerBowl"
+            "MixerBowl",
+            "Oven"
           ],
           "ingredients": [
             "FlourSO",
             "EggSO",
             "PancakeStrawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "ecfe82aeabe59ca907011ae6195f4754",
+      "id": "dlc13_mixedfloureggstrawberries",
+      "nameZh": "草莓面糊（DLC13）",
+      "nameEn": "Strawberry Batter (DLC13)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_mixedfloureggstrawberries.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_strawberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_strawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "db1f49c22125a3767afaf8b78bc091a7",
+      "id": "dlc09_mixedfloureggstrawberry",
+      "nameZh": "草莓面糊（DLC9）",
+      "nameEn": "Strawberry Batter (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedfloureggstrawberry.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_pancakestrawberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_pancakestrawberry"
           ]
         }
       ],
@@ -142,8 +215,7 @@
           ],
           "ingredients": [
             "FlourSO",
-            "EggSO",
-            "PancakeStrawberry"
+            "EggSO"
           ]
         },
         {
@@ -152,7 +224,44 @@
             "Cooker",
             "FryPan"
           ],
-          "ingredients": []
+          "ingredients": [
+            "PancakeStrawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "281c42055ab2d27fb6d7dac8a5657434",
+      "id": "dlc09_pancake_strawberry",
+      "nameZh": "草莓松饼（DLC9）",
+      "nameEn": "Strawberry Pancake (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_pancake_strawberry.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_pancakestrawberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "pancake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_pancakestrawberry"
+          ]
         }
       ],
       "icon": true
@@ -167,8 +276,8 @@
       "ingredients": [
         "DLC05_Crackers",
         "DLC05_Marshmallow",
-        "DLC05_Strawberry",
-        "DLC05_Banana"
+        "DLC05_Banana",
+        "DLC05_Strawberry"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -183,8 +292,8 @@
           "utensils": [],
           "ingredients": [
             "DLC05_Crackers",
-            "DLC05_Strawberry",
-            "DLC05_Banana"
+            "DLC05_Banana",
+            "DLC05_Strawberry"
           ]
         },
         {
@@ -195,6 +304,220 @@
           ],
           "ingredients": [
             "DLC05_Marshmallow"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "00d5f3f3bea77b6137529f4cebe0db96",
+      "id": "dlc13_moonpie_strawberry",
+      "nameZh": "草莓月亮派",
+      "nameEn": "Strawberry Moon Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_moonpie_strawberry.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_strawberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "moonpie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_strawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "ca3c392f7afd57b0f791227fe50c529d",
+      "id": "fruitplatter_orangegrapes",
+      "nameZh": "橙子葡萄拼盘",
+      "nameEn": "Orange & Grapes Platter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/fruitplatter_orangegrapes.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc04_orange",
+        "grapes"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc04_orange",
+            "grapes"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "1e2cd636a03c0380c1a8b7060e61330e",
+      "id": "dlc10_fruitplatter_orangegrapes",
+      "nameZh": "橙子葡萄拼盘（DLC10）",
+      "nameEn": "Orange & Grapes Platter (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_fruitplatter_orangegrapes.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc10_orange",
+        "dlc10_grapes"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc10_orange",
+            "dlc10_grapes"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "26c9d53207cfd6d8da449e37a523dbf7",
+      "id": "dlc13_fruitplatter_orangegrapes",
+      "nameZh": "橙子葡萄拼盘（DLC13）",
+      "nameEn": "Orange & Grapes Platter (DLC13)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_fruitplatter_orangegrapes.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc13_orange",
+        "dlc13_grapes"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc13_orange",
+            "dlc13_grapes"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "c0810453a029f5265219965bbd1139c0",
+      "id": "fruitplatter_orangepeach",
+      "nameZh": "橙子桃子拼盘",
+      "nameEn": "Orange & Peach Platter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/fruitplatter_orangepeach.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc04_orange",
+        "peach"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc04_orange",
+            "peach"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7c937cf3ab61fbe9a83ff9fbbb55620c",
+      "id": "dlc10_fruitplatter_orangepeach",
+      "nameZh": "橙子桃子拼盘（DLC10）",
+      "nameEn": "Orange & Peach Platter (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_fruitplatter_orangepeach.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc10_orange",
+        "dlc10_peach"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc10_orange",
+            "dlc10_peach"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "40b17ec8b4ee2b583b139e2825425082",
+      "id": "dlc13_fruitplatter_orangepeach",
+      "nameZh": "橙子桃子拼盘（DLC13）",
+      "nameEn": "Orange & Peach Platter (DLC13)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_fruitplatter_orangepeach.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc13_orange",
+        "dlc13_peach"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc13_orange",
+            "dlc13_peach"
           ]
         }
       ],
@@ -232,6 +555,206 @@
           "ingredients": [
             "TomatoSO",
             "EggSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0f3c0cb3723f9fa9a0946ec627dc40c9",
+      "id": "tomato_cucumber_onion",
+      "nameZh": "番茄黄瓜洋葱沙拉",
+      "nameEn": "Tomato Cucumber & Onion Salad",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/tomato_cucumber_onion.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_tomato",
+            "dlc11_cucumber",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "eb0563923a543f4191a9c24aaa1feba2",
+      "id": "hotdog_ketchup_mustard",
+      "nameZh": "番茄酱芥末热狗",
+      "nameEn": "Hot Dog Ketchup & Mustard",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_ketchup_mustard.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "ketchup",
+        "mustard"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "ketchup",
+            "mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "baad8f77ae279bda42a56423ffa1c659",
+      "id": "dlc11_hotdog_ketchup_mustard",
+      "nameZh": "番茄酱芥末热狗（DLC11）",
+      "nameEn": "Hot Dog Ketchup & Mustard (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_ketchup_mustard.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_ketchup",
+            "dlc11_mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "428be35ca1f1f9f1e79a8f41bd305eb9",
+      "id": "hotdog_ketchup",
+      "nameZh": "番茄酱热狗",
+      "nameEn": "Hot Dog & Ketchup",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_ketchup.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "ketchup"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "ketchup"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "6ad3960a4ea1a03d9d548b24ece92b99",
+      "id": "dlc11_hotdog_ketchup",
+      "nameZh": "番茄酱热狗（DLC11）",
+      "nameEn": "Hot Dog & Ketchup (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_ketchup.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_ketchup"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_ketchup"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
           ]
         }
       ],
@@ -308,6 +831,38 @@
       "icon": true
     },
     {
+      "guid": "b4a2ac7b4f21722ee388bdc59a497af5",
+      "id": "salad_tomato_onion",
+      "nameZh": "番茄洋葱沙拉",
+      "nameEn": "Tomato & Onion Salad",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/salad_tomato_onion.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "dlc11_tomato",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "fbce1bb14baa5b54e9c73399f9cad117",
       "id": "Pasta_TomatoOnly_SO",
       "nameZh": "番茄意面",
@@ -350,20 +905,132 @@
       "icon": true
     },
     {
+      "guid": "f439c8b1a3e7668333bec741dfa99870",
+      "id": "tomato_corn_onion",
+      "nameZh": "番茄玉米洋葱沙拉",
+      "nameEn": "Tomato Corn & Onion Salad",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/tomato_corn_onion.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc11_tomato",
+        "corn",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_tomato",
+            "corn",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "cb3f2f86134eb1bb4931cfe5df2bc9b2",
+      "id": "mixedfloureggraspberry",
+      "nameZh": "覆盆子面糊",
+      "nameEn": "Raspberry Batter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/mixedfloureggraspberry.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "raspberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "raspberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9917852641a8c74ce7b37f4fb4dc17be",
+      "id": "donut_raspberry",
+      "nameZh": "覆盆子甜甜圈",
+      "nameEn": "Raspberry Donut",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/donut_raspberry.asset",
+      "cookingStep": "DeepFatFryer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "raspberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "donut",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "raspberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "9794da25ccc26214cb16a18a9384a784",
       "id": "Pizza_Olives",
       "nameZh": "橄榄披萨",
       "nameEn": "Olive Pizza",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Pizza_Olives.asset",
-      "cookingStep": "OvenTray",
+      "cookingStep": "",
       "ingredients": [
-        "DLC05_Dough",
+        "DoughSO",
         "TomatoSO",
         "CheeseSO",
         "Olive"
       ],
       "ingredientCount": 4,
-      "cookingStepCount": 1,
+      "cookingStepCount": 0,
       "score": 100,
       "isCustom": false,
       "group": "dlc05",
@@ -371,15 +1038,161 @@
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
+          "step": "",
+          "utensils": [],
           "ingredients": [
-            "DLC05_Dough",
+            "DoughSO",
             "TomatoSO",
             "CheeseSO",
             "Olive"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "cedba94c13b27578980573cf94629c27",
+      "id": "mixedfloureggdriedfruitorange",
+      "nameZh": "果干橙子面糊",
+      "nameEn": "Dried Fruit & Orange Batter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/mixedfloureggdriedfruitorange.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "driedfruit",
+        "orange"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "driedfruit",
+            "orange"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4646abca79ca38d4347cea1d466a7351",
+      "id": "dlc09_mixedfloureggdriedfruitorange",
+      "nameZh": "果干橙子面糊（DLC9）",
+      "nameEn": "Dried Fruit & Orange Batter (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedfloureggdriedfruitorange.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_driedfruit",
+        "dlc09_orange"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_driedfruit",
+            "dlc09_orange"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "a9a768e9ec09136a0e90d768da8fe2e3",
+      "id": "mixedfloureggdriedfruit",
+      "nameZh": "果干面糊",
+      "nameEn": "Dried Fruit Batter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/mixedfloureggdriedfruit.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "driedfruit"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "driedfruit"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "b467fb94bd03b453cfc9711039703abd",
+      "id": "dlc09_mixedfloureggdriedfruit",
+      "nameZh": "果干面糊（DLC9）",
+      "nameEn": "Dried Fruit Batter (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedfloureggdriedfruit.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_driedfruit"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_driedfruit"
           ]
         }
       ],
@@ -478,6 +1291,85 @@
       "icon": true
     },
     {
+      "guid": "5f2a228eb7a8555f6352dcc6f7effe1d",
+      "id": "mixedfloureggblackberry",
+      "nameZh": "黑莓面糊",
+      "nameEn": "Blackberry Batter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggblackberry.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "blackberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "blackberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "131a3b8eb2250cbb1c4cd723c9490802",
+      "id": "fruitpie_blackberry",
+      "nameZh": "黑莓派",
+      "nameEn": "Blackberry Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_blackberry.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "blackberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "blackberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "dfbe8b5399972034391163ef9a6bf050",
       "id": "Cake_HoneyCarrot_SO",
       "nameZh": "胡萝卜蛋糕",
@@ -525,8 +1417,8 @@
     {
       "guid": "576b3ced1e3ff084696b2948e18790a3",
       "id": "Steamed_Carrot_SO",
-      "nameZh": "胡萝卜饺",
-      "nameEn": "Carrot Dumpling",
+      "nameZh": "胡萝卜烧麦",
+      "nameEn": "Carrot Shumai",
       "assetPath": "Assets/common01/food/Recipes/Steamed_Carrot_SO.asset",
       "cookingStep": "Steamer",
       "ingredients": [
@@ -559,6 +1451,40 @@
           ],
           "ingredients": [
             "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "85af1e323bd8673c9a68b9e3f17da1e2",
+      "id": "salad_cucumber_tomato_onion",
+      "nameZh": "黄瓜番茄洋葱沙拉",
+      "nameEn": "Cucumber Tomato & Onion Salad",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/salad_cucumber_tomato_onion.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "dlc11_tomato",
+            "dlc11_cucumber",
+            "dlc11onion_salad"
           ]
         }
       ],
@@ -638,6 +1564,38 @@
       "icon": true
     },
     {
+      "guid": "9a83520c544b94e585bfd1e91d6bb0cc",
+      "id": "salad_cucumber_onion",
+      "nameZh": "黄瓜洋葱沙拉",
+      "nameEn": "Cucumber & Onion Salad",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/salad_cucumber_onion.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "dlc11_cucumber",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "e82eb7b57c06a044a85bf3a370361c5e",
       "id": "Kebob_ChickenTomato",
       "nameZh": "鸡肉番茄烤串",
@@ -669,6 +1627,45 @@
         }
       ],
       "icon": true
+    },
+    {
+      "guid": "d067bcb2fa433447cffca113d224b449",
+      "id": "chickenburger",
+      "nameZh": "鸡肉汉堡",
+      "nameEn": "Chicken Burger",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/chickenburger.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "dlc08_bun",
+        "dlc08_chicken"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "burger",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        }
+      ],
+      "icon": false
     },
     {
       "guid": "03131c3b6e7cd284198075c9d409e3e9",
@@ -826,6 +1823,407 @@
       "icon": true
     },
     {
+      "guid": "64e1f74ca542f2e42c25e37aa076cca8",
+      "id": "hotdog_mustard",
+      "nameZh": "芥末热狗",
+      "nameEn": "Hot Dog & Mustard",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_mustard.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "mustard"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "47f571713dea2fcb0a720d396f563076",
+      "id": "dlc11_hotdog_mustard",
+      "nameZh": "芥末热狗（DLC11）",
+      "nameEn": "Hot Dog & Mustard (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_mustard.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_mustard"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "36309afacba05463d3acc614eb41b5ee",
+      "id": "chickenpotatocarrotbroccoliroast",
+      "nameZh": "烤鸡什锦",
+      "nameEn": "Roast Chicken Potato Carrot & Broccoli",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/chickenpotatocarrotbroccoliroast.asset",
+      "cookingStep": "RoastingTray",
+      "ingredients": [
+        "chicken_roast",
+        "dlc07_potato",
+        "CarrotSO",
+        "broccoli"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "chicken_roast",
+            "dlc07_potato",
+            "CarrotSO",
+            "broccoli"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "a4fb2d67be3e32546484a9e72f6dd40f",
+      "id": "dlc09_chickenpotatocarrotbroccoliroast",
+      "nameZh": "烤鸡什锦（DLC9）",
+      "nameEn": "Roast Chicken Roast (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_chickenpotatocarrotbroccoliroast.asset",
+      "cookingStep": "RoastingTray",
+      "ingredients": [
+        "dlc09_chicken_roast",
+        "dlc09_potato",
+        "dlc09_carrot",
+        "dlc09_broccoli"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "dlc09_chicken_roast",
+            "dlc09_potato",
+            "dlc09_carrot",
+            "dlc09_broccoli"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "bd5588e77ab98362bb92322503207a6c",
+      "id": "chickenpotatocarrotroast",
+      "nameZh": "烤鸡土豆胡萝卜",
+      "nameEn": "Roast Chicken Potato & Carrot",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/chickenpotatocarrotroast.asset",
+      "cookingStep": "RoastingTray",
+      "ingredients": [
+        "chicken_roast",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "chicken_roast",
+            "dlc07_potato",
+            "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "67c1b613d3be34f5107cd27389207d87",
+      "id": "dlc09_chickenpotatocarrotroast",
+      "nameZh": "烤鸡土豆胡萝卜（DLC9）",
+      "nameEn": "Roast Chicken Potato & Carrot (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_chickenpotatocarrotroast.asset",
+      "cookingStep": "RoastingTray",
+      "ingredients": [
+        "dlc09_chicken_roast",
+        "dlc09_potato",
+        "dlc09_carrot"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "dlc09_chicken_roast",
+            "dlc09_potato",
+            "dlc09_carrot"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7be07bd0c9b0417d1112a11ae4bbfe04",
+      "id": "roastedmarshmallow",
+      "nameZh": "烤棉花糖",
+      "nameEn": "Roasted Marshmallow",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc05/roastedmarshmallow.asset",
+      "cookingStep": "ToastingFork",
+      "ingredients": [
+        "DLC05_Marshmallow"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "smores",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "ToastingFork",
+          "utensils": [
+            "Campfire",
+            "ToastingFork"
+          ],
+          "ingredients": [
+            "DLC05_Marshmallow"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "057a978fc2c69f0d0026d365a2856b7d",
+      "id": "beefpotatocarrotbroccoliroast",
+      "nameZh": "烤牛肉什锦",
+      "nameEn": "Roast Beef Potato Carrot & Broccoli",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/beefpotatocarrotbroccoliroast.asset",
+      "cookingStep": "RoastingTray",
+      "ingredients": [
+        "beef_roast",
+        "dlc07_potato",
+        "CarrotSO",
+        "broccoli"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "beef_roast",
+            "dlc07_potato",
+            "CarrotSO",
+            "broccoli"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8b8bf38ab7304469986bd8a42168e8b6",
+      "id": "dlc09_beefpotatocarrotbroccoliroast",
+      "nameZh": "烤牛肉什锦（DLC9）",
+      "nameEn": "Roast Beef Roast (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_beefpotatocarrotbroccoliroast.asset",
+      "cookingStep": "RoastingTray",
+      "ingredients": [
+        "dlc09_beef_roast",
+        "dlc09_potato",
+        "dlc09_carrot",
+        "dlc09_broccoli"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "dlc09_beef_roast",
+            "dlc09_potato",
+            "dlc09_carrot",
+            "dlc09_broccoli"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "5ff1e688f7d53ed0dd262ebd163e1d6d",
+      "id": "beefpotatocarrotroast",
+      "nameZh": "烤牛肉土豆胡萝卜",
+      "nameEn": "Roast Beef Potato & Carrot",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/beefpotatocarrotroast.asset",
+      "cookingStep": "RoastingTray",
+      "ingredients": [
+        "beef_roast",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "beef_roast",
+            "dlc07_potato",
+            "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d3b16a73e68ddb55bd5caccc1617ad1a",
+      "id": "dlc09_beefpotatocarrotroast",
+      "nameZh": "烤牛肉土豆胡萝卜（DLC9）",
+      "nameEn": "Roast Beef Potato & Carrot (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_beefpotatocarrotroast.asset",
+      "cookingStep": "RoastingTray",
+      "ingredients": [
+        "dlc09_beef_roast",
+        "dlc09_potato",
+        "dlc09_carrot"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "dlc09_beef_roast",
+            "dlc09_potato",
+            "dlc09_carrot"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "c2b4dfafdec3f3949b43d1af8d17a214",
       "id": "Pizza_Peperoni_SO",
       "nameZh": "辣香肠披萨",
@@ -903,7 +2301,7 @@
       "nameZh": "蓝莓面糊",
       "nameEn": "Blueberry Batter",
       "assetPath": "Assets/common02/food/Recipes/dlc05/MixedFlourEggBlueberry.asset",
-      "cookingStep": "MixingBowl",
+      "cookingStep": "Mixer",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -918,10 +2316,11 @@
       "intermediate": true,
       "cookingGroups": [
         {
-          "step": "MixingBowl",
+          "step": "Mixer",
           "utensils": [
             "Mixer",
-            "MixerBowl"
+            "MixerBowl",
+            "Oven"
           ],
           "ingredients": [
             "FlourSO",
@@ -960,8 +2359,7 @@
           ],
           "ingredients": [
             "FlourSO",
-            "EggSO",
-            "Blueberry"
+            "EggSO"
           ]
         },
         {
@@ -970,7 +2368,43 @@
             "Cooker",
             "FryPan"
           ],
-          "ingredients": []
+          "ingredients": [
+            "Blueberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "820c21d5cc42a73978fdc1727bfb640f",
+      "id": "dlc09_mixedflouregg",
+      "nameZh": "面糊（DLC9）",
+      "nameEn": "Batter (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedflouregg.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg"
+          ]
         }
       ],
       "icon": true
@@ -1284,6 +2718,493 @@
       "icon": true
     },
     {
+      "guid": "074f169b75e4b6c74bd0f97f085c5e7d",
+      "id": "mixedfloureggappleblackberry",
+      "nameZh": "苹果黑莓面糊",
+      "nameEn": "Apple & Blackberry Batter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggappleblackberry.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "apple",
+        "blackberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "apple",
+            "blackberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9bad989d7b3f4edceff931347047df6f",
+      "id": "fruitpie_appleblackberry",
+      "nameZh": "苹果黑莓派",
+      "nameEn": "Apple & Blackberry Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_appleblackberry.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "apple",
+        "blackberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "apple",
+            "blackberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f315f10756df53f7bbe744a7933f4ca7",
+      "id": "mixedfloureggapple",
+      "nameZh": "苹果面糊",
+      "nameEn": "Apple Batter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggapple.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "apple"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "apple"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "204adb61c324b4f88574d66edce86416",
+      "id": "fruitpie_apple",
+      "nameZh": "苹果水果派",
+      "nameEn": "Apple Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_apple.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "apple"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "apple"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0552850cf55d06aa15a87be6ee7efc4f",
+      "id": "mixedfloureggapplecherry",
+      "nameZh": "苹果樱桃面糊",
+      "nameEn": "Apple & Cherry Batter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggapplecherry.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "apple",
+        "cherry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "apple",
+            "cherry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "ab5ddc545cd6953e9b8b634e7209e5b3",
+      "id": "fruitpie_applecherry",
+      "nameZh": "苹果樱桃派",
+      "nameEn": "Apple & Cherry Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_applecherry.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "apple",
+        "cherry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "apple",
+            "cherry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8e5c9f76337d76f224e9641156d04610",
+      "id": "fruitplatter_grapespeach",
+      "nameZh": "葡萄桃子拼盘",
+      "nameEn": "Grapes & Peach Platter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/fruitplatter_grapespeach.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "grapes",
+        "peach"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "grapes",
+            "peach"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "ca4cdcd7a515a64e66738d7ac030fdf5",
+      "id": "dlc10_fruitplatter_grapespeach",
+      "nameZh": "葡萄桃子拼盘（DLC10）",
+      "nameEn": "Grapes & Peach Platter (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_fruitplatter_grapespeach.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc10_grapes",
+        "dlc10_peach"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc10_grapes",
+            "dlc10_peach"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "5dc7e42fdaec9f635e5c71c381119b9e",
+      "id": "dlc13_fruitplatter_grapespeach",
+      "nameZh": "葡萄桃子拼盘（DLC13）",
+      "nameEn": "Grapes & Peach Platter (DLC13)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_fruitplatter_grapespeach.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc13_grapes",
+        "dlc13_peach"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc13_grapes",
+            "dlc13_peach"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "6cdc770ddaa0aa873ccc0ad2fdcc9a90",
+      "id": "icecream_chocolate",
+      "nameZh": "巧克力冰淇淋",
+      "nameEn": "Chocolate Ice Cream",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/icecream_chocolate.asset",
+      "cookingStep": "Blender",
+      "ingredients": [
+        "ChocolateSO",
+        "icecube",
+        "dlc11_milk"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "icecream",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "d68ecfd0eba57b2aefae3017474c581c",
+      "id": "dlc13_mixedfloureggchocolatestrawberry",
+      "nameZh": "巧克力草莓面糊（DLC13）",
+      "nameEn": "Chocolate & Strawberry Batter (DLC13)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_mixedfloureggchocolatestrawberry.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate",
+        "dlc13_strawberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate",
+            "dlc13_strawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "e5aecf7764556bed71d73122cf6dd115",
+      "id": "dlc13_moonpie_chocolatestrawberry",
+      "nameZh": "巧克力草莓月亮派",
+      "nameEn": "Chocolate & Strawberry Moon Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_moonpie_chocolatestrawberry.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate",
+        "dlc13_strawberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "moonpie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate",
+            "dlc13_strawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "54aeb2d40e9638cfaa1e00dbc9d5cb39",
+      "id": "orangesodafloat_chocolate",
+      "nameZh": "巧克力橙味汽水冰淇淋",
+      "nameEn": "Orange Soda Ice Cream Float (Chocolate)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/orangesodafloat_chocolate.asset",
+      "cookingStep": "Blender",
+      "ingredients": [
+        "ChocolateSO",
+        "icecube",
+        "dlc11_milk",
+        "orangesoda"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "orangesoda"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "44cfb001bec2e9243bce5037c9ffe070",
       "id": "Cake_HoneyChocolate_SO",
       "nameZh": "巧克力蛋糕",
@@ -1329,6 +3250,49 @@
       "icon": true
     },
     {
+      "guid": "b2e245b9af1c2e38da900abf92d41cd7",
+      "id": "rootbeerfloat_chocolate",
+      "nameZh": "巧克力可乐冰淇淋",
+      "nameEn": "Cola Ice Cream Float (Chocolate)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/rootbeerfloat_chocolate.asset",
+      "cookingStep": "Blender",
+      "ingredients": [
+        "ChocolateSO",
+        "icecube",
+        "dlc11_milk",
+        "rootbeer"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "rootbeer"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "3134ebc710e6ab14680f8d891997b311",
       "id": "Smores_Chocolate",
       "nameZh": "巧克力棉花糖饼干",
@@ -1364,6 +3328,78 @@
           ],
           "ingredients": [
             "DLC05_Marshmallow"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8baf05f1e92fce594409690786bb5b11",
+      "id": "dlc13_mixedfloureggchocolate",
+      "nameZh": "巧克力面糊（DLC13）",
+      "nameEn": "Chocolate Batter (DLC13)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_mixedfloureggchocolate.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4dfe32fb9336666f05938f31765c39e2",
+      "id": "dlc09_mixedfloureggchocolate",
+      "nameZh": "巧克力面糊（DLC9）",
+      "nameEn": "Chocolate Batter (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedfloureggchocolate.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_chocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_chocolate"
           ]
         }
       ],
@@ -1414,6 +3450,119 @@
       "icon": true
     },
     {
+      "guid": "d800cbb9c2a7d54a9581ffcc1f31d145",
+      "id": "dlc09_pancake_chocolate",
+      "nameZh": "巧克力松饼（DLC9）",
+      "nameEn": "Chocolate Pancake (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_pancake_chocolate.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_chocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "pancake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "6dea31d0d23fcafc7683485e5bc7c0e0",
+      "id": "donut_chocolate",
+      "nameZh": "巧克力甜甜圈",
+      "nameEn": "Chocolate Donut",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/donut_chocolate.asset",
+      "cookingStep": "DeepFatFryer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "donut",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "ChocolateSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "6c7100922042afdbd0144a9693b0c014",
+      "id": "dlc13_moonpie_chocolate",
+      "nameZh": "巧克力月亮派",
+      "nameEn": "Chocolate Moon Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_moonpie_chocolate.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "moonpie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "69bf42c2b4dcad440902ac2d25bc4bc6",
       "id": "Breakfast_Sausage_Beans_Egg_Bacon",
       "nameZh": "全餐早餐",
@@ -1445,6 +3594,322 @@
             "DLC05_Beans",
             "DLC05_Egg",
             "Bacon"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3363a62f8abb3d1568f77a05519f09da",
+      "id": "hotchocolate",
+      "nameZh": "热可可",
+      "nameEn": "Hot Chocolate",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/hotchocolate.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "milk",
+        "dlc03_chocolate"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "milk",
+            "dlc03_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "b5747845f812cb40e7bb963b3cfe6b51",
+      "id": "dlc09_hotchocolatemallow",
+      "nameZh": "热可可（加棉花糖·DLC9）",
+      "nameEn": "Hot Chocolate & Marshmallows (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_hotchocolatemallow.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc09_milk",
+        "dlc09_chocolate",
+        "dlc09_marshmallow"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc09_marshmallow"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc09_milk",
+            "dlc09_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "30ae2ee6ae8f1cd07a385928131b9a1c",
+      "id": "hotchocolatemallow",
+      "nameZh": "热可可（加棉花糖）",
+      "nameEn": "Hot Chocolate & Marshmallows",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/hotchocolatemallow.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "milk",
+        "dlc03_chocolate",
+        "marshmallow"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "marshmallow"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "milk",
+            "dlc03_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "c4c9ec9c2b9088490909518470c74be7",
+      "id": "dlc09_hotchocolatecream",
+      "nameZh": "热可可（加奶油·DLC9）",
+      "nameEn": "Hot Chocolate & Cream (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_hotchocolatecream.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc09_milk",
+        "dlc09_chocolate",
+        "dlc09_whippedcream"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc09_whippedcream"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc09_milk",
+            "dlc09_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "e9ea43cf689b1cc06d5f8efaa44086cb",
+      "id": "hotchocolatecream",
+      "nameZh": "热可可（加奶油）",
+      "nameEn": "Hot Chocolate & Cream",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/hotchocolatecream.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "milk",
+        "dlc03_chocolate",
+        "whippedcream"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "whippedcream"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "milk",
+            "dlc03_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "aca3396b72fcc2eba388fe53163cda3c",
+      "id": "dlc09_hotchocolatemallowcream",
+      "nameZh": "热可可（奶油棉花糖·DLC9）",
+      "nameEn": "Hot Chocolate Cream & Mallows (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_hotchocolatemallowcream.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc09_milk",
+        "dlc09_chocolate",
+        "dlc09_marshmallow",
+        "dlc09_whippedcream"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc09_marshmallow",
+            "dlc09_whippedcream"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc09_milk",
+            "dlc09_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "82aee8fa749a9a79844225aeacbdcdaf",
+      "id": "hotchocolatemallowcream",
+      "nameZh": "热可可（奶油棉花糖）",
+      "nameEn": "Hot Chocolate Cream & Mallows",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/hotchocolatemallowcream.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "milk",
+        "dlc03_chocolate",
+        "marshmallow",
+        "whippedcream"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "marshmallow",
+            "whippedcream"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "milk",
+            "dlc03_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fa060c45b57b85de321ff4bca1850909",
+      "id": "dlc09_hotchocolate",
+      "nameZh": "热可可（DLC9）",
+      "nameEn": "Hot Chocolate (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_hotchocolate.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc09_milk",
+        "dlc09_chocolate"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc09_milk",
+            "dlc09_chocolate"
           ]
         }
       ],
@@ -1578,17 +4043,113 @@
       "icon": true
     },
     {
+      "guid": "676a97591b09c349c6c172551726202e",
+      "id": "fruitplatter_orangepeachgrapes",
+      "nameZh": "三果拼盘",
+      "nameEn": "Orange Peach & Grapes Platter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/fruitplatter_orangepeachgrapes.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc04_orange",
+        "peach",
+        "grapes"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc04_orange",
+            "peach",
+            "grapes"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fb63750b9494216cc267e80b93974d14",
+      "id": "dlc10_fruitplatter_orangepeachgrapes",
+      "nameZh": "三果拼盘（DLC10）",
+      "nameEn": "Fruit Platter (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_fruitplatter_orangepeachgrapes.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc10_orange",
+        "dlc10_peach",
+        "dlc10_grapes"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc10_orange",
+            "dlc10_peach",
+            "dlc10_grapes"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8a06d2cceaddeb10dde37e3c6c821db6",
+      "id": "dlc13_fruitplatter_orangepeachgrapes",
+      "nameZh": "三果拼盘（DLC13）",
+      "nameEn": "Fruit Platter (DLC13)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_fruitplatter_orangepeachgrapes.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc13_orange",
+        "dlc13_peach",
+        "dlc13_grapes"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc13_orange",
+            "dlc13_peach",
+            "dlc13_grapes"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "2d19841c5faf85f4ea9b7c8cecc22dc9",
       "id": "Smoothie_Mega",
-      "nameZh": "什锦冰沙",
+      "nameZh": "什锦果汁",
       "nameEn": "Mega Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Mega.asset",
       "cookingStep": "Blender",
       "ingredients": [
-        "SmoothieStrawberry",
         "Banana",
         "Melon",
-        "SmoothiePineapple"
+        "SmoothiePineapple",
+        "SmoothieStrawberry"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -1605,10 +4166,84 @@
             "BlenderCup"
           ],
           "ingredients": [
-            "SmoothieStrawberry",
             "Banana",
             "Melon",
-            "SmoothiePineapple"
+            "SmoothiePineapple",
+            "SmoothieStrawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "dec7b24f1a33623c35dfb1224da8b652",
+      "id": "hotpot_mixed",
+      "nameZh": "什锦火锅",
+      "nameEn": "Hotpot Mixed",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_mixed.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "noodles",
+        "dlc04_meat",
+        "dlc04_prawn",
+        "bokchoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "noodles",
+            "dlc04_meat",
+            "dlc04_prawn",
+            "bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "2879af3faef7424bc18540e3fee192fa",
+      "id": "dlc10_hotpot_mixed",
+      "nameZh": "什锦火锅（DLC10）",
+      "nameEn": "Hotpot Mixed (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_mixed.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "dlc10_noodles",
+        "dlc10_meat",
+        "dlc10_prawn",
+        "dlc10_bokchoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "dlc10_noodles",
+            "dlc10_meat",
+            "dlc10_prawn",
+            "dlc10_bokchoy"
           ]
         }
       ],
@@ -1777,6 +4412,206 @@
       "icon": true
     },
     {
+      "guid": "3beac6dd526864446930aa0d7b8205e5",
+      "id": "Sushi_PlainPrawn_SO",
+      "nameZh": "生虾片",
+      "nameEn": "Raw Prawn Sashimi",
+      "assetPath": "Assets/common01/food/Recipes/Sushi_PlainPrawn_SO.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "SushiPrawnSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 0,
+      "score": 20,
+      "isCustom": false,
+      "group": "core",
+      "type": "sushi",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "SushiPrawnSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "a48a53230ee5ca74cac63fb1898855a5",
+      "id": "Sushi_PlainFish_SO",
+      "nameZh": "生鱼片",
+      "nameEn": "Raw Fish Sashimi",
+      "assetPath": "Assets/common01/food/Recipes/Sushi_PlainFish_SO.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "SushiFishSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 0,
+      "score": 20,
+      "isCustom": false,
+      "group": "core",
+      "type": "sushi",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "SushiFishSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "76bc4e01c41a8462246f939795269a60",
+      "id": "christmaspudding",
+      "nameZh": "圣诞布丁",
+      "nameEn": "Christmas Pudding",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/christmaspudding.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "driedfruit"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pudding",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "driedfruit"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "bb035b759dd32d4b941df12d7293b993",
+      "id": "dlc09_christmaspuddingwithorange",
+      "nameZh": "圣诞布丁（橙子·DLC9）",
+      "nameEn": "Christmas Pudding & Orange (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_christmaspuddingwithorange.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_driedfruit",
+        "dlc09_orange"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pudding",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_driedfruit",
+            "dlc09_orange"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4d0a93cbb3c1750ac5ea1d2bee43e067",
+      "id": "christmaspuddingwithorange",
+      "nameZh": "圣诞布丁（橙子）",
+      "nameEn": "Christmas Pudding & Orange",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/christmaspuddingwithorange.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "driedfruit",
+        "orange"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pudding",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "driedfruit",
+            "orange"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d0333e07e450b671d46c108c48688200",
+      "id": "dlc09_christmaspudding",
+      "nameZh": "圣诞布丁（DLC9）",
+      "nameEn": "Christmas Pudding (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_christmaspudding.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_driedfruit"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pudding",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_driedfruit"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "31afcf7d8ebb9cf42982a5f004db3fdd",
       "id": "OnionCarrotPotatoSoup_SO",
       "nameZh": "蔬菜浓汤",
@@ -1885,9 +4720,334 @@
       "icon": true
     },
     {
+      "guid": "18615c49df5d3e95511a884770a901b1",
+      "id": "hotpot_meat",
+      "nameZh": "涮肉火锅",
+      "nameEn": "Hotpot Meat",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_meat.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "noodles",
+        "dlc04_meat",
+        "bokchoy"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "noodles",
+            "dlc04_meat",
+            "bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4d77cf377d723be1b8a847f4c6e31aff",
+      "id": "dlc10_hotpot_meat",
+      "nameZh": "涮肉火锅（DLC10）",
+      "nameEn": "Hotpot Meat (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_meat.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "dlc10_noodles",
+        "dlc10_meat",
+        "dlc10_bokchoy"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "dlc10_noodles",
+            "dlc10_meat",
+            "dlc10_bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3aab840f019d41e3b001b1660326191c",
+      "id": "hotpot_prawn",
+      "nameZh": "涮虾火锅",
+      "nameEn": "Hotpot Prawn",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_prawn.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "noodles",
+        "dlc04_prawn",
+        "bokchoy"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "noodles",
+            "dlc04_prawn",
+            "bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9816df909987519931e781b56ae2dc92",
+      "id": "dlc10_hotpot_prawn",
+      "nameZh": "涮虾火锅（DLC10）",
+      "nameEn": "Hotpot Prawn (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_prawn.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "dlc10_noodles",
+        "dlc10_prawn",
+        "dlc10_bokchoy"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "dlc10_noodles",
+            "dlc10_prawn",
+            "dlc10_bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3231398b456c5567a253110263d608ac",
+      "id": "hotpot_doublemeat",
+      "nameZh": "双份涮肉火锅",
+      "nameEn": "Hotpot Double Meat",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_doublemeat.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "noodles",
+        "dlc04_meat",
+        "dlc04_meat",
+        "bokchoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "noodles",
+            "dlc04_meat",
+            "dlc04_meat",
+            "bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f6c5e55bde8a0a454961d0a4706b8957",
+      "id": "dlc10_hotpot_doublemeat",
+      "nameZh": "双份涮肉火锅（DLC10）",
+      "nameEn": "Hotpot Double Meat (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_doublemeat.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "dlc10_noodles",
+        "dlc10_meat",
+        "dlc10_meat",
+        "dlc10_bokchoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "dlc10_noodles",
+            "dlc10_meat",
+            "dlc10_meat",
+            "dlc10_bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "a4f19c0f81e589651ef71c6c8bb6a43e",
+      "id": "hotpot_doubleprawn",
+      "nameZh": "双份涮虾火锅",
+      "nameEn": "Hotpot Double Prawn",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_doubleprawn.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "noodles",
+        "dlc04_prawn",
+        "dlc04_prawn",
+        "bokchoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "noodles",
+            "dlc04_prawn",
+            "dlc04_prawn",
+            "bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "a82b5840ca408c21c6ed48f00426d423",
+      "id": "dlc10_hotpot_doubleprawn",
+      "nameZh": "双份涮虾火锅（DLC10）",
+      "nameEn": "Hotpot Double Prawn (DLC10)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_doubleprawn.asset",
+      "cookingStep": "HotPot",
+      "ingredients": [
+        "dlc10_noodles",
+        "dlc10_prawn",
+        "dlc10_prawn",
+        "dlc10_bokchoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "cooking_region_floorburner",
+            "utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "dlc10_noodles",
+            "dlc10_prawn",
+            "dlc10_prawn",
+            "dlc10_bokchoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7b8424511da55a9e8ac56e28e0edcde8",
+      "id": "meatpineapplemushroomchickenkebob",
+      "nameZh": "四味烤串",
+      "nameEn": "Meat Pineapple Mushroom Chicken Kebab",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc02/meatpineapplemushroomchickenkebob.asset",
+      "cookingStep": "KebabSkewer",
+      "ingredients": [
+        "KebobMeat",
+        "KebobPineapple",
+        "KebobMushroom",
+        "KebobChicken"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "kebab",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "KebabSkewer",
+          "utensils": [
+            "Barbeque",
+            "Skewer"
+          ],
+          "ingredients": [
+            "KebobMeat",
+            "KebobPineapple",
+            "KebobMushroom",
+            "KebobChicken"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "aeb56bd1de590f74282da06e14ef5a25",
       "id": "Smoothie_Melon",
-      "nameZh": "甜瓜冰沙",
+      "nameZh": "甜瓜果汁",
       "nameEn": "Melon Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Melon.asset",
       "cookingStep": "Blender",
@@ -1920,10 +5080,80 @@
       "icon": true
     },
     {
+      "guid": "f417c0096c7f2afb2a5130d52565cb8c",
+      "id": "dlc13_mixedfloureggwatermelon",
+      "nameZh": "甜瓜面糊（DLC13）",
+      "nameEn": "Melon Batter (DLC13)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_mixedfloureggwatermelon.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_melon"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_melon"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "2b390c581aa43e4b1e239dace0c3fdb3",
+      "id": "dlc13_moonpie_watermelon",
+      "nameZh": "甜瓜月亮派",
+      "nameEn": "Melon Moon Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_moonpie_watermelon.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_melon"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "moonpie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_melon"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "d41b20c4dd4638942bf7476ee239a85a",
       "id": "Steamed_Prawns_SO",
-      "nameZh": "虾饺",
-      "nameEn": "Prawn Dumpling",
+      "nameZh": "虾烧麦",
+      "nameEn": "Prawn Shumai",
       "assetPath": "Assets/common01/food/Recipes/Steamed_Prawns_SO.asset",
       "cookingStep": "Steamer",
       "ingredients": [
@@ -1969,7 +5199,7 @@
       "assetPath": "Assets/common02/food/Recipes/dlc02/Burger_Hawaiian.asset",
       "cookingStep": "FryingPan",
       "ingredients": [
-        "DLC02_ChoppedBun",
+        "dlc08_bun",
         "BurgerPineapple",
         "MeatSO",
         "MeatSO"
@@ -1986,7 +5216,7 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "DLC02_ChoppedBun",
+            "dlc08_bun",
             "BurgerPineapple"
           ]
         },
@@ -2007,8 +5237,8 @@
     {
       "guid": "7ef61c9e0206c784cb28602c0d013a4b",
       "id": "Steamed_Meat_SO",
-      "nameZh": "鲜肉饺",
-      "nameEn": "Meat Dumpling",
+      "nameZh": "鲜肉烧麦",
+      "nameEn": "Meat Shumai",
       "assetPath": "Assets/common01/food/Recipes/Steamed_Meat_SO.asset",
       "cookingStep": "Steamer",
       "ingredients": [
@@ -2047,41 +5277,121 @@
       "icon": true
     },
     {
-      "guid": "3beac6dd526864446930aa0d7b8205e5",
-      "id": "Sushi_PlainPrawn_SO",
-      "nameZh": "鲜虾寿司",
-      "nameEn": "Prawn Sushi",
-      "assetPath": "Assets/common01/food/Recipes/Sushi_PlainPrawn_SO.asset",
-      "cookingStep": "Steamer",
+      "guid": "5af4125798dd9b9f22fbf481c0e5b3bf",
+      "id": "icecream_vanilla",
+      "nameZh": "香草冰淇淋",
+      "nameEn": "Vanilla Ice Cream",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/icecream_vanilla.asset",
+      "cookingStep": "Blender",
       "ingredients": [
-        "SeaweedSO",
-        "SushiRiceSO",
-        "SushiPrawnSO"
+        "vanilla",
+        "icecube",
+        "dlc11_milk"
       ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
-      "score": 20,
+      "score": 0,
       "isCustom": false,
-      "group": "core",
-      "type": "sushi",
+      "group": "web",
+      "type": "icecream",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "vanilla",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "19765d73b6dfd0f2d8bd10c2bad68fce",
+      "id": "orangesodafloat_vanilla",
+      "nameZh": "香草橙味汽水冰淇淋",
+      "nameEn": "Orange Soda Ice Cream Float (Vanilla)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/orangesodafloat_vanilla.asset",
+      "cookingStep": "Blender",
+      "ingredients": [
+        "vanilla",
+        "icecube",
+        "dlc11_milk",
+        "orangesoda"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "float",
       "intermediate": false,
       "cookingGroups": [
         {
           "step": "",
           "utensils": [],
           "ingredients": [
-            "SeaweedSO",
-            "SushiPrawnSO"
+            "orangesoda"
           ]
         },
         {
-          "step": "Steamer",
+          "step": "Blender",
           "utensils": [
-            "Cooker",
-            "Steamer"
+            "Blender",
+            "BlenderCup"
           ],
           "ingredients": [
-            "SushiRiceSO"
+            "vanilla",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0a57fffe8eb3a30ed0df23b83f58d1b7",
+      "id": "rootbeerfloat_vanilla",
+      "nameZh": "香草可乐冰淇淋",
+      "nameEn": "Cola Ice Cream Float (Vanilla)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/rootbeerfloat_vanilla.asset",
+      "cookingStep": "Blender",
+      "ingredients": [
+        "vanilla",
+        "icecube",
+        "dlc11_milk",
+        "rootbeer"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "rootbeer"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "vanilla",
+            "icecube",
+            "dlc11_milk"
           ]
         }
       ],
@@ -2156,44 +5466,9 @@
       "icon": true
     },
     {
-      "guid": "26e734a28ecc2144ab85b03ebd030fbf",
-      "id": "Smoothie_Banana",
-      "nameZh": "香蕉冰沙",
-      "nameEn": "Banana Smoothie",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Banana.asset",
-      "cookingStep": "Blender",
-      "ingredients": [
-        "Banana",
-        "Banana",
-        "Banana"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "smoothie",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Blender",
-          "utensils": [
-            "Blender",
-            "BlenderCup"
-          ],
-          "ingredients": [
-            "Banana",
-            "Banana",
-            "Banana"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "b8715455f33af3e458de4c4b7345e951",
       "id": "Smoothie_BananaPineapple",
-      "nameZh": "香蕉菠萝冰沙",
+      "nameZh": "香蕉菠萝果汁",
       "nameEn": "Banana Pineapple Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_BananaPineapple.asset",
       "cookingStep": "Blender",
@@ -2222,6 +5497,41 @@
             "Banana",
             "SmoothiePineapple",
             "SmoothiePineapple"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "26e734a28ecc2144ab85b03ebd030fbf",
+      "id": "Smoothie_Banana",
+      "nameZh": "香蕉果汁",
+      "nameEn": "Banana Smoothie",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Banana.asset",
+      "cookingStep": "Blender",
+      "ingredients": [
+        "Banana",
+        "Banana",
+        "Banana"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "smoothie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "Banana",
+            "Banana",
+            "Banana"
           ]
         }
       ],
@@ -2269,6 +5579,349 @@
       "icon": true
     },
     {
+      "guid": "7dc4ac104712f59b966d187718a7d4e5",
+      "id": "hotdog_onions_ketchup",
+      "nameZh": "洋葱番茄酱热狗",
+      "nameEn": "Hot Dog Onions & Ketchup",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_onions_ketchup.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "dlc08_onion",
+        "ketchup"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "ketchup"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "478f472f2e8d37f42a6de56806a34fc5",
+      "id": "dlc11_hotdog_onions_ketchup",
+      "nameZh": "洋葱番茄酱热狗（DLC11）",
+      "nameEn": "Hot Dog Onions & Ketchup (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_onions_ketchup.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_onion",
+        "dlc11_ketchup"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_ketchup"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc11_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f25725afc40bb6b700727cbceba0294b",
+      "id": "onioncarrotpotatosoup",
+      "nameZh": "洋葱胡萝卜土豆汤",
+      "nameEn": "Onion Carrot & Potato Soup",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/onioncarrotpotatosoup.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "OnionSO",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "soup",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "OnionSO",
+            "dlc07_potato",
+            "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "ada8822251fceff3a58a4c8d229de500",
+      "id": "hotdog_onions_mustard",
+      "nameZh": "洋葱芥末热狗",
+      "nameEn": "Hot Dog Onions & Mustard",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_onions_mustard.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "dlc08_onion",
+        "mustard"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "635e6327e96e10dd781abadf4ca5454c",
+      "id": "dlc11_hotdog_onions_mustard",
+      "nameZh": "洋葱芥末热狗（DLC11）",
+      "nameEn": "Hot Dog Onions & Mustard (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_onions_mustard.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_onion",
+        "dlc11_mustard"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc11_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7cf08f27c57e9acdb0a4880243d8628d",
+      "id": "hotdog_onions",
+      "nameZh": "洋葱热狗",
+      "nameEn": "Hot Dog & Onions",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_onions.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "dlc08_onion"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "a9e32ddbde40025c5b07afb0751b6c61",
+      "id": "dlc11_hotdog_onions",
+      "nameZh": "洋葱热狗（DLC11）",
+      "nameEn": "Hot Dog & Onions (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_onions.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_onion"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc11_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "46777af3b534f0c449ca60c4b173fbbc",
       "id": "Soup_Onion_SO",
       "nameZh": "洋葱汤",
@@ -2309,41 +5962,149 @@
       "icon": true
     },
     {
-      "guid": "a48a53230ee5ca74cac63fb1898855a5",
-      "id": "Sushi_PlainFish_SO",
-      "nameZh": "鱼肉寿司",
-      "nameEn": "Fish Sushi",
-      "assetPath": "Assets/common01/food/Recipes/Sushi_PlainFish_SO.asset",
-      "cookingStep": "Steamer",
+      "guid": "4db74ecac6b88fbd47992bee2c6850e1",
+      "id": "onionpotatosoupleek",
+      "nameZh": "洋葱土豆韭葱汤",
+      "nameEn": "Onion Potato & Leek Soup",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/onionpotatosoupleek.asset",
+      "cookingStep": "Pot",
       "ingredients": [
-        "SeaweedSO",
-        "SushiRiceSO",
-        "SushiFishSO"
+        "OnionSO",
+        "dlc07_potato",
+        "leek"
       ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
-      "score": 20,
+      "score": 80,
       "isCustom": false,
-      "group": "core",
-      "type": "sushi",
+      "group": "web",
+      "type": "soup",
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "",
-          "utensils": [],
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
           "ingredients": [
-            "SeaweedSO",
-            "SushiFishSO"
+            "OnionSO",
+            "dlc07_potato",
+            "leek"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "798c274e2ff30885c66fd5e474e6df90",
+      "id": "onionbroccolicheesesoup",
+      "nameZh": "洋葱西兰花芝士汤",
+      "nameEn": "Onion Broccoli & Cheese Soup",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/onionbroccolicheesesoup.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "OnionSO",
+        "broccoli",
+        "dlc07_cheese"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "soup",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "OnionSO",
+            "broccoli",
+            "dlc07_cheese"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fcf7d7c9831118144b53ba39c6b68008",
+      "id": "mixedfloureggcherry",
+      "nameZh": "樱桃面糊",
+      "nameEn": "Cherry Batter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggcherry.asset",
+      "cookingStep": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "cherry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "cherry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "2fbdbcf0cdb233dd469b4632b6c1f80c",
+      "id": "fruitpie_cherry",
+      "nameZh": "樱桃派",
+      "nameEn": "Cherry Pie",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_cherry.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "cherry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "web",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
           ]
         },
         {
-          "step": "Steamer",
+          "step": "OvenTray",
           "utensils": [
-            "Cooker",
-            "Steamer"
+            "Oven"
           ],
           "ingredients": [
-            "SushiRiceSO"
+            "cherry"
           ]
         }
       ],
@@ -2385,6 +6146,38 @@
           ],
           "ingredients": [
             "SushiRiceSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "13c7fb32dd92fd78b20468b8e53b2d41",
+      "id": "salad_corn_onion",
+      "nameZh": "玉米洋葱沙拉",
+      "nameEn": "Corn & Onion Salad",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/salad_corn_onion.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "corn",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "corn",
+            "dlc11onion_salad"
           ]
         }
       ],
@@ -2541,6 +6334,84 @@
       "icon": true
     },
     {
+      "guid": "d0202a69a75b2e83766130e3ecce098e",
+      "id": "hotdog_plain",
+      "nameZh": "原味热狗",
+      "nameEn": "Plain Hot Dog",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_plain.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7f52b468f31974ef556fe0fa8ba9056d",
+      "id": "dlc11_hotdog_plain",
+      "nameZh": "原味热狗（DLC11）",
+      "nameEn": "Plain Hot Dog (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_plain.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "295793044e219d34fab1527986132d98",
       "id": "Cake_Plain_SO",
       "nameZh": "原味松饼",
@@ -2580,6 +6451,114 @@
         }
       ],
       "icon": true
+    },
+    {
+      "guid": "1a579c8194cee97c295a9dc20a24c7d7",
+      "id": "dlc09_pancake_plain",
+      "nameZh": "原味松饼（DLC9）",
+      "nameEn": "Plain Pancake (DLC9)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_pancake_plain.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "pancake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "13459a4e0206c4602b6f25ad81d0728c",
+      "id": "donut_plain",
+      "nameZh": "原味甜甜圈",
+      "nameEn": "Plain Donut",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/donut_plain.asset",
+      "cookingStep": "DeepFatFryer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "web",
+      "type": "donut",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "HoneycombSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "bcec4e5b3b50171c78eaf83608d69cef",
+      "id": "friedchickenburger",
+      "nameZh": "炸鸡汉堡排",
+      "nameEn": "Fried Chicken Burger",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/friedchickenburger.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "dlc08_chicken"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        }
+      ],
+      "icon": false
     },
     {
       "guid": "77f71dc44da0b0245994c307efbe4711",
@@ -2645,6 +6624,161 @@
         }
       ],
       "icon": true
+    },
+    {
+      "guid": "9131aced4d7ec752cf5b85ea413b429d",
+      "id": "dlc08_friedchips",
+      "nameZh": "炸薯条",
+      "nameEn": "Fried Chips",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/dlc08_friedchips.asset",
+      "cookingStep": "DeepFatFryer",
+      "ingredients": [
+        "dlc08_potato"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4097f96b7686d0aa3be7de86f2796d61",
+      "id": "friedonions",
+      "nameZh": "炸洋葱",
+      "nameEn": "Fried Onions",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/friedonions.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "dlc08_onion"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fb0851cd16ddcd6df69600c278e8c656",
+      "id": "dlc11_friedonions",
+      "nameZh": "炸洋葱（DLC11）",
+      "nameEn": "Fried Onions (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_friedonions.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "dlc11_onion"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc11_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f19c92bb5395e3e387f0ceaafb0b432a",
+      "id": "friedonion_rings",
+      "nameZh": "炸洋葱圈",
+      "nameEn": "Fried Onion Rings",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/friedonion_rings.asset",
+      "cookingStep": "DeepFatFryer",
+      "ingredients": [
+        "dlc08_onion_ring"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "8b1e4b4a4923fb7768017a7241701be8",
+      "id": "onionrings",
+      "nameZh": "炸洋葱圈",
+      "nameEn": "Onion Rings",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/onionrings.asset",
+      "cookingStep": "DeepFatFryer",
+      "ingredients": [
+        "dlc08_onion_ring"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fry",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": false
     },
     {
       "guid": "bb786bba935dc824ea7ac976036ac282",
@@ -2750,6 +6884,68 @@
         }
       ],
       "icon": true
+    },
+    {
+      "guid": "0b737f520919a9d81668e76f16865df1",
+      "id": "cheesesticks",
+      "nameZh": "炸芝士条",
+      "nameEn": "Cheese Sticks",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/cheesesticks.asset",
+      "cookingStep": "DeepFatFryer",
+      "ingredients": [
+        "dlc08_cheesesticks"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "web",
+      "type": "fry",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "ce1a1f6b10620ff06aee6323d2285630",
+      "id": "friedcheese_sticks",
+      "nameZh": "炸芝士条",
+      "nameEn": "Fried Cheese Sticks",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/friedcheese_sticks.asset",
+      "cookingStep": "DeepFatFryer",
+      "ingredients": [
+        "dlc08_cheesesticks"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": false
     },
     {
       "guid": "438e7bb16ab4b4845b058337c9b8acf2",
@@ -2861,6 +7057,68 @@
           ],
           "ingredients": [
             "MeatSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9dd356154a85aed66bcd14778e791f3d",
+      "id": "boiledfrankfurter",
+      "nameZh": "煮热狗肠",
+      "nameEn": "Boiled Frankfurter",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/boiledfrankfurter.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "frankfurter"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8c9ad5c480eb745a670f30ea0ac5c831",
+      "id": "dlc11_boiledfrankfurter",
+      "nameZh": "煮热狗肠（DLC11）",
+      "nameEn": "Boiled Frankfurter (DLC11)",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_boiledfrankfurter.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "dlc11_frankfurter"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "hotdog",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
           ]
         }
       ],

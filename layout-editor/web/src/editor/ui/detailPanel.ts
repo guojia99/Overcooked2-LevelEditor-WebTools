@@ -15,7 +15,7 @@ import {
   escHtml
 } from "../coords";
 import { itemLabel } from "../labels";
-import { counterAppearanceOptions } from "../catalog";
+import { counterAppearanceOptions, catalogItemForGuidOrPath } from "../catalog";
 import {
   isSurfaceItem,
   surfaceKindLabelZh
@@ -104,7 +104,7 @@ export function extraStubDetailHtml(item: EditorItem): string {
     return `<dt>传送门</dt><dd>${pairTxt} · 颜色 ${colorName}${ds}</dd>`;
   }
   switch (stubKindOf(item)) {
-    case "AttackingFoodSpawner": {
+    case "AttachingFoodSpawner": {
       const fs = item.foodSpawner ?? {};
       const n = (fs.attachmentPrefabGuids ?? []).length;
       return `<dt>食材生成器</dt><dd>${fs.spawnInOrder !== false ? "按顺序" : "随机"}生成 · ${fs.triggerAtStart !== false ? "开局触发" : "不开局触发"} · 间隔 ${fs.triggerTime ?? 5}s · ${n} 种食材（右键直接修改）</dd>`;
@@ -221,7 +221,7 @@ export function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY
 }
 
 export function showDetail(item: EditorItem, clientX: number, clientY: number) {
-  const cat = S.catalogByGuid.get(item.prefabGuid);
+  const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
   const fp = resolveFootprint(item);
   const id = prefabIdFromPath(item.prefabAssetPath) || cat?.id || "—";
 

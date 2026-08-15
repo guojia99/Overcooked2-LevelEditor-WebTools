@@ -29,6 +29,8 @@ public static class LayoutEditorRecipeKnowledge
         { "KebabSkewer", new[] { "Barbeque", "Skewer" } },
         { "ToastingFork", new[] { "Campfire", "ToastingFork" } },
         { "MixingBowl", new[] { "Mixer", "MixerBowl" } },
+        { "HotPot", new[] { "cooking_region_floorburner", "utensil_large_pot_01" } },
+        { "RoastingTray", new[] { "Oven", "utensil_roasting_tray" } },
     };
 
     public static string[] UtensilsForStep(string step)
@@ -205,9 +207,45 @@ public static class LayoutEditorRecipeKnowledge
             foreach (var ing in ingredients)
                 prep[ing] = ing == "PastaSO" ? "Pot" : "FryingPan";
         }
-        else if (finalStep == "DeepFatFryer" || (type == "fry" && !IsCookStep(finalStep)))
+        else if (type == "hotdog")
+        {
+            // 只有热狗肠需要煮；洋葱单独煎；面包/芥末/番茄酱无需烹饪
+            foreach (var ing in ingredients)
+            {
+                if (ing == "frankfurter" || ing == "dlc11_frankfurter")
+                    prep[ing] = "Pot";
+                else if (ing == "dlc08_onion" || ing == "dlc11_onion")
+                    prep[ing] = "FryingPan";
+                else
+                    prep[ing] = "";
+            }
+        }
+        else if (type == "hotchocolate")
+        {
+            // 全程只有牛奶+巧克力需要煮；奶油/棉花糖是单独的（无需烹饪）
+            foreach (var ing in ingredients)
+            {
+                if (ing == "milk" || ing == "dlc09_milk" || ing == "dlc03_chocolate" || ing == "dlc09_chocolate")
+                    prep[ing] = "Pot";
+                else
+                    prep[ing] = "";
+            }
+        }
+        else if (type == "float")
+        {
+            // 冰淇淋汽水：汽水单独（无需搅拌）；牛奶/口味/冰块进搅拌机（Blender）
+            foreach (var ing in ingredients)
+            {
+                if (ing == "orangesoda" || ing == "rootbeer")
+                    prep[ing] = "";
+                else
+                    prep[ing] = "Blender";
+            }
+        }
+        else if ((finalStep == "DeepFatFryer" && type != "donut") || (type == "fry" && !IsCookStep(finalStep)))
         {
             // 名称前缀推断的 fry（如 FriedEgg）不得覆盖显式烹饪步骤（FryingPan 等）
+            // 甜甜圈走搅拌+炸篮分支（下方 flourBranch）
             foreach (var ing in ingredients)
                 prep[ing] = "DeepFatFryer";
         }
@@ -267,7 +305,7 @@ public static class LayoutEditorRecipeKnowledge
         if (flourBranch && IsCookStep(finalStep) && !groupMap.ContainsKey(finalStep) && order.Count > 0)
             ordered.Add(finalStep);
 
-        bool splitPerIngredient = finalStep == "DeepFatFryer" ||
+        bool splitPerIngredient = (finalStep == "DeepFatFryer" && type != "donut") ||
             (type == "fry" && !IsCookStep(finalStep)) ||
             (finalStep == "Pot" && Array.IndexOf(ingredients, "PastaSO") >= 0);
 
@@ -586,5 +624,37 @@ public static class LayoutEditorRecipeKnowledge
                     ids.Add(iid);
             }
         }
+    }
+
+    /// <summary>Web 内置菜谱分数估算：分数 = 20 × 食材种类数 + 烹调难度加成，
+    ///  clamp [20,120]、级距 20（对齐游戏攻略：材料越多越高、烹调越麻烦越高）。
+    ///  加成：搅拌+烘焙(蛋糕/派/月亮派/布丁/搅拌步骤)=60；搅拌+煎炸(松饼/甜甜圈)=40；
+    ///  煮/炸/蒸/烤/火锅/烤串/搅拌机(Blender)=20；组装/切菜/煎(FryingPan)=0。</summary>
+    public static int EstimateWebRecipeScore(string id, string step, string[] ingredients)
+    {
+        var distinct = new HashSet<string>(StringComparer.Ordinal);
+        if (ingredients != null)
+        {
+            foreach (var i in ingredients)
+                if (!string.IsNullOrEmpty(i))
+                    distinct.Add(i);
+        }
+        var lower = (id ?? "").ToLowerInvariant();
+        int bonus;
+        // 先判「搅拌+煎/炸」再判「搅拌+烤」（pancake 含 cake 子串，顺序关键）
+        if (lower.Contains("pancake") || lower.Contains("donut"))
+            bonus = 40;
+        else if (lower.Contains("cake") || lower.Contains("pie") || lower.Contains("moonpie") || lower.Contains("pudding"))
+            bonus = 60;
+        else if (step == "Mixer" || step == "MixingBowl" || step == "OvenCakeTin")
+            bonus = 60;
+        else if (step == "Pot" || step == "OvenTray" || step == "Steamer" || step == "DeepFatFryer"
+            || step == "RoastingTray" || step == "HotPot" || step == "KebabSkewer" || step == "ToastingFork"
+            || step == "GriddlePan" || step == "Blender")
+            bonus = 20;
+        else
+            bonus = 0;
+        var score = 20 * distinct.Count + bonus;
+        return Mathf.Clamp(score, 20, 120);
     }
 }

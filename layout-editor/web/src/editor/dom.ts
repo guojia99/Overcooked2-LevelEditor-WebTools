@@ -33,6 +33,7 @@ export function buildLayoutDom(): void {
       <button id="btn-reload" title="重新加载当前场景">🔄 重新加载</button>
       <button id="btn-save" class="primary" title="将布局写回 Unity">💾 写回 Unity</button>
       <button id="btn-save-items" class="primary" title="仅写回核心物品（不修改地板、背景、装饰）">🎯 仅核心物品</button>
+      <button id="btn-repair-broken" type="button" title="移除当前场景中源预制件缺失的损坏实例（解决 pseudoPrefabSO 空引用导致的 NullReferenceException）">🔧 修复损坏</button>
       <span class="toolbar-sep"></span>
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
@@ -80,9 +81,11 @@ export function buildLayoutDom(): void {
     <aside class="palette" id="palette-panel">
       <div class="palette-header">
         <input type="search" id="palette-search" placeholder="搜索 prefab…" />
+        <button type="button" id="btn-palette-variants" class="palette-variants-btn" title="显示 / 隐藏功能重复的 DLC 变体（换皮道具）">🎨 DLC 变体 <span id="palette-variants-state"></span></button>
       </div>
       <div class="palette-cats" id="palette-cats"></div>
     </aside>
+    <div class="panel-resizer" id="palette-resizer" title="拖动调整宽度"></div>
     <button type="button" class="panel-collapse" id="btn-collapse-palette" title="收起 / 展开物品栏">◀</button>
     <div class="canvas-wrap">
       <canvas id="canvas"></canvas>

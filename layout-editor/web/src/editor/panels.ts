@@ -10,7 +10,7 @@ import {
   escHtml
 } from "./coords";
 import { itemLabel } from "./labels";
-import { itemLayerOfIt, itemCategoryOf } from "./catalog";
+import { itemLayerOfIt, itemCategoryOf, catalogItemForGuidOrPath } from "./catalog";
 import { isCollisionItem } from "./stubControls";
 import {
   isSelected,
@@ -21,6 +21,44 @@ import {
 import { sceneNpcAnimItems, NPC_ANIM_TYPES } from "./npcAnimations";
 import { draw } from "./render";
 import { renderMoveControlPanel, groupVisibleInLayer, updateMovePickBar } from "./moveControl";
+import { applyPaletteGridCols } from "./palette";
+
+/** Drag the left palette's right edge to resize it (min 180px, max half the window). */
+export function initPaletteResizer(): void {
+  const resizer = document.getElementById("palette-resizer");
+  const panel = document.getElementById("palette-panel");
+  if (!resizer || !panel) return;
+  try {
+    const saved = parseFloat(localStorage.getItem("paletteWidth") || "0");
+    if (saved > 0) {
+      panel.style.width = saved + "px";
+      applyPaletteGridCols();
+    }
+  } catch {
+    /* ignore */
+  }
+  resizer.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = panel.getBoundingClientRect().width;
+    const onMove = (ev: MouseEvent) => {
+      const w = Math.min(window.innerWidth / 2, Math.max(180, startW + ev.clientX - startX));
+      panel.style.width = w + "px";
+      applyPaletteGridCols();
+      try {
+        localStorage.setItem("paletteWidth", String(w));
+      } catch {
+        /* ignore */
+      }
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  });
+}
 
 /** Drag the right items panel's left edge to resize it (max half the window). */
 export function initPanelResizer(): void {
@@ -59,7 +97,9 @@ export function applyPanelCollapse(): void {  const palette = document.getElemen
   const itemsPanel = document.getElementById("items-panel");
   const btnPalette = document.getElementById("btn-collapse-palette");
   const btnItems = document.getElementById("btn-collapse-items");
+  const paletteResizer = document.getElementById("palette-resizer");
   if (palette) palette.classList.toggle("hidden", S.paletteCollapsed);
+  if (paletteResizer) paletteResizer.classList.toggle("hidden", S.paletteCollapsed);
   if (btnPalette) btnPalette.textContent = S.paletteCollapsed ? "▶" : "◀";
   // Right panel visible on every layer (per-layer item list / move control).
   const onPanel = true;
@@ -100,7 +140,7 @@ export function refreshSceneItemList(): void {
 
   const layer = S.currentLayer;
   const layerItems = S.items.filter(
-    (it) => !isCollisionItem(it) && itemLayerOfIt(it) === layer
+    (it) => itemLayerOfIt(it) === layer
   );
   if (countEl) countEl.textContent = `（${layerItems.length}）`;
 
@@ -168,7 +208,7 @@ export function refreshSceneItemList(): void {
     // items / decor / move: group by catalog category, per-layer.
     const groups = new Map<string, EditorItem[]>();
     for (const it of layerItems) {
-      const cat = S.catalogByGuid.get(it.prefabGuid);
+      const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
       const key = cat?.category && S.corePaletteGroupMeta.has(cat.category) ? cat.category : "__other";
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(it);

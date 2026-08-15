@@ -15,7 +15,8 @@ import {
   fetchSwitchMaterials,
   fetchLevelSets,
   fetchLevelRecipes,
-  fetchLevelDetail
+  fetchLevelDetail,
+  repairBrokenPrefabs
 } from "../api";
 import {
   warnIfBridgeOutdated,
@@ -36,7 +37,8 @@ import {
   applyPanelCollapse,
   updatePanelTabButtons,
   renderRightPanel,
-  initPanelResizer
+  initPanelResizer,
+  initPaletteResizer
 } from "./panels";
 import {
   clearSelection,
@@ -146,6 +148,7 @@ export function setLayer(layer: LayerKey): void {
   hideContextMenu();
   S.pendingNewFloor = false;
   S.pendingNewFloorCat = null;
+  S.pendingNewAirFloor = false;
   dom.canvas.style.cursor = "";
   S.selectedWaypointId = null;
   S.expandedMemberId = null;
@@ -192,6 +195,12 @@ export async function init() {
   warnIfBridgeOutdated(healthInfo, catalog.schemaVersion ?? 1);
   layoutCatalog = catalog;
   for (const it of catalog.items) S.catalogByGuid.set(it.guid, it);
+  // id → 目录条目：跳过 custom_web/custom_ingredients 运行时副本，只保留
+  // Import 源库 / 基础条目，供 custom_web 副本（guid 随运行态变化）按 prefab id 回退解析。
+  for (const it of catalog.items) {
+    if (/\/custom_(web|ingredients)\//.test(it.assetPath)) continue;
+    if (!S.catalogById.has(it.id)) S.catalogById.set(it.id, it);
+  }
   S.ingredientsCache = await fetchIngredients().catch(() => []);
   S.intermediatesCache = await fetchRecipeCatalog("")
     .then((r) => r.filter((x) => x.intermediate || x.isCustom))
@@ -244,12 +253,34 @@ export async function init() {
     else buildPalette(catalog, q);
   });
 
+  document.getElementById("btn-palette-variants")?.addEventListener("click", () => {
+    S.showPaletteVariants = !S.showPaletteVariants;
+    localStorage.setItem("showPaletteVariants", S.showPaletteVariants ? "1" : "0");
+    const q = (document.getElementById("palette-search") as HTMLInputElement)?.value ?? "";
+    if (S.currentLayer === "floor") buildFloorPalette(q, "floor");
+    else if (S.currentLayer === "background") buildFloorPalette(q, "background");
+    else buildPalette(catalog, q);
+  });
+
   document.getElementById("btn-reload")!.addEventListener("click", () => {
     if (S.scenePath) confirmLeaveIfDirty(() => void loadScene(S.scenePath));
   });
 
   document.getElementById("btn-save")!.addEventListener("click", () => void saveToUnity(""));
   document.getElementById("btn-save-items")!.addEventListener("click", () => void saveToUnity(scopedSaveMeta().scope));
+  document.getElementById("btn-repair-broken")?.addEventListener("click", async () => {
+    try {
+      const n = await repairBrokenPrefabs(S.scenePath);
+      if (n > 0) {
+        setStatus(`已移除 ${n} 个损坏的预制件实例，请重新加载场景`, false);
+        await loadScene(S.scenePath ?? "");
+      } else {
+        setStatus("未发现损坏的预制件实例", false);
+      }
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    }
+  });
   refreshScopedSaveButton();
 
   document.getElementById("btn-collapse-palette")!.addEventListener("click", () => {
@@ -386,6 +417,7 @@ export async function init() {
   });
 
   initPanelResizer();
+  initPaletteResizer();
   wireVisibilityPopover();
   setupCanvas();
   requestAnimationFrame(draw);

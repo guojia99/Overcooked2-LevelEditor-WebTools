@@ -281,6 +281,7 @@ export function updateMarqueeSelection() {
     const nextFloors = S.marqueeAdd ? new Set(S.selectedFloorKeys) : new Set<string>();
     for (const f of S.floors) {
       if (f.surfaceKind === "background") continue;
+      if (f.airFloor) continue; // 空气地板（仅碰撞盒）不参与移动组成员框选
       if (!categoryVisible(floorCategoryOf(f))) continue;
       if (inRect(f._wx, f._wz)) nextFloors.add(f._key);
     }

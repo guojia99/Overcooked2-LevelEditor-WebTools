@@ -17,7 +17,7 @@ import type {
   CatalogItem,
   LayoutItem
 } from "../types";
-import { itemLayerOf } from "./catalog";
+import { itemLayerOf, catalogItemForGuidOrPath } from "./catalog";
 
 /** Decimal places needed to display positions at a given step (0.6 → 1, 0.1 → 1, 0.01 → 2, 0.001 → 3). */
 export function stepDecimals(step: number): number {
@@ -57,19 +57,26 @@ export function prefabIdFromPath(assetPath: string | undefined): string {
 }
 
 export function resolveFootprint(item: LayoutItem): { cellsX: number; cellsZ: number } {
+  const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
+  const catFp = cat?.footprint;
+  const id = prefabIdFromPath(item.prefabAssetPath) || cat?.id || "";
+  const known = FOOTPRINT_BY_ID[id];
+
+  // 已知多格道具：目录/内置表为准（即使旧桥接回传了过时的 1×1，如火锅大锅占地修复前）。
+  if (catFp && (catFp.cellsX > 1 || catFp.cellsZ > 1)) {
+    return { cellsX: catFp.cellsX, cellsZ: catFp.cellsZ };
+  }
+  if (known && (known.cellsX > 1 || known.cellsZ > 1)) {
+    return known;
+  }
+
   const cx = item.footprint?.cellsX ?? 0;
   const cz = item.footprint?.cellsZ ?? 0;
   if (cx > 0 && cz > 0) return { cellsX: cx, cellsZ: cz };
-
-  const cat = S.catalogByGuid.get(item.prefabGuid);
-  if (cat?.footprint && cat.footprint.cellsX > 0 && cat.footprint.cellsZ > 0) {
-    return { cellsX: cat.footprint.cellsX, cellsZ: cat.footprint.cellsZ };
+  if (catFp && catFp.cellsX > 0 && catFp.cellsZ > 0) {
+    return { cellsX: catFp.cellsX, cellsZ: catFp.cellsZ };
   }
-
-  const id = prefabIdFromPath(item.prefabAssetPath) || cat?.id || "";
-  const known = FOOTPRINT_BY_ID[id];
   if (known) return known;
-
   return { cellsX: 1, cellsZ: 1 };
 }
 

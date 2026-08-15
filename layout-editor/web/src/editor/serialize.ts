@@ -30,11 +30,13 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
   const cat = S.catalogByGuid.get(rest.prefabGuid);
   // Raft planks already expanded below are walkable:false; other floor prefabs stay walkable.
   const isRaftPlank = cat?.surfaceKind === "raft";
+  // 空气墙是隐形碰撞块，不生成可行走 Col_Floor
+  const isAirWall = rest.stubKind === "Collision" && rest.airWall === true;
   return {
     ...rest,
     footprint: fp,
     worldPosition: { x: _wx, y: rest.localPosition?.y ?? 0, z: _wz },
-    walkable: !isRaftPlank && !!(cat && cat.surfaceTier === "floor"),
+    walkable: isAirWall ? false : !isRaftPlank && !!(cat && cat.surfaceTier === "floor"),
   };
 }
 

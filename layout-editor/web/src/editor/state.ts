@@ -105,15 +105,25 @@ export const PX_PER_UNIT = 48;
 
 export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }> = {
   ServingStation: { cellsX: 2, cellsZ: 1 },
+  // 所有水槽 2×1
   Sink: { cellsX: 2, cellsZ: 1 },
   SinkGlass: { cellsX: 2, cellsZ: 1 },
-  GlassReturn: { cellsX: 2, cellsZ: 1 },
+  workstation_sink_mug_01_wood: { cellsX: 2, cellsZ: 1 },
+  dlc09_workstation_sink_mug_01_wood: { cellsX: 2, cellsZ: 1 },
+  dlc13_workstation_sink_01_wood: { cellsX: 2, cellsZ: 1 },
+  workstation_sink_01_summer: { cellsX: 2, cellsZ: 1 },
+  GlassReturn: { cellsX: 1, cellsZ: 1 },
+  utensil_large_pot_01: { cellsX: 2, cellsZ: 2 },
+  utensil_dlc10_large_pot_01: { cellsX: 2, cellsZ: 2 },
+  pushable_object: { cellsX: 2, cellsZ: 2 },
+  dlc10_pushable_object: { cellsX: 2, cellsZ: 2 },
 };
 
 /** 全部编辑器可变状态（单例）。模块间共享，禁止顶层访问 DOM 的状态也在此。 */
 export const S = {
   freeSnapStep: 0.01,
   catalogByGuid: new Map<string, CatalogItem>(),
+  catalogById: new Map<string, CatalogItem>(),
   counterAppearances: null as CounterAppearanceCatalog | null,
   switchMaterialsCache: [] as SwitchMaterialOption[],
   items: [] as EditorItem[],
@@ -206,11 +216,16 @@ export const S = {
   sceneItemListSig: "",
   paletteCollapsed: localStorage.getItem("paletteCollapsed") === "1",
   itemsPanelCollapsed: localStorage.getItem("itemsPanelCollapsed") === "1",
+  showPaletteVariants: localStorage.getItem("showPaletteVariants") === "1",
+  webSyncVersion: "",
+  webSyncDisabled: false,
   corePaletteGroupMeta: new Map<string, string>(),
   pendingNewFloor: false,
   pendingNewFloorCat: null as CatalogItem | null,
+  pendingNewAirFloor: false,
   bridgeWasUp: false,
   bridgeStopAlerted: false,
+  bridgeFailCount: 0,
   teleportalLabels: new Map<string, string>(),
   paramLabels: new Map<string, string>(),
   paramColors: new Map<string, string>(),

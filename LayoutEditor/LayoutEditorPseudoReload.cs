@@ -21,7 +21,7 @@ static class LayoutEditorSceneCleanup
     {
         if (!removingScene)
             return;
-        RuntimePrefabManager.ClearAllRuntimePrefabs();
+        RuntimePrefabManager.ClearAllRuntimePrefabs(true);
     }
 }
 

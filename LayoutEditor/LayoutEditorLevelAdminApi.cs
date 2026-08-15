@@ -248,7 +248,10 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        SetAssetBundleName(setDir, setName + "/info_" + setName);
+        // Web 内置（Import 源库）内容仅作模板：创建关卡时即把全部菜谱/食材/道具
+        // 同步到关卡集 custom_web，保证后续引用一律指向关卡集副本。
+        LayoutEditorCustomIngredients.SyncAllWebContent(setName);
+        ReloadPseudo();
         return null;
     }
 
@@ -400,6 +403,8 @@ public static class LayoutEditorLevelAdminApi
             screenshotPath = so.screenshot != null ? AssetDatabase.GetAssetPath(so.screenshot) : "",
             debugRecipeCount = so.debugRecipeCount,
             disableDynamicParenting = so.disableDynamicParenting,
+            minOrderCount = ClampOrderCount(so.minOrderCount, 2),
+            maxOrderCount = ClampOrderCount(so.maxOrderCount, 5),
             dependencies = so.dependencies != null ? (string[])so.dependencies.Clone() : new string[0],
             configs = new[]
             {
@@ -765,6 +770,10 @@ public static class LayoutEditorLevelAdminApi
         }
         so.debugRecipeCount = dto.debugRecipeCount;
         so.disableDynamicParenting = dto.disableDynamicParenting;
+        so.minOrderCount = ClampOrderCount(dto.minOrderCount, so.minOrderCount);
+        so.maxOrderCount = ClampOrderCount(dto.maxOrderCount, so.maxOrderCount);
+        if (so.minOrderCount > so.maxOrderCount)
+            so.maxOrderCount = so.minOrderCount;
         so.dependencies = dto.dependencies != null ? (string[])dto.dependencies.Clone() : so.dependencies;
         EditorUtility.SetDirty(so);
 
@@ -903,6 +912,14 @@ public static class LayoutEditorLevelAdminApi
             info.dependencies = deps.ToArray();
             EditorUtility.SetDirty(info);
         }
+    }
+
+    /// <summary>公开入口：合并当前音频引用（BGM/死亡音效/音频目录）所需的 bundle 依赖。
+    /// 回写流程在 Fill All AudioDirectorySOs 之后调用，保证新增的 DLC 音频目录 bundle
+    /// 已写入 dependencies，运行时宿主可正常加载。</summary>
+    public static void MergeAudioDependencies(LevelInfoSO info)
+    {
+        AutoMergeAudioDependencies(info);
     }
 
     public static AssetPathListDto PreviewDeleteLevel(string setName, string levelId)
@@ -1206,6 +1223,15 @@ public static class LayoutEditorLevelAdminApi
         if (string.IsNullOrEmpty(path))
             return null;
         return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+    }
+
+    /// <summary>将订单数量限制在 [1, 10]（与 LevelInfoSO 字段上的 Range 一致）；
+    /// 旧关卡未序列化该字段时为 0，回退到传入的默认值。</summary>
+    private static int ClampOrderCount(int value, int fallback)
+    {
+        if (value < 1 || value > 10)
+            return fallback;
+        return value;
     }
 
     private static void OpenScene(string assetPath)
@@ -3248,6 +3274,150 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
+    /// <summary>Web 内置菜谱库：合并 Import 源库与关卡集 custom_web 副本状态，
+    ///  计算安装/被引用状态与去重代表（规范化中文名聚簇，代表=最高 DLC）。
+    ///  排除不存在的菜谱（如 chocolatesmoothie）。</summary>
+    public static WebRecipeLibraryDto ScanWebRecipeLibrary(string setName)
+    {
+        var dto = new WebRecipeLibraryDto { setName = setName, recipes = new WebRecipeEntryDto[0] };
+        if (string.IsNullOrEmpty(setName))
+            return dto;
+
+        var catalog = LayoutEditorCatalogApi.ScanRecipes("");
+        var list = new List<WebRecipeEntryDto>();
+        foreach (var r in catalog.recipes)
+        {
+            if (r.group != "web" || r.intermediate)
+                continue;
+            if (r.id == "chocolatesmoothie")
+                continue;
+            list.Add(new WebRecipeEntryDto
+            {
+                guid = r.guid,
+                id = r.id,
+                nameZh = r.nameZh,
+                nameEn = r.nameEn,
+                assetPath = r.assetPath,
+                cookingStep = r.cookingStep,
+                ingredients = r.ingredients,
+                score = r.score,
+                type = r.type,
+            });
+        }
+        if (list.Count == 0)
+            return dto;
+
+        // 已装副本：custom_web/Recipes 下同 id 资产 → 副本 guid
+        var installedGuid = new Dictionary<string, string>(StringComparer.Ordinal);
+        var customWebRecipes = LayoutEditorCustomIngredients.CustomIngredientsDir(setName) + "/Recipes";
+        if (AssetFolderExists(customWebRecipes))
+        {
+            foreach (var asset in ScanAssetsByScript(customWebRecipes, OriginalRecipeScriptGuid))
+            {
+                var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+                if (!installedGuid.ContainsKey(id))
+                    installedGuid[id] = asset.guid;
+            }
+        }
+
+        // 被引用：遍历关卡集 LevelInfo.recipes 的文件名
+        var usedLevelsByRecipe = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        var dataDir = LevelSetsRoot + "/" + setName + "/data";
+        if (AssetFolderExists(dataDir))
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { dataDir }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(path);
+                if (info == null || info.recipes == null)
+                    continue;
+                foreach (var r in info.recipes)
+                {
+                    if (r == null)
+                        continue;
+                    var rp = AssetDatabase.GetAssetPath(r);
+                    var rid = string.IsNullOrEmpty(rp) ? "" : Path.GetFileNameWithoutExtension(rp);
+                    if (string.IsNullOrEmpty(rid))
+                        continue;
+                    List<string> lv;
+                    if (!usedLevelsByRecipe.TryGetValue(rid, out lv))
+                    {
+                        lv = new List<string>();
+                        usedLevelsByRecipe[rid] = lv;
+                    }
+                    var lname = info.levelName ?? Path.GetFileName(Path.GetDirectoryName(path));
+                    if (!lv.Contains(lname))
+                        lv.Add(lname);
+                }
+            }
+        }
+
+        // 去重：规范化中文名聚簇，代表 = 最高 DLC（保留 DLC 后缀）
+        var groups = new Dictionary<string, List<WebRecipeEntryDto>>(StringComparer.Ordinal);
+        foreach (var e in list)
+        {
+            var key = NormalizeDishName(e.nameZh);
+            List<WebRecipeEntryDto> g;
+            if (!groups.TryGetValue(key, out g))
+            {
+                g = new List<WebRecipeEntryDto>();
+                groups[key] = g;
+            }
+            g.Add(e);
+        }
+        var result = new List<WebRecipeEntryDto>();
+        foreach (var kv in groups)
+        {
+            var arr = kv.Value;
+            var rep = arr[0];
+            foreach (var e in arr)
+                if (DlcNumber(e.id) > DlcNumber(rep.id))
+                    rep = e;
+            foreach (var e in arr)
+            {
+                e.dupKey = kv.Key;
+                e.representative = e.id == rep.id;
+                string ig;
+                if (installedGuid.TryGetValue(e.id, out ig))
+                {
+                    e.installed = true;
+                    e.installedGuid = ig;
+                }
+                List<string> lv;
+                if (usedLevelsByRecipe.TryGetValue(e.id, out lv))
+                {
+                    e.referenced = true;
+                    e.referencedBy = lv.ToArray();
+                }
+                result.Add(e);
+            }
+        }
+        result.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
+        dto.recipes = result.ToArray();
+        return dto;
+    }
+
+    /// <summary>规范化菜名（去 DLC 后缀与空白），作为 Web 内置菜谱去重键。</summary>
+    private static string NormalizeDishName(string zh)
+    {
+        if (string.IsNullOrEmpty(zh))
+            return "";
+        var s = System.Text.RegularExpressions.Regex.Replace(zh, @"·?DLC\d+", "");
+        return s.Replace("（）", "").Replace("()", "").Replace("·", "").Replace(" ", "").Trim();
+    }
+
+    /// <summary>菜谱 id 的 DLC 编号（无 dlcXX_ 前缀为 0），用于去重代表选择。</summary>
+    private static int DlcNumber(string id)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(id ?? "", @"^dlc(\d+)_");
+        if (m.Success)
+        {
+            int v;
+            return int.TryParse(m.Groups[1].Value, out v) ? v : 0;
+        }
+        return 0;
+    }
+
     private static bool GloballyUniqueRecipeName(string recipeName)
     {
         if (string.IsNullOrEmpty(recipeName))
@@ -3277,7 +3447,8 @@ public static class LayoutEditorLevelAdminApi
         return false;
     }
 
-    /// <summary>PseudoPrefabSO 的查找目录（食材/烹饪步骤/装盘容器）。</summary>
+    /// <summary>PseudoPrefabSO 的查找目录（食材/烹饪步骤/装盘容器）。
+    ///  含 Web 内置源库（游戏 DLC 内容）与全部关卡集的 custom_web 拷贝。</summary>
     private static readonly string[] PseudoPrefabSearchFolders =
     {
         "Assets/common01/food/Ingredients",
@@ -3286,7 +3457,28 @@ public static class LayoutEditorLevelAdminApi
         "Assets/common02/food/CookingSteps",
         "Assets/common01/food/PlatingSteps",
         "Assets/common02/food/PlatingSteps",
+        "Assets/Editor/LayoutEditor/Import/Ingredients",
+        "Assets/Editor/LayoutEditor/Import/CookingSteps",
     };
+
+    /// <summary>全部关卡集的 custom_web/Ingredients 目录（Web 内置食材拷贝，
+    ///  随关卡集打包，始终归 Web内置 分组；props 的 pseudo 副本在 custom_web/pseudo）。</summary>
+    public static List<string> LevelSetCustomIngredientFolders()
+    {
+        var folders = new List<string>();
+        var setsRoot = LevelSetsRoot;
+        if (Directory.Exists(AbsPath(setsRoot)))
+        {
+            foreach (var dir in Directory.GetDirectories(AbsPath(setsRoot)))
+            {
+                var setName = Path.GetFileName(dir);
+                var ci = setsRoot + "/" + setName + "/custom_web/Ingredients";
+                if (AssetFolderExists(ci))
+                    folders.Add(ci);
+            }
+        }
+        return folders;
+    }
 
     /// <summary>全项目自定义菜谱查找目录（官方 + 全部关卡集）。</summary>
     private static List<string> CustomRecipeSearchFolders()

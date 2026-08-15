@@ -1,5 +1,5 @@
 import type { IngredientEntry, LayoutItem, RecipeEntry } from "./types";
-import { foodGroupLabel } from "./ingredientLabels";
+import { foodGroupLabel, visibleIngredients } from "./ingredientLabels";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 
 /** Inline <img> for an ingredient/recipe: try the extracted icon PNG (unless explicitly known
@@ -73,6 +73,7 @@ export function openIngredientPicker(
   currentGuid: string | undefined,
   onSave: (guid: string) => void
 ) {
+  ingredients = visibleIngredients(ingredients);
   const grid = `<div class="pick-grid" id="ing-pick-grid">${ingredients
     .map((ing) => {
       const sel = ing.guid === currentGuid;
@@ -158,6 +159,7 @@ export function openIngredientMultiPicker(
   onSave: (guids: string[]) => void,
   intermediates?: RecipeEntry[]
 ) {
+  ingredients = visibleIngredients(ingredients);
   const groups = [...new Set(ingredients.map((i) => i.group ?? "other"))]
     .filter((g) => g !== "core")
     .sort();
@@ -181,7 +183,7 @@ export function openIngredientMultiPicker(
       <input type="search" id="ing-pick-search" class="ing-search" placeholder="搜索食材…" />
       <div class="ing-groups">
         <button type="button" class="ing-group-btn active" data-group="">全部</button>
-        ${groups.map((g) => `<button type="button" class="ing-group-btn" data-group="${g}">${foodGroupLabel(g)}</button>`).join("")}
+        ${groups.map((g) => `        <button type="button" class="ing-group-btn" data-group="${g}" ${g === "web" ? 'title="Web内置 · 保存时自动打包到本关卡集"' : ""}>${foodGroupLabel(g)}</button>${""}`).join("")}
         ${hasIntermediates ? '<button type="button" class="ing-group-btn" data-group="__intermediate__">中间产物</button>' : ""}
       </div>
     </div>`;

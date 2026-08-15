@@ -44,8 +44,23 @@ const SCRIPT_GUID = {
 
 const FOOTPRINT_OVERRIDES = {
   ServingStation: { cellsX: 2, cellsZ: 1 },
+  // 所有水槽 2×1（含马克杯水槽 / 洗杯槽 / 各 DLC 水槽）
   Sink: { cellsX: 2, cellsZ: 1 },
   SinkGlass: { cellsX: 2, cellsZ: 1 },
+  workstation_sink_mug_01_wood: { cellsX: 2, cellsZ: 1 },
+  dlc09_workstation_sink_mug_01_wood: { cellsX: 2, cellsZ: 1 },
+  dlc13_workstation_sink_01_wood: { cellsX: 2, cellsZ: 1 },
+  workstation_sink_01_summer: { cellsX: 2, cellsZ: 1 },
+  // DLC 大件：火锅灶台 / 大莲花压力开关 2×2
+  cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
+  dlc10_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
+  dlc13_lotuspressureswitch_large: { cellsX: 2, cellsZ: 2 },
+  // 火锅大锅 2×2（与火锅灶台同占地）
+  utensil_large_pot_01: { cellsX: 2, cellsZ: 2 },
+  utensil_dlc10_large_pot_01: { cellsX: 2, cellsZ: 2 },
+  // 可推动方块 = 可推动的大火锅，2×2
+  pushable_object: { cellsX: 2, cellsZ: 2 },
+  dlc10_pushable_object: { cellsX: 2, cellsZ: 2 },
   // multi-cell decor (by naming convention: xN = N 格长, Nunit = N 格)
   crate_raft_x2_01: { cellsX: 2, cellsZ: 1 },
   Crate_raft_x3_01: { cellsX: 3, cellsZ: 1 },
@@ -95,6 +110,7 @@ const CORE_PALETTE = [
   { key: "utensils/mixing", labelZh: "核心 · 搅拌器具", labelEn: "Mixing & blending" },
   { key: "utensils/tools", labelZh: "核心 · 工具 / 其他", labelEn: "Tools & misc" },
   { key: "mechanisms", labelZh: "核心 · 机关", labelEn: "Mechanisms" },
+  { key: "surface", labelZh: "核心 · 空气墙", labelEn: "Air walls" },
   { key: "Player", labelZh: "核心 · 厨师出生点", labelEn: "Chef spawns" },
 ];
 
@@ -115,6 +131,12 @@ const ART_THEME_ZH = {
   dlc07_horde: "部落 DLC",
   dlc08_circus: "马戏团 DLC",
   dlc09_wonderland: "仙境 DLC",
+  dlc02_beach: "海滩 DLC",
+  dlc05_camping: "露营 DLC",
+  dlc04: "火锅 DLC",
+  dlc10: "火锅 DLC2",
+  dlc11_summer: "夏季饮料 DLC",
+  dlc13: "巧克力 DLC",
 };
 
 /** Utensil stack rules (使用手册 §3.3, extended with DLC stations). */
@@ -136,14 +158,56 @@ const UTENSIL_STACK = {
   Skewer: { y: 1, hostRule: "barbeque" },
   ToastingFork: { y: 0.6, hostRule: "campfire" },
   Bellows: { y: 0.6, hostRule: "campfire" },
+
+  // ---- 新增 DLC 厨具（锅具/烤具挂灶台，搅拌碗挂搅拌台，盘杯工具上台面） ----
+  dlc03_utensil_pot: { y: 0.6, hostRule: "cooker" },
+  dlc09_utensil_pot: { y: 0.6, hostRule: "cooker" },
+  dlc09_utensil_frying_pan: { y: 0.6, hostRule: "cooker" },
+  dlc07_utensil_pot_01: { y: 0.6, hostRule: "cooker" },
+  dlc07_utensil_frying_pan_01: { y: 0.6, hostRule: "cooker" },
+  dlc08_utensil_pot_01: { y: 0.6, hostRule: "cooker" },
+  dlc08_utensil_frying_pan: { y: 0.6, hostRule: "cooker" },
+  utensil_large_pot_01: { y: 0.6, hostRule: "cooker" },
+  utensil_dlc10_large_pot_01: { y: 0.6, hostRule: "cooker" },
+  dlc08_frierbasket: { y: 0.6, hostRule: "frying_station" },
+  dlc03_utensil_mixer: { y: 0.6, hostRule: "mixer" },
+  dlc09_utensil_mixer: { y: 0.6, hostRule: "mixer" },
+  dlc07_utensil_mixer_01: { y: 0.6, hostRule: "mixer" },
+  dlc08_utensil_mixer_01: { y: 0.6, hostRule: "mixer" },
+  dlc13_utensil_mixer_01: { y: 0.6, hostRule: "mixer" },
+  cleanmugstack: { y: 0.5, hostRule: "counter_standard" },
+  dirtymug: { y: 0.5, hostRule: "counter_standard" },
+  dirtymugstack: { y: 0.5, hostRule: "counter_standard" },
+  dlc09_cleanmugstack: { y: 0.5, hostRule: "counter_standard" },
+  dlc09_dirtymug: { y: 0.5, hostRule: "counter_standard" },
+  dlc09_dirtymugstack: { y: 0.5, hostRule: "counter_standard" },
+  dlc11_cleanglassstack: { y: 0.5, hostRule: "counter_standard" },
+  dlc11_dirtyglass: { y: 0.5, hostRule: "counter_standard" },
+  dlc11_dirtyglassstack: { y: 0.5, hostRule: "counter_standard" },
+  equipment_mug_01: { y: 0.5, hostRule: "counter_standard" },
+  dlc09_equipment_mug_01: { y: 0.5, hostRule: "counter_standard" },
+  dlc11_equipment_glass_01: { y: 0.5, hostRule: "counter_standard" },
+  dlc08_equipment_tray: { y: 0.5, hostRule: "counter_standard" },
+  dlc08_cleantraystack: { y: 0.5, hostRule: "counter_standard" },
+  dlc08_dirtytray: { y: 0.5, hostRule: "counter_standard" },
+  dlc08_dirtytraystack: { y: 0.5, hostRule: "counter_standard" },
+  utensil_ingredient_spray_01: { y: 1, hostRule: "counter_standard" },
+  dlc09_utensil_ingredient_spray: { y: 1, hostRule: "counter_standard" },
+  utensil_big_ol_spoon: { y: 0.6, hostRule: "counter_standard" },
+  utensil_dlc10_big_ol_spoon: { y: 0.6, hostRule: "counter_standard" },
+  utensil_coalbucket_01: { y: 1, hostRule: "counter_standard" },
+  p_dlc7_coal_bucket_coal_01: { y: 1, hostRule: "counter_standard" },
+  dlc08_utensil_fire_extinguisher: { y: 1, hostRule: "counter_standard" },
+  utensil_roasting_tray: { y: 0.1, hostRule: "counter_standard" },
+  dlc09_utensil_roasting_tray: { y: 0.1, hostRule: "counter_standard" },
 };
 
 /** Utensil subcategory assignment for finer palette grouping. */
 const UTENSIL_SUBCATEGORY = {
   Plate: "utensils/plates",
-  Glass: "utensils/plates",
   CleanPlateStack: "utensils/plates",
   CleanGlassStack: "utensils/plates",
+  Glass: "utensils/plates",
 
   Pot: "utensils/cooking",
   FryPan: "utensils/cooking",
@@ -160,6 +224,52 @@ const UTENSIL_SUBCATEGORY = {
   Flamethrower: "utensils/tools",
   WaterGun: "utensils/tools",
   Bellows: "utensils/tools",
+
+  // ---- 新增 DLC 厨具 ----
+  // 锅具烤具
+  dlc03_utensil_pot: "utensils/cooking",
+  dlc09_utensil_pot: "utensils/cooking",
+  dlc09_utensil_frying_pan: "utensils/cooking",
+  dlc09_utensil_roasting_tray: "utensils/cooking",
+  utensil_roasting_tray: "utensils/cooking",
+  dlc07_utensil_pot_01: "utensils/cooking",
+  dlc07_utensil_frying_pan_01: "utensils/cooking",
+  dlc08_utensil_pot_01: "utensils/cooking",
+  dlc08_utensil_frying_pan: "utensils/cooking",
+  dlc08_frierbasket: "utensils/cooking",
+  utensil_large_pot_01: "utensils/cooking",
+  utensil_dlc10_large_pot_01: "utensils/cooking",
+  // 搅拌器具
+  dlc03_utensil_mixer: "utensils/mixing",
+  dlc09_utensil_mixer: "utensils/mixing",
+  dlc07_utensil_mixer_01: "utensils/mixing",
+  dlc08_utensil_mixer_01: "utensils/mixing",
+  dlc13_utensil_mixer_01: "utensils/mixing",
+  // 盘杯器具（马克杯/玻璃杯/托盘）
+  cleanmugstack: "utensils/plates",
+  dirtymug: "utensils/plates",
+  dirtymugstack: "utensils/plates",
+  dlc09_cleanmugstack: "utensils/plates",
+  dlc09_dirtymug: "utensils/plates",
+  dlc09_dirtymugstack: "utensils/plates",
+  dlc11_cleanglassstack: "utensils/plates",
+  dlc11_dirtyglass: "utensils/plates",
+  dlc11_dirtyglassstack: "utensils/plates",
+  equipment_mug_01: "utensils/plates",
+  dlc09_equipment_mug_01: "utensils/plates",
+  dlc11_equipment_glass_01: "utensils/plates",
+  dlc08_equipment_tray: "utensils/plates",
+  dlc08_cleantraystack: "utensils/plates",
+  dlc08_dirtytray: "utensils/plates",
+  dlc08_dirtytraystack: "utensils/plates",
+  // 工具/其他
+  utensil_ingredient_spray_01: "utensils/tools",
+  dlc09_utensil_ingredient_spray: "utensils/tools",
+  utensil_big_ol_spoon: "utensils/tools",
+  utensil_dlc10_big_ol_spoon: "utensils/tools",
+  utensil_coalbucket_01: "utensils/tools",
+  p_dlc7_coal_bucket_coal_01: "utensils/tools",
+  dlc08_utensil_fire_extinguisher: "utensils/tools",
 };
 
 /** Counter subcategory assignment for finer palette grouping. */
@@ -184,7 +294,48 @@ const COUNTER_SUBCATEGORY = {
   Blender: "counters/service",
   ServingStation: "counters/service",
   Dispenser: "counters/service",
-  ConveyorStation: "counters/service",
+  ConveyorStation: "mechanisms",
+
+  // ---- 新增 DLC 工作站 ----
+  // 烤制工作站
+  oven_furnace_medieval: "counters/cooking",
+  oven_medieval: "counters/cooking",
+  dlc09_oven: "counters/cooking",
+  dlc08_oven_02: "counters/cooking",
+  cooking_region_floorburner: "counters/cooking",
+  dlc10_cooking_region_floorburner: "counters/cooking",
+  workstation_furnace_01: "counters/cooking",
+  dlc13_workstation_cooker_01: "counters/cooking",
+  // 水槽/清洁/回收
+  workstation_sink_mug_01_wood: "counters/sinks",
+  dlc09_workstation_sink_mug_01_wood: "counters/sinks",
+  workstation_sink_01_summer: "counters/sinks",
+  dlc13_workstation_sink_01_wood: "counters/sinks",
+  workstation_mug_return: "counters/sinks",
+  dlc09_workstation_mug_return_winter: "counters/sinks",
+  dlc11_workstation_glass_return_01: "counters/sinks",
+  dlc08_workstation_tray_return: "counters/sinks",
+  dlc13_workstation_bin_01: "counters/sinks",
+  dlc13_workstation_plate_return: "counters/sinks",
+  // 出餐/加工
+  workstation_mixer_01: "counters/service",
+  dlc10_workstation_mixer: "counters/service",
+  dlc08_workstation_mixer: "counters/service",
+  dlc13_workstation_mixer_01: "counters/service",
+  dlc13_workstation_plate_station: "counters/service",
+  dlc11_drink_dispenser: "counters/service",
+  dlc11_condiment_dispenser: "counters/service",
+  dlc08_drink_machine: "counters/service",
+  dlc08_condiment_dispenser: "counters/service",
+};
+
+/** 机关类 prefab 的显式分类覆盖：传送带站归入机关；食材生成器/背包归入出餐/加工；
+ *  可推动方块实为可推动大火锅，归入锅具。 */
+const MECHANISM_CATEGORY_OVERRIDE = {
+  AttachingFoodSpawner: "counters/service",
+  Backpack: "counters/service",
+  pushable_object: "utensils/cooking",
+  dlc10_pushable_object: "utensils/cooking",
 };
 
 /** Palette ordering: utensils cluster by paired workstation, counters by workflow. */
@@ -220,8 +371,12 @@ const COUNTER_SORT_ORDER = [
 ];
 
 /** Recipe family derived from the recipe id (mirrors LayoutEditorCatalogApi.RecipeTypeOf). */
+/** Recipe family derived from the recipe id (mirrors RecipeTypeOf in LayoutEditorCatalogApi.cs).
+ *  New-DLC ids are lowercase with dlcXX_ prefixes; matching is substring-based (case-insensitive),
+ *  ordered so the most specific family wins. */
 function recipeTypeOf(id) {
-  const head = id.split("_")[0];
+  const lower = id.toLowerCase();
+  const has = (s) => lower.includes(s);
   const map = {
     Burger: "burger",
     Burrito: "burrito",
@@ -241,16 +396,53 @@ function recipeTypeOf(id) {
     Mushroom: "pizza",
     Soup: "soup",
   };
-  const mapped = map[head];
-  if (mapped === "cake" && id.includes("Pancake")) return "pancake";
-  if (mapped === "cake" && id === "Cake_Chocolate_SO") return "pancake";
-  if (mapped === "cake" && id === "Cake_Plain_SO") return "pancake";
+  const mapped = map[id.split("_")[0]];
+  if (mapped === "cake" && has("pancake")) return "pancake";
+  if (mapped === "cake" && (id === "Cake_Chocolate_SO" || id === "Cake_Plain_SO")) return "pancake";
   if (mapped) return mapped;
-  if (id.startsWith("Fried") || id.startsWith("Fry")) return "fry";
-  if (id.startsWith("Mixed")) return "batter";
-  if (id.includes("Pancake")) return "pancake";
-  if (id.includes("Soup")) return "soup";
+  if (has("fruitplatter")) return "fruitplatter";
+  if (has("moonpie")) return "moonpie";
+  if (has("christmaspudding")) return "pudding";
+  if (has("hotpot")) return "hotpot";
+  if (has("hotchoc")) return "hotchocolate";
+  if (has("sodafloat") || has("float")) return "float";
+  if (has("icecream")) return "icecream";
+  if (has("donut")) return "donut";
+  if (has("hotdog") || has("frankfurter")) return "hotdog";
+  if (has("fruitpie")) return "pie";
+  if (has("roastedmarshmallow")) return "smores"; // 烤棉花糖归入棉花糖饼干（先于 roast）
+  if (has("roast")) return "roast";
+  if (has("fried")) return "fry";
+  if (has("cheesestick") || has("onionrings")) return "fry";
+  if (has("smoothie")) return "smoothie";
+  if (has("kebob")) return "kebab";
+  if (has("burger")) return "burger";
+  if (has("pancake")) return "pancake";
+  if (has("salad") || (has("cucumber") && has("onion")) || (has("tomato_") && has("onion"))) return "salad";
+  if (has("soup")) return "soup";
+  if (has("pizza")) return "pizza";
+  if (has("pasta")) return "pasta";
+  if (has("sushi")) return "sushi";
+  if (has("burrito")) return "burrito";
+  if (has("smores") || has("roastedmarshmallow")) return "smores";
+  if (has("breakfast")) return "breakfast";
+  if (has("steamed")) return "steamed";
+  if (has("mixed")) return "batter";
   return "other";
+}
+
+/** Web 内置菜谱分数估算（镜像后端 LayoutEditorRecipeKnowledge.EstimateWebRecipeScore）：
+ *  分数 = 20 × 食材种类数 + 难度加成，clamp [20,120]、级距 20。 */
+function estimateWebRecipeScore(id, step, ingredients) {
+  const distinct = new Set((ingredients || []).filter(Boolean));
+  const lower = String(id || "").toLowerCase();
+  let bonus;
+  if (/(pancake|donut)/.test(lower)) bonus = 40;
+  else if (/(cake|pie|moonpie|pudding)/.test(lower)) bonus = 60;
+  else if (step === "Mixer" || step === "MixingBowl" || step === "OvenCakeTin") bonus = 60;
+  else if (["Pot", "OvenTray", "Steamer", "DeepFatFryer", "RoastingTray", "HotPot", "KebabSkewer", "ToastingFork", "GriddlePan", "Blender"].includes(step)) bonus = 20;
+  else bonus = 0;
+  return Math.max(20, Math.min(120, 20 * distinct.size + bonus));
 }
 
 function readGuid(metaPath) {
@@ -288,7 +480,10 @@ function parseManualTable(md) {
 }
 
 function categorize(assetPath) {
-  const rel = assetPath.replace(/^Assets\/common0[12]\/prefabs\/?/, "");
+  // 归一化：Web 内置源库与关卡集 custom_web / custom_ingredients 副本 → 只保留分类段
+  let rel = assetPath.replace(/^Assets\/common0[12]\/prefabs\/?/, "");
+  rel = rel.replace(/^Assets\/Editor\/LayoutEditor\/Import\/prefabs\/?/, "");
+  rel = rel.replace(/^Assets\/LevelSets\/[^/]+\/(custom_web|custom_ingredients)\/prefabs\/?/, "");
   const seg = rel.split("/");
   const id = seg[seg.length - 1].replace(/\.prefab$/, "");
   if (seg[0] === "counters") {
@@ -299,7 +494,10 @@ function categorize(assetPath) {
     const sub = UTENSIL_SUBCATEGORY[id] || "utensils/tools";
     return { category: sub, theme: null };
   }
-  if (seg[0] === "mechanisms") return { category: "mechanisms", theme: null };
+  if (seg[0] === "mechanisms") {
+    const over = MECHANISM_CATEGORY_OVERRIDE[id];
+    return over ? { category: over, theme: null } : { category: "mechanisms", theme: null };
+  }
   if (seg[0] === "Player" || rel === "Player.prefab") return { category: "Player", theme: null };
   if (seg[0] === "art" && seg.length > 1) return { category: "art", theme: seg[1] };
   if (seg[0] === "art") return { category: "art", theme: "misc" };
@@ -312,11 +510,22 @@ function layoutMetaFor(id, category) {
     if (surf.surfaceTier) return { layoutTier: "floor", ...surf };
     return { layoutTier: "decor", ...surf };
   }
-  const meta = { layoutTier: "core", ...surfaceMeta(id) };
+  const surf = surfaceMeta(id);
+  if (FLOOR_LAYERED_SURFACE_IDS.has(id)) {
+    return { layoutTier: "floor", ...surf };
+  }
+  const meta = { layoutTier: "core", ...surf };
   const stack = UTENSIL_STACK[id];
   if (stack) meta.stack = stack;
   return meta;
 }
+
+/** 特殊地板：压力开关（含莲花压力开关）铺在地板上，归入地板层。 */
+const FLOOR_LAYERED_SURFACE_IDS = new Set([
+  "PressureSwitch",
+  "dlc13_lotuspressureswitch_large",
+  "dlc13_lotuspressureswitch_small",
+]);
 
 /** Floor/background classification for the floor layer. */
 function surfaceMeta(id) {
@@ -324,7 +533,10 @@ function surfaceMeta(id) {
   let surfaceTier = null;
   let surfaceKind = null;
 
-  if (/^sky$|background/.test(lower)) {
+  if (FLOOR_LAYERED_SURFACE_IDS.has(id)) {
+    surfaceTier = "floor";
+    surfaceKind = "solid";
+  } else if (/^sky$|background/.test(lower)) {
     surfaceTier = "background";
     surfaceKind = "background";
   } else if (id === "raft_water" || id === "alien_gue" || id === "sand_01") {
@@ -594,8 +806,14 @@ function lookupName(dictionary, idToRow, id) {
   };
 }
 
-/** "core" / "custom" / "dlc02" / "dlc05" from an asset path. */
+/** "core" / "custom" / "dlcXX" / "levelset" / "web" from an asset path.
+ *  web = Web 内置源库（游戏 DLC 内容，保存时自动打包到关卡集）。 */
 function foodGroupOf(assetPath) {
+  if (assetPath.includes("/Editor/LayoutEditor/Import/")) return "web";
+  if (assetPath.includes("/custom_recipes/")) return "levelset";
+  // Web 拷贝目录：始终归 Web内置 分组（与自定义食材 custom_ingredients 分开）
+  if (assetPath.includes("/custom_web/")) return "web";
+  if (assetPath.includes("/custom_ingredients/")) return "levelset";
   if (assetPath.includes("/CustomRecipes/")) return "custom";
   const m = assetPath.match(/\/(dlc\d+)\//);
   if (m) return m[1];
@@ -606,8 +824,29 @@ function foodGroupOf(assetPath) {
 // Food scans
 // ---------------------------------------------------------------------------
 
+/** 全部关卡集的 custom_web（及旧 custom_ingredients）子目录（Web 内置拷贝）。 */
+function levelSetCustomDirs(sub) {
+  const dirs = [];
+  const setsRoot = path.join(repoRoot, "Assets/LevelSets");
+  if (!fs.existsSync(setsRoot)) return dirs;
+  for (const setName of fs.readdirSync(setsRoot)) {
+    for (const dirName of ["custom_web", "custom_ingredients"]) {
+      const d = path.join(setsRoot, setName, dirName, sub);
+      if (fs.existsSync(d)) dirs.push(toAssetPath(d));
+    }
+  }
+  return dirs;
+}
+
 function scanIngredients(dictionary, idToRow) {
-  const roots = ["Assets/common01/food/Ingredients", "Assets/common02/food/Ingredients"];
+  // 注意：不扫关卡集 custom_web/custom_ingredients 拷贝 —— 副本 guid 是后端运行态数据
+  // （直读 meta），静态 json 只保留核心/DLC/Import 源库作为参考，web 内置条目的
+  // guid 一律由 /api/catalog/ingredients 实时提供。
+  const roots = [
+    "Assets/common01/food/Ingredients",
+    "Assets/common02/food/Ingredients",
+    "Assets/Editor/LayoutEditor/Import/Ingredients",
+  ];
   const list = [];
   const seen = new Set();
   for (const root of roots) {
@@ -660,6 +899,8 @@ const STEP_UTENSILS = {
   KebabSkewer: ["Barbeque", "Skewer"],
   ToastingFork: ["Campfire", "ToastingFork"],
   MixingBowl: ["Mixer", "MixerBowl"],
+  HotPot: ["cooking_region_floorburner", "utensil_large_pot_01"],
+  RoastingTray: ["Oven", "utensil_roasting_tray"],
 };
 
 /** Recipe-book ingredient grouping (mirrors ComputeCookingGroups in LayoutEditorRecipeKnowledge.cs).
@@ -752,8 +993,24 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
     for (const ing of ingredients) {
       prep.set(ing, ing === "PastaSO" ? "Pot" : "FryingPan");
     }
-  } else if (finalStep === "DeepFatFryer" || (type === "fry" && !isCookStep(finalStep))) {
-    // 名称前缀推断的 fry（如 FriedEgg）不得覆盖显式烹饪步骤（FryingPan 等）
+  } else if (type === "hotdog") {
+    // 只有热狗肠需要煮；洋葱单独煎；面包/芥末/番茄酱无需烹饪
+    for (const ing of ingredients) {
+      prep.set(ing, ing === "frankfurter" || ing === "dlc11_frankfurter" ? "Pot" : ing === "dlc08_onion" || ing === "dlc11_onion" ? "FryingPan" : "");
+    }
+  } else if (type === "hotchocolate") {
+    // 全程只有牛奶+巧克力需要煮；奶油/棉花糖是单独的（无需烹饪）
+    for (const ing of ingredients) {
+      prep.set(ing, ing === "milk" || ing === "dlc09_milk" || ing === "dlc03_chocolate" || ing === "dlc09_chocolate" ? "Pot" : "");
+    }
+  } else if (type === "float") {
+    // 冰淇淋汽水：汽水单独（无需搅拌）；牛奶/口味/冰块进搅拌机（Blender）
+    for (const ing of ingredients) {
+      prep.set(ing, ing === "orangesoda" || ing === "rootbeer" ? "" : "Blender");
+    }
+  } else if ((finalStep === "DeepFatFryer" && type !== "donut") || (type === "fry" && !isCookStep(finalStep))) {
+    // 名称前缀推断的 fry（如 FriedEgg）不得覆盖显式烹饪步骤（FryingPan 等）；
+    // 甜甜圈走搅拌+炸篮分支（flourBranch）
     for (const ing of ingredients) prep.set(ing, "DeepFatFryer");
   } else if (
     type === "cake" ||
@@ -792,7 +1049,7 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
   }
 
   const splitPerIngredient =
-    finalStep === "DeepFatFryer" || (type === "fry" && !isCookStep(finalStep)) || (finalStep === "Pot" && ingredients.includes("PastaSO"));
+    (finalStep === "DeepFatFryer" && type !== "donut") || (type === "fry" && !isCookStep(finalStep)) || (finalStep === "Pot" && ingredients.includes("PastaSO"));
 
   const result = [];
   if (groupMap.has("")) result.push({ step: "", utensils: [], ingredients: groupMap.get("") });
@@ -843,13 +1100,17 @@ function loadAudioKnowledge() {
 }
 
 function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
+  // 注意：不扫关卡集 custom_web 拷贝 —— 副本 guid 是后端运行态数据（直读 meta），
+  // 静态 json 只保留核心/DLC/Import 源库作为参考，web 内置菜谱的 guid 一律由
+  // /api/recipes 实时提供。
   const roots = [
     "Assets/common01/food/Recipes",
     "Assets/common01/food/CustomRecipes",
     "Assets/common02/food/Recipes",
+    "Assets/Editor/LayoutEditor/Import/Recipes",
   ];
   const customByGuid = new Map();
-  const originals = [];
+  let originals = [];
   for (const root of roots) {
     for (const file of listFilesRecursive(path.join(repoRoot, root), (n) => n.endsWith(".asset"))) {
       const fields = parseUnityAsset(file);
@@ -898,6 +1159,9 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
 
     const step = fields.cookingStepGuid ? guidIndex.get(fields.cookingStepGuid)?.id || "" : "";
     const ingredientCount = stats.ings > 0 ? stats.ings : ingredientIds.length;
+    const group = foodGroupOf(entry.assetPath);
+    const rawScore = fields.score || 0;
+    const score = group === "web" && rawScore > 0 ? estimateWebRecipeScore(entry.id, step, ingredientIds) : rawScore;
     list.push({
       guid: entry.guid,
       id: entry.id,
@@ -908,11 +1172,11 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
       compositionIds: (fields.compositionGuids || []).map((g) => guidIndex.get(g)?.id || g),
       ingredientCount,
       cookingStepCount: stats.cooks,
-      score: fields.score || 0,
+      score,
       isCustom: true,
-      group: foodGroupOf(entry.assetPath),
+      group,
       type: recipeTypeOf(entry.id),
-      intermediate: (fields.score || 0) <= 0,
+      intermediate: score <= 0,
     });
   }
 
@@ -933,6 +1197,9 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
       if (![...guidIndex.values()].some((v) => v.id === ing))
         console.warn(`WARN: knowledge ${id}: unknown ingredient id ${ing}`);
     }
+    const group = foodGroupOf(entry.assetPath);
+    const rawScore = fields.score || 0;
+    const score = group === "web" && rawScore > 0 ? estimateWebRecipeScore(id, step, ings) : rawScore;
     list.push({
       guid: entry.guid,
       id,
@@ -942,11 +1209,11 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
       ingredients: ings,
       ingredientCount: ings.length,
       cookingStepCount: step && knowledge.cookSteps.has(step) ? 1 : 0,
-      score: fields.score || 0,
+      score,
       isCustom: false,
-      group: foodGroupOf(entry.assetPath),
+      group,
       type: recipeTypeOf(id),
-      intermediate: (fields.score || 0) <= 0,
+      intermediate: score <= 0,
     });
   }
 
@@ -964,6 +1231,7 @@ function scanCookingSteps(dictionary, idToRow) {
     { root: "Assets/common02/food/CookingSteps", kind: "cooking" },
     { root: "Assets/common01/food/PlatingSteps", kind: "plating" },
     { root: "Assets/common02/food/PlatingSteps", kind: "plating" },
+    { root: "Assets/Editor/LayoutEditor/Import/CookingSteps", kind: "cooking" },
   ];
   const list = [];
   const seen = new Set();
@@ -1293,6 +1561,29 @@ function main() {
     const base = root.includes("common01") ? "Assets/common01/prefabs" : "Assets/common02/prefabs";
     walkPrefabs(root, base, items, measuredFootprints);
   }
+  // Web 内置源库与关卡集 custom_ingredients 副本（道具占位 prefab）。
+  // 注意：不在此去重 —— 已放置场景物品可能引用 Import 源库 guid，保留全部条目
+  // 保证 guid 始终可解析；去重在 buildPaletteGroups 展示层完成（副本优先）。
+  const importPrefabRoot = path.join(repoRoot, "Assets/Editor/LayoutEditor/Import/prefabs");
+  walkPrefabs(importPrefabRoot, "Assets/Editor/LayoutEditor/Import/prefabs", items, measuredFootprints);
+  for (const dir of levelSetCustomDirs("prefabs")) {
+    walkPrefabs(path.join(repoRoot, dir), dir, items, measuredFootprints);
+  }
+
+  // 合成核心物品：空气墙（隐形碰撞块，无 prefab，场景应用时生成 BoxCollider）。
+  // 作为「核心层」物品：layoutTier=core → 在核心层编辑/保存；应用为 1×1×1.132 碰撞盒
+  // （1.132 为魔法数，导出时据此识别），不生成地板自带的 y=0.4 Col_Floor。
+  items.push({
+    id: "AirWall",
+    guid: "0d0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+    assetPath: "",
+    category: "surface",
+    theme: null,
+    defaultParent: "Design/Collision",
+    footprint: { cellsX: 1, cellsZ: 1 },
+    layoutTier: "core",
+    surfaceKind: "airwall",
+  });
 
   for (const item of items) {
     const names = lookupName(dictionary, idToRow, item.id);
@@ -1321,6 +1612,21 @@ function main() {
     const key = item.category === "art" && item.theme ? `art/${item.theme}` : item.category;
     if (!byCategory[key]) byCategory[key] = [];
     byCategory[key].push(item);
+  }
+
+  // 展示层去重：同一道具同时存在 Import 源库项与关卡集拷贝（custom_web/custom_ingredients）
+  // 时，只保留拷贝（避免调色板重复）
+  for (const key of Object.keys(byCategory)) {
+    if (key.startsWith("surface/")) continue;
+    const byId = new Map();
+    for (const it of byCategory[key]) {
+      const prev = byId.get(it.id);
+      const isCopy = /\/custom_(web|ingredients)\//.test(it.assetPath);
+      const prevIsCopy = prev ? /\/custom_(web|ingredients)\//.test(prev.assetPath) : false;
+      if (prev && (prevIsCopy || !isCopy)) continue;
+      byId.set(it.id, it);
+    }
+    byCategory[key] = [...byId.values()];
   }
 
   // Floor/background surface items belong ONLY to the floor palette, not their decor group.
@@ -1352,6 +1658,9 @@ function main() {
   const guidIndex = buildGuidIndex([
     "Assets/common01/food",
     "Assets/common02/food",
+    "Assets/Editor/LayoutEditor/Import/Ingredients",
+    "Assets/Editor/LayoutEditor/Import/Recipes",
+    "Assets/Editor/LayoutEditor/Import/CookingSteps",
   ]);
   const knowledge = loadKnowledge();
 

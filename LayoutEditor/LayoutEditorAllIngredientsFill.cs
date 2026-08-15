@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using LevelEditor;
 using LevelEditorStub;
+using UnityEditor;
 using UnityEngine;
 
 /// <summary>
@@ -11,6 +12,32 @@ using UnityEngine;
 /// </summary>
 public static class LayoutEditorAllIngredientsFill
 {
+    /// <summary>复刻宿主 LevelInfoSOEditor 的 "Fill All AudioDirectorySOs" 按钮：
+    /// 把 common02 音频目录下的全部 PseudoPrefabSO 填进 audioDirectorySOs。
+    /// 与宿主按钮一致扫描 common02（运行时 assetPath 用正斜杠，能从 bundle 内容加载），
+    /// 插件侧防御：跳过 bundle 文件尚未构建的目录，避免宿主 PseudoPrefabManager 因缺失 bundle 抛异常。</summary>
+    public static void FillAllAudioDirectorySOs(LevelInfoSO levelInfo)
+    {
+        if (levelInfo == null)
+            return;
+        const string folder = "Assets/common02/pseudo_prefab_so/audio/AudioDirectories";
+        var list = new List<PseudoPrefabSO>();
+        if (AssetDatabase.IsValidFolder(folder))
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { folder }))
+            {
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(AssetDatabase.GUIDToAssetPath(guid));
+                if (so == null)
+                    continue;
+                if (!string.IsNullOrEmpty(so.bundleName) && !LayoutEditorCatalogApi.BundleFileExists(so.bundleName))
+                    continue;
+                if (!list.Contains(so))
+                    list.Add(so);
+            }
+        }
+        levelInfo.audioDirectorySOs = list.ToArray();
+    }
+
     public static void AutoFillIngredients(LevelInfoSO levelInfo)
     {
         List<PseudoPrefabSO> allIngredients = new List<PseudoPrefabSO>();
@@ -68,7 +95,30 @@ public static class LayoutEditorAllIngredientsFill
             }
         }
 
-        levelInfo.allIngredients = allIngredients.ToArray();
+        // 过滤：运行时宿主（LevelConfigSetup.SetupConfig / PseudoPrefabDispenser.Setup）
+        // 会对 allIngredients 逐项 PseudoPrefabManager.LoadAsset<GameObject>(assetPath)，
+        // 路径无法匹配 bundle 内容器时返回 null 并抛 NullReferenceException。
+        // 原版关卡 allIngredients 恒为空（基础食材由游戏内置 RecipeMatchList 匹配），
+        // 因此这里只保留"内置匹配未覆盖"且"assetPath 指向真实 prefab"的食材：
+        //  - assetPath 为反斜杠旧格式（基础食材）一律不写入；
+        //  - assetPath 不以 .prefab 结尾（bundle 中无该食材 prefab，如番茄酱/芥末/汽水）
+        //    也无法加载，一并排除（这些浇头由游戏内置/场景内嵌匹配处理）。
+        var filtered = new List<PseudoPrefabSO>();
+        foreach (PseudoPrefabSO pseudo in allIngredients)
+        {
+            if (pseudo == null)
+                continue;
+            var bundlePath = pseudo.assetPath;
+            if (string.IsNullOrEmpty(bundlePath))
+                continue;
+            if (bundlePath.IndexOf('\\') >= 0)
+                continue;
+            if (!bundlePath.EndsWith(".prefab", System.StringComparison.OrdinalIgnoreCase))
+                continue;
+            filtered.Add(pseudo);
+        }
+
+        levelInfo.allIngredients = filtered.ToArray();
     }
 
     private static void CollectCustomRecipeIngredients(

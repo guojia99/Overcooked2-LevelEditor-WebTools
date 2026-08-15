@@ -4,7 +4,7 @@ import {
   getIngredientIcon,
   getCatalogIcon
 } from "./iconCaches";
-import { ingredientIdByGuid } from "./catalog";
+import { ingredientIdByGuid, catalogItemForGuidOrPath } from "./catalog";
 import { ingredientNameZh } from "../ingredientLabels";
 import { tidyCatalogNameZh } from "../displayLabels";
 import type { CatalogItem } from "../types";
@@ -112,6 +112,9 @@ export function drawCatalogItemIcon(
 
 export function itemLabel(item: EditorItem): string {
   const id = prefabIdFromPath(item.prefabAssetPath);
+  if (item.stubKind === "Collision") {
+    return item.displayName === "AirWall" ? "空气墙（隐形碰撞）" : item.displayName || "碰撞块";
+  }
   const isDispenser =
     (item.stubKind === "Dispenser" || id === "Dispenser") && id !== "Backpack";
   if (isDispenser) {
@@ -124,7 +127,7 @@ export function itemLabel(item: EditorItem): string {
     if (pid !== 11) return `玩家${pid + 1}`;
   }
 
-  const cat = S.catalogByGuid.get(item.prefabGuid);
+  const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
   if (cat?.nameZh) return tidyCatalogNameZh(cat.nameZh, cat.id);
   if (item.displayName) return tidyCatalogNameZh(item.displayName, item.displayName);
   return id || "?";

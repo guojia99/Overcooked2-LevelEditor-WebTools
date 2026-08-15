@@ -41,6 +41,33 @@ export function hexToRgba(hex: string, alpha: number): string {
 export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean) {
   const { center, bw, bh, rot } = floorRectPx(f);
   const paint = surfacePaint(f.surfaceKind, selected);
+  // 空气地板：无可见地板，仅可行走区——半透明橙色虚线框 + 标注。
+  if (f.airFloor) {
+    dom.ctx.save();
+    dom.ctx.translate(center.x, center.y);
+    dom.ctx.rotate((-rot * Math.PI) / 180);
+    dom.ctx.fillStyle = selected ? "rgba(249,171,0,0.30)" : "rgba(249,171,0,0.12)";
+    dom.ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+    dom.ctx.strokeStyle = selected ? "#f9ab00" : "rgba(249,171,0,0.7)";
+    dom.ctx.lineWidth = selected ? 2.5 : ghost ? 1 : 1.5;
+    dom.ctx.setLineDash([7, 4]);
+    dom.ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
+    dom.ctx.setLineDash([]);
+    if (selected && !ghost && S.selectedFloorKeys.size === 1) {
+      dom.ctx.fillStyle = "#f9ab00";
+      for (const hx of [-bw / 2, bw / 2]) {
+        for (const hy of [-bh / 2, bh / 2]) {
+          dom.ctx.fillRect(hx - 3, hy - 3, 6, 6);
+        }
+      }
+    }
+    dom.ctx.fillStyle = "rgba(249,171,0,0.98)";
+    dom.ctx.textAlign = "center";
+    dom.ctx.textBaseline = "middle";
+    drawLabelInBox(dom.ctx, `${f._wCells}×${f._dCells}格 空气地板`, bw - 6, bh - 6);
+    dom.ctx.restore();
+    return;
+  }
   const isImage = f.surfaceKind === "solid" && !!f.imageTexturePath;
   const img = isImage ? getFloorImage(f.imageTexturePath!) : null;
   // Manual tint overrides the fill (only when enabled) so the recolor is visible

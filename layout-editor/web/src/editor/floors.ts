@@ -48,6 +48,11 @@ export function isThemedFloor(f: EditorFloor): boolean {
   return !!f.prefabGuid && f.surfaceKind !== "raft";
 }
 
+/** 空气地板：仅有可行走 Col_AirFloor 碰撞盒，无可见 Plane。 */
+export function isAirFloor(f: EditorFloor): boolean {
+  return !!f.airFloor;
+}
+
 /** Ids that are clearly NOT area floor surfaces and must stay out of themed
  *  floor management: walkway pillars / roofs / ropes, the Red Carpet Entrance
  *  piece, and beach floor corner/edge trims (stretching them over an N×M rect
@@ -178,7 +183,7 @@ export function finalizeFloor(f: EditorFloor) {
   f.widthUnits = f._wCells * CELL;
   f.depthUnits = f._dCells * CELL;
   // Smart material match by size tag.
-  if (f.surfaceKind !== "background" && f.surfaceKind !== "raft" && !f.prefabGuid)
+  if (f.surfaceKind !== "background" && f.surfaceKind !== "raft" && !f.prefabGuid && !f.airFloor)
     tryMatchFloorMaterialBySize(f);
 }
 
@@ -246,7 +251,44 @@ export function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | nul
   );
 }
 
+export function addAirFloorAt(wx: number, wz: number) {
+  pushHistory();
+  const id = `new:floor:${crypto.randomUUID()}`;
+  const key = newEditorKey();
+  const w = 4;
+  const d = 4;
+  const snapped = snapFootprintCenter(wx, wz, w, d, 0, CELL, HALF_CELL);
+  const floor: EditorFloor = {
+    instanceId: id,
+    _key: key,
+    hierarchyPath: id,
+    parentPath: "Design/Collision",
+    displayName: "AirFloor",
+    surfaceKind: "solid",
+    meshType: "plane",
+    meshFileId: 0,
+    airFloor: true,
+    localPosition: { x: snapped.x, y: 0, z: snapped.z },
+    worldPosition: { x: snapped.x, y: 0, z: snapped.z },
+    localRotationY: 0,
+    localScale: { x: 1, y: 1, z: 1 },
+    widthUnits: w * CELL,
+    depthUnits: d * CELL,
+    widthCells: w,
+    depthCells: d,
+    _wx: snapped.x,
+    _wz: snapped.z,
+    _wCells: w,
+    _dCells: d,
+  };
+  S.floors.push(floor);
+  setFloorSelection([key]);
+  draw();
+  setStatus("已新增空气地板（仅可行走，无可见地板，写回后生效）");
+}
+
 export function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | undefined): string {
+  if (f.airFloor) return "空气地板（仅可行走，无可见地板）";
   if (f.surfaceKind === "raft") return "木筏拼块（写回时生成）";
   if (isThemedFloor(f)) {
     const cat = S.catalogByGuid.get(f.prefabGuid!);

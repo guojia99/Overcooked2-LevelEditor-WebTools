@@ -37,6 +37,7 @@ export interface CatalogItem {
     | "section"
     | "conveyor"
     | "decal"
+    | "airwall"
     | "background";
   stack?: CatalogStackMeta;
   /** True when an extracted icon PNG exists under web/public/icons/catalog/<id>.png. */
@@ -169,10 +170,15 @@ export interface LayoutItem {
   /** Euler X in degrees — quad-based floor tiles lie flat via x=90. */
   localRotationX?: number;
   localRotationY: number;
+  localRotationZ?: number;
+  /** 空气墙碰撞盒中心（局部坐标），写回时还原 BoxCollider.center。 */
+  colliderCenter?: LayoutVector3;
   localScale?: LayoutVector3;
   footprint?: { cellsX: number; cellsZ: number };
   walkable?: boolean;
   stubKind?: string;
+  /** 空气墙（隐形碰撞块）：应用为 1×1×1.132 的 BoxCollider，不生成 Col_Floor。 */
+  airWall?: boolean;
   dispenser?: LayoutDispenserStub;
   conveyor?: LayoutConveyorStub;
   teleportal?: LayoutTeleportalStub;
@@ -384,6 +390,9 @@ export interface FloorObject {
   /** Image rotation in degrees, snapped to 90° steps (0/90/180/270, clockwise
    *  viewed from above). Default 0. */
   imageRotation?: number;
+  /** 空气地板：仅有可行走 Col_AirFloor 碰撞盒（Ground 层，几何与普通 Col_Floor
+   *  相同），无可见 Plane。写回时只生成碰撞盒，不建可见面。 */
+  airFloor?: boolean;
 }
 
 export interface WalkableRect {
@@ -440,7 +449,7 @@ export interface LevelSetScene {
   sceneName: string;
 }
 
-export type FoodGroup = "core" | "custom" | "dlc02" | "dlc05" | string;
+export type FoodGroup = "core" | "custom" | "dlc02" | "dlc05" | "levelset" | "web" | string;
 
 export interface IngredientEntry {
   guid: string;
@@ -554,6 +563,8 @@ export interface LevelRecipes {
   levelInfoAssetPath: string;
   levelName: string;
   recipeGuids: string[];
+  /** 与 recipeGuids 对应的菜谱 id（文件名），前端据此按 id 兜底匹配勾选状态。 */
+  recipeIds?: string[];
 }
 
 // ---------- Level admin (sets / levels / audio) ----------
@@ -701,6 +712,8 @@ export interface LevelDetail {
   screenshotPath?: string;
   debugRecipeCount: number;
   disableDynamicParenting: boolean;
+  minOrderCount: number;
+  maxOrderCount: number;
   dependencies: string[];
   configs: PerPlayerConfig[];
   audio: AudioConfig;
@@ -822,6 +835,46 @@ export interface CustomRecipeReferences {
   icons: CustomRecipeReferenceEntry[];
   reusableModels: CustomRecipeReferenceEntry[];
   ingredients: string[];
+}
+
+// ---------- Web 内置菜谱库（内置菜谱管理） ----------
+
+export interface WebRecipeEntry {
+  /** Import 源库 guid（安装时用于定位源资产）。 */
+  guid: string;
+  id: string;
+  nameZh: string;
+  nameEn: string;
+  assetPath: string;
+  cookingStep: string;
+  ingredients: string[];
+  /** 难度估算分（20×食材+加成，20~120）。 */
+  score: number;
+  type: string;
+  /** 去重键（规范化中文名，去 DLC 后缀）。 */
+  dupKey: string;
+  /** 是否为本菜组代表（同组内取最高 DLC）。 */
+  representative: boolean;
+  /** 本关卡集 custom_web 是否已有副本。 */
+  installed: boolean;
+  /** 已装副本 guid（未装为空）。 */
+  installedGuid: string;
+  /** 是否被本关卡集任一关卡引用。 */
+  referenced: boolean;
+  /** 引用它的关卡名列表。 */
+  referencedBy: string[];
+}
+
+export interface WebRecipeLibrary {
+  setName: string;
+  recipes: WebRecipeEntry[];
+}
+
+export interface WebRecipeUninstallResult {
+  ok: boolean;
+  error?: string;
+  /** 被引用时列出使用关卡（此时拒绝移除）。 */
+  usedByLevels?: string[];
 }
 
 // ---------- Counter Appearance ----------

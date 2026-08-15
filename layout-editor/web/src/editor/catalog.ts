@@ -63,15 +63,33 @@ function looksLikeBackgroundPath(it: {
   );
 }
 
+/** 场景物品的目录条目解析：先按 guid，失败（如 custom_web 副本 guid 随运行态
+ *  变化、静态目录未收录）时按 prefab id（assetPath 文件名）回退到源库条目。 */
+export function catalogItemForGuidOrPath(
+  guid: string | undefined,
+  assetPath: string | undefined
+): CatalogItem | undefined {
+  if (guid) {
+    const byGuid = S.catalogByGuid.get(guid);
+    if (byGuid) return byGuid;
+  }
+  const id = prefabIdFromPath(assetPath);
+  return id ? S.catalogById.get(id) : undefined;
+}
+
 /** Layer of a scene item, with a fallback heuristic for items the catalog does
  *  not know (they must never leak into the decor layer). */
 export function itemLayerOfIt(it: {
   prefabGuid: string;
   prefabAssetPath?: string;
   hierarchyPath?: string;
+  stubKind?: string;
 }): LayerKey {
-  const cat = S.catalogByGuid.get(it.prefabGuid);
+  // 空气墙等合成表面物品按 catalog 分类（surfaceTier=floor → 地板层）
+  const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
   if (cat) return itemLayerOf(cat);
+  // 通用（非空气墙）碰撞块归入核心物品层
+  if (it.stubKind === "Collision") return "items";
   if (looksLikeBackgroundPath(it)) return "background";
   return "decor";
 }
@@ -81,9 +99,15 @@ export function itemCategoryOf(it: {
   prefabGuid: string;
   prefabAssetPath?: string;
   hierarchyPath?: string;
+  stubKind?: string;
 }): VisibilityCategory {
-  const cat = S.catalogByGuid.get(it.prefabGuid);
-  if (isSurfaceItem(cat)) return cat?.surfaceTier === "background" ? "background" : "floors";
+  const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
+  if (cat) {
+    if (isSurfaceItem(cat)) return cat?.surfaceTier === "background" ? "background" : "floors";
+    return itemLayerOf(cat) === "background" ? "background" : itemLayerOf(cat) === "decor" ? "decor" : "items";
+  }
+  // 通用（非空气墙）碰撞块归入核心物品
+  if (it.stubKind === "Collision") return "items";
   const layer = itemLayerOfIt(it);
   return layer === "background" ? "background" : layer === "decor" ? "decor" : "items";
 }

@@ -712,11 +712,17 @@ public static class LayoutEditorBundleDumper
         try
         {
             Rect rect = sprite.textureRect;
-            Texture2D tex = new Texture2D((int)rect.width, (int)rect.height,
-                sprite.texture.format, false);
+            Texture2D source = sprite.texture;
+            // sprite.textureRect 可能越界（atlas 引用错位/坏精灵），夹紧到实际纹理边界，
+            // 否则 GetPixels 内部 ReadPixels 会抛 "attempting to ReadPixels outside of
+            // RenderTexture bounds"。
+            int x = Mathf.Clamp((int)rect.x, 0, source.width - 1);
+            int y = Mathf.Clamp((int)rect.y, 0, source.height - 1);
+            int w = Mathf.Clamp((int)rect.width, 1, source.width - x);
+            int h = Mathf.Clamp((int)rect.height, 1, source.height - y);
+            Texture2D tex = new Texture2D(w, h, source.format, false);
             tex.filterMode = FilterMode.Point;
-            tex.SetPixels(sprite.texture.GetPixels(
-                (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height));
+            tex.SetPixels(source.GetPixels(x, y, w, h));
             tex.Apply();
             return tex;
         }

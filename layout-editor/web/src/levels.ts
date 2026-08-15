@@ -454,6 +454,8 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <label class="m-field">中文名 levelNameZH<input type="text" id="f-levelNameZH" value="${esc(detail.levelNameZH)}"></label>
         <label class="m-field">场景名 sceneName<input type="text" id="f-sceneName" value="${esc(detail.sceneName)}"></label>
         <label class="m-field">调试菜谱数 debugRecipeCount<input type="number" id="f-debugRecipeCount" value="${detail.debugRecipeCount}"></label>
+        <label class="m-field">最少同时订单 minOrderCount<input type="number" id="f-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount}"></label>
+        <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="f-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount}"></label>
         <label class="m-field">截图
           <span class="muted" id="ss-status">${detail.hasScreenshot ? "已设置 screenshot" : "未设置"}</span>
           <div class="m-actions-row" style="margin-top:4px">
@@ -491,6 +493,8 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
         sceneName: (document.getElementById("f-sceneName") as HTMLInputElement).value.trim(),
         debugRecipeCount: Number((document.getElementById("f-debugRecipeCount") as HTMLInputElement).value || 0),
         disableDynamicParenting: (document.getElementById("f-disableDynamicParenting") as HTMLInputElement).checked,
+        minOrderCount: Number((document.getElementById("f-minOrderCount") as HTMLInputElement).value || 2),
+        maxOrderCount: Number((document.getElementById("f-maxOrderCount") as HTMLInputElement).value || 5),
         dependencies: deps,
       });
       setStatus("基础信息已保存（已 reload）");
@@ -742,6 +746,12 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
     `<div class="cfg-ai-bar">
         <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ 一键定分</button>
      </div>
+     <p class="modal-hint">订单数量（LevelInfoSO）</p>
+     <div class="cfg-order-count">
+       <label class="m-field">最少同时订单 minOrderCount<input type="number" id="cfg-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount ?? 2}"></label>
+       <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="cfg-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount ?? 5}"></label>
+     </div>
+     <p class="modal-hint">星级分数（按人数）</p>
      <table class="cfg-matrix">
        <thead><tr><th>人数</th>${starHead}<th>难度系数</th></tr></thead>
        <tbody>${matrixRows}</tbody>
@@ -866,6 +876,19 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
         };
       };
       showBusy("保存分数配置…");
+      const minOrderCount = Number((document.getElementById("cfg-minOrderCount") as HTMLInputElement).value || 2);
+      const maxOrderCount = Number((document.getElementById("cfg-maxOrderCount") as HTMLInputElement).value || 5);
+      await api.updateLevelInfo({
+        assetPath: detail.levelInfoAssetPath,
+        levelName: detail.levelName,
+        levelNameZH: detail.levelNameZH,
+        sceneName: detail.sceneName,
+        debugRecipeCount: detail.debugRecipeCount,
+        disableDynamicParenting: detail.disableDynamicParenting,
+        minOrderCount,
+        maxOrderCount,
+        dependencies: detail.dependencies,
+      });
       await api.updateLevelConfig({
         assetPath: detail.levelInfoAssetPath,
         config_1p: build("1p"),
@@ -1337,6 +1360,7 @@ export async function openAudioModal(
       <div class="modal-scroll">${ambGroupsHtml || '<p class="muted">无</p>'}</div>
     </div>
 
+    ${exports ? "" : `<div class="dep-warn dep-miss" style="margin-top:10px">🎧 试听不可用：尚未导出音频数据。请在 Unity Editor 的 Bridge 窗口（菜单 Layout Editor → Open Bridge）点击「导出音频依赖」，完成后刷新页面即可试听。</div>`}
     <div class="au-player ${exports ? "" : "au-player-hidden"}" id="au-player">
       <button type="button" class="au-play-btn" id="au-player-btn" title="播放/暂停">▶</button>
       <span class="au-player-label" id="au-player-label"></span>
@@ -1695,6 +1719,8 @@ export async function openAudioModal(
           sceneName: detail.sceneName,
           debugRecipeCount: detail.debugRecipeCount,
           disableDynamicParenting: detail.disableDynamicParenting,
+          minOrderCount: detail.minOrderCount,
+          maxOrderCount: detail.maxOrderCount,
           dependencies: kept,
         });
       }

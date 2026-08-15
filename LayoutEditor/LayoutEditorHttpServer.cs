@@ -13,6 +13,10 @@ public class LayoutEditorHttpServer
 {
     public const int DefaultPort = 8765;
 
+    /// <summary>当前请求是否已写出响应（防止 catch 分支对同一响应重复写导致
+    ///  "Cannot be changed after headers are sent"）。</summary>
+    private static bool _responseSent;
+
     private HttpListener _listener;
     private Thread _listenerThread;
     private volatile bool _running;
@@ -201,6 +205,7 @@ public class LayoutEditorHttpServer
 
     private void HandleRequest(HttpListenerContext context)
     {
+        _responseSent = false;
         var request = context.Request;
         var response = context.Response;
         response.Headers.Add("Access-Control-Allow-Origin", "*");
@@ -232,6 +237,20 @@ public class LayoutEditorHttpServer
             if (path == "/api/level-sets" && request.HttpMethod == "GET")
             {
                 WriteJson(response, 200, LayoutEditorJson.ToJson(ScanLevelSetScenes()));
+                return;
+            }
+
+            if (path == "/api/level-set/sync" && request.HttpMethod == "POST")
+            {
+                // 打开关卡集时调用：版本不一致立即同步一次；v0.0.0 不同步且 web 内置禁用。
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                var version = LayoutEditorCustomIngredients.ImportVersion();
+                var disabled = version == "v0.0.0";
+                var changed = 0;
+                if (!disabled && !string.IsNullOrEmpty(setName))
+                    changed = LayoutEditorCustomIngredients.SyncAllWebContent(setName);
+                WriteJson(response, 200, "{\"version\":\"" + version + "\",\"disabled\":"
+                    + (disabled ? "true" : "false") + ",\"changed\":" + changed + "}");
                 return;
             }
 
@@ -311,6 +330,24 @@ public class LayoutEditorHttpServer
                 var only = request.QueryString["only"];
                 if (string.IsNullOrEmpty(only) && request.QueryString["itemsOnly"] == "1")
                     only = "items";
+
+                // 统一保存处理：Web 内置（Import 源库）食材/道具按需拷入关卡集
+                // custom_web，并把 doc 引用改写为副本 guid（随关卡打包）。
+                // Import 仅作模板：先无条件把全部 Web 内容同步到关卡集，再改写引用。
+                var levelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(doc.sceneAssetPath);
+                string levelSet = null;
+                if (levelInfo != null)
+                {
+                    var p = (doc.sceneAssetPath ?? "").Replace('\\', '/').Split('/');
+                    if (p.Length > 2 && p[1] == "LevelSets")
+                        levelSet = p[2];
+                }
+                if (levelSet != null)
+                {
+                    LayoutEditorCustomIngredients.SyncAllWebContent(levelSet);
+                    LayoutEditorCustomIngredients.EnsureDocCopies(levelSet, doc);
+                }
+
                 var err = SceneLayoutApplier.Apply(doc, snap, syncWalkable, only);
                 if (!string.IsNullOrEmpty(err))
                 {
@@ -318,7 +355,30 @@ public class LayoutEditorHttpServer
                     return;
                 }
 
+                // 场景写回完成后：先同步全部引用（recipes/allIngredients 副本改写 + 依赖注册），
+                // 最后再默认触发两个自动填充 —— Fill All AudioDirectorySOs 与 Auto Fill All
+                // Ingredients，确保填充是基于"写完全部"之后的最终状态。
+                if (levelSet != null && levelInfo != null)
+                {
+                    LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
+                    LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
+                    LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
+                    // 填充可能引入新的食材/音频目录引用，再同步一次副本、依赖并合并音频 bundle。
+                    LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
+                    LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
+                }
+
                 WriteJson(response, 200, "{\"ok\":true}");
+                return;
+            }
+
+            if (path == "/api/scene/repair-broken" && request.HttpMethod == "POST")
+            {
+                var assetPath = request.QueryString["assetPath"];
+                if (!string.IsNullOrEmpty(assetPath))
+                    OpenSceneIfNeeded(assetPath);
+                var removed = LayoutEditorSceneRepair.RemoveBrokenPrefabInstances();
+                WriteJson(response, 200, "{\"ok\":true,\"removed\":" + removed + "}");
                 return;
             }
 
@@ -529,6 +589,7 @@ public class LayoutEditorHttpServer
                     return;
                 }
                 var bytes = File.ReadAllBytes(abs);
+                _responseSent = true;
                 response.ContentType = contentType;
                 response.StatusCode = 200;
                 response.ContentLength64 = bytes.Length;
@@ -599,6 +660,7 @@ public class LayoutEditorHttpServer
                     case ".tga": ct = "image/x-tga"; break;
                 }
                 var bytes = File.ReadAllBytes(fullAbs);
+                _responseSent = true;
                 response.ContentType = ct;
                 response.StatusCode = 200;
                 response.ContentLength64 = bytes.Length;
@@ -631,6 +693,35 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // ---------- Web 内置菜谱管理 ----------
+
+            if (path == "/api/web-recipes" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanWebRecipeLibrary(setName)));
+                return;
+            }
+
+            if (path == "/api/web-recipes/install" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<WebRecipeInstallDto>(body);
+                var err = dto == null ? "缺少参数。" : LayoutEditorCustomIngredients.InstallRecipes(dto.setName, dto.ids);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/web-recipes/uninstall" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<WebRecipeUninstallDto>(body);
+                var result = dto == null
+                    ? new WebRecipeUninstallResultDto { ok = false, error = "缺少参数。" }
+                    : LayoutEditorCustomIngredients.UninstallRecipes(dto.setName, dto.ids);
+                WriteJson(response, result.ok ? 200 : 400, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
             // ---------- Custom Recipe Management ----------
 
             if (path == "/api/custom-recipes/config" && request.HttpMethod == "GET")
@@ -652,6 +743,7 @@ public class LayoutEditorHttpServer
                     return;
                 }
                 var bytes = File.ReadAllBytes(abs);
+                _responseSent = true;
                 response.ContentType = contentType;
                 response.StatusCode = 200;
                 response.ContentLength64 = bytes.Length;
@@ -672,6 +764,7 @@ public class LayoutEditorHttpServer
                     return;
                 }
                 var bytes = File.ReadAllBytes(abs);
+                _responseSent = true;
                 response.ContentType = contentType;
                 response.StatusCode = 200;
                 response.ContentLength64 = bytes.Length;
@@ -821,7 +914,18 @@ public class LayoutEditorHttpServer
         }
         catch (Exception ex)
         {
-            WriteJson(response, 500, LayoutEditorJson.ToJson(new ApiErrorDto { error = ex.Message }));
+            // 响应已写出时不再覆盖（否则 "Cannot be changed after headers are sent"）；
+            // 直接写流（非 WriteText）的路径可能未置 _responseSent，用 try/catch 兜底。
+            if (_responseSent)
+                return;
+            try
+            {
+                WriteJson(response, 500, LayoutEditorJson.ToJson(new ApiErrorDto { error = ex.Message }));
+            }
+            catch
+            {
+                // 响应已部分写出，无法再写 500
+            }
         }
     }
 
@@ -898,6 +1002,7 @@ public class LayoutEditorHttpServer
         }
 
         var bytes = File.ReadAllBytes(filePath);
+        _responseSent = true;
         response.ContentType = GetContentType(filePath);
         response.StatusCode = 200;
         response.ContentLength64 = bytes.Length;
@@ -937,12 +1042,25 @@ public class LayoutEditorHttpServer
 
     private static void WriteText(HttpListenerResponse response, int status, string text, string contentType = "text/plain; charset=utf-8")
     {
-        var bytes = Encoding.UTF8.GetBytes(text ?? "");
-        response.StatusCode = status;
-        response.ContentType = contentType;
-        response.ContentLength64 = bytes.Length;
-        response.OutputStream.Write(bytes, 0, bytes.Length);
-        response.OutputStream.Close();
+        if (_responseSent)
+            return; // 响应已写出，避免重复写抛异常
+        try
+        {
+            _responseSent = true;
+            var bytes = Encoding.UTF8.GetBytes(text ?? "");
+            response.StatusCode = status;
+            response.ContentType = contentType;
+            response.ContentLength64 = bytes.Length;
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+            response.OutputStream.Close();
+        }
+        catch (Exception ex)
+        {
+            // 响应头可能已被其它路径送出（"Cannot be changed after headers are sent"），
+            // 此时无法再写任何内容，仅记录，避免异常传播到主线程泵导致刷屏。
+            _responseSent = true;
+            Debug.LogWarning("[LayoutEditor] write response skipped: " + ex.Message);
+        }
     }
 
     private static void WriteAdminResult(HttpListenerResponse response, string error)
@@ -962,6 +1080,7 @@ public class LayoutEditorHttpServer
             return;
         }
         var bytes = File.ReadAllBytes(manifestPath);
+        _responseSent = true;
         response.ContentType = "application/json; charset=utf-8";
         response.StatusCode = 200;
         response.ContentLength64 = bytes.Length;
@@ -987,6 +1106,8 @@ public class LayoutEditorHttpServer
             return;
         }
 
+        // 以下直接写流（Range 分支/普通分支），不再走 WriteText。
+        _responseSent = true;
         var ext = Path.GetExtension(absPath).ToLowerInvariant();
         if (ext == ".wav")
             response.ContentType = "audio/wav";

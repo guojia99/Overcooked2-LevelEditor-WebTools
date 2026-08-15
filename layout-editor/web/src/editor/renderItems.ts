@@ -16,7 +16,8 @@ import { dom } from "./dom";
 import {
   isActiveItemLayer,
   itemCategoryOf,
-  categoryVisible
+  categoryVisible,
+  catalogItemForGuidOrPath
 } from "./catalog";
 import {
   drawLabelInBox,
@@ -44,8 +45,34 @@ import {
   isGlassReturnItem
 } from "./servingLinks";
 
-export function itemDrawCompare(a: EditorItem, b: EditorItem): number {
-  const d = drawLayerForItem(a, S.catalogByGuid) - drawLayerForItem(b, S.catalogByGuid);
+/** 空气箱（隐形碰撞块）：编辑器内以虚线框 + 半透明填充标示，游戏内不可见。 */
+function drawCollisionMarker(item: EditorItem, selected: boolean) {
+  const fp = resolveFootprint(item);
+  const rot = normalizeRot(item.localRotationY);
+  const center = worldToCanvas(item._wx, item._wz);
+  const cellPx = CELL * PX_PER_UNIT * S.scale;
+  const w = fp.cellsX * cellPx * itemScaleX(item);
+  const h = fp.cellsZ * cellPx * itemScaleZ(item);
+  const ctx = dom.ctx;
+  const rotated = rot === 90 || rot === 270;
+  const [dw, dh] = rotated ? [h, w] : [w, h];
+
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.rotate((rot * Math.PI) / 180);
+  ctx.fillStyle = selected ? "rgba(120,160,255,0.28)" : "rgba(120,160,255,0.12)";
+  ctx.fillRect(-dw / 2, -dh / 2, dw, dh);
+  ctx.strokeStyle = selected ? "rgba(140,180,255,0.95)" : "rgba(120,160,255,0.55)";
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([4, 3]);
+  ctx.strokeRect(-dw / 2, -dh / 2, dw, dh);
+  ctx.setLineDash([]);
+  ctx.fillStyle = selected ? "rgba(180,210,255,0.95)" : "rgba(150,190,255,0.75)";
+  drawLabelInBox(ctx, "空气墙", dw, dh);
+  ctx.restore();
+}
+
+export function itemDrawCompare(a: EditorItem, b: EditorItem): number {  const d = drawLayerForItem(a, S.catalogByGuid) - drawLayerForItem(b, S.catalogByGuid);
   if (d !== 0) return d;
   const as = isSelected(a._editorKey) ? 1 : 0;
   const bs = isSelected(b._editorKey) ? 1 : 0;
@@ -53,8 +80,11 @@ export function itemDrawCompare(a: EditorItem, b: EditorItem): number {
 }
 
 export function drawItem(item: EditorItem, selected: boolean) {
-  if (isCollisionItem(item)) return;
-  const cat = S.catalogByGuid.get(item.prefabGuid);
+  if (isCollisionItem(item)) {
+    drawCollisionMarker(item, selected);
+    return;
+  }
+  const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
   if (isSurfaceItem(cat)) {
     drawSurfaceItem(item, selected);
     return;
@@ -157,7 +187,7 @@ export function drawItem(item: EditorItem, selected: boolean) {
 }
 
 export function drawSurfaceItem(item: EditorItem, selected: boolean) {
-  const cat = S.catalogByGuid.get(item.prefabGuid);
+  const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
   const fp = resolveFootprint(item);
   const rot = normalizeRot(item.localRotationY);
   const center = worldToCanvas(item._wx, item._wz);
@@ -340,7 +370,6 @@ export function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx
 
 export function hitTestAll(wx: number, wz: number, allLayers?: boolean): EditorItem[] {
   const sorted = S.items
-    .filter((it) => !isCollisionItem(it))
     .filter((it) => (allLayers ? true : isActiveItemLayer(it)))
     .filter((it) => categoryVisible(itemCategoryOf(it)))
     .sort((a, b) => itemDrawCompare(b, a));
@@ -386,7 +415,7 @@ export function isPlayerItem(item: EditorItem): boolean {
 }
 
 export function isFoodSpawnerItem(item: EditorItem): boolean {
-  return item.stubKind === "AttackingFoodSpawner" || prefabIdFromPath(item.prefabAssetPath) === "AttackingFoodSpawner";
+  return item.stubKind === "AttachingFoodSpawner" || prefabIdFromPath(item.prefabAssetPath) === "AttachingFoodSpawner";
 }
 
 export const PORTAL_COLORS = [  "#9ad7ff",

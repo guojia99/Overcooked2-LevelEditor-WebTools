@@ -34,6 +34,13 @@ public class LayoutEditorBridgeWindow : EditorWindow
         StopServer();
     }
 
+    [MenuItem("Layout Editor/清理损坏的预制件实例", false, 203)]
+    public static void CleanBrokenPrefabInstancesMenu()
+    {
+        var n = LayoutEditorSceneRepair.RemoveBrokenPrefabInstances();
+        Debug.Log("[LayoutEditor] 清理损坏的预制件实例：" + n + " 个");
+    }
+
     private static LayoutEditorHttpServer EnsureServer()
     {
         if (_server == null)
@@ -159,6 +166,8 @@ public class LayoutEditorBridgeWindow : EditorWindow
             LayoutEditorAudioExporter.ExportAudioForWeb();
         if (GUILayout.Button("导出 Bundle 全部内容", GUILayout.Height(26)))
             LayoutEditorBundleDumper.Dump();
+        if (GUILayout.Button("导出全部素材图", GUILayout.Height(26)))
+            LayoutEditorImageExporter.Export();
     }
 }
 

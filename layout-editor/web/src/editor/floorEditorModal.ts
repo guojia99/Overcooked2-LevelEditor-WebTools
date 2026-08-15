@@ -26,6 +26,7 @@ import {
 import {
   themedFloorPrefabs,
   isThemedFloor,
+  isAirFloor,
   finalizeFloor,
   snapRaftCenterToGrid,
   floorMatSummary
@@ -50,9 +51,10 @@ export function openFloorEditorModal(f: EditorFloor) {
   const areaCells = f._wCells * f._dCells;
   const isRaft = f.surfaceKind === "raft";
   const isThemed = isThemedFloor(f);
-  const isImage = !isThemed && f.surfaceKind === "solid" && (!!f.imageTexturePath || !!f.imageMode);
-  const isTinted = !isThemed && f.surfaceKind === "solid" && !!f.tintEnabled && !isImage;
-  const isPlainSolid = !isThemed && f.surfaceKind === "solid" && !f.tintEnabled && !isImage;
+  const isAir = isAirFloor(f);
+  const isImage = !isAir && !isThemed && f.surfaceKind === "solid" && (!!f.imageTexturePath || !!f.imageMode);
+  const isTinted = !isAir && !isThemed && f.surfaceKind === "solid" && !!f.tintEnabled && !isImage;
+  const isPlainSolid = !isAir && !isThemed && f.surfaceKind === "solid" && !f.tintEnabled && !isImage;
 
   const matRows = FLOOR_MATERIAL_GROUPS.map((g) => {
     const groupMats = S.floorMaterials.filter((m) => floorMaterialGroup(m.id) === g.key);
@@ -117,7 +119,9 @@ export function openFloorEditorModal(f: EditorFloor) {
      </div>
      <p class="modal-hint">修改宽高后铺开/平铺会自动重算 · 镜像已在 Unity 端修正 · 写回后生效</p>`;
 
-  const materialBlock = isThemed
+  const materialBlock = isAir
+    ? `<p class="modal-hint">空气地板没有可见地板，只生成可行走的 Col_AirFloor 碰撞盒（Ground 层），无需材质。</p>`
+    : isThemed
     ? `<p class="modal-hint">当前为主题地板：写回时整块区域生成一个拉伸的 prefab 实例，可在下方改选；切回其它类型请用上方「地板类型」。</p>${themedBlock}`
     : isPlainSolid
       ? `<div class="mat-pick-title">切换材质（实心地板）</div>
@@ -128,8 +132,8 @@ export function openFloorEditorModal(f: EditorFloor) {
           ? colorBlock
           : `<p class="modal-hint">木筏地板由写回时按尺寸铺满真实木筏拼块生成，无需材质。</p>`;
 
-  const meshTag = f.meshType === "plane" ? "（Plane）" : f.meshType === "quad" ? "（Quad）" : "";
-  const typeLabel = isRaft ? "木筏地板" : isThemed ? "主题地板" : isImage ? "图片地板" : isTinted ? "染色地板" : "实心地板";
+  const meshTag = isAir ? "" : f.meshType === "plane" ? "（Plane）" : f.meshType === "quad" ? "（Quad）" : "";
+  const typeLabel = isAir ? "空气地板" : isRaft ? "木筏地板" : isThemed ? "主题地板" : isImage ? "图片地板" : isTinted ? "染色地板" : "实心地板";
   const body = `
     <div class="fm-summary fm-inline">
       <span><b>类型</b> ${typeLabel}${meshTag}</span>
@@ -151,6 +155,7 @@ export function openFloorEditorModal(f: EditorFloor) {
       <button type="button" class="mat-pick${isImage ? " active" : ""}" data-kind="image"><span class="mat-id">🖼️ 图片地板</span><span class="mat-sub">实心 Plane + 上传图片（平铺/铺开）</span></button>
       <button type="button" class="mat-pick${isRaft ? " active" : ""}" data-kind="raft"><span class="mat-id">🪵 木筏地板</span><span class="mat-sub">写回时按尺寸铺满真实木筏拼块</span></button>
       <button type="button" class="mat-pick${isThemed ? " active" : ""}" data-kind="themed"><span class="mat-id">🧩 主题地板</span><span class="mat-sub">整块区域 = 一个拉伸 prefab（地毯/冰/雪…）</span></button>
+      <button type="button" class="mat-pick${isAir ? " active" : ""}" data-kind="air"><span class="mat-id">💨 空气地板</span><span class="mat-sub">仅可行走碰撞盒，无可见地板</span></button>
     </div>
     ${materialBlock}
     <p class="modal-hint">提示：拖四角缩放 · 宽高输入即时生效 · 左键拖动移动 · Esc 关闭</p>
@@ -204,6 +209,8 @@ export function openFloorEditorModal(f: EditorFloor) {
     if (isPlainSolid) return; // already solid
     pushHistory();
     f.surfaceKind = "solid";
+    f.airFloor = false;
+    if (f.parentPath === "Design/Collision") f.parentPath = "Art/Ground";
     f.tintEnabled = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
@@ -219,6 +226,8 @@ export function openFloorEditorModal(f: EditorFloor) {
     if (isTinted) return; // already tinted
     pushHistory();
     f.surfaceKind = "solid";
+    f.airFloor = false;
+    if (f.parentPath === "Design/Collision") f.parentPath = "Art/Ground";
     f.tintEnabled = true;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
@@ -235,6 +244,8 @@ export function openFloorEditorModal(f: EditorFloor) {
     if (isImage) return; // already image
     pushHistory();
     f.surfaceKind = "solid";
+    f.airFloor = false;
+    if (f.parentPath === "Design/Collision") f.parentPath = "Art/Ground";
     f.tintEnabled = false;
     f.prefabGuid = undefined;
     f.prefabAssetPath = undefined;
@@ -248,6 +259,7 @@ export function openFloorEditorModal(f: EditorFloor) {
     if (isRaft) return; // already raft
     pushHistory();
     f.surfaceKind = "raft";
+    f.airFloor = false;
     f.tintEnabled = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
@@ -272,6 +284,7 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.prefabAssetPath = cat.assetPath;
     f.surfaceKind = cat.surfaceKind ?? "solid";
     f.displayName = cat.id;
+    f.airFloor = false;
     f.tintEnabled = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
@@ -279,6 +292,30 @@ export function openFloorEditorModal(f: EditorFloor) {
     finalizeFloor(f);
     draw();
     setStatus(`已设为主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}（写回时生成单个缩放实例，可 Ctrl+Z 撤回）`);
+    openFloorEditorModal(f);
+  });
+  document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="air"]')?.addEventListener("click", () => {
+    if (isAir) return; // already air
+    pushHistory();
+    f.airFloor = true;
+    f.surfaceKind = "solid";
+    f.tintEnabled = false;
+    f.tintColor = undefined;
+    f.imageTexturePath = undefined;
+    f.imageMode = undefined;
+    f.imageRotation = undefined;
+    f.prefabGuid = undefined;
+    f.prefabAssetPath = undefined;
+    f.materialGuid = undefined;
+    f.materialAssetPath = undefined;
+    f.materialName = undefined;
+    f.displayName = "AirFloor";
+    f.meshType = "plane";
+    f.meshFileId = 0;
+    f.parentPath = "Design/Collision";
+    finalizeFloor(f);
+    draw();
+    setStatus("已设为空气地板（仅可行走，无可见地板，写回后生效）");
     openFloorEditorModal(f);
   });
   // 主题地板: pick a themed prefab → whole rect tiles it on write-back.
@@ -292,6 +329,7 @@ export function openFloorEditorModal(f: EditorFloor) {
       f.prefabAssetPath = cat.assetPath;
       f.surfaceKind = cat.surfaceKind ?? "solid";
       f.displayName = cat.id;
+      f.airFloor = false;
       f.tintEnabled = false;
       f.imageTexturePath = undefined;
       f.imageMode = undefined;

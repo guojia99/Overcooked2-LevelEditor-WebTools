@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-12T06:45:35.278Z",
+  "generatedAt": "2026-08-14T16:23:54.412Z",
   "schemaVersion": 3,
-  "itemCount": 33,
+  "itemCount": 35,
   "cookingSteps": [
     {
       "guid": "3d9eb9842fed18948886db9630423451",
@@ -144,6 +144,16 @@
       "group": "core"
     },
     {
+      "guid": "84d3943ee842f41be63ed9087782b1bf",
+      "id": "HotPot",
+      "nameZh": "火锅台",
+      "nameEn": "Hot Pot",
+      "kind": "cooking",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/CookingSteps/HotPot.asset",
+      "bundleName": "bundle225",
+      "group": "web"
+    },
+    {
       "guid": "e059aea0615924c439c288cdaf588a06",
       "id": "KebabSkewer",
       "nameZh": "烤串签",
@@ -262,6 +272,16 @@
       "assetPath": "Assets/common02/food/CookingSteps/icons/PotIcon.asset",
       "bundleName": "bundle18",
       "group": "core"
+    },
+    {
+      "guid": "4b9e27f36c53882acc77e96387ffbe91",
+      "id": "RoastingTray",
+      "nameZh": "烤盘",
+      "nameEn": "Roasting Tray",
+      "kind": "cooking",
+      "assetPath": "Assets/Editor/LayoutEditor/Import/CookingSteps/RoastingTray.asset",
+      "bundleName": "bundle293",
+      "group": "web"
     },
     {
       "guid": "a322a3a12d71f7f4dbbb1c6388b8539d",
