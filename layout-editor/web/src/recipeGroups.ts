@@ -12,6 +12,8 @@ export interface CookingGroup {
   ingredients: string[];
   /** Extra step icons appended to this group (final pot after mixing, merged from the marker group). */
   extraSteps?: { step: string; utensils: string[] }[];
+  /** 食材级步骤角标：ingredientId → 步骤列表（如炒饭的米 → Pot），渲染在该食材图标右下角。 */
+  ingredientSteps?: Record<string, string[]>;
 }
 
 export interface RecipeLike {
@@ -22,12 +24,14 @@ export interface RecipeLike {
   /** Direct composition ids for custom recipes (sub-recipe ids and/or ingredient ids). */
   compositionIds?: string[];
   intermediate?: boolean;
+  /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪。 */
+  mixing?: boolean;
 }
 
 export interface IntermediateLike extends RecipeLike {}
 
 /** Mirrors STEP_UTENSILS in build-catalog.mjs / LayoutEditorRecipeKnowledge.cs. */
-const STEP_UTENSILS: Record<string, string[]> = {
+export const STEP_UTENSILS: Record<string, string[]> = {
   Pot: ["Cooker", "Pot"],
   FryingPan: ["Cooker", "FryPan"],
   DeepFatFryer: ["FryingStation", "FrierBasket"],
@@ -50,10 +54,16 @@ export function isCookStepLike(s: string | undefined): boolean {
   return !!s && COOK_STEPS.has(s);
 }
 
-/** Custom recipe "工序" grouping (mirrors the backend composition branch):
- *  the recipe has no overall cooking step (Composite/assembly), so its direct
- *  compositions are expanded — sub-recipes group under their own cooking step
- *  with their leaf ingredients, plain ingredients fall into the raw group.
+/** Custom recipe "工序" grouping (mirrors the backend composition branch).
+ *  Direct compositions are expanded — sub-recipes group under their own cooking
+ *  step with their leaf ingredients, plain ingredients fall into the cooking box.
+ *
+ *  Cases (hasOwnStep = 自身有烹饪步骤):
+ *  - 有自身步骤 + 已烹饪子菜谱（两阶段，如炒饭）：子菜谱步骤作该食材的角标
+ *    （煮米 → 米右下角 Pot 角标），普通食材并入同一框，自身步骤作主图标（煎锅）。
+ *  - 有自身步骤 + 仅搅拌子菜谱（面糊，如 CheesePrawn）：搅拌框 + 自身步骤标记（双图标）。
+ *  - 有自身步骤 + 全生食材组成（如 Fried2_Shrimp）：当前烹饪步骤包裹全部食材（单框）。
+ *  - 无自身烹饪步骤（Composite/组装型）：子菜谱独立成组在前，普通食材归生组。
  *  Composition order defines the group order. */
 export function deriveCompositionGroups(
   r: RecipeLike,
@@ -67,32 +77,82 @@ export function deriveCompositionGroups(
     if (x.id && !byId.has(x.id)) byId.set(x.id, x);
   }
 
-  const raw: string[] = [];
-  const steps: string[] = [];
-  const stepIngs = new Map<string, string[]>();
+  const finalStep = r.cookingStep ?? "";
+  const hasOwnStep = COOK_STEPS.has(finalStep);
+  // 普通食材（不是子菜谱 / 子菜谱无烹饪步骤的食材）
+  const plain: string[] = [];
+  // 每个子菜谱（按自身烹饪步骤）单独成组，互不合并：
+  // 例如「炸薯条+炸鱼排+蘑菇汤」套餐中，炸薯条与炸鱼排即使同为 DeepFatFryer 也分开显示。
+  // 子菜谱为 Mixed 类型（mixing）时即使无 cookingStep 也按 MixingBowl 成组（搅拌）。
+  const groups: CookingGroup[] = [];
+  const subGroups = new Map<string, CookingGroup>();
   for (const compId of compIds) {
     const sub = byId.get(compId);
     if (sub && (sub.ingredients ?? []).length > 0) {
-      const step = COOK_STEPS.has(sub.cookingStep ?? "") ? sub.cookingStep! : "";
-      if (!step) {
-        for (const ing of sub.ingredients!) raw.push(ing);
-        continue;
+      const step = COOK_STEPS.has(sub.cookingStep ?? "")
+        ? sub.cookingStep!
+        : sub.mixing
+          ? "MixingBowl"
+          : "";
+      if (step) {
+        // 同一子菜谱重复出现（数量叠加）时并入同一组；不同子菜谱即使步骤相同也分开。
+        const key = `${step}::${compId}`;
+        let g = subGroups.get(key);
+        if (!g) {
+          g = { step, utensils: STEP_UTENSILS[step] ?? [], ingredients: [] };
+          subGroups.set(key, g);
+          groups.push(g);
+        }
+        for (const ing of sub.ingredients!) g.ingredients.push(ing);
+      } else {
+        for (const ing of sub.ingredients!) plain.push(ing);
       }
-      const lst = stepIngs.get(step) ?? [];
-      for (const ing of sub.ingredients!) lst.push(ing);
-      stepIngs.set(step, lst);
-      if (!steps.includes(step)) steps.push(step);
     } else {
-      raw.push(compId);
+      plain.push(compId);
     }
   }
 
-  const groups: CookingGroup[] = [];
-  if (raw.length > 0) groups.push({ step: "", utensils: [], ingredients: raw });
-  for (const st of steps) {
-    groups.push({ step: st, utensils: STEP_UTENSILS[st] ?? [], ingredients: stepIngs.get(st)! });
+  const result: CookingGroup[] = [];
+  if (hasOwnStep) {
+    // 食材级步骤角标（如炒饭的米 → Pot 煮锅角标）
+    const badgeSteps: Record<string, string[]> = {};
+    // 主框食材：已烹饪子菜谱产物 + 普通食材
+    const mainIngs: string[] = [];
+    // 搅拌子菜谱保留为独立搅拌框（CheesePrawn）
+    const keepBoxes: CookingGroup[] = [];
+    for (const g of groups) {
+      if (g.step === "MixingBowl") {
+        keepBoxes.push(g);
+        continue;
+      }
+      // 已烹饪子菜谱（如煮米）：其步骤作该食材角标，食材并入主框
+      for (const ing of g.ingredients) {
+        mainIngs.push(ing);
+        (badgeSteps[ing] = badgeSteps[ing] ?? []).push(g.step);
+      }
+    }
+    for (const ing of plain) mainIngs.push(ing);
+
+    result.push(...keepBoxes);
+    if (mainIngs.length > 0) {
+      result.push({
+        step: finalStep,
+        utensils: STEP_UTENSILS[finalStep] ?? [],
+        ingredients: mainIngs,
+        ingredientSteps: Object.keys(badgeSteps).length ? badgeSteps : undefined,
+      });
+    } else if (keepBoxes.length > 0) {
+      // 只有搅拌子菜谱（如 CheesePrawn）：自身烹饪步骤作为标记组（并入同格双图标）
+      result.push({ step: finalStep, utensils: STEP_UTENSILS[finalStep] ?? [], ingredients: [] });
+    } else {
+      // 组成全是生食材：当前烹饪步骤包裹全部（如 Fried2_Shrimp 鱼虾同框）
+      result.push({ step: finalStep, utensils: STEP_UTENSILS[finalStep] ?? [], ingredients: plain });
+    }
+  } else {
+    if (plain.length > 0) result.push({ step: "", utensils: [], ingredients: plain });
+    result.push(...groups);
   }
-  return groups;
+  return result;
 }
 
 /** Fallback derivation of ingredient cooking groups (mirrors the backend algorithm). */
@@ -108,6 +168,24 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   if (r.intermediate) {
     const step = isCookStep(finalStep) ? finalStep : "";
     return [{ step, utensils: STEP_UTENSILS[step] ?? [], ingredients }];
+  }
+
+  // Mixed 类型自定义菜谱：
+  //  - 若自身烹饪步骤本身就是混合步骤（Blender / Mixer / MixingBowl），
+  //    该步骤即搅拌本身 → 只显示该混合图标（单图标，如冰蓝莓沙 = 搅拌机）。
+  //  - 否则先搅拌（MixingBowl）再烹饪（最终步骤标记，并入同格双图标），
+  //    例：面团+肉搅拌 → MixingBowl 组 + 烹饪步骤标记组。
+  if (r.mixing) {
+    if (finalStep === "Blender" || finalStep === "Mixer" || finalStep === "MixingBowl") {
+      return [{ step: finalStep, utensils: STEP_UTENSILS[finalStep] ?? [], ingredients: [...ingredients] }];
+    }
+    const groups: CookingGroup[] = [
+      { step: "MixingBowl", utensils: STEP_UTENSILS["MixingBowl"] ?? [], ingredients: [...ingredients] },
+    ];
+    if (isCookStep(finalStep)) {
+      groups.push({ step: finalStep, utensils: STEP_UTENSILS[finalStep] ?? [], ingredients: [] });
+    }
+    return groups;
   }
 
   const prep = new Map<string, string>(); // ingredient -> step ("" = raw)
@@ -131,6 +209,23 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
     for (const cand of candidates) {
       for (const ing of cand.ingredients ?? []) {
         if (!prep.has(ing)) prep.set(ing, cand.cookingStep!);
+      }
+    }
+  }
+
+  // 食材本身是半成品（如月饼引用搅拌面糊 dlc13_mixedflouregg*）：
+  // 按半成品自身的烹饪步骤成组；最终烹饪步骤（烤箱）作为标记组追加。
+  let interBranch = false;
+  {
+    const byId = new Map<string, RecipeLike>();
+    for (const x of allRecipes) {
+      if (x.id && !byId.has(x.id)) byId.set(x.id, x);
+    }
+    for (const ing of ingredients) {
+      const sub = byId.get(ing);
+      if (sub && sub.intermediate && isCookStep(sub.cookingStep)) {
+        if (!prep.has(ing)) prep.set(ing, sub.cookingStep!);
+        interBranch = true;
       }
     }
   }
@@ -199,7 +294,7 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   }
 
   const ordered = order.filter((s) => s !== "");
-  if (flourBranch && isCookStep(finalStep) && !groupMap.has(finalStep) && order.length > 0) {
+  if ((flourBranch || interBranch) && isCookStep(finalStep) && !groupMap.has(finalStep) && order.length > 0) {
     ordered.push(finalStep);
   }
 
@@ -267,22 +362,44 @@ export function mergeFinalMarkers(groups: CookingGroup[]): CookingGroup[] {
 
 /** Backend-computed cookingGroups ride along fetchRecipeCatalog, but the entry-level id
  *  normalizations of api.ts (sushi Steamer→Pot, pizza DLC05_Dough→DoughSO) are not applied
- *  to them — apply the same tweaks here and merge groups that collapse to one step. */
+ *  to them — apply the same tweaks here and merge groups that collapse to one step.
+ *  后端 ingredientSteps 是 pair 数组（JsonUtility 不支持 Dictionary）→ 归一化为 Record。 */
 export function normalizeCookingGroups(r: RecipeLike, groups: CookingGroup[]): CookingGroup[] {
   if (!groups || groups.length === 0) return groups ?? [];
   const stepMap = new Map<string, string>();
   if (r.type === "sushi") stepMap.set("Steamer", "Pot");
   const ingMap = new Map<string, string>();
   if (r.type === "pizza" && r.id !== "Pizza_Olives") ingMap.set("DLC05_Dough", "DoughSO");
-  if (stepMap.size === 0 && ingMap.size === 0) return groups;
+  const mapIng = (i: string): string => ingMap.get(i) ?? i;
+  const mapSteps = (raw: unknown): Record<string, string[]> | undefined => {
+    if (raw == null) return undefined;
+    const out: Record<string, string[]> = {};
+    if (Array.isArray(raw)) {
+      // pair 数组：[{ ingredient, steps: [] }]
+      for (const pair of raw as { ingredient?: string; steps?: string[] }[]) {
+        if (!pair || pair.ingredient == null) continue;
+        out[mapIng(pair.ingredient)] = (pair.steps ?? []).map((s) => stepMap.get(s) ?? s);
+      }
+    } else {
+      // Record<ingredient, step[]>
+      for (const [k, v] of Object.entries(raw as Record<string, string[]>)) {
+        out[mapIng(k)] = (v ?? []).map((s) => stepMap.get(s) ?? s);
+      }
+    }
+    return Object.keys(out).length ? out : undefined;
+  };
+  if (stepMap.size === 0 && ingMap.size === 0) {
+    // 无 id 归一化时也需把后端 pair 数组 ingredientSteps 转成 Record
+    return groups.map((g) => (g.ingredientSteps ? { ...g, ingredientSteps: mapSteps(g.ingredientSteps) } : g));
+  }
 
   const out: CookingGroup[] = [];
   for (const g of groups) {
     const step = stepMap.get(g.step) ?? g.step;
-    const ings = g.ingredients.map((i) => ingMap.get(i) ?? i);
+    const ings = g.ingredients.map(mapIng);
     const prev = out.find((x) => x.step === step);
     if (prev) prev.ingredients = prev.ingredients.concat(ings);
-    else out.push({ step, utensils: g.utensils, ingredients: ings });
+    else out.push({ step, utensils: g.utensils, ingredients: ings, ingredientSteps: mapSteps(g.ingredientSteps) });
   }
   return out;
 }

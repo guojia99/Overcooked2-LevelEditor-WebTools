@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 /**
- * import-dlc-content.mjs — 一次性生成游戏 DLC 内容源库（供编辑器扫描 + 按需拷贝打包）。
+ * import-dlc-content.mjs — 一次性生成游戏 DLC 内容源库（Web 内置，直接打包 common_w bundle）。
  *
  * 输入：dump_bundle/manifest.json（游戏 AssetBundle 导出清单，bundle + container 精确查表）
- * 输出（全部在插件目录内，遵守项目铁律）：
- *   Assets/Editor/LayoutEditor/Import/Ingredients/dlcXX/<id>.asset      PseudoPrefabSO 食材/中间产物
- *   Assets/Editor/LayoutEditor/Import/Recipes/dlcXX/<id>.asset          PseudoPrefabSORecipe 菜谱
- *   Assets/Editor/LayoutEditor/Import/CookingSteps/<id>.asset           烹饪步骤（HotPot/RoastingTray）
- *   Assets/Editor/LayoutEditor/Import/prefabs/{category}/<id>.prefab    道具占位 prefab
- *   Assets/Editor/LayoutEditor/Import/pseudo_prefab_so/{category}/<id>.asset  道具 PseudoPrefabSO
+ * 输出（Assets/common_w/，由 Assets/Editor/LayoutEditor/Import 迁移而来）：
+ *   Assets/common_w/Ingredients/dlcXX/<id>.asset          PseudoPrefabSO 食材/中间产物
+ *   Assets/common_w/Recipes/dlcXX/<id>.asset              PseudoPrefabSORecipe 菜谱
+ *   Assets/common_w/CookingSteps/<id>.asset               烹饪步骤（HotPot/RoastingTray）
+ *   Assets/common_w/prefabs/{category}/<id>.prefab        道具占位 prefab
+ *   Assets/common_w/pseudo_prefab_so/{category}/<id>.asset 道具 PseudoPrefabSO
  * 每个 .asset/.prefab 同时生成确定性 .meta（md5(id) 派生，重复运行内容不变）。
  *
- * 用法：node layout-editor/scripts/import-dlc-content.mjs [--dry]
+ * 用法：
+ *   node layout-editor/scripts/import-dlc-content.mjs [--dry]           全量生成
+ *   node layout-editor/scripts/import-dlc-content.mjs --props-only      只补道具（已存在的跳过）
  */
 import fs from "fs";
 import path from "path";
@@ -21,10 +23,11 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 const MANIFEST = path.join(repoRoot, "dump_bundle", "manifest.json");
-const OUT_ROOT = path.join(repoRoot, "Assets/Editor/LayoutEditor/Import");
+const OUT_ROOT = path.join(repoRoot, "Assets/common_w");
 const ING_JSON = path.join(repoRoot, "layout-editor/web/public/ingredients.json");
 
 const DRY = process.argv.includes("--dry");
+const PROPS_ONLY = process.argv.includes("--props-only");
 
 // ---------------------------------------------------------------------------
 // Script guids (same as common assets)
@@ -49,11 +52,13 @@ for (const o of manifest.objects) {
   if (!containerIndex.has(c)) containerIndex.set(c, o);
 }
 
-/** Find a GameObject/prefab container whose path ends with `/name.prefab` (exact basename). */
-function prefabContainer(name, { exact = true } = {}) {
+/** Find a GameObject/prefab container whose path ends with `/name.prefab` (exact basename).
+ *  dlc: 可选，限定容器路径必须包含 `/dlcXX/`（处理跨 DLC 同名 prefab）。 */
+function prefabContainer(name, { exact = true, dlc = null } = {}) {
   const target = name.toLowerCase();
   for (const [c, o] of containerIndex) {
     if (!c.endsWith(".prefab")) continue;
+    if (dlc && !c.includes(`/dlc${dlc}/`)) continue;
     const base = c.slice(c.lastIndexOf("/") + 1, -".prefab".length);
     if (exact ? base === target : base.startsWith(target)) return o;
   }
@@ -244,7 +249,7 @@ const INGREDIENTS = {
 const INGREDIENT_PREFAB_FIX = {
   "corn": "dlc11_corn",
   "vanilla": "dlc11_vanilla",
-  "dlc08_bun": "hotdogbun",
+  "dlc08_bun": "dlc08_choppedbun",
   "dlc08_cheesesticks": "dlc08_cheese_sticks",
 };
 
@@ -329,12 +334,66 @@ const PROPS = [
   ["dlc08_drink_machine", "counters"], ["dlc08_condiment_dispenser", "counters"], ["dlc08_oven_02", "counters"],
   ["dlc08_utensil_fire_extinguisher", "utensils"], ["dlc08_utensil_frying_pan", "utensils"], ["dlc08_utensil_mixer_01", "utensils"], ["dlc08_utensil_pot_01", "utensils"], ["dlc08_frierbasket", "utensils"], ["dlc08_equipment_tray", "utensils"],
   ["dlc08_cleantraystack", "utensils"], ["dlc08_dirtytray", "utensils"], ["dlc08_dirtytraystack", "utensils"], ["dlc08_dispenser_crate_circus", "art/dlc08_circus"],
-  ["dlc08_workstation_mixer", "counters"], ["dlc08_workstation_tray_return", "counters"],
+  ["dlc08_workstation_mixer", "counters"],
+  ["dlc08_workstation_tray_return", "counters"],
   // ---- dlc13 巧克力节 ----
   ["dlc13_workstation_cooker_01", "counters"], ["dlc13_lotuspressureswitch_large", "mechanisms"], ["dlc13_lotuspressureswitch_small", "mechanisms"],
   ["dlc13_utensil_mixer_01", "utensils"], ["dlc13_workstation_bin_01", "counters"], ["dlc13_workstation_mixer_01", "counters"],
   ["dlc13_workstation_plate_return", "counters"], ["dlc13_workstation_plate_station", "counters"], ["dlc13_workstation_sink_01_wood", "counters"],
   ["dlc13_dispenser_crate_camping_new", "art/dlc13"],
+];
+
+/**
+ * 第二批补全道具（2026-08，自新 dump_bundle 推测定位；入库但白名单默认不放开）。
+ * 格式：[id, category, dlc?] —— dlc 用于限定容器路径（跨 DLC/本体同名 prefab）。
+ * 核心本体功能件（锅/搅拌机/烧烤架/篝火等）common01/02 已有，此处只收 DLC 变体与独有件。
+ */
+const PROPS_2 = [
+  // ---- dlc07 部落：断头台（3×1 切菜台）+ 开关/传送门类机制 ----
+  ["workstation_guillotine_01", "counters", "07"],
+  ["toggleswitch", "mechanisms", "07"],
+  ["workstation_service_hatch", "counters", "07"],
+  ["gate", "mechanisms", "07"],
+  ["service_window", "counters", "07"],
+  ["m_dlc07_drawbridge_01", "mechanisms", "07"],
+  ["m_dlc07_drawbridge_02", "mechanisms", "07"],
+  ["utensil_fire_extinguisher_02", "utensils", "07"],
+  // ---- dlc08 马戏团：大炮 + 地面按钮（果汁机/酱料机 1:1 联动开关）----
+  ["dlc08_cannon", "mechanisms", "08"],
+  ["p_dlc08_cannon_base_01", "art/dlc08_circus", "08"],
+  ["p_dlc08_button_drinks", "mechanisms", "08"],
+  ["p_dlc08_button_condiments", "mechanisms", "08"],
+  ["p_dlc08_button_cannon", "mechanisms", "08"],
+  ["p_dlc08_button_generic", "mechanisms", "08"],
+  ["p_dlc08_servicehatch_01", "counters", "08"],
+  // 洗餐盘水槽（bundle359，餐盘 burger/mealdeal 关卡的专用洗涤槽，3 款皮肤）
+  ["dlc08_workstation_01_tray_sink_circus", "counters", "08"],
+  ["dlc08_workstation_02_tray_sink_circus", "counters", "08"],
+  ["dlc08_workstation_03_tray_sink_circus", "counters", "08"],
+  // ---- dlc09 仙境/赛季：大炮换皮 ----
+  ["dlc09_cannon", "mechanisms", "09"],
+  ["p_dlc09_button_cannon", "mechanisms", "09"],
+  // ---- dlc02 海滩：烧烤/搅拌机工作站 + 工具 + 玻璃杯系列 ----
+  ["workstation_barbeque_01", "counters", "02"],
+  ["workstation_blender_01", "counters", "02"],
+  ["workstation_glass_return_01", "counters", "02"],
+  ["utensil_blender_01", "utensils", "02"],
+  ["utensil_bellows_01", "utensils", "02"],
+  ["utensil_water_gun_01", "utensils", "02"],
+  ["utensil_skewer_01", "utensils", "02"],
+  ["dlc02_utensil_frying_pan", "utensils", "02"],
+  ["dlc02_utensil_mixer", "utensils", "02"],
+  ["cleanglassstack", "utensils", "02"],
+  ["dirtyglassstack", "utensils", "02"],
+  ["equipment_glass_01", "utensils", "02"],
+  // ---- dlc05 露营：篝火套件 ----
+  ["workstation_campfire_01", "counters", "05"],
+  ["workstation_mixer_02", "counters", "05"],
+  ["dispenser_crate_firewood", "art/dlc05", "05"],
+  ["utensil_griddlepan", "utensils", "05"],
+  ["utensil_toasting_fork_01", "utensils", "05"],
+  ["dlc05_utensil_frying_pan", "utensils", "05"],
+  ["dlc05_utensil_mixer", "utensils", "05"],
 ];
 
 // ---------------------------------------------------------------------------
@@ -470,17 +529,23 @@ function emitCookingSteps() {
 // ---------------------------------------------------------------------------
 function emitProps() {
   let count = 0;
-  for (const [id, category] of PROPS) {
-    const o = prefabContainer(id);
+  const all = [
+    ...PROPS.map(([id, category]) => ({ id, category, dlc: null })),
+    ...PROPS_2.map(([id, category, dlc]) => ({ id, category, dlc })),
+  ];
+  for (const { id, category, dlc } of all) {
+    const prefabFile = path.join(OUT_ROOT, "prefabs", category.startsWith("art/") ? category : category, `${id}.prefab`);
+    if (PROPS_ONLY && fs.existsSync(prefabFile)) continue; // --props-only：只补新增
+    const o = prefabContainer(id, { dlc });
     if (!o) {
       // tolerate dump names like "workstation_mixer_01 (1)"
-      const loose = prefabContainer(id, { exact: false });
+      const loose = prefabContainer(id, { exact: false, dlc });
       if (!loose) {
         console.warn(`  !! 找不到道具容器: ${id}`);
         continue;
       }
     }
-    const found = o ?? prefabContainer(id, { exact: false });
+    const found = o ?? prefabContainer(id, { exact: false, dlc });
     const assetPath = "Assets/" + found.container.replace(/^assets\//, "");
     const isDecor = category.startsWith("art/");
     const catDir = isDecor ? category.replace("art/", "art/") : category;
@@ -493,9 +558,9 @@ function emitProps() {
     write(pseudoFile, pseudoPrefabAsset(id, id, found.bundle, assetPath));
     write(pseudoFile + ".meta", metaYaml(pseudoGuid));
 
-    const prefabFile = path.join(prefabDir, `${id}.prefab`);
     write(prefabFile, propPrefab(id, pseudoGuid, isDecor));
     write(prefabFile + ".meta", metaYaml(guid("prefab", id)));
+    console.log(`  + ${id} -> ${found.bundle} ${assetPath}`);
     count++;
   }
   console.log(`道具生成: ${count}`);
@@ -512,9 +577,13 @@ function camelize(s) {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-console.log(`生成源库 → ${path.relative(repoRoot, OUT_ROOT)}${DRY ? "（dry-run）" : ""}`);
-emitIngredients();
-emitRecipes();
-emitCookingSteps();
-emitProps();
+console.log(`生成源库 → ${path.relative(repoRoot, OUT_ROOT)}${DRY ? "（dry-run）" : ""}${PROPS_ONLY ? "（仅道具）" : ""}`);
+if (PROPS_ONLY) {
+  emitProps();
+} else {
+  emitIngredients();
+  emitRecipes();
+  emitCookingSteps();
+  emitProps();
+}
 console.log(`完成，共写出 ${written} 个文件${DRY ? "（未落盘）" : ""}。`);

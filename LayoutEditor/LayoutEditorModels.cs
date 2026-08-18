@@ -126,11 +126,131 @@ public class LayoutSwitchStubDto
     public string inactiveMaterialGuid;
 }
 
+/// <summary>开关 → 目标对象的联动（断头台/果汁机/酱料机的按钮触发）。
+///  id 约定同 Teleportal："u:<instanceID>"（既有场景对象）或文档 instanceId（"new:..."）。</summary>
+/// <summary>启动环境一次性自检（/api/env/status）：前端启动时拉取一次，
+///  据此判断各依赖是否可用（common_w / 音频导出 / 游戏 bundle / dump 清单等）。</summary>
+[Serializable]
+public class EnvStatusDto
+{
+    public bool ok;
+    public int port;
+    /** web 静态页面（dist）就绪。 */
+    public bool staticDist;
+    public int schemaVersion;
+    /** recipe-knowledge 已加载。 */
+    public bool knowledgeLoaded;
+    /** 手册词典已加载。 */
+    public bool dictionaryLoaded;
+    /** common_w 源库：目录存在 = 已装配（内容按白名单放开）；含实测 id 清单。 */
+    public CommonWStatusDto commonW;
+    /** 音频导出清单（audio-exports/audio-exports.json）存在。 */
+    public bool audioExports;
+    /** 已导出的 ogg 数量（无导出时为 0）。 */
+    public int audioExportClips;
+    /** 游戏 bundle 目录（StreamingAssets/Windows）存在。 */
+    public bool gameBundles;
+    /** 游戏 bundle 数量（不含 .meta）。 */
+    public int gameBundleCount;
+    /** dump_bundle/manifest.json（bundle 分析依赖）存在。 */
+    public bool dumpManifest;
+}
+
+/// <summary>common_w 源库状态（/api/env/status 的 commonW 段）：是否存在 + 版本 + 各内容 id 清单。
+///  约定：只要用户装配了 common_w（目录存在），其全部菜谱/食材/道具即可用；
+///  id 清单从用户实际的 common_w 目录扫描，条目被 common2/commonN 更新移除时前端据此容忍。</summary>
+[Serializable]
+public class CommonWStatusDto
+{
+    public bool exists;
+    public string version;
+    public string[] recipes;
+    public string[] ingredients;
+    public string[] prefabs;
+    public string[] cookingSteps;
+}
+
+[Serializable]
+public class LayoutSwitchLinkDto
+{
+    /** 开关对象（PseudoPrefabSwitchStub 所在对象；缺失时导入端自动补组件）。 */
+    public string switchId;
+    /** 被触发的目标对象（如断头台/饮料机/酱料机）。 */
+    public string targetId;
+    /** 触发消息名（TriggerOnObject.m_triggerToFire；空时导入端默认 "Switch"）。 */
+    public string trigger;
+}
+
 [Serializable]
 public class LayoutPressureSwitchStubDto
 {
     public string occupiedMaterialGuid;
     public string unoccupiedMaterialGuid;
+}
+
+/// <summary>按钮/压力开关 → 移动组联动（ButtonLinkBakery 烘焙为 Design/Button Logic
+///  下的隐藏 Animator 逻辑物体）。
+///  顺序触发：每次按压按 groupNames 顺序启动下一组（循环）；
+///  lockUntilFinished：组运行期间忽略按压（组完成后才接受下一次）；
+///  共轭对：两条 link 共享 pairId（一对一，各方最多 2 组），按下时本方各组同时启动，
+///  全部完成后对方按钮抬起、本方按下（反之亦然）。</summary>
+[Serializable]
+public class LayoutButtonLinkDto
+{
+    public string id;
+    /** 触发源物品 id（Switch / PressureSwitch；"u:<instanceID>" 或 "new:..."）。 */
+    public string sourceId;
+    /** 按顺序触发的移动组 displayName 列表（displayName 为跨保存稳定键）。 */
+    public string[] groupNames;
+    /** true = 组运行期间忽略按压（完成后才接受下一次按压）。 */
+    public bool lockUntilFinished = true;
+    /** 共轭对 id（两条 link 共享；空 = 非共轭）。 */
+    public string pairId;
+    /** 共轭对中本按钮初始为抬起（可按）状态。 */
+    public bool pairStartsUp;
+}
+
+[Serializable]
+public class LayoutButtonLinkDataDto
+{
+    public LayoutButtonLinkDto[] links;
+}
+
+/// <summary>按钮 ↔ 事件组联动（ButtonEventBakery 烘焙为 Design/Button Logic 下的
+///  隐藏 Animator 逻辑物体）。
+///  顺序广播：每次按压向下一事件组广播全部事件（最后一组后循环回第一组）；
+///  组内全部事件完成（doneTrigger，未配置 = 立即完成）后才接受下一次按压。</summary>
+[Serializable]
+public class LayoutButtonEventDto
+{
+    /** 目标物品 id（"u:<instanceID>" 或 "new:..."）。 */
+    public string targetId;
+    /** 广播给目标的触发消息（如 switch_dlc08_drink_machine_1）。 */
+    public string trigger;
+    /** 目标完成事件时广播的触发消息（空 = 该事件立即视为完成）。 */
+    public string doneTrigger;
+}
+
+[Serializable]
+public class LayoutButtonEventGroupDto
+{
+    public string id;
+    public LayoutButtonEventDto[] events;
+}
+
+[Serializable]
+public class LayoutButtonEventLinkDto
+{
+    public string id;
+    /** 触发源物品 id（Switch / PressureSwitch）。 */
+    public string sourceId;
+    public LayoutButtonEventGroupDto[] groups;
+}
+
+[Serializable]
+public class LayoutButtonEventDataDto
+{
+    public LayoutButtonEventLinkDto[] links;
 }
 
 [Serializable]
@@ -345,6 +465,51 @@ public class LayoutDocumentDto
     public DeathInfoDto deathInfo;
     /** Movable object movement control (decor + items layer). */
     public MoveControlDataDto moveControls;
+    /** 开关联动（按钮 → 断头台/饮料机/酱料机等目标）。 */
+    public LayoutSwitchLinkDto[] switchLinks;
+    /** 按钮/压力开关 ↔ 移动组联动（仅全量写回携带）。 */
+    public LayoutButtonLinkDataDto buttonLinks;
+    /** 按钮 ↔ 事件组联动（仅全量写回携带）。 */
+    public LayoutButtonEventDataDto buttonEvents;
+    /** 游戏相机（背景色 / FOV；仅全量写回携带）。 */
+    public CameraInfoDto cameraInfo;
+    /** Art/Lights 下非 prefab 灯光（颜色/强度/范围/启用；仅全量写回携带）。 */
+    public LightInfoDto[] lights;
+}
+
+/** 游戏相机信息：背景色与 FOV 可编辑，transform 为只读快照供前端绘制视野。 */
+[Serializable]
+public class CameraInfoDto
+{
+    /** "#rrggbb" — 运行时相机 clear 色（空洞主题无背景 prefab，即游戏背景色）。 */
+    public string backgroundColor;
+    public float fieldOfView;
+    /** 只读：主相机世界位置与欧拉角快照（度）。 */
+    public LayoutVector3 position;
+    public float pitch;
+    public float yaw;
+    public float roll;
+    public float nearClip;
+    public float farClip;
+}
+
+/** Art/Lights 子树中非 prefab instance 的灯光（prefab 灯作为普通 item 往返，不在此列）。 */
+[Serializable]
+public class LightInfoDto
+{
+    /** 场景层级路径（如 "Art/Lights/day"），写回时按路径匹配。 */
+    public string hierarchyPath;
+    public string displayName;
+    /** LightType 枚举值（0=Spot 1=Directional 2=Point 3=Area）。 */
+    public int lightType;
+    /** "#rrggbb" */
+    public string color;
+    public float intensity;
+    public float range;
+    public float spotAngle;
+    public bool enabled;
+    /** 只读：世界欧拉角快照（度）。 */
+    public LayoutVector3 eulerAngles;
 }
 
 /** A floor/background surface object in the scene. */
@@ -521,6 +686,8 @@ public class RecipeEntryDto
     public string type;
     /** True for score-0 half-finished products (batter, fried parts, optional pizza parts) — not orderable. */
     public bool intermediate;
+    /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（卡片显示双步骤）。 */
+    public bool mixing;
     /** Ingredient cooking groups for the recipe-list UI (recipe book grouping rules):
      *  raw group first (step = ""), then per-step groups, optional final-step marker last. */
     public RecipeCookingGroupDto[] cookingGroups;
@@ -538,6 +705,18 @@ public class RecipeCookingGroupDto
     public string[] utensils;
     /** Ingredient asset ids in this group. */
     public string[] ingredients;
+    /** 食材级步骤角标（JsonUtility 不支持 Dictionary，用 pair 数组）：
+     *  如炒饭的米 → Pot 煮锅角标。 */
+    public RecipeIngredientStepDto[] ingredientSteps;
+}
+
+[Serializable]
+public class RecipeIngredientStepDto
+{
+    /** 食材 asset id。 */
+    public string ingredient;
+    /** 该食材的步骤角标（如 "Pot"）。 */
+    public string[] steps;
 }
 
 [Serializable]
@@ -585,12 +764,12 @@ public class LevelRecipesUpdateDto
     public string[] recipeGuids;
 }
 
-// ---------- Web 内置菜谱库（内置菜谱管理） ----------
+// ---------- Web 内置菜谱库（内置菜谱管理，已废弃：改为 common_w 直接引用 + 静态 JSON） ----------
 
 [Serializable]
 public class WebRecipeEntryDto
 {
-    /** Import 源库 guid（安装时用于定位源资产）。 */
+    /** 源库 guid（原 Import 源库；现 common_w 资产）。 */
     public string guid;
     public string id;
     public string nameZh;

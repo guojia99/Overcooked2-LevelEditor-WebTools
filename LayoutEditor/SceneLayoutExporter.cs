@@ -32,6 +32,12 @@ public static class SceneLayoutExporter
         LayoutEditorLog.Log("move control: export " + scene.name + " -> " +
             (moveControls != null ? moveControls.groups.Length : 0) + " group(s)");
 
+        // 按钮↔移动组联动也从场景重建（Design/Button Logic 下的 helper 接线）。
+        var buttonLinks = ButtonLinkBakery.ImportFromScene(scene, imported, items);
+
+        // 按钮↔事件组联动同样从场景重建（Design/Button Event Logic 下的 helper 接线）。
+        var buttonEvents = ButtonEventBakery.ImportFromScene(scene, items);
+
         var doc = new LayoutDocumentDto
         {
             sceneAssetPath = scene.path,
@@ -39,9 +45,155 @@ public static class SceneLayoutExporter
             floors = SceneFloorExporter.ExportFromScene().ToArray(),
             walkable = SceneWalkabilityReader.ReadWalkable().ToArray(),
             deathInfo = SceneWalkabilityReader.ReadDeathInfo(),
-            moveControls = moveControls
+            moveControls = moveControls,
+            switchLinks = CollectSwitchLinks(items).ToArray(),
+            buttonLinks = buttonLinks.Count > 0
+                ? new LayoutButtonLinkDataDto { links = buttonLinks.ToArray() }
+                : null,
+            buttonEvents = buttonEvents.Count > 0
+                ? new LayoutButtonEventDataDto { links = buttonEvents.ToArray() }
+                : null,
+            cameraInfo = CollectCameraInfo(),
+            lights = CollectLights().ToArray()
         };
         return doc;
+    }
+
+    /// <summary>导出游戏相机（背景色 / FOV + 只读 transform 快照）。
+    ///  优先取 tag=MainCamera 的相机，兜底第一个启用相机。</summary>
+    public static CameraInfoDto CollectCameraInfo()
+    {
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return null;
+
+        var cam = Camera.main;
+        if (cam == null)
+        {
+            foreach (var rootGo in scene.GetRootGameObjects())
+            {
+                cam = rootGo.GetComponentInChildren<Camera>();
+                if (cam != null)
+                    break;
+            }
+        }
+        if (cam == null)
+            return null;
+
+        var t = cam.transform;
+        var e = t.eulerAngles;
+        return new CameraInfoDto
+        {
+            backgroundColor = "#" + ColorUtility.ToHtmlStringRGB(cam.backgroundColor),
+            fieldOfView = cam.fieldOfView,
+            position = LayoutVector3.From(t.position),
+            pitch = e.x,
+            yaw = e.y,
+            roll = e.z,
+            nearClip = cam.nearClipPlane,
+            farClip = cam.farClipPlane
+        };
+    }
+
+    /// <summary>收集所有根物体下 "Lights" 子树中的非 prefab 灯光
+    ///  （通常为 Art/Lights/day；prefab 灯作为普通 item 往返，不在此列）。</summary>
+    public static List<LightInfoDto> CollectLights()
+    {
+        var lights = new List<LightInfoDto>();
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return lights;
+
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            for (int i = 0; i < rootGo.transform.childCount; i++)
+            {
+                var child = rootGo.transform.GetChild(i);
+                if (child.name != "Lights")
+                    continue;
+                CollectNonPrefabLights(child, lights);
+            }
+        }
+        return lights;
+    }
+
+    private static void CollectNonPrefabLights(Transform root, List<LightInfoDto> lights)
+    {
+        var stack = new Stack<Transform>();
+        stack.Push(root);
+
+        while (stack.Count > 0)
+        {
+            var t = stack.Pop();
+            for (int i = 0; i < t.childCount; i++)
+                stack.Push(t.GetChild(i));
+
+            var go = t.gameObject;
+            if ((go.hideFlags & HideFlags.HideAndDontSave) != 0)
+                continue;
+
+            // Prefab-instance lights (decoration_wall_light 1 …) ride as regular items.
+            if (PrefabUtility.GetPrefabType(go) != PrefabType.None)
+                continue;
+
+            // Temp-loaded bundle content under a PseudoPrefab placeholder moves with
+            // the placeholder and must not be exported as a scene light.
+            if (go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>() != null)
+                continue;
+
+            var light = go.GetComponent<Light>();
+            if (light == null)
+                continue;
+
+            lights.Add(new LightInfoDto
+            {
+                hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(t),
+                displayName = go.name,
+                lightType = (int)light.type,
+                color = "#" + ColorUtility.ToHtmlStringRGB(light.color),
+                intensity = light.intensity,
+                range = light.range,
+                spotAngle = light.spotAngle,
+                enabled = light.enabled,
+                eulerAngles = LayoutVector3.From(t.eulerAngles)
+            });
+        }
+    }
+
+    /// <summary>收集场景中所有 PseudoPrefabSwitchStub 的 objectToTrigger 联动，
+    ///  输出为文档级 switchLinks（断头台/饮料机/酱料机按钮触发）。</summary>
+    private static System.Collections.Generic.List<LayoutSwitchLinkDto> CollectSwitchLinks(
+        System.Collections.Generic.List<LayoutItemDto> items)
+    {
+        var links = new System.Collections.Generic.List<LayoutSwitchLinkDto>();
+        foreach (var item in items)
+        {
+            if (item == null || string.IsNullOrEmpty(item.instanceId))
+                continue;
+            if (!item.instanceId.StartsWith("u:", System.StringComparison.Ordinal))
+                continue;
+            int id;
+            if (!int.TryParse(item.instanceId.Substring(2), out id))
+                continue;
+            var go = EditorUtility.InstanceIDToObject(id) as GameObject;
+            if (go == null)
+                continue;
+            var sw = go.GetComponent<LevelEditorStub.PseudoPrefabSwitchStub>();
+            if (sw == null || sw.objectToTrigger == null || sw.objectToTrigger.Length == 0)
+                continue;
+            foreach (var target in sw.objectToTrigger)
+            {
+                if (target == null)
+                    continue;
+                links.Add(new LayoutSwitchLinkDto
+                {
+                    switchId = item.instanceId,
+                    targetId = "u:" + target.GetInstanceID(),
+                    trigger = sw.triggerOnObject ?? ""
+                });
+            }
+        }
+        return links;
     }
 
     public static List<LayoutItemDto> ExportFromScene()

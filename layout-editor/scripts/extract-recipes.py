@@ -237,7 +237,7 @@ def derive_step(recipe_id, recipes, lookups):
             return step, lname
     if bake_comp:
         return bake_comp, "bake-comp"
-    # 8) 名称兜底：烤串/月亮派/水果派
+    # 8) 名称兜底：烤串/月饼/水果派
     if "Kebob" in recipe_id or "Kebab" in recipe_id:
         return "KebabSkewer", "name"
     if "MoonPie" in recipe_id or "FruitPie" in recipe_id:

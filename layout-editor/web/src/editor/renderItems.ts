@@ -79,6 +79,19 @@ export function itemDrawCompare(a: EditorItem, b: EditorItem): number {  const d
   return as - bs;
 }
 
+/** 方向与 web 前向标记差 180° 的道具（prefab 烘焙了相反朝向）：
+ *  烤箱与上菜台（含经 bundle 实测净朝向一致的换皮 dlc09_oven /
+ *  dlc13_workstation_plate_station）。渲染方向加 180°，使 web 所见与
+ *  游戏实际朝向一致；保存仍写原始 localRotationY（与 Unity 1:1）。
+ *  其余换皮（dlc08_oven_02 / 中古炉 / dlc13 炉灶）净朝向不同，不在此列。 */
+const FLIPPED_DIRECTION_IDS = new Set(["Oven", "dlc09_oven", "ServingStation", "dlc13_workstation_plate_station"]);
+
+export function itemDisplayRotationY(item: EditorItem): number {
+  const id = prefabIdFromPath(item.prefabAssetPath) ?? "";
+  const flip = FLIPPED_DIRECTION_IDS.has(id) ? 180 : 0;
+  return normalizeRot(item.localRotationY + flip);
+}
+
 export function drawItem(item: EditorItem, selected: boolean) {
   if (isCollisionItem(item)) {
     drawCollisionMarker(item, selected);
@@ -90,7 +103,7 @@ export function drawItem(item: EditorItem, selected: boolean) {
     return;
   }
   const fp = resolveFootprint(item);
-  const rot = normalizeRot(item.localRotationY);
+  const rot = itemDisplayRotationY(item);
   const center = worldToCanvas(item._wx, item._wz);
   const cellPx = CELL * PX_PER_UNIT * S.scale;
   const sx = itemScaleX(item);
@@ -352,6 +365,38 @@ export function drawTeleportalLinks() {
     dom.ctx.lineTo(b.x, b.y);
     dom.ctx.stroke();
     dom.ctx.setLineDash([]);
+    dom.ctx.restore();
+  }
+}
+
+/** 开关联动连线（switchLinks：开关 → 断头台/果汁机/酱料机等目标），橙色虚线 + 箭头指向目标。 */
+export function drawSwitchLinks() {
+  const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
+  for (const l of S.switchLinks) {
+    const sw = byInst.get(l.switchId);
+    const target = byInst.get(l.targetId);
+    if (!sw || !target) continue;
+    const a = worldToCanvas(sw._wx, sw._wz);
+    const b = worldToCanvas(target._wx, target._wz);
+    dom.ctx.save();
+    dom.ctx.strokeStyle = "#f9ab00";
+    dom.ctx.globalAlpha = 0.5;
+    dom.ctx.lineWidth = 1.5;
+    dom.ctx.setLineDash([6, 4]);
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(a.x, a.y);
+    dom.ctx.lineTo(b.x, b.y);
+    dom.ctx.stroke();
+    dom.ctx.setLineDash([]);
+    const rad = Math.atan2(b.y - a.y, b.x - a.x);
+    const ah = 8 * Math.max(0.6, S.scale);
+    dom.ctx.fillStyle = "#f9ab00";
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(b.x, b.y);
+    dom.ctx.lineTo(b.x - Math.cos(rad - 0.45) * ah, b.y - Math.sin(rad - 0.45) * ah);
+    dom.ctx.lineTo(b.x - Math.cos(rad + 0.45) * ah, b.y - Math.sin(rad + 0.45) * ah);
+    dom.ctx.closePath();
+    dom.ctx.fill();
     dom.ctx.restore();
   }
 }

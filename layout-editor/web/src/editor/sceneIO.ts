@@ -10,6 +10,8 @@ import { isPlayerItem } from "./renderItems";
 import { enrichItem, enrichFloor, checkPlayerCollisions, checkWorkstationCollisions, refreshUtensilStacks } from "./items";
 import { stubKindOf } from "./stubControls";
 import { cleanOrphanedMoveControls, stopMovePreview } from "./moveControl";
+import { cleanOrphanedButtonLinks } from "./buttonLinks";
+import { cleanOrphanedButtonEvents } from "./buttonEvents";
 import { itemLabel } from "./labels";
 import {
   syncBackgroundForTheme,
@@ -115,8 +117,15 @@ export async function loadScene(assetPath: string) {
     mergeThemedItemsIntoFloors();
     S.walkable = doc.walkable ?? [];
     S.deathInfo = doc.deathInfo ?? null;
+    S.cameraInfo = doc.cameraInfo ?? null;
+    S.lights = doc.lights ?? [];
     S.moveControls = doc.moveControls?.groups ?? [];
+    S.switchLinks = doc.switchLinks ?? [];
+    S.buttonLinks = doc.buttonLinks?.links ?? [];
+    S.buttonEvents = doc.buttonEvents?.links ?? [];
     cleanOrphanedMoveControls();
+    cleanOrphanedButtonLinks();
+    cleanOrphanedButtonEvents();
     const itemTheme = inferBgThemeFromItems(S.items);
     const deathThemeKey = bgThemeKeyForDeathType(S.deathInfo?.deathType);
     const sceneThemeKey = itemTheme ?? deathThemeKey;

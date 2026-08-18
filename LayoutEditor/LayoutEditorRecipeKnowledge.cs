@@ -14,6 +14,17 @@ public static class LayoutEditorRecipeKnowledge
     /// <summary>Bumped together with SCHEMA_VERSION in build-catalog.mjs.</summary>
     public const int BridgeSchemaVersion = 3;
 
+    /// <summary>面粉/蛋家族（与前端 recipeKnowledge.ts 一致）：面粉系菜谱
+    ///  （蛋糕/松饼/月饼/派/布丁，含 dlc09/dlc13 变体）的搅拌分组判定用。</summary>
+    private static readonly HashSet<string> FlourIngredients = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "FlourSO", "dlc09_flour", "dlc13_flour"
+    };
+    private static readonly HashSet<string> EggIngredients = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "EggSO", "DLC05_Egg", "dlc09_egg", "dlc13_egg"
+    };
+
     /// <summary>Utensil / workstation sets per cooking step (mirrors STEP_UTENSILS in build-catalog.mjs
     ///  and the web frontend). First entry is the station, last entry the actual cooking vessel.</summary>
     public static readonly Dictionary<string, string[]> StepUtensils = new Dictionary<string, string[]>(StringComparer.Ordinal)
@@ -39,6 +50,18 @@ public static class LayoutEditorRecipeKnowledge
         if (!string.IsNullOrEmpty(step) && StepUtensils.TryGetValue(step, out utensils))
             return utensils;
         return new string[0];
+    }
+
+    private static bool ContainsAnyIngredient(string[] ids, HashSet<string> set)
+    {
+        if (ids == null)
+            return false;
+        for (int i = 0; i < ids.Length; i++)
+        {
+            if (set.Contains(ids[i]))
+                return true;
+        }
+        return false;
     }
 
     /// <summary>Recipe-book ingredient grouping (mirrors computeCookingGroups in build-catalog.mjs).
@@ -69,11 +92,40 @@ public static class LayoutEditorRecipeKnowledge
             };
         }
 
-        // 自定义菜谱的"工序"分组：当菜谱自身没有整体烹饪步骤（Composite/组装型）时，
-        // 按其直接组成展开 —— 组成若是子菜谱（中间产物/半成品），以子菜谱自身的烹饪
-        // 步骤成组并展开其叶食材；普通食材归生组。组成顺序即组顺序。
+        // Mixed 类型自定义菜谱：
+        //  - 若自身烹饪步骤本身就是混合步骤（Blender / Mixer / MixingBowl），
+        //    该步骤即搅拌本身 → 只显示该混合图标（单图标，如冰蓝莓沙 = 搅拌机）。
+        //  - 否则先搅拌（MixingBowl）再烹饪（最终步骤标记，并入同格双图标），
+        //    例：面团+肉搅拌 → MixingBowl 组 + 烹饪步骤标记组。
+        if (recipe != null && recipe.mixing)
+        {
+            if (finalStep == "Blender" || finalStep == "Mixer" || finalStep == "MixingBowl")
+            {
+                return new[]
+                {
+                    new RecipeCookingGroupDto { step = finalStep, utensils = UtensilsForStep(finalStep), ingredients = ingredients }
+                };
+            }
+            var mixGroups = new List<RecipeCookingGroupDto>
+            {
+                new RecipeCookingGroupDto { step = "MixingBowl", utensils = UtensilsForStep("MixingBowl"), ingredients = ingredients }
+            };
+            if (IsCookStep(finalStep))
+                mixGroups.Add(new RecipeCookingGroupDto { step = finalStep, utensils = UtensilsForStep(finalStep), ingredients = new string[0] });
+            return mixGroups.ToArray();
+        }
+
+        // 自定义菜谱的"工序"分组：按直接组成展开 —— 每个子菜谱（含烹饪步骤的）单独成组，
+        // 互不合并；子菜谱为 Mixed（mixing）时即使无 cookingStep 也按 MixingBowl 成组（搅拌）；
+        // 普通食材归生组。组成顺序即组顺序。
+        // 例：「炸薯条+炸鱼排+蘑菇汤」套餐中炸薯条与炸鱼排即使同为 DeepFatFryer 也分开显示；
+        //    CheesePrawn = 面糊（Mixed 子菜谱）搅拌 + 炸制（自身烹饪步骤标记）。
+        // 有自身烹饪步骤（两阶段，如炒饭）：已烹饪子菜谱步骤作该食材角标（米 → Pot 角标），
+        //    普通食材并入主框，自身步骤作主图标（煎锅）；仅搅拌子菜谱 → 搅拌框 + 自身步骤标记；
+        //    全生食材组成（如 Fried2_Shrimp）→ 自身烹饪步骤包裹全部（单框）。
+        // 纯叶食材组成（如汤的 TomatoSO/EggSO）不是子菜谱，不应走分步展开。
         if (recipe != null && recipe.compositionIds != null && recipe.compositionIds.Length > 0 &&
-            !IsCookStep(finalStep))
+            !recipe.intermediate)
         {
             var byId = new Dictionary<string, RecipeEntryDto>(StringComparer.Ordinal);
             if (allRecipes != null)
@@ -87,54 +139,140 @@ public static class LayoutEditorRecipeKnowledge
                 }
             }
 
-            var compResult = new List<RecipeCookingGroupDto>();
-            var compRaw = new List<string>();
-            var compSteps = new List<string>();
-            var compStepIngs = new Dictionary<string, List<string>>(StringComparer.Ordinal);
-            foreach (var compId in recipe.compositionIds)
+            bool hasStepSub = false;
+            foreach (var cid in recipe.compositionIds)
             {
-                if (string.IsNullOrEmpty(compId))
-                    continue;
                 RecipeEntryDto sub;
-                if (byId.TryGetValue(compId, out sub) && sub != null &&
-                    sub.ingredients != null && sub.ingredients.Length > 0)
+                if (string.IsNullOrEmpty(cid) || !byId.TryGetValue(cid, out sub) || sub == null)
+                    continue;
+                if (IsCookStep(sub.cookingStep) || sub.mixing)
                 {
-                    var subStep = IsCookStep(sub.cookingStep) ? sub.cookingStep : "";
-                    if (subStep == "")
-                    {
-                        foreach (var ing in sub.ingredients)
-                            compRaw.Add(ing);
-                        continue;
-                    }
-                    List<string> lst;
-                    if (!compStepIngs.TryGetValue(subStep, out lst))
-                    {
-                        lst = new List<string>();
-                        compStepIngs[subStep] = lst;
-                        compSteps.Add(subStep);
-                    }
-                    foreach (var ing in sub.ingredients)
-                        lst.Add(ing);
-                }
-                else
-                {
-                    compRaw.Add(compId);
+                    hasStepSub = true;
+                    break;
                 }
             }
 
-            if (compRaw.Count > 0)
-                compResult.Add(new RecipeCookingGroupDto { step = "", utensils = new string[0], ingredients = compRaw.ToArray() });
-            for (int i = 0; i < compSteps.Count; i++)
+            if (hasStepSub)
             {
-                var st = compSteps[i];
-                compResult.Add(new RecipeCookingGroupDto
+                bool finalHasStep = IsCookStep(finalStep);
+                var compResult = new List<RecipeCookingGroupDto>();
+                var compPlain = new List<string>();
+                // subGroups: key "step::compId" → List<string>（可继续追加）；
+                // subOrder 记录分组顺序，最终统一转成 DTO。
+                var subGroups = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+                var subOrder = new List<string>();
+                foreach (var compId in recipe.compositionIds)
                 {
-                    step = st,
-                    utensils = UtensilsForStep(st),
-                    ingredients = compStepIngs[st].ToArray()
-                });
+                    if (string.IsNullOrEmpty(compId))
+                        continue;
+                    RecipeEntryDto sub;
+                    if (byId.TryGetValue(compId, out sub) && sub != null &&
+                        sub.ingredients != null && sub.ingredients.Length > 0)
+                    {
+                        var subStep = IsCookStep(sub.cookingStep) ? sub.cookingStep : (sub.mixing ? "MixingBowl" : "");
+                        if (subStep == "")
+                        {
+                            foreach (var ing in sub.ingredients)
+                                compPlain.Add(ing);
+                            continue;
+                        }
+                        var key = subStep + "::" + compId;
+                        List<string> lst;
+                        if (!subGroups.TryGetValue(key, out lst))
+                        {
+                            lst = new List<string>();
+                            subGroups[key] = lst;
+                            subOrder.Add(key);
+                        }
+                        foreach (var ing in sub.ingredients)
+                            lst.Add(ing);
+                    }
+                    else
+                    {
+                        compPlain.Add(compId);
+                    }
+                }
+
+                if (finalHasStep)
+                {
+                    // 两阶段烹饪：搅拌子菜谱保留独立搅拌框；已烹饪子菜谱步骤作食材角标并入主框
+                    var badgeMap = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+                    var mainIngs = new List<string>();
+                    var keepBoxes = new List<RecipeCookingGroupDto>();
+                    foreach (var key in subOrder)
+                    {
+                        var lst = subGroups[key];
+                        var step = key.Substring(0, key.IndexOf("::", StringComparison.Ordinal));
+                        // Mixer / MixingBowl 都是搅拌步骤（如月饼引用的面糊 Mixer 中间产物）
+                        if (step == "MixingBowl" || step == "Mixer")
+                        {
+                            keepBoxes.Add(new RecipeCookingGroupDto { step = step, utensils = UtensilsForStep(step), ingredients = lst.ToArray() });
+                            continue;
+                        }
+                        foreach (var ing in lst)
+                        {
+                            mainIngs.Add(ing);
+                            List<string> steps;
+                            if (!badgeMap.TryGetValue(ing, out steps))
+                            {
+                                steps = new List<string>();
+                                badgeMap[ing] = steps;
+                            }
+                            steps.Add(step);
+                        }
+                    }
+                    foreach (var ing in compPlain)
+                        mainIngs.Add(ing);
+
+                    compResult.AddRange(keepBoxes);
+                    if (mainIngs.Count > 0)
+                    {
+                        var stepsArr = new List<RecipeIngredientStepDto>();
+                        foreach (var kv in badgeMap)
+                            stepsArr.Add(new RecipeIngredientStepDto { ingredient = kv.Key, steps = kv.Value.ToArray() });
+                        compResult.Add(new RecipeCookingGroupDto
+                        {
+                            step = finalStep,
+                            utensils = UtensilsForStep(finalStep),
+                            ingredients = mainIngs.ToArray(),
+                            ingredientSteps = stepsArr.Count > 0 ? stepsArr.ToArray() : null
+                        });
+                    }
+                    else if (keepBoxes.Count > 0)
+                    {
+                        // 只有搅拌子菜谱（如 CheesePrawn）：自身烹饪步骤作为标记组（并入同格双图标）
+                        compResult.Add(new RecipeCookingGroupDto { step = finalStep, utensils = UtensilsForStep(finalStep), ingredients = new string[0] });
+                    }
+                    else
+                    {
+                        // 组成全是生食材：当前烹饪步骤包裹全部（如 Fried2_Shrimp 鱼虾同框）
+                        compResult.Add(new RecipeCookingGroupDto { step = finalStep, utensils = UtensilsForStep(finalStep), ingredients = compPlain.ToArray() });
+                    }
+                }
+                else
+                {
+                    if (compPlain.Count > 0)
+                        compResult.Insert(0, new RecipeCookingGroupDto { step = "", utensils = new string[0], ingredients = compPlain.ToArray() });
+                    foreach (var key in subOrder)
+                    {
+                        var lst = subGroups[key];
+                        var step = key.Substring(0, key.IndexOf("::", StringComparison.Ordinal));
+                        compResult.Add(new RecipeCookingGroupDto { step = step, utensils = UtensilsForStep(step), ingredients = lst.ToArray() });
+                    }
+                }
+                return compResult.ToArray();
             }
-            return compResult.ToArray();
+            // 全生食材组成 + 自身烹饪步骤：包裹全部（如 Fried2_Shrimp 鱼虾同框）
+            if (IsCookStep(finalStep))
+            {
+                var allIngs = recipe.ingredients != null && recipe.ingredients.Length > 0
+                    ? recipe.ingredients
+                    : recipe.compositionIds;
+                return new[]
+                {
+                    new RecipeCookingGroupDto { step = finalStep, utensils = UtensilsForStep(finalStep), ingredients = allIngs }
+                };
+            }
         }
 
         var prep = new Dictionary<string, string>(StringComparer.Ordinal); // ingredient -> step ("" = raw)
@@ -178,6 +316,31 @@ public static class LayoutEditorRecipeKnowledge
                 {
                     if (!prep.ContainsKey(ing))
                         prep[ing] = cand.cookingStep;
+                }
+            }
+        }
+
+        // 食材本身是半成品（如月饼引用搅拌面糊 dlc13_mixedflouregg*）：
+        // 按半成品自身的烹饪步骤成组；最终烹饪步骤（烤箱）作为标记组追加。
+        bool interBranch = false;
+        if (allRecipes != null)
+        {
+            var interById = new Dictionary<string, RecipeEntryDto>(StringComparer.Ordinal);
+            foreach (var r in allRecipes)
+            {
+                if (r == null || string.IsNullOrEmpty(r.id) || interById.ContainsKey(r.id))
+                    continue;
+                interById[r.id] = r;
+            }
+            foreach (var ing in ingredients)
+            {
+                RecipeEntryDto sub;
+                if (interById.TryGetValue(ing, out sub) && sub != null &&
+                    sub.intermediate && IsCookStep(sub.cookingStep))
+                {
+                    if (!prep.ContainsKey(ing))
+                        prep[ing] = sub.cookingStep;
+                    interBranch = true;
                 }
             }
         }
@@ -249,17 +412,17 @@ public static class LayoutEditorRecipeKnowledge
             foreach (var ing in ingredients)
                 prep[ing] = "DeepFatFryer";
         }
-        else if (type == "cake" ||
-            (Array.IndexOf(ingredients, "FlourSO") >= 0 && finalStep != "Mixer" && finalStep != "MixingBowl"))
+        else if (type == "cake" || (ContainsAnyIngredient(ingredients, FlourIngredients) && finalStep != "Mixer" && finalStep != "MixingBowl"))
         {
-            // 蛋糕：搅拌 + 烤箱；面糊/面团（松饼/饺子）：搅拌 + 最终锅具
+            // 蛋糕：搅拌 + 烤箱；面糊/面团（松饼/饺子/月饼）：搅拌 + 最终锅具。
+            // 面粉/蛋判定用全家族集合（FlourSO/dlc09/dlc13 变体）。
             flourBranch = type != "cake";
             var cookStep = type == "cake" ? "OvenTray" : (IsCookStep(finalStep) ? finalStep : "");
             foreach (var ing in ingredients)
             {
                 if (prep.ContainsKey(ing))
                     continue;
-                prep[ing] = (ing == "FlourSO" || ing == "EggSO")
+                prep[ing] = (FlourIngredients.Contains(ing) || EggIngredients.Contains(ing))
                     ? "MixingBowl"
                     : cookStep;
             }
@@ -302,7 +465,7 @@ public static class LayoutEditorRecipeKnowledge
             if (order[i] != "")
                 ordered.Add(order[i]);
         }
-        if (flourBranch && IsCookStep(finalStep) && !groupMap.ContainsKey(finalStep) && order.Count > 0)
+        if ((flourBranch || interBranch) && IsCookStep(finalStep) && !groupMap.ContainsKey(finalStep) && order.Count > 0)
             ordered.Add(finalStep);
 
         bool splitPerIngredient = (finalStep == "DeepFatFryer" && type != "donut") ||
@@ -628,7 +791,7 @@ public static class LayoutEditorRecipeKnowledge
 
     /// <summary>Web 内置菜谱分数估算：分数 = 20 × 食材种类数 + 烹调难度加成，
     ///  clamp [20,120]、级距 20（对齐游戏攻略：材料越多越高、烹调越麻烦越高）。
-    ///  加成：搅拌+烘焙(蛋糕/派/月亮派/布丁/搅拌步骤)=60；搅拌+煎炸(松饼/甜甜圈)=40；
+    ///  加成：搅拌+烘焙(蛋糕/派/月饼/布丁/搅拌步骤)=60；搅拌+煎炸(松饼/甜甜圈)=40；
     ///  煮/炸/蒸/烤/火锅/烤串/搅拌机(Blender)=20；组装/切菜/煎(FryingPan)=0。</summary>
     public static int EstimateWebRecipeScore(string id, string step, string[] ingredients)
     {

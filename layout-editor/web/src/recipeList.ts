@@ -9,6 +9,7 @@ import {
   type RecipeWithGroups,
 } from "./recipeCard";
 import { mountVersionBadge } from "./version";
+import { initWebBuiltin, webIngredientDisabledReason, webRecipeDisabledReason } from "./webBuiltin";
 
 mountVersionBadge();
 
@@ -133,19 +134,17 @@ function card(r: RecipeWithGroups): string {
     ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
     // Web 内置徽标由 foodGroupLabel("web") 自动渲染，避免重复
     extraBadge: r.group === "levelset" ? "本关" : undefined,
+    // web 内置未放开：显示但置灰（不禁用条目消失）
+    disabledReason: webRecipeDisabledReason(r) ?? undefined,
   });
 }
 
 function visible(): RecipeWithGroups[] {
   const q = query.trim().toLowerCase();
-  // 展示层去重：Web 拷贝（custom_web）与 Import 源库同 id 时只保留拷贝；旧 levelset 副本覆盖 web 项
+  // 展示层去重：旧 levelset 副本覆盖同 id 的 web 项；web 内置未放开的一律显示但置灰
   const levelsetIds = new Set(recipes.filter((r) => r.group === "levelset").map((r) => r.id));
-  const webCopiedIds = new Set(
-    recipes.filter((r) => r.group === "web" && (r.assetPath ?? "").includes("/custom_web/")).map((r) => r.id)
-  );
   let out = recipes.filter((r) => {
     if (r.group === "web" && levelsetIds.has(r.id)) return false;
-    if (r.group === "web" && webCopiedIds.has(r.id) && !(r.assetPath ?? "").includes("/custom_web/")) return false;
     if (!showIntermediate && r.intermediate) return false;
     if (typeFilter !== "all" && (r.type ?? "other") !== typeFilter) return false;
     if (groupFilter !== "all" && (r.group ?? "core") !== groupFilter) return false;
@@ -172,9 +171,11 @@ function ingredientCard(i: IngredientEntry): string {
   const badge =
     i.group && i.group !== "core" ? ` <span class="pc-badge">${esc(foodGroupLabel(i.group))}</span>` : "";
   const en = (i.nameEn && i.nameEn.trim()) ? ` <span class="muted pc-en">${esc(i.nameEn)}</span>` : "";
-  return `<div class="rl-ing-card" title="${esc(i.id)}">
+  const disabledReason = webIngredientDisabledReason(i);
+  const disBadge = disabledReason ? ` <span class="rl-badge rl-badge-disabled">⛔ 禁用</span>` : "";
+  return `<div class="rl-ing-card${disabledReason ? " rl-ing-disabled" : ""}" title="${esc(disabledReason ? `${i.id}（${disabledReason}）` : i.id)}">
     <img class="food-icon" loading="lazy" src="/icons/ingredients/${encodeURIComponent(i.id)}.png" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">
-    <span class="rl-ing-name">${esc(i.nameZh)}${badge}${en}</span>
+    <span class="rl-ing-name">${esc(i.nameZh)}${badge}${disBadge}${en}</span>
     <span class="muted small">${esc(i.id)}</span>
   </div>`;
 }
@@ -182,6 +183,7 @@ function ingredientCard(i: IngredientEntry): string {
 function renderIngredients(): string {
   const q = query.trim().toLowerCase();
   const list = ingredients.filter((i) => {
+    // web 内置未放开的一律显示但置灰（不再隐藏）
     if (showWebReps && i.group === "web") return true; // 去重在下
     if (q && !`${i.nameZh} ${i.nameEn ?? ""} ${i.id}`.toLowerCase().includes(q)) return false;
     if (groupFilter !== "all" && (i.group ?? "core") !== groupFilter) return false;
@@ -308,6 +310,7 @@ function wire(): void {
 
 async function init(): Promise<void> {
   try {
+    await initWebBuiltin();
     const [recs, ings] = await Promise.all([
       api.fetchRecipeCatalog(""),
       api.fetchIngredients(),

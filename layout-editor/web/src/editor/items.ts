@@ -15,6 +15,8 @@ import {
 } from "./state";
 import { itemLayerOfIt } from "./catalog";
 import { isCollisionItem } from "./stubControls";
+import { cleanOrphanedButtonLinks } from "./buttonLinks";
+import { cleanOrphanedButtonEvents } from "./buttonEvents";
 import { isPlayerItem } from "./renderItems";
 import { itemLabel } from "./labels";
 import {
@@ -167,6 +169,14 @@ export function deleteSelected() {
       g.memberStatic = g.memberStatic.filter((m) => !deletedInstanceIds.has(m.instanceId));
   }
   S.moveControls = S.moveControls.filter((g) => g.itemInstanceIds.length > 0 || g.floorInstanceIds.length > 0 || g.objectInstanceIds.length > 0);
+  // 删除物品时同步清理指向它的开关联动（断头台/饮料机按钮）
+  if (deletedInstanceIds.size)
+    S.switchLinks = S.switchLinks.filter((l) => !deletedInstanceIds.has(l.switchId) && !deletedInstanceIds.has(l.targetId));
+  S.items = S.items.filter((i) => !kill.has(i._editorKey));
+  // 同步清理按钮↔移动组联动（须在物品列表更新之后：源按钮被删则联动失效）
+  cleanOrphanedButtonLinks();
+  // 同步清理按钮↔事件组联动（源按钮/目标物品被删则相应事件失效）
+  cleanOrphanedButtonEvents();
   if (S.activeMoveGroupId && !S.moveControls.some((g) => g.id === S.activeMoveGroupId)) {
     S.activeMoveGroupId = null;
     S.activeMoveEventIdx = null;

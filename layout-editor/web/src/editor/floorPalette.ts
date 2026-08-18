@@ -118,6 +118,7 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
         ]
       : [
           { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
+          { key: "ground", labelZh: "大型地面", match: (it) => it.surfaceKind === "ground" },
           { key: "pressure", labelZh: "压力开关（特殊地板）", match: (it) => PRESSURE_SWITCH_SURFACE_IDS.has(it.id) },
         ];
   // Background palette also lists ambient effects (they are not surface items).

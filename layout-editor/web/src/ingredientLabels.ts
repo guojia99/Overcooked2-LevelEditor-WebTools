@@ -27,25 +27,14 @@ export function foodGroupBadge(group: FoodGroup | undefined): string {
   return label && group !== "core" ? `[${label}] ` : "";
 }
 
-/**
- * 展示层去重：同一食材既存在于 Web 内置源库又有关卡集副本时，选择器只显示副本
- * （数据保留全部条目，guid 始终可解析；此处仅隐藏重复项）。
- *  - 旧 custom_ingredients 拷贝（levelset 组）覆盖同 id 的 Web 内置项；
- *  - custom_web 拷贝（web 组）覆盖同 id 的 Import 源库项。
- */
+/** 展示层去重：同 id 时隐藏 web 内置项，保留 levelset 组条目。 */
 export function visibleIngredients(ingredients: IngredientEntry[]): IngredientEntry[] {
   const levelsetIds = new Set(
     ingredients.filter((i) => i.group === "levelset").map((i) => i.id)
   );
-  const webCopiedIds = new Set(
-    ingredients
-      .filter((i) => i.group === "web" && (i.assetPath ?? "").includes("/custom_web/"))
-      .map((i) => i.id)
-  );
   return ingredients.filter((i) => {
     if (i.group !== "web") return true;
     if (levelsetIds.has(i.id)) return false;
-    if (webCopiedIds.has(i.id) && !(i.assetPath ?? "").includes("/custom_web/")) return false;
     return true;
   });
 }
@@ -53,13 +42,9 @@ export function visibleIngredients(ingredients: IngredientEntry[]): IngredientEn
 /** 菜谱展示层去重（同 visibleIngredients 规则）。 */
 export function visibleRecipes<T extends { id: string; group?: string; assetPath?: string }>(recipes: T[]): T[] {
   const levelsetIds = new Set(recipes.filter((r) => r.group === "levelset").map((r) => r.id));
-  const webCopiedIds = new Set(
-    recipes.filter((r) => r.group === "web" && (r.assetPath ?? "").includes("/custom_web/")).map((r) => r.id)
-  );
   return recipes.filter((r) => {
     if (r.group !== "web") return true;
     if (levelsetIds.has(r.id)) return false;
-    if (webCopiedIds.has(r.id) && !(r.assetPath ?? "").includes("/custom_web/")) return false;
     return true;
   });
 }
@@ -86,4 +71,47 @@ export function ingredientNameZh(
 export function ingredientOptionLabel(ing: IngredientEntry): string {
   const en = (ing.nameEn && ing.nameEn.trim()) || ing.id;
   return `${foodGroupBadge(ing.group)}${ing.nameZh} · ${en}`;
+}
+
+/** 食材简单分类（选择器分类 chips 用）。按顺序匹配 id，先命中先归。 */
+export const INGREDIENT_CATEGORIES: { key: string; label: string }[] = [
+  { key: "vegetable", label: "蔬菜" },
+  { key: "fruit", label: "水果" },
+  { key: "meat", label: "肉类·水产" },
+  { key: "dairy", label: "乳蛋·烘焙" },
+  { key: "staple", label: "主食" },
+  { key: "drink", label: "饮料" },
+  { key: "sauce", label: "酱料" },
+  { key: "other", label: "其他" },
+];
+
+const INGREDIENT_CATEGORY_RULES: [string, RegExp][] = [
+  // 饮料：冰块/汽水/可乐/饮料机饮料
+  ["drink", /icecube|soda|rootbeer|^drink\d+$/],
+  // 酱料：番茄酱/芥末酱（node 型浇头）
+  ["sauce", /ketchup|mustard/],
+  // 主食：米/面/意面/玉米饼/面包/饼干
+  ["staple", /rice|noodle|pasta|tortilla|bun|cracker/],
+  // 乳蛋·烘焙：蛋/面粉/面团/奶酪/巧克力/蜂蜜/奶/奶油/棉花糖/香草
+  ["dairy", /egg|flour|dough|cheese|chocolate|honeycomb|milk|cream|marshmallow|vanilla/],
+  // 肉类·水产：肉/鸡/火鸡/培根/香肠/热狗肠/烤肉/鱼/虾/鸡块/辣香肠
+  ["meat", /meat|chicken|turkey|bacon|sausage|frankfurter|roast|fish|prawn|nugget|pepperoni/],
+  // 水果：橙/苹果/葡萄/桃/樱桃/莓/瓜/香蕉/菠萝/果干
+  ["fruit", /orange|apple|grape|peach|cherry|berry|melon|banana|pineapple|driedfruit/],
+  // 蔬菜：生菜/番茄/黄瓜/胡萝卜/洋葱/土豆/西兰花/西芹/白菜/玉米/蘑菇/海苔/豆/橄榄
+  ["vegetable", /lettuce|tomato|cucumber|carrot|onion|potato|broccoli|leek|bokchoy|corn|mushroom|seaweed|beans|olive/],
+];
+
+/** 食材 id → 分类 key（未命中归 other）。 */
+export function ingredientCategoryOf(id: string): string {
+  const lower = (id ?? "").toLowerCase();
+  for (const [key, re] of INGREDIENT_CATEGORY_RULES) {
+    if (re.test(lower)) return key;
+  }
+  return "other";
+}
+
+/** 分类 key → 中文标签。 */
+export function ingredientCategoryLabel(key: string): string {
+  return INGREDIENT_CATEGORIES.find((c) => c.key === key)?.label ?? key;
 }

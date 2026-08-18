@@ -26,6 +26,7 @@ import {
   updatePanelTabButtons
 } from "./panels";
 import { isCollisionItem } from "./stubControls";
+import { renameGroupInButtonLinks, linkBindingGroup, cleanOrphanedButtonLinks } from "./buttonLinks";
 import { isAirFloor } from "./floors";
 import { openModal, closeModal } from "../modals";
 import { setLayer } from "./init";
@@ -2139,7 +2140,12 @@ function renderWaypointsTab(group: MoveGroup): string {
   </div>`;
 }
 
-function renderSettingsTab(group: MoveGroup): string {  return `<div class="move-section">
+function renderSettingsTab(group: MoveGroup): string {
+  const boundLink = linkBindingGroup(group.displayName);
+  const boundHint = boundLink
+    ? `<div class="sub move-wp-hint" style="color:#e8b35a">⚠ 该组已被按钮联动绑定：不再自动执行，启动/结束触发器由联动自动管理（在此处手动修改无效，写回时会被联动覆盖）。</div>`
+    : "";
+  return `<div class="move-section">
     ${sectionTitle("⚙", "组设置", "", "#8b93a3")}
     <div class="move-settings-grid">
       <label>启动延迟 (秒)<input type="number" class="group-start-delay" value="${group.startDelay}" step="0.1" min="0" /></label>
@@ -2149,6 +2155,7 @@ function renderSettingsTab(group: MoveGroup): string {  return `<div class="move
   </div>
   <div class="move-section">
     ${sectionTitle("🔀", "触发器 / 动画（TriggerQueue · Animator）", "", "#4f8fd6")}
+    ${boundHint}
     <div class="move-settings-grid">
       <label class="check"><input type="checkbox" class="group-wait-finished"${group.waitForFinished ? " checked" : ""} /> 等待动画播完再触发下一事件</label>
       <div class="sub move-wp-hint">勾选后：每个移动事件播完（到达终点）才触发下一事件；循环片段不会发送完成信号。</div>
@@ -2486,6 +2493,7 @@ function wireGroupEditor(body: HTMLElement, group: MoveGroup): void {
   nameInput?.addEventListener("change", () => {
     if (nameInput.value.trim() && nameInput.value !== group.displayName) {
       pushHistory();
+      renameGroupInButtonLinks(group.displayName, nameInput.value.trim());
       group.displayName = nameInput.value.trim();
       S.dirty = true;
     }
@@ -2828,6 +2836,7 @@ function wireGroupEditor(body: HTMLElement, group: MoveGroup): void {
     if (!confirm(`确定删除移动组「${group.displayName}」及其 ${group.events.length} 个事件？`)) return;
     pushHistory();
     S.moveControls = S.moveControls.filter((g) => g.id !== S.activeMoveGroupId);
+    cleanOrphanedButtonLinks();
     S.activeMoveGroupId = null;
     S.activeMoveEventIdx = null;
     S.selectedWaypointId = null;

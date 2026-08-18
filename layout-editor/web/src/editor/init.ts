@@ -28,11 +28,15 @@ import {
   selectSceneInDropdowns
 } from "./sceneIO";
 import { buildPalette } from "./palette";
+import { initWebBuiltin } from "../webBuiltin";
 import { buildFloorPalette } from "./floorPalette";
 import { refreshScopedSaveButton } from "./serialize";
 import { scopedSaveMeta } from "./serialize";
 import { openRecipesDialog } from "./ui/recipesDialogs";
+import { openDepsCheckModal } from "./ui/depsCheck";
 import { openUtensilManager } from "./ui/utensilManager";
+import { openScreenshotModal } from "./ui/screenshotModal";
+import { openCameraLightModal } from "./cameraLight";
 import {
   applyPanelCollapse,
   updatePanelTabButtons,
@@ -180,6 +184,8 @@ export function setLayer(layer: LayerKey): void {
 }
 
 export async function init() {
+  // Web 内置（common_w）门槛：先加载 manifest + 白名单，再拉取目录数据
+  await initWebBuiltin();
   const ok = await fetchHealth();
   const healthInfo = await fetchHealthInfo().catch(() => ({ ok: false, recipeApi: false }));
   setStatus(
@@ -195,8 +201,7 @@ export async function init() {
   warnIfBridgeOutdated(healthInfo, catalog.schemaVersion ?? 1);
   layoutCatalog = catalog;
   for (const it of catalog.items) S.catalogByGuid.set(it.guid, it);
-  // id → 目录条目：跳过 custom_web/custom_ingredients 运行时副本，只保留
-  // Import 源库 / 基础条目，供 custom_web 副本（guid 随运行态变化）按 prefab id 回退解析。
+  // id → 目录条目（跳过 custom_web/custom_ingredients 拷贝路径），供按 prefab id 回退解析。
   for (const it of catalog.items) {
     if (/\/custom_(web|ingredients)\//.test(it.assetPath)) continue;
     if (!S.catalogById.has(it.id)) S.catalogById.set(it.id, it);
@@ -253,23 +258,14 @@ export async function init() {
     else buildPalette(catalog, q);
   });
 
-  document.getElementById("btn-palette-variants")?.addEventListener("click", () => {
-    S.showPaletteVariants = !S.showPaletteVariants;
-    localStorage.setItem("showPaletteVariants", S.showPaletteVariants ? "1" : "0");
-    const q = (document.getElementById("palette-search") as HTMLInputElement)?.value ?? "";
-    if (S.currentLayer === "floor") buildFloorPalette(q, "floor");
-    else if (S.currentLayer === "background") buildFloorPalette(q, "background");
-    else buildPalette(catalog, q);
-  });
-
   document.getElementById("btn-reload")!.addEventListener("click", () => {
     if (S.scenePath) confirmLeaveIfDirty(() => void loadScene(S.scenePath));
   });
 
   document.getElementById("btn-save")!.addEventListener("click", () => void saveToUnity(""));
   document.getElementById("btn-save-items")!.addEventListener("click", () => void saveToUnity(scopedSaveMeta().scope));
-  document.getElementById("btn-repair-broken")?.addEventListener("click", async () => {
-    try {
+  document.getElementById("btn-deps-check")?.addEventListener("click", () => openDepsCheckModal());
+  document.getElementById("btn-repair-broken")?.addEventListener("click", async () => {    try {
       const n = await repairBrokenPrefabs(S.scenePath);
       if (n > 0) {
         setStatus(`已移除 ${n} 个损坏的预制件实例，请重新加载场景`, false);
@@ -299,6 +295,7 @@ export async function init() {
 
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
   document.getElementById("btn-utensils")!.addEventListener("click", () => openUtensilManager());
+  document.getElementById("btn-camera-light")!.addEventListener("click", () => openCameraLightModal());
   document.getElementById("chk-auto-intermediates")!.addEventListener("change", (e) => {
     S.autoIntermediates = (e.target as HTMLInputElement).checked;
   });
@@ -343,6 +340,10 @@ export async function init() {
     })
   );
 
+  document.getElementById("btn-level-screenshot")!.addEventListener("click", () =>
+    void withLevelDetail((detail) => openScreenshotModal(detail, () => {}))
+  );
+
   document.getElementById("btn-summary")!.addEventListener("click", () =>
     confirmLeaveIfDirty(() =>
       void withLevelDetail((detail) => renderLevelSummary(dom.app, S.currentLevelSet, detail.levelInfoAssetPath))
@@ -382,6 +383,12 @@ export async function init() {
     draw();
   });
 
+  document.getElementById("show-camera-fov")!.addEventListener("change", (e) => {
+    S.showCameraFov = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("showCameraFov", S.showCameraFov ? "1" : "0");
+    draw();
+  });
+
   document.getElementById("show-coords")!.addEventListener("change", (e) => {
     S.showCoords = (e.target as HTMLInputElement).checked;
     if (!S.showCoords) {
@@ -404,7 +411,7 @@ export async function init() {
 
   document.querySelectorAll<HTMLButtonElement>(".panel-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab as "items" | "move";
+      const tab = btn.dataset.tab as "items" | "move" | "bevents";
       if (tab === S.activeRightTab) return;
       S.activeRightTab = tab;
       updatePanelTabButtons();

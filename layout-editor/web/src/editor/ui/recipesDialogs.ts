@@ -1,18 +1,27 @@
 import {
   S,
-  CELL
+  CELL,
+  EditorItem
 } from "../state";
 import {
   computeRequiredUtensils,
   STEP_UTENSILS,
   computeIntermediatesForUtensils,
+  computeUtensilIngredientFill,
   recipeNeedsCreamSpray,
+  recipeNeedsSodaMachine,
+  recipeNeedsDrinkMachine,
+  SODA_MACHINE_INGREDIENT_IDS,
+  DRINK_MACHINE_INGREDIENT_IDS,
   recipeLacksIntermediate,
   missingIntermediateRecipes,
   functionalBaseId,
+  leafIngredientIds,
   CREAM_SPRAY_IDS,
+  CREAM_SPRAY_DEFAULT_ID,
   CREAM_INGREDIENT_IDS
 } from "../recipeKnowledge";
+import { comboById, addCombo } from "../combos";
 import {
   prefabIdFromPath,
   escHtml
@@ -23,8 +32,7 @@ import {
   foodIconImg,
   customRecipeIconUrl,
   ingredientGuidById,
-  ingredientIdByGuid,
-  ingredientNameById
+  ingredientIdByGuid
 } from "../catalog";
 import {
   openModal,
@@ -35,7 +43,7 @@ import {
   addFromCatalog,
   placementBase
 } from "../items";
-import { defaultUtensilCapacity } from "../stubControls";
+import { utensilCapacityOrFix } from "../stubControls";
 import { foodGroupLabel, visibleRecipes } from "../../ingredientLabels";
 import {
   groupRecipesByType,
@@ -47,9 +55,9 @@ import {
   STALE_BRIDGE_MSG,
   fetchRecipeCatalog,
   fetchLevelRecipes,
-  saveLevelRecipes,
-  syncLevelSetWeb
+  saveLevelRecipes
 } from "../../api";
+  import { webManifestHas, webRecipeDisabledReason, NODE_INGREDIENT_SOURCES } from "../../webBuiltin";
 import type { RecipeEntry } from "../../types";
 
 export type RecipeTab = "select" | "selected" | "autofill";
@@ -73,20 +81,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     return;
   }
   const hasScene = !!S.scenePath;
-  const levelSet = opts.setName ?? S.currentLevelSet ?? "";
 
-  // 打开关卡集：版本不一致立即同步一次；v0.0.0 不同步且 web 内置禁用。
   let activeTab: RecipeTab = opts.openTab ?? "select";
-  if (levelSet) {
-    try {
-      const sync = await syncLevelSetWeb(levelSet);
-      S.webSyncVersion = sync.version;
-      S.webSyncDisabled = sync.disabled;
-      if (sync.changed > 0) setStatus(`已同步 Web 内置内容（${sync.changed} 项）`);
-    } catch {
-      /* 版本/同步接口不可用不影响菜谱弹窗 */
-    }
-  }
 
   // ---------- 选择/已选 数据 ----------
   let recipes: RecipeEntry[] = [];
@@ -110,27 +106,49 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   const selected = new Set<string>(level?.recipeGuids ?? []);
   let orderable: RecipeEntry[] = [];
   let byGuid = new Map<string, RecipeEntry>();
+  /** id → 菜谱/中间产物条目：套餐等组成项里查不到食材表的（FriedMeat 等
+   *  中间产物）用它回退取中文名与成品贴图（icons/recipes）。 */
+  let byRecipeId = new Map<string, RecipeEntry>();
   let levelSetRecipes: RecipeEntry[] = [];
   let webInstalled: RecipeEntry[] = [];
   let coreRecipes: RecipeEntry[] = [];
   S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
 
+  // Web 内置硬性去重：同一道菜的多 DLC 换皮变体只保留一个代表（最高 DLC），
+  // 已勾选的变体始终保留可见（旧关卡已保存的换皮版不丢）。
+  const webDedupeKey = (name: string) =>
+    String(name ?? "").replace(/·?DLC\d+/g, "").replace(/[（）()· ]/g, "");
+  const dlcNumberOf = (id: string) => {
+    const m = /^dlc(\d+)_/.exec(id ?? "");
+    return m ? parseInt(m[1], 10) : 0;
+  };
+
   /** 从 recipes 重建派生集合（加载或安装/移除后刷新）。 */
   const recomputeGroups = () => {
     byGuid = new Map(recipes.map((r) => [r.guid, r]));
-    orderable = recipes.filter((r) => !r.intermediate);
+    byRecipeId = new Map(recipes.map((r) => [r.id, r]));
+    // 自定义菜谱（含 Composite/Mixed，score 可能为 0 被标 intermediate）一律可作为订单菜谱；
+    // 只有非自定义的中间产物（如 web 内置 score<=0）排除在可点单之外。
+    orderable = recipes.filter((r) => !r.intermediate || r.isCustom);
     S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
     const vis = visibleRecipes(orderable);
     levelSetRecipes = orderable.filter((r) => r.group === "levelset");
-    // 选择菜谱只显示：本关自定义 + 已安装 Web 副本（custom_web）+ Common 核心
-    // v0.0.0（web 内置禁用）时不显示任何 Web 内置菜谱
-    webInstalled = S.webSyncDisabled
-      ? []
-      : vis.filter((r) => r.group === "web" && (r.assetPath ?? "").includes("/custom_web/"));
+    // 选择菜谱只显示：本关自定义 + Web 内置（common_w，白名单+清单过滤）+ Common 核心
+    // common_w 不存在/禁用（manifest exists=false 或 v0.0.0）时不显示任何 Web 内置菜谱
+    // 未放开的 web 菜谱也显示但置灰（不可勾选），便于用户了解存在但暂不可用
+    let web = vis.filter((r) => r.group === "web" && webManifestHas("recipes", r.id));
+    {
+      const reps = new Map<string, RecipeEntry>();
+      for (const r of web) {
+        const key = webDedupeKey(r.nameZh ?? "");
+        const cur = reps.get(key);
+        if (!cur || dlcNumberOf(r.id) > dlcNumberOf(cur.id)) reps.set(key, r);
+      }
+      web = web.filter((r) => reps.get(webDedupeKey(r.nameZh ?? "")) === r || selectedIds.has(r.id));
+    }
+    webInstalled = web;
     coreRecipes = vis.filter((r) => r.group !== "levelset" && r.group !== "web");
   };
-  recomputeGroups();
-
   // 勾选判定按「菜谱 id」而非 guid：同 id 的 Import/拷贝视为同一菜谱；保存仍用 guid 集合。
   const selectedIds = new Set<string>();
   /** 由 level 已保存的 guid/id 重建勾选 id 集合（含后端 recipeIds 兜底）。 */
@@ -141,6 +159,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     for (const id of level?.recipeIds ?? []) if (id) selectedIds.add(id);
   };
   syncSelectedIdsFromLevel();
+  // 去重过滤依赖 selectedIds（已选变体保留可见），必须在 syncSelectedIdsFromLevel 之后
+  recomputeGroups();
 
   const toggleSelect = (guid: string, checked: boolean) => {
     if (checked) {
@@ -165,6 +185,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
 
   function recipeCard(r: RecipeEntry): string {
     const checked = selectedIds.has(r.id) ? "checked" : "";
+    const disabledReason = webRecipeDisabledReason(r);
+    const disabled = disabledReason !== null;
     const cust = r.isCustom ? ` <span class="pc-badge" title="自定义菜谱">🔧</span>` : "";
     const grp =
       r.group && r.group !== "core" && r.group !== "levelset"
@@ -176,18 +198,29 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const warnBadge = recipeLacksIntermediate(r)
       ? ` <span class="pc-badge" style="background:#b45309;color:#fff" title="该菜谱需要搅拌但缺少对应中间产物（面糊），请勿使用">⚠ 无中间产物</span>`
       : "";
+    const disBadge = disabled
+      ? ` <span class="pc-badge pc-badge-disabled" title="${escHtml(disabledReason ?? "")}">⛔ 禁用</span>`
+      : "";
     const chips = (r.ingredients ?? [])
       .map((ingId) => {
-        const ing = ingredientEntryById(ingId);
-        const name = ing?.nameZh ?? ingId;
-        return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("ingredients", ing?.id, ing?.icon)}${escHtml(name)}</span>`;
+        // 建箱等价替换（如套餐面包 dlc08_bun 显示为核心汉堡面包）优先
+        const ing = ingredientEntryById(ingId) ?? ingredientEntryById(NODE_INGREDIENT_SOURCES[ingId] ?? "");
+        if (ing) {
+          return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("ingredients", ing.id, ing.icon)}${escHtml(ing.nameZh)}</span>`;
+        }
+        // 食材表查不到：多为中间产物（煎肉排/炸洋葱圈等），按菜谱条目取名与成品贴图
+        const mid = byRecipeId.get(ingId);
+        if (mid) {
+          return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("recipes", mid.id, mid.icon)}${escHtml(mid.nameZh)}</span>`;
+        }
+        return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("ingredients", undefined, false)}${escHtml(ingId)}</span>`;
       })
       .join("");
     const searchable = `${r.nameZh} ${r.nameEn ?? ""} ${r.id}`.toLowerCase();
     const iconSrc = customRecipeIconUrl(r) ?? (r.id && r.icon !== false ? `/icons/recipes/${encodeURIComponent(r.id)}.png` : "/icons/_placeholder.png");
-    return `<label class="pick-card recipe-card" data-name="${escHtml(searchable)}">
-      <input type="checkbox" value="${r.guid}" ${checked}>
-      <span class="rc-head"><img class="food-icon" loading="lazy" src="${escHtml(iconSrc)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'"><span class="pc-name">${escHtml(r.nameZh)}${grp}${cust}${lsBadge}${warnBadge}</span></span>
+    return `<label class="pick-card recipe-card${disabled ? " pick-card-disabled" : ""}" data-name="${escHtml(searchable)}"${disabled ? ` title="${escHtml(disabledReason ?? "")}"` : ""}>
+      <input type="checkbox" value="${r.guid}" ${checked} ${disabled ? "disabled" : ""}>
+      <span class="rc-head"><img class="food-icon" loading="lazy" src="${escHtml(iconSrc)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'"><span class="pc-name">${escHtml(r.nameZh)}${grp}${cust}${lsBadge}${warnBadge}${disBadge}</span></span>
       <span class="rc-ings">${chips || '<span class="muted small">无食材</span>'}</span>
     </label>`;
   }
@@ -256,7 +289,15 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     for (const it of S.items) {
       if (it.stubKind === "Dispenser") {
         const id = ingredientIdByGuid(it.dispenser?.spawnerItemPrefabGuid);
-        if (id) s.add(id);
+        if (!id) continue;
+        s.add(id);
+        // 等价形态互通（uID 相同的换皮/核心版）：dlc10 箱算 dlc04 需求已满足
+        // （反之亦然），dlc08 面包箱算核心面包——避免误报缺失、重复建箱。
+        const equiv = NODE_INGREDIENT_SOURCES[id];
+        if (equiv) s.add(equiv);
+        for (const [from, to] of Object.entries(NODE_INGREDIENT_SOURCES)) {
+          if (to === id) s.add(from);
+        }
       }
     }
     return s;
@@ -277,17 +318,56 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const steps = new Set<string>();
     const platingSteps = new Set<string>();
     for (const r of recs) {
-      (r.ingredients ?? []).forEach((i) => reqIngs.add(i));
+      // 组成项里的中间产物（煎肉排/炸洋葱圈等）展开为叶食材（MeatSO/dlc08_onion_ring）
+      // 进食材箱清单——半成品本身无实体食材条目，不能建箱（此前报「目录中找不到
+      // 对应食材资产」），改由锅具装填（computeUtensilIngredientFill）分配到对应锅具。
+      // NODE_INGREDIENT_SOURCES 同时做建箱等价替换（套餐面包 dlc08_bun → 核心
+      // 汉堡面包 ChoppedBunSO，uID 等价、订单匹配不受影响）。
+      (r.ingredients ?? []).forEach((i) =>
+        leafIngredientIds(i).forEach((leaf) => reqIngs.add(NODE_INGREDIENT_SOURCES[leaf] ?? leaf))
+      );
       if (r.cookingStep) steps.add(r.cookingStep);
+      // 套餐等无主步骤的菜谱：加工步骤在 cookingGroups 里（FryingPan 煎肉 /
+      // DeepFatFryer 炸薯条洋葱圈芝士条），据此要求煎锅/炸锅工作台
+      for (const g of r.cookingGroups ?? []) if (g.step) steps.add(g.step);
       if (r.platingStep) platingSteps.add(r.platingStep);
     }
     const haveDisp = existingDispenserIngIds();
     const havePref = existingPrefabIds();
-    const missingIngs = [...reqIngs].filter((i) => !haveDisp.has(i));
-    const reqUt = computeRequiredUtensils(reqIngs, steps, platingSteps, recs);
+    // node 型匹配节点（如沙拉洋葱 dlc11onion_salad）由其整食材食材箱覆盖
+    const crateIngId = (i: string) => NODE_INGREDIENT_SOURCES[i] ?? i;
+    // 汽水是 node 型，由汽水机产出（需求体现在「锅具/道具」区），不进食材箱清单
+    const fromSodaMachine = (i: string) => SODA_MACHINE_INGREDIENT_IDS.includes(i);
+    // 套餐饮料由饮料机产出（机器 + 开关联动），不建普通食材箱
+    const fromDrinkMachine = (i: string) => DRINK_MACHINE_INGREDIENT_IDS.includes(i);
+    // 发泡奶油由奶油喷罐喷出（道具绑定），不建食材箱
+    const fromCreamSpray = (i: string) => CREAM_INGREDIENT_IDS.includes(i);
+    const fromTool = (i: string) => fromSodaMachine(i) || fromDrinkMachine(i) || fromCreamSpray(i);
+    const missingIngs = [...reqIngs].filter(
+      (i) => !fromTool(i) && !haveDisp.has(i) && !haveDisp.has(crateIngId(i))
+    );
+    // 奶油喷罐：需求只含默认 DLC3 款（不自动填充 dlc09 版）；
+    // 场景里已有任一款（dlc03/dlc09）即视为满足，不误报缺失。
+    const sprayGuids = CREAM_SPRAY_IDS.map((id) => catalogItemById(id)?.guid).filter((g): g is string => !!g);
+    const hasAnySpray = S.items.some((it) => !!it.prefabGuid && sprayGuids.includes(it.prefabGuid));
+    const reqUt0 = computeRequiredUtensils(
+      new Set([...reqIngs].filter((i) => !fromTool(i))),
+      steps,
+      platingSteps,
+      recs
+    );
+    const reqUt = hasAnySpray ? reqUt0.filter((u) => u !== CREAM_SPRAY_DEFAULT_ID) : reqUt0;
     const missingUt = reqUt.filter((u) => !havePref.has(u));
     const missingIntermediateIds = missingIntermediateRecipes(recs).map((r) => r.id);
-    return { reqIngs, steps, platingSteps, missingIngs, reqUt, missingUt, missingIntermediateIds };
+    return {
+      reqIngs: new Set([...reqIngs].filter((i) => !fromTool(i))),
+      steps,
+      platingSteps,
+      missingIngs,
+      reqUt,
+      missingUt,
+      missingIntermediateIds,
+    };
   };
 
   // ---------- 自动填充道具（食材箱 + 锅具/道具） ----------
@@ -306,9 +386,15 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     let idx = 0;
     const unresolved: string[] = [];
     for (const ing of selectedIngs) {
-      const guid = ingredientGuidById(ing);
+      // 汽水是 node 型（由汽水机产出）、发泡奶油由喷罐喷出：都不建食材箱
+      if (SODA_MACHINE_INGREDIENT_IDS.includes(ing) || CREAM_INGREDIENT_IDS.includes(ing)) continue;
+      // node 型匹配节点 → 食材箱生成其整食材（如沙拉洋葱节点 → 整个沙拉洋葱）
+      const crateId = NODE_INGREDIENT_SOURCES[ing] ?? ing;
+      const guid = ingredientGuidById(crateId);
       if (!guid) {
-        unresolved.push(ing);
+        // 中间产物（煎肉排等）无实体食材条目、不建箱（叶食材展开后不应出现，防御）；
+        // 仅对真正的未知食材报缺失
+        if (!byRecipeId.has(ing)) unresolved.push(ing);
         continue;
       }
       const it = addFromCatalog(cat, base.x + idx * CELL, base.z);
@@ -324,7 +410,6 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
 
   function fillMissingUtensils(selectedUt: Set<string>) {
     const recs = currentRecipes();
-    if (selectedUt.size === 0) return;
 
     const attachBase = new Map<string, string>();
     for (const ids of Object.values(STEP_UTENSILS)) {
@@ -380,46 +465,176 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       idx++;
     }
 
-    // 奶油喷罐：绑定发泡奶油食材
+    // 奶油喷罐：发泡奶油由喷罐喷出（不建食材箱）。缺失时自动放置一个并绑定奶油食材。
     const needCream = recs.some(recipeNeedsCreamSpray);
     const ingByGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
     if (needCream) {
       const creamGuids = CREAM_INGREDIENT_IDS.map((iid) => ingByGuid.get(iid)).filter((g): g is string => !!g);
+      if (creamGuids.length === 0) {
+        setStatus("⚠️ 选中菜谱需要奶油喷罐，但目录中找不到发泡奶油食材（whippedcream），喷罐未绑定", false);
+      }
+      let sprayFound = false;
+      const bindSpray = (it: EditorItem) => {
+        sprayFound = true;
+        it.stubKind = "CookingUtensil";
+        if (!it.cookingUtensil) it.cookingUtensil = {};
+        it.cookingUtensil.capacity = utensilCapacityOrFix(it);
+        const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
+        for (const g of creamGuids) existing.add(g);
+        it.cookingUtensil.allowedIngredientGuids = [...existing];
+      };
       for (const sprayId of CREAM_SPRAY_IDS) {
         const sprayCat = catalogItemById(sprayId);
         if (!sprayCat) continue;
         for (const it of S.items) {
-          if (it.prefabGuid !== sprayCat.guid) continue;
+          if (it.prefabGuid === sprayCat.guid) bindSpray(it);
+        }
+      }
+      if (!sprayFound) {
+        const sprayCat = catalogItemById("utensil_ingredient_spray_01") ?? catalogItemById(CREAM_SPRAY_IDS[0]);
+        const it = sprayCat
+          ? addFromCatalog(sprayCat, base.x + idx * CELL, base.z - 2 * CELL, false)
+          : null;
+        if (it) {
+          idx++;
+          bindSpray(it);
+        } else {
+          setStatus("⚠️ 选中菜谱需要奶油喷罐，但未能自动放置（utensil_ingredient_spray_01）", false);
+        }
+      }
+    }
+
+    // 汽水机 + 联动开关（冰淇淋汽水：汽水为 node 型，只能由汽水机产出）。
+    // 无机器 → 放置「汽水饮料机 + 开关」组合（自动联动）；机器可输出列表
+    // 收窄为本关所需汽水；已有机器但缺开关联动 → 只补开关 + switchLink。
+    {
+      const sodaRecs = recs.filter(recipeNeedsSodaMachine);
+      if (sodaRecs.length > 0) {
+        const sodas = new Set<string>();
+        for (const r of sodaRecs)
+          for (const i of r.ingredients ?? [])
+            if (SODA_MACHINE_INGREDIENT_IDS.includes(i)) sodas.add(i);
+        const machineOf = () =>
+          S.items.find((it) => prefabIdFromPath(it.prefabAssetPath ?? "") === "dlc11_drink_dispenser");
+        let machine = machineOf();
+        if (!machine) {
+          const def = comboById("drink_switch_icecream");
+          if (def) {
+            addCombo(def, base.x + idx * CELL, base.z - 3 * CELL);
+            idx++;
+            machine = machineOf();
+          }
+        }
+        if (machine) {
+          const guids = [...sodas].map((id) => ingByGuid.get(id)).filter((g): g is string => !!g);
+          if (guids.length > 0) {
+            machine.stubKind = "Dispenser";
+            machine.soArray = { pseudoPrefabGuids: guids };
+            machine.dispenser = { spawnerItemPrefabGuid: guids[0] };
+          }
+          const linked = S.switchLinks.some((l) => l.targetId === machine.instanceId);
+          if (!linked) {
+            const swCat = catalogItemById("Switch");
+            const sw = swCat
+              ? addFromCatalog(swCat, (machine._wx ?? 0) + 2 * CELL, machine._wz ?? 0)
+              : null;
+            if (sw) {
+              S.switchLinks.push({
+                switchId: sw.instanceId,
+                targetId: machine.instanceId,
+                trigger: "switch_dlc11_drink_dispenser_1",
+              });
+            }
+          }
+        } else {
+          setStatus("⚠️ 选中菜谱需要汽水机（dlc11_drink_dispenser），但未能放置", false);
+        }
+      }
+    }
+
+    // 饮料机 + 联动开关（套餐：饮料 drink01/02/03 由 DLC8 饮料机产出，不建普通食材箱）。
+    // 逻辑同汽水机：无机器 → 放置「饮料机 + 开关」组合（自动联动）；可输出列表
+    // 收窄为本关所需饮料；已有机器但缺开关联动 → 只补开关 + switchLink。
+    {
+      const drinkRecs = recs.filter(recipeNeedsDrinkMachine);
+      if (drinkRecs.length > 0) {
+        const drinks = new Set<string>();
+        for (const r of drinkRecs)
+          for (const i of r.ingredients ?? [])
+            if (DRINK_MACHINE_INGREDIENT_IDS.includes(i)) drinks.add(i);
+        const machineOf = () =>
+          S.items.find((it) => prefabIdFromPath(it.prefabAssetPath ?? "") === "dlc08_drink_machine");
+        let machine = machineOf();
+        if (!machine) {
+          const def = comboById("drink_switch");
+          if (def) {
+            addCombo(def, base.x + idx * CELL, base.z - 3 * CELL);
+            idx++;
+            machine = machineOf();
+          }
+        }
+        if (machine) {
+          const guids = [...drinks].map((id) => ingByGuid.get(id)).filter((g): g is string => !!g);
+          if (guids.length > 0) {
+            machine.stubKind = "Dispenser";
+            machine.soArray = { pseudoPrefabGuids: guids };
+            machine.dispenser = { spawnerItemPrefabGuid: guids[0] };
+          }
+          const linked = S.switchLinks.some((l) => l.targetId === machine.instanceId);
+          if (!linked) {
+            const swCat = catalogItemById("Switch");
+            const sw = swCat
+              ? addFromCatalog(swCat, (machine._wx ?? 0) + 2 * CELL, machine._wz ?? 0)
+              : null;
+            if (sw) {
+              S.switchLinks.push({
+                switchId: sw.instanceId,
+                targetId: machine.instanceId,
+                trigger: "switch_dlc08_drink_machine_1",
+              });
+            }
+          }
+        } else {
+          setStatus("⚠️ 选中菜谱需要饮料机（dlc08_drink_machine），但未能放置", false);
+        }
+      }
+    }
+
+    // 锅具食材自动装填（数据驱动，镜像游戏 OrderDefinitionNode 组成）：
+    // 汤类食材→汤锅、热狗肠→汤锅、洋葱→煎锅、搅拌类食材→搅拌杯、面糊食材→搅拌碗、
+    // 面糊中间产物→炸篮等。按功能基础 id 匹配场景锅具（含 DLC 变体），已有列表只增不删。
+    {
+      const vesselFill = computeUtensilIngredientFill(recs);
+      const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
+      const recipeGuid = new Map(recipes.map((r) => [r.id, r.guid]));
+      const vesselOfItem = (it: { prefabGuid?: string; prefabAssetPath?: string }): string => {
+        const id = S.catalogByGuid.get(it.prefabGuid ?? "")?.id ?? prefabIdFromPath(it.prefabAssetPath ?? "");
+        return functionalBaseId(id ?? "");
+      };
+      for (const [vessel, fill] of vesselFill) {
+        const guids: string[] = [];
+        for (const iid of fill.ings) {
+          const g = ingGuid.get(iid);
+          if (g) guids.push(g);
+        }
+        for (const iid of fill.intermediates) {
+          const g = recipeGuid.get(iid);
+          if (g) guids.push(g);
+        }
+        if (guids.length === 0) continue;
+        for (const it of S.items) {
+          if (vesselOfItem(it) !== vessel) continue;
           it.stubKind = "CookingUtensil";
           if (!it.cookingUtensil) it.cookingUtensil = {};
-          if (it.cookingUtensil.capacity == null) it.cookingUtensil.capacity = defaultUtensilCapacity(it);
+          it.cookingUtensil.capacity = utensilCapacityOrFix(it);
           const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
-          for (const g of creamGuids) existing.add(g);
+          for (const g of guids) existing.add(g);
           it.cookingUtensil.allowedIngredientGuids = [...existing];
         }
       }
     }
 
     // 自动分配中间产物 + 搅拌杯装填
-    const blenderIngs = new Set<string>();
-    for (const r of recs) {
-      if (r.cookingStep === "Blender") (r.ingredients ?? []).forEach((i) => blenderIngs.add(i));
-    }
-    if (blenderIngs.size > 0 && placedItemIds.includes("BlenderCup")) {
-      const guidsToAdd = [...blenderIngs].map((iid) => ingByGuid.get(iid)).filter((g): g is string => !!g);
-      if (guidsToAdd.length > 0) {
-        const itCat = catalogItemById("BlenderCup");
-        for (const it of S.items) {
-          if (!itCat || it.prefabGuid !== itCat.guid) continue;
-          it.stubKind = "CookingUtensil";
-          if (!it.cookingUtensil) it.cookingUtensil = {};
-          if (it.cookingUtensil.capacity == null) it.cookingUtensil.capacity = defaultUtensilCapacity(it);
-          const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
-          for (const g of guidsToAdd) existing.add(g);
-          it.cookingUtensil.allowedIngredientGuids = [...existing];
-        }
-      }
-    }
     if (S.autoIntermediates) {
       const intermediateMap = computeIntermediatesForUtensils(recs);
       for (const [placedId, intIds] of intermediateMap) {
@@ -432,7 +647,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
           if (it.prefabGuid !== itCat.guid) continue;
           it.stubKind = "CookingUtensil";
           if (!it.cookingUtensil) it.cookingUtensil = {};
-          if (it.cookingUtensil.capacity == null) it.cookingUtensil.capacity = defaultUtensilCapacity(it);
+          it.cookingUtensil.capacity = utensilCapacityOrFix(it);
           const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
           for (const g of guidsToAdd) existing.add(g);
           it.cookingUtensil.allowedIngredientGuids = [...existing];
@@ -590,7 +805,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         let checked = !ok;
         if (i === "DoughSO" && info.reqIngs.has("DLC05_Dough")) checked = false;
         if (i === "ChoppedBunSO" && info.reqIngs.has("DLC02_ChoppedBun")) checked = false;
-        return `<label class="rw-row ${ok ? "" : "miss"}"><input type="checkbox" class="rw-ing-cb" value="${i}" ${checked ? "checked" : ""}/> <span>${escHtml(ingredientNameById(i))}</span> <span class="muted">${escHtml(i)}</span></label>`;
+        const iName = ingredientEntryById(i)?.nameZh ?? byRecipeId.get(i)?.nameZh ?? i;
+        return `<label class="rw-row ${ok ? "" : "miss"}"><input type="checkbox" class="rw-ing-cb" value="${i}" ${checked ? "checked" : ""}/> <span>${escHtml(iName)}</span> <span class="muted">${escHtml(i)}</span></label>`;
       })
       .join("");
     const utRows = info.reqUt
@@ -623,7 +839,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         : `<p class="modal-hint ok">锅具/道具已齐全</p>`}
       <div class="rw-toolbar" style="margin-top:8px">
         ${info.missingIngs.length ? `<button type="button" class="modal-btn primary" id="an-fill-ing">一键补齐食材 (${info.missingIngs.length})</button>` : ""}
-        ${info.missingUt.length ? `<button type="button" class="modal-btn primary" id="an-fill-ut">自动补全道具 (${info.missingUt.length})</button>` : ""}
+        <button type="button" class="modal-btn primary" id="an-fill-ut" title="放置缺失锅具/机具并装填：锅具按已选菜谱分配可处理食材（煎锅←肉、炸篮←薯条/洋葱圈/芝士条等），饮料机/汽水机/奶油喷罐自动放置并联动；锅具已齐时仅执行装填与联动（只增不删）">${info.missingUt.length ? `自动补全道具 (${info.missingUt.length})` : "🔄 锅具装填 / 机具联动"}</button>
       </div>
     </div>`;
   };

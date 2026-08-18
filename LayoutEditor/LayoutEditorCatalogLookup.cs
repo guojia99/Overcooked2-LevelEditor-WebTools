@@ -14,9 +14,13 @@ public static class LayoutEditorCatalogLookup
         { "dlc09_workstation_sink_mug_01_wood", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "dlc13_workstation_sink_01_wood", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "workstation_sink_01_summer", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
-        // DLC 大件：火锅灶台 / 大莲花压力开关 2×2
-        { "cooking_region_floorburner", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
-        { "dlc10_cooking_region_floorburner", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
+        // 洗餐盘水槽（DLC8 马戏团，3 款皮肤同占地）
+        { "dlc08_workstation_01_tray_sink_circus", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        { "dlc08_workstation_02_tray_sink_circus", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        { "dlc08_workstation_03_tray_sink_circus", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        // DLC 大件：大莲花压力开关 2×2；火锅灶台 1×1（半格 2×2 = 1.2m）
+        { "cooking_region_floorburner", new LayoutFootprint { cellsX = 1, cellsZ = 1 } },
+        { "dlc10_cooking_region_floorburner", new LayoutFootprint { cellsX = 1, cellsZ = 1 } },
         { "dlc13_lotuspressureswitch_large", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
         // 火锅大锅 2×2（与火锅灶台同占地）
         { "utensil_large_pot_01", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
@@ -24,6 +28,10 @@ public static class LayoutEditorCatalogLookup
         // 可推动方块 = 可推动的大火锅，2×2
         { "pushable_object", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
         { "dlc10_pushable_object", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
+        // 断头台 3×1（切菜台）；大炮 2×2
+        { "workstation_guillotine_01", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        { "dlc08_cannon", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
+        { "dlc09_cannon", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
     };
 
     public static LayoutFootprint GetFootprint(string prefabId)

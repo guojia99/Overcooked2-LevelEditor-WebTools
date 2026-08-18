@@ -1,5 +1,8 @@
 import { HistoryStack } from "../history";
 import type {
+  ButtonEventLink,
+  ButtonLink,
+  CameraInfo,
   CatalogItem,
   CounterAppearanceCatalog,
   DeathInfo,
@@ -9,8 +12,10 @@ import type {
   IngredientEntry,
   LayoutItem,
   LevelSetScene,
+  LightInfo,
   MoveGroup,
   RecipeEntry,
+  SwitchLink,
   SwitchMaterialOption,
   WalkableRect
 } from "../types";
@@ -30,6 +35,26 @@ export type EditorFloor = FloorObject & {
   _wCells: number;
   _dCells: number;
 };
+
+/** 联合组合（palette「联合组合」分类）：一次放置多个物品并自动完成联动配置。 */
+export interface ComboPart {
+  /** 目录物品 id（catalogItemById 查找）。 */
+  id: string;
+  /** 相对主物品的偏移（格，1 格 = CELL 米）。 */
+  dx: number;
+  dz: number;
+}
+
+export interface ComboDef {
+  id: string;
+  nameZh: string;
+  /** 自动配置说明（卡片副标题）。 */
+  hint: string;
+  /** 第一个为主物品（落在拖放点）。 */
+  parts: ComboPart[];
+  /** 全部放置成功后的自动联动配置（按 parts 顺序接收 EditorItem）。 */
+  link: (items: EditorItem[]) => void;
+}
 
 export type LayerKey = "items" | "decor" | "floor" | "background" | "move";
 
@@ -65,6 +90,16 @@ export interface EditorSnapshot {
   bgThemeKey: string;
   /** Move-control groups (undo/redo must restore them too). */
   moveControls: MoveGroup[];
+  /** 开关联动（按钮 → 断头台/饮料机/酱料机；undo/redo 一并恢复）。 */
+  switchLinks: SwitchLink[];
+  /** 按钮/压力开关 ↔ 移动组联动（undo/redo 一并恢复）。 */
+  buttonLinks: ButtonLink[];
+  /** 按钮 ↔ 事件组联动（undo/redo 一并恢复）。 */
+  buttonEvents: ButtonEventLink[];
+  /** 相机（背景色/FOV，undo/redo 一并恢复）。 */
+  cameraInfo: CameraInfo | null;
+  /** Art/Lights 非 prefab 灯光（undo/redo 一并恢复）。 */
+  lights: LightInfo[];
 }
 
 /** Move layer interaction mode. "members" = pick/box-select members (items + floors);
@@ -112,11 +147,21 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
   dlc09_workstation_sink_mug_01_wood: { cellsX: 2, cellsZ: 1 },
   dlc13_workstation_sink_01_wood: { cellsX: 2, cellsZ: 1 },
   workstation_sink_01_summer: { cellsX: 2, cellsZ: 1 },
+  dlc08_workstation_01_tray_sink_circus: { cellsX: 2, cellsZ: 1 },
+  dlc08_workstation_02_tray_sink_circus: { cellsX: 2, cellsZ: 1 },
+  dlc08_workstation_03_tray_sink_circus: { cellsX: 2, cellsZ: 1 },
   GlassReturn: { cellsX: 1, cellsZ: 1 },
   utensil_large_pot_01: { cellsX: 2, cellsZ: 2 },
   utensil_dlc10_large_pot_01: { cellsX: 2, cellsZ: 2 },
+  // 火锅地面灶台 1×1（游戏实测半格 2×2 = 1.2m；大锅 2×2 锅沿外架其上）
+  cooking_region_floorburner: { cellsX: 1, cellsZ: 1 },
+  dlc10_cooking_region_floorburner: { cellsX: 1, cellsZ: 1 },
   pushable_object: { cellsX: 2, cellsZ: 2 },
   dlc10_pushable_object: { cellsX: 2, cellsZ: 2 },
+  // 断头台 2×1（切菜台）；大炮 2×2
+  workstation_guillotine_01: { cellsX: 2, cellsZ: 1 },
+  dlc08_cannon: { cellsX: 2, cellsZ: 2 },
+  dlc09_cannon: { cellsX: 2, cellsZ: 2 },
 };
 
 /** 全部编辑器可变状态（单例）。模块间共享，禁止顶层访问 DOM 的状态也在此。 */
@@ -130,6 +175,12 @@ export const S = {
   floors: [] as EditorFloor[],
   walkable: [] as WalkableRect[],
   deathInfo: null as DeathInfo | null,
+  /** 游戏相机（背景色/FOV；写回时随全量保存携带）。 */
+  cameraInfo: null as CameraInfo | null,
+  /** Art/Lights 非 prefab 灯光。 */
+  lights: [] as LightInfo[],
+  /** 画布上显示相机视野范围（FOV 视锥与地面交线）。 */
+  showCameraFov: localStorage.getItem("showCameraFov") !== "0",
   bgThemeKey: "void",
   bgThemeDirty: false,
   autoKillPlane: false,
@@ -152,6 +203,9 @@ export const S = {
   hoverCy: -1,
   gridInfo: null as GridInfo | null,
   moveControls: [] as MoveGroup[],
+  switchLinks: [] as SwitchLink[],
+  buttonLinks: [] as ButtonLink[],
+  buttonEvents: [] as ButtonEventLink[],
   activeMoveGroupId: null as string | null,
   activeMoveEventIdx: null as number | null,
   selectedWaypointId: null as string | null,
@@ -172,12 +226,13 @@ export const S = {
   /** Canvas-placed waypoints are appended to the active event's route right away. */
   moveRouteAutoAdd: true,
   expandedMemberId: null as string | null,
-  activeRightTab: "items" as "items" | "move",
+  activeRightTab: "items" as "items" | "move" | "bevents",
   draggingWaypointId: null as string | null,
   scale: 1,
   panX: 0,
   panY: 0,
   dragCatalog: null as CatalogItem | null,
+  dragCombo: null as ComboDef | null,
   dragItemKey: null as string | null,
   dragOffsetX: 0,
   dragOffsetZ: 0,
@@ -216,9 +271,6 @@ export const S = {
   sceneItemListSig: "",
   paletteCollapsed: localStorage.getItem("paletteCollapsed") === "1",
   itemsPanelCollapsed: localStorage.getItem("itemsPanelCollapsed") === "1",
-  showPaletteVariants: localStorage.getItem("showPaletteVariants") === "1",
-  webSyncVersion: "",
-  webSyncDisabled: false,
   corePaletteGroupMeta: new Map<string, string>(),
   pendingNewFloor: false,
   pendingNewFloorCat: null as CatalogItem | null,

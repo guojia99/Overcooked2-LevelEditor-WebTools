@@ -240,17 +240,23 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/env/status" && request.HttpMethod == "GET")
+            {
+                // 启动环境一次性自检：common_w 装配、音频导出、游戏 bundle、dump 清单等
+                // 依赖可用性一次返回，前端启动时拉取一次即可（webBuiltin/版本徽标共用）。
+                WriteJson(response, 200, LayoutEditorJson.ToJson(BuildEnvStatus(Port)));
+                return;
+            }
+
             if (path == "/api/level-set/sync" && request.HttpMethod == "POST")
             {
-                // 打开关卡集时调用：版本不一致立即同步一次；v0.0.0 不同步且 web 内置禁用。
+                // （已废弃拷贝同步）仅上报 common_w 状态：目录不存在 = 未装配（web 内置禁用）；
+                // changed 恒为 0（不再有 custom_web 拷贝动作）。
                 var setName = request.QueryString["setName"] ?? string.Empty;
-                var version = LayoutEditorCustomIngredients.ImportVersion();
-                var disabled = version == "v0.0.0";
+                var status = LayoutEditorCustomIngredients.CommonWStatus();
                 var changed = 0;
-                if (!disabled && !string.IsNullOrEmpty(setName))
-                    changed = LayoutEditorCustomIngredients.SyncAllWebContent(setName);
-                WriteJson(response, 200, "{\"version\":\"" + version + "\",\"disabled\":"
-                    + (disabled ? "true" : "false") + ",\"changed\":" + changed + "}");
+                WriteJson(response, 200, "{\"version\":\"" + status.version + "\",\"disabled\":"
+                    + (status.exists ? "false" : "true") + ",\"changed\":" + changed + "}");
                 return;
             }
 
@@ -331,9 +337,9 @@ public class LayoutEditorHttpServer
                 if (string.IsNullOrEmpty(only) && request.QueryString["itemsOnly"] == "1")
                     only = "items";
 
-                // 统一保存处理：Web 内置（Import 源库）食材/道具按需拷入关卡集
-                // custom_web，并把 doc 引用改写为副本 guid（随关卡打包）。
-                // Import 仅作模板：先无条件把全部 Web 内容同步到关卡集，再改写引用。
+                // 统一保存处理：Web 内置（common_w）引用校验（历史 Import/custom_web
+                // 引用告警）+ 收集 doc 引用的游戏 bundle，供后续依赖注册。
+                // common_w 资产直接引用、随 common_w bundle 打包，不再拷贝 custom_web。
                 var levelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(doc.sceneAssetPath);
                 string levelSet = null;
                 if (levelInfo != null)
@@ -348,6 +354,12 @@ public class LayoutEditorHttpServer
                     LayoutEditorCustomIngredients.EnsureDocCopies(levelSet, doc);
                 }
 
+                // 依赖注册必须在 Apply 之前：Apply 结尾的 ReloadPseudoAssetsFull 按
+                // LevelInfoSO.dependencies 加载伪预制件，晚注册会让本轮 reload 缺
+                // bundle（新放 common_w 道具首存必空的原因之一）。
+                if (levelSet != null && levelInfo != null)
+                    LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
+
                 var err = SceneLayoutApplier.Apply(doc, snap, syncWalkable, only);
                 if (!string.IsNullOrEmpty(err))
                 {
@@ -355,12 +367,10 @@ public class LayoutEditorHttpServer
                     return;
                 }
 
-                // 场景写回完成后：先同步全部引用（recipes/allIngredients 副本改写 + 依赖注册），
-                // 最后再默认触发两个自动填充 —— Fill All AudioDirectorySOs 与 Auto Fill All
-                // Ingredients，确保填充是基于"写完全部"之后的最终状态。
+                // 场景写回完成后：默认触发两个自动填充 —— Fill All AudioDirectorySOs 与
+                // Auto Fill All Ingredients，确保填充是基于"写完全部"之后的最终状态。
                 if (levelSet != null && levelInfo != null)
                 {
-                    LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
                     LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
                     LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
                     // 填充可能引入新的食材/音频目录引用，再同步一次副本、依赖并合并音频 bundle。
@@ -1069,6 +1079,59 @@ public class LayoutEditorHttpServer
             WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = error }));
         else
             WriteJson(response, 200, "{\"ok\":true}");
+    }
+
+    /// <summary>/api/env/status：启动环境一次性自检（依赖文件/目录可用性聚合）。</summary>
+    private static EnvStatusDto BuildEnvStatus(int port)
+    {
+        var dto = new EnvStatusDto
+        {
+            ok = true,
+            port = port,
+            staticDist = LayoutEditorPaths.IsWebDistReady(),
+            schemaVersion = LayoutEditorRecipeKnowledge.BridgeSchemaVersion,
+            knowledgeLoaded = LayoutEditorRecipeKnowledge.KnowledgeFileLoaded,
+            dictionaryLoaded = LayoutEditorManualLookup.DictionaryLoaded,
+            commonW = LayoutEditorCustomIngredients.CommonWStatus()
+        };
+
+        // 音频导出（audio-exports/）
+        var audioManifest = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports/audio-exports.json"));
+        dto.audioExports = File.Exists(audioManifest);
+        if (dto.audioExports)
+        {
+            try
+            {
+                dto.audioExportClips = Directory.GetFiles(
+                    Path.GetDirectoryName(audioManifest), "*.ogg", SearchOption.AllDirectories).Length;
+            }
+            catch { }
+        }
+
+        // 游戏 bundle（StreamingAssets/Windows，不计 .meta）
+        var bundlesDir = Path.GetFullPath(Path.Combine(Application.dataPath, "StreamingAssets/Windows"));
+        dto.gameBundles = Directory.Exists(bundlesDir);
+        if (dto.gameBundles)
+        {
+            try
+            {
+                var files = Directory.GetFiles(bundlesDir);
+                int count = 0;
+                foreach (var f in files)
+                {
+                    if (!f.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+                        count++;
+                }
+                dto.gameBundleCount = count;
+            }
+            catch { }
+        }
+
+        // dump_bundle/manifest.json（bundle 分析/依赖图）
+        dto.dumpManifest = File.Exists(
+            Path.GetFullPath(Path.Combine(Application.dataPath, "../dump_bundle/manifest.json")));
+
+        return dto;
     }
 
     private static void ServeAudioExports(HttpListenerResponse response)

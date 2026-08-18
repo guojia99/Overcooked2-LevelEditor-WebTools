@@ -224,6 +224,20 @@
   border-color: rgba(200, 195, 185, 0.35);
 }
 
+/* 禁用态（web 内置未放开）：卡片置灰 + ⛔徽标 */
+.rl-badge-disabled {
+  color: #e08a8a;
+  border-color: rgba(224, 138, 138, 0.45);
+}
+.rl-card.rl-card-disabled {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+.rl-ing-card.rl-ing-disabled {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
 /* 食材分组：Recipe_Background_2.png 拉伸铺底。
  * 分组从左到右排列（update_ui.md 三.2），空间不足时换行；
  * 与上方成品背景图之间无上下间距、无 padding。 */
@@ -277,6 +291,19 @@
   height: 40px;
   object-fit: contain;
   display: block;
+}
+
+/* 食材级步骤角标（如炒饭的米 → Pot 煮锅角标）：食材图标右下角小图标 */
+.rl-chip-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  line-height: 0;
+}
+
+.rl-chip-badge .rl-step-icon {
+  width: 16px;
+  height: 16px;
 }
 
 /* 锅具 / 烹饪方式：直接显示图标，无背景、无边框、无阴影；

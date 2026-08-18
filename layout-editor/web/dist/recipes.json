@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-14T16:23:54.408Z",
+  "generatedAt": "2026-08-18T14:49:16.759Z",
   "schemaVersion": 3,
-  "itemCount": 192,
+  "itemCount": 206,
   "recipes": [
     {
       "guid": "33ae6e311fad09147a11dfaeed918dce",
@@ -10,6 +10,7 @@
       "nameEn": "Strawberry Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Strawberry.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "SmoothieStrawberry",
         "SmoothieStrawberry",
@@ -45,6 +46,7 @@
       "nameEn": "Strawberry S'mores",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Smores_Strawberry.asset",
       "cookingStep": "ToastingFork",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Crackers",
         "DLC05_Marshmallow",
@@ -86,6 +88,7 @@
       "nameEn": "Strawberry Batter",
       "assetPath": "Assets/common02/food/Recipes/dlc02/MixedFlourEggStrawberry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -120,8 +123,9 @@
       "id": "dlc13_mixedfloureggstrawberries",
       "nameZh": "草莓面糊（DLC13）",
       "nameEn": "Strawberry Batter (DLC13)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_mixedfloureggstrawberries.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_mixedfloureggstrawberries.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "dlc13_flour",
         "dlc13_egg",
@@ -156,8 +160,9 @@
       "id": "dlc09_mixedfloureggstrawberry",
       "nameZh": "草莓面糊（DLC9）",
       "nameEn": "Strawberry Batter (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedfloureggstrawberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_mixedfloureggstrawberry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg",
@@ -194,6 +199,7 @@
       "nameEn": "Strawberry Pancake",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Cake_StrawberryPancake.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -236,8 +242,9 @@
       "id": "dlc09_pancake_strawberry",
       "nameZh": "草莓松饼（DLC9）",
       "nameEn": "Strawberry Pancake (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_pancake_strawberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_pancake_strawberry.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg",
@@ -252,14 +259,23 @@
       "intermediate": false,
       "cookingGroups": [
         {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg"
+          ]
+        },
+        {
           "step": "FryingPan",
           "utensils": [
             "Cooker",
             "FryPan"
           ],
           "ingredients": [
-            "dlc09_flour",
-            "dlc09_egg",
             "dlc09_pancakestrawberry"
           ]
         }
@@ -273,6 +289,7 @@
       "nameEn": "Strawberry Banana S'mores",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Smores_Strawberry_Banana.asset",
       "cookingStep": "ToastingFork",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Crackers",
         "DLC05_Marshmallow",
@@ -312,14 +329,18 @@
     {
       "guid": "00d5f3f3bea77b6137529f4cebe0db96",
       "id": "dlc13_moonpie_strawberry",
-      "nameZh": "草莓月亮派",
+      "nameZh": "草莓月饼",
       "nameEn": "Strawberry Moon Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_moonpie_strawberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_moonpie_strawberry.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "Plate",
       "ingredients": [
         "dlc13_flour",
         "dlc13_egg",
         "dlc13_strawberry"
+      ],
+      "compositionIds": [
+        "dlc13_mixedfloureggstrawberries"
       ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
@@ -330,8 +351,10 @@
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "OvenTray",
+          "step": "Mixer",
           "utensils": [
+            "Mixer",
+            "MixerBowl",
             "Oven"
           ],
           "ingredients": [
@@ -339,6 +362,13 @@
             "dlc13_egg",
             "dlc13_strawberry"
           ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
         }
       ],
       "icon": true
@@ -348,8 +378,9 @@
       "id": "fruitplatter_orangegrapes",
       "nameZh": "橙子葡萄拼盘",
       "nameEn": "Orange & Grapes Platter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/fruitplatter_orangegrapes.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/fruitplatter_orangegrapes.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc04_orange",
         "grapes"
@@ -378,8 +409,9 @@
       "id": "dlc10_fruitplatter_orangegrapes",
       "nameZh": "橙子葡萄拼盘（DLC10）",
       "nameEn": "Orange & Grapes Platter (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_fruitplatter_orangegrapes.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_fruitplatter_orangegrapes.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc10_orange",
         "dlc10_grapes"
@@ -408,8 +440,9 @@
       "id": "dlc13_fruitplatter_orangegrapes",
       "nameZh": "橙子葡萄拼盘（DLC13）",
       "nameEn": "Orange & Grapes Platter (DLC13)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_fruitplatter_orangegrapes.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_fruitplatter_orangegrapes.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc13_orange",
         "dlc13_grapes"
@@ -438,8 +471,9 @@
       "id": "fruitplatter_orangepeach",
       "nameZh": "橙子桃子拼盘",
       "nameEn": "Orange & Peach Platter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/fruitplatter_orangepeach.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/fruitplatter_orangepeach.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc04_orange",
         "peach"
@@ -468,8 +502,9 @@
       "id": "dlc10_fruitplatter_orangepeach",
       "nameZh": "橙子桃子拼盘（DLC10）",
       "nameEn": "Orange & Peach Platter (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_fruitplatter_orangepeach.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_fruitplatter_orangepeach.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc10_orange",
         "dlc10_peach"
@@ -498,8 +533,9 @@
       "id": "dlc13_fruitplatter_orangepeach",
       "nameZh": "橙子桃子拼盘（DLC13）",
       "nameEn": "Orange & Peach Platter (DLC13)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_fruitplatter_orangepeach.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_fruitplatter_orangepeach.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc13_orange",
         "dlc13_peach"
@@ -565,8 +601,9 @@
       "id": "tomato_cucumber_onion",
       "nameZh": "番茄黄瓜洋葱沙拉",
       "nameEn": "Tomato Cucumber & Onion Salad",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/tomato_cucumber_onion.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/tomato_cucumber_onion.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc11_tomato",
         "dlc11_cucumber",
@@ -597,8 +634,9 @@
       "id": "hotdog_ketchup_mustard",
       "nameZh": "番茄酱芥末热狗",
       "nameEn": "Hot Dog Ketchup & Mustard",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_ketchup_mustard.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/hotdog_ketchup_mustard.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "hotdogbun",
         "frankfurter",
@@ -640,8 +678,9 @@
       "id": "dlc11_hotdog_ketchup_mustard",
       "nameZh": "番茄酱芥末热狗（DLC11）",
       "nameEn": "Hot Dog Ketchup & Mustard (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_ketchup_mustard.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_hotdog_ketchup_mustard.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "dlc11_hotdogbun",
         "dlc11_frankfurter",
@@ -683,8 +722,9 @@
       "id": "hotdog_ketchup",
       "nameZh": "番茄酱热狗",
       "nameEn": "Hot Dog & Ketchup",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_ketchup.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/hotdog_ketchup.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "hotdogbun",
         "frankfurter",
@@ -724,8 +764,9 @@
       "id": "dlc11_hotdog_ketchup",
       "nameZh": "番茄酱热狗（DLC11）",
       "nameEn": "Hot Dog & Ketchup (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_ketchup.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_hotdog_ketchup.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "dlc11_hotdogbun",
         "dlc11_frankfurter",
@@ -767,6 +808,7 @@
       "nameEn": "Tomato Salad",
       "assetPath": "Assets/common01/food/Recipes/Salad_Tomato_SO.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "LettuceSO",
         "TomatoSO"
@@ -835,8 +877,9 @@
       "id": "salad_tomato_onion",
       "nameZh": "番茄洋葱沙拉",
       "nameEn": "Tomato & Onion Salad",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/salad_tomato_onion.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/salad_tomato_onion.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc11_lettuce",
         "dlc11_tomato",
@@ -869,6 +912,7 @@
       "nameEn": "Pasta Tomato",
       "assetPath": "Assets/common01/food/Recipes/Pasta_TomatoOnly_SO.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "PastaSO",
         "TomatoSO"
@@ -909,8 +953,9 @@
       "id": "tomato_corn_onion",
       "nameZh": "番茄玉米洋葱沙拉",
       "nameEn": "Tomato Corn & Onion Salad",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/tomato_corn_onion.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/tomato_corn_onion.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc11_tomato",
         "corn",
@@ -937,12 +982,50 @@
       "icon": true
     },
     {
+      "guid": "1384e5b499d548ed99f8f5d512cdaf95",
+      "id": "mixedflouregghoneycomb",
+      "nameZh": "蜂蜜面糊",
+      "nameEn": "Honeycomb Batter",
+      "assetPath": "Assets/common_w/Recipes/dlc08/mixedflouregghoneycomb.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "HoneycombSO"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
       "guid": "cb3f2f86134eb1bb4931cfe5df2bc9b2",
       "id": "mixedfloureggraspberry",
       "nameZh": "覆盆子面糊",
       "nameEn": "Raspberry Batter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/mixedfloureggraspberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/mixedfloureggraspberry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -977,8 +1060,9 @@
       "id": "donut_raspberry",
       "nameZh": "覆盆子甜甜圈",
       "nameEn": "Raspberry Donut",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/donut_raspberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/donut_raspberry.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -1023,6 +1107,7 @@
       "nameEn": "Olive Pizza",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Pizza_Olives.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "DoughSO",
         "TomatoSO",
@@ -1055,8 +1140,9 @@
       "id": "mixedfloureggdriedfruitorange",
       "nameZh": "果干橙子面糊",
       "nameEn": "Dried Fruit & Orange Batter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/mixedfloureggdriedfruitorange.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc03/mixedfloureggdriedfruitorange.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -1093,8 +1179,9 @@
       "id": "dlc09_mixedfloureggdriedfruitorange",
       "nameZh": "果干橙子面糊（DLC9）",
       "nameEn": "Dried Fruit & Orange Batter (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedfloureggdriedfruitorange.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_mixedfloureggdriedfruitorange.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg",
@@ -1131,8 +1218,9 @@
       "id": "mixedfloureggdriedfruit",
       "nameZh": "果干面糊",
       "nameEn": "Dried Fruit Batter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/mixedfloureggdriedfruit.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc03/mixedfloureggdriedfruit.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -1167,8 +1255,9 @@
       "id": "dlc09_mixedfloureggdriedfruit",
       "nameZh": "果干面糊（DLC9）",
       "nameEn": "Dried Fruit Batter (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedfloureggdriedfruit.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_mixedfloureggdriedfruit.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg",
@@ -1205,6 +1294,7 @@
       "nameEn": "Seafood Pasta",
       "assetPath": "Assets/common01/food/Recipes/Pasta_Marinara_SO.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "PastaSO",
         "FishSO",
@@ -1258,6 +1348,7 @@
       "nameEn": "Burger",
       "assetPath": "Assets/common01/food/Recipes/Burger_Plain_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "DLC02_ChoppedBun",
         "MeatSO"
@@ -1291,12 +1382,485 @@
       "icon": true
     },
     {
+      "guid": "28b16a20829fc0b3e5a33d24141def8a",
+      "id": "md_burger_fries",
+      "nameZh": "汉堡+薯条 套餐",
+      "nameEn": "Burger & Fries Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_burger_fries.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "27873c1b8548622bd7bd6be5f56cb530",
+      "id": "md_burger_fries_drink02",
+      "nameZh": "汉堡+薯条+饮料 2 套餐",
+      "nameEn": "Burger & Fries & Drink 2 Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_burger_fries_drink02.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "drink02"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "drink02"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink02"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3f7c2e7596a599be8dd95877efbf4480",
+      "id": "md_burger_fries_cheesesticks",
+      "nameZh": "汉堡+薯条+炸芝士条 套餐",
+      "nameEn": "Burger & Fries & Cheese Sticks Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_burger_fries_cheesesticks.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "friedcheese_sticks"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "friedcheese_sticks"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "03c9a0bc1703febac7f59abdcf7dd9b2",
+      "id": "md_burger_drink01",
+      "nameZh": "汉堡+饮料 1 套餐",
+      "nameEn": "Burger & Drink 1 Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_burger_drink01.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "drink01"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "drink01"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink01"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3b4ba721240d21c7f000355d1d44b019",
+      "id": "md_burger_onionrings",
+      "nameZh": "汉堡+炸洋葱圈 套餐",
+      "nameEn": "Burger & Onion Rings Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_burger_onionrings.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "83fad59b96d0f1d49ba459a0f509d3ef",
+      "id": "md_burger_onionrings_drink01",
+      "nameZh": "汉堡+炸洋葱圈+饮料 1 套餐",
+      "nameEn": "Burger & Onion Rings & Drink 1 Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_burger_onionrings_drink01.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings",
+        "drink01"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings",
+        "drink01"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink01"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "55a7e92cc181867320fbcba62883e4c4",
+      "id": "md_burger_onionrings_cheesesticks",
+      "nameZh": "汉堡+炸洋葱圈+炸芝士条 套餐",
+      "nameEn": "Burger & Onion Rings & Cheese Sticks Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_burger_onionrings_cheesesticks.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings",
+        "friedcheese_sticks"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings",
+        "friedcheese_sticks"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "633b6b73a45afaf8fc92dcd395023531",
+      "id": "md_burger_cheesesticks_drink03",
+      "nameZh": "汉堡+炸芝士条+饮料 3 套餐",
+      "nameEn": "Burger & Cheese Sticks & Drink 3 Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_burger_cheesesticks_drink03.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedcheese_sticks",
+        "drink03"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedcheese_sticks",
+        "drink03"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink03"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "5f2a228eb7a8555f6352dcc6f7effe1d",
       "id": "mixedfloureggblackberry",
       "nameZh": "黑莓面糊",
       "nameEn": "Blackberry Batter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggblackberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/mixedfloureggblackberry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -1331,8 +1895,9 @@
       "id": "fruitpie_blackberry",
       "nameZh": "黑莓派",
       "nameEn": "Blackberry Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_blackberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/fruitpie_blackberry.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -1376,6 +1941,7 @@
       "nameEn": "Carrot Cake",
       "assetPath": "Assets/common01/food/Recipes/Cake_HoneyCarrot_SO.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -1421,6 +1987,7 @@
       "nameEn": "Carrot Shumai",
       "assetPath": "Assets/common01/food/Recipes/Steamed_Carrot_SO.asset",
       "cookingStep": "Steamer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "CarrotSO"
@@ -1461,8 +2028,9 @@
       "id": "salad_cucumber_tomato_onion",
       "nameZh": "黄瓜番茄洋葱沙拉",
       "nameEn": "Cucumber Tomato & Onion Salad",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/salad_cucumber_tomato_onion.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/salad_cucumber_tomato_onion.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc11_lettuce",
         "dlc11_tomato",
@@ -1497,6 +2065,7 @@
       "nameEn": "Cucumber Salad",
       "assetPath": "Assets/common01/food/Recipes/Salad_Cucumber_SO.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "LettuceSO",
         "TomatoSO",
@@ -1529,6 +2098,7 @@
       "nameEn": "Cucumber Sushi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_Cucumber_SO.asset",
       "cookingStep": "Steamer",
+      "platingStep": "",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -1568,8 +2138,9 @@
       "id": "salad_cucumber_onion",
       "nameZh": "黄瓜洋葱沙拉",
       "nameEn": "Cucumber & Onion Salad",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/salad_cucumber_onion.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/salad_cucumber_onion.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc11_lettuce",
         "dlc11_cucumber",
@@ -1602,6 +2173,7 @@
       "nameEn": "Chicken Tomato Kebab",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Kebob_ChickenTomato.asset",
       "cookingStep": "KebabSkewer",
+      "platingStep": "",
       "ingredients": [
         "KebobChicken",
         "KebobTomato"
@@ -1633,8 +2205,9 @@
       "id": "chickenburger",
       "nameZh": "鸡肉汉堡",
       "nameEn": "Chicken Burger",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/chickenburger.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/chickenburger.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "dlc08_bun",
         "dlc08_chicken"
@@ -1665,7 +2238,479 @@
           ]
         }
       ],
-      "icon": false
+      "icon": true
+    },
+    {
+      "guid": "0f007802d9382b111d4d4e206307956a",
+      "id": "md_c_burger_fries_drink03",
+      "nameZh": "鸡肉汉堡+薯条+饮料 3 套餐",
+      "nameEn": "Chicken Burger & Fries & Drink 3 Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_c_burger_fries_drink03.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "drink03"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "drink03"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink03"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8b8c47e035b8809576828ec949c29957",
+      "id": "md_c_burger_fries_onionrings",
+      "nameZh": "鸡肉汉堡+薯条+炸洋葱圈 套餐",
+      "nameEn": "Chicken Burger & Fries & Onion Rings Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_c_burger_fries_onionrings.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "friedonion_rings"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "friedonion_rings"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "84835518175f97e4d28e36f13c54c754",
+      "id": "md_c_burger_fries_cheesesticks",
+      "nameZh": "鸡肉汉堡+薯条+炸芝士条 套餐",
+      "nameEn": "Chicken Burger & Fries & Cheese Sticks Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_c_burger_fries_cheesesticks.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "friedcheese_sticks"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "friedcheese_sticks"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0c28587ea0e7ee2126084bfe7daa5be5",
+      "id": "md_c_burger_drink03",
+      "nameZh": "鸡肉汉堡+饮料 3 套餐",
+      "nameEn": "Chicken Burger & Drink 3 Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_c_burger_drink03.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "drink03"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "drink03"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink03"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "c082a54e7b87abec21311954e1023011",
+      "id": "md_c_burger_onionrings",
+      "nameZh": "鸡肉汉堡+炸洋葱圈 套餐",
+      "nameEn": "Chicken Burger & Onion Rings Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_c_burger_onionrings.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedonion_rings"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedonion_rings"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "05ecbca1e1abdf4e1d3e334defd185a5",
+      "id": "md_c_burger_onionrings_drink01",
+      "nameZh": "鸡肉汉堡+炸洋葱圈+饮料 1 套餐",
+      "nameEn": "Chicken Burger & Onion Rings & Drink 1 Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_c_burger_onionrings_drink01.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedonion_rings",
+        "drink01"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedonion_rings",
+        "drink01"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink01"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fc58bc006dbfe1fed75d5c261b42bc4b",
+      "id": "md_c_burger_cheesesticks",
+      "nameZh": "鸡肉汉堡+炸芝士条 套餐",
+      "nameEn": "Chicken Burger & Cheese Sticks Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_c_burger_cheesesticks.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedcheese_sticks"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedcheese_sticks"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "64b1bd39b2ac69e1c85deb630429c95f",
+      "id": "md_c_burger_cheesesticks_drink02",
+      "nameZh": "鸡肉汉堡+炸芝士条+饮料 2 套餐",
+      "nameEn": "Chicken Burger & Cheese Sticks & Drink 2 Meal",
+      "assetPath": "Assets/common_w/Recipes/dlc08/md_c_burger_cheesesticks_drink02.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedcheese_sticks",
+        "drink02"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedcheese_sticks",
+        "drink02"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "web",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink02"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
     },
     {
       "guid": "03131c3b6e7cd284198075c9d409e3e9",
@@ -1674,6 +2719,7 @@
       "nameEn": "Chicken Burrito",
       "assetPath": "Assets/common01/food/Recipes/Burrito_Chicken_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "TortillaSO",
         "SushiRiceSO",
@@ -1724,6 +2770,7 @@
       "nameEn": "Chicken Pizza",
       "assetPath": "Assets/common01/food/Recipes/Pizza_Chicken_SO.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Dough",
         "TomatoSO",
@@ -1756,10 +2803,11 @@
     {
       "guid": "a98ddb55d4d276b49a135ddc3de4bcb9",
       "id": "Kebob_ChickenMeatTomato",
-      "nameZh": "鸡肉肉丸番茄烤串",
+      "nameZh": "鸡肉肉排番茄烤串",
       "nameEn": "Chicken Meat Tomato Kebab",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Kebob_ChickenMeatTomato.asset",
       "cookingStep": "KebabSkewer",
+      "platingStep": "",
       "ingredients": [
         "KebobChicken",
         "KebobMeat",
@@ -1827,8 +2875,9 @@
       "id": "hotdog_mustard",
       "nameZh": "芥末热狗",
       "nameEn": "Hot Dog & Mustard",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_mustard.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/hotdog_mustard.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "hotdogbun",
         "frankfurter",
@@ -1868,8 +2917,9 @@
       "id": "dlc11_hotdog_mustard",
       "nameZh": "芥末热狗（DLC11）",
       "nameEn": "Hot Dog & Mustard (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_mustard.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_hotdog_mustard.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "dlc11_hotdogbun",
         "dlc11_frankfurter",
@@ -1909,8 +2959,9 @@
       "id": "chickenpotatocarrotbroccoliroast",
       "nameZh": "烤鸡什锦",
       "nameEn": "Roast Chicken Potato Carrot & Broccoli",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/chickenpotatocarrotbroccoliroast.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/chickenpotatocarrotbroccoliroast.asset",
       "cookingStep": "RoastingTray",
+      "platingStep": "",
       "ingredients": [
         "chicken_roast",
         "dlc07_potato",
@@ -1946,8 +2997,9 @@
       "id": "dlc09_chickenpotatocarrotbroccoliroast",
       "nameZh": "烤鸡什锦（DLC9）",
       "nameEn": "Roast Chicken Roast (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_chickenpotatocarrotbroccoliroast.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_chickenpotatocarrotbroccoliroast.asset",
       "cookingStep": "RoastingTray",
+      "platingStep": "",
       "ingredients": [
         "dlc09_chicken_roast",
         "dlc09_potato",
@@ -1983,8 +3035,9 @@
       "id": "chickenpotatocarrotroast",
       "nameZh": "烤鸡土豆胡萝卜",
       "nameEn": "Roast Chicken Potato & Carrot",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/chickenpotatocarrotroast.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/chickenpotatocarrotroast.asset",
       "cookingStep": "RoastingTray",
+      "platingStep": "",
       "ingredients": [
         "chicken_roast",
         "dlc07_potato",
@@ -2018,8 +3071,9 @@
       "id": "dlc09_chickenpotatocarrotroast",
       "nameZh": "烤鸡土豆胡萝卜（DLC9）",
       "nameEn": "Roast Chicken Potato & Carrot (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_chickenpotatocarrotroast.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_chickenpotatocarrotroast.asset",
       "cookingStep": "RoastingTray",
+      "platingStep": "",
       "ingredients": [
         "dlc09_chicken_roast",
         "dlc09_potato",
@@ -2053,8 +3107,9 @@
       "id": "roastedmarshmallow",
       "nameZh": "烤棉花糖",
       "nameEn": "Roasted Marshmallow",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc05/roastedmarshmallow.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc05/roastedmarshmallow.asset",
       "cookingStep": "ToastingFork",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Marshmallow"
       ],
@@ -2084,8 +3139,9 @@
       "id": "beefpotatocarrotbroccoliroast",
       "nameZh": "烤牛肉什锦",
       "nameEn": "Roast Beef Potato Carrot & Broccoli",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/beefpotatocarrotbroccoliroast.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/beefpotatocarrotbroccoliroast.asset",
       "cookingStep": "RoastingTray",
+      "platingStep": "",
       "ingredients": [
         "beef_roast",
         "dlc07_potato",
@@ -2121,8 +3177,9 @@
       "id": "dlc09_beefpotatocarrotbroccoliroast",
       "nameZh": "烤牛肉什锦（DLC9）",
       "nameEn": "Roast Beef Roast (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_beefpotatocarrotbroccoliroast.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_beefpotatocarrotbroccoliroast.asset",
       "cookingStep": "RoastingTray",
+      "platingStep": "",
       "ingredients": [
         "dlc09_beef_roast",
         "dlc09_potato",
@@ -2158,8 +3215,9 @@
       "id": "beefpotatocarrotroast",
       "nameZh": "烤牛肉土豆胡萝卜",
       "nameEn": "Roast Beef Potato & Carrot",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/beefpotatocarrotroast.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/beefpotatocarrotroast.asset",
       "cookingStep": "RoastingTray",
+      "platingStep": "",
       "ingredients": [
         "beef_roast",
         "dlc07_potato",
@@ -2193,8 +3251,9 @@
       "id": "dlc09_beefpotatocarrotroast",
       "nameZh": "烤牛肉土豆胡萝卜（DLC9）",
       "nameEn": "Roast Beef Potato & Carrot (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_beefpotatocarrotroast.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_beefpotatocarrotroast.asset",
       "cookingStep": "RoastingTray",
+      "platingStep": "",
       "ingredients": [
         "dlc09_beef_roast",
         "dlc09_potato",
@@ -2230,6 +3289,7 @@
       "nameEn": "Pepperoni Pizza",
       "assetPath": "Assets/common01/food/Recipes/Pizza_Peperoni_SO.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Dough",
         "TomatoSO",
@@ -2262,10 +3322,11 @@
     {
       "guid": "4636eea990e4c614b9b5fdb25effcd70",
       "id": "Pizza_Peperoni_80_SO",
-      "nameZh": "辣香肠披萨 80",
+      "nameZh": "辣香肠披萨（80 分）",
       "nameEn": "Pepperoni Pizza 80",
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Peperoni_80_SO.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Dough",
         "TomatoSO",
@@ -2302,6 +3363,7 @@
       "nameEn": "Blueberry Batter",
       "assetPath": "Assets/common02/food/Recipes/dlc05/MixedFlourEggBlueberry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -2338,6 +3400,7 @@
       "nameEn": "Blueberry Pancake",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Cake_BlueberryPancake.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -2380,8 +3443,9 @@
       "id": "dlc09_mixedflouregg",
       "nameZh": "面糊（DLC9）",
       "nameEn": "Batter (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedflouregg.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_mixedflouregg.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg"
@@ -2416,6 +3480,7 @@
       "nameEn": "Mushroom Pineapple Tomato Kebab",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Kebob_MushroomPineappleTomato.asset",
       "cookingStep": "KebabSkewer",
+      "platingStep": "",
       "ingredients": [
         "KebobMushroom",
         "KebobPineapple",
@@ -2451,6 +3516,7 @@
       "nameEn": "Mushroom Burrito",
       "assetPath": "Assets/common01/food/Recipes/Burrito_Mushroom_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "TortillaSO",
         "SushiRiceSO",
@@ -2583,6 +3649,7 @@
       "nameEn": "Pasta Mushroom",
       "assetPath": "Assets/common01/food/Recipes/Pasta_MushroomOnly_SO.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "PastaSO",
         "MushroomSO"
@@ -2625,6 +3692,7 @@
       "nameEn": "Bacon Egg Sausage Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Bacon_Egg_Sausage.asset",
       "cookingStep": "GriddlePan",
+      "platingStep": "",
       "ingredients": [
         "Bacon",
         "DLC05_Egg",
@@ -2660,6 +3728,7 @@
       "nameEn": "Bacon Egg Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Bacon_Egg.asset",
       "cookingStep": "GriddlePan",
+      "platingStep": "",
       "ingredients": [
         "Bacon",
         "DLC05_Egg"
@@ -2722,8 +3791,9 @@
       "id": "mixedfloureggappleblackberry",
       "nameZh": "苹果黑莓面糊",
       "nameEn": "Apple & Blackberry Batter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggappleblackberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/mixedfloureggappleblackberry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -2760,8 +3830,9 @@
       "id": "fruitpie_appleblackberry",
       "nameZh": "苹果黑莓派",
       "nameEn": "Apple & Blackberry Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_appleblackberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/fruitpie_appleblackberry.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -2805,8 +3876,9 @@
       "id": "mixedfloureggapple",
       "nameZh": "苹果面糊",
       "nameEn": "Apple Batter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggapple.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/mixedfloureggapple.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -2839,10 +3911,11 @@
     {
       "guid": "204adb61c324b4f88574d66edce86416",
       "id": "fruitpie_apple",
-      "nameZh": "苹果水果派",
+      "nameZh": "苹果派",
       "nameEn": "Apple Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_apple.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/fruitpie_apple.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -2884,8 +3957,9 @@
       "id": "mixedfloureggapplecherry",
       "nameZh": "苹果樱桃面糊",
       "nameEn": "Apple & Cherry Batter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggapplecherry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/mixedfloureggapplecherry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -2922,8 +3996,9 @@
       "id": "fruitpie_applecherry",
       "nameZh": "苹果樱桃派",
       "nameEn": "Apple & Cherry Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_applecherry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/fruitpie_applecherry.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -2967,8 +4042,9 @@
       "id": "fruitplatter_grapespeach",
       "nameZh": "葡萄桃子拼盘",
       "nameEn": "Grapes & Peach Platter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/fruitplatter_grapespeach.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/fruitplatter_grapespeach.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "grapes",
         "peach"
@@ -2997,8 +4073,9 @@
       "id": "dlc10_fruitplatter_grapespeach",
       "nameZh": "葡萄桃子拼盘（DLC10）",
       "nameEn": "Grapes & Peach Platter (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_fruitplatter_grapespeach.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_fruitplatter_grapespeach.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc10_grapes",
         "dlc10_peach"
@@ -3027,8 +4104,9 @@
       "id": "dlc13_fruitplatter_grapespeach",
       "nameZh": "葡萄桃子拼盘（DLC13）",
       "nameEn": "Grapes & Peach Platter (DLC13)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_fruitplatter_grapespeach.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_fruitplatter_grapespeach.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc13_grapes",
         "dlc13_peach"
@@ -3057,8 +4135,9 @@
       "id": "icecream_chocolate",
       "nameZh": "巧克力冰淇淋",
       "nameEn": "Chocolate Ice Cream",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/icecream_chocolate.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/icecream_chocolate.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "ChocolateSO",
         "icecube",
@@ -3092,8 +4171,9 @@
       "id": "dlc13_mixedfloureggchocolatestrawberry",
       "nameZh": "巧克力草莓面糊（DLC13）",
       "nameEn": "Chocolate & Strawberry Batter (DLC13)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_mixedfloureggchocolatestrawberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_mixedfloureggchocolatestrawberry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "dlc13_flour",
         "dlc13_egg",
@@ -3128,15 +4208,19 @@
     {
       "guid": "e5aecf7764556bed71d73122cf6dd115",
       "id": "dlc13_moonpie_chocolatestrawberry",
-      "nameZh": "巧克力草莓月亮派",
+      "nameZh": "巧克力草莓月饼",
       "nameEn": "Chocolate & Strawberry Moon Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_moonpie_chocolatestrawberry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_moonpie_chocolatestrawberry.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "Plate",
       "ingredients": [
         "dlc13_flour",
         "dlc13_egg",
         "dlc13_chocolate",
         "dlc13_strawberry"
+      ],
+      "compositionIds": [
+        "dlc13_mixedfloureggchocolatestrawberry"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -3147,8 +4231,10 @@
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "OvenTray",
+          "step": "Mixer",
           "utensils": [
+            "Mixer",
+            "MixerBowl",
             "Oven"
           ],
           "ingredients": [
@@ -3157,6 +4243,13 @@
             "dlc13_chocolate",
             "dlc13_strawberry"
           ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
         }
       ],
       "icon": true
@@ -3166,8 +4259,9 @@
       "id": "orangesodafloat_chocolate",
       "nameZh": "巧克力橙味汽水冰淇淋",
       "nameEn": "Orange Soda Ice Cream Float (Chocolate)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/orangesodafloat_chocolate.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/orangesodafloat_chocolate.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "ChocolateSO",
         "icecube",
@@ -3211,6 +4305,7 @@
       "nameEn": "Chocolate Cake",
       "assetPath": "Assets/common01/food/Recipes/Cake_HoneyChocolate_SO.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -3250,12 +4345,166 @@
       "icon": true
     },
     {
+      "guid": "3134ebc710e6ab14680f8d891997b311",
+      "id": "Smores_Chocolate",
+      "nameZh": "巧克力棉花糖饼干",
+      "nameEn": "Chocolate S'mores",
+      "assetPath": "Assets/common02/food/Recipes/dlc05/Smores_Chocolate.asset",
+      "cookingStep": "ToastingFork",
+      "platingStep": "",
+      "ingredients": [
+        "DLC05_Crackers",
+        "DLC05_Marshmallow",
+        "DLC05_Chocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc05",
+      "type": "smores",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC05_Crackers",
+            "DLC05_Chocolate"
+          ]
+        },
+        {
+          "step": "ToastingFork",
+          "utensils": [
+            "Campfire",
+            "ToastingFork"
+          ],
+          "ingredients": [
+            "DLC05_Marshmallow"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d41e13f666654b6087b16fb6b70b6171",
+      "id": "mixedfloureggchocolate",
+      "nameZh": "巧克力面糊",
+      "nameEn": "Chocolate Batter",
+      "assetPath": "Assets/common_w/Recipes/dlc08/mixedfloureggchocolate.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "ChocolateSO"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "8baf05f1e92fce594409690786bb5b11",
+      "id": "dlc13_mixedfloureggchocolate",
+      "nameZh": "巧克力面糊（DLC13）",
+      "nameEn": "Chocolate Batter (DLC13)",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_mixedfloureggchocolate.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4dfe32fb9336666f05938f31765c39e2",
+      "id": "dlc09_mixedfloureggchocolate",
+      "nameZh": "巧克力面糊（DLC9）",
+      "nameEn": "Chocolate Batter (DLC9)",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_mixedfloureggchocolate.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc09_flour",
+        "dlc09_egg",
+        "dlc09_chocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "web",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg",
+            "dlc09_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "b2e245b9af1c2e38da900abf92d41cd7",
       "id": "rootbeerfloat_chocolate",
-      "nameZh": "巧克力可乐冰淇淋",
-      "nameEn": "Cola Ice Cream Float (Chocolate)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/rootbeerfloat_chocolate.asset",
+      "nameZh": "巧克力沙士冰淇淋",
+      "nameEn": "Root Beer Ice Cream Float (Chocolate)",
+      "assetPath": "Assets/common_w/Recipes/dlc11/rootbeerfloat_chocolate.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "ChocolateSO",
         "icecube",
@@ -3293,125 +4542,13 @@
       "icon": true
     },
     {
-      "guid": "3134ebc710e6ab14680f8d891997b311",
-      "id": "Smores_Chocolate",
-      "nameZh": "巧克力棉花糖饼干",
-      "nameEn": "Chocolate S'mores",
-      "assetPath": "Assets/common02/food/Recipes/dlc05/Smores_Chocolate.asset",
-      "cookingStep": "ToastingFork",
-      "ingredients": [
-        "DLC05_Crackers",
-        "DLC05_Marshmallow",
-        "DLC05_Chocolate"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 60,
-      "isCustom": false,
-      "group": "dlc05",
-      "type": "smores",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "DLC05_Crackers",
-            "DLC05_Chocolate"
-          ]
-        },
-        {
-          "step": "ToastingFork",
-          "utensils": [
-            "Campfire",
-            "ToastingFork"
-          ],
-          "ingredients": [
-            "DLC05_Marshmallow"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "8baf05f1e92fce594409690786bb5b11",
-      "id": "dlc13_mixedfloureggchocolate",
-      "nameZh": "巧克力面糊（DLC13）",
-      "nameEn": "Chocolate Batter (DLC13)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_mixedfloureggchocolate.asset",
-      "cookingStep": "Mixer",
-      "ingredients": [
-        "dlc13_flour",
-        "dlc13_egg",
-        "dlc13_chocolate"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 0,
-      "isCustom": false,
-      "group": "web",
-      "type": "batter",
-      "intermediate": true,
-      "cookingGroups": [
-        {
-          "step": "Mixer",
-          "utensils": [
-            "Mixer",
-            "MixerBowl",
-            "Oven"
-          ],
-          "ingredients": [
-            "dlc13_flour",
-            "dlc13_egg",
-            "dlc13_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "4dfe32fb9336666f05938f31765c39e2",
-      "id": "dlc09_mixedfloureggchocolate",
-      "nameZh": "巧克力面糊（DLC9）",
-      "nameEn": "Chocolate Batter (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_mixedfloureggchocolate.asset",
-      "cookingStep": "Mixer",
-      "ingredients": [
-        "dlc09_flour",
-        "dlc09_egg",
-        "dlc09_chocolate"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 0,
-      "isCustom": false,
-      "group": "web",
-      "type": "batter",
-      "intermediate": true,
-      "cookingGroups": [
-        {
-          "step": "Mixer",
-          "utensils": [
-            "Mixer",
-            "MixerBowl",
-            "Oven"
-          ],
-          "ingredients": [
-            "dlc09_flour",
-            "dlc09_egg",
-            "dlc09_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "41f46c9d3978bd8488503aee9fe9dbaa",
       "id": "Cake_Chocolate_SO",
       "nameZh": "巧克力松饼",
       "nameEn": "Chocolate Pancake",
       "assetPath": "Assets/common01/food/Recipes/Cake_Chocolate_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -3454,8 +4591,9 @@
       "id": "dlc09_pancake_chocolate",
       "nameZh": "巧克力松饼（DLC9）",
       "nameEn": "Chocolate Pancake (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_pancake_chocolate.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_pancake_chocolate.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg",
@@ -3470,14 +4608,23 @@
       "intermediate": false,
       "cookingGroups": [
         {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg"
+          ]
+        },
+        {
           "step": "FryingPan",
           "utensils": [
             "Cooker",
             "FryPan"
           ],
           "ingredients": [
-            "dlc09_flour",
-            "dlc09_egg",
             "dlc09_chocolate"
           ]
         }
@@ -3489,8 +4636,9 @@
       "id": "donut_chocolate",
       "nameZh": "巧克力甜甜圈",
       "nameEn": "Chocolate Donut",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/donut_chocolate.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/donut_chocolate.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -3531,14 +4679,18 @@
     {
       "guid": "6c7100922042afdbd0144a9693b0c014",
       "id": "dlc13_moonpie_chocolate",
-      "nameZh": "巧克力月亮派",
+      "nameZh": "巧克力月饼",
       "nameEn": "Chocolate Moon Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_moonpie_chocolate.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_moonpie_chocolate.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "Plate",
       "ingredients": [
         "dlc13_flour",
         "dlc13_egg",
         "dlc13_chocolate"
+      ],
+      "compositionIds": [
+        "dlc13_mixedfloureggchocolate"
       ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
@@ -3549,8 +4701,10 @@
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "OvenTray",
+          "step": "Mixer",
           "utensils": [
+            "Mixer",
+            "MixerBowl",
             "Oven"
           ],
           "ingredients": [
@@ -3558,6 +4712,13 @@
             "dlc13_egg",
             "dlc13_chocolate"
           ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
         }
       ],
       "icon": true
@@ -3569,6 +4730,7 @@
       "nameEn": "Full Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Sausage_Beans_Egg_Bacon.asset",
       "cookingStep": "GriddlePan",
+      "platingStep": "",
       "ingredients": [
         "Sausage",
         "DLC05_Beans",
@@ -3604,8 +4766,9 @@
       "id": "hotchocolate",
       "nameZh": "热可可",
       "nameEn": "Hot Chocolate",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/hotchocolate.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc03/hotchocolate.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "milk",
         "dlc03_chocolate"
@@ -3633,53 +4796,13 @@
       "icon": true
     },
     {
-      "guid": "b5747845f812cb40e7bb963b3cfe6b51",
-      "id": "dlc09_hotchocolatemallow",
-      "nameZh": "热可可（加棉花糖·DLC9）",
-      "nameEn": "Hot Chocolate & Marshmallows (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_hotchocolatemallow.asset",
-      "cookingStep": "Pot",
-      "ingredients": [
-        "dlc09_milk",
-        "dlc09_chocolate",
-        "dlc09_marshmallow"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "web",
-      "type": "hotchocolate",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc09_marshmallow"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "dlc09_milk",
-            "dlc09_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "30ae2ee6ae8f1cd07a385928131b9a1c",
       "id": "hotchocolatemallow",
       "nameZh": "热可可（加棉花糖）",
       "nameEn": "Hot Chocolate & Marshmallows",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/hotchocolatemallow.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc03/hotchocolatemallow.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "milk",
         "dlc03_chocolate",
@@ -3715,53 +4838,13 @@
       "icon": true
     },
     {
-      "guid": "c4c9ec9c2b9088490909518470c74be7",
-      "id": "dlc09_hotchocolatecream",
-      "nameZh": "热可可（加奶油·DLC9）",
-      "nameEn": "Hot Chocolate & Cream (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_hotchocolatecream.asset",
-      "cookingStep": "Pot",
-      "ingredients": [
-        "dlc09_milk",
-        "dlc09_chocolate",
-        "dlc09_whippedcream"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "web",
-      "type": "hotchocolate",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc09_whippedcream"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "dlc09_milk",
-            "dlc09_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "e9ea43cf689b1cc06d5f8efaa44086cb",
       "id": "hotchocolatecream",
       "nameZh": "热可可（加奶油）",
       "nameEn": "Hot Chocolate & Cream",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/hotchocolatecream.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc03/hotchocolatecream.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "milk",
         "dlc03_chocolate",
@@ -3797,55 +4880,13 @@
       "icon": true
     },
     {
-      "guid": "aca3396b72fcc2eba388fe53163cda3c",
-      "id": "dlc09_hotchocolatemallowcream",
-      "nameZh": "热可可（奶油棉花糖·DLC9）",
-      "nameEn": "Hot Chocolate Cream & Mallows (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_hotchocolatemallowcream.asset",
-      "cookingStep": "Pot",
-      "ingredients": [
-        "dlc09_milk",
-        "dlc09_chocolate",
-        "dlc09_marshmallow",
-        "dlc09_whippedcream"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "web",
-      "type": "hotchocolate",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc09_marshmallow",
-            "dlc09_whippedcream"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "dlc09_milk",
-            "dlc09_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "82aee8fa749a9a79844225aeacbdcdaf",
       "id": "hotchocolatemallowcream",
       "nameZh": "热可可（奶油棉花糖）",
       "nameEn": "Hot Chocolate Cream & Mallows",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/hotchocolatemallowcream.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc03/hotchocolatemallowcream.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "milk",
         "dlc03_chocolate",
@@ -3883,45 +4924,13 @@
       "icon": true
     },
     {
-      "guid": "fa060c45b57b85de321ff4bca1850909",
-      "id": "dlc09_hotchocolate",
-      "nameZh": "热可可（DLC9）",
-      "nameEn": "Hot Chocolate (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_hotchocolate.asset",
-      "cookingStep": "Pot",
-      "ingredients": [
-        "dlc09_milk",
-        "dlc09_chocolate"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 1,
-      "score": 60,
-      "isCustom": false,
-      "group": "web",
-      "type": "hotchocolate",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "dlc09_milk",
-            "dlc09_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "c69644a2efed4ec49addefba22d621d1",
       "id": "Pasta_MeatOnly_SO",
       "nameZh": "肉酱意面",
       "nameEn": "Pasta Meat",
       "assetPath": "Assets/common01/food/Recipes/Pasta_MeatOnly_SO.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "PastaSO",
         "MeatSO"
@@ -3964,6 +4973,7 @@
       "nameEn": "Meat Mushroom Pineapple Kebab",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Kebob_MeatMushroomPineapple.asset",
       "cookingStep": "KebabSkewer",
+      "platingStep": "",
       "ingredients": [
         "KebobMeat",
         "KebobMushroom",
@@ -3999,6 +5009,7 @@
       "nameEn": "Meat Burrito",
       "assetPath": "Assets/common01/food/Recipes/Burrito_Meat_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "TortillaSO",
         "SushiRiceSO",
@@ -4047,8 +5058,9 @@
       "id": "fruitplatter_orangepeachgrapes",
       "nameZh": "三果拼盘",
       "nameEn": "Orange Peach & Grapes Platter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/fruitplatter_orangepeachgrapes.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/fruitplatter_orangepeachgrapes.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc04_orange",
         "peach",
@@ -4079,8 +5091,9 @@
       "id": "dlc10_fruitplatter_orangepeachgrapes",
       "nameZh": "三果拼盘（DLC10）",
       "nameEn": "Fruit Platter (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_fruitplatter_orangepeachgrapes.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_fruitplatter_orangepeachgrapes.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc10_orange",
         "dlc10_peach",
@@ -4111,8 +5124,9 @@
       "id": "dlc13_fruitplatter_orangepeachgrapes",
       "nameZh": "三果拼盘（DLC13）",
       "nameEn": "Fruit Platter (DLC13)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_fruitplatter_orangepeachgrapes.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_fruitplatter_orangepeachgrapes.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc13_orange",
         "dlc13_peach",
@@ -4145,6 +5159,7 @@
       "nameEn": "Mega Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Mega.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "Banana",
         "Melon",
@@ -4180,8 +5195,9 @@
       "id": "hotpot_mixed",
       "nameZh": "什锦火锅",
       "nameEn": "Hotpot Mixed",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_mixed.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/hotpot_mixed.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "noodles",
         "dlc04_meat",
@@ -4217,8 +5233,9 @@
       "id": "dlc10_hotpot_mixed",
       "nameZh": "什锦火锅（DLC10）",
       "nameEn": "Hotpot Mixed (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_mixed.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_hotpot_mixed.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "dlc10_noodles",
         "dlc10_meat",
@@ -4256,6 +5273,7 @@
       "nameEn": "Sushi All",
       "assetPath": "Assets/common01/food/Recipes/Sushi_All_SO.asset",
       "cookingStep": "Steamer",
+      "platingStep": "",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -4301,6 +5319,7 @@
       "nameEn": "Lettuce Tomato Burger",
       "assetPath": "Assets/common01/food/Recipes/Burger_LettuceTomato_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "DLC02_ChoppedBun",
         "LettuceSO",
@@ -4390,6 +5409,7 @@
       "nameEn": "Lettuce Salad",
       "assetPath": "Assets/common01/food/Recipes/Salad_Plain_SO.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "LettuceSO"
       ],
@@ -4418,6 +5438,7 @@
       "nameEn": "Raw Prawn Sashimi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_PlainPrawn_SO.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "SushiPrawnSO"
       ],
@@ -4446,6 +5467,7 @@
       "nameEn": "Raw Fish Sashimi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_PlainFish_SO.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "SushiFishSO"
       ],
@@ -4472,8 +5494,9 @@
       "id": "christmaspudding",
       "nameZh": "圣诞布丁",
       "nameEn": "Christmas Pudding",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/christmaspudding.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc03/christmaspudding.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -4508,8 +5531,9 @@
       "id": "dlc09_christmaspuddingwithorange",
       "nameZh": "圣诞布丁（橙子·DLC9）",
       "nameEn": "Christmas Pudding & Orange (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_christmaspuddingwithorange.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_christmaspuddingwithorange.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg",
@@ -4525,13 +5549,22 @@
       "intermediate": false,
       "cookingGroups": [
         {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg"
+          ]
+        },
+        {
           "step": "OvenTray",
           "utensils": [
             "Oven"
           ],
           "ingredients": [
-            "dlc09_flour",
-            "dlc09_egg",
             "dlc09_driedfruit",
             "dlc09_orange"
           ]
@@ -4544,8 +5577,9 @@
       "id": "christmaspuddingwithorange",
       "nameZh": "圣诞布丁（橙子）",
       "nameEn": "Christmas Pudding & Orange",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc03/christmaspuddingwithorange.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc03/christmaspuddingwithorange.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -4582,8 +5616,9 @@
       "id": "dlc09_christmaspudding",
       "nameZh": "圣诞布丁（DLC9）",
       "nameEn": "Christmas Pudding (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_christmaspudding.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_christmaspudding.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg",
@@ -4598,13 +5633,22 @@
       "intermediate": false,
       "cookingGroups": [
         {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "dlc09_flour",
+            "dlc09_egg"
+          ]
+        },
+        {
           "step": "OvenTray",
           "utensils": [
             "Oven"
           ],
           "ingredients": [
-            "dlc09_flour",
-            "dlc09_egg",
             "dlc09_driedfruit"
           ]
         }
@@ -4618,6 +5662,7 @@
       "nameEn": "Vegetable Soup",
       "assetPath": "Assets/common01/food/Recipes/OnionCarrotPotatoSoup_SO.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "OnionSO",
         "CarrotSO",
@@ -4653,6 +5698,7 @@
       "nameEn": "Chips",
       "assetPath": "Assets/common01/food/Recipes/Fry_Chips_SO.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "PotatoSO"
       ],
@@ -4684,6 +5730,7 @@
       "nameEn": "Chips & Chicken",
       "assetPath": "Assets/common01/food/Recipes/Fry_All_SO.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "PotatoSO",
         "NuggetChickenSO"
@@ -4724,8 +5771,9 @@
       "id": "hotpot_meat",
       "nameZh": "涮肉火锅",
       "nameEn": "Hotpot Meat",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_meat.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/hotpot_meat.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "noodles",
         "dlc04_meat",
@@ -4759,8 +5807,9 @@
       "id": "dlc10_hotpot_meat",
       "nameZh": "涮肉火锅（DLC10）",
       "nameEn": "Hotpot Meat (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_meat.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_hotpot_meat.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "dlc10_noodles",
         "dlc10_meat",
@@ -4794,8 +5843,9 @@
       "id": "hotpot_prawn",
       "nameZh": "涮虾火锅",
       "nameEn": "Hotpot Prawn",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_prawn.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/hotpot_prawn.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "noodles",
         "dlc04_prawn",
@@ -4829,8 +5879,9 @@
       "id": "dlc10_hotpot_prawn",
       "nameZh": "涮虾火锅（DLC10）",
       "nameEn": "Hotpot Prawn (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_prawn.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_hotpot_prawn.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "dlc10_noodles",
         "dlc10_prawn",
@@ -4864,8 +5915,9 @@
       "id": "hotpot_doublemeat",
       "nameZh": "双份涮肉火锅",
       "nameEn": "Hotpot Double Meat",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_doublemeat.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/hotpot_doublemeat.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "noodles",
         "dlc04_meat",
@@ -4901,8 +5953,9 @@
       "id": "dlc10_hotpot_doublemeat",
       "nameZh": "双份涮肉火锅（DLC10）",
       "nameEn": "Hotpot Double Meat (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_doublemeat.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_hotpot_doublemeat.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "dlc10_noodles",
         "dlc10_meat",
@@ -4938,8 +5991,9 @@
       "id": "hotpot_doubleprawn",
       "nameZh": "双份涮虾火锅",
       "nameEn": "Hotpot Double Prawn",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc04/hotpot_doubleprawn.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc04/hotpot_doubleprawn.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "noodles",
         "dlc04_prawn",
@@ -4975,8 +6029,9 @@
       "id": "dlc10_hotpot_doubleprawn",
       "nameZh": "双份涮虾火锅（DLC10）",
       "nameEn": "Hotpot Double Prawn (DLC10)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc10/dlc10_hotpot_doubleprawn.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc10/dlc10_hotpot_doubleprawn.asset",
       "cookingStep": "HotPot",
+      "platingStep": "",
       "ingredients": [
         "dlc10_noodles",
         "dlc10_prawn",
@@ -5012,8 +6067,9 @@
       "id": "meatpineapplemushroomchickenkebob",
       "nameZh": "四味烤串",
       "nameEn": "Meat Pineapple Mushroom Chicken Kebab",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc02/meatpineapplemushroomchickenkebob.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc02/meatpineapplemushroomchickenkebob.asset",
       "cookingStep": "KebabSkewer",
+      "platingStep": "",
       "ingredients": [
         "KebobMeat",
         "KebobPineapple",
@@ -5051,6 +6107,7 @@
       "nameEn": "Melon Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Melon.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "Melon",
         "Melon",
@@ -5084,8 +6141,9 @@
       "id": "dlc13_mixedfloureggwatermelon",
       "nameZh": "甜瓜面糊（DLC13）",
       "nameEn": "Melon Batter (DLC13)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_mixedfloureggwatermelon.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_mixedfloureggwatermelon.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "dlc13_flour",
         "dlc13_egg",
@@ -5118,14 +6176,18 @@
     {
       "guid": "2b390c581aa43e4b1e239dace0c3fdb3",
       "id": "dlc13_moonpie_watermelon",
-      "nameZh": "甜瓜月亮派",
+      "nameZh": "甜瓜月饼",
       "nameEn": "Melon Moon Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc13/dlc13_moonpie_watermelon.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc13/dlc13_moonpie_watermelon.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "Plate",
       "ingredients": [
         "dlc13_flour",
         "dlc13_egg",
         "dlc13_melon"
+      ],
+      "compositionIds": [
+        "dlc13_mixedfloureggwatermelon"
       ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
@@ -5136,8 +6198,10 @@
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "OvenTray",
+          "step": "Mixer",
           "utensils": [
+            "Mixer",
+            "MixerBowl",
             "Oven"
           ],
           "ingredients": [
@@ -5145,6 +6209,13 @@
             "dlc13_egg",
             "dlc13_melon"
           ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
         }
       ],
       "icon": true
@@ -5156,6 +6227,7 @@
       "nameEn": "Prawn Shumai",
       "assetPath": "Assets/common01/food/Recipes/Steamed_Prawns_SO.asset",
       "cookingStep": "Steamer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "PrawnSO"
@@ -5198,6 +6270,7 @@
       "nameEn": "Hawaiian Burger",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Burger_Hawaiian.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "dlc08_bun",
         "BurgerPineapple",
@@ -5241,6 +6314,7 @@
       "nameEn": "Meat Shumai",
       "assetPath": "Assets/common01/food/Recipes/Steamed_Meat_SO.asset",
       "cookingStep": "Steamer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "MeatSO"
@@ -5281,8 +6355,9 @@
       "id": "icecream_vanilla",
       "nameZh": "香草冰淇淋",
       "nameEn": "Vanilla Ice Cream",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/icecream_vanilla.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/icecream_vanilla.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "vanilla",
         "icecube",
@@ -5316,8 +6391,9 @@
       "id": "orangesodafloat_vanilla",
       "nameZh": "香草橙味汽水冰淇淋",
       "nameEn": "Orange Soda Ice Cream Float (Vanilla)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/orangesodafloat_vanilla.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/orangesodafloat_vanilla.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "vanilla",
         "icecube",
@@ -5357,10 +6433,11 @@
     {
       "guid": "0a57fffe8eb3a30ed0df23b83f58d1b7",
       "id": "rootbeerfloat_vanilla",
-      "nameZh": "香草可乐冰淇淋",
-      "nameEn": "Cola Ice Cream Float (Vanilla)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/rootbeerfloat_vanilla.asset",
+      "nameZh": "香草沙士冰淇淋",
+      "nameEn": "Root Beer Ice Cream Float (Vanilla)",
+      "assetPath": "Assets/common_w/Recipes/dlc11/rootbeerfloat_vanilla.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "vanilla",
         "icecube",
@@ -5404,6 +6481,7 @@
       "nameEn": "Sausage Beans Egg Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Sausage_Beans_Egg.asset",
       "cookingStep": "GriddlePan",
+      "platingStep": "",
       "ingredients": [
         "Sausage",
         "DLC05_Beans",
@@ -5439,6 +6517,7 @@
       "nameEn": "Sausage Beans Breakfast",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Breakfast_Sausage_Beans.asset",
       "cookingStep": "GriddlePan",
+      "platingStep": "",
       "ingredients": [
         "Sausage",
         "DLC05_Beans"
@@ -5472,6 +6551,7 @@
       "nameEn": "Banana Pineapple Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_BananaPineapple.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "Banana",
         "Banana",
@@ -5509,6 +6589,7 @@
       "nameEn": "Banana Smoothie",
       "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Banana.asset",
       "cookingStep": "Blender",
+      "platingStep": "",
       "ingredients": [
         "Banana",
         "Banana",
@@ -5544,6 +6625,7 @@
       "nameEn": "Banana S'mores",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Smores_Banana.asset",
       "cookingStep": "ToastingFork",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Crackers",
         "DLC05_Marshmallow",
@@ -5583,8 +6665,9 @@
       "id": "hotdog_onions_ketchup",
       "nameZh": "洋葱番茄酱热狗",
       "nameEn": "Hot Dog Onions & Ketchup",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_onions_ketchup.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/hotdog_onions_ketchup.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "hotdogbun",
         "frankfurter",
@@ -5635,8 +6718,9 @@
       "id": "dlc11_hotdog_onions_ketchup",
       "nameZh": "洋葱番茄酱热狗（DLC11）",
       "nameEn": "Hot Dog Onions & Ketchup (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_onions_ketchup.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_hotdog_onions_ketchup.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "dlc11_hotdogbun",
         "dlc11_frankfurter",
@@ -5687,8 +6771,9 @@
       "id": "onioncarrotpotatosoup",
       "nameZh": "洋葱胡萝卜土豆汤",
       "nameEn": "Onion Carrot & Potato Soup",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/onioncarrotpotatosoup.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/onioncarrotpotatosoup.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "OnionSO",
         "dlc07_potato",
@@ -5722,8 +6807,9 @@
       "id": "hotdog_onions_mustard",
       "nameZh": "洋葱芥末热狗",
       "nameEn": "Hot Dog Onions & Mustard",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_onions_mustard.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/hotdog_onions_mustard.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "hotdogbun",
         "frankfurter",
@@ -5774,8 +6860,9 @@
       "id": "dlc11_hotdog_onions_mustard",
       "nameZh": "洋葱芥末热狗（DLC11）",
       "nameEn": "Hot Dog Onions & Mustard (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_onions_mustard.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_hotdog_onions_mustard.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "dlc11_hotdogbun",
         "dlc11_frankfurter",
@@ -5826,8 +6913,9 @@
       "id": "hotdog_onions",
       "nameZh": "洋葱热狗",
       "nameEn": "Hot Dog & Onions",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_onions.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/hotdog_onions.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "hotdogbun",
         "frankfurter",
@@ -5876,8 +6964,9 @@
       "id": "dlc11_hotdog_onions",
       "nameZh": "洋葱热狗（DLC11）",
       "nameEn": "Hot Dog & Onions (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_onions.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_hotdog_onions.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "dlc11_hotdogbun",
         "dlc11_frankfurter",
@@ -5964,10 +7053,11 @@
     {
       "guid": "4db74ecac6b88fbd47992bee2c6850e1",
       "id": "onionpotatosoupleek",
-      "nameZh": "洋葱土豆韭葱汤",
+      "nameZh": "洋葱土豆西芹汤",
       "nameEn": "Onion Potato & Leek Soup",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/onionpotatosoupleek.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/onionpotatosoupleek.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "OnionSO",
         "dlc07_potato",
@@ -6001,8 +7091,9 @@
       "id": "onionbroccolicheesesoup",
       "nameZh": "洋葱西兰花芝士汤",
       "nameEn": "Onion Broccoli & Cheese Soup",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/onionbroccolicheesesoup.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/onionbroccolicheesesoup.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "OnionSO",
         "broccoli",
@@ -6036,8 +7127,9 @@
       "id": "mixedfloureggcherry",
       "nameZh": "樱桃面糊",
       "nameEn": "Cherry Batter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/mixedfloureggcherry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/mixedfloureggcherry.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -6072,8 +7164,9 @@
       "id": "fruitpie_cherry",
       "nameZh": "樱桃派",
       "nameEn": "Cherry Pie",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc07/fruitpie_cherry.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc07/fruitpie_cherry.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -6117,6 +7210,7 @@
       "nameEn": "Sushi Fish",
       "assetPath": "Assets/common01/food/Recipes/Sushi_Fish_SO.asset",
       "cookingStep": "Steamer",
+      "platingStep": "",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -6156,8 +7250,9 @@
       "id": "salad_corn_onion",
       "nameZh": "玉米洋葱沙拉",
       "nameEn": "Corn & Onion Salad",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/salad_corn_onion.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/salad_corn_onion.asset",
       "cookingStep": "",
+      "platingStep": "",
       "ingredients": [
         "dlc11_lettuce",
         "corn",
@@ -6190,6 +7285,7 @@
       "nameEn": "Plain Cake",
       "assetPath": "Assets/common01/food/Recipes/Cake_Honey_SO.asset",
       "cookingStep": "Mixer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -6233,6 +7329,7 @@
       "nameEn": "Plain S'mores",
       "assetPath": "Assets/common02/food/Recipes/dlc05/Smores_Plain.asset",
       "cookingStep": "ToastingFork",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Crackers",
         "DLC05_Marshmallow"
@@ -6272,6 +7369,7 @@
       "nameEn": "Plain Pizza",
       "assetPath": "Assets/common01/food/Recipes/Pizza_Plain_SO.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Dough",
         "TomatoSO",
@@ -6302,10 +7400,11 @@
     {
       "guid": "e235ed00068ae3845bd2d1dbdc25d8e0",
       "id": "Pizza_Plain_60_SO",
-      "nameZh": "原味披萨 60",
+      "nameZh": "原味披萨（60 分）",
       "nameEn": "Plain Pizza 60",
       "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Plain_60_SO.asset",
       "cookingStep": "OvenTray",
+      "platingStep": "",
       "ingredients": [
         "DLC05_Dough",
         "TomatoSO",
@@ -6338,8 +7437,9 @@
       "id": "hotdog_plain",
       "nameZh": "原味热狗",
       "nameEn": "Plain Hot Dog",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/hotdog_plain.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/hotdog_plain.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "hotdogbun",
         "frankfurter"
@@ -6377,8 +7477,9 @@
       "id": "dlc11_hotdog_plain",
       "nameZh": "原味热狗（DLC11）",
       "nameEn": "Plain Hot Dog (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_hotdog_plain.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_hotdog_plain.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "dlc11_hotdogbun",
         "dlc11_frankfurter"
@@ -6418,6 +7519,7 @@
       "nameEn": "Plain Pancake",
       "assetPath": "Assets/common01/food/Recipes/Cake_Plain_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO"
@@ -6457,8 +7559,9 @@
       "id": "dlc09_pancake_plain",
       "nameZh": "原味松饼（DLC9）",
       "nameEn": "Plain Pancake (DLC9)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc09/dlc09_pancake_plain.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc09/dlc09_pancake_plain.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "dlc09_flour",
         "dlc09_egg"
@@ -6472,15 +7575,23 @@
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "FryingPan",
+          "step": "MixingBowl",
           "utensils": [
-            "Cooker",
-            "FryPan"
+            "Mixer",
+            "MixerBowl"
           ],
           "ingredients": [
             "dlc09_flour",
             "dlc09_egg"
           ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": []
         }
       ],
       "icon": true
@@ -6490,8 +7601,9 @@
       "id": "donut_plain",
       "nameZh": "原味甜甜圈",
       "nameEn": "Plain Donut",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/donut_plain.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/donut_plain.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
@@ -6532,10 +7644,11 @@
     {
       "guid": "bcec4e5b3b50171c78eaf83608d69cef",
       "id": "friedchickenburger",
-      "nameZh": "炸鸡汉堡排",
+      "nameZh": "炸鸡汉堡",
       "nameEn": "Fried Chicken Burger",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/friedchickenburger.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/friedchickenburger.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "dlc08_chicken"
       ],
@@ -6558,7 +7671,7 @@
           ]
         }
       ],
-      "icon": false
+      "icon": true
     },
     {
       "guid": "77f71dc44da0b0245994c307efbe4711",
@@ -6567,6 +7680,7 @@
       "nameEn": "Fried Chicken",
       "assetPath": "Assets/common01/food/Recipes/Fry_Chicken_SO.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "NuggetChickenSO"
       ],
@@ -6630,8 +7744,9 @@
       "id": "dlc08_friedchips",
       "nameZh": "炸薯条",
       "nameEn": "Fried Chips",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/dlc08_friedchips.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/dlc08_friedchips.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "dlc08_potato"
       ],
@@ -6661,8 +7776,9 @@
       "id": "friedonions",
       "nameZh": "炸洋葱",
       "nameEn": "Fried Onions",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/friedonions.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/friedonions.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "dlc08_onion"
       ],
@@ -6692,8 +7808,9 @@
       "id": "dlc11_friedonions",
       "nameZh": "炸洋葱（DLC11）",
       "nameEn": "Fried Onions (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_friedonions.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_friedonions.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "dlc11_onion"
       ],
@@ -6723,8 +7840,9 @@
       "id": "friedonion_rings",
       "nameZh": "炸洋葱圈",
       "nameEn": "Fried Onion Rings",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/friedonion_rings.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/friedonion_rings.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "dlc08_onion_ring"
       ],
@@ -6747,15 +7865,16 @@
           ]
         }
       ],
-      "icon": false
+      "icon": true
     },
     {
       "guid": "8b1e4b4a4923fb7768017a7241701be8",
       "id": "onionrings",
       "nameZh": "炸洋葱圈",
       "nameEn": "Onion Rings",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/onionrings.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/onionrings.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "dlc08_onion_ring"
       ],
@@ -6778,7 +7897,7 @@
           ]
         }
       ],
-      "icon": false
+      "icon": true
     },
     {
       "guid": "bb786bba935dc824ea7ac976036ac282",
@@ -6878,7 +7997,16 @@
             "FrierBasket"
           ],
           "ingredients": [
-            "SushiFishSO",
+            "SushiFishSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
             "PotatoSO"
           ]
         }
@@ -6890,8 +8018,9 @@
       "id": "cheesesticks",
       "nameZh": "炸芝士条",
       "nameEn": "Cheese Sticks",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/cheesesticks.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/cheesesticks.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "dlc08_cheesesticks"
       ],
@@ -6914,15 +8043,16 @@
           ]
         }
       ],
-      "icon": false
+      "icon": true
     },
     {
       "guid": "ce1a1f6b10620ff06aee6323d2285630",
       "id": "friedcheese_sticks",
       "nameZh": "炸芝士条",
       "nameEn": "Fried Cheese Sticks",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/friedcheese_sticks.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/friedcheese_sticks.asset",
       "cookingStep": "DeepFatFryer",
+      "platingStep": "",
       "ingredients": [
         "dlc08_cheesesticks"
       ],
@@ -6945,7 +8075,7 @@
           ]
         }
       ],
-      "icon": false
+      "icon": true
     },
     {
       "guid": "438e7bb16ab4b4845b058337c9b8acf2",
@@ -6954,6 +8084,7 @@
       "nameEn": "Steamed Fish",
       "assetPath": "Assets/common01/food/Recipes/Steamed_Fish_SO.asset",
       "cookingStep": "Steamer",
+      "platingStep": "",
       "ingredients": [
         "FishSO"
       ],
@@ -6985,6 +8116,7 @@
       "nameEn": "Cheese Burger",
       "assetPath": "Assets/common01/food/Recipes/Burger_Cheese_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "DLC02_ChoppedBun",
         "CheeseSO",
@@ -7026,6 +8158,7 @@
       "nameEn": "Cheese Lettuce Burger",
       "assetPath": "Assets/common01/food/Recipes/Burger_CheeseLettuce_SO.asset",
       "cookingStep": "FryingPan",
+      "platingStep": "",
       "ingredients": [
         "DLC02_ChoppedBun",
         "CheeseSO",
@@ -7067,8 +8200,9 @@
       "id": "boiledfrankfurter",
       "nameZh": "煮热狗肠",
       "nameEn": "Boiled Frankfurter",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc08/boiledfrankfurter.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc08/boiledfrankfurter.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "frankfurter"
       ],
@@ -7098,8 +8232,9 @@
       "id": "dlc11_boiledfrankfurter",
       "nameZh": "煮热狗肠（DLC11）",
       "nameEn": "Boiled Frankfurter (DLC11)",
-      "assetPath": "Assets/Editor/LayoutEditor/Import/Recipes/dlc11/dlc11_boiledfrankfurter.asset",
+      "assetPath": "Assets/common_w/Recipes/dlc11/dlc11_boiledfrankfurter.asset",
       "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
         "dlc11_frankfurter"
       ],

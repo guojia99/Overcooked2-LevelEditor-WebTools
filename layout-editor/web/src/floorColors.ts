@@ -17,6 +17,7 @@ const SURFACE_PAINT: Record<string, SurfacePaint> = {
   walkway: { fill: "rgba(170,145,105,0.55)", stroke: "rgba(130,105,70,0.95)", label: "#2a1f10", emoji: "" },
   carpet: { fill: "rgba(190,120,170,0.5)", stroke: "rgba(150,85,135,0.95)", label: "#2a1020", emoji: "" },
   section: { fill: "rgba(165,150,125,0.5)", stroke: "rgba(120,105,80,0.95)", label: "#1a1d23", emoji: "" },
+  ground: { fill: "rgba(120,165,105,0.5)", stroke: "rgba(85,125,72,0.95)", label: "#12240e", emoji: "" },
   conveyor: { fill: "rgba(225,180,90,0.55)", stroke: "rgba(180,130,50,0.95)", label: "#2a1f10", emoji: "↔" },
   background: { fill: "rgba(120,150,220,0.4)", stroke: "rgba(90,120,190,0.9)", label: "#0d1830", emoji: "☁" },
 };
@@ -176,6 +177,8 @@ export function surfaceKindLabelZh(kind: string | undefined): string {
       return "地毯";
     case "section":
       return "地板段";
+    case "ground":
+      return "大型地面";
     case "conveyor":
       return "传送带地面";
     case "background":

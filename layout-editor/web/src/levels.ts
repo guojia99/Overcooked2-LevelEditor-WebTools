@@ -6,6 +6,7 @@ import type {
   AudioItemRule,
   AudioKnowledge,
   BundleAnalysis,
+  CustomRecipeSummary,
   DeathEffectEntry,
   DirectoryEvent,
   IngredientEntry,
@@ -17,6 +18,7 @@ import type {
   RecipeEntry,
 } from "./types";
 import { closeModal, openModal } from "./modals";
+import { initWebBuiltin } from "./webBuiltin";
 import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
 import { applyRatio, computeAutoScores, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
@@ -24,6 +26,8 @@ import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
 import { computeCardGroups, rlCardHtml, rlSectionHtml, STEP_ICON_SRC, type RecipeWithGroups } from "./recipeCard";
 import { exportSummaryPng, type SummaryCard, type SummaryExportData } from "./summaryExport";
+import { customRecipeIconUrl } from "./editor/catalog";
+import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 
 const TARGET_SCENE_KEY = "layoutTargetScene";
 
@@ -120,6 +124,7 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
 }
 
 export async function renderManageView(app: HTMLElement): Promise<void> {
+  await initWebBuiltin();
   await renderSetList(app);
 }
 
@@ -568,14 +573,16 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
     return;
   }
 
-  let level: { recipeGuids: string[] };
+  let level: { recipeGuids: string[]; recipeIds?: string[] };
   let recipes: RecipeWithGroups[];
   let ingredients: IngredientEntry[];
+  let customRecipes: CustomRecipeSummary[] = [];
   try {
-    [level, recipes, ingredients] = await Promise.all([
+    [level, recipes, ingredients, customRecipes] = await Promise.all([
       api.fetchLevelRecipes(detail.sceneAssetPath),
       api.fetchRecipeCatalog(setName),
       api.fetchIngredients().catch(() => [] as IngredientEntry[]),
+      api.fetchCustomRecipes(setName).catch(() => [] as CustomRecipeSummary[]),
     ]);
   } catch (e) {
     showError(e);
@@ -584,11 +591,20 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
 
   const set = sets.find((s) => s.setName === setName);
   const ingredientName = (id: string): string => ingredients.find((i) => i.id === id)?.nameZh ?? id;
+  /** 成品图标：自定义菜谱经专用端点从 CustomRecipeSO.icon 读取；其余用静态菜谱图标。 */
+  const recipeIconUrl = (r: RecipeEntry): string =>
+    customRecipeIconUrl(r) ?? `/icons/recipes/${encodeURIComponent(r.id)}.png`;
 
   const byGuid = new Map(recipes.map((r) => [r.guid, r]));
+  // 关卡集自定义菜谱：用与自定义菜谱列表一致的形式覆盖目录条目
+  // （normalizeCustomRecipeCard：cookingStep=cookingStepId、mixing=type==="Mixed"、
+  //  intermediate=false、不携带后端 cookingGroups），保证汇总卡片与列表卡片完全一致。
+  const customByGuid = new Map(customRecipes.map((c) => [c.guid, normalizeCustomRecipeCard(c) as RecipeWithGroups]));
+  for (const [g, c] of customByGuid) byGuid.set(g, c);
   const selected = (level.recipeGuids ?? [])
     .map((g) => byGuid.get(g))
-    .filter((r): r is RecipeEntry => !!r && !r.intermediate);
+    // 自定义菜谱（含 Composite/Mixed，score 可能为 0 被标 intermediate）也计入汇总
+    .filter((r): r is RecipeEntry => !!r && (!r.intermediate || !!r.isCustom));
 
   const grouped = groupRecipesByType(selected).map(([type, arr]) => ({
     type,
@@ -613,7 +629,7 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
         if (r.group && r.group !== "core" && r.group !== "levelset") badges.push(foodGroupLabel(r.group));
         badges.push(`⭐ ${r.score ?? 0}`);
         return {
-          iconUrl: `/icons/recipes/${encodeURIComponent(r.id)}.png`,
+          iconUrl: recipeIconUrl(r),
           nameZh: r.nameZh,
           nameEn: r.nameEn || r.id,
           badges,
@@ -623,6 +639,12 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
               .map((s) => STEP_ICON_SRC[s])
               .filter((s): s is string => !!s),
             ingredientUrls: (cg.ingredients ?? []).map((id) => `/icons/ingredients/${encodeURIComponent(id)}.png`),
+            ingredientStepIcons: (cg.ingredients ?? []).map(
+              (id) =>
+                (cg.ingredientSteps?.[id] ?? [])
+                  .map((s) => STEP_ICON_SRC[s])
+                  .filter((s): s is string => !!s)
+            ),
           })),
         };
       }),
@@ -639,6 +661,7 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
               allRecipes: recipes,
               ingredientName,
               extraBadge: r.group === "levelset" ? "本关" : undefined,
+              iconSrc: recipeIconUrl,
             })
           )
           .join(""),

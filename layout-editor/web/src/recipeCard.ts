@@ -37,6 +37,9 @@ export const STEP_ICON_SRC: Record<string, string> = {
   GriddlePan: "/icons/steps/splitpan.png",
   KebabSkewer: "/icons/steps/grill.png",
   ToastingFork: "/icons/steps/toastingfork.png",
+  // 大火锅/烤托盘暂无专属图标，复用煮锅/烤箱
+  HotPot: "/icons/catalog/Pot.png",
+  RoastingTray: "/icons/catalog/Oven.png",
 };
 
 function esc(s: unknown): string {
@@ -67,9 +70,21 @@ export function stepIconHtml(step: string): string {
   return `<img class="rl-step-icon" loading="lazy" src="${src}" alt="" onerror="this.onerror=null;this.style.display='none'">`;
 }
 
-/** One cooking group box: ingredient chips + step icons (if any). */
+/** One cooking group box: ingredient chips + step icons (if any).
+ *  食材级步骤角标（如炒饭的米 → Pot 煮锅角标）：渲染在该食材图标右下角。 */
 export function rlGroupHtml(g: CookingGroup, ingredientName?: (id: string) => string): string {
-  const chips = g.ingredients.map((ing) => ingredientChipHtml(ing, ingredientName?.(ing))).join("");
+  const chips = g.ingredients
+    .map((ing) => {
+      const badgeSteps = g.ingredientSteps?.[ing] ?? [];
+      const badges = badgeSteps
+        .map((s) => `<span class="rl-chip-badge">${stepIconHtml(s)}</span>`)
+        .join("");
+      return `<span class="rl-chip" title="${esc(ingredientName?.(ing) || ing)}">
+        <img loading="lazy" src="/icons/ingredients/${encodeURIComponent(ing)}.png" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">
+        ${badges}
+      </span>`;
+    })
+    .join("");
   const hasStep = !!g.step;
   const icons = [g.step, ...(g.extraSteps ?? []).map((e) => e.step)]
     .filter(Boolean)
@@ -91,6 +106,8 @@ export interface RlCardOptions {
   allRecipes?: RecipeWithGroups[];
   /** Extra badge text (e.g. "本关" for levelset recipes). */
   extraBadge?: string;
+  /** 禁用原因（web 内置未放开等）：卡片置灰 + ⛔徽标。 */
+  disabledReason?: string;
   /** Ingredient id → Chinese name, used for chip tooltips. */
   ingredientName?: (id: string) => string;
   /** Custom product icon src override (e.g. levelset custom recipe icons
@@ -98,29 +115,56 @@ export interface RlCardOptions {
   iconSrc?: (r: RecipeEntry) => string;
 }
 
-/** Compute the merged cooking groups for a card (backend data + fallback derivation). */
+/** Compute the merged cooking groups for a card (backend data + fallback derivation).
+ *  自定义菜谱（isCustom）：忽略后端 cookingGroups 与 intermediate（后端按旧 score<=0
+ *  中间产物语义计算，不含 mixing/分步组成），统一走前端镜像推导（intermediate:false +
+ *  mixing + 分步组成），与自定义菜谱列表 / 「组装效果（实时预览）」渲染完全一致。
+ *  带 compositionIds 的自定义菜谱：先展开组成（含 Mixed 子菜谱的搅拌组），再追加自身
+ *  烹饪步骤标记组（如 CheesePrawn = 面糊搅拌 + 炸制）。 */
 export function computeCardGroups(r: RecipeWithGroups, opts: RlCardOptions = {}): CookingGroup[] {
-  const compOk = (r.compositionIds ?? []).length > 0 && !isCookStepLike(r.cookingStep);
-  const groups = r.cookingGroups
-    ? normalizeCookingGroups(r, r.cookingGroups)
-    : compOk
-      ? normalizeCookingGroups(r, deriveCompositionGroups(r, opts.allRecipes ?? []))
-      : normalizeCookingGroups(r, deriveCookingGroups(r, opts.allRecipes ?? []));
+  const norm: RecipeWithGroups = { ...r, intermediate: r.isCustom ? false : r.intermediate };
+  const compIds = r.compositionIds ?? [];
+  const all = opts.allRecipes ?? [];
+  let groups: CookingGroup[];
+  if (r.cookingGroups && !r.isCustom) {
+    groups = normalizeCookingGroups(r, r.cookingGroups);
+  } else if (r.isCustom && r.mixing) {
+    // Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（最终步骤标记），
+    // 即使带 compositionIds（纯叶食材）也走搅拌推导，不展开组成
+    groups = normalizeCookingGroups(r, deriveCookingGroups(norm, all));
+  } else if (r.isCustom && compIds.length > 0) {
+    // 组成子菜谱先各自成组；自身还有烹饪步骤时（两阶段，如炒饭=煮米→炒），
+    // deriveCompositionGroups 会把已烹饪子菜谱步骤作食材角标、普通食材并入主框、
+    // 全生食材组成则被自身烹饪步骤全部包裹（如 Fried2_Shrimp 鱼虾同框）
+    groups = normalizeCookingGroups(r, deriveCompositionGroups(norm, all));
+  } else if (compIds.length > 0 && !isCookStepLike(r.cookingStep)) {
+    groups = normalizeCookingGroups(r, deriveCompositionGroups(norm, all));
+  } else {
+    groups = normalizeCookingGroups(r, deriveCookingGroups(norm, all));
+  }
   return mergeFinalMarkers(groups);
+}
+
+/** 卡片徽标/分组展示统一的自定义菜谱归一化：自定义菜谱恒 intermediate:false。
+ *  （与 toRecipeCard 一致：所有自定义菜谱均可作组成/订单菜谱。） */
+export function cardIntermediate(r: RecipeWithGroups): boolean {
+  return r.isCustom ? false : !!r.intermediate;
 }
 
 /** Full "菜谱清单列表" card: product area + cooking groups. */
 export function rlCardHtml(r: RecipeWithGroups, opts: RlCardOptions = {}): string {
   const merged = computeCardGroups(r, opts);
+  const intermediate = cardIntermediate(r);
 
   const badges = [
-    r.intermediate ? `<span class="rl-badge rl-badge-inter">半成品</span>` : "",
+    opts.disabledReason ? `<span class="rl-badge rl-badge-disabled">⛔ 禁用</span>` : "",
+    intermediate ? `<span class="rl-badge rl-badge-inter">半成品</span>` : "",
     r.isCustom ? `<span class="rl-badge rl-badge-custom">自定义</span>` : "",
     opts.extraBadge ? `<span class="rl-badge rl-badge-dlc">${esc(opts.extraBadge)}</span>` : "",
     r.group && r.group !== "core"
       ? `<span class="rl-badge rl-badge-dlc">${esc(foodGroupLabel(r.group))}</span>`
       : "",
-    !r.intermediate ? `<span class="rl-badge rl-badge-score">⭐ ${r.score ?? 0}</span>` : "",
+    !intermediate ? `<span class="rl-badge rl-badge-score">⭐ ${r.score ?? 0}</span>` : "",
   ].join("");
 
   const groupsHtml =
@@ -134,7 +178,7 @@ export function rlCardHtml(r: RecipeWithGroups, opts: RlCardOptions = {}): strin
     ? `<img loading="lazy" src="${esc(opts.iconSrc(r))}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`
     : recipeImgHtml(r);
 
-  return `<article class="rl-card" title="${esc(r.id)}">
+  return `<article class="rl-card${opts.disabledReason ? " rl-card-disabled" : ""}" title="${esc(opts.disabledReason ? `${r.id}（${opts.disabledReason}）` : r.id)}">
     <div class="rl-product">
       ${prodIcon}
       <div class="rl-prod-name">${esc(r.nameZh)}<span class="rl-prod-en">${esc(r.nameEn || r.id)}</span></div>

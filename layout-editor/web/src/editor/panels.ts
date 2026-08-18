@@ -18,9 +18,10 @@ import {
   setFloorSelection,
   clearSelection
 } from "./selection";
-import { sceneNpcAnimItems, NPC_ANIM_TYPES } from "./npcAnimations";
+import { sceneNpcAnimItems, npcTypesHintHtml } from "./npcAnimations";
 import { draw } from "./render";
 import { renderMoveControlPanel, groupVisibleInLayer, updateMovePickBar } from "./moveControl";
+import { renderButtonEventPanel } from "./buttonEvents";
 import { applyPaletteGridCols } from "./palette";
 
 /** Drag the left palette's right edge to resize it (min 180px, max half the window). */
@@ -223,7 +224,6 @@ export function refreshSceneItemList(): void {
     if (layer === "decor") {
       // 自带移动动画的 NPC 清单
       const npcs = sceneNpcAnimItems();
-      const known = NPC_ANIM_TYPES.map((t) => `${t.labelZh}（${t.evidence}）`).join("；");
       parts.push(
         `<details class="cat-group" open><summary>🎞 自带行走动画的 NPC（${npcs.length}）</summary>` +
           (npcs.length > 0
@@ -235,7 +235,7 @@ export function refreshSceneItemList(): void {
                     `</div>`
                 )
                 .join("")
-            : `<div class="muted" style="padding:6px 4px;">场景中暂无自带动画的 NPC。已知类型：${escHtml(known)}。服务生（NPC_*_Waiter_01）为目录内可直接放置的自带动画 NPC；月亮 / 面包人 / 行人为关卡专属物体。</div>`) +
+            : `<div class="npc-types-empty">场景中暂无自带动画的 NPC。${npcTypesHintHtml()}</div>`) +
           `</details>`
       );
     }
@@ -269,7 +269,7 @@ export function refreshSceneItemList(): void {
 }
 
 export function maybeRefreshSceneItemList(): void {
-  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeMoveGroupId}|${S.activeMoveEventIdx}|${S.moveMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.moveControls.length}|${S.dirty}`;
+  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeMoveGroupId}|${S.activeMoveEventIdx}|${S.moveMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.moveControls.length}|${S.buttonEvents.length}|${S.dirty}`;
   if (sig === S.sceneItemListSig) return;
   S.sceneItemListSig = sig;
   renderRightPanel();
@@ -313,6 +313,10 @@ export function renderRightPanel(): void {
     if (countEl) countEl.textContent = "";
     const layerGroups = S.moveControls.filter((g) => groupVisibleInLayer(g));
     if (moveCountEl) moveCountEl.textContent = layerGroups.length > 0 ? `(${layerGroups.length})` : "";
+  } else if (S.activeRightTab === "bevents") {
+    renderButtonEventPanel(body);
+    if (countEl) countEl.textContent = "";
+    if (moveCountEl) moveCountEl.textContent = "";
   } else {
     refreshSceneItemList();
     if (moveCountEl) moveCountEl.textContent = "";

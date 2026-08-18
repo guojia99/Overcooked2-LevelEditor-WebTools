@@ -20,6 +20,11 @@ export function snapshotState(): EditorSnapshot {
     floors: S.floors,
     bgThemeKey: S.bgThemeKey,
     moveControls: S.moveControls,
+    switchLinks: S.switchLinks,
+    buttonLinks: S.buttonLinks,
+    buttonEvents: S.buttonEvents,
+    cameraInfo: S.cameraInfo,
+    lights: S.lights,
   })) as EditorSnapshot;
 }
 
@@ -48,6 +53,11 @@ export function applySnapshot(snap: EditorSnapshot): void {
   S.floors = snap.floors;
   S.bgThemeKey = snap.bgThemeKey;
   S.moveControls = snap.moveControls;
+  S.switchLinks = snap.switchLinks ?? [];
+  S.buttonLinks = snap.buttonLinks ?? [];
+  S.buttonEvents = snap.buttonEvents ?? [];
+  S.cameraInfo = snap.cameraInfo ?? null;
+  S.lights = snap.lights ?? [];
   // Restore move-group selection only when the group still exists.
   if (S.activeMoveGroupId && !S.moveControls.some((g) => g.id === S.activeMoveGroupId)) {
     S.activeMoveGroupId = null;

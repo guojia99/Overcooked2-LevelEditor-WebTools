@@ -2,7 +2,6 @@ import {
   S,
   EditorItem
 } from "./state";
-import type { IngredientEntry } from "../types";
 import { dom } from "./dom";
 import {
   prefabIdFromPath,
@@ -18,6 +17,8 @@ import {
   openIngredientMultiPicker
 } from "../modals";
 import { ingredientOptionLabel, visibleIngredients } from "../ingredientLabels";
+import { webIngredientDisabledReason } from "../webBuiltin";
+import type { IngredientEntry } from "../types";
 import {
   counterTypeOfItem,
   counterAppearanceOptions
@@ -47,6 +48,16 @@ import {
   PORTAL_COLOR_NAMES,
   BURNER_FIRE_MODES
 } from "./ui/constants";
+import {
+  buttonLinkSummaryHtml,
+  openButtonLinkModal,
+  isButtonLinkSource
+} from "./buttonLinks";
+import {
+  buttonEventSummaryHtml,
+  openButtonEventModal,
+  isButtonEventSource
+} from "./buttonEvents";
 
 export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Dispenser: "Dispenser",
@@ -68,8 +79,45 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Skewer: "CookingUtensil",
   Blender: "CookingUtensil",
   BlenderCup: "CookingUtensil",
+  // common_w 厨具变体 wrapper（右键「锅具参数/额外食材」面板与换肤参数迁移依赖此表）
+  utensil_large_pot_01: "CookingUtensil",
+  utensil_dlc10_large_pot_01: "CookingUtensil",
+  utensil_roasting_tray: "CookingUtensil",
+  dlc09_utensil_roasting_tray: "CookingUtensil",
+  dlc02_utensil_frying_pan: "CookingUtensil",
+  dlc05_utensil_frying_pan: "CookingUtensil",
+  dlc07_utensil_frying_pan_01: "CookingUtensil",
+  dlc08_utensil_frying_pan: "CookingUtensil",
+  dlc09_utensil_frying_pan: "CookingUtensil",
+  dlc03_utensil_pot: "CookingUtensil",
+  dlc07_utensil_pot_01: "CookingUtensil",
+  dlc08_utensil_pot_01: "CookingUtensil",
+  dlc09_utensil_pot: "CookingUtensil",
+  dlc02_utensil_mixer: "CookingUtensil",
+  dlc03_utensil_mixer: "CookingUtensil",
+  dlc05_utensil_mixer: "CookingUtensil",
+  dlc07_utensil_mixer_01: "CookingUtensil",
+  dlc08_utensil_mixer_01: "CookingUtensil",
+  dlc09_utensil_mixer: "CookingUtensil",
+  dlc13_utensil_mixer_01: "CookingUtensil",
+  dlc08_frierbasket: "CookingUtensil",
+  utensil_griddlepan: "CookingUtensil",
+  utensil_skewer_01: "CookingUtensil",
+  utensil_toasting_fork_01: "CookingUtensil",
+  utensil_blender_01: "CookingUtensil",
   CleanPlateStack: "CleanPlateStack",
   CleanGlassStack: "CleanPlateStack",
+  // 容器堆变体（wrapper 无专属 stub，靠 stubKind 让后端补挂组件并推断容器 SO）
+  dlc08_cleantraystack: "CleanPlateStack",
+  cleanmugstack: "CleanPlateStack",
+  cleanglassstack: "CleanPlateStack",
+  dlc11_cleanglassstack: "CleanPlateStack",
+  // 脏堆变体（同 CleanPlateStack 家族：脏马克杯/脏玻璃杯/脏餐盘堆）
+  dirtymugstack: "CleanPlateStack",
+  dlc09_dirtymugstack: "CleanPlateStack",
+  dirtyglassstack: "CleanPlateStack",
+  dlc11_dirtyglassstack: "CleanPlateStack",
+  dlc08_dirtytraystack: "CleanPlateStack",
   Travelator: "Travelator",
   Flamethrower: "Flamethrower",
   Burner: "Burner",
@@ -77,36 +125,46 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   ServingStation: "ServingStation",
   PlateReturn: "PlateReturn",
   GlassReturn: "GlassReturn",
+  // 回收台/上菜台 DLC 变体（wrapper 无专属 stub，靠 stubKind 让后端补挂组件）
+  workstation_mug_return: "PlateReturn",
+  dlc09_workstation_mug_return_winter: "PlateReturn",
+  dlc13_workstation_plate_return: "PlateReturn",
+  dlc08_workstation_tray_return: "PlateReturn",
+  dlc11_workstation_glass_return_01: "GlassReturn",
+  workstation_glass_return_01: "GlassReturn",
+  dlc13_workstation_plate_station: "ServingStation",
   Switch: "Switch",
+  // DLC8 按钮（断头台/果汁机/酱料机的触发开关）按 Switch 处理
+  p_dlc08_button_drinks: "Switch",
+  p_dlc08_button_condiments: "Switch",
   PressureSwitch: "PressureSwitch",
   MultiControlTerminal: "Terminal",
 };
 
-/** 酱料机可输出的酱料（芥末 / 番茄酱）。 */
-const CONDIMENT_INGREDIENT_IDS = new Set(["ketchup", "dlc11_ketchup", "mustard", "dlc11_mustard"]);
-/** 饮料机可输出的饮料（可乐 / 橙味汽水 / 香草 / 巧克力 / 牛奶 / 冰块等）。 */
-const DRINK_INGREDIENT_IDS = new Set([
-  "rootbeer",
-  "orangesoda",
-  "vanilla",
-  "ChocolateSO",
-  "dlc03_chocolate",
-  "dlc09_chocolate",
-  "dlc13_chocolate",
-  "DLC05_Chocolate",
-  "milk",
-  "dlc11_milk",
-  "dlc09_milk",
-  "icecube",
-  "drink01",
-  "drink02",
-  "drink03",
-  "orange",
-  "dlc04_orange",
-  "dlc09_orange",
-  "dlc10_orange",
-  "dlc13_orange",
-]);
+/** 酱料机可输出的酱料（黄芥末酱 / 番茄酱，含 DLC11 换皮，逻辑一致）。 */
+/** 特殊分配器（饮料机/酱料机）按 DLC 可输出的食材（实测 bundle 组件，dlc 各自一套）：
+ *  dlc08_drink_machine → 饮料1/2/3；dlc11_drink_dispenser → 橙味汽水+沙士汽水；
+ *  dlc08_condiment_dispenser → 番茄酱+芥末酱；dlc11_condiment_dispenser → dlc11 番茄酱/芥末酱。 */
+const DISPENSER_INGREDIENT_IDS: Record<string, Set<string>> = {
+  dlc08_drink_machine: new Set(["drink01", "drink02", "drink03"]),
+  dlc11_drink_dispenser: new Set(["orangesoda", "rootbeer"]),
+  dlc08_condiment_dispenser: new Set(["ketchup", "mustard"]),
+  dlc11_condiment_dispenser: new Set(["dlc11_ketchup", "dlc11_mustard"]),
+};
+
+/** 该分配器允许输出的食材 id 集合（非特殊分配器返回 null = 全部食材可选）。 */
+function specialDispenserAllowedIds(item: EditorItem): Set<string> | null {
+  const pid = prefabIdFromPath(item.prefabAssetPath);
+  return DISPENSER_INGREDIENT_IDS[pid] ?? null;
+}
+
+/** 普通食材箱的禁选判定：node 型食材（无实体 prefab，如沙拉洋葱/汽水）放入食材箱会在
+ *  运行时 PseudoPrefabDispenser.Setup 按 GameObject 加载失败而崩溃——只能经加工
+ *  （如切洋葱）或专属机器（饮料机/酱料机）产出；其余按 web 白名单置灰。 */
+function crateIngredientDisabled(ing: IngredientEntry): string | null {
+  if (ing.nodeOnly) return "node 型食材（无实体 prefab），食材箱无法生成（经加工或专属机器产出）";
+  return webIngredientDisabledReason(ing);
+}
 
 function specialDispenserType(item: EditorItem): "condiment" | "drink" | "" {
   const pid = prefabIdFromPath(item.prefabAssetPath);
@@ -125,11 +183,34 @@ export function isCollisionItem(it: EditorItem): boolean {
   return stubKindOf(it) === "Collision";
 }
 
+/** 原版厨具容量（bundle 实测 IngredientContainer.m_capacity）：
+ *  汤锅族=3（多食材组合）、煎锅/炸篮/蒸锅等=1、搅拌碗/搅拌杯/烤盘=4、烤串=3、
+ *  火锅大锅=4（bundle226）、烤菜烤盘=4（bundle297）。子串规则与后端
+ *  NativeUtensilCapacity 一致（large_pot/roasting_tray 先于 pot 判断）。 */
 export function defaultUtensilCapacity(item: EditorItem): number {
-  const prefabId = prefabIdFromPath(item.prefabAssetPath);
-  if (prefabId === "MixerBowl" || prefabId === "GriddlePan" || prefabId === "BlenderCup") return 4;
-  if (prefabId === "Skewer") return 3;
+  const prefabId = (prefabIdFromPath(item.prefabAssetPath) ?? "").toLowerCase();
+  if (prefabId.includes("large_pot")) return 4;
+  if (prefabId.includes("roasting_tray")) return 4;
+  if (prefabId.includes("pot")) return 3;
+  if (
+    prefabId.includes("mixer") ||
+    prefabId.includes("blender") ||
+    prefabId.includes("griddle")
+  )
+    return 4;
+  if (prefabId.includes("skewer")) return 3;
   return 1;
+}
+
+/** autofill 装填锅具时的容量兜底：未设置 → 原版默认；
+ *  旧版 autofill 曾把汤锅默认成 1（放不进 3 种食材），凡容量仍为 1 且原版默认
+ *  非 1 的（仅 Pot）视为历史污染，纠正回原版默认。用户手动设置的其他值不动。 */
+export function utensilCapacityOrFix(item: EditorItem): number {
+  const def = defaultUtensilCapacity(item);
+  const cur = item.cookingUtensil?.capacity;
+  if (cur == null) return def;
+  if (def !== 1 && cur === 1) return def;
+  return cur;
 }
 
 export function counterAppearanceHtml(item: EditorItem): string {
@@ -201,28 +282,32 @@ export function stubControlsHtml(item: EditorItem): string {
   computeParamLabels(); // refresh per-type sequence numbers so menus match the canvas
   switch (kind) {
     case "Dispenser": {
-      const cur = item.dispenser?.spawnerItemPrefabGuid ?? "";
       const stype = specialDispenserType(item);
-      let ings = visibleIngredients(S.ingredientsCache);
-      if (stype === "condiment") ings = ings.filter((i) => CONDIMENT_INGREDIENT_IDS.has(i.id));
-      else if (stype === "drink") ings = ings.filter((i) => DRINK_INGREDIENT_IDS.has(i.id));
-      // web 内置食材暂不可用：普通食材按名排序，web 内置单独成组置灰放在最后
-      const normal = ings.filter((i) => i.group !== "web").sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
-      const web = ings.filter((i) => i.group === "web").sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
-      const opt = (ing: IngredientEntry) =>
-        `<option value="${ing.guid}" ${ing.guid === cur ? "selected" : ""}>${escHtml(ingredientOptionLabel(ing))}</option>`;
-      const webGroup = web.length
-        ? `<optgroup label="Web 内置（暂不可用）" disabled>${web.map(opt).join("")}</optgroup>`
-        : "";
-      const opts = ['<option value="">— 未设置 —</option>']
-        .concat(normal.map(opt))
-        .concat(webGroup ? [webGroup] : [])
-        .join("");
       const title = stype === "condiment" ? "酱料机参数" : stype === "drink" ? "饮料机参数" : "食材箱参数";
       const fieldLabel = stype === "condiment" ? "酱料" : stype === "drink" ? "饮料" : "食材";
+      if (stype) {
+        // 酱料机/饮料机：多选（游戏内开关循环切换，顺序即切换顺序）；
+        // 多选列表存 item.soArray.pseudoPrefabGuids（PseudoPrefabSOArray），不选 = prefab 内置列表。
+        const guids = item.soArray?.pseudoPrefabGuids?.length
+          ? item.soArray.pseudoPrefabGuids
+          : item.dispenser?.spawnerItemPrefabGuid
+            ? [item.dispenser.spawnerItemPrefabGuid]
+            : [];
+        const names = guids.map((g) => {
+          const ing = S.ingredientsCache.find((i) => i.guid === g);
+          return ing ? escHtml(ingredientOptionLabel(ing)) : "?";
+        });
+        return `<div class="ctx-stub"><div class="ctx-stub-title">${title}</div>
+          <div class="ctx-stub-row" style="font-size:11px">${names.length ? names.join(" → ") : "— 默认（机器内置列表）—"}</div>
+          <button type="button" class="ctx-btn" id="ctx-stub-ing-pick">选择${fieldLabel}（可多选）…</button>
+          <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">多选后，联动的开关按下时按顺序循环切换${fieldLabel}；不选则使用机器内置列表</div></div>`;
+      }
+      const cur = item.dispenser?.spawnerItemPrefabGuid ?? "";
+      const curIng = cur ? S.ingredientsCache.find((i) => i.guid === cur) : undefined;
       return `<div class="ctx-stub"><div class="ctx-stub-title">${title}</div>
-        <label class="ctx-stub-row">${fieldLabel} <select id="ctx-stub-ing" class="ctx-input">${opts}</select></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">Web 内置食材暂不可用，已置灰</div></div>`;
+        <label class="ctx-stub-row">${fieldLabel} <span class="ctx-input" style="opacity:${curIng ? 1 : 0.6}">${curIng ? escHtml(ingredientOptionLabel(curIng)) : "— 未设置 —"}</span>
+        <button type="button" class="ctx-btn" id="ctx-stub-ing-pick">选择…</button></label>
+        </div>`;
     }
     case "AttachingFoodSpawner": {
       const fs = item.foodSpawner ?? {};
@@ -296,12 +381,22 @@ export function stubControlsHtml(item: EditorItem): string {
       const matHtml = switchMaterialHtml(item);
       return `<div class="ctx-stub"><div class="ctx-stub-title">开关参数</div>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-sw-start" ${sw.startEnabled !== false ? "checked" : ""}/> 初始开启</label>
-        ${matHtml}</div>`;
+        ${matHtml}
+        <div class="ctx-stub-title" style="margin-top:6px">联动目标（断头台/饮料机等）</div>
+        <div id="ctx-sw-links"></div>
+        <label class="ctx-stub-row"><select id="ctx-sw-linktarget" class="ctx-input"></select>
+          <button type="button" class="ctx-btn" id="ctx-sw-linkadd">添加</button></label>
+        <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" value="Switch" placeholder="Switch"/></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">按下按钮时对目标对象广播该消息（默认 Switch）</div>
+        ${buttonEventSummaryHtml(item)}
+        ${buttonLinkSummaryHtml(item)}</div>`;
     }
     case "PressureSwitch": {
       const matHtml = pressureSwitchMaterialHtml(item);
       return `<div class="ctx-stub"><div class="ctx-stub-title">压力开关参数</div>
-        ${matHtml || '<div class="ctx-stub-row">此物件无用户可配置参数，配置内置于预制件中</div>'}</div>`;
+        ${matHtml || '<div class="ctx-stub-row">此物件无用户可配置参数，配置内置于预制件中</div>'}
+        ${buttonEventSummaryHtml(item)}
+        ${buttonLinkSummaryHtml(item)}</div>`;
     }
     case "Terminal": {
       const t = item.terminal ?? {};
@@ -365,7 +460,7 @@ export function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row">脏杯台 <select id="ctx-ss-glass" class="ctx-input">${glassOpts}</select></label>
         <label class="ctx-stub-row">脏马克杯台 <select id="ctx-ss-mug" class="ctx-input">${mugOpts}</select></label>
         <label class="ctx-stub-row">餐盘回收台 <select id="ctx-ss-tray" class="ctx-input">${trayOpts}</select></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">一个上菜台最多各绑一个脏盘/脏杯/马克杯/餐盘回收台；一个回收台可被多个上菜台共用</div></div>`;
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">脏盘台与餐盘回收台互斥（同族容器，绑一个会自动替换另一个）；普通菜与套餐混搭请用两套上菜台。脏杯/马克杯回收台可与之并存，一个回收台可被多个上菜台共用</div></div>`;
     }
     case "PlateReturn":
     case "GlassReturn": {
@@ -402,12 +497,62 @@ export function wireStubControls(item: EditorItem) {
   if (kind) {
   switch (kind) {
     case "Dispenser": {
-      num("ctx-stub-ing")?.addEventListener("change", (e) => {
-        pushHistory();
-        item.stubKind = "Dispenser";
-        item.dispenser = { spawnerItemPrefabGuid: (e.target as HTMLSelectElement).value };
-        draw();
-        setStatus("已设置食材箱食材（写回后生效）");
+      document.getElementById("ctx-stub-ing-pick")?.addEventListener("click", () => {
+        const stype = specialDispenserType(item);
+        // 全部食材可选（含未放开的 web 内置——弹窗内置灰禁选并注明原因）；
+        // 酱料机/饮料机再按各自可输出列表收窄（dlc 各自一套，见 DISPENSER_INGREDIENT_IDS）
+        let ings = visibleIngredients(S.ingredientsCache);
+        const allowedIds = specialDispenserAllowedIds(item);
+        if (allowedIds) ings = ings.filter((i) => allowedIds.has(i.id));
+        ings = ings.sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
+        const fieldLabel = stype === "condiment" ? "酱料" : stype === "drink" ? "饮料" : "食材";
+        hideContextMenu();
+        if (stype) {
+          // 酱料机/饮料机：多选（游戏内开关循环切换）。写入 soArray（PseudoPrefabSOArray）。
+          const curGuids = item.soArray?.pseudoPrefabGuids?.length
+            ? item.soArray.pseudoPrefabGuids
+            : item.dispenser?.spawnerItemPrefabGuid
+              ? [item.dispenser.spawnerItemPrefabGuid]
+              : [];
+          openIngredientMultiPicker(
+            `${fieldLabel}选择（可多选）`,
+            `勾选机器可输出的${fieldLabel}：游戏内按下联动开关按勾选顺序循环切换；全不选 = 使用机器内置列表（⛔ 为未放开的 Web 内置项）`,
+            ings,
+            curGuids,
+            (guids) => {
+              pushHistory();
+              item.stubKind = "Dispenser";
+              item.dispenser = { spawnerItemPrefabGuid: guids[0] ?? "" };
+              // 空数组也要传：后端据此清空场景组件里的旧列表（patcher 遇空数组则不动，用内置列表）
+              item.soArray = { pseudoPrefabGuids: guids };
+              draw();
+              setStatus(
+                guids.length
+                  ? `已设置${guids.length} 种${fieldLabel}（开关循环切换，写回后生效）`
+                  : `已恢复${fieldLabel}机内置列表（写回后生效）`
+              );
+            },
+            undefined,
+            { isDisabled: webIngredientDisabledReason }
+          );
+          return;
+        }
+        const cur = item.dispenser?.spawnerItemPrefabGuid ?? "";
+        openIngredientMultiPicker(
+          `${fieldLabel}选择`,
+          `选择食材箱要生成的食材（⛔ 为未放开的 Web 内置项）`,
+          ings,
+          cur ? [cur] : [],
+          (guids) => {
+            pushHistory();
+            item.stubKind = "Dispenser";
+            item.dispenser = { spawnerItemPrefabGuid: guids[0] ?? "" };
+            draw();
+            setStatus(guids[0] ? `已设置${fieldLabel}（写回后生效）` : `已清除${fieldLabel}设置（写回后生效）`);
+          },
+          undefined,
+          { single: true, isDisabled: crateIngredientDisabled }
+        );
       });
       break;
     }
@@ -470,7 +615,10 @@ export function wireStubControls(item: EditorItem) {
           item.cookingUtensil?.allowedIngredientGuids ?? [],
           (guids) => {
             pushHistory();
-            ensure().allowedIngredientGuids = guids;
+            const cu = ensure();
+            cu.allowedIngredientGuids = guids;
+            // capacity 缺省会写回 0（后端 int），导致锅具一个食材都放不进——始终兜底原版默认
+            if (cu.capacity == null) cu.capacity = defaultUtensilCapacity(item);
             draw();
             setStatus("已更新锅具额外食材（写回后生效）");
           },
@@ -647,6 +795,75 @@ export function wireStubControls(item: EditorItem) {
         ensure().inactiveMaterialGuid = (e.target as HTMLSelectElement).value || undefined;
         setStatus("已更新开关按下外观（写回后生效）");
       });
+
+      // ---- 开关联动（switchLinks，文档级） ----
+      const myId = item.instanceId ?? "";
+      const myLinks = () => S.switchLinks.filter((l) => l.switchId === myId);
+      const linkRowsHtml = () => {
+        const links = myLinks();
+        if (!links.length)
+          return '<div class="ctx-stub-row" style="font-size:11px;color:#8a909a">未设置联动目标</div>';
+        return links
+          .map((l) => {
+            const target = S.items.find((i) => i.instanceId === l.targetId);
+            return `<div class="ctx-stub-row">→ ${escHtml(target ? itemLabel(target) : l.targetId)}
+              <button type="button" class="ctx-btn" data-unlink="${escHtml(l.targetId)}">移除</button></div>`;
+          })
+          .join("");
+      };
+      const linkTargetOptsHtml = () => {
+        const linked = new Set(myLinks().map((l) => l.targetId));
+        return S.items
+          .filter((i) => i.instanceId && i.instanceId !== myId && !linked.has(i.instanceId) && stubKindOf(i) !== "Player")
+          .map((i) => `<option value="${escHtml(i.instanceId)}">${escHtml(itemLabel(i))}</option>`)
+          .join("");
+      };
+      const refreshLinks = () => {
+        const rows = document.getElementById("ctx-sw-links");
+        if (rows) {
+          rows.innerHTML = linkRowsHtml();
+          rows.querySelectorAll<HTMLButtonElement>("[data-unlink]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              pushHistory();
+              const tid = btn.dataset.unlink!;
+              S.switchLinks = S.switchLinks.filter((l) => !(l.switchId === myId && l.targetId === tid));
+              setStatus("已移除开关联动（写回后生效）");
+              refreshLinks();
+            });
+          });
+        }
+        const sel = document.getElementById("ctx-sw-linktarget") as HTMLSelectElement | null;
+        if (sel) sel.innerHTML = linkTargetOptsHtml();
+        const trig = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
+        if (trig && document.activeElement !== trig) trig.value = myLinks()[0]?.trigger ?? "Switch";
+      };
+      refreshLinks();
+      num("ctx-sw-linkadd")?.addEventListener("click", () => {
+        const sel = document.getElementById("ctx-sw-linktarget") as HTMLSelectElement | null;
+        const tid = sel?.value ?? "";
+        if (!tid || !myId) return;
+        pushHistory();
+        const trigInput = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
+        let trigger = trigInput?.value.trim() || "";
+        // 未自定义时按约定命名：switch_{目标prefabId}_{N}（N = 该开关已有链接数 + 1）
+        if (!trigger || trigger === "Switch") {
+          const target = S.items.find((i) => i.instanceId === tid);
+          const prefabId = target ? prefabIdFromPath(target.prefabAssetPath) ?? "item" : "item";
+          trigger = `switch_${prefabId}_${myLinks().length + 1}`;
+          if (trigInput) trigInput.value = trigger;
+        }
+        S.switchLinks.push({ switchId: myId, targetId: tid, trigger });
+        setStatus(`已添加开关联动（${trigger}，写回后生效）`);
+        refreshLinks();
+      });
+      num("ctx-sw-trigger")?.addEventListener("change", () => {
+        const trig = (document.getElementById("ctx-sw-trigger") as HTMLInputElement).value.trim() || "Switch";
+        const links = myLinks();
+        if (!links.length) return;
+        pushHistory();
+        for (const l of links) l.trigger = trig;
+        setStatus(`已更新触发消息为 ${trig}（写回后生效）`);
+      });
       break;
     }
     case "PressureSwitch": {
@@ -679,6 +896,20 @@ export function wireStubControls(item: EditorItem) {
       break;
     }
   }
+  }
+
+  if (isButtonEventSource(item)) {
+    document.getElementById("ctx-bev-config")?.addEventListener("click", () => {
+      hideContextMenu();
+      openButtonEventModal(item);
+    });
+  }
+
+  if (isButtonLinkSource(item)) {
+    document.getElementById("ctx-bl-config")?.addEventListener("click", () => {
+      hideContextMenu();
+      openButtonLinkModal(item);
+    });
   }
 
   wireCounterAppearance(item);

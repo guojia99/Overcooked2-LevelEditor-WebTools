@@ -34,11 +34,14 @@ export function buildLayoutDom(): void {
       <button id="btn-save" class="primary" title="将布局写回 Unity">💾 写回 Unity</button>
       <button id="btn-save-items" class="primary" title="仅写回核心物品（不修改地板、背景、装饰）">🎯 仅核心物品</button>
       <button id="btn-repair-broken" type="button" title="移除当前场景中源预制件缺失的损坏实例（解决 pseudoPrefabSO 空引用导致的 NullReferenceException）">🔧 修复损坏</button>
+      <button id="btn-deps-check" type="button" title="检查后端服务、common_w、音频、bundle 等依赖是否就绪">🩺 依赖检查</button>
       <span class="toolbar-sep"></span>
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
       <button id="btn-level-config" type="button" title="配置各玩家分数">📊 分数配置</button>
+      <button id="btn-camera-light" type="button" title="修改游戏相机背景色 / FOV 与 Art/Lights 灯光颜色、强度">🎥 相机/灯光</button>
       <button id="btn-level-audio" type="button" title="配置关卡音频">🔊 音频</button>
+      <button id="btn-level-screenshot" type="button" title="上传 / 查看关卡截图（支持裁剪与画质压缩）">📷 截图</button>
       <button id="btn-summary" type="button" title="查看关卡菜谱汇总并一键导出图片">📋 汇总</button>
       <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">📥 同步布局…</button>
       <span id="status" class="status">连接中…</span>
@@ -72,6 +75,7 @@ export function buildLayoutDom(): void {
         </select>
       </label>
       <label class="toolbar-check"><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
+      <label class="toolbar-check" title="在画布上显示游戏相机视野的大致范围（FOV 视锥与地面的交线，16:9 估算）"><input type="checkbox" id="show-camera-fov" ${S.showCameraFov ? "checked" : ""} /> 🎥 相机视野</label>
       <label class="toolbar-check"><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
       <label class="toolbar-check" title="勾选后允许工作台重叠时仍然写回"><input type="checkbox" id="allow-ws-overlap" /> ⚠ 允许工作台重叠</label>
       <label class="toolbar-check" title="补齐锅具时自动分配中间产物（煎肉排/面糊/炸物等）到对应锅具的 allowedIngredientSOs"><input type="checkbox" id="chk-auto-intermediates" ${S.autoIntermediates ? "checked" : ""} /> 🧩 自动中间产物</label>
@@ -81,7 +85,6 @@ export function buildLayoutDom(): void {
     <aside class="palette" id="palette-panel">
       <div class="palette-header">
         <input type="search" id="palette-search" placeholder="搜索 prefab…" />
-        <button type="button" id="btn-palette-variants" class="palette-variants-btn" title="显示 / 隐藏功能重复的 DLC 变体（换皮道具）">🎨 DLC 变体 <span id="palette-variants-state"></span></button>
       </div>
       <div class="palette-cats" id="palette-cats"></div>
     </aside>
@@ -103,6 +106,7 @@ export function buildLayoutDom(): void {
         <div class="panel-tabs" id="panel-tabs">
           <button type="button" data-tab="items" class="panel-tab active">📋 物品清单</button>
           <button type="button" data-tab="move" class="panel-tab">🎯 移动控制 <span id="move-control-count" class="move-control-count"></span></button>
+          <button type="button" data-tab="bevents" class="panel-tab">🔘 按钮事件组 <span id="bevents-count" class="move-control-count"></span></button>
         </div>
         <span id="scene-items-count" class="scene-items-count"></span>
       </div>

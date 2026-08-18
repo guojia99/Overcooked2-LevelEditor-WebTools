@@ -31,7 +31,12 @@ export function hostMatchesRule(hostPrefabId: string, rule: string): boolean {
     ];
     return counterLike.some((p) => id === p || id.startsWith(p));
   }
-  if (rule === "cooker") return id === "Cooker";
+  if (rule === "cooker")
+    return (
+      id === "Cooker" ||
+      id === "cooking_region_floorburner" ||
+      id === "dlc10_cooking_region_floorburner"
+    );
   if (rule === "frying_station") return id === "FryingStation";
   if (rule === "mixer") return id === "Mixer" || id.startsWith("Mixer");
   if (rule === "blender") return id === "Blender";

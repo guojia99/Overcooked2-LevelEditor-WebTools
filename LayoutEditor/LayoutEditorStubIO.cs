@@ -75,6 +75,10 @@ public static class LayoutEditorStubIO
                 var path = AssetDatabase.GetAssetPath(dispenser.spawnerItemPrefabSO);
                 item.dispenser.spawnerItemPrefabGuid = AssetDatabase.AssetPathToGUID(path);
             }
+            // 饮料机/酱料机的多选循环列表（PseudoPrefabSOArray）必须在此导出：
+            // 本分支提前 return，走不到方法末尾的通用 soArray 导出——
+            // 漏掉时 web 重新加载看不到机器配置的饮料/酱料。
+            ExportSoArrayIfPresent(go, item);
             return;
         }
 
@@ -86,6 +90,7 @@ public static class LayoutEditorStubIO
         {
             item.stubKind = "Dispenser";
             item.dispenser = new LayoutDispenserStubDto();
+            ExportSoArrayIfPresent(go, item);
             return;
         }
 
@@ -151,16 +156,18 @@ public static class LayoutEditorStubIO
             var udto = new LayoutCookingUtensilStubDto { capacity = utensil.capacity };
             if (utensil.allowedIngredientSOs != null && utensil.allowedIngredientSOs.Length > 0)
             {
-                var guids = new string[utensil.allowedIngredientSOs.Length];
+                // 跳过 null 引用（历史迁移/引用断裂残留）：不导出为空 guid，否则前端
+                // 原样回传后 LoadIngredientSOs 会把它写成 None，形成「三个 none」残留。
+                var guids = new System.Collections.Generic.List<string>();
                 for (int i = 0; i < utensil.allowedIngredientSOs.Length; i++)
                 {
                     var so = utensil.allowedIngredientSOs[i];
-                    guids[i] = so != null
-                        ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so))
-                        : string.Empty;
+                    if (so == null)
+                        continue;
+                    guids.Add(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so)));
                 }
 
-                udto.allowedIngredientGuids = guids;
+                udto.allowedIngredientGuids = guids.ToArray();
             }
 
             item.cookingUtensil = udto;
@@ -314,6 +321,16 @@ public static class LayoutEditorStubIO
         if (item.soArray != null && item.soArray.pseudoPrefabGuids != null)
         {
             var soArray = go.GetComponent<PseudoPrefabSOArray>();
+            if (soArray == null && item.soArray.pseudoPrefabGuids.Length > 0)
+            {
+                // 酱料机/饮料机的多选列表（游戏内开关循环切换，见 LayoutEditorItemSwitcherPatch）：
+                // 原 prefab 没有 PseudoPrefabSOArray 组件，写回时补加。
+                var pid0 = !string.IsNullOrEmpty(item.prefabAssetPath)
+                    ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+                    : "";
+                if (IsSpecialDispenserPrefabId(pid0))
+                    soArray = Undo.AddComponent<PseudoPrefabSOArray>(go);
+            }
             if (soArray != null)
             {
                 Undo.RecordObject(soArray, "Layout Editor SOArray");
@@ -326,14 +343,15 @@ public static class LayoutEditorStubIO
 
         if (item.stubKind == "Dispenser" && item.dispenser != null)
         {
+            var pid = !string.IsNullOrEmpty(item.prefabAssetPath)
+                ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+                : "";
+            var isSpecialMachine = IsSpecialDispenserPrefabId(pid);
             var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
             if (dispenser == null)
             {
                 // 酱料机/饮料机原 prefab 无 PseudoPrefabDispenserStub：写回时补加（并复用基础 stub 的 pseudoPrefabSO）
-                var pid = !string.IsNullOrEmpty(item.prefabAssetPath)
-                    ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
-                    : "";
-                if (!IsSpecialDispenserPrefabId(pid))
+                if (!isSpecialMachine)
                 {
                     Debug.LogWarning("[LayoutEditor] Apply Dispenser: 场景对象缺少 PseudoPrefabDispenserStub: " + go.name);
                     return;
@@ -346,6 +364,30 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(dispenser, "Layout Editor Dispenser");
             var so = LoadPseudoPrefabSO(item.dispenser.spawnerItemPrefabGuid);
+            // node 型食材（assetPath 指 .asset 匹配节点，无实体 prefab）不能进【普通食材箱】：
+            // 运行时 PseudoPrefabDispenser.Setup 按 GameObject 加载得 null 而 NRE。
+            // 饮料机/酱料机豁免——其输出（饮料/酱料）本身就是 node 型（机器内置列表即如此）。
+            // 已知映射自动替换为整食材（沙拉洋葱节点 → 整个沙拉洋葱，切 8 刀得到匹配形态）；
+            // 未知 node 型则告警并跳过赋值（保留原值，避免写回必然崩溃的配置）。
+            if (!isSpecialMachine && so != null && !string.IsNullOrEmpty(so.assetPath) &&
+                !so.assetPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+            {
+                var mapped = so.name == "dlc11onion_salad"
+                    ? AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>("Assets/common_w/Ingredients/dlc11/dlc11_onion_salad.asset")
+                    : null;
+                if (mapped != null)
+                {
+                    Debug.LogWarning("[LayoutEditor] Apply Dispenser: node 型食材 " + so.name
+                        + " 不能放入食材箱，已自动替换为整食材 " + mapped.name + "（加工后得到匹配形态）");
+                    so = mapped;
+                }
+                else
+                {
+                    Debug.LogWarning("[LayoutEditor] Apply Dispenser: node 型食材 " + so.name
+                        + " 无实体 prefab，放入食材箱运行时会崩溃，已跳过（请在 Web 编辑器改选 prefab 型食材）");
+                    return;
+                }
+            }
             Debug.Log("[LayoutEditor] Apply Dispenser: guid=" + (item.dispenser.spawnerItemPrefabGuid ?? "<empty>")
                 + " -> " + (so != null ? so.name : "NULL"));
             dispenser.spawnerItemPrefabSO = so;
@@ -398,14 +440,65 @@ public static class LayoutEditorStubIO
 
         if (item.stubKind == "CookingUtensil" && item.cookingUtensil != null)
         {
+            // common_w 厨具变体 wrapper（火锅大锅/烤盘/DLC 锅具）只带基础 PseudoPrefabStub
+            // 与基类 PseudoPrefab（Setup 空操作）：补挂派生 stub（拷贝 SO）并换派生运行时
+            // 组件，否则「锅具参数/额外食材」被静默丢弃、运行时不生效——与容器堆
+            // （CleanPlateStack 分支）同模式的修复。
             var utensil = go.GetComponent<PseudoPrefabCookingUtensilStub>();
+            var baseStub = FindExactBaseStub(go);
             if (utensil == null)
-                return;
+            {
+                utensil = Undo.AddComponent<PseudoPrefabCookingUtensilStub>(go);
+                if (baseStub != null && baseStub.pseudoPrefabSO != null)
+                    utensil.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+            }
 
             Undo.RecordObject(utensil, "Layout Editor Cooking Utensil");
-            utensil.capacity = item.cookingUtensil.capacity;
+            // capacity<=0（前端漏传/旧文档）不直接覆盖：写 0 会让锅具一个食材都放不进
+            // （stub Setup 会把它写进 IngredientContainer.m_capacity）。
+            // 已设置食材列表但容量无效时，按原版默认表兜底（bundle 实测：
+            // 汤锅=3、搅拌碗/搅拌杯/烤盘=4、烤串=3、其余=1）。
+            if (item.cookingUtensil.capacity > 0)
+                utensil.capacity = item.cookingUtensil.capacity;
+            else if (utensil.capacity <= 0 &&
+                     item.cookingUtensil.allowedIngredientGuids != null &&
+                     item.cookingUtensil.allowedIngredientGuids.Length > 0)
+            {
+                utensil.capacity = NativeUtensilCapacity(go);
+            }
             if (item.cookingUtensil.allowedIngredientGuids != null)
-                utensil.allowedIngredientSOs = LoadIngredientSOs(item.cookingUtensil.allowedIngredientGuids);
+            {
+                var sos = LoadIngredientSOs(item.cookingUtensil.allowedIngredientGuids);
+                // 必须走 SerializedObject 写数组：直接字段赋值在 prefab 实例上收缩数组时，
+                // Array.size 的 property mod 会残留旧长度（Unity 2017），尾部槽位落回默认
+                // null —— 搅拌碗出现「食材变 None」且无论写回多少次都无法自愈的根因。
+                // SerializedObject 显式设置 arraySize 会正确更新 size mod 并清理孤儿条目。
+                var serialized = new SerializedObject(utensil);
+                var prop = serialized.FindProperty("allowedIngredientSOs");
+                prop.arraySize = sos.Length;
+                for (int i = 0; i < sos.Length; i++)
+                    prop.GetArrayElementAtIndex(i).objectReferenceValue = sos[i];
+                serialized.ApplyModifiedProperties();
+            }
+
+            // 容量最终兜底：新补挂的 stub capacity 为 0，而派生 Setup() 会把它
+            // 无条件写进 IngredientContainer.m_capacity——0 = 锅具什么都放不进。
+            if (utensil.capacity <= 0)
+                utensil.capacity = NativeUtensilCapacity(go);
+
+            // 基础 stub 的 SO 已被派生 stub 接管：移除基础组件，保证
+            // PseudoPrefab.Awake 的 GetComponent<PseudoPrefabStub>() 命中派生 stub。
+            if (baseStub != null && baseStub != utensil)
+                Undo.DestroyObjectImmediate(baseStub);
+
+            // 运行时组件：基类 PseudoPrefab（Setup 空操作）换成派生 PseudoPrefabCookingUtensil
+            // （Setup 把容量/额外食材写进运行时容器）。
+            var runtimeUtensil = go.GetComponent<LevelEditor.PseudoPrefabCookingUtensil>();
+            var baseRuntime = FindExactBaseRuntime(go);
+            if (baseRuntime != null && baseRuntime != runtimeUtensil)
+                Undo.DestroyObjectImmediate(baseRuntime);
+            if (runtimeUtensil == null)
+                Undo.AddComponent<LevelEditor.PseudoPrefabCookingUtensil>(go);
             return;
         }
 
@@ -431,27 +524,84 @@ public static class LayoutEditorStubIO
             return;
         }
 
+        if (item.stubKind == "ServingStation")
+        {
+            // 上菜台变体（dlc13_workstation_plate_station 等）wrapper 无专属 stub：补挂
+            // （未绑定回收台时不走二阶段，须在此保证组件存在，否则运行时不工作）
+            if (go.GetComponent<PseudoPrefabServingStationStub>() == null)
+            {
+                var servingStub = Undo.AddComponent<PseudoPrefabServingStationStub>(go);
+                var baseStub = go.GetComponent<PseudoPrefabStub>();
+                if (baseStub != null && baseStub.pseudoPrefabSO != null)
+                    servingStub.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+            }
+            return;
+        }
+
         if ((item.stubKind == "PlateReturn" || item.stubKind == "GlassReturn") && item.plateReturn != null)
         {
             var returnStation = go.GetComponent<PseudoPrefabPlateReturnStub>();
             if (returnStation == null)
-                return;
+            {
+                // 回收台 DLC 变体（workstation_mug_return / dlc13 plate_return 等）的
+                // common_w wrapper 只有基础 PseudoPrefabStub——缺组件时补挂，否则
+                // 上菜台绑定二阶段找不到 stub，绑定被静默丢弃。
+                returnStation = Undo.AddComponent<PseudoPrefabPlateReturnStub>(go);
+                var baseStub = go.GetComponent<PseudoPrefabStub>();
+                if (baseStub != null && baseStub.pseudoPrefabSO != null)
+                    returnStation.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+            }
 
             Undo.RecordObject(returnStation, "Layout Editor Plate Return");
             returnStation.returnClean = item.plateReturn.returnClean;
             return;
         }
 
-        if (item.stubKind == "CleanPlateStack" && item.cleanPlateStack != null)
+        if (item.stubKind == "CleanPlateStack")
         {
+            // 容器堆变体（餐盘堆/马克杯堆/玻璃杯堆 wrapper）只带基础 PseudoPrefabStub +
+            // 基类 PseudoPrefab：补齐核心堆同款的「派生 stub + 派生运行时组件」组合。
+            // 堆类游戏 prefab 本身无网格（dump 实测无 .obj），可见的盘/杯完全由
+            // PseudoPrefabCleanPlateStack.Setup() 逐个实例化——基类组件的 Setup() 是
+            // 空操作，缺派生运行时组件 = 写回后场景里空无一物（餐盘/马克杯不显示的根因）。
+            // dto 缺失（autofill 放置未配参数）也进入：数量默认 5、容器 SO 按堆类型推断。
             var plateStack = go.GetComponent<PseudoPrefabCleanPlateStackStub>();
+            var baseStub = FindExactBaseStub(go);
             if (plateStack == null)
-                return;
+            {
+                plateStack = Undo.AddComponent<PseudoPrefabCleanPlateStackStub>(go);
+                if (baseStub != null && baseStub.pseudoPrefabSO != null)
+                    plateStack.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+            }
 
             Undo.RecordObject(plateStack, "Layout Editor Clean Plate Stack");
-            plateStack.plateCount = item.cleanPlateStack.plateCount;
-            if (!string.IsNullOrEmpty(item.cleanPlateStack.platePrefabGuid))
+            var count = item.cleanPlateStack != null ? item.cleanPlateStack.plateCount : 0;
+            plateStack.plateCount = count > 0 ? count : 5;
+            if (item.cleanPlateStack != null && !string.IsNullOrEmpty(item.cleanPlateStack.platePrefabGuid))
+            {
                 plateStack.platePseudoPrefabSO = LoadPseudoPrefabSO(item.cleanPlateStack.platePrefabGuid);
+            }
+            else if (plateStack.platePseudoPrefabSO == null)
+            {
+                // 未指定容器 SO 时按堆类型推断（堆 → 对应容器本体 SO）
+                var so = DefaultPlateSOForStack(go);
+                if (so != null)
+                    plateStack.platePseudoPrefabSO = so;
+            }
+
+            // 基础 stub 的 SO 已被派生 stub 接管：移除基础组件（含旧写法残留的双 stub），
+            // 保证 PseudoPrefab.Awake 的 GetComponent<PseudoPrefabStub>() 命中派生 stub，
+            // 派生 Setup() 里的强转不再失败。
+            if (baseStub != null && baseStub != plateStack)
+                Undo.DestroyObjectImmediate(baseStub);
+
+            // 运行时组件：基类 PseudoPrefab（Setup 空操作）换成派生 PseudoPrefabCleanPlateStack。
+            var runtimeStack = go.GetComponent<LevelEditor.PseudoPrefabCleanPlateStack>();
+            var baseRuntime = FindExactBaseRuntime(go);
+            if (baseRuntime != null && baseRuntime != runtimeStack)
+                Undo.DestroyObjectImmediate(baseRuntime);
+            if (runtimeStack == null)
+                Undo.AddComponent<LevelEditor.PseudoPrefabCleanPlateStack>(go);
             return;
         }
 
@@ -593,7 +743,13 @@ public static class LayoutEditorStubIO
 
         var serving = go.GetComponent<PseudoPrefabServingStationStub>();
         if (serving == null)
-            return;
+        {
+            // 上菜台变体（dlc13_workstation_plate_station 等）wrapper 无专属 stub：补挂
+            serving = Undo.AddComponent<PseudoPrefabServingStationStub>(go);
+            var baseStub = go.GetComponent<PseudoPrefabStub>();
+            if (baseStub != null && baseStub.pseudoPrefabSO != null)
+                serving.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+        }
 
         var resolved = new System.Collections.Generic.List<PseudoPrefabPlateReturnStub>();
         if (plateReturnInstanceIds != null)
@@ -615,16 +771,117 @@ public static class LayoutEditorStubIO
                     createdObjects.TryGetValue(rid, out target);
                 }
 
-                var stub = target != null ? target.GetComponent<PseudoPrefabPlateReturnStub>() : null;
-                if (stub != null && !resolved.Contains(stub))
+                if (target == null)
+                {
+                    LayoutEditorLog.LogWarning("[LayoutEditor] 上菜台绑定丢弃：目标不在场景中 " + rid);
+                    continue;
+                }
+                var stub = target.GetComponent<PseudoPrefabPlateReturnStub>();
+                if (stub == null)
+                {
+                    // 回收台变体 wrapper 无专属 stub（首次写回未走过 ApplyStub 分支）：
+                    // 有基础 PseudoPrefabStub 即补挂，绑定不再因缺组件被丢弃。
+                    var targetBase = target.GetComponent<PseudoPrefabStub>();
+                    if (targetBase == null)
+                    {
+                        LayoutEditorLog.LogWarning("[LayoutEditor] 上菜台绑定丢弃：目标不是伪预制件 " + target.name);
+                        continue;
+                    }
+                    stub = Undo.AddComponent<PseudoPrefabPlateReturnStub>(target);
+                    if (targetBase.pseudoPrefabSO != null)
+                        stub.pseudoPrefabSO = targetBase.pseudoPrefabSO;
+                }
+                if (!resolved.Contains(stub))
                     resolved.Add(stub);
             }
         }
 
         Undo.RecordObject(serving, "Layout Editor ServingStation Returns");
-        serving.plateReturns = resolved.ToArray();
+        // 数组必须走 SerializedObject 写：直接字段赋值在 prefab 实例上收缩时
+        // Array.size mod 残留旧长度，尾部槽位落回 null（同锅具食材 None 问题）。
+        var serialized = new SerializedObject(serving);
+        var prop = serialized.FindProperty("plateReturns");
+        prop.arraySize = resolved.Count;
+        for (int i = 0; i < resolved.Count; i++)
+            prop.GetArrayElementAtIndex(i).objectReferenceValue = resolved[i];
+        serialized.ApplyModifiedProperties();
         // Mirror the first binding to the legacy single field for older runtime paths.
         serving.plateReturn = resolved.Count > 0 ? resolved[0] : null;
+    }
+
+    /// <summary>
+    /// Second pass: apply document-level switch links (断头台/饮料机/酱料机按钮触发).
+    /// Both ends resolve like Teleportal ids: "u:<instanceID>" for existing scene
+    /// objects, otherwise a document instanceId mapped through createdObjects.
+    /// If the switch object lacks PseudoPrefabSwitchStub (e.g. bundle-backed button
+    /// prefabs), the component is added so the link has somewhere to live.
+    /// </summary>
+    public static void ApplySwitchLinks(LayoutSwitchLinkDto[] links, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    {
+        if (links == null || links.Length == 0)
+            return;
+
+        // Group targets per switch so multi-target buttons end up with one array write.
+        var perSwitch = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<GameObject>>(StringComparer.Ordinal);
+        var triggerBySwitch = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal);
+        var order = new System.Collections.Generic.List<string>();
+
+        foreach (var link in links)
+        {
+            if (link == null || string.IsNullOrEmpty(link.switchId) || string.IsNullOrEmpty(link.targetId))
+                continue;
+
+            var target = ResolveLinkedObject(link.targetId, createdObjects);
+            if (target == null)
+                continue;
+
+            System.Collections.Generic.List<GameObject> targets;
+            if (!perSwitch.TryGetValue(link.switchId, out targets))
+            {
+                targets = new System.Collections.Generic.List<GameObject>();
+                perSwitch[link.switchId] = targets;
+                order.Add(link.switchId);
+            }
+            if (!targets.Contains(target))
+                targets.Add(target);
+            if (!string.IsNullOrEmpty(link.trigger))
+                triggerBySwitch[link.switchId] = link.trigger;
+        }
+
+        foreach (var switchId in order)
+        {
+            var switchGo = ResolveLinkedObject(switchId, createdObjects);
+            if (switchGo == null)
+                continue;
+
+            var sw = switchGo.GetComponent<PseudoPrefabSwitchStub>();
+            if (sw == null)
+                sw = switchGo.AddComponent<PseudoPrefabSwitchStub>();
+
+            Undo.RecordObject(sw, "Layout Editor Switch Link");
+            string trigger;
+            sw.triggerOnObject = triggerBySwitch.TryGetValue(switchId, out trigger) && !string.IsNullOrEmpty(trigger)
+                ? trigger
+                : "Switch";
+            sw.objectToTrigger = perSwitch[switchId].ToArray();
+        }
+    }
+
+    private static GameObject ResolveLinkedObject(string id, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+        if (id.StartsWith("u:", StringComparison.Ordinal))
+        {
+            int instanceId;
+            if (int.TryParse(id.Substring(2), out instanceId))
+                return EditorUtility.InstanceIDToObject(instanceId) as GameObject;
+            return null;
+        }
+        GameObject go = null;
+        if (createdObjects != null)
+            createdObjects.TryGetValue(id, out go);
+        return go;
     }
 
     private static PseudoPrefabSO LoadPseudoPrefabSO(string guid)
@@ -644,12 +901,129 @@ public static class LayoutEditorStubIO
             || prefabId == "dlc08_condiment_dispenser" || prefabId == "dlc11_condiment_dispenser";
     }
 
+    /// <summary>导出 PseudoPrefabSOArray（饮料机/酱料机的多选循环列表）为 dto；
+    ///  无组件或列表为空时不写。供 ExportStub 各提前 return 的分支复用。</summary>
+    private static void ExportSoArrayIfPresent(GameObject go, LayoutItemDto item)
+    {
+        var soArray = go.GetComponent<PseudoPrefabSOArray>();
+        if (soArray == null || soArray.pseudoPrefabSOs == null || soArray.pseudoPrefabSOs.Length == 0)
+            return;
+        var guids = new string[soArray.pseudoPrefabSOs.Length];
+        for (int i = 0; i < soArray.pseudoPrefabSOs.Length; i++)
+            guids[i] = soArray.pseudoPrefabSOs[i] != null
+                ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(soArray.pseudoPrefabSOs[i]))
+                : string.Empty;
+        item.soArray = new LayoutSOArrayStubDto { pseudoPrefabGuids = guids };
+    }
+
     private static PseudoPrefabSO[] LoadPseudoPrefabSOs(string[] guids)
     {
         var sos = new PseudoPrefabSO[guids.Length];
         for (int i = 0; i < guids.Length; i++)
             sos[i] = LoadPseudoPrefabSO(guids[i]);
         return sos;
+    }
+
+    /// <summary>查找「恰好为基类类型」的 PseudoPrefabStub（派生类实例不算）：
+    ///  common_w wrapper prefab 自带基础 stub，补挂派生 stub 后需移除基础组件，
+    ///  而 GetComponent&lt;PseudoPrefabStub&gt;() 会多态命中派生实例，无法直接定位。</summary>
+    private static PseudoPrefabStub FindExactBaseStub(GameObject go)
+    {
+        foreach (var s in go.GetComponents<PseudoPrefabStub>())
+            if (s != null && s.GetType() == typeof(PseudoPrefabStub))
+                return s;
+        return null;
+    }
+
+    /// <summary>查找「恰好为基类类型」的 PseudoPrefab（派生类实例不算），用途同上。</summary>
+    private static LevelEditor.PseudoPrefab FindExactBaseRuntime(GameObject go)
+    {
+        foreach (var p in go.GetComponents<LevelEditor.PseudoPrefab>())
+            if (p != null && p.GetType() == typeof(LevelEditor.PseudoPrefab))
+                return p;
+        return null;
+    }
+
+    /// <summary>容器堆 id → 容器本体 SO id（均在 common_w/pseudo_prefab_so/utensils 下）。
+    ///  堆道具 wrapper 补挂派生 stub 后 platePseudoPrefabSO 按堆类型推断：
+    ///  同 DLC 皮肤优先（dlc09 马克杯堆 → dlc09 马克杯），脏堆 → 脏容器本体；
+    ///  common_w 无 dlc02 单脏杯，脏玻璃杯堆借用 dlc11 脏玻璃杯（同形网格）。</summary>
+    private static readonly System.Collections.Generic.Dictionary<string, string> StackPlateSoIds =
+        new System.Collections.Generic.Dictionary<string, string>
+        {
+            // 干净堆 → 同皮肤干净容器
+            { "cleanmugstack", "equipment_mug_01" },
+            { "dlc09_cleanmugstack", "dlc09_equipment_mug_01" },
+            { "dlc08_cleantraystack", "dlc08_equipment_tray" },
+            { "cleanglassstack", "equipment_glass_01" },
+            { "dlc11_cleanglassstack", "dlc11_equipment_glass_01" },
+            // 脏堆 → 脏容器
+            { "dirtymugstack", "dirtymug" },
+            { "dlc09_dirtymugstack", "dlc09_dirtymug" },
+            { "dlc08_dirtytraystack", "dlc08_dirtytray" },
+            { "dirtyglassstack", "dlc11_dirtyglass" },
+            { "dlc11_dirtyglassstack", "dlc11_dirtyglass" }
+        };
+
+    private static PseudoPrefabSO LoadUtensilSo(string soId)
+    {
+        if (string.IsNullOrEmpty(soId))
+            return null;
+        return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(
+            "Assets/common_w/pseudo_prefab_so/utensils/" + soId + ".asset");
+    }
+
+    /// <summary>容器堆 → 对应容器本体 SO（common_w/pseudo_prefab_so）。
+    ///  精确表（StackPlateSoIds）优先，未知堆 id 走子串兜底（脏堆先匹配脏容器，
+    ///  避免「脏杯堆里摆干净杯」）。</summary>
+    private static PseudoPrefabSO DefaultPlateSOForStack(GameObject go)
+    {
+        var pid = !string.IsNullOrEmpty(go.name) ? go.name.Replace("(Clone)", "") : "";
+        if (string.IsNullOrEmpty(pid))
+            return null;
+
+        string soId;
+        if (StackPlateSoIds.TryGetValue(pid, out soId))
+            return LoadUtensilSo(soId);
+
+        if (pid.IndexOf("dirtymug", StringComparison.OrdinalIgnoreCase) >= 0)
+            return LoadUtensilSo("dirtymug");
+        if (pid.IndexOf("dirtytray", StringComparison.OrdinalIgnoreCase) >= 0)
+            return LoadUtensilSo("dlc08_dirtytray");
+        if (pid.IndexOf("dirtyglass", StringComparison.OrdinalIgnoreCase) >= 0)
+            return LoadUtensilSo("dlc11_dirtyglass");
+        if (pid.IndexOf("tray", StringComparison.OrdinalIgnoreCase) >= 0)
+            return LoadUtensilSo("dlc08_equipment_tray");
+        if (pid.IndexOf("mug", StringComparison.OrdinalIgnoreCase) >= 0)
+            return LoadUtensilSo("equipment_mug_01");
+        if (pid.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0)
+            return LoadUtensilSo("equipment_glass_01");
+        return null;
+    }
+
+    /// <summary>锅具原版默认容量（bundle 实测 IngredientContainer.m_capacity）：
+    ///  汤锅 Pot=3、搅拌碗 MixerBowl/搅拌杯 BlenderCup/烤盘 GriddlePan=4、烤串 Skewer=3、
+    ///  火锅大锅（utensil_large_pot_01，bundle226）=4、烤菜烤盘（utensil_roasting_tray，
+    ///  bundle297）=4、其余（煎锅/炸篮/蒸锅等）=1。用于前端漏传 capacity 时的兜底。
+    ///  注意 large_pot / roasting_tray 必须先于 pot 子串判断。</summary>
+    private static int NativeUtensilCapacity(GameObject go)
+    {
+        var pid = !string.IsNullOrEmpty(go.name) ? go.name.Replace("(Clone)", "") : "";
+        return NativeUtensilCapacityForId(pid);
+    }
+
+    /// <summary>按 prefab id 查原版默认容量（utensil guard 等复用）。</summary>
+    public static int NativeUtensilCapacityForId(string prefabId)
+    {
+        var pid = prefabId ?? "";
+        if (pid.IndexOf("large_pot", StringComparison.OrdinalIgnoreCase) >= 0) return 4;
+        if (pid.IndexOf("roasting_tray", StringComparison.OrdinalIgnoreCase) >= 0) return 4;
+        if (pid.IndexOf("pot", StringComparison.OrdinalIgnoreCase) >= 0) return 3;
+        if (pid.IndexOf("mixer", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            pid.IndexOf("blender", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            pid.IndexOf("griddle", StringComparison.OrdinalIgnoreCase) >= 0) return 4;
+        if (pid.IndexOf("skewer", StringComparison.OrdinalIgnoreCase) >= 0) return 3;
+        return 1;
     }
 
     /// <summary>allowedIngredientSOs is ScriptableObject[] and may hold CustomRecipeSO
@@ -666,9 +1040,22 @@ public static class LayoutEditorStubIO
 
     private static ScriptableObject[] LoadIngredientSOs(string[] guids)
     {
-        var sos = new ScriptableObject[guids.Length];
+        if (guids == null)
+            return null;
+        // 空/失效 guid（前端残留、迁移断裂等）在 LoadIngredientSO 里解不出 SO：
+        // 丢弃而不是写成 null，避免 allowedIngredientSOs 出现一排 None。
+        var sos = new System.Collections.Generic.List<ScriptableObject>();
         for (int i = 0; i < guids.Length; i++)
-            sos[i] = LoadIngredientSO(guids[i]);
-        return sos;
+        {
+            var so = LoadIngredientSO(guids[i]);
+            if (so == null)
+            {
+                if (!string.IsNullOrEmpty(guids[i]))
+                    LayoutEditorLog.LogWarning("[LayoutEditor] 锅具额外食材 guid 无法解析为 ScriptableObject（已忽略）: " + guids[i]);
+                continue;
+            }
+            sos.Add(so);
+        }
+        return sos.ToArray();
     }
 }

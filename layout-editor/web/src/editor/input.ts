@@ -47,6 +47,10 @@ import {
   nudgeSelectedItems
 } from "./items";
 import {
+  addCombo,
+  comboById
+} from "./combos";
+import {
   copySelection,
   cutSelection,
   pasteClipboard,
@@ -809,11 +813,20 @@ export function setupCanvas() {
 
   dom.canvas.addEventListener("drop", (e) => {
     e.preventDefault();
-    const guid = e.dataTransfer?.getData("text/plain");
-    const cat = guid ? S.catalogByGuid.get(guid) : S.dragCatalog;
-    if (!cat) return;
     const rect = dom.canvas.getBoundingClientRect();
     const { x: wx, z: wz } = canvasToWorld(e.clientX - rect.left, e.clientY - rect.top);
+    const guid = e.dataTransfer?.getData("text/plain");
+    // 联合组合（palette「联合组合」分类）：一次放置多个物品并自动完成联动配置。
+    if (guid && guid.startsWith("combo:")) {
+      const def = comboById(guid.substring("combo:".length));
+      if (def) addCombo(def, wx, wz);
+      return;
+    }
+    const cat = guid ? S.catalogByGuid.get(guid) : S.dragCatalog;
+    if (!cat) {
+      if (S.dragCombo) addCombo(S.dragCombo, wx, wz);
+      return;
+    }
     addFromCatalog(cat, wx, wz);
   });
 

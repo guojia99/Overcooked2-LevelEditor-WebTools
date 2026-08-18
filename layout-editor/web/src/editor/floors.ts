@@ -86,6 +86,8 @@ export const THEMED_FLOOR_NATIVE: Record<string, ThemedFloorNative> = {
   alien_floor_tile_01: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
   floor_carpet_purple: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
   sand_floor_01: { rotX: 0, depthAxis: "z", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  // OC1 大型地面（露营地地面）：整块平铺在 XZ 的巨型地面，原生尺寸 34×21 格
+  dlc5_ground_camp: { rotX: 0, depthAxis: "z", cellsPerScaleX: 34, cellsPerScaleZ: 21 },
 };
 
 export const THEMED_FLOOR_NATIVE_DEFAULT: ThemedFloorNative = {

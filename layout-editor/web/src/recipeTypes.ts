@@ -2,6 +2,7 @@ import type { RecipeEntry } from "./types";
 
 export const RECIPE_TYPE_ZH: Record<string, string> = {
   burger: "汉堡",
+  mealdeal: "套餐",
   burrito: "卷饼",
   pizza: "披萨",
   pasta: "意面",
@@ -14,7 +15,7 @@ export const RECIPE_TYPE_ZH: Record<string, string> = {
   roast: "烤菜",
   pie: "水果派",
   pudding: "布丁",
-  moonpie: "月亮派",
+  moonpie: "月饼",
   fruitplatter: "水果拼盘",
   float: "冰淇淋汽水",
   icecream: "冰淇淋",
@@ -28,11 +29,13 @@ export const RECIPE_TYPE_ZH: Record<string, string> = {
   breakfast: "早餐",
   smores: "棉花糖饼干",
   batter: "面糊（半成品）",
+  custom: "自定义菜谱",
   other: "其他",
 };
 
 export const RECIPE_TYPE_ORDER = [
   "burger",
+  "mealdeal",
   "burrito",
   "pizza",
   "pasta",

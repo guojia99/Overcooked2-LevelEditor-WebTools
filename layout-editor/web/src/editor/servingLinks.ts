@@ -121,8 +121,22 @@ export function servingTrayReturn(s: EditorItem): string | undefined {
 export type ServingReturnKind = "plate" | "glass" | "mug" | "tray";
 
 export function setServingReturnOfType(s: EditorItem, returnId: string | undefined, kind: ServingReturnKind): void {
+  // 脏盘台（plate）与餐盘回收台（tray）互斥：二者共用同一 PlatingStepData
+  // （游戏实测 bundle 里普通盘/餐盘/各自脏堆全部引用同一 SO 实例），运行时
+  // ServerPlateStation.GetReturnStation 按 PlatingStep 匹配命中绑定数组第一个
+  // Plate 族回收台——同台并绑必然一个独占（先绑定者赢），套餐会错回到普通
+  // 脏盘台生成普通盘子。绑定时后选的族自动清掉先绑的；混合普通菜+套餐的
+  // 关卡请放两套上菜台各绑各的。
+  const excl: ServingReturnKind | null = returnId
+    ? kind === "plate"
+      ? "tray"
+      : kind === "tray"
+        ? "plate"
+        : null
+    : null;
   const keep = (kind2: ServingReturnKind): string | undefined => {
     if (kind === kind2) return returnId;
+    if (excl === kind2) return undefined;
     if (kind2 === "plate") return servingPlateReturn(s);
     if (kind2 === "glass") return servingGlassReturn(s);
     if (kind2 === "mug") return servingMugReturn(s);

@@ -49,6 +49,7 @@ import {
   updatePanelTabButtons
 } from "../panels";
 import { findGroupByItemId, waypointInfo, deleteWaypoint } from "../moveControl";
+import { itemVariantHtml, wireItemVariant } from "../itemVariants";
 
 export function moveControlCtxHtml(item: EditorItem): string {
   // Players are not movable; pure background (water/sky) is not a move member.
@@ -170,13 +171,22 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     }
     ${stubHtml}
     ${appearHtml}
+    ${itemVariantHtml(item)}
     <div class="ctx-actions">
-      <button type="button" class="ctx-btn" data-act="detail">详情…</button>
-      ${isPlayer ? "" : `<button type="button" class="ctx-btn" data-act="copy">复制 (Ctrl+C)</button>
-      <button type="button" class="ctx-btn" data-act="cut">裁切 (Ctrl+X)</button>`}
-      <button type="button" class="ctx-btn" data-act="paste">粘贴 (Ctrl+V)</button>
-      ${!isPlayer && !isSurface ? moveControlCtxHtml(item) : ""}
-      ${isPlayer ? "" : `<button type="button" class="ctx-btn danger" data-act="delete">删除</button>`}
+      <div class="ctx-actions-row">
+        <button type="button" class="ctx-btn" data-act="detail">详情…</button>
+        ${isPlayer ? "" : `<button type="button" class="ctx-btn" data-act="copy" title="Ctrl+C">复制</button>
+        <button type="button" class="ctx-btn" data-act="cut" title="Ctrl+X">裁切</button>`}
+        <button type="button" class="ctx-btn" data-act="paste" title="Ctrl+V">粘贴</button>
+      </div>
+      ${
+        isPlayer
+          ? ""
+          : `<div class="ctx-actions-row">
+        ${!isSurface ? moveControlCtxHtml(item) : ""}
+        <button type="button" class="ctx-btn danger" data-act="delete">删除</button>
+      </div>`
+      }
     </div>
     <p class="close-hint">点击外部或 Esc 关闭</p>
   `;
@@ -276,6 +286,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   const rotInput = document.getElementById("ctx-rot-input") as HTMLInputElement | null;
   rotInput?.addEventListener("change", () => applyRotation(parseFloat(rotInput.value)));
   wireStubControls(item);
+  wireItemVariant(item);
   dom.ctxMenuEl.querySelector('[data-act="detail"]')?.addEventListener("click", () => {
     if ((S.currentLayer === "floor" || S.currentLayer === "background") && isSurface) {
       showSurfaceItemDetail(item, clientX, clientY);

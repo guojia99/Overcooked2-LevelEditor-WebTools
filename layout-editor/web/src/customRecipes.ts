@@ -13,7 +13,9 @@ import { showBusy, hideBusy, withBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
 import { foodGroupLabel, visibleIngredients } from "./ingredientLabels";
 import { closeModal, openModal } from "./modals";
+import { initWebBuiltin } from "./webBuiltin";
 import { rlCardHtml, type RecipeWithGroups } from "./recipeCard";
+import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { fmt4, fmtCm, footprintOf, u2cm } from "./modelUnits";
 import { sanitizeUploadFileName } from "./fbxTextureRename";
 import { ensureObjMtllib, renameMtlTextureRefs } from "./mtlTextureRename";
@@ -64,6 +66,7 @@ function shell(app: HTMLElement, title: string): HTMLElement {
 export async function renderCustomRecipesView(app: HTMLElement): Promise<void> {
   const content = shell(app, "自定义菜谱管理");
   setBusy("加载关卡集…");
+  await initWebBuiltin();
 
   let sets: LevelSetInfo[] = [];
   try {
@@ -191,22 +194,7 @@ async function openRecipeModelPreview(
 interface RecipeLikeCard extends RecipeWithGroups {}
 
 function toRecipeCard(r: CustomRecipeSummary): RecipeLikeCard {
-  return {
-    guid: r.guid,
-    id: r.id,
-    nameZh: r.nameZh,
-    nameEn: r.nameEn || undefined,
-    assetPath: r.assetPath,
-    cookingStep: r.cookingStepId || undefined,
-    ingredients: r.ingredients,
-    compositionIds: r.compositionIds,
-    score: r.score,
-    isCustom: true,
-    intermediate: r.intermediate,
-    group: r.group,
-    type: "custom",
-    cookingGroups: r.cookingGroups,
-  };
+  return normalizeCustomRecipeCard(r) as RecipeLikeCard;
 }
 
 async function renderRecipeList(app: HTMLElement, setName: string): Promise<void> {
@@ -215,8 +203,11 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
 
   let config: CustomRecipeConfig;
   let recipes: CustomRecipeSummary[];
+  let catalogCustoms: RecipeEntry[] = [];
   let ingredientNames = new Map<string, string>();
   let platingNames = new Map<string, string>();
+  // 组成推导上下文：关卡集菜谱 + 目录自定义菜谱（与「组装效果（实时预览）」一致）
+  let recipeLikes: RecipeLikeCard[] = [];
   try {
     [config, recipes] = await Promise.all([
       api.fetchCustomRecipeConfig(setName),
@@ -225,10 +216,14 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     const refs = await api.fetchCustomRecipeReferences(setName).catch(() => null);
     for (const c of refs?.platingContainers ?? []) platingNames.set(c.id, c.nameZh || c.id);
     let ingLoadFailed = false;
-    const ings = await api.fetchIngredients().catch(() => {
-      ingLoadFailed = true;
-      return [] as IngredientEntry[];
-    });
+    const [ings, catalog] = await Promise.all([
+      api.fetchIngredients().catch(() => {
+        ingLoadFailed = true;
+        return [] as IngredientEntry[];
+      }),
+      api.fetchRecipeCatalog(setName).catch(() => [] as RecipeEntry[]),
+    ]);
+    catalogCustoms = catalog.filter((c) => c.isCustom);
     for (const i of ings) ingredientNames.set(i.id, i.nameZh);
     if (ingLoadFailed) setStatus("⚠️ 食材数据加载失败（/api/catalog/ingredients），卡片可能缺少食材图标");
   } catch (e) {
@@ -245,11 +240,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
 
   let activeCategoryId = "";
   let searchQuery = "";
-  let roleFilter: "all" | "done" | "half" = "all";
 
-  function roleFilterClass(role: "all" | "done" | "half"): string {
-    return roleFilter === role ? " active" : "";
-  }
   /** 旧桥接数据无 ingredients/cookingGroups 时，用 compositionIds 反查食材名兜底。 */
   function cardRecipe(r: CustomRecipeSummary): RecipeLikeCard {
     const card = toRecipeCard(r);
@@ -259,10 +250,15 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     return card;
   }
 
+  // 组成推导上下文（与「组装效果（实时预览）」的 allRecipeLikes 一致）：
+  // 关卡集自定义菜谱 + 目录自定义菜谱，保证列表卡片与预览渲染一致。
+  recipeLikes = [
+    ...recipes.map(cardRecipe),
+    ...catalogCustoms.map((c) => ({ ...c, isCustom: true }) as RecipeLikeCard),
+  ];
+
   function filteredRecipes(): CustomRecipeSummary[] {
     let list = activeCategoryId ? recipes.filter((r) => r.category === activeCategoryId) : recipes;
-    if (roleFilter === "done") list = list.filter((r) => !r.intermediate);
-    else if (roleFilter === "half") list = list.filter((r) => r.intermediate);
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       list = list.filter((r) => {
@@ -279,7 +275,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     const filtered = filteredRecipes();
 
     if (filtered.length === 0) {
-      if (recipes.length === 0 && searchQuery === "" && roleFilter === "all" && activeCategoryId === "") {
+      if (recipes.length === 0 && searchQuery === "" && activeCategoryId === "") {
         // 空列表时自动诊断：区分"目录确实没菜谱"与"桥接旧版/资产加载失败"
         void (async () => {
           const el = document.getElementById("cr-grid");
@@ -323,7 +319,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         let cardHtml: string;
         try {
           cardHtml = rlCardHtml(cardRecipe(r), {
-            allRecipes: recipes.map(cardRecipe),
+            allRecipes: recipeLikes,
             ingredientName: (id) => ingredientNames.get(id) ?? id,
             iconSrc: () => crIconSrc(r),
           });
@@ -339,7 +335,6 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         <div class="cr-card-foot">
           <span class="cr-cat-tag">${esc(catDisplay(cat ?? { id: r.category, zh: r.category, en: r.category }))}</span>
           ${plating ? `<span class="cr-cat-tag cr-plate-tag" title="装盘容器">🍽 ${esc(plating)}</span>` : ""}
-          ${r.intermediate ? '<span class="cr-cat-tag cr-half-tag">中间产物</span>' : ""}
           <span class="muted small">UID ${r.uID} · 组成 ${compCount} 项</span>
           <span style="flex:1"></span>
           ${r.hasModel ? `<button class="m-btn small" data-preview="${esc(r.assetPath)}" title="3D 模型在线预览">👁</button>` : ""}
@@ -382,11 +377,6 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     </div>
     <div class="cr-toolbar">
       <input type="search" id="cr-search" class="rl-search" placeholder="搜索菜名 / ID / 食材…" autocomplete="off">
-      <div class="ing-groups">
-        <button type="button" class="cr-comp-chip${roleFilterClass("all")}" data-role="all">全部</button>
-        <button type="button" class="cr-comp-chip${roleFilterClass("done")}" data-role="done">成品</button>
-        <button type="button" class="cr-comp-chip${roleFilterClass("half")}" data-role="half">中间产物</button>
-      </div>
     </div>
     <div class="cr-layout">
       <div id="cr-sidebar">${renderSidebar()}</div>
@@ -421,14 +411,6 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       searchQuery = (e.target as HTMLInputElement).value;
       document.getElementById("cr-grid")!.innerHTML = renderGrid();
       wireGridButtons();
-    });
-    document.querySelectorAll<HTMLButtonElement>("[data-role]").forEach((b) => {
-      b.addEventListener("click", () => {
-        roleFilter = (b.dataset.role as "all" | "done" | "half") ?? "all";
-        document.querySelectorAll<HTMLButtonElement>("[data-role]").forEach((x) => x.classList.toggle("active", x === b));
-        document.getElementById("cr-grid")!.innerHTML = renderGrid();
-        wireGridButtons();
-      });
     });
   }
 
@@ -707,13 +689,11 @@ async function renderRecipeForm(
     if (isSub) {
       const s = subById.get(id);
       if (!s) return "";
-      const badge = s.score <= 0
-        ? '<span class="cr-badge-half">中间产物</span>'
-        : `<span class="cr-badge-done">成品菜 · 可作组成</span>`;
+      const badge = `<span class="cr-badge-done">可作组成</span>`;
       const src = s.official ? `/icons/recipes/${encodeURIComponent(s.id)}.png` : crIconSrc(s);
       return `<div class="pick-card cp-card${selected ? " selected" : ""}" data-cpid="${esc(id)}" data-cpsub="1" title="${esc(s.id)}">
         <span class="pc-head"><img class="food-icon" loading="lazy" src="${esc(src)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'" /><span class="pc-name">${esc(s.nameZh)}${badge}${s.nameEn ? ` <span class="muted pc-en">${esc(s.nameEn)}</span>` : ""}</span></span>
-        <span class="muted small">${s.cookingStepId ? esc(s.cookingStepId) : "无烹饪步骤"} · ${(s.ingredients ?? []).length} 种食材${s.official ? " · 官方" : s.score <= 0 ? " · 本关卡集" : " · 本关卡集"}</span>
+        <span class="muted small">${s.cookingStepId ? esc(s.cookingStepId) : "无烹饪步骤"} · ${(s.ingredients ?? []).length} 种食材${s.official ? " · 官方" : " · 本关卡集"}</span>
         ${stepper}
       </div>`;
     }
@@ -731,7 +711,7 @@ async function renderRecipeForm(
     const draft = new Map<string, number>();
     for (const [id, n] of selectedIng) draft.set(id, n);
     for (const [id, n] of selectedSub) draft.set(id, n);
-    let filter: "all" | "ing" | "sub" | "done" = "all";
+    let filter: "all" | "ing" | "sub" = "all";
     let q = "";
 
     function filteredIds(): { id: string; isSub: boolean }[] {
@@ -743,10 +723,8 @@ async function renderRecipeForm(
           out.push({ id: i.id, isSub: false });
         }
       }
-      // 菜谱分组：中间产物（score<=0）/ 成品菜（score>0，同样可作组成）
-      const recipes = subItems.filter(
-        (s) => filter === "all" || (filter === "sub" ? s.score <= 0 : s.score > 0)
-      );
+      // 菜谱分组：所有菜谱都可作为组成
+      const recipes = filter === "all" || filter === "sub" ? subItems : [];
       for (const s of recipes) {
         if (query && !s.nameZh.toLowerCase().includes(query) && !(s.nameEn ?? "").toLowerCase().includes(query) && !s.id.toLowerCase().includes(query)) continue;
         out.push({ id: s.id, isSub: true });
@@ -759,10 +737,9 @@ async function renderRecipeForm(
       const chips = [
         `<button type="button" class="cr-comp-chip${filter === "all" ? " active" : ""}" data-filter="all">全部</button>`,
         `<button type="button" class="cr-comp-chip${filter === "ing" ? " active" : ""}" data-filter="ing">食材</button>`,
-        `<button type="button" class="cr-comp-chip${filter === "sub" ? " active" : ""}" data-filter="sub">中间产物</button>`,
-        `<button type="button" class="cr-comp-chip${filter === "done" ? " active" : ""}" data-filter="done">成品菜</button>`,
+        `<button type="button" class="cr-comp-chip${filter === "sub" ? " active" : ""}" data-filter="sub">菜谱</button>`,
       ].join("");
-      const loadWarn = ingLoadFailed && filter !== "sub" && filter !== "done"
+      const loadWarn = ingLoadFailed && filter !== "sub"
         ? '<p class="mp-status err">⚠️ 未加载到食材数据（桥接 /api/catalog/ingredients 异常），请刷新重试或检查 Unity 桥。</p>'
         : "";
       // #cp-grid 始终保留（搜索时只更新其内部），保证点击委托不丢失。
@@ -786,7 +763,10 @@ async function renderRecipeForm(
        <button type="button" class="m-btn primary" data-ok>确定</button>`
     );
     const panel = document.querySelector(".modal-panel");
-    if (panel) panel.classList.add("wide");
+    if (panel) {
+      panel.classList.add("wide");
+      panel.classList.add("cp-panel");
+    }
 
     const body = document.getElementById("cp-body")!;
 
@@ -876,7 +856,7 @@ async function renderRecipeForm(
     }
     for (const [id, n] of selectedSub) {
       const s = subById.get(id);
-      const badge = (s?.score ?? 0) <= 0 ? '<span class="cr-chip-tag">中间产物</span>' : '<span class="cr-chip-tag">成品菜</span>';
+      const badge = '<span class="cr-chip-tag">可作组成</span>';
       rows.push(`<div class="cr-comp-row cr-comp-row-sub" data-rowid="sub:${esc(id)}">
         ${s ? `<img class="food-icon" loading="lazy" src="${esc(s.official ? `/icons/recipes/${encodeURIComponent(s.id)}.png` : crIconSrc(s))}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'" />` : ""}
         <span class="cr-row-name">${esc(s?.nameZh ?? id)}${badge}</span>
@@ -891,13 +871,13 @@ async function renderRecipeForm(
 
     el.innerHTML = rows.length
       ? rows.join("")
-      : '<p class="muted small" style="margin:4px 0">尚未选择。点击下方「添加」选择食材或中间产物。</p>';
+      : '<p class="muted small" style="margin:4px 0">尚未选择。点击下方「添加」选择食材或菜谱。</p>';
 
     const total = expandSelection().length;
     const hint = document.getElementById("cr-comp-hint");
     if (hint) {
       hint.textContent = rows.length
-        ? `共 ${total} 份组成（食材 ${[...selectedIng.values()].reduce((a, b) => a + b, 0)} · 中间产物 ${[...selectedSub.values()].reduce((a, b) => a + b, 0)}）`
+        ? `共 ${total} 份组成（食材 ${[...selectedIng.values()].reduce((a, b) => a + b, 0)} · 菜谱 ${[...selectedSub.values()].reduce((a, b) => a + b, 0)}）`
         : "";
     }
 
@@ -942,6 +922,7 @@ async function renderRecipeForm(
     const en = (document.getElementById("cr-en") as HTMLInputElement)?.value.trim() ?? "";
     const scoreVal = Number((document.getElementById("cr-score") as HTMLInputElement)?.value) || 0;
     const typeVal = (document.getElementById("cr-type") as HTMLSelectElement)?.value ?? "Composite";
+    // Mixed 类型：烹饪步骤为所选步骤（保存同值），由 mixing 标记带出搅拌步骤
     const cookStep = typeVal === "Composite" ? "" : (document.getElementById("cr-cook-step") as HTMLSelectElement)?.value ?? "";
     const compIds = expandSelection();
     const preview: RecipeWithGroups = {
@@ -951,9 +932,10 @@ async function renderRecipeForm(
       nameEn: en || undefined,
       assetPath: "",
       isCustom: true,
+      mixing: typeVal === "Mixed",
       group: "levelset",
       score: scoreVal,
-      intermediate: scoreVal <= 0,
+      intermediate: false,
       ingredients: expandLeaf(compIds),
       compositionIds: compIds,
       cookingStep: cookStep || undefined,
@@ -995,16 +977,6 @@ async function renderRecipeForm(
           <label class="m-field">分类 ${catSelectHtml()}
             <button type="button" class="m-btn" id="cr-new-cat-inline" style="margin-top:6px">+ 新建分类</button>
           </label>
-          <label class="m-field">类型
-            <select id="cr-type" class="m-select">
-              <option value="Composite" ${type === "Composite" ? "selected" : ""}>Composite（组合）</option>
-              <option value="Cooked" ${type === "Cooked" ? "selected" : ""}>Cooked（烹饪）</option>
-              <option value="Mixed" ${type === "Mixed" ? "selected" : ""}>Mixed（搅拌）</option>
-            </select>
-          </label>
-          <label class="m-field">分数<input type="number" id="cr-score" value="${score}" min="0">
-            <span class="muted small">0 = 中间产物（不直接上桌，可被其他菜谱引用）</span>
-          </label>
           <label class="m-field">UID（自动生成）<input type="text" value="${recipe?.uID ?? (isNew ? config.uidPrefix * 1000 + config.nextSequence : "—")}" disabled></label>
           <label class="m-field">菜谱图标（PNG，卡片图）<input type="file" id="cr-icon-upload" accept="image/png">
             <span class="muted small">上传后立即在组装预览中显示</span></label>
@@ -1015,13 +987,22 @@ async function renderRecipeForm(
         <div class="cr-comp-list" id="cr-comp-list"></div>
         <div class="cr-comp-toolbar" style="margin-top:10px">
           <button type="button" class="m-btn primary" id="cr-add-comp">＋ 添加食材 / 菜谱</button>
-          <button type="button" class="m-btn" id="cr-new-sub">＋ 新建中间产物</button>
           <span class="muted small" id="cr-comp-hint" style="margin-left:auto"></span>
         </div>
       </div>
       <div class="cr-section">
         <div class="m-section-title">烹饪与装盘</div>
         <div class="cr-form-grid">
+          <label class="m-field">类型
+            <select id="cr-type" class="m-select">
+              <option value="Composite" ${type === "Composite" ? "selected" : ""}>Composite（组合）</option>
+              <option value="Cooked" ${type === "Cooked" ? "selected" : ""}>Cooked（烹饪）</option>
+              <option value="Mixed" ${type === "Mixed" ? "selected" : ""}>Mixed（搅拌）</option>
+            </select>
+          </label>
+          <label class="m-field">分数<input type="number" id="cr-score" value="${score}" min="0">
+            <span class="muted small">菜谱分值（卡片展示）</span>
+          </label>
           <label class="m-field" id="cr-cook-step-field">烹饪步骤 ${selectHtml(refs.cookingSteps, cookingStepId, "cr-cook-step")}</label>
           <label class="m-field" id="cr-cook-icon-field">烹饪图标 ${selectHtml(refs.icons, cookingStepIconId, "cr-cook-icon")}</label>
           <label class="m-field" id="cr-cook-prog-field">烹饪程度
@@ -1038,10 +1019,10 @@ async function renderRecipeForm(
             platingStepId,
             "cr-plate-step"
           )}
-            <span class="muted small">决定上桌容器（盘子/杯子），运行时映射为 PlatingStepData</span>
+            <span class="muted small">决定上桌容器（盘子/杯子）</span>
           </label>
-          <label class="m-field" id="cr-mix-icon-field" style="display:none">搅拌图标 ${selectHtml(refs.icons, mixingIconId, "cr-mix-icon")}</label>
-          <label class="m-field" id="cr-mix-prog-field" style="display:none">搅拌程度
+          <label class="m-field" id="cr-mix-icon-field">搅拌图标 ${selectHtml(refs.icons, mixingIconId, "cr-mix-icon")}</label>
+          <label class="m-field" id="cr-mix-prog-field">搅拌程度
             <select id="cr-mix-prog" class="m-select">
               <option value="0">Unmixed（未搅拌）</option>
               <option value="1" selected>Mixed（已搅拌）</option>
@@ -1098,20 +1079,7 @@ async function renderRecipeForm(
   // ---- 交互 ----
 
   function updateTypeFields(): void {
-    const sel = (document.getElementById("cr-type") as HTMLSelectElement)?.value ?? "Composite";
-    const showCook = sel === "Cooked";
-    const showPlate = sel !== "Composite";
-    const showMix = sel === "Mixed";
-    const set = (id: string, show: boolean): void => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = show ? "" : "none";
-    };
-    set("cr-cook-step-field", showCook);
-    set("cr-cook-icon-field", showCook);
-    set("cr-cook-prog-field", showCook);
-    set("cr-plate-field", showPlate);
-    set("cr-mix-icon-field", showMix);
-    set("cr-mix-prog-field", showMix);
+    // 类型只影响预览图标与保存字段，烹饪/搅拌参数始终同时展示
     renderPreview();
   }
 
@@ -1375,15 +1343,6 @@ async function renderRecipeForm(
       }, 2000);
     });
   }
-  // 「+ 新建中间产物」：中间产物也是完整菜谱（图标/模型/装盘容器均可配），
-  // 直接进入完整新建表单（预填分数 0），保存后回到列表即可被引用。
-  document.getElementById("cr-new-sub")?.addEventListener("click", () =>
-    void renderRecipeForm(app, setName, null, {
-      score: 0,
-      category: (document.getElementById("cr-type-cat") as HTMLSelectElement)?.value || categoryId,
-    })
-  );
-
   document.getElementById("cr-type")?.addEventListener("change", updateTypeFields);
   document.getElementById("cr-score")?.addEventListener("input", renderPreview);
   document.getElementById("cr-zh")?.addEventListener("input", renderPreview);

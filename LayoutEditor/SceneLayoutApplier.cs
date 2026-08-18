@@ -160,6 +160,10 @@ public static class SceneLayoutApplier
                 LayoutEditorStubIO.ApplyServingStationPlateReturns(go, item.servingStation.plateReturnInstanceIds, createdObjects);
         }
 
+        // Second pass (cont.): document-level switch links (按钮 → 断头台/饮料机/酱料机)。
+        // 只在文档携带链接时写入；空/缺失时不动场景里既有的联动（避免误清手工配置）。
+        LayoutEditorStubIO.ApplySwitchLinks(document.switchLinks, createdObjects);
+
         // Snap floors with the web-sent precision (default 0.01). Floor centers sit on
         // half-cell (0.6) multiples, which are also multiples of that precision, so the
         // round trip is lossless. Snapping to full GridCellSize (1.2) would shift
@@ -171,6 +175,21 @@ public static class SceneLayoutApplier
                 SyncWalkableToFloors(document, snapStep);
         }
 
+        // Camera background/FOV + Art/Lights colors — full writes only (scoped writes
+        // never touch the camera or the lights).
+        string cameraLightError = null;
+        if (only == null)
+        {
+            cameraLightError = ApplyCameraInfo(document.cameraInfo);
+            var lightsError = ApplyLights(document.lights);
+            if (!string.IsNullOrEmpty(lightsError))
+            {
+                cameraLightError = string.IsNullOrEmpty(cameraLightError)
+                    ? lightsError
+                    : cameraLightError + "; " + lightsError;
+            }
+        }
+
         // Bake move controls into the scene — full writes only (scoped writes never
         // touch the scene's existing move groups). The scene itself (group roots +
         // Animator + TriggerQueue/TriggerTimer + controller/clips) is the single
@@ -178,6 +197,10 @@ public static class SceneLayoutApplier
         string bakeError = null;
         if (only == null && document.moveControls != null)
         {
+            // 按钮联动 phase 1：为被绑定的移动组覆写 start/end 触发器（须在烘焙前）。
+            if (document.buttonLinks != null)
+                ButtonLinkBakery.PrepareGroups(document);
+
             // Remap "new:" group member IDs to the real Unity IDs of objects created this pass.
             foreach (var group in document.moveControls.groups ?? new MoveGroupDto[0])
             {
@@ -190,7 +213,38 @@ public static class SceneLayoutApplier
             bakeError = MoveControlBakery.Sync(scene, document.moveControls);
             if (!string.IsNullOrEmpty(bakeError))
                 LayoutEditorLog.LogWarning(bakeError);
+
+            // 按钮联动 phase 2：移动组烘焙完成后创建逻辑 helper 并接线（组根须已存在）。
+            if (document.buttonLinks != null)
+            {
+                var blError = ButtonLinkBakery.Sync(scene, document, createdObjects);
+                if (!string.IsNullOrEmpty(blError))
+                {
+                    LayoutEditorLog.LogWarning(blError);
+                    bakeError = string.IsNullOrEmpty(bakeError) ? blError : bakeError + "; " + blError;
+                }
+            }
+
+            // 按钮事件组：独立的按钮逻辑 helper（Design/Button Event Logic），
+            // 事件目标为伪根（按名字广播），done 中继写到目标伪根（Play 期挂到 child）。
+            if (document.buttonEvents != null)
+            {
+                var beError = ButtonEventBakery.Sync(scene, document, createdObjects);
+                if (!string.IsNullOrEmpty(beError))
+                {
+                    LayoutEditorLog.LogWarning(beError);
+                    bakeError = string.IsNullOrEmpty(bakeError) ? beError : bakeError + "; " + beError;
+                }
+            }
         }
+
+        // 烤菜烤盘「默认能放」：把所选烤菜菜谱的叶食材追加为场景烤盘 stub 的额外食材
+        // （allowedIngredientSOs，只增不删）。基础版烤盘（utensil_roasting_tray）内置
+        // approvedContents 只含基础/dlc07 烤菜食材，dlc09 节点需显式登记才能放入——
+        // 覆盖「手动放置烤盘未跑自动填充」的情况。
+        var roastInfo = LayoutEditorLevelInfoResolver.ResolveForScene(scene.path);
+        if (roastInfo != null)
+            LayoutEditorRoastTrayFill.EnsureRoastTrayIngredients(roastInfo);
 
         // After mutating placeholder transforms, persist with the canonical Tools workflow:
         // Toggle Prepare For Building (strip temp-loaded children so they aren't baked into the
@@ -201,9 +255,183 @@ public static class SceneLayoutApplier
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
-        return string.IsNullOrEmpty(bakeError)
+
+        var partialError = cameraLightError;
+        if (!string.IsNullOrEmpty(bakeError))
+            partialError = string.IsNullOrEmpty(partialError) ? bakeError : partialError + "; " + bakeError;
+        return string.IsNullOrEmpty(partialError)
             ? null
-            : "部分移动组写回失败（场景已保存）：" + bakeError;
+            : "部分写回失败（场景已保存）：" + partialError;
+    }
+
+    /// <summary>定位场景游戏相机：优先 tag=MainCamera，兜底第一个启用相机。</summary>
+    private static Camera FindSceneCamera()
+    {
+        var cam = Camera.main;
+        if (cam != null)
+            return cam;
+
+        var scene = EditorSceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return null;
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            cam = rootGo.GetComponentInChildren<Camera>();
+            if (cam != null)
+                return cam;
+        }
+        return null;
+    }
+
+    /// <summary>写回相机背景色（同时确保 clearFlags=SolidColor）与 FOV。
+    ///  运行时从不写这两个值，改场景序列化即生效。</summary>
+    private static string ApplyCameraInfo(CameraInfoDto info)
+    {
+        if (info == null)
+            return null;
+
+        var cam = FindSceneCamera();
+        if (cam == null)
+            return "场景中未找到游戏相机，背景色/FOV 未写入";
+
+        var changed = false;
+        Color bg;
+        if (!string.IsNullOrEmpty(info.backgroundColor) &&
+            ColorUtility.TryParseHtmlString(info.backgroundColor, out bg))
+        {
+            Undo.RecordObject(cam, "Layout Editor Camera");
+            cam.backgroundColor = bg;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            changed = true;
+        }
+        if (info.fieldOfView > 0f)
+        {
+            Undo.RecordObject(cam, "Layout Editor Camera");
+            cam.fieldOfView = Mathf.Clamp(info.fieldOfView, 1f, 179f);
+            changed = true;
+        }
+        if (changed)
+            EditorUtility.SetDirty(cam);
+        return null;
+    }
+
+    /// <summary>写回 Art/Lights 非 prefab 灯光的颜色/强度/范围/启用状态。
+    ///  按 hierarchyPath 匹配；场景缺失则新建（方向角用导出快照），
+    ///  场景中多余的非 prefab 灯光（web 已删除）一并移除。</summary>
+    private static string ApplyLights(LightInfoDto[] lights)
+    {
+        if (lights == null)
+            return null;
+
+        var keepPaths = new HashSet<string>();
+        foreach (var dto in lights)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.hierarchyPath))
+                continue;
+            keepPaths.Add(dto.hierarchyPath);
+
+            var t = LayoutEditorHierarchy.FindByPath(dto.hierarchyPath);
+            var light = t != null ? t.GetComponent<Light>() : null;
+            if (light == null)
+            {
+                var parentPath = ParentPathOf(dto.hierarchyPath);
+                var leafName = LeafNameOf(dto.hierarchyPath);
+                var parent = string.IsNullOrEmpty(parentPath)
+                    ? null
+                    : LayoutEditorHierarchy.FindOrCreatePath(parentPath);
+                if (parent == null)
+                    continue;
+                var go = new GameObject(string.IsNullOrEmpty(leafName) ? "Light" : leafName);
+                Undo.RegisterCreatedObjectUndo(go, "Layout Editor Light");
+                go.transform.SetParent(parent, false);
+                if (dto.eulerAngles != null)
+                    go.transform.eulerAngles = dto.eulerAngles.ToVector3();
+                light = go.AddComponent<Light>();
+            }
+
+            Undo.RecordObject(light, "Layout Editor Light");
+            if (dto.lightType >= 0 && dto.lightType <= 4)
+                light.type = (LightType)dto.lightType;
+            Color c;
+            if (!string.IsNullOrEmpty(dto.color) && ColorUtility.TryParseHtmlString(dto.color, out c))
+                light.color = c;
+            light.intensity = Mathf.Max(0f, dto.intensity);
+            if (light.type == LightType.Spot || light.type == LightType.Point)
+                light.range = Mathf.Max(0.01f, dto.range);
+            if (light.type == LightType.Spot)
+                light.spotAngle = Mathf.Clamp(dto.spotAngle, 1f, 179f);
+            light.enabled = dto.enabled;
+            EditorUtility.SetDirty(light);
+        }
+
+        RemoveUnmatchedSceneLights(keepPaths);
+        return null;
+    }
+
+    /// <summary>删除 "Lights" 子树中不在文档里的非 prefab 灯光（web 侧已删除的）。</summary>
+    private static void RemoveUnmatchedSceneLights(HashSet<string> keepPaths)
+    {
+        var scene = EditorSceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return;
+
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            for (int i = 0; i < rootGo.transform.childCount; i++)
+            {
+                var child = rootGo.transform.GetChild(i);
+                if (child.name != "Lights")
+                    continue;
+                RemoveUnmatchedLightsUnder(child, keepPaths);
+            }
+        }
+    }
+
+    private static void RemoveUnmatchedLightsUnder(Transform root, HashSet<string> keepPaths)
+    {
+        // Collect first: destroying while walking the hierarchy is unsafe.
+        var doomed = new List<GameObject>();
+        var stack = new Stack<Transform>();
+        stack.Push(root);
+
+        while (stack.Count > 0)
+        {
+            var t = stack.Pop();
+            for (int i = 0; i < t.childCount; i++)
+                stack.Push(t.GetChild(i));
+
+            var go = t.gameObject;
+            if ((go.hideFlags & HideFlags.HideAndDontSave) != 0)
+                continue;
+            if (PrefabUtility.GetPrefabType(go) != PrefabType.None)
+                continue;
+            if (go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>() != null)
+                continue;
+            if (go.GetComponent<Light>() == null)
+                continue;
+            if (keepPaths.Contains(LayoutEditorHierarchy.GetHierarchyPath(t)))
+                continue;
+            doomed.Add(go);
+        }
+
+        foreach (var go in doomed)
+            Undo.DestroyObjectImmediate(go);
+    }
+
+    private static string ParentPathOf(string hierarchyPath)
+    {
+        if (string.IsNullOrEmpty(hierarchyPath))
+            return null;
+        var idx = hierarchyPath.LastIndexOf('/');
+        return idx < 0 ? null : hierarchyPath.Substring(0, idx);
+    }
+
+    private static string LeafNameOf(string hierarchyPath)
+    {
+        if (string.IsNullOrEmpty(hierarchyPath))
+            return null;
+        var idx = hierarchyPath.LastIndexOf('/');
+        return idx < 0 ? hierarchyPath : hierarchyPath.Substring(idx + 1);
     }
 
     /// <summary>Replace "new:" instance ids with the real Unity ids of objects created

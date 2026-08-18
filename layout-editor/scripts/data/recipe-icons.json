@@ -6,6 +6,8 @@
   "Burger_Lettuce_SO": "ui_cheeseburgerlettuce_01",
   "Burger_LettuceTomato_SO": "ui_cheeseburgerlettucetomato_01",
   "Burger_Hawaiian": "ui_Hawaiianburger_01",
+  "chickenburger": "ui_plainburger_01",
+  "friedchickenburger": "ui_plainburger_01",
   "Pizza_Plain_SO": "ui_cheeseandtomatopizza",
   "Pizza_Plain_60_SO": "ui_cheeseandtomatopizza",
   "Pizza_Peperoni_SO": "ui_pepperonipizza",
@@ -66,8 +68,6 @@
   "FriedFish": "Fish_Icon",
   "FriedPotato": "Potato_Icon",
   "Mushroom_For_Pizza_SO": "Mushroom_Icon",
-
-
   "Pizza_Optional_Uncooked_SO": null,
   "Soup_TomatoEgg_SO": null,
   "Soup_Tomato_SO": "ui_soup_tomato_01",
@@ -77,5 +77,21 @@
   "Fry_Fish_SO": "Fish",
   "Steamed_Carrot_SO": "t_icon_carrot_dumpling_d",
   "Steamed_Meat_SO": "ui_MeatDumpling_01",
-  "Steamed_Prawns_SO": "ui_PrawnDumpling_01"
+  "Steamed_Prawns_SO": "ui_PrawnDumpling_01",
+  "md_burger_fries": "burger_fries",
+  "md_burger_fries_drink02": "burger_fries_drink02",
+  "md_burger_fries_cheesesticks": "burger_fries_cheesesticks",
+  "md_burger_drink01": "burger_drink01",
+  "md_burger_onionrings": "burger_onionrings",
+  "md_burger_onionrings_drink01": "burger_onionrings_drink01",
+  "md_burger_onionrings_cheesesticks": "burger_onionrings_cheesesticks",
+  "md_burger_cheesesticks_drink03": "burger_cheesesticks_drink03",
+  "md_c_burger_fries_drink03": "c_burger_fries_drink03",
+  "md_c_burger_fries_onionrings": "c_burger_fries_onionrings",
+  "md_c_burger_fries_cheesesticks": "c_burger_fries_cheesesticks",
+  "md_c_burger_drink03": "c_burger_drink03",
+  "md_c_burger_onionrings": "c_burger_onionrings",
+  "md_c_burger_onionrings_drink01": "c_burger_onionrings_drink01",
+  "md_c_burger_cheesesticks": "c_burger_cheesesticks",
+  "md_c_burger_cheesesticks_drink02": "c_burger_cheesesticks_drink02"
 }

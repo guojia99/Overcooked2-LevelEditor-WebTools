@@ -17,8 +17,18 @@ import {
 import { openIngredientMultiPicker } from "../../modals";
 import {
   stubKindOf,
-  defaultUtensilCapacity
+  defaultUtensilCapacity,
+  utensilCapacityOrFix
 } from "../stubControls";
+import {
+  computeUtensilIngredientFill,
+  functionalBaseId
+} from "../recipeKnowledge";
+import {
+  fetchRecipeCatalog,
+  fetchLevelRecipes
+} from "../../api";
+import type { RecipeEntry } from "../../types";
 
 export function openUtensilManager() {
   const utensils = S.items.filter((it) => stubKindOf(it) === "CookingUtensil");
@@ -61,7 +71,8 @@ export function openUtensilManager() {
   openModal(
     "锅具管理 · 参数同步",
     `<p class="modal-hint">可直接修改每个锅具的容量与额外食材（不选额外食材时可处理所有主线食材，选中后可额外煮这些食材），或一键把它的参数同步给所有相同类型的锅具。仅修改前端数据，写回 Unity 后生效。</p><div class="modal-scroll">${body}</div>`,
-    `<button type="button" class="modal-btn" data-cancel>关闭</button>`
+    `<button type="button" class="modal-btn primary" id="utm-auto-fill">🧺 按菜谱自动填充</button>
+     <button type="button" class="modal-btn" data-cancel>关闭</button>`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
 
@@ -77,6 +88,83 @@ export function openUtensilManager() {
   };
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+
+  // 按菜谱自动填充：读取当前关卡已选菜谱 → 数据驱动计算各锅具应装的食材
+  // （汤料→汤锅、香肠→汤锅、洋葱→煎锅、面糊食材→搅拌碗、面糊节点→炸篮、
+  //  搅拌类→搅拌杯，含 DLC 食材如 dlc07 土豆/西芹），按功能基础 id 匹配
+  // 场景锅具（含 DLC 变体），容量取原版默认并纠正历史污染，食材列表只增不删。
+  document.getElementById("utm-auto-fill")?.addEventListener("click", async () => {
+    if (!S.scenePath) {
+      setStatus("未选择场景，无法读取关卡菜谱", false);
+      return;
+    }
+    let recipes: RecipeEntry[] | null = null;
+    let guids: string[] = [];
+    try {
+      const [catalog, level] = await Promise.all([
+        fetchRecipeCatalog(S.currentLevelSet),
+        fetchLevelRecipes(S.scenePath),
+      ]);
+      recipes = catalog;
+      guids = level?.recipeGuids ?? [];
+    } catch (e) {
+      setStatus(`读取关卡菜谱失败：${(e as Error).message}`, false);
+      return;
+    }
+    const byGuid = new Map(recipes.map((r) => [r.guid, r]));
+    const recs = guids.map((g) => byGuid.get(g)).filter((r): r is RecipeEntry => !!r);
+    if (!recs.length) {
+      setStatus("当前关卡未选择菜谱，先在「选择菜谱」里勾选", false);
+      return;
+    }
+    S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
+
+    const fill = computeUtensilIngredientFill(recs);
+    if (!fill.size) {
+      setStatus("所选菜谱无需锅具装填（沙拉/拼盘等组装类）", false);
+      return;
+    }
+    const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
+    const recipeGuid = new Map(recipes.map((r) => [r.id, r.guid]));
+    const vesselOfItem = (it: EditorItem): string => {
+      const id = S.catalogByGuid.get(it.prefabGuid ?? "")?.id ?? prefabIdFromPath(it.prefabAssetPath ?? "");
+      return functionalBaseId(id ?? "");
+    };
+
+    pushHistory();
+    let touched = 0;
+    for (const it of S.items) {
+      if (stubKindOf(it) !== "CookingUtensil") continue;
+      const f = fill.get(vesselOfItem(it));
+      if (!f) continue;
+      const add: string[] = [];
+      for (const iid of f.ings) {
+        const g = ingGuid.get(iid);
+        if (g) add.push(g);
+      }
+      for (const iid of f.intermediates) {
+        const g = recipeGuid.get(iid);
+        if (g) add.push(g);
+      }
+      if (!add.length) continue;
+      it.stubKind = "CookingUtensil";
+      if (!it.cookingUtensil) it.cookingUtensil = {};
+      it.cookingUtensil.capacity = utensilCapacityOrFix(it);
+      const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
+      for (const g of add) existing.add(g);
+      it.cookingUtensil.allowedIngredientGuids = [...existing];
+      touched++;
+    }
+    draw();
+    const parts = [...fill.entries()].map(([v, f]) => `${v}×${f.ings.length + f.intermediates.length}`);
+    setStatus(
+      touched
+        ? `已按 ${recs.length} 道菜谱填充 ${touched} 个锅具（${parts.join("、")}；写回后生效）`
+        : `场景中没有匹配的锅具（需要：${parts.join("、")}）`,
+      touched > 0
+    );
+    reopen();
+  });
 
   document.querySelectorAll<HTMLInputElement>(".utm-cap").forEach((input) => {
     input.addEventListener("change", () => {
@@ -102,7 +190,10 @@ export function openUtensilManager() {
         it.cookingUtensil?.allowedIngredientGuids ?? [],
         (guids) => {
           pushHistory();
-          ensureUtensil(it).allowedIngredientGuids = guids;
+          const cu = ensureUtensil(it);
+          cu.allowedIngredientGuids = guids;
+          // capacity 缺省会写回 0（后端 int）——兜底原版默认
+          if (cu.capacity == null) cu.capacity = defaultUtensilCapacity(it);
           draw();
           setStatus(`${itemLabel(it)} 额外食材已更新（写回后生效）`);
           setTimeout(reopen, 0);

@@ -200,6 +200,9 @@ public static class LayoutEditorLevelAdminApi
             var setName = SetNameFromPath(path);
             if (string.IsNullOrEmpty(setName))
                 continue;
+            // 自动修复：历史关卡集可能漏设根目录 AssetBundle（Docs/zh 构建步骤 3），
+            // 列表时补齐，保证下次 Build AssetBundles 能打出 info_<set>。
+            EnsureSetInfoBundle(setName);
             list.Add(new LevelSetInfoDto
             {
                 setName = setName,
@@ -248,9 +251,11 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        // Web 内置（Import 源库）内容仅作模板：创建关卡时即把全部菜谱/食材/道具
-        // 同步到关卡集 custom_web，保证后续引用一律指向关卡集副本。
+        // Web 内置内容（Assets/common_w）直接引用、随 common_w bundle 打包，
+        // 不再同步 custom_web 拷贝（SyncAllWebContent 已退役为 no-op）。
         LayoutEditorCustomIngredients.SyncAllWebContent(setName);
+        // Docs/zh 构建步骤 3：关卡集根目录 AssetBundle = "<set>/info_<set>"
+        EnsureSetInfoBundle(setName);
         ReloadPseudo();
         return null;
     }
@@ -296,6 +301,28 @@ public static class LayoutEditorLevelAdminApi
             importer.assetBundleName = bundleName;
             importer.SaveAndReimport();
         }
+    }
+
+    /// <summary>确保关卡集根目录的 AssetBundle 名为 "&lt;set&gt;/info_&lt;set&gt;"（Docs/zh 构建步骤 3）。
+    ///  缺它则 info bundle 不打包，Assets/AssetBundles/&lt;set&gt;/ 下没有 info_&lt;set&gt;，
+    ///  游戏加载不到关卡集配置（LevelSetInfo/LevelInfo/config 等 data/ 下资产）。
+    ///  幂等且保守：只补**空值**（历史关卡集漏设时），已设置过的（含历史 test_level 等旧名）不改。</summary>
+    private static void EnsureSetInfoBundle(string setName)
+    {
+        if (string.IsNullOrEmpty(setName))
+            return;
+        var setDir = LevelSetsRoot + "/" + setName;
+        if (!AssetDatabase.IsValidFolder(setDir))
+            return;
+        var importer = AssetImporter.GetAtPath(setDir);
+        if (importer == null)
+            return;
+        if (!string.IsNullOrEmpty(importer.assetBundleName))
+            return;
+        var expected = setName + "/info_" + setName;
+        importer.assetBundleName = expected;
+        importer.SaveAndReimport();
+        Debug.Log("[LevelAdmin] 关卡集 AssetBundle 已设为 " + expected);
     }
 
     public static string UpdateSetInfo(LevelSetInfoUpdateDto dto)
@@ -3274,9 +3301,9 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
-    /// <summary>Web 内置菜谱库：合并 Import 源库与关卡集 custom_web 副本状态，
-    ///  计算安装/被引用状态与去重代表（规范化中文名聚簇，代表=最高 DLC）。
-    ///  排除不存在的菜谱（如 chocolatesmoothie）。</summary>
+    /// <summary>（已废弃）Web 内置菜谱库扫描：原合并 Import 源库与 custom_web 副本状态。
+    ///  Web 内置改为 common_w 直接引用 + 前端静态 JSON 后，后端不再动态下发 web 组
+    ///  （ScanRecipes 已不扫 common_w），本接口仅返回历史 custom_web 残留（通常为空）。</summary>
     public static WebRecipeLibraryDto ScanWebRecipeLibrary(string setName)
     {
         var dto = new WebRecipeLibraryDto { setName = setName, recipes = new WebRecipeEntryDto[0] };
@@ -3448,7 +3475,7 @@ public static class LayoutEditorLevelAdminApi
     }
 
     /// <summary>PseudoPrefabSO 的查找目录（食材/烹饪步骤/装盘容器）。
-    ///  含 Web 内置源库（游戏 DLC 内容）与全部关卡集的 custom_web 拷贝。</summary>
+    ///  含 Web 内置源库（Assets/common_w，游戏 DLC 内容，直接打包为 common_w bundle）。</summary>
     private static readonly string[] PseudoPrefabSearchFolders =
     {
         "Assets/common01/food/Ingredients",
@@ -3457,12 +3484,12 @@ public static class LayoutEditorLevelAdminApi
         "Assets/common02/food/CookingSteps",
         "Assets/common01/food/PlatingSteps",
         "Assets/common02/food/PlatingSteps",
-        "Assets/Editor/LayoutEditor/Import/Ingredients",
-        "Assets/Editor/LayoutEditor/Import/CookingSteps",
+        "Assets/common_w/Ingredients",
+        "Assets/common_w/CookingSteps",
     };
 
-    /// <summary>全部关卡集的 custom_web/Ingredients 目录（Web 内置食材拷贝，
-    ///  随关卡集打包，始终归 Web内置 分组；props 的 pseudo 副本在 custom_web/pseudo）。</summary>
+    /// <summary>全部关卡集的旧 custom_web/Ingredients 目录（Web 内置食材拷贝，
+    ///  机制已废弃，仅为兼容读取历史数据保留）。</summary>
     public static List<string> LevelSetCustomIngredientFolders()
     {
         var folders = new List<string>();

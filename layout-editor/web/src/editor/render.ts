@@ -39,7 +39,7 @@ import {
   drawVoidHatch
 } from "./renderFloors";
 import { drawMoveControlOverlay, previewMemberPositions } from "./moveControl";
-import { drawTeleportalLinks } from "./renderItems";
+import { drawTeleportalLinks, drawSwitchLinks } from "./renderItems";
 import { drawServingLinks } from "./servingLinks";
 import {
   isSurfaceItem,
@@ -387,7 +387,12 @@ export function draw() {
   const layerBg = S.currentLayer === "background";
   const vis = S.layerVisibility[S.currentLayer];
   const theme = bgTheme(S.bgThemeKey);
-  dom.ctx.fillStyle = onFloor ? theme.fill : "#1a1d23";
+  // 空洞主题没有背景物体，画布底色直接采用相机背景色（所见即所得）。
+  const camVoidBg =
+    onFloor && S.bgThemeKey === "void" && isHexColor(S.cameraInfo?.backgroundColor)
+      ? S.cameraInfo!.backgroundColor
+      : null;
+  dom.ctx.fillStyle = camVoidBg ?? (onFloor ? theme.fill : "#1a1d23");
   dom.ctx.fillRect(0, 0, w, h);
 
   if (onFloor) drawVoidHatch(theme.hatch);
@@ -509,6 +514,7 @@ export function draw() {
       drawItemPreview(item, isSelected(item._editorKey), previewPos);
     }
     drawTeleportalLinks();
+    drawSwitchLinks();
     drawServingLinks();
   }
 
@@ -518,9 +524,108 @@ export function draw() {
     drawMoveControlOverlay();
   }
 
+  if (S.showCameraFov) drawCameraFrustum();
+
   if (S.showCoords) drawCoordAxes();
 
   if (S.marqueeing) drawMarquee();
 
   refreshHooks();
+}
+
+function isHexColor(hex: string | undefined): hex is string {
+  return !!hex && /^#[0-9a-fA-F]{6}$/.test(hex);
+}
+
+/** 游戏相机视野范围估算：FOV 视锥四条边线与地面 y=0 的交点连成四边形（16:9）。
+ *  相机 transform 来自导出快照；运行时镜头会跟随玩家推拉，此处为静态近似。 */
+export function drawCameraFrustum(): void {
+  const cam = S.cameraInfo;
+  if (!cam || !cam.position) return;
+
+  const fovRaw = Number(cam.fieldOfView);
+  const fov = Number.isFinite(fovRaw) && fovRaw > 0 ? fovRaw : 45;
+  const pitch = (((cam.pitch ?? 0) % 360) + 360) % 360;
+  const yaw = cam.yaw ?? 0;
+
+  const th = (pitch * Math.PI) / 180;
+  const ps = (yaw * Math.PI) / 180;
+  const cosT = Math.cos(th);
+  const sinT = Math.sin(th);
+  const cosP = Math.cos(ps);
+  const sinP = Math.sin(ps);
+
+  // Unity Quaternion.Euler(pitch, yaw, 0) 作用于 +Z 的朝向（ZXY 顺序，roll=0）。
+  const fwd = { x: sinP * cosT, y: -sinT, z: cosP * cosT };
+  const right = { x: cosP, y: 0, z: -sinP };
+  const up = { x: sinT * sinP, y: cosT, z: sinT * cosP };
+
+  const vy = ((fov / 2) * Math.PI) / 180;
+  const tanVy = Math.tan(vy);
+  const tanVh = tanVy * (16 / 9);
+
+  const P = cam.position;
+  if (fwd.y >= -1e-4) return; // 相机没朝下看，视野与地面无交线
+
+  const corners: { x: number; z: number }[] = [];
+  // 周长顺序（左上 → 左下 → 右下 → 右上）避免自交四边形。
+  for (const [sx, sy] of [[-1, -1], [-1, 1], [1, 1], [1, -1]] as const) {
+    const dx = fwd.x + tanVh * sx * right.x + tanVy * sy * up.x;
+    const dy = fwd.y + tanVh * sx * right.y + tanVy * sy * up.y;
+    const dz = fwd.z + tanVh * sx * right.z + tanVy * sy * up.z;
+    if (dy >= -1e-6) return; // 某条视锥边线越过地平线，四边形不闭合
+    const t = -P.y / dy;
+    corners.push({ x: P.x + t * dx, z: P.z + t * dz });
+  }
+
+  const tc = -P.y / fwd.y;
+  const target = { x: P.x + tc * fwd.x, z: P.z + tc * fwd.z };
+
+  const ctx = dom.ctx;
+  ctx.save();
+
+  const pts = corners.map((c) => worldToCanvas(c.x, c.z));
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(94,234,212,0.07)";
+  ctx.fill();
+
+  ctx.setLineDash([6, 4]);
+  ctx.strokeStyle = "rgba(94,234,212,0.8)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 视线中心线：相机位置 → 注视点。
+  const camC = worldToCanvas(P.x, P.z);
+  const tgtC = worldToCanvas(target.x, target.z);
+  ctx.strokeStyle = "rgba(94,234,212,0.45)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(camC.x, camC.y);
+  ctx.lineTo(tgtC.x, tgtC.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 注视点十字。
+  ctx.strokeStyle = "rgba(94,234,212,0.7)";
+  ctx.beginPath();
+  ctx.moveTo(tgtC.x - 6, tgtC.y);
+  ctx.lineTo(tgtC.x + 6, tgtC.y);
+  ctx.moveTo(tgtC.x, tgtC.y - 6);
+  ctx.lineTo(tgtC.x, tgtC.y + 6);
+  ctx.stroke();
+
+  // 相机位置标记。
+  ctx.fillStyle = "rgba(94,234,212,0.95)";
+  ctx.beginPath();
+  ctx.arc(camC.x, camC.y, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = "11px sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  ctx.fillText(`🎥 相机 FOV ${fov}° · 16:9（静态估算，运行时随玩家推拉）`, camC.x + 8, camC.y - 4);
+
+  ctx.restore();
 }

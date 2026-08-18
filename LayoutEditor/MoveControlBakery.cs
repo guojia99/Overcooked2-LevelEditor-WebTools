@@ -1142,6 +1142,9 @@ public static class MoveControlBakery
                 var path = AssetDatabase.GetAssetPath(rc);
                 if (string.IsNullOrEmpty(path)) continue;
                 var norm = path.Replace('\\', '/');
+                // Button-link logic controllers (BtnLogic_/BtnPair_) are managed by
+                // ButtonLinkBakery — never treat them as stale move-control assets.
+                if (ButtonLinkBakery.IsButtonLogicAsset(norm)) continue;
                 bool ours = norm.StartsWith(prefix, StringComparison.Ordinal) ||
                             norm.Contains("/" + OldMoveAnimsFolderName + "/");
                 if (!ours) continue;
@@ -1186,6 +1189,7 @@ public static class MoveControlBakery
         foreach (var guid in AssetDatabase.FindAssets("t:Object", new[] { animDir }))
         {
             var path = AssetDatabase.GUIDToAssetPath(guid).Replace('\\', '/');
+            if (ButtonLinkBakery.IsButtonLogicAsset(path)) continue;
             if (!path.StartsWith(prefix, StringComparison.Ordinal)) continue;
             if (usedAssets.Contains(path)) continue;
             AssetDatabase.DeleteAsset(path);
@@ -1260,7 +1264,7 @@ public static class MoveControlBakery
         return string.Join("/", names.ToArray());
     }
 
-    private static void EnsureFolder(string animDir)
+    internal static void EnsureFolder(string animDir)
     {
         var parent = Path.GetDirectoryName(animDir).Replace('\\', '/');
         var leaf = Path.GetFileName(animDir);
@@ -1274,7 +1278,7 @@ public static class MoveControlBakery
             AssetDatabase.CreateFolder(parent, leaf);
     }
 
-    private static bool DeleteAssetIfExists(string path)
+    internal static bool DeleteAssetIfExists(string path)
     {
         if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path) == null)
             return false;
@@ -1301,7 +1305,7 @@ public static class MoveControlBakery
         return SanitizeFileName(sceneName + "_" + namePart + "_" + idPart);
     }
 
-    private static string SanitizeFileName(string s)
+    internal static string SanitizeFileName(string s)
     {
         if (string.IsNullOrEmpty(s)) return "group";
         var chars = s.ToCharArray();

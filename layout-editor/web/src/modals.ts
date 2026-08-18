@@ -1,5 +1,10 @@
 import type { IngredientEntry, LayoutItem, RecipeEntry } from "./types";
-import { foodGroupLabel, visibleIngredients } from "./ingredientLabels";
+import {
+  foodGroupLabel,
+  visibleIngredients,
+  ingredientCategoryOf,
+  INGREDIENT_CATEGORIES,
+} from "./ingredientLabels";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 
 /** Inline <img> for an ingredient/recipe: try the extracted icon PNG (unless explicitly known
@@ -11,28 +16,47 @@ function iconImg(kind: "ingredients" | "recipes", id: string | undefined, hasIco
 
 /** A clickable ingredient tile (image + name). Wraps a visually-hidden checkbox so the existing
  *  `input:checked` gathering still works; selected tiles get a green border via :has(). */
-function ingredientCard(ing: IngredientEntry, checked: boolean): string {
+/** 选择器额外选项：single = 单选（食材箱等）；isDisabled = 禁用项置灰不可选（web 内置未放开）。 */
+export interface IngredientPickerOptions {
+  single?: boolean;
+  isDisabled?: (ing: IngredientEntry) => string | null;
+}
+
+function ingredientCard(ing: IngredientEntry, checked: boolean, opts?: IngredientPickerOptions): string {
   const badge =
     ing.group && ing.group !== "core" ? ` <span class="pc-badge">${foodGroupLabel(ing.group)}</span>` : "";
   const en = (ing.nameEn && ing.nameEn.trim()) || "";
-  return `<label class="pick-card">
-    <input type="checkbox" value="${ing.guid}" ${checked ? "checked" : ""}>
-    <span class="pc-head">${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${badge}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
+  const disabledReason = opts?.isDisabled?.(ing) ?? null;
+  const disBadge = disabledReason ? ` <span class="pc-badge pc-badge-disabled">⛔ 禁用</span>` : "";
+  const input = opts?.single
+    ? `<input type="radio" name="ing-pick-single" value="${ing.guid}" ${checked ? "checked" : ""} ${disabledReason ? "disabled" : ""}>`
+    : `<input type="checkbox" value="${ing.guid}" ${checked ? "checked" : ""} ${disabledReason ? "disabled" : ""}>`;
+  return `<label class="pick-card${disabledReason ? " pick-card-disabled" : ""}"${disabledReason ? ` title="${disabledReason}"` : ""}>
+    ${input}
+    <span class="pc-head">${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${badge}${disBadge}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
   </label>`;
 }
 
 /** Grid of ingredient cards. */
-function ingredientGrid(ingredients: IngredientEntry[], selected: Set<string>): string {
-  return `<div class="pick-grid">${ingredients.map((i) => ingredientCard(i, selected.has(i.guid))).join("")}</div>`;
+function ingredientGrid(ingredients: IngredientEntry[], selected: Set<string>, opts?: IngredientPickerOptions): string {
+  return `<div class="pick-grid">${ingredients.map((i) => ingredientCard(i, selected.has(i.guid), opts)).join("")}</div>`;
 }
 
 /** Sync the `.selected` class on every pick-card with its checkbox state (visual green border,
  *  works even without CSS :has() support). Call after the modal body is in the DOM. */
 function syncPickCards(root: ParentNode): void {
-  root.querySelectorAll<HTMLInputElement>(".pick-card input[type=checkbox]").forEach((cb) => {
+  root.querySelectorAll<HTMLInputElement>(".pick-card input[type=checkbox], .pick-card input[type=radio]").forEach((cb) => {
     const card = cb.closest(".pick-card");
     if (card) card.classList.toggle("selected", cb.checked);
-    cb.addEventListener("change", () => card?.classList.toggle("selected", cb.checked));
+    cb.addEventListener("change", () => {
+      if (cb.type === "radio" && cb.checked) {
+        // 单选：清掉其它卡片的选中态
+        (cb.closest(".pick-grid") ?? root).querySelectorAll(".pick-card.selected").forEach((c) => {
+          if (c !== card) c.classList.remove("selected");
+        });
+      }
+      card?.classList.toggle("selected", cb.checked);
+    });
   });
 }
 
@@ -116,7 +140,10 @@ export function openFoodSpawnerEditor(
 ) {
   const fs = item.foodSpawner ?? {};
   const selected = new Set(fs.attachmentPrefabGuids ?? []);
-  const grid = ingredientGrid(ingredients, selected);
+  const grid = ingredientGrid(ingredients, selected, {
+    // node 型食材无实体 prefab，挂点生成器无法实例化
+    isDisabled: (i) => (i.nodeOnly ? "node 型食材（无实体 prefab），生成器无法生成" : null),
+  });
 
   openModal(
     "食材生成器 · 参数",
@@ -157,13 +184,20 @@ export function openIngredientMultiPicker(
   ingredients: IngredientEntry[],
   selectedGuids: string[],
   onSave: (guids: string[]) => void,
-  intermediates?: RecipeEntry[]
+  intermediates?: RecipeEntry[],
+  opts?: IngredientPickerOptions
 ) {
   ingredients = visibleIngredients(ingredients);
   const groups = [...new Set(ingredients.map((i) => i.group ?? "other"))]
     .filter((g) => g !== "core")
     .sort();
   const hasIntermediates = intermediates && intermediates.length > 0;
+  const selectedInit = new Set(selectedGuids);
+  const hasSelected = selectedInit.size > 0;
+  // 分类 chips：只显示当前列表里实际出现的分类
+  const cats = INGREDIENT_CATEGORIES.filter((c) =>
+    ingredients.some((i) => ingredientCategoryOf(i.id) === c.key)
+  );
 
   // card for intermediate recipe (uses recipe icons)
   function recipeCard(r: RecipeEntry, checked: boolean): string {
@@ -185,23 +219,44 @@ export function openIngredientMultiPicker(
         <button type="button" class="ing-group-btn active" data-group="">全部</button>
         ${groups.map((g) => `        <button type="button" class="ing-group-btn" data-group="${g}" ${g === "web" ? 'title="Web内置 · 保存时自动打包到本关卡集"' : ""}>${foodGroupLabel(g)}</button>${""}`).join("")}
         ${hasIntermediates ? '<button type="button" class="ing-group-btn" data-group="__intermediate__">中间产物</button>' : ""}
+        ${hasSelected ? '<button type="button" class="ing-group-btn" data-group="__selected__" title="只显示当前已勾选的条目，便于审查与取消">✓ 已选</button>' : ""}
       </div>
-    </div>`;
+    </div>
+    ${cats.length > 1 ? `
+    <div class="ing-filter-bar ing-cat-bar">
+      <span class="ing-cat-label">分类</span>
+      <div class="ing-groups">
+        <button type="button" class="ing-group-btn active" data-cat="">全部</button>
+        ${cats.map((c) => `<button type="button" class="ing-group-btn" data-cat="${c.key}">${c.label}</button>`).join("")}
+      </div>
+    </div>` : ""}`;
 
   function buildFiltered(): string {
     const selected = new Set(selectedGuids);
-    const activeGroup = (document.querySelector(".ing-group-btn.active") as HTMLElement)?.dataset.group ?? "";
+    const activeGroup = (document.querySelector(".ing-groups .ing-group-btn.active[data-group]") as HTMLElement)?.dataset.group ?? "";
+    const activeCat = (document.querySelector(".ing-groups .ing-group-btn.active[data-cat]") as HTMLElement)?.dataset.cat ?? "";
+    const q = (document.getElementById("ing-pick-search") as HTMLInputElement)?.value?.trim()?.toLowerCase() ?? "";
+    const catMatch = (i: IngredientEntry) => !activeCat || ingredientCategoryOf(i.id) === activeCat;
+    const textMatch = (i: IngredientEntry) =>
+      !q || i.nameZh.toLowerCase().includes(q) || (i.nameEn ?? "").toLowerCase().includes(q) || i.id.toLowerCase().includes(q);
+
+    // 已选 tab：当前勾选的食材 + 中间产物（仍受分类/搜索过滤）
+    if (activeGroup === "__selected__") {
+      const selIngs = ingredients.filter((i) => selected.has(i.guid) && catMatch(i) && textMatch(i));
+      const selRecs = (intermediates ?? []).filter((r) => selected.has(r.guid));
+      return ingredientGrid(selIngs, selected, opts) + (selRecs.length ? recipeGrid(selRecs, selected) : "");
+    }
 
     // intermediates group
     if (activeGroup === "__intermediate__" && intermediates) {
       return recipeGrid(intermediates, selected);
     }
 
-    const q = (document.getElementById("ing-pick-search") as HTMLInputElement)?.value?.trim()?.toLowerCase() ?? "";
     let filtered = ingredients;
     if (activeGroup) filtered = filtered.filter((i) => (i.group ?? "other") === activeGroup);
-    if (q) filtered = filtered.filter((i) => i.nameZh.toLowerCase().includes(q) || (i.nameEn ?? "").toLowerCase().includes(q) || i.id.toLowerCase().includes(q));
-    return ingredientGrid(filtered, selected);
+    filtered = filtered.filter(catMatch);
+    filtered = filtered.filter(textMatch);
+    return ingredientGrid(filtered, selected, opts);
   }
 
   function applyFilter(): void {
@@ -216,6 +271,7 @@ export function openIngredientMultiPicker(
      ${filterBar}
      <div class="modal-scroll" id="ing-pick-container">${buildFiltered()}</div>`,
     `<button type="button" class="modal-btn" data-cancel>取消</button>
+     ${opts?.single ? '<button type="button" class="modal-btn" data-clear>清除设置</button>' : ""}
      <button type="button" class="modal-btn primary" data-ok>确定</button>`
   );
 
@@ -223,15 +279,27 @@ export function openIngredientMultiPicker(
   if (panel) panel.classList.add("wide");
 
   document.getElementById("ing-pick-search")?.addEventListener("input", applyFilter);
-  document.querySelectorAll(".ing-group-btn").forEach((btn) => {
+  // 分组 tab 与分类 chips 各自独立高亮/过滤（data-group / data-cat）
+  document.querySelectorAll(".ing-group-btn[data-group]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".ing-group-btn").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".ing-group-btn[data-group]").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilter();
+    });
+  });
+  document.querySelectorAll(".ing-group-btn[data-cat]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".ing-group-btn[data-cat]").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       applyFilter();
     });
   });
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-clear]")?.addEventListener("click", () => {
+    onSave([]);
+    closeModal();
+  });
   document.querySelector("[data-ok]")?.addEventListener("click", () => {
     const guids: string[] = [];
     document.querySelectorAll<HTMLInputElement>("#ing-pick-container input:checked").forEach((el) => {

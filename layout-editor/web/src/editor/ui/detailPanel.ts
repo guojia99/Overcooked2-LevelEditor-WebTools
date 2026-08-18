@@ -21,7 +21,7 @@ import {
   surfaceKindLabelZh
 } from "../../floorColors";
 import { tidyCatalogNameZh } from "../../displayLabels";
-import { ingredientNameZh } from "../../ingredientLabels";
+import { ingredientNameZh, ingredientOptionLabel } from "../../ingredientLabels";
 import {
   findStackHost,
   hostRuleLabelZh
@@ -220,6 +220,25 @@ export function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY
   scaleInput.addEventListener("change", applyScale);
 }
 
+/** 酱料机/饮料机：显示 soArray 多选列表（开关循环切换）；其他食材箱显示单项。 */
+function dispenserDetailHtml(item: EditorItem): string {
+  if (item.stubKind !== "Dispenser") return "";
+  const pid = prefabIdFromPath(item.prefabAssetPath) ?? "";
+  const isSpecial =
+    pid === "dlc08_drink_machine" ||
+    pid === "dlc11_drink_dispenser" ||
+    pid === "dlc08_condiment_dispenser" ||
+    pid === "dlc11_condiment_dispenser";
+  if (isSpecial && item.soArray?.pseudoPrefabGuids?.length) {
+    const names = item.soArray.pseudoPrefabGuids.map((g) => {
+      const ing = S.ingredientsCache.find((i) => i.guid === g);
+      return ing ? escHtml(ingredientOptionLabel(ing)) : "?";
+    });
+    return `<dt>输出（开关循环）</dt><dd>${names.join(" → ")}</dd>`;
+  }
+  return `<dt>食材</dt><dd>${ingredientNameZh(S.ingredientsCache, item.dispenser?.spawnerItemPrefabGuid)}</dd>`;
+}
+
 export function showDetail(item: EditorItem, clientX: number, clientY: number) {
   const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
   const fp = resolveFootprint(item);
@@ -239,7 +258,7 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       ${isSurfaceItem(cat) ? `<dt>缩放</dt><dd>${itemUniformScale(item).toFixed(2)}×（右键菜单可调整大小）</dd>` : ""}
       <dt>分类</dt><dd>${isSurfaceItem(cat) ? surfaceKindLabelZh(cat?.surfaceKind) + "（地板层）" : cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : cat?.category ?? "—"}</dd>
       ${stackDetailHtml(item, cat)}
-      ${item.stubKind === "Dispenser" ? `<dt>食材</dt><dd>${ingredientNameZh(S.ingredientsCache, item.dispenser?.spawnerItemPrefabGuid)}</dd>` : ""}
+      ${dispenserDetailHtml(item)}
       ${extraStubDetailHtml(item)}
     </dl>
     <p class="close-hint">Esc 关闭</p>

@@ -4,6 +4,9 @@ import { tidyCatalogNameZh } from "../displayLabels";
 import { hostRuleLabelZh } from "../stacking";
 import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
 import { isNpcAnimItem } from "./npcAnimations";
+import { webPrefabDisabledReason } from "../webBuiltin";
+import { buildComboPaletteGroup } from "./combos";
+import { variantBaseId, VARIANT_TO_BASE } from "./itemVariants";
 import { escHtml } from "./coords";
 import type { Catalog } from "../types";
 
@@ -31,73 +34,8 @@ export function applyPaletteGridCols(): void {
   cats.style.setProperty("--palette-cols", String(cols));
 }
 
-function syncVariantsButton(): void {
-  const btn = document.getElementById("btn-palette-variants");
-  const state = document.getElementById("palette-variants-state");
-  if (btn) btn.classList.toggle("active", S.showPaletteVariants);
-  if (state) state.textContent = S.showPaletteVariants ? "●" : "○";
-}
-
-/** 功能重复的 DLC 变体（换皮/同名），默认折叠在「显示 DLC 变体」按钮之后。 */
-export const CORE_PALETTE_VARIANTS = new Set([
-  // 烤箱 / 烤制工作站（换皮）
-  "dlc08_oven_02",
-  "dlc09_oven",
-  "oven_medieval",
-  "oven_furnace_medieval",
-  "workstation_furnace_01",
-  "dlc13_workstation_cooker_01",
-  // 汤锅 / 煎锅 / 炸篮 / 烤盘
-  "dlc03_utensil_pot",
-  "dlc07_utensil_pot_01",
-  "dlc08_utensil_pot_01",
-  "dlc09_utensil_pot",
-  "dlc07_utensil_frying_pan_01",
-  "dlc08_utensil_frying_pan",
-  "dlc09_utensil_frying_pan",
-  "dlc08_frierbasket",
-  "dlc09_utensil_roasting_tray",
-  // 火锅
-  "utensil_dlc10_large_pot_01",
-  "dlc10_cooking_region_floorburner",
-  // 搅拌器具 / 搅拌台
-  "dlc03_utensil_mixer",
-  "dlc07_utensil_mixer_01",
-  "dlc08_utensil_mixer_01",
-  "dlc09_utensil_mixer",
-  "dlc13_utensil_mixer_01",
-  "workstation_mixer_01",
-  "workstation_mixer_03",
-  "dlc10_workstation_mixer",
-  "dlc08_workstation_mixer",
-  "dlc13_workstation_mixer_01",
-  // 杯子 / 马克杯（换皮）
-  "dlc11_cleanglassstack",
-  "dlc11_equipment_glass_01",
-  "dlc09_cleanmugstack",
-  "dlc09_dirtymug",
-  "dlc09_dirtymugstack",
-  "dlc09_equipment_mug_01",
-  // 水槽 / 回收台（换皮）
-  "dlc13_workstation_sink_01_wood",
-  "workstation_sink_01_summer",
-  "dlc13_workstation_bin_01",
-  "dlc13_workstation_plate_return",
-  "dlc11_workstation_glass_return_01",
-  "dlc09_workstation_sink_mug_01_wood",
-  "dlc09_workstation_mug_return_winter",
-  "dlc13_workstation_plate_station",
-  // 工具
-  "dlc09_utensil_ingredient_spray",
-  "dlc10_pushable_object",
-  "utensil_dlc10_big_ol_spoon",
-  "dlc08_utensil_fire_extinguisher",
-]);
-
 export function buildPalette(catalog: Catalog, filter: string) {
   dom.paletteCats.innerHTML = "";
-  dom.paletteCats.classList.toggle("show-variants", S.showPaletteVariants);
-  syncVariantsButton();
   const q = filter.trim().toLowerCase();
 
   const groups =
@@ -115,6 +53,19 @@ export function buildPalette(catalog: Catalog, filter: string) {
   S.corePaletteGroupMeta.clear();
   for (const g of groups) {
     if (g.layoutTier === "core") S.corePaletteGroupMeta.set(g.key, g.labelZh);
+  }
+
+  // 家族皮肤计数（基础版卡片显示 ×N 徽标）：baseId → 家族内目录条目数。
+  const skinCounts = new Map<string, number>();
+  for (const it of S.catalogById.values()) {
+    const b = variantBaseId(it.id);
+    skinCounts.set(b, (skinCounts.get(b) ?? 0) + 1);
+  }
+
+  // 「联合组合」分类：核心层置顶（一次放置多个物品并自动完成联动配置）。
+  if (S.currentLayer !== "decor") {
+    const comboEl = buildComboPaletteGroup(filter);
+    if (comboEl) dom.paletteCats.appendChild(comboEl);
   }
 
   for (const group of groups) {
@@ -143,7 +94,6 @@ export function buildPalette(catalog: Catalog, filter: string) {
     details.dataset.tier = group.layoutTier;
     details.open = group.layoutTier === "core";
     const summary = document.createElement("summary");
-    summary.textContent = `${group.labelZh} (${list.length})`;
     summary.title = group.labelEn;
     details.appendChild(summary);
 
@@ -151,17 +101,22 @@ export function buildPalette(catalog: Catalog, filter: string) {
     grid.className = "palette-grid";
     details.appendChild(grid);
 
+    let shownCount = 0;
     for (const it of list) {
+      // DLC 变体合并：变体不单独出卡（家族只留基础版一张卡，右键切换皮肤）；
+      // 基础版条目缺失时保留变体卡（容忍 common_w 内容更新移除条目）。
+      const baseId = VARIANT_TO_BASE[it.id];
+      if (baseId && baseId !== it.id && S.catalogById.has(baseId)) continue;
+      // 不可用条目（旧拷贝、common_w 缺失）静默隐藏
+      const p = it.assetPath ?? "";
+      const isLegacyWeb = p.includes("/Import/prefabs/") || p.includes("/custom_web/prefabs/");
+      if (isLegacyWeb) continue;
+      if (webPrefabDisabledReason(it.id, p) !== null) continue;
       const row = document.createElement("div");
       const catName = paletteCardCategory(it.category);
       row.className = `palette-card palette-cat-${catName}`;
       if (it.layoutTier === "decor") row.classList.add("palette-decor");
-      const isVariant = CORE_PALETTE_VARIANTS.has(it.id);
-      if (isVariant) row.classList.add("palette-card-variant");
-      // 暂时屏蔽这波新增的 DLC 道具（Import 源库 / custom_web 副本）：可见但置灰禁用
-      const isDlcProp = /(\/Import\/prefabs\/|\/custom_web\/prefabs\/)/.test(it.assetPath);
-      if (isDlcProp) row.classList.add("palette-card-disabled");
-      row.draggable = !isDlcProp;
+      row.draggable = true;
       row.dataset.guid = it.guid;
       const npcAnim = isNpcAnimItem(it.id, it.nameZh);
       const sub = it.stack
@@ -169,8 +124,10 @@ export function buildPalette(catalog: Catalog, filter: string) {
         : it.layoutTier === "decor"
           ? `<div class="sub">装饰${npcAnim ? " · 🎞 自带移动动画" : ""}</div>`
           : "";
-      const badge = isDlcProp ? ' <span class="disabled-badge" title="暂时屏蔽的 DLC 道具">⛔ 禁用</span>' : "";
-      row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${isVariant ? ' <span class="variant-badge">DLC</span>' : ""}${badge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
+      const skins = skinCounts.get(it.id) ?? 1;
+      const skinBadge =
+        skins > 1 ? ` <span class="variant-badge" title="同功能换肤 ${skins} 种：放置后右键可切换">×${skins}</span>` : "";
+      row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
       if (npcAnim) {
         row.title = "自带移动动画（行走循环 / 路径动画）";
         const badgeEl = document.createElement("span");
@@ -178,17 +135,19 @@ export function buildPalette(catalog: Catalog, filter: string) {
         badgeEl.textContent = "🎞";
         row.querySelector(".zh")?.appendChild(badgeEl);
       }
-      if (!isDlcProp) {
-        row.addEventListener("dragstart", (e) => {
-          S.dragCatalog = it;
-          e.dataTransfer?.setData("text/plain", it.guid);
-        });
-        row.addEventListener("dragend", () => {
-          S.dragCatalog = null;
-        });
-      }
+      row.addEventListener("dragstart", (e) => {
+        S.dragCatalog = it;
+        e.dataTransfer?.setData("text/plain", it.guid);
+      });
+      row.addEventListener("dragend", () => {
+        S.dragCatalog = null;
+      });
       grid.appendChild(row);
+      shownCount++;
     }
+    // 全部条目都被隐藏（家族合并/不可用）时收起整个分组
+    if (shownCount === 0) continue;
+    summary.textContent = `${group.labelZh} (${shownCount})`;
     dom.paletteCats.appendChild(details);
   }
   applyPaletteGridCols();

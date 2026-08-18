@@ -35,6 +35,7 @@ export interface CatalogItem {
     | "walkway"
     | "carpet"
     | "section"
+    | "ground"
     | "conveyor"
     | "decal"
     | "airwall"
@@ -171,13 +172,13 @@ export interface LayoutItem {
   localRotationX?: number;
   localRotationY: number;
   localRotationZ?: number;
-  /** 空气墙碰撞盒中心（局部坐标），写回时还原 BoxCollider.center。 */
+  /** 空气墙碰撞盒中心（局部坐标）。 */
   colliderCenter?: LayoutVector3;
   localScale?: LayoutVector3;
   footprint?: { cellsX: number; cellsZ: number };
   walkable?: boolean;
   stubKind?: string;
-  /** 空气墙（隐形碰撞块）：应用为 1×1×1.132 的 BoxCollider，不生成 Col_Floor。 */
+  /** 空气墙：隐形碰撞块。 */
   airWall?: boolean;
   dispenser?: LayoutDispenserStub;
   conveyor?: LayoutConveyorStub;
@@ -329,6 +330,114 @@ export interface LayoutDocument {
   deathInfo?: DeathInfo;
   /** Movable object movement control (decor + items layer). */
   moveControls?: MoveControlData;
+  /** 开关联动（按钮 → 断头台/饮料机/酱料机等目标）。
+   *  id 约定同传送门："u:<instanceID>"（既有场景对象）或文档 instanceId（"new:..."）。 */
+  switchLinks?: SwitchLink[];
+  /** 按钮/压力开关 ↔ 移动组联动（顺序触发 / 运行期锁定 / 共轭对）。
+   *  仅全量保存携带（引用移动组，与 moveControls 同策略）。 */
+  buttonLinks?: ButtonLinkData;
+  /** 按钮 ↔ 事件组联动（顺序广播多事件组 / 完成门控）。
+   *  仅全量保存携带（引用场景物品）。 */
+  buttonEvents?: ButtonEventData;
+  /** 游戏相机（背景色 / FOV；仅全量保存携带）。 */
+  cameraInfo?: CameraInfo | null;
+  /** Art/Lights 非 prefab 灯光（颜色/强度/范围/启用；仅全量保存携带）。 */
+  lights?: LightInfo[];
+}
+
+/** 游戏相机信息：背景色与 FOV 可编辑，transform 为只读快照（绘制视野用）。 */
+export interface CameraInfo {
+  /** "#rrggbb" — 相机 clear 色（空洞主题下即游戏背景色）。 */
+  backgroundColor: string;
+  fieldOfView: number;
+  /** 只读：主相机世界位置与欧拉角快照（度）。 */
+  position: LayoutVector3;
+  pitch: number;
+  yaw: number;
+  roll: number;
+  nearClip: number;
+  farClip: number;
+}
+
+/** Art/Lights 子树中非 prefab instance 的灯光（prefab 灯作为普通 item 往返）。 */
+export interface LightInfo {
+  /** 场景层级路径（如 "Art/Lights/day"），写回按路径匹配。 */
+  hierarchyPath: string;
+  displayName: string;
+  /** LightType 枚举值（0=Spot 1=Directional 2=Point 3=Area）。 */
+  lightType: number;
+  color: string;
+  intensity: number;
+  range: number;
+  spotAngle: number;
+  enabled: boolean;
+  /** 只读：世界欧拉角快照（度）。 */
+  eulerAngles: LayoutVector3;
+}
+
+export interface SwitchLink {
+  /** 开关对象（按钮/Switch stub 所在物品）。 */
+  switchId: string;
+  /** 被触发的目标对象。 */
+  targetId: string;
+  /** 触发消息名（TriggerOnObject.m_triggerToFire；缺省后端按 "Switch" 处理）。 */
+  trigger?: string;
+}
+
+// ---------- Button ↔ MoveGroup links（按钮/压力开关 联动移动组） ----------
+
+/** 按钮/压力开关 → 移动组联动。
+ *  顺序触发：每按一次按 groupNames 顺序启动下一组（最后一组后循环回第一组）；
+ *  lockUntilFinished：组运行期间忽略按压（组完成后才接受下一次）。
+ *  共轭对：两个 link 共享 pairId（一对一），每个按钮各绑 2 个移动组——
+ *  按下时两组同时启动，两组全部完成后对方按钮抬起、本按钮按下（反之亦然）。 */
+export interface ButtonLink {
+  id: string;
+  /** 触发源物品 instanceId（Switch / PressureSwitch）。 */
+  sourceId: string;
+  /** 按顺序触发的移动组 displayName 列表（displayName 是跨保存的稳定键）。 */
+  groupNames: string[];
+  /** true = 移动组运行期间忽略按压（完成后才接受下一次按压）。 */
+  lockUntilFinished: boolean;
+  /** 共轭对 id（两个 link 共享；空/缺省 = 非共轭）。 */
+  pairId?: string;
+  /** 共轭对中本按钮初始为抬起（可按）状态。 */
+  pairStartsUp?: boolean;
+}
+
+export interface ButtonLinkData {
+  links: ButtonLink[];
+}
+
+// ---------- 按钮事件组（按钮 → 多事件组顺序广播） ----------
+
+/** 事件组内单条事件：按下按钮时对目标物品广播 trigger；
+ *  doneTrigger 非空时目标完成该事件会广播 doneTrigger，组内全部事件完成后按钮才可再按。 */
+export interface ButtonEvent {
+  /** 目标物品 instanceId（"u:<instanceID>" 或文档 instanceId）。 */
+  targetId: string;
+  /** 广播给目标的触发消息（如 switch_dlc08_drink_machine_1）。 */
+  trigger: string;
+  /** 目标完成事件时广播的触发消息（可选；不配 = 该事件立即视为完成）。 */
+  doneTrigger?: string;
+}
+
+export interface ButtonEventGroup {
+  id: string;
+  events: ButtonEvent[];
+}
+
+/** 按钮 ↔ 事件组联动：每次按压按顺序广播下一事件组的全部事件（最后一组后循环回第一组）；
+ *  组内全部事件完成（doneTrigger 或立即完成）后才接受下一次按压。 */
+export interface ButtonEventLink {
+  id: string;
+  /** 触发源物品 instanceId（Switch / PressureSwitch）。 */
+  sourceId: string;
+  groups: ButtonEventGroup[];
+}
+
+export interface ButtonEventData {
+  links: ButtonEventLink[];
 }
 
 export type SurfaceKind =
@@ -390,8 +499,7 @@ export interface FloorObject {
   /** Image rotation in degrees, snapped to 90° steps (0/90/180/270, clockwise
    *  viewed from above). Default 0. */
   imageRotation?: number;
-  /** 空气地板：仅有可行走 Col_AirFloor 碰撞盒（Ground 层，几何与普通 Col_Floor
-   *  相同），无可见 Plane。写回时只生成碰撞盒，不建可见面。 */
+  /** 空气地板：不可见，仅可行走。 */
   airFloor?: boolean;
 }
 
@@ -459,6 +567,9 @@ export interface IngredientEntry {
   assetPath: string;
   group?: FoodGroup;
   icon?: boolean;
+  /** node 型食材（SO 目标是 bundle 内 OrderDefinitionNode 而非 .prefab）：
+   *  无实体 prefab，食材箱/食材生成器无法生成，只能经加工或专属机器产出。 */
+  nodeOnly?: boolean;
 }
 
 export interface RecipeEntry {
@@ -473,6 +584,8 @@ export interface RecipeEntry {
   ingredients?: string[];
   /** Direct composition ids for custom recipes (sub-recipe ids and/or ingredient ids). */
   compositionIds?: string[];
+  /** 工序分组（构建期生成；web/custom 菜谱用于菜谱卡与锅具装填）。 */
+  cookingGroups?: RecipeCookingGroup[];
   ingredientCount?: number;
   cookingStepCount?: number;
   score?: number;
@@ -482,6 +595,8 @@ export interface RecipeEntry {
   type?: string;
   /** score-0 半成品（面糊/炸物部件/自选披萨部件），不可作为关卡菜谱 */
   intermediate?: boolean;
+  /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（卡片显示双步骤）。 */
+  mixing?: boolean;
   icon?: boolean;
 }
 
@@ -760,7 +875,7 @@ export interface CustomRecipeSummary {
   mixingIconId?: string;
   hasIcon: boolean;
   hasModel: boolean;
-  /** 模型在游戏中的缩放/旋转/位置（应用到 prefab 根节点，运行时直接生效）。 */
+  /** 模型在游戏中的缩放/旋转/位置。 */
   modelScale: number;
   modelRotationY: number;
   modelRotationX: number;
@@ -830,7 +945,7 @@ export interface CustomRecipeReferenceEntry {
 export interface CustomRecipeReferences {
   cookingSteps: CustomRecipeReferenceEntry[];
   platingSteps: CustomRecipeReferenceEntry[];
-  /** 装盘容器（盘子/杯子等），运行时映射为 PlatingStepData。 */
+  /** 装盘容器（盘子/杯子等）。 */
   platingContainers: CustomRecipeReferenceEntry[];
   icons: CustomRecipeReferenceEntry[];
   reusableModels: CustomRecipeReferenceEntry[];
@@ -840,7 +955,7 @@ export interface CustomRecipeReferences {
 // ---------- Web 内置菜谱库（内置菜谱管理） ----------
 
 export interface WebRecipeEntry {
-  /** Import 源库 guid（安装时用于定位源资产）。 */
+  /** common_w 源库 guid。 */
   guid: string;
   id: string;
   nameZh: string;
@@ -855,7 +970,7 @@ export interface WebRecipeEntry {
   dupKey: string;
   /** 是否为本菜组代表（同组内取最高 DLC）。 */
   representative: boolean;
-  /** 本关卡集 custom_web 是否已有副本。 */
+  /** 是否存在历史 custom_web 旧副本。 */
   installed: boolean;
   /** 已装副本 guid（未装为空）。 */
   installedGuid: string;

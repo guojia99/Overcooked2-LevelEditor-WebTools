@@ -15,6 +15,8 @@ export interface SummaryCardGroup {
   stepIcons: string[];
   /** URL strings for ingredient icons. */
   ingredientUrls: string[];
+  /** 食材级步骤角标 URL（与 ingredientUrls 一一对应；[] = 无角标）。 */
+  ingredientStepIcons?: string[][];
 }
 
 export interface SummaryCard {
@@ -69,6 +71,7 @@ const CHIP_GAP = 10;
 const STEP_ICON = 22;
 const STEP_GAP = 6;
 const STEP_MT = 2;
+const CHIP_BADGE = 14;
 const STEP_PAD_B = 8;
 const ACCENT_COLOR = "#e8b04b";
 const TITLE_COLOR = "#fdf3dd";
@@ -419,11 +422,21 @@ function buildSvg(data: SummaryExportData, layout: Layout, imgs: Map<string, Loa
         const totalW = n * CHIP + Math.max(0, n - 1) * CHIP_GAP;
         let ix = g.x + (g.w - totalW) / 2;
         const iy = g.y + (g.hasStep ? 0 : Math.max(0, (g.h - CHIP) / 2));
-        for (const u of group.ingredientUrls) {
+        for (let uIdx = 0; uIdx < group.ingredientUrls.length; uIdx++) {
+          const u = group.ingredientUrls[uIdx];
           const img = imgs.get(u);
           if (img) {
             const fit = fitRect(img.w, img.h, CHIP, CHIP);
             parts.push(`<image href="${img.dataUrl}" x="${Math.round(ix + (CHIP - fit.w) / 2)}" y="${Math.round(iy + (CHIP - fit.h) / 2)}" width="${Math.round(fit.w)}" height="${Math.round(fit.h)}"/>`);
+          }
+          // 食材级步骤角标（如炒饭的米 → Pot）：食材图标右下角小图标
+          const badgeUrls = (group.ingredientStepIcons ?? [])[uIdx] ?? [];
+          for (const bu of badgeUrls) {
+            const bimg = imgs.get(bu);
+            if (bimg) {
+              const bfit = fitRect(bimg.w, bimg.h, CHIP_BADGE, CHIP_BADGE);
+              parts.push(`<image href="${bimg.dataUrl}" x="${Math.round(ix + CHIP - bfit.w)}" y="${Math.round(iy + CHIP - bfit.h)}" width="${Math.round(bfit.w)}" height="${Math.round(bfit.h)}"/>`);
+            }
           }
           ix += CHIP + CHIP_GAP;
         }

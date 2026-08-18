@@ -18,16 +18,25 @@ import {
   finalizeFloor
 } from "./floors";
 import { raftPiecesForRect } from "../raft";
+import { STUB_KIND_BY_PREFAB_ID } from "./stubControls";
 import type {
   LayoutItem,
   FloorObject,
   LayoutDocument,
-  MoveControlData
+  MoveControlData,
+  ButtonLinkData,
+  ButtonEventData
 } from "../types";
 
 export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz, ...rest }: EditorItem): LayoutItem {
   const fp = resolveFootprint(rest);
   const cat = S.catalogByGuid.get(rest.prefabGuid);
+  // 新放置物品 stubKind 为空：按 prefab id 映射补默认 stubKind（回收台/容器堆等
+  // wrapper 无专属 stub 的道具靠它让后端补挂组件），已显式设置的优先。
+  if (!rest.stubKind) {
+    const mapId = cat?.id ?? "";
+    if (mapId && STUB_KIND_BY_PREFAB_ID[mapId]) rest.stubKind = STUB_KIND_BY_PREFAB_ID[mapId];
+  }
   // Raft planks already expanded below are walkable:false; other floor prefabs stay walkable.
   const isRaftPlank = cat?.surfaceKind === "raft";
   // 空气墙是隐形碰撞块，不生成可行走 Col_Floor
@@ -139,6 +148,18 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     return { groups: S.moveControls };
   };
 
+  // 按钮↔移动组联动引用移动组，与 moveControls 一样只在全量保存时携带。
+  const buttonLinkDoc = (): ButtonLinkData | undefined => {
+    if (only) return undefined;
+    return { links: S.buttonLinks };
+  };
+
+  // 按钮↔事件组联动引用场景物品，与 moveControls 一样只在全量保存时携带。
+  const buttonEventDoc = (): ButtonEventData | undefined => {
+    if (only) return undefined;
+    return { links: S.buttonEvents };
+  };
+
   if (only === "items" || only === "decor") {
     return {
       sceneAssetPath: S.scenePath,
@@ -147,6 +168,8 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
         .map(serializeItemForDoc),
       floors: undefined,
       moveControls: moveDoc(),
+      // 开关联动随 items/decor 作用域一起写（链接两端都在物品层）
+      switchLinks: S.switchLinks,
     };
   }
 
@@ -178,6 +201,14 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     items: S.items.map(serializeItemForDoc).concat(raftItems).concat(themedItems),
     floors: serializeFloorsForDoc(),
     moveControls: moveDoc(),
+    switchLinks: S.switchLinks,
+    buttonLinks: buttonLinkDoc(),
+    buttonEvents: buttonEventDoc(),
+    // 相机与灯光仅随全量写回（作用域保存不携带，Unity 侧 likewise no-op）。
+    // cameraInfo 为 null 时省略字段（JSON.stringify 丢弃 undefined），
+    // 后端 JsonUtility 对缺失字段得 null → ApplyCameraInfo no-op。
+    cameraInfo: S.cameraInfo ?? undefined,
+    lights: S.lights,
   };
 }
 
