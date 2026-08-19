@@ -304,6 +304,8 @@ export const S = {
   clipboard: [] as EditorItem[],
   pasteRound: 0,
   floorClipboard: [] as EditorFloor[],
+  /** 地板层复制携带的地板层物品（压力开关等 surface 物品，随地板一起复制/粘贴）。 */
+  floorItemClipboard: [] as EditorItem[],
   floorPasteRound: 0,
   sceneItemListSig: "",
   paletteCollapsed: localStorage.getItem("paletteCollapsed") === "1",

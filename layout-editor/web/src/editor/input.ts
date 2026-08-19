@@ -324,7 +324,9 @@ export function setupCanvas() {
         draw();
         return;
       }
-      const fHit = keepFloor ?? fHits[0] ?? null;
+      // 聚焦优先级：已选中的地板 > 已选中的地板层物品 > 最上层地板。
+      // 否则重叠时点击已选中的物品（如压力开关）会被其下方的地板抢走焦点。
+      const fHit = keepFloor ?? (keepItem ? null : fHits[0]) ?? null;
       if (fHit) {
         S.dragSnapshot = snapshotState();
         clearSelection();
@@ -551,7 +553,9 @@ export function setupCanvas() {
         draw();
         return;
       }
-      const fHit = keepFloor ?? fHits[0] ?? null;
+      // 聚焦优先级：已选中的地板 > 已选中的地板层物品 > 最上层地板。
+      // 否则重叠时点击已选中的物品（如压力开关）会被其下方的地板抢走焦点。
+      const fHit = keepFloor ?? (keepItem ? null : fHits[0]) ?? null;
       if (fHit) {
         setFloorSelection([fHit.floor._key]);
         openFloorEditorModal(fHit.floor);

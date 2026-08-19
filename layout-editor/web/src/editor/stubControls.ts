@@ -110,6 +110,7 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   // 容器堆变体（wrapper 无专属 stub，靠 stubKind 让后端补挂组件并推断容器 SO）
   dlc08_cleantraystack: "CleanPlateStack",
   cleanmugstack: "CleanPlateStack",
+  dlc09_cleanmugstack: "CleanPlateStack",
   cleanglassstack: "CleanPlateStack",
   dlc11_cleanglassstack: "CleanPlateStack",
   // 脏堆变体：自包含 DirtyPlateStack（真实 prefab 无独立盘子），不走 CleanPlateStack
@@ -133,7 +134,13 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   // DLC8 按钮（断头台/果汁机/酱料机的触发开关）按 Switch 处理
   p_dlc08_button_drinks: "Switch",
   p_dlc08_button_condiments: "Switch",
+  // 大炮开关（Unity 里带五角星标志的发射按钮）：只联动大炮，触发名 Launch
+  p_dlc08_button_cannon: "CannonSwitch",
+  p_dlc09_button_cannon: "CannonSwitch",
   PressureSwitch: "PressureSwitch",
+  // DLC13 莲花压力开关（大/小）：压力开关特殊地板，保持为物品不并入主题地板
+  dlc13_lotuspressureswitch_large: "PressureSwitch",
+  dlc13_lotuspressureswitch_small: "PressureSwitch",
   MultiControlTerminal: "Terminal",
 };
 
@@ -170,9 +177,32 @@ function specialDispenserType(item: EditorItem): "condiment" | "drink" | "" {
 }
 
 export function stubKindOf(item: EditorItem): string {
-  if (item.stubKind) return item.stubKind;
+  if (item.stubKind) {
+    // 喷雾喷罐被（历史/误配）标成锅具时，绝不按 CookingUtensil 处理（宿主 Setup NRE）
+    if (item.stubKind === "CookingUtensil" && isIngredientSprayId(prefabIdFromPath(item.prefabAssetPath)))
+      return "";
+    return item.stubKind;
+  }
   const prefabId = prefabIdFromPath(item.prefabAssetPath);
   return STUB_KIND_BY_PREFAB_ID[prefabId] ?? "";
+}
+
+/** 大炮开关（Unity 里带五角星标志的发射按钮）：只联动大炮，触发名 Launch。 */
+export function isCannonSwitch(item: EditorItem): boolean {
+  return stubKindOf(item) === "CannonSwitch";
+}
+
+/** 喷雾喷罐（奶油喷罐）真实 prefab 无 IngredientContainer，不是锅具容器，
+ *  宿主 PseudoPrefabCookingUtensil.Setup 会对无容器的 child 抛 NRE。
+ *  这些 id 绝不按 CookingUtensil 处理。 */
+export function isIngredientSprayId(id: string | undefined): boolean {
+  return id === "utensil_ingredient_spray_01" || id === "dlc09_utensil_ingredient_spray";
+}
+
+/** 大炮目标（dlc08/dlc09）：联动触发消息默认 Launch（ServerCannon.m_launchTrigger）。 */
+export function isCannonTarget(item: EditorItem): boolean {
+  const id = prefabIdFromPath(item.prefabAssetPath);
+  return id === "dlc08_cannon" || id === "dlc09_cannon";
 }
 
 export function isCollisionItem(it: EditorItem): boolean {
@@ -372,20 +402,22 @@ export function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-rand" ${b.randomTargetOrder ? "checked" : ""}/> 随机目标顺序</label>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-hide" ${b.hideVisual ? "checked" : ""}/> 隐藏模型</label></div>`;
     }
-    case "Switch": {
+    case "Switch":
+    case "CannonSwitch": {
+      const isCannon = kind === "CannonSwitch";
       const sw = item.switchStub ?? {};
       const matHtml = switchMaterialHtml(item);
-      return `<div class="ctx-stub"><div class="ctx-stub-title">开关参数</div>
+      return `<div class="ctx-stub"><div class="ctx-stub-title">${isCannon ? "大炮开关参数" : "开关参数"}</div>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-sw-start" ${sw.startEnabled !== false ? "checked" : ""}/> 初始开启</label>
         ${matHtml}
-        <div class="ctx-stub-title" style="margin-top:6px">联动目标（断头台/饮料机等）</div>
+        <div class="ctx-stub-title" style="margin-top:6px">联动目标${isCannon ? "（大炮，触发消息 Launch）" : "（断头台/饮料机等）"}</div>
         <div id="ctx-sw-links"></div>
         <label class="ctx-stub-row"><select id="ctx-sw-linktarget" class="ctx-input"></select>
           <button type="button" class="ctx-btn" id="ctx-sw-linkadd">添加</button></label>
-        <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" value="Switch" placeholder="Switch"/></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">按下按钮时对目标对象广播该消息（默认 Switch）</div>
-        ${buttonEventSummaryHtml(item)}
-        ${buttonLinkSummaryHtml(item)}</div>`;
+        <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" value="Launch" placeholder="Launch"/></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">按下按钮时对目标对象广播该消息${isCannon ? "（大炮须为 Launch，对应游戏内发射触发）" : "（默认 Switch）"}</div>
+        ${isCannon ? "" : buttonEventSummaryHtml(item)}
+        ${isCannon ? "" : buttonLinkSummaryHtml(item)}</div>`;
     }
     case "PressureSwitch": {
       const matHtml = pressureSwitchMaterialHtml(item);
@@ -770,9 +802,11 @@ export function wireStubControls(item: EditorItem) {
       });
       break;
     }
-    case "Switch": {
+    case "Switch":
+    case "CannonSwitch": {
+      const isCannon = kind === "CannonSwitch";
       const ensure = () => {
-        item.stubKind = "Switch";
+        item.stubKind = kind;
         if (!item.switchStub) item.switchStub = {};
         return item.switchStub;
       };
@@ -831,7 +865,7 @@ export function wireStubControls(item: EditorItem) {
         const sel = document.getElementById("ctx-sw-linktarget") as HTMLSelectElement | null;
         if (sel) sel.innerHTML = linkTargetOptsHtml();
         const trig = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
-        if (trig && document.activeElement !== trig) trig.value = myLinks()[0]?.trigger ?? "Switch";
+        if (trig && document.activeElement !== trig) trig.value = myLinks()[0]?.trigger ?? (isCannon ? "Launch" : "Switch");
       };
       refreshLinks();
       num("ctx-sw-linkadd")?.addEventListener("click", () => {
@@ -841,11 +875,16 @@ export function wireStubControls(item: EditorItem) {
         pushHistory();
         const trigInput = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
         let trigger = trigInput?.value.trim() || "";
-        // 未自定义时按约定命名：switch_{目标prefabId}_{N}（N = 该开关已有链接数 + 1）
+        // 未自定义时：目标为大炮 → Launch（对应 ServerCannon.m_launchTrigger），
+        // 否则按约定命名 switch_{目标prefabId}_{N}（N = 该开关已有链接数 + 1）
         if (!trigger || trigger === "Switch") {
           const target = S.items.find((i) => i.instanceId === tid);
-          const prefabId = target ? prefabIdFromPath(target.prefabAssetPath) ?? "item" : "item";
-          trigger = `switch_${prefabId}_${myLinks().length + 1}`;
+          if (target && isCannonTarget(target)) {
+            trigger = "Launch";
+          } else {
+            const prefabId = target ? prefabIdFromPath(target.prefabAssetPath) ?? "item" : "item";
+            trigger = `switch_${prefabId}_${myLinks().length + 1}`;
+          }
           if (trigInput) trigInput.value = trigger;
         }
         S.switchLinks.push({ switchId: myId, targetId: tid, trigger });
@@ -853,7 +892,7 @@ export function wireStubControls(item: EditorItem) {
         refreshLinks();
       });
       num("ctx-sw-trigger")?.addEventListener("change", () => {
-        const trig = (document.getElementById("ctx-sw-trigger") as HTMLInputElement).value.trim() || "Switch";
+        const trig = (document.getElementById("ctx-sw-trigger") as HTMLInputElement).value.trim() || (isCannon ? "Launch" : "Switch");
         const links = myLinks();
         if (!links.length) return;
         pushHistory();

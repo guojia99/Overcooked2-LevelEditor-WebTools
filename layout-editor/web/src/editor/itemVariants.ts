@@ -4,7 +4,9 @@
  *
  * 基准规则（与用户约定）：
  *  - 有核心版（common01/02）的家族用核心版：煎锅→FryPan、烤箱→Oven、玻璃杯堆→CleanGlassStack。
- *  - 纯 DLC 家族用最高 DLC 版：马克杯堆→dlc09_cleanmugstack、脏玻璃杯堆→dlc11_dirtyglassstack。
+ *  - 纯 DLC 家族用最高 DLC 版：脏玻璃杯堆→dlc11_dirtyglassstack。
+ *  - 马克杯家族默认用核心/非 DLC 版（cleanmugstack/equipment_mug_01/dirtymugstack/dirtymug/
+ *    马克杯水槽/马克杯回收台真实 prefab 为 bundle210/dlc03，dlc09 为换皮变体）。
  *  - 例外不合并（各自独立出卡）：饮料机/汽水机/酱料机（dlc 各自一套可输出内容）、
  *    开关/压力开关、断头台。
  *
@@ -72,18 +74,18 @@ export const VARIANT_TO_BASE: Record<string, string> = {
   dlc08_workstation_mixer: "Mixer",
   dlc10_workstation_mixer: "Mixer",
   dlc13_workstation_mixer_01: "Mixer",
-  // 水槽 → 核心 Sink；马克杯水槽（纯 DLC 家族 → 最高 dlc09）
+  // 水槽 → 核心 Sink；马克杯水槽（核心版为默认，dlc09 为换皮）
   dlc13_workstation_sink_01_wood: "Sink",
   workstation_sink_01_summer: "Sink",
-  workstation_sink_mug_01_wood: "dlc09_workstation_sink_mug_01_wood",
+  dlc09_workstation_sink_mug_01_wood: "workstation_sink_mug_01_wood",
   // 洗餐盘水槽（纯 DLC 家族：普通 Sink 洗不了餐盘，不与 Sink 合并；三款皮肤合一）
   dlc08_workstation_02_tray_sink_circus: "dlc08_workstation_01_tray_sink_circus",
   dlc08_workstation_03_tray_sink_circus: "dlc08_workstation_01_tray_sink_circus",
   // 垃圾桶 → 核心 Bin
   dlc13_workstation_bin_01: "Bin",
-  // 回收台 / 上菜台
+  // 回收台 / 上菜台（马克杯回收台默认核心版，dlc09 为换皮）
   dlc13_workstation_plate_return: "PlateReturn",
-  workstation_mug_return: "dlc09_workstation_mug_return_winter",
+  dlc09_workstation_mug_return_winter: "workstation_mug_return",
   workstation_glass_return_01: "GlassReturn",
   dlc11_workstation_glass_return_01: "GlassReturn",
   dlc13_workstation_plate_station: "ServingStation",
@@ -94,11 +96,12 @@ export const VARIANT_TO_BASE: Record<string, string> = {
   dlc11_equipment_glass_01: "Glass",
   // 脏玻璃杯堆（纯 DLC 家族 → 最高 dlc11）
   dirtyglassstack: "dlc11_dirtyglassstack",
-  // 马克杯家族（纯 DLC → 最高 dlc09）
-  cleanmugstack: "dlc09_cleanmugstack",
-  dirtymugstack: "dlc09_dirtymugstack",
-  equipment_mug_01: "dlc09_equipment_mug_01",
-  dirtymug: "dlc09_dirtymug",
+  // 马克杯家族（默认用核心/非 DLC 版：cleanmugstack / equipment_mug_01 /
+  // dirtymugstack / dirtymug 真实 prefab 为 bundle210/dlc03，dlc09 为换皮变体）
+  dlc09_cleanmugstack: "cleanmugstack",
+  dlc09_equipment_mug_01: "equipment_mug_01",
+  dlc09_dirtymugstack: "dirtymugstack",
+  dlc09_dirtymug: "dirtymug",
   // 工具 → 核心 FireExtinguisher / WaterGun / Bellows
   utensil_fire_extinguisher_02: "FireExtinguisher",
   dlc08_utensil_fire_extinguisher: "FireExtinguisher",

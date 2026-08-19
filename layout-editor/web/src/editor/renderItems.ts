@@ -23,7 +23,8 @@ import {
   drawLabelInBox,
   itemLabel,
   drawDispenserIngredient,
-  drawCatalogItemIcon
+  drawCatalogItemIcon,
+  drawCannonSwitchStarIcon
 } from "./labels";
 import {
   isCollisionItem,
@@ -178,7 +179,7 @@ export function drawItem(item: EditorItem, selected: boolean) {
   if (isPlayer) {
     drawLabelInBox(dom.ctx, itemLabel(item), bw - 4, bh - 4);
   } else {
-    const drawn = drawDispenserIngredient(dom.ctx, item, bw, bh) || drawCatalogItemIcon(dom.ctx, cat, item, bw, bh);
+    const drawn = drawDispenserIngredient(dom.ctx, item, bw, bh) || drawCatalogItemIcon(dom.ctx, cat, item, bw, bh) || drawCannonSwitchStarIcon(dom.ctx, item, bw, bh);
     if (!drawn) {
       drawLabelInBox(dom.ctx, itemLabel(item), bw - 4, bh - 4);
     }
@@ -487,6 +488,7 @@ export const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: stri
   { match: (it) => stubKindOf(it) === "Flamethrower", type: "喷火器", color: "#e85b5b" },
   { match: (it) => stubKindOf(it) === "Burner", type: "喷射器", color: "#d97742" },
   { match: (it) => stubKindOf(it) === "CleanPlateStack", type: "盘堆", color: "#8db8e8" },
+  { match: (it) => stubKindOf(it) === "CannonSwitch", type: "大炮开关", color: "#e8a14b" },
   { match: (it) => stubKindOf(it) === "Switch", type: "开关", color: "#e8cf5b" },
   { match: (it) => stubKindOf(it) === "PressureSwitch", type: "压力开关", color: "#5be8b5" },
   { match: (it) => stubKindOf(it) === "Terminal", type: "终端", color: "#c75be8" },

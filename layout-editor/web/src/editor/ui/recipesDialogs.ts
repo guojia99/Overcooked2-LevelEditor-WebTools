@@ -19,7 +19,8 @@ import {
   leafIngredientIds,
   CREAM_SPRAY_IDS,
   CREAM_SPRAY_DEFAULT_ID,
-  CREAM_INGREDIENT_IDS
+  CREAM_INGREDIENT_IDS,
+  isRecipeDlcBlocked
 } from "../recipeKnowledge";
 import { comboById, addCombo } from "../combos";
 import {
@@ -104,6 +105,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   }
 
   const selected = new Set<string>(level?.recipeGuids ?? []);
+  // 默认屏蔽重复 DLC 换皮（同一道菜的多个 DLC 皮肤只保留首选一版，已选的不隐藏）。
+  let blockDupDlc = true;
   let orderable: RecipeEntry[] = [];
   let byGuid = new Map<string, RecipeEntry>();
   /** id → 菜谱/中间产物条目：套餐等组成项里查不到食材表的（FriedMeat 等
@@ -237,6 +240,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const lower = q.toLowerCase();
     const vis = (items: RecipeEntry[]) =>
       items.filter((r) => {
+        // 默认屏蔽重复 DLC 换皮（已勾选的不隐藏，便于查看/取消）
+        if (blockDupDlc && isRecipeDlcBlocked(r) && !selectedIds.has(r.id)) return false;
         if (!lower) return true;
         const hay = `${r.nameZh} ${r.nameEn ?? ""} ${r.id} ${(r.ingredients ?? []).join(" ")}`.toLowerCase();
         return hay.includes(lower);
@@ -655,6 +660,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       const q = (document.getElementById("rw-search") as HTMLInputElement)?.value.trim().toLowerCase() ?? "";
       el.innerHTML = `<div class="rw-toolbar">
           <input type="search" id="rw-search" class="rw-search" value="${escHtml(q)}" placeholder="搜索菜谱 / 食材…" autocomplete="off">
+          ${activeTab === "select" ? `<button type="button" class="rw-collapse-all" id="rw-block-dup" title="${blockDupDlc ? "同一道菜的多个 DLC 皮肤只保留首选一版（热狗保留 DLC8、热可可保留 DLC3、火锅保留 DLC10、烤菜/布丁保留 DLC7/DLC3、水果拼盘保留 DLC4）" : "显示所有 DLC 皮肤变体"}">${blockDupDlc ? "屏蔽重复DLC ✓" : "显示重复DLC"}</button>` : ""}
           ${activeTab === "select" ? '<button type="button" class="rw-collapse-all" id="rw-collapse-all">收起全部</button>' : ""}
         </div>
         <div class="rw-list" id="rw-list">${listHtmlFor(q)}</div>`;
@@ -717,6 +723,10 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
 
   const wireList = (_q: string) => {
     document.getElementById("rw-search")?.addEventListener("input", () => render());
+    document.getElementById("rw-block-dup")?.addEventListener("click", () => {
+      blockDupDlc = !blockDupDlc;
+      render();
+    });
     const listEl = document.getElementById("rw-list");
     if (!listEl) return;
     listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {

@@ -150,7 +150,9 @@ public static class LayoutEditorStubIO
         }
 
         var utensil = go.GetComponent<PseudoPrefabCookingUtensilStub>();
-        if (utensil != null)
+        // 喷雾喷罐被（历史/误配）标成锅具时不作为锅具导出：保持普通道具
+        // （宿主 CookingUtensil.Setup 对无容器的 child 会 NRE）。
+        if (utensil != null && !LayoutEditorCookingUtensilGuard.IsIngredientSpray(utensil.pseudoPrefabSO))
         {
             item.stubKind = "CookingUtensil";
             var udto = new LayoutCookingUtensilStubDto { capacity = utensil.capacity };
@@ -232,7 +234,12 @@ public static class LayoutEditorStubIO
         var switchStub = go.GetComponent<PseudoPrefabSwitchStub>();
         if (switchStub != null)
         {
-            item.stubKind = "Switch";
+            // 大炮开关（Unity 里带五角星标志的发射按钮）与普通开关共用
+            // PseudoPrefabSwitchStub，按 prefabName 区分导出类型（往返不丢类型）。
+            var so = switchStub.pseudoPrefabSO;
+            var prefabName = so != null ? so.prefabName : string.Empty;
+            item.stubKind = (prefabName == "p_dlc08_button_cannon" || prefabName == "p_dlc09_button_cannon")
+                ? "CannonSwitch" : "Switch";
             var sdto = new LayoutSwitchStubDto { startEnabled = switchStub.startEnabled };
             if (switchStub.activeMaterial != null)
                 sdto.activeMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(switchStub.activeMaterial));
@@ -470,13 +477,16 @@ public static class LayoutEditorStubIO
         {
             // 防御：真实 prefab 不是锅具容器（无 IngredientContainer，如喷雾/搅拌工作站被
             // 误配成锅具）时，宿主 PseudoPrefabCookingUtensil.Setup 会 NRE。跳过锅具参数，
-            // 保持基础道具（与 CookingUtensilGuard 的降级逻辑一致）。
+            // 保持基础道具（与 CookingUtensilGuard 的降级逻辑一致）。喷雾喷罐按 prefabName
+            // 直接排除（编辑模式 bundle 未加载时按 SO 判定，不依赖容器检查）。
             var probeSo = go.GetComponent<PseudoPrefabCookingUtensilStub>();
             var probeBase = FindExactBaseStub(go);
             var cuSo = probeSo != null && probeSo.pseudoPrefabSO != null
                 ? probeSo.pseudoPrefabSO
                 : (probeBase != null ? probeBase.pseudoPrefabSO : null);
-            if (cuSo != null && !LayoutEditorCookingUtensilGuard.RealPrefabHasIngredientContainer(cuSo))
+            if (cuSo != null &&
+                (LayoutEditorCookingUtensilGuard.IsIngredientSpray(cuSo) ||
+                 !LayoutEditorCookingUtensilGuard.RealPrefabHasIngredientContainer(cuSo)))
             {
                 LayoutEditorLog.LogWarning("[LayoutEditor] 跳过锅具参数：该道具的真实 prefab 不是锅具容器" +
                     "（无 IngredientContainer）: " + go.name + "（" + cuSo.name + "）。如需多食材容器请换用锅/搅拌碗/烤盘等。");
@@ -684,7 +694,7 @@ public static class LayoutEditorStubIO
             burner.hideVisual = item.burner.hideVisual;
         }
 
-        if (item.stubKind == "Switch" && item.switchStub != null)
+        if ((item.stubKind == "Switch" || item.stubKind == "CannonSwitch") && item.switchStub != null)
         {
             var sw = go.GetComponent<PseudoPrefabSwitchStub>();
             if (sw == null)
@@ -932,10 +942,20 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(sw, "Layout Editor Switch Link");
             string trigger;
-            sw.triggerOnObject = triggerBySwitch.TryGetValue(switchId, out trigger) && !string.IsNullOrEmpty(trigger)
+            string resolvedTrigger = triggerBySwitch.TryGetValue(switchId, out trigger) && !string.IsNullOrEmpty(trigger)
                 ? trigger
                 : "Switch";
+            sw.triggerOnObject = resolvedTrigger;
             sw.objectToTrigger = perSwitch[switchId].ToArray();
+
+            // 游戏编译的运行时接线组件（随场景保存，游戏包内也生效）：完成伪根→child
+            // 触发转发、机器监听字段、大炮 Cannon.m_button / 瞄准 / 发射按钮门控。
+            // 类在游戏程序集（Assembly-CSharp，经 Assembly-CSharp-Patch 编译）。
+            var linker = switchGo.GetComponent<LayoutRuntimeSwitchLink>();
+            if (linker == null)
+                linker = switchGo.AddComponent<LayoutRuntimeSwitchLink>();
+            linker.m_targetRoots = perSwitch[switchId].ToArray();
+            linker.m_trigger = resolvedTrigger;
         }
     }
 

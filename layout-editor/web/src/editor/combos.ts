@@ -44,6 +44,17 @@ function linkSwitch(ingredientIds?: string[]) {
   };
 }
 
+/** 大炮 + 大炮开关（1:1）：星形发射按钮联动大炮，触发消息 Launch
+ *  （对应 ServerCannon.m_launchTrigger，Play 期补丁同步）。 */
+function linkCannonSwitch(items: EditorItem[]): void {
+  const cannon = items[0];
+  const sw = items[1];
+  sw.stubKind = "CannonSwitch";
+  if (!sw.switchStub) sw.switchStub = {};
+  sw.switchStub.startEnabled = true;
+  S.switchLinks.push({ switchId: sw.instanceId, targetId: cannon.instanceId, trigger: "Launch" });
+}
+
 /** 两个传送门互为出口（双向传送）。 */
 function linkTeleportalPair(items: EditorItem[]): void {
   const [a, b] = items;
@@ -116,6 +127,16 @@ export const COMBOS: ComboDef[] = [
       { id: "Switch", dx: 3, dz: 0 },
     ],
     link: linkSwitch(),
+  },
+  {
+    id: "cannon_switch",
+    nameZh: "大炮 + 大炮开关",
+    hint: "自动联动：星形发射按钮按下 → 大炮发射（trigger: Launch，1:1）",
+    parts: [
+      { id: "dlc08_cannon", dx: 0, dz: 0 },
+      { id: "p_dlc08_button_cannon", dx: 3, dz: 0 },
+    ],
+    link: linkCannonSwitch,
   },
   {
     id: "teleportal_pair",

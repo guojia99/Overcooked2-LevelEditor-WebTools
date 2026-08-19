@@ -281,7 +281,7 @@ public class LayoutItemDto
     public bool walkable;
     /** 空气墙（隐形碰撞块）：应用为 1×1×1.132 的 BoxCollider（1.132 为魔法数，导出据此识别），不生成 Col_Floor。 */
     public bool airWall;
-    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | PressureSwitch | Terminal | empty */
+    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | CannonSwitch | PressureSwitch | Terminal | empty */
     public string stubKind;
     /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
     public string pseudoPrefabGuid;

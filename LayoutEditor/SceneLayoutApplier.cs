@@ -503,6 +503,13 @@ public static class SceneLayoutApplier
             {
                 if (item == null || !item.walkable)
                     continue;
+                // 压力开关（含莲花变体）是自带碰撞的可踩踏机制，不生成隐形 Col_Floor
+                // （否则 Play 期莲花底下出现一块「空气地板」）。按 prefab id 匹配，
+                // 兜底处理旧文档里 walkable=true 的历史数据。
+                var itemId = !string.IsNullOrEmpty(item.prefabAssetPath)
+                    ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath) : string.Empty;
+                if (itemId.IndexOf("pressureswitch", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    continue;
                 float cx = item.worldPosition != null ? item.worldPosition.x : (item.localPosition != null ? item.localPosition.x : 0f);
                 float cz = item.worldPosition != null ? item.worldPosition.z : (item.localPosition != null ? item.localPosition.z : 0f);
                 float scx = item.localScale != null ? item.localScale.x : 1f;

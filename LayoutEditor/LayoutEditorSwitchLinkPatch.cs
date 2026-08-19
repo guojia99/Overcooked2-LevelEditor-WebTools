@@ -17,7 +17,9 @@ using LevelEditorStub;
 ///   1) 开关可反复按：按压周期结束后自动补发 "Reset"（短暂红色反馈后回绿）。
 ///   2) 触发名同步：switchLinks 的自定义触发名（switch_{目标id}_{N}）写入目标机器
 ///      PickupItemSwitcher/PlacementItemSwitcher.m_switchTrigger 与断头台
-///      AutoWorkstation.m_workTrigger（这些字段都在 OnTrigger 中实时读取）。
+///      AutoWorkstation.m_workTrigger（这些字段都在 OnTrigger 中实时读取）；
+///      大炮联动（CannonSwitch，Unity 星形发射按钮）写入 Cannon.m_launchTrigger，
+///      并把按钮 child 挂到大炮 Cannon.m_button（宿主 ServerCannon 收发 Reset/Disable）。
 ///   3) 伪根转发：宿主 TriggerOnObject/按钮逻辑 helper 把触发消息发到伪根
 ///      GameObject，而监听者都在 bundle child 上（SendTrigger 只查同物体组件），
 ///      本补丁在伪根挂转发器把消息转给 child；事件组的 done 中继同理挂到 child。
@@ -112,6 +114,12 @@ public static class LayoutEditorSwitchLinkPatch
     {
         bool pending = false;
 
+        // 新场景：写回时已烘焙 LayoutRuntimeSwitchLink（游戏编译，随场景保存），
+        // 转发/监听字段/大炮接线/回绿全部由它在编辑器与游戏包内完成。
+        // 这里跳过以免与 Linker 重复触发（同一按压目标收到两次消息 → 机器跳一档）。
+        if (root.GetComponent<LayoutRuntimeSwitchLink>() != null)
+            return pending;
+
         if (switchChild.GetComponent<TriggerDisableScript>() != null)
         {
             var reenable = switchChild.GetComponent<LayoutEditorSwitchReenableRelay>();
@@ -137,8 +145,28 @@ public static class LayoutEditorSwitchLinkPatch
             // 伪根 → child 转发（宿主 TriggerOnObject 把消息发到伪根）
             EnsureForwarder(target, targetChild);
             PatchTargetListeners(targetChild, trigger);
+            PatchCannonLink(switchChild, targetChild, trigger);
         }
         return pending;
+    }
+
+    /// <summary>大炮联动（1:1）：把按钮 child 挂到大炮 Cannon.m_button，并把联动
+    ///  触发名写入 Cannon.m_launchTrigger。宿主 ServerCannon.StartSynchronising
+    ///  需 m_button.RequireComponent&lt;ServerInteractable&gt; 收发 Reset/Disable
+    ///  （m_button 为空会 NRE 使大炮失效）；m_launchTrigger 在 OnTrigger 实时读取，
+    ///  同步后任意联动触发名（含默认 switch_{id}_{N} 或 Launch）都能发射。</summary>
+    private static void PatchCannonLink(GameObject switchChild, GameObject targetChild, string trigger)
+    {
+        if (switchChild == null || targetChild == null)
+            return;
+        var cannon = targetChild.GetComponent<Cannon>();
+        if (cannon == null)
+            return;
+        if (!string.IsNullOrEmpty(trigger))
+            cannon.m_launchTrigger = trigger;
+        cannon.m_button = switchChild;
+        Debug.Log("[LayoutEditor] cannon link: " + targetChild.name +
+            " m_launchTrigger = " + cannon.m_launchTrigger + " m_button = " + switchChild.name);
     }
 
     /// <summary>事件组目标伪根：转发器 + done 中继挂到 child（每个根中继对应一个

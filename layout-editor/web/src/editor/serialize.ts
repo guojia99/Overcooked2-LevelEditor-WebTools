@@ -6,7 +6,8 @@ import {
 } from "./state";
 import {
   normalizeRot,
-  resolveFootprint
+  resolveFootprint,
+  prefabIdFromPath
 } from "./coords";
 import {
   itemLayerOfIt,
@@ -18,7 +19,7 @@ import {
   finalizeFloor
 } from "./floors";
 import { raftPiecesForRect } from "../raft";
-import { STUB_KIND_BY_PREFAB_ID } from "./stubControls";
+import { STUB_KIND_BY_PREFAB_ID, isIngredientSprayId } from "./stubControls";
 import type {
   LayoutItem,
   FloorObject,
@@ -37,15 +38,25 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
     const mapId = cat?.id ?? "";
     if (mapId && STUB_KIND_BY_PREFAB_ID[mapId]) rest.stubKind = STUB_KIND_BY_PREFAB_ID[mapId];
   }
+  // 喷雾喷罐不是锅具容器：历史/误配的 CookingUtensil stubKind 一律清除，
+  // 防止后端 ApplyStub 补挂 PseudoPrefabCookingUtensil（宿主 Setup 对无容器的
+  // child 抛 NRE）。
+  if (rest.stubKind === "CookingUtensil" && isIngredientSprayId(prefabIdFromPath(rest.prefabAssetPath))) {
+    rest.stubKind = "";
+    rest.cookingUtensil = undefined;
+  }
   // Raft planks already expanded below are walkable:false; other floor prefabs stay walkable.
   const isRaftPlank = cat?.surfaceKind === "raft";
   // 空气墙是隐形碰撞块，不生成可行走 Col_Floor
   const isAirWall = rest.stubKind === "Collision" && rest.airWall === true;
+  // 压力开关（含莲花变体）是自带碰撞的可踩踏机制：若 walkable:true，后端会为它生成
+  // 一块隐形 Col_Floor，Play 期莲花底下出现「空气地板」。保持 walkable:false。
+  const isPressureSwitch = rest.stubKind === "PressureSwitch";
   return {
     ...rest,
     footprint: fp,
     worldPosition: { x: _wx, y: rest.localPosition?.y ?? 0, z: _wz },
-    walkable: isAirWall ? false : !isRaftPlank && !!(cat && cat.surfaceTier === "floor"),
+    walkable: isAirWall || isPressureSwitch ? false : !isRaftPlank && !!(cat && cat.surfaceTier === "floor"),
   };
 }
 

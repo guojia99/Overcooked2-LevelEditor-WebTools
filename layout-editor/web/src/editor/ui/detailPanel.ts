@@ -146,12 +146,13 @@ export function extraStubDetailHtml(item: EditorItem): string {
       const cleanTxt = item.plateReturn?.returnClean ? ` · 直接返回干净${isGlass ? "杯子" : "盘子"}` : "";
       return `<dt>${typeZh}</dt><dd>${txt}${cleanTxt}（右键直接修改，绑定在上菜台右键菜单里设置）</dd>`;
     }
-    case "Switch": {
+    case "Switch":
+    case "CannonSwitch": {
       const sw = item.switchStub ?? {};
       const matLookup = new Map(S.switchMaterialsCache.map((m) => [m.guid, m]));
       const activeName = matLookup.get(sw.activeMaterialGuid ?? "")?.nameZh ?? "默认";
       const inactiveName = matLookup.get(sw.inactiveMaterialGuid ?? "")?.nameZh ?? "默认";
-      return `<dt>开关</dt><dd>初始状态：${sw.startEnabled !== false ? "开启" : "关闭"} · 未按下外观：${activeName} · 按下外观：${inactiveName}（右键直接修改）</dd>`;
+      return `<dt>${stubKindOf(item) === "CannonSwitch" ? "大炮开关" : "开关"}</dt><dd>初始状态：${sw.startEnabled !== false ? "开启" : "关闭"} · 未按下外观：${activeName} · 按下外观：${inactiveName}（右键直接修改）</dd>`;
     }
     case "PressureSwitch": {
       const ps = item.pressureSwitch ?? {};

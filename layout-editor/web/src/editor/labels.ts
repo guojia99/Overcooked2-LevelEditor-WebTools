@@ -7,6 +7,7 @@ import {
 import { ingredientIdByGuid, catalogItemForGuidOrPath } from "./catalog";
 import { ingredientNameZh } from "../ingredientLabels";
 import { tidyCatalogNameZh } from "../displayLabels";
+import { isCannonSwitch } from "./stubControls";
 import type { CatalogItem } from "../types";
 import type { EditorItem } from "./state";
 
@@ -107,6 +108,45 @@ export function drawCatalogItemIcon(
 ): boolean {
   if (!cat?.icon) return false;
   drawIconWithLabel(ctx, getCatalogIcon(cat.id), itemLabel(item), bw, bh);
+  return true;
+}
+
+/** 大炮开关（p_dlc0{8,9}_button_cannon）特殊图标：金色五角星
+ *  （对应 Unity 里带五角星标志的大炮发射按钮）+ 名称；非大炮开关返回 false。 */
+export function drawCannonSwitchStarIcon(
+  ctx: CanvasRenderingContext2D,
+  item: EditorItem,
+  bw: number,
+  bh: number
+): boolean {
+  if (!isCannonSwitch(item)) return false;
+  const starSize = Math.min(bw * 0.8, bh * 0.46, 30 * S.scale);
+  const starCy = -bh / 4 - 1;
+  const outer = starSize * 0.5;
+  const inner = outer * 0.42;
+  ctx.save();
+  ctx.shadowColor = "rgba(255,255,255,0.4)";
+  ctx.shadowBlur = 3 * S.scale;
+  ctx.fillStyle = "#ffd54a";
+  ctx.strokeStyle = "rgba(120,80,0,0.85)";
+  ctx.lineWidth = Math.max(1, 1.4 * S.scale);
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const x = Math.cos(a) * r;
+    const y = starCy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+  ctx.save();
+  ctx.translate(0, bh / 4 + 1);
+  drawLabelInBox(ctx, itemLabel(item), bw - 4, bh / 2);
+  ctx.restore();
   return true;
 }
 

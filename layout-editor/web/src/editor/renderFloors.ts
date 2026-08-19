@@ -53,7 +53,7 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
     dom.ctx.setLineDash([7, 4]);
     dom.ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
     dom.ctx.setLineDash([]);
-    if (selected && !ghost && S.selectedFloorKeys.size === 1) {
+    if (selected && !ghost && S.selectedFloorKeys.size === 1 && !(f._wCells === 1 && f._dCells === 1)) {
       dom.ctx.fillStyle = "#f9ab00";
       for (const hx of [-bw / 2, bw / 2]) {
         for (const hy of [-bh / 2, bh / 2]) {
@@ -152,8 +152,8 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
     dom.ctx.setLineDash([]);
   }
 
-  // Resize handles when exactly one floor is selected.
-  if (selected && !ghost && S.selectedFloorKeys.size === 1) {
+  // Resize handles when exactly one floor is selected (1×1 地板不可拖拽缩放，不显示柄)。
+  if (selected && !ghost && S.selectedFloorKeys.size === 1 && !(f._wCells === 1 && f._dCells === 1)) {
     dom.ctx.fillStyle = "#f9ab00";
     for (const hx of [-bw / 2, bw / 2]) {
       for (const hy of [-bh / 2, bh / 2]) {
@@ -265,24 +265,29 @@ export function hitTestFloorsAll(wx: number, wz: number): FloorHit[] {  const hi
     const { lx, lz } = floorLocalPoint(f, wx, wz);
     if (Math.abs(lx) > hw || Math.abs(lz) > hh) continue;
 
-    // Corner handle hit → resize.
-    const handleTol = Math.max(CELL * 0.5, 0.9);
-    const nearLeft = lx < -hw + handleTol;
-    const nearRight = lx > hw - handleTol;
-    const nearBottom = lz < -hh + handleTol;
-    const nearTop = lz > hh - handleTol;
-    if ((nearLeft || nearRight) && (nearBottom || nearTop)) {
-      const edge = `${nearRight ? "R" : "L"}${nearTop ? "T" : "B"}`;
-      // Anchor = opposite corner in world space.
-      const ax = nearRight ? -hw : hw;
-      const az = nearTop ? -hh : hh;
-      const rad = (normalizeRot(f.localRotationY) * Math.PI) / 180;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
-      const anchorX = f._wx + ax * cos - az * sin;
-      const anchorZ = f._wz + ax * sin + az * cos;
-      hits.push({ floor: f, mode: "resize", edge, anchorX, anchorZ });
-      continue;
+    // 1×1 地板：角点容差（0.9）大于半格（0.6）会覆盖整个矩形，导致一拖就进入
+    // 缩放（无法移动、容易误缩放）。1×1 地板恒为移动模式，缩放改由地板弹窗改尺寸。
+    const oneCell = f._wCells === 1 && f._dCells === 1;
+    if (!oneCell) {
+      // Corner handle hit → resize.
+      const handleTol = Math.max(CELL * 0.5, 0.9);
+      const nearLeft = lx < -hw + handleTol;
+      const nearRight = lx > hw - handleTol;
+      const nearBottom = lz < -hh + handleTol;
+      const nearTop = lz > hh - handleTol;
+      if ((nearLeft || nearRight) && (nearBottom || nearTop)) {
+        const edge = `${nearRight ? "R" : "L"}${nearTop ? "T" : "B"}`;
+        // Anchor = opposite corner in world space.
+        const ax = nearRight ? -hw : hw;
+        const az = nearTop ? -hh : hh;
+        const rad = (normalizeRot(f.localRotationY) * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const anchorX = f._wx + ax * cos - az * sin;
+        const anchorZ = f._wz + ax * sin + az * cos;
+        hits.push({ floor: f, mode: "resize", edge, anchorX, anchorZ });
+        continue;
+      }
     }
     hits.push({ floor: f, mode: "move", edge: "", anchorX: 0, anchorZ: 0 });
   }

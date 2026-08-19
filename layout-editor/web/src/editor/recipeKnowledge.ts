@@ -114,6 +114,25 @@ export function recipeNeedsGlass(r: RecipeEntry): boolean {
   return t === "float" || t === "icecream" || t === "smoothie";
 }
 
+/** 每族「重复 DLC 换皮」默认屏蔽的来源组：只保留族内首选 DLC 一版，避免菜单里出现
+ *  同一道菜的多个 DLC 皮肤（换皮菜品规格一致，重复上架无意义）。火锅的厨房道具
+ *  （地炉/大锅）默认是 DLC10 版，因此保留 dlc10 菜谱、屏蔽 dlc04。 */
+export const DUPLICATE_DLC_BLOCK: Record<string, string[]> = {
+  hotdog: ["dlc11"],
+  hotchocolate: ["dlc09"],
+  hotpot: ["dlc04"],
+  roast: ["dlc09"],
+  pudding: ["dlc09"],
+  fruitplatter: ["dlc13"],
+};
+
+/** 该菜谱是否属于「默认屏蔽的重复 DLC」来源组。 */
+export function isRecipeDlcBlocked(r: RecipeEntry): boolean {
+  const blocked = DUPLICATE_DLC_BLOCK[r.type ?? ""];
+  if (!blocked) return false;
+  return blocked.includes(r.group ?? "");
+}
+
 /** DLC 换皮/变体 → 功能等价的基础道具 id：场景里放了变体即视为具备基础功能
  *  （如放了 dlc09_oven 就算有了 Oven），供自动填充/缺失分析使用。
  *  唯一数据源见 itemVariants.ts（调色板合并与右键换肤同源）。 */

@@ -59,12 +59,20 @@ export function isAirFloor(f: EditorFloor): boolean {
  *  makes no sense). They remain regular floor-layer items. */
 export const THEMED_FLOOR_NOT_FLOOR_ID = /pillar|roof|rope|entrance|corner|edge|walkway/i;
 
+/** 压力开关（含 DLC13 莲花变体）是特殊地板道具：必须始终作为地板层物品保留
+ *  （有自己的 footprint 尺寸 / 中文名 / PressureSwitch stub），
+ *  绝不能并入主题地板——否则会被 mergeThemedItemsIntoFloors 按缺失的
+ *  localScale 转成 1×1 地板（丢尺寸、丢名字、误被拖拽缩放）。 */
+const PRESSURE_SWITCH_FLOOR_ID = /pressureswitch/i;
+
 /** True for catalog prefabs that can back a themed floor (excludes raft planks,
- *  conveyors, decals, floor sections and non-floor pieces like pillars/roofs). */
+ *  conveyors, decals, floor sections, pressure switches and non-floor pieces
+ *  like pillars/roofs). */
 export function isThemedFloorPrefab(it: CatalogItem | undefined): boolean {
   if (!it || it.surfaceTier !== "floor") return false;
   const k = it.surfaceKind;
   if (k === "raft" || k === "conveyor" || k === "decal" || k === "section") return false;
+  if (PRESSURE_SWITCH_FLOOR_ID.test(it.id)) return false;
   if (THEMED_FLOOR_NOT_FLOOR_ID.test(it.id)) return false;
   return true;
 }
@@ -417,6 +425,9 @@ export function mergeRaftItemsIntoFloors(): void {
 export function mergeThemedItemsIntoFloors(): void {
   const consumed = new Set<string>();
   for (const it of S.items) {
+    // 压力开关（含莲花变体）保持为物品：不并入主题地板（防御，即使 catalog
+    // 缺失导致 isThemedFloorPrefab 误判也不转换）。
+    if (it.stubKind === "PressureSwitch") continue;
     const cat = S.catalogByGuid.get(it.prefabGuid);
     if (!isThemedFloorPrefab(cat)) continue;
     const c = cat!;

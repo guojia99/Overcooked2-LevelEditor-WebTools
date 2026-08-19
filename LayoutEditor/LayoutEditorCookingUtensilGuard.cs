@@ -57,6 +57,17 @@ static class LayoutEditorCookingUtensilGuard
         Arm();
     }
 
+    /// <summary>喷雾喷罐（奶油喷罐）真实 prefab 无 IngredientContainer，不是锅具容器，
+    ///  绝不能按 PseudoPrefabCookingUtensil 处理（宿主 Setup 对无容器的 child 会 NRE）。
+    ///  按 prefabName 判定（无需 bundle，编辑模式下 bundle 未加载也可判定）。</summary>
+    public static bool IsIngredientSpray(PseudoPrefabSO so)
+    {
+        if (so == null)
+            return false;
+        string name = so.prefabName;
+        return name == "utensil_ingredient_spray_01" || name == "dlc09_utensil_ingredient_spray";
+    }
+
     /// <summary>真实 prefab 是否为锅具容器（有 IngredientContainer）。
     ///  判定失败（bundle 未加载/资产缺失/加载异常）一律放行返回 true，
     ///  仅在**确实加载到真实 prefab 且无 IngredientContainer** 时返回 false，
@@ -164,7 +175,7 @@ static class LayoutEditorCookingUtensilGuard
                     so = existingCuStub.pseudoPrefabSO;
                 else if (stub != null)
                     so = stub.pseudoPrefabSO;
-                if (so != null && !RealPrefabHasIngredientContainer(so))
+                if (so != null && (IsIngredientSpray(so) || !RealPrefabHasIngredientContainer(so)))
                 {
                     DowngradeToBase(go, so);
                     dirty = true;
