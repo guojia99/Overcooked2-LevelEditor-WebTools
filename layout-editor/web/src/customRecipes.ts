@@ -13,7 +13,6 @@ import { showBusy, hideBusy, withBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
 import { foodGroupLabel, visibleIngredients } from "./ingredientLabels";
 import { closeModal, openModal } from "./modals";
-import { initWebBuiltin } from "./webBuiltin";
 import { rlCardHtml, type RecipeWithGroups } from "./recipeCard";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { fmt4, fmtCm, footprintOf, u2cm } from "./modelUnits";
@@ -66,7 +65,6 @@ function shell(app: HTMLElement, title: string): HTMLElement {
 export async function renderCustomRecipesView(app: HTMLElement): Promise<void> {
   const content = shell(app, "自定义菜谱管理");
   setBusy("加载关卡集…");
-  await initWebBuiltin();
 
   let sets: LevelSetInfo[] = [];
   try {

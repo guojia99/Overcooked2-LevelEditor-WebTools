@@ -21,8 +21,9 @@ public class LayoutVector3
 [Serializable]
 public class LayoutFootprint
 {
-    public int cellsX = 1;
-    public int cellsZ = 1;
+    /// <summary>格数（1 格 = 1.2m；半格小型厨具/工具为 0.5）。</summary>
+    public float cellsX = 1f;
+    public float cellsZ = 1f;
 }
 
 [Serializable]
@@ -129,7 +130,7 @@ public class LayoutSwitchStubDto
 /// <summary>开关 → 目标对象的联动（断头台/果汁机/酱料机的按钮触发）。
 ///  id 约定同 Teleportal："u:<instanceID>"（既有场景对象）或文档 instanceId（"new:..."）。</summary>
 /// <summary>启动环境一次性自检（/api/env/status）：前端启动时拉取一次，
-///  据此判断各依赖是否可用（common_w / 音频导出 / 游戏 bundle / dump 清单等）。</summary>
+///  据此判断各依赖是否可用（common03 / 音频导出 / 游戏 bundle / dump 清单等）。</summary>
 [Serializable]
 public class EnvStatusDto
 {
@@ -142,8 +143,6 @@ public class EnvStatusDto
     public bool knowledgeLoaded;
     /** 手册词典已加载。 */
     public bool dictionaryLoaded;
-    /** common_w 源库：目录存在 = 已装配（内容按白名单放开）；含实测 id 清单。 */
-    public CommonWStatusDto commonW;
     /** 音频导出清单（audio-exports/audio-exports.json）存在。 */
     public bool audioExports;
     /** 已导出的 ogg 数量（无导出时为 0）。 */
@@ -154,20 +153,6 @@ public class EnvStatusDto
     public int gameBundleCount;
     /** dump_bundle/manifest.json（bundle 分析依赖）存在。 */
     public bool dumpManifest;
-}
-
-/// <summary>common_w 源库状态（/api/env/status 的 commonW 段）：是否存在 + 版本 + 各内容 id 清单。
-///  约定：只要用户装配了 common_w（目录存在），其全部菜谱/食材/道具即可用；
-///  id 清单从用户实际的 common_w 目录扫描，条目被 common2/commonN 更新移除时前端据此容忍。</summary>
-[Serializable]
-public class CommonWStatusDto
-{
-    public bool exists;
-    public string version;
-    public string[] recipes;
-    public string[] ingredients;
-    public string[] prefabs;
-    public string[] cookingSteps;
 }
 
 [Serializable]
@@ -764,12 +749,12 @@ public class LevelRecipesUpdateDto
     public string[] recipeGuids;
 }
 
-// ---------- Web 内置菜谱库（内置菜谱管理，已废弃：改为 common_w 直接引用 + 静态 JSON） ----------
+// ---------- 通用内容菜谱库（内置菜谱管理，已废弃：改为 common03 直接引用 + 静态 JSON） ----------
 
 [Serializable]
 public class WebRecipeEntryDto
 {
-    /** 源库 guid（原 Import 源库；现 common_w 资产）。 */
+    /** 源库 guid（原 Import 源库；现 common03 资产）。 */
     public string guid;
     public string id;
     public string nameZh;

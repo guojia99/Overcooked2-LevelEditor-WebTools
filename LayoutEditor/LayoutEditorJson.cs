@@ -231,8 +231,8 @@ public static class LayoutEditorJson
         item.localPosition = ReadVector3(block, "localPosition");
         item.worldPosition = ReadVector3(block, "worldPosition");
 
-        item.footprint.cellsX = (int)ReadFloat(block, "cellsX");
-        item.footprint.cellsZ = (int)ReadFloat(block, "cellsZ");
+        item.footprint.cellsX = ReadFloat(block, "cellsX");
+        item.footprint.cellsZ = ReadFloat(block, "cellsZ");
 
         return item;
     }

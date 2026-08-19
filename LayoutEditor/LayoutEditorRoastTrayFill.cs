@@ -124,7 +124,7 @@ public static class LayoutEditorRoastTrayFill
     }
 
     /// <summary>收集 LevelInfo 所选菜谱中 RoastingTray 步骤菜谱的叶食材 PseudoPrefabSO
-    ///  （从 common_w/common01/common02 本地源库按 id 解析；dlc07/dlc09 都覆盖）。</summary>
+    ///  （从 common03/common01/common02 本地源库按 id 解析；dlc07/dlc09 都覆盖）。</summary>
     public static List<PseudoPrefabSO> CollectRoastTrayIngredients(LevelInfoSO info)
     {
         var result = new List<PseudoPrefabSO>();
@@ -157,11 +157,11 @@ public static class LayoutEditorRoastTrayFill
     {
         if (string.IsNullOrEmpty(id))
             return null;
-        // 优先 common_w（dlc 换皮）；基础食材（如 CarrotSO）在 common01/common02。
+        // 优先 common03（dlc 换皮）；基础食材（如 CarrotSO）在 common01/common02。
         // 与 LayoutEditorCustomIngredients.IsLocalSourceAsset 一致，只查本地源库。
         string[] roots =
         {
-            "Assets/common_w/Ingredients",
+            "Assets/common03/Ingredients",
             "Assets/common01/food/Ingredients",
             "Assets/common02/food/Ingredients",
         };

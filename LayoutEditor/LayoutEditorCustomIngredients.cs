@@ -6,46 +6,37 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Web 内置内容（Assets/common_w 源库）的引用校验与 bundle 依赖注册。
+/// 通用内容源库（Assets/common03）的引用校验与 bundle 依赖注册。
 ///
 /// 历史机制（已废弃）：源库曾在 Assets/Editor/LayoutEditor/Import 下，无法进入
 /// AssetBundle 构建，保存时把用到的资产拷入 Assets/LevelSets/&lt;set&gt;/custom_web/
-/// （分配新 guid、改写引用）。现源库已迁移到 Assets/common_w/（folder meta 的
-/// assetBundleName=common_w），可直接被 Tools/Build AssetBundles 打成 common_w
-/// bundle，关卡/场景**直接引用 common_w 内资产**，前端经静态 JSON +
-/// common-w-manifest.json 获取条目，不再依赖后端动态同步/拷贝。
+/// （分配新 guid、改写引用）。现源库已迁移到 Assets/common03/（folder meta 的
+/// assetBundleName=common03），可直接被 Tools/Build AssetBundles 打成 common03
+/// bundle，关卡/场景**直接引用 common03 内资产**，不再依赖后端动态同步/拷贝。
+/// 原「Web 内置」白名单/manifest 门槛已随 common03 通用化移除，内容全量可用。
 ///
 /// 本类保留的职责：
-///  1. WebVersion()：读取 common_w/version.txt（缺失 → "v0.0.0"，表示整体禁用）。
-///  2. EnsureDocCopies()：仅校验——场景文档仍引用历史 Import/custom_web 资产时告警。
-///  3. EnsureWebDependencies()：把关卡引用到的 common_w 资产所需 bundle
-///     （common_w 本体 + 各资产 bundleName 指向的游戏原 bundle）注册进
+///  1. EnsureDocCopies()：仅校验——场景文档仍引用历史 Import/custom_web 资产时告警。
+///  2. EnsureWebDependencies()：把关卡引用到的 common03 资产所需 bundle
+///     （common03 本体 + 各资产 bundleName 指向的游戏原 bundle）注册进
 ///     LevelInfoSO.dependencies。仅写入 StreamingAssets/Windows 下已存在的 bundle，
 ///     防御宿主 PseudoPrefabManager 对缺失 bundle 抛 KeyNotFoundException。
 ///
-/// Web 内置始终归为「Web内置」分组（group="web"，见 LayoutEditorCatalogApi.FoodGroupOf）。
-///
-/// 内容分级（避免误操作）：
-///  - Assets/common_w        —— 已适配/正在适配内容（当前按 web-allowlist.json 白名单 = hotdog 全家）。
-///  - Assets/common_w_beta   —— 未正确支持的内容（菜谱/食材/关卡机关等），前端不提供、不打包，
-///    仅作暂存；场景若仍引用会在此告警。
-/// 宿主文件一律不动。
+/// common03 与 common01/common02 同级：后端正常扫描、前端菜单全量可用（无白名单/
+/// manifest/web 分组）。宿主文件一律不动。
 /// </summary>
 public static class LayoutEditorCustomIngredients
 {
-    /// <summary>Web 内置内容源库根目录（由 Assets/Editor/LayoutEditor/Import 迁移而来）。</summary>
-    public const string WebRoot = "Assets/common_w";
-
-    /// <summary>未适配内容暂存目录（不打包、前端不提供；见类注释）。</summary>
-    public const string WebBetaRoot = "Assets/common_w_beta";
+    /// <summary>通用内容源库根目录（由 Assets/Editor/LayoutEditor/Import 迁移而来）。</summary>
+    public const string Common03Root = "Assets/common03";
 
     /// <summary>旧 custom_web 拷贝目录名（机制已废弃，仅为兼容读取历史数据保留）。</summary>
     public const string CustomDirName = "custom_web";
 
-    /// <summary>common_w bundle 名（folder meta assetBundleName）。</summary>
-    public const string WebBundleName = "common_w";
+    /// <summary>common03 bundle 名（folder meta assetBundleName）。</summary>
+    public const string Common03BundleName = "common03";
 
-    /// <summary>场景保存时从 doc 收集到的 common_w 引用所需游戏 bundle，
+    /// <summary>场景保存时从 doc 收集到的 common03 引用所需游戏 bundle，
     ///  由随后 SyncLevelInfo → EnsureWebDependencies 一并注册。</summary>
     private static readonly HashSet<string> _pendingDocBundles = new HashSet<string>(StringComparer.Ordinal);
 
@@ -55,83 +46,29 @@ public static class LayoutEditorCustomIngredients
         return "Assets/LevelSets/" + levelSet + "/" + CustomDirName;
     }
 
-    /// <summary>是否 common_w 源库内资产（Web 内置）。</summary>
-    public static bool IsWebBuiltinAsset(string assetPath)
+    /// <summary>是否 common03 源库内资产（通用内容）。</summary>
+    public static bool IsCommon03Asset(string assetPath)
     {
         if (string.IsNullOrEmpty(assetPath))
             return false;
-        return assetPath.IndexOf("/common_w/", StringComparison.Ordinal) >= 0;
+        return assetPath.IndexOf("/common03/", StringComparison.Ordinal) >= 0;
     }
 
-    /// <summary>是否本地源库资产（common_w / common01 / common02）：这些目录里的
+    /// <summary>是否本地源库资产（common03 / common01 / common02）：这些目录里的
     ///  wrapper prefab 与 PseudoPrefabSO 都按 bundleName 指向游戏原 bundle，
     ///  可安全解析注册依赖（AddDependency 只收实际存在的 bundle）。</summary>
     private static bool IsLocalSourceAsset(string assetPath)
     {
         if (string.IsNullOrEmpty(assetPath))
             return false;
-        return IsWebBuiltinAsset(assetPath)
+        return IsCommon03Asset(assetPath)
             || assetPath.IndexOf("/common01/", StringComparison.Ordinal) >= 0
             || assetPath.IndexOf("/common02/", StringComparison.Ordinal) >= 0;
     }
 
-    /// <summary>common_w 源库版本号（Assets/common_w/version.txt）。
-    ///  缺失时返回 "v0.0.0"（仅作展示；可用性以目录存在为准）。</summary>
-    public static string WebVersion()
-    {
-        var p = AbsPath(WebRoot + "/version.txt");
-        if (!File.Exists(p))
-            return "v0.0.0";
-        try
-        {
-            return File.ReadAllText(p).Trim();
-        }
-        catch
-        {
-            return "v0.0.0";
-        }
-    }
-
-    /// <summary>common_w 状态：目录存在即视为已装配（全部内容可用），
-    ///  并扫描实际的菜谱/食材/道具/烹饪步骤 id 清单（文件名去扩展名）供前端过滤。</summary>
-    public static CommonWStatusDto CommonWStatus()
-    {
-        var dto = new CommonWStatusDto
-        {
-            exists = false,
-            version = "v0.0.0",
-            recipes = new string[0],
-            ingredients = new string[0],
-            prefabs = new string[0],
-            cookingSteps = new string[0]
-        };
-        if (!Directory.Exists(AbsPath(WebRoot)))
-            return dto;
-        dto.exists = true;
-        dto.version = WebVersion();
-        dto.recipes = ScanCommonWIds(WebRoot + "/Recipes", "*.asset");
-        dto.ingredients = ScanCommonWIds(WebRoot + "/Ingredients", "*.asset");
-        dto.prefabs = ScanCommonWIds(WebRoot + "/prefabs", "*.prefab");
-        dto.cookingSteps = ScanCommonWIds(WebRoot + "/CookingSteps", "*.asset");
-        return dto;
-    }
-
-    private static string[] ScanCommonWIds(string relDir, string pattern)
-    {
-        var abs = AbsPath(relDir);
-        if (!Directory.Exists(abs))
-            return new string[0];
-        var files = Directory.GetFiles(abs, pattern, SearchOption.AllDirectories);
-        var ids = new List<string>(files.Length);
-        foreach (var f in files)
-            ids.Add(Path.GetFileNameWithoutExtension(f));
-        ids.Sort(StringComparer.Ordinal);
-        return ids.ToArray();
-    }
-
-    /// <summary>保存布局（/api/scene/layout）时调用：仅校验文档中的 Web 内置引用
+    /// <summary>保存布局（/api/scene/layout）时调用：仅校验文档中的历史引用
     ///  （历史 Import / custom_web 拷贝引用告警，提示重新放置），并收集 doc 引用到的
-    ///  common_w 资产所需游戏 bundle，供 SyncLevelInfo 注册依赖。
+    ///  common03 资产所需游戏 bundle，供 SyncLevelInfo 注册依赖。
     ///  不再做任何拷贝/引用改写。返回空映射（保留签名兼容调用方）。</summary>
     public static Dictionary<string, string> EnsureDocCopies(string levelSet, LayoutDocumentDto doc)
     {
@@ -164,7 +101,7 @@ public static class LayoutEditorCustomIngredients
         return map;
     }
 
-    /// <summary>校验单个 doc 引用 guid：历史引用告警；common_w 引用收集其游戏 bundle。</summary>
+    /// <summary>校验单个 doc 引用 guid：历史引用告警；common03 引用收集其游戏 bundle。</summary>
     private static void ValidateDocGuid(string guid)
     {
         if (string.IsNullOrEmpty(guid))
@@ -174,20 +111,15 @@ public static class LayoutEditorCustomIngredients
             return; // 无法解析的 guid 由上层既有逻辑处理
         if (path.IndexOf("/Editor/LayoutEditor/Import/", StringComparison.Ordinal) >= 0)
         {
-            LayoutEditorLog.LogWarning("[Web内置] 场景仍引用已迁移的 Import 源库资产（请删除并重新放置）: " + path);
+            LayoutEditorLog.LogWarning("[通用内容] 场景仍引用已迁移的 Import 源库资产（请删除并重新放置）: " + path);
             return;
         }
         if (path.IndexOf("/" + CustomDirName + "/", StringComparison.Ordinal) >= 0)
         {
-            LayoutEditorLog.LogWarning("[Web内置] 场景仍引用已废弃的 custom_web 拷贝（请删除并重新放置为 common_w 资产）: " + path);
+            LayoutEditorLog.LogWarning("[通用内容] 场景仍引用已废弃的 custom_web 拷贝（请删除并重新放置为 common03 资产）: " + path);
             return;
         }
-        if (path.IndexOf(WebBetaRoot + "/", StringComparison.Ordinal) >= 0)
-        {
-            LayoutEditorLog.LogWarning("[Web内置] 场景引用了 common_w_beta（未适配暂存）内容，游戏内不可用：请改用 common_w 中的已适配资产: " + path);
-            return;
-        }
-        // 依赖注册仅针对本地源库资产（common_w / common01 / common02）：
+        // 依赖注册仅针对本地源库资产（common03 / common01 / common02）：
         // 这里的 wrapper prefab / SO 都指向游戏原 bundle（AddDependency 只收
         // StreamingAssets 实际存在的 bundle，多注册无害）。
         if (!IsLocalSourceAsset(path))
@@ -218,7 +150,7 @@ public static class LayoutEditorCustomIngredients
         }
     }
 
-    /// <summary>保存菜谱（SetLevelRecipes）/场景写回后调用：注册 common_w 相关 bundle 依赖。
+    /// <summary>保存菜谱（SetLevelRecipes）/场景写回后调用：注册 common03 相关 bundle 依赖。
     ///  不再做任何拷贝/引用改写。返回 0（保留签名兼容调用方）。</summary>
     public static int SyncLevelInfo(string levelSet, LevelInfoSO info)
     {
@@ -228,7 +160,7 @@ public static class LayoutEditorCustomIngredients
         return 0;
     }
 
-    /// <summary>（已废弃）custom_web 全量同步机制随 common_w 迁移退役，保留方法壳兼容调用方。</summary>
+    /// <summary>（已废弃）custom_web 全量同步机制随 common03 迁移退役，保留方法壳兼容调用方。</summary>
     public static int SyncAllWebContent(string levelSet)
     {
         return 0;
@@ -255,19 +187,19 @@ public static class LayoutEditorCustomIngredients
         EnsureWebDependencies(levelSet, info);
     }
 
-    /// <summary>把关卡引用到的 common_w 资产所需 bundle 加入 LevelInfoSO.dependencies：
-    ///  common_w 本体（stub 资产所在包）+ 各被引用资产 bundleName 指向的游戏原 bundle
-    ///  （菜谱/食材/道具伪 SO 的真实 prefab 所在）+ Web 菜谱叶食材的游戏 bundle
+    /// <summary>把关卡引用到的 common03 资产所需 bundle 加入 LevelInfoSO.dependencies：
+    ///  common03 本体（stub 资产所在包）+ 各被引用资产 bundleName 指向的游戏原 bundle
+    ///  （菜谱/食材/道具伪 SO 的真实 prefab 所在）+ 菜谱叶食材的游戏 bundle
     ///  + 场景 doc 引用收集到的 bundle（EnsureDocCopies）。
     ///  仅当 bundle 已存在于 StreamingAssets 才写入，缺失跳过（避免宿主
     ///  PseudoPrefabManager.GetAssetBundle 抛 KeyNotFoundException）——
-    ///  common_w 未构建（Tools/Build AssetBundles 未跑）时本体依赖自动缺席。</summary>
+    ///  common03 未构建（Tools/Build AssetBundles 未跑）时本体依赖自动缺席。</summary>
     public static void EnsureWebDependencies(string levelSet, LevelInfoSO info)
     {
         if (info == null)
             return;
         var deps = new List<string>(info.dependencies ?? new string[0]);
-        AddDependency(deps, WebBundleName);
+        AddDependency(deps, Common03BundleName);
         foreach (var b in _pendingDocBundles)
             AddDependency(deps, b);
 
@@ -278,7 +210,7 @@ public static class LayoutEditorCustomIngredients
                 if (r == null)
                     continue;
                 var rp = AssetDatabase.GetAssetPath(r);
-                if (string.IsNullOrEmpty(rp) || !IsWebBuiltinAsset(rp))
+                if (string.IsNullOrEmpty(rp) || !IsCommon03Asset(rp))
                     continue;
                 // 菜谱资产自身指向的游戏 bundle（真实菜谱 prefab 所在）
                 var pseudo = r as PseudoPrefabSO;
@@ -302,7 +234,7 @@ public static class LayoutEditorCustomIngredients
                 if (ing == null)
                     continue;
                 var ip = AssetDatabase.GetAssetPath(ing);
-                if (string.IsNullOrEmpty(ip) || !IsWebBuiltinAsset(ip))
+                if (string.IsNullOrEmpty(ip) || !IsCommon03Asset(ip))
                     continue;
                 if (!string.IsNullOrEmpty(ing.bundleName))
                     AddDependency(deps, ing.bundleName);
@@ -322,18 +254,18 @@ public static class LayoutEditorCustomIngredients
         EditorUtility.SetDirty(info);
     }
 
-    /// <summary>在 common_w/&lt;sub&gt; 下按 id 找资产并注册其 bundleName 依赖。</summary>
+    /// <summary>在 common03/&lt;sub&gt; 下按 id 找资产并注册其 bundleName 依赖。</summary>
     private static void AddWebAssetBundleDep(List<string> deps, string sub, string id)
     {
         if (string.IsNullOrEmpty(id))
             return;
-        var absRoot = AbsPath(WebRoot + "/" + sub);
+        var absRoot = AbsPath(Common03Root + "/" + sub);
         if (!Directory.Exists(absRoot))
             return;
         var files = Directory.GetFiles(absRoot, id + ".asset", SearchOption.AllDirectories);
         if (files.Length == 0)
             return;
-        var rel = WebRoot + "/" + sub + files[0].Substring(absRoot.Length).Replace('\\', '/');
+        var rel = Common03Root + "/" + sub + files[0].Substring(absRoot.Length).Replace('\\', '/');
         var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(rel);
         if (so != null && !string.IsNullOrEmpty(so.bundleName))
             AddDependency(deps, so.bundleName);
@@ -354,19 +286,19 @@ public static class LayoutEditorCustomIngredients
     // Web 内置菜谱：显式安装 / 移除（已废弃）
     // -------------------------------------------------------------
 
-    /// <summary>（已废弃）Web 内置改为 common_w 直接引用，无需安装。</summary>
+    /// <summary>（已废弃）通用内容改为 common03 直接引用，无需安装。</summary>
     public static string InstallRecipes(string levelSet, string[] ids)
     {
-        return "Web 内置内容已改为 common_w 直接引用（静态 JSON 选取），无需安装。";
+        return "通用内容已改为 common03 直接引用（静态 JSON 选取），无需安装。";
     }
 
-    /// <summary>（已废弃）Web 内置改为 common_w 直接引用，无需卸载。</summary>
+    /// <summary>（已废弃）通用内容改为 common03 直接引用，无需卸载。</summary>
     public static WebRecipeUninstallResultDto UninstallRecipes(string levelSet, string[] ids)
     {
         return new WebRecipeUninstallResultDto
         {
             ok = false,
-            error = "Web 内置内容已改为 common_w 直接引用（静态 JSON 选取），无需卸载。"
+            error = "通用内容已改为 common03 直接引用（静态 JSON 选取），无需卸载。"
         };
     }
 

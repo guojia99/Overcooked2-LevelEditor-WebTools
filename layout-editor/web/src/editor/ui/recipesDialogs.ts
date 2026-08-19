@@ -57,7 +57,7 @@ import {
   fetchLevelRecipes,
   saveLevelRecipes
 } from "../../api";
-  import { webManifestHas, webRecipeDisabledReason, NODE_INGREDIENT_SOURCES } from "../../webBuiltin";
+import { NODE_INGREDIENT_SOURCES } from "../../recipeGroups";
 import type { RecipeEntry } from "../../types";
 
 export type RecipeTab = "select" | "selected" | "autofill";
@@ -110,44 +110,21 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
    *  中间产物）用它回退取中文名与成品贴图（icons/recipes）。 */
   let byRecipeId = new Map<string, RecipeEntry>();
   let levelSetRecipes: RecipeEntry[] = [];
-  let webInstalled: RecipeEntry[] = [];
   let coreRecipes: RecipeEntry[] = [];
   S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
-
-  // Web 内置硬性去重：同一道菜的多 DLC 换皮变体只保留一个代表（最高 DLC），
-  // 已勾选的变体始终保留可见（旧关卡已保存的换皮版不丢）。
-  const webDedupeKey = (name: string) =>
-    String(name ?? "").replace(/·?DLC\d+/g, "").replace(/[（）()· ]/g, "");
-  const dlcNumberOf = (id: string) => {
-    const m = /^dlc(\d+)_/.exec(id ?? "");
-    return m ? parseInt(m[1], 10) : 0;
-  };
 
   /** 从 recipes 重建派生集合（加载或安装/移除后刷新）。 */
   const recomputeGroups = () => {
     byGuid = new Map(recipes.map((r) => [r.guid, r]));
     byRecipeId = new Map(recipes.map((r) => [r.id, r]));
     // 自定义菜谱（含 Composite/Mixed，score 可能为 0 被标 intermediate）一律可作为订单菜谱；
-    // 只有非自定义的中间产物（如 web 内置 score<=0）排除在可点单之外。
+    // 只有非自定义的中间产物（如 score<=0 的匹配规则）排除在可点单之外。
     orderable = recipes.filter((r) => !r.intermediate || r.isCustom);
     S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
     const vis = visibleRecipes(orderable);
     levelSetRecipes = orderable.filter((r) => r.group === "levelset");
-    // 选择菜谱只显示：本关自定义 + Web 内置（common_w，白名单+清单过滤）+ Common 核心
-    // common_w 不存在/禁用（manifest exists=false 或 v0.0.0）时不显示任何 Web 内置菜谱
-    // 未放开的 web 菜谱也显示但置灰（不可勾选），便于用户了解存在但暂不可用
-    let web = vis.filter((r) => r.group === "web" && webManifestHas("recipes", r.id));
-    {
-      const reps = new Map<string, RecipeEntry>();
-      for (const r of web) {
-        const key = webDedupeKey(r.nameZh ?? "");
-        const cur = reps.get(key);
-        if (!cur || dlcNumberOf(r.id) > dlcNumberOf(cur.id)) reps.set(key, r);
-      }
-      web = web.filter((r) => reps.get(webDedupeKey(r.nameZh ?? "")) === r || selectedIds.has(r.id));
-    }
-    webInstalled = web;
-    coreRecipes = vis.filter((r) => r.group !== "levelset" && r.group !== "web");
+    // 选择菜谱：本关自定义（levelset）+ 其余全部（core / dlcXX 通用内容），全量可用。
+    coreRecipes = vis.filter((r) => r.group !== "levelset");
   };
   // 勾选判定按「菜谱 id」而非 guid：同 id 的 Import/拷贝视为同一菜谱；保存仍用 guid 集合。
   const selectedIds = new Set<string>();
@@ -179,14 +156,11 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
 
   const catMeta: Record<string, { label: string; emoji: string; color: string }> = {
     levelset: { label: "自定义菜谱", emoji: "🍽️", color: "#3b82f6" },
-    web: { label: "已安装 Web 内置", emoji: "🕸️", color: "#7c5cbf" },
     core: { label: "Common", emoji: "📦", color: "#2d6a4f" },
   };
 
   function recipeCard(r: RecipeEntry): string {
     const checked = selectedIds.has(r.id) ? "checked" : "";
-    const disabledReason = webRecipeDisabledReason(r);
-    const disabled = disabledReason !== null;
     const cust = r.isCustom ? ` <span class="pc-badge" title="自定义菜谱">🔧</span>` : "";
     const grp =
       r.group && r.group !== "core" && r.group !== "levelset"
@@ -197,9 +171,6 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       : "";
     const warnBadge = recipeLacksIntermediate(r)
       ? ` <span class="pc-badge" style="background:#b45309;color:#fff" title="该菜谱需要搅拌但缺少对应中间产物（面糊），请勿使用">⚠ 无中间产物</span>`
-      : "";
-    const disBadge = disabled
-      ? ` <span class="pc-badge pc-badge-disabled" title="${escHtml(disabledReason ?? "")}">⛔ 禁用</span>`
       : "";
     const chips = (r.ingredients ?? [])
       .map((ingId) => {
@@ -218,9 +189,9 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       .join("");
     const searchable = `${r.nameZh} ${r.nameEn ?? ""} ${r.id}`.toLowerCase();
     const iconSrc = customRecipeIconUrl(r) ?? (r.id && r.icon !== false ? `/icons/recipes/${encodeURIComponent(r.id)}.png` : "/icons/_placeholder.png");
-    return `<label class="pick-card recipe-card${disabled ? " pick-card-disabled" : ""}" data-name="${escHtml(searchable)}"${disabled ? ` title="${escHtml(disabledReason ?? "")}"` : ""}>
-      <input type="checkbox" value="${r.guid}" ${checked} ${disabled ? "disabled" : ""}>
-      <span class="rc-head"><img class="food-icon" loading="lazy" src="${escHtml(iconSrc)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'"><span class="pc-name">${escHtml(r.nameZh)}${grp}${cust}${lsBadge}${warnBadge}${disBadge}</span></span>
+    return `<label class="pick-card recipe-card" data-name="${escHtml(searchable)}">
+      <input type="checkbox" value="${r.guid}" ${checked}>
+      <span class="rc-head"><img class="food-icon" loading="lazy" src="${escHtml(iconSrc)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'"><span class="pc-name">${escHtml(r.nameZh)}${grp}${cust}${lsBadge}${warnBadge}</span></span>
       <span class="rc-ings">${chips || '<span class="muted small">无食材</span>'}</span>
     </label>`;
   }
@@ -233,7 +204,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     </div>`;
   }
 
-  function catHtml(cat: "levelset" | "web" | "core", items: RecipeEntry[]): string {
+  function catHtml(cat: "levelset" | "core", items: RecipeEntry[]): string {
     const meta = catMeta[cat];
     // 用传入的 items（已选/已搜索过滤后的子集）分组，而不是预计算的全量 catGroups
     const groups = groupRecipesByType(items).map(([type, arr]) => typeGroupHtml(cat, type, arr)).join("");
@@ -249,14 +220,13 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   function selectedViewHtml(): string {
     const sel = visibleRecipes(orderable).filter((r) => selectedIds.has(r.id));
     if (sel.length === 0) return '<p class="modal-hint">未选择菜谱，勾选左侧菜谱后显示在这里。</p>';
-    const byCat: Record<string, RecipeEntry[]> = { levelset: [], web: [], core: [] };
+    const byCat: Record<string, RecipeEntry[]> = { levelset: [], core: [] };
     for (const r of sel) {
       if (r.group === "levelset") byCat.levelset.push(r);
-      else if (r.group === "web") byCat.web.push(r);
       else byCat.core.push(r);
     }
     let html = "";
-    for (const cat of ["levelset", "web", "core"] as const) {
+    for (const cat of ["levelset", "core"] as const) {
       if (byCat[cat].length === 0) continue;
       html += catHtml(cat, byCat[cat]);
     }
@@ -275,7 +245,6 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const parts: string[] = [];
     if (activeTab === "select") {
       if (vis(levelSetRecipes).length) parts.push(catHtml("levelset", vis(levelSetRecipes)));
-      if (vis(webInstalled).length) parts.push(catHtml("web", vis(webInstalled)));
       if (vis(coreRecipes).length) parts.push(catHtml("core", vis(coreRecipes)));
     }
     return parts.join("") || '<p class="modal-hint">没有匹配的菜谱</p>';

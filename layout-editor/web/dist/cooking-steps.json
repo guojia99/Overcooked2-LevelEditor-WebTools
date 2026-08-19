@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-18T14:49:16.764Z",
+  "generatedAt": "2026-08-19T04:48:43.846Z",
   "schemaVersion": 3,
   "itemCount": 35,
   "cookingSteps": [
@@ -149,9 +149,9 @@
       "nameZh": "火锅台",
       "nameEn": "Hot Pot",
       "kind": "cooking",
-      "assetPath": "Assets/common_w/CookingSteps/HotPot.asset",
+      "assetPath": "Assets/common03/CookingSteps/HotPot.asset",
       "bundleName": "bundle225",
-      "group": "web"
+      "group": "core"
     },
     {
       "guid": "e059aea0615924c439c288cdaf588a06",
@@ -279,9 +279,9 @@
       "nameZh": "烤盘",
       "nameEn": "Roasting Tray",
       "kind": "cooking",
-      "assetPath": "Assets/common_w/CookingSteps/RoastingTray.asset",
+      "assetPath": "Assets/common03/CookingSteps/RoastingTray.asset",
       "bundleName": "bundle293",
-      "group": "web"
+      "group": "core"
     },
     {
       "guid": "a322a3a12d71f7f4dbbb1c6388b8539d",

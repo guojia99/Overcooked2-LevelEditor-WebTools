@@ -22,8 +22,8 @@ public static class LayoutEditorFootprintDump
     {
         public string id;
         public string guid;
-        public int cellsX;
-        public int cellsZ;
+        public float cellsX;
+        public float cellsZ;
     }
 
     [Serializable]

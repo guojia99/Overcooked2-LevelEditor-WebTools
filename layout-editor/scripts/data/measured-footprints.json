@@ -1,4145 +1,4145 @@
 {
-    "generatedAt": "2026-08-13 18:43:52",
+    "generatedAt": "2026-08-19 12:08:25",
     "items": [
         {
             "id": "Airbed_01",
             "guid": "31b0c185f498c324384e954a6a9f223d",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "Alien_Tentacle_01",
             "guid": "236e3248bcdfbe54fb3203888ec7ca75",
-            "cellsX": 3,
-            "cellsZ": 4
+            "cellsX": 3.0,
+            "cellsZ": 4.0
         },
         {
             "id": "Barrelraft_02",
             "guid": "5f6d1eb3359c7d44e980271aa84953a3",
-            "cellsX": 6,
-            "cellsZ": 6
+            "cellsX": 6.0,
+            "cellsZ": 6.0
         },
         {
             "id": "Beach_stonewall_01",
             "guid": "c82c660ad81106749b39082fd017ee55",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Beach_stonewall_corner_01",
             "guid": "0d43947633992084cafa4b59d82fc6d2",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Beach_stonewall_end_01",
             "guid": "26592c8030a591b44ac01c6d10beed07",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Boat_Cannon",
             "guid": "5012ffe1e218cd348b5f7dbe1d76b048",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Buoy_01",
             "guid": "693d6f6cb8f788b438e161ae912e760c",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "Candle1Position",
             "guid": "952d6163bedba3841b64d2e2a9e680e0",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Candle2Position",
             "guid": "e09d835c02f472848ac92ce54b601507",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Candle3Position",
             "guid": "a1b0cc3104e339f4ab428756f98fb6fa",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "City_kevin_02",
             "guid": "f3bed11192375e6448f42b50b330a12d",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "City_path_corner_01",
             "guid": "4c4b63027bcd9534299081d77f88780e",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "City_path_side_01",
             "guid": "c5d816fe3775ae945a066fcf3eedc8df",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "City_restaurant_table&chairs_01",
             "guid": "52dc812ad08d1d24ab5005250d0687a3",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "Citywall_brick_01a",
             "guid": "4ea45e7ab85b42647978777eb4d352c9",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Citywall_brick_01c",
             "guid": "d3983ff0192039449b644109821ab616",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Citywall_brick_out_02",
             "guid": "43dce9a4ead534641a86a8b19537fbcf",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Citywall_brick_vent_01a",
             "guid": "e5228139e115a2b44bbe87a7ae78fd3c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Citywall_brick_window_01",
             "guid": "635eff51b9229f244af5e2aaa9879690",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Citywall_brick_window_02",
             "guid": "7f9853a2e787ce34fb34275a13e37b49",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "Citywall_end_01",
             "guid": "f5e88166a3f7b8b45916433c3e12ee3a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Citywall_wallpaper_01",
             "guid": "c6c521d9aeaba7a419fd3460e825490b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Citywall_wallpaper_corner_in_01",
             "guid": "ab4a6db3087a62e44966390c1f442745",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Crate_raft_x10_01",
             "guid": "428ac7ef3f3ea0847b91801934b81c75",
-            "cellsX": 2,
-            "cellsZ": 11
+            "cellsX": 2.0,
+            "cellsZ": 11.0
         },
         {
             "id": "Crate_raft_x3_01",
             "guid": "953aeee694e8f074f9376377e7dd4f04",
-            "cellsX": 2,
-            "cellsZ": 4
+            "cellsX": 2.0,
+            "cellsZ": 4.0
         },
         {
             "id": "Dinghy",
             "guid": "f7bbeeb19fab7e74592c2223ca2f675b",
-            "cellsX": 3,
-            "cellsZ": 5
+            "cellsX": 3.0,
+            "cellsZ": 5.0
         },
         {
             "id": "DogSled",
             "guid": "bd4e9a3de3ce56441b2e939ecb0e17e6",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "DogSled_Luggage",
             "guid": "4acf96d5184cbd740874522901585fcb",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "Earth",
             "guid": "c0cc09a68b7c78542a48d0163cdc71ad",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "Fire_hydrant",
             "guid": "76ca035e59f2c98499c66aaaefc26a4d",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Flower_01",
             "guid": "2091ae6771c5a1242992698aebb69243",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Kevin_Hawaiian_01",
             "guid": "6580e0945b4d03d4684651618f489e5e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "LifeBuoyPillar",
             "guid": "0e9c8217cbf0674459ffe85a76f16f10",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "MarketCrate_01",
             "guid": "067bdf63ef400414bbcf33a0eef3d5c4",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "MarketCrate_02",
             "guid": "ccef2ad65b6f94b498e79c8ed93aa6ae",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "NPC_Penguin",
             "guid": "c53944d537b0149468a687e9c10db9b0",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Pool_Vent_01",
             "guid": "b5510730885226044aaf7767655c3c3c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Raft Floats",
             "guid": "c575e583003d77e44ae2e7247c673c62",
-            "cellsX": 5,
-            "cellsZ": 4
+            "cellsX": 5.0,
+            "cellsZ": 4.0
         },
         {
             "id": "Red Carpet Entrance",
             "guid": "208fb099fac50a242b03678a23b3244f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Resort_Marksetstall_01",
             "guid": "f2e3bddf41e2e34488b72baf5f5ece6b",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Resort_canopy",
             "guid": "f5c0ef8a57d27ef4c917506973e60be4",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Resort_wall_corner_in_01",
             "guid": "fc695cf3d4cb86645af1b02908e5649e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Resort_wall_end_01",
             "guid": "1437d070d89361f49b800ce9953e8f28",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Resort_wall_out_01",
             "guid": "97ee08d918ca66b4190a18ca1403abec",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Resort_wall_straight_01",
             "guid": "a8b42ec1686c9df4fab35767553623ac",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Resort_wall_window_01",
             "guid": "a88e3401b4b31dc43afa0da7225ae0d5",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Roof_Corner",
             "guid": "c7826068df5b2d546a24b691f480063f",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "RopeSwing_Group01",
             "guid": "50ebe3b7f0049364d882d85005745628",
-            "cellsX": 9,
-            "cellsZ": 1
+            "cellsX": 9.0,
+            "cellsZ": 1.0
         },
         {
             "id": "RopeSwing_Group02",
             "guid": "53a89e7e8ba68e74c9572e4735c5d85f",
-            "cellsX": 5,
-            "cellsZ": 1
+            "cellsX": 5.0,
+            "cellsZ": 1.0
         },
         {
             "id": "RopeSwing_Group03",
             "guid": "cbc63a52d2effde429708ec1d27e9403",
-            "cellsX": 16,
-            "cellsZ": 1
+            "cellsX": 16.0,
+            "cellsZ": 1.0
         },
         {
             "id": "RopeSwing_Group04",
             "guid": "c538af29e6d07064688d3ba934e74c7c",
-            "cellsX": 7,
-            "cellsZ": 1
+            "cellsX": 7.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Rubber_plant_01",
             "guid": "97f31f594baaa4b4684cd6c8c2bc4db5",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "Rubber_plant_02",
             "guid": "797dc1fa0f4b3314e9b84a8c66a7194c",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "Rubber_plant_03",
             "guid": "f641eab70fdcec649a31bb4d76086700",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "Scooter_01",
             "guid": "337e4413bf72e16418e253d435748f4b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Scooter_02",
             "guid": "97915ad13974cae45be72f490d08fe0e",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "Sea_plane_curved_02",
             "guid": "4777a4d9b26a0104598e808d03d19e1a",
-            "cellsX": 77,
-            "cellsZ": 37
+            "cellsX": 77.0,
+            "cellsZ": 37.0
         },
         {
             "id": "SignPost_01",
             "guid": "668ab41361d29074b8c35df0594cc0f1",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "Sky",
             "guid": "6bc6ab537d9e12b41964f64bb530b259",
-            "cellsX": 1784,
-            "cellsZ": 1825
+            "cellsX": 1784.0,
+            "cellsZ": 1825.0
         },
         {
             "id": "Snowfall_01",
             "guid": "c8ef56094c25a2746b37e348ab7a46ef",
-            "cellsX": 8,
-            "cellsZ": 8
+            "cellsX": 8.0,
+            "cellsZ": 8.0
         },
         {
             "id": "Space_Door_Airlock_Bool_Close",
             "guid": "74f88fea561b28a43a5b771367aaf026",
-            "cellsX": 4,
-            "cellsZ": 1
+            "cellsX": 4.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Space_Door_Airlock_Bool_Open",
             "guid": "06e4208eb991fd94d98351d88b8e91b4",
-            "cellsX": 4,
-            "cellsZ": 1
+            "cellsX": 4.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Space_Door_Airlock_Close",
             "guid": "e841f98c314bb724b90495bd70d45991",
-            "cellsX": 4,
-            "cellsZ": 1
+            "cellsX": 4.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Space_Door_Airlock_Open",
             "guid": "64a747b73c21e9a44b93a8712ffd3e8f",
-            "cellsX": 4,
-            "cellsZ": 1
+            "cellsX": 4.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Stair",
             "guid": "80a6f98478e9fe34ead3a8d6890ed189",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Stairs",
             "guid": "f565cf10a21b5e6469a669f4eef2d63c",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "Step",
             "guid": "465a6cb0fe2191741b49ed9ab808bd63",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "StoryKevin_Hawaiian",
             "guid": "1fd94bcd1521d4d48b8e4010f9be9109",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Strawberry_dressing_01",
             "guid": "0eded006002105e4cbd1c9cfb143eb95",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Umbrella_base_01",
             "guid": "e515f92e91ab5ec44ba8d335197e6980",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Urn_01",
             "guid": "3cf628b28aa9cc64f88d33e05f365d25",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "Wall_straight_top_01",
             "guid": "c8cdcaaa753fe51478c4c33ea7cf3c07",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Wall_straight_top_01b",
             "guid": "fb7e97d9a170e334894cd321f77c6790",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Wall_straight_top_02",
             "guid": "72bdc79df01ea984187f831c07aed688",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Wall_straight_top_02b",
             "guid": "04ceb457239231c4488e9e7a3133cdae",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "Water_01",
             "guid": "a3288048c24aaa44181e6970566891bd",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "aboard_01",
             "guid": "f51299eb8abafd54d9002898344c6d66",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_Lifebelt_01",
             "guid": "35fa2cdcb7da5bb4b9a8083d6d11a9eb",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_balloon_01",
             "guid": "693c7c5699d69f443aa178e3a38fb8a7",
-            "cellsX": 19,
-            "cellsZ": 19
+            "cellsX": 19.0,
+            "cellsZ": 19.0
         },
         {
             "id": "air_balloon_balloon_02",
             "guid": "bc30cc35cb927e34a9cdf4dec5f0bdef",
-            "cellsX": 17,
-            "cellsZ": 17
+            "cellsX": 17.0,
+            "cellsZ": 17.0
         },
         {
             "id": "air_balloon_balloon_03",
             "guid": "d83847a4862a41a47ae5bb779482b1a0",
-            "cellsX": 11,
-            "cellsZ": 11
+            "cellsX": 11.0,
+            "cellsZ": 11.0
         },
         {
             "id": "air_balloon_bridge_x3",
             "guid": "7dbfe6b6844a62941a0e763cb340e0ff",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_bridge_x5",
             "guid": "e4ba220de65ae4943a15d7ec5ba023c8",
-            "cellsX": 6,
-            "cellsZ": 1
+            "cellsX": 6.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_bunting_01",
             "guid": "c3cc034c3e041e246bb9551415947271",
-            "cellsX": 6,
-            "cellsZ": 11
+            "cellsX": 6.0,
+            "cellsZ": 11.0
         },
         {
             "id": "air_balloon_bunting_05",
             "guid": "8827430ee1831cf41bbb54b40b994fbe",
-            "cellsX": 7,
-            "cellsZ": 5
+            "cellsX": 7.0,
+            "cellsZ": 5.0
         },
         {
             "id": "air_balloon_burner_standard",
             "guid": "cee6a7bea26a3c54e977adf52d0dc67e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_chimney_01",
             "guid": "42e4fae5d0c191b4ca8783f412cb5fc5",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "air_balloon_flag_01",
             "guid": "1547d503f5e28c841bfe190e4f70ad35",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_roof_01",
             "guid": "0302ada6a422a7643b67c2587cfbb7ae",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "air_balloon_roof_02",
             "guid": "2ad5ac3c390b93d40a00ed5345ae1dc2",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_roof_03",
             "guid": "58adab78c0857c8499f9e0438569142a",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_roof_roof_section_01",
             "guid": "8b58d88b26276444688c104db7766d78",
-            "cellsX": 2,
-            "cellsZ": 9
+            "cellsX": 2.0,
+            "cellsZ": 9.0
         },
         {
             "id": "air_balloon_rope_top_side_01",
             "guid": "e02fcabb166500f42b311c1b5aed7d19",
-            "cellsX": 4,
-            "cellsZ": 2
+            "cellsX": 4.0,
+            "cellsZ": 2.0
         },
         {
             "id": "air_balloon_side_02",
             "guid": "115be376bff68554986455737a097d8a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_side_corner_04",
             "guid": "eb48408a928fd484ab69f7459a2bf3ef",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "air_balloon_side_corner_low_01",
             "guid": "0259fa94c4570bb4ca2c56c667894915",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "air_balloon_side_end_01",
             "guid": "44847740499a5e945a0f953d14511807",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_side_low_01",
             "guid": "135cad94871fcb24cb8c2faea868d7af",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "air_balloon_turbine_01",
             "guid": "fe7f49093a44a9f42bde8cb6df819332",
-            "cellsX": 9,
-            "cellsZ": 2
+            "cellsX": 9.0,
+            "cellsZ": 2.0
         },
         {
             "id": "air_balloon_turbine_02",
             "guid": "f098f091ee519e5448a74a24f48ac844",
-            "cellsX": 15,
-            "cellsZ": 2
+            "cellsX": 15.0,
+            "cellsZ": 2.0
         },
         {
             "id": "air_balloon_turbine_03",
             "guid": "27bf16572ca267940bbc8011d301454e",
-            "cellsX": 9,
-            "cellsZ": 5
+            "cellsX": 9.0,
+            "cellsZ": 5.0
         },
         {
             "id": "airballoon_barrier",
             "guid": "7504a511a9337504291be8170d5c7aa4",
-            "cellsX": 4,
-            "cellsZ": 1
+            "cellsX": 4.0,
+            "cellsZ": 1.0
         },
         {
             "id": "alien_floor_tile_01",
             "guid": "ba183481254daed438cea101dd22c762",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "alien_gue",
             "guid": "f71f8914afef39d4d9bc02b63c2de1ad",
-            "cellsX": 62,
-            "cellsZ": 36
+            "cellsX": 62.0,
+            "cellsZ": 36.0
         },
         {
             "id": "background_balloon_01",
             "guid": "3c1cdd404e14d9b4e881f05bce8cb120",
-            "cellsX": 12,
-            "cellsZ": 12
+            "cellsX": 12.0,
+            "cellsZ": 12.0
         },
         {
             "id": "barrier_01",
             "guid": "2eb05318b35a7eb458107620166be280",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "barrier_rope_1unit_01",
             "guid": "aac21639e93a9404caa79d72f227dc99",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "barrier_rope_2unit_01",
             "guid": "47feb17257e7dfc4cbf20972d09165a6",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "beachball_01",
             "guid": "15fc919678098dc4aa0878b7496c1119",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "beachdoodads_clamshell_01",
             "guid": "01f4562f51a1dea4aa3ecef72680246f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "beachdoodads_pebbles_01",
             "guid": "1bc5b84e99a8eec43a739ea4191c05b0",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "beachdoodads_pebbles_02",
             "guid": "936ef85a0ccb3f2458e90568a65e2b68",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "beachdoodads_pebbles_03",
             "guid": "a6379fb8b78340644960b96d34840130",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "beachdoodads_starfish_01",
             "guid": "54a188dde027d1144a923e9fe86044cc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "beachdoodads_starfish_02",
             "guid": "84f223bbb895a164fa58fa436ac75fc5",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "brokentiles_01",
             "guid": "a8cf483d157fb064c8f14c0f8039b286",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "brokentiles_02",
             "guid": "1a831102039fa9047843167d3eb50719",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "brokentiles_03",
             "guid": "a65036cc41655b2419cdff934597bd7e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "brokentiles_04",
             "guid": "727f940582cb79e4b8655644c9f2b57e",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "brokentiles_05",
             "guid": "261dd9ddf6d9c5248adf8c8e66bd6600",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "bucket_01",
             "guid": "6bd48b6dba8e4564f92edad024d052bc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "car_position_01",
             "guid": "b333a2edc8ebe0e45a8eea49adc7f56d",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "car_position_02",
             "guid": "d3c3b29bfb4401249a03317df47bf7be",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "car_position_03",
             "guid": "0bcce8d340517414caf045536c80cce3",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "chair_01",
             "guid": "08bbca291ea8f734c9d14f26ceb5eccc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "city_RubbishBin_01",
             "guid": "3e0ff66867a7e1540947aa55ddcb4e8f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "city_door_double_01",
             "guid": "d3941656b8aeaae45838ff4e1ab8844a",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "city_flag_01",
             "guid": "cb71e8afbe7f30a429b366cab212c6ca",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "city_wall_end_01",
             "guid": "28e7c80bc2f723b48bfea3e850eca0e8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "city_wall_straight_05",
             "guid": "1a02bd1739bf33b4c913acecb3544090",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "crate_raft_01",
             "guid": "2c3d6bb7ccd2d3542af1fc998652a7a4",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "crate_raft_x2_01",
             "guid": "51fd56f78f20a494e9af28cb59de09b6",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "debris_01",
             "guid": "75cdad6d8922cb04a8467c7163f55bba",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "debris_02",
             "guid": "9911c494c49b0eb49b343cabb7bd66cc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "debris_03",
             "guid": "2033dffe6ba584b4fb65a7e8ad7e9a25",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "debris_04",
             "guid": "60396e974168f2942b8585082dfeb226",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "debris_05",
             "guid": "373d621205916d243980562016bd71c9",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "decoration_bamboo_01",
             "guid": "a71e9b4552cd0a94a86bb425b0f94a35",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "decoration_bamboo_02",
             "guid": "6432c72fd2c4bfe4196215559098ad86",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "decoration_spice_rack",
             "guid": "495ca44a967155b41be64386eb2b1191",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "decoration_table_plant",
             "guid": "dbc5461e3bd144e48b3589cc65c16e60",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "decoration_ticket_rack",
             "guid": "4a8627f298e416d44b03b86cd65a10a9",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "decoration_vent",
             "guid": "8cf59752598f6f2469defad141bab37e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "decoration_wall_light 1",
             "guid": "d6f8268d61f82a748aa67e5a6e260edc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "divingboard_01",
             "guid": "4258cca752881784487668e58fa482f2",
-            "cellsX": 4,
-            "cellsZ": 2
+            "cellsX": 4.0,
+            "cellsZ": 2.0
         },
         {
             "id": "dlc2_Planter_01",
             "guid": "762ac292e1ec475498697375098d6358",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "dlc2_banner_01",
             "guid": "5172f598483349e4885d7d2c23a31d88",
-            "cellsX": 7,
-            "cellsZ": 1
+            "cellsX": 7.0,
+            "cellsZ": 1.0
         },
         {
             "id": "dlc2_banner_02",
             "guid": "f650a729d1aded54098dcd57d5531c54",
-            "cellsX": 7,
-            "cellsZ": 1
+            "cellsX": 7.0,
+            "cellsZ": 1.0
         },
         {
             "id": "dlc2_bush_01",
             "guid": "453281c9fe586f34a9e1f27fa82ca3f5",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "dlc5_ground_camp",
             "guid": "2dd242cecc176c141a6310f35f40ac30",
-            "cellsX": 34,
-            "cellsZ": 21
+            "cellsX": 34.0,
+            "cellsZ": 21.0
         },
         {
             "id": "exterior_car_blue_01",
             "guid": "e9e91a2b3da1c684f8505fe50b6df5d2",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "exterior_car_green_01",
             "guid": "8584db23e0275164cb4aa4986539214a",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "exterior_car_yellow_01",
             "guid": "3773f40284023bf4c98e1ba6bc16fbd8",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "exterior_fire_hydrant_01",
             "guid": "4727083d37bc6b441ac50b98816c317a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "exterior_grass_01",
             "guid": "98737bae21178e34296db9071fb499d7",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "exterior_man_hole_01",
             "guid": "b6504a69e5f95624d96d4f7cd6dbca87",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "exterior_man_hole_02",
             "guid": "d3006785ed913b44d8360d2cc1703a1e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "exterior_path_01",
             "guid": "9526cc63a99513d4688e7e420903cfb8",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "exterior_path_corner_01",
             "guid": "befba24dd8222c64ba1cd948155289be",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "exterior_path_side_01",
             "guid": "c0e141a09aca5ab46a5b25cdc684a189",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "exterior_road_01",
             "guid": "edea3814fed09f74f8df7abc7f2e619c",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "exterior_road_centre_01",
             "guid": "9d544e73669857c42b81e3e6f161ed46",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "exterior_road_crossing_01",
             "guid": "cc5a9ddc2f27c7645917e9da46164756",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "exterior_road_stop_01",
             "guid": "65a84de13f119124ab1b70351c1dc3a2",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "exterior_road_yellow_box_01",
             "guid": "ff7ac266ec34d5f4aa1d8d5cd3ca76d4",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "exterior_street_bench",
             "guid": "c6875c7771c813e43b068aaeac3a0b05",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "exterior_tree_green_01",
             "guid": "1a9e18f400100cc4a8b49504edd737d2",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "exterior_tree_pink_01",
             "guid": "43aaaad2a82edc24ca7df3af785f44f6",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "fence_pillar_lantern_01",
             "guid": "20303abd638b2674598b75dba707a0d8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "fence_straight_01",
             "guid": "89e2c45bc22459d43a734dc3e29af5dd",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "fence_straight_short_01",
             "guid": "b1638d254074b8a418eba556ed6ac687",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "flag_01",
             "guid": "8e111ce32fcf00a4c8bf9b8b0b3794ff",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "flag_01",
             "guid": "a69687b7a92ee85408ffa5a3751d8533",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "flag_02",
             "guid": "f857a8303feb86d45891b183e8e273a4",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "flag_02",
             "guid": "3c2348e1a5e58514da641f494b005491",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "floor_carpet_purple",
             "guid": "9f67dfb56cc0a4842b2d6a568e278de1",
-            "cellsX": 1,
-            "cellsZ": 4
+            "cellsX": 1.0,
+            "cellsZ": 4.0
         },
         {
             "id": "floor_corner_01",
             "guid": "6ad4f571a8b3a424b8360d6cece3e44e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "floor_edge_01",
             "guid": "ad045c17f45ebf84a8f5c89ba08e6f70",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grass_01",
             "guid": "c44eecc463d9d3a4cb29a8120ceb44dc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grass_01",
             "guid": "ad8658bdaeaaf154fbac031f958e597f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grass_02",
             "guid": "a16ebfcd75a62aa46994e00c1522d1a8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grass_02",
             "guid": "625e88c18ffd5cb42b70a87e58aa2ff3",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_fence_pillar_01",
             "guid": "37715d63a7ef86042b870da8a59054a6",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_grass_tile_01",
             "guid": "af287c27afe3cff43be4afbf97ef3758",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_gravestone_01",
             "guid": "4a90348eb3e00a04fa5b11bc1d081313",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_gravestone_02",
             "guid": "580eef5e3dfdd3d4ebf5f284b2965078",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_gravestone_03",
             "guid": "0b805ed635ee2394fb4a789bf322c9f3",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_gravestone_04",
             "guid": "538a9a8ce58f06345b765a89bd7c8b8a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_gravestone_05",
             "guid": "301c9b8883e4efa4291e6abb44804666",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_gravestone_06",
             "guid": "a36f0146cfb842b4790a7553120566ad",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_leaves_01",
             "guid": "20b82d4a833437c489cb74ccad394a55",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "grave_leaves_02",
             "guid": "5c513f99c3ffc2245b3ed36b5e109563",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_leaves_03",
             "guid": "c3803febb91e6cb439057b4b8e28eb21",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "grave_leaves_04",
             "guid": "4dfc5e715d9b1e14ebe7dc9210e58fda",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "grave_leaves_05",
             "guid": "562a7b562ac57324bbb67f55a93ef491",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_leaves_06",
             "guid": "e3fe3154d8a555d4d946c163c8537ca7",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "grave_leaves_07",
             "guid": "f95bf08e2ea8f0d4d83098d49d40790f",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "grave_leaves_08",
             "guid": "ab036c75311727f449bc225589b0ad25",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_leaves_09",
             "guid": "cdc6e0ac7d0d38540aaabae9ea3d0339",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_leaves_10",
             "guid": "3fef40bbbc47d50408c83599b0829b87",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_leaves_11",
             "guid": "3c40221b3d1414c4dbd0790baf1367cf",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "grave_tree_01",
             "guid": "1074311506f352a4f9f1963f5e0f979a",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "grave_tree_s_01",
             "guid": "c047bbb02d6629949810e6552d7df14a",
-            "cellsX": 5,
-            "cellsZ": 4
+            "cellsX": 5.0,
+            "cellsZ": 4.0
         },
         {
             "id": "grave_tree_s_02",
             "guid": "87956945d2dcc1f41a0de2ff670cf67d",
-            "cellsX": 6,
-            "cellsZ": 5
+            "cellsX": 6.0,
+            "cellsZ": 5.0
         },
         {
             "id": "hut_01",
             "guid": "9b460551cdffdd941afa436637cfb956",
-            "cellsX": 3,
-            "cellsZ": 4
+            "cellsX": 3.0,
+            "cellsZ": 4.0
         },
         {
             "id": "ice_floor_01",
             "guid": "46d2e3289d9e97543b43ede1a072ccfc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "kitchen_firepit_01",
             "guid": "25646e967fddc4b45a455add2553fe37",
-            "cellsX": 2,
-            "cellsZ": 7
+            "cellsX": 2.0,
+            "cellsZ": 7.0
         },
         {
             "id": "kitchen_firepit_02",
             "guid": "06c065b8cfeccc744aa089b436e86cf9",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "ladder_01",
             "guid": "ced655e6dbd77ec498353603288e2746",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "lantern_suspended_01",
             "guid": "12d359167eafaa54a8de31bc0702301a",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "m_city_canopy",
             "guid": "9787949914b4da54ea6e6c7914d7dc49",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_city_kevin_01",
             "guid": "b22d9169a4693c948aa92feec2084afe",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "m_city_kevin_02",
             "guid": "a2b5156cda64a1845820e0e0e292e33c",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "m_city_wall_right_angle_inside",
             "guid": "615d59d9f6ad1d14eb9207ce28e2a0ea",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc2_barrel_01",
             "guid": "bcc4d7c1bfd5fa547a50e6fb41cee20c",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "m_dlc2_barrelraft_01",
             "guid": "6444046dfba2c054c805e1c1368a72aa",
-            "cellsX": 6,
-            "cellsZ": 9
+            "cellsX": 6.0,
+            "cellsZ": 9.0
         },
         {
             "id": "m_dlc2_bush_01",
             "guid": "e1eb538b81958114b9d5674694ae1a24",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "m_dlc2_duck_01",
             "guid": "42e24b7fd4d8cc049b77a50b53eab48d",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "m_dlc2_flamingo_01",
             "guid": "3875a41a397f4dd49bf5280665be879a",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc2_pineapple_plant_02NoFruit",
             "guid": "086478cc4e365cd4ba08656f56e9a4b7",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "m_dlc2_sandcastle_01",
             "guid": "fff5d0405ec42d64dbfaaa88bdb7522e",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "m_dlc3_iceblock_01",
             "guid": "e7edce59c2dcfce4e8961659dc5644a6",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc3_iceblock_02",
             "guid": "aaed9f7a452440a45800d3000d5761aa",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc3_iceblock_03",
             "guid": "89408557682fbe640b7542cc208fb09b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc3_icecliff_270",
             "guid": "c3d40717412382845bee670975a480fc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc3_icecliff_90",
             "guid": "a219a44b013140f4d9468fd3195ee012",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc3_icecliff_straight_01",
             "guid": "6abdbf27f38cbb94b8265c4901667159",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc3_icecliff_straight_02",
             "guid": "96188dcc3bafdf64289d423aad495613",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_dlc5_owl_01",
             "guid": "bdf94e4862988b04b96302f21be2893c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_kitchen_firepit_02",
             "guid": "0743dbf719eced24eb17f3e9a2eb1cb6",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "m_lorry_van_back_01",
             "guid": "ad4283cdba18d5b41ad3f5be417e8365",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_lorry_van_back_02",
             "guid": "a5a6cc13591246c4bb7b2b7901b46416",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_lorry_van_exhaust_01",
             "guid": "3425dee7af63828469c055bab6d32cec",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_lorry_van_front_01",
             "guid": "3068067054a74de4b81ef01cab6f1ad3",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_raft_barrier_01",
             "guid": "0efab2147f373d34b90066134efeb9bc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_raft_barrier_rope_01",
             "guid": "f9eef2dd50d1ba14f9b26f9ddade8d23",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "m_sp_cliff_corner_in",
             "guid": "8682b7881496a8449a4e149542e81551",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_sp_cliff_corner_out_01",
             "guid": "d91ef7a074a9760469acf912564e1ec4",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "m_sp_cliff_edge_01",
             "guid": "c88be4937e35a874c9ad2acd777fd445",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_sp_cliff_edge_02",
             "guid": "ba29c2ccc32b3a540b34cc9a2db2e5ed",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_sp_cliff_edge_05",
             "guid": "5732ebda0e20e2941a8e4b6035d2708d",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_sp_cliff_edge_06",
             "guid": "7c00ee19f0d28254895f80c8c1b4de08",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_sp_countertop_01",
             "guid": "257f2a61474c3014fbf82cbd8cae3749",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "m_wizard_countertop_05_b",
             "guid": "8d1984ef166fbdc4886820180b5afd9c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "marketstall_blank_01",
             "guid": "8265df3ee42e57c4192472b90690b626",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "marksetstall_01",
             "guid": "92b112b03cfaf1f4eba19f8ba8f69d7a",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "mi_lantern_02",
             "guid": "e794fb4f4561d13489458ebdc3c31178",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "noripple_m_dlc3_icecliff_270",
             "guid": "4bf3e144a5b8f414ba30bba47c4a177f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "noripple_m_dlc3_icecliff_90",
             "guid": "570f7de4d8097564cb589da5f04551e9",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "noripple_m_dlc3_icecliff_straight_01",
             "guid": "6f93f3d60c0bfc34a8bdb0e7759ae2b0",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "noripple_m_dlc3_icecliff_straight_02",
             "guid": "48bcf42894d2f59418b79eaa6af83563",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_camp_building_01",
             "guid": "752c77e3deb730940b043754229f5308",
-            "cellsX": 6,
-            "cellsZ": 5
+            "cellsX": 6.0,
+            "cellsZ": 5.0
         },
         {
             "id": "p_camp_building_02",
             "guid": "818cd4e97366fef4b8c28fd844538828",
-            "cellsX": 4,
-            "cellsZ": 5
+            "cellsX": 4.0,
+            "cellsZ": 5.0
         },
         {
             "id": "p_dlc07_arch_01",
             "guid": "b1e655e5769124248872c23e341bdad9",
-            "cellsX": 4,
-            "cellsZ": 1
+            "cellsX": 4.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc07_chair_01",
             "guid": "72a1385489e688f4390fc6f8663154e2",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc07_courtyard_cobble_path_01",
             "guid": "061b2cd5c1fa41d42bbc5a09f8b324b0",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc07_keep_flagstone_01",
             "guid": "bf99624d0474ccd48855e6ad2c5b00a8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc07_keep_flagstone_02",
             "guid": "24109ab5b76d32e43b08b0db069e5c34",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc07_keep_flagstone_03",
             "guid": "ffe3693de2f1557458f68462bc3522c0",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc07_keep_flagstone_04",
             "guid": "046fed4411628a7428d330be56d6e72c",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc07_keep_flagstone_set_01",
             "guid": "a967e6f3be029eb4baed767d16db20f1",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc07_keep_flagstone_set_02",
             "guid": "b9a4eb3a067173e45bbaad612de69400",
-            "cellsX": 5,
-            "cellsZ": 3
+            "cellsX": 5.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc07_keep_flagstone_set_03",
             "guid": "740bbe5d5f882ae4dae137824f1b8aed",
-            "cellsX": 3,
-            "cellsZ": 4
+            "cellsX": 3.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc07_keep_flagstone_set_04",
             "guid": "072e5b8515319bf4299d60d54b1abc50",
-            "cellsX": 5,
-            "cellsZ": 5
+            "cellsX": 5.0,
+            "cellsZ": 5.0
         },
         {
             "id": "p_dlc07_keep_flagstone_set_05",
             "guid": "286e5bbf35f5c774989b71b5b9bce98f",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc07_keep_flagstone_set_06",
             "guid": "eb08dfd89afb97e4ca87e0ff32b9cd5b",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc07_keep_flagstone_set_07",
             "guid": "99ebbc3af091ccf41ab41ab0c87abf55",
-            "cellsX": 3,
-            "cellsZ": 4
+            "cellsX": 3.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc07_shield_01",
             "guid": "0fad53f750525c940bb9ddf1ff80596a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc07_shield_fork_spoon_01",
             "guid": "8c5179086ec11b2489bc8cb9d843908b",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc07_table_01",
             "guid": "a7ff9df1d66623740a7368ca04539523",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_box_01",
             "guid": "19a88836227156f4bb7d2eb93a30a2cf",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_box_02",
             "guid": "a9b3bde1bf325d04da7e4ce930d25755",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_box_03",
             "guid": "9da7477bd0fdcbe4f8529434e3923846",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_box_04",
             "guid": "bebe9198735c2df478ef43d67f5600e5",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_box_lid_01",
             "guid": "161ce2ee8295e5c4993f70a4252de607",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_box_lid_04",
             "guid": "c69c03ca28f09be49952526889a826fd",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_drink_trash_01",
             "guid": "f059fc96b4540be4a90ed0fde378ca68",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_scaffold_pillar_01",
             "guid": "f0304648f829cd7429605424e62cd6ca",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc08_standing_sign_01",
             "guid": "450ad07dc980bc24da98218cac83bf08",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc09_box_lid_01",
             "guid": "b29fc2e42e365ad42b84f2af727c548d",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc09_box_lid_02",
             "guid": "d29327fc2c8575744a49bb8d938456be",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc09_box_lid_03",
             "guid": "7edf25212b8e31b4083f7af99e190443",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc09_box_lid_04",
             "guid": "5cf712062d0237446ad3c545b1178bb7",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc09_tent_01",
             "guid": "1d8ea4a266bd72a46ba50c4f543f558b",
-            "cellsX": 6,
-            "cellsZ": 4
+            "cellsX": 6.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc09_tent_02",
             "guid": "0a19c9203b24f9a42a346078c9146c1c",
-            "cellsX": 7,
-            "cellsZ": 6
+            "cellsX": 7.0,
+            "cellsZ": 6.0
         },
         {
             "id": "p_dlc09_wallbit_01",
             "guid": "9ebab50e62a1f7146bbebfa90df32455",
-            "cellsX": 1,
-            "cellsZ": 6
+            "cellsX": 1.0,
+            "cellsZ": 6.0
         },
         {
             "id": "p_dlc5_bedroll_01",
             "guid": "5a0586310de568c41aa800b6d79a6e3d",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_bedroll_02",
             "guid": "64e629ec3459d4c47aff8e8ac6e38087",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_cabin_01",
             "guid": "db4f8324bd8375e4e93dba83f422c4bc",
-            "cellsX": 6,
-            "cellsZ": 6
+            "cellsX": 6.0,
+            "cellsZ": 6.0
         },
         {
             "id": "p_dlc5_cabin_roof_01",
             "guid": "3c3c8916a604a734fb7864757a3772f7",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_camp_fire_01",
             "guid": "dfc2044a3f5acc649918e8c25d863140",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_camp_fire_02",
             "guid": "e3740701ed9e7f343a2b8dd892ba331c",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_camp_fire_02",
             "guid": "6cd82a19c21be2040a28fb94de1496bc",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_camp_fire_02_nopfx",
             "guid": "da158454530202146b0a2c64e9066551",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_camp_river",
             "guid": "5f40cdcb39146644db685c596f0a8577",
-            "cellsX": 1,
-            "cellsZ": 4
+            "cellsX": 1.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc5_camp_water",
             "guid": "4645d536de8b7a04b935b1d1b6ae8d51",
-            "cellsX": 1,
-            "cellsZ": 13
+            "cellsX": 1.0,
+            "cellsZ": 13.0
         },
         {
             "id": "p_dlc5_canoe_01",
             "guid": "702457d92b33214468063c76db177d23",
-            "cellsX": 9,
-            "cellsZ": 1
+            "cellsX": 9.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_cliff_01",
             "guid": "bb5831939ee380245af6b867d0e24a24",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_cliff_02",
             "guid": "17cbb9224d186cb47a5a020b44c7553f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_cliff_270_01",
             "guid": "9076dc3dc2fdc2d49b2b116db4bc1581",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_cliff_270_02",
             "guid": "c8d71bc5f4c58bc4aaa4d465aae6344a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_cliff_90_01",
             "guid": "97b058cd21a31d147bc0605f77bc6ac4",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_fern_01",
             "guid": "7cd054e0836c7dd4d89a29c6f8182e04",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_fern_02",
             "guid": "1749e4b101caf934ba61d4d8c897f970",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_forestfog_01",
             "guid": "ebd7b27275d432b4bb659a49502d96f4",
-            "cellsX": 5,
-            "cellsZ": 14
+            "cellsX": 5.0,
+            "cellsZ": 14.0
         },
         {
             "id": "p_dlc5_forestfog_02",
             "guid": "d469a7a6acab41d42b1e6b84756578b3",
-            "cellsX": 4,
-            "cellsZ": 13
+            "cellsX": 4.0,
+            "cellsZ": 13.0
         },
         {
             "id": "p_dlc5_forestfog_03",
             "guid": "9fa49da5d060f2b448ad5ac66f22cb39",
-            "cellsX": 6,
-            "cellsZ": 8
+            "cellsX": 6.0,
+            "cellsZ": 8.0
         },
         {
             "id": "p_dlc5_grass_card_a 1",
             "guid": "528f972795134ba4cb8fe2e28e024edd",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_grass_card_b 1",
             "guid": "9d921415615f29443a586eed324b6d9f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_grass_card_c 1",
             "guid": "846918f2ebfbdc44d812330ff02a77c9",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_hanging_masonjar",
             "guid": "c02ede184e6ba0548a9f6d8a1564799c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_hanging_masonjar_02",
             "guid": "7435b2e9a6fed5347adbbec9a4e37146",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_hanging_masonjar_03",
             "guid": "5fc8e2d4d855b5a47a46dbc04e10372e",
-            "cellsX": 4,
-            "cellsZ": 2
+            "cellsX": 4.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_hatchet_01",
             "guid": "5aa728506bfd4b64e9937293fc8c6d83",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_hotchoc_mug_01",
             "guid": "475ccc704a2d16b4396e024ff861ad79",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_lantern_01",
             "guid": "a9f05da503e796f4b9328571bedf7c3a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_large_stump_01",
             "guid": "dc931fbda49315f49936f35fd268f07c",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_large_stump_02",
             "guid": "058fee72680786247aa08ef936302766",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_leaves_01",
             "guid": "dfa9b57a8a42bff40b61fd56dcfbfb95",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_leaves_02",
             "guid": "41e3bcc215ee0ea4c80dc06dbf94c465",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_leaves_03",
             "guid": "afd7ecad7d5d7f446b1510bfe1265204",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_leaves_04",
             "guid": "5860af7790d2fed428b7de89640dc117",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_log_01",
             "guid": "2b597006d45e6d24685c2ab2741d9d1f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_log_02",
             "guid": "6304edc5c6b77c14b81f3e5f16240518",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_log_03",
             "guid": "7d86b8978ee0c9f46ba90c1b6018d9b3",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_log_stairs_01",
             "guid": "00d43120defc95c40b14ecab9b189fb7",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_moonshaft_01 (4)",
             "guid": "bb0cba20f0c0ba04ba446cd2487906e0",
-            "cellsX": 9,
-            "cellsZ": 4
+            "cellsX": 9.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc5_mushroom_01",
             "guid": "71b73f807a2fa0845880f0d0b396aeae",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_mushroom_02",
             "guid": "b79a6c32512470046bd7894fed16d401",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_mushroom_03",
             "guid": "df1e3eb778a7ddf4fbefa64e2e4ee1b0",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_mushroom_04",
             "guid": "bf3785c4feb22284aa7ebda21ffe5b62",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_mushroom_05",
             "guid": "319d32ada5b8aaf458a70667c84c5fd2",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_nail_01",
             "guid": "c52d50042deea9d4b8b783f269085a19",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_picnic_table_01",
             "guid": "435b730b205b21342974be85f564a683",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_plank_wall_01",
             "guid": "8f94a07148e1e6b41a4720c0d004cfc7",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_plywood_01",
             "guid": "83121e68dc4012e4a9c826c1cd3c358a",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_reed_01",
             "guid": "cc3f0b9f2a32cf34092dae3f01eaaeb7",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_reed_02",
             "guid": "aa0a37b5487881541aac6db0cc2c4bfd",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_reed_03",
             "guid": "5de484c224b418e4d80a4fa8ba674fcc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_ripple_01",
             "guid": "6d23f722ba1fe534bb940887cea68635",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_rock_01",
             "guid": "ee6c35e7b5f002d459afcaf8c461aabf",
-            "cellsX": 5,
-            "cellsZ": 4
+            "cellsX": 5.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc5_rock_02",
             "guid": "b5be8b019bb20d34f82cd8674ae7acba",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_rock_03",
             "guid": "2a0a3012de69feb48bfd4b84ed3a0dc3",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_rock_04",
             "guid": "43b40782bd80c0b4d9199aa7fd3e9482",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_rockwall_01",
             "guid": "0c3346afc07479941a7f93e5d0d2b555",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rockwall_02",
             "guid": "16927f80312cfc140a06c1c7b032e056",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rockwall_03",
             "guid": "7c886e651cbf9374086bfa661104fd2b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rockwall_04",
             "guid": "0e96e927d7740ca488fb047411009d5b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_roof_ridge_01",
             "guid": "094036c8ec16cf943b14d8bf77670e10",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_roof_ridge_02",
             "guid": "ec61ed2aa90bcc3428be43f2af56805b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_roof_section_01",
             "guid": "3952aeccd4ba96044a9d5ede06db918e",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_roof_tile_02",
             "guid": "1210330be9a41194fbf09f8784735897",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_roof_tile_03",
             "guid": "b1190aca320d9964da993f4c8b57ed2e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_roof_tiles_end",
             "guid": "862904fdf0ec4004ea714d82fed5b629",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_roof_tiles_end_02",
             "guid": "805023bc71c510841b27dd2f403c2cc6",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_roof_tiles_front",
             "guid": "8c621e3e45bc4a446acc30b1ec79f442",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_roof_vbeam",
             "guid": "bf334efca2d4add4babefac2f5ceb963",
-            "cellsX": 4,
-            "cellsZ": 1
+            "cellsX": 4.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_roof_vbeam_02",
             "guid": "a5e9d14bbdef05244bfa10038f728cdc",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rope_01",
             "guid": "963eb80357dd5df4082401001f0b2e31",
-            "cellsX": 1,
-            "cellsZ": 8
+            "cellsX": 1.0,
+            "cellsZ": 8.0
         },
         {
             "id": "p_dlc5_rope_02",
             "guid": "fb3303ce305994d498e64a6ce40dbbde",
-            "cellsX": 1,
-            "cellsZ": 5
+            "cellsX": 1.0,
+            "cellsZ": 5.0
         },
         {
             "id": "p_dlc5_rope_03",
             "guid": "17f73fb4c4df3fa41b1dd6de6621df1f",
-            "cellsX": 1,
-            "cellsZ": 4
+            "cellsX": 1.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc5_rope_04",
             "guid": "fd2a6e725fbb7094b81a4ae78e4e3471",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_rope_bunting_01",
             "guid": "9d95ab9f2f5228b4db862705d0b21e28",
-            "cellsX": 1,
-            "cellsZ": 5
+            "cellsX": 1.0,
+            "cellsZ": 5.0
         },
         {
             "id": "p_dlc5_rope_bunting_02",
             "guid": "ffdaf40b1f7a4f643b0f3e38d6a681f5",
-            "cellsX": 1,
-            "cellsZ": 4
+            "cellsX": 1.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc5_rope_bunting_03",
             "guid": "06a30ee1c10c1734794509fb7c08f8c2",
-            "cellsX": 1,
-            "cellsZ": 7
+            "cellsX": 1.0,
+            "cellsZ": 7.0
         },
         {
             "id": "p_dlc5_rope_bunting_04",
             "guid": "f70fcfb6c2552ea4dae0fdc1e8a9a438",
-            "cellsX": 1,
-            "cellsZ": 7
+            "cellsX": 1.0,
+            "cellsZ": 7.0
         },
         {
             "id": "p_dlc5_rope_bunting_05",
             "guid": "67f874ff342fc374eb24b617ff036885",
-            "cellsX": 1,
-            "cellsZ": 10
+            "cellsX": 1.0,
+            "cellsZ": 10.0
         },
         {
             "id": "p_dlc5_rope_bunting_06",
             "guid": "f21f277f91f748e44adbcc72277abd28",
-            "cellsX": 1,
-            "cellsZ": 9
+            "cellsX": 1.0,
+            "cellsZ": 9.0
         },
         {
             "id": "p_dlc5_rope_fence",
             "guid": "95c9b89a600cfc84cab991e85e04a217",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_rope_log_01",
             "guid": "3650f3d42ac5a2343ad8c9a672407e58",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rope_log_02",
             "guid": "80a059d6707057342a52389da276cce3",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rope_log_03",
             "guid": "6f26f1ec9ae17a34690933f3a8d35b51",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rope_plank_01",
             "guid": "6ad0449884b9a5f4daa4acbc1ed3183b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rope_plank_02",
             "guid": "bc9220615e757984ca87de29df9f303c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rope_plank_03",
             "guid": "6f6e96d697bbc7d48a403eaf06555a4f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rug_01",
             "guid": "8b96ad0ffd7e82f42a840bf1015321ca",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_rug_02",
             "guid": "2e9092d60a36b8042bfead46d3fad9d6",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_rug_03",
             "guid": "0abcddda2295c1f4fb9d8a9b5bfa4638",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_rug_04",
             "guid": "2269be8977794af40a43c7988d43c0f5",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_rug_05",
             "guid": "b102b08bc2c560049940c49842fef5b5",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_rug_06",
             "guid": "5af7d09c5b4a43d48b78c9bc027cf7d3",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_rug_07",
             "guid": "d98a02cb22153cd42961bf05223768d4",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rug_08",
             "guid": "1706f1fb8977ee842ad324fc981d4164",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_rug_09",
             "guid": "a143a740096e8d046b31338557a84b18",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_scooter_01",
             "guid": "58e8aba20b76ce242b4ee90bf43308a2",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_shadowcast_01",
             "guid": "54e4794a91a908f4bb16cea9114c9b8d",
-            "cellsX": 9,
-            "cellsZ": 15
+            "cellsX": 9.0,
+            "cellsZ": 15.0
         },
         {
             "id": "p_dlc5_shadowcast_02",
             "guid": "ff018c586cf188641858273872543ad0",
-            "cellsX": 3,
-            "cellsZ": 4
+            "cellsX": 3.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc5_small_rock_01",
             "guid": "2ed8286184c1c4946b6d8c49c679d964",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_02",
             "guid": "f8ee44588309553408aca702045f040a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_03",
             "guid": "26598bb1964ce9444b58e9807e131b48",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_04",
             "guid": "6bf4e7b3bc10ed24e8442557c98e6e36",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_05",
             "guid": "450bf046ca3d50f4fa0ebac8b7db83b1",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_06",
             "guid": "4613bc62ace2f3f4da18eb9fc3e67088",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_07",
             "guid": "bb7f0bc4a025ac54ca343cd56912d6a1",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_08",
             "guid": "4b12f878c576d3d4086dea7b6b8c81e1",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_09",
             "guid": "6ead69d53d5157845a5639099aa8e904",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_small_rock_10",
             "guid": "6245e10e3ef5db74fa0b2d9bb10a4469",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_stairs",
             "guid": "cbdc10a607fc1094dba6908e20b3aea3",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_stump_stall_01",
             "guid": "863836bcb5a8b1440aa777ec95a5bf46",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_stump_table_01",
             "guid": "bb3d084cf6b930048b58d1d0db2ecc07",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_table_01",
             "guid": "f2e5925bc088e0d468af992832c27ac6",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_tent_01",
             "guid": "47b64ff7e4298d44daa5768aa8502ebd",
-            "cellsX": 6,
-            "cellsZ": 4
+            "cellsX": 6.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc5_tent_02",
             "guid": "a504136715c921b409cb73e3030bc03f",
-            "cellsX": 7,
-            "cellsZ": 6
+            "cellsX": 7.0,
+            "cellsZ": 6.0
         },
         {
             "id": "p_dlc5_throne_01",
             "guid": "7f75aab5c9f8cf74693adf8f3ae93c28",
-            "cellsX": 2,
-            "cellsZ": 4
+            "cellsX": 2.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_dlc5_tree_leaf_branch_01",
             "guid": "d443a78b9eaa1714380a19428b9f7d65",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_pine_01",
             "guid": "e0ba72b0e2dccb848aa3ee309825b86b",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_stump_01",
             "guid": "580c4fd1f9c69684baaffca7eecccfe7",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_stump_02",
             "guid": "26b480daa3cc8534a9dc442c5d5e0a45",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_tree_trunk_01",
             "guid": "d40f4a7657788774b89e10f05accb9a3",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_branch_01",
             "guid": "4f400ecfbb803a142a3586831da98516",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_tree_trunk_branch_02",
             "guid": "c6d46c3411fe9a64da2d5e85cdd8035c",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_tree_trunk_rope_01",
             "guid": "75781525ac3105c438c804efef7e89a0",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_rope_02",
             "guid": "6581b3bd26d11a44daa7ef43616bc92c",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_rope_03",
             "guid": "b40cf87b8f329ba4faa5250f2185c6ac",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_rope_04",
             "guid": "91195a9ecb982654fa574551be5709a1",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_rope_05",
             "guid": "8abacf0394ab8db4d85d2c5a5e3e9366",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_support_01",
             "guid": "08c154f54f18e254b9683aca0342174d",
-            "cellsX": 8,
-            "cellsZ": 5
+            "cellsX": 8.0,
+            "cellsZ": 5.0
         },
         {
             "id": "p_dlc5_tree_trunk_support_02",
             "guid": "bdd88b7811cf99e49bb62618c8c4be71",
-            "cellsX": 8,
-            "cellsZ": 6
+            "cellsX": 8.0,
+            "cellsZ": 6.0
         },
         {
             "id": "p_dlc5_tree_trunk_support__rope_01a",
             "guid": "98498562614c62a4f9e590bb74fb14bb",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_support__rope_01b",
             "guid": "1ccdb30a8ac6d784a8445ed2c8e2ec39",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_support_rope_02a",
             "guid": "c287b682903e42349893ba3d859340a2",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_support_rope_02b",
             "guid": "b0f4ea3dbc886264daf85c70a68701ca",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_support_rope_02c",
             "guid": "1b0f44ef9143f4c449c1b154e17f14e5",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_vines_01",
             "guid": "aca3c963dbf79104dad224a02c8f5dda",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_tree_trunk_vines_02",
             "guid": "f931d781ff8623242a2f02b10c655448",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_treehouse_roof",
             "guid": "8875dc0cc2df4514c8c0c26958e91459",
-            "cellsX": 4,
-            "cellsZ": 2
+            "cellsX": 4.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_treehouse_window_01",
             "guid": "accc26a9a58e4fe40bc3bf4a324d02c1",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_twig_01",
             "guid": "55d99ddf96676b34ca8d070358c33067",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_twig_02",
             "guid": "2d81f6720d5877a4a8ba0050adb045ad",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_dlc5_twig_03",
             "guid": "d0ac50cecf205e94a9b0f7133c57f17a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_twig_04",
             "guid": "145d69bdd07e08b469caf21611cb0603",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_twig_05",
             "guid": "9ac55be979197594fa3e829ce3380823",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_twig_06",
             "guid": "1b25d8d956bcee64e8916397e8b793b8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_twig_pile_01",
             "guid": "675fa335f958aa34289da6c1cdc455b9",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_dlc5_wooden_support_01",
             "guid": "adc4a4b3d414ffc42805b849bfec2983",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_wooden_support_02",
             "guid": "b98a04d0242f206428736a4c65e96371",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_wooden_support_03",
             "guid": "0e9d349182ecb054c9de69300dafcf6c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_01",
             "guid": "0308b2de307b3e04aa451298f2c61248",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_02",
             "guid": "b3a6f5ac1fed2bc4795b6e362b5b6dd1",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_03",
             "guid": "3e8f302ca14dfcb439d1806c3771be7a",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_04",
             "guid": "9da115b391e149249ab16a2370240cfa",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_05",
             "guid": "b0a10fc373391df43911961a4105861e",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_06",
             "guid": "8e39397296638e14487f78cb73b25a5c",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_large_01",
             "guid": "81f6526550c4aa0458ef3b08dfb48f22",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_large_02",
             "guid": "067fb5501b29bee488657bed41409ce5",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc5_woodplank_large_03",
             "guid": "156bdd3dbc894fa448dcf0aa8d5e26fc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_dlc7_cobweb_01",
             "guid": "6988e5fefe4fc6546b706ea33970bc5d",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_floor_section_01",
             "guid": "767f47ee190332c43bbd0a3520cce337",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_floor_section_02",
             "guid": "b0f146f8ca32a44458891958143d6ff3",
-            "cellsX": 4,
-            "cellsZ": 5
+            "cellsX": 4.0,
+            "cellsZ": 5.0
         },
         {
             "id": "p_floor_section_03",
             "guid": "30d1d1c39fd51d44cb1ccbd70d35c416",
-            "cellsX": 2,
-            "cellsZ": 5
+            "cellsX": 2.0,
+            "cellsZ": 5.0
         },
         {
             "id": "p_floor_section_04",
             "guid": "d9505904469862649a19106b91f525dd",
-            "cellsX": 4,
-            "cellsZ": 7
+            "cellsX": 4.0,
+            "cellsZ": 7.0
         },
         {
             "id": "p_floor_section_05",
             "guid": "4cb483e9bb0d0184cada9052b71ba5bf",
-            "cellsX": 7,
-            "cellsZ": 7
+            "cellsX": 7.0,
+            "cellsZ": 7.0
         },
         {
             "id": "p_rope_fence_01",
             "guid": "3a145e53f3686154aa55244d99a05ddf",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_rope_fence_02",
             "guid": "788ff24f690172d4790666d849209ec3",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_rope_fence_03",
             "guid": "1b5182ca3704a1049b63b84c738c4b5b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_rope_fence_04",
             "guid": "bb9394ff400881e45a78bda5146b608d",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_ropebridge_01",
             "guid": "27d1c9956e316f048b344c11885ca2d3",
-            "cellsX": 9,
-            "cellsZ": 4
+            "cellsX": 9.0,
+            "cellsZ": 4.0
         },
         {
             "id": "p_small_rock_pile_01",
             "guid": "66599f72d32958540941e649565e59c1",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_small_rock_pile_02",
             "guid": "0af42eee0e1001347b95fc186793807b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_small_rock_pile_03",
             "guid": "120da2c41023c554fa6f84c3e276b77a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_small_rock_pile_04",
             "guid": "a494ebc05d43cc640996e0dedb4f01c3",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_small_rock_pile_05",
             "guid": "a75bd553bef1c074490375f37f3a9123",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "p_space_rail_01",
             "guid": "0d5b4ae878ba3d04fa60162f3682a716",
-            "cellsX": 6,
-            "cellsZ": 6
+            "cellsX": 6.0,
+            "cellsZ": 6.0
         },
         {
             "id": "p_treehouse_wall_01",
             "guid": "a406aa6e8ad8f464d8947b0a31dda8dd",
-            "cellsX": 4,
-            "cellsZ": 2
+            "cellsX": 4.0,
+            "cellsZ": 2.0
         },
         {
             "id": "p_wallbit_01",
             "guid": "805ba919140d0b84e9d033d284714aaa",
-            "cellsX": 1,
-            "cellsZ": 6
+            "cellsX": 1.0,
+            "cellsZ": 6.0
         },
         {
             "id": "p_wooden_stairs_01",
             "guid": "d79eb423aa2d6f845bc648b8e4358b5e",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_wooden_stairs_02",
             "guid": "af51b4c0618f1e94b9226b859d28fa3b",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_wooden_stairs_03",
             "guid": "4991c9ca0e4206849b0cda7c6a2ec52a",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "p_wooden_stairs_04",
             "guid": "3a4025c939474a943a7e5c1a297dd2a7",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "palmtree_01",
             "guid": "2dbfd289ce8f770429e4231c2f792e97",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "palmtree_02",
             "guid": "123717c6803ddb44285309fd412ad1af",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "palmtree_03",
             "guid": "bf48fa37e9a34784c94212836c826204",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "palmtree_coconut_01",
             "guid": "af19a94dc75ee49438981ea81da504d9",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "palmtree_leaf_01",
             "guid": "1dbe657ef7a6c5147a85cf7b9ea7bef5",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "palmtree_leaf_02",
             "guid": "1539ec1921e1d0e44ab5a1bb75c56c89",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "palmtree_trunk_01",
             "guid": "489e273505116bc4f9ee4fed6bd84189",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "palmtree_trunk_02",
             "guid": "a56191819bcb791479283ec334eeca5f",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "palmtree_trunk_03",
             "guid": "e9724848bc1ba2245b062290a61e9505",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "pillar_end_01",
             "guid": "d440d7cfeffb91345a9b1a32f4398ef6",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "pillar_middle_01",
             "guid": "baa66eb0031334141afbc06e5dcfe7ae",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "pineapple_plant_01",
             "guid": "30d68455942732646913ccf6f7aa24b6",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "pineapple_plant_02NoFruit",
             "guid": "931746d274401bb4d87f9afb44234e2d",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "pineapple_plant_03_flowers",
             "guid": "809a7816647b4b1419e023cec0e39b46",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "plank",
             "guid": "64f1e17d4c2206944bdb7430cb0e5a1e",
-            "cellsX": 1,
-            "cellsZ": 5
+            "cellsX": 1.0,
+            "cellsZ": 5.0
         },
         {
             "id": "planks_3_01",
             "guid": "d1c0aaae7329e4444b82d985511b6a2b",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "planks_3_02",
             "guid": "b5c61602df7c32b41af9e06f6b919eae",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "plants_01",
             "guid": "d2f2cc695e3cc334980973d8051ae195",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "plants_02",
             "guid": "f8771e57f7bf3b44d9b60a993fa59316",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "plants_03",
             "guid": "b81867cd156eadd4698063478058759d",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "pool_corner_01",
             "guid": "79db4b31560c27f4ba477646cb2205f9",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "pool_corner_01 1",
             "guid": "b835dcd281a662b40872436a81ceb6e5",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "pool_corner_02",
             "guid": "99dc32eb7b8a56a488f5c3852c5b01a5",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "pool_corner_02 1",
             "guid": "eca9254858ab11c4081f83a28f72bd9a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "pool_straight_01",
             "guid": "a0d0c215402d4f047a321fd0927c910e",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "pool_straight_01 1",
             "guid": "e60cfa408049e23468949ed4a7955088",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "pool_wall_corner_01",
             "guid": "b013aa055517fbd419ae5c8317b0a656",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "pool_wall_corner_02",
             "guid": "01529946feff7d240b3899708a39839c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "pool_wall_straight_01",
             "guid": "0d85c8b870ebe8244b68cc582e0ab36e",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "poolwater_01",
             "guid": "61b368f8a024e9c40986faa62d7eb46c",
-            "cellsX": 7,
-            "cellsZ": 12
+            "cellsX": 7.0,
+            "cellsZ": 12.0
         },
         {
             "id": "raft_flower_01",
             "guid": "b764657c184afec4982955af9146cf2a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_leave_01",
             "guid": "eeb86fbb433e4d249b5d8f817cea09ee",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_leave_02",
             "guid": "75e438e8cf5a6864f8326ffeaf8872b6",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_leave_03",
             "guid": "40688b0e7c1d36a419dae0442d20511e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_leave_04",
             "guid": "c5eb6df36790aaf47b0e6008e836a3f2",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_leaves_01",
             "guid": "84fccfd77cf6b304984878a03c81998c",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "raft_leaves_02",
             "guid": "c4d2d04216f91644a95a223796d7abef",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "raft_leaves_03",
             "guid": "79ec27abb55856740a68288082f6a3db",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_leaves_04",
             "guid": "183a000ce6048dc418b8010a1680ed2c",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "raft_leaves_05",
             "guid": "ae020c6ca9df9b34aaf4a5b35bfabdd8",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "raft_lilypad_01",
             "guid": "7de80a0f2f45dfd4387fa3f73656728c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_lilypad_02",
             "guid": "ea17f48d5c97c064cb7394d1977312f6",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_raft_back_01",
             "guid": "8cb07519309744a4eb4bb4450af6fbd5",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_raft_front_01",
             "guid": "b458266b3848162489e77fa5a1d18c14",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_raft_middle_01",
             "guid": "7f7305fe1d2ee0d4596076bb99ff0c78",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_raft_middle_02",
             "guid": "ff84eb3c30e1be144a8fab538b770390",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_raft_middle_03",
             "guid": "900b63e4858f9644a94a944b520d683d",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_rock_01",
             "guid": "8a827faf0bc02b54885b6dac0632b824",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "raft_rock_02",
             "guid": "b3fd3d369668d2c479b1382860448527",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_rock_03",
             "guid": "84fe8de158d341b4dbb50f021b0f1a64",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_rock_04",
             "guid": "3f3849bb000223d4eb9a4dfd23bd5e47",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_rock_05",
             "guid": "02b65f022cd6f504e9114101968c4295",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_wake_02",
             "guid": "2c54412c1f0847a428ee8b4d58edd8b4",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_wake_03",
             "guid": "c55c25ea62b74a44c9fa9e47ec06a387",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_wake_04",
             "guid": "b9f71a4f78f11064abc9a26edd5285ca",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "raft_water",
             "guid": "a312fec52e14e1444ba46b71d26285d2",
-            "cellsX": 60,
-            "cellsZ": 26
+            "cellsX": 60.0,
+            "cellsZ": 26.0
         },
         {
             "id": "restaurant_chair_01",
             "guid": "0598dcc60e4063c4ea6f7cfb40f60e18",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "restaurant_chair_02",
             "guid": "f04336ea7b062bb469181040015bf935",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "restaurant_chair_03",
             "guid": "ba1669ec9458389449bcc07375ab7c50",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "restaurant_chair_04",
             "guid": "c4d785076a4faf547ad588bec51dd811",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "restaurant_lantern",
             "guid": "30b3a50f2e1c7994ea50508649f69ad7",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "restaurant_light_01",
             "guid": "9e6ac3dd10c49aa49851dd889380355f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "restaurant_picture_01",
             "guid": "8518eef2ee62fb840957c5ebd49dbfed",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "restaurant_plant_01",
             "guid": "8ed8b9d9ff59a3148962039d17f614cb",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "restaurant_plate_01",
             "guid": "69540b44cbab54c47bacd3979c721fd8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "restaurant_table_01",
             "guid": "4a5e84d07e31de446b2f3c5276acf3ec",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "restaurant_table_02",
             "guid": "d0e25a755fb52ae48a823e96c75086e1",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "ripple",
             "guid": "bfeda2e7208752b4b9050266d9578eaa",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "rocket_01",
             "guid": "eed86655c1194fc4b9392aab3961c20b",
-            "cellsX": 11,
-            "cellsZ": 6
+            "cellsX": 11.0,
+            "cellsZ": 6.0
         },
         {
             "id": "rooftiles_corner_01",
             "guid": "dc42b3878921d884b808ce0c14a85af5",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "rooftiles_corner_02",
             "guid": "1528a993f09e17e49b2610545ed14019",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "rooftiles_straight_01",
             "guid": "7255be0d6c1056b4587a18606a872cc1",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "rope_01",
             "guid": "e1bf8e87a90133447b6f4117a9922e51",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "rope_03",
             "guid": "4c42ece56df9a7c4aa5c034dbd91a86c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sand_01",
             "guid": "34969f3178968ed439ebeca0923bc407",
-            "cellsX": 35,
-            "cellsZ": 35
+            "cellsX": 35.0,
+            "cellsZ": 35.0
         },
         {
             "id": "sand_floor_01",
             "guid": "a22658b6127e9e345bceab8f372c906b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sanddecal_01",
             "guid": "cc629e8e188f48f468317d7da53d8837",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sanddecal_02",
             "guid": "a1d161dabb8cdda46a2c9c3ffffd9126",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sanddecal_03",
             "guid": "a026a33b4004ae443a0500ae013ad98b",
-            "cellsX": 1,
-            "cellsZ": 2
+            "cellsX": 1.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sanddecal_04",
             "guid": "a69be1af708135c408222d5cc1cb7148",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sanddecal_05",
             "guid": "c174865b01efd02409fa337e9fcfa18e",
-            "cellsX": 7,
-            "cellsZ": 3
+            "cellsX": 7.0,
+            "cellsZ": 3.0
         },
         {
             "id": "sanddecal_06",
             "guid": "c77e5a2f8d51a4248ba06d560515403b",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "sea_shore_01",
             "guid": "b25183645aafc0047a106f4512380494",
-            "cellsX": 17,
-            "cellsZ": 10
+            "cellsX": 17.0,
+            "cellsZ": 10.0
         },
         {
             "id": "sea_shore_extended",
             "guid": "a52b67044742fd3449d01640d50b449f",
-            "cellsX": 17,
-            "cellsZ": 38
+            "cellsX": 17.0,
+            "cellsZ": 38.0
         },
         {
             "id": "shark_01",
             "guid": "7462491c19441e54f87aef4bd599766b",
-            "cellsX": 2,
-            "cellsZ": 4
+            "cellsX": 2.0,
+            "cellsZ": 4.0
         },
         {
             "id": "sharkfin_01",
             "guid": "e907eaebbc4739b4a839fc459fb85f9f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sign_01",
             "guid": "cac847d6539be5743b19f68842baff4b",
-            "cellsX": 1,
-            "cellsZ": 3
+            "cellsX": 1.0,
+            "cellsZ": 3.0
         },
         {
             "id": "sign_02",
             "guid": "70bd51e4781df3e4fa56d74605d4f03f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "smoothie_01",
             "guid": "c759638db2e7317468507b50716ee209",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "smoothie_02",
             "guid": "ff2e7a6dda42121488baeee87a987348",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "smoothie_03",
             "guid": "4ca3a7248d85f43479c3e99f302c640c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "smoothie_04",
             "guid": "1ed0c07a40c730b48b6d5293de2f34b4",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snow_270",
             "guid": "b189d42b8d4bfe84cbc99271b1dda0a4",
-            "cellsX": 74,
-            "cellsZ": 63
+            "cellsX": 74.0,
+            "cellsZ": 63.0
         },
         {
             "id": "snow_90",
             "guid": "4a1047cc09bcf2a4db77f698d2933f9d",
-            "cellsX": 120,
-            "cellsZ": 120
+            "cellsX": 120.0,
+            "cellsZ": 120.0
         },
         {
             "id": "snow_floor_01",
             "guid": "47ee35a1dc6245e4b8a6da98121b63fc",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snow_straight_01",
             "guid": "a21b1b02d0c27fc4b997c86bd7dc3e95",
-            "cellsX": 60,
-            "cellsZ": 120
+            "cellsX": 60.0,
+            "cellsZ": 120.0
         },
         {
             "id": "snow_straight_02",
             "guid": "070c192a1c96f6245b0424e83ae3a1e3",
-            "cellsX": 76,
-            "cellsZ": 120
+            "cellsX": 76.0,
+            "cellsZ": 120.0
         },
         {
             "id": "snowballpile_01",
             "guid": "7420c01cb0ea9c94ea2a7b75033325eb",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snowmound_01",
             "guid": "251b8d7198c395b4f80906bbe9173649",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snowmound_02",
             "guid": "b44e0ee71eed03344ac8e1466bd4839f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snowmound_03",
             "guid": "8cfd1bb644e580641b6aed3c36a375f9",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snowmound_04",
             "guid": "8452a972465115c47af67270ec476b76",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snowmound_05",
             "guid": "5b5df672891cfb242a6398be5d9dc04b",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "snowmound_06",
             "guid": "af2a980af02aa0b4a9026d81a89f39ed",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snowmound_07",
             "guid": "897e5d6ed9c4ed448b582ddd95dd1f1f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "snowmound_08",
             "guid": "4afcaf13be108f3498d332e3545418e3",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sp_cliff_corner_in_01",
             "guid": "e6e27a5123ba06044b25f9ff1ea5249c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sp_cliff_corner_out_01",
             "guid": "4159cc1ba5cd75c47ad2e80d273bb58f",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sp_cliff_edge_01",
             "guid": "042f4c8edd935e549a038ee74b9ac3c7",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sp_cliff_edge_02",
             "guid": "1ee6b36c7d373ab40889be6870a5040b",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sp_cliff_edge_05",
             "guid": "97c4d19201114cd43aa5b18de0801ad0",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sp_cliff_edge_06",
             "guid": "1e07c924b2c44c24e9a8c73357112c5c",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sp_ripple",
             "guid": "3b8903e199f7d4d48b911a329486c9ec",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sp_rock_01",
             "guid": "3a665aa5c400ca6498079437eba95b32",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sp_rock_02",
             "guid": "99492dc0db8c68c4fb181fd9f49783fd",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sp_rock_03",
             "guid": "24d1e9255776a7a4f87b6260fd627181",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sp_rock_04",
             "guid": "f43ceb773e27f3840920b682ed0d16a8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "space_chair_01",
             "guid": "2fbb56fa6a77c6943bd931b526dc03de",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "spade_01",
             "guid": "9c57b334d9883b6478c572b3fe77e28a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "stairs_campsite",
             "guid": "061e0eb386f1e85489a250f0b58f7733",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "stone_slab_01",
             "guid": "75ef1163a22a1c440823c49871f62d26",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "stones_01",
             "guid": "c392cb0c349017d4eb0292d813335e63",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "stones_02",
             "guid": "c70d96b75e4f9254eae6afadefaaba8c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "stones_03",
             "guid": "5928e0b74062ed24bba26981abd0b9c7",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sunbed_01",
             "guid": "66bbfd8aedd3d454db59a0c5789bb47c",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sunbed_table_01",
             "guid": "0db346b476068414887f2223a8f822c8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sunglasses_01",
             "guid": "9c9bfa1dc3a043740a035c9b14ba5411",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "surfboard_01",
             "guid": "d52376f7f2c331e41ab1817488d4f399",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sushi_side_step_1x28",
             "guid": "7280b19c70c988140b5d9fa4d81cf864",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sushi_side_step_1x8",
             "guid": "4301d60b535bd0341b13efd5658bea7e",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sushi_sign_01",
             "guid": "55c4db2eaa6107b4984d54bada16ae2d",
-            "cellsX": 6,
-            "cellsZ": 1
+            "cellsX": 6.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sushi_sign_01_day",
             "guid": "52611f483a3f3ff45990772e10b99f71",
-            "cellsX": 6,
-            "cellsZ": 1
+            "cellsX": 6.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sushi_sign_01b",
             "guid": "f4a633f20cc56c24399c3677fb6356e7",
-            "cellsX": 5,
-            "cellsZ": 1
+            "cellsX": 5.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sushi_sign_02",
             "guid": "0fadf07aab2679342adfe8504361155c",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sushi_sign_03",
             "guid": "f57ce22f264191140ae36caa9630d861",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sushi_sign_03_day",
             "guid": "0ae09322bdc306c4993ddfea6230ccd7",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sushi_sign_03b_day",
             "guid": "48cd7f079a0442e4588e63f43a416732",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "sushi_sumi_01a",
             "guid": "53d78d4ce0b34234f8fccb1c19227e97",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sushi_sumi_01b",
             "guid": "a559c1a7f8ad03f4283b41552e1c46ab",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sushi_sumi_01c",
             "guid": "7d3034b550cd0ab44a7398492eb7e99c",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sushi_sumi_01d",
             "guid": "980974b28729c324681c217ac83bbbf2",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sushi_sumi_01e",
             "guid": "8f7adc36d1ed90a4691fa8b6206508b9",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sushi_sumi_01f",
             "guid": "b537b6048001e79408bad1011697e5e4",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "sushi_sumi_01g",
             "guid": "2a8d16436264c9e4ca3b552d6a8f6df7",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "table_01",
             "guid": "18a481b5cb85fba42b9db542e45b20e8",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "table_01",
             "guid": "f59dff78bcb42c840b747d0fdf229139",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "throne_armor_01",
             "guid": "10268dc209c129d42882116039ed9358",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "throne_banner_01",
             "guid": "e2ff2eace3e79e74592dabee1b4ebad4",
-            "cellsX": 4,
-            "cellsZ": 1
+            "cellsX": 4.0,
+            "cellsZ": 1.0
         },
         {
             "id": "throne_kevinschair_01",
             "guid": "e67f9dae8d04fbf4ca8586b3e1425165",
-            "cellsX": 3,
-            "cellsZ": 3
+            "cellsX": 3.0,
+            "cellsZ": 3.0
         },
         {
             "id": "throne_picture_01",
             "guid": "a06a0f76d55c5f54b9c2f06cdd2eab04",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "throne_torch",
             "guid": "3a9d27d90539338498f5d5ed2646840b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "towel_01",
             "guid": "4cbb1ac3f14ad464e99279b651d5c1ca",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "towel_02",
             "guid": "420348176b42f614588d5257ecfd3d7b",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "towel_03",
             "guid": "a470863cc610fe0478d8e0857b284c50",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "traffic_cone_01",
             "guid": "10b341dcf6d150b409da717eb040acfe",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "traffic_light green",
             "guid": "2eca47a1a2ef31d498135880d34628b0",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "traffic_light off",
             "guid": "3e1a91f9e3cc99540883307f26abad0e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "traffic_light red",
             "guid": "6817416bbc685db4db588a40dc4077c9",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "umbrella_closed_01",
             "guid": "cb3ae9fe3bc1a2b40942f699c4fff1af",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "umbrella_open_01",
             "guid": "3909d2a3db7261d49ab018320a6e3646",
-            "cellsX": 5,
-            "cellsZ": 5
+            "cellsX": 5.0,
+            "cellsZ": 5.0
         },
         {
             "id": "walkway_floor_01",
             "guid": "36028bae063323e4c86e5f61f9904f53",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "walkway_floor_03_alt_01",
             "guid": "0cf28a7642a517a40aed0723d45b9798",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "walkway_pillar_01",
             "guid": "e1f5238afdff0c44dae7f0c970d7be98",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "walkway_pillars_01",
             "guid": "7faae133bb520b949972d87cf9f1ac54",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "walkway_roof_01",
             "guid": "c633ba08176a9df488830755f7398fc2",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "walkway_roof_alt_01",
             "guid": "d323ab4bfacd6094bb9684f814110679",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "walkway_rope_02",
             "guid": "d28f3c299e0ff8e4c83eed23c97df99e",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_270_01",
             "guid": "ffb0746e6f9f88a498dc3081ce6ea700",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_90_01",
             "guid": "a962afa48a53c7841be882151cf032bc",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "wall_brick_01a",
             "guid": "342d2709b7155cd428e5ac1aab0a39c4",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_01b",
             "guid": "9d10e7a28166afb4589564c0922c18a0",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_01c",
             "guid": "3dfb0d7224bdcee478aae655f007164b",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_01d",
             "guid": "3c1ef1df6bf7d4c48a490cd6ac98adeb",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_crack_01",
             "guid": "72f211f753230644c9233ed40d172644",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_in_01",
             "guid": "af4f454a0ff150d46a756511d7ae5232",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_out_01",
             "guid": "f991727a681f84b4ebdbbf19ce440d58",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_short_01",
             "guid": "e79fb59a8c19da34ebebd9f871a12ad3",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_window_01",
             "guid": "fd5b060d5e41f5f408956918cb0ba834",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_window_02",
             "guid": "c51360ec55c7a804b9f757e2348f8b2a",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_window_02_orange",
             "guid": "c572c239bfcb570489fbeadb53cff072",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_brick_window_02_ornate",
             "guid": "20b3d97b71ac6bd428410235439c539f",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "wall_brick_window_03",
             "guid": "375e6a079af0ff34786e8fe1ab7ec7d8",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_broken_01",
             "guid": "889ae6bfd08c36e409c3c3e21830004d",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_detail_01",
             "guid": "9156e37706171c9499e6cfc451b5c8a2",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_detail_02",
             "guid": "835fa8978bd1e2d4ea35f35133684b84",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_detail_03",
             "guid": "d54196ca0bd65074c848c2cdaa613f37",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_orange_01",
             "guid": "e2302171e9bb9ec4dbed3a3510c81a29",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_straight_01",
             "guid": "3fc2c9270ca3ebe42a27aa025a8bb7f7",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_wallpaper_01",
             "guid": "daa9bb76a58af124b9c64a3437295168",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_wallpaper_in_01",
             "guid": "ad92d11839b2f8049a77cdb62645ca27",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_wallpaper_in_02",
             "guid": "41eec5aa576d8a04d9ea5316fd99d5e4",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wall_wood_slats_01",
             "guid": "c10148d1633de8d43bb6a31e852a2bd2",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_banner_01",
             "guid": "4a6f919ed2611c6448defb500798d8eb",
-            "cellsX": 2,
-            "cellsZ": 3
+            "cellsX": 2.0,
+            "cellsZ": 3.0
         },
         {
             "id": "wizard_book_01",
             "guid": "51e0c05c33921a84ca53a4e50433f0a2",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_book_02",
             "guid": "c3d4e209d4b8bf74c86a0afbe30ee52a",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_book_03",
             "guid": "54d205849430abb4982d35615016d1eb",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_book_04",
             "guid": "960e7f426d506ee4b8e82762c8faf4cf",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_bookcase",
             "guid": "e06f08ea16934204b9ccd5a7aaf9e2e1",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_longbench_01",
             "guid": "b76987196498e834aa409e5f13df82ad",
-            "cellsX": 3,
-            "cellsZ": 1
+            "cellsX": 3.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_longtable_01",
             "guid": "2610218e594842c4a8a25dedba4bb714",
-            "cellsX": 3,
-            "cellsZ": 2
+            "cellsX": 3.0,
+            "cellsZ": 2.0
         },
         {
             "id": "wizard_picture_01",
             "guid": "08c2ef06f51c669418d2d36fd8e26a1d",
-            "cellsX": 2,
-            "cellsZ": 2
+            "cellsX": 2.0,
+            "cellsZ": 2.0
         },
         {
             "id": "wizard_rail_01",
             "guid": "18b391531cc011e47b84b2183d891f63",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_rail_02",
             "guid": "69924aeae23affa4e9fd37b788ebc375",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_rail_03",
             "guid": "2f10f096531262346aef48c8914aac56",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_sconcecandle_01",
             "guid": "270375c894d94984cbac4ca1667d5898",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_shelf_01",
             "guid": "b1c087bf5a5b240408ceb2d790b38f94",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_shelf_02",
             "guid": "a5d00084af4a8414cb83aecc9af1d43c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_shelf_03",
             "guid": "e32b30c9dbde7124380e13fed23bed53",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_shelf_04",
             "guid": "36d0315fce736ae4d8f023293143fe61",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_stoneblock_01",
             "guid": "9c388dba182e215479197e15c736f72c",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_stoneblock_02",
             "guid": "61e7567de3d34254ba35c3eeb0bb278f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_stoneblock_03",
             "guid": "be8020cbb98dc2841b8f8759bed715db",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_stonewall_01",
             "guid": "8240d0c00d674eb42bb1a71a3050457d",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_walltile",
             "guid": "1699416f0701a874c9f2e561c068ea1f",
-            "cellsX": 2,
-            "cellsZ": 1
+            "cellsX": 2.0,
+            "cellsZ": 1.0
         },
         {
             "id": "wizard_walltruss_01",
             "guid": "56abc9d95b869024191bbb3411ab607f",
-            "cellsX": 1,
-            "cellsZ": 8
+            "cellsX": 1.0,
+            "cellsZ": 8.0
         },
         {
             "id": "wizard_window_01",
             "guid": "3748df889a3d81f45872c16dca1c609f",
-            "cellsX": 4,
-            "cellsZ": 4
+            "cellsX": 4.0,
+            "cellsZ": 4.0
         },
         {
             "id": "wizard_window_02",
             "guid": "29bcbc5811edf7544beeccec28326ba3",
-            "cellsX": 2,
-            "cellsZ": 4
+            "cellsX": 2.0,
+            "cellsZ": 4.0
         },
         {
             "id": "woodenwall_01",
             "guid": "12ff31005f463794794bd5da2657facd",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "woodenwall_night_01",
             "guid": "c34cbfd51c4b5fc409083894296c034f",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         },
         {
             "id": "woodenwall_roof_alt_01",
             "guid": "6f47b02cc109396408d60b904899f8f7",
-            "cellsX": 1,
-            "cellsZ": 1
+            "cellsX": 1.0,
+            "cellsZ": 1.0
         }
     ]
 }

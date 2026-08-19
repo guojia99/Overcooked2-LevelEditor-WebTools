@@ -789,11 +789,11 @@ public static class LayoutEditorRecipeKnowledge
         }
     }
 
-    /// <summary>Web 内置菜谱分数估算：分数 = 20 × 食材种类数 + 烹调难度加成，
+    /// <summary>common03 通用菜谱分数估算：分数 = 20 × 食材种类数 + 烹调难度加成，
     ///  clamp [20,120]、级距 20（对齐游戏攻略：材料越多越高、烹调越麻烦越高）。
     ///  加成：搅拌+烘焙(蛋糕/派/月饼/布丁/搅拌步骤)=60；搅拌+煎炸(松饼/甜甜圈)=40；
     ///  煮/炸/蒸/烤/火锅/烤串/搅拌机(Blender)=20；组装/切菜/煎(FryingPan)=0。</summary>
-    public static int EstimateWebRecipeScore(string id, string step, string[] ingredients)
+    public static int EstimateCommon03RecipeScore(string id, string step, string[] ingredients)
     {
         var distinct = new HashSet<string>(StringComparer.Ordinal);
         if (ingredients != null)

@@ -3,7 +3,6 @@
  * 逐项展示依赖是否就绪，缺失时给出操作指引。布局编辑器工具栏「🩺 依赖检查」打开。
  */
 import { envStatus, refreshEnvStatus, type EnvStatus } from "../../envStatus";
-import { syncWebBuiltinFromEnv } from "../../webBuiltin";
 import { openModal, closeModal } from "../../modals";
 
 interface DepRow {
@@ -26,7 +25,6 @@ function buildRows(env: EnvStatus | null): DepRow[] {
     ];
   }
 
-  const cw = env.commonW;
   const rows: DepRow[] = [
     {
       name: "后端服务",
@@ -48,14 +46,6 @@ function buildRows(env: EnvStatus | null): DepRow[] {
       name: "手册词典",
       ok: !!env.dictionaryLoaded,
       fix: "names-dictionary.json 未加载。确认 layout-editor/scripts/data/names-dictionary.json 存在，然后在 Unity 中触发一次脚本重编译强制重载。",
-    },
-    {
-      name: "common_w（Web 内置内容）",
-      ok: !!cw?.exists,
-      detail: cw?.exists
-        ? `版本 ${cw.version} · 菜谱 ${cw.recipes.length} · 食材 ${cw.ingredients.length} · 道具 ${cw.prefabs.length}`
-        : undefined,
-      fix: "common_w 为开发者提供的外置文件夹。请将开发者分发的 common_w 文件夹整体放入 Unity 项目的 Assets/ 目录下（即 Assets/common_w，内含 version.txt），等待 Unity 导入完成后点击「重新检查」。未装配时全部 Web 内置菜谱/食材/道具不可用。",
     },
     {
       name: "游戏 Bundle",
@@ -115,8 +105,6 @@ export function openDepsCheckModal(): void {
     btn.disabled = true;
     btn.textContent = "检查中…";
     await refreshEnvStatus();
-    // 同步 common_w 清单缓存（白名单/闭包逻辑下次取数时自动跟随）
-    syncWebBuiltinFromEnv();
     const body = panel.querySelector(".modal-body");
     if (body) body.innerHTML = renderBody();
     btn.disabled = false;

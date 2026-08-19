@@ -28,12 +28,12 @@ import {
   selectSceneInDropdowns
 } from "./sceneIO";
 import { buildPalette } from "./palette";
-import { initWebBuiltin } from "../webBuiltin";
 import { buildFloorPalette } from "./floorPalette";
 import { refreshScopedSaveButton } from "./serialize";
 import { scopedSaveMeta } from "./serialize";
 import { openRecipesDialog } from "./ui/recipesDialogs";
 import { openDepsCheckModal } from "./ui/depsCheck";
+import { requestTestLayout } from "./testLayout";
 import { openUtensilManager } from "./ui/utensilManager";
 import { openScreenshotModal } from "./ui/screenshotModal";
 import { openCameraLightModal } from "./cameraLight";
@@ -184,8 +184,6 @@ export function setLayer(layer: LayerKey): void {
 }
 
 export async function init() {
-  // Web 内置（common_w）门槛：先加载 manifest + 白名单，再拉取目录数据
-  await initWebBuiltin();
   const ok = await fetchHealth();
   const healthInfo = await fetchHealthInfo().catch(() => ({ ok: false, recipeApi: false }));
   setStatus(
@@ -265,6 +263,7 @@ export async function init() {
   document.getElementById("btn-save")!.addEventListener("click", () => void saveToUnity(""));
   document.getElementById("btn-save-items")!.addEventListener("click", () => void saveToUnity(scopedSaveMeta().scope));
   document.getElementById("btn-deps-check")?.addEventListener("click", () => openDepsCheckModal());
+  document.getElementById("btn-test-layout")?.addEventListener("click", () => requestTestLayout());
   document.getElementById("btn-repair-broken")?.addEventListener("click", async () => {    try {
       const n = await repairBrokenPrefabs(S.scenePath);
       if (n > 0) {

@@ -14,7 +14,6 @@ const FOOD_GROUP_ZH: Record<string, string> = {
   dlc11: "DLC11 饮料",
   dlc13: "DLC13 巧克力",
   levelset: "本关卡集",
-  web: "Web内置",
 };
 
 export function foodGroupLabel(group: FoodGroup | undefined): string {
@@ -27,13 +26,13 @@ export function foodGroupBadge(group: FoodGroup | undefined): string {
   return label && group !== "core" ? `[${label}] ` : "";
 }
 
-/** 展示层去重：同 id 时隐藏 web 内置项，保留 levelset 组条目。 */
+/** 展示层去重：同 id 时隐藏通用内容项，保留 levelset 组条目。 */
 export function visibleIngredients(ingredients: IngredientEntry[]): IngredientEntry[] {
   const levelsetIds = new Set(
     ingredients.filter((i) => i.group === "levelset").map((i) => i.id)
   );
   return ingredients.filter((i) => {
-    if (i.group !== "web") return true;
+    if (i.group === "levelset") return true;
     if (levelsetIds.has(i.id)) return false;
     return true;
   });
@@ -43,7 +42,7 @@ export function visibleIngredients(ingredients: IngredientEntry[]): IngredientEn
 export function visibleRecipes<T extends { id: string; group?: string; assetPath?: string }>(recipes: T[]): T[] {
   const levelsetIds = new Set(recipes.filter((r) => r.group === "levelset").map((r) => r.id));
   return recipes.filter((r) => {
-    if (r.group !== "web") return true;
+    if (r.group === "levelset") return true;
     if (levelsetIds.has(r.id)) return false;
     return true;
   });

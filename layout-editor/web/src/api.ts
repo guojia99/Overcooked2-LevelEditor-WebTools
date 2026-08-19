@@ -1,7 +1,3 @@
-import {
-  computeWebClosure,
-  filterWebEntries,
-} from "./webBuiltin";
 import type {
   AmbienceCatalog,
   AudioCatalog,
@@ -34,8 +30,6 @@ import type {
   RecipeEntry,
   SwitchMaterialCatalog,
   SwitchMaterialOption,
-  WebRecipeLibrary,
-  WebRecipeUninstallResult,
 } from "./types";
 
 const STALE_BRIDGE_MSG =
@@ -105,17 +99,6 @@ export async function repairBrokenPrefabs(assetPath?: string): Promise<number> {
   return data.removed ?? 0;
 }
 
-/** 打开关卡集时上报 common_w 状态（不执行同步）。
- *  web 内置内容的实际门槛在前端 /api/env/status（后端实测存在性）+ web-allowlist.json。 */
-export async function syncLevelSetWeb(setName: string): Promise<{ version: string; disabled: boolean; changed: number }> {
-  const q = new URLSearchParams();
-  if (setName) q.set("setName", setName);
-  const r = await fetch(`/api/level-set/sync?${q}`, { method: "POST" });
-  if (!r.ok) return { version: "", disabled: false, changed: 0 };
-  const data = await r.json().catch(() => ({}));
-  return { version: data.version ?? "", disabled: !!data.disabled, changed: data.changed ?? 0 };
-}
-
 /** only scopes the write-back to one layer: "" = full, "items" / "decor" / "floors". */
 export async function saveLayout(doc: LayoutDocument, snap: number, syncWalkable = false, only = ""): Promise<void> {
   const q = new URLSearchParams({ snap: String(snap) });
@@ -166,23 +149,16 @@ function dropLevelSetCopies<T extends { assetPath?: string }>(entries: T[], file
 }
 
 export async function fetchIngredients(): Promise<IngredientEntry[]> {
-  // Web 内置（common_w）食材只认静态 JSON（经 manifest 过滤）。
-  let dynamic: IngredientEntry[] | null = null;
+  // 通用内容（common03）食材：后端动态接口直接下发（含 common01/02/common03），
+  // 失败时回退静态 ingredients.json。
   try {
     const r = await fetch("/api/catalog/ingredients");
     const data = await readApiJson<{ ingredients?: IngredientEntry[] }>(r);
-    dynamic = (data.ingredients ?? []).filter((e) => e.group !== "web");
+    return data.ingredients ?? [];
   } catch {
     console.debug("[catalog] /api/catalog/ingredients 不可用，回退静态 ingredients.json");
-  }
-  try {
     const data = await fetchStaticCatalog<{ ingredients?: IngredientEntry[] }>("ingredients.json");
-    const staticAll = dropLevelSetCopies(data.ingredients ?? [], "ingredients.json");
-    const staticWeb = filterWebEntries("ingredients", staticAll.filter((e) => e.group === "web"));
-    if (dynamic === null) return filterWebEntries("ingredients", staticAll);
-    return [...dynamic, ...staticWeb];
-  } catch {
-    return dynamic ?? [];
+    return dropLevelSetCopies(data.ingredients ?? [], "ingredients.json");
   }
 }
 
@@ -205,27 +181,19 @@ export async function fetchFloorMaterials(levelSet: string): Promise<FloorMateri
 }
 
 export async function fetchRecipeCatalog(levelSet: string): Promise<RecipeEntry[]> {
-  // Web 内置（common_w）菜谱只认静态 JSON（经 manifest 过滤）。
-  let dynamic: RecipeEntry[] | null = null;
+  // 通用内容（common03）菜谱：后端动态接口直接下发（含 common01/02/common03），
+  // 失败时回退静态 recipes.json。
+  let recipes: RecipeEntry[];
   try {
     const q = new URLSearchParams({ levelSet });
     const r = await fetch(`/api/recipes?${q}`);
     const data = await readApiJson<{ recipes?: RecipeEntry[] }>(r);
-    dynamic = (data.recipes ?? []).filter((e) => e.group !== "web");
+    recipes = data.recipes ?? [];
   } catch {
     console.debug("[catalog] /api/recipes 不可用，回退静态 recipes.json");
-  }
-  let recipes: RecipeEntry[];
-  try {
     const data = await fetchStaticCatalog<{ recipes?: RecipeEntry[] }>("recipes.json");
-    const staticAll = dropLevelSetCopies(data.recipes ?? [], "recipes.json");
-    const staticWeb = filterWebEntries("recipes", staticAll.filter((e) => e.group === "web"));
-    recipes = dynamic === null ? filterWebEntries("recipes", staticAll) : [...dynamic, ...staticWeb];
-  } catch {
-    recipes = dynamic ?? [];
+    recipes = dropLevelSetCopies(data.recipes ?? [], "recipes.json");
   }
-  // 依赖闭包：已放开的 web 菜谱带出所需食材/中间产物/步骤/工作站道具。
-  computeWebClosure(recipes);
   for (const r of recipes) {
     if (r.type === "sushi" && r.cookingStep === "Steamer") {
       r.cookingStep = "Pot";
@@ -240,7 +208,7 @@ export async function fetchRecipeCatalog(levelSet: string): Promise<RecipeEntry[
 
 export async function fetchCookingSteps(): Promise<CookingStepEntry[]> {
   const data = await fetchStaticCatalog<CookingStepCatalog>("cooking-steps.json");
-  return filterWebEntries("cookingSteps", data.cookingSteps ?? []);
+  return data.cookingSteps ?? [];
 }
 
 export async function fetchLevelRecipes(assetPath: string): Promise<LevelRecipes> {
@@ -823,35 +791,6 @@ export async function deleteCustomRecipeCategory(setName: string, category: stri
 export async function fetchCounterAppearances(): Promise<CounterAppearanceCatalog> {
   const data = await fetchStaticCatalog<CounterAppearanceCatalog>("counter-appearances.json");
   return data;
-}
-
-// ---------- Web 内置菜谱库（内置菜谱管理） ----------
-
-/** 拉取 Web 内置菜谱库（含安装/被引用状态与去重代表）。 */
-export async function fetchWebRecipeLibrary(setName: string): Promise<WebRecipeLibrary> {
-  const q = new URLSearchParams({ setName });
-  const r = await fetch(`/api/web-recipes?${q}`);
-  return readApiJson<WebRecipeLibrary>(r);
-}
-
-/** 显式安装指定 Web 内置菜谱到关卡集 custom_web（连同叶食材）。 */
-export async function installWebRecipes(setName: string, ids: string[]): Promise<void> {
-  const r = await fetch("/api/web-recipes/install", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ setName, ids }),
-  });
-  await readApiJson<{ ok?: boolean }>(r);
-}
-
-/** 移除已安装的 Web 内置菜谱副本；若被关卡引用则拒绝并返回 usedByLevels。 */
-export async function uninstallWebRecipes(setName: string, ids: string[]): Promise<WebRecipeUninstallResult> {
-  const r = await fetch("/api/web-recipes/uninstall", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ setName, ids }),
-  });
-  return readApiJson<WebRecipeUninstallResult>(r);
 }
 
 export async function fetchSwitchMaterials(): Promise<SwitchMaterialOption[]> {

@@ -10,5 +10,18 @@
   "BlenderCup": "Blender",
   "Steamer": "Steamer",
   "Oven": "OvenPot",
-  "Campfire": "Campfire"
+  "Campfire": "Campfire",
+  "dlc02_utensil_mixer": "Mixer",
+  "dlc03_utensil_mixer": "Mixer",
+  "dlc05_utensil_mixer": "Mixer",
+  "dlc07_utensil_mixer_01": "Mixer",
+  "dlc08_utensil_mixer_01": "Mixer",
+  "dlc09_utensil_mixer": "Mixer",
+  "dlc13_utensil_mixer_01": "Mixer",
+  "utensil_blender_01": "Blender",
+  "dlc02_utensil_frying_pan": "FryingPan",
+  "dlc05_utensil_frying_pan": "FryingPan",
+  "dlc07_utensil_frying_pan_01": "FryingPan",
+  "dlc08_utensil_frying_pan": "FryingPan",
+  "dlc09_utensil_frying_pan": "FryingPan"
 }

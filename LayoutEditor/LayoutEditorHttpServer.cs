@@ -242,21 +242,9 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/env/status" && request.HttpMethod == "GET")
             {
-                // 启动环境一次性自检：common_w 装配、音频导出、游戏 bundle、dump 清单等
-                // 依赖可用性一次返回，前端启动时拉取一次即可（webBuiltin/版本徽标共用）。
+                // 启动环境一次性自检：音频导出、游戏 bundle、dump 清单等
+                // 依赖可用性一次返回，前端启动时拉取一次即可（依赖检查/版本徽标共用）。
                 WriteJson(response, 200, LayoutEditorJson.ToJson(BuildEnvStatus(Port)));
-                return;
-            }
-
-            if (path == "/api/level-set/sync" && request.HttpMethod == "POST")
-            {
-                // （已废弃拷贝同步）仅上报 common_w 状态：目录不存在 = 未装配（web 内置禁用）；
-                // changed 恒为 0（不再有 custom_web 拷贝动作）。
-                var setName = request.QueryString["setName"] ?? string.Empty;
-                var status = LayoutEditorCustomIngredients.CommonWStatus();
-                var changed = 0;
-                WriteJson(response, 200, "{\"version\":\"" + status.version + "\",\"disabled\":"
-                    + (status.exists ? "false" : "true") + ",\"changed\":" + changed + "}");
                 return;
             }
 
@@ -337,9 +325,9 @@ public class LayoutEditorHttpServer
                 if (string.IsNullOrEmpty(only) && request.QueryString["itemsOnly"] == "1")
                     only = "items";
 
-                // 统一保存处理：Web 内置（common_w）引用校验（历史 Import/custom_web
+                // 统一保存处理：common03 引用校验（历史 Import/custom_web
                 // 引用告警）+ 收集 doc 引用的游戏 bundle，供后续依赖注册。
-                // common_w 资产直接引用、随 common_w bundle 打包，不再拷贝 custom_web。
+                // common03 资产直接引用、随 common03 bundle 打包，不再拷贝 custom_web。
                 var levelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(doc.sceneAssetPath);
                 string levelSet = null;
                 if (levelInfo != null)
@@ -356,7 +344,7 @@ public class LayoutEditorHttpServer
 
                 // 依赖注册必须在 Apply 之前：Apply 结尾的 ReloadPseudoAssetsFull 按
                 // LevelInfoSO.dependencies 加载伪预制件，晚注册会让本轮 reload 缺
-                // bundle（新放 common_w 道具首存必空的原因之一）。
+                // bundle（新放 common03 道具首存必空的原因之一）。
                 if (levelSet != null && levelInfo != null)
                     LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
 
@@ -1091,8 +1079,7 @@ public class LayoutEditorHttpServer
             staticDist = LayoutEditorPaths.IsWebDistReady(),
             schemaVersion = LayoutEditorRecipeKnowledge.BridgeSchemaVersion,
             knowledgeLoaded = LayoutEditorRecipeKnowledge.KnowledgeFileLoaded,
-            dictionaryLoaded = LayoutEditorManualLookup.DictionaryLoaded,
-            commonW = LayoutEditorCustomIngredients.CommonWStatus()
+            dictionaryLoaded = LayoutEditorManualLookup.DictionaryLoaded
         };
 
         // 音频导出（audio-exports/）

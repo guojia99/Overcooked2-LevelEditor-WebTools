@@ -30,9 +30,9 @@ public static class LayoutEditorCatalogApi
         var roots = new List<string>
         {
             "Assets/common01/food/Ingredients",
-            "Assets/common02/food/Ingredients"
-            // 注意：Web 内置（Assets/common_w）不再由后端动态下发，
-            // 前端经静态 JSON（ingredients.json + common-w-manifest.json）获取。
+            "Assets/common02/food/Ingredients",
+            // 通用内容源库（Assets/common03）：与 common01/common02 同级直接扫描。
+            "Assets/common03/Ingredients"
         };
         roots.AddRange(LayoutEditorLevelAdminApi.LevelSetCustomIngredientFolders());
 
@@ -74,20 +74,16 @@ public static class LayoutEditorCatalogApi
         return new IngredientCatalogDto { ingredients = list.ToArray() };
     }
 
-    /** "core" / "custom" / "dlcXX" / "levelset" / "web" — mirrors foodGroupOf in build-catalog.mjs. */
+    /** "core" / "custom" / "dlcXX" / "levelset" — mirrors foodGroupOf in build-catalog.mjs.
+     *  common03 通用内容按 dlc 子目录归 dlcXX，无 dlc 目录则归 core（无 web 分组）。 */
     internal static string FoodGroupOf(string assetPath)
     {
         if (string.IsNullOrEmpty(assetPath))
             return "core";
-        // Web 内置源库（Assets/common_w，游戏 DLC 内容，直接打包为 common_w bundle）
-        // ——必须在 dlc 正则前判断。
-        if (assetPath.IndexOf("/common_w/", StringComparison.Ordinal) >= 0)
-            return "web";
         if (assetPath.IndexOf("/custom_recipes/", StringComparison.Ordinal) >= 0)
             return "levelset";
-        // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：始终归 Web内置 分组
-        if (assetPath.IndexOf("/custom_web/", StringComparison.Ordinal) >= 0)
-            return "web";
+        // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：按通用内容处理
+        // （无 dlc 目录 → core）。
         // 已拷入关卡集的自定义食材（与 custom_recipes 同机制打包）。
         if (assetPath.IndexOf("/custom_ingredients/", StringComparison.Ordinal) >= 0)
             return "levelset";
@@ -208,9 +204,9 @@ public static class LayoutEditorCatalogApi
         {
             "Assets/common01/food/Recipes",
             "Assets/common01/food/CustomRecipes",
-            "Assets/common02/food/Recipes"
-            // 注意：Web 内置（Assets/common_w）不再由后端动态下发，
-            // 前端经静态 JSON（recipes.json + common-w-manifest.json）获取。
+            "Assets/common02/food/Recipes",
+            // 通用内容源库（Assets/common03）：与 common01/common02 同级直接扫描。
+            "Assets/common03/Recipes"
         };
 
         if (!string.IsNullOrEmpty(levelSet))
@@ -294,10 +290,10 @@ public static class LayoutEditorCatalogApi
                     score = original != null ? original.score : 0;
                 }
 
-                // Web 内置菜谱：用难度估算分覆盖资产里的 100（对齐游戏攻略：20×食材+难度加成）。
+                // common03 通用菜谱：用难度估算分覆盖资产里的 100（对齐游戏攻略：20×食材+难度加成）。
                 // 中间产物（资产 score<=0，如烤棉花糖/冰淇淋）保持 0 分、不作为关卡菜谱。
-                if (group == "web" && score > 0)
-                    score = LayoutEditorRecipeKnowledge.EstimateWebRecipeScore(id, step, ings);
+                if (path.IndexOf("/common03/", StringComparison.Ordinal) >= 0 && score > 0)
+                    score = LayoutEditorRecipeKnowledge.EstimateCommon03RecipeScore(id, step, ings);
 
                 list.Add(new RecipeEntryDto
                 {
@@ -439,15 +435,15 @@ public static class LayoutEditorCatalogApi
                     dropped.Add(g);
                     continue;
                 }
-                // 历史 Import 源库（Assets/Editor/...，已迁移到 Assets/common_w）引用不可写入。
+                // 历史 Import 源库（Assets/Editor/...，已迁移到 Assets/common03）引用不可写入。
                 if (path.IndexOf("/Editor/LayoutEditor/Import/", StringComparison.Ordinal) >= 0)
                 {
-                    LayoutEditorLog.LogWarning("[Recipes] 收到历史 Import 源 guid（源库已迁移 common_w），丢弃: "
+                    LayoutEditorLog.LogWarning("[Recipes] 收到历史 Import 源 guid（源库已迁移 common03），丢弃: "
                         + Path.GetFileNameWithoutExtension(path) + " (" + g + ")");
                     dropped.Add(Path.GetFileNameWithoutExtension(path));
                     continue;
                 }
-                // common_w 资产（Web 内置）可直接写入 LevelInfo：随 common_w bundle 打包。
+                // common03 资产可直接写入 LevelInfo：随 common03 bundle 打包。
                 var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
                 if (so != null)
                 {
@@ -502,12 +498,12 @@ public static class LayoutEditorCatalogApi
         // as the LevelInfoSO inspector button (story/include match lists + scene dispensers).
         LayoutEditorAllIngredientsFill.AutoFillIngredients(info);
 
-        // 注册已选 Web 内置菜谱的 bundle 依赖（common_w 包 + 食材自身游戏 bundle）。
+        // 注册已选 common03 菜谱的 bundle 依赖（common03 包 + 食材自身游戏 bundle）。
         if (levelSet != null)
             LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, info);
 
-        // 注意：Web 内置菜谱直接引用 Assets/common_w 内资产（guid 来自静态 JSON），
-        // 随 common_w bundle 打包，不再有 custom_web 拷贝/安装步骤。
+        // 注意：common03 菜谱直接引用 Assets/common03 内资产（guid 来自静态 JSON），
+        // 随 common03 bundle 打包，不再有 custom_web 拷贝/安装步骤。
 
         // (Disabled) Auto-populate allIngredients from selected recipes
         // Only register ingredients NOT in the core/original RecipeMatchList
@@ -606,11 +602,9 @@ public static class LayoutEditorCatalogApi
                     if (HasSubRecipe(custom))
                         existing.Add(r);
                 }
-                else if (group.StartsWith("dlc", StringComparison.Ordinal) || group == "web")
+                else if (group.StartsWith("dlc", StringComparison.Ordinal))
                 {
-                    // DLC / Web（common_w）原始菜谱：游戏内置匹配表不含，需注册。
-                    // 注意 Web 菜谱位于 Assets/common_w（FoodGroupOf 归 group="web"），
-                    // 与 dlc 变体一样必须注册，否则运行时内置 RecipeMatchList 无法匹配。
+                    // DLC 原始菜谱（含 common03 通用内容按 dlc 子目录归组）：游戏内置匹配表不含，需注册。
                     existing.Add(r);
                 }
 
@@ -650,7 +644,7 @@ public static class LayoutEditorCatalogApi
         }
 
         // Auto-populate includeRecipeMatchLists: 按所选菜谱所属 DLC，自动填入该 DLC 的
-        // recipematchlist（PseudoPrefabSO 资产，位于 common_w/pseudo_prefab_so/matchlists/）。
+        // recipematchlist（PseudoPrefabSO 资产，位于 common03/pseudo_prefab_so/matchlists/）。
         // 运行时 SetupConfig 会把它并入关卡匹配表（GetAllOrderNodes 取并集），一次带齐该 DLC 的
         // 整套匹配节点（食材/订单/可选自由拼接/套餐/烹饪步骤），避免手工逐项列 optionalRecipeMatchListItems。
         {
@@ -666,7 +660,7 @@ public static class LayoutEditorCatalogApi
             foreach (var dlc in dlcSet)
             {
                 var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(
-                    "Assets/common_w/pseudo_prefab_so/matchlists/" + dlc + "_recipematchlist.asset");
+                    "Assets/common03/pseudo_prefab_so/matchlists/" + dlc + "_recipematchlist.asset");
                 if (so != null)
                     includeLists.Add(so);
             }
@@ -731,7 +725,7 @@ public static class LayoutEditorCatalogApi
         }
     }
 
-    /// <summary>Hotdog 自由拼接：注册 common_w 里游戏内置的可选热狗菜谱
+    /// <summary>Hotdog 自由拼接：注册 common03 里游戏内置的可选热狗菜谱
     ///  （optional_bun_* / optional_frankfurter_* / optional_onions_* / optionalhotdogs）。
     ///  它们在 optionalRecipeMatchListItems 中按 OrderDefinitionNode 加载（PseudoPrefabSORecipe
     ///  走 PseudoPrefabSO 分支），从而让游戏能匹配「自由组装」的热狗（任意面包/香肠/浇头组合）。
@@ -739,8 +733,8 @@ public static class LayoutEditorCatalogApi
     private static void AddHotdogOptionalRecipes(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] roots = dlc11
-            ? new[] { "Assets/common_w/Recipes/dlc11" }
-            : new[] { "Assets/common_w/Recipes/dlc08" };
+            ? new[] { "Assets/common03/Recipes/dlc11" }
+            : new[] { "Assets/common03/Recipes/dlc08" };
         foreach (var root in roots)
         {
             if (!AssetDatabase.IsValidFolder(root))
@@ -761,14 +755,14 @@ public static class LayoutEditorCatalogApi
 
     /// <summary>Hotdog 酱料：番茄酱/芥末酱（dlc08 或 dlc11）的 node 型食材 SO。
     ///  只能进 optionalRecipeMatchListItems（宿主 allIngredients 加载路径按 GameObject
-    ///  加载，node 型无 prefab 会返回 null 崩溃）；此处按 id 从 common_w/Ingredients 解析。</summary>
+    ///  加载，node 型无 prefab 会返回 null 崩溃）；此处按 id 从 common03/Ingredients 解析。</summary>
     private static void AddHotdogCondiments(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] rootAndIds = dlc11
-            ? new[] { "Assets/common_w/Ingredients/dlc11/dlc11_ketchup.asset",
-                      "Assets/common_w/Ingredients/dlc11/dlc11_mustard.asset" }
-            : new[] { "Assets/common_w/Ingredients/dlc08/ketchup.asset",
-                      "Assets/common_w/Ingredients/dlc08/mustard.asset" };
+            ? new[] { "Assets/common03/Ingredients/dlc11/dlc11_ketchup.asset",
+                      "Assets/common03/Ingredients/dlc11/dlc11_mustard.asset" }
+            : new[] { "Assets/common03/Ingredients/dlc08/ketchup.asset",
+                      "Assets/common03/Ingredients/dlc08/mustard.asset" };
         foreach (var path in rootAndIds)
         {
             var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
@@ -784,8 +778,8 @@ public static class LayoutEditorCatalogApi
     private static void AddHotdogBoiledFrankfurter(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] paths = dlc11
-            ? new[] { "Assets/common_w/Recipes/dlc11/dlc11_boiledfrankfurter.asset" }
-            : new[] { "Assets/common_w/Recipes/dlc08/boiledfrankfurter.asset" };
+            ? new[] { "Assets/common03/Recipes/dlc11/dlc11_boiledfrankfurter.asset" }
+            : new[] { "Assets/common03/Recipes/dlc08/boiledfrankfurter.asset" };
         foreach (var p in paths)
         {
             var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(p);

@@ -952,46 +952,6 @@ export interface CustomRecipeReferences {
   ingredients: string[];
 }
 
-// ---------- Web 内置菜谱库（内置菜谱管理） ----------
-
-export interface WebRecipeEntry {
-  /** common_w 源库 guid。 */
-  guid: string;
-  id: string;
-  nameZh: string;
-  nameEn: string;
-  assetPath: string;
-  cookingStep: string;
-  ingredients: string[];
-  /** 难度估算分（20×食材+加成，20~120）。 */
-  score: number;
-  type: string;
-  /** 去重键（规范化中文名，去 DLC 后缀）。 */
-  dupKey: string;
-  /** 是否为本菜组代表（同组内取最高 DLC）。 */
-  representative: boolean;
-  /** 是否存在历史 custom_web 旧副本。 */
-  installed: boolean;
-  /** 已装副本 guid（未装为空）。 */
-  installedGuid: string;
-  /** 是否被本关卡集任一关卡引用。 */
-  referenced: boolean;
-  /** 引用它的关卡名列表。 */
-  referencedBy: string[];
-}
-
-export interface WebRecipeLibrary {
-  setName: string;
-  recipes: WebRecipeEntry[];
-}
-
-export interface WebRecipeUninstallResult {
-  ok: boolean;
-  error?: string;
-  /** 被引用时列出使用关卡（此时拒绝移除）。 */
-  usedByLevels?: string[];
-}
-
 // ---------- Counter Appearance ----------
 
 export interface CounterAppearanceOption {

@@ -18,7 +18,6 @@ import type {
   RecipeEntry,
 } from "./types";
 import { closeModal, openModal } from "./modals";
-import { initWebBuiltin } from "./webBuiltin";
 import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
 import { applyRatio, computeAutoScores, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
@@ -124,7 +123,6 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
 }
 
 export async function renderManageView(app: HTMLElement): Promise<void> {
-  await initWebBuiltin();
   await renderSetList(app);
 }
 

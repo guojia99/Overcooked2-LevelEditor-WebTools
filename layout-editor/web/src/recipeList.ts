@@ -9,7 +9,6 @@ import {
   type RecipeWithGroups,
 } from "./recipeCard";
 import { mountVersionBadge } from "./version";
-import { initWebBuiltin, webIngredientDisabledReason, webRecipeDisabledReason } from "./webBuiltin";
 
 mountVersionBadge();
 
@@ -94,7 +93,7 @@ let groupFilter = "all";
 let scoreFilter: "all" | "other" | number = "all";
 let showIntermediate = false;
 let view: "recipes" | "ingredients" = "recipes";
-let showWebReps = true;
+let showReskinReps = true;
 
 /** 标准分数档位（其他 = 不在这些值内）。 */
 const STANDARD_SCORES = [20, 40, 60, 80, 100, 120];
@@ -105,46 +104,35 @@ function scoreMatches(s: number | undefined, filter: "all" | "other" | number): 
   return v === filter;
 }
 
-/** Web 内置去重：规范化中文名（去 DLC 后缀/空白）作聚簇键，代表 = 最高 DLC（保留后缀）。 */
-function webDedupKey(name: string): string {
+/** 多 DLC 换皮去重：规范化中文名（去 DLC 后缀/空白）作聚簇键，代表 = 最高 DLC（保留后缀）。 */
+function reskinDedupKey(name: string): string {
   return String(name ?? "").replace(/·?DLC\d+/g, "").replace(/[（）()· ]/g, "");
 }
 function dlcNumber(id: string): number {
   const m = /^dlc(\d+)_/.exec(id ?? "");
   return m ? parseInt(m[1], 10) : 0;
 }
-function dedupWeb<T extends { id: string; group?: string; nameZh?: string }>(items: T[]): T[] {
+function dedupReskins<T extends { id: string; group?: string; nameZh?: string }>(items: T[]): T[] {
   const reps = new Map<string, T>();
-  const rest: T[] = [];
   for (const it of items) {
-    if (it.group !== "web") {
-      rest.push(it);
-      continue;
-    }
-    const key = webDedupKey(it.nameZh ?? "");
+    const key = reskinDedupKey(it.nameZh ?? "");
     const cur = reps.get(key);
     if (!cur || dlcNumber(it.id) > dlcNumber(cur.id)) reps.set(key, it);
   }
-  return [...rest, ...reps.values()];
+  return [...reps.values()];
 }
 
 function card(r: RecipeWithGroups): string {
   return rlCardHtml(r, {
     allRecipes: recipes,
     ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
-    // Web 内置徽标由 foodGroupLabel("web") 自动渲染，避免重复
     extraBadge: r.group === "levelset" ? "本关" : undefined,
-    // web 内置未放开：显示但置灰（不禁用条目消失）
-    disabledReason: webRecipeDisabledReason(r) ?? undefined,
   });
 }
 
 function visible(): RecipeWithGroups[] {
   const q = query.trim().toLowerCase();
-  // 展示层去重：旧 levelset 副本覆盖同 id 的 web 项；web 内置未放开的一律显示但置灰
-  const levelsetIds = new Set(recipes.filter((r) => r.group === "levelset").map((r) => r.id));
   let out = recipes.filter((r) => {
-    if (r.group === "web" && levelsetIds.has(r.id)) return false;
     if (!showIntermediate && r.intermediate) return false;
     if (typeFilter !== "all" && (r.type ?? "other") !== typeFilter) return false;
     if (groupFilter !== "all" && (r.group ?? "core") !== groupFilter) return false;
@@ -162,8 +150,8 @@ function visible(): RecipeWithGroups[] {
     }
     return true;
   });
-  // Web 内置仅保留代表（多 DLC 换皮变体只显示最高 DLC）
-  if (showWebReps) out = dedupWeb(out);
+  // 多 DLC 换皮仅保留代表（同菜名只显示最高 DLC）
+  if (showReskinReps) out = dedupReskins(out);
   return out;
 }
 
@@ -171,11 +159,9 @@ function ingredientCard(i: IngredientEntry): string {
   const badge =
     i.group && i.group !== "core" ? ` <span class="pc-badge">${esc(foodGroupLabel(i.group))}</span>` : "";
   const en = (i.nameEn && i.nameEn.trim()) ? ` <span class="muted pc-en">${esc(i.nameEn)}</span>` : "";
-  const disabledReason = webIngredientDisabledReason(i);
-  const disBadge = disabledReason ? ` <span class="rl-badge rl-badge-disabled">⛔ 禁用</span>` : "";
-  return `<div class="rl-ing-card${disabledReason ? " rl-ing-disabled" : ""}" title="${esc(disabledReason ? `${i.id}（${disabledReason}）` : i.id)}">
+  return `<div class="rl-ing-card" title="${esc(i.id)}">
     <img class="food-icon" loading="lazy" src="/icons/ingredients/${encodeURIComponent(i.id)}.png" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">
-    <span class="rl-ing-name">${esc(i.nameZh)}${badge}${disBadge}${en}</span>
+    <span class="rl-ing-name">${esc(i.nameZh)}${badge}${en}</span>
     <span class="muted small">${esc(i.id)}</span>
   </div>`;
 }
@@ -183,13 +169,11 @@ function ingredientCard(i: IngredientEntry): string {
 function renderIngredients(): string {
   const q = query.trim().toLowerCase();
   const list = ingredients.filter((i) => {
-    // web 内置未放开的一律显示但置灰（不再隐藏）
-    if (showWebReps && i.group === "web") return true; // 去重在下
     if (q && !`${i.nameZh} ${i.nameEn ?? ""} ${i.id}`.toLowerCase().includes(q)) return false;
     if (groupFilter !== "all" && (i.group ?? "core") !== groupFilter) return false;
     return true;
   });
-  const deduped = showWebReps ? dedupWeb(list) : list;
+  const deduped = showReskinReps ? dedupReskins(list) : list;
   if (deduped.length === 0) return '<div class="rl-empty">没有匹配的食材，试试调整搜索或筛选条件</div>';
   const groups = new Map<string, IngredientEntry[]>();
   for (const i of deduped) {
@@ -198,7 +182,7 @@ function renderIngredients(): string {
     groups.get(g)!.push(i);
   }
   const order = [...groups.keys()].sort((a, b) => {
-    const rank = (g: string) => (g === "core" ? 0 : g === "levelset" ? 1 : g === "web" ? 2 : 3);
+    const rank = (g: string) => (g === "core" ? 0 : g === "levelset" ? 1 : 2);
     return rank(a) - rank(b) || a.localeCompare(b);
   });
   return order
@@ -234,9 +218,9 @@ function render(): void {
 }
 
 function buildFilters(): void {
-  // 计数跟随 Web 去重：隐藏 DLC 重复变体时数量与展示一致
-  const orderables = showWebReps
-    ? dedupWeb(recipes.filter((r) => !r.intermediate))
+  // 计数跟随换皮去重：隐藏 DLC 重复变体时数量与展示一致
+  const orderables = showReskinReps
+    ? dedupReskins(recipes.filter((r) => !r.intermediate))
     : recipes.filter((r) => !r.intermediate);
   const byType = groupRecipesByType(orderables);
 
@@ -293,7 +277,7 @@ function wire(): void {
     render();
   });
   document.getElementById("rl-web-reps")!.addEventListener("change", (e) => {
-    showWebReps = (e.target as HTMLInputElement).checked;
+    showReskinReps = (e.target as HTMLInputElement).checked;
     buildFilters();
     render();
   });
@@ -310,7 +294,7 @@ function wire(): void {
 
 async function init(): Promise<void> {
   try {
-    await initWebBuiltin();
+
     const [recs, ings] = await Promise.all([
       api.fetchRecipeCatalog(""),
       api.fetchIngredients(),
@@ -325,7 +309,7 @@ async function init(): Promise<void> {
 
   const bridgeUp = await api.fetchHealth().catch(() => false);
   const orderable = recipes.filter((r) => !r.intermediate).length;
-  const orderableVisible = dedupWeb(recipes.filter((r) => !r.intermediate)).length;
+  const orderableVisible = dedupReskins(recipes.filter((r) => !r.intermediate)).length;
   setStatus(
     `共 ${recipes.length} 个菜谱（成品 ${orderable} · Web去重后 ${orderableVisible}）${bridgeUp ? "" : " · 静态数据"}`
   );

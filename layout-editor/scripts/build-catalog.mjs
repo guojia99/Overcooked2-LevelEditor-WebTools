@@ -54,21 +54,57 @@ const FOOTPRINT_OVERRIDES = {
   dlc08_workstation_01_tray_sink_circus: { cellsX: 2, cellsZ: 1 },
   dlc08_workstation_02_tray_sink_circus: { cellsX: 2, cellsZ: 1 },
   dlc08_workstation_03_tray_sink_circus: { cellsX: 2, cellsZ: 1 },
-  // DLC 大件：大莲花压力开关 2×2；火锅灶台 1×1（游戏实测半格 2×2 = 1.2m，
-  // 大锅 2×2 锅沿外架其上）
-  cooking_region_floorburner: { cellsX: 1, cellsZ: 1 },
-  dlc10_cooking_region_floorburner: { cellsX: 1, cellsZ: 1 },
+  // DLC 大件：大莲花压力开关 2×2；火锅灶台铺满 2×2（大锅 2×2 锅沿外架其上）
+  cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
+  dlc10_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
   dlc13_lotuspressureswitch_large: { cellsX: 2, cellsZ: 2 },
-  // 火锅大锅 2×2（与火锅灶台同占地）
+  // 火锅大锅 2×2（与火锅灶台同占地，铺满）
   utensil_large_pot_01: { cellsX: 2, cellsZ: 2 },
   utensil_dlc10_large_pot_01: { cellsX: 2, cellsZ: 2 },
   // 可推动方块 = 可推动的大火锅，2×2
   pushable_object: { cellsX: 2, cellsZ: 2 },
   dlc10_pushable_object: { cellsX: 2, cellsZ: 2 },
-  // 断头台 3×1（切菜台）；大炮 2×2
-  workstation_guillotine_01: { cellsX: 3, cellsZ: 1 },
+  // 断头台 2×1（切菜台）；大炮 2×2
+  workstation_guillotine_01: { cellsX: 2, cellsZ: 1 },
   dlc08_cannon: { cellsX: 2, cellsZ: 2 },
   dlc09_cannon: { cellsX: 2, cellsZ: 2 },
+  // 半格小型厨具/工具：1×1 向内缩 10%（0.9 格）；旧数据误设为 1×1
+  utensil_bellows_01: { cellsX: 0.9, cellsZ: 0.9 },
+  Bellows: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_water_gun_01: { cellsX: 0.9, cellsZ: 0.9 },
+  WaterGun: { cellsX: 0.9, cellsZ: 0.9 },
+  FireExtinguisher: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_fire_extinguisher_02: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_utensil_fire_extinguisher: { cellsX: 0.9, cellsZ: 0.9 },
+  ToastingFork: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_toasting_fork_01: { cellsX: 0.9, cellsZ: 0.9 },
+  Skewer: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_skewer_01: { cellsX: 0.9, cellsZ: 0.9 },
+  MixerBowl: { cellsX: 0.9, cellsZ: 0.9 },
+  BlenderCup: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_blender_01: { cellsX: 0.9, cellsZ: 0.9 },
+  Blender: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc02_utensil_mixer: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc03_utensil_mixer: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc05_utensil_mixer: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc07_utensil_mixer_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_utensil_mixer_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_utensil_mixer: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc13_utensil_mixer_01: { cellsX: 0.9, cellsZ: 0.9 },
+  FryPan: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc02_utensil_frying_pan: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc05_utensil_frying_pan: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc07_utensil_frying_pan_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_utensil_frying_pan: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_utensil_frying_pan: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_griddlepan: { cellsX: 0.9, cellsZ: 0.9 },
+  GriddlePan: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_big_ol_spoon: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_dlc10_big_ol_spoon: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_coalbucket_01: { cellsX: 0.9, cellsZ: 0.9 },
+  p_dlc7_coal_bucket_coal_01: { cellsX: 0.9, cellsZ: 0.9 },
+  utensil_ingredient_spray_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_utensil_ingredient_spray: { cellsX: 0.9, cellsZ: 0.9 },
   // multi-cell decor (by naming convention: xN = N 格长, Nunit = N 格)
   crate_raft_x2_01: { cellsX: 2, cellsZ: 1 },
   Crate_raft_x3_01: { cellsX: 3, cellsZ: 1 },
@@ -208,6 +244,22 @@ const UTENSIL_STACK = {
   dlc08_utensil_fire_extinguisher: { y: 1, hostRule: "counter_standard" },
   utensil_roasting_tray: { y: 0.1, hostRule: "counter_standard" },
   dlc09_utensil_roasting_tray: { y: 0.1, hostRule: "counter_standard" },
+  // 通用内容 common03 变体（与上方 generic/同类变体保持一致的叠放规则）：
+  // 缺失 stack → 前端 isStackUtensilCatalog=false → 渲染无厨具内缩（尺寸不同）、不叠放宿主。
+  dlc02_utensil_frying_pan: { y: 0.6, hostRule: "cooker" },
+  dlc05_utensil_frying_pan: { y: 0.6, hostRule: "cooker" },
+  utensil_griddlepan: { y: 0.6, hostRule: "campfire" },
+  utensil_skewer_01: { y: 1, hostRule: "barbeque" },
+  utensil_toasting_fork_01: { y: 0.6, hostRule: "campfire" },
+  dlc02_utensil_mixer: { y: 0.6, hostRule: "mixer" },
+  dlc05_utensil_mixer: { y: 0.6, hostRule: "mixer" },
+  utensil_blender_01: { y: 0.6, hostRule: "blender" },
+  cleanglassstack: { y: 0.5, hostRule: "counter_standard" },
+  dirtyglassstack: { y: 0.5, hostRule: "counter_standard" },
+  equipment_glass_01: { y: 0.5, hostRule: "counter_standard" },
+  utensil_bellows_01: { y: 0.6, hostRule: "campfire" },
+  utensil_fire_extinguisher_02: { y: 1, hostRule: "counter_standard" },
+  utensil_water_gun_01: { y: 1, hostRule: "counter_standard" },
 };
 
 /** Utensil subcategory assignment for finer palette grouping. */
@@ -469,9 +521,9 @@ function recipeTypeOf(id) {
   return "other";
 }
 
-/** Web 内置菜谱分数估算（镜像后端 LayoutEditorRecipeKnowledge.EstimateWebRecipeScore）：
+/** common03 通用菜谱分数估算（镜像后端 LayoutEditorRecipeKnowledge.EstimateCommon03RecipeScore）：
  *  分数 = 20 × 食材种类数 + 难度加成，clamp [20,120]、级距 20。 */
-function estimateWebRecipeScore(id, step, ingredients) {
+function estimateCommon03RecipeScore(id, step, ingredients) {
   const distinct = new Set((ingredients || []).filter(Boolean));
   const lower = String(id || "").toLowerCase();
   let bonus;
@@ -518,10 +570,12 @@ function parseManualTable(md) {
 }
 
 function categorize(assetPath) {
-  // 归一化：Web 内置源库（common_w）与旧关卡集 custom_web / custom_ingredients 副本 → 只保留分类段
+  // 归一化：通用内容源库（common03）与旧关卡集 custom_web / custom_ingredients 副本 → 只保留分类段。
+  // common03 按 prefabs/{dlcXX|core}/{category}/ 组织，需先跳过 dlc 段。
   let rel = assetPath.replace(/^Assets\/common0[12]\/prefabs\/?/, "");
-  rel = rel.replace(/^Assets\/common_w\/prefabs\/?/, "");
+  rel = rel.replace(/^Assets\/common03\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/LevelSets\/[^/]+\/(custom_web|custom_ingredients)\/prefabs\/?/, "");
+  rel = rel.replace(/^(?:core|dlc\d+)\//, "");
   const seg = rel.split("/");
   const id = seg[seg.length - 1].replace(/\.prefab$/, "");
   if (seg[0] === "counters") {
@@ -852,13 +906,11 @@ function lookupName(dictionary, idToRow, id) {
   };
 }
 
-/** "core" / "custom" / "dlcXX" / "levelset" / "web" from an asset path.
- *  web = Web 内置源库（Assets/common_w，游戏 DLC 内容，直接打包为 common_w bundle）。 */
+/** "core" / "custom" / "dlcXX" / "levelset" from an asset path.
+ *  common03 通用内容按 dlc 子目录归 dlcXX，无 dlc 目录则归 core（无 web 分组）。 */
 function foodGroupOf(assetPath) {
-  if (assetPath.includes("/common_w/")) return "web";
   if (assetPath.includes("/custom_recipes/")) return "levelset";
-  // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：始终归 Web内置 分组
-  if (assetPath.includes("/custom_web/")) return "web";
+  // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：无 dlc 目录 → core。
   if (assetPath.includes("/custom_ingredients/")) return "levelset";
   if (assetPath.includes("/CustomRecipes/")) return "custom";
   const m = assetPath.match(/\/(dlc\d+)\//);
@@ -870,7 +922,7 @@ function foodGroupOf(assetPath) {
 // Food scans
 // ---------------------------------------------------------------------------
 
-/** 全部关卡集的 custom_web（及旧 custom_ingredients）子目录（Web 内置拷贝）。 */
+/** 全部关卡集的 custom_web（及旧 custom_ingredients）子目录（历史拷贝）。 */
 function levelSetCustomDirs(sub) {
   const dirs = [];
   const setsRoot = path.join(repoRoot, "Assets/LevelSets");
@@ -885,13 +937,12 @@ function levelSetCustomDirs(sub) {
 }
 
 function scanIngredients(dictionary, idToRow) {
-  // Web 内置（common_w）条目 guid 稳定（.meta 随库提交），静态 json 即权威来源；
+  // 通用内容（common03）条目 guid 稳定（.meta 随库提交），静态 json 即权威来源；
   // 不扫关卡集 custom_web/custom_ingredients 旧拷贝（机制已废弃）。
-  // common_w 目录不存在时 web 组条目整体缺席（manifest 标记 exists=false）。
   const roots = [
     "Assets/common01/food/Ingredients",
     "Assets/common02/food/Ingredients",
-    "Assets/common_w/Ingredients",
+    "Assets/common03/Ingredients",
   ];
   const list = [];
   const seen = new Set();
@@ -1233,13 +1284,13 @@ function loadAudioKnowledge() {
 }
 
 function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
-  // Web 内置（common_w）菜谱 guid 稳定（.meta 随库提交），静态 json 即权威来源；
+  // 通用内容（common03）菜谱 guid 稳定（.meta 随库提交），静态 json 即权威来源；
   // 不扫关卡集 custom_web 旧拷贝（机制已废弃）。
   const roots = [
     "Assets/common01/food/Recipes",
     "Assets/common01/food/CustomRecipes",
     "Assets/common02/food/Recipes",
-    "Assets/common_w/Recipes",
+    "Assets/common03/Recipes",
   ];
   const customByGuid = new Map();
   let originals = [];
@@ -1293,7 +1344,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
     const ingredientCount = stats.ings > 0 ? stats.ings : ingredientIds.length;
     const group = foodGroupOf(entry.assetPath);
     const rawScore = fields.score || 0;
-    const score = group === "web" && rawScore > 0 ? estimateWebRecipeScore(entry.id, step, ingredientIds) : rawScore;
+    const score = entry.assetPath.includes("/common03/") && rawScore > 0 ? estimateCommon03RecipeScore(entry.id, step, ingredientIds) : rawScore;
     list.push({
       guid: entry.guid,
       id: entry.id,
@@ -1331,7 +1382,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
     }
     const group = foodGroupOf(entry.assetPath);
     const rawScore = fields.score || 0;
-    const score = group === "web" && rawScore > 0 ? estimateWebRecipeScore(id, step, ings) : rawScore;
+    const score = entry.assetPath.includes("/common03/") && rawScore > 0 ? estimateCommon03RecipeScore(id, step, ings) : rawScore;
     list.push({
       guid: entry.guid,
       id,
@@ -1367,7 +1418,7 @@ function scanCookingSteps(dictionary, idToRow) {
     { root: "Assets/common02/food/CookingSteps", kind: "cooking" },
     { root: "Assets/common01/food/PlatingSteps", kind: "plating" },
     { root: "Assets/common02/food/PlatingSteps", kind: "plating" },
-    { root: "Assets/common_w/CookingSteps", kind: "cooking" },
+    { root: "Assets/common03/CookingSteps", kind: "cooking" },
   ];
   const list = [];
   const seen = new Set();
@@ -1697,15 +1748,12 @@ function main() {
     const base = root.includes("common01") ? "Assets/common01/prefabs" : "Assets/common02/prefabs";
     walkPrefabs(root, base, items, measuredFootprints);
   }
-  // Web 内置源库（common_w）与旧关卡集 custom_ingredients 副本（道具占位 prefab）。
-  // 注意：不在此去重 —— 已放置场景物品可能引用 common_w 资产 guid，保留全部条目
+  // 通用内容源库（common03）与旧关卡集 custom_ingredients 副本（道具占位 prefab）。
+  // 注意：不在此去重 —— 已放置场景物品可能引用 common03 资产 guid，保留全部条目
   // 保证 guid 始终可解析；去重在 buildPaletteGroups 展示层完成。
-  // common_w 目录可能整体缺失（未同步/被移除）：缺失时 web 内置条目整体缺席，
-  // 前端由 /api/env/status（后端实测 exists=false）禁用全部 web 内置内容。
-  const commonWRoot = path.join(repoRoot, "Assets/common_w");
-  const commonWExists = fs.existsSync(commonWRoot);
-  const commonWPrefabRoot = path.join(commonWRoot, "prefabs");
-  walkPrefabs(commonWPrefabRoot, "Assets/common_w/prefabs", items, measuredFootprints);
+  const common03Root = path.join(repoRoot, "Assets/common03");
+  const common03PrefabRoot = path.join(common03Root, "prefabs");
+  walkPrefabs(common03PrefabRoot, "Assets/common03/prefabs", items, measuredFootprints);
   for (const dir of levelSetCustomDirs("prefabs")) {
     walkPrefabs(path.join(repoRoot, dir), dir, items, measuredFootprints);
   }
@@ -1754,8 +1802,8 @@ function main() {
     byCategory[key].push(item);
   }
 
-  // 展示层去重：同一道具同时存在 common_w 源库项与旧关卡集拷贝（custom_web/custom_ingredients）
-  // 时，只保留 common_w 源库项（拷贝机制已废弃）
+  // 展示层去重：同一道具同时存在 common03 源库项与旧关卡集拷贝（custom_web/custom_ingredients）
+  // 时，只保留 common03 源库项（拷贝机制已废弃）
   for (const key of Object.keys(byCategory)) {
     if (key.startsWith("surface/")) continue;
     const byId = new Map();
@@ -1798,9 +1846,9 @@ function main() {
   const guidIndex = buildGuidIndex([
     "Assets/common01/food",
     "Assets/common02/food",
-    "Assets/common_w/Ingredients",
-    "Assets/common_w/Recipes",
-    "Assets/common_w/CookingSteps",
+    "Assets/common03/Ingredients",
+    "Assets/common03/Recipes",
+    "Assets/common03/CookingSteps",
   ]);
   const knowledge = loadKnowledge();
 
@@ -1830,28 +1878,6 @@ function main() {
     itemCount: cookingSteps.length,
     cookingSteps,
   });
-
-  // common-w-manifest.json：Web 内置内容（Assets/common_w）构建期清单快照（诊断用）。
-  // 运行时的可用性门槛在前端 /api/env/status（后端实测用户项目目录）：
-  // 目录不存在 → 全禁；存在 → 按 web-allowlist.json 白名单放开。
-  {
-    const versionFile = path.join(commonWRoot, "version.txt");
-    let version = "v0.0.0";
-    try {
-      version = fs.readFileSync(versionFile, "utf8").trim() || "v0.0.0";
-    } catch {}
-    const manifest = {
-      generatedAt: new Date().toISOString(),
-      schemaVersion: SCHEMA_VERSION,
-      exists: commonWExists,
-      version,
-      recipes: recipes.filter((r) => r.group === "web").map((r) => r.id),
-      ingredients: ingredients.filter((i) => i.group === "web").map((i) => i.id),
-      prefabs: items.filter((it) => (it.assetPath || "").includes("/common_w/prefabs/")).map((it) => it.id),
-      cookingSteps: cookingSteps.filter((s) => s.group === "web").map((s) => s.id),
-    };
-    writeCatalogFile("common-w-manifest.json", manifest);
-  }
 
   const audio = scanAudioCatalog(dictionary, idToRow);
   const audioKnowledge = loadAudioKnowledge();

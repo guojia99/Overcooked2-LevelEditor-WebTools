@@ -251,7 +251,7 @@ public static class LayoutEditorLevelAdminApi
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        // Web 内置内容（Assets/common_w）直接引用、随 common_w bundle 打包，
+        // 通用内容（Assets/common03）直接引用、随 common03 bundle 打包，
         // 不再同步 custom_web 拷贝（SyncAllWebContent 已退役为 no-op）。
         LayoutEditorCustomIngredients.SyncAllWebContent(setName);
         // Docs/zh 构建步骤 3：关卡集根目录 AssetBundle = "<set>/info_<set>"
@@ -3302,8 +3302,8 @@ public static class LayoutEditorLevelAdminApi
     }
 
     /// <summary>（已废弃）Web 内置菜谱库扫描：原合并 Import 源库与 custom_web 副本状态。
-    ///  Web 内置改为 common_w 直接引用 + 前端静态 JSON 后，后端不再动态下发 web 组
-    ///  （ScanRecipes 已不扫 common_w），本接口仅返回历史 custom_web 残留（通常为空）。</summary>
+    ///  通用内容改为 common03 直接引用 + 前端静态 JSON 后，后端不再动态下发 web 组
+    ///  （ScanRecipes 已改扫 common03），本接口仅返回历史 custom_web 残留（通常为空）。</summary>
     public static WebRecipeLibraryDto ScanWebRecipeLibrary(string setName)
     {
         var dto = new WebRecipeLibraryDto { setName = setName, recipes = new WebRecipeEntryDto[0] };
@@ -3475,7 +3475,7 @@ public static class LayoutEditorLevelAdminApi
     }
 
     /// <summary>PseudoPrefabSO 的查找目录（食材/烹饪步骤/装盘容器）。
-    ///  含 Web 内置源库（Assets/common_w，游戏 DLC 内容，直接打包为 common_w bundle）。</summary>
+    ///  含通用内容源库（Assets/common03，游戏 DLC 内容，直接打包为 common03 bundle）。</summary>
     private static readonly string[] PseudoPrefabSearchFolders =
     {
         "Assets/common01/food/Ingredients",
@@ -3484,8 +3484,8 @@ public static class LayoutEditorLevelAdminApi
         "Assets/common02/food/CookingSteps",
         "Assets/common01/food/PlatingSteps",
         "Assets/common02/food/PlatingSteps",
-        "Assets/common_w/Ingredients",
-        "Assets/common_w/CookingSteps",
+        "Assets/common03/Ingredients",
+        "Assets/common03/CookingSteps",
     };
 
     /// <summary>全部关卡集的旧 custom_web/Ingredients 目录（Web 内置食材拷贝，

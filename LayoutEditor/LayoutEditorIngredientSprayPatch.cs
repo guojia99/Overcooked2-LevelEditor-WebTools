@@ -19,18 +19,18 @@ using LevelEditorStub;
 ///
 /// 处理：进入 Play 后，宿主 PseudoPrefab.ResetChild 从 bundle 重新实例化真实
 /// prefab（场景内改动不保留），本补丁在 child 就绪后按喷罐皮肤加载对应奶油
-/// prefab（common_w Ingredients SO → 同 bundle 直读），补上 m_OrderPrefab。
+/// prefab（common03 Ingredients SO → 同 bundle 直读），补上 m_OrderPrefab。
 /// 喷罐与奶油同 bundle（210/405），依赖必然一起加载。
 /// </summary>
 [InitializeOnLoad]
 static class LayoutEditorIngredientSprayPatch
 {
-    /// <summary>喷罐 prefab 名 → 奶油 PseudoPrefabSO（common_w/Ingredients）。</summary>
+    /// <summary>喷罐 prefab 名 → 奶油 PseudoPrefabSO（common03/Ingredients）。</summary>
     private static readonly Dictionary<string, string> SprayCreamSoPaths =
         new Dictionary<string, string>
         {
-            { "utensil_ingredient_spray_01", "Assets/common_w/Ingredients/dlc03/whippedcream.asset" },
-            { "dlc09_utensil_ingredient_spray", "Assets/common_w/Ingredients/dlc09/dlc09_whippedcream.asset" },
+            { "utensil_ingredient_spray_01", "Assets/common03/Ingredients/dlc03/whippedcream.asset" },
+            { "dlc09_utensil_ingredient_spray", "Assets/common03/Ingredients/dlc09/dlc09_whippedcream.asset" },
         };
 
     private static bool _armed;

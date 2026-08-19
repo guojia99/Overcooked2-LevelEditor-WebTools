@@ -364,6 +364,24 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(dispenser, "Layout Editor Dispenser");
             var so = LoadPseudoPrefabSO(item.dispenser.spawnerItemPrefabGuid);
+            // 普通食材箱未设置生成食材：宿主 PseudoPrefabDispenser.Setup 的 LoadAsset(null)
+            // 会 NRE。降级为普通道具（保留 base stub/runtime），等用户选好食材再配置。
+            if (so == null && !isSpecialMachine)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] Apply Dispenser: 食材箱未设置生成食材，" +
+                    "已降级为普通道具（请先选择食材）: " + go.name);
+                LayoutEditorCookingUtensilGuard.DowngradeToBase(go, dispenser.pseudoPrefabSO);
+                return;
+            }
+            // 食材真实 prefab 无 ISpawnableItem（如 TurkeySO 原始火鸡）：宿主
+            // PseudoPrefabDispenser.Setup 的 RequireInterface 得 null → GetSubTexture NRE。
+            if (!isSpecialMachine && so != null && !LayoutEditorCookingUtensilGuard.RealPrefabIsSpawnableIngredient(so))
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] Apply Dispenser: 食材不可从食材箱产出（真实 prefab" +
+                    " 无 ISpawnableItem），已降级为普通道具: " + go.name + "（" + so.name + "）");
+                LayoutEditorCookingUtensilGuard.DowngradeToBase(go, dispenser.pseudoPrefabSO);
+                return;
+            }
             // node 型食材（assetPath 指 .asset 匹配节点，无实体 prefab）不能进【普通食材箱】：
             // 运行时 PseudoPrefabDispenser.Setup 按 GameObject 加载得 null 而 NRE。
             // 饮料机/酱料机豁免——其输出（饮料/酱料）本身就是 node 型（机器内置列表即如此）。
@@ -373,7 +391,7 @@ public static class LayoutEditorStubIO
                 !so.assetPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
             {
                 var mapped = so.name == "dlc11onion_salad"
-                    ? AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>("Assets/common_w/Ingredients/dlc11/dlc11_onion_salad.asset")
+                    ? AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>("Assets/common03/Ingredients/dlc11/dlc11_onion_salad.asset")
                     : null;
                 if (mapped != null)
                 {
@@ -425,8 +443,18 @@ public static class LayoutEditorStubIO
             return;
         }
 
-        if (item.stubKind == "Teleportal" && item.teleportal != null)
+        if (item.stubKind == "Teleportal")
         {
+            // 传送门必须有出口（exitPortal）：裸传送门宿主 PseudoPrefabTeleportal.LateSetup
+            // 对 null exitPortal 调用 GetComponent 抛 NRE。无出口时降级为普通道具。
+            if (item.teleportal == null || string.IsNullOrEmpty(item.teleportal.exitPortalInstanceId))
+            {
+                var ts = go.GetComponent<PseudoPrefabTeleportalStub>();
+                LayoutEditorLog.LogWarning("[LayoutEditor] Apply Teleportal: 传送门未配置出口（exitPortal），" +
+                    "已降级为普通道具: " + go.name);
+                LayoutEditorCookingUtensilGuard.DowngradeToBase(go, ts != null ? ts.pseudoPrefabSO : null);
+                return;
+            }
             var teleportal = go.GetComponent<PseudoPrefabTeleportalStub>();
             if (teleportal == null)
                 return;
@@ -440,7 +468,22 @@ public static class LayoutEditorStubIO
 
         if (item.stubKind == "CookingUtensil" && item.cookingUtensil != null)
         {
-            // common_w 厨具变体 wrapper（火锅大锅/烤盘/DLC 锅具）只带基础 PseudoPrefabStub
+            // 防御：真实 prefab 不是锅具容器（无 IngredientContainer，如喷雾/搅拌工作站被
+            // 误配成锅具）时，宿主 PseudoPrefabCookingUtensil.Setup 会 NRE。跳过锅具参数，
+            // 保持基础道具（与 CookingUtensilGuard 的降级逻辑一致）。
+            var probeSo = go.GetComponent<PseudoPrefabCookingUtensilStub>();
+            var probeBase = FindExactBaseStub(go);
+            var cuSo = probeSo != null && probeSo.pseudoPrefabSO != null
+                ? probeSo.pseudoPrefabSO
+                : (probeBase != null ? probeBase.pseudoPrefabSO : null);
+            if (cuSo != null && !LayoutEditorCookingUtensilGuard.RealPrefabHasIngredientContainer(cuSo))
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] 跳过锅具参数：该道具的真实 prefab 不是锅具容器" +
+                    "（无 IngredientContainer）: " + go.name + "（" + cuSo.name + "）。如需多食材容器请换用锅/搅拌碗/烤盘等。");
+                return;
+            }
+
+            // common03 厨具变体 wrapper（火锅大锅/烤盘/DLC 锅具）只带基础 PseudoPrefabStub
             // 与基类 PseudoPrefab（Setup 空操作）：补挂派生 stub（拷贝 SO）并换派生运行时
             // 组件，否则「锅具参数/额外食材」被静默丢弃、运行时不生效——与容器堆
             // （CleanPlateStack 分支）同模式的修复。
@@ -544,7 +587,7 @@ public static class LayoutEditorStubIO
             if (returnStation == null)
             {
                 // 回收台 DLC 变体（workstation_mug_return / dlc13 plate_return 等）的
-                // common_w wrapper 只有基础 PseudoPrefabStub——缺组件时补挂，否则
+                // common03 wrapper 只有基础 PseudoPrefabStub——缺组件时补挂，否则
                 // 上菜台绑定二阶段找不到 stub，绑定被静默丢弃。
                 returnStation = Undo.AddComponent<PseudoPrefabPlateReturnStub>(go);
                 var baseStub = go.GetComponent<PseudoPrefabStub>();
@@ -587,6 +630,18 @@ public static class LayoutEditorStubIO
                 var so = DefaultPlateSOForStack(go);
                 if (so != null)
                     plateStack.platePseudoPrefabSO = so;
+            }
+
+            // 防御：盘子 SO 缺失或真实 prefab 无 EditorGridSnap 时，宿主
+            // PseudoPrefabCleanPlateStack.Setup 逐盘实例化会 NRE（如脏堆的 mesh 占位）。
+            // 降级为普通道具（脏堆本身是自包含 DirtyPlateStack，无需走此流程）。
+            if (plateStack.platePseudoPrefabSO == null ||
+                !LayoutEditorCookingUtensilGuard.PlatePrefabHasGridSnap(plateStack.platePseudoPrefabSO))
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] Apply CleanPlateStack: 容器 SO 缺失或盘子" +
+                    " prefab 无 EditorGridSnap，已降级为普通道具: " + go.name);
+                LayoutEditorCookingUtensilGuard.DowngradeToBase(go, plateStack.pseudoPrefabSO);
+                return;
             }
 
             // 基础 stub 的 SO 已被派生 stub 接管：移除基础组件（含旧写法残留的双 stub），
@@ -658,8 +713,18 @@ public static class LayoutEditorStubIO
             return;
         }
 
-        if (item.stubKind == "Terminal" && item.terminal != null)
+        if (item.stubKind == "Terminal")
         {
+            // 终端未配置 pilotableObject：宿主 PseudoPrefabTerminal.Setup 抛
+            // UnassignedReferenceException。降级为普通道具。
+            if (item.terminal == null)
+            {
+                var ts = go.GetComponent<PseudoPrefabTerminalStub>();
+                LayoutEditorLog.LogWarning("[LayoutEditor] Apply Terminal: 终端未配置可操控对象，" +
+                    "已降级为普通道具: " + go.name);
+                LayoutEditorCookingUtensilGuard.DowngradeToBase(go, ts != null ? ts.pseudoPrefabSO : null);
+                return;
+            }
             var terminal = go.GetComponent<PseudoPrefabTerminalStub>();
             if (terminal == null)
                 return;
@@ -678,6 +743,13 @@ public static class LayoutEditorStubIO
             else
             {
                 terminal.pilotableObject = null;
+            }
+            if (terminal.pilotableObject == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] Apply Terminal: 终端可操控对象无法解析，" +
+                    "已降级为普通道具: " + go.name);
+                LayoutEditorCookingUtensilGuard.DowngradeToBase(go, terminal.pseudoPrefabSO);
+                return;
             }
         }
 
@@ -925,7 +997,7 @@ public static class LayoutEditorStubIO
     }
 
     /// <summary>查找「恰好为基类类型」的 PseudoPrefabStub（派生类实例不算）：
-    ///  common_w wrapper prefab 自带基础 stub，补挂派生 stub 后需移除基础组件，
+    ///  common03 wrapper prefab 自带基础 stub，补挂派生 stub 后需移除基础组件，
     ///  而 GetComponent&lt;PseudoPrefabStub&gt;() 会多态命中派生实例，无法直接定位。</summary>
     private static PseudoPrefabStub FindExactBaseStub(GameObject go)
     {
@@ -944,10 +1016,10 @@ public static class LayoutEditorStubIO
         return null;
     }
 
-    /// <summary>容器堆 id → 容器本体 SO id（均在 common_w/pseudo_prefab_so/utensils 下）。
+    /// <summary>容器堆 id → 容器本体 SO id（均在 common03/pseudo_prefab_so/{dlc|core}/utensils 下）。
     ///  堆道具 wrapper 补挂派生 stub 后 platePseudoPrefabSO 按堆类型推断：
     ///  同 DLC 皮肤优先（dlc09 马克杯堆 → dlc09 马克杯），脏堆 → 脏容器本体；
-    ///  common_w 无 dlc02 单脏杯，脏玻璃杯堆借用 dlc11 脏玻璃杯（同形网格）。</summary>
+    ///  common03 无 dlc02 单脏杯，脏玻璃杯堆借用 dlc11 脏玻璃杯（同形网格）。</summary>
     private static readonly System.Collections.Generic.Dictionary<string, string> StackPlateSoIds =
         new System.Collections.Generic.Dictionary<string, string>
         {
@@ -969,11 +1041,18 @@ public static class LayoutEditorStubIO
     {
         if (string.IsNullOrEmpty(soId))
             return null;
-        return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(
-            "Assets/common_w/pseudo_prefab_so/utensils/" + soId + ".asset");
+        // prefab/pseudo 已按 dlc 分目录（prefabs/{dlc|core}/{category}/），此处全库递归查找。
+        var absRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../Assets/common03/pseudo_prefab_so"));
+        if (!System.IO.Directory.Exists(absRoot))
+            return null;
+        var files = System.IO.Directory.GetFiles(absRoot, soId + ".asset", System.IO.SearchOption.AllDirectories);
+        if (files.Length == 0)
+            return null;
+        var rel = "Assets/common03/pseudo_prefab_so" + files[0].Substring(absRoot.Length).Replace('\\', '/');
+        return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(rel);
     }
 
-    /// <summary>容器堆 → 对应容器本体 SO（common_w/pseudo_prefab_so）。
+    /// <summary>容器堆 → 对应容器本体 SO（common03/pseudo_prefab_so）。
     ///  精确表（StackPlateSoIds）优先，未知堆 id 走子串兜底（脏堆先匹配脏容器，
     ///  避免「脏杯堆里摆干净杯」）。</summary>
     private static PseudoPrefabSO DefaultPlateSOForStack(GameObject go)

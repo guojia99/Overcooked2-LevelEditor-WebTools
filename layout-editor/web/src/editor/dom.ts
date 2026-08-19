@@ -34,7 +34,8 @@ export function buildLayoutDom(): void {
       <button id="btn-save" class="primary" title="将布局写回 Unity">💾 写回 Unity</button>
       <button id="btn-save-items" class="primary" title="仅写回核心物品（不修改地板、背景、装饰）">🎯 仅核心物品</button>
       <button id="btn-repair-broken" type="button" title="移除当前场景中源预制件缺失的损坏实例（解决 pseudoPrefabSO 空引用导致的 NullReferenceException）">🔧 修复损坏</button>
-      <button id="btn-deps-check" type="button" title="检查后端服务、common_w、音频、bundle 等依赖是否就绪">🩺 依赖检查</button>
+      <button id="btn-deps-check" type="button" title="检查后端服务、音频、bundle 等依赖是否就绪">🩺 依赖检查</button>
+      <button id="btn-test-layout" type="button" title="一键生成测试布局：30×16 地板 + 相机 FOV 56 + 全部食材箱 + 全部核心层道具（开关组合默认用组合）">🧪 测试布局</button>
       <span class="toolbar-sep"></span>
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>

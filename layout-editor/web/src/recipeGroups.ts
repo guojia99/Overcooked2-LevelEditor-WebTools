@@ -47,6 +47,29 @@ export const STEP_UTENSILS: Record<string, string[]> = {
   RoastingTray: ["Oven", "utensil_roasting_tray"],
 };
 
+/** node 型食材（匹配节点，无实体 prefab）→ 食材箱可生成的整食材；
+ *  以及建箱等价替换（同 uID 节点的核心版/dlc04 版优先）。
+ *  - 沙拉洋葱：原版 dlc11 关卡食材箱给整个沙拉洋葱（dlc11_onion_salad，prefab 型，
+ *    切 8 刀变 ChoppedOnion_Salad 匹配 dlc11onion_salad 节点）；节点本体不能进食材箱
+ *    （运行时 LoadAsset<GameObject> 为 null → PseudoPrefabDispenser.Setup NRE）。
+ *  - DLC8 汉堡胚 → 核心汉堡面包（ChoppedBunSO）：二者携带的 IngredientOrderNode
+ *    uID 同为 16088（bundle 实测），订单匹配完全等价；套餐统一用核心面包，
+ *    不再依赖 bundle359 的 dlc08_choppedbun。
+ *  - DLC10 火锅/拼盘食材 → DLC04 版（uID 718144~718150 一一相等，换皮复用）：
+ *    dlc10_* 建箱统一映射到无前缀/dlc04 版（bundle226），少一个 bundle 依赖；
+ *    混选两套换皮菜谱时也只建一套箱（uID 等价，一箱即匹配两套订单）。 */
+export const NODE_INGREDIENT_SOURCES: Record<string, string> = {
+  dlc11onion_salad: "dlc11_onion_salad",
+  dlc08_bun: "ChoppedBunSO",
+  dlc10_bokchoy: "bokchoy",
+  dlc10_meat: "dlc04_meat",
+  dlc10_orange: "dlc04_orange",
+  dlc10_prawn: "dlc04_prawn",
+  dlc10_grapes: "grapes",
+  dlc10_noodles: "noodles",
+  dlc10_peach: "peach",
+};
+
 const COOK_STEPS = new Set(Object.keys(STEP_UTENSILS));
 
 /** True when the step id is a real cooking step (pot, pan, steamer, …). */

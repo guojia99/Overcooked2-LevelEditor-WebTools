@@ -15,7 +15,7 @@ import { S, EditorItem } from "./state";
 import type { CatalogItem } from "../types";
 import { prefabIdFromPath, escHtml, newEditorKey } from "./coords";
 import { tidyCatalogNameZh } from "../displayLabels";
-import { stubKindOf } from "./stubControls";
+import { stubKindOf, STUB_KIND_BY_PREFAB_ID } from "./stubControls";
 import { pushHistory } from "./historyOps";
 import { draw } from "./render";
 import { setStatus } from "./status";
@@ -123,7 +123,7 @@ function dlcOrder(id: string): number {
 }
 
 /** 家族成员（基础版在前，其余按 DLC 序号升序）：以当前 catalog 为准，
- *  common_w 条目可能被内容更新移除，缺谁少谁都能工作。 */
+ *  common03 条目可能被内容更新移除，缺谁少谁都能工作。 */
 export function variantFamilyItems(id: string): CatalogItem[] {
   const base = variantBaseId(id);
   const members: CatalogItem[] = [];
@@ -202,8 +202,10 @@ export function switchItemVariant(item: EditorItem, cat: CatalogItem): void {
     _parentWz: item._parentWz,
   };
   if (item.stubKind) next.stubKind = item.stubKind;
-  // 同族 stubKind 一致，参数迁移；指向旧皮肤 SO 的覆盖字段不迁移
-  if (kind === "CookingUtensil" && item.cookingUtensil) {
+  // 同族 stubKind 一致，参数迁移；指向旧皮肤 SO 的覆盖字段不迁移。
+  // 锅具参数只在目标皮肤仍是锅具容器时迁移（否则真实 prefab 无 IngredientContainer，
+  // 宿主 PseudoPrefabCookingUtensil.Setup 会 NRE）。
+  if (kind === "CookingUtensil" && item.cookingUtensil && STUB_KIND_BY_PREFAB_ID[cat.id] === "CookingUtensil") {
     next.cookingUtensil = { ...item.cookingUtensil };
   } else if (kind === "CleanPlateStack" && item.cleanPlateStack) {
     next.cleanPlateStack = { plateCount: item.cleanPlateStack.plateCount };

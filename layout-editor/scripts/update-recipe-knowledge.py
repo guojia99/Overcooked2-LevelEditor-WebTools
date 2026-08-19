@@ -21,12 +21,12 @@ KNOWLEDGE = os.path.join(os.path.dirname(__file__), "data", "recipe-knowledge.js
 RECIPE_DIRS = [
     "Assets/common01/food/Recipes",
     "Assets/common02/food/Recipes",
-    "Assets/common_w/Recipes",
+    "Assets/common03/Recipes",
 ]
 ING_DIRS = [
     "Assets/common01/food/Ingredients",
     "Assets/common02/food/Ingredients",
-    "Assets/common_w/Ingredients",
+    "Assets/common03/Ingredients",
 ]
 
 # 特殊名映射（规范化后仍无法匹配的）：提取名 -> 编辑器 id

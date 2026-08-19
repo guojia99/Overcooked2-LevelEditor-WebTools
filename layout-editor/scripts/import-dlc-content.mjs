@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * import-dlc-content.mjs — 一次性生成游戏 DLC 内容源库（Web 内置，直接打包 common_w bundle）。
+ * import-dlc-content.mjs — 一次性生成游戏 DLC 内容源库（通用内容，直接打包 common03 bundle）。
  *
  * 输入：dump_bundle/manifest.json（游戏 AssetBundle 导出清单，bundle + container 精确查表）
- * 输出（Assets/common_w/，由 Assets/Editor/LayoutEditor/Import 迁移而来）：
- *   Assets/common_w/Ingredients/dlcXX/<id>.asset          PseudoPrefabSO 食材/中间产物
- *   Assets/common_w/Recipes/dlcXX/<id>.asset              PseudoPrefabSORecipe 菜谱
- *   Assets/common_w/CookingSteps/<id>.asset               烹饪步骤（HotPot/RoastingTray）
- *   Assets/common_w/prefabs/{category}/<id>.prefab        道具占位 prefab
- *   Assets/common_w/pseudo_prefab_so/{category}/<id>.asset 道具 PseudoPrefabSO
+ * 输出（Assets/common03/，由 Assets/Editor/LayoutEditor/Import 迁移而来）：
+ *   Assets/common03/Ingredients/dlcXX/<id>.asset          PseudoPrefabSO 食材/中间产物
+ *   Assets/common03/Recipes/dlcXX/<id>.asset              PseudoPrefabSORecipe 菜谱
+ *   Assets/common03/CookingSteps/<id>.asset               烹饪步骤（HotPot/RoastingTray）
+ *   Assets/common03/prefabs/{dlc|core}/{category}/<id>.prefab  道具占位 prefab
+ *   Assets/common03/pseudo_prefab_so/{dlc|core}/{category}/<id>.asset 道具 PseudoPrefabSO
  * 每个 .asset/.prefab 同时生成确定性 .meta（md5(id) 派生，重复运行内容不变）。
  *
  * 用法：
@@ -23,7 +23,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 const MANIFEST = path.join(repoRoot, "dump_bundle", "manifest.json");
-const OUT_ROOT = path.join(repoRoot, "Assets/common_w");
+const OUT_ROOT = path.join(repoRoot, "Assets/common03");
 const ING_JSON = path.join(repoRoot, "layout-editor/web/public/ingredients.json");
 
 const DRY = process.argv.includes("--dry");

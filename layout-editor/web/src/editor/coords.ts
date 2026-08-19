@@ -69,6 +69,13 @@ export function resolveFootprint(item: LayoutItem): { cellsX: number; cellsZ: nu
   if (known && (known.cellsX > 1 || known.cellsZ > 1)) {
     return known;
   }
+  // 半格小型厨具/工具（<1 格）：目录/内置表为准（旧文档误设为 1×1 的历史污染以目录修正）。
+  if (catFp && (catFp.cellsX < 1 || catFp.cellsZ < 1)) {
+    return { cellsX: catFp.cellsX, cellsZ: catFp.cellsZ };
+  }
+  if (known && (known.cellsX < 1 || known.cellsZ < 1)) {
+    return { cellsX: known.cellsX, cellsZ: known.cellsZ };
+  }
 
   const cx = item.footprint?.cellsX ?? 0;
   const cz = item.footprint?.cellsZ ?? 0;

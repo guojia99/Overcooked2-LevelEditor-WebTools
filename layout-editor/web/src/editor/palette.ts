@@ -4,7 +4,6 @@ import { tidyCatalogNameZh } from "../displayLabels";
 import { hostRuleLabelZh } from "../stacking";
 import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
 import { isNpcAnimItem } from "./npcAnimations";
-import { webPrefabDisabledReason } from "../webBuiltin";
 import { buildComboPaletteGroup } from "./combos";
 import { variantBaseId, VARIANT_TO_BASE } from "./itemVariants";
 import { escHtml } from "./coords";
@@ -104,14 +103,13 @@ export function buildPalette(catalog: Catalog, filter: string) {
     let shownCount = 0;
     for (const it of list) {
       // DLC 变体合并：变体不单独出卡（家族只留基础版一张卡，右键切换皮肤）；
-      // 基础版条目缺失时保留变体卡（容忍 common_w 内容更新移除条目）。
+      // 基础版条目缺失时保留变体卡（容忍 common03 内容更新移除条目）。
       const baseId = VARIANT_TO_BASE[it.id];
       if (baseId && baseId !== it.id && S.catalogById.has(baseId)) continue;
-      // 不可用条目（旧拷贝、common_w 缺失）静默隐藏
+      // 不可用条目（旧拷贝）静默隐藏
       const p = it.assetPath ?? "";
       const isLegacyWeb = p.includes("/Import/prefabs/") || p.includes("/custom_web/prefabs/");
       if (isLegacyWeb) continue;
-      if (webPrefabDisabledReason(it.id, p) !== null) continue;
       const row = document.createElement("div");
       const catName = paletteCardCategory(it.category);
       row.className = `palette-card palette-cat-${catName}`;

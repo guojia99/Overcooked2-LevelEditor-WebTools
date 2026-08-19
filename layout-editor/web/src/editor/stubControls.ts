@@ -17,7 +17,6 @@ import {
   openIngredientMultiPicker
 } from "../modals";
 import { ingredientOptionLabel, visibleIngredients } from "../ingredientLabels";
-import { webIngredientDisabledReason } from "../webBuiltin";
 import type { IngredientEntry } from "../types";
 import {
   counterTypeOfItem,
@@ -77,9 +76,10 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   ToastingFork: "CookingUtensil",
   GriddlePan: "CookingUtensil",
   Skewer: "CookingUtensil",
-  Blender: "CookingUtensil",
+  // Blender 是搅拌机工作站（counters/service，SO=workstation_blender_01），不是锅具容器
+  // （真实 prefab 无 IngredientContainer，误配成锅具运行时会 NRE）；便携搅拌机是 utensil_blender_01。
   BlenderCup: "CookingUtensil",
-  // common_w 厨具变体 wrapper（右键「锅具参数/额外食材」面板与换肤参数迁移依赖此表）
+  // common03 厨具变体 wrapper（右键「锅具参数/额外食材」面板与换肤参数迁移依赖此表）
   utensil_large_pot_01: "CookingUtensil",
   utensil_dlc10_large_pot_01: "CookingUtensil",
   utensil_roasting_tray: "CookingUtensil",
@@ -112,12 +112,8 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   cleanmugstack: "CleanPlateStack",
   cleanglassstack: "CleanPlateStack",
   dlc11_cleanglassstack: "CleanPlateStack",
-  // 脏堆变体（同 CleanPlateStack 家族：脏马克杯/脏玻璃杯/脏餐盘堆）
-  dirtymugstack: "CleanPlateStack",
-  dlc09_dirtymugstack: "CleanPlateStack",
-  dirtyglassstack: "CleanPlateStack",
-  dlc11_dirtyglassstack: "CleanPlateStack",
-  dlc08_dirtytraystack: "CleanPlateStack",
+  // 脏堆变体：自包含 DirtyPlateStack（真实 prefab 无独立盘子），不走 CleanPlateStack
+  // 实例化盘子（否则 Setup 对无 EditorGridSnap 的盘子 NRE），保持普通道具。
   Travelator: "Travelator",
   Flamethrower: "Flamethrower",
   Burner: "Burner",
@@ -160,10 +156,10 @@ function specialDispenserAllowedIds(item: EditorItem): Set<string> | null {
 
 /** 普通食材箱的禁选判定：node 型食材（无实体 prefab，如沙拉洋葱/汽水）放入食材箱会在
  *  运行时 PseudoPrefabDispenser.Setup 按 GameObject 加载失败而崩溃——只能经加工
- *  （如切洋葱）或专属机器（饮料机/酱料机）产出；其余按 web 白名单置灰。 */
+ *  （如切洋葱）或专属机器（饮料机/酱料机）产出。 */
 function crateIngredientDisabled(ing: IngredientEntry): string | null {
   if (ing.nodeOnly) return "node 型食材（无实体 prefab），食材箱无法生成（经加工或专属机器产出）";
-  return webIngredientDisabledReason(ing);
+  return null;
 }
 
 function specialDispenserType(item: EditorItem): "condiment" | "drink" | "" {
@@ -516,7 +512,7 @@ export function wireStubControls(item: EditorItem) {
               : [];
           openIngredientMultiPicker(
             `${fieldLabel}选择（可多选）`,
-            `勾选机器可输出的${fieldLabel}：游戏内按下联动开关按勾选顺序循环切换；全不选 = 使用机器内置列表（⛔ 为未放开的 Web 内置项）`,
+            `勾选机器可输出的${fieldLabel}：游戏内按下联动开关按勾选顺序循环切换；全不选 = 使用机器内置列表`,
             ings,
             curGuids,
             (guids) => {
@@ -533,14 +529,14 @@ export function wireStubControls(item: EditorItem) {
               );
             },
             undefined,
-            { isDisabled: webIngredientDisabledReason }
+            { isDisabled: () => null }
           );
           return;
         }
         const cur = item.dispenser?.spawnerItemPrefabGuid ?? "";
         openIngredientMultiPicker(
           `${fieldLabel}选择`,
-          `选择食材箱要生成的食材（⛔ 为未放开的 Web 内置项）`,
+          `选择食材箱要生成的食材`,
           ings,
           cur ? [cur] : [],
           (guids) => {

@@ -8,7 +8,6 @@ import { pushHistory } from "./historyOps";
 import { setSelection } from "./selection";
 import { setStatus } from "./status";
 import { draw } from "./render";
-import { webPrefabDisabledReason } from "../webBuiltin";
 import { escHtml, prefabIdFromPath } from "./coords";
 
 /** 上菜台 → 回收台（脏盘/脏杯/马克杯/餐盘）自动绑定。 */
@@ -134,13 +133,11 @@ export function comboById(id: string): ComboDef | undefined {
   return COMBOS.find((c) => c.id === id);
 }
 
-/** 组合不可用原因（部件缺失/未放开）；null = 可用。 */
+/** 组合不可用原因（部件缺失）；null = 可用。 */
 export function comboDisabledReason(def: ComboDef): string | null {
   for (const p of def.parts) {
     const cat = catalogItemById(p.id);
     if (!cat) return `目录中缺少物品：${p.id}`;
-    const r = webPrefabDisabledReason(cat.id, cat.assetPath);
-    if (r) return `${cat.nameZh || cat.id}：${r}`;
   }
   return null;
 }
