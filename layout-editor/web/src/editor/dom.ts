@@ -39,10 +39,9 @@ export function buildLayoutDom(): void {
       <span class="toolbar-sep"></span>
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
-      <button id="btn-level-config" type="button" title="配置各玩家分数">📊 分数配置</button>
+      <button id="btn-level-config" type="button" title="配置各玩家分数与关卡截图">📊 关卡配置</button>
       <button id="btn-camera-light" type="button" title="修改游戏相机背景色 / FOV 与 Art/Lights 灯光颜色、强度">🎥 相机/灯光</button>
       <button id="btn-level-audio" type="button" title="配置关卡音频">🔊 音频</button>
-      <button id="btn-level-screenshot" type="button" title="上传 / 查看关卡截图（支持裁剪与画质压缩）">📷 截图</button>
       <button id="btn-summary" type="button" title="查看关卡菜谱汇总并一键导出图片">📋 汇总</button>
       <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">📥 同步布局…</button>
       <span id="status" class="status">连接中…</span>

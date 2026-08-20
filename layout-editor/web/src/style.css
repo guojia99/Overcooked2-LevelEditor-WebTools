@@ -1314,7 +1314,7 @@ canvas.pan-active {
   font-size: 11px;
 }
 
-/* Screenshot upload modal (关卡截图上传弹窗) */
+/* Screenshot pane (关卡配置弹窗 · 截图 tab) */
 .ss-current {
   margin-bottom: 10px;
 }
@@ -1369,6 +1369,9 @@ canvas.pan-active {
 }
 #ss-err.modal-hint {
   margin-top: 6px;
+}
+.ss-actions-row {
+  margin: 8px 0;
 }
 
 /* Button-link config modal (按钮联动配置弹窗) */
@@ -2150,6 +2153,32 @@ body.manage-bg {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px 12px;
+}
+
+/* 关卡配置弹窗顶层 tab（分数 / 截图） */
+.cfg-ltabs {
+  display: inline-flex;
+  gap: 2px;
+  background: #1a1d23;
+  border: 1px solid #4a5060;
+  border-radius: 6px;
+  padding: 2px;
+  margin-bottom: 12px;
+}
+
+.cfg-ltab-btn {
+  background: transparent;
+  border: none;
+  color: #9aa0a6;
+  padding: 6px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.cfg-ltab-btn.active {
+  background: #3d6bf3;
+  color: #fff;
 }
 
 .au-pane {

@@ -1,4 +1,5 @@
 ﻿using System;
+using LevelEditor;
 using LevelEditorStub;
 using UnityEditor;
 using UnityEngine;
@@ -62,6 +63,8 @@ public static class LayoutEditorStubIO
             sdto.plateReturnInstanceIds = ids.ToArray();
 
             item.servingStation = sdto;
+            // 提前 return 的分支须自行导出外观皮肤 guid（否则回读丢失）。
+            ExportPseudoPrefabGuidIfPresent(go, item);
             return;
         }
 
@@ -79,6 +82,8 @@ public static class LayoutEditorStubIO
             // 本分支提前 return，走不到方法末尾的通用 soArray 导出——
             // 漏掉时 web 重新加载看不到机器配置的饮料/酱料。
             ExportSoArrayIfPresent(go, item);
+            // 外观皮肤 guid 同理须在此导出（食材箱有多款皮肤可换）。
+            ExportPseudoPrefabGuidIfPresent(go, item);
             return;
         }
 
@@ -91,6 +96,7 @@ public static class LayoutEditorStubIO
             item.stubKind = "Dispenser";
             item.dispenser = new LayoutDispenserStubDto();
             ExportSoArrayIfPresent(go, item);
+            ExportPseudoPrefabGuidIfPresent(go, item);
             return;
         }
 
@@ -131,6 +137,7 @@ public static class LayoutEditorStubIO
         {
             item.stubKind = "Conveyor";
             item.conveyor = new LayoutConveyorStubDto { conveySpeed = conveyor.conveySpeed };
+            ExportPseudoPrefabGuidIfPresent(go, item);
             return;
         }
 
@@ -199,6 +206,7 @@ public static class LayoutEditorStubIO
                 ? "GlassReturn"
                 : "PlateReturn";
             item.plateReturn = new LayoutPlateReturnStubDto { returnClean = returnStation.returnClean };
+            ExportPseudoPrefabGuidIfPresent(go, item);
             return;
         }
 
@@ -321,6 +329,26 @@ public static class LayoutEditorStubIO
                 {
                     Undo.RecordObject(pseudoStub, "Layout Editor PseudoPrefab");
                     pseudoStub.pseudoPrefabSO = so;
+                }
+            }
+        }
+
+        // 食材箱外观防御：静态网格箱皮肤（dlc03/07/08/09/13 箱）已从外观目录移除——
+        // 宿主 PseudoPrefabDispenser.Setup 的箱面图标渲染只支持「盖子节点
+        // SkinnedMeshRenderer / 根节点 MeshRenderer」，静态箱两者皆无会抛
+        // MissingComponentException 并中断 ResetAllPseudoPrefabs 循环（其后所有
+        // 伪预制件不初始化）。若食材箱 wrapper 的 SO 是悬挂引用（皮肤资产已删/
+        // guid 失效），回退默认箱 Dispenser01SO，避免运行时空引用 NRE。
+        if (go.GetComponent<PseudoPrefabDispenser>() != null)
+        {
+            var pseudoStub = go.GetComponent<PseudoPrefabStub>();
+            if (pseudoStub != null && pseudoStub.pseudoPrefabSO == null)
+            {
+                var baseSo = LoadPseudoPrefabSO("3085f7abbd164904dbf7ff588c076f4b"); // Dispenser01SO
+                if (baseSo != null)
+                {
+                    Undo.RecordObject(pseudoStub, "Layout Editor Dispenser Base Skin");
+                    pseudoStub.pseudoPrefabSO = baseSo;
                 }
             }
         }
@@ -1006,6 +1034,17 @@ public static class LayoutEditorStubIO
                 ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(soArray.pseudoPrefabSOs[i]))
                 : string.Empty;
         item.soArray = new LayoutSOArrayStubDto { pseudoPrefabGuids = guids };
+    }
+
+    /// <summary>导出基础 PseudoPrefabStub.pseudoPrefabSO 的 guid（外观皮肤）。
+    /// 本分支提前 return 的 stub 类型（Dispenser/ServingStation/PlateReturn/Conveyor 等）
+    /// 走不到方法末尾的通用导出——漏掉时 web 重新加载丢失已设置的外观皮肤
+    /// （写回侧 ApplyStub 的外观应用位于所有分支之前，不受影响）。</summary>
+    private static void ExportPseudoPrefabGuidIfPresent(GameObject go, LayoutItemDto item)
+    {
+        var pseudoStub = go.GetComponent<PseudoPrefabStub>();
+        if (pseudoStub != null && pseudoStub.pseudoPrefabSO != null)
+            item.pseudoPrefabGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(pseudoStub.pseudoPrefabSO));
     }
 
     private static PseudoPrefabSO[] LoadPseudoPrefabSOs(string[] guids)

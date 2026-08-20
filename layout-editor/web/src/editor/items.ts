@@ -336,14 +336,21 @@ export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordH
 }
 
 export function placementBase(): { x: number; z: number } {
-  if (S.items.length === 0) return { x: 0, z: 0 };
-  let minZ = Infinity;
+  // 以可行走地面区域的中心为填充起点。此前取全部物品包围盒的 min 角，
+  // 背景/装饰等偏远物会把自动填充行拖到 30-40 格外。
+  if (S.walkable.length === 0) return { x: 0, z: 0 };
   let minX = Infinity;
-  for (const it of S.items) {
-    minZ = Math.min(minZ, it._wz);
-    minX = Math.min(minX, it._wx);
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  for (const r of S.walkable) {
+    minX = Math.min(minX, r.cx - r.sx / 2);
+    maxX = Math.max(maxX, r.cx + r.sx / 2);
+    minZ = Math.min(minZ, r.cz - r.sz / 2);
+    maxZ = Math.max(maxZ, r.cz + r.sz / 2);
   }
-  return { x: minX, z: minZ - 2 * CELL };
+  if (!isFinite(minX)) return { x: 0, z: 0 };
+  return { x: (minX + maxX) / 2, z: (minZ + maxZ) / 2 };
 }
 
 export function itemVoidWarning(item: EditorItem): string | null {

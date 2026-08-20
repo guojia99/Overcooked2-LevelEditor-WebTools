@@ -873,6 +873,7 @@ public static class LayoutEditorLevelAdminApi
             EditorUtility.SetDirty(stub);
 
         AssetDatabase.SaveAssets();
+
         ReloadPseudo();
         return null;
     }

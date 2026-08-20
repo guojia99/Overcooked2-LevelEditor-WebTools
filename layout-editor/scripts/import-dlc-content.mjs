@@ -685,6 +685,22 @@ const STATION_APPEARANCES = [
   ["BinWood13SO", "dlc13_workstation_bin_01", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_workstation_bin_01.prefab"],
   // ---- PlateReturn 脏盘台（默认 = workstation_plate_return）----
   ["PlateReturnWood13SO", "dlc13_workstation_plate_return", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_workstation_plate_return.prefab"],
+  // ---- ServingStation 上菜台（默认/Slim/SlimNoBlock 已有；unlit 为无光照版，夜关用）----
+  ["ServingStationBlueSO", "workstation_plate_station_blue", "bundle47", "core", "Assets/prefabs/shared_kitchen/workstation_plate_station_blue.prefab"],
+  ["ServingStationRedSO", "workstation_plate_station_red", "bundle47", "core", "Assets/prefabs/shared_kitchen/workstation_plate_station_red.prefab"],
+  ["ServingStationBlueSlimSO", "workstation_plate_station_blue_slim_01", "bundle47", "core", "Assets/prefabs/shared_kitchen/workstation_plate_station_blue_slim_01.prefab"],
+  ["ServingStationRedSlimSO", "workstation_plate_station_red_slim_01", "bundle47", "core", "Assets/prefabs/shared_kitchen/workstation_plate_station_red_slim_01.prefab"],
+  ["ServingStationUnlitSO", "workstation_plate_station_unlit", "bundle47", "core", "Assets/prefabs/shared_kitchen/workstation_plate_station_unlit.prefab"],
+  ["ServingStationWood13SO", "dlc13_workstation_plate_station", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_workstation_plate_station.prefab"],
+  // ---- Dispenser 食材箱（默认 01-03 已有）----
+  // UnityPy 验证：可换肤标准 = 箱面图标渲染兼容（宿主 PseudoPrefabDispenser.Setup
+  // 只支持盖子节点 SkinnedMeshRenderer 或根节点 MeshRenderer）。蒙皮版（m_sk_crate_01
+  // 带 SMR）：01/02/03/firewood ✓。静态网格版（Body/Lid/Image 各自 MeshRenderer、
+  // 根无渲染器）：dlc03 crate_04 / dlc07 crate_05 / dlc08 circus / dlc09 winter /
+  // dlc13 camping_new —— 换肤后 Setup 必抛 MissingComponentException 并中断
+  // ResetAllPseudoPrefabs 循环，全部禁用。跳过：dispenser_coal_01（放置式出料）、
+  // dlc10_dispenser_crate（DynamicGridLocation 可推动）。
+  ["DispenserFirewoodSO", "dispenser_crate_firewood", "bundle250", "dlc05", "Assets/downloadablecontent/dlc05/dlc_assets/prefabs/shared kitchen/dispenser_crate_firewood.prefab"],
 ];
 
 function emitCounterAppearances() {

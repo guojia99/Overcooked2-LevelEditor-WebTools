@@ -84,6 +84,14 @@ export function resolveFootprint(item: LayoutItem): { cellsX: number; cellsZ: nu
   if (known && (known.cellsX < 1 || known.cellsZ < 1)) {
     return { cellsX: known.cellsX, cellsZ: known.cellsZ };
   }
+  // 旧数据强制刷新：文档 footprint 任一边 <1 而权威表（目录/内置表）≥1 时以权威值
+  // 纠正（v0.6 beta03 误设 0.9 的搅拌机/搅拌杯：权威表已改回 1×1，加载与回写均刷新）。
+  if (item.footprint && (item.footprint.cellsX < 1 || item.footprint.cellsZ < 1)) {
+    const authFp = catFp && catFp.cellsX > 0 && catFp.cellsZ > 0 ? catFp : known;
+    if (authFp && authFp.cellsX >= 1 && authFp.cellsZ >= 1) {
+      return { cellsX: authFp.cellsX, cellsZ: authFp.cellsZ };
+    }
+  }
 
   const cx = item.footprint?.cellsX ?? 0;
   const cz = item.footprint?.cellsZ ?? 0;

@@ -29,6 +29,7 @@ import { computeCardGroups, rlCardHtml, rlSectionHtml, STEP_ICON_SRC, type Recip
 import { exportSummaryPng, type SummaryCard, type SummaryExportData } from "./summaryExport";
 import { customRecipeIconUrl } from "./editor/catalog";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
+import { screenshotPaneHtml, wireScreenshotPane } from "./editor/ui/screenshotModal";
 
 const TARGET_SCENE_KEY = "layoutTargetScene";
 
@@ -551,6 +552,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn" id="btn-layout">打开关卡编辑器</button>
+      <button class="m-btn" id="btn-level-config">📊 关卡配置</button>
       <button class="m-btn" id="btn-summary">📋 汇总</button>
     </div>
 
@@ -563,14 +565,6 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <label class="m-field">调试菜谱数 debugRecipeCount<input type="number" id="f-debugRecipeCount" value="${detail.debugRecipeCount}"></label>
         <label class="m-field">最少同时订单 minOrderCount<input type="number" id="f-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount}"></label>
         <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="f-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount}"></label>
-        <label class="m-field">截图
-          <span class="muted" id="ss-status">${detail.hasScreenshot ? "已设置 screenshot" : "未设置"}</span>
-          <div class="m-actions-row" style="margin-top:4px">
-            <input type="file" id="ss-file" accept="image/png,image/jpeg" style="display:none">
-            <button type="button" class="m-btn small" id="ss-upload">上传截图</button>
-            ${detail.hasScreenshot ? '<button type="button" class="m-btn small" id="ss-preview">预览</button>' : ""}
-          </div>
-        </label>
         <label class="m-field">动态父挂载 disableDynamicParenting
           <label class="modal-check"><input type="checkbox" id="f-disableDynamicParenting" ${detail.disableDynamicParenting ? "checked" : ""}> 勾选=禁用（含移动/升降平台关卡应取消）</label>
         </label>
@@ -615,44 +609,11 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
 
   document.getElementById("btn-layout")?.addEventListener("click", () => goLayout(detail.sceneAssetPath));
   document.getElementById("btn-summary")?.addEventListener("click", () => void renderLevelSummary(app, setName, assetPath));
-
-  const ssFile = document.getElementById("ss-file") as HTMLInputElement | null;
-  const ssUpload = document.getElementById("ss-upload");
-  const ssPreview = document.getElementById("ss-preview");
-
-  ssUpload?.addEventListener("click", () => ssFile?.click());
-
-  ssFile?.addEventListener("change", async () => {
-    const file = ssFile.files?.[0];
-    if (!file) return;
-    showBusy("上传截图…");
-    try {
-      const reader = new FileReader();
-      await new Promise<void>((resolve, reject) => {
-        reader.onload = () => resolve();
-        reader.onerror = () => reject(new Error("读取文件失败"));
-        reader.readAsDataURL(file);
-      });
-      const base64 = (reader.result as string).split(",")[1] || (reader.result as string);
-      await api.uploadScreenshot(assetPath, file.name, base64);
-      setStatus("截图已上传");
-      await renderLevelDetail(app, setName, assetPath);
-    } catch (e) {
-      setStatus((e as Error).message, false);
-    } finally {
-      hideBusy();
-    }
-  });
-
-  ssPreview?.addEventListener("click", async () => {
-    try {
-      // Fetch the level detail again to get screenshot info, then open in new tab
-      // We don't have a direct URL for the sprite, but we can try to look it up
-      setStatus("截图已保存在关卡数据目录中，可在 Unity 中查看。");
-    } catch (e) {
-      setStatus((e as Error).message, false);
-    }
-  });
+  document.getElementById("btn-level-config")?.addEventListener("click", () =>
+    void openConfigTabsModal(detail, setName, () => {
+      void renderLevelDetail(app, setName, assetPath);
+    })
+  );
 }
 
 // ==================== Level recipe summary (汇总页) ====================
@@ -836,7 +797,7 @@ const PLAYER_TABS = ["1p", "2p", "3p", "4p"] as const;
 const PLAYER_LABELS = ["单人 1P", "双人 2P", "三人 3P", "四人 4P"];
 const PLAYER_ROW_LABELS = ["1P", "2P", "3P", "4P"];
 
-export function openConfigTabsModal(detail: LevelDetail, setName: string, onSaved: () => void): void {
+export async function openConfigTabsModal(detail: LevelDetail, setName: string, onSaved: () => void): Promise<void> {
   const starHead = STAR_FIELDS.map(([, label]) => `<th>${label}</th>`).join("");
   const matrixRows = PLAYER_TABS.map((t, ti) => {
     const cfg = detail.configs[ti] ?? ({ exists: false } as PerPlayerConfig);
@@ -867,26 +828,48 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
   }).join("");
 
   openModal(
-    `分数配置 · ${detail.levelName || detail.levelNameZH}`,
-    `<div class="cfg-ai-bar">
-        <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ 一键定分</button>
+    `关卡配置 · ${detail.levelName || detail.levelNameZH}`,
+    `<div class="cfg-ltabs">
+        <button type="button" class="cfg-ltab-btn active" data-ltab="score">📊 分数</button>
+        <button type="button" class="cfg-ltab-btn" data-ltab="shot">📷 截图</button>
      </div>
-     <p class="modal-hint">订单数量（LevelInfoSO）</p>
-     <div class="cfg-order-count">
-       <label class="m-field">最少同时订单 minOrderCount<input type="number" id="cfg-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount ?? 2}"></label>
-       <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="cfg-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount ?? 5}"></label>
+     <div data-lpane="score">
+       <div class="cfg-ai-bar">
+          <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ 一键定分</button>
+       </div>
+       <p class="modal-hint">订单数量（LevelInfoSO）</p>
+       <div class="cfg-order-count">
+         <label class="m-field">最少同时订单 minOrderCount<input type="number" id="cfg-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount ?? 2}"></label>
+         <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="cfg-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount ?? 5}"></label>
+       </div>
+       <p class="modal-hint">星级分数（按人数）</p>
+       <table class="cfg-matrix">
+         <thead><tr><th>人数</th>${starHead}<th>难度系数</th></tr></thead>
+         <tbody>${matrixRows}</tbody>
+       </table>
+       <div id="cfg-ai-detail"></div>
+       <p class="modal-hint">节奏参数</p>
+       <div class="cfg-tabs">${tabBtns}</div>${panes}
      </div>
-     <p class="modal-hint">星级分数（按人数）</p>
-     <table class="cfg-matrix">
-       <thead><tr><th>人数</th>${starHead}<th>难度系数</th></tr></thead>
-       <tbody>${matrixRows}</tbody>
-     </table>
-     <div id="cfg-ai-detail"></div>
-     <p class="modal-hint">节奏参数</p>
-     <div class="cfg-tabs">${tabBtns}</div>${panes}`,
+     <div data-lpane="shot" style="display:none">
+       ${screenshotPaneHtml(detail)}
+     </div>`,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>保存全部</button>`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
+
+  // 顶层 tab：分数（参与「保存全部」）/ 截图（即时上传，切到截图时隐藏保存按钮）
+  document.querySelectorAll<HTMLButtonElement>(".cfg-ltab-btn").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".cfg-ltab-btn").forEach((b) => b.classList.toggle("active", b === btn));
+      const isShot = btn.dataset.ltab === "shot";
+      document.querySelectorAll<HTMLElement>("[data-lpane]").forEach((p) => {
+        p.style.display = p.dataset.lpane === btn.dataset.ltab ? "" : "none";
+      });
+      document.querySelector<HTMLButtonElement>("[data-ok]")?.style.setProperty("display", isShot ? "none" : "");
+    })
+  );
+  wireScreenshotPane(detail);
 
   document.querySelectorAll<HTMLButtonElement>(".cfg-tab-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
@@ -1000,7 +983,7 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
           fourStarScore: round5(getNum("fourStarScore")),
         };
       };
-      showBusy("保存分数配置…");
+      showBusy("保存关卡配置…");
       const minOrderCount = Number((document.getElementById("cfg-minOrderCount") as HTMLInputElement).value || 2);
       const maxOrderCount = Number((document.getElementById("cfg-maxOrderCount") as HTMLInputElement).value || 5);
       await api.updateLevelInfo({
@@ -1022,7 +1005,7 @@ export function openConfigTabsModal(detail: LevelDetail, setName: string, onSave
         config_4p: build("4p"),
       });
       closeModal();
-      setStatus("分数配置已保存（已 reload）");
+      setStatus("关卡配置已保存（已 reload）");
       onSaved();
     } catch (e) {
       setStatus((e as Error).message, false);

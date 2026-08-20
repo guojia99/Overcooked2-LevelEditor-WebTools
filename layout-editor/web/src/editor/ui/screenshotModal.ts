@@ -1,15 +1,14 @@
 /**
- * 关卡截图上传弹窗（关卡编辑器「📷 截图」按钮）。
+ * 关卡截图 pane（关卡配置弹窗「📷 截图」tab）。
  *
  * 功能：
  *  - 查看已上传的截图（imageFloorUrl 预览）。
  *  - 选择本地图片 → 画布上自由矩形拖拽裁剪选区（可重选）。
  *  - 画质压缩滑杆（JPEG quality 50–100%）。
  *  - 「裁剪并上传」→ 按源图坐标裁切 → JPEG base64 → /api/level/screenshot-upload
- *    （后端写入关卡 data 目录并赋给 LevelInfoSO.screenshot）。
+ *    （后端写入关卡 data 目录并赋给 LevelInfoSO.screenshot），上传成功后就地刷新预览。
  */
 import type { LevelDetail } from "../../types";
-import { openModal, closeModal } from "../../modals";
 import { showBusy, hideBusy } from "../../busy";
 import { setStatus } from "../status";
 import { uploadScreenshot, imageFloorUrl } from "../../api";
@@ -34,28 +33,20 @@ interface FitRect {
   dh: number;
 }
 
-export function openScreenshotModal(detail: LevelDetail, onSaved?: () => void): void {
-  let img: HTMLImageElement | null = null;
-  let fit: FitRect = { scale: 1, dx: 0, dy: 0, dw: 0, dh: 0 };
-  // 裁剪选区（画布显示坐标）
-  let crop: CropRect | null = null;
-  // 拖拽状态
-  let dragStart: { x: number; y: number } | null = null;
-  let moving = false;
-  let moveOffset: { x: number; y: number } | null = null;
-
+/** 截图 tab 的 pane HTML（由关卡配置弹窗嵌入；配对调用 wireScreenshotPane）。 */
+export function screenshotPaneHtml(detail: LevelDetail): string {
   const currentShot = detail.screenshotPath
-    ? `<div class="ss-current">
+    ? `<div class="ss-current" id="ss-current-wrap">
         <div class="ss-label">已上传截图</div>
         <img src="${imageFloorUrl(detail.screenshotPath)}" alt="关卡截图" class="ss-current-img">
       </div>`
-    : '<div class="ss-current ss-empty"><div class="ss-label">尚未上传截图</div></div>';
+    : '<div class="ss-current ss-empty" id="ss-current-wrap"><div class="ss-label">尚未上传截图</div></div>';
 
-  const bodyHtml = `
+  return `
     ${currentShot}
     <div class="ss-upload-row">
       <input type="file" id="ss-file" accept="image/png,image/jpeg" style="display:none">
-      <button type="button" class="modal-btn" id="ss-choose">选择图片</button>
+      <button type="button" class="modal-btn primary" id="ss-choose">选择图片</button>
       <span class="muted ss-file-name" id="ss-file-name"></span>
     </div>
     <div id="ss-crop-wrap" class="ss-crop-wrap" style="display:none">
@@ -68,16 +59,23 @@ export function openScreenshotModal(detail: LevelDetail, onSaved?: () => void): 
         <span class="muted" id="ss-quality-val">85%</span>
       </label>
     </div>
+    <div class="ss-actions-row">
+      <button type="button" class="m-btn primary" id="ss-upload" disabled>裁剪并上传</button>
+    </div>
     <div class="modal-hint err" id="ss-err" style="display:none"></div>
   `;
+}
 
-  const footerHtml = `
-    <button type="button" class="modal-btn" data-cancel>取消</button>
-    <button type="button" class="modal-btn primary" id="ss-upload" disabled>裁剪并上传</button>
-  `;
-
-  openModal("关卡截图 · " + (detail.levelNameZH || detail.levelName || "未命名"), bodyHtml, footerHtml);
-  document.querySelector(".modal-panel")?.classList.add("wide");
+/** 挂接截图 pane 的全部交互（渲染 screenshotPaneHtml 之后调用一次）。 */
+export function wireScreenshotPane(detail: LevelDetail): void {
+  let img: HTMLImageElement | null = null;
+  let fit: FitRect = { scale: 1, dx: 0, dy: 0, dw: 0, dh: 0 };
+  // 裁剪选区（画布显示坐标）
+  let crop: CropRect | null = null;
+  // 拖拽状态
+  let dragStart: { x: number; y: number } | null = null;
+  let moving = false;
+  let moveOffset: { x: number; y: number } | null = null;
 
   const err = (msg: string) => {
     const el = document.getElementById("ss-err");
@@ -248,8 +246,6 @@ export function openScreenshotModal(detail: LevelDetail, onSaved?: () => void): 
     reader.readAsDataURL(file);
   });
 
-  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
-
   uploadBtn?.addEventListener("click", async () => {
     if (!img || !crop) return;
     if (!detail.levelInfoAssetPath) {
@@ -284,11 +280,15 @@ export function openScreenshotModal(detail: LevelDetail, onSaved?: () => void): 
       }
       detail.hasScreenshot = true;
       detail.screenshotPath = texturePath;
-      closeModal();
+      // 就地刷新预览（不重开弹窗）
+      const wrap = document.getElementById("ss-current-wrap");
+      if (wrap) {
+        wrap.classList.remove("ss-empty");
+        wrap.innerHTML = `
+          <div class="ss-label">已上传截图</div>
+          <img src="${imageFloorUrl(texturePath)}" alt="关卡截图" class="ss-current-img">`;
+      }
       setStatus("关卡截图已上传");
-      onSaved?.();
-      // 重开弹窗展示新截图
-      openScreenshotModal(detail, onSaved);
     } catch (e) {
       err((e as Error).message);
     } finally {

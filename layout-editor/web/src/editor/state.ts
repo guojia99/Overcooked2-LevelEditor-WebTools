@@ -162,7 +162,9 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
   workstation_guillotine_01: { cellsX: 2, cellsZ: 1 },
   dlc08_cannon: { cellsX: 2, cellsZ: 2 },
   dlc09_cannon: { cellsX: 2, cellsZ: 2 },
-  // 半格小型厨具/工具：1×1 向内缩 10%（0.9 格）；旧数据误设为 1×1
+  // 半格小型厨具/工具 + 餐具（盘/杯/马克杯/餐盘）+ 锅具 + 喷火器：0.9 格。
+  // 与 scripts/build-catalog.mjs FOOTPRINT_OVERRIDES、Assets/Editor/LayoutEditor/
+  // LayoutEditorCatalogLookup.cs 三处镜像，修改须同步。
   utensil_bellows_01: { cellsX: 0.9, cellsZ: 0.9 },
   Bellows: { cellsX: 0.9, cellsZ: 0.9 },
   utensil_water_gun_01: { cellsX: 0.9, cellsZ: 0.9 },
@@ -175,9 +177,9 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
   Skewer: { cellsX: 0.9, cellsZ: 0.9 },
   utensil_skewer_01: { cellsX: 0.9, cellsZ: 0.9 },
   MixerBowl: { cellsX: 0.9, cellsZ: 0.9 },
+  // 搅拌杯（可放置容器）0.9；仅搅拌机机身 Blender 保持 1×1
   BlenderCup: { cellsX: 0.9, cellsZ: 0.9 },
   utensil_blender_01: { cellsX: 0.9, cellsZ: 0.9 },
-  Blender: { cellsX: 0.9, cellsZ: 0.9 },
   dlc02_utensil_mixer: { cellsX: 0.9, cellsZ: 0.9 },
   dlc03_utensil_mixer: { cellsX: 0.9, cellsZ: 0.9 },
   dlc05_utensil_mixer: { cellsX: 0.9, cellsZ: 0.9 },
@@ -199,6 +201,44 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
   p_dlc7_coal_bucket_coal_01: { cellsX: 0.9, cellsZ: 0.9 },
   utensil_ingredient_spray_01: { cellsX: 0.9, cellsZ: 0.9 },
   dlc09_utensil_ingredient_spray: { cellsX: 0.9, cellsZ: 0.9 },
+  // 盘子/杯子/马克杯/餐盘（含堆叠/脏净/DLC 变体）：0.9 格
+  Plate: { cellsX: 0.9, cellsZ: 0.9 },
+  CleanPlateStack: { cellsX: 0.9, cellsZ: 0.9 },
+  Glass: { cellsX: 0.9, cellsZ: 0.9 },
+  CleanGlassStack: { cellsX: 0.9, cellsZ: 0.9 },
+  cleanglassstack: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc11_cleanglassstack: { cellsX: 0.9, cellsZ: 0.9 },
+  dirtyglassstack: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc11_dirtyglass: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc11_dirtyglassstack: { cellsX: 0.9, cellsZ: 0.9 },
+  equipment_glass_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc11_equipment_glass_01: { cellsX: 0.9, cellsZ: 0.9 },
+  cleanmugstack: { cellsX: 0.9, cellsZ: 0.9 },
+  dirtymug: { cellsX: 0.9, cellsZ: 0.9 },
+  dirtymugstack: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_cleanmugstack: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_dirtymug: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_dirtymugstack: { cellsX: 0.9, cellsZ: 0.9 },
+  equipment_mug_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_equipment_mug_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_cleantraystack: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_dirtytray: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_dirtytraystack: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_equipment_tray: { cellsX: 0.9, cellsZ: 0.9 },
+  // 烤盘（roasting tray）：0.9 格
+  utensil_roasting_tray: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_utensil_roasting_tray: { cellsX: 0.9, cellsZ: 0.9 },
+  // 锅具（汤锅/蒸笼/炸篮，含 DLC 变体）：0.9 格
+  Pot: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc03_utensil_pot: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc07_utensil_pot_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_utensil_pot_01: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc09_utensil_pot: { cellsX: 0.9, cellsZ: 0.9 },
+  Steamer: { cellsX: 0.9, cellsZ: 0.9 },
+  FrierBasket: { cellsX: 0.9, cellsZ: 0.9 },
+  dlc08_frierbasket: { cellsX: 0.9, cellsZ: 0.9 },
+  // 特殊道具：喷火器 0.9 格
+  Flamethrower: { cellsX: 0.9, cellsZ: 0.9 },
 };
 
 /** 中心 pivot 道具（pivot 在多格footprint正中，工作位在根 ±半格）：根必须落在

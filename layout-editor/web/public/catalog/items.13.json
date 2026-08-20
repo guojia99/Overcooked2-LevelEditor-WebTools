@@ -2727,8 +2727,8 @@
       "theme": null,
       "defaultParent": "Design/Counters",
       "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "layoutTier": "core",
       "nameZh": "搅拌机",

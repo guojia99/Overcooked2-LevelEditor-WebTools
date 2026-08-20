@@ -35,7 +35,6 @@ import { openRecipesDialog } from "./ui/recipesDialogs";
 import { openDepsCheckModal } from "./ui/depsCheck";
 import { requestTestLayout } from "./testLayout";
 import { openUtensilManager } from "./ui/utensilManager";
-import { openScreenshotModal } from "./ui/screenshotModal";
 import { openCameraLightModal } from "./cameraLight";
 import {
   applyPanelCollapse,
@@ -347,10 +346,6 @@ export async function init() {
       const deathTheme = dt === "water" ? "water" : dt === "goo" ? "goo" : "";
       openAudioModal(detail, { themes, raft, deathTheme, itemIds }, () => {});
     })
-  );
-
-  document.getElementById("btn-level-screenshot")!.addEventListener("click", () =>
-    void withLevelDetail((detail) => openScreenshotModal(detail, () => {}))
   );
 
   document.getElementById("btn-summary")!.addEventListener("click", () =>

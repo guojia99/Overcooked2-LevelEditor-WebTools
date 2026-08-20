@@ -32,7 +32,9 @@ public static class LayoutEditorCatalogLookup
         { "workstation_guillotine_01", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "dlc08_cannon", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
         { "dlc09_cannon", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
-        // 半格小型厨具/工具：1×1 向内缩 10%（0.9 格）；旧数据误设为 1×1
+        // 半格小型厨具/工具 + 餐具（盘/杯/马克杯/餐盘）+ 锅具 + 喷火器：0.9 格。
+        // 与 layout-editor/scripts/build-catalog.mjs FOOTPRINT_OVERRIDES、
+        // layout-editor/web/src/editor/state.ts FOOTPRINT_BY_ID 三处镜像，修改须同步。
         { "utensil_bellows_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "Bellows", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "utensil_water_gun_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
@@ -45,9 +47,9 @@ public static class LayoutEditorCatalogLookup
         { "Skewer", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "utensil_skewer_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "MixerBowl", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        // 搅拌杯（可放置容器）0.9；仅搅拌机机身 Blender 保持 1×1
         { "BlenderCup", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "utensil_blender_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
-        { "Blender", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "dlc02_utensil_mixer", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "dlc03_utensil_mixer", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "dlc05_utensil_mixer", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
@@ -69,6 +71,44 @@ public static class LayoutEditorCatalogLookup
         { "p_dlc7_coal_bucket_coal_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "utensil_ingredient_spray_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "dlc09_utensil_ingredient_spray", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        // 盘子/杯子/马克杯/餐盘（含堆叠/脏净/DLC 变体）：0.9 格
+        { "Plate", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "CleanPlateStack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "Glass", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "CleanGlassStack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "cleanglassstack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc11_cleanglassstack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dirtyglassstack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc11_dirtyglass", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc11_dirtyglassstack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "equipment_glass_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc11_equipment_glass_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "cleanmugstack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dirtymug", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dirtymugstack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc09_cleanmugstack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc09_dirtymug", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc09_dirtymugstack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "equipment_mug_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc09_equipment_mug_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc08_cleantraystack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc08_dirtytray", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc08_dirtytraystack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc08_equipment_tray", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        // 烤盘（roasting tray）：0.9 格
+        { "utensil_roasting_tray", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc09_utensil_roasting_tray", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        // 锅具（汤锅/蒸笼/炸篮，含 DLC 变体）：0.9 格
+        { "Pot", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc03_utensil_pot", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc07_utensil_pot_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc08_utensil_pot_01", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc09_utensil_pot", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "Steamer", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "FrierBasket", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "dlc08_frierbasket", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        // 特殊道具：喷火器 0.9 格
+        { "Flamethrower", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
     };
 
     public static LayoutFootprint GetFootprint(string prefabId)
