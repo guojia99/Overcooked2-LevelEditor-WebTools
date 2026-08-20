@@ -21,12 +21,78 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 22px 28px;
+  gap: 16px;
+  padding: 22px 30px 18px;
   background: #2d323c;
   border: 1px solid #4a5060;
   border-radius: 10px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* 烹饪 loading：番茄/芝士/土豆依次弹跳（119×119 源图，32px 展示） */
+.busy-foods {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 8px 4px 0;
+}
+
+.busy-food {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  transform-origin: 50% 100%;
+  animation: busy-cook 0.9s ease-in-out infinite;
+}
+
+.busy-food.f2 {
+  animation-delay: 0.15s;
+}
+
+.busy-food.f3 {
+  animation-delay: 0.3s;
+}
+
+/* 底部“案板”托住弹跳的食材 */
+.busy-foods::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: -9px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes busy-cook {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0) scale(1, 1) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-13px) scale(0.96, 1.05) rotate(-5deg);
+  }
+  45% {
+    transform: translateY(-6px) scale(1, 1) rotate(4deg);
+  }
+}
+
+/* 图标缺失时的回退 spinner */
+.busy-fallback {
+  display: none;
+  padding: 4px 0;
+}
+
+.busy-overlay.no-food-icons .busy-foods {
+  display: none;
+}
+
+.busy-overlay.no-food-icons .busy-fallback {
+  display: flex;
 }
 
 .busy-spinner {
@@ -421,6 +487,31 @@ body {
   border: 1px solid #4a5060;
   background: #1a1d23;
   color: #e8eaed;
+}
+
+.palette-header .decor-size-filter {
+  width: 100%;
+  margin-top: 6px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid #4a5060;
+  background: #1a1d23;
+  color: #e8eaed;
+}
+
+.palette-header .decor-size-filter.hidden {
+  display: none;
+}
+
+.decor-size-badge {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #2d3a4f;
+  color: #9fc2ff;
+  font-size: 10px;
+  line-height: 14px;
 }
 
 .palette-cats {
@@ -1583,6 +1674,25 @@ canvas.pan-active {
   margin-top: 2px;
 }
 
+/* 地板编辑弹窗：材质/主题地板卡片一行 3 列 */
+.mat-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.mat-pick-grid .mat-pick {
+  min-width: 0;
+}
+
+.mat-pick-grid .mat-id,
+.mat-pick-grid .mat-sub {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mat-pick-list.type-row {
   flex-direction: row;
   gap: 6px;
@@ -1744,6 +1854,33 @@ body.manage-bg {
   gap: 6px;
 }
 
+/* 关卡列表卡片：每行最多 4 列（minmax 上限 = (100% - 3*gap)/4） */
+.m-level-grid {
+  grid-template-columns: repeat(auto-fill, minmax(max(250px, calc((100% - 36px) / 4)), 1fr));
+}
+
+.m-level-shot {
+  margin: -12px -14px 10px;
+  height: 130px;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  background: #1a1d23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.m-level-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.m-level-shot.empty {
+  font-size: 12px;
+}
+
 .m-list {
   display: flex;
   flex-direction: column;
@@ -1850,6 +1987,23 @@ body.manage-bg {
 
 .modal-panel.wide {
   max-width: 1100px;
+}
+
+/* 地板编辑弹窗：整体更高（材质列表占满剩余空间，卡片网格一行 3 列） */
+.modal-panel.floor-edit {
+  height: min(820px, 88vh);
+  max-height: 92vh;
+}
+
+.modal-panel.floor-edit .modal-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-panel.floor-edit .mat-pick-list:not(.type-row) {
+  flex: 1;
+  min-height: 120px;
+  max-height: none;
 }
 
 /* 已选菜谱弹窗：固定高度 640px，卡片区占满剩余空间 */

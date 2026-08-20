@@ -1,0 +1,1818 @@
+{
+  "schemaVersion": 3,
+  "group": "dlc08",
+  "itemCount": 38,
+  "recipes": [
+    {
+      "guid": "eb0563923a543f4191a9c24aaa1feba2",
+      "id": "hotdog_ketchup_mustard",
+      "nameZh": "番茄酱芥末热狗",
+      "nameEn": "Hot Dog Ketchup & Mustard",
+      "assetPath": "Assets/common03/Recipes/dlc08/hotdog_ketchup_mustard.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "ketchup",
+        "mustard"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "ketchup",
+            "mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "428be35ca1f1f9f1e79a8f41bd305eb9",
+      "id": "hotdog_ketchup",
+      "nameZh": "番茄酱热狗",
+      "nameEn": "Hot Dog & Ketchup",
+      "assetPath": "Assets/common03/Recipes/dlc08/hotdog_ketchup.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "ketchup"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "ketchup"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "1384e5b499d548ed99f8f5d512cdaf95",
+      "id": "mixedflouregghoneycomb",
+      "nameZh": "蜂蜜面糊",
+      "nameEn": "Honeycomb Batter",
+      "assetPath": "Assets/common03/Recipes/dlc08/mixedflouregghoneycomb.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "HoneycombSO"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "cb3f2f86134eb1bb4931cfe5df2bc9b2",
+      "id": "mixedfloureggraspberry",
+      "nameZh": "覆盆子面糊",
+      "nameEn": "Raspberry Batter",
+      "assetPath": "Assets/common03/Recipes/dlc08/mixedfloureggraspberry.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "raspberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "raspberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "94cd242f06ced014cbd051f61e0b2373",
+      "id": "donut_raspberry",
+      "nameZh": "覆盆子甜甜圈",
+      "nameEn": "Raspberry Donut",
+      "assetPath": "Assets/common03/Recipes/dlc08/donut_raspberry.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "raspberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "donut",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "raspberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "28b16a20829fc0b3e5a33d24141def8a",
+      "id": "md_burger_fries",
+      "nameZh": "汉堡+薯条 套餐",
+      "nameEn": "Burger & Fries Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_burger_fries.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "27873c1b8548622bd7bd6be5f56cb530",
+      "id": "md_burger_fries_drink02",
+      "nameZh": "汉堡+薯条+饮料 2 套餐",
+      "nameEn": "Burger & Fries & Drink 2 Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_burger_fries_drink02.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "drink02"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "drink02"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink02"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3f7c2e7596a599be8dd95877efbf4480",
+      "id": "md_burger_fries_cheesesticks",
+      "nameZh": "汉堡+薯条+炸芝士条 套餐",
+      "nameEn": "Burger & Fries & Cheese Sticks Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_burger_fries_cheesesticks.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "friedcheese_sticks"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "friedcheese_sticks"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "03c9a0bc1703febac7f59abdcf7dd9b2",
+      "id": "md_burger_drink01",
+      "nameZh": "汉堡+饮料 1 套餐",
+      "nameEn": "Burger & Drink 1 Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_burger_drink01.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "drink01"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "drink01"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink01"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3b4ba721240d21c7f000355d1d44b019",
+      "id": "md_burger_onionrings",
+      "nameZh": "汉堡+炸洋葱圈 套餐",
+      "nameEn": "Burger & Onion Rings Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_burger_onionrings.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "83fad59b96d0f1d49ba459a0f509d3ef",
+      "id": "md_burger_onionrings_drink01",
+      "nameZh": "汉堡+炸洋葱圈+饮料 1 套餐",
+      "nameEn": "Burger & Onion Rings & Drink 1 Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_burger_onionrings_drink01.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings",
+        "drink01"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings",
+        "drink01"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink01"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "55a7e92cc181867320fbcba62883e4c4",
+      "id": "md_burger_onionrings_cheesesticks",
+      "nameZh": "汉堡+炸洋葱圈+炸芝士条 套餐",
+      "nameEn": "Burger & Onion Rings & Cheese Sticks Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_burger_onionrings_cheesesticks.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings",
+        "friedcheese_sticks"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedonion_rings",
+        "friedcheese_sticks"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "633b6b73a45afaf8fc92dcd395023531",
+      "id": "md_burger_cheesesticks_drink03",
+      "nameZh": "汉堡+炸芝士条+饮料 3 套餐",
+      "nameEn": "Burger & Cheese Sticks & Drink 3 Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_burger_cheesesticks_drink03.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedcheese_sticks",
+        "drink03"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "FriedMeat",
+        "friedcheese_sticks",
+        "drink03"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink03"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d067bcb2fa433447cffca113d224b449",
+      "id": "chickenburger",
+      "nameZh": "鸡肉汉堡",
+      "nameEn": "Chicken Burger",
+      "assetPath": "Assets/common03/Recipes/dlc08/chickenburger.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_bun",
+        "dlc08_chicken"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "burger",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0f007802d9382b111d4d4e206307956a",
+      "id": "md_c_burger_fries_drink03",
+      "nameZh": "鸡肉汉堡+薯条+饮料 3 套餐",
+      "nameEn": "Chicken Burger & Fries & Drink 3 Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_c_burger_fries_drink03.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "drink03"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "drink03"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink03"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8b8c47e035b8809576828ec949c29957",
+      "id": "md_c_burger_fries_onionrings",
+      "nameZh": "鸡肉汉堡+薯条+炸洋葱圈 套餐",
+      "nameEn": "Chicken Burger & Fries & Onion Rings Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_c_burger_fries_onionrings.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "friedonion_rings"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "friedonion_rings"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "84835518175f97e4d28e36f13c54c754",
+      "id": "md_c_burger_fries_cheesesticks",
+      "nameZh": "鸡肉汉堡+薯条+炸芝士条 套餐",
+      "nameEn": "Chicken Burger & Fries & Cheese Sticks Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_c_burger_fries_cheesesticks.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "friedcheese_sticks"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "dlc08_friedchips",
+        "friedcheese_sticks"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0c28587ea0e7ee2126084bfe7daa5be5",
+      "id": "md_c_burger_drink03",
+      "nameZh": "鸡肉汉堡+饮料 3 套餐",
+      "nameEn": "Chicken Burger & Drink 3 Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_c_burger_drink03.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "drink03"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "drink03"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink03"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "c082a54e7b87abec21311954e1023011",
+      "id": "md_c_burger_onionrings",
+      "nameZh": "鸡肉汉堡+炸洋葱圈 套餐",
+      "nameEn": "Chicken Burger & Onion Rings Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_c_burger_onionrings.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedonion_rings"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedonion_rings"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "05ecbca1e1abdf4e1d3e334defd185a5",
+      "id": "md_c_burger_onionrings_drink01",
+      "nameZh": "鸡肉汉堡+炸洋葱圈+饮料 1 套餐",
+      "nameEn": "Chicken Burger & Onion Rings & Drink 1 Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_c_burger_onionrings_drink01.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedonion_rings",
+        "drink01"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedonion_rings",
+        "drink01"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink01"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fc58bc006dbfe1fed75d5c261b42bc4b",
+      "id": "md_c_burger_cheesesticks",
+      "nameZh": "鸡肉汉堡+炸芝士条 套餐",
+      "nameEn": "Chicken Burger & Cheese Sticks Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_c_burger_cheesesticks.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedcheese_sticks"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedcheese_sticks"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "64b1bd39b2ac69e1c85deb630429c95f",
+      "id": "md_c_burger_cheesesticks_drink02",
+      "nameZh": "鸡肉汉堡+炸芝士条+饮料 2 套餐",
+      "nameEn": "Chicken Burger & Cheese Sticks & Drink 2 Meal",
+      "assetPath": "Assets/common03/Recipes/dlc08/md_c_burger_cheesesticks_drink02.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedcheese_sticks",
+        "drink02"
+      ],
+      "compositionIds": [
+        "dlc08_bun",
+        "friedchickenburger",
+        "friedcheese_sticks",
+        "drink02"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "mealdeal",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_bun",
+            "drink02"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "64e1f74ca542f2e42c25e37aa076cca8",
+      "id": "hotdog_mustard",
+      "nameZh": "芥末热狗",
+      "nameEn": "Hot Dog & Mustard",
+      "assetPath": "Assets/common03/Recipes/dlc08/hotdog_mustard.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "mustard"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d41e13f666654b6087b16fb6b70b6171",
+      "id": "mixedfloureggchocolate",
+      "nameZh": "巧克力面糊",
+      "nameEn": "Chocolate Batter",
+      "assetPath": "Assets/common03/Recipes/dlc08/mixedfloureggchocolate.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "ChocolateSO"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "7e1266d3fddbb8d4298c58fe4fbaa426",
+      "id": "donut_chocolate",
+      "nameZh": "巧克力甜甜圈",
+      "nameEn": "Chocolate Donut",
+      "assetPath": "Assets/common03/Recipes/dlc08/donut_chocolate.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "donut",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "ChocolateSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7dc4ac104712f59b966d187718a7d4e5",
+      "id": "hotdog_onions_ketchup",
+      "nameZh": "洋葱番茄酱热狗",
+      "nameEn": "Hot Dog Onions & Ketchup",
+      "assetPath": "Assets/common03/Recipes/dlc08/hotdog_onions_ketchup.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "dlc08_onion",
+        "ketchup"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "ketchup"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "ada8822251fceff3a58a4c8d229de500",
+      "id": "hotdog_onions_mustard",
+      "nameZh": "洋葱芥末热狗",
+      "nameEn": "Hot Dog Onions & Mustard",
+      "assetPath": "Assets/common03/Recipes/dlc08/hotdog_onions_mustard.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "dlc08_onion",
+        "mustard"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun",
+            "mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7cf08f27c57e9acdb0a4880243d8628d",
+      "id": "hotdog_onions",
+      "nameZh": "洋葱热狗",
+      "nameEn": "Hot Dog & Onions",
+      "assetPath": "Assets/common03/Recipes/dlc08/hotdog_onions.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter",
+        "dlc08_onion"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d0202a69a75b2e83766130e3ecce098e",
+      "id": "hotdog_plain",
+      "nameZh": "原味热狗",
+      "nameEn": "Plain Hot Dog",
+      "assetPath": "Assets/common03/Recipes/dlc08/hotdog_plain.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "hotdogbun",
+        "frankfurter"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "hotdogbun"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d7a5e51b167d9294b8298b03c931e254",
+      "id": "donut_plain",
+      "nameZh": "原味甜甜圈",
+      "nameEn": "Plain Donut",
+      "assetPath": "Assets/common03/Recipes/dlc08/donut_plain.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "donut",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "HoneycombSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "bcec4e5b3b50171c78eaf83608d69cef",
+      "id": "friedchickenburger",
+      "nameZh": "炸鸡汉堡",
+      "nameEn": "Fried Chicken Burger",
+      "assetPath": "Assets/common03/Recipes/dlc08/friedchickenburger.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_chicken"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_chicken"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9131aced4d7ec752cf5b85ea413b429d",
+      "id": "dlc08_friedchips",
+      "nameZh": "炸薯条",
+      "nameEn": "Fried Chips",
+      "assetPath": "Assets/common03/Recipes/dlc08/dlc08_friedchips.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_potato"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_potato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4097f96b7686d0aa3be7de86f2796d61",
+      "id": "friedonions",
+      "nameZh": "炸洋葱",
+      "nameEn": "Fried Onions",
+      "assetPath": "Assets/common03/Recipes/dlc08/friedonions.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_onion"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc08_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f19c92bb5395e3e387f0ceaafb0b432a",
+      "id": "friedonion_rings",
+      "nameZh": "炸洋葱圈",
+      "nameEn": "Fried Onion Rings",
+      "assetPath": "Assets/common03/Recipes/dlc08/friedonion_rings.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_onion_ring"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8b1e4b4a4923fb7768017a7241701be8",
+      "id": "onionrings",
+      "nameZh": "炸洋葱圈",
+      "nameEn": "Onion Rings",
+      "assetPath": "Assets/common03/Recipes/dlc08/onionrings.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_onion_ring"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "fry",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_onion_ring"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0b737f520919a9d81668e76f16865df1",
+      "id": "cheesesticks",
+      "nameZh": "炸芝士条",
+      "nameEn": "Cheese Sticks",
+      "assetPath": "Assets/common03/Recipes/dlc08/cheesesticks.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_cheesesticks"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "fry",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "ce1a1f6b10620ff06aee6323d2285630",
+      "id": "friedcheese_sticks",
+      "nameZh": "炸芝士条",
+      "nameEn": "Fried Cheese Sticks",
+      "assetPath": "Assets/common03/Recipes/dlc08/friedcheese_sticks.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_cheesesticks"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "dlc08_cheesesticks"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9dd356154a85aed66bcd14778e791f3d",
+      "id": "boiledfrankfurter",
+      "nameZh": "煮热狗肠",
+      "nameEn": "Boiled Frankfurter",
+      "assetPath": "Assets/common03/Recipes/dlc08/boiledfrankfurter.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "frankfurter"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "hotdog",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    }
+  ]
+}

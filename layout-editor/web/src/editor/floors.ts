@@ -96,6 +96,22 @@ export const THEMED_FLOOR_NATIVE: Record<string, ThemedFloorNative> = {
   sand_floor_01: { rotX: 0, depthAxis: "z", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
   // OC1 大型地面（露营地地面）：整块平铺在 XZ 的巨型地面，原生尺寸 34×21 格
   dlc5_ground_camp: { rotX: 0, depthAxis: "z", cellsPerScaleX: 34, cellsPerScaleZ: 21 },
+  // 基础本体主题地板（dump .obj 判定：QUAD 竖立铺平 / FLAT 横铺 XZ；cellsPerScale=名称尺寸）
+  air_balloon_kitchen_floor_wood_01: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  floor_wood_2x2: { rotX: 90, depthAxis: "y", cellsPerScaleX: 2, cellsPerScaleZ: 2 },
+  grave_kitchen_floor_01: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  mi_wood_floor_16x4: { rotX: 90, depthAxis: "y", cellsPerScaleX: 16, cellsPerScaleZ: 4 },
+  throne_room_floor_01: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  wizard_floor_10x10: { rotX: 90, depthAxis: "y", cellsPerScaleX: 10, cellsPerScaleZ: 10 },
+  wizard_stone_floor_6x6: { rotX: 90, depthAxis: "y", cellsPerScaleX: 6, cellsPerScaleZ: 6 },
+  wizard_wood_floor_6x4: { rotX: 90, depthAxis: "y", cellsPerScaleX: 6, cellsPerScaleZ: 4 },
+  p_dlc7_floor_01: { rotX: 90, depthAxis: "y", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  floor_tile_9x4: { rotX: 0, depthAxis: "z", cellsPerScaleX: 9, cellsPerScaleZ: 4 },
+  floor_tiled_blue_01: { rotX: 0, depthAxis: "z", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  floor_tiles_black_1: { rotX: 0, depthAxis: "z", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  kitchen_floor_5x7: { rotX: 0, depthAxis: "z", cellsPerScaleX: 5, cellsPerScaleZ: 7 },
+  m_city_floor_h4_01: { rotX: 0, depthAxis: "z", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
+  mi_floor_01: { rotX: 0, depthAxis: "z", cellsPerScaleX: 1, cellsPerScaleZ: 1 },
 };
 
 export const THEMED_FLOOR_NATIVE_DEFAULT: ThemedFloorNative = {

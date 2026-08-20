@@ -176,6 +176,46 @@ def try_local_png(local_idx, recipe_id, sprite_name, out_dir, check):
     return False
 
 
+def emit_intermediate_ingredient_icons(ing_ids, check):
+    """中间产物（非独立食材、但被其他菜谱作为食材引用的 PseudoPrefabSORecipe，
+    如 FriedMeat / dlc08_friedchips / friedcheese_sticks / friedonion_rings）在
+    `icons/ingredients/` 没有专属图，前端食材角标会显示占位图。此处复用其
+    `icons/recipes/<id>.png`（成品图）作为食材图，保证套餐等组合菜谱角标有图。
+
+    生成式：每次 extract-icons 重跑都会补齐，不会被重新生成覆盖。"""
+    kp = os.path.join(DATA, "recipe-knowledge.json")
+    if not os.path.exists(kp):
+        return 0
+    raw = json.load(open(kp, encoding="utf-8"))
+    recipes = raw.get("recipes") or []
+    referenced = set()
+    for r in recipes:
+        for ing in (r.get("ingredients") or []):
+            if ing:
+                referenced.add(ing)
+    real = set(ing_ids)
+    intermediates = sorted(referenced - real)
+
+    out_dir = os.path.join(OUT, "ingredients")
+    count = 0
+    for sid in intermediates:
+        src = os.path.join(OUT, "recipes", sid + ".png")
+        dest = os.path.join(out_dir, sid + ".png")
+        if not os.path.exists(src):
+            continue  # 无成品图可复用，跳过
+        if os.path.exists(dest):
+            continue  # 已有食材图（手动补过）
+        if check:
+            count += 1
+            continue
+        os.makedirs(out_dir, exist_ok=True)
+        shutil.copy2(src, dest)
+        count += 1
+    if count:
+        print(f"intermediate ingredient icons: {count} (copied from recipe icons)")
+    return count
+
+
 def main():
     args = [a.lower() for a in sys.argv[1:]]
     check = "--check" in args
@@ -226,6 +266,9 @@ def main():
             stats["ing_ok"] += 1
             if not check:
                 extract(obj, os.path.join(out_dir, sid + ".png"))
+
+    # 中间产物食材图：复用菜谱成品图（套餐等组合菜谱的食材角标）
+    emit_intermediate_ingredient_icons(ing_ids, check)
 
     if do_rec:
         out_dir = os.path.join(OUT, "recipes")

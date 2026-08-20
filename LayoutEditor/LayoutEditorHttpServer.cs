@@ -152,6 +152,10 @@ public class LayoutEditorHttpServer
             {
                 var context = _listener.GetContext();
                 var captured = context;
+                // 导出状态/下载走监听线程 fast-path：BuildPipeline 阻塞主线程泵期间，
+                // 这些请求若排队将永远得不到响应（前端轮询会超时）。
+                if (TryServeExportFastPath(captured))
+                    continue;
                 EnqueueMain(delegate { HandleRequest(captured); });
             }
             catch (HttpListenerException)
@@ -200,6 +204,90 @@ public class LayoutEditorHttpServer
             {
                 Debug.LogException(ex);
             }
+        }
+    }
+
+    /// <summary>导出任务的状态查询与 zip 下载在监听线程直答（不进主线程队列）。
+    ///  导出期间 BuildPipeline.BuildAssetBundles 会阻塞主线程泵数分钟，排队请求
+    ///  全部挂起；这两个端点只读导出器的锁保护状态快照 / 做纯文件 I/O，线程安全。
+    ///  命中返回 true（响应已写出），未命中返回 false 走正常主线程分发。</summary>
+    private static bool TryServeExportFastPath(HttpListenerContext context)
+    {
+        try
+        {
+            var request = context.Request;
+            var path = request.Url.AbsolutePath;
+            var isStatus = path == "/api/set/export/status";
+            var isDownload = path == "/api/set/export/download";
+            if ((!isStatus && !isDownload) || request.HttpMethod != "GET")
+                return false;
+
+            var response = context.Response;
+            response.Headers.Add("Access-Control-Allow-Origin", "*");
+            if (isStatus)
+            {
+                WriteListenerJson(response, 200,
+                    LayoutEditorJson.ToJson(LayoutEditorSetExporter.GetStatus()));
+            }
+            else
+            {
+                var zipPath = LayoutEditorSetExporter.ResolveDownloadPath(
+                    request.QueryString["setName"], request.QueryString["fileName"]);
+                if (zipPath == null)
+                {
+                    WriteListenerJson(response, 404, LayoutEditorJson.ToJson(
+                        new ApiErrorDto { error = "未找到导出的 zip（请先完成一次导出）。" }));
+                }
+                else
+                {
+                    WriteListenerFile(response, zipPath, Path.GetFileName(zipPath));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] export fast-path: " + ex.Message);
+            // 尽力写一个 500，避免浏览器一直挂着等响应。
+            WriteListenerJson(context.Response, 500,
+                LayoutEditorJson.ToJson(new ApiErrorDto { error = "导出状态查询失败：" + ex.Message }));
+        }
+        return true;
+    }
+
+    /// <summary>监听线程专用写响应（不碰主线程流程的 _responseSent 标志，避免竞态）。</summary>
+    private static void WriteListenerJson(HttpListenerResponse response, int status, string json)
+    {
+        try
+        {
+            var bytes = Encoding.UTF8.GetBytes(json ?? "");
+            response.StatusCode = status;
+            response.ContentType = "application/json; charset=utf-8";
+            response.ContentLength64 = bytes.Length;
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+            response.OutputStream.Close();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] listener write skipped: " + ex.Message);
+        }
+    }
+
+    private static void WriteListenerFile(HttpListenerResponse response, string absPath, string downloadName)
+    {
+        try
+        {
+            var bytes = File.ReadAllBytes(absPath);
+            response.StatusCode = 200;
+            response.ContentType = "application/zip";
+            response.AddHeader("Content-Disposition",
+                "attachment; filename=\"" + (downloadName ?? "export.zip") + "\"");
+            response.ContentLength64 = bytes.Length;
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+            response.OutputStream.Close();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] listener file write failed: " + ex.Message);
         }
     }
 
@@ -441,6 +529,15 @@ public class LayoutEditorHttpServer
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<LevelSetCreateDto>(body);
                 var err = LayoutEditorLevelAdminApi.DeleteSet(dto != null ? dto.setName : null);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/set/export" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<SetExportStartDto>(body);
+                var err = LayoutEditorSetExporter.StartExport(dto != null ? dto.setName : null);
                 WriteAdminResult(response, err);
                 return;
             }
@@ -1089,8 +1186,9 @@ public class LayoutEditorHttpServer
         {
             try
             {
-                dto.audioExportClips = Directory.GetFiles(
-                    Path.GetDirectoryName(audioManifest), "*.ogg", SearchOption.AllDirectories).Length;
+                string audioRoot = Path.GetDirectoryName(audioManifest);
+                dto.audioExportClips = Directory.GetFiles(audioRoot, "*.ogg", SearchOption.AllDirectories).Length
+                    + Directory.GetFiles(audioRoot, "*.wav", SearchOption.AllDirectories).Length;
             }
             catch { }
         }
@@ -1265,42 +1363,49 @@ public class LayoutEditorHttpServer
         var result = new IconStatusListDto();
         var webRoot = LayoutEditorPaths.WebDistRoot;
 
-        var recipesPath = Path.Combine(webRoot, "recipes.json");
-        if (File.Exists(recipesPath))
+        // recipes.json 已切分为 recipes/<group>.json 分组文件，此处聚合统计图标覆盖。
+        var recipesDir = Path.Combine(webRoot, "recipes");
+        var allRecipes = new List<IconRecipeEntry>();
+        if (Directory.Exists(recipesDir))
         {
             try
             {
-                var json = File.ReadAllText(recipesPath);
-                var catalog = JsonUtility.FromJson<IconRecipeCatalog>(json);
-                if (catalog != null && catalog.recipes != null)
+                foreach (var file in Directory.GetFiles(recipesDir, "*.json"))
                 {
-                    var missing = new List<IconStatusItemDto>();
-                    int withIcon = 0;
-                    foreach (var r in catalog.recipes)
-                    {
-                        if (r.icon) withIcon++;
-                        else if (!r.intermediate)
-                        {
-                            missing.Add(new IconStatusItemDto
-                            {
-                                id = r.id,
-                                nameZh = r.nameZh,
-                                nameEn = r.nameEn,
-                                hasIcon = false,
-                                group = r.group,
-                                type = r.type
-                            });
-                        }
-                    }
-                    result.totalRecipes = catalog.recipes.Length;
-                    result.recipesWithIcon = withIcon;
-                    result.missingRecipes = missing.ToArray();
+                    var json = File.ReadAllText(file);
+                    var catalog = JsonUtility.FromJson<IconRecipeCatalog>(json);
+                    if (catalog != null && catalog.recipes != null)
+                        allRecipes.AddRange(catalog.recipes);
                 }
             }
             catch (System.Exception ex)
             {
-                Debug.LogWarning("Failed to read recipes.json for icon status: " + ex.Message);
+                Debug.LogWarning("Failed to read recipes/*.json for icon status: " + ex.Message);
             }
+        }
+        if (allRecipes.Count > 0)
+        {
+            var missing = new List<IconStatusItemDto>();
+            int withIcon = 0;
+            foreach (var r in allRecipes)
+            {
+                if (r.icon) withIcon++;
+                else if (!r.intermediate)
+                {
+                    missing.Add(new IconStatusItemDto
+                    {
+                        id = r.id,
+                        nameZh = r.nameZh,
+                        nameEn = r.nameEn,
+                        hasIcon = false,
+                        group = r.group,
+                        type = r.type
+                    });
+                }
+            }
+            result.totalRecipes = allRecipes.Count;
+            result.recipesWithIcon = withIcon;
+            result.missingRecipes = missing.ToArray();
         }
 
         var ingredientsPath = Path.Combine(webRoot, "ingredients.json");

@@ -791,7 +791,7 @@ public static class LayoutEditorRecipeKnowledge
 
     /// <summary>common03 通用菜谱分数估算：分数 = 20 × 食材种类数 + 烹调难度加成，
     ///  clamp [20,120]、级距 20（对齐游戏攻略：材料越多越高、烹调越麻烦越高）。
-    ///  加成：搅拌+烘焙(蛋糕/派/月饼/布丁/搅拌步骤)=60；搅拌+煎炸(松饼/甜甜圈)=40；
+    ///  加成：搅拌+烘焙(蛋糕/派/月饼/布丁)=40；搅拌+煎炸(松饼/甜甜圈)=40；搅拌步骤=60；
     ///  煮/炸/蒸/烤/火锅/烤串/搅拌机(Blender)=20；组装/切菜/煎(FryingPan)=0。</summary>
     public static int EstimateCommon03RecipeScore(string id, string step, string[] ingredients)
     {
@@ -808,7 +808,7 @@ public static class LayoutEditorRecipeKnowledge
         if (lower.Contains("pancake") || lower.Contains("donut"))
             bonus = 40;
         else if (lower.Contains("cake") || lower.Contains("pie") || lower.Contains("moonpie") || lower.Contains("pudding"))
-            bonus = 60;
+            bonus = 40;
         else if (step == "Mixer" || step == "MixingBowl" || step == "OvenCakeTin")
             bonus = 60;
         else if (step == "Pot" || step == "OvenTray" || step == "Steamer" || step == "DeepFatFryer"

@@ -39,6 +39,18 @@ const CURATED = {
   PressureSwitch: "压力开关", Switch: "开关", Teleportal: "传送门",
   // chef spawn
   Player: "厨师出生点",
+  // odd game assets
+  beachthronecollision: "海滩王座碰撞", rename_me: "未命名",
+  // 新增 DLC NPC 装饰（gen-decor-entries 2026-08）
+  city_kevin_02: "城市凯文 2", kevin_01: "凯文", kevin_01_dlc5: "凯文（露营）",
+  dlc08_npc_firebreather01: "马戏团·吐火者 1", dlc08_npc_firebreather02: "马戏团·吐火者 2",
+  dlc08_npc_juggler01: "马戏团·杂耍者 1", dlc08_npc_strongman01: "马戏团·大力士 1",
+  dlc08_npc_strongman02: "马戏团·大力士 2",
+  npc_buck: "顾客·巴克", npc_business: "顾客·商务男", npc_constructionworker_01: "顾客·建筑工 1",
+  npc_diners_01: "顾客·食客 1", npc_eskimo: "顾客·爱斯基摩人", npc_glasses: "顾客·眼镜男",
+  npc_lifering: "顾客·救生圈", npc_mel: "顾客·梅尔", npc_mike: "顾客·迈克",
+  npc_penguin_1: "企鹅", npc_waiter: "顾客·服务员", npc_waiters_01: "顾客·服务员 1",
+  robinflight: "知更鸟（飞）", robinground_01: "知更鸟（地面）",
   // floors / backgrounds
   floor_corner_01: "地板转角", floor_edge_01: "地板边缘", sand_floor_01: "沙地地板",
   walkway_floor_01: "栈道地板", walkway_floor_03_alt_01: "栈道地板（变体）",
@@ -265,6 +277,36 @@ const TOKEN_ZH = {
   sp: "太空", keep: "城堡", horde: "部落", circus: "马戏团",
   wonderland: "仙境", christmas: "圣诞", graveyard: "墓地", mine: "矿洞",
   theme: "主题曲", medley: "组曲", wonder: "仙境", sparkling: "闪耀",
+  // ---- DLC 装饰（gen-decor-entries 新增，2026-08）----
+  candycane: "拐杖糖", toy: "玩具", cracker: "拉炮", gingerbreadman: "姜饼人",
+  horse: "木马", letterblock: "字母积木", nutcracker: "胡桃夹子", pretzel: "椒盐卷饼",
+  snowglobe: "雪景球", train: "火车", gift: "礼物", bigsack: "大麻袋", bow: "蝴蝶结",
+  evergreen: "常青树", decorated: "装饰", mince: "肉馅", pies: "派",
+  hotchocolate: "热可可", iceberg: "冰山", icicle: "冰柱", snowpile: "雪堆",
+  sled: "雪橇", sack: "麻袋", northpole: "北极点", treestump: "树桩",
+  longbench: "长椅", longtable: "长桌", streetlamp: "路灯", marketcrate: "市集板条箱",
+  butterflies: "蝴蝶", flightpath: "飞行轨迹", flyinglanterns: "飞天灯笼",
+  flyinglanternsgroup: "飞天灯笼组", lilypods: "睡莲叶", incense: "香炉",
+  crazypaving: "碎拼石板", flooredge: "地板边缘", floortile: "地板砖",
+  mud: "泥地", mudmound: "泥堆", moss: "苔藓", pond: "池塘", pathedge: "路边",
+  squarestone: "方石", stonebase: "石基", temple: "寺庙", vase: "花瓶",
+  pagoda: "宝塔", npctablechair: "顾客桌椅", archway: "牌坊", dragon: "龙",
+  statue: "雕像", fishfloat: "鱼漂", seafloat: "海漂", wavefloat: "波浪浮筒",
+  genericfloat: "通用浮筒", boxlantern: "盒灯", lotus: "莲花", candle: "烛台",
+  seaweedfloat: "海草浮筒", waterwheel: "水车", woodenfloor: "木地板",
+  woodenwall: "木墙", confetti: "彩纸屑", fireworkbox: "烟花箱", firework: "烟花",
+  pinata: "皮纳塔", banana: "香蕉", broccoli: "西兰花", carrot: "胡萝卜",
+  eggplant: "茄子", grapes: "葡萄", tomato: "番茄", balloons: "气球串",
+  baloon: "气球", playable: "可玩", scene: "场景", lights: "灯串", giant: "巨型",
+  map: "地图", snowsparkle: "雪闪", mid: "中段", wide: "宽", wind: "风",
+  float: "浮筒", collision: "碰撞", beachthrone: "海滩王座", tropicalbirds: "热带鸟",
+  merge: "拼块", merger: "拼块", diners: "小餐馆", vanbunting: "货车彩旗",
+  dragonstatue: "龙雕像", mincepie: "肉馅派",
+  dlc4: "DLC4", dlc10: "DLC10", dlc11: "DLC11", dlc13: "DLC13",
+  icebergs: "冰山", floatingboxlantern: "漂浮盒灯", flyingboxlantern: "飞天盒灯",
+  lotuscandle: "莲花烛", shovel: "铲子", mi: "",
+  mooncake: "月饼", chocolate: "巧克力", watermelon: "西瓜",
+  plants: "植物", incensepot: "香炉", plantpot: "花盆", seawavefloat: "海浪浮筒",
 };
 
 // ---------------------------------------------------------------------------
@@ -395,10 +437,16 @@ function draftEn(id) {
 function collectIds() {
   const ids = new Set();
   const read = (name) => JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, name), "utf8"));
+  // catalog.json / recipes.json 已切分为索引 + 分块/分组文件，需聚合。
   const catalog = read("catalog.json");
-  for (const it of catalog.items || []) ids.add(it.id);
+  for (const chunkFile of catalog.itemChunks || []) {
+    for (const it of read(chunkFile).items || []) ids.add(it.id);
+  }
   for (const it of read("ingredients.json").ingredients || []) ids.add(it.id);
-  for (const it of read("recipes.json").recipes || []) ids.add(it.id);
+  const recipesIndex = read("recipes.json");
+  for (const groupFile of Object.values(recipesIndex.groupFiles || {})) {
+    for (const it of read(groupFile).recipes || []) ids.add(it.id);
+  }
   for (const it of read("cooking-steps.json").cookingSteps || []) ids.add(it.id);
   const audio = read("audio-catalog.json");
   for (const it of audio.music || []) ids.add(it.id);

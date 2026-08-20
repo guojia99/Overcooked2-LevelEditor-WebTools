@@ -652,6 +652,8 @@ export interface AudioKnowledge {
   baseBundles: string[];
   alwaysLoadedBundles: string[];
   mandatoryDirectoryIds: string[];
+  /** 实际存在于至少一个 AudioDirectoryData 的 GameLoopingAudioTag；其余枚举值无音频资源，选了运行时会崩溃 */
+  availableAmbiences?: string[];
   directoryEvents: DirectoryEvent[];
   themes: AudioTheme[];
   deathThemes: DeathTheme[];
@@ -774,6 +776,18 @@ export interface LevelSetInfo {
 
 export interface LevelSetList {
   sets: LevelSetInfo[];
+}
+
+/** 关卡集导出任务状态（GET /api/set/export/status，构建期间由桥接监听线程直答）。 */
+export interface SetExportStatus {
+  status: "idle" | "running" | "done" | "error";
+  setName: string;
+  /** queued | prepare | clean | build | package | zip | done */
+  phase: string;
+  message: string;
+  error: string;
+  zipFileName: string;
+  fileCount: number;
 }
 
 export interface LevelSummary {

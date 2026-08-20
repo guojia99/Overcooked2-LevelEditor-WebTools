@@ -52,11 +52,16 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
   // 压力开关（含莲花变体）是自带碰撞的可踩踏机制：若 walkable:true，后端会为它生成
   // 一块隐形 Col_Floor，Play 期莲花底下出现「空气地板」。保持 walkable:false。
   const isPressureSwitch = rest.stubKind === "PressureSwitch";
+  // 热气球桥（三格）真实 prefab 无 Ground 层碰撞（bundle 实测仅 x5 自带），
+  // 按 footprint 生成 Col_Floor 才可走；x5 已自带碰撞，不重复生成。
+  const isAirBalloonBridgeX3 = prefabIdFromPath(rest.prefabAssetPath) === "air_balloon_bridge_x3";
   return {
     ...rest,
     footprint: fp,
     worldPosition: { x: _wx, y: rest.localPosition?.y ?? 0, z: _wz },
-    walkable: isAirWall || isPressureSwitch ? false : !isRaftPlank && !!(cat && cat.surfaceTier === "floor"),
+    walkable: isAirWall || isPressureSwitch
+      ? false
+      : !isRaftPlank && (!!(cat && cat.surfaceTier === "floor") || isAirBalloonBridgeX3),
   };
 }
 

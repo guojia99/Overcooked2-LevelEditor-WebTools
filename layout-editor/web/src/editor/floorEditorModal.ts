@@ -65,7 +65,7 @@ export function openFloorEditorModal(f: EditorFloor) {
         return `<button type="button" class="mat-pick${m.guid === f.materialGuid ? " active" : ""}" data-guid="${m.guid}"><span class="mat-id">${bl.zh}</span><span class="mat-sub">${bl.en}</span></button>`;
       })
       .join("");
-    return `<div class="mat-pick-group">${g.labelZh}</div>${rows}`;
+    return `<div class="mat-pick-group">${g.labelZh}</div><div class="mat-pick-grid">${rows}</div>`;
   }).join("");
 
   // 主题地板: pick a themed prefab — the whole rect is tiled with it on write-back.
@@ -76,7 +76,7 @@ export function openFloorEditorModal(f: EditorFloor) {
     )
     .join("");
   const themedBlock = `<div class="mat-pick-title">主题地板（整块区域 = 一个拉伸的 prefab 实例，写回后生效）</div>
-     <div class="mat-pick-list">${themedRows || '<div class="mat-pick-empty">catalog 中无主题地板 prefab</div>'}</div>`;
+     <div class="mat-pick-list"><div class="mat-pick-grid">${themedRows || '<div class="mat-pick-empty">catalog 中无主题地板 prefab</div>'}</div></div>`;
 
   // 染色地板: pick a tint color (replaces the material list).
   const colorBlock = `<div class="mat-pick-title">染色（染色地板 = 实心 Plane + 纯色）</div>
@@ -163,7 +163,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   const footer = `<button type="button" class="modal-btn" data-fm-copy>复制</button><button type="button" class="modal-btn" data-fm-dup>克隆</button><button type="button" class="modal-btn" data-fm-delete>删除地板</button><button type="button" class="modal-btn primary" data-fm-close>关闭</button>`;
 
   openModal(`${typeLabel} · ${f.displayName}`, body, footer);
-  document.querySelector(".modal-panel")?.classList.add("wide");
+  document.querySelector(".modal-panel")?.classList.add("wide", "floor-edit");
 
   const feW = document.getElementById("fe-w") as HTMLInputElement;
   const feD = document.getElementById("fe-d") as HTMLInputElement;

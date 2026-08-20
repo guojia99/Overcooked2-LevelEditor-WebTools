@@ -64,7 +64,9 @@ function linkTeleportalPair(items: EditorItem[]): void {
 
 /**
  * 联合组合表（palette「联合组合」分类）。
- * 部件偏移按格数（1 格 = 1.2m）：上菜台 2×1 → 搭档 dx=3；断头台 2×1 → dx=3；其余 1×1 → dx=2。
+ * 部件偏移按格数（1 格 = 1.2m）：上菜台 2×1 → 搭档 dx=3；断头台 2×1 为中心 pivot
+ * （磁吸落半格奇偶位，根在 0.6 mod 1.2）→ 搭档须用半格偏移 dx=2.5 才落整格；
+ * 其余 1×1 → dx=2。
  * 新增组合只需在表里加一条（id 用目录物品 id，缺失/未放开时卡片自动置灰）。
  */
 export const COMBOS: ComboDef[] = [
@@ -91,12 +93,12 @@ export const COMBOS: ComboDef[] = [
   {
     id: "drink_switch",
     nameZh: "饮料机 + 开关",
-    hint: "自动联动：默认饮料 饮料1+饮料2，按下开关循环切换（switch_dlc08_drink_machine_N）",
+    hint: "自动联动：默认饮料 饮料1+饮料2+饮料3，按下开关循环切换（switch_dlc08_drink_machine_N）",
     parts: [
       { id: "dlc08_drink_machine", dx: 0, dz: 0 },
       { id: "Switch", dx: 2, dz: 0 },
     ],
-    link: linkSwitch(["drink01", "drink02"]),
+    link: linkSwitch(["drink01", "drink02", "drink03"]),
   },
   {
     id: "drink_switch_icecream",
@@ -124,7 +126,7 @@ export const COMBOS: ComboDef[] = [
     hint: "自动联动：按下开关触发断头台落刀（switch_workstation_guillotine_01_N）",
     parts: [
       { id: "workstation_guillotine_01", dx: 0, dz: 0 },
-      { id: "Switch", dx: 3, dz: 0 },
+      { id: "Switch", dx: 2.5, dz: 0 },
     ],
     link: linkSwitch(),
   },

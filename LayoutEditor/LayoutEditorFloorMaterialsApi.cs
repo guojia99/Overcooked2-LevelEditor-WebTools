@@ -40,6 +40,12 @@ public static class LayoutEditorFloorMaterialsApi
                 if (string.IsNullOrEmpty(id))
                     continue;
 
+                // 自定义菜谱/自定义食材目录里的 .mat（导入模型的附带材质等）不是地板
+                // 材质——LevelSets 根目录递归扫描会误收（前端落入「其他」组），跳过。
+                if (path.IndexOf("/custom_recipes/", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    path.IndexOf("/custom_ingredients/", StringComparison.OrdinalIgnoreCase) >= 0)
+                    continue;
+
                 list.Add(new FloorMaterialDto
                 {
                     guid = guid,

@@ -1,0 +1,3215 @@
+{
+  "schemaVersion": 3,
+  "index": 8,
+  "itemCount": 200,
+  "items": [
+    {
+      "id": "p_dlc09_rockwall_04",
+      "guid": "471d1e80f5607b42f50dd0d2ec25fbe3",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rockwall_04.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 岩壁 4",
+      "nameEn": "dlc09 rockwall 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_roof_section_01",
+      "guid": "4934114cfd00017ab2cc2c13b1a3bea7",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_roof_section_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 屋顶段 1",
+      "nameEn": "dlc09 roof section 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_roof_tiles_front",
+      "guid": "562639c615530b55b36ba210b7e780f1",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_roof_tiles_front.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 屋顶瓦前端",
+      "nameEn": "dlc09 roof tiles front",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_01",
+      "guid": "f64ae335fe6d443c2a1280b8d8b5abd3",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 8
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳 1",
+      "nameEn": "dlc09 rope 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_02",
+      "guid": "60646a066cacca767bc24a967203068d",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳 2",
+      "nameEn": "dlc09 rope 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_03",
+      "guid": "7e9f5cce02886166ba7ce0bfa7c6cd43",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳 3",
+      "nameEn": "dlc09 rope 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_bunting_07",
+      "guid": "2865fc15b9bb55469a46ea2a1891e82e",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_rope_bunting_07.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 7
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳彩旗 7",
+      "nameEn": "dlc09 rope bunting 7",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_bunting_08",
+      "guid": "f76d9f0a847cf99293fb846721f92aae",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_rope_bunting_08.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 7
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳彩旗 8",
+      "nameEn": "dlc09 rope bunting 8",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_bunting_09",
+      "guid": "c4077c33edb4b72c3f0f5d62e00f645b",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_rope_bunting_09.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 9
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳彩旗 9",
+      "nameEn": "dlc09 rope bunting 9",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_bunting_10",
+      "guid": "a83110b37ac0321d0760aeed06b81d8e",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_rope_bunting_10.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳彩旗 10",
+      "nameEn": "dlc09 rope bunting 10",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_bunting_11",
+      "guid": "c0bceee92afba2f6a49cbf698a145977",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_rope_bunting_11.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳彩旗 11",
+      "nameEn": "dlc09 rope bunting 11",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_bunting_12",
+      "guid": "b9c64535ada7cb28f2e26c169e7e09e1",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_rope_bunting_12.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 10
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳彩旗 12",
+      "nameEn": "dlc09 rope bunting 12",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_fence",
+      "guid": "f2f0e3f4dc51bb3f8098a4a67f67779b",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_fence.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳栅栏",
+      "nameEn": "dlc09 rope fence",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_fence_01",
+      "guid": "bdb26a71c64b3ea438793ca41b676f71",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_fence_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳栅栏 1",
+      "nameEn": "dlc09 rope fence 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_fence_02",
+      "guid": "38435e91df75910354819666798d3c84",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_fence_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳栅栏 2",
+      "nameEn": "dlc09 rope fence 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_fence_03",
+      "guid": "784e98825edf261cdd7e0c1d989fb3db",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_fence_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳栅栏 3",
+      "nameEn": "dlc09 rope fence 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_log_01",
+      "guid": "b7ef74525413f5ffad51d3aae03e94e0",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_log_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳原木 1",
+      "nameEn": "dlc09 rope log 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_log_02",
+      "guid": "972eb740f38a61f4adc8c6e8e8d4a2c0",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_log_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳原木 2",
+      "nameEn": "dlc09 rope log 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_log_03",
+      "guid": "89cf9d9ed3e85afbea98c36cb355f727",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_log_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳原木 3",
+      "nameEn": "dlc09 rope log 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_plank_01",
+      "guid": "83ef24b5958308c5b92ce4986e1b9270",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_plank_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳木板 1",
+      "nameEn": "dlc09 rope plank 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_plank_02",
+      "guid": "fe65a7ff78f292fd70492ae023c073e9",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_plank_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳木板 2",
+      "nameEn": "dlc09 rope plank 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_plank_03",
+      "guid": "187652cbfb6b29634e09957ff8787e99",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rope_plank_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳木板 3",
+      "nameEn": "dlc09 rope plank 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_scaffold_01",
+      "guid": "fc5beffb4a39ea4d9d3119a017a615a3",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_scaffold_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 脚手架 1",
+      "nameEn": "dlc09 scaffold 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_scaffold_pillar_01",
+      "guid": "f5efbbfb589115a3720ee475a9b6dc62",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_scaffold_pillar_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 脚手架立柱 1",
+      "nameEn": "dlc09 scaffold pillar 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_scaffolding_01",
+      "guid": "d3a9339f97b59222724304112767876c",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_scaffolding_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 scaffolding 1",
+      "nameEn": "dlc09 scaffolding 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_sconce_01",
+      "guid": "f7ec33e56880b23e63cec4f044c37d1a",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_sconce_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 sconce 1",
+      "nameEn": "dlc09 sconce 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_shield_fork_spoon_01",
+      "guid": "11008d1da1b7b5950bdfa82bb8861d5c",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_shield_fork_spoon_01.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 盾叉勺 1",
+      "nameEn": "dlc09 shield fork spoon 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_sign_01",
+      "guid": "ae1d651445de824670ed62e8cd4ebc15",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_sign_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 招牌 1",
+      "nameEn": "dlc09 sign 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_sign_02",
+      "guid": "34754b07a12cfec09e835f18a09f56b7",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_sign_02.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 招牌 2",
+      "nameEn": "dlc09 sign 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_sign_03",
+      "guid": "1eff031ae111f2481e179676582568dc",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_sign_03.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 招牌 3",
+      "nameEn": "dlc09 sign 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_sled_01",
+      "guid": "b1fb88a3c50427e3da54aeadcb23b043",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_sled_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 sled 1",
+      "nameEn": "dlc09 sled 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_sled_02",
+      "guid": "2d5e2e3c03e6b2d893980f8348761e88",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_sled_02.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 sled 2",
+      "nameEn": "dlc09 sled 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_small_rock_pile_01",
+      "guid": "a907f7e4285fc7629373237dd0b63dee",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_small_rock_pile_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 小岩石堆 1",
+      "nameEn": "dlc09 small rock pile 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_small_rock_pile_02",
+      "guid": "0c4fe01c92c8304cbdb4c07d879fe34f",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_small_rock_pile_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 小岩石堆 2",
+      "nameEn": "dlc09 small rock pile 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_small_rock_pile_03",
+      "guid": "8c8887f6b3bd53f030d2460726962608",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_small_rock_pile_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 小岩石堆 3",
+      "nameEn": "dlc09 small rock pile 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_small_rock_pile_04",
+      "guid": "30f877def47f73eed22c0313eb17917a",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_small_rock_pile_04.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 小岩石堆 4",
+      "nameEn": "dlc09 small rock pile 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_small_rock_pile_05",
+      "guid": "97317be28a9f5f37743f42d1c4deace4",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_small_rock_pile_05.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 小岩石堆 5",
+      "nameEn": "dlc09 small rock pile 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_small_stall_dressed_01",
+      "guid": "ff7b593280e5aeab25c4ec1a55c2c5f0",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_small_stall_dressed_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 小摊位 dressed 1",
+      "nameEn": "dlc09 small stall dressed 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowballpile_01",
+      "guid": "3865c6a5491829668d3c1896bed8eb5f",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowballpile_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪球堆 1",
+      "nameEn": "dlc09 snowballpile 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowmound_01",
+      "guid": "3699faa2f12c631f8fb1ede8b48a5865",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowmound_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪堆 1",
+      "nameEn": "dlc09 snowmound 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowmound_02",
+      "guid": "93bc34344110b5d31e65c1e34f82c574",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowmound_02.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪堆 2",
+      "nameEn": "dlc09 snowmound 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowmound_03",
+      "guid": "2c4873ad178b81043611e3d33f332b12",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowmound_03.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪堆 3",
+      "nameEn": "dlc09 snowmound 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowmound_04",
+      "guid": "cc5d9059219411db087028f2de1edfb1",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowmound_04.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪堆 4",
+      "nameEn": "dlc09 snowmound 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowmound_05",
+      "guid": "1d71a7ee14ad68b3c35407d7747e350c",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowmound_05.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪堆 5",
+      "nameEn": "dlc09 snowmound 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowmound_06",
+      "guid": "f7c7f0b34675b073d657d3faedfc610e",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowmound_06.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪堆 6",
+      "nameEn": "dlc09 snowmound 6",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowmound_07",
+      "guid": "0e7e21050d826a9a4d7b26967eb009cf",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowmound_07.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪堆 7",
+      "nameEn": "dlc09 snowmound 7",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowmound_08",
+      "guid": "859c2c74211174cd63655c38ccc2e726",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowmound_08.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 雪堆 8",
+      "nameEn": "dlc09 snowmound 8",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_snowpile_01",
+      "guid": "d5b99260f531dc294cfa72da24e3a831",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_snowpile_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 snowpile 1",
+      "nameEn": "dlc09 snowpile 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_stage_entrance_01",
+      "guid": "38ee324be21835c303d3d47975d08700",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_stage_entrance_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 7,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 stage entrance 1",
+      "nameEn": "dlc09 stage entrance 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_stained_glass_01",
+      "guid": "43c46dae6f6738f2c2f95057dbbce816",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_stained_glass_01.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 stained glass 1",
+      "nameEn": "dlc09 stained glass 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_stained_glass_02",
+      "guid": "3e6868b02411d548ba97b6a911d0e9b3",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_stained_glass_02.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 stained glass 2",
+      "nameEn": "dlc09 stained glass 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_stairs",
+      "guid": "412f355557e984aac74d4c524c61cbcb",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_stairs.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 楼梯",
+      "nameEn": "dlc09 stairs",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_standing_sign_01",
+      "guid": "9ae4a6923d6343d3b5e8ee7a5b4aca0e",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_standing_sign_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 standing 招牌 1",
+      "nameEn": "dlc09 standing sign 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_streetlamp_01",
+      "guid": "a1fba3b0ac1bba0b060c755be80e0642",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_streetlamp_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 streetlamp 1",
+      "nameEn": "dlc09 streetlamp 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_string_lights_01",
+      "guid": "4f10edb7dcff6c2959de2c2b431e50bb",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_string_lights_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 9
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 string lights 1",
+      "nameEn": "dlc09 string lights 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_string_lights_02",
+      "guid": "845e1dbbad244f41f2f71aef1556ff73",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_string_lights_02.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 6
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 string lights 2",
+      "nameEn": "dlc09 string lights 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_string_lights_03",
+      "guid": "2f52500b6e5a86ae1a38e021dd98cc27",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_string_lights_03.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 string lights 3",
+      "nameEn": "dlc09 string lights 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_string_lights_04",
+      "guid": "f2a480b976326ea525697b3c44355d49",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_string_lights_04.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 6
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 string lights 4",
+      "nameEn": "dlc09 string lights 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_stump_stall_01",
+      "guid": "f5a85c686ec3567bedc243887a3c99e0",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_stump_stall_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树桩摊位 1",
+      "nameEn": "dlc09 stump stall 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_stump_table_01",
+      "guid": "7e0432c45ed7191b72d2e835bbdcb5ec",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_stump_table_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树桩桌 1",
+      "nameEn": "dlc09 stump table 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_table_01",
+      "guid": "c829bce419bcdaf3e2d979c48dc99639",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_table_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 桌 1",
+      "nameEn": "dlc09 table 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tableandchairs_01",
+      "guid": "bc8e1e5f8b64a2159d77924ada18bd65",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_tableandchairs_01.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 tableandchairs 1",
+      "nameEn": "dlc09 tableandchairs 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tent_01",
+      "guid": "1d8ea4a266bd72a46ba50c4f543f558b",
+      "assetPath": "Assets/common01/prefabs/art/dlc09_wonderland/p_dlc09_tent_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 帐篷 1",
+      "nameEn": "dlc09 tent 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tent_02",
+      "guid": "0a19c9203b24f9a42a346078c9146c1c",
+      "assetPath": "Assets/common01/prefabs/art/dlc09_wonderland/p_dlc09_tent_02.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 7,
+        "cellsZ": 6
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 帐篷 2",
+      "nameEn": "dlc09 tent 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tent_roof_01",
+      "guid": "5acaba42cd8075185d4921fc29769cd2",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_tent_roof_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 帐篷屋顶 1",
+      "nameEn": "dlc09 tent roof 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tent_wall_patch_01",
+      "guid": "573803512f2c880086d45f44cc0ca744",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_tent_wall_patch_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 帐篷墙 patch 1",
+      "nameEn": "dlc09 tent wall patch 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tent_wall_patch_02",
+      "guid": "251a5c4ec79ed79ec60df82272a3a06d",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_tent_wall_patch_02.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 帐篷墙 patch 2",
+      "nameEn": "dlc09 tent wall patch 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tent_wall_patch_03",
+      "guid": "a51e04a8ea01b6d243fe371c482cce09",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_tent_wall_patch_03.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 帐篷墙 patch 3",
+      "nameEn": "dlc09 tent wall patch 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tent_wall_rope_01",
+      "guid": "d4c4fb2d6efd3edb06f2a25a720b29ff",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_tent_wall_rope_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 帐篷墙绳 1",
+      "nameEn": "dlc09 tent wall rope 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_ticketstub_01",
+      "guid": "4a9b87e12fab7261861a0fba870551df",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_ticketstub_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 ticketstub 1",
+      "nameEn": "dlc09 ticketstub 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_toy_gingerbreadman",
+      "guid": "aa84a8383472c95e6e0b572590974f22",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_toy_gingerbreadman.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 toy gingerbreadman",
+      "nameEn": "dlc09 toy gingerbreadman",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_toy_letterblock_stack",
+      "guid": "e24690d3a42fd3f98d483aa72cc1d5c4",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_toy_letterblock_stack.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 toy letterblock stack",
+      "nameEn": "dlc09 toy letterblock stack",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_toy_train",
+      "guid": "51d7e6a33ffafa191cf9d825b2be0143",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_wonderland/p_dlc09_toy_train.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 toy train",
+      "nameEn": "dlc09 toy train",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_leaf_branch_01",
+      "guid": "2dd2bbd55f26c673b95e17828df69fd6",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_leaf_branch_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树叶枝 1",
+      "nameEn": "dlc09 tree leaf branch 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_pine_01",
+      "guid": "557b5fb8f63a4c480b0bfc710f7628e2",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_pine_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树松 1",
+      "nameEn": "dlc09 tree pine 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_stump_01",
+      "guid": "14c9c5206ea3c0840a3366ee4d613be4",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_stump_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树桩 1",
+      "nameEn": "dlc09 tree stump 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_stump_02",
+      "guid": "e70cd8736273d2b11714edb68c95a8f3",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_stump_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树桩 2",
+      "nameEn": "dlc09 tree stump 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_trunk_01",
+      "guid": "c25c214b4643842dd572f7b9aa4b0f40",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_trunk_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树干 1",
+      "nameEn": "dlc09 tree trunk 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_trunk_branch_01",
+      "guid": "1e3104f0e610537ba5c102ab9cecfa38",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_trunk_branch_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树干枝 1",
+      "nameEn": "dlc09 tree trunk branch 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_trunk_branch_02",
+      "guid": "11377c8aee5b73644d53daba09b6f12a",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_trunk_branch_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树干枝 2",
+      "nameEn": "dlc09 tree trunk branch 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_trunk_rope_01",
+      "guid": "b6a4e262454714787e846c11a27d2206",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_trunk_rope_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树干绳 1",
+      "nameEn": "dlc09 tree trunk rope 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_trunk_rope_02",
+      "guid": "7d65e477c2043661eab7aedb8967eb17",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_trunk_rope_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树干绳 2",
+      "nameEn": "dlc09 tree trunk rope 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_trunk_rope_03",
+      "guid": "6ba50a0f0bca607462d6ab4793d78ce1",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_trunk_rope_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树干绳 3",
+      "nameEn": "dlc09 tree trunk rope 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_trunk_rope_04",
+      "guid": "db9805cbc4a10ef182367b0f07deca8e",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_trunk_rope_04.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树干绳 4",
+      "nameEn": "dlc09 tree trunk rope 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_tree_trunk_rope_05",
+      "guid": "c287ef85bc3daba96d5b3433b94e2d25",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_tree_trunk_rope_05.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树树干绳 5",
+      "nameEn": "dlc09 tree trunk rope 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_treehouse_window_01",
+      "guid": "3bd7db6f5e5349bf6c08f86d8ce223b1",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_treehouse_window_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树屋窗 1",
+      "nameEn": "dlc09 treehouse window 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_twig_01",
+      "guid": "93910f40d9c29ec4957bd48989c2417a",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_twig_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树枝 1",
+      "nameEn": "dlc09 twig 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_twig_02",
+      "guid": "e79065e0e7b4d487c3a6433e3520bfb0",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_twig_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树枝 2",
+      "nameEn": "dlc09 twig 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_twig_03",
+      "guid": "6e37864c161f0d83fe5ddfacedb79293",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_twig_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树枝 3",
+      "nameEn": "dlc09 twig 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_twig_04",
+      "guid": "7519373cb4cdd15a1c8d053a0cac58ca",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_twig_04.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树枝 4",
+      "nameEn": "dlc09 twig 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_twig_05",
+      "guid": "95ce45e753e6926826668e5719dc1213",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_twig_05.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树枝 5",
+      "nameEn": "dlc09 twig 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_twig_06",
+      "guid": "7c16839feed9b2cffe0c9b29d5a924c2",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_twig_06.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 树枝 6",
+      "nameEn": "dlc09 twig 6",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wagon_01",
+      "guid": "05c9de1f392f2bc2d283dec94e8c93a3",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_wagon_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 9,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 wagon 1",
+      "nameEn": "dlc09 wagon 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wagon_candy_01",
+      "guid": "40794651edffeb3c881681d139f0daed",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_wagon_candy_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 8,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 wagon candy 1",
+      "nameEn": "dlc09 wagon candy 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wagon_music_front_01",
+      "guid": "187710c4d6030985ee5a6024831bee39",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_wagon_music_front_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 7,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 wagon music 前端 1",
+      "nameEn": "dlc09 wagon music front 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wagon_popcorn_01",
+      "guid": "1224c8c82fd15d4b760db2b088ee3d70",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_wagon_popcorn_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 wagon popcorn 1",
+      "nameEn": "dlc09 wagon popcorn 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wagon_small_01",
+      "guid": "f8ff1d4b48732f728fff970d6aa55148",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_wagon_small_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 wagon 小 1",
+      "nameEn": "dlc09 wagon small 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wagon_ticket_day_01",
+      "guid": "a25d6aa20005b8c69ab91fd1cd48aa03",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_circus/p_dlc09_wagon_ticket_day_01.prefab",
+      "category": "art",
+      "theme": "dlc09_circus",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 7,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 wagon 票据白天 1",
+      "nameEn": "dlc09 wagon ticket day 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wall_deco_support_01",
+      "guid": "96967e109977bf75e346775db9b16625",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_wall_deco_support_01.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 墙 deco 支撑 1",
+      "nameEn": "dlc09 wall deco support 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wall_deco_support_02",
+      "guid": "8b43ee60801cbd6a02125027700759bc",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_wall_deco_support_02.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 墙 deco 支撑 2",
+      "nameEn": "dlc09 wall deco support 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wall_deco_support_03",
+      "guid": "efa46aa6f67ce33beb1a4d4e03d6c449",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_wall_deco_support_03.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 墙 deco 支撑 3",
+      "nameEn": "dlc09 wall deco support 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wallbit_01",
+      "guid": "9ebab50e62a1f7146bbebfa90df32455",
+      "assetPath": "Assets/common01/prefabs/art/dlc09_wonderland/p_dlc09_wallbit_01.prefab",
+      "category": "art",
+      "theme": "dlc09_wonderland",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 6
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 墙块 1",
+      "nameEn": "dlc09 wallbit 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_weapon_stand_01",
+      "guid": "a4787cbb6fb0a8231b934feaf3ddc954",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_weapon_stand_01.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 weapon stand 1",
+      "nameEn": "dlc09 weapon stand 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wood_ladder_01",
+      "guid": "e18fdd4a9c99089373fdb23a3a10dd59",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_wood_ladder_01.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木梯子 1",
+      "nameEn": "dlc09 wood ladder 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wooden_support_01",
+      "guid": "4ac74d2eeed4f13db631f77d12e551f4",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_wooden_support_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木制支撑 1",
+      "nameEn": "dlc09 wooden support 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wooden_support_02",
+      "guid": "cfa2834837b63f59468faeaf0192ad57",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_wooden_support_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木制支撑 2",
+      "nameEn": "dlc09 wooden support 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_wooden_support_03",
+      "guid": "674113abe9c914932eb9661d0c75324e",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_wooden_support_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木制支撑 3",
+      "nameEn": "dlc09 wooden support 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodensupport_01",
+      "guid": "292496b86fc10edf3859d13a3010256b",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_woodensupport_01.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 woodensupport 1",
+      "nameEn": "dlc09 woodensupport 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_01",
+      "guid": "7b4f7c4f5b5367755400bbe75bf0fb0d",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板 1",
+      "nameEn": "dlc09 woodplank 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_02",
+      "guid": "619a2c837f07d4f335d35aca037a2976",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板 2",
+      "nameEn": "dlc09 woodplank 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_03",
+      "guid": "f015ee893bbf19dc4a00f2c34d654906",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板 3",
+      "nameEn": "dlc09 woodplank 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_04",
+      "guid": "3e8751a442088ce2ef24a4360679a638",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_04.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板 4",
+      "nameEn": "dlc09 woodplank 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_05",
+      "guid": "8816e83498116eca08599fe7037a2019",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_05.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板 5",
+      "nameEn": "dlc09 woodplank 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_06",
+      "guid": "e5746c4717faa977152e51c0c9b95992",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_06.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板 6",
+      "nameEn": "dlc09 woodplank 6",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_large_01",
+      "guid": "1f61dae0b10ef438a3bf9f91364f4405",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_large_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板大 1",
+      "nameEn": "dlc09 woodplank large 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_large_02",
+      "guid": "8501615003e71411cd5e9ae11161a92d",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_large_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板大 2",
+      "nameEn": "dlc09 woodplank large 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_woodplank_large_03",
+      "guid": "187f3962cd7aa092ad501a35b82eca0e",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_woodplank_large_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC9 木板大 3",
+      "nameEn": "dlc09 woodplank large 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_arch",
+      "guid": "00056df774adac55f3a8820ea3d2a2eb",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_arch.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 6
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 拱门",
+      "nameEn": "dlc 10 arch",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_archway_dragon_01",
+      "guid": "7c181e29a944639f65b60304b0cca606",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_archway_dragon_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 牌坊龙 1",
+      "nameEn": "dlc10 archway dragon 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bamboo",
+      "guid": "428ab4673c4297014749d98c1e079811",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bamboo.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 竹",
+      "nameEn": "dlc 10 bamboo",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bamboo_01",
+      "guid": "d3ce723d48e4c460b13e9d7d26d5c4d2",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bamboo_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 竹 1",
+      "nameEn": "dlc 10 bamboo 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bridge_end",
+      "guid": "ccb2389e6b93445d1c7f0ca32ae10bbe",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bridge_end.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 桥尽头",
+      "nameEn": "dlc 10 bridge end",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bridge_middle",
+      "guid": "938a69823bd1a7514c5ba19a0f86e89a",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bridge_middle.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 桥中段",
+      "nameEn": "dlc 10 bridge middle",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bush_large_green",
+      "guid": "507d18e74c4f85d97ba50daef83e9326",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bush_large_green.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灌木大绿",
+      "nameEn": "dlc 10 bush large green",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bush_large_pink",
+      "guid": "eb9fbf9eb7adb6e676b3c9ae414da3db",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bush_large_pink.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灌木大粉",
+      "nameEn": "dlc 10 bush large pink",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bush_large_red",
+      "guid": "c3f73ec438fc788621c49ce36de56a01",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bush_large_red.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灌木大红",
+      "nameEn": "dlc 10 bush large red",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bush_small_green",
+      "guid": "976738b01137ce0c0a52feae567e9b0b",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bush_small_green.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灌木小绿",
+      "nameEn": "dlc 10 bush small green",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bush_small_pink",
+      "guid": "7efa1879fad6ca62fab08d1ca7e01b78",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bush_small_pink.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灌木小粉",
+      "nameEn": "dlc 10 bush small pink",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_bush_small_red",
+      "guid": "0848d7d392408fa77d48181f98fd1385",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_bush_small_red.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灌木小红",
+      "nameEn": "dlc 10 bush small red",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_butterflies_flightpath",
+      "guid": "2c939e4547537f89687566efa11bba72",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_butterflies_flightpath.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 蝴蝶飞行轨迹",
+      "nameEn": "dlc10 butterflies flightpath",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_crazypaving_01",
+      "guid": "333e4704d38bc347315504a916d297be",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_crazypaving_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 碎拼石板 1",
+      "nameEn": "dlc10 crazypaving 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_dragon_statue_01",
+      "guid": "e74118aa3fa1435f875d505dc90f16cc",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_dragon_statue_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 龙雕像 1",
+      "nameEn": "dlc10 dragon statue 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_fence_01",
+      "guid": "e6dc749de02c9b4ae5da1e2b7949bdbd",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_fence_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 栅栏 1",
+      "nameEn": "dlc 10 fence 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_flooredge_01",
+      "guid": "96cace60321d10e8a045bcb8fa3a1a9a",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_flooredge_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "DLC10 地板边缘 1",
+      "nameEn": "dlc10 flooredge 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_flooredge_02",
+      "guid": "11113358f186e97160d18466adaad895",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_flooredge_02.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "DLC10 地板边缘 2",
+      "nameEn": "dlc10 flooredge 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_flooredge_corner_01",
+      "guid": "fbe9d2a102ac7e368cb83e835a8df072",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_flooredge_corner_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "dlc 10 flooredge 转角 1",
+      "nameEn": "dlc 10 flooredge corner 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_floortile_01",
+      "guid": "f13b7218312950415ca059b5ded6ed72",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_floortile_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "DLC10 地板砖 1",
+      "nameEn": "dlc10 floortile 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_flyinglanterns",
+      "guid": "35dd38c92867f621d1e5560c6fadb497",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_flyinglanterns.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 飞天灯笼",
+      "nameEn": "dlc10 flyinglanterns",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_flyinglanternsgroup",
+      "guid": "8a27f2524e740b7846b402891f8576f2",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_flyinglanternsgroup.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 21,
+        "cellsZ": 9
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 飞天灯笼组",
+      "nameEn": "dlc10 flyinglanternsgroup",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_grass_01",
+      "guid": "0d36c83e37424682b3056634526fe697",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_grass_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 草 1",
+      "nameEn": "dlc 10 grass 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_grass_02",
+      "guid": "6ad766e351ef7fa96ea00f9abddbebf1",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/p_dlc10_grass_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 草 2",
+      "nameEn": "dlc 10 grass 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_grass_card_a",
+      "guid": "89bc01dd376a34c40fb00ef64ef9cd63",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_grass_card_a.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 草 card a",
+      "nameEn": "dlc 10 grass card a",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_grass_card_b",
+      "guid": "8ea45cf5424a99e316168676ab4cbbd0",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_grass_card_b.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 草 card b",
+      "nameEn": "dlc 10 grass card b",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_grass_card_c",
+      "guid": "2b9d2e8d57959c999fb1c429dcc811a5",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_grass_card_c.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 草 card c",
+      "nameEn": "dlc 10 grass card c",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_ground_butterfly",
+      "guid": "2234b08ec0f2cc5bdce95c0bdea25121",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_ground_butterfly.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 地面 butterfly",
+      "nameEn": "dlc 10 ground butterfly",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_hover_butterfly",
+      "guid": "97c7f2be43b161493878003c02c35486",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_hover_butterfly.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 悬停 butterfly",
+      "nameEn": "dlc 10 hover butterfly",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_incense_pot",
+      "guid": "5c26bc354c6b363fa0d4aacdfba1c58d",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_incense_pot.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 香炉 pot",
+      "nameEn": "dlc10 incense pot",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_lantern",
+      "guid": "c4e644f5a7327baf2a6df528ec98afc2",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_lantern.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灯笼",
+      "nameEn": "dlc 10 lantern",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_lantern_floating_air_01",
+      "guid": "b8c5ac2f59af469a71a8a6f3c645dd78",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_lantern_floating_air_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灯笼 floating 飞 1",
+      "nameEn": "dlc 10 lantern floating air 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_lantern_floating_water_01",
+      "guid": "54cc31b88e6cf436033212a83fcb4f3a",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_lantern_floating_water_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灯笼 floating 水 1",
+      "nameEn": "dlc 10 lantern floating water 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_lantern_stand",
+      "guid": "7a79267abf1feaabb3cea118fa7a102e",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_lantern_stand.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 灯笼 stand",
+      "nameEn": "dlc 10 lantern stand",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_lilypods_01",
+      "guid": "de0f31e9708d0de5ea734bab5d4c2a17",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_lilypods_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 睡莲叶 1",
+      "nameEn": "dlc10 lilypods 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_log_stairs_01",
+      "guid": "994ff7b9a51e5d0dd7e499787d2b6f3b",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_log_stairs_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 原木楼梯 1",
+      "nameEn": "dlc 10 log stairs 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_map_archway_02",
+      "guid": "e157bd2e671c90f0b1640b2821d8b311",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_map_archway_02.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 地图牌坊 2",
+      "nameEn": "dlc10 map archway 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_map_archway_dragon_01",
+      "guid": "17257fdf7c773c833afea7e0b3f80442",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_map_archway_dragon_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 地图牌坊龙 1",
+      "nameEn": "dlc10 map archway dragon 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_map_dragon_statue_01",
+      "guid": "1e915d2ebf0b7e323e3f8e551d171f06",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_map_dragon_statue_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 地图龙雕像 1",
+      "nameEn": "dlc10 map dragon statue 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_map_fence_01",
+      "guid": "584ecb140f28d817a110a85458d85550",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_map_fence_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 地图栅栏 1",
+      "nameEn": "dlc10 map fence 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_map_pagoda_01",
+      "guid": "2713a6159c47daa19badc239fb1cd2a6",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_map_pagoda_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 地图宝塔 1",
+      "nameEn": "dlc10 map pagoda 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_moss_01",
+      "guid": "33129ca980d089b44b5595c3919b6a0d",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_moss_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 苔藓 1",
+      "nameEn": "dlc10 moss 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_moss_03",
+      "guid": "4ca33cdd783e969abf4fc18ea0f3ca8f",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_moss_03.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 苔藓 3",
+      "nameEn": "dlc10 moss 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_moss_04",
+      "guid": "64a710637d49b249384de7af4c594902",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_moss_04.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 苔藓 4",
+      "nameEn": "dlc10 moss 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_mud_01",
+      "guid": "aeb01afc1e6c3aa07f0576afd0048e7e",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_mud_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 泥地 1",
+      "nameEn": "dlc10 mud 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_mudmound_01",
+      "guid": "632d4e801e57f5db24c72ac92c2a925f",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_mudmound_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 泥堆 1",
+      "nameEn": "dlc10 mudmound 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_npctablechair",
+      "guid": "4caa1274a10eff2f480cb2b86ae7251c",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_npctablechair.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 顾客桌椅",
+      "nameEn": "dlc10 npctablechair",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_pagoda",
+      "guid": "c72c31da4a73718b032d5dbb5e0a8bca",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_pagoda.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 6
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 宝塔",
+      "nameEn": "dlc10 pagoda",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_pathedge_01",
+      "guid": "ad3edeb567c7ea8ef7084254c25a6944",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_pathedge_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 路边 1",
+      "nameEn": "dlc10 pathedge 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_pathedge_02",
+      "guid": "39eb731bbaeec8d67e5e5d8b688f3f21",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_pathedge_02.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 路边 2",
+      "nameEn": "dlc10 pathedge 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_pathedge_03",
+      "guid": "8e9aac73b533d36d93311c63ff99c406",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_pathedge_03.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 路边 3",
+      "nameEn": "dlc10 pathedge 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_pathedge_04",
+      "guid": "e0ecd7c8a7a0a7cc02590163d037691b",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_pathedge_04.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 路边 4",
+      "nameEn": "dlc10 pathedge 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_pillar_large",
+      "guid": "2aa681f87a8223a978d8e0e0aeb3a526",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_pillar_large.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 立柱大",
+      "nameEn": "dlc 10 pillar large",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_pillar_small",
+      "guid": "aee959fa831169b574a75ba4c7b36297",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_pillar_small.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 立柱小",
+      "nameEn": "dlc 10 pillar small",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_plant_pot",
+      "guid": "2a3209806b841adc32ee6c4245e6a9f2",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_plant_pot.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 植物 pot",
+      "nameEn": "dlc 10 plant pot",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_plant_reed_01",
+      "guid": "d4b80e68c319bc0396299357bc2984e6",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_plant_reed_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 植物芦苇 1",
+      "nameEn": "dlc 10 plant reed 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_pond_01",
+      "guid": "38ac2a70a02deeb9909512c039784a66",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_pond_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 19,
+        "cellsZ": 8
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 池塘 1",
+      "nameEn": "dlc10 pond 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_ripple_01",
+      "guid": "a10903b068c0d100d675f1b154b411ec",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_ripple_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 涟漪 1",
+      "nameEn": "dlc 10 ripple 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_rock_a",
+      "guid": "0a514fb38beabbe354df923be9a73773",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_rock_a.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 岩石 a",
+      "nameEn": "dlc 10 rock a",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_rock_b",
+      "guid": "007b88d15e508023dee574a984ea416b",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_rock_b.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 岩石 b",
+      "nameEn": "dlc 10 rock b",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_rock_c",
+      "guid": "c2cec8c664b62e60379d83f0e5071918",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_rock_c.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 岩石 c",
+      "nameEn": "dlc 10 rock c",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_rock_d",
+      "guid": "fb3a496040b6f23793cab1de931e1eca",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_rock_d.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 岩石 d",
+      "nameEn": "dlc 10 rock d",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_rock_e",
+      "guid": "ba500049c43457b7215833bf4aecd0d3",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_rock_e.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 岩石 e",
+      "nameEn": "dlc 10 rock e",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_squarestone_single_01",
+      "guid": "1372859d64003434dc82e68f2de4ac72",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_squarestone_single_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 方石 single 1",
+      "nameEn": "dlc10 squarestone single 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_squarestone_single_02",
+      "guid": "3e2f6a1d1ddb97cb3c24af41a7b4617b",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_squarestone_single_02.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 方石 single 2",
+      "nameEn": "dlc10 squarestone single 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_squarestone_single_03",
+      "guid": "ab012c6947d47c0f029c412fa8e23338",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_squarestone_single_03.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 方石 single 3",
+      "nameEn": "dlc10 squarestone single 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_squarestone_single_04",
+      "guid": "5404e080a233b07a686d77d0743860f1",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_squarestone_single_04.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 方石 single 4",
+      "nameEn": "dlc10 squarestone single 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_squarestone_single_05",
+      "guid": "30ecb58ddbef9f0f0a35c7474c79976e",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_squarestone_single_05.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 方石 single 5",
+      "nameEn": "dlc10 squarestone single 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_squarestone_single_06",
+      "guid": "52142a79d3770cdd098c8998d8684cb3",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_squarestone_single_06.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 方石 single 6",
+      "nameEn": "dlc10 squarestone single 6",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_stair_rope_01",
+      "guid": "4abd6305e7b8158cd9c199c014323519",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_stair_rope_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 楼梯绳 1",
+      "nameEn": "dlc 10 stair rope 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_stair_rope_02",
+      "guid": "341c29d8a08450e74b996c93c017b982",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_stair_rope_02.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 楼梯绳 2",
+      "nameEn": "dlc 10 stair rope 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_stonebase",
+      "guid": "0ba2332d271a53362fd095c063f460e6",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_stonebase.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 石基",
+      "nameEn": "dlc10 stonebase",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_temple",
+      "guid": "d4b1fcb7f5ef9edcad755abd01e46a68",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_temple.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 寺庙",
+      "nameEn": "dlc10 temple",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_tree_green",
+      "guid": "66a210f3877209410c67524b9ca0302a",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_tree_green.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 12,
+        "cellsZ": 12
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 树绿",
+      "nameEn": "dlc 10 tree green",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_tree_pink",
+      "guid": "3eda085ae691db581814d510c3051d20",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_tree_pink.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 12,
+        "cellsZ": 12
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 树粉",
+      "nameEn": "dlc 10 tree pink",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_tree_red",
+      "guid": "5a67ff6f76ce00596b1d603cac751482",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_tree_red.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 12,
+        "cellsZ": 12
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 树红",
+      "nameEn": "dlc 10 tree red",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_vase",
+      "guid": "d27a95121be0fcd81adac09c79b665be",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_vase.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC10 花瓶",
+      "nameEn": "dlc10 vase",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_wall_a",
+      "guid": "fa30527698d374b43d25e20c2fcad6cb",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_wall_a.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 墙 a",
+      "nameEn": "dlc 10 wall a",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_wall_b",
+      "guid": "e24b124e35a4218653392467da670760",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_wall_b.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 墙 b",
+      "nameEn": "dlc 10 wall b",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_water_01",
+      "guid": "d88cd6a4f257615cafb695ffb38a56de",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_water_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 水 1",
+      "nameEn": "dlc 10 water 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_woodplank_large_01",
+      "guid": "ba1cc781b802809324e55da6115b5f3b",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_woodplank_large_01.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 木板大 1",
+      "nameEn": "dlc 10 woodplank large 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_woodplank_large_02",
+      "guid": "70af42a2165b9f9a71ccbb7cf4422921",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_woodplank_large_02.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 木板大 2",
+      "nameEn": "dlc 10 woodplank large 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc10_woodplank_large_03",
+      "guid": "10f3a532c3827d34b0f10a993060d15a",
+      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_woodplank_large_03.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "dlc 10 木板大 3",
+      "nameEn": "dlc 10 woodplank large 3",
+      "icon": false
+    }
+  ]
+}

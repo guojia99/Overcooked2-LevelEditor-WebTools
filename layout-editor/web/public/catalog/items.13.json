@@ -1,0 +1,3235 @@
+{
+  "schemaVersion": 3,
+  "index": 13,
+  "itemCount": 200,
+  "items": [
+    {
+      "id": "sushi_sign_03",
+      "guid": "f57ce22f264191140ae36caa9630d861",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_03.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司招牌 3",
+      "nameEn": "sushi sign 3",
+      "icon": false
+    },
+    {
+      "id": "sushi_sign_03_day",
+      "guid": "0ae09322bdc306c4993ddfea6230ccd7",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_03_day.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司招牌 3 白天",
+      "nameEn": "sushi sign 3 day",
+      "icon": false
+    },
+    {
+      "id": "sushi_sign_03b_day",
+      "guid": "48cd7f079a0442e4588e63f43a416732",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_03b_day.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司招牌 3b 白天",
+      "nameEn": "sushi sign 03b day",
+      "icon": false
+    },
+    {
+      "id": "sushi_sumi_01a",
+      "guid": "53d78d4ce0b34234f8fccb1c19227e97",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sumi_01a.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司墨绘 1a",
+      "nameEn": "sushi sumi 01a",
+      "icon": false
+    },
+    {
+      "id": "sushi_sumi_01b",
+      "guid": "a559c1a7f8ad03f4283b41552e1c46ab",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sumi_01b.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司墨绘 1b",
+      "nameEn": "sushi sumi 01b",
+      "icon": false
+    },
+    {
+      "id": "sushi_sumi_01c",
+      "guid": "7d3034b550cd0ab44a7398492eb7e99c",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sumi_01c.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司墨绘 1c",
+      "nameEn": "sushi sumi 01c",
+      "icon": false
+    },
+    {
+      "id": "sushi_sumi_01d",
+      "guid": "980974b28729c324681c217ac83bbbf2",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sumi_01d.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司墨绘 1d",
+      "nameEn": "sushi sumi 01d",
+      "icon": false
+    },
+    {
+      "id": "sushi_sumi_01e",
+      "guid": "8f7adc36d1ed90a4691fa8b6206508b9",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sumi_01e.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司墨绘 1e",
+      "nameEn": "sushi sumi 01e",
+      "icon": false
+    },
+    {
+      "id": "sushi_sumi_01f",
+      "guid": "b537b6048001e79408bad1011697e5e4",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sumi_01f.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司墨绘 1f",
+      "nameEn": "sushi sumi 01f",
+      "icon": false
+    },
+    {
+      "id": "sushi_sumi_01g",
+      "guid": "2a8d16436264c9e4ca3b552d6a8f6df7",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sumi_01g.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "寿司墨绘 1g",
+      "nameEn": "sushi sumi 01g",
+      "icon": false
+    },
+    {
+      "id": "table_01",
+      "guid": "f59dff78bcb42c840b747d0fdf229139",
+      "assetPath": "Assets/common01/prefabs/art/dlc02_beach/table_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "桌 1",
+      "nameEn": "table 1",
+      "icon": false
+    },
+    {
+      "id": "table_01",
+      "guid": "18a481b5cb85fba42b9db542e45b20e8",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/table_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "桌 1",
+      "nameEn": "table 1",
+      "icon": false
+    },
+    {
+      "id": "table_02",
+      "guid": "fc8fc2eeea31f0bc692244629be55e33",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/table_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "桌 2",
+      "nameEn": "table 2",
+      "icon": false
+    },
+    {
+      "id": "table_customers",
+      "guid": "2bce6efbb09e7fc34c26ccc555235b92",
+      "assetPath": "Assets/common03/prefabs/core/art/legacy/table_customers.prefab",
+      "category": "art",
+      "theme": "legacy",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "餐客桌（OC1）",
+      "nameEn": "Customer Table (OC1)",
+      "icon": false
+    },
+    {
+      "id": "table_customers_2",
+      "guid": "74b63cddabe72798276f6f3d078915b8",
+      "assetPath": "Assets/common03/prefabs/core/art/legacy/table_customers_2.prefab",
+      "category": "art",
+      "theme": "legacy",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "餐客桌 2（OC1）",
+      "nameEn": "Customer Table 2 (OC1)",
+      "icon": false
+    },
+    {
+      "id": "throne_armor_01",
+      "guid": "10268dc209c129d42882116039ed9358",
+      "assetPath": "Assets/common01/prefabs/art/throne/throne_armor_01.prefab",
+      "category": "art",
+      "theme": "throne",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "王座盔甲",
+      "nameEn": "throne armor 1",
+      "icon": false
+    },
+    {
+      "id": "throne_banner_01",
+      "guid": "e2ff2eace3e79e74592dabee1b4ebad4",
+      "assetPath": "Assets/common01/prefabs/art/throne/throne_banner_01.prefab",
+      "category": "art",
+      "theme": "throne",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "王座旗帜",
+      "nameEn": "throne banner 1",
+      "icon": false
+    },
+    {
+      "id": "throne_kevinschair_01",
+      "guid": "e67f9dae8d04fbf4ca8586b3e1425165",
+      "assetPath": "Assets/common01/prefabs/art/throne/throne_kevinschair_01.prefab",
+      "category": "art",
+      "theme": "throne",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "凯文王座椅",
+      "nameEn": "throne kevinschair 1",
+      "icon": false
+    },
+    {
+      "id": "throne_picture_01",
+      "guid": "a06a0f76d55c5f54b9c2f06cdd2eab04",
+      "assetPath": "Assets/common01/prefabs/art/throne/throne_picture_01.prefab",
+      "category": "art",
+      "theme": "throne",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "王座挂画",
+      "nameEn": "throne picture 1",
+      "icon": false
+    },
+    {
+      "id": "throne_room_floor_01",
+      "guid": "0b03d8cf1dc72cd0b6566fd2f112b025",
+      "assetPath": "Assets/common03/prefabs/core/art/floors/throne_room_floor_01.prefab",
+      "category": "art",
+      "theme": "floors",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "王座室地板 1",
+      "nameEn": "Throne Room Floor 1",
+      "icon": false
+    },
+    {
+      "id": "throne_torch",
+      "guid": "3a9d27d90539338498f5d5ed2646840b",
+      "assetPath": "Assets/common01/prefabs/art/throne/throne_torch.prefab",
+      "category": "art",
+      "theme": "throne",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "王座火把",
+      "nameEn": "throne torch",
+      "icon": false
+    },
+    {
+      "id": "tile_merger",
+      "guid": "740014770b9493902df81b1093f8a0ab",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/tile_merger.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "瓦片 merger",
+      "nameEn": "tile merger",
+      "icon": false
+    },
+    {
+      "id": "towel_01",
+      "guid": "4cbb1ac3f14ad464e99279b651d5c1ca",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/towel_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "毛巾 1",
+      "nameEn": "towel 1",
+      "icon": false
+    },
+    {
+      "id": "towel_02",
+      "guid": "420348176b42f614588d5257ecfd3d7b",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/towel_02.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "毛巾 2",
+      "nameEn": "towel 2",
+      "icon": false
+    },
+    {
+      "id": "towel_03",
+      "guid": "a470863cc610fe0478d8e0857b284c50",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/towel_03.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "毛巾 3",
+      "nameEn": "towel 3",
+      "icon": false
+    },
+    {
+      "id": "towel_04",
+      "guid": "39a12d385c2fc6c869fe4536581607cc",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/towel_04.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "毛巾 4",
+      "nameEn": "towel 4",
+      "icon": false
+    },
+    {
+      "id": "towel_05",
+      "guid": "a2c8fa9c2b069aaa9391cd8e1676dd69",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/towel_05.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "毛巾 5",
+      "nameEn": "towel 5",
+      "icon": false
+    },
+    {
+      "id": "towel_06",
+      "guid": "4e4978685c138720dd144ac5662dab38",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/towel_06.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "毛巾 6",
+      "nameEn": "towel 6",
+      "icon": false
+    },
+    {
+      "id": "toy_candycane",
+      "guid": "00560d3c36007c3cc2e96ccb2bd374fe",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_candycane.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具拐杖糖",
+      "nameEn": "toy candycane",
+      "icon": false
+    },
+    {
+      "id": "toy_cracker",
+      "guid": "1cd6c33b58afa6b1513ffcfefce5fb86",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_cracker.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具拉炮",
+      "nameEn": "toy cracker",
+      "icon": false
+    },
+    {
+      "id": "toy_gingerbreadman",
+      "guid": "c6075704bdeb93a09113771ab801bea5",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_gingerbreadman.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具姜饼人",
+      "nameEn": "toy gingerbreadman",
+      "icon": false
+    },
+    {
+      "id": "toy_horse",
+      "guid": "5cd7f37a0d617b19eb0c7836197704e0",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_horse.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具木马",
+      "nameEn": "toy horse",
+      "icon": false
+    },
+    {
+      "id": "toy_letterblock_01",
+      "guid": "c858eea84e851d387aac30aba2c34ebc",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_letterblock_01.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具字母积木 1",
+      "nameEn": "toy letterblock 1",
+      "icon": false
+    },
+    {
+      "id": "toy_letterblock_02",
+      "guid": "97fb825cd86a87bfcc636241ce2b8251",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_letterblock_02.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具字母积木 2",
+      "nameEn": "toy letterblock 2",
+      "icon": false
+    },
+    {
+      "id": "toy_letterblock_03",
+      "guid": "140fb8a6bb49c1f288acef7cebcdf1a7",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_letterblock_03.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具字母积木 3",
+      "nameEn": "toy letterblock 3",
+      "icon": false
+    },
+    {
+      "id": "toy_letterblock_stack",
+      "guid": "8fca7387d2b81d76b0fe7de2797908ed",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_letterblock_stack.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具字母积木 stack",
+      "nameEn": "toy letterblock stack",
+      "icon": false
+    },
+    {
+      "id": "toy_nutcracker",
+      "guid": "c8d5c2bb1be3353fa8473683eda08f17",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_nutcracker.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具胡桃夹子",
+      "nameEn": "toy nutcracker",
+      "icon": false
+    },
+    {
+      "id": "toy_pretzel",
+      "guid": "199b51081a51136031f2fc7d5bf277b4",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_pretzel.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具椒盐卷饼",
+      "nameEn": "toy pretzel",
+      "icon": false
+    },
+    {
+      "id": "toy_snowglobe",
+      "guid": "5e14684259e8f0131775bf804f8b2d86",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_snowglobe.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具雪景球",
+      "nameEn": "toy snowglobe",
+      "icon": false
+    },
+    {
+      "id": "toy_train",
+      "guid": "00e1f120a44e226e4c79dc084772bf2e",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/toy_train.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "玩具火车",
+      "nameEn": "toy train",
+      "icon": false
+    },
+    {
+      "id": "traffic_cone_01",
+      "guid": "10b341dcf6d150b409da717eb040acfe",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/traffic_cone_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "交通锥桶 1",
+      "nameEn": "traffic cone 1",
+      "icon": false
+    },
+    {
+      "id": "traffic_light green",
+      "guid": "2eca47a1a2ef31d498135880d34628b0",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/traffic_light green.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "绿灯",
+      "nameEn": "traffic light green",
+      "icon": false
+    },
+    {
+      "id": "traffic_light off",
+      "guid": "3e1a91f9e3cc99540883307f26abad0e",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/traffic_light off.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "信号灯（灭）",
+      "nameEn": "traffic light off",
+      "icon": false
+    },
+    {
+      "id": "traffic_light red",
+      "guid": "6817416bbc685db4db588a40dc4077c9",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/traffic_light red.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "红灯",
+      "nameEn": "traffic light red",
+      "icon": false
+    },
+    {
+      "id": "tropicalbirds",
+      "guid": "52f16463e49310e6420a5988af8c856d",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/tropicalbirds.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "热带鸟",
+      "nameEn": "tropicalbirds",
+      "icon": false
+    },
+    {
+      "id": "TropicalBirds",
+      "guid": "24b099fc3765c6b4781b0ebdb6da1023",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/TropicalBirds.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "热带鸟群",
+      "nameEn": "Tropical Birds",
+      "icon": false
+    },
+    {
+      "id": "tropicalbirds_noaudio",
+      "guid": "c24713bdc3aefd48513259860f11e4cc",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/tropicalbirds_noaudio.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "tropicalbirds 无音效",
+      "nameEn": "tropicalbirds noaudio",
+      "icon": false
+    },
+    {
+      "id": "TropicalBirds(noAudio)",
+      "guid": "bc8d9c8fcdec0ed47afe2d3ded6572b3",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/TropicalBirds(noAudio).prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "热带鸟群（无音效）",
+      "nameEn": "Tropical Birds(no Audio)",
+      "icon": false
+    },
+    {
+      "id": "umbrella_base_01",
+      "guid": "4579b89388da1f881f4e25995849c56e",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/umbrella_base_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞底座 1",
+      "nameEn": "umbrella base 1",
+      "icon": false
+    },
+    {
+      "id": "Umbrella_base_01",
+      "guid": "e515f92e91ab5ec44ba8d335197e6980",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Umbrella_base_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞底座 1",
+      "nameEn": "Umbrella base 1",
+      "icon": false
+    },
+    {
+      "id": "umbrella_base_02",
+      "guid": "4ad05249d8285bdac30c5772145cbd56",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/umbrella_base_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞底座 2",
+      "nameEn": "umbrella base 2",
+      "icon": false
+    },
+    {
+      "id": "umbrella_closed_01",
+      "guid": "cb3ae9fe3bc1a2b40942f699c4fff1af",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/umbrella_closed_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞（合拢）",
+      "nameEn": "umbrella closed 1",
+      "icon": false
+    },
+    {
+      "id": "umbrella_closed_02",
+      "guid": "e551f122b683f03c59b2adec34fce534",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/umbrella_closed_02.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞合拢 2",
+      "nameEn": "umbrella closed 2",
+      "icon": false
+    },
+    {
+      "id": "umbrella_closed_03",
+      "guid": "7d87700f1e75e5b7e1a5b3d04c691626",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/umbrella_closed_03.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞合拢 3",
+      "nameEn": "umbrella closed 3",
+      "icon": false
+    },
+    {
+      "id": "umbrella_closed_04",
+      "guid": "fbb779d9494f626cbe3972f386787ad0",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/umbrella_closed_04.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞合拢 4",
+      "nameEn": "umbrella closed 4",
+      "icon": false
+    },
+    {
+      "id": "umbrella_open_01",
+      "guid": "3909d2a3db7261d49ab018320a6e3646",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/umbrella_open_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞",
+      "nameEn": "umbrella open 1",
+      "icon": false
+    },
+    {
+      "id": "umbrella_open_02",
+      "guid": "c13c221e62a98c607f896c24cf1a87ec",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/umbrella_open_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "遮阳伞打开 2",
+      "nameEn": "umbrella open 2",
+      "icon": false
+    },
+    {
+      "id": "urn_01",
+      "guid": "7976c3659ea27f1563f3e2e94e84c5d1",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/urn_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "瓮 1",
+      "nameEn": "urn 1",
+      "icon": false
+    },
+    {
+      "id": "Urn_01",
+      "guid": "3cf628b28aa9cc64f88d33e05f365d25",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Urn_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "瓮 1",
+      "nameEn": "Urn 1",
+      "icon": false
+    },
+    {
+      "id": "walkway_floor_01",
+      "guid": "36028bae063323e4c86e5f61f9904f53",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_floor_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 3
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道地板",
+      "nameEn": "walkway floor 1",
+      "icon": false
+    },
+    {
+      "id": "walkway_floor_03_alt_01",
+      "guid": "0cf28a7642a517a40aed0723d45b9798",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_floor_03_alt_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 3
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道地板（变体）",
+      "nameEn": "walkway floor 3 alt 1",
+      "icon": false
+    },
+    {
+      "id": "walkway_pillar_01",
+      "guid": "e1f5238afdff0c44dae7f0c970d7be98",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_pillar_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道立柱",
+      "nameEn": "walkway pillar 1",
+      "icon": false
+    },
+    {
+      "id": "walkway_pillar_02",
+      "guid": "13d61acaa69ce3d1c10349760393852e",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/walkway_pillar_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道立柱 2",
+      "nameEn": "walkway pillar 2",
+      "icon": false
+    },
+    {
+      "id": "walkway_pillars_01",
+      "guid": "7faae133bb520b949972d87cf9f1ac54",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_pillars_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道立柱",
+      "nameEn": "walkway pillars 1",
+      "icon": false
+    },
+    {
+      "id": "walkway_pillars_02",
+      "guid": "06af1e93939f68e5cbbc7e342e433ffc",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/walkway_pillars_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道 pillars 2",
+      "nameEn": "walkway pillars 2",
+      "icon": false
+    },
+    {
+      "id": "walkway_roof_01",
+      "guid": "c633ba08176a9df488830755f7398fc2",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_roof_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道顶棚",
+      "nameEn": "walkway roof 1",
+      "icon": false
+    },
+    {
+      "id": "walkway_roof_alt_01",
+      "guid": "d323ab4bfacd6094bb9684f814110679",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_roof_alt_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 3
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道顶棚（变体）",
+      "nameEn": "walkway roof alt 1",
+      "icon": false
+    },
+    {
+      "id": "walkway_rope_02",
+      "guid": "d28f3c299e0ff8e4c83eed23c97df99e",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/walkway_rope_02.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "walkway",
+      "nameZh": "栈道绳索",
+      "nameEn": "walkway rope 2",
+      "icon": false
+    },
+    {
+      "id": "wall_270_01",
+      "guid": "ffb0746e6f9f88a498dc3081ce6ea700",
+      "assetPath": "Assets/common01/prefabs/art/space/wall_270_01.prefab",
+      "category": "art",
+      "theme": "space",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "270° 转角墙",
+      "nameEn": "wall 270 1",
+      "icon": false
+    },
+    {
+      "id": "wall_90_01",
+      "guid": "a962afa48a53c7841be882151cf032bc",
+      "assetPath": "Assets/common01/prefabs/art/space/wall_90_01.prefab",
+      "category": "art",
+      "theme": "space",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙 90 1",
+      "nameEn": "wall 90 1",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_01a",
+      "guid": "342d2709b7155cd428e5ac1aab0a39c4",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_01a.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "砖墙 01a",
+      "nameEn": "wall brick 01a",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_01b",
+      "guid": "9d10e7a28166afb4589564c0922c18a0",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_01b.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "砖墙 01b",
+      "nameEn": "wall brick 01b",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_01c",
+      "guid": "3dfb0d7224bdcee478aae655f007164b",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_01c.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙砖 1c",
+      "nameEn": "wall brick 01c",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_01d",
+      "guid": "3c1ef1df6bf7d4c48a490cd6ac98adeb",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_01d.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "砖墙 01d",
+      "nameEn": "wall brick 01d",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_crack_01",
+      "guid": "72f211f753230644c9233ed40d172644",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_crack_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙砖裂缝 1",
+      "nameEn": "wall brick crack 1",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_in_01",
+      "guid": "af4f454a0ff150d46a756511d7ae5232",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_in_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙砖内 1",
+      "nameEn": "wall brick in 1",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_out_01",
+      "guid": "f991727a681f84b4ebdbbf19ce440d58",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_out_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "砖墙外角",
+      "nameEn": "wall brick out 1",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_short_01",
+      "guid": "e79fb59a8c19da34ebebd9f871a12ad3",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_short_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙砖短 1",
+      "nameEn": "wall brick short 1",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_window_01",
+      "guid": "fd5b060d5e41f5f408956918cb0ba834",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_window_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙砖窗 1",
+      "nameEn": "wall brick window 1",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_window_02",
+      "guid": "c51360ec55c7a804b9f757e2348f8b2a",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_window_02.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙砖窗 2",
+      "nameEn": "wall brick window 2",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_window_02_orange",
+      "guid": "c572c239bfcb570489fbeadb53cff072",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_window_02_orange.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙砖窗 2 橙",
+      "nameEn": "wall brick window 2 orange",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_window_02_ornate",
+      "guid": "20b3d97b71ac6bd428410235439c539f",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_window_02_ornate.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙砖窗 2 华丽",
+      "nameEn": "wall brick window 2 ornate",
+      "icon": false
+    },
+    {
+      "id": "wall_brick_window_03",
+      "guid": "375e6a079af0ff34786e8fe1ab7ec7d8",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_brick_window_03.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "砖墙窗 03",
+      "nameEn": "wall brick window 3",
+      "icon": false
+    },
+    {
+      "id": "wall_broken_01",
+      "guid": "889ae6bfd08c36e409c3c3e21830004d",
+      "assetPath": "Assets/common01/prefabs/art/space/wall_broken_01.prefab",
+      "category": "art",
+      "theme": "space",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "破损墙体 1",
+      "nameEn": "wall broken 1",
+      "icon": false
+    },
+    {
+      "id": "wall_detail_01",
+      "guid": "9156e37706171c9499e6cfc451b5c8a2",
+      "assetPath": "Assets/common01/prefabs/art/space/wall_detail_01.prefab",
+      "category": "art",
+      "theme": "space",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙体装饰 1",
+      "nameEn": "wall detail 1",
+      "icon": false
+    },
+    {
+      "id": "wall_detail_02",
+      "guid": "835fa8978bd1e2d4ea35f35133684b84",
+      "assetPath": "Assets/common01/prefabs/art/space/wall_detail_02.prefab",
+      "category": "art",
+      "theme": "space",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙体装饰 2",
+      "nameEn": "wall detail 2",
+      "icon": false
+    },
+    {
+      "id": "wall_detail_03",
+      "guid": "d54196ca0bd65074c848c2cdaa613f37",
+      "assetPath": "Assets/common01/prefabs/art/space/wall_detail_03.prefab",
+      "category": "art",
+      "theme": "space",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙体装饰 3",
+      "nameEn": "wall detail 3",
+      "icon": false
+    },
+    {
+      "id": "wall_orange_01",
+      "guid": "e2302171e9bb9ec4dbed3a3510c81a29",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_orange_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙橙 1",
+      "nameEn": "wall orange 1",
+      "icon": false
+    },
+    {
+      "id": "wall_straight_01",
+      "guid": "3fc2c9270ca3ebe42a27aa025a8bb7f7",
+      "assetPath": "Assets/common01/prefabs/art/space/wall_straight_01.prefab",
+      "category": "art",
+      "theme": "space",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙直 1",
+      "nameEn": "wall straight 1",
+      "icon": false
+    },
+    {
+      "id": "wall_straight_top_01",
+      "guid": "6a03ba0acb88f10678cfb1a187ecf8ec",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/wall_straight_top_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙直顶部 1",
+      "nameEn": "wall straight top 1",
+      "icon": false
+    },
+    {
+      "id": "Wall_straight_top_01",
+      "guid": "c8cdcaaa753fe51478c4c33ea7cf3c07",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Wall_straight_top_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙直顶部 1",
+      "nameEn": "Wall straight top 1",
+      "icon": false
+    },
+    {
+      "id": "wall_straight_top_01b",
+      "guid": "5aa501b65abe9c615fedf931e8dcb393",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/wall_straight_top_01b.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙直顶部 1b",
+      "nameEn": "wall straight top 01b",
+      "icon": false
+    },
+    {
+      "id": "Wall_straight_top_01b",
+      "guid": "fb7e97d9a170e334894cd321f77c6790",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Wall_straight_top_01b.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙直顶部 1b",
+      "nameEn": "Wall straight top 01b",
+      "icon": false
+    },
+    {
+      "id": "wall_straight_top_02",
+      "guid": "f185f9c4fa07f41832dd5527b14453cb",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/wall_straight_top_02.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙直顶部 2",
+      "nameEn": "wall straight top 2",
+      "icon": false
+    },
+    {
+      "id": "Wall_straight_top_02",
+      "guid": "72bdc79df01ea984187f831c07aed688",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Wall_straight_top_02.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "直墙顶沿 02",
+      "nameEn": "Wall straight top 2",
+      "icon": false
+    },
+    {
+      "id": "wall_straight_top_02b",
+      "guid": "c1045290c67a86015ff2e6b975940530",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/wall_straight_top_02b.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙直顶部 2b",
+      "nameEn": "wall straight top 02b",
+      "icon": false
+    },
+    {
+      "id": "Wall_straight_top_02b",
+      "guid": "04ceb457239231c4488e9e7a3133cdae",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Wall_straight_top_02b.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙直顶部 2b",
+      "nameEn": "Wall straight top 02b",
+      "icon": false
+    },
+    {
+      "id": "wall_wallpaper_01",
+      "guid": "daa9bb76a58af124b9c64a3437295168",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_wallpaper_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙纸 1",
+      "nameEn": "wall wallpaper 1",
+      "icon": false
+    },
+    {
+      "id": "wall_wallpaper_in_01",
+      "guid": "ad92d11839b2f8049a77cdb62645ca27",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_wallpaper_in_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙纸内 1",
+      "nameEn": "wall wallpaper in 1",
+      "icon": false
+    },
+    {
+      "id": "wall_wallpaper_in_02",
+      "guid": "41eec5aa576d8a04d9ea5316fd99d5e4",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_wallpaper_in_02.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墙纸内 2",
+      "nameEn": "wall wallpaper in 2",
+      "icon": false
+    },
+    {
+      "id": "wall_wood_slats_01",
+      "guid": "c10148d1633de8d43bb6a31e852a2bd2",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/wall_wood_slats_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "木质墙板 1",
+      "nameEn": "wall wood slats 1",
+      "icon": false
+    },
+    {
+      "id": "water",
+      "guid": "21a937d62bd83d13be26db3db979c815",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/water.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 38,
+        "cellsZ": 24
+      },
+      "layoutTier": "decor",
+      "nameZh": "水",
+      "nameEn": "water",
+      "icon": false
+    },
+    {
+      "id": "water_01",
+      "guid": "a4bfbb8e03eb9724e213c66dbf81ce2f",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/water_01.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "水 1",
+      "nameEn": "water 1",
+      "icon": false
+    },
+    {
+      "id": "Water_01",
+      "guid": "a3288048c24aaa44181e6970566891bd",
+      "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/Water_01.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "水面 1",
+      "nameEn": "water surface 1",
+      "icon": false
+    },
+    {
+      "id": "WaterSplash_GooSplash_Particle_001",
+      "guid": "a9f99149e65623447ae07155ffb05c99",
+      "assetPath": "Assets/common01/prefabs/art/space/WaterSplash_GooSplash_Particle_001.prefab",
+      "category": "art",
+      "theme": "space",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "黏液水花特效 1",
+      "nameEn": "Water Splash Goo Splash Particle 1",
+      "icon": false
+    },
+    {
+      "id": "waterwheel",
+      "guid": "180d330008032dcd59933b5e888f03c3",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/waterwheel.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "水车",
+      "nameEn": "waterwheel",
+      "icon": false
+    },
+    {
+      "id": "wavefloat_generic",
+      "guid": "5d7945143deb41348d5fe79129018c66",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/wavefloat_generic.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "波浪浮筒 generic",
+      "nameEn": "wavefloat generic",
+      "icon": false
+    },
+    {
+      "id": "wizard_banner_01",
+      "guid": "4a6f919ed2611c6448defb500798d8eb",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_banner_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法横幅 1",
+      "nameEn": "wizard banner 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_book_01",
+      "guid": "51e0c05c33921a84ca53a4e50433f0a2",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_book_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法书 1",
+      "nameEn": "wizard book 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_book_02",
+      "guid": "c3d4e209d4b8bf74c86a0afbe30ee52a",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_book_02.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法书 2",
+      "nameEn": "wizard book 2",
+      "icon": false
+    },
+    {
+      "id": "wizard_book_03",
+      "guid": "54d205849430abb4982d35615016d1eb",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_book_03.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法书 3",
+      "nameEn": "wizard book 3",
+      "icon": false
+    },
+    {
+      "id": "wizard_book_04",
+      "guid": "960e7f426d506ee4b8e82762c8faf4cf",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_book_04.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法书 4",
+      "nameEn": "wizard book 4",
+      "icon": false
+    },
+    {
+      "id": "wizard_bookcase",
+      "guid": "e06f08ea16934204b9ccd5a7aaf9e2e1",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_bookcase.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法书柜",
+      "nameEn": "wizard bookcase",
+      "icon": false
+    },
+    {
+      "id": "wizard_floor_10x10",
+      "guid": "81b9123872750b20c9648f57a54f0e19",
+      "assetPath": "Assets/common03/prefabs/core/art/floors/wizard_floor_10x10.prefab",
+      "category": "art",
+      "theme": "floors",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "魔法学校地板 10×10",
+      "nameEn": "Wizard Floor 10x10",
+      "icon": false
+    },
+    {
+      "id": "wizard_longbench_01",
+      "guid": "b76987196498e834aa409e5f13df82ad",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_longbench_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法长凳 1",
+      "nameEn": "wizard longbench 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_longtable_01",
+      "guid": "2610218e594842c4a8a25dedba4bb714",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_longtable_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法长桌 1",
+      "nameEn": "wizard longtable 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_picture_01",
+      "guid": "08c2ef06f51c669418d2d36fd8e26a1d",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_picture_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法画 1",
+      "nameEn": "wizard picture 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_rail_01",
+      "guid": "18b391531cc011e47b84b2183d891f63",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_rail_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法栏杆 1",
+      "nameEn": "wizard rail 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_rail_02",
+      "guid": "69924aeae23affa4e9fd37b788ebc375",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_rail_02.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法栏杆 2",
+      "nameEn": "wizard rail 2",
+      "icon": false
+    },
+    {
+      "id": "wizard_rail_03",
+      "guid": "2f10f096531262346aef48c8914aac56",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_rail_03.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法栏杆 3",
+      "nameEn": "wizard rail 3",
+      "icon": false
+    },
+    {
+      "id": "wizard_sconcecandle_01",
+      "guid": "270375c894d94984cbac4ca1667d5898",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_sconcecandle_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法壁烛灯 1",
+      "nameEn": "wizard sconcecandle 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_shelf_01",
+      "guid": "b1c087bf5a5b240408ceb2d790b38f94",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_shelf_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法架子 1",
+      "nameEn": "wizard shelf 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_shelf_02",
+      "guid": "a5d00084af4a8414cb83aecc9af1d43c",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_shelf_02.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法架子 2",
+      "nameEn": "wizard shelf 2",
+      "icon": false
+    },
+    {
+      "id": "wizard_shelf_03",
+      "guid": "e32b30c9dbde7124380e13fed23bed53",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_shelf_03.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法架子 3",
+      "nameEn": "wizard shelf 3",
+      "icon": false
+    },
+    {
+      "id": "wizard_shelf_04",
+      "guid": "36d0315fce736ae4d8f023293143fe61",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_shelf_04.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法架子 4",
+      "nameEn": "wizard shelf 4",
+      "icon": false
+    },
+    {
+      "id": "wizard_stone_floor_6x6",
+      "guid": "9f23608d12c9120bd421051a63deb4d5",
+      "assetPath": "Assets/common03/prefabs/core/art/floors/wizard_stone_floor_6x6.prefab",
+      "category": "art",
+      "theme": "floors",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "魔法学校石地板 6×6",
+      "nameEn": "Wizard Stone Floor 6x6",
+      "icon": false
+    },
+    {
+      "id": "wizard_stoneblock_01",
+      "guid": "9c388dba182e215479197e15c736f72c",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_stoneblock_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法石块 1",
+      "nameEn": "wizard stoneblock 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_stoneblock_02",
+      "guid": "61e7567de3d34254ba35c3eeb0bb278f",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_stoneblock_02.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法石块 2",
+      "nameEn": "wizard stoneblock 2",
+      "icon": false
+    },
+    {
+      "id": "wizard_stoneblock_03",
+      "guid": "be8020cbb98dc2841b8f8759bed715db",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_stoneblock_03.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法石块 3",
+      "nameEn": "wizard stoneblock 3",
+      "icon": false
+    },
+    {
+      "id": "wizard_stonewall_01",
+      "guid": "8240d0c00d674eb42bb1a71a3050457d",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_stonewall_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法石墙 1",
+      "nameEn": "wizard stonewall 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_table_01",
+      "guid": "a6357d416b8c861e137fc24ffc9a0da8",
+      "assetPath": "Assets/common03/prefabs/core/art/wizard/wizard_table_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法学校桌子 1",
+      "nameEn": "Wizard Table 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_tabletop_01",
+      "guid": "96fee239c7ff41e820f41dc8694a718d",
+      "assetPath": "Assets/common03/prefabs/core/art/wizard/wizard_tabletop_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法学校桌板 1",
+      "nameEn": "Wizard Tabletop 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_tabletop_02",
+      "guid": "2bdabcce8d6b068a39255683c578c456",
+      "assetPath": "Assets/common03/prefabs/core/art/wizard/wizard_tabletop_02.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法学校桌板 2",
+      "nameEn": "Wizard Tabletop 2",
+      "icon": false
+    },
+    {
+      "id": "wizard_tabletopcorner_01",
+      "guid": "c49e0bc18602f2d192e5a08392597ab0",
+      "assetPath": "Assets/common03/prefabs/core/art/wizard/wizard_tabletopcorner_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法学校桌板转角 1",
+      "nameEn": "Wizard Tabletop Corner 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_tabletopedge_01",
+      "guid": "768800177475521d3954d90fe338120a",
+      "assetPath": "Assets/common03/prefabs/core/art/wizard/wizard_tabletopedge_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法学校桌板边缘 1",
+      "nameEn": "Wizard Tabletop Edge 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_walltile",
+      "guid": "1699416f0701a874c9f2e561c068ea1f",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_walltile.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法墙砖",
+      "nameEn": "wizard walltile",
+      "icon": false
+    },
+    {
+      "id": "wizard_walltruss_01",
+      "guid": "56abc9d95b869024191bbb3411ab607f",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_walltruss_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 8
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法墙桁架 1",
+      "nameEn": "wizard walltruss 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_window_01",
+      "guid": "3748df889a3d81f45872c16dca1c609f",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_window_01.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法窗 1",
+      "nameEn": "wizard window 1",
+      "icon": false
+    },
+    {
+      "id": "wizard_window_02",
+      "guid": "29bcbc5811edf7544beeccec28326ba3",
+      "assetPath": "Assets/common01/prefabs/art/wizard/wizard_window_02.prefab",
+      "category": "art",
+      "theme": "wizard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "魔法窗 2",
+      "nameEn": "wizard window 2",
+      "icon": false
+    },
+    {
+      "id": "wizard_wood_floor_6x4",
+      "guid": "9001968f8e91eca928f11f634cc7095f",
+      "assetPath": "Assets/common03/prefabs/core/art/floors/wizard_wood_floor_6x4.prefab",
+      "category": "art",
+      "theme": "floors",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "魔法学校木地板 6×4",
+      "nameEn": "Wizard Wood Floor 6x4",
+      "icon": false
+    },
+    {
+      "id": "woodenfloor_01",
+      "guid": "b1100c0b0ac92afe5f0534f4e35f2dee",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/woodenfloor_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "木地板 1",
+      "nameEn": "woodenfloor 1",
+      "icon": false
+    },
+    {
+      "id": "woodenwall_01",
+      "guid": "12ff31005f463794794bd5da2657facd",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/woodenwall_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "木墙",
+      "nameEn": "woodenwall 1",
+      "icon": false
+    },
+    {
+      "id": "woodenwall_02",
+      "guid": "37d46339070e5b2b1430e69855c46485",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/woodenwall_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "木墙 2",
+      "nameEn": "woodenwall 2",
+      "icon": false
+    },
+    {
+      "id": "woodenwall_night_01",
+      "guid": "c34cbfd51c4b5fc409083894296c034f",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/woodenwall_night_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "木墙（夜晚）1",
+      "nameEn": "woodenwall night 1",
+      "icon": false
+    },
+    {
+      "id": "woodenwall_night_02",
+      "guid": "11d7b9a1f037c9406887753749875e6b",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/woodenwall_night_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "woodenwall 夜晚 2",
+      "nameEn": "woodenwall night 2",
+      "icon": false
+    },
+    {
+      "id": "woodenwall_roof_alt_01",
+      "guid": "6f47b02cc109396408d60b904899f8f7",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/woodenwall_roof_alt_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "木墙屋顶（变体）1",
+      "nameEn": "woodenwall roof alt 1",
+      "icon": false
+    },
+    {
+      "id": "woodenwall_roof_alt_02",
+      "guid": "e20458256e23c816ae75d47341fbdd41",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/woodenwall_roof_alt_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "woodenwall 屋顶变体 2",
+      "nameEn": "woodenwall roof alt 2",
+      "icon": false
+    },
+    {
+      "id": "Cooker",
+      "guid": "345e34a1e4e313d47ae4d05deb0beaf4",
+      "assetPath": "Assets/common01/prefabs/counters/Cooker.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "灶台",
+      "nameEn": "Cooker",
+      "icon": false
+    },
+    {
+      "id": "FryingStation",
+      "guid": "d12e5f8429062a24fb0df0c998175ecb",
+      "assetPath": "Assets/common01/prefabs/counters/FryingStation.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "煎炸台",
+      "nameEn": "Frying Station",
+      "icon": true
+    },
+    {
+      "id": "Oven",
+      "guid": "382d3e37eabafd34da677247d3c2634c",
+      "assetPath": "Assets/common01/prefabs/counters/Oven.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "烤箱",
+      "nameEn": "Oven",
+      "icon": true
+    },
+    {
+      "id": "Barbeque",
+      "guid": "f28cbfa6e2e8a14448d61354c2c8270e",
+      "assetPath": "Assets/common02/prefabs/counters/Barbeque.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "烧烤架",
+      "nameEn": "Barbeque",
+      "icon": false
+    },
+    {
+      "id": "Campfire",
+      "guid": "16823c8b6ebabf74585a67fc62e707f3",
+      "assetPath": "Assets/common02/prefabs/counters/Campfire.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "篝火",
+      "nameEn": "Campfire",
+      "icon": true
+    },
+    {
+      "id": "cooking_region_floorburner",
+      "guid": "a815348f43cd4b3905fb2ffaec777548",
+      "assetPath": "Assets/common03/prefabs/core/counters/cooking_region_floorburner.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "core",
+      "nameZh": "火锅灶台",
+      "nameEn": "Hotpot Burner",
+      "icon": false
+    },
+    {
+      "id": "dlc08_oven_02",
+      "guid": "5ae29de0e5cc6404bd165ea0a432c800",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_oven_02.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "烤箱 2（马戏团）",
+      "nameEn": "Oven 2 (Circus)",
+      "icon": false
+    },
+    {
+      "id": "dlc09_oven",
+      "guid": "a13452a7296b3cf477c67d31893a5c11",
+      "assetPath": "Assets/common03/prefabs/dlc09/counters/dlc09_oven.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "烤箱（仙境）",
+      "nameEn": "Oven (Wonderland)",
+      "icon": false
+    },
+    {
+      "id": "dlc10_cooking_region_floorburner",
+      "guid": "cfef68541d799fc8288b2a49d140d866",
+      "assetPath": "Assets/common03/prefabs/dlc10/counters/dlc10_cooking_region_floorburner.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "core",
+      "nameZh": "火锅灶台（DLC10）",
+      "nameEn": "Hotpot Burner (DLC10)",
+      "icon": false
+    },
+    {
+      "id": "dlc13_workstation_cooker_01",
+      "guid": "cfb02e9aa3e351d64072bca93c3463d9",
+      "assetPath": "Assets/common03/prefabs/dlc13/counters/dlc13_workstation_cooker_01.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "灶台（DLC13）",
+      "nameEn": "Cooker (DLC13)",
+      "icon": false
+    },
+    {
+      "id": "oven_furnace_medieval",
+      "guid": "09d88cc6d327a425315d63c0f9a0d0ba",
+      "assetPath": "Assets/common03/prefabs/core/counters/oven_furnace_medieval.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "烤炉（石炉）",
+      "nameEn": "Furnace Oven",
+      "icon": false
+    },
+    {
+      "id": "oven_medieval",
+      "guid": "aa9f43925748e22eea000ac7631b21ae",
+      "assetPath": "Assets/common03/prefabs/core/counters/oven_medieval.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "烤箱（中世纪）",
+      "nameEn": "Oven (Medieval)",
+      "icon": false
+    },
+    {
+      "id": "workstation_barbeque_01",
+      "guid": "604a47c9fef87148366252100dcc11b0",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_barbeque_01.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "烧烤架（DLC2）",
+      "nameEn": "Barbecue (DLC2)",
+      "icon": false
+    },
+    {
+      "id": "workstation_campfire_01",
+      "guid": "f23773f3ed0b02fa1b1d720b207ade6b",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_campfire_01.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "篝火灶台",
+      "nameEn": "Campfire Station",
+      "icon": false
+    },
+    {
+      "id": "workstation_furnace_01",
+      "guid": "503c206df980d89cf9c3f56535c138bb",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_furnace_01.prefab",
+      "category": "counters/cooking",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "石炉台",
+      "nameEn": "Furnace Station",
+      "icon": false
+    },
+    {
+      "id": "Counter",
+      "guid": "60878121fab2c1a44b2e9b2337600c5f",
+      "assetPath": "Assets/common01/prefabs/counters/Counter.prefab",
+      "category": "counters/prep",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "工作台",
+      "nameEn": "Counter",
+      "icon": false
+    },
+    {
+      "id": "CounterCorner",
+      "guid": "03aac8b0f41714d469ee5f454b43a9c8",
+      "assetPath": "Assets/common01/prefabs/counters/CounterCorner.prefab",
+      "category": "counters/prep",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "转角工作台",
+      "nameEn": "Counter Corner",
+      "icon": false
+    },
+    {
+      "id": "ChoppingCounter",
+      "guid": "75971337a46479e41a933d5b4fb2fe1a",
+      "assetPath": "Assets/common01/prefabs/counters/ChoppingCounter.prefab",
+      "category": "counters/prep",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "切菜台",
+      "nameEn": "Chopping Counter",
+      "icon": false
+    },
+    {
+      "id": "workstation_guillotine_01",
+      "guid": "86c79362de3d2cca9fc4fe3a04838930",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_guillotine_01.prefab",
+      "category": "counters/prep",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "断头台",
+      "nameEn": "Guillotine",
+      "icon": false
+    },
+    {
+      "id": "Dispenser",
+      "guid": "a73b3f0cafd804944b6e93b0feac0a20",
+      "assetPath": "Assets/common01/prefabs/counters/Dispenser.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "食材箱",
+      "nameEn": "Dispenser",
+      "icon": false
+    },
+    {
+      "id": "Mixer",
+      "guid": "d7856b2e98de44c43a37abfcb3a104e6",
+      "assetPath": "Assets/common01/prefabs/counters/Mixer.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌台",
+      "nameEn": "Mixer",
+      "icon": true
+    },
+    {
+      "id": "Blender",
+      "guid": "73b160ccedd68bd4480ffa866ebd336e",
+      "assetPath": "Assets/common02/prefabs/counters/Blender.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌机",
+      "nameEn": "Blender",
+      "icon": true
+    },
+    {
+      "id": "ServingStation",
+      "guid": "fb4883750ab23964fa3d000c2b455b38",
+      "assetPath": "Assets/common01/prefabs/counters/ServingStation.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "上菜台",
+      "nameEn": "Serving Station",
+      "icon": false
+    },
+    {
+      "id": "AttachingFoodSpawner",
+      "guid": "84e4fae33036ac04d9b69d99a585bf17",
+      "assetPath": "Assets/common01/prefabs/mechanisms/AttachingFoodSpawner.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "传送带食材生成器",
+      "nameEn": "Attaching Food Spawner",
+      "icon": false
+    },
+    {
+      "id": "Backpack",
+      "guid": "9b77838145843da4899777494c140efb",
+      "assetPath": "Assets/common02/prefabs/mechanisms/Backpack.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "背包",
+      "nameEn": "Backpack",
+      "icon": false
+    },
+    {
+      "id": "dlc08_condiment_dispenser",
+      "guid": "15766b4d0608726e0fcf9e9f6b1481da",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_condiment_dispenser.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "酱料机（马戏团）",
+      "nameEn": "Condiment Dispenser",
+      "icon": false
+    },
+    {
+      "id": "dlc08_drink_machine",
+      "guid": "a667661d702259bb9a956f600c30fa64",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_drink_machine.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "饮料机",
+      "nameEn": "Drink Machine",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_mixer",
+      "guid": "713a617b7f8da0d46d62f1d8a35c390d",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_mixer.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌台（马戏团）",
+      "nameEn": "Mixer Station (Circus)",
+      "icon": false
+    },
+    {
+      "id": "dlc10_workstation_mixer",
+      "guid": "9a9c6ed742fbdc8e61d5db9d5802a15e",
+      "assetPath": "Assets/common03/prefabs/dlc10/counters/dlc10_workstation_mixer.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌台（火锅）",
+      "nameEn": "Mixer Station (Hotpot)",
+      "icon": false
+    },
+    {
+      "id": "dlc11_condiment_dispenser",
+      "guid": "2f07179f34bd76cf733c1ed93d2b8f49",
+      "assetPath": "Assets/common03/prefabs/dlc11/counters/dlc11_condiment_dispenser.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "酱料机",
+      "nameEn": "Condiment Dispenser",
+      "icon": false
+    },
+    {
+      "id": "dlc11_drink_dispenser",
+      "guid": "71ab04e0cc215d78425bd1d02517ac64",
+      "assetPath": "Assets/common03/prefabs/dlc11/counters/dlc11_drink_dispenser.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "汽水饮料机",
+      "nameEn": "Drink Dispenser",
+      "icon": false
+    },
+    {
+      "id": "dlc13_workstation_mixer_01",
+      "guid": "42390e46933fb2dc48878edd930957ce",
+      "assetPath": "Assets/common03/prefabs/dlc13/counters/dlc13_workstation_mixer_01.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌台（DLC13）",
+      "nameEn": "Mixer Station (DLC13)",
+      "icon": false
+    },
+    {
+      "id": "dlc13_workstation_plate_station",
+      "guid": "f790c0863736504ff296a9b511df525d",
+      "assetPath": "Assets/common03/prefabs/dlc13/counters/dlc13_workstation_plate_station.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "餐盘台（DLC13）",
+      "nameEn": "Plate Station (DLC13)",
+      "icon": false
+    },
+    {
+      "id": "p_dlc08_servicehatch_01",
+      "guid": "5d8e4b02b0fc4c0b2ee74cfb44515a22",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/p_dlc08_servicehatch_01.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "传菜窗（马戏团）",
+      "nameEn": "Service Hatch (Circus)",
+      "icon": false
+    },
+    {
+      "id": "service_window",
+      "guid": "414f1107f1e88fa016cd887b8c628d49",
+      "assetPath": "Assets/common03/prefabs/core/counters/service_window.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "服务窗（部落）",
+      "nameEn": "Service Window (Horde)",
+      "icon": false
+    },
+    {
+      "id": "workstation_blender_01",
+      "guid": "0501e9378607c3a649732cdb944af6cb",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_blender_01.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌工作站（DLC2）",
+      "nameEn": "Blender Station (DLC2)",
+      "icon": false
+    },
+    {
+      "id": "workstation_mixer_01",
+      "guid": "6ea552caecabe3f3420fc656c9763033",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_mixer_01.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌台（DLC3）",
+      "nameEn": "Mixer Station (DLC3)",
+      "icon": false
+    },
+    {
+      "id": "workstation_mixer_02",
+      "guid": "9aecfe3537b488f41ebbf737b1ba18fb",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_mixer_02.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌台 02",
+      "nameEn": "Mixer Station 02",
+      "icon": false
+    },
+    {
+      "id": "workstation_mixer_03",
+      "guid": "a4a73dac6588d52cae3fd0854f8ddcd7",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_mixer_03.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "搅拌台（中世纪）",
+      "nameEn": "Mixer Station (Medieval)",
+      "icon": false
+    },
+    {
+      "id": "workstation_service_hatch",
+      "guid": "a663e3e3ac2869cbb08d5055f2758a99",
+      "assetPath": "Assets/common03/prefabs/core/counters/workstation_service_hatch.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "传菜窗（部落）",
+      "nameEn": "Service Hatch (Horde)",
+      "icon": false
+    },
+    {
+      "id": "Sink",
+      "guid": "ce123dae8809b3f4a89a37ce3f1969c3",
+      "assetPath": "Assets/common01/prefabs/counters/Sink.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "水槽",
+      "nameEn": "Sink",
+      "icon": false
+    },
+    {
+      "id": "SinkGlass",
+      "guid": "509bf64c1dc11e24789e275d67fa2d67",
+      "assetPath": "Assets/common02/prefabs/counters/SinkGlass.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗杯槽",
+      "nameEn": "Sink Glass",
+      "icon": false
+    },
+    {
+      "id": "Bin",
+      "guid": "d1fa490d07f93534481063b914a22b8c",
+      "assetPath": "Assets/common01/prefabs/counters/Bin.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "垃圾箱",
+      "nameEn": "Bin",
+      "icon": false
+    },
+    {
+      "id": "PlateReturn",
+      "guid": "68f3833c8fc919b4499dea8b6cc4062b",
+      "assetPath": "Assets/common01/prefabs/counters/PlateReturn.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "脏盘台",
+      "nameEn": "Plate Return",
+      "icon": false
+    },
+    {
+      "id": "GlassReturn",
+      "guid": "1f4092287fd2d1d428520b4e1534786d",
+      "assetPath": "Assets/common02/prefabs/counters/GlassReturn.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "脏杯台",
+      "nameEn": "Glass Return",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_01_tray_sink_circus",
+      "guid": "4194172f8b203c1b1ffe44a7ac2a85e4",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_01_tray_sink_circus.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗餐盘水槽（马戏团）",
+      "nameEn": "Tray Sink (Circus)",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_02_tray_sink_circus",
+      "guid": "d1b9332ab76beda823608df2f14031d2",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_02_tray_sink_circus.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗餐盘水槽（马戏团·条纹）",
+      "nameEn": "Tray Sink (Circus Striped)",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_03_tray_sink_circus",
+      "guid": "9915b090428bc8993f049cc6f1715dbb",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_03_tray_sink_circus.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗餐盘水槽（马戏团·彩绘）",
+      "nameEn": "Tray Sink (Circus Painted)",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_tray_return",
+      "guid": "be0758917fdd7d2d46411171ba42ef29",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_tray_return.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "餐盘回收台",
+      "nameEn": "Tray Return Station",
+      "icon": false
+    },
+    {
+      "id": "dlc09_workstation_mug_return_winter",
+      "guid": "f1dc669b31e429d903514b9b94e90851",
+      "assetPath": "Assets/common03/prefabs/dlc09/counters/dlc09_workstation_mug_return_winter.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "马克杯回收台（冬季）",
+      "nameEn": "Mug Return Station (Winter)",
+      "icon": false
+    },
+    {
+      "id": "dlc09_workstation_sink_mug_01_wood",
+      "guid": "ced2a77bc24e1859957c60ee025cad5c",
+      "assetPath": "Assets/common03/prefabs/dlc09/counters/dlc09_workstation_sink_mug_01_wood.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "马克杯水槽（木制）",
+      "nameEn": "Mug Sink (Wooden)",
+      "icon": false
+    },
+    {
+      "id": "dlc11_workstation_glass_return_01",
+      "guid": "5f2f5671ca81db6cd59251996b7c55f0",
+      "assetPath": "Assets/common03/prefabs/dlc11/counters/dlc11_workstation_glass_return_01.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "玻璃杯回收台",
+      "nameEn": "Glass Return Station",
+      "icon": false
+    },
+    {
+      "id": "dlc13_workstation_bin_01",
+      "guid": "8bc7dd9376ab8467bbc249d37a2c0ad9",
+      "assetPath": "Assets/common03/prefabs/dlc13/counters/dlc13_workstation_bin_01.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "垃圾桶（DLC13）",
+      "nameEn": "Bin (DLC13)",
+      "icon": false
+    }
+  ]
+}

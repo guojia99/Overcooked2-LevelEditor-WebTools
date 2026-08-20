@@ -164,6 +164,8 @@ export function setLayer(layer: LayerKey): void {
   updatePanelTabButtons();
   syncVisibilityPopover();
   const searchEl = document.getElementById("palette-search") as HTMLInputElement;
+  const sizeEl = document.getElementById("decor-size-filter") as HTMLSelectElement;
+  if (sizeEl) sizeEl.classList.toggle("hidden", layer !== "decor");
   if (layer === "floor") {
     searchEl.placeholder = "搜索木筏 / 地板…";
     buildFloorPalette(searchEl.value, "floor");
@@ -254,6 +256,14 @@ export async function init() {
     if (S.currentLayer === "floor") buildFloorPalette(q, "floor");
     else if (S.currentLayer === "background") buildFloorPalette(q, "background");
     else buildPalette(catalog, q);
+  });
+
+  document.getElementById("decor-size-filter")?.addEventListener("change", (e) => {
+    const v = (e.target as HTMLSelectElement).value;
+    S.decorSizeFilter = v as typeof S.decorSizeFilter;
+    if (S.currentLayer === "decor") {
+      buildPalette(catalog, (document.getElementById("palette-search") as HTMLInputElement).value);
+    }
   });
 
   document.getElementById("btn-reload")!.addEventListener("click", () => {

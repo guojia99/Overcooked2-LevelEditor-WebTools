@@ -6,16 +6,21 @@ using UnityEngine;
 
 /// <summary>
 /// One-shot batch tool: measures the real XZ footprint of every art decor
-/// prefab (common01/common02 prefabs/art/**) and writes the result to
-/// layout-editor/scripts/data/measured-footprints.json, which
-/// build-catalog.mjs merges into catalog.json so the web palette shows decor
-/// at its true size (e.g. roads 1x2) instead of the 1x1 fallback.
-/// Re-run this menu after art prefabs change, then rebuild the catalog.
+/// prefab (common01/common02/prefabs/art/** and common03/prefabs/**/art/**) and
+/// writes the result to layout-editor/scripts/data/measured-footprints.json,
+/// which build-catalog.mjs merges into catalog.json so the web palette shows
+/// decor at its true size (e.g. roads 1x2) instead of the 1x1 fallback.
+/// Re-run this menu after art prefabs change (incl. common03 decor), then
+/// rebuild the catalog.
 /// </summary>
 public static class LayoutEditorFootprintDump
 {
     private const string OutputPath = "layout-editor/scripts/data/measured-footprints.json";
-    private static readonly string[] ArtRoots = { "Assets/common01/prefabs/art", "Assets/common02/prefabs/art" };
+    private static readonly string[] ArtRoots = {
+        "Assets/common01/prefabs/art",
+        "Assets/common02/prefabs/art",
+        "Assets/common03/prefabs",
+    };
 
     [Serializable]
     private class Entry
@@ -46,6 +51,10 @@ public static class LayoutEditorFootprintDump
             foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { root }))
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                // common03 root 覆盖全部分类，只测装饰物（占位 prefab 走 PseudoPrefab
+                // 家族 ResetChild 从 bundle 生成真实网格后测量，与 common01/02 一致）。
+                if (!assetPath.Contains("/art/"))
+                    continue;
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
                 if (prefab == null)
                     continue;

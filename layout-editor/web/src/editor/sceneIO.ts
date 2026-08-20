@@ -366,11 +366,27 @@ export async function syncLayoutFromScene(otherPath: string): Promise<void> {
   }
 }
 
+let bridgeWatchSuspended = false;
+
+/** 暂停桥接健康探测。导出关卡集（Build AssetBundles）会阻塞 Unity 主线程泵数分钟，
+ *  期间 /api/health 得不到响应，探测会误报“后台服务已停止”；长任务前挂起、结束后恢复。 */
+export function suspendBridgeWatch(): void {
+  bridgeWatchSuspended = true;
+}
+
+export function resumeBridgeWatch(): void {
+  bridgeWatchSuspended = false;
+  S.bridgeWasUp = true;
+  S.bridgeFailCount = 0;
+  S.bridgeStopAlerted = false;
+}
+
 export function startBridgeWatch() {
   S.bridgeWasUp = true;
   S.bridgeStopAlerted = false;
   S.bridgeFailCount = 0;
   window.setInterval(async () => {
+    if (bridgeWatchSuspended) return;
     const up = await fetchHealth();
     if (up) {
       S.bridgeFailCount = 0;

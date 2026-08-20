@@ -105,6 +105,17 @@ public static class LayoutEditorLevelInfoSanitizer
             }
         }
 
+        // inLevelAmbiences 里的死枚举值（WashingUp/Sizzling 等 6 个无任何
+        // AudioDirectoryData 条目）会让运行时 AudioManager.FindEntry 对空列表
+        // 取下标越界，同样属于必须迁移的坏数据。
+        var removedAmb = LayoutEditorLevelAdminApi.StripInvalidAmbiences(info);
+        if (removedAmb != null)
+        {
+            Debug.LogWarning("[LayoutEditor] removed invalid ambiences (no audio resource) from "
+                + AssetDatabase.GetAssetPath(info) + ": " + string.Join(", ", removedAmb.ToArray()));
+            changed = true;
+        }
+
         if (!changed)
             return false;
 

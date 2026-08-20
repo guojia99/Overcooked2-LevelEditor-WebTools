@@ -1,6 +1,8 @@
 {
   "_comment": "Top-precedence icon overrides for ingredients, recipes, AND catalog (core items). Keys are ids (asset/prefab filename without extension). Value is a sprite name (must exist in the game bundles) or null to force-skip. Use this for: custom items you add, correcting a wrong curated match, or suppressing an icon. Takes precedence over ingredient-icons.json / recipe-icons.json / catalog-icons.json / auto <base>_Icon lookup. Example: { \"ingredients\": {\"MyCustomIngredientSO\": \"Tomato_Icon\"}, \"recipes\": {\"Cake_Honey_SO\": \"ui_CakePlain_01\"}, \"catalog\": {\"Barbeque\": \"Campfire\"} }",
-  "ingredients": {},
+  "ingredients": {
+    "vanilla": "dlc11_vanilla_icon"
+  },
   "recipes": {},
   "catalog": {}
 }

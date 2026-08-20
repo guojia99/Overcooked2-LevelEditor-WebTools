@@ -177,10 +177,15 @@ const ART_THEME_ZH = {
   dlc09_wonderland: "仙境 DLC",
   dlc02_beach: "海滩 DLC",
   dlc05_camping: "露营 DLC",
-  dlc04: "火锅 DLC",
-  dlc10: "火锅 DLC2",
+  dlc04: "新年 · 火锅 DLC",
+  dlc10: "新年 · 火锅 DLC2",
   dlc11_summer: "夏季饮料 DLC",
-  dlc13: "巧克力 DLC",
+  dlc13: "中秋 · 巧克力 DLC",
+  dlc09_camping: "露营（dlc09 换皮）",
+  dlc09_circus: "马戏团（dlc09 换皮）",
+  dlc09_battlements: "堡垒（dlc09 换皮）",
+  floors: "主题地板",
+  legacy: "经典 OC1",
 };
 
 /** Utensil stack rules (使用手册 §3.3, extended with DLC stations). */
@@ -528,7 +533,7 @@ function estimateCommon03RecipeScore(id, step, ingredients) {
   const lower = String(id || "").toLowerCase();
   let bonus;
   if (/(pancake|donut)/.test(lower)) bonus = 40;
-  else if (/(cake|pie|moonpie|pudding)/.test(lower)) bonus = 60;
+  else if (/(cake|pie|moonpie|pudding)/.test(lower)) bonus = 40;
   else if (step === "Mixer" || step === "MixingBowl" || step === "OvenCakeTin") bonus = 60;
   else if (["Pot", "OvenTray", "Steamer", "DeepFatFryer", "RoastingTray", "HotPot", "KebabSkewer", "ToastingFork", "GriddlePan", "Blender"].includes(step)) bonus = 20;
   else bonus = 0;
@@ -1559,6 +1564,26 @@ const THEME_NAMES_ZH = {
   Beach01: "海滩 1",
   Beach02: "海滩 2",
   BeachGlass: "海滩·玻璃",
+  // common03 新增外观主题（import-dlc-content COUNTER_APPEARANCES）
+  Pink: "粉色",
+  Swamp: "沼泽",
+  Medieval1: "部落 1",
+  Medieval2: "部落 2",
+  Medieval3: "部落 3",
+  Medieval4: "部落 4",
+  Float: "漂流",
+  Wood13: "木纹·中秋",
+  // 工作台外观主题（STATION_APPEARANCES）
+  Black: "黑色",
+  DarkWood: "暗木",
+  OldWood: "旧木",
+  Medieval: "部落",
+  Circus: "马戏团",
+  Winter: "冬季",
+  Circus1: "马戏团 1",
+  Circus2: "马戏团 2",
+  Circus3: "马戏团 3",
+  Circus4: "马戏团 4",
 };
 
 const COUNTER_TYPE_NAMES_ZH = {
@@ -1582,6 +1607,15 @@ function scanCounterAppearances(dictionary, idToRow) {
     "Assets/common01/pseudo_prefab_so/counters",
     "Assets/common02/pseudo_prefab_so/counters",
   ];
+  // common03 各 dlc 目录下的外观皮肤（core/dlc02/…/dlc13 自动发现；其它目录的
+  // workstation_* SO 无 Counter 族前缀，不会被误收）
+  const c03SoRoot = path.join(repoRoot, "Assets/common03/pseudo_prefab_so");
+  if (fs.existsSync(c03SoRoot)) {
+    for (const name of fs.readdirSync(c03SoRoot)) {
+      const counters = `Assets/common03/pseudo_prefab_so/${name}/counters`;
+      if (fs.existsSync(path.join(repoRoot, counters))) roots.push(counters);
+    }
+  }
   const byType = {};
   const seen = new Set();
 
@@ -1732,7 +1766,9 @@ function writeCatalogFile(fileName, payload) {
   fs.writeFileSync(outPath, JSON.stringify(payload, null, 2), "utf8");
   console.log(`Wrote ${payload.itemCount ?? "?"} entries to ${outPath}`);
   if (fs.existsSync(DIST_DIR)) {
-    fs.copyFileSync(outPath, path.join(DIST_DIR, fileName));
+    const dest = path.join(DIST_DIR, fileName);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(outPath, dest);
     console.log(`Synced ${fileName} to ${DIST_DIR}`);
   }
 }
@@ -1832,14 +1868,27 @@ function main() {
 
   const paletteGroups = buildPaletteGroups(byCategory);
 
+  // catalog.json 切分：小索引 + 分块 items（前端并行加载后合并，行为不变）。
+  // byCategory 不再静态输出 —— 由前端按 category/theme 规则在加载时重建，
+  // 消除与 items 的 2x 冗余，文件变小且 git diff 按块隔离。
   stampIcons(items, "catalog");
+  const ITEM_CHUNK_SIZE = 200;
+  const chunks = [];
+  for (let i = 0; i < items.length; i += ITEM_CHUNK_SIZE) chunks.push(items.slice(i, i + ITEM_CHUNK_SIZE));
+  chunks.forEach((chunk, i) => {
+    writeCatalogFile(`catalog/items.${i}.json`, {
+      schemaVersion: SCHEMA_VERSION,
+      index: i,
+      itemCount: chunk.length,
+      items: chunk,
+    });
+  });
   writeCatalogFile("catalog.json", {
     generatedAt: new Date().toISOString(),
     schemaVersion: SCHEMA_VERSION,
     gridCellSize: 1.2,
     itemCount: items.length,
-    items,
-    byCategory,
+    itemChunks: chunks.map((_, i) => `catalog/items.${i}.json`),
     paletteGroups,
   });
 
@@ -1863,11 +1912,27 @@ function main() {
 
   const { list: recipes, skipped } = scanRecipes(dictionary, idToRow, guidIndex, knowledge);
   stampIcons(recipes, "recipes");
+  // recipes.json 切分：小索引 + 按 group（core/custom/dlcXX）分组文件。
+  const recipesByGroup = {};
+  for (const r of recipes) (recipesByGroup[r.group || "core"] ??= []).push(r);
+  const recipeGroups = Object.keys(recipesByGroup).sort();
+  const recipeGroupFiles = {};
+  for (const g of recipeGroups) {
+    const list = recipesByGroup[g];
+    recipeGroupFiles[g] = `recipes/${g}.json`;
+    writeCatalogFile(recipeGroupFiles[g], {
+      schemaVersion: SCHEMA_VERSION,
+      group: g,
+      itemCount: list.length,
+      recipes: list,
+    });
+  }
   writeCatalogFile("recipes.json", {
     generatedAt: new Date().toISOString(),
     schemaVersion: SCHEMA_VERSION,
     itemCount: recipes.length,
-    recipes,
+    groups: recipeGroups,
+    groupFiles: recipeGroupFiles,
   });
   if (skipped.length > 0) console.log(`Skipped ${skipped.length} recipes:\n  ${skipped.join("\n  ")}`);
 

@@ -201,6 +201,12 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
   dlc09_utensil_ingredient_spray: { cellsX: 0.9, cellsZ: 0.9 },
 };
 
+/** 中心 pivot 道具（pivot 在多格footprint正中，工作位在根 ±半格）：根必须落在
+ *  半格奇偶位（0.6 mod 1.2）长轴上，两个工作位才对齐格子中心。断头台 2×1 的
+ *  counter 在 ±0.53，被宿主 EditorGridSnap 拉回整格即错位（左格拿不到）——
+ *  后端 LayoutEditorGridSnapGuard 已解除其 X/Z 约束，前端磁吸同步固定奇偶位。 */
+export const CENTER_PIVOT_PREFAB_IDS = new Set(["workstation_guillotine_01"]);
+
 /** 全部编辑器可变状态（单例）。模块间共享，禁止顶层访问 DOM 的状态也在此。 */
 export const S = {
   freeSnapStep: 0.01,
@@ -230,6 +236,8 @@ export const S = {
   selectedFloorKey: null as string | null,
   selectedFloorKeys: new Set<string>(),
   currentLayer: "items" as LayerKey,
+  /** 装饰层尺寸筛选：all / small / medium / large / xl（按 footprint 判定）。 */
+  decorSizeFilter: "all" as "all" | "small" | "medium" | "large" | "xl",
   /** Per-layer canvas visibility of each content category. */
   layerVisibility: makeLayerVisibility(),
   scenePath: "",

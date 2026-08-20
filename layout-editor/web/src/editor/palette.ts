@@ -15,6 +15,25 @@ export function paletteCardCategory(category: string): string {
   return top || "other";
 }
 
+/** 装饰物尺寸分级：按 footprint 最大边（格）判定。 */
+export type DecorSizeFilter = "all" | "small" | "medium" | "large" | "xl";
+
+export const DECOR_SIZE_LABEL_ZH: Record<Exclude<DecorSizeFilter, "all">, string> = {
+  small: "小",
+  medium: "中",
+  large: "大",
+  xl: "特大",
+};
+
+export function decorSizeTier(it: { footprint?: { cellsX?: number; cellsZ?: number } }): Exclude<DecorSizeFilter, "all"> {
+  const f = it.footprint;
+  const max = Math.max(f?.cellsX ?? 1, f?.cellsZ ?? 1);
+  if (max <= 1) return "small";
+  if (max <= 2) return "medium";
+  if (max <= 3) return "large";
+  return "xl";
+}
+
 /** 卡片副标题：英文名与 prefab id 相同（归一化后）时只显示 id，避免重复。 */
 function cardSubId(it: { nameEn?: string; id: string }): string {
   const en = it.nameEn ?? "";
@@ -36,6 +55,8 @@ export function applyPaletteGridCols(): void {
 export function buildPalette(catalog: Catalog, filter: string) {
   dom.paletteCats.innerHTML = "";
   const q = filter.trim().toLowerCase();
+  const sizeFilter: DecorSizeFilter =
+    S.currentLayer === "decor" ? (S.decorSizeFilter ?? "all") : "all";
 
   const groups =
     catalog.paletteGroups ??
@@ -78,6 +99,7 @@ export function buildPalette(catalog: Catalog, filter: string) {
       // background layer.
       if (isAmbientBackgroundCat(it)) return false;
       if (isWaterBackgroundCat(it)) return false;
+      if (sizeFilter !== "all" && decorSizeTier(it) !== sizeFilter) return false;
       if (!q) return true;
       return (
         it.id.toLowerCase().includes(q) ||
@@ -117,10 +139,14 @@ export function buildPalette(catalog: Catalog, filter: string) {
       row.draggable = true;
       row.dataset.guid = it.guid;
       const npcAnim = isNpcAnimItem(it.id, it.nameZh);
+      const decorSize =
+        it.layoutTier === "decor"
+          ? ` <span class="decor-size-badge" title="尺寸分级：按实测占位（footprint）最大边判定">${DECOR_SIZE_LABEL_ZH[decorSizeTier(it)]}</span>`
+          : "";
       const sub = it.stack
         ? `<div class="sub">配套${hostRuleLabelZh(it.stack.hostRule)} · 高 ${it.stack.y}m</div>`
         : it.layoutTier === "decor"
-          ? `<div class="sub">装饰${npcAnim ? " · 🎞 自带移动动画" : ""}</div>`
+          ? `<div class="sub">装饰${decorSize}${npcAnim ? " · 🎞 自带移动动画" : ""}</div>`
           : "";
       const skins = skinCounts.get(it.id) ?? 1;
       const skinBadge =

@@ -25,9 +25,13 @@ const repoRoot = path.resolve(__dirname, "../..");
 const MANIFEST = path.join(repoRoot, "dump_bundle", "manifest.json");
 const OUT_ROOT = path.join(repoRoot, "Assets/common03");
 const ING_JSON = path.join(repoRoot, "layout-editor/web/public/ingredients.json");
+/** DLC 装饰物清单（gen-decor-entries.py 生成）：id + 真实容器 + 主题 + dlc。 */
+const DECOR_ENTRIES_PATH = path.join(repoRoot, "layout-editor/scripts/data/decor-entries.json");
 
 const DRY = process.argv.includes("--dry");
 const PROPS_ONLY = process.argv.includes("--props-only");
+const DECOR_ONLY = process.argv.includes("--decor-only");
+const REPAIR_DECOR = process.argv.includes("--repair-decor");
 
 // ---------------------------------------------------------------------------
 // Script guids (same as common assets)
@@ -146,15 +150,17 @@ MonoBehaviour:
 `;
 }
 
-/** Placeholder prefab for placeable props (mirrors Assets/common02 Blender/Airbed templates). */
-function propPrefab(id, pseudoGuid, isDecor) {
-  const stubScript = isDecor ? GUID.PseudoPrefabMeshWithMaterialStub : GUID.PseudoPrefabStub;
-  const secondScript = isDecor ? GUID.PseudoPrefabMeshWithMaterial : GUID.PseudoPrefab;
+/** Placeholder prefab for placeable props (mirrors Assets/common02 Blender/Airbed templates).
+ *  装饰物也统一用普通 PseudoPrefabStub + PseudoPrefab：宿主 PseudoPrefab.Setup() 为空操作，
+ *  不会因 materialSO 为 null 抛空引用（MeshWithMaterial 变体的 Setup() 会
+ *  LoadAsset<Material>(materialSO)，materialSO 为空 → NullReferenceException）。 */
+function propPrefab(id, pseudoGuid) {
+  const stubScript = GUID.PseudoPrefabStub;
+  const secondScript = GUID.PseudoPrefab;
   const go = 1554132891853676;
   const tr = 4341917854781290;
   const c1 = 114096038827637246;
   const c2 = 114967938430519454;
-  const field = isDecor ? "  materialSO: {fileID: 0}\n" : "";
   return `%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!1001 &100100000
@@ -210,7 +216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pseudoPrefabSO: {fileID: 11400000, guid: ${pseudoGuid}, type: 2}
-${field}--- !u!114 &${c2}
+--- !u!114 &${c2}
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -558,12 +564,140 @@ function emitProps() {
     write(pseudoFile, pseudoPrefabAsset(id, id, found.bundle, assetPath));
     write(pseudoFile + ".meta", metaYaml(pseudoGuid));
 
-    write(prefabFile, propPrefab(id, pseudoGuid, isDecor));
+    write(prefabFile, propPrefab(id, pseudoGuid));
     write(prefabFile + ".meta", metaYaml(guid("prefab", id)));
     console.log(`  + ${id} -> ${found.bundle} ${assetPath}`);
     count++;
   }
   console.log(`道具生成: ${count}`);
+}
+
+// ---------------------------------------------------------------------------
+// Repair decor prefabs (Material-with-material → plain PseudoPrefab)
+// ---------------------------------------------------------------------------
+/**
+ * 把 common03 已有装饰占位 prefab（prefabs 下 art 目录全部）重写为普通
+ * PseudoPrefabStub + PseudoPrefab（不再用 PseudoPrefabMeshWithMaterial）。
+ * 原因：MeshWithMaterial.Setup() 会 LoadAsset(Material)(materialSO)，而占位
+ * materialSO 为 null → 放置时 NullReferenceException（宿主无法修改，插件侧防御）。
+ * 重写保留每个文件内嵌的 pseudoPrefabSO guid 与 .meta（guid 不变，引用不失效）。
+ */
+function repairDecorPrefabs() {
+  const prefabRoot = path.join(OUT_ROOT, "prefabs");
+  const guids = [];
+  const walk = (dir) => {
+    for (const n of fs.readdirSync(dir)) {
+      const p = path.join(dir, n);
+      if (fs.statSync(p).isDirectory()) walk(p);
+      else if (n.endsWith(".prefab") && p.includes(`${path.sep}art${path.sep}`)) guids.push(p);
+    }
+  };
+  if (fs.existsSync(prefabRoot)) walk(prefabRoot);
+
+  let count = 0;
+  for (const file of guids) {
+    const txt = fs.readFileSync(file, "utf8");
+    const m = txt.match(/pseudoPrefabSO:\s*\{fileID:\s*\d+,\s*guid:\s*([a-f0-9]+),/);
+    if (!m) {
+      console.warn(`  !! 无 pseudoPrefabSO 引用，跳过: ${file}`);
+      continue;
+    }
+    const pseudoGuid = m[1];
+    const id = path.basename(file, ".prefab");
+    write(file, propPrefab(id, pseudoGuid));
+    count++;
+  }
+  console.log(`装饰 prefab 修复: ${count}`);
+}
+
+// ---------------------------------------------------------------------------
+// Emit counter appearance SOs (skin-only: SO + .meta, no placeholder prefab)
+// ---------------------------------------------------------------------------
+/**
+ * 台面外观皮肤（普通桌台/转角桌台/切菜台 三类型 × 各 DLC 主题）。
+ * 外观 = 换 pseudoPrefabSO 指向的整只 prefab；SO 命名必须遵循
+ * build-catalog.mjs scanCounterAppearances 的类型前缀约定
+ * （CounterCorner 前缀按「长前缀优先」先于 Counter 匹配）。
+ * 只生成 SO + 确定性 .meta（guid=pseudo:id），无占位 prefab ——
+ * 前端外观下拉按 guid 直接换 SO，游戏按 assetPath 实例化真实 prefab，
+ * 各类型族的玩法组件（Workstation/菜板/菜刀 等）随 prefab 保留。
+ */
+const COUNTER_APPEARANCES = [
+  // ---- Pink 粉色（本体 bundle47）----
+  ["CounterPinkSO", "countertop_01_standard_pink", "bundle47", "core", "Assets/prefabs/shared_kitchen/countertop_01_standard_pink.prefab"],
+  ["CounterCornerPinkSO", "countertop_01_standard_pink_corner", "bundle47", "core", "Assets/prefabs/shared_kitchen/countertop_01_standard_pink_corner.prefab"],
+  ["ChoppingCounterPinkSO", "countertop_01_chopping_board_pink", "bundle47", "core", "Assets/prefabs/shared_kitchen/countertop_01_chopping_board_pink.prefab"],
+  // ---- Swamp 沼泽（本体 bundle47，注意 corner 词序 standard_corner_swamp）----
+  ["CounterSwampSO", "countertop_01_standard_swamp", "bundle47", "core", "Assets/prefabs/themes/swamp/countertop_01_standard_swamp.prefab"],
+  ["CounterCornerSwampSO", "countertop_01_standard_corner_swamp", "bundle47", "core", "Assets/prefabs/themes/swamp/countertop_01_standard_corner_swamp.prefab"],
+  ["ChoppingCounterSwampSO", "countertop_01_chopping_board_swamp", "bundle47", "core", "Assets/prefabs/themes/swamp/countertop_01_chopping_board_swamp.prefab"],
+  // ---- Medieval1-4 部落四档（dlc07 bundle297）----
+  ["CounterMedieval1SO", "countertop_01_standard_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_01_standard_medieval.prefab"],
+  ["CounterCornerMedieval1SO", "countertop_01_standard_medieval_corner", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_01_standard_medieval_corner.prefab"],
+  ["ChoppingCounterMedieval1SO", "countertop_01_chopping_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_01_chopping_medieval.prefab"],
+  ["CounterMedieval2SO", "countertop_02_standard_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_02_standard_medieval.prefab"],
+  ["CounterCornerMedieval2SO", "countertop_02_standard_medieval_corner", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_02_standard_medieval_corner.prefab"],
+  ["ChoppingCounterMedieval2SO", "countertop_02_chopping_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_02_chopping_medieval.prefab"],
+  ["CounterMedieval3SO", "countertop_03_standard_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_03_standard_medieval.prefab"],
+  ["CounterCornerMedieval3SO", "countertop_03_standard_medieval_corner", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_03_standard_medieval_corner.prefab"],
+  ["ChoppingCounterMedieval3SO", "countertop_03_chopping_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_03_chopping_medieval.prefab"],
+  ["CounterMedieval4SO", "countertop_04_standard_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_04_standard_medieval.prefab"],
+  ["CounterCornerMedieval4SO", "countertop_04_standard_medieval_corner", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_04_standard_medieval_corner.prefab"],
+  ["ChoppingCounterMedieval4SO", "countertop_04_chopping_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/countertop_04_chopping_medieval.prefab"],
+  // ---- Float 漂流（dlc11 bundle428）----
+  ["CounterFloatSO", "dlc11_countertop_01_standard_float", "bundle428", "dlc11", "Assets/downloadablecontent/dlc11/dlc_assets/prefabs/sharedkitchen/dlc11_countertop_01_standard_float.prefab"],
+  ["CounterCornerFloatSO", "dlc11_countertop_01_standard_float_corner", "bundle428", "dlc11", "Assets/downloadablecontent/dlc11/dlc_assets/prefabs/sharedkitchen/dlc11_countertop_01_standard_float_corner.prefab"],
+  ["ChoppingCounterFloatSO", "dlc11_countertop_01_chopping_float", "bundle428", "dlc11", "Assets/downloadablecontent/dlc11/dlc_assets/prefabs/sharedkitchen/dlc11_countertop_01_chopping_float.prefab"],
+  // ---- Wood13 木纹·中秋（dlc13 bundle449）----
+  ["CounterWood13SO", "dlc13_countertop_01_standard_wood", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_countertop_01_standard_wood.prefab"],
+  ["CounterCornerWood13SO", "dlc13_countertop_01_standard_wood_corner", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_countertop_01_standard_wood_corner.prefab"],
+  ["ChoppingCounterWood13SO", "dlc13_countertop_01_chopping_board_wood_no_edge", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_countertop_01_chopping_board_wood_no_edge.prefab"],
+];
+
+/** 工作台外观皮肤（水槽/烤箱/灶台/搅拌台/垃圾桶/脏盘台）。
+ *  同 COUNTER_APPEARANCES 机制：SO 前缀必须匹配 scanCounterAppearances 的
+ *  类型键（Sink/Oven/Cooker/Mixer/Bin/PlateReturn），换肤=换整只 prefab，
+ *  各族玩法组件随 prefab 保留。仅收「同行为换肤」的变体——
+ *  专用槽（洗马克杯/玻璃杯/餐盘/托盘的水槽）是独立玩法件，不做皮肤；
+ *  common01/02 已有的主题（Dark/Old/Space/Beach/BeachGlass/Camping1/Camping2）不重复生成。 */
+const STATION_APPEARANCES = [
+  // ---- Sink 水槽（默认 SinkSO=wood；已有 Dark/Old/Space/Beach/BeachGlass/Camping1/Camping2）----
+  ["SinkBlackSO", "workstation_sink_01_black", "bundle47", "core", "Assets/prefabs/shared_kitchen/workstation_sink_01_black.prefab"],
+  ["SinkMedieval1SO", "workstation_sink_medieval_01", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/workstation_sink_medieval_01.prefab"],
+  ["SinkMedieval2SO", "workstation_sink_medieval_02", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/workstation_sink_medieval_02.prefab"],
+  ["SinkMedieval3SO", "workstation_sink_medieval_03", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/workstation_sink_medieval_03.prefab"],
+  ["SinkMedieval4SO", "workstation_sink_medieval_04", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/workstation_sink_medieval_04.prefab"],
+  ["SinkCircus1SO", "dlc08_workstation_01_sink_circus", "bundle359", "dlc08", "Assets/downloadablecontent/dlc08/dlc_assets/prefabs/shared kitchen/dlc08_workstation_01_sink_circus.prefab"],
+  ["SinkCircus2SO", "dlc08_workstation_02_sink_circus", "bundle359", "dlc08", "Assets/downloadablecontent/dlc08/dlc_assets/prefabs/shared kitchen/dlc08_workstation_02_sink_circus.prefab"],
+  ["SinkCircus3SO", "dlc08_workstation_03_sink_circus", "bundle359", "dlc08", "Assets/downloadablecontent/dlc08/dlc_assets/prefabs/shared kitchen/dlc08_workstation_03_sink_circus.prefab"],
+  ["SinkCircus4SO", "dlc08_workstation_04_sink_circus", "bundle359", "dlc08", "Assets/downloadablecontent/dlc08/dlc_assets/prefabs/shared kitchen/dlc08_workstation_04_sink_circus.prefab"],
+  ["SinkWood13SO", "dlc13_workstation_sink_01_wood", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_workstation_sink_01_wood.prefab"],
+  // ---- Oven 烤箱（默认 OvenSO = Oven）----
+  ["OvenMedievalSO", "oven_medieval", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/oven_medieval.prefab"],
+  ["OvenCircusSO", "dlc08_oven_02", "bundle359", "dlc08", "Assets/downloadablecontent/dlc08/dlc_assets/prefabs/shared kitchen/dlc08_oven_02.prefab"],
+  ["OvenWinterSO", "dlc09_oven", "bundle405", "dlc09", "Assets/downloadablecontent/dlc09/dlc_assets/prefabs/sharedkitchen/dlc09_oven.prefab"],
+  // ---- Cooker 灶台（默认 CookerSO = workstation_cooker_01）----
+  ["CookerWood13SO", "dlc13_workstation_cooker_01", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_workstation_cooker_01.prefab"],
+  // ---- Mixer 搅拌台（已有 默认/Camping1/Camping2/Wizard/Space/Airballoon）----
+  ["MixerMedievalSO", "workstation_mixer_03", "bundle297", "dlc07", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/workstation_mixer_03.prefab"],
+  ["MixerCircusSO", "dlc08_workstation_mixer", "bundle359", "dlc08", "Assets/downloadablecontent/dlc08/dlc_assets/prefabs/shared kitchen/dlc08_workstation_mixer.prefab"],
+  // ---- Bin 垃圾桶（默认 = workstation_bin_01）----
+  ["BinWood13SO", "dlc13_workstation_bin_01", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_workstation_bin_01.prefab"],
+  // ---- PlateReturn 脏盘台（默认 = workstation_plate_return）----
+  ["PlateReturnWood13SO", "dlc13_workstation_plate_return", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_workstation_plate_return.prefab"],
+];
+
+function emitCounterAppearances() {
+  let count = 0;
+  const all = [...COUNTER_APPEARANCES, ...STATION_APPEARANCES];
+  for (const [id, prefabName, bundle, dlcDir, assetPath] of all) {
+    const dir = path.join(OUT_ROOT, "pseudo_prefab_so", dlcDir, "counters");
+    const file = path.join(dir, `${id}.asset`);
+    write(file, pseudoPrefabAsset(id, prefabName, bundle, assetPath));
+    write(file + ".meta", metaYaml(guid("pseudo", id)));
+    count++;
+  }
+  console.log(`台面/工作台外观 SO 生成: ${count}`);
 }
 
 function camelize(s) {
@@ -575,15 +709,61 @@ function camelize(s) {
 }
 
 // ---------------------------------------------------------------------------
+// Emit DLC decor (read from decor-entries.json; strictly additive)
+// ---------------------------------------------------------------------------
+/**
+ * 按 gen-decor-entries.py 生成的清单，把 DLC 装饰物写入
+ *   prefabs/{dlc}/art/{theme}/<id>.prefab + pseudo_prefab_so/{dlc}/art/{theme}/<id>.asset
+ * 已存在的文件跳过（--props-only 只补新增），不影响 emitProps/PROPS/PROPS_2。
+ * id 为清洗后的安全文件名，container 为游戏内真实资产路径（运行时按 assetPath 加载）。
+ */
+function emitDecor() {
+  if (!fs.existsSync(DECOR_ENTRIES_PATH)) {
+    console.warn(`  !! 缺少装饰物清单: ${DECOR_ENTRIES_PATH}（先运行 gen-decor-entries.py）`);
+    return;
+  }
+  const data = JSON.parse(fs.readFileSync(DECOR_ENTRIES_PATH, "utf8"));
+  let count = 0;
+  for (const e of data.entries || []) {
+    const dlcDir = e.dlc === "core" ? "core" : `dlc${e.dlc}`;
+    const prefabFile = path.join(OUT_ROOT, "prefabs", dlcDir, "art", e.theme, `${e.id}.prefab`);
+    if (PROPS_ONLY && fs.existsSync(prefabFile)) continue; // 只补新增
+    const o = containerIndex.get((e.container || "").toLowerCase());
+    if (!o) {
+      console.warn(`  !! 找不到容器: ${e.id} ${e.container}`);
+      continue;
+    }
+    const assetPath = "Assets/" + o.container.replace(/^assets\//, "");
+    const artDir = path.join("art", e.theme);
+    const pseudoDir = path.join(OUT_ROOT, "pseudo_prefab_so", dlcDir, artDir);
+    const pseudoGuid = guid("pseudo", e.id);
+
+    write(path.join(pseudoDir, `${e.id}.asset`), pseudoPrefabAsset(e.id, e.id, o.bundle, assetPath));
+    write(path.join(pseudoDir, `${e.id}.asset.meta`), metaYaml(pseudoGuid));
+    write(prefabFile, propPrefab(e.id, pseudoGuid));
+    write(prefabFile + ".meta", metaYaml(guid("prefab", e.id)));
+    count++;
+  }
+  console.log(`装饰物生成: ${count}`);
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-console.log(`生成源库 → ${path.relative(repoRoot, OUT_ROOT)}${DRY ? "（dry-run）" : ""}${PROPS_ONLY ? "（仅道具）" : ""}`);
-if (PROPS_ONLY) {
+console.log(`生成源库 → ${path.relative(repoRoot, OUT_ROOT)}${DRY ? "（dry-run）" : ""}${REPAIR_DECOR ? "（修复装饰占位）" : DECOR_ONLY ? "（仅装饰物+家具+外观）" : PROPS_ONLY ? "（仅道具+装饰物）" : ""}`);
+if (REPAIR_DECOR) {
+  repairDecorPrefabs();
+} else if (DECOR_ONLY) {
+  emitDecor();
+  emitCounterAppearances();
+} else if (PROPS_ONLY) {
   emitProps();
+  emitDecor();
 } else {
   emitIngredients();
   emitRecipes();
   emitCookingSteps();
   emitProps();
+  emitDecor();
 }
 console.log(`完成，共写出 ${written} 个文件${DRY ? "（未落盘）" : ""}。`);

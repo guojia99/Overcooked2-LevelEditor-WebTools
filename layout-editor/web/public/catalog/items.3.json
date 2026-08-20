@@ -1,0 +1,3207 @@
+{
+  "schemaVersion": 3,
+  "index": 3,
+  "itemCount": 200,
+  "items": [
+    {
+      "id": "noripple_m_dlc3_icecliff_90",
+      "guid": "570f7de4d8097564cb589da5f04551e9",
+      "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/noripple_m_dlc3_icecliff_90.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "冰崖转角 90°",
+      "nameEn": "m dlc3 icecliff 90",
+      "icon": false
+    },
+    {
+      "id": "noripple_m_dlc3_icecliff_straight_01",
+      "guid": "6f93f3d60c0bfc34a8bdb0e7759ae2b0",
+      "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/noripple_m_dlc3_icecliff_straight_01.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "冰崖直边 1",
+      "nameEn": "m dlc3 icecliff straight 1",
+      "icon": false
+    },
+    {
+      "id": "noripple_m_dlc3_icecliff_straight_02",
+      "guid": "48bcf42894d2f59418b79eaa6af83563",
+      "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/noripple_m_dlc3_icecliff_straight_02.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "冰崖直边 2",
+      "nameEn": "m dlc3 icecliff straight 2",
+      "icon": false
+    },
+    {
+      "id": "NPC_Alien_Green_01",
+      "guid": "2a6375c32a53a9345bbab43966f68d14",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Alien_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·外星人（绿）",
+      "nameEn": "NPC Alien Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Alien_Pink_01",
+      "guid": "a1d9aa3bcd0df9b4ca99930e7ddbac95",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Alien_Pink_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·外星人（粉）",
+      "nameEn": "NPC Alien Pink 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Blue_01",
+      "guid": "89c693e0d16578642bb8a9908eb3649f",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（蓝）",
+      "nameEn": "NPC Asian Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Brown_01",
+      "guid": "39ae10b1d8936084eaedcc9369ebab6c",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（棕）",
+      "nameEn": "NPC Asian Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Civ_01",
+      "guid": "c117eadf3033cc646896cc374061e3d6",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（便装）",
+      "nameEn": "NPC Asian Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Construction_01",
+      "guid": "824aaf88e1dbb244e83827fab8839b43",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Construction_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（施工）",
+      "nameEn": "NPC Asian Construction 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Green_01",
+      "guid": "e09b087817394b44cad01a661bb7115f",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（绿）",
+      "nameEn": "NPC Asian Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_HardHat_01",
+      "guid": "6dbc263f8df6994469dc0be281f5815a",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（安全帽）",
+      "nameEn": "NPC Asian Hard Hat 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Hawaiian_01",
+      "guid": "a89b75bc1cb885040b087960660666f3",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Asian_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（夏威夷）",
+      "nameEn": "NPC Asian Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Orange_01",
+      "guid": "3d67bc4cccd773f40bf88cda3604f2aa",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（橙）",
+      "nameEn": "NPC Asian Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Waiter_01",
+      "guid": "2bf53d6647a60464bb4f33df56650fc4",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Waiter_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（服务生）",
+      "nameEn": "NPC Asian Waiter 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Wizard_01",
+      "guid": "33accc15a912f8748a684374c1a2ddf1",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（巫师）",
+      "nameEn": "NPC Asian Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Asian_Yellow_01",
+      "guid": "8fa24eaea3135e141a99dc1d86259657",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Asian_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·亚裔（黄）",
+      "nameEn": "NPC Asian Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Blue_01",
+      "guid": "d47e237d1cf36154499a48a0d3494f06",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Beard_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（蓝）",
+      "nameEn": "NPC Beard Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Brown_01",
+      "guid": "25313be9898b29c4a88fff696b43c413",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Beard_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（棕）",
+      "nameEn": "NPC Beard Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Civ_01",
+      "guid": "19d00f21d4425dc439f715c602236b09",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Beard_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（便装）",
+      "nameEn": "NPC Beard Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Green_01",
+      "guid": "2027d7cc5d454f2469a32f318e5059f0",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Beard_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（绿）",
+      "nameEn": "NPC Beard Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Hawaiian_01",
+      "guid": "36919808942981c4aa569c0e55f8377b",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Beard_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（夏威夷）",
+      "nameEn": "NPC Beard Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Orange_01",
+      "guid": "5a1b8436176b26f4aa510877e60cf95c",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Beard_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（橙）",
+      "nameEn": "NPC Beard Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Waiter_01",
+      "guid": "32580d254c28bfb458162386759428ea",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Beard_Waiter_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（服务生）",
+      "nameEn": "NPC Beard Waiter 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Wizard_01",
+      "guid": "dddffade99435c24f9e2375fe4d7dd16",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Beard_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（巫师）",
+      "nameEn": "NPC Beard Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Beard_Yellow_01",
+      "guid": "8b7e5aa30c2f803428b2f0173bec78f6",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Beard_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·大胡子（黄）",
+      "nameEn": "NPC Beard Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "npc_buck",
+      "guid": "97cb361712fad00ff0acf400a380b424",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_buck.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巴克",
+      "nameEn": "npc buck",
+      "icon": false
+    },
+    {
+      "id": "npc_business",
+      "guid": "90b3c7586e53116cb5f83ab0dfb4ef7d",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_business.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·商务男",
+      "nameEn": "npc business",
+      "icon": false
+    },
+    {
+      "id": "npc_constructionworker_01",
+      "guid": "a5bc66b7d9c7963a7723db012bbb1c52",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_constructionworker_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·建筑工 1",
+      "nameEn": "npc constructionworker 1",
+      "icon": false
+    },
+    {
+      "id": "npc_diners_01",
+      "guid": "0e71d7f20419ff03202d6a0a60e9f827",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_diners_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·食客 1",
+      "nameEn": "npc diners 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DLC_04",
+      "guid": "4a05b0dcf5ca00341bf9a1933ef3aa63",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_DLC_04.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC 顾客 04",
+      "nameEn": "NPC DLC 4",
+      "icon": false
+    },
+    {
+      "id": "NPC_DLC_05",
+      "guid": "7597ccd4847110149bdd9b845cf8dc44",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_DLC_05.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC 顾客 05",
+      "nameEn": "NPC DLC 5",
+      "icon": false
+    },
+    {
+      "id": "NPC_DLC_06",
+      "guid": "dab25f253c8f107408d0e856aea9f20f",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_DLC_06.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC 顾客 06",
+      "nameEn": "NPC DLC 6",
+      "icon": false
+    },
+    {
+      "id": "NPC_Dora_Blue_01",
+      "guid": "059e9dc975e897741a78af045f5b0739",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Dora_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·朵拉（蓝）",
+      "nameEn": "NPC Dora Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Dora_Brown_01",
+      "guid": "730a39db77242e04eb9c3ade53d37cec",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Dora_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·朵拉（棕）",
+      "nameEn": "NPC Dora Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Dora_Civ_01",
+      "guid": "09d9d1e938ab93e4580d1736cc19f04c",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Dora_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·朵拉（便装）",
+      "nameEn": "NPC Dora Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Dora_Green_01",
+      "guid": "f394510cc0688914397610aeb9d3814c",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Dora_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·朵拉（绿）",
+      "nameEn": "NPC Dora Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Dora_Hawaiian_01",
+      "guid": "ae467102d8a9f874cbf258ad90651eba",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Dora_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·朵拉（夏威夷）",
+      "nameEn": "NPC Dora Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Dora_Orange_01",
+      "guid": "4061b50f29e65e5459ae2485e5871a5e",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Dora_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·朵拉（橙）",
+      "nameEn": "NPC Dora Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Dora_Wizard_01",
+      "guid": "13dc27d366f90d54894bbf999ec084a2",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Dora_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·朵拉（巫师）",
+      "nameEn": "NPC Dora Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Dora_Yellow_01",
+      "guid": "5dacc12f9a416ce42a17ff8274f66758",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Dora_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·朵拉（黄）",
+      "nameEn": "NPC Dora Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Blue_01",
+      "guid": "2408c71a6e9b2da4e9e9cf140f88b1b3",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_DoraBlonde_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（蓝）",
+      "nameEn": "NPC Dora Blonde Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Brown_01",
+      "guid": "4d0783e94d34e844bb30082fe0964368",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_DoraBlonde_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（棕）",
+      "nameEn": "NPC Dora Blonde Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Civ_01",
+      "guid": "60fc1f6cafe280e46b1ee1ce95f1590e",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_DoraBlonde_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（便装）",
+      "nameEn": "NPC Dora Blonde Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Green_01",
+      "guid": "5420ffafecb51b04cb71f1fe08d8a1d4",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_DoraBlonde_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（绿）",
+      "nameEn": "NPC Dora Blonde Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Hawaiian_01",
+      "guid": "9af2fb0ea3492d941855fd1cc5ecd574",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_DoraBlonde_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（夏威夷）",
+      "nameEn": "NPC Dora Blonde Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Orange_01",
+      "guid": "395aaf5bb25e05a478da332821768353",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_DoraBlonde_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（橙）",
+      "nameEn": "NPC Dora Blonde Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Waiter_01",
+      "guid": "6d0eb3bb56ec8cf41943d212ef9fbf72",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_DoraBlonde_Waiter_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（服务生）",
+      "nameEn": "NPC Dora Blonde Waiter 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Wizard_01",
+      "guid": "b76c85b8111c4054d8df17de5b7b7a7a",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_DoraBlonde_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（巫师）",
+      "nameEn": "NPC Dora Blonde Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_DoraBlonde_Yellow_01",
+      "guid": "282a8cd9b55be0746bfaa7ab54a10dc5",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_DoraBlonde_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·金发朵拉（黄）",
+      "nameEn": "NPC Dora Blonde Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "npc_eskimo",
+      "guid": "69de55db58333bae20843c07153c05ef",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_eskimo.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·爱斯基摩人",
+      "nameEn": "npc eskimo",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_Blue_01",
+      "guid": "814fc3b8f62a68e4a8d152e1dd1beb19",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Ginger_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（蓝）",
+      "nameEn": "NPC Ginger Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_Brown_01",
+      "guid": "94f5b160478c76a469fd70323953f176",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Ginger_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（棕）",
+      "nameEn": "NPC Ginger Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_Civ_01",
+      "guid": "582d5ab7a1027ea49a3c6dda9dcd451d",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Ginger_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（便装）",
+      "nameEn": "NPC Ginger Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_Construction_01",
+      "guid": "d02cfb8875e4e984cb5529b891152e39",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Ginger_Construction_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（施工）",
+      "nameEn": "NPC Ginger Construction 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_Green_01",
+      "guid": "f884619c59d2c2d488a625765cb82c6a",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Ginger_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（绿）",
+      "nameEn": "NPC Ginger Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_HardHat_01",
+      "guid": "85af5f13811332f44a853128dce17fcc",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Ginger_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（安全帽）",
+      "nameEn": "NPC Ginger Hard Hat 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_Hawaiian_01",
+      "guid": "a8bb03267e7a2054d881c7a3afd7188d",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Ginger_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（夏威夷）",
+      "nameEn": "NPC Ginger Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_Orange_01",
+      "guid": "0f9dc13a976e5ef4a987c2ded4d5f70a",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Ginger_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（橙）",
+      "nameEn": "NPC Ginger Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Ginger_Yellow_01",
+      "guid": "bfa6b32425b9dc149ae2b348ef5731ac",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Ginger_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·姜发（黄）",
+      "nameEn": "NPC Ginger Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "npc_glasses",
+      "guid": "68f623a54cd950fff48bd6e0b08d68a1",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_glasses.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜男",
+      "nameEn": "npc glasses",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Blue_01",
+      "guid": "eaf97397a83e6894395aecaa8b4c0176",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（蓝）",
+      "nameEn": "NPC Hispanic Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Brown_01",
+      "guid": "1406713287042ae429da69e721792c26",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（棕）",
+      "nameEn": "NPC Hispanic Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Civ_01",
+      "guid": "651d5494d32eb92429e84a38cd58e802",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（便装）",
+      "nameEn": "NPC Hispanic Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Green_01",
+      "guid": "dae707452c1c4244dab1195b1f80f1b3",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（绿）",
+      "nameEn": "NPC Hispanic Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_HardHat_01",
+      "guid": "784f5c49109c6be47a04a514c9d5bbb5",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（安全帽）",
+      "nameEn": "NPC Hispanic Hard Hat 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Hawaiian_01",
+      "guid": "e7b79adb86af35a48b5b9600b6ebb811",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Hispanic_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（夏威夷）",
+      "nameEn": "NPC Hispanic Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Orange_01",
+      "guid": "4903be3f3a3a44e4d84733f8a90fb4c6",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（橙）",
+      "nameEn": "NPC Hispanic Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Waiter_01",
+      "guid": "d334563da3e586746b9776f86ecc305d",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Waiter_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（服务生）",
+      "nameEn": "NPC Hispanic Waiter 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Wizard_01",
+      "guid": "4d21f80949f28bb478976ba4d74bf33f",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（巫师）",
+      "nameEn": "NPC Hispanic Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Yellow_01",
+      "guid": "376e21693145be44595ba0bd91dffd03",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（黄）",
+      "nameEn": "NPC Hispanic Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "npc_lifering",
+      "guid": "977c615530d65510a7717ef61719cf2d",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_lifering.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·救生圈",
+      "nameEn": "npc lifering",
+      "icon": false
+    },
+    {
+      "id": "npc_mel",
+      "guid": "26dfad3753238f131dc6cb6f3d6b528c",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_mel.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·梅尔",
+      "nameEn": "npc mel",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEastern_Construction_01",
+      "guid": "c8eca34248180054cb83612813555963",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEastern_Construction_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（施工）",
+      "nameEn": "NPC Middle Eastern Construction 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEastern_HardHat_01",
+      "guid": "47e75b38c46be214f915f86f75c0a4d0",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEastern_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（安全帽）",
+      "nameEn": "NPC Middle Eastern Hard Hat 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEastern_Waiter_01",
+      "guid": "03cc9a5836749e6458b194db5b33d5b2",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEastern_Waiter_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（服务生）",
+      "nameEn": "NPC Middle Eastern Waiter 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Blue_01",
+      "guid": "5c2d07a64444b9f45a16862e7ac58479",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（蓝）",
+      "nameEn": "NPC Middle Eatern Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Brown_01",
+      "guid": "a699cc9aa15bcf34ba63c34846babae5",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（棕）",
+      "nameEn": "NPC Middle Eatern Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Civ_01",
+      "guid": "3f4c932b995d4b04dba178ecf80edf3d",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（便装）",
+      "nameEn": "NPC Middle Eatern Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Green_01",
+      "guid": "68969b228efbaef42829655a24159bc8",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（绿）",
+      "nameEn": "NPC Middle Eatern Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Hawaiian_01",
+      "guid": "5c4ded2b28c860744b2f6edceb29aa6d",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_MiddleEatern_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（夏威夷）",
+      "nameEn": "NPC Middle Eatern Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Orange_01",
+      "guid": "9c0e65e0f2bf8a3469a83e9cd3f6367c",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（橙）",
+      "nameEn": "NPC Middle Eatern Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Wizard_01",
+      "guid": "b1b635ee710620d40bbfb429589dfb24",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（巫师）",
+      "nameEn": "NPC Middle Eatern Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Yellow_01",
+      "guid": "e16f7e6388db19149a8c9ef2ea08c9e2",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（黄）",
+      "nameEn": "NPC Middle Eatern Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "npc_mike",
+      "guid": "9d08d0eb8624125dc4b1264b91ed2d68",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_mike.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克",
+      "nameEn": "npc mike",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Blue_01",
+      "guid": "bb240d42dbf3f4a4c8567fd9f4c96f44",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（蓝）",
+      "nameEn": "NPC Mike Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Brown_01",
+      "guid": "6bd29aac6cf609f44b42124411beda00",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（棕）",
+      "nameEn": "NPC Mike Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Civ_01",
+      "guid": "89d4cdd4b5ff4a04ab0a45c0c71b0edc",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（便装）",
+      "nameEn": "NPC Mike Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Green_01",
+      "guid": "90ea22972d5a7534db594427180f5ade",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（绿）",
+      "nameEn": "NPC Mike Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_HardHat_01",
+      "guid": "9bcefe62b9e62334193e1f790d33cb2b",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（安全帽）",
+      "nameEn": "NPC Mike Hard Hat 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Hawaiian_01",
+      "guid": "ff50f1b184d68f240973946371927615",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Mike_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（夏威夷）",
+      "nameEn": "NPC Mike Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Orange_01",
+      "guid": "2d0f5b884454beb44ad6642a565d8a28",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（橙）",
+      "nameEn": "NPC Mike Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Wizard_01",
+      "guid": "fdc7b43e250074f4caa3422faaf5d70d",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（巫师）",
+      "nameEn": "NPC Mike Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Yellow_01",
+      "guid": "59560002489486144bdda1aed5f77ebc",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（黄）",
+      "nameEn": "NPC Mike Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Penguin",
+      "guid": "c53944d537b0149468a687e9c10db9b0",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Penguin.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "企鹅顾客",
+      "nameEn": "NPC Penguin",
+      "icon": false
+    },
+    {
+      "id": "npc_penguin_1",
+      "guid": "a94eea6da15bffa9d668d9b3f51c65df",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_penguin_1.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "企鹅",
+      "nameEn": "npc penguin 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Blue_01",
+      "guid": "063cae9de8a1a2c439e66cb96d5bf843",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（蓝）",
+      "nameEn": "NPC Specs Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Brown_01",
+      "guid": "f837f7858f7db844db5aed24b240e50f",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（棕）",
+      "nameEn": "NPC Specs Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Civ_01",
+      "guid": "5b5e1487cd9ce934bb920ee0373bcf3a",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（便装）",
+      "nameEn": "NPC Specs Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Construction_01",
+      "guid": "1325631d60c040e48a658b4edc26a911",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Construction_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（施工）",
+      "nameEn": "NPC Specs Construction 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Green_01",
+      "guid": "124b8e87887f566459803f2bfddfc134",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（绿）",
+      "nameEn": "NPC Specs Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_HardHat_01",
+      "guid": "21b7033c3410ccf488edaf623c75c369",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（安全帽）",
+      "nameEn": "NPC Specs Hard Hat 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Hawaiian_01",
+      "guid": "b4271174916d3654ab358e530a175864",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Specs_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（夏威夷）",
+      "nameEn": "NPC Specs Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Orange_01",
+      "guid": "f1b6f442b8da44c44b4d94c94514a4aa",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（橙）",
+      "nameEn": "NPC Specs Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Waiter_01",
+      "guid": "513100dcddf46e049b0044db12b0838d",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Waiter_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（服务生）",
+      "nameEn": "NPC Specs Waiter 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Wizard_01",
+      "guid": "e6754898a6dae8a43bacba466542ed03",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（巫师）",
+      "nameEn": "NPC Specs Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Yellow_01",
+      "guid": "8b873df2241a60640a9c13e67f305180",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（黄）",
+      "nameEn": "NPC Specs Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "npc_waiter",
+      "guid": "71e1bf67cd7f8b856bb157237aa0ddfc",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_waiter.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·服务员",
+      "nameEn": "npc waiter",
+      "icon": false
+    },
+    {
+      "id": "npc_waiters_01",
+      "guid": "310b3ccba988e14d6a7938d52a65b161",
+      "assetPath": "Assets/common03/prefabs/core/art/npc/npc_waiters_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·服务员 1",
+      "nameEn": "npc waiters 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_Walk_Anticlockwise_47s",
+      "guid": "83cb730f1de2aa247b5fd5ff85da2dbb",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/NPC_Walk_Anticlockwise_47s.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "NPC 逆时针巡逻路径 47 秒",
+      "nameEn": "NPC Walk Anticlockwise 47s",
+      "icon": false
+    },
+    {
+      "id": "NPC_Walk_Anticlockwise_67s",
+      "guid": "4c300a92f81cad24ca2bb028a36f4dfe",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/NPC_Walk_Anticlockwise_67s.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "NPC 逆时针巡逻路径 67 秒",
+      "nameEn": "NPC Walk Anticlockwise 67s",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Blue_01",
+      "guid": "a4924bfcb83ba1e46bf227e3e70b6b36",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（蓝）",
+      "nameEn": "NPC Wiz Boy Blue 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Brown_01",
+      "guid": "080c654deec68db4c97f0175d6b0cdc0",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（棕）",
+      "nameEn": "NPC Wiz Boy Brown 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Civ_01",
+      "guid": "ce20fcf0ed47a7046be4264772d50691",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（便装）",
+      "nameEn": "NPC Wiz Boy Civ 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Green_01",
+      "guid": "db8c2c454cd51764995f72ffa3d438d2",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（绿）",
+      "nameEn": "NPC Wiz Boy Green 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Hawaiian_01",
+      "guid": "08491a69e6c541243b27b5b9f7927d32",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_WizBoy_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（夏威夷）",
+      "nameEn": "NPC Wiz Boy Hawaiian 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Orange_01",
+      "guid": "736f812aaa21cb348980b5653b84a0f5",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（橙）",
+      "nameEn": "NPC Wiz Boy Orange 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Wizard_01",
+      "guid": "3b99d44fbd8f19a4c99b5f5a9a75ae8a",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（巫师）",
+      "nameEn": "NPC Wiz Boy Wizard 1",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Yellow_01",
+      "guid": "7895c89304c23024e858a1e4cb806ccd",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（黄）",
+      "nameEn": "NPC Wiz Boy Yellow 1",
+      "icon": false
+    },
+    {
+      "id": "p_boxlantern_01",
+      "guid": "e01207539ea7e2d77e1467c7ef28202e",
+      "assetPath": "Assets/common03/prefabs/dlc13/art/dlc13/p_boxlantern_01.prefab",
+      "category": "art",
+      "theme": "dlc13",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "盒灯 1",
+      "nameEn": "boxlantern 1",
+      "icon": false
+    },
+    {
+      "id": "p_camp_building_01",
+      "guid": "752c77e3deb730940b043754229f5308",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_camp_building_01.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "营地建筑 1",
+      "nameEn": "camp building 1",
+      "icon": false
+    },
+    {
+      "id": "p_camp_building_02",
+      "guid": "818cd4e97366fef4b8c28fd844538828",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_camp_building_02.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 5
+      },
+      "layoutTier": "decor",
+      "nameZh": "营地建筑 2",
+      "nameEn": "camp building 2",
+      "icon": false
+    },
+    {
+      "id": "p_city_fire_hydrant_01",
+      "guid": "50049f67c3aebd670f82e81275113b49",
+      "assetPath": "Assets/common03/prefabs/dlc05/art/dlc05_camping/p_city_fire_hydrant_01.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "城市 fire 消防栓 1",
+      "nameEn": "city fire hydrant 1",
+      "icon": false
+    },
+    {
+      "id": "p_dcl13_log_float_01",
+      "guid": "78f11141667ad2272aef85982a1c5c6d",
+      "assetPath": "Assets/common03/prefabs/dlc13/art/dlc13/p_dcl13_log_float_01.prefab",
+      "category": "art",
+      "theme": "dlc13",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 8,
+        "cellsZ": 4
+      },
+      "layoutTier": "decor",
+      "nameZh": "dcl 13 原木 float 1",
+      "nameEn": "dcl 13 log float 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_01",
+      "guid": "b1e655e5769124248872c23e341bdad9",
+      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_arch_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门 1",
+      "nameEn": "dlc07 arch 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_02",
+      "guid": "1504df87f968843f1694d4e120d71400",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门 2",
+      "nameEn": "dlc07 arch 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_end_01",
+      "guid": "0bec56411a4c8c6804465c39ceca1bb8",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_end_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门尽头 1",
+      "nameEn": "dlc07 arch end 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_end_02",
+      "guid": "3a9e2b5f65cd7ade2e5da97327ea9b4f",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_end_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门尽头 2",
+      "nameEn": "dlc07 arch end 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_01",
+      "guid": "321ad03499309a83cd64e1620d4319ad",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 1",
+      "nameEn": "dlc07 arch middle 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_02",
+      "guid": "1f62e79f86195b3bdd1238ab7c99834e",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 2",
+      "nameEn": "dlc07 arch middle 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_03",
+      "guid": "0a29ba74c0c80874906442338fea3771",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 3",
+      "nameEn": "dlc07 arch middle 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_04",
+      "guid": "c207d07c723099599110d6b6cae5e7b2",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 4",
+      "nameEn": "dlc07 arch middle 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_05",
+      "guid": "476956fdd2f82b2e864b05885063b446",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_05.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 5",
+      "nameEn": "dlc07 arch middle 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_06",
+      "guid": "ffbf5721e9d2d54bf9b4c35616838af2",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 6",
+      "nameEn": "dlc07 arch middle 6",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_start_01",
+      "guid": "b5c0ff09b72eac53cf520cfd19b90418",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_start_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门 start 1",
+      "nameEn": "dlc07 arch start 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_start_02",
+      "guid": "adb07d4a8a84cff8250d41cd4a0d6b33",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_start_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门 start 2",
+      "nameEn": "dlc07 arch start 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_armor_01",
+      "guid": "8c12bcf5e3057b2cd1de1179e954c018",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_armor_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 盔甲 1",
+      "nameEn": "dlc07 armor 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_banner_01",
+      "guid": "7b0ccd54490d14fd986b6a09e1d619b8",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_banner_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 横幅 1",
+      "nameEn": "dlc07 banner 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_banner_02",
+      "guid": "c29feb4231fe6a3aaa0930d5fe92610c",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_banner_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 横幅 2",
+      "nameEn": "dlc07 banner 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlement_wall_01",
+      "guid": "e4a09ed34da5acec6fe0ba0b5d473a06",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlement_wall_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlement 墙 1",
+      "nameEn": "dlc07 battlement wall 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlement_wall_02",
+      "guid": "2357302508edff1c1b9439dd504e6849",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlement_wall_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlement 墙 2",
+      "nameEn": "dlc07 battlement wall 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_01",
+      "guid": "bf8d8bef3ebb797cf1f6bedc39423ea3",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 1",
+      "nameEn": "dlc07 battlements 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_arch_02",
+      "guid": "c61db1f81a3528dbea64e25ddd02b88b",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_arch_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 拱门 2",
+      "nameEn": "dlc07 battlements arch 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_arch_end_02",
+      "guid": "1d1fdc8ece7073be3d3c1fc1d661aad2",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_arch_end_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 拱门尽头 2",
+      "nameEn": "dlc07 battlements arch end 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_arch_middle_04",
+      "guid": "a685a494f6834f99b01285d16e3d4a65",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_arch_middle_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 拱门中段 4",
+      "nameEn": "dlc07 battlements arch middle 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_arch_middle_05",
+      "guid": "5cf26c8c828a3ab5d5962a4732a89f3b",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_arch_middle_05.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 拱门中段 5",
+      "nameEn": "dlc07 battlements arch middle 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_arch_middle_06",
+      "guid": "7ecbe6ed14b971f33ee161e6a7ac65b9",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_arch_middle_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 拱门中段 6",
+      "nameEn": "dlc07 battlements arch middle 6",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_arch_start_02",
+      "guid": "69844ffd15173e14a52c4e518105c874",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_arch_start_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 拱门 start 2",
+      "nameEn": "dlc07 battlements arch start 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_battlement_wall_03",
+      "guid": "2f5577dbc1394beb073c7a8e5aa1aade",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_battlement_wall_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements battlement 墙 3",
+      "nameEn": "dlc07 battlements battlement wall 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_battlement_wall_04",
+      "guid": "8e75277bb5bad2731d5ecefd17ccac9f",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_battlement_wall_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements battlement 墙 4",
+      "nameEn": "dlc07 battlements battlement wall 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_battlement_wall_top_02",
+      "guid": "94c009c8f0c416c5bca62a6a7c5cc50d",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_battlement_wall_top_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements battlement 墙顶部 2",
+      "nameEn": "dlc07 battlements battlement wall top 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_fog_01",
+      "guid": "391c2ac7348db8e7947d05cefb3be934",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_fog_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 14
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 雾 1",
+      "nameEn": "dlc07 battlements fog 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_fog_02",
+      "guid": "883ebe29e6a0261e7ada030e4f9a3357",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_fog_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 13
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 雾 2",
+      "nameEn": "dlc07 battlements fog 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_fog_03",
+      "guid": "963312354feabbfec15784195a2af7a0",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_fog_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 8
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 雾 3",
+      "nameEn": "dlc07 battlements fog 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_fog_04",
+      "guid": "8dca36e794d291af2447838646b3784e",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_fog_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 15
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 雾 4",
+      "nameEn": "dlc07 battlements fog 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_grotesque_02",
+      "guid": "441005c0577f579cdf2e8743b4ee44af",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_grotesque_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements grotesque 2",
+      "nameEn": "dlc07 battlements grotesque 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_large_window_01",
+      "guid": "5d99ed83e32f2845dbb0fe7236bb43c3",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_large_window_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 大窗 1",
+      "nameEn": "dlc07 battlements large window 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_pillar_05",
+      "guid": "c0a0c782477aa813e1fc305f620f61ba",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_pillar_05.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 立柱 5",
+      "nameEn": "dlc07 battlements pillar 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_pillar_06",
+      "guid": "80f6203d93187227969ae6709796806c",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_pillar_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 立柱 6",
+      "nameEn": "dlc07 battlements pillar 6",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_pillar_07",
+      "guid": "b40750558c8509bfa7aa24770d6d27d7",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_pillar_07.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 立柱 7",
+      "nameEn": "dlc07 battlements pillar 7",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_pillar_08",
+      "guid": "7b2002def7d539bb3f4ae170d198ce91",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_pillar_08.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 立柱 8",
+      "nameEn": "dlc07 battlements pillar 8",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_pillar_tall_02",
+      "guid": "aacb3c95612dc9a92198e6ae8e42537e",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_pillar_tall_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 立柱 tall 2",
+      "nameEn": "dlc07 battlements pillar tall 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_07",
+      "guid": "f63f79cf202122afcc5b66b8d1d12222",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_07.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 7",
+      "nameEn": "dlc07 battlements plank 7",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_08",
+      "guid": "a686357a4cb447801db3d9cf0a2f492f",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_08.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 8",
+      "nameEn": "dlc07 battlements plank 8",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_09",
+      "guid": "95fa844da5d41faa1f0e7abd3ea4ea7b",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_09.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 9",
+      "nameEn": "dlc07 battlements plank 9",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_10",
+      "guid": "cf1b567cb1517c6380e3d190e7480b44",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_10.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 10",
+      "nameEn": "dlc07 battlements plank 10",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_11",
+      "guid": "70ff3671b0c40ce937bc65c336ef1a47",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_11.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 11",
+      "nameEn": "dlc07 battlements plank 11",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_12",
+      "guid": "bfda212153515d67ca44dd0704a61955",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_12.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 12",
+      "nameEn": "dlc07 battlements plank 12",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_sewergrate_01",
+      "guid": "78e6cc8f413f215d6d4186dcfe662094",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_sewergrate_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements sewergrate 1",
+      "nameEn": "dlc07 battlements sewergrate 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_small_window_02",
+      "guid": "9088e6e7b19a4c1abea2387ffe251be0",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_small_window_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 小窗 2",
+      "nameEn": "dlc07 battlements small window 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_01_a_1",
+      "guid": "92911daef5aca54161d1741329fa39ea",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_01_a_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 1 a 1",
+      "nameEn": "dlc07 battlements stone block 1 a 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_01_b_1",
+      "guid": "766b93a27dd2fa155640fe1e06496d67",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_01_b_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 1 b 1",
+      "nameEn": "dlc07 battlements stone block 1 b 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_01_c_1",
+      "guid": "e2fce9283457d9ad7afa73faba6897a9",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_01_c_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 1 c 1",
+      "nameEn": "dlc07 battlements stone block 1 c 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_01_d_1",
+      "guid": "979657bd0709d7f97600cdf938729f6c",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_01_d_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 1 d 1",
+      "nameEn": "dlc07 battlements stone block 1 d 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_02_a_1",
+      "guid": "d296780ad0d755e3b8f92b3fa472f9fa",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_02_a_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 2 a 1",
+      "nameEn": "dlc07 battlements stone block 2 a 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_02_b_1",
+      "guid": "a63eac29183552fd8a8306027de655cc",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_02_b_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 2 b 1",
+      "nameEn": "dlc07 battlements stone block 2 b 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_02_c_1",
+      "guid": "b5e94740826dcdfacdee6b2ba8a100a8",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_02_c_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 2 c 1",
+      "nameEn": "dlc07 battlements stone block 2 c 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_02_d_1",
+      "guid": "2aff9fda87b09862f899291b5632cf6f",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_02_d_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 2 d 1",
+      "nameEn": "dlc07 battlements stone block 2 d 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_03_a_1",
+      "guid": "8929d8efa22670493cdb9c7623895466",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_03_a_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 3 a 1",
+      "nameEn": "dlc07 battlements stone block 3 a 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_03_b_1",
+      "guid": "2238149051095a6dff97479521b6103c",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_03_b_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 3 b 1",
+      "nameEn": "dlc07 battlements stone block 3 b 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_03_c_1",
+      "guid": "fb63951a7c3c6237ceca856dbf985b1a",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_03_c_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 3 c 1",
+      "nameEn": "dlc07 battlements stone block 3 c 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_03_d_1",
+      "guid": "06ce8f99ea4121ff806b99955a87c689",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_03_d_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 3 d 1",
+      "nameEn": "dlc07 battlements stone block 3 d 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_04_a_1",
+      "guid": "dbbd567d6418857372a5b13239f46d57",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_04_a_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 4 a 1",
+      "nameEn": "dlc07 battlements stone block 4 a 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_04_b_1",
+      "guid": "80c16a0fcdcaa9f06e4177df6f16485c",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_04_b_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 4 b 1",
+      "nameEn": "dlc07 battlements stone block 4 b 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_04_c_1",
+      "guid": "9e7eddf4160f2e78132944e0ce2d7b57",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_04_c_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 4 c 1",
+      "nameEn": "dlc07 battlements stone block 4 c 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_04_d_1",
+      "guid": "23b1e89cb577d2dfbee291a9ad2d9614",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_04_d_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 4 d 1",
+      "nameEn": "dlc07 battlements stone block 4 d 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_05_a_1",
+      "guid": "235cfb76007bec59896c68b021d9723c",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_05_a_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 5 a 1",
+      "nameEn": "dlc07 battlements stone block 5 a 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_05_b_1",
+      "guid": "8a4f27b13bcb5db80f42818c1d35fbc5",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_05_b_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 5 b 1",
+      "nameEn": "dlc07 battlements stone block 5 b 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_05_c_1",
+      "guid": "bc4f5b109ed14f06b7b6553e2425cd5a",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_05_c_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 5 c 1",
+      "nameEn": "dlc07 battlements stone block 5 c 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_05_d_1",
+      "guid": "235d83e15a71ea1d1428cf02782e5d1f",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_05_d_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 5 d 1",
+      "nameEn": "dlc07 battlements stone block 5 d 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_06_a_1",
+      "guid": "cd57696fae025460145fa781b9130aab",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_06_a_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 6 a 1",
+      "nameEn": "dlc07 battlements stone block 6 a 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_06_b_1",
+      "guid": "a27a7833fd46079bc1e66d0feafb1211",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_06_b_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 6 b 1",
+      "nameEn": "dlc07 battlements stone block 6 b 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_06_c_1",
+      "guid": "8c1a614879735e2236ad2c4b3fcb185f",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_06_c_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 6 c 1",
+      "nameEn": "dlc07 battlements stone block 6 c 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_06_d_1",
+      "guid": "3a1db68b8183c62b909bf8f7c4207a97",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_06_d_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 6 d 1",
+      "nameEn": "dlc07 battlements stone block 6 d 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_07_a_1",
+      "guid": "cc1170b3b696f0882cdac3a113c1d75d",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_07_a_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 7 a 1",
+      "nameEn": "dlc07 battlements stone block 7 a 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_07_b_1",
+      "guid": "dcd857445f1ed7357b3bd615b6b052de",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_07_b_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 7 b 1",
+      "nameEn": "dlc07 battlements stone block 7 b 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_07_c_1",
+      "guid": "f15b2c39e93224bcd0bcf6e006e26ab5",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_07_c_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 7 c 1",
+      "nameEn": "dlc07 battlements stone block 7 c 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_07_d_1",
+      "guid": "0e596b1d3961d4ef272718c0794ff30d",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_07_d_1.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block 7 d 1",
+      "nameEn": "dlc07 battlements stone block 7 d 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_trip_04",
+      "guid": "e5e84410d47ab814c5c77f2aabdea496",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_trip_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block trip 4",
+      "nameEn": "dlc07 battlements stone block trip 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_trip_05",
+      "guid": "986dedd4e59111ccbd77b7799a400fd8",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_trip_05.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block trip 5",
+      "nameEn": "dlc07 battlements stone block trip 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_block_trip_06",
+      "guid": "12ecefd36ba27919e830d8f9b7de5840",
+      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_trip_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石 block trip 6",
+      "nameEn": "dlc07 battlements stone block trip 6",
+      "icon": false
+    }
+  ]
+}

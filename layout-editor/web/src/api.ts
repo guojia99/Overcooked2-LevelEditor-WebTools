@@ -28,6 +28,7 @@ import type {
   MusicCatalog,
   PerPlayerConfig,
   RecipeEntry,
+  SetExportStatus,
   SwitchMaterialCatalog,
   SwitchMaterialOption,
 } from "./types";
@@ -121,10 +122,54 @@ export async function fetchGrid(): Promise<GridInfo> {
   return r.json();
 }
 
+/** 前端重建 byCategory（镜像 build-catalog.mjs categorize 的分组规则：
+ *  category==='art' 且带 theme 时按 `art/{theme}` 分组，其余按 category）。 */
+function deriveCatalogByCategory(
+  items: import("./types").CatalogItem[]
+): Record<string, import("./types").CatalogItem[]> {
+  const by: Record<string, import("./types").CatalogItem[]> = {};
+  for (const it of items) {
+    const key = it.category === "art" && it.theme ? `art/${it.theme}` : it.category;
+    (by[key] ??= []).push(it);
+  }
+  return by;
+}
+
+/** catalog.json 已切分为「小索引 + 分块 items」：并行加载后合并为原 Catalog 结构，
+ *  byCategory 由 items 运行时重建（不再静态输出，消除 2x 冗余）。 */
 export async function loadCatalog(): Promise<import("./types").Catalog> {
   const r = await fetch("/catalog.json");
   if (!r.ok) throw new Error("无法加载 catalog.json，请先运行 build-catalog");
-  return r.json();
+  const index = (await r.json()) as {
+    generatedAt: string;
+    schemaVersion?: number;
+    gridCellSize: number;
+    itemCount: number;
+    itemChunks?: string[];
+    paletteGroups?: import("./types").CatalogPaletteGroup[];
+  };
+  const items: import("./types").CatalogItem[] = [];
+  const chunks = index.itemChunks ?? [];
+  if (chunks.length > 0) {
+    const loaded = await Promise.all(
+      chunks.map(async (f) => {
+        const rr = await fetch(`/${f}`);
+        if (!rr.ok) throw new Error(`无法加载 ${f}，请先运行 build-catalog`);
+        const data = await rr.json();
+        return (data.items ?? []) as import("./types").CatalogItem[];
+      })
+    );
+    for (const c of loaded) items.push(...c);
+  }
+  return {
+    generatedAt: index.generatedAt,
+    schemaVersion: index.schemaVersion,
+    gridCellSize: index.gridCellSize,
+    itemCount: items.length,
+    items,
+    byCategory: deriveCatalogByCategory(items),
+    paletteGroups: index.paletteGroups,
+  };
 }
 
 /** Static catalog JSON fallback (build-catalog.mjs output) when the Unity bridge is offline. */
@@ -180,9 +225,30 @@ export async function fetchFloorMaterials(levelSet: string): Promise<FloorMateri
   }
 }
 
+/** recipes.json 已切分为「小索引 + 按 group 分组文件」：并行加载后合并。 */
+async function fetchStaticRecipes(): Promise<RecipeEntry[]> {
+  const r = await fetch("/recipes.json");
+  if (!r.ok) throw new Error("无法加载 recipes.json，请先运行 build-catalog");
+  const index = (await r.json()) as { groupFiles?: Record<string, string>; itemCount?: number };
+  const files = Object.values(index.groupFiles ?? {});
+  const all: RecipeEntry[] = [];
+  if (files.length > 0) {
+    const groups = await Promise.all(
+      files.map(async (f) => {
+        const rr = await fetch(`/${f}`);
+        if (!rr.ok) throw new Error(`无法加载 ${f}，请先运行 build-catalog`);
+        const data = await rr.json();
+        return (data.recipes ?? []) as RecipeEntry[];
+      })
+    );
+    for (const g of groups) all.push(...g);
+  }
+  return all;
+}
+
 export async function fetchRecipeCatalog(levelSet: string): Promise<RecipeEntry[]> {
   // 通用内容（common03）菜谱：后端动态接口直接下发（含 common01/02/common03），
-  // 失败时回退静态 recipes.json。
+  // 失败时回退静态 recipes.json（索引 + 分组文件）。
   let recipes: RecipeEntry[];
   try {
     const q = new URLSearchParams({ levelSet });
@@ -191,8 +257,8 @@ export async function fetchRecipeCatalog(levelSet: string): Promise<RecipeEntry[
     recipes = data.recipes ?? [];
   } catch {
     console.debug("[catalog] /api/recipes 不可用，回退静态 recipes.json");
-    const data = await fetchStaticCatalog<{ recipes?: RecipeEntry[] }>("recipes.json");
-    recipes = dropLevelSetCopies(data.recipes ?? [], "recipes.json");
+    recipes = await fetchStaticRecipes().catch(() => []);
+    recipes = dropLevelSetCopies(recipes, "recipes.json");
   }
   for (const r of recipes) {
     if (r.type === "sushi" && r.cookingStep === "Steamer") {
@@ -307,6 +373,7 @@ export async function fetchAudioKnowledge(): Promise<AudioKnowledge> {
       baseBundles: data.baseBundles ?? empty.baseBundles,
       alwaysLoadedBundles: data.alwaysLoadedBundles ?? empty.alwaysLoadedBundles,
       mandatoryDirectoryIds: data.mandatoryDirectoryIds ?? [],
+      availableAmbiences: data.availableAmbiences ?? [],
       directoryEvents: data.directoryEvents ?? [],
       themes: data.themes ?? [],
       deathThemes: data.deathThemes ?? [],
@@ -319,6 +386,7 @@ export async function fetchAudioKnowledge(): Promise<AudioKnowledge> {
       baseBundles: data.baseBundles ?? empty.baseBundles,
       alwaysLoadedBundles: data.alwaysLoadedBundles ?? empty.alwaysLoadedBundles,
       mandatoryDirectoryIds: data.mandatoryDirectoryIds ?? [],
+      availableAmbiences: data.availableAmbiences ?? [],
       directoryEvents: data.directoryEvents ?? [],
       themes: data.themes ?? [],
       deathThemes: data.deathThemes ?? [],
@@ -444,6 +512,38 @@ export async function updateSetInfo(body: SetInfoUpdateBody): Promise<void> {
     body: JSON.stringify(body),
   });
   await readApiJson<{ ok?: boolean }>(r);
+}
+
+/** 启动关卡集导出（打包 AssetBundle → zip）。任务在 Unity 后台异步执行，
+ *  进度用 fetchSetExportStatus 轮询；打包约需 3-5 分钟。 */
+export async function startSetExport(setName: string): Promise<void> {
+  const r = await fetch("/api/set/export", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export async function fetchSetExportStatus(): Promise<SetExportStatus> {
+  const r = await fetch("/api/set/export/status");
+  return readApiJson<SetExportStatus>(r);
+}
+
+/** 下载导出的 zip。fileName 来自导出完成状态的 zipFileName（也可作为回退查找名）。 */
+export async function downloadSetExportZip(
+  setName: string,
+  fileName: string
+): Promise<{ blob: Blob; fileName: string }> {
+  const q = new URLSearchParams({ setName, fileName });
+  const r = await fetch(`/api/set/export/download?${q}`);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.error ?? `下载失败（HTTP ${r.status}）`);
+  }
+  const cd = r.headers.get("Content-Disposition") ?? "";
+  const m = /filename="?([^";]+)"?/.exec(cd);
+  return { blob: await r.blob(), fileName: m?.[1] || fileName };
 }
 
 export interface LevelCreateBody {

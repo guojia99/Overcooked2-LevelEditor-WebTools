@@ -256,6 +256,10 @@ public static class SceneLayoutApplier
         EditorSceneManager.SaveScene(scene);
         LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
 
+        // Reload 会从 bundle 重建伪 prefab child（EditorGridSnap 的 X/Z 约束随之复位），
+        // 写回末尾即时解除断头台/石炉台的半格约束，防编辑模式每帧拉回整格。
+        LayoutEditorGridSnapGuard.RelaxGridSnapOnScene();
+
         var partialError = cameraLightError;
         if (!string.IsNullOrEmpty(bakeError))
             partialError = string.IsNullOrEmpty(partialError) ? bakeError : partialError + "; " + bakeError;
@@ -848,8 +852,9 @@ public static class SceneLayoutApplier
             }
         }
 
-        // Non-image floors never use a texture-tiling block — clear any stale one
-        // left from a previous image-floor state.
+        // Non-image floors never use a texture-tiling block unless the size-tag
+        // scaler below applies one — clear any stale block left from a previous
+        // image-floor state.
         mr.SetPropertyBlock(null);
 
         // Manual tint feature: only when explicitly enabled does an explicit
@@ -879,7 +884,62 @@ public static class SceneLayoutApplier
         {
             Undo.RecordObject(mr, "Layout Editor Floor Material");
             mr.sharedMaterial = mat;
+            ApplyFloorTiling(mr, mat, floor);
         }
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex FloorSizeTagRegex =
+        new System.Text.RegularExpressions.Regex(@"_([0-9]+)x([0-9]+)(?:_|$)");
+
+    /// <summary>材质 id 中的尺寸标签（mat_kevin_floor_12x8 → 12×8），
+    ///  与 LayoutEditorFloorMaterialsApi.SizeTagOf 同一正则。</summary>
+    private static bool TryParseFloorSizeTag(string materialName, out int w, out int h)
+    {
+        w = 0;
+        h = 0;
+        var m = FloorSizeTagRegex.Match(materialName ?? "");
+        if (!m.Success)
+            return false;
+        return int.TryParse(m.Groups[1].Value, out w)
+            && int.TryParse(m.Groups[2].Value, out h)
+            && w > 0 && h > 0;
+    }
+
+    /// <summary>格子地板改宽/改深后按比例重算材质 tiling：尺寸材质（mat_*_WxH）
+    ///  的 _MainTex/_BumpMap ST 是按 sizeTag 格数烘焙的，Plane 缩放后不改 ST 纹理
+    ///  会被拉伸。按 bakedST × (当前格数 / sizeTag 格数) 写 MaterialPropertyBlock
+    ///  （与 image floor 同机制，保留原 offset），维持作者意图的每格贴图密度；
+    ///  无 sizeTag 或格数恰好一致时不写块（材质烘焙值即正确）。</summary>
+    private static void ApplyFloorTiling(MeshRenderer mr, Material mat, FloorDto floor)
+    {
+        int tagW, tagH;
+        if (!TryParseFloorSizeTag(mat.name, out tagW, out tagH))
+            return;
+        if (floor == null || floor.widthCells <= 0 || floor.depthCells <= 0)
+            return;
+        if (floor.widthCells == tagW && floor.depthCells == tagH)
+            return;
+
+        var block = new MaterialPropertyBlock();
+        if (mat.HasProperty("_MainTex"))
+        {
+            var scale = mat.GetTextureScale("_MainTex");
+            var offset = mat.GetTextureOffset("_MainTex");
+            block.SetVector("_MainTex_ST", new Vector4(
+                scale.x * floor.widthCells / tagW,
+                scale.y * floor.depthCells / tagH,
+                offset.x, offset.y));
+        }
+        if (mat.HasProperty("_BumpMap"))
+        {
+            var scale = mat.GetTextureScale("_BumpMap");
+            var offset = mat.GetTextureOffset("_BumpMap");
+            block.SetVector("_BumpMap_ST", new Vector4(
+                scale.x * floor.widthCells / tagW,
+                scale.y * floor.depthCells / tagH,
+                offset.x, offset.y));
+        }
+        mr.SetPropertyBlock(block);
     }
 
     private static readonly System.Collections.Generic.Dictionary<string, Material> _imageFloorMats =

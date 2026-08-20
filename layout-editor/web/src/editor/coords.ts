@@ -1,5 +1,6 @@
 import {
   snapFootprintCenter,
+  snapCenterPivot,
   snapValue
 } from "../snap";
 export { snapValue };
@@ -10,6 +11,7 @@ import {
   MAGNET_THRESHOLD,
   PX_PER_UNIT,
   FOOTPRINT_BY_ID,
+  CENTER_PIVOT_PREFAB_IDS,
   EditorItem
 } from "./state";
 import { dom } from "./dom";
@@ -41,7 +43,13 @@ export function snapPlacement(
   wz: number
 ): { x: number; z: number } {
   const free = { x: snapValue(wx, S.freeSnapStep), z: snapValue(wz, S.freeSnapStep) };
-  if (!S.snapEnabled || itemLayerOf(S.catalogByGuid.get(prefabGuid)) === "decor") return free;
+  const cat = S.catalogByGuid.get(prefabGuid);
+  if (!S.snapEnabled || itemLayerOf(cat) === "decor") return free;
+  // 中心 pivot 道具（断头台）：长轴强制吸到半格奇偶位（0.6 mod 1.2），不做阈值
+  // 门控——否则一半概率落在错位格，且后端已解除 Unity 侧自动纠偏，错位会持久化。
+  if (cat && CENTER_PIVOT_PREFAB_IDS.has(cat.id)) {
+    return snapCenterPivot(wx, wz, cellsX, cellsZ, rotY, CELL);
+  }
   const snapped = snapFootprintCenter(wx, wz, cellsX, cellsZ, rotY, CELL, HALF_CELL);
   return Math.hypot(snapped.x - wx, snapped.z - wz) <= MAGNET_THRESHOLD ? snapped : free;
 }

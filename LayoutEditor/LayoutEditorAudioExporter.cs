@@ -2,10 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using LevelEditorStub;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// 音频导出：扫描 common01/common02 的 BGM 与 AudioDirectory PseudoPrefabSO，
+/// 直接解析游戏 AssetBundle（UnityFS/LZ4/SerializedFile/TypeTree，见 AudioFs/），
+/// 从 FSB5 提取音频：Vorbis → 无损重组 .ogg，IMA ADPCM → 解码 .wav，
+/// 写出到仓库根目录 audio-exports/，并生成 audio-exports.json 供 web 编辑器试听。
+/// 不依赖 python / libvorbis；不通过 AudioClip.GetData（压缩 clip 不支持）。
+/// </summary>
 public static class LayoutEditorAudioExporter
 {
     private struct AudioAssetInfo
@@ -13,438 +21,526 @@ public static class LayoutEditorAudioExporter
         public string guid;
         public string id;
         public string bundleName;
-        public string assetPath; // in-bundle path
+        public string assetPath; // in-bundle container path
         public string nameZh;
     }
 
-    // ==================== Audio export request (Unity -> python) ====================
-
-    [Serializable]
-    public class AudioExportRequestClip
+    // bundle 环境（含跨 bundle PPtr 解析）
+    private sealed class Bundle
     {
-        public string kind;   // "oneshot" | "looping"
-        public int entry;     // index into OneShotAudio / LoopingAudio
-        public string part;   // "" | "start" | "end"
-        public string tag;
-        public string type;   // "oneshot", "looping", "looping_start", "looping_end"
-        public string filename;
+        public string name;
+        public LayoutEditor.AudioFs.AudioFsBundle raw;
+        public Dictionary<string, LayoutEditor.AudioFs.AudioFsSerializedFile> files =
+            new Dictionary<string, LayoutEditor.AudioFs.AudioFsSerializedFile>(StringComparer.OrdinalIgnoreCase);
+        public byte[] data;
     }
 
-    [Serializable]
-    public class AudioExportRequestDir
+    private sealed class ObjRef
     {
-        public string bundle;
-        public string container;
-        public string dirId;
-        public string nameZh;
-        public AudioExportRequestClip[] clips;
+        public LayoutEditor.AudioFs.AudioFsObjectInfo obj;
+        public LayoutEditor.AudioFs.AudioFsSerializedFile sf;
+        public Bundle bundle;
+        public LayoutEditor.AudioFs.AudioFsValue Read() { return obj.ReadValue(bundle.data); }
     }
 
-    [Serializable]
-    public class AudioExportRequestMusic
-    {
-        public string bundle;
-        public string container;
-        public string guid;
-        public string id;
-        public string nameZh;
-        public string filename;
-    }
+    private static readonly Dictionary<string, Bundle> _bundles =
+        new Dictionary<string, Bundle>(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, string> _cabToBundle =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private static readonly List<string> _bundleOrder = new List<string>();
+    private static string _bundlesDir;
+    private static bool _tablesLoaded;
 
-    [Serializable]
-    public class AudioExportRequestAmbience
-    {
-        public string tag;
-        public string filename;
-        public string dirId;
-    }
-
-    [Serializable]
-    public class AudioExportRequest
-    {
-        public string exportRoot;
-        public string bundlesDir;
-        public AudioExportRequestMusic[] music;
-        public AudioExportRequestDir[] dirs;
-        public AudioExportRequestAmbience[] ambiences;
-    }
-
-    // ==================== Audio export result (python -> Unity) ====================
-
-    [Serializable]
-    public class AudioExportResultFile
-    {
-        public string key;
-        public bool ok;
-        public string actual;
-        public string error;
-    }
-
-    [Serializable]
-    public class AudioExportResult
-    {
-        public int ok;
-        public int fail;
-        public AudioExportResultFile[] files;
-    }
-
-    // ==================== async export state ====================
-
-    private static System.Diagnostics.Process _exportProcess;
-    private static AudioExportRequest _exportRequest;
-    private static string _exportRoot;
-    private static float _exportStartTime;
+    private static bool _exporting;
 
     public static void ExportAudioForWeb()
     {
-        if (_exportProcess != null && !_exportProcess.HasExited)
+        if (_exporting)
         {
             EditorUtility.DisplayDialog("Export Audio", "上一次导出仍在进行中，请稍候。", "OK");
             return;
         }
 
-        string exportRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports"));
+        _exporting = true;
+        var failures = new List<string>();
+
         try
         {
-            // ---- Phase 1: Scan ----
-            EditorUtility.DisplayProgressBar("Export Audio", "扫描 BGM 资源…", 0.02f);
+            // ---- Phase 1: tables ----
+            EditorUtility.DisplayProgressBar("Export Audio", "加载解析表…", 0.01f);
+            LoadTables();
+
+            // ---- Phase 2: Scan ----
+            EditorUtility.DisplayProgressBar("Export Audio", "扫描 BGM 资源…", 0.03f);
             var musicAssets = ScanAudioAssets("audio/music");
             EditorUtility.DisplayProgressBar("Export Audio", "扫描音效集资源…", 0.05f);
             var dirAssets = ScanAudioAssets("audio/AudioDirectories");
 
-            // ---- Phase 2: Load bundles (for reading AudioDirectoryData entries) ----
-            var bundleNames = new HashSet<string>();
-            foreach (var a in musicAssets) if (!string.IsNullOrEmpty(a.bundleName)) bundleNames.Add(a.bundleName);
-            foreach (var a in dirAssets) if (!string.IsNullOrEmpty(a.bundleName)) bundleNames.Add(a.bundleName);
-            var bundles = LoadAllBundles(bundleNames);
+            // ---- Phase 3: Prepare output ----
+            string exportRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports"));
+            if (Directory.Exists(exportRoot))
+                Directory.Delete(exportRoot, true);
+            Directory.CreateDirectory(Path.Combine(exportRoot, "bgm"));
+            Directory.CreateDirectory(Path.Combine(exportRoot, "sfx"));
 
-            // ---- Phase 3: Build export request ----
-            var musicList = new List<AudioExportRequestMusic>();
+            _bundlesDir = Path.Combine(Application.streamingAssetsPath, "Windows").Replace('\\', '/');
+
+            // ---- Phase 4: Export ----
+            var bgmList = new List<AudioExportBgmDto>();
+            var sfxList = new List<AudioExportSfxDirDto>();
+            var ambienceCandidates = new Dictionary<string, string[]>(); // tag -> {filename, dirId}
+            int okCount = 0;
+            int failCount = 0;
+            bool canceled = false;
+
+            // BGM
             for (int i = 0; i < musicAssets.Count; i++)
             {
                 var a = musicAssets[i];
-                float p = 0.10f + 0.20f * ((float)i / Mathf.Max(1, musicAssets.Count));
+                float p = 0.10f + 0.45f * ((float)i / Mathf.Max(1, musicAssets.Count));
                 if (EditorUtility.DisplayCancelableProgressBar("Export Audio",
-                    "读取 BGM " + (i + 1) + "/" + musicAssets.Count + ": " + a.nameZh, p))
-                    return;
-                musicList.Add(new AudioExportRequestMusic
+                    "导出 BGM " + (i + 1) + "/" + musicAssets.Count + ": " + a.nameZh, p))
                 {
-                    bundle = a.bundleName,
-                    container = a.assetPath,
-                    guid = a.guid,
-                    id = a.id,
-                    nameZh = a.nameZh,
-                    filename = "bgm/" + SanitizeFilename(a.id) + ".ogg"
-                });
+                    canceled = true;
+                    break;
+                }
+
+                string rel = "bgm/" + SanitizeFilename(a.id);
+                try
+                {
+                    string ext = ExportClipByContainer(a.bundleName, a.assetPath, exportRoot, rel);
+                    bgmList.Add(new AudioExportBgmDto
+                        { guid = a.guid, id = a.id, nameZh = a.nameZh, filename = rel + ext });
+                    okCount++;
+                }
+                catch (Exception ex)
+                {
+                    failCount++;
+                    failures.Add(rel + " — " + ex.Message);
+                }
             }
 
-            var sfxList = new List<AudioExportRequestDir>();
-            var ambienceCandidates = new Dictionary<string, AudioExportRequestAmbience>();
-            for (int i = 0; i < dirAssets.Count; i++)
+            // SFX directories
+            if (!canceled)
             {
-                var a = dirAssets[i];
-                float p = 0.30f + 0.40f * ((float)i / Mathf.Max(1, dirAssets.Count));
-                if (EditorUtility.DisplayCancelableProgressBar("Export Audio",
-                    "读取音效集 " + (i + 1) + "/" + dirAssets.Count + ": " + a.nameZh, p))
-                    return;
-
-                AssetBundle bundle2;
-                if (!bundles.TryGetValue(a.bundleName, out bundle2))
-                    continue;
-
-                var dirData = bundle2.LoadAsset<AudioDirectoryData>(a.assetPath);
-                if (dirData == null)
+                for (int i = 0; i < dirAssets.Count; i++)
                 {
-                    Debug.LogWarning("Export Audio: AudioDirectoryData is null — " + a.id);
-                    sfxList.Add(new AudioExportRequestDir
-                        { dirId = a.id, nameZh = a.nameZh, clips = new AudioExportRequestClip[0] });
-                    continue;
-                }
-
-                var clips = new List<AudioExportRequestClip>();
-
-                // OneShotAudio
-                if (dirData.OneShotAudio != null)
-                {
-                    for (int e = 0; e < dirData.OneShotAudio.Length; e++)
+                    var a = dirAssets[i];
+                    float p = 0.55f + 0.40f * ((float)i / Mathf.Max(1, dirAssets.Count));
+                    if (EditorUtility.DisplayCancelableProgressBar("Export Audio",
+                        "导出音效集 " + (i + 1) + "/" + dirAssets.Count + ": " + a.nameZh, p))
                     {
-                        var entry = dirData.OneShotAudio[e];
-                        var clip = GetBaseAudioClip(entry);
-                        if (clip == null) continue;
-                        string tag = entry.Tag.ToString();
-                        string fn = "sfx/" + SanitizeFilename(a.id) + "/oneshot_" + SanitizeFilename(tag) + ".ogg";
-                        clips.Add(new AudioExportRequestClip
-                            { kind = "oneshot", entry = e, part = "", tag = tag, type = "oneshot", filename = fn });
+                        canceled = true;
+                        break;
                     }
-                }
 
-                // LoopingAudio
-                if (dirData.LoopingAudio != null)
-                {
-                    for (int e = 0; e < dirData.LoopingAudio.Length; e++)
+                    string dirFolder = "sfx/" + SanitizeFilename(a.id);
+                    try
                     {
-                        var entry = dirData.LoopingAudio[e];
-                        string tag = entry.Tag.ToString();
-
-                        var baseClip = GetBaseAudioClip(entry);
-                        if (baseClip != null)
-                        {
-                            string fn = "sfx/" + SanitizeFilename(a.id) + "/looping_" + SanitizeFilename(tag) + ".ogg";
-                            clips.Add(new AudioExportRequestClip
-                                { kind = "looping", entry = e, part = "base", tag = tag, type = "looping", filename = fn });
-                            if (!ambienceCandidates.ContainsKey(tag))
-                                ambienceCandidates[tag] = new AudioExportRequestAmbience
-                                    { tag = tag, filename = fn, dirId = a.id };
-                        }
-
-                        if (entry.StartClip != null)
-                        {
-                            string fn = "sfx/" + SanitizeFilename(a.id) + "/looping_" + SanitizeFilename(tag) + "_start.ogg";
-                            clips.Add(new AudioExportRequestClip
-                                { kind = "looping", entry = e, part = "start", tag = tag, type = "looping_start", filename = fn });
-                        }
-
-                        if (entry.EndClip != null)
-                        {
-                            string fn = "sfx/" + SanitizeFilename(a.id) + "/looping_" + SanitizeFilename(tag) + "_end.ogg";
-                            clips.Add(new AudioExportRequestClip
-                                { kind = "looping", entry = e, part = "end", tag = tag, type = "looping_end", filename = fn });
-                        }
+                        var clips = ExportDirectory(a.bundleName, a.assetPath, dirFolder, exportRoot,
+                            ambienceCandidates, failures, ref okCount, ref failCount);
+                        sfxList.Add(new AudioExportSfxDirDto { id = a.id, nameZh = a.nameZh, clips = clips });
                     }
+                    catch (Exception ex)
+                    {
+                        failures.Add(dirFolder + " — " + ex.Message);
+                        sfxList.Add(new AudioExportSfxDirDto
+                            { id = a.id, nameZh = a.nameZh, clips = new AudioExportSfxClipDto[0] });
+                    }
+                    TrimBundleCache();
                 }
-
-                sfxList.Add(new AudioExportRequestDir
-                {
-                    bundle = a.bundleName,
-                    container = a.assetPath,
-                    dirId = a.id,
-                    nameZh = a.nameZh,
-                    clips = clips.ToArray()
-                });
             }
 
-            var ambList = new List<AudioExportRequestAmbience>();
-            foreach (var kv in ambienceCandidates) ambList.Add(kv.Value);
+            // ---- Phase 5: Write manifest ----
+            EditorUtility.DisplayProgressBar("Export Audio", "写出 manifest…", 0.96f);
 
-            var request = new AudioExportRequest
+            var ambList = new List<AudioExportAmbienceDto>();
+            foreach (var tagName in Enum.GetNames(typeof(LevelInfoSO.GameLoopingAudioTag)))
             {
-                exportRoot = exportRoot,
-                bundlesDir = Path.Combine(Application.streamingAssetsPath, "Windows").Replace('\\', '/'),
-                music = musicList.ToArray(),
-                dirs = sfxList.ToArray(),
+                if (tagName == "COUNT") continue;
+                string[] cand;
+                if (ambienceCandidates.TryGetValue(tagName, out cand))
+                    ambList.Add(new AudioExportAmbienceDto
+                        { tag = tagName, found = true, filename = cand[0], dirId = cand[1] });
+                else
+                    ambList.Add(new AudioExportAmbienceDto { tag = tagName, found = false });
+            }
+
+            var manifest = new AudioExportManifestDto
+            {
+                generatedAt = DateTime.UtcNow.ToString("o"),
+                bgm = bgmList.ToArray(),
+                sfx = sfxList.ToArray(),
                 ambiences = ambList.ToArray()
             };
-
-            // ---- Phase 4: Clean old exports & write request ----
-            EditorUtility.DisplayProgressBar("Export Audio", "准备导出…", 0.75f);
-            if (Directory.Exists(exportRoot))
-                Directory.Delete(exportRoot, true);
-            Directory.CreateDirectory(exportRoot);
-
             File.WriteAllText(
-                Path.Combine(exportRoot, "audio-export-request.json"),
-                JsonUtility.ToJson(request, true));
+                Path.Combine(exportRoot, "audio-exports.json"),
+                JsonUtility.ToJson(manifest, true));
 
-            // ---- Phase 5: Run python extractor ----
-            EditorUtility.ClearProgressBar();
-            _exportRequest = request;
-            _exportRoot = exportRoot;
-            StartExportProcess();
+            // ---- Phase 6: Summary ----
+            if (failures.Count > 0)
+            {
+                var sb = new StringBuilder();
+                int max = Mathf.Min(failures.Count, 50);
+                sb.AppendLine("Export Audio: 失败清单（前 " + max + "/" + failures.Count + " 个）：");
+                for (int i = 0; i < max; i++)
+                    sb.AppendLine("  " + failures[i]);
+                Debug.LogWarning(sb.ToString());
+            }
+
+            string msg = string.Format("{0}完成！\n\n成功 {1} 个，失败 {2} 个。\n\n输出目录：\n{3}",
+                canceled ? "导出已取消（已写出已完成部分）" : "导出", okCount, failCount, exportRoot);
+            if (failures.Count > 0)
+                msg += "\n\n⚠️ 有 " + failures.Count + " 项失败，详见 Console 日志。";
+            EditorUtility.DisplayDialog("Export Audio", msg, "OK");
         }
         catch (Exception ex)
         {
-            EditorUtility.ClearProgressBar();
             Debug.LogError("Export Audio failed: " + ex);
             EditorUtility.DisplayDialog("Export Audio Error", ex.Message, "OK");
         }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
+            _bundles.Clear();
+            _cabToBundle.Clear();
+            _bundleOrder.Clear();
+            _exporting = false;
+        }
     }
 
-    private static void StartExportProcess()
-    {
-        string repoRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-        string scriptPath = Path.Combine(Path.Combine(Path.Combine(repoRoot, "layout-editor"), "scripts"), "export-audio.py");
-        string reqPath = Path.Combine(_exportRoot, "audio-export-request.json");
+    // -------------------------------------------------------------
+    // 导出一个 AudioDirectory 的全部 clip
+    // -------------------------------------------------------------
 
-        if (!File.Exists(scriptPath))
+    private static AudioExportSfxClipDto[] ExportDirectory(string bundleName, string containerPath, string dirFolder,
+        string exportRoot, Dictionary<string, string[]> ambienceCandidates,
+        List<string> failures, ref int okCount, ref int failCount)
+    {
+        var dirObj = FindByContainer(bundleName, containerPath);
+        if (dirObj == null)
+            throw new Exception("AudioDirectoryData 未找到（bundle=" + bundleName + "，路径=" + containerPath + "）");
+
+        var tree = dirObj.Read();
+        string outDir = Path.Combine(exportRoot, dirFolder.Replace('/', Path.DirectorySeparatorChar));
+        if (!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
+
+        var clips = new List<AudioExportSfxClipDto>();
+        var usedNames = new Dictionary<string, int>();
+
+        var oneShot = tree.Field("OneShotAudio");
+        if (oneShot != null)
         {
-            _exportRequest = null;
-            EditorUtility.DisplayDialog("Export Audio",
-                "未找到导出脚本：\n" + scriptPath + "\n\n请确认 layout-editor 目录完整。", "OK");
-            return;
+            var arr = AsArray(oneShot.value);
+            for (int e = 0; e < arr.Count; e++)
+                ExportEntry(dirObj, arr[e], "AudioFile", "oneshot", typeofGameOneShotTag,
+                    dirFolder, exportRoot, usedNames, clips, ambienceCandidates, false,
+                    failures, ref okCount, ref failCount);
         }
 
-        var psi = new System.Diagnostics.ProcessStartInfo();
-        psi.FileName = "python3";
-        psi.Arguments = "\"" + scriptPath + "\" \"" + reqPath + "\"";
-        psi.UseShellExecute = false;
-        psi.RedirectStandardOutput = true;
-        psi.RedirectStandardError = true;
-        psi.CreateNoWindow = true;
+        var looping = tree.Field("LoopingAudio");
+        if (looping != null)
+        {
+            var arr = AsArray(looping.value);
+            for (int e = 0; e < arr.Count; e++)
+            {
+                ExportEntry(dirObj, arr[e], "AudioFile", "looping", typeofGameLoopingTag,
+                    dirFolder, exportRoot, usedNames, clips, ambienceCandidates, true,
+                    failures, ref okCount, ref failCount);
+                ExportEntry(dirObj, arr[e], "StartClip", "looping_start", typeofGameLoopingTag,
+                    dirFolder, exportRoot, usedNames, clips, ambienceCandidates, false,
+                    failures, ref okCount, ref failCount);
+                ExportEntry(dirObj, arr[e], "EndClip", "looping_end", typeofGameLoopingTag,
+                    dirFolder, exportRoot, usedNames, clips, ambienceCandidates, false,
+                    failures, ref okCount, ref failCount);
+            }
+        }
 
+        return clips.ToArray();
+    }
+
+    private static Type typeofGameOneShotTag;
+    private static Type typeofGameLoopingTag;
+
+    private static void InitTagTypes()
+    {
         try
         {
-            _exportProcess = System.Diagnostics.Process.Start(psi);
+            var osEntry = typeof(AudioDirectoryData).GetNestedType("OneShotAudioDirectoryEntry",
+                BindingFlags.Public | BindingFlags.NonPublic);
+            if (osEntry != null)
+            {
+                var f = osEntry.GetField("Tag", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (f != null) typeofGameOneShotTag = f.FieldType;
+            }
+            var lpEntry = typeof(AudioDirectoryData).GetNestedType("LoopingAudioDirectoryEntry",
+                BindingFlags.Public | BindingFlags.NonPublic);
+            if (lpEntry != null)
+            {
+                var f = lpEntry.GetField("Tag", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (f != null) typeofGameLoopingTag = f.FieldType;
+            }
         }
         catch (Exception ex)
         {
-            // fallback to "python"
-            try
-            {
-                psi.FileName = "python";
-                _exportProcess = System.Diagnostics.Process.Start(psi);
-            }
-            catch (Exception ex2)
-            {
-                _exportRequest = null;
-                EditorUtility.DisplayDialog("Export Audio",
-                    "无法启动 python 导出器（" + ex2.Message + "）。\n\n请安装 Python3 后重试。", "OK");
-                return;
-            }
+            Debug.LogWarning("Export Audio: Tag 枚举反射失败（将以数值命名）：" + ex.Message);
         }
-
-        _exportStartTime = Time.realtimeSinceStartup;
-        EditorApplication.update -= ExportAudioTick;
-        EditorApplication.update += ExportAudioTick;
     }
 
-    private static void ExportAudioTick()
+    private static string TagToName(Type enumType, long value)
     {
-        if (_exportProcess == null) return;
-        if (!_exportProcess.HasExited)
+        if (enumType != null && enumType.IsEnum)
         {
-            float secs = Time.realtimeSinceStartup - _exportStartTime;
-            EditorUtility.DisplayProgressBar("Export Audio",
-                "正在提取音频… " + (int)secs + "s（首次运行会自动安装 Python 依赖）", 0.5f);
-            return;
+            try { return Enum.ToObject(enumType, value).ToString(); }
+            catch (System.Exception) { }
         }
+        return value.ToString();
+    }
 
-        EditorApplication.update -= ExportAudioTick;
-        EditorUtility.ClearProgressBar();
+    private static void ExportEntry(ObjRef dirObj, LayoutEditor.AudioFs.AudioFsValue entry, string field,
+        string typePrefix, Type tagEnumType, string dirFolder, string exportRoot,
+        Dictionary<string, int> usedNames, List<AudioExportSfxClipDto> clips,
+        Dictionary<string, string[]> ambienceCandidates, bool isAmbienceCandidate,
+        List<string> failures, ref int okCount, ref int failCount)
+    {
+        var f = entry.Field(field);
+        if (f == null) return;
+        var pptr = f.value;
+        long mpid = pptr.Field("m_PathID").value.AsInt();
+        if (mpid == 0) return;
+        int mfid = (int)pptr.Field("m_FileID").value.AsInt();
 
-        string stdout = _exportProcess.StandardOutput.ReadToEnd();
-        string stderr = _exportProcess.StandardError.ReadToEnd();
-        int exitCode = _exportProcess.ExitCode;
-        _exportProcess = null;
+        string tag = TagToName(tagEnumType, entry.Field("Tag").value.AsInt());
+        string baseName = typePrefix + "_" + SanitizeFilename(tag);
+        string name = baseName;
+        int used;
+        if (usedNames.TryGetValue(baseName, out used))
+            name = baseName + "_" + (used + 1);
+        usedNames[baseName] = used + 1;
 
-        if (!string.IsNullOrEmpty(stdout))
-            Debug.Log("Export Audio (python):\n" + stdout);
-        if (!string.IsNullOrEmpty(stderr))
-            Debug.LogWarning("Export Audio (python stderr):\n" + stderr);
-
+        string rel = dirFolder + "/" + name;
         try
         {
-            FinalizeExport(exitCode, stdout);
+            var clip = ResolvePPtr(dirObj, mfid, mpid);
+            if (clip == null) throw new Exception("clip 对象未解析（m_FileID=" + mfid + "）");
+            string outPath = Path.Combine(exportRoot, rel.Replace('/', Path.DirectorySeparatorChar));
+            string ext = ExtractClip(clip, outPath);
+            clips.Add(new AudioExportSfxClipDto { tag = tag, type = typePrefix, filename = rel + ext });
+            okCount++;
+            if (isAmbienceCandidate && !ambienceCandidates.ContainsKey(tag))
+                ambienceCandidates[tag] = new[] { rel + ext, Path.GetFileName(dirFolder) };
         }
         catch (Exception ex)
         {
-            Debug.LogError("Export Audio finalize failed: " + ex);
-            EditorUtility.DisplayDialog("Export Audio Error", ex.Message, "OK");
+            failCount++;
+            failures.Add(rel + " — " + ex.Message);
         }
     }
 
-    private static void FinalizeExport(int exitCode, string pythonOutput)
+    /// <summary>按 container 路径取 clip 并导出；返回扩展名（.ogg/.wav）。</summary>
+    private static string ExportClipByContainer(string bundleName, string containerPath, string exportRoot, string relNoExt)
     {
-        var results = new Dictionary<string, AudioExportResultFile>();
-        string resultPath = Path.Combine(_exportRoot, "audio-export-result.json");
-        if (File.Exists(resultPath))
+        var clip = FindByContainer(bundleName, containerPath);
+        if (clip == null)
+            throw new Exception("AudioClip 未找到（bundle=" + bundleName + "，路径=" + containerPath + "）");
+        string ext = ExtractClip(clip, Path.Combine(exportRoot, relNoExt.Replace('/', Path.DirectorySeparatorChar)));
+        return ext;
+    }
+
+    /// <summary>读取 clip 的 FSB5 并写出文件，返回扩展名。</summary>
+    private static string ExtractClip(ObjRef clip, string outPathNoExt)
+    {
+        var cv = clip.Read();
+        byte[] fsb = ReadClipResource(clip, cv);
+        if (fsb.Length < 4 || fsb[0] != (byte)'F' || fsb[1] != (byte)'S' || fsb[2] != (byte)'B' || fsb[3] != (byte)'5')
+            throw new Exception("非 FSB5 音频资源");
+        int mode = LayoutEditor.AudioFs.AudioFsFsb5.Mode(fsb);
+        var samples = LayoutEditor.AudioFs.AudioFsFsb5.Parse(fsb);
+        if (samples.Count == 0) throw new Exception("FSB5 无 sample");
+        var s = samples[0];
+
+        if (mode == LayoutEditor.AudioFs.AudioFsFsb5.ModeVorbis)
         {
+            var setup = LayoutEditor.AudioFs.AudioFsTables.GetVorbisSetup(s.vorbisCrc32);
+            if (setup == null) throw new Exception("Vorbis 配置缺失（crc32=" + s.vorbisCrc32 + "）");
+            byte[] ogg = LayoutEditor.AudioFs.AudioFsFsb5.RebuildVorbisOgg(s, setup, 1);
+            File.WriteAllBytes(outPathNoExt + ".ogg", ogg);
+            return ".ogg";
+        }
+        if (mode == LayoutEditor.AudioFs.AudioFsFsb5.ModeImaAdpcm)
+        {
+            short[] pcm = LayoutEditor.AudioFs.AudioFsFsb5.DecodeImaAdpcm(s);
+            byte[] wav = LayoutEditor.AudioFs.AudioFsFsb5.BuildWav(pcm, s.channels, s.frequency);
+            File.WriteAllBytes(outPathNoExt + ".wav", wav);
+            return ".wav";
+        }
+        throw new Exception("不支持的音频格式 mode=" + mode);
+    }
+
+    private static List<LayoutEditor.AudioFs.AudioFsValue> AsArray(LayoutEditor.AudioFs.AudioFsValue v)
+    {
+        if (v.isObject) throw new Exception("expected array");
+        return (List<LayoutEditor.AudioFs.AudioFsValue>)v.primitive;
+    }
+
+    // -------------------------------------------------------------
+    // Bundle 环境：加载 / container 查找 / PPtr 解析 / 资源读取
+    // -------------------------------------------------------------
+
+    private static void LoadTables()
+    {
+        if (_tablesLoaded) return;
+        string dir = Path.Combine(Application.dataPath, "Editor/LayoutEditor/AudioFs").Replace('\\', '/');
+        LayoutEditor.AudioFs.AudioFsTables.LoadCommonStrings(Path.Combine(dir, "oc2-common-strings.txt"));
+        LayoutEditor.AudioFs.AudioFsTables.LoadVorbisSetups(Path.Combine(dir, "vorbis-setup-tables.txt"));
+        InitTagTypes();
+        _tablesLoaded = true;
+    }
+
+    private static Bundle LoadBundle(string name)
+    {
+        Bundle b;
+        if (_bundles.TryGetValue(name, out b))
+        {
+            if (b.data == null) b.data = b.raw.Data; // 被裁剪后重载
+            return b;
+        }
+        string path = Path.Combine(_bundlesDir, name);
+        b = new Bundle();
+        b.name = name;
+        b.raw = LayoutEditor.AudioFs.AudioFsBundle.Scan(path);
+        b.data = b.raw.Data;
+        foreach (var e in b.raw.entries)
+        {
+            _cabToBundle[e.name] = name;
+            if (e.name.EndsWith(".resS", StringComparison.OrdinalIgnoreCase) ||
+                e.name.EndsWith(".resource", StringComparison.OrdinalIgnoreCase))
+                continue;
+            var bytes = new byte[e.size];
+            Buffer.BlockCopy(b.data, (int)e.offset, bytes, 0, (int)e.size);
+            b.files[e.name] = LayoutEditor.AudioFs.AudioFsSerializedFile.Parse(e.name, bytes);
+        }
+        _bundles[name] = b;
+        _bundleOrder.Add(name);
+        return b;
+    }
+
+    /// <summary>限制缓存：保留最近 8 个 bundle 的解压数据（条目/序列化文件元数据保留）。</summary>
+    private static void TrimBundleCache()
+    {
+        while (_bundleOrder.Count > 8)
+        {
+            string evict = _bundleOrder[0];
+            _bundleOrder.RemoveAt(0);
+            Bundle b;
+            if (_bundles.TryGetValue(evict, out b))
+                b.data = null;
+        }
+    }
+
+    private static ObjRef FindByContainer(string bundleName, string containerPath)
+    {
+        var b = LoadBundle(bundleName);
+        string target = (containerPath ?? "").ToLowerInvariant().Replace('\\', '/');
+        foreach (var sf in b.files.Values)
+        {
+            var abObj = sf.FindByClass(142);
+            if (abObj == null) continue;
+            LayoutEditor.AudioFs.AudioFsValue abTree;
+            try { abTree = abObj.ReadValue(b.data); }
+            catch (Exception) { continue; }
+            var cont = abTree.Field("m_Container");
+            if (cont == null) continue;
+            foreach (var pair in AsArray(cont.value))
+            {
+                var pf = pair.Fields;
+                string path = pf[0].value.AsString();
+                if (string.Compare((path ?? "").Replace('\\', '/'), target, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    var pptr = pf[1].value.Field("asset").value;
+                    int mfid = (int)pptr.Field("m_FileID").value.AsInt();
+                    long mpid = pptr.Field("m_PathID").value.AsInt();
+                    return ResolvePPtr(new ObjRef { obj = abObj, sf = sf, bundle = b }, mfid, mpid);
+                }
+            }
+        }
+        return null;
+    }
+
+    private static string CabOfExternal(string ext)
+    {
+        // 形如 archive:/CAB-xxx/CAB-xxx（单斜杠）
+        string cab = ext;
+        int colon = cab.IndexOf(':');
+        if (colon >= 0) cab = cab.Substring(colon + 1);
+        cab = cab.TrimStart('/');
+        int slash = cab.IndexOf('/');
+        if (slash >= 0) cab = cab.Substring(0, slash);
+        return cab;
+    }
+
+    private static ObjRef ResolvePPtr(ObjRef from, int mFileId, long mPathId)
+    {
+        if (mFileId == 0)
+        {
+            var o = from.sf.GetByPathId(mPathId);
+            if (o != null) return new ObjRef { obj = o, sf = from.sf, bundle = from.bundle };
+            foreach (var sf in from.bundle.files.Values)
+            {
+                var o2 = sf.GetByPathId(mPathId);
+                if (o2 != null) return new ObjRef { obj = o2, sf = sf, bundle = from.bundle };
+            }
+            return null;
+        }
+        int idx = mFileId - 1;
+        if (idx < 0 || idx >= from.sf.externals.Count) return null;
+        string cab = CabOfExternal(from.sf.externals[idx]);
+        string bundleName = FindBundleForCab(cab);
+        if (bundleName == null) return null;
+        var dep = LoadBundle(bundleName);
+        foreach (var depSf in dep.files.Values)
+        {
+            var o = depSf.GetByPathId(mPathId);
+            if (o != null) return new ObjRef { obj = o, sf = depSf, bundle = dep };
+        }
+        return null;
+    }
+
+    private static string FindBundleForCab(string cab)
+    {
+        if (_cabToBundle.ContainsKey(cab)) return _cabToBundle[cab];
+        foreach (var f in Directory.GetFiles(_bundlesDir))
+        {
+            string n = Path.GetFileName(f);
+            if (n.StartsWith(".") || n.EndsWith(".meta")) continue;
             try
             {
-                var r = JsonUtility.FromJson<AudioExportResult>(File.ReadAllText(resultPath));
-                if (r.files != null)
-                    foreach (var f in r.files)
-                        if (f != null && !string.IsNullOrEmpty(f.key))
-                            results[f.key] = f;
+                var scanned = LayoutEditor.AudioFs.AudioFsBundle.Scan(f);
+                foreach (var e in scanned.entries)
+                    _cabToBundle[e.name] = n;
             }
-            catch (Exception ex)
-            {
-                Debug.LogWarning("Export Audio: parse result failed: " + ex.Message);
-            }
+            catch (Exception) { }
+            if (_cabToBundle.ContainsKey(cab)) return _cabToBundle[cab];
         }
+        return null;
+    }
 
-        int okCount = 0;
-        int failCount = 0;
-        var req = _exportRequest;
-        _exportRequest = null;
-
-        // ---- BGM ----
-        var bgmList = new List<AudioExportBgmDto>();
-        foreach (var m in req.music ?? new AudioExportRequestMusic[0])
-        {
-            AudioExportResultFile f;
-            if (results.TryGetValue(m.filename, out f) && f.ok && !string.IsNullOrEmpty(f.actual))
-            {
-                bgmList.Add(new AudioExportBgmDto { guid = m.guid, id = m.id, nameZh = m.nameZh, filename = f.actual });
-                okCount++;
-            }
-            else
-            {
-                failCount++;
-            }
-        }
-
-        // ---- SFX dirs ----
-        var sfxList = new List<AudioExportSfxDirDto>();
-        foreach (var d in req.dirs ?? new AudioExportRequestDir[0])
-        {
-            var clips = new List<AudioExportSfxClipDto>();
-            foreach (var c in d.clips ?? new AudioExportRequestClip[0])
-            {
-                AudioExportResultFile f;
-                if (results.TryGetValue(c.filename, out f) && f.ok && !string.IsNullOrEmpty(f.actual))
-                {
-                    clips.Add(new AudioExportSfxClipDto { tag = c.tag, type = c.type, filename = f.actual });
-                    okCount++;
-                }
-                else
-                {
-                    failCount++;
-                }
-            }
-            sfxList.Add(new AudioExportSfxDirDto { id = d.dirId, nameZh = d.nameZh, clips = clips.ToArray() });
-        }
-
-        // ---- Ambiences ----
-        var ambMap = new Dictionary<string, AudioExportRequestAmbience>();
-        foreach (var a in req.ambiences ?? new AudioExportRequestAmbience[0])
-            if (!ambMap.ContainsKey(a.tag)) ambMap[a.tag] = a;
-
-        var ambList = new List<AudioExportAmbienceDto>();
-        foreach (var tagName in Enum.GetNames(typeof(LevelInfoSO.GameLoopingAudioTag)))
-        {
-            if (tagName == "COUNT") continue;
-            AudioExportRequestAmbience cand;
-            AudioExportResultFile f;
-            if (ambMap.TryGetValue(tagName, out cand) &&
-                results.TryGetValue(cand.filename, out f) && f.ok && !string.IsNullOrEmpty(f.actual))
-            {
-                ambList.Add(new AudioExportAmbienceDto
-                    { tag = tagName, found = true, filename = f.actual, dirId = cand.dirId });
-            }
-            else
-            {
-                ambList.Add(new AudioExportAmbienceDto { tag = tagName, found = false });
-            }
-        }
-
-        var manifest = new AudioExportManifestDto
-        {
-            generatedAt = DateTime.UtcNow.ToString("o"),
-            bgm = bgmList.ToArray(),
-            sfx = sfxList.ToArray(),
-            ambiences = ambList.ToArray()
-        };
-        File.WriteAllText(
-            Path.Combine(_exportRoot, "audio-exports.json"),
-            JsonUtility.ToJson(manifest, true));
-
-        string msg = string.Format("导出完成！\n\n成功 {0} 个，失败 {1} 个。\n\n输出目录：\n{2}",
-            okCount, failCount, _exportRoot);
-        if (exitCode != 0)
-            msg += "\n\n⚠️ 导出器脚本异常退出，失败原因见 Console 日志。";
-        else if (!string.IsNullOrEmpty(pythonOutput) && pythonOutput.Contains("ERROR:"))
-            msg += "\n\n⚠️ 导出器报告错误，详见 Console 日志。";
-        EditorUtility.DisplayDialog("Export Audio", msg, "OK");
+    private static byte[] ReadClipResource(ObjRef clip, LayoutEditor.AudioFs.AudioFsValue cv)
+    {
+        var b = clip.bundle;
+        if (b.data == null) b.data = b.raw.Data;
+        var res = cv.Field("m_Resource").value;
+        string src = res.Field("m_Source").value.AsString();
+        long off = res.Field("m_Offset").value.AsInt();
+        long size = res.Field("m_Size").value.AsInt();
+        string entryName = src;
+        int slash = entryName.LastIndexOf('/');
+        if (slash >= 0) entryName = entryName.Substring(slash + 1);
+        var entry = b.raw.FindEntry(entryName);
+        if (entry == null) throw new Exception("资源条目未找到：" + entryName);
+        var buf = new byte[size];
+        Buffer.BlockCopy(b.data, (int)(entry.offset + off), buf, 0, (int)size);
+        return buf;
     }
 
     // -------------------------------------------------------------
@@ -494,81 +590,6 @@ public static class LayoutEditorAudioExporter
 
         list.Sort((a, b) => string.Compare(a.id, b.id, StringComparison.Ordinal));
         return list;
-    }
-
-    private static bool _bundlesReused;
-
-    private static Dictionary<string, AssetBundle> LoadAllBundles(HashSet<string> bundleNames)
-    {
-        // Reuse bundles already loaded by PseudoPrefabManager when a scene is open
-        var mgr = LevelEditor.PseudoPrefabManager.Instance;
-        if (mgr != null)
-        {
-            var reused = new Dictionary<string, AssetBundle>();
-            foreach (var name in bundleNames)
-            {
-                try
-                {
-                    var bundle = LevelEditor.PseudoPrefabManager.GetAssetBundle(name);
-                    if (bundle != null)
-                        reused[name] = bundle;
-                }
-                catch (System.Exception)
-                {
-                    // bundle not in manager's dict, will be missing
-                }
-            }
-            if (reused.Count > 0)
-            {
-                _bundlesReused = true;
-                return reused;
-            }
-        }
-
-        _bundlesReused = false;
-        string manifestPath = Path.Combine(Application.streamingAssetsPath, "Windows/Windows").Replace('\\', '/');
-        var manifestBundle = AssetBundle.LoadFromFile(manifestPath);
-        if (manifestBundle == null)
-            throw new System.Exception("Cannot load Windows manifest bundle from " + manifestPath);
-
-        var manifest = manifestBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
-        if (manifest == null)
-            throw new System.Exception("AssetBundleManifest not found in Windows bundle");
-
-        var allNames = new HashSet<string>(bundleNames);
-        foreach (var name in bundleNames)
-        foreach (var dep in manifest.GetAllDependencies(name))
-            allNames.Add(dep);
-
-        var bundles = new Dictionary<string, AssetBundle>();
-        foreach (var name in allNames)
-        {
-            string path = Path.Combine(Application.streamingAssetsPath, "Windows/" + name)
-                .Replace('\\', '/');
-            if (!File.Exists(path))
-                continue;
-            var bundle = AssetBundle.LoadFromFile(path);
-            if (bundle != null)
-                bundles[name] = bundle;
-        }
-
-        manifestBundle.Unload(false);
-        return bundles;
-    }
-
-    private static AudioClip GetBaseAudioClip(object entry)
-    {
-        var type = entry.GetType();
-        foreach (var f in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (f.FieldType != typeof(AudioClip))
-                continue;
-            if (f.Name == "StartClip" || f.Name == "EndClip")
-                continue;
-            return f.GetValue(entry) as AudioClip;
-        }
-
-        return null;
     }
 
     private static string SanitizeFilename(string s)

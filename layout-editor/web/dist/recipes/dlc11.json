@@ -1,0 +1,844 @@
+{
+  "schemaVersion": 3,
+  "group": "dlc11",
+  "itemCount": 21,
+  "recipes": [
+    {
+      "guid": "0f3c0cb3723f9fa9a0946ec627dc40c9",
+      "id": "tomato_cucumber_onion",
+      "nameZh": "番茄黄瓜洋葱沙拉",
+      "nameEn": "Tomato Cucumber & Onion Salad",
+      "assetPath": "Assets/common03/Recipes/dlc11/tomato_cucumber_onion.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_tomato",
+            "dlc11_cucumber",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "baad8f77ae279bda42a56423ffa1c659",
+      "id": "dlc11_hotdog_ketchup_mustard",
+      "nameZh": "番茄酱芥末热狗（DLC11）",
+      "nameEn": "Hot Dog Ketchup & Mustard (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_hotdog_ketchup_mustard.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_ketchup",
+            "dlc11_mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "6ad3960a4ea1a03d9d548b24ece92b99",
+      "id": "dlc11_hotdog_ketchup",
+      "nameZh": "番茄酱热狗（DLC11）",
+      "nameEn": "Hot Dog & Ketchup (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_hotdog_ketchup.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_ketchup"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_ketchup"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "b4a2ac7b4f21722ee388bdc59a497af5",
+      "id": "salad_tomato_onion",
+      "nameZh": "番茄洋葱沙拉",
+      "nameEn": "Tomato & Onion Salad",
+      "assetPath": "Assets/common03/Recipes/dlc11/salad_tomato_onion.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "dlc11_tomato",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f439c8b1a3e7668333bec741dfa99870",
+      "id": "tomato_corn_onion",
+      "nameZh": "番茄玉米洋葱沙拉",
+      "nameEn": "Tomato Corn & Onion Salad",
+      "assetPath": "Assets/common03/Recipes/dlc11/tomato_corn_onion.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_tomato",
+        "corn",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_tomato",
+            "corn",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "85af1e323bd8673c9a68b9e3f17da1e2",
+      "id": "salad_cucumber_tomato_onion",
+      "nameZh": "黄瓜番茄洋葱沙拉",
+      "nameEn": "Cucumber Tomato & Onion Salad",
+      "assetPath": "Assets/common03/Recipes/dlc11/salad_cucumber_tomato_onion.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 0,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "dlc11_tomato",
+            "dlc11_cucumber",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9a83520c544b94e585bfd1e91d6bb0cc",
+      "id": "salad_cucumber_onion",
+      "nameZh": "黄瓜洋葱沙拉",
+      "nameEn": "Cucumber & Onion Salad",
+      "assetPath": "Assets/common03/Recipes/dlc11/salad_cucumber_onion.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "dlc11_cucumber",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "47f571713dea2fcb0a720d396f563076",
+      "id": "dlc11_hotdog_mustard",
+      "nameZh": "芥末热狗（DLC11）",
+      "nameEn": "Hot Dog & Mustard (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_hotdog_mustard.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_mustard"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "6cdc770ddaa0aa873ccc0ad2fdcc9a90",
+      "id": "icecream_chocolate",
+      "nameZh": "巧克力冰淇淋",
+      "nameEn": "Chocolate Ice Cream",
+      "assetPath": "Assets/common03/Recipes/dlc11/icecream_chocolate.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "ChocolateSO",
+        "icecube",
+        "dlc11_milk"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "icecream",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "54aeb2d40e9638cfaa1e00dbc9d5cb39",
+      "id": "orangesodafloat_chocolate",
+      "nameZh": "巧克力橙味汽水冰淇淋",
+      "nameEn": "Orange Soda Ice Cream Float (Chocolate)",
+      "assetPath": "Assets/common03/Recipes/dlc11/orangesodafloat_chocolate.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "ChocolateSO",
+        "icecube",
+        "dlc11_milk",
+        "orangesoda"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "orangesoda"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "b2e245b9af1c2e38da900abf92d41cd7",
+      "id": "rootbeerfloat_chocolate",
+      "nameZh": "巧克力沙士冰淇淋",
+      "nameEn": "Root Beer Ice Cream Float (Chocolate)",
+      "assetPath": "Assets/common03/Recipes/dlc11/rootbeerfloat_chocolate.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "ChocolateSO",
+        "icecube",
+        "dlc11_milk",
+        "rootbeer"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "rootbeer"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "5af4125798dd9b9f22fbf481c0e5b3bf",
+      "id": "icecream_vanilla",
+      "nameZh": "香草冰淇淋",
+      "nameEn": "Vanilla Ice Cream",
+      "assetPath": "Assets/common03/Recipes/dlc11/icecream_vanilla.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "vanilla",
+        "icecube",
+        "dlc11_milk"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "icecream",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "vanilla",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": false
+    },
+    {
+      "guid": "19765d73b6dfd0f2d8bd10c2bad68fce",
+      "id": "orangesodafloat_vanilla",
+      "nameZh": "香草橙味汽水冰淇淋",
+      "nameEn": "Orange Soda Ice Cream Float (Vanilla)",
+      "assetPath": "Assets/common03/Recipes/dlc11/orangesodafloat_vanilla.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "vanilla",
+        "icecube",
+        "dlc11_milk",
+        "orangesoda"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "orangesoda"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "vanilla",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0a57fffe8eb3a30ed0df23b83f58d1b7",
+      "id": "rootbeerfloat_vanilla",
+      "nameZh": "香草沙士冰淇淋",
+      "nameEn": "Root Beer Ice Cream Float (Vanilla)",
+      "assetPath": "Assets/common03/Recipes/dlc11/rootbeerfloat_vanilla.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "vanilla",
+        "icecube",
+        "dlc11_milk",
+        "rootbeer"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "rootbeer"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "vanilla",
+            "icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "478f472f2e8d37f42a6de56806a34fc5",
+      "id": "dlc11_hotdog_onions_ketchup",
+      "nameZh": "洋葱番茄酱热狗（DLC11）",
+      "nameEn": "Hot Dog Onions & Ketchup (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_hotdog_onions_ketchup.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_onion",
+        "dlc11_ketchup"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_ketchup"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc11_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "635e6327e96e10dd781abadf4ca5454c",
+      "id": "dlc11_hotdog_onions_mustard",
+      "nameZh": "洋葱芥末热狗（DLC11）",
+      "nameEn": "Hot Dog Onions & Mustard (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_hotdog_onions_mustard.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_onion",
+        "dlc11_mustard"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun",
+            "dlc11_mustard"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc11_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "a9e32ddbde40025c5b07afb0751b6c61",
+      "id": "dlc11_hotdog_onions",
+      "nameZh": "洋葱热狗（DLC11）",
+      "nameEn": "Hot Dog & Onions (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_hotdog_onions.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter",
+        "dlc11_onion"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc11_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "13c7fb32dd92fd78b20468b8e53b2d41",
+      "id": "salad_corn_onion",
+      "nameZh": "玉米洋葱沙拉",
+      "nameEn": "Corn & Onion Salad",
+      "assetPath": "Assets/common03/Recipes/dlc11/salad_corn_onion.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "corn",
+        "dlc11onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "corn",
+            "dlc11onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "7f52b468f31974ef556fe0fa8ba9056d",
+      "id": "dlc11_hotdog_plain",
+      "nameZh": "原味热狗（DLC11）",
+      "nameEn": "Plain Hot Dog (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_hotdog_plain.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_hotdogbun",
+        "dlc11_frankfurter"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_hotdogbun"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fb0851cd16ddcd6df69600c278e8c656",
+      "id": "dlc11_friedonions",
+      "nameZh": "炸洋葱（DLC11）",
+      "nameEn": "Fried Onions (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_friedonions.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_onion"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "dlc11_onion"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8c9ad5c480eb745a670f30ea0ac5c831",
+      "id": "dlc11_boiledfrankfurter",
+      "nameZh": "煮热狗肠（DLC11）",
+      "nameEn": "Boiled Frankfurter (DLC11)",
+      "assetPath": "Assets/common03/Recipes/dlc11/dlc11_boiledfrankfurter.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "dlc11_frankfurter"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "dlc11_frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    }
+  ]
+}

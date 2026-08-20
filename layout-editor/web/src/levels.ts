@@ -16,9 +16,11 @@ import type {
   MusicEntry,
   PerPlayerConfig,
   RecipeEntry,
+  SetExportStatus,
 } from "./types";
 import { closeModal, openModal } from "./modals";
-import { showBusy, hideBusy } from "./busy";
+import { showBusy, hideBusy, setBusyMessage } from "./busy";
+import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
 import { navHtml, wireNav } from "./nav";
 import { applyRatio, computeAutoScores, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
@@ -153,6 +155,7 @@ async function renderSetList(app: HTMLElement): Promise<void> {
         <div class="m-actions">
           <button class="m-btn primary" data-open="${esc(s.setName)}">打开</button>
           <button class="m-btn" data-edit="${esc(s.setName)}">编辑信息</button>
+          <button class="m-btn" data-export="${esc(s.setName)}">导出</button>
           <button class="m-btn danger" data-del="${esc(s.setName)}">删除</button>
         </div>
       </div>`
@@ -182,6 +185,12 @@ async function renderSetList(app: HTMLElement): Promise<void> {
     b.addEventListener("click", () => {
       const s = setMap.get(b.dataset.del!);
       if (s) confirmDeleteSet(app, s);
+    })
+  );
+  content.querySelectorAll<HTMLButtonElement>("[data-export]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const s = setMap.get(b.dataset.export!);
+      if (s) confirmExportSet(app, s);
     })
   );
 }
@@ -216,6 +225,96 @@ function confirmDeleteSet(app: HTMLElement, s: LevelSetInfo): void {
     } catch (e) {
       setStatus((e as Error).message, false);
     } finally {
+      hideBusy();
+    }
+  });
+}
+
+// ==================== Set export（打包 AssetBundle + zip 下载） ====================
+
+/** 导出各阶段的提示（后端 message 已足够描述时优先用后端的）。 */
+const EXPORT_PHASE_HINT: Record<string, string> = {
+  queued: "任务已排队…",
+  prepare: "准备场景（逐个保存并清除临时物体）…",
+  clean: "清理旧构建产物…",
+  build: "构建 AssetBundle，约需 3-5 分钟，请保持 Unity 打开…",
+  package: "清理 manifest / meta 文件…",
+  zip: "生成 zip 压缩包…",
+};
+
+function fmtElapsed(ms: number): string {
+  const sec = Math.floor(ms / 1000);
+  const m = Math.floor(sec / 60);
+  return `${m}:${(sec % 60).toString().padStart(2, "0")}`;
+}
+
+function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
+  const display = s.levelSetNameZH || s.levelSetName || s.setName;
+  const prevVersion = (s.version || "").trim();
+  openModal(
+    `导出关卡集 · ${esc(display)}`,
+    `<p>将打包 <b>${esc(display)}</b>（${s.levelCount} 个关卡）的 AssetBundle 并生成可发布的 zip，<b>约需 3-5 分钟</b>。期间 Unity 会逐个保存场景并构建，请勿操作 Unity 或关闭本页。</p>
+     <p class="modal-hint">发布新版本前建议更新版本号（当前 <code>v${esc(prevVersion || "0")}</code>，会写入 LevelSetInfo）：</p>
+     <label class="m-field">版本号 version<input type="text" id="exp-set-version" autocomplete="off" placeholder="${esc(prevVersion || "0.1")}" value="${esc(prevVersion)}"></label>
+     <p class="modal-hint">zip 内含 <code>${esc(s.setName)}/info_${esc(s.setName)}</code> 与各场景 <code>${esc(s.setName)}/s_*</code>（不含 manifest/meta）。将 zip 解压到游戏 <code>BepInEx/plugins/OC2DIYLevel/levels/</code> 目录即可游玩。</p>`,
+    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>开始导出</button>`
+  );
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+    const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
+    if (okBtn) okBtn.disabled = true;
+    const versionInput = document.getElementById("exp-set-version") as HTMLInputElement | null;
+    const newVersion = (versionInput?.value ?? "").trim();
+    const startAt = Date.now();
+    suspendBridgeWatch(); // 构建会阻塞 Unity 主线程泵，健康探测会误报掉线
+    showBusy("正在启动导出…");
+    try {
+      if (newVersion && newVersion !== prevVersion) {
+        setBusyMessage("保存版本号…");
+        await api.updateSetInfo({
+          setName: s.setName,
+          levelSetName: s.levelSetName,
+          levelSetNameZH: s.levelSetNameZH,
+          author: s.author,
+          version: newVersion,
+        });
+      }
+      await api.startSetExport(s.setName);
+      closeModal();
+
+      // 轮询导出进度（状态端点由桥接监听线程直答，构建期间仍可响应）。
+      const deadline = Date.now() + 15 * 60 * 1000;
+      for (;;) {
+        if (Date.now() > deadline) throw new Error("导出超时（15 分钟），请查看 Unity Console。");
+        await new Promise((r) => setTimeout(r, 2000));
+        let st: SetExportStatus;
+        try {
+          st = await api.fetchSetExportStatus();
+        } catch {
+          continue; // 瞬时网络抖动，继续轮询
+        }
+        if (st.status === "error") throw new Error(st.error || "导出失败（详见 Unity Console）。");
+        if (st.status === "done" && st.setName === s.setName) {
+          setBusyMessage("导出完成，正在下载 zip…");
+          const res = await api.downloadSetExportZip(s.setName, st.zipFileName);
+          const url = URL.createObjectURL(res.blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = res.fileName;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          setStatus(`已导出 ${res.fileName}（${st.fileCount} 个文件），已开始下载`);
+          break;
+        }
+        const hint = st.message || EXPORT_PHASE_HINT[st.phase] || "导出中…";
+        setBusyMessage(`${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`);
+      }
+      await renderSetList(app);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+      if (okBtn) okBtn.disabled = false; // 允许重试（弹窗此时可能仍打开）
+    } finally {
+      resumeBridgeWatch();
       hideBusy();
     }
   });
@@ -306,23 +405,28 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
   }
   setStatus(`共 ${levels.length} 个关卡`);
 
-  const rows = levels
+  const cards = levels
     .map((lv, idx) => {
       const id = lv.dataDir.split("/").pop() || `level${idx}`;
+      const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
+      const title = lv.levelNameZH || lv.levelName || id;
+      const enName = lv.levelNameZH && lv.levelName ? lv.levelName : "";
       return `
-      <div class="m-row">
-        <div class="m-row-main">
-          <div class="m-row-title">${esc(lv.levelNameZH || lv.levelName || id)}</div>
-          <div class="m-row-sub">
-            ${lv.hasScreenshot ? '<span class="m-badge ok">截图</span>' : '<span class="m-badge">无截图</span>'}
-            ${lv.hasScene ? '<span class="m-badge ok">场景</span>' : '<span class="m-badge warn">缺场景</span>'}
-            ${esc(lv.sceneName)} · <span class="muted">${esc(id)}</span>
-          </div>
+      <div class="m-card m-level-card">
+        <div class="m-level-shot${shot ? "" : " empty"}">
+          ${shot ? `<img src="${esc(shot)}" alt="截图" loading="lazy">` : '<span class="muted">无截图</span>'}
         </div>
-        <button class="m-btn primary" data-edit="${esc(lv.assetPath)}">编辑</button>
-        <button class="m-btn" data-summary="${esc(lv.assetPath)}">📋 汇总</button>
-        <button class="m-btn" data-layout="${esc(lv.sceneAssetPath)}">打开布局</button>
-        <button class="m-btn danger" data-del="${esc(id)}">删除</button>
+        <h3 title="${esc(title)}">${esc(title)}${enName ? ` <span class="muted">(${esc(enName)})</span>` : ""}</h3>
+        <div class="m-meta">
+          ${lv.hasScene ? '<span class="m-badge ok">场景</span>' : '<span class="m-badge warn">缺场景</span>'}
+          <span class="muted">${esc(lv.sceneName)} · ${esc(id)}</span>
+        </div>
+        <div class="m-actions">
+          <button class="m-btn primary" data-edit="${esc(lv.assetPath)}">编辑</button>
+          <button class="m-btn" data-summary="${esc(lv.assetPath)}">📋 汇总</button>
+          <button class="m-btn" data-layout="${esc(lv.sceneAssetPath)}">打开布局</button>
+          <button class="m-btn danger" data-del="${esc(id)}">删除</button>
+        </div>
       </div>`;
     })
     .join("");
@@ -333,7 +437,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
       <span class="muted">当前关卡集：<b>${esc(setName)}</b></span>
     </div>
     <div class="m-section-title">关卡</div>
-    <div class="m-list">${rows || '<p class="muted">暂无关卡</p>'}</div>
+    <div class="m-grid m-level-grid">${cards || '<p class="muted">暂无关卡</p>'}</div>
   `;
 
   document.getElementById("new-level")?.addEventListener("click", () => openCreateLevelModal(app, setName));
@@ -1055,12 +1159,25 @@ export async function openAudioModal(
   const eventsByDir = new Map<string, DirectoryEvent>();
   for (const e of knowledge.directoryEvents) eventsByDir.set(e.id, e);
 
+  // ---- ambience validity ----
+  // 枚举里有 6 个死值（WashingUp/Sizzling 等）不存在于任何 AudioDirectoryData，
+  // 选中后运行时 AudioManager.FindEntry 会对空列表取下标直接越界。仅展示/保存有音频资源的 tag。
+  const ambValidSet = (knowledge.availableAmbiences || []).length
+    ? new Set<string>(knowledge.availableAmbiences!)
+    : null;
+  const ambUniverse = ambValidSet ? ambiances.filter((a) => ambValidSet.has(a)) : ambiances;
+  const droppedAmb = ambValidSet
+    ? (cur.ambiences || []).filter((a) => ambiances.includes(a) && !ambValidSet.has(a))
+    : [];
+
   // ---- mutable state ----
   const state = {
     musicGuid: cur.inLevelMusicGuid || "",
     deathGuid: cur.onDeathEffectGuid || "",
     dirGuids: new Set<string>((cur.audioDirectoryGuids || []).filter((g) => dirByGuid.has(g))),
-    ambiences: new Set<string>((cur.ambiences || []).filter((a) => ambiances.includes(a))),
+    ambiences: new Set<string>(
+      (cur.ambiences || []).filter((a) => ambiances.includes(a) && (!ambValidSet || ambValidSet.has(a)))
+    ),
     cleanExtras: false,
   };
 
@@ -1113,7 +1230,13 @@ export async function openAudioModal(
     bgmGroups.get(tk)!.push(m);
   }
   const bgmGroupKeys = [...bgmGroups.keys()].sort((a, b) => (a === "_other" ? 1 : a < b ? -1 : 1));
+  // 当前 BGM 不在曲库时（guid 未匹配）也保留显示，避免静默显示为「(无)」导致误存覆盖
+  const bgmInCatalog = musicByGuid.has(state.musicGuid);
+  const bgmCurId = cur.inLevelMusicId || state.musicGuid;
   const bgmOptHtml = `<option value="" ${!state.musicGuid ? "selected" : ""}>(无)</option>` +
+    (state.musicGuid && !bgmInCatalog
+      ? `<option value="${esc(state.musicGuid)}" selected>当前：${esc(bgmCurId)}（不在曲库，保持不变）</option>`
+      : "") +
     bgmGroupKeys
       .map((tk) => {
         const label = tk === "_other" ? "其他" : themeLabelZh(tk);
@@ -1191,7 +1314,7 @@ export async function openAudioModal(
   const ambThemeOf = new Map<string, string>();
   for (const t of knowledge.themes) for (const a of t.ambiences) ambThemeOf.set(a, t.key);
   const ambGroups = new Map<string, string[]>();
-  for (const a of ambiances) {
+  for (const a of ambUniverse) {
     const tk = ambThemeOf.get(a) || "_other";
     if (!ambGroups.has(tk)) ambGroups.set(tk, []);
     ambGroups.get(tk)!.push(a);
@@ -1322,25 +1445,27 @@ export async function openAudioModal(
     : "";
 
   // ---- render ----
-  const detectedThemes = [...themeSignals.themes, ...(themeSignals.raft ? ["raft"] : [])];
+  const detectedThemes = [...themeSignals.themes, ...(themeSignals.raft ? ["raft"] : "")].filter(Boolean);
   const recHint = detectedThemes.length
     ? `检测到主题：${detectedThemes.map((t) => esc(themeLabelZh(t))).join("、")}`
     : "未检测到明显主题（可手动选择）";
+  // 已选 BGM 的关卡默认打开「音乐」tab，直接显示当前 BGM
+  const defaultTab = state.musicGuid ? "music" : "check";
 
   openModal(
     `音频配置 · ${detail.levelName || detail.levelNameZH}`,
     `
     <p class="modal-hint">写入场景的 <code>PseudoPrefabManagerStub</code>。保存时会自动打开/保存场景、Reload，并<b>自动把所选 BGM / 音效集所需 bundle 并入 <code>LevelInfoSO.dependencies</code></b>（只增不删）。</p>
     <div class="cfg-tabs">
-      <button type="button" class="cfg-tab-btn active" data-tab="check">🔍 检查</button>
-      <button type="button" class="cfg-tab-btn" data-tab="music">🎵 音乐 / 特效</button>
+      <button type="button" class="cfg-tab-btn ${defaultTab === "check" ? "active" : ""}" data-tab="check">🔍 检查</button>
+      <button type="button" class="cfg-tab-btn ${defaultTab === "music" ? "active" : ""}" data-tab="music">🎵 音乐 / 特效</button>
       <button type="button" class="cfg-tab-btn" data-tab="mand">📦 强制音效集</button>
       <button type="button" class="cfg-tab-btn" data-tab="dirs">🔊 音效集</button>
       <button type="button" class="cfg-tab-btn" data-tab="amb">🌬️ 氛围音</button>
     </div>
 
     <!-- === TAB: 检查 === -->
-    <div class="au-pane" data-pane="check">
+    <div class="au-pane" data-pane="check" ${defaultTab === "check" ? "" : 'style="display:none"'}>
       <div class="modal-actions"><button type="button" class="m-btn small" id="au-apply-rec">✨ 应用主题推荐</button> <span class="muted small">${recHint}</span></div>
 
       <p class="modal-hint" style="margin-top:8px">覆盖检查${allGapsCount ? ` · <span class="dep-miss">有 ${allGapsCount} 处缺失</span>` : ""} <button type="button" class="link-btn" id="au-fix-gaps" ${allGapsCount ? "" : "disabled"}>添加所有缺失</button></p>
@@ -1349,7 +1474,7 @@ export async function openAudioModal(
     </div>
 
     <!-- === TAB: 音乐 / 特效 === -->
-    <div class="au-pane" data-pane="music" style="display:none">
+    <div class="au-pane" data-pane="music" ${defaultTab === "music" ? "" : 'style="display:none"'}>
       <div class="audio-grid">
         <label class="m-field">关卡 BGM (InLevelMusicSO)<select id="au-music">${bgmOptHtml}</select></label>
         <div id="au-music-warn" class="dep-warn dep-miss" style="display:none"></div>
@@ -1378,6 +1503,7 @@ export async function openAudioModal(
     <!-- === TAB: 氛围音 === -->
     <div class="au-pane" data-pane="amb" style="display:none">
       <p class="modal-hint">氛围音 InLevelAmbiences</p>
+      ${droppedAmb.length ? `<div class="dep-warn dep-miss">已移除 ${droppedAmb.length} 个无音频资源的无效氛围音（运行时会导致崩溃）：${droppedAmb.map((a) => esc(ambZh(a))).join("、")}，保存后生效。</div>` : ""}
       <div class="modal-scroll">${ambGroupsHtml || '<p class="muted">无</p>'}</div>
     </div>
 
@@ -1473,7 +1599,7 @@ export async function openAudioModal(
       }
     });
     rec.ambiences.forEach((a) => {
-      if (ambiances.includes(a)) {
+      if (ambUniverse.includes(a)) {
         state.ambiences.add(a);
         const cb = document.querySelector<HTMLInputElement>(`[data-amb][value="${a}"]`);
         if (cb) cb.checked = true;
@@ -1514,7 +1640,7 @@ export async function openAudioModal(
       return true;
     };
     const fixAmb = (a: string) => {
-      if (!ambiances.includes(a)) return false;
+      if (!ambUniverse.includes(a)) return false;
       state.ambiences.add(a);
       const cb = document.querySelector<HTMLInputElement>(`[data-amb][value="${a}"]`);
       if (cb) cb.checked = true;
@@ -1535,11 +1661,32 @@ export async function openAudioModal(
 
   // ---- Audio player ----
   if (exports) {
+    const playerEl = document.getElementById("au-player")!;
     const audio = document.createElement("audio");
     audio.preload = "auto";
     audio.style.display = "none";
-    document.body.appendChild(audio);
-    const playerEl = document.getElementById("au-player")!;
+    playerEl.appendChild(audio); // 挂在弹窗内，随弹窗一起销毁
+    // 弹窗关闭（取消/保存/点背景/程序关闭）时停止播放并释放
+    const disposeAudio = (): void => {
+      try {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      } catch {
+        /* ignore */
+      }
+      audio.remove();
+    };
+    const modalRoot = document.getElementById("modal-root");
+    if (modalRoot) {
+      const observer = new MutationObserver(() => {
+        if (!modalRoot.hasChildNodes()) {
+          observer.disconnect();
+          disposeAudio();
+        }
+      });
+      observer.observe(modalRoot, { childList: true });
+    }
     const playerBtn = document.getElementById("au-player-btn") as HTMLButtonElement;
     const playerLabel = document.getElementById("au-player-label")!;
     const playerTime = document.getElementById("au-player-time")!;

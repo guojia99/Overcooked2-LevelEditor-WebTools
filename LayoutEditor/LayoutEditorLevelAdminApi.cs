@@ -47,12 +47,51 @@ public static class LayoutEditorLevelAdminApi
             baseBundles = k.baseBundles,
             alwaysLoadedBundles = k.alwaysLoadedBundles,
             mandatoryDirectoryIds = k.mandatoryDirectoryIds,
+            availableAmbiences = k.availableAmbiences,
             directoryEvents = k.directoryEvents,
             themes = k.themes,
             deathThemes = k.deathThemes,
             ambienceLabels = k.ambienceLabels,
             itemAudioRules = k.itemAudioRules
         };
+    }
+
+    /// <summary>audio-knowledge.json 的 availableAmbiences 记录了所有实际存在于至少一个
+    /// AudioDirectoryData 的 GameLoopingAudioTag。枚举里另有 6 个死值（WashingUp/Sizzling 等）
+    /// 没有任何音频资源，被选进 inLevelAmbiences 后运行时宿主 AudioManager.FindEntry 会对
+    /// 空列表取下标直接越界崩溃。返回 null 表示知识库未提供（不过滤）。</summary>
+    public static HashSet<string> GetAvailableAmbiences()
+    {
+        var k = LoadAudioKnowledge();
+        if (k.availableAmbiences == null || k.availableAmbiences.Length == 0)
+            return null;
+        var set = new HashSet<string>();
+        foreach (var n in k.availableAmbiences)
+            set.Add(n);
+        return set;
+    }
+
+    /// <summary>剔除 inLevelAmbiences 中没有任何 AudioDirectoryData 条目的死枚举值
+    /// （否则运行时 AudioManager.FindEntry 越界）。返回被移除的名字，无知识库时不动。</summary>
+    public static List<string> StripInvalidAmbiences(LevelInfoSO info)
+    {
+        if (info == null || info.inLevelAmbiences == null || info.inLevelAmbiences.Length == 0)
+            return null;
+        var available = GetAvailableAmbiences();
+        if (available == null)
+            return null;
+        var kept = new List<LevelInfoSO.GameLoopingAudioTag>();
+        var removed = new List<string>();
+        foreach (var t in info.inLevelAmbiences)
+        {
+            if (available.Contains(t.ToString()))
+                kept.Add(t);
+            else
+                removed.Add(t.ToString());
+        }
+        if (removed.Count > 0)
+            info.inLevelAmbiences = kept.ToArray();
+        return removed.Count > 0 ? removed : null;
     }
 
     public static AmbienceCatalogDto ScanAmbiences()
@@ -307,7 +346,7 @@ public static class LayoutEditorLevelAdminApi
     ///  缺它则 info bundle 不打包，Assets/AssetBundles/&lt;set&gt;/ 下没有 info_&lt;set&gt;，
     ///  游戏加载不到关卡集配置（LevelSetInfo/LevelInfo/config 等 data/ 下资产）。
     ///  幂等且保守：只补**空值**（历史关卡集漏设时），已设置过的（含历史 test_level 等旧名）不改。</summary>
-    private static void EnsureSetInfoBundle(string setName)
+    public static void EnsureSetInfoBundle(string setName)
     {
         if (string.IsNullOrEmpty(setName))
             return;
@@ -401,7 +440,32 @@ public static class LayoutEditorLevelAdminApi
             });
         }
 
-        list.Sort((a, b) => string.Compare(a.levelName, b.levelName, StringComparison.Ordinal));
+        // 按 LevelSetInfo.levelInfos 的记录顺序（即创建顺序）排列；
+        // 未登记进 levelInfos 的游离关卡排在末尾，回退为 levelName 字典序。
+        var orderMap = new Dictionary<string, int>();
+        var setInfo = FindSetInfo(setName);
+        if (setInfo != null && setInfo.levelInfos != null)
+        {
+            for (int i = 0; i < setInfo.levelInfos.Length; i++)
+            {
+                var li = setInfo.levelInfos[i];
+                if (li == null)
+                    continue;
+                var p = AssetDatabase.GetAssetPath(li);
+                if (!string.IsNullOrEmpty(p) && !orderMap.ContainsKey(p))
+                    orderMap.Add(p, i);
+            }
+        }
+
+        list.Sort((a, b) =>
+        {
+            int ia;
+            int ib;
+            if (!orderMap.TryGetValue(a.assetPath, out ia)) ia = int.MaxValue;
+            if (!orderMap.TryGetValue(b.assetPath, out ib)) ib = int.MaxValue;
+            if (ia != ib) return ia.CompareTo(ib);
+            return string.Compare(a.levelName, b.levelName, StringComparison.Ordinal);
+        });
         return new LevelListDto { levels = list.ToArray() };
     }
 
@@ -845,12 +909,19 @@ public static class LayoutEditorLevelAdminApi
         info.inLevelMusicSO = LoadPseudoByGuid(dto.inLevelMusicGuid);
 
         var ambList = new List<LevelInfoSO.GameLoopingAudioTag>();
+        var ambAvailable = GetAvailableAmbiences();
         if (dto.ambiences != null)
         {
             foreach (var name in dto.ambiences)
             {
                 if (string.IsNullOrEmpty(name) || name == "COUNT")
                     continue;
+                // 无任何 AudioDirectoryData 条目的死枚举值会让运行时 FindEntry 越界，直接拒绝
+                if (ambAvailable != null && !ambAvailable.Contains(name))
+                {
+                    Debug.LogWarning("[LayoutEditor] dropped invalid ambience (no audio resource): " + name);
+                    continue;
+                }
                 try
                 {
                     var t = (LevelInfoSO.GameLoopingAudioTag)Enum.Parse(

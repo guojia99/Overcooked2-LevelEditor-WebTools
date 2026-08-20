@@ -86,6 +86,13 @@ export function buildLayoutDom(): void {
     <aside class="palette" id="palette-panel">
       <div class="palette-header">
         <input type="search" id="palette-search" placeholder="搜索 prefab…" />
+        <select id="decor-size-filter" class="decor-size-filter hidden" title="按装饰物实测尺寸筛选（小 / 中 / 大 / 特大）">
+          <option value="all">尺寸：全部</option>
+          <option value="small">尺寸：小</option>
+          <option value="medium">尺寸：中</option>
+          <option value="large">尺寸：大</option>
+          <option value="xl">尺寸：特大</option>
+        </select>
       </div>
       <div class="palette-cats" id="palette-cats"></div>
     </aside>

@@ -845,6 +845,7 @@ public class AudioDirectoryCatalogDto
     public string[] baseBundles;
     public string[] alwaysLoadedBundles;
     public string[] mandatoryDirectoryIds;
+    public string[] availableAmbiences;
     public DirectoryEventDto[] directoryEvents;
     public AudioThemeDto[] themes;
     public AudioDeathThemeDto[] deathThemes;
@@ -980,6 +981,26 @@ public class LevelSetInfoUpdateDto
     public string levelSetNameZH;
     public string author;
     public string version;
+}
+
+[Serializable]
+public class SetExportStatusDto
+{
+    /** idle | running | done | error */
+    public string status;
+    public string setName;
+    /** queued | prepare | clean | build | package | zip | done */
+    public string phase;
+    public string message;
+    public string error;
+    public string zipFileName;
+    public int fileCount;
+}
+
+[Serializable]
+public class SetExportStartDto
+{
+    public string setName;
 }
 
 // ---------- Levels ----------

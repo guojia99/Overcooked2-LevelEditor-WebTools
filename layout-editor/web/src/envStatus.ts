@@ -23,7 +23,7 @@ export interface EnvStatus {
   dictionaryLoaded?: boolean;
   /** 音频导出清单存在。 */
   audioExports?: boolean;
-  /** 已导出的 ogg 数量。 */
+  /** 已导出的音频数量（ogg + wav）。 */
   audioExportClips?: number;
   /** 游戏 bundle 目录存在。 */
   gameBundles?: boolean;
