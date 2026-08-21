@@ -123,7 +123,10 @@ public class LayoutRuntimeSwitchLink : MonoBehaviour
 
     /// <summary>大炮：炮内玩家摇杆分给 ServerPilotRotation（瞄准）；发射按钮门控
     ///  （炮内有人才可点，空炮置灰）。loaded 用 AttachPoint 下是否挂着玩家判定
-    ///  （Load 时玩家 SetParent(AttachPoint)，Unload/发射后脱离）。</summary>
+    ///  （Load 时玩家 SetParent(AttachPoint)，Unload/发射后脱离）。
+    ///  大炮被控制终端绑定（Terminal.m_pilotableObject 指向本炮 PilotMovement）时
+    ///  跳过座位赋值：瞄准权归终端玩家（宿主 ServerTerminal 负责 AssignPlayer），
+    ///  本处赋值/清空会与终端打架。</summary>
     private void PatchCannon(Cannon cannon)
     {
         var serverCannon = cannon.GetComponent<ServerCannon>();
@@ -133,7 +136,7 @@ public class LayoutRuntimeSwitchLink : MonoBehaviour
         GameObject player = loaded ? cannon.m_attachPoint.GetChild(0).gameObject : null;
 
         var pilot = cannon.GetComponent<ServerPilotRotation>();
-        if (pilot != null)
+        if (pilot != null && !IsTerminalAimed(cannon))
         {
             if (loaded && player != null)
             {
@@ -154,6 +157,36 @@ public class LayoutRuntimeSwitchLink : MonoBehaviour
             if (interactable != null && interactable.enabled != loaded)
                 interactable.enabled = loaded;
         }
+    }
+
+    /// <summary>本炮是否被控制终端绑定为可操控目标（多路控制终端
+    ///  MultiControlTerminal.m_pilotableObject == 本炮的 PilotMovement）。
+    ///  绑定关系运行期只增不减，命中即缓存（避免每帧 FindObjectsOfType）。</summary>
+    private static readonly Dictionary<Cannon, bool> m_terminalAimed = new Dictionary<Cannon, bool>();
+
+    private static bool IsTerminalAimed(Cannon cannon)
+    {
+        bool cached;
+        if (m_terminalAimed.TryGetValue(cannon, out cached))
+            return cached;
+        bool result = false;
+        var pilotMovement = cannon.GetComponent<PilotMovement>();
+        if (pilotMovement != null)
+        {
+            var terminals = FindObjectsOfType<Terminal>();
+            for (int i = 0; i < terminals.Length; i++)
+            {
+                var t = terminals[i];
+                if (t != null && t.m_pilotableObject == pilotMovement)
+                {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        if (result)
+            m_terminalAimed[cannon] = true;
+        return result;
     }
 }
 

@@ -29,6 +29,13 @@ static class LayoutEditorGridSnapGuard
     {
         "workstation_guillotine_01",
         "workstation_furnace_01",
+        // 火锅全家（灶台 + 静态/可移动大锅）：child 带 EditorGridSnap 会吸附整格
+        // （1.2），与 web 摆放的半格（0.6）坐标互相拉扯，写回-读回循环中每次偏半格。
+        "cooking_region_floorburner",
+        "dlc10_cooking_region_floorburner",
+        "pushable_object",
+        "utensil_large_pot_01",
+        "utensil_dlc10_large_pot_01",
     };
 
     private static readonly FieldInfo _constrainXField;

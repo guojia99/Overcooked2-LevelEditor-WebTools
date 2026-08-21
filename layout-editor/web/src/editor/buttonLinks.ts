@@ -5,7 +5,7 @@ import {
 import type { ButtonLink } from "../types";
 import { stubKindOf } from "./stubControls";
 import { itemLabel } from "./labels";
-import { escHtml } from "./coords";
+import { uuid, escHtml } from "./coords";
 import { closeModal, openModal } from "../modals";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
@@ -25,7 +25,7 @@ export function ensureLink(sourceId: string): ButtonLink {
   const existing = linkOfSource(sourceId);
   if (existing) return existing;
   const link: ButtonLink = {
-    id: crypto.randomUUID(),
+    id: uuid(),
     sourceId,
     groupNames: [],
     lockUntilFinished: true,
@@ -279,7 +279,7 @@ function wireButtonLinkModal(item: EditorItem): void {
       l.pairStartsUp = undefined;
       setStatus("已解除共轭配对（写回后生效）");
     } else {
-      const shared = crypto.randomUUID();
+      const shared = uuid();
       const other = ensureLink(pid);
       l.pairId = shared;
       other.pairId = shared;

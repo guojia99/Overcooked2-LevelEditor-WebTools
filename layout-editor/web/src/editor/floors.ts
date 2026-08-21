@@ -7,6 +7,7 @@ import {
 } from "./state";
 import { snapFootprintCenter } from "../snap";
 import {
+  uuid,
   normalizeRot,
   canvasToWorld,
   newEditorKey,
@@ -30,6 +31,7 @@ import {
 import { tidyCatalogNameZh } from "../displayLabels";
 import { catalogItemById } from "./catalog";
 import { addFromCatalog } from "./items";
+import { defaultNewFloorY } from "./floorHeight";
 import type {
   CatalogItem,
   FloorMaterial
@@ -215,6 +217,13 @@ export function finalizeFloor(f: EditorFloor) {
 
 export function tryMatchFloorMaterialBySize(f: EditorFloor) {
   const tag = `${f._wCells}x${f._dCells}`;
+  // Never override an explicitly chosen material: only auto-match when the
+  // floor has no material yet, or its material no longer exists in the
+  // catalog (stale guid from an old save).
+  if (f.materialGuid) {
+    const cur = S.floorMaterials.find((m) => m.guid === f.materialGuid);
+    if (cur) return;
+  }
   const match = S.floorMaterials.find((m) => m.sizeTag === tag);
   if (match && match.guid !== f.materialGuid) {
     f.materialGuid = match.guid;
@@ -234,7 +243,7 @@ export function pointInWalkable(wx: number, wz: number): boolean {
 
 export function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | null) {
   pushHistory();
-  const id = `new:floor:${crypto.randomUUID()}`;
+  const id = `new:floor:${uuid()}`;
   const key = newEditorKey();
   const w = 4;
   const d = 4;
@@ -254,8 +263,8 @@ export function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | nul
     materialGuid: themedCat ? undefined : defaultMat?.guid,
     materialAssetPath: themedCat ? undefined : defaultMat?.assetPath,
     materialName: themedCat ? undefined : defaultMat?.id,
-    localPosition: { x: snapped.x, y: themedCat ? 0.01 : -0.05, z: snapped.z },
-    worldPosition: { x: snapped.x, y: themedCat ? 0.01 : -0.05, z: snapped.z },
+    localPosition: { x: snapped.x, y: defaultNewFloorY(themedCat ? 0.01 : -0.05), z: snapped.z },
+    worldPosition: { x: snapped.x, y: defaultNewFloorY(themedCat ? 0.01 : -0.05), z: snapped.z },
     localRotationY: 0,
     localScale: { x: (w * CELL) / 10, y: 1, z: (d * CELL) / 10 },
     widthUnits: w * CELL,
@@ -279,7 +288,7 @@ export function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | nul
 
 export function addAirFloorAt(wx: number, wz: number) {
   pushHistory();
-  const id = `new:floor:${crypto.randomUUID()}`;
+  const id = `new:floor:${uuid()}`;
   const key = newEditorKey();
   const w = 4;
   const d = 4;
@@ -294,8 +303,8 @@ export function addAirFloorAt(wx: number, wz: number) {
     meshType: "plane",
     meshFileId: 0,
     airFloor: true,
-    localPosition: { x: snapped.x, y: 0, z: snapped.z },
-    worldPosition: { x: snapped.x, y: 0, z: snapped.z },
+    localPosition: { x: snapped.x, y: defaultNewFloorY(0), z: snapped.z },
+    worldPosition: { x: snapped.x, y: defaultNewFloorY(0), z: snapped.z },
     localRotationY: 0,
     localScale: { x: 1, y: 1, z: 1 },
     widthUnits: w * CELL,
@@ -414,7 +423,7 @@ export function mergeRaftItemsIntoFloors(): void {
     const { w, d, cx: cxW, cz: czW } = rect;
     const key = newEditorKey();
     S.floors.push({
-      instanceId: `new:raft:${crypto.randomUUID()}`,
+      instanceId: `new:raft:${uuid()}`,
       _key: key,
       hierarchyPath: `raft:${key}`,
       parentPath: "Art",
@@ -465,7 +474,7 @@ export function mergeThemedItemsIntoFloors(): void {
     const key = newEditorKey();
     const y = it.localPosition?.y ?? 0;
     S.floors.push({
-      instanceId: `new:themed:${crypto.randomUUID()}`,
+      instanceId: `new:themed:${uuid()}`,
       _key: key,
       hierarchyPath: `themed:${key}`,
       parentPath: c.defaultParent || "Art",

@@ -71,4 +71,46 @@ public static class LayoutEditorFootprintMeasure
         fp.cellsZ = Mathf.Max(1, Mathf.RoundToInt(sz / LayoutEditorCatalogLookup.GridCellSize));
         return fp;
     }
+
+    /// <summary>
+    /// Native (unscaled) model height in world units — the MeshRenderer world
+    /// bounds Y size with the instance scale divided out. Flat floor tiles
+    /// report ~0.1, tall pieces (ice cliffs, blocks) report 1+; the web uses
+    /// this as the catalog item's intrinsic height for the height-range
+    /// palette filter. Returns 0 when nothing measurable is found.
+    /// </summary>
+    public static float MeasureHeight(GameObject root)
+    {
+        if (root == null)
+            return 0f;
+
+        var renderers = root.GetComponentsInChildren<MeshRenderer>(false);
+        if (renderers == null || renderers.Length == 0)
+            return 0f;
+
+        Bounds bounds = renderers[0].bounds;
+        bool any = false;
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            var r = renderers[i];
+            if (r == null)
+                continue;
+            if (!any)
+            {
+                bounds = r.bounds;
+                any = true;
+            }
+            else
+            {
+                bounds.Encapsulate(r.bounds);
+            }
+        }
+        if (!any)
+            return 0f;
+
+        float sy = bounds.size.y;
+        float scaleY = Mathf.Abs(root.transform.localScale.y);
+        if (scaleY > 0.0001f) sy /= scaleY;
+        return sy;
+    }
 }

@@ -245,6 +245,15 @@ public class LayoutTerminalStubDto
     public string pilotableObjectInstanceId;
 }
 
+/// <summary>大炮参数（dlc08/dlc09 cannon）。
+/// freeRotation=true → PilotRotation 限位写为 ±180°（360° 自由旋转）；
+/// 缺省/未配置 = 不改动 prefab 自带限位（固定小角度 ±45°）。</summary>
+[Serializable]
+public class LayoutCannonStubDto
+{
+    public bool freeRotation;
+}
+
 [Serializable]
 public class LayoutMeshWithMaterialStubDto
 {
@@ -256,6 +265,22 @@ public class LayoutMeshWithMaterialStubDto
 public class LayoutSOArrayStubDto
 {
     public string[] pseudoPrefabGuids;
+}
+
+/// <summary>火锅灶台定时开关（开局自动循环：开 onSeconds 秒 → 关 offSeconds 秒；
+/// 关闭期 CookingRegion.enabled=false，锅具不烹饪、火焰熄灭）。
+/// 组件随场景烘焙到灶台伪根（LayoutRuntimeTimedCookingSwitch，游戏程序集）。</summary>
+[Serializable]
+public class LayoutTimedSwitchDto
+{
+    /** false = 配置保留但不生效（灶台常开）。 */
+    public bool enabled = true;
+    /** 开启期秒数（最小 3）。 */
+    public float onSeconds = 30f;
+    /** 关闭期秒数（最小 3）。 */
+    public float offSeconds = 30f;
+    /** 初始相位为开启。 */
+    public bool startOn = true;
 }
 
 [Serializable]
@@ -285,6 +310,7 @@ public class LayoutItemDto
     public string stubKind;
     /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
     public string pseudoPrefabGuid;
+    public LayoutCannonStubDto cannon;
     public LayoutDispenserStubDto dispenser;
     public LayoutConveyorStubDto conveyor;
     public LayoutTeleportalStubDto teleportal;
@@ -302,6 +328,8 @@ public class LayoutItemDto
     public LayoutTerminalStubDto terminal;
     public LayoutMeshWithMaterialStubDto meshWithMaterial;
     public LayoutSOArrayStubDto soArray;
+    /** 火锅灶台定时开关（cooking_region_floorburner / dlc10 变体）。 */
+    public LayoutTimedSwitchDto timedSwitch;
 }
 
 [Serializable]

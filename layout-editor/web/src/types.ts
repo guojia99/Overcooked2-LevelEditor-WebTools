@@ -41,6 +41,10 @@ export interface CatalogItem {
     | "airwall"
     | "background";
   stack?: CatalogStackMeta;
+  /** Intrinsic model height (measured renderer bounds size Y, world units).
+   *  Flat floor tiles ~0.1; tall pieces (ice cliffs, blocks) 1+. Used by the
+   *  floor palette's height-range filter. Undefined when not measured. */
+  height?: number;
   /** True when an extracted icon PNG exists under web/public/icons/catalog/<id>.png. */
   icon?: boolean;
 }
@@ -159,6 +163,21 @@ export interface LayoutTerminalStub {
   pilotableObjectInstanceId?: string;
 }
 
+/** 大炮（dlc08/dlc09 cannon）参数。freeRotation=true → 360° 自由旋转（±180°）；
+ *  缺省/未配置 = 固定小角度模式（±45°）。 */
+export interface LayoutCannonStub {
+  freeRotation?: boolean;
+}
+
+/** 火锅灶台定时开关（开局自动循环：开 onSeconds 秒 → 关 offSeconds 秒）。
+ *  字段存在且 enabled!==false = 生效；关闭期灶台不加热、锅具不烹饪、火焰熄灭。 */
+export interface LayoutTimedSwitchStub {
+  enabled?: boolean;
+  onSeconds?: number;
+  offSeconds?: number;
+  startOn?: boolean;
+}
+
 export interface LayoutItem {
   instanceId: string;
   hierarchyPath: string;
@@ -195,10 +214,13 @@ export interface LayoutItem {
   switchStub?: LayoutSwitchStub;
   pressureSwitch?: LayoutPressureSwitchStub;
   terminal?: LayoutTerminalStub;
+  cannon?: LayoutCannonStub;
   /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
   pseudoPrefabGuid?: string;
   meshWithMaterial?: LayoutMeshWithMaterialStub;
   soArray?: LayoutSOArrayStub;
+  /** 火锅灶台定时开关（cooking_region_floorburner / dlc10 变体）。 */
+  timedSwitch?: LayoutTimedSwitchStub;
 }
 
 // ---------- Movable Object Control (Animated Objects groups) ----------

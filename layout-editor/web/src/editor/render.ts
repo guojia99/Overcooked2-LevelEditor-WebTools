@@ -39,7 +39,8 @@ import {
   drawVoidHatch
 } from "./renderFloors";
 import { drawMoveControlOverlay, previewMemberPositions } from "./moveControl";
-import { drawTeleportalLinks, drawSwitchLinks } from "./renderItems";
+import { floorInHeightFilter, itemInHeightFilter } from "./floorHeight";
+import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks } from "./renderItems";
 import { drawServingLinks } from "./servingLinks";
 import {
   isSurfaceItem,
@@ -297,6 +298,7 @@ export function updateMarqueeSelection() {
       const isBg = f.surfaceKind === "background";
       if (layerBg ? !isBg : isBg && !S.backgroundEditable) continue;
       if (!categoryVisible(isBg ? "background" : "floors")) continue;
+      if (!floorInHeightFilter(f)) continue;
       if (inRect(f._wx, f._wz)) nextFloors.add(f._key);
     }
     setFloorSelection([...nextFloors]);
@@ -306,6 +308,7 @@ export function updateMarqueeSelection() {
       if (cat !== (layerBg ? "background" : "floors")) continue;
       if (isCollisionItem(it)) continue;
       if (!categoryVisible(cat)) continue;
+      if (!itemInHeightFilter(it)) continue;
       if (inRect(it._wx, it._wz)) next.add(it._editorKey);
     }
     S.selectedKeys = next;
@@ -318,6 +321,7 @@ export function updateMarqueeSelection() {
     if (!isActiveItemLayer(it)) continue;
     if (isCollisionItem(it)) continue;
     if (!categoryVisible(itemCategoryOf(it))) continue;
+    if (!itemInHeightFilter(it)) continue;
     if (inRect(it._wx, it._wz)) next.add(it._editorKey);
   }
   S.selectedKeys = next;
@@ -450,7 +454,10 @@ export function draw() {
     // On the background layer the ambient effects (落雪 BGM…) are active content
     // and must stay fully visible with selection highlights.
     const ghostItems = S.items.filter(
-      (it) => !isSurfaceItem(S.catalogByGuid.get(it.prefabGuid)) && categoryVisible(itemCategoryOf(it))
+      (it) =>
+        !isSurfaceItem(S.catalogByGuid.get(it.prefabGuid)) &&
+        categoryVisible(itemCategoryOf(it)) &&
+        (itemInHeightFilter(it) || isSelected(it._editorKey))
     );
     if (ghostItems.length > 0) {
       S.teleportalLabels = computeTeleportalLabels();
@@ -486,7 +493,10 @@ export function draw() {
       drawFloorPlanes(true, "background");
     }
     const inactive = S.items.filter(
-      (it) => !isActiveItemLayer(it) && categoryVisible(itemCategoryOf(it))
+      (it) =>
+        !isActiveItemLayer(it) &&
+        categoryVisible(itemCategoryOf(it)) &&
+        (itemInHeightFilter(it) || isSelected(it._editorKey))
     );
     if (inactive.length > 0) {
       // On the move layer, selected items (pick mode / group highlight) must stay
@@ -507,6 +517,8 @@ export function draw() {
     const sorted = S.items
       .filter(isActiveItemLayer)
       .filter((it) => categoryVisible(itemCategoryOf(it)) || isSelected(it._editorKey))
+      // 高度过滤：范围外的物品不绘制；已选中的豁免（避免拖动中消失）。
+      .filter((it) => itemInHeightFilter(it) || isSelected(it._editorKey))
       .sort(itemDrawCompare);
     S.teleportalLabels = computeTeleportalLabels();
     computeParamLabels();
@@ -515,6 +527,7 @@ export function draw() {
     }
     drawTeleportalLinks();
     drawSwitchLinks();
+    drawTerminalLinks();
     drawServingLinks();
   }
 

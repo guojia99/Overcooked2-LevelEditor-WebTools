@@ -672,6 +672,10 @@ public static class LayoutEditorCatalogApi
         // 调用幂等，只增不删）。
         LayoutEditorRoastTrayFill.EnsureRoastTrayIngredients(info);
 
+        // 火锅大锅「默认能放/有汤面」：把所选火锅菜谱叶食材 + permutations 生/熟节点
+        // 登记为大锅 stub 的 allowedIngredientSOs（同烤盘 Fill 模式，幂等）。
+        LayoutEditorHotPotFill.EnsureHotPotIngredients(info);
+
         EditorUtility.SetDirty(info);
 
         var manager = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();

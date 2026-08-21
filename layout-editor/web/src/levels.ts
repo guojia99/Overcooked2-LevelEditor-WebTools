@@ -22,7 +22,7 @@ import { closeModal, openModal } from "./modals";
 import { showBusy, hideBusy, setBusyMessage } from "./busy";
 import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
 import { navHtml, wireNav } from "./nav";
-import { applyRatio, computeAutoScores, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
+import { applyRatio, computeAutoScores, computeOrderLifeTimes, ORDER_INTERVAL_SEC, PLATE_RETURN_SEC, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
 import { computeCardGroups, rlCardHtml, rlSectionHtml, STEP_ICON_SRC, type RecipeWithGroups } from "./recipeCard";
@@ -794,7 +794,6 @@ const STAR_FIELDS: Array<[keyof PerPlayerConfig, string]> = [
 ];
 
 const PLAYER_TABS = ["1p", "2p", "3p", "4p"] as const;
-const PLAYER_LABELS = ["单人 1P", "双人 2P", "三人 3P", "四人 4P"];
 const PLAYER_ROW_LABELS = ["1P", "2P", "3P", "4P"];
 
 export async function openConfigTabsModal(detail: LevelDetail, setName: string, onSaved: () => void): Promise<void> {
@@ -814,18 +813,16 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
     </tr>`;
   }).join("");
 
-  const tabBtns = PLAYER_TABS.map(
-    (t, i) => `<button type="button" class="cfg-tab-btn ${i === 0 ? "active" : ""}" data-tab="${t}">${PLAYER_LABELS[i]}</button>`
-  ).join("");
-
-  const panes = PLAYER_TABS.map((t, ti) => {
+  const rhythmHead = RHYTHM_FIELDS.map(([, label]) => `<th>${label}</th>`).join("");
+  const rhythmRows = PLAYER_TABS.map((t, ti) => {
     const cfg = detail.configs[ti] ?? ({ exists: false } as PerPlayerConfig);
-    const inputs = RHYTHM_FIELDS.map(([key, label, step]) => {
+    const cells = RHYTHM_FIELDS.map(([key, , step]) => {
       const val = (cfg[key] as number) ?? 0;
-      return `<label class="m-field">${esc(label)}<input type="number" step="${step}" id="cfg-${t}-${key}" value="${val}"></label>`;
+      return `<td><input type="number" step="${step}" class="cfg-star-input" id="cfg-${t}-${key}" value="${val}"></td>`;
     }).join("");
-    return `<div class="cfg-pane" data-pane="${t}" ${ti !== 0 ? 'style="display:none"' : ""}>${inputs}</div>`;
+    return `<tr><td class="cfg-row-label">${PLAYER_ROW_LABELS[ti]}</td>${cells}</tr>`;
   }).join("");
+  const defaultRoundTime = detail.configs[0]?.roundTime || 240;
 
   openModal(
     `关卡配置 · ${detail.levelName || detail.levelNameZH}`,
@@ -836,6 +833,8 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
      <div data-lpane="score">
        <div class="cfg-ai-bar">
           <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ 一键定分</button>
+          <label class="m-field cfg-round-all">关卡时长(秒)<input type="number" id="cfg-roundTime-all" step="10" min="30" value="${defaultRoundTime}"></label>
+          <span class="muted small">修改时长后点击「一键定分」重新修订；定分会同步修正订单超时 / 间隔 / 回盘</span>
        </div>
        <p class="modal-hint">订单数量（LevelInfoSO）</p>
        <div class="cfg-order-count">
@@ -848,8 +847,11 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
          <tbody>${matrixRows}</tbody>
        </table>
        <div id="cfg-ai-detail"></div>
-       <p class="modal-hint">节奏参数</p>
-       <div class="cfg-tabs">${tabBtns}</div>${panes}
+       <p class="modal-hint">节奏参数（按人数）</p>
+       <table class="cfg-matrix">
+         <thead><tr><th>人数</th>${rhythmHead}</tr></thead>
+         <tbody>${rhythmRows}</tbody>
+       </table>
      </div>
      <div data-lpane="shot" style="display:none">
        ${screenshotPaneHtml(detail)}
@@ -871,14 +873,13 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
   );
   wireScreenshotPane(detail);
 
-  document.querySelectorAll<HTMLButtonElement>(".cfg-tab-btn").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".cfg-tab-btn").forEach((b) => b.classList.toggle("active", b === btn));
-      document.querySelectorAll<HTMLElement>(".cfg-pane").forEach((p) => {
-        p.style.display = p.dataset.pane === btn.dataset.tab ? "" : "none";
-      });
-    })
-  );
+  // 顶部统一关卡时长：修改后广播到 1P~4P 四行（行内仍可单独微调）
+  document.getElementById("cfg-roundTime-all")?.addEventListener("change", (e) => {
+    const v = (e.target as HTMLInputElement).value;
+    PLAYER_TABS.forEach((t) => {
+      (document.getElementById(`cfg-${t}-roundTime`) as HTMLInputElement).value = v;
+    });
+  });
 
   const baseStars: number[][] = PLAYER_TABS.map((_t, ti) => {
     const cfg = detail.configs[ti] ?? ({ exists: false } as PerPlayerConfig);
@@ -928,20 +929,27 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
         detailEl.innerHTML = `<p class="modal-hint err">该关卡尚未配置菜谱，请先在详情页点击「菜谱…」选择菜谱。</p>`;
         return;
       }
-      const roundTimes = PLAYER_TABS.map(
-        (t) => parseInt((document.getElementById(`cfg-${t}-roundTime`) as HTMLInputElement).value || "240", 10) || 240
-      );
-      const result = computeAutoScores(selected, roundTimes);
+      const topRoundTime =
+        parseInt((document.getElementById("cfg-roundTime-all") as HTMLInputElement).value || "240", 10) || 240;
+      const result = computeAutoScores(selected, PLAYER_TABS.map(() => topRoundTime));
       if (!result) {
         detailEl.innerHTML = `<p class="modal-hint err">所选菜谱缺少价格信息，无法推算。</p>`;
         return;
       }
+      const lifeTimes = computeOrderLifeTimes(result.maxTimeSec);
       PLAYER_TABS.forEach((t, ti) => {
         baseStars[ti] = result.stars[ti].slice();
         result.stars[ti].forEach((v, j) => {
           starInput(t, j).value = String(v);
         });
         resetRatio(t);
+        const setVal = (key: string, v: number) => {
+          (document.getElementById(`cfg-${t}-${key}`) as HTMLInputElement).value = String(v);
+        };
+        setVal("roundTime", topRoundTime);
+        setVal("orderLifeTime", lifeTimes[ti]);
+        setVal("timeBetweenOrders", ORDER_INTERVAL_SEC[ti]);
+        setVal("plateReturnTime", PLATE_RETURN_SEC);
       });
       const rows = result.details
         .map(
@@ -950,7 +958,7 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
         )
         .join("");
       detailEl.innerHTML = `
-        <p class="modal-hint ok">已按 ${result.details.length} 道菜谱推算：平均单菜约 ${result.avgTimeSec.toFixed(0)} 秒 · 平均菜价 ${result.avgPrice.toFixed(0)} 分</p>
+        <p class="modal-hint ok">已按 ${result.details.length} 道菜谱推算：平均单菜约 ${result.avgTimeSec.toFixed(0)} 秒 · 平均菜价 ${result.avgPrice.toFixed(0)} 分 · 已同步修正节奏（订单超时 1P~4P：${lifeTimes.join(" / ")} 秒，关卡时长 ${topRoundTime} 秒）</p>
         <table class="cfg-ai-table">
           <thead><tr><th>菜谱</th><th>来源</th><th>食材数</th><th>需烹饪</th><th>菜价</th><th>估时</th></tr></thead>
           <tbody>${rows}</tbody>

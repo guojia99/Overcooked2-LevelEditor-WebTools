@@ -3,7 +3,7 @@ import {
   SaveScope
 } from "./state";
 import { dom } from "./dom";
-import { prefabIdFromPath, escHtml, newEditorKey } from "./coords";
+import { uuid, prefabIdFromPath, escHtml, newEditorKey } from "./coords";
 import { setStatus } from "./status";
 import { levelSetFromScenePath } from "./catalog";
 import { isPlayerItem } from "./renderItems";
@@ -312,7 +312,7 @@ export async function syncLayoutFromScene(otherPath: string): Promise<void> {
       .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true))
       .map((raw) => {
         const it = enrichItem(JSON.parse(JSON.stringify(raw)) as LayoutItem, newEditorKey());
-        const nextId = `new:sync:${crypto.randomUUID()}`;
+        const nextId = `new:sync:${uuid()}`;
         if (raw.instanceId) idMap.set(raw.instanceId, nextId);
         it.instanceId = nextId;
         it.hierarchyPath = nextId;
@@ -338,7 +338,7 @@ export async function syncLayoutFromScene(otherPath: string): Promise<void> {
     }
     S.floors = (doc.floors ?? []).map((raw) => {
       const f = enrichFloor(JSON.parse(JSON.stringify(raw)) as FloorObject, newEditorKey());
-      f.instanceId = `new:floor:${crypto.randomUUID()}`;
+      f.instanceId = `new:floor:${uuid()}`;
       f.hierarchyPath = f.instanceId;
       return f;
     });

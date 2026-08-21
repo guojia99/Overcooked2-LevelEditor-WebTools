@@ -4,6 +4,7 @@ import {
 } from "./state";
 import { dom } from "./dom";
 import {
+  uuid,
   normalizeRot,
   prefabIdFromPath,
   canvasToWorld,
@@ -70,6 +71,7 @@ import { draw } from "./render";
 import { closeModal } from "../modals";
 import { hitTestAll } from "./renderItems";
 import { hitTestFloorsAll } from "./renderFloors";
+import { floorWalkY, floorLayerIndex } from "./floorHeight";
 import { updateMarqueeSelection } from "./render";
 import { hitTestWaypoints, waypointInfo, deleteWaypoint, activeGroup, updateMovePickBar, exitMoveMode, removeSelectedMembers } from "./moveControl";
 import { renderRightPanel, updatePanelTabButtons } from "./panels";
@@ -299,8 +301,11 @@ export function setupCanvas() {
         hideContextMenu();
         const candidates: PickCandidate[] = [];
         for (const fh of fHits) {
+          // 多层高度重叠：候选带行走面高度标注，方便区分各层地板。
+          const fhH = floorWalkY(fh.floor);
+          const hTag = fhH > 0.005 ? ` · h=${fhH.toFixed(2)} L${floorLayerIndex(fhH)}` : "";
           candidates.push({
-            title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格`,
+            title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格${hTag}`,
             sub: `地板 · ${isThemedFloor(fh.floor) ? fh.floor.displayName : (fh.floor.materialName ?? "无材质")}`,
             onPick: () => {
               setFloorSelection([fh.floor._key]);
@@ -525,8 +530,10 @@ export function setupCanvas() {
         hideContextMenu();
         const candidates: PickCandidate[] = [];
         for (const fh of fHits) {
+          const fhH = floorWalkY(fh.floor);
+          const hTag = fhH > 0.005 ? ` · h=${fhH.toFixed(2)} L${floorLayerIndex(fhH)}` : "";
           candidates.push({
-            title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格`,
+            title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格${hTag}`,
             sub: `地板 · ${isThemedFloor(fh.floor) ? fh.floor.displayName : (fh.floor.materialName ?? "无材质")}`,
             onPick: () => {
               setFloorSelection([fh.floor._key]);
@@ -767,7 +774,7 @@ export function setupCanvas() {
           pushHistory();
           // 路点精度跟随全局精度（自由吸附步长）。
           const wp = {
-            id: crypto.randomUUID(),
+            id: uuid(),
             x: snapValue(wx, S.freeSnapStep),
             z: snapValue(wz, S.freeSnapStep),
           };

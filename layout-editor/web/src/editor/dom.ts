@@ -104,6 +104,22 @@ export function buildLayoutDom(): void {
       <div id="pick-tip" class="pick-tip hidden" role="dialog"></div>
       <div id="move-pick-bar" class="move-pick-bar hidden" role="dialog"></div>
       <div id="floor-bar" class="floor-bar hidden"></div>
+      <button type="button" id="fhf-toggle" class="fhf-toggle hidden" title="高度层过滤：按行走面高度分层显示（地板/核心/装饰层可用）">📐</button>
+      <div id="floor-height-filter" class="floor-height-filter floating hidden">
+        <div class="fhf-row">
+          <span class="fhf-title">📐 高度层</span>
+          <label class="fhf-thickness" title="每层的高度带宽（如 0.2 = 0~0.2 一层、0.2~0.4 一层）">层厚 <input type="number" id="fhf-thickness" min="0.05" max="2" step="0.05" value="0.2" /></label>
+          <button type="button" id="fhf-reset" class="fhf-reset" title="显示全部高度">全部</button>
+        </div>
+        <div id="fhf-layers" class="fhf-layers"></div>
+        <div class="fhf-sliders" title="自由高度区间（与上方层列表联动：点层=设为该层区间，拖滑块=自定义区间）">
+          <div class="fhf-dual">
+            <input type="range" id="fhf-min" min="0" max="2" step="0.05" value="0" />
+            <input type="range" id="fhf-max" min="0" max="2" step="0.05" value="2" />
+          </div>
+          <div class="fhf-range-vals"><span class="fhf-val" id="fhf-min-val">0.00</span> ~ <span class="fhf-val" id="fhf-max-val">2.00</span></div>
+        </div>
+      </div>
       <div class="hint">拖拽空白框选 · Shift 加选 · Ctrl+C/V/X 复制/粘贴/裁切 · Ctrl+Z 撤回 · Ctrl+Shift+Z 重做 · 重叠点击弹出选择 · 空格+拖动平移 · 右键微移/旋转/改参数 · Del 删除 · R/Shift+R 旋转90° · 滚轮缩放</div>
     </div>
     <button type="button" class="panel-collapse" id="btn-collapse-items" title="收起 / 展开物品清单">▶</button>

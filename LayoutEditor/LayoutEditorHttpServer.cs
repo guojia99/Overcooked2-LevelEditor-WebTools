@@ -55,11 +55,14 @@ public class LayoutEditorHttpServer
             return true;
 
         Port = port;
+        bool boundAllInterfaces = false;
         for (int attempt = 0; attempt < 5; attempt++)
         {
             // 优先通配前缀（支持 Mac 开发机经局域网访问虚拟机内的 Unity 服务）；
             // Windows 非管理员无 URLACL 权限时会绑定失败，回退为仅本机绑定。
             var listener = TryStartListener(new[] { "http://*:" + port + "/", "http://127.0.0.1:" + port + "/", "http://localhost:" + port + "/" });
+            if (listener != null)
+                boundAllInterfaces = true;
             if (listener == null)
             {
                 listener = TryStartListener(new[] { "http://127.0.0.1:" + port + "/", "http://localhost:" + port + "/" });
@@ -99,6 +102,11 @@ public class LayoutEditorHttpServer
         _listenerThread = new Thread(ListenLoop) { IsBackground = true };
         _listenerThread.Start();
 
+        // 通配绑定失败（Windows 无 URLACL）时，用纯 TCP 中继把 0.0.0.0:port+1
+        // 转发到本机端口——TcpListener 不走 HTTP.sys，无需管理员权限。
+        if (!boundAllInterfaces)
+            LayoutEditorLanRelay.Start(port + 1, port);
+
         EditorApplication.update -= PumpMainThread;
         EditorApplication.update += PumpMainThread;
         return true;
@@ -123,6 +131,7 @@ public class LayoutEditorHttpServer
 
     public void Stop()
     {
+        LayoutEditorLanRelay.Stop();
         if (!_running)
             return;
 

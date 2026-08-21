@@ -153,6 +153,8 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
   GlassReturn: { cellsX: 1, cellsZ: 1 },
   utensil_large_pot_01: { cellsX: 2, cellsZ: 2 },
   utensil_dlc10_large_pot_01: { cellsX: 2, cellsZ: 2 },
+  // 可移动火锅：原版 pushable_object（2×2，带四向抓取点，可自由拖动）
+  utensil_large_pot_01_pushable: { cellsX: 2, cellsZ: 2 },
   // 火锅地面灶台铺满 2×2（大锅 2×2 锅沿外架其上）
   cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
   dlc10_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
@@ -278,6 +280,16 @@ export const S = {
   currentLayer: "items" as LayerKey,
   /** 装饰层尺寸筛选：all / small / medium / large / xl（按 footprint 判定）。 */
   decorSizeFilter: "all" as "all" | "small" | "medium" | "large" | "xl",
+  /** 地板高度过滤：层厚（每层高度带宽，可调）+ 当前显示区间 [min,max]。
+   *  min/max 均为 null 表示「全部高度」不过滤。点层列表 = 设为该层区间；
+   *  拖自由滑块 = 自定义区间。 */
+  floorHeight: {
+    thickness: 0.2,
+    min: null as number | null,
+    max: null as number | null,
+  },
+  /** 高度过滤面板（画布左下角悬浮）是否展开；收起时通过 📐 小按钮唤醒。 */
+  floorHeightPanelOpen: false,
   /** Per-layer canvas visibility of each content category. */
   layerVisibility: makeLayerVisibility(),
   scenePath: "",

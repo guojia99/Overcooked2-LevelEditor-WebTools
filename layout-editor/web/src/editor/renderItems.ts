@@ -19,6 +19,7 @@ import {
   categoryVisible,
   catalogItemForGuidOrPath
 } from "./catalog";
+import { itemInHeightFilter } from "./floorHeight";
 import {
   drawLabelInBox,
   itemLabel,
@@ -28,7 +29,8 @@ import {
 } from "./labels";
 import {
   isCollisionItem,
-  stubKindOf
+  stubKindOf,
+  isHotpotBurnerItem
 } from "./stubControls";
 import { isSelected } from "./selection";
 import {
@@ -112,7 +114,8 @@ export function drawItem(item: EditorItem, selected: boolean) {
   const w = fp.cellsX * cellPx * sx;
   const h = fp.cellsZ * cellPx * sz;
   const id = prefabIdFromPath(item.prefabAssetPath);
-  const isUtensil = isStackUtensilCatalog(cat) || id === "Backpack";
+  const isUtensil =
+    isStackUtensilCatalog(cat) || id === "Backpack" || id === "utensil_large_pot_01_pushable";
   const isPlayer = isPlayerItem(item);
   const paint = paintStyleForItem(cat, item.parentPath, selected);
 
@@ -402,6 +405,40 @@ export function drawSwitchLinks() {
   }
 }
 
+/** 控制终端连线（Terminal.pilotableObjectInstanceId → 目标物件），紫色虚线 + 箭头指向目标。 */
+export function drawTerminalLinks() {
+  const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
+  for (const tm of S.items) {
+    if (stubKindOf(tm) !== "Terminal") continue;
+    const targetId = tm.terminal?.pilotableObjectInstanceId;
+    if (!targetId) continue;
+    const target = byInst.get(targetId);
+    if (!target) continue;
+    const a = worldToCanvas(tm._wx, tm._wz);
+    const b = worldToCanvas(target._wx, target._wz);
+    dom.ctx.save();
+    dom.ctx.strokeStyle = "#c75be8";
+    dom.ctx.globalAlpha = 0.55;
+    dom.ctx.lineWidth = 1.5;
+    dom.ctx.setLineDash([6, 4]);
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(a.x, a.y);
+    dom.ctx.lineTo(b.x, b.y);
+    dom.ctx.stroke();
+    dom.ctx.setLineDash([]);
+    const rad = Math.atan2(b.y - a.y, b.x - a.x);
+    const ah = 8 * Math.max(0.6, S.scale);
+    dom.ctx.fillStyle = "#c75be8";
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(b.x, b.y);
+    dom.ctx.lineTo(b.x - Math.cos(rad - 0.45) * ah, b.y - Math.sin(rad - 0.45) * ah);
+    dom.ctx.lineTo(b.x - Math.cos(rad + 0.45) * ah, b.y - Math.sin(rad + 0.45) * ah);
+    dom.ctx.closePath();
+    dom.ctx.fill();
+    dom.ctx.restore();
+  }
+}
+
 export function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx: number; lz: number } {
   const dx = wx - item._wx;
   const dz = wz - item._wz;
@@ -418,6 +455,8 @@ export function hitTestAll(wx: number, wz: number, allLayers?: boolean): EditorI
   const sorted = S.items
     .filter((it) => (allLayers ? true : isActiveItemLayer(it)))
     .filter((it) => categoryVisible(itemCategoryOf(it)))
+    // 高度过滤：范围外的物品不参与点选/框选（「全部」时不过滤）。
+    .filter(itemInHeightFilter)
     .sort((a, b) => itemDrawCompare(b, a));
   return sorted.filter((item) => {
     const fp = resolveFootprint(item);
@@ -476,6 +515,7 @@ export const PORTAL_COLORS = [  "#9ad7ff",
 ];
 
 export const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: string; color: string }[] = [
+  { match: (it) => isHotpotBurnerItem(it) && it.timedSwitch?.enabled !== false && !!it.timedSwitch, type: "定时灶台", color: "#e8704b" },
   { match: isServingStationItem, type: "上菜台", color: "#f9ab00" },
   { match: isPlateReturnItem, type: "脏盘台", color: "#7bd889" },
   { match: isGlassReturnItem, type: "脏杯台", color: "#5ec8e0" },
@@ -488,6 +528,7 @@ export const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: stri
   { match: (it) => stubKindOf(it) === "Flamethrower", type: "喷火器", color: "#e85b5b" },
   { match: (it) => stubKindOf(it) === "Burner", type: "喷射器", color: "#d97742" },
   { match: (it) => stubKindOf(it) === "CleanPlateStack", type: "盘堆", color: "#8db8e8" },
+  { match: (it) => stubKindOf(it) === "Cannon", type: "大炮", color: "#e8a14b" },
   { match: (it) => stubKindOf(it) === "CannonSwitch", type: "大炮开关", color: "#e8a14b" },
   { match: (it) => stubKindOf(it) === "Switch", type: "开关", color: "#e8cf5b" },
   { match: (it) => stubKindOf(it) === "PressureSwitch", type: "压力开关", color: "#5be8b5" },

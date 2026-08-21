@@ -6,6 +6,7 @@ import {
 } from "./state";
 import { dom } from "./dom";
 import {
+  uuid,
   worldToCanvas,
   escHtml,
   snapValue
@@ -1155,9 +1156,9 @@ function memberSpawnPos(itemIds: string[], floorIds: string[]): { x: number; z: 
 function createGroup(name: string, itemIds: string[], floorIds: string[]): void {
   pushHistory();
   const pos = memberSpawnPos(itemIds, floorIds);
-  const wp: MoveGroupWaypoint = { id: crypto.randomUUID(), x: pos?.x ?? 0, z: pos?.z ?? 0 };
+  const wp: MoveGroupWaypoint = { id: uuid(), x: pos?.x ?? 0, z: pos?.z ?? 0 };
   const group: MoveGroup = {
-    id: crypto.randomUUID(),
+    id: uuid(),
     displayName: name,
     itemInstanceIds: itemIds,
     floorInstanceIds: floorIds,
@@ -1170,7 +1171,7 @@ function createGroup(name: string, itemIds: string[], floorIds: string[]): void 
     loopDelay: 2,
     waypoints: [wp],
     events: [{
-      id: crypto.randomUUID(),
+      id: uuid(),
       type: "move",
       delay: 0,
       intervalSeconds: 2,
@@ -1690,7 +1691,7 @@ let newMgFormOpen = false;
 function createMemberGroup(group: MoveGroup, name: string): void {
   pushHistory();
   if (!group.memberGroups) group.memberGroups = [];
-  const mg: MoveGroupMemberGroup = { id: crypto.randomUUID(), name: name.trim(), memberInstanceIds: [] };
+  const mg: MoveGroupMemberGroup = { id: uuid(), name: name.trim(), memberInstanceIds: [] };
   group.memberGroups.push(mg);
   S.movePickTargetGroupId = mg.id;
   S.dirty = true;
@@ -2367,7 +2368,7 @@ function wireGroupEditor(body: HTMLElement, group: MoveGroup): void {
       }
       pushHistory();
       const wp: MoveGroupWaypoint = {
-        id: crypto.randomUUID(),
+        id: uuid(),
         x: snapValue(pos.x, S.freeSnapStep),
         z: snapValue(pos.z, S.freeSnapStep),
       };
@@ -2763,7 +2764,7 @@ function wireGroupEditor(body: HTMLElement, group: MoveGroup): void {
   body.querySelector("#btn-add-event")?.addEventListener("click", () => {
     pushHistory();
     group.events.push({
-      id: crypto.randomUUID(),
+      id: uuid(),
       type: "move",
       delay: 0,
       intervalSeconds: 2,

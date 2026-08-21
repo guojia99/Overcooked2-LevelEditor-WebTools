@@ -32,10 +32,17 @@ import {
   floorMatSummary
 } from "./floors";
 import {
+  floorWalkY,
+  floorVisualYForWalkHeight,
+  floorLayerIndex
+} from "./floorHeight";
+import { floorLocalPoint } from "./renderFloors";
+import { snapValue } from "../snap";
+import {
   copyFloors,
   duplicateFloors
 } from "./clipboard";
-import { updateFloorBar } from "./floorPalette";
+import { updateFloorBar, refreshFloorHeightPanel } from "./floorPalette";
 import { clearFloorImageCache } from "./iconCaches";
 import {
   FLOOR_MATERIAL_GROUPS,
@@ -134,18 +141,21 @@ export function openFloorEditorModal(f: EditorFloor) {
 
   const meshTag = isAir ? "" : f.meshType === "plane" ? "（Plane）" : f.meshType === "quad" ? "（Quad）" : "";
   const typeLabel = isAir ? "空气地板" : isRaft ? "木筏地板" : isThemed ? "主题地板" : isImage ? "图片地板" : isTinted ? "染色地板" : "实心地板";
+  const walkH = floorWalkY(f);
   const body = `
     <div class="fm-summary fm-inline">
       <span><b>类型</b> ${typeLabel}${meshTag}</span>
       <span><b>尺寸</b> <span id="fe-size">${f._wCells}×${f._dCells}格 (${(f._wCells * CELL).toFixed(1)}×${(f._dCells * CELL).toFixed(1)}m，${areaCells}格)</span></span>
       <span><b>材质</b> <span id="fe-mat">${floorMatSummary(f, matchedMat)}</span></span>
       <span><b>坐标</b> x${f._wx.toFixed(2)}, z${f._wz.toFixed(2)}</span>
+      <span><b>高度</b> h=${walkH.toFixed(2)} · <span id="fe-h-layer">L${floorLayerIndex(walkH)}</span></span>
       <span><b>死亡</b> ${deathLabelZh(S.deathInfo)}</span>
     </div>
     <div class="floor-edit-row">
       <label>宽(格) <input type="number" min="1" id="fe-w" value="${f._wCells}" /></label>
       <label>高(格) <input type="number" min="1" id="fe-d" value="${f._dCells}" /></label>
       <label>旋转(°) <input type="number" step="90" id="fe-rot" value="${normalizeRot(f.localRotationY)}" /></label>
+      <label title="行走面高度：0=地面层；抬高后站上地板的物品会一起抬升，写回时碰撞盒跟随">高度 <input type="number" min="0" step="0.05" id="fe-h" value="${walkH.toFixed(2)}" /></label>
       <span class="muted" style="align-self:center;font-size:11px">实时应用 · 也可 R / Shift+R</span>
     </div>
     <div class="mat-pick-title">地板类型</div>
@@ -204,6 +214,47 @@ export function openFloorEditorModal(f: EditorFloor) {
   };
   feRot?.addEventListener("input", applyRotLive);
   feRot?.addEventListener("change", applyRotLive);
+
+  // 行走面高度：h=0 回落类型默认视觉 Y（实心 -0.05 / 主题 0.01 / 空气 0），h>0
+  // 时视觉=行走面。站上地板的物品（Y≈h0）随动抬升，写回时碰撞盒由后端跟随。
+  const feH = document.getElementById("fe-h") as HTMLInputElement | null;
+  let hPushed = false;
+  const applyHeightLive = () => {
+    const v = parseFloat(feH?.value ?? "");
+    if (!Number.isFinite(v) || v < 0) return;
+    const h1 = Math.round(v * 100) / 100;
+    const h0 = floorWalkY(f);
+    if (Math.abs(h1 - h0) < 1e-6) return;
+    if (!hPushed) {
+      pushHistory();
+      hPushed = true;
+    }
+    const kind = isAirFloor(f) ? "air" : isThemedFloor(f) ? "themed" : "plane";
+    const y = floorVisualYForWalkHeight(h1, kind);
+    f.localPosition.y = y;
+    if (f.worldPosition) f.worldPosition.y = y;
+    const dy = h1 - h0;
+    const hw = (f._wCells * CELL) / 2;
+    const hh = (f._dCells * CELL) / 2;
+    let lifted = 0;
+    for (const it of S.items) {
+      const { lx, lz } = floorLocalPoint(f, it._wx, it._wz);
+      if (Math.abs(lx) > hw + 0.01 || Math.abs(lz) > hh + 0.01) continue;
+      const iy = it.localPosition?.y ?? 0;
+      if (Math.abs(iy - h0) > 0.1) continue;
+      it.localPosition.y = snapValue(iy + dy, S.freeSnapStep);
+      if (it.worldPosition) it.worldPosition.y = it.localPosition.y;
+      lifted++;
+    }
+    draw();
+    updateFloorBar();
+    refreshFloorHeightPanel();
+    const layerEl = document.getElementById("fe-h-layer");
+    if (layerEl) layerEl.textContent = `L${floorLayerIndex(h1)}`;
+    if (lifted > 0) setStatus(`${lifted} 个物品已随地板抬升至 h=${h1.toFixed(2)}（可 Ctrl+Z 撤回）`);
+  };
+  feH?.addEventListener("input", applyHeightLive);
+  feH?.addEventListener("change", applyHeightLive);
 
   document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="solid"]')?.addEventListener("click", () => {
     if (isPlainSolid) return; // already solid

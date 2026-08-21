@@ -503,6 +503,197 @@ body {
   display: none;
 }
 
+/* ── 高度层过滤（画布左下角悬浮面板 + 唤醒按钮） ── */
+.fhf-toggle {
+  position: absolute;
+  left: 8px;
+  bottom: 30px;
+  z-index: 6;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 5px;
+  border: 1px solid #4a5060;
+  background: rgba(20, 23, 29, 0.85);
+  color: #c8cdd5;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.fhf-toggle:hover {
+  background: #2d3a4f;
+}
+
+.fhf-toggle.hidden {
+  display: none;
+}
+
+/* 过滤激活时按钮高亮（即使面板收起也有提示） */
+.fhf-toggle.active {
+  border-color: #6ea8fe;
+  color: #9fc2ff;
+  box-shadow: 0 0 6px rgba(110, 168, 254, 0.5);
+}
+
+.floor-height-filter {
+  font-size: 11px;
+  color: #c8cdd5;
+}
+
+.floor-height-filter.floating {
+  position: absolute;
+  left: 8px;
+  bottom: 62px;
+  z-index: 6;
+  width: 264px;
+  padding: 8px 10px;
+  border: 1px solid #3a3f4b;
+  border-radius: 6px;
+  background: rgba(20, 23, 29, 0.92);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.floor-height-filter.hidden {
+  display: none;
+}
+
+.floor-height-filter .fhf-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.floor-height-filter .fhf-title {
+  font-weight: 600;
+  color: #e8eaed;
+}
+
+.floor-height-filter .fhf-thickness {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.floor-height-filter .fhf-thickness input {
+  width: 56px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border: 1px solid #4a5060;
+  background: #12151a;
+  color: #e8eaed;
+}
+
+.floor-height-filter .fhf-reset {
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid #4a5060;
+  background: #22262e;
+  color: #c8cdd5;
+  cursor: pointer;
+}
+
+.floor-height-filter .fhf-reset:hover {
+  background: #2d3a4f;
+  color: #e8eaed;
+}
+
+.floor-height-filter .fhf-layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.floor-height-filter .fhf-layer {
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #4a5060;
+  background: #12151a;
+  color: #c8cdd5;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.floor-height-filter .fhf-layer:hover {
+  background: #2d3a4f;
+}
+
+.floor-height-filter .fhf-layer.active {
+  background: #2d3a4f;
+  border-color: #6ea8fe;
+  color: #9fc2ff;
+}
+
+/* 单轨双滑头：两个 range 叠在同一轨道上，仅滑头可拖。 */
+.floor-height-filter .fhf-dual {
+  position: relative;
+  height: 22px;
+  margin-top: 8px;
+}
+
+.floor-height-filter .fhf-dual input[type="range"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: none;
+}
+
+.floor-height-filter .fhf-dual input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #3a3f4b;
+}
+
+.floor-height-filter .fhf-dual input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border-radius: 50%;
+  border: 1px solid #2d3a4f;
+  background: #6ea8fe;
+  cursor: ew-resize;
+}
+
+.floor-height-filter .fhf-dual input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #3a3f4b;
+}
+
+.floor-height-filter .fhf-dual input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #2d3a4f;
+  background: #6ea8fe;
+  cursor: ew-resize;
+}
+
+.floor-height-filter .fhf-range-vals {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.floor-height-filter .fhf-range-vals .fhf-val {
+  color: #9fc2ff;
+  font-variant-numeric: tabular-nums;
+}
+
+
 .decor-size-badge {
   display: inline-block;
   margin-left: 2px;
@@ -2193,6 +2384,10 @@ body.manage-bg {
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+}
+
+.cfg-ai-bar .cfg-round-all input {
+  width: 80px;
 }
 
 .cfg-order-count {

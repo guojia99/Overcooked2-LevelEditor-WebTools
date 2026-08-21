@@ -14,7 +14,7 @@
  */
 import { CELL, S, EditorItem, EditorFloor, type ComboDef } from "./state";
 import type { CatalogItem } from "../types";
-import { newEditorKey, prefabIdFromPath } from "./coords";
+import { uuid, newEditorKey, prefabIdFromPath } from "./coords";
 import { catalogItemById } from "./catalog";
 import { addCombo, comboById, comboDisabledReason } from "./combos";
 import { setSelection, setFloorSelection } from "./selection";
@@ -57,7 +57,7 @@ function makeItem(
   wz: number,
   dispenserGuid?: string
 ): EditorItem {
-  const id = `new:${cat.guid}:${crypto.randomUUID()}`;
+  const id = `new:${cat.guid}:${uuid()}`;
   const item: EditorItem = {
     instanceId: id,
     _editorKey: newEditorKey(),
@@ -101,7 +101,7 @@ function makeItem(
 }
 
 function makeFloor(w: number, d: number): EditorFloor {
-  const id = `new:floor:${crypto.randomUUID()}`;
+  const id = `new:floor:${uuid()}`;
   const defaultMat = S.floorMaterials.find((m) => /floor|blacktiles|path/i.test(m.id));
   return {
     instanceId: id,

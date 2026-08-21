@@ -6,7 +6,7 @@ import type { ButtonEventLink, ButtonEventGroup } from "../types";
 import { isButtonLinkSource } from "./buttonLinks";
 import { stubKindOf } from "./stubControls";
 import { itemLabel } from "./labels";
-import { escHtml, prefabIdFromPath } from "./coords";
+import { uuid, escHtml, prefabIdFromPath } from "./coords";
 import { closeModal, openModal } from "../modals";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
@@ -29,7 +29,7 @@ export function ensureEventLink(sourceId: string): ButtonEventLink {
   const existing = eventLinkOfSource(sourceId);
   if (existing) return existing;
   const link: ButtonEventLink = {
-    id: crypto.randomUUID(),
+    id: uuid(),
     sourceId,
     groups: [],
   };
@@ -304,7 +304,7 @@ function wireButtonEventModal(item: EditorItem): void {
   document.getElementById("bev-addgroup")?.addEventListener("click", () => {
     pushHistory();
     const l = ensureEventLink(myId);
-    l.groups.push({ id: crypto.randomUUID(), events: [] } as ButtonEventGroup);
+    l.groups.push({ id: uuid(), events: [] } as ButtonEventGroup);
     setStatus(`已添加事件组 ${l.groups.length}（写回后生效）`);
     refresh();
     refreshButtonEventPanelIfActive();

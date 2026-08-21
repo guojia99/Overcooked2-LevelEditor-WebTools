@@ -4,7 +4,7 @@ import {
   EditorItem,
   EditorFloor
 } from "./state";
-import { newEditorKey } from "./coords";
+import { uuid, newEditorKey } from "./coords";
 import { isPlayerItem } from "./renderItems";
 import { deleteSelected } from "./items";
 import {
@@ -80,7 +80,7 @@ export function pasteClipboard() {
     const editorKey = newEditorKey();
     const copy = JSON.parse(JSON.stringify(src)) as EditorItem;
     copy._editorKey = editorKey;
-    copy.instanceId = `new:copy:${crypto.randomUUID()}`;
+    copy.instanceId = `new:copy:${uuid()}`;
     copy.hierarchyPath = copy.instanceId;
     copy._wx = nx;
     copy._wz = nz;
@@ -163,7 +163,7 @@ export function pasteFloors(): void {
     const key = newEditorKey();
     const copy = JSON.parse(JSON.stringify(src)) as EditorFloor;
     copy._key = key;
-    copy.instanceId = `new:floor:${crypto.randomUUID()}`;
+    copy.instanceId = `new:floor:${uuid()}`;
     copy.hierarchyPath = copy.instanceId;
     copy._wx = src._wx + off;
     copy._wz = src._wz + off;
@@ -184,7 +184,7 @@ export function pasteFloors(): void {
     const editorKey = newEditorKey();
     const copy = JSON.parse(JSON.stringify(src)) as EditorItem;
     copy._editorKey = editorKey;
-    copy.instanceId = `new:copy:${crypto.randomUUID()}`;
+    copy.instanceId = `new:copy:${uuid()}`;
     copy.hierarchyPath = copy.instanceId;
     copy._wx = nx;
     copy._wz = nz;

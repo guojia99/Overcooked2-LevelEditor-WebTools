@@ -175,6 +175,11 @@ export function trySnapUtensilToHost(
   sceneItems: EditorLike[],
   catalogByGuid: Map<string, CatalogItem>
 ): boolean {
+  // 火锅大锅（2×2，自身即覆盖灶台）：不做灶台吸附——吸附会把锅 pivot 移到灶台中心，
+  // 而锅模型中心在自身局部 (-0.6, +0.6) 差半格，读回-写回循环会累积漂移半格。
+  if (utensilCat?.id === "utensil_large_pot_01" ||
+      utensilCat?.id === "utensil_dlc10_large_pot_01" ||
+      utensilCat?.id === "utensil_large_pot_01_pushable") return false;
   if (!utensilCat?.stack?.hostRule) return false;
   const host = findStackHost(
     utensil,

@@ -18,6 +18,12 @@ import {
   surfacePaint,
   isSurfaceItem
 } from "../floorColors";
+import {
+  floorWalkY,
+  floorInHeightFilter,
+  floorLayerIndex,
+  itemInHeightFilter
+} from "./floorHeight";
 
 export function floorRectPx(f: EditorFloor) {
   const center = worldToCanvas(f._wx, f._wz);
@@ -41,6 +47,8 @@ export function hexToRgba(hex: string, alpha: number): string {
 export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean) {
   const { center, bw, bh, rot } = floorRectPx(f);
   const paint = surfacePaint(f.surfaceKind, selected);
+  const walkH = floorWalkY(f);
+  const hTag = walkH > 0.005 ? ` · h=${walkH.toFixed(2)} L${floorLayerIndex(walkH)}` : "";
   // 空气地板：无可见地板，仅可行走区——半透明橙色虚线框 + 标注。
   if (f.airFloor) {
     dom.ctx.save();
@@ -64,7 +72,7 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
     dom.ctx.fillStyle = "rgba(249,171,0,0.98)";
     dom.ctx.textAlign = "center";
     dom.ctx.textBaseline = "middle";
-    drawLabelInBox(dom.ctx, `${f._wCells}×${f._dCells}格 空气地板`, bw - 6, bh - 6);
+    drawLabelInBox(dom.ctx, `${f._wCells}×${f._dCells}格 空气地板${hTag}`, bw - 6, bh - 6);
     dom.ctx.restore();
     return;
   }
@@ -121,6 +129,14 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
     dom.ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
   }
 
+  // 高度叠加：抬高的地板按层增亮（同层同色、层越高越亮），图片/染色地板
+  // 同样以叠加层实现，不破坏原有填色。
+  if (walkH > 0.005) {
+    const li = floorLayerIndex(walkH);
+    dom.ctx.fillStyle = `rgba(255,255,255,${Math.min(0.4, 0.08 + li * 0.09)})`;
+    dom.ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+  }
+
   // Dashed outer border to convey the floor surface.
   dom.ctx.strokeStyle = paint.stroke;
   dom.ctx.lineWidth = selected ? 2.5 : ghost ? 1 : 1.5;
@@ -170,16 +186,21 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
   dom.ctx.textAlign = "center";
   dom.ctx.textBaseline = "middle";
   const emoji = paint.emoji ? paint.emoji + " " : "";
-  drawLabelInBox(dom.ctx, `${emoji}${f._wCells}×${f._dCells}格`, bw - 6, bh - 6);
+  drawLabelInBox(dom.ctx, `${emoji}${f._wCells}×${f._dCells}格${hTag}`, bw - 6, bh - 6);
   dom.ctx.restore();
 }
 
 export function drawFloorPlanes(highlight: boolean, kind: "floor" | "background" = "floor") {
-  for (const f of S.floors) {
+  // 多层高度重叠时按行走面高度升序绘制（高的后画 = 压在上面），使视觉上的
+  // 最上层与命中顺序一致。
+  const sorted = [...S.floors].sort((a, b) => floorWalkY(a) - floorWalkY(b));
+  for (const f of sorted) {
     // Backdrop planes (often huge, default-white in Unity) belong to the
     // dedicated background layer; theme fill shows the void color elsewhere.
     const isBg = f.surfaceKind === "background";
     if (isBg !== (kind === "background")) continue;
+    // 高度过滤：范围外的地板不绘制（也不可点选，见 hitTestFloorsAll）。
+    if (kind === "floor" && !floorInHeightFilter(f)) continue;
     const selected = highlight && S.selectedFloorKeys.has(f._key);
     drawFloorPlane(f, selected, false);
   }
@@ -189,7 +210,9 @@ export function drawFloorAdjacentSeams() {
   if (S.floors.length < 2) return;
   const tol = CELL * 0.35;
   for (let i = 0; i < S.floors.length; i++) {
+    if (!floorInHeightFilter(S.floors[i])) continue;
     for (let j = i + 1; j < S.floors.length; j++) {
+      if (!floorInHeightFilter(S.floors[j])) continue;
       const a = S.floors[i];
       const b = S.floors[j];
       const aL = a._wx - (a._wCells * CELL) / 2;
@@ -260,6 +283,9 @@ export function hitTestFloorsAll(wx: number, wz: number): FloorHit[] {  const hi
     } else if (!categoryVisible("floors")) {
       continue;
     }
+    // 高度过滤：范围外的地板不参与点选/框选/拖动（「全部」时不过滤，
+    // 多层重叠的地板仍按既有候选列表逻辑逐块选择）。
+    if (!floorInHeightFilter(f)) continue;
     const hw = (f._wCells * CELL) / 2;
     const hh = (f._dCells * CELL) / 2;
     const { lx, lz } = floorLocalPoint(f, wx, wz);
@@ -301,6 +327,8 @@ export function drawSurfaceItems(
 ) {
   const sorted = [...S.items]
     .filter((it) => isSurfaceItem(S.catalogByGuid.get(it.prefabGuid)))
+    // 高度过滤：范围外的表面物品不绘制；已选中的豁免（避免拖动中消失）。
+    .filter((it) => itemInHeightFilter(it) || it._editorKey === S.selectedKey)
     .filter((it) => (S.catalogByGuid.get(it.prefabGuid)?.surfaceTier ?? "floor") === tier)
     .sort((a, b) => drawLayerForItem(a, S.catalogByGuid) - drawLayerForItem(b, S.catalogByGuid));
   for (const item of sorted) {

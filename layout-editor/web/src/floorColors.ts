@@ -199,14 +199,26 @@ export function floorMaterialGroup(id: string): string {
   if (/blacktiles/.test(n)) return "blacktiles";
   if (/wizard/.test(n)) return "wizard";
   if (/kevin/.test(n)) return "kevin";
-  if (/city/.test(n)) return "city";
+  if (/sk_floor/.test(n)) return "sk";
+  if (/(^|_)mi_|mine/.test(n)) return "mine";
+  if (/(^|_)sp_|space/.test(n)) return "sp";
+  if (/swamp/.test(n)) return "swamp";
+  if (/grave/.test(n)) return "grave";
+  if (/dlc2|onionhouse/.test(n)) return "beach";
+  if (/dlc3|ice_floor/.test(n)) return "ice";
+  if (/dlc4|mossfloor|pathedging/.test(n)) return "dlc4";
+  if (/dlc5|forest/.test(n)) return "forest";
+  if (/dlc07|hiddencity/.test(n)) return "hiddencity";
+  if (/dlc08/.test(n)) return "circus";
+  if (/dlc13/.test(n)) return "other";
+  if (/city|pavement|road|yellowbox/.test(n)) return "city";
   if (/alien/.test(n)) return "alien";
   if (/raft/.test(n)) return "raft";
   if (/snow/.test(n)) return "snow";
-  if (/ice/.test(n)) return "ice";
-  if (/sand/.test(n)) return "sand";
+  if (/sand|desert/.test(n)) return "sand";
   if (/walkway/.test(n)) return "walkway";
   if (/carpet/.test(n)) return "carpet";
+  if (/kitchen|floortile|floor_tile/.test(n)) return "kitchen";
   return "other";
 }
 
@@ -217,14 +229,25 @@ export const FLOOR_MATERIAL_GROUPS: { key: string; labelZh: string }[] = [
   { key: "airballoon", labelZh: "热气球" },
   { key: "blacktiles", labelZh: "太空黑砖" },
   { key: "wizard", labelZh: "魔法学校" },
+  { key: "sk", labelZh: "共享厨房" },
+  { key: "mine", labelZh: "矿洞" },
+  { key: "sp", labelZh: "太空" },
+  { key: "swamp", labelZh: "沼泽" },
+  { key: "grave", labelZh: "墓地" },
+  { key: "beach", labelZh: "海滩（DLC2）" },
+  { key: "ice", labelZh: "冰面" },
+  { key: "dlc4", labelZh: "石径苔地（DLC4）" },
+  { key: "forest", labelZh: "森林营地（DLC5）" },
+  { key: "hiddencity", labelZh: "隐秘之城（DLC7）" },
+  { key: "circus", labelZh: "马戏团（DLC8）" },
   { key: "city", labelZh: "城市" },
   { key: "alien", labelZh: "外星地板" },
   { key: "raft", labelZh: "木筏" },
   { key: "snow", labelZh: "雪地" },
-  { key: "ice", labelZh: "冰面" },
   { key: "sand", labelZh: "沙地" },
   { key: "walkway", labelZh: "栈道" },
   { key: "carpet", labelZh: "地毯" },
+  { key: "kitchen", labelZh: "原版厨房/路面" },
   { key: "other", labelZh: "其他" },
 ];
 

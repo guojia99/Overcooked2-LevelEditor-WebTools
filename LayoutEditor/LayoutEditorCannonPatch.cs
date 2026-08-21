@@ -93,8 +93,11 @@ public static class LayoutEditorCannonPatch
             loaded = false;
 
         // 1) 瞄准：把炮内玩家的摇杆分给 ServerPilotRotation（空炮时清空）。
+        //    大炮被控制终端（MultiControlTerminal，m_pilotableObject 指向本炮的
+        //    PilotMovement）绑定时跳过：瞄准完全交给终端玩家（宿主 ServerTerminal
+        //    会 AssignPlayer），座位赋值/清空会与终端打架。
         var pilot = cannon.GetComponent<ServerPilotRotation>();
-        if (pilot != null)
+        if (pilot != null && !IsTerminalAimed(cannon))
         {
             if (loaded)
             {
@@ -119,6 +122,37 @@ public static class LayoutEditorCannonPatch
             if (interactable != null && interactable.enabled != loaded)
                 interactable.enabled = loaded;
         }
+    }
+
+    /// <summary>本炮是否被控制终端绑定为可操控目标（Terminal.m_pilotableObject
+    ///  == 本炮的 PilotMovement）。绑定后瞄准权归终端玩家。
+    ///  绑定关系运行期只增不减，命中即缓存（避免每帧 FindObjectsOfType）。</summary>
+    private static readonly System.Collections.Generic.Dictionary<Cannon, bool> _terminalAimed =
+        new System.Collections.Generic.Dictionary<Cannon, bool>();
+
+    private static bool IsTerminalAimed(Cannon cannon)
+    {
+        bool cached;
+        if (_terminalAimed.TryGetValue(cannon, out cached))
+            return cached;
+        bool result = false;
+        var pilotMovement = cannon.GetComponent<PilotMovement>();
+        if (pilotMovement != null)
+        {
+            var terminals = UnityEngine.Object.FindObjectsOfType<Terminal>();
+            for (int i = 0; i < terminals.Length; i++)
+            {
+                var t = terminals[i];
+                if (t != null && t.m_pilotableObject == pilotMovement)
+                {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        if (result)
+            _terminalAimed[cannon] = true;
+        return result;
     }
 
     private static GameObject ReadLoadedObject(ServerCannon serverCannon)

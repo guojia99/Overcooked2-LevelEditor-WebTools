@@ -142,7 +142,8 @@ public static class SceneLayoutApplier
 
             var isTeleportal = item.stubKind == "Teleportal" && item.teleportal != null;
             var isServing = item.stubKind == "ServingStation" && item.servingStation != null;
-            if (!isTeleportal && !isServing)
+            var isTerminal = item.stubKind == "Terminal" && item.terminal != null;
+            if (!isTeleportal && !isServing && !isTerminal)
                 continue;
 
             GameObject go;
@@ -156,6 +157,8 @@ public static class SceneLayoutApplier
 
             if (isTeleportal)
                 LayoutEditorStubIO.ApplyTeleportalExit(go, item.teleportal.exitPortalInstanceId ?? "", createdObjects);
+            else if (isTerminal)
+                LayoutEditorStubIO.ApplyTerminalPilotable(go, item.terminal.pilotableObjectInstanceId ?? "", createdObjects);
             else
                 LayoutEditorStubIO.ApplyServingStationPlateReturns(go, item.servingStation.plateReturnInstanceIds, createdObjects);
         }
@@ -244,7 +247,10 @@ public static class SceneLayoutApplier
         // 覆盖「手动放置烤盘未跑自动填充」的情况。
         var roastInfo = LayoutEditorLevelInfoResolver.ResolveForScene(scene.path);
         if (roastInfo != null)
+        {
             LayoutEditorRoastTrayFill.EnsureRoastTrayIngredients(roastInfo);
+            LayoutEditorHotPotFill.EnsureHotPotIngredients(roastInfo);
+        }
 
         // After mutating placeholder transforms, persist with the canonical Tools workflow:
         // Toggle Prepare For Building (strip temp-loaded children so they aren't baked into the
@@ -495,7 +501,7 @@ public static class SceneLayoutApplier
             cz = SnapScalar(cz, snapStep);
             float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
             float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
-            CreateColFloor(collision, groundLayer, cx, cz, w, d, floor.localRotationY,
+            CreateColFloor(collision, groundLayer, cx, cz, w, d, FloorWalkY(floor.localPosition != null ? floor.localPosition.y : 0f), floor.localRotationY,
                 floor.airFloor ? SceneFloorExporter.AirFloorColliderName : "Col_Floor");
         }
 
@@ -522,7 +528,7 @@ public static class SceneLayoutApplier
                 if (scz <= 0f) scz = 1f;
                 float w = (item.footprint != null && item.footprint.cellsX > 0 ? item.footprint.cellsX : 1) * LayoutEditorCatalogLookup.GridCellSize * scx;
                 float d = (item.footprint != null && item.footprint.cellsZ > 0 ? item.footprint.cellsZ : 1) * LayoutEditorCatalogLookup.GridCellSize * scz;
-                CreateColFloor(collision, groundLayer, cx, cz, w, d, item.localRotationY);
+                CreateColFloor(collision, groundLayer, cx, cz, w, d, FloorWalkY(item.localPosition != null ? item.localPosition.y : 0f), item.localRotationY);
             }
         }
     }
@@ -541,7 +547,17 @@ public static class SceneLayoutApplier
             || go.name.StartsWith(SceneFloorExporter.AirFloorColliderName + " (", StringComparison.Ordinal);
     }
 
-    private static void CreateColFloor(Transform parent, int groundLayer, float cx, float cz, float w, float d, float rotY, string colliderName = null)
+    /// <summary>Walk-surface height convention shared with the web editor: legacy
+    /// default floors sit at visual y=-0.05 (plane) / 0.01 (themed) while their walk
+    /// surface is 0, so small |y| values all mean "ground level". Only genuinely
+    /// raised floors (y &gt; 0.05) lift the Col_Floor collider — keeping legacy
+    /// scenes' colliders exactly at y=0 as before.</summary>
+    private static float FloorWalkY(float y)
+    {
+        return y <= 0.05f ? 0f : y;
+    }
+
+    private static void CreateColFloor(Transform parent, int groundLayer, float cx, float cz, float w, float d, float y, float rotY, string colliderName = null)
     {
         var name = string.IsNullOrEmpty(colliderName) ? "Col_Floor" : colliderName;
         var go = new GameObject(name);
@@ -549,7 +565,7 @@ public static class SceneLayoutApplier
         go.layer = groundLayer;
         var t = go.transform;
         t.SetParent(parent, false);
-        t.localPosition = new Vector3(cx, 0f, cz);
+        t.localPosition = new Vector3(cx, y, cz);
         t.localRotation = Quaternion.Euler(0f, rotY, 0f);
         t.localScale = Vector3.one;
         var col = go.AddComponent<BoxCollider>();

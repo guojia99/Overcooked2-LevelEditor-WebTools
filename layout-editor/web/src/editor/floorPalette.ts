@@ -24,6 +24,84 @@ import {
 } from "../floorColors";
 import { tidyCatalogNameZh } from "../displayLabels";
 import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
+import { floorLayerSummary } from "./floorHeight";
+
+/** 面板高度过滤：按 prefab 固有模型高度（catalog 的 height 字段，未实测按 0）
+ *  是否落在当前高度区间内。未激活（全部）时恒通过。 */
+export function matchesFloorHeightFilter(it: CatalogItem): boolean {
+  if (S.floorHeight.min == null || S.floorHeight.max == null) return true;
+  const h = it.height ?? 0;
+  return h >= S.floorHeight.min - 1e-6 && h <= S.floorHeight.max + 1e-6;
+}
+
+/** 同步滑块位置与数值标签到 S.floorHeight（null = 全部 = 整个滑块域）。 */
+export function syncFloorHeightSliderUI(): void {
+  const minEl = document.getElementById("fhf-min") as HTMLInputElement | null;
+  const maxEl = document.getElementById("fhf-max") as HTMLInputElement | null;
+  const minVal = document.getElementById("fhf-min-val");
+  const maxVal = document.getElementById("fhf-max-val");
+  if (!minEl || !maxEl) return;
+  const lo = S.floorHeight.min ?? parseFloat(minEl.min);
+  const hi = S.floorHeight.max ?? parseFloat(maxEl.max);
+  minEl.value = String(lo);
+  maxEl.value = String(hi);
+  if (minVal) minVal.textContent = lo.toFixed(2);
+  if (maxVal) maxVal.textContent = hi.toFixed(2);
+}
+
+/** 渲染高度层列表（全部 + L0…LN，含每层地板/物品计数），点击 = 设为该层区间。 */
+export function renderFloorHeightLayers(): void {
+  const box = document.getElementById("fhf-layers");
+  if (!box) return;
+  box.innerHTML = "";
+  const isAll = S.floorHeight.min == null || S.floorHeight.max == null;
+  // 地板层按地板计数，核心/装饰层按物品计数。
+  const byItems = S.currentLayer === "items" || S.currentLayer === "decor";
+  const addBtn = (label: string, active: boolean, title: string, onClick: () => void) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "fhf-layer" + (active ? " active" : "");
+    b.textContent = label;
+    b.title = title;
+    b.addEventListener("click", onClick);
+    box.appendChild(b);
+  };
+  const applyRange = (min: number | null, max: number | null) => {
+    S.floorHeight.min = min;
+    S.floorHeight.max = max;
+    refreshAfterHeightFilterChange();
+  };
+  addBtn(`全部高度`, isAll, "显示所有高度", () => applyRange(null, null));
+  for (const l of floorLayerSummary()) {
+    const active =
+      !isAll &&
+      Math.abs((S.floorHeight.min as number) - l.lo) < 1e-6 &&
+      Math.abs((S.floorHeight.max as number) - l.hi) < 1e-6;
+    const n = byItems ? `${l.itemCount}件` : `${l.count}块`;
+    addBtn(
+      `L${l.index} · ${l.lo.toFixed(2)}~${l.hi.toFixed(2)} · ${n}`,
+      active,
+      `只显示高度在 ${l.lo.toFixed(2)}~${l.hi.toFixed(2)} 的${byItems ? "物品" : "地板"}`,
+      () => applyRange(l.lo, l.hi)
+    );
+  }
+}
+
+/** 高度过滤面板（悬浮）整体刷新：层列表 + 滑块位置。 */
+export function refreshFloorHeightPanel(): void {
+  renderFloorHeightLayers();
+  syncFloorHeightSliderUI();
+}
+
+/** 高度区间变化后的统一刷新：面板 + 物品面板（地板层）+ 画布。 */
+export function refreshAfterHeightFilterChange(): void {
+  refreshFloorHeightPanel();
+  if (S.currentLayer === "floor") {
+    const q = (document.getElementById("palette-search") as HTMLInputElement | null)?.value ?? "";
+    buildFloorPalette(q, "floor");
+  }
+  draw();
+}
 
 /** 特殊地板：压力开关（含莲花压力开关），在地板层放置。 */
 const PRESSURE_SWITCH_SURFACE_IDS = new Set([
@@ -37,6 +115,7 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
   const q = filter.trim().toLowerCase();
 
   if (mode === "floor") {
+    refreshFloorHeightPanel();
     const addBtn = document.createElement("button");
     addBtn.className = "palette-add-floor";
     addBtn.textContent = "+ 新增地板（在画布点击放置）";
@@ -50,7 +129,7 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
 
     // 新增主题地板: pick a themed prefab, then click the canvas to place a floor
     // that tiles it on write-back (a standalone floor type, not a solid plane).
-    const themedList = themedFloorPrefabs().filter((it) => matchesFloorPaletteFilter(it, q));
+    const themedList = themedFloorPrefabs().filter((it) => matchesFloorPaletteFilter(it, q) && matchesFloorHeightFilter(it));
     if (themedList.length > 0) {
       const themedRow = document.createElement("div");
       themedRow.className = "palette-add-themed";
@@ -94,9 +173,6 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
     dom.paletteCats.appendChild(airBtn);
   }
 
-  const surfaceItems: CatalogItem[] = [];
-  for (const it of S.catalogByGuid.values()) if (isSurfaceItem(it)) surfaceItems.push(it);
-
   const groups: { key: string; labelZh: string; match: (it: CatalogItem) => boolean }[] =
     mode === "background"
       ? [
@@ -117,18 +193,31 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
           },
         ]
       : [
+          {
+            key: "snowice",
+            labelZh: "❄ 雪地 / 冰面（含冰崖围边）",
+            // 雪地板/冰面砖 + 冰崖围边（装饰层条目，搭高台时围边用）+ 雪堆
+            match: (it) =>
+              it.surfaceKind === "snow" ||
+              it.surfaceKind === "ice" ||
+              /icecliff|snowmound|snowpile|snowball|iceblock/i.test(it.id),
+          },
           { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
           { key: "ground", labelZh: "大型地面", match: (it) => it.surfaceKind === "ground" },
           { key: "pressure", labelZh: "压力开关（特殊地板）", match: (it) => PRESSURE_SWITCH_SURFACE_IDS.has(it.id) },
         ];
   // Background palette also lists ambient effects (they are not surface items).
-  const pool = mode === "background" ? [...S.catalogByGuid.values()] : surfaceItems;
+  // Floor mode uses the full catalog too so the snow group can include ice-cliff
+  // decor pieces (placed as regular items); conveyor/ground/pressure groups are
+  // surfaceKind/ID-scoped and unaffected.
+  const pool = [...S.catalogByGuid.values()];
 
   let anyGroup = false;
   for (const group of groups) {
     const list = pool
       .filter((it) => group.match(it))
       .filter((it) => matchesFloorPaletteFilter(it, q))
+      .filter((it) => mode === "background" || matchesFloorHeightFilter(it))
       .sort((a, b) => a.id.localeCompare(b.id));
     if (list.length === 0) continue;
     anyGroup = true;
@@ -244,7 +333,12 @@ export function appendPaletteTileGrid(parent: HTMLElement, list: CatalogItem[]) 
           : it.id === "alien_gue"
             ? `<div class="sub">黏液主题自动补齐</div>`
             : "";
-    row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}</div><div class="id">${it.id}</div>${sub}`;
+    // 固有模型高度徽标（实测 bounds Y）：平板 ~0.1、冰崖等高件 1+。
+    const hBadge =
+      it.height != null && it.height > 0.01
+        ? `<div class="sub fhf-badge">h=${it.height.toFixed(2)}</div>`
+        : "";
+    row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}</div><div class="id">${it.id}</div>${sub}${hBadge}`;
     row.addEventListener("dragstart", (e) => {
       S.dragCatalog = it;
       e.dataTransfer?.setData("text/plain", it.guid);

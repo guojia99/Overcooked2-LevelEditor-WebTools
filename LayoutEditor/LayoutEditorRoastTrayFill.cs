@@ -153,7 +153,7 @@ public static class LayoutEditorRoastTrayFill
         return result;
     }
 
-    private static PseudoPrefabSO LoadIngredientSo(string id)
+    public static PseudoPrefabSO LoadIngredientSo(string id)
     {
         if (string.IsNullOrEmpty(id))
             return null;

@@ -142,6 +142,9 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   dlc13_lotuspressureswitch_large: "PressureSwitch",
   dlc13_lotuspressureswitch_small: "PressureSwitch",
   MultiControlTerminal: "Terminal",
+  // 大炮（dlc08/dlc09）：右键可配 360° 自由旋转；固定小角度模式为 prefab 默认 ±45°
+  dlc08_cannon: "Cannon",
+  dlc09_cannon: "Cannon",
 };
 
 /** 酱料机可输出的酱料（黄芥末酱 / 番茄酱，含 DLC11 换皮，逻辑一致）。 */
@@ -184,6 +187,10 @@ export function stubKindOf(item: EditorItem): string {
     return item.stubKind;
   }
   const prefabId = prefabIdFromPath(item.prefabAssetPath);
+  // 可移动火锅：stubKind 保持空（不挂 CookingUtensil stub，宿主 Setup NRE），
+  // 但 UI 按锅具处理（右键「额外食材」等）。
+  if (prefabId === "utensil_large_pot_01_pushable")
+    return "CookingUtensil";
   return STUB_KIND_BY_PREFAB_ID[prefabId] ?? "";
 }
 
@@ -203,6 +210,12 @@ export function isIngredientSprayId(id: string | undefined): boolean {
 export function isCannonTarget(item: EditorItem): boolean {
   const id = prefabIdFromPath(item.prefabAssetPath);
   return id === "dlc08_cannon" || id === "dlc09_cannon";
+}
+
+/** 火锅灶台（core / dlc10 变体）：支持定时开关（开局自动循环开/关）。 */
+export function isHotpotBurnerItem(item: EditorItem): boolean {
+  const id = prefabIdFromPath(item.prefabAssetPath);
+  return id === "cooking_region_floorburner" || id === "dlc10_cooking_region_floorburner";
 }
 
 export function isCollisionItem(it: EditorItem): boolean {
@@ -306,6 +319,17 @@ export function pressureSwitchMaterialHtml(item: EditorItem): string {
 export function stubControlsHtml(item: EditorItem): string {
   const kind = stubKindOf(item);
   computeParamLabels(); // refresh per-type sequence numbers so menus match the canvas
+  // 火锅灶台无 stub 组件（kind 为空）：定时开关是它唯一的专属参数区
+  if (!kind && isHotpotBurnerItem(item)) {
+    const ts = item.timedSwitch ?? {};
+    const on = ts.enabled !== false;
+    return `<div class="ctx-stub"><div class="ctx-stub-title">火锅灶台 · 定时开关</div>
+      <label class="ctx-stub-row"><input type="checkbox" id="ctx-ts-enable" ${on ? "checked" : ""}/> 启用定时循环</label>
+      <label class="ctx-stub-row">开启 <input type="number" id="ctx-ts-on" class="ctx-input" step="1" min="3" value="${ts.onSeconds ?? 30}"/> 秒</label>
+      <label class="ctx-stub-row">关闭 <input type="number" id="ctx-ts-off" class="ctx-input" step="1" min="3" value="${ts.offSeconds ?? 30}"/> 秒</label>
+      <label class="ctx-stub-row"><input type="checkbox" id="ctx-ts-starton" ${ts.startOn !== false ? "checked" : ""}/> 初始为开启</label>
+      <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">开局自动循环：关闭期锅具不加热、火焰熄灭；相同设置的多台灶台自动同步</div></div>`;
+  }
   switch (kind) {
     case "Dispenser": {
       const stype = specialDispenserType(item);
@@ -521,6 +545,45 @@ export function wireStubControls(item: EditorItem) {
 
   const num = (id: string): HTMLInputElement | null =>
     document.getElementById(id) as HTMLInputElement | null;
+
+  // 火锅灶台定时开关（kind 为空也能配置）
+  if (isHotpotBurnerItem(item)) {
+    const ensureTs = () => {
+      if (!item.timedSwitch)
+        item.timedSwitch = { enabled: true, onSeconds: 30, offSeconds: 30, startOn: true };
+      return item.timedSwitch;
+    };
+    num("ctx-ts-enable")?.addEventListener("change", (e) => {
+      pushHistory();
+      ensureTs().enabled = (e.target as HTMLInputElement).checked;
+      setStatus(`定时循环已${(e.target as HTMLInputElement).checked ? "启用" : "停用"}（写回后生效）`);
+    });
+    num("ctx-ts-on")?.addEventListener("change", (e) => {
+      const v = parseFloat((e.target as HTMLInputElement).value);
+      if (isFinite(v) && v >= 3) {
+        pushHistory();
+        ensureTs().onSeconds = v;
+        setStatus(`开启时长已设为 ${v} 秒（写回后生效）`);
+      } else {
+        setStatus("开启时长至少 3 秒");
+      }
+    });
+    num("ctx-ts-off")?.addEventListener("change", (e) => {
+      const v = parseFloat((e.target as HTMLInputElement).value);
+      if (isFinite(v) && v >= 3) {
+        pushHistory();
+        ensureTs().offSeconds = v;
+        setStatus(`关闭时长已设为 ${v} 秒（写回后生效）`);
+      } else {
+        setStatus("关闭时长至少 3 秒");
+      }
+    });
+    num("ctx-ts-starton")?.addEventListener("change", (e) => {
+      pushHistory();
+      ensureTs().startOn = (e.target as HTMLInputElement).checked;
+      setStatus(`初始相位已设为${(e.target as HTMLInputElement).checked ? "开启" : "关闭"}（写回后生效）`);
+    });
+  }
 
   if (kind) {
   switch (kind) {
@@ -753,6 +816,16 @@ export function wireStubControls(item: EditorItem) {
       num("ctx-bn-hide")?.addEventListener("change", (e) => {
         pushHistory();
         ensure().hideVisual = (e.target as HTMLInputElement).checked;
+      });
+      break;
+    }
+    case "Cannon": {
+      num("ctx-cn-free")?.addEventListener("change", (e) => {
+        pushHistory();
+        item.stubKind = "Cannon";
+        if (!item.cannon) item.cannon = {};
+        item.cannon.freeRotation = (e.target as HTMLInputElement).checked;
+        setStatus(`大炮已${item.cannon.freeRotation ? "开启 360° 自由旋转" : "恢复固定小角度模式（±45°）"}（写回后生效）`);
       });
       break;
     }

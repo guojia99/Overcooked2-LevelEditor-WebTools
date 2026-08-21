@@ -31,7 +31,13 @@ import {
 import type { RecipeEntry } from "../../types";
 
 export function openUtensilManager() {
-  const utensils = S.items.filter((it) => stubKindOf(it) === "CookingUtensil");
+  // 锅具 = CookingUtensil stub + 可移动火锅（含锅 child，有 IngredientContainer，
+  // 食材配置同样有效，但 stubKind 保持空由后端载体组装，不挂 CookingUtensil stub）
+  const utensils = S.items.filter(
+    (it) =>
+      stubKindOf(it) === "CookingUtensil" ||
+      prefabIdFromPath(it.prefabAssetPath) === "utensil_large_pot_01_pushable"
+  );
   if (!utensils.length) {
     setStatus("当前关卡没有锅具", false);
     return;
@@ -134,7 +140,8 @@ export function openUtensilManager() {
     pushHistory();
     let touched = 0;
     for (const it of S.items) {
-      if (stubKindOf(it) !== "CookingUtensil") continue;
+      const isPushablePot = prefabIdFromPath(it.prefabAssetPath) === "utensil_large_pot_01_pushable";
+      if (stubKindOf(it) !== "CookingUtensil" && !isPushablePot) continue;
       const f = fill.get(vesselOfItem(it));
       if (!f) continue;
       const add: string[] = [];
@@ -147,7 +154,11 @@ export function openUtensilManager() {
         if (g) add.push(g);
       }
       if (!add.length) continue;
-      it.stubKind = "CookingUtensil";
+      // 可移动火锅不挂 CookingUtensil stub（载体组装在 LayoutRuntimePushablePot，
+      // 挂 stub 会触发宿主 Setup NRE）；只写食材配置。
+      if (!isPushablePot) {
+        it.stubKind = "CookingUtensil";
+      }
       if (!it.cookingUtensil) it.cookingUtensil = {};
       it.cookingUtensil.capacity = utensilCapacityOrFix(it);
       const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);

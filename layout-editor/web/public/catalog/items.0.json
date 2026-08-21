@@ -28,8 +28,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.3813226222991943
       },
+      "height": 2.381,
       "layoutTier": "decor",
       "nameZh": "登船板",
       "nameEn": "aboard 1",
@@ -44,8 +46,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 19,
-        "cellsZ": 19
+        "cellsZ": 19,
+        "sizeY": 28.56077766418457
       },
+      "height": 28.561,
       "layoutTier": "decor",
       "nameZh": "热气球·球体 1",
       "nameEn": "air balloon balloon 1",
@@ -60,8 +64,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 17,
-        "cellsZ": 17
+        "cellsZ": 17,
+        "sizeY": 25.447715759277344
       },
+      "height": 25.448,
       "layoutTier": "decor",
       "nameZh": "热气球·球体 2",
       "nameEn": "air balloon balloon 2",
@@ -76,8 +82,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 11,
-        "cellsZ": 11
+        "cellsZ": 11,
+        "sizeY": 16.557836532592773
       },
+      "height": 16.558,
       "layoutTier": "decor",
       "nameZh": "热气球·球体 3",
       "nameEn": "air balloon balloon 3",
@@ -92,8 +100,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.24613463878631592
       },
+      "height": 0.246,
       "layoutTier": "decor",
       "nameZh": "热气球·桥（三格）",
       "nameEn": "air balloon bridge x3",
@@ -108,8 +118,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.24236023426055908
       },
+      "height": 0.242,
       "layoutTier": "decor",
       "nameZh": "热气球·桥（五格）",
       "nameEn": "air balloon bridge x5",
@@ -124,8 +136,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 11
+        "cellsZ": 11,
+        "sizeY": 0.8114393949508667
       },
+      "height": 0.811,
       "layoutTier": "decor",
       "nameZh": "热气球·彩旗 1",
       "nameEn": "air balloon bunting 1",
@@ -140,8 +154,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 7,
-        "cellsZ": 5
+        "cellsZ": 5,
+        "sizeY": 0.5602359175682068
       },
+      "height": 0.56,
       "layoutTier": "decor",
       "nameZh": "热气球·彩旗 5",
       "nameEn": "air balloon bunting 5",
@@ -156,8 +172,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2082713842391968
       },
+      "height": 1.208,
       "layoutTier": "decor",
       "nameZh": "热气球·燃烧器标准",
       "nameEn": "air balloon burner standard",
@@ -172,8 +190,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.932571530342102
       },
+      "height": 1.933,
       "layoutTier": "decor",
       "nameZh": "热气球·烟囱",
       "nameEn": "Chimney 1",
@@ -188,8 +208,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.4664550721645355
       },
+      "height": 0.466,
       "layoutTier": "decor",
       "nameZh": "热气球·旗帜 1",
       "nameEn": "air balloon flag 1",
@@ -203,9 +225,11 @@
       "theme": "floors",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 2.280003786087036
       },
+      "height": 2.28,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -222,8 +246,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.28977632522583
       },
+      "height": 1.29,
       "layoutTier": "decor",
       "nameZh": "热气球·救生圈",
       "nameEn": "Lifebelt 1",
@@ -238,8 +264,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.115546815097332
       },
+      "height": 0.116,
       "layoutTier": "decor",
       "nameZh": "热气球·屋顶 1",
       "nameEn": "air balloon roof 1",
@@ -254,8 +282,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.30000004172325134
       },
+      "height": 0.3,
       "layoutTier": "decor",
       "nameZh": "热气球·屋顶 2",
       "nameEn": "air balloon roof 2",
@@ -270,8 +300,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.1750161349773407
       },
+      "height": 0.175,
       "layoutTier": "decor",
       "nameZh": "热气球·屋顶 3",
       "nameEn": "air balloon roof 3",
@@ -286,8 +318,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 9
+        "cellsZ": 9,
+        "sizeY": 1.768412709236145
       },
+      "height": 1.768,
       "layoutTier": "decor",
       "nameZh": "热气球·屋顶段 1",
       "nameEn": "air balloon roof roof section 1",
@@ -302,8 +336,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 11.865135192871094
       },
+      "height": 11.865,
       "layoutTier": "decor",
       "nameZh": "热气球·绳顶部侧边 1",
       "nameEn": "air balloon rope top side 1",
@@ -318,8 +354,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.010983943939209
       },
+      "height": 4.011,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边 2",
       "nameEn": "air balloon side 2",
@@ -334,8 +372,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 4.25370979309082
       },
+      "height": 4.254,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边转角 4",
       "nameEn": "air balloon side corner 4",
@@ -350,8 +390,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.203536033630371
       },
+      "height": 3.204,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边转角（低）1",
       "nameEn": "air balloon side corner low 1",
@@ -366,8 +408,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.010983943939209
       },
+      "height": 4.011,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边尽头 1",
       "nameEn": "air balloon side end 1",
@@ -382,8 +426,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.967554807662964
       },
+      "height": 2.968,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边（低）1",
       "nameEn": "air balloon side low 1",
@@ -398,8 +444,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 9,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 11.204585075378418
       },
+      "height": 11.205,
       "layoutTier": "decor",
       "nameZh": "热气球·涡轮 1",
       "nameEn": "Turbine 1",
@@ -414,8 +462,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 15,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 18.392757415771484
       },
+      "height": 18.393,
       "layoutTier": "decor",
       "nameZh": "热气球·涡轮 2",
       "nameEn": "Turbine 2",
@@ -430,8 +480,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 9,
-        "cellsZ": 5
+        "cellsZ": 5,
+        "sizeY": 11.083613395690918
       },
+      "height": 11.084,
       "layoutTier": "decor",
       "nameZh": "热气球·涡轮 3",
       "nameEn": "Turbine 3",
@@ -446,8 +498,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8136734366416931
       },
+      "height": 0.814,
       "layoutTier": "decor",
       "nameZh": "热气球护栏",
       "nameEn": "airballoon barrier",
@@ -494,8 +548,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 0.5635550022125244
       },
+      "height": 0.564,
       "layoutTier": "decor",
       "nameZh": "充气床 1",
       "nameEn": "airbed 1",
@@ -510,8 +566,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 0.5635550022125244
       },
+      "height": 0.564,
       "layoutTier": "decor",
       "nameZh": "充气床 1",
       "nameEn": "Airbed 1",
@@ -526,8 +584,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2000004053115845
       },
+      "height": 1.2,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "alien",
@@ -544,8 +604,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 62,
-        "cellsZ": 36
+        "cellsZ": 36,
+        "sizeY": 0.6952760219573975
       },
+      "height": 0.695,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -562,8 +624,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 0.5564079284667969
       },
+      "height": 0.556,
       "layoutTier": "decor",
       "nameZh": "外星触手",
       "nameEn": "Alien Tentacle 1",
@@ -578,8 +642,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 12,
-        "cellsZ": 12
+        "cellsZ": 12,
+        "sizeY": 29.14591407775879
       },
+      "height": 29.146,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -596,8 +662,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 6
+        "cellsZ": 6,
+        "sizeY": 2.404592275619507
       },
+      "height": 2.405,
       "layoutTier": "decor",
       "nameZh": "木桶筏 2",
       "nameEn": "barrelraft 2",
@@ -612,8 +680,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 6
+        "cellsZ": 6,
+        "sizeY": 2.404592275619507
       },
+      "height": 2.405,
       "layoutTier": "decor",
       "nameZh": "木桶筏 2",
       "nameEn": "Barrelraft 2",
@@ -628,8 +698,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 6
+        "cellsZ": 6,
+        "sizeY": 2.404592275619507
       },
+      "height": 2.405,
       "layoutTier": "decor",
       "nameZh": "木桶筏 3",
       "nameEn": "barrelraft 3",
@@ -644,8 +716,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3282750844955444
       },
+      "height": 1.328,
       "layoutTier": "decor",
       "nameZh": "护栏 1",
       "nameEn": "barrier 1",
@@ -660,8 +734,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.21597504615783691
       },
+      "height": 0.216,
       "layoutTier": "decor",
       "nameZh": "绳索护栏（1格）",
       "nameEn": "barrier rope 1unit 1",
@@ -678,6 +754,7 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 0.609,
       "layoutTier": "decor",
       "nameZh": "绳索护栏（2格）",
       "nameEn": "barrier rope 2unit 1",
@@ -932,8 +1009,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.008331298828125
       },
+      "height": 2.008,
       "layoutTier": "decor",
       "nameZh": "海滩石墙 1",
       "nameEn": "beach stonewall 1",
@@ -948,8 +1027,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.008331298828125
       },
+      "height": 2.008,
       "layoutTier": "decor",
       "nameZh": "海滩石墙 1",
       "nameEn": "Beach stonewall 1",
@@ -964,8 +1045,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.008331298828125
       },
+      "height": 2.008,
       "layoutTier": "decor",
       "nameZh": "海滩石墙 2",
       "nameEn": "beach stonewall 2",
@@ -980,8 +1063,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.014803647994995
       },
+      "height": 2.015,
       "layoutTier": "decor",
       "nameZh": "海滩石墙转角 1",
       "nameEn": "beach stonewall corner 1",
@@ -996,8 +1081,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.014803647994995
       },
+      "height": 2.015,
       "layoutTier": "decor",
       "nameZh": "海滩石墙转角 1",
       "nameEn": "Beach stonewall corner 1",
@@ -1012,8 +1099,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.014803647994995
       },
+      "height": 2.015,
       "layoutTier": "decor",
       "nameZh": "海滩石墙转角 2",
       "nameEn": "beach stonewall corner 2",
@@ -1028,8 +1117,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.008331298828125
       },
+      "height": 2.008,
       "layoutTier": "decor",
       "nameZh": "海滩石墙尽头 1",
       "nameEn": "beach stonewall end 1",
@@ -1044,8 +1135,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.008331298828125
       },
+      "height": 2.008,
       "layoutTier": "decor",
       "nameZh": "海滩石墙尽头 1",
       "nameEn": "Beach stonewall end 1",
@@ -1060,8 +1153,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.008331298828125
       },
+      "height": 2.008,
       "layoutTier": "decor",
       "nameZh": "海滩石墙尽头 2",
       "nameEn": "beach stonewall end 2",
@@ -1076,8 +1171,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 168,
-        "cellsZ": 51
+        "cellsZ": 51,
+        "sizeY": 20.09857940673828
       },
+      "height": 20.099,
       "layoutTier": "decor",
       "nameZh": "海滩王座 prefab",
       "nameEn": "beach throne prefab",
@@ -1092,8 +1189,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5090829133987427
       },
+      "height": 1.509,
       "layoutTier": "decor",
       "nameZh": "沙滩球 1",
       "nameEn": "beachball 1",
@@ -1108,8 +1207,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5090829133987427
       },
+      "height": 1.509,
       "layoutTier": "decor",
       "nameZh": "沙滩球 2",
       "nameEn": "beachball 2",
@@ -1188,8 +1289,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.09747807681560516
       },
+      "height": 0.097,
       "layoutTier": "decor",
       "nameZh": "海滩鹅卵石 3",
       "nameEn": "beachdoodads pebbles 3",
@@ -1220,8 +1323,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.10576053708791733
       },
+      "height": 0.106,
       "layoutTier": "decor",
       "nameZh": "海星 2",
       "nameEn": "beachdoodads starfish 2",
@@ -1236,8 +1341,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.10576053708791733
       },
+      "height": 0.106,
       "layoutTier": "decor",
       "nameZh": "beachdoodads 海星 3",
       "nameEn": "beachdoodads starfish 3",
@@ -1268,8 +1375,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 2.8936448097229004
       },
+      "height": 2.894,
       "layoutTier": "decor",
       "nameZh": "大麻袋 1",
       "nameEn": "bigsack 1",
@@ -1284,8 +1393,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.128908395767212
       },
+      "height": 1.129,
       "layoutTier": "decor",
       "nameZh": "船炮",
       "nameEn": "Boat Cannon",
@@ -1300,8 +1411,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5954118967056274
       },
+      "height": 1.595,
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 1",
       "nameEn": "bow 1",
@@ -1316,8 +1429,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5954118967056274
       },
+      "height": 1.595,
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 2",
       "nameEn": "bow 2",
@@ -1332,8 +1447,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5954118967056274
       },
+      "height": 1.595,
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 3",
       "nameEn": "bow 3",
@@ -1348,8 +1465,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5954118967056274
       },
+      "height": 1.595,
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 4",
       "nameEn": "bow 4",
@@ -1364,8 +1483,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.2143014669418335
       },
+      "height": 0.214,
       "layoutTier": "decor",
       "nameZh": "碎砖 1",
       "nameEn": "brokentiles 1",
@@ -1380,8 +1501,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.08295905590057373
       },
+      "height": 0.083,
       "layoutTier": "decor",
       "nameZh": "碎砖 2",
       "nameEn": "brokentiles 2",
@@ -1396,8 +1519,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.08306027203798294
       },
+      "height": 0.083,
       "layoutTier": "decor",
       "nameZh": "碎砖 3",
       "nameEn": "brokentiles 3",
@@ -1412,8 +1537,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.174858957529068
       },
+      "height": 0.175,
       "layoutTier": "decor",
       "nameZh": "碎砖 4",
       "nameEn": "brokentiles 4",
@@ -1428,8 +1555,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.22356446087360382
       },
+      "height": 0.224,
       "layoutTier": "decor",
       "nameZh": "碎砖 5",
       "nameEn": "brokentiles 5",
@@ -1444,8 +1573,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7353320717811584
       },
+      "height": 0.735,
       "layoutTier": "decor",
       "nameZh": "水桶 1",
       "nameEn": "bucket 1",
@@ -1460,8 +1591,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.0248289108276367
       },
+      "height": 1.025,
       "layoutTier": "decor",
       "nameZh": "彩旗 1",
       "nameEn": "bunting 1",
@@ -1476,8 +1609,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.9726099967956543
       },
+      "height": 0.973,
       "layoutTier": "decor",
       "nameZh": "彩旗 2",
       "nameEn": "bunting 2",
@@ -1492,8 +1627,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.0325121879577637
       },
+      "height": 1.033,
       "layoutTier": "decor",
       "nameZh": "彩旗 3",
       "nameEn": "bunting 3",
@@ -1508,8 +1645,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.1291813850402832
       },
+      "height": 1.129,
       "layoutTier": "decor",
       "nameZh": "浮标 1",
       "nameEn": "buoy 1",
@@ -1524,8 +1663,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.1291813850402832
       },
+      "height": 1.129,
       "layoutTier": "decor",
       "nameZh": "浮标 1",
       "nameEn": "Buoy 1",
@@ -1540,8 +1681,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.1291813850402832
       },
+      "height": 1.129,
       "layoutTier": "decor",
       "nameZh": "浮标 2",
       "nameEn": "buoy 2",
@@ -1572,8 +1715,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.721008062362671
       },
+      "height": 1.721,
       "layoutTier": "decor",
       "nameZh": "蜡烛位 1",
       "nameEn": "Candle 1 Position",
@@ -1588,8 +1733,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.721008062362671
       },
+      "height": 1.721,
       "layoutTier": "decor",
       "nameZh": "蜡烛位 2",
       "nameEn": "Candle 2 Position",
@@ -1604,8 +1751,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.721008062362671
       },
+      "height": 1.721,
       "layoutTier": "decor",
       "nameZh": "蜡烛位 3",
       "nameEn": "Candle 3 Position",
@@ -1620,8 +1769,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.7722934484481812
       },
+      "height": 1.772,
       "layoutTier": "decor",
       "nameZh": "车",
       "nameEn": "car",
@@ -1636,8 +1787,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.7722934484481812
       },
+      "height": 1.772,
       "layoutTier": "decor",
       "nameZh": "车位 1",
       "nameEn": "car position 1",
@@ -1652,8 +1805,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.7722934484481812
       },
+      "height": 1.772,
       "layoutTier": "decor",
       "nameZh": "车位 2",
       "nameEn": "car position 2",
@@ -1668,8 +1823,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.7722934484481812
       },
+      "height": 1.772,
       "layoutTier": "decor",
       "nameZh": "车位 3",
       "nameEn": "car position 3",
@@ -1684,8 +1841,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3030353784561157
       },
+      "height": 1.303,
       "layoutTier": "decor",
       "nameZh": "椅 1",
       "nameEn": "chair 1",
@@ -1700,8 +1859,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市门双开 1",
       "nameEn": "city door double 1",
@@ -1716,8 +1877,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.1784393787384033
       },
+      "height": 3.178,
       "layoutTier": "decor",
       "nameZh": "城市旗帜 1",
       "nameEn": "city flag 1",
@@ -1731,9 +1894,11 @@
       "theme": "npc",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 1.874986171722412
       },
+      "height": 1.875,
       "layoutTier": "decor",
       "nameZh": "城市凯文 2",
       "nameEn": "city kevin 2",
@@ -1748,8 +1913,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.874986171722412
       },
+      "height": 1.875,
       "layoutTier": "decor",
       "nameZh": "凯文雕像",
       "nameEn": "City kevin 2",
@@ -1764,8 +1931,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.11048725247383118
       },
+      "height": 0.11,
       "layoutTier": "decor",
       "nameZh": "城市小路转角 1",
       "nameEn": "city path corner 1",
@@ -1780,8 +1949,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.11048725247383118
       },
+      "height": 0.11,
       "layoutTier": "decor",
       "nameZh": "城市小路转角 1",
       "nameEn": "City path corner 1",
@@ -1796,8 +1967,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.11048725247383118
       },
+      "height": 0.11,
       "layoutTier": "decor",
       "nameZh": "城市小路侧边 1",
       "nameEn": "city path side 1",
@@ -1812,8 +1985,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.11048725247383118
       },
+      "height": 0.11,
       "layoutTier": "decor",
       "nameZh": "城市路缘",
       "nameEn": "City path side 1",
@@ -1828,8 +2003,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.462324619293213
       },
+      "height": 1.462,
       "layoutTier": "decor",
       "nameZh": "城市餐厅桌 and chairs 1",
       "nameEn": "city restaurant table and chairs 1",
@@ -1844,8 +2021,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.462324619293213
       },
+      "height": 1.462,
       "layoutTier": "decor",
       "nameZh": "餐厅桌椅",
       "nameEn": "City restaurant table&chairs 1",
@@ -1860,8 +2039,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6039287447929382
       },
+      "height": 0.604,
       "layoutTier": "decor",
       "nameZh": "城市垃圾桶 1",
       "nameEn": "city RubbishBin 1",
@@ -1876,8 +2057,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙尽头 1",
       "nameEn": "city wall end 1",
@@ -1892,8 +2075,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0012314319610596
       },
+      "height": 2.001,
       "layoutTier": "decor",
       "nameZh": "城市直墙 05",
       "nameEn": "city wall straight 5",
@@ -1908,8 +2093,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖 1a",
       "nameEn": "citywall brick 01a",
@@ -1924,8 +2111,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市砖墙 01a",
       "nameEn": "Citywall brick 01a",
@@ -1940,8 +2129,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0158145427703857
       },
+      "height": 2.016,
       "layoutTier": "decor",
       "nameZh": "城市墙砖 1c",
       "nameEn": "citywall brick 01c",
@@ -1956,8 +2147,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0158145427703857
       },
+      "height": 2.016,
       "layoutTier": "decor",
       "nameZh": "城市砖墙 01c",
       "nameEn": "Citywall brick 01c",
@@ -1972,8 +2165,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.000001907348633
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖外 2",
       "nameEn": "citywall brick out 2",
@@ -1988,8 +2183,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.000001907348633
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖外 2",
       "nameEn": "Citywall brick out 2",
@@ -2004,8 +2201,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖通风口 1a",
       "nameEn": "citywall brick vent 01a",
@@ -2020,8 +2219,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖通风口 1a",
       "nameEn": "Citywall brick vent 01a",
@@ -2036,8 +2237,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖窗 1",
       "nameEn": "citywall brick window 1",
@@ -2052,8 +2255,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖窗 1",
       "nameEn": "Citywall brick window 1",
@@ -2068,8 +2273,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖窗 2",
       "nameEn": "citywall brick window 2",
@@ -2084,8 +2291,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖窗 2",
       "nameEn": "Citywall brick window 2",
@@ -2100,8 +2309,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖窗 3",
       "nameEn": "citywall brick window 3",
@@ -2116,8 +2327,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙砖窗 4",
       "nameEn": "citywall brick window 4",
@@ -2132,8 +2345,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙尽头 1",
       "nameEn": "citywall end 1",
@@ -2148,8 +2363,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙尽头 1",
       "nameEn": "Citywall end 1",
@@ -2164,8 +2381,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙尽头 2",
       "nameEn": "citywall end 2",
@@ -2180,8 +2399,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙墙纸 1",
       "nameEn": "citywall wallpaper 1",
@@ -2196,8 +2417,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙纸墙",
       "nameEn": "Citywall wallpaper 1",
@@ -2212,8 +2435,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙墙纸 2",
       "nameEn": "citywall wallpaper 2",
@@ -2228,8 +2453,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙墙纸转角内 1",
       "nameEn": "citywall wallpaper corner in 1",
@@ -2244,8 +2471,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙纸内角墙",
       "nameEn": "Citywall wallpaper corner in 1",
@@ -2260,8 +2489,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙墙纸转角内 2",
       "nameEn": "citywall wallpaper corner in 2",
@@ -2276,8 +2507,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.24155543744564056
       },
+      "height": 0.242,
       "layoutTier": "decor",
       "nameZh": "卵石 1",
       "nameEn": "cobble 1",
@@ -2292,8 +2525,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.24155543744564056
       },
+      "height": 0.242,
       "layoutTier": "decor",
       "nameZh": "卵石 2",
       "nameEn": "cobble 2",
@@ -2308,8 +2543,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.22883281111717224
       },
+      "height": 0.229,
       "layoutTier": "decor",
       "nameZh": "卵石 3",
       "nameEn": "cobble 3",
@@ -2324,8 +2561,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.26368018984794617
       },
+      "height": 0.264,
       "layoutTier": "decor",
       "nameZh": "卵石 tiled 1",
       "nameEn": "cobble tiled 1",
@@ -2340,8 +2579,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.7085577249526978
       },
+      "height": 0.709,
       "layoutTier": "decor",
       "nameZh": "木筏板条箱",
       "nameEn": "crate raft 1",
@@ -2356,8 +2597,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 11
+        "cellsZ": 11,
+        "sizeY": 0.7241032123565674
       },
+      "height": 0.724,
       "layoutTier": "decor",
       "nameZh": "板条箱 raft 十格 1",
       "nameEn": "crate raft x10 1",
@@ -2374,6 +2617,7 @@
         "cellsX": 10,
         "cellsZ": 1
       },
+      "height": 0.724,
       "layoutTier": "decor",
       "nameZh": "木筏板条箱（十格）",
       "nameEn": "Crate raft x10 1",
@@ -2390,6 +2634,7 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 0.709,
       "layoutTier": "decor",
       "nameZh": "木筏板条箱（双格）",
       "nameEn": "crate raft x2 1",
@@ -2404,8 +2649,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 0.7085716724395752
       },
+      "height": 0.709,
       "layoutTier": "decor",
       "nameZh": "板条箱 raft 三格 1",
       "nameEn": "crate raft x3 1",
@@ -2422,6 +2669,7 @@
         "cellsX": 3,
         "cellsZ": 1
       },
+      "height": 0.709,
       "layoutTier": "decor",
       "nameZh": "木筏板条箱（三格）",
       "nameEn": "Crate raft x3 1",
@@ -2436,8 +2684,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 3.380126476287842
       },
+      "height": 3.38,
       "layoutTier": "decor",
       "nameZh": "残骸 1",
       "nameEn": "debris 1",
@@ -2452,8 +2702,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5477998852729797
       },
+      "height": 0.548,
       "layoutTier": "decor",
       "nameZh": "残骸 2",
       "nameEn": "debris 2",
@@ -2468,8 +2720,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.36381545662879944
       },
+      "height": 0.364,
       "layoutTier": "decor",
       "nameZh": "残骸 3",
       "nameEn": "debris 3",
@@ -2484,8 +2738,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0543756484985352
       },
+      "height": 1.054,
       "layoutTier": "decor",
       "nameZh": "残骸 4",
       "nameEn": "debris 4",
@@ -2500,8 +2756,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2415627241134644
       },
+      "height": 1.242,
       "layoutTier": "decor",
       "nameZh": "残骸 5",
       "nameEn": "debris 5",
@@ -2516,8 +2774,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.605128049850464
       },
+      "height": 2.605,
       "layoutTier": "decor",
       "nameZh": "装饰竹 1",
       "nameEn": "decoration bamboo 1",
@@ -2532,8 +2792,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.038935899734497
       },
+      "height": 2.039,
       "layoutTier": "decor",
       "nameZh": "装饰竹 2",
       "nameEn": "decoration bamboo 2",
@@ -2548,8 +2810,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3794548809528351
       },
+      "height": 0.379,
       "layoutTier": "decor",
       "nameZh": "装饰香料架",
       "nameEn": "decoration spice rack",
@@ -2564,8 +2828,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6780117750167847
       },
+      "height": 0.678,
       "layoutTier": "decor",
       "nameZh": "装饰桌植物",
       "nameEn": "decoration table plant",
@@ -2580,8 +2846,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.4327741861343384
       },
+      "height": 0.433,
       "layoutTier": "decor",
       "nameZh": "装饰票据架",
       "nameEn": "decoration ticket rack",
@@ -2596,8 +2864,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.39886823296546936
       },
+      "height": 0.399,
       "layoutTier": "decor",
       "nameZh": "装饰通风口",
       "nameEn": "decoration vent",
@@ -2612,8 +2882,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.2512861490249634
       },
+      "height": 0.251,
       "layoutTier": "decor",
       "nameZh": "装饰壁灯 1",
       "nameEn": "decoration wall light 1",
@@ -2628,8 +2900,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.5874958038330078
       },
+      "height": 1.587,
       "layoutTier": "decor",
       "nameZh": "小餐馆 1",
       "nameEn": "diners 1",
@@ -2644,8 +2918,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 5
+        "cellsZ": 5,
+        "sizeY": 1.257441520690918
       },
+      "height": 1.257,
       "layoutTier": "decor",
       "nameZh": "小艇",
       "nameEn": "dinghy",
@@ -2660,8 +2936,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 5
+        "cellsZ": 5,
+        "sizeY": 1.257441520690918
       },
+      "height": 1.257,
       "layoutTier": "decor",
       "nameZh": "小艇",
       "nameEn": "Dinghy",
@@ -2676,8 +2954,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5726684331893921
       },
+      "height": 0.573,
       "layoutTier": "decor",
       "nameZh": "煤箱",
       "nameEn": "Coal Dispenser",
@@ -2692,8 +2972,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
       },
+      "height": 0.503,
       "layoutTier": "decor",
       "nameZh": "食材箱（圣诞）",
       "nameEn": "Dispenser Crate (DLC3)",
@@ -2708,8 +2990,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
       },
+      "height": 0.503,
       "layoutTier": "decor",
       "nameZh": "食材箱（部落）",
       "nameEn": "Dispenser Crate (DLC7)",
@@ -2740,8 +3024,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.086016893386841
       },
+      "height": 2.086,
       "layoutTier": "decor",
       "nameZh": "跳水板 1",
       "nameEn": "divingboard 1",
@@ -2756,8 +3042,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.086016893386841
       },
+      "height": 2.086,
       "layoutTier": "decor",
       "nameZh": "跳水板 2",
       "nameEn": "divingboard 2",
@@ -2868,8 +3156,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
       },
+      "height": 0.503,
       "layoutTier": "decor",
       "nameZh": "食材箱（马戏团）",
       "nameEn": "Dispenser Crate (Circus)",
@@ -3044,8 +3334,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
       },
+      "height": 0.503,
       "layoutTier": "decor",
       "nameZh": "食材箱（仙境）",
       "nameEn": "Dispenser Crate (DLC9)",
@@ -3060,8 +3352,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
       },
+      "height": 0.503,
       "layoutTier": "decor",
       "nameZh": "食材箱（火锅）",
       "nameEn": "Dispenser Crate (Hotpot)",
@@ -3076,8 +3370,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.3813226222991943
       },
+      "height": 2.381,
       "layoutTier": "decor",
       "nameZh": "dlc 11 登船板 1",
       "nameEn": "dlc 11 aboard 1",
@@ -3092,8 +3388,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 6.101938724517822
       },
+      "height": 6.102,
       "layoutTier": "decor",
       "nameZh": "dlc 11 气球 1",
       "nameEn": "dlc 11 balloon 1",
@@ -3108,8 +3406,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 6.101938724517822
       },
+      "height": 6.102,
       "layoutTier": "decor",
       "nameZh": "dlc 11 气球 2",
       "nameEn": "dlc 11 balloon 2",
@@ -3124,8 +3424,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 6.101937770843506
       },
+      "height": 6.102,
       "layoutTier": "decor",
       "nameZh": "dlc 11 气球 3",
       "nameEn": "dlc 11 balloon 3",
@@ -3140,8 +3442,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 4.366038799285889
       },
+      "height": 4.366,
       "layoutTier": "decor",
       "nameZh": "DLC11 气球串 1",
       "nameEn": "dlc11 balloons 1",
@@ -3156,8 +3460,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.7162399291992188
       },
+      "height": 2.716,
       "layoutTier": "decor",
       "nameZh": "DLC11 气球浮筒",
       "nameEn": "dlc11 baloon float",
@@ -3172,8 +3478,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 7,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.89658784866333
       },
+      "height": 1.897,
       "layoutTier": "decor",
       "nameZh": "dlc 11 横幅 1",
       "nameEn": "dlc 11 banner 1",
@@ -3188,8 +3496,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 7,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.89658784866333
       },
+      "height": 1.897,
       "layoutTier": "decor",
       "nameZh": "dlc 11 横幅 2",
       "nameEn": "dlc 11 banner 2",
@@ -3204,8 +3514,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 7,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.89658784866333
       },
+      "height": 1.897,
       "layoutTier": "decor",
       "nameZh": "dlc 11 横幅 3",
       "nameEn": "dlc 11 banner 3",

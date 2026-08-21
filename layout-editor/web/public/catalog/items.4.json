@@ -12,8 +12,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 1 a 1",
       "nameEn": "dlc07 battlements stone half block 1 a 1",
@@ -28,8 +30,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 1 b 1",
       "nameEn": "dlc07 battlements stone half block 1 b 1",
@@ -44,8 +48,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 1 c 1",
       "nameEn": "dlc07 battlements stone half block 1 c 1",
@@ -60,8 +66,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 1 d 1",
       "nameEn": "dlc07 battlements stone half block 1 d 1",
@@ -76,8 +84,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 2 a 1",
       "nameEn": "dlc07 battlements stone half block 2 a 1",
@@ -92,8 +102,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 2 b 1",
       "nameEn": "dlc07 battlements stone half block 2 b 1",
@@ -108,8 +120,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 2 c 1",
       "nameEn": "dlc07 battlements stone half block 2 c 1",
@@ -124,8 +138,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 2 d 1",
       "nameEn": "dlc07 battlements stone half block 2 d 1",
@@ -140,8 +156,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 3 a 1",
       "nameEn": "dlc07 battlements stone half block 3 a 1",
@@ -156,8 +174,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 3 b 1",
       "nameEn": "dlc07 battlements stone half block 3 b 1",
@@ -172,8 +192,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 3 c 1",
       "nameEn": "dlc07 battlements stone half block 3 c 1",
@@ -188,8 +210,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 3 d 1",
       "nameEn": "dlc07 battlements stone half block 3 d 1",
@@ -204,8 +228,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 4 a 1",
       "nameEn": "dlc07 battlements stone half block 4 a 1",
@@ -220,8 +246,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 4 b 1",
       "nameEn": "dlc07 battlements stone half block 4 b 1",
@@ -236,8 +264,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 4 c 1",
       "nameEn": "dlc07 battlements stone half block 4 c 1",
@@ -252,8 +282,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 4 d 1",
       "nameEn": "dlc07 battlements stone half block 4 d 1",
@@ -268,8 +300,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 5 a 1",
       "nameEn": "dlc07 battlements stone half block 5 a 1",
@@ -284,8 +318,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 5 b 1",
       "nameEn": "dlc07 battlements stone half block 5 b 1",
@@ -300,8 +336,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 5 c 1",
       "nameEn": "dlc07 battlements stone half block 5 c 1",
@@ -316,8 +354,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 5 d 1",
       "nameEn": "dlc07 battlements stone half block 5 d 1",
@@ -332,8 +372,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 tall block 1 a 1",
       "nameEn": "dlc07 battlements stone tall block 1 a 1",
@@ -348,8 +390,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 tall block 1 b 1",
       "nameEn": "dlc07 battlements stone tall block 1 b 1",
@@ -364,8 +408,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 tall block 1 c 1",
       "nameEn": "dlc07 battlements stone tall block 1 c 1",
@@ -380,8 +426,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 tall block 1 d 1",
       "nameEn": "dlc07 battlements stone tall block 1 d 1",
@@ -396,8 +444,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.500722646713257
       },
+      "height": 3.501,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 5",
       "nameEn": "dlc07 battlements stone wall 5",
@@ -412,8 +462,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.5001823902130127
       },
+      "height": 3.5,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 6",
       "nameEn": "dlc07 battlements stone wall 6",
@@ -428,8 +480,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.615952730178833
       },
+      "height": 2.616,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 7",
       "nameEn": "dlc07 battlements stone wall 7",
@@ -444,8 +498,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.504225969314575
       },
+      "height": 3.504,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 8",
       "nameEn": "dlc07 battlements stone wall 8",
@@ -460,8 +516,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.503796339035034
       },
+      "height": 3.504,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 optimized 4",
       "nameEn": "dlc07 battlements stone wall optimized 4",
@@ -476,8 +534,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.4974377155303955
       },
+      "height": 3.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 optimized 5",
       "nameEn": "dlc07 battlements stone wall optimized 5",
@@ -492,8 +552,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.5049471855163574
       },
+      "height": 3.505,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 optimized 6",
       "nameEn": "dlc07 battlements stone wall optimized 6",
@@ -508,8 +570,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 9.784927368164062
       },
+      "height": 9.785,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements wallsection 1",
       "nameEn": "dlc07 battlements wallsection 1",
@@ -524,8 +588,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 7,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 9.294590950012207
       },
+      "height": 9.295,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements wallsection 拱门 1",
       "nameEn": "dlc07 battlements wallsection arch 1",
@@ -540,8 +606,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 9.780891418457031
       },
+      "height": 9.781,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements wallsection 转角 1",
       "nameEn": "dlc07 battlements wallsection corner 1",
@@ -556,8 +624,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.750006914138794
       },
+      "height": 0.75,
       "layoutTier": "decor",
       "nameZh": "DLC7 遮阳棚 1",
       "nameEn": "dlc07 canopy 1",
@@ -572,8 +642,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4397097826004028
       },
+      "height": 1.44,
       "layoutTier": "decor",
       "nameZh": "DLC7 椅 1",
       "nameEn": "dlc07 chair 1",
@@ -588,8 +660,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.8707588911056519
       },
+      "height": 1.871,
       "layoutTier": "decor",
       "nameZh": "部落后椅 1",
       "nameEn": "Horde Chair 1",
@@ -604,8 +678,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4397097826004028
       },
+      "height": 1.44,
       "layoutTier": "decor",
       "nameZh": "DLC7 椅 2",
       "nameEn": "dlc07 chair 2",
@@ -620,8 +696,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.20405054092407227
       },
+      "height": 0.204,
       "layoutTier": "decor",
       "nameZh": "DLC7 卵石小路 1 11",
       "nameEn": "dlc07 cobble path 1 11",
@@ -636,8 +714,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 5
+        "cellsZ": 5,
+        "sizeY": 0.20405054092407227
       },
+      "height": 0.204,
       "layoutTier": "decor",
       "nameZh": "DLC7 卵石小路 1 23",
       "nameEn": "dlc07 cobble path 1 23",
@@ -652,8 +732,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门 2",
       "nameEn": "dlc07 courtyard arch 2",
@@ -668,8 +750,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.9879727363586426
       },
+      "height": 3.988,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门尽头 2",
       "nameEn": "dlc07 courtyard arch end 2",
@@ -684,8 +768,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门中段 4",
       "nameEn": "dlc07 courtyard arch middle 4",
@@ -700,8 +786,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门中段 5",
       "nameEn": "dlc07 courtyard arch middle 5",
@@ -716,8 +804,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门中段 6",
       "nameEn": "dlc07 courtyard arch middle 6",
@@ -732,8 +822,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门 start 2",
       "nameEn": "dlc07 courtyard arch start 2",
@@ -748,8 +840,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 5.497945785522461
       },
+      "height": 5.498,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 battlement 墙 1",
       "nameEn": "dlc07 courtyard battlement wall 1",
@@ -764,8 +858,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 5.511209487915039
       },
+      "height": 5.511,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 battlement 墙 2",
       "nameEn": "dlc07 courtyard battlement wall 2",
@@ -780,8 +876,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.6231138706207275
       },
+      "height": 1.623,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 candelabra 1",
       "nameEn": "dlc07 courtyard candelabra 1",
@@ -796,8 +894,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.20405054092407227
       },
+      "height": 0.204,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石小路 1",
       "nameEn": "dlc07 courtyard cobble path 1",
@@ -812,8 +912,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.20405054092407227
       },
+      "height": 0.204,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石小路 2",
       "nameEn": "dlc07 courtyard cobble path 2",
@@ -828,8 +930,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.660605251789093
       },
+      "height": 0.661,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 1",
       "nameEn": "dlc07 courtyard flagstone 1",
@@ -844,8 +948,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.6975831985473633
       },
+      "height": 0.698,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 2",
       "nameEn": "dlc07 courtyard flagstone 2",
@@ -860,8 +966,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.678662121295929
       },
+      "height": 0.679,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 3",
       "nameEn": "dlc07 courtyard flagstone 3",
@@ -876,8 +984,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.6548405885696411
       },
+      "height": 0.655,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 4",
       "nameEn": "dlc07 courtyard flagstone 4",
@@ -892,8 +1002,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7182494401931763
       },
+      "height": 0.718,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 1",
       "nameEn": "dlc07 courtyard grass card 1",
@@ -908,8 +1020,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7182494401931763
       },
+      "height": 0.718,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 2",
       "nameEn": "dlc07 courtyard grass card 2",
@@ -924,8 +1038,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8636392951011658
       },
+      "height": 0.864,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 3",
       "nameEn": "dlc07 courtyard grass card 3",
@@ -940,8 +1056,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3533568382263184
       },
+      "height": 1.353,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 grotesque 2",
       "nameEn": "dlc07 courtyard grotesque 2",
@@ -956,8 +1074,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.563446044921875
       },
+      "height": 3.563,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院大窗 3",
       "nameEn": "dlc07 courtyard large window 3",
@@ -972,8 +1092,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 5",
       "nameEn": "dlc07 courtyard pillar 5",
@@ -988,8 +1110,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 6",
       "nameEn": "dlc07 courtyard pillar 6",
@@ -1004,8 +1128,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.0153961181640625
       },
+      "height": 2.015,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 7",
       "nameEn": "dlc07 courtyard pillar 7",
@@ -1020,8 +1146,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 8",
       "nameEn": "dlc07 courtyard pillar 8",
@@ -1036,8 +1164,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 7.657927513122559
       },
+      "height": 7.658,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 tall 2",
       "nameEn": "dlc07 courtyard pillar tall 2",
@@ -1052,8 +1182,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.24950341880321503
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院木板 7",
       "nameEn": "dlc07 courtyard plank 7",
@@ -1068,8 +1200,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.25032567977905273
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院木板 8",
       "nameEn": "dlc07 courtyard plank 8",
@@ -1084,8 +1218,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.19750574231147766
       },
+      "height": 0.198,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院木板 9",
       "nameEn": "dlc07 courtyard plank 9",
@@ -1100,8 +1236,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.24950341880321503
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院木板 10",
       "nameEn": "dlc07 courtyard plank 10",
@@ -1116,8 +1254,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.19750574231147766
       },
+      "height": 0.198,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院木板 11",
       "nameEn": "dlc07 courtyard plank 11",
@@ -1132,8 +1272,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.25032567977905273
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院木板 12",
       "nameEn": "dlc07 courtyard plank 12",
@@ -1148,8 +1290,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 9,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 9.087871551513672
       },
+      "height": 9.088,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 portcullis 1",
       "nameEn": "dlc07 courtyard portcullis 1",
@@ -1164,8 +1308,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 10,
-        "cellsZ": 13
+        "cellsZ": 13,
+        "sizeY": 4.75642204284668
       },
+      "height": 4.756,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 prefab 1",
       "nameEn": "dlc07 courtyard prefab 1",
@@ -1180,8 +1326,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 11,
-        "cellsZ": 12
+        "cellsZ": 12,
+        "sizeY": 14.762351989746094
       },
+      "height": 14.762,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 prefab 2",
       "nameEn": "dlc07 courtyard prefab 2",
@@ -1196,8 +1344,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.6715567111968994
       },
+      "height": 1.672,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 sconce 1",
       "nameEn": "dlc07 courtyard sconce 1",
@@ -1212,8 +1362,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.8663673400878906
       },
+      "height": 0.866,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 sewergrate 2",
       "nameEn": "dlc07 courtyard sewergrate 2",
@@ -1228,8 +1380,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.4860363006591797
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院小窗 1",
       "nameEn": "dlc07 courtyard small window 1",
@@ -1244,8 +1398,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.4860363006591797
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院小窗 2",
       "nameEn": "dlc07 courtyard small window 2",
@@ -1260,8 +1416,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 1 a 1",
       "nameEn": "dlc07 courtyard stone block 1 a 1",
@@ -1276,8 +1434,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 1 b 1",
       "nameEn": "dlc07 courtyard stone block 1 b 1",
@@ -1292,8 +1452,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 1 c 1",
       "nameEn": "dlc07 courtyard stone block 1 c 1",
@@ -1308,8 +1470,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 1 d 1",
       "nameEn": "dlc07 courtyard stone block 1 d 1",
@@ -1324,8 +1488,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 2 a 1",
       "nameEn": "dlc07 courtyard stone block 2 a 1",
@@ -1340,8 +1506,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 2 b 1",
       "nameEn": "dlc07 courtyard stone block 2 b 1",
@@ -1356,8 +1524,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 2 c 1",
       "nameEn": "dlc07 courtyard stone block 2 c 1",
@@ -1372,8 +1542,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 2 d 1",
       "nameEn": "dlc07 courtyard stone block 2 d 1",
@@ -1388,8 +1560,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 3 a 1",
       "nameEn": "dlc07 courtyard stone block 3 a 1",
@@ -1404,8 +1578,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 3 b 1",
       "nameEn": "dlc07 courtyard stone block 3 b 1",
@@ -1420,8 +1596,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 3 c 1",
       "nameEn": "dlc07 courtyard stone block 3 c 1",
@@ -1436,8 +1614,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 3 d 1",
       "nameEn": "dlc07 courtyard stone block 3 d 1",
@@ -1452,8 +1632,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 4 a 1",
       "nameEn": "dlc07 courtyard stone block 4 a 1",
@@ -1468,8 +1650,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 4 b 1",
       "nameEn": "dlc07 courtyard stone block 4 b 1",
@@ -1484,8 +1668,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 4 c 1",
       "nameEn": "dlc07 courtyard stone block 4 c 1",
@@ -1500,8 +1686,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 4 d 1",
       "nameEn": "dlc07 courtyard stone block 4 d 1",
@@ -1516,8 +1704,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 5 a 1",
       "nameEn": "dlc07 courtyard stone block 5 a 1",
@@ -1532,8 +1722,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 5 b 1",
       "nameEn": "dlc07 courtyard stone block 5 b 1",
@@ -1548,8 +1740,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 5 c 1",
       "nameEn": "dlc07 courtyard stone block 5 c 1",
@@ -1564,8 +1758,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 5 d 1",
       "nameEn": "dlc07 courtyard stone block 5 d 1",
@@ -1580,8 +1776,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 6 a 1",
       "nameEn": "dlc07 courtyard stone block 6 a 1",
@@ -1596,8 +1794,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 6 b 1",
       "nameEn": "dlc07 courtyard stone block 6 b 1",
@@ -1612,8 +1812,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 6 c 1",
       "nameEn": "dlc07 courtyard stone block 6 c 1",
@@ -1628,8 +1830,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 6 d 1",
       "nameEn": "dlc07 courtyard stone block 6 d 1",
@@ -1644,8 +1848,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 7 a 1",
       "nameEn": "dlc07 courtyard stone block 7 a 1",
@@ -1660,8 +1866,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 7 b 1",
       "nameEn": "dlc07 courtyard stone block 7 b 1",
@@ -1676,8 +1884,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 7 c 1",
       "nameEn": "dlc07 courtyard stone block 7 c 1",
@@ -1692,8 +1902,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block 7 d 1",
       "nameEn": "dlc07 courtyard stone block 7 d 1",
@@ -1708,8 +1920,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.49676573276519775
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block trip 4",
       "nameEn": "dlc07 courtyard stone block trip 4",
@@ -1724,8 +1938,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.496765673160553
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block trip 5",
       "nameEn": "dlc07 courtyard stone block trip 5",
@@ -1740,8 +1956,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.49676573276519775
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 block trip 6",
       "nameEn": "dlc07 courtyard stone block trip 6",
@@ -1756,8 +1974,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.79911208152771
       },
+      "height": 1.799,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 broken block 1",
       "nameEn": "dlc07 courtyard stone broken block 1",
@@ -1772,8 +1992,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 1 a 1",
       "nameEn": "dlc07 courtyard stone half block 1 a 1",
@@ -1788,8 +2010,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 1 b 1",
       "nameEn": "dlc07 courtyard stone half block 1 b 1",
@@ -1804,8 +2028,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 1 c 1",
       "nameEn": "dlc07 courtyard stone half block 1 c 1",
@@ -1820,8 +2046,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 1 d 1",
       "nameEn": "dlc07 courtyard stone half block 1 d 1",
@@ -1836,8 +2064,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 2 a 1",
       "nameEn": "dlc07 courtyard stone half block 2 a 1",
@@ -1852,8 +2082,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 2 b 1",
       "nameEn": "dlc07 courtyard stone half block 2 b 1",
@@ -1868,8 +2100,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 2 c 1",
       "nameEn": "dlc07 courtyard stone half block 2 c 1",
@@ -1884,8 +2118,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 2 d 1",
       "nameEn": "dlc07 courtyard stone half block 2 d 1",
@@ -1900,8 +2136,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 3 a 1",
       "nameEn": "dlc07 courtyard stone half block 3 a 1",
@@ -1916,8 +2154,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 3 b 1",
       "nameEn": "dlc07 courtyard stone half block 3 b 1",
@@ -1932,8 +2172,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 3 c 1",
       "nameEn": "dlc07 courtyard stone half block 3 c 1",
@@ -1948,8 +2190,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 3 d 1",
       "nameEn": "dlc07 courtyard stone half block 3 d 1",
@@ -1964,8 +2208,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 4 a 1",
       "nameEn": "dlc07 courtyard stone half block 4 a 1",
@@ -1980,8 +2226,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 4 b 1",
       "nameEn": "dlc07 courtyard stone half block 4 b 1",
@@ -1996,8 +2244,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 4 c 1",
       "nameEn": "dlc07 courtyard stone half block 4 c 1",
@@ -2012,8 +2262,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 4 d 1",
       "nameEn": "dlc07 courtyard stone half block 4 d 1",
@@ -2028,8 +2280,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 5 a 1",
       "nameEn": "dlc07 courtyard stone half block 5 a 1",
@@ -2044,8 +2298,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 5 b 1",
       "nameEn": "dlc07 courtyard stone half block 5 b 1",
@@ -2060,8 +2316,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 5 c 1",
       "nameEn": "dlc07 courtyard stone half block 5 c 1",
@@ -2076,8 +2334,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 half block 5 d 1",
       "nameEn": "dlc07 courtyard stone half block 5 d 1",
@@ -2092,8 +2352,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 tall block 1 a 1",
       "nameEn": "dlc07 courtyard stone tall block 1 a 1",
@@ -2108,8 +2370,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 tall block 1 b 1",
       "nameEn": "dlc07 courtyard stone tall block 1 b 1",
@@ -2124,8 +2388,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 tall block 1 c 1",
       "nameEn": "dlc07 courtyard stone tall block 1 c 1",
@@ -2140,8 +2406,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石 tall block 1 d 1",
       "nameEn": "dlc07 courtyard stone tall block 1 d 1",
@@ -2156,8 +2424,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.500722646713257
       },
+      "height": 3.501,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石墙 5",
       "nameEn": "dlc07 courtyard stone wall 5",
@@ -2172,8 +2442,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.5001823902130127
       },
+      "height": 3.5,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石墙 6",
       "nameEn": "dlc07 courtyard stone wall 6",
@@ -2188,8 +2460,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.615952730178833
       },
+      "height": 2.616,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石墙 7",
       "nameEn": "dlc07 courtyard stone wall 7",
@@ -2204,8 +2478,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.504225969314575
       },
+      "height": 3.504,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石墙 8",
       "nameEn": "dlc07 courtyard stone wall 8",
@@ -2220,8 +2496,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.503796339035034
       },
+      "height": 3.504,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石墙 optimized 4",
       "nameEn": "dlc07 courtyard stone wall optimized 4",
@@ -2236,8 +2514,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.4974377155303955
       },
+      "height": 3.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石墙 optimized 5",
       "nameEn": "dlc07 courtyard stone wall optimized 5",
@@ -2252,8 +2532,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.5049471855163574
       },
+      "height": 3.505,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石墙 optimized 6",
       "nameEn": "dlc07 courtyard stone wall optimized 6",
@@ -2268,8 +2550,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 9.784927368164062
       },
+      "height": 9.785,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 wallsection 1 1",
       "nameEn": "dlc07 courtyard wallsection 1 1",
@@ -2284,8 +2568,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 7,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 9.294590950012207
       },
+      "height": 9.295,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 wallsection 拱门 1",
       "nameEn": "dlc07 courtyard wallsection arch 1",
@@ -2300,8 +2586,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 9.780891418457031
       },
+      "height": 9.781,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 wallsection 转角 1",
       "nameEn": "dlc07 courtyard wallsection corner 1",
@@ -2316,8 +2604,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.8380359411239624
       },
+      "height": 1.838,
       "layoutTier": "decor",
       "nameZh": "DLC7 curtain 1",
       "nameEn": "dlc07 curtain 1",
@@ -2332,8 +2622,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.651395559310913
       },
+      "height": 1.651,
       "layoutTier": "decor",
       "nameZh": "DLC7 门 1",
       "nameEn": "dlc07 door 1",
@@ -2348,8 +2640,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.4088807106018066
       },
+      "height": 3.409,
       "layoutTier": "decor",
       "nameZh": "DLC7 drawbridge 1",
       "nameEn": "dlc07 drawbridge 1",
@@ -2364,8 +2658,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.9755487442016602
       },
+      "height": 0.976,
       "layoutTier": "decor",
       "nameZh": "DLC7 fire 消防栓 1",
       "nameEn": "dlc07 fire hydrant 1",
@@ -2380,8 +2676,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 2.522876739501953
       },
+      "height": 2.523,
       "layoutTier": "decor",
       "nameZh": "DLC7 旗帜 1",
       "nameEn": "dlc07 flag 1",
@@ -2396,8 +2694,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.6548405885696411
       },
+      "height": 0.655,
       "layoutTier": "decor",
       "nameZh": "DLC7 石板 1",
       "nameEn": "dlc07 flagstone 1",
@@ -2412,8 +2712,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.6975831985473633
       },
+      "height": 0.698,
       "layoutTier": "decor",
       "nameZh": "DLC7 石板 2",
       "nameEn": "dlc07 flagstone 2",
@@ -2428,8 +2730,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.660605251789093
       },
+      "height": 0.661,
       "layoutTier": "decor",
       "nameZh": "DLC7 石板 3",
       "nameEn": "dlc07 flagstone 3",
@@ -2444,8 +2748,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.678662121295929
       },
+      "height": 0.679,
       "layoutTier": "decor",
       "nameZh": "DLC7 石板 4",
       "nameEn": "dlc07 flagstone 4",
@@ -2476,8 +2782,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0031870603561401
       },
+      "height": 1.003,
       "layoutTier": "decor",
       "nameZh": "DLC7 gothic trefoil 1",
       "nameEn": "dlc07 gothic trefoil 1",
@@ -2492,8 +2800,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3533568382263184
       },
+      "height": 1.353,
       "layoutTier": "decor",
       "nameZh": "DLC7 grotesque 1",
       "nameEn": "dlc07 grotesque 1",
@@ -2508,8 +2818,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5839566588401794
       },
+      "height": 0.584,
       "layoutTier": "decor",
       "nameZh": "DLC7 jug 1",
       "nameEn": "dlc07 jug 1",
@@ -2524,8 +2836,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门 2",
       "nameEn": "dlc07 keep arch 2",
@@ -2540,8 +2854,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.254787445068359
       },
+      "height": 5.255,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门 bricks 1",
       "nameEn": "dlc07 keep arch bricks 1",
@@ -2556,8 +2872,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.9879727363586426
       },
+      "height": 3.988,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门尽头 2",
       "nameEn": "dlc07 keep arch end 2",
@@ -2572,8 +2890,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门 gate 1",
       "nameEn": "dlc07 keep arch gate 1",
@@ -2588,8 +2908,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门 gate 2",
       "nameEn": "dlc07 keep arch gate 2",
@@ -2604,8 +2926,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门中段 4",
       "nameEn": "dlc07 keep arch middle 4",
@@ -2620,8 +2944,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门中段 5",
       "nameEn": "dlc07 keep arch middle 5",
@@ -2636,8 +2962,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门中段 6",
       "nameEn": "dlc07 keep arch middle 6",
@@ -2652,8 +2980,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
       },
+      "height": 5.102,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡拱门 start 2",
       "nameEn": "dlc07 keep arch start 2",
@@ -2668,8 +2998,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.028660535812378
       },
+      "height": 2.029,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡 battlement 墙 3",
       "nameEn": "dlc07 keep battlement wall 3",
@@ -2684,8 +3016,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.511629581451416
       },
+      "height": 3.512,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡 battlement 墙 4",
       "nameEn": "dlc07 keep battlement wall 4",
@@ -2700,8 +3034,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0153968334198
       },
+      "height": 2.015,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡 battlement 墙顶部 2",
       "nameEn": "dlc07 keep battlement wall top 2",
@@ -2716,8 +3052,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.660605251789093
       },
+      "height": 0.661,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板 1",
       "nameEn": "dlc07 keep flagstone 1",
@@ -2732,8 +3070,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.6975831985473633
       },
+      "height": 0.698,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板 2",
       "nameEn": "dlc07 keep flagstone 2",
@@ -2748,8 +3088,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.678662121295929
       },
+      "height": 0.679,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板 3",
       "nameEn": "dlc07 keep flagstone 3",
@@ -2764,8 +3106,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.6548405885696411
       },
+      "height": 0.655,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板 4",
       "nameEn": "dlc07 keep flagstone 4",
@@ -2780,8 +3124,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 0.8013778924942017
       },
+      "height": 0.801,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板组 1",
       "nameEn": "Flagstone Set 1 (DLC7)",
@@ -2796,8 +3142,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.8375085592269897
       },
+      "height": 0.838,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板组 2",
       "nameEn": "Flagstone Set 2 (DLC7)",
@@ -2812,8 +3160,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 0.7832937240600586
       },
+      "height": 0.783,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板组 3",
       "nameEn": "Flagstone Set 3 (DLC7)",
@@ -2828,8 +3178,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 5
+        "cellsZ": 5,
+        "sizeY": 1.1351319551467896
       },
+      "height": 1.135,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板组 4",
       "nameEn": "Flagstone Set 4 (DLC7)",
@@ -2844,8 +3196,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.6905920505523682
       },
+      "height": 0.691,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板组 5",
       "nameEn": "Flagstone Set 5 (DLC7)",
@@ -2860,8 +3214,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.9254854917526245
       },
+      "height": 0.925,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板组 6",
       "nameEn": "Flagstone Set 6 (DLC7)",
@@ -2876,8 +3232,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 0.6946338415145874
       },
+      "height": 0.695,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石板组 7",
       "nameEn": "Flagstone Set 7 (DLC7)",
@@ -2892,8 +3250,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 13,
-        "cellsZ": 13
+        "cellsZ": 13,
+        "sizeY": 0.9966839551925659
       },
+      "height": 0.997,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -2910,8 +3270,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡立柱 5",
       "nameEn": "dlc07 keep pillar 5",
@@ -2926,8 +3288,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡立柱 6",
       "nameEn": "dlc07 keep pillar 6",
@@ -2942,8 +3306,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.0153961181640625
       },
+      "height": 2.015,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡立柱 7",
       "nameEn": "dlc07 keep pillar 7",
@@ -2958,8 +3324,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡立柱 8",
       "nameEn": "dlc07 keep pillar 8",
@@ -2974,8 +3342,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 7.657927513122559
       },
+      "height": 7.658,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡立柱 tall 2",
       "nameEn": "dlc07 keep pillar tall 2",
@@ -2990,8 +3360,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.24950341880321503
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡木板 7",
       "nameEn": "dlc07 keep plank 7",
@@ -3006,8 +3378,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.25032567977905273
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡木板 8",
       "nameEn": "dlc07 keep plank 8",
@@ -3022,8 +3396,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.19750574231147766
       },
+      "height": 0.198,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡木板 9",
       "nameEn": "dlc07 keep plank 9",
@@ -3038,8 +3414,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.24950341880321503
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡木板 10",
       "nameEn": "dlc07 keep plank 10",
@@ -3054,8 +3432,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.19750574231147766
       },
+      "height": 0.198,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡木板 11",
       "nameEn": "dlc07 keep plank 11",
@@ -3070,8 +3450,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.25032567977905273
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡木板 12",
       "nameEn": "dlc07 keep plank 12",
@@ -3086,8 +3468,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 5
+        "cellsZ": 5,
+        "sizeY": 1.218454360961914
       },
+      "height": 1.218,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡 sewergrate 2",
       "nameEn": "dlc07 keep sewergrate 2",
@@ -3102,8 +3486,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 1 a 1",
       "nameEn": "dlc07 keep stone block 1 a 1",
@@ -3118,8 +3504,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 1 b 1",
       "nameEn": "dlc07 keep stone block 1 b 1",
@@ -3134,8 +3522,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 1 c 1",
       "nameEn": "dlc07 keep stone block 1 c 1",
@@ -3150,8 +3540,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 1 d 1",
       "nameEn": "dlc07 keep stone block 1 d 1",
@@ -3166,8 +3558,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 2 a 1",
       "nameEn": "dlc07 keep stone block 2 a 1",
@@ -3182,8 +3576,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 2 b 1",
       "nameEn": "dlc07 keep stone block 2 b 1",
@@ -3198,8 +3594,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 2 c 1",
       "nameEn": "dlc07 keep stone block 2 c 1",

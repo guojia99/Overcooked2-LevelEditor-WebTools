@@ -1,3 +1,4 @@
+import { uuid } from "../coords";
 import {
   S,
   EditorItem
@@ -65,7 +66,7 @@ export function moveControlCtxHtml(item: EditorItem): string {
 export function enableMoveControl(item: EditorItem): void {
   pushHistory();
   const group: MoveGroup = {
-    id: crypto.randomUUID(),
+    id: uuid(),
     displayName: itemLabel(item),
     itemInstanceIds: [item.instanceId],
     floorInstanceIds: [],
@@ -76,9 +77,9 @@ export function enableMoveControl(item: EditorItem): void {
     startDelay: 0,
     loop: false,
     loopDelay: 2,
-    waypoints: [{ id: crypto.randomUUID(), x: item._wx, z: item._wz }],
+    waypoints: [{ id: uuid(), x: item._wx, z: item._wz }],
     events: [{
-      id: crypto.randomUUID(),
+      id: uuid(),
       type: "move",
       delay: 0,
       intervalSeconds: 2,

@@ -27,9 +27,11 @@ public static class LayoutEditorStubIO
         item.switchStub = null;
         item.pressureSwitch = null;
         item.terminal = null;
+        item.cannon = null;
         item.pseudoPrefabGuid = null;
         item.meshWithMaterial = null;
         item.soArray = null;
+        item.timedSwitch = null;
 
         var playerStub = go.GetComponent<PseudoPrefabPlayerStub>();
         if (playerStub != null)
@@ -276,8 +278,35 @@ public static class LayoutEditorStubIO
             item.stubKind = "Terminal";
             var tdto = new LayoutTerminalStubDto();
             if (terminal.pilotableObject != null)
-                tdto.pilotableObjectInstanceId = "u:" + terminal.pilotableObject.GetInstanceID();
+            {
+                // 反向映射：pilotable 已被重定向到伪 prefab child 时，上报其伪根
+                // instanceId（与前端 item id 对齐，往返不丢绑定显示）。
+                var idGo = terminal.pilotableObject;
+                var parentT = idGo.transform.parent;
+                if (parentT != null
+                    && parentT.GetComponent<PilotMovement>() == null
+                    && parentT.GetComponent<PseudoPrefab>() != null)
+                    idGo = parentT.gameObject;
+                tdto.pilotableObjectInstanceId = "u:" + idGo.GetInstanceID();
+            }
             item.terminal = tdto;
+            return;
+        }
+
+        // 大炮（dlc08/dlc09 cannon）：Cannon/PilotRotation 都在 bundle child 上，
+        // 导出限位（±180 = 自由旋转）供前端往返。
+        var cannonComp = go.GetComponentInChildren<Cannon>();
+        if (cannonComp != null)
+        {
+            var pilotRot = cannonComp.GetComponent<PilotRotation>();
+            item.stubKind = "Cannon";
+            if (pilotRot != null)
+            {
+                item.cannon = new LayoutCannonStubDto
+                {
+                    freeRotation = pilotRot.m_maxLimitDegrees >= 180f || pilotRot.m_minLimitDegrees <= -180f
+                };
+            }
             return;
         }
 
@@ -309,6 +338,20 @@ public static class LayoutEditorStubIO
         if (pseudoStub != null && pseudoStub.pseudoPrefabSO != null)
         {
             item.pseudoPrefabGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(pseudoStub.pseudoPrefabSO));
+        }
+
+        // 火锅灶台定时开关：运行时组件导出（无 stub 的火锅灶台会走到此末尾；
+        // 带定时组件的其它物品理论上不存在，但此导出不依赖 stubKind）。
+        var timedComp = go.GetComponent<LayoutRuntimeTimedCookingSwitch>();
+        if (timedComp != null)
+        {
+            item.timedSwitch = new LayoutTimedSwitchDto
+            {
+                enabled = timedComp.m_enabled,
+                onSeconds = timedComp.m_onSeconds,
+                offSeconds = timedComp.m_offSeconds,
+                startOn = timedComp.m_startOn
+            };
         }
     }
 
@@ -373,8 +416,60 @@ public static class LayoutEditorStubIO
             }
         }
 
+        // 火锅灶台定时开关：伪根烘焙运行时循环组件（游戏程序集，随场景保存）。
+        // 必须在空 stubKind 提前 return 之前处理——火锅灶台无任何 stub 组件。
+        // enabled=false 也保留组件（配置随场景往返不丢，运行时不生效）。
+        {
+            var timedComp = go.GetComponent<LayoutRuntimeTimedCookingSwitch>();
+            if (item.timedSwitch != null)
+            {
+                if (timedComp == null)
+                    timedComp = Undo.AddComponent<LayoutRuntimeTimedCookingSwitch>(go);
+                else
+                    Undo.RecordObject(timedComp, "Layout Editor Timed Cooking Switch");
+                timedComp.m_enabled = item.timedSwitch.enabled;
+                timedComp.m_onSeconds = Mathf.Max(3f, item.timedSwitch.onSeconds);
+                timedComp.m_offSeconds = Mathf.Max(3f, item.timedSwitch.offSeconds);
+                timedComp.m_startOn = item.timedSwitch.startOn;
+            }
+            else if (timedComp != null)
+            {
+                Undo.DestroyObjectImmediate(timedComp);
+            }
+        }
+
         if (string.IsNullOrEmpty(item.stubKind))
+        {
+            // 可移动火锅：stubKind 为空（不挂 CookingUtensil stub），但锅具管理的
+            //  allowedIngredientGuids 仍要落到载体组件上（运行时重建许可表）。
+            var pushablePid = !string.IsNullOrEmpty(item.prefabAssetPath)
+                ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+                : "";
+            if (pushablePid == "utensil_large_pot_01_pushable" &&
+                item.cookingUtensil != null &&
+                item.cookingUtensil.allowedIngredientGuids != null &&
+                item.cookingUtensil.allowedIngredientGuids.Length > 0)
+            {
+                var pushable = go.GetComponent<LevelEditor.LayoutRuntimePushablePot>();
+                if (pushable != null)
+                {
+                    var bundles = new System.Collections.Generic.List<string>();
+                    var paths = new System.Collections.Generic.List<string>();
+                    foreach (var g in item.cookingUtensil.allowedIngredientGuids)
+                    {
+                        var so = LoadPseudoPrefabSO(g);
+                        if (so == null || string.IsNullOrEmpty(so.assetPath))
+                            continue;
+                        bundles.Add(so.bundleName ?? "");
+                        paths.Add(so.assetPath);
+                    }
+                    Undo.RecordObject(pushable, "Layout Editor Pushable Pot Ingredients");
+                    pushable.m_allowedIngredientBundles = bundles.ToArray();
+                    pushable.m_allowedIngredientPaths = paths.ToArray();
+                }
+            }
             return;
+        }
 
         if (item.stubKind == "Dispenser" && item.dispenser != null)
         {
@@ -767,6 +862,12 @@ public static class LayoutEditorStubIO
             if (terminal == null)
                 return;
 
+            // 文档 id（"new:..."）指向本趟写回新建的对象：第一趟尚未创建，
+            // 交给第二趟 ApplyTerminalPilotable 解析，这里不降级。
+            var rid0 = item.terminal.pilotableObjectInstanceId ?? "";
+            if (rid0.StartsWith("new:", StringComparison.Ordinal))
+                return;
+
             Undo.RecordObject(terminal, "Layout Editor Terminal");
             if (!string.IsNullOrEmpty(item.terminal.pilotableObjectInstanceId))
             {
@@ -782,6 +883,10 @@ public static class LayoutEditorStubIO
             {
                 terminal.pilotableObject = null;
             }
+            // 大炮等伪 prefab：PilotMovement 在 bundle child 上，而宿主
+            // PseudoPrefabTerminal.Setup 用同对象 GetComponent<PilotMovement>()，
+            // 伪根拿不到 → 重定向到携带 PilotMovement 的 child。
+            RedirectPilotableToChild(terminal);
             if (terminal.pilotableObject == null)
             {
                 LayoutEditorLog.LogWarning("[LayoutEditor] Apply Terminal: 终端可操控对象无法解析，" +
@@ -789,6 +894,28 @@ public static class LayoutEditorStubIO
                 LayoutEditorCookingUtensilGuard.DowngradeToBase(go, terminal.pseudoPrefabSO);
                 return;
             }
+        }
+
+        if (item.stubKind == "Cannon" && item.cannon != null)
+        {
+            // 大炮：Cannon/PilotRotation 在 bundle child 上；freeRotation=true 写 ±180°
+            //（360° 自由旋转），false 恢复 prefab 默认 ±45°（固定小角度）。
+            var cannonComp = go.GetComponentInChildren<Cannon>();
+            var pilotRot = cannonComp != null ? cannonComp.GetComponent<PilotRotation>() : null;
+            if (pilotRot == null)
+                return;
+            Undo.RecordObject(pilotRot, "Layout Editor Cannon");
+            if (item.cannon.freeRotation)
+            {
+                pilotRot.m_minLimitDegrees = -180f;
+                pilotRot.m_maxLimitDegrees = 180f;
+            }
+            else
+            {
+                pilotRot.m_minLimitDegrees = -45f;
+                pilotRot.m_maxLimitDegrees = 45f;
+            }
+            return;
         }
 
         if (item.stubKind == "MeshWithMaterial" && item.meshWithMaterial != null)
@@ -805,6 +932,57 @@ public static class LayoutEditorStubIO
             return;
         }
 
+    }
+
+    /// <summary>大炮等伪 prefab 的 PilotMovement 在 bundle child 上，而宿主
+    /// PseudoPrefabTerminal.Setup 用同对象 GetComponent&lt;PilotMovement&gt;()：
+    /// pilotable 伪根拿不到组件时重定向到携带 PilotMovement 的 child。</summary>
+    private static void RedirectPilotableToChild(PseudoPrefabTerminalStub terminal)
+    {
+        if (terminal.pilotableObject == null
+            || terminal.pilotableObject.GetComponent<PilotMovement>() != null)
+            return;
+        var pp = terminal.pilotableObject.GetComponent<PseudoPrefab>();
+        if (pp != null && pp.childGameObject != null
+            && pp.childGameObject.GetComponent<PilotMovement>() != null)
+            terminal.pilotableObject = pp.childGameObject;
+    }
+
+    /// <summary>Second pass: resolve a Terminal's pilotable object. The id is either
+    /// "u:&lt;instanceID&gt;" (existing scene object) or a document instanceId
+    /// ("new:...") mapped through createdObjects (created this write pass).
+    /// Unresolvable targets downgrade the terminal to a plain prop (host Setup
+    /// would otherwise throw).</summary>
+    public static void ApplyTerminalPilotable(GameObject go, string pilotableInstanceId, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    {
+        if (go == null || string.IsNullOrEmpty(pilotableInstanceId))
+            return;
+
+        var terminal = go.GetComponent<PseudoPrefabTerminalStub>();
+        if (terminal == null)
+            return;
+
+        GameObject target = null;
+        if (pilotableInstanceId.StartsWith("u:", StringComparison.Ordinal))
+        {
+            int id;
+            if (int.TryParse(pilotableInstanceId.Substring(2), out id))
+                target = EditorUtility.InstanceIDToObject(id) as GameObject;
+        }
+        else if (createdObjects != null)
+        {
+            createdObjects.TryGetValue(pilotableInstanceId, out target);
+        }
+
+        Undo.RecordObject(terminal, "Layout Editor Terminal");
+        terminal.pilotableObject = target;
+        RedirectPilotableToChild(terminal);
+        if (terminal.pilotableObject == null)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] Apply Terminal: 终端可操控对象无法解析，" +
+                "已降级为普通道具: " + go.name);
+            LayoutEditorCookingUtensilGuard.DowngradeToBase(go, terminal.pseudoPrefabSO);
+        }
     }
 
     /// <summary>

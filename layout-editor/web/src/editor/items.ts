@@ -1,4 +1,5 @@
 import {
+  uuid,
   snapPlacement,
   resolveFootprint,
   normalizeRot,
@@ -29,6 +30,7 @@ import {
   hideContextMenu
 } from "./ui/overlay";
 import { pointInWalkable } from "./floors";
+import { floorHeightAt, floorHeightFilterActive } from "./floorHeight";
 import { draw } from "./render";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
@@ -44,6 +46,10 @@ import type {
 } from "../types";
 
 export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
+  // 历史场景里的裸 pushable_object（载体，无锅）已删除：迁移到可推动大火锅包装器。
+  if (raw.prefabAssetPath === "Assets/common03/prefabs/core/mechanisms/pushable_object.prefab") {
+    raw.prefabAssetPath = "Assets/common03/prefabs/core/utensils/utensil_large_pot_01_pushable.prefab";
+  }
   const wp = raw.worldPosition ?? raw.localPosition;
   const fp = resolveFootprint(raw);
   return {
@@ -277,8 +283,16 @@ export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordH
     return null;
   }
   if (recordHistory) pushHistory();
-  const id = `new:${cat.guid}:${crypto.randomUUID()}`;
+  const id = `new:${cat.guid}:${uuid()}`;
   const editorKey = newEditorKey();
+  // 落在抬高的地板（高台）上时，物品初始 Y = 该处行走面高度，否则会埋进高台里。
+  // 高度过滤激活时：只取当前区间内的地板；该点无可用地板则落在区间底（当前层）。
+  const filterOn = floorHeightFilterActive();
+  let baseY = floorHeightAt(snapped.x, snapped.z, filterOn);
+  if (baseY < 0) baseY = filterOn && S.floorHeight.min != null ? S.floorHeight.min + 0.01 : 0;
+  // 可移动火锅默认贴地高度 0.2（载具自带 Rigidbody，放置即落位；不与静态锅
+  // 共用 0.6 灶台挂高——它是推上灶台的地面道具）。
+  if (cat.id === "utensil_large_pot_01_pushable") baseY = 0.2;
   const item: EditorItem = {
     instanceId: id,
     _editorKey: editorKey,
@@ -287,8 +301,8 @@ export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordH
     prefabAssetPath: cat.assetPath,
     parentPath: cat.defaultParent,
     displayName: cat.id,
-    localPosition: { x: snapped.x, y: 0, z: snapped.z },
-    worldPosition: { x: snapped.x, y: 0, z: snapped.z },
+    localPosition: { x: snapped.x, y: baseY, z: snapped.z },
+    worldPosition: { x: snapped.x, y: baseY, z: snapped.z },
     localRotationY: 0,
     footprint: cat.footprint,
     _wx: snapped.x,

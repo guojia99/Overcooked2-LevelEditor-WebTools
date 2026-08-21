@@ -773,6 +773,26 @@
       "icon": false
     },
     {
+      "id": "utensil_large_pot_01_pushable",
+      "guid": "10ce31d309b2482496ae0d2071bc1d98",
+      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_large_pot_01_pushable.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "stack": {
+        "y": 0.2,
+        "hostRule": "cooker"
+      },
+      "nameZh": "可移动火锅",
+      "nameEn": "Pushable Hotpot Pot",
+      "icon": false
+    },
+    {
       "id": "dlc08_frierbasket",
       "guid": "94820df2e5cb244888322b261f5146e8",
       "assetPath": "Assets/common03/prefabs/dlc08/utensils/dlc08_frierbasket.prefab",
@@ -966,22 +986,6 @@
       "layoutTier": "core",
       "nameZh": "可推动大火锅（DLC10）",
       "nameEn": "Pushable Large Hot Pot (DLC10)",
-      "icon": false
-    },
-    {
-      "id": "pushable_object",
-      "guid": "54ec2c64ab9f3fd4f14a08ddeda60fe1",
-      "assetPath": "Assets/common03/prefabs/core/mechanisms/pushable_object.prefab",
-      "category": "utensils/cooking",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2
-      },
-      "layoutTier": "core",
-      "nameZh": "可推动大火锅",
-      "nameEn": "Pushable Large Hot Pot",
       "icon": false
     },
     {

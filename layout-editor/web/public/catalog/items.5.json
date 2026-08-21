@@ -12,8 +12,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 2 d 1",
       "nameEn": "dlc07 keep stone block 2 d 1",
@@ -28,8 +30,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 3 a 1",
       "nameEn": "dlc07 keep stone block 3 a 1",
@@ -44,8 +48,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 3 b 1",
       "nameEn": "dlc07 keep stone block 3 b 1",
@@ -60,8 +66,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 3 c 1",
       "nameEn": "dlc07 keep stone block 3 c 1",
@@ -76,8 +84,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 3 d 1",
       "nameEn": "dlc07 keep stone block 3 d 1",
@@ -92,8 +102,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 4 a 1",
       "nameEn": "dlc07 keep stone block 4 a 1",
@@ -108,8 +120,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 4 b 1",
       "nameEn": "dlc07 keep stone block 4 b 1",
@@ -124,8 +138,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 4 c 1",
       "nameEn": "dlc07 keep stone block 4 c 1",
@@ -140,8 +156,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 4 d 1",
       "nameEn": "dlc07 keep stone block 4 d 1",
@@ -156,8 +174,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 5 a 1",
       "nameEn": "dlc07 keep stone block 5 a 1",
@@ -172,8 +192,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 5 b 1",
       "nameEn": "dlc07 keep stone block 5 b 1",
@@ -188,8 +210,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 5 c 1",
       "nameEn": "dlc07 keep stone block 5 c 1",
@@ -204,8 +228,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 5 d 1",
       "nameEn": "dlc07 keep stone block 5 d 1",
@@ -220,8 +246,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 6 a 1",
       "nameEn": "dlc07 keep stone block 6 a 1",
@@ -236,8 +264,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 6 b 1",
       "nameEn": "dlc07 keep stone block 6 b 1",
@@ -252,8 +282,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 6 c 1",
       "nameEn": "dlc07 keep stone block 6 c 1",
@@ -268,8 +300,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 6 d 1",
       "nameEn": "dlc07 keep stone block 6 d 1",
@@ -284,8 +318,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 7 a 1",
       "nameEn": "dlc07 keep stone block 7 a 1",
@@ -300,8 +336,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 7 b 1",
       "nameEn": "dlc07 keep stone block 7 b 1",
@@ -316,8 +354,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 7 c 1",
       "nameEn": "dlc07 keep stone block 7 c 1",
@@ -332,8 +372,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block 7 d 1",
       "nameEn": "dlc07 keep stone block 7 d 1",
@@ -348,8 +390,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.49676573276519775
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block trip 4",
       "nameEn": "dlc07 keep stone block trip 4",
@@ -364,8 +408,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.496765673160553
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block trip 5",
       "nameEn": "dlc07 keep stone block trip 5",
@@ -380,8 +426,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.49676573276519775
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 block trip 6",
       "nameEn": "dlc07 keep stone block trip 6",
@@ -396,8 +444,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 1 a 1",
       "nameEn": "dlc07 keep stone half block 1 a 1",
@@ -412,8 +462,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 1 b 1",
       "nameEn": "dlc07 keep stone half block 1 b 1",
@@ -428,8 +480,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 1 c 1",
       "nameEn": "dlc07 keep stone half block 1 c 1",
@@ -444,8 +498,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 1 d 1",
       "nameEn": "dlc07 keep stone half block 1 d 1",
@@ -460,8 +516,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 2 a 1",
       "nameEn": "dlc07 keep stone half block 2 a 1",
@@ -476,8 +534,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 2 b 1",
       "nameEn": "dlc07 keep stone half block 2 b 1",
@@ -492,8 +552,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 2 c 1",
       "nameEn": "dlc07 keep stone half block 2 c 1",
@@ -508,8 +570,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 2 d 1",
       "nameEn": "dlc07 keep stone half block 2 d 1",
@@ -524,8 +588,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 3 a 1",
       "nameEn": "dlc07 keep stone half block 3 a 1",
@@ -540,8 +606,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 3 b 1",
       "nameEn": "dlc07 keep stone half block 3 b 1",
@@ -556,8 +624,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 3 c 1",
       "nameEn": "dlc07 keep stone half block 3 c 1",
@@ -572,8 +642,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 3 d 1",
       "nameEn": "dlc07 keep stone half block 3 d 1",
@@ -588,8 +660,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 4 a 1",
       "nameEn": "dlc07 keep stone half block 4 a 1",
@@ -604,8 +678,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 4 b 1",
       "nameEn": "dlc07 keep stone half block 4 b 1",
@@ -620,8 +696,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 4 c 1",
       "nameEn": "dlc07 keep stone half block 4 c 1",
@@ -636,8 +714,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 4 d 1",
       "nameEn": "dlc07 keep stone half block 4 d 1",
@@ -652,8 +732,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 5 a 1",
       "nameEn": "dlc07 keep stone half block 5 a 1",
@@ -668,8 +750,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 5 b 1",
       "nameEn": "dlc07 keep stone half block 5 b 1",
@@ -684,8 +768,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 5 c 1",
       "nameEn": "dlc07 keep stone half block 5 c 1",
@@ -700,8 +786,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 half block 5 d 1",
       "nameEn": "dlc07 keep stone half block 5 d 1",
@@ -716,8 +804,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 tall block 1 a 1",
       "nameEn": "dlc07 keep stone tall block 1 a 1",
@@ -732,8 +822,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 tall block 1 b 1",
       "nameEn": "dlc07 keep stone tall block 1 b 1",
@@ -748,8 +840,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 tall block 1 c 1",
       "nameEn": "dlc07 keep stone tall block 1 c 1",
@@ -764,8 +858,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石 tall block 1 d 1",
       "nameEn": "dlc07 keep stone tall block 1 d 1",
@@ -780,8 +876,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.500722646713257
       },
+      "height": 3.501,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石墙 5",
       "nameEn": "dlc07 keep stone wall 5",
@@ -796,8 +894,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.5001823902130127
       },
+      "height": 3.5,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石墙 6",
       "nameEn": "dlc07 keep stone wall 6",
@@ -812,8 +912,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.615952730178833
       },
+      "height": 2.616,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石墙 7",
       "nameEn": "dlc07 keep stone wall 7",
@@ -828,8 +930,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.504225969314575
       },
+      "height": 3.504,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石墙 8",
       "nameEn": "dlc07 keep stone wall 8",
@@ -844,8 +948,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.503796339035034
       },
+      "height": 3.504,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石墙 optimized 4",
       "nameEn": "dlc07 keep stone wall optimized 4",
@@ -860,8 +966,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.4974377155303955
       },
+      "height": 3.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石墙 optimized 5",
       "nameEn": "dlc07 keep stone wall optimized 5",
@@ -876,8 +984,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.5049471855163574
       },
+      "height": 3.505,
       "layoutTier": "decor",
       "nameZh": "DLC7 城堡石墙 optimized 6",
       "nameEn": "dlc07 keep stone wall optimized 6",
@@ -892,8 +1002,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.329070200563396e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC7 厨房瓦片 1",
       "nameEn": "dlc07 kitchen tile 1",
@@ -908,8 +1020,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.329070200563396e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC7 厨房瓦片 2",
       "nameEn": "dlc07 kitchen tile 2",
@@ -924,8 +1038,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.328586578369141
       },
+      "height": 5.329,
       "layoutTier": "decor",
       "nameZh": "DLC7 大窗 1",
       "nameEn": "dlc07 large window 1",
@@ -940,8 +1056,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 10.657173156738281
       },
+      "height": 10.657,
       "layoutTier": "decor",
       "nameZh": "DLC7 大窗 stainglass 1",
       "nameEn": "dlc07 large window stainglass 1",
@@ -956,8 +1074,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 10.657173156738281
       },
+      "height": 10.657,
       "layoutTier": "decor",
       "nameZh": "DLC7 大窗 stainglass 2",
       "nameEn": "dlc07 large window stainglass 2",
@@ -972,8 +1092,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.4334234893321991
       },
+      "height": 0.433,
       "layoutTier": "decor",
       "nameZh": "DLC7 liftbase 1",
       "nameEn": "dlc07 liftbase 1",
@@ -988,8 +1110,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.06500086933374405
       },
+      "height": 0.065,
       "layoutTier": "decor",
       "nameZh": "DLC7 man hole 1",
       "nameEn": "dlc07 man hole 1",
@@ -1004,8 +1128,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.329070200563396e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC7 man hole 2",
       "nameEn": "dlc07 man hole 2",
@@ -1020,8 +1146,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.8548336029052734
       },
+      "height": 2.855,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 拱门 grate 1",
       "nameEn": "dlc07 map arch grate 1",
@@ -1036,8 +1164,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.8548336029052734
       },
+      "height": 2.855,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 拱门 grate 2",
       "nameEn": "dlc07 map arch grate 2",
@@ -1052,8 +1182,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.8519487380981445
       },
+      "height": 1.852,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 盔甲 1",
       "nameEn": "dlc07 map armor 1",
@@ -1068,8 +1200,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5794259309768677
       },
+      "height": 0.579,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 砖 1",
       "nameEn": "dlc07 map brick 1",
@@ -1084,8 +1218,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5794259309768677
       },
+      "height": 0.579,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 砖 2",
       "nameEn": "dlc07 map brick 2",
@@ -1100,8 +1236,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5794259309768677
       },
+      "height": 0.579,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 砖 3",
       "nameEn": "dlc07 map brick 3",
@@ -1116,8 +1254,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6854152083396912
       },
+      "height": 0.685,
       "layoutTier": "decor",
       "nameZh": "DLC7 map crenellation 1",
       "nameEn": "dlc07 map crenellation 1",
@@ -1132,8 +1272,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 7
+        "cellsZ": 7,
+        "sizeY": 3.6850061416625977
       },
+      "height": 3.685,
       "layoutTier": "decor",
       "nameZh": "DLC7 map drawbridge 1",
       "nameEn": "dlc07 map drawbridge 1",
@@ -1148,8 +1290,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.4247145652770996
       },
+      "height": 3.425,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 梯子 1",
       "nameEn": "dlc07 map ladder 1",
@@ -1164,8 +1308,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.46559828519821167
       },
+      "height": 0.466,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 灯笼 2",
       "nameEn": "dlc07 map lantern 2",
@@ -1180,8 +1326,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4703176021575928
       },
+      "height": 2.47,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 立柱 2",
       "nameEn": "dlc07 map pillar 2",
@@ -1196,8 +1344,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4522150754928589
       },
+      "height": 1.452,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 立柱 3",
       "nameEn": "dlc07 map pillar 3",
@@ -1212,8 +1362,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.8040552139282227
       },
+      "height": 1.804,
       "layoutTier": "decor",
       "nameZh": "DLC7 map sconce 1",
       "nameEn": "dlc07 map sconce 1",
@@ -1228,8 +1380,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.191676527261734
       },
+      "height": 0.192,
       "layoutTier": "decor",
       "nameZh": "DLC7 map sewer 1",
       "nameEn": "dlc07 map sewer 1",
@@ -1244,8 +1398,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.4323341846466064
       },
+      "height": 1.432,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 墙 1",
       "nameEn": "dlc07 map wall 1",
@@ -1260,8 +1416,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4300106763839722
       },
+      "height": 1.43,
       "layoutTier": "decor",
       "nameZh": "DLC7 map 墙 2",
       "nameEn": "dlc07 map wall 2",
@@ -1276,8 +1434,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2639886140823364
       },
+      "height": 1.264,
       "layoutTier": "decor",
       "nameZh": "DLC7 map weaponstand 1",
       "nameEn": "dlc07 map weaponstand 1",
@@ -1292,8 +1452,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.11048725247383118
       },
+      "height": 0.11,
       "layoutTier": "decor",
       "nameZh": "DLC7 小路转角 1",
       "nameEn": "dlc07 path corner 1",
@@ -1308,8 +1470,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.11048738658428192
       },
+      "height": 0.11,
       "layoutTier": "decor",
       "nameZh": "DLC7 小路转角内 1",
       "nameEn": "dlc07 path corner in 1",
@@ -1324,8 +1488,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.11048725247383118
       },
+      "height": 0.11,
       "layoutTier": "decor",
       "nameZh": "DLC7 小路侧边 1",
       "nameEn": "dlc07 path side 1",
@@ -1340,8 +1506,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC7 pavement 1",
       "nameEn": "dlc07 pavement 1",
@@ -1356,8 +1524,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC7 pavement 2",
       "nameEn": "dlc07 pavement 2",
@@ -1372,8 +1542,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4439328908920288
       },
+      "height": 1.444,
       "layoutTier": "decor",
       "nameZh": "DLC7 画 1",
       "nameEn": "dlc07 picture 1",
@@ -1388,8 +1560,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 1",
       "nameEn": "dlc07 pillar 1",
@@ -1404,8 +1578,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 2",
       "nameEn": "dlc07 pillar 2",
@@ -1420,8 +1596,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 3",
       "nameEn": "dlc07 pillar 3",
@@ -1436,8 +1614,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.0153961181640625
       },
+      "height": 2.015,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 4",
       "nameEn": "dlc07 pillar 4",
@@ -1452,8 +1632,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8196722269058228
       },
+      "height": 0.82,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe cannister 1",
       "nameEn": "dlc07 pipe cannister 1",
@@ -1468,8 +1650,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.8266643285751343
       },
+      "height": 1.827,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe furnace 1",
       "nameEn": "dlc07 pipe furnace 1",
@@ -1484,8 +1668,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3222360610961914
       },
+      "height": 1.322,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 1",
       "nameEn": "dlc07 pipe large 1",
@@ -1500,8 +1686,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3275460004806519
       },
+      "height": 1.328,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 2",
       "nameEn": "dlc07 pipe large 2",
@@ -1516,8 +1704,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3259038925170898
       },
+      "height": 1.326,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 3",
       "nameEn": "dlc07 pipe large 3",
@@ -1532,8 +1722,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3736647367477417
       },
+      "height": 1.374,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 4",
       "nameEn": "dlc07 pipe large 4",
@@ -1548,8 +1740,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.575681209564209
       },
+      "height": 1.576,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 bend 1",
       "nameEn": "dlc07 pipe large bend 1",
@@ -1564,8 +1758,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4574220180511475
       },
+      "height": 1.457,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 bracket 1",
       "nameEn": "dlc07 pipe large bracket 1",
@@ -1580,8 +1776,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4574220180511475
       },
+      "height": 1.457,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 bracket 2",
       "nameEn": "dlc07 pipe large bracket 2",
@@ -1596,8 +1794,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.6495935916900635
       },
+      "height": 1.65,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 bracket 3",
       "nameEn": "dlc07 pipe large bracket 3",
@@ -1612,8 +1812,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.2423585653305054
       },
+      "height": 1.242,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 connector 1",
       "nameEn": "dlc07 pipe large connector 1",
@@ -1628,8 +1830,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5717728734016418
       },
+      "height": 0.572,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 大 valve 1",
       "nameEn": "dlc07 pipe large valve 1",
@@ -1644,8 +1848,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 18,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.7547154426574707
       },
+      "height": 1.755,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe silhouette 1",
       "nameEn": "dlc07 pipe silhouette 1",
@@ -1660,8 +1866,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5911241769790649
       },
+      "height": 0.591,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 1",
       "nameEn": "dlc07 pipe small 1",
@@ -1676,8 +1884,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5665615797042847
       },
+      "height": 0.567,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 2",
       "nameEn": "dlc07 pipe small 2",
@@ -1692,8 +1902,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6146626472473145
       },
+      "height": 0.615,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 3",
       "nameEn": "dlc07 pipe small 3",
@@ -1708,8 +1920,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6359583139419556
       },
+      "height": 0.636,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 4",
       "nameEn": "dlc07 pipe small 4",
@@ -1724,8 +1938,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7070558667182922
       },
+      "height": 0.707,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 bend 1",
       "nameEn": "dlc07 pipe small bend 1",
@@ -1740,8 +1956,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6636176109313965
       },
+      "height": 0.664,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 bracket 1",
       "nameEn": "dlc07 pipe small bracket 1",
@@ -1756,8 +1974,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6344645023345947
       },
+      "height": 0.634,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 connector 1",
       "nameEn": "dlc07 pipe small connector 1",
@@ -1772,8 +1992,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6286941766738892
       },
+      "height": 0.629,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 connector 2",
       "nameEn": "dlc07 pipe small connector 2",
@@ -1788,8 +2010,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8010573983192444
       },
+      "height": 0.801,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 pannel 1",
       "nameEn": "dlc07 pipe small pannel 1",
@@ -1804,8 +2028,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5533993244171143
       },
+      "height": 1.553,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 pannel 2",
       "nameEn": "dlc07 pipe small pannel 2",
@@ -1820,8 +2046,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.9970033168792725
       },
+      "height": 0.997,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 通风口 1",
       "nameEn": "dlc07 pipe vent 1",
@@ -1836,8 +2064,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7861972451210022
       },
+      "height": 0.786,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 通风口 2",
       "nameEn": "dlc07 pipe vent 2",
@@ -1852,8 +2082,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5947937965393066
       },
+      "height": 0.595,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 通风口 3",
       "nameEn": "dlc07 pipe vent 3",
@@ -1868,8 +2100,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 15,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.33252400159835815
       },
+      "height": 0.333,
       "layoutTier": "decor",
       "nameZh": "DLC7 木板段 1",
       "nameEn": "dlc07 planks section 1",
@@ -1884,8 +2118,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.32530879974365234
       },
+      "height": 0.325,
       "layoutTier": "decor",
       "nameZh": "DLC7 railtrack 尽头 1",
       "nameEn": "dlc07 railtrack end 1",
@@ -1900,8 +2136,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.32530879974365234
       },
+      "height": 0.325,
       "layoutTier": "decor",
       "nameZh": "DLC7 railtrack 中段 1",
       "nameEn": "dlc07 railtrack middle 1",
@@ -1916,8 +2154,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "carpet",
@@ -1934,8 +2174,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "DLC7 restaurantwall",
       "nameEn": "dlc07 restaurantwall",
@@ -1950,8 +2192,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "DLC7 restaurantwallcorner",
       "nameEn": "dlc07 restaurantwallcorner",
@@ -1966,8 +2210,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "DLC7 restaurantwindow",
       "nameEn": "dlc07 restaurantwindow",
@@ -2046,8 +2292,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.6715567111968994
       },
+      "height": 1.672,
       "layoutTier": "decor",
       "nameZh": "DLC7 sconce 1",
       "nameEn": "dlc07 sconce 1",
@@ -2062,8 +2310,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.6696155071258545
       },
+      "height": 1.67,
       "layoutTier": "decor",
       "nameZh": "DLC7 sconce 2",
       "nameEn": "dlc07 sconce 2",
@@ -2078,8 +2328,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.6715567111968994
       },
+      "height": 1.672,
       "layoutTier": "decor",
       "nameZh": "DLC7 sconce 王座 1",
       "nameEn": "dlc07 sconce throne 1",
@@ -2094,8 +2346,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.265608549118042
       },
+      "height": 1.266,
       "layoutTier": "decor",
       "nameZh": "DLC7 小摩托 1",
       "nameEn": "dlc07 scooter 1",
@@ -2110,8 +2364,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.265608549118042
       },
+      "height": 1.266,
       "layoutTier": "decor",
       "nameZh": "DLC7 小摩托 2",
       "nameEn": "dlc07 scooter 2",
@@ -2126,8 +2382,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.8663673400878906
       },
+      "height": 0.866,
       "layoutTier": "decor",
       "nameZh": "DLC7 sewergrate 1",
       "nameEn": "dlc07 sewergrate 1",
@@ -2142,8 +2400,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.7968411445617676
       },
+      "height": 1.797,
       "layoutTier": "decor",
       "nameZh": "DLC7 盾 1",
       "nameEn": "dlc07 shield 1",
@@ -2158,8 +2418,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.3299779891967773
       },
+      "height": 3.33,
       "layoutTier": "decor",
       "nameZh": "刀叉勺盾饰",
       "nameEn": "dlc07 shield fork spoon 1",
@@ -2174,8 +2436,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.3193095950089834e-23
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC7 slime puddle 1",
       "nameEn": "dlc07 slime puddle 1",
@@ -2190,8 +2454,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.482530117034912
       },
+      "height": 4.483,
       "layoutTier": "decor",
       "nameZh": "DLC7 slime stream 1",
       "nameEn": "dlc07 slime stream 1",
@@ -2206,8 +2472,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.17430925369262695
       },
+      "height": 0.174,
       "layoutTier": "decor",
       "nameZh": "DLC7 小 valve 1",
       "nameEn": "dlc07 small valve 1",
@@ -2222,8 +2490,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.4860363006591797
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 小窗 1",
       "nameEn": "dlc07 small window 1",
@@ -2238,8 +2508,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.16298770904541
       },
+      "height": 3.163,
       "layoutTier": "decor",
       "nameZh": "DLC7 stained glass 1",
       "nameEn": "dlc07 stained glass 1",
@@ -2254,8 +2526,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.2923498153686523
       },
+      "height": 3.292,
       "layoutTier": "decor",
       "nameZh": "DLC7 stained glass 2",
       "nameEn": "dlc07 stained glass 2",
@@ -2270,8 +2544,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "DLC7 standardwall",
       "nameEn": "dlc07 standardwall",
@@ -2286,8 +2562,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "DLC7 standardwallcorner",
       "nameEn": "dlc07 standardwallcorner",
@@ -2302,8 +2580,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 1 a",
       "nameEn": "dlc07 stone block 1 a",
@@ -2318,8 +2598,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 1 b",
       "nameEn": "dlc07 stone block 1 b",
@@ -2334,8 +2616,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 1 c",
       "nameEn": "dlc07 stone block 1 c",
@@ -2350,8 +2634,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 1 d",
       "nameEn": "dlc07 stone block 1 d",
@@ -2366,8 +2652,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 2 a",
       "nameEn": "dlc07 stone block 2 a",
@@ -2382,8 +2670,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 2 b",
       "nameEn": "dlc07 stone block 2 b",
@@ -2398,8 +2688,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 2 c",
       "nameEn": "dlc07 stone block 2 c",
@@ -2414,8 +2706,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 2 d",
       "nameEn": "dlc07 stone block 2 d",
@@ -2430,8 +2724,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 3 a",
       "nameEn": "dlc07 stone block 3 a",
@@ -2446,8 +2742,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 3 b",
       "nameEn": "dlc07 stone block 3 b",
@@ -2462,8 +2760,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 3 c",
       "nameEn": "dlc07 stone block 3 c",
@@ -2478,8 +2778,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 3 d",
       "nameEn": "dlc07 stone block 3 d",
@@ -2494,8 +2796,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 4 a",
       "nameEn": "dlc07 stone block 4 a",
@@ -2510,8 +2814,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 4 b",
       "nameEn": "dlc07 stone block 4 b",
@@ -2526,8 +2832,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 4 c",
       "nameEn": "dlc07 stone block 4 c",
@@ -2542,8 +2850,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 4 d",
       "nameEn": "dlc07 stone block 4 d",
@@ -2558,8 +2868,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 5 a",
       "nameEn": "dlc07 stone block 5 a",
@@ -2574,8 +2886,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 5 b",
       "nameEn": "dlc07 stone block 5 b",
@@ -2590,8 +2904,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 5 c",
       "nameEn": "dlc07 stone block 5 c",
@@ -2606,8 +2922,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 5 d",
       "nameEn": "dlc07 stone block 5 d",
@@ -2622,8 +2940,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 6 a",
       "nameEn": "dlc07 stone block 6 a",
@@ -2638,8 +2958,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 6 b",
       "nameEn": "dlc07 stone block 6 b",
@@ -2654,8 +2976,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 6 c",
       "nameEn": "dlc07 stone block 6 c",
@@ -2670,8 +2994,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 6 d",
       "nameEn": "dlc07 stone block 6 d",
@@ -2686,8 +3012,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 7 a",
       "nameEn": "dlc07 stone block 7 a",
@@ -2702,8 +3030,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 7 b",
       "nameEn": "dlc07 stone block 7 b",
@@ -2718,8 +3048,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 7 c",
       "nameEn": "dlc07 stone block 7 c",
@@ -2734,8 +3066,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
+      "height": 0.884,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block 7 d",
       "nameEn": "dlc07 stone block 7 d",
@@ -2750,8 +3084,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.496765673160553
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block trip 1",
       "nameEn": "dlc07 stone block trip 1",
@@ -2766,8 +3102,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.49676573276519775
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block trip 2",
       "nameEn": "dlc07 stone block trip 2",
@@ -2782,8 +3120,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.49676573276519775
       },
+      "height": 0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 block trip 3",
       "nameEn": "dlc07 stone block trip 3",
@@ -2798,8 +3138,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 1 a",
       "nameEn": "dlc07 stone half block 1 a",
@@ -2814,8 +3156,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 1 b",
       "nameEn": "dlc07 stone half block 1 b",
@@ -2830,8 +3174,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 1 c",
       "nameEn": "dlc07 stone half block 1 c",
@@ -2846,8 +3192,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 1 d",
       "nameEn": "dlc07 stone half block 1 d",
@@ -2862,8 +3210,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 2 a",
       "nameEn": "dlc07 stone half block 2 a",
@@ -2878,8 +3228,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 2 b",
       "nameEn": "dlc07 stone half block 2 b",
@@ -2894,8 +3246,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 2 c",
       "nameEn": "dlc07 stone half block 2 c",
@@ -2910,8 +3264,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 2 d",
       "nameEn": "dlc07 stone half block 2 d",
@@ -2926,8 +3282,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 3 a",
       "nameEn": "dlc07 stone half block 3 a",
@@ -2942,8 +3300,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 3 b",
       "nameEn": "dlc07 stone half block 3 b",
@@ -2958,8 +3318,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 3 c",
       "nameEn": "dlc07 stone half block 3 c",
@@ -2974,8 +3336,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 3 d",
       "nameEn": "dlc07 stone half block 3 d",
@@ -2990,8 +3354,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 4 a",
       "nameEn": "dlc07 stone half block 4 a",
@@ -3006,8 +3372,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 4 b",
       "nameEn": "dlc07 stone half block 4 b",
@@ -3022,8 +3390,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 4 c",
       "nameEn": "dlc07 stone half block 4 c",
@@ -3038,8 +3408,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
+      "height": 0.893,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 4 d",
       "nameEn": "dlc07 stone half block 4 d",
@@ -3054,8 +3426,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 5 a",
       "nameEn": "dlc07 stone half block 5 a",
@@ -3070,8 +3444,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 5 b",
       "nameEn": "dlc07 stone half block 5 b",
@@ -3086,8 +3462,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 5 c",
       "nameEn": "dlc07 stone half block 5 c",
@@ -3102,8 +3480,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 half block 5 d",
       "nameEn": "dlc07 stone half block 5 d",
@@ -3118,8 +3498,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.12295663356781
       },
+      "height": 1.123,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 kerb 1",
       "nameEn": "dlc07 stone kerb 1",
@@ -3134,8 +3516,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 tall block 1 a",
       "nameEn": "dlc07 stone tall block 1 a",
@@ -3150,8 +3534,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 tall block 1 b",
       "nameEn": "dlc07 stone tall block 1 b",
@@ -3166,8 +3552,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 tall block 1 c",
       "nameEn": "dlc07 stone tall block 1 c",
@@ -3182,8 +3570,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 tall block 1 d",
       "nameEn": "dlc07 stone tall block 1 d",
@@ -3198,8 +3588,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.504225969314575
       },
+      "height": 3.504,
       "layoutTier": "decor",
       "nameZh": "DLC7 石墙 1",
       "nameEn": "dlc07 stone wall 1",

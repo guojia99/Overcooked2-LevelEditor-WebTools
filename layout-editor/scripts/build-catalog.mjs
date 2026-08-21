@@ -165,7 +165,12 @@ function loadMeasuredFootprints() {
     const map = new Map();
     for (const it of raw.items || []) {
       if (it && it.id && it.cellsX > 0 && it.cellsZ > 0) {
-        map.set(it.id, { cellsX: it.cellsX, cellsZ: it.cellsZ });
+        map.set(it.id, {
+          cellsX: it.cellsX,
+          cellsZ: it.cellsZ,
+          // Model bounds height (world units), when the dump included it.
+          sizeY: it.sizeY > 0 ? it.sizeY : undefined,
+        });
       }
     }
     console.log(`Measured footprints: ${map.size} entries`);
@@ -258,6 +263,8 @@ const UTENSIL_STACK = {
   dlc08_utensil_frying_pan: { y: 0.6, hostRule: "cooker" },
   utensil_large_pot_01: { y: 0.6, hostRule: "cooker" },
   utensil_dlc10_large_pot_01: { y: 0.6, hostRule: "cooker" },
+  // 可移动火锅：与静态大锅同位（y=0.2 贴地放灶台上，载体自身有 Rigidbody，不抬高）
+  utensil_large_pot_01_pushable: { y: 0.2, hostRule: "cooker" },
   dlc08_frierbasket: { y: 0.6, hostRule: "frying_station" },
   dlc03_utensil_mixer: { y: 0.6, hostRule: "mixer" },
   dlc09_utensil_mixer: { y: 0.6, hostRule: "mixer" },
@@ -344,6 +351,8 @@ const UTENSIL_SUBCATEGORY = {
   dlc08_frierbasket: "utensils/cooking",
   utensil_large_pot_01: "utensils/cooking",
   utensil_dlc10_large_pot_01: "utensils/cooking",
+  // 可移动火锅 = 载具+锅组合（锅具分类，支持食材填充）
+  utensil_large_pot_01_pushable: "utensils/cooking",
   // 搅拌器具
   dlc03_utensil_mixer: "utensils/mixing",
   dlc09_utensil_mixer: "utensils/mixing",
@@ -735,9 +744,10 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
       const { category, theme } = categorize(assetPath);
       // Priority: hand-authored override > Unity-measured (decor only) > 1x1.
       const isDecorCategory = category === "art" || category === "other";
+      const measured = isDecorCategory ? measuredFootprints.get(id) : undefined;
       const fp =
         FOOTPRINT_OVERRIDES[id] ||
-        (isDecorCategory ? measuredFootprints.get(id) : undefined) ||
+        measured ||
         { cellsX: 1, cellsZ: 1 };
       out.push({
         id,
@@ -747,6 +757,11 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
         theme,
         defaultParent: DEFAULT_PARENT[category] || DEFAULT_PARENT[category.split("/")[0]] || "Art",
         footprint: fp,
+        // Intrinsic model height (measured bounds size Y) for the height-range
+        // palette filter: flat floor tiles ~0.1, tall pieces (ice cliffs…) 1+.
+        ...(measured && measured.sizeY > 0
+          ? { height: Math.round(measured.sizeY * 1000) / 1000 }
+          : {}),
         ...layoutMetaFor(id, category),
       });
     }

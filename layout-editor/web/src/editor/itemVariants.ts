@@ -15,7 +15,7 @@
  */
 import { S, EditorItem } from "./state";
 import type { CatalogItem } from "../types";
-import { prefabIdFromPath, escHtml, newEditorKey } from "./coords";
+import { uuid, prefabIdFromPath, escHtml, newEditorKey } from "./coords";
 import { tidyCatalogNameZh } from "../displayLabels";
 import { stubKindOf, STUB_KIND_BY_PREFAB_ID } from "./stubControls";
 import { pushHistory } from "./historyOps";
@@ -52,6 +52,8 @@ export const VARIANT_TO_BASE: Record<string, string> = {
   // 烤盘 / 火锅大锅 / 地炉（主版本无 dlc 前缀）
   dlc09_utensil_roasting_tray: "utensil_roasting_tray",
   utensil_dlc10_large_pot_01: "utensil_large_pot_01",
+  // 可移动火锅 → 大火锅（食材配置/锅具管理等按同族处理）
+  utensil_large_pot_01_pushable: "utensil_large_pot_01",
   dlc10_cooking_region_floorburner: "cooking_region_floorburner",
   // 烤串签 / 烤盘 / 烤叉 → 核心 Skewer / GriddlePan / ToastingFork
   utensil_skewer_01: "Skewer",
@@ -182,7 +184,7 @@ export function switchItemVariant(item: EditorItem, cat: CatalogItem): void {
   const oldId = item.instanceId;
   const wasSelected = S.selectedKeys.has(item._editorKey);
   const kind = stubKindOf(item);
-  const newId = `new:${cat.guid}:${crypto.randomUUID()}`;
+  const newId = `new:${cat.guid}:${uuid()}`;
   const next: EditorItem = {
     instanceId: newId,
     _editorKey: newEditorKey(),

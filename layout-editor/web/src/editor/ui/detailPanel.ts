@@ -124,6 +124,10 @@ export function extraStubDetailHtml(item: EditorItem): string {
       const b = item.burner ?? {};
       return `<dt>火焰喷射器</dt><dd>${BURNER_FIRE_MODES[b.fireMode ?? 1]} · 空中时间 ${b.airTime ?? 2}s${b.randomTargetOrder ? " · 随机目标" : ""}${b.hideVisual ? " · 隐藏模型" : ""}（右键直接修改）</dd>`;
     }
+    case "Cannon": {
+      const free = item.cannon?.freeRotation;
+      return `<dt>大炮</dt><dd>${free ? "360° 自由旋转" : "固定小角度（±45°）"}（右键直接修改）</dd>`;
+    }
     case "Player": {
       const pid = item.player?.playerID ?? 11;
       return `<dt>玩家</dt><dd>${pid === 11 ? "自动（按加入顺序）" : `玩家 ${pid + 1}`} · 固定出生点，仅可拖动位置</dd>`;

@@ -19,6 +19,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4341917854781290}
+  - component: {fileID: 6598243100175246001}
   - component: {fileID: 114096038827637250}
   - component: {fileID: 114967938430519460}
   m_Layer: 0
@@ -65,3 +66,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   childGameObject: {fileID: 0}
+--- !u!65 &6598243100175246001
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1554132891853676}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1.8, y: 0.8, z: 1.8}
+  m_Center: {x: -0.7, y: 0.4, z: 0.5}

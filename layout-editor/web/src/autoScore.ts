@@ -16,6 +16,23 @@ export const RATIO_MIN = 0.1;
 export const RATIO_MAX = 5.0;
 export const RATIO_STEP = 0.1;
 
+// 节奏参数默认值：对齐 oc1_story 官方图（订单间隔 1P=15 其余=10，回盘恒 7 秒）
+export const ORDER_INTERVAL_SEC = [15, 10, 10, 10];
+export const PLATE_RETURN_SEC = 7;
+// 订单超时 = 最复杂菜谱估时 × 倍率：1P 取 1.75~2.5 的中值 2.0，人越多节奏越快。
+// 验证：T≈90（复杂菜谱）→ 180/135/120/110，与官方图 180/130/130/100 吻合；
+//       T≈50（简单菜谱）→ 100/75/70/60，与 jia_level1_1 的 100/90/75/75 同量级。
+const ORDER_LIFE_MULT = [2.0, 1.5, 1.35, 1.2];
+const ORDER_LIFE_MIN = 60;
+const ORDER_LIFE_MAX = 250;
+
+/** 由最复杂菜谱的估时推算 1P~4P 的订单超时（秒，取整到 5 并限制在 60~250）。 */
+export function computeOrderLifeTimes(maxRecipeTimeSec: number): number[] {
+  return ORDER_LIFE_MULT.map((m) =>
+    Math.min(ORDER_LIFE_MAX, Math.max(ORDER_LIFE_MIN, round5(maxRecipeTimeSec * m)))
+  );
+}
+
 export interface AutoScoreRecipeDetail {
   name: string;
   groupLabel: string;
@@ -28,6 +45,7 @@ export interface AutoScoreRecipeDetail {
 export interface AutoScoreResult {
   details: AutoScoreRecipeDetail[];
   avgTimeSec: number;
+  maxTimeSec: number;
   avgPrice: number;
   stars: number[][];
 }
@@ -63,6 +81,7 @@ export function computeAutoScores(recipes: RecipeEntry[], roundTimes: number[]):
   });
 
   const avgTimeSec = details.reduce((s, d) => s + d.timeSec, 0) / details.length;
+  const maxTimeSec = Math.max(...details.map((d) => d.timeSec));
   const avgPrice = details.reduce((s, d) => s + d.score, 0) / details.length;
 
   const stars: number[][] = [];
@@ -71,7 +90,7 @@ export function computeAutoScores(recipes: RecipeEntry[], roundTimes: number[]):
     const maxScore = (rt / avgTimeSec) * PLAYER_EFFICIENCY[p] * avgPrice;
     stars.push(STAR_RATIOS.map((r) => round5(maxScore * r)));
   }
-  return { details, avgTimeSec, avgPrice, stars };
+  return { details, avgTimeSec, maxTimeSec, avgPrice, stars };
 }
 
 export function applyRatio(baseStars: number[], ratio: number): number[] {

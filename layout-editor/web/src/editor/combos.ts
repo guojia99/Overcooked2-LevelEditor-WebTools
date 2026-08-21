@@ -55,6 +55,21 @@ function linkCannonSwitch(items: EditorItem[]): void {
   S.switchLinks.push({ switchId: sw.instanceId, targetId: cannon.instanceId, trigger: "Launch" });
 }
 
+/** 大炮 + 摇杆（多路控制终端）+ 大炮开关：终端绑定大炮（瞄准权归终端玩家，
+ *  炮内玩家不再控角度），发射按钮联动大炮（trigger: Launch，1:1）。 */
+function linkCannonTerminal(items: EditorItem[]): void {
+  const cannon = items[0];
+  const terminal = items[1];
+  const sw = items[2];
+  cannon.stubKind = "Cannon";
+  terminal.stubKind = "Terminal";
+  terminal.terminal = { pilotableObjectInstanceId: cannon.instanceId };
+  sw.stubKind = "CannonSwitch";
+  if (!sw.switchStub) sw.switchStub = {};
+  sw.switchStub.startEnabled = true;
+  S.switchLinks.push({ switchId: sw.instanceId, targetId: cannon.instanceId, trigger: "Launch" });
+}
+
 /** 两个传送门互为出口（双向传送）。 */
 function linkTeleportalPair(items: EditorItem[]): void {
   const [a, b] = items;
@@ -139,6 +154,17 @@ export const COMBOS: ComboDef[] = [
       { id: "p_dlc08_button_cannon", dx: 3, dz: 0 },
     ],
     link: linkCannonSwitch,
+  },
+  {
+    id: "cannon_terminal_switch",
+    nameZh: "大炮 + 摇杆 + 发射按钮",
+    hint: "自动联动：多路控制终端绑定大炮（终端玩家遥控瞄准，炮内玩家不控角度），星形按钮按下 → 发射（Launch）",
+    parts: [
+      { id: "dlc08_cannon", dx: 0, dz: 0 },
+      { id: "MultiControlTerminal", dx: 3, dz: 0 },
+      { id: "p_dlc08_button_cannon", dx: 5, dz: 0 },
+    ],
+    link: linkCannonTerminal,
   },
   {
     id: "teleportal_pair",

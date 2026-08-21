@@ -29,6 +29,7 @@ public static class LayoutEditorFootprintDump
         public string guid;
         public float cellsX;
         public float cellsZ;
+        public float sizeY;
     }
 
     [Serializable]
@@ -73,6 +74,7 @@ public static class LayoutEditorFootprintDump
                         pseudo.ResetChild();
 
                     var fp = LayoutEditorFootprintMeasure.MeasureCells(temp);
+                    float sizeY = LayoutEditorFootprintMeasure.MeasureHeight(temp);
                     bool measurable = temp.GetComponentsInChildren<MeshRenderer>(false).Length > 0;
                     if (!measurable)
                     {
@@ -81,7 +83,7 @@ public static class LayoutEditorFootprintDump
                         continue;
                     }
 
-                    entries.Add(new Entry { id = id, guid = guid, cellsX = fp.cellsX, cellsZ = fp.cellsZ });
+                    entries.Add(new Entry { id = id, guid = guid, cellsX = fp.cellsX, cellsZ = fp.cellsZ, sizeY = sizeY });
                 }
                 catch (Exception e)
                 {

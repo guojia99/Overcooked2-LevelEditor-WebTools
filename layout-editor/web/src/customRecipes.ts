@@ -1330,12 +1330,26 @@ async function renderRecipeForm(
     document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
     const copyBtn = document.getElementById("diag-copy");
     copyBtn?.addEventListener("click", async () => {
+      let ok = false;
       try {
         await navigator.clipboard.writeText(text);
-        copyBtn.textContent = "已复制 ✓";
+        ok = true;
       } catch {
-        copyBtn.textContent = "复制失败";
+        // 非安全上下文（IP 访问）无 navigator.clipboard：退回 execCommand 方案
+        try {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          ok = document.execCommand("copy");
+          document.body.removeChild(ta);
+        } catch {
+          ok = false;
+        }
       }
+      copyBtn.textContent = ok ? "已复制 ✓" : "复制失败";
       setTimeout(() => {
         if (copyBtn) copyBtn.textContent = "📋 复制链路数据";
       }, 2000);

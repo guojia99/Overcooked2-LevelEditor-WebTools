@@ -28,7 +28,7 @@ import {
   selectSceneInDropdowns
 } from "./sceneIO";
 import { buildPalette } from "./palette";
-import { buildFloorPalette } from "./floorPalette";
+import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
 import { refreshScopedSaveButton } from "./serialize";
 import { scopedSaveMeta } from "./serialize";
 import { openRecipesDialog } from "./ui/recipesDialogs";
@@ -135,6 +135,20 @@ function wireVisibilityPopover(): void {
   });
 }
 
+/** 高度过滤悬浮面板（画布左下角）：唤醒按钮在地板/核心/装饰层可用，
+ *  面板按 S.floorHeightPanelOpen 展开/收起；过滤激活时按钮高亮提示。 */
+export function syncFloorHeightUI(layer = S.currentLayer): void {
+  const toggle = document.getElementById("fhf-toggle");
+  const panel = document.getElementById("floor-height-filter");
+  const applies = layer === "floor" || layer === "items" || layer === "decor";
+  if (toggle) {
+    toggle.classList.toggle("hidden", !applies);
+    toggle.classList.toggle("active", S.floorHeight.min != null);
+  }
+  if (panel) panel.classList.toggle("hidden", !(applies && S.floorHeightPanelOpen));
+  if (applies) refreshFloorHeightPanel();
+}
+
 /** Programmatic layer switch (used by the layer tabs and the move-layer wizards). */
 export function setLayer(layer: LayerKey): void {
   if (layer === S.currentLayer) return;
@@ -165,6 +179,7 @@ export function setLayer(layer: LayerKey): void {
   const searchEl = document.getElementById("palette-search") as HTMLInputElement;
   const sizeEl = document.getElementById("decor-size-filter") as HTMLSelectElement;
   if (sizeEl) sizeEl.classList.toggle("hidden", layer !== "decor");
+  syncFloorHeightUI(layer);
   if (layer === "floor") {
     searchEl.placeholder = "搜索木筏 / 地板…";
     buildFloorPalette(searchEl.value, "floor");
@@ -263,6 +278,45 @@ export async function init() {
     if (S.currentLayer === "decor") {
       buildPalette(catalog, (document.getElementById("palette-search") as HTMLInputElement).value);
     }
+  });
+
+  // ── 地板高度过滤：层厚 / 自由区间双滑块（同一条轨道双滑头）/ 全部 / 唤醒按钮 ──
+  document.getElementById("fhf-toggle")?.addEventListener("click", () => {
+    S.floorHeightPanelOpen = !S.floorHeightPanelOpen;
+    syncFloorHeightUI();
+  });
+  document.getElementById("fhf-thickness")?.addEventListener("change", (e) => {
+    const v = parseFloat((e.target as HTMLInputElement).value);
+    if (!Number.isFinite(v) || v < 0.05 || v > 2) return;
+    S.floorHeight.thickness = Math.round(v * 100) / 100;
+    refreshAfterHeightFilterChange();
+  });
+  const bindHeightSlider = (id: "fhf-min" | "fhf-max") => {
+    document.getElementById(id)?.addEventListener("input", () => {
+      const minEl = document.getElementById("fhf-min") as HTMLInputElement;
+      const maxEl = document.getElementById("fhf-max") as HTMLInputElement;
+      if (!minEl || !maxEl) return;
+      let lo = parseFloat(minEl.value);
+      let hi = parseFloat(maxEl.value);
+      if (!Number.isFinite(lo) || !Number.isFinite(hi)) return;
+      if (lo > hi) {
+        // 交叉拖动时把另一头吸过来，保持 min <= max。
+        if (id === "fhf-min") { hi = lo; maxEl.value = String(lo); }
+        else { lo = hi; minEl.value = String(hi); }
+      }
+      S.floorHeight.min = lo;
+      S.floorHeight.max = hi;
+      refreshAfterHeightFilterChange();
+      syncFloorHeightUI();
+    });
+  };
+  bindHeightSlider("fhf-min");
+  bindHeightSlider("fhf-max");
+  document.getElementById("fhf-reset")?.addEventListener("click", () => {
+    S.floorHeight.min = null;
+    S.floorHeight.max = null;
+    refreshAfterHeightFilterChange();
+    syncFloorHeightUI();
   });
 
   document.getElementById("btn-reload")!.addEventListener("click", () => {
@@ -431,6 +485,7 @@ export async function init() {
   initPaletteResizer();
   wireVisibilityPopover();
   setupCanvas();
+  syncFloorHeightUI();
   requestAnimationFrame(draw);
 
   if (scenes.length > 0) {

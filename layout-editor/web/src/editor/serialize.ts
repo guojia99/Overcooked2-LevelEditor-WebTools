@@ -5,6 +5,7 @@ import {
   SaveScope
 } from "./state";
 import {
+  uuid,
   normalizeRot,
   resolveFootprint,
   prefabIdFromPath
@@ -44,6 +45,12 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
   if (rest.stubKind === "CookingUtensil" && isIngredientSprayId(prefabIdFromPath(rest.prefabAssetPath))) {
     rest.stubKind = "";
     rest.cookingUtensil = undefined;
+  }
+  // 可移动火锅：stubKind 保持空（不挂 CookingUtensil stub，宿主 Setup NRE）——
+  // 但 cookingUtensil 字段保留（allowedIngredientGuids 会落到载体组件上）。
+  const serPid = prefabIdFromPath(rest.prefabAssetPath);
+  if (rest.stubKind === "CookingUtensil" && serPid === "utensil_large_pot_01_pushable") {
+    rest.stubKind = "";
   }
   // Raft planks already expanded below are walkable:false; other floor prefabs stay walkable.
   const isRaftPlank = cat?.surfaceKind === "raft";
@@ -90,7 +97,7 @@ export function buildRaftItemsForDoc(): LayoutItem[] {
         missingIds.add(p.id);
         continue;
       }
-      const id = `new:raft:${crypto.randomUUID()}`;
+      const id = `new:raft:${uuid()}`;
       const px = f._wx + p.dx;
       const pz = f._wz + p.dz;
       raftItems.push({
@@ -136,7 +143,7 @@ export function buildThemedItemsForDoc(): LayoutItem[] {
       : nat.depthAxis === "y"
         ? { x: f._wCells / nat.cellsPerScaleX, y: f._dCells / nat.cellsPerScaleZ, z: 1 }
         : { x: f._wCells / nat.cellsPerScaleX, y: 1, z: f._dCells / nat.cellsPerScaleZ };
-    const id = `new:themed:${crypto.randomUUID()}`;
+    const id = `new:themed:${uuid()}`;
     themedItems.push({
       instanceId: id,
       hierarchyPath: id,

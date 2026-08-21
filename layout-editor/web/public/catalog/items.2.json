@@ -12,8 +12,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5170549154281616
       },
+      "height": 0.517,
       "layoutTier": "decor",
       "nameZh": "冰山 3",
       "nameEn": "icebergs 3",
@@ -28,8 +30,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.4190329909324646
       },
+      "height": 0.419,
       "layoutTier": "decor",
       "nameZh": "冰山 4",
       "nameEn": "icebergs 4",
@@ -44,8 +48,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 5
+        "cellsZ": 5,
+        "sizeY": 2.0727806091308594
       },
+      "height": 2.073,
       "layoutTier": "decor",
       "nameZh": "冰崖 hole 3x3 1",
       "nameEn": "icecliff hole 3x3 1",
@@ -60,8 +66,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.97440105676651
       },
+      "height": 0.974,
       "layoutTier": "decor",
       "nameZh": "冰柱 1",
       "nameEn": "icicle 1",
@@ -76,8 +84,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8866389989852905
       },
+      "height": 0.887,
       "layoutTier": "decor",
       "nameZh": "冰柱 2",
       "nameEn": "icicle 2",
@@ -92,8 +102,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7607989311218262
       },
+      "height": 0.761,
       "layoutTier": "decor",
       "nameZh": "冰柱 3",
       "nameEn": "icicle 3",
@@ -108,8 +120,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.691727876663208
       },
+      "height": 0.692,
       "layoutTier": "decor",
       "nameZh": "冰柱 4",
       "nameEn": "icicle 4",
@@ -172,8 +186,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.1973648965358734
       },
+      "height": 0.197,
       "layoutTier": "decor",
       "nameZh": "凯文（夏威夷）",
       "nameEn": "Kevin Hawaiian 1",
@@ -188,8 +204,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 7
+        "cellsZ": 7,
+        "sizeY": 0.9789305925369263
       },
+      "height": 0.979,
       "layoutTier": "decor",
       "nameZh": "厨房火坑 1",
       "nameEn": "kitchen firepit 1",
@@ -204,8 +222,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.7642308473587036
       },
+      "height": 0.764,
       "layoutTier": "decor",
       "nameZh": "厨房火坑 2",
       "nameEn": "kitchen firepit 2",
@@ -219,9 +239,11 @@
       "theme": "floors",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 15,
+        "cellsZ": 13,
+        "sizeY": 3.4638957097755463e-15
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -238,8 +260,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.0805649757385254
       },
+      "height": 3.081,
       "layoutTier": "decor",
       "nameZh": "梯子 1",
       "nameEn": "ladder 1",
@@ -254,8 +278,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.0805649757385254
       },
+      "height": 3.081,
       "layoutTier": "decor",
       "nameZh": "梯子 2",
       "nameEn": "ladder 2",
@@ -270,8 +296,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.130157947540283
       },
+      "height": 2.13,
       "layoutTier": "decor",
       "nameZh": "悬挂灯笼 1",
       "nameEn": "lantern suspended 1",
@@ -286,8 +314,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 9,
-        "cellsZ": 6
+        "cellsZ": 6,
+        "sizeY": 4.7024383544921875
       },
+      "height": 4.702,
       "layoutTier": "decor",
       "nameZh": "大摊位 dressed 1",
       "nameEn": "large stall dressed 1",
@@ -302,8 +332,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.082324266433716
       },
+      "height": 3.082,
       "layoutTier": "decor",
       "nameZh": "救生圈柱",
       "nameEn": "lifebuoypillar",
@@ -318,8 +350,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.082324266433716
       },
+      "height": 3.082,
       "layoutTier": "decor",
       "nameZh": "救生圈柱",
       "nameEn": "LifeBuoyPillar",
@@ -350,8 +384,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.4329531788825989
       },
+      "height": 0.433,
       "layoutTier": "decor",
       "nameZh": "长椅 1",
       "nameEn": "longbench 1",
@@ -366,8 +402,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.7931891679763794
       },
+      "height": 0.793,
       "layoutTier": "decor",
       "nameZh": "长桌 1",
       "nameEn": "longtable 1",
@@ -382,8 +420,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.30000004172325134
       },
+      "height": 0.3,
       "layoutTier": "decor",
       "nameZh": "airballoon 屋顶 3",
       "nameEn": "airballoon roof 3",
@@ -398,8 +438,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.115546815097332
       },
+      "height": 0.116,
       "layoutTier": "decor",
       "nameZh": "airballoon 屋顶 4",
       "nameEn": "airballoon roof 4",
@@ -414,8 +456,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.1750161349773407
       },
+      "height": 0.175,
       "layoutTier": "decor",
       "nameZh": "airballoon 屋顶 5",
       "nameEn": "airballoon roof 5",
@@ -430,8 +474,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.750006914138794
       },
+      "height": 0.75,
       "layoutTier": "decor",
       "nameZh": "城市遮阳棚",
       "nameEn": "city canopy",
@@ -446,8 +492,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市门双开 2",
       "nameEn": "city door double 2",
@@ -461,9 +509,11 @@
       "theme": "floors",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 10,
+        "cellsZ": 12,
+        "sizeY": 1.19209286886246e-9
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -480,8 +530,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.8569782972335815
       },
+      "height": 1.857,
       "layoutTier": "decor",
       "nameZh": "凯文雕像 1",
       "nameEn": "city kevin 1",
@@ -496,8 +548,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.8746979236602783
       },
+      "height": 1.875,
       "layoutTier": "decor",
       "nameZh": "凯文雕像 2",
       "nameEn": "city kevin 2",
@@ -528,8 +582,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.012056589126586914
       },
+      "height": 0.012,
       "layoutTier": "decor",
       "nameZh": "城市墙 left 角顶部 1",
       "nameEn": "city wall left angle top 1",
@@ -544,8 +600,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "城市墙右角内侧",
       "nameEn": "city wall right angle inside",
@@ -560,8 +618,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.012056589126586914
       },
+      "height": 0.012,
       "layoutTier": "decor",
       "nameZh": "城市墙右角顶部 1",
       "nameEn": "city wall right angle top 1",
@@ -592,8 +652,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 9
+        "cellsZ": 9,
+        "sizeY": 4.817725880457147e-7
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC7 deathscreen 平面 1",
       "nameEn": "dlc07 deathscreen plane 1",
@@ -608,8 +670,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0031870603561401
       },
+      "height": 1.003,
       "layoutTier": "decor",
       "nameZh": "DLC7 gothic trefoil 1",
       "nameEn": "dlc07 gothic trefoil 1",
@@ -624,8 +688,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.3649377822875977
       },
+      "height": 3.365,
       "layoutTier": "decor",
       "nameZh": "DLC7 大窗叉 1",
       "nameEn": "dlc07 large window fork 1",
@@ -640,8 +706,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.2991833686828613
       },
+      "height": 3.299,
       "layoutTier": "decor",
       "nameZh": "DLC7 大窗叉 2",
       "nameEn": "dlc07 large window fork 2",
@@ -656,8 +724,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 1",
       "nameEn": "dlc07 pillar 1",
@@ -672,8 +742,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 2",
       "nameEn": "dlc07 pillar 2",
@@ -688,8 +760,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
       },
+      "height": 3.486,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 3",
       "nameEn": "dlc07 pillar 3",
@@ -704,8 +778,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.0153961181640625
       },
+      "height": 2.015,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 4",
       "nameEn": "dlc07 pillar 4",
@@ -720,8 +796,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 7.657927513122559
       },
+      "height": 7.658,
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 tall 1",
       "nameEn": "dlc07 pillar tall 1",
@@ -736,8 +814,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.17430925369262695
       },
+      "height": 0.174,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 valve 1",
       "nameEn": "dlc07 pipe small valve 1",
@@ -752,8 +832,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.9970033168792725
       },
+      "height": 0.997,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 通风口 1",
       "nameEn": "dlc07 pipe vent 1",
@@ -768,8 +850,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7861972451210022
       },
+      "height": 0.786,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 通风口 2",
       "nameEn": "dlc07 pipe vent 2",
@@ -784,8 +868,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5947937965393066
       },
+      "height": 0.595,
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 通风口 3",
       "nameEn": "dlc07 pipe vent 3",
@@ -800,8 +886,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.981370687484741
       },
+      "height": 3.981,
       "layoutTier": "decor",
       "nameZh": "DLC7 portcullis 2",
       "nameEn": "dlc07 portcullis 2",
@@ -816,8 +904,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.981370687484741
       },
+      "height": 3.981,
       "layoutTier": "decor",
       "nameZh": "DLC7 portcullis 3",
       "nameEn": "dlc07 portcullis 3",
@@ -832,8 +922,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.79911208152771
       },
+      "height": 1.799,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 broken block 1",
       "nameEn": "dlc07 stone broken block 1",
@@ -848,8 +940,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.6413230895996094
       },
+      "height": 2.641,
       "layoutTier": "decor",
       "nameZh": "DLC7 石 broken block 2",
       "nameEn": "dlc07 stone broken block 2",
@@ -864,8 +958,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.7689781188964844
       },
+      "height": 1.769,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙 deco 支撑 1",
       "nameEn": "dlc07 wall deco support 1",
@@ -880,8 +976,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.785880446434021
       },
+      "height": 1.786,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙 deco 支撑 2",
       "nameEn": "dlc07 wall deco support 2",
@@ -896,8 +994,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.7731285095214844
       },
+      "height": 1.773,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙 deco 支撑 3",
       "nameEn": "dlc07 wall deco support 3",
@@ -912,8 +1012,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.3440542221069336
       },
+      "height": 2.344,
       "layoutTier": "decor",
       "nameZh": "DLC7 weapon stand 1",
       "nameEn": "dlc07 weapon stand 1",
@@ -928,8 +1030,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7861201763153076
       },
+      "height": 0.786,
       "layoutTier": "decor",
       "nameZh": "DLC8 barbell 1",
       "nameEn": "dlc08 barbell 1",
@@ -944,8 +1048,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 5.742776870727539
       },
+      "height": 5.743,
       "layoutTier": "decor",
       "nameZh": "DLC8 bleachers crowd 1",
       "nameEn": "dlc08 bleachers crowd 1",
@@ -960,8 +1066,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7170078754425049
       },
+      "height": 0.717,
       "layoutTier": "decor",
       "nameZh": "DLC8 马戏团 ball 1",
       "nameEn": "dlc08 circus ball 1",
@@ -976,8 +1084,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7170078754425049
       },
+      "height": 0.717,
       "layoutTier": "decor",
       "nameZh": "DLC8 马戏团 ball 2",
       "nameEn": "dlc08 circus ball 2",
@@ -992,8 +1102,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7170078754425049
       },
+      "height": 0.717,
       "layoutTier": "decor",
       "nameZh": "DLC8 马戏团 ball 3",
       "nameEn": "dlc08 circus ball 3",
@@ -1008,8 +1120,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7170078754425049
       },
+      "height": 0.717,
       "layoutTier": "decor",
       "nameZh": "DLC8 马戏团 ball 4",
       "nameEn": "dlc08 circus ball 4",
@@ -1024,8 +1138,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3781329393386841
       },
+      "height": 0.378,
       "layoutTier": "decor",
       "nameZh": "DLC8 gobstopper 1",
       "nameEn": "dlc08 gobstopper 1",
@@ -1040,8 +1156,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.2925938367843628
       },
+      "height": 0.293,
       "layoutTier": "decor",
       "nameZh": "DLC8 gobstopper 2",
       "nameEn": "dlc08 gobstopper 2",
@@ -1056,8 +1174,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.32397764921188354
       },
+      "height": 0.324,
       "layoutTier": "decor",
       "nameZh": "DLC8 gobstopper 3",
       "nameEn": "dlc08 gobstopper 3",
@@ -1072,8 +1192,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.023669719696045
       },
+      "height": 1.024,
       "layoutTier": "decor",
       "nameZh": "DLC8 kettlebell 1",
       "nameEn": "dlc08 kettlebell 1",
@@ -1088,8 +1210,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.22918805480003357
       },
+      "height": 0.229,
       "layoutTier": "decor",
       "nameZh": "DLC8 map popcorn 1",
       "nameEn": "dlc08 map popcorn 1",
@@ -1104,8 +1228,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3597657084465027
       },
+      "height": 0.36,
       "layoutTier": "decor",
       "nameZh": "DLC8 map popcorn 2",
       "nameEn": "dlc08 map popcorn 2",
@@ -1120,8 +1246,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.23848511278629303
       },
+      "height": 0.238,
       "layoutTier": "decor",
       "nameZh": "DLC8 map popcorn 3",
       "nameEn": "dlc08 map popcorn 3",
@@ -1136,8 +1264,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.24302515387535095
       },
+      "height": 0.243,
       "layoutTier": "decor",
       "nameZh": "DLC8 map popcorn 4",
       "nameEn": "dlc08 map popcorn 4",
@@ -1152,8 +1282,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 8.350421905517578
       },
+      "height": 8.35,
       "layoutTier": "decor",
       "nameZh": "DLC8 立柱 trapeze 1",
       "nameEn": "dlc08 pillar trapeze 1",
@@ -1168,8 +1300,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.807917058467865
       },
+      "height": 0.808,
       "layoutTier": "decor",
       "nameZh": "DLC8 popcorn 1",
       "nameEn": "dlc08 popcorn 1",
@@ -1184,8 +1318,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7605423331260681
       },
+      "height": 0.761,
       "layoutTier": "decor",
       "nameZh": "DLC8 popcorn 2",
       "nameEn": "dlc08 popcorn 2",
@@ -1200,8 +1336,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.22744883596897125
       },
+      "height": 0.227,
       "layoutTier": "decor",
       "nameZh": "DLC8 popcorn 3",
       "nameEn": "dlc08 popcorn 3",
@@ -1216,8 +1354,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.39473244547843933
       },
+      "height": 0.395,
       "layoutTier": "decor",
       "nameZh": "DLC8 popcorn 4",
       "nameEn": "dlc08 popcorn 4",
@@ -1232,8 +1372,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.23738741874694824
       },
+      "height": 0.237,
       "layoutTier": "decor",
       "nameZh": "DLC8 popcorn 5",
       "nameEn": "dlc08 popcorn 5",
@@ -1248,8 +1390,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.24297796189785004
       },
+      "height": 0.243,
       "layoutTier": "decor",
       "nameZh": "DLC8 popcorn 6",
       "nameEn": "dlc08 popcorn 6",
@@ -1264,8 +1408,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.533085286617279
       },
+      "height": 0.533,
       "layoutTier": "decor",
       "nameZh": "DLC8 popcorn 7",
       "nameEn": "dlc08 popcorn 7",
@@ -1280,8 +1426,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5676248669624329
       },
+      "height": 0.568,
       "layoutTier": "decor",
       "nameZh": "DLC8 popcorn 8",
       "nameEn": "dlc08 popcorn 8",
@@ -1296,8 +1444,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.983244776725769
       },
+      "height": 1.983,
       "layoutTier": "decor",
       "nameZh": "DLC8 standing 招牌 1",
       "nameEn": "dlc08 standing sign 1",
@@ -1312,8 +1462,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 4.115756988525391
       },
+      "height": 4.116,
       "layoutTier": "decor",
       "nameZh": "DLC8 帐篷屋顶 1",
       "nameEn": "dlc08 tent roof 1",
@@ -1328,8 +1480,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 5,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 5.992135524749756
       },
+      "height": 5.992,
       "layoutTier": "decor",
       "nameZh": "DLC8 王座 1",
       "nameEn": "dlc08 throne 1",
@@ -1344,8 +1498,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.17990057170391083
       },
+      "height": 0.18,
       "layoutTier": "decor",
       "nameZh": "DLC8 ticketstub 1",
       "nameEn": "dlc08 ticketstub 1",
@@ -1359,9 +1515,11 @@
       "theme": "dlc13",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 2.4793972969055176
       },
+      "height": 2.479,
       "layoutTier": "decor",
       "nameZh": "DLC13 地图树 1 1",
       "nameEn": "dlc13 map tree 1 1",
@@ -1376,8 +1534,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.9323863983154297
       },
+      "height": 2.932,
       "layoutTier": "decor",
       "nameZh": "DLC2 桶 1",
       "nameEn": "dlc2 barrel 1",
@@ -1392,8 +1552,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 9
+        "cellsZ": 9,
+        "sizeY": 2.389207363128662
       },
+      "height": 2.389,
       "layoutTier": "decor",
       "nameZh": "木桶筏",
       "nameEn": "dlc2 barrelraft 1",
@@ -1408,8 +1570,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 2.173435688018799
       },
+      "height": 2.173,
       "layoutTier": "decor",
       "nameZh": "DLC2 灌木 1",
       "nameEn": "dlc2 bush 1",
@@ -1424,8 +1588,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.130228042602539
       },
+      "height": 1.13,
       "layoutTier": "decor",
       "nameZh": "DLC2 鸭 1",
       "nameEn": "dlc2 duck 1",
@@ -1440,8 +1606,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.130228042602539
       },
+      "height": 1.13,
       "layoutTier": "decor",
       "nameZh": "DLC2 鸭 2",
       "nameEn": "dlc2 duck 2",
@@ -1456,8 +1624,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.155172824859619
       },
+      "height": 2.155,
       "layoutTier": "decor",
       "nameZh": "DLC2 火烈鸟 1",
       "nameEn": "dlc2 flamingo 1",
@@ -1488,8 +1658,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 2.2482588291168213
       },
+      "height": 2.248,
       "layoutTier": "decor",
       "nameZh": "DLC2 菠萝植物 02nofruit",
       "nameEn": "dlc2 pineapple plant 02nofruit",
@@ -1504,8 +1676,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 2.2482588291168213
       },
+      "height": 2.248,
       "layoutTier": "decor",
       "nameZh": "DLC2 无果菠萝植株 2",
       "nameEn": "Pineapple Plant 2 (No Fruit)",
@@ -1520,8 +1694,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.291126012802124
       },
+      "height": 1.291,
       "layoutTier": "decor",
       "nameZh": "DLC2 沙堡 1",
       "nameEn": "dlc2 sandcastle 1",
@@ -1536,8 +1712,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 1.291126012802124
       },
+      "height": 1.291,
       "layoutTier": "decor",
       "nameZh": "DLC2 沙堡 2",
       "nameEn": "dlc2 sandcastle 2",
@@ -1552,8 +1730,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 4.71922492980957
       },
+      "height": 4.719,
       "layoutTier": "decor",
       "nameZh": "DLC3 evergreen 雪 1",
       "nameEn": "dlc3 evergreen snow 1",
@@ -1568,8 +1748,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.039554476737976
       },
+      "height": 1.04,
       "layoutTier": "decor",
       "nameZh": "DLC3 冰块 1",
       "nameEn": "dlc3 iceblock 1",
@@ -1584,8 +1766,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0334452390670776
       },
+      "height": 1.033,
       "layoutTier": "decor",
       "nameZh": "DLC3 冰块 2",
       "nameEn": "dlc3 iceblock 2",
@@ -1600,8 +1784,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0330811738967896
       },
+      "height": 1.033,
       "layoutTier": "decor",
       "nameZh": "DLC3 冰块 3",
       "nameEn": "dlc3 iceblock 3",
@@ -1616,8 +1802,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0651562213897705
       },
+      "height": 2.065,
       "layoutTier": "decor",
       "nameZh": "DLC3 冰崖 270",
       "nameEn": "dlc3 icecliff 270",
@@ -1632,8 +1820,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0651559829711914
       },
+      "height": 2.065,
       "layoutTier": "decor",
       "nameZh": "DLC3 冰崖 90",
       "nameEn": "dlc3 icecliff 90",
@@ -1648,8 +1838,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0727806091308594
       },
+      "height": 2.073,
       "layoutTier": "decor",
       "nameZh": "DLC3 冰崖直 1",
       "nameEn": "dlc3 icecliff straight 1",
@@ -1664,8 +1856,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0651559829711914
       },
+      "height": 2.065,
       "layoutTier": "decor",
       "nameZh": "DLC3 冰崖直 2",
       "nameEn": "dlc3 icecliff straight 2",
@@ -1680,8 +1874,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 8
+        "cellsZ": 8,
+        "sizeY": 4.702438831329346
       },
+      "height": 4.702,
       "layoutTier": "decor",
       "nameZh": "DLC3 摊位大",
       "nameEn": "dlc3 stall large",
@@ -1696,8 +1892,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 6
+        "cellsZ": 6,
+        "sizeY": 4.718239784240723
       },
+      "height": 4.718,
       "layoutTier": "decor",
       "nameZh": "DLC3 摊位 medium",
       "nameEn": "dlc3 stall medium",
@@ -1712,8 +1910,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 4.778648376464844
       },
+      "height": 4.779,
       "layoutTier": "decor",
       "nameZh": "DLC3 摊位小",
       "nameEn": "dlc3 stall small",
@@ -1728,8 +1928,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 1.867043375968933
       },
+      "height": 1.867,
       "layoutTier": "decor",
       "nameZh": "DLC4 牌坊龙 1",
       "nameEn": "dlc4 archway dragon 1",
@@ -1744,8 +1946,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 3.3033530712127686
       },
+      "height": 3.303,
       "layoutTier": "decor",
       "nameZh": "DLC4 龙雕像 1",
       "nameEn": "dlc4 dragon statue 1",
@@ -1760,8 +1964,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0235284566879272
       },
+      "height": 1.024,
       "layoutTier": "decor",
       "nameZh": "dlc 4 灯笼 floating 飞 1",
       "nameEn": "dlc 4 lantern floating air 1",
@@ -1776,8 +1982,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822378516197205
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "dlc 4 灯笼 floating 水 1",
       "nameEn": "dlc 4 lantern floating water 1",
@@ -1792,8 +2000,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 19,
-        "cellsZ": 8
+        "cellsZ": 8,
+        "sizeY": 0.05767807364463806
       },
+      "height": 0.058,
       "layoutTier": "decor",
       "nameZh": "DLC4 池塘 1",
       "nameEn": "dlc4 pond 1",
@@ -1808,8 +2018,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.181920051574707
       },
+      "height": 1.182,
       "layoutTier": "decor",
       "nameZh": "猫头鹰",
       "nameEn": "dlc5 owl 1",
@@ -1824,8 +2036,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.19750574231147766
       },
+      "height": 0.198,
       "layoutTier": "decor",
       "nameZh": "DLC7 木板 1",
       "nameEn": "dlc7 plank 1",
@@ -1840,8 +2054,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.25032567977905273
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 木板 2",
       "nameEn": "dlc7 plank 2",
@@ -1856,8 +2072,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.24950341880321503
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 木板 3",
       "nameEn": "dlc7 plank 3",
@@ -1872,8 +2090,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3
+        "cellsZ": 3,
+        "sizeY": 0.24950341880321503
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 木板 4",
       "nameEn": "dlc7 plank 4",
@@ -1888,8 +2108,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.25032567977905273
       },
+      "height": 0.25,
       "layoutTier": "decor",
       "nameZh": "DLC7 木板 5",
       "nameEn": "dlc7 plank 5",
@@ -1904,8 +2126,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.19750574231147766
       },
+      "height": 0.198,
       "layoutTier": "decor",
       "nameZh": "DLC7 木板 6",
       "nameEn": "dlc7 plank 6",
@@ -1936,8 +2160,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4736194610595703
       },
+      "height": 1.474,
       "layoutTier": "decor",
       "nameZh": "DLC7 woodensupport 1",
       "nameEn": "dlc7 woodensupport 1",
@@ -1952,8 +2178,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.7642308473587036
       },
+      "height": 0.764,
       "layoutTier": "decor",
       "nameZh": "厨房火坑 2",
       "nameEn": "kitchen firepit 2",
@@ -1968,8 +2196,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.05565553158521652
       },
+      "height": 0.056,
       "layoutTier": "decor",
       "nameZh": "餐车尾部 1",
       "nameEn": "lorry van back 1",
@@ -1984,8 +2214,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.05565553158521652
       },
+      "height": 0.056,
       "layoutTier": "decor",
       "nameZh": "餐车尾部 2",
       "nameEn": "lorry van back 2",
@@ -2000,8 +2232,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.025350196287035942
       },
+      "height": 0.025,
       "layoutTier": "decor",
       "nameZh": "餐车排气管",
       "nameEn": "lorry van exhaust 1",
@@ -2016,8 +2250,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.05565553158521652
       },
+      "height": 0.056,
       "layoutTier": "decor",
       "nameZh": "餐车前部",
       "nameEn": "lorry van front 1",
@@ -2048,8 +2284,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5658819675445557
       },
+      "height": 0.566,
       "layoutTier": "decor",
       "nameZh": "木筏护栏 1",
       "nameEn": "raft barrier 1",
@@ -2064,8 +2302,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.3193880319595337
       },
+      "height": 0.319,
       "layoutTier": "decor",
       "nameZh": "木筏绳索护栏",
       "nameEn": "raft barrier rope 1",
@@ -2080,8 +2320,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.399339437484741
       },
+      "height": 2.399,
       "layoutTier": "decor",
       "nameZh": "太空悬崖转角内",
       "nameEn": "sp cliff corner in",
@@ -2096,8 +2338,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 2.399339199066162
       },
+      "height": 2.399,
       "layoutTier": "decor",
       "nameZh": "悬崖外转角",
       "nameEn": "sp cliff corner out 1",
@@ -2112,8 +2356,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4518353939056396
       },
+      "height": 2.452,
       "layoutTier": "decor",
       "nameZh": "悬崖边缘 1",
       "nameEn": "sp cliff edge 1",
@@ -2128,8 +2374,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.399339199066162
       },
+      "height": 2.399,
       "layoutTier": "decor",
       "nameZh": "悬崖边缘 2",
       "nameEn": "sp cliff edge 2",
@@ -2144,8 +2392,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.399339199066162
       },
+      "height": 2.399,
       "layoutTier": "decor",
       "nameZh": "悬崖边缘 5",
       "nameEn": "sp cliff edge 5",
@@ -2160,8 +2410,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4102258682250977
       },
+      "height": 2.41,
       "layoutTier": "decor",
       "nameZh": "悬崖边缘 6",
       "nameEn": "sp cliff edge 6",
@@ -2176,8 +2428,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5
       },
+      "height": 0.5,
       "layoutTier": "decor",
       "nameZh": "台面",
       "nameEn": "sp countertop 1",
@@ -2192,8 +2446,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.3343725204467773
       },
+      "height": 3.334,
       "layoutTier": "decor",
       "nameZh": "路灯 1",
       "nameEn": "streetlamp 1",
@@ -2208,8 +2464,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5543287396430969
       },
+      "height": 0.554,
       "layoutTier": "decor",
       "nameZh": "魔法台面 5 b",
       "nameEn": "wizard countertop 5 b",
@@ -2224,8 +2482,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.40498092770576477
       },
+      "height": 0.405,
       "layoutTier": "decor",
       "nameZh": "地图 DLC4 地图树叶 1",
       "nameEn": "map dlc4 map leaves 1",
@@ -2240,8 +2500,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6418803930282593
       },
+      "height": 0.642,
       "layoutTier": "decor",
       "nameZh": "地图礼物 1",
       "nameEn": "map gift 1",
@@ -2256,8 +2518,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.44001325964927673
       },
+      "height": 0.44,
       "layoutTier": "decor",
       "nameZh": "地图礼物 2",
       "nameEn": "map gift 2",
@@ -2272,8 +2536,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.31126582622528076
       },
+      "height": 0.311,
       "layoutTier": "decor",
       "nameZh": "地图冰山 1",
       "nameEn": "map iceberg 1",
@@ -2288,8 +2554,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.2780833840370178
       },
+      "height": 0.278,
       "layoutTier": "decor",
       "nameZh": "地图冰山 2",
       "nameEn": "map iceberg 2",
@@ -2304,8 +2572,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.19133958220481873
       },
+      "height": 0.191,
       "layoutTier": "decor",
       "nameZh": "地图冰山 3",
       "nameEn": "map iceberg 3",
@@ -2320,8 +2590,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.2257632166147232
       },
+      "height": 0.226,
       "layoutTier": "decor",
       "nameZh": "地图冰山 4",
       "nameEn": "map iceberg 4",
@@ -2336,8 +2608,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 0.8782577514648438
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "map 冰块 1",
       "nameEn": "map iceblock 1",
@@ -2352,8 +2626,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.36816439032554626
       },
+      "height": 0.368,
       "layoutTier": "decor",
       "nameZh": "map 树叶 1",
       "nameEn": "map leaves 1",
@@ -2368,8 +2644,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6135643720626831
       },
+      "height": 0.614,
       "layoutTier": "decor",
       "nameZh": "map mountain 石 1",
       "nameEn": "map mountain stone 1",
@@ -2384,8 +2662,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.48667651414871216
       },
+      "height": 0.487,
       "layoutTier": "decor",
       "nameZh": "map mountain 石 2",
       "nameEn": "map mountain stone 2",
@@ -2400,8 +2680,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5845734477043152
       },
+      "height": 0.585,
       "layoutTier": "decor",
       "nameZh": "map mountain 石 3",
       "nameEn": "map mountain stone 3",
@@ -2496,8 +2778,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.507503628730774
       },
+      "height": 1.508,
       "layoutTier": "decor",
       "nameZh": "map mountain 树 1",
       "nameEn": "map mountain tree 1",
@@ -2512,8 +2796,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.507503628730774
       },
+      "height": 1.508,
       "layoutTier": "decor",
       "nameZh": "map mountain 树 2",
       "nameEn": "map mountain tree 2",
@@ -2528,8 +2814,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.2895023822784424
       },
+      "height": 2.29,
       "layoutTier": "decor",
       "nameZh": "地图北极点 1",
       "nameEn": "map northpole 1",
@@ -2608,8 +2896,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0328983068466187
       },
+      "height": 1.033,
       "layoutTier": "decor",
       "nameZh": "map 岩石 1 1",
       "nameEn": "map rock 1 1",
@@ -2624,8 +2914,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6559012532234192
       },
+      "height": 0.656,
       "layoutTier": "decor",
       "nameZh": "map 岩石 2 1",
       "nameEn": "map rock 2 1",
@@ -2640,8 +2932,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6374117136001587
       },
+      "height": 0.637,
       "layoutTier": "decor",
       "nameZh": "map 岩石 3 1",
       "nameEn": "map rock 3 1",
@@ -2656,8 +2950,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2158699035644531
       },
+      "height": 1.216,
       "layoutTier": "decor",
       "nameZh": "地图麻袋 1",
       "nameEn": "map sack 1",
@@ -2688,8 +2984,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4462950229644775
       },
+      "height": 1.446,
       "layoutTier": "decor",
       "nameZh": "map 摊位 1",
       "nameEn": "map stall 1",
@@ -2704,8 +3002,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6135643720626831
       },
+      "height": 0.614,
       "layoutTier": "decor",
       "nameZh": "map 石 1",
       "nameEn": "map stone 1",
@@ -2720,8 +3020,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.48667651414871216
       },
+      "height": 0.487,
       "layoutTier": "decor",
       "nameZh": "map 石 2",
       "nameEn": "map stone 2",
@@ -2736,8 +3038,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5845734477043152
       },
+      "height": 0.585,
       "layoutTier": "decor",
       "nameZh": "map 石 3",
       "nameEn": "map stone 3",
@@ -2832,8 +3136,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.45284903049469
       },
+      "height": 1.453,
       "layoutTier": "decor",
       "nameZh": "地图路灯 1",
       "nameEn": "map streetlamp 1",
@@ -2848,8 +3154,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.1916818618774414
       },
+      "height": 1.192,
       "layoutTier": "decor",
       "nameZh": "map 树 1",
       "nameEn": "map tree 1",
@@ -2864,8 +3172,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3213986158370972
       },
+      "height": 1.321,
       "layoutTier": "decor",
       "nameZh": "map 树 2",
       "nameEn": "map tree 2",
@@ -2880,8 +3190,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.542242169380188
       },
+      "height": 0.542,
       "layoutTier": "decor",
       "nameZh": "地图树桩 1",
       "nameEn": "map treestump 1",
@@ -2896,8 +3208,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5025426745414734
       },
+      "height": 0.503,
       "layoutTier": "decor",
       "nameZh": "市集板条箱 1",
       "nameEn": "marketcrate 1",
@@ -2912,8 +3226,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5025426745414734
       },
+      "height": 0.503,
       "layoutTier": "decor",
       "nameZh": "市集板条箱 1",
       "nameEn": "Market Crate 1",
@@ -2928,8 +3244,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3951902985572815
       },
+      "height": 0.395,
       "layoutTier": "decor",
       "nameZh": "市集板条箱 2",
       "nameEn": "marketcrate 2",
@@ -2944,8 +3262,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3951902985572815
       },
+      "height": 0.395,
       "layoutTier": "decor",
       "nameZh": "市集板条箱 2",
       "nameEn": "Market Crate 2",
@@ -2960,8 +3280,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.080369710922241
       },
+      "height": 2.08,
       "layoutTier": "decor",
       "nameZh": "市集摊位空白 1",
       "nameEn": "marketstall blank 1",
@@ -2976,8 +3298,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 3,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.080369710922241
       },
+      "height": 2.08,
       "layoutTier": "decor",
       "nameZh": "市集摊位 1",
       "nameEn": "marksetstall 1",
@@ -2992,8 +3316,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 6,
-        "cellsZ": 7
+        "cellsZ": 7,
+        "sizeY": 4.718239784240723
       },
+      "height": 4.718,
       "layoutTier": "decor",
       "nameZh": "medium 摊位 dressed 1",
       "nameEn": "medium stall dressed 1",
@@ -3008,8 +3334,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 7
+        "cellsZ": 7,
+        "sizeY": 4.718239784240723
       },
+      "height": 4.718,
       "layoutTier": "decor",
       "nameZh": "medium 摊位 dressed 2",
       "nameEn": "medium stall dressed 2",
@@ -3024,8 +3352,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 2
+        "cellsZ": 2,
+        "sizeY": 5.977893829345703
       },
+      "height": 5.978,
       "layoutTier": "decor",
       "nameZh": "mi 悬崖转角内 2",
       "nameEn": "mi cliff corner in 2",
@@ -3040,8 +3370,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.664535364979494e-16
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -3058,8 +3390,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2810544967651367
       },
+      "height": 1.281,
       "layoutTier": "decor",
       "nameZh": "矿洞灯笼",
       "nameEn": "mi lantern 2",
@@ -3074,8 +3408,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.3092775344848633
       },
+      "height": 2.309,
       "layoutTier": "decor",
       "nameZh": "mi 铲子 2",
       "nameEn": "mi shovel 2",
@@ -3090,8 +3426,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 2.66453695316627e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "mi 石墙 2 2x5",
       "nameEn": "mi stone wall 2 2x5",
@@ -3106,8 +3444,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 4,
-        "cellsZ": 8
+        "cellsZ": 8,
+        "sizeY": 2.664535364979494e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "mi 石墙 2 4x9",
       "nameEn": "mi stone wall 2 4x9",
@@ -3122,8 +3462,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
-        "cellsZ": 4
+        "cellsZ": 4,
+        "sizeY": 2.66453695316627e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "mi 石墙 2 8x14",
       "nameEn": "mi stone wall 2 8x14",
@@ -3137,9 +3479,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.6103930473327637
       },
+      "height": 0.61,
       "layoutTier": "decor",
       "nameZh": "矿洞桌子 1",
       "nameEn": "Mine Table 1",
@@ -3169,9 +3513,11 @@
       "theme": "floors",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 13,
+        "cellsZ": 1,
+        "sizeY": 4
       },
+      "height": 4,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -3188,8 +3534,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5747966766357422
       },
+      "height": 0.575,
       "layoutTier": "decor",
       "nameZh": "肉馅派 1",
       "nameEn": "mince pies 1",
@@ -3204,8 +3552,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.0651562213897705
       },
+      "height": 2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖转角 270°",
       "nameEn": "m dlc3 icecliff 270",
