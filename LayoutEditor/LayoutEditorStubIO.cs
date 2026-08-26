@@ -1103,8 +1103,20 @@ public static class LayoutEditorStubIO
     /// objects, otherwise a document instanceId mapped through createdObjects.
     /// If the switch object lacks PseudoPrefabSwitchStub (e.g. bundle-backed button
     /// prefabs), the component is added so the link has somewhere to live.
+    ///
+    /// 数组字段必须走 SerializedObject 写：直接字段赋值在 prefab 实例上收缩时
+    /// Array.size mod 残留旧长度，尾部槽位落回 null/旧值（同锅具食材 None、
+    /// 上菜台回收台问题）——开关加多个断头台时第二个目标丢失的根因之一。
+    ///
+    /// 配了按钮事件组（buttonEvents）的开关抑制直发广播（objectToTrigger 置空，
+    /// 按压只走事件组 helper），避免同一目标一次按压收到两次消息（饮料机跳档）；
+    /// LayoutRuntimeSwitchLink.m_targetRoots 仍写全量目标——事件路径依赖它完成
+    /// 伪根→child 转发与监听字段接线。仅 Setup 路径（包装带 PseudoPrefabSwitch）
+    /// 抑制：非 Setup 按钮的直发由 linker 的 relay 承担且无法从场景数据侧关闭。
     /// </summary>
-    public static void ApplySwitchLinks(LayoutSwitchLinkDto[] links, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    public static void ApplySwitchLinks(LayoutSwitchLinkDto[] links,
+        System.Collections.Generic.Dictionary<string, GameObject> createdObjects,
+        LayoutButtonEventDataDto buttonEvents)
     {
         if (links == null || links.Length == 0)
             return;
@@ -1121,7 +1133,11 @@ public static class LayoutEditorStubIO
 
             var target = ResolveLinkedObject(link.targetId, createdObjects);
             if (target == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] 开关联动丢弃：目标不在场景中 " +
+                    link.targetId + "（开关 " + link.switchId + "）");
                 continue;
+            }
 
             System.Collections.Generic.List<GameObject> targets;
             if (!perSwitch.TryGetValue(link.switchId, out targets))
@@ -1136,23 +1152,71 @@ public static class LayoutEditorStubIO
                 triggerBySwitch[link.switchId] = link.trigger;
         }
 
+        // 配了事件组（组非空，与 ButtonEventBakery.BakeLink 的跳过条件一致）的触发源。
+        // 全量写回以文档为准；作用域写回不带 buttonEvents，回退按场景里上次的
+        // 烘焙痕迹判定（BEP_ 前缀是事件组按压触发名；移动组联动用 BLP_，不会误判）。
+        var eventSources = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+        bool docCarriesEvents = buttonEvents != null && buttonEvents.links != null;
+        if (docCarriesEvents)
+        {
+            foreach (var l in buttonEvents.links)
+            {
+                if (l == null || string.IsNullOrEmpty(l.sourceId))
+                    continue;
+                if (l.groups == null || l.groups.Length == 0)
+                    continue;
+                eventSources.Add(l.sourceId);
+            }
+        }
+
         foreach (var switchId in order)
         {
             var switchGo = ResolveLinkedObject(switchId, createdObjects);
             if (switchGo == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] 开关联动丢弃：开关不在场景中 " + switchId);
                 continue;
+            }
 
             var sw = switchGo.GetComponent<PseudoPrefabSwitchStub>();
             if (sw == null)
                 sw = switchGo.AddComponent<PseudoPrefabSwitchStub>();
 
-            Undo.RecordObject(sw, "Layout Editor Switch Link");
             string trigger;
             string resolvedTrigger = triggerBySwitch.TryGetValue(switchId, out trigger) && !string.IsNullOrEmpty(trigger)
                 ? trigger
                 : "Switch";
-            sw.triggerOnObject = resolvedTrigger;
-            sw.objectToTrigger = perSwitch[switchId].ToArray();
+
+            bool hasEvents = eventSources.Contains(switchId);
+            if (!docCarriesEvents)
+            {
+                var wiredPress = sw.triggerOnAnimator ?? "";
+                hasEvents = wiredPress.StartsWith("BEP_", StringComparison.Ordinal);
+            }
+            bool setupPath = switchGo.GetComponent<LevelEditor.PseudoPrefabSwitch>() != null;
+            GameObject[] directTargets = hasEvents && setupPath
+                ? new GameObject[0]
+                : perSwitch[switchId].ToArray();
+
+            Undo.RecordObject(sw, "Layout Editor Switch Link");
+            var swSo = new SerializedObject(sw);
+            var trigProp = swSo.FindProperty("triggerOnObject");
+            if (trigProp != null)
+                trigProp.stringValue = resolvedTrigger;
+            var arrProp = swSo.FindProperty("objectToTrigger");
+            if (arrProp != null)
+            {
+                arrProp.arraySize = directTargets.Length;
+                for (int i = 0; i < directTargets.Length; i++)
+                    arrProp.GetArrayElementAtIndex(i).objectReferenceValue = directTargets[i];
+                swSo.ApplyModifiedProperties();
+            }
+            else
+            {
+                // 兜底：字段改名时不至于整体丢失
+                sw.triggerOnObject = resolvedTrigger;
+                sw.objectToTrigger = directTargets;
+            }
 
             // 游戏编译的运行时接线组件（随场景保存，游戏包内也生效）：完成伪根→child
             // 触发转发、机器监听字段、大炮 Cannon.m_button / 瞄准 / 发射按钮门控。
@@ -1160,9 +1224,61 @@ public static class LayoutEditorStubIO
             var linker = switchGo.GetComponent<LayoutRuntimeSwitchLink>();
             if (linker == null)
                 linker = switchGo.AddComponent<LayoutRuntimeSwitchLink>();
-            linker.m_targetRoots = perSwitch[switchId].ToArray();
-            linker.m_trigger = resolvedTrigger;
+            Undo.RecordObject(linker, "Layout Editor Switch Link");
+            var lkSo = new SerializedObject(linker);
+            var lkTrig = lkSo.FindProperty("m_trigger");
+            if (lkTrig != null)
+                lkTrig.stringValue = resolvedTrigger;
+            var rootsProp = lkSo.FindProperty("m_targetRoots");
+            if (rootsProp != null)
+            {
+                GameObject[] roots = perSwitch[switchId].ToArray();
+                rootsProp.arraySize = roots.Length;
+                for (int i = 0; i < roots.Length; i++)
+                    rootsProp.GetArrayElementAtIndex(i).objectReferenceValue = roots[i];
+                lkSo.ApplyModifiedProperties();
+            }
+            else
+            {
+                linker.m_trigger = resolvedTrigger;
+                linker.m_targetRoots = perSwitch[switchId].ToArray();
+            }
         }
+    }
+
+    /// <summary>
+    /// 世界地图装饰展开组件烘焙（随场景保存，游戏包内生效）。
+    ///
+    /// 背景：dlc08 map_* 装饰（bundle 内 dressing assets/map/ 家族，如
+    /// p_dlc08_map_rope_fence_* 绳栏）的 prefab 带 WorldMapSceneryOptimizer：
+    /// 其 Awake() 把整个可视 Mesh 子树 SetActive(false)，只有世界地图场景的
+    /// 展开流程会重新激活；关卡场景里展开永不触发——编辑器可见、Play/游戏包内
+    /// 整件消失。这里按伪 prefab SO 的 bundle assetPath 含 "/map/" 识别该家族，
+    /// 给伪根烘焙 LayoutRuntimeWorldMapDressing（游戏编译），运行时 child 就绪后
+    /// 强制 End(Unfold)。map 家族里的纯网格件（如 p_dlc08_cloud_clump）会被一并
+    /// 烘焙但运行时自然空转，无副作用。编辑器 Play 另有
+    /// LayoutEditorWorldMapDressingPatch 兜底未重新烘焙的旧场景。
+    /// </summary>
+    public static void BakeWorldMapDressing()
+    {
+        int added = 0;
+        foreach (var stub in UnityEngine.Object.FindObjectsOfType<PseudoPrefabStub>())
+        {
+            if (stub == null)
+                continue;
+            var so = stub.pseudoPrefabSO;
+            if (so == null || string.IsNullOrEmpty(so.assetPath))
+                continue;
+            if (!so.assetPath.Contains("/map/"))
+                continue;
+            var go = stub.gameObject;
+            if (go == null || go.GetComponent<LayoutRuntimeWorldMapDressing>() != null)
+                continue;
+            go.AddComponent<LayoutRuntimeWorldMapDressing>();
+            added++;
+        }
+        if (added > 0)
+            LayoutEditorLog.Log("[LayoutEditor] 世界地图装饰展开组件烘焙：" + added + " 个伪根");
     }
 
     private static GameObject ResolveLinkedObject(string id, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)

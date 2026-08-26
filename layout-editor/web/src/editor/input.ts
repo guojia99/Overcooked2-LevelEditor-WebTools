@@ -195,11 +195,41 @@ export function setupCanvas() {
           const hits = hitTestAll(wx, wz, true).filter(
             (it) => itemCategoryOf(it) !== "background"
           );
-          const fHits = hitTestFloorsAll(wx, wz);
-          // 空气地板（仅碰撞盒）不参与移动组成员选点。
-          const fHit = fHits.length > 0 && fHits[0].floor.surfaceKind !== "background" && !fHits[0].floor.airFloor
-            ? fHits[0].floor
-            : null;
+          const fHits = hitTestFloorsAll(wx, wz).filter(
+            (fh) => fh.floor.surfaceKind !== "background"
+          );
+          // 空气地板（仅碰撞盒）可入移动组：其 Col_AirFloor 碰撞盒会被烘焙
+          // reparent + 动画，行走碰撞随组移动。
+          const fHit = fHits.length > 0 ? fHits[0].floor : null;
+          // 空气地板与上方物品重叠（如隐形桥被岛体地砖盖住）时，物品恒优先
+          // 会让空气地板永远点不到——弹候选列表让两者都可选。
+          if (hits.length > 0 && fHit?.airFloor) {
+            hideDetail();
+            hideContextMenu();
+            const candidates: PickCandidate[] = hits.map((it) => ({
+              title: itemLabel(it),
+              sub: `物品 · ${prefabIdFromPath(it.prefabAssetPath)}`,
+              onPick: () => {
+                setSelection([it._editorKey]);
+                clearFloorSelection();
+                updateMovePickBar();
+                draw();
+              },
+            }));
+            candidates.push({
+              title: `空气地板 ${fHit._wCells}×${fHit._dCells}格`,
+              sub: "地板 · 仅碰撞盒（入组后碰撞随组移动）",
+              onPick: () => {
+                clearSelection();
+                setFloorSelection([fHit._key]);
+                updateMovePickBar();
+                draw();
+              },
+            });
+            showPickTip(candidates, e.clientX, e.clientY);
+            draw();
+            return;
+          }
           if (hits.length > 0 || fHit) {
             hideDetail();
             hideContextMenu();

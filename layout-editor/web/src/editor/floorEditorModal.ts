@@ -94,7 +94,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   // 图片地板: upload an image + choose tile/stretch. Image data goes to the
   // current level set's data dir.
   const imgName = f.imageTexturePath ? f.imageTexturePath.split("/").pop() ?? "" : "";
-  const mode = f.imageMode === "tile" ? "tile" : "stretch";
+  const mode = f.imageMode === "tile" ? "tile" : f.imageMode === "warp" ? "warp" : "stretch";
   const opacityPct = Math.round((f.imageOpacity != null ? f.imageOpacity : 1) * 100);
   const imgRot = normalizeRot(f.imageRotation ?? 0);
   const imgRotOpts = [0, 90, 180, 270]
@@ -108,10 +108,11 @@ export function openFloorEditorModal(f: EditorFloor) {
        ${previewHtml}
        <span class="muted" style="font-size:11px">当前贴图：${imgName || "未设置"}</span>
      </div>
-     <div class="floor-edit-row">
-       <label class="modal-check"><input type="radio" name="fe-imgmode" value="stretch" ${mode === "stretch" ? "checked" : ""}/> 全部铺开（自动伸缩）</label>
-       <label class="modal-check"><input type="radio" name="fe-imgmode" value="tile" ${mode === "tile" ? "checked" : ""}/> 一格重复平铺</label>
-     </div>
+      <div class="floor-edit-row">
+        <label class="modal-check"><input type="radio" name="fe-imgmode" value="stretch" ${mode === "stretch" ? "checked" : ""}/> 全部铺开（自动伸缩）</label>
+        <label class="modal-check"><input type="radio" name="fe-imgmode" value="tile" ${mode === "tile" ? "checked" : ""}/> 一格重复平铺</label>
+        <label class="modal-check"><input type="radio" name="fe-imgmode" value="warp" ${mode === "warp" ? "checked" : ""}/> 透视贴合（按相机构图）</label>
+      </div>
      <div class="floor-edit-row">
        <label>图片旋转 <select id="fe-img-rot">${imgRotOpts}</select></label>
        <span class="muted" style="font-size:11px;align-self:center">以 90° 为单位（俯视顺时针）· 实时预览</span>
@@ -124,7 +125,7 @@ export function openFloorEditorModal(f: EditorFloor) {
        <input type="file" id="fe-img-file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="font-size:11px;flex:1"/>
        <button type="button" class="m-btn" id="fe-img-upload" style="font-size:11px;padding:3px 8px;">上传并应用</button>
      </div>
-     <p class="modal-hint">修改宽高后铺开/平铺会自动重算 · 镜像已在 Unity 端修正 · 写回后生效</p>`;
+      <p class="modal-hint">全部铺开/平铺按宽高自动计算 · <b>透视贴合</b>：图片按游戏相机（16:9）透视预变形，画面里显示为原样、四角对齐视野四角，宽高只决定可行走碰撞盒，坐标/缩放无效（写回时按相机重新烘焙）· 写回后生效</p>`;
 
   const materialBlock = isAir
     ? `<p class="modal-hint">空气地板没有可见地板，只生成可行走的 Col_AirFloor 碰撞盒（Ground 层），无需材质。</p>`
@@ -416,9 +417,12 @@ export function openFloorEditorModal(f: EditorFloor) {
     radio.addEventListener("change", () => {
       if (!radio.checked) return;
       pushHistory();
-      f.imageMode = radio.value === "tile" ? "tile" : "stretch";
+      f.imageMode = radio.value === "tile" ? "tile" : radio.value === "warp" ? "warp" : "stretch";
       finalizeFloor(f);
       draw();
+      if (f.imageMode === "warp" && !S.cameraInfo) {
+        setStatus("透视贴合需要场景相机信息（当前关卡未读到相机，写回时后端会尝试定位）", false);
+      }
     });
   });
   const feImgRot = document.getElementById("fe-img-rot") as HTMLSelectElement | null;

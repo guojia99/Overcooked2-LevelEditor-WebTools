@@ -406,9 +406,22 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
   }
   setStatus(`共 ${levels.length} 个关卡`);
 
+  let setInfo: LevelSetInfo | undefined;
+  try {
+    setInfo = (await api.fetchSets()).find((s) => s.setName === setName);
+  } catch {
+    /* 忽略：回退为仅显示 ID */
+  }
+  let setDisplay = esc(setName);
+  if (setInfo?.levelSetNameZH) setDisplay = esc(setInfo.levelSetNameZH);
+  if (setInfo?.levelSetName) setDisplay += ` <span class="muted">(${esc(setInfo.levelSetName)})</span>`;
+  setDisplay += ` <span class="muted">[${esc(setName)}]</span>`;
+
+  const levelIds = levels.map((lv, idx) => lv.dataDir.split("/").pop() || `level${idx}`);
+
   const cards = levels
     .map((lv, idx) => {
-      const id = lv.dataDir.split("/").pop() || `level${idx}`;
+      const id = levelIds[idx];
       const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
       const title = lv.levelNameZH || lv.levelName || id;
       const enName = lv.levelNameZH && lv.levelName ? lv.levelName : "";
@@ -420,7 +433,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
         <h3 title="${esc(title)}">${esc(title)}${enName ? ` <span class="muted">(${esc(enName)})</span>` : ""}</h3>
         <div class="m-meta">
           ${lv.hasScene ? '<span class="m-badge ok">场景</span>' : '<span class="m-badge warn">缺场景</span>'}
-          <span class="muted">${esc(lv.sceneName)} · ${esc(id)}</span>
+          <span class="muted">第 ${idx + 1} 关 · ${esc(lv.sceneName)} · ${esc(id)}</span>
         </div>
         <div class="m-actions">
           <button class="m-btn primary" data-edit="${esc(lv.assetPath)}">编辑</button>
@@ -435,13 +448,16 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn primary" id="new-level">+ 新建关卡</button>
-      <span class="muted">当前关卡集：<b>${esc(setName)}</b></span>
+      ${levels.length > 1 ? '<button class="m-btn" id="reorder-levels">⇅ 调整顺序</button>' : ""}
+      <span class="muted">当前关卡集：<b>${setDisplay}</b></span>
     </div>
     <div class="m-section-title">关卡</div>
     <div class="m-grid m-level-grid">${cards || '<p class="muted">暂无关卡</p>'}</div>
   `;
 
   document.getElementById("new-level")?.addEventListener("click", () => openCreateLevelModal(app, setName));
+  document.getElementById("reorder-levels")?.addEventListener("click", () => openReorderModal(app, setName, levels));
+
   content.querySelectorAll<HTMLButtonElement>("[data-edit]").forEach((b) =>
     b.addEventListener("click", () => void renderLevelDetail(app, setName, b.dataset.edit!))
   );
@@ -454,6 +470,118 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
   content.querySelectorAll<HTMLButtonElement>("[data-del]").forEach((b) =>
     b.addEventListener("click", () => confirmDeleteLevel(app, setName, b.dataset.del!))
   );
+}
+
+function openReorderModal(app: HTMLElement, setName: string, levels: LevelSummary[]): void {
+  const initialIds = levels.map((lv, idx) => lv.dataDir.split("/").pop() || `level${idx}`);
+
+  const rows = levels
+    .map((lv, idx) => {
+      const id = initialIds[idx];
+      const title = lv.levelNameZH || lv.levelName || id;
+      const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
+      return `
+      <div class="m-reorder-row" draggable="true" data-id="${esc(id)}">
+        <span class="m-reorder-handle" title="上下拖拽调整顺序">⠿</span>
+        <span class="m-reorder-num">${idx + 1}</span>
+        ${shot ? `<img class="m-reorder-shot" src="${esc(shot)}" alt="" loading="lazy">` : '<span class="m-reorder-shot empty"></span>'}
+        <div class="m-row-main">
+          <div class="m-row-title">${esc(title)}</div>
+          <div class="m-row-sub">${esc(lv.sceneName)} · ${esc(id)}</div>
+        </div>
+        <span class="m-reorder-btns">
+          <button type="button" class="m-btn" data-rup title="上移一位">↑</button>
+          <button type="button" class="m-btn" data-rdown title="下移一位">↓</button>
+        </span>
+      </div>`;
+    })
+    .join("");
+
+  openModal(
+    `调整关卡顺序 · ${esc(setName)}`,
+    `
+    <p class="modal-hint">按住 ⠿ 或整行上下拖拽，调整到满意后点「保存顺序」一次性写入（列表顶部为第 1 关）。</p>
+    <div class="modal-scroll"><div class="m-reorder-list" id="reorder-list">${rows}</div></div>
+    `,
+    `<button type="button" class="modal-btn" data-cancel>取消</button>
+     <button type="button" class="modal-btn primary" data-ok>保存顺序</button>`
+  );
+
+  const list = document.getElementById("reorder-list")!;
+
+  function renumber(): void {
+    list.querySelectorAll(".m-reorder-row").forEach((row, i) => {
+      const num = row.querySelector(".m-reorder-num");
+      if (num) num.textContent = String(i + 1);
+    });
+  }
+
+  function moveRow(row: Element, delta: number): void {
+    const rows = Array.from(list.querySelectorAll(".m-reorder-row"));
+    const idx = rows.indexOf(row);
+    const to = idx + delta;
+    if (idx < 0 || to < 0 || to >= rows.length) return;
+    if (delta < 0) list.insertBefore(row, rows[to]);
+    else list.insertBefore(row, rows[to].nextSibling);
+    renumber();
+  }
+
+  list.querySelectorAll<HTMLButtonElement>("[data-rup]").forEach((b) =>
+    b.addEventListener("click", () => moveRow(b.closest(".m-reorder-row")!, -1))
+  );
+  list.querySelectorAll<HTMLButtonElement>("[data-rdown]").forEach((b) =>
+    b.addEventListener("click", () => moveRow(b.closest(".m-reorder-row")!, 1))
+  );
+
+  // HTML5 拖拽：拖动行经过目标行时按鼠标相对其中线的位置实时换位。
+  let dragRow: Element | null = null;
+  list.querySelectorAll<HTMLElement>(".m-reorder-row").forEach((row) => {
+    row.addEventListener("dragstart", (e) => {
+      dragRow = row;
+      row.classList.add("dragging");
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", row.dataset.id ?? "");
+      }
+    });
+    row.addEventListener("dragend", () => {
+      row.classList.remove("dragging");
+      dragRow = null;
+      renumber();
+    });
+    row.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!dragRow || dragRow === row) return;
+      const rect = row.getBoundingClientRect();
+      const before = e.clientY < rect.top + rect.height / 2;
+      if (before) list.insertBefore(dragRow, row);
+      else list.insertBefore(dragRow, row.nextSibling);
+    });
+  });
+
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+    const ids = Array.from(list.querySelectorAll(".m-reorder-row")).map((r) => (r as HTMLElement).dataset.id ?? "");
+    if (ids.join("\n") === initialIds.join("\n")) {
+      closeModal();
+      setStatus("顺序未变化");
+      return;
+    }
+    const okBtn = document.querySelector<HTMLButtonElement>("[data-ok]");
+    if (okBtn) okBtn.disabled = true;
+    try {
+      showBusy("保存关卡顺序…");
+      await api.reorderLevels(setName, ids);
+      closeModal();
+      setStatus("已保存关卡顺序");
+      await renderLevelList(app, setName);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+      if (okBtn) okBtn.disabled = false;
+    } finally {
+      hideBusy();
+    }
+  });
 }
 
 function openCreateLevelModal(app: HTMLElement, setName: string): void {

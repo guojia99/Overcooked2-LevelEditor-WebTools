@@ -514,8 +514,10 @@ export interface FloorObject {
    *  data dir (Assets/LevelSets/<set>/data/). Set together with imageMode. */
   imageTexturePath?: string;
   /** Image tiling mode: "tile" repeats the image once per cell; "stretch"
-   *  stretches one copy across the whole floor rect. */
-  imageMode?: "tile" | "stretch";
+   * stretches one copy across the whole floor rect; "warp" perspective-fits the
+   * image to the game camera frustum so it shows undistorted on screen (mesh
+   * is baked per camera; the floor's w/d cells only size its walk collider). */
+  imageMode?: "tile" | "stretch" | "warp";
   /** Image opacity 0..1 (default 1 = fully opaque). */
   imageOpacity?: number;
   /** Image rotation in degrees, snapped to 90° steps (0/90/180/270, clockwise

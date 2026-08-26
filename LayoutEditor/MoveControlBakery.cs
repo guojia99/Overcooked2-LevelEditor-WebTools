@@ -107,6 +107,46 @@ public static class MoveControlBakery
         return null;
     }
 
+    /// <summary>Resolve a member by instance id first, then by the importer-stamped
+    /// hierarchyPath (ids go stale across Unity restarts / domain reloads).</summary>
+    private static GameObject ResolveMember(string instanceId, Dictionary<string, string> pathById)
+    {
+        var go = ResolveGameObject(instanceId);
+        if (go != null) return go;
+        string hp;
+        if (!string.IsNullOrEmpty(instanceId) && pathById.TryGetValue(instanceId, out hp))
+        {
+            var t = LayoutEditorHierarchy.FindByPath(hp);
+            if (t != null) return t.gameObject;
+        }
+        return null;
+    }
+
+    private static void FilterDict<TK, TV>(Dictionary<TK, TV> dict, HashSet<TK> liveKeys)
+    {
+        var stale = new List<TK>();
+        foreach (var k in dict.Keys)
+        {
+            if (!liveKeys.Contains(k)) stale.Add(k);
+        }
+        for (int i = 0; i < stale.Count; i++) dict.Remove(stale[i]);
+    }
+
+    private static void FilterNames(Dictionary<string, string> names,
+        Dictionary<string, string> paths, HashSet<string> liveIds)
+    {
+        FilterDict(names, liveIds);
+        FilterDict(paths, liveIds);
+    }
+
+    private static void FilterStatic(HashSet<string> set,
+        Dictionary<string, string> names, Dictionary<string, string> paths, HashSet<string> liveIds)
+    {
+        set.RemoveWhere(id => !liveIds.Contains(id));
+        FilterDict(names, liveIds);
+        FilterDict(paths, liveIds);
+    }
+
     // ------------------------------------------------------------------- groups
 
     private static string BakeGroup(Scene scene, MoveGroupDto group, string animDir,
@@ -123,11 +163,27 @@ public static class MoveControlBakery
         if (group.events == null || group.events.Length == 0)
             return "移动组「" + (group.displayName ?? "?") + "」没有事件";
 
+        // Cross-session fallback: instance ids go stale after a Unity restart /
+        // domain reload, which would make every member unresolvable ("没有可解析
+        // 的物品") and abort the bake. The importer stamps each member's
+        // hierarchyPath into memberOffsets/memberStatic, so resolve by path too.
+        var pathById = new Dictionary<string, string>();
+        foreach (var o in group.memberOffsets ?? new MoveGroupMemberOffsetDto[0])
+        {
+            if (o == null || string.IsNullOrEmpty(o.instanceId) || string.IsNullOrEmpty(o.hierarchyPath)) continue;
+            pathById[o.instanceId] = o.hierarchyPath;
+        }
+        foreach (var m in group.memberStatic ?? new MoveGroupMemberDto[0])
+        {
+            if (m == null || string.IsNullOrEmpty(m.instanceId) || string.IsNullOrEmpty(m.hierarchyPath)) continue;
+            pathById[m.instanceId] = m.hierarchyPath;
+        }
+
         var members = new List<GameObject>();
         foreach (var id in group.itemInstanceIds ?? new string[0])
         {
             if (string.IsNullOrEmpty(id)) continue;
-            var go = ResolveGameObject(id);
+            var go = ResolveMember(id, pathById);
             if (go == null)
             {
                 LayoutEditorLog.LogWarning("move control: scene object not found for item " +
@@ -139,7 +195,7 @@ public static class MoveControlBakery
         foreach (var id in group.floorInstanceIds ?? new string[0])
         {
             if (string.IsNullOrEmpty(id)) continue;
-            var go = ResolveGameObject(id);
+            var go = ResolveMember(id, pathById);
             if (go == null)
             {
                 LayoutEditorLog.LogWarning("move control: scene object not found for floor " +
@@ -151,7 +207,7 @@ public static class MoveControlBakery
         foreach (var id in group.objectInstanceIds ?? new string[0])
         {
             if (string.IsNullOrEmpty(id)) continue;
-            var go = ResolveGameObject(id);
+            var go = ResolveMember(id, pathById);
             if (go == null)
             {
                 LayoutEditorLog.LogWarning("move control: scene object not found for member " +
@@ -214,6 +270,12 @@ public static class MoveControlBakery
                 while (!childNames.Add(newName = go.name + " (" + n + ")")) n++;
                 go.name = newName;
             }
+            // ObjectContainer（IParentable）必须挂在**成员自身**：烘焙动画动的是各成员的
+            // localPosition（组根本身不动），实体（chef/食材容器）经 DynamicLandscapeParenting
+            // 从脚下碰撞体向上找到的第一个 IParentable 就是该成员 —— 父挂载到成员才会随
+            // 动画走（挂在组根上等于挂到永不移动的物体）。无碰撞的装饰成员挂着无副作用。
+            if (go.GetComponent<ObjectContainer>() == null)
+                Undo.AddComponent<ObjectContainer>(go);
         }
 
         // User member groups become named sub-roots under the group root; their
@@ -312,6 +374,12 @@ public static class MoveControlBakery
         // preserve the link (the offset dict only holds x/z values).
         var memberFollowPos = new Dictionary<string, Vector2>();
         var origOffsetDtos = new Dictionary<string, MoveGroupMemberOffsetDto>();
+        // Path-keyed secondaries: after a domain reload the doc's u: ids are stale,
+        // so lookups fall back to the member's current hierarchyPath. Hits are
+        // re-keyed under the fresh id below so the clip builders see fresh keys.
+        var offsetByPath = new Dictionary<string, MoveGroupMemberOffsetDto>();
+        var phaseByPath = new Dictionary<string, float>();
+        var followByPath = new Dictionary<string, string>();
         foreach (var o in group.memberOffsets ?? new MoveGroupMemberOffsetDto[0])
         {
             if (o == null || string.IsNullOrEmpty(o.instanceId)) continue;
@@ -324,6 +392,8 @@ public static class MoveControlBakery
                 if (wpById.TryGetValue(o.followWaypointId, out fw))
                 {
                     memberFollowPos[o.instanceId] = new Vector2(fw.x, fw.z);
+                    if (!string.IsNullOrEmpty(o.hierarchyPath))
+                        followByPath[o.hierarchyPath] = o.followWaypointId;
                 }
                 else
                 {
@@ -332,28 +402,66 @@ public static class MoveControlBakery
                 }
             }
             if (!string.IsNullOrEmpty(o.displayName)) memberNames[o.instanceId] = o.displayName;
-            if (!string.IsNullOrEmpty(o.hierarchyPath)) memberPaths[o.instanceId] = o.hierarchyPath;
+            if (!string.IsNullOrEmpty(o.hierarchyPath))
+            {
+                memberPaths[o.instanceId] = o.hierarchyPath;
+                offsetByPath[o.hierarchyPath] = o;
+                if (o.t != 0f) phaseByPath[o.hierarchyPath] = o.t;
+            }
         }
         var staticSet = new HashSet<string>();
         var staticNames = new Dictionary<string, string>();
         var staticPaths = new Dictionary<string, string>();
+        var staticByPath = new HashSet<string>();
         foreach (var m in group.memberStatic ?? new MoveGroupMemberDto[0])
         {
             if (m == null || string.IsNullOrEmpty(m.instanceId)) continue;
             staticSet.Add(m.instanceId);
             if (!string.IsNullOrEmpty(m.displayName)) staticNames[m.instanceId] = m.displayName;
-            if (!string.IsNullOrEmpty(m.hierarchyPath)) staticPaths[m.instanceId] = m.hierarchyPath;
+            if (!string.IsNullOrEmpty(m.hierarchyPath))
+            {
+                staticPaths[m.instanceId] = m.hierarchyPath;
+                staticByPath.Add(m.hierarchyPath);
+            }
         }
         if (firstWp != null)
         {
             foreach (var go in members)
             {
                 var id = "u:" + go.GetInstanceID();
+                var goPath = LayoutEditorHierarchy.GetHierarchyPath(go.transform);
+
+                // Stale-id recovery (Unity restarted since the web export): the doc
+                // dicts are keyed by dead ids. Recover each entry via the member's
+                // current hierarchyPath and re-key it under the fresh id.
+                if (!staticSet.Contains(id) && staticByPath.Contains(goPath))
+                    staticSet.Add(id);
+                if (!memberPhases.ContainsKey(id))
+                {
+                    float ph;
+                    if (phaseByPath.TryGetValue(goPath, out ph)) memberPhases[id] = ph;
+                }
+                if (!memberFollowPos.ContainsKey(id))
+                {
+                    string followWpId;
+                    if (followByPath.TryGetValue(goPath, out followWpId))
+                    {
+                        MoveGroupWaypointDto fw;
+                        if (wpById.TryGetValue(followWpId, out fw))
+                            memberFollowPos[id] = new Vector2(fw.x, fw.z);
+                    }
+                }
+                if (!memberOffsets.ContainsKey(id))
+                {
+                    MoveGroupMemberOffsetDto byPath;
+                    if (offsetByPath.TryGetValue(goPath, out byPath))
+                        memberOffsets[id] = new Vector2(byPath.x, byPath.z);
+                }
+
                 if (staticSet.Contains(id))
                 {
                     if (!staticNames.ContainsKey(id)) staticNames[id] = go.name;
-                    if (!staticPaths.ContainsKey(id))
-                        staticPaths[id] = LayoutEditorHierarchy.GetHierarchyPath(go.transform);
+                    if (!staticPaths.ContainsKey(id)) staticPaths[id] = goPath;
                     continue;
                 }
                 // Phase members keep their scene position (the route is time-shifted,
@@ -362,8 +470,7 @@ public static class MoveControlBakery
                 if (memberPhases.TryGetValue(id, out phase))
                 {
                     if (!memberNames.ContainsKey(id)) memberNames[id] = go.name;
-                    if (!memberPaths.ContainsKey(id))
-                        memberPaths[id] = LayoutEditorHierarchy.GetHierarchyPath(go.transform);
+                    if (!memberPaths.ContainsKey(id)) memberPaths[id] = goPath;
                     continue;
                 }
                 Vector2 off;
@@ -375,23 +482,41 @@ public static class MoveControlBakery
                     memberOffsets[id] = off;
                 }
                 if (!memberNames.ContainsKey(id)) memberNames[id] = go.name;
-                if (!memberPaths.ContainsKey(id))
-                    memberPaths[id] = LayoutEditorHierarchy.GetHierarchyPath(go.transform);
+                if (!memberPaths.ContainsKey(id)) memberPaths[id] = goPath;
                 Undo.RecordObject(go.transform, "Layout Editor Move Group");
                 var lp = go.transform.localPosition;
                 lp.x = firstWp.Value.x + off.x;
                 lp.z = firstWp.Value.y + off.y;
                 go.transform.localPosition = lp;
             }
+            // Drop entries that did not resolve to a live member this pass (stale
+            // ids after a reload) so the write-back below returns fresh ids only.
+            var liveIds = new HashSet<string>();
+            foreach (var go in members) liveIds.Add("u:" + go.GetInstanceID());
+            FilterDict(memberOffsets, liveIds);
+            FilterDict(memberPhases, liveIds);
+            FilterDict(memberFollowPos, liveIds);
+            FilterNames(memberNames, memberPaths, liveIds);
+            FilterStatic(staticSet, staticNames, staticPaths, liveIds);
+            // Follow link lookup tolerates stale ids: fall back to the path-keyed map.
+            Func<string, string> followOf = delegate(string id2)
+            {
+                MoveGroupMemberOffsetDto od;
+                if (origOffsetDtos.TryGetValue(id2, out od) && !string.IsNullOrEmpty(od.followWaypointId))
+                    return od.followWaypointId;
+                string p;
+                string fw;
+                if (memberPaths.TryGetValue(id2, out p) && followByPath.TryGetValue(p, out fw))
+                    return fw;
+                return null;
+            };
             group.memberOffsets = memberOffsets
                 .Select(kv => new MoveGroupMemberOffsetDto
                 {
                     instanceId = kv.Key,
                     x = kv.Value.x,
                     z = kv.Value.y,
-                    followWaypointId = origOffsetDtos.ContainsKey(kv.Key)
-                        ? origOffsetDtos[kv.Key].followWaypointId
-                        : null,
+                    followWaypointId = followOf(kv.Key),
                     displayName = memberNames.ContainsKey(kv.Key) ? memberNames[kv.Key] : null,
                     hierarchyPath = memberPaths.ContainsKey(kv.Key) ? memberPaths[kv.Key] : null
                 })
@@ -399,9 +524,7 @@ public static class MoveControlBakery
                 {
                     instanceId = kv.Key,
                     t = kv.Value,
-                    followWaypointId = origOffsetDtos.ContainsKey(kv.Key)
-                        ? origOffsetDtos[kv.Key].followWaypointId
-                        : null,
+                    followWaypointId = followOf(kv.Key),
                     displayName = memberNames.ContainsKey(kv.Key) ? memberNames[kv.Key] : null,
                     hierarchyPath = memberPaths.ContainsKey(kv.Key) ? memberPaths[kv.Key] : null
                 }))
@@ -1070,6 +1193,13 @@ public static class MoveControlBakery
         List<string> queueTriggers, List<float> queueDelays, AnimatorController controller)
     {
         var go = groupRoot.gameObject;
+
+        // ObjectContainer（IParentable）：实体（玩家/食材的 _Rigidbody 容器）脚下
+        // 碰撞体经 DynamicLandscapeParenting 向上递归找挂载点，找到才 SetParent
+        // 随组走。组根挂上后覆盖全部成员（成员子 Col_Floor、组内 Col_AirFloor
+        // 都在其子树）；纯装饰组无碰撞体，挂着也无作用。幂等添加。
+        if (go.GetComponent<ObjectContainer>() == null)
+            Undo.AddComponent<ObjectContainer>(go);
 
         var anim = go.GetComponent<Animator>();
         if (anim == null)

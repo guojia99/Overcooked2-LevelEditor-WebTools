@@ -618,10 +618,29 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/level/reorder" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelReorderDto>(body);
+                var err = LayoutEditorLevelAdminApi.ReorderLevels(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
             if (path == "/api/reload" && request.HttpMethod == "POST")
             {
                 LayoutEditorLevelAdminApi.Reload();
                 WriteJson(response, 200, "{\"ok\":true}");
+                return;
+            }
+
+            // 触发 AssetDatabase.Refresh：导入外部修改的脚本/资源并重编译。
+            // 若有脚本变动，编译引发的 domain reload 会中断本请求（客户端收到
+            // 连接重置或空回复属预期），服务由看门狗在 reload 后自动拉起。
+            if (path == "/api/compile" && request.HttpMethod == "POST")
+            {
+                WriteJson(response, 200, "{\"ok\":true,\"reloading\":true}");
+                AssetDatabase.Refresh();
                 return;
             }
 

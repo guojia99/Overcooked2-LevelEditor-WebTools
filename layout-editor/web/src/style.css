@@ -2075,6 +2075,72 @@ body.manage-bg {
   font-size: 12px;
 }
 
+/* 调整关卡顺序弹窗：可拖拽行列表 */
+.m-reorder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.m-reorder-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #22262e;
+  border: 1px solid #3a3f4b;
+  border-radius: 6px;
+  padding: 7px 10px;
+  cursor: grab;
+  user-select: none;
+}
+
+.m-reorder-row.dragging {
+  opacity: 0.45;
+  border-style: dashed;
+  cursor: grabbing;
+}
+
+.m-reorder-handle {
+  color: #7c8390;
+  font-size: 15px;
+  letter-spacing: -1px;
+  flex: none;
+}
+
+.m-reorder-num {
+  flex: none;
+  min-width: 34px;
+  text-align: center;
+  font-size: 12px;
+  color: #c8cdd6;
+  background: #191c22;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.m-reorder-shot {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #1a1d23;
+}
+
+.m-reorder-shot.empty {
+  border: 1px dashed #3a3f4b;
+}
+
+.m-reorder-btns {
+  flex: none;
+  display: flex;
+  gap: 4px;
+}
+
+.m-reorder-btns .m-btn {
+  padding: 2px 8px;
+}
+
 .m-list {
   display: flex;
   flex-direction: column;

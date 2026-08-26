@@ -15,6 +15,9 @@ public static class SceneFloorExporter
 {
     private const int PlaneMeshFileId = 10209;
     private const int QuadMeshFileId = 10210;
+    /// <summary>SceneLayoutApplier 生成的 warp（透视贴合）内嵌网格的 meshId 占位值
+    ///  （非内置网格，仅用于在导出器内部与 Plane/Quad 区分）。</summary>
+    private const int WarpMeshFileId = 1;
     /// <summary>空气地板碰撞盒名称：仅此名称的 Ground 层 BoxCollider 被识别为空气地板
     /// （无可见 Plane，只有可行走碰撞盒）。几何与普通 Col_Floor 相同。与空气墙的
     /// 1×1×1.132 魔法数不同，空气地板仅靠名称识别，故不会被 items 导出器捡走。</summary>
@@ -134,7 +137,8 @@ public static class SceneFloorExporter
             return;
 
         int meshId = GetBuiltinMeshFileId(mesh);
-        if (meshId != PlaneMeshFileId && meshId != QuadMeshFileId)
+        bool isWarp = meshId == WarpMeshFileId;
+        if (meshId != PlaneMeshFileId && meshId != QuadMeshFileId && meshId != WarpMeshFileId)
             return;
 
         if (!LooksLikeFloor(go.name, t))
@@ -142,7 +146,13 @@ public static class SceneFloorExporter
 
         float baseX, baseZ;
         string meshType;
-        if (meshId == PlaneMeshFileId)
+        if (isWarp)
+        {
+            baseX = 1f;
+            baseZ = 1f;
+            meshType = "warp";
+        }
+        else if (meshId == PlaneMeshFileId)
         {
             baseX = 10f;
             baseZ = 10f;
@@ -167,6 +177,14 @@ public static class SceneFloorExporter
         {
             widthUnits = baseX * scale.x;
             depthUnits = baseZ * scale.z;
+        }
+        // warp 网格覆盖整个相机视野，包围盒巨大且不代表意图尺寸——碰撞盒尺寸
+        // 用网格名后缀 "_WxD" 里作者设定的格数还原。
+        int warpW = 0, warpD = 0;
+        if (isWarp && TryParseWarpMeshSize(mesh.name, out warpW, out warpD))
+        {
+            widthUnits = warpW * LayoutEditorCatalogLookup.GridCellSize;
+            depthUnits = warpD * LayoutEditorCatalogLookup.GridCellSize;
         }
 
         var mat = mr.sharedMaterial;
@@ -306,6 +324,27 @@ public static class SceneFloorExporter
             return PlaneMeshFileId;
         if (n == "Quad")
             return QuadMeshFileId;
+        if (n != null && n.StartsWith(SceneLayoutApplier.WarpMeshNamePrefix, System.StringComparison.Ordinal))
+            return WarpMeshFileId;
         return 0;
     }
+
+    /// <summary>warp 网格名 "ImgWarpFloorMesh_20x12" → (20, 12)；失败返回 false。</summary>
+    private static bool TryParseWarpMeshSize(string meshName, out int w, out int d)
+    {
+        w = 0;
+        d = 0;
+        if (string.IsNullOrEmpty(meshName))
+            return false;
+        var idx = meshName.LastIndexOf('_');
+        if (idx < 0) return false;
+        var tail = meshName.Substring(idx + 1);
+        var x = tail.IndexOf('x');
+        if (x <= 0 || x >= tail.Length - 1) return false;
+        return int.TryParse(tail.Substring(0, x), out w)
+            && int.TryParse(tail.Substring(x + 1), out d)
+            && w > 0 && d > 0;
+    }
 }
+
+

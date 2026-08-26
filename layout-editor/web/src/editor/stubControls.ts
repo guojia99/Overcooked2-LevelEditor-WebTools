@@ -55,7 +55,8 @@ import {
 import {
   buttonEventSummaryHtml,
   openButtonEventModal,
-  isButtonEventSource
+  isButtonEventSource,
+  cleanOrphanedButtonEvents
 } from "./buttonEvents";
 
 export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
@@ -210,6 +211,20 @@ export function isIngredientSprayId(id: string | undefined): boolean {
 export function isCannonTarget(item: EditorItem): boolean {
   const id = prefabIdFromPath(item.prefabAssetPath);
   return id === "dlc08_cannon" || id === "dlc09_cannon";
+}
+
+/** 可作为开关联动目标的物品白名单（与运行时接线一致：LayoutRuntimeSwitchLink
+ *  只给这些机器写监听字段/接线）——断头台（AutoWorkstation.m_workTrigger）、
+ *  饮料机/酱料机（Pickup/PlacementItemSwitcher.m_switchTrigger）、
+ *  大炮（Cannon.m_launchTrigger）。其它物品收了消息也不会响应。 */
+export function isSwitchLinkTarget(item: EditorItem): boolean {
+  const id = prefabIdFromPath(item.prefabAssetPath);
+  return id === "workstation_guillotine_01"
+    || id === "dlc08_drink_machine"
+    || id === "dlc11_drink_dispenser"
+    || id === "dlc08_condiment_dispenser"
+    || id === "dlc11_condiment_dispenser"
+    || isCannonTarget(item);
 }
 
 /** 火锅灶台（core / dlc10 变体）：支持定时开关（开局自动循环开/关）。 */
@@ -434,12 +449,12 @@ export function stubControlsHtml(item: EditorItem): string {
       return `<div class="ctx-stub"><div class="ctx-stub-title">${isCannon ? "大炮开关参数" : "开关参数"}</div>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-sw-start" ${sw.startEnabled !== false ? "checked" : ""}/> 初始开启</label>
         ${matHtml}
-        <div class="ctx-stub-title" style="margin-top:6px">联动目标${isCannon ? "（大炮，触发消息 Launch）" : "（断头台/饮料机等）"}</div>
+        <div class="ctx-stub-title" style="margin-top:6px">联动目标${isCannon ? "（大炮，触发消息 Launch）" : "（仅断头台/饮料机/酱料机/大炮）"}</div>
         <div id="ctx-sw-links"></div>
         <label class="ctx-stub-row"><select id="ctx-sw-linktarget" class="ctx-input"></select>
           <button type="button" class="ctx-btn" id="ctx-sw-linkadd">添加</button></label>
         <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" value="Launch" placeholder="Launch"/></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">按下按钮时对目标对象广播该消息${isCannon ? "（大炮须为 Launch，对应游戏内发射触发）" : "（默认 Switch）"}</div>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">按下按钮时对目标对象广播该消息${isCannon ? "（大炮须为 Launch，对应游戏内发射触发）" : "（默认 Switch；同一开关的所有联动共享此消息）"}；配置了「联动事件组」后按压以事件组为准，直发自动停用</div>
         ${isCannon ? "" : buttonEventSummaryHtml(item)}
         ${isCannon ? "" : buttonLinkSummaryHtml(item)}</div>`;
     }
@@ -916,10 +931,17 @@ export function wireStubControls(item: EditorItem) {
       };
       const linkTargetOptsHtml = () => {
         const linked = new Set(myLinks().map((l) => l.targetId));
-        return S.items
-          .filter((i) => i.instanceId && i.instanceId !== myId && !linked.has(i.instanceId) && stubKindOf(i) !== "Player")
+        const opts = S.items
+          .filter(
+            (i) =>
+              i.instanceId &&
+              i.instanceId !== myId &&
+              !linked.has(i.instanceId) &&
+              isSwitchLinkTarget(i)
+          )
           .map((i) => `<option value="${escHtml(i.instanceId)}">${escHtml(itemLabel(i))}</option>`)
           .join("");
+        return opts || '<option value="">— 无可联动目标（仅断头台/饮料机/酱料机/大炮） —</option>';
       };
       const refreshLinks = () => {
         const rows = document.getElementById("ctx-sw-links");
@@ -930,6 +952,8 @@ export function wireStubControls(item: EditorItem) {
               pushHistory();
               const tid = btn.dataset.unlink!;
               S.switchLinks = S.switchLinks.filter((l) => !(l.switchId === myId && l.targetId === tid));
+              // 事件组目标仅限联动目标：联动被移除时同步丢弃对应事件
+              cleanOrphanedButtonEvents();
               setStatus("已移除开关联动（写回后生效）");
               refreshLinks();
             });
@@ -948,15 +972,18 @@ export function wireStubControls(item: EditorItem) {
         pushHistory();
         const trigInput = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
         let trigger = trigInput?.value.trim() || "";
-        // 未自定义时：目标为大炮 → Launch（对应 ServerCannon.m_launchTrigger），
-        // 否则按约定命名 switch_{目标prefabId}_{N}（N = 该开关已有链接数 + 1）
+        // 未自定义时：目标为大炮 → Launch（对应 ServerCannon.m_launchTrigger）；
+        // 已有联动 → 沿用其触发名（一个开关一个共享触发名，与运行时一致）；
+        // 否则按约定命名 switch_{目标prefabId}_1
         if (!trigger || trigger === "Switch") {
           const target = S.items.find((i) => i.instanceId === tid);
           if (target && isCannonTarget(target)) {
             trigger = "Launch";
+          } else if (myLinks()[0]?.trigger) {
+            trigger = myLinks()[0]!.trigger;
           } else {
             const prefabId = target ? prefabIdFromPath(target.prefabAssetPath) ?? "item" : "item";
-            trigger = `switch_${prefabId}_${myLinks().length + 1}`;
+            trigger = `switch_${prefabId}_1`;
           }
           if (trigInput) trigInput.value = trigger;
         }
@@ -970,6 +997,11 @@ export function wireStubControls(item: EditorItem) {
         if (!links.length) return;
         pushHistory();
         for (const l of links) l.trigger = trig;
+        // 事件组触发名固定取联动共享触发名：联动改名时同步事件
+        for (const bl of S.buttonEvents) {
+          if (bl.sourceId !== myId) continue;
+          for (const g of bl.groups) for (const e of g.events) e.trigger = trig;
+        }
         setStatus(`已更新触发消息为 ${trig}（写回后生效）`);
       });
       break;

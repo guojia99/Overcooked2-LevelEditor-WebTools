@@ -112,6 +112,11 @@ export async function loadScene(assetPath: string) {
     S.items = doc.items
       .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true))
       .map((raw, index) => enrichItem(raw, `i${index}`));
+    // 移动组必须先于 merge 赋值：merge*IntoFloors 里的「组成员跳过吸收」逻辑
+    // 读取 S.moveControls，若此时尚为空/旧值，移动岛的主题地砖会被吸收成地板
+    // 矩形、写回时以新 id 挂到 Art 下重发射——永久脱离移动组（testice MidIsland
+    // 岛分裂实证）。
+    S.moveControls = doc.moveControls?.groups ?? [];
     S.floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
     mergeRaftItemsIntoFloors();
     mergeThemedItemsIntoFloors();
@@ -119,7 +124,6 @@ export async function loadScene(assetPath: string) {
     S.deathInfo = doc.deathInfo ?? null;
     S.cameraInfo = doc.cameraInfo ?? null;
     S.lights = doc.lights ?? [];
-    S.moveControls = doc.moveControls?.groups ?? [];
     S.switchLinks = doc.switchLinks ?? [];
     S.buttonLinks = doc.buttonLinks?.links ?? [];
     S.buttonEvents = doc.buttonEvents?.links ?? [];

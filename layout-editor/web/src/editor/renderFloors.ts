@@ -44,6 +44,118 @@ export function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+/** warp（透视贴合）预览的相机基向量（与 render.ts drawCameraFrustum 同一数学，
+ *  Unity Quaternion.Euler(pitch, yaw, 0) ZXY 顺序，16:9）。 */
+function warpCamBasis() {
+  const cam = S.cameraInfo;
+  if (!cam || !cam.position) return null;
+  const fovRaw = Number(cam.fieldOfView);
+  const fov = Number.isFinite(fovRaw) && fovRaw > 0 ? fovRaw : 45;
+  const pitch = (((cam.pitch ?? 0) % 360) + 360) % 360;
+  const yaw = cam.yaw ?? 0;
+  const th = (pitch * Math.PI) / 180;
+  const ps = (yaw * Math.PI) / 180;
+  const cosT = Math.cos(th);
+  const sinT = Math.sin(th);
+  const cosP = Math.cos(ps);
+  const sinP = Math.sin(ps);
+  const vy = ((fov / 2) * Math.PI) / 180;
+  const tanVy = Math.tan(vy);
+  return {
+    fwd: { x: sinP * cosT, y: -sinT, z: cosP * cosT },
+    right: { x: cosP, y: 0, z: -sinP },
+    up: { x: sinT * sinP, y: cosT, z: sinT * cosP },
+    tanVh: tanVy * (16 / 9),
+    tanVy,
+    px: cam.position.x,
+    py: cam.position.y,
+    pz: cam.position.z
+  };
+}
+
+/** 屏幕 NDC (sx, sy ∈ [-1,1]) 射线与高度 y 地面的交点；射线不朝下时返回 null。 */
+function warpGroundPoint(
+  b: NonNullable<ReturnType<typeof warpCamBasis>>,
+  sx: number,
+  sy: number,
+  y: number
+): { x: number; z: number } | null {
+  const dx = b.fwd.x + b.tanVh * sx * b.right.x + b.tanVy * sy * b.up.x;
+  const dy = b.fwd.y + b.tanVh * sx * b.right.y + b.tanVy * sy * b.up.y;
+  const dz = b.fwd.z + b.tanVh * sx * b.right.z + b.tanVy * sy * b.up.z;
+  if (dy >= -1e-6) return null;
+  const t = (y - b.py) / dy;
+  return { x: b.px + t * dx, z: b.pz + t * dz };
+}
+
+/** warp 地板预览：把图片按 N 个水平条带仿射映射进相机视野的地面梯形
+ *  （条带内为平行四边形近似，20 条带肉眼无差）。相机信息缺失或视野越地平线时
+ *  退化为普通矩形铺开预览。90°/270° 旋转在预览中暂不体现（仅 0/180）。 */
+function drawWarpImagePreview(f: EditorFloor, img: HTMLImageElement, alpha: number) {
+  const ctx = dom.ctx;
+  const b = warpCamBasis();
+  const y = floorWalkY(f);
+  const corners =
+    b &&
+    [-1, 1, 1, -1].map((sx, i) => warpGroundPoint(b, sx, i < 2 ? 1 : -1, y));
+  const quad = corners && corners.every((c) => c != null) ? (corners as { x: number; z: number }[]) : null;
+
+  if (!quad) {
+    // 无相机：按地板矩形整图铺开做近似预览。
+    const { bw, bh } = floorRectPx(f);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh);
+    ctx.restore();
+    return;
+  }
+
+  const rot = normalizeRot(f.imageRotation ?? 0);
+  const N = 20;
+  const imgH = img.naturalHeight || img.height;
+  const prevAlpha = ctx.globalAlpha;
+  ctx.globalAlpha = alpha;
+  for (let j = 0; j < N; j++) {
+    const v0 = -1 + (2 * j) / N;
+    const v1 = -1 + (2 * (j + 1)) / N;
+    const A = warpGroundPoint(b!, -1, v0, y)!;
+    const B = warpGroundPoint(b!, -1, v1, y)!;
+    const D = warpGroundPoint(b!, 1, v0, y)!;
+    const a = worldToCanvas(A.x, A.z);
+    const bb = worldToCanvas(B.x, B.z);
+    const d = worldToCanvas(D.x, D.z);
+    // 图片 v（底=0）对应屏幕 v（-1 底）；180° 旋转翻转条带源。
+    let vs0 = (v0 + 1) / 2;
+    let vs1 = (v1 + 1) / 2;
+    if (rot === 180) {
+      const t = vs0;
+      vs0 = 1 - vs1;
+      vs1 = 1 - t;
+    }
+    const sy = (1 - vs1) * imgH;
+    const sh = Math.max(1, (vs1 - vs0) * imgH);
+    ctx.save();
+    ctx.translate(a.x, a.y);
+    ctx.transform(d.x - a.x, d.y - a.y, bb.x - a.x, bb.y - a.y, 0, 0);
+    ctx.drawImage(img, 0, sy, img.naturalWidth || img.width, sh, 0, 0, 1, 1);
+    ctx.restore();
+  }
+  ctx.globalAlpha = prevAlpha;
+
+  // 视野梯形描边：直观标出「画面四角」在哪。
+  const pts = quad.map((c) => worldToCanvas(c.x, c.z));
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.setLineDash([6, 4]);
+  ctx.strokeStyle = "rgba(94,234,212,0.85)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+}
+
 export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean) {
   const { center, bw, bh, rot } = floorRectPx(f);
   const paint = surfacePaint(f.surfaceKind, selected);
@@ -82,11 +194,18 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
   // in the canvas immediately; disabled tint falls back to the kind/material color.
   const fill = f.tintEnabled && f.tintColor ? hexToRgba(f.tintColor, selected ? 0.92 : 0.78) : paint.fill;
 
+  // warp（透视贴合）：绝对像素坐标绘制（自带 alpha），画在虚线边框/标签之下。
+  const isWarpImg = !!img && f.imageMode === "warp";
+  if (isWarpImg) {
+    const warpAlpha = f.imageOpacity != null ? Math.max(0, Math.min(1, f.imageOpacity)) : 1;
+    drawWarpImagePreview(f, img!, warpAlpha);
+  }
+
   dom.ctx.save();
   dom.ctx.translate(center.x, center.y);
   dom.ctx.rotate((-rot * Math.PI) / 180);
 
-  if (img) {
+  if (img && !isWarpImg) {
     // Draw the uploaded image: "tile" repeats once per cell, "stretch" fills.
     // imageRotation rotates the texture itself in 90° steps (clockwise from above).
     const cellPx = CELL * PX_PER_UNIT * S.scale;
@@ -124,7 +243,7 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
       dom.ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh);
     }
     dom.ctx.globalAlpha = prevAlpha;
-  } else {
+  } else if (!img) {
     dom.ctx.fillStyle = fill;
     dom.ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
   }

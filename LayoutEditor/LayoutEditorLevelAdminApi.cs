@@ -1112,6 +1112,75 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
+    // ==================== Levels (reorder) ====================
+
+    /// <summary>按前端给定的顺序重写 LevelSetInfoSO.levelInfos（即游戏内关卡顺序）。</summary>
+    public static string ReorderLevels(LevelReorderDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.setName) || dto.levelIds == null || dto.levelIds.Length == 0)
+            return "缺少关卡集或排序列表。";
+        var setName = dto.setName;
+        var setInfo = FindSetInfo(setName);
+        if (setInfo == null)
+            return "未找到关卡集配置 LevelSetInfoSO。";
+
+        var dataDir = LevelSetsRoot + "/" + setName + "/data";
+        var byId = new Dictionary<string, LevelInfoSO>();
+        if (AssetDatabase.IsValidFolder(dataDir))
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { dataDir }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(path);
+                if (so == null)
+                    continue;
+                var p = path.Replace('\\', '/');
+                var dir = p.Substring(0, p.LastIndexOf('/')); // .../data/<levelId>
+                var id = dir.Substring(dir.LastIndexOf('/') + 1);
+                byId[id] = so;
+            }
+        }
+
+        var ordered = new List<LevelInfoSO>();
+        var seen = new HashSet<string>();
+        foreach (var rawId in dto.levelIds)
+        {
+            var id = rawId == null ? "" : rawId.Trim();
+            if (id.Length == 0)
+                return "关卡标识无效。";
+            if (!seen.Add(id))
+                return "关卡重复：" + id;
+            LevelInfoSO so;
+            if (!byId.TryGetValue(id, out so))
+                return "关卡不存在：" + id;
+            ordered.Add(so);
+        }
+
+        // 发送列表必须恰好覆盖 data/ 下的全部关卡，避免并发修改时静默丢失关卡。
+        if (seen.Count != byId.Count)
+            return "关卡列表与当前数据不一致，请刷新页面后重试。";
+
+        // 指向 data/ 之外（或已丢失）的旧引用保留在末尾，避免丢数据。
+        if (setInfo.levelInfos != null)
+        {
+            foreach (var li in setInfo.levelInfos)
+            {
+                if (li == null)
+                    continue;
+                var p = AssetDatabase.GetAssetPath(li);
+                if (string.IsNullOrEmpty(p) || !p.Replace('\\', '/').StartsWith(dataDir + "/", StringComparison.Ordinal))
+                    ordered.Add(li);
+            }
+        }
+
+        Undo.RecordObject(setInfo, "Reorder Levels");
+        setInfo.levelInfos = ordered.ToArray();
+        EditorUtility.SetDirty(setInfo);
+        AssetDatabase.SaveAssets();
+        ReloadPseudo();
+        return null;
+    }
+
     public static void Reload()
     {
         ReloadPseudo();

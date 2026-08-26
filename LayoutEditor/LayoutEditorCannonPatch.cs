@@ -66,8 +66,18 @@ public static class LayoutEditorCannonPatch
         for (int i = 0; i < cannons.Length; i++)
         {
             var cannon = cannons[i];
-            if (cannon == null || cannon.m_button == null)
+            if (cannon == null)
                 continue;
+            if (cannon.m_button == null)
+            {
+                // 未配发射按钮的大炮：宿主 ServerCannon.StartSynchronising 会
+                // m_button.RequireComponent<ServerInteractable>() 空引用，且异常被
+                // PeerBase/ ExceptionManager 静默吞掉（本 stub 工程 LogLastException
+                // 为空实现）→ 客户端永远发不出 StartedSyncronising → 整局卡死。
+                // 这里在同步启动前用空按钮兜底（大炮变为纯摆设，不可发射）。
+                EnsureFallbackButton(cannon);
+                continue;
+            }
             try
             {
                 PatchCannon(cannon);
@@ -77,6 +87,25 @@ public static class LayoutEditorCannonPatch
                 // 对象销毁/同步未完成，下一帧再试
             }
         }
+    }
+
+    private const string FallbackButtonName = "__leCannonFallbackButton";
+
+    /// <summary>给未接线的大炮挂一个空按钮对象（含 ServerInteractable，宿主
+    /// RequireComponent 为「取不到则返回 null」语义，必须提前挂好）。</summary>
+    private static void EnsureFallbackButton(Cannon cannon)
+    {
+        var existing = cannon.transform.Find(FallbackButtonName);
+        GameObject go = existing != null ? existing.gameObject : null;
+        if (go == null)
+        {
+            go = new GameObject(FallbackButtonName);
+            go.transform.SetParent(cannon.transform, false);
+            go.AddComponent<ServerInteractable>();
+            Debug.LogWarning("[LayoutEditor] 大炮未配置发射按钮（无开关链接），已用空按钮兜底: "
+                + cannon.name + "。若要可发射，请在 web 编辑器给大炮配置开关。");
+        }
+        cannon.m_button = go;
     }
 
     private static void PatchCannon(Cannon cannon)

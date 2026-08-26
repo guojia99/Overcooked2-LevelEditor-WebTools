@@ -112,18 +112,19 @@ public static class SceneLayoutApplier
                     if (!usedSceneObjectIds.Contains(objectId))
                     {
                         usedSceneObjectIds.Add(objectId);
-                        Undo.RecordObject(t, "Layout Editor Move");
-                        var posFull = item.localPosition != null ? item.localPosition.ToVector3() : t.localPosition;
-                        posFull.x = SnapScalar(posFull.x, itemSnap);
-                        posFull.z = SnapScalar(posFull.z, itemSnap);
-                        t.localPosition = posFull;
-                        var rotX = item.localRotationX != 0f ? item.localRotationX : t.localEulerAngles.x;
-                        t.localEulerAngles = new Vector3(rotX, rotY, t.localEulerAngles.z);
-                        ApplyItemScale(t, item);
-                        LayoutEditorStubIO.ApplyStub(t.gameObject, item);
-                        if (!string.IsNullOrEmpty(item.instanceId))
-                            createdObjects[item.instanceId] = t.gameObject;
-                        continue;
+                    Undo.RecordObject(t, "Layout Editor Move");
+                    var posFull = item.localPosition != null ? item.localPosition.ToVector3() : t.localPosition;
+                    posFull.x = SnapScalar(posFull.x, itemSnap);
+                    posFull.z = SnapScalar(posFull.z, itemSnap);
+                    t.localPosition = posFull;
+                    var rotX = item.localRotationX != 0f ? item.localRotationX : t.localEulerAngles.x;
+                    t.localEulerAngles = new Vector3(rotX, rotY, t.localEulerAngles.z);
+                    ApplyItemScale(t, item);
+                    LayoutEditorStubIO.ApplyStub(t.gameObject, item);
+                    EnsureUniqueSiblingName(t);
+                    if (!string.IsNullOrEmpty(item.instanceId))
+                        createdObjects[item.instanceId] = t.gameObject;
+                    continue;
                     }
                 }
 
@@ -165,7 +166,12 @@ public static class SceneLayoutApplier
 
         // Second pass (cont.): document-level switch links (按钮 → 断头台/饮料机/酱料机)。
         // 只在文档携带链接时写入；空/缺失时不动场景里既有的联动（避免误清手工配置）。
-        LayoutEditorStubIO.ApplySwitchLinks(document.switchLinks, createdObjects);
+        // buttonEvents 一并传入：配了事件组的开关抑制直发广播（按压只走事件组）。
+        LayoutEditorStubIO.ApplySwitchLinks(document.switchLinks, createdObjects, document.buttonEvents);
+
+        // 世界地图装饰（bundle map/ 家族，如 dlc08 绳栏）：烘焙运行时强制展开组件
+        // （游戏编译，随场景保存）。全场景扫描、幂等，scoped writes 同样执行。
+        LayoutEditorStubIO.BakeWorldMapDressing();
 
         // Snap floors with the web-sent precision (default 0.01). Floor centers sit on
         // half-cell (0.6) multiples, which are also multiples of that precision, so the
@@ -175,7 +181,7 @@ public static class SceneLayoutApplier
         {
             ApplyFloors(document, snapStep, createdObjects);
             if (syncWalkable)
-                SyncWalkableToFloors(document, snapStep);
+                SyncWalkableToFloors(document, snapStep, createdObjects);
         }
 
         // Camera background/FOV + Art/Lights colors — full writes only (scoped writes
@@ -239,6 +245,12 @@ public static class SceneLayoutApplier
                     bakeError = string.IsNullOrEmpty(bakeError) ? beError : bakeError + "; " + beError;
                 }
             }
+
+            // 移动组含可行走面（地板成员 / walkable 物品成员）时，自动关闭
+            // disableDynamicParenting：宿主 DynamicLandscapeParenting 在该开关
+            // 为 true 时自毁，玩家/食材不会父挂载到组根 ObjectContainer 上，
+            // 表现为「地板走了人留在原地」。单向自动（只关不开）。
+            AutoEnableDynamicParenting(scene, document);
         }
 
         // 烤菜烤盘「默认能放」：把所选烤菜菜谱的叶食材追加为场景烤盘 stub 的额外食材
@@ -459,21 +471,108 @@ public static class SceneLayoutApplier
         }
     }
 
+    /// <summary>移动组含可行走面（floorInstanceIds 非空，或 itemInstanceIds 里有
+    /// walkable 物品成员——如地砖岛）时，把关卡 LevelInfoSO.disableDynamicParenting
+    /// 置 false（只自动关、绝不自动开；开关本身仍在 web 关卡管理里可手动调）。
+    /// 宿主侧链路：DynamicLandscapeParenting.Awake 检查该开关，false 时实体脚下
+    /// 碰撞体向上递归找 IParentable（烘焙已挂在组根的 ObjectContainer）并
+    /// SetParent —— 玩家/食材随移动组走。</summary>
+    private static void AutoEnableDynamicParenting(Scene scene, LayoutDocumentDto document)
+    {
+        try
+        {
+            var hasWalkSurface = false;
+            foreach (var g in document.moveControls.groups ?? new MoveGroupDto[0])
+            {
+                if (g == null) continue;
+                if (g.floorInstanceIds != null && g.floorInstanceIds.Length > 0) { hasWalkSurface = true; break; }
+                if (g.itemInstanceIds == null) continue;
+                foreach (var id in g.itemInstanceIds)
+                {
+                    var item = document.items != null
+                        ? System.Array.Find(document.items, x => x != null && x.instanceId == id)
+                        : null;
+                    if (item != null && item.walkable) { hasWalkSurface = true; break; }
+                }
+                if (hasWalkSurface) break;
+            }
+            if (!hasWalkSurface) return;
+
+            var info = LayoutEditorLevelInfoResolver.ResolveForScene(scene.path);
+            if (info == null || !info.disableDynamicParenting) return;
+
+            Undo.RecordObject(info, "Layout Editor Enable Dynamic Parenting");
+            info.disableDynamicParenting = false;
+            EditorUtility.SetDirty(info);
+            AssetDatabase.SaveAssets();
+            LayoutEditorLog.Log("move control: 移动组含可行走面，已自动关闭 disableDynamicParenting（"
+                + info.name + "）—— 玩家/食材将随移动组父挂载");
+        }
+        catch (Exception e)
+        {
+            // 自动开关失败不阻断写回（场景已保存优先）。
+            LayoutEditorLog.LogWarning("move control: 自动关闭 disableDynamicParenting 失败：" + e.Message);
+        }
+    }
+
     /// <summary>
     /// Regenerate the Ground-layer "Col_Floor" walkable colliders under Design/Collision so
     /// the walkable area matches the visible floor planes (gaps between floors become fall pits).
     /// </summary>
-    private static void SyncWalkableToFloors(LayoutDocumentDto document, float snapStep)
+    private static void SyncWalkableToFloors(LayoutDocumentDto document, float snapStep,
+        Dictionary<string, GameObject> createdObjects)
     {
         var collision = LayoutEditorHierarchy.FindOrCreatePath("Design/Collision");
         if (collision == null)
             return;
 
+        // 移动组成员的 walkable 碰撞不能放静态 Design/Collision（不会跟随动画）。
+        // 挂为物品自身的子物体：MoveControlBakery 会把成员 re-parent 到组根并
+        // 动画其 localPosition，子碰撞体随之一起移动。
+        var moveMembers = new HashSet<string>();
+        var moveFloorIds = new HashSet<string>();
+        if (document != null && document.moveControls != null && document.moveControls.groups != null)
+        {
+            foreach (var g in document.moveControls.groups)
+            {
+                if (g == null) continue;
+                if (g.itemInstanceIds != null)
+                {
+                    foreach (var id in g.itemInstanceIds)
+                        if (!string.IsNullOrEmpty(id))
+                            moveMembers.Add(id);
+                }
+                // 组内地板：airFloor 的碰撞盒对象本身就是被动画的成员（不能在静态
+                // 路径清除/重建，否则烘焙器拿到死 id、岛走了碰撞留在原地）；solid
+                // plane 的碰撞挂为 plane 子物体随组动。
+                if (g.floorInstanceIds != null)
+                {
+                    foreach (var id in g.floorInstanceIds)
+                        if (!string.IsNullOrEmpty(id))
+                            moveFloorIds.Add(id);
+                }
+            }
+        }
+        // 组内地板当前的场景对象（airFloor 首轮入组时仍在 Design/Collision 下，
+        // 必须先解析进保留集，下面的清除循环才不会把它当旧碰撞删掉）。
+        var protectedFloorGos = new HashSet<GameObject>();
+        if (document != null && document.floors != null && moveFloorIds.Count > 0)
+        {
+            foreach (var floor in document.floors)
+            {
+                if (floor == null || string.IsNullOrEmpty(floor.instanceId) ||
+                    !moveFloorIds.Contains(floor.instanceId)) continue;
+                var go = ResolveItemGo2(floor, createdObjects);
+                if (go != null)
+                    protectedFloorGos.Add(go);
+            }
+        }
+
         var toRemove = new List<GameObject>();
         for (int i = 0; i < collision.childCount; i++)
         {
             var c = collision.GetChild(i);
-            if (c != null && IsEditorFloorCollider(c.gameObject))
+            if (c != null && IsEditorFloorCollider(c.gameObject) && !protectedFloorGos.Contains(c.gameObject))
                 toRemove.Add(c.gameObject);
         }
         foreach (var go in toRemove)
@@ -501,7 +600,32 @@ public static class SceneLayoutApplier
             cz = SnapScalar(cz, snapStep);
             float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
             float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
-            CreateColFloor(collision, groundLayer, cx, cz, w, d, FloorWalkY(floor.localPosition != null ? floor.localPosition.y : 0f), floor.localRotationY,
+            float walkY = FloorWalkY(floor.localPosition != null ? floor.localPosition.y : 0f);
+
+            if (moveFloorIds.Count > 0 && moveFloorIds.Contains(floor.instanceId))
+            {
+                if (floor.airFloor)
+                {
+                    // 碰撞盒对象即动画成员（ApplyAirFloorCollider 已就位/归位），
+                    // 不在静态路径重建。
+                    continue;
+                }
+                var floorGo = ResolveItemGo2(floor, createdObjects);
+                if (floorGo != null)
+                {
+                    // 清掉上一轮挂的子碰撞（退出移动组/改尺寸后重建）。
+                    for (int i = floorGo.transform.childCount - 1; i >= 0; i--)
+                    {
+                        var c = floorGo.transform.GetChild(i);
+                        if (c != null && IsEditorFloorCollider(c.gameObject))
+                            Undo.DestroyObjectImmediate(c.gameObject);
+                    }
+                    CreateColFloorOnItem(floorGo.transform, groundLayer, cx, cz, w, d, walkY, floor.localRotationY);
+                    continue;
+                }
+                // 对象解析失败（含 themed rect 无场景对象）：退回静态碰撞兜底。
+            }
+            CreateColFloor(collision, groundLayer, cx, cz, w, d, walkY, floor.localRotationY,
                 floor.airFloor ? SceneFloorExporter.AirFloorColliderName : "Col_Floor");
         }
 
@@ -528,9 +652,73 @@ public static class SceneLayoutApplier
                 if (scz <= 0f) scz = 1f;
                 float w = (item.footprint != null && item.footprint.cellsX > 0 ? item.footprint.cellsX : 1) * LayoutEditorCatalogLookup.GridCellSize * scx;
                 float d = (item.footprint != null && item.footprint.cellsZ > 0 ? item.footprint.cellsZ : 1) * LayoutEditorCatalogLookup.GridCellSize * scz;
-                CreateColFloor(collision, groundLayer, cx, cz, w, d, FloorWalkY(item.localPosition != null ? item.localPosition.y : 0f), item.localRotationY);
+                float walkY = FloorWalkY(item.localPosition != null ? item.localPosition.y : 0f);
+
+                var itemGo = ResolveItemGo(item, createdObjects);
+                if (itemGo != null)
+                {
+                    // 清掉上一轮挂在物品下的子碰撞（改组/改尺寸后重建；物品退出移动组
+                    // 时下面的静态路径会重新生成，这里避免残留双重碰撞）。
+                    for (int i = itemGo.transform.childCount - 1; i >= 0; i--)
+                    {
+                        var c = itemGo.transform.GetChild(i);
+                        if (c != null && IsEditorFloorCollider(c.gameObject))
+                            Undo.DestroyObjectImmediate(c.gameObject);
+                    }
+                }
+
+                if (itemGo != null && moveMembers.Contains(item.instanceId ?? ""))
+                    CreateColFloorOnItem(itemGo.transform, groundLayer, cx, cz, w, d, walkY, item.localRotationY);
+                else
+                    CreateColFloor(collision, groundLayer, cx, cz, w, d, walkY, item.localRotationY);
             }
         }
+    }
+
+    /// <summary>Resolve the scene GameObject for a walkable item: freshly created
+    /// instances via createdObjects, existing ones via FindItemTransform.</summary>
+    private static GameObject ResolveItemGo(LayoutItemDto item, Dictionary<string, GameObject> createdObjects)
+    {
+        GameObject go;
+        if (createdObjects != null && !string.IsNullOrEmpty(item.instanceId) &&
+            createdObjects.TryGetValue(item.instanceId, out go) && go != null)
+            return go;
+        var t = FindItemTransform(item);
+        return t != null ? t.gameObject : null;
+    }
+
+    /// <summary>Resolve the scene GameObject for a floor rect (move-group members
+    /// need it to attach their walkable collider as a child).</summary>
+    private static GameObject ResolveItemGo2(FloorDto floor, Dictionary<string, GameObject> createdObjects)
+    {
+        GameObject go;
+        if (createdObjects != null && !string.IsNullOrEmpty(floor.instanceId) &&
+            createdObjects.TryGetValue(floor.instanceId, out go) && go != null)
+            return go;
+        var t = FindFloorTransform(floor);
+        return t != null ? t.gameObject : null;
+    }
+
+    /// <summary>移动组成员的 walkable 碰撞：挂为物品子物体并补偿父级旋转/缩放
+    /// （贴花地砖常带 rotX=90、scale≈1.05），使世界空间碰撞盒仍为
+    /// axis-aligned 的 (w,0.4,d)、顶面在 walkY。父级被移动组动画驱动时随之移动。</summary>
+    private static void CreateColFloorOnItem(Transform parent, int groundLayer, float cx, float cz, float w, float d, float walkY, float rotY)
+    {
+        var go = new GameObject("Col_Floor");
+        Undo.RegisterCreatedObjectUndo(go, "Layout Editor Col_Floor (move)");
+        go.layer = groundLayer;
+        var t = go.transform;
+        t.SetParent(parent, false);
+        // 直接给世界位姿：物品自身可能带 rotX=90 等旋转，localPosition 手算会错轴。
+        t.position = new Vector3(cx, walkY, cz);
+        t.rotation = Quaternion.Euler(0f, rotY, 0f);
+        var ps = parent.lossyScale;
+        if (ps.x <= 0.0001f) ps.x = 1f;
+        if (ps.y <= 0.0001f) ps.y = 1f;
+        if (ps.z <= 0.0001f) ps.z = 1f;
+        var col = go.AddComponent<BoxCollider>();
+        col.size = new Vector3(w / ps.x, 0.4f / ps.y, d / ps.z);
+        col.center = new Vector3(0f, -0.2f / ps.y, 0f);
     }
 
     /// <summary>True for walkable colliders this editor regenerates: Col_Floor (visible
@@ -726,6 +914,13 @@ public static class SceneLayoutApplier
         t.gameObject.name = FloorGameObjectName(floor);
 
         ApplyFloorMaterial(t, floor);
+
+        // warp（透视贴合）：每次写回按相机重建网格；从 warp 切回普通模式时
+        // 把内嵌 warp 网格换回内置 Plane/Quad。
+        if (IsWarpFloor(floor))
+            EnsureWarpFloorMesh(t, floor);
+        else
+            RestoreBuiltinFloorMesh(t, floor);
     }
 
     /** GameObject name for a floor, encoding an optional tint color suffix so
@@ -766,6 +961,21 @@ public static class SceneLayoutApplier
     {
         var r = ((rotation % 360) + 360) % 360;
         return ((r + 45) / 90 * 90) % 360;
+    }
+
+    /// <summary>透视贴合（warp）模式：网格名前缀，后缀 "_{w}x{d}" 记录作者设定的
+    ///  碰撞盒格数（warp 网格本身覆盖整个相机视野，包围盒巨大且无意义，
+    ///  SceneFloorExporter 靠该后缀还原 widthCells/depthCells 供碰撞盒使用）。</summary>
+    public const string WarpMeshNamePrefix = "ImgWarpFloorMesh";
+    /** 游戏画面宽高比（warp 网格按此比例反投影，编辑器 Scene 视图比例不同会有偏差）。 */
+    private const float WarpAspect = 16f / 9f;
+    /** warp 网格细分段数（分片仿射逼近投影变换，24 段肉眼无差）。 */
+    private const int WarpMeshSegments = 24;
+
+    private static bool IsWarpFloor(FloorDto floor)
+    {
+        return floor != null && !string.IsNullOrEmpty(floor.imageTexturePath)
+            && floor.imageMode == "warp";
     }
 
     /** Parse an image-floor name back into (texturePath, mode, opacity, rotation).
@@ -815,6 +1025,10 @@ public static class SceneLayoutApplier
 
     private static Vector3 FloorScaleFromCells(FloorDto floor, float preserveY)
     {
+        // warp 网格顶点已是绝对局部坐标（按相机视野烘焙），transform 缩放必须为 1。
+        if (IsWarpFloor(floor))
+            return new Vector3(1f, preserveY > 0f ? preserveY : 1f, 1f);
+
         var cell = LayoutEditorCatalogLookup.GridCellSize;
         int wcx = floor.widthCells > 0 ? floor.widthCells : Mathf.RoundToInt(floor.widthUnits / cell);
         int dcz = floor.depthCells > 0 ? floor.depthCells : Mathf.RoundToInt(floor.depthUnits / cell);
@@ -837,33 +1051,25 @@ public static class SceneLayoutApplier
         if (mr == null)
             return;
 
-        // Image floor: a shared material with the uploaded texture + per-floor
-        // tiling via MaterialPropertyBlock (tile = repeat per cell, stretch = fill).
+        // Image floor: one material instance per (texture, mode, tiling, opacity),
+        //  baked via material _MainTex_ST + color alpha — NOT MaterialPropertyBlock,
+        //  which is runtime-only state lost on scene save / bundle build (the old
+        //  MPB path made exported floors lose their tiling + U-flip in the game).
         // The V axis is flipped (negative tiling + offset) because Unity's Plane UVs
         // render the texture upside-down when viewed from above.
         if (!string.IsNullOrEmpty(floor.imageTexturePath))
         {
-            var texMat = ImageFloorMaterial(floor.imageTexturePath, NormalizeImageRotation(floor.imageRotation));
+            var rot = NormalizeImageRotation(floor.imageRotation);
+            float opacity = floor.imageOpacity > 0f ? Mathf.Clamp01(floor.imageOpacity) : 1f;
+            var texMat = IsWarpFloor(floor)
+                ? WarpFloorMaterial(floor.imageTexturePath, opacity)
+                : BakedImageFloorMaterial(floor, rot, opacity);
             if (texMat != null)
             {
                 Undo.RecordObject(mr, "Layout Editor Floor Material");
+                // 清掉旧 MPB 方案的残留（MPB 优先级高于材质，不清会盖住烘焙值）。
+                mr.SetPropertyBlock(null);
                 mr.sharedMaterial = texMat;
-                float tileX = 1f, tileY = 1f;
-                if (floor.imageMode == "tile")
-                {
-                    tileX = floor.widthCells > 0 ? floor.widthCells : 1;
-                    tileY = floor.depthCells > 0 ? floor.depthCells : 1;
-                }
-                float opacity = floor.imageOpacity > 0f ? Mathf.Clamp01(floor.imageOpacity) : 1f;
-                var block = new MaterialPropertyBlock();
-                // Unity's Plane UVs mirror the texture horizontally; flip U (negative
-                // tiling + compensating offset) so the image renders upright/correct.
-                block.SetVector("_MainTex_ST", new Vector4(-tileX, tileY, tileX, 0f));
-                // Per-floor opacity via the material color alpha (shader must be in a
-                // transparent/fade mode — set on the shared material in ImageFloorMaterial).
-                block.SetVector("_Color", new Vector4(1f, 1f, 1f, opacity));
-                block.SetVector("_BaseColor", new Vector4(1f, 1f, 1f, opacity));
-                mr.SetPropertyBlock(block);
                 return;
             }
         }
@@ -991,6 +1197,193 @@ public static class SceneLayoutApplier
         SetupTransparentMode(m);
         _imageFloorMats[key] = m;
         return m;
+    }
+
+    /// <summary>带烘焙 ST/透明度的图片地板材质（每 texture+mode+tiling+opacity 一份，
+    ///  直接写进材质并随场景序列化；替代旧 MPB 方案——MPB 不落盘，导出 bundle 后
+    ///  平铺计数与 U 轴镜像全部丢失）。旋转走旋转贴图资产，与共享版一致。</summary>
+    private static Material BakedImageFloorMaterial(FloorDto floor, int rotation, float opacity)
+    {
+        float tileX = 1f, tileY = 1f;
+        if (floor.imageMode == "tile")
+        {
+            tileX = floor.widthCells > 0 ? floor.widthCells : 1;
+            tileY = floor.depthCells > 0 ? floor.depthCells : 1;
+        }
+        var key = floor.imageTexturePath + "|rot" + rotation + "|" + floor.imageMode
+            + "|" + tileX + "x" + tileY + "|op" + opacity.ToString("0.###",
+                System.Globalization.CultureInfo.InvariantCulture);
+        Material m;
+        if (_imageFloorMats.TryGetValue(key, out m) && m != null)
+            return m;
+
+        var src = ImageFloorMaterial(floor.imageTexturePath, rotation);
+        if (src == null) return null;
+        m = new Material(src);
+        m.name = src.name + "_baked";
+        // Unity's Plane UVs mirror the texture horizontally; flip U (negative
+        // tiling + compensating offset) so the image renders upright/correct.
+        if (m.HasProperty("_MainTex"))
+            m.SetTextureScale("_MainTex", new Vector2(-tileX, tileY));
+        if (m.HasProperty("_MainTex"))
+            m.SetTextureOffset("_MainTex", new Vector2(tileX, 0f));
+        m.color = new Color(1f, 1f, 1f, opacity);
+        _imageFloorMats[key] = m;
+        return m;
+    }
+
+    /// <summary>warp（透视贴合）地板材质：直接用原始贴图（ImageFloorMaterial 会给
+    ///  Plane 遗留问题烘焙 180° 旋转贴图，warp 的 NDC 直构 UV 不需要——否则画面里
+    ///  图片会转 180°）。90° 旋转烘焙进网格 UV，ST 恒等，透明度进颜色。</summary>
+    private static Material WarpFloorMaterial(string texturePath, float opacity)
+    {
+        var key = texturePath + "|warp|op" + opacity.ToString("0.###",
+            System.Globalization.CultureInfo.InvariantCulture);
+        Material m;
+        if (_imageFloorMats.TryGetValue(key, out m) && m != null)
+            return m;
+
+        var tex = AssetDatabase.LoadAssetAtPath<Texture>(texturePath);
+        if (tex == null) return null;
+        var shader = Shader.Find("Standard")
+            ?? Shader.Find("Universal Render Pipeline/Lit")
+            ?? Shader.Find("UI/Default");
+        m = new Material(shader);
+        m.mainTexture = tex;
+        m.name = "img_warp_" + System.IO.Path.GetFileNameWithoutExtension(texturePath);
+        SetupTransparentMode(m);
+        m.color = new Color(1f, 1f, 1f, opacity);
+        _imageFloorMats[key] = m;
+        return m;
+    }
+
+    /// <summary>屏幕 NDC(fx/fy ∈ [0,1]，左下原点) → 贴图 UV，含 90° 步进旋转
+    ///  （俯视顺时针：显示(u,v) ← 源(1-v,u) 等）。warp 网格 UV 直接对应屏幕坐标，
+    ///  无 Plane UV 的镜像问题。</summary>
+    private static Vector2 WarpUv(float fx, float fy, int rotation)
+    {
+        float u = fx, v = fy;
+        switch (rotation)
+        {
+            case 90: u = 1f - fy; v = fx; break;
+            case 180: u = 1f - fx; v = 1f - fy; break;
+            case 270: u = fy; v = 1f - fx; break;
+        }
+        return new Vector2(u, v);
+    }
+
+    /// <summary>构建/重建 warp（透视贴合）网格：把游戏画面（16:9 视锥）的 NxN 网格
+    ///  反投影到地板高度的地面上，UV = 屏幕位置。由此图片在游戏画面里显示为原样
+    ///  （四角对齐屏幕梯形四角、不透视变形）。网格为场景内嵌对象（随场景保存/打包），
+    ///  名字携带作者设定的碰撞盒格数 "_WxD" 供导出器还原。</summary>
+    private static void EnsureWarpFloorMesh(Transform t, FloorDto floor)
+    {
+        var mf = t.GetComponent<MeshFilter>();
+        if (mf == null) return;
+
+        var cam = FindSceneCamera();
+        if (cam == null)
+        {
+            Debug.LogWarning("[LayoutEditor] warp 地板未找到场景相机，保留原网格。");
+            return;
+        }
+
+        int wcx = floor.widthCells > 0 ? floor.widthCells
+            : Mathf.RoundToInt(floor.widthUnits / LayoutEditorCatalogLookup.GridCellSize);
+        int dcz = floor.depthCells > 0 ? floor.depthCells
+            : Mathf.RoundToInt(floor.depthUnits / LayoutEditorCatalogLookup.GridCellSize);
+        if (wcx <= 0) wcx = 1;
+        if (dcz <= 0) dcz = 1;
+
+        int segs = WarpMeshSegments;
+        var camPos = cam.transform.position;
+        var camRot = cam.transform.rotation;
+        float halfH = Mathf.Tan(Mathf.Clamp(cam.fieldOfView, 1f, 170f) * 0.5f * Mathf.Deg2Rad);
+        float halfW = halfH * WarpAspect;
+        float floorY = t.position.y;
+        var worldToLocal = t.worldToLocalMatrix;
+        int rot = NormalizeImageRotation(floor.imageRotation);
+
+        int count = (segs + 1) * (segs + 1);
+        var verts = new Vector3[count];
+        var norms = new Vector3[count];
+        var uvs = new Vector2[count];
+        int vi = 0;
+        for (int j = 0; j <= segs; j++)
+        {
+            float fy = (float)j / segs;
+            for (int i = 0; i <= segs; i++, vi++)
+            {
+                float fx = (float)i / segs;
+                // NDC 左下原点 → 相机空间射线（+x 右、+y 上、+z 前）。
+                var dir = camRot * new Vector3((fx * 2f - 1f) * halfW, (fy * 2f - 1f) * halfH, 1f);
+                if (dir.y > -1e-4f) dir.y = -1e-4f; // 越过地平线的极端角点：钳到近平水平
+                float dist = (floorY - camPos.y) / dir.y;
+                if (dist < 0f) dist = 0f;
+                if (dist > 500f) dist = 500f;
+                var world = camPos + dir * dist;
+                verts[vi] = worldToLocal.MultiplyPoint3x4(world);
+                norms[vi] = Vector3.up;
+                uvs[vi] = WarpUv(fx, fy, rot);
+            }
+        }
+
+        var tris = new int[segs * segs * 6];
+        int ti = 0;
+        for (int j = 0; j < segs; j++)
+        {
+            for (int i = 0; i < segs; i++)
+            {
+                int a = j * (segs + 1) + i;
+                int b = a + 1;
+                int c = a + segs + 1;
+                int d = c + 1;
+                // 顶点序保证法线朝上（+Y）。
+                tris[ti++] = a; tris[ti++] = c; tris[ti++] = b;
+                tris[ti++] = b; tris[ti++] = c; tris[ti++] = d;
+            }
+        }
+
+        var mesh = new Mesh();
+        mesh.name = WarpMeshNamePrefix + "_" + wcx + "x" + dcz;
+        mesh.vertices = verts;
+        mesh.normals = norms;
+        mesh.uv = uvs;
+        mesh.triangles = tris;
+        mesh.RecalculateBounds();
+
+        var old = mf.sharedMesh;
+        Undo.RecordObject(mf, "Layout Editor Warp Floor Mesh");
+        mf.sharedMesh = mesh;
+        // 旧 warp 网格是上一轮的场景内嵌对象，替换后清掉防累积（内置 Plane/Quad 不动）。
+        if (old != null && old != mesh && !string.IsNullOrEmpty(old.name)
+            && old.name.StartsWith(WarpMeshNamePrefix, StringComparison.Ordinal)
+            && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(old)))
+            UnityEngine.Object.DestroyImmediate(old);
+    }
+
+    /// <summary>从 warp 切回普通模式时，把内嵌 warp 网格换回内置 Plane/Quad
+    ///  （缩放已由 FloorScaleFromCells 恢复为格数换算值）。</summary>
+    private static void RestoreBuiltinFloorMesh(Transform t, FloorDto floor)
+    {
+        var mf = t.GetComponent<MeshFilter>();
+        if (mf == null) return;
+        var cur = mf.sharedMesh;
+        if (cur == null || string.IsNullOrEmpty(cur.name)
+            || !cur.name.StartsWith(WarpMeshNamePrefix, StringComparison.Ordinal))
+            return;
+
+        var wantQuad = floor != null && floor.meshType == "quad";
+        var tmp = GameObject.CreatePrimitive(wantQuad ? PrimitiveType.Quad : PrimitiveType.Plane);
+        var mesh = tmp.GetComponent<MeshFilter>().sharedMesh;
+        UnityEngine.Object.DestroyImmediate(tmp);
+
+        var old = mf.sharedMesh;
+        Undo.RecordObject(mf, "Layout Editor Floor Mesh Restore");
+        mf.sharedMesh = mesh;
+        if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(old)))
+            return;
+        UnityEngine.Object.DestroyImmediate(old);
     }
 
     /** Asset path of the rotated copy of an uploaded floor texture. */
@@ -1160,6 +1553,8 @@ public static class SceneLayoutApplier
         primitive.transform.localScale = FloorScaleFromCells(floor, 1f);
 
         ApplyFloorMaterial(primitive.transform, floor);
+        if (IsWarpFloor(floor))
+            EnsureWarpFloorMesh(primitive.transform, floor);
 
         if (createdObjects != null && floor != null && !string.IsNullOrEmpty(floor.instanceId))
             createdObjects[floor.instanceId] = primitive;
@@ -1498,9 +1893,61 @@ public static class SceneLayoutApplier
 
         if (!string.IsNullOrEmpty(item.displayName))
             instance.name = item.displayName;
+        EnsureUniqueSiblingName(instance.transform);
 
         LayoutEditorStubIO.ApplyStub(instance, item);
         return instance;
+    }
+
+    /// <summary>同名兄弟去重：按钮事件组的 SendTriggerToObject 按 GameObject.Find(名字)
+    /// 投递，两个断头台等同类目标同名时事件全部命中第一个。同父下按兄弟顺序，
+    /// 靠前的保留原名，靠后的追加 " (n)"（n 取最小空闲值）。幂等：重跑不再改名，
+    /// 首对象名保持稳定（旧烘焙引用不断）。</summary>
+    private static void EnsureUniqueSiblingName(Transform t)
+    {
+        if (t == null)
+            return;
+        var parent = t.parent;
+        if (parent == null)
+            return;
+
+        int myIndex = t.GetSiblingIndex();
+        string name = t.name;
+        bool earlierDuplicate = false;
+        for (int i = 0; i < myIndex; i++)
+        {
+            if (parent.GetChild(i).name == name)
+            {
+                earlierDuplicate = true;
+                break;
+            }
+        }
+        if (!earlierDuplicate)
+            return;
+
+        int suffix = 1;
+        while (true)
+        {
+            string candidate = name + " (" + suffix + ")";
+            bool taken = false;
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                if (i == myIndex)
+                    continue;
+                if (parent.GetChild(i).name == candidate)
+                {
+                    taken = true;
+                    break;
+                }
+            }
+            if (!taken)
+            {
+                Undo.RecordObject(t.gameObject, "Layout Editor Unique Name");
+                t.name = candidate;
+                return;
+            }
+            suffix++;
+        }
     }
 
     private static void ApplyItemScale(Transform t, LayoutItemDto item)
@@ -1637,3 +2084,5 @@ public static class LayoutEditorSafety
         return true;
     }
 }
+
+

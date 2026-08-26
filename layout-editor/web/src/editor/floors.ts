@@ -332,8 +332,9 @@ export function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | unde
   if (f.imageMode || f.imageTexturePath) {
     const rot = normalizeRot(f.imageRotation ?? 0);
     const rotTxt = rot ? ` · 旋转${rot}°` : "";
+    const modeTxt = f.imageMode === "tile" ? "一格平铺" : f.imageMode === "warp" ? "透视贴合（按相机构图）" : "全部铺开";
     return f.imageTexturePath
-      ? `图片地板（${f.imageMode === "tile" ? "一格平铺" : "全部铺开"}${rotTxt} · ${f.imageTexturePath.split("/").pop() ?? ""}）`
+      ? `图片地板（${modeTxt}${rotTxt} · ${f.imageTexturePath.split("/").pop() ?? ""}）`
       : "图片地板（未上传图片）";
   }
   if (f.tintEnabled) return `染色地板（颜色 ${f.tintColor ?? "#ffffff"}）`;
@@ -342,10 +343,15 @@ export function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | unde
 
 export function mergeRaftItemsIntoFloors(): void {
   const raftOf = (it: EditorItem) => S.catalogByGuid.get(it.prefabGuid)?.surfaceKind === "raft";
+  // 移动组成员不吸收（同 mergeThemedItemsIntoFloors：吸收会让成员脱离移动组）。
+  const memberIds = new Set<string>();
+  for (const g of S.moveControls) {
+    for (const id of g.itemInstanceIds) memberIds.add(id);
+  }
+  const rafts = S.items.filter((it) => raftOf(it) && !(it.instanceId && memberIds.has(it.instanceId)));
+  if (rafts.length === 0) return;
   const catalogId = (it: EditorItem) => S.catalogByGuid.get(it.prefabGuid)?.id ?? "";
   const isPrimary = (it: EditorItem) => catalogId(it) === "raft_raft_middle_01";
-  const rafts = S.items.filter(raftOf);
-  if (rafts.length === 0) return;
 
   const TOL = 0.05;
   /** Secondary↔primary nearest distance in official scenes is ~0.82–0.86. */
@@ -448,11 +454,20 @@ export function mergeRaftItemsIntoFloors(): void {
 }
 
 export function mergeThemedItemsIntoFloors(): void {
+  // 移动组成员不能被吸收成地板矩形：吸收后 item 从 S.items 消失，
+  // cleanOrphanedMoveControls 会把它从组里剔除，写回时以 new:themed: 重新
+  // 发射（脱离移动组挂到 Art 下）——移动岛的地砖会永久脱离组、不再随组动画，
+  // 与仍在组里的崖/贴花分裂错位（testice MidIsland 实证）。保持为普通物品。
+  const memberIds = new Set<string>();
+  for (const g of S.moveControls) {
+    for (const id of g.itemInstanceIds) memberIds.add(id);
+  }
   const consumed = new Set<string>();
   for (const it of S.items) {
     // 压力开关（含莲花变体）保持为物品：不并入主题地板（防御，即使 catalog
     // 缺失导致 isThemedFloorPrefab 误判也不转换）。
     if (it.stubKind === "PressureSwitch") continue;
+    if (it.instanceId && memberIds.has(it.instanceId)) continue;
     const cat = S.catalogByGuid.get(it.prefabGuid);
     if (!isThemedFloorPrefab(cat)) continue;
     const c = cat!;

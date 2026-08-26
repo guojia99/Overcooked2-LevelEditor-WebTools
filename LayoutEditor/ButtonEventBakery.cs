@@ -608,15 +608,22 @@ public static class ButtonEventBakery
 
     private static LayoutItemDto FindItemByName(List<LayoutItemDto> items, string objectName)
     {
-        if (string.IsNullOrEmpty(objectName)) return null;
+        if (string.IsNullOrEmpty(objectName))
+            return null;
+        // 优先 hierarchyPath 精确匹配（唯一）；displayName 兜底（历史场景可能
+        // 存在同名兄弟，此时取第一个匹配，与 GameObject.Find 行为一致）
+        LayoutItemDto fallback = null;
         foreach (var item in items ?? new List<LayoutItemDto>())
         {
-            if (item == null || string.IsNullOrEmpty(item.instanceId)) continue;
-            if (item.displayName == objectName) return item;
+            if (item == null || string.IsNullOrEmpty(item.instanceId))
+                continue;
             var path = item.hierarchyPath ?? "";
-            if (path.EndsWith("/" + objectName, StringComparison.Ordinal)) return item;
+            if (path.EndsWith("/" + objectName, StringComparison.Ordinal))
+                return item;
+            if (fallback == null && item.displayName == objectName)
+                fallback = item;
         }
-        return null;
+        return fallback;
     }
 
     /// <summary>读取状态上所有 SendTriggerToObject 的 (目标名, 触发名)（私有字段走

@@ -6,7 +6,7 @@ import type { ButtonEventLink, ButtonEventGroup } from "../types";
 import { isButtonLinkSource } from "./buttonLinks";
 import { stubKindOf } from "./stubControls";
 import { itemLabel } from "./labels";
-import { uuid, escHtml, prefabIdFromPath } from "./coords";
+import { uuid, escHtml } from "./coords";
 import { closeModal, openModal } from "../modals";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
@@ -37,12 +37,23 @@ export function ensureEventLink(sourceId: string): ButtonEventLink {
   return link;
 }
 
-/** 清理失效事件组：源物品被删、目标物品被删、组内事件清空。 */
+/** 清理失效事件组：源物品被删、目标物品被删、组内事件清空、目标不再是联动目标。
+ *  同时归一事件触发名 = 联动的共享触发名（运行时监听字段只认这个名字；
+ *  历史文档里自造的 switch_{prefabId}_{N} 会被自动修复）。 */
 export function cleanOrphanedButtonEvents(): void {
   const itemIds = new Set(S.items.map((i) => i.instanceId).filter(Boolean));
   for (const l of S.buttonEvents) {
+    const linked = new Set(
+      S.switchLinks.filter((sl) => sl.switchId === l.sourceId).map((sl) => sl.targetId)
+    );
     for (const g of l.groups) {
-      g.events = g.events.filter((e) => itemIds.has(e.targetId));
+      g.events = g.events.filter((e) => itemIds.has(e.targetId) && linked.has(e.targetId));
+      for (const e of g.events) {
+        const lt = S.switchLinks.find(
+          (sl) => sl.switchId === l.sourceId && sl.targetId === e.targetId
+        )?.trigger;
+        if (lt) e.trigger = lt;
+      }
     }
     l.groups = l.groups.filter((g) => g.events.length > 0);
   }
@@ -51,11 +62,18 @@ export function cleanOrphanedButtonEvents(): void {
   );
 }
 
-/** 默认触发名：switch_{目标prefabId}_{N}，N = 该按钮全部事件数 + 1。 */
-function defaultEventTrigger(link: ButtonEventLink, target: EditorItem): string {
-  const prefabId = prefabIdFromPath(target.prefabAssetPath) ?? "item";
-  const n = link.groups.reduce((sum, g) => sum + g.events.length, 0) + 1;
-  return `switch_${prefabId}_${n}`;
+/** 目标的联动共享触发名（未联动返回 undefined）。 */
+export function linkTriggerOf(sourceId: string, targetId?: string): string | undefined {
+  return S.switchLinks.find(
+    (l) => l.switchId === sourceId && (targetId === undefined || l.targetId === targetId)
+  )?.trigger;
+}
+
+/** 事件触发名：固定取联动的共享触发名（大炮为 Launch）。监听字段
+ *  （m_workTrigger/m_switchTrigger）是每台机器单值，由联动路径写入，
+ *  自造其它名字只会无人监听。 */
+function defaultEventTrigger(sourceId: string, target: EditorItem): string {
+  return linkTriggerOf(sourceId, target.instanceId) ?? "Switch";
 }
 
 // ---------------------------------------------------------------- 右侧面板
@@ -79,7 +97,7 @@ export function renderButtonEventPanel(body: HTMLElement): void {
 
   const parts: string[] = [];
   parts.push(
-    `<div class="muted" style="padding:8px 10px;">一个按钮可绑定多个事件组：每次按压按顺序向下一组广播全部事件（循环）；组内全部事件完成（完成触发器）后才可再按。配置在按钮右键菜单或下方列表中打开。</div>`
+    `<div class="muted" style="padding:8px 10px;">一个按钮可绑定多个事件组：每次按压按顺序向下一组广播全部事件（循环）；组内全部事件完成（完成触发器）后才可再按。事件目标仅限开关右键菜单「联动目标」中的物件。配置在按钮右键菜单或下方列表中打开。</div>`
   );
   for (const src of sources) {
     const link = eventLinkOfSource(src.instanceId ?? "");
@@ -134,16 +152,24 @@ export function buttonEventSummaryHtml(item: EditorItem): string {
 
 // ---------------------------------------------------------------- 配置弹窗
 
-function targetOptionsHtml(excludeIds: Set<string>): string {
+/** 事件目标下拉：仅限本开关的联动目标（运行时监听字段只由联动路径接线，
+ *  未联动的目标收了消息也不会响应）。 */
+function targetOptionsHtml(excludeIds: Set<string>, allowedTargets: Set<string>): string {
   return S.items
-    .filter((i) => i.instanceId && !excludeIds.has(i.instanceId) && stubKindOf(i) !== "Player")
+    .filter(
+      (i) =>
+        i.instanceId &&
+        !excludeIds.has(i.instanceId) &&
+        allowedTargets.has(i.instanceId) &&
+        stubKindOf(i) !== "Player"
+    )
     .map((i) => `<option value="${escHtml(i.instanceId)}">${escHtml(itemLabel(i))}</option>`)
     .join("");
 }
 
 function modalBodyHtml(link: ButtonEventLink | undefined): string {
   const n = link?.groups.length ?? 0;
-  return `<p class="modal-hint">每次按压按顺序向下一事件组广播全部事件（最后一组后循环回第一组）。事件可配「完成触发器」：目标完成事件时广播该触发名，组内全部完成后按钮才可再按；未配完成触发器的事件视为立即完成。</p>
+  return `<p class="modal-hint">每次按压按顺序向下一事件组广播全部事件（最后一组后循环回第一组）。事件目标仅限开关右键菜单「联动目标」里的物件；触发消息固定取联动的共享触发名（在开关右键菜单修改）。事件可配「完成触发器」：目标完成事件时广播该触发名，组内全部完成后按钮才可再按；未配完成触发器的事件视为立即完成。</p>
     <div class="blm-sec">事件组（共 ${n} 组，按下时顺序切换）</div>
     <div id="bev-groups"></div>
     <div class="blm-addrow"><button type="button" class="modal-btn" id="bev-addgroup">＋ 添加事件组</button></div>`;
@@ -176,8 +202,14 @@ function wireButtonEventModal(item: EditorItem): void {
 
   const refresh = () => {
     const l = link();
+    const allowedTargets = new Set(
+      S.switchLinks.filter((sl) => sl.switchId === myId).map((sl) => sl.targetId)
+    );
     if (!l || l.groups.length === 0) {
-      groupsEl.innerHTML = '<p class="modal-hint">未配置事件组</p>';
+      groupsEl.innerHTML =
+        allowedTargets.size === 0
+          ? '<p class="modal-hint">未配置事件组，且本开关还没有联动目标：先在开关右键菜单「联动目标」添加（如断头台/饮料机），再回到这里编排事件。</p>'
+          : '<p class="modal-hint">未配置事件组</p>';
     } else {
       groupsEl.innerHTML = l.groups
         .map((g, gi) => {
@@ -185,13 +217,13 @@ function wireButtonEventModal(item: EditorItem): void {
             .map(
               (e, ei) => `<div class="blm-row">
                 <span class="blm-row-label">${gi + 1}.${ei + 1} → ${escHtml(labelOf(e.targetId))}</span>
-                <input class="modal-input bev-trig" data-bev-g="${gi}" data-bev-i="${ei}" value="${escHtml(e.trigger)}" title="广播给目标的触发消息"/>
+                <span class="modal-input" style="display:inline-flex;align-items:center;min-width:120px" title="触发消息 = 联动的共享触发名（在开关右键菜单修改）">${escHtml(e.trigger)}</span>
                 <input class="modal-input bev-done" data-bev-g="${gi}" data-bev-i="${ei}" value="${escHtml(e.doneTrigger ?? "")}" placeholder="完成触发器（可选）" title="目标完成事件时广播的触发名"/>
                 <button type="button" class="modal-btn blm-mini" data-bev-del="${gi}:${ei}">移除</button>
               </div>`
             )
             .join("");
-          const opts = targetOptionsHtml(new Set(g.events.map((e) => e.targetId)));
+          const opts = targetOptionsHtml(new Set(g.events.map((e) => e.targetId)), allowedTargets);
           return `<div class="bev-group">
             <div class="blm-sec">事件组 ${gi + 1}（${g.events.length} 条事件）
               <button type="button" class="modal-btn blm-mini" data-bevg-up="${gi}" ${gi === 0 ? "disabled" : ""}>↑</button>
@@ -199,24 +231,13 @@ function wireButtonEventModal(item: EditorItem): void {
               <button type="button" class="modal-btn blm-mini" data-bevg-del="${gi}">删除组</button>
             </div>
             ${eventRows || '<p class="modal-hint">空事件组（按下时直接跳过）</p>'}
-            <div class="blm-addrow"><select id="bev-target-${gi}" class="modal-select">${opts || '<option value="">— 无可添加目标 —</option>'}</select>
+            <div class="blm-addrow"><select id="bev-target-${gi}" class="modal-select">${opts || '<option value="">— 无联动目标可添加（先在开关右键菜单添加联动） —</option>'}</select>
               <button type="button" class="modal-btn" data-bev-add="${gi}">＋ 添加事件</button></div>
           </div>`;
         })
         .join("");
     }
 
-    groupsEl.querySelectorAll<HTMLInputElement>(".bev-trig").forEach((inp) => {
-      inp.addEventListener("change", () => {
-        const l = link();
-        const g = l?.groups[parseInt(inp.dataset.bevG!, 10)];
-        const e = g?.events[parseInt(inp.dataset.bevI!, 10)];
-        if (!l || !g || !e) return;
-        pushHistory();
-        e.trigger = inp.value.trim() || "Switch";
-        setStatus(`事件触发消息已设为 ${e.trigger}（写回后生效）`);
-      });
-    });
     groupsEl.querySelectorAll<HTMLInputElement>(".bev-done").forEach((inp) => {
       inp.addEventListener("change", () => {
         const l = link();
@@ -291,7 +312,7 @@ function wireButtonEventModal(item: EditorItem): void {
         const g = l.groups[gi];
         if (!l || !g || !target) return;
         pushHistory();
-        g.events.push({ targetId: tid, trigger: defaultEventTrigger(l, target) });
+        g.events.push({ targetId: tid, trigger: defaultEventTrigger(myId, target) });
         setStatus(`已向事件组 ${gi + 1} 添加事件 → ${itemLabel(target)}（写回后生效）`);
         refresh();
         refreshButtonEventPanelIfActive();

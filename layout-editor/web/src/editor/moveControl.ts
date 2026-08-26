@@ -28,7 +28,6 @@ import {
 } from "./panels";
 import { isCollisionItem } from "./stubControls";
 import { renameGroupInButtonLinks, linkBindingGroup, cleanOrphanedButtonLinks } from "./buttonLinks";
-import { isAirFloor } from "./floors";
 import { openModal, closeModal } from "../modals";
 import { setLayer } from "./init";
 import type {
@@ -163,14 +162,14 @@ export function deleteWaypoint(group: MoveGroup, wpId: string): void {
 export function cleanOrphanedMoveControls(): void {
   const liveIds = new Set(S.items.map((it) => it.instanceId));
   const liveFloorIds = new Set(S.floors.map((f) => f.instanceId));
-  // 空气地板（仅碰撞盒）随写回重建，无法参与移动组烘焙 → 从组中剥离。
-  const airFloorIds = new Set(S.floors.filter((f) => isAirFloor(f)).map((f) => f.instanceId));
   S.moveControls = S.moveControls.filter((g) => {
     g.itemInstanceIds = g.itemInstanceIds.filter(
       (id) => liveIds.has(id) || id.startsWith("new:")
     );
+    // 空气地板（airFloor）保留在组里：其碰撞盒对象（Col_AirFloor）是场景对象，
+    // Unity 端会被移动组烘焙 reparent + 动画，碰撞随岛移动。
     g.floorInstanceIds = g.floorInstanceIds.filter(
-      (id) => (liveFloorIds.has(id) || id.startsWith("new:")) && !airFloorIds.has(id)
+      (id) => liveFloorIds.has(id) || id.startsWith("new:")
     );
     // Drop dangling member-group references (grouping is organizational).
     if (g.memberGroups) {
@@ -274,25 +273,39 @@ function addSelectedToGroup(): void {
   pushHistory();
   let addedItems = 0;
   let addedFloors = 0;
+  let linkedItems = 0;
   const target = pickTarget(group);
   const targetAdd = (id: string) => {
     if (target && !target.memberInstanceIds.includes(id)) target.memberInstanceIds.push(id);
   };
+  const addItem = (it: EditorItem): boolean => {
+    if (isBackgroundItem(it) || group.itemInstanceIds.includes(it.instanceId)) return false;
+    group.itemInstanceIds.push(it.instanceId);
+    targetAdd(it.instanceId);
+    return true;
+  };
   for (const key of S.selectedKeys) {
     const it = S.items.find((i) => i._editorKey === key);
-    if (it && !isBackgroundItem(it) && !group.itemInstanceIds.includes(it.instanceId)) {
-      group.itemInstanceIds.push(it.instanceId);
-      targetAdd(it.instanceId);
-      addedItems++;
-    }
+    if (it && addItem(it)) addedItems++;
   }
   for (const key of S.selectedFloorKeys) {
     const f = S.floors.find((fl) => fl._key === key);
-    // 空气地板（仅碰撞盒）随写回重建，加入移动组会在写回时失效 → 排除。
-    if (f && !isAirFloor(f) && f.surfaceKind !== "background" && !group.floorInstanceIds.includes(f.instanceId)) {
-      group.floorInstanceIds.push(f.instanceId);
-      targetAdd(f.instanceId);
-      addedFloors++;
+    if (!f || f.surfaceKind === "background" || group.floorInstanceIds.includes(f.instanceId)) continue;
+    // 空气地板（仅碰撞盒）允许入组：Unity 端其 Col_AirFloor 碰撞盒对象会被
+    // 烘焙 reparent + 动画，行走碰撞随组移动。
+    group.floorInstanceIds.push(f.instanceId);
+    targetAdd(f.instanceId);
+    addedFloors++;
+    // 空气地板不做整岛连带：隐形桥常与两侧静态岛边缘重叠（嵌入碰撞用），
+    // 连带会把静态岛的地砖/崖错误拉进移动组。
+    if (f.airFloor) continue;
+    // 整岛语义：地板入组时自动连带其矩形上方的物品（工作站/装饰/地砖）——
+    // 只移地板而上面的东西留在原地几乎必然不是想要的结果。
+    const hw = (f._wCells * CELL) / 2 + 0.05;
+    const hd = (f._dCells * CELL) / 2 + 0.05;
+    for (const it of S.items) {
+      if (Math.abs(it._wx - f._wx) > hw || Math.abs(it._wz - f._wz) > hd) continue;
+      if (addItem(it)) linkedItems++;
     }
   }
   S.dirty = true;
@@ -302,6 +315,7 @@ function addSelectedToGroup(): void {
   draw();
   setStatus(
     `已加入 ${addedItems} 个物品 · ${addedFloors} 块地板到组「${group.displayName}」` +
+      (linkedItems > 0 ? `（自动连带地板上方 ${linkedItems} 个物品）` : "") +
       (target ? `（成员组「${target.name}」）` : ""),
     addedItems + addedFloors > 0
   );
@@ -1806,9 +1820,9 @@ function renderMembersTab(group: MoveGroup): string {
       itemLayerOfIt(it) === "decor" &&
       !group.itemInstanceIds.includes(it.instanceId)
   );
-  // 空气地板（仅碰撞盒）随写回重建，无法参与移动组烘焙 → 不出现在添加候选里。
+  // 空气地板（仅碰撞盒）可入组：Unity 端其 Col_AirFloor 对象会被烘焙动画。
   const floorCandidates = S.floors.filter(
-    (f) => !isAirFloor(f) && f.surfaceKind !== "background" && !group.floorInstanceIds.includes(f.instanceId)
+    (f) => f.surfaceKind !== "background" && !group.floorInstanceIds.includes(f.instanceId)
   );
   html += `<div class="move-add-row">
     <button type="button" class="btn-small pick-add" id="btn-add-members" title="地图选点：点选 / 框选地图上的物品、装饰与地板加入本组（水面等背景不可选）">📐 地图选点</button>
@@ -2548,19 +2562,28 @@ function wireGroupEditor(body: HTMLElement, group: MoveGroup): void {
   body.querySelector<HTMLSelectElement>(".group-add-floor")?.addEventListener("change", (e) => {
     const id = (e.target as HTMLSelectElement).value;
     if (!id) return;
-    // 防御：空气地板（仅碰撞盒）不参与移动组烘焙。
-    const f = S.floors.find((fl) => fl.instanceId === id);
-    if (f && isAirFloor(f)) {
-      setStatus("空气地板（仅碰撞盒）无法加入移动组", false);
-      refresh();
-      return;
-    }
     pushHistory();
     group.floorInstanceIds.push(id);
+    // 整岛语义：地板入组时自动连带其矩形上方的物品（工作站/装饰/地砖）。
+    const f = S.floors.find((fl) => fl.instanceId === id);
+    let linked = 0;
+    if (f) {
+      const hw = (f._wCells * CELL) / 2 + 0.05;
+      const hd = (f._dCells * CELL) / 2 + 0.05;
+      for (const it of S.items) {
+        if (isBackgroundItem(it) || group.itemInstanceIds.includes(it.instanceId)) continue;
+        if (Math.abs(it._wx - f._wx) > hw || Math.abs(it._wz - f._wz) > hd) continue;
+        group.itemInstanceIds.push(it.instanceId);
+        const tgt2 = pickTarget(group);
+        if (tgt2 && !tgt2.memberInstanceIds.includes(it.instanceId)) tgt2.memberInstanceIds.push(it.instanceId);
+        linked++;
+      }
+    }
     const tgt = pickTarget(group);
     if (tgt && !tgt.memberInstanceIds.includes(id)) tgt.memberInstanceIds.push(id);
     S.dirty = true;
     refresh();
+    if (linked > 0) setStatus(`地板已入组，自动连带其上方 ${linked} 个物品`);
   });
 
   // ---- events tab

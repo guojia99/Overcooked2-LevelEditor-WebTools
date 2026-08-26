@@ -626,6 +626,15 @@ export async function deleteLevel(setName: string, levelId: string): Promise<voi
   await readApiJson<{ ok?: boolean }>(r);
 }
 
+export async function reorderLevels(setName: string, levelIds: string[]): Promise<void> {
+  const r = await fetch("/api/level/reorder", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, levelIds }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
 export async function fetchDeletePreview(setName: string, levelId: string): Promise<string[]> {
   const q = new URLSearchParams({ setName, levelId });
   const r = await fetch(`/api/level/delete-preview?${q}`);

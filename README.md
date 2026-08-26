@@ -29,6 +29,10 @@
 ![img_1.png](img/img_1.png)
 4. 点击菜单`Tool`菜单Open Bridge 即可使用
    ![img.png](img/img.png)
+5. 如果你使用了较新版本, 可能会有`Assembly-CSharp-Patch` 和 `common03`文件夹，这两个文件夹按照GUA的项目指引放在对应的目录下即可。
+
+
+
 
    
 ### 功能清单

@@ -547,20 +547,48 @@ public static class MoveControlImporter
             return null;
         }
 
-        // Average interval for the UI (key times are preserved per waypoint).
+        // Average interval for the UI, computed from PURE segment times: the bake
+        // lays keys as arrival t[i+1] = t[i] + wait[i] + segment[i], so each
+        // waypoint's dwell must be subtracted. The old (l.t - f.t)/(n-1) folded
+        // waits into travel time — a 12s step with a 30s dwell came back as 27s,
+        // and every save/reload round-trip inflated the interval by wait/(n-1)
+        // more (12 -> 27 -> 42 ...).
         foreach (var evt in events)
         {
             if (evt.waypointIds == null || evt.waypointIds.Length < 2) continue;
-            var first = evt.waypointIds[0];
-            var last = evt.waypointIds[evt.waypointIds.Length - 1];
-            MoveGroupWaypointDto f = null, l = null;
-            foreach (var wp in waypoints)
+            var wps = new List<MoveGroupWaypointDto>();
+            bool missing = false;
+            for (int i = 0; i < evt.waypointIds.Length; i++)
             {
-                if (wp.id == first) f = wp;
-                if (wp.id == last) l = wp;
+                MoveGroupWaypointDto found = null;
+                foreach (var wp in waypoints)
+                {
+                    if (wp.id == evt.waypointIds[i])
+                    {
+                        found = wp;
+                        break;
+                    }
+                }
+                if (found == null)
+                {
+                    missing = true;
+                    break;
+                }
+                wps.Add(found);
             }
-            if (f != null && l != null && f.hasTime && l.hasTime && l.t - f.t > 0.001f)
-                evt.intervalSeconds = (l.t - f.t) / (evt.waypointIds.Length - 1);
+            if (missing) continue;
+            float sum = 0f;
+            int count = 0;
+            for (int i = 0; i < wps.Count - 1; i++)
+            {
+                if (!wps[i].hasTime || !wps[i + 1].hasTime) continue;
+                float seg = wps[i + 1].t - wps[i].t - Mathf.Max(0f, wps[i].wait);
+                if (seg <= 0.001f) continue;
+                sum += seg;
+                count++;
+            }
+            if (count > 0)
+                evt.intervalSeconds = sum / count;
         }
 
         var group = new MoveGroupDto
@@ -968,6 +996,11 @@ public static class MoveControlImporter
 
     private static bool LooksLikeFloor(GameObject go)
     {
+        // 空气地板成员：无 Mesh、只有 BoxCollider，按导出同名约定识别，归入
+        // floorIds（web 端 floors 数组持有其 id，组往返才不断链）。
+        if (go.name == SceneFloorExporter.AirFloorColliderName ||
+            go.name.StartsWith(SceneFloorExporter.AirFloorColliderName + " (", StringComparison.Ordinal))
+            return true;
         var mf = go.GetComponent<MeshFilter>();
         var mr = go.GetComponent<MeshRenderer>();
         if (mf == null || mr == null) return false;

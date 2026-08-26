@@ -1,34 +1,46 @@
 #!/usr/bin/env node
 /**
- * gen-testice-layout.mjs — 生成 my_test/testice 冰雪三岛布景并写回 Unity（v2）。
+ * gen-jia-level1_2-layout.mjs — 把 my_test/testice 的冰雪布局同步到
+ * jia_carnival / s_jia_level1_2（Level1-2 Snowy Plum Loft 梅雪凇阁），并带两项修复：
  *
- * 布局（格 = 1.2m，行走面统一高度，左中右结构，背景为水）：
- *   左岛 8×12（四角各阶梯切 3 格的斜角）、中岛 4×4、右岛 8×8（同款切角）
- *   中岛与左右岛之间各留 1 格（1.2m）水道，视觉隔水；
- *   中岛下方垫一块隐形 airFloor 行走碰撞（左右各嵌入邻岛碰撞体 0.6m、纵向
- *   外扩 0.9m，学 3-4 浮冰 Ground 碰撞比可视面大一圈的做法），走上去不掉水。
- *   远景聚集上半部分：北/东北/西北三座布景岛（中秋宝塔、DLC13 寺庙、雪树、
- *   企鹅）+ 北带与东侧远处冰山；下半部分水面留空（预留给动态冰岛）。
- *   左右岛西/东侧各伸出 2 格宽走廊连接 5×5 庭院（DLC13 中秋灯柱/围栏/盒灯/
- *   桌椅 + 普通树），水面更多浮冰与中秋漂浮灯。
- *   岛上冰块配隐形碰撞盒（1.2×2×1.2，阻挡玩家穿行）。背景水面东扩。
- *   岛面全部雪地砖（ice_floor 只用于水面浮冰）；边缘贴花盖在地砖/崖顶接缝线上。
+ *   1) 三个主岛（左/中/右，含走廊庭院）的边缘贴花向岛心内缩 EDGE_INSET=0.15m
+ *      （直边沿法线、凸角沿对角线、凹角不动；scale 保持 0.0125 —— 缩小会重蹈
+ *      testice 0.0115 漏缝的覆辙）。布景岛不内缩。
+ *   2) 防 Play 闪烁（z-fighting）：地砖 y=0 不动（行走铁律）；所有边缘/转角
+ *      贴花抬到地砖之上并做确定性高度分层 —— 直边 y=0.010+eps、转角
+ *      y=0.020+eps（eps 按格坐标哈希 0~0.0028，相邻条必然不同高，转角稳定
+ *      压直边一头）。1~2cm 抬升在游戏相机下不可见，搭接量不变、不露缝。
  *
- * 素材：地砖/冰崖/雪盖/水面/降雪复用 oc1_story_3_4（DLC03 / bundle210），
- * 宝塔与漂浮灯笼来自 DLC13 中秋主题（common03）。
+ * 与 testice 生成器的差异：
+ *   - 中岛铺成**静态**可行走岛（parent Art/MainIsland），不带移动组；
+ *     doc 不传 moveControls —— applier 对 null 完全不碰现有移动配置。
+ *   - doc 不传 cameraInfo —— 保留 level1_2 自己的相机 (5.4,22,-15.2)；
+ *     也不调用 /api/level/audio（保留 LevelInfo 已配的音频）。
+ *   - 灯光改用 testice 实证值（冷蓝 #636BFF @ 0.35）：原暖白 #FFEECA 照白雪
+ *     贴花惨白刺眼（"贴花太白"，用户降 intensity 到 0.35 仍白亮——是色温问题
+ *     不是亮度问题，雪地必须冷光）。
+ *   - 出生点重映射为 testice 位（旧 P1/P2 在 x≈17，同步后会落水）。
+ *   - --apply 后重发死亡主题 water + KillPlane (2.4, 4, 54×40)。
  *
  * 用法：
- *   node gen-testice-layout.mjs --base-url http://<虚拟机IP>:8765            # 只生成 JSON，不写回
- *   node gen-testice-layout.mjs --base-url http://<虚拟机IP>:8765 --apply    # 生成并写回 Unity
+ *   node gen-jia-level1_2-layout.mjs --base-url http://<虚拟机IP>:8765            # dry-run
+ *   node gen-jia-level1_2-layout.mjs --base-url http://<虚拟机IP>:8765 --apply    # 写回 Unity
  */
 
 const CELL = 1.2;
 const HALF = 0.6;
-// 行走层高度：必须为 0！3-4 的 Col_Ice 与编辑器自制关（jia_carnival）的 Col_Floor
-// 顶面都在 y=0，角色出生/行走基准也是 0。地砖视觉也放 0 与碰撞对齐；
-// 之前放 0.08 会导致胶囊嵌进地板盒侧面 → 到处"空气墙"。
+// 行走层高度：必须为 0（FLOOR_Y 铁律，见 testice 生成器注释）。
 const FLOOR_Y = 0;
-const SCENE = "Assets/LevelSets/my_test/scenes/s_testice.unity";
+const SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level1_2.unity";
+
+// 边缘贴花内缩量（米）：三个主岛用；约 1/8 格。Play 后如需调整改这一个数重跑。
+const EDGE_INSET = 0.15;
+// 防闪烁高度分层：直边贴花 / 转角贴花的基础 y（地砖 y=0，转角压直边）。
+const CAP_Y_EDGE = 0.010;
+const CAP_Y_CORNER = 0.020;
+// 确定性微抖动（0~0.0028）：相邻格 i±1 → ±31≡±7 (mod 8)、j±1 → ±17≡±1 (mod 8)，
+// 取模后必然不同 → 相邻贴花永不同高；同位置多次运行结果一致。
+const capEps = (a, b, salt) => ((((a * 31) ^ (b * 17) ^ salt) % 8) + 8) % 8 * 0.0004;
 
 // ---------------------------------------------------------------- prefab 表
 const P = (id, guid, extra = {}) => ({
@@ -267,10 +279,13 @@ const EDGE_RULES = [
 const CONVEX_YAW = { NE: 270, NW: 180, SW: 90, SE: 0 };
 // 凹角（占 3 格）：cliff_90；key=缺失格方位
 const CONCAVE_YAW = { NW: 0, SW: 270, NE: 90, SE: 180 };
+// 凸角被占格 → 岛心方向（内缩方向 = 被占格方位的反方向... 即岛内侧）。
+// 角点在格角上，被占格在象限 q，则岛心朝 q 方向——内缩 = 往被占格一侧移。
+const QUAD_DIR = { NE: [1, 1], NW: [-1, 1], SW: [-1, -1], SE: [1, -1] };
 
 let seq = 0;
 function makeItem(pf, x, y, z, rotY, parentPath, walkable, displaySuffix) {
-  const id = `new:testice:${String(seq++).padStart(4, "0")}`;
+  const id = `new:jia12:${String(seq++).padStart(4, "0")}`;
   return {
     instanceId: id,
     hierarchyPath: id,
@@ -317,14 +332,18 @@ function pickVariant(a, b, i, j, salt) {
 
 /**
  * 铺一座岛：地砖 + 直边冰崖 + 边缘贴花 + 转角。
- * opts: { parent, walkable, ox, oz } —— ox/oz 为格基准（中心 = ox+1.2i）
- * 岛面全部雪地砖（ice_floor 只用于水面浮冰；岛上不用——看着像洞）。
+ * opts: { parent, walkable, ox, oz, edgeInset } —— ox/oz 为格基准（中心 = ox+1.2i）
+ * edgeInset（米）：边缘贴花向岛心平移量（直边沿法线、凸角沿对角线朝被占格一侧、
+ * 凹角不动）。scale 不变，搭接量不变，不露缝。
+ * 防闪烁：地砖 y=0；直边贴花 y=CAP_Y_EDGE+eps(i,j)、转角贴花 y=CAP_Y_CORNER+eps(a,b)，
+ * 相邻异高，彻底消除共面 z-fighting。
  */
 function emitIsland(items, cells, salt, opts = {}) {
   const parent = opts.parent || "Art/MainIsland";
   const walkable = opts.walkable !== false;
   const ox = opts.ox !== undefined ? opts.ox : HALF;
   const oz = opts.oz !== undefined ? opts.oz : HALF;
+  const inset = opts.edgeInset || 0;
   const wx = (i) => ox + CELL * i;
   const wz = (j) => oz + CELL * j;
   const has = (i, j) => cells.has(key(i, j));
@@ -333,7 +352,7 @@ function emitIsland(items, cells, salt, opts = {}) {
     const [i, j] = k.split(",").map(Number);
     items.push(makeItem(PREFABS.snow_tile, wx(i), FLOOR_Y, wz(j), 0, parent, walkable));
   }
-  // 2) 直边冰崖（水线，y=0）+ 边缘雪贴花（盖缝，y=FLOOR_Y，放边线上，每条外露边都盖）
+  // 2) 直边冰崖（水线，y=0）+ 边缘雪贴花（盖缝，放边线上；内缩 inset，抬高分层）
   for (const k of cells) {
     const [i, j] = k.split(",").map(Number);
     const exposed = EDGE_RULES.filter((r) => !has(i + r.di, j + r.dj));
@@ -341,7 +360,11 @@ function emitIsland(items, cells, salt, opts = {}) {
       const cf = pickVariant(PREFABS.cliff_s1, PREFABS.cliff_s2, i, j, salt + r.yaw);
       items.push(makeItem(cf, wx(i) + r.dx, 0, wz(j) + r.dz, r.yaw, parent, false));
       const cap = pickVariant(PREFABS.cap_s1, PREFABS.cap_s2, i, j, salt + r.yaw + 7);
-      items.push(makeItem(cap, wx(i) + r.dx, FLOOR_Y, wz(j) + r.dz, r.yaw, parent, false));
+      // 内缩方向 = 边法线的反方向（朝岛心）：r.dx/dz 指向岛外
+      const ix = inset ? -(r.dx / HALF) * inset : 0;
+      const iz = inset ? -(r.dz / HALF) * inset : 0;
+      items.push(makeItem(cap, wx(i) + r.dx + ix, CAP_Y_EDGE + capEps(i, j, salt + r.yaw),
+        wz(j) + r.dz + iz, r.yaw, parent, false));
     }
   }
   // 3) 转角（凸角 cliff_270 / 凹角 cliff_90），角点 = 相邻砖中心±半格
@@ -364,30 +387,36 @@ function emitIsland(items, cells, salt, opts = {}) {
         const yaw = CONVEX_YAW[occ[0]];
         items.push(makeItem(PREFABS.cliff_270, ox + CELL * a - HALF, 0, oz + CELL * b - HALF, yaw, parent, false));
         // 凸角雪地贴花：snow_270 同位，yaw = 凸角崖 yaw + 180（3-4 实测规则）
-        items.push(makeItem(PREFABS.cap_270, ox + CELL * a - HALF, FLOOR_Y, oz + CELL * b - HALF, (yaw + 180) % 360, parent, false));
+        // 内缩：沿对角线朝被占格（岛心）一侧两轴各移 inset，与相邻直边对齐
+        const [qx, qz] = QUAD_DIR[occ[0]];
+        items.push(makeItem(PREFABS.cap_270,
+          ox + CELL * a - HALF + qx * inset, CAP_Y_CORNER + capEps(a, b, salt),
+          oz + CELL * b - HALF + qz * inset, (yaw + 180) % 360, parent, false));
       } else if (occ.length === 3) {
         const missing = ["SW", "SE", "NW", "NE"].find((n) => !occ.includes(n));
         const yaw = CONCAVE_YAW[missing];
         items.push(makeItem(PREFABS.cliff_90, ox + CELL * a - HALF, 0, oz + CELL * b - HALF, yaw, parent, false));
         // 凹角雪地贴花：snow_90 同位，yaw = 凹角崖 yaw + 90（3-4 实测规则）
-        items.push(makeItem(PREFABS.cap_90, ox + CELL * a - HALF, FLOOR_Y, oz + CELL * b - HALF, (yaw + 90) % 360, parent, false));
+        // 凹角已陷在岛内、无外悬，v1 不平移，只抬高分层
+        items.push(makeItem(PREFABS.cap_90,
+          ox + CELL * a - HALF, CAP_Y_CORNER + capEps(a, b, salt + 3),
+          oz + CELL * b - HALF, (yaw + 90) % 360, parent, false));
       }
     }
   }
 }
 
-// ---------------------------------------------------------------- 远景布景（上半部分聚集，下半留空给动态冰岛）
-// 东北布景岛 4×4（只切角点 1 格）、西北布景岛 4×4（切 4 角点；v3 扩自 3×3 以放下 4×4 大雪树）
+// ---------------------------------------------------------------- 远景布景（上半部分聚集，下半留空）
+// 东北布景岛 4×4（只切角点 1 格）、西北布景岛 4×4（切 4 角点）
 const neIslet = rectCells(14, 17, 8, 11, [[14, 8], [17, 8], [14, 11], [17, 11]]);
 const nwIslet = rectCells(-11, -8, 8, 11, [[-11, 8], [-8, 8], [-11, 11], [-8, 11]]);
 
-// 布景岛装饰坐标一律取岛格集内的格心（cx(i), cz(j)）——之前的自由坐标导致
-// NPC/桌椅悬在切角格外的水面上方。
+// 布景岛装饰坐标一律取岛格集内的格心（cx(i), cz(j)）
 function emitBackdrop(items) {
   const B = (pf, i, j, yaw, y = FLOOR_Y) =>
     items.push(makeItem(pf, cx(i), y, cz(j), yaw, "Art/Backdrop", false));
   // 中秋岛（宝塔，i∈[0,4] j∈[6,10] 切 4 角点）：亭内坐桌喝茶客人 ×2 + 企鹅 +
-  // 亭周灯柱/盒灯 + 新素材（eskimo 岛民 / 中式侍者 / 龙雕像）
+  // 亭周灯柱/盒灯 + eskimo 岛民 / 中式侍者 / 龙雕像
   items.push(makeItem(PREFABS.pagoda, 3.0, FLOOR_Y, 10.2, 0, "Art/Backdrop", false));
   B(PREFABS.table_guests, 1, 7, 0);
   B(PREFABS.table_guests, 3, 7, 180);
@@ -416,8 +445,6 @@ function emitBackdrop(items) {
 }
 
 // ---------------------------------------------------------------- 走廊+庭院装饰
-// 中秋庭院升级：装饰圣诞树（原普通雪树）+ 雪橇/礼物/糖果拐杖/冰晶/雪堆/街灯/大红灯笼，
-// 走廊入口加 dlc13 拱门。坐标全部格心（cx/cz）。
 function emitCourtyards(items) {
   const C = (pf, i, j, yaw, y = FLOOR_Y) =>
     items.push(makeItem(pf, cx(i), y, cz(j), yaw, "Art/Decoration", false));
@@ -461,8 +488,7 @@ function emitCourtyards(items) {
   items.push(makeItem(PREFABS.archway, 20.4, FLOOR_Y, 0, 0, "Art/Decoration", false));
 }
 
-// ---------------------------------------------------------------- 碰撞体
-//  invisible BoxCollider（1.2×2×1.2，插件 ApplyCollisionItem 机制），给岛上冰块加碰撞
+// ---------------------------------------------------------------- 碰撞体（备用机制，本场景暂不使用）
 function makeCollisionItem(x, z, displayName) {
   const it = makeItem({ guid: "", assetPath: "", id: displayName, rotX: 0, scale: { x: 1, y: 1, z: 1 }, footprint: { cellsX: 1, cellsZ: 1 } },
     x, FLOOR_Y, z, 0, "Design/Collision", false);
@@ -486,7 +512,6 @@ function emitDecor(items) {
   D(PREFABS.box_lantern_01, 11, -3, 135);
   D(PREFABS.box_lantern_01, 6, 2, 315);
   D(PREFABS.box_lantern_01, 11, 2, 225);
-  // 北侧布景岛装饰已在 emitBackdrop 中（宝塔等）；此处仅水面漂浮物。
   // 水面上半浮的冰块（仿 3-4，y=-1.15；避开水道，不挡过岛路线）
   const W = (pf, x, z, yaw) =>
     items.push(makeItem(pf, x, -1.15, z, yaw, "Art/Decoration", false));
@@ -532,8 +557,7 @@ function emitDecor(items) {
   AL(3.0, 13.8);
   AL(-18.6, 3.6);
   AL(23.4, 3.6);
-  // v3 水面新装饰（y=-0.81 贴水）：莲花烛 / 水波纹 / 花灯鱼 —— 全部布在北侧水面，
-  // 避开中岛移动航线（x 0..11.4, z -9.6..2.4）
+  // 水面新装饰（y=-0.81 贴水）：莲花烛 / 水波纹 / 花灯鱼 —— 全部布在北侧水面
   const LOT = (x, z, yaw) =>
     items.push(makeItem(PREFABS.lotus, x, -0.81, z, yaw, "Art/Decoration", false));
   LOT(0.6, 5.4, 15);
@@ -569,6 +593,7 @@ async function api(path, method, body) {
 }
 
 // 出生点：Player1/2 左岛，Player3/4 右岛（仿 3-4 的 2+2）
+// 注意：level1_2 旧出生点 P1/P2 在 x≈17（同步几何后在右岛东侧水里），必须重映射。
 const SPAWN_POS = {
   "Player 1": { x: cx(-7), z: cz(-2) },
   "Player 2": { x: cx(-6), z: cz(0) },
@@ -577,7 +602,9 @@ const SPAWN_POS = {
 };
 
 async function main() {
-  // 1) 现有布局：保留 4 个出生点（改坐标），其余内容全量重建（差量删除旧生成物）
+  // 1) 现有布局：保留 4 个出生点（改坐标），其余内容全量重建（差量删除旧生成物：
+  //    旧 2 大冰面 + 2 雪面 + 水/落雪被新内容替换；旧 4 个 Col_Floor 由
+  //    SyncWalkableToFloors 清除并从 walkable 地砖自动重建）
   const cur = await api(`/api/scene/layout?assetPath=${encodeURIComponent(SCENE)}`);
   const players = (cur.items || []).filter((it) => /Player\.prefab$/.test(it.prefabAssetPath || ""));
   if (players.length !== 4) throw new Error(`出生点数量异常：${players.length}（期望 4）`);
@@ -590,20 +617,18 @@ async function main() {
   }
 
   // 2) 生成三岛 + 布景岛 + 浮冰 + 装饰 + 水面 + 落雪
+  //    三个主岛（含走廊庭院）边缘贴花内缩 EDGE_INSET；布景岛不内缩。
+  //    中岛静态（parent Art/MainIsland），不进移动组。
   const gen = [];
-  emitIsland(gen, leftIsland, 11);
-  // 中岛单独收集：全部物品（地砖+崖+贴花）进移动组。walkable:true ——
-  // 插件 SyncWalkableToFloors 会把移动组成员的行走碰撞挂成物品子物体，随组动画移动。
-  const midItems = [];
-  emitIsland(midItems, midIsland, 23, { parent: "Art/MovingIsland" });
-  emitIsland(gen, rightIsland, 37);
+  emitIsland(gen, leftIsland, 11, { edgeInset: EDGE_INSET });
+  emitIsland(gen, midIsland, 23, { edgeInset: EDGE_INSET });
+  emitIsland(gen, rightIsland, 37, { edgeInset: EDGE_INSET });
   emitIsland(gen, pagodaIsland, 53, { parent: "Art/Backdrop", walkable: false });
   emitIsland(gen, neIslet, 67, { parent: "Art/Backdrop", walkable: false });
   emitIsland(gen, nwIslet, 71, { parent: "Art/Backdrop", walkable: false });
   emitBackdrop(gen);
   emitCourtyards(gen);
   emitDecor(gen);
-  gen.push(...midItems);
   const water = makeItem(PREFABS.water, 3.0, -0.81, 4.0, 0, "Art/Environment", false);
   water.localScale = { x: 54, y: 38, z: 1 }; // x -24..30, z -15..23
   gen.push(water);
@@ -612,10 +637,10 @@ async function main() {
   const doc = {
     sceneAssetPath: SCENE,
     items: players.concat(gen),
-    // 中岛隐形过桥：airFloor（Ground 层碰撞，无可见面），横向嵌入左右岛碰撞体
-    // 0.6m（零缝隙，走上去绝不掉水），纵向比岛面外扩 0.9m（学 3-4 浮冰 Ground）。
+    // 中岛两侧水道的隐形过桥：airFloor（Ground 层碰撞，无可见面），横向嵌入左右岛
+    // 碰撞体 0.6m（零缝隙，走上去绝不掉水），纵向比岛面外扩 0.9m（学 3-4 浮冰）。
     floors: [{
-      instanceId: "new:testice-airfloor-mid",
+      instanceId: "new:jia12-airfloor-mid",
       hierarchyPath: "Design/Collision/Col_AirFloor",
       parentPath: "Design/Collision",
       displayName: "Col_AirFloor",
@@ -632,50 +657,16 @@ async function main() {
       widthCells: 7,
       depthCells: 6,
     }],
-    // 中岛移动组：中心(2.4,0) → 停 30s → 下行 7.5s 至 (2.4,-7.2) → 右移 7.5s 至
-    // 拼接位 (9.0,-7.2)（北缘 z=-4.8 与右岛南缘齐平拼合）→ 停 30s → 原路 15s 返回中心。
-    // 两个独立 move 事件 + 组级 loop（周期 90s；不用单事件 pingpong —— 镜像会把
-    // C 点 30s 停留重复成 60s）。e2 用独立的 waypoint 副本，避免 wait 在两端重复触发。
-    moveControls: {
-      groups: [{
-        id: "mid-island",
-        displayName: "MidIsland",
-        itemInstanceIds: midItems.map((it) => it.instanceId),
-        floorInstanceIds: [],
-        objectInstanceIds: [],
-        startDelay: 0,
-        loop: true,
-        loopDelay: 0,
-        waypoints: [
-          { id: "wpA", x: 2.4, z: 0, wait: 30 },
-          { id: "wpB", x: 2.4, z: -7.2, segmentSeconds: 7.5 },
-          { id: "wpC", x: 9.0, z: -7.2, segmentSeconds: 7.5 },
-          { id: "wpC2", x: 9.0, z: -7.2, wait: 30, segmentSeconds: 7.5 },
-          { id: "wpB2", x: 2.4, z: -7.2, segmentSeconds: 7.5 },
-          { id: "wpA2", x: 2.4, z: 0 },
-        ],
-        events: [
-          { id: "e1", type: "move", delay: 0, intervalSeconds: 7.5, waypointIds: ["wpA", "wpB", "wpC"] },
-          { id: "e2", type: "move", delay: 0, intervalSeconds: 7.5, waypointIds: ["wpC2", "wpB2", "wpA2"] },
-        ],
-      }],
-    },
-    cameraInfo: {
-      backgroundColor: "#000000",
-      fieldOfView: 45,
-      position: { x: 2.4, y: 15, z: -15 },
-      pitch: 54,
-      yaw: 0,
-      roll: 0,
-      nearClip: 0.3,
-      farClip: 1000,
-    },
+    // 不传 moveControls / cameraInfo —— applier 对 null 完全不碰：
+    // 保留 level1_2 现有移动配置与相机 (5.4,22,-15.2) pitch60。
+    // 灯光：换 testice 实证冷蓝 #636BFF @ 0.35 —— 原暖白 #FFEECA 照白雪贴花
+    // 惨白刺眼（色温问题，非亮度问题；用户降 intensity 无效）。
     lights: [
       {
         hierarchyPath: "Art/Lights/day",
         displayName: "day",
         lightType: 1,
-        color: "#636BFF", // 3-4 同款冷蓝平行光
+        color: "#636BFF", // 3-4 / testice 同款冷蓝平行光
         intensity: 0.35,
         range: 10,
         spotAngle: 30,
@@ -692,12 +683,12 @@ async function main() {
 
   if (!APPLY) {
     const fs = await import("node:fs");
-    fs.writeFileSync("/var/folders/p8/b3ryxj6s1bd4wgsspxzhfnw40000gn/T/opencode/testice-doc.json", JSON.stringify(doc));
+    fs.writeFileSync("/var/folders/p8/b3ryxj6s1bd4wgsspxzhfnw40000gn/T/opencode/jia12-doc.json", JSON.stringify(doc));
     console.log("\n（未加 --apply，不写回。文档大小：", JSON.stringify(doc).length, "字节）");
     return;
   }
 
-  // 3) 写回布局（全量 + 重建行走碰撞 + 烘焙移动组动画）
+  // 3) 写回布局（全量 + 重建行走碰撞；moveControls=null 不烘焙不动现有移动配置）
   console.log("\n写回布局…");
   const r1 = await api(`/api/scene/layout?snap=0.01&syncWalkable=1`, "POST", doc);
   console.log("布局写回：", typeof r1 === "string" ? r1 : JSON.stringify(r1));
@@ -710,24 +701,9 @@ async function main() {
   console.log("设置 KillPlane 范围…");
   console.log(await api("/api/scene/killplane", "POST", { sceneAssetPath: SCENE, cx: 2.4, cz: 4, sx: 54, sz: 40 }));
 
-  // 6) 冰雪 BGM + 环境声 + 音频目录（保留 testice 现有 5 个目录 + DLC03）
-  console.log("设置冰雪 BGM…");
-  console.log(await api("/api/level/audio", "POST", {
-    sceneAssetPath: SCENE,
-    inLevelMusicGuid: "e7478bf2c298f4543868f5f42a972711", // DLC_03_InGame_Music_SO
-    ambiences: ["DLC_03_Amb"],
-    audioDirectoryGuids: [
-      "45abe9378aa684144b655a71d85d422a",
-      "b298262cebf31cc41ad9e3d8eef6104a",
-      "4c50268f8f711f0478ed2afe1fe04148",
-      "c3d1d7d9880429247949bfc85cb265cd",
-      "193b2f9bf726f474bbcad5946bf20392",
-      "1e0a31a7d9dc8ec419e69701fef59706", // DLC03AudioDirectory
-    ],
-    onDeathEffectGuid: "66a94ec69fed59240b93b7a666dfc2be", // WaterSplash_Particle_003_SO
-  }));
+  // 注意：不调用 /api/level/audio —— level1_2 的 LevelInfo 已配好 BGM 与 30 个音频目录。
 
-  console.log("\n全部完成。请在 Unity 中 Play 验证（重点：过岛行走、冰块碰撞、BGM/落水）。");
+  console.log("\n全部完成。请在 Unity 中 Play 验证（重点：过岛行走、边缘贴花内缩效果、拼接缝闪烁是否消失）。");
 }
 
 main().catch((e) => {

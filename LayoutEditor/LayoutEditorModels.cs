@@ -1152,6 +1152,14 @@ public class LevelDeleteDto
 }
 
 [Serializable]
+public class LevelReorderDto
+{
+    public string setName;
+    /** 期望的新顺序（关卡 data 目录名列表，须恰好覆盖该集全部关卡）。 */
+    public string[] levelIds;
+}
+
+[Serializable]
 public class DeathThemeDto
 {
     public string sceneAssetPath;
