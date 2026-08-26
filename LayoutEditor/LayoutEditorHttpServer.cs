@@ -454,13 +454,15 @@ public class LayoutEditorHttpServer
 
                 // 场景写回完成后：默认触发两个自动填充 —— Fill All AudioDirectorySOs 与
                 // Auto Fill All Ingredients，确保填充是基于"写完全部"之后的最终状态。
-                if (levelSet != null && levelInfo != null)
+        if (levelSet != null && levelInfo != null)
                 {
                     LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
                     LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
                     // 填充可能引入新的食材/音频目录引用，再同步一次副本、依赖并合并音频 bundle。
                     LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
                     LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
+                    EditorUtility.SetDirty(levelInfo);
+                    AssetDatabase.SaveAssets();
                 }
 
                 WriteJson(response, 200, "{\"ok\":true}");

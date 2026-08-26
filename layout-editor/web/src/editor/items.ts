@@ -6,16 +6,44 @@ import {
   itemScaleX,
   itemScaleZ,
   newEditorKey,
-  stepDisplayDecimals
+  stepDisplayDecimals,
+  prefabIdFromPath,
+  isSwCornerPivotPrefabId,
+  isLargePotPrefabId,
+  itemPrefabId,
+  itemVisualCenterXZ,
+  stubToVisualOffset,
+  hotpotEditorStubFromUnity,
+  largePotUnityFromVisualCenter,
+  largePotVisualOffsetWorld,
+  editorItemUnityWorldXZ,
+  visualCenterToStubXZ,
+  syncItemLocalFromEditor
 } from "./coords";
 import {
   S,
   CELL,
+  AIR_WALL_BASE_XZ,
   EditorItem,
   EditorFloor
 } from "./state";
-import { itemLayerOfIt } from "./catalog";
-import { isCollisionItem } from "./stubControls";
+import type { LayoutItem } from "../types";
+import {
+  itemLayerOfIt,
+  isBackgroundPlaneCat,
+  isStandingWaterQuadCat,
+  isResizableBackgroundItem,
+  planeCatalogFootprint,
+  catalogItemForGuidOrPath,
+  planeNativeForItem,
+  planeScaleFromCells,
+  planeCatalogFootprint
+} from "./catalog";
+import {
+  isCollisionItem,
+  isAirWallItem,
+  isLotusPressureSwitchItem
+} from "./stubControls";
 import { cleanOrphanedButtonLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
 import { isPlayerItem } from "./renderItems";
@@ -29,7 +57,7 @@ import {
   hideDetail,
   hideContextMenu
 } from "./ui/overlay";
-import { pointInWalkable } from "./floors";
+import { pointInWalkable, parseMaterialTilingFromName } from "./floors";
 import { floorHeightAt, floorHeightFilterActive } from "./floorHeight";
 import { draw } from "./render";
 import { pushHistory } from "./historyOps";
@@ -45,19 +73,73 @@ import type {
   CatalogItem
 } from "../types";
 
+/** 旧版空气墙 collider 水平 1m×localScale；新版底边 1.2m，scale 为格数倍率。 */
+function migrateAirWallScale(raw: LayoutItem): void {
+  if (!raw.airWall || !raw.localScale) return;
+  const sx = raw.localScale.x ?? 1;
+  const sz = raw.localScale.z ?? 1;
+  const rot = normalizeRot(raw.localRotationY ?? 0);
+  const swapped = rot === 90 || rot === 270;
+  const wScale = swapped ? sz : sx;
+  const dScale = swapped ? sx : sz;
+  const y = raw.localScale.y ?? 1;
+
+  // 旧版 web：scale=1.2 补偿 1m 底 collider
+  if (Math.abs(wScale - CELL) < 0.02 && Math.abs(dScale - CELL) < 0.02) {
+    raw.localScale = { x: 1, y, z: 1 };
+    return;
+  }
+
+  // 已是新版格数倍率（小整数 scale）
+  const wNonInt = Math.abs(wScale - Math.round(wScale)) > 0.02;
+  const dNonInt = Math.abs(dScale - Math.round(dScale)) > 0.02;
+  if (!wNonInt && !dNonInt && wScale >= 1 && dScale >= 1 && wScale <= 200 && dScale <= 200) {
+    return;
+  }
+
+  const wCells = Math.max(1, Math.round(wScale / CELL));
+  const dCells = Math.max(1, Math.round(dScale / CELL));
+  raw.localScale = swapped
+    ? { x: dCells, y, z: wCells }
+    : { x: wCells, y, z: dCells };
+}
+
 export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
   // 历史场景里的裸 pushable_object（载体，无锅）已删除：迁移到可推动大火锅包装器。
   if (raw.prefabAssetPath === "Assets/common03/prefabs/core/mechanisms/pushable_object.prefab") {
     raw.prefabAssetPath = "Assets/common03/prefabs/core/utensils/utensil_large_pot_01_pushable.prefab";
   }
+  // 迁移：早期版本把立式水面 quad（Water_01 家族）当作平铺 XZ 面（rotX=0，深度
+  // 写在 localScale.z），而这些 quad 只有 rotX=90 才平躺（深度映射到 localScale.y），
+  // 否则在 Unity 里立成细长竖条。载入时修正：放平、把深度搬到 Y 轴。
+  const cat = catalogItemForGuidOrPath(raw.prefabGuid, raw.prefabAssetPath);
+  if (isStandingWaterQuadCat(cat) && Math.abs((raw.localRotationX ?? 0) - 90) > 1) {
+    const s = raw.localScale;
+    const depth = s && s.z && s.z > 0 ? s.z : s?.y ?? 1;
+    raw.localScale = { x: s?.x ?? 1, y: depth, z: 1 };
+    raw.localRotationX = 90;
+  }
+  if (raw.airWall) migrateAirWallScale(raw);
   const wp = raw.worldPosition ?? raw.localPosition;
-  const fp = resolveFootprint(raw);
+  // 背景水面等：Unity 导出 footprint 为渲染器实测格数（如 1×26），尺寸由
+  // catalog 1×1 × localScale 表达；载入时还原为目录基准，避免与 scale 二次相乘。
+  const fp = isResizableBackgroundItem(raw)
+    ? planeCatalogFootprint(raw)
+    : resolveFootprint(raw);
+  const pid = prefabIdFromPath(raw.prefabAssetPath);
+  let stubX = wp.x;
+  let stubZ = wp.z;
+  if (isSwCornerPivotPrefabId(pid)) {
+    const ed = hotpotEditorStubFromUnity(stubX, stubZ, raw.localRotationY ?? 0);
+    stubX = ed.x;
+    stubZ = ed.z;
+  }
   return {
     ...raw,
     _editorKey: editorKey,
     footprint: fp,
-    _wx: wp.x,
-    _wz: wp.z,
+    _wx: stubX,
+    _wz: stubZ,
     _parentWx: wp.x - raw.localPosition.x,
     _parentWz: wp.z - raw.localPosition.z,
   };
@@ -67,8 +149,19 @@ export function enrichFloor(raw: FloorObject, key: string): EditorFloor {
   const wp = raw.worldPosition ?? raw.localPosition;
   const w = raw.widthCells > 0 ? raw.widthCells : Math.max(1, Math.round(raw.widthUnits / CELL));
   const d = raw.depthCells > 0 ? raw.depthCells : Math.max(1, Math.round(raw.depthUnits / CELL));
+  let tilingW = raw.materialTilingW && raw.materialTilingW > 0 ? raw.materialTilingW : w;
+  let tilingD = raw.materialTilingD && raw.materialTilingD > 0 ? raw.materialTilingD : d;
+  if (raw.materialName) {
+    const parsed = parseMaterialTilingFromName(raw.materialName);
+    if (parsed) {
+      if (!raw.materialTilingW || raw.materialTilingW <= 0) tilingW = parsed.w;
+      if (!raw.materialTilingD || raw.materialTilingD <= 0) tilingD = parsed.d;
+    }
+  }
   return {
     ...raw,
+    materialTilingW: tilingW,
+    materialTilingD: tilingD,
     _key: key,
     _wx: wp.x,
     _wz: wp.z,
@@ -79,6 +172,31 @@ export function enrichFloor(raw: FloorObject, key: string): EditorFloor {
 
 export function snapItemWorld(item: EditorItem, wx: number, wz: number): { x: number; z: number } {
   const fp = resolveFootprint(item);
+  const pid = itemPrefabId(item);
+  if (isSwCornerPivotPrefabId(pid)) {
+    const o = stubToVisualOffset(item.localRotationY);
+    const snapped = snapPlacement(
+      fp.cellsX,
+      fp.cellsZ,
+      item.localRotationY,
+      item.prefabGuid,
+      wx + o.x,
+      wz + o.z
+    );
+    return visualCenterToStubXZ(pid, snapped.x, snapped.z, item.localRotationY);
+  }
+  if (isLargePotPrefabId(pid)) {
+    const o = largePotVisualOffsetWorld(item.localRotationY);
+    const snapped = snapPlacement(
+      fp.cellsX,
+      fp.cellsZ,
+      item.localRotationY,
+      item.prefabGuid,
+      wx + o.x,
+      wz + o.z
+    );
+    return largePotUnityFromVisualCenter(snapped.x, snapped.z, item.localRotationY);
+  }
   return snapPlacement(fp.cellsX, fp.cellsZ, item.localRotationY, item.prefabGuid, wx, wz);
 }
 
@@ -97,8 +215,49 @@ export function syncLocalFromWorld(item: EditorItem) {
   if (cat?.stack) {
     trySnapUtensilToHost(item, cat, S.items, S.catalogByGuid);
   }
-  item.localPosition.x = snapValue(item._wx - item._parentWx, S.freeSnapStep);
-  item.localPosition.z = snapValue(item._wz - item._parentWz, S.freeSnapStep);
+  syncItemLocalFromEditor(item);
+}
+
+/** R 键旋转：火锅灶台等保持占地中心不动并重算 stub；其余物品保持原逻辑。 */
+export function rotateItemByDelta(item: EditorItem, deltaDeg: number) {
+  const pid = itemPrefabId(item);
+  if (isSwCornerPivotPrefabId(pid)) {
+    const vc = itemVisualCenterXZ(item);
+    item.localRotationY = normalizeRot(item.localRotationY + deltaDeg);
+    const stub = visualCenterToStubXZ(pid, vc.x, vc.z, item.localRotationY);
+    item._wx = stub.x;
+    item._wz = stub.z;
+    syncItemLocalFromEditor(item);
+    return;
+  }
+  if (isLargePotPrefabId(pid)) {
+    const vc = itemVisualCenterXZ(item);
+    item.localRotationY = normalizeRot(item.localRotationY + deltaDeg);
+    const u = largePotUnityFromVisualCenter(vc.x, vc.z, item.localRotationY);
+    item._wx = u.x;
+    item._wz = u.z;
+    syncItemLocalFromEditor(item);
+    return;
+  }
+  item.localRotationY = normalizeRot(item.localRotationY + deltaDeg);
+  syncLocalFromWorld(item);
+}
+
+const LOTUS_RANDOM_ROTATIONS = [0, 90, 180, 270];
+
+/** 将场景中全部莲花压力开关随机旋转为 0° / 90° / 180° / 270°（各实例独立随机）。 */
+export function batchRandomRotateLotusPressureSwitches(): number {
+  const targets = S.items.filter(isLotusPressureSwitchItem);
+  if (targets.length === 0) return 0;
+  pushHistory();
+  for (const item of targets) {
+    const angle = LOTUS_RANDOM_ROTATIONS[Math.floor(Math.random() * LOTUS_RANDOM_ROTATIONS.length)];
+    const delta = normalizeRot(angle - item.localRotationY);
+    if (delta !== 0) rotateItemByDelta(item, delta);
+  }
+  S.dirty = true;
+  draw();
+  return targets.length;
 }
 
 export function nudgeItem(item: EditorItem, dx: number, dz: number, dy = 0) {
@@ -109,8 +268,7 @@ export function nudgeItem(item: EditorItem, dx: number, dz: number, dy = 0) {
   pushHistory();
   item._wx += dx;
   item._wz += dz;
-  item.localPosition.x = item._wx - item._parentWx;
-  item.localPosition.z = item._wz - item._parentWz;
+  syncItemLocalFromEditor(item);
   if (dy !== 0) {
     item.localPosition.y = snapValue(item.localPosition.y + dy, S.freeSnapStep);
   }
@@ -133,8 +291,7 @@ export function nudgeSelectedItems(dx: number, dz: number): void {
     }
     it._wx += dx;
     it._wz += dz;
-    it.localPosition.x = it._wx - it._parentWx;
-    it.localPosition.z = it._wz - it._parentWz;
+    syncItemLocalFromEditor(it);
     const cat = S.catalogByGuid.get(it.prefabGuid);
     if (cat?.stack) trySnapUtensilToHost(it, cat, S.items, S.catalogByGuid);
   }
@@ -145,7 +302,7 @@ export function updateCtxCoord(item: EditorItem) {
   const el = document.getElementById("ctx-coord");
   if (el) {
     const d = stepDisplayDecimals(S.freeSnapStep);
-    el.textContent = `x ${item.localPosition.x.toFixed(d)} · y ${item.localPosition.y.toFixed(d)} · z ${item.localPosition.z.toFixed(d)}`;
+    el.textContent = `x ${item._wx.toFixed(d)} · y ${item.localPosition.y.toFixed(d)} · z ${item._wz.toFixed(d)}`;
   }
 }
 
@@ -226,18 +383,27 @@ export function checkPlayerCollisions(): string[] {
 }
 
 export function itemWorldAABB(item: EditorItem): { minX: number; minZ: number; maxX: number; maxZ: number } {
-  const fp = resolveFootprint(item);
-  const rot = normalizeRot(item.localRotationY);
-  const swapped = rot === 90 || rot === 270;
-  const cw = swapped ? fp.cellsZ : fp.cellsX;
-  const cd = swapped ? fp.cellsX : fp.cellsZ;
-  const spanW = cw * CELL * itemScaleX(item);
-  const spanD = cd * CELL * itemScaleZ(item);
+  let spanW: number;
+  let spanD: number;
+  if (isAirWallItem(item)) {
+    const c = airWallCells(item);
+    spanW = c.wCells * CELL;
+    spanD = c.dCells * CELL;
+  } else {
+    const fp = resolveFootprint(item);
+    const rot = normalizeRot(item.localRotationY);
+    const swapped = rot === 90 || rot === 270;
+    const cw = swapped ? fp.cellsZ : fp.cellsX;
+    const cd = swapped ? fp.cellsX : fp.cellsZ;
+    spanW = cw * CELL * itemScaleX(item);
+    spanD = cd * CELL * itemScaleZ(item);
+  }
+  const center = itemVisualCenterXZ(item);
   return {
-    minX: item._wx - spanW / 2,
-    minZ: item._wz - spanD / 2,
-    maxX: item._wx + spanW / 2,
-    maxZ: item._wz + spanD / 2,
+    minX: center.x - spanW / 2,
+    minZ: center.z - spanD / 2,
+    maxX: center.x + spanW / 2,
+    maxZ: center.z + spanD / 2,
   };
 }
 
@@ -263,22 +429,111 @@ export function checkWorkstationCollisions(): string[] {
   return result;
 }
 
+/** Apply a width/depth (in grid cells) to a background plane item: writes the
+ *  correct localScale for the prefab's native depth axis and enforces its native
+ *  rotX (so e.g. Water_01 lies flat with rotX=90 and depth on localScale.y). */
+export function setItemPlaneSize(item: EditorItem, wCells: number, dCells: number): void {
+  item.localScale = planeScaleFromCells(item, wCells, dCells);
+  item.localRotationX = planeNativeForItem(item).rotX;
+}
+
+/** 空气墙有效占地（格）：底 collider 1.2m × localScale，旋转 90° 时宽高互换。 */
+export function airWallCells(item: EditorItem): { wCells: number; dCells: number } {
+  const rot = normalizeRot(item.localRotationY);
+  const swapped = rot === 90 || rot === 270;
+  const sx = itemScaleX(item);
+  const sz = itemScaleZ(item);
+  const wM = (swapped ? sz : sx) * AIR_WALL_BASE_XZ;
+  const dM = (swapped ? sx : sz) * AIR_WALL_BASE_XZ;
+  return {
+    wCells: Math.max(1, Math.round(wM / CELL)),
+    dCells: Math.max(1, Math.round(dM / CELL)),
+  };
+}
+
+export function setAirWallSize(item: EditorItem, wCells: number, dCells: number): void {
+  const rot = normalizeRot(item.localRotationY);
+  const swapped = rot === 90 || rot === 270;
+  const wCellsClamped = Math.max(1, wCells);
+  const dCellsClamped = Math.max(1, dCells);
+  const y = item.localScale?.y ?? 1;
+  item.localScale = swapped
+    ? { x: dCellsClamped, y, z: wCellsClamped }
+    : { x: wCellsClamped, y, z: dCellsClamped };
+}
+
+export function itemIntersectsWorldRect(
+  item: EditorItem,
+  minWx: number,
+  maxWx: number,
+  minWz: number,
+  maxWz: number
+): boolean {
+  const a = itemWorldAABB(item);
+  return a.maxX >= minWx && a.minX <= maxWx && a.maxZ >= minWz && a.minZ <= maxWz;
+}
+
+/** Resize a background/water plane item by dragging a corner handle. Mirrors
+ *  dragFloor's resize math: the opposite corner (anchor) stays fixed while the
+ *  dragged corner sets a new width/depth in cells, applied as native-aware
+ *  localScale (see setItemPlaneSize). */
+function resizeItemByCells(
+  item: EditorItem,
+  wx: number,
+  wz: number,
+  applySize: (it: EditorItem, w: number, d: number) => void
+): void {
+  const rad = (normalizeRot(item.localRotationY) * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const dx = wx - S.dragItemResizeAnchorX;
+  const dz = wz - S.dragItemResizeAnchorZ;
+  const lx = dx * cos + dz * sin;
+  const lz = -dx * sin + dz * cos;
+  const newW = Math.max(1, Math.round(Math.abs(lx) / CELL) || 1);
+  const newD = Math.max(1, Math.round(Math.abs(lz) / CELL) || 1);
+  const signX = S.dragItemResizeEdge.includes("R") ? 1 : -1;
+  const signZ = S.dragItemResizeEdge.includes("T") ? 1 : -1;
+  const newCxLocal = (signX * (newW * CELL)) / 2;
+  const newCzLocal = (signZ * (newD * CELL)) / 2;
+  item._wx = S.dragItemResizeAnchorX + newCxLocal * cos - newCzLocal * sin;
+  item._wz = S.dragItemResizeAnchorZ + newCxLocal * sin + newCzLocal * cos;
+  applySize(item, newW, newD);
+  syncItemLocalFromEditor(item);
+  if (item.worldPosition) {
+    const u = editorItemUnityWorldXZ(item);
+    item.worldPosition.x = u.x;
+    item.worldPosition.z = u.z;
+  }
+}
+
+export function resizeItem(item: EditorItem, wx: number, wz: number): void {
+  resizeItemByCells(item, wx, wz, setItemPlaneSize);
+}
+
+export function resizeAirWall(item: EditorItem, wx: number, wz: number): void {
+  resizeItemByCells(item, wx, wz, setAirWallSize);
+}
+
 export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordHistory = true): EditorItem | null {
   if (cat.id === "Player") {
     setStatus("玩家固定在场景中，不可添加", false);
     return null;
   }
   const snapped = snapPlacement(cat.footprint.cellsX, cat.footprint.cellsZ, 0, cat.guid, wx, wz);
+  const stub = isLargePotPrefabId(cat.id)
+    ? largePotUnityFromVisualCenter(snapped.x, snapped.z, 0)
+    : visualCenterToStubXZ(cat.id, snapped.x, snapped.z, 0);
   const probe = {
     _editorKey: "",
-    _wx: snapped.x,
-    _wz: snapped.z,
+    _wx: stub.x,
+    _wz: stub.z,
     prefabGuid: cat.guid,
     prefabAssetPath: cat.assetPath,
     footprint: cat.footprint,
     stubKind: "",
   } as unknown as EditorItem;
-  if (moveBlockedAt(probe, snapped.x, snapped.z)) {
+  if (moveBlockedAt(probe, stub.x, stub.z)) {
     setStatus("该位置与玩家重叠，无法放置", false);
     return null;
   }
@@ -301,14 +556,22 @@ export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordH
     prefabAssetPath: cat.assetPath,
     parentPath: cat.defaultParent,
     displayName: cat.id,
-    localPosition: { x: snapped.x, y: baseY, z: snapped.z },
-    worldPosition: { x: snapped.x, y: baseY, z: snapped.z },
+    localPosition: { x: 0, y: baseY, z: 0 },
+    worldPosition: { x: 0, y: baseY, z: 0 },
     localRotationY: 0,
     footprint: cat.footprint,
-    _wx: snapped.x,
-    _wz: snapped.z,
+    _wx: stub.x,
+    _wz: stub.z,
     _parentWx: 0,
     _parentWz: 0,
+  };
+  syncItemLocalFromEditor(item);
+  item.localPosition.y = baseY;
+  const u = editorItemUnityWorldXZ(item);
+  item.worldPosition = {
+    x: u.x,
+    y: baseY,
+    z: u.z,
   };
   if (cat.id === "Dispenser") {
     item.stubKind = "Dispenser";
@@ -333,13 +596,21 @@ export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordH
     item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false };
   }
   if (cat.id === "AirWall") {
-    // 空气墙：核心层隐形碰撞块（无 prefab，场景应用时生成 1×1×1.132 BoxCollider 空气墙）。
+    // 空气墙：核心层隐形碰撞块（1.2×1.2×1.132 BoxCollider × localScale 格数倍率）。
     // prefabGuid 保留 catalog guid 供分层识别；应用走 stubKind=Collision 分支，不使用 prefab。
     item.stubKind = "Collision";
     item.airWall = true;
     item.prefabAssetPath = "";
     item.parentPath = cat.defaultParent;
     item.walkable = false;
+    item.localScale = { x: 1, y: 1, z: 1 };
+  }
+  // Background surface planes (water / sand / sea…) default to a manageable 6×6
+  // and are laid flat via their native rotX (standing water quads need rotX=90,
+  // with depth on localScale.y) so they don't spawn 1×1 or as a vertical strip.
+  if (isBackgroundPlaneCat(cat)) {
+    setItemPlaneSize(item, 6, 6);
+    item.footprint = planeCatalogFootprint(item);
   }
   S.items.push(item);
   trySnapUtensilToHost(item, cat, S.items, S.catalogByGuid);

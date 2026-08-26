@@ -4,6 +4,240 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "sunbed_01",
+      "guid": "66bbfd8aedd3d454db59a0c5789bb47c",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/sunbed_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.4296733140945435
+      },
+      "height": 1.43,
+      "layoutTier": "decor",
+      "nameZh": "日光浴床 1",
+      "nameEn": "sunbed 1",
+      "icon": false
+    },
+    {
+      "id": "sunbed_02",
+      "guid": "538728bde92f8dfa5929f8c412f50059",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/sunbed_02.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.4296733140945435
+      },
+      "height": 1.43,
+      "layoutTier": "decor",
+      "nameZh": "日光浴床 2",
+      "nameEn": "sunbed 2",
+      "icon": false
+    },
+    {
+      "id": "sunbed_03",
+      "guid": "663f93a7f6e0eb206c9972076bc16ca5",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/sunbed_03.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.4296733140945435
+      },
+      "height": 1.43,
+      "layoutTier": "decor",
+      "nameZh": "日光浴床 3",
+      "nameEn": "sunbed 3",
+      "icon": false
+    },
+    {
+      "id": "sunbed_04",
+      "guid": "20b4d0de93b1b9a091f8d4ba74ee6fb6",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/sunbed_04.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.4296733140945435
+      },
+      "height": 1.43,
+      "layoutTier": "decor",
+      "nameZh": "日光浴床 4",
+      "nameEn": "sunbed 4",
+      "icon": false
+    },
+    {
+      "id": "sunbed_table_01",
+      "guid": "0db346b476068414887f2223a8f822c8",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/sunbed_table_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.5450517535209656
+      },
+      "height": 0.545,
+      "layoutTier": "decor",
+      "nameZh": "日光浴床桌 1",
+      "nameEn": "sunbed table 1",
+      "icon": false
+    },
+    {
+      "id": "sunglasses_01",
+      "guid": "9c9bfa1dc3a043740a035c9b14ba5411",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/sunglasses_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.19989502429962158
+      },
+      "height": 0.2,
+      "layoutTier": "decor",
+      "nameZh": "太阳镜 1",
+      "nameEn": "sunglasses 1",
+      "icon": false
+    },
+    {
+      "id": "surfboard_01",
+      "guid": "d52376f7f2c331e41ab1817488d4f399",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/surfboard_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 0.9897508025169373
+      },
+      "height": 0.99,
+      "layoutTier": "decor",
+      "nameZh": "冲浪板 1",
+      "nameEn": "surfboard 1",
+      "icon": false
+    },
+    {
+      "id": "sushi_side_step_1x28",
+      "guid": "7280b19c70c988140b5d9fa4d81cf864",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_side_step_1x28.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "寿司侧边台阶 1x28",
+      "nameEn": "sushi side step 1x28",
+      "icon": false
+    },
+    {
+      "id": "sushi_side_step_1x8",
+      "guid": "4301d60b535bd0341b13efd5658bea7e",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_side_step_1x8.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "寿司侧边台阶 1x8",
+      "nameEn": "sushi side step 1x8",
+      "icon": false
+    },
+    {
+      "id": "sushi_sign_01",
+      "guid": "55c4db2eaa6107b4984d54bada16ae2d",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 1,
+        "sizeY": 1.5198842287063599
+      },
+      "height": 1.52,
+      "layoutTier": "decor",
+      "nameZh": "寿司招牌 1",
+      "nameEn": "sushi sign 1",
+      "icon": false
+    },
+    {
+      "id": "sushi_sign_01_day",
+      "guid": "52611f483a3f3ff45990772e10b99f71",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_01_day.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 1,
+        "sizeY": 1.5198849439620972
+      },
+      "height": 1.52,
+      "layoutTier": "decor",
+      "nameZh": "寿司招牌 1 白天",
+      "nameEn": "sushi sign 1 day",
+      "icon": false
+    },
+    {
+      "id": "sushi_sign_01b",
+      "guid": "f4a633f20cc56c24399c3677fb6356e7",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_01b.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 1,
+        "sizeY": 1.4159889221191406
+      },
+      "height": 1.416,
+      "layoutTier": "decor",
+      "nameZh": "寿司招牌 1b",
+      "nameEn": "sushi sign 01b",
+      "icon": false
+    },
+    {
+      "id": "sushi_sign_02",
+      "guid": "0fadf07aab2679342adfe8504361155c",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_02.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 3.4194061756134033
+      },
+      "height": 3.419,
+      "layoutTier": "decor",
+      "nameZh": "寿司招牌 2",
+      "nameEn": "sushi sign 2",
+      "icon": false
+    },
+    {
       "id": "sushi_sign_03",
       "guid": "f57ce22f264191140ae36caa9630d861",
       "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_03.prefab",
@@ -1846,7 +2080,9 @@
         "sizeY": 4.627365978322187e-15
       },
       "height": 0,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "水",
       "nameEn": "water",
       "icon": false
@@ -1864,7 +2100,9 @@
         "sizeY": 1.2000004053115845
       },
       "height": 1.2,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "水 1",
       "nameEn": "water 1",
       "icon": false
@@ -1882,7 +2120,9 @@
         "sizeY": 1.2000004053115845
       },
       "height": 1.2,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "水面 1",
       "nameEn": "water surface 1",
       "icon": false
@@ -3303,214 +3543,6 @@
       "layoutTier": "core",
       "nameZh": "传菜窗（部落）",
       "nameEn": "Service Hatch (Horde)",
-      "icon": false
-    },
-    {
-      "id": "Sink",
-      "guid": "ce123dae8809b3f4a89a37ce3f1969c3",
-      "assetPath": "Assets/common01/prefabs/counters/Sink.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "水槽",
-      "nameEn": "Sink",
-      "icon": false
-    },
-    {
-      "id": "SinkGlass",
-      "guid": "509bf64c1dc11e24789e275d67fa2d67",
-      "assetPath": "Assets/common02/prefabs/counters/SinkGlass.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "洗杯槽",
-      "nameEn": "Sink Glass",
-      "icon": false
-    },
-    {
-      "id": "Bin",
-      "guid": "d1fa490d07f93534481063b914a22b8c",
-      "assetPath": "Assets/common01/prefabs/counters/Bin.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "垃圾箱",
-      "nameEn": "Bin",
-      "icon": false
-    },
-    {
-      "id": "PlateReturn",
-      "guid": "68f3833c8fc919b4499dea8b6cc4062b",
-      "assetPath": "Assets/common01/prefabs/counters/PlateReturn.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "脏盘台",
-      "nameEn": "Plate Return",
-      "icon": false
-    },
-    {
-      "id": "GlassReturn",
-      "guid": "1f4092287fd2d1d428520b4e1534786d",
-      "assetPath": "Assets/common02/prefabs/counters/GlassReturn.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "脏杯台",
-      "nameEn": "Glass Return",
-      "icon": false
-    },
-    {
-      "id": "dlc08_workstation_01_tray_sink_circus",
-      "guid": "4194172f8b203c1b1ffe44a7ac2a85e4",
-      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_01_tray_sink_circus.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "洗餐盘水槽（马戏团）",
-      "nameEn": "Tray Sink (Circus)",
-      "icon": false
-    },
-    {
-      "id": "dlc08_workstation_02_tray_sink_circus",
-      "guid": "d1b9332ab76beda823608df2f14031d2",
-      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_02_tray_sink_circus.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "洗餐盘水槽（马戏团·条纹）",
-      "nameEn": "Tray Sink (Circus Striped)",
-      "icon": false
-    },
-    {
-      "id": "dlc08_workstation_03_tray_sink_circus",
-      "guid": "9915b090428bc8993f049cc6f1715dbb",
-      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_03_tray_sink_circus.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "洗餐盘水槽（马戏团·彩绘）",
-      "nameEn": "Tray Sink (Circus Painted)",
-      "icon": false
-    },
-    {
-      "id": "dlc08_workstation_tray_return",
-      "guid": "be0758917fdd7d2d46411171ba42ef29",
-      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_tray_return.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "餐盘回收台",
-      "nameEn": "Tray Return Station",
-      "icon": false
-    },
-    {
-      "id": "dlc09_workstation_mug_return_winter",
-      "guid": "f1dc669b31e429d903514b9b94e90851",
-      "assetPath": "Assets/common03/prefabs/dlc09/counters/dlc09_workstation_mug_return_winter.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "马克杯回收台（冬季）",
-      "nameEn": "Mug Return Station (Winter)",
-      "icon": false
-    },
-    {
-      "id": "dlc09_workstation_sink_mug_01_wood",
-      "guid": "ced2a77bc24e1859957c60ee025cad5c",
-      "assetPath": "Assets/common03/prefabs/dlc09/counters/dlc09_workstation_sink_mug_01_wood.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "马克杯水槽（木制）",
-      "nameEn": "Mug Sink (Wooden)",
-      "icon": false
-    },
-    {
-      "id": "dlc11_workstation_glass_return_01",
-      "guid": "5f2f5671ca81db6cd59251996b7c55f0",
-      "assetPath": "Assets/common03/prefabs/dlc11/counters/dlc11_workstation_glass_return_01.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "玻璃杯回收台",
-      "nameEn": "Glass Return Station",
-      "icon": false
-    },
-    {
-      "id": "dlc13_workstation_bin_01",
-      "guid": "8bc7dd9376ab8467bbc249d37a2c0ad9",
-      "assetPath": "Assets/common03/prefabs/dlc13/counters/dlc13_workstation_bin_01.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "垃圾桶（DLC13）",
-      "nameEn": "Bin (DLC13)",
       "icon": false
     }
   ]

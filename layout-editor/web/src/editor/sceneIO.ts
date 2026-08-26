@@ -16,7 +16,8 @@ import { itemLabel } from "./labels";
 import {
   syncBackgroundForTheme,
   mergeRaftItemsIntoFloors,
-  mergeThemedItemsIntoFloors
+  mergeThemedItemsIntoFloors,
+  repairFloorMaterialsFromCatalog
 } from "./floors";
 import { buildFloorPalette } from "./floorPalette";
 import { buildDocument } from "./serialize";
@@ -146,6 +147,7 @@ export async function loadScene(assetPath: string) {
     refreshUtensilStacks();
     S.gridInfo = await fetchGrid();
     S.floorMaterials = await fetchFloorMaterials(S.currentLevelSet).catch(() => []);
+    repairFloorMaterialsFromCatalog();
     if (S.currentLayer === "floor") {
       buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "", "floor");
     } else if (S.currentLayer === "background") {

@@ -575,7 +575,9 @@ function memberRoleText(group: MoveGroup, id: string): string {
   if (group.memberStatic?.some((m) => m.instanceId === id)) return "静止";
   const off = group.memberOffsets?.find((o) => o.instanceId === id);
   if (off?.followWaypointId) return "跟随";
-  if (off?.t != null) return "相位";
+  // A route-riding member serializes t:0 (C# float default) — only a *nonzero*
+  // phase shift makes it "相位"; t==0 means it rides the route in step ("移动").
+  if (off?.t != null && off.t !== 0) return "相位";
   return "移动";
 }
 
@@ -622,7 +624,7 @@ function drawMemberMarkers(group: MoveGroup): void {
     const p = worldToCanvas(pos.x, pos.z);
     const isStatic = group.memberStatic?.some((m) => m.instanceId === id);
     const off = offById.get(id);
-    const isPhase = !isStatic && off?.t != null;
+    const isPhase = !isStatic && off?.t != null && off.t !== 0;
     const isFollow = !isStatic && !!off?.followWaypointId;
     // Role shapes: 移动 = square (group color), 静止 = circle (gray),
     // 相位 = diamond (purple), 跟随 = triangle (teal, pinned to a waypoint).

@@ -4,6 +4,24 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "dlc11_banner_03",
+      "guid": "1e68f2579e45ad1b9de54f30194c3eb4",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/dlc11_banner_03.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 7,
+        "cellsZ": 1,
+        "sizeY": 1.89658784866333
+      },
+      "height": 1.897,
+      "layoutTier": "decor",
+      "nameZh": "dlc 11 横幅 3",
+      "nameEn": "dlc 11 banner 3",
+      "icon": false
+    },
+    {
       "id": "dlc11_barrier_01",
       "guid": "0e6f64744be6479c70a88985be267585",
       "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/dlc11_barrier_01.prefab",
@@ -1788,6 +1806,24 @@
       "icon": false
     },
     {
+      "id": "dynamic_raft_water",
+      "guid": "2e06941c2a6ceeaa65ec68cff222ee5f",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/raft/dynamic_raft_water.prefab",
+      "category": "art",
+      "theme": "raft",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 6
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "木筏动态水面",
+      "nameEn": "dynamic raft water",
+      "icon": false
+    },
+    {
       "id": "Earth",
       "guid": "c0cc09a68b7c78542a48d0163cdc71ad",
       "assetPath": "Assets/common01/prefabs/art/space/Earth.prefab",
@@ -3318,7 +3354,9 @@
         "sizeY": 5.329070200563396e-16
       },
       "height": 0,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "h 9 泳池水 1",
       "nameEn": "h 9 pool water 1",
       "icon": false
@@ -3571,42 +3609,6 @@
       "layoutTier": "decor",
       "nameZh": "iceberg 组 1",
       "nameEn": "iceberg group 1",
-      "icon": false
-    },
-    {
-      "id": "icebergs_01",
-      "guid": "aba2748188ee6a44f30f10ad8c210484",
-      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/icebergs_01.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.44532907009124756
-      },
-      "height": 0.445,
-      "layoutTier": "decor",
-      "nameZh": "冰山 1",
-      "nameEn": "icebergs 1",
-      "icon": false
-    },
-    {
-      "id": "icebergs_02",
-      "guid": "6bbf301e763996c7b3e04a2033c73fd3",
-      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/icebergs_02.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.4750175476074219
-      },
-      "height": 0.475,
-      "layoutTier": "decor",
-      "nameZh": "冰山 2",
-      "nameEn": "icebergs 2",
       "icon": false
     }
   ]

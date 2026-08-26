@@ -29,7 +29,10 @@ import {
   isAirFloor,
   finalizeFloor,
   snapRaftCenterToGrid,
-  floorMatSummary
+  floorMatSummary,
+  effectiveMaterialTiling,
+  resolveFloorMaterial,
+  syncFloorMaterialFromCatalog
 } from "./floors";
 import {
   floorWalkY,
@@ -52,9 +55,104 @@ import {
   deathLabelZh
 } from "../floorColors";
 import { tidyCatalogNameZh } from "../displayLabels";
+import type { FloorMaterial } from "../types";
+
+function materialGroupsWithMats(): { key: string; labelZh: string }[] {
+  return FLOOR_MATERIAL_GROUPS.filter((g) =>
+    S.floorMaterials.some((m) => floorMaterialGroup(m.id) === g.key)
+  );
+}
+
+function initialMaterialTabKey(f: EditorFloor, matchedMat: FloorMaterial | undefined): string {
+  const groups = materialGroupsWithMats();
+  if (groups.length === 0) return "";
+  const pick = (id: string) => {
+    const g = floorMaterialGroup(id);
+    return groups.some((x) => x.key === g) ? g : "";
+  };
+  const fromMat = matchedMat ? pick(matchedMat.id) : f.materialName ? pick(f.materialName) : "";
+  if (fromMat) return fromMat;
+  if (S.floorMaterialTabKey && groups.some((g) => g.key === S.floorMaterialTabKey)) {
+    return S.floorMaterialTabKey;
+  }
+  return groups[0].key;
+}
+
+function buildSolidMaterialPickerHtml(
+  f: EditorFloor,
+  activeTab: string,
+  activeMaterialGuid: string | undefined
+): string {
+  const groups = materialGroupsWithMats();
+  if (groups.length === 0) {
+    return `<div class="mat-pick-title">切换材质（实心地板）</div><div class="mat-pick-empty">当前关卡集无材质</div>`;
+  }
+  const tabs = groups
+    .map((g) => {
+      const n = S.floorMaterials.filter((m) => floorMaterialGroup(m.id) === g.key).length;
+      return `<button type="button" class="mat-tab-btn${g.key === activeTab ? " active" : ""}" data-mat-tab="${g.key}">${escHtml(g.labelZh)}<span class="mat-tab-n">${n}</span></button>`;
+    })
+    .join("");
+  const panes = groups
+    .map((g) => {
+      const rows = S.floorMaterials
+        .filter((m) => floorMaterialGroup(m.id) === g.key)
+        .map((m) => {
+          const bl = materialBilingual(m.id);
+          return `<button type="button" class="mat-pick${m.guid === activeMaterialGuid ? " active" : ""}" data-guid="${m.guid}"><span class="mat-id">${bl.zh}</span><span class="mat-sub">${bl.en}</span></button>`;
+        })
+        .join("");
+      return `<div class="mat-pick-pane${g.key === activeTab ? " active" : ""}" data-mat-pane="${g.key}"><div class="mat-pick-grid">${rows}</div></div>`;
+    })
+    .join("");
+  return `<div class="mat-pick-title">切换材质（实心地板）</div>
+    <div class="mat-pick-tabs" id="fe-mat-tabs">${tabs}</div>
+    <div class="mat-pick-list" id="fe-mat-list">${panes}</div>`;
+}
+
+function wireSolidMaterialPicker(f: EditorFloor, activeTab: string): void {
+  const switchTab = (key: string) => {
+    S.floorMaterialTabKey = key;
+    document.querySelectorAll<HTMLButtonElement>(".mat-tab-btn[data-mat-tab]").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.matTab === key);
+    });
+    document.querySelectorAll<HTMLElement>(".mat-pick-pane[data-mat-pane]").forEach((pane) => {
+      pane.classList.toggle("active", pane.dataset.matPane === key);
+    });
+  };
+  document.querySelectorAll<HTMLButtonElement>(".mat-tab-btn[data-mat-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.matTab;
+      if (!key) return;
+      switchTab(key);
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>(".mat-pick[data-guid]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const m = S.floorMaterials.find((x) => x.guid === btn.dataset.guid);
+      if (!m) return;
+      pushHistory();
+      f.materialGuid = m.guid;
+      f.materialAssetPath = m.assetPath;
+      f.materialName = m.id;
+      f.surfaceKind = "solid";
+      S.floorMaterialTabKey = floorMaterialGroup(m.id);
+      draw();
+      setStatus(`已切换材质：${m.nameZh}（写回后生效）`);
+      openFloorEditorModal(f);
+    });
+  });
+  switchTab(activeTab);
+  requestAnimationFrame(() => {
+    const tabBtn = document.querySelector<HTMLElement>(`.mat-tab-btn[data-mat-tab="${activeTab}"]`);
+    if (tabBtn) tabBtn.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const matBtn = document.querySelector<HTMLElement>("#fe-mat-list .mat-pick[data-guid].active");
+    if (matBtn) matBtn.scrollIntoView({ block: "nearest", inline: "nearest" });
+  });
+}
 
 export function openFloorEditorModal(f: EditorFloor) {
-  const matchedMat = S.floorMaterials.find((m) => m.guid === f.materialGuid);
+  const matchedMat = syncFloorMaterialFromCatalog(f);
   const areaCells = f._wCells * f._dCells;
   const isRaft = f.surfaceKind === "raft";
   const isThemed = isThemedFloor(f);
@@ -62,18 +160,8 @@ export function openFloorEditorModal(f: EditorFloor) {
   const isImage = !isAir && !isThemed && f.surfaceKind === "solid" && (!!f.imageTexturePath || !!f.imageMode);
   const isTinted = !isAir && !isThemed && f.surfaceKind === "solid" && !!f.tintEnabled && !isImage;
   const isPlainSolid = !isAir && !isThemed && f.surfaceKind === "solid" && !f.tintEnabled && !isImage;
-
-  const matRows = FLOOR_MATERIAL_GROUPS.map((g) => {
-    const groupMats = S.floorMaterials.filter((m) => floorMaterialGroup(m.id) === g.key);
-    if (groupMats.length === 0) return "";
-    const rows = groupMats
-      .map((m) => {
-        const bl = materialBilingual(m.id);
-        return `<button type="button" class="mat-pick${m.guid === f.materialGuid ? " active" : ""}" data-guid="${m.guid}"><span class="mat-id">${bl.zh}</span><span class="mat-sub">${bl.en}</span></button>`;
-      })
-      .join("");
-    return `<div class="mat-pick-group">${g.labelZh}</div><div class="mat-pick-grid">${rows}</div>`;
-  }).join("");
+  const tiling = effectiveMaterialTiling(f);
+  const activeMatTab = initialMaterialTabKey(f, matchedMat);
 
   // 主题地板: pick a themed prefab — the whole rect is tiled with it on write-back.
   const themedRows = themedFloorPrefabs()
@@ -132,8 +220,7 @@ export function openFloorEditorModal(f: EditorFloor) {
     : isThemed
     ? `<p class="modal-hint">当前为主题地板：写回时整块区域生成一个拉伸的 prefab 实例，可在下方改选；切回其它类型请用上方「地板类型」。</p>${themedBlock}`
     : isPlainSolid
-      ? `<div class="mat-pick-title">切换材质（实心地板）</div>
-         <div class="mat-pick-list">${matRows || '<div class="mat-pick-empty">当前关卡集无材质</div>'}</div>`
+      ? buildSolidMaterialPickerHtml(f, activeMatTab, matchedMat?.guid)
       : isImage
         ? imageBlock
         : isTinted
@@ -159,6 +246,12 @@ export function openFloorEditorModal(f: EditorFloor) {
       <label title="行走面高度：0=地面层；抬高后站上地板的物品会一起抬升，写回时碰撞盒跟随">高度 <input type="number" min="0" step="0.05" id="fe-h" value="${walkH.toFixed(2)}" /></label>
       <span class="muted" style="align-self:center;font-size:11px">实时应用 · 也可 R / Shift+R</span>
     </div>
+    ${isPlainSolid ? `<div class="floor-edit-row">
+      <span class="muted" style="font-size:11px;align-self:center">贴图平铺(格)</span>
+      <label>宽 <input type="number" min="1" id="fe-tiling-w" value="${tiling.w}" /></label>
+      <label>深 <input type="number" min="1" id="fe-tiling-d" value="${tiling.d}" /></label>
+      <span class="muted" style="font-size:11px;align-self:center">与地板尺寸一致时每格一贴图 · 改尺寸时自动同步</span>
+    </div>` : ""}
     <div class="mat-pick-title">地板类型</div>
     <div class="mat-pick-list type-row">
       <button type="button" class="mat-pick${isPlainSolid ? " active" : ""}" data-kind="solid"><span class="mat-id">⬛ 实心地板</span><span class="mat-sub">单块 Plane + 材质</span></button>
@@ -175,9 +268,21 @@ export function openFloorEditorModal(f: EditorFloor) {
 
   openModal(`${typeLabel} · ${f.displayName}`, body, footer);
   document.querySelector(".modal-panel")?.classList.add("wide", "floor-edit");
+  if (isPlainSolid && activeMatTab) wireSolidMaterialPicker(f, activeMatTab);
 
   const feW = document.getElementById("fe-w") as HTMLInputElement;
   const feD = document.getElementById("fe-d") as HTMLInputElement;
+  const feTilingW = document.getElementById("fe-tiling-w") as HTMLInputElement | null;
+  const feTilingD = document.getElementById("fe-tiling-d") as HTMLInputElement | null;
+  const refreshMatSummary = () => {
+    const matEl = document.getElementById("fe-mat");
+    if (matEl) matEl.textContent = floorMatSummary(f, resolveFloorMaterial(f));
+  };
+  const syncTilingInputs = () => {
+    const { w, d } = effectiveMaterialTiling(f);
+    if (feTilingW) feTilingW.value = String(w);
+    if (feTilingD) feTilingD.value = String(d);
+  };
   let sizePushed = false;
   const applyFloorSizeLive = () => {
     const wv = parseInt(feW.value, 10);
@@ -194,11 +299,32 @@ export function openFloorEditorModal(f: EditorFloor) {
     const sz = document.getElementById("fe-size");
     if (sz)
       sz.textContent = `${f._wCells}×${f._dCells}格 (${(f._wCells * CELL).toFixed(1)}×${(f._dCells * CELL).toFixed(1)}m，${f._wCells * f._dCells}格)`;
+    syncTilingInputs();
+    refreshMatSummary();
   };
   feW.addEventListener("input", applyFloorSizeLive);
   feD.addEventListener("input", applyFloorSizeLive);
   feW.addEventListener("change", applyFloorSizeLive);
   feD.addEventListener("change", applyFloorSizeLive);
+
+  let tilingPushed = false;
+  const applyTilingLive = () => {
+    const wv = parseInt(feTilingW?.value ?? "", 10);
+    const dv = parseInt(feTilingD?.value ?? "", 10);
+    if (!(wv > 0) || !(dv > 0)) return;
+    if (!tilingPushed) {
+      pushHistory();
+      tilingPushed = true;
+    }
+    f.materialTilingW = wv;
+    f.materialTilingD = dv;
+    draw();
+    refreshMatSummary();
+  };
+  feTilingW?.addEventListener("input", applyTilingLive);
+  feTilingD?.addEventListener("input", applyTilingLive);
+  feTilingW?.addEventListener("change", applyTilingLive);
+  feTilingD?.addEventListener("change", applyTilingLive);
 
   const feRot = document.getElementById("fe-rot") as HTMLInputElement | null;
   let rotPushed = false;
@@ -494,23 +620,6 @@ export function openFloorEditorModal(f: EditorFloor) {
       hideBusy();
     }
   });
-
-  if (isPlainSolid) {
-    document.querySelectorAll<HTMLButtonElement>(".mat-pick[data-guid]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const m = S.floorMaterials.find((x) => x.guid === btn.dataset.guid);
-        if (!m) return;
-        pushHistory();
-        f.materialGuid = m.guid;
-        f.materialAssetPath = m.assetPath;
-        f.materialName = m.id;
-        f.surfaceKind = "solid";
-        draw();
-        setStatus(`已切换材质：${m.nameZh}（写回后生效）`);
-        openFloorEditorModal(f);
-      });
-    });
-  }
 
   document.querySelector("[data-fm-close]")?.addEventListener("click", closeModal);
   document.querySelector("[data-fm-copy]")?.addEventListener("click", () => {

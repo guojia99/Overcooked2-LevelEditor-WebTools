@@ -4,6 +4,204 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "p_dlc09_portcullis_03",
+      "guid": "c11bb8655cfc4665ee4f69c34f10df70",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_battlements/p_dlc09_portcullis_03.prefab",
+      "category": "art",
+      "theme": "dlc09_battlements",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 3.981370687484741
+      },
+      "height": 3.981,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 portcullis 3",
+      "nameEn": "dlc09 portcullis 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_reed_01",
+      "guid": "dd3ea2895402878118c963e3c0428270",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_reed_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.1208882331848145
+      },
+      "height": 2.121,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 芦苇 1",
+      "nameEn": "dlc09 reed 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_reed_02",
+      "guid": "1965353d557abf8c710a33c08d8b6a50",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_reed_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.674490213394165
+      },
+      "height": 2.674,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 芦苇 2",
+      "nameEn": "dlc09 reed 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_reed_03",
+      "guid": "cca6e4567d4077cc1db8a1646e78adb0",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_reed_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.7949784994125366
+      },
+      "height": 1.795,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 芦苇 3",
+      "nameEn": "dlc09 reed 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rock_01",
+      "guid": "78553fdb62641d54555cc8081d31a069",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rock_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 4,
+        "sizeY": 3.434459686279297
+      },
+      "height": 3.434,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 岩石 1",
+      "nameEn": "dlc09 rock 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rock_02",
+      "guid": "c7a09a06994f15c60b8ede8558ed094a",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rock_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.4918246269226074
+      },
+      "height": 1.492,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 岩石 2",
+      "nameEn": "dlc09 rock 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rock_03",
+      "guid": "befd3ab8e7ad933d9643e8a5e12d5222",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rock_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.6078764796257019
+      },
+      "height": 0.608,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 岩石 3",
+      "nameEn": "dlc09 rock 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rock_04",
+      "guid": "d0bef59208d2ff74c24c57c575ba1079",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rock_04.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.4620139598846436
+      },
+      "height": 1.462,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 岩石 4",
+      "nameEn": "dlc09 rock 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rockwall_01",
+      "guid": "fc1275289a6f05d1da75478e51566844",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rockwall_01.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.8268983364105225
+      },
+      "height": 1.827,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 岩壁 1",
+      "nameEn": "dlc09 rockwall 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rockwall_02",
+      "guid": "3f2e5d01b5bf2a096989f6c6111a3287",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rockwall_02.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.815277099609375
+      },
+      "height": 1.815,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 岩壁 2",
+      "nameEn": "dlc09 rockwall 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rockwall_03",
+      "guid": "bd3aa9e38ae8eaf9a7de92b882f92945",
+      "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rockwall_03.prefab",
+      "category": "art",
+      "theme": "dlc09_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.829215407371521
+      },
+      "height": 1.829,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 岩壁 3",
+      "nameEn": "dlc09 rockwall 3",
+      "icon": false
+    },
+    {
       "id": "p_dlc09_rockwall_04",
       "guid": "471d1e80f5607b42f50dd0d2ec25fbe3",
       "assetPath": "Assets/common03/prefabs/dlc09/art/dlc09_camping/p_dlc09_rockwall_04.prefab",
@@ -3401,204 +3599,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC10 石基",
       "nameEn": "dlc10 stonebase",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_temple",
-      "guid": "d4b1fcb7f5ef9edcad755abd01e46a68",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_temple.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 6,
-        "cellsZ": 5,
-        "sizeY": 5.270464897155762
-      },
-      "height": 5.27,
-      "layoutTier": "decor",
-      "nameZh": "DLC10 寺庙",
-      "nameEn": "dlc10 temple",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_tree_green",
-      "guid": "66a210f3877209410c67524b9ca0302a",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_tree_green.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 12,
-        "cellsZ": 12,
-        "sizeY": 12.05717658996582
-      },
-      "height": 12.057,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 树绿",
-      "nameEn": "dlc 10 tree green",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_tree_pink",
-      "guid": "3eda085ae691db581814d510c3051d20",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_tree_pink.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 12,
-        "cellsZ": 12,
-        "sizeY": 12.05717658996582
-      },
-      "height": 12.057,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 树粉",
-      "nameEn": "dlc 10 tree pink",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_tree_red",
-      "guid": "5a67ff6f76ce00596b1d603cac751482",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_tree_red.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 12,
-        "cellsZ": 12,
-        "sizeY": 12.05717658996582
-      },
-      "height": 12.057,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 树红",
-      "nameEn": "dlc 10 tree red",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_vase",
-      "guid": "d27a95121be0fcd81adac09c79b665be",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_vase.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.0917446613311768
-      },
-      "height": 2.092,
-      "layoutTier": "decor",
-      "nameZh": "DLC10 花瓶",
-      "nameEn": "dlc10 vase",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_wall_a",
-      "guid": "fa30527698d374b43d25e20c2fcad6cb",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_wall_a.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 2.4394776821136475
-      },
-      "height": 2.439,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 墙 a",
-      "nameEn": "dlc 10 wall a",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_wall_b",
-      "guid": "e24b124e35a4218653392467da670760",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_wall_b.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 2.4394776821136475
-      },
-      "height": 2.439,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 墙 b",
-      "nameEn": "dlc 10 wall b",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_water_01",
-      "guid": "d88cd6a4f257615cafb695ffb38a56de",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_water_01.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.2000004053115845
-      },
-      "height": 1.2,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 水 1",
-      "nameEn": "dlc 10 water 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_woodplank_large_01",
-      "guid": "ba1cc781b802809324e55da6115b5f3b",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_woodplank_large_01.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.950559139251709
-      },
-      "height": 2.951,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 木板大 1",
-      "nameEn": "dlc 10 woodplank large 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_woodplank_large_02",
-      "guid": "70af42a2165b9f9a71ccbb7cf4422921",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_woodplank_large_02.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.8520398139953613
-      },
-      "height": 2.852,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 木板大 2",
-      "nameEn": "dlc 10 woodplank large 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc10_woodplank_large_03",
-      "guid": "10f3a532c3827d34b0f10a993060d15a",
-      "assetPath": "Assets/common03/prefabs/dlc10/art/dlc10/p_dlc10_woodplank_large_03.prefab",
-      "category": "art",
-      "theme": "dlc10",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.950559139251709
-      },
-      "height": 2.951,
-      "layoutTier": "decor",
-      "nameZh": "dlc 10 木板大 3",
-      "nameEn": "dlc 10 woodplank large 3",
       "icon": false
     }
   ]

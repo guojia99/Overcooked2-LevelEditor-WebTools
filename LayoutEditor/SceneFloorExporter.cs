@@ -191,6 +191,8 @@ public static class SceneFloorExporter
         string matGuid = null;
         string matPath = null;
         string matName = null;
+        int materialTilingW = 0;
+        int materialTilingD = 0;
         if (mat != null)
         {
             matPath = AssetDatabase.GetAssetPath(mat);
@@ -201,7 +203,29 @@ public static class SceneFloorExporter
             }
             else
             {
-                matName = mat.name;
+                int tw, td;
+                if (LayoutEditorFloorMaterialsApi.TryParseMaterialTilingSuffix(mat.name, out tw, out td))
+                {
+                    materialTilingW = tw;
+                    materialTilingD = td;
+                }
+                else if (LayoutEditorFloorMaterialsApi.TryInferTilingFromMainTex(mat, out tw, out td))
+                {
+                    materialTilingW = tw;
+                    materialTilingD = td;
+                }
+
+                string resolvedGuid, resolvedPath;
+                if (LayoutEditorFloorMaterialsApi.TryResolveFloorMaterialByName(mat.name, out resolvedGuid, out resolvedPath))
+                {
+                    matGuid = resolvedGuid;
+                    matPath = resolvedPath;
+                    matName = System.IO.Path.GetFileNameWithoutExtension(resolvedPath);
+                }
+                else
+                {
+                    matName = LayoutEditorFloorMaterialsApi.StripMaterialTilingSuffix(mat.name);
+                }
             }
         }
 
@@ -216,6 +240,9 @@ public static class SceneFloorExporter
         float imgOpacity;
         int imgRotation;
         SceneLayoutApplier.TryParseImageFloorName(go.name, out imgPath, out imgMode, out imgOpacity, out imgRotation);
+
+        var widthCells = Mathf.RoundToInt(widthUnits / LayoutEditorCatalogLookup.GridCellSize);
+        var depthCells = Mathf.RoundToInt(depthUnits / LayoutEditorCatalogLookup.GridCellSize);
 
         floors.Add(new FloorDto
         {
@@ -243,8 +270,10 @@ public static class SceneFloorExporter
             localScale = LayoutVector3.From(scale),
             widthUnits = widthUnits,
             depthUnits = depthUnits,
-            widthCells = Mathf.RoundToInt(widthUnits / LayoutEditorCatalogLookup.GridCellSize),
-            depthCells = Mathf.RoundToInt(depthUnits / LayoutEditorCatalogLookup.GridCellSize),
+            widthCells = widthCells,
+            depthCells = depthCells,
+            materialTilingW = materialTilingW > 0 ? materialTilingW : widthCells,
+            materialTilingD = materialTilingD > 0 ? materialTilingD : depthCells,
         });
     }
 

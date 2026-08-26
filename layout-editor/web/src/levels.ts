@@ -110,6 +110,9 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
       location.reload();
     } else if (target === "recipes") {
       location.href = "/recipes";
+    } else if (target === "guide") {
+      location.hash = "#/guide";
+      location.reload();
     }
   });
   const back = document.getElementById("m-back");

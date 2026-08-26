@@ -1,8 +1,216 @@
 {
   "schemaVersion": 3,
   "index": 14,
-  "itemCount": 103,
+  "itemCount": 118,
   "items": [
+    {
+      "id": "Sink",
+      "guid": "ce123dae8809b3f4a89a37ce3f1969c3",
+      "assetPath": "Assets/common01/prefabs/counters/Sink.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "水槽",
+      "nameEn": "Sink",
+      "icon": false
+    },
+    {
+      "id": "SinkGlass",
+      "guid": "509bf64c1dc11e24789e275d67fa2d67",
+      "assetPath": "Assets/common02/prefabs/counters/SinkGlass.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗杯槽",
+      "nameEn": "Sink Glass",
+      "icon": false
+    },
+    {
+      "id": "Bin",
+      "guid": "d1fa490d07f93534481063b914a22b8c",
+      "assetPath": "Assets/common01/prefabs/counters/Bin.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "垃圾箱",
+      "nameEn": "Bin",
+      "icon": false
+    },
+    {
+      "id": "PlateReturn",
+      "guid": "68f3833c8fc919b4499dea8b6cc4062b",
+      "assetPath": "Assets/common01/prefabs/counters/PlateReturn.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "脏盘台",
+      "nameEn": "Plate Return",
+      "icon": false
+    },
+    {
+      "id": "GlassReturn",
+      "guid": "1f4092287fd2d1d428520b4e1534786d",
+      "assetPath": "Assets/common02/prefabs/counters/GlassReturn.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "脏杯台",
+      "nameEn": "Glass Return",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_01_tray_sink_circus",
+      "guid": "4194172f8b203c1b1ffe44a7ac2a85e4",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_01_tray_sink_circus.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗餐盘水槽（马戏团）",
+      "nameEn": "Tray Sink (Circus)",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_02_tray_sink_circus",
+      "guid": "d1b9332ab76beda823608df2f14031d2",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_02_tray_sink_circus.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗餐盘水槽（马戏团·条纹）",
+      "nameEn": "Tray Sink (Circus Striped)",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_03_tray_sink_circus",
+      "guid": "9915b090428bc8993f049cc6f1715dbb",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_03_tray_sink_circus.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗餐盘水槽（马戏团·彩绘）",
+      "nameEn": "Tray Sink (Circus Painted)",
+      "icon": false
+    },
+    {
+      "id": "dlc08_workstation_tray_return",
+      "guid": "be0758917fdd7d2d46411171ba42ef29",
+      "assetPath": "Assets/common03/prefabs/dlc08/counters/dlc08_workstation_tray_return.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "餐盘回收台",
+      "nameEn": "Tray Return Station",
+      "icon": false
+    },
+    {
+      "id": "dlc09_workstation_mug_return_winter",
+      "guid": "f1dc669b31e429d903514b9b94e90851",
+      "assetPath": "Assets/common03/prefabs/dlc09/counters/dlc09_workstation_mug_return_winter.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "马克杯回收台（冬季）",
+      "nameEn": "Mug Return Station (Winter)",
+      "icon": false
+    },
+    {
+      "id": "dlc09_workstation_sink_mug_01_wood",
+      "guid": "ced2a77bc24e1859957c60ee025cad5c",
+      "assetPath": "Assets/common03/prefabs/dlc09/counters/dlc09_workstation_sink_mug_01_wood.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "马克杯水槽（木制）",
+      "nameEn": "Mug Sink (Wooden)",
+      "icon": false
+    },
+    {
+      "id": "dlc11_workstation_glass_return_01",
+      "guid": "5f2f5671ca81db6cd59251996b7c55f0",
+      "assetPath": "Assets/common03/prefabs/dlc11/counters/dlc11_workstation_glass_return_01.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "玻璃杯回收台",
+      "nameEn": "Glass Return Station",
+      "icon": false
+    },
+    {
+      "id": "dlc13_workstation_bin_01",
+      "guid": "8bc7dd9376ab8467bbc249d37a2c0ad9",
+      "assetPath": "Assets/common03/prefabs/dlc13/counters/dlc13_workstation_bin_01.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "垃圾桶（DLC13）",
+      "nameEn": "Bin (DLC13)",
+      "icon": false
+    },
     {
       "id": "dlc13_workstation_plate_return",
       "guid": "b7a5790602e0584cbea1b711eec31514",
@@ -457,6 +665,42 @@
       "surfaceKind": "conveyor",
       "nameZh": "自动步道",
       "nameEn": "Travelator",
+      "icon": false
+    },
+    {
+      "id": "city_water",
+      "guid": "bcde3d16db50c27f9463238987de7c23",
+      "assetPath": "Assets/common03/prefabs/core/themes/city_water.prefab",
+      "category": "other",
+      "theme": "themes",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 6
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "城市水面",
+      "nameEn": "city water",
+      "icon": false
+    },
+    {
+      "id": "dynamic_raft_water",
+      "guid": "9520de4b766cb253fe500d0e3ed49d23",
+      "assetPath": "Assets/common03/prefabs/core/themes/dynamic_raft_water.prefab",
+      "category": "other",
+      "theme": "themes",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 6
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "木筏动态水面",
+      "nameEn": "dynamic raft water",
       "icon": false
     },
     {

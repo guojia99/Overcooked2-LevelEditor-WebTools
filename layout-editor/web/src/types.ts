@@ -523,6 +523,10 @@ export interface FloorObject {
   /** Image rotation in degrees, snapped to 90° steps (0/90/180/270, clockwise
    *  viewed from above). Default 0. */
   imageRotation?: number;
+  /** Material floor texture tiling in grid cells (repeat count along width/depth).
+   *  Defaults to widthCells/depthCells when unset. */
+  materialTilingW?: number;
+  materialTilingD?: number;
   /** 空气地板：不可见，仅可行走。 */
   airFloor?: boolean;
 }
@@ -1000,6 +1004,8 @@ export interface CounterAppearanceOption {
   nameEn: string;
   theme: string;
   themeName: string;
+  /** 外观 prefab 所在游戏 bundle；写回 Unity 时会自动并入 LevelInfoSO.dependencies */
+  bundleName?: string;
 }
 
 export interface CounterAppearanceCatalog {

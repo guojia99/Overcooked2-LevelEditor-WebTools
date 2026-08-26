@@ -79,20 +79,104 @@ export function bgTheme(key: string | undefined): BgTheme {
 /** Prefab ids auto-placed when a theme is selected and missing from the scene. */
 export const THEME_BACKGROUND_PREFABS: Record<string, string[]> = {
   sky: ["Sky"],
-  water: ["raft_water"],
+  water: ["Water_01"],
   sand: ["sand_01"],
   goo: ["alien_gue"],
 };
 
-export function themeBackgroundPrefabIds(themeKey: string): string[] {
+/** Default water plane when no DLC-specific match is found. */
+export const DEFAULT_THEME_WATER_PREFAB = "Water_01";
+
+/** Preferred water backdrop per DLC / theme family (background theme dropdown). */
+export const THEME_WATER_PREFAB_BY_DLC: Record<string, string> = {
+  dlc02: "poolwater_01",
+  dlc03: "Water_01",
+  dlc04: "p_dlc4_water_01",
+  dlc05: "p_dlc5_camp_water",
+  dlc10: "p_dlc10_water_01",
+  dlc11: "poolwater_02",
+  dlc13: "p_dlc13_water_02",
+  raft: "dynamic_raft_water",
+  city: "city_water",
+};
+
+/** All prefab ids that may be auto-placed or inferred for the water theme. */
+export function allThemeWaterPrefabIds(): string[] {
+  const ids = new Set<string>([DEFAULT_THEME_WATER_PREFAB, "raft_water"]);
+  for (const id of Object.values(THEME_WATER_PREFAB_BY_DLC)) ids.add(id);
+  return [...ids];
+}
+
+/** Guess dominant DLC tag from level set name or placed prefab paths. */
+export function inferDominantDlcTag(
+  levelSet: string,
+  items?: { prefabAssetPath?: string }[]
+): string | null {
+  const lc = (levelSet ?? "").toLowerCase();
+  const ordered = Object.keys(THEME_WATER_PREFAB_BY_DLC).sort((a, b) => b.length - a.length);
+  for (const dlc of ordered) {
+    if (lc.includes(dlc)) return dlc;
+  }
+  if (lc.includes("jia_carnival") || lc.includes("mid_autumn") || lc.includes("moon")) return "dlc13";
+  if (lc.includes("beach")) return "dlc02";
+  if (lc.includes("camp") || lc.includes("forest")) return "dlc05";
+  if (lc.includes("raft")) return "raft";
+  if (lc.includes("city") || lc.includes("sushi")) return "city";
+
+  if (!items?.length) return null;
+  const counts = new Map<string, number>();
+  for (const it of items) {
+    const p = (it.prefabAssetPath ?? "").toLowerCase();
+    const m = p.match(/\/(dlc\d{2})\//) ?? p.match(/(dlc\d{2})_/);
+    if (m) counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
+  }
+  let best = "";
+  let bestN = 0;
+  for (const [dlc, n] of counts) {
+    if (n > bestN) {
+      bestN = n;
+      best = dlc;
+    }
+  }
+  return best || null;
+}
+
+/** Resolve the water prefab for the current level set / scene content. */
+export function themeWaterPrefabId(
+  levelSet?: string,
+  items?: { prefabAssetPath?: string }[],
+  catalogHas?: (id: string) => boolean
+): string {
+  const dlc = inferDominantDlcTag(levelSet ?? "", items);
+  if (dlc === "raft" && catalogHas && !catalogHas("dynamic_raft_water")) {
+    return "raft_water";
+  }
+  if (dlc && THEME_WATER_PREFAB_BY_DLC[dlc]) {
+    const id = THEME_WATER_PREFAB_BY_DLC[dlc];
+    if (!catalogHas || catalogHas(id)) return id;
+  }
+  return DEFAULT_THEME_WATER_PREFAB;
+}
+
+export function themeBackgroundPrefabIds(
+  themeKey: string,
+  levelSet?: string,
+  items?: { prefabAssetPath?: string }[],
+  catalogHas?: (id: string) => boolean
+): string[] {
+  if (themeKey === "water") return [themeWaterPrefabId(levelSet, items, catalogHas)];
   return THEME_BACKGROUND_PREFABS[themeKey] ?? [];
 }
 
 /** All environment prefabs managed by theme switching (mutually exclusive). */
 export function allThemeBackgroundPrefabIds(): string[] {
   const ids = new Set<string>();
-  for (const list of Object.values(THEME_BACKGROUND_PREFABS)) {
-    for (const id of list) ids.add(id);
+  for (const [theme, list] of Object.entries(THEME_BACKGROUND_PREFABS)) {
+    if (theme === "water") {
+      for (const id of allThemeWaterPrefabIds()) ids.add(id);
+    } else {
+      for (const id of list) ids.add(id);
+    }
   }
   return [...ids];
 }
@@ -118,7 +202,11 @@ export function inferBgThemeFromItems(
   layoutItems: { prefabAssetPath?: string }[]
 ): string | null {
   const ids = new Set(layoutItems.map((i) => prefabIdFromAssetPath(i.prefabAssetPath)));
+  for (const p of allThemeWaterPrefabIds()) {
+    if (ids.has(p)) return "water";
+  }
   for (const [theme, prefs] of Object.entries(THEME_BACKGROUND_PREFABS)) {
+    if (theme === "water") continue;
     for (const p of prefs) {
       if (ids.has(p)) return theme;
     }
@@ -126,7 +214,11 @@ export function inferBgThemeFromItems(
   return null;
 }
 
-export function bgThemeTooltip(theme: BgTheme): string {
+export function bgThemeTooltip(theme: BgTheme, levelSet?: string): string {
+  if (theme.key === "water") {
+    const pid = themeWaterPrefabId(levelSet);
+    return `${theme.labelZh}：写回时自动确保场景有 ${pid} 环境 prefab（按关卡 DLC 自动选择）`;
+  }
   const prefabs = THEME_BACKGROUND_PREFABS[theme.key];
   if (prefabs?.length) {
     return `${theme.labelZh}：写回时自动确保场景有 ${prefabs.join(" / ")} 环境 prefab`;

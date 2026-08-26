@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-08-21T13:23:15.052Z",
+  "generatedAt": "2026-08-26T07:12:14.255Z",
   "schemaVersion": 3,
   "materials": [
     {
-      "guid": "0c2e6dfed9c86a9419611290b5d378c5",
-      "id": "Grey",
-      "assetPath": "Assets/common01/pseudo_prefab_so/mechanisms/Switch/Grey.asset",
-      "nameZh": "灰色（Grey）",
-      "nameEn": "Grey"
+      "guid": "cc9423e4e9f489945abee200986aae4b",
+      "id": "PressureSwitch",
+      "assetPath": "Assets/common01/pseudo_prefab_so/mechanisms/Switch/PressureSwitch.asset",
+      "nameZh": "压力开关（Pressure Switch）",
+      "nameEn": "Pressure Switch"
     },
     {
       "guid": "2793ac1358e7fae4b9237db0e8527f00",
@@ -38,11 +38,11 @@
       "nameEn": "mat_sk_switch_unoccupied"
     },
     {
-      "guid": "cc9423e4e9f489945abee200986aae4b",
-      "id": "PressureSwitch",
-      "assetPath": "Assets/common01/pseudo_prefab_so/mechanisms/Switch/PressureSwitch.asset",
-      "nameZh": "压力开关（Pressure Switch）",
-      "nameEn": "Pressure Switch"
+      "guid": "0c2e6dfed9c86a9419611290b5d378c5",
+      "id": "Grey",
+      "assetPath": "Assets/common01/pseudo_prefab_so/mechanisms/Switch/Grey.asset",
+      "nameZh": "灰色（Grey）",
+      "nameEn": "Grey"
     }
   ]
 }

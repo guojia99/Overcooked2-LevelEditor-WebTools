@@ -20,6 +20,7 @@ public static class LayoutEditorFootprintDump
         "Assets/common01/prefabs/art",
         "Assets/common02/prefabs/art",
         "Assets/common03/prefabs",
+        "Assets/commonW1/prefabs/backgrounds",
     };
 
     [Serializable]
@@ -52,9 +53,9 @@ public static class LayoutEditorFootprintDump
             foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { root }))
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                // common03 root 覆盖全部分类，只测装饰物（占位 prefab 走 PseudoPrefab
+                // common03 / commonW1 根覆盖全部分类，只测装饰物（占位 prefab 走 PseudoPrefab
                 // 家族 ResetChild 从 bundle 生成真实网格后测量，与 common01/02 一致）。
-                if (!assetPath.Contains("/art/"))
+                if (!assetPath.Contains("/art/") && !assetPath.Contains("/backgrounds/"))
                     continue;
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
                 if (prefab == null)

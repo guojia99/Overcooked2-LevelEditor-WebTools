@@ -4,6 +4,206 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "mi_floor_01",
+      "guid": "af89ae6f83d1e3bbc81815e57fdad23f",
+      "assetPath": "Assets/common03/prefabs/core/art/floors/mi_floor_01.prefab",
+      "category": "art",
+      "theme": "floors",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.664535364979494e-16
+      },
+      "height": 0,
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "矿洞地板 1",
+      "nameEn": "Mine Floor 1",
+      "icon": false
+    },
+    {
+      "id": "mi_lantern_02",
+      "guid": "e794fb4f4561d13489458ebdc3c31178",
+      "assetPath": "Assets/common01/prefabs/art/mine/mi_lantern_02.prefab",
+      "category": "art",
+      "theme": "mine",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.2810544967651367
+      },
+      "height": 1.281,
+      "layoutTier": "decor",
+      "nameZh": "矿洞灯笼",
+      "nameEn": "mi lantern 2",
+      "icon": false
+    },
+    {
+      "id": "mi_shovel_02",
+      "guid": "2081cee61e4ab70d3d0a6fd69acb6741",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/mi_shovel_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.3092775344848633
+      },
+      "height": 2.309,
+      "layoutTier": "decor",
+      "nameZh": "mi 铲子 2",
+      "nameEn": "mi shovel 2",
+      "icon": false
+    },
+    {
+      "id": "mi_stone_wall_02_2x5",
+      "guid": "8b21a9b785bece6fdde14c01a854421c",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/mi_stone_wall_02_2x5.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 4,
+        "sizeY": 2.66453695316627e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "mi 石墙 2 2x5",
+      "nameEn": "mi stone wall 2 2x5",
+      "icon": false
+    },
+    {
+      "id": "mi_stone_wall_02_4x9",
+      "guid": "5e39ee11f883eef48f22b1b82baa9d2c",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/mi_stone_wall_02_4x9.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 8,
+        "sizeY": 2.664535364979494e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "mi 石墙 2 4x9",
+      "nameEn": "mi stone wall 2 4x9",
+      "icon": false
+    },
+    {
+      "id": "mi_stone_wall_02_8x14",
+      "guid": "5856c8388ba2cb4f3beb4f796db7339f",
+      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/mi_stone_wall_02_8x14.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 4,
+        "sizeY": 2.66453695316627e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "mi 石墙 2 8x14",
+      "nameEn": "mi stone wall 2 8x14",
+      "icon": false
+    },
+    {
+      "id": "mi_table_01",
+      "guid": "2cc8c266ce62328116886830c232f06e",
+      "assetPath": "Assets/common03/prefabs/core/art/mine/mi_table_01.prefab",
+      "category": "art",
+      "theme": "mine",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.6103930473327637
+      },
+      "height": 0.61,
+      "layoutTier": "decor",
+      "nameZh": "矿洞桌子 1",
+      "nameEn": "Mine Table 1",
+      "icon": false
+    },
+    {
+      "id": "mi_turntable_01",
+      "guid": "638d3af325ddfd0089979c0ada5dc9ba",
+      "assetPath": "Assets/common03/prefabs/core/art/mine/mi_turntable_01.prefab",
+      "category": "art",
+      "theme": "mine",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "矿洞转盘 1",
+      "nameEn": "Mine Turntable 1",
+      "icon": false
+    },
+    {
+      "id": "mi_wood_floor_16x4",
+      "guid": "785a3ec64f16ea8996cc2ac8fb2ea254",
+      "assetPath": "Assets/common03/prefabs/core/art/floors/mi_wood_floor_16x4.prefab",
+      "category": "art",
+      "theme": "floors",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 13,
+        "cellsZ": 1,
+        "sizeY": 4
+      },
+      "height": 4,
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "矿洞木地板 16×4",
+      "nameEn": "Mine Wood Floor 16x4",
+      "icon": false
+    },
+    {
+      "id": "mince_pies_01",
+      "guid": "f068c66837c4141e682a470e64e9b9d6",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/mince_pies_01.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.5747966766357422
+      },
+      "height": 0.575,
+      "layoutTier": "decor",
+      "nameZh": "肉馅派 1",
+      "nameEn": "mince pies 1",
+      "icon": false
+    },
+    {
+      "id": "noripple_m_dlc3_icecliff_270",
+      "guid": "4bf3e144a5b8f414ba30bba47c4a177f",
+      "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/noripple_m_dlc3_icecliff_270.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.0651562213897705
+      },
+      "height": 2.065,
+      "layoutTier": "decor",
+      "nameZh": "冰崖转角 270°",
+      "nameEn": "m dlc3 icecliff 270",
+      "icon": false
+    },
+    {
       "id": "noripple_m_dlc3_icecliff_90",
       "guid": "570f7de4d8097564cb589da5f04551e9",
       "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/noripple_m_dlc3_icecliff_90.prefab",
@@ -3181,204 +3381,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 5 d 1",
       "nameEn": "dlc07 battlements stone block 5 d 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_06_a_1",
-      "guid": "cd57696fae025460145fa781b9130aab",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_06_a_1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8777133226394653
-      },
-      "height": 0.878,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block 6 a 1",
-      "nameEn": "dlc07 battlements stone block 6 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_06_b_1",
-      "guid": "a27a7833fd46079bc1e66d0feafb1211",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_06_b_1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8777133226394653
-      },
-      "height": 0.878,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block 6 b 1",
-      "nameEn": "dlc07 battlements stone block 6 b 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_06_c_1",
-      "guid": "8c1a614879735e2236ad2c4b3fcb185f",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_06_c_1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8777133226394653
-      },
-      "height": 0.878,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block 6 c 1",
-      "nameEn": "dlc07 battlements stone block 6 c 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_06_d_1",
-      "guid": "3a1db68b8183c62b909bf8f7c4207a97",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_06_d_1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8777133226394653
-      },
-      "height": 0.878,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block 6 d 1",
-      "nameEn": "dlc07 battlements stone block 6 d 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_07_a_1",
-      "guid": "cc1170b3b696f0882cdac3a113c1d75d",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_07_a_1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8841999769210815
-      },
-      "height": 0.884,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block 7 a 1",
-      "nameEn": "dlc07 battlements stone block 7 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_07_b_1",
-      "guid": "dcd857445f1ed7357b3bd615b6b052de",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_07_b_1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8841999769210815
-      },
-      "height": 0.884,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block 7 b 1",
-      "nameEn": "dlc07 battlements stone block 7 b 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_07_c_1",
-      "guid": "f15b2c39e93224bcd0bcf6e006e26ab5",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_07_c_1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8841999769210815
-      },
-      "height": 0.884,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block 7 c 1",
-      "nameEn": "dlc07 battlements stone block 7 c 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_07_d_1",
-      "guid": "0e596b1d3961d4ef272718c0794ff30d",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_07_d_1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8841999769210815
-      },
-      "height": 0.884,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block 7 d 1",
-      "nameEn": "dlc07 battlements stone block 7 d 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_trip_04",
-      "guid": "e5e84410d47ab814c5c77f2aabdea496",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_trip_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.49676573276519775
-      },
-      "height": 0.497,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block trip 4",
-      "nameEn": "dlc07 battlements stone block trip 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_trip_05",
-      "guid": "986dedd4e59111ccbd77b7799a400fd8",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_trip_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.496765673160553
-      },
-      "height": 0.497,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block trip 5",
-      "nameEn": "dlc07 battlements stone block trip 5",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_battlements_stone_block_trip_06",
-      "guid": "12ecefd36ba27919e830d8f9b7de5840",
-      "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_block_trip_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.49676573276519775
-      },
-      "height": 0.497,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 battlements 石 block trip 6",
-      "nameEn": "dlc07 battlements stone block trip 6",
       "icon": false
     }
   ]

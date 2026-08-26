@@ -134,6 +134,9 @@ export type SaveScope = "" | "items" | "decor" | "floors";
 
 export const CELL = 1.2;
 export const HALF_CELL = CELL / 2;
+
+/** 空气墙 BoxCollider 水平边长（米），与 Unity GridCellSize / 工作台 1 格一致。 */
+export const AIR_WALL_BASE_XZ = CELL;
 /** 磁吸半径：距半格网格 0.1 内才吸附到网格，其余位置按所选精度自由摆放。 */
 export const MAGNET_THRESHOLD = 0.1;
 export const PX_PER_UNIT = 48;
@@ -249,6 +252,19 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
  *  后端 LayoutEditorGridSnapGuard 已解除其 X/Z 约束，前端磁吸同步固定奇偶位。 */
 export const CENTER_PIVOT_PREFAB_IDS = new Set(["workstation_guillotine_01"]);
 
+/** 西南角 pivot 的 2×2 道具：_wx 存 Unity stub；画布按 stubToVisualOffset 绘制占地框。 */
+export const SW_CORNER_PIVOT_PREFAB_IDS = new Set([
+  "cooking_region_floorburner",
+  "dlc10_cooking_region_floorburner",
+]);
+
+/** 2×2 火锅大锅：模型中心在 transform 局部 (-0.6,+0.6)；编辑器 _wx 存占地中心。 */
+export const LARGE_POT_PREFAB_IDS = new Set([
+  "utensil_large_pot_01",
+  "utensil_large_pot_01_pushable",
+  "utensil_dlc10_large_pot_01",
+]);
+
 /** 全部编辑器可变状态（单例）。模块间共享，禁止顶层访问 DOM 的状态也在此。 */
 export const S = {
   freeSnapStep: 0.01,
@@ -273,6 +289,8 @@ export const S = {
   allowWorkstationOverlap: false,
   backgroundEditable: false,
   floorMaterials: [] as FloorMaterial[],
+  /** 实心地板材质选择器：上次选中的主题分类 tab。 */
+  floorMaterialTabKey: "" as string,
   selectedKey: null as string | null,
   selectedKeys: new Set<string>(),
   selectedFloorKey: null as string | null,
@@ -334,6 +352,11 @@ export const S = {
   dragOffsetX: 0,
   dragOffsetZ: 0,
   dragGroupKeys: [] as string[],
+  // Background/water item resize (corner drag): edge + anchored opposite corner.
+  dragItemResizeKey: null as string | null,
+  dragItemResizeEdge: "",
+  dragItemResizeAnchorX: 0,
+  dragItemResizeAnchorZ: 0,
   dragLastWx: 0,
   dragLastWz: 0,
   marqueeing: false,

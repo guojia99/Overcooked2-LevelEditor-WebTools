@@ -57,6 +57,9 @@ function shell(app: HTMLElement, title: string): HTMLElement {
       location.reload();
     } else if (target === "recipes") {
       location.href = "/recipes";
+    } else if (target === "guide") {
+      location.hash = "#/guide";
+      location.reload();
     }
   });
   return document.getElementById("cr-content")!;

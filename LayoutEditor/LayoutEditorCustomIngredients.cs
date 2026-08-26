@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 通用内容源库（Assets/common03）的引用校验与 bundle 依赖注册。
+/// 通用内容源库（Assets/common03）与背景占位库（Assets/commonW1）的引用校验与 bundle 依赖注册。
 ///
 /// 历史机制（已废弃）：源库曾在 Assets/Editor/LayoutEditor/Import 下，无法进入
 /// AssetBundle 构建，保存时把用到的资产拷入 Assets/LevelSets/&lt;set&gt;/custom_web/
@@ -30,11 +30,17 @@ public static class LayoutEditorCustomIngredients
     /// <summary>通用内容源库根目录（由 Assets/Editor/LayoutEditor/Import 迁移而来）。</summary>
     public const string Common03Root = "Assets/common03";
 
+    /// <summary>背景装饰占位源库（仅 prefab + .meta，打包为 commonW1 bundle）。</summary>
+    public const string CommonW1Root = "Assets/commonW1";
+
     /// <summary>旧 custom_web 拷贝目录名（机制已废弃，仅为兼容读取历史数据保留）。</summary>
     public const string CustomDirName = "custom_web";
 
     /// <summary>common03 bundle 名（folder meta assetBundleName）。</summary>
     public const string Common03BundleName = "common03";
+
+    /// <summary>commonW1 bundle 名（folder meta assetBundleName）。</summary>
+    public const string CommonW1BundleName = "commonW1";
 
     /// <summary>场景保存时从 doc 收集到的 common03 引用所需游戏 bundle，
     ///  由随后 SyncLevelInfo → EnsureWebDependencies 一并注册。</summary>
@@ -54,7 +60,15 @@ public static class LayoutEditorCustomIngredients
         return assetPath.IndexOf("/common03/", StringComparison.Ordinal) >= 0;
     }
 
-    /// <summary>是否本地源库资产（common03 / common01 / common02）：这些目录里的
+    /// <summary>是否 commonW1 背景占位源库内资产。</summary>
+    public static bool IsCommonW1Asset(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        return assetPath.IndexOf("/commonW1/", StringComparison.Ordinal) >= 0;
+    }
+
+    /// <summary>是否本地源库资产（common03 / commonW1 / common01 / common02）：这些目录里的
     ///  wrapper prefab 与 PseudoPrefabSO 都按 bundleName 指向游戏原 bundle，
     ///  可安全解析注册依赖（AddDependency 只收实际存在的 bundle）。</summary>
     private static bool IsLocalSourceAsset(string assetPath)
@@ -62,6 +76,7 @@ public static class LayoutEditorCustomIngredients
         if (string.IsNullOrEmpty(assetPath))
             return false;
         return IsCommon03Asset(assetPath)
+            || IsCommonW1Asset(assetPath)
             || assetPath.IndexOf("/common01/", StringComparison.Ordinal) >= 0
             || assetPath.IndexOf("/common02/", StringComparison.Ordinal) >= 0;
     }
@@ -200,6 +215,7 @@ public static class LayoutEditorCustomIngredients
             return;
         var deps = new List<string>(info.dependencies ?? new string[0]);
         AddDependency(deps, Common03BundleName);
+        AddDependency(deps, CommonW1BundleName);
         foreach (var b in _pendingDocBundles)
             AddDependency(deps, b);
 

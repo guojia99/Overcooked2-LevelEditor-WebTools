@@ -20,7 +20,8 @@ import {
   floorCategoryOf,
   categoryVisible
 } from "./catalog";
-import { isCollisionItem } from "./stubControls";
+import { isCollisionItem, isAirWallItem } from "./stubControls";
+import { itemIntersectsWorldRect } from "./items";
 import {
   isSelected,
   selectionKeys,
@@ -267,16 +268,26 @@ export function updateMarqueeSelection() {
     const p = worldToCanvas(wx, wz);
     return p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY;
   };
+  const c1 = canvasToWorld(minX, minY);
+  const c2 = canvasToWorld(maxX, maxY);
+  const minWx = Math.min(c1.x, c2.x);
+  const maxWx = Math.max(c1.x, c2.x);
+  const minWz = Math.min(c1.z, c2.z);
+  const maxWz = Math.max(c1.z, c2.z);
+  const marqueeHitsItem = (it: EditorItem) => {
+    if (isAirWallItem(it)) return itemIntersectsWorldRect(it, minWx, maxWx, minWz, maxWz);
+    return inRect(it._wx, it._wz);
+  };
   // Move layer in members mode: marquee selects items AND floors across ALL layers.
   // Pure background content (water, sky…) is never selectable as a member.
   if (S.currentLayer === "move" && S.moveMode === "members") {
     const next = S.marqueeAdd ? new Set(S.selectedKeys) : new Set<string>();
     for (const it of S.items) {
-      if (isCollisionItem(it)) continue;
+      if (isCollisionItem(it) && !isAirWallItem(it)) continue;
       const cat = itemCategoryOf(it);
       if (cat === "background") continue;
       if (!categoryVisible(cat)) continue;
-      if (inRect(it._wx, it._wz)) next.add(it._editorKey);
+      if (marqueeHitsItem(it)) next.add(it._editorKey);
     }
     S.selectedKeys = next;
     const nextFloors = S.marqueeAdd ? new Set(S.selectedFloorKeys) : new Set<string>();
@@ -306,7 +317,7 @@ export function updateMarqueeSelection() {
     for (const it of S.items) {
       const cat = itemCategoryOf(it);
       if (cat !== (layerBg ? "background" : "floors")) continue;
-      if (isCollisionItem(it)) continue;
+      if (isCollisionItem(it) && !isAirWallItem(it)) continue;
       if (!categoryVisible(cat)) continue;
       if (!itemInHeightFilter(it)) continue;
       if (inRect(it._wx, it._wz)) next.add(it._editorKey);
@@ -319,10 +330,10 @@ export function updateMarqueeSelection() {
   const next = S.marqueeAdd ? new Set(S.selectedKeys) : new Set<string>();
   for (const it of S.items) {
     if (!isActiveItemLayer(it)) continue;
-    if (isCollisionItem(it)) continue;
+    if (isCollisionItem(it) && !isAirWallItem(it)) continue;
     if (!categoryVisible(itemCategoryOf(it))) continue;
     if (!itemInHeightFilter(it)) continue;
-    if (inRect(it._wx, it._wz)) next.add(it._editorKey);
+    if (marqueeHitsItem(it)) next.add(it._editorKey);
   }
   S.selectedKeys = next;
   const keys = selectionKeys();
@@ -449,6 +460,11 @@ export function draw() {
     if (S.selectedFloorKeys.size > 0) {
       drawFloorPlanes(true, "floor");
       drawFloorPlanes(true, "background");
+    }
+    // Selected surface items (flooredge, background planes…) — same multi-select pass as floors.
+    if (S.selectedKeys.size > 0) {
+      drawSurfaceItems(true, "floor", previewPos);
+      drawSurfaceItems(true, "background", previewPos);
     }
     // Ghost items (non-surface) from other layers, dimmed by category visibility.
     // On the background layer the ambient effects (落雪 BGM…) are active content

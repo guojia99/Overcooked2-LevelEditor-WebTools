@@ -1,7 +1,9 @@
 using System;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using LevelEditor;
 
 /// <summary>
@@ -43,6 +45,14 @@ static class LayoutEditorGridSnapGuard
 
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         EditorApplication.update += OnLoaded;
+        EditorSceneManager.sceneOpened += OnSceneOpened;
+    }
+
+    private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
+    {
+        RelaxGridSnapOnScene();
+        EditorApplication.delayCall += () => RelaxGridSnapOnScene();
+        Arm();
     }
 
     private static void OnPlayModeStateChanged(PlayModeStateChange state)
@@ -110,6 +120,13 @@ static class LayoutEditorGridSnapGuard
                 if (ReadConstrain(_constrainZField, snap))
                 {
                     WriteConstrain(_constrainZField, snap, false);
+                    changed = true;
+                }
+                // 约束解除后仍可能因 enabled 在 ResetChild 后首帧吸附；压力开关
+                // 占地中心若落在 n×1.2 格点会被吸到 0.6 mod 1.2 并带动父 stub 偏移。
+                if (snap.enabled)
+                {
+                    snap.enabled = false;
                     changed = true;
                 }
                 if (changed)

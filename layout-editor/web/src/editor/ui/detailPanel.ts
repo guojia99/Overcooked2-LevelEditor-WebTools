@@ -12,10 +12,21 @@ import {
   itemUniformScale,
   setItemUniformScale,
   stepDisplayDecimals,
-  escHtml
+  escHtml,
+  isSwCornerPivotPrefabId,
+  isLargePotPrefabId,
+  itemPrefabId,
+  itemVisualCenterXZ,
+  editorItemUnityWorldXZ
 } from "../coords";
 import { itemLabel } from "../labels";
-import { counterAppearanceOptions, catalogItemForGuidOrPath } from "../catalog";
+import {
+  counterAppearanceOptions,
+  catalogItemForGuidOrPath,
+  isResizableBackgroundItem,
+  isBackgroundPlaneCat,
+  itemPlaneCells
+} from "../catalog";
 import {
   isSurfaceItem,
   surfaceKindLabelZh
@@ -29,6 +40,7 @@ import {
 import { pushHistory } from "../historyOps";
 import { draw } from "../render";
 import { updateFloorBar } from "../floorPalette";
+import { setItemPlaneSize } from "../items";
 import {
   isConveyorItem,
   isTeleportalItem
@@ -186,25 +198,72 @@ export function extraStubDetailHtml(item: EditorItem): string {
 
 export function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY: number) {
   const cat = S.catalogByGuid.get(item.prefabGuid);
-  const fp = resolveFootprint(item);
+  const resizable = isResizableBackgroundItem(item) || isBackgroundPlaneCat(cat);
+  const planeCells = resizable ? itemPlaneCells(item) : null;
+  const fp = resizable && planeCells
+    ? { cellsX: planeCells.wCells, cellsZ: planeCells.dCells }
+    : resolveFootprint(item);
   const uScale = itemUniformScale(item);
+  const rotXNote =
+    Math.abs((item.localRotationX ?? 0) - 90) < 1 && resizable
+      ? `<dt>平面</dt><dd>立式水面 quad（绕 X 轴 90° 铺平，深度在 localScale.y）</dd>`
+      : "";
+  const sizeRow = resizable && planeCells
+    ? `<dt>大小</dt><dd id="si-size-val">${planeCells.wCells} × ${planeCells.dCells} 格</dd>
+    <div class="floor-edit-row">
+      <label>宽(格) <input type="number" min="1" step="1" id="si-w-cells" value="${planeCells.wCells}" /></label>
+      <label>深(格) <input type="number" min="1" step="1" id="si-d-cells" value="${planeCells.dCells}" /></label>
+      <span class="muted" style="align-self:center;font-size:11px">即时生效</span>
+    </div>`
+    : `<dt>缩放</dt><dd id="si-scale-val">${uScale.toFixed(2)}×</dd>
+    <div class="floor-edit-row">
+      <label>缩放 <input type="number" min="0.5" step="0.1" id="si-scale" value="${uScale.toFixed(2)}" /></label>
+      <span class="muted" style="align-self:center;font-size:11px">即时生效</span>
+    </div>`;
   dom.detailEl.innerHTML = `
     <h3>${surfaceKindLabelZh(cat?.surfaceKind)} · ${itemLabel(item)}</h3>
     <dl>
       <dt>类型</dt><dd>${surfaceKindLabelZh(cat?.surfaceKind)}（地板层 prefab）</dd>
       <dt>占地</dt><dd>${fp.cellsX} × ${fp.cellsZ} 格</dd>
       <dt>坐标</dt><dd>x ${item._wx.toFixed(2)}, z ${item._wz.toFixed(2)}</dd>
-      <dt>旋转</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
-      <dt>缩放</dt><dd id="si-scale-val">${uScale.toFixed(2)}×</dd>
+      <dt>旋转 Y</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
+      ${rotXNote}
+      ${sizeRow}
     </dl>
-    <div class="floor-edit-row">
-      <label>缩放 <input type="number" min="0.5" step="0.1" id="si-scale" value="${uScale.toFixed(2)}" /></label>
-      <span class="muted" style="align-self:center;font-size:11px">即时生效</span>
-    </div>
-    <p class="close-hint">右键菜单可微移/旋转 · R/Shift+R 旋转90° · Del 删除 · Esc 关闭</p>
+    <p class="close-hint">右键菜单可微移/旋转 · 大小请用宽×深(格) · R/Shift+R 旋转90° · Del 删除 · Esc 关闭</p>
   `;
   dom.detailEl.classList.remove("hidden");
   positionDetail(clientX, clientY);
+
+  if (resizable && planeCells) {
+    const wInp = document.getElementById("si-w-cells") as HTMLInputElement;
+    const dInp = document.getElementById("si-d-cells") as HTMLInputElement;
+    let sizePushed = false;
+    const applySize = () => {
+      const wv = parseInt(wInp?.value ?? "", 10);
+      const dv = parseInt(dInp?.value ?? "", 10);
+      if (!(wv > 0) && !(dv > 0)) return;
+      const cur = itemPlaneCells(item);
+      if (!sizePushed) {
+        pushHistory();
+        sizePushed = true;
+      }
+      setItemPlaneSize(item, wv > 0 ? wv : cur.wCells, dv > 0 ? dv : cur.dCells);
+      const next = itemPlaneCells(item);
+      const el = document.getElementById("si-size-val");
+      if (el) el.textContent = `${next.wCells} × ${next.dCells} 格`;
+      if (wInp && document.activeElement !== wInp) wInp.value = String(next.wCells);
+      if (dInp && document.activeElement !== dInp) dInp.value = String(next.dCells);
+      S.dirty = true;
+      draw();
+      updateFloorBar();
+    };
+    wInp?.addEventListener("input", applySize);
+    dInp?.addEventListener("input", applySize);
+    wInp?.addEventListener("change", applySize);
+    dInp?.addEventListener("change", applySize);
+    return;
+  }
 
   const scaleInput = document.getElementById("si-scale") as HTMLInputElement;
   let scalePushed = false;
@@ -246,8 +305,26 @@ function dispenserDetailHtml(item: EditorItem): string {
 
 export function showDetail(item: EditorItem, clientX: number, clientY: number) {
   const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
-  const fp = resolveFootprint(item);
+  const fp = isResizableBackgroundItem(item)
+    ? (() => {
+        const c = itemPlaneCells(item);
+        return { cellsX: c.wCells, cellsZ: c.dCells };
+      })()
+    : resolveFootprint(item);
   const id = prefabIdFromPath(item.prefabAssetPath) || cat?.id || "—";
+  const d = stepDisplayDecimals(S.freeSnapStep);
+  const pid = itemPrefabId(item);
+  const swCorner = isSwCornerPivotPrefabId(pid);
+  const largePot = isLargePotPrefabId(pid);
+  const unityStub = swCorner ? editorItemUnityWorldXZ(item) : null;
+  const coordRows = swCorner
+    ? `<dt>编辑器 Stub</dt><dd>x ${item._wx.toFixed(d)}, z ${item._wz.toFixed(d)}</dd>
+      <dt>占地中心</dt><dd>x ${itemVisualCenterXZ(item).x.toFixed(d)}, z ${itemVisualCenterXZ(item).z.toFixed(d)}</dd>
+      <dt>Unity 写回</dt><dd>x ${unityStub!.x.toFixed(d)}, z ${unityStub!.z.toFixed(d)}</dd>`
+    : largePot
+      ? `<dt>占地中心</dt><dd>x ${itemVisualCenterXZ(item).x.toFixed(d)}, z ${itemVisualCenterXZ(item).z.toFixed(d)}</dd>
+      <dt>Unity 坐标</dt><dd>x ${item._wx.toFixed(d)}, z ${item._wz.toFixed(d)}</dd>`
+      : `<dt>世界坐标</dt><dd>x ${item._wx.toFixed(d)}, z ${item._wz.toFixed(d)}</dd>`;
 
   dom.detailEl.innerHTML = `
     <h3>${itemLabel(item)}</h3>
@@ -258,7 +335,8 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       <dt>层级路径</dt><dd>${item.hierarchyPath}</dd>
       <dt>父节点</dt><dd>${item.parentPath || "—"}</dd>
       <dt>占地</dt><dd>${fp.cellsX} × ${fp.cellsZ} 格 (${(fp.cellsX * CELL).toFixed(1)} × ${(fp.cellsZ * CELL).toFixed(1)} m)</dd>
-      <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(stepDisplayDecimals(S.freeSnapStep))}, y ${item.localPosition.y.toFixed(stepDisplayDecimals(S.freeSnapStep))}, z ${item.localPosition.z.toFixed(stepDisplayDecimals(S.freeSnapStep))}</dd>
+      ${coordRows}
+      <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(d)}, y ${item.localPosition.y.toFixed(d)}, z ${item.localPosition.z.toFixed(d)}</dd>
       <dt>旋转 Y</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
       ${isSurfaceItem(cat) ? `<dt>缩放</dt><dd>${itemUniformScale(item).toFixed(2)}×（右键菜单可调整大小）</dd>` : ""}
       <dt>分类</dt><dd>${isSurfaceItem(cat) ? surfaceKindLabelZh(cat?.surfaceKind) + "（地板层）" : cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : cat?.category ?? "—"}</dd>

@@ -12,6 +12,8 @@ import {
   PX_PER_UNIT,
   FOOTPRINT_BY_ID,
   CENTER_PIVOT_PREFAB_IDS,
+  SW_CORNER_PIVOT_PREFAB_IDS,
+  LARGE_POT_PREFAB_IDS,
   EditorItem
 } from "./state";
 import { dom } from "./dom";
@@ -19,7 +21,111 @@ import type {
   CatalogItem,
   LayoutItem
 } from "../types";
-import { itemLayerOf, catalogItemForGuidOrPath } from "./catalog";
+import { catalogItemForGuidOrPath, itemLayerOf } from "./catalog";
+
+export function isSwCornerPivotPrefabId(prefabId: string): boolean {
+  return SW_CORNER_PIVOT_PREFAB_IDS.has(prefabId);
+}
+
+export function isLargePotPrefabId(prefabId: string): boolean {
+  return LARGE_POT_PREFAB_IDS.has(prefabId);
+}
+
+/** 大锅模型中心相对 transform 的世界偏移（stacking.ts：局部 (-0.6,+0.6)）；仅画布对齐用。 */
+export function largePotVisualOffsetWorld(rotY: number): { x: number; z: number } {
+  const rot = normalizeRot(rotY);
+  if (rot === 90 || rot === 270) return { x: 0, z: 0 };
+  if (rot === 180) return { x: HALF_CELL, z: -HALF_CELL };
+  return { x: -HALF_CELL, z: HALF_CELL };
+}
+
+/** 占地中心 → Unity transform（写回/存盘坐标，与游戏一致，不做额外换算）。 */
+export function largePotUnityFromVisualCenter(
+  footX: number,
+  footZ: number,
+  rotY: number
+): { x: number; z: number } {
+  const o = largePotVisualOffsetWorld(rotY);
+  return { x: footX - o.x, z: footZ - o.z };
+}
+
+/** Stub transform → 占地/视觉中心（仅画布绘制与点选；写回坐标仍为 stub）。
+ *  2×2 轴对齐占地：stub 在西南格心，中心恒为 stub + (HALF_CELL, HALF_CELL)，与 rotY 无关。 */
+export function stubToVisualOffset(_rotY: number): { x: number; z: number } {
+  return { x: HALF_CELL, z: HALF_CELL };
+}
+
+/** rot 0/180：Unity stub 与玩法视觉中心差 ±CELL（X）；90/270 与导出数据一致无需换算。 */
+export function hotpotEditorStubFromUnity(
+  unityStubX: number,
+  unityStubZ: number,
+  rotY: number
+): { x: number; z: number } {
+  const rot = normalizeRot(rotY);
+  if (rot === 0) return { x: unityStubX - CELL, z: unityStubZ };
+  if (rot === 180) return { x: unityStubX + CELL, z: unityStubZ };
+  return { x: unityStubX, z: unityStubZ };
+}
+
+export function hotpotUnityStubFromEditor(
+  editorStubX: number,
+  editorStubZ: number,
+  rotY: number
+): { x: number; z: number } {
+  const rot = normalizeRot(rotY);
+  if (rot === 0) return { x: editorStubX + CELL, z: editorStubZ };
+  if (rot === 180) return { x: editorStubX - CELL, z: editorStubZ };
+  return { x: editorStubX, z: editorStubZ };
+}
+
+/** 写回 Unity 用的 stub 世界 XZ（火锅灶台 rot 0/180 做 ±CELL 换算）。 */
+export function editorItemUnityWorldXZ(
+  item: Pick<EditorItem, "_wx" | "_wz" | "localRotationY" | "prefabAssetPath" | "prefabGuid">
+): { x: number; z: number } {
+  const pid = itemPrefabId(item);
+  if (isSwCornerPivotPrefabId(pid)) {
+    return hotpotUnityStubFromEditor(item._wx, item._wz, item.localRotationY ?? 0);
+  }
+  // 大锅：_wx 即 Unity transform，与游戏一致原样写回
+  return { x: item._wx, z: item._wz };
+}
+
+export function itemPrefabId(item: Pick<LayoutItem, "prefabAssetPath" | "prefabGuid">): string {
+  const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
+  return prefabIdFromPath(item.prefabAssetPath) || cat?.id || "";
+}
+
+/** 画布占地方框中心（火锅灶台等 stub 与视觉中心不一致时用）。 */
+export function itemVisualCenterXZ(
+  item: Pick<EditorItem, "_wx" | "_wz" | "localRotationY" | "prefabAssetPath" | "prefabGuid">
+): { x: number; z: number } {
+  const pid = itemPrefabId(item);
+  if (isLargePotPrefabId(pid)) {
+    const o = largePotVisualOffsetWorld(item.localRotationY ?? 0);
+    return { x: item._wx + o.x, z: item._wz + o.z };
+  }
+  if (!isSwCornerPivotPrefabId(pid)) return { x: item._wx, z: item._wz };
+  const o = stubToVisualOffset(item.localRotationY ?? 0);
+  return { x: item._wx + o.x, z: item._wz + o.z };
+}
+
+/** 占地中心吸附点 → stub 坐标（新放置火锅灶台时用）。 */
+export function visualCenterToStubXZ(
+  prefabId: string,
+  vx: number,
+  vz: number,
+  rotY: number
+): { x: number; z: number } {
+  if (!isSwCornerPivotPrefabId(prefabId)) return { x: vx, z: vz };
+  const o = stubToVisualOffset(rotY);
+  return { x: vx - o.x, z: vz - o.z };
+}
+
+export function syncItemLocalFromEditor(item: EditorItem): void {
+  const u = editorItemUnityWorldXZ(item);
+  item.localPosition.x = snapValue(u.x - item._parentWx, S.freeSnapStep);
+  item.localPosition.z = snapValue(u.z - item._parentWz, S.freeSnapStep);
+}
 
 /** Decimal places needed to display positions at a given step (0.6 → 1, 0.1 → 1, 0.01 → 2, 0.001 → 3). */
 export function stepDecimals(step: number): number {
@@ -51,7 +157,9 @@ export function snapPlacement(
     return snapCenterPivot(wx, wz, cellsX, cellsZ, rotY, CELL);
   }
   const snapped = snapFootprintCenter(wx, wz, cellsX, cellsZ, rotY, CELL, HALF_CELL);
-  return Math.hypot(snapped.x - wx, snapped.z - wz) <= MAGNET_THRESHOLD ? snapped : free;
+  const magnetized =
+    Math.hypot(snapped.x - wx, snapped.z - wz) <= MAGNET_THRESHOLD ? snapped : free;
+  return magnetized;
 }
 
 export function normalizeRot(deg: number): number {

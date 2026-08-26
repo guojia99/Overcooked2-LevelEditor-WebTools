@@ -11,7 +11,7 @@ import {
   snapValue
 } from "./coords";
 import { itemLabel } from "./labels";
-import { itemCategoryOf } from "./catalog";
+import { itemCategoryOf, isResizableBackgroundItem } from "./catalog";
 import {
   isSurfaceItem,
   surfaceKindLabelZh
@@ -30,7 +30,8 @@ import {
   hidePickTip
 } from "./ui/overlay";
 import { showPickTip } from "./ui/pickTip";
-import { showContextMenu, showWaypointContextMenu } from "./ui/contextMenu";
+import { showBatchHeightMenu, showContextMenu, showWaypointContextMenu } from "./ui/contextMenu";
+import { selectionHeightTargetCount } from "./selectionHeight";
 import { openFloorEditorModal } from "./floorEditorModal";
 import {
   addFloorAt,
@@ -43,9 +44,12 @@ import {
   addFromCatalog,
   moveBlockedAt,
   syncLocalFromWorld,
+  rotateItemByDelta,
   warnItemVoid,
   deleteSelected,
-  nudgeSelectedItems
+  nudgeSelectedItems,
+  resizeItem,
+  resizeAirWall
 } from "./items";
 import {
   addCombo,
@@ -69,13 +73,14 @@ import {
 } from "./historyOps";
 import { draw } from "./render";
 import { closeModal } from "../modals";
-import { hitTestAll } from "./renderItems";
+import { hitTestAll, hitTestItemResizeHandle } from "./renderItems";
 import { hitTestFloorsAll } from "./renderFloors";
 import { floorWalkY, floorLayerIndex } from "./floorHeight";
 import { updateMarqueeSelection } from "./render";
 import { hitTestWaypoints, waypointInfo, deleteWaypoint, activeGroup, updateMovePickBar, exitMoveMode, removeSelectedMembers } from "./moveControl";
 import { renderRightPanel, updatePanelTabButtons } from "./panels";
 import { isPlayerItem } from "./renderItems";
+import { isAirWallItem } from "./stubControls";
 
 export function updateCanvasCursor() {
   dom.canvas.classList.remove("pan-ready", "pan-active");
@@ -91,6 +96,72 @@ export function isTypingTarget(target: EventTarget | null): boolean {
 
 /** Arrow-key nudge hold state: one undo entry per press-and-hold gesture. */
 let arrowNudgeHeld = false;
+
+function activeFloorDragKeys(): string[] {
+  if (S.dragFloorGroupKeys.length > 0) return [...S.dragFloorGroupKeys];
+  if (S.dragFloorKey) return [S.dragFloorKey];
+  return [];
+}
+
+function isSurfaceLayerGroupDrag(): boolean {
+  return activeFloorDragKeys().length > 0 && S.dragGroupKeys.length > 0;
+}
+
+/** Begin a floor-layer group drag that may include both floors and surface items. */
+function beginSurfaceLayerGroupDrag(
+  wx: number,
+  wz: number,
+  floorAnchorKey: string | null,
+  itemAnchorKey: string | null
+): void {
+  if (S.selectedFloorKeys.size > 0) {
+    const floorKeys = [...S.selectedFloorKeys];
+    const fk =
+      floorAnchorKey && S.selectedFloorKeys.has(floorAnchorKey)
+        ? floorAnchorKey
+        : floorKeys[floorKeys.length - 1];
+    S.dragFloorKey = fk;
+    S.dragFloorMode = "move";
+    S.dragFloorEdge = "";
+    S.dragFloorGroupKeys = floorKeys;
+  }
+  if (S.selectedKeys.size > 0) {
+    const keys = selectionKeys();
+    const ik =
+      itemAnchorKey && S.selectedKeys.has(itemAnchorKey)
+        ? itemAnchorKey
+        : keys[keys.length - 1];
+    S.dragItemKey = ik;
+    S.dragGroupKeys = keys;
+    const anchor = S.items.find((i) => i._editorKey === ik);
+    if (anchor) {
+      S.dragOffsetX = wx - anchor._wx;
+      S.dragOffsetZ = wz - anchor._wz;
+    }
+  }
+  S.dragLastWx = wx;
+  S.dragLastWz = wz;
+}
+
+function applySurfaceLayerGroupDelta(dx: number, dz: number): void {
+  for (const k of activeFloorDragKeys()) {
+    const f = S.floors.find((x) => x._key === k);
+    if (f) {
+      f._wx += dx;
+      f._wz += dz;
+    }
+  }
+  const groupSet = new Set(S.dragGroupKeys);
+  for (const k of S.dragGroupKeys) {
+    const it = S.items.find((i) => i._editorKey === k);
+    if (!it) continue;
+    const nx = it._wx + dx;
+    const nz = it._wz + dz;
+    if (moveBlockedAt(it, nx, nz, groupSet)) continue;
+    it._wx = nx;
+    it._wz = nz;
+  }
+}
 
 export function setupCanvas() {
   dom.canvas.addEventListener("wheel", (e) => {
@@ -322,10 +393,15 @@ export function setupCanvas() {
       });
       const keepFloor = S.selectedFloorKey
         ? fHits.find((fh) => fh.floor._key === S.selectedFloorKey)
-        : undefined;
-      const keepItem = S.selectedKey
-        ? surfaceHits.find((it) => it._editorKey === S.selectedKey)
-        : undefined;
+        : S.selectedFloorKeys.size > 1
+          ? fHits.find((fh) => S.selectedFloorKeys.has(fh.floor._key))
+          : undefined;
+      const keepItem =
+        S.selectedKeys.size > 1
+          ? surfaceHits.find((it) => isSelected(it._editorKey))
+          : S.selectedKey
+            ? surfaceHits.find((it) => it._editorKey === S.selectedKey)
+            : undefined;
       if (fHits.length + surfaceHits.length > 1 && !keepFloor && !keepItem) {
         hideDetail();
         hideContextMenu();
@@ -364,21 +440,29 @@ export function setupCanvas() {
       const fHit = keepFloor ?? (keepItem ? null : fHits[0]) ?? null;
       if (fHit) {
         S.dragSnapshot = snapshotState();
-        clearSelection();
         if (e.shiftKey) {
           const next = new Set(S.selectedFloorKeys);
           if (next.has(fHit.floor._key)) next.delete(fHit.floor._key);
           else next.add(fHit.floor._key);
           setFloorSelection([...next], fHit.floor._key);
-        } else if (S.selectedFloorKeys.size > 1 && S.selectedFloorKeys.has(fHit.floor._key)) {
-          S.selectedFloorKey = fHit.floor._key;
+        } else if (fHit.mode === "resize") {
+          clearSelection();
+          setFloorSelection([fHit.floor._key]);
           S.dragFloorKey = fHit.floor._key;
-          S.dragFloorMode = "move";
-          S.dragFloorEdge = "";
-          S.dragFloorGroupKeys = [...S.selectedFloorKeys];
-          S.dragLastWx = wx;
-          S.dragLastWz = wz;
+          S.dragFloorMode = fHit.mode;
+          S.dragFloorEdge = fHit.edge;
+          S.dragFloorAnchorX = fHit.anchorX;
+          S.dragFloorAnchorZ = fHit.anchorZ;
+          S.dragFloorGroupKeys = [];
+          if (fHit.mode === "resize") dom.canvas.style.cursor = "grabbing";
+        } else if (
+          S.selectedFloorKeys.has(fHit.floor._key) &&
+          (S.selectedFloorKeys.size > 1 || S.selectedKeys.size > 0)
+        ) {
+          S.selectedFloorKey = fHit.floor._key;
+          beginSurfaceLayerGroupDrag(wx, wz, fHit.floor._key, null);
         } else {
+          clearSelection();
           setFloorSelection([fHit.floor._key]);
           S.dragFloorKey = fHit.floor._key;
           S.dragFloorMode = fHit.mode;
@@ -393,11 +477,71 @@ export function setupCanvas() {
         const itemHit = keepItem ?? surfaceHits[0] ?? null;
         if (itemHit) {
           S.dragSnapshot = snapshotState();
-          setSelection([itemHit._editorKey]);
-          S.dragItemKey = itemHit._editorKey;
-          S.dragGroupKeys = [];
-          S.dragOffsetX = wx - itemHit._wx;
-          S.dragOffsetZ = wz - itemHit._wz;
+          if (e.shiftKey) {
+            if (isSelected(itemHit._editorKey)) S.selectedKeys.delete(itemHit._editorKey);
+            else S.selectedKeys.add(itemHit._editorKey);
+            S.selectedKey = itemHit._editorKey;
+            const rHit =
+              layerBg && isResizableBackgroundItem(itemHit)
+                ? hitTestItemResizeHandle(itemHit, wx, wz)
+                : null;
+            if (rHit) {
+              S.dragItemResizeKey = itemHit._editorKey;
+              S.dragItemResizeEdge = rHit.edge;
+              S.dragItemResizeAnchorX = rHit.anchorX;
+              S.dragItemResizeAnchorZ = rHit.anchorZ;
+              dom.canvas.style.cursor = "grabbing";
+              S.dragItemKey = null;
+              S.dragGroupKeys = [];
+            } else {
+              S.dragItemKey = isSelected(itemHit._editorKey) ? itemHit._editorKey : null;
+              S.dragGroupKeys = S.selectedKeys.size > 1 && S.dragItemKey ? selectionKeys() : [];
+              if (S.dragItemKey) {
+                S.dragOffsetX = wx - itemHit._wx;
+                S.dragOffsetZ = wz - itemHit._wz;
+                S.dragLastWx = itemHit._wx;
+                S.dragLastWz = itemHit._wz;
+              }
+            }
+          } else if (
+            isSelected(itemHit._editorKey) &&
+            (S.selectedKeys.size > 1 || S.selectedFloorKeys.size > 0)
+          ) {
+            S.selectedKey = itemHit._editorKey;
+            const rHit =
+              layerBg && isResizableBackgroundItem(itemHit)
+                ? hitTestItemResizeHandle(itemHit, wx, wz)
+                : null;
+            if (rHit) {
+              clearFloorSelection();
+              S.dragItemResizeKey = itemHit._editorKey;
+              S.dragItemResizeEdge = rHit.edge;
+              S.dragItemResizeAnchorX = rHit.anchorX;
+              S.dragItemResizeAnchorZ = rHit.anchorZ;
+              dom.canvas.style.cursor = "grabbing";
+            } else {
+              beginSurfaceLayerGroupDrag(wx, wz, null, itemHit._editorKey);
+            }
+          } else {
+            clearFloorSelection();
+            setSelection([itemHit._editorKey]);
+            const rHit =
+              layerBg && isResizableBackgroundItem(itemHit)
+                ? hitTestItemResizeHandle(itemHit, wx, wz)
+                : null;
+            if (rHit) {
+              S.dragItemResizeKey = itemHit._editorKey;
+              S.dragItemResizeEdge = rHit.edge;
+              S.dragItemResizeAnchorX = rHit.anchorX;
+              S.dragItemResizeAnchorZ = rHit.anchorZ;
+              dom.canvas.style.cursor = "grabbing";
+            } else {
+              S.dragItemKey = itemHit._editorKey;
+              S.dragGroupKeys = [];
+              S.dragOffsetX = wx - itemHit._wx;
+              S.dragOffsetZ = wz - itemHit._wz;
+            }
+          }
         } else {
           S.marqueeing = true;
           S.marqueeAdd = e.shiftKey;
@@ -407,6 +551,7 @@ export function setupCanvas() {
           S.marqueeCurY = my;
           if (!S.marqueeAdd) {
             clearSelection();
+            clearFloorSelection();
             hideDetail();
             hideContextMenu();
           }
@@ -444,7 +589,20 @@ export function setupCanvas() {
       S.dragSnapshot = snapshotState();
       hideDetail();
       hideContextMenu();
-      if (e.shiftKey) {
+      const airResize =
+        S.currentLayer === "items" && isAirWallItem(hit) && !e.shiftKey
+          ? hitTestItemResizeHandle(hit, wx, wz)
+          : null;
+      if (airResize) {
+        setSelection([hit._editorKey]);
+        S.dragItemResizeKey = hit._editorKey;
+        S.dragItemResizeEdge = airResize.edge;
+        S.dragItemResizeAnchorX = airResize.anchorX;
+        S.dragItemResizeAnchorZ = airResize.anchorZ;
+        dom.canvas.style.cursor = "grabbing";
+        S.dragItemKey = null;
+        S.dragGroupKeys = [];
+      } else if (e.shiftKey) {
         if (isSelected(hit._editorKey)) S.selectedKeys.delete(hit._editorKey);
         else S.selectedKeys.add(hit._editorKey);
         S.selectedKey = hit._editorKey;
@@ -551,10 +709,15 @@ export function setupCanvas() {
       });
       const keepFloor = S.selectedFloorKey
         ? fHits.find((fh) => fh.floor._key === S.selectedFloorKey)
-        : undefined;
-      const keepItem = S.selectedKey
-        ? surfaceHits.find((it) => it._editorKey === S.selectedKey)
-        : undefined;
+        : S.selectedFloorKeys.size > 1
+          ? fHits.find((fh) => S.selectedFloorKeys.has(fh.floor._key))
+          : undefined;
+      const keepItem =
+        S.selectedKeys.size > 1
+          ? surfaceHits.find((it) => isSelected(it._editorKey))
+          : S.selectedKey
+            ? surfaceHits.find((it) => it._editorKey === S.selectedKey)
+            : undefined;
       if (fHits.length + surfaceHits.length > 1 && !keepFloor && !keepItem) {
         hideDetail();
         hideContextMenu();
@@ -594,6 +757,15 @@ export function setupCanvas() {
       // 否则重叠时点击已选中的物品（如压力开关）会被其下方的地板抢走焦点。
       const fHit = keepFloor ?? (keepItem ? null : fHits[0]) ?? null;
       if (fHit) {
+        if (
+          selectionHeightTargetCount() >= 2 &&
+          S.selectedFloorKeys.has(fHit.floor._key)
+        ) {
+          hideDetail();
+          showBatchHeightMenu(e.clientX, e.clientY);
+          draw();
+          return;
+        }
         setFloorSelection([fHit.floor._key]);
         openFloorEditorModal(fHit.floor);
         draw();
@@ -601,6 +773,12 @@ export function setupCanvas() {
       }
       const itemHit = keepItem ?? surfaceHits[0] ?? null;
       if (itemHit) {
+        if (selectionHeightTargetCount() >= 2 && isSelected(itemHit._editorKey)) {
+          hideDetail();
+          showBatchHeightMenu(e.clientX, e.clientY);
+          draw();
+          return;
+        }
         setSelection([itemHit._editorKey]);
         hideDetail();
         showContextMenu(itemHit, e.clientX, e.clientY);
@@ -642,7 +820,11 @@ export function setupCanvas() {
         S.selectedKey = hit._editorKey;
       }
       hideDetail();
-      showContextMenu(hit, e.clientX, e.clientY);
+      if (selectionHeightTargetCount() >= 2 && isSelected(hit._editorKey)) {
+        showBatchHeightMenu(e.clientX, e.clientY);
+      } else {
+        showContextMenu(hit, e.clientX, e.clientY);
+      }
       draw();
     } else {
       hideDetail();
@@ -702,15 +884,19 @@ export function setupCanvas() {
 
     if (S.dragFloorKey) {
       if (S.dragFloorMode === "resize") dom.canvas.style.cursor = "grabbing";
-      if (S.dragFloorGroupKeys.length > 1) {
+      if (isSurfaceLayerGroupDrag() || S.dragFloorGroupKeys.length > 1) {
         const { x: wx, z: wz } = canvasToWorld(mx, my);
         const dx = wx - S.dragLastWx;
         const dz = wz - S.dragLastWz;
-        for (const k of S.dragFloorGroupKeys) {
-          const f = S.floors.find((x) => x._key === k);
-          if (f) {
-            f._wx += dx;
-            f._wz += dz;
+        if (isSurfaceLayerGroupDrag()) {
+          applySurfaceLayerGroupDelta(dx, dz);
+        } else {
+          for (const k of S.dragFloorGroupKeys) {
+            const f = S.floors.find((x) => x._key === k);
+            if (f) {
+              f._wx += dx;
+              f._wz += dz;
+            }
           }
         }
         S.dragLastWx = wx;
@@ -723,11 +909,36 @@ export function setupCanvas() {
       return;
     }
 
-    if (!S.dragItemKey) {
-      if ((S.currentLayer === "floor" || S.currentLayer === "background") && !S.pendingNewFloor) {
+    if (S.dragItemResizeKey) {
+      dom.canvas.style.cursor = "grabbing";
+      const it = S.items.find((i) => i._editorKey === S.dragItemResizeKey);
+      if (it) {
         const { x: wx, z: wz } = canvasToWorld(mx, my);
+        if (isAirWallItem(it)) resizeAirWall(it, wx, wz);
+        else resizeItem(it, wx, wz);
+      }
+      draw();
+      return;
+    }
+
+    if (!S.dragItemKey) {
+      const { x: wx, z: wz } = canvasToWorld(mx, my);
+      if ((S.currentLayer === "floor" || S.currentLayer === "background") && !S.pendingNewFloor) {
         const fHits = hitTestFloorsAll(wx, wz);
-        const cursor = fHits[0]?.mode === "resize" ? "grab" : "";
+        let cursor = fHits[0]?.mode === "resize" ? "grab" : "";
+        // Background layer: hovering a selected water/background plane's corner
+        // shows the resize cursor too.
+        if (!cursor && S.currentLayer === "background" && S.selectedKey) {
+          const sel = S.items.find((i) => i._editorKey === S.selectedKey);
+          if (sel && isResizableBackgroundItem(sel) && hitTestItemResizeHandle(sel, wx, wz)) {
+            cursor = "grab";
+          }
+        }
+        if (dom.canvas.style.cursor !== cursor) dom.canvas.style.cursor = cursor;
+      } else if (S.currentLayer === "items" && S.selectedKey) {
+        const sel = S.items.find((i) => i._editorKey === S.selectedKey);
+        const cursor =
+          sel && isAirWallItem(sel) && hitTestItemResizeHandle(sel, wx, wz) ? "grab" : "";
         if (dom.canvas.style.cursor !== cursor) dom.canvas.style.cursor = cursor;
       }
       return;
@@ -735,20 +946,24 @@ export function setupCanvas() {
     const item = S.items.find((i) => i._editorKey === S.dragItemKey);
     if (!item) return;
     const { x: wx, z: wz } = canvasToWorld(mx, my);
-    if (S.dragGroupKeys.length > 1) {
+    if (S.dragGroupKeys.length > 1 || isSurfaceLayerGroupDrag()) {
       const newWx = wx - S.dragOffsetX;
       const newWz = wz - S.dragOffsetZ;
       const dx = newWx - S.dragLastWx;
       const dz = newWz - S.dragLastWz;
-      const groupSet = new Set(S.dragGroupKeys);
-      for (const k of S.dragGroupKeys) {
-        const it = S.items.find((i) => i._editorKey === k);
-        if (it) {
-          const nx = it._wx + dx;
-          const nz = it._wz + dz;
-          if (moveBlockedAt(it, nx, nz, groupSet)) continue;
-          it._wx = nx;
-          it._wz = nz;
+      if (isSurfaceLayerGroupDrag()) {
+        applySurfaceLayerGroupDelta(dx, dz);
+      } else {
+        const groupSet = new Set(S.dragGroupKeys);
+        for (const k of S.dragGroupKeys) {
+          const it = S.items.find((i) => i._editorKey === k);
+          if (it) {
+            const nx = it._wx + dx;
+            const nz = it._wz + dz;
+            if (moveBlockedAt(it, nx, nz, groupSet)) continue;
+            it._wx = nx;
+            it._wz = nz;
+          }
         }
       }
       S.dragLastWx = newWx;
@@ -778,14 +993,25 @@ export function setupCanvas() {
     }
     if (S.dragFloorKey) {
       if (S.dragFloorMode === "resize") dom.canvas.style.cursor = "";
-      const keys = S.dragFloorGroupKeys.length > 1 ? S.dragFloorGroupKeys : [S.dragFloorKey];
-      for (const k of keys) {
+      for (const k of activeFloorDragKeys()) {
         const f = S.floors.find((x) => x._key === k);
         if (f) finalizeFloor(f);
       }
     }
     S.dragFloorKey = null;
     S.dragFloorGroupKeys = [];
+    if (S.dragItemResizeKey) {
+      dom.canvas.style.cursor = "";
+      const it = S.items.find((i) => i._editorKey === S.dragItemResizeKey);
+      if (it) {
+        syncLocalFromWorld(it);
+        warnItemVoid(it);
+      }
+      S.dragItemResizeKey = null;
+      commitDragSnapshot();
+      draw();
+      return;
+    }
     if (S.marqueeing) {
       S.marqueeing = false;
       const dx = S.marqueeCurX - S.marqueeStartX;
@@ -828,7 +1054,7 @@ export function setupCanvas() {
       renderRightPanel();
       draw();
     }
-    if (S.dragGroupKeys.length > 1) {
+    if (S.dragGroupKeys.length > 0) {
       for (const k of S.dragGroupKeys) {
         const it = S.items.find((i) => i._editorKey === k);
         if (it) {
@@ -1013,8 +1239,7 @@ export function setupCanvas() {
           const item = S.items.find((i) => i._editorKey === S.selectedKey);
           if (item && isSurfaceItem(S.catalogByGuid.get(item.prefabGuid))) {
             pushHistory();
-            item.localRotationY = normalizeRot(item.localRotationY + (e.shiftKey ? -90 : 90));
-            syncLocalFromWorld(item);
+            rotateItemByDelta(item, e.shiftKey ? -90 : 90);
             draw();
           }
         }
@@ -1033,8 +1258,7 @@ export function setupCanvas() {
     }
     if ((e.key === "r" || e.key === "R") && !isPlayerItem(item)) {
       pushHistory();
-      item.localRotationY = normalizeRot(item.localRotationY + (e.shiftKey ? -90 : 90));
-      syncLocalFromWorld(item);
+      rotateItemByDelta(item, e.shiftKey ? -90 : 90);
       draw();
     }
   });

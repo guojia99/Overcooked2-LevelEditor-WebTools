@@ -59,3 +59,16 @@ function snapCenterPivotAxis(v: number, span: number, cellSize: number): number 
   // 奇数格轴：根在整格点 k · cellSize
   return snapValue(v, cellSize);
 }
+
+/** Unity EditorGridSnap / QuadGridManager 格子中心格点：(k + 0.5) · cellSize（0.6 mod 1.2）。 */
+export function snapOddLatticeAxis(v: number, cellSize: number): number {
+  return (Math.round(v / cellSize - 0.5) + 0.5) * cellSize;
+}
+
+export function snapOddLattice(
+  wx: number,
+  wz: number,
+  cellSize: number
+): { x: number; z: number } {
+  return { x: snapOddLatticeAxis(wx, cellSize), z: snapOddLatticeAxis(wz, cellSize) };
+}

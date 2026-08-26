@@ -628,10 +628,14 @@ function categorize(assetPath) {
   // common03 按 prefabs/{dlcXX|core}/{category}/ 组织，需先跳过 dlc 段。
   let rel = assetPath.replace(/^Assets\/common0[12]\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/common03\/prefabs\/?/, "");
+  rel = rel.replace(/^Assets\/commonW1\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/LevelSets\/[^/]+\/(custom_web|custom_ingredients)\/prefabs\/?/, "");
   rel = rel.replace(/^(?:core|dlc\d+)\//, "");
   const seg = rel.split("/");
   const id = seg[seg.length - 1].replace(/\.prefab$/, "");
+  if (seg[0] === "backgrounds" && seg.length > 1) {
+    return { category: "art", theme: seg[1] };
+  }
   if (seg[0] === "counters") {
     const sub = COUNTER_SUBCATEGORY[id] || "counters/service";
     return { category: sub, theme: null };
@@ -673,6 +677,67 @@ const FLOOR_LAYERED_SURFACE_IDS = new Set([
   "dlc13_lotuspressureswitch_small",
 ]);
 
+/** Match layout-editor/web/src/editor/catalog.ts isWaterBackgroundCat (no FX/props). */
+function isWaterBackgroundId(id) {
+  const lower = id.toLowerCase();
+  if (/(pfx|splash|particle|wake|gun|lantern|waterwheel|mooncake|seagull|seaweed|seafloat|seawave)/.test(lower)) {
+    return false;
+  }
+  if (id === "raft_water" || id === "city_water" || id === "dynamic_raft_water") return true;
+  if (/waterbase|water_edge|mapwater/.test(lower)) return true;
+  if (/(^|_)(water|river|ocean|poolwater|sea_plane|sea_shore)(_|$)/.test(lower)) return true;
+  return false;
+}
+
+/** Legacy theme water prefabs that may live outside the normal common0x scan roots. */
+const LEGACY_WATER_PREFAB_CANDIDATES = [
+  {
+    id: "city_water",
+    theme: "city",
+    paths: [
+      "Assets/commonW1/prefabs/backgrounds/city/city_water.prefab",
+      "Assets/common03/prefabs/core/themes/city_water.prefab",
+      "Assets/common01/prefabs/art/city/city_water.prefab",
+    ],
+  },
+  {
+    id: "dynamic_raft_water",
+    theme: "raft",
+    paths: [
+      "Assets/commonW1/prefabs/backgrounds/raft/dynamic_raft_water.prefab",
+      "Assets/common03/prefabs/core/themes/dynamic_raft_water.prefab",
+      "Assets/common01/prefabs/art/raft/dynamic_raft_water.prefab",
+    ],
+  },
+];
+
+function injectLegacyWaterPrefabs(items, measuredFootprints) {
+  for (const spec of LEGACY_WATER_PREFAB_CANDIDATES) {
+    if (items.some((it) => it.id === spec.id)) continue;
+    for (const rel of spec.paths) {
+      const full = path.join(repoRoot, rel);
+      if (!fs.existsSync(full)) continue;
+      const guid = readGuid(full + ".meta");
+      if (!guid) continue;
+      const { category } = categorize(rel);
+      const measured = measuredFootprints.get(spec.id);
+      const fp = FOOTPRINT_OVERRIDES[spec.id] || measured || { cellsX: 1, cellsZ: 1 };
+      items.push({
+        id: spec.id,
+        guid,
+        assetPath: rel.replace(/\\/g, "/"),
+        category,
+        theme: spec.theme,
+        defaultParent: "Art",
+        footprint: fp,
+        layoutTier: "decor",
+      });
+      console.log(`Injected legacy water prefab: ${spec.id} (${rel})`);
+      break;
+    }
+  }
+}
+
 /** Floor/background classification for the floor layer. */
 function surfaceMeta(id) {
   const lower = id.toLowerCase();
@@ -693,8 +758,8 @@ function surfaceMeta(id) {
     // and switched via the background-theme dropdown.
     surfaceTier = "background";
     surfaceKind = "background";
-  } else if (id === "p_dlc5_camp_water" || id === "p_dlc5_camp_river") {
-    // DLC5 camping water/river backdrop planes (analogous to raft_water).
+  } else if (isWaterBackgroundId(id)) {
+    // DLC / beach / camp water planes and coast strips — background layer only.
     surfaceTier = "background";
     surfaceKind = "background";
   } else if (/^dlc\d+_ground_/.test(lower)) {
@@ -950,6 +1015,26 @@ function loadDictionary() {
     if (entry && entry.id) map.set(entry.id, { zh: entry.zh, en: entry.en });
   }
   return map;
+}
+
+/** Footprints + display names from commonW1 background manifest. */
+function loadCommonW1Manifest() {
+  const manifestPath = path.join(__dirname, "data/commonw1-backgrounds.json");
+  if (!fs.existsSync(manifestPath)) {
+    console.warn(`WARN: commonW1 manifest missing: ${manifestPath}`);
+    return { names: new Map(), footprints: {} };
+  }
+  const raw = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const names = new Map();
+  const footprints = {};
+  for (const item of raw.items || []) {
+    if (!item?.id) continue;
+    if (item.zh) names.set(item.id, { zh: item.zh, en: item.en || item.id });
+    if (item.cellsX > 0 && item.cellsZ > 0) {
+      footprints[item.id] = { cellsX: item.cellsX, cellsZ: item.cellsZ };
+    }
+  }
+  return { names, footprints };
 }
 
 /** Lookup order: names-dictionary.json -> 使用手册.md -> id fallback. */
@@ -1718,6 +1803,7 @@ function scanCounterAppearances(dictionary, idToRow) {
         nameEn,
         theme: themeSuffix,
         themeName,
+        bundleName: fields.bundleName || "",
       });
     }
   }
@@ -1840,6 +1926,11 @@ function main() {
   const manual = fs.existsSync(MANUAL_PATH) ? fs.readFileSync(MANUAL_PATH, "utf8") : "";
   const idToRow = parseManualTable(manual);
   const dictionary = loadDictionary();
+  const commonW1Manifest = loadCommonW1Manifest();
+  for (const [id, names] of commonW1Manifest.names) {
+    dictionary.set(id, names);
+  }
+  Object.assign(FOOTPRINT_OVERRIDES, commonW1Manifest.footprints);
 
   const items = [];
   const measuredFootprints = loadMeasuredFootprints();
@@ -1853,9 +1944,12 @@ function main() {
   const common03Root = path.join(repoRoot, "Assets/common03");
   const common03PrefabRoot = path.join(common03Root, "prefabs");
   walkPrefabs(common03PrefabRoot, "Assets/common03/prefabs", items, measuredFootprints);
+  const commonW1PrefabRoot = path.join(repoRoot, "Assets/commonW1/prefabs");
+  walkPrefabs(commonW1PrefabRoot, "Assets/commonW1/prefabs", items, measuredFootprints);
   for (const dir of levelSetCustomDirs("prefabs")) {
     walkPrefabs(path.join(repoRoot, dir), dir, items, measuredFootprints);
   }
+  injectLegacyWaterPrefabs(items, measuredFootprints);
 
   // 合成核心物品：空气墙（隐形碰撞块，无 prefab，场景应用时生成 BoxCollider）。
   // 作为「核心层」物品：layoutTier=core → 在核心层编辑/保存；应用为 1×1×1.132 碰撞盒
@@ -1901,17 +1995,25 @@ function main() {
     byCategory[key].push(item);
   }
 
-  // 展示层去重：同一道具同时存在 common03 源库项与旧关卡集拷贝（custom_web/custom_ingredients）
-  // 时，只保留 common03 源库项（拷贝机制已废弃）
+  // 展示层去重：同一 id 多来源时优先 commonW1 > common03 > 其它 > custom_web 拷贝。
+  function catalogSourcePriority(assetPath) {
+    if (/\/commonW1\//.test(assetPath)) return 4;
+    if (/\/common03\//.test(assetPath)) return 3;
+    if (/\/custom_(web|ingredients)\//.test(assetPath)) return 0;
+    return 2;
+  }
   for (const key of Object.keys(byCategory)) {
     if (key.startsWith("surface/")) continue;
     const byId = new Map();
     for (const it of byCategory[key]) {
       const prev = byId.get(it.id);
-      const isCopy = /\/custom_(web|ingredients)\//.test(it.assetPath);
-      const prevIsCopy = prev ? /\/custom_(web|ingredients)\//.test(prev.assetPath) : false;
-      if (prev && (prevIsCopy || !isCopy)) continue;
-      byId.set(it.id, it);
+      if (!prev) {
+        byId.set(it.id, it);
+        continue;
+      }
+      if (catalogSourcePriority(it.assetPath) > catalogSourcePriority(prev.assetPath)) {
+        byId.set(it.id, it);
+      }
     }
     byCategory[key] = [...byId.values()];
   }
@@ -1927,7 +2029,16 @@ function main() {
       return true;
     });
   }
-  if (surfaceItems.length > 0) byCategory["surface/floor"] = surfaceItems;
+  if (surfaceItems.length > 0) {
+    const surfaceById = new Map();
+    for (const it of surfaceItems) {
+      const prev = surfaceById.get(it.id);
+      if (!prev || catalogSourcePriority(it.assetPath) > catalogSourcePriority(prev.assetPath)) {
+        surfaceById.set(it.id, it);
+      }
+    }
+    byCategory["surface/floor"] = [...surfaceById.values()];
+  }
 
   const paletteGroups = buildPaletteGroups(byCategory);
 

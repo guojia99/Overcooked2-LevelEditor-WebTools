@@ -4,7 +4,8 @@ import {
   resolveFootprint,
   itemScaleX,
   itemScaleZ,
-  prefabIdFromPath
+  prefabIdFromPath,
+  itemVisualCenterXZ
 } from "./coords";
 import {
   S,
@@ -17,7 +18,9 @@ import {
   isActiveItemLayer,
   itemCategoryOf,
   categoryVisible,
-  catalogItemForGuidOrPath
+  catalogItemForGuidOrPath,
+  isResizableBackgroundItem,
+  itemPlaneCells
 } from "./catalog";
 import { itemInHeightFilter } from "./floorHeight";
 import {
@@ -30,7 +33,8 @@ import {
 import {
   isCollisionItem,
   stubKindOf,
-  isHotpotBurnerItem
+  isHotpotBurnerItem,
+  isAirWallItem
 } from "./stubControls";
 import { isSelected } from "./selection";
 import {
@@ -42,20 +46,20 @@ import {
   surfacePaint
 } from "../floorColors";
 import { paintStyleForItem } from "../itemColors";
-import {
-  isServingStationItem,
+import { isServingStationItem,
   isPlateReturnItem,
   isGlassReturnItem
 } from "./servingLinks";
+import { airWallCells } from "./items";
 
 /** 空气箱（隐形碰撞块）：编辑器内以虚线框 + 半透明填充标示，游戏内不可见。 */
 function drawCollisionMarker(item: EditorItem, selected: boolean) {
-  const fp = resolveFootprint(item);
   const rot = normalizeRot(item.localRotationY);
   const center = worldToCanvas(item._wx, item._wz);
   const cellPx = CELL * PX_PER_UNIT * S.scale;
-  const w = fp.cellsX * cellPx * itemScaleX(item);
-  const h = fp.cellsZ * cellPx * itemScaleZ(item);
+  const cells = isAirWallItem(item) ? airWallCells(item) : null;
+  const w = cells ? cells.wCells * cellPx : resolveFootprint(item).cellsX * cellPx * itemScaleX(item);
+  const h = cells ? cells.dCells * cellPx : resolveFootprint(item).cellsZ * cellPx * itemScaleZ(item);
   const ctx = dom.ctx;
   const rotated = rot === 90 || rot === 270;
   const [dw, dh] = rotated ? [h, w] : [w, h];
@@ -63,16 +67,36 @@ function drawCollisionMarker(item: EditorItem, selected: boolean) {
   ctx.save();
   ctx.translate(center.x, center.y);
   ctx.rotate((rot * Math.PI) / 180);
-  ctx.fillStyle = selected ? "rgba(120,160,255,0.28)" : "rgba(120,160,255,0.12)";
+  ctx.fillStyle = selected ? "rgba(249,171,0,0.35)" : "rgba(120,160,255,0.12)";
   ctx.fillRect(-dw / 2, -dh / 2, dw, dh);
-  ctx.strokeStyle = selected ? "rgba(140,180,255,0.95)" : "rgba(120,160,255,0.55)";
-  ctx.lineWidth = 1.2;
-  ctx.setLineDash([4, 3]);
+  ctx.strokeStyle = selected ? "#f9ab00" : "rgba(120,160,255,0.55)";
+  ctx.lineWidth = selected ? 2.5 : 1.2;
+  ctx.setLineDash(selected ? [] : [4, 3]);
   ctx.strokeRect(-dw / 2, -dh / 2, dw, dh);
   ctx.setLineDash([]);
-  ctx.fillStyle = selected ? "rgba(180,210,255,0.95)" : "rgba(150,190,255,0.75)";
+  ctx.fillStyle = selected ? "rgba(255,220,120,0.95)" : "rgba(150,190,255,0.75)";
   drawLabelInBox(ctx, "空气墙", dw, dh);
+  if (showItemResizeHandles(item, selected)) drawItemResizeHandles(dw, dh);
   ctx.restore();
+}
+
+/** Background/water planes on the background layer show floor-style corner
+ *  handles so they can be dragged to resize (non-uniform localScale). */
+export function showItemResizeHandles(item: EditorItem, selected: boolean): boolean {
+  if (!selected || S.selectedKeys.size !== 1) return false;
+  if (isResizableBackgroundItem(item)) return S.currentLayer === "background";
+  if (isAirWallItem(item)) return S.currentLayer === "items";
+  return false;
+}
+
+/** Draw 4 corner resize handles in the current (translated + rotated) frame. */
+function drawItemResizeHandles(bw: number, bh: number) {
+  dom.ctx.fillStyle = "#f9ab00";
+  for (const hx of [-bw / 2, bw / 2]) {
+    for (const hy of [-bh / 2, bh / 2]) {
+      dom.ctx.fillRect(hx - 3, hy - 3, 6, 6);
+    }
+  }
 }
 
 export function itemDrawCompare(a: EditorItem, b: EditorItem): number {  const d = drawLayerForItem(a, S.catalogByGuid) - drawLayerForItem(b, S.catalogByGuid);
@@ -107,12 +131,18 @@ export function drawItem(item: EditorItem, selected: boolean) {
   }
   const fp = resolveFootprint(item);
   const rot = itemDisplayRotationY(item);
-  const center = worldToCanvas(item._wx, item._wz);
+  const vc = itemVisualCenterXZ(item);
+  const center = worldToCanvas(vc.x, vc.z);
   const cellPx = CELL * PX_PER_UNIT * S.scale;
   const sx = itemScaleX(item);
   const sz = itemScaleZ(item);
-  const w = fp.cellsX * cellPx * sx;
-  const h = fp.cellsZ * cellPx * sz;
+  let w = fp.cellsX * cellPx * sx;
+  let h = fp.cellsZ * cellPx * sz;
+  if (isResizableBackgroundItem(item)) {
+    const c = itemPlaneCells(item);
+    w = c.wCells * cellPx;
+    h = c.dCells * cellPx;
+  }
   const id = prefabIdFromPath(item.prefabAssetPath);
   const isUtensil =
     isStackUtensilCatalog(cat) || id === "Backpack" || id === "utensil_large_pot_01_pushable";
@@ -167,6 +197,8 @@ export function drawItem(item: EditorItem, selected: boolean) {
   dom.ctx.closePath();
   dom.ctx.fill();
 
+  if (showItemResizeHandles(item, selected)) drawItemResizeHandles(bw, bh);
+
   dom.ctx.restore();
 
   dom.ctx.save();
@@ -211,8 +243,13 @@ export function drawSurfaceItem(item: EditorItem, selected: boolean) {
   const cellPx = CELL * PX_PER_UNIT * S.scale;
   const sx = itemScaleX(item);
   const sz = itemScaleZ(item);
-  const w = fp.cellsX * cellPx * sx;
-  const h = fp.cellsZ * cellPx * sz;
+  let w = fp.cellsX * cellPx * sx;
+  let h = fp.cellsZ * cellPx * sz;
+  if (isResizableBackgroundItem(item)) {
+    const c = itemPlaneCells(item);
+    w = c.wCells * cellPx;
+    h = c.dCells * cellPx;
+  }
   const paint = surfacePaint(cat?.surfaceKind, selected);
 
   dom.ctx.save();
@@ -228,6 +265,8 @@ export function drawSurfaceItem(item: EditorItem, selected: boolean) {
   dom.ctx.setLineDash([5, 4]);
   dom.ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
   dom.ctx.setLineDash([]);
+
+  if (showItemResizeHandles(item, selected)) drawItemResizeHandles(bw, bh);
 
   if (paint.emoji) {
     dom.ctx.font = `${Math.min(14, bh * 0.4)}px system-ui`;
@@ -440,8 +479,9 @@ export function drawTerminalLinks() {
 }
 
 export function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx: number; lz: number } {
-  const dx = wx - item._wx;
-  const dz = wz - item._wz;
+  const origin = itemVisualCenterXZ(item);
+  const dx = wx - origin.x;
+  const dz = wz - origin.z;
   const rad = (normalizeRot(item.localRotationY) * Math.PI) / 180;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
@@ -461,10 +501,49 @@ export function hitTestAll(wx: number, wz: number, allLayers?: boolean): EditorI
   return sorted.filter((item) => {
     const fp = resolveFootprint(item);
     const { lx, lz } = worldToItemLocal(item, wx, wz);
-    const hw = ((fp.cellsX * CELL) / 2) * itemScaleX(item);
-    const hh = ((fp.cellsZ * CELL) / 2) * itemScaleZ(item);
+    let hw = ((fp.cellsX * CELL) / 2) * itemScaleX(item);
+    let hh = ((fp.cellsZ * CELL) / 2) * itemScaleZ(item);
+    if (isResizableBackgroundItem(item)) {
+      const c = itemPlaneCells(item);
+      hw = (c.wCells * CELL) / 2;
+      hh = (c.dCells * CELL) / 2;
+    }
     return Math.abs(lx) <= hw && Math.abs(lz) <= hh;
   });
+}
+
+export interface ItemResizeHit {
+  edge: string;
+  anchorX: number;
+  anchorZ: number;
+}
+
+/** Corner-handle hit test for a resizable background item (mirrors floor
+ *  hitTestFloorsAll resize branch). Returns null when the point is not on a
+ *  corner handle. */
+export function hitTestItemResizeHandle(item: EditorItem, wx: number, wz: number): ItemResizeHit | null {
+  const { wCells, dCells } = isAirWallItem(item) ? airWallCells(item) : itemPlaneCells(item);
+  if (wCells === 1 && dCells === 1) return null;
+  const hw = (wCells * CELL) / 2;
+  const hh = (dCells * CELL) / 2;
+  const { lx, lz } = worldToItemLocal(item, wx, wz);
+  if (Math.abs(lx) > hw || Math.abs(lz) > hh) return null;
+  const handleTol = Math.max(CELL * 0.5, 0.9);
+  const nearLeft = lx < -hw + handleTol;
+  const nearRight = lx > hw - handleTol;
+  const nearBottom = lz < -hh + handleTol;
+  const nearTop = lz > hh - handleTol;
+  if (!((nearLeft || nearRight) && (nearBottom || nearTop))) return null;
+  const edge = `${nearRight ? "R" : "L"}${nearTop ? "T" : "B"}`;
+  const ax = nearRight ? -hw : hw;
+  const az = nearTop ? -hh : hh;
+  const rad = (normalizeRot(item.localRotationY) * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const origin = itemVisualCenterXZ(item);
+  const anchorX = origin.x + ax * cos - az * sin;
+  const anchorZ = origin.z + ax * sin + az * cos;
+  return { edge, anchorX, anchorZ };
 }
 
 export function computeTeleportalLabels(): Map<string, string> {

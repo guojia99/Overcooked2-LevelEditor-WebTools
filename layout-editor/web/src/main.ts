@@ -1,6 +1,6 @@
 import "./style.css";
 import "./recipeList.css";
-import { dom, buildLayoutDom, MANAGE_ACTIVE, CUSTOM_RECIPES_ACTIVE } from "./editor/dom";
+import { dom, buildLayoutDom, MANAGE_ACTIVE, CUSTOM_RECIPES_ACTIVE, GUIDE_ACTIVE } from "./editor/dom";
 import { init } from "./editor/init";
 import { setRedraw } from "./editor/iconCaches";
 import { setRefreshHooks, draw } from "./editor/render";
@@ -17,7 +17,9 @@ setRefreshHooks(() => {
   maybeRefreshSceneItemList();
 });
 
-if (CUSTOM_RECIPES_ACTIVE) {
+if (GUIDE_ACTIVE) {
+  void import("./guide").then((m) => m.renderGuideView(dom.app));
+} else if (CUSTOM_RECIPES_ACTIVE) {
   document.body.classList.add("manage-bg");
   void import("./customRecipes").then(m => m.renderCustomRecipesView(dom.app));
 } else if (MANAGE_ACTIVE) {

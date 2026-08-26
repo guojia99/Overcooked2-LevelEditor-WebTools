@@ -407,16 +407,22 @@ public static class SceneLayoutExporter
         }
     }
 
-    /// <summary>空气墙魔法数识别：三个轴向恰好一个≈1.132，另外两个≈1（允许任意轴向排列）。</summary>
+    /// <summary>空气墙魔法数识别：一轴≈1.132，另两轴≈1.2（一格）或旧版≈1（允许任意轴向排列）。</summary>
     private static bool IsAirWallCollider(BoxCollider col)
     {
         var s = col.size;
         int tall = (Mathf.Approximately(s.x, 1.132f) ? 1 : 0)
                  + (Mathf.Approximately(s.y, 1.132f) ? 1 : 0)
                  + (Mathf.Approximately(s.z, 1.132f) ? 1 : 0);
-        int unit = (Mathf.Approximately(s.x, 1f) ? 1 : 0)
-                 + (Mathf.Approximately(s.y, 1f) ? 1 : 0)
-                 + (Mathf.Approximately(s.z, 1f) ? 1 : 0);
+        int unit = (IsAirWallHorizontalSize(s.x) ? 1 : 0)
+                 + (IsAirWallHorizontalSize(s.y) ? 1 : 0)
+                 + (IsAirWallHorizontalSize(s.z) ? 1 : 0);
         return tall == 1 && unit == 2;
+    }
+
+    private static bool IsAirWallHorizontalSize(float v)
+    {
+        return Mathf.Approximately(v, 1f)
+            || Mathf.Approximately(v, LayoutEditorCatalogLookup.GridCellSize);
     }
 }

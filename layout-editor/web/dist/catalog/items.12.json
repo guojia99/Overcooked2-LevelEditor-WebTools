@@ -4,6 +4,204 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "pool_corner_01",
+      "guid": "79db4b31560c27f4ba477646cb2205f9",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_corner_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 0.7777763605117798
+      },
+      "height": 0.778,
+      "layoutTier": "decor",
+      "nameZh": "泳池转角 1",
+      "nameEn": "pool corner 1",
+      "icon": false
+    },
+    {
+      "id": "pool_corner_01 1",
+      "guid": "b835dcd281a662b40872436a81ceb6e5",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_corner_01 1.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 3.8539717197418213
+      },
+      "height": 3.854,
+      "layoutTier": "decor",
+      "nameZh": "泳池转角 1'",
+      "nameEn": "pool corner 1 1",
+      "icon": false
+    },
+    {
+      "id": "pool_corner_02",
+      "guid": "99dc32eb7b8a56a488f5c3852c5b01a5",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_corner_02.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.784225344657898
+      },
+      "height": 0.784,
+      "layoutTier": "decor",
+      "nameZh": "泳池转角 2",
+      "nameEn": "pool corner 2",
+      "icon": false
+    },
+    {
+      "id": "pool_corner_02 1",
+      "guid": "eca9254858ab11c4081f83a28f72bd9a",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_corner_02 1.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 3.8509843349456787
+      },
+      "height": 3.851,
+      "layoutTier": "decor",
+      "nameZh": "泳池转角 2'",
+      "nameEn": "pool corner 2 1",
+      "icon": false
+    },
+    {
+      "id": "pool_straight_01",
+      "guid": "a0d0c215402d4f047a321fd0927c910e",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_straight_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 0.7777754664421082
+      },
+      "height": 0.778,
+      "layoutTier": "decor",
+      "nameZh": "泳池直边",
+      "nameEn": "pool straight 1",
+      "icon": false
+    },
+    {
+      "id": "pool_straight_01 1",
+      "guid": "e60cfa408049e23468949ed4a7955088",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_straight_01 1.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 3.853971242904663
+      },
+      "height": 3.854,
+      "layoutTier": "decor",
+      "nameZh": "泳池直边'",
+      "nameEn": "pool straight 1 1",
+      "icon": false
+    },
+    {
+      "id": "pool_vent_01",
+      "guid": "4ce4c63e8fb6586d096a6012ec22b3a1",
+      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/pool_vent_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.664535100281698e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "泳池通风口 1",
+      "nameEn": "pool vent 1",
+      "icon": false
+    },
+    {
+      "id": "Pool_Vent_01",
+      "guid": "b5510730885226044aaf7767655c3c3c",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Pool_Vent_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.664535100281698e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "泳池通风口 1",
+      "nameEn": "Pool Vent 1",
+      "icon": false
+    },
+    {
+      "id": "pool_wall_corner_01",
+      "guid": "b013aa055517fbd419ae5c8317b0a656",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_wall_corner_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 3.685260772705078
+      },
+      "height": 3.685,
+      "layoutTier": "decor",
+      "nameZh": "泳池墙转角 1",
+      "nameEn": "pool wall corner 1",
+      "icon": false
+    },
+    {
+      "id": "pool_wall_corner_02",
+      "guid": "01529946feff7d240b3899708a39839c",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_wall_corner_02.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 3.685260534286499
+      },
+      "height": 3.685,
+      "layoutTier": "decor",
+      "nameZh": "泳池墙转角 2",
+      "nameEn": "pool wall corner 2",
+      "icon": false
+    },
+    {
+      "id": "pool_wall_straight_01",
+      "guid": "0d85c8b870ebe8244b68cc582e0ab36e",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_wall_straight_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 3.685260772705078
+      },
+      "height": 3.685,
+      "layoutTier": "decor",
+      "nameZh": "泳池直墙",
+      "nameEn": "pool wall straight 1",
+      "icon": false
+    },
+    {
       "id": "poolwater_01",
       "guid": "61b368f8a024e9c40986faa62d7eb46c",
       "assetPath": "Assets/common02/prefabs/art/dlc02_beach/poolwater_01.prefab",
@@ -16,7 +214,9 @@
         "sizeY": 4.627365978322187e-15
       },
       "height": 0,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "泳池水面 1",
       "nameEn": "pool water 1",
       "icon": false
@@ -34,7 +234,9 @@
         "sizeY": 4.627365978322187e-15
       },
       "height": 0,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "泳池水 2",
       "nameEn": "poolwater 2",
       "icon": false
@@ -1174,7 +1376,9 @@
         "sizeY": 1.8704818470341126e-17
       },
       "height": 0,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "河边缘 foam 1",
       "nameEn": "river edge foam 1",
       "icon": false
@@ -1964,7 +2168,9 @@
         "sizeY": 0.19500060379505157
       },
       "height": 0.195,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "海平面弧形 2",
       "nameEn": "sea plane curved 2",
       "icon": false
@@ -1982,7 +2188,9 @@
         "sizeY": 0.19500060379505157
       },
       "height": 0.195,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "海面弧形段 2",
       "nameEn": "Sea plane curved 2",
       "icon": false
@@ -2000,7 +2208,9 @@
         "sizeY": 0.20000000298023224
       },
       "height": 0.2,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "海岸 1",
       "nameEn": "sea shore 1",
       "icon": false
@@ -2018,7 +2228,9 @@
         "sizeY": 0.20000000298023224
       },
       "height": 0.2,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "海岸（延伸款）",
       "nameEn": "sea shore extended",
       "icon": false
@@ -2036,7 +2248,9 @@
         "sizeY": 0.15000000596046448
       },
       "height": 0.15,
-      "layoutTier": "decor",
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
       "nameZh": "海岸 simple 1",
       "nameEn": "sea shore simple 1",
       "icon": false
@@ -2335,6 +2549,42 @@
       "layoutTier": "decor",
       "nameZh": "雪橇中段",
       "nameEn": "sled mid",
+      "icon": false
+    },
+    {
+      "id": "sm_dlc13_water_edge",
+      "guid": "771dbb98c36bb840dfbb453fb3fbbffb",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc13/sm_dlc13_water_edge.prefab",
+      "category": "art",
+      "theme": "dlc13",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "DLC13 水面边缘",
+      "nameEn": "DLC13 water edge",
+      "icon": false
+    },
+    {
+      "id": "SM_DLC13_WaterBase_1to2",
+      "guid": "25aba3f0d954faa24660181e6d25cff0",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc13/SM_DLC13_WaterBase_1to2.prefab",
+      "category": "art",
+      "theme": "dlc13",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "DLC13 水面底座 1×2",
+      "nameEn": "DLC13 water base 1x2",
       "icon": false
     },
     {
@@ -3355,240 +3605,6 @@
       "layoutTier": "decor",
       "nameZh": "草莓装饰 1",
       "nameEn": "Strawberry dressing 1",
-      "icon": false
-    },
-    {
-      "id": "sunbed_01",
-      "guid": "66bbfd8aedd3d454db59a0c5789bb47c",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/sunbed_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 1.4296733140945435
-      },
-      "height": 1.43,
-      "layoutTier": "decor",
-      "nameZh": "日光浴床 1",
-      "nameEn": "sunbed 1",
-      "icon": false
-    },
-    {
-      "id": "sunbed_02",
-      "guid": "538728bde92f8dfa5929f8c412f50059",
-      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/sunbed_02.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 1.4296733140945435
-      },
-      "height": 1.43,
-      "layoutTier": "decor",
-      "nameZh": "日光浴床 2",
-      "nameEn": "sunbed 2",
-      "icon": false
-    },
-    {
-      "id": "sunbed_03",
-      "guid": "663f93a7f6e0eb206c9972076bc16ca5",
-      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/sunbed_03.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 1.4296733140945435
-      },
-      "height": 1.43,
-      "layoutTier": "decor",
-      "nameZh": "日光浴床 3",
-      "nameEn": "sunbed 3",
-      "icon": false
-    },
-    {
-      "id": "sunbed_04",
-      "guid": "20b4d0de93b1b9a091f8d4ba74ee6fb6",
-      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/sunbed_04.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 1.4296733140945435
-      },
-      "height": 1.43,
-      "layoutTier": "decor",
-      "nameZh": "日光浴床 4",
-      "nameEn": "sunbed 4",
-      "icon": false
-    },
-    {
-      "id": "sunbed_table_01",
-      "guid": "0db346b476068414887f2223a8f822c8",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/sunbed_table_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5450517535209656
-      },
-      "height": 0.545,
-      "layoutTier": "decor",
-      "nameZh": "日光浴床桌 1",
-      "nameEn": "sunbed table 1",
-      "icon": false
-    },
-    {
-      "id": "sunglasses_01",
-      "guid": "9c9bfa1dc3a043740a035c9b14ba5411",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/sunglasses_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.19989502429962158
-      },
-      "height": 0.2,
-      "layoutTier": "decor",
-      "nameZh": "太阳镜 1",
-      "nameEn": "sunglasses 1",
-      "icon": false
-    },
-    {
-      "id": "surfboard_01",
-      "guid": "d52376f7f2c331e41ab1817488d4f399",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/surfboard_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 0.9897508025169373
-      },
-      "height": 0.99,
-      "layoutTier": "decor",
-      "nameZh": "冲浪板 1",
-      "nameEn": "surfboard 1",
-      "icon": false
-    },
-    {
-      "id": "sushi_side_step_1x28",
-      "guid": "7280b19c70c988140b5d9fa4d81cf864",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_side_step_1x28.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.329070200563396e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "寿司侧边台阶 1x28",
-      "nameEn": "sushi side step 1x28",
-      "icon": false
-    },
-    {
-      "id": "sushi_side_step_1x8",
-      "guid": "4301d60b535bd0341b13efd5658bea7e",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_side_step_1x8.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.329070200563396e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "寿司侧边台阶 1x8",
-      "nameEn": "sushi side step 1x8",
-      "icon": false
-    },
-    {
-      "id": "sushi_sign_01",
-      "guid": "55c4db2eaa6107b4984d54bada16ae2d",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_01.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 6,
-        "cellsZ": 1,
-        "sizeY": 1.5198842287063599
-      },
-      "height": 1.52,
-      "layoutTier": "decor",
-      "nameZh": "寿司招牌 1",
-      "nameEn": "sushi sign 1",
-      "icon": false
-    },
-    {
-      "id": "sushi_sign_01_day",
-      "guid": "52611f483a3f3ff45990772e10b99f71",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_01_day.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 6,
-        "cellsZ": 1,
-        "sizeY": 1.5198849439620972
-      },
-      "height": 1.52,
-      "layoutTier": "decor",
-      "nameZh": "寿司招牌 1 白天",
-      "nameEn": "sushi sign 1 day",
-      "icon": false
-    },
-    {
-      "id": "sushi_sign_01b",
-      "guid": "f4a633f20cc56c24399c3677fb6356e7",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_01b.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 5,
-        "cellsZ": 1,
-        "sizeY": 1.4159889221191406
-      },
-      "height": 1.416,
-      "layoutTier": "decor",
-      "nameZh": "寿司招牌 1b",
-      "nameEn": "sushi sign 01b",
-      "icon": false
-    },
-    {
-      "id": "sushi_sign_02",
-      "guid": "0fadf07aab2679342adfe8504361155c",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/sushi_sign_02.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 3.4194061756134033
-      },
-      "height": 3.419,
-      "layoutTier": "decor",
-      "nameZh": "寿司招牌 2",
-      "nameEn": "sushi sign 2",
       "icon": false
     }
   ]

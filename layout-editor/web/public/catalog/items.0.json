@@ -2085,6 +2085,24 @@
       "icon": false
     },
     {
+      "id": "city_water",
+      "guid": "b77ad6312958f2bd663c3d289e187ccf",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/city/city_water.prefab",
+      "category": "art",
+      "theme": "city",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 6
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "城市水面",
+      "nameEn": "city water",
+      "icon": false
+    },
+    {
       "id": "citywall_brick_01a",
       "guid": "a54bb073aea43c4ab55bb01001c00ebd",
       "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/citywall_brick_01a.prefab",
@@ -3503,24 +3521,6 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 横幅 2",
       "nameEn": "dlc 11 banner 2",
-      "icon": false
-    },
-    {
-      "id": "dlc11_banner_03",
-      "guid": "1e68f2579e45ad1b9de54f30194c3eb4",
-      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/dlc11_banner_03.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 7,
-        "cellsZ": 1,
-        "sizeY": 1.89658784866333
-      },
-      "height": 1.897,
-      "layoutTier": "decor",
-      "nameZh": "dlc 11 横幅 3",
-      "nameEn": "dlc 11 banner 3",
       "icon": false
     }
   ]

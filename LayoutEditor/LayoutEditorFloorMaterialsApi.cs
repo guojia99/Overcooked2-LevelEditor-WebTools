@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEngine;
 
 /// <summary>
 /// Scans the project for swappable floor/background materials, prioritising the
@@ -11,6 +12,81 @@ using UnityEditor;
 public static class LayoutEditorFloorMaterialsApi
 {
     private static readonly Regex SizeTagRegex = new Regex(@"_([0-9]+)x([0-9]+)(?:_|$)", RegexOptions.Compiled);
+    private static readonly Regex TilingSuffixRegex = new Regex(@"_tiling([0-9]+)x([0-9]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>运行时烘焙材质名 mat_foo_tiling12x4 → (12, 4)。</summary>
+    public static bool TryParseMaterialTilingSuffix(string materialName, out int tilingW, out int tilingD)
+    {
+        tilingW = 0;
+        tilingD = 0;
+        if (string.IsNullOrEmpty(materialName))
+            return false;
+        var m = TilingSuffixRegex.Match(materialName);
+        if (!m.Success)
+            return false;
+        return int.TryParse(m.Groups[1].Value, out tilingW)
+            && int.TryParse(m.Groups[2].Value, out tilingD)
+            && tilingW > 0 && tilingD > 0;
+    }
+
+    /// <summary>去掉 SceneLayoutApplier 烘焙材质名上的 _tilingWxH 后缀。</summary>
+    public static string StripMaterialTilingSuffix(string materialName)
+    {
+        if (string.IsNullOrEmpty(materialName))
+            return materialName;
+        var m = TilingSuffixRegex.Match(materialName);
+        if (!m.Success)
+            return materialName;
+        return materialName.Substring(0, m.Index);
+    }
+
+    /// <summary>按剥离后缀后的材质 id 在工程中查找 .mat 资产。</summary>
+    public static bool TryResolveFloorMaterialByName(string materialName, out string guid, out string assetPath)
+    {
+        guid = null;
+        assetPath = null;
+        var baseName = StripMaterialTilingSuffix(materialName);
+        if (string.IsNullOrEmpty(baseName))
+            return false;
+
+        foreach (var found in AssetDatabase.FindAssets("t:Material " + baseName))
+        {
+            var path = AssetDatabase.GUIDToAssetPath(found);
+            var id = Path.GetFileNameWithoutExtension(path);
+            if (string.Equals(id, baseName, StringComparison.OrdinalIgnoreCase))
+            {
+                guid = found;
+                assetPath = path;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>从 ApplyMaterialFloorDirectTiling 烘焙的 _MainTex ST 反推 tiling 格数。</summary>
+    public static bool TryInferTilingFromMainTex(Material mat, out int tilingW, out int tilingD)
+    {
+        tilingW = 0;
+        tilingD = 0;
+        if (mat == null || !mat.HasProperty("_MainTex"))
+            return false;
+
+        var scale = mat.GetTextureScale("_MainTex");
+        var offset = mat.GetTextureOffset("_MainTex");
+        var w = Mathf.RoundToInt(Mathf.Abs(scale.x));
+        var d = Mathf.RoundToInt(Mathf.Abs(scale.y));
+        if (w <= 0 || d <= 0)
+            return false;
+
+        // Direct tiling: scale.x = -tilingW, scale.y = tilingD, offset.x = tilingW.
+        if (Mathf.Approximately(Mathf.Abs(offset.x), w))
+        {
+            tilingW = w;
+            tilingD = d;
+            return true;
+        }
+        return false;
+    }
 
     public static FloorMaterialCatalogDto Scan(string levelSet)
     {

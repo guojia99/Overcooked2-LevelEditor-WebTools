@@ -4,64 +4,200 @@
   "itemCount": 35,
   "recipes": [
     {
-      "guid": "37f84c2a617aa264b8f8bebb5fc8c55b",
-      "id": "Salad_Tomato_SO",
-      "nameZh": "番茄沙拉",
-      "nameEn": "Tomato Salad",
-      "assetPath": "Assets/common01/food/Recipes/Salad_Tomato_SO.asset",
-      "cookingStep": "",
+      "guid": "956d0cf781ea09740814e8f80a4621bf",
+      "id": "Sushi_All_SO",
+      "nameZh": "什锦寿司",
+      "nameEn": "Sushi All",
+      "assetPath": "Assets/common01/food/Recipes/Sushi_All_SO.asset",
+      "cookingStep": "Steamer",
       "platingStep": "",
       "ingredients": [
-        "LettuceSO",
-        "TomatoSO"
+        "SeaweedSO",
+        "SushiRiceSO",
+        "SushiFishSO",
+        "CucumberSO"
       ],
-      "ingredientCount": 2,
-      "cookingStepCount": 0,
-      "score": 40,
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
       "isCustom": false,
       "group": "core",
-      "type": "salad",
+      "type": "sushi",
       "intermediate": false,
       "cookingGroups": [
         {
           "step": "",
           "utensils": [],
           "ingredients": [
-            "LettuceSO",
-            "TomatoSO"
+            "SeaweedSO",
+            "SushiFishSO",
+            "CucumberSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
           ]
         }
       ],
       "icon": true
     },
     {
-      "guid": "fbce1bb14baa5b54e9c73399f9cad117",
-      "id": "Pasta_TomatoOnly_SO",
-      "nameZh": "番茄意面",
-      "nameEn": "Pasta Tomato",
-      "assetPath": "Assets/common01/food/Recipes/Pasta_TomatoOnly_SO.asset",
-      "cookingStep": "Pot",
+      "guid": "60067ad76e73bc9499e6e39a5e2b77c3",
+      "id": "Pizza_Plain_SO",
+      "nameZh": "原味披萨",
+      "nameEn": "Plain Pizza",
+      "assetPath": "Assets/common01/food/Recipes/Pizza_Plain_SO.asset",
+      "cookingStep": "OvenTray",
       "platingStep": "",
       "ingredients": [
-        "PastaSO",
-        "TomatoSO"
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
-      "score": 60,
+      "score": 80,
       "isCustom": false,
       "group": "core",
-      "type": "pasta",
+      "type": "pizza",
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "Pot",
+          "step": "OvenTray",
           "utensils": [
-            "Cooker",
-            "Pot"
+            "Oven"
           ],
           "ingredients": [
-            "PastaSO"
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "295793044e219d34fab1527986132d98",
+      "id": "Cake_Plain_SO",
+      "nameZh": "原味松饼",
+      "nameEn": "Plain Pancake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_Plain_SO.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "core",
+      "type": "pancake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "c7961809bf61ff247a47965c97348285",
+      "id": "Cake_Honey_SO",
+      "nameZh": "原味蛋糕",
+      "nameEn": "Plain Cake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_Honey_SO.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "core",
+      "type": "cake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "HoneycombSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "41f46c9d3978bd8488503aee9fe9dbaa",
+      "id": "Cake_Chocolate_SO",
+      "nameZh": "巧克力松饼",
+      "nameEn": "Chocolate Pancake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_Chocolate_SO.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "core",
+      "type": "pancake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
           ]
         },
         {
@@ -71,7 +207,93 @@
             "FryPan"
           ],
           "ingredients": [
-            "TomatoSO"
+            "ChocolateSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "44cfb001bec2e9243bce5037c9ffe070",
+      "id": "Cake_HoneyChocolate_SO",
+      "nameZh": "巧克力蛋糕",
+      "nameEn": "Chocolate Cake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_HoneyChocolate_SO.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO",
+        "ChocolateSO"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "core",
+      "type": "cake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "HoneycombSO",
+            "ChocolateSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "b98d38299de379745b64461474cd7943",
+      "id": "Burger_Plain_SO",
+      "nameZh": "汉堡",
+      "nameEn": "Burger",
+      "assetPath": "Assets/common01/food/Recipes/Burger_Plain_SO.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "DLC02_ChoppedBun",
+        "MeatSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "core",
+      "type": "burger",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC02_ChoppedBun"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
           ]
         }
       ],
@@ -132,20 +354,115 @@
       "icon": true
     },
     {
-      "guid": "b98d38299de379745b64461474cd7943",
-      "id": "Burger_Plain_SO",
-      "nameZh": "汉堡",
-      "nameEn": "Burger",
-      "assetPath": "Assets/common01/food/Recipes/Burger_Plain_SO.asset",
+      "guid": "77f71dc44da0b0245994c307efbe4711",
+      "id": "Fry_Chicken_SO",
+      "nameZh": "炸鸡块",
+      "nameEn": "Fried Chicken",
+      "assetPath": "Assets/common01/food/Recipes/Fry_Chicken_SO.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "",
+      "ingredients": [
+        "NuggetChickenSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "core",
+      "type": "fry",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": [
+            "NuggetChickenSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "438e7bb16ab4b4845b058337c9b8acf2",
+      "id": "Steamed_Fish_SO",
+      "nameZh": "蒸鱼",
+      "nameEn": "Steamed Fish",
+      "assetPath": "Assets/common01/food/Recipes/Steamed_Fish_SO.asset",
+      "cookingStep": "Steamer",
+      "platingStep": "",
+      "ingredients": [
+        "FishSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": false,
+      "group": "core",
+      "type": "steamed",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "FishSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "5f0dafdeee03521408c2363448b9fd98",
+      "id": "Salad_Plain_SO",
+      "nameZh": "生菜沙拉",
+      "nameEn": "Lettuce Salad",
+      "assetPath": "Assets/common01/food/Recipes/Salad_Plain_SO.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "LettuceSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 0,
+      "score": 20,
+      "isCustom": false,
+      "group": "core",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "LettuceSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "68f4e9cdbfeb9db4a81f0fc9f53c0bb6",
+      "id": "Burger_LettuceTomato_SO",
+      "nameZh": "生菜番茄汉堡",
+      "nameEn": "Lettuce Tomato Burger",
+      "assetPath": "Assets/common01/food/Recipes/Burger_LettuceTomato_SO.asset",
       "cookingStep": "FryingPan",
       "platingStep": "",
       "ingredients": [
         "DLC02_ChoppedBun",
+        "LettuceSO",
+        "TomatoSO",
         "MeatSO"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 4,
       "cookingStepCount": 1,
-      "score": 40,
+      "score": 80,
       "isCustom": false,
       "group": "core",
       "type": "burger",
@@ -155,7 +472,9 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "DLC02_ChoppedBun"
+            "DLC02_ChoppedBun",
+            "LettuceSO",
+            "TomatoSO"
           ]
         },
         {
@@ -172,143 +491,19 @@
       "icon": true
     },
     {
-      "guid": "dfbe8b5399972034391163ef9a6bf050",
-      "id": "Cake_HoneyCarrot_SO",
-      "nameZh": "胡萝卜蛋糕",
-      "nameEn": "Carrot Cake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_HoneyCarrot_SO.asset",
-      "cookingStep": "Mixer",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "HoneycombSO",
-        "CarrotSO"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 120,
-      "isCustom": false,
-      "group": "core",
-      "type": "cake",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "MixingBowl",
-          "utensils": [
-            "Mixer",
-            "MixerBowl"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO"
-          ]
-        },
-        {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
-          "ingredients": [
-            "HoneycombSO",
-            "CarrotSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "576b3ced1e3ff084696b2948e18790a3",
-      "id": "Steamed_Carrot_SO",
-      "nameZh": "胡萝卜烧麦",
-      "nameEn": "Carrot Shumai",
-      "assetPath": "Assets/common01/food/Recipes/Steamed_Carrot_SO.asset",
-      "cookingStep": "Steamer",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "CarrotSO"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "steamed",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "MixingBowl",
-          "utensils": [
-            "Mixer",
-            "MixerBowl"
-          ],
-          "ingredients": [
-            "FlourSO"
-          ]
-        },
-        {
-          "step": "Steamer",
-          "utensils": [
-            "Cooker",
-            "Steamer"
-          ],
-          "ingredients": [
-            "CarrotSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "81bcc1cde7d8cad46a2a0b5ca827cd90",
-      "id": "Salad_Cucumber_SO",
-      "nameZh": "黄瓜沙拉",
-      "nameEn": "Cucumber Salad",
-      "assetPath": "Assets/common01/food/Recipes/Salad_Cucumber_SO.asset",
+      "guid": "3beac6dd526864446930aa0d7b8205e5",
+      "id": "Sushi_PlainPrawn_SO",
+      "nameZh": "生虾片",
+      "nameEn": "Raw Prawn Sashimi",
+      "assetPath": "Assets/common01/food/Recipes/Sushi_PlainPrawn_SO.asset",
       "cookingStep": "",
       "platingStep": "",
       "ingredients": [
-        "LettuceSO",
-        "TomatoSO",
-        "CucumberSO"
+        "SushiPrawnSO"
       ],
-      "ingredientCount": 3,
+      "ingredientCount": 1,
       "cookingStepCount": 0,
-      "score": 60,
-      "isCustom": false,
-      "group": "core",
-      "type": "salad",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "LettuceSO",
-            "TomatoSO",
-            "CucumberSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "f4d4c3390da5ff5478096991d3d878ec",
-      "id": "Sushi_Cucumber_SO",
-      "nameZh": "黄瓜寿司",
-      "nameEn": "Cucumber Sushi",
-      "assetPath": "Assets/common01/food/Recipes/Sushi_Cucumber_SO.asset",
-      "cookingStep": "Steamer",
-      "platingStep": "",
-      "ingredients": [
-        "SeaweedSO",
-        "SushiRiceSO",
-        "CucumberSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 60,
+      "score": 20,
       "isCustom": false,
       "group": "core",
       "type": "sushi",
@@ -318,210 +513,52 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "SeaweedSO",
-            "CucumberSO"
-          ]
-        },
-        {
-          "step": "Steamer",
-          "utensils": [
-            "Cooker",
-            "Steamer"
-          ],
-          "ingredients": [
-            "SushiRiceSO"
+            "SushiPrawnSO"
           ]
         }
       ],
       "icon": true
     },
     {
-      "guid": "03131c3b6e7cd284198075c9d409e3e9",
-      "id": "Burrito_Chicken_SO",
-      "nameZh": "鸡肉卷饼",
-      "nameEn": "Chicken Burrito",
-      "assetPath": "Assets/common01/food/Recipes/Burrito_Chicken_SO.asset",
-      "cookingStep": "FryingPan",
+      "guid": "a48a53230ee5ca74cac63fb1898855a5",
+      "id": "Sushi_PlainFish_SO",
+      "nameZh": "生鱼片",
+      "nameEn": "Raw Fish Sashimi",
+      "assetPath": "Assets/common01/food/Recipes/Sushi_PlainFish_SO.asset",
+      "cookingStep": "",
       "platingStep": "",
       "ingredients": [
-        "TortillaSO",
-        "SushiRiceSO",
-        "BurritoChickenSO"
+        "SushiFishSO"
       ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
+      "ingredientCount": 1,
+      "cookingStepCount": 0,
+      "score": 20,
       "isCustom": false,
       "group": "core",
-      "type": "burrito",
+      "type": "sushi",
       "intermediate": false,
       "cookingGroups": [
         {
           "step": "",
           "utensils": [],
           "ingredients": [
-            "TortillaSO"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "SushiRiceSO"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "BurritoChickenSO"
+            "SushiFishSO"
           ]
         }
       ],
       "icon": true
     },
     {
-      "guid": "46088bb325670d9439fa6cb449e59b3c",
-      "id": "Pizza_Chicken_SO",
-      "nameZh": "鸡肉披萨",
-      "nameEn": "Chicken Pizza",
-      "assetPath": "Assets/common01/food/Recipes/Pizza_Chicken_SO.asset",
-      "cookingStep": "OvenTray",
-      "platingStep": "",
-      "ingredients": [
-        "DLC05_Dough",
-        "TomatoSO",
-        "CheeseSO",
-        "ChickenSO"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "core",
-      "type": "pizza",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
-          "ingredients": [
-            "DLC05_Dough",
-            "TomatoSO",
-            "CheeseSO",
-            "ChickenSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "c2b4dfafdec3f3949b43d1af8d17a214",
-      "id": "Pizza_Peperoni_SO",
-      "nameZh": "辣香肠披萨",
-      "nameEn": "Pepperoni Pizza",
-      "assetPath": "Assets/common01/food/Recipes/Pizza_Peperoni_SO.asset",
-      "cookingStep": "OvenTray",
-      "platingStep": "",
-      "ingredients": [
-        "DLC05_Dough",
-        "TomatoSO",
-        "CheeseSO",
-        "PepperoniSO"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "core",
-      "type": "pizza",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
-          "ingredients": [
-            "DLC05_Dough",
-            "TomatoSO",
-            "CheeseSO",
-            "PepperoniSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "20cc00c67fac2594fb09d2cbaddf6ffe",
-      "id": "Burrito_Mushroom_SO",
-      "nameZh": "蘑菇卷饼",
-      "nameEn": "Mushroom Burrito",
-      "assetPath": "Assets/common01/food/Recipes/Burrito_Mushroom_SO.asset",
-      "cookingStep": "FryingPan",
-      "platingStep": "",
-      "ingredients": [
-        "TortillaSO",
-        "SushiRiceSO",
-        "MushroomSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "burrito",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "TortillaSO"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "SushiRiceSO"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "MushroomSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "93d3b27379604234898da77913a11d37",
-      "id": "Pasta_MushroomOnly_SO",
-      "nameZh": "蘑菇意面",
-      "nameEn": "Pasta Mushroom",
-      "assetPath": "Assets/common01/food/Recipes/Pasta_MushroomOnly_SO.asset",
+      "guid": "fbce1bb14baa5b54e9c73399f9cad117",
+      "id": "Pasta_TomatoOnly_SO",
+      "nameZh": "番茄意面",
+      "nameEn": "Pasta Tomato",
+      "assetPath": "Assets/common01/food/Recipes/Pasta_TomatoOnly_SO.asset",
       "cookingStep": "Pot",
       "platingStep": "",
       "ingredients": [
         "PastaSO",
-        "MushroomSO"
+        "TomatoSO"
       ],
       "ingredientCount": 2,
       "cookingStepCount": 1,
@@ -548,98 +585,38 @@
             "FryPan"
           ],
           "ingredients": [
-            "MushroomSO"
+            "TomatoSO"
           ]
         }
       ],
       "icon": true
     },
     {
-      "guid": "44cfb001bec2e9243bce5037c9ffe070",
-      "id": "Cake_HoneyChocolate_SO",
-      "nameZh": "巧克力蛋糕",
-      "nameEn": "Chocolate Cake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_HoneyChocolate_SO.asset",
-      "cookingStep": "Mixer",
+      "guid": "37f84c2a617aa264b8f8bebb5fc8c55b",
+      "id": "Salad_Tomato_SO",
+      "nameZh": "番茄沙拉",
+      "nameEn": "Tomato Salad",
+      "assetPath": "Assets/common01/food/Recipes/Salad_Tomato_SO.asset",
+      "cookingStep": "",
       "platingStep": "",
       "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "HoneycombSO",
-        "ChocolateSO"
+        "LettuceSO",
+        "TomatoSO"
       ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 120,
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
       "isCustom": false,
       "group": "core",
-      "type": "cake",
+      "type": "salad",
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "MixingBowl",
-          "utensils": [
-            "Mixer",
-            "MixerBowl"
-          ],
+          "step": "",
+          "utensils": [],
           "ingredients": [
-            "FlourSO",
-            "EggSO"
-          ]
-        },
-        {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
-          "ingredients": [
-            "HoneycombSO",
-            "ChocolateSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "41f46c9d3978bd8488503aee9fe9dbaa",
-      "id": "Cake_Chocolate_SO",
-      "nameZh": "巧克力松饼",
-      "nameEn": "Chocolate Pancake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_Chocolate_SO.asset",
-      "cookingStep": "FryingPan",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "ChocolateSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "core",
-      "type": "pancake",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "MixingBowl",
-          "utensils": [
-            "Mixer",
-            "MixerBowl"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "ChocolateSO"
+            "LettuceSO",
+            "TomatoSO"
           ]
         }
       ],
@@ -740,36 +717,33 @@
       "icon": true
     },
     {
-      "guid": "956d0cf781ea09740814e8f80a4621bf",
-      "id": "Sushi_All_SO",
-      "nameZh": "什锦寿司",
-      "nameEn": "Sushi All",
-      "assetPath": "Assets/common01/food/Recipes/Sushi_All_SO.asset",
+      "guid": "576b3ced1e3ff084696b2948e18790a3",
+      "id": "Steamed_Carrot_SO",
+      "nameZh": "胡萝卜烧麦",
+      "nameEn": "Carrot Shumai",
+      "assetPath": "Assets/common01/food/Recipes/Steamed_Carrot_SO.asset",
       "cookingStep": "Steamer",
       "platingStep": "",
       "ingredients": [
-        "SeaweedSO",
-        "SushiRiceSO",
-        "SushiFishSO",
-        "SushiPrawnSO",
-        "CucumberSO"
+        "FlourSO",
+        "CarrotSO"
       ],
-      "ingredientCount": 5,
+      "ingredientCount": 2,
       "cookingStepCount": 1,
       "score": 80,
       "isCustom": false,
       "group": "core",
-      "type": "sushi",
+      "type": "steamed",
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "",
-          "utensils": [],
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
           "ingredients": [
-            "SeaweedSO",
-            "SushiFishSO",
-            "SushiPrawnSO",
-            "CucumberSO"
+            "FlourSO"
           ]
         },
         {
@@ -779,29 +753,74 @@
             "Steamer"
           ],
           "ingredients": [
-            "SushiRiceSO"
+            "CarrotSO"
           ]
         }
       ],
       "icon": true
     },
     {
-      "guid": "68f4e9cdbfeb9db4a81f0fc9f53c0bb6",
-      "id": "Burger_LettuceTomato_SO",
-      "nameZh": "生菜番茄汉堡",
-      "nameEn": "Lettuce Tomato Burger",
-      "assetPath": "Assets/common01/food/Recipes/Burger_LettuceTomato_SO.asset",
+      "guid": "dfbe8b5399972034391163ef9a6bf050",
+      "id": "Cake_HoneyCarrot_SO",
+      "nameZh": "胡萝卜蛋糕",
+      "nameEn": "Carrot Cake",
+      "assetPath": "Assets/common01/food/Recipes/Cake_HoneyCarrot_SO.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO",
+        "CarrotSO"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "core",
+      "type": "cake",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "HoneycombSO",
+            "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fedbf23992bef3c4b9157912f377ca61",
+      "id": "Burger_Cheese_SO",
+      "nameZh": "芝士汉堡",
+      "nameEn": "Cheese Burger",
+      "assetPath": "Assets/common01/food/Recipes/Burger_Cheese_SO.asset",
       "cookingStep": "FryingPan",
       "platingStep": "",
       "ingredients": [
         "DLC02_ChoppedBun",
-        "LettuceSO",
-        "TomatoSO",
+        "CheeseSO",
         "MeatSO"
       ],
-      "ingredientCount": 4,
+      "ingredientCount": 3,
       "cookingStepCount": 1,
-      "score": 80,
+      "score": 60,
       "isCustom": false,
       "group": "core",
       "type": "burger",
@@ -812,8 +831,7 @@
           "utensils": [],
           "ingredients": [
             "DLC02_ChoppedBun",
-            "LettuceSO",
-            "TomatoSO"
+            "CheeseSO"
           ]
         },
         {
@@ -830,87 +848,44 @@
       "icon": true
     },
     {
-      "guid": "5f0dafdeee03521408c2363448b9fd98",
-      "id": "Salad_Plain_SO",
-      "nameZh": "生菜沙拉",
-      "nameEn": "Lettuce Salad",
-      "assetPath": "Assets/common01/food/Recipes/Salad_Plain_SO.asset",
-      "cookingStep": "",
+      "guid": "5b78a80caa87d7846aab091bb0492d69",
+      "id": "Burger_CheeseLettuce_SO",
+      "nameZh": "芝士生菜汉堡",
+      "nameEn": "Cheese Lettuce Burger",
+      "assetPath": "Assets/common01/food/Recipes/Burger_CheeseLettuce_SO.asset",
+      "cookingStep": "FryingPan",
       "platingStep": "",
       "ingredients": [
-        "LettuceSO"
+        "DLC02_ChoppedBun",
+        "CheeseSO",
+        "LettuceSO",
+        "MeatSO"
       ],
-      "ingredientCount": 1,
-      "cookingStepCount": 0,
-      "score": 20,
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
       "isCustom": false,
       "group": "core",
-      "type": "salad",
+      "type": "burger",
       "intermediate": false,
       "cookingGroups": [
         {
           "step": "",
           "utensils": [],
           "ingredients": [
+            "DLC02_ChoppedBun",
+            "CheeseSO",
             "LettuceSO"
           ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "3beac6dd526864446930aa0d7b8205e5",
-      "id": "Sushi_PlainPrawn_SO",
-      "nameZh": "生虾片",
-      "nameEn": "Raw Prawn Sashimi",
-      "assetPath": "Assets/common01/food/Recipes/Sushi_PlainPrawn_SO.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [
-        "SushiPrawnSO"
-      ],
-      "ingredientCount": 1,
-      "cookingStepCount": 0,
-      "score": 20,
-      "isCustom": false,
-      "group": "core",
-      "type": "sushi",
-      "intermediate": false,
-      "cookingGroups": [
+        },
         {
-          "step": "",
-          "utensils": [],
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
           "ingredients": [
-            "SushiPrawnSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "a48a53230ee5ca74cac63fb1898855a5",
-      "id": "Sushi_PlainFish_SO",
-      "nameZh": "生鱼片",
-      "nameEn": "Raw Fish Sashimi",
-      "assetPath": "Assets/common01/food/Recipes/Sushi_PlainFish_SO.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [
-        "SushiFishSO"
-      ],
-      "ingredientCount": 1,
-      "cookingStepCount": 0,
-      "score": 20,
-      "isCustom": false,
-      "group": "core",
-      "type": "sushi",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "SushiFishSO"
+            "MeatSO"
           ]
         }
       ],
@@ -1028,6 +1003,100 @@
       "icon": true
     },
     {
+      "guid": "20cc00c67fac2594fb09d2cbaddf6ffe",
+      "id": "Burrito_Mushroom_SO",
+      "nameZh": "蘑菇卷饼",
+      "nameEn": "Mushroom Burrito",
+      "assetPath": "Assets/common01/food/Recipes/Burrito_Mushroom_SO.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "TortillaSO",
+        "SushiRiceSO",
+        "MushroomSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "core",
+      "type": "burrito",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "TortillaSO"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MushroomSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "93d3b27379604234898da77913a11d37",
+      "id": "Pasta_MushroomOnly_SO",
+      "nameZh": "蘑菇意面",
+      "nameEn": "Pasta Mushroom",
+      "assetPath": "Assets/common01/food/Recipes/Pasta_MushroomOnly_SO.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "PastaSO",
+        "MushroomSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "core",
+      "type": "pasta",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "PastaSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MushroomSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "d41b20c4dd4638942bf7476ee239a85a",
       "id": "Steamed_Prawns_SO",
       "nameZh": "虾烧麦",
@@ -1065,6 +1134,85 @@
           ],
           "ingredients": [
             "PrawnSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "c2b4dfafdec3f3949b43d1af8d17a214",
+      "id": "Pizza_Peperoni_SO",
+      "nameZh": "辣香肠披萨",
+      "nameEn": "Pepperoni Pizza",
+      "assetPath": "Assets/common01/food/Recipes/Pizza_Peperoni_SO.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "",
+      "ingredients": [
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
+        "PepperoniSO"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "core",
+      "type": "pizza",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO",
+            "PepperoniSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "526f081687303c04591c7f12fc6aec70",
+      "id": "Sushi_Fish_SO",
+      "nameZh": "鱼生寿司",
+      "nameEn": "Sushi Fish",
+      "assetPath": "Assets/common01/food/Recipes/Sushi_Fish_SO.asset",
+      "cookingStep": "Steamer",
+      "platingStep": "",
+      "ingredients": [
+        "SeaweedSO",
+        "SushiRiceSO",
+        "SushiFishSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "core",
+      "type": "sushi",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "SeaweedSO",
+            "SushiFishSO"
+          ]
+        },
+        {
+          "step": "Steamer",
+          "utensils": [
+            "Cooker",
+            "Steamer"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
           ]
         }
       ],
@@ -1114,17 +1262,105 @@
       "icon": true
     },
     {
-      "guid": "526f081687303c04591c7f12fc6aec70",
-      "id": "Sushi_Fish_SO",
-      "nameZh": "鱼生寿司",
-      "nameEn": "Sushi Fish",
-      "assetPath": "Assets/common01/food/Recipes/Sushi_Fish_SO.asset",
+      "guid": "03131c3b6e7cd284198075c9d409e3e9",
+      "id": "Burrito_Chicken_SO",
+      "nameZh": "鸡肉卷饼",
+      "nameEn": "Chicken Burrito",
+      "assetPath": "Assets/common01/food/Recipes/Burrito_Chicken_SO.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "TortillaSO",
+        "SushiRiceSO",
+        "BurritoChickenSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "core",
+      "type": "burrito",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "TortillaSO"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "SushiRiceSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "BurritoChickenSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "46088bb325670d9439fa6cb449e59b3c",
+      "id": "Pizza_Chicken_SO",
+      "nameZh": "鸡肉披萨",
+      "nameEn": "Chicken Pizza",
+      "assetPath": "Assets/common01/food/Recipes/Pizza_Chicken_SO.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "",
+      "ingredients": [
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO",
+        "ChickenSO"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "core",
+      "type": "pizza",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO",
+            "ChickenSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f4d4c3390da5ff5478096991d3d878ec",
+      "id": "Sushi_Cucumber_SO",
+      "nameZh": "黄瓜寿司",
+      "nameEn": "Cucumber Sushi",
+      "assetPath": "Assets/common01/food/Recipes/Sushi_Cucumber_SO.asset",
       "cookingStep": "Steamer",
       "platingStep": "",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
-        "SushiFishSO"
+        "CucumberSO"
       ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
@@ -1139,7 +1375,7 @@
           "utensils": [],
           "ingredients": [
             "SeaweedSO",
-            "SushiFishSO"
+            "CucumberSO"
           ]
         },
         {
@@ -1156,271 +1392,33 @@
       "icon": true
     },
     {
-      "guid": "c7961809bf61ff247a47965c97348285",
-      "id": "Cake_Honey_SO",
-      "nameZh": "原味蛋糕",
-      "nameEn": "Plain Cake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_Honey_SO.asset",
-      "cookingStep": "Mixer",
+      "guid": "81bcc1cde7d8cad46a2a0b5ca827cd90",
+      "id": "Salad_Cucumber_SO",
+      "nameZh": "黄瓜沙拉",
+      "nameEn": "Cucumber Salad",
+      "assetPath": "Assets/common01/food/Recipes/Salad_Cucumber_SO.asset",
+      "cookingStep": "",
       "platingStep": "",
       "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "HoneycombSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "core",
-      "type": "cake",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "MixingBowl",
-          "utensils": [
-            "Mixer",
-            "MixerBowl"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO"
-          ]
-        },
-        {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
-          "ingredients": [
-            "HoneycombSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "60067ad76e73bc9499e6e39a5e2b77c3",
-      "id": "Pizza_Plain_SO",
-      "nameZh": "原味披萨",
-      "nameEn": "Plain Pizza",
-      "assetPath": "Assets/common01/food/Recipes/Pizza_Plain_SO.asset",
-      "cookingStep": "OvenTray",
-      "platingStep": "",
-      "ingredients": [
-        "DLC05_Dough",
+        "LettuceSO",
         "TomatoSO",
-        "CheeseSO"
+        "CucumberSO"
       ],
       "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "pizza",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
-          "ingredients": [
-            "DLC05_Dough",
-            "TomatoSO",
-            "CheeseSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "295793044e219d34fab1527986132d98",
-      "id": "Cake_Plain_SO",
-      "nameZh": "原味松饼",
-      "nameEn": "Plain Pancake",
-      "assetPath": "Assets/common01/food/Recipes/Cake_Plain_SO.asset",
-      "cookingStep": "FryingPan",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "EggSO"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "pancake",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "MixingBowl",
-          "utensils": [
-            "Mixer",
-            "MixerBowl"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": []
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "77f71dc44da0b0245994c307efbe4711",
-      "id": "Fry_Chicken_SO",
-      "nameZh": "炸鸡块",
-      "nameEn": "Fried Chicken",
-      "assetPath": "Assets/common01/food/Recipes/Fry_Chicken_SO.asset",
-      "cookingStep": "DeepFatFryer",
-      "platingStep": "",
-      "ingredients": [
-        "NuggetChickenSO"
-      ],
-      "ingredientCount": 1,
-      "cookingStepCount": 1,
-      "score": 40,
-      "isCustom": false,
-      "group": "core",
-      "type": "fry",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "DeepFatFryer",
-          "utensils": [
-            "FryingStation",
-            "FrierBasket"
-          ],
-          "ingredients": [
-            "NuggetChickenSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "438e7bb16ab4b4845b058337c9b8acf2",
-      "id": "Steamed_Fish_SO",
-      "nameZh": "蒸鱼",
-      "nameEn": "Steamed Fish",
-      "assetPath": "Assets/common01/food/Recipes/Steamed_Fish_SO.asset",
-      "cookingStep": "Steamer",
-      "platingStep": "",
-      "ingredients": [
-        "FishSO"
-      ],
-      "ingredientCount": 1,
-      "cookingStepCount": 1,
-      "score": 40,
-      "isCustom": false,
-      "group": "core",
-      "type": "steamed",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Steamer",
-          "utensils": [
-            "Cooker",
-            "Steamer"
-          ],
-          "ingredients": [
-            "FishSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "fedbf23992bef3c4b9157912f377ca61",
-      "id": "Burger_Cheese_SO",
-      "nameZh": "芝士汉堡",
-      "nameEn": "Cheese Burger",
-      "assetPath": "Assets/common01/food/Recipes/Burger_Cheese_SO.asset",
-      "cookingStep": "FryingPan",
-      "platingStep": "",
-      "ingredients": [
-        "DLC02_ChoppedBun",
-        "CheeseSO",
-        "MeatSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
+      "cookingStepCount": 0,
       "score": 60,
       "isCustom": false,
       "group": "core",
-      "type": "burger",
+      "type": "salad",
       "intermediate": false,
       "cookingGroups": [
         {
           "step": "",
           "utensils": [],
           "ingredients": [
-            "DLC02_ChoppedBun",
-            "CheeseSO"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "MeatSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "5b78a80caa87d7846aab091bb0492d69",
-      "id": "Burger_CheeseLettuce_SO",
-      "nameZh": "芝士生菜汉堡",
-      "nameEn": "Cheese Lettuce Burger",
-      "assetPath": "Assets/common01/food/Recipes/Burger_CheeseLettuce_SO.asset",
-      "cookingStep": "FryingPan",
-      "platingStep": "",
-      "ingredients": [
-        "DLC02_ChoppedBun",
-        "CheeseSO",
-        "LettuceSO",
-        "MeatSO"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "core",
-      "type": "burger",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "DLC02_ChoppedBun",
-            "CheeseSO",
-            "LettuceSO"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "MeatSO"
+            "LettuceSO",
+            "TomatoSO",
+            "CucumberSO"
           ]
         }
       ],

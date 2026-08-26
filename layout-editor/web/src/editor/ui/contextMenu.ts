@@ -15,7 +15,9 @@ import {
   escHtml
 } from "../coords";
 import { itemLabel } from "../labels";
-import { itemCategoryOf } from "../catalog";
+import { itemCategoryOf, isResizableBackgroundItem, itemPlaneCells } from "../catalog";
+import { setItemPlaneSize, airWallCells, setAirWallSize } from "../items";
+import { isAirWallItem } from "../stubControls";
 import { isSurfaceItem } from "../../floorColors";
 import {
   isPlayerItem,
@@ -51,6 +53,12 @@ import {
 } from "../panels";
 import { findGroupByItemId, waypointInfo, deleteWaypoint } from "../moveControl";
 import { itemVariantHtml, wireItemVariant } from "../itemVariants";
+import {
+  selectionHeightRowHtml,
+  selectionHeightTargetCount,
+  wireSelectionHeightRow
+} from "../selectionHeight";
+import { updateFloorBar } from "../floorPalette";
 
 export function moveControlCtxHtml(item: EditorItem): string {
   // Players are not movable; pure background (water/sky) is not a move member.
@@ -100,10 +108,44 @@ export function enableMoveControl(item: EditorItem): void {
   draw();
 }
 
+/** 多选地板/物品时仅显示批量高度菜单（地板层右键）。 */
+export function showBatchHeightMenu(clientX: number, clientY: number) {
+  if (selectionHeightTargetCount() < 2) return;
+  dom.ctxMenuEl.innerHTML = `
+    <div class="ctx-head">批量调整高度</div>
+    ${selectionHeightRowHtml()}
+    <p class="close-hint">地板按行走面高度 · 物品按本地 Y · Esc 关闭</p>
+  `;
+  const margin = 8;
+  let left = clientX + margin;
+  let top = clientY + margin;
+  dom.ctxMenuEl.classList.remove("hidden");
+  dom.ctxMenuEl.style.left = `${left}px`;
+  dom.ctxMenuEl.style.top = `${top}px`;
+  requestAnimationFrame(() => {
+    const rect = dom.ctxMenuEl.getBoundingClientRect();
+    if (rect.right > window.innerWidth - margin) {
+      left = Math.max(margin, clientX - rect.width - margin);
+      dom.ctxMenuEl.style.left = `${left}px`;
+    }
+    if (rect.bottom > window.innerHeight - margin) {
+      top = Math.max(margin, clientY - rect.height - margin);
+      dom.ctxMenuEl.style.top = `${top}px`;
+    }
+  });
+  wireSelectionHeightRow(dom.ctxMenuEl, () => {
+    draw();
+    updateFloorBar();
+  });
+}
+
 export function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
   const cat = S.catalogByGuid.get(item.prefabGuid);
   const isSurface = isSurfaceItem(cat);
   const isPlayer = isPlayerItem(item);
+  const batchHeight = selectionHeightTargetCount() >= 2;
+  const resizable = isResizableBackgroundItem(item) || isAirWallItem(item);
+  const { wCells, dCells } = isAirWallItem(item) ? airWallCells(item) : itemPlaneCells(item);
   const stubHtml = stubControlsHtml(item);
   const appearHtml = counterAppearanceHtml(item);
   const rot = normalizeRot(item.localRotationY);
@@ -117,7 +159,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
 
   dom.ctxMenuEl.innerHTML = `
     <div class="ctx-head">${headBadge}${itemLabel(item)}</div>
-    <div class="ctx-coord" id="ctx-coord">x ${item.localPosition.x.toFixed(stepDisplayDecimals(S.freeSnapStep))} · z ${item.localPosition.z.toFixed(stepDisplayDecimals(S.freeSnapStep))}</div>
+    <div class="ctx-coord" id="ctx-coord">x ${item._wx.toFixed(stepDisplayDecimals(S.freeSnapStep))} · z ${item._wz.toFixed(stepDisplayDecimals(S.freeSnapStep))}</div>
     ${
       isPlayer
         ? ""
@@ -141,15 +183,21 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     ${
       isPlayer
         ? ""
-        : `<div class="ctx-nudge-row">
+        : batchHeight
+          ? selectionHeightRowHtml()
+          : `<div class="ctx-nudge-row">
       <span class="ctx-label">高度 <span id="ctx-y-val" class="ctx-scale-val">${item.localPosition.y.toFixed(stepDisplayDecimals(S.freeSnapStep))}</span></span>
       <div class="ctx-nudge">
         <button type="button" data-nudge="0,0,-${S.freeSnapStep}" title="降低 ${S.freeSnapStep}">−${S.freeSnapStep.toFixed(stepDecimals(S.freeSnapStep))}</button>
         <input type="number" id="ctx-y-input" class="ctx-input ctx-pos-input" step="${S.freeSnapStep}" value="${item.localPosition.y.toFixed(stepDisplayDecimals(S.freeSnapStep))}" title="高度 Y（回车生效）" />
         <button type="button" data-nudge="0,0,${S.freeSnapStep}" title="升高 ${S.freeSnapStep}">+${S.freeSnapStep.toFixed(stepDecimals(S.freeSnapStep))}</button>
       </div>
-    </div>
-    <div class="ctx-nudge-row">
+    </div>`
+    }
+    ${
+      isPlayer
+        ? ""
+        : `<div class="ctx-nudge-row">
       <span class="ctx-label">旋转 <span id="ctx-rot" class="ctx-scale-val">${rot}°</span></span>
       <div class="ctx-nudge">
         <button type="button" data-rot="-90" title="逆时针 90°">−90°</button>
@@ -159,13 +207,25 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     </div>`
     }
     ${
-      isSurface
+      isSurface && !resizable
         ? `<div class="ctx-nudge-row">
       <span class="ctx-label">缩放</span>
       <div class="ctx-nudge">
         <button type="button" data-scale="-0.5" title="缩小">−</button>
         <span id="ctx-scale" class="ctx-scale-val">${itemUniformScale(item).toFixed(1)}×</span>
         <button type="button" data-scale="0.5" title="放大">+</button>
+      </div>
+    </div>`
+        : ""
+    }
+    ${
+      resizable
+        ? `<div class="ctx-nudge-row">
+      <span class="ctx-label">大小(格)</span>
+      <div class="ctx-nudge">
+        <input type="number" id="ctx-bw-input" class="ctx-input ctx-pos-input" min="1" step="1" value="${wCells}" title="宽(格)（回车生效）" />
+        <span class="ctx-scale-val">×</span>
+        <input type="number" id="ctx-bd-input" class="ctx-input ctx-pos-input" min="1" step="1" value="${dCells}" title="高(格)（回车生效）" />
       </div>
     </div>`
         : ""
@@ -245,6 +305,12 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   };
   document.getElementById("ctx-x-input")?.addEventListener("change", applyWorldPos);
   document.getElementById("ctx-z-input")?.addEventListener("change", applyWorldPos);
+  if (batchHeight) {
+    wireSelectionHeightRow(dom.ctxMenuEl, () => {
+      draw();
+      updateFloorBar();
+    });
+  }
   const yInput = document.getElementById("ctx-y-input") as HTMLInputElement | null;
   yInput?.addEventListener("change", () => {
     const y = parseFloat(yInput.value);
@@ -257,6 +323,22 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     refreshCtxPosInputs();
     draw();
   });
+  const applyItemSize = () => {
+    const bwInp = document.getElementById("ctx-bw-input") as HTMLInputElement | null;
+    const bdInp = document.getElementById("ctx-bd-input") as HTMLInputElement | null;
+    if (!bwInp || !bdInp) return;
+    const wv = parseInt(bwInp.value, 10);
+    const dv = parseInt(bdInp.value, 10);
+    if (!(wv > 0) && !(dv > 0)) return;
+    const cur = isAirWallItem(item) ? airWallCells(item) : itemPlaneCells(item);
+    pushHistory();
+    if (isAirWallItem(item)) setAirWallSize(item, wv > 0 ? wv : cur.wCells, dv > 0 ? dv : cur.dCells);
+    else setItemPlaneSize(item, wv > 0 ? wv : cur.wCells, dv > 0 ? dv : cur.dCells);
+    S.dirty = true;
+    draw();
+  };
+  document.getElementById("ctx-bw-input")?.addEventListener("change", applyItemSize);
+  document.getElementById("ctx-bd-input")?.addEventListener("change", applyItemSize);
   dom.ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-scale]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const delta = parseFloat(btn.dataset.scale!);

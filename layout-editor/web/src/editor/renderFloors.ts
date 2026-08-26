@@ -24,6 +24,8 @@ import {
   floorLayerIndex,
   itemInHeightFilter
 } from "./floorHeight";
+import { isSelected } from "./selection";
+import { effectiveMaterialTiling } from "./floors";
 
 export function floorRectPx(f: EditorFloor) {
   const center = worldToCanvas(f._wx, f._wz);
@@ -263,28 +265,32 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
   dom.ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
   dom.ctx.setLineDash([]);
 
-  // Faint dashed internal cell grid → "perspective" tiling (skip for tiled
+  // Faint dashed internal cell grid → material tiling preview (skip for tiled
   // images, whose own tiling already conveys the cells).
-  const cellPx = CELL * PX_PER_UNIT * S.scale;
-  if (!ghost && cellPx > 6 && !(img && f.imageMode === "tile")) {
-    dom.ctx.strokeStyle = "rgba(255,255,255,0.10)";
-    dom.ctx.lineWidth = 1;
-    dom.ctx.setLineDash([3, 4]);
-    for (let i = 1; i < f._wCells; i++) {
-      const x = -bw / 2 + i * cellPx;
-      dom.ctx.beginPath();
-      dom.ctx.moveTo(x, -bh / 2);
-      dom.ctx.lineTo(x, bh / 2);
-      dom.ctx.stroke();
+  if (!ghost && !(img && f.imageMode === "tile")) {
+    const { w: tilingW, d: tilingD } = effectiveMaterialTiling(f);
+    const tileWpx = bw / tilingW;
+    const tileDpx = bh / tilingD;
+    if (tileWpx > 6 && tileDpx > 6) {
+      dom.ctx.strokeStyle = "rgba(255,255,255,0.10)";
+      dom.ctx.lineWidth = 1;
+      dom.ctx.setLineDash([3, 4]);
+      for (let i = 1; i < tilingW; i++) {
+        const x = -bw / 2 + i * tileWpx;
+        dom.ctx.beginPath();
+        dom.ctx.moveTo(x, -bh / 2);
+        dom.ctx.lineTo(x, bh / 2);
+        dom.ctx.stroke();
+      }
+      for (let j = 1; j < tilingD; j++) {
+        const y = -bh / 2 + j * tileDpx;
+        dom.ctx.beginPath();
+        dom.ctx.moveTo(-bw / 2, y);
+        dom.ctx.lineTo(bw / 2, y);
+        dom.ctx.stroke();
+      }
+      dom.ctx.setLineDash([]);
     }
-    for (let j = 1; j < f._dCells; j++) {
-      const y = -bh / 2 + j * cellPx;
-      dom.ctx.beginPath();
-      dom.ctx.moveTo(-bw / 2, y);
-      dom.ctx.lineTo(bw / 2, y);
-      dom.ctx.stroke();
-    }
-    dom.ctx.setLineDash([]);
   }
 
   // Resize handles when exactly one floor is selected (1×1 地板不可拖拽缩放，不显示柄)。
@@ -447,11 +453,11 @@ export function drawSurfaceItems(
   const sorted = [...S.items]
     .filter((it) => isSurfaceItem(S.catalogByGuid.get(it.prefabGuid)))
     // 高度过滤：范围外的表面物品不绘制；已选中的豁免（避免拖动中消失）。
-    .filter((it) => itemInHeightFilter(it) || it._editorKey === S.selectedKey)
+    .filter((it) => itemInHeightFilter(it) || isSelected(it._editorKey))
     .filter((it) => (S.catalogByGuid.get(it.prefabGuid)?.surfaceTier ?? "floor") === tier)
     .sort((a, b) => drawLayerForItem(a, S.catalogByGuid) - drawLayerForItem(b, S.catalogByGuid));
   for (const item of sorted) {
-    const selected = highlight && item._editorKey === S.selectedKey;
+    const selected = highlight && isSelected(item._editorKey);
     // Move preview: draw the surface item at its simulated position (dim ghost
     // at the original spot), so counters/platforms visibly move with the route.
     const pp = previewPos?.get(item.instanceId);

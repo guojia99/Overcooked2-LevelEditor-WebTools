@@ -4,6 +4,42 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "icebergs_01",
+      "guid": "aba2748188ee6a44f30f10ad8c210484",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/icebergs_01.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.44532907009124756
+      },
+      "height": 0.445,
+      "layoutTier": "decor",
+      "nameZh": "冰山 1",
+      "nameEn": "icebergs 1",
+      "icon": false
+    },
+    {
+      "id": "icebergs_02",
+      "guid": "6bbf301e763996c7b3e04a2033c73fd3",
+      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/icebergs_02.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 0.4750175476074219
+      },
+      "height": 0.475,
+      "layoutTier": "decor",
+      "nameZh": "冰山 2",
+      "nameEn": "icebergs 2",
+      "icon": false
+    },
+    {
       "id": "icebergs_03",
       "guid": "a47973dcd3371c949aa02c6de7dace0f",
       "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/icebergs_03.prefab",
@@ -644,6 +680,42 @@
       "icon": false
     },
     {
+      "id": "m_dlc07_1_3_water",
+      "guid": "ce069b4a632c6a7bddaf62ae5cb74a94",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc07/m_dlc07_1_3_water.prefab",
+      "category": "art",
+      "theme": "dlc07",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "DLC7 水面 1×3",
+      "nameEn": "DLC7 water 1x3",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_2_1_water_01",
+      "guid": "033f0f6844466bd871ca34114d9eed05",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc07/m_dlc07_2_1_water_01.prefab",
+      "category": "art",
+      "theme": "dlc07",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "DLC7 水面 2×1",
+      "nameEn": "DLC7 water 2x1",
+      "icon": false
+    },
+    {
       "id": "m_dlc07_deathscreen_plane_01",
       "guid": "21c9c9a6995bd06227a8a24d4562435c",
       "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/m_dlc07_deathscreen_plane_01.prefab",
@@ -1001,6 +1073,24 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 墙 deco 支撑 3",
       "nameEn": "dlc07 wall deco support 3",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_water_3_2",
+      "guid": "8cfa780452c855d5e84df0fb62190c01",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc07/m_dlc07_water_3_2.prefab",
+      "category": "art",
+      "theme": "dlc07",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "DLC7 水面 3×2",
+      "nameEn": "DLC7 water 3x2",
       "icon": false
     },
     {
@@ -1508,6 +1598,24 @@
       "icon": false
     },
     {
+      "id": "m_dlc10_1_2_water",
+      "guid": "c3488e4a428efc3a56ddb7182c8e63fe",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc10/m_dlc10_1_2_water.prefab",
+      "category": "art",
+      "theme": "dlc10",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "DLC10 水面 1×2",
+      "nameEn": "DLC10 water 1x2",
+      "icon": false
+    },
+    {
       "id": "m_dlc13_map_tree_01_1",
       "guid": "f596329746a2e3abcb02f93809350828",
       "assetPath": "Assets/common03/prefabs/dlc13/art/dlc13/m_dlc13_map_tree_01_1.prefab",
@@ -1631,6 +1739,24 @@
       "layoutTier": "decor",
       "nameZh": "DLC2 火烈鸟 1",
       "nameEn": "dlc2 flamingo 1",
+      "icon": false
+    },
+    {
+      "id": "m_dlc2_h9_pool_water_01",
+      "guid": "11e1a9a1557143a7e7e827c2d86d76b1",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc02/m_dlc2_h9_pool_water_01.prefab",
+      "category": "art",
+      "theme": "dlc02",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "DLC2 泳池水面 H9",
+      "nameEn": "DLC2 pool water H9",
       "icon": false
     },
     {
@@ -2028,6 +2154,24 @@
       "icon": false
     },
     {
+      "id": "m_dlc5_water_special",
+      "guid": "6b6662deca88c43e61304dc4ea0884ff",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc05/m_dlc5_water_special.prefab",
+      "category": "art",
+      "theme": "dlc05",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "DLC5 特殊水面",
+      "nameEn": "DLC5 special water",
+      "icon": false
+    },
+    {
       "id": "m_dlc7_plank_01",
       "guid": "2e69da3afe28848cda13d8f298d40e9c",
       "assetPath": "Assets/common03/prefabs/dlc07/art/dlc07_horde/m_dlc7_plank_01.prefab",
@@ -2257,6 +2401,60 @@
       "layoutTier": "decor",
       "nameZh": "餐车前部",
       "nameEn": "lorry van front 1",
+      "icon": false
+    },
+    {
+      "id": "m_mapwatercurve120_01",
+      "guid": "904d8410ba836ab0ce61bf6ba4408f8f",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/core/m_mapwatercurve120_01.prefab",
+      "category": "art",
+      "theme": "core",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "地图弯曲水面 120°",
+      "nameEn": "map water curve 120",
+      "icon": false
+    },
+    {
+      "id": "m_mapwaterroad_01",
+      "guid": "4fcc5b3f1c1d731d5915c61733c4a6a9",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/core/m_mapwaterroad_01.prefab",
+      "category": "art",
+      "theme": "core",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "地图水路",
+      "nameEn": "map water road",
+      "icon": false
+    },
+    {
+      "id": "m_mapwaterroadshort_01",
+      "guid": "2a16fff0c260bd1be943945ba585ba29",
+      "assetPath": "Assets/commonW1/prefabs/backgrounds/core/m_mapwaterroadshort_01.prefab",
+      "category": "art",
+      "theme": "core",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "地图短水路",
+      "nameEn": "map water road short",
       "icon": false
     },
     {
@@ -3359,206 +3557,6 @@
       "layoutTier": "decor",
       "nameZh": "mi 悬崖转角内 2",
       "nameEn": "mi cliff corner in 2",
-      "icon": false
-    },
-    {
-      "id": "mi_floor_01",
-      "guid": "af89ae6f83d1e3bbc81815e57fdad23f",
-      "assetPath": "Assets/common03/prefabs/core/art/floors/mi_floor_01.prefab",
-      "category": "art",
-      "theme": "floors",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.664535364979494e-16
-      },
-      "height": 0,
-      "layoutTier": "floor",
-      "surfaceTier": "floor",
-      "surfaceKind": "solid",
-      "nameZh": "矿洞地板 1",
-      "nameEn": "Mine Floor 1",
-      "icon": false
-    },
-    {
-      "id": "mi_lantern_02",
-      "guid": "e794fb4f4561d13489458ebdc3c31178",
-      "assetPath": "Assets/common01/prefabs/art/mine/mi_lantern_02.prefab",
-      "category": "art",
-      "theme": "mine",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.2810544967651367
-      },
-      "height": 1.281,
-      "layoutTier": "decor",
-      "nameZh": "矿洞灯笼",
-      "nameEn": "mi lantern 2",
-      "icon": false
-    },
-    {
-      "id": "mi_shovel_02",
-      "guid": "2081cee61e4ab70d3d0a6fd69acb6741",
-      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/mi_shovel_02.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.3092775344848633
-      },
-      "height": 2.309,
-      "layoutTier": "decor",
-      "nameZh": "mi 铲子 2",
-      "nameEn": "mi shovel 2",
-      "icon": false
-    },
-    {
-      "id": "mi_stone_wall_02_2x5",
-      "guid": "8b21a9b785bece6fdde14c01a854421c",
-      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/mi_stone_wall_02_2x5.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 4,
-        "sizeY": 2.66453695316627e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "mi 石墙 2 2x5",
-      "nameEn": "mi stone wall 2 2x5",
-      "icon": false
-    },
-    {
-      "id": "mi_stone_wall_02_4x9",
-      "guid": "5e39ee11f883eef48f22b1b82baa9d2c",
-      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/mi_stone_wall_02_4x9.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 8,
-        "sizeY": 2.664535364979494e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "mi 石墙 2 4x9",
-      "nameEn": "mi stone wall 2 4x9",
-      "icon": false
-    },
-    {
-      "id": "mi_stone_wall_02_8x14",
-      "guid": "5856c8388ba2cb4f3beb4f796db7339f",
-      "assetPath": "Assets/common03/prefabs/dlc11/art/dlc11_summer/mi_stone_wall_02_8x14.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 4,
-        "sizeY": 2.66453695316627e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "mi 石墙 2 8x14",
-      "nameEn": "mi stone wall 2 8x14",
-      "icon": false
-    },
-    {
-      "id": "mi_table_01",
-      "guid": "2cc8c266ce62328116886830c232f06e",
-      "assetPath": "Assets/common03/prefabs/core/art/mine/mi_table_01.prefab",
-      "category": "art",
-      "theme": "mine",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.6103930473327637
-      },
-      "height": 0.61,
-      "layoutTier": "decor",
-      "nameZh": "矿洞桌子 1",
-      "nameEn": "Mine Table 1",
-      "icon": false
-    },
-    {
-      "id": "mi_turntable_01",
-      "guid": "638d3af325ddfd0089979c0ada5dc9ba",
-      "assetPath": "Assets/common03/prefabs/core/art/mine/mi_turntable_01.prefab",
-      "category": "art",
-      "theme": "mine",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "矿洞转盘 1",
-      "nameEn": "Mine Turntable 1",
-      "icon": false
-    },
-    {
-      "id": "mi_wood_floor_16x4",
-      "guid": "785a3ec64f16ea8996cc2ac8fb2ea254",
-      "assetPath": "Assets/common03/prefabs/core/art/floors/mi_wood_floor_16x4.prefab",
-      "category": "art",
-      "theme": "floors",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 13,
-        "cellsZ": 1,
-        "sizeY": 4
-      },
-      "height": 4,
-      "layoutTier": "floor",
-      "surfaceTier": "floor",
-      "surfaceKind": "solid",
-      "nameZh": "矿洞木地板 16×4",
-      "nameEn": "Mine Wood Floor 16x4",
-      "icon": false
-    },
-    {
-      "id": "mince_pies_01",
-      "guid": "f068c66837c4141e682a470e64e9b9d6",
-      "assetPath": "Assets/common03/prefabs/dlc03/art/dlc03_christmas/mince_pies_01.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5747966766357422
-      },
-      "height": 0.575,
-      "layoutTier": "decor",
-      "nameZh": "肉馅派 1",
-      "nameEn": "mince pies 1",
-      "icon": false
-    },
-    {
-      "id": "noripple_m_dlc3_icecliff_270",
-      "guid": "4bf3e144a5b8f414ba30bba47c4a177f",
-      "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/noripple_m_dlc3_icecliff_270.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.0651562213897705
-      },
-      "height": 2.065,
-      "layoutTier": "decor",
-      "nameZh": "冰崖转角 270°",
-      "nameEn": "m dlc3 icecliff 270",
       "icon": false
     }
   ]

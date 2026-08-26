@@ -419,6 +419,11 @@ export async function init() {
       confirmLeaveIfDirty(() => {
         location.href = "/recipes";
       });
+    } else if (target === "guide") {
+      confirmLeaveIfDirty(() => {
+        location.hash = "#/guide";
+        location.reload();
+      });
     }
   });
 

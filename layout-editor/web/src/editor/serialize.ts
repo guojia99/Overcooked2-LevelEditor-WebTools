@@ -8,11 +8,14 @@ import {
   uuid,
   normalizeRot,
   resolveFootprint,
-  prefabIdFromPath
+  prefabIdFromPath,
+  editorItemUnityWorldXZ
 } from "./coords";
 import {
   itemLayerOfIt,
-  catalogItemById
+  catalogItemById,
+  isResizableBackgroundItem,
+  planeCatalogFootprint
 } from "./catalog";
 import {
   isThemedFloor,
@@ -31,7 +34,9 @@ import type {
 } from "../types";
 
 export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz, ...rest }: EditorItem): LayoutItem {
-  const fp = resolveFootprint(rest);
+  const fp = isResizableBackgroundItem(rest)
+    ? planeCatalogFootprint(rest)
+    : resolveFootprint(rest);
   const cat = S.catalogByGuid.get(rest.prefabGuid);
   // 新放置物品 stubKind 为空：按 prefab id 映射补默认 stubKind（回收台/容器堆等
   // wrapper 无专属 stub 的道具靠它让后端补挂组件），已显式设置的优先。
@@ -62,10 +67,21 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
   // 热气球桥（三格）真实 prefab 无 Ground 层碰撞（bundle 实测仅 x5 自带），
   // 按 footprint 生成 Col_Floor 才可走；x5 已自带碰撞，不重复生成。
   const isAirBalloonBridgeX3 = prefabIdFromPath(rest.prefabAssetPath) === "air_balloon_bridge_x3";
+  if (rest.timedSwitch) {
+    rest.timedSwitch = {
+      enabled: rest.timedSwitch.enabled !== false,
+      onSeconds: rest.timedSwitch.onSeconds ?? 30,
+      offSeconds: rest.timedSwitch.offSeconds ?? 30,
+      startOn: rest.timedSwitch.startOn !== false,
+    };
+  }
+  const ly = rest.localPosition?.y ?? 0;
+  const unityXZ = editorItemUnityWorldXZ({ _wx, _wz, localRotationY: rest.localRotationY, prefabAssetPath: rest.prefabAssetPath, prefabGuid: rest.prefabGuid });
   return {
     ...rest,
     footprint: fp,
-    worldPosition: { x: _wx, y: rest.localPosition?.y ?? 0, z: _wz },
+    localPosition: { x: unityXZ.x - _parentWx, y: ly, z: unityXZ.z - _parentWz },
+    worldPosition: { x: unityXZ.x, y: ly, z: unityXZ.z },
     walkable: isAirWall || isPressureSwitch
       ? false
       : !isRaftPlank && (!!(cat && cat.surfaceTier === "floor") || isAirBalloonBridgeX3),
@@ -143,7 +159,15 @@ export function buildThemedItemsForDoc(): LayoutItem[] {
       : nat.depthAxis === "y"
         ? { x: f._wCells / nat.cellsPerScaleX, y: f._dCells / nat.cellsPerScaleZ, z: 1 }
         : { x: f._wCells / nat.cellsPerScaleX, y: 1, z: f._dCells / nat.cellsPerScaleZ };
-    const id = `new:themed:${uuid()}`;
+    // The themed item IS the floor's scene object — share the floor's own
+    // instanceId (always a unique "new:…" id) instead of minting a fresh one.
+    // Unifying the ids lets the backend resolve the floor to this GameObject
+    // (createdObjects[floor.instanceId]) so move-group bindings and the walkable
+    // Col_Floor attach to it; otherwise the floor id maps to nothing and the
+    // themed floor never joins its move group ("绑定地板写回后没绑定").
+    const id = f.instanceId && f.instanceId.startsWith("new:")
+      ? f.instanceId
+      : `new:themed:${uuid()}`;
     themedItems.push({
       instanceId: id,
       hierarchyPath: id,

@@ -4,6 +4,204 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "p_dlc5_tree_stump_01",
+      "guid": "580c4fd1f9c69684baaffca7eecccfe7",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_stump_01.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.8669291734695435
+      },
+      "height": 1.867,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树桩 1",
+      "nameEn": "dlc5 tree stump 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_stump_02",
+      "guid": "26b480daa3cc8534a9dc442c5d5e0a45",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_stump_02.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 2.0989809036254883
+      },
+      "height": 2.099,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树桩 2",
+      "nameEn": "dlc5 tree stump 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_01",
+      "guid": "d40f4a7657788774b89e10f05accb9a3",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_01.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 13.199957847595215
+      },
+      "height": 13.2,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干 1",
+      "nameEn": "dlc5 tree trunk 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_branch_01",
+      "guid": "4f400ecfbb803a142a3586831da98516",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_branch_01.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 6.842903137207031
+      },
+      "height": 6.843,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干枝 1",
+      "nameEn": "dlc5 tree trunk branch 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_branch_02",
+      "guid": "c6d46c3411fe9a64da2d5e85cdd8035c",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_branch_02.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 3,
+        "sizeY": 6.870761394500732
+      },
+      "height": 6.871,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干枝 2",
+      "nameEn": "dlc5 tree trunk branch 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_rope_01",
+      "guid": "75781525ac3105c438c804efef7e89a0",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_rope_01.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.8394403457641602
+      },
+      "height": 0.839,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干绳 1",
+      "nameEn": "dlc5 tree trunk rope 1",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_rope_02",
+      "guid": "6581b3bd26d11a44daa7ef43616bc92c",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_rope_02.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.9030725955963135
+      },
+      "height": 0.903,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干绳 2",
+      "nameEn": "dlc5 tree trunk rope 2",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_rope_03",
+      "guid": "b40cf87b8f329ba4faa5250f2185c6ac",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_rope_03.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.1822214126586914
+      },
+      "height": 1.182,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干绳 3",
+      "nameEn": "dlc5 tree trunk rope 3",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_rope_04",
+      "guid": "91195a9ecb982654fa574551be5709a1",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_rope_04.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.2453839778900146
+      },
+      "height": 1.245,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干绳 4",
+      "nameEn": "dlc5 tree trunk rope 4",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_rope_05",
+      "guid": "8abacf0394ab8db4d85d2c5a5e3e9366",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_rope_05.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 1.223040223121643
+      },
+      "height": 1.223,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干绳 5",
+      "nameEn": "dlc5 tree trunk rope 5",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_tree_trunk_support__rope_01a",
+      "guid": "98498562614c62a4f9e590bb74fb14bb",
+      "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_support__rope_01a.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 1.9961553812026978
+      },
+      "height": 1.996,
+      "layoutTier": "decor",
+      "nameZh": "DLC5 树干支撑绳 1a",
+      "nameEn": "dlc5 tree trunk support rope 01a",
+      "icon": false
+    },
+    {
       "id": "p_dlc5_tree_trunk_support__rope_01b",
       "guid": "1ccdb30a8ac6d784a8445ed2c8e2ec39",
       "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_dlc5_tree_trunk_support__rope_01b.prefab",
@@ -3399,204 +3597,6 @@
       "layoutTier": "decor",
       "nameZh": "植物丛 3",
       "nameEn": "plants 3",
-      "icon": false
-    },
-    {
-      "id": "pool_corner_01",
-      "guid": "79db4b31560c27f4ba477646cb2205f9",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_corner_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 3,
-        "sizeY": 0.7777763605117798
-      },
-      "height": 0.778,
-      "layoutTier": "decor",
-      "nameZh": "泳池转角 1",
-      "nameEn": "pool corner 1",
-      "icon": false
-    },
-    {
-      "id": "pool_corner_01 1",
-      "guid": "b835dcd281a662b40872436a81ceb6e5",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_corner_01 1.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 3,
-        "sizeY": 3.8539717197418213
-      },
-      "height": 3.854,
-      "layoutTier": "decor",
-      "nameZh": "泳池转角 1'",
-      "nameEn": "pool corner 1 1",
-      "icon": false
-    },
-    {
-      "id": "pool_corner_02",
-      "guid": "99dc32eb7b8a56a488f5c3852c5b01a5",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_corner_02.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.784225344657898
-      },
-      "height": 0.784,
-      "layoutTier": "decor",
-      "nameZh": "泳池转角 2",
-      "nameEn": "pool corner 2",
-      "icon": false
-    },
-    {
-      "id": "pool_corner_02 1",
-      "guid": "eca9254858ab11c4081f83a28f72bd9a",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_corner_02 1.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 3.8509843349456787
-      },
-      "height": 3.851,
-      "layoutTier": "decor",
-      "nameZh": "泳池转角 2'",
-      "nameEn": "pool corner 2 1",
-      "icon": false
-    },
-    {
-      "id": "pool_straight_01",
-      "guid": "a0d0c215402d4f047a321fd0927c910e",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_straight_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.7777754664421082
-      },
-      "height": 0.778,
-      "layoutTier": "decor",
-      "nameZh": "泳池直边",
-      "nameEn": "pool straight 1",
-      "icon": false
-    },
-    {
-      "id": "pool_straight_01 1",
-      "guid": "e60cfa408049e23468949ed4a7955088",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_straight_01 1.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 3.853971242904663
-      },
-      "height": 3.854,
-      "layoutTier": "decor",
-      "nameZh": "泳池直边'",
-      "nameEn": "pool straight 1 1",
-      "icon": false
-    },
-    {
-      "id": "pool_vent_01",
-      "guid": "4ce4c63e8fb6586d096a6012ec22b3a1",
-      "assetPath": "Assets/common03/prefabs/dlc02/art/dlc02_beach/pool_vent_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.664535100281698e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "泳池通风口 1",
-      "nameEn": "pool vent 1",
-      "icon": false
-    },
-    {
-      "id": "Pool_Vent_01",
-      "guid": "b5510730885226044aaf7767655c3c3c",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Pool_Vent_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.664535100281698e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "泳池通风口 1",
-      "nameEn": "Pool Vent 1",
-      "icon": false
-    },
-    {
-      "id": "pool_wall_corner_01",
-      "guid": "b013aa055517fbd419ae5c8317b0a656",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_wall_corner_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 3.685260772705078
-      },
-      "height": 3.685,
-      "layoutTier": "decor",
-      "nameZh": "泳池墙转角 1",
-      "nameEn": "pool wall corner 1",
-      "icon": false
-    },
-    {
-      "id": "pool_wall_corner_02",
-      "guid": "01529946feff7d240b3899708a39839c",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_wall_corner_02.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 3.685260534286499
-      },
-      "height": 3.685,
-      "layoutTier": "decor",
-      "nameZh": "泳池墙转角 2",
-      "nameEn": "pool wall corner 2",
-      "icon": false
-    },
-    {
-      "id": "pool_wall_straight_01",
-      "guid": "0d85c8b870ebe8244b68cc582e0ab36e",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/pool_wall_straight_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 3.685260772705078
-      },
-      "height": 3.685,
-      "layoutTier": "decor",
-      "nameZh": "泳池直墙",
-      "nameEn": "pool wall straight 1",
       "icon": false
     }
   ]

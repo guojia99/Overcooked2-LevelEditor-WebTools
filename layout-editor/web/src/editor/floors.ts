@@ -28,9 +28,10 @@ import {
   isThemeBackgroundPrefabId,
   themeBackgroundPrefabIds
 } from "../floorColors";
+import type { FloorMaterial } from "../types";
 import { tidyCatalogNameZh } from "../displayLabels";
-import { catalogItemById } from "./catalog";
-import { addFromCatalog } from "./items";
+import { catalogItemById, isBackgroundPlaneCat, isStandingWaterQuadCat } from "./catalog";
+import { addFromCatalog, setItemPlaneSize } from "./items";
 import { defaultNewFloorY } from "./floorHeight";
 import type {
   CatalogItem,
@@ -53,6 +54,28 @@ export function isThemedFloor(f: EditorFloor): boolean {
 /** 空气地板：仅有可行走 Col_AirFloor 碰撞盒，无可见 Plane。 */
 export function isAirFloor(f: EditorFloor): boolean {
   return !!f.airFloor;
+}
+
+/** Solid plane + Unity material (not image/tint/themed/raft/air). */
+export function isPlainMaterialFloor(f: EditorFloor): boolean {
+  return !isAirFloor(f)
+    && !isThemedFloor(f)
+    && f.surfaceKind !== "raft"
+    && f.surfaceKind !== "background"
+    && !f.tintEnabled
+    && !f.imageTexturePath
+    && !f.imageMode;
+}
+
+export function effectiveMaterialTiling(f: EditorFloor): { w: number; d: number } {
+  const w = f.materialTilingW && f.materialTilingW > 0 ? f.materialTilingW : f._wCells;
+  const d = f.materialTilingD && f.materialTilingD > 0 ? f.materialTilingD : f._dCells;
+  return { w, d };
+}
+
+export function syncMaterialTilingToSize(f: EditorFloor): void {
+  f.materialTilingW = f._wCells;
+  f.materialTilingD = f._dCells;
 }
 
 /** Ids that are clearly NOT area floor surfaces and must stay out of themed
@@ -210,9 +233,68 @@ export function finalizeFloor(f: EditorFloor) {
   f.worldPosition.z = f._wz;
   f.widthUnits = f._wCells * CELL;
   f.depthUnits = f._dCells * CELL;
+  if (isPlainMaterialFloor(f)) syncMaterialTilingToSize(f);
   // Smart material match by size tag.
   if (f.surfaceKind !== "background" && f.surfaceKind !== "raft" && !f.prefabGuid && !f.airFloor)
     tryMatchFloorMaterialBySize(f);
+}
+
+function normalizeFloorMaterialId(name: string): string {
+  return name
+    .replace(/\s*\(Instance\)$/i, "")
+    .replace(/\.mat$/i, "")
+    .replace(/_tiling\d+x\d+$/i, "")
+    .trim();
+}
+
+/** 从烘焙材质名 mat_foo_tiling12x4 解析 tiling 格数。 */
+export function parseMaterialTilingFromName(materialName: string): { w: number; d: number } | undefined {
+  const m = materialName.match(/_tiling(\d+)x(\d+)$/i);
+  if (!m) return undefined;
+  const w = parseInt(m[1], 10);
+  const d = parseInt(m[2], 10);
+  if (!(w > 0 && d > 0)) return undefined;
+  return { w, d };
+}
+
+/** 场景加载后、catalog 就绪时，把地板材质元数据与 catalog 对齐。 */
+export function repairFloorMaterialsFromCatalog(): void {
+  for (const f of S.floors) {
+    if (!isPlainMaterialFloor(f)) continue;
+    syncFloorMaterialFromCatalog(f);
+  }
+}
+
+/** 按名称/路径优先匹配 catalog（Unity 导入的 guid 可能与当前 catalog 不一致）。 */
+export function resolveFloorMaterial(f: EditorFloor): FloorMaterial | undefined {
+  const mats = S.floorMaterials;
+  if (!mats.length) return undefined;
+
+  const nameKey = f.materialName ? normalizeFloorMaterialId(f.materialName) : "";
+  if (nameKey) {
+    const byId = mats.find(
+      (m) => m.id === nameKey || normalizeFloorMaterialId(m.id) === nameKey
+    );
+    if (byId) return byId;
+  }
+  if (f.materialAssetPath) {
+    const byPath = mats.find((m) => m.assetPath === f.materialAssetPath);
+    if (byPath) return byPath;
+  }
+  if (f.materialGuid) {
+    return mats.find((m) => m.guid === f.materialGuid);
+  }
+  return undefined;
+}
+
+/** 将地板材质字段与 catalog 对齐（仅修正元数据，不写历史）。 */
+export function syncFloorMaterialFromCatalog(f: EditorFloor): FloorMaterial | undefined {
+  const m = resolveFloorMaterial(f);
+  if (!m) return undefined;
+  if (f.materialGuid !== m.guid) f.materialGuid = m.guid;
+  if (f.materialAssetPath !== m.assetPath) f.materialAssetPath = m.assetPath;
+  if (f.materialName !== m.id) f.materialName = m.id;
+  return m;
 }
 
 export function tryMatchFloorMaterialBySize(f: EditorFloor) {
@@ -220,9 +302,12 @@ export function tryMatchFloorMaterialBySize(f: EditorFloor) {
   // Never override an explicitly chosen material: only auto-match when the
   // floor has no material yet, or its material no longer exists in the
   // catalog (stale guid from an old save).
-  if (f.materialGuid) {
-    const cur = S.floorMaterials.find((m) => m.guid === f.materialGuid);
-    if (cur) return;
+  if (resolveFloorMaterial(f)) return;
+  // 烘焙材质名剥离 _tiling 后若能命中 catalog，视为已有材质，不按尺寸误配。
+  if (f.materialName) {
+    const stripped = normalizeFloorMaterialId(f.materialName);
+    if (stripped && S.floorMaterials.some((m) => m.id === stripped || normalizeFloorMaterialId(m.id) === stripped))
+      return;
   }
   const match = S.floorMaterials.find((m) => m.sizeTag === tag);
   if (match && match.guid !== f.materialGuid) {
@@ -276,6 +361,7 @@ export function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | nul
     _wCells: w,
     _dCells: d,
   };
+  if (!themedCat) syncMaterialTilingToSize(floor);
   S.floors.push(floor);
   setFloorSelection([key]);
   draw();
@@ -338,7 +424,10 @@ export function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | unde
       : "图片地板（未上传图片）";
   }
   if (f.tintEnabled) return `染色地板（颜色 ${f.tintColor ?? "#ffffff"}）`;
-  return matchedMat?.nameZh ?? f.materialName ?? "无";
+  const { w: tw, d: td } = effectiveMaterialTiling(f);
+  const matName = matchedMat?.nameZh ?? f.materialName ?? "无";
+  const tilingTxt = tw === f._wCells && td === f._dCells ? `平铺 ${tw}×${td}` : `平铺 ${tw}×${td}（地板 ${f._wCells}×${f._dCells}）`;
+  return `${matName} · ${tilingTxt}`;
 }
 
 export function mergeRaftItemsIntoFloors(): void {
@@ -533,18 +622,24 @@ export function removeBackgroundFloors(): number {
 }
 
 export function syncBackgroundForTheme(themeKey: string) {
-  const wanted = themeBackgroundPrefabIds(themeKey);
+  const catalogHas = (id: string) => !!catalogItemById(id);
+  const wanted = themeBackgroundPrefabIds(themeKey, S.currentLevelSet, S.items, catalogHas);
   const wantedSet = new Set(wanted);
 
-  // Drop theme-managed prefabs that don't match the selected theme.
+  // Drop theme-managed prefabs only when the target theme declares replacements
+  // (water/sky/sand/goo). Void has wanted=[] — must NOT strip hand-placed
+  // p_dlc13_water_02 / Water_01 etc. on every save (was causing void+manual water
+  // to never reach Unity).
   const removedItemKeys: string[] = [];
-  S.items = S.items.filter((it) => {
-    const pid = prefabIdFromPath(it.prefabAssetPath);
-    if (!isThemeBackgroundPrefabId(pid)) return true;
-    if (wantedSet.has(pid)) return true;
-    removedItemKeys.push(it._editorKey);
-    return false;
-  });
+  if (wanted.length > 0) {
+    S.items = S.items.filter((it) => {
+      const pid = prefabIdFromPath(it.prefabAssetPath);
+      if (!isThemeBackgroundPrefabId(pid)) return true;
+      if (wantedSet.has(pid)) return true;
+      removedItemKeys.push(it._editorKey);
+      return false;
+    });
+  }
   if (removedItemKeys.some((k) => S.selectedKeys.has(k))) {
     clearSelection();
     hideDetail();
@@ -570,10 +665,36 @@ export function syncBackgroundForTheme(themeKey: string) {
 
   const bounds = computeLevelBounds();
   const wx = bounds?.cx ?? 0;
-  const wz = (bounds?.cz ?? 0) + 2 * CELL;
+  const wz = bounds?.cz ?? 0;
   const cat = catalogItemById(pid);
   if (!cat) return;
-  addFromCatalog(cat, wx, wz, false);
+  const placed = addFromCatalog(cat, wx, wz, false);
+  // Theme background planes (water / sand…) should default to covering the whole
+  // playable area, centered, instead of the 6×6 starter used for manual drops.
+  // setItemPlaneSize writes the correct localScale axis (depth→Y for standing
+  // water quads) and native rotX (=90) so the plane lies flat and spans the level
+  // rather than standing up as a thin vertical strip.
+  if (placed && bounds && isBackgroundPlaneCat(cat)) {
+    const wCells = Math.max(1, Math.ceil((bounds.sx + 4 * CELL) / CELL));
+    const dCells = Math.max(1, Math.ceil((bounds.sz + 4 * CELL) / CELL));
+    setItemPlaneSize(placed, wCells, dCells);
+    // Water sits just below the island tops (walk surface y=0) so it shows around
+    // the edges (matches the scenery workflow's -0.81 water level); other planes
+    // (sand…) keep their placement height.
+    const y = isStandingWaterQuadCat(cat) ? -0.81 : placed.localPosition?.y ?? 0;
+    placed._wx = bounds.cx;
+    placed._wz = bounds.cz;
+    if (placed.localPosition) {
+      placed.localPosition.x = bounds.cx;
+      placed.localPosition.y = y;
+      placed.localPosition.z = bounds.cz;
+    }
+    if (placed.worldPosition) {
+      placed.worldPosition.x = bounds.cx;
+      placed.worldPosition.y = y;
+      placed.worldPosition.z = bounds.cz;
+    }
+  }
   setStatus(`已切换背景环境：${tidyCatalogNameZh(cat.nameZh, cat.id)}（${pid}）`);
   draw();
 }

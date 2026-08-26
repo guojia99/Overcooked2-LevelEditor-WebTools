@@ -431,6 +431,7 @@ public static class LayoutEditorStubIO
                 timedComp.m_onSeconds = Mathf.Max(3f, item.timedSwitch.onSeconds);
                 timedComp.m_offSeconds = Mathf.Max(3f, item.timedSwitch.offSeconds);
                 timedComp.m_startOn = item.timedSwitch.startOn;
+                EditorUtility.SetDirty(timedComp);
             }
             else if (timedComp != null)
             {

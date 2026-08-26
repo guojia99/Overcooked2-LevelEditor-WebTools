@@ -5,11 +5,13 @@ import { normalizeRot } from "./coords";
 import { setStatus } from "./status";
 import { draw } from "./render";
 import { pushHistory } from "./historyOps";
+import { batchRandomRotateLotusPressureSwitches } from "./items";
 import { setFloorSelection } from "./selection";
 import {
   isThemedFloor,
   themedFloorPrefabs,
-  syncBackgroundForTheme
+  syncBackgroundForTheme,
+  effectiveMaterialTiling
 } from "./floors";
 import { itemLabel } from "./labels";
 import {
@@ -25,6 +27,11 @@ import {
 import { tidyCatalogNameZh } from "../displayLabels";
 import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
 import { floorLayerSummary } from "./floorHeight";
+import {
+  selectionHeightRowHtml,
+  selectionHeightTargetCount,
+  wireSelectionHeightRow
+} from "./selectionHeight";
 
 /** 面板高度过滤：按 prefab 固有模型高度（catalog 的 height 字段，未实测按 0）
  *  是否落在当前高度区间内。未激活（全部）时恒通过。 */
@@ -250,7 +257,7 @@ export function updateFloorBar() {
     (t) =>
       `<option value="${t.key}"${t.key === S.bgThemeKey ? " selected" : ""}>${t.emoji} ${t.labelZh}</option>`
   ).join("");
-  const themeRow = `<label class="fb-theme" title="${bgThemeTooltip(bgTheme(S.bgThemeKey))}">背景：<select id="fb-bg-theme">${themeOpts}</select></label>`;
+  const themeRow = `<label class="fb-theme" title="${bgThemeTooltip(bgTheme(S.bgThemeKey), S.currentLevelSet)}">背景：<select id="fb-bg-theme">${themeOpts}</select></label>`;
   const killToggle = `<label class="fb-check" title="回写 Unity 时把坠落区(KillPlane)扩大到覆盖整关，使所有非地板区域都会坠落"><input type="checkbox" id="fb-autokill" ${S.autoKillPlane ? "checked" : ""}/> 回写扩大坠落区</label>`;
   const walkToggle = `<label class="fb-check" title="回写时按可见地板重新生成可行走碰撞体(Col_Floor)：可行走=地板，地板间空隙=坠落坑"><input type="checkbox" id="fb-autowalk" ${S.autoWalkable ? "checked" : ""}/> 同步可行走到地板</label>`;
   const bgEditToggle = `<label class="fb-check" title="默认锁定：背景板只显示，不参与点选/框选/拖动/缩放。勾选后可像普通地板一样操作背景"><input type="checkbox" id="fb-bgedit" ${S.backgroundEditable ? "checked" : ""}/> 解锁背景操作</label>`;
@@ -260,14 +267,32 @@ export function updateFloorBar() {
   let info: string;
   if (S.selectedFloorKeys.size > 1) {
     info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板（拖动整体移动 · Del 删除）</span>`;
+  } else if (S.selectedFloorKeys.size > 0 && S.selectedKeys.size > 0) {
+    info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板 · ${S.selectedKeys.size} 个表面物品（拖动任一选中项整体移动 · Del 删除）</span>`;
+  } else if (S.selectedKeys.size > 1 && S.selectedFloorKeys.size === 0) {
+    info = `<span class="fb-info">已选 ${S.selectedKeys.size} 个表面物品（拖动整体移动 · Del 删除）</span>`;
   } else if (f) {
-    info = `<span class="fb-info"><b>${f.airFloor ? "空气地板" : f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.airFloor ? "仅可行走（无可见地板）" : f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(S.catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : f.imageMode === "warp" ? "透视贴合" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : f.materialName ?? "无材质"}</span>`;
+    const matFloorDetail = (() => {
+      const { w: tw, d: td } = effectiveMaterialTiling(f);
+      const tilingMismatch = tw !== f._wCells || td !== f._dCells;
+      const tilingTxt = tilingMismatch
+        ? `<b>平铺 ${tw}×${td}</b>（地板 ${f._wCells}×${f._dCells}）`
+        : `平铺 ${tw}×${td}`;
+      return `${f.materialName ?? "无材质"} · ${tilingTxt}`;
+    })();
+    info = `<span class="fb-info"><b>${f.airFloor ? "空气地板" : f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.airFloor ? "仅可行走（无可见地板）" : f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(S.catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : f.imageMode === "warp" ? "透视贴合" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : matFloorDetail}</span>`;
   } else if (selItem && isSurfaceItem(selCat)) {
     info = `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
   } else {
     info = `<span class="fb-info">${deathLabelZh(S.deathInfo)} · 共 ${S.floors.length} 块地板</span>`;
   }
-  const html = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+  const lotusRotBtn =
+    S.currentLayer === "floor"
+      ? `<button type="button" id="fb-lotus-rand-rot" class="fb-btn" title="将场景中所有莲花压力开关随机设为 0° / 90° / 180° / 270°（写回后生效）">🪷 莲花随机旋转</button>`
+      : "";
+  const batchHRow =
+    selectionHeightTargetCount() >= 2 ? selectionHeightRowHtml() : "";
+  const html = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${lotusRotBtn}${batchHRow}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
   const active = document.activeElement;
   const editing =
     !!active && dom.floorBar.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT");
@@ -303,6 +328,15 @@ export function updateFloorBar() {
     }
     draw();
   });
+  document.getElementById("fb-lotus-rand-rot")?.addEventListener("click", () => {
+    const n = batchRandomRotateLotusPressureSwitches();
+    if (n === 0) {
+      setStatus("场景中没有莲花压力开关", false);
+      return;
+    }
+    setStatus(`已随机旋转 ${n} 个莲花压力开关（0° / 90° / 180° / 270°）`);
+  });
+  wireSelectionHeightRow(dom.floorBar, () => draw());
 }
 
 export function matchesFloorPaletteFilter(it: CatalogItem, q: string): boolean {
@@ -328,7 +362,7 @@ export function appendPaletteTileGrid(parent: HTMLElement, list: CatalogItem[]) 
     const sub =
       it.surfaceTier === "background" && themeBackgroundPrefabIds("sky").includes(it.id)
         ? `<div class="sub">天空主题自动补齐</div>`
-        : it.id === "raft_water"
+        : it.id === "Water_01"
           ? `<div class="sub">水主题自动补齐</div>`
           : it.id === "alien_gue"
             ? `<div class="sub">黏液主题自动补齐</div>`

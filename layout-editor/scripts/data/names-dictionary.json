@@ -17018,6 +17018,16 @@
       "en": "raft water"
     },
     {
+      "id": "dynamic_raft_water",
+      "zh": "木筏动态水面",
+      "en": "dynamic raft water"
+    },
+    {
+      "id": "city_water",
+      "zh": "城市水面",
+      "en": "city water"
+    },
+    {
       "id": "raspberry",
       "zh": "覆盆子",
       "en": "Raspberry"

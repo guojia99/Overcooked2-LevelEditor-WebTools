@@ -1,4 +1,5 @@
 import type { CatalogItem, CatalogStackMeta, LayoutItem } from "./types";
+import { syncItemLocalFromEditor } from "./editor/coords";
 
 export type EditorLike = LayoutItem & {
   _editorKey: string;
@@ -161,8 +162,7 @@ export function applyStackOnHost(
   if (utensil.localPosition.y <= 0.001) {
     utensil.localPosition.y = stackY;
   }
-  utensil.localPosition.x = snapScalar(utensil._wx - utensil._parentWx);
-  utensil.localPosition.z = snapScalar(utensil._wz - utensil._parentWz);
+  syncItemLocalFromEditor(utensil);
 }
 
 function snapScalar(v: number): number {
@@ -202,7 +202,7 @@ export function trySnapUtensilToHost(
     );
     if (occupied) {
       utensil._wx = host._wx + CELL;
-      utensil.localPosition.x = snapScalar(utensil._wx - utensil._parentWx);
+      syncItemLocalFromEditor(utensil);
     }
   }
   return true;

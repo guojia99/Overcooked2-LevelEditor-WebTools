@@ -697,10 +697,15 @@ const STATION_APPEARANCES = [
   // 只支持盖子节点 SkinnedMeshRenderer 或根节点 MeshRenderer）。蒙皮版（m_sk_crate_01
   // 带 SMR）：01/02/03/firewood ✓。静态网格版（Body/Lid/Image 各自 MeshRenderer、
   // 根无渲染器）：dlc03 crate_04 / dlc07 crate_05 / dlc08 circus / dlc09 winter /
-  // dlc13 camping_new —— 换肤后 Setup 必抛 MissingComponentException 并中断
-  // ResetAllPseudoPrefabs 循环，全部禁用。跳过：dispenser_coal_01（放置式出料）、
-  // dlc10_dispenser_crate（DynamicGridLocation 可推动）。
+  // dlc13 camping_new —— 编辑器侧由 LayoutEditorDispenserIconFix 补种子 MeshRenderer
+  // 后可在编排页换肤；游戏运行时 ClientItemCrateCosmeticDecisions 本就兼容。
+  // 跳过：dispenser_coal_01（放置式出料）、dlc10_dispenser_crate（可推动）。
   ["DispenserFirewoodSO", "dispenser_crate_firewood", "bundle250", "dlc05", "Assets/downloadablecontent/dlc05/dlc_assets/prefabs/shared kitchen/dispenser_crate_firewood.prefab"],
+  ["DispenserChristmasSO", "dispenser_crate_04", "bundle210", "core", "Assets/downloadablecontent/dlc03/dlc_assets/prefabs/shared kitchen/dispenser_crate_04.prefab"],
+  ["DispenserMedievalSO", "dispenser_crate_05", "bundle297", "core", "Assets/downloadablecontent/dlc07/dlc_assets/prefabs/shared kitchen/dispenser_crate_05.prefab"],
+  ["DispenserCircusSO", "dlc08_dispenser_crate_circus", "bundle359", "dlc08", "Assets/downloadablecontent/dlc08/dlc_assets/prefabs/shared kitchen/dlc08_dispenser_crate_circus.prefab"],
+  ["DispenserWinterSO", "dlc09_dispenser_crate_winter", "bundle405", "dlc09", "Assets/downloadablecontent/dlc09/dlc_assets/prefabs/sharedkitchen/dlc09_dispenser_crate_winter.prefab"],
+  ["DispenserWood13SO", "dlc13_dispenser_crate_camping_new", "bundle449", "dlc13", "Assets/downloadablecontent/dlc13/assets/prefabs/sharedkitchen/dlc13_dispenser_crate_camping_new.prefab"],
 ];
 
 function emitCounterAppearances() {

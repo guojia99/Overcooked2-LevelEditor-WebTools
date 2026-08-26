@@ -72,6 +72,7 @@ public static class LayoutEditorPseudoReload
                 LayoutEditorLog.LogWarning("[dispenser-icon] ReloadSceneLayoutPrefabs failed: " + ex);
             }
             LayoutEditorDispenserIconFix.SyncSeededIcons();
+            LayoutEditorGridSnapGuard.RelaxGridSnapOnScene();
             return;
         }
 
@@ -146,6 +147,7 @@ public static class LayoutEditorPseudoReload
         }
         LayoutEditorDispenserIconFix.SyncSeededIcons();
         LayoutEditorLog.Log("[dispenser-icon] SafeReinit: end");
+        LayoutEditorGridSnapGuard.RelaxGridSnapOnScene();
     }
 
     /// <summary>若本关卡集的自定义菜谱 bundle 已构建，则补入 levelInfo.dependencies，

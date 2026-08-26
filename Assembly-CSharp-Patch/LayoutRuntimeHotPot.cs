@@ -113,11 +113,10 @@ public static class LayoutRuntimeHotPot
                 continue;
             if (handler.IsBurning() || handler.IsCooked())
                 continue;
-            // 锅内无内容物不加热（与宿主 ServerCookingRegion 行为一致）
-            var iorder = handler.gameObject.RequestInterface<IOrderDefinition>();
-            var comp = iorder != null ? iorder.GetOrderComposition() : null;
-            var simple = comp != null ? comp.Simpilfy() : null;
-            if (simple == null || simple == AssembledDefinitionNode.NullNode)
+            // 锅内无内容物不加热（与宿主 ServerCookingRegion 行为一致）。
+            // 不用 GetOrderComposition：可移动火锅刚实例化时容器尚未同步，会 NRE。
+            var itemContainer = handler.GetComponent<ServerIngredientContainer>();
+            if (itemContainer == null || !itemContainer.HasContents())
                 continue;
             handler.Cook(deltaTime);
         }

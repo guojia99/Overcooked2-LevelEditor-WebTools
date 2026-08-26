@@ -4,7 +4,7 @@ import {
   EditorItem,
   EditorFloor
 } from "./state";
-import { uuid, newEditorKey } from "./coords";
+import { uuid, newEditorKey, syncItemLocalFromEditor, editorItemUnityWorldXZ } from "./coords";
 import { isPlayerItem } from "./renderItems";
 import { deleteSelected } from "./items";
 import {
@@ -84,12 +84,9 @@ export function pasteClipboard() {
     copy.hierarchyPath = copy.instanceId;
     copy._wx = nx;
     copy._wz = nz;
-    copy.localPosition = {
-      x: copy._wx - copy._parentWx,
-      y: copy.localPosition.y,
-      z: copy._wz - copy._parentWz,
-    };
-    copy.worldPosition = { x: copy._wx, y: copy.localPosition.y, z: copy._wz };
+    syncItemLocalFromEditor(copy);
+    const u = editorItemUnityWorldXZ(copy);
+    copy.worldPosition = { x: u.x, y: copy.localPosition.y, z: u.z };
     S.items.push(copy);
     pasted.push(editorKey);
   }
@@ -188,12 +185,9 @@ export function pasteFloors(): void {
     copy.hierarchyPath = copy.instanceId;
     copy._wx = nx;
     copy._wz = nz;
-    copy.localPosition = {
-      x: copy._wx - copy._parentWx,
-      y: copy.localPosition.y,
-      z: copy._wz - copy._parentWz,
-    };
-    copy.worldPosition = { x: copy._wx, y: copy.localPosition.y, z: copy._wz };
+    syncItemLocalFromEditor(copy);
+    const u = editorItemUnityWorldXZ(copy);
+    copy.worldPosition = { x: u.x, y: copy.localPosition.y, z: u.z };
     S.items.push(copy);
     pastedItems.push(editorKey);
   }

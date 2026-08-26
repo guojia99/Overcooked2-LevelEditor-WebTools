@@ -569,6 +569,10 @@ public class FloorDto
     public float imageOpacity;
     /** Image rotation in degrees (0/90/180/270, clockwise viewed from above). */
     public int imageRotation;
+    /** Material floor texture tiling in grid cells (repeat along width/depth).
+     *  Defaults to widthCells/depthCells when unset. */
+    public int materialTilingW;
+    public int materialTilingD;
     /** 空气地板：仅有可行走 Col_AirFloor 碰撞盒（Ground 层，几何与普通 Col_Floor
      *  相同），无可见 Plane。导出时按名称 Col_AirFloor 识别，写回时不创建可见面。 */
     public bool airFloor;

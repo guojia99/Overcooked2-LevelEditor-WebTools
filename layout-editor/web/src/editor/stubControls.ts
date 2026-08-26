@@ -148,6 +148,14 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   dlc09_cannon: "Cannon",
 };
 
+/** DLC13 莲花压力开关（大/小）— 地板层特殊道具，支持批量随机朝向。 */
+export function isLotusPressureSwitchItem(item: {
+  prefabAssetPath?: string;
+}): boolean {
+  const id = (prefabIdFromPath(item.prefabAssetPath) ?? "").toLowerCase();
+  return id.includes("lotuspressureswitch");
+}
+
 /** 酱料机可输出的酱料（黄芥末酱 / 番茄酱，含 DLC11 换皮，逻辑一致）。 */
 /** 特殊分配器（饮料机/酱料机）按 DLC 可输出的食材（实测 bundle 组件，dlc 各自一套）：
  *  dlc08_drink_machine → 饮料1/2/3；dlc11_drink_dispenser → 橙味汽水+沙士汽水；
@@ -237,6 +245,11 @@ export function isCollisionItem(it: EditorItem): boolean {
   return stubKindOf(it) === "Collision";
 }
 
+/** 核心层空气墙（隐形碰撞块，非场景 Col_Wall 等辅助碰撞）。 */
+export function isAirWallItem(it: EditorItem): boolean {
+  return !!it.airWall;
+}
+
 /** 原版厨具容量（bundle 实测 IngredientContainer.m_capacity）：
  *  汤锅族=3（多食材组合）、煎锅/炸篮/蒸锅等=1、搅拌碗/搅拌杯/烤盘=4、烤串=3、
  *  火锅大锅=4（bundle226）、烤菜烤盘=4（bundle297）。子串规则与后端
@@ -284,7 +297,8 @@ export function counterAppearanceHtml(item: EditorItem): string {
   const typeName = S.counterAppearances?.typeNames[ct!] ?? ct ?? "桌台";
   return `<div class="ctx-stub"><div class="ctx-stub-title">${typeName}外观</div>
     <label class="ctx-stub-row">外观 <select id="ctx-appear" class="ctx-input">${opts}</select></label>
-    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">当前：${escHtml(curName)}</div></div>`;
+    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">当前：${escHtml(curName)}</div>
+    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">写回 Unity 时会自动把外观所需 bundle 并入关卡 dependencies（只增不删）</div></div>`;
 }
 
 export function switchMaterialHtml(item: EditorItem): string {
@@ -597,6 +611,7 @@ export function wireStubControls(item: EditorItem) {
       pushHistory();
       ensureTs().startOn = (e.target as HTMLInputElement).checked;
       setStatus(`初始相位已设为${(e.target as HTMLInputElement).checked ? "开启" : "关闭"}（写回后生效）`);
+      draw();
     });
   }
 
@@ -1064,8 +1079,10 @@ export function wireCounterAppearance(item: EditorItem) {
     draw();
     const options = counterAppearanceOptions(item);
     const nameLookup = new Map(options.map((o) => [o.guid, o]));
-    const name = nameLookup.get(item.pseudoPrefabGuid ?? "")?.nameZh ?? "默认外观";
-    setStatus(`已更新外观为：${name}（写回后生效）`);
+    const picked = nameLookup.get(item.pseudoPrefabGuid ?? "");
+    const name = picked?.nameZh ?? "默认外观";
+    const bundleHint = picked?.bundleName ? `（需 ${picked.bundleName}，写回时自动并入 dependencies）` : "";
+    setStatus(`已更新外观为：${name}${bundleHint}`);
     // Re-show context menu to update the display
     dom.ctxMenuEl.classList.add("hidden");
   });

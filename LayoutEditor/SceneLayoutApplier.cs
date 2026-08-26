@@ -9,7 +9,12 @@ using LevelEditor;
 
 public static class SceneLayoutApplier
 {
-    private static readonly string[] ThemeBackgroundPrefabNames = { "Sky", "raft_water", "alien_gue" };
+    private static readonly string[] ThemeBackgroundPrefabNames = {
+        "Sky", "raft_water", "dynamic_raft_water", "Water_01", "alien_gue", "sand_01",
+        "poolwater_01", "poolwater_02", "h9_pool_water_01", "water", "water_01",
+        "p_dlc4_water_01", "p_dlc5_camp_water", "p_dlc5_camp_river",
+        "p_dlc10_water_01", "p_dlc13_water_02", "city_water",
+    };
 
     public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, bool itemsOnly = false)
     {
@@ -113,10 +118,17 @@ public static class SceneLayoutApplier
                     {
                         usedSceneObjectIds.Add(objectId);
                     Undo.RecordObject(t, "Layout Editor Move");
-                    var posFull = item.localPosition != null ? item.localPosition.ToVector3() : t.localPosition;
-                    posFull.x = SnapScalar(posFull.x, itemSnap);
-                    posFull.z = SnapScalar(posFull.z, itemSnap);
-                    t.localPosition = posFull;
+                    if (worldPos.HasValue)
+                    {
+                        t.position = worldPos.Value;
+                    }
+                    else
+                    {
+                        var posFull = item.localPosition != null ? item.localPosition.ToVector3() : t.localPosition;
+                        posFull.x = SnapScalar(posFull.x, itemSnap);
+                        posFull.z = SnapScalar(posFull.z, itemSnap);
+                        t.localPosition = posFull;
+                    }
                     var rotX = item.localRotationX != 0f ? item.localRotationX : t.localEulerAngles.x;
                     t.localEulerAngles = new Vector3(rotX, rotY, t.localEulerAngles.z);
                     ApplyItemScale(t, item);
@@ -1101,12 +1113,109 @@ public static class SceneLayoutApplier
         {
             mat = AssetDatabase.LoadAssetAtPath<Material>(floor.materialAssetPath);
         }
+        else if (!string.IsNullOrEmpty(floor.materialName))
+        {
+            string resolvedGuid, resolvedPath;
+            if (LayoutEditorFloorMaterialsApi.TryResolveFloorMaterialByName(floor.materialName, out resolvedGuid, out resolvedPath))
+                mat = AssetDatabase.LoadAssetAtPath<Material>(resolvedPath);
+        }
 
         if (mat != null)
         {
             Undo.RecordObject(mr, "Layout Editor Floor Material");
-            mr.sharedMaterial = mat;
-            ApplyFloorTiling(mr, mat, floor);
+            var baked = BakedMaterialFloorMaterial(floor, mat);
+            mr.sharedMaterial = baked ?? mat;
+        }
+        else if (!string.IsNullOrEmpty(floor.materialName)
+            && string.IsNullOrEmpty(floor.imageTexturePath)
+            && !(floor.tintEnabled && !string.IsNullOrEmpty(floor.tintColor)))
+        {
+            var where = !string.IsNullOrEmpty(floor.hierarchyPath) ? floor.hierarchyPath : floor.instanceId;
+            if (string.IsNullOrEmpty(where))
+                where = t.name;
+            LayoutEditorLog.LogWarning("Layout Editor: could not resolve floor material \""
+                + floor.materialName + "\" for " + where);
+        }
+    }
+
+    private static int EffectiveMaterialTilingW(FloorDto floor)
+    {
+        if (floor == null) return 1;
+        return floor.materialTilingW > 0 ? floor.materialTilingW
+            : (floor.widthCells > 0 ? floor.widthCells : 1);
+    }
+
+    private static int EffectiveMaterialTilingD(FloorDto floor)
+    {
+        if (floor == null) return 1;
+        return floor.materialTilingD > 0 ? floor.materialTilingD
+            : (floor.depthCells > 0 ? floor.depthCells : 1);
+    }
+
+    private static readonly System.Collections.Generic.Dictionary<string, Material> _materialFloorMats =
+        new System.Collections.Generic.Dictionary<string, Material>();
+
+    /// <summary>材质地板：按 tiling 格数烘焙 _MainTex/_BumpMap ST 到材质实例（非 MPB），
+    ///  与图片地板同策略，保证场景保存 / bundle 导出后平铺不丢失。</summary>
+    private static Material BakedMaterialFloorMaterial(FloorDto floor, Material source)
+    {
+        if (source == null) return null;
+        int tilingW = EffectiveMaterialTilingW(floor);
+        int tilingD = EffectiveMaterialTilingD(floor);
+        int tagW, tagH;
+        bool hasTag = TryParseFloorSizeTag(source.name, out tagW, out tagH);
+        if (hasTag && tilingW == tagW && tilingD == tagH)
+            return source;
+
+        var guidKey = !string.IsNullOrEmpty(floor.materialGuid) ? floor.materialGuid : source.name;
+        var key = guidKey + "|tiling" + tilingW + "x" + tilingD;
+        Material m;
+        if (_materialFloorMats.TryGetValue(key, out m) && m != null)
+            return m;
+
+        m = new Material(source);
+        m.name = source.name + "_tiling" + tilingW + "x" + tilingD;
+        if (hasTag)
+            ApplyMaterialFloorStScale(m, source, tilingW, tilingD, tagW, tagH);
+        else
+            ApplyMaterialFloorDirectTiling(m, tilingW, tilingD);
+        _materialFloorMats[key] = m;
+        return m;
+    }
+
+    private static void ApplyMaterialFloorStScale(Material dest, Material source,
+        int tilingW, int tilingD, int tagW, int tagH)
+    {
+        if (source.HasProperty("_MainTex"))
+        {
+            var scale = source.GetTextureScale("_MainTex");
+            var offset = source.GetTextureOffset("_MainTex");
+            dest.SetTextureScale("_MainTex", new Vector2(
+                scale.x * tilingW / tagW, scale.y * tilingD / tagH));
+            dest.SetTextureOffset("_MainTex", offset);
+        }
+        if (source.HasProperty("_BumpMap"))
+        {
+            var scale = source.GetTextureScale("_BumpMap");
+            var offset = source.GetTextureOffset("_BumpMap");
+            dest.SetTextureScale("_BumpMap", new Vector2(
+                scale.x * tilingW / tagW, scale.y * tilingD / tagH));
+            dest.SetTextureOffset("_BumpMap", offset);
+        }
+    }
+
+  /** 无 sizeTag 材质：与图片 tile 模式相同，翻转 U 轴以匹配 Plane UV。 */
+    private static void ApplyMaterialFloorDirectTiling(Material m, int tilingW, int tilingD)
+    {
+        if (m.HasProperty("_MainTex"))
+        {
+            m.SetTextureScale("_MainTex", new Vector2(-tilingW, tilingD));
+            m.SetTextureOffset("_MainTex", new Vector2(tilingW, 0f));
+        }
+        if (m.HasProperty("_BumpMap"))
+        {
+            m.SetTextureScale("_BumpMap", new Vector2(-tilingW, tilingD));
+            m.SetTextureOffset("_BumpMap", new Vector2(tilingW, 0f));
         }
     }
 
@@ -1125,43 +1234,6 @@ public static class SceneLayoutApplier
         return int.TryParse(m.Groups[1].Value, out w)
             && int.TryParse(m.Groups[2].Value, out h)
             && w > 0 && h > 0;
-    }
-
-    /// <summary>格子地板改宽/改深后按比例重算材质 tiling：尺寸材质（mat_*_WxH）
-    ///  的 _MainTex/_BumpMap ST 是按 sizeTag 格数烘焙的，Plane 缩放后不改 ST 纹理
-    ///  会被拉伸。按 bakedST × (当前格数 / sizeTag 格数) 写 MaterialPropertyBlock
-    ///  （与 image floor 同机制，保留原 offset），维持作者意图的每格贴图密度；
-    ///  无 sizeTag 或格数恰好一致时不写块（材质烘焙值即正确）。</summary>
-    private static void ApplyFloorTiling(MeshRenderer mr, Material mat, FloorDto floor)
-    {
-        int tagW, tagH;
-        if (!TryParseFloorSizeTag(mat.name, out tagW, out tagH))
-            return;
-        if (floor == null || floor.widthCells <= 0 || floor.depthCells <= 0)
-            return;
-        if (floor.widthCells == tagW && floor.depthCells == tagH)
-            return;
-
-        var block = new MaterialPropertyBlock();
-        if (mat.HasProperty("_MainTex"))
-        {
-            var scale = mat.GetTextureScale("_MainTex");
-            var offset = mat.GetTextureOffset("_MainTex");
-            block.SetVector("_MainTex_ST", new Vector4(
-                scale.x * floor.widthCells / tagW,
-                scale.y * floor.depthCells / tagH,
-                offset.x, offset.y));
-        }
-        if (mat.HasProperty("_BumpMap"))
-        {
-            var scale = mat.GetTextureScale("_BumpMap");
-            var offset = mat.GetTextureOffset("_BumpMap");
-            block.SetVector("_BumpMap_ST", new Vector4(
-                scale.x * floor.widthCells / tagW,
-                scale.y * floor.depthCells / tagH,
-                offset.x, offset.y));
-        }
-        mr.SetPropertyBlock(block);
     }
 
     private static readonly System.Collections.Generic.Dictionary<string, Material> _imageFloorMats =
@@ -1733,7 +1805,7 @@ public static class SceneLayoutApplier
         var n = id.ToLowerInvariant();
         if (n == "sky" || n.Contains("background"))
             return true;
-        if (id == "raft_water" || id == "alien_gue" || id == "sand_01")
+        if (id == "raft_water" || id == "Water_01" || id == "alien_gue" || id == "sand_01")
             return true;
         if (id == "p_dlc5_camp_water" || id == "p_dlc5_camp_river")
             return true;
@@ -1804,10 +1876,11 @@ public static class SceneLayoutApplier
                     go.transform.localScale = sc;
             }
             var col = go.AddComponent<BoxCollider>();
-            // 空气墙：1×1 占地、高 1.132（魔法数，导出时据此识别，避免与其他碰撞混淆）
+            // 空气墙：1 格占地 = GridCellSize（1.2）×1.132 高；1.132 为魔法数供导出识别。
+            var cell = LayoutEditorCatalogLookup.GridCellSize;
             col.size = item.airWall
-                ? new Vector3(1f, 1.132f, 1f)
-                : new Vector3(1.2f, 2f, 1.2f);
+                ? new Vector3(cell, 1.132f, cell)
+                : new Vector3(cell, 2f, cell);
             if (item.colliderCenter != null)
                 col.center = item.colliderCenter.ToVector3();
             if (!string.IsNullOrEmpty(item.instanceId))
@@ -1832,14 +1905,15 @@ public static class SceneLayoutApplier
                 item.localRotationY,
                 item.localRotationZ != 0f ? item.localRotationZ : t.localEulerAngles.z);
             ApplyItemScale(t, item);
-            // 修复空气墙碰撞几何：确保 size 为魔法数 1×1×1.132，center 与文档一致。
+            // 修复空气墙碰撞几何：水平 1.2×1.2（一格）、高 1.132，center 与文档一致。
             if (item.airWall)
             {
                 var col = t.GetComponent<BoxCollider>();
                 if (col != null)
                 {
                     Undo.RecordObject(col, "Layout Editor Collision");
-                    col.size = new Vector3(1f, 1.132f, 1f);
+                    var cell = LayoutEditorCatalogLookup.GridCellSize;
+                    col.size = new Vector3(cell, 1.132f, cell);
                     if (item.colliderCenter != null)
                         col.center = item.colliderCenter.ToVector3();
                 }

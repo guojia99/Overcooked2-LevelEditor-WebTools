@@ -1,6 +1,21 @@
 import { openModal, closeModal } from "./modals";
 
-export type NavPage = "layout" | "manage" | "custom-recipes" | "recipes";
+export type NavPage = "layout" | "manage" | "custom-recipes" | "recipes" | "guide";
+
+const GUIDE_FEATURES: [string, string, string][] = [
+  ["🗺️", "关卡编辑器", "俯视图编排物品 / 装饰 / 地板层，叠放吸附、半格对齐、旋转删除，一键写回 Unity 场景"],
+  ["📋", "关卡管理", "关卡集与关卡增删改，1P~4P 人数配置、音频与菜谱绑定"],
+  ["📖", "菜谱清单列表", "全部菜谱按类型分组陈列，搜索筛选，按烹饪步骤展示食材与锅具"],
+  ["🍽️", "自定义菜谱", "可视化组装配方、上传 3D 模型（FBX/OBJ），浏览器内在线预览"],
+  ["⚙️", "与 Unity 无缝协作", "HTTP 桥接自动 Prepare For Building，资源目录一键生成"],
+];
+
+export function guideFeatureListHtml(): string {
+  return GUIDE_FEATURES.map(
+    ([icon, name, desc]) =>
+      `<li><span>${icon}</span><b>${name}</b><span class="af-desc">${desc}</span></li>`
+  ).join("");
+}
 
 const GITHUB_URL = "https://github.com/guojia99/Overcooked2-LevelEditor-WebTools";
 
@@ -24,26 +39,11 @@ export function navHtml(active: NavPage): string {
     <button type="button" class="topnav-link${active === "manage" ? " active" : ""}" data-nav="manage">📋 关卡管理</button>
     <button type="button" class="topnav-link${active === "custom-recipes" ? " active" : ""}" data-nav="custom-recipes">🍽️ 自定义菜谱</button>
     <button type="button" class="topnav-link${active === "recipes" ? " active" : ""}" data-nav="recipes">📖 菜谱清单列表</button>
+    <button type="button" class="topnav-link${active === "guide" ? " active" : ""}" data-nav="guide">📘 功能说明</button>
     <span class="topnav-spacer"></span>
     ${sceneControls}
     <button type="button" class="topnav-github" data-nav-github title="作者介绍 · guojia99">${GITHUB_SVG}<span>关于</span></button>
   </nav>`;
-}
-
-function aboutFeatureList(): string {
-  const features: [string, string, string][] = [
-    ["🗺️", "关卡编辑器", "俯视图编排物品 / 装饰 / 地板层，叠放吸附、半格对齐、旋转删除，一键写回 Unity 场景"],
-    ["📋", "关卡管理", "关卡集与关卡增删改，1P~4P 人数配置、音频与菜谱绑定"],
-    ["📖", "菜谱清单列表", "全部菜谱按类型分组陈列，搜索筛选，按烹饪步骤展示食材与锅具"],
-    ["🍽️", "自定义菜谱", "可视化组装配方、上传 3D 模型（FBX/OBJ），浏览器内在线预览"],
-    ["⚙️", "与 Unity 无缝协作", "HTTP 桥接自动 Prepare For Building，资源目录一键生成"],
-  ];
-  return features
-    .map(
-      ([icon, name, desc]) =>
-        `<li><span>${icon}</span><b>${name}</b><span class="af-desc">${desc}</span></li>`
-    )
-    .join("");
 }
 
 function openAboutModal(): void {
@@ -60,7 +60,7 @@ function openAboutModal(): void {
     <p class="about-desc">一个把 Overcooked!2 关卡制作搬进浏览器的工具：俯视图编排、关卡与菜谱管理，通过 Unity 桥接直接写回工程场景。更多源码、使用说明与更新，欢迎前往 GitHub 仓库。</p>
     <a class="about-link" href="${GITHUB_URL}" target="_blank" rel="noopener">${GITHUB_SVG} GitHub 仓库</a>
     <h3 class="about-sub">工具功能</h3>
-    <ul class="about-features">${aboutFeatureList()}</ul>
+    <ul class="about-features">${guideFeatureListHtml()}</ul>
     `,
     `<button type="button" class="modal-btn primary" data-cancel>关闭</button>`
   );
