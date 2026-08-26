@@ -28,12 +28,11 @@ public class ServerTriggerZone : ServerSynchroniserBase
 		{
 			return;
 		}
-		for (int i = 0; i < m_collidersOccupying.Count; i++)
+		for (int i = m_collidersOccupying.Count - 1; i >= 0; i--)
 		{
-			if (!m_collidersOccupying[i].enabled)
-			{
-				m_collidersOccupying.Remove(m_collidersOccupying[i]);
-			}
+			var col = m_collidersOccupying[i];
+			if (col == null || !col.enabled)
+				m_collidersOccupying.RemoveAt(i);
 		}
 	}
 

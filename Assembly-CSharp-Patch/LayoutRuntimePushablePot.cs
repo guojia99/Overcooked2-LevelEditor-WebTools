@@ -90,6 +90,20 @@ namespace LevelEditor
 
         public override void ResetChild()
         {
+            // 运行期防线：网络同步已启动（关卡加载扫描完成）后，载具/锅上已被
+            // EntitySerialisationRegistry 注册并挂上 ServerInteractable /
+            // ServerPushableObject / ServerCookableContainer 等扫描组件。此时
+            // ClearChild 的 DestroyImmediate 会把它们连实体注册一起永久销毁，
+            // 重建出的对象没有同步组件（「空气锅」根因），因此拒绝重建。
+            // 编辑态、加载态（同步未启动）与重开关卡（同步已停止）不受影响。
+            if (Application.isPlaying
+                && childGameObject != null
+                && MultiplayerController.IsSynchronisationActive()
+                && childGameObject.GetComponent<LayoutPushableVoidFallTarget>() != null)
+            {
+                return;
+            }
+
             if (stub == null)
                 stub = GetComponent<PseudoPrefabStub>();
 
@@ -135,6 +149,10 @@ namespace LevelEditor
                 //  CookableContainer.m_approvedContentsList（仿宿主 CookingUtensil.Setup）。
                 ApplyAllowedIngredients(pot);
             }
+
+            // 空洞/水面坠落检测：LayoutRuntimePushableVoidFall 只扫描此 marker。
+            if (childGameObject.GetComponent<LayoutPushableVoidFallTarget>() == null)
+                childGameObject.AddComponent<LayoutPushableVoidFallTarget>();
         }
     }
 }

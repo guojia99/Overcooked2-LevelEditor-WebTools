@@ -24,54 +24,115 @@ public class LayoutRuntimeTimedCookingSwitch : MonoBehaviour
     public bool m_startOn = true;
 
     private CookingRegion m_region;
-    private bool m_running;
+    private bool m_cycleStarted;
+    /** 当前是否处于开启相位（与 m_startOn 初始值一致，随后交替翻转）。 */
+    private bool m_phaseOn;
+    private Coroutine m_endOfFrameDrive;
 
-    private void Update()
+    /// 定时开关启用时，当前是否处于「加热 / 有火」相位（供 LayoutRuntimeHotPot 等查询）。
+    public bool IsHeatingPhase()
     {
-        if (m_running)
-            return;
+        return !m_enabled || m_phaseOn;
+    }
+
+    private void OnEnable()
+    {
+        m_cycleStarted = false;
+        m_phaseOn = m_startOn;
+        m_endOfFrameDrive = StartCoroutine(EndOfFrameDrive());
+    }
+
+    private void OnDisable()
+    {
+        if (m_endOfFrameDrive != null)
+        {
+            StopCoroutine(m_endOfFrameDrive);
+            m_endOfFrameDrive = null;
+        }
+        // 编辑器停止 Play / 组件被移除：恢复灶台可用，不留禁用残留
+        if (m_region != null)
+            m_region.enabled = true;
+        m_region = null;
+        m_cycleStarted = false;
+    }
+
+    private IEnumerator EndOfFrameDrive()
+    {
+        while (true)
+        {
+            yield return new WaitForEndOfFrame();
+            if (!TryBindRegion())
+                continue;
+            if (!m_cycleStarted)
+            {
+                m_phaseOn = m_startOn;
+                m_cycleStarted = true;
+                StartCoroutine(Cycle());
+            }
+            ApplyRegionState();
+        }
+    }
+
+    private bool TryBindRegion()
+    {
+        if (m_region != null)
+            return true;
         try
         {
             var pseudo = GetComponent<PseudoPrefab>();
-            if (pseudo == null)
-                return;
-            var child = pseudo.childGameObject;
-            if (child == null)
-                return; // child 尚未生成（ResetChild 未执行），下帧再试
-            if (m_region == null)
-                m_region = child.GetComponentInChildren<CookingRegion>();
-            if (m_region == null)
-                return;
+            if (pseudo == null || pseudo.childGameObject == null)
+                return false;
+            m_region = pseudo.childGameObject.GetComponentInChildren<CookingRegion>();
+            return m_region != null;
         }
         catch (System.Exception)
         {
-            return; // ResetChild 中途销毁/重建，下帧重试
+            return false;
         }
+    }
 
-        m_running = true;
-        StartCoroutine(Cycle());
+    private void ApplyRegionState()
+    {
+        if (m_region == null)
+            return;
+        bool on = IsHeatingPhase();
+        m_region.enabled = on;
+        SyncFlameVisuals(on);
+    }
+
+    private void SyncFlameVisuals(bool on)
+    {
+        if (m_region.m_flameEffects != null)
+        {
+            foreach (var pfx in m_region.m_flameEffects)
+            {
+                if (pfx == null)
+                    continue;
+                if (on && !pfx.isPlaying)
+                    pfx.Play();
+                else if (!on && pfx.isPlaying)
+                    pfx.Stop();
+            }
+        }
+        if (m_region.m_glowEffect != null)
+        {
+            if (on && !m_region.m_glowEffect.isPlaying)
+                m_region.m_glowEffect.Play();
+            else if (!on && m_region.m_glowEffect.isPlaying)
+                m_region.m_glowEffect.Stop();
+        }
     }
 
     private IEnumerator Cycle()
     {
-        bool on = m_startOn;
         var waitOn = new WaitForSeconds(Mathf.Max(3f, m_onSeconds));
         var waitOff = new WaitForSeconds(Mathf.Max(3f, m_offSeconds));
         while (true)
         {
             if (m_region == null)
-                yield break; // 灶台被销毁
-            // 非启用状态：保持开启，等配置重新生效（编辑器写回后重建组件）
-            m_region.enabled = !m_enabled || on;
-            yield return on ? waitOn : waitOff;
-            on = !on;
+                yield break;
+            yield return m_phaseOn ? waitOn : waitOff;
+            m_phaseOn = !m_phaseOn;
         }
-    }
-
-    private void OnDisable()
-    {
-        // 编辑器停止 Play / 组件被移除：恢复灶台可用，不留禁用残留
-        if (m_region != null)
-            m_region.enabled = true;
     }
 }
