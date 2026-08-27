@@ -32,7 +32,8 @@ import {
   nudgeItem,
   syncLocalFromWorld,
   deleteSelected,
-  updateCtxCoord
+  updateCtxCoord,
+  rotateItemByDelta
 } from "../items";
 import {
   copySelection,
@@ -58,6 +59,15 @@ import {
   selectionHeightTargetCount,
   wireSelectionHeightRow
 } from "../selectionHeight";
+import {
+  batchRotationRowHtml,
+  batchDisperseRowHtml,
+  batchNudgeRowLabel,
+  batchNudgeSelected,
+  isBatchTransform,
+  wireBatchRotationRow,
+  wireBatchDisperseRow,
+} from "../selectionTransform";
 import { updateFloorBar } from "../floorPalette";
 
 export function moveControlCtxHtml(item: EditorItem): string {
@@ -111,8 +121,26 @@ export function enableMoveControl(item: EditorItem): void {
 /** 多选地板/物品时仅显示批量高度菜单（地板层右键）。 */
 export function showBatchHeightMenu(clientX: number, clientY: number) {
   if (selectionHeightTargetCount() < 2) return;
+  const batch = isBatchTransform();
+  const step = S.freeSnapStep;
+  const nudgeLabel = batchNudgeRowLabel() || `微移 ${step.toFixed(stepDecimals(step))}`;
   dom.ctxMenuEl.innerHTML = `
-    <div class="ctx-head">批量调整高度</div>
+    <div class="ctx-head">批量调整</div>
+    ${
+      batch
+        ? `<div class="ctx-nudge-row">
+      <span class="ctx-label">${nudgeLabel}</span>
+      <div class="ctx-nudge">
+        <button type="button" data-batch-nudge="-${step},0" title="左移 ${step}">←</button>
+        <button type="button" data-batch-nudge="0,${step}" title="上移 ${step}">↑</button>
+        <button type="button" data-batch-nudge="0,-${step}" title="下移 ${step}">↓</button>
+        <button type="button" data-batch-nudge="${step},0" title="右移 ${step}">→</button>
+      </div>
+    </div>
+    ${batchRotationRowHtml()}
+    ${batchDisperseRowHtml()}`
+        : ""
+    }
     ${selectionHeightRowHtml()}
     <p class="close-hint">地板按行走面高度 · 物品按本地 Y · Esc 关闭</p>
   `;
@@ -137,6 +165,22 @@ export function showBatchHeightMenu(clientX: number, clientY: number) {
     draw();
     updateFloorBar();
   });
+  wireBatchRotationRow(dom.ctxMenuEl, () => {
+    draw();
+    updateFloorBar();
+  });
+  wireBatchDisperseRow(dom.ctxMenuEl, () => {
+    draw();
+    updateFloorBar();
+  });
+  dom.ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-batch-nudge]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const parts = btn.dataset.batchNudge!.split(",").map(Number);
+      batchNudgeSelected(parts[0] || 0, parts[1] || 0);
+      draw();
+      updateFloorBar();
+    });
+  });
 }
 
 export function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
@@ -144,6 +188,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   const isSurface = isSurfaceItem(cat);
   const isPlayer = isPlayerItem(item);
   const batchHeight = selectionHeightTargetCount() >= 2;
+  const batchTransform = isBatchTransform();
   const resizable = isResizableBackgroundItem(item) || isAirWallItem(item);
   const { wCells, dCells } = isAirWallItem(item) ? airWallCells(item) : itemPlaneCells(item);
   const stubHtml = stubControlsHtml(item);
@@ -172,7 +217,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     </div>`
     }
     <div class="ctx-nudge-row">
-      <span class="ctx-label">微移 ${S.freeSnapStep.toFixed(stepDecimals(S.freeSnapStep))}</span>
+      <span class="ctx-label">${batchTransform ? batchNudgeRowLabel() || `微移 ${S.freeSnapStep.toFixed(stepDecimals(S.freeSnapStep))}` : `微移 ${S.freeSnapStep.toFixed(stepDecimals(S.freeSnapStep))}`}</span>
       <div class="ctx-nudge">
         <button type="button" data-nudge="-${S.freeSnapStep},0" title="左移 ${S.freeSnapStep}">←</button>
         <button type="button" data-nudge="0,${S.freeSnapStep}" title="上移 ${S.freeSnapStep}">↑</button>
@@ -197,7 +242,9 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     ${
       isPlayer
         ? ""
-        : `<div class="ctx-nudge-row">
+        : batchTransform
+          ? `${batchRotationRowHtml()}${batchDisperseRowHtml()}`
+          : `<div class="ctx-nudge-row">
       <span class="ctx-label">旋转 <span id="ctx-rot" class="ctx-scale-val">${rot}°</span></span>
       <div class="ctx-nudge">
         <button type="button" data-rot="-90" title="逆时针 90°">−90°</button>
@@ -282,6 +329,12 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   dom.ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-nudge]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const parts = btn.dataset.nudge!.split(",").map(Number);
+      if (batchTransform) {
+        batchNudgeSelected(parts[0] || 0, parts[1] || 0, parts[2] || 0);
+        draw();
+        updateFloorBar();
+        return;
+      }
       nudgeItem(item, parts[0] || 0, parts[1] || 0, parts[2] || 0);
       const yEl = document.getElementById("ctx-y-val");
       if (yEl) yEl.textContent = item.localPosition.y.toFixed(stepDisplayDecimals(S.freeSnapStep));
@@ -307,6 +360,16 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   document.getElementById("ctx-z-input")?.addEventListener("change", applyWorldPos);
   if (batchHeight) {
     wireSelectionHeightRow(dom.ctxMenuEl, () => {
+      draw();
+      updateFloorBar();
+    });
+  }
+  if (batchTransform) {
+    wireBatchRotationRow(dom.ctxMenuEl, () => {
+      draw();
+      updateFloorBar();
+    });
+    wireBatchDisperseRow(dom.ctxMenuEl, () => {
       draw();
       updateFloorBar();
     });
@@ -350,24 +413,44 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
       draw();
     });
   });
-  const applyRotation = (deg: number) => {
+  let rotInputPushed = false;
+  const applyRotationAbsolute = (deg: number) => {
     if (!isFinite(deg)) return;
+    const target = normalizeRot(deg);
+    const delta = normalizeRot(target - item.localRotationY);
+    if (delta === 0) return;
+    if (!rotInputPushed) {
+      pushHistory();
+      rotInputPushed = true;
+    }
+    rotateItemByDelta(item, delta);
+    S.dirty = true;
+    const lbl = document.getElementById("ctx-rot");
+    if (lbl) lbl.textContent = `${normalizeRot(item.localRotationY)}°`;
+    draw();
+  };
+  const applyRotationDelta = (delta: number) => {
+    if (!delta || !isFinite(delta)) return;
     pushHistory();
-    item.localRotationY = normalizeRot(deg);
-    syncLocalFromWorld(item);
+    rotateItemByDelta(item, delta);
+    S.dirty = true;
     const lbl = document.getElementById("ctx-rot");
     if (lbl) lbl.textContent = `${normalizeRot(item.localRotationY)}°`;
     const inp = document.getElementById("ctx-rot-input") as HTMLInputElement | null;
-    if (inp && document.activeElement !== inp) inp.value = String(normalizeRot(item.localRotationY));
+    if (inp) inp.value = String(normalizeRot(item.localRotationY));
     draw();
   };
-  dom.ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-rot]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      applyRotation(item.localRotationY + parseFloat(btn.dataset.rot!));
+  if (!batchTransform) {
+    dom.ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-rot]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        applyRotationDelta(parseFloat(btn.dataset.rot!));
+      });
     });
-  });
-  const rotInput = document.getElementById("ctx-rot-input") as HTMLInputElement | null;
-  rotInput?.addEventListener("change", () => applyRotation(parseFloat(rotInput.value)));
+    const rotInput = document.getElementById("ctx-rot-input") as HTMLInputElement | null;
+    const onRotInput = () => applyRotationAbsolute(parseFloat(rotInput?.value ?? ""));
+    rotInput?.addEventListener("input", onRotInput);
+    rotInput?.addEventListener("change", onRotInput);
+  }
   wireStubControls(item);
   wireItemVariant(item);
   dom.ctxMenuEl.querySelector('[data-act="detail"]')?.addEventListener("click", () => {
@@ -405,7 +488,8 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   });
   dom.ctxMenuEl.querySelector('[data-act="paste"]')?.addEventListener("click", () => {
     hideContextMenu();
-    pasteClipboard();
+    const rect = dom.canvas.getBoundingClientRect();
+    pasteClipboard(clientX - rect.left, clientY - rect.top);
   });
 }
 

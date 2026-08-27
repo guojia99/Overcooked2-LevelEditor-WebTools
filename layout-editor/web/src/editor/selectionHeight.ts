@@ -24,6 +24,24 @@ export function selectionHeightTargetCount(): number {
   return selectedFloorsForHeight().length + selectedItemsForHeight().length;
 }
 
+export function primarySelectionHeight(): number | null {
+  if (S.selectedKey) {
+    const it = S.items.find((i) => i._editorKey === S.selectedKey);
+    if (it && S.selectedKeys.has(it._editorKey) && !isPlayerItem(it)) {
+      return it.localPosition?.y ?? 0;
+    }
+  }
+  if (S.selectedFloorKey && S.selectedFloorKeys.has(S.selectedFloorKey)) {
+    const f = S.floors.find((x) => x._key === S.selectedFloorKey);
+    if (f) return floorWalkY(f);
+  }
+  const floors = selectedFloorsForHeight();
+  if (floors.length) return floorWalkY(floors[0]);
+  const items = selectedItemsForHeight();
+  if (items.length) return items[0].localPosition?.y ?? 0;
+  return null;
+}
+
 export function selectionHeightSummary(): {
   floorCount: number;
   itemCount: number;
@@ -37,11 +55,12 @@ export function selectionHeightSummary(): {
   for (const it of items) ys.push(it.localPosition?.y ?? 0);
   const mixed =
     ys.length > 1 && ys.some((y) => Math.abs(y - ys[0]) > 1e-4);
+  const primary = primarySelectionHeight();
   return {
     floorCount: floors.length,
     itemCount: items.length,
     mixed,
-    displayY: ys.length ? ys[0] : null,
+    displayY: primary ?? (ys.length ? ys[0] : null),
   };
 }
 
@@ -137,18 +156,19 @@ export function selectionHeightRowHtml(): string {
   const step = S.freeSnapStep;
   const d = stepDisplayDecimals(step);
   const dec = stepDecimals(step);
-  const val =
-    mixed || displayY == null ? "" : displayY.toFixed(d);
+  const val = displayY == null ? "" : displayY.toFixed(d);
+  const mixedTag = mixed ? ' <span class="ctx-mixed-tag">混合</span>' : "";
   const parts: string[] = [];
   if (floorCount) parts.push(`${floorCount} 地板`);
   if (itemCount) parts.push(`${itemCount} 物品`);
   return `
     <div class="ctx-nudge-row fb-batch-h">
-      <span class="ctx-label">批量高度 <span class="ctx-scale-val" id="sel-h-count">${parts.join(" · ")}</span></span>
+      <span class="ctx-label">批量高度${mixedTag} <span class="ctx-scale-val" id="sel-h-count">${parts.join(" · ")}</span></span>
       <div class="ctx-nudge">
         <button type="button" data-sel-h-dy="-${step}" title="全体降低 ${step}">−${step.toFixed(dec)}</button>
-        <input type="number" id="sel-h-input" class="ctx-input ctx-pos-input" step="${step}" value="${val}" placeholder="${mixed ? "混合" : "Y"}" title="统一设为该高度（回车生效）" />
+        <input type="number" id="sel-h-input" class="ctx-input ctx-pos-input" step="${step}" value="${val}" placeholder="Y" title="统一设为该高度（回车或同步）" />
         <button type="button" data-sel-h-dy="${step}" title="全体升高 ${step}">+${step.toFixed(dec)}</button>
+        <button type="button" id="sel-h-sync" class="ctx-sync-btn" title="将全部同步为输入框中的高度">同步</button>
       </div>
     </div>`;
 }
@@ -165,8 +185,22 @@ export function wireSelectionHeightRow(
     const { mixed, displayY } = selectionHeightSummary();
     if (document.activeElement === input) return;
     const d = stepDisplayDecimals(S.freeSnapStep);
-    input.value = mixed || displayY == null ? "" : displayY.toFixed(d);
-    input.placeholder = mixed ? "混合" : "Y";
+    input.value = displayY == null ? "" : displayY.toFixed(d);
+    input.placeholder = "Y";
+    const tag = root.querySelector(".ctx-mixed-tag");
+    if (tag) tag.classList.toggle("hidden", !mixed);
+  };
+
+  const applyAbsolute = () => {
+    const raw = input.value.trim();
+    if (!raw) return;
+    const y = parseFloat(raw);
+    if (!isFinite(y)) return;
+    const result = batchAdjustSelectionHeight({ absoluteY: y, liftItemsOnFloors: true });
+    if (result.floors + result.items === 0) return;
+    refreshVal();
+    onApplied?.(result);
+    setStatus(`已将选中项高度设为 ${snapValue(y, S.freeSnapStep).toFixed(stepDisplayDecimals(S.freeSnapStep))}`);
   };
 
   root.querySelectorAll<HTMLButtonElement>("[data-sel-h-dy]").forEach((btn) => {
@@ -184,15 +218,6 @@ export function wireSelectionHeightRow(
     });
   });
 
-  input.addEventListener("change", () => {
-    const raw = input.value.trim();
-    if (!raw) return;
-    const y = parseFloat(raw);
-    if (!isFinite(y)) return;
-    const result = batchAdjustSelectionHeight({ absoluteY: y, liftItemsOnFloors: true });
-    if (result.floors + result.items === 0) return;
-    refreshVal();
-    onApplied?.(result);
-    setStatus(`已将选中项高度设为 ${snapValue(y, S.freeSnapStep).toFixed(stepDisplayDecimals(S.freeSnapStep))}`);
-  });
+  input.addEventListener("change", applyAbsolute);
+  root.querySelector("#sel-h-sync")?.addEventListener("click", applyAbsolute);
 }

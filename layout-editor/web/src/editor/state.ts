@@ -118,7 +118,15 @@ export interface MovePreview {
 export interface PickCandidate {
   title: string;
   sub: string;
+  /** 是否已在当前选区中（弹窗内显示 ✓ 标记） */
+  selected?: boolean;
   onPick: () => void;
+}
+
+export interface PickTipHeaderAction {
+  label: string;
+  sub?: string;
+  onClick: () => void;
 }
 
 export interface FloorHit {
@@ -347,6 +355,10 @@ export const S = {
   panX: 0,
   panY: 0,
   dragCatalog: null as CatalogItem | null,
+  /** 调色板双击武装：拖到画布时按 count 网格放置。 */
+  palettePick: null as { guid: string; count: number } | null,
+  /** 当前 palette 拖放批次数（dragstart 写入，dragend 重置）。 */
+  dragCatalogBatch: 1,
   dragCombo: null as ComboDef | null,
   dragItemKey: null as string | null,
   dragOffsetX: 0,
@@ -403,4 +415,6 @@ export const S = {
   teleportalLabels: new Map<string, string>(),
   paramLabels: new Map<string, string>(),
   paramColors: new Map<string, string>(),
+  /** 多选批量旋转：group=绕选中集中心；individual=各项原地旋转。默认整体。 */
+  batchRotateMode: "group" as "group" | "individual",
 };

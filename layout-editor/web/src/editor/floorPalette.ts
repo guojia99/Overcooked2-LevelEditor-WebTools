@@ -266,11 +266,11 @@ export function updateFloorBar() {
   const selCat = selItem ? S.catalogByGuid.get(selItem.prefabGuid) : undefined;
   let info: string;
   if (S.selectedFloorKeys.size > 1) {
-    info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板（拖动整体移动 · Del 删除）</span>`;
+    info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板（拖动整体移动 · 方向键微移 · R 旋转 · Del 删除）</span>`;
   } else if (S.selectedFloorKeys.size > 0 && S.selectedKeys.size > 0) {
-    info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板 · ${S.selectedKeys.size} 个表面物品（拖动任一选中项整体移动 · Del 删除）</span>`;
+    info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板 · ${S.selectedKeys.size} 个表面物品（拖动任一选中项整体移动 · 方向键/R 批量变换 · Del 删除）</span>`;
   } else if (S.selectedKeys.size > 1 && S.selectedFloorKeys.size === 0) {
-    info = `<span class="fb-info">已选 ${S.selectedKeys.size} 个表面物品（拖动整体移动 · Del 删除）</span>`;
+    info = `<span class="fb-info">已选 ${S.selectedKeys.size} 个表面物品（拖动整体移动 · 方向键微移 · R 旋转 · Del 删除）</span>`;
   } else if (f) {
     const matFloorDetail = (() => {
       const { w: tw, d: td } = effectiveMaterialTiling(f);

@@ -700,6 +700,28 @@ function drawMoveLegend(): void {
 let previewRAF = 0;
 let previewLastTick = 0;
 
+/** Drop clip-imported key times so intervalSeconds / per-segment edits take effect. */
+function clearImportedRouteTiming(group: MoveGroup, evt: MoveGroupEvent): void {
+  for (const wpId of evt.waypointIds ?? []) {
+    const wp = group.waypoints.find((w) => w.id === wpId);
+    if (!wp) continue;
+    delete wp.hasTime;
+    delete wp.t;
+    delete wp.segmentSeconds;
+  }
+}
+
+function applyEventInterval(group: MoveGroup, evtIdx: number, seconds: number): void {
+  const evt = group.events[evtIdx];
+  const v = Math.max(0.1, seconds);
+  const prev = evt.intervalSeconds ?? 2;
+  if (Math.abs(v - prev) < 0.001) return;
+  pushHistory();
+  evt.intervalSeconds = v;
+  clearImportedRouteTiming(group, evt);
+  S.dirty = true;
+}
+
 /** Keyframe timeline of an event route (arrival keys + dwell keys from waits).
  *  Imported routes keep their original key times unless any timing is edited
  *  (wait / segmentSeconds), in which case the computed timeline takes over. */
@@ -822,6 +844,22 @@ function previewDuration(group: MoveGroup): number {
   return acc;
 }
 
+/** Member's authored local Y (decor offsets below ground, etc.). */
+function memberBaseY(id: string): number {
+  const it = S.items.find((i) => i.instanceId === id);
+  if (it) return it.localPosition.y;
+  const f = S.floors.find((fl) => fl.instanceId === id);
+  if (f) return f.localPosition.y;
+  return 0;
+}
+
+/** Preview Y: plain moves keep authored height; lift/drop/fly use absolute Y like the bake. */
+function memberPreviewY(id: string, y: number, mode: "base" | "relative" | "absolute"): number {
+  if (mode === "base") return memberBaseY(id);
+  if (mode === "absolute") return y;
+  return memberBaseY(id) + y;
+}
+
 /** Simulated positions (with optional height) of every member and the route head.
  *  Move events after a lift fly at the inherited height (same rule as the bake). */
 function previewPositions(group: MoveGroup, t: number): Map<string, { x: number; z: number; y?: number }> {
@@ -835,24 +873,24 @@ function previewPositions(group: MoveGroup, t: number): Map<string, { x: number;
     group.waypoints[0];
   const basePos = baseWp ? { x: baseWp.x, z: baseWp.z } : { x: 0, z: 0 };
 
-  const place = (id: string, p: { x: number; z: number } | null | undefined, y = 0) => {
+  const place = (id: string, p: { x: number; z: number } | null | undefined, yMode: "base" | "relative" | "absolute" = "base", y = 0) => {
     if (!p) return;
     const off = offById.get(id);
     out.set(id, {
       x: p.x + (off?.x ?? 0),
       z: p.z + (off?.z ?? 0),
-      y: y + (off?.t != null ? 0 : 0),
+      y: memberPreviewY(id, y, yMode),
     });
   };
 
   /** Hold every non-static member (+ route head) at the given position. */
-  const holdAll = (p: { x: number; z: number }, y = 0) => {
-    out.set("__head__", { ...p, y });
+  const holdAll = (p: { x: number; z: number }, yMode: "base" | "relative" | "absolute" = "base", y = 0) => {
+    out.set("__head__", { ...p, y: yMode === "base" ? 0 : y });
     for (const id of memberIds) {
       if (staticIds.has(id)) continue;
       const f = followPosOf(id);
-      if (f) out.set(id, { x: f.x, z: f.z, y });
-      else place(id, p, y);
+      if (f) out.set(id, { x: f.x, z: f.z, y: memberPreviewY(id, y, yMode) });
+      else place(id, p, yMode, y);
     }
   };
 
@@ -920,7 +958,7 @@ function previewPositions(group: MoveGroup, t: number): Map<string, { x: number;
     const yFrom = cur.type === "drop" ? seqLiftY : 0;
     const yTo = cur.yTo ?? (cur.type === "lift" ? 1 : 0);
     const y = yFrom + (yTo - yFrom) * k;
-    holdAll(lastPos ?? basePos, y);
+    holdAll(lastPos ?? basePos, "absolute", y);
     seqLiftY = yTo;
   } else {
     const L = clipDuration(cur, group);
@@ -928,9 +966,17 @@ function previewPositions(group: MoveGroup, t: number): Map<string, { x: number;
       holdAll(lastPos ?? basePos);
     } else {
       const p = clipPos(cur, group, tc);
-      const flyY = (cur.liftHeight ?? 0) > 0 ? clipY(cur, group, tc) : seqLiftY;
+      let yMode: "base" | "relative" | "absolute" = "base";
+      let flyY = 0;
+      if ((cur.liftHeight ?? 0) > 0) {
+        yMode = "relative";
+        flyY = clipY(cur, group, tc);
+      } else if (seqLiftY > 0) {
+        yMode = "absolute";
+        flyY = seqLiftY;
+      }
       if (p) {
-        out.set("__head__", { ...p, y: flyY });
+        out.set("__head__", { ...p, y: yMode === "base" ? 0 : flyY });
         const end = clipPos(cur, group, L);
         if (end) lastPos = end;
       }
@@ -939,7 +985,7 @@ function previewPositions(group: MoveGroup, t: number): Map<string, { x: number;
         const off = offById.get(id);
         const f = followPosOf(id);
         if (f) {
-          out.set(id, { x: f.x, z: f.z, y: flyY });
+          out.set(id, { x: f.x, z: f.z, y: memberPreviewY(id, flyY, yMode) });
           continue;
         }
         const tc2 = off?.t != null ? tc + off.t : tc;
@@ -947,7 +993,7 @@ function previewPositions(group: MoveGroup, t: number): Map<string, { x: number;
         if (mp) {
           const offX = off?.x ?? 0;
           const offZ = off?.z ?? 0;
-          out.set(id, { x: mp.x + offX, z: mp.z + offZ, y: flyY });
+          out.set(id, { x: mp.x + offX, z: mp.z + offZ, y: memberPreviewY(id, flyY, yMode) });
         }
       }
     }
@@ -2647,13 +2693,20 @@ function wireGroupEditor(body: HTMLElement, group: MoveGroup): void {
     });
   });
   body.querySelectorAll<HTMLInputElement>(".event-interval").forEach((inp) => {
-    inp.addEventListener("change", () => {
+    const commit = () => {
       const idx = parseInt(inp.dataset.idx!);
-      const v = parseFloat(inp.value) || 2;
-      if (v === group.events[idx].intervalSeconds) return;
-      pushHistory();
-      group.events[idx].intervalSeconds = v;
-      S.dirty = true;
+      const v = parseFloat(inp.value);
+      if (!isFinite(v)) return;
+      applyEventInterval(group, idx, v);
+      refresh();
+      draw();
+    };
+    inp.addEventListener("change", commit);
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commit();
+      }
     });
   });
   body.querySelectorAll<HTMLInputElement>(".event-loop").forEach((cb) => {

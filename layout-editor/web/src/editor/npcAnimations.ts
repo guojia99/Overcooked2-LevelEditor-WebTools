@@ -81,7 +81,9 @@ export function npcTypesHintHtml(): string {
 export function isNpcAnimItem(id: string, nameZh: string): boolean {
   const s = `${id} ${nameZh}`;
   return (
+    /NPC_Walk_/i.test(id) ||
     /_Waiter_/.test(id) ||
+    /^npc_waiter/i.test(id) ||
     /moon/i.test(s) ||
     /月亮/.test(s) ||
     /walkingbread/i.test(s) ||

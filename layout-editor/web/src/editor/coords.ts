@@ -242,6 +242,49 @@ export function canvasToWorld(cx: number, cy: number): { x: number; z: number } 
   return { x: wx, z: wz };
 }
 
+/** 与画布坐标显示 (cx,cz) 一致的格网原点偏移。 */
+export const COORD_ORIGIN_OFFSET = { x: 3.5, z: -1.5 };
+
+export function pasteGridOrigin(): { x: number; z: number } {
+  const base = S.gridInfo?.found
+    ? { x: S.gridInfo.worldPosition.x, z: S.gridInfo.worldPosition.z }
+    : { x: 0, z: 0 };
+  return {
+    x: base.x + COORD_ORIGIN_OFFSET.x * CELL,
+    z: base.z + COORD_ORIGIN_OFFSET.z * CELL,
+  };
+}
+
+/** 世界坐标 → 最近粘贴格心（与画布右下角格坐标显示一致）。 */
+export function nearestPasteGrid(wx: number, wz: number): { x: number; z: number } {
+  const o = pasteGridOrigin();
+  const cellX = Math.round((wx - o.x) / CELL);
+  const cellZ = Math.round((wz - o.z) / CELL);
+  return { x: o.x + cellX * CELL, z: o.z + cellZ * CELL };
+}
+
+/** 锚点格 → 目标格，返回整格平移量（保持剪贴板内相对位置）。 */
+export function pasteGridDelta(
+  anchorWx: number,
+  anchorWz: number,
+  targetWx: number,
+  targetWz: number
+): { dx: number; dz: number } {
+  const o = pasteGridOrigin();
+  const acx = Math.round((anchorWx - o.x) / CELL);
+  const acz = Math.round((anchorWz - o.z) / CELL);
+  const tcx = Math.round((targetWx - o.x) / CELL);
+  const tcz = Math.round((targetWz - o.z) / CELL);
+  return { dx: (tcx - acx) * CELL, dz: (tcz - acz) * CELL };
+}
+
+/** 粘贴目标世界坐标：优先画布指针，否则画布中心。 */
+export function pastePointerWorld(mx?: number, my?: number): { x: number; z: number } {
+  const cx = mx ?? (S.hoverCx >= 0 ? S.hoverCx : dom.canvas.width / 2);
+  const cy = my ?? (S.hoverCy >= 0 ? S.hoverCy : dom.canvas.height / 2);
+  return canvasToWorld(cx, cy);
+}
+
 /** UUID 生成：crypto.randomUUID 仅在安全上下文（HTTPS/localhost）可用，
  *  通过 IP/主机名访问 Unity 内嵌页面时不存在，回退到 RFC4122 v4 手工实现。 */
 export function uuid(): string {

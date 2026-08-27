@@ -4,8 +4,11 @@ import {
   resolveFootprint,
   itemScaleX,
   itemScaleZ,
-  normalizeRot
+  normalizeRot,
+  COORD_ORIGIN_OFFSET,
+  pasteGridOrigin,
 } from "./coords";
+export { COORD_ORIGIN_OFFSET } from "./coords";
 import {
   S,
   CELL,
@@ -57,16 +60,16 @@ export function setRefreshHooks(fn: () => void): void {
   refreshHooks = fn;
 }
 
-export const COORD_ORIGIN_OFFSET = { x: 3.5, z: -1.5 };
-
 export function coordOrigin(): { x: number; z: number } {
-  let base: { x: number; z: number };
-  if (S.gridInfo?.found) base = { x: S.gridInfo.worldPosition.x, z: S.gridInfo.worldPosition.z };
-  else {
-    const b = computeLevelBounds();
-    base = b ? { x: Math.round(b.cx / CELL) * CELL, z: Math.round(b.cz / CELL) * CELL } : { x: 0, z: 0 };
+  if (S.gridInfo?.found) {
+    return pasteGridOrigin();
   }
-  return { x: base.x + COORD_ORIGIN_OFFSET.x * CELL, z: base.z + COORD_ORIGIN_OFFSET.z * CELL };
+  const b = computeLevelBounds();
+  const base = b ? { x: Math.round(b.cx / CELL) * CELL, z: Math.round(b.cz / CELL) * CELL } : { x: 0, z: 0 };
+  return {
+    x: base.x + COORD_ORIGIN_OFFSET.x * CELL,
+    z: base.z + COORD_ORIGIN_OFFSET.z * CELL,
+  };
 }
 
 export function drawGrid() {

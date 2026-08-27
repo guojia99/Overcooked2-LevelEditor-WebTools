@@ -1,10 +1,9 @@
 import {
   S,
-  CELL,
   EditorItem,
   EditorFloor
 } from "./state";
-import { uuid, newEditorKey, syncItemLocalFromEditor, editorItemUnityWorldXZ } from "./coords";
+import { uuid, newEditorKey, syncItemLocalFromEditor, editorItemUnityWorldXZ, pasteGridDelta, pastePointerWorld } from "./coords";
 import { isPlayerItem } from "./renderItems";
 import { deleteSelected } from "./items";
 import {
@@ -26,6 +25,26 @@ import { finalizeFloor } from "./floors";
 import { updateFloorBar } from "./floorPalette";
 import { closeModal } from "../modals";
 import { isSurfaceItem } from "../floorColors";
+
+function selectionCentroid(items: { _wx: number; _wz: number }[]): { x: number; z: number } {
+  if (!items.length) return { x: 0, z: 0 };
+  let sx = 0;
+  let sz = 0;
+  for (const it of items) {
+    sx += it._wx;
+    sz += it._wz;
+  }
+  return { x: sx / items.length, z: sz / items.length };
+}
+
+function pasteOffsetFromPointer(
+  anchor: { x: number; z: number },
+  canvasMx?: number,
+  canvasMy?: number
+): { dx: number; dz: number } {
+  const ptr = pastePointerWorld(canvasMx, canvasMy);
+  return pasteGridDelta(anchor.x, anchor.z, ptr.x, ptr.z);
+}
 
 export function copySelection() {
   const keys = selectionKeys();
@@ -56,14 +75,14 @@ export function cutSelection() {
   setStatus(`已裁切 ${S.clipboard.length} 个物品（Ctrl/Cmd+V 粘贴，Ctrl/Cmd+Z 撤回）`);
 }
 
-export function pasteClipboard() {
+export function pasteClipboard(canvasMx?: number, canvasMy?: number) {
   if (!S.clipboard.length) {
     setStatus("剪贴板为空（先 Ctrl/Cmd+V 复制）", false);
     return;
   }
   pushHistory();
-  S.pasteRound++;
-  const off = CELL * S.pasteRound;
+  const anchor = selectionCentroid(S.clipboard);
+  const { dx: offX, dz: offZ } = pasteOffsetFromPointer(anchor, canvasMx, canvasMy);
   const pasted: string[] = [];
   let skipped = 0;
   for (const src of S.clipboard) {
@@ -71,8 +90,8 @@ export function pasteClipboard() {
       skipped++;
       continue;
     }
-    const nx = src._wx + off;
-    const nz = src._wz + off;
+    const nx = src._wx + offX;
+    const nz = src._wz + offZ;
     if (moveBlockedAt(src, nx, nz)) {
       skipped++;
       continue;
@@ -147,14 +166,15 @@ export function cutFloors(): void {
   );
 }
 
-export function pasteFloors(): void {
+export function pasteFloors(canvasMx?: number, canvasMy?: number): void {
   if (!S.floorClipboard.length && !S.floorItemClipboard.length) {
     setStatus("地板剪贴板为空（先 Ctrl/Cmd+C 复制）", false);
     return;
   }
   pushHistory();
-  S.floorPasteRound++;
-  const off = CELL * S.floorPasteRound;
+  const allAnchors = [...S.floorClipboard, ...S.floorItemClipboard];
+  const anchor = selectionCentroid(allAnchors);
+  const { dx: offX, dz: offZ } = pasteOffsetFromPointer(anchor, canvasMx, canvasMy);
   const pastedKeys: string[] = [];
   for (const src of S.floorClipboard) {
     const key = newEditorKey();
@@ -162,8 +182,8 @@ export function pasteFloors(): void {
     copy._key = key;
     copy.instanceId = `new:floor:${uuid()}`;
     copy.hierarchyPath = copy.instanceId;
-    copy._wx = src._wx + off;
-    copy._wz = src._wz + off;
+    copy._wx = src._wx + offX;
+    copy._wz = src._wz + offZ;
     copy.localPosition = { x: copy._wx, y: copy.localPosition?.y ?? -0.05, z: copy._wz };
     copy.worldPosition = { x: copy._wx, y: copy.localPosition.y, z: copy._wz };
     S.floors.push(copy);
@@ -175,8 +195,8 @@ export function pasteFloors(): void {
   }
   const pastedItems: string[] = [];
   for (const src of S.floorItemClipboard) {
-    const nx = src._wx + off;
-    const nz = src._wz + off;
+    const nx = src._wx + offX;
+    const nz = src._wz + offZ;
     if (moveBlockedAt(src, nx, nz)) continue;
     const editorKey = newEditorKey();
     const copy = JSON.parse(JSON.stringify(src)) as EditorItem;

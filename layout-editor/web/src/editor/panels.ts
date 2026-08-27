@@ -19,6 +19,7 @@ import {
   clearSelection
 } from "./selection";
 import { sceneNpcAnimItems, npcTypesHintHtml } from "./npcAnimations";
+import { matchBuiltinAnimDecor, sceneEnvAnimDecorItems, envAnimTypesHintHtml } from "./builtinAnimDecor";
 import { draw } from "./render";
 import { renderMoveControlPanel, groupVisibleInLayer, updateMovePickBar } from "./moveControl";
 import { renderButtonEventPanel } from "./buttonEvents";
@@ -236,6 +237,25 @@ export function refreshSceneItemList(): void {
                 )
                 .join("")
             : `<div class="npc-types-empty">场景中暂无自带动画的 NPC。${npcTypesHintHtml()}</div>`) +
+          `</details>`
+      );
+      const envAnims = sceneEnvAnimDecorItems();
+      parts.push(
+        `<details class="cat-group" open><summary>✨ 自带环境动画的装饰（${envAnims.length}）</summary>` +
+          (envAnims.length > 0
+            ? envAnims
+                .map((it) => {
+                  const id = prefabIdFromPath(it.prefabAssetPath) || it.instanceId;
+                  const match = matchBuiltinAnimDecor(id, it.displayName);
+                  const badge = match?.emoji ?? "✨";
+                  return (
+                    `<div class="scene-item-row" data-key="${it._editorKey}">` +
+                    `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${badge}</span>` +
+                    `</div>`
+                  );
+                })
+                .join("")
+            : `<div class="npc-types-empty">场景中暂无环境动画装饰。${envAnimTypesHintHtml()}</div>`) +
           `</details>`
       );
     }

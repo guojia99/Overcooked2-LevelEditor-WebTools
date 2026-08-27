@@ -3,11 +3,65 @@ import { dom } from "./dom";
 import { tidyCatalogNameZh } from "../displayLabels";
 import { hostRuleLabelZh } from "../stacking";
 import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
-import { isNpcAnimItem } from "./npcAnimations";
+import { matchBuiltinAnimDecor } from "./builtinAnimDecor";
 import { buildComboPaletteGroup } from "./combos";
 import { variantBaseId, VARIANT_TO_BASE } from "./itemVariants";
 import { escHtml } from "./coords";
-import type { Catalog } from "../types";
+import type { Catalog, CatalogItem } from "../types";
+
+function clampPaletteCount(n: number): number {
+  if (!isFinite(n)) return 1;
+  return Math.max(1, Math.min(99, Math.round(n)));
+}
+
+/** 单击武装并累加数量；在卡片角标显示，拖到画布按数量放置。 */
+export function bumpPalettePick(cat: CatalogItem): void {
+  if (S.palettePick?.guid === cat.guid) {
+    S.palettePick.count = clampPaletteCount(S.palettePick.count + 1);
+  } else {
+    S.palettePick = { guid: cat.guid, count: 1 };
+  }
+  refreshPaletteQtyBadges();
+}
+
+export function clearPalettePick(): void {
+  if (!S.palettePick) return;
+  S.palettePick = null;
+  refreshPaletteQtyBadges();
+}
+
+export function refreshPaletteQtyBadges(): void {
+  document.querySelectorAll<HTMLElement>(".palette-card[data-guid]").forEach((el) => {
+    const guid = el.dataset.guid!;
+    const armed = !!S.palettePick && S.palettePick.guid === guid;
+    el.classList.toggle("palette-card-armed", armed);
+    let badge = el.querySelector<HTMLElement>(".palette-qty-badge");
+    if (armed && S.palettePick) {
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "palette-qty-badge";
+        badge.title = "点击 × 清除数量";
+        badge.innerHTML =
+          '<span class="palette-qty-num"></span><button type="button" class="palette-qty-reset" title="清除数量">×</button>';
+        badge.querySelector(".palette-qty-reset")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          clearPalettePick();
+        });
+        el.appendChild(badge);
+      }
+      const num = badge.querySelector(".palette-qty-num");
+      if (num) num.textContent = String(S.palettePick.count);
+    } else if (badge) {
+      badge.remove();
+    }
+  });
+}
+
+export function palettePlaceCountFor(guid: string): number {
+  if (S.palettePick?.guid === guid) return S.palettePick.count;
+  return 1;
+}
 
 /** 卡片按目录大类着色（与画布配色 itemColors.CATEGORY_RGB 一致）。 */
 export function paletteCardCategory(category: string): string {
@@ -138,7 +192,7 @@ export function buildPalette(catalog: Catalog, filter: string) {
       if (it.layoutTier === "decor") row.classList.add("palette-decor");
       row.draggable = true;
       row.dataset.guid = it.guid;
-      const npcAnim = isNpcAnimItem(it.id, it.nameZh);
+      const animDecor = it.layoutTier === "decor" ? matchBuiltinAnimDecor(it.id, it.nameZh) : null;
       const decorSize =
         it.layoutTier === "decor"
           ? ` <span class="decor-size-badge" title="尺寸分级：按实测占位（footprint）最大边判定">${DECOR_SIZE_LABEL_ZH[decorSizeTier(it)]}</span>`
@@ -146,25 +200,45 @@ export function buildPalette(catalog: Catalog, filter: string) {
       const sub = it.stack
         ? `<div class="sub">配套${hostRuleLabelZh(it.stack.hostRule)} · 高 ${it.stack.y}m</div>`
         : it.layoutTier === "decor"
-          ? `<div class="sub">装饰${decorSize}${npcAnim ? " · 🎞 自带移动动画" : ""}</div>`
+          ? `<div class="sub">装饰${decorSize}${animDecor ? ` · ${animDecor.emoji} ${animDecor.badgeZh}` : ""}</div>`
           : "";
       const skins = skinCounts.get(it.id) ?? 1;
       const skinBadge =
         skins > 1 ? ` <span class="variant-badge" title="同功能换肤 ${skins} 种：放置后右键可切换">×${skins}</span>` : "";
       row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
-      if (npcAnim) {
-        row.title = "自带移动动画（行走循环 / 路径动画）";
+      if (animDecor) {
+        row.title = animDecor.title;
         const badgeEl = document.createElement("span");
-        badgeEl.className = "npc-anim-badge";
-        badgeEl.textContent = "🎞";
+        badgeEl.className = animDecor.kind === "npc" ? "npc-anim-badge" : "env-anim-badge";
+        badgeEl.textContent = animDecor.emoji;
         row.querySelector(".zh")?.appendChild(badgeEl);
       }
+      let skipClick = false;
       row.addEventListener("dragstart", (e) => {
+        skipClick = true;
         S.dragCatalog = it;
+        S.dragCatalogBatch = palettePlaceCountFor(it.guid);
         e.dataTransfer?.setData("text/plain", it.guid);
       });
       row.addEventListener("dragend", () => {
         S.dragCatalog = null;
+        S.dragCatalogBatch = 1;
+        setTimeout(() => {
+          skipClick = false;
+        }, 0);
+      });
+      row.addEventListener("click", (e) => {
+        if (skipClick) return;
+        if ((e.target as HTMLElement).closest(".palette-qty-reset")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        bumpPalettePick(it);
+      });
+      row.addEventListener("contextmenu", (e) => {
+        if (S.palettePick?.guid !== it.guid) return;
+        e.preventDefault();
+        e.stopPropagation();
+        clearPalettePick();
       });
       grid.appendChild(row);
       shownCount++;
@@ -175,4 +249,5 @@ export function buildPalette(catalog: Catalog, filter: string) {
     dom.paletteCats.appendChild(details);
   }
   applyPaletteGridCols();
+  refreshPaletteQtyBadges();
 }

@@ -30,8 +30,14 @@ import {
   hidePickTip
 } from "./ui/overlay";
 import { showPickTip } from "./ui/pickTip";
+import {
+  showItemOverlapPickTip,
+  showSurfaceOverlapPickTip,
+  showMoveMemberOverlapPickTip,
+} from "./ui/pickOverlap";
 import { showBatchHeightMenu, showContextMenu, showWaypointContextMenu } from "./ui/contextMenu";
 import { selectionHeightTargetCount } from "./selectionHeight";
+import { batchNudgeSelected, batchRotateSelected, batchTransformCount } from "./selectionTransform";
 import { openFloorEditorModal } from "./floorEditorModal";
 import {
   addFloorAt,
@@ -42,6 +48,7 @@ import {
 } from "./floors";
 import {
   addFromCatalog,
+  addFromCatalogBatch,
   moveBlockedAt,
   syncLocalFromWorld,
   rotateItemByDelta,
@@ -81,6 +88,60 @@ import { hitTestWaypoints, waypointInfo, deleteWaypoint, activeGroup, updateMove
 import { renderRightPanel, updatePanelTabButtons } from "./panels";
 import { isPlayerItem } from "./renderItems";
 import { isAirWallItem } from "./stubControls";
+import { clearPalettePick, palettePlaceCountFor } from "./palette";
+
+/** 批量微调应覆盖的键：已有 ≥2 项选中时保留完整选区，否则仅取点击处重叠项。 */
+function batchAdjustKeysForOverlap(
+  hitItemKeys: string[],
+  hitFloorKeys: string[]
+): { itemKeys: string[]; floorKeys: string[] } {
+  const curItems = selectionKeys();
+  const curFloors = [...S.selectedFloorKeys];
+  if (curItems.length + curFloors.length >= 2) {
+    return { itemKeys: curItems, floorKeys: curFloors };
+  }
+  const itemKeys = [...new Set([...curItems, ...hitItemKeys])];
+  const floorKeys = [...new Set([...curFloors, ...hitFloorKeys])];
+  if (itemKeys.length + floorKeys.length >= 2) {
+    return { itemKeys, floorKeys };
+  }
+  return { itemKeys: hitItemKeys, floorKeys: hitFloorKeys };
+}
+
+function openOverlapBatchAdjust(
+  hitItemKeys: string[],
+  hitFloorKeys: string[],
+  clientX: number,
+  clientY: number
+): void {
+  const { itemKeys, floorKeys } = batchAdjustKeysForOverlap(hitItemKeys, hitFloorKeys);
+  setSelection(itemKeys, itemKeys.length ? itemKeys[itemKeys.length - 1] : undefined);
+  setFloorSelection(floorKeys, floorKeys.length ? floorKeys[floorKeys.length - 1] : undefined);
+  hideDetail();
+  showBatchHeightMenu(clientX, clientY);
+  draw();
+}
+
+function overlapBatchHeader(
+  hitItemKeys: string[],
+  hitFloorKeys: string[],
+  clientX: number,
+  clientY: number
+) {
+  const { itemKeys, floorKeys } = batchAdjustKeysForOverlap(hitItemKeys, hitFloorKeys);
+  const total = itemKeys.length + floorKeys.length;
+  if (total < 2) return undefined;
+  const curTotal = selectionKeys().length + S.selectedFloorKeys.size;
+  const sub =
+    curTotal >= 2 && total > hitItemKeys.length + hitFloorKeys.length
+      ? "含全部已选 · 微移 · 旋转 · 高度"
+      : "微移 · 旋转 · 高度";
+  return {
+    label: `批量微调（${total} 项）`,
+    sub,
+    onClick: () => openOverlapBatchAdjust(hitItemKeys, hitFloorKeys, clientX, clientY),
+  };
+}
 
 export function updateCanvasCursor() {
   dom.canvas.classList.remove("pan-ready", "pan-active");
@@ -275,29 +336,11 @@ export function setupCanvas() {
           // 空气地板与上方物品重叠（如隐形桥被岛体地砖盖住）时，物品恒优先
           // 会让空气地板永远点不到——弹候选列表让两者都可选。
           if (hits.length > 0 && fHit?.airFloor) {
-            hideDetail();
-            hideContextMenu();
-            const candidates: PickCandidate[] = hits.map((it) => ({
-              title: itemLabel(it),
-              sub: `物品 · ${prefabIdFromPath(it.prefabAssetPath)}`,
-              onPick: () => {
-                setSelection([it._editorKey]);
-                clearFloorSelection();
-                updateMovePickBar();
-                draw();
-              },
-            }));
-            candidates.push({
-              title: `空气地板 ${fHit._wCells}×${fHit._dCells}格`,
-              sub: "地板 · 仅碰撞盒（入组后碰撞随组移动）",
-              onPick: () => {
-                clearSelection();
-                setFloorSelection([fHit._key]);
-                updateMovePickBar();
-                draw();
-              },
+            showMoveMemberOverlapPickTip(hits, fHit, e.clientX, e.clientY, e.shiftKey, () => {
+              updateMovePickBar();
+              renderRightPanel();
+              draw();
             });
-            showPickTip(candidates, e.clientX, e.clientY);
             draw();
             return;
           }
@@ -402,36 +445,17 @@ export function setupCanvas() {
           : S.selectedKey
             ? surfaceHits.find((it) => it._editorKey === S.selectedKey)
             : undefined;
-      if (fHits.length + surfaceHits.length > 1 && !keepFloor && !keepItem) {
-        hideDetail();
-        hideContextMenu();
-        const candidates: PickCandidate[] = [];
-        for (const fh of fHits) {
-          // 多层高度重叠：候选带行走面高度标注，方便区分各层地板。
-          const fhH = floorWalkY(fh.floor);
-          const hTag = fhH > 0.005 ? ` · h=${fhH.toFixed(2)} L${floorLayerIndex(fhH)}` : "";
-          candidates.push({
-            title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格${hTag}`,
-            sub: `地板 · ${isThemedFloor(fh.floor) ? fh.floor.displayName : (fh.floor.materialName ?? "无材质")}`,
-            onPick: () => {
-              setFloorSelection([fh.floor._key]);
-              clearSelection();
-              draw();
-            },
-          });
-        }
-        for (const it of surfaceHits) {
-          candidates.push({
-            title: itemLabel(it),
-            sub: `${surfaceKindLabelZh(S.catalogByGuid.get(it.prefabGuid)?.surfaceKind)} · ${prefabIdFromPath(it.prefabAssetPath)}`,
-            onPick: () => {
-              clearFloorSelection();
-              setSelection([it._editorKey]);
-              draw();
-            },
-          });
-        }
-        showPickTip(candidates, e.clientX, e.clientY);
+      if (fHits.length + surfaceHits.length > 1 && (e.shiftKey || (!keepFloor && !keepItem))) {
+        const itemKeys = surfaceHits.map((it) => it._editorKey);
+        const floorKeys = fHits.map((fh) => fh.floor._key);
+        showSurfaceOverlapPickTip(
+          fHits,
+          surfaceHits,
+          e.clientX,
+          e.clientY,
+          e.shiftKey,
+          overlapBatchHeader(itemKeys, floorKeys, e.clientX, e.clientY)
+        );
         draw();
         return;
       }
@@ -566,21 +590,8 @@ export function setupCanvas() {
     // (and starts a group drag) instead of popping the overlap picker.
     const groupHit = S.selectedKeys.size > 1 ? hits.find((it) => isSelected(it._editorKey)) : undefined;
     const already = groupHit ?? (S.selectedKey ? hits.find((it) => it._editorKey === S.selectedKey) : undefined);
-    if (hits.length > 1 && !e.shiftKey && !already) {
-      hideDetail();
-      hideContextMenu();
-      showPickTip(
-        hits.map((it) => ({
-          title: itemLabel(it),
-          sub: prefabIdFromPath(it.prefabAssetPath) || "—",
-          onPick: () => {
-            setSelection([it._editorKey]);
-            draw();
-          },
-        })),
-        e.clientX,
-        e.clientY
-      );
+    if (hits.length > 1 && (e.shiftKey || !already)) {
+      showItemOverlapPickTip(hits, e.clientX, e.clientY, e.shiftKey);
       draw();
       return;
     }
@@ -719,37 +730,31 @@ export function setupCanvas() {
             ? surfaceHits.find((it) => it._editorKey === S.selectedKey)
             : undefined;
       if (fHits.length + surfaceHits.length > 1 && !keepFloor && !keepItem) {
-        hideDetail();
-        hideContextMenu();
-        const candidates: PickCandidate[] = [];
-        for (const fh of fHits) {
-          const fhH = floorWalkY(fh.floor);
-          const hTag = fhH > 0.005 ? ` · h=${fhH.toFixed(2)} L${floorLayerIndex(fhH)}` : "";
-          candidates.push({
-            title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格${hTag}`,
-            sub: `地板 · ${isThemedFloor(fh.floor) ? fh.floor.displayName : (fh.floor.materialName ?? "无材质")}`,
-            onPick: () => {
+        const itemKeys = surfaceHits.map((it) => it._editorKey);
+        const floorKeys = fHits.map((fh) => fh.floor._key);
+        showSurfaceOverlapPickTip(
+          fHits,
+          surfaceHits,
+          e.clientX,
+          e.clientY,
+          false,
+          overlapBatchHeader(itemKeys, floorKeys, e.clientX, e.clientY),
+          {
+            onPickFloor: (fh) => {
               setFloorSelection([fh.floor._key]);
               clearSelection();
               openFloorEditorModal(fh.floor);
               draw();
             },
-          });
-        }
-        for (const it of surfaceHits) {
-          candidates.push({
-            title: itemLabel(it),
-            sub: `${surfaceKindLabelZh(S.catalogByGuid.get(it.prefabGuid)?.surfaceKind)} · ${prefabIdFromPath(it.prefabAssetPath)}`,
-            onPick: () => {
+            onPickItem: (it) => {
               clearFloorSelection();
               setSelection([it._editorKey]);
               hideDetail();
               showContextMenu(it, e.clientX, e.clientY);
               draw();
             },
-          });
-        }
-        showPickTip(candidates, e.clientX, e.clientY);
+          }
+        );
         draw();
         return;
       }
@@ -793,21 +798,21 @@ export function setupCanvas() {
     const hits = hitTestAll(wx, wz);
     const already = S.selectedKey ? hits.find((it) => it._editorKey === S.selectedKey) : undefined;
     if (hits.length > 1 && !already) {
-      hideDetail();
-      hideContextMenu();
-      showPickTip(
-        hits.map((it) => ({
-          title: itemLabel(it),
-          sub: prefabIdFromPath(it.prefabAssetPath) || "—",
-          onPick: () => {
+      const itemKeys = hits.map((it) => it._editorKey);
+      showItemOverlapPickTip(
+        hits,
+        e.clientX,
+        e.clientY,
+        false,
+        overlapBatchHeader(itemKeys, [], e.clientX, e.clientY),
+        {
+          onPickItem: (it) => {
             setSelection([it._editorKey]);
             hideDetail();
             showContextMenu(it, e.clientX, e.clientY);
             draw();
           },
-        })),
-        e.clientX,
-        e.clientY
+        }
       );
       draw();
       return;
@@ -1094,7 +1099,9 @@ export function setupCanvas() {
       if (S.dragCombo) addCombo(S.dragCombo, wx, wz);
       return;
     }
-    addFromCatalog(cat, wx, wz);
+    const batch = S.dragCatalogBatch > 1 ? S.dragCatalogBatch : palettePlaceCountFor(cat.guid);
+    if (batch > 1) addFromCatalogBatch(cat, wx, wz, batch);
+    else addFromCatalog(cat, wx, wz);
   });
 
   window.addEventListener("keydown", (e) => {
@@ -1138,7 +1145,11 @@ export function setupCanvas() {
         S.dirty = true;
         renderRightPanel();
       } else {
-        nudgeSelectedItems(dx, dz);
+        if (batchTransformCount() >= 2) {
+          batchNudgeSelected(dx, dz);
+        } else {
+          nudgeSelectedItems(dx, dz);
+        }
         S.dirty = true;
         renderRightPanel();
       }
@@ -1151,6 +1162,7 @@ export function setupCanvas() {
       hideContextMenu();
       hidePickTip();
       closeModal();
+      clearPalettePick();
       S.marqueeing = false;
       S.pendingNewFloor = false;
       S.pendingNewFloorCat = null;
@@ -1226,11 +1238,17 @@ export function setupCanvas() {
         return;
       }
       if (e.key === "r" || e.key === "R") {
+        const delta = e.shiftKey ? -90 : 90;
+        if (batchTransformCount() >= 2) {
+          batchRotateSelected(delta);
+          draw();
+          return;
+        }
         if (S.selectedFloorKeys.size === 1 && S.selectedFloorKey) {
           const f = S.floors.find((x) => x._key === S.selectedFloorKey);
           if (f) {
             pushHistory();
-            f.localRotationY = normalizeRot(f.localRotationY + (e.shiftKey ? -90 : 90));
+            f.localRotationY = normalizeRot(f.localRotationY + delta);
             draw();
           }
           return;
@@ -1239,7 +1257,7 @@ export function setupCanvas() {
           const item = S.items.find((i) => i._editorKey === S.selectedKey);
           if (item && isSurfaceItem(S.catalogByGuid.get(item.prefabGuid))) {
             pushHistory();
-            rotateItemByDelta(item, e.shiftKey ? -90 : 90);
+            rotateItemByDelta(item, delta);
             draw();
           }
         }
@@ -1257,8 +1275,13 @@ export function setupCanvas() {
       deleteSelected();
     }
     if ((e.key === "r" || e.key === "R") && !isPlayerItem(item)) {
-      pushHistory();
-      rotateItemByDelta(item, e.shiftKey ? -90 : 90);
+      const delta = e.shiftKey ? -90 : 90;
+      if (batchTransformCount() >= 2) {
+        batchRotateSelected(delta);
+      } else {
+        pushHistory();
+        rotateItemByDelta(item, delta);
+      }
       draw();
     }
   });

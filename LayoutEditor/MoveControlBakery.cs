@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -53,9 +55,22 @@ public static class MoveControlBakery
         if (data != null && data.groups != null && data.groups.Length > 0)
         {
             EnsureFolder(animDir);
+            var assetKeys = new Dictionary<string, string>();
             foreach (var g in data.groups)
             {
                 if (g == null) continue;
+                var key = BuildAssetKey(sceneName, g);
+                string otherName;
+                if (assetKeys.TryGetValue(key, out otherName))
+                {
+                    LayoutEditorLog.LogWarning("move control: asset key collision — \"" +
+                        (g.displayName ?? "?") + "\" and \"" + otherName +
+                        "\" both map to " + key);
+                }
+                else
+                {
+                    assetKeys[key] = g.displayName ?? "?";
+                }
                 var err = BakeGroup(scene, g, animDir, sceneName, usedAssets);
                 if (!string.IsNullOrEmpty(err))
                     errors.Add(err);
@@ -813,7 +828,7 @@ public static class MoveControlBakery
             // do not participate in vertical motion.
             if (staticSet.Contains(id))
             {
-                SetConstantCurves(clip, path, curPos.x, curPos.z);
+                SetConstantCurves(clip, path, curPos.x, curPos.y, curPos.z);
                 continue;
             }
 
@@ -940,6 +955,13 @@ public static class MoveControlBakery
                 AnimationUtility.SetEditorCurve(clip,
                     EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalPosition.y"), cy);
             }
+            else
+            {
+                // Plain XZ move: still bake a constant Y so Play mode does not
+                // snap members (e.g. decor at y=-0.8) back to 0 when the clip
+                // only animates X/Z.
+                SetConstantY(clip, path, curPos.y, clipLen);
+            }
         }
 
         var path2 = animDir + "/" + key + "_" + suffix + ".anim";
@@ -1000,7 +1022,7 @@ public static class MoveControlBakery
                 p.x = holdPos.Value.x + off.x;
                 p.z = holdPos.Value.y + off.y;
             }
-            SetConstantCurves(clip, path, p.x, p.z);
+            SetConstantCurves(clip, path, p.x, p.y, p.z);
         }
         var path2 = animDir + "/" + key + "_" + suffix + ".anim";
         AssetDatabase.CreateAsset(clip, path2);
@@ -1026,18 +1048,35 @@ public static class MoveControlBakery
         return t;
     }
 
-    private static void SetConstantCurves(AnimationClip clip, string path, float x, float z)
+    private static void SetConstantCurves(AnimationClip clip, string path, float x, float y, float z)
     {
         var sx = new AnimationCurve(new Keyframe(0f, x), new Keyframe(1f, x));
+        var sy = new AnimationCurve(new Keyframe(0f, y), new Keyframe(1f, y));
         var sz = new AnimationCurve(new Keyframe(0f, z), new Keyframe(1f, z));
         SetLinear(sx);
+        SetLinear(sy);
         SetLinear(sz);
         SetCycleWrap(sx);
+        SetCycleWrap(sy);
         SetCycleWrap(sz);
         AnimationUtility.SetEditorCurve(clip,
             EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalPosition.x"), sx);
         AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalPosition.y"), sy);
+        AnimationUtility.SetEditorCurve(clip,
             EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalPosition.z"), sz);
+    }
+
+    private static void SetConstantY(AnimationClip clip, string path, float y, float duration)
+    {
+        float end = duration > 0.05f ? duration : 1f;
+        var cy = new AnimationCurve(
+            new Keyframe(0f, y),
+            new Keyframe(end, y));
+        SetLinear(cy);
+        SetCycleWrap(cy);
+        AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalPosition.y"), cy);
     }
 
     private static void SetLinear(AnimationCurve curve)
@@ -1416,23 +1455,57 @@ public static class MoveControlBakery
         return true;
     }
 
-    private static string BuildAssetKey(string sceneName, MoveGroupDto group)
+    internal static string BuildAssetKey(string sceneName, MoveGroupDto group)
     {
-        var name = group.displayName ?? "group";
-        bool hasAscii = false;
+        var namePart = DeriveNamePart(group.displayName);
+        var idPart = DeriveIdPart(group);
+        return SanitizeFileName(sceneName + "_" + namePart + "_" + idPart);
+    }
+
+    private static string DeriveNamePart(string displayName)
+    {
+        var name = displayName ?? "group";
         foreach (var c in name)
         {
             if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
-            {
-                hasAscii = true;
-                break;
-            }
+                return SanitizeFileName(name.Replace(" ", "_"));
         }
-        var namePart = hasAscii ? SanitizeFileName(name.Replace(" ", "_")) : "group";
-        var idPart = string.IsNullOrEmpty(group.id)
-            ? "g"
-            : (group.id.Length > 8 ? group.id.Substring(0, 8) : group.id);
-        return SanitizeFileName(sceneName + "_" + namePart + "_" + idPart);
+        return "group";
+    }
+
+    /// <summary>Stable short suffix for animation asset filenames. Scene-imported
+    /// groups must not use id.Substring(0, 8) — every "scene:Design/..." id shares
+    /// the same prefix and would collide for Chinese display names.</summary>
+    private static string DeriveIdPart(MoveGroupDto group)
+    {
+        if (string.IsNullOrEmpty(group.id))
+            return "g";
+
+        const string scenePrefix = "scene:";
+        if (group.id.StartsWith(scenePrefix, StringComparison.Ordinal))
+        {
+            var path = !string.IsNullOrEmpty(group.groupHierarchyPath)
+                ? group.groupHierarchyPath
+                : group.id.Substring(scenePrefix.Length);
+            return ShortHash(path);
+        }
+
+        var compact = group.id.Replace("-", "");
+        if (compact.Length > 8)
+            compact = compact.Substring(0, 8);
+        return SanitizeFileName(compact);
+    }
+
+    internal static string ShortHash(string input)
+    {
+        using (var md5 = MD5.Create())
+        {
+            var bytes = md5.ComputeHash(Encoding.UTF8.GetBytes(input ?? ""));
+            var sb = new StringBuilder(8);
+            for (int i = 0; i < 4; i++)
+                sb.Append(bytes[i].ToString("x2"));
+            return sb.ToString();
+        }
     }
 
     internal static string SanitizeFileName(string s)

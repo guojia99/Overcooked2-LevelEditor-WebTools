@@ -515,7 +515,13 @@ export function resizeAirWall(item: EditorItem, wx: number, wz: number): void {
   resizeItemByCells(item, wx, wz, setAirWallSize);
 }
 
-export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordHistory = true): EditorItem | null {
+export function addFromCatalog(
+  cat: CatalogItem,
+  wx: number,
+  wz: number,
+  recordHistory = true,
+  silent = false
+): EditorItem | null {
   if (cat.id === "Player") {
     setStatus("玩家固定在场景中，不可添加", false);
     return null;
@@ -614,10 +620,74 @@ export function addFromCatalog(cat: CatalogItem, wx: number, wz: number, recordH
   }
   S.items.push(item);
   trySnapUtensilToHost(item, cat, S.items, S.catalogByGuid);
-  setSelection([editorKey]);
-  draw();
+  if (!silent) {
+    setSelection([editorKey]);
+    draw();
+  }
   warnItemVoid(item);
   return item;
+}
+
+/** 批量放置网格偏移（以落点为中心，按 footprint 步进排布）。 */
+export function batchPlaceGridOffsets(
+  count: number,
+  cellsX: number,
+  cellsZ: number
+): Array<{ dx: number; dz: number }> {
+  const cols = Math.ceil(Math.sqrt(count));
+  const rows = Math.ceil(count / cols);
+  const stepX = Math.max(1, cellsX) * CELL;
+  const stepZ = Math.max(1, cellsZ) * CELL;
+  const out: Array<{ dx: number; dz: number }> = [];
+  let n = 0;
+  for (let r = 0; r < rows && n < count; r++) {
+    for (let c = 0; c < cols && n < count; c++) {
+      out.push({
+        dx: (c - (cols - 1) / 2) * stepX,
+        dz: (r - (rows - 1) / 2) * stepZ,
+      });
+      n++;
+    }
+  }
+  return out;
+}
+
+/** 在落点为中心网格放置 count 个相同 catalog 物品（单次撤销）。 */
+export function addFromCatalogBatch(
+  cat: CatalogItem,
+  wx: number,
+  wz: number,
+  count: number
+): EditorItem[] {
+  const n = Math.max(1, Math.min(99, Math.round(count)));
+  if (n <= 1) {
+    const one = addFromCatalog(cat, wx, wz, true);
+    return one ? [one] : [];
+  }
+  pushHistory();
+  const offsets = batchPlaceGridOffsets(n, cat.footprint.cellsX, cat.footprint.cellsZ);
+  const placed: EditorItem[] = [];
+  let skipped = 0;
+  for (const off of offsets) {
+    const it = addFromCatalog(cat, wx + off.dx, wz + off.dz, false, true);
+    if (it) placed.push(it);
+    else skipped++;
+  }
+  if (placed.length) {
+    setSelection(placed.map((i) => i._editorKey));
+    S.dirty = true;
+    draw();
+    const label = cat.nameZh || cat.id;
+    setStatus(
+      skipped
+        ? `已放置 ${placed.length}/${n} 个「${label}」（${skipped} 个因重叠跳过）`
+        : `已放置 ${placed.length} 个「${label}」`,
+      skipped === 0
+    );
+  } else {
+    setStatus("无法放置：与玩家重叠或位置无效", false);
+  }
+  return placed;
 }
 
 export function placementBase(): { x: number; z: number } {
