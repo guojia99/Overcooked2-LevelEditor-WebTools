@@ -42,6 +42,7 @@ public static class LayoutEditorRecipeKnowledge
         { "MixingBowl", new[] { "Mixer", "MixerBowl" } },
         { "HotPot", new[] { "cooking_region_floorburner", "utensil_large_pot_01" } },
         { "RoastingTray", new[] { "Oven", "utensil_roasting_tray" } },
+        { "OvenCakeTin", new[] { "Oven", "utensil_cake_tin_01" } },
     };
 
     public static string[] UtensilsForStep(string step)

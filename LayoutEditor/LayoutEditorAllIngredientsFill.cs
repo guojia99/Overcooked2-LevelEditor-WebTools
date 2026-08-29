@@ -121,6 +121,74 @@ public static class LayoutEditorAllIngredientsFill
         levelInfo.allIngredients = filtered.ToArray();
     }
 
+    /// <summary>保存菜谱（SetLevelRecipes）专用：仅根据当前已选菜谱重建 allIngredients，
+    ///  不扫描场景食材箱；覆盖写入，清除历史遗留的无关食材。</summary>
+    public static void AutoFillIngredientsFromSelectedRecipes(LevelInfoSO levelInfo)
+    {
+        if (levelInfo == null)
+        {
+            return;
+        }
+        var allIngredients = new List<PseudoPrefabSO>();
+        if (levelInfo.recipes != null)
+        {
+            var customSeen = new HashSet<CustomRecipeSO>();
+            foreach (ScriptableObject recipeSO in levelInfo.recipes)
+            {
+                if (recipeSO is CustomRecipeSO)
+                {
+                    CollectCustomRecipeIngredients((CustomRecipeSO)recipeSO, allIngredients, customSeen);
+                    continue;
+                }
+                var original = recipeSO as PseudoPrefabSORecipe;
+                if (original == null)
+                {
+                    continue;
+                }
+                var pathKey = System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(original));
+                string step;
+                string[] ings;
+                if (!LayoutEditorRecipeKnowledge.TryGetOriginal(pathKey, out step, out ings) &&
+                    !LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out ings) &&
+                    !LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName, out step, out ings))
+                {
+                    continue;
+                }
+                foreach (var ingId in ings)
+                {
+                    var ingSo = LayoutEditorRoastTrayFill.LoadIngredientSo(ingId);
+                    if (ingSo != null && !allIngredients.Contains(ingSo))
+                    {
+                        allIngredients.Add(ingSo);
+                    }
+                }
+            }
+        }
+        var filtered = new List<PseudoPrefabSO>();
+        foreach (PseudoPrefabSO pseudo in allIngredients)
+        {
+            if (pseudo == null)
+            {
+                continue;
+            }
+            var bundlePath = pseudo.assetPath;
+            if (string.IsNullOrEmpty(bundlePath))
+            {
+                continue;
+            }
+            if (bundlePath.IndexOf('\\') >= 0)
+            {
+                continue;
+            }
+            if (!bundlePath.EndsWith(".prefab", System.StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+            filtered.Add(pseudo);
+        }
+        levelInfo.allIngredients = filtered.ToArray();
+    }
+
     private static void CollectCustomRecipeIngredients(
         CustomRecipeSO recipe,
         List<PseudoPrefabSO> ingredients,
@@ -138,6 +206,28 @@ public static class LayoutEditorAllIngredientsFill
             if (sub != null)
             {
                 CollectCustomRecipeIngredients(sub, ingredients, seen);
+                continue;
+            }
+            PseudoPrefabSORecipe officialSub = comp as PseudoPrefabSORecipe;
+            if (officialSub != null)
+            {
+                var pathKey = System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(officialSub));
+                string step;
+                string[] ings;
+                if (!LayoutEditorRecipeKnowledge.TryGetOriginal(pathKey, out step, out ings) &&
+                    !LayoutEditorRecipeKnowledge.TryGetOriginal(officialSub.prefabName + "_SO", out step, out ings) &&
+                    !LayoutEditorRecipeKnowledge.TryGetOriginal(officialSub.prefabName, out step, out ings))
+                {
+                    continue;
+                }
+                foreach (var ingId in ings)
+                {
+                    var ingSo = LayoutEditorRoastTrayFill.LoadIngredientSo(ingId);
+                    if (ingSo != null && !ingredients.Contains(ingSo))
+                    {
+                        ingredients.Add(ingSo);
+                    }
+                }
                 continue;
             }
             PseudoPrefabSO pseudo = comp as PseudoPrefabSO;

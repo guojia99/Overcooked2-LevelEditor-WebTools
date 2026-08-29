@@ -40,6 +40,7 @@ export const STEP_ICON_SRC: Record<string, string> = {
   // 大火锅/烤托盘暂无专属图标，复用煮锅/烤箱
   HotPot: "/icons/catalog/Pot.png",
   RoastingTray: "/icons/catalog/Oven.png",
+  OvenCakeTin: "/icons/steps/caketin.png",
 };
 
 function esc(s: unknown): string {

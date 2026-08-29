@@ -25,6 +25,14 @@ function renderBlock(block: GuideBlock, ctx: GuideRenderContext): string {
       return `<ul class="guide-bullets">${block.items.map((s) => `<li>${s}</li>`).join("")}</ul>`;
     case "callout":
       return `<p class="guide-callout">${esc(block.text)}</p>`;
+    case "note":
+      return `<p class="guide-note">${esc(block.text)}</p>`;
+    case "table":
+      return `<table class="guide-table guide-table-grid"><thead><tr>${block.header
+        .map((h) => `<th>${esc(h)}</th>`)
+        .join("")}</tr></thead><tbody>${block.rows
+        .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`)
+        .join("")}</tbody></table>`;
     case "kbdTable":
       return `<table class="guide-table"><tbody>${block.rows
         .map(([k, v]) => `<tr><th>${esc(k)}</th><td>${v}</td></tr>`)

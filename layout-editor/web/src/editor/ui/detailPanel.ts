@@ -40,7 +40,8 @@ import {
 import { pushHistory } from "../historyOps";
 import { draw } from "../render";
 import { updateFloorBar } from "../floorPalette";
-import { setItemPlaneSize } from "../items";
+import { setItemPlaneSize, airWallCells, airWallHeightCells, setAirWallHeight } from "../items";
+import { isAirWallItem } from "../stubControls";
 import {
   isConveyorItem,
   isTeleportalItem
@@ -305,12 +306,25 @@ function dispenserDetailHtml(item: EditorItem): string {
 
 export function showDetail(item: EditorItem, clientX: number, clientY: number) {
   const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
-  const fp = isResizableBackgroundItem(item)
+  const fp = isAirWallItem(item)
+    ? (() => {
+        const c = airWallCells(item);
+        return { cellsX: c.wCells, cellsZ: c.dCells };
+      })()
+    : isResizableBackgroundItem(item)
     ? (() => {
         const c = itemPlaneCells(item);
         return { cellsX: c.wCells, cellsZ: c.dCells };
       })()
     : resolveFootprint(item);
+  const hCells = isAirWallItem(item) ? airWallHeightCells(item) : 0;
+  const airWallHeightRow = isAirWallItem(item)
+    ? `<dt>碰撞高度</dt><dd id="si-aw-h-val">${hCells} 格 (≈${(hCells * CELL).toFixed(1)} m)</dd>
+    <div class="floor-edit-row">
+      <label>高度(格) <input type="number" min="1" step="1" id="si-aw-h" value="${hCells}" /></label>
+      <span class="muted" style="align-self:center;font-size:11px">阻挡抛掷物 · 写回后生效</span>
+    </div>`
+    : "";
   const id = prefabIdFromPath(item.prefabAssetPath) || cat?.id || "—";
   const d = stepDisplayDecimals(S.freeSnapStep);
   const pid = itemPrefabId(item);
@@ -335,6 +349,7 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       <dt>层级路径</dt><dd>${item.hierarchyPath}</dd>
       <dt>父节点</dt><dd>${item.parentPath || "—"}</dd>
       <dt>占地</dt><dd>${fp.cellsX} × ${fp.cellsZ} 格 (${(fp.cellsX * CELL).toFixed(1)} × ${(fp.cellsZ * CELL).toFixed(1)} m)</dd>
+      ${airWallHeightRow}
       ${coordRows}
       <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(d)}, y ${item.localPosition.y.toFixed(d)}, z ${item.localPosition.z.toFixed(d)}</dd>
       <dt>旋转 Y</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
@@ -365,4 +380,27 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       dom.detailEl.style.top = `${top}px`;
     }
   });
+
+  if (isAirWallItem(item)) {
+    const hInp = document.getElementById("si-aw-h") as HTMLInputElement | null;
+    let hPushed = false;
+    const applyH = () => {
+      const v = parseInt(hInp?.value ?? "", 10);
+      if (!(v >= 1)) return;
+      if (!hPushed) {
+        pushHistory();
+        hPushed = true;
+      }
+      setAirWallHeight(item, v);
+      const h = airWallHeightCells(item);
+      const el = document.getElementById("si-aw-h-val");
+      if (el) el.textContent = `${h} 格 (≈${(h * CELL).toFixed(1)} m)`;
+      if (hInp && document.activeElement !== hInp) hInp.value = String(h);
+      S.dirty = true;
+      draw();
+      updateFloorBar();
+    };
+    hInp?.addEventListener("input", applyH);
+    hInp?.addEventListener("change", applyH);
+  }
 }

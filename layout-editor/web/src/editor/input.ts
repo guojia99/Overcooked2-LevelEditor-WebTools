@@ -1,6 +1,7 @@
 import {
   S,
-  PickCandidate
+  PickCandidate,
+  EditorItem
 } from "./state";
 import { dom } from "./dom";
 import {
@@ -44,7 +45,8 @@ import {
   addAirFloorAt,
   dragFloor,
   finalizeFloor,
-  isThemedFloor
+  isThemedFloor,
+  maybeSyncMaterialTilingOnResize,
 } from "./floors";
 import {
   addFromCatalog,
@@ -81,7 +83,7 @@ import {
 import { draw } from "./render";
 import { closeModal } from "../modals";
 import { hitTestAll, hitTestItemResizeHandle } from "./renderItems";
-import { hitTestFloorsAll } from "./renderFloors";
+import { hitTestFloorsAll, type FloorHit } from "./renderFloors";
 import { floorWalkY, floorLayerIndex } from "./floorHeight";
 import { updateMarqueeSelection } from "./render";
 import { hitTestWaypoints, waypointInfo, deleteWaypoint, activeGroup, updateMovePickBar, exitMoveMode, removeSelectedMembers } from "./moveControl";
@@ -89,6 +91,126 @@ import { renderRightPanel, updatePanelTabButtons } from "./panels";
 import { isPlayerItem } from "./renderItems";
 import { isAirWallItem } from "./stubControls";
 import { clearPalettePick, palettePlaceCountFor } from "./palette";
+
+/** Shift+点在物品/地板上：按下先聚焦，拖动超过阈值再框选；短按切换选中或弹重叠列表。 */
+const SHIFT_MARQUEE_THRESHOLD = 5;
+let shiftMarqueePending = false;
+let shiftMarqueeStartX = 0;
+let shiftMarqueeStartY = 0;
+let shiftPickClientX = 0;
+let shiftPickClientY = 0;
+let shiftPickItems: EditorItem[] = [];
+let shiftPickSurface: { fHits: FloorHit[]; surfaceHits: EditorItem[] } | null = null;
+let shiftToggleItemKey: string | null = null;
+let shiftToggleWasSelected = false;
+let shiftToggleFloorKey: string | null = null;
+let shiftToggleFloorWasSelected = false;
+
+export function resetOverlapMarqueePending(): void {
+  shiftMarqueePending = false;
+  shiftPickItems = [];
+  shiftPickSurface = null;
+  shiftToggleItemKey = null;
+  shiftToggleFloorKey = null;
+}
+
+function beginShiftMarqueeAtHit(
+  mx: number,
+  my: number,
+  clientX: number,
+  clientY: number,
+  opts: {
+    items?: EditorItem[];
+    fHits?: FloorHit[];
+    surfaceHits?: EditorItem[];
+  }
+): void {
+  const fHits = opts.fHits ?? [];
+  const surfaceHits = opts.surfaceHits ?? opts.items ?? [];
+  const itemHits = opts.items ?? surfaceHits;
+
+  shiftMarqueePending = true;
+  shiftMarqueeStartX = mx;
+  shiftMarqueeStartY = my;
+  shiftPickClientX = clientX;
+  shiftPickClientY = clientY;
+  shiftPickItems = itemHits.length > 1 ? itemHits : [];
+  shiftPickSurface =
+    fHits.length + surfaceHits.length > 1 ? { fHits, surfaceHits } : null;
+
+  shiftToggleItemKey = null;
+  shiftToggleFloorKey = null;
+
+  const primaryItem = surfaceHits[0] ?? itemHits[0] ?? null;
+  const primaryFloor = !primaryItem && fHits[0] ? fHits[0].floor : null;
+
+  if (primaryItem) {
+    shiftToggleItemKey = primaryItem._editorKey;
+    shiftToggleWasSelected = isSelected(primaryItem._editorKey);
+    if (!shiftToggleWasSelected) S.selectedKeys.add(primaryItem._editorKey);
+    S.selectedKey = primaryItem._editorKey;
+  } else if (primaryFloor) {
+    shiftToggleFloorKey = primaryFloor._key;
+    shiftToggleFloorWasSelected = S.selectedFloorKeys.has(primaryFloor._key);
+    if (!shiftToggleFloorWasSelected) S.selectedFloorKeys.add(primaryFloor._key);
+    S.selectedFloorKey = primaryFloor._key;
+  }
+}
+
+function promoteShiftMarqueeToBox(mx: number, my: number): void {
+  shiftMarqueePending = false;
+  shiftToggleItemKey = null;
+  shiftToggleFloorKey = null;
+  shiftPickItems = [];
+  shiftPickSurface = null;
+  S.marqueeing = true;
+  S.marqueeAdd = true;
+  S.marqueeStartX = shiftMarqueeStartX;
+  S.marqueeStartY = shiftMarqueeStartY;
+  S.marqueeCurX = mx;
+  S.marqueeCurY = my;
+  updateMarqueeSelection();
+}
+
+function finishShiftMarqueeClick(): boolean {
+  if (!shiftMarqueePending) return false;
+  shiftMarqueePending = false;
+
+  if (shiftPickItems.length > 1) {
+    showItemOverlapPickTip(shiftPickItems, shiftPickClientX, shiftPickClientY, true);
+  } else if (shiftPickSurface) {
+    const { fHits, surfaceHits } = shiftPickSurface;
+    if (fHits.length + surfaceHits.length > 1) {
+      const itemKeys = surfaceHits.map((it) => it._editorKey);
+      const floorKeys = fHits.map((fh) => fh.floor._key);
+      showSurfaceOverlapPickTip(
+        fHits,
+        surfaceHits,
+        shiftPickClientX,
+        shiftPickClientY,
+        true,
+        overlapBatchHeader(itemKeys, floorKeys, shiftPickClientX, shiftPickClientY)
+      );
+    }
+  } else {
+    if (shiftToggleItemKey && shiftToggleWasSelected) {
+      S.selectedKeys.delete(shiftToggleItemKey);
+      const keys = selectionKeys();
+      S.selectedKey = keys.length ? keys[keys.length - 1] : null;
+    }
+    if (shiftToggleFloorKey && shiftToggleFloorWasSelected) {
+      S.selectedFloorKeys.delete(shiftToggleFloorKey);
+      const keys = [...S.selectedFloorKeys];
+      S.selectedFloorKey = keys.length ? keys[keys.length - 1] : null;
+    }
+  }
+
+  shiftPickItems = [];
+  shiftPickSurface = null;
+  shiftToggleItemKey = null;
+  shiftToggleFloorKey = null;
+  return true;
+}
 
 /** 批量微调应覆盖的键：已有 ≥2 项选中时保留完整选区，否则仅取点击处重叠项。 */
 function batchAdjustKeysForOverlap(
@@ -250,6 +372,7 @@ export function setupCanvas() {
     if (e.button === 2) return;
     if (e.button !== 0) return;
 
+    resetOverlapMarqueePending();
     hidePickTip();
 
     // Move control waypoint interactions: active on the dedicated move layer,
@@ -344,23 +467,23 @@ export function setupCanvas() {
             draw();
             return;
           }
+          if (e.shiftKey && (hits.length > 0 || fHit)) {
+            hideDetail();
+            hideContextMenu();
+            beginShiftMarqueeAtHit(mx, my, e.clientX, e.clientY, {
+              items: hits,
+              fHits,
+              surfaceHits: hits,
+            });
+            updateMovePickBar();
+            renderRightPanel();
+            draw();
+            return;
+          }
           if (hits.length > 0 || fHit) {
             hideDetail();
             hideContextMenu();
-            if (e.shiftKey) {
-              if (hits.length > 0) {
-                for (const it of hits) {
-                  if (isSelected(it._editorKey)) S.selectedKeys.delete(it._editorKey);
-                  else S.selectedKeys.add(it._editorKey);
-                }
-                const keys = selectionKeys();
-                S.selectedKey = keys.length ? keys[keys.length - 1] : null;
-              }
-              if (fHit) {
-                if (S.selectedFloorKeys.has(fHit._key)) S.selectedFloorKeys.delete(fHit._key);
-                else S.selectedFloorKeys.add(fHit._key);
-              }
-            } else if (hits.length > 0) {
+            if (hits.length > 0) {
               setSelection([hits[0]._editorKey]);
               clearFloorSelection();
             } else if (fHit) {
@@ -445,7 +568,21 @@ export function setupCanvas() {
           : S.selectedKey
             ? surfaceHits.find((it) => it._editorKey === S.selectedKey)
             : undefined;
-      if (fHits.length + surfaceHits.length > 1 && (e.shiftKey || (!keepFloor && !keepItem))) {
+      if (e.shiftKey && (fHits.length > 0 || surfaceHits.length > 0)) {
+        const resizeItem = surfaceHits[0];
+        const rHit =
+          resizeItem && layerBg && isResizableBackgroundItem(resizeItem)
+            ? hitTestItemResizeHandle(resizeItem, wx, wz)
+            : null;
+        if (!rHit) {
+          beginShiftMarqueeAtHit(mx, my, e.clientX, e.clientY, { fHits, surfaceHits });
+          hideDetail();
+          hideContextMenu();
+          draw();
+          return;
+        }
+      }
+      if (fHits.length + surfaceHits.length > 1 && !keepFloor && !keepItem) {
         const itemKeys = surfaceHits.map((it) => it._editorKey);
         const floorKeys = fHits.map((fh) => fh.floor._key);
         showSurfaceOverlapPickTip(
@@ -464,12 +601,7 @@ export function setupCanvas() {
       const fHit = keepFloor ?? (keepItem ? null : fHits[0]) ?? null;
       if (fHit) {
         S.dragSnapshot = snapshotState();
-        if (e.shiftKey) {
-          const next = new Set(S.selectedFloorKeys);
-          if (next.has(fHit.floor._key)) next.delete(fHit.floor._key);
-          else next.add(fHit.floor._key);
-          setFloorSelection([...next], fHit.floor._key);
-        } else if (fHit.mode === "resize") {
+        if (fHit.mode === "resize") {
           clearSelection();
           setFloorSelection([fHit.floor._key]);
           S.dragFloorKey = fHit.floor._key;
@@ -478,6 +610,8 @@ export function setupCanvas() {
           S.dragFloorAnchorX = fHit.anchorX;
           S.dragFloorAnchorZ = fHit.anchorZ;
           S.dragFloorGroupKeys = [];
+          S.dragFloorResizePrevW = fHit.floor._wCells;
+          S.dragFloorResizePrevD = fHit.floor._dCells;
           if (fHit.mode === "resize") dom.canvas.style.cursor = "grabbing";
         } else if (
           S.selectedFloorKeys.has(fHit.floor._key) &&
@@ -494,40 +628,18 @@ export function setupCanvas() {
           S.dragFloorAnchorX = fHit.anchorX;
           S.dragFloorAnchorZ = fHit.anchorZ;
           S.dragFloorGroupKeys = [];
-          if (fHit.mode === "resize") dom.canvas.style.cursor = "grabbing";
+          if (fHit.mode === "resize") {
+            S.dragFloorResizePrevW = fHit.floor._wCells;
+            S.dragFloorResizePrevD = fHit.floor._dCells;
+            dom.canvas.style.cursor = "grabbing";
+          }
         }
       } else {
         clearFloorSelection();
         const itemHit = keepItem ?? surfaceHits[0] ?? null;
         if (itemHit) {
           S.dragSnapshot = snapshotState();
-          if (e.shiftKey) {
-            if (isSelected(itemHit._editorKey)) S.selectedKeys.delete(itemHit._editorKey);
-            else S.selectedKeys.add(itemHit._editorKey);
-            S.selectedKey = itemHit._editorKey;
-            const rHit =
-              layerBg && isResizableBackgroundItem(itemHit)
-                ? hitTestItemResizeHandle(itemHit, wx, wz)
-                : null;
-            if (rHit) {
-              S.dragItemResizeKey = itemHit._editorKey;
-              S.dragItemResizeEdge = rHit.edge;
-              S.dragItemResizeAnchorX = rHit.anchorX;
-              S.dragItemResizeAnchorZ = rHit.anchorZ;
-              dom.canvas.style.cursor = "grabbing";
-              S.dragItemKey = null;
-              S.dragGroupKeys = [];
-            } else {
-              S.dragItemKey = isSelected(itemHit._editorKey) ? itemHit._editorKey : null;
-              S.dragGroupKeys = S.selectedKeys.size > 1 && S.dragItemKey ? selectionKeys() : [];
-              if (S.dragItemKey) {
-                S.dragOffsetX = wx - itemHit._wx;
-                S.dragOffsetZ = wz - itemHit._wz;
-                S.dragLastWx = itemHit._wx;
-                S.dragLastWz = itemHit._wz;
-              }
-            }
-          } else if (
+          if (
             isSelected(itemHit._editorKey) &&
             (S.selectedKeys.size > 1 || S.selectedFloorKeys.size > 0)
           ) {
@@ -590,7 +702,20 @@ export function setupCanvas() {
     // (and starts a group drag) instead of popping the overlap picker.
     const groupHit = S.selectedKeys.size > 1 ? hits.find((it) => isSelected(it._editorKey)) : undefined;
     const already = groupHit ?? (S.selectedKey ? hits.find((it) => it._editorKey === S.selectedKey) : undefined);
-    if (hits.length > 1 && (e.shiftKey || !already)) {
+    if (e.shiftKey && hits.length > 0 && !isPlayerItem(hits[0])) {
+      const airResize =
+        S.currentLayer === "items" && isAirWallItem(hits[0])
+          ? hitTestItemResizeHandle(hits[0], wx, wz)
+          : null;
+      if (!airResize) {
+        beginShiftMarqueeAtHit(mx, my, e.clientX, e.clientY, { items: hits });
+        hideDetail();
+        hideContextMenu();
+        draw();
+        return;
+      }
+    }
+    if (hits.length > 1 && !already) {
       showItemOverlapPickTip(hits, e.clientX, e.clientY, e.shiftKey);
       draw();
       return;
@@ -613,18 +738,6 @@ export function setupCanvas() {
         dom.canvas.style.cursor = "grabbing";
         S.dragItemKey = null;
         S.dragGroupKeys = [];
-      } else if (e.shiftKey) {
-        if (isSelected(hit._editorKey)) S.selectedKeys.delete(hit._editorKey);
-        else S.selectedKeys.add(hit._editorKey);
-        S.selectedKey = hit._editorKey;
-        S.dragItemKey = isSelected(hit._editorKey) ? hit._editorKey : null;
-        S.dragGroupKeys = S.selectedKeys.size > 1 && S.dragItemKey ? selectionKeys() : [];
-        if (S.dragItemKey) {
-          S.dragOffsetX = wx - hit._wx;
-          S.dragOffsetZ = wz - hit._wz;
-          S.dragLastWx = hit._wx;
-          S.dragLastWz = hit._wz;
-        }
       } else if (S.selectedKeys.size > 1 && isSelected(hit._editorKey)) {
         S.selectedKey = hit._editorKey;
         S.dragItemKey = hit._editorKey;
@@ -850,7 +963,15 @@ export function setupCanvas() {
       if (nx !== S.hoverCx || ny !== S.hoverCy) {
         S.hoverCx = nx;
         S.hoverCy = ny;
-        if (!S.marqueeing && !S.panning && !S.dragFloorKey && !S.dragItemKey) draw();
+        if (!S.marqueeing && !S.panning && !S.dragFloorKey && !S.dragItemKey && !shiftMarqueePending) draw();
+      }
+    }
+
+    if (shiftMarqueePending) {
+      const dx = mx - shiftMarqueeStartX;
+      const dy = my - shiftMarqueeStartY;
+      if (Math.hypot(dx, dy) >= SHIFT_MARQUEE_THRESHOLD) {
+        promoteShiftMarqueeToBox(mx, my);
       }
     }
 
@@ -1000,7 +1121,12 @@ export function setupCanvas() {
       if (S.dragFloorMode === "resize") dom.canvas.style.cursor = "";
       for (const k of activeFloorDragKeys()) {
         const f = S.floors.find((x) => x._key === k);
-        if (f) finalizeFloor(f);
+        if (f) {
+          if (S.dragFloorMode === "resize") {
+            maybeSyncMaterialTilingOnResize(f, S.dragFloorResizePrevW, S.dragFloorResizePrevD);
+          }
+          finalizeFloor(f);
+        }
       }
     }
     S.dragFloorKey = null;
@@ -1014,6 +1140,10 @@ export function setupCanvas() {
       }
       S.dragItemResizeKey = null;
       commitDragSnapshot();
+      draw();
+      return;
+    }
+    if (finishShiftMarqueeClick()) {
       draw();
       return;
     }
@@ -1164,6 +1294,7 @@ export function setupCanvas() {
       closeModal();
       clearPalettePick();
       S.marqueeing = false;
+      resetOverlapMarqueePending();
       S.pendingNewFloor = false;
       S.pendingNewFloorCat = null;
       S.pendingNewAirFloor = false;

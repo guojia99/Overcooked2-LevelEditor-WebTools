@@ -22,6 +22,7 @@ import {
 import { buildFloorPalette } from "./floorPalette";
 import { buildDocument } from "./serialize";
 import { clearSelection, clearFloorSelection } from "./selection";
+import { resetOverlapMarqueePending } from "./input";
 import { pushHistory } from "./historyOps";
 import {
   hideDetail,
@@ -157,6 +158,7 @@ export async function loadScene(assetPath: string) {
     }
     clearSelection();
     S.marqueeing = false;
+    resetOverlapMarqueePending();
     clearFloorSelection();
     hideDetail();
     S.history.clear();

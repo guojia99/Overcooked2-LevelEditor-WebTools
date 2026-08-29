@@ -26,7 +26,7 @@ using UnityEngine;
 /// </summary>
 public static class LayoutEditorRoastTrayFill
 {
-    /// <summary>把所选烤菜菜谱的叶食材合并进场景所有烤盘 stub 的 allowedIngredientSOs。</summary>
+    /// <summary>把所选烤菜菜谱的叶食材合并进场景所有烤盘 stub 的 allowedIngredientSOs（只增不删）。</summary>
     public static void EnsureRoastTrayIngredients(LevelInfoSO info)
     {
         if (info == null)
@@ -53,7 +53,6 @@ public static class LayoutEditorRoastTrayFill
             var derived = go.GetComponent<PseudoPrefabCookingUtensilStub>();
             if (derived == null)
             {
-                // 手动放置（未跑自动填充）：无派生 stub，复用 ApplyStub 补挂并登记食材。
                 var item = new LayoutItemDto
                 {
                     stubKind = "CookingUtensil",
@@ -84,6 +83,69 @@ public static class LayoutEditorRoastTrayFill
         }
     }
 
+    /// <summary>保存菜谱时覆盖同步：仅保留当前 LevelInfo 烤菜菜谱所需食材，移除无关遗留项。</summary>
+    public static void SyncRoastTrayIngredients(LevelInfoSO info)
+    {
+        if (info == null)
+            return;
+        var required = CollectRoastTrayIngredients(info);
+        ApplyTrayIngredients(required, IsRoastTray);
+    }
+
+    private static void ApplyTrayIngredients(
+        List<PseudoPrefabSO> required,
+        System.Func<PseudoPrefabStub, bool> isTray)
+    {
+        bool sceneDirty = false;
+        foreach (var stub in Object.FindObjectsOfType<PseudoPrefabStub>())
+        {
+            if (stub == null || stub.gameObject == null || !isTray(stub))
+                continue;
+            var go = stub.gameObject;
+            var derived = go.GetComponent<PseudoPrefabCookingUtensilStub>();
+            if (derived == null)
+            {
+                if (required.Count == 0)
+                    continue;
+                var extraGuids = new List<string>();
+                foreach (var so in required)
+                {
+                    var p = AssetDatabase.GetAssetPath(so);
+                    if (!string.IsNullOrEmpty(p))
+                        extraGuids.Add(AssetDatabase.AssetPathToGUID(p));
+                }
+                if (extraGuids.Count == 0)
+                    continue;
+                var item = new LayoutItemDto
+                {
+                    stubKind = "CookingUtensil",
+                    cookingUtensil = new LayoutCookingUtensilStubDto
+                    {
+                        capacity = LayoutEditorStubIO.NativeUtensilCapacityForId(go.name),
+                        allowedIngredientGuids = extraGuids.ToArray(),
+                    },
+                };
+                LayoutEditorStubIO.ApplyStub(go, item);
+                sceneDirty = true;
+            }
+            else if (SetIngredients(derived, required))
+            {
+                sceneDirty = true;
+            }
+        }
+        if (sceneDirty)
+        {
+            foreach (var stub in Object.FindObjectsOfType<PseudoPrefabCookingUtensilStub>())
+            {
+                if (stub == null || stub.gameObject == null)
+                    continue;
+                var scene = stub.gameObject.scene;
+                if (scene.IsValid())
+                    EditorSceneManager.MarkSceneDirty(scene);
+            }
+        }
+    }
+
     private static bool IsRoastTray(PseudoPrefabStub stub)
     {
         if (stub.gameObject == null)
@@ -95,7 +157,30 @@ public static class LayoutEditorRoastTrayFill
             so.prefabName.IndexOf("roasting_tray", System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    /// <summary>把 extra 追加进 allowedIngredientSOs（去重，只增不删）。返回是否发生变更。</summary>
+    /// <summary>把 extra 覆盖写入 allowedIngredientSOs。返回是否发生变更。</summary>
+    private static bool SetIngredients(PseudoPrefabCookingUtensilStub stub, List<PseudoPrefabSO> required)
+    {
+        var next = required.ToArray();
+        var cur = stub.allowedIngredientSOs;
+        if (cur != null && cur.Length == next.Length)
+        {
+            bool same = true;
+            for (int i = 0; i < cur.Length; i++)
+            {
+                if (cur[i] != next[i])
+                {
+                    same = false;
+                    break;
+                }
+            }
+            if (same)
+                return false;
+        }
+        stub.allowedIngredientSOs = next;
+        return true;
+    }
+
+    /// <summary>（场景写回）把 extra 追加进 allowedIngredientSOs（去重，只增不删）。</summary>
     private static bool MergeIngredients(PseudoPrefabCookingUtensilStub stub, List<PseudoPrefabSO> extra)
     {
         if (stub.allowedIngredientSOs == null)

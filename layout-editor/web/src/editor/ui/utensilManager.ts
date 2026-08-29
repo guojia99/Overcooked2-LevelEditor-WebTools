@@ -98,7 +98,7 @@ export function openUtensilManager() {
   // 按菜谱自动填充：读取当前关卡已选菜谱 → 数据驱动计算各锅具应装的食材
   // （汤料→汤锅、香肠→汤锅、洋葱→煎锅、面糊食材→搅拌碗、面糊节点→炸篮、
   //  搅拌类→搅拌杯，含 DLC 食材如 dlc07 土豆/西芹），按功能基础 id 匹配
-  // 场景锅具（含 DLC 变体），容量取原版默认并纠正历史污染，食材列表只增不删。
+  // 场景锅具（含 DLC 变体），容量默认 4；按菜谱自动填充覆盖写入食材列表。
   document.getElementById("utm-auto-fill")?.addEventListener("click", async () => {
     if (!S.scenePath) {
       setStatus("未选择场景，无法读取关卡菜谱", false);
@@ -161,9 +161,7 @@ export function openUtensilManager() {
       }
       if (!it.cookingUtensil) it.cookingUtensil = {};
       it.cookingUtensil.capacity = utensilCapacityOrFix(it);
-      const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
-      for (const g of add) existing.add(g);
-      it.cookingUtensil.allowedIngredientGuids = [...existing];
+      it.cookingUtensil.allowedIngredientGuids = [...new Set(add)];
       touched++;
     }
     draw();

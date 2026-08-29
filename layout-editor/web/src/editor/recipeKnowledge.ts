@@ -16,6 +16,7 @@ export const STEP_UTENSILS: Record<string, string[]> = {
   MixingBowl: ["Mixer", "MixerBowl"],
   HotPot: ["cooking_region_floorburner", "utensil_large_pot_01"],
   RoastingTray: ["Oven", "utensil_roasting_tray"],
+  OvenCakeTin: ["Oven", "utensil_cake_tin_01"],
 };
 
 export const CHOPPABLE_INGREDIENTS = new Set([
@@ -207,6 +208,8 @@ export const STEP_CONTAINER: Record<string, string> = {
   HotPot: "utensil_large_pot_01",
   // 烤菜：食材装进烤盘（叠放在烤箱/工作台上）
   RoastingTray: "utensil_roasting_tray",
+  // 蛋糕：食材装进蛋糕模具（叠放在烤箱内）
+  OvenCakeTin: "utensil_cake_tin_01",
 };
 
 export const WORKSTATION_UTENSILS = new Set([
@@ -224,12 +227,23 @@ export function isFlourBranchRecipe(r: RecipeEntry): boolean {
   return ings.some((i) => FLOUR_INGREDIENTS.has(i)) && ings.some((i) => EGG_INGREDIENTS.has(i));
 }
 
+/** 搅拌型中间产物：官方面糊用 cookingStep=Mixer/MixingBowl；自定义 Mixed 类型用 mixing 标记。 */
+export function isMixIntermediate(inter: RecipeEntry): boolean {
+  const step = inter.cookingStep ?? "";
+  return step === "Mixer" || step === "MixingBowl" || !!inter.mixing;
+}
+
 export function findBatterIntermediateForRecipe(r: RecipeEntry): RecipeEntry | undefined {
+  const interById = new Map(S.intermediatesCache.map((x) => [x.id, x]));
+  // 组成直接引用搅拌中间产物（如 mooncake_meat → Mixed_FlourEggMeat）
+  for (const cid of r.compositionIds ?? []) {
+    const sub = interById.get(cid);
+    if (sub && isMixIntermediate(sub)) return sub;
+  }
   const leafs = new Set(r.ingredients ?? []);
   let best: RecipeEntry | undefined;
   for (const inter of S.intermediatesCache) {
-    const step = inter.cookingStep ?? "";
-    if (step !== "Mixer" && step !== "MixingBowl") continue;
+    if (!isMixIntermediate(inter)) continue;
     const ings = inter.ingredients ?? [];
     if (ings.length === 0 || !ings.every((i) => leafs.has(i))) continue;
     if (!best || ings.length > (best.ingredients ?? []).length) best = inter;
@@ -238,7 +252,15 @@ export function findBatterIntermediateForRecipe(r: RecipeEntry): RecipeEntry | u
 }
 
 export function recipeLacksIntermediate(r: RecipeEntry): boolean {
-  return isFlourBranchRecipe(r) && !findBatterIntermediateForRecipe(r);
+  // Mixed 类型自定义菜谱：叶食材直接进搅拌碗，无需单独面糊中间产物
+  if (r.mixing) return false;
+  if (!isFlourBranchRecipe(r)) return false;
+  const interById = new Map(S.intermediatesCache.map((x) => [x.id, x]));
+  for (const i of r.ingredients ?? []) {
+    const sub = interById.get(i);
+    if (sub && isMixIntermediate(sub)) return false;
+  }
+  return !findBatterIntermediateForRecipe(r);
 }
 
 export function missingIntermediateRecipes(recipes: RecipeEntry[]): RecipeEntry[] {
@@ -276,6 +298,7 @@ export function computeUtensilIngredientFill(
 
   const interById = new Map(S.intermediatesCache.map((x) => [x.id, x]));
   const isMixStep = (s?: string) => s === "Mixer" || s === "MixingBowl";
+  const isMixSub = (x: RecipeEntry) => isMixStep(x.cookingStep) || !!x.mixing;
   // 菜谱最终热锅容器（工作站无 stub，返回空）
   const finalVesselOf = (r: RecipeEntry): string => {
     const uts = STEP_UTENSILS[r.cookingStep ?? ""] ?? [];
@@ -288,13 +311,32 @@ export function computeUtensilIngredientFill(
     // 食材直接引用混合中间产物（月饼型：食材即面糊半成品）
     const refMix = (r.ingredients ?? [])
       .map((i) => interById.get(i))
-      .filter((x): x is RecipeEntry => !!x && isMixStep(x.cookingStep));
+      .filter((x): x is RecipeEntry => !!x && isMixSub(x));
     if (refMix.length > 0) {
       for (const b of refMix) {
         for (const ing of b.ingredients ?? []) addIng("MixerBowl", ing);
         const vessel = finalVesselOf(r);
         if (vessel) addInter(vessel, b.id);
       }
+      continue;
+    }
+    // 组成引用搅拌中间产物（如 mooncake_meat → Mixed_FlourEggMeat）
+    const mixComps = (r.compositionIds ?? [])
+      .map((cid) => interById.get(cid))
+      .filter((x): x is RecipeEntry => !!x && isMixSub(x));
+    if (mixComps.length > 0) {
+      for (const b of mixComps) {
+        for (const ing of b.ingredients ?? []) addIng("MixerBowl", ing);
+        const vessel = finalVesselOf(r);
+        if (vessel) addInter(vessel, b.id);
+      }
+      continue;
+    }
+    // Mixed 类型：叶食材直接进搅拌碗（如 mooncake_Orange 四料直接搅拌）
+    if (r.mixing && isFlourBranchRecipe(r)) {
+      for (const ing of r.ingredients ?? []) addIng("MixerBowl", ing);
+      const vessel = finalVesselOf(r);
+      if (vessel) addInter(vessel, r.id);
       continue;
     }
     // 面粉系：面糊中间产物为准（其食材表=真实下搅拌碗的内容）
@@ -315,7 +357,7 @@ export function computeUtensilIngredientFill(
       if (!container) continue;
       for (const ing of g.ingredients ?? []) {
         const sub = interById.get(ing);
-        if (sub && isMixStep(sub.cookingStep)) {
+        if (sub && isMixSub(sub)) {
           if (container === "MixerBowl") {
             for (const leaf of sub.ingredients ?? []) addIng(container, leaf);
           } else {
@@ -353,7 +395,7 @@ export function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<str
           // 混合型中间产物（面糊）进加热锅具时注册节点本身（原版 FryableObjectsLookup
           // 含 MixedFlourEgg 系节点而非生面粉）；搅拌碗仍展开叶食材。
           const sub = interById.get(iid);
-          if (sub && isMixStep(sub.cookingStep) && ut !== "MixerBowl") {
+          if (sub && isMixIntermediate(sub) && ut !== "MixerBowl") {
             add(ut, sub.id);
             continue;
           }
@@ -379,13 +421,18 @@ export function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<str
   for (const r of recipes) {
     const leafs = new Set(r.ingredients ?? []);
     for (const inter of S.intermediatesCache) {
-      const step = inter.cookingStep ?? "";
-      const container = STEP_CONTAINER[step];
-      if (!container || inter.group !== "levelset") continue;
+      if (inter.group !== "levelset") continue;
+      const container = inter.mixing ? "MixerBowl" : STEP_CONTAINER[inter.cookingStep ?? ""];
+      if (!container) continue;
       const ings = inter.ingredients ?? [];
       if (ings.length === 0 || !ings.every((i) => leafs.has(i))) continue;
       for (const ing of ings) add(container, ing);
     }
+  }
+  // Mixed 类型自定义菜谱：叶食材直接进搅拌碗
+  for (const r of recipes) {
+    if (!r.mixing || !isFlourBranchRecipe(r)) continue;
+    for (const ing of r.ingredients ?? []) add("MixerBowl", ing);
   }
   return result;
 }

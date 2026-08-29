@@ -52,7 +52,7 @@ import {
   hideContextMenu
 } from "./ui/overlay";
 import { draw } from "./render";
-import { setupCanvas } from "./input";
+import { setupCanvas, resetOverlapMarqueePending } from "./input";
 import {
   goManage,
   renderLevelSummary,
@@ -60,6 +60,7 @@ import {
   openAudioModal,
   consumeTargetScene
 } from "../levels";
+import { goDependencies } from "../dependencies";
 import {
   showBusy,
   hideBusy
@@ -161,6 +162,7 @@ export function setLayer(layer: LayerKey): void {
   clearSelection();
   clearFloorSelection();
   S.marqueeing = false;
+  resetOverlapMarqueePending();
   hideDetail();
   hideContextMenu();
   S.pendingNewFloor = false;
@@ -412,6 +414,7 @@ export async function init() {
 
   wireNav((target) => {
     if (target === "manage") confirmLeaveIfDirty(() => goManage());
+    else if (target === "dependencies") confirmLeaveIfDirty(() => goDependencies());
     else if (target === "custom-recipes") {
       location.hash = "#/custom-recipes";
       location.reload();

@@ -265,17 +265,8 @@ public static class SceneLayoutApplier
             AutoEnableDynamicParenting(scene, document);
         }
 
-        // 烤菜烤盘「默认能放」：把所选烤菜菜谱的叶食材追加为场景烤盘 stub 的额外食材
-        // （allowedIngredientSOs，只增不删）。基础版烤盘（utensil_roasting_tray）内置
-        // approvedContents 只含基础/dlc07 烤菜食材，dlc09 节点需显式登记才能放入——
-        // 覆盖「手动放置烤盘未跑自动填充」的情况。
-        var roastInfo = LayoutEditorLevelInfoResolver.ResolveForScene(scene.path);
-        if (roastInfo != null)
-        {
-            LayoutEditorRoastTrayFill.EnsureRoastTrayIngredients(roastInfo);
-            LayoutEditorHotPotFill.EnsureHotPotIngredients(roastInfo);
-        }
 
+        // 烤菜烤盘 / 火锅大锅：食材由前端锅具管理或菜谱自动填充写入，写回时不再追加。
         // After mutating placeholder transforms, persist with the canonical Tools workflow:
         // Toggle Prepare For Building (strip temp-loaded children so they aren't baked into the
         // saved scene) -> Save to disk -> Reload Pseudo Assets (re-load children, restore UI).
@@ -742,9 +733,8 @@ public static class SceneLayoutApplier
         if (go == null)
             return false;
         return go.name == "Col_Floor"
-            || go.name == SceneFloorExporter.AirFloorColliderName
-            || go.name.StartsWith("Col_Floor (", StringComparison.Ordinal)
-            || go.name.StartsWith(SceneFloorExporter.AirFloorColliderName + " (", StringComparison.Ordinal);
+            || SceneFloorExporter.IsAirFloorColliderName(go.name)
+            || go.name.StartsWith("Col_Floor (", StringComparison.Ordinal);
     }
 
     /// <summary>Walk-surface height convention shared with the web editor: legacy
@@ -777,7 +767,7 @@ public static class SceneLayoutApplier
     /// Col_Floor 相同：size=(w,0.4,d)、center=(0,-0.2,0)，仅名称 Col_AirFloor 不同）。
     /// 无论 autoWalkable 开关都会创建/更新——否则空气地板没有任何作用。</summary>
     private static void ApplyAirFloorCollider(FloorDto floor, float snapStep,
-        Dictionary<string, GameObject> createdObjects)
+        LayoutDocumentDto document, Dictionary<string, GameObject> createdObjects)
     {
         var parentPath = !string.IsNullOrEmpty(floor.parentPath) ? floor.parentPath : "Design/Collision";
         var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
@@ -790,26 +780,35 @@ public static class SceneLayoutApplier
         float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
         float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
 
-        var t = FindFloorTransform(floor);
+        var t = FindAirFloorTransform(floor, document);
+        bool inMoveGroup = IsFloorInMoveGroup(floor, document);
         if (t != null)
         {
             Undo.RecordObject(t, "Layout Editor Air Floor");
             Undo.RecordObject(t.gameObject, "Layout Editor Air Floor");
-            var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : t.localPosition;
-            pos.x = SnapScalar(pos.x, snapStep);
-            pos.z = SnapScalar(pos.z, snapStep);
-            t.localPosition = pos;
-            t.localEulerAngles = new Vector3(0f, floor.localRotationY, 0f);
-            t.localScale = Vector3.one;
-            var col = t.GetComponent<BoxCollider>();
+            if (!inMoveGroup)
+            {
+                var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : t.localPosition;
+                pos.x = SnapScalar(pos.x, snapStep);
+                pos.z = SnapScalar(pos.z, snapStep);
+                t.localPosition = pos;
+                t.localEulerAngles = new Vector3(0f, floor.localRotationY, 0f);
+                t.localScale = Vector3.one;
+            }
+            var colGo = AirFloorRig.GetColliderObject(t.gameObject);
+            var colT = colGo != null ? colGo.transform : t;
+            var col = colT.GetComponent<BoxCollider>();
             if (col != null)
             {
                 Undo.RecordObject(col, "Layout Editor Air Floor");
                 col.size = new Vector3(w, 0.4f, d);
                 col.center = new Vector3(0f, -0.2f, 0f);
             }
+            floor.hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(t);
             if (!string.IsNullOrEmpty(floor.instanceId))
-                createdObjects[floor.instanceId] = t.gameObject;
+                createdObjects[floor.instanceId] = colGo != null ? colGo : t.gameObject;
+            PurgeDuplicateAirFloors(colT, w, d);
+            EnsureObjectContainerForMoveFloor(floor, document, colGo != null ? colGo : t.gameObject);
             return;
         }
 
@@ -832,8 +831,164 @@ public static class SceneLayoutApplier
         newCol.size = new Vector3(w, 0.4f, d);
         newCol.center = new Vector3(0f, -0.2f, 0f);
 
+        floor.hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(gt);
         if (createdObjects != null && !string.IsNullOrEmpty(floor.instanceId))
             createdObjects[floor.instanceId] = go;
+        PurgeDuplicateAirFloors(gt, w, d);
+        EnsureObjectContainerForMoveFloor(floor, document, go);
+    }
+
+    /// <summary>Resolve an air-floor collider even when hierarchyPath still points at
+    /// Design/Collision but the object was reparented under a move group.</summary>
+    private static Transform FindAirFloorTransform(FloorDto floor, LayoutDocumentDto document)
+    {
+        var t = FindFloorTransform(floor);
+        if (t != null)
+            return t;
+        if (floor == null || !floor.airFloor)
+            return null;
+
+        // 烘焙后的岛式层级：Design/.../移动组/AirFloor/Ground
+        var scene = EditorSceneManager.GetActiveScene();
+        if (scene.IsValid())
+        {
+            foreach (var rootGo in scene.GetRootGameObjects())
+            {
+                foreach (var tr in rootGo.GetComponentsInChildren<Transform>(true))
+                {
+                    if (tr.name != AirFloorRig.GroundChildName)
+                        continue;
+                    if (tr.parent == null || !AirFloorRig.IsWrapperName(tr.parent.name))
+                        continue;
+                    var col = tr.GetComponent<BoxCollider>();
+                    if (col == null)
+                        continue;
+                    if (!string.IsNullOrEmpty(floor.instanceId))
+                    {
+                        var id = "u:" + tr.gameObject.GetInstanceID();
+                        if (id == floor.instanceId)
+                            return tr;
+                    }
+                }
+            }
+        }
+
+        if (document != null && document.moveControls != null && document.moveControls.groups != null
+            && !string.IsNullOrEmpty(floor.instanceId))
+        {
+            foreach (var g in document.moveControls.groups)
+            {
+                if (g == null || g.floorInstanceIds == null)
+                    continue;
+                bool inGroup = false;
+                foreach (var fid in g.floorInstanceIds)
+                {
+                    if (fid == floor.instanceId) { inGroup = true; break; }
+                }
+                if (!inGroup)
+                    continue;
+                foreach (var o in g.memberOffsets ?? new MoveGroupMemberOffsetDto[0])
+                {
+                    if (o == null || o.instanceId != floor.instanceId || string.IsNullOrEmpty(o.hierarchyPath))
+                        continue;
+                    t = LayoutEditorHierarchy.FindByPath(o.hierarchyPath);
+                    if (t != null)
+                        return t;
+                }
+                foreach (var m in g.memberStatic ?? new MoveGroupMemberDto[0])
+                {
+                    if (m == null || m.instanceId != floor.instanceId || string.IsNullOrEmpty(m.hierarchyPath))
+                        continue;
+                    t = LayoutEditorHierarchy.FindByPath(m.hierarchyPath);
+                    if (t != null)
+                        return t;
+                }
+            }
+        }
+
+        float cx = floor.worldPosition != null ? floor.worldPosition.x : (floor.localPosition != null ? floor.localPosition.x : 0f);
+        float cz = floor.worldPosition != null ? floor.worldPosition.z : (floor.localPosition != null ? floor.localPosition.z : 0f);
+        float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
+        float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
+        Transform best = null;
+        float bestDist = float.MaxValue;
+        if (!scene.IsValid())
+            return null;
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            foreach (var col in rootGo.GetComponentsInChildren<BoxCollider>(true))
+            {
+                var go = col.gameObject;
+                if (!SceneFloorExporter.IsAirFloorColliderName(go.name)
+                    && go.name != AirFloorRig.GroundChildName)
+                    continue;
+                if (go.layer != 9 && LayerMask.LayerToName(go.layer) != "Ground")
+                    continue;
+                var b = col.bounds;
+                if (Mathf.Abs(b.size.x - w) > 0.2f || Mathf.Abs(b.size.z - d) > 0.2f)
+                    continue;
+                float dx = b.center.x - cx;
+                float dz = b.center.z - cz;
+                float dist = dx * dx + dz * dz;
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    best = col.transform;
+                }
+            }
+        }
+        return best != null && bestDist < 4f ? best : null;
+    }
+
+    /// <summary>Remove Col_AirFloor clones left from stale write-backs (same size,
+    /// overlapping center). Keeps the canonical transform passed in.</summary>
+    private static void PurgeDuplicateAirFloors(Transform keep, float w, float d)
+    {
+        if (keep == null)
+            return;
+        var keepCol = keep.GetComponent<BoxCollider>();
+        if (keepCol == null)
+            return;
+        var keepCenter = keepCol.bounds.center;
+        var doomed = new List<GameObject>();
+        var scene = EditorSceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return;
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            foreach (var col in rootGo.GetComponentsInChildren<BoxCollider>(true))
+            {
+                var go = col.gameObject;
+                if (go == keep.gameObject)
+                    continue;
+                if (!SceneFloorExporter.IsAirFloorColliderName(go.name)
+                    && go.name != AirFloorRig.GroundChildName)
+                    continue;
+                var b = col.bounds;
+                if (Mathf.Abs(b.size.x - w) > 0.2f || Mathf.Abs(b.size.z - d) > 0.2f)
+                    continue;
+                if ((b.center - keepCenter).sqrMagnitude > 0.25f)
+                    continue;
+                doomed.Add(go);
+            }
+        }
+        foreach (var go in doomed)
+            Undo.DestroyObjectImmediate(go);
+    }
+
+    /// <summary>移动组内可行走面须挂 ObjectContainer，DynamicLandscapeParenting 才能把
+    /// 玩家/食材父挂载到随动画移动的碰撞体上。</summary>
+    private static void EnsureObjectContainerForMoveFloor(FloorDto floor, LayoutDocumentDto document, GameObject go)
+    {
+        if (floor == null || go == null || string.IsNullOrEmpty(floor.instanceId))
+            return;
+        if (!IsFloorInMoveGroup(floor, document))
+            return;
+        var animated = AirFloorRig.GetAnimatedMember(go);
+        if (animated == null)
+            animated = go;
+        if (animated.GetComponent<ObjectContainer>() == null)
+            Undo.AddComponent<ObjectContainer>(animated);
     }
 
     private static void ApplyFloors(LayoutDocumentDto document, float snapStep,
@@ -859,7 +1014,7 @@ public static class SceneLayoutApplier
             // 就毫无作用；开启时随后由 SyncWalkableToFloors 重建，终态一致。
             if (floor.airFloor)
             {
-                ApplyAirFloorCollider(floor, snapStep, createdObjects);
+                ApplyAirFloorCollider(floor, snapStep, document, createdObjects);
                 continue;
             }
             // Raft floors are visualized via planks in items[]; keep the floor
@@ -903,6 +1058,66 @@ public static class SceneLayoutApplier
 
             CreateFloorInstance(floor, snapStep, createdObjects);
         }
+
+        PurgeOrphanAirFloorsForDocument(document);
+    }
+
+    private static bool IsFloorInMoveGroup(FloorDto floor, LayoutDocumentDto document)
+    {
+        if (floor == null || string.IsNullOrEmpty(floor.instanceId)
+            || document == null || document.moveControls == null
+            || document.moveControls.groups == null)
+            return false;
+        foreach (var g in document.moveControls.groups)
+        {
+            if (g == null || g.floorInstanceIds == null)
+                continue;
+            foreach (var fid in g.floorInstanceIds)
+            {
+                if (fid == floor.instanceId)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>删除文档空气地板之外的 Col_AirFloor / 残留 AirFloor 岛副本。</summary>
+    private static void PurgeOrphanAirFloorsForDocument(LayoutDocumentDto document)
+    {
+        if (document == null || document.floors == null)
+            return;
+        var keep = new HashSet<GameObject>();
+        foreach (var floor in document.floors)
+        {
+            if (floor == null || !floor.airFloor)
+                continue;
+            var t = FindAirFloorTransform(floor, document);
+            if (t == null)
+                continue;
+            var colGo = AirFloorRig.GetColliderObject(t.gameObject);
+            if (colGo != null)
+                keep.Add(colGo);
+            var animated = AirFloorRig.GetAnimatedMember(colGo != null ? colGo : t.gameObject);
+            if (animated != null)
+                keep.Add(animated);
+        }
+        var doomed = new List<GameObject>();
+        var scene = EditorSceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return;
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            foreach (var col in rootGo.GetComponentsInChildren<Transform>(true))
+            {
+                var go = col.gameObject;
+                if (keep.Contains(go))
+                    continue;
+                if (AirFloorRig.IsColliderObject(go) || AirFloorRig.IsWrapperName(go.name))
+                    doomed.Add(go);
+            }
+        }
+        foreach (var go in doomed)
+            Undo.DestroyObjectImmediate(go);
     }
 
     private static void ApplyFloorTransform(Transform t, FloorDto floor, float snapStep)
@@ -1881,7 +2096,13 @@ public static class SceneLayoutApplier
             col.size = item.airWall
                 ? new Vector3(cell, 1.132f, cell)
                 : new Vector3(cell, 2f, cell);
-            if (item.colliderCenter != null)
+            if (item.airWall)
+            {
+                col.center = item.colliderCenter != null
+                    ? item.colliderCenter.ToVector3()
+                    : new Vector3(0f, 1.132f * 0.5f, 0f);
+            }
+            else if (item.colliderCenter != null)
                 col.center = item.colliderCenter.ToVector3();
             if (!string.IsNullOrEmpty(item.instanceId))
                 createdObjects[item.instanceId] = go;
@@ -1914,8 +2135,9 @@ public static class SceneLayoutApplier
                     Undo.RecordObject(col, "Layout Editor Collision");
                     var cell = LayoutEditorCatalogLookup.GridCellSize;
                     col.size = new Vector3(cell, 1.132f, cell);
-                    if (item.colliderCenter != null)
-                        col.center = item.colliderCenter.ToVector3();
+                    col.center = item.colliderCenter != null
+                        ? item.colliderCenter.ToVector3()
+                        : new Vector3(0f, 1.132f * 0.5f, 0f);
                 }
             }
         }
@@ -2079,20 +2301,25 @@ public static class SceneLayoutApplier
         return false;
     }
 
-    /// <summary>Keep at most one theme-managed environment background in the layout document.</summary>
+    /// <summary>Prune only *stacked* theme-background duplicates (same prefab at the
+    /// same position) — historically the doc kept at most one background, which broke
+    /// legitimately tiled backgrounds such as a pond made of many p_dlc4_water_01
+    /// tiles at distinct cells. Different-prefab or spatially distinct tiles survive.</summary>
     private static LayoutItemDto[] PruneThemeBackgroundItems(LayoutItemDto[] items)
     {
         if (items == null || items.Length == 0)
             return items ?? new LayoutItemDto[0];
 
-        int lastBg = -1;
+        bool hasBg = false;
         for (int i = 0; i < items.Length; i++)
         {
             if (items[i] != null && IsThemeBackgroundPrefab(items[i].prefabAssetPath))
-                lastBg = i;
+            {
+                hasBg = true;
+                break;
+            }
         }
-
-        if (lastBg < 0)
+        if (!hasBg)
             return items;
 
         var result = new List<LayoutItemDto>(items.Length);
@@ -2101,11 +2328,35 @@ public static class SceneLayoutApplier
             var it = items[i];
             if (it == null)
                 continue;
-            if (IsThemeBackgroundPrefab(it.prefabAssetPath) && i != lastBg)
+            if (IsThemeBackgroundPrefab(it.prefabAssetPath) && IsStackedBackgroundDuplicate(items, i))
                 continue;
             result.Add(it);
         }
         return result.ToArray();
+    }
+
+    /// <summary>True when a later item uses the same background prefab at (nearly)
+    /// the same position — i.e. an accidental stack, not a tiled pond.</summary>
+    private static bool IsStackedBackgroundDuplicate(LayoutItemDto[] items, int idx)
+    {
+        var a = items[idx];
+        var pa = a.worldPosition ?? a.localPosition;
+        for (int j = idx + 1; j < items.Length; j++)
+        {
+            var b = items[j];
+            if (b == null || !IsThemeBackgroundPrefab(b.prefabAssetPath))
+                continue;
+            if (b.prefabAssetPath != a.prefabAssetPath)
+                continue;
+            var pb = b.worldPosition ?? b.localPosition;
+            if (pa == null || pb == null)
+                return true;
+            if (Mathf.Abs(pa.x - pb.x) < 0.01f
+                && Mathf.Abs(pa.y - pb.y) < 0.01f
+                && Mathf.Abs(pa.z - pb.z) < 0.01f)
+                return true;
+        }
+        return false;
     }
 
     private static Vector3 SnapVector(Vector3 v, float step)

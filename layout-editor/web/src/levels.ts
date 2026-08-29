@@ -5,7 +5,6 @@ import type {
   AudioExportSfxDir,
   AudioItemRule,
   AudioKnowledge,
-  BundleAnalysis,
   CustomRecipeSummary,
   DeathEffectEntry,
   DirectoryEvent,
@@ -22,6 +21,16 @@ import { closeModal, openModal } from "./modals";
 import { showBusy, hideBusy, setBusyMessage } from "./busy";
 import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
 import { navHtml, wireNav } from "./nav";
+
+const DEPS_TARGET_KEY = "depsTargetLevel";
+
+function goDependenciesPage(setName?: string, levelInfoAssetPath?: string): void {
+  if (setName && levelInfoAssetPath) {
+    sessionStorage.setItem(DEPS_TARGET_KEY, JSON.stringify({ setName, assetPath: levelInfoAssetPath }));
+  }
+  location.hash = "#/dependencies";
+  location.reload();
+}
 import { applyRatio, computeAutoScores, computeOrderLifeTimes, ORDER_INTERVAL_SEC, PLATE_RETURN_SEC, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
@@ -105,6 +114,7 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
   `;
   wireNav((target) => {
     if (target === "layout") goLayout();
+    else if (target === "dependencies") goDependenciesPage();
     else if (target === "custom-recipes") {
       location.hash = "#/custom-recipes";
       location.reload();
@@ -679,11 +689,11 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
   }
   setStatus(`已加载：${detail.levelName}`);
 
-  const deps = (detail.dependencies || []).join("\n");
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn" id="btn-layout">打开关卡编辑器</button>
       <button class="m-btn" id="btn-level-config">📊 关卡配置</button>
+      <button class="m-btn" id="btn-deps">📦 依赖管理</button>
       <button class="m-btn" id="btn-summary">📋 汇总</button>
     </div>
 
@@ -699,7 +709,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <label class="m-field">动态父挂载 disableDynamicParenting
           <label class="modal-check"><input type="checkbox" id="f-disableDynamicParenting" ${detail.disableDynamicParenting ? "checked" : ""}> 勾选=禁用（含移动/升降平台关卡应取消）</label>
         </label>
-        <label class="m-field">依赖 bundles（每行一个，如 bundle47 / bundle11）<textarea id="f-dependencies">${esc(deps)}</textarea></label>
+        <p class="modal-hint">Bundle 依赖（<code>dependencies</code>）请在顶栏 <b>📦 依赖管理</b> 中编辑。当前共 ${(detail.dependencies || []).length} 项。</p>
       </div>
       <div class="m-actions-row">
         <button class="m-btn primary" id="save-info">保存基础信息</button>
@@ -713,10 +723,6 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
 function wireDetailActions(app: HTMLElement, setName: string, assetPath: string, detail: LevelDetail): void {
   document.getElementById("save-info")?.addEventListener("click", async () => {
     try {
-      const deps = (document.getElementById("f-dependencies") as HTMLTextAreaElement).value
-        .split(/\r?\n/)
-        .map((s) => s.trim())
-        .filter(Boolean);
       showBusy("保存基础信息…");
       await api.updateLevelInfo({
         assetPath,
@@ -727,7 +733,7 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
         disableDynamicParenting: (document.getElementById("f-disableDynamicParenting") as HTMLInputElement).checked,
         minOrderCount: Number((document.getElementById("f-minOrderCount") as HTMLInputElement).value || 2),
         maxOrderCount: Number((document.getElementById("f-maxOrderCount") as HTMLInputElement).value || 5),
-        dependencies: deps,
+        dependencies: detail.dependencies || [],
       });
       setStatus("基础信息已保存（已 reload）");
       await renderLevelDetail(app, setName, assetPath);
@@ -739,6 +745,7 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
   });
 
   document.getElementById("btn-layout")?.addEventListener("click", () => goLayout(detail.sceneAssetPath));
+  document.getElementById("btn-deps")?.addEventListener("click", () => goDependenciesPage(setName, assetPath));
   document.getElementById("btn-summary")?.addEventListener("click", () => void renderLevelSummary(app, setName, assetPath));
   document.getElementById("btn-level-config")?.addEventListener("click", () =>
     void openConfigTabsModal(detail, setName, () => {
@@ -1243,17 +1250,15 @@ export async function openAudioModal(
   let ambiances: string[];
   let deaths: DeathEffectEntry[];
   let knowledge: AudioKnowledge;
-  let analysis: BundleAnalysis | null;
   let bundleGraph: Map<string, string[]>;
   let exports: AudioExportManifest | null;
   try {
-    [music, dirs, ambiances, deaths, knowledge, analysis, bundleGraph, exports] = await Promise.all([
+    [music, dirs, ambiances, deaths, knowledge, bundleGraph, exports] = await Promise.all([
       api.fetchMusicCatalog(),
       api.fetchAudioDirectoryCatalog(),
       api.fetchAmbiences(),
       api.fetchDeathEffects(),
       api.fetchAudioKnowledge(),
-      api.fetchBundleAnalysis(detail.levelInfoAssetPath).catch(() => null),
       api.fetchBundleGraph(),
       api.fetchAudioExports(),
     ]);
@@ -1300,7 +1305,6 @@ export async function openAudioModal(
     ambiences: new Set<string>(
       (cur.ambiences || []).filter((a) => ambiances.includes(a) && (!ambValidSet || ambValidSet.has(a)))
     ),
-    cleanExtras: false,
   };
 
   // always force the mandatory directories in
@@ -1499,27 +1503,6 @@ export async function openAudioModal(
         .join("")
     : `<div class="dep-ok">已覆盖所有已放置装饰的主题音效集与氛围音。</div>`;
 
-  // ---- dependencies panel ----
-  let depsHtml = "";
-  if (analysis) {
-    const miss = analysis.missing.filter((b) => !alwaysLoaded.has(b));
-    const extras = analysis.extras;
-    const missHtml = miss.length
-      ? `<div class="dep-warn dep-miss">🔴 缺失（保存时自动加入）：<b>${miss.map(esc).join(", ")}</b></div>`
-      : `<div class="dep-ok">依赖资源包完整。</div>`;
-    const extrasHtml = extras.length
-      ? `<div class="dep-warn dep-extra">🟡 检测到未使用 bundle：${extras.map(esc).join(", ")} <label class="modal-check inline"><input type="checkbox" id="au-clean"> 清理未用 bundle</label></div>`
-      : "";
-    const cur2 = analysis.current.length ? analysis.current.map(esc).join(", ") : "<i class='muted'>（无）</i>";
-    depsHtml = `
-      <p class="modal-hint" style="margin-top:8px">依赖资源包 <code>LevelInfoSO.dependencies</code></p>
-      <div class="dep-box">
-        <div class="muted">当前：${cur2}</div>
-        ${missHtml}
-        ${extrasHtml}
-      </div>`;
-  }
-
   // ---- item audio gaps ----
   const itemGaps: { labelZh: string; itemIds: string[]; missingDirs: string[]; missingAmb: string[] }[] = [];
   for (const { rule, itemIds: hitIds } of itemReq.hits) {
@@ -1577,7 +1560,7 @@ export async function openAudioModal(
   openModal(
     `音频配置 · ${detail.levelName || detail.levelNameZH}`,
     `
-    <p class="modal-hint">写入场景的 <code>PseudoPrefabManagerStub</code>。保存时会自动打开/保存场景、Reload，并<b>自动把所选 BGM / 音效集所需 bundle 并入 <code>LevelInfoSO.dependencies</code></b>（只增不删）。</p>
+    <p class="modal-hint">写入场景的 <code>PseudoPrefabManagerStub</code>。保存时会自动打开/保存场景、Reload，并<b>把所选 BGM / 音效集所需 bundle 并入 <code>LevelInfoSO.dependencies</code></b>。Bundle 分析与清理请使用顶栏 <b>📦 依赖管理</b>。</p>
     <div class="cfg-tabs">
       <button type="button" class="cfg-tab-btn ${defaultTab === "check" ? "active" : ""}" data-tab="check">🔍 检查</button>
       <button type="button" class="cfg-tab-btn ${defaultTab === "music" ? "active" : ""}" data-tab="music">🎵 音乐 / 特效</button>
@@ -1592,7 +1575,6 @@ export async function openAudioModal(
 
       <p class="modal-hint" style="margin-top:8px">覆盖检查${allGapsCount ? ` · <span class="dep-miss">有 ${allGapsCount} 处缺失</span>` : ""} <button type="button" class="link-btn" id="au-fix-gaps" ${allGapsCount ? "" : "disabled"}>添加所有缺失</button></p>
       <div class="dep-box">${gapHtml || itemGapHtml ? (gapHtml + itemGapHtml) : '<div class="dep-ok">所有主题与物品音频均已覆盖。</div>'}</div>
-      ${depsHtml}
     </div>
 
     <!-- === TAB: 音乐 / 特效 === -->
@@ -1991,29 +1973,8 @@ export async function openAudioModal(
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     try {
-      state.cleanExtras =
-        (document.getElementById("au-clean") as HTMLInputElement | null)?.checked ?? false;
       const ambiences = [...state.ambiences];
       const audioDirectoryGuids = effectiveDirGuids();
-
-      // optional cleanup first (trim confirmed-unused bundles), then audio save auto-merges required.
-      if (state.cleanExtras && analysis && analysis.extras.length) {
-        const cur2 = new Set(analysis.current);
-        analysis.extras.forEach((b) => cur2.delete(b));
-        const kept = [...cur2];
-        showBusy("清理未用 bundle…");
-        await api.updateLevelInfo({
-          assetPath: detail.levelInfoAssetPath,
-          levelName: detail.levelName,
-          levelNameZH: detail.levelNameZH,
-          sceneName: detail.sceneName,
-          debugRecipeCount: detail.debugRecipeCount,
-          disableDynamicParenting: detail.disableDynamicParenting,
-          minOrderCount: detail.minOrderCount,
-          maxOrderCount: detail.maxOrderCount,
-          dependencies: kept,
-        });
-      }
 
       showBusy("保存音频配置（打开并保存场景）…");
       await api.updateLevelAudio({

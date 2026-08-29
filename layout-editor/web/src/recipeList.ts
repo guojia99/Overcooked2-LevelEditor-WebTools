@@ -80,6 +80,7 @@ app.innerHTML = `
 wireNav((target) => {
   if (target === "layout") location.href = "/index.html#/layout";
   else if (target === "manage") location.href = "/index.html#/manage";
+  else if (target === "dependencies") location.href = "/index.html#/dependencies";
   else if (target === "custom-recipes") location.href = "/index.html#/custom-recipes";
   else if (target === "guide") location.href = "/index.html#/guide";
 });

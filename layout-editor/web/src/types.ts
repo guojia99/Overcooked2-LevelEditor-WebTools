@@ -561,6 +561,7 @@ export interface FloorMaterial {
   id: string;
   assetPath: string;
   nameZh: string;
+  nameEn?: string;
   sizeTag?: string;
   /** Level set name or "common01"/"common02" (static floor-materials.json only). */
   source?: string;

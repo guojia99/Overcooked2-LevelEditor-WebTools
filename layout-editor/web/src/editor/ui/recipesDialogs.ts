@@ -157,6 +157,21 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     }
   };
 
+  /** 按当前勾选的菜谱 id 解析 guid（覆盖写回，不保留未勾选项）。 */
+  function guidsForSave(): string[] {
+    const out: string[] = [];
+    const seenId = new Set<string>();
+    for (const id of selectedIds) {
+      if (!id || seenId.has(id)) continue;
+      seenId.add(id);
+      const r =
+        recipes.find((x) => x.id === id && x.group === "levelset") ??
+        recipes.find((x) => x.id === id);
+      if (r) out.push(r.guid);
+    }
+    return out;
+  }
+
   const catMeta: Record<string, { label: string; emoji: string; color: string }> = {
     levelset: { label: "自定义菜谱", emoji: "🍽️", color: "#3b82f6" },
     core: { label: "Common", emoji: "📦", color: "#2d6a4f" },
@@ -442,6 +457,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     // 奶油喷罐：发泡奶油由喷罐喷出（不建食材箱）。缺失时自动放置一个并绑定奶油食材。
     const needCream = recs.some(recipeNeedsCreamSpray);
     const ingByGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
+    const recipeById = new Map(recipes.map((r) => [r.id, r.guid]));
     if (needCream) {
       const creamGuids = CREAM_INGREDIENT_IDS.map((iid) => ingByGuid.get(iid)).filter((g): g is string => !!g);
       if (creamGuids.length === 0) {
@@ -453,9 +469,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         it.stubKind = "CookingUtensil";
         if (!it.cookingUtensil) it.cookingUtensil = {};
         it.cookingUtensil.capacity = utensilCapacityOrFix(it);
-        const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
-        for (const g of creamGuids) existing.add(g);
-        it.cookingUtensil.allowedIngredientGuids = [...existing];
+        it.cookingUtensil.allowedIngredientGuids = [...creamGuids];
       };
       for (const sprayId of CREAM_SPRAY_IDS) {
         const sprayCat = catalogItemById(sprayId);
@@ -576,11 +590,10 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
 
     // 锅具食材自动装填（数据驱动，镜像游戏 OrderDefinitionNode 组成）：
     // 汤类食材→汤锅、热狗肠→汤锅、洋葱→煎锅、搅拌类食材→搅拌杯、面糊食材→搅拌碗、
-    // 面糊中间产物→炸篮等。按功能基础 id 匹配场景锅具（含 DLC 变体），已有列表只增不删。
+    // 面糊中间产物→炸篮等。按功能基础 id 匹配场景锅具（含 DLC 变体），覆盖写入 allowedIngredientSOs。
     {
       const vesselFill = computeUtensilIngredientFill(recs);
       const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
-      const recipeGuid = new Map(recipes.map((r) => [r.id, r.guid]));
       const vesselOfItem = (it: { prefabGuid?: string; prefabAssetPath?: string }): string => {
         const id = S.catalogByGuid.get(it.prefabGuid ?? "")?.id ?? prefabIdFromPath(it.prefabAssetPath ?? "");
         return functionalBaseId(id ?? "");
@@ -592,7 +605,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
           if (g) guids.push(g);
         }
         for (const iid of fill.intermediates) {
-          const g = recipeGuid.get(iid);
+          const g = recipeById.get(iid);
           if (g) guids.push(g);
         }
         if (guids.length === 0) continue;
@@ -601,9 +614,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
           it.stubKind = "CookingUtensil";
           if (!it.cookingUtensil) it.cookingUtensil = {};
           it.cookingUtensil.capacity = utensilCapacityOrFix(it);
-          const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
-          for (const g of guids) existing.add(g);
-          it.cookingUtensil.allowedIngredientGuids = [...existing];
+          it.cookingUtensil.allowedIngredientGuids = [...new Set(guids)];
         }
       }
     }
@@ -615,16 +626,16 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         if (!intIds || intIds.length === 0) continue;
         const itCat = catalogItemById(placedId);
         if (!itCat) continue;
-        const guidsToAdd = intIds.map((iid) => ingByGuid.get(iid)).filter((g): g is string => !!g);
+        const guidsToAdd = intIds
+          .map((iid) => ingByGuid.get(iid) ?? recipeById.get(iid))
+          .filter((g): g is string => !!g);
         if (guidsToAdd.length === 0) continue;
         for (const it of S.items) {
           if (it.prefabGuid !== itCat.guid) continue;
           it.stubKind = "CookingUtensil";
           if (!it.cookingUtensil) it.cookingUtensil = {};
           it.cookingUtensil.capacity = utensilCapacityOrFix(it);
-          const existing = new Set(it.cookingUtensil.allowedIngredientGuids ?? []);
-          for (const g of guidsToAdd) existing.add(g);
-          it.cookingUtensil.allowedIngredientGuids = [...existing];
+          it.cookingUtensil.allowedIngredientGuids = [...new Set(guidsToAdd)];
         }
       }
     }
@@ -687,16 +698,18 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       });
       document.querySelector("[data-ok]")?.addEventListener("click", async () => {
         try {
-          const guids = [...selected];
-          console.debug(`[recipes] 保存菜谱: levelInfo=${level!.levelInfoAssetPath}, 共 ${guids.length} 个 guid:`);
+          const guids = guidsForSave();
+          console.debug(`[recipes] 保存菜谱（覆盖）: levelInfo=${level!.levelInfoAssetPath}, 共 ${guids.length} 个 guid:`);
           for (const g of guids) {
             const r = byGuid.get(g);
             if (r) console.debug(`[recipes]   ${g} -> ${r.id} (${r.group}, ${r.assetPath ?? ""})`);
             else console.warn(`[recipes]   ${g} -> 不在当前目录中（后端可能丢弃该 guid）`);
           }
           await saveLevelRecipes(level!.levelInfoAssetPath, guids);
+          selected.clear();
+          for (const g of guids) selected.add(g);
           closeModal();
-          setStatus("菜谱已写入 LevelInfo");
+          setStatus(`菜谱已覆盖写入 LevelInfo（${guids.length} 道）`);
         } catch (e) {
           setStatus((e as Error).message, false);
         }
@@ -818,7 +831,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         : `<p class="modal-hint ok">锅具/道具已齐全</p>`}
       <div class="rw-toolbar" style="margin-top:8px">
         ${info.missingIngs.length ? `<button type="button" class="modal-btn primary" id="an-fill-ing">一键补齐食材 (${info.missingIngs.length})</button>` : ""}
-        <button type="button" class="modal-btn primary" id="an-fill-ut" title="放置缺失锅具/机具并装填：锅具按已选菜谱分配可处理食材（煎锅←肉、炸篮←薯条/洋葱圈/芝士条等），饮料机/汽水机/奶油喷罐自动放置并联动；锅具已齐时仅执行装填与联动（只增不删）">${info.missingUt.length ? `自动补全道具 (${info.missingUt.length})` : "🔄 锅具装填 / 机具联动"}</button>
+        <button type="button" class="modal-btn primary" id="an-fill-ut" title="放置缺失锅具/机具并装填：锅具按已选菜谱分配可处理食材（煎锅←肉、炸篮←薯条/洋葱圈/芝士条等），饮料机/汽水机/奶油喷罐自动放置并联动；锅具已齐时仅执行装填与联动（覆盖写入食材）">${info.missingUt.length ? `自动补全道具 (${info.missingUt.length})` : "🔄 锅具装填 / 机具联动"}</button>
       </div>
     </div>`;
   };

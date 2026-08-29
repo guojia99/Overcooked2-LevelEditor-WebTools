@@ -211,9 +211,31 @@ public static class LayoutEditorCustomIngredients
     ///  common03 未构建（Tools/Build AssetBundles 未跑）时本体依赖自动缺席。</summary>
     public static void EnsureWebDependencies(string levelSet, LevelInfoSO info)
     {
+        EnsureWebDependencies(levelSet, info, false);
+    }
+
+    /// <param name="replaceExisting">true：按当前 LevelInfo 引用重建 dependencies（保存菜谱覆盖写回）；
+    ///  false：在已有 dependencies 上追加（场景写回）。</param>
+    public static void EnsureWebDependencies(string levelSet, LevelInfoSO info, bool replaceExisting)
+    {
         if (info == null)
             return;
-        var deps = new List<string>(info.dependencies ?? new string[0]);
+        var deps = replaceExisting
+            ? new List<string>()
+            : new List<string>(info.dependencies ?? new string[0]);
+        if (levelSet != null)
+        {
+            var customBundle = levelSet + "/custom_recipes";
+            if (LayoutEditorCatalogApi.BundleFileExists(customBundle))
+                AddDependency(deps, customBundle);
+            foreach (var r in info.recipes ?? new ScriptableObject[0])
+            {
+                var custom = r as CustomRecipeSO;
+                if (custom == null || custom.platingStepSO == null)
+                    continue;
+                AddDependency(deps, custom.platingStepSO.bundleName);
+            }
+        }
         AddDependency(deps, Common03BundleName);
         AddDependency(deps, CommonW1BundleName);
         foreach (var b in _pendingDocBundles)

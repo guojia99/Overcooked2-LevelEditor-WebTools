@@ -1434,29 +1434,16 @@ public static class LayoutEditorStubIO
         return null;
     }
 
-    /// <summary>锅具原版默认容量（bundle 实测 IngredientContainer.m_capacity）：
-    ///  汤锅 Pot=3、搅拌碗 MixerBowl/搅拌杯 BlenderCup/烤盘 GriddlePan=4、烤串 Skewer=3、
-    ///  火锅大锅（utensil_large_pot_01，bundle226）=4、烤菜烤盘（utensil_roasting_tray，
-    ///  bundle297）=4、其余（煎锅/炸篮/蒸锅等）=1。用于前端漏传 capacity 时的兜底。
-    ///  注意 large_pot / roasting_tray 必须先于 pot 子串判断。</summary>
+    /// <summary>厨具默认容量：统一为 4。用于前端漏传 capacity 时的兜底。</summary>
     private static int NativeUtensilCapacity(GameObject go)
     {
-        var pid = !string.IsNullOrEmpty(go.name) ? go.name.Replace("(Clone)", "") : "";
-        return NativeUtensilCapacityForId(pid);
+        return 4;
     }
 
-    /// <summary>按 prefab id 查原版默认容量（utensil guard 等复用）。</summary>
+    /// <summary>按 prefab id 查默认容量（utensil guard 等复用）。</summary>
     public static int NativeUtensilCapacityForId(string prefabId)
     {
-        var pid = prefabId ?? "";
-        if (pid.IndexOf("large_pot", StringComparison.OrdinalIgnoreCase) >= 0) return 4;
-        if (pid.IndexOf("roasting_tray", StringComparison.OrdinalIgnoreCase) >= 0) return 4;
-        if (pid.IndexOf("pot", StringComparison.OrdinalIgnoreCase) >= 0) return 3;
-        if (pid.IndexOf("mixer", StringComparison.OrdinalIgnoreCase) >= 0 ||
-            pid.IndexOf("blender", StringComparison.OrdinalIgnoreCase) >= 0 ||
-            pid.IndexOf("griddle", StringComparison.OrdinalIgnoreCase) >= 0) return 4;
-        if (pid.IndexOf("skewer", StringComparison.OrdinalIgnoreCase) >= 0) return 3;
-        return 1;
+        return 4;
     }
 
     /// <summary>allowedIngredientSOs is ScriptableObject[] and may hold CustomRecipeSO

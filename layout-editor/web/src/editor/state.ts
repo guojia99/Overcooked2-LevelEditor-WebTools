@@ -145,6 +145,8 @@ export const HALF_CELL = CELL / 2;
 
 /** 空气墙 BoxCollider 水平边长（米），与 Unity GridCellSize / 工作台 1 格一致。 */
 export const AIR_WALL_BASE_XZ = CELL;
+/** 空气墙 BoxCollider 竖向基准高度（米）；Unity 导出识别魔法数，实际高度 = 此值 × localScale.y。 */
+export const AIR_WALL_BASE_Y = 1.132;
 /** 磁吸半径：距半格网格 0.1 内才吸附到网格，其余位置按所选精度自由摆放。 */
 export const MAGNET_THRESHOLD = 0.1;
 export const PX_PER_UNIT = 48;
@@ -387,6 +389,9 @@ export const S = {
   dragFloorEdge: "",
   dragFloorAnchorX: 0,
   dragFloorAnchorZ: 0,
+  /** 拖角缩放地板前记录的格数，用于判断是否同步贴图平铺。 */
+  dragFloorResizePrevW: 0,
+  dragFloorResizePrevD: 0,
   ingredientsCache: [] as IngredientEntry[],
   intermediatesCache: [] as RecipeEntry[],
   autoIntermediates: true,

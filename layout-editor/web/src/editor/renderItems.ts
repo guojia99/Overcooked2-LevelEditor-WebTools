@@ -34,7 +34,8 @@ import {
   isCollisionItem,
   stubKindOf,
   isHotpotBurnerItem,
-  isAirWallItem
+  isAirWallItem,
+  isTravelatorItem
 } from "./stubControls";
 import { isSelected } from "./selection";
 import {
@@ -50,7 +51,7 @@ import { isServingStationItem,
   isPlateReturnItem,
   isGlassReturnItem
 } from "./servingLinks";
-import { airWallCells } from "./items";
+import { airWallCells, airWallHeightCells } from "./items";
 
 /** 空气箱（隐形碰撞块）：编辑器内以虚线框 + 半透明填充标示，游戏内不可见。 */
 function drawCollisionMarker(item: EditorItem, selected: boolean) {
@@ -58,6 +59,7 @@ function drawCollisionMarker(item: EditorItem, selected: boolean) {
   const center = worldToCanvas(item._wx, item._wz);
   const cellPx = CELL * PX_PER_UNIT * S.scale;
   const cells = isAirWallItem(item) ? airWallCells(item) : null;
+  const hCells = isAirWallItem(item) ? airWallHeightCells(item) : 1;
   const w = cells ? cells.wCells * cellPx : resolveFootprint(item).cellsX * cellPx * itemScaleX(item);
   const h = cells ? cells.dCells * cellPx : resolveFootprint(item).cellsZ * cellPx * itemScaleZ(item);
   const ctx = dom.ctx;
@@ -75,7 +77,7 @@ function drawCollisionMarker(item: EditorItem, selected: boolean) {
   ctx.strokeRect(-dw / 2, -dh / 2, dw, dh);
   ctx.setLineDash([]);
   ctx.fillStyle = selected ? "rgba(255,220,120,0.95)" : "rgba(150,190,255,0.75)";
-  drawLabelInBox(ctx, "空气墙", dw, dh);
+  drawLabelInBox(ctx, hCells > 1 ? `空气墙·${hCells}格` : "空气墙", dw, dh);
   if (showItemResizeHandles(item, selected)) drawItemResizeHandles(dw, dh);
   ctx.restore();
 }
@@ -268,7 +270,8 @@ export function drawSurfaceItem(item: EditorItem, selected: boolean) {
 
   if (showItemResizeHandles(item, selected)) drawItemResizeHandles(bw, bh);
 
-  if (paint.emoji) {
+  const isTravelator = isTravelatorItem(item);
+  if (paint.emoji && !isTravelator) {
     dom.ctx.font = `${Math.min(14, bh * 0.4)}px system-ui`;
     dom.ctx.textAlign = "center";
     dom.ctx.textBaseline = "middle";
@@ -285,6 +288,11 @@ export function drawSurfaceItem(item: EditorItem, selected: boolean) {
   }
 
   dom.ctx.restore();
+
+  // 自动步道：localRotationY 0°左 / 90°上 / 180°右 / 270°下，与传送带同一套箭头绘制。
+  if (isTravelator) {
+    drawConveyorArrow(center, rot - 90, cellPx, item.travelator?.speed ?? 2.5);
+  }
 }
 
 export function drawNumberBadge(

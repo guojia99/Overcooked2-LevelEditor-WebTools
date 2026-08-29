@@ -162,7 +162,7 @@ export function selectionHeightRowHtml(): string {
   if (floorCount) parts.push(`${floorCount} 地板`);
   if (itemCount) parts.push(`${itemCount} 物品`);
   return `
-    <div class="ctx-nudge-row fb-batch-h">
+    <div class="ctx-nudge-row ctx-batch-row">
       <span class="ctx-label">批量高度${mixedTag} <span class="ctx-scale-val" id="sel-h-count">${parts.join(" · ")}</span></span>
       <div class="ctx-nudge">
         <button type="button" data-sel-h-dy="-${step}" title="全体降低 ${step}">−${step.toFixed(dec)}</button>

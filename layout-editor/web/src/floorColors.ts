@@ -1,4 +1,5 @@
 import type { CatalogItem, DeathInfo } from "./types";
+import { translateMaterialId } from "./floorMaterialLabels";
 
 export interface SurfacePaint {
   fill: string;
@@ -344,75 +345,6 @@ export const FLOOR_MATERIAL_GROUPS: { key: string; labelZh: string }[] = [
 ];
 
 /** Bilingual (zh / en) label for a floor material id, e.g. mat_kevin_floor_12x8. */
-const MAT_ZH: Record<string, string> = {
-  kevin: "凯文",
-  raft: "木筏",
-  airballoon: "热气球",
-  city: "城市",
-  path: "路面",
-  sp: "太空",
-  blacktiles: "黑砖",
-  wizard: "魔法学校",
-  stonefloor: "石地板",
-  woodfloor: "木地板",
-  floor: "地板",
-  tile: "砖",
-  carpet: "地毯",
-  sky: "天空",
-  wood: "木",
-  stone: "石",
-  snow: "雪",
-  ice: "冰",
-  sand: "沙",
-  alien: "外星",
-  dark: "深色",
-  old: "复古",
-};
-
-const MAT_EN: Record<string, string> = {
-  kevin: "Kevin",
-  raft: "Raft",
-  airballoon: "Air Balloon",
-  city: "City",
-  path: "Path",
-  sp: "Space",
-  blacktiles: "Black Tiles",
-  wizard: "Wizard",
-  stonefloor: "Stone Floor",
-  woodfloor: "Wood Floor",
-  floor: "Floor",
-  tile: "Tile",
-  carpet: "Carpet",
-  sky: "Sky",
-  wood: "Wood",
-  stone: "Stone",
-  snow: "Snow",
-  ice: "Ice",
-  sand: "Sand",
-  alien: "Alien",
-  dark: "Dark",
-  old: "Old",
-};
-
 export function materialBilingual(id: string): { zh: string; en: string } {
-  let n = id ?? "";
-  if (n.toLowerCase().startsWith("mat_")) n = n.slice(4);
-  const sizeMatch = n.match(/(\d+)x(\d+)$/);
-  const size = sizeMatch ? `${sizeMatch[1]}×${sizeMatch[2]}` : "";
-
-  const tokens = n.replace(/_?\d+x\d+$/, "").split("_").filter((t) => t.length > 0);
-  const zhParts: string[] = [];
-  const enParts: string[] = [];
-  for (const t of tokens) {
-    const lower = t.toLowerCase();
-    zhParts.push(MAT_ZH[lower] ?? t);
-    enParts.push(MAT_EN[lower] ?? t);
-  }
-  // Trailing numeric variant token (e.g. the "1" in sp_blacktiles_1_11x3).
-  const variantMatch = n.match(/_?(\d+)_\d+x\d+$/);
-  const variant = variantMatch ? variantMatch[1] : "";
-
-  const zh = (zhParts.join("") + (variant ? " " + variant : "") + (size ? " " + size : "")).trim();
-  const en = (enParts.join(" ") + (variant ? " " + variant : "") + (size ? " (" + size + ")" : "")).trim();
-  return { zh, en };
+  return translateMaterialId(id);
 }

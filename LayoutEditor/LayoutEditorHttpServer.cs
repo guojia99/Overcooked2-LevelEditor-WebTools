@@ -458,8 +458,8 @@ public class LayoutEditorHttpServer
                 {
                     LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
                     LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
-                    // 填充可能引入新的食材/音频目录引用，再同步一次副本、依赖并合并音频 bundle。
-                    LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
+                    // 填充可能引入新的食材/音频目录引用，覆盖重建 dependencies 并合并音频 bundle。
+                    LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
                     LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
                     EditorUtility.SetDirty(levelInfo);
                     AssetDatabase.SaveAssets();

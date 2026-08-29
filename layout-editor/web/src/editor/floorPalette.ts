@@ -27,11 +27,6 @@ import {
 import { tidyCatalogNameZh } from "../displayLabels";
 import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
 import { floorLayerSummary } from "./floorHeight";
-import {
-  selectionHeightRowHtml,
-  selectionHeightTargetCount,
-  wireSelectionHeightRow
-} from "./selectionHeight";
 
 /** 面板高度过滤：按 prefab 固有模型高度（catalog 的 height 字段，未实测按 0）
  *  是否落在当前高度区间内。未激活（全部）时恒通过。 */
@@ -290,9 +285,7 @@ export function updateFloorBar() {
     S.currentLayer === "floor"
       ? `<button type="button" id="fb-lotus-rand-rot" class="fb-btn" title="将场景中所有莲花压力开关随机设为 0° / 90° / 180° / 270°（写回后生效）">🪷 莲花随机旋转</button>`
       : "";
-  const batchHRow =
-    selectionHeightTargetCount() >= 2 ? selectionHeightRowHtml() : "";
-  const html = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${lotusRotBtn}${batchHRow}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+  const html = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${lotusRotBtn}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
   const active = document.activeElement;
   const editing =
     !!active && dom.floorBar.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT");
@@ -336,7 +329,6 @@ export function updateFloorBar() {
     }
     setStatus(`已随机旋转 ${n} 个莲花压力开关（0° / 90° / 180° / 270°）`);
   });
-  wireSelectionHeightRow(dom.floorBar, () => draw());
 }
 
 export function matchesFloorPaletteFilter(it: CatalogItem, q: string): boolean {

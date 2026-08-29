@@ -34,12 +34,12 @@ function renderPickTip(
       </button>`
     : "";
   const defaultHead = toggleMode
-    ? `此处 ${candidates.length} 个重叠 · Shift 点击切换选中（✓ 已选）`
+    ? `此处 ${candidates.length} 个重叠 · Shift 点击切换选中 · Shift 拖动框选加选`
     : headerAction
       ? "重叠对象 · 可选批量微调或单独操作："
       : `此处有 ${candidates.length} 个重叠对象，请选择要操作的对象：`;
   const headText = options.headText ?? defaultHead;
-  const footHint = toggleMode ? "点击列表项切换选中 · 点击外部或 Esc 关闭" : "点击外部或 Esc 关闭";
+  const footHint = toggleMode ? "点击列表项切换选中 · Shift 拖动可框选加选 · 点击外部或 Esc 关闭" : "点击外部或 Esc 关闭";
 
   dom.pickTipEl.innerHTML =
     `<div class="pick-tip-head">${escHtml(headText)}</div>` +

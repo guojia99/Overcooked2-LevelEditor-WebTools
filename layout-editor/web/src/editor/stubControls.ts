@@ -11,6 +11,7 @@ import { itemLabel } from "./labels";
 import { pushHistory } from "./historyOps";
 import { draw } from "./render";
 import { setStatus } from "./status";
+import { selectionKeys } from "./selection";
 import { hideContextMenu } from "./ui/overlay";
 import {
   openFoodSpawnerEditor,
@@ -208,6 +209,10 @@ export function isCannonSwitch(item: EditorItem): boolean {
   return stubKindOf(item) === "CannonSwitch";
 }
 
+export function isTravelatorItem(item: EditorItem): boolean {
+  return stubKindOf(item) === "Travelator";
+}
+
 /** 喷雾喷罐（奶油喷罐）真实 prefab 无 IngredientContainer，不是锅具容器，
  *  宿主 PseudoPrefabCookingUtensil.Setup 会对无容器的 child 抛 NRE。
  *  这些 id 绝不按 CookingUtensil 处理。 */
@@ -250,33 +255,17 @@ export function isAirWallItem(it: EditorItem): boolean {
   return !!it.airWall;
 }
 
-/** 原版厨具容量（bundle 实测 IngredientContainer.m_capacity）：
- *  汤锅族=3（多食材组合）、煎锅/炸篮/蒸锅等=1、搅拌碗/搅拌杯/烤盘=4、烤串=3、
- *  火锅大锅=4（bundle226）、烤菜烤盘=4（bundle297）。子串规则与后端
- *  NativeUtensilCapacity 一致（large_pot/roasting_tray 先于 pot 判断）。 */
-export function defaultUtensilCapacity(item: EditorItem): number {
-  const prefabId = (prefabIdFromPath(item.prefabAssetPath) ?? "").toLowerCase();
-  if (prefabId.includes("large_pot")) return 4;
-  if (prefabId.includes("roasting_tray")) return 4;
-  if (prefabId.includes("pot")) return 3;
-  if (
-    prefabId.includes("mixer") ||
-    prefabId.includes("blender") ||
-    prefabId.includes("griddle")
-  )
-    return 4;
-  if (prefabId.includes("skewer")) return 3;
-  return 1;
+/** 厨具默认容量：统一为 4。 */
+export function defaultUtensilCapacity(_item: EditorItem): number {
+  return 4;
 }
 
-/** autofill 装填锅具时的容量兜底：未设置 → 原版默认；
- *  旧版 autofill 曾把汤锅默认成 1（放不进 3 种食材），凡容量仍为 1 且原版默认
- *  非 1 的（仅 Pot）视为历史污染，纠正回原版默认。用户手动设置的其他值不动。 */
+/** autofill 装填锅具时的容量兜底：未设置 → 默认 4；
+ *  旧版 autofill 曾把锅具默认成 1，凡容量仍为 1 时纠正回 4。 */
 export function utensilCapacityOrFix(item: EditorItem): number {
-  const def = defaultUtensilCapacity(item);
   const cur = item.cookingUtensil?.capacity;
-  if (cur == null) return def;
-  if (def !== 1 && cur === 1) return def;
+  if (cur == null) return 4;
+  if (cur === 1) return 4;
   return cur;
 }
 
@@ -298,7 +287,7 @@ export function counterAppearanceHtml(item: EditorItem): string {
   return `<div class="ctx-stub"><div class="ctx-stub-title">${typeName}外观</div>
     <label class="ctx-stub-row">外观 <select id="ctx-appear" class="ctx-input">${opts}</select></label>
     <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">当前：${escHtml(curName)}</div>
-    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">写回 Unity 时会自动把外观所需 bundle 并入关卡 dependencies（只增不删）</div></div>`;
+    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">写回 Unity 时会重建关卡 dependencies（覆盖），并合并外观所需 bundle</div></div>`;
 }
 
 export function switchMaterialHtml(item: EditorItem): string {
@@ -429,6 +418,10 @@ export function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row">出口 <select id="ctx-tp-exit" class="ctx-input">${exitOpts}</select></label></div>`;
     }
     case "Travelator": {
+      if (selectionKeys().filter((k) => {
+        const it = S.items.find((i) => i._editorKey === k);
+        return !!it && isTravelatorItem(it);
+      }).length >= 2) return "";
       const sp = item.travelator?.speed ?? 2.5;
       return `<div class="ctx-stub"><div class="ctx-stub-title">移动地板参数</div>
         <label class="ctx-stub-row">速度 <input type="number" id="ctx-tv-speed" class="ctx-input" step="0.1" min="0" value="${sp}"/></label></div>`;

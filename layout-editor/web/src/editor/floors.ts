@@ -30,6 +30,7 @@ import {
 } from "../floorColors";
 import type { FloorMaterial } from "../types";
 import { tidyCatalogNameZh } from "../displayLabels";
+import { materialDisplayLabel } from "../floorMaterialLabels";
 import { catalogItemById, isBackgroundPlaneCat, isStandingWaterQuadCat } from "./catalog";
 import { addFromCatalog, setItemPlaneSize } from "./items";
 import { defaultNewFloorY } from "./floorHeight";
@@ -76,6 +77,18 @@ export function effectiveMaterialTiling(f: EditorFloor): { w: number; d: number 
 export function syncMaterialTilingToSize(f: EditorFloor): void {
   f.materialTilingW = f._wCells;
   f.materialTilingD = f._dCells;
+}
+
+/** 改地板格数时：仅当平铺仍与改前尺寸一致（未单独改过）才随尺寸同步。 */
+export function maybeSyncMaterialTilingOnResize(
+  f: EditorFloor,
+  prevWCells: number,
+  prevDCells: number
+): void {
+  if (!isPlainMaterialFloor(f)) return;
+  const tw = f.materialTilingW && f.materialTilingW > 0 ? f.materialTilingW : prevWCells;
+  const td = f.materialTilingD && f.materialTilingD > 0 ? f.materialTilingD : prevDCells;
+  if (tw === prevWCells && td === prevDCells) syncMaterialTilingToSize(f);
 }
 
 /** Ids that are clearly NOT area floor surfaces and must stay out of themed
@@ -233,7 +246,6 @@ export function finalizeFloor(f: EditorFloor) {
   f.worldPosition.z = f._wz;
   f.widthUnits = f._wCells * CELL;
   f.depthUnits = f._dCells * CELL;
-  if (isPlainMaterialFloor(f)) syncMaterialTilingToSize(f);
   // Smart material match by size tag.
   if (f.surfaceKind !== "background" && f.surfaceKind !== "raft" && !f.prefabGuid && !f.airFloor)
     tryMatchFloorMaterialBySize(f);
@@ -425,7 +437,11 @@ export function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | unde
   }
   if (f.tintEnabled) return `染色地板（颜色 ${f.tintColor ?? "#ffffff"}）`;
   const { w: tw, d: td } = effectiveMaterialTiling(f);
-  const matName = matchedMat?.nameZh ?? f.materialName ?? "无";
+  const matName = matchedMat
+    ? materialDisplayLabel(matchedMat).zh
+    : f.materialName
+      ? materialDisplayLabel({ id: f.materialName }).zh
+      : "无";
   const tilingTxt = tw === f._wCells && td === f._dCells ? `平铺 ${tw}×${td}` : `平铺 ${tw}×${td}（地板 ${f._wCells}×${f._dCells}）`;
   return `${matName} · ${tilingTxt}`;
 }

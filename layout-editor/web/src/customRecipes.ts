@@ -11,7 +11,8 @@ import type {
 } from "./types";
 import { showBusy, hideBusy, withBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
-import { foodGroupLabel, visibleIngredients } from "./ingredientLabels";
+import { foodGroupLabel, visibleIngredients, visibleRecipes } from "./ingredientLabels";
+import { recipeTypeLabel, RECIPE_TYPE_ORDER } from "./recipeTypes";
 import { closeModal, openModal } from "./modals";
 import { rlCardHtml, type RecipeWithGroups } from "./recipeCard";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
@@ -54,6 +55,9 @@ function shell(app: HTMLElement, title: string): HTMLElement {
       location.reload();
     } else if (target === "manage") {
       location.hash = "#/manage";
+      location.reload();
+    } else if (target === "dependencies") {
+      location.hash = "#/dependencies";
       location.reload();
     } else if (target === "recipes") {
       location.href = "/recipes";
@@ -204,10 +208,10 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
 
   let config: CustomRecipeConfig;
   let recipes: CustomRecipeSummary[];
-  let catalogCustoms: RecipeEntry[] = [];
+  let catalog: RecipeEntry[] = [];
   let ingredientNames = new Map<string, string>();
   let platingNames = new Map<string, string>();
-  // 组成推导上下文：关卡集菜谱 + 目录自定义菜谱（与「组装效果（实时预览）」一致）
+  // 组成推导上下文：关卡集菜谱 + 目录全部菜谱（与「组装效果（实时预览）」一致）
   let recipeLikes: RecipeLikeCard[] = [];
   try {
     [config, recipes] = await Promise.all([
@@ -217,14 +221,14 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     const refs = await api.fetchCustomRecipeReferences(setName).catch(() => null);
     for (const c of refs?.platingContainers ?? []) platingNames.set(c.id, c.nameZh || c.id);
     let ingLoadFailed = false;
-    const [ings, catalog] = await Promise.all([
+    const [ings, catalogFetched] = await Promise.all([
       api.fetchIngredients().catch(() => {
         ingLoadFailed = true;
         return [] as IngredientEntry[];
       }),
       api.fetchRecipeCatalog(setName).catch(() => [] as RecipeEntry[]),
     ]);
-    catalogCustoms = catalog.filter((c) => c.isCustom);
+    catalog = catalogFetched;
     for (const i of ings) ingredientNames.set(i.id, i.nameZh);
     if (ingLoadFailed) setStatus("⚠️ 食材数据加载失败（/api/catalog/ingredients），卡片可能缺少食材图标");
   } catch (e) {
@@ -251,12 +255,8 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     return card;
   }
 
-  // 组成推导上下文（与「组装效果（实时预览）」的 allRecipeLikes 一致）：
-  // 关卡集自定义菜谱 + 目录自定义菜谱，保证列表卡片与预览渲染一致。
-  recipeLikes = [
-    ...recipes.map(cardRecipe),
-    ...catalogCustoms.map((c) => ({ ...c, isCustom: true }) as RecipeLikeCard),
-  ];
+  // 组成推导上下文（与「组装效果（实时预览）」一致）：含官方成品菜与本关卡集全部自定义菜谱。
+  recipeLikes = buildCompositionContext(recipes, catalog).allRecipeLikes as RecipeLikeCard[];
 
   function filteredRecipes(): CustomRecipeSummary[] {
     let list = activeCategoryId ? recipes.filter((r) => r.category === activeCategoryId) : recipes;
@@ -494,8 +494,104 @@ interface SubItem {
   cookingStepId: string;
   hasIcon: boolean;
   assetPath: string;
-  official: boolean;
+  /** 官方菜谱 vs 本关卡集自定义菜谱 */
+  source: "official" | "levelset";
+  recipeType: string;
+  /** 本关卡集自定义菜谱的分类目录 id */
+  category: string;
   ingredients: string[];
+}
+
+function categoryFromAssetPath(assetPath: string): string {
+  const m = /custom_recipes\/([^/]+)\/[^/]+\.asset$/i.exec(assetPath.replace(/\\/g, "/"));
+  return m ? m[1] : "";
+}
+
+/** 组成选择器上下文：关卡集自定义菜谱 + 目录全部菜谱（含官方成品与中间产物）。 */
+function buildCompositionContext(
+  levelsetRecipes: CustomRecipeSummary[],
+  catalog: RecipeEntry[],
+  excludeAssetPath?: string | null
+): { subItems: SubItem[]; recipeIdSet: Set<string>; allRecipeLikes: RecipeWithGroups[] } {
+  const subItems: SubItem[] = [];
+  const seen = new Set<string>();
+  const recipeIdSet = new Set<string>();
+  const allRecipeLikes: RecipeWithGroups[] = [];
+  const likesSeen = new Set<string>();
+
+  const addSummary = (r: CustomRecipeSummary): void => {
+    if (excludeAssetPath && r.assetPath === excludeAssetPath) return;
+    if (seen.has(r.id)) return;
+    seen.add(r.id);
+    recipeIdSet.add(r.id);
+    subItems.push({
+      id: r.id,
+      nameZh: r.nameZh,
+      nameEn: r.nameEn,
+      score: r.score,
+      cookingStepId: r.cookingStepId,
+      hasIcon: r.hasIcon,
+      assetPath: r.assetPath,
+      source: "levelset",
+      recipeType: r.type || "custom",
+      category: r.category || categoryFromAssetPath(r.assetPath),
+      ingredients: r.ingredients,
+    });
+  };
+
+  const addCatalog = (c: RecipeEntry): void => {
+    if (excludeAssetPath && c.assetPath === excludeAssetPath) return;
+    if (seen.has(c.id)) return;
+    seen.add(c.id);
+    recipeIdSet.add(c.id);
+    const isLevelset = !!(c.isCustom && c.group === "levelset");
+    subItems.push({
+      id: c.id,
+      nameZh: c.nameZh,
+      nameEn: c.nameEn,
+      score: c.score ?? 0,
+      cookingStepId: c.cookingStep ?? "",
+      hasIcon: c.icon !== false,
+      assetPath: c.assetPath,
+      source: isLevelset ? "levelset" : "official",
+      recipeType: c.type ?? (isLevelset ? "custom" : "other"),
+      category: isLevelset ? categoryFromAssetPath(c.assetPath) : "",
+      ingredients: c.ingredients ?? [],
+    });
+  };
+
+  const addLike = (r: RecipeWithGroups): void => {
+    if (!r.id || likesSeen.has(r.id)) return;
+    likesSeen.add(r.id);
+    allRecipeLikes.push(r);
+  };
+
+  for (const r of levelsetRecipes) {
+    addSummary(r);
+    if (!excludeAssetPath || r.assetPath !== excludeAssetPath) {
+      addLike(normalizeCustomRecipeCard(r) as RecipeWithGroups);
+    }
+  }
+
+  for (const c of visibleRecipes(catalog)) {
+    addCatalog(c);
+    if (!excludeAssetPath || c.assetPath !== excludeAssetPath) {
+      addLike(
+        c.isCustom
+          ? ({ ...c, isCustom: true, intermediate: false } as RecipeWithGroups)
+          : (c as RecipeWithGroups)
+      );
+    }
+  }
+
+  subItems.sort(
+    (a, b) =>
+      (a.source === "levelset" ? 0 : 1) - (b.source === "levelset" ? 0 : 1) ||
+      a.score - b.score ||
+      a.nameZh.localeCompare(b.nameZh, "zh")
+  );
+
+  return { subItems, recipeIdSet, allRecipeLikes };
 }
 
 async function renderRecipeForm(
@@ -546,9 +642,8 @@ async function renderRecipeForm(
   hideBusy();
 
   // ---- 组成状态：id → 数量（同一种食材/中间产物可出现多次） ----
-  const subIdSet = new Set<string>();
-  for (const r of levelsetRecipes) subIdSet.add(r.id);
-  for (const c of catalog) if (c.isCustom) subIdSet.add(c.id);
+  const compositionCtx = buildCompositionContext(levelsetRecipes, catalog, isEdit ? assetPath : null);
+  const { subItems, recipeIdSet: subIdSet, allRecipeLikes } = compositionCtx;
 
   const selectedIng = new Map<string, number>();
   const selectedSub = new Map<string, number>();
@@ -577,55 +672,8 @@ async function renderRecipeForm(
 
   const ingLoadFailed = ingredients.length === 0;
 
-  const subItems: SubItem[] = (() => {
-    const list: SubItem[] = [];
-    for (const r of levelsetRecipes) {
-      if (isEdit && r.assetPath === assetPath) continue;
-      list.push({
-        id: r.id,
-        nameZh: r.nameZh,
-        nameEn: r.nameEn,
-        score: r.score,
-        cookingStepId: r.cookingStepId,
-        hasIcon: r.hasIcon,
-        assetPath: r.assetPath,
-        official: false,
-        ingredients: r.ingredients,
-      });
-    }
-    const seen = new Set(list.map((s) => s.id));
-    // 官方 CustomRecipeSO（含成品与中间产物，如蓝莓/草莓松饼糊、汤类成品）也可作为组成
-    for (const c of catalog) {
-      if (!c.isCustom || (c.group ?? "") === "levelset") continue;
-      if (seen.has(c.id)) continue;
-      list.push({
-        id: c.id,
-        nameZh: c.nameZh,
-        nameEn: c.nameEn,
-        score: c.score ?? 0,
-        cookingStepId: c.cookingStep ?? "",
-        hasIcon: !!c.icon,
-        assetPath: c.assetPath,
-        official: true,
-        ingredients: c.ingredients ?? [],
-      });
-      seen.add(c.id);
-    }
-    list.sort(
-      (a, b) =>
-        a.score - b.score || Number(a.official) - Number(b.official) || a.nameZh.localeCompare(b.nameZh, "zh")
-    );
-    return list;
-  })();
-
   const subById = new Map<string, SubItem>();
   for (const s of subItems) subById.set(s.id, s);
-
-  // 供预览分组回退使用的全部菜谱（关卡集菜谱 + 目录）
-  const allRecipeLikes: RecipeWithGroups[] = [
-    ...levelsetRecipes.map(toRecipeCard),
-    ...catalog.filter((c) => c.isCustom).map((c) => ({ ...c, isCustom: true }) as RecipeWithGroups),
-  ];
 
   function catDisplay(c: CustomRecipeCategory): string {
     return c.zh || c.id;
@@ -676,8 +724,7 @@ async function renderRecipeForm(
     return out;
   }
 
-  /** 选择弹窗内的卡片：点击选中（数量 1），已选时显示 −/＋ 数量调整。
-   *  菜谱卡片按角色打标签：半成品（score=0）/ 成品菜（score>0，同样可作组成）。 */
+  /** 选择弹窗内的卡片：点击选中（数量 1），已选时显示 −/＋ 数量调整。 */
   function pickerCardHtml(id: string, isSub: boolean, count: number): string {
     const selected = count > 0;
     const stepper = selected
@@ -690,11 +737,16 @@ async function renderRecipeForm(
     if (isSub) {
       const s = subById.get(id);
       if (!s) return "";
-      const badge = `<span class="cr-badge-done">可作组成</span>`;
-      const src = s.official ? `/icons/recipes/${encodeURIComponent(s.id)}.png` : crIconSrc(s);
+      const roleBadge =
+        s.score <= 0
+          ? `<span class="cr-badge-inter">中间产物</span>`
+          : `<span class="cr-badge-done">成品菜</span>`;
+      const src =
+        s.source === "levelset" ? crIconSrc(s) : `/icons/recipes/${encodeURIComponent(s.id)}.png`;
+      const srcTag = s.source === "levelset" ? "本关卡集" : "官方";
       return `<div class="pick-card cp-card${selected ? " selected" : ""}" data-cpid="${esc(id)}" data-cpsub="1" title="${esc(s.id)}">
-        <span class="pc-head"><img class="food-icon" loading="lazy" src="${esc(src)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'" /><span class="pc-name">${esc(s.nameZh)}${badge}${s.nameEn ? ` <span class="muted pc-en">${esc(s.nameEn)}</span>` : ""}</span></span>
-        <span class="muted small">${s.cookingStepId ? esc(s.cookingStepId) : "无烹饪步骤"} · ${(s.ingredients ?? []).length} 种食材${s.official ? " · 官方" : " · 本关卡集"}</span>
+        <span class="pc-head"><img class="food-icon" loading="lazy" src="${esc(src)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'" /><span class="pc-name">${esc(s.nameZh)}${roleBadge}${s.nameEn ? ` <span class="muted pc-en">${esc(s.nameEn)}</span>` : ""}</span></span>
+        <span class="muted small">${s.cookingStepId ? esc(s.cookingStepId) : "无烹饪步骤"} · ${(s.ingredients ?? []).length} 种食材 · ${srcTag}</span>
         ${stepper}
       </div>`;
     }
@@ -712,25 +764,134 @@ async function renderRecipeForm(
     const draft = new Map<string, number>();
     for (const [id, n] of selectedIng) draft.set(id, n);
     for (const [id, n] of selectedSub) draft.set(id, n);
-    let filter: "all" | "ing" | "sub" = "all";
+    type CompFilter = "all" | "ing" | "sub" | "inter" | "levelset";
+    let filter: CompFilter = "all";
     let q = "";
 
-    function filteredIds(): { id: string; isSub: boolean }[] {
+    const catLabel = (catId: string): string => {
+      const c = categories.find((x) => x.id === catId);
+      return c ? c.zh || c.id : catId || "未分类";
+    };
+
+    function recipeMatchesTab(s: SubItem): boolean {
+      if (filter === "sub") return s.source === "official" && s.score > 0;
+      if (filter === "inter") return s.source === "official" && s.score <= 0;
+      if (filter === "levelset") return s.source === "levelset";
+      return true;
+    }
+
+    function matchesQuery(id: string, isSub: boolean): boolean {
       const query = q.trim().toLowerCase();
+      if (!query) return true;
+      if (!isSub) {
+        const ing = ingById.get(id);
+        if (!ing) return false;
+        return (
+          ing.nameZh.toLowerCase().includes(query) ||
+          (ing.nameEn ?? "").toLowerCase().includes(query) ||
+          ing.id.toLowerCase().includes(query)
+        );
+      }
+      const s = subById.get(id);
+      if (!s) return false;
+      return (
+        s.nameZh.toLowerCase().includes(query) ||
+        (s.nameEn ?? "").toLowerCase().includes(query) ||
+        s.id.toLowerCase().includes(query)
+      );
+    }
+
+    function filteredIds(): { id: string; isSub: boolean }[] {
       const out: { id: string; isSub: boolean }[] = [];
       if (filter === "all" || filter === "ing") {
         for (const i of ingredients) {
-          if (query && !i.nameZh.toLowerCase().includes(query) && !(i.nameEn ?? "").toLowerCase().includes(query) && !i.id.toLowerCase().includes(query)) continue;
+          if (!matchesQuery(i.id, false)) continue;
           out.push({ id: i.id, isSub: false });
         }
       }
-      // 菜谱分组：所有菜谱都可作为组成
-      const recipes = filter === "all" || filter === "sub" ? subItems : [];
-      for (const s of recipes) {
-        if (query && !s.nameZh.toLowerCase().includes(query) && !(s.nameEn ?? "").toLowerCase().includes(query) && !s.id.toLowerCase().includes(query)) continue;
-        out.push({ id: s.id, isSub: true });
+      if (filter === "all" || filter === "sub" || filter === "inter" || filter === "levelset") {
+        for (const s of subItems) {
+          if (!recipeMatchesTab(s)) continue;
+          if (!matchesQuery(s.id, true)) continue;
+          out.push({ id: s.id, isSub: true });
+        }
       }
       return out;
+    }
+
+    function cardsHtml(items: { id: string; isSub: boolean }[]): string {
+      return items.map((x) => pickerCardHtml(x.id, x.isSub, draft.get(x.id) ?? 0)).join("");
+    }
+
+    function sectionHtml(title: string, items: { id: string; isSub: boolean }[]): string {
+      if (!items.length) return "";
+      return `<div class="cp-section">
+        <div class="cp-section-title">${esc(title)}</div>
+        <div class="pick-grid">${cardsHtml(items)}</div>
+      </div>`;
+    }
+
+    function groupByRecipeType(items: { id: string; isSub: boolean }[]): [string, { id: string; isSub: boolean }[]][] {
+      const map = new Map<string, { id: string; isSub: boolean }[]>();
+      for (const x of items) {
+        const t = subById.get(x.id)?.recipeType ?? "other";
+        if (!map.has(t)) map.set(t, []);
+        map.get(t)!.push(x);
+      }
+      const order = (t: string) => {
+        const i = RECIPE_TYPE_ORDER.indexOf(t);
+        return i < 0 ? 99 : i;
+      };
+      return [...map.entries()].sort((a, b) => order(a[0]) - order(b[0]));
+    }
+
+    function groupByCategory(items: { id: string; isSub: boolean }[]): [string, { id: string; isSub: boolean }[]][] {
+      const map = new Map<string, { id: string; isSub: boolean }[]>();
+      for (const x of items) {
+        const cat = subById.get(x.id)?.category ?? "";
+        if (!map.has(cat)) map.set(cat, []);
+        map.get(cat)!.push(x);
+      }
+      const order = categories.map((c) => c.id);
+      return [...map.entries()].sort((a, b) => {
+        const ia = order.indexOf(a[0]);
+        const ib = order.indexOf(b[0]);
+        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+      });
+    }
+
+    function pickerGridHtml(items: { id: string; isSub: boolean }[]): string {
+      if (!items.length) return "";
+      if (filter === "sub") {
+        return groupByRecipeType(items)
+          .map(([type, arr]) => sectionHtml(recipeTypeLabel(type), arr))
+          .join("");
+      }
+      if (filter === "inter") {
+        return groupByRecipeType(items)
+          .map(([type, arr]) => sectionHtml(recipeTypeLabel(type), arr))
+          .join("");
+      }
+      if (filter === "levelset") {
+        const subs = items.filter((x) => x.isSub);
+        const finished = subs.filter((x) => (subById.get(x.id)?.score ?? 0) > 0);
+        const inter = subs.filter((x) => (subById.get(x.id)?.score ?? 0) <= 0);
+        let html = "";
+        if (finished.length) {
+          html += `<div class="cp-section-band">成品菜</div>`;
+          html += groupByCategory(finished)
+            .map(([cat, arr]) => sectionHtml(catLabel(cat), arr))
+            .join("");
+        }
+        if (inter.length) {
+          html += `<div class="cp-section-band">中间产物</div>`;
+          html += groupByCategory(inter)
+            .map(([cat, arr]) => sectionHtml(catLabel(cat), arr))
+            .join("");
+        }
+        return html;
+      }
+      return `<div class="pick-grid">${cardsHtml(items)}</div>`;
     }
 
     function bodyHtml(): string {
@@ -738,12 +899,14 @@ async function renderRecipeForm(
       const chips = [
         `<button type="button" class="cr-comp-chip${filter === "all" ? " active" : ""}" data-filter="all">全部</button>`,
         `<button type="button" class="cr-comp-chip${filter === "ing" ? " active" : ""}" data-filter="ing">食材</button>`,
-        `<button type="button" class="cr-comp-chip${filter === "sub" ? " active" : ""}" data-filter="sub">菜谱</button>`,
+        `<button type="button" class="cr-comp-chip${filter === "sub" ? " active" : ""}" data-filter="sub">成品菜</button>`,
+        `<button type="button" class="cr-comp-chip${filter === "inter" ? " active" : ""}" data-filter="inter">中间产物</button>`,
+        `<button type="button" class="cr-comp-chip${filter === "levelset" ? " active" : ""}" data-filter="levelset">本关卡集</button>`,
       ].join("");
-      const loadWarn = ingLoadFailed && filter !== "sub"
+      const loadWarn = ingLoadFailed && (filter === "all" || filter === "ing")
         ? '<p class="mp-status err">⚠️ 未加载到食材数据（桥接 /api/catalog/ingredients 异常），请刷新重试或检查 Unity 桥。</p>'
         : "";
-      // #cp-grid 始终保留（搜索时只更新其内部），保证点击委托不丢失。
+      const grid = pickerGridHtml(ids);
       return `
         <div class="cr-comp-toolbar">
           <input type="search" id="cp-search" class="ing-search" placeholder="搜索名称 / ID…" autocomplete="off">
@@ -751,14 +914,14 @@ async function renderRecipeForm(
         </div>
         ${loadWarn}
         <div class="modal-scroll" id="cp-scroll">
-          <div class="pick-grid" id="cp-grid">${ids.map((x) => pickerCardHtml(x.id, x.isSub, draft.get(x.id) ?? 0)).join("")}</div>
+          <div id="cp-grid">${grid}</div>
           ${ids.length ? "" : '<p class="muted">没有匹配的项</p>'}
         </div>`;
     }
 
     openModal(
       "添加食材 / 菜谱",
-      `<p class="modal-hint">点击卡片加入（默认 1 份），再次点击 − / ＋ 调整数量；同一项可多次使用。<b>任何菜谱（成品菜或中间产物）都能作为本菜谱的组成</b>，如鸡蛋汉堡 = 煎蛋（成品菜）+ 面包。</p>
+      `<p class="modal-hint">点击卡片加入（默认 1 份），再次点击 − / ＋ 调整数量。<b>官方成品菜按类型分组；本关卡集自定义菜谱单独一页</b>（含成品与中间产物）。</p>
        <div id="cp-body">${bodyHtml()}</div>`,
       `<button type="button" class="m-btn" data-cancel>取消</button>
        <button type="button" class="m-btn primary" data-ok>确定</button>`
@@ -781,14 +944,13 @@ async function renderRecipeForm(
         q = (e.target as HTMLInputElement).value;
         const grid = document.getElementById("cp-grid");
         if (grid) {
-          grid.innerHTML = filteredIds()
-            .map((x) => pickerCardHtml(x.id, x.isSub, draft.get(x.id) ?? 0))
-            .join("");
+          const ids = filteredIds();
+          grid.innerHTML = pickerGridHtml(ids);
           const scroll = document.getElementById("cp-scroll");
           if (scroll) {
             const empty = scroll.querySelector("p.muted");
             if (empty) empty.remove();
-            if (filteredIds().length === 0) {
+            if (ids.length === 0) {
               scroll.insertAdjacentHTML("beforeend", '<p class="muted">没有匹配的项</p>');
             }
           }
@@ -796,7 +958,7 @@ async function renderRecipeForm(
       });
       document.querySelectorAll<HTMLButtonElement>("#cp-body .cr-comp-chip").forEach((b) => {
         b.addEventListener("click", () => {
-          filter = (b.dataset.filter as "all" | "ing" | "sub") ?? "all";
+          filter = (b.dataset.filter as CompFilter) ?? "all";
           renderBody();
         });
       });
@@ -812,7 +974,6 @@ async function renderRecipeForm(
           const delta = step.dataset.cpinc !== undefined ? 1 : -1;
           count = Math.max(0, count + delta);
         } else {
-          // 点击卡片主体：选中/取消
           count = count > 0 ? 0 : 1;
         }
         if (count <= 0) draft.delete(cid);
@@ -857,10 +1018,17 @@ async function renderRecipeForm(
     }
     for (const [id, n] of selectedSub) {
       const s = subById.get(id);
-      const badge = '<span class="cr-chip-tag">可作组成</span>';
+      const badge =
+        s && s.score <= 0
+          ? '<span class="cr-chip-tag cr-chip-inter">中间产物</span>'
+          : '<span class="cr-chip-tag cr-chip-done">成品菜</span>';
+      const srcTag =
+        s?.source === "levelset"
+          ? '<span class="cr-chip-tag cr-chip-levelset">本关卡集</span>'
+          : '<span class="cr-chip-tag">官方</span>';
       rows.push(`<div class="cr-comp-row cr-comp-row-sub" data-rowid="sub:${esc(id)}">
-        ${s ? `<img class="food-icon" loading="lazy" src="${esc(s.official ? `/icons/recipes/${encodeURIComponent(s.id)}.png` : crIconSrc(s))}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'" />` : ""}
-        <span class="cr-row-name">${esc(s?.nameZh ?? id)}${badge}</span>
+        ${s ? `<img class="food-icon" loading="lazy" src="${esc(s.source === "levelset" ? crIconSrc(s) : `/icons/recipes/${encodeURIComponent(s.id)}.png`)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'" />` : ""}
+        <span class="cr-row-name">${esc(s?.nameZh ?? id)}${srcTag}${badge}</span>
         <span class="cr-row-stepper">
           <button type="button" class="cr-step" data-rowdec="sub:${esc(id)}">−</button>
           <span class="cr-step-num">${n}</span>

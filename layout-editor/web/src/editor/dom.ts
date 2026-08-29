@@ -3,6 +3,7 @@ import { S } from "./state";
 
 /** 布局视图路由标记（由 URL hash 决定，模块加载时计算）。 */
 export const MANAGE_ACTIVE = /^#\/manage/.test(location.hash);
+export const DEPENDENCIES_ACTIVE = /^#\/dependencies/.test(location.hash);
 export const CUSTOM_RECIPES_ACTIVE = /^#\/custom-recipes/.test(location.hash);
 export const GUIDE_ACTIVE = /^#\/guide/.test(location.hash);
 
@@ -25,7 +26,7 @@ export const dom = {
 /** 布局视图的完整 DOM 模板 + 元素引用填充（仅 layout 视图调用；manage/custom-recipes 返回空）。 */
 export function buildLayoutDom(): void {
   dom.app = document.getElementById("app")!;
-  if (MANAGE_ACTIVE || CUSTOM_RECIPES_ACTIVE || GUIDE_ACTIVE) return;
+  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || CUSTOM_RECIPES_ACTIVE || GUIDE_ACTIVE) return;
   document.body.classList.remove("manage-bg");
   dom.app.innerHTML = `
   ${navHtml("layout")}

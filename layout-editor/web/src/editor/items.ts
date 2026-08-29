@@ -24,6 +24,7 @@ import {
   S,
   CELL,
   AIR_WALL_BASE_XZ,
+  AIR_WALL_BASE_Y,
   EditorItem,
   EditorFloor
 } from "./state";
@@ -119,7 +120,12 @@ export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
     raw.localScale = { x: s?.x ?? 1, y: depth, z: 1 };
     raw.localRotationX = 90;
   }
-  if (raw.airWall) migrateAirWallScale(raw);
+  if (raw.airWall) {
+    migrateAirWallScale(raw);
+    if (!raw.localScale) raw.localScale = { x: 1, y: 1, z: 1 };
+    if (!(raw.localScale.y > 0)) raw.localScale.y = 1;
+    ensureAirWallColliderCenter(raw);
+  }
   const wp = raw.worldPosition ?? raw.localPosition;
   // 背景水面等：Unity 导出 footprint 为渲染器实测格数（如 1×26），尺寸由
   // catalog 1×1 × localScale 表达；载入时还原为目录基准，避免与 scale 二次相乘。
@@ -437,6 +443,35 @@ export function setItemPlaneSize(item: EditorItem, wCells: number, dCells: numbe
   item.localRotationX = planeNativeForItem(item).rotX;
 }
 
+/** 空气墙碰撞高度（格）：localScale.y，默认 1 格 ≈ 1.2m（Unity 写回为 1.132×y）。 */
+export function airWallHeightCells(item: EditorItem): number {
+  const y = item.localScale?.y ?? 1;
+  return Math.max(1, Math.round(y));
+}
+
+export function airWallHeightMeters(hCells: number): number {
+  return Math.max(1, Math.round(hCells)) * CELL;
+}
+
+export function defaultAirWallColliderCenter(): { x: number; y: number; z: number } {
+  return { x: 0, y: AIR_WALL_BASE_Y / 2, z: 0 };
+}
+
+export function ensureAirWallColliderCenter(item: EditorItem | LayoutItem): void {
+  if (!item.airWall) return;
+  if (!item.colliderCenter) {
+    item.colliderCenter = defaultAirWallColliderCenter();
+  }
+}
+
+export function setAirWallHeight(item: EditorItem, hCells: number): void {
+  const h = Math.max(1, Math.round(hCells));
+  const sx = item.localScale?.x ?? 1;
+  const sz = item.localScale?.z ?? 1;
+  item.localScale = { x: sx, y: h, z: sz };
+  ensureAirWallColliderCenter(item);
+}
+
 /** 空气墙有效占地（格）：底 collider 1.2m × localScale，旋转 90° 时宽高互换。 */
 export function airWallCells(item: EditorItem): { wCells: number; dCells: number } {
   const rot = normalizeRot(item.localRotationY);
@@ -610,6 +645,7 @@ export function addFromCatalog(
     item.parentPath = cat.defaultParent;
     item.walkable = false;
     item.localScale = { x: 1, y: 1, z: 1 };
+    item.colliderCenter = defaultAirWallColliderCenter();
   }
   // Background surface planes (water / sand / sea…) default to a manageable 6×6
   // and are laid flat via their native rotX (standing water quads need rotX=90,

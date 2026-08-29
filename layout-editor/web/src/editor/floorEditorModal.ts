@@ -32,7 +32,8 @@ import {
   floorMatSummary,
   effectiveMaterialTiling,
   resolveFloorMaterial,
-  syncFloorMaterialFromCatalog
+  syncFloorMaterialFromCatalog,
+  maybeSyncMaterialTilingOnResize,
 } from "./floors";
 import {
   floorWalkY,
@@ -50,12 +51,20 @@ import { clearFloorImageCache } from "./iconCaches";
 import {
   FLOOR_MATERIAL_GROUPS,
   floorMaterialGroup,
-  materialBilingual,
   surfaceKindLabelZh,
   deathLabelZh
 } from "../floorColors";
+import { materialDisplayLabel, materialMatchesSearchQuery } from "../floorMaterialLabels";
 import { tidyCatalogNameZh } from "../displayLabels";
 import type { FloorMaterial } from "../types";
+
+/** 材质分组 Tab：「全部」专用 key（非 floorMaterialGroup 返回值）。 */
+const MAT_TAB_ALL = "__all__";
+
+function materialPickButtonHtml(m: FloorMaterial, activeMaterialGuid: string | undefined): string {
+  const bl = materialDisplayLabel(m);
+  return `<button type="button" class="mat-pick${m.guid === activeMaterialGuid ? " active" : ""}" data-guid="${m.guid}"><span class="mat-id">${escHtml(bl.zh)}</span><span class="mat-sub">${escHtml(bl.en)}</span></button>`;
+}
 
 function materialGroupsWithMats(): { key: string; labelZh: string }[] {
   return FLOOR_MATERIAL_GROUPS.filter((g) =>
@@ -72,6 +81,7 @@ function initialMaterialTabKey(f: EditorFloor, matchedMat: FloorMaterial | undef
   };
   const fromMat = matchedMat ? pick(matchedMat.id) : f.materialName ? pick(f.materialName) : "";
   if (fromMat) return fromMat;
+  if (S.floorMaterialTabKey === MAT_TAB_ALL) return MAT_TAB_ALL;
   if (S.floorMaterialTabKey && groups.some((g) => g.key === S.floorMaterialTabKey)) {
     return S.floorMaterialTabKey;
   }
@@ -87,43 +97,113 @@ function buildSolidMaterialPickerHtml(
   if (groups.length === 0) {
     return `<div class="mat-pick-title">切换材质（实心地板）</div><div class="mat-pick-empty">当前关卡集无材质</div>`;
   }
-  const tabs = groups
-    .map((g) => {
-      const n = S.floorMaterials.filter((m) => floorMaterialGroup(m.id) === g.key).length;
-      return `<button type="button" class="mat-tab-btn${g.key === activeTab ? " active" : ""}" data-mat-tab="${g.key}">${escHtml(g.labelZh)}<span class="mat-tab-n">${n}</span></button>`;
-    })
-    .join("");
-  const panes = groups
-    .map((g) => {
-      const rows = S.floorMaterials
-        .filter((m) => floorMaterialGroup(m.id) === g.key)
-        .map((m) => {
-          const bl = materialBilingual(m.id);
-          return `<button type="button" class="mat-pick${m.guid === activeMaterialGuid ? " active" : ""}" data-guid="${m.guid}"><span class="mat-id">${bl.zh}</span><span class="mat-sub">${bl.en}</span></button>`;
-        })
-        .join("");
-      return `<div class="mat-pick-pane${g.key === activeTab ? " active" : ""}" data-mat-pane="${g.key}"><div class="mat-pick-grid">${rows}</div></div>`;
-    })
-    .join("");
+  const tabs =
+    `<button type="button" class="mat-tab-btn${activeTab === MAT_TAB_ALL ? " active" : ""}" data-mat-tab="${MAT_TAB_ALL}">全部<span class="mat-tab-n">${S.floorMaterials.length}</span></button>` +
+    groups
+      .map((g) => {
+        const n = S.floorMaterials.filter((m) => floorMaterialGroup(m.id) === g.key).length;
+        return `<button type="button" class="mat-tab-btn${g.key === activeTab ? " active" : ""}" data-mat-tab="${g.key}">${escHtml(g.labelZh)}<span class="mat-tab-n">${n}</span></button>`;
+      })
+      .join("");
+  const allRows = S.floorMaterials.map((m) => materialPickButtonHtml(m, activeMaterialGuid)).join("");
+  const allPane = `<div class="mat-pick-pane${activeTab === MAT_TAB_ALL ? " active" : ""}" data-mat-pane="${MAT_TAB_ALL}"><div class="mat-pick-grid">${allRows}</div></div>`;
+  const panes =
+    allPane +
+    groups
+      .map((g) => {
+        const rows = S.floorMaterials
+          .filter((m) => floorMaterialGroup(m.id) === g.key)
+          .map((m) => materialPickButtonHtml(m, activeMaterialGuid))
+          .join("");
+        return `<div class="mat-pick-pane${g.key === activeTab ? " active" : ""}" data-mat-pane="${g.key}"><div class="mat-pick-grid">${rows}</div></div>`;
+      })
+      .join("");
   return `<div class="mat-pick-title">切换材质（实心地板）</div>
+    <div class="mat-pick-search-row">
+      <input type="search" id="fe-mat-search" class="mat-pick-search" placeholder="搜索材质（中文 / 英文 / id）" autocomplete="off" spellcheck="false" />
+      <span id="fe-mat-search-count" class="mat-pick-search-count muted"></span>
+    </div>
     <div class="mat-pick-tabs" id="fe-mat-tabs">${tabs}</div>
-    <div class="mat-pick-list" id="fe-mat-list">${panes}</div>`;
+    <div class="mat-pick-list" id="fe-mat-list">${panes}</div>
+    <div id="fe-mat-search-empty" class="mat-pick-empty" hidden>无匹配材质</div>`;
+}
+
+function updateMaterialSearchUi(query: string): number {
+  const empty = document.getElementById("fe-mat-search-empty");
+  const countEl = document.getElementById("fe-mat-search-count");
+  const searching = query.trim().length > 0;
+  const allPane = document.querySelector<HTMLElement>(`.mat-pick-pane[data-mat-pane="${MAT_TAB_ALL}"]`);
+  let visible = 0;
+  allPane?.querySelectorAll<HTMLButtonElement>(".mat-pick[data-guid]").forEach((btn) => {
+    const guid = btn.dataset.guid ?? "";
+    const mat = S.floorMaterials.find((x) => x.guid === guid);
+    const show = !searching || (mat ? materialMatchesSearchQuery(mat, query) : false);
+    btn.hidden = !show;
+    btn.classList.toggle("mat-pick-filtered", !show);
+    if (show) visible++;
+  });
+  if (empty) empty.hidden = !searching || visible > 0;
+  if (countEl) countEl.textContent = searching ? `${visible} 项` : "";
+  return visible;
 }
 
 function wireSolidMaterialPicker(f: EditorFloor, activeTab: string): void {
+  let currentTab = activeTab;
+  let tabBeforeSearch = "";
+
   const switchTab = (key: string) => {
+    currentTab = key;
     S.floorMaterialTabKey = key;
+    const searchInput = document.getElementById("fe-mat-search") as HTMLInputElement | null;
+    const query = searchInput?.value.trim() ?? "";
+    const searching = query.length > 0;
+
+    document.getElementById("fe-mat-list")?.classList.toggle("mat-pick-searching", searching);
+    document.getElementById("fe-mat-search-empty")?.toggleAttribute("hidden", !searching);
+
     document.querySelectorAll<HTMLButtonElement>(".mat-tab-btn[data-mat-tab]").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.matTab === key);
     });
+
     document.querySelectorAll<HTMLElement>(".mat-pick-pane[data-mat-pane]").forEach((pane) => {
-      pane.classList.toggle("active", pane.dataset.matPane === key);
+      const paneKey = pane.dataset.matPane ?? "";
+      const showPane = searching ? paneKey === MAT_TAB_ALL : paneKey === key;
+      pane.classList.toggle("active", showPane);
+      pane.hidden = !showPane;
+      if (paneKey !== MAT_TAB_ALL) {
+        pane.querySelectorAll<HTMLButtonElement>(".mat-pick[data-guid]").forEach((btn) => {
+          btn.hidden = false;
+        });
+      }
     });
+
+    if (searching) updateMaterialSearchUi(query);
+    else {
+      const countEl = document.getElementById("fe-mat-search-count");
+      if (countEl) countEl.textContent = "";
+      document.getElementById("fe-mat-search-empty")?.setAttribute("hidden", "");
+      allPaneResetHidden();
+    }
+  };
+
+  const allPaneResetHidden = () => {
+    document
+      .querySelector<HTMLElement>(`.mat-pick-pane[data-mat-pane="${MAT_TAB_ALL}"]`)
+      ?.querySelectorAll<HTMLButtonElement>(".mat-pick[data-guid]")
+      .forEach((btn) => {
+        btn.hidden = false;
+        btn.classList.remove("mat-pick-filtered");
+      });
   };
   document.querySelectorAll<HTMLButtonElement>(".mat-tab-btn[data-mat-tab]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const key = btn.dataset.matTab;
       if (!key) return;
+      const searchInput = document.getElementById("fe-mat-search") as HTMLInputElement | null;
+      if (searchInput?.value.trim()) {
+        searchInput.value = "";
+        tabBeforeSearch = "";
+      }
       switchTab(key);
     });
   });
@@ -138,11 +218,34 @@ function wireSolidMaterialPicker(f: EditorFloor, activeTab: string): void {
       f.surfaceKind = "solid";
       S.floorMaterialTabKey = floorMaterialGroup(m.id);
       draw();
-      setStatus(`已切换材质：${m.nameZh}（写回后生效）`);
+      setStatus(`已切换材质：${materialDisplayLabel(m).zh}（写回后生效）`);
       openFloorEditorModal(f);
     });
   });
   switchTab(activeTab);
+  const searchInput = document.getElementById("fe-mat-search") as HTMLInputElement | null;
+  let searchComposing = false;
+  const runMaterialSearch = () => {
+    if (!searchInput || searchComposing) return;
+    const q = searchInput.value.trim();
+    if (!q) {
+      const restore = tabBeforeSearch || currentTab;
+      tabBeforeSearch = "";
+      switchTab(restore);
+      return;
+    }
+    if (!tabBeforeSearch && currentTab !== MAT_TAB_ALL) tabBeforeSearch = currentTab;
+    if (currentTab !== MAT_TAB_ALL) switchTab(MAT_TAB_ALL);
+    else updateMaterialSearchUi(q);
+  };
+  searchInput?.addEventListener("compositionstart", () => {
+    searchComposing = true;
+  });
+  searchInput?.addEventListener("compositionend", () => {
+    searchComposing = false;
+    runMaterialSearch();
+  });
+  searchInput?.addEventListener("input", runMaterialSearch);
   requestAnimationFrame(() => {
     const tabBtn = document.querySelector<HTMLElement>(`.mat-tab-btn[data-mat-tab="${activeTab}"]`);
     if (tabBtn) tabBtn.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -288,12 +391,15 @@ export function openFloorEditorModal(f: EditorFloor) {
     const wv = parseInt(feW.value, 10);
     const dv = parseInt(feD.value, 10);
     if (!(wv > 0) && !(dv > 0)) return;
+    const prevW = f._wCells;
+    const prevD = f._dCells;
     if (!sizePushed) {
       pushHistory();
       sizePushed = true;
     }
     if (wv > 0) f._wCells = wv;
     if (dv > 0) f._dCells = dv;
+    maybeSyncMaterialTilingOnResize(f, prevW, prevD);
     finalizeFloor(f);
     draw();
     const sz = document.getElementById("fe-size");
@@ -318,6 +424,7 @@ export function openFloorEditorModal(f: EditorFloor) {
     }
     f.materialTilingW = wv;
     f.materialTilingD = dv;
+    S.dirty = true;
     draw();
     refreshMatSummary();
   };

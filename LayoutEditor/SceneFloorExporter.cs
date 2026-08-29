@@ -23,6 +23,16 @@ public static class SceneFloorExporter
     /// 1×1×1.132 魔法数不同，空气地板仅靠名称识别，故不会被 items 导出器捡走。</summary>
     public const string AirFloorColliderName = "Col_AirFloor";
 
+    /// <summary>True for editor air-floor walk colliders (Col_AirFloor and Unity
+    /// duplicate suffixes Col_AirFloor (1), …).</summary>
+    public static bool IsAirFloorColliderName(string objectName)
+    {
+        if (string.IsNullOrEmpty(objectName))
+            return false;
+        return objectName == AirFloorColliderName
+            || objectName.StartsWith(AirFloorColliderName + " (", System.StringComparison.Ordinal);
+    }
+
     public static List<FloorDto> ExportFromScene()
     {
         var floors = new List<FloorDto>();
@@ -74,8 +84,17 @@ public static class SceneFloorExporter
     /// 故不能像空气墙那样用高度魔法数识别。</summary>
     private static void TryAddAirFloor(GameObject go, Transform t, List<FloorDto> floors)
     {
-        if (go.name != AirFloorColliderName)
+        // 移动组烘焙后的岛式层级：AirFloor / Ground（对齐 oc1_story 3-4 Island/Ground）。
+        if (go.name == AirFloorRig.GroundChildName && t.parent != null
+            && AirFloorRig.IsWrapperName(t.parent.name))
+        {
+            go = t.gameObject;
+            t = go.transform;
+        }
+        else if (!IsAirFloorColliderName(go.name))
+        {
             return;
+        }
         var col = go.GetComponent<BoxCollider>();
         if (col == null)
             return;
@@ -85,6 +104,22 @@ public static class SceneFloorExporter
         var b = col.bounds;
         if (b.size.x <= 0.001f || b.size.z <= 0.001f)
             return;
+
+        // 写回失败重试会在移动组里堆 Col_AirFloor (1)… 副本；只导出同尺寸同位置
+        // 的第一个，避免 web 文档出现多条空气地板、下次写回再克隆一轮。
+        foreach (var existing in floors)
+        {
+            if (existing == null || !existing.airFloor)
+                continue;
+            var ep = existing.worldPosition ?? existing.localPosition;
+            if (ep == null)
+                continue;
+            if (Mathf.Abs(ep.x - b.center.x) < 0.05f
+                && Mathf.Abs(ep.z - b.center.z) < 0.05f
+                && Mathf.Abs((existing.widthUnits > 0f ? existing.widthUnits : existing.widthCells * LayoutEditorCatalogLookup.GridCellSize) - b.size.x) < 0.15f
+                && Mathf.Abs((existing.depthUnits > 0f ? existing.depthUnits : existing.depthCells * LayoutEditorCatalogLookup.GridCellSize) - b.size.z) < 0.15f)
+                return;
+        }
 
         var path = LayoutEditorHierarchy.GetHierarchyPath(t);
         var parentPath = t.parent != null

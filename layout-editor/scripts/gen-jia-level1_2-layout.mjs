@@ -688,7 +688,10 @@ async function main() {
     return;
   }
 
-  // 3) 写回布局（全量 + 重建行走碰撞；moveControls=null 不烘焙不动现有移动配置）
+    // 3) 写回布局（全量 + 重建行走碰撞）。
+    // 注意：本脚本不传 moveControls，不会重烘焙移动组。若关卡含移动组/空气地板过桥，
+    // 写回后请在 layout-editor 网页对移动组再点一次「写回」，以清理 Col_AirFloor 副本
+    // 并烘焙 AirFloor/Ground 岛式层级（对齐 oc1_story 3-4）。
   console.log("\n写回布局…");
   const r1 = await api(`/api/scene/layout?snap=0.01&syncWalkable=1`, "POST", doc);
   console.log("布局写回：", typeof r1 === "string" ? r1 : JSON.stringify(r1));

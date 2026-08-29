@@ -248,6 +248,15 @@ public static class MoveControlBakery
             return "移动组「" + (group.displayName ?? "?") + "」：无法创建组根物体";
         group.groupHierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(groupRoot);
 
+        // 上次写回若因 hierarchyPath 过期克隆了 Col_AirFloor 副本，它们会留在组根
+        // 下但不参与本轮 members 动画——Play 期脚下仍踩静止碰撞，岛走了人留原地。
+        RemoveStaleFloorColliderChildren(groupRoot, members);
+
+        // 空气地板对齐 oc1_story 3-4：AirFloor(ObjectContainer) + Ground(碰撞)，动画驱动容器。
+        for (int i = 0; i < members.Count; i++)
+            members[i] = AirFloorRig.EnsureRig(members[i], groupRoot);
+        RemoveStaleFloorColliderChildren(groupRoot, members);
+
         // Reparent items under the group root (world position preserved), giving each
         // a unique direct-child name so animation-curve child paths stay unambiguous.
         // Members already under the root (from a previous bake) must NOT occupy the
@@ -289,7 +298,7 @@ public static class MoveControlBakery
             // localPosition（组根本身不动），实体（chef/食材容器）经 DynamicLandscapeParenting
             // 从脚下碰撞体向上找到的第一个 IParentable 就是该成员 —— 父挂载到成员才会随
             // 动画走（挂在组根上等于挂到永不移动的物体）。无碰撞的装饰成员挂着无副作用。
-            if (go.GetComponent<ObjectContainer>() == null)
+            if (!AirFloorRig.IsColliderObject(go) && go.GetComponent<ObjectContainer>() == null)
                 Undo.AddComponent<ObjectContainer>(go);
         }
 
@@ -1417,6 +1426,27 @@ public static class MoveControlBakery
         if (string.IsNullOrEmpty(levelSet))
             levelSet = Path.GetDirectoryName(sceneAssetPath).Replace('\\', '/');
         return levelSet + "/animations";
+    }
+
+    /// <summary>Drop direct children of the group root that are walk colliders left
+    /// over from a previous bake but are no longer listed as members.</summary>
+    private static void RemoveStaleFloorColliderChildren(Transform groupRoot, List<GameObject> members)
+    {
+        if (groupRoot == null || members == null)
+            return;
+        var memberSet = new HashSet<GameObject>(members);
+        var doomed = new List<GameObject>();
+        for (int i = 0; i < groupRoot.childCount; i++)
+        {
+            var child = groupRoot.GetChild(i);
+            if (child == null || memberSet.Contains(child.gameObject))
+                continue;
+            if (!AirFloorRig.IsMoveGroupWalkCollider(child.gameObject))
+                continue;
+            doomed.Add(child.gameObject);
+        }
+        foreach (var go in doomed)
+            Undo.DestroyObjectImmediate(go);
     }
 
     private static string GetChildPath(Transform child, Transform root)

@@ -4,7 +4,9 @@ export type GuideBlock =
   | { type: "steps"; items: string[] }
   | { type: "bullets"; items: string[] }
   | { type: "callout"; text: string }
+  | { type: "note"; text: string }
   | { type: "kbdTable"; rows: [string, string][] }
+  | { type: "table"; header: string[]; rows: string[][] }
   | { type: "link"; label: string; href: string; external?: boolean }
   | { type: "dynamic"; kind: "ingredient-samples" | "recipe-samples" | "utensil-icons" | "icon-paths" };
 

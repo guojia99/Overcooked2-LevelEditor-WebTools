@@ -67,6 +67,9 @@ export async function renderGuideView(app: HTMLElement): Promise<void> {
     } else if (target === "manage") {
       location.hash = "#/manage";
       location.reload();
+    } else if (target === "dependencies") {
+      location.hash = "#/dependencies";
+      location.reload();
     } else if (target === "custom-recipes") {
       location.hash = "#/custom-recipes";
       location.reload();

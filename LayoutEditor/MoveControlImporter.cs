@@ -400,7 +400,11 @@ public static class MoveControlImporter
             }
 
             if (IsPrefabInstance(member)) itemIds.Add(id);
-            else if (LooksLikeFloor(member)) floorIds.Add(id);
+            else if (LooksLikeFloor(member))
+            {
+                var colGo = AirFloorRig.GetColliderObject(member);
+                floorIds.Add("u:" + (colGo != null ? colGo.GetInstanceID() : member.GetInstanceID()));
+            }
             else objectIds.Add(id);
         }
 
@@ -996,10 +1000,9 @@ public static class MoveControlImporter
 
     private static bool LooksLikeFloor(GameObject go)
     {
-        // 空气地板成员：无 Mesh、只有 BoxCollider，按导出同名约定识别，归入
-        // floorIds（web 端 floors 数组持有其 id，组往返才不断链）。
-        if (go.name == SceneFloorExporter.AirFloorColliderName ||
-            go.name.StartsWith(SceneFloorExporter.AirFloorColliderName + " (", StringComparison.Ordinal))
+        if (AirFloorRig.IsColliderObject(go))
+            return true;
+        if (AirFloorRig.IsWrapperName(go.name))
             return true;
         var mf = go.GetComponent<MeshFilter>();
         var mr = go.GetComponent<MeshRenderer>();

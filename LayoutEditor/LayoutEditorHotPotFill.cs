@@ -97,6 +97,88 @@ public static class LayoutEditorHotPotFill
         }
     }
 
+    /// <summary>保存菜谱时覆盖同步：仅保留当前 LevelInfo 火锅菜谱所需节点，移除无关遗留项。</summary>
+    public static void SyncHotPotIngredients(LevelInfoSO info)
+    {
+        if (info == null)
+            return;
+        var required = CollectHotPotNodes(info);
+        bool sceneDirty = false;
+        foreach (var stub in Object.FindObjectsOfType<PseudoPrefabStub>())
+        {
+            if (stub == null || stub.gameObject == null)
+                continue;
+            if (IsPushablePot(stub) || IsTrack(stub))
+                continue;
+            if (!IsLargePot(stub))
+                continue;
+            var go = stub.gameObject;
+            var derived = go.GetComponent<PseudoPrefabCookingUtensilStub>();
+            if (derived == null)
+            {
+                if (required.Count == 0)
+                    continue;
+                var extraGuids = new List<string>();
+                foreach (var so in required)
+                {
+                    var p = AssetDatabase.GetAssetPath(so);
+                    if (!string.IsNullOrEmpty(p))
+                        extraGuids.Add(AssetDatabase.AssetPathToGUID(p));
+                }
+                if (extraGuids.Count == 0)
+                    continue;
+                var item = new LayoutItemDto
+                {
+                    stubKind = "CookingUtensil",
+                    cookingUtensil = new LayoutCookingUtensilStubDto
+                    {
+                        capacity = LayoutEditorStubIO.NativeUtensilCapacityForId(go.name),
+                        allowedIngredientGuids = extraGuids.ToArray(),
+                    },
+                };
+                LayoutEditorStubIO.ApplyStub(go, item);
+                sceneDirty = true;
+            }
+            else if (SetHotPotIngredients(derived, required))
+            {
+                sceneDirty = true;
+            }
+        }
+        if (sceneDirty)
+        {
+            foreach (var stub in Object.FindObjectsOfType<PseudoPrefabCookingUtensilStub>())
+            {
+                if (stub == null || stub.gameObject == null)
+                    continue;
+                var scene = stub.gameObject.scene;
+                if (scene.IsValid())
+                    EditorSceneManager.MarkSceneDirty(scene);
+            }
+        }
+    }
+
+    private static bool SetHotPotIngredients(PseudoPrefabCookingUtensilStub stub, List<ScriptableObject> required)
+    {
+        var next = required.ToArray();
+        var cur = stub.allowedIngredientSOs;
+        if (cur != null && cur.Length == next.Length)
+        {
+            bool same = true;
+            for (int i = 0; i < cur.Length; i++)
+            {
+                if (cur[i] != next[i])
+                {
+                    same = false;
+                    break;
+                }
+            }
+            if (same)
+                return false;
+        }
+        stub.allowedIngredientSOs = next;
+        return true;
+    }
+
     private static bool IsPushablePot(PseudoPrefabStub stub)
     {
         if (stub.gameObject == null)

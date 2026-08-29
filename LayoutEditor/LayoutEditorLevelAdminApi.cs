@@ -2852,6 +2852,8 @@ public static class LayoutEditorLevelAdminApi
             so.modelSO = null;
         }
 
+        so.optionalSOs = new ScriptableObject[0];
+
         var assetPath = categoryDir + "/" + recipeName + ".asset";
         AssetDatabase.CreateAsset(so, assetPath);
         EditorUtility.SetDirty(so);
@@ -2944,6 +2946,8 @@ public static class LayoutEditorLevelAdminApi
             so.model = model;
             so.modelSO = null;
         }
+
+        so.optionalSOs = new ScriptableObject[0];
 
         EditorUtility.SetDirty(so);
 

@@ -468,114 +468,7 @@ public static class LayoutEditorCatalogApi
         Undo.RecordObject(info, "Layout Editor Recipes");
         info.recipes = recipes.ToArray();
 
-        // 自动把本关卡集的自定义菜谱 bundle 加入 dependencies：
-        // 运行时 PseudoPrefabManager 只加载 dependencies 中的 bundle，
-        // 缺少则自定义菜谱的模型/贴图引用无法解析（装盘空、材质红/灰）。
-        // 只加入磁盘上已存在的 bundle：宿主原版 PseudoPrefabManager 对缺失 bundle 会抛
-        // KeyNotFoundException，未构建（如自定义菜谱 bundle 构建前）时不能写进 dependencies。
-        if (levelSet != null)
-        {
-            var deps = new List<string>(info.dependencies ?? new string[0]);
-            var customBundle = levelSet + "/custom_recipes";
-            if (System.Array.IndexOf(deps.ToArray(), customBundle) < 0 && BundleFileExists(customBundle))
-                deps.Add(customBundle);
-
-            // 自定义菜谱引用的外部资产 bundle（装盘容器等，如 Glass=bundle162）一并确保加载
-            foreach (var r in recipes)
-            {
-                var custom = r as CustomRecipeSO;
-                if (custom == null || custom.platingStepSO == null)
-                    continue;
-                var b = custom.platingStepSO.bundleName;
-                if (!string.IsNullOrEmpty(b) && System.Array.IndexOf(deps.ToArray(), b) < 0 && BundleFileExists(b))
-                    deps.Add(b);
-            }
-
-            info.dependencies = deps.ToArray();
-        }
-
-        // Auto-populate allIngredients: run the same "Auto Fill All Ingredients" logic
-        // as the LevelInfoSO inspector button (story/include match lists + scene dispensers).
-        LayoutEditorAllIngredientsFill.AutoFillIngredients(info);
-
-        // 注册已选 common03 菜谱的 bundle 依赖（common03 包 + 食材自身游戏 bundle）。
-        if (levelSet != null)
-            LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, info);
-
-        // 注意：common03 菜谱直接引用 Assets/common03 内资产（guid 来自静态 JSON），
-        // 随 common03 bundle 打包，不再有 custom_web 拷贝/安装步骤。
-
-        // (Disabled) Auto-populate allIngredients from selected recipes
-        // Only register ingredients NOT in the core/original RecipeMatchList
-        // (DLC/custom-exclusive ingredients only — core ingredients are already in the game's built-in matching)
-        /*{
-            var coreIngs = new HashSet<string>(StringComparer.Ordinal)
-            {
-                "ChoppedBunSO", "DoughSO", "MeatSO", "CheeseSO", "LettuceSO", "TomatoSO",
-                "TortillaSO", "BurritoChickenSO", "BurritoMeatSO",
-                "FlourSO", "EggSO", "HoneycombSO", "ChocolateSO", "CarrotSO",
-                "PotatoSO", "NuggetChickenSO", "OnionSO", "PastaSO",
-                "PepperoniSO", "ChickenSO", "CucumberSO", "FishSO", "PrawnSO",
-                "SeaweedSO", "SushiRiceSO", "SushiFishSO", "SushiPrawnSO",
-            };
-            var allIngs = new List<PseudoPrefabSO>();
-            var seenIngIds = new HashSet<string>(StringComparer.Ordinal);
-            var ingLookup = new Dictionary<string, PseudoPrefabSO>(StringComparer.Ordinal);
-
-            foreach (var r in recipes)
-            {
-                List<string> ingIds = null;
-                var custom = r as CustomRecipeSO;
-                if (custom != null)
-                {
-                    ingIds = LayoutEditorRecipeKnowledge.CustomIngredients(custom);
-                }
-                else
-                {
-                    var original = r as PseudoPrefabSORecipe;
-                    if (original != null)
-                    {
-                        string step;
-                        string[] originalIngs;
-                        var pathKey = System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(original));
-                        if (LayoutEditorRecipeKnowledge.TryGetOriginal(pathKey, out step, out originalIngs) ||
-                            LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out originalIngs) ||
-                            LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName, out step, out originalIngs))
-                        {
-                            ingIds = new List<string>(originalIngs);
-                        }
-                    }
-                }
-                if (ingIds == null)
-                    continue;
-                foreach (var ingId in ingIds)
-                {
-                    if (string.IsNullOrEmpty(ingId))
-                        continue;
-                    // Skip core ingredients already covered by the game's built-in RecipeMatchList
-                    if (coreIngs.Contains(ingId))
-                        continue;
-                    if (!seenIngIds.Add(ingId))
-                        continue;
-                    PseudoPrefabSO ingSO;
-                    if (!ingLookup.TryGetValue(ingId, out ingSO))
-                    {
-                        var ingGuids = AssetDatabase.FindAssets(ingId + " t:PseudoPrefabSO");
-                        if (ingGuids.Length > 0)
-                        {
-                            var ingPath = AssetDatabase.GUIDToAssetPath(ingGuids[0]);
-                            ingSO = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(ingPath);
-                            ingLookup[ingId] = ingSO;
-                        }
-                    }
-                    if (ingSO != null)
-                        allIngs.Add(ingSO);
-                }
-            }
-            info.allIngredients = allIngs.ToArray();
-        }*/
-
-        // Auto-populate optionalRecipeMatchListItems: 每次保存自动重建。
+        // Auto-populate optionalRecipeMatchListItems: 每次保存自动重建（覆盖，不保留旧条目）。
         // 规则：只有食材组成（无嵌套子菜谱）的菜谱（如煎蛋 = 鸡蛋）不需要注册——
         // 其匹配由食材 + 烹饪步骤天然覆盖；组合了其他菜谱的（如鸡蛋汉堡 = 煎蛋 + 面包）
         // 以及 DLC/Web 原始菜谱必须注册，否则运行时内置 RecipeMatchList 无法匹配。
@@ -592,17 +485,8 @@ public static class LayoutEditorCatalogApi
                 var type = RecipeTypeOf(id);
                 var group = FoodGroupOf(path);
                 var custom = r as CustomRecipeSO;
-                List<string> customIngs = custom != null
-                    ? LayoutEditorRecipeKnowledge.CustomIngredients(custom)
-                    : null;
 
-                if (custom != null)
-                {
-                    // 自定义菜谱：仅嵌套了其他菜谱（子菜谱/中间产物）的组合需要注册
-                    if (HasSubRecipe(custom))
-                        existing.Add(r);
-                }
-                else if (group.StartsWith("dlc", StringComparison.Ordinal))
+                if (custom == null && group.StartsWith("dlc", StringComparison.Ordinal))
                 {
                     // DLC 原始菜谱（含 common03 通用内容按 dlc 子目录归组）：游戏内置匹配表不含，需注册。
                     existing.Add(r);
@@ -617,7 +501,7 @@ public static class LayoutEditorCatalogApi
                 bool isHotdog = type == "hotdog"
                     || id.IndexOf("hotdog", StringComparison.OrdinalIgnoreCase) >= 0
                     || id.IndexOf("frankfurter", StringComparison.OrdinalIgnoreCase) >= 0;
-                if (isHotdog)
+                if (custom == null && isHotdog)
                 {
                     bool isDlc11 = path.IndexOf("/dlc11/", StringComparison.Ordinal) >= 0
                         || id.IndexOf("dlc11", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -627,15 +511,10 @@ public static class LayoutEditorCatalogApi
                 }
 
                 // Pizza: add 自选披萨 optionals; mushroom pizza additionally needs 蘑菇披萨
-                bool isPizza = type == "pizza";
-                if (!isPizza && customIngs != null)
-                    isPizza = customIngs.Contains("DLC05_Dough") || customIngs.Contains("DoughSO");
-                if (isPizza)
+                if (custom == null && type == "pizza")
                 {
                     AddOptionalGuids(existing, new[] { "c8a3b9520d25f674a89e274226dee7cf", "b38643b6c45e859479f6105f5d0ec839" });
-                    bool mushroom = id.IndexOf("Mushroom", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        (customIngs != null && customIngs.Contains("MushroomSO"));
-                    if (mushroom)
+                    if (id.IndexOf("Mushroom", StringComparison.OrdinalIgnoreCase) >= 0)
                         AddOptionalGuids(existing, new[] { "1072f0ef3ba328546a7a5bb84d983d6e" });
                 }
             }
@@ -667,14 +546,16 @@ public static class LayoutEditorCatalogApi
             info.includeRecipeMatchLists = includeLists.ToArray();
         }
 
-        // 烤菜烤盘「默认能放」：把所选烤菜菜谱的叶食材追加为场景烤盘 stub 的额外食材
-        // （覆盖「先摆放烤盘、后选菜谱/再保存」的顺序；与 SceneLayoutApplier.Apply 的
-        // 调用幂等，只增不删）。
-        LayoutEditorRoastTrayFill.EnsureRoastTrayIngredients(info);
+        // 仅根据当前已选菜谱覆盖重建 allIngredients（不扫描场景食材箱，清除无关遗留食材）。
+        LayoutEditorAllIngredientsFill.AutoFillIngredientsFromSelectedRecipes(info);
 
-        // 火锅大锅「默认能放/有汤面」：把所选火锅菜谱叶食材 + permutations 生/熟节点
-        // 登记为大锅 stub 的 allowedIngredientSOs（同烤盘 Fill 模式，幂等）。
-        LayoutEditorHotPotFill.EnsureHotPotIngredients(info);
+        // 按当前 LevelInfo 引用覆盖重建 bundle 依赖（不保留旧菜谱遗留的 dependencies）。
+        if (levelSet != null)
+            LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, info, true);
+
+        // 烤盘/火锅：按当前菜谱同步 allowedIngredientSOs（覆盖，不保留旧菜谱遗留项）。
+        LayoutEditorRoastTrayFill.SyncRoastTrayIngredients(info);
+        LayoutEditorHotPotFill.SyncHotPotIngredients(info);
 
         EditorUtility.SetDirty(info);
 
@@ -804,6 +685,20 @@ public static class LayoutEditorCatalogApi
                 return true;
         }
         return false;
+    }
+
+    /// <summary>登记组成里的自定义子菜谱（面糊等中间产物），否则运行时匹配表无法识别
+    ///  搅拌产物节点（参考热狗关 AddHotdogBoiledFrankfurter）。</summary>
+    private static void AddNestedCustomSubRecipes(CustomRecipeSO so, HashSet<ScriptableObject> existing)
+    {
+        if (so == null || so.compositionSOs == null)
+            return;
+        foreach (var c in so.compositionSOs)
+        {
+            CustomRecipeSO sub = c as CustomRecipeSO;
+            if (sub != null && existing.Add(sub))
+                AddNestedCustomSubRecipes(sub, existing);
+        }
     }
 
     private static string[] DirectCompositionIds(CustomRecipeSO so)

@@ -1152,6 +1152,7 @@ const STEP_UTENSILS = {
   MixingBowl: ["Mixer", "MixerBowl"],
   HotPot: ["cooking_region_floorburner", "utensil_large_pot_01"],
   RoastingTray: ["Oven", "utensil_roasting_tray"],
+  OvenCakeTin: ["Oven", "utensil_cake_tin_01"],
 };
 
 /** Recipe-book ingredient grouping (mirrors ComputeCookingGroups in LayoutEditorRecipeKnowledge.cs).

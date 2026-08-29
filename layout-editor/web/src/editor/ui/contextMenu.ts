@@ -60,6 +60,16 @@ import {
   wireSelectionHeightRow
 } from "../selectionHeight";
 import {
+  selectionTravelatorSpeedRowHtml,
+  wireSelectionTravelatorSpeedRow,
+} from "../selectionTravelator";
+import {
+  airWallHeightRowHtml,
+  selectionAirWallHeightRowHtml,
+  wireAirWallHeightRow,
+  wireSelectionAirWallHeightRow,
+} from "../selectionAirWallHeight";
+import {
   batchRotationRowHtml,
   batchDisperseRowHtml,
   batchNudgeRowLabel,
@@ -142,7 +152,9 @@ export function showBatchHeightMenu(clientX: number, clientY: number) {
         : ""
     }
     ${selectionHeightRowHtml()}
-    <p class="close-hint">地板按行走面高度 · 物品按本地 Y · Esc 关闭</p>
+    ${selectionTravelatorSpeedRowHtml()}
+    ${selectionAirWallHeightRowHtml()}
+    <p class="close-hint">地板按行走面高度 · 物品按本地 Y · 空气墙碰撞高度按格 · Esc 关闭</p>
   `;
   const margin = 8;
   let left = clientX + margin;
@@ -162,6 +174,14 @@ export function showBatchHeightMenu(clientX: number, clientY: number) {
     }
   });
   wireSelectionHeightRow(dom.ctxMenuEl, () => {
+    draw();
+    updateFloorBar();
+  });
+  wireSelectionTravelatorSpeedRow(dom.ctxMenuEl, () => {
+    draw();
+    updateFloorBar();
+  });
+  wireSelectionAirWallHeightRow(dom.ctxMenuEl, () => {
     draw();
     updateFloorBar();
   });
@@ -253,6 +273,8 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
       </div>
     </div>`
     }
+    ${selectionTravelatorSpeedRowHtml()}
+    ${selectionAirWallHeightRowHtml()}
     ${
       isSurface && !resizable
         ? `<div class="ctx-nudge-row">
@@ -277,6 +299,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     </div>`
         : ""
     }
+    ${isAirWallItem(item) && !batchHeight ? airWallHeightRowHtml(item) : ""}
     ${stubHtml}
     ${appearHtml}
     ${itemVariantHtml(item)}
@@ -364,6 +387,17 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
       updateFloorBar();
     });
   }
+  wireSelectionTravelatorSpeedRow(dom.ctxMenuEl, () => {
+    draw();
+    updateFloorBar();
+  });
+  if (isAirWallItem(item) && !batchHeight) {
+    wireAirWallHeightRow(dom.ctxMenuEl, item);
+  }
+  wireSelectionAirWallHeightRow(dom.ctxMenuEl, () => {
+    draw();
+    updateFloorBar();
+  });
   if (batchTransform) {
     wireBatchRotationRow(dom.ctxMenuEl, () => {
       draw();
