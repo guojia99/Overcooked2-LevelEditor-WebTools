@@ -651,10 +651,14 @@ function categorize(assetPath) {
   if (seg[0] === "Player" || rel === "Player.prefab") return { category: "Player", theme: null };
   if (seg[0] === "art" && seg.length > 1) return { category: "art", theme: seg[1] };
   if (seg[0] === "art") return { category: "art", theme: "misc" };
+  if (seg[0] === "decor" && seg[1] === "food") return { category: "decor/food", theme: null };
   return { category: "other", theme: seg[0] || "misc" };
 }
 
 function layoutMetaFor(id, category) {
+  if (category === "decor/food") {
+    return { layoutTier: "decor" };
+  }
   if (category === "art" || category === "other") {
     const surf = surfaceMeta(id);
     if (surf.surfaceTier) return { layoutTier: "floor", ...surf };
@@ -790,6 +794,15 @@ function surfaceMeta(id) {
   return out;
 }
 
+function readPseudoPrefabSoGuid(prefabPath) {
+  try {
+    const txt = fs.readFileSync(prefabPath, "utf8");
+    const m = txt.match(/pseudoPrefabSO:\s*\{fileID:\s*\d+,\s*guid:\s*([a-f0-9]+),/);
+    return m ? m[1] : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
   const baseAbs = path.resolve(repoRoot, baseAssetsPath);
@@ -808,7 +821,7 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
       if (!guid) continue;
       const { category, theme } = categorize(assetPath);
       // Priority: hand-authored override > Unity-measured (decor only) > 1x1.
-      const isDecorCategory = category === "art" || category === "other";
+      const isDecorCategory = category === "art" || category === "other" || category === "decor/food";
       const measured = isDecorCategory ? measuredFootprints.get(id) : undefined;
       const fp =
         FOOTPRINT_OVERRIDES[id] ||
@@ -828,6 +841,12 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
           ? { height: Math.round(measured.sizeY * 1000) / 1000 }
           : {}),
         ...layoutMetaFor(id, category),
+        ...(category === "decor/food"
+          ? {
+              ingredientDecor: true,
+              ingredientGuid: readPseudoPrefabSoGuid(full),
+            }
+          : {}),
       });
     }
   }
@@ -876,6 +895,16 @@ function buildPaletteGroups(byCategory) {
       return ta.localeCompare(tb);
     });
 
+  if ((byCategory["decor/food"] || []).length > 0) {
+    groups.push({
+      key: "decor/food",
+      labelZh: "装饰 · 食材模型",
+      labelEn: "Decor · food props",
+      layoutTier: "decor",
+      itemCount: byCategory["decor/food"].length,
+    });
+  }
+
   for (const key of artKeys) {
     const theme = key.slice(4);
     const themeZh = ART_THEME_ZH[theme] || theme;
@@ -891,7 +920,11 @@ function buildPaletteGroups(byCategory) {
   }
 
   const otherKeys = Object.keys(byCategory).filter(
-    (k) => !k.startsWith("art/") && !k.startsWith("surface/") && !CORE_PALETTE.some((c) => c.key === k)
+    (k) =>
+      !k.startsWith("art/") &&
+      !k.startsWith("surface/") &&
+      k !== "decor/food" &&
+      !CORE_PALETTE.some((c) => c.key === k)
   );
   for (const key of otherKeys.sort()) {
     groups.push({
@@ -1903,7 +1936,10 @@ function stampIcons(list, sub) {
   const dir = path.join(OUT_DIR, "icons", sub);
   let count = 0;
   for (const it of list) {
-    const has = !!it.id && fs.existsSync(path.join(dir, it.id + ".png"));
+    if (!it.id) continue;
+    const iconSub = it.ingredientDecor ? "ingredients" : sub;
+    const iconDir = path.join(OUT_DIR, "icons", iconSub);
+    const has = fs.existsSync(path.join(iconDir, it.id + ".png"));
     it.icon = has;
     if (has) count++;
   }

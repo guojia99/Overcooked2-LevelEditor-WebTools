@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-26T07:12:14.165Z",
+  "generatedAt": "2026-08-29T14:33:09.337Z",
   "schemaVersion": 3,
   "gridCellSize": 1.2,
-  "itemCount": 2918,
+  "itemCount": 3048,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -18,7 +18,8 @@
     "catalog/items.11.json",
     "catalog/items.12.json",
     "catalog/items.13.json",
-    "catalog/items.14.json"
+    "catalog/items.14.json",
+    "catalog/items.15.json"
   ],
   "paletteGroups": [
     {
@@ -104,6 +105,13 @@
       "labelEn": "Floor & background surfaces",
       "layoutTier": "floor",
       "itemCount": 116
+    },
+    {
+      "key": "decor/food",
+      "labelZh": "装饰 · 食材模型",
+      "labelEn": "Decor · food props",
+      "layoutTier": "decor",
+      "itemCount": 130
     },
     {
       "key": "art/npc",

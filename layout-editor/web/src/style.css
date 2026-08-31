@@ -1101,6 +1101,15 @@ body {
   overflow-wrap: anywhere;
 }
 
+.palette-card > .pc-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  align-self: center;
+  margin-bottom: 2px;
+  image-rendering: -webkit-optimize-contrast;
+}
+
 .palette-card .id {
   color: #9aa0a6;
   font-size: 10px;

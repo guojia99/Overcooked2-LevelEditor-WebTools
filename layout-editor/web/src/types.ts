@@ -47,6 +47,12 @@ export interface CatalogItem {
   height?: number;
   /** True when an extracted icon PNG exists under web/public/icons/catalog/<id>.png. */
   icon?: boolean;
+  /** Catalog flag: decor/food wrapper prefab (icon from ingredients/). */
+  ingredientDecor?: boolean;
+  /** Referenced ingredient PseudoPrefabSO guid (from wrapper prefab). */
+  ingredientGuid?: string;
+  bundleName?: string;
+  prefabName?: string;
 }
 
 export interface CatalogPaletteGroup {
@@ -221,6 +227,12 @@ export interface LayoutItem {
   soArray?: LayoutSOArrayStub;
   /** 火锅灶台定时开关（cooking_region_floorburner / dlc10 变体）。 */
   timedSwitch?: LayoutTimedSwitchStub;
+  /** @deprecated 旧版食材装饰字段；载入时迁移为 common03 decor/food prefab。 */
+  ingredientDecor?: LayoutIngredientDecorStub;
+}
+
+export interface LayoutIngredientDecorStub {
+  ingredientGuid: string;
 }
 
 // ---------- Movable Object Control (Animated Objects groups) ----------

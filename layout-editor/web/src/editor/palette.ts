@@ -2,7 +2,7 @@ import { S } from "./state";
 import { dom } from "./dom";
 import { tidyCatalogNameZh } from "../displayLabels";
 import { hostRuleLabelZh } from "../stacking";
-import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
+import { isAmbientBackgroundCat, isWaterBackgroundCat, foodIconImg } from "./catalog";
 import { matchBuiltinAnimDecor } from "./builtinAnimDecor";
 import { buildComboPaletteGroup } from "./combos";
 import { variantBaseId, VARIANT_TO_BASE } from "./itemVariants";
@@ -193,6 +193,7 @@ export function buildPalette(catalog: Catalog, filter: string) {
       row.draggable = true;
       row.dataset.guid = it.guid;
       const animDecor = it.layoutTier === "decor" ? matchBuiltinAnimDecor(it.id, it.nameZh) : null;
+      const foodDecor = it.ingredientDecor === true;
       const decorSize =
         it.layoutTier === "decor"
           ? ` <span class="decor-size-badge" title="尺寸分级：按实测占位（footprint）最大边判定">${DECOR_SIZE_LABEL_ZH[decorSizeTier(it)]}</span>`
@@ -200,12 +201,13 @@ export function buildPalette(catalog: Catalog, filter: string) {
       const sub = it.stack
         ? `<div class="sub">配套${hostRuleLabelZh(it.stack.hostRule)} · 高 ${it.stack.y}m</div>`
         : it.layoutTier === "decor"
-          ? `<div class="sub">装饰${decorSize}${animDecor ? ` · ${animDecor.emoji} ${animDecor.badgeZh}` : ""}</div>`
+          ? `<div class="sub">装饰${foodDecor ? " · 食材" : ""}${decorSize}${animDecor ? ` · ${animDecor.emoji} ${animDecor.badgeZh}` : ""}</div>`
           : "";
       const skins = skinCounts.get(it.id) ?? 1;
       const skinBadge =
         skins > 1 ? ` <span class="variant-badge" title="同功能换肤 ${skins} 种：放置后右键可切换">×${skins}</span>` : "";
-      row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
+      const thumb = it.ingredientDecor ? foodIconImg("ingredients", it.id, true) : "";
+      row.innerHTML = `${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
       if (animDecor) {
         row.title = animDecor.title;
         const badgeEl = document.createElement("span");

@@ -14,6 +14,7 @@ import {
 import {
   itemLayerOfIt,
   catalogItemById,
+  ingredientIdByGuid,
   isResizableBackgroundItem,
   planeCatalogFootprint
 } from "./catalog";
@@ -74,6 +75,18 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
       offSeconds: rest.timedSwitch.offSeconds ?? 30,
       startOn: rest.timedSwitch.startOn !== false,
     };
+  }
+  if (rest.stubKind === "IngredientDecor" || rest.ingredientDecor) {
+    const ingGuid = rest.ingredientDecor?.ingredientGuid || rest.prefabGuid;
+    let ingId = prefabIdFromPath(rest.prefabAssetPath);
+    if (!ingId && ingGuid) ingId = ingredientIdByGuid(ingGuid);
+    const wrapper = ingId ? catalogItemById(ingId) : undefined;
+    if (wrapper?.category === "decor/food") {
+      rest.prefabGuid = wrapper.guid;
+      rest.prefabAssetPath = wrapper.assetPath;
+    }
+    delete rest.stubKind;
+    delete rest.ingredientDecor;
   }
   const ly = rest.localPosition?.y ?? 0;
   const unityXZ = editorItemUnityWorldXZ({ _wx, _wz, localRotationY: rest.localRotationY, prefabAssetPath: rest.prefabAssetPath, prefabGuid: rest.prefabGuid });

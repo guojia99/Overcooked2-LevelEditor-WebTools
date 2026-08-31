@@ -84,7 +84,8 @@ export function drawLayerForItem(
   catalogByGuid: Map<string, CatalogItem>
 ): number {
   const cat = catalogByGuid.get(item.prefabGuid);
-  if (cat?.layoutTier === "decor" || cat?.category === "art") return 30;
+  if (cat?.layoutTier === "decor" || cat?.category === "art" || cat?.category?.startsWith("decor/"))
+    return 30;
   if (isStackUtensilCatalog(cat) || item.parentPath.includes("Utensils")) return 20;
   if (isStackHostCatalog(cat) || item.parentPath.includes("Counters")) return 10;
   return 15;

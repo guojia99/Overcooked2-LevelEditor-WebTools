@@ -16,6 +16,7 @@ const CATEGORY_RGB: Record<string, Rgb> = {
   mechanisms: { r: 196, g: 148, b: 255 },
   Player: { r: 255, g: 168, b: 188 },
   art: { r: 128, g: 212, b: 168 },
+  decor: { r: 255, g: 196, b: 120 },
   other: { r: 178, g: 186, b: 200 },
 };
 

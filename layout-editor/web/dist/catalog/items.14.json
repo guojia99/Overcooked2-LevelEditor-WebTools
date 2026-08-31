@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "index": 14,
-  "itemCount": 118,
+  "itemCount": 200,
   "items": [
     {
       "id": "Sink",
@@ -306,6 +306,2346 @@
       "nameZh": "马克杯水槽（木制）",
       "nameEn": "Mug Sink (Wooden)",
       "icon": false
+    },
+    {
+      "id": "apple",
+      "guid": "8427b163ceab5b54b367f83cbcf12ecb",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/apple.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "68f5f658353ad8162036803a8bf13cc1",
+      "nameZh": "苹果",
+      "nameEn": "Apple",
+      "icon": true
+    },
+    {
+      "id": "Bacon",
+      "guid": "9c67ac6b6093f61ed4760a5605071db0",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/Bacon.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "5e15cf0dda7163a48901aa33a88e993d",
+      "nameZh": "培根",
+      "nameEn": "Bacon",
+      "icon": true
+    },
+    {
+      "id": "Banana",
+      "guid": "0e1fc5cd66c2b03c6e8895dbdbc2af40",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/Banana.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "b6f2aa157beed2140a12c5cc8a66f8c1",
+      "nameZh": "香蕉",
+      "nameEn": "Banana",
+      "icon": true
+    },
+    {
+      "id": "beef_roast",
+      "guid": "ce553c8af298df853c4e9aad627a486c",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/beef_roast.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "e177ae873a0fd11ddb634f83169196d5",
+      "nameZh": "烤牛肉",
+      "nameEn": "Roast Beef",
+      "icon": true
+    },
+    {
+      "id": "blackberry",
+      "guid": "7f0e6a0f703ae5ec2741c5a345d3b4a6",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/blackberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "1e87aab4d91d5e2b460a8de8fe55b737",
+      "nameZh": "黑莓",
+      "nameEn": "Blackberry",
+      "icon": true
+    },
+    {
+      "id": "Blueberry",
+      "guid": "619d267505c00d249813b0ba4edf99ab",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/Blueberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "a192356a1fd01504eadf0d90ffa2de62",
+      "nameZh": "蓝莓",
+      "nameEn": "Blueberry",
+      "icon": true
+    },
+    {
+      "id": "bokchoy",
+      "guid": "1e50d17ebc07de1b6766027284a171aa",
+      "assetPath": "Assets/common03/prefabs/dlc04/decor/food/bokchoy.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "d141ea96f54b43c0843b7b7a4a195e92",
+      "nameZh": "小白菜",
+      "nameEn": "Bok Choy",
+      "icon": true
+    },
+    {
+      "id": "broccoli",
+      "guid": "81e67efdfa85b8d2da25421605344aee",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/broccoli.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "4562e236d5380f78a99753febcfcf033",
+      "nameZh": "西兰花",
+      "nameEn": "Broccoli",
+      "icon": true
+    },
+    {
+      "id": "BurgerPineapple",
+      "guid": "60b66b793b30727246aef38e4d67d832",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/BurgerPineapple.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "ff0a377cca6a00a45a5a5f13ac30098d",
+      "nameZh": "菠萝（汉堡）",
+      "nameEn": "Burger Pineapple",
+      "icon": true
+    },
+    {
+      "id": "BurritoChickenSO",
+      "guid": "2de8ec471d5e161beef62b03297930f9",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/BurritoChickenSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "85bd4a3b88782714091204aeb3e85e6d",
+      "nameZh": "卷饼鸡肉",
+      "nameEn": "Burrito Chicken",
+      "icon": true
+    },
+    {
+      "id": "BurritoMeatSO",
+      "guid": "7015afb92eb33d70f9d583913450c249",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/BurritoMeatSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "4c54ee4dbc00db742a827110f1aea22d",
+      "nameZh": "卷饼肉馅",
+      "nameEn": "Burrito Meat",
+      "icon": true
+    },
+    {
+      "id": "CarrotSO",
+      "guid": "ab6ed28f2ba3a1556f00b8d088b6787e",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/CarrotSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "a02996980ffbb23499219aa012ea9ca1",
+      "nameZh": "胡萝卜",
+      "nameEn": "Carrot",
+      "icon": true
+    },
+    {
+      "id": "CheeseSO",
+      "guid": "59ccca1100c55267d2df4e2aae1b982b",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/CheeseSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "b785cb39803b3be40b7d7052d54595fd",
+      "nameZh": "芝士",
+      "nameEn": "Cheese",
+      "icon": true
+    },
+    {
+      "id": "cherry",
+      "guid": "93ccfbe3a9932c0b65958d868776c3a2",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/cherry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "4817ce28632a97d7fda2712f3cb47ac6",
+      "nameZh": "樱桃",
+      "nameEn": "Cherry",
+      "icon": true
+    },
+    {
+      "id": "chicken_roast",
+      "guid": "05f3ac830035f282d782c6c925953701",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/chicken_roast.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "bd167913cd87017f14773a28bbcc1c22",
+      "nameZh": "烤鸡",
+      "nameEn": "Roast Chicken",
+      "icon": true
+    },
+    {
+      "id": "ChickenSO",
+      "guid": "53f34949b85452860ad3ab1c34f9d9da",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/ChickenSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "f5e2ed0b5f84bfb4da375a513302084e",
+      "nameZh": "鸡肉",
+      "nameEn": "Chicken",
+      "icon": true
+    },
+    {
+      "id": "ChocolateSO",
+      "guid": "d1569bd9ff751dc4c62776f5e1c51e71",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/ChocolateSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "d2a417e941d3a3f4181cfadf039d720d",
+      "nameZh": "巧克力",
+      "nameEn": "Chocolate",
+      "icon": true
+    },
+    {
+      "id": "ChoppedBunSO",
+      "guid": "f5be243991c698a183b0354d32a8e55c",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/ChoppedBunSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "81232e654b602714098c1a440b66ddd5",
+      "nameZh": "汉堡面包",
+      "nameEn": "Chopped Bun",
+      "icon": true
+    },
+    {
+      "id": "corn",
+      "guid": "982f87df4d7d23ba330130abc6a24d1c",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/corn.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "8d4a5aaf71fdf648b0648dd20ae1a920",
+      "nameZh": "玉米",
+      "nameEn": "Corn",
+      "icon": true
+    },
+    {
+      "id": "CucumberSO",
+      "guid": "c216140cedc365f17ecce9517db66762",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/CucumberSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "09a8ff9ede819e14e9f89df70f935402",
+      "nameZh": "黄瓜",
+      "nameEn": "Cucumber",
+      "icon": true
+    },
+    {
+      "id": "DLC02_ChoppedBun",
+      "guid": "1a7f247216072c8d135def3f4ed2c8fb",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/DLC02_ChoppedBun.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "7e3070b091a402f42be328cc261adff3",
+      "nameZh": "汉堡面包（DLC2）",
+      "nameEn": "Chopped Bun (DLC2)",
+      "icon": true
+    },
+    {
+      "id": "dlc03_chocolate",
+      "guid": "3a1157642cf9730f429d72b741325023",
+      "assetPath": "Assets/common03/prefabs/dlc03/decor/food/dlc03_chocolate.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "30e53740fcc7be49a00685e29a46793d",
+      "nameZh": "巧克力（DLC3）",
+      "nameEn": "Chocolate (DLC3)",
+      "icon": true
+    },
+    {
+      "id": "dlc04_meat",
+      "guid": "b1a23b3d9d63fbe28d01d9d946539c98",
+      "assetPath": "Assets/common03/prefabs/dlc04/decor/food/dlc04_meat.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "e27d2085bff69fb1125400036a60daaf",
+      "nameZh": "涮肉（DLC4）",
+      "nameEn": "Hotpot Meat (DLC4)",
+      "icon": true
+    },
+    {
+      "id": "dlc04_orange",
+      "guid": "e9aa96e18f746ee07871e3f7926f4278",
+      "assetPath": "Assets/common03/prefabs/dlc04/decor/food/dlc04_orange.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "c0721b5197a5193a62cac90b2e010560",
+      "nameZh": "橙子（DLC4）",
+      "nameEn": "Orange (DLC4)",
+      "icon": true
+    },
+    {
+      "id": "dlc04_prawn",
+      "guid": "7a7da98635b1437c00b430b00e73d1ac",
+      "assetPath": "Assets/common03/prefabs/dlc04/decor/food/dlc04_prawn.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "f1f203ca0b2f02bd64622cb03f7d7068",
+      "nameZh": "虾（DLC4）",
+      "nameEn": "Prawn (DLC4)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Banana",
+      "guid": "7f855961e096d269135db704a5617650",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Banana.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "fd102576fe1c8ff40abbdb5f2f64a0c9",
+      "nameZh": "香蕉（DLC5）",
+      "nameEn": "Banana (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Beans",
+      "guid": "4f1dc34d3a935aaa871e611c001e5076",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Beans.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "1d180e6bcff709d4d9abc1d3420346e4",
+      "nameZh": "焗豆",
+      "nameEn": "Beans (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Chocolate",
+      "guid": "b299cd5c91013d23fc0aff1728eb436e",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Chocolate.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "9107a2832a94d894e83ae22aae1c764d",
+      "nameZh": "巧克力（DLC5）",
+      "nameEn": "Chocolate (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Crackers",
+      "guid": "1a1265d75e77fa8d1b501ce4bab7aaf6",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Crackers.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "2424b9e5c9152d247a579cbd8020343a",
+      "nameZh": "脆饼干",
+      "nameEn": "Crackers (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Dough",
+      "guid": "cadd571660167ecded5e7d93c514dffd",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Dough.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "07ddbb4392cfa5b47b83abc476c435da",
+      "nameZh": "面团（DLC5）",
+      "nameEn": "Dough (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Egg",
+      "guid": "821903291d137245f8a5dca478c3fe0e",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Egg.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "ad56741d152e35d459da75d1531b494c",
+      "nameZh": "鸡蛋（DLC5）",
+      "nameEn": "Egg (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Marshmallow",
+      "guid": "46597992a0f150913ce665c489a68885",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Marshmallow.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "2a88d8f3685df8144b0c7b1ab3c6f87f",
+      "nameZh": "棉花糖",
+      "nameEn": "Marshmallow (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Strawberry",
+      "guid": "21734f9f2873cc92206fb0f9b0411a1b",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Strawberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "de4f19d5464ae7149a090a4cea5b6cf5",
+      "nameZh": "草莓（DLC5）",
+      "nameEn": "Strawberry (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "DLC05_Wood",
+      "guid": "f0806a81406176560f8e0fa1f2a1eda4",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/DLC05_Wood.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "2d89a2cd05903554b8aabd5617534acf",
+      "nameZh": "木柴",
+      "nameEn": "Wood (DLC5)",
+      "icon": true
+    },
+    {
+      "id": "dlc07_cheese",
+      "guid": "35e1f637f5e1518bc5db54fec127e2e5",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/dlc07_cheese.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "c06417ddfb515faff7cddcd76ed361fc",
+      "nameZh": "芝士（DLC7）",
+      "nameEn": "Cheese (DLC7)",
+      "icon": true
+    },
+    {
+      "id": "dlc07_potato",
+      "guid": "64a8b463b87a75ea761d8182efcf530d",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/dlc07_potato.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "ce4bbf2d10d28f927611e1845005c9cb",
+      "nameZh": "土豆（DLC7）",
+      "nameEn": "Potato (DLC7)",
+      "icon": true
+    },
+    {
+      "id": "dlc08_bun",
+      "guid": "8942acdfe827b7f1e956858bea42cd8b",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/dlc08_bun.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "965ff691e25e50b0c5151ea9a97899d4",
+      "nameZh": "汉堡胚（DLC8）",
+      "nameEn": "Bun (DLC8)",
+      "icon": true
+    },
+    {
+      "id": "dlc08_cheesesticks",
+      "guid": "7dca6112b3f2dd324260d72efc49a103",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/dlc08_cheesesticks.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "8220aeba30e31f47f7921ab32b8da7af",
+      "nameZh": "芝士条",
+      "nameEn": "Cheese Sticks",
+      "icon": true
+    },
+    {
+      "id": "dlc08_chicken",
+      "guid": "0a2cd7023396c388b0930e1499be3d76",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/dlc08_chicken.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "60adb1f0c4d250dffb7581931157b10f",
+      "nameZh": "鸡肉（DLC8）",
+      "nameEn": "Chicken (DLC8)",
+      "icon": true
+    },
+    {
+      "id": "dlc08_onion",
+      "guid": "4b3f554ae4784c72653402e9e17e501d",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/dlc08_onion.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "fd657e9082619a2e2eea4c700a1643fc",
+      "nameZh": "洋葱（DLC8）",
+      "nameEn": "Onion (DLC8)",
+      "icon": true
+    },
+    {
+      "id": "dlc08_onion_ring",
+      "guid": "f8cc0a8e3d88d1b53c047116d4769ac3",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/dlc08_onion_ring.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "8dd97968f2d87b4bee73088e62641b94",
+      "nameZh": "洋葱圈",
+      "nameEn": "Onion Ring",
+      "icon": true
+    },
+    {
+      "id": "dlc08_potato",
+      "guid": "cfd244210c159623678563ed60c1e0fa",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/dlc08_potato.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "f6cb4e3da992420e9f63b4c96204ce1a",
+      "nameZh": "土豆（DLC8）",
+      "nameEn": "Potato (DLC8)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_beef_roast",
+      "guid": "29fdd9be14ea673009a7ca34f0d5dfc2",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_beef_roast.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "5f5bd4c5334c025c08fdb17252ff1b98",
+      "nameZh": "烤牛肉（DLC9）",
+      "nameEn": "Roast Beef (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_broccoli",
+      "guid": "43a335ba35cb9bfe7253fa379c29f5e1",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_broccoli.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "b3b094506fa9d8471efde9fb629d5895",
+      "nameZh": "西兰花（DLC9）",
+      "nameEn": "Broccoli (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_carrot",
+      "guid": "09f92774bd293a140437f6d4f022d2ef",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_carrot.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "2e4ec9369bab73ad0d11b395b1dd6ea4",
+      "nameZh": "胡萝卜（DLC9）",
+      "nameEn": "Carrot (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_chicken_roast",
+      "guid": "27503936a96680ea8c56d5cdd0dfab61",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_chicken_roast.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "451514ac42b67ec34c2051fbd80948db",
+      "nameZh": "烤鸡（DLC9）",
+      "nameEn": "Roast Chicken (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_chocolate",
+      "guid": "49b1bcf7caa10720b851e5698a2730c0",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_chocolate.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "8f9450fb817169cb2da96efcd411cf34",
+      "nameZh": "巧克力（DLC9）",
+      "nameEn": "Chocolate (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_driedfruit",
+      "guid": "c2749b7c781035c5077c7a81261d8c1e",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_driedfruit.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "4f431764532b70320505d1fc85a4ff48",
+      "nameZh": "果干（DLC9）",
+      "nameEn": "Dried Fruit (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_egg",
+      "guid": "cab159eca8f8e20721cc20538cf4c615",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_egg.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "235de95296062e0013e62a313599be3f",
+      "nameZh": "鸡蛋（DLC9）",
+      "nameEn": "Egg (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_flour",
+      "guid": "0ad2376cc17f9bd24159adad84aba40a",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_flour.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "7d38cbf897c601251772a91369bf91e3",
+      "nameZh": "面粉（DLC9）",
+      "nameEn": "Flour (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_marshmallow",
+      "guid": "def62d5edceb04558f241af4afacb2d2",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_marshmallow.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "4bd025be3d1160fee29c4d8102a2a497",
+      "nameZh": "棉花糖（DLC9）",
+      "nameEn": "Marshmallow (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_milk",
+      "guid": "d5d706f703a1017e283b6d0969e1d13c",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_milk.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "c3fa6001600f1022fd4f272205c9a9b7",
+      "nameZh": "牛奶（DLC9）",
+      "nameEn": "Milk (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_orange",
+      "guid": "55172269f5721c53ef85f4d4019ec9a2",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_orange.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "10b3c3653b7f62ad8d9fdcf38321a487",
+      "nameZh": "橙子（DLC9）",
+      "nameEn": "Orange (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_pancakestrawberry",
+      "guid": "929676865c0dfb1ef3eae13702a7681c",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_pancakestrawberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "032cccd35c7d625b0f86a57a273e26c7",
+      "nameZh": "草莓（松饼·DLC9）",
+      "nameEn": "Pancake Strawberry (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_potato",
+      "guid": "7e02f8a033b61a8e8732e95e436fe457",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_potato.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "b9d6ab9ce433c50b451f8b40ac00fb15",
+      "nameZh": "土豆（DLC9）",
+      "nameEn": "Potato (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_whippedcream",
+      "guid": "2beb78b7216ed6e61a7dfa5c0ef6ace0",
+      "assetPath": "Assets/common03/prefabs/dlc09/decor/food/dlc09_whippedcream.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "9db0036e8add98fc2c2c635d80de7d04",
+      "nameZh": "发泡奶油（DLC9）",
+      "nameEn": "Whipped Cream (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc10_bokchoy",
+      "guid": "6b1c49698d561925b0badb25ca8ddff5",
+      "assetPath": "Assets/common03/prefabs/dlc10/decor/food/dlc10_bokchoy.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "d5d3abb6779245c85f8088e1099a23b7",
+      "nameZh": "小白菜（DLC10）",
+      "nameEn": "Bok Choy (DLC10)",
+      "icon": true
+    },
+    {
+      "id": "dlc10_grapes",
+      "guid": "6a64183daf5d1ace98060dc2198adf5c",
+      "assetPath": "Assets/common03/prefabs/dlc10/decor/food/dlc10_grapes.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "99fe31d55e0df7276004539ee10c8c48",
+      "nameZh": "葡萄（DLC10）",
+      "nameEn": "Grapes (DLC10)",
+      "icon": true
+    },
+    {
+      "id": "dlc10_meat",
+      "guid": "9b22449c4ad1978b70387e773829464f",
+      "assetPath": "Assets/common03/prefabs/dlc10/decor/food/dlc10_meat.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "852b272581ed4b91f902ef670dd48ad3",
+      "nameZh": "涮肉（DLC10）",
+      "nameEn": "Hotpot Meat (DLC10)",
+      "icon": true
+    },
+    {
+      "id": "dlc10_noodles",
+      "guid": "41ac597f8a8128bc3a939be1d17d7456",
+      "assetPath": "Assets/common03/prefabs/dlc10/decor/food/dlc10_noodles.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "aaee3cc1889350164a7cc93272f7c3f8",
+      "nameZh": "面条（DLC10）",
+      "nameEn": "Noodles (DLC10)",
+      "icon": true
+    },
+    {
+      "id": "dlc10_orange",
+      "guid": "2854440be0061b24d28d1c28e70e230b",
+      "assetPath": "Assets/common03/prefabs/dlc10/decor/food/dlc10_orange.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "61f6238c4a7f1d00da02bdc43d9f9e20",
+      "nameZh": "橙子（DLC10）",
+      "nameEn": "Orange (DLC10)",
+      "icon": true
+    },
+    {
+      "id": "dlc10_peach",
+      "guid": "32ebc51f0d680ad3d9c60b343a1f3203",
+      "assetPath": "Assets/common03/prefabs/dlc10/decor/food/dlc10_peach.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "e7e98cc5fccac28fa0c61b3de8fabe3b",
+      "nameZh": "桃子（DLC10）",
+      "nameEn": "Peach (DLC10)",
+      "icon": true
+    },
+    {
+      "id": "dlc10_prawn",
+      "guid": "2fa5472651013314f9e6cb211ff80f65",
+      "assetPath": "Assets/common03/prefabs/dlc10/decor/food/dlc10_prawn.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "e301217df07dd1e7d6e1ee8bbab65599",
+      "nameZh": "虾（DLC10）",
+      "nameEn": "Prawn (DLC10)",
+      "icon": true
+    },
+    {
+      "id": "dlc11_cucumber",
+      "guid": "6d659db6fdeb812ed5499f61f685c521",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/dlc11_cucumber.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "346c97285c09802fc24b95dd5ed2c4ed",
+      "nameZh": "黄瓜（DLC11）",
+      "nameEn": "Cucumber (DLC11)",
+      "icon": true
+    },
+    {
+      "id": "dlc11_frankfurter",
+      "guid": "20a3e7bdb7db578fca11681bd4b8a222",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/dlc11_frankfurter.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "4e6b0329086fa5fd6545242ea18c7e48",
+      "nameZh": "热狗肠（DLC11）",
+      "nameEn": "Frankfurter (DLC11)",
+      "icon": true
+    },
+    {
+      "id": "dlc11_hotdogbun",
+      "guid": "b15f0a9ae7f1415ab81da8eb093a5987",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/dlc11_hotdogbun.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "6854c00f61ca788818a1e5ab65a5be92",
+      "nameZh": "热狗面包（DLC11）",
+      "nameEn": "Hot Dog Bun (DLC11)",
+      "icon": true
+    },
+    {
+      "id": "dlc11_lettuce",
+      "guid": "79b4fe3e34721148b70ec09e2fc66bbb",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/dlc11_lettuce.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "a981e8745a1cda0a67d5b89c7dc72790",
+      "nameZh": "生菜（DLC11）",
+      "nameEn": "Lettuce (DLC11)",
+      "icon": true
+    },
+    {
+      "id": "dlc11_milk",
+      "guid": "ff150485f57870394de44f4fd6320fb2",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/dlc11_milk.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "af1fe45a85aaf6448f00b5bdd59a7002",
+      "nameZh": "牛奶（DLC11）",
+      "nameEn": "Milk (DLC11)",
+      "icon": true
+    },
+    {
+      "id": "dlc11_onion",
+      "guid": "6a74dae4addffd1af0e7ab1aed5ed817",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/dlc11_onion.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "b5640719abc62ad8926b11503c94671e",
+      "nameZh": "洋葱（DLC11）",
+      "nameEn": "Onion (DLC11)",
+      "icon": true
+    },
+    {
+      "id": "dlc11_onion_salad",
+      "guid": "6adb99563049cf6fb6d6a89d6721b019",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/dlc11_onion_salad.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "1d5a4daa4406430cac79e018fea51a55",
+      "nameZh": "沙拉洋葱（DLC11）",
+      "nameEn": "Salad Onion (DLC11)",
+      "icon": true
+    },
+    {
+      "id": "dlc11_tomato",
+      "guid": "7aacb2ecb66bfa440ca78f7ae5dc1bca",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/dlc11_tomato.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "8f92929d152f8c5d1148ad15a002b20c",
+      "nameZh": "番茄（DLC11）",
+      "nameEn": "Tomato (DLC11)",
+      "icon": true
+    },
+    {
+      "id": "dlc13_chocolate",
+      "guid": "b10e67af23de27c5c3af053bb70623e6",
+      "assetPath": "Assets/common03/prefabs/dlc13/decor/food/dlc13_chocolate.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "77756e92ea75974685830fcce784de82",
+      "nameZh": "巧克力（DLC13）",
+      "nameEn": "Chocolate (DLC13)",
+      "icon": true
+    },
+    {
+      "id": "dlc13_egg",
+      "guid": "0e9bc5beaf4ae580850e388cb0430625",
+      "assetPath": "Assets/common03/prefabs/dlc13/decor/food/dlc13_egg.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "e833705be1021c7a961806d30805040e",
+      "nameZh": "鸡蛋（DLC13）",
+      "nameEn": "Egg (DLC13)",
+      "icon": true
+    },
+    {
+      "id": "dlc13_flour",
+      "guid": "06be2a6910be127ed8b5e84e3a0d5825",
+      "assetPath": "Assets/common03/prefabs/dlc13/decor/food/dlc13_flour.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "ab8564c1b0bdf0809204963ae2833ea5",
+      "nameZh": "面粉（DLC13）",
+      "nameEn": "Flour (DLC13)",
+      "icon": true
+    },
+    {
+      "id": "dlc13_grapes",
+      "guid": "fdaa8ca993c59b3e150aca148d62d07b",
+      "assetPath": "Assets/common03/prefabs/dlc13/decor/food/dlc13_grapes.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "0c774556fe6b3e9fc6419dd8385dac7c",
+      "nameZh": "葡萄（DLC13）",
+      "nameEn": "Grapes (DLC13)",
+      "icon": true
+    },
+    {
+      "id": "dlc13_melon",
+      "guid": "427a1e08035b8f67f6c411ae86a2be74",
+      "assetPath": "Assets/common03/prefabs/dlc13/decor/food/dlc13_melon.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "45bdb5ed5832eac5c5f3a59332dd4f66",
+      "nameZh": "甜瓜（DLC13）",
+      "nameEn": "Melon (DLC13)",
+      "icon": true
+    },
+    {
+      "id": "dlc13_orange",
+      "guid": "7dead695a4e188278e065e8632ee2249",
+      "assetPath": "Assets/common03/prefabs/dlc13/decor/food/dlc13_orange.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "64167ae8beb587f196013c072553e924",
+      "nameZh": "橙子（DLC13）",
+      "nameEn": "Orange (DLC13)",
+      "icon": true
+    },
+    {
+      "id": "dlc13_peach",
+      "guid": "08a90edb2919dc826570a9e31d5a3a8b",
+      "assetPath": "Assets/common03/prefabs/dlc13/decor/food/dlc13_peach.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "28f64062a66ccccaaaef0f0e9d1cc5e8",
+      "nameZh": "桃子（DLC13）",
+      "nameEn": "Peach (DLC13)",
+      "icon": true
+    },
+    {
+      "id": "dlc13_strawberry",
+      "guid": "c2c3267a98a2781cf4d65c15452e26cc",
+      "assetPath": "Assets/common03/prefabs/dlc13/decor/food/dlc13_strawberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "68dcd1a17e4e64004bf8c889ca83e078",
+      "nameZh": "草莓（DLC13）",
+      "nameEn": "Strawberry (DLC13)",
+      "icon": true
+    },
+    {
+      "id": "DoughSO",
+      "guid": "67090ba4ba68cb0a996e5b23bd91329d",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/DoughSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "72928b14d0bc3de44843e321fcca23a7",
+      "nameZh": "面团",
+      "nameEn": "Dough",
+      "icon": true
+    },
+    {
+      "id": "driedfruit",
+      "guid": "74a2bb116120f59b1b07c330532a3750",
+      "assetPath": "Assets/common03/prefabs/dlc03/decor/food/driedfruit.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "bcf86bac680eb09dde226524d7bebd0c",
+      "nameZh": "果干",
+      "nameEn": "Dried Fruit",
+      "icon": true
+    },
+    {
+      "id": "drink01",
+      "guid": "5b0a74e8141ca7b8caca9bffb51d7d9d",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/drink01.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "f9bbf21e5ccefe21a5f1930d0b7f35fc",
+      "nameZh": "饮料 1",
+      "nameEn": "Drink 1",
+      "icon": true
+    },
+    {
+      "id": "drink02",
+      "guid": "dbcef7bfe064a59eeff907575f8cb96e",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/drink02.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "f3cc6bff9d659a4839558753b2545026",
+      "nameZh": "饮料 2",
+      "nameEn": "Drink 2",
+      "icon": true
+    },
+    {
+      "id": "drink03",
+      "guid": "b890eb858c769b19dd9c43152612aacc",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/drink03.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "6b6a757bceaccc918c209005aa68d642",
+      "nameZh": "饮料 3",
+      "nameEn": "Drink 3",
+      "icon": true
+    },
+    {
+      "id": "EggSO",
+      "guid": "ee469075d4b1c7ee0d3b8842242daf7f",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/EggSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "95b82bda2a24c4942ac723feb92fc147",
+      "nameZh": "鸡蛋",
+      "nameEn": "Egg",
+      "icon": true
+    },
+    {
+      "id": "FishSO",
+      "guid": "cd6e0d179bc707d13dc18a5672750c94",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/FishSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "797864ae4f61afc4f80a85c4c3d8b552",
+      "nameZh": "鱼",
+      "nameEn": "Fish",
+      "icon": true
+    },
+    {
+      "id": "FlourSO",
+      "guid": "04ac63703bd057ca76839128e3171d9f",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/FlourSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "03519de205ed57142ac8e4686730babf",
+      "nameZh": "面粉",
+      "nameEn": "Flour",
+      "icon": true
+    },
+    {
+      "id": "frankfurter",
+      "guid": "8693e41d3e05d4baf4768fcead263b62",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/frankfurter.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "76a07f5e12f0d7449b908a6e81fbb645",
+      "nameZh": "热狗肠",
+      "nameEn": "Frankfurter",
+      "icon": true
+    },
+    {
+      "id": "grapes",
+      "guid": "2454aa015cf682093987e48f525975ab",
+      "assetPath": "Assets/common03/prefabs/dlc04/decor/food/grapes.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "067651d383836c606d0d325fe3b3dbd7",
+      "nameZh": "葡萄",
+      "nameEn": "Grapes",
+      "icon": true
+    },
+    {
+      "id": "HoneycombSO",
+      "guid": "9974db2ed47811e2f1f34afc791ec580",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/HoneycombSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "122895ac50bba48499d9a8ad16e03582",
+      "nameZh": "蜂蜜",
+      "nameEn": "Honey",
+      "icon": true
+    },
+    {
+      "id": "hotdogbun",
+      "guid": "aa468103232472943a6c8db0848d53c3",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/hotdogbun.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "53d2a928cf32627d7918d862face4b7d",
+      "nameZh": "热狗面包",
+      "nameEn": "Hot Dog Bun",
+      "icon": true
+    },
+    {
+      "id": "icecube",
+      "guid": "c23148221c948e7e43fcfd1b40fbf5f1",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/icecube.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "ef868e413995bdf5ea3c0058f6dd5db0",
+      "nameZh": "冰块",
+      "nameEn": "Ice Cube",
+      "icon": true
+    },
+    {
+      "id": "KebobChicken",
+      "guid": "a91ab0f415f30275158130d50767758e",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/KebobChicken.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "bea5e20c34dbde846a1728adecc9f3a8",
+      "nameZh": "烤串鸡肉",
+      "nameEn": "Kebab Chicken",
+      "icon": true
+    },
+    {
+      "id": "KebobMeat",
+      "guid": "211036f42c210ed825a20cdee12bd135",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/KebobMeat.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "dc32be47fbff96049b0555160a9015c1",
+      "nameZh": "烤串肉",
+      "nameEn": "Kebab Meat",
+      "icon": true
+    },
+    {
+      "id": "KebobMushroom",
+      "guid": "24047e290aa7a282c27e2490e7eaf0d6",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/KebobMushroom.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "1163b73ff1565244787b2a59f8bbca10",
+      "nameZh": "烤串蘑菇",
+      "nameEn": "Kebab Mushroom",
+      "icon": true
+    },
+    {
+      "id": "KebobPineapple",
+      "guid": "512516a8694117ba3c5d64be9a5be3b3",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/KebobPineapple.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "24db4b587e15e92458a05516d4c84bad",
+      "nameZh": "烤串菠萝",
+      "nameEn": "Kebab Pineapple",
+      "icon": true
+    },
+    {
+      "id": "KebobTomato",
+      "guid": "ed2752c531e236a95f230a44c493dd80",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/KebobTomato.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "9f37a90546adba743b3b44e893f5912a",
+      "nameZh": "烤串番茄",
+      "nameEn": "Kebab Tomato",
+      "icon": true
+    },
+    {
+      "id": "leek",
+      "guid": "e7b8613e8d863d35d20822409d1809e4",
+      "assetPath": "Assets/common03/prefabs/dlc07/decor/food/leek.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "09eef04c11b4a891aa802e9f0707ffae",
+      "nameZh": "西芹",
+      "nameEn": "Leek",
+      "icon": true
+    },
+    {
+      "id": "LettuceSO",
+      "guid": "22f58a2f87e56ac44f1c83ebeb618f32",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/LettuceSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "45f00e942534da143a3e94855455b50b",
+      "nameZh": "生菜",
+      "nameEn": "Lettuce",
+      "icon": true
+    },
+    {
+      "id": "marshmallow",
+      "guid": "bce719aac8285c8ba59bde2c33b91b02",
+      "assetPath": "Assets/common03/prefabs/dlc03/decor/food/marshmallow.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "8d2603aa9ff8aaef86c943501260c693",
+      "nameZh": "棉花糖",
+      "nameEn": "Marshmallow",
+      "icon": true
+    },
+    {
+      "id": "MeatSO",
+      "guid": "b760b997cd09e7cc953a8aea2d9292c6",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/MeatSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "c14c19bf0f3fa884bb60dee315a91b18",
+      "nameZh": "肉排",
+      "nameEn": "Meat",
+      "icon": true
+    },
+    {
+      "id": "Melon",
+      "guid": "8a20fe2d9beaef021d2751aa2d4f3d1a",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/Melon.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "f57c067108d7dd543873dd5df1414aea",
+      "nameZh": "甜瓜",
+      "nameEn": "Melon",
+      "icon": true
+    },
+    {
+      "id": "milk",
+      "guid": "a953fe64816f418377a5fdadf107147b",
+      "assetPath": "Assets/common03/prefabs/dlc03/decor/food/milk.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "7f8657a5292f561670c991f7783a097e",
+      "nameZh": "牛奶",
+      "nameEn": "Milk",
+      "icon": true
+    },
+    {
+      "id": "MushroomSO",
+      "guid": "2997895dc2712fef4701466e8dd3f2df",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/MushroomSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "2b710142f4f6a0a4f8ad21e3170ad9b3",
+      "nameZh": "蘑菇",
+      "nameEn": "Mushroom",
+      "icon": true
+    },
+    {
+      "id": "noodles",
+      "guid": "1c59d9467ba84fedc227a3d59d4f0d54",
+      "assetPath": "Assets/common03/prefabs/dlc04/decor/food/noodles.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "6be7388a76972e2ee30f9ca26891ed26",
+      "nameZh": "面条",
+      "nameEn": "Noodles",
+      "icon": true
+    },
+    {
+      "id": "NuggetChickenSO",
+      "guid": "8f413bd71dd6a6c1c96f580e5943a76a",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/NuggetChickenSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "fb531a6ac7ad9a24aa4f2a806350b1e4",
+      "nameZh": "鸡块",
+      "nameEn": "Chicken Nugget",
+      "icon": true
+    },
+    {
+      "id": "Olive",
+      "guid": "d5c1b07c5fd3bf0a81764c17b03489c0",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/Olive.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "e967eab522af0e642b3d6cfbe694c06b",
+      "nameZh": "橄榄",
+      "nameEn": "Olive",
+      "icon": true
+    },
+    {
+      "id": "OnionSO",
+      "guid": "5e1d610d2d19fa17b11d39439dbe54a1",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/OnionSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "1d97426e890100348ac91825774d1184",
+      "nameZh": "洋葱",
+      "nameEn": "Onion",
+      "icon": true
+    },
+    {
+      "id": "orange",
+      "guid": "9360d35d976a21b7cc0f70935c905f73",
+      "assetPath": "Assets/common03/prefabs/dlc03/decor/food/orange.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "f8ea29fcb550c639d77d76981792285f",
+      "nameZh": "橙子",
+      "nameEn": "Orange",
+      "icon": true
+    },
+    {
+      "id": "PancakeStrawberry",
+      "guid": "4c7c0d18b716ecc7cbc0be3b8fb42189",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/PancakeStrawberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "01bdf18c64f2c5b41ab41a9c898397a1",
+      "nameZh": "草莓（松饼）",
+      "nameEn": "Pancake Strawberry",
+      "icon": true
+    },
+    {
+      "id": "PastaSO",
+      "guid": "e1ab962255ab9c3c1bfb574460133cc8",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/PastaSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "7ac8ffa91f182f14c8d14bfe5badd2ac",
+      "nameZh": "意面",
+      "nameEn": "Pasta",
+      "icon": true
+    },
+    {
+      "id": "PastaTomatoSO",
+      "guid": "3fedd608cf920fc651b3504f4412410d",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/PastaTomatoSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "c4c6ab478c937f14f8269ff080ba7206",
+      "nameZh": "番茄意面",
+      "nameEn": "Pasta Tomato",
+      "icon": true
+    },
+    {
+      "id": "peach",
+      "guid": "7aff44956bb018ca8e42bd0152cad2d6",
+      "assetPath": "Assets/common03/prefabs/dlc04/decor/food/peach.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "c4a38be9154f4a2dfba533c6fdb72aa9",
+      "nameZh": "桃子",
+      "nameEn": "Peach",
+      "icon": true
+    },
+    {
+      "id": "PepperoniSO",
+      "guid": "813bbf207663f3bc78bc3eff4089867c",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/PepperoniSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "c6dc7f3809c18fd46bc41d15afb7cb9a",
+      "nameZh": "意式辣香肠",
+      "nameEn": "Pepperoni",
+      "icon": true
+    },
+    {
+      "id": "PotatoSO",
+      "guid": "257cfb7c14c4bc3788d47bb9b4a144ea",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/PotatoSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "091a84ec23abdeb4199567f108341d56",
+      "nameZh": "土豆",
+      "nameEn": "Potato",
+      "icon": true
+    },
+    {
+      "id": "PrawnSO",
+      "guid": "ab0dbb28cb081a36614791bebdca2043",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/PrawnSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "dcc2cc58768a02345a47efe3f0cdf788",
+      "nameZh": "虾",
+      "nameEn": "Prawn",
+      "icon": true
+    },
+    {
+      "id": "raspberry",
+      "guid": "786e3cbb7ce1f2ec0b90bdac6478d653",
+      "assetPath": "Assets/common03/prefabs/dlc08/decor/food/raspberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "2c4b11eca006b60f3ae5a95e5cf4c609",
+      "nameZh": "覆盆子",
+      "nameEn": "Raspberry",
+      "icon": true
+    },
+    {
+      "id": "RiceSO",
+      "guid": "01b7802bf6147e6b178c28afc7536e68",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/RiceSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "d628cc1cba14ca24f927c76c83ae9463",
+      "nameZh": "米饭",
+      "nameEn": "Rice",
+      "icon": true
+    },
+    {
+      "id": "Sausage",
+      "guid": "e2b44df7a1202e575be6d88f32532c4b",
+      "assetPath": "Assets/common03/prefabs/dlc05/decor/food/Sausage.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "0bac7a72dc228024fb5f36278fab79d6",
+      "nameZh": "香肠",
+      "nameEn": "Sausage",
+      "icon": true
+    },
+    {
+      "id": "SeaweedSO",
+      "guid": "3c1999752883d5e7d34467958180110d",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/SeaweedSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "5eed196a512449c439f00bc8757ed190",
+      "nameZh": "海苔",
+      "nameEn": "Seaweed",
+      "icon": true
+    },
+    {
+      "id": "SmoothiePineapple",
+      "guid": "ea2a720a339592a897f4d70ab4f51d7e",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/SmoothiePineapple.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "6207742210e05564daf15e9c5d4c727b",
+      "nameZh": "菠萝（果汁）",
+      "nameEn": "Smoothie Pineapple",
+      "icon": true
+    },
+    {
+      "id": "SmoothieStrawberry",
+      "guid": "341299f0aeeacf157e841f3e482e32b8",
+      "assetPath": "Assets/common03/prefabs/dlc02/decor/food/SmoothieStrawberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "e1e6338f70e25804d8a1081909bcb066",
+      "nameZh": "草莓（果汁）",
+      "nameEn": "Smoothie Strawberry",
+      "icon": true
+    },
+    {
+      "id": "SushiFishSO",
+      "guid": "0642071d549821a3a6569108b56b545c",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/SushiFishSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "bbf0e92641aa4ab49bda6bc68117e01f",
+      "nameZh": "寿司鱼",
+      "nameEn": "Sushi Fish",
+      "icon": true
+    },
+    {
+      "id": "SushiPrawnSO",
+      "guid": "20fb3797fdc0efabf3d3ff39045d5264",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/SushiPrawnSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "df4a04d1549f9ee41a991153bd723110",
+      "nameZh": "寿司虾",
+      "nameEn": "Sushi Prawn",
+      "icon": true
+    },
+    {
+      "id": "SushiRiceSO",
+      "guid": "69edef35f43ae879100ad72e69914cd2",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/SushiRiceSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "da6efd0b90360e34b9443171826d5c12",
+      "nameZh": "寿司米",
+      "nameEn": "Sushi Rice",
+      "icon": true
+    },
+    {
+      "id": "TomatoSO",
+      "guid": "c9fde3a10bdfbd5d495f67b9fbe508bd",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/TomatoSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "8a928e5055585f34c89f8535c40fea3f",
+      "nameZh": "番茄",
+      "nameEn": "Tomato",
+      "icon": true
+    },
+    {
+      "id": "TortillaSO",
+      "guid": "c0889969c5c130851ac213a05e0a50bb",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/TortillaSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "eba97984fecfb8940a72e730a55ea89f",
+      "nameZh": "玉米薄饼",
+      "nameEn": "Tortilla",
+      "icon": true
+    },
+    {
+      "id": "TurkeySO",
+      "guid": "43f1d98709dbeccd58b58fb22edd48d5",
+      "assetPath": "Assets/common03/prefabs/core/decor/food/TurkeySO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "f16eb735da1f7ec44a2a5a0b02d1fd77",
+      "nameZh": "火鸡",
+      "nameEn": "Turkey",
+      "icon": true
+    },
+    {
+      "id": "vanilla",
+      "guid": "bc812e7f5c9e384f30479c08c8551dcb",
+      "assetPath": "Assets/common03/prefabs/dlc11/decor/food/vanilla.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "73c28675ea0968be18f65b2d948e3227",
+      "nameZh": "香草",
+      "nameEn": "Vanilla",
+      "icon": true
+    },
+    {
+      "id": "whippedcream",
+      "guid": "a892a8b4a062d60762b9f194a9173cb2",
+      "assetPath": "Assets/common03/prefabs/dlc03/decor/food/whippedcream.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "929a10c33aebfc05481414ed68a7a4a3",
+      "nameZh": "发泡奶油",
+      "nameEn": "Whipped Cream",
+      "icon": true
     },
     {
       "id": "Burner",
@@ -1230,966 +3570,6 @@
       "layoutTier": "core",
       "nameZh": "可推动大火锅（DLC10）",
       "nameEn": "Pushable Large Hot Pot (DLC10)",
-      "icon": false
-    },
-    {
-      "id": "utensil_roasting_tray",
-      "guid": "6b377aab878cb075e16ff1e4b0516a1e",
-      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_roasting_tray.prefab",
-      "category": "utensils/cooking",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "烤盘",
-      "nameEn": "Roasting Tray",
-      "icon": false
-    },
-    {
-      "id": "dlc02_utensil_mixer",
-      "guid": "699ca95695c28ab5a5a9b81812b98c71",
-      "assetPath": "Assets/common03/prefabs/dlc02/utensils/dlc02_utensil_mixer.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "mixer"
-      },
-      "nameZh": "搅拌碗（DLC2）",
-      "nameEn": "Mixer Bowl (DLC2)",
-      "icon": true
-    },
-    {
-      "id": "dlc03_utensil_mixer",
-      "guid": "b0797e5f9b0716081ac59c8c646266af",
-      "assetPath": "Assets/common03/prefabs/dlc03/utensils/dlc03_utensil_mixer.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "mixer"
-      },
-      "nameZh": "搅拌碗（DLC3）",
-      "nameEn": "Mixer Bowl (DLC3)",
-      "icon": true
-    },
-    {
-      "id": "dlc05_utensil_mixer",
-      "guid": "8b210f471fcd48578fdd4073e34efffc",
-      "assetPath": "Assets/common03/prefabs/dlc05/utensils/dlc05_utensil_mixer.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "mixer"
-      },
-      "nameZh": "搅拌碗（DLC5）",
-      "nameEn": "Mixer Bowl (DLC5)",
-      "icon": true
-    },
-    {
-      "id": "dlc07_utensil_mixer_01",
-      "guid": "27d042d90f335e6099c5673197f2f912",
-      "assetPath": "Assets/common03/prefabs/dlc07/utensils/dlc07_utensil_mixer_01.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "mixer"
-      },
-      "nameZh": "搅拌碗（DLC7）",
-      "nameEn": "Mixer Bowl (DLC7)",
-      "icon": true
-    },
-    {
-      "id": "dlc08_utensil_mixer_01",
-      "guid": "df884254178c5ddb949a47df432cc804",
-      "assetPath": "Assets/common03/prefabs/dlc08/utensils/dlc08_utensil_mixer_01.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "mixer"
-      },
-      "nameZh": "搅拌碗（马戏团）",
-      "nameEn": "Mixer Bowl (Circus)",
-      "icon": true
-    },
-    {
-      "id": "dlc09_utensil_mixer",
-      "guid": "8f229caf7c1a721abf58e4479bc7ee25",
-      "assetPath": "Assets/common03/prefabs/dlc09/utensils/dlc09_utensil_mixer.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "mixer"
-      },
-      "nameZh": "搅拌碗（DLC9）",
-      "nameEn": "Mixer Bowl (DLC9)",
-      "icon": true
-    },
-    {
-      "id": "dlc13_utensil_mixer_01",
-      "guid": "21707372f8bb32d118dd5f6cbabb9a00",
-      "assetPath": "Assets/common03/prefabs/dlc13/utensils/dlc13_utensil_mixer_01.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "mixer"
-      },
-      "nameZh": "搅拌碗（DLC13）",
-      "nameEn": "Mixer Bowl (DLC13)",
-      "icon": true
-    },
-    {
-      "id": "MixerBowl",
-      "guid": "4ebaf351b0a4d1e4a8b4bee53bea4d67",
-      "assetPath": "Assets/common01/prefabs/utensils/MixerBowl.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "mixer"
-      },
-      "nameZh": "搅拌碗",
-      "nameEn": "Mixer Bowl",
-      "icon": true
-    },
-    {
-      "id": "BlenderCup",
-      "guid": "0c1c939676755474f890c8f5584a67f9",
-      "assetPath": "Assets/common02/prefabs/utensils/BlenderCup.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "blender"
-      },
-      "nameZh": "搅拌杯",
-      "nameEn": "Blender Cup",
-      "icon": true
-    },
-    {
-      "id": "utensil_blender_01",
-      "guid": "90ab72330e85d8d1e2cdfb1f92a28e17",
-      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_blender_01.prefab",
-      "category": "utensils/mixing",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "blender"
-      },
-      "nameZh": "搅拌杯（DLC2）",
-      "nameEn": "Blender Cup (DLC2)",
-      "icon": true
-    },
-    {
-      "id": "cleanglassstack",
-      "guid": "3b6acc7d3f6f8cbb96609ff96bf8dbd2",
-      "assetPath": "Assets/common03/prefabs/core/utensils/cleanglassstack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "干净玻璃杯堆（DLC2）",
-      "nameEn": "Clean Glass Stack (DLC2)",
-      "icon": false
-    },
-    {
-      "id": "CleanGlassStack",
-      "guid": "8e369dd524a52094b90a6b04ad1dd70b",
-      "assetPath": "Assets/common02/prefabs/utensils/CleanGlassStack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "干净杯堆",
-      "nameEn": "Clean Glass Stack",
-      "icon": false
-    },
-    {
-      "id": "cleanmugstack",
-      "guid": "40be86fc566138d3381e38d61692abfd",
-      "assetPath": "Assets/common03/prefabs/core/utensils/cleanmugstack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "干净马克杯堆",
-      "nameEn": "Clean Mug Stack",
-      "icon": false
-    },
-    {
-      "id": "CleanPlateStack",
-      "guid": "318ce2bc40f927e48a17bb2415f293ea",
-      "assetPath": "Assets/common01/prefabs/utensils/CleanPlateStack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "干净盘堆",
-      "nameEn": "Clean Plate Stack",
-      "icon": false
-    },
-    {
-      "id": "dirtyglassstack",
-      "guid": "abe07b0ddc9942ead86d5d4ee55511d3",
-      "assetPath": "Assets/common03/prefabs/core/utensils/dirtyglassstack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏玻璃杯堆（DLC2）",
-      "nameEn": "Dirty Glass Stack (DLC2)",
-      "icon": false
-    },
-    {
-      "id": "dirtymug",
-      "guid": "8fef6f8a072636b2a3a9a397fd6f503b",
-      "assetPath": "Assets/common03/prefabs/core/utensils/dirtymug.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏马克杯",
-      "nameEn": "Dirty Mug",
-      "icon": false
-    },
-    {
-      "id": "dirtymugstack",
-      "guid": "de566722925f6331ed94be6051a3a47a",
-      "assetPath": "Assets/common03/prefabs/core/utensils/dirtymugstack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏马克杯堆",
-      "nameEn": "Dirty Mug Stack",
-      "icon": false
-    },
-    {
-      "id": "dlc08_cleantraystack",
-      "guid": "1186b26e9e9148791a4c8a615963a3f0",
-      "assetPath": "Assets/common03/prefabs/dlc08/utensils/dlc08_cleantraystack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "干净餐盘堆",
-      "nameEn": "Clean Tray Stack",
-      "icon": false
-    },
-    {
-      "id": "dlc08_dirtytray",
-      "guid": "4d2ec4d788cef430c62fabe0d36715c2",
-      "assetPath": "Assets/common03/prefabs/dlc08/utensils/dlc08_dirtytray.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏餐盘",
-      "nameEn": "Dirty Tray",
-      "icon": false
-    },
-    {
-      "id": "dlc08_dirtytraystack",
-      "guid": "c660328e86bbdc259d7f081f1eaa196e",
-      "assetPath": "Assets/common03/prefabs/dlc08/utensils/dlc08_dirtytraystack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏餐盘堆",
-      "nameEn": "Dirty Tray Stack",
-      "icon": false
-    },
-    {
-      "id": "dlc08_equipment_tray",
-      "guid": "9b9b99a33f212fc18bb9e3bea56e9fa9",
-      "assetPath": "Assets/common03/prefabs/dlc08/utensils/dlc08_equipment_tray.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "餐盘",
-      "nameEn": "Plate",
-      "icon": false
-    },
-    {
-      "id": "dlc09_cleanmugstack",
-      "guid": "bb356db7229f39ade988c86612420864",
-      "assetPath": "Assets/common03/prefabs/dlc09/utensils/dlc09_cleanmugstack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "干净马克杯堆（DLC9）",
-      "nameEn": "Clean Mug Stack (DLC9)",
-      "icon": false
-    },
-    {
-      "id": "dlc09_dirtymug",
-      "guid": "085dc68b6b72baa06f423ede6ecadc20",
-      "assetPath": "Assets/common03/prefabs/dlc09/utensils/dlc09_dirtymug.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏马克杯（DLC9）",
-      "nameEn": "Dirty Mug (DLC9)",
-      "icon": false
-    },
-    {
-      "id": "dlc09_dirtymugstack",
-      "guid": "7ee668e1a4fdfac0bc38c7da36de8ec7",
-      "assetPath": "Assets/common03/prefabs/dlc09/utensils/dlc09_dirtymugstack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏马克杯堆（DLC9）",
-      "nameEn": "Dirty Mug Stack (DLC9)",
-      "icon": false
-    },
-    {
-      "id": "dlc09_equipment_mug_01",
-      "guid": "147fe89e33fdb6e43b5da6df189f0e7c",
-      "assetPath": "Assets/common03/prefabs/dlc09/utensils/dlc09_equipment_mug_01.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "马克杯（DLC9）",
-      "nameEn": "Mug (DLC9)",
-      "icon": false
-    },
-    {
-      "id": "dlc11_cleanglassstack",
-      "guid": "f1cf826ed6ec320b03c12261692d5ac1",
-      "assetPath": "Assets/common03/prefabs/dlc11/utensils/dlc11_cleanglassstack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "干净玻璃杯堆",
-      "nameEn": "Clean Glass Stack",
-      "icon": false
-    },
-    {
-      "id": "dlc11_dirtyglass",
-      "guid": "61a5d5a8f5233a2c954d162b548bbbf0",
-      "assetPath": "Assets/common03/prefabs/dlc11/utensils/dlc11_dirtyglass.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏玻璃杯",
-      "nameEn": "Dirty Glass",
-      "icon": false
-    },
-    {
-      "id": "dlc11_dirtyglassstack",
-      "guid": "b774e1f555596e4609114fcce021e264",
-      "assetPath": "Assets/common03/prefabs/dlc11/utensils/dlc11_dirtyglassstack.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "脏玻璃杯堆",
-      "nameEn": "Dirty Glass Stack",
-      "icon": false
-    },
-    {
-      "id": "dlc11_equipment_glass_01",
-      "guid": "c018bf5fee0ceb147f03ce4db2136027",
-      "assetPath": "Assets/common03/prefabs/dlc11/utensils/dlc11_equipment_glass_01.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "玻璃杯（DLC11）",
-      "nameEn": "Glass Equipment",
-      "icon": false
-    },
-    {
-      "id": "equipment_glass_01",
-      "guid": "c083e5a64ae4e6d2330abbec68344cad",
-      "assetPath": "Assets/common03/prefabs/core/utensils/equipment_glass_01.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "玻璃杯（DLC2）",
-      "nameEn": "Glass (DLC2)",
-      "icon": false
-    },
-    {
-      "id": "equipment_mug_01",
-      "guid": "0fb8e1859a14eb5a5fb9ffdcfa786b5a",
-      "assetPath": "Assets/common03/prefabs/core/utensils/equipment_mug_01.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "马克杯",
-      "nameEn": "Mug",
-      "icon": false
-    },
-    {
-      "id": "Glass",
-      "guid": "d95f42399d1941943a4ff7ed6614a3f1",
-      "assetPath": "Assets/common02/prefabs/utensils/Glass.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "玻璃杯",
-      "nameEn": "Glass",
-      "icon": false
-    },
-    {
-      "id": "Plate",
-      "guid": "cf7d26516d6d2ff4787881721ba6ad8d",
-      "assetPath": "Assets/common01/prefabs/utensils/Plate.prefab",
-      "category": "utensils/plates",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.5,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "盘子",
-      "nameEn": "Plate",
-      "icon": false
-    },
-    {
-      "id": "Bellows",
-      "guid": "e50667f9d2d6a2e408c230cda368828b",
-      "assetPath": "Assets/common02/prefabs/utensils/Bellows.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "campfire"
-      },
-      "nameZh": "风箱",
-      "nameEn": "Bellows",
-      "icon": false
-    },
-    {
-      "id": "utensil_bellows_01",
-      "guid": "0a4a516f6bc71e29a2d3e4c101662fbd",
-      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_bellows_01.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "campfire"
-      },
-      "nameZh": "风箱",
-      "nameEn": "Bellows",
-      "icon": false
-    },
-    {
-      "id": "dlc08_utensil_fire_extinguisher",
-      "guid": "8cca3fa4e5752154b6c73922f7631144",
-      "assetPath": "Assets/common03/prefabs/dlc08/utensils/dlc08_utensil_fire_extinguisher.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "灭火器（马戏团）",
-      "nameEn": "Fire Extinguisher",
-      "icon": false
-    },
-    {
-      "id": "dlc09_utensil_ingredient_spray",
-      "guid": "455dd2a07ccec6aa130f46da3068a35a",
-      "assetPath": "Assets/common03/prefabs/dlc09/utensils/dlc09_utensil_ingredient_spray.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "奶油喷罐（DLC9）",
-      "nameEn": "Whipped Cream Spray (DLC9)",
-      "icon": false
-    },
-    {
-      "id": "FireExtinguisher",
-      "guid": "8a076f50debf2474a9cbd7d51b56cb92",
-      "assetPath": "Assets/common01/prefabs/utensils/FireExtinguisher.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "灭火器",
-      "nameEn": "Fire Extinguisher",
-      "icon": false
-    },
-    {
-      "id": "Flamethrower",
-      "guid": "9febd79da2ed4bb44b628517e9bbc47e",
-      "assetPath": "Assets/common01/prefabs/utensils/Flamethrower.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "喷火器",
-      "nameEn": "Flamethrower",
-      "icon": false
-    },
-    {
-      "id": "p_dlc7_coal_bucket_coal_01",
-      "guid": "99a2100c500a690e2fe92fc276090ba8",
-      "assetPath": "Assets/common03/prefabs/dlc07/utensils/p_dlc7_coal_bucket_coal_01.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "煤桶（带煤）",
-      "nameEn": "Coal Bucket (Filled)",
-      "icon": false
-    },
-    {
-      "id": "utensil_big_ol_spoon",
-      "guid": "f91af913eebd32d2c2c1f883211ac464",
-      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_big_ol_spoon.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "大汤勺",
-      "nameEn": "Big Spoon",
-      "icon": false
-    },
-    {
-      "id": "utensil_coalbucket_01",
-      "guid": "7ca58d380512a4a46cc56f0eac4ff74c",
-      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_coalbucket_01.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "煤桶",
-      "nameEn": "Coal Bucket",
-      "icon": false
-    },
-    {
-      "id": "utensil_dlc10_big_ol_spoon",
-      "guid": "f3705e0fd28a2a7db82703ad180118aa",
-      "assetPath": "Assets/common03/prefabs/dlc10/utensils/utensil_dlc10_big_ol_spoon.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 0.6,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "大汤勺（DLC10）",
-      "nameEn": "Big Spoon (DLC10)",
-      "icon": false
-    },
-    {
-      "id": "utensil_fire_extinguisher_02",
-      "guid": "43cf28028cc3ab8834c770cde44ef943",
-      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_fire_extinguisher_02.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "灭火器 02",
-      "nameEn": "Fire Extinguisher 02",
-      "icon": false
-    },
-    {
-      "id": "utensil_ingredient_spray_01",
-      "guid": "2fd55a5d5d25778aed2469e96cb38464",
-      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_ingredient_spray_01.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "奶油喷罐",
-      "nameEn": "Whipped Cream Spray",
-      "icon": false
-    },
-    {
-      "id": "utensil_water_gun_01",
-      "guid": "e856274d48d93ebdfe2cb1373b02f3ca",
-      "assetPath": "Assets/common03/prefabs/core/utensils/utensil_water_gun_01.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "水枪",
-      "nameEn": "Water Gun",
-      "icon": false
-    },
-    {
-      "id": "WaterGun",
-      "guid": "18ac54834aaba2b4d81ca0fd52d9b6ea",
-      "assetPath": "Assets/common02/prefabs/utensils/WaterGun.prefab",
-      "category": "utensils/tools",
-      "theme": null,
-      "defaultParent": "Design/Utensils",
-      "footprint": {
-        "cellsX": 0.9,
-        "cellsZ": 0.9
-      },
-      "layoutTier": "core",
-      "stack": {
-        "y": 1,
-        "hostRule": "counter_standard"
-      },
-      "nameZh": "水枪",
-      "nameEn": "Water Gun",
       "icon": false
     }
   ]

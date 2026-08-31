@@ -106,7 +106,12 @@ export function drawCatalogItemIcon(
   bw: number,
   bh: number
 ): boolean {
-  if (!cat?.icon) return false;
+  if (!cat) return false;
+  if (cat.ingredientDecor) {
+    drawIconWithLabel(ctx, getIngredientIcon(cat.id), itemLabel(item), bw, bh);
+    return true;
+  }
+  if (!cat.icon) return false;
   drawIconWithLabel(ctx, getCatalogIcon(cat.id), itemLabel(item), bw, bh);
   return true;
 }

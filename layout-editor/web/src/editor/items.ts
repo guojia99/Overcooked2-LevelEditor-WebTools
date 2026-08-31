@@ -38,7 +38,9 @@ import {
   catalogItemForGuidOrPath,
   planeNativeForItem,
   planeScaleFromCells,
-  planeCatalogFootprint
+  planeCatalogFootprint,
+  catalogItemById,
+  ingredientIdByGuid
 } from "./catalog";
 import {
   isCollisionItem,
@@ -73,6 +75,22 @@ import type {
   FloorObject,
   CatalogItem
 } from "../types";
+
+/** 旧版食材装饰（stubKind=IngredientDecor + 食材 SO guid）→ common03 包装 prefab。 */
+function migrateIngredientDecorToWrapper(raw: LayoutItem): void {
+  if (raw.stubKind !== "IngredientDecor" && !raw.ingredientDecor) return;
+  const ingGuid = raw.ingredientDecor?.ingredientGuid || raw.prefabGuid;
+  let ingId = prefabIdFromPath(raw.prefabAssetPath);
+  if (!ingId && ingGuid) ingId = ingredientIdByGuid(ingGuid);
+  const wrapper = ingId ? catalogItemById(ingId) : undefined;
+  if (wrapper?.category === "decor/food") {
+    raw.prefabGuid = wrapper.guid;
+    raw.prefabAssetPath = wrapper.assetPath;
+    if (!raw.parentPath) raw.parentPath = wrapper.defaultParent;
+  }
+  delete raw.stubKind;
+  delete raw.ingredientDecor;
+}
 
 /** 旧版空气墙 collider 水平 1m×localScale；新版底边 1.2m，scale 为格数倍率。 */
 function migrateAirWallScale(raw: LayoutItem): void {
@@ -126,6 +144,7 @@ export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
     if (!(raw.localScale.y > 0)) raw.localScale.y = 1;
     ensureAirWallColliderCenter(raw);
   }
+  migrateIngredientDecorToWrapper(raw);
   const wp = raw.worldPosition ?? raw.localPosition;
   // 背景水面等：Unity 导出 footprint 为渲染器实测格数（如 1×26），尺寸由
   // catalog 1×1 × localScale 表达；载入时还原为目录基准，避免与 scale 二次相乘。

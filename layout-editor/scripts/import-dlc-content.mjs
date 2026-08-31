@@ -32,6 +32,7 @@ const DRY = process.argv.includes("--dry");
 const PROPS_ONLY = process.argv.includes("--props-only");
 const DECOR_ONLY = process.argv.includes("--decor-only");
 const REPAIR_DECOR = process.argv.includes("--repair-decor");
+const FOOD_DECOR_ONLY = process.argv.includes("--food-decor-only");
 
 // ---------------------------------------------------------------------------
 // Script guids (same as common assets)
@@ -472,6 +473,84 @@ function emitIngredients() {
 }
 
 // ---------------------------------------------------------------------------
+// Emit ingredient decor wrappers (common03 prefabs referencing existing SO)
+// ---------------------------------------------------------------------------
+
+function readMetaGuid(file) {
+  try {
+    const m = fs.readFileSync(file + ".meta", "utf8").match(/^guid:\s*([a-f0-9]+)/m);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+function foodGroupOf(assetPath) {
+  const m = assetPath.match(/\/(dlc\d+)\//);
+  if (m) return m[1];
+  return "core";
+}
+
+function dlcDirFromGroup(group) {
+  return group === "core" ? "core" : group.startsWith("dlc") ? group : "core";
+}
+
+function parseIngredientAsset(file) {
+  const text = fs.readFileSync(file, "utf8");
+  if (!text.includes(GUID.PseudoPrefabSO)) return null;
+  const assetPathM = text.match(/assetPath:\s*(.+)/);
+  const target = assetPathM ? assetPathM[1].trim().replace(/\\/g, "/") : "";
+  if (!target || !/\.prefab$/i.test(target)) return { nodeOnly: true };
+  return { nodeOnly: false };
+}
+
+/**
+ * 为可摆放食材生成 common03 包装 prefab（PseudoPrefabStub + PseudoPrefab），
+ * pseudoPrefabSO 直接引用 common01/02/03 已有食材 SO（不新建 pseudo_prefab_so）。
+ * 与 art 装饰物相同：由 PseudoPrefabManager 在编辑器内加载 bundle 子物体。
+ */
+function emitIngredientDecorWrappers() {
+  const roots = [
+    "Assets/common01/food/Ingredients",
+    "Assets/common02/food/Ingredients",
+    "Assets/common03/Ingredients",
+  ];
+  const seen = new Set();
+  let count = 0;
+  let skip = 0;
+  const walk = (dir, onFile) => {
+    for (const n of fs.readdirSync(dir)) {
+      const p = path.join(dir, n);
+      if (fs.statSync(p).isDirectory()) walk(p, onFile);
+      else if (n.endsWith(".asset")) onFile(p);
+    }
+  };
+  for (const root of roots) {
+    const abs = path.join(repoRoot, root);
+    if (!fs.existsSync(abs)) continue;
+    walk(abs, (file) => {
+      const id = path.basename(file, ".asset");
+      if (NO_PREFAB_INGREDIENTS.has(id)) return;
+      const parsed = parseIngredientAsset(file);
+      if (!parsed || parsed.nodeOnly) return;
+      const soGuid = readMetaGuid(file);
+      if (!soGuid || !seen.add(soGuid)) return;
+      const rel = path.relative(repoRoot, file).replace(/\\/g, "/");
+      const group = dlcDirFromGroup(foodGroupOf(rel));
+      const prefabFile = path.join(OUT_ROOT, "prefabs", group, "decor", "food", `${id}.prefab`);
+      if (PROPS_ONLY && fs.existsSync(prefabFile)) {
+        skip++;
+        return;
+      }
+      write(prefabFile, propPrefab(id, soGuid));
+      write(prefabFile + ".meta", metaYaml(guid("food-decor-prefab", id)));
+      count++;
+    });
+  }
+  console.log(`食材装饰包装 prefab: ${count}${skip ? `（跳过已存在 ${skip}）` : ""}`);
+}
+
+// ---------------------------------------------------------------------------
 // Emit recipes (main dishes + intermediates)
 // ---------------------------------------------------------------------------
 function emitRecipes() {
@@ -771,20 +850,25 @@ function emitDecor() {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-console.log(`生成源库 → ${path.relative(repoRoot, OUT_ROOT)}${DRY ? "（dry-run）" : ""}${REPAIR_DECOR ? "（修复装饰占位）" : DECOR_ONLY ? "（仅装饰物+家具+外观）" : PROPS_ONLY ? "（仅道具+装饰物）" : ""}`);
+console.log(`生成源库 → ${path.relative(repoRoot, OUT_ROOT)}${DRY ? "（dry-run）" : ""}${REPAIR_DECOR ? "（修复装饰占位）" : DECOR_ONLY ? "（仅装饰物+家具+外观）" : PROPS_ONLY ? "（仅道具+装饰物）" : FOOD_DECOR_ONLY ? "（仅食材装饰包装）" : ""}`);
 if (REPAIR_DECOR) {
   repairDecorPrefabs();
+} else if (FOOD_DECOR_ONLY) {
+  emitIngredientDecorWrappers();
 } else if (DECOR_ONLY) {
   emitDecor();
   emitCounterAppearances();
+  emitIngredientDecorWrappers();
 } else if (PROPS_ONLY) {
   emitProps();
   emitDecor();
+  emitIngredientDecorWrappers();
 } else {
   emitIngredients();
   emitRecipes();
   emitCookingSteps();
   emitProps();
   emitDecor();
+  emitIngredientDecorWrappers();
 }
 console.log(`完成，共写出 ${written} 个文件${DRY ? "（未落盘）" : ""}。`);
