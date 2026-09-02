@@ -184,7 +184,7 @@ export function envAnimTypesHintHtml(): string {
     </div>`
   ).join("");
   return `<div class="npc-types-grid">${cards}</div>
-    <div class="npc-types-note">调色板中带 ✨ 徽章的条目为 prefab 内嵌 Animator，放置即用；轨迹可在「移动层」自建 MoveControl 组覆盖。</div>`;
+    <div class="npc-types-note">调色板中带 ✨ 徽章的条目为 prefab 内嵌 Animator，放置即用；轨迹可在「动画层」自建动画组覆盖。</div>`;
 }
 
 /** 场景中环境动画装饰实例（不含 NPC）。 */

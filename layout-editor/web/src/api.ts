@@ -693,6 +693,24 @@ export function imageFloorUrl(texturePath: string): string {
   return `/api/level/data-file?path=${encodeURIComponent(texturePath)}`;
 }
 
+/** 随机食材箱问号图标样式（Assets/commonW1/question_mark/*.png，Unity 侧目录扫描）。 */
+export type QuestionMarkStyle = {
+  name: string;
+  guid: string;
+  isDefault: boolean;
+};
+
+export async function fetchQuestionMarks(): Promise<QuestionMarkStyle[]> {
+  const r = await fetch("/api/catalog/questionmarks");
+  const data = await readApiJson<{ items: QuestionMarkStyle[] }>(r);
+  return data.items ?? [];
+}
+
+/** 问号图标缩略图 URL（回源 PNG）。 */
+export function questionMarkIconUrl(guid: string): string {
+  return `/api/catalog/questionmarks/icon?guid=${encodeURIComponent(guid)}`;
+}
+
 /** Upload a level screenshot image (base64) into the level's data dir.
  *  Assigns the imported Sprite to LevelInfoSO.screenshot. */
 export async function uploadScreenshot(

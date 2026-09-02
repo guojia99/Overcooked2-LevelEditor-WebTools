@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-29T14:33:09.337Z",
+  "generatedAt": "2026-09-01T17:33:51.283Z",
   "schemaVersion": 3,
   "gridCellSize": 1.2,
-  "itemCount": 3048,
+  "itemCount": 3276,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -19,7 +19,8 @@
     "catalog/items.12.json",
     "catalog/items.13.json",
     "catalog/items.14.json",
-    "catalog/items.15.json"
+    "catalog/items.15.json",
+    "catalog/items.16.json"
   ],
   "paletteGroups": [
     {
@@ -48,7 +49,7 @@
       "labelZh": "核心 · 出餐 / 加工",
       "labelEn": "Serving & processing",
       "layoutTier": "core",
-      "itemCount": 21
+      "itemCount": 22
     },
     {
       "key": "utensils/plates",
@@ -112,6 +113,13 @@
       "labelEn": "Decor · food props",
       "layoutTier": "decor",
       "itemCount": 130
+    },
+    {
+      "key": "decor/recipes",
+      "labelZh": "装饰 · 成品菜",
+      "labelEn": "Decor · plated dishes",
+      "layoutTier": "decor",
+      "itemCount": 97
     },
     {
       "key": "art/npc",

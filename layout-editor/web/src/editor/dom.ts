@@ -19,7 +19,7 @@ export const dom = {
   detailEl: null as unknown as HTMLElement,
   ctxMenuEl: null as unknown as HTMLElement,
   pickTipEl: null as unknown as HTMLElement,
-  movePickBar: null as unknown as HTMLElement,
+  animPickBar: null as unknown as HTMLElement,
   floorBar: null as unknown as HTMLElement,
 };
 
@@ -54,7 +54,7 @@ export function buildLayoutDom(): void {
         <button type="button" data-layer="items" class="layer-tab active">📦 核心层</button>
         <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板层</button>
         <button type="button" data-layer="background" class="layer-tab">🌊 背景层</button>
-        <button type="button" data-layer="move" class="layer-tab">🎬 移动层</button>
+        <button type="button" data-layer="anim" class="layer-tab">🎬 动画层</button>
       </div>
       <span class="toolbar-sep"></span>
       <div class="vis-wrap">
@@ -104,7 +104,7 @@ export function buildLayoutDom(): void {
       <div id="item-detail" class="item-detail hidden" role="dialog"></div>
       <div id="ctx-menu" class="ctx-menu hidden" role="dialog"></div>
       <div id="pick-tip" class="pick-tip hidden" role="dialog"></div>
-      <div id="move-pick-bar" class="move-pick-bar hidden" role="dialog"></div>
+      <div id="anim-pick-bar" class="anim-pick-bar hidden" role="dialog"></div>
       <div id="floor-bar" class="floor-bar hidden"></div>
       <button type="button" id="fhf-toggle" class="fhf-toggle hidden" title="高度层过滤：按行走面高度分层显示（地板/核心/装饰层可用）">📐</button>
       <div id="floor-height-filter" class="floor-height-filter floating hidden">
@@ -130,8 +130,8 @@ export function buildLayoutDom(): void {
       <div class="scene-items-header">
         <div class="panel-tabs" id="panel-tabs">
           <button type="button" data-tab="items" class="panel-tab active">📋 物品清单</button>
-          <button type="button" data-tab="move" class="panel-tab">🎯 移动控制 <span id="move-control-count" class="move-control-count"></span></button>
-          <button type="button" data-tab="bevents" class="panel-tab">🔘 按钮事件组 <span id="bevents-count" class="move-control-count"></span></button>
+          <button type="button" data-tab="anim" class="panel-tab">🎯 动画控制 <span id="anim-control-count" class="anim-control-count"></span></button>
+          <button type="button" data-tab="bevents" class="panel-tab">🔘 按钮事件组 <span id="bevents-count" class="anim-control-count"></span></button>
         </div>
         <span id="scene-items-count" class="scene-items-count"></span>
       </div>
@@ -147,6 +147,6 @@ export function buildLayoutDom(): void {
   dom.detailEl = document.getElementById("item-detail")!;
   dom.ctxMenuEl = document.getElementById("ctx-menu")!;
   dom.pickTipEl = document.getElementById("pick-tip")!;
-  dom.movePickBar = document.getElementById("move-pick-bar")!;
+  dom.animPickBar = document.getElementById("anim-pick-bar")!;
   dom.floorBar = document.getElementById("floor-bar")!;
 }

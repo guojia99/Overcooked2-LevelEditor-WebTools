@@ -13,7 +13,7 @@ import type {
   LayoutItem,
   LevelSetScene,
   LightInfo,
-  MoveGroup,
+  AnimGroup,
   RecipeEntry,
   SwitchLink,
   SwitchMaterialOption,
@@ -56,7 +56,7 @@ export interface ComboDef {
   link: (items: EditorItem[]) => void;
 }
 
-export type LayerKey = "items" | "decor" | "floor" | "background" | "move";
+export type LayerKey = "items" | "decor" | "floor" | "background" | "anim";
 
 /** Content categories that can be shown / hidden on the canvas per layer. */
 export type VisibilityCategory = "items" | "decor" | "floors" | "background";
@@ -80,7 +80,7 @@ export function makeLayerVisibility(): Record<LayerKey, LayerVisibility> {
     decor: noBg,
     floor: all,
     background: all,
-    move: noBg,
+    anim: noBg,
   };
 }
 
@@ -89,10 +89,10 @@ export interface EditorSnapshot {
   floors: EditorFloor[];
   bgThemeKey: string;
   /** Move-control groups (undo/redo must restore them too). */
-  moveControls: MoveGroup[];
+  animControls: AnimGroup[];
   /** 开关联动（按钮 → 断头台/饮料机/酱料机；undo/redo 一并恢复）。 */
   switchLinks: SwitchLink[];
-  /** 按钮/压力开关 ↔ 移动组联动（undo/redo 一并恢复）。 */
+  /** 按钮/压力开关 ↔ 动画组联动（undo/redo 一并恢复）。 */
   buttonLinks: ButtonLink[];
   /** 按钮 ↔ 事件组联动（undo/redo 一并恢复）。 */
   buttonEvents: ButtonEventLink[];
@@ -104,10 +104,10 @@ export interface EditorSnapshot {
 
 /** Move layer interaction mode. "members" = pick/box-select members (items + floors);
  *  "waypoints" = click empty canvas to place waypoints. */
-export type MoveMode = "none" | "members" | "waypoints";
+export type AnimMode = "none" | "members" | "waypoints";
 
 /** Route preview playback state (pure front-end simulation). */
-export interface MovePreview {
+export interface AnimPreview {
   playing: boolean;
   /** Elapsed simulation seconds since the preview started. */
   t: number;
@@ -327,31 +327,31 @@ export const S = {
   hoverCx: -1,
   hoverCy: -1,
   gridInfo: null as GridInfo | null,
-  moveControls: [] as MoveGroup[],
+  animControls: [] as AnimGroup[],
   switchLinks: [] as SwitchLink[],
   buttonLinks: [] as ButtonLink[],
   buttonEvents: [] as ButtonEventLink[],
-  activeMoveGroupId: null as string | null,
-  activeMoveEventIdx: null as number | null,
+  activeAnimGroupId: null as string | null,
+  activeAnimEventIdx: null as number | null,
   selectedWaypointId: null as string | null,
   /** Active tab inside the move group editor. */
-  activeMoveTab: "members" as "members" | "events" | "waypoints" | "settings",
+  activeAnimTab: "timeline" as "timeline" | "members" | "waypoints" | "settings",
   /** Ids of member groups currently collapsed (default: expanded). */
   collapsedGroupIds: new Set<string>(),
   /** Member group targeted by the next "框选添加" pick (null = ungrouped). */
-  movePickTargetGroupId: null as string | null,
-  /** Explicit interaction mode on the move layer (see MoveMode). */
-  moveMode: "none" as MoveMode,
+  animPickTargetGroupId: null as string | null,
+  /** Explicit interaction mode on the move layer (see AnimMode). */
+  animMode: "none" as AnimMode,
   /** Route preview (front-end simulation only). */
-  movePreview: null as MovePreview | null,
+  animPreview: null as AnimPreview | null,
   /** Event indices whose time-curve editor is expanded (collapsed by default). */
   openCurves: new Set<number>(),
   /** Event indices whose waypoint-pool strip is expanded (collapsed by default). */
   openWaypointPool: new Set<number>(),
   /** Canvas-placed waypoints are appended to the active event's route right away. */
-  moveRouteAutoAdd: true,
+  animRouteAutoAdd: true,
   expandedMemberId: null as string | null,
-  activeRightTab: "items" as "items" | "move" | "bevents",
+  activeRightTab: "items" as "items" | "anim" | "bevents",
   draggingWaypointId: null as string | null,
   scale: 1,
   panX: 0,

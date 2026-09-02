@@ -40,21 +40,21 @@ export function partnerOf(link: ButtonLink): ButtonLink | undefined {
   return S.buttonLinks.find((l) => l !== link && l.pairId === link.pairId);
 }
 
-/** 某移动组是否已被任一联动绑定（一个组至多属于一条联动）。 */
+/** 某动画组是否已被任一联动绑定（一个组至多属于一条联动）。 */
 export function linkBindingGroup(groupName: string): ButtonLink | undefined {
   return S.buttonLinks.find((l) => l.groupNames.includes(groupName));
 }
 
-/** 共轭模式下单个按钮最多绑定的移动组数（两组同时启动、全部完成后翻转）。 */
+/** 共轭模式下单个按钮最多绑定的动画组数（两组同时启动、全部完成后翻转）。 */
 export const PAIR_GROUP_LIMIT = 2;
 
 /**
- * 清理失效联动：源物品被删、移动组被删/改名、配对另一方缺失。
- * 移动组以 displayName 引用（跨保存稳定），改名由 moveControl 的改名处同步。
+ * 清理失效联动：源物品被删、动画组被删/改名、配对另一方缺失。
+ * 动画组以 displayName 引用（跨保存稳定），改名由 animControl 的改名处同步。
  */
 export function cleanOrphanedButtonLinks(): void {
   const itemIds = new Set(S.items.map((i) => i.instanceId).filter(Boolean));
-  const groupNames = new Set(S.moveControls.map((g) => g.displayName));
+  const groupNames = new Set(S.animControls.map((g) => g.displayName));
   for (const l of S.buttonLinks) {
     l.groupNames = l.groupNames.filter((n) => groupNames.has(n));
   }
@@ -70,7 +70,7 @@ export function cleanOrphanedButtonLinks(): void {
   }
 }
 
-/** 移动组改名时同步联动里的引用（displayName 是引用键）。 */
+/** 动画组改名时同步联动里的引用（displayName 是引用键）。 */
 export function renameGroupInButtonLinks(oldName: string, newName: string): void {
   if (!oldName || oldName === newName) return;
   for (const l of S.buttonLinks) {
@@ -79,7 +79,7 @@ export function renameGroupInButtonLinks(oldName: string, newName: string): void
 }
 
 function groupLabel(name: string): string {
-  const g = S.moveControls.find((gr) => gr.displayName === name);
+  const g = S.animControls.find((gr) => gr.displayName === name);
   const members = g ? g.itemInstanceIds.length + g.floorInstanceIds.length + g.objectInstanceIds.length : 0;
   return g ? `${escHtml(name)}（${members} 成员/${g.events.length} 事件）` : escHtml(name);
 }
@@ -93,9 +93,9 @@ export function buttonLinkSummaryHtml(item: EditorItem): string {
   const partner = link ? partnerOf(link) : undefined;
   const summary =
     !link || n === 0
-      ? "— 未绑定移动组 —"
+      ? "— 未绑定动画组 —"
       : `已绑 ${n} 组${link.lockUntilFinished !== false ? " · 完成后才可再按" : ""}${partner ? " · 共轭配对" : ""}`;
-  return `<div class="ctx-stub-title" style="margin-top:6px">联动移动组（按顺序触发）</div>
+  return `<div class="ctx-stub-title" style="margin-top:6px">联动动画组（按顺序触发）</div>
     <label class="ctx-stub-row"><span class="ctx-input" style="opacity:${n > 0 ? 1 : 0.6}">${escHtml(summary)}</span>
     <button type="button" class="ctx-btn" id="ctx-bl-config">配置…</button></label>`;
 }
@@ -104,7 +104,7 @@ function pairHintText(partner: ButtonLink | undefined): string {
   if (!partner)
     return "不配对时为顺序触发：每次按压启动下一组（最后一组后循环回第一组）。";
   const partnerItem = S.items.find((i) => i.instanceId === partner.sourceId);
-  return `共轭模式：与「${partnerItem ? itemLabel(partnerItem) : "?"}」互斥，每个按钮需各绑 ${PAIR_GROUP_LIMIT} 个移动组；按下时两组同时启动，全部完成后对方抬起。`;
+  return `共轭模式：与「${partnerItem ? itemLabel(partnerItem) : "?"}」互斥，每个按钮需各绑 ${PAIR_GROUP_LIMIT} 个动画组；按下时两组同时启动，全部完成后对方抬起。`;
 }
 
 function buttonLinkModalBodyHtml(item: EditorItem): string {
@@ -124,11 +124,11 @@ function buttonLinkModalBodyHtml(item: EditorItem): string {
     .join("");
 
   return `<p class="modal-hint">绑定后每次按压按顺序触发下一组（循环）；绑定的组不再自动执行，启动/结束触发器由联动自动管理。</p>
-    <div class="blm-sec">联动移动组（按顺序触发）</div>
+    <div class="blm-sec">联动动画组（按顺序触发）</div>
     <div id="blm-groups"></div>
     <div class="blm-addrow"><select id="blm-groupadd" class="modal-select"></select>
       <button type="button" class="modal-btn" id="blm-add">添加</button></div>
-    <label class="modal-check"><input type="checkbox" id="blm-lock" ${!link || link.lockUntilFinished !== false ? "checked" : ""}/> 移动组完成后才可再按（运行期忽略按压）</label>
+    <label class="modal-check"><input type="checkbox" id="blm-lock" ${!link || link.lockUntilFinished !== false ? "checked" : ""}/> 动画组完成后才可再按（运行期忽略按压）</label>
     <div class="blm-sec">共轭按钮（一对一）</div>
     <label class="modal-field">配对按钮 <select id="blm-pair" class="modal-select">${pairOpts}</select></label>
     <label class="modal-check"><input type="checkbox" id="blm-startup" ${link?.pairStartsUp ? "checked" : ""} ${partner ? "" : "disabled"}/> 初始为抬起（可按）状态</label>
@@ -161,7 +161,7 @@ function wireButtonLinkModal(item: EditorItem): void {
   const refresh = () => {
     const l = link();
     if (!l || l.groupNames.length === 0) {
-      groupsEl.innerHTML = '<p class="modal-hint">未绑定移动组</p>';
+      groupsEl.innerHTML = '<p class="modal-hint">未绑定动画组</p>';
     } else {
       groupsEl.innerHTML = l.groupNames
         .map(
@@ -201,7 +201,7 @@ function wireButtonLinkModal(item: EditorItem): void {
           if (ll.groupNames.length === 0 && !ll.pairId) {
             S.buttonLinks = S.buttonLinks.filter((x) => x !== ll);
           }
-          setStatus("已移除联动移动组（写回后生效）");
+          setStatus("已移除联动动画组（写回后生效）");
           refresh();
           refreshAddSel();
         });
@@ -214,7 +214,7 @@ function wireButtonLinkModal(item: EditorItem): void {
     const mine = new Set(l?.groupNames ?? []);
     const paired = !!(l && partnerOf(l));
     const limitReached = paired && mine.size >= PAIR_GROUP_LIMIT;
-    const opts = S.moveControls
+    const opts = S.animControls
       .filter((g) => !mine.has(g.displayName))
       .map((g) => {
         const boundBy = linkBindingGroup(g.displayName);
@@ -223,7 +223,7 @@ function wireButtonLinkModal(item: EditorItem): void {
         return `<option value="${escHtml(g.displayName)}" ${disabled}>${escHtml(g.displayName)}${suffix}</option>`;
       })
       .join("");
-    addSel.innerHTML = opts || '<option value="">— 无可绑定的移动组 —</option>';
+    addSel.innerHTML = opts || '<option value="">— 无可绑定的动画组 —</option>';
   };
 
   refresh();
@@ -233,21 +233,21 @@ function wireButtonLinkModal(item: EditorItem): void {
     const name = addSel.value;
     if (!name) return;
     if (linkBindingGroup(name)) {
-      setStatus("该移动组已被其他按钮绑定", false);
+      setStatus("该动画组已被其他按钮绑定", false);
       return;
     }
     pushHistory();
     const l = ensureLink(myId);
     if (partnerOf(l) && l.groupNames.length >= PAIR_GROUP_LIMIT) {
-      setStatus(`共轭模式每个按钮最多绑定 ${PAIR_GROUP_LIMIT} 个移动组`, false);
+      setStatus(`共轭模式每个按钮最多绑定 ${PAIR_GROUP_LIMIT} 个动画组`, false);
       return;
     }
     l.groupNames.push(name);
-    const g = S.moveControls.find((gr) => gr.displayName === name);
+    const g = S.animControls.find((gr) => gr.displayName === name);
     if (g && g.loop) {
       setStatus(`已绑定「${name}」（写回后生效）⚠ 该组循环执行不会结束，开启锁定时按钮将无法再按`, true);
     } else {
-      setStatus(`已绑定移动组「${name}」（写回后生效）`);
+      setStatus(`已绑定动画组「${name}」（写回后生效）`);
     }
     refresh();
     refreshAddSel();

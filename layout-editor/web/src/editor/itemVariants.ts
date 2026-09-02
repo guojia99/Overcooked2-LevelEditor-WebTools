@@ -175,7 +175,7 @@ export function wireItemVariant(item: EditorItem): void {
 }
 
 /** 切换皮肤：删旧建新（同位置/旋转/缩放），迁移兼容 stub 参数，
- *  重映射所有 instanceId 引用（开关/按钮/事件组/移动组/传送门/回收台绑定）。
+ *  重映射所有 instanceId 引用（开关/按钮/事件组/动画组/传送门/回收台绑定）。
  *  写回时旧场景实例不在文档中会被 RemoveUnmatchedSceneItems 删除，新实例走 CreateInstance。 */
 export function switchItemVariant(item: EditorItem, cat: CatalogItem): void {
   const idx = S.items.indexOf(item);
@@ -248,7 +248,7 @@ function remapInstanceRefs(oldId: string, newId: string): void {
       }
     }
   }
-  for (const mg of S.moveControls) {
+  for (const mg of S.animControls) {
     mg.itemInstanceIds = mg.itemInstanceIds.map(map);
     if (mg.memberStatic) {
       for (const m of mg.memberStatic) m.instanceId = map(m.instanceId);

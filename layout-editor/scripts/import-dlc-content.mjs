@@ -9,6 +9,7 @@
  *   Assets/common03/CookingSteps/<id>.asset               烹饪步骤（HotPot/RoastingTray）
  *   Assets/common03/prefabs/{dlc|core}/{category}/<id>.prefab  道具占位 prefab
  *   Assets/common03/pseudo_prefab_so/{dlc|core}/{category}/<id>.asset 道具 PseudoPrefabSO
+ *   Assets/commonW1/prefabs/{dlc|core}/decor/{food|recipes}/<id>.prefab  食材/成品菜装饰（见 gen-commonw1-decor.mjs）
  * 每个 .asset/.prefab 同时生成确定性 .meta（md5(id) 派生，重复运行内容不变）。
  *
  * 用法：
@@ -19,11 +20,19 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
+import {
+  buildRecipeVisualContext,
+  listRecipeAssets,
+  resolveRecipeVisual,
+} from "./recipe-visual-resolve.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 const MANIFEST = path.join(repoRoot, "dump_bundle", "manifest.json");
 const OUT_ROOT = path.join(repoRoot, "Assets/common03");
+/** 食材/成品菜装饰包装（prefab + 可选 pseudo SO），打包进 commonW1 bundle。 */
+const COMMONW1_ROOT = path.join(repoRoot, "Assets/commonW1");
+const COMMONW1_BUNDLE = "commonW1";
 const ING_JSON = path.join(repoRoot, "layout-editor/web/public/ingredients.json");
 /** DLC 装饰物清单（gen-decor-entries.py 生成）：id + 真实容器 + 主题 + dlc。 */
 const DECOR_ENTRIES_PATH = path.join(repoRoot, "layout-editor/scripts/data/decor-entries.json");
@@ -33,6 +42,7 @@ const PROPS_ONLY = process.argv.includes("--props-only");
 const DECOR_ONLY = process.argv.includes("--decor-only");
 const REPAIR_DECOR = process.argv.includes("--repair-decor");
 const FOOD_DECOR_ONLY = process.argv.includes("--food-decor-only");
+const RECIPE_DECOR_ONLY = process.argv.includes("--recipe-decor-only");
 
 // ---------------------------------------------------------------------------
 // Script guids (same as common assets)
@@ -93,9 +103,38 @@ function write(file, content) {
     console.log("  [dry] " + path.relative(repoRoot, file));
     return;
   }
-  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const dir = path.dirname(file);
+  fs.mkdirSync(dir, { recursive: true });
+  ensureCommonW1FolderMeta(dir);
   fs.writeFileSync(file, content, "utf8");
   written++;
+}
+
+/** 新建 commonW1 子目录时写入 folder .meta（assetBundleName: commonW1）。 */
+function ensureCommonW1FolderMeta(absDir) {
+  if (!absDir.startsWith(COMMONW1_ROOT)) return;
+  let cur = absDir;
+  while (cur.startsWith(COMMONW1_ROOT) && cur !== COMMONW1_ROOT) {
+    const metaPath = cur + ".meta";
+    if (!fs.existsSync(metaPath)) {
+      const rel = path.relative(COMMONW1_ROOT, cur).replace(/\\/g, "/") || ".";
+      const g = guid("commonw1-folder", rel);
+      fs.writeFileSync(
+        metaPath,
+        `fileFormatVersion: 2
+guid: ${g}
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: ${COMMONW1_BUNDLE}
+  assetBundleVariant: 
+`,
+        "utf8"
+      );
+    }
+    cur = path.dirname(cur);
+  }
 }
 
 function metaYaml(g) {
@@ -505,9 +544,8 @@ function parseIngredientAsset(file) {
 }
 
 /**
- * 为可摆放食材生成 common03 包装 prefab（PseudoPrefabStub + PseudoPrefab），
+ * 为可摆放食材生成 commonW1 包装 prefab（PseudoPrefabStub + PseudoPrefab），
  * pseudoPrefabSO 直接引用 common01/02/03 已有食材 SO（不新建 pseudo_prefab_so）。
- * 与 art 装饰物相同：由 PseudoPrefabManager 在编辑器内加载 bundle 子物体。
  */
 function emitIngredientDecorWrappers() {
   const roots = [
@@ -537,7 +575,7 @@ function emitIngredientDecorWrappers() {
       if (!soGuid || !seen.add(soGuid)) return;
       const rel = path.relative(repoRoot, file).replace(/\\/g, "/");
       const group = dlcDirFromGroup(foodGroupOf(rel));
-      const prefabFile = path.join(OUT_ROOT, "prefabs", group, "decor", "food", `${id}.prefab`);
+      const prefabFile = path.join(COMMONW1_ROOT, "prefabs", group, "decor", "food", `${id}.prefab`);
       if (PROPS_ONLY && fs.existsSync(prefabFile)) {
         skip++;
         return;
@@ -548,6 +586,70 @@ function emitIngredientDecorWrappers() {
     });
   }
   console.log(`食材装饰包装 prefab: ${count}${skip ? `（跳过已存在 ${skip}）` : ""}`);
+}
+
+// ---------------------------------------------------------------------------
+// Emit finished-dish decor wrappers (commonW1 prefabs → visual PseudoPrefabSO)
+// ---------------------------------------------------------------------------
+
+/**
+ * 成品菜装饰：包装 prefab 引用已有或新建的 PseudoPrefabSO（指向 bundle 内菜品
+ * GameObject prefab），与食材装饰相同走 PseudoPrefab 标准流程。
+ * 不引用 PseudoPrefabSORecipe（订单逻辑 SO，无 mesh）。
+ */
+function emitRecipeDecorWrappers() {
+  const recipeIconsPath = path.join(repoRoot, "layout-editor/scripts/data/recipe-icons.json");
+  const recipeIcons = fs.existsSync(recipeIconsPath)
+    ? JSON.parse(fs.readFileSync(recipeIconsPath, "utf8"))
+    : {};
+  const ctx = buildRecipeVisualContext(repoRoot, manifest, recipeIcons);
+  const recipes = listRecipeAssets(repoRoot);
+  let count = 0;
+  let skip = 0;
+  let unresolved = 0;
+
+  for (const { id, score, assetPath: recipeAssetPath } of recipes) {
+    const visual = resolveRecipeVisual(id, ctx, { score });
+    if (!visual) {
+      unresolved++;
+      continue;
+    }
+
+    const group = dlcDirFromGroup(foodGroupOf(recipeAssetPath));
+    const prefabFile = path.join(COMMONW1_ROOT, "prefabs", group, "decor", "recipes", `${id}.prefab`);
+    if (PROPS_ONLY && fs.existsSync(prefabFile)) {
+      skip++;
+      continue;
+    }
+
+    let pseudoGuid;
+    if (visual.kind === "so") {
+      pseudoGuid = visual.soGuid;
+    } else {
+      const pseudoFile = path.join(
+        COMMONW1_ROOT,
+        "pseudo_prefab_so",
+        group,
+        "decor",
+        "recipes",
+        `${id}.asset`
+      );
+      pseudoGuid = guid("recipe-decor-pseudo", id);
+      write(
+        pseudoFile,
+        pseudoPrefabAsset(id, visual.prefabBase, visual.bundle, visual.assetPath)
+      );
+      write(pseudoFile + ".meta", metaYaml(pseudoGuid));
+    }
+
+    write(prefabFile, propPrefab(id, pseudoGuid));
+    write(prefabFile + ".meta", metaYaml(guid("recipe-decor-prefab", id)));
+    count++;
+  }
+
+  console.log(
+    `成品菜装饰包装 prefab: ${count}${skip ? `（跳过已存在 ${skip}）` : ""}，未解析视觉 ${unresolved}/${recipes.length}`
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -850,25 +952,46 @@ function emitDecor() {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-console.log(`生成源库 → ${path.relative(repoRoot, OUT_ROOT)}${DRY ? "（dry-run）" : ""}${REPAIR_DECOR ? "（修复装饰占位）" : DECOR_ONLY ? "（仅装饰物+家具+外观）" : PROPS_ONLY ? "（仅道具+装饰物）" : FOOD_DECOR_ONLY ? "（仅食材装饰包装）" : ""}`);
+const isMain =
+  process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+
+if (isMain) {
+const decorW1Label = path.relative(repoRoot, COMMONW1_ROOT);
+console.log(
+  `生成源库 → ${path.relative(repoRoot, OUT_ROOT)}${DRY ? "（dry-run）" : ""}${
+    REPAIR_DECOR
+      ? "（修复装饰占位）"
+      : DECOR_ONLY
+        ? "（仅装饰物+家具+外观）"
+        : PROPS_ONLY
+          ? "（仅道具+装饰物）"
+          : FOOD_DECOR_ONLY
+            ? `（仅食材装饰 → ${decorW1Label}）`
+            : RECIPE_DECOR_ONLY
+              ? `（仅成品菜装饰 → ${decorW1Label}）`
+              : ""
+  }`
+);
 if (REPAIR_DECOR) {
   repairDecorPrefabs();
 } else if (FOOD_DECOR_ONLY) {
   emitIngredientDecorWrappers();
+} else if (RECIPE_DECOR_ONLY) {
+  emitRecipeDecorWrappers();
 } else if (DECOR_ONLY) {
   emitDecor();
   emitCounterAppearances();
-  emitIngredientDecorWrappers();
 } else if (PROPS_ONLY) {
   emitProps();
   emitDecor();
-  emitIngredientDecorWrappers();
 } else {
   emitIngredients();
   emitRecipes();
   emitCookingSteps();
   emitProps();
   emitDecor();
-  emitIngredientDecorWrappers();
 }
 console.log(`完成，共写出 ${written} 个文件${DRY ? "（未落盘）" : ""}。`);
+}
+
+export { emitIngredientDecorWrappers, emitRecipeDecorWrappers };

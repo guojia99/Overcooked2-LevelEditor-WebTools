@@ -30,7 +30,7 @@ public static class LayoutEditorCustomIngredients
     /// <summary>通用内容源库根目录（由 Assets/Editor/LayoutEditor/Import 迁移而来）。</summary>
     public const string Common03Root = "Assets/common03";
 
-    /// <summary>背景装饰占位源库（仅 prefab + .meta，打包为 commonW1 bundle）。</summary>
+    /// <summary>背景与食材/成品菜装饰占位源库（prefab + .meta，打包为 commonW1 bundle）。</summary>
     public const string CommonW1Root = "Assets/commonW1";
 
     /// <summary>旧 custom_web 拷贝目录名（机制已废弃，仅为兼容读取历史数据保留）。</summary>
@@ -99,6 +99,12 @@ public static class LayoutEditorCustomIngredients
             ValidateDocGuid(it.pseudoPrefabGuid);
             if (it.dispenser != null)
                 ValidateDocGuid(it.dispenser.spawnerItemPrefabGuid);
+            // 随机食材箱：候选食材的 bundle 也要进依赖收集（CustomStub.RandomCrate
+            // 运行时按 bundleName 直读食材 prefab；菜谱保存重建 dependencies 时
+            // 依赖 _pendingDocBundles 里这份收集，避免随机食材的 bundle 被挤掉）
+            if (it.dispenser != null && it.dispenser.randomItemGuids != null)
+                foreach (var g in it.dispenser.randomItemGuids)
+                    ValidateDocGuid(g);
             if (it.foodSpawner != null && it.foodSpawner.attachmentPrefabGuids != null)
                 foreach (var g in it.foodSpawner.attachmentPrefabGuids)
                     ValidateDocGuid(g);

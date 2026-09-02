@@ -9,7 +9,7 @@ import { levelSetFromScenePath } from "./catalog";
 import { isPlayerItem } from "./renderItems";
 import { enrichItem, enrichFloor, checkPlayerCollisions, checkWorkstationCollisions, refreshUtensilStacks } from "./items";
 import { stubKindOf } from "./stubControls";
-import { cleanOrphanedMoveControls, stopMovePreview } from "./moveControl";
+import { cleanOrphanedAnimControls, stopAnimPreview } from "./animControl";
 import { cleanOrphanedButtonLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
 import { itemLabel } from "./labels";
@@ -114,11 +114,11 @@ export async function loadScene(assetPath: string) {
     S.items = doc.items
       .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true))
       .map((raw, index) => enrichItem(raw, `i${index}`));
-    // 移动组必须先于 merge 赋值：merge*IntoFloors 里的「组成员跳过吸收」逻辑
-    // 读取 S.moveControls，若此时尚为空/旧值，移动岛的主题地砖会被吸收成地板
-    // 矩形、写回时以新 id 挂到 Art 下重发射——永久脱离移动组（testice MidIsland
+    // 动画组必须先于 merge 赋值：merge*IntoFloors 里的「组成员跳过吸收」逻辑
+    // 读取 S.animControls，若此时尚为空/旧值，移动岛的主题地砖会被吸收成地板
+    // 矩形、写回时以新 id 挂到 Art 下重发射——永久脱离动画组（testice MidIsland
     // 岛分裂实证）。
-    S.moveControls = doc.moveControls?.groups ?? [];
+    S.animControls = (doc.animControls ?? doc.moveControls)?.groups ?? [];
     S.floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
     mergeRaftItemsIntoFloors();
     mergeThemedItemsIntoFloors();
@@ -129,7 +129,7 @@ export async function loadScene(assetPath: string) {
     S.switchLinks = doc.switchLinks ?? [];
     S.buttonLinks = doc.buttonLinks?.links ?? [];
     S.buttonEvents = doc.buttonEvents?.links ?? [];
-    cleanOrphanedMoveControls();
+    cleanOrphanedAnimControls();
     cleanOrphanedButtonLinks();
     cleanOrphanedButtonEvents();
     const itemTheme = inferBgThemeFromItems(S.items);
@@ -153,7 +153,7 @@ export async function loadScene(assetPath: string) {
       buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "", "floor");
     } else if (S.currentLayer === "background") {
       buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "", "background");
-    } else if (S.currentLayer === "move") {
+    } else if (S.currentLayer === "anim") {
       dom.paletteCats.innerHTML = "";
     }
     clearSelection();
@@ -163,16 +163,16 @@ export async function loadScene(assetPath: string) {
     hideDetail();
     S.history.clear();
     clearDirty();
-    S.activeMoveGroupId = null;
-    S.activeMoveEventIdx = null;
+    S.activeAnimGroupId = null;
+    S.activeAnimEventIdx = null;
     S.selectedWaypointId = null;
-    S.moveMode = "none";
-    S.activeMoveTab = "members";
-    S.movePickTargetGroupId = null;
+    S.animMode = "none";
+    S.activeAnimTab = "members";
+    S.animPickTargetGroupId = null;
     S.collapsedGroupIds = new Set<string>();
-    stopMovePreview();
+    stopAnimPreview();
     S.expandedMemberId = null;
-    if (S.currentLayer === "move") S.activeRightTab = "move";
+    if (S.currentLayer === "anim") S.activeRightTab = "anim";
     updatePanelTabButtons();
     draw();
     const floorNote = S.floors.length > 0 ? `、${S.floors.length} 块地板` : "";
@@ -234,12 +234,28 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     syncBackgroundForTheme(S.bgThemeKey);
     const addedBg = S.items.length > itemsBeforeSync;
 
-    const emptyDispensers = S.items.filter(
-      (it) => stubKindOf(it) === "Dispenser" && !it.dispenser?.spawnerItemPrefabGuid
-    );
-    if (emptyDispensers.length > 0) {
-      const names = emptyDispensers.map((it) => itemLabel(it)).join("、");
-      setStatus(`以下食材箱未设置食材，将配置为空食材箱（不报错）：${names}`, true);
+    // 写回强校验：普通食材箱（含背包，不含饮料/酱料机）必须配 1 种食材；
+    // 随机食材箱必须 ≥2 种候选。违规阻断写回并列出明细（后端同款兜底）。
+    const violations: string[] = [];
+    for (const it of S.items) {
+      if (stubKindOf(it) !== "Dispenser" || !it.dispenser) continue;
+      const pid = prefabIdFromPath(it.prefabAssetPath ?? "");
+      if (
+        pid === "dlc08_drink_machine" || pid === "dlc11_drink_dispenser" ||
+        pid === "dlc08_condiment_dispenser" || pid === "dlc11_condiment_dispenser"
+      )
+        continue;
+      const rndCount = it.dispenser.randomItemGuids?.length ?? 0;
+      const isRandom = pid === "RandomDispenser" || rndCount > 0;
+      if (isRandom) {
+        if (rndCount < 2) violations.push(`${itemLabel(it)}（随机食材箱至少 2 种候选）`);
+      } else if (!it.dispenser.spawnerItemPrefabGuid) {
+        violations.push(`${itemLabel(it)}（普通食材箱未设置食材）`);
+      }
+    }
+    if (violations.length > 0) {
+      setStatus(`写回被阻断，请先修复 ${violations.length} 处：${violations.join("、")}`, true);
+      return false;
     }
 
     await saveLayout(buildDocument(""), S.freeSnapStep, S.autoWalkable, "");

@@ -448,9 +448,9 @@ export function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | unde
 
 export function mergeRaftItemsIntoFloors(): void {
   const raftOf = (it: EditorItem) => S.catalogByGuid.get(it.prefabGuid)?.surfaceKind === "raft";
-  // 移动组成员不吸收（同 mergeThemedItemsIntoFloors：吸收会让成员脱离移动组）。
+  // 动画组成员不吸收（同 mergeThemedItemsIntoFloors：吸收会让成员脱离动画组）。
   const memberIds = new Set<string>();
-  for (const g of S.moveControls) {
+  for (const g of S.animControls) {
     for (const id of g.itemInstanceIds) memberIds.add(id);
   }
   const rafts = S.items.filter((it) => raftOf(it) && !(it.instanceId && memberIds.has(it.instanceId)));
@@ -559,12 +559,12 @@ export function mergeRaftItemsIntoFloors(): void {
 }
 
 export function mergeThemedItemsIntoFloors(): void {
-  // 移动组成员不能被吸收成地板矩形：吸收后 item 从 S.items 消失，
-  // cleanOrphanedMoveControls 会把它从组里剔除，写回时以 new:themed: 重新
-  // 发射（脱离移动组挂到 Art 下）——移动岛的地砖会永久脱离组、不再随组动画，
+  // 动画组成员不能被吸收成地板矩形：吸收后 item 从 S.items 消失，
+  // cleanOrphanedAnimControls 会把它从组里剔除，写回时以 new:themed: 重新
+  // 发射（脱离动画组挂到 Art 下）——移动岛的地砖会永久脱离组、不再随组动画，
   // 与仍在组里的崖/贴花分裂错位（testice MidIsland 实证）。保持为普通物品。
   const memberIds = new Set<string>();
-  for (const g of S.moveControls) {
+  for (const g of S.animControls) {
     for (const id of g.itemInstanceIds) memberIds.add(id);
   }
   const consumed = new Set<string>();

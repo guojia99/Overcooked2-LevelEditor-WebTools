@@ -15,9 +15,12 @@ import { selectionKeys } from "./selection";
 import { hideContextMenu } from "./ui/overlay";
 import {
   openFoodSpawnerEditor,
-  openIngredientMultiPicker
+  openIngredientMultiPicker,
+  openRandomCrateEditor
 } from "../modals";
 import { ingredientOptionLabel, visibleIngredients } from "../ingredientLabels";
+import { questionMarkLabel } from "./iconCaches";
+import { questionMarkIconUrl } from "../api";
 import type { IngredientEntry } from "../types";
 import {
   counterTypeOfItem,
@@ -62,6 +65,7 @@ import {
 
 export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Dispenser: "Dispenser",
+  RandomDispenser: "Dispenser",
   Backpack: "Dispenser",
   dlc08_drink_machine: "Dispenser",
   dlc11_drink_dispenser: "Dispenser",
@@ -372,9 +376,24 @@ export function stubControlsHtml(item: EditorItem): string {
       }
       const cur = item.dispenser?.spawnerItemPrefabGuid ?? "";
       const curIng = cur ? S.ingredientsCache.find((i) => i.guid === cur) : undefined;
+      const rndCount = item.dispenser?.randomItemGuids?.length ?? 0;
+      // 随机食材箱（RandomDispenser 道具，或历史遗留携带随机配置的箱子）：
+      // 只可编辑随机配置，禁止转回固定（无「选择…」/「取消随机」）。
+      const isRandomItem = prefabIdFromPath(item.prefabAssetPath) === "RandomDispenser" || rndCount > 0;
+      if (isRandomItem) {
+        const iconGuid = item.dispenser?.questionMarkGuid ?? "";
+        return `<div class="ctx-stub"><div class="ctx-stub-title">随机食材箱</div>
+          <div class="ctx-stub-row">图标 <img class="qm-thumb" src="${questionMarkIconUrl(iconGuid)}" alt="?" onerror="this.style.display='none'">
+          <span class="ctx-input">${escHtml(questionMarkLabel(iconGuid))}</span></div>
+          <div class="ctx-stub-row" style="font-size:12px">候选 ${rndCount} 种（每次取出 -1 配额，归零回满初始值）</div>
+          <button type="button" class="ctx-btn" id="ctx-stub-ing-random">随机食材（图标+多选+权重）…</button>
+          <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">随机食材箱不可转为固定食材；至少需要 2 种候选（写回校验）</div>
+          </div>`;
+      }
       return `<div class="ctx-stub"><div class="ctx-stub-title">${title}</div>
-        <label class="ctx-stub-row">${fieldLabel} <span class="ctx-input" style="opacity:${curIng ? 1 : 0.6}">${curIng ? escHtml(ingredientOptionLabel(curIng)) : "— 未设置 —"}</span>
+        <label class="ctx-stub-row">${fieldLabel} <span class="ctx-input" style="opacity:${curIng ? 1 : 0.6}">${curIng ? escHtml(ingredientOptionLabel(curIng)) : "— 未设置（写回将被阻断）—"}</span>
         <button type="button" class="ctx-btn" id="ctx-stub-ing-pick">选择…</button></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">普通食材箱必须设置一种食材（写回校验）；需要随机产出请放置「随机食材箱」道具</div>
         </div>`;
     }
     case "AttachingFoodSpawner": {
@@ -666,6 +685,31 @@ export function wireStubControls(item: EditorItem) {
           },
           undefined,
           { single: true, isDisabled: crateIngredientDisabled }
+        );
+      });
+      // 随机食材箱：图标样式 + 多选候选 + 权重（CustomStub.RandomCrate，代码随关卡包分发）。
+      // 仅随机食材箱面板渲染本按钮（普通食材箱禁止转入随机）。
+      document.getElementById("ctx-stub-ing-random")?.addEventListener("click", () => {
+        const ings = visibleIngredients(S.ingredientsCache).sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
+        hideContextMenu();
+        const curRnd = item.dispenser?.randomItemGuids ?? [];
+        const curW = item.dispenser?.randomWeights ?? [];
+        openRandomCrateEditor(
+          ings,
+          { guids: curRnd, weights: curW, iconGuid: item.dispenser?.questionMarkGuid ?? "" },
+          (guids, weights, iconGuid) => {
+            pushHistory();
+            item.stubKind = "Dispenser";
+            item.dispenser = {
+              // 随机模式：清空原固定食材参数（普通箱与随机箱已禁止互转）
+              spawnerItemPrefabGuid: "",
+              randomItemGuids: guids,
+              randomWeights: weights,
+              questionMarkGuid: iconGuid,
+            };
+            draw();
+            setStatus(`已设置随机食材箱（${guids.length} 种候选，写回后生效）`);
+          }
         );
       });
       break;

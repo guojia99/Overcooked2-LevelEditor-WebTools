@@ -1,0 +1,3 @@
+{
+  "_comment": "Optional per-recipe visual overrides for decor/recipes wrappers. Keys = recipe .asset id (no extension). soId = existing PseudoPrefabSO id to reference; prefabBase = manifest prefab basename when a new pseudo SO is needed."
+}

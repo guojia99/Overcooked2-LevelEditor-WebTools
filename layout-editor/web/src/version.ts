@@ -1,5 +1,5 @@
 /** 应用版本号（发版时手动更新）。 */
-export const APP_VERSION = "v0.6.0"
+export const APP_VERSION = "v0.7.0"
 
 /** 由 vite.config.ts 的 define 注入的构建时间（ISO 字符串）；未注入时回退到加载时间。 */
 declare const __APP_BUILD_TIME__: string | undefined;

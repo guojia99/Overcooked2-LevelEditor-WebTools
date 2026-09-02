@@ -6,6 +6,9 @@ import {
   INGREDIENT_CATEGORIES,
 } from "./ingredientLabels";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
+import { getQuestionMarkStyles } from "./editor/iconCaches";
+import { questionMarkIconUrl } from "./api";
+import { levelRequiredCrateIngredientIds } from "./editor/recipeKnowledge";
 
 /** Inline <img> for an ingredient/recipe: try the extracted icon PNG (unless explicitly known
  *  missing), else / on error fall back to the shared placeholder (MissingIngredient_Icon). */
@@ -308,6 +311,246 @@ export function openIngredientMultiPicker(
     onSave(guids);
     closeModal();
   });
+}
+
+/** 随机食材箱编辑器：图标样式单选 + 分组/分类/搜索筛选 + 一键填充本关所需 +
+ *  多选候选食材（初始配额默认 5）。候选 <2 时禁用确定（写回强校验的前端闸口）。 */
+export function openRandomCrateEditor(
+  ingredients: IngredientEntry[],
+  current: { guids: string[]; weights: number[]; iconGuid: string },
+  onSave: (guids: string[], weights: number[], iconGuid: string) => void
+) {
+  const styles = getQuestionMarkStyles();
+  let iconGuid = current.iconGuid || styles.find((s) => s.isDefault)?.guid || styles[0]?.guid || "";
+  const state = new Map<string, number>();
+  current.guids.forEach((g, i) => {
+    if (g) state.set(g, current.weights[i] != null && current.weights[i] >= 1 ? current.weights[i] : 5);
+  });
+
+  const styleRow = (): string =>
+    styles.length
+      ? `<div class="qm-style-row">${styles
+          .map(
+            (s) => `<label class="qm-style${s.guid === iconGuid ? " selected" : ""}" title="${s.name}">
+        <input type="radio" name="qm-style" value="${s.guid}" ${s.guid === iconGuid ? "checked" : ""}>
+        <img src="${questionMarkIconUrl(s.guid)}" alt="">
+        <span>${questionMarkZhLabel(s)}</span>
+      </label>`
+          )
+          .join("")}</div>`
+      : `<p class="modal-hint">图标样式列表加载中（保存后默认厨师帽样式）</p>`;
+
+  const card = (ing: IngredientEntry): string => {
+    const reason = ing.nodeOnly ? "node 型食材（无实体 prefab），食材箱无法生成" : null;
+    const checked = !reason && state.has(ing.guid);
+    const badge =
+      ing.group && ing.group !== "core" ? ` <span class="pc-badge">${foodGroupLabel(ing.group)}</span>` : "";
+    const en = (ing.nameEn && ing.nameEn.trim()) || "";
+    const w = state.get(ing.guid) ?? 5;
+    return `<div class="pick-card rc-card${checked ? " selected" : ""}${reason ? " pick-card-disabled" : ""}"${reason ? ` title="${reason}"` : ""}>
+      <label class="rc-card-main"><input type="checkbox" value="${ing.guid}" ${checked ? "checked" : ""} ${reason ? "disabled" : ""}>
+      ${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${badge}${reason ? ' <span class="pc-badge pc-badge-disabled">⛔ 禁用</span>' : ""}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></label>
+      <input type="number" class="rc-weight" data-guid="${ing.guid}" step="1" min="1" value="${w}" title="初始权重/配额（取出 -1，归零回满）">
+    </div>`;
+  };
+
+  // ---- 筛选（分组 tab + 分类 chips + 搜索），同 openIngredientMultiPicker 模式 ----
+  const groups = [...new Set(ingredients.map((i) => i.group ?? "other"))]
+    .filter((g) => g !== "core")
+    .sort();
+  const cats = INGREDIENT_CATEGORIES.filter((c) =>
+    ingredients.some((i) => ingredientCategoryOf(i.id) === c.key)
+  );
+  let activeGroup = "";
+  let activeCat = "";
+
+  const buildFiltered = (): string => {
+    const q = (document.getElementById("rc-search") as HTMLInputElement)?.value?.trim()?.toLowerCase() ?? "";
+    const catMatch = (i: IngredientEntry) => !activeCat || ingredientCategoryOf(i.id) === activeCat;
+    const textMatch = (i: IngredientEntry) =>
+      !q || i.nameZh.toLowerCase().includes(q) || (i.nameEn ?? "").toLowerCase().includes(q) || i.id.toLowerCase().includes(q);
+    let list: IngredientEntry[];
+    if (activeGroup === "__selected__") {
+      list = ingredients.filter((i) => state.has(i.guid) && textMatch(i));
+    } else if (activeGroup) {
+      list = ingredients.filter((i) => (i.group ?? "other") === activeGroup && catMatch(i) && textMatch(i));
+    } else {
+      list = ingredients.filter((i) => catMatch(i) && textMatch(i));
+    }
+    return `<div class="pick-grid">${list.map(card).join("")}</div>`;
+  };
+
+  const groupTabs = (): string => `
+    <div class="ing-groups">
+      <button type="button" class="ing-group-btn${activeGroup === "" ? " active" : ""}" data-group="">全部</button>
+      ${groups.map((g) => `        <button type="button" class="ing-group-btn${activeGroup === g ? " active" : ""}" data-group="${g}">${foodGroupLabel(g)}</button>${""}`).join("")}
+      <button type="button" class="ing-group-btn${activeGroup === "__selected__" ? " active" : ""}" data-group="__selected__" title="只显示已勾选的候选，便于审查与取消">✓ 已选 (${state.size})</button>
+    </div>`;
+  const catChips = (): string =>
+    cats.length > 1
+      ? `
+    <div class="ing-filter-bar ing-cat-bar">
+      <span class="ing-cat-label">分类</span>
+      <div class="ing-groups">
+        <button type="button" class="ing-group-btn${activeCat === "" ? " active" : ""}" data-cat="">全部</button>
+        ${cats.map((c) => `        <button type="button" class="ing-group-btn${activeCat === c.key ? " active" : ""}" data-cat="${c.key}">${c.label}</button>${""}`).join("")}
+      </div>
+    </div>`
+      : "";
+
+  const applyFilter = (): void => {
+    const container = document.getElementById("rc-container");
+    if (container) container.innerHTML = buildFiltered();
+    const tabs = document.getElementById("rc-groups");
+    if (tabs) tabs.innerHTML = groupTabs();
+    const chips = document.getElementById("rc-cats");
+    if (chips) chips.innerHTML = catChips();
+    bindGrid();
+    bindTabs();
+  };
+
+  openModal(
+    "随机食材箱 · 图标与候选",
+    `<p class="modal-hint">问号图标样式（盖子显示）· 候选至少 2 种 · 初始配额（取出 -1，归零回满，默认 5）</p>
+     ${styleRow()}
+     <div class="ing-filter-bar">
+       <input type="search" id="rc-search" class="ing-search" placeholder="搜索食材…" />
+       <button type="button" class="ing-group-btn" id="rc-fill-required" title="勾选本关已保存菜谱所需的全部叶食材（机器产出的汽水/饮料/奶油除外）">⚡ 填充本关所需</button>
+       <span id="rc-fill-note" class="muted" style="font-size:11px"></span>
+     </div>
+     <div class="ing-filter-bar" id="rc-groups">${groupTabs()}</div>
+     <div id="rc-cats">${catChips()}</div>
+     <div class="modal-scroll" id="rc-container">${buildFiltered()}</div>`,
+    `<button type="button" class="modal-btn" data-cancel>取消</button>
+     <button type="button" class="modal-btn primary" data-ok>确定</button>`
+  );
+
+  const panel = document.querySelector(".modal-panel");
+  if (panel) {
+    panel.classList.add("wide");
+    panel.classList.add("qm-editor");
+  }
+
+  const updateOk = (): void => {
+    const ok = document.querySelector<HTMLButtonElement>("[data-ok]");
+    if (ok) {
+      ok.disabled = state.size < 2;
+      ok.textContent = state.size > 0 ? `确定（已选 ${state.size} 种）` : "确定";
+    }
+  };
+
+  const bindGrid = (): void => {
+    document.querySelectorAll<HTMLInputElement>("#rc-container .rc-card input[type=checkbox]").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const cardEl = cb.closest(".pick-card");
+        if (cb.checked) {
+          const wInput = cardEl?.querySelector<HTMLInputElement>(".rc-weight");
+          const w = parseFloat(wInput?.value ?? "5");
+          state.set(cb.value, isFinite(w) && w >= 1 ? w : 5);
+          cardEl?.classList.add("selected");
+        } else {
+          state.delete(cb.value);
+          cardEl?.classList.remove("selected");
+        }
+        updateOk();
+        // 已选 tab 的计数随勾选联动
+        const sel = document.querySelector<HTMLButtonElement>('.ing-group-btn[data-group="__selected__"]');
+        if (sel) sel.textContent = `✓ 已选 (${state.size})`;
+      });
+    });
+    document.querySelectorAll<HTMLInputElement>("#rc-container .rc-weight").forEach((inp) => {
+      inp.addEventListener("change", () => {
+        if (!state.has(inp.dataset.guid ?? "")) return;
+        const w = parseFloat(inp.value);
+        if (isFinite(w) && w >= 1) state.set(inp.dataset.guid ?? "", w);
+        else inp.value = String(state.get(inp.dataset.guid ?? "") ?? 5);
+      });
+    });
+  };
+
+  const bindTabs = (): void => {
+    document.querySelectorAll<HTMLButtonElement>("#rc-groups .ing-group-btn[data-group]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeGroup = btn.dataset.group ?? "";
+        applyFilter();
+      });
+    });
+    document.querySelectorAll<HTMLButtonElement>("#rc-cats .ing-group-btn[data-cat]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeCat = btn.dataset.cat ?? "";
+        applyFilter();
+      });
+    });
+  };
+
+  bindGrid();
+  bindTabs();
+  updateOk();
+
+  document.querySelectorAll<HTMLInputElement>(".qm-style input[type=radio]").forEach((radio) => {
+    radio.addEventListener("change", () => {
+      iconGuid = radio.value;
+      document.querySelectorAll(".qm-style").forEach((el) => el.classList.remove("selected"));
+      radio.closest(".qm-style")?.classList.add("selected");
+    });
+  });
+
+  document.getElementById("rc-search")?.addEventListener("input", applyFilter);
+
+  // 一键填充本关所需（菜谱叶食材展开；已勾选的保留原配额，仅补充缺失项）
+  document.getElementById("rc-fill-required")?.addEventListener("click", async () => {
+    const note = document.getElementById("rc-fill-note");
+    if (note) note.textContent = "计算中…";
+    const ids = await levelRequiredCrateIngredientIds();
+    let added = 0;
+    let skipped = 0;
+    for (const id of ids) {
+      const ing = ingredients.find((i) => i.id === id);
+      if (!ing || ing.nodeOnly) {
+        skipped++;
+        continue;
+      }
+      if (!state.has(ing.guid)) {
+        state.set(ing.guid, 5);
+        added++;
+      }
+    }
+    if (note)
+      note.textContent = ids.length
+        ? `本关所需 ${ids.length} 项：新增 ${added}，已有 ${ids.length - added}${skipped ? `，跳过 ${skipped}` : ""}`
+        : "本关未找到已保存的菜谱（先在菜谱页配置）";
+    activeGroup = "__selected__";
+    applyFilter();
+    updateOk();
+  });
+
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", () => {
+    if (state.size < 2) return;
+    const guids = [...state.keys()];
+    const weights = guids.map((g) => state.get(g) ?? 1);
+    onSave(guids, weights, iconGuid);
+    closeModal();
+  });
+}
+
+/** 图标样式的中文标签（文件名 → 中文）。 */
+function questionMarkZhLabel(style: { name: string }): string {
+  const map: Record<string, string> = {
+    question_mark_chef_hat: "厨师帽问号",
+    question_mark_blue: "蓝色问号",
+    question_mark_brown: "棕色问号",
+    question_mark_gray: "灰色问号",
+    question_mark_green: "绿色问号",
+    question_mark_orange: "橙色问号",
+    question_mark_pink: "粉色问号",
+    question_mark_purple: "紫色问号",
+    question_mark_red: "红色问号",
+    question_mark_yellow: "黄色问号",
+    question_mark_food: "食物问号",
+    question_mark_theme: "主题色问号",
+  };
+  return map[style.name] ?? style.name;
 }
 
 export function openRecipePicker(

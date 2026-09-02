@@ -84,7 +84,7 @@ public static class SceneFloorExporter
     /// 故不能像空气墙那样用高度魔法数识别。</summary>
     private static void TryAddAirFloor(GameObject go, Transform t, List<FloorDto> floors)
     {
-        // 移动组烘焙后的岛式层级：AirFloor / Ground（对齐 oc1_story 3-4 Island/Ground）。
+        // 动画组烘焙后的岛式层级：AirFloor / Ground（对齐 oc1_story 3-4 Island/Ground）。
         if (go.name == AirFloorRig.GroundChildName && t.parent != null
             && AirFloorRig.IsWrapperName(t.parent.name))
         {
@@ -105,7 +105,7 @@ public static class SceneFloorExporter
         if (b.size.x <= 0.001f || b.size.z <= 0.001f)
             return;
 
-        // 写回失败重试会在移动组里堆 Col_AirFloor (1)… 副本；只导出同尺寸同位置
+        // 写回失败重试会在动画组里堆 Col_AirFloor (1)… 副本；只导出同尺寸同位置
         // 的第一个，避免 web 文档出现多条空气地板、下次写回再克隆一轮。
         foreach (var existing in floors)
         {

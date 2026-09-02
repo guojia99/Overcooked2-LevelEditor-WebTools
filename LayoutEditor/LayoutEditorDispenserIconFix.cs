@@ -34,6 +34,11 @@ public static class LayoutEditorDispenserIconFix
 {
     private const string Tag = "[dispenser-icon] ";
 
+    /// <summary>图标同步完成后的扩展钩子（SyncSeededIcons 末尾调用；SafeReinit /
+    ///  ReloadPseudoAssets / 自愈守卫等全部初始化路径都汇聚于此）。解耦：无订阅者
+    /// 行为不变——CustomStubAutoBake 订阅它来同步随机食材箱的问号箱盖。</summary>
+    public static Action AfterRandomCrateSync;
+
     private static FieldInfo _bundleDictField;
 
     private static FieldInfo BundleDictField
@@ -240,6 +245,17 @@ public static class LayoutEditorDispenserIconFix
         }
         if (seededSeen > 0)
             LayoutEditorLog.Log(Tag + "Sync 完成: 种子箱 " + seededSeen + " 个，同步成功 " + synced + " 个");
+        if (AfterRandomCrateSync != null)
+        {
+            try
+            {
+                AfterRandomCrateSync();
+            }
+            catch (Exception ex)
+            {
+                LayoutEditorLog.LogWarning(Tag + "AfterRandomCrateSync 扩展钩子异常: " + ex.Message);
+            }
+        }
     }
 
     private static bool SeedPrefab(PseudoPrefabSO so)

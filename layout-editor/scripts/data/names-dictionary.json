@@ -3,6 +3,11 @@
   "comment": "Display-name dictionary shared by build-catalog.mjs and LayoutEditorManualLookup.cs. Lookup order: this file -> 使用手册.md -> id fallback. names[]: id = asset file name without extension.",
   "names": [
     {
+      "id": "RandomDispenser",
+      "zh": "随机食材箱",
+      "en": "Random Dispenser"
+    },
+    {
       "id": "1_2_float",
       "zh": "1 2 浮筒",
       "en": "1 2 float"

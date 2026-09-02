@@ -194,6 +194,7 @@ export function buildPalette(catalog: Catalog, filter: string) {
       row.dataset.guid = it.guid;
       const animDecor = it.layoutTier === "decor" ? matchBuiltinAnimDecor(it.id, it.nameZh) : null;
       const foodDecor = it.ingredientDecor === true;
+      const recipeDecor = it.recipeDecor === true;
       const decorSize =
         it.layoutTier === "decor"
           ? ` <span class="decor-size-badge" title="尺寸分级：按实测占位（footprint）最大边判定">${DECOR_SIZE_LABEL_ZH[decorSizeTier(it)]}</span>`
@@ -201,12 +202,16 @@ export function buildPalette(catalog: Catalog, filter: string) {
       const sub = it.stack
         ? `<div class="sub">配套${hostRuleLabelZh(it.stack.hostRule)} · 高 ${it.stack.y}m</div>`
         : it.layoutTier === "decor"
-          ? `<div class="sub">装饰${foodDecor ? " · 食材" : ""}${decorSize}${animDecor ? ` · ${animDecor.emoji} ${animDecor.badgeZh}` : ""}</div>`
+          ? `<div class="sub">装饰${foodDecor ? " · 食材" : recipeDecor ? " · 成品菜" : ""}${decorSize}${animDecor ? ` · ${animDecor.emoji} ${animDecor.badgeZh}` : ""}</div>`
           : "";
       const skins = skinCounts.get(it.id) ?? 1;
       const skinBadge =
         skins > 1 ? ` <span class="variant-badge" title="同功能换肤 ${skins} 种：放置后右键可切换">×${skins}</span>` : "";
-      const thumb = it.ingredientDecor ? foodIconImg("ingredients", it.id, true) : "";
+      const thumb = it.ingredientDecor
+        ? foodIconImg("ingredients", it.id, true)
+        : it.recipeDecor
+          ? foodIconImg("recipes", it.id, true)
+          : "";
       row.innerHTML = `${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
       if (animDecor) {
         row.title = animDecor.title;

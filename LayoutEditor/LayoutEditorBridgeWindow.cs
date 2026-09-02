@@ -168,6 +168,52 @@ public class LayoutEditorBridgeWindow : EditorWindow
             LayoutEditorBundleDumper.Dump();
         if (GUILayout.Button("导出全部素材图", GUILayout.Height(26)))
             LayoutEditorImageExporter.Export();
+
+        GUILayout.Space(8f);
+        EditorGUILayout.LabelField("CustomStub（随机食材箱等 · 代码随关卡包分发）", EditorStyles.boldLabel);
+        // 反射软调用：LayoutStubDllBuilder / CustomStubCopyTool 属可选扩展，
+        // 缺失时按钮置灰而不是编译失败（LayoutEditor 本体零依赖）。
+        var dllBuilderType = FindCustomStubExtension("LayoutStubDllBuilder");
+        var copyToolType = FindCustomStubExtension("CustomStubCopyTool");
+        GUI.enabled = dllBuilderType != null;
+        if (GUILayout.Button("打包输出 Stub DLL（全部关卡集 → runtime bundle）", GUILayout.Height(26)))
+            InvokeCustomStubExtension(dllBuilderType, "StageAllManual");
+        GUI.enabled = copyToolType != null;
+        if (GUILayout.Button("拷贝 CustomStub 母本到关卡集…", GUILayout.Height(26)))
+            InvokeCustomStubExtension(copyToolType, "OpenWindow");
+        GUI.enabled = true;
+    }
+
+    /// <summary>按类名定位可选扩展类型（CustomStub 打包工具等）；缺失返回 null。</summary>
+    private static Type FindCustomStubExtension(string typeName)
+    {
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var t = asm.GetType(typeName, false);
+            if (t != null)
+                return t;
+        }
+        return null;
+    }
+
+    private static void InvokeCustomStubExtension(Type type, string methodName)
+    {
+        if (type == null)
+            return;
+        var method = type.GetMethod(methodName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        if (method == null)
+        {
+            Debug.LogWarning("[LayoutEditor] 扩展方法缺失: " + type.Name + "." + methodName);
+            return;
+        }
+        try
+        {
+            method.Invoke(null, null);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+        }
     }
 }
 

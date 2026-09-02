@@ -29,7 +29,7 @@ import type {
   LayoutItem,
   FloorObject,
   LayoutDocument,
-  MoveControlData,
+  AnimControlData,
   ButtonLinkData,
   ButtonEventData
 } from "../types";
@@ -87,6 +87,14 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
     }
     delete rest.stubKind;
     delete rest.ingredientDecor;
+  }
+  if (rest.prefabAssetPath?.includes("/common03/prefabs/") && rest.prefabAssetPath.includes("/decor/")) {
+    const decorId = prefabIdFromPath(rest.prefabAssetPath);
+    const wrapper = decorId ? catalogItemById(decorId) : undefined;
+    if (wrapper?.assetPath.includes("/commonW1/")) {
+      rest.prefabGuid = wrapper.guid;
+      rest.prefabAssetPath = wrapper.assetPath;
+    }
   }
   const ly = rest.localPosition?.y ?? 0;
   const unityXZ = editorItemUnityWorldXZ({ _wx, _wz, localRotationY: rest.localRotationY, prefabAssetPath: rest.prefabAssetPath, prefabGuid: rest.prefabGuid });
@@ -175,7 +183,7 @@ export function buildThemedItemsForDoc(): LayoutItem[] {
     // The themed item IS the floor's scene object — share the floor's own
     // instanceId (always a unique "new:…" id) instead of minting a fresh one.
     // Unifying the ids lets the backend resolve the floor to this GameObject
-    // (createdObjects[floor.instanceId]) so move-group bindings and the walkable
+    // (createdObjects[floor.instanceId]) so anim-group bindings and the walkable
     // Col_Floor attach to it; otherwise the floor id maps to nothing and the
     // themed floor never joins its move group ("绑定地板写回后没绑定").
     const id = f.instanceId && f.instanceId.startsWith("new:")
@@ -201,20 +209,20 @@ export function buildThemedItemsForDoc(): LayoutItem[] {
 }
 
 export function buildDocument(only: SaveScope = ""): LayoutDocument {
-  const moveDoc = (): MoveControlData | undefined => {
+  const animDoc = (): AnimControlData | undefined => {
     // Move controls are baked straight into the scene (no external config) and are
     // only ever written on FULL saves — scoped saves must not touch existing groups.
     if (only) return undefined;
-    return { groups: S.moveControls };
+    return { groups: S.animControls };
   };
 
-  // 按钮↔移动组联动引用移动组，与 moveControls 一样只在全量保存时携带。
+  // 按钮↔动画组联动引用动画组，与 animControls 一样只在全量保存时携带。
   const buttonLinkDoc = (): ButtonLinkData | undefined => {
     if (only) return undefined;
     return { links: S.buttonLinks };
   };
 
-  // 按钮↔事件组联动引用场景物品，与 moveControls 一样只在全量保存时携带。
+  // 按钮↔事件组联动引用场景物品，与 animControls 一样只在全量保存时携带。
   const buttonEventDoc = (): ButtonEventData | undefined => {
     if (only) return undefined;
     return { links: S.buttonEvents };
@@ -227,7 +235,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
         .filter((it) => itemLayerOfIt(it) === only)
         .map(serializeItemForDoc),
       floors: undefined,
-      moveControls: moveDoc(),
+      animControls: animDoc(),
       // 开关联动随 items/decor 作用域一起写（链接两端都在物品层）
       switchLinks: S.switchLinks,
     };
@@ -252,7 +260,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
         .concat(raftItems)
         .concat(themedItems),
       floors: serializeFloorsForDoc(),
-      moveControls: moveDoc(),
+      animControls: animDoc(),
     };
   }
 
@@ -260,7 +268,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     sceneAssetPath: S.scenePath,
     items: S.items.map(serializeItemForDoc).concat(raftItems).concat(themedItems),
     floors: serializeFloorsForDoc(),
-    moveControls: moveDoc(),
+    animControls: animDoc(),
     switchLinks: S.switchLinks,
     buttonLinks: buttonLinkDoc(),
     buttonEvents: buttonEventDoc(),
@@ -273,8 +281,8 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
 }
 
 export function scopedSaveMeta(): { scope: SaveScope; label: string; title: string } {
-  if (S.currentLayer === "move") {
-    return { scope: "", label: "🎬 移动组+全部", title: "移动层写回：连同物品/地板/背景一起保存（移动组需要完整文档）" };
+  if (S.currentLayer === "anim") {
+    return { scope: "", label: "🎬 动画组+全部", title: "动画层写回：连同物品/地板/背景一起保存（动画组需要完整文档）" };
   }
   if (S.currentLayer === "decor") {
     return { scope: "decor", label: "🎯 仅装饰", title: "仅写回装饰（不修改物品、地板、背景）" };

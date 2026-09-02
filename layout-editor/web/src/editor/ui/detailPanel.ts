@@ -32,6 +32,7 @@ import {
   surfaceKindLabelZh
 } from "../../floorColors";
 import { tidyCatalogNameZh } from "../../displayLabels";
+import { questionMarkLabel } from "../iconCaches";
 import { ingredientNameZh, ingredientOptionLabel } from "../../ingredientLabels";
 import {
   findStackHost,
@@ -301,6 +302,9 @@ function dispenserDetailHtml(item: EditorItem): string {
     });
     return `<dt>输出（开关循环）</dt><dd>${names.join(" → ")}</dd>`;
   }
+  const rndCount = item.dispenser?.randomItemGuids?.length ?? 0;
+  if (rndCount)
+    return `<dt>食材</dt><dd>随机 ${rndCount} 种（${escHtml(questionMarkLabel(item.dispenser?.questionMarkGuid ?? ""))} · 取出 -1 归零回满）</dd>`;
   return `<dt>食材</dt><dd>${ingredientNameZh(S.ingredientsCache, item.dispenser?.spawnerItemPrefabGuid)}</dd>`;
 }
 

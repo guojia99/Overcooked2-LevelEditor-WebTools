@@ -42,7 +42,7 @@ import {
   drawKillPlanes,
   drawVoidHatch
 } from "./renderFloors";
-import { drawMoveControlOverlay, previewMemberPositions } from "./moveControl";
+import { drawAnimControlOverlay, previewMemberPositions, previewFxState } from "./animControl";
 import { floorInHeightFilter, itemInHeightFilter } from "./floorHeight";
 import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks } from "./renderItems";
 import { drawServingLinks } from "./servingLinks";
@@ -283,7 +283,7 @@ export function updateMarqueeSelection() {
   };
   // Move layer in members mode: marquee selects items AND floors across ALL layers.
   // Pure background content (water, sky…) is never selectable as a member.
-  if (S.currentLayer === "move" && S.moveMode === "members") {
+  if (S.currentLayer === "anim" && S.animMode === "members") {
     const next = S.marqueeAdd ? new Set(S.selectedKeys) : new Set<string>();
     for (const it of S.items) {
       if (isCollisionItem(it) && !isAirWallItem(it)) continue;
@@ -296,7 +296,7 @@ export function updateMarqueeSelection() {
     const nextFloors = S.marqueeAdd ? new Set(S.selectedFloorKeys) : new Set<string>();
     for (const f of S.floors) {
       if (f.surfaceKind === "background") continue;
-      // 空气地板（仅碰撞盒）允许框选入组：其碰撞盒对象随移动组动画一起走。
+      // 空气地板（仅碰撞盒）允许框选入组：其碰撞盒对象随动画组动画一起走。
       if (!categoryVisible(floorCategoryOf(f))) continue;
       if (inRect(f._wx, f._wz)) nextFloors.add(f._key);
     }
@@ -343,11 +343,11 @@ export function updateMarqueeSelection() {
   S.selectedKey = keys.length ? keys[keys.length - 1] : null;
 }
 
-type PreviewPosMap = Map<string, { x: number; z: number; y?: number }> | null;
+type PreviewPosMap = Map<string, { x: number; z: number; y?: number; rotY?: number }> | null;
 
-/** Draw an item at its preview position when the move preview is playing:
- *  a dim ghost stays at the original spot while the item itself moves (drawn at
- *  full opacity so it stays visible even inside the dimmed inactive pass). */
+/** Draw an item at its preview pose when the anim preview is playing:
+ *  a dim ghost stays at the original spot while the item itself moves/rotates
+ *  (drawn at full opacity so it stays visible even inside the dimmed inactive pass). */
 function drawItemPreview(item: EditorItem, selected: boolean, pos: PreviewPosMap): void {
   const pp = pos?.get(item.instanceId);
   if (!pp) {
@@ -360,7 +360,15 @@ function drawItemPreview(item: EditorItem, selected: boolean, pos: PreviewPosMap
   dom.ctx.restore();
   dom.ctx.save();
   dom.ctx.globalAlpha = 1;
-  drawItem({ ...item, _wx: pp.x, _wz: pp.z }, selected);
+  drawItem(
+    {
+      ...item,
+      _wx: pp.x,
+      _wz: pp.z,
+      localRotationY: pp.rotY != null ? item.localRotationY + pp.rotY : item.localRotationY,
+    },
+    selected
+  );
   dom.ctx.restore();
 }
 
@@ -373,7 +381,7 @@ function drawPreviewFloorGhosts(pos: PreviewPosMap): void {
     const pp = pos.get(f.instanceId);
     if (!pp) continue;
     const c = worldToCanvas(pp.x, pp.z);
-    const rad = (-normalizeRot(f.localRotationY) * Math.PI) / 180;
+    const rad = (-normalizeRot(f.localRotationY + (pp.rotY ?? 0)) * Math.PI) / 180;
     const w = f._wCells * cellPx;
     const h = f._dCells * cellPx;
     dom.ctx.save();
@@ -400,6 +408,9 @@ export function draw() {
   // Move-preview playback: per-frame simulated positions of the previewed
   // group's members, so the actual components visibly move along the route.
   const previewPos = previewMemberPositions();
+  // 全屏特效预览：抖动 = 整个世界层平移（背景留驻，模拟相机抖出画框）；
+  // 闪光 = 最后叠一层全屏 overlay。
+  const fx = previewFxState();
 
   const onFloor = isFloorLikeLayer(S.currentLayer);
   const layerBg = S.currentLayer === "background";
@@ -412,6 +423,13 @@ export function draw() {
       : null;
   dom.ctx.fillStyle = camVoidBg ?? (onFloor ? theme.fill : "#1a1d23");
   dom.ctx.fillRect(0, 0, w, h);
+
+  // 相机抖动：世界层整体偏移（网格 / 地板 / 物品 / 相机视野全部随之）。
+  const shaking = fx && (Math.abs(fx.shakeX) >= 0.05 || Math.abs(fx.shakeY) >= 0.05);
+  if (shaking) {
+    dom.ctx.save();
+    dom.ctx.translate(fx.shakeX, fx.shakeY);
+  }
 
   if (onFloor) drawVoidHatch(theme.hatch);
 
@@ -528,7 +546,7 @@ export function draw() {
       }
       if (rest.length > 0) {
         dom.ctx.save();
-        dom.ctx.globalAlpha = S.moveMode === "members" ? 0.6 : 0.32;
+        dom.ctx.globalAlpha = S.animMode === "members" ? 0.6 : 0.32;
         for (const it of rest) drawItemPreview(it, false, previewPos);
         dom.ctx.restore();
       }
@@ -550,15 +568,27 @@ export function draw() {
     drawServingLinks();
   }
 
-  if ((!isFloorLikeLayer(S.currentLayer) || S.activeMoveGroupId) &&
-      (S.activeRightTab === "move" || S.activeMoveGroupId)) {
+  if ((!isFloorLikeLayer(S.currentLayer) || S.activeAnimGroupId) &&
+      (S.activeRightTab === "anim" || S.activeAnimGroupId)) {
     drawPreviewFloorGhosts(previewPos);
-    drawMoveControlOverlay();
+    drawAnimControlOverlay();
   }
 
   if (S.showCameraFov) drawCameraFrustum();
 
   if (S.showCoords) drawCoordAxes();
+
+  // 结束相机抖动平移（marquee 是 UI 框选反馈，不参与抖动；闪光 overlay 全屏固定）。
+  if (shaking) dom.ctx.restore();
+
+  // 闪电 overlay：全屏闪电色闪光（强度 → 透明度，峰值 4 → ~0.7 封顶）。
+  if (fx && fx.flash > 0.001) {
+    dom.ctx.save();
+    dom.ctx.globalAlpha = Math.min(0.85, fx.flash / 6);
+    dom.ctx.fillStyle = fx.flashColor;
+    dom.ctx.fillRect(0, 0, w, h);
+    dom.ctx.restore();
+  }
 
   if (S.marqueeing) drawMarquee();
 

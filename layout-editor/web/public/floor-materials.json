@@ -1,8 +1,80 @@
 {
-  "generatedAt": "2026-08-29T14:33:09.437Z",
+  "generatedAt": "2026-09-01T17:33:51.481Z",
   "schemaVersion": 3,
   "itemCount": 36,
   "materials": [
+    {
+      "guid": "531c9b7e1aadccc448da5969d378cb28",
+      "id": "mat_wizard_woodfloor_tile_2x3",
+      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_woodfloor_tile_2x3.mat",
+      "nameZh": "魔法学校木地板砖 2×3",
+      "nameEn": "wizard wood floor tile 2x3",
+      "sizeTag": "2x3",
+      "source": "test"
+    },
+    {
+      "guid": "b5bb0b69a2422624187812668f893e67",
+      "id": "mat_wizard_stonefloor_tile_03",
+      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_03.mat",
+      "nameZh": "魔法学校石地板砖 03",
+      "nameEn": "wizard stone floor tile 03",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "fbeb1f610964b1847be6ea4f6cbf2c51",
+      "id": "mat_wizard_stonefloor_tile_04",
+      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_04.mat",
+      "nameZh": "魔法学校石地板砖 04",
+      "nameEn": "wizard stone floor tile 04",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "883a54ac74a33314292e55f09d097ee0",
+      "id": "mat_wizard_stonefloor_tile_05",
+      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_05.mat",
+      "nameZh": "魔法学校石地板砖 05",
+      "nameEn": "wizard stone floor tile 05",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "78aeccbc049bea946ae339f444c55ca9",
+      "id": "mat_airballoon_floor_01",
+      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_01.mat",
+      "nameZh": "热气球地板 1",
+      "nameEn": "air balloon floor 1",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "2de46e4ca11253149b801ae68e0ace87",
+      "id": "mat_airballoon_floor_02",
+      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_02.mat",
+      "nameZh": "热气球地板 2",
+      "nameEn": "air balloon floor 2",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "965dc41046ca35c48841be89c4e0250d",
+      "id": "mat_airballoon_floor_tile_05",
+      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_tile_05.mat",
+      "nameZh": "热气球地板砖 05",
+      "nameEn": "air balloon floor tile 05",
+      "sizeTag": "",
+      "source": "test"
+    },
+    {
+      "guid": "b0fc584fedd6a1542a1e8f77f595c4ba",
+      "id": "mat_airballoon_floor_tile_08",
+      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_tile_08.mat",
+      "nameZh": "热气球地板砖 08",
+      "nameEn": "air balloon floor tile 08",
+      "sizeTag": "",
+      "source": "test"
+    },
     {
       "guid": "335108659516380429dbf8841580462b",
       "id": "mat_kevin_floor_12x8",
@@ -56,78 +128,6 @@
       "nameEn": "kevin floor 6x4",
       "sizeTag": "6x4",
       "source": "oc1_story"
-    },
-    {
-      "guid": "78aeccbc049bea946ae339f444c55ca9",
-      "id": "mat_airballoon_floor_01",
-      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_01.mat",
-      "nameZh": "热气球地板 1",
-      "nameEn": "air balloon floor 1",
-      "sizeTag": "",
-      "source": "test"
-    },
-    {
-      "guid": "2de46e4ca11253149b801ae68e0ace87",
-      "id": "mat_airballoon_floor_02",
-      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_02.mat",
-      "nameZh": "热气球地板 2",
-      "nameEn": "air balloon floor 2",
-      "sizeTag": "",
-      "source": "test"
-    },
-    {
-      "guid": "965dc41046ca35c48841be89c4e0250d",
-      "id": "mat_airballoon_floor_tile_05",
-      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_tile_05.mat",
-      "nameZh": "热气球地板砖 05",
-      "nameEn": "air balloon floor tile 05",
-      "sizeTag": "",
-      "source": "test"
-    },
-    {
-      "guid": "b0fc584fedd6a1542a1e8f77f595c4ba",
-      "id": "mat_airballoon_floor_tile_08",
-      "assetPath": "Assets/LevelSets/test/materials/mat_airballoon_floor_tile_08.mat",
-      "nameZh": "热气球地板砖 08",
-      "nameEn": "air balloon floor tile 08",
-      "sizeTag": "",
-      "source": "test"
-    },
-    {
-      "guid": "531c9b7e1aadccc448da5969d378cb28",
-      "id": "mat_wizard_woodfloor_tile_2x3",
-      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_woodfloor_tile_2x3.mat",
-      "nameZh": "魔法学校木地板砖 2×3",
-      "nameEn": "wizard wood floor tile 2x3",
-      "sizeTag": "2x3",
-      "source": "test"
-    },
-    {
-      "guid": "b5bb0b69a2422624187812668f893e67",
-      "id": "mat_wizard_stonefloor_tile_03",
-      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_03.mat",
-      "nameZh": "魔法学校石地板砖 03",
-      "nameEn": "wizard stone floor tile 03",
-      "sizeTag": "",
-      "source": "test"
-    },
-    {
-      "guid": "fbeb1f610964b1847be6ea4f6cbf2c51",
-      "id": "mat_wizard_stonefloor_tile_04",
-      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_04.mat",
-      "nameZh": "魔法学校石地板砖 04",
-      "nameEn": "wizard stone floor tile 04",
-      "sizeTag": "",
-      "source": "test"
-    },
-    {
-      "guid": "883a54ac74a33314292e55f09d097ee0",
-      "id": "mat_wizard_stonefloor_tile_05",
-      "assetPath": "Assets/LevelSets/test/materials/mat_wizard_stonefloor_tile_05.mat",
-      "nameZh": "魔法学校石地板砖 05",
-      "nameEn": "wizard stone floor tile 05",
-      "sizeTag": "",
-      "source": "test"
     },
     {
       "guid": "1be52d52d36440a418c00fc0ea4a1615",
@@ -292,20 +292,20 @@
       "source": "test"
     },
     {
-      "guid": "96593a1841f16a94cbb2f9c6b8f14a6e",
-      "id": "mat_dlc3_skybox",
-      "assetPath": "Assets/common01/materials/mat_dlc3_skybox.mat",
-      "nameZh": "DLC3 天空盒",
-      "nameEn": "dlc3 skybox",
-      "sizeTag": "",
-      "source": "common01"
-    },
-    {
       "guid": "81091d99d5574cf4097b0e3e89b2605a",
       "id": "mat_sunny3_skybox",
       "assetPath": "Assets/common01/materials/mat_sunny3_skybox.mat",
       "nameZh": "晴天天空盒",
       "nameEn": "sunny3 skybox",
+      "sizeTag": "",
+      "source": "common01"
+    },
+    {
+      "guid": "96593a1841f16a94cbb2f9c6b8f14a6e",
+      "id": "mat_dlc3_skybox",
+      "assetPath": "Assets/common01/materials/mat_dlc3_skybox.mat",
+      "nameZh": "DLC3 天空盒",
+      "nameEn": "dlc3 skybox",
       "sizeTag": "",
       "source": "common01"
     },

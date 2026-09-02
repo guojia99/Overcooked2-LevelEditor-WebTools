@@ -5,6 +5,7 @@ import {
 } from "./state";
 import { dom } from "./dom";
 import { setStatus } from "./status";
+import { loadQuestionMarks } from "./iconCaches";
 import {
   loadCatalog,
   fetchHealth,
@@ -83,7 +84,7 @@ const LAYER_LABEL: Record<LayerKey, string> = {
   decor: "装饰层",
   floor: "地板层",
   background: "背景层",
-  move: "移动层",
+  anim: "动画层",
 };
 
 /** Reflect S.layerVisibility of the current layer into the popover checkboxes.
@@ -150,7 +151,7 @@ export function syncFloorHeightUI(layer = S.currentLayer): void {
   if (applies) refreshFloorHeightPanel();
 }
 
-/** Programmatic layer switch (used by the layer tabs and the move-layer wizards). */
+/** Programmatic layer switch (used by the layer tabs and the anim-layer wizards). */
 export function setLayer(layer: LayerKey): void {
   if (layer === S.currentLayer) return;
   S.currentLayer = layer;
@@ -172,10 +173,10 @@ export function setLayer(layer: LayerKey): void {
   S.selectedWaypointId = null;
   S.expandedMemberId = null;
   // Leaving the move layer cancels any member/waypoint pick mode.
-  if (layer !== "move") {
-    S.moveMode = "none";
+  if (layer !== "anim") {
+    S.animMode = "none";
   }
-  if (layer === "move") S.activeRightTab = "move";
+  if (layer === "anim") S.activeRightTab = "anim";
   updatePanelTabButtons();
   syncVisibilityPopover();
   const searchEl = document.getElementById("palette-search") as HTMLInputElement;
@@ -188,8 +189,8 @@ export function setLayer(layer: LayerKey): void {
   } else if (layer === "background") {
     searchEl.placeholder = "搜索背景 / 水面 / 环境…";
     buildFloorPalette(searchEl.value, "background");
-  } else if (layer === "move") {
-    searchEl.placeholder = "移动层：管理可移动物品组";
+  } else if (layer === "anim") {
+    searchEl.placeholder = "动画层：管理可移动物品组";
     dom.paletteCats.innerHTML = "";
   } else if (layer === "decor") {
     searchEl.placeholder = "搜索装饰…";
@@ -223,6 +224,8 @@ export async function init() {
     if (!S.catalogById.has(it.id)) S.catalogById.set(it.id, it);
   }
   S.ingredientsCache = await fetchIngredients().catch(() => []);
+  // 随机食材箱问号图标样式（异步，画布在其就绪后自动重绘）
+  loadQuestionMarks();
   S.intermediatesCache = await fetchRecipeCatalog("")
     .then((r) => r.filter((x) => x.intermediate || x.isCustom))
     .catch(() => []);
@@ -268,7 +271,7 @@ export async function init() {
 
   document.getElementById("palette-search")!.addEventListener("input", (e) => {
     const q = (e.target as HTMLInputElement).value;
-    if (S.currentLayer === "move") return;
+    if (S.currentLayer === "anim") return;
     if (S.currentLayer === "floor") buildFloorPalette(q, "floor");
     else if (S.currentLayer === "background") buildFloorPalette(q, "background");
     else buildPalette(catalog, q);
@@ -477,12 +480,12 @@ export async function init() {
 
   document.querySelectorAll<HTMLButtonElement>(".panel-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab as "items" | "move" | "bevents";
+      const tab = btn.dataset.tab as "items" | "anim" | "bevents";
       if (tab === S.activeRightTab) return;
       S.activeRightTab = tab;
       updatePanelTabButtons();
-      S.activeMoveGroupId = null;
-    S.activeMoveEventIdx = null;
+      S.activeAnimGroupId = null;
+    S.activeAnimEventIdx = null;
       S.selectedWaypointId = null;
       renderRightPanel();
       draw();

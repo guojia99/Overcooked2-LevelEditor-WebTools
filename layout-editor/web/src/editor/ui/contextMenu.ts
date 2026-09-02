@@ -3,7 +3,7 @@ import {
   S,
   EditorItem
 } from "../state";
-import type { MoveGroup } from "../../types";
+import type { AnimGroup } from "../../types";
 import { dom } from "../dom";
 import {
   normalizeRot,
@@ -52,7 +52,7 @@ import {
   renderRightPanel,
   updatePanelTabButtons
 } from "../panels";
-import { findGroupByItemId, waypointInfo, deleteWaypoint } from "../moveControl";
+import { findGroupByItemId, waypointInfo, deleteWaypoint } from "../animControl";
 import { itemVariantHtml, wireItemVariant } from "../itemVariants";
 import {
   selectionHeightRowHtml,
@@ -80,20 +80,20 @@ import {
 } from "../selectionTransform";
 import { updateFloorBar } from "../floorPalette";
 
-export function moveControlCtxHtml(item: EditorItem): string {
+export function animControlCtxHtml(item: EditorItem): string {
   // Players are not movable; pure background (water/sky) is not a move member.
   if (isPlayerItem(item)) return "";
   if (itemCategoryOf(item) === "background") return "";
   const has = findGroupByItemId(item.instanceId);
   if (has) {
-    return `<button type="button" class="ctx-btn" data-act="edit-move">编辑移动组</button>`;
+    return `<button type="button" class="ctx-btn" data-act="edit-move">编辑动画组</button>`;
   }
-  return `<button type="button" class="ctx-btn" data-act="enable-move">创建移动组</button>`;
+  return `<button type="button" class="ctx-btn" data-act="enable-move">创建动画组</button>`;
 }
 
-export function enableMoveControl(item: EditorItem): void {
+export function enableAnimControl(item: EditorItem): void {
   pushHistory();
-  const group: MoveGroup = {
+  const group: AnimGroup = {
     id: uuid(),
     displayName: itemLabel(item),
     itemInstanceIds: [item.instanceId],
@@ -110,18 +110,19 @@ export function enableMoveControl(item: EditorItem): void {
       id: uuid(),
       type: "move",
       delay: 0,
+      startTime: 0,
       intervalSeconds: 2,
       waypointIds: [],
     }],
   };
   // The spawn waypoint is already part of the route so the bake is valid.
   group.events[0].waypointIds = [group.waypoints[0].id];
-  S.moveControls.push(group);
-  S.activeMoveGroupId = group.id;
-  S.activeMoveEventIdx = 0;
-  S.activeMoveTab = "members";
-  S.moveMode = "none";
-  S.activeRightTab = "move";
+  S.animControls.push(group);
+  S.activeAnimGroupId = group.id;
+  S.activeAnimEventIdx = 0;
+  S.activeAnimTab = "members";
+  S.animMode = "none";
+  S.activeRightTab = "anim";
   updatePanelTabButtons();
   S.dirty = true;
   renderRightPanel();
@@ -314,7 +315,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
         isPlayer
           ? ""
           : `<div class="ctx-actions-row">
-        ${!isSurface ? moveControlCtxHtml(item) : ""}
+        ${!isSurface ? animControlCtxHtml(item) : ""}
         <button type="button" class="ctx-btn danger" data-act="delete">删除</button>
       </div>`
       }
@@ -496,16 +497,16 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     hideContextMenu();
   });
   dom.ctxMenuEl.querySelector('[data-act="enable-move"]')?.addEventListener("click", () => {
-    enableMoveControl(item);
+    enableAnimControl(item);
     hideContextMenu();
   });
   dom.ctxMenuEl.querySelector('[data-act="edit-move"]')?.addEventListener("click", () => {
     const group = findGroupByItemId(item.instanceId);
-    S.activeMoveGroupId = group?.id ?? null;
-    S.activeMoveEventIdx = 0;
-    S.activeMoveTab = "members";
-    S.moveMode = "none";
-    S.activeRightTab = "move";
+    S.activeAnimGroupId = group?.id ?? null;
+    S.activeAnimEventIdx = 0;
+    S.activeAnimTab = "members";
+    S.animMode = "none";
+    S.activeRightTab = "anim";
     updatePanelTabButtons();
     setSelection([item._editorKey]);
     hideContextMenu();
@@ -537,8 +538,8 @@ export function showWaypointContextMenu(wpId: string, clientX: number, clientY: 
   const step = S.freeSnapStep;
   // Route actions only make sense for the active group's event.
   const evt =
-    group.id === S.activeMoveGroupId && S.activeMoveEventIdx !== null
-      ? group.events[S.activeMoveEventIdx]
+    group.id === S.activeAnimGroupId && S.activeAnimEventIdx !== null
+      ? group.events[S.activeAnimEventIdx]
       : undefined;
   const evtMove = evt?.type === "move";
   const inRoute = !!evtMove && !!evt.waypointIds?.includes(wpId);
@@ -630,7 +631,7 @@ export function showWaypointContextMenu(wpId: string, clientX: number, clientY: 
     draw();
   });
   dom.ctxMenuEl.querySelector('[data-wp-act="add-route"]')?.addEventListener("click", () => {
-    const e = S.activeMoveEventIdx !== null ? group.events[S.activeMoveEventIdx] : undefined;
+    const e = S.activeAnimEventIdx !== null ? group.events[S.activeAnimEventIdx] : undefined;
     if (e && e.type === "move") {
       if (!e.waypointIds) e.waypointIds = [];
       if (!e.waypointIds.includes(wpId)) {
@@ -644,7 +645,7 @@ export function showWaypointContextMenu(wpId: string, clientX: number, clientY: 
     hideContextMenu();
   });
   dom.ctxMenuEl.querySelector('[data-wp-act="remove-route"]')?.addEventListener("click", () => {
-    const e = S.activeMoveEventIdx !== null ? group.events[S.activeMoveEventIdx] : undefined;
+    const e = S.activeAnimEventIdx !== null ? group.events[S.activeAnimEventIdx] : undefined;
     if (e && e.type === "move" && e.waypointIds) {
       const ri = e.waypointIds.indexOf(wpId);
       if (ri >= 0) {

@@ -24,7 +24,7 @@ export function itemHeightOf(it: EditorItem): number {
   return y <= 0.05 ? 0 : y;
 }
 
-/** 高度过滤适用的图层：地板 / 核心 / 装饰（背景层与移动层不过滤）。
+/** 高度过滤适用的图层：地板 / 核心 / 装饰（背景层与动画层不过滤）。
  *  过滤面板悬浮在画布左下角，在这三层可用。 */
 export function floorHeightFilterLayers(): ReadonlySet<string> {
   return HEIGHT_FILTER_LAYERS;

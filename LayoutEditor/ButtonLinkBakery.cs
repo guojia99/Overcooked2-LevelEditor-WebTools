@@ -8,12 +8,12 @@ using UnityEngine.SceneManagement;
 using LevelEditorStub;
 
 /// <summary>
-/// 按钮/压力开关 ↔ 移动组联动烘焙。在 Design/Button Logic/Btn(Logic|Pair)_*&lt;key&gt; 下创建
+/// 按钮/压力开关 ↔ 动画组联动烘焙。在 Design/Button Logic/Btn(Logic|Pair)_*&lt;key&gt; 下创建
 /// 隐藏逻辑物体（Animator + 生成的 controller + TriggerOnAnimator 中继），全部用宿主原语实现：
 ///  - 顺序触发：状态环 Ready_i --Advance--> Run_i（进入即用 SendTriggerToObject 启动组 i）
 ///    --Done_i--> Ready_{i+1 mod n}（最后一组后循环回第一组）；
 ///  - 运行期锁定（lockUntilFinished）：Run_i 无 Advance 出口且挂 ClearTriggerDuringState，
-///    组运行期间的按压被忽略且不会锁存（"移动组完成后才可再按"）；
+///    组运行期间的按压被忽略且不会锁存（"动画组完成后才可再按"）；
 ///  - 共轭对（一对一，每方至多 2 组）：AReady→ARun→(两组均完成的 AND 门)→BReady→BRun→…→
 ///    AReady 状态环；ARun 进入时同时启动 A 方各组，全部完成后对方才可按，反之亦然。
 /// 场景是唯一事实源：ImportFromScene 从 helper 接线重建文档数据（按钮 stub 的
@@ -28,13 +28,13 @@ public static class ButtonLinkBakery
     /// <summary>无操作 trigger：压力开关的 Exit 事件必须指向有效参数，否则宿主
     ///  PseudoPrefabPressureSwitch.Setup 会装一个空名 TriggerOnAnimator。参数存在但无过渡消费。</summary>
     public const string NoopTrigger = "BLNoop";
-    /// <summary>共轭模式下单个按钮最多绑定的移动组数。</summary>
+    /// <summary>共轭模式下单个按钮最多绑定的动画组数。</summary>
     public const int PairGroupLimit = 2;
 
     private const string ImportedSeqMarker = "scene:BtnLogic:";
     private const string ImportedPairMarker = "scene:BtnPair:";
 
-    /// <summary>该路径是否为按钮联动逻辑控制器资产（MoveControlBakery.CleanupStale 据此跳过；
+    /// <summary>该路径是否为按钮联动逻辑控制器资产（AnimGroupBakery.CleanupStale 据此跳过；
     ///  _BtnEvt 为按钮事件组资产，见 ButtonEventBakery）。</summary>
     public static bool IsButtonLogicAsset(string normalizedAssetPath)
     {
@@ -108,7 +108,7 @@ public static class ButtonLinkBakery
         return null;
     }
 
-    private static Transform ResolveGroupRoot(MoveGroupDto group)
+    private static Transform ResolveGroupRoot(AnimGroupDto group)
     {
         if (group == null) return null;
         if (!string.IsNullOrEmpty(group.groupHierarchyPath))
@@ -121,29 +121,29 @@ public static class ButtonLinkBakery
         return LayoutEditorHierarchy.FindByPath("Design/Animated Objects/" + name);
     }
 
-    private static Dictionary<string, MoveGroupDto> GroupMapByName(LayoutDocumentDto doc)
+    private static Dictionary<string, AnimGroupDto> GroupMapByName(LayoutDocumentDto doc)
     {
-        var byName = new Dictionary<string, MoveGroupDto>(StringComparer.Ordinal);
-        foreach (var g in doc.moveControls != null ? doc.moveControls.groups ?? new MoveGroupDto[0] : new MoveGroupDto[0])
+        var byName = new Dictionary<string, AnimGroupDto>(StringComparer.Ordinal);
+        foreach (var g in doc.AnimControls != null ? doc.AnimControls.groups ?? new AnimGroupDto[0] : new AnimGroupDto[0])
         {
             if (g == null || string.IsNullOrEmpty(g.displayName)) continue;
             if (!byName.ContainsKey(g.displayName))
                 byName[g.displayName] = g;
             else
-                LayoutEditorLog.LogWarning("button link: 移动组名重复 \"" + g.displayName + "\"，联动只绑定第一个");
+                LayoutEditorLog.LogWarning("button link: 动画组名重复 \"" + g.displayName + "\"，联动只绑定第一个");
         }
         return byName;
     }
 
     // ------------------------------------------------------------ phase 1: groups
 
-    /// <summary>在 MoveControlBakery.Sync 之前调用：为被联动绑定的移动组覆写
+    /// <summary>在 AnimGroupBakery.Sync 之前调用：为被联动绑定的动画组覆写
     ///  startTrigger/endTrigger（确定性命名），并清零 startDelay（绑定后由按钮控制，
     ///  保留延迟启动会导致开局自动触发一次）。</summary>
     public static void PrepareGroups(LayoutDocumentDto doc)
     {
         if (doc == null || doc.buttonLinks == null || doc.buttonLinks.links == null) return;
-        if (doc.moveControls == null || doc.moveControls.groups == null) return;
+        if (doc.AnimControls == null || doc.AnimControls.groups == null) return;
 
         var byName = GroupMapByName(doc);
         var pairSides = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -198,27 +198,27 @@ public static class ButtonLinkBakery
             {
                 var gname = link.groupNames[i];
                 if (string.IsNullOrEmpty(gname)) continue;
-                MoveGroupDto g;
+                AnimGroupDto g;
                 if (!byName.TryGetValue(gname, out g))
                 {
-                    LayoutEditorLog.LogWarning("button link: 移动组「" + gname + "」不存在，跳过绑定");
+                    LayoutEditorLog.LogWarning("button link: 动画组「" + gname + "」不存在，跳过绑定");
                     continue;
                 }
                 if (!boundGroups.Add(gname))
                 {
-                    LayoutEditorLog.LogWarning("button link: 移动组「" + gname + "」已被其他联动绑定，跳过后续绑定");
+                    LayoutEditorLog.LogWarning("button link: 动画组「" + gname + "」已被其他联动绑定，跳过后续绑定");
                     continue;
                 }
                 g.startTrigger = GoTrigger(trigBase, side, i);
                 g.endTrigger = DoneTrigger(trigBase, side, i);
                 if (g.startDelay > 0f)
                 {
-                    LayoutEditorLog.LogWarning("button link: 移动组「" + gname +
+                    LayoutEditorLog.LogWarning("button link: 动画组「" + gname +
                         "」的启动延迟已清零（绑定后由按钮控制）");
                     g.startDelay = 0f;
                 }
                 if (g.loop)
-                    LayoutEditorLog.LogWarning("button link: 移动组「" + gname +
+                    LayoutEditorLog.LogWarning("button link: 动画组「" + gname +
                         "」循环执行不会结束，锁定时按钮将无法再按");
             }
         }
@@ -242,7 +242,7 @@ public static class ButtonLinkBakery
     private static string SyncInner(Scene scene, LayoutDocumentDto doc, Dictionary<string, GameObject> createdObjects)
     {
         var sceneName = Path.GetFileNameWithoutExtension(scene.path);
-        var animDir = MoveControlBakery.GetAnimationsFolder(scene.path);
+        var animDir = AnimGroupBakery.GetAnimationsFolder(scene.path);
         var errors = new List<string>();
         var usedHelpers = new HashSet<string>(StringComparer.Ordinal);
         var usedAssets = new HashSet<string>(StringComparer.Ordinal);
@@ -257,7 +257,7 @@ public static class ButtonLinkBakery
         var pairBaked = new HashSet<string>(StringComparer.Ordinal);
 
         if (links.Length > 0)
-            MoveControlBakery.EnsureFolder(animDir);
+            AnimGroupBakery.EnsureFolder(animDir);
 
         foreach (var link in links)
         {
@@ -310,15 +310,15 @@ public static class ButtonLinkBakery
         return errors.Count > 0 ? string.Join("; ", errors.ToArray()) : null;
     }
 
-    /// <summary>解析 link 的移动组根物体列表（跳过无法解析的项，返回 null 表示有缺失）。</summary>
+    /// <summary>解析 link 的动画组根物体列表（跳过无法解析的项，返回 null 表示有缺失）。</summary>
     private static List<Transform> ResolveGroupRoots(LayoutButtonLinkDto link, int count,
-        Dictionary<string, MoveGroupDto> byName, HashSet<string> boundGroups, List<MoveGroupDto> outGroups)
+        Dictionary<string, AnimGroupDto> byName, HashSet<string> boundGroups, List<AnimGroupDto> outGroups)
     {
         var roots = new List<Transform>();
         for (int i = 0; i < count; i++)
         {
             var gname = link.groupNames[i];
-            MoveGroupDto g;
+            AnimGroupDto g;
             if (string.IsNullOrEmpty(gname) || !byName.TryGetValue(gname, out g))
             {
                 outGroups.Add(null);
@@ -339,7 +339,7 @@ public static class ButtonLinkBakery
     }
 
     private static string BakeSequence(Scene scene, LayoutButtonLinkDto link,
-        Dictionary<string, MoveGroupDto> byName, HashSet<string> boundGroups,
+        Dictionary<string, AnimGroupDto> byName, HashSet<string> boundGroups,
         string animDir, string sceneName, Dictionary<string, GameObject> createdObjects,
         HashSet<string> usedHelpers, HashSet<string> usedAssets)
     {
@@ -348,12 +348,12 @@ public static class ButtonLinkBakery
         if (sourceGo == null)
             return "按钮联动：找不到触发源 " + link.sourceId;
 
-        var groups = new List<MoveGroupDto>();
+        var groups = new List<AnimGroupDto>();
         var roots = ResolveGroupRoots(link, link.groupNames.Length, byName, boundGroups, groups);
         for (int i = 0; i < roots.Count; i++)
         {
             if (roots[i] == null)
-                return "按钮联动：移动组「" + link.groupNames[i] + "」无法绑定（不存在/未烘焙/已被其他联动占用）";
+                return "按钮联动：动画组「" + link.groupNames[i] + "」无法绑定（不存在/未烘焙/已被其他联动占用）";
         }
 
         var helper = EnsureHelper(helperName);
@@ -388,7 +388,7 @@ public static class ButtonLinkBakery
     }
 
     private static string BakePair(Scene scene, LayoutButtonLinkDto linkA, LayoutButtonLinkDto linkB,
-        Dictionary<string, MoveGroupDto> byName, HashSet<string> boundGroups,
+        Dictionary<string, AnimGroupDto> byName, HashSet<string> boundGroups,
         string animDir, string sceneName, Dictionary<string, GameObject> createdObjects,
         HashSet<string> usedHelpers, HashSet<string> usedAssets)
     {
@@ -400,14 +400,14 @@ public static class ButtonLinkBakery
 
         int nA = Math.Min(linkA.groupNames.Length, PairGroupLimit);
         int nB = Math.Min(linkB.groupNames.Length, PairGroupLimit);
-        var groupsA = new List<MoveGroupDto>();
-        var groupsB = new List<MoveGroupDto>();
+        var groupsA = new List<AnimGroupDto>();
+        var groupsB = new List<AnimGroupDto>();
         var rootsA = ResolveGroupRoots(linkA, nA, byName, boundGroups, groupsA);
         var rootsB = ResolveGroupRoots(linkB, nB, byName, boundGroups, groupsB);
         for (int i = 0; i < rootsA.Count; i++)
-            if (rootsA[i] == null) return "共轭按钮：移动组「" + linkA.groupNames[i] + "」无法绑定（不存在/未烘焙/已被占用）";
+            if (rootsA[i] == null) return "共轭按钮：动画组「" + linkA.groupNames[i] + "」无法绑定（不存在/未烘焙/已被占用）";
         for (int i = 0; i < rootsB.Count; i++)
-            if (rootsB[i] == null) return "共轭按钮：移动组「" + linkB.groupNames[i] + "」无法绑定（不存在/未烘焙/已被占用）";
+            if (rootsB[i] == null) return "共轭按钮：动画组「" + linkB.groupNames[i] + "」无法绑定（不存在/未烘焙/已被占用）";
 
         var helper = EnsureHelper(helperName);
         if (helper == null)
@@ -497,7 +497,7 @@ public static class ButtonLinkBakery
     }
 
     /// <summary>把组根的 TriggerQueue 完成事件指向 helper（m_endTrigger 已由
-    ///  PrepareGroups→MoveControlBakery 写入，这里补 m_endTriggerTarget 并核对）。</summary>
+    ///  PrepareGroups→AnimGroupBakery 写入，这里补 m_endTriggerTarget 并核对）。</summary>
     private static void WireGroupQueue(Transform groupRoot, string doneTrigger, GameObject helper)
     {
         var q = groupRoot.GetComponent<TriggerQueue>();
@@ -593,7 +593,7 @@ public static class ButtonLinkBakery
     private static AnimatorController BuildSequenceController(string path, string helperName,
         string[] rootNames, string[] goTrigs, string[] doneTrigs, bool lockUntilFinished)
     {
-        MoveControlBakery.DeleteAssetIfExists(path);
+        AnimGroupBakery.DeleteAssetIfExists(path);
         var ctrl = AnimatorController.CreateAnimatorControllerAtPath(path);
         if (ctrl == null) return null;
         ctrl.name = Path.GetFileNameWithoutExtension(path);
@@ -623,7 +623,7 @@ public static class ButtonLinkBakery
             AddTrigTransition(run[i], ready[next], doneTrigs[i]);
             if (lockUntilFinished)
             {
-                // 运行期锁定：按压被吞掉且不锁存（"移动组完成后才可再按"）。
+                // 运行期锁定：按压被吞掉且不锁存（"动画组完成后才可再按"）。
                 AddClearTrigger(run[i], adv);
             }
             else
@@ -650,7 +650,7 @@ public static class ButtonLinkBakery
         string[] namesA, string[] goA, string[] doneA,
         string[] namesB, string[] goB, string[] doneB, bool aStartsUp)
     {
-        MoveControlBakery.DeleteAssetIfExists(path);
+        AnimGroupBakery.DeleteAssetIfExists(path);
         var ctrl = AnimatorController.CreateAnimatorControllerAtPath(path);
         if (ctrl == null) return null;
         ctrl.name = Path.GetFileNameWithoutExtension(path);
@@ -763,18 +763,18 @@ public static class ButtonLinkBakery
     // ------------------------------------------------------------------- import
 
     /// <summary>从场景重建按钮联动（场景是唯一事实源）：扫描 Design/Button Logic 下的
-    ///  helper，按 controller 状态里的 SendTriggerToObject 反查移动组，按 stub 接线反查触发源。</summary>
+    ///  helper，按 controller 状态里的 SendTriggerToObject 反查动画组，按 stub 接线反查触发源。</summary>
     public static List<LayoutButtonLinkDto> ImportFromScene(Scene scene,
-        List<MoveGroupDto> groups, List<LayoutItemDto> items)
+        List<AnimGroupDto> groups, List<LayoutItemDto> items)
     {
         var result = new List<LayoutButtonLinkDto>();
         if (!scene.IsValid()) return result;
         var root = LayoutEditorHierarchy.FindByPath(ButtonLogicRootPath);
         if (root == null) return result;
 
-        // startTrigger → 移动组（由 PrepareGroups 覆写为 BLGo_* 名，随 MoveControlImporter 回导）
-        var groupByStartTrigger = new Dictionary<string, MoveGroupDto>(StringComparer.Ordinal);
-        foreach (var g in groups ?? new List<MoveGroupDto>())
+        // startTrigger → 动画组（由 PrepareGroups 覆写为 BLGo_* 名，随 AnimGroupImporter 回导）
+        var groupByStartTrigger = new Dictionary<string, AnimGroupDto>(StringComparer.Ordinal);
+        foreach (var g in groups ?? new List<AnimGroupDto>())
         {
             if (g == null || string.IsNullOrEmpty(g.startTrigger)) continue;
             if (!groupByStartTrigger.ContainsKey(g.startTrigger))
@@ -802,9 +802,9 @@ public static class ButtonLinkBakery
 
     private static void ImportSequence(List<LayoutButtonLinkDto> result, string helperName,
         GameObject helperGo, Animator anim, AnimatorStateMachine sm,
-        Dictionary<string, MoveGroupDto> groupByStartTrigger, List<LayoutItemDto> items)
+        Dictionary<string, AnimGroupDto> groupByStartTrigger, List<LayoutItemDto> items)
     {
-        // Run_i 状态按序号排列，读取其 SendTriggerToObject 反查移动组。
+        // Run_i 状态按序号排列，读取其 SendTriggerToObject 反查动画组。
         var runStates = new SortedDictionary<int, AnimatorState>();
         foreach (var cs in sm.states)
         {
@@ -842,7 +842,7 @@ public static class ButtonLinkBakery
 
     private static void ImportPair(List<LayoutButtonLinkDto> result, string helperName,
         GameObject helperGo, Animator anim, AnimatorStateMachine sm,
-        Dictionary<string, MoveGroupDto> groupByStartTrigger, List<LayoutItemDto> items)
+        Dictionary<string, AnimGroupDto> groupByStartTrigger, List<LayoutItemDto> items)
     {
         var pairId = ImportedPairMarker + helperName;
         var srcA = FindSourceId(items, anim, PressTrigger(helperName, "A"));
@@ -857,7 +857,7 @@ public static class ButtonLinkBakery
         var groupsB = GroupsOfRunState(sm, "BRun", groupByStartTrigger);
         if (groupsA == null || groupsB == null || groupsA.Count == 0 || groupsB.Count == 0)
         {
-            LayoutEditorLog.LogWarning("button link: 共轭 helper " + helperName + " 的移动组不完整，跳过导入");
+            LayoutEditorLog.LogWarning("button link: 共轭 helper " + helperName + " 的动画组不完整，跳过导入");
             return;
         }
 
@@ -882,10 +882,10 @@ public static class ButtonLinkBakery
         });
     }
 
-    /// <summary>读取 Run 状态上全部 SendTriggerToObject 的触发名，反查移动组（顺序任意，
+    /// <summary>读取 Run 状态上全部 SendTriggerToObject 的触发名，反查动画组（顺序任意，
     ///  组内顺序对共轭无意义——两组同时启动）。任一组缺失返回 null。</summary>
     private static List<string> GroupsOfRunState(AnimatorStateMachine sm, string stateName,
-        Dictionary<string, MoveGroupDto> groupByStartTrigger)
+        Dictionary<string, AnimGroupDto> groupByStartTrigger)
     {
         foreach (var cs in sm.states)
         {
@@ -894,7 +894,7 @@ public static class ButtonLinkBakery
             var names = new List<string>();
             foreach (var trigger in ReadSendTriggers(st))
             {
-                MoveGroupDto g;
+                AnimGroupDto g;
                 if (!groupByStartTrigger.TryGetValue(trigger, out g)) return null;
                 names.Add(g.displayName);
             }
@@ -903,12 +903,12 @@ public static class ButtonLinkBakery
         return null;
     }
 
-    private static MoveGroupDto GroupOfState(AnimatorState st,
-        Dictionary<string, MoveGroupDto> groupByStartTrigger)
+    private static AnimGroupDto GroupOfState(AnimatorState st,
+        Dictionary<string, AnimGroupDto> groupByStartTrigger)
     {
         foreach (var trigger in ReadSendTriggers(st))
         {
-            MoveGroupDto g;
+            AnimGroupDto g;
             if (groupByStartTrigger.TryGetValue(trigger, out g))
                 return g;
         }

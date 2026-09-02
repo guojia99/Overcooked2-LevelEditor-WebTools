@@ -22,6 +22,10 @@ public static class LayoutEditorSetExporter
     /** zip 输出目录（项目根、Assets 外，避免 Unity 生成 .meta）。 */
     public const string ExportRootDir = "LayoutEditorExports";
 
+    /// <summary>导出前置扩展钩子（参数 = 关卡集名）。解耦点：无订阅者时行为不变，
+    /// 例如 CustomStub 的 Stub DLL staging（LayoutStubDllBuilder）经此接入。</summary>
+    public static Action<string> BeforeBuild;
+
     private static readonly object _lock = new object();
     private static string _status = "idle"; // idle | running | done | error
     private static string _setName = "";
@@ -189,6 +193,8 @@ public static class LayoutEditorSetExporter
         SetPhase("build", "构建 AssetBundle（约 3-5 分钟）…");
         LayoutEditorLevelAdminApi.EnsureSetInfoBundle(setName);
         EnsureSceneBundleNames(setName, scenes);
+        if (BeforeBuild != null)
+            BeforeBuild(setName);
         if (!Directory.Exists(AbsPath(BundlesRoot)))
             Directory.CreateDirectory(AbsPath(BundlesRoot));
         var manifest = BuildPipeline.BuildAssetBundles(

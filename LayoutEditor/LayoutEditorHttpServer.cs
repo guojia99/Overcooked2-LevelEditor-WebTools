@@ -364,6 +364,47 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/catalog/questionmarks" && request.HttpMethod == "GET")
+            {
+                var dir = "Assets/commonW1/question_mark";
+                var list = new List<QuestionMarkStyleDto>();
+                if (AssetDatabase.IsValidFolder(dir))
+                {
+                    foreach (var guid in AssetDatabase.FindAssets("t:Texture2D", new[] { dir }))
+                    {
+                        var p = AssetDatabase.GUIDToAssetPath(guid);
+                        var name = System.IO.Path.GetFileNameWithoutExtension(p);
+                        list.Add(new QuestionMarkStyleDto
+                        {
+                            name = name,
+                            guid = guid,
+                            isDefault = name == "question_mark_chef_hat"
+                        });
+                    }
+                    list.Sort(delegate(QuestionMarkStyleDto a, QuestionMarkStyleDto b)
+                    {
+                        return string.CompareOrdinal(a.name, b.name);
+                    });
+                }
+                WriteJson(response, 200, LayoutEditorJson.ToJson(new QuestionMarkStyleListDto { items = list.ToArray() }));
+                return;
+            }
+
+            if (path == "/api/catalog/questionmarks/icon" && request.HttpMethod == "GET")
+            {
+                var iconGuid = request.QueryString["guid"];
+                var iconPath = string.IsNullOrEmpty(iconGuid) ? null : AssetDatabase.GUIDToAssetPath(iconGuid);
+                if (!string.IsNullOrEmpty(iconPath) && File.Exists(iconPath))
+                {
+                    WritePngFile(response, iconPath);
+                }
+                else
+                {
+                    WriteJson(response, 404, "{\"error\":\"question mark icon not found\"}");
+                }
+                return;
+            }
+
             if (path == "/api/recipes" && request.HttpMethod == "GET")
             {
                 var levelSet = request.QueryString["levelSet"] ?? string.Empty;
@@ -402,6 +443,7 @@ public class LayoutEditorHttpServer
                     OpenSceneIfNeeded(assetPath);
 
                 var doc = SceneLayoutExporter.ExportActiveScene();
+                LogDispenserTrace("GET /api/scene/layout 导出", doc);
                 WriteJson(response, 200, LayoutEditorJson.ToJson(doc));
                 return;
             }
@@ -410,6 +452,17 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var doc = LayoutEditorJson.ParseLayoutDocument(body);
+                LogDispenserTrace("POST /api/scene/layout 解析", doc);
+
+                // 写回强校验（web 侧同款规则的后端兜底，防绕过）：
+                // 普通食材箱（含背包）必须配 1 种食材；随机食材箱必须 ≥2 种候选。
+                var validationError = ValidateDispenserConfigs(doc);
+                if (validationError != null)
+                {
+                    LayoutEditorLog.LogWarning("[随机箱链路] " + validationError);
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = validationError }));
+                    return;
+                }
                 var snap = 0.01f;
                 var snapStr = request.QueryString["snap"];
                 if (!string.IsNullOrEmpty(snapStr))
@@ -1148,6 +1201,97 @@ public class LayoutEditorHttpServer
             case ".svg": return "image/svg+xml";
             case ".png": return "image/png";
             default: return "application/octet-stream";
+        }
+    }
+
+    /// <summary>写回强校验：普通食材箱（含背包，不含饮料/酱料机）必须配 1 种食材；
+    /// 随机食材箱（RandomDispenser 或携带随机配置）必须 ≥2 种候选。返回 null=通过。</summary>
+    private static string ValidateDispenserConfigs(LayoutDocumentDto doc)
+    {
+        if (doc == null || doc.items == null)
+            return null;
+        var problems = new List<string>();
+        foreach (var it in doc.items)
+        {
+            if (it == null || it.stubKind != "Dispenser" || it.dispenser == null)
+                continue;
+            var pid = System.IO.Path.GetFileNameWithoutExtension(it.prefabAssetPath ?? "");
+            if (LayoutEditorStubIO.IsSpecialDispenserPrefabId(pid))
+                continue;
+            var rndCount = it.dispenser.randomItemGuids != null ? it.dispenser.randomItemGuids.Length : 0;
+            var isRandom = pid == "RandomDispenser" || rndCount > 0;
+            if (isRandom)
+            {
+                if (rndCount < 2)
+                    problems.Add((it.displayName ?? pid) + "：随机食材箱至少需要 2 种候选食材");
+            }
+            else if (string.IsNullOrEmpty(it.dispenser.spawnerItemPrefabGuid))
+            {
+                problems.Add((it.displayName ?? pid) + "：普通食材箱未设置食材");
+            }
+        }
+        if (problems.Count == 0)
+            return null;
+        return "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray());
+    }
+
+    /// <summary>随机食材箱链路追踪（定位 web↔Unity 数据丢失环节）：统计 doc 中
+    /// Dispenser 项的随机配置。POST 解析 vs GET 导出两处日志对比即可锁定丢失环节；
+    /// 若写回后本日志完全不出现，说明编辑器仍在运行旧程序集（未重编译）。</summary>
+    private static void LogDispenserTrace(string phase, LayoutDocumentDto doc)
+    {
+        try
+        {
+            if (doc == null || doc.items == null)
+            {
+                LayoutEditorLog.Log("[随机箱链路] " + phase + ": doc/items 为空");
+                return;
+            }
+            var dispensers = 0;
+            var withRandom = 0;
+            var sb = new StringBuilder();
+            foreach (var it in doc.items)
+            {
+                if (it == null || it.stubKind != "Dispenser" || it.dispenser == null)
+                    continue;
+                dispensers++;
+                var n = it.dispenser.randomItemGuids != null ? it.dispenser.randomItemGuids.Length : 0;
+                if (n <= 0)
+                    continue;
+                withRandom++;
+                if (sb.Length > 0)
+                    sb.Append("; ");
+                sb.Append(it.displayName ?? it.instanceId ?? "?").Append(" 随机 ").Append(n).Append(" 种 [")
+                    .Append(string.Join(",", it.dispenser.randomItemGuids)).Append("] 权重 [")
+                    .Append(it.dispenser.randomWeights != null
+                        ? string.Join(",", System.Array.ConvertAll(it.dispenser.randomWeights,
+                            delegate(float w) { return w.ToString("0.##"); }))
+                        : "").Append("]");
+            }
+            LayoutEditorLog.Log("[随机箱链路] " + phase + ": Dispenser " + dispensers + " 个，含随机配置 "
+                + withRandom + " 个" + (withRandom > 0 ? " → " + sb : ""));
+        }
+        catch (Exception ex)
+        {
+            LayoutEditorLog.LogWarning("[随机箱链路] " + phase + " 日志异常: " + ex.Message);
+        }
+    }
+
+    /// <summary>回源 PNG（web 图标缩略图直接读 Assets/commonW1/question_mark 源文件）。</summary>
+    private static void WritePngFile(HttpListenerResponse response, string absPath)
+    {
+        try
+        {
+            var bytes = File.ReadAllBytes(absPath);
+            response.StatusCode = 200;
+            response.ContentType = "image/png";
+            response.ContentLength64 = bytes.Length;
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+            response.OutputStream.Close();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] question mark icon write failed: " + ex.Message);
         }
     }
 

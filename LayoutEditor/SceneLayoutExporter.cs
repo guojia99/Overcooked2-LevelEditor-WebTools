@@ -23,16 +23,16 @@ public static class SceneLayoutExporter
         // them directly from the animated objects (Animator + TriggerQueue/Timer +
         // controller/clips). No external JSON config is read.
         var sceneName = System.IO.Path.GetFileNameWithoutExtension(scene.path);
-        var imported = MoveControlImporter.ImportFromScene(scene, sceneName,
-            MoveControlBakery.GetAnimationsFolder(scene.path));
-        MoveControlDataDto moveControls = null;
+        var imported = AnimGroupImporter.ImportFromScene(scene, sceneName,
+            AnimGroupBakery.GetAnimationsFolder(scene.path));
+        AnimControlDataDto animControls = null;
         if (imported.Count > 0)
-            moveControls = new MoveControlDataDto { groups = imported.ToArray() };
+            animControls = new AnimControlDataDto { groups = imported.ToArray() };
 
-        LayoutEditorLog.Log("move control: export " + scene.name + " -> " +
-            (moveControls != null ? moveControls.groups.Length : 0) + " group(s)");
+        LayoutEditorLog.Log("anim group: export " + scene.name + " -> " +
+            (animControls != null ? animControls.groups.Length : 0) + " group(s)");
 
-        // 按钮↔移动组联动也从场景重建（Design/Button Logic 下的 helper 接线）。
+        // 按钮↔动画组联动也从场景重建（Design/Button Logic 下的 helper 接线）。
         var buttonLinks = ButtonLinkBakery.ImportFromScene(scene, imported, items);
 
         // 按钮↔事件组联动同样从场景重建（Design/Button Event Logic 下的 helper 接线）。
@@ -45,7 +45,7 @@ public static class SceneLayoutExporter
             floors = SceneFloorExporter.ExportFromScene().ToArray(),
             walkable = SceneWalkabilityReader.ReadWalkable().ToArray(),
             deathInfo = SceneWalkabilityReader.ReadDeathInfo(),
-            moveControls = moveControls,
+            animControls = animControls,
             switchLinks = CollectSwitchLinks(items).ToArray(),
             buttonLinks = buttonLinks.Count > 0
                 ? new LayoutButtonLinkDataDto { links = buttonLinks.ToArray() }
@@ -143,6 +143,10 @@ public static class SceneLayoutExporter
 
             var light = go.GetComponent<Light>();
             if (light == null)
+                continue;
+
+            // FX 闪电灯由动画组烘焙拥有（Lights/FX_Lightning），不进灯光面板。
+            if (LayoutEditorHierarchy.GetHierarchyPath(t) == AnimGroupBakery.FxLightPath)
                 continue;
 
             lights.Add(new LightInfoDto

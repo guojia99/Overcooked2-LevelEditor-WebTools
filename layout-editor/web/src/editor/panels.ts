@@ -21,7 +21,7 @@ import {
 import { sceneNpcAnimItems, npcTypesHintHtml } from "./npcAnimations";
 import { matchBuiltinAnimDecor, sceneEnvAnimDecorItems, envAnimTypesHintHtml } from "./builtinAnimDecor";
 import { draw } from "./render";
-import { renderMoveControlPanel, groupVisibleInLayer, updateMovePickBar } from "./moveControl";
+import { renderAnimControlPanel, groupVisibleInLayer, updateAnimPickBar } from "./animControl";
 import { renderButtonEventPanel } from "./buttonEvents";
 import { applyPaletteGridCols } from "./palette";
 
@@ -111,8 +111,8 @@ export function applyPanelCollapse(): void {  const palette = document.getElemen
     btnItems.textContent = S.itemsPanelCollapsed ? "◀" : "▶";
   }
   // On the move layer there is no per-layer item list: force the "move" tab.
-  if (S.currentLayer === "move" && S.activeRightTab === "items") {
-    S.activeRightTab = "move";
+  if (S.currentLayer === "anim" && S.activeRightTab === "items") {
+    S.activeRightTab = "anim";
     updatePanelTabButtons();
   }
   S.sceneItemListSig = ""; // force rebuild on expand/layer change
@@ -289,7 +289,7 @@ export function refreshSceneItemList(): void {
 }
 
 export function maybeRefreshSceneItemList(): void {
-  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeMoveGroupId}|${S.activeMoveEventIdx}|${S.moveMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.moveControls.length}|${S.buttonEvents.length}|${S.dirty}`;
+  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeAnimGroupId}|${S.activeAnimEventIdx}|${S.animMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.animControls.length}|${S.buttonEvents.length}|${S.dirty}`;
   if (sig === S.sceneItemListSig) return;
   S.sceneItemListSig = sig;
   renderRightPanel();
@@ -298,47 +298,47 @@ export function maybeRefreshSceneItemList(): void {
 export function renderRightPanel(): void {
   const body = document.getElementById("scene-items-body");
   if (!body) return;
-  updateMovePickBar();
+  updateAnimPickBar();
 
   const countEl = document.getElementById("scene-items-count");
-  const moveCountEl = document.getElementById("move-control-count");
+  const animCountEl = document.getElementById("anim-control-count");
 
-  if (S.currentLayer === "move") {
+  if (S.currentLayer === "anim") {
     // Move layer: the move panel is always shown (dedicated management layer).
-    S.activeRightTab = "move";
+    S.activeRightTab = "anim";
     updatePanelTabButtons();
-    renderMoveControlPanel(body);
+    renderAnimControlPanel(body);
     if (countEl) countEl.textContent = "";
-    const layerGroups = S.moveControls.filter((g) => groupVisibleInLayer(g));
-    if (moveCountEl) moveCountEl.textContent = layerGroups.length > 0 ? `(${layerGroups.length})` : "";
+    const layerGroups = S.animControls.filter((g) => groupVisibleInLayer(g));
+    if (animCountEl) animCountEl.textContent = layerGroups.length > 0 ? `(${layerGroups.length})` : "";
     return;
   }
 
   if (
     (S.currentLayer === "floor" || S.currentLayer === "background") &&
-    S.activeMoveGroupId
+    S.activeAnimGroupId
   ) {
     // Floor/background layer with an active move group: the move panel takes over.
-    S.activeRightTab = "move";
+    S.activeRightTab = "anim";
     updatePanelTabButtons();
-    renderMoveControlPanel(body);
+    renderAnimControlPanel(body);
     if (countEl) countEl.textContent = "";
-    const layerGroups = S.moveControls.filter((g) => groupVisibleInLayer(g));
-    if (moveCountEl) moveCountEl.textContent = layerGroups.length > 0 ? `(${layerGroups.length})` : "";
+    const layerGroups = S.animControls.filter((g) => groupVisibleInLayer(g));
+    if (animCountEl) animCountEl.textContent = layerGroups.length > 0 ? `(${layerGroups.length})` : "";
     return;
   }
 
-  if (S.activeRightTab === "move") {
-    renderMoveControlPanel(body);
+  if (S.activeRightTab === "anim") {
+    renderAnimControlPanel(body);
     if (countEl) countEl.textContent = "";
-    const layerGroups = S.moveControls.filter((g) => groupVisibleInLayer(g));
-    if (moveCountEl) moveCountEl.textContent = layerGroups.length > 0 ? `(${layerGroups.length})` : "";
+    const layerGroups = S.animControls.filter((g) => groupVisibleInLayer(g));
+    if (animCountEl) animCountEl.textContent = layerGroups.length > 0 ? `(${layerGroups.length})` : "";
   } else if (S.activeRightTab === "bevents") {
     renderButtonEventPanel(body);
     if (countEl) countEl.textContent = "";
-    if (moveCountEl) moveCountEl.textContent = "";
+    if (animCountEl) animCountEl.textContent = "";
   } else {
     refreshSceneItemList();
-    if (moveCountEl) moveCountEl.textContent = "";
+    if (animCountEl) animCountEl.textContent = "";
   }
 }

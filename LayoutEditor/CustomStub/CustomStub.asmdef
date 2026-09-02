@@ -1,0 +1,10 @@
+{
+    "name": "CustomStub",
+    "references": [
+        "LevelEditorStub"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

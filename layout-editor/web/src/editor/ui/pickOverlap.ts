@@ -132,8 +132,8 @@ export function showSurfaceOverlapPickTip(
   showPickTip(build(), clientX, clientY, opts);
 }
 
-/** 移动组成员模式：物品 + 空气地板重叠候选。 */
-export function showMoveMemberOverlapPickTip(
+/** 动画组成员模式：物品 + 空气地板重叠候选。 */
+export function showAnimMemberOverlapPickTip(
   hits: EditorItem[],
   fHit: FloorHit["floor"],
   clientX: number,

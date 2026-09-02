@@ -19,7 +19,7 @@ export function snapshotState(): EditorSnapshot {
     items: S.items,
     floors: S.floors,
     bgThemeKey: S.bgThemeKey,
-    moveControls: S.moveControls,
+    animControls: S.animControls,
     switchLinks: S.switchLinks,
     buttonLinks: S.buttonLinks,
     buttonEvents: S.buttonEvents,
@@ -52,20 +52,20 @@ export function applySnapshot(snap: EditorSnapshot): void {
   S.items = snap.items;
   S.floors = snap.floors;
   S.bgThemeKey = snap.bgThemeKey;
-  S.moveControls = snap.moveControls;
+  S.animControls = snap.animControls;
   S.switchLinks = snap.switchLinks ?? [];
   S.buttonLinks = snap.buttonLinks ?? [];
   S.buttonEvents = snap.buttonEvents ?? [];
   S.cameraInfo = snap.cameraInfo ?? null;
   S.lights = snap.lights ?? [];
-  // Restore move-group selection only when the group still exists.
-  if (S.activeMoveGroupId && !S.moveControls.some((g) => g.id === S.activeMoveGroupId)) {
-    S.activeMoveGroupId = null;
-    S.activeMoveEventIdx = null;
+  // Restore anim-group selection only when the group still exists.
+  if (S.activeAnimGroupId && !S.animControls.some((g) => g.id === S.activeAnimGroupId)) {
+    S.activeAnimGroupId = null;
+    S.activeAnimEventIdx = null;
     S.selectedWaypointId = null;
   }
-  if (S.moveMode !== "none") {
-    S.moveMode = "none";
+  if (S.animMode !== "none") {
+    S.animMode = "none";
   }
   clearSelection();
   clearFloorSelection();

@@ -1,6 +1,8 @@
 import { S } from "./state";
 import { VARIANT_TO_BASE } from "./itemVariants";
 import type { RecipeEntry } from "../types";
+import { NODE_INGREDIENT_SOURCES } from "../recipeGroups";
+import { fetchLevelRecipes, fetchRecipeCatalog } from "../api";
 
 export const STEP_UTENSILS: Record<string, string[]> = {
   Pot: ["Cooker", "Pot"],
@@ -532,4 +534,42 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
   // 输出统一为家族基准 id（变体→基础）：与 existingPrefabIds 的 functionalBaseId
   // 归一化对齐——场景里放的是哪个皮肤都算「已有」，自动放置/提示用默认皮肤。
   return [...set].map(functionalBaseId);
+}
+
+/** 当前关卡已保存菜谱所需的「食材箱可产出」叶食材 id 清单：
+ *  中间产物展开为叶子（leafIngredientIds）、node 型等价替换（NODE_INGREDIENT_SOURCES）、
+ *  汽水/饮料/奶油等机器或道具产出的排除。与菜谱弹窗 analysisInfo 的 reqIngs 同一套
+ *  展开规则；随机食材箱编辑器「填充本关所需」复用。 */
+export async function levelRequiredCrateIngredientIds(): Promise<string[]> {
+  try {
+    const [level, recipes] = await Promise.all([
+      fetchLevelRecipes(S.scenePath).catch(() => null),
+      fetchRecipeCatalog(S.currentLevelSet).catch(() => [] as RecipeEntry[]),
+    ]);
+    const byGuid = new Map(recipes.map((r) => [r.guid, r] as const));
+    const byId = new Map(recipes.map((r) => [r.id, r] as const));
+    const seen = new Set<RecipeEntry>();
+    for (const g of level?.recipeGuids ?? []) {
+      const r = byGuid.get(g);
+      if (r) seen.add(r);
+    }
+    // recipeIds 兜底（已装副本不在当前目录时按 id 命中，同菜谱选择弹窗）
+    for (const id of level?.recipeIds ?? []) {
+      const r = byId.get(id);
+      if (r) seen.add(r);
+    }
+    const required = new Set<string>();
+    for (const r of seen)
+      (r.ingredients ?? []).forEach((i) =>
+        leafIngredientIds(i).forEach((leaf) => required.add(NODE_INGREDIENT_SOURCES[leaf] ?? leaf))
+      );
+    return [...required].filter(
+      (i) =>
+        !SODA_MACHINE_INGREDIENT_IDS.includes(i) &&
+        !DRINK_MACHINE_INGREDIENT_IDS.includes(i) &&
+        !CREAM_INGREDIENT_IDS.includes(i)
+    );
+  } catch {
+    return [];
+  }
 }

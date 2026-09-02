@@ -80,9 +80,15 @@ public static class SceneLayoutApplier
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
             if (prefab == null)
             {
-                Debug.LogWarning("[LayoutEditor] Apply: item skipped — prefab not found at " + assetPath + " (displayName: " + (item.displayName ?? "?") + ")");
+                LayoutEditorLog.LogWarning("[Applier] item skipped — prefab not found at " + assetPath + " (displayName: " + (item.displayName ?? "?") + ")");
                 continue;
             }
+
+            // 随机箱链路追踪：Dispenser 类物品走了哪条路径（新建/匹配现有）
+            if (item.stubKind == "Dispenser")
+                LayoutEditorLog.Log("[随机箱链路] Applier: " + (item.displayName ?? "?") + " id=" + (item.instanceId ?? "?")
+                    + " prefab=" + System.IO.Path.GetFileName(assetPath)
+                    + (item.instanceId != null && item.instanceId.StartsWith("new:", StringComparison.Ordinal) ? " → 新建" : " → 匹配现有"));
 
             var itemSnap = SnapStepForItem(item, snapStep);
             var pos = item.localPosition != null ? item.localPosition.ToVector3() : Vector3.zero;
@@ -211,19 +217,19 @@ public static class SceneLayoutApplier
             }
         }
 
-        // Bake move controls into the scene — full writes only (scoped writes never
-        // touch the scene's existing move groups). The scene itself (group roots +
+        // Bake animation groups into the scene — full writes only (scoped writes never
+        // touch the scene's existing anim groups). The scene itself (group roots +
         // Animator + TriggerQueue/TriggerTimer + controller/clips) is the single
         // source of truth: no external JSON config is kept.
         string bakeError = null;
-        if (only == null && document.moveControls != null)
+        if (only == null && document.AnimControls != null)
         {
-            // 按钮联动 phase 1：为被绑定的移动组覆写 start/end 触发器（须在烘焙前）。
+            // 按钮联动 phase 1：为被绑定的动画组覆写 start/end 触发器（须在烘焙前）。
             if (document.buttonLinks != null)
                 ButtonLinkBakery.PrepareGroups(document);
 
             // Remap "new:" group member IDs to the real Unity IDs of objects created this pass.
-            foreach (var group in document.moveControls.groups ?? new MoveGroupDto[0])
+            foreach (var group in document.AnimControls.groups ?? new AnimGroupDto[0])
             {
                 if (group == null) continue;
                 RemapNewIds(group.itemInstanceIds, createdObjects);
@@ -231,11 +237,11 @@ public static class SceneLayoutApplier
                 RemapNewIds(group.objectInstanceIds, createdObjects);
             }
 
-            bakeError = MoveControlBakery.Sync(scene, document.moveControls);
+            bakeError = AnimGroupBakery.Sync(scene, document.AnimControls);
             if (!string.IsNullOrEmpty(bakeError))
                 LayoutEditorLog.LogWarning(bakeError);
 
-            // 按钮联动 phase 2：移动组烘焙完成后创建逻辑 helper 并接线（组根须已存在）。
+            // 按钮联动 phase 2：动画组烘焙完成后创建逻辑 helper 并接线（组根须已存在）。
             if (document.buttonLinks != null)
             {
                 var blError = ButtonLinkBakery.Sync(scene, document, createdObjects);
@@ -258,7 +264,7 @@ public static class SceneLayoutApplier
                 }
             }
 
-            // 移动组含可行走面（地板成员 / walkable 物品成员）时，自动关闭
+            // 动画组含可行走面（地板成员 / walkable 物品成员）时，自动关闭
             // disableDynamicParenting：宿主 DynamicLandscapeParenting 在该开关
             // 为 true 时自毁，玩家/食材不会父挂载到组根 ObjectContainer 上，
             // 表现为「地板走了人留在原地」。单向自动（只关不开）。
@@ -349,6 +355,9 @@ public static class SceneLayoutApplier
             return null;
 
         var keepPaths = new HashSet<string>();
+        // FX 闪电灯由动画组烘焙拥有（创建/复用/清理），灯光面板不管理：
+        // 无条件保留，避免写回时被当作“web 已删除”清掉。
+        keepPaths.Add(AnimGroupBakery.FxLightPath);
         foreach (var dto in lights)
         {
             if (dto == null || string.IsNullOrEmpty(dto.hierarchyPath))
@@ -474,18 +483,18 @@ public static class SceneLayoutApplier
         }
     }
 
-    /// <summary>移动组含可行走面（floorInstanceIds 非空，或 itemInstanceIds 里有
+    /// <summary>动画组含可行走面（floorInstanceIds 非空，或 itemInstanceIds 里有
     /// walkable 物品成员——如地砖岛）时，把关卡 LevelInfoSO.disableDynamicParenting
     /// 置 false（只自动关、绝不自动开；开关本身仍在 web 关卡管理里可手动调）。
     /// 宿主侧链路：DynamicLandscapeParenting.Awake 检查该开关，false 时实体脚下
     /// 碰撞体向上递归找 IParentable（烘焙已挂在组根的 ObjectContainer）并
-    /// SetParent —— 玩家/食材随移动组走。</summary>
+    /// SetParent —— 玩家/食材随动画组走。</summary>
     private static void AutoEnableDynamicParenting(Scene scene, LayoutDocumentDto document)
     {
         try
         {
             var hasWalkSurface = false;
-            foreach (var g in document.moveControls.groups ?? new MoveGroupDto[0])
+            foreach (var g in document.AnimControls.groups ?? new AnimGroupDto[0])
             {
                 if (g == null) continue;
                 if (g.floorInstanceIds != null && g.floorInstanceIds.Length > 0) { hasWalkSurface = true; break; }
@@ -508,13 +517,13 @@ public static class SceneLayoutApplier
             info.disableDynamicParenting = false;
             EditorUtility.SetDirty(info);
             AssetDatabase.SaveAssets();
-            LayoutEditorLog.Log("move control: 移动组含可行走面，已自动关闭 disableDynamicParenting（"
-                + info.name + "）—— 玩家/食材将随移动组父挂载");
+            LayoutEditorLog.Log("anim group: 动画组含可行走面，已自动关闭 disableDynamicParenting（"
+                + info.name + "）—— 玩家/食材将随动画组父挂载");
         }
         catch (Exception e)
         {
             // 自动开关失败不阻断写回（场景已保存优先）。
-            LayoutEditorLog.LogWarning("move control: 自动关闭 disableDynamicParenting 失败：" + e.Message);
+            LayoutEditorLog.LogWarning("anim group: 自动关闭 disableDynamicParenting 失败：" + e.Message);
         }
     }
 
@@ -529,14 +538,14 @@ public static class SceneLayoutApplier
         if (collision == null)
             return;
 
-        // 移动组成员的 walkable 碰撞不能放静态 Design/Collision（不会跟随动画）。
-        // 挂为物品自身的子物体：MoveControlBakery 会把成员 re-parent 到组根并
+        // 动画组成员的 walkable 碰撞不能放静态 Design/Collision（不会跟随动画）。
+        // 挂为物品自身的子物体：AnimGroupBakery 会把成员 re-parent 到组根并
         // 动画其 localPosition，子碰撞体随之一起移动。
         var moveMembers = new HashSet<string>();
         var moveFloorIds = new HashSet<string>();
-        if (document != null && document.moveControls != null && document.moveControls.groups != null)
+        if (document != null && document.AnimControls != null && document.AnimControls.groups != null)
         {
-            foreach (var g in document.moveControls.groups)
+            foreach (var g in document.AnimControls.groups)
             {
                 if (g == null) continue;
                 if (g.itemInstanceIds != null)
@@ -616,7 +625,7 @@ public static class SceneLayoutApplier
                 var floorGo = ResolveItemGo2(floor, createdObjects);
                 if (floorGo != null)
                 {
-                    // 清掉上一轮挂的子碰撞（退出移动组/改尺寸后重建）。
+                    // 清掉上一轮挂的子碰撞（退出动画组/改尺寸后重建）。
                     for (int i = floorGo.transform.childCount - 1; i >= 0; i--)
                     {
                         var c = floorGo.transform.GetChild(i);
@@ -660,7 +669,7 @@ public static class SceneLayoutApplier
                 var itemGo = ResolveItemGo(item, createdObjects);
                 if (itemGo != null)
                 {
-                    // 清掉上一轮挂在物品下的子碰撞（改组/改尺寸后重建；物品退出移动组
+                    // 清掉上一轮挂在物品下的子碰撞（改组/改尺寸后重建；物品退出动画组
                     // 时下面的静态路径会重新生成，这里避免残留双重碰撞）。
                     for (int i = itemGo.transform.childCount - 1; i >= 0; i--)
                     {
@@ -702,9 +711,9 @@ public static class SceneLayoutApplier
         return t != null ? t.gameObject : null;
     }
 
-    /// <summary>移动组成员的 walkable 碰撞：挂为物品子物体并补偿父级旋转/缩放
+    /// <summary>动画组成员的 walkable 碰撞：挂为物品子物体并补偿父级旋转/缩放
     /// （贴花地砖常带 rotX=90、scale≈1.05），使世界空间碰撞盒仍为
-    /// axis-aligned 的 (w,0.4,d)、顶面在 walkY。父级被移动组动画驱动时随之移动。</summary>
+    /// axis-aligned 的 (w,0.4,d)、顶面在 walkY。父级被动画组动画驱动时随之移动。</summary>
     private static void CreateColFloorOnItem(Transform parent, int groundLayer, float cx, float cz, float w, float d, float walkY, float rotY)
     {
         var go = new GameObject("Col_Floor");
@@ -848,7 +857,7 @@ public static class SceneLayoutApplier
         if (floor == null || !floor.airFloor)
             return null;
 
-        // 烘焙后的岛式层级：Design/.../移动组/AirFloor/Ground
+        // 烘焙后的岛式层级：Design/.../动画组/AirFloor/Ground
         var scene = EditorSceneManager.GetActiveScene();
         if (scene.IsValid())
         {
@@ -873,10 +882,10 @@ public static class SceneLayoutApplier
             }
         }
 
-        if (document != null && document.moveControls != null && document.moveControls.groups != null
+        if (document != null && document.AnimControls != null && document.AnimControls.groups != null
             && !string.IsNullOrEmpty(floor.instanceId))
         {
-            foreach (var g in document.moveControls.groups)
+            foreach (var g in document.AnimControls.groups)
             {
                 if (g == null || g.floorInstanceIds == null)
                     continue;
@@ -887,7 +896,7 @@ public static class SceneLayoutApplier
                 }
                 if (!inGroup)
                     continue;
-                foreach (var o in g.memberOffsets ?? new MoveGroupMemberOffsetDto[0])
+                foreach (var o in g.memberOffsets ?? new AnimGroupMemberOffsetDto[0])
                 {
                     if (o == null || o.instanceId != floor.instanceId || string.IsNullOrEmpty(o.hierarchyPath))
                         continue;
@@ -895,7 +904,7 @@ public static class SceneLayoutApplier
                     if (t != null)
                         return t;
                 }
-                foreach (var m in g.memberStatic ?? new MoveGroupMemberDto[0])
+                foreach (var m in g.memberStatic ?? new AnimGroupMemberDto[0])
                 {
                     if (m == null || m.instanceId != floor.instanceId || string.IsNullOrEmpty(m.hierarchyPath))
                         continue;
@@ -976,7 +985,7 @@ public static class SceneLayoutApplier
             Undo.DestroyObjectImmediate(go);
     }
 
-    /// <summary>移动组内可行走面须挂 ObjectContainer，DynamicLandscapeParenting 才能把
+    /// <summary>动画组内可行走面须挂 ObjectContainer，DynamicLandscapeParenting 才能把
     /// 玩家/食材父挂载到随动画移动的碰撞体上。</summary>
     private static void EnsureObjectContainerForMoveFloor(FloorDto floor, LayoutDocumentDto document, GameObject go)
     {
@@ -1065,10 +1074,10 @@ public static class SceneLayoutApplier
     private static bool IsFloorInMoveGroup(FloorDto floor, LayoutDocumentDto document)
     {
         if (floor == null || string.IsNullOrEmpty(floor.instanceId)
-            || document == null || document.moveControls == null
-            || document.moveControls.groups == null)
+            || document == null || document.AnimControls == null
+            || document.AnimControls.groups == null)
             return false;
-        foreach (var g in document.moveControls.groups)
+        foreach (var g in document.AnimControls.groups)
         {
             if (g == null || g.floorInstanceIds == null)
                 continue;
@@ -2163,7 +2172,7 @@ public static class SceneLayoutApplier
         var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
         if (parent == null)
         {
-            Debug.LogWarning("[LayoutEditor] CreateInstance: parent path not found \"" + parentPath
+            LayoutEditorLog.LogWarning("[Applier] CreateInstance: parent path not found \"" + parentPath
                 + "\" for " + assetPath + " (displayName: " + (item.displayName ?? "?") + ")");
             return null;
         }
@@ -2171,7 +2180,7 @@ public static class SceneLayoutApplier
         var instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
         if (instance == null)
         {
-            Debug.LogWarning("[LayoutEditor] CreateInstance: InstantiatePrefab returned null for "
+            LayoutEditorLog.LogWarning("[Applier] CreateInstance: InstantiatePrefab returned null for "
                 + assetPath + " (displayName: " + (item.displayName ?? "?") + ")");
             return null;
         }

@@ -652,11 +652,12 @@ function categorize(assetPath) {
   if (seg[0] === "art" && seg.length > 1) return { category: "art", theme: seg[1] };
   if (seg[0] === "art") return { category: "art", theme: "misc" };
   if (seg[0] === "decor" && seg[1] === "food") return { category: "decor/food", theme: null };
+  if (seg[0] === "decor" && seg[1] === "recipes") return { category: "decor/recipes", theme: null };
   return { category: "other", theme: seg[0] || "misc" };
 }
 
 function layoutMetaFor(id, category) {
-  if (category === "decor/food") {
+  if (category === "decor/food" || category === "decor/recipes") {
     return { layoutTier: "decor" };
   }
   if (category === "art" || category === "other") {
@@ -821,7 +822,8 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
       if (!guid) continue;
       const { category, theme } = categorize(assetPath);
       // Priority: hand-authored override > Unity-measured (decor only) > 1x1.
-      const isDecorCategory = category === "art" || category === "other" || category === "decor/food";
+      const isDecorCategory =
+        category === "art" || category === "other" || category === "decor/food" || category === "decor/recipes";
       const measured = isDecorCategory ? measuredFootprints.get(id) : undefined;
       const fp =
         FOOTPRINT_OVERRIDES[id] ||
@@ -845,6 +847,12 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
           ? {
               ingredientDecor: true,
               ingredientGuid: readPseudoPrefabSoGuid(full),
+            }
+          : {}),
+        ...(category === "decor/recipes"
+          ? {
+              recipeDecor: true,
+              recipeGuid: readPseudoPrefabSoGuid(full),
             }
           : {}),
       });
@@ -905,6 +913,16 @@ function buildPaletteGroups(byCategory) {
     });
   }
 
+  if ((byCategory["decor/recipes"] || []).length > 0) {
+    groups.push({
+      key: "decor/recipes",
+      labelZh: "装饰 · 成品菜",
+      labelEn: "Decor · plated dishes",
+      layoutTier: "decor",
+      itemCount: byCategory["decor/recipes"].length,
+    });
+  }
+
   for (const key of artKeys) {
     const theme = key.slice(4);
     const themeZh = ART_THEME_ZH[theme] || theme;
@@ -924,6 +942,7 @@ function buildPaletteGroups(byCategory) {
       !k.startsWith("art/") &&
       !k.startsWith("surface/") &&
       k !== "decor/food" &&
+      k !== "decor/recipes" &&
       !CORE_PALETTE.some((c) => c.key === k)
   );
   for (const key of otherKeys.sort()) {
@@ -1937,7 +1956,7 @@ function stampIcons(list, sub) {
   let count = 0;
   for (const it of list) {
     if (!it.id) continue;
-    const iconSub = it.ingredientDecor ? "ingredients" : sub;
+    const iconSub = it.ingredientDecor ? "ingredients" : it.recipeDecor ? "recipes" : sub;
     const iconDir = path.join(OUT_DIR, "icons", iconSub);
     const has = fs.existsSync(path.join(iconDir, it.id + ".png"));
     it.icon = has;

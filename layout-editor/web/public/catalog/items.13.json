@@ -3450,6 +3450,22 @@
       "icon": false
     },
     {
+      "id": "RandomDispenser",
+      "guid": "b76171dfcc074248aa6572edfe9f476e",
+      "assetPath": "Assets/commonW1/prefabs/core/counters/RandomDispenser.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "随机食材箱",
+      "nameEn": "Random Dispenser",
+      "icon": true
+    },
+    {
       "id": "service_window",
       "guid": "414f1107f1e88fa016cd887b8c628d49",
       "assetPath": "Assets/common03/prefabs/core/counters/service_window.prefab",
@@ -3527,22 +3543,6 @@
       "layoutTier": "core",
       "nameZh": "搅拌台（中世纪）",
       "nameEn": "Mixer Station (Medieval)",
-      "icon": false
-    },
-    {
-      "id": "workstation_service_hatch",
-      "guid": "a663e3e3ac2869cbb08d5055f2758a99",
-      "assetPath": "Assets/common03/prefabs/core/counters/workstation_service_hatch.prefab",
-      "category": "counters/service",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "core",
-      "nameZh": "传菜窗（部落）",
-      "nameEn": "Service Hatch (Horde)",
       "icon": false
     }
   ]

@@ -4,82 +4,6 @@
   "itemCount": 8,
   "recipes": [
     {
-      "guid": "76bc4e01c41a8462246f939795269a60",
-      "id": "christmaspudding",
-      "nameZh": "圣诞布丁",
-      "nameEn": "Christmas Pudding",
-      "assetPath": "Assets/common03/Recipes/dlc03/christmaspudding.asset",
-      "cookingStep": "Mixer",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "driedfruit"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "dlc03",
-      "type": "pudding",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Mixer",
-          "utensils": [
-            "Mixer",
-            "MixerBowl",
-            "Oven"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO",
-            "driedfruit"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "4d0a93cbb3c1750ac5ea1d2bee43e067",
-      "id": "christmaspuddingwithorange",
-      "nameZh": "圣诞布丁（橙子）",
-      "nameEn": "Christmas Pudding & Orange",
-      "assetPath": "Assets/common03/Recipes/dlc03/christmaspuddingwithorange.asset",
-      "cookingStep": "Mixer",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "driedfruit",
-        "orange"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 120,
-      "isCustom": false,
-      "group": "dlc03",
-      "type": "pudding",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Mixer",
-          "utensils": [
-            "Mixer",
-            "MixerBowl",
-            "Oven"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO",
-            "driedfruit",
-            "orange"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "cedba94c13b27578980573cf94629c27",
       "id": "mixedfloureggdriedfruitorange",
       "nameZh": "果干橙子面糊",
@@ -190,48 +114,6 @@
       "icon": true
     },
     {
-      "guid": "e9ea43cf689b1cc06d5f8efaa44086cb",
-      "id": "hotchocolatecream",
-      "nameZh": "热可可（加奶油）",
-      "nameEn": "Hot Chocolate & Cream",
-      "assetPath": "Assets/common03/Recipes/dlc03/hotchocolatecream.asset",
-      "cookingStep": "Pot",
-      "platingStep": "",
-      "ingredients": [
-        "milk",
-        "dlc03_chocolate",
-        "whippedcream"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "dlc03",
-      "type": "hotchocolate",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "whippedcream"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "milk",
-            "dlc03_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "30ae2ee6ae8f1cd07a385928131b9a1c",
       "id": "hotchocolatemallow",
       "nameZh": "热可可（加棉花糖）",
@@ -257,6 +139,48 @@
           "utensils": [],
           "ingredients": [
             "marshmallow"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "milk",
+            "dlc03_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "e9ea43cf689b1cc06d5f8efaa44086cb",
+      "id": "hotchocolatecream",
+      "nameZh": "热可可（加奶油）",
+      "nameEn": "Hot Chocolate & Cream",
+      "assetPath": "Assets/common03/Recipes/dlc03/hotchocolatecream.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "milk",
+        "dlc03_chocolate",
+        "whippedcream"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc03",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "whippedcream"
           ]
         },
         {
@@ -312,6 +236,82 @@
           "ingredients": [
             "milk",
             "dlc03_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "76bc4e01c41a8462246f939795269a60",
+      "id": "christmaspudding",
+      "nameZh": "圣诞布丁",
+      "nameEn": "Christmas Pudding",
+      "assetPath": "Assets/common03/Recipes/dlc03/christmaspudding.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "driedfruit"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc03",
+      "type": "pudding",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "driedfruit"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4d0a93cbb3c1750ac5ea1d2bee43e067",
+      "id": "christmaspuddingwithorange",
+      "nameZh": "圣诞布丁（橙子）",
+      "nameEn": "Christmas Pudding & Orange",
+      "assetPath": "Assets/common03/Recipes/dlc03/christmaspuddingwithorange.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "driedfruit",
+        "orange"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "dlc03",
+      "type": "pudding",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "driedfruit",
+            "orange"
           ]
         }
       ],

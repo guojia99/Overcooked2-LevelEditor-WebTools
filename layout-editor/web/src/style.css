@@ -1642,6 +1642,91 @@ canvas.pan-active {
   color: #e8eaed;
   word-break: break-word;
 }
+/* 随机食材箱编辑卡片：横向布局，右侧内联权重输入（覆盖 .pick-card input 的隐藏规则） */
+.pick-card.rc-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.pick-card.rc-card .rc-card-main {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+.pick-card.rc-card input.rc-weight {
+  position: static;
+  opacity: 1;
+  pointer-events: auto;
+  width: 58px;
+  height: 24px;
+  padding: 0 4px;
+  flex: none;
+}
+/* 随机食材箱：问号图标样式选择行（弹窗内缩略图单选）与面板缩略图 */
+.qm-style-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid #2a2f3a;
+  margin-bottom: 6px;
+}
+.qm-style {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 7px;
+  border: 1px solid #2a2f3a;
+  border-radius: 7px;
+  background: #1b1e23;
+  cursor: pointer;
+  user-select: none;
+}
+.qm-style.selected {
+  border-color: #34d36f;
+  background: rgba(52, 211, 111, 0.12);
+}
+.qm-style input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.qm-style img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+}
+.qm-style span {
+  font-size: 11px;
+  color: #e8eaed;
+}
+.qm-thumb {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+/* 随机食材箱编辑弹窗：整体加高（分组/分类筛选 + 卡片区占满剩余空间） */
+.modal-panel.qm-editor {
+  height: 680px;
+  max-height: 92vh;
+}
+.modal-panel.qm-editor .modal-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.modal-panel.qm-editor .modal-scroll {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+}
 .pick-card .pc-en {
   display: block;
   font-size: 10px;
@@ -4714,7 +4799,7 @@ body.manage-bg {
   border-bottom: 2px solid #3d6bf3;
 }
 
-.move-control-count {
+.anim-control-count {
   color: #9aa0a6;
   font-weight: 400;
   font-size: 10px;
@@ -4723,7 +4808,7 @@ body.manage-bg {
 
 /* ---------- Move Control Panel ---------- */
 
-.move-list-head {
+.anim-list-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4732,21 +4817,21 @@ body.manage-bg {
   border-bottom: 1px solid #3a3f4b;
 }
 
-.move-list-title {
+.anim-list-title {
   font-size: 14px;
   font-weight: 700;
   color: #e8eaed;
 }
 
 /* Group cards in the list view */
-.move-group-card {
+.anim-group-card {
   display: flex;
   cursor: pointer;
   border-bottom: 1px solid #2a2e36;
   background: #1e2127;
 }
 
-.move-group-card:hover {
+.anim-group-card:hover {
   background: #2d323c;
 }
 
@@ -4817,7 +4902,7 @@ body.manage-bg {
 }
 
 /* Empty state */
-.move-empty {
+.anim-empty {
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
@@ -4826,30 +4911,30 @@ body.manage-bg {
   text-align: center;
 }
 
-.move-empty-icon {
+.anim-empty-icon {
   font-size: 30px;
 }
 
-.move-empty-text {
+.anim-empty-text {
   font-size: 15px;
   font-weight: 700;
   color: #e8eaed;
 }
 
-.move-empty-sub {
+.anim-empty-sub {
   font-size: 11.5px;
   color: #8b93a3;
   line-height: 1.5;
 }
 
-.move-empty-btn {
+.anim-empty-btn {
   margin-top: 6px;
   font-size: 13px;
   padding: 6px 16px;
 }
 
 /* Group editor header */
-.move-editor-head {
+.anim-editor-head {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4857,7 +4942,7 @@ body.manage-bg {
   border-bottom: 1px solid #3a3f4b;
 }
 
-.move-editor-head #group-name {
+.anim-editor-head #group-name {
   flex: 1;
   min-width: 0;
   background: #1a1d23;
@@ -4869,14 +4954,14 @@ body.manage-bg {
   border-radius: 3px;
 }
 
-.move-editor-color {
+.anim-editor-color {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   flex: 0 0 auto;
 }
 
-.move-editor-summary {
+.anim-editor-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4894,7 +4979,7 @@ body.manage-bg {
 }
 
 /* Explicit interaction-mode bar */
-.move-mode-bar {
+.anim-mode-bar {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4931,12 +5016,12 @@ body.manage-bg {
 }
 
 /* Colored panel sections */
-.move-section {
+.anim-section {
   padding: 8px 10px;
   border-bottom: 1px solid #2a2e36;
 }
 
-.move-section-title {
+.anim-section-title {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4960,19 +5045,19 @@ body.manage-bg {
 }
 
 /* Members */
-.move-member-groups {
+.anim-member-groups {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.move-member-group-head {
+.anim-member-group-head {
   font-size: 11px;
   color: #9aa0a6;
   font-weight: 600;
 }
 
-.move-member-row {
+.anim-member-row {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4982,11 +5067,11 @@ body.manage-bg {
   color: #ddd;
 }
 
-.move-member-row:hover {
+.anim-member-row:hover {
   background: #2d323c;
 }
 
-.move-member-row .zh {
+.anim-member-row .zh {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -5014,7 +5099,7 @@ body.manage-bg {
   font-size: 11px;
 }
 
-.move-member-empty {
+.anim-member-empty {
   font-size: 11px;
   padding: 2px 4px;
 }
@@ -5047,7 +5132,7 @@ body.manage-bg {
   background: rgba(79, 214, 192, 0.16);
 }
 
-.move-add-row {
+.anim-add-row {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
@@ -5055,7 +5140,7 @@ body.manage-bg {
   align-items: center;
 }
 
-.move-add-row select {
+.anim-add-row select {
   background: #1a1d23;
   color: #ddd;
   border: 1px solid #444;
@@ -5066,7 +5151,7 @@ body.manage-bg {
 }
 
 /* Waypoints */
-.move-wp-list {
+.anim-wp-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -5074,7 +5159,7 @@ body.manage-bg {
   overflow-y: auto;
 }
 
-.move-wp-row {
+.anim-wp-row {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -5084,11 +5169,11 @@ body.manage-bg {
   font-size: 12.5px;
 }
 
-.move-wp-row:hover {
+.anim-wp-row:hover {
   background: #2d323c;
 }
 
-.move-wp-row.active {
+.anim-wp-row.active {
   background: #31435f;
 }
 
@@ -5146,7 +5231,7 @@ body.manage-bg {
   flex: 0 0 auto;
 }
 
-.move-wp-hint {
+.anim-wp-hint {
   font-size: 11px;
   color: #6d737d;
   padding: 4px 0;
@@ -5155,11 +5240,11 @@ body.manage-bg {
 }
 
 /* Unified route editor: waypoint pool (collapsible) */
-.move-wp-pool {
+.anim-wp-pool {
   margin-top: 3px;
 }
 
-.move-wp-pool-head {
+.anim-wp-pool-head {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -5173,11 +5258,11 @@ body.manage-bg {
   border: 1px dashed #3a3f4b;
 }
 
-.move-wp-pool-head:hover {
+.anim-wp-pool-head:hover {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.move-wp-pool-body {
+.anim-wp-pool-body {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -5188,7 +5273,7 @@ body.manage-bg {
   border-radius: 0 0 3px 3px;
 }
 
-.move-wp-pool-body .wp-pos {
+.anim-wp-pool-body .wp-pos {
   flex: 1;
   color: #7c828c;
   font-family: monospace;
@@ -5685,37 +5770,37 @@ body.manage-bg {
   border-radius: 3px;
 }
 
-.move-event-actions {
+.anim-event-actions {
   display: flex;
   gap: 6px;
   margin-top: 6px;
 }
 
 /* Group settings */
-.move-settings-grid {
+.anim-settings-grid {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.move-settings-grid label {
+.anim-settings-grid label {
   display: block;
   font-size: 12px;
   color: #9aa0a6;
 }
 
-.move-settings-grid label.check {
+.anim-settings-grid label.check {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.move-settings-grid label.check input {
+.anim-settings-grid label.check input {
   width: auto;
   margin: 0;
 }
 
-.move-settings-grid input[type="number"] {
+.anim-settings-grid input[type="number"] {
   width: 100%;
   background: #1a1d23;
   color: #ddd;
@@ -5727,7 +5812,7 @@ body.manage-bg {
 }
 
 /* Danger zone */
-.move-danger {
+.anim-danger {
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -5737,7 +5822,7 @@ body.manage-bg {
 }
 
 /* Floating pick bar (top-center of the canvas) */
-.move-pick-bar {
+.anim-pick-bar {
   position: absolute;
   top: 10px;
   left: 50%;
@@ -5755,7 +5840,7 @@ body.manage-bg {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
-.move-pick-bar.hidden {
+.anim-pick-bar.hidden {
   display: none;
 }
 
@@ -5793,7 +5878,7 @@ body.manage-bg {
 }
 
 /* Group editor tabs */
-.move-tabs {
+.anim-tabs {
   display: flex;
   gap: 4px;
   padding: 8px 10px 0;
@@ -5801,7 +5886,7 @@ body.manage-bg {
   background: rgba(255, 255, 255, 0.02);
 }
 
-.move-tab {
+.anim-tab {
   padding: 5px 12px;
   background: #262a32;
   color: #9aa0a6;
@@ -5812,12 +5897,12 @@ body.manage-bg {
   font-size: 12.5px;
 }
 
-.move-tab:hover {
+.anim-tab:hover {
   color: #e0e0e0;
   background: #2d323c;
 }
 
-.move-tab.active {
+.anim-tab.active {
   background: #1e2127;
   color: #f0f0f0;
   font-weight: 700;
@@ -5825,7 +5910,7 @@ body.manage-bg {
   box-shadow: inset 0 2px 0 #3d6bf3;
 }
 
-.move-tab-body {
+.anim-tab-body {
   padding-top: 4px;
 }
 
@@ -5967,7 +6052,7 @@ body.manage-bg {
 }
 
 /* Routes tab toolbar */
-.move-routes-toolbar {
+.anim-routes-toolbar {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -6207,6 +6292,181 @@ body.manage-bg {
 .wp-nudge-btns .btn-small {
   padding: 2px 7px;
   font-size: 11px;
+}
+
+/* ---------- Anim timeline (AE 风格时间轴) ---------- */
+
+.anim-tl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 4px 0 6px;
+}
+
+.anim-tl-toolbar .btn-small {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.anim-tl-time {
+  font-size: 11px;
+  color: #8fa6cc;
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
+.anim-tl-toolbar-sp {
+  flex: 1 1 auto;
+}
+
+.anim-tl-warn {
+  font-size: 11px;
+  color: #e8b35a;
+  background: rgba(232, 179, 90, 0.08);
+  border: 1px solid rgba(232, 179, 90, 0.35);
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+}
+
+.anim-tl-warn-inline {
+  font-size: 11px;
+  color: #e8b35a;
+}
+
+.anim-tl-zoom {
+  font-size: 11px;
+  color: #8b93a3;
+  min-width: 38px;
+  text-align: center;
+  align-self: center;
+}
+
+.anim-tl-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #2e3340;
+  border-radius: 4px;
+  background: #14161c;
+  margin-bottom: 6px;
+}
+
+.anim-tl-canvas {
+  position: relative;
+  user-select: none;
+}
+
+.anim-tl-ruler {
+  position: relative;
+  height: 20px;
+  border-bottom: 1px solid #2e3340;
+  cursor: ew-resize;
+  /* 0.1s / 1s 网格（TL_PPS = 48px/s） */
+  background-image:
+    repeating-linear-gradient(to right, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4.8px),
+    repeating-linear-gradient(to right, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 48px);
+}
+
+.anim-tl-tick {
+  position: absolute;
+  top: 3px;
+  font-size: 10px;
+  color: #8b93a3;
+  padding-left: 3px;
+  pointer-events: none;
+}
+
+.anim-tl-lanes {
+  position: relative;
+  background-image:
+    repeating-linear-gradient(to right, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 4.8px),
+    repeating-linear-gradient(to right, rgba(255, 255, 255, 0.09) 0 1px, transparent 1px 48px);
+}
+
+.anim-tl-block {
+  position: absolute;
+  height: 26px;
+  border: 1px solid;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px 0 6px;
+  font-size: 11px;
+  color: #e8eaed;
+  cursor: grab;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.anim-tl-block:active {
+  cursor: grabbing;
+}
+
+.anim-tl-block.sel {
+  outline: 2px solid #e8eaed;
+  z-index: 2;
+}
+
+.anim-tl-block-label {
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.anim-tl-block-meta {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.anim-tl-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: ew-resize;
+}
+
+.anim-tl-handle.r {
+  right: 0;
+  border-right: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.anim-tl-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px solid #ff5252;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.anim-tl-playhead::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -6px;
+  border: 5px solid transparent;
+  border-top: 7px solid #ff5252;
+}
+
+.anim-tl-inspector {
+  border-top: 1px solid #2a2e36;
+  padding-top: 6px;
+}
+
+.anim-tl-insp-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0 6px;
+}
+
+.anim-tl-insp-head .subgroup-meta {
+  margin-left: auto;
 }
 
 /* ---------- Buttons ---------- */

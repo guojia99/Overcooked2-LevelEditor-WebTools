@@ -7,10 +7,14 @@ run:
 	rm -rf ./common03/
 	rm -rf ./commonW1
 	rm -rf ./Assembly-CSharp-Patch/
+	rm -rf ./BepInExPlugins/
+
+	cp -r ../Overcooked2-LevelEditor/BepInExPlugins .
 	cp -r ../Overcooked2-LevelEditor/layout-editor .
 	cp -r ../Overcooked2-LevelEditor/Assets/common03 .
 	cp -r ../Overcooked2-LevelEditor/Assets/commonW1 .
 	cp -r ../Overcooked2-LevelEditor/Assets/Editor/LayoutEditor .
 	cp -r ../Overcooked2-LevelEditor/Assembly-CSharp-Patch .
+
 	rm -rf layout-editor/web/node_modules/
 	rm -rf layout-editor/scripts/.venv-audio/

@@ -76,7 +76,7 @@ import type {
   CatalogItem
 } from "../types";
 
-/** 旧版食材装饰（stubKind=IngredientDecor + 食材 SO guid）→ common03 包装 prefab。 */
+/** 旧版食材装饰（stubKind=IngredientDecor）→ commonW1 decor/food 包装 prefab。 */
 function migrateIngredientDecorToWrapper(raw: LayoutItem): void {
   if (raw.stubKind !== "IngredientDecor" && !raw.ingredientDecor) return;
   const ingGuid = raw.ingredientDecor?.ingredientGuid || raw.prefabGuid;
@@ -90,6 +90,19 @@ function migrateIngredientDecorToWrapper(raw: LayoutItem): void {
   }
   delete raw.stubKind;
   delete raw.ingredientDecor;
+}
+
+/** common03 decor 包装已迁至 commonW1：按 catalog id 更新 guid / assetPath。 */
+function migrateDecorCommon03ToCommonW1(raw: LayoutItem): void {
+  const p = raw.prefabAssetPath ?? "";
+  if (!p.includes("/common03/prefabs/") || !p.includes("/decor/")) return;
+  const id = prefabIdFromPath(p);
+  if (!id) return;
+  const wrapper = catalogItemById(id);
+  if (!wrapper || !wrapper.assetPath.includes("/commonW1/")) return;
+  raw.prefabGuid = wrapper.guid;
+  raw.prefabAssetPath = wrapper.assetPath;
+  if (!raw.parentPath) raw.parentPath = wrapper.defaultParent;
 }
 
 /** 旧版空气墙 collider 水平 1m×localScale；新版底边 1.2m，scale 为格数倍率。 */
@@ -145,6 +158,7 @@ export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
     ensureAirWallColliderCenter(raw);
   }
   migrateIngredientDecorToWrapper(raw);
+  migrateDecorCommon03ToCommonW1(raw);
   const wp = raw.worldPosition ?? raw.localPosition;
   // 背景水面等：Unity 导出 footprint 为渲染器实测格数（如 1×26），尺寸由
   // catalog 1×1 × localScale 表达；载入时还原为目录基准，避免与 scale 二次相乘。
@@ -344,11 +358,11 @@ export function deleteSelected() {
     return;
   }
   pushHistory();
-  // Remove move-control group membership for deleted items; drop emptied groups.
+  // Remove anim-control group membership for deleted items; drop emptied groups.
   const deletedInstanceIds = new Set(
     S.items.filter((i) => kill.has(i._editorKey)).map((i) => i.instanceId)
   );
-  for (const g of S.moveControls) {
+  for (const g of S.animControls) {
     if (!deletedInstanceIds.size) break;
     g.itemInstanceIds = g.itemInstanceIds.filter((id) => !deletedInstanceIds.has(id));
     if (g.memberOffsets)
@@ -356,18 +370,18 @@ export function deleteSelected() {
     if (g.memberStatic)
       g.memberStatic = g.memberStatic.filter((m) => !deletedInstanceIds.has(m.instanceId));
   }
-  S.moveControls = S.moveControls.filter((g) => g.itemInstanceIds.length > 0 || g.floorInstanceIds.length > 0 || g.objectInstanceIds.length > 0);
+  S.animControls = S.animControls.filter((g) => g.itemInstanceIds.length > 0 || g.floorInstanceIds.length > 0 || g.objectInstanceIds.length > 0);
   // 删除物品时同步清理指向它的开关联动（断头台/饮料机按钮）
   if (deletedInstanceIds.size)
     S.switchLinks = S.switchLinks.filter((l) => !deletedInstanceIds.has(l.switchId) && !deletedInstanceIds.has(l.targetId));
   S.items = S.items.filter((i) => !kill.has(i._editorKey));
-  // 同步清理按钮↔移动组联动（须在物品列表更新之后：源按钮被删则联动失效）
+  // 同步清理按钮↔动画组联动（须在物品列表更新之后：源按钮被删则联动失效）
   cleanOrphanedButtonLinks();
   // 同步清理按钮↔事件组联动（源按钮/目标物品被删则相应事件失效）
   cleanOrphanedButtonEvents();
-  if (S.activeMoveGroupId && !S.moveControls.some((g) => g.id === S.activeMoveGroupId)) {
-    S.activeMoveGroupId = null;
-    S.activeMoveEventIdx = null;
+  if (S.activeAnimGroupId && !S.animControls.some((g) => g.id === S.activeAnimGroupId)) {
+    S.activeAnimGroupId = null;
+    S.activeAnimEventIdx = null;
     S.selectedWaypointId = null;
   }
   S.items = S.items.filter((i) => !kill.has(i._editorKey));

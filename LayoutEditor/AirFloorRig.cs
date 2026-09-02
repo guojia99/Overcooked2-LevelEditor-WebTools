@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 移动组内空气地板的「岛」式层级，对齐 oc1_story 3-4（Island + Ground）：
+/// 动画组内空气地板的「岛」式层级，对齐 oc1_story 3-4（Island + Ground）：
 ///  Animator 驱动带 ObjectContainer 的容器，碰撞盒在子物体 Ground 上随父级移动。
 /// </summary>
 public static class AirFloorRig

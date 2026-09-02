@@ -448,7 +448,7 @@ export function hitTestFloorsAll(wx: number, wz: number): FloorHit[] {  const hi
 export function drawSurfaceItems(
   highlight: boolean,
   tier: "floor" | "background" = "floor",
-  previewPos: Map<string, { x: number; z: number; y?: number }> | null = null
+  previewPos: Map<string, { x: number; z: number; y?: number; rotY?: number }> | null = null
 ) {
   const sorted = [...S.items]
     .filter((it) => isSurfaceItem(S.catalogByGuid.get(it.prefabGuid)))
@@ -458,8 +458,8 @@ export function drawSurfaceItems(
     .sort((a, b) => drawLayerForItem(a, S.catalogByGuid) - drawLayerForItem(b, S.catalogByGuid));
   for (const item of sorted) {
     const selected = highlight && isSelected(item._editorKey);
-    // Move preview: draw the surface item at its simulated position (dim ghost
-    // at the original spot), so counters/platforms visibly move with the route.
+    // 动画预览：表面物品绘制在模拟位置（原位保留暗色残影），并应用旋转预览，
+    // 工作台/平台随路线移动 + 自转可见。
     const pp = previewPos?.get(item.instanceId);
     if (!pp) {
       drawItem(item, selected);
@@ -471,7 +471,15 @@ export function drawSurfaceItems(
     dom.ctx.restore();
     dom.ctx.save();
     dom.ctx.globalAlpha = 1;
-    drawItem({ ...item, _wx: pp.x, _wz: pp.z }, selected);
+    drawItem(
+      {
+        ...item,
+        _wx: pp.x,
+        _wz: pp.z,
+        localRotationY: pp.rotY != null ? item.localRotationY + pp.rotY : item.localRotationY,
+      },
+      selected
+    );
     dom.ctx.restore();
   }
 }

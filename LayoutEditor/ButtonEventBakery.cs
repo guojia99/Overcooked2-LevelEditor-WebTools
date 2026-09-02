@@ -93,7 +93,7 @@ public static class ButtonEventBakery
     private static string SyncInner(Scene scene, LayoutDocumentDto doc, Dictionary<string, GameObject> createdObjects)
     {
         var sceneName = Path.GetFileNameWithoutExtension(scene.path);
-        var animDir = MoveControlBakery.GetAnimationsFolder(scene.path);
+        var animDir = AnimGroupBakery.GetAnimationsFolder(scene.path);
         var errors = new List<string>();
         var usedHelpers = new HashSet<string>(StringComparer.Ordinal);
         var usedAssets = new HashSet<string>(StringComparer.Ordinal);
@@ -103,7 +103,7 @@ public static class ButtonEventBakery
             : new LayoutButtonEventLinkDto[0];
 
         if (links.Length > 0)
-            MoveControlBakery.EnsureFolder(animDir);
+            AnimGroupBakery.EnsureFolder(animDir);
 
         foreach (var link in links)
         {
@@ -290,7 +290,7 @@ public static class ButtonEventBakery
             if (!string.IsNullOrEmpty(sw.triggerOnAnimator) && sw.animatorToTrigger != null &&
                 sw.animatorToTrigger != targetAnim)
                 LayoutEditorLog.LogWarning("button event: 触发源 " + sourceGo.name +
-                    " 同时绑定了移动组联动与事件组，后者覆盖前者接线");
+                    " 同时绑定了动画组联动与事件组，后者覆盖前者接线");
             Undo.RecordObject(sw, "Layout Editor Button Event");
             sw.triggerOnAnimator = pressTrigger;
             sw.animatorToTrigger = targetAnim;
@@ -375,7 +375,7 @@ public static class ButtonEventBakery
     private static AnimatorController BuildController(string path, string helperName,
         List<List<string>> doneNames, List<List<string>> targetNames, List<List<string>> eventTriggers)
     {
-        MoveControlBakery.DeleteAssetIfExists(path);
+        AnimGroupBakery.DeleteAssetIfExists(path);
         var ctrl = AnimatorController.CreateAnimatorControllerAtPath(path);
         if (ctrl == null) return null;
         ctrl.name = Path.GetFileNameWithoutExtension(path);

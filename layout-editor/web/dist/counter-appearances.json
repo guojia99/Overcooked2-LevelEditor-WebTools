@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T14:33:09.445Z",
+  "generatedAt": "2026-09-01T17:33:51.496Z",
   "schemaVersion": 3,
   "typeNames": {
     "Counter": "普通桌台",
@@ -66,16 +66,6 @@
   "byType": {
     "Bin": [
       {
-        "guid": "f29979ebe0d96a11001b62df84af2035",
-        "id": "BinWood13SO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/BinWood13SO.asset",
-        "nameZh": "垃圾桶 · 木纹·中秋（Bin Wood13）",
-        "nameEn": "Bin Wood13",
-        "theme": "Wood13",
-        "themeName": "木纹·中秋",
-        "bundleName": "bundle449"
-      },
-      {
         "guid": "8cb0c2b73ce3c284aada830bf2d4cf6a",
         "id": "BinSO",
         "assetPath": "Assets/common01/pseudo_prefab_so/counters/BinSO.asset",
@@ -84,29 +74,19 @@
         "theme": "",
         "themeName": "默认",
         "bundleName": "bundle47"
+      },
+      {
+        "guid": "f29979ebe0d96a11001b62df84af2035",
+        "id": "BinWood13SO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/BinWood13SO.asset",
+        "nameZh": "垃圾桶 · 木纹·中秋（Bin Wood13）",
+        "nameEn": "Bin Wood13",
+        "theme": "Wood13",
+        "themeName": "木纹·中秋",
+        "bundleName": "bundle449"
       }
     ],
     "ChoppingCounter": [
-      {
-        "guid": "44942c0d3c1df3c4aaa39d8db39d9284",
-        "id": "ChoppingCounterSpaceSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ChoppingCounterSpaceSO.asset",
-        "nameZh": "切菜台 · 太空（Chopping Counter Space）",
-        "nameEn": "Chopping Counter Space",
-        "theme": "Space",
-        "themeName": "太空",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "ae2e4deae65450a4b98e20759eb10743",
-        "id": "ChoppingCounterOldSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ChoppingCounterOldSO.asset",
-        "nameZh": "切菜台 · 旧式（Chopping Counter Old）",
-        "nameEn": "Chopping Counter Old",
-        "theme": "Old",
-        "themeName": "旧式",
-        "bundleName": "bundle47"
-      },
       {
         "guid": "d9243229c6be08046b196a24ac6f3911",
         "id": "ChoppingCounterDarkSO",
@@ -115,56 +95,6 @@
         "nameEn": "Chopping Counter Dark",
         "theme": "Dark",
         "themeName": "暗黑",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "c8de7b0afb6063195aa3843444e871ba",
-        "id": "ChoppingCounterWood13SO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/ChoppingCounterWood13SO.asset",
-        "nameZh": "切菜台 · 木纹·中秋（Chopping Counter Wood13）",
-        "nameEn": "Chopping Counter Wood13",
-        "theme": "Wood13",
-        "themeName": "木纹·中秋",
-        "bundleName": "bundle449"
-      },
-      {
-        "guid": "5f4efb09f9bde12040298a8eb02ca724",
-        "id": "ChoppingCounterSwampSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/ChoppingCounterSwampSO.asset",
-        "nameZh": "切菜台 · 沼泽（Chopping Counter Swamp）",
-        "nameEn": "Chopping Counter Swamp",
-        "theme": "Swamp",
-        "themeName": "沼泽",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "27de14b04fa42274cbacd5b677828227",
-        "id": "ChoppingCounterBeachSO",
-        "assetPath": "Assets/common02/pseudo_prefab_so/counters/ChoppingCounterBeachSO.asset",
-        "nameZh": "切菜台 · 海滩（Chopping Counter Beach）",
-        "nameEn": "Chopping Counter Beach",
-        "theme": "Beach",
-        "themeName": "海滩",
-        "bundleName": "bundle167"
-      },
-      {
-        "guid": "83cd883f4c7b395db8e8af48dcc88a66",
-        "id": "ChoppingCounterFloatSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc11/counters/ChoppingCounterFloatSO.asset",
-        "nameZh": "切菜台 · 漂流（Chopping Counter Float）",
-        "nameEn": "Chopping Counter Float",
-        "theme": "Float",
-        "themeName": "漂流",
-        "bundleName": "bundle428"
-      },
-      {
-        "guid": "cff7671926e5424f547ed80caf35f632",
-        "id": "ChoppingCounterPinkSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/ChoppingCounterPinkSO.asset",
-        "nameZh": "切菜台 · 粉色（Chopping Counter Pink）",
-        "nameEn": "Chopping Counter Pink",
-        "theme": "Pink",
-        "themeName": "粉色",
         "bundleName": "bundle47"
       },
       {
@@ -218,6 +148,46 @@
         "bundleName": "bundle297"
       },
       {
+        "guid": "cff7671926e5424f547ed80caf35f632",
+        "id": "ChoppingCounterPinkSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/ChoppingCounterPinkSO.asset",
+        "nameZh": "切菜台 · 粉色（Chopping Counter Pink）",
+        "nameEn": "Chopping Counter Pink",
+        "theme": "Pink",
+        "themeName": "粉色",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "27de14b04fa42274cbacd5b677828227",
+        "id": "ChoppingCounterBeachSO",
+        "assetPath": "Assets/common02/pseudo_prefab_so/counters/ChoppingCounterBeachSO.asset",
+        "nameZh": "切菜台 · 海滩（Chopping Counter Beach）",
+        "nameEn": "Chopping Counter Beach",
+        "theme": "Beach",
+        "themeName": "海滩",
+        "bundleName": "bundle167"
+      },
+      {
+        "guid": "13ce833d6d985224ba66a904bcc4d76d",
+        "id": "ChoppingCounterGoldSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ChoppingCounterGoldSO.asset",
+        "nameZh": "切菜台 · 黄金（Chopping Counter Gold）",
+        "nameEn": "Chopping Counter Gold",
+        "theme": "Gold",
+        "themeName": "黄金",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "ae2e4deae65450a4b98e20759eb10743",
+        "id": "ChoppingCounterOldSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ChoppingCounterOldSO.asset",
+        "nameZh": "切菜台 · 旧式（Chopping Counter Old）",
+        "nameEn": "Chopping Counter Old",
+        "theme": "Old",
+        "themeName": "旧式",
+        "bundleName": "bundle47"
+      },
+      {
         "guid": "971629b5b89c28b4499f570e5b26d5ea",
         "id": "ChoppingCounterCamping1SO",
         "assetPath": "Assets/common02/pseudo_prefab_so/counters/ChoppingCounterCamping1SO.asset",
@@ -268,16 +238,6 @@
         "bundleName": "bundle359"
       },
       {
-        "guid": "13ce833d6d985224ba66a904bcc4d76d",
-        "id": "ChoppingCounterGoldSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ChoppingCounterGoldSO.asset",
-        "nameZh": "切菜台 · 黄金（Chopping Counter Gold）",
-        "nameEn": "Chopping Counter Gold",
-        "theme": "Gold",
-        "themeName": "黄金",
-        "bundleName": "bundle47"
-      },
-      {
         "guid": "63105a7520f9bd24fb2c4406e5ea4035",
         "id": "ChoppingCounterSO",
         "assetPath": "Assets/common01/pseudo_prefab_so/counters/ChoppingCounterSO.asset",
@@ -285,6 +245,46 @@
         "nameEn": "Chopping Counter Default",
         "theme": "",
         "themeName": "默认",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "c8de7b0afb6063195aa3843444e871ba",
+        "id": "ChoppingCounterWood13SO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/ChoppingCounterWood13SO.asset",
+        "nameZh": "切菜台 · 木纹·中秋（Chopping Counter Wood13）",
+        "nameEn": "Chopping Counter Wood13",
+        "theme": "Wood13",
+        "themeName": "木纹·中秋",
+        "bundleName": "bundle449"
+      },
+      {
+        "guid": "83cd883f4c7b395db8e8af48dcc88a66",
+        "id": "ChoppingCounterFloatSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc11/counters/ChoppingCounterFloatSO.asset",
+        "nameZh": "切菜台 · 漂流（Chopping Counter Float）",
+        "nameEn": "Chopping Counter Float",
+        "theme": "Float",
+        "themeName": "漂流",
+        "bundleName": "bundle428"
+      },
+      {
+        "guid": "44942c0d3c1df3c4aaa39d8db39d9284",
+        "id": "ChoppingCounterSpaceSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ChoppingCounterSpaceSO.asset",
+        "nameZh": "切菜台 · 太空（Chopping Counter Space）",
+        "nameEn": "Chopping Counter Space",
+        "theme": "Space",
+        "themeName": "太空",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "5f4efb09f9bde12040298a8eb02ca724",
+        "id": "ChoppingCounterSwampSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/ChoppingCounterSwampSO.asset",
+        "nameZh": "切菜台 · 沼泽（Chopping Counter Swamp）",
+        "nameEn": "Chopping Counter Swamp",
+        "theme": "Swamp",
+        "themeName": "沼泽",
         "bundleName": "bundle47"
       }
     ],
@@ -302,16 +302,6 @@
     ],
     "Cooker": [
       {
-        "guid": "98e4be4aea2bf45e19440a6dc77d318b",
-        "id": "CookerWood13SO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/CookerWood13SO.asset",
-        "nameZh": "灶台 · 木纹·中秋（Cooker Wood13）",
-        "nameEn": "Cooker Wood13",
-        "theme": "Wood13",
-        "themeName": "木纹·中秋",
-        "bundleName": "bundle449"
-      },
-      {
         "guid": "ab0d6e0e217c23440b2aadd4b0f9a6e8",
         "id": "CookerSO",
         "assetPath": "Assets/common01/pseudo_prefab_so/counters/CookerSO.asset",
@@ -320,39 +310,19 @@
         "theme": "",
         "themeName": "默认",
         "bundleName": "bundle47"
+      },
+      {
+        "guid": "98e4be4aea2bf45e19440a6dc77d318b",
+        "id": "CookerWood13SO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/CookerWood13SO.asset",
+        "nameZh": "灶台 · 木纹·中秋（Cooker Wood13）",
+        "nameEn": "Cooker Wood13",
+        "theme": "Wood13",
+        "themeName": "木纹·中秋",
+        "bundleName": "bundle449"
       }
     ],
     "Counter": [
-      {
-        "guid": "b0f8f4e31411a704aa06e0913776070b",
-        "id": "CounterSpace02SO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterSpace02SO.asset",
-        "nameZh": "普通桌台 · 太空 2（Counter Space02）",
-        "nameEn": "Counter Space02",
-        "theme": "Space02",
-        "themeName": "太空 2",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "222e5b2a61f3379458068c012a091dd4",
-        "id": "CounterSpaceSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterSpaceSO.asset",
-        "nameZh": "普通桌台 · 太空（Counter Space）",
-        "nameEn": "Counter Space",
-        "theme": "Space",
-        "themeName": "太空",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "994502afc6309e244b68b5070daea719",
-        "id": "CounterOldSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterOldSO.asset",
-        "nameZh": "普通桌台 · 旧式（Counter Old）",
-        "nameEn": "Counter Old",
-        "theme": "Old",
-        "themeName": "旧式",
-        "bundleName": "bundle47"
-      },
       {
         "guid": "80b046d360b0a5d42b810d57f53ee848",
         "id": "CounterDarkSO",
@@ -361,66 +331,6 @@
         "nameEn": "Counter Dark",
         "theme": "Dark",
         "themeName": "暗黑",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "a952de523b0676e641fcd68bc884824a",
-        "id": "CounterWood13SO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/CounterWood13SO.asset",
-        "nameZh": "普通桌台 · 木纹·中秋（Counter Wood13）",
-        "nameEn": "Counter Wood13",
-        "theme": "Wood13",
-        "themeName": "木纹·中秋",
-        "bundleName": "bundle449"
-      },
-      {
-        "guid": "ff39ea710801c029ca35e78c5f7f3546",
-        "id": "CounterSwampSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/CounterSwampSO.asset",
-        "nameZh": "普通桌台 · 沼泽（Counter Swamp）",
-        "nameEn": "Counter Swamp",
-        "theme": "Swamp",
-        "themeName": "沼泽",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "94d495c9f74f2a14bbf8edeeb7f45215",
-        "id": "CounterBeach01SO",
-        "assetPath": "Assets/common02/pseudo_prefab_so/counters/CounterBeach01SO.asset",
-        "nameZh": "普通桌台 · 海滩 1（Counter Beach01）",
-        "nameEn": "Counter Beach01",
-        "theme": "Beach01",
-        "themeName": "海滩 1",
-        "bundleName": "bundle167"
-      },
-      {
-        "guid": "cca0773a13a55864485f752d9c04c12e",
-        "id": "CounterBeach02SO",
-        "assetPath": "Assets/common02/pseudo_prefab_so/counters/CounterBeach02SO.asset",
-        "nameZh": "普通桌台 · 海滩 2（Counter Beach02）",
-        "nameEn": "Counter Beach02",
-        "theme": "Beach02",
-        "themeName": "海滩 2",
-        "bundleName": "bundle167"
-      },
-      {
-        "guid": "db49a2d9343035574da05b948f10b687",
-        "id": "CounterFloatSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc11/counters/CounterFloatSO.asset",
-        "nameZh": "普通桌台 · 漂流（Counter Float）",
-        "nameEn": "Counter Float",
-        "theme": "Float",
-        "themeName": "漂流",
-        "bundleName": "bundle428"
-      },
-      {
-        "guid": "bcfc16c8842a2ddf527b8ce1696215b3",
-        "id": "CounterPinkSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/CounterPinkSO.asset",
-        "nameZh": "普通桌台 · 粉色（Counter Pink）",
-        "nameEn": "Counter Pink",
-        "theme": "Pink",
-        "themeName": "粉色",
         "bundleName": "bundle47"
       },
       {
@@ -474,6 +384,56 @@
         "bundleName": "bundle297"
       },
       {
+        "guid": "bcfc16c8842a2ddf527b8ce1696215b3",
+        "id": "CounterPinkSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/CounterPinkSO.asset",
+        "nameZh": "普通桌台 · 粉色（Counter Pink）",
+        "nameEn": "Counter Pink",
+        "theme": "Pink",
+        "themeName": "粉色",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "94d495c9f74f2a14bbf8edeeb7f45215",
+        "id": "CounterBeach01SO",
+        "assetPath": "Assets/common02/pseudo_prefab_so/counters/CounterBeach01SO.asset",
+        "nameZh": "普通桌台 · 海滩 1（Counter Beach01）",
+        "nameEn": "Counter Beach01",
+        "theme": "Beach01",
+        "themeName": "海滩 1",
+        "bundleName": "bundle167"
+      },
+      {
+        "guid": "cca0773a13a55864485f752d9c04c12e",
+        "id": "CounterBeach02SO",
+        "assetPath": "Assets/common02/pseudo_prefab_so/counters/CounterBeach02SO.asset",
+        "nameZh": "普通桌台 · 海滩 2（Counter Beach02）",
+        "nameEn": "Counter Beach02",
+        "theme": "Beach02",
+        "themeName": "海滩 2",
+        "bundleName": "bundle167"
+      },
+      {
+        "guid": "58ecd49c5f9615848a82677d5cc2b9e3",
+        "id": "CounterGoldSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterGoldSO.asset",
+        "nameZh": "普通桌台 · 黄金（Counter Gold）",
+        "nameEn": "Counter Gold",
+        "theme": "Gold",
+        "themeName": "黄金",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "994502afc6309e244b68b5070daea719",
+        "id": "CounterOldSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterOldSO.asset",
+        "nameZh": "普通桌台 · 旧式（Counter Old）",
+        "nameEn": "Counter Old",
+        "theme": "Old",
+        "themeName": "旧式",
+        "bundleName": "bundle47"
+      },
+      {
         "guid": "77704539174fbcd4588fb9f5ce211289",
         "id": "CounterCamping1SO",
         "assetPath": "Assets/common02/pseudo_prefab_so/counters/CounterCamping1SO.asset",
@@ -514,16 +474,6 @@
         "bundleName": "bundle359"
       },
       {
-        "guid": "58ecd49c5f9615848a82677d5cc2b9e3",
-        "id": "CounterGoldSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterGoldSO.asset",
-        "nameZh": "普通桌台 · 黄金（Counter Gold）",
-        "nameEn": "Counter Gold",
-        "theme": "Gold",
-        "themeName": "黄金",
-        "bundleName": "bundle47"
-      },
-      {
         "guid": "f7af2d819a8000e41b3c675b129e3235",
         "id": "CounterSO",
         "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterSO.asset",
@@ -532,29 +482,59 @@
         "theme": "",
         "themeName": "默认",
         "bundleName": "bundle47"
-      }
-    ],
-    "CounterCorner": [
+      },
       {
-        "guid": "7006e788b38e1d5458d3329bb69b5615",
-        "id": "CounterCornerSpaceSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterCornerSpaceSO.asset",
-        "nameZh": "角落桌台 · 太空（Counter Corner Space）",
-        "nameEn": "Counter Corner Space",
+        "guid": "a952de523b0676e641fcd68bc884824a",
+        "id": "CounterWood13SO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/CounterWood13SO.asset",
+        "nameZh": "普通桌台 · 木纹·中秋（Counter Wood13）",
+        "nameEn": "Counter Wood13",
+        "theme": "Wood13",
+        "themeName": "木纹·中秋",
+        "bundleName": "bundle449"
+      },
+      {
+        "guid": "db49a2d9343035574da05b948f10b687",
+        "id": "CounterFloatSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc11/counters/CounterFloatSO.asset",
+        "nameZh": "普通桌台 · 漂流（Counter Float）",
+        "nameEn": "Counter Float",
+        "theme": "Float",
+        "themeName": "漂流",
+        "bundleName": "bundle428"
+      },
+      {
+        "guid": "b0f8f4e31411a704aa06e0913776070b",
+        "id": "CounterSpace02SO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterSpace02SO.asset",
+        "nameZh": "普通桌台 · 太空 2（Counter Space02）",
+        "nameEn": "Counter Space02",
+        "theme": "Space02",
+        "themeName": "太空 2",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "222e5b2a61f3379458068c012a091dd4",
+        "id": "CounterSpaceSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterSpaceSO.asset",
+        "nameZh": "普通桌台 · 太空（Counter Space）",
+        "nameEn": "Counter Space",
         "theme": "Space",
         "themeName": "太空",
         "bundleName": "bundle47"
       },
       {
-        "guid": "a6d0a6b8d14c9f14eae1e40376cf60e2",
-        "id": "CounterCornerOldSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterCornerOldSO.asset",
-        "nameZh": "角落桌台 · 旧式（Counter Corner Old）",
-        "nameEn": "Counter Corner Old",
-        "theme": "Old",
-        "themeName": "旧式",
+        "guid": "ff39ea710801c029ca35e78c5f7f3546",
+        "id": "CounterSwampSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/CounterSwampSO.asset",
+        "nameZh": "普通桌台 · 沼泽（Counter Swamp）",
+        "nameEn": "Counter Swamp",
+        "theme": "Swamp",
+        "themeName": "沼泽",
         "bundleName": "bundle47"
-      },
+      }
+    ],
+    "CounterCorner": [
       {
         "guid": "aae88f5ca97096c4a91c23c376478a10",
         "id": "CounterCornerDarkSO",
@@ -563,56 +543,6 @@
         "nameEn": "Counter Corner Dark",
         "theme": "Dark",
         "themeName": "暗黑",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "42953571827adcba1e4704e4129eb495",
-        "id": "CounterCornerWood13SO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/CounterCornerWood13SO.asset",
-        "nameZh": "角落桌台 · 木纹·中秋（Counter Corner Wood13）",
-        "nameEn": "Counter Corner Wood13",
-        "theme": "Wood13",
-        "themeName": "木纹·中秋",
-        "bundleName": "bundle449"
-      },
-      {
-        "guid": "844f9ae016f31ab3b3cfe50ebc256dc5",
-        "id": "CounterCornerSwampSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/CounterCornerSwampSO.asset",
-        "nameZh": "角落桌台 · 沼泽（Counter Corner Swamp）",
-        "nameEn": "Counter Corner Swamp",
-        "theme": "Swamp",
-        "themeName": "沼泽",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "fa2ddf257dd1fb845b576d3aeb2f49fb",
-        "id": "CounterCornerBeachSO",
-        "assetPath": "Assets/common02/pseudo_prefab_so/counters/CounterCornerBeachSO.asset",
-        "nameZh": "角落桌台 · 海滩（Counter Corner Beach）",
-        "nameEn": "Counter Corner Beach",
-        "theme": "Beach",
-        "themeName": "海滩",
-        "bundleName": "bundle167"
-      },
-      {
-        "guid": "b1dc88afff181467af89e05599d3bc49",
-        "id": "CounterCornerFloatSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc11/counters/CounterCornerFloatSO.asset",
-        "nameZh": "角落桌台 · 漂流（Counter Corner Float）",
-        "nameEn": "Counter Corner Float",
-        "theme": "Float",
-        "themeName": "漂流",
-        "bundleName": "bundle428"
-      },
-      {
-        "guid": "d21b964012e188aadfb4799435dbbdbf",
-        "id": "CounterCornerPinkSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/CounterCornerPinkSO.asset",
-        "nameZh": "角落桌台 · 粉色（Counter Corner Pink）",
-        "nameEn": "Counter Corner Pink",
-        "theme": "Pink",
-        "themeName": "粉色",
         "bundleName": "bundle47"
       },
       {
@@ -666,6 +596,46 @@
         "bundleName": "bundle297"
       },
       {
+        "guid": "d21b964012e188aadfb4799435dbbdbf",
+        "id": "CounterCornerPinkSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/CounterCornerPinkSO.asset",
+        "nameZh": "角落桌台 · 粉色（Counter Corner Pink）",
+        "nameEn": "Counter Corner Pink",
+        "theme": "Pink",
+        "themeName": "粉色",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "fa2ddf257dd1fb845b576d3aeb2f49fb",
+        "id": "CounterCornerBeachSO",
+        "assetPath": "Assets/common02/pseudo_prefab_so/counters/CounterCornerBeachSO.asset",
+        "nameZh": "角落桌台 · 海滩（Counter Corner Beach）",
+        "nameEn": "Counter Corner Beach",
+        "theme": "Beach",
+        "themeName": "海滩",
+        "bundleName": "bundle167"
+      },
+      {
+        "guid": "3fe681949f7328343b650e565376ba41",
+        "id": "CounterCornerGoldSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterCornerGoldSO.asset",
+        "nameZh": "角落桌台 · 黄金（Counter Corner Gold）",
+        "nameEn": "Counter Corner Gold",
+        "theme": "Gold",
+        "themeName": "黄金",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "a6d0a6b8d14c9f14eae1e40376cf60e2",
+        "id": "CounterCornerOldSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterCornerOldSO.asset",
+        "nameZh": "角落桌台 · 旧式（Counter Corner Old）",
+        "nameEn": "Counter Corner Old",
+        "theme": "Old",
+        "themeName": "旧式",
+        "bundleName": "bundle47"
+      },
+      {
         "guid": "36856b3ff4a083249a5c63e2f3c2825b",
         "id": "CounterCornerCamping1SO",
         "assetPath": "Assets/common02/pseudo_prefab_so/counters/CounterCornerCamping1SO.asset",
@@ -706,16 +676,6 @@
         "bundleName": "bundle359"
       },
       {
-        "guid": "3fe681949f7328343b650e565376ba41",
-        "id": "CounterCornerGoldSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterCornerGoldSO.asset",
-        "nameZh": "角落桌台 · 黄金（Counter Corner Gold）",
-        "nameEn": "Counter Corner Gold",
-        "theme": "Gold",
-        "themeName": "黄金",
-        "bundleName": "bundle47"
-      },
-      {
         "guid": "fba124da5f9548a48906bbb6f5bf7ad2",
         "id": "CounterCornerSO",
         "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterCornerSO.asset",
@@ -723,6 +683,46 @@
         "nameEn": "Counter Corner Default",
         "theme": "",
         "themeName": "默认",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "42953571827adcba1e4704e4129eb495",
+        "id": "CounterCornerWood13SO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/CounterCornerWood13SO.asset",
+        "nameZh": "角落桌台 · 木纹·中秋（Counter Corner Wood13）",
+        "nameEn": "Counter Corner Wood13",
+        "theme": "Wood13",
+        "themeName": "木纹·中秋",
+        "bundleName": "bundle449"
+      },
+      {
+        "guid": "b1dc88afff181467af89e05599d3bc49",
+        "id": "CounterCornerFloatSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc11/counters/CounterCornerFloatSO.asset",
+        "nameZh": "角落桌台 · 漂流（Counter Corner Float）",
+        "nameEn": "Counter Corner Float",
+        "theme": "Float",
+        "themeName": "漂流",
+        "bundleName": "bundle428"
+      },
+      {
+        "guid": "7006e788b38e1d5458d3329bb69b5615",
+        "id": "CounterCornerSpaceSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/CounterCornerSpaceSO.asset",
+        "nameZh": "角落桌台 · 太空（Counter Corner Space）",
+        "nameEn": "Counter Corner Space",
+        "theme": "Space",
+        "themeName": "太空",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "844f9ae016f31ab3b3cfe50ebc256dc5",
+        "id": "CounterCornerSwampSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/CounterCornerSwampSO.asset",
+        "nameZh": "角落桌台 · 沼泽（Counter Corner Swamp）",
+        "nameEn": "Counter Corner Swamp",
+        "theme": "Swamp",
+        "themeName": "沼泽",
         "bundleName": "bundle47"
       }
     ],
@@ -758,6 +758,16 @@
         "bundleName": "bundle47"
       },
       {
+        "guid": "c0d8a1bf646090cb5c55fcea981624a3",
+        "id": "DispenserMedievalSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/DispenserMedievalSO.asset",
+        "nameZh": "食材箱 · 部落（Dispenser Medieval）",
+        "nameEn": "Dispenser Medieval",
+        "theme": "Medieval",
+        "themeName": "部落",
+        "bundleName": "bundle297"
+      },
+      {
         "guid": "82d3beb09aa94e18ff944809c445f6da",
         "id": "DispenserWinterSO",
         "assetPath": "Assets/common03/pseudo_prefab_so/dlc09/counters/DispenserWinterSO.asset",
@@ -768,14 +778,14 @@
         "bundleName": "bundle405"
       },
       {
-        "guid": "f3ceada80f7fba999b1df8399b7fcfee",
-        "id": "DispenserChristmasSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/DispenserChristmasSO.asset",
-        "nameZh": "食材箱 · 圣诞（Dispenser Christmas）",
-        "nameEn": "Dispenser Christmas",
-        "theme": "Christmas",
-        "themeName": "圣诞",
-        "bundleName": "bundle210"
+        "guid": "e4822bdca1075451cf86345f922da943",
+        "id": "DispenserCircusSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc08/counters/DispenserCircusSO.asset",
+        "nameZh": "食材箱 · 马戏团（Dispenser Circus）",
+        "nameEn": "Dispenser Circus",
+        "theme": "Circus",
+        "themeName": "马戏团",
+        "bundleName": "bundle359"
       },
       {
         "guid": "c0c0d8f595d92729fc8e1920cc490271",
@@ -798,24 +808,14 @@
         "bundleName": "bundle449"
       },
       {
-        "guid": "c0d8a1bf646090cb5c55fcea981624a3",
-        "id": "DispenserMedievalSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/DispenserMedievalSO.asset",
-        "nameZh": "食材箱 · 部落（Dispenser Medieval）",
-        "nameEn": "Dispenser Medieval",
-        "theme": "Medieval",
-        "themeName": "部落",
-        "bundleName": "bundle297"
-      },
-      {
-        "guid": "e4822bdca1075451cf86345f922da943",
-        "id": "DispenserCircusSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc08/counters/DispenserCircusSO.asset",
-        "nameZh": "食材箱 · 马戏团（Dispenser Circus）",
-        "nameEn": "Dispenser Circus",
-        "theme": "Circus",
-        "themeName": "马戏团",
-        "bundleName": "bundle359"
+        "guid": "f3ceada80f7fba999b1df8399b7fcfee",
+        "id": "DispenserChristmasSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/DispenserChristmasSO.asset",
+        "nameZh": "食材箱 · 圣诞（Dispenser Christmas）",
+        "nameEn": "Dispenser Christmas",
+        "theme": "Christmas",
+        "themeName": "圣诞",
+        "bundleName": "bundle210"
       }
     ],
     "FryingStation": [
@@ -831,26 +831,6 @@
       }
     ],
     "Mixer": [
-      {
-        "guid": "a17a992f3e8945e469f1a6612f45bd5b",
-        "id": "MixerSpaceSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/MixerSpaceSO.asset",
-        "nameZh": "搅拌台 · 太空（Mixer Space）",
-        "nameEn": "Mixer Space",
-        "theme": "Space",
-        "themeName": "太空",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "1af53dfac22b84b498edec3a08ce2208",
-        "id": "MixerAirballoonSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/MixerAirballoonSO.asset",
-        "nameZh": "搅拌台 · 热气球（Mixer Airballoon）",
-        "nameEn": "Mixer Airballoon",
-        "theme": "Airballoon",
-        "themeName": "热气球",
-        "bundleName": "bundle47"
-      },
       {
         "guid": "5b39d99ee7cf84c999e93afedf6d14c5",
         "id": "MixerMedievalSO",
@@ -910,19 +890,29 @@
         "theme": "",
         "themeName": "默认",
         "bundleName": "bundle47"
+      },
+      {
+        "guid": "1af53dfac22b84b498edec3a08ce2208",
+        "id": "MixerAirballoonSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/MixerAirballoonSO.asset",
+        "nameZh": "搅拌台 · 热气球（Mixer Airballoon）",
+        "nameEn": "Mixer Airballoon",
+        "theme": "Airballoon",
+        "themeName": "热气球",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "a17a992f3e8945e469f1a6612f45bd5b",
+        "id": "MixerSpaceSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/MixerSpaceSO.asset",
+        "nameZh": "搅拌台 · 太空（Mixer Space）",
+        "nameEn": "Mixer Space",
+        "theme": "Space",
+        "themeName": "太空",
+        "bundleName": "bundle47"
       }
     ],
     "Oven": [
-      {
-        "guid": "f29a8332c56068ee40519c151525997b",
-        "id": "OvenWinterSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc09/counters/OvenWinterSO.asset",
-        "nameZh": "烤箱 · 冬季（Oven Winter）",
-        "nameEn": "Oven Winter",
-        "theme": "Winter",
-        "themeName": "冬季",
-        "bundleName": "bundle405"
-      },
       {
         "guid": "400b52f3f58a784efefdcb1b44734c27",
         "id": "OvenMedievalSO",
@@ -932,6 +922,16 @@
         "theme": "Medieval",
         "themeName": "部落",
         "bundleName": "bundle297"
+      },
+      {
+        "guid": "f29a8332c56068ee40519c151525997b",
+        "id": "OvenWinterSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc09/counters/OvenWinterSO.asset",
+        "nameZh": "烤箱 · 冬季（Oven Winter）",
+        "nameEn": "Oven Winter",
+        "theme": "Winter",
+        "themeName": "冬季",
+        "bundleName": "bundle405"
       },
       {
         "guid": "16f23cc1a4fdad61ee2b970c7dd44f76",
@@ -956,16 +956,6 @@
     ],
     "PlateReturn": [
       {
-        "guid": "0cbe46b4f4e64863b6214b2204ddd3b0",
-        "id": "PlateReturnWood13SO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/PlateReturnWood13SO.asset",
-        "nameZh": "脏盘台 · 木纹·中秋（Plate Return Wood13）",
-        "nameEn": "Plate Return Wood13",
-        "theme": "Wood13",
-        "themeName": "木纹·中秋",
-        "bundleName": "bundle449"
-      },
-      {
         "guid": "97e8fe984ac53794b84f2a250b030323",
         "id": "PlateReturnSO",
         "assetPath": "Assets/common01/pseudo_prefab_so/counters/PlateReturnSO.asset",
@@ -974,49 +964,19 @@
         "theme": "",
         "themeName": "默认",
         "bundleName": "bundle47"
-      }
-    ],
-    "ServingStation": [
-      {
-        "guid": "2b5a2efbfe50ce0b8e9cf9ff45571f0f",
-        "id": "ServingStationUnlitSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/ServingStationUnlitSO.asset",
-        "nameZh": "上菜口 · 无光照（Serving Station Unlit）",
-        "nameEn": "Serving Station Unlit",
-        "theme": "Unlit",
-        "themeName": "无光照",
-        "bundleName": "bundle47"
       },
       {
-        "guid": "e4c37b5ec7a918399da5e32de4c6d2f6",
-        "id": "ServingStationWood13SO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/ServingStationWood13SO.asset",
-        "nameZh": "上菜口 · 木纹·中秋（Serving Station Wood13）",
-        "nameEn": "Serving Station Wood13",
+        "guid": "0cbe46b4f4e64863b6214b2204ddd3b0",
+        "id": "PlateReturnWood13SO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/PlateReturnWood13SO.asset",
+        "nameZh": "脏盘台 · 木纹·中秋（Plate Return Wood13）",
+        "nameEn": "Plate Return Wood13",
         "theme": "Wood13",
         "themeName": "木纹·中秋",
         "bundleName": "bundle449"
-      },
-      {
-        "guid": "ef4546cc0d3d9e14998c6d0bec6a78b6",
-        "id": "ServingStationSlimNoBlockSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ServingStationSlimNoBlockSO.asset",
-        "nameZh": "上菜口 · 窄式·无障碍（Serving Station Slim No Block）",
-        "nameEn": "Serving Station Slim No Block",
-        "theme": "SlimNoBlock",
-        "themeName": "窄式·无障碍",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "4b140467c63bbf14ab973ad4b641b7d1",
-        "id": "ServingStationSlimSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ServingStationSlimSO.asset",
-        "nameZh": "上菜口 · 窄式（Serving Station Slim）",
-        "nameEn": "Serving Station Slim",
-        "theme": "Slim",
-        "themeName": "窄式",
-        "bundleName": "bundle47"
-      },
+      }
+    ],
+    "ServingStation": [
       {
         "guid": "00cf0fb6cfcdd99769ff4f254fc2db4d",
         "id": "ServingStationRedSlimSO",
@@ -1066,29 +1026,49 @@
         "theme": "",
         "themeName": "默认",
         "bundleName": "bundle47"
+      },
+      {
+        "guid": "e4c37b5ec7a918399da5e32de4c6d2f6",
+        "id": "ServingStationWood13SO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/ServingStationWood13SO.asset",
+        "nameZh": "上菜口 · 木纹·中秋（Serving Station Wood13）",
+        "nameEn": "Serving Station Wood13",
+        "theme": "Wood13",
+        "themeName": "木纹·中秋",
+        "bundleName": "bundle449"
+      },
+      {
+        "guid": "2b5a2efbfe50ce0b8e9cf9ff45571f0f",
+        "id": "ServingStationUnlitSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/ServingStationUnlitSO.asset",
+        "nameZh": "上菜口 · 无光照（Serving Station Unlit）",
+        "nameEn": "Serving Station Unlit",
+        "theme": "Unlit",
+        "themeName": "无光照",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "ef4546cc0d3d9e14998c6d0bec6a78b6",
+        "id": "ServingStationSlimNoBlockSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ServingStationSlimNoBlockSO.asset",
+        "nameZh": "上菜口 · 窄式·无障碍（Serving Station Slim No Block）",
+        "nameEn": "Serving Station Slim No Block",
+        "theme": "SlimNoBlock",
+        "themeName": "窄式·无障碍",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "4b140467c63bbf14ab973ad4b641b7d1",
+        "id": "ServingStationSlimSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/ServingStationSlimSO.asset",
+        "nameZh": "上菜口 · 窄式（Serving Station Slim）",
+        "nameEn": "Serving Station Slim",
+        "theme": "Slim",
+        "themeName": "窄式",
+        "bundleName": "bundle47"
       }
     ],
     "Sink": [
-      {
-        "guid": "ef4647e4351b6ba42afcd43aa83af3c7",
-        "id": "SinkSpaceSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/SinkSpaceSO.asset",
-        "nameZh": "洗碗池 · 太空（Sink Space）",
-        "nameEn": "Sink Space",
-        "theme": "Space",
-        "themeName": "太空",
-        "bundleName": "bundle47"
-      },
-      {
-        "guid": "5deaf87f671819c4bbcab0d9394efe6a",
-        "id": "SinkOldSO",
-        "assetPath": "Assets/common01/pseudo_prefab_so/counters/SinkOldSO.asset",
-        "nameZh": "洗碗池 · 旧式（Sink Old）",
-        "nameEn": "Sink Old",
-        "theme": "Old",
-        "themeName": "旧式",
-        "bundleName": "bundle47"
-      },
       {
         "guid": "e8cdbccf973fb8e4fbe708ac5c400c2c",
         "id": "SinkDarkSO",
@@ -1098,36 +1078,6 @@
         "theme": "Dark",
         "themeName": "暗黑",
         "bundleName": "bundle47"
-      },
-      {
-        "guid": "6a047abaf8aaafd3b6ab3997c2b75974",
-        "id": "SinkWood13SO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/SinkWood13SO.asset",
-        "nameZh": "洗碗池 · 木纹·中秋（Sink Wood13）",
-        "nameEn": "Sink Wood13",
-        "theme": "Wood13",
-        "themeName": "木纹·中秋",
-        "bundleName": "bundle449"
-      },
-      {
-        "guid": "a68be342f1a64d543ad07071a8baa5d9",
-        "id": "SinkBeachGlassSO",
-        "assetPath": "Assets/common02/pseudo_prefab_so/counters/SinkBeachGlassSO.asset",
-        "nameZh": "洗碗池 · 海滩·玻璃（Sink Beach Glass）",
-        "nameEn": "Sink Beach Glass",
-        "theme": "BeachGlass",
-        "themeName": "海滩·玻璃",
-        "bundleName": "bundle167"
-      },
-      {
-        "guid": "b6774565da4ee454aaee130c351860fe",
-        "id": "SinkBeachSO",
-        "assetPath": "Assets/common02/pseudo_prefab_so/counters/SinkBeachSO.asset",
-        "nameZh": "洗碗池 · 海滩（Sink Beach）",
-        "nameEn": "Sink Beach",
-        "theme": "Beach",
-        "themeName": "海滩",
-        "bundleName": "bundle167"
       },
       {
         "guid": "cc0bc7c74738f6ac74e19f9df655b1bc",
@@ -1168,6 +1118,46 @@
         "theme": "Medieval4",
         "themeName": "部落 4",
         "bundleName": "bundle297"
+      },
+      {
+        "guid": "a68be342f1a64d543ad07071a8baa5d9",
+        "id": "SinkBeachGlassSO",
+        "assetPath": "Assets/common02/pseudo_prefab_so/counters/SinkBeachGlassSO.asset",
+        "nameZh": "洗碗池 · 海滩·玻璃（Sink Beach Glass）",
+        "nameEn": "Sink Beach Glass",
+        "theme": "BeachGlass",
+        "themeName": "海滩·玻璃",
+        "bundleName": "bundle167"
+      },
+      {
+        "guid": "b6774565da4ee454aaee130c351860fe",
+        "id": "SinkBeachSO",
+        "assetPath": "Assets/common02/pseudo_prefab_so/counters/SinkBeachSO.asset",
+        "nameZh": "洗碗池 · 海滩（Sink Beach）",
+        "nameEn": "Sink Beach",
+        "theme": "Beach",
+        "themeName": "海滩",
+        "bundleName": "bundle167"
+      },
+      {
+        "guid": "cf3b4701fc019244740da0af15423b4e",
+        "id": "SinkBlackSO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/SinkBlackSO.asset",
+        "nameZh": "洗碗池 · 黑色（Sink Black）",
+        "nameEn": "Sink Black",
+        "theme": "Black",
+        "themeName": "黑色",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "5deaf87f671819c4bbcab0d9394efe6a",
+        "id": "SinkOldSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/SinkOldSO.asset",
+        "nameZh": "洗碗池 · 旧式（Sink Old）",
+        "nameEn": "Sink Old",
+        "theme": "Old",
+        "themeName": "旧式",
+        "bundleName": "bundle47"
       },
       {
         "guid": "f74a60495fe428843b0a7aefd0e6ac09",
@@ -1240,16 +1230,6 @@
         "bundleName": "bundle359"
       },
       {
-        "guid": "cf3b4701fc019244740da0af15423b4e",
-        "id": "SinkBlackSO",
-        "assetPath": "Assets/common03/pseudo_prefab_so/core/counters/SinkBlackSO.asset",
-        "nameZh": "洗碗池 · 黑色（Sink Black）",
-        "nameEn": "Sink Black",
-        "theme": "Black",
-        "themeName": "黑色",
-        "bundleName": "bundle47"
-      },
-      {
         "guid": "27e24bf265b1d2f4e947b950866af709",
         "id": "SinkSO",
         "assetPath": "Assets/common01/pseudo_prefab_so/counters/SinkSO.asset",
@@ -1257,6 +1237,26 @@
         "nameEn": "Sink Default",
         "theme": "",
         "themeName": "默认",
+        "bundleName": "bundle47"
+      },
+      {
+        "guid": "6a047abaf8aaafd3b6ab3997c2b75974",
+        "id": "SinkWood13SO",
+        "assetPath": "Assets/common03/pseudo_prefab_so/dlc13/counters/SinkWood13SO.asset",
+        "nameZh": "洗碗池 · 木纹·中秋（Sink Wood13）",
+        "nameEn": "Sink Wood13",
+        "theme": "Wood13",
+        "themeName": "木纹·中秋",
+        "bundleName": "bundle449"
+      },
+      {
+        "guid": "ef4647e4351b6ba42afcd43aa83af3c7",
+        "id": "SinkSpaceSO",
+        "assetPath": "Assets/common01/pseudo_prefab_so/counters/SinkSpaceSO.asset",
+        "nameZh": "洗碗池 · 太空（Sink Space）",
+        "nameEn": "Sink Space",
+        "theme": "Space",
+        "themeName": "太空",
         "bundleName": "bundle47"
       }
     ]

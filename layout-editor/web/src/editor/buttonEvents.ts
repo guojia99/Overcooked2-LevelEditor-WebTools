@@ -16,7 +16,7 @@ import { ensureItemVisible } from "./panels";
 
 // ---------------------------------------------------------------- data
 
-/** 按钮事件组的触发源：Switch 按钮 / PressureSwitch 压力开关（与移动组联动同口径）。 */
+/** 按钮事件组的触发源：Switch 按钮 / PressureSwitch 压力开关（与动画组联动同口径）。 */
 export function isButtonEventSource(it: EditorItem): boolean {
   return isButtonLinkSource(it);
 }

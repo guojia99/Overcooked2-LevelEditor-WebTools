@@ -20,7 +20,7 @@ public static class LayoutEditorFootprintDump
         "Assets/common01/prefabs/art",
         "Assets/common02/prefabs/art",
         "Assets/common03/prefabs",
-        "Assets/commonW1/prefabs/backgrounds",
+        "Assets/commonW1/prefabs",
     };
 
     [Serializable]

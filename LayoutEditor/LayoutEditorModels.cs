@@ -30,6 +30,33 @@ public class LayoutFootprint
 public class LayoutDispenserStubDto
 {
     public string spawnerItemPrefabGuid;
+
+    /// <summary>随机食材箱：候选食材 guid 列表（空/未设 = 普通固定食材箱）。
+    /// 烘焙到关卡集 stub 程序集（Stub_&lt;set&gt;）的 CustomStub.RandomCrate 组件。
+    /// 启用随机模式时固定食材参数（spawnerItemPrefabGuid）对外清空。</summary>
+    public string[] randomItemGuids;
+
+    /// <summary>随机食材箱：与 randomItemGuids 一一对应的初始权重/配额（缺省 5）。
+    /// 运行时每次取出该食材权重 -1，归零自动回满初始值（纯服务端状态）。</summary>
+    public float[] randomWeights;
+
+    /// <summary>随机食材箱：问号图标样式（Assets/commonW1/question_mark/*.png 的 guid；
+    /// 空 = 默认样式 question_mark_chef_hat）。</summary>
+    public string questionMarkGuid;
+}
+
+[Serializable]
+public class QuestionMarkStyleDto
+{
+    public string name;
+    public string guid;
+    public bool isDefault;
+}
+
+[Serializable]
+public class QuestionMarkStyleListDto
+{
+    public QuestionMarkStyleDto[] items;
 }
 
 [Serializable]
@@ -173,7 +200,7 @@ public class LayoutPressureSwitchStubDto
     public string unoccupiedMaterialGuid;
 }
 
-/// <summary>按钮/压力开关 → 移动组联动（ButtonLinkBakery 烘焙为 Design/Button Logic
+/// <summary>按钮/压力开关 → 动画组联动（ButtonLinkBakery 烘焙为 Design/Button Logic
 ///  下的隐藏 Animator 逻辑物体）。
 ///  顺序触发：每次按压按 groupNames 顺序启动下一组（循环）；
 ///  lockUntilFinished：组运行期间忽略按压（组完成后才接受下一次）；
@@ -185,7 +212,7 @@ public class LayoutButtonLinkDto
     public string id;
     /** 触发源物品 id（Switch / PressureSwitch；"u:<instanceID>" 或 "new:..."）。 */
     public string sourceId;
-    /** 按顺序触发的移动组 displayName 列表（displayName 为跨保存稳定键）。 */
+    /** 按顺序触发的动画组 displayName 列表（displayName 为跨保存稳定键）。 */
     public string[] groupNames;
     /** true = 组运行期间忽略按压（完成后才接受下一次按压）。 */
     public bool lockUntilFinished = true;
@@ -333,7 +360,7 @@ public class LayoutItemDto
 }
 
 [Serializable]
-public class MoveGroupWaypointDto
+public class AnimGroupWaypointDto
 {
     public string id;
     /** World XZ of the waypoint. The bakery converts to per-item local curve keys. */
@@ -350,27 +377,42 @@ public class MoveGroupWaypointDto
 }
 
 [Serializable]
-public class MoveGroupEventDto
+public class AnimGroupEventDto
 {
     public string id;
-    /** "move" | "wait" | "lift" | "drop" — waits bake as pure queue delays (no
-     * controller state); lift/drop are pure-Y clips (no route). */
+    /** "move" | "wait" | "lift" | "drop" | "rotate" — lift/drop are pure-Y clips
+     *  (no route); rotate spins each member around its own Y axis.
+     *  "shake" | "flash" — 全屏特效（仅特效组 groupKind="fx"）：
+     *  shake = 相机抖动一次，flash = 闪电灯明暗交替一次。 */
     public string type;
     /** Auto-generated when empty ("Move1".."MoveN"), matching original level naming. */
     public string triggerName;
-    /** Seconds between the previous trigger and this one (TriggerQueue delays[i]). */
+    /** 时间轴绝对开始时间（秒，相对组队列启动；<0 = 旧顺序数据，烘焙时按
+     *  delay 链自动迁移）。时间区间重叠的事件并行播放（烘焙为同一组合 clip）。 */
+    public float startTime = -1f;
+    /** 旧顺序模型：Seconds between the previous trigger and this one (TriggerQueue
+     *  delays[i])。迁移后由 startTime 差值派生；仅用于迁移与旧档兼容。 */
     public float delay;
+    /** wait 事件：停顿时长（秒，<=0 用默认 1）。 */
+    public float duration;
+    /** rotate 事件：旋转角度（0~360）。 */
+    public float rotateDegrees;
+    /** rotate 事件：方向（"cw" 顺时针俯视 / "ccw" 逆时针，默认 cw）。 */
+    public string rotateDirection;
+    /** rotate 事件：旋转用时（秒，<=0 用默认 2）。 */
+    public float rotateSeconds;
     /** Seconds per waypoint segment inside this event's move clip (uniform routes). */
     public float intervalSeconds;
     /** Ordered waypoint route (contiguous slice of the group waypoint list). */
     public string[] waypointIds;
-    /** Loop the clip itself (loopTime=1, no exit transition) — scrolling patterns
-     * like 3_4/6_3 Islands. Only honored on the last move event. */
+    /** Loop the clip itself (self-transition replay) — scrolling patterns like
+     *  3_4/6_3 Islands 或持续旋转。move/rotate 通用；仅在最后一个单事件时间簇生效。 */
     public bool loop;
     /** Ping-pong loop: move to the end of the route, then back (wrapMode=PingPong).
-     * Mutually exclusive with loop; only honored on the last move event. */
+     *  Mutually exclusive with loop; only honored on the last move event. */
     public bool pingpong;
-    /** lift/drop: target Y members rise/fall to (absolute; drop default 0). */
+    /** lift/drop: 相对位移量 Δy —— 每个成员从自身当前高度上升/下降该量
+     *  （lift 默认 1；drop 0 = 落回原高度）。非绝对目标高度。 */
     public float yTo;
     /** Vertical motion seconds: lift/drop clip duration, or move event rise time. */
     public float liftSeconds;
@@ -378,10 +420,18 @@ public class MoveGroupEventDto
     public float liftHeight;
     /** move events: seconds to lower back at the end (0 = stays up). */
     public float dropSeconds;
+    /** shake 事件：抖动幅度（米，<=0 用默认 0.15）——相机 localPosition 抖动半幅。 */
+    public float shakeAmplitude;
+    /** flash 事件：闪电峰值光照强度（<=0 用默认 4）。 */
+    public float flashIntensity;
+    /** flash 事件：闪电颜色（"#rrggbb"，空用默认淡蓝白）。 */
+    public string flashColor;
+    /** flash 事件：雷声 AudioTrigger 事件名（空 = 无声）。 */
+    public string soundCue;
 }
 
 [Serializable]
-public class MoveGroupMemberOffsetDto
+public class AnimGroupMemberOffsetDto
 {
     public string instanceId;
     public float x;
@@ -399,7 +449,7 @@ public class MoveGroupMemberOffsetDto
 }
 
 [Serializable]
-public class MoveGroupMemberDto
+public class AnimGroupMemberDto
 {
     public string instanceId;
     /** Plain-object member display name (imported levels; web display only). */
@@ -409,7 +459,7 @@ public class MoveGroupMemberDto
 }
 
 [Serializable]
-public class MoveGroupMemberGroupDto
+public class AnimGroupMemberGroupDto
 {
     public string id;
     public string name;
@@ -418,10 +468,14 @@ public class MoveGroupMemberGroupDto
 }
 
 [Serializable]
-public class MoveGroupDto
+public class AnimGroupDto
 {
     public string id;
     public string displayName;
+    /** 组类型："members"（默认，驱动物品/地板成员）| "fx"（全屏特效组，无成员，
+     *  事件仅 shake/flash/wait，单一特效类型——shake 驱动相机、flash 驱动
+     *  Lights/FX_Lightning 专用方向光，宿主不同故不允许混排）。 */
+    public string groupKind;
     /** Unity instance ids ("u:xxx"/"new:xxx") of the items driven by this group. */
     public string[] itemInstanceIds;
     /** Unity instance ids of the floor (Plane/Quad) objects driven by this group. */
@@ -430,12 +484,12 @@ public class MoveGroupDto
      * original levels: island roots, lorry parts, ...). */
     public string[] objectInstanceIds;
     /** Per-member local offset from the route (parallel tracks; imported levels). */
-    public MoveGroupMemberOffsetDto[] memberOffsets;
+    public AnimGroupMemberOffsetDto[] memberOffsets;
     /** Member ids that hold still while the route moves (6_3 duplicate-cover trick). */
-    public MoveGroupMemberDto[] memberStatic;
+    public AnimGroupMemberDto[] memberStatic;
     /** User-created member groups (organizational; baked as named sub-roots under
      *  the group root so a later scene import can reconstruct them). */
-    public MoveGroupMemberGroupDto[] memberGroups;
+    public AnimGroupMemberGroupDto[] memberGroups;
     /** Seconds after round start before the queue begins (TriggerTimer). */
     public float startDelay;
     /** Loop the whole trigger queue (loopWhenFinished + loopDelay). */
@@ -453,16 +507,16 @@ public class MoveGroupDto
     public string finishedTrigger;
     /** Animator.applyRootMotion. */
     public bool applyRootMotion;
-    public MoveGroupWaypointDto[] waypoints;
-    public MoveGroupEventDto[] events;
+    public AnimGroupWaypointDto[] waypoints;
+    public AnimGroupEventDto[] events;
     /** Backend-owned: hierarchy path of the created "Animated Objects" group root. */
     public string groupHierarchyPath;
 }
 
 [Serializable]
-public class MoveControlDataDto
+public class AnimControlDataDto
 {
-    public MoveGroupDto[] groups;
+    public AnimGroupDto[] groups;
 }
 
 [Serializable]
@@ -476,11 +530,15 @@ public class LayoutDocumentDto
     public WalkableRectDto[] walkable;
     /** Read-only death configuration (water / goo / fall). */
     public DeathInfoDto deathInfo;
-    /** Movable object movement control (decor + items layer). */
-    public MoveControlDataDto moveControls;
+    /** 动画组（装饰 + 物品层的移动/旋转等动画；烘焙为原生 Animator 动画）。 */
+    public AnimControlDataDto animControls;
+    /** 旧键名（moveControls），仅读取兼容旧文档；写入一律用 animControls。 */
+    public AnimControlDataDto moveControls;
+    /** Effective animation control data (new key wins; legacy key as fallback). */
+    public AnimControlDataDto AnimControls { get { return animControls ?? moveControls; } }
     /** 开关联动（按钮 → 断头台/饮料机/酱料机等目标）。 */
     public LayoutSwitchLinkDto[] switchLinks;
-    /** 按钮/压力开关 ↔ 移动组联动（仅全量写回携带）。 */
+    /** 按钮/压力开关 ↔ 动画组联动（仅全量写回携带）。 */
     public LayoutButtonLinkDataDto buttonLinks;
     /** 按钮 ↔ 事件组联动（仅全量写回携带）。 */
     public LayoutButtonEventDataDto buttonEvents;

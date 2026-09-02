@@ -2,7 +2,9 @@ import { prefabIdFromPath } from "./coords";
 import { S } from "./state";
 import {
   getIngredientIcon,
-  getCatalogIcon
+  getCatalogIcon,
+  getRecipeIcon,
+  getQuestionMarkIcon
 } from "./iconCaches";
 import { ingredientIdByGuid, catalogItemForGuidOrPath } from "./catalog";
 import { ingredientNameZh } from "../ingredientLabels";
@@ -90,6 +92,18 @@ export function drawDispenserIngredient(
   // the item isn't a dispenser with a set ingredient (caller falls back to the plain label).
   const id = prefabIdFromPath(item.prefabAssetPath);
   if (item.stubKind !== "Dispenser" && id !== "Dispenser" && id !== "Backpack") return false;
+  // 随机食材箱：显示所选问号图标样式（设了食材也显示）+ 候选数
+  const rndCount = item.dispenser?.randomItemGuids?.length ?? 0;
+  if (rndCount > 0) {
+    drawIconWithLabel(
+      ctx,
+      getQuestionMarkIcon(item.dispenser?.questionMarkGuid ?? ""),
+      `随机${rndCount}种`,
+      bw,
+      bh
+    );
+    return true;
+  }
   const guid = item.dispenser?.spawnerItemPrefabGuid;
   if (!guid) return false;
   const ingId = ingredientIdByGuid(guid);
@@ -109,6 +123,10 @@ export function drawCatalogItemIcon(
   if (!cat) return false;
   if (cat.ingredientDecor) {
     drawIconWithLabel(ctx, getIngredientIcon(cat.id), itemLabel(item), bw, bh);
+    return true;
+  }
+  if (cat.recipeDecor) {
+    drawIconWithLabel(ctx, getRecipeIcon(cat.id), itemLabel(item), bw, bh);
     return true;
   }
   if (!cat.icon) return false;
@@ -163,6 +181,8 @@ export function itemLabel(item: EditorItem): string {
   const isDispenser =
     (item.stubKind === "Dispenser" || id === "Dispenser") && id !== "Backpack";
   if (isDispenser) {
+    const rnd = item.dispenser?.randomItemGuids?.length ?? 0;
+    if (rnd > 0) return `随机${rnd}种（?）`;
     const ingZh = ingredientNameZh(S.ingredientsCache, item.dispenser?.spawnerItemPrefabGuid);
     if (ingZh !== "未设置") return ingZh;
   }

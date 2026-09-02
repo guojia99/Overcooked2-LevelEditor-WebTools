@@ -34,7 +34,7 @@ import { showPickTip } from "./ui/pickTip";
 import {
   showItemOverlapPickTip,
   showSurfaceOverlapPickTip,
-  showMoveMemberOverlapPickTip,
+  showAnimMemberOverlapPickTip,
 } from "./ui/pickOverlap";
 import { showBatchHeightMenu, showContextMenu, showWaypointContextMenu } from "./ui/contextMenu";
 import { selectionHeightTargetCount } from "./selectionHeight";
@@ -86,7 +86,7 @@ import { hitTestAll, hitTestItemResizeHandle } from "./renderItems";
 import { hitTestFloorsAll, type FloorHit } from "./renderFloors";
 import { floorWalkY, floorLayerIndex } from "./floorHeight";
 import { updateMarqueeSelection } from "./render";
-import { hitTestWaypoints, waypointInfo, deleteWaypoint, activeGroup, updateMovePickBar, exitMoveMode, removeSelectedMembers } from "./moveControl";
+import { hitTestWaypoints, waypointInfo, deleteWaypoint, activeGroup, updateAnimPickBar, exitAnimMode, removeSelectedMembers, toggleAnimPreview } from "./animControl";
 import { renderRightPanel, updatePanelTabButtons } from "./panels";
 import { isPlayerItem } from "./renderItems";
 import { isAirWallItem } from "./stubControls";
@@ -377,12 +377,12 @@ export function setupCanvas() {
 
     // Move control waypoint interactions: active on the dedicated move layer,
     // and on the floor layer while a move group is active.
-    if (S.currentLayer === "move" || S.activeMoveGroupId || S.currentLayer === "floor" || S.currentLayer === "background") {
-      const onMoveLayer = S.currentLayer === "move";
+    if (S.currentLayer === "anim" || S.activeAnimGroupId || S.currentLayer === "floor" || S.currentLayer === "background") {
+      const onAnimLayer = S.currentLayer === "anim";
       // In "members" mode waypoints are intentionally not clickable so items /
       // floors under them can be picked.
       const inMembersMode =
-        onMoveLayer && S.moveMode === "members" && !!activeGroup();
+        onAnimLayer && S.animMode === "members" && !!activeGroup();
 
       if (!inMembersMode) {
         // 0.5 格内的路点视为重合：命中多个时弹出选点列表（与物品选点一致）。
@@ -417,14 +417,14 @@ export function setupCanvas() {
             wpId = wpHits[0].id;
           }
           // Clicking a waypoint without an active group enters that group's editor.
-          if (!S.activeMoveGroupId) {
-            const g = S.moveControls.find((grp) =>
+          if (!S.activeAnimGroupId) {
+            const g = S.animControls.find((grp) =>
               grp.waypoints.some((w) => w.id === wpId)
             );
             if (g) {
-              S.activeMoveGroupId = g.id;
-              S.activeMoveEventIdx = null;
-              S.activeRightTab = "move";
+              S.activeAnimGroupId = g.id;
+              S.activeAnimEventIdx = null;
+              S.activeRightTab = "anim";
               updatePanelTabButtons();
             }
           }
@@ -443,9 +443,9 @@ export function setupCanvas() {
         }
       }
 
-      if (onMoveLayer) {
+      if (onAnimLayer) {
         // Members mode: click / marquee selects items AND floors.
-        if (S.moveMode === "members" && activeGroup()) {
+        if (S.animMode === "members" && activeGroup()) {
           // Pure background content (water, sky…) is never selectable as a member.
           const hits = hitTestAll(wx, wz, true).filter(
             (it) => itemCategoryOf(it) !== "background"
@@ -453,14 +453,14 @@ export function setupCanvas() {
           const fHits = hitTestFloorsAll(wx, wz).filter(
             (fh) => fh.floor.surfaceKind !== "background"
           );
-          // 空气地板（仅碰撞盒）可入移动组：其 Col_AirFloor 碰撞盒会被烘焙
+          // 空气地板（仅碰撞盒）可入动画组：其 Col_AirFloor 碰撞盒会被烘焙
           // reparent + 动画，行走碰撞随组移动。
           const fHit = fHits.length > 0 ? fHits[0].floor : null;
           // 空气地板与上方物品重叠（如隐形桥被岛体地砖盖住）时，物品恒优先
           // 会让空气地板永远点不到——弹候选列表让两者都可选。
           if (hits.length > 0 && fHit?.airFloor) {
-            showMoveMemberOverlapPickTip(hits, fHit, e.clientX, e.clientY, e.shiftKey, () => {
-              updateMovePickBar();
+            showAnimMemberOverlapPickTip(hits, fHit, e.clientX, e.clientY, e.shiftKey, () => {
+              updateAnimPickBar();
               renderRightPanel();
               draw();
             });
@@ -475,7 +475,7 @@ export function setupCanvas() {
               fHits,
               surfaceHits: hits,
             });
-            updateMovePickBar();
+            updateAnimPickBar();
             renderRightPanel();
             draw();
             return;
@@ -490,7 +490,7 @@ export function setupCanvas() {
               clearSelection();
               setFloorSelection([fHit._key]);
             }
-            updateMovePickBar();
+            updateAnimPickBar();
             renderRightPanel();
             draw();
             return;
@@ -512,7 +512,7 @@ export function setupCanvas() {
           return;
         }
         // Waypoints mode: clicking empty canvas places a waypoint (mouseup).
-        if (S.moveMode === "waypoints" && activeGroup()) {
+        if (S.animMode === "waypoints" && activeGroup()) {
           S.marqueeing = true;
           S.marqueeAdd = e.shiftKey;
           S.marqueeStartX = mx;
@@ -777,8 +777,8 @@ export function setupCanvas() {
     // Overlapping points (0.5 格) first show the picker list, like item picking.
     // (Members pick mode keeps waypoints out of the way, same as left-click.)
     const wpMenuActive =
-      (S.currentLayer === "move" || S.activeMoveGroupId) &&
-      !(S.currentLayer === "move" && S.moveMode === "members" && !!activeGroup());
+      (S.currentLayer === "anim" || S.activeAnimGroupId) &&
+      !(S.currentLayer === "anim" && S.animMode === "members" && !!activeGroup());
     if (wpMenuActive) {
       const wpHits = hitTestWaypoints(wx, wz);
       if (wpHits.length > 0) {
@@ -1152,8 +1152,8 @@ export function setupCanvas() {
       const dx = S.marqueeCurX - S.marqueeStartX;
       const dy = S.marqueeCurY - S.marqueeStartY;
       if (
-        S.currentLayer === "move" &&
-        S.moveMode === "waypoints" &&
+        S.currentLayer === "anim" &&
+        S.animMode === "waypoints" &&
         activeGroup() &&
         Math.abs(dx) < 5 &&
         Math.abs(dy) < 5
@@ -1172,8 +1172,8 @@ export function setupCanvas() {
           group.waypoints.push(wp);
           S.selectedWaypointId = wp.id;
           // 放置自动编入：勾选时新路点直接追加到当前事件路线末尾。
-          if (S.moveRouteAutoAdd && S.activeMoveEventIdx !== null) {
-            const evt = group.events[S.activeMoveEventIdx];
+          if (S.animRouteAutoAdd && S.activeAnimEventIdx !== null) {
+            const evt = group.events[S.activeAnimEventIdx];
             if (evt && evt.type === "move") {
               if (!evt.waypointIds) evt.waypointIds = [];
               evt.waypointIds.push(wp.id);
@@ -1185,7 +1185,7 @@ export function setupCanvas() {
         const keys = selectionKeys();
         S.selectedKey = keys.length ? keys[keys.length - 1] : null;
       }
-      updateMovePickBar();
+      updateAnimPickBar();
       renderRightPanel();
       draw();
     }
@@ -1237,6 +1237,11 @@ export function setupCanvas() {
   window.addEventListener("keydown", (e) => {
     if (e.code === "Space" && !isTypingTarget(e.target)) {
       e.preventDefault();
+      // 动画组时间轴 tab 下空格 = 播放/暂停预览；其余情况 = 平移画布。
+      if (S.currentLayer === "anim" && S.activeAnimGroupId && S.activeAnimTab === "timeline") {
+        toggleAnimPreview();
+        return;
+      }
       if (!S.spaceHeld) {
         S.spaceHeld = true;
         updateCanvasCursor();
@@ -1257,13 +1262,13 @@ export function setupCanvas() {
       const dx = adir[0] * step;
       const dz = adir[1] * step;
       const wpContext =
-        S.currentLayer === "move" ||
-        ((S.currentLayer === "floor" || S.currentLayer === "background") && !!S.activeMoveGroupId);
+        S.currentLayer === "anim" ||
+        ((S.currentLayer === "floor" || S.currentLayer === "background") && !!S.activeAnimGroupId);
       const wpNudge =
         wpContext && S.selectedWaypointId && activeGroup()
           ? activeGroup()!.waypoints.find((w) => w.id === S.selectedWaypointId) ?? null
           : null;
-      const itemKeys = S.currentLayer === "move" ? [] : selectionKeys();
+      const itemKeys = S.currentLayer === "anim" ? [] : selectionKeys();
       if (!wpNudge && itemKeys.length === 0) return;
       if (!arrowNudgeHeld) {
         pushHistory();
@@ -1299,7 +1304,7 @@ export function setupCanvas() {
       S.pendingNewFloorCat = null;
       S.pendingNewAirFloor = false;
       dom.canvas.style.cursor = "";
-      if (S.moveMode !== "none") exitMoveMode();
+      if (S.animMode !== "none") exitAnimMode();
     }
 
     if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !isTypingTarget(e.target)) {
@@ -1310,7 +1315,7 @@ export function setupCanvas() {
     }
     if ((e.ctrlKey || e.metaKey) && (e.key === "x" || e.key === "X") && !isTypingTarget(e.target)) {
       if (S.currentLayer === "floor" || S.currentLayer === "background") cutFloors();
-      else if (S.currentLayer !== "move") cutSelection();
+      else if (S.currentLayer !== "anim") cutSelection();
       e.preventDefault();
       return;
     }
@@ -1333,15 +1338,15 @@ export function setupCanvas() {
     }
 
     // Move layer: no scene item operations — Delete removes members / waypoints instead.
-    if (S.currentLayer === "move") {
+    if (S.currentLayer === "anim") {
       if (isTypingTarget(e.target)) return;
       if (e.key === "Delete" || e.key === "Backspace") {
-        if (S.moveMode === "waypoints" && S.selectedWaypointId && activeGroup()) {
+        if (S.animMode === "waypoints" && S.selectedWaypointId && activeGroup()) {
           pushHistory();
           deleteWaypoint(activeGroup()!, S.selectedWaypointId);
           renderRightPanel();
           draw();
-        } else if (S.moveMode === "members" && activeGroup()) {
+        } else if (S.animMode === "members" && activeGroup()) {
           removeSelectedMembers();
         }
         e.preventDefault();

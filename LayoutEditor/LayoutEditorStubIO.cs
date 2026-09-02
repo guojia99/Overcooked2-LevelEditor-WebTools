@@ -6,6 +6,13 @@ using UnityEngine;
 
 public static class LayoutEditorStubIO
 {
+    /// <summary>链路金丝雀：写回/导出后若 logs/layout_editor.log 无此行，说明编辑器
+    /// 还在跑旧程序集（新代码未编译），一切“数据丢失”先查这条。</summary>
+    static LayoutEditorStubIO()
+    {
+        LayoutEditorLog.Log("[随机箱链路] StubIO 已加载（随机食材箱追踪 v3）");
+    }
+
     public static void ExportStub(GameObject go, LayoutItemDto item)
     {
         if (go == null || item == null)
@@ -75,6 +82,8 @@ public static class LayoutEditorStubIO
         {
             item.stubKind = "Dispenser";
             item.dispenser = new LayoutDispenserStubDto();
+            LayoutEditorLog.Log("[随机箱链路] ExportStub Dispenser: " + go.name
+                + " 单食材=" + (dispenser.spawnerItemPrefabSO != null ? dispenser.spawnerItemPrefabSO.name : "<空>"));
             if (dispenser.spawnerItemPrefabSO != null)
             {
                 var path = AssetDatabase.GetAssetPath(dispenser.spawnerItemPrefabSO);
@@ -86,6 +95,8 @@ public static class LayoutEditorStubIO
             ExportSoArrayIfPresent(go, item);
             // 外观皮肤 guid 同理须在此导出（食材箱有多款皮肤可换）。
             ExportPseudoPrefabGuidIfPresent(go, item);
+            // 随机食材箱（若已烘焙 CustomStub.RandomCrate 组件）读回 DTO。
+            ExportRandomCrate(go, item.dispenser);
             return;
         }
 
@@ -484,7 +495,8 @@ public static class LayoutEditorStubIO
                 // 酱料机/饮料机原 prefab 无 PseudoPrefabDispenserStub：写回时补加（并复用基础 stub 的 pseudoPrefabSO）
                 if (!isSpecialMachine)
                 {
-                    Debug.LogWarning("[LayoutEditor] Apply Dispenser: 场景对象缺少 PseudoPrefabDispenserStub: " + go.name);
+                    LayoutEditorLog.LogWarning("[随机箱链路] ApplyStub: 场景对象缺少 PseudoPrefabDispenserStub" +
+                        "（多为历史降级残留的普通道具，请在 web 删除后重放）: " + go.name + " id=" + (item.instanceId ?? "?"));
                     return;
                 }
                 dispenser = Undo.AddComponent<PseudoPrefabDispenserStub>(go);
@@ -493,12 +505,28 @@ public static class LayoutEditorStubIO
                     dispenser.pseudoPrefabSO = baseStub.pseudoPrefabSO;
             }
 
+            // 随机食材箱：烘焙关卡集 stub 程序集的 CustomStub.RandomCrate（反射软接入；
+            // 程序集缺失时写持久化数据载体并按固定箱（首候选）临时生效，不降级）
+            LayoutEditorLog.Log("[随机箱链路] ApplyStub Dispenser: " + go.name
+                + " 单食材guid=" + (item.dispenser.spawnerItemPrefabGuid ?? "<null>")
+                + " 随机=" + (item.dispenser.randomItemGuids != null ? item.dispenser.randomItemGuids.Length.ToString() + " 种" : "null"));
+            if (ApplyRandomCrate(go, dispenser, item.dispenser, isSpecialMachine))
+                return;
+
             Undo.RecordObject(dispenser, "Layout Editor Dispenser");
             var so = LoadPseudoPrefabSO(item.dispenser.spawnerItemPrefabGuid);
             // 普通食材箱未设置生成食材：宿主 PseudoPrefabDispenser.Setup 的 LoadAsset(null)
             // 会 NRE。降级为普通道具（保留 base stub/runtime），等用户选好食材再配置。
             if (so == null && !isSpecialMachine)
             {
+                // RandomDispenser（随机食材箱专属道具）未配置随机列表：保留包装内置的
+                // 默认食材，不降级（等用户配置随机候选）
+                if (item.prefabAssetPath != null &&
+                    item.prefabAssetPath.EndsWith("RandomDispenser.prefab", StringComparison.Ordinal))
+                {
+                    LayoutEditorLog.LogWarning("[随机箱链路] RandomDispenser 未配置随机候选，保留包装默认食材箱: " + go.name);
+                    return;
+                }
                 LayoutEditorLog.LogWarning("[LayoutEditor] Apply Dispenser: 食材箱未设置生成食材，" +
                     "已降级为普通道具（请先选择食材）: " + go.name);
                 LayoutEditorCookingUtensilGuard.DowngradeToBase(go, dispenser.pseudoPrefabSO);
@@ -1155,7 +1183,7 @@ public static class LayoutEditorStubIO
 
         // 配了事件组（组非空，与 ButtonEventBakery.BakeLink 的跳过条件一致）的触发源。
         // 全量写回以文档为准；作用域写回不带 buttonEvents，回退按场景里上次的
-        // 烘焙痕迹判定（BEP_ 前缀是事件组按压触发名；移动组联动用 BLP_，不会误判）。
+        // 烘焙痕迹判定（BEP_ 前缀是事件组按压触发名；动画组联动用 BLP_，不会误判）。
         var eventSources = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
         bool docCarriesEvents = buttonEvents != null && buttonEvents.links != null;
         if (docCarriesEvents)
@@ -1310,7 +1338,7 @@ public static class LayoutEditorStubIO
     }
 
     /// <summary>酱料机 / 饮料机：编辑器按食材箱处理，可绑定特定酱料/饮料。</summary>
-    private static bool IsSpecialDispenserPrefabId(string prefabId)
+    public static bool IsSpecialDispenserPrefabId(string prefabId)
     {
         return prefabId == "dlc08_drink_machine" || prefabId == "dlc11_drink_dispenser"
             || prefabId == "dlc08_condiment_dispenser" || prefabId == "dlc11_condiment_dispenser";
@@ -1477,5 +1505,459 @@ public static class LayoutEditorStubIO
             sos.Add(so);
         }
         return sos.ToArray();
+    }
+
+    // -------------------------------------------------------------
+    // 随机食材箱（CustomStub.RandomCrate · 关卡集 stub 程序集 Stub_<set>）
+    // 反射软接入：LayoutEditor 本体不依赖该程序集，缺失时回落普通食材箱。
+    // -------------------------------------------------------------
+
+    /// <summary>导出：把已烘焙的 RandomCrate 组件（若存在）读回 DTO。</summary>
+    /// <summary>随机食材箱数据载体 tag 前缀（SpecificPseudoPrefabTag.prefabTag）：
+    /// "RandomCrate|w1,w2,..."（invariant 浮点）。候选列表存 PseudoPrefabSOArray。
+    /// 关卡集 stub 程序集缺失期间靠它往返 web 数据。</summary>
+    private const string RandomCrateTagPrefix = "RandomCrate|";
+
+    /// <summary>问号图标库目录（多样式；PNG 均为正常方向，游戏内由
+    /// RandomCrate.PaintQuestionMark 统一做左右镜像）。</summary>
+    private const string RandomCrateQuestionTextureDir = "Assets/commonW1/question_mark";
+
+    /// <summary>默认图标样式（DTO questionMarkGuid 为空时使用，厨师帽问号）。</summary>
+    private const string RandomCrateDefaultQuestionTexture = RandomCrateQuestionTextureDir + "/question_mark_chef_hat.png";
+
+    /// <summary>按 guid 装载问号图标；guid 为空/失效回落默认样式。</summary>
+    private static Texture2D LoadQuestionMarkTexture(string guid)
+    {
+        if (!string.IsNullOrEmpty(guid))
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            if (!string.IsNullOrEmpty(path))
+            {
+                var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (tex != null)
+                    return tex;
+            }
+            LayoutEditorLog.LogWarning("[随机箱链路] 问号图标 guid 失效，回落默认样式: " + guid);
+        }
+        return AssetDatabase.LoadAssetAtPath<Texture2D>(RandomCrateDefaultQuestionTexture);
+    }
+
+    /// <summary>导出：组件优先；无组件（stub 程序集缺失/未拷贝）时读数据载体兜底，
+    /// 保证 web 往返不丢随机配置。</summary>
+    private static void ExportRandomCrate(GameObject go, LayoutDispenserStubDto dto)
+    {
+        if (dto == null)
+            return;
+
+        var type = FindRandomCrateType(go);
+        if (type != null)
+        {
+            var comp = go.GetComponent(type);
+            if (comp != null)
+            {
+                var sos = RandomCrateField(comp, "m_itemSOs") as PseudoPrefabSO[];
+                if (sos != null && sos.Length > 0)
+                {
+                    dto.randomItemGuids = SosToGuids(sos);
+                    var ws = RandomCrateField(comp, "m_weights") as float[];
+                    if (ws != null && ws.Length == sos.Length)
+                        dto.randomWeights = (float[])ws.Clone();
+                    var tex = RandomCrateField(comp, "m_questionMarkTexture") as Texture2D;
+                    if (tex != null)
+                        dto.questionMarkGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(tex));
+                    // 随机模式下固定食材参数对外清空（场景内部仍保留首食材兜底，见 ApplyRandomCrate）
+                    dto.spawnerItemPrefabGuid = "";
+                    LayoutEditorLog.Log("[随机箱链路] ExportRandomCrate(组件): " + go.name + " → " + sos.Length + " 种");
+                    return;
+                }
+                LayoutEditorLog.LogWarning("[随机箱链路] ExportRandomCrate: 组件存在但 m_itemSOs 为空: " + go.name);
+            }
+        }
+
+        // 数据载体兜底：soArray（候选）+ tag（权重）
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        if (tag == null || string.IsNullOrEmpty(tag.prefabTag) ||
+            !tag.prefabTag.StartsWith(RandomCrateTagPrefix, StringComparison.Ordinal))
+            return;
+        var soArray = go.GetComponent<PseudoPrefabSOArray>();
+        if (soArray == null || soArray.pseudoPrefabSOs == null || soArray.pseudoPrefabSOs.Length == 0)
+        {
+            LayoutEditorLog.LogWarning("[随机箱链路] ExportRandomCrate: 有随机 tag 但无 soArray 载体: " + go.name);
+            return;
+        }
+        dto.randomItemGuids = SosToGuids(soArray.pseudoPrefabSOs);
+        string iconGuid;
+        dto.randomWeights = ParseRandomCrateWeights(tag.prefabTag, soArray.pseudoPrefabSOs.Length, out iconGuid);
+        dto.questionMarkGuid = iconGuid;
+        dto.spawnerItemPrefabGuid = "";
+        LayoutEditorLog.Log("[随机箱链路] ExportRandomCrate(载体兜底): " + go.name + " → "
+            + soArray.pseudoPrefabSOs.Length + " 种");
+    }
+
+    private static string[] SosToGuids(PseudoPrefabSO[] sos)
+    {
+        var guids = new System.Collections.Generic.List<string>();
+        foreach (var so in sos)
+            guids.Add(so != null ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so)) : "");
+        return guids.ToArray();
+    }
+
+    /// <summary>解析载体 tag。v2：RandomCrate|&lt;iconGuid&gt;|&lt;w1,w2,...&gt;（iconGuid 可空 →
+    /// RandomCrate||w1,w2）；旧版（无图标）：RandomCrate|&lt;w1,w2,...&gt;。</summary>
+    private static float[] ParseRandomCrateWeights(string prefabTag, int count, out string iconGuid)
+    {
+        iconGuid = "";
+        var result = new float[count];
+        for (int i = 0; i < count; i++)
+            result[i] = 5f;
+        var payload = prefabTag.Substring(RandomCrateTagPrefix.Length);
+        string csv;
+        if (payload.StartsWith("|", StringComparison.Ordinal))
+        {
+            // v2 且 iconGuid 为空：|w1,w2,...
+            var segments = payload.Substring(1).Split('|');
+            iconGuid = "";
+            csv = segments.Length > 0 ? segments[0] : "";
+        }
+        else if (payload.IndexOf('|') >= 0)
+        {
+            // v2 带图标：iconGuid|w1,w2,...
+            var segments = payload.Split('|');
+            iconGuid = segments[0];
+            csv = segments.Length > 1 ? segments[1] : "";
+        }
+        else
+        {
+            // 旧版两段式：仅权重
+            csv = payload;
+        }
+        var parts = csv.Split(',');
+        for (int i = 0; i < count && i < parts.Length; i++)
+        {
+            float w;
+            if (float.TryParse(parts[i], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out w) && w >= 1f)
+                result[i] = w;
+        }
+        return result;
+    }
+
+    /// <summary>烘焙随机食材箱。返回 true = 随机配置已处理（跳过普通单食材路径，
+    /// 包括「程序集缺失但数据已存载体」的临时生效态）；false = 无随机配置/无有效食材
+    /// /特殊机型不支持（调用方继续原路径）。绝不因程序集缺失而降级箱子。</summary>
+    private static bool ApplyRandomCrate(GameObject go, PseudoPrefabDispenserStub dispenserStub, LayoutDispenserStubDto dto, bool isSpecialMachine)
+    {
+        var type = FindRandomCrateType(go);
+        var comp = type != null ? go.GetComponent(type) : null;
+
+        if (dto == null || dto.randomItemGuids == null || dto.randomItemGuids.Length == 0)
+        {
+            LayoutEditorLog.Log("[随机箱链路] ApplyRandomCrate: 无随机配置 → 清理组件/载体: " + go.name);
+            RemoveRandomCrate(go, type);
+            return false;
+        }
+        if (isSpecialMachine)
+        {
+            // 饮料机/酱料机的 soArray 是其自身的循环列表，不能当随机箱载体
+            LayoutEditorLog.LogWarning("[LayoutEditor] 随机食材箱不支持饮料机/酱料机，已忽略随机配置: " + go.name);
+            RemoveRandomCrate(go, type);
+            return false;
+        }
+
+        var sos = new System.Collections.Generic.List<PseudoPrefabSO>();
+        var weights = new System.Collections.Generic.List<float>();
+        for (int i = 0; i < dto.randomItemGuids.Length; i++)
+        {
+            var so = LoadPseudoPrefabSO(dto.randomItemGuids[i]);
+            if (so == null)
+            {
+                Debug.LogWarning("[LayoutEditor] 随机食材箱：跳过无法解析的食材 guid: " + dto.randomItemGuids[i]);
+                continue;
+            }
+            if (!LayoutEditorCookingUtensilGuard.RealPrefabIsSpawnableIngredient(so))
+            {
+                Debug.LogWarning("[LayoutEditor] 随机食材箱：跳过不可产出食材（真实 prefab 无 ISpawnableItem）: " + so.name);
+                continue;
+            }
+            // node 型食材不能进普通食材箱（守卫与自动重映射同单食材路径）
+            if (!string.IsNullOrEmpty(so.assetPath) &&
+                !so.assetPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+            {
+                var mapped = so.name == "dlc11onion_salad"
+                    ? AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>("Assets/common03/Ingredients/dlc11/dlc11_onion_salad.asset")
+                    : null;
+                if (mapped != null)
+                {
+                    so = mapped;
+                }
+                else
+                {
+                    Debug.LogWarning("[LayoutEditor] 随机食材箱：跳过 node 型食材 " + so.name + "（无实体 prefab）");
+                    continue;
+                }
+            }
+            var w = dto.randomWeights != null && i < dto.randomWeights.Length ? dto.randomWeights[i] : 5f;
+            sos.Add(so);
+            weights.Add(w >= 1f ? w : 5f);
+        }
+
+        if (sos.Count == 0)
+        {
+            LayoutEditorLog.LogWarning("[随机箱链路] ApplyRandomCrate: 无有效食材（guid 全部解析/校验失败），按普通食材箱处理: " + go.name);
+            RemoveRandomCrate(go, type);
+            return false;
+        }
+
+        // 运行时安全兜底：单食材字段 = 首个随机食材（未装加载器/老模组回落为固定箱，
+        // 也保证宿主 PseudoPrefabDispenser.Setup 不空引用）
+        Undo.RecordObject(dispenserStub, "Layout Editor Random Crate");
+        dispenserStub.spawnerItemPrefabSO = sos[0];
+
+        // 持久化数据载体（组件之外的独立通道）：候选列表 + 权重/图标 tag。
+        // stub 程序集缺失时 web 数据靠它往返；拷贝程序集后重新写回即烘焙组件。
+        WriteRandomCrateData(go, sos, weights, dto.questionMarkGuid ?? "");
+        EnsureRandomCrateDependencies(sos, type != null);
+
+        if (type == null)
+        {
+            // 按需自动拷贝：钩子由 CustomStubAutoBake 订阅（拷贝母本 → 编译 → 域重载后
+            // 自动补烘焙本场景）；无订阅者（解耦删除扩展文件时）退回纯告警
+            var setName = LevelSetOfScenePath(go.scene.path);
+            if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+            {
+                CustomStubCopyRequested(setName);
+                LayoutEditorLog.LogWarning("[LayoutEditor] 随机食材箱：关卡集 " + setName +
+                    " 尚无 CustomStub，已自动拷贝母本（Unity 编译完成后自动烘焙随机箱；本次先按固定食材箱（首候选「" +
+                    sos[0].name + "」）临时生效）: " + go.name);
+            }
+            else
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] 随机食材箱：关卡集尚未拷贝 CustomStub（Unity 菜单 " +
+                    "Tools/CustomStub/拷贝到关卡集…），本次先按固定食材箱（首候选「" + sos[0].name +
+                    "」）临时生效；拷贝并编译后重新写回即可启用随机。物品: " + go.name);
+            }
+            return true;
+        }
+
+        if (comp == null)
+            comp = Undo.AddComponent(go, type);
+        else
+            Undo.RecordObject(comp, "Layout Editor Random Crate");
+        SetRandomCrateField(comp, "m_itemSOs", sos.ToArray());
+        SetRandomCrateField(comp, "m_weights", weights.ToArray());
+        SetRandomCrateField(comp, "m_questionMarkTexture", LoadQuestionMarkTexture(dto.questionMarkGuid));
+        EditorUtility.SetDirty(comp);
+
+        var weightSum = 0f;
+        foreach (var w in weights)
+            weightSum += w;
+        LayoutEditorLog.Log("[随机箱链路] ApplyRandomCrate 成功: " + go.name + " → " + sos.Count + " 种食材（初始配额和 "
+            + weightSum.ToString("0.##") + "），组件=" + (comp != null ? "已烘焙" : "异常") + "，载体已写入");
+        return true;
+    }
+
+    /// <summary>写随机箱数据载体：PseudoPrefabSOArray=候选，SpecificPseudoPrefabTag=v2
+    /// 权重/图标串（RandomCrate|&lt;iconGuid&gt;|&lt;w1,w2,...&gt;）。
+    /// 普通食材箱的 soArray 仅由本通道使用（饮料机/酱料机不走随机路径）。</summary>
+    private static void WriteRandomCrateData(GameObject go, System.Collections.Generic.List<PseudoPrefabSO> sos, System.Collections.Generic.List<float> weights, string iconGuid)
+    {
+        var soArray = go.GetComponent<PseudoPrefabSOArray>();
+        if (soArray == null)
+            soArray = Undo.AddComponent<PseudoPrefabSOArray>(go);
+        else
+            Undo.RecordObject(soArray, "Layout Editor Random Crate Data");
+        soArray.pseudoPrefabSOs = sos.ToArray();
+        EditorUtility.SetDirty(soArray);
+
+        var sb = new System.Text.StringBuilder(RandomCrateTagPrefix);
+        sb.Append(iconGuid ?? "").Append('|');
+        for (int i = 0; i < weights.Count; i++)
+        {
+            if (i > 0)
+                sb.Append(',');
+            sb.Append(weights[i].ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+        }
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        if (tag == null)
+            tag = Undo.AddComponent<SpecificPseudoPrefabTag>(go);
+        else
+            Undo.RecordObject(tag, "Layout Editor Random Crate Data");
+        tag.prefabTag = sb.ToString();
+        EditorUtility.SetDirty(tag);
+    }
+
+    /// <summary>清除随机箱组件与数据载体（tag 带 RandomCrate| 前缀时 soArray 才视为本通道所有）。</summary>
+    private static void RemoveRandomCrate(GameObject go, Type type)
+    {
+        if (type != null)
+        {
+            var comp = go.GetComponent(type);
+            if (comp != null)
+                Undo.DestroyObjectImmediate(comp);
+        }
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        if (tag == null)
+            return;
+        var isOurs = !string.IsNullOrEmpty(tag.prefabTag) &&
+            tag.prefabTag.StartsWith(RandomCrateTagPrefix, StringComparison.Ordinal);
+        if (!isOurs)
+            return;
+        Undo.DestroyObjectImmediate(tag);
+        var soArray = go.GetComponent<PseudoPrefabSOArray>();
+        if (soArray != null)
+            Undo.DestroyObjectImmediate(soArray);
+    }
+
+    /// <summary>把各食材 bundle（及问号贴图所在 commonW1，includeTextureBundle=true 即
+    /// 组件已烘焙时）注册进 LevelInfoSO.dependencies。镜像 EnsureWebDependencies 的
+    /// StreamingAssets 存在性守卫，防宿主 PseudoPrefabManager 对缺失 bundle 抛
+    /// KeyNotFoundException。</summary>
+    private static void EnsureRandomCrateDependencies(System.Collections.Generic.List<PseudoPrefabSO> sos, bool includeTextureBundle)
+    {
+        PseudoPrefabManagerStub managerStub = null;
+        foreach (var ms in UnityEngine.Object.FindObjectsOfType<PseudoPrefabManagerStub>())
+        {
+            if (ms != null && ms.levelInfo != null)
+            {
+                managerStub = ms;
+                break;
+            }
+        }
+        if (managerStub == null)
+            return;
+
+        var info = managerStub.levelInfo;
+        var deps = new System.Collections.Generic.List<string>(info.dependencies ?? new string[0]);
+        var changed = false;
+
+        System.Action<string> tryAdd = delegate(string bundle)
+        {
+            if (string.IsNullOrEmpty(bundle) || deps.Contains(bundle))
+                return;
+            if (!System.IO.File.Exists(System.IO.Path.Combine(
+                System.IO.Path.Combine(Application.streamingAssetsPath, "Windows"), bundle)))
+            {
+                Debug.LogWarning("[LayoutEditor] 随机食材箱依赖的 bundle 不存在于 StreamingAssets/Windows，暂不注册: " + bundle
+                    + "（请先 Tools/Build AssetBundles 或把 bundle 拷入后重写回场景）");
+                return;
+            }
+            deps.Add(bundle);
+            changed = true;
+        };
+
+        if (includeTextureBundle)
+            tryAdd("commonW1");
+        foreach (var so in sos)
+        {
+            if (so != null)
+                tryAdd(so.bundleName);
+        }
+
+        if (changed)
+        {
+            Undo.RecordObject(info, "Layout Editor Random Crate Dependencies");
+            info.dependencies = deps.ToArray();
+            EditorUtility.SetDirty(info);
+        }
+    }
+
+    /// <summary>场景路径 → 关卡集名（"Assets/LevelSets/&lt;set&gt;/…" → &lt;set&gt;；其余 null）。</summary>
+    private static string LevelSetOfScenePath(string scenePath)
+    {
+        if (string.IsNullOrEmpty(scenePath) || !scenePath.StartsWith("Assets/LevelSets/", StringComparison.Ordinal))
+            return null;
+        var rest = scenePath.Substring("Assets/LevelSets/".Length);
+        var slash = rest.IndexOf('/');
+        if (slash <= 0)
+            return null;
+        return rest.Substring(0, slash);
+    }
+
+    /// <summary>定位关卡集 stub 程序集（Stub_&lt;set&gt;）里的 CustomStub.RandomCrate。
+    /// 程序集缺失返回 null —— LayoutEditor 本体零依赖。（公开：CustomStubAutoBake 复用）</summary>
+    public static Type FindRandomCrateType(GameObject go)
+    {
+        return FindRandomCrateType(LevelSetOfScenePath(go.scene.path));
+    }
+
+    private static Type FindRandomCrateType(string setName)
+    {
+        if (string.IsNullOrEmpty(setName))
+            return null;
+        var sb = new System.Text.StringBuilder("Stub_");
+        foreach (var ch in setName)
+            sb.Append(char.IsLetterOrDigit(ch) || ch == '_' ? ch : '_');
+        var asmName = sb.ToString();
+
+        var t = Type.GetType("CustomStub.RandomCrate, " + asmName);
+        if (t != null)
+            return t;
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            if (asm.GetName().Name != asmName)
+                continue;
+            t = asm.GetType("CustomStub.RandomCrate", false);
+            if (t != null)
+                return t;
+        }
+        return null;
+    }
+
+    /// <summary>随机箱需要但关卡集尚无 stub 程序集时发起（参数 = 关卡集名）。
+    /// 解耦钩子：CustomStubAutoBake 订阅并自动拷贝母本+编译+补烘焙；无订阅者仅告警。</summary>
+    public static Action<string> CustomStubCopyRequested;
+
+    /// <summary>域重载后（如 stub 程序集编译完成）自动补烘焙活动场景里的随机箱：
+    /// 找到数据载体（tag 前缀 + soArray）但组件缺失、且程序集现已可用的对象，
+    /// 从载体烘焙组件。返回补烘焙数量（>0 时调用方应保存场景）。</summary>
+    public static int RebakeRandomCratesInActiveScene()
+    {
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        var setName = LevelSetOfScenePath(scene.path);
+        var type = FindRandomCrateType(setName);
+        if (type == null)
+            return 0;
+
+        var baked = 0;
+        foreach (var tag in UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>())
+        {
+            if (tag == null || string.IsNullOrEmpty(tag.prefabTag) ||
+                !tag.prefabTag.StartsWith(RandomCrateTagPrefix, StringComparison.Ordinal))
+                continue;
+            var soArray = tag.gameObject.GetComponent<PseudoPrefabSOArray>();
+            if (soArray == null || soArray.pseudoPrefabSOs == null || soArray.pseudoPrefabSOs.Length == 0)
+                continue;
+            var comp = tag.gameObject.GetComponent(type);
+            if (comp != null)
+                continue;
+
+            comp = Undo.AddComponent(tag.gameObject, type);
+            string iconGuid;
+            SetRandomCrateField(comp, "m_itemSOs", soArray.pseudoPrefabSOs);
+            SetRandomCrateField(comp, "m_weights",
+                ParseRandomCrateWeights(tag.prefabTag, soArray.pseudoPrefabSOs.Length, out iconGuid));
+            SetRandomCrateField(comp, "m_questionMarkTexture",
+                LoadQuestionMarkTexture(iconGuid));
+            EditorUtility.SetDirty(comp);
+            baked++;
+        }
+        return baked;
+    }
+
+    private static object RandomCrateField(Component comp, string fieldName)
+    {
+        if (comp == null)
+            return null;
+        var f = comp.GetType().GetField(fieldName);
+        return f != null ? f.GetValue(comp) : null;
+    }
+
+    private static void SetRandomCrateField(Component comp, string fieldName, object value)
+    {
+        if (comp == null)
+            return;
+        var f = comp.GetType().GetField(fieldName);
+        if (f != null)
+            f.SetValue(comp, value);
     }
 }
