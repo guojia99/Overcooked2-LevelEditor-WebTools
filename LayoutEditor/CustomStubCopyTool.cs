@@ -21,7 +21,7 @@ public static class CustomStubCopyTool
     private const string MasterDir = "Assets/Editor/LayoutEditor/CustomStub";
     private const string LevelSetsRoot = "Assets/LevelSets";
 
-    [MenuItem("Tools/CustomStub/拷贝到关卡集…")]
+    [MenuItem("Layout Editor/CustomStub/拷贝到关卡集…")]
     public static void OpenWindow()
     {
         var window = EditorWindow.GetWindow<CustomStubCopyToolWindow>(false, "CustomStub 拷贝");

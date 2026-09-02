@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OC2LevelRuntimeLoader")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+87935ac70afeb1d48b83fccbd1efc100ca808096")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4e11b1a3b9f3e7d652941a25c3e2abfdcfc84c82")]
 [assembly: System.Reflection.AssemblyProductAttribute("OC2LevelRuntimeLoader")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OC2LevelRuntimeLoader")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

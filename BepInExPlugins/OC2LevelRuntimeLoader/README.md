@@ -42,11 +42,29 @@ Assembly-CSharp / common 包**。
 dotnet build -c Release -p:GameDir="D:\Games\Overcooked! 2"
 ```
 
-## 安装与分发
+## 安装与分发（位置务必放对）
 
-- 自用：把 `OC2LevelRuntimeLoader.dll` 复制到游戏 `BepInEx/plugins/`；
-- 玩家：随你的「[前置]BepInEx」包或模组更新渠道分发一次即可（与更新版
-  commonW1 bundle 同批）。
+本插件是 **OC2DIYLevel 的配套能力扩展**（为其加载关卡内额外 C# 代码），随模组包一起分发、放在同一目录：
+
+| 文件 | 游戏内位置 | 说明 |
+|---|---|---|
+| `OC2LevelRuntimeLoader.dll` | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/OC2LevelRuntimeLoader.dll` | 与 `OC2DIYLevel.dll`、`LevelEditorStub.dll` 同层（BepInEx 递归扫描 plugins/，子目录插件正常加载） |
+| 关卡集 zip（含 `runtime` 文件） | 解压到 `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/levels/<set>/` | `runtime` 必须与 `info_<set>`、`s_*` 同层；**不要**把 `.meta`/`.manifest` 文件拷进去 |
+| 更新版 `commonW1` bundle | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/commonW1` | 与 `common`/`common01`/`common02` 同级，归 OC2DIYLevel 管辖加载（**不放 StreamingAssets**）；含 RandomDispenser 包装与 question_mark 图标库 |
+
+### 真机不生效的排查顺序（症状：随机箱只出第一个食材）
+
+1. 看 `Overcooked! 2/BepInEx/LogOutput.log`：
+   - 有 `[OC2LevelRuntimeLoader] 已加载关卡程序集: Stub_xxx` → 加载器正常，问题在场景/代码；
+   - 完全没有 `[OC2LevelRuntimeLoader]` → DLL 没放对位置（应在 `plugins/OC2DIYLevel/` 内）或 BepInEx 未加载；
+   - `runtime bundle 加载失败/未找到` → `levels/<set>/` 下缺 `runtime` 文件。
+2. 确认 zip 是**最新导出**的（旧包里可能是过期 DLL）：编辑器 Console 应有
+   `[CustomStub] 已自动打包 N 个关卡集的 Stub DLL` 或导出时的 staging 日志。
+3. 确认 `plugins/OC2DIYLevel/commonW1` 已更新（否则问号贴图缺失，但随机仍应生效——
+   若随机也不生效则与 commonW1 无关）。
+
+- 自用测试：按上表放入 `BepInEx/plugins/OC2DIYLevel/`；
+- 玩家：随「[前置]BepInEx + OC2DIYLevel」模组包整包分发（更新版 commonW1 同批）。
 
 ## 注意
 

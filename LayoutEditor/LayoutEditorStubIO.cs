@@ -1733,7 +1733,7 @@ public static class LayoutEditorStubIO
             else
             {
                 LayoutEditorLog.LogWarning("[LayoutEditor] 随机食材箱：关卡集尚未拷贝 CustomStub（Unity 菜单 " +
-                    "Tools/CustomStub/拷贝到关卡集…），本次先按固定食材箱（首候选「" + sos[0].name +
+                    "Layout Editor/CustomStub/拷贝到关卡集…），本次先按固定食材箱（首候选「" + sos[0].name +
                     "」）临时生效；拷贝并编译后重新写回即可启用随机。物品: " + go.name);
             }
             return true;

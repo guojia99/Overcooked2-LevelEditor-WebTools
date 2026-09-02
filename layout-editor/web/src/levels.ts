@@ -36,6 +36,7 @@ import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
 import { computeCardGroups, rlCardHtml, rlSectionHtml, STEP_ICON_SRC, type RecipeWithGroups } from "./recipeCard";
 import { exportSummaryPng, type SummaryCard, type SummaryExportData } from "./summaryExport";
+import { exportLevelShotsPng, type LevelShotExportData } from "./levelShotExport";
 import { customRecipeIconUrl } from "./editor/catalog";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { screenshotPaneHtml, wireScreenshotPane } from "./editor/ui/screenshotModal";
@@ -462,6 +463,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
     <div class="m-actions-row">
       <button class="m-btn primary" id="new-level">+ 新建关卡</button>
       ${levels.length > 1 ? '<button class="m-btn" id="reorder-levels">⇅ 调整顺序</button>' : ""}
+      ${levels.length > 0 ? '<button class="m-btn" id="shots-export">🖼 一键导出关卡截图</button>' : ""}
       <span class="muted">当前关卡集：<b>${setDisplay}</b></span>
     </div>
     <div class="m-section-title">关卡</div>
@@ -470,6 +472,32 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
 
   document.getElementById("new-level")?.addEventListener("click", () => openCreateLevelModal(app, setName));
   document.getElementById("reorder-levels")?.addEventListener("click", () => openReorderModal(app, setName, levels));
+  document.getElementById("shots-export")?.addEventListener("click", async () => {
+    const btn = document.getElementById("shots-export") as HTMLButtonElement | null;
+    if (btn) btn.disabled = true;
+    setStatus("正在合成关卡截图…");
+    try {
+      const grid = content.querySelector<HTMLElement>(".m-level-grid");
+      const exportData: LevelShotExportData = {
+        title: setInfo?.levelSetNameZH || setInfo?.levelSetName || setName,
+        sub: `${setInfo?.levelSetName || setName} · 共 ${levels.length} 关`,
+        // 仅中英文名 + 截图：不带 s_* 标识/序号元信息与按钮（无名的关卡回退为「第 N 关」）
+        cards: levels.map((lv, idx) => ({
+          screenshotUrl: lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "",
+          nameZh: lv.levelNameZH || lv.levelName || `第 ${idx + 1} 关`,
+          nameEn: lv.levelNameZH && lv.levelName ? lv.levelName : "",
+        })),
+      };
+      const width = grid ? grid.getBoundingClientRect().width : 1200;
+      const fileName = `${exportData.title}_关卡截图.png`;
+      await exportLevelShotsPng(exportData, width, fileName);
+      setStatus(`已导出 ${fileName}（${levels.length} 关）`);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
 
   content.querySelectorAll<HTMLButtonElement>("[data-edit]").forEach((b) =>
     b.addEventListener("click", () => void renderLevelDetail(app, setName, b.dataset.edit!))

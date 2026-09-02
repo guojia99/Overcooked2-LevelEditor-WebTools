@@ -17,7 +17,9 @@ namespace CustomStub
     /// 所有游戏类型经 GameApi 反射缓存访问；Unity / LevelEditorStub 类型直接引用。
     ///
     /// 关键时序（时序错则全部失效，见各步注释）：
-    /// 1. 等 PseudoPrefab.childGameObject（宿主 Init 实例化真实箱子）；
+    /// 1. 等真实箱子：子孙中递归找 PickupItemSpawner（游戏原生类型，编辑器/游戏通用；
+    ///    游戏侧 OC2DIYLevel 模组按 stub 标记生成真实箱子，没有 LevelEditor.PseudoPrefab
+    ///    类型，切勿再反射它）；
     /// 2. 等网络同步完成 MultiplayerController.IsSynchronisationActive()：
     ///    - Server/Client 同步器组件（含 ServerPickupItemSpawner）在
     ///      AsyncScanEntities 协程（等所有玩家加载完成）之后才 AddComponent，
@@ -54,43 +56,137 @@ namespace CustomStub
         private bool _isServer;
         private Component _spawner;
 
+        // ---- 日志桥（金丝雀版本号：真机日志确认 DLL 新鲜度用） ----
+        private const string Version = "v5";
+        private static MethodInfo _bridgeLog;
+        private static bool _bridgeSearched;
+
+        /// <summary>优先转发到 OC2LevelRuntimeLoader 插件日志（LogOutput.log 同一
+        /// 来源可见，Debug.Log 可能被 BepInEx 级别过滤）；无加载器（编辑器宿主）
+        /// 回落 Unity Console。</summary>
+        private static void Log(string msg)
+        {
+            Bridge(msg, false);
+        }
+
+        private static void LogWarn(string msg)
+        {
+            Bridge(msg, true);
+        }
+
+        private static void Bridge(string msg, bool warn)
+        {
+            if (!_bridgeSearched)
+            {
+                _bridgeSearched = true;
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    var t = asm.GetType("OC2LevelRuntimeLoader.LevelRuntimeLoader", false);
+                    if (t == null)
+                        continue;
+                    _bridgeLog = t.GetMethod("LogFromCrate", BindingFlags.Public | BindingFlags.Static);
+                    break;
+                }
+            }
+            if (_bridgeLog != null)
+            {
+                try
+                {
+                    _bridgeLog.Invoke(null, new object[] { msg, warn });
+                    return;
+                }
+                catch (Exception)
+                {
+                    // 桥失败回落 Debug
+                }
+            }
+            if (warn)
+                Debug.LogWarning(msg);
+            else
+                Debug.Log(msg);
+        }
+
+        /// <summary>外层枚举器：C#4 禁止在有 catch 的 try 里 yield，用嵌套枚举器
+        /// 模式给整个协程套异常捕获——任何未捕获异常（含 GameApi 静态构造的
+        /// TypeInitializationException）都打到日志桥上，不再静默死亡。</summary>
         private IEnumerator Start()
         {
-            // 外层循环：宿主 ResetChild 重建 childGameObject 后（重开关卡等场景）
-            // 重新走完整装配。pseudo 本体被删则彻底退出。
+            var inner = RunInner();
             while (true)
             {
-                var pseudo = GetComponent(GameApi.PseudoPrefabType);
-                if (pseudo == null)
+                object current;
+                bool hasNext;
+                try
                 {
-                    Debug.LogWarning("[RandomCrate] 宿主缺少 PseudoPrefab，组件退出: " + name);
+                    hasNext = inner.MoveNext();
+                    current = hasNext ? inner.Current : null;
+                }
+                catch (Exception ex)
+                {
+                    LogWarn("[RandomCrate] 协程异常退出: " + name + "\n" + ex);
                     yield break;
                 }
+                if (!hasNext)
+                    yield break;
+                yield return current;
+            }
+        }
 
-                GameObject child = GameApi.GetChildGameObject(pseudo);
+        private IEnumerator RunInner()
+        {
+            Log("[RandomCrate " + Version + "] 初始化: " + name
+                + "（场景 " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+                + "，配置候选 " + (m_itemSOs != null ? m_itemSOs.Length : 0)
+                + "，权重 " + FormatFloats(m_weights)
+                + "，问号贴图 " + (m_questionMarkTexture != null ? m_questionMarkTexture.name : "无") + "）");
+            // 反射自检：强制触发 GameApi 静态构造（异常会被外层捕获打日志），
+            // 并报告每个关键反射目标在游戏侧是否命中。
+            // 注意：不依赖 LevelEditor.PseudoPrefab / PseudoPrefabManager——游戏侧
+            // AppDomain 没有这些类型（OC2DIYLevel 模组只按 stub 标记加功能组件），
+            // 真实箱子一律靠「子孙里找 PickupItemSpawner」定位、bundle 靠
+            // AssetBundle.GetAllLoadedAssetBundles 按名匹配（v4 起，编辑器/游戏通用）。
+            Log("[RandomCrate] 反射自检: " + name
+                + "（PickupItemSpawnerType=" + (GameApi.PickupItemSpawnerType != null)
+                + "，IsSyncActiveMethod=" + (GameApi.IsSyncActiveMethod != null)
+                + "，RegisterSpawnable=" + (GameApi.RegisterSpawnableMethod != null)
+                + "，RegisterSpawnableCallback=" + (GameApi.RegisterSpawnableCallbackMethod != null) + "）");
+            // 外层循环：宿主重建真实箱子后（重开关卡等场景）重新走完整装配。
+            while (true)
+            {
+                // 定位真实箱子：子孙中递归找 PickupItemSpawner（游戏原生类型）。
+                var spawner = FindSpawnerInDescendants();
+                GameObject child = spawner != null ? spawner.gameObject : null;
+                if (child == null)
+                    Log("[RandomCrate] 等待真实箱子 prefab: " + name);
                 var deadline = Time.realtimeSinceStartup + 20f;
+                var lastChildBeat = Time.realtimeSinceStartup;
                 while (child == null)
                 {
-                    if (pseudo == null)
-                        yield break;
                     if (Time.realtimeSinceStartup > deadline)
                     {
-                        Debug.LogWarning("[RandomCrate] 等待真实箱子 prefab 超时（20s），本轮跳过: " + name);
+                        LogWarn("[RandomCrate] 等待真实箱子 prefab 超时（20s），本轮跳过: " + name
+                            + "（直接子物体: " + DirectChildrenNames() + "）");
                         child = null;
                         break;
                     }
+                    if (Time.realtimeSinceStartup - lastChildBeat > 5f)
+                    {
+                        lastChildBeat = Time.realtimeSinceStartup;
+                        Log("[RandomCrate] 仍在等待真实箱子 prefab: " + name);
+                    }
                     yield return null;
-                    child = GameApi.GetChildGameObject(pseudo);
+                    spawner = FindSpawnerInDescendants();
+                    child = spawner != null ? spawner.gameObject : null;
                 }
                 if (child == null)
                 {
                     yield return new WaitForSeconds(1f);
                     continue;
                 }
-
-                // 载入全部食材 prefab：bundle 直读（镜像 LayoutEditorItemSwitcherPatch
-                // 的 LoadBundleAsset，避开 PseudoPrefabManager.LoadAsset 对 null 结果
-                // 触发的 DeInit/Init 全量重置连锁）。
+                Log("[RandomCrate] 真实箱子就绪: " + name + " → " + child.name);
+                // 载入全部食材 prefab：已加载 bundle 按名直读（AssetBundle.
+                // GetAllLoadedAssetBundles，避开宿主 PseudoPrefabManager.LoadAsset
+                // 对 null 结果触发的 DeInit/Init 全量重置连锁，且游戏侧无该类型）。
                 // 同 assetPath 的重复条目合并（配额相加），保证名字匹配无歧义。
                 _prefabs = new List<GameObject>();
                 _initial = new List<float>();
@@ -100,7 +196,7 @@ namespace CustomStub
                     var so = m_itemSOs[i];
                     if (so == null || string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
                     {
-                        Debug.LogWarning("[RandomCrate] 跳过无效食材配置项 #" + i + ": " + name);
+                        LogWarn("[RandomCrate] 跳过无效食材配置项 #" + i + ": " + name);
                         continue;
                     }
                     float w = m_weights != null && i < m_weights.Length && m_weights[i] >= 1f ? m_weights[i] : 5f;
@@ -109,13 +205,13 @@ namespace CustomStub
                         var bundle = GameApi.GetAssetBundle(so.bundleName);
                         if (bundle == null)
                         {
-                            Debug.LogWarning("[RandomCrate] bundle 未加载，跳过食材 " + so.prefabName + ": " + name);
+                            LogWarn("[RandomCrate] bundle 未加载，跳过食材 " + so.prefabName + ": " + name);
                             continue;
                         }
                         var prefab = bundle.LoadAsset<GameObject>(so.assetPath);
                         if (prefab == null)
                         {
-                            Debug.LogWarning("[RandomCrate] 食材 prefab 加载失败 " + so.assetPath + ": " + name);
+                            LogWarn("[RandomCrate] 食材 prefab 加载失败 " + so.assetPath + ": " + name);
                             continue;
                         }
                         var merged = assetPaths.IndexOf(so.assetPath);
@@ -130,28 +226,23 @@ namespace CustomStub
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning("[RandomCrate] 食材加载异常（bundle 缺失?）" + so.bundleName + "/" + so.assetPath
+                        LogWarn("[RandomCrate] 食材加载异常（bundle 缺失?）" + so.bundleName + "/" + so.assetPath
                             + ": " + ex.Message);
                     }
                 }
                 if (_prefabs.Count == 0)
                 {
-                    Debug.LogWarning("[RandomCrate] 无可用食材，本轮跳过: " + name);
+                    LogWarn("[RandomCrate] 无可用食材，本轮跳过: " + name);
                     yield return new WaitForSeconds(1f);
                     continue;
                 }
+                Log("[RandomCrate] 候选加载完成: " + name + "（" + PrefabSummary() + "）");
 
                 _remaining = new float[_prefabs.Count];
                 for (int i = 0; i < _initial.Count; i++)
                     _remaining[i] = _initial[i];
 
-                _spawner = child.GetComponent(GameApi.PickupItemSpawnerType);
-                if (_spawner == null)
-                {
-                    Debug.LogWarning("[RandomCrate] 真实箱子缺少 PickupItemSpawner，本轮跳过: " + name);
-                    yield return new WaitForSeconds(1f);
-                    continue;
-                }
+                _spawner = spawner;
 
                 // 预画问号：childGameObject 就绪即显示，不等网络握手（开局不再先显示
                 // 首食材图标）。同步握手时游戏 ClientItemCrateCosmeticDecisions 会重绘
@@ -159,18 +250,27 @@ namespace CustomStub
                 PaintQuestionMark(child, m_questionMarkTexture);
 
                 // 等网络同步完成（见类头注释第 2 点）。同步是可玩局面的必要环节，
-                // 不设超时；child/pseudo 失效则回外层重装配。
+                // 不设超时；child 失效则回外层重装配。心跳日志便于定位"卡在等同步"。
+                var waitStart = Time.realtimeSinceStartup;
+                var lastBeat = waitStart;
+                var waitingLogged = false;
                 while (!GameApi.IsSynchronisationActive())
                 {
-                    if (pseudo == null)
-                        yield break;
                     if (child == null)
                         break;
+                    if (!waitingLogged)
+                    {
+                        waitingLogged = true;
+                        Log("[RandomCrate] 等待网络同步完成: " + name);
+                    }
+                    else if (Time.realtimeSinceStartup - lastBeat > 5f)
+                    {
+                        lastBeat = Time.realtimeSinceStartup;
+                        Log("[RandomCrate] 仍在等待网络同步（已等 "
+                            + (int)(lastBeat - waitStart) + "s）: " + name);
+                    }
                     yield return null;
-                    child = GameApi.GetChildGameObject(pseudo);
                 }
-                if (pseudo == null)
-                    yield break;
                 if (child == null)
                 {
                     yield return null;
@@ -179,11 +279,13 @@ namespace CustomStub
 
                 // 服务端判定（游戏标准写法：主机 或 未在联机会话=单机）
                 _isServer = GameApi.IsServerMachine();
+                Log("[RandomCrate] 网络同步就绪: " + name + "（isServer=" + _isServer + "）");
 
                 // 注册全部候选（服务端与客户端都要——客户端网络实例化按 spawner 的
                 // 注册表解析 spawnableID；静态查表，同步后注册依然有效）。
                 // 服务端注册带回调：取出事件（ServerSpawnPrefab 内同步触发）驱动配额递减。
                 var callback = _isServer ? CreateSpawnCallback() : null;
+                var registered = 0;
                 for (int i = 0; i < _prefabs.Count; i++)
                 {
                     try
@@ -192,12 +294,15 @@ namespace CustomStub
                             GameApi.RegisterSpawnable(child, _prefabs[i], callback);
                         else
                             GameApi.RegisterSpawnable(child, _prefabs[i]);
+                        registered++;
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning("[RandomCrate] 注册生成 prefab 失败 " + _prefabs[i].name + ": " + ex.Message);
+                        LogWarn("[RandomCrate] 注册生成 prefab 失败 " + _prefabs[i].name + ": " + ex.Message);
                     }
                 }
+                Log("[RandomCrate] 候选注册完成: " + name + "（" + registered + "/" + _prefabs.Count
+                    + (callback != null ? "，含取出回调" : "，无取出回调（客户端）") + "）");
 
                 // 问号绘制：必须晚于游戏 ClientItemCrateCosmeticDecisions 的首食材
                 // 图标绘制（发生在同步握手内），此刻已安全。
@@ -233,6 +338,8 @@ namespace CustomStub
                 }
             }
             GameApi.SetItemPrefab(_spawner, pick);
+            Log("[RandomCrate] 掷出下一个食材: " + name + " → " + pick.name
+                + "（剩余配额 " + FormatFloats(_remaining) + "）");
         }
 
         /// <summary>取出事件（仅服务端注册本回调）。匹配被取出的食材 → 配额 -1 →
@@ -257,17 +364,19 @@ namespace CustomStub
                 }
                 if (index < 0)
                 {
-                    Debug.LogWarning("[RandomCrate] 取出物品无法匹配候选列表: " + spawned.name);
+                    LogWarn("[RandomCrate] 取出物品无法匹配候选列表: " + spawned.name);
                     return;
                 }
                 _remaining[index] -= 1f;
                 if (_remaining[index] <= 0f)
                     _remaining[index] = _initial[index];
+                Log("[RandomCrate] 取出: " + name + " → " + n
+                    + "（剩余配额 " + FormatFloats(_remaining) + "）");
                 RollNext();
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("[RandomCrate] 取出回调异常: " + ex.Message);
+                LogWarn("[RandomCrate] 取出回调异常: " + ex.Message);
             }
         }
 
@@ -302,17 +411,28 @@ namespace CustomStub
                     return;
                 var lid = FindChildRecursive(child.transform, lidName);
                 Renderer renderer = null;
+                var rendererPath = "";
                 if (lid != null)
                 {
                     renderer = lid.GetComponent<SkinnedMeshRenderer>();
+                    if (renderer != null)
+                        rendererPath = "盖子 SkinnedMeshRenderer";
                     if (renderer == null)
+                    {
                         renderer = lid.GetComponent<MeshRenderer>();
+                        if (renderer != null)
+                            rendererPath = "盖子 MeshRenderer";
+                    }
                 }
                 if (renderer == null)
+                {
                     renderer = child.GetComponent<MeshRenderer>();
+                    if (renderer != null)
+                        rendererPath = "根 MeshRenderer";
+                }
                 if (renderer == null)
                 {
-                    Debug.LogWarning("[RandomCrate] 找不到箱盖渲染器: " + child.name);
+                    LogWarn("[RandomCrate] 找不到箱盖渲染器: " + child.name);
                     return;
                 }
                 var matNumber = GameApi.MaterialNumberField != null ? (int)GameApi.MaterialNumberField.GetValue(decisions) : 0;
@@ -320,7 +440,7 @@ namespace CustomStub
                 var materials = renderer.sharedMaterials;
                 if (materials == null || matNumber < 0 || matNumber >= materials.Length || materials[matNumber] == null)
                 {
-                    Debug.LogWarning("[RandomCrate] 箱盖材质数组无效: " + child.name);
+                    LogWarn("[RandomCrate] 箱盖材质数组无效: " + child.name);
                     return;
                 }
                 var material = new Material(materials[matNumber]);
@@ -330,11 +450,37 @@ namespace CustomStub
                 material.mainTextureScale = new Vector2(-uvScale.x, -uvScale.y);
                 materials[matNumber] = material;
                 renderer.sharedMaterials = materials;
+                Log("[RandomCrate] 问号绘制成功: " + child.name + "（" + rendererPath
+                    + "，材质 #" + matNumber + "，贴图 " + texture.name + "）");
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("[RandomCrate] 绘制问号图标失败: " + ex.Message);
+                LogWarn("[RandomCrate] 绘制问号图标失败: " + ex.Message);
             }
+        }
+
+        /// <summary>子孙中递归查找 PickupItemSpawner（真实箱子的定位锚点，游戏原生
+        /// 类型，编辑器/游戏通用——不依赖 LevelEditor.PseudoPrefab.childGameObject，
+        /// 游戏侧 OC2DIYLevel 模组根本没有 LevelEditor 命名空间的类型）。</summary>
+        private Component FindSpawnerInDescendants()
+        {
+            var spawnerType = GameApi.PickupItemSpawnerType;
+            if (spawnerType == null)
+                return null;
+            foreach (var comp in GetComponentsInChildren(spawnerType, true))
+            {
+                if (comp != null)
+                    return comp;
+            }
+            return null;
+        }
+
+        private string DirectChildrenNames()
+        {
+            var names = new List<string>();
+            for (int i = 0; i < transform.childCount; i++)
+                names.Add(transform.GetChild(i).name);
+            return names.Count > 0 ? string.Join(", ", names.ToArray()) : "无";
         }
 
         /// <summary>按名称深度查找子节点（宿主的 Transform.FindChildRecursive 是
@@ -354,30 +500,50 @@ namespace CustomStub
             return null;
         }
 
+        private string PrefabSummary()
+        {
+            var parts = new List<string>();
+            for (int i = 0; i < _prefabs.Count; i++)
+                parts.Add((_prefabs[i] != null ? _prefabs[i].name : "?") + "×" + _initial[i].ToString("0.##"));
+            return string.Join(", ", parts.ToArray());
+        }
+
+        private static string FormatFloats(float[] values)
+        {
+            if (values == null || values.Length == 0)
+                return "无";
+            var parts = new string[values.Length];
+            for (int i = 0; i < values.Length; i++)
+                parts[i] = values[i].ToString("0.##");
+            return string.Join(",", parts);
+        }
+
         /// <summary>Assembly-CSharp（宿主程序集）类型的反射缓存。类型缺失时安全返回 null。</summary>
         private static class GameApi
         {
-            public static readonly Type PseudoPrefabType = Find("LevelEditor.PseudoPrefab");
-            public static readonly FieldInfo ChildGameObjectField = Field(PseudoPrefabType, "childGameObject");
-
-            public static readonly Type PseudoPrefabManagerType = Find("LevelEditor.PseudoPrefabManager");
-            public static readonly MethodInfo GetAssetBundleMethod = Method(
-                PseudoPrefabManagerType, "GetAssetBundle", new[] { typeof(string) });
-
             public static readonly Type VoidGenericType = Find("VoidGeneric`1");
-            public static readonly Type VoidGenericGameObjectType = VoidGenericType != null
-                ? VoidGenericType.MakeGenericType(typeof(GameObject))
-                : null;
+            public static readonly Type VoidGenericGameObjectType = Safe(delegate
+            {
+                return VoidGenericType != null ? VoidGenericType.MakeGenericType(typeof(GameObject)) : null;
+            });
 
             public static readonly Type NetworkUtilsType = Find("NetworkUtils");
-            public static readonly MethodInfo RegisterSpawnableMethod = NetworkUtilsType != null
-                ? NetworkUtilsType.GetMethod("RegisterSpawnablePrefab", BindingFlags.Public | BindingFlags.Static,
-                    null, new[] { typeof(GameObject), typeof(GameObject) }, null)
-                : null;
-            public static readonly MethodInfo RegisterSpawnableCallbackMethod = NetworkUtilsType != null
-                ? NetworkUtilsType.GetMethod("RegisterSpawnablePrefab", BindingFlags.Public | BindingFlags.Static,
-                    null, new[] { typeof(GameObject), typeof(GameObject), VoidGenericGameObjectType }, null)
-                : null;
+            // 注意：GetMethod 的 types 数组含 null 元素会抛 ArgumentNullException——
+            // 静态构造抛异常 = TypeInitializationException，协程无声死亡，一律 Safe 包裹。
+            public static readonly MethodInfo RegisterSpawnableMethod = Safe(delegate
+            {
+                return NetworkUtilsType != null
+                    ? NetworkUtilsType.GetMethod("RegisterSpawnablePrefab", BindingFlags.Public | BindingFlags.Static,
+                        null, new[] { typeof(GameObject), typeof(GameObject) }, null)
+                    : null;
+            });
+            public static readonly MethodInfo RegisterSpawnableCallbackMethod = Safe(delegate
+            {
+                return NetworkUtilsType != null && VoidGenericGameObjectType != null
+                    ? NetworkUtilsType.GetMethod("RegisterSpawnablePrefab", BindingFlags.Public | BindingFlags.Static,
+                        null, new[] { typeof(GameObject), typeof(GameObject), VoidGenericGameObjectType }, null)
+                    : null;
+            });
 
             public static readonly Type PickupItemSpawnerType = Find("PickupItemSpawner");
             public static readonly FieldInfo ItemPrefabField = Field(PickupItemSpawnerType, "m_itemPrefab");
@@ -396,6 +562,20 @@ namespace CustomStub
             public static readonly FieldInfo LidMeshNameField = Field(ItemCrateCosmeticDecisionsType, "m_crateLidMeshName");
             public static readonly FieldInfo MaterialNumberField = Field(ItemCrateCosmeticDecisionsType, "m_materialNumber");
             public static readonly FieldInfo UvScaleField = Field(ItemCrateCosmeticDecisionsType, "m_uvScale");
+
+            /// <summary>静态字段初始化防爆：任何反射异常返回 null（缺失按降级处理），
+            /// 绝不让 TypeInitializationException 逃出静态构造。</summary>
+            private static T Safe<T>(Func<T> f) where T : class
+            {
+                try
+                {
+                    return f();
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
 
             private static Type Find(string typeName)
             {
@@ -421,18 +601,21 @@ namespace CustomStub
                 return type != null ? type.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static, null, args, null) : null;
             }
 
-            public static GameObject GetChildGameObject(Component pseudo)
-            {
-                if (pseudo == null || ChildGameObjectField == null)
-                    return null;
-                return ChildGameObjectField.GetValue(pseudo) as GameObject;
-            }
-
+            /// <summary>按名找已加载的 AssetBundle（Unity 原生 API，不再反射
+            /// PseudoPrefabManager.GetAssetBundle——游戏侧没有该类型）。
+            /// bundleName 为 bundle 文件名（如 common01 / bundle18）。</summary>
             public static AssetBundle GetAssetBundle(string bundleName)
             {
-                if (GetAssetBundleMethod == null)
+                if (string.IsNullOrEmpty(bundleName))
                     return null;
-                return GetAssetBundleMethod.Invoke(null, new object[] { bundleName }) as AssetBundle;
+                foreach (var b in AssetBundle.GetAllLoadedAssetBundles())
+                {
+                    if (b == null)
+                        continue;
+                    if (string.Equals(b.name, bundleName, StringComparison.OrdinalIgnoreCase))
+                        return b;
+                }
+                return null;
             }
 
             /// <summary>网络实体扫描+链接+StartSynchronising 是否全部完成
