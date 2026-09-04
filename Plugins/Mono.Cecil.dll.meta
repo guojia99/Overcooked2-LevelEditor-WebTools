@@ -1,0 +1,27 @@
+fileFormatVersion: 2
+guid: ab2bd7f703b242ad83c66f6191ed79cb
+PluginImporter:
+  serializedVersion: 2
+  name: Mono.Cecil
+  externalObjects: {}
+  iconMap: {}
+  executionOrder: {}
+  isPreloaded: 0
+  isOverridable: 0
+  platformData:
+  - first:
+      Any:
+    second:
+      enabled: 1
+      settings: {}
+  - first:
+      Editor: Editor
+    second:
+      enabled: 1
+      settings:
+        DefaultValueInitialized: true
+  output:
+    dllType: 0
+  userData:
+  assetBundleName:
+  assetBundleVariant:

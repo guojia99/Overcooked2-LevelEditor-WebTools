@@ -1,6 +1,6 @@
 all: run
 
-ZIP_NAME := OC2-Web-v0.7.zip
+ZIP_NAME := OC2-Web-v0.7.1.zip
 
 build:
 	rm -f $(ZIP_NAME)
@@ -8,6 +8,15 @@ build:
 
 
 run:
+	rm -rf Plugins/*
+
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/Mono.Cecil.dll Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/Mono.Cecil.dll.meta Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.RuntimeDetour.dll Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.RuntimeDetour.dll.meta Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.Utils.dll Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.Utils.dll.meta Plugins/
+
 	rm -rf ./layout-editor/
 	rm -rf ./LayoutEditor/
 	rm -rf ./common03/

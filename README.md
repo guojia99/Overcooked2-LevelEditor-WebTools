@@ -24,6 +24,7 @@
 2. 将`LayoutEditor` 放到`../Overcooked2-LevelEditor/Assets/Editor`中
 3. 将`layout-editor` 放到`../Overcooked2-LevelEditor/` 目录下即可
 4. 将`commonW1`和`commonW1.meta` 放到`../Overcooked2-LevelEditor/Assets/`目录
+5. 将`Plugins` 中的所有组件 拷贝到`./Overcooked2-LevelEditor/Assets/Plugins`中
 
 
 ### 功能清单

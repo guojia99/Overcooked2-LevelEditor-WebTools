@@ -1,0 +1,27 @@
+fileFormatVersion: 2
+guid: c7169c916e4c4f599b1d5489beba9dd2
+PluginImporter:
+  serializedVersion: 2
+  name: MonoMod.RuntimeDetour
+  externalObjects: {}
+  iconMap: {}
+  executionOrder: {}
+  isPreloaded: 0
+  isOverridable: 0
+  platformData:
+  - first:
+      Any:
+    second:
+      enabled: 1
+      settings: {}
+  - first:
+      Editor: Editor
+    second:
+      enabled: 1
+      settings:
+        DefaultValueInitialized: true
+  output:
+    dllType: 0
+  userData:
+  assetBundleName:
+  assetBundleVariant:
