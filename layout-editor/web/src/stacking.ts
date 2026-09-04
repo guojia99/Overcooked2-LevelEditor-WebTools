@@ -36,7 +36,8 @@ export function hostMatchesRule(hostPrefabId: string, rule: string): boolean {
     return (
       id === "Cooker" ||
       id === "cooking_region_floorburner" ||
-      id === "dlc10_cooking_region_floorburner"
+      id === "web_cooking_region_floorburner" ||
+      id === "web_dlc10_cooking_region_floorburner"
     );
   if (rule === "frying_station") return id === "FryingStation";
   if (rule === "mixer") return id === "Mixer" || id.startsWith("Mixer");
@@ -48,14 +49,22 @@ export function hostMatchesRule(hostPrefabId: string, rule: string): boolean {
 
 export function isStackHostCatalog(cat: CatalogItem | undefined): boolean {
   if (!cat) return false;
+  // 带 stack.hostRule 的是「叠放在宿主上的锅具/餐具/工具」（stack 客人），
+  // 不是工作台——尤其火锅大锅 utensil_large_pot_01 在正式版 common03 里位于
+  // prefabs/mechanisms/Hotpot/（category=mechanisms），但它按 hostRule=cooker
+  // 叠放在灶台上（锅+灶同格是设计内布局），绝不能进宿主重叠检测
+  //（2026-09-03 误报「火锅灶台 与 火锅大锅 重叠」阻断写回的根因）。
+  if (cat.stack?.hostRule) return false;
   return cat.category === "counters" || cat.category === "mechanisms" || cat.category?.startsWith("counters/") || false;
 }
 
 export function isStackUtensilCatalog(cat: CatalogItem | undefined): boolean {
-  return (
-    (cat?.category === "utensils" || cat?.category?.startsWith("utensils/") === true) &&
-    Boolean(cat.stack?.hostRule)
-  );
+  // 2026-09-03：以 stack.hostRule 元数据为准，不再要求 category=utensils——
+  // 正式版 common03 把火锅大锅 utensil_large_pot_01 挪到了 mechanisms/Hotpot/
+  // （category=mechanisms），但它按 hostRule=cooker 叠放在灶台上，是锅具：
+  // 渲染缩边（renderItems inset）/绘制层级（20 器皿层）/配色都应与 dlc10 火锅
+  // 一致。吸附行为不受影响（trySnapUtensilToHost 按 id 显式排除全部火锅大锅）。
+  return Boolean(cat?.stack?.hostRule);
 }
 
 export function hostRuleLabelZh(rule: CatalogStackMeta["hostRule"]): string {
@@ -179,8 +188,9 @@ export function trySnapUtensilToHost(
   // 火锅大锅（2×2，自身即覆盖灶台）：不做灶台吸附——吸附会把锅 pivot 移到灶台中心，
   // 而锅模型中心在自身局部 (-0.6, +0.6) 差半格，读回-写回循环会累积漂移半格。
   if (utensilCat?.id === "utensil_large_pot_01" ||
-      utensilCat?.id === "utensil_dlc10_large_pot_01" ||
-      utensilCat?.id === "utensil_large_pot_01_pushable") return false;
+      utensilCat?.id === "web_utensil_large_pot_01" ||
+      utensilCat?.id === "web_utensil_dlc10_large_pot_01" ||
+      utensilCat?.id === "web_utensil_large_pot_01_pushable") return false;
   if (!utensilCat?.stack?.hostRule) return false;
   const host = findStackHost(
     utensil,

@@ -96,7 +96,7 @@ public static class LayoutEditorFloorMaterialsApi
             folders.Add(setRoot);
 
         // Fallback / shared swatch sources.
-        foreach (var shared in new[] { "Assets/LevelSets", "Assets/common01/materials", "Assets/common02/materials", "Assets/common03/materials" })
+        foreach (var shared in new[] { "Assets/LevelSets", "Assets/common01/materials", "Assets/common02/materials", "Assets/commonW1/materials" })
         {
             if (AssetDatabase.IsValidFolder(shared) && !folders.Contains(shared))
                 folders.Add(shared);

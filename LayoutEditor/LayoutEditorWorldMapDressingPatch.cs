@@ -84,9 +84,10 @@ public static class LayoutEditorWorldMapDressingPatch
                     pending = true;
                     continue;
                 }
-                // 已烘焙 LayoutRuntimeWorldMapDressing（游戏编译，随场景保存）的伪根
-                // 由运行时组件自行展开，这里跳过以免重复处理。
-                if (stub.GetComponent<LayoutRuntimeWorldMapDressing>() != null)
+                // 已烘焙 customStub 展开组件（关卡集程序集 CustomStub.WorldMapDressing，
+                // 写回时随场景保存）的伪根由其运行时协程自行展开，这里跳过以免重复处理。
+                var wmdType = LayoutEditorStubIO.FindCustomStubType(stub.gameObject, "WorldMapDressing");
+                if (wmdType != null && stub.GetComponent(wmdType) != null)
                     continue;
                 if (!_patched.Add(child.GetInstanceID()))
                     continue;

@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-01T17:33:51.304Z",
-  "schemaVersion": 3,
-  "itemCount": 137,
+  "generatedAt": "2026-09-04T07:19:23.658Z",
+  "schemaVersion": 5,
+  "itemCount": 111,
   "ingredients": [
     {
       "guid": "ef868e413995bdf5ea3c0058f6dd5db0",
-      "id": "icecube",
+      "id": "DLC11_Icecube",
       "nameZh": "冰块",
       "nameEn": "Ice Cube",
-      "assetPath": "Assets/common03/Ingredients/dlc11/icecube.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_Icecube.asset",
       "group": "dlc11",
       "icon": true
     },
@@ -40,15 +40,6 @@
       "icon": true
     },
     {
-      "guid": "032cccd35c7d625b0f86a57a273e26c7",
-      "id": "dlc09_pancakestrawberry",
-      "nameZh": "草莓（松饼·DLC9）",
-      "nameEn": "Pancake Strawberry (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_pancakestrawberry.asset",
-      "group": "dlc09",
-      "icon": true
-    },
-    {
       "guid": "01bdf18c64f2c5b41ab41a9c898397a1",
       "id": "PancakeStrawberry",
       "nameZh": "草莓（松饼）",
@@ -62,7 +53,7 @@
       "id": "dlc13_strawberry",
       "nameZh": "草莓（DLC13）",
       "nameEn": "Strawberry (DLC13)",
-      "assetPath": "Assets/common03/Ingredients/dlc13/dlc13_strawberry.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc13/dlc13_strawberry.asset",
       "group": "dlc13",
       "icon": true
     },
@@ -76,40 +67,12 @@
       "icon": true
     },
     {
-      "guid": "1716cd7af6d91b44b902232a1a5aba52",
-      "id": "orangesoda",
-      "nameZh": "橙味汽水",
-      "nameEn": "Orange Soda",
-      "assetPath": "Assets/common03/Ingredients/dlc11/orangesoda.asset",
-      "group": "dlc11",
-      "nodeOnly": true,
-      "icon": true
-    },
-    {
       "guid": "f8ea29fcb550c639d77d76981792285f",
-      "id": "orange",
-      "nameZh": "橙子",
-      "nameEn": "Orange",
-      "assetPath": "Assets/common03/Ingredients/dlc03/orange.asset",
+      "id": "DLC03_Orange",
+      "nameZh": "橙子（圣诞）",
+      "nameEn": "Orange (Christmas)",
+      "assetPath": "Assets/common03/food/Ingredients/dlc03/DLC03_Orange.asset",
       "group": "dlc03",
-      "icon": true
-    },
-    {
-      "guid": "61f6238c4a7f1d00da02bdc43d9f9e20",
-      "id": "dlc10_orange",
-      "nameZh": "橙子（DLC10）",
-      "nameEn": "Orange (DLC10)",
-      "assetPath": "Assets/common03/Ingredients/dlc10/dlc10_orange.asset",
-      "group": "dlc10",
-      "icon": true
-    },
-    {
-      "guid": "64167ae8beb587f196013c072553e924",
-      "id": "dlc13_orange",
-      "nameZh": "橙子（DLC13）",
-      "nameEn": "Orange (DLC13)",
-      "assetPath": "Assets/common03/Ingredients/dlc13/dlc13_orange.asset",
-      "group": "dlc13",
       "icon": true
     },
     {
@@ -117,17 +80,18 @@
       "id": "dlc04_orange",
       "nameZh": "橙子（DLC4）",
       "nameEn": "Orange (DLC4)",
-      "assetPath": "Assets/common03/Ingredients/dlc04/dlc04_orange.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc04/dlc04_orange.asset",
       "group": "dlc04",
       "icon": true
     },
     {
-      "guid": "10b3c3653b7f62ad8d9fdcf38321a487",
-      "id": "dlc09_orange",
-      "nameZh": "橙子（DLC9）",
-      "nameEn": "Orange (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_orange.asset",
-      "group": "dlc09",
+      "guid": "1716cd7af6d91b44b902232a1a5aba52",
+      "id": "DLC11_OrangeSoda",
+      "nameZh": "橙子汽水",
+      "nameEn": "Orange Soda",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_OrangeSoda.asset",
+      "group": "dlc11",
+      "nodeOnly": true,
       "icon": true
     },
     {
@@ -141,10 +105,10 @@
     },
     {
       "guid": "929a10c33aebfc05481414ed68a7a4a3",
-      "id": "whippedcream",
-      "nameZh": "发泡奶油",
+      "id": "DLC03_WhippedCream",
+      "nameZh": "打发奶油",
       "nameEn": "Whipped Cream",
-      "assetPath": "Assets/common03/Ingredients/dlc03/whippedcream.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc03/DLC03_WhippedCream.asset",
       "group": "dlc03",
       "icon": true
     },
@@ -153,8 +117,17 @@
       "id": "dlc09_whippedcream",
       "nameZh": "发泡奶油（DLC9）",
       "nameEn": "Whipped Cream (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_whippedcream.asset",
+      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc09/food/dlc09_whippedcream.asset",
       "group": "dlc09",
+      "icon": true
+    },
+    {
+      "guid": "76a07f5e12f0d7449b908a6e81fbb645",
+      "id": "DLC08_Frankfurter",
+      "nameZh": "法兰克福香肠",
+      "nameEn": "Frankfurter",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Frankfurter.asset",
+      "group": "dlc08",
       "icon": true
     },
     {
@@ -171,16 +144,16 @@
       "id": "dlc11_tomato",
       "nameZh": "番茄（DLC11）",
       "nameEn": "Tomato (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_tomato.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_tomato.asset",
       "group": "dlc11",
       "icon": true
     },
     {
       "guid": "ed266d0490bf1fa262e94a82795cd1ae",
-      "id": "ketchup",
+      "id": "DLC08_Ketchup",
       "nameZh": "番茄酱",
       "nameEn": "Ketchup",
-      "assetPath": "Assets/common03/Ingredients/dlc08/ketchup.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Ketchup.asset",
       "group": "dlc08",
       "nodeOnly": true,
       "icon": true
@@ -190,7 +163,7 @@
       "id": "dlc11_ketchup",
       "nameZh": "番茄酱（DLC11）",
       "nameEn": "Ketchup (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_ketchup.asset",
+      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_ketchup.asset",
       "group": "dlc11",
       "nodeOnly": true,
       "icon": true
@@ -214,15 +187,6 @@
       "icon": true
     },
     {
-      "guid": "2c4b11eca006b60f3ae5a95e5cf4c609",
-      "id": "raspberry",
-      "nameZh": "覆盆子",
-      "nameEn": "Raspberry",
-      "assetPath": "Assets/common03/Ingredients/dlc08/raspberry.asset",
-      "group": "dlc08",
-      "icon": true
-    },
-    {
       "guid": "e967eab522af0e642b3d6cfbe694c06b",
       "id": "Olive",
       "nameZh": "橄榄",
@@ -232,21 +196,22 @@
       "icon": true
     },
     {
-      "guid": "bcf86bac680eb09dde226524d7bebd0c",
-      "id": "driedfruit",
-      "nameZh": "果干",
-      "nameEn": "Dried Fruit",
-      "assetPath": "Assets/common03/Ingredients/dlc03/driedfruit.asset",
-      "group": "dlc03",
+      "guid": "8a836c17f71d85d091203d6caff3913a",
+      "id": "DLC11_RootBeer",
+      "nameZh": "根汁汽水",
+      "nameEn": "Root Beer",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_RootBeer.asset",
+      "group": "dlc11",
+      "nodeOnly": true,
       "icon": true
     },
     {
-      "guid": "4f431764532b70320505d1fc85a4ff48",
-      "id": "dlc09_driedfruit",
-      "nameZh": "果干（DLC9）",
-      "nameEn": "Dried Fruit (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_driedfruit.asset",
-      "group": "dlc09",
+      "guid": "bcf86bac680eb09dde226524d7bebd0c",
+      "id": "DLC03_DriedFruit",
+      "nameZh": "果干",
+      "nameEn": "Dried Fruit",
+      "assetPath": "Assets/common03/food/Ingredients/dlc03/DLC03_DriedFruit.asset",
+      "group": "dlc03",
       "icon": true
     },
     {
@@ -277,20 +242,11 @@
       "icon": true
     },
     {
-      "guid": "965ff691e25e50b0c5151ea9a97899d4",
-      "id": "dlc08_bun",
-      "nameZh": "汉堡胚（DLC8）",
-      "nameEn": "Bun (DLC8)",
-      "assetPath": "Assets/common03/Ingredients/dlc08/dlc08_bun.asset",
-      "group": "dlc08",
-      "icon": true
-    },
-    {
       "guid": "1e87aab4d91d5e2b460a8de8fe55b737",
-      "id": "blackberry",
+      "id": "DLC07_Blackberry",
       "nameZh": "黑莓",
       "nameEn": "Blackberry",
-      "assetPath": "Assets/common03/Ingredients/dlc07/blackberry.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/DLC07_Blackberry.asset",
       "group": "dlc07",
       "icon": true
     },
@@ -301,15 +257,6 @@
       "nameEn": "Carrot",
       "assetPath": "Assets/common01/food/Ingredients/CarrotSO.asset",
       "group": "core",
-      "icon": true
-    },
-    {
-      "guid": "2e4ec9369bab73ad0d11b395b1dd6ea4",
-      "id": "dlc09_carrot",
-      "nameZh": "胡萝卜（DLC9）",
-      "nameEn": "Carrot (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_carrot.asset",
-      "group": "dlc09",
       "icon": true
     },
     {
@@ -326,7 +273,7 @@
       "id": "dlc11_cucumber",
       "nameZh": "黄瓜（DLC11）",
       "nameEn": "Cucumber (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_cucumber.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_cucumber.asset",
       "group": "dlc11",
       "icon": true
     },
@@ -353,7 +300,7 @@
       "id": "dlc13_egg",
       "nameZh": "鸡蛋（DLC13）",
       "nameEn": "Egg (DLC13)",
-      "assetPath": "Assets/common03/Ingredients/dlc13/dlc13_egg.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc13/dlc13_egg.asset",
       "group": "dlc13",
       "icon": true
     },
@@ -364,15 +311,6 @@
       "nameEn": "Egg (DLC5)",
       "assetPath": "Assets/common02/food/Ingredients/dlc05/DLC05_Egg.asset",
       "group": "dlc05",
-      "icon": true
-    },
-    {
-      "guid": "235de95296062e0013e62a313599be3f",
-      "id": "dlc09_egg",
-      "nameZh": "鸡蛋（DLC9）",
-      "nameEn": "Egg (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_egg.asset",
-      "group": "dlc09",
       "icon": true
     },
     {
@@ -398,18 +336,8 @@
       "id": "dlc08_chicken",
       "nameZh": "鸡肉（DLC8）",
       "nameEn": "Chicken (DLC8)",
-      "assetPath": "Assets/common03/Ingredients/dlc08/dlc08_chicken.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/dlc08_chicken.asset",
       "group": "dlc08",
-      "icon": true
-    },
-    {
-      "guid": "4930531b26d8652f42620a0850a207fd",
-      "id": "mustard",
-      "nameZh": "芥末",
-      "nameEn": "Mustard",
-      "assetPath": "Assets/common03/Ingredients/dlc08/mustard.asset",
-      "group": "dlc08",
-      "nodeOnly": true,
       "icon": true
     },
     {
@@ -417,9 +345,28 @@
       "id": "dlc11_mustard",
       "nameZh": "芥末（DLC11）",
       "nameEn": "Mustard (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_mustard.asset",
+      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_mustard.asset",
       "group": "dlc11",
       "nodeOnly": true,
+      "icon": true
+    },
+    {
+      "guid": "4930531b26d8652f42620a0850a207fd",
+      "id": "DLC08_Mustard",
+      "nameZh": "芥末酱",
+      "nameEn": "Mustard",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Mustard.asset",
+      "group": "dlc08",
+      "nodeOnly": true,
+      "icon": true
+    },
+    {
+      "guid": "09eef04c11b4a891aa802e9f0707ffae",
+      "id": "DLC07_Leek",
+      "nameZh": "韭葱",
+      "nameEn": "Leek",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/DLC07_Leek.asset",
+      "group": "dlc07",
       "icon": true
     },
     {
@@ -496,38 +443,20 @@
     },
     {
       "guid": "bd167913cd87017f14773a28bbcc1c22",
-      "id": "chicken_roast",
+      "id": "DLC07_ChickenRoast",
       "nameZh": "烤鸡",
-      "nameEn": "Roast Chicken",
-      "assetPath": "Assets/common03/Ingredients/dlc07/chicken_roast.asset",
+      "nameEn": "Chicken Roast",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/DLC07_ChickenRoast.asset",
       "group": "dlc07",
-      "icon": true
-    },
-    {
-      "guid": "451514ac42b67ec34c2051fbd80948db",
-      "id": "dlc09_chicken_roast",
-      "nameZh": "烤鸡（DLC9）",
-      "nameEn": "Roast Chicken (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_chicken_roast.asset",
-      "group": "dlc09",
       "icon": true
     },
     {
       "guid": "e177ae873a0fd11ddb634f83169196d5",
-      "id": "beef_roast",
+      "id": "DLC07_BeefRoast",
       "nameZh": "烤牛肉",
-      "nameEn": "Roast Beef",
-      "assetPath": "Assets/common03/Ingredients/dlc07/beef_roast.asset",
+      "nameEn": "Beef Roast",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/DLC07_BeefRoast.asset",
       "group": "dlc07",
-      "icon": true
-    },
-    {
-      "guid": "5f5bd4c5334c025c08fdb17252ff1b98",
-      "id": "dlc09_beef_roast",
-      "nameZh": "烤牛肉（DLC9）",
-      "nameEn": "Roast Beef (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_beef_roast.asset",
-      "group": "dlc09",
       "icon": true
     },
     {
@@ -537,6 +466,15 @@
       "nameEn": "Blueberry",
       "assetPath": "Assets/common02/food/Ingredients/dlc05/Blueberry.asset",
       "group": "dlc05",
+      "icon": true
+    },
+    {
+      "guid": "802390f809593523b98b9a8cc6db9966",
+      "id": "DLC07_Coal",
+      "nameZh": "煤炭",
+      "nameEn": "Coal",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/DLC07_Coal.asset",
+      "group": "dlc07",
       "icon": true
     },
     {
@@ -559,20 +497,11 @@
     },
     {
       "guid": "8d2603aa9ff8aaef86c943501260c693",
-      "id": "marshmallow",
+      "id": "DLC03_Marshmallow",
       "nameZh": "棉花糖",
       "nameEn": "Marshmallow",
-      "assetPath": "Assets/common03/Ingredients/dlc03/marshmallow.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc03/DLC03_Marshmallow.asset",
       "group": "dlc03",
-      "icon": true
-    },
-    {
-      "guid": "4bd025be3d1160fee29c4d8102a2a497",
-      "id": "dlc09_marshmallow",
-      "nameZh": "棉花糖（DLC9）",
-      "nameEn": "Marshmallow (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_marshmallow.asset",
-      "group": "dlc09",
       "icon": true
     },
     {
@@ -589,35 +518,17 @@
       "id": "dlc13_flour",
       "nameZh": "面粉（DLC13）",
       "nameEn": "Flour (DLC13)",
-      "assetPath": "Assets/common03/Ingredients/dlc13/dlc13_flour.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc13/dlc13_flour.asset",
       "group": "dlc13",
       "icon": true
     },
     {
-      "guid": "7d38cbf897c601251772a91369bf91e3",
-      "id": "dlc09_flour",
-      "nameZh": "面粉（DLC9）",
-      "nameEn": "Flour (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_flour.asset",
-      "group": "dlc09",
-      "icon": true
-    },
-    {
       "guid": "6be7388a76972e2ee30f9ca26891ed26",
-      "id": "noodles",
+      "id": "DLC04_Noodles",
       "nameZh": "面条",
       "nameEn": "Noodles",
-      "assetPath": "Assets/common03/Ingredients/dlc04/noodles.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc04/DLC04_Noodles.asset",
       "group": "dlc04",
-      "icon": true
-    },
-    {
-      "guid": "aaee3cc1889350164a7cc93272f7c3f8",
-      "id": "dlc10_noodles",
-      "nameZh": "面条（DLC10）",
-      "nameEn": "Noodles (DLC10)",
-      "assetPath": "Assets/common03/Ingredients/dlc10/dlc10_noodles.asset",
-      "group": "dlc10",
       "icon": true
     },
     {
@@ -658,10 +569,10 @@
     },
     {
       "guid": "7f8657a5292f561670c991f7783a097e",
-      "id": "milk",
-      "nameZh": "牛奶",
-      "nameEn": "Milk",
-      "assetPath": "Assets/common03/Ingredients/dlc03/milk.asset",
+      "id": "DLC03_Milk",
+      "nameZh": "牛奶（圣诞）",
+      "nameEn": "Milk (Christmas)",
+      "assetPath": "Assets/common03/food/Ingredients/dlc03/DLC03_Milk.asset",
       "group": "dlc03",
       "icon": true
     },
@@ -670,17 +581,8 @@
       "id": "dlc11_milk",
       "nameZh": "牛奶（DLC11）",
       "nameEn": "Milk (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_milk.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_milk.asset",
       "group": "dlc11",
-      "icon": true
-    },
-    {
-      "guid": "c3fa6001600f1022fd4f272205c9a9b7",
-      "id": "dlc09_milk",
-      "nameZh": "牛奶（DLC9）",
-      "nameEn": "Milk (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_milk.asset",
-      "group": "dlc09",
       "icon": true
     },
     {
@@ -694,38 +596,20 @@
     },
     {
       "guid": "68f5f658353ad8162036803a8bf13cc1",
-      "id": "apple",
+      "id": "DLC07_Apple",
       "nameZh": "苹果",
       "nameEn": "Apple",
-      "assetPath": "Assets/common03/Ingredients/dlc07/apple.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/DLC07_Apple.asset",
       "group": "dlc07",
       "icon": true
     },
     {
       "guid": "067651d383836c606d0d325fe3b3dbd7",
-      "id": "grapes",
+      "id": "DLC04_Grapes",
       "nameZh": "葡萄",
       "nameEn": "Grapes",
-      "assetPath": "Assets/common03/Ingredients/dlc04/grapes.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc04/DLC04_Grapes.asset",
       "group": "dlc04",
-      "icon": true
-    },
-    {
-      "guid": "99fe31d55e0df7276004539ee10c8c48",
-      "id": "dlc10_grapes",
-      "nameZh": "葡萄（DLC10）",
-      "nameEn": "Grapes (DLC10)",
-      "assetPath": "Assets/common03/Ingredients/dlc10/dlc10_grapes.asset",
-      "group": "dlc10",
-      "icon": true
-    },
-    {
-      "guid": "0c774556fe6b3e9fc6419dd8385dac7c",
-      "id": "dlc13_grapes",
-      "nameZh": "葡萄（DLC13）",
-      "nameEn": "Grapes (DLC13)",
-      "assetPath": "Assets/common03/Ingredients/dlc13/dlc13_grapes.asset",
-      "group": "dlc13",
       "icon": true
     },
     {
@@ -738,21 +622,21 @@
       "icon": true
     },
     {
+      "guid": "30e53740fcc7be49a00685e29a46793d",
+      "id": "DLC03_Chocolate",
+      "nameZh": "巧克力（圣诞）",
+      "nameEn": "Chocolate (Christmas)",
+      "assetPath": "Assets/common03/food/Ingredients/dlc03/DLC03_Chocolate.asset",
+      "group": "dlc03",
+      "icon": true
+    },
+    {
       "guid": "77756e92ea75974685830fcce784de82",
       "id": "dlc13_chocolate",
       "nameZh": "巧克力（DLC13）",
       "nameEn": "Chocolate (DLC13)",
-      "assetPath": "Assets/common03/Ingredients/dlc13/dlc13_chocolate.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc13/dlc13_chocolate.asset",
       "group": "dlc13",
-      "icon": true
-    },
-    {
-      "guid": "30e53740fcc7be49a00685e29a46793d",
-      "id": "dlc03_chocolate",
-      "nameZh": "巧克力（DLC3）",
-      "nameEn": "Chocolate (DLC3)",
-      "assetPath": "Assets/common03/Ingredients/dlc03/dlc03_chocolate.asset",
-      "group": "dlc03",
       "icon": true
     },
     {
@@ -765,48 +649,30 @@
       "icon": true
     },
     {
-      "guid": "8f9450fb817169cb2da96efcd411cf34",
-      "id": "dlc09_chocolate",
-      "nameZh": "巧克力（DLC9）",
-      "nameEn": "Chocolate (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_chocolate.asset",
-      "group": "dlc09",
-      "icon": true
-    },
-    {
-      "guid": "76a07f5e12f0d7449b908a6e81fbb645",
-      "id": "frankfurter",
-      "nameZh": "热狗肠",
-      "nameEn": "Frankfurter",
-      "assetPath": "Assets/common03/Ingredients/dlc08/frankfurter.asset",
+      "guid": "965ff691e25e50b0c5151ea9a97899d4",
+      "id": "DLC08_ChoppedBun",
+      "nameZh": "切好的面包",
+      "nameEn": "Chopped Bun",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_ChoppedBun.asset",
       "group": "dlc08",
       "icon": true
     },
     {
-      "guid": "4e6b0329086fa5fd6545242ea18c7e48",
-      "id": "dlc11_frankfurter",
-      "nameZh": "热狗肠（DLC11）",
-      "nameEn": "Frankfurter (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_frankfurter.asset",
-      "group": "dlc11",
+      "guid": "d141ea96f54b43c0843b7b7a4a195e92",
+      "id": "DLC04_BokChoy",
+      "nameZh": "青菜",
+      "nameEn": "Bok Choy",
+      "assetPath": "Assets/common03/food/Ingredients/dlc04/DLC04_BokChoy.asset",
+      "group": "dlc04",
       "icon": true
     },
     {
       "guid": "53d2a928cf32627d7918d862face4b7d",
-      "id": "hotdogbun",
+      "id": "DLC08_HotdogBun",
       "nameZh": "热狗面包",
-      "nameEn": "Hot Dog Bun",
-      "assetPath": "Assets/common03/Ingredients/dlc08/hotdogbun.asset",
+      "nameEn": "Hotdog Bun",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_HotdogBun.asset",
       "group": "dlc08",
-      "icon": true
-    },
-    {
-      "guid": "6854c00f61ca788818a1e5ab65a5be92",
-      "id": "dlc11_hotdogbun",
-      "nameZh": "热狗面包（DLC11）",
-      "nameEn": "Hot Dog Bun (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_hotdogbun.asset",
-      "group": "dlc11",
       "icon": true
     },
     {
@@ -823,18 +689,8 @@
       "id": "dlc11_onion_salad",
       "nameZh": "沙拉洋葱（DLC11）",
       "nameEn": "Salad Onion (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_onion_salad.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_onion_salad.asset",
       "group": "dlc11",
-      "icon": true
-    },
-    {
-      "guid": "8a836c17f71d85d091203d6caff3913a",
-      "id": "rootbeer",
-      "nameZh": "沙士汽水",
-      "nameEn": "Root Beer",
-      "assetPath": "Assets/common03/Ingredients/dlc11/rootbeer.asset",
-      "group": "dlc11",
-      "nodeOnly": true,
       "icon": true
     },
     {
@@ -851,7 +707,7 @@
       "id": "dlc11_lettuce",
       "nameZh": "生菜（DLC11）",
       "nameEn": "Lettuce (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_lettuce.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_lettuce.asset",
       "group": "dlc11",
       "icon": true
     },
@@ -883,12 +739,12 @@
       "icon": true
     },
     {
-      "guid": "852b272581ed4b91f902ef670dd48ad3",
-      "id": "dlc10_meat",
-      "nameZh": "涮肉（DLC10）",
-      "nameEn": "Hotpot Meat (DLC10)",
-      "assetPath": "Assets/common03/Ingredients/dlc10/dlc10_meat.asset",
-      "group": "dlc10",
+      "guid": "2c4b11eca006b60f3ae5a95e5cf4c609",
+      "id": "DLC08_Raspberry",
+      "nameZh": "树莓",
+      "nameEn": "Raspberry",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Raspberry.asset",
+      "group": "dlc08",
       "icon": true
     },
     {
@@ -896,35 +752,17 @@
       "id": "dlc04_meat",
       "nameZh": "涮肉（DLC4）",
       "nameEn": "Hotpot Meat (DLC4)",
-      "assetPath": "Assets/common03/Ingredients/dlc04/dlc04_meat.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc04/dlc04_meat.asset",
       "group": "dlc04",
       "icon": true
     },
     {
       "guid": "c4a38be9154f4a2dfba533c6fdb72aa9",
-      "id": "peach",
+      "id": "DLC04_Peach",
       "nameZh": "桃子",
       "nameEn": "Peach",
-      "assetPath": "Assets/common03/Ingredients/dlc04/peach.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc04/DLC04_Peach.asset",
       "group": "dlc04",
-      "icon": true
-    },
-    {
-      "guid": "e7e98cc5fccac28fa0c61b3de8fabe3b",
-      "id": "dlc10_peach",
-      "nameZh": "桃子（DLC10）",
-      "nameEn": "Peach (DLC10)",
-      "assetPath": "Assets/common03/Ingredients/dlc10/dlc10_peach.asset",
-      "group": "dlc10",
-      "icon": true
-    },
-    {
-      "guid": "28f64062a66ccccaaaef0f0e9d1cc5e8",
-      "id": "dlc13_peach",
-      "nameZh": "桃子（DLC13）",
-      "nameEn": "Peach (DLC13)",
-      "assetPath": "Assets/common03/Ingredients/dlc13/dlc13_peach.asset",
-      "group": "dlc13",
       "icon": true
     },
     {
@@ -941,7 +779,7 @@
       "id": "dlc13_melon",
       "nameZh": "甜瓜（DLC13）",
       "nameEn": "Melon (DLC13)",
-      "assetPath": "Assets/common03/Ingredients/dlc13/dlc13_melon.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc13/dlc13_melon.asset",
       "group": "dlc13",
       "icon": true
     },
@@ -959,7 +797,7 @@
       "id": "dlc07_potato",
       "nameZh": "土豆（DLC7）",
       "nameEn": "Potato (DLC7)",
-      "assetPath": "Assets/common03/Ingredients/dlc07/dlc07_potato.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/dlc07_potato.asset",
       "group": "dlc07",
       "icon": true
     },
@@ -968,43 +806,16 @@
       "id": "dlc08_potato",
       "nameZh": "土豆（DLC8）",
       "nameEn": "Potato (DLC8)",
-      "assetPath": "Assets/common03/Ingredients/dlc08/dlc08_potato.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/dlc08_potato.asset",
       "group": "dlc08",
       "icon": true
     },
     {
-      "guid": "b9d6ab9ce433c50b451f8b40ac00fb15",
-      "id": "dlc09_potato",
-      "nameZh": "土豆（DLC9）",
-      "nameEn": "Potato (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_potato.asset",
-      "group": "dlc09",
-      "icon": true
-    },
-    {
       "guid": "4562e236d5380f78a99753febcfcf033",
-      "id": "broccoli",
+      "id": "DLC07_Broccoli",
       "nameZh": "西兰花",
       "nameEn": "Broccoli",
-      "assetPath": "Assets/common03/Ingredients/dlc07/broccoli.asset",
-      "group": "dlc07",
-      "icon": true
-    },
-    {
-      "guid": "b3b094506fa9d8471efde9fb629d5895",
-      "id": "dlc09_broccoli",
-      "nameZh": "西兰花（DLC9）",
-      "nameEn": "Broccoli (DLC9)",
-      "assetPath": "Assets/common03/Ingredients/dlc09/dlc09_broccoli.asset",
-      "group": "dlc09",
-      "icon": true
-    },
-    {
-      "guid": "09eef04c11b4a891aa802e9f0707ffae",
-      "id": "leek",
-      "nameZh": "西芹",
-      "nameEn": "Leek",
-      "assetPath": "Assets/common03/Ingredients/dlc07/leek.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/DLC07_Broccoli.asset",
       "group": "dlc07",
       "icon": true
     },
@@ -1018,29 +829,20 @@
       "icon": true
     },
     {
-      "guid": "e301217df07dd1e7d6e1ee8bbab65599",
-      "id": "dlc10_prawn",
-      "nameZh": "虾（DLC10）",
-      "nameEn": "Prawn (DLC10)",
-      "assetPath": "Assets/common03/Ingredients/dlc10/dlc10_prawn.asset",
-      "group": "dlc10",
-      "icon": true
-    },
-    {
       "guid": "f1f203ca0b2f02bd64622cb03f7d7068",
       "id": "dlc04_prawn",
       "nameZh": "虾（DLC4）",
       "nameEn": "Prawn (DLC4)",
-      "assetPath": "Assets/common03/Ingredients/dlc04/dlc04_prawn.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc04/dlc04_prawn.asset",
       "group": "dlc04",
       "icon": true
     },
     {
       "guid": "73c28675ea0968be18f65b2d948e3227",
-      "id": "vanilla",
+      "id": "DLC11_Vanilla",
       "nameZh": "香草",
       "nameEn": "Vanilla",
-      "assetPath": "Assets/common03/Ingredients/dlc11/vanilla.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_Vanilla.asset",
       "group": "dlc11",
       "icon": true
     },
@@ -1072,24 +874,6 @@
       "icon": true
     },
     {
-      "guid": "d141ea96f54b43c0843b7b7a4a195e92",
-      "id": "bokchoy",
-      "nameZh": "小白菜",
-      "nameEn": "Bok Choy",
-      "assetPath": "Assets/common03/Ingredients/dlc04/bokchoy.asset",
-      "group": "dlc04",
-      "icon": true
-    },
-    {
-      "guid": "d5d3abb6779245c85f8088e1099a23b7",
-      "id": "dlc10_bokchoy",
-      "nameZh": "小白菜（DLC10）",
-      "nameEn": "Bok Choy (DLC10)",
-      "assetPath": "Assets/common03/Ingredients/dlc10/dlc10_bokchoy.asset",
-      "group": "dlc10",
-      "icon": true
-    },
-    {
       "guid": "1d97426e890100348ac91825774d1184",
       "id": "OnionSO",
       "nameZh": "洋葱",
@@ -1099,20 +883,11 @@
       "icon": true
     },
     {
-      "guid": "b5640719abc62ad8926b11503c94671e",
-      "id": "dlc11_onion",
-      "nameZh": "洋葱（DLC11）",
-      "nameEn": "Onion (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11_onion.asset",
-      "group": "dlc11",
-      "icon": true
-    },
-    {
       "guid": "fd657e9082619a2e2eea4c700a1643fc",
       "id": "dlc08_onion",
       "nameZh": "洋葱（DLC8）",
       "nameEn": "Onion (DLC8)",
-      "assetPath": "Assets/common03/Ingredients/dlc08/dlc08_onion.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/dlc08_onion.asset",
       "group": "dlc08",
       "icon": true
     },
@@ -1121,18 +896,8 @@
       "id": "dlc08_onion_ring",
       "nameZh": "洋葱圈",
       "nameEn": "Onion Ring",
-      "assetPath": "Assets/common03/Ingredients/dlc08/dlc08_onion_ring.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/dlc08_onion_ring.asset",
       "group": "dlc08",
-      "icon": true
-    },
-    {
-      "guid": "e5fc8f3d080dc7dfe83c47cfa382453c",
-      "id": "dlc11onion_salad",
-      "nameZh": "洋葱沙拉（DLC11）",
-      "nameEn": "Onion Salad (DLC11)",
-      "assetPath": "Assets/common03/Ingredients/dlc11/dlc11onion_salad.asset",
-      "group": "dlc11",
-      "nodeOnly": true,
       "icon": true
     },
     {
@@ -1155,37 +920,37 @@
     },
     {
       "guid": "f9bbf21e5ccefe21a5f1930d0b7f35fc",
-      "id": "drink01",
-      "nameZh": "饮料 1",
-      "nameEn": "Drink 1",
-      "assetPath": "Assets/common03/Ingredients/dlc08/drink01.asset",
+      "id": "DLC08_Drink01",
+      "nameZh": "饮料 01",
+      "nameEn": "Drink 01",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Drink01.asset",
       "group": "dlc08",
       "icon": true
     },
     {
       "guid": "f3cc6bff9d659a4839558753b2545026",
-      "id": "drink02",
-      "nameZh": "饮料 2",
-      "nameEn": "Drink 2",
-      "assetPath": "Assets/common03/Ingredients/dlc08/drink02.asset",
+      "id": "DLC08_Drink02",
+      "nameZh": "饮料 02",
+      "nameEn": "Drink 02",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Drink02.asset",
       "group": "dlc08",
       "icon": true
     },
     {
       "guid": "6b6a757bceaccc918c209005aa68d642",
-      "id": "drink03",
-      "nameZh": "饮料 3",
-      "nameEn": "Drink 3",
-      "assetPath": "Assets/common03/Ingredients/dlc08/drink03.asset",
+      "id": "DLC08_Drink03",
+      "nameZh": "饮料 03",
+      "nameEn": "Drink 03",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Drink03.asset",
       "group": "dlc08",
       "icon": true
     },
     {
       "guid": "4817ce28632a97d7fda2712f3cb47ac6",
-      "id": "cherry",
+      "id": "DLC07_Cherry",
       "nameZh": "樱桃",
       "nameEn": "Cherry",
-      "assetPath": "Assets/common03/Ingredients/dlc07/cherry.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/DLC07_Cherry.asset",
       "group": "dlc07",
       "icon": true
     },
@@ -1200,10 +965,10 @@
     },
     {
       "guid": "8d4a5aaf71fdf648b0648dd20ae1a920",
-      "id": "corn",
+      "id": "DLC11_Corn",
       "nameZh": "玉米",
       "nameEn": "Corn",
-      "assetPath": "Assets/common03/Ingredients/dlc11/corn.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_Corn.asset",
       "group": "dlc11",
       "icon": true
     },
@@ -1230,16 +995,16 @@
       "id": "dlc07_cheese",
       "nameZh": "芝士（DLC7）",
       "nameEn": "Cheese (DLC7)",
-      "assetPath": "Assets/common03/Ingredients/dlc07/dlc07_cheese.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc07/dlc07_cheese.asset",
       "group": "dlc07",
       "icon": true
     },
     {
       "guid": "8220aeba30e31f47f7921ab32b8da7af",
-      "id": "dlc08_cheesesticks",
+      "id": "DLC08_Cheese_Sticks",
       "nameZh": "芝士条",
       "nameEn": "Cheese Sticks",
-      "assetPath": "Assets/common03/Ingredients/dlc08/dlc08_cheesesticks.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Cheese_Sticks.asset",
       "group": "dlc08",
       "icon": true
     }

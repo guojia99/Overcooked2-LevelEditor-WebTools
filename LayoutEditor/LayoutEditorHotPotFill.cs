@@ -309,7 +309,7 @@ public static class LayoutEditorHotPotFill
     {
         if (string.IsNullOrEmpty(id))
             return null;
-        var root = "Assets/common03/Recipes";
+        var root = "Assets/common03/food/Recipes";
         var absRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../" + root));
         if (!System.IO.Directory.Exists(absRoot))
             return null;

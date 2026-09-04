@@ -8,7 +8,7 @@ import { setStatus } from "./status";
 import { levelSetFromScenePath } from "./catalog";
 import { isPlayerItem } from "./renderItems";
 import { enrichItem, enrichFloor, checkPlayerCollisions, checkWorkstationCollisions, refreshUtensilStacks } from "./items";
-import { stubKindOf } from "./stubControls";
+import { stubKindOf, normalizeMachineLinkTriggers } from "./stubControls";
 import { cleanOrphanedAnimControls, stopAnimPreview } from "./animControl";
 import { cleanOrphanedButtonLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
@@ -109,6 +109,25 @@ export async function loadScene(assetPath: string) {
     );
     const doc = await fetchLayout(assetPath);
     const dupIds = countDuplicateInstanceIds(doc.items);
+    // 场景导出端自动去重：同 prefab 完全同位（<0.01）的物品在画布上 100% 重叠、
+    // 视觉不可见（88 个重叠炮看起来就是 1 个）——历史克隆残留。这里保留首条、
+    // 其余直接丢弃；下次写回由 Unity 侧 RemoveUnmatchedSceneItems 清理场景残留，
+    // 同时 Applier 的防堆叠守卫兜底。闭环：重新加载 → 自动去重 → 写回 → 场景干净。
+    let dedupedStacks = 0;
+    {
+      const seenPos = new Map<string, { wx: number; wz: number }>();
+      S.items = S.items.filter((it) => {
+        const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
+        if (it._wx == null || it._wz == null) return true;
+        const prev = seenPos.get(key);
+        if (prev && Math.abs(prev.wx - it._wx) < 0.01 && Math.abs(prev.wz - it._wz) < 0.01) {
+          dedupedStacks++;
+          return false;
+        }
+        if (!prev) seenPos.set(key, { wx: it._wx, wz: it._wz });
+        return true;
+      });
+    }
     // 过滤通用碰撞块（Col_Wall / Col_Floor 等场景辅助对象）：只有空气墙
     // （airWall=true，1×1×1.132）才作为核心层物品进入编辑器。
     S.items = doc.items
@@ -127,6 +146,8 @@ export async function loadScene(assetPath: string) {
     S.cameraInfo = doc.cameraInfo ?? null;
     S.lights = doc.lights ?? [];
     S.switchLinks = doc.switchLinks ?? [];
+    // 旧式自定义触发名（switch_*）对机器目标已失效（真机不响应），归一化为原生触发名
+    normalizeMachineLinkTriggers();
     S.buttonLinks = doc.buttonLinks?.links ?? [];
     S.buttonEvents = doc.buttonEvents?.links ?? [];
     cleanOrphanedAnimControls();
@@ -181,6 +202,11 @@ export async function loadScene(assetPath: string) {
         `已加载 ${S.items.length} 个物体（有 ${dupIds} 个重复 ID，请重新编译 Unity 后点「重新加载」）`,
         false
       );
+    } else if (dedupedStacks > 0) {
+      setStatus(
+        `已加载 ${S.items.length} 个物体${floorNote}（自动清除了 ${dedupedStacks} 个完全重叠的重复物品；请写回一次，Unity 侧的同位残留会被一并清理）`,
+        false
+      );
     } else {
       setStatus(`已加载 ${S.items.length} 个物体${floorNote}`);
     }
@@ -206,6 +232,30 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     if (!S.allowWorkstationOverlap && wsCollisions.length > 0) {
       setStatus(`写回取消：工作台之间存在重叠 — ${wsCollisions.join("；")}`, false);
       return false;
+    }
+
+    // 写回前堆叠检测：同 guid 且 XZ 完全同位（<0.01）的多条物品 = 重复数据
+    //（画布上完全重叠、视觉不可见；历史导出/放置 bug 的残留）。直接写回会随
+    //「写回→导出→再写回」循环成倍克隆（test12 大炮堆叠事故）。阻断并列出明细。
+    {
+      const seen = new Map<string, { label: string; wx: number; wz: number }>();
+      const stacks: string[] = [];
+      for (const it of S.items) {
+        const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
+        const wx = it._wx;
+        const wz = it._wz;
+        if (wx == null || wz == null) continue;
+        const prev = seen.get(key);
+        if (prev && Math.abs(prev.wx - wx) < 0.01 && Math.abs(prev.wz - wz) < 0.01) {
+          stacks.push(`${prev.label} 与 ${itemLabel(it)} 完全重叠`);
+        } else if (!prev) {
+          seen.set(key, { label: itemLabel(it), wx, wz });
+        }
+      }
+      if (stacks.length > 0) {
+        setStatus(`写回取消：检测到 ${stacks.length} 处完全重叠的重复物品（请在画布选中删除多余一份）— ${stacks.slice(0, 4).join("；")}${stacks.length > 4 ? " 等" : ""}`, false);
+        return false;
+      }
     }
 
     if (only) {

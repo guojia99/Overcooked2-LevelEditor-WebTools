@@ -1,21 +1,21 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "group": "dlc03",
   "itemCount": 8,
   "recipes": [
     {
       "guid": "cedba94c13b27578980573cf94629c27",
-      "id": "mixedfloureggdriedfruitorange",
-      "nameZh": "果干橙子面糊",
-      "nameEn": "Dried Fruit & Orange Batter",
-      "assetPath": "Assets/common03/Recipes/dlc03/mixedfloureggdriedfruitorange.asset",
+      "id": "DLC03_mixedfloureggdriedfruitorange",
+      "nameZh": "果干橙子面糊（DLC03）",
+      "nameEn": "Dried Fruit & Orange Batter (DLC03)",
+      "assetPath": "Assets/common03/food/Recipes/dlc03/DLC03_mixedfloureggdriedfruitorange.asset",
       "cookingStep": "Mixer",
       "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
-        "driedfruit",
-        "orange"
+        "DLC03_DriedFruit",
+        "DLC03_Orange"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -35,8 +35,8 @@
           "ingredients": [
             "FlourSO",
             "EggSO",
-            "driedfruit",
-            "orange"
+            "DLC03_DriedFruit",
+            "DLC03_Orange"
           ]
         }
       ],
@@ -44,16 +44,16 @@
     },
     {
       "guid": "a9a768e9ec09136a0e90d768da8fe2e3",
-      "id": "mixedfloureggdriedfruit",
-      "nameZh": "果干面糊",
-      "nameEn": "Dried Fruit Batter",
-      "assetPath": "Assets/common03/Recipes/dlc03/mixedfloureggdriedfruit.asset",
+      "id": "DLC03_mixedfloureggdriedfruit",
+      "nameZh": "果干面糊（DLC03）",
+      "nameEn": "Dried Fruit Batter (DLC03)",
+      "assetPath": "Assets/common03/food/Recipes/dlc03/DLC03_mixedfloureggdriedfruit.asset",
       "cookingStep": "Mixer",
       "platingStep": "",
       "ingredients": [
         "FlourSO",
         "EggSO",
-        "driedfruit"
+        "DLC03_DriedFruit"
       ],
       "ingredientCount": 3,
       "cookingStepCount": 1,
@@ -73,7 +73,135 @@
           "ingredients": [
             "FlourSO",
             "EggSO",
-            "driedfruit"
+            "DLC03_DriedFruit"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "30ae2ee6ae8f1cd07a385928131b9a1c",
+      "id": "DLC03_Cocoa_hotchocolatemallow",
+      "nameZh": "热可可（加棉花糖）（DLC03）",
+      "nameEn": "Hot Chocolate & Marshmallows (DLC03)",
+      "assetPath": "Assets/common03/food/Recipes/dlc03/DLC03_Cocoa_hotchocolatemallow.asset",
+      "cookingStep": "Pot",
+      "platingStep": "Mug",
+      "ingredients": [
+        "DLC03_Milk",
+        "DLC03_Chocolate",
+        "DLC03_Marshmallow"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc03",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC03_Marshmallow"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "DLC03_Milk",
+            "DLC03_Chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "e9ea43cf689b1cc06d5f8efaa44086cb",
+      "id": "DLC03_Cocoa_hotchocolatecream",
+      "nameZh": "热可可（加奶油）（DLC03）",
+      "nameEn": "Hot Chocolate & Cream (DLC03)",
+      "assetPath": "Assets/common03/food/Recipes/dlc03/DLC03_Cocoa_hotchocolatecream.asset",
+      "cookingStep": "Pot",
+      "platingStep": "Mug",
+      "ingredients": [
+        "DLC03_Milk",
+        "DLC03_Chocolate",
+        "DLC03_WhippedCream"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc03",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC03_WhippedCream"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "DLC03_Milk",
+            "DLC03_Chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "82aee8fa749a9a79844225aeacbdcdaf",
+      "id": "DLC03_Cocoa_hotchocolatemallowcream",
+      "nameZh": "热可可（奶油棉花糖）（DLC03）",
+      "nameEn": "Hot Chocolate Cream & Mallows (DLC03)",
+      "assetPath": "Assets/common03/food/Recipes/dlc03/DLC03_Cocoa_hotchocolatemallowcream.asset",
+      "cookingStep": "Pot",
+      "platingStep": "Mug",
+      "ingredients": [
+        "DLC03_Milk",
+        "DLC03_Chocolate",
+        "DLC03_Marshmallow",
+        "DLC03_WhippedCream"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc03",
+      "type": "hotchocolate",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC03_Marshmallow",
+            "DLC03_WhippedCream"
+          ]
+        },
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "DLC03_Milk",
+            "DLC03_Chocolate"
           ]
         }
       ],
@@ -81,15 +209,15 @@
     },
     {
       "guid": "3363a62f8abb3d1568f77a05519f09da",
-      "id": "hotchocolate",
-      "nameZh": "热可可",
-      "nameEn": "Hot Chocolate",
-      "assetPath": "Assets/common03/Recipes/dlc03/hotchocolate.asset",
+      "id": "DLC03_Cocoa_hotchocolate",
+      "nameZh": "热可可（DLC03）",
+      "nameEn": "Hot Chocolate (DLC03)",
+      "assetPath": "Assets/common03/food/Recipes/dlc03/DLC03_Cocoa_hotchocolate.asset",
       "cookingStep": "Pot",
-      "platingStep": "",
+      "platingStep": "Mug",
       "ingredients": [
-        "milk",
-        "dlc03_chocolate"
+        "DLC03_Milk",
+        "DLC03_Chocolate"
       ],
       "ingredientCount": 2,
       "cookingStepCount": 1,
@@ -106,173 +234,8 @@
             "Pot"
           ],
           "ingredients": [
-            "milk",
-            "dlc03_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "30ae2ee6ae8f1cd07a385928131b9a1c",
-      "id": "hotchocolatemallow",
-      "nameZh": "热可可（加棉花糖）",
-      "nameEn": "Hot Chocolate & Marshmallows",
-      "assetPath": "Assets/common03/Recipes/dlc03/hotchocolatemallow.asset",
-      "cookingStep": "Pot",
-      "platingStep": "",
-      "ingredients": [
-        "milk",
-        "dlc03_chocolate",
-        "marshmallow"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "dlc03",
-      "type": "hotchocolate",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "marshmallow"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "milk",
-            "dlc03_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "e9ea43cf689b1cc06d5f8efaa44086cb",
-      "id": "hotchocolatecream",
-      "nameZh": "热可可（加奶油）",
-      "nameEn": "Hot Chocolate & Cream",
-      "assetPath": "Assets/common03/Recipes/dlc03/hotchocolatecream.asset",
-      "cookingStep": "Pot",
-      "platingStep": "",
-      "ingredients": [
-        "milk",
-        "dlc03_chocolate",
-        "whippedcream"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "dlc03",
-      "type": "hotchocolate",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "whippedcream"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "milk",
-            "dlc03_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "82aee8fa749a9a79844225aeacbdcdaf",
-      "id": "hotchocolatemallowcream",
-      "nameZh": "热可可（奶油棉花糖）",
-      "nameEn": "Hot Chocolate Cream & Mallows",
-      "assetPath": "Assets/common03/Recipes/dlc03/hotchocolatemallowcream.asset",
-      "cookingStep": "Pot",
-      "platingStep": "",
-      "ingredients": [
-        "milk",
-        "dlc03_chocolate",
-        "marshmallow",
-        "whippedcream"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "dlc03",
-      "type": "hotchocolate",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "marshmallow",
-            "whippedcream"
-          ]
-        },
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "milk",
-            "dlc03_chocolate"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "76bc4e01c41a8462246f939795269a60",
-      "id": "christmaspudding",
-      "nameZh": "圣诞布丁",
-      "nameEn": "Christmas Pudding",
-      "assetPath": "Assets/common03/Recipes/dlc03/christmaspudding.asset",
-      "cookingStep": "Mixer",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "driedfruit"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "dlc03",
-      "type": "pudding",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Mixer",
-          "utensils": [
-            "Mixer",
-            "MixerBowl",
-            "Oven"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO",
-            "driedfruit"
+            "DLC03_Milk",
+            "DLC03_Chocolate"
           ]
         }
       ],
@@ -280,17 +243,20 @@
     },
     {
       "guid": "4d0a93cbb3c1750ac5ea1d2bee43e067",
-      "id": "christmaspuddingwithorange",
-      "nameZh": "圣诞布丁（橙子）",
-      "nameEn": "Christmas Pudding & Orange",
-      "assetPath": "Assets/common03/Recipes/dlc03/christmaspuddingwithorange.asset",
+      "id": "DLC03_Cake_christmaspuddingwithorange",
+      "nameZh": "圣诞布丁（橙子）（DLC03）",
+      "nameEn": "Christmas Pudding & Orange (DLC03)",
+      "assetPath": "Assets/common03/food/Recipes/dlc03/DLC03_Cake_christmaspuddingwithorange.asset",
       "cookingStep": "Mixer",
-      "platingStep": "",
+      "platingStep": "Plate",
       "ingredients": [
         "FlourSO",
         "EggSO",
-        "driedfruit",
-        "orange"
+        "DLC03_DriedFruit",
+        "DLC03_Orange"
+      ],
+      "compositionIds": [
+        "DLC03_mixedfloureggdriedfruitorange"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -301,17 +267,71 @@
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "Mixer",
+          "step": "MixingBowl",
           "utensils": [
             "Mixer",
-            "MixerBowl",
-            "Oven"
+            "MixerBowl"
           ],
           "ingredients": [
             "FlourSO",
-            "EggSO",
-            "driedfruit",
-            "orange"
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC03_DriedFruit",
+            "DLC03_Orange"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "76bc4e01c41a8462246f939795269a60",
+      "id": "DLC03_Cake_christmaspudding",
+      "nameZh": "圣诞布丁（DLC03）",
+      "nameEn": "Christmas Pudding (DLC03)",
+      "assetPath": "Assets/common03/food/Recipes/dlc03/DLC03_Cake_christmaspudding.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "Plate",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC03_DriedFruit"
+      ],
+      "compositionIds": [
+        "DLC03_mixedfloureggdriedfruit"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc03",
+      "type": "pudding",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "MixingBowl",
+          "utensils": [
+            "Mixer",
+            "MixerBowl"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC03_DriedFruit"
           ]
         }
       ],

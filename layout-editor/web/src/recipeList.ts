@@ -4,10 +4,14 @@ import { navHtml, wireNav } from "./nav";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
 import {
+  cardIntermediate,
+  computeCardGroups,
   rlCardHtml,
   rlSectionHtml,
+  STEP_ICON_SRC,
   type RecipeWithGroups,
 } from "./recipeCard";
+import { exportSummaryPng, type SummaryCard } from "./summaryExport";
 import { mountVersionBadge } from "./version";
 
 mountVersionBadge();
@@ -44,6 +48,7 @@ app.innerHTML = `
     <h1 class="m-title">📖 菜谱清单列表</h1>
     <span class="status" id="rl-status">加载中…</span>
     <span style="flex: 1"></span>
+    <button type="button" class="m-btn" id="rl-export" title="把当前筛选出的菜谱合成一张 PNG 长图（重置筛选即导出全部）">🖼 导出图片</button>
     <label class="rl-tool-check" title="显示面糊、炸物部件、自选披萨部件等半成品">
       <input type="checkbox" id="rl-intermediates"> 含半成品
     </label>
@@ -83,6 +88,7 @@ wireNav((target) => {
   else if (target === "dependencies") location.href = "/index.html#/dependencies";
   else if (target === "custom-recipes") location.href = "/index.html#/custom-recipes";
   else if (target === "guide") location.href = "/index.html#/guide";
+  else if (target === "changelog") location.href = "/index.html#/changelog";
 });
 
 let recipes: RecipeWithGroups[] = [];
@@ -292,6 +298,72 @@ function wire(): void {
       render();
     });
   });
+  document.getElementById("rl-export")!.addEventListener("click", () => void exportAll());
+}
+
+/** 一键导出：把当前筛选出的全部菜谱（含分组标题/卡片/徽标/烹饪组）合成为一张 PNG 长图。
+ *  复用汇总页的纯 SVG 合成管线（summaryExport.ts），布局规则与页面卡片一致。 */
+async function exportAll(): Promise<void> {
+  const btn = document.getElementById("rl-export") as HTMLButtonElement | null;
+  const vis = visible();
+  if (vis.length === 0) {
+    setStatus("没有可导出的菜谱", false);
+    return;
+  }
+  if (btn) btn.disabled = true;
+  setStatus("正在生成图片…");
+  try {
+    const sections = groupRecipesByType(vis).map(([type, arr]) => ({
+      typeLabel: recipeTypeLabel(type),
+      count: arr.length,
+      cards: arr.map((r): SummaryCard => {
+        const groups = computeCardGroups(r, { allRecipes: recipes });
+        const intermediate = cardIntermediate(r);
+        const badges: string[] = [];
+        if (intermediate) badges.push("半成品");
+        if (r.isCustom) badges.push("自定义");
+        if (r.group === "levelset") badges.push("本关");
+        if (r.group && r.group !== "core" && r.group !== "levelset") badges.push(foodGroupLabel(r.group));
+        if (!intermediate) badges.push(`⭐ ${r.score ?? 0}`);
+        return {
+          iconUrl: `/icons/recipes/${encodeURIComponent(r.id)}.png`,
+          nameZh: r.nameZh,
+          nameEn: r.nameEn || r.id,
+          badges,
+          groups: groups.map((cg) => ({
+            stepIcons: [cg.step, ...(cg.extraSteps ?? []).map((e) => e.step)]
+              .filter(Boolean)
+              .map((s) => STEP_ICON_SRC[s])
+              .filter((s): s is string => !!s),
+            ingredientUrls: (cg.ingredients ?? []).map(
+              (id) => `/icons/ingredients/${encodeURIComponent(id)}.png`
+            ),
+            ingredientStepIcons: (cg.ingredients ?? []).map((id) =>
+              (cg.ingredientSteps?.[id] ?? [])
+                .map((s) => STEP_ICON_SRC[s])
+                .filter((s): s is string => !!s)
+            ),
+          })),
+        };
+      }),
+    }));
+    const width = document.getElementById("rl-content")?.getBoundingClientRect().width || 1200;
+    const date = new Date().toISOString().slice(0, 10);
+    await exportSummaryPng(
+      {
+        title: "菜谱清单列表",
+        sub: `共 ${vis.length} 个菜谱 · 导出于 ${date}`,
+        sections,
+      },
+      width,
+      `菜谱清单_${vis.length}个_${date}.png`
+    );
+    setStatus(`已导出 PNG（${vis.length} 个菜谱）`);
+  } catch (e) {
+    setStatus(e instanceof Error ? e.message : String(e), false);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function init(): Promise<void> {

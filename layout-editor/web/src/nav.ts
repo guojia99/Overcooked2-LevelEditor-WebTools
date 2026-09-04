@@ -1,6 +1,6 @@
 import { openModal, closeModal } from "./modals";
 
-export type NavPage = "layout" | "manage" | "custom-recipes" | "recipes" | "guide" | "dependencies";
+export type NavPage = "layout" | "manage" | "custom-recipes" | "recipes" | "guide" | "dependencies" | "changelog";
 
 const GUIDE_FEATURES: [string, string, string][] = [
   ["🗺️", "关卡编辑器", "俯视图编排物品 / 装饰 / 地板层，叠放吸附、半格对齐、旋转删除，一键写回 Unity 场景"],
@@ -42,6 +42,7 @@ export function navHtml(active: NavPage): string {
     <button type="button" class="topnav-link${active === "custom-recipes" ? " active" : ""}" data-nav="custom-recipes">🍽️ 自定义菜谱</button>
     <button type="button" class="topnav-link${active === "recipes" ? " active" : ""}" data-nav="recipes">📖 菜谱清单列表</button>
     <button type="button" class="topnav-link${active === "guide" ? " active" : ""}" data-nav="guide">📘 功能说明</button>
+    <button type="button" class="topnav-link${active === "changelog" ? " active" : ""}" data-nav="changelog">📜 更新日志</button>
     <span class="topnav-spacer"></span>
     ${sceneControls}
     <button type="button" class="topnav-github" data-nav-github title="作者介绍 · guojia99">${GITHUB_SVG}<span>关于</span></button>

@@ -36,8 +36,10 @@ export interface SummarySection {
 export interface SummaryExportData {
   title: string;
   sub: string;
-  author: string;
-  screenshotUrl: string;
+  /** 作者行（汇总页用）；留空/缺省则不渲染也不占位（菜谱清单整页导出）。 */
+  author?: string;
+  /** 关卡截图 URL；留空/缺省则不渲染。 */
+  screenshotUrl?: string;
   sections: SummarySection[];
 }
 
@@ -258,7 +260,8 @@ function computeLayout(data: SummaryExportData, width: number, imgs: Map<string,
   };
 
   let y = PAGE_PAD;
-  out.headBottom = y + Math.round(TITLE_FS * 1.15) + 6 + Math.round(SUB_FS * 1.2) + 6 + Math.round(AUTHOR_FS * 1.2);
+  const authorH = data.author ? Math.round(AUTHOR_FS * 1.2) : 0;
+  out.headBottom = y + Math.round(TITLE_FS * 1.15) + 6 + Math.round(SUB_FS * 1.2) + 6 + authorH;
   y = out.headBottom + HEAD_MB;
 
   if (data.screenshotUrl) {
@@ -342,9 +345,12 @@ function buildSvg(data: SummaryExportData, layout: Layout, imgs: Map<string, Loa
   const cx = W / 2;
 
   // ---- header ----
+  const authorH = data.author ? Math.round(AUTHOR_FS * 1.2) : 0;
   parts.push(`<text x="${cx}" y="${PAGE_PAD + Math.round(TITLE_FS * 0.8)}" text-anchor="middle" font-family="${escXml(pageFont)}" font-size="${TITLE_FS}" font-weight="700" fill="${TITLE_COLOR}">${escXml(data.title)}</text>`);
-  parts.push(`<text x="${cx}" y="${layout.headBottom - Math.round(AUTHOR_FS * 1.2) - 26}" text-anchor="middle" font-family="${escXml(pageFont)}" font-size="${SUB_FS}" fill="${SUB_COLOR}">${escXml(data.sub)}</text>`);
-  parts.push(`<text x="${cx}" y="${layout.headBottom - 10}" text-anchor="middle" font-family="${escXml(pageFont)}" font-size="${AUTHOR_FS}" font-weight="600" fill="${AUTHOR_COLOR}">${escXml(data.author)}</text>`);
+  parts.push(`<text x="${cx}" y="${layout.headBottom - authorH - 26}" text-anchor="middle" font-family="${escXml(pageFont)}" font-size="${SUB_FS}" fill="${SUB_COLOR}">${escXml(data.sub)}</text>`);
+  if (data.author) {
+    parts.push(`<text x="${cx}" y="${layout.headBottom - 10}" text-anchor="middle" font-family="${escXml(pageFont)}" font-size="${AUTHOR_FS}" font-weight="600" fill="${AUTHOR_COLOR}">${escXml(data.author)}</text>`);
+  }
 
   // ---- screenshot ----
   if (data.screenshotUrl && layout.shotH > 0) {

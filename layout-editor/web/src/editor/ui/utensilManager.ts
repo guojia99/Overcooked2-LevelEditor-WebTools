@@ -36,7 +36,7 @@ export function openUtensilManager() {
   const utensils = S.items.filter(
     (it) =>
       stubKindOf(it) === "CookingUtensil" ||
-      prefabIdFromPath(it.prefabAssetPath) === "utensil_large_pot_01_pushable"
+      prefabIdFromPath(it.prefabAssetPath) === "web_utensil_large_pot_01_pushable"
   );
   if (!utensils.length) {
     setStatus("当前关卡没有锅具", false);
@@ -140,7 +140,7 @@ export function openUtensilManager() {
     pushHistory();
     let touched = 0;
     for (const it of S.items) {
-      const isPushablePot = prefabIdFromPath(it.prefabAssetPath) === "utensil_large_pot_01_pushable";
+      const isPushablePot = prefabIdFromPath(it.prefabAssetPath) === "web_utensil_large_pot_01_pushable";
       if (stubKindOf(it) !== "CookingUtensil" && !isPushablePot) continue;
       const f = fill.get(vesselOfItem(it));
       if (!f) continue;

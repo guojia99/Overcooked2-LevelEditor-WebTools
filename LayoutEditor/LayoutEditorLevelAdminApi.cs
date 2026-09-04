@@ -3629,8 +3629,8 @@ public static class LayoutEditorLevelAdminApi
         "Assets/common02/food/CookingSteps",
         "Assets/common01/food/PlatingSteps",
         "Assets/common02/food/PlatingSteps",
-        "Assets/common03/Ingredients",
-        "Assets/common03/CookingSteps",
+        "Assets/common03/food/Ingredients",
+        "Assets/common03/food/CookingSteps",
     };
 
     /// <summary>全部关卡集的旧 custom_web/Ingredients 目录（Web 内置食材拷贝，

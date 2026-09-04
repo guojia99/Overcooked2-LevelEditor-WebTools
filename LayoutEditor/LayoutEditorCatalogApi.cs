@@ -32,7 +32,7 @@ public static class LayoutEditorCatalogApi
             "Assets/common01/food/Ingredients",
             "Assets/common02/food/Ingredients",
             // 通用内容源库（Assets/common03）：与 common01/common02 同级直接扫描。
-            "Assets/common03/Ingredients"
+            "Assets/common03/food/Ingredients"
         };
         roots.AddRange(LayoutEditorLevelAdminApi.LevelSetCustomIngredientFolders());
 
@@ -105,7 +105,9 @@ public static class LayoutEditorCatalogApi
         var lower = id.ToLowerInvariant();
         var head = id.Split('_')[0];
         // md_* 套餐（组装类：成品/子产物 + 餐盘上菜）优先于 burger 子串判定。
-        if (lower.StartsWith("md_", StringComparison.Ordinal))
+        // 正式版 common03 改名 md_* → DLC08_MD_*（dlcXX_md_ 前缀同样命中）。
+        if (lower.StartsWith("md_", StringComparison.Ordinal)
+            || (lower.StartsWith("dlc", StringComparison.Ordinal) && lower.Contains("_md_")))
             return "mealdeal";
         string mapped = null;
         switch (head)
@@ -206,7 +208,7 @@ public static class LayoutEditorCatalogApi
             "Assets/common01/food/CustomRecipes",
             "Assets/common02/food/Recipes",
             // 通用内容源库（Assets/common03）：与 common01/common02 同级直接扫描。
-            "Assets/common03/Recipes"
+            "Assets/common03/food/Recipes"
         };
 
         if (!string.IsNullOrEmpty(levelSet))
@@ -539,7 +541,7 @@ public static class LayoutEditorCatalogApi
             foreach (var dlc in dlcSet)
             {
                 var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(
-                    "Assets/common03/pseudo_prefab_so/matchlists/" + dlc + "_recipematchlist.asset");
+                    "Assets/commonW1/pseudo_prefab_so/core/matchlists/" + dlc + "_recipematchlist.asset");
                 if (so != null)
                     includeLists.Add(so);
             }
@@ -618,8 +620,8 @@ public static class LayoutEditorCatalogApi
     private static void AddHotdogOptionalRecipes(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] roots = dlc11
-            ? new[] { "Assets/common03/Recipes/dlc11" }
-            : new[] { "Assets/common03/Recipes/dlc08" };
+            ? new[] { "Assets/common03/food/Recipes/dlc11" }
+            : new[] { "Assets/common03/food/Recipes/dlc08" };
         foreach (var root in roots)
         {
             if (!AssetDatabase.IsValidFolder(root))
@@ -644,10 +646,10 @@ public static class LayoutEditorCatalogApi
     private static void AddHotdogCondiments(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] rootAndIds = dlc11
-            ? new[] { "Assets/common03/Ingredients/dlc11/dlc11_ketchup.asset",
-                      "Assets/common03/Ingredients/dlc11/dlc11_mustard.asset" }
-            : new[] { "Assets/common03/Ingredients/dlc08/ketchup.asset",
-                      "Assets/common03/Ingredients/dlc08/mustard.asset" };
+            ? new[] { "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_ketchup.asset",
+                      "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_mustard.asset" }
+            : new[] { "Assets/common03/food/Ingredients/dlc08/DLC08_Ketchup.asset",
+                      "Assets/common03/food/Ingredients/dlc08/DLC08_Mustard.asset" };
         foreach (var path in rootAndIds)
         {
             var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
@@ -663,8 +665,8 @@ public static class LayoutEditorCatalogApi
     private static void AddHotdogBoiledFrankfurter(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] paths = dlc11
-            ? new[] { "Assets/common03/Recipes/dlc11/dlc11_boiledfrankfurter.asset" }
-            : new[] { "Assets/common03/Recipes/dlc08/boiledfrankfurter.asset" };
+            ? new[] { "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_boiledfrankfurter.asset" }
+            : new[] { "Assets/common03/food/Recipes/dlc08/DLC08_boiledfrankfurter.asset" };
         foreach (var p in paths)
         {
             var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(p);

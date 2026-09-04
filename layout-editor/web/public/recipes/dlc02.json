@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "group": "dlc02",
-  "itemCount": 13,
+  "itemCount": 12,
   "recipes": [
     {
       "guid": "33ae6e311fad09147a11dfaeed918dce",
@@ -302,44 +302,6 @@
       "icon": true
     },
     {
-      "guid": "7b8424511da55a9e8ac56e28e0edcde8",
-      "id": "meatpineapplemushroomchickenkebob",
-      "nameZh": "四味烤串",
-      "nameEn": "Meat Pineapple Mushroom Chicken Kebab",
-      "assetPath": "Assets/common03/Recipes/dlc02/meatpineapplemushroomchickenkebob.asset",
-      "cookingStep": "KebabSkewer",
-      "platingStep": "",
-      "ingredients": [
-        "KebobMeat",
-        "KebobPineapple",
-        "KebobMushroom",
-        "KebobChicken"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "kebab",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "KebabSkewer",
-          "utensils": [
-            "Barbeque",
-            "Skewer"
-          ],
-          "ingredients": [
-            "KebobMeat",
-            "KebobPineapple",
-            "KebobMushroom",
-            "KebobChicken"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "aeb56bd1de590f74282da06e14ef5a25",
       "id": "Smoothie_Melon",
       "nameZh": "甜瓜果汁",
@@ -384,7 +346,7 @@
       "cookingStep": "FryingPan",
       "platingStep": "",
       "ingredients": [
-        "dlc08_bun",
+        "DLC08_ChoppedBun",
         "BurgerPineapple",
         "MeatSO",
         "MeatSO"
@@ -401,7 +363,7 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "dlc08_bun",
+            "DLC08_ChoppedBun",
             "BurgerPineapple"
           ]
         },

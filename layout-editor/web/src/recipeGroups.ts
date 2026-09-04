@@ -43,7 +43,7 @@ export const STEP_UTENSILS: Record<string, string[]> = {
   KebabSkewer: ["Barbeque", "Skewer"],
   ToastingFork: ["Campfire", "ToastingFork"],
   MixingBowl: ["Mixer", "MixerBowl"],
-  HotPot: ["cooking_region_floorburner", "utensil_large_pot_01"],
+  HotPot: ["web_cooking_region_floorburner", "web_utensil_large_pot_01"],
   RoastingTray: ["Oven", "utensil_roasting_tray"],
   OvenCakeTin: ["Oven", "utensil_cake_tin_01"],
 };
@@ -255,6 +255,8 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   }
 
   let flourBranch = false;
+  // 蛋糕/布丁同族：搅拌 + 烤箱（布丁自身步骤 Mixer 是搅拌+烤箱一体工作站）
+  const cakeLike = r.type === "cake" || r.type === "pudding";
   if (r.type === "sushi") {
     for (const ing of ingredients) prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Steamer" : "");
   } else if (r.type === "burrito") {
@@ -267,30 +269,31 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
     for (const ing of ingredients) prep.set(ing, ing === "PastaSO" ? "Pot" : "FryingPan");
   } else if (r.type === "hotdog") {
     // 只有热狗肠需要煮；洋葱单独煎；面包/芥末/番茄酱无需烹饪
+    // （含 common03 正式版新 id：DLC08_Frankfurter 等）
     for (const ing of ingredients) {
-      prep.set(ing, ing === "frankfurter" || ing === "dlc11_frankfurter" ? "Pot" : ing === "dlc08_onion" || ing === "dlc11_onion" ? "FryingPan" : "");
+      prep.set(ing, ing === "frankfurter" || ing === "dlc11_frankfurter" || ing === "DLC08_Frankfurter" ? "Pot" : ing === "dlc08_onion" || ing === "dlc11_onion" ? "FryingPan" : "");
     }
   } else if (r.type === "hotchocolate") {
     // 全程只有牛奶+巧克力需要煮；奶油/棉花糖是单独的（无需烹饪）
     for (const ing of ingredients) {
-      prep.set(ing, ing === "milk" || ing === "dlc09_milk" || ing === "dlc03_chocolate" || ing === "dlc09_chocolate" ? "Pot" : "");
+      prep.set(ing, ing === "milk" || ing === "dlc09_milk" || ing === "DLC03_Milk" || ing === "dlc03_chocolate" || ing === "dlc09_chocolate" || ing === "DLC03_Chocolate" ? "Pot" : "");
     }
   } else if (r.type === "float") {
     // 冰淇淋汽水：汽水单独（无需搅拌）；牛奶/口味/冰块进搅拌机（Blender）
     for (const ing of ingredients) {
-      prep.set(ing, ing === "orangesoda" || ing === "rootbeer" ? "" : "Blender");
+      prep.set(ing, ing === "orangesoda" || ing === "rootbeer" || ing === "DLC11_OrangeSoda" || ing === "DLC11_RootBeer" ? "" : "Blender");
     }
   } else if (finalStep === "DeepFatFryer" && r.type !== "donut" || (r.type === "fry" && !isCookStep(finalStep))) {
     // 名称前缀推断的 fry（如 FriedEgg）不得覆盖显式烹饪步骤（FryingPan 等）；
     // 甜甜圈走搅拌+炸篮分支（flourBranch）
     for (const ing of ingredients) prep.set(ing, "DeepFatFryer");
   } else if (
-    r.type === "cake" ||
+    cakeLike ||
     (has("FlourSO") && finalStep !== "Mixer" && finalStep !== "MixingBowl")
   ) {
-    // 蛋糕：搅拌 + 烤箱；面糊/面团（松饼/饺子）：搅拌 + 最终锅具
-    flourBranch = r.type !== "cake";
-    const cookStep = r.type === "cake" ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
+    // 蛋糕/布丁：搅拌 + 烤箱；面糊/面团（松饼/饺子）：搅拌 + 最终锅具
+    flourBranch = !cakeLike;
+    const cookStep = cakeLike ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
     for (const ing of ingredients) {
       if (!prep.has(ing)) {
         prep.set(ing, ing === "FlourSO" || ing === "EggSO" ? "MixingBowl" : cookStep);

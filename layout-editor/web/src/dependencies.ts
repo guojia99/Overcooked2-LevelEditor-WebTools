@@ -72,6 +72,9 @@ function wireDepsNav(): void {
     } else if (target === "guide") {
       location.hash = "#/guide";
       location.reload();
+    } else if (target === "changelog") {
+      location.hash = "#/changelog";
+      location.reload();
     } else if (target === "dependencies") {
       location.hash = "#/dependencies";
       location.reload();

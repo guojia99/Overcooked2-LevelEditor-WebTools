@@ -11,6 +11,8 @@ import {
   recipeNeedsCreamSpray,
   recipeNeedsSodaMachine,
   recipeNeedsDrinkMachine,
+  recipeNeedsCondimentMachine,
+  condimentMachineForIngredient,
   SODA_MACHINE_INGREDIENT_IDS,
   DRINK_MACHINE_INGREDIENT_IDS,
   recipeLacksIntermediate,
@@ -530,7 +532,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
               S.switchLinks.push({
                 switchId: sw.instanceId,
                 targetId: machine.instanceId,
-                trigger: "switch_dlc11_drink_dispenser_1",
+                trigger: "Next",
               });
             }
           }
@@ -578,12 +580,72 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
               S.switchLinks.push({
                 switchId: sw.instanceId,
                 targetId: machine.instanceId,
-                trigger: "switch_dlc08_drink_machine_1",
+                trigger: "Next",
               });
             }
           }
         } else {
           setStatus("⚠️ 选中菜谱需要饮料机（dlc08_drink_machine），但未能放置", false);
+        }
+      }
+    }
+
+    // 酱料机 + 联动开关（热狗的番茄酱/芥末酱：node 型食材，只能由酱料机产出）。
+    // 逻辑同饮料机：无机器 → 放置「酱料机 + 开关」组合（自动联动，dlc08）；可输出列表
+    // 收窄为本关所需酱料；已有机器但缺开关联动 → 只补开关 + switchLink。
+    // dlc11 换皮酱料（dlc11_ketchup/mustard）只认 dlc11 酱料机（无组合，手动摆放 + 接线）。
+    {
+      const condRecs = recs.filter(recipeNeedsCondimentMachine);
+      if (condRecs.length > 0) {
+        // 按机器家族分组收集所需酱料
+        const needByMachine = new Map<string, Set<string>>();
+        for (const r of condRecs)
+          for (const i of r.ingredients ?? []) {
+            const mid = condimentMachineForIngredient(i);
+            if (!mid) continue;
+            if (!needByMachine.has(mid)) needByMachine.set(mid, new Set<string>());
+            needByMachine.get(mid)!.add(i);
+          }
+        for (const [machinePid, sauceIds] of needByMachine) {
+          const machineOf = () =>
+            S.items.find((it) => prefabIdFromPath(it.prefabAssetPath ?? "") === machinePid);
+          let machine: EditorItem | null | undefined = machineOf();
+          if (!machine) {
+            const def = machinePid === "dlc08_condiment_dispenser" ? comboById("condiment_switch") : undefined;
+            if (def) {
+              addCombo(def, base.x + idx * CELL, base.z - 3 * CELL);
+              idx++;
+              machine = machineOf();
+            } else {
+              const mCat = catalogItemById(machinePid);
+              machine = mCat ? addFromCatalog(mCat, base.x + idx * CELL, base.z - 3 * CELL, false) : null;
+              if (machine) idx++;
+            }
+          }
+          if (machine) {
+            const guids = [...sauceIds].map((id) => ingByGuid.get(id)).filter((g): g is string => !!g);
+            if (guids.length > 0) {
+              machine.stubKind = "Dispenser";
+              machine.soArray = { pseudoPrefabGuids: guids };
+              machine.dispenser = { spawnerItemPrefabGuid: guids[0] };
+            }
+            const linked = S.switchLinks.some((l) => l.targetId === machine.instanceId);
+            if (!linked) {
+              const swCat = catalogItemById("Switch");
+              const sw = swCat
+                ? addFromCatalog(swCat, (machine._wx ?? 0) + 2 * CELL, machine._wz ?? 0)
+                : null;
+              if (sw) {
+                S.switchLinks.push({
+                  switchId: sw.instanceId,
+                  targetId: machine.instanceId,
+                  trigger: "Next",
+                });
+              }
+            }
+          } else {
+            setStatus(`⚠️ 选中菜谱需要酱料机（${machinePid}），但未能放置`, false);
+          }
         }
       }
     }
@@ -675,13 +737,62 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
           ${activeTab === "select" ? '<button type="button" class="rw-collapse-all" id="rw-collapse-all">收起全部</button>' : ""}
         </div>
         <div class="rw-list" id="rw-list">${listHtmlFor(q)}</div>`;
-      wireList(q);
+      wireToolbarButtons();
+      wireListCards();
     } else if (activeTab === "autofill") {
       if (!hasScene) { el.innerHTML = '<p class="modal-hint">请先在关卡编辑器中选择场景，再使用「自动填充道具」。</p>'; renderFooter(); return; }
       el.innerHTML = autofillHtml();
       wireAutofill();
     }
     renderFooter();
+  };
+
+  /** 搜索输入：只重建列表区（不触碰工具栏/搜索框），避免焦点丢失导致只能输入一个字。 */
+  const renderList = () => {
+    const q = (document.getElementById("rw-search") as HTMLInputElement)?.value.trim().toLowerCase() ?? "";
+    const listEl = document.getElementById("rw-list");
+    if (!listEl) return;
+    listEl.innerHTML = listHtmlFor(q);
+    wireListCards();
+  };
+
+  /** 工具栏（搜索框 / 屏蔽重复DLC / 收起全部）接线 —— 仅整页 render 时调用。 */
+  const wireToolbarButtons = () => {
+    document.getElementById("rw-search")?.addEventListener("input", renderList);
+    document.getElementById("rw-block-dup")?.addEventListener("click", () => {
+      blockDupDlc = !blockDupDlc;
+      render();
+    });
+    document.getElementById("rw-collapse-all")?.addEventListener("click", () => {
+      const listEl = document.getElementById("rw-list");
+      if (!listEl) return;
+      const groups = [...listEl.querySelectorAll<HTMLElement>(".rw-group")];
+      const allCollapsed = groups.every((g) => g.classList.contains("collapsed"));
+      groups.forEach((g) => g.classList.toggle("collapsed", !allCollapsed));
+      const btn = document.getElementById("rw-collapse-all");
+      if (btn) btn.textContent = allCollapsed ? "收起全部" : "展开全部";
+    });
+  };
+
+  /** 列表卡片接线：勾选 / 分组折叠（重建 #rw-list 后需重挂）。 */
+  const wireListCards = () => {
+    const listEl = document.getElementById("rw-list");
+    if (!listEl) return;
+    listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+      const card = cb.closest(".pick-card");
+      if (card) card.classList.toggle("selected", cb.checked);
+      cb.addEventListener("change", () => {
+        toggleSelect(cb.value, cb.checked);
+        card?.classList.toggle("selected", cb.checked);
+        updateGroupCounts();
+        // 轻量刷新：只更新 tab 计数，不重建列表（保持滚动位置与搜索框焦点）
+        const tabsEl = document.getElementById("rw-tabs");
+        if (tabsEl) { tabsEl.innerHTML = tabsHtml(); wireTabs(); }
+      });
+    });
+    listEl.querySelectorAll<HTMLElement>(".rw-group-header").forEach((hdr) => {
+      hdr.addEventListener("click", () => hdr.parentElement?.classList.toggle("collapsed"));
+    });
   };
 
   const renderFooter = () => {
@@ -731,36 +842,6 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         activeTab = tab;
         render();
       });
-    });
-  };
-
-  const wireList = (_q: string) => {
-    document.getElementById("rw-search")?.addEventListener("input", () => render());
-    document.getElementById("rw-block-dup")?.addEventListener("click", () => {
-      blockDupDlc = !blockDupDlc;
-      render();
-    });
-    const listEl = document.getElementById("rw-list");
-    if (!listEl) return;
-    listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
-      const card = cb.closest(".pick-card");
-      if (card) card.classList.toggle("selected", cb.checked);
-      cb.addEventListener("change", () => {
-        toggleSelect(cb.value, cb.checked);
-        card?.classList.toggle("selected", cb.checked);
-        updateGroupCounts();
-        render();
-      });
-    });
-    listEl.querySelectorAll<HTMLElement>(".rw-group-header").forEach((hdr) => {
-      hdr.addEventListener("click", () => hdr.parentElement?.classList.toggle("collapsed"));
-    });
-    document.getElementById("rw-collapse-all")?.addEventListener("click", () => {
-      const groups = [...listEl.querySelectorAll<HTMLElement>(".rw-group")];
-      const allCollapsed = groups.every((g) => g.classList.contains("collapsed"));
-      groups.forEach((g) => g.classList.toggle("collapsed", !allCollapsed));
-      const btn = document.getElementById("rw-collapse-all");
-      if (btn) btn.textContent = allCollapsed ? "收起全部" : "展开全部";
     });
   };
 
@@ -831,7 +912,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         : `<p class="modal-hint ok">锅具/道具已齐全</p>`}
       <div class="rw-toolbar" style="margin-top:8px">
         ${info.missingIngs.length ? `<button type="button" class="modal-btn primary" id="an-fill-ing">一键补齐食材 (${info.missingIngs.length})</button>` : ""}
-        <button type="button" class="modal-btn primary" id="an-fill-ut" title="放置缺失锅具/机具并装填：锅具按已选菜谱分配可处理食材（煎锅←肉、炸篮←薯条/洋葱圈/芝士条等），饮料机/汽水机/奶油喷罐自动放置并联动；锅具已齐时仅执行装填与联动（覆盖写入食材）">${info.missingUt.length ? `自动补全道具 (${info.missingUt.length})` : "🔄 锅具装填 / 机具联动"}</button>
+        <button type="button" class="modal-btn primary" id="an-fill-ut" title="放置缺失锅具/机具并装填：锅具按已选菜谱分配可处理食材（煎锅←肉、炸篮←薯条/洋葱圈/芝士条等），饮料机/汽水机/酱料机/奶油喷罐自动放置并联动；锅具已齐时仅执行装填与联动（覆盖写入食材）">${info.missingUt.length ? `自动补全道具 (${info.missingUt.length})` : "🔄 锅具装填 / 机具联动"}</button>
       </div>
     </div>`;
   };

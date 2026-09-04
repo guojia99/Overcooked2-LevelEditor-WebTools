@@ -8,13 +8,14 @@ run:
 	rm -rf ./commonW1
 	rm -rf ./Assembly-CSharp-Patch/
 	rm -rf ./BepInExPlugins/
+	rm -rf ./OC2LevelRuntimeLoader.dll
 
+	cp -r ../Overcooked2-LevelEditor/BepInExPlugins/OC2LevelRuntimeLoader/bin/Debug/OC2LevelRuntimeLoader.dll .
 	cp -r ../Overcooked2-LevelEditor/BepInExPlugins .
 	cp -r ../Overcooked2-LevelEditor/layout-editor .
-	cp -r ../Overcooked2-LevelEditor/Assets/common03 .
 	cp -r ../Overcooked2-LevelEditor/Assets/commonW1 .
+	cp -r ../Overcooked2-LevelEditor/Assets/commonW1.meta .
 	cp -r ../Overcooked2-LevelEditor/Assets/Editor/LayoutEditor .
-	cp -r ../Overcooked2-LevelEditor/Assembly-CSharp-Patch .
 
 	rm -rf layout-editor/web/node_modules/
 	rm -rf layout-editor/scripts/.venv-audio/

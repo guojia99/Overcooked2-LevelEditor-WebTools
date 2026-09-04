@@ -74,7 +74,35 @@
     "hotpot_permutationsraw",
     "dlc10_hotpot_permutationscooked",
     "dlc10_hotpot_permutationsraw",
-    "chocolatesmoothie"
+    "chocolatesmoothie",
+    "DLC04_optionalhotpot_cooked",
+    "DLC04_optionalhotpot_raw",
+    "DLC03_optionalhotchocolate",
+    "DLC07_optionalroast",
+    "DLC07_optionalsoup",
+    "DLC08_optionalhotdogs",
+    "DLC08_optional_bun_frank_onions_ketchup_mustard",
+    "DLC08_optional_bun_ketchup",
+    "DLC08_optional_bun_ketchup_mustard",
+    "DLC08_optional_bun_mustard",
+    "DLC08_optional_bun_onions",
+    "DLC08_optional_bun_onions_ketchup",
+    "DLC08_optional_bun_onions_ketchup_mustard",
+    "DLC08_optional_bun_onions_mustard",
+    "DLC08_optional_frank_onions_ketchup_mustard",
+    "DLC08_optional_frankfurter_ketchup",
+    "DLC08_optional_frankfurter_mustard",
+    "DLC08_optional_frankfurter_mustard_ketchup",
+    "DLC08_optional_frankfurter_onions",
+    "DLC08_optional_frankfurter_onions_ketchup",
+    "DLC08_optional_frankfurter_onions_mustard",
+    "DLC08_optional_onions_ketchup",
+    "DLC08_optional_onions_ketchup_mustard",
+    "DLC08_optional_onions_mustard",
+    "DLC11_optional_chocolateorangefloat",
+    "DLC11_optional_chocolaterootfloat",
+    "DLC11_optional_vanillaorangefloat",
+    "DLC11_optional_vanillarootfloat"
   ],
   "recipes": [
     {
@@ -144,7 +172,7 @@
       "id": "Burger_Hawaiian",
       "step": "FryingPan",
       "ingredients": [
-        "dlc08_bun",
+        "DLC08_ChoppedBun",
         "BurgerPineapple",
         "MeatSO",
         "MeatSO"
@@ -948,7 +976,7 @@
       "id": "dlc11_boiledfrankfurter",
       "step": "Pot",
       "ingredients": [
-        "dlc11_frankfurter"
+        "DLC08_Frankfurter"
       ]
     },
     {
@@ -1946,6 +1974,931 @@
         "dlc11_cucumber",
         "dlc11onion_salad"
       ]
+    },
+    {
+      "id": "DLC04_Hotpot_meat",
+      "step": "HotPot",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_meat",
+        "DLC04_BokChoy"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC04_Hotpot_prawn",
+      "step": "HotPot",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_prawn",
+        "DLC04_BokChoy"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC04_Hotpot_doublemeat",
+      "step": "HotPot",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_meat",
+        "dlc04_meat",
+        "DLC04_BokChoy"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC04_Hotpot_doubleprawn",
+      "step": "HotPot",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_prawn",
+        "dlc04_prawn",
+        "DLC04_BokChoy"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC04_Hotpot_mixed",
+      "step": "HotPot",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_meat",
+        "dlc04_prawn",
+        "DLC04_BokChoy"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC04_FruitPlatter_orangepeach",
+      "step": "",
+      "ingredients": [
+        "dlc04_orange",
+        "DLC04_Peach"
+      ]
+    },
+    {
+      "id": "DLC04_FruitPlatter_grapespeach",
+      "step": "",
+      "ingredients": [
+        "DLC04_Grapes",
+        "DLC04_Peach"
+      ]
+    },
+    {
+      "id": "DLC04_FruitPlatter_orangegrapes",
+      "step": "",
+      "ingredients": [
+        "dlc04_orange",
+        "DLC04_Grapes"
+      ]
+    },
+    {
+      "id": "DLC04_FruitPlatter_orangepeachgrapes",
+      "step": "",
+      "ingredients": [
+        "dlc04_orange",
+        "DLC04_Peach",
+        "DLC04_Grapes"
+      ]
+    },
+    {
+      "id": "DLC11_Salad_corn_onion",
+      "step": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "DLC11_Corn",
+        "dlc11_onion_salad"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC11_Salad_cucumber_onion",
+      "step": "",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC11_Salad_tomato_onion",
+      "step": "",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_onion_salad"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC11_Salad_cucumber_tomato_onion",
+      "step": "",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_tomato",
+        "dlc11_onion_salad"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC11_Salad_tomato_corn_onion",
+      "step": "",
+      "ingredients": [
+        "dlc11_tomato",
+        "DLC11_Corn",
+        "dlc11_onion_salad"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC11_Salad_tomato_cucumber_onion",
+      "step": "",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC03_Cake_christmaspudding",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC03_DriedFruit"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC03_mixedfloureggdriedfruit"
+      ]
+    },
+    {
+      "id": "DLC03_Cake_christmaspuddingwithorange",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC03_DriedFruit",
+        "DLC03_Orange"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC03_mixedfloureggdriedfruitorange"
+      ]
+    },
+    {
+      "id": "DLC03_mixedfloureggdriedfruit",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC03_DriedFruit"
+      ]
+    },
+    {
+      "id": "DLC03_mixedfloureggdriedfruitorange",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC03_DriedFruit",
+        "DLC03_Orange"
+      ]
+    },
+    {
+      "id": "DLC03_Cocoa_hotchocolate",
+      "step": "Pot",
+      "ingredients": [
+        "DLC03_Milk",
+        "DLC03_Chocolate"
+      ],
+      "plating": "Mug"
+    },
+    {
+      "id": "DLC03_Cocoa_hotchocolatecream",
+      "step": "Pot",
+      "ingredients": [
+        "DLC03_Milk",
+        "DLC03_Chocolate",
+        "DLC03_WhippedCream"
+      ],
+      "plating": "Mug"
+    },
+    {
+      "id": "DLC03_Cocoa_hotchocolatemallow",
+      "step": "Pot",
+      "ingredients": [
+        "DLC03_Milk",
+        "DLC03_Chocolate",
+        "DLC03_Marshmallow"
+      ],
+      "plating": "Mug"
+    },
+    {
+      "id": "DLC03_Cocoa_hotchocolatemallowcream",
+      "step": "Pot",
+      "ingredients": [
+        "DLC03_Milk",
+        "DLC03_Chocolate",
+        "DLC03_Marshmallow",
+        "DLC03_WhippedCream"
+      ],
+      "plating": "Mug"
+    },
+    {
+      "id": "RoastedMarshmallow",
+      "step": "ToastingFork",
+      "ingredients": [
+        "DLC05_Marshmallow"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC07_FruitPie_apple",
+      "step": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple"
+      ],
+      "composition": [
+        "DLC07_mixedfloureggapple"
+      ]
+    },
+    {
+      "id": "DLC07_mixedfloureggapple",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple"
+      ]
+    },
+    {
+      "id": "DLC07_FruitPie_appleblackberry",
+      "step": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple",
+        "DLC07_Blackberry"
+      ],
+      "composition": [
+        "DLC07_mixedfloureggappleblackberry"
+      ]
+    },
+    {
+      "id": "DLC07_mixedfloureggappleblackberry",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple",
+        "DLC07_Blackberry"
+      ]
+    },
+    {
+      "id": "DLC07_FruitPie_applecherry",
+      "step": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple",
+        "DLC07_Cherry"
+      ],
+      "composition": [
+        "DLC07_mixedfloureggapplecherry"
+      ]
+    },
+    {
+      "id": "DLC07_mixedfloureggapplecherry",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple",
+        "DLC07_Cherry"
+      ]
+    },
+    {
+      "id": "DLC07_FruitPie_blackberry",
+      "step": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Blackberry"
+      ],
+      "composition": [
+        "DLC07_mixedfloureggblackberry"
+      ]
+    },
+    {
+      "id": "DLC07_mixedfloureggblackberry",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Blackberry"
+      ]
+    },
+    {
+      "id": "DLC07_FruitPie_cherry",
+      "step": "OvenTray",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Cherry"
+      ],
+      "composition": [
+        "DLC07_mixedfloureggcherry"
+      ]
+    },
+    {
+      "id": "DLC07_mixedfloureggcherry",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Cherry"
+      ]
+    },
+    {
+      "id": "DLC07_Roast_beefpotatocarrotbroccoliroast",
+      "step": "RoastingTray",
+      "ingredients": [
+        "DLC07_BeefRoast",
+        "dlc07_potato",
+        "CarrotSO",
+        "DLC07_Broccoli"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC07_Roast_beefpotatocarrotroast",
+      "step": "RoastingTray",
+      "ingredients": [
+        "DLC07_BeefRoast",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC07_Roast_chickenpotatocarrotbroccoliroast",
+      "step": "RoastingTray",
+      "ingredients": [
+        "DLC07_ChickenRoast",
+        "dlc07_potato",
+        "CarrotSO",
+        "DLC07_Broccoli"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC07_Roast_chickenpotatocarrotroast",
+      "step": "RoastingTray",
+      "ingredients": [
+        "DLC07_ChickenRoast",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC07_Soup_onionbroccolicheesesoup",
+      "step": "Pot",
+      "ingredients": [
+        "OnionSO",
+        "DLC07_Broccoli",
+        "dlc07_cheese"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC07_Soup_onioncarrotpotatosoup",
+      "step": "Pot",
+      "ingredients": [
+        "OnionSO",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC07_Soup_onionpotatosoupleek",
+      "step": "Pot",
+      "ingredients": [
+        "OnionSO",
+        "dlc07_potato",
+        "DLC07_Leek"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC08_Donut_chocolate",
+      "step": "DeepFatFryer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_mixedfloureggchocolate"
+      ]
+    },
+    {
+      "id": "DLC08_mixedfloureggchocolate",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "ChocolateSO"
+      ]
+    },
+    {
+      "id": "DLC08_Donut_plain",
+      "step": "DeepFatFryer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_mixedflouregghoneycomb"
+      ]
+    },
+    {
+      "id": "DLC08_mixedflouregghoneycomb",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "HoneycombSO"
+      ]
+    },
+    {
+      "id": "DLC08_Donut_raspberry",
+      "step": "DeepFatFryer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC08_Raspberry"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_mixedfloureggraspberry"
+      ]
+    },
+    {
+      "id": "DLC08_mixedfloureggraspberry",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC08_Raspberry"
+      ]
+    },
+    {
+      "id": "DLC08_boiledfrankfurter",
+      "step": "Pot",
+      "ingredients": [
+        "DLC08_Frankfurter"
+      ]
+    },
+    {
+      "id": "DLC08_chickenburger",
+      "step": "FryingPan",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "dlc08_chicken"
+      ]
+    },
+    {
+      "id": "DLC08_friedchickenburger",
+      "step": "FryingPan",
+      "ingredients": [
+        "dlc08_chicken"
+      ]
+    },
+    {
+      "id": "DLC08_friedcheese_sticks",
+      "step": "DeepFatFryer",
+      "ingredients": [
+        "DLC08_Cheese_Sticks"
+      ]
+    },
+    {
+      "id": "DLC08_friedonion_rings",
+      "step": "DeepFatFryer",
+      "ingredients": [
+        "dlc08_onion_ring"
+      ]
+    },
+    {
+      "id": "DLC08_friedonions",
+      "step": "FryingPan",
+      "ingredients": [
+        "dlc08_onion"
+      ]
+    },
+    {
+      "id": "DLC08_Hotdog_Plain",
+      "step": "Pot",
+      "ingredients": [
+        "DLC08_HotdogBun",
+        "DLC08_Frankfurter"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC08_Hotdog_Ketchup",
+      "step": "Pot",
+      "ingredients": [
+        "DLC08_HotdogBun",
+        "DLC08_Frankfurter",
+        "DLC08_Ketchup"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC08_Hotdog_Mustard",
+      "step": "Pot",
+      "ingredients": [
+        "DLC08_HotdogBun",
+        "DLC08_Frankfurter",
+        "DLC08_Mustard"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC08_Hotdog_Onions",
+      "step": "Pot",
+      "ingredients": [
+        "DLC08_HotdogBun",
+        "DLC08_Frankfurter",
+        "dlc08_onion"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC08_Hotdog_Onions_Ketchup",
+      "step": "Pot",
+      "ingredients": [
+        "DLC08_HotdogBun",
+        "DLC08_Frankfurter",
+        "dlc08_onion",
+        "DLC08_Ketchup"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC08_Hotdog_Onions_Mustard",
+      "step": "Pot",
+      "ingredients": [
+        "DLC08_HotdogBun",
+        "DLC08_Frankfurter",
+        "dlc08_onion",
+        "DLC08_Mustard"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC08_Hotdog_Ketchup_Mustard",
+      "step": "Pot",
+      "ingredients": [
+        "DLC08_HotdogBun",
+        "DLC08_Frankfurter",
+        "DLC08_Ketchup",
+        "DLC08_Mustard"
+      ],
+      "plating": "Plate"
+    },
+    {
+      "id": "DLC08_MD_burger_cheesesticks_drink03",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_friedcheese_sticks",
+        "DLC08_Drink03"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_friedcheese_sticks",
+        "DLC08_Drink03"
+      ]
+    },
+    {
+      "id": "DLC08_MD_burger_drink01",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_Drink01"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_Drink01"
+      ]
+    },
+    {
+      "id": "DLC08_MD_burger_fries",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "dlc08_friedchips"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "dlc08_friedchips"
+      ]
+    },
+    {
+      "id": "DLC08_MD_burger_fries_cheesesticks",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "DLC08_friedcheese_sticks"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "DLC08_friedcheese_sticks"
+      ]
+    },
+    {
+      "id": "DLC08_MD_burger_fries_drink02",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "DLC08_Drink02"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "dlc08_friedchips",
+        "DLC08_Drink02"
+      ]
+    },
+    {
+      "id": "DLC08_MD_burger_onionrings",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_friedonion_rings"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_friedonion_rings"
+      ]
+    },
+    {
+      "id": "DLC08_MD_burger_onionrings_cheesesticks",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_friedonion_rings",
+        "DLC08_friedcheese_sticks"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_friedonion_rings",
+        "DLC08_friedcheese_sticks"
+      ]
+    },
+    {
+      "id": "DLC08_MD_burger_onionrings_drink01",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_friedonion_rings",
+        "DLC08_Drink01"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "FriedMeat",
+        "DLC08_friedonion_rings",
+        "DLC08_Drink01"
+      ]
+    },
+    {
+      "id": "DLC08_MD_c_burger_cheesesticks",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_friedcheese_sticks"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_friedcheese_sticks"
+      ]
+    },
+    {
+      "id": "DLC08_MD_c_burger_cheesesticks_drink02",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_friedcheese_sticks",
+        "DLC08_Drink02"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_friedcheese_sticks",
+        "DLC08_Drink02"
+      ]
+    },
+    {
+      "id": "DLC08_MD_c_burger_drink03",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_Drink03"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_Drink03"
+      ]
+    },
+    {
+      "id": "DLC08_MD_c_burger_fries_cheesesticks",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "dlc08_friedchips",
+        "DLC08_friedcheese_sticks"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "dlc08_friedchips",
+        "DLC08_friedcheese_sticks"
+      ]
+    },
+    {
+      "id": "DLC08_MD_c_burger_fries_drink03",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "dlc08_friedchips",
+        "DLC08_Drink03"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "dlc08_friedchips",
+        "DLC08_Drink03"
+      ]
+    },
+    {
+      "id": "DLC08_MD_c_burger_fries_onionrings",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "dlc08_friedchips",
+        "DLC08_friedonion_rings"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "dlc08_friedchips",
+        "DLC08_friedonion_rings"
+      ]
+    },
+    {
+      "id": "DLC08_MD_c_burger_onionrings",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_friedonion_rings"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_friedonion_rings"
+      ]
+    },
+    {
+      "id": "DLC08_MD_c_burger_onionrings_drink01",
+      "step": "",
+      "ingredients": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_friedonion_rings",
+        "DLC08_Drink01"
+      ],
+      "plating": "Plate",
+      "composition": [
+        "DLC08_ChoppedBun",
+        "DLC08_friedchickenburger",
+        "DLC08_friedonion_rings",
+        "DLC08_Drink01"
+      ]
+    },
+    {
+      "id": "DLC11_mixed_icecream_chocolate",
+      "step": "Blender",
+      "ingredients": [
+        "ChocolateSO",
+        "DLC11_Icecube",
+        "dlc11_milk"
+      ],
+      "plating": "Glass"
+    },
+    {
+      "id": "DLC11_mixed_icecream_vanilla",
+      "step": "Blender",
+      "ingredients": [
+        "DLC11_Vanilla",
+        "DLC11_Icecube",
+        "dlc11_milk"
+      ],
+      "plating": "Glass"
+    },
+    {
+      "id": "DLC11_Float_orangesodafloat_chocolate",
+      "step": "Blender",
+      "ingredients": [
+        "ChocolateSO",
+        "DLC11_Icecube",
+        "dlc11_milk",
+        "DLC11_OrangeSoda"
+      ],
+      "plating": "Glass"
+    },
+    {
+      "id": "DLC11_Float_orangesodafloat_vanilla",
+      "step": "Blender",
+      "ingredients": [
+        "DLC11_Vanilla",
+        "DLC11_Icecube",
+        "dlc11_milk",
+        "DLC11_OrangeSoda"
+      ],
+      "plating": "Glass"
+    },
+    {
+      "id": "DLC11_Float_rootbeerfloat_chocolate",
+      "step": "Blender",
+      "ingredients": [
+        "ChocolateSO",
+        "DLC11_Icecube",
+        "dlc11_milk",
+        "DLC11_RootBeer"
+      ],
+      "plating": "Glass"
+    },
+    {
+      "id": "DLC11_Float_rootbeerfloat_vanilla",
+      "step": "Blender",
+      "ingredients": [
+        "DLC11_Vanilla",
+        "DLC11_Icecube",
+        "dlc11_milk",
+        "DLC11_RootBeer"
+      ],
+      "plating": "Glass"
     }
   ]
 }

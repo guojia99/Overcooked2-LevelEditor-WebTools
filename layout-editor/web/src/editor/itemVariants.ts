@@ -51,10 +51,9 @@ export const VARIANT_TO_BASE: Record<string, string> = {
   dlc08_frierbasket: "FrierBasket",
   // 烤盘 / 火锅大锅 / 地炉（主版本无 dlc 前缀）
   dlc09_utensil_roasting_tray: "utensil_roasting_tray",
-  utensil_dlc10_large_pot_01: "utensil_large_pot_01",
+  web_utensil_dlc10_large_pot_01: "web_utensil_large_pot_01",
   // 可移动火锅 → 大火锅（食材配置/锅具管理等按同族处理）
-  utensil_large_pot_01_pushable: "utensil_large_pot_01",
-  dlc10_cooking_region_floorburner: "cooking_region_floorburner",
+  web_dlc10_cooking_region_floorburner: "web_cooking_region_floorburner",
   // 烤串签 / 烤盘 / 烤叉 → 核心 Skewer / GriddlePan / ToastingFork
   utensil_skewer_01: "Skewer",
   utensil_griddlepan: "GriddlePan",
@@ -114,7 +113,7 @@ export const VARIANT_TO_BASE: Record<string, string> = {
   // 由 LayoutEditorIngredientSprayPatch 在 Play 期补齐）
   utensil_dlc10_big_ol_spoon: "utensil_big_ol_spoon",
   // 可推动物件（装饰层）
-  dlc10_pushable_object: "pushable_object",
+  web_dlc10_pushable_object: "web_utensil_large_pot_01_pushable",
 };
 
 /** 把一个 prefab id 归一化为其家族基础 id（变体→基础；非变体→自身）。 */

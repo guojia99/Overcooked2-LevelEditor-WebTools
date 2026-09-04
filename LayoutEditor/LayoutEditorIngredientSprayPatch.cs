@@ -29,8 +29,8 @@ static class LayoutEditorIngredientSprayPatch
     private static readonly Dictionary<string, string> SprayCreamSoPaths =
         new Dictionary<string, string>
         {
-            { "utensil_ingredient_spray_01", "Assets/common03/Ingredients/dlc03/whippedcream.asset" },
-            { "dlc09_utensil_ingredient_spray", "Assets/common03/Ingredients/dlc09/dlc09_whippedcream.asset" },
+            { "utensil_ingredient_spray_01", "Assets/common03/food/Ingredients/dlc03/DLC03_WhippedCream.asset" },
+            { "dlc09_utensil_ingredient_spray", "Assets/commonW1/pseudo_prefab_so/dlc09/food/dlc09_whippedcream.asset" },
         };
 
     private static bool _armed;

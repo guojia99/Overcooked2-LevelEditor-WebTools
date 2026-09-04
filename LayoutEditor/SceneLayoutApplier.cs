@@ -50,6 +50,11 @@ public static class SceneLayoutApplier
 
         var usedSceneObjectIds = new HashSet<int>();
         var createdObjects = new Dictionary<string, GameObject>();
+        // 写回防堆叠守卫：同 prefab 且同一落点（XZ < 0.01）的多条 item 是重复数据
+        // （web 画布完全重叠视觉不可见；或两条 item 撞同一场景对象时旧兜底会再
+        // 新建一份）。全部写入会随「写回→导出→再写回」循环成倍克隆（test12 大炮
+        // 堆叠根因）。保留首条，其余跳过并打链路日志定位来源。
+        var placedFootprint = new Dictionary<string, Vector2>();
         foreach (var item in document.items)
         {
             if (item == null)
@@ -108,6 +113,26 @@ public static class SceneLayoutApplier
                 worldPos = wp;
             }
 
+            // ---- 防堆叠守卫（见上方注释）----
+            {
+                var guardPos = worldPos.HasValue
+                    ? new Vector2(worldPos.Value.x, worldPos.Value.z)
+                    : new Vector2(pos.x, pos.z);
+                var guardKey = (item.prefabGuid ?? item.prefabAssetPath ?? "");
+                Vector2 prevPos;
+                if (placedFootprint.TryGetValue(guardKey, out prevPos)
+                    && Mathf.Abs(prevPos.x - guardPos.x) < 0.01f
+                    && Mathf.Abs(prevPos.y - guardPos.y) < 0.01f)
+                {
+                    LayoutEditorLog.LogWarning("[写回链路] 防堆叠守卫：跳过重复条目 "
+                        + (item.displayName ?? "?") + " id=" + (item.instanceId ?? "?")
+                        + " prefab=" + System.IO.Path.GetFileName(assetPath)
+                        + "（同 prefab 同落点，本次写回已处理一条；web 画布重叠不可见的重复数据）");
+                    continue;
+                }
+                placedFootprint[guardKey] = guardPos;
+            }
+
             if (item.instanceId != null && item.instanceId.StartsWith("new:", StringComparison.Ordinal))
             {
                 var created = CreateInstance(item, prefab, assetPath, pos, rotY, worldPos);
@@ -162,7 +187,8 @@ public static class SceneLayoutApplier
             var isTeleportal = item.stubKind == "Teleportal" && item.teleportal != null;
             var isServing = item.stubKind == "ServingStation" && item.servingStation != null;
             var isTerminal = item.stubKind == "Terminal" && item.terminal != null;
-            if (!isTeleportal && !isServing && !isTerminal)
+            var isHeatedOven = item.stubKind == "HeatedOven" && item.heatedOven != null;
+            if (!isTeleportal && !isServing && !isTerminal && !isHeatedOven)
                 continue;
 
             GameObject go;
@@ -178,6 +204,8 @@ public static class SceneLayoutApplier
                 LayoutEditorStubIO.ApplyTeleportalExit(go, item.teleportal.exitPortalInstanceId ?? "", createdObjects);
             else if (isTerminal)
                 LayoutEditorStubIO.ApplyTerminalPilotable(go, item.terminal.pilotableObjectInstanceId ?? "", createdObjects);
+            else if (isHeatedOven)
+                LayoutEditorStubIO.ApplyHeatedOvenHeatSource(go, item.heatedOven.heatedStationInstanceId ?? "", createdObjects);
             else
                 LayoutEditorStubIO.ApplyServingStationPlateReturns(go, item.servingStation.plateReturnInstanceIds, createdObjects);
         }
@@ -439,7 +467,7 @@ public static class SceneLayoutApplier
                 continue;
             if (PrefabUtility.GetPrefabType(go) != PrefabType.None)
                 continue;
-            if (go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>() != null)
+            if (go.GetComponentInParent<LevelEditorStub.Stub>() != null)
                 continue;
             if (go.GetComponent<Light>() == null)
                 continue;

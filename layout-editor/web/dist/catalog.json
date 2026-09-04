@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-01T17:33:51.283Z",
-  "schemaVersion": 3,
+  "generatedAt": "2026-09-04T07:19:23.635Z",
+  "schemaVersion": 5,
   "gridCellSize": 1.2,
-  "itemCount": 3276,
+  "itemCount": 2527,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -16,11 +16,7 @@
     "catalog/items.9.json",
     "catalog/items.10.json",
     "catalog/items.11.json",
-    "catalog/items.12.json",
-    "catalog/items.13.json",
-    "catalog/items.14.json",
-    "catalog/items.15.json",
-    "catalog/items.16.json"
+    "catalog/items.12.json"
   ],
   "paletteGroups": [
     {
@@ -28,63 +24,70 @@
       "labelZh": "核心 · 台面 / 准备",
       "labelEn": "Countertops & prep",
       "layoutTier": "core",
-      "itemCount": 4
+      "itemCount": 5
     },
     {
       "key": "counters/cooking",
       "labelZh": "核心 · 烤制工作站",
       "labelEn": "Cooking stations",
       "layoutTier": "core",
-      "itemCount": 15
+      "itemCount": 7
     },
     {
       "key": "counters/sinks",
       "labelZh": "核心 · 水槽 / 清洁",
       "labelEn": "Sinks & cleaning",
       "layoutTier": "core",
-      "itemCount": 19
+      "itemCount": 10
     },
     {
       "key": "counters/service",
       "labelZh": "核心 · 出餐 / 加工",
       "labelEn": "Serving & processing",
       "layoutTier": "core",
-      "itemCount": 22
+      "itemCount": 10
     },
     {
       "key": "utensils/plates",
       "labelZh": "核心 · 盘杯器具",
       "labelEn": "Plates & glassware",
       "layoutTier": "core",
-      "itemCount": 23
+      "itemCount": 8
     },
     {
       "key": "utensils/cooking",
       "labelZh": "核心 · 锅具烤具",
       "labelEn": "Cooking utensils",
       "layoutTier": "core",
-      "itemCount": 26
+      "itemCount": 9
+    },
+    {
+      "key": "hotpot/web",
+      "labelZh": "火锅 · Web（CustomStub）",
+      "labelEn": "Hotpot · Web (CustomStub)",
+      "layoutTier": "core",
+      "itemCount": 6
     },
     {
       "key": "utensils/mixing",
       "labelZh": "核心 · 搅拌器具",
       "labelEn": "Mixing & blending",
       "layoutTier": "core",
-      "itemCount": 10
+      "itemCount": 3
     },
     {
       "key": "utensils/tools",
       "labelZh": "核心 · 工具 / 其他",
       "labelEn": "Tools & misc",
       "layoutTier": "core",
-      "itemCount": 14
+      "itemCount": 7
     },
     {
       "key": "mechanisms",
       "labelZh": "核心 · 机关",
       "labelEn": "Mechanisms",
       "layoutTier": "core",
-      "itemCount": 18
+      "itemCount": 23
     },
     {
       "key": "surface",
@@ -105,7 +108,7 @@
       "labelZh": "地板 / 背景",
       "labelEn": "Floor & background surfaces",
       "layoutTier": "floor",
-      "itemCount": 116
+      "itemCount": 80
     },
     {
       "key": "decor/food",
@@ -126,7 +129,7 @@
       "labelZh": "装饰 · NPC 角色",
       "labelEn": "Decor · NPC",
       "layoutTier": "decor",
-      "itemCount": 134
+      "itemCount": 120
     },
     {
       "key": "art/air_balloon",
@@ -168,35 +171,42 @@
       "labelZh": "装饰 · 海滩 DLC",
       "labelEn": "Decor · dlc02_beach",
       "layoutTier": "decor",
-      "itemCount": 258
+      "itemCount": 159
     },
     {
       "key": "art/dlc03_christmas",
       "labelZh": "装饰 · 圣诞 DLC",
       "labelEn": "Decor · dlc03_christmas",
       "layoutTier": "decor",
-      "itemCount": 92
+      "itemCount": 91
     },
     {
       "key": "art/dlc04",
       "labelZh": "装饰 · 新年 · 火锅 DLC",
       "labelEn": "Decor · dlc04",
       "layoutTier": "decor",
-      "itemCount": 89
+      "itemCount": 1
+    },
+    {
+      "key": "art/dlc04_chinatown",
+      "labelZh": "装饰 · dlc04_chinatown",
+      "labelEn": "Decor · dlc04_chinatown",
+      "layoutTier": "decor",
+      "itemCount": 64
     },
     {
       "key": "art/dlc05",
       "labelZh": "装饰 · dlc05",
       "labelEn": "Decor · dlc05",
       "layoutTier": "decor",
-      "itemCount": 1
+      "itemCount": 0
     },
     {
       "key": "art/dlc05_camping",
       "labelZh": "装饰 · 露营 DLC",
       "labelEn": "Decor · dlc05_camping",
       "layoutTier": "decor",
-      "itemCount": 234
+      "itemCount": 185
     },
     {
       "key": "art/dlc07",
@@ -210,70 +220,63 @@
       "labelZh": "装饰 · 部落 DLC",
       "labelEn": "Decor · dlc07_horde",
       "layoutTier": "decor",
-      "itemCount": 564
+      "itemCount": 414
     },
     {
       "key": "art/dlc08_circus",
       "labelZh": "装饰 · 马戏团 DLC",
       "labelEn": "Decor · dlc08_circus",
       "layoutTier": "decor",
-      "itemCount": 184
+      "itemCount": 183
     },
     {
-      "key": "art/dlc09_battlements",
-      "labelZh": "装饰 · 堡垒（dlc09 换皮）",
-      "labelEn": "Decor · dlc09_battlements",
+      "key": "art/dlc09_festivemashup",
+      "labelZh": "装饰 · dlc09_festivemashup",
+      "labelEn": "Decor · dlc09_festivemashup",
       "layoutTier": "decor",
-      "itemCount": 78
-    },
-    {
-      "key": "art/dlc09_camping",
-      "labelZh": "装饰 · 露营（dlc09 换皮）",
-      "labelEn": "Decor · dlc09_camping",
-      "layoutTier": "decor",
-      "itemCount": 124
-    },
-    {
-      "key": "art/dlc09_circus",
-      "labelZh": "装饰 · 马戏团（dlc09 换皮）",
-      "labelEn": "Decor · dlc09_circus",
-      "layoutTier": "decor",
-      "itemCount": 89
+      "itemCount": 306
     },
     {
       "key": "art/dlc09_wonderland",
       "labelZh": "装饰 · 仙境 DLC",
       "labelEn": "Decor · dlc09_wonderland",
       "layoutTier": "decor",
-      "itemCount": 92
+      "itemCount": 9
     },
     {
       "key": "art/dlc10",
       "labelZh": "装饰 · 新年 · 火锅 DLC2",
       "labelEn": "Decor · dlc10",
       "layoutTier": "decor",
-      "itemCount": 78
+      "itemCount": 7
+    },
+    {
+      "key": "art/dlc10_lunar",
+      "labelZh": "装饰 · dlc10_lunar",
+      "labelEn": "Decor · dlc10_lunar",
+      "layoutTier": "decor",
+      "itemCount": 3
     },
     {
       "key": "art/dlc11_summer",
       "labelZh": "装饰 · 夏季饮料 DLC",
       "labelEn": "Decor · dlc11_summer",
       "layoutTier": "decor",
-      "itemCount": 208
+      "itemCount": 163
     },
     {
       "key": "art/dlc13",
       "labelZh": "装饰 · 中秋 · 巧克力 DLC",
       "labelEn": "Decor · dlc13",
       "layoutTier": "decor",
-      "itemCount": 134
+      "itemCount": 5
     },
     {
-      "key": "art/floors",
-      "labelZh": "装饰 · 主题地板",
-      "labelEn": "Decor · floors",
+      "key": "art/dlc13_moonfestival",
+      "labelZh": "装饰 · dlc13_moonfestival",
+      "labelEn": "Decor · dlc13_moonfestival",
       "layoutTier": "decor",
-      "itemCount": 0
+      "itemCount": 84
     },
     {
       "key": "art/foodtruck",
@@ -301,7 +304,7 @@
       "labelZh": "装饰 · 矿洞",
       "labelEn": "Decor · mine",
       "layoutTier": "decor",
-      "itemCount": 4
+      "itemCount": 1
     },
     {
       "key": "art/raft",
@@ -315,7 +318,7 @@
       "labelZh": "装饰 · 太空",
       "labelEn": "Decor · space",
       "layoutTier": "decor",
-      "itemCount": 52
+      "itemCount": 51
     },
     {
       "key": "art/throne",
@@ -329,14 +332,7 @@
       "labelZh": "装饰 · 魔法学校",
       "labelEn": "Decor · wizard",
       "layoutTier": "decor",
-      "itemCount": 35
-    },
-    {
-      "key": "other",
-      "labelZh": "其他 · other",
-      "labelEn": "other",
-      "layoutTier": "decor",
-      "itemCount": 0
+      "itemCount": 30
     }
   ]
 }

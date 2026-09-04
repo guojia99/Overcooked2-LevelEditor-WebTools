@@ -57,6 +57,9 @@ export interface CatalogItem {
   recipeGuid?: string;
   bundleName?: string;
   prefabName?: string;
+  /** 需要 CustomStub runtime（Stub_<set>）才能完整运行的道具（随机箱/火锅家族/
+   *  可移动火锅/dlc09 大炮/dlc08 map_* 装饰等）。导出时由 Unity 场景扫描兜底。 */
+  needsStub?: boolean;
 }
 
 export interface CatalogPaletteGroup {
@@ -181,6 +184,12 @@ export interface LayoutTerminalStub {
   pilotableObjectInstanceId?: string;
 }
 
+/** 石炉台（oven_furnace_medieval）热源绑定：上游 PseudoPrefabHeatedOvenStub
+ *  heatedStation 指向热源伪根（如 workstation_furnace_01 熔炉工作台）。 */
+export interface LayoutHeatedOvenStub {
+  heatedStationInstanceId?: string;
+}
+
 /** 大炮（dlc08/dlc09 cannon）参数。freeRotation=true → 360° 自由旋转（±180°）；
  *  缺省/未配置 = 固定小角度模式（±45°）。 */
 export interface LayoutCannonStub {
@@ -232,6 +241,8 @@ export interface LayoutItem {
   switchStub?: LayoutSwitchStub;
   pressureSwitch?: LayoutPressureSwitchStub;
   terminal?: LayoutTerminalStub;
+  /** 石炉台热源绑定（oven_furnace_medieval）。 */
+  heatedOven?: LayoutHeatedOvenStub;
   cannon?: LayoutCannonStub;
   /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
   pseudoPrefabGuid?: string;

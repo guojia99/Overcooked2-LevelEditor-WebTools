@@ -164,15 +164,20 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
   dlc08_workstation_02_tray_sink_circus: { cellsX: 2, cellsZ: 1 },
   dlc08_workstation_03_tray_sink_circus: { cellsX: 2, cellsZ: 1 },
   GlassReturn: { cellsX: 1, cellsZ: 1 },
+  // 正式版 common03 新增：洗杯/洗托盘水槽 2×1；上游空载具 Pushable_Object 2×2
+  SinkMug: { cellsX: 2, cellsZ: 1 },
+  SinkTray: { cellsX: 2, cellsZ: 1 },
+  Pushable_Object: { cellsX: 2, cellsZ: 2 },
   utensil_large_pot_01: { cellsX: 2, cellsZ: 2 },
-  utensil_dlc10_large_pot_01: { cellsX: 2, cellsZ: 2 },
-  // 可移动火锅：原版 pushable_object（2×2，带四向抓取点，可自由拖动）
-  utensil_large_pot_01_pushable: { cellsX: 2, cellsZ: 2 },
-  // 火锅地面灶台铺满 2×2（大锅 2×2 锅沿外架其上）
   cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
-  dlc10_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
   pushable_object: { cellsX: 2, cellsZ: 2 },
-  dlc10_pushable_object: { cellsX: 2, cellsZ: 2 },
+  // Web 火锅专区（commonW1 web/hotpot/，CustomStub 轨道；2026-09-03 与 common03 原版并存双轨）
+  web_utensil_large_pot_01: { cellsX: 2, cellsZ: 2 },
+  web_utensil_dlc10_large_pot_01: { cellsX: 2, cellsZ: 2 },
+  web_utensil_large_pot_01_pushable: { cellsX: 2, cellsZ: 2 },
+  web_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
+  web_dlc10_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
+  web_dlc10_pushable_object: { cellsX: 2, cellsZ: 2 },
   // 断头台 2×1（切菜台）；大炮 2×2
   workstation_guillotine_01: { cellsX: 2, cellsZ: 1 },
   dlc08_cannon: { cellsX: 2, cellsZ: 2 },
@@ -265,14 +270,16 @@ export const CENTER_PIVOT_PREFAB_IDS = new Set(["workstation_guillotine_01"]);
 /** 西南角 pivot 的 2×2 道具：_wx 存 Unity stub；画布按 stubToVisualOffset 绘制占地框。 */
 export const SW_CORNER_PIVOT_PREFAB_IDS = new Set([
   "cooking_region_floorburner",
-  "dlc10_cooking_region_floorburner",
+  "web_cooking_region_floorburner",
+  "web_dlc10_cooking_region_floorburner",
 ]);
 
 /** 2×2 火锅大锅：模型中心在 transform 局部 (-0.6,+0.6)；编辑器 _wx 存占地中心。 */
 export const LARGE_POT_PREFAB_IDS = new Set([
   "utensil_large_pot_01",
-  "utensil_large_pot_01_pushable",
-  "utensil_dlc10_large_pot_01",
+  "web_utensil_large_pot_01",
+  "web_utensil_large_pot_01_pushable",
+  "web_utensil_dlc10_large_pot_01",
 ]);
 
 /** 全部编辑器可变状态（单例）。模块间共享，禁止顶层访问 DOM 的状态也在此。 */

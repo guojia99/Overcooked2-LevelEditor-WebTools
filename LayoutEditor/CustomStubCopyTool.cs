@@ -171,7 +171,9 @@ public static class CustomStubCopyTool
                 copied++;
         }
 
-        // asmdef：关卡集专属程序集（与母本不同名，全平台编译，引用 LevelEditorStub）
+        // asmdef：关卡集专属程序集（与母本不同名，全平台编译，引用 LevelEditorStub）。
+        // 注意：0Harmony（Assets/Plugins 预编译 DLL）不写入 references——Unity 2017.4
+        // 的 asmdef 只能引用其他 asmdef，预编译 DLL 走全局自动引用（Auto Reference 默认开）。
         var asmdefName = StubAssemblyName(setName);
         var asmdefFile = Path.Combine(dstDir, asmdefName + ".asmdef");
         var asmdefContent = "{\n"

@@ -27,7 +27,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.levelruntimeloader";
         public const string PluginName = "OC2 LevelRuntime Loader";
-        public const string PluginVersion = "1.3.2";
+        public const string PluginVersion = "1.4.0";
 
         private static ManualLogSource _log;
         private static readonly List<byte[]> PendingRaw = new List<byte[]>();
@@ -163,6 +163,27 @@ namespace OC2LevelRuntimeLoader
                 _log.LogInfo("已加载关卡程序集: " + name + "（来自 " + displayName + "，类型数 "
                     + (typeCount >= 0 ? typeCount.ToString() : "未知") + "）"
                     + (crateType != null ? "，CustomStub.RandomCrate ✓" : "，⚠ 未找到 CustomStub.RandomCrate（旧版或空程序集）"));
+                // CustomStub EntryPoint 引导（v1.4.0+）：新 stub 组件（TimedSwitch /
+                // PushablePot / VoidFall / SwitchReenable / WorldMapDressing / Harmony
+                // KillPlane 补丁）的统一安装器。纯反射约定调用，loader 与 stub 零编译依赖；
+                // EntryPoint 内部自带哨兵幂等（多关卡集同名程序集只装一次）。
+                var entryPoint = asm.GetType("CustomStub.EntryPoint", false);
+                if (entryPoint != null)
+                {
+                    try
+                    {
+                        var install = entryPoint.GetMethod("Install", BindingFlags.Public | BindingFlags.Static, null, Type.EmptyTypes, null);
+                        if (install != null)
+                        {
+                            var installed = install.Invoke(null, null);
+                            _log.LogInfo("CustomStub.EntryPoint.Install: " + ((installed is bool && (bool)installed) ? "已安装" : "跳过（已有实例）"));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.LogWarning("CustomStub.EntryPoint.Install 调用失败: " + ex.Message);
+                    }
+                }
                 return true;
             }
             catch (Exception ex)

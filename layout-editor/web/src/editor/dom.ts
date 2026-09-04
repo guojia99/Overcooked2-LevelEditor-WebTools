@@ -6,6 +6,7 @@ export const MANAGE_ACTIVE = /^#\/manage/.test(location.hash);
 export const DEPENDENCIES_ACTIVE = /^#\/dependencies/.test(location.hash);
 export const CUSTOM_RECIPES_ACTIVE = /^#\/custom-recipes/.test(location.hash);
 export const GUIDE_ACTIVE = /^#\/guide/.test(location.hash);
+export const CHANGELOG_ACTIVE = /^#\/changelog/.test(location.hash);
 
 /** 全部 DOM 引用（buildLayoutDom 在布局视图填充；各模块禁止顶层访问 DOM，只在函数体内使用）。
  *  与拆分前 `document.getElementById(...) as HTMLCanvasElement` 等价：视为非空，直接使用。 */
@@ -26,7 +27,7 @@ export const dom = {
 /** 布局视图的完整 DOM 模板 + 元素引用填充（仅 layout 视图调用；manage/custom-recipes 返回空）。 */
 export function buildLayoutDom(): void {
   dom.app = document.getElementById("app")!;
-  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || CUSTOM_RECIPES_ACTIVE || GUIDE_ACTIVE) return;
+  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || CUSTOM_RECIPES_ACTIVE || GUIDE_ACTIVE || CHANGELOG_ACTIVE) return;
   document.body.classList.remove("manage-bg");
   dom.app.innerHTML = `
   ${navHtml("layout")}

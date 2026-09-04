@@ -71,7 +71,9 @@ public static class SceneFloorExporter
             // placeholder carrying a PseudoPrefabStub, and their quad/mesh would
             // otherwise be exported as a duplicate "floor" next to the wrapper
             // instance that the items exporter already round-trips.
-            if (go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>() != null)
+            // 2026-09-03：泛化到 Stub 基类（覆盖 SetupCustomPrefab 家族，同
+            // SceneLayoutExporter.CollectUnderTransform）。
+            if (go.GetComponentInParent<LevelEditorStub.Stub>() != null)
                 continue;
 
             TryAddFloor(go, t, floors);

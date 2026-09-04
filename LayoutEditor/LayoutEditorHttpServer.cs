@@ -444,6 +444,7 @@ public class LayoutEditorHttpServer
 
                 var doc = SceneLayoutExporter.ExportActiveScene();
                 LogDispenserTrace("GET /api/scene/layout 导出", doc);
+                LogExportDiagnostics("GET 导出", doc);
                 WriteJson(response, 200, LayoutEditorJson.ToJson(doc));
                 return;
             }
@@ -453,6 +454,7 @@ public class LayoutEditorHttpServer
                 var body = ReadBody(request);
                 var doc = LayoutEditorJson.ParseLayoutDocument(body);
                 LogDispenserTrace("POST /api/scene/layout 解析", doc);
+                LogExportDiagnostics("POST 解析", doc);
 
                 // 写回强校验（web 侧同款规则的后端兜底，防绕过）：
                 // 普通食材箱（含背包）必须配 1 种食材；随机食材箱必须 ≥2 种候选。
@@ -1233,6 +1235,81 @@ public class LayoutEditorHttpServer
         if (problems.Count == 0)
             return null;
         return "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray());
+    }
+
+    /// <summary>导出/写回诊断（2026-09-03 大炮 ×16 事故排查）：物品总数 + 重复 guid
+    /// 分组明细（prefabId、层级路径、坐标、instanceId）。GET 侧 = Unity 导出实况，
+    /// POST 侧 = web 发来的文档——两侧对照即可定位重复产生在哪一端。常规场景无重复
+    /// 时只打一行总数。</summary>
+    private static void LogExportDiagnostics(string phase, LayoutDocumentDto doc)
+    {
+        try
+        {
+            if (doc == null || doc.items == null)
+                return;
+            var total = 0;
+            var byGuid = new Dictionary<string, List<LayoutItemDto>>();
+            foreach (var it in doc.items)
+            {
+                if (it == null)
+                    continue;
+                total++;
+                var key = !string.IsNullOrEmpty(it.prefabGuid) ? it.prefabGuid : (it.prefabAssetPath ?? "?");
+                List<LayoutItemDto> lst;
+                if (!byGuid.TryGetValue(key, out lst))
+                {
+                    lst = new List<LayoutItemDto>();
+                    byGuid[key] = lst;
+                }
+                lst.Add(it);
+            }
+            var dupGroups = 0;
+            var dupItems = 0;
+            var warned = 0;
+            foreach (var kv in byGuid)
+            {
+                if (kv.Value.Count <= 1)
+                    continue;
+                dupGroups++;
+                dupItems += kv.Value.Count;
+                var first = kv.Value[0];
+                var pid = !string.IsNullOrEmpty(first.prefabAssetPath)
+                    ? Path.GetFileNameWithoutExtension(first.prefabAssetPath)
+                    : kv.Key;
+                // Player ×N 是合法多出生点，不告警（只计入总数行）
+                if (pid == "Player" || string.Equals(first.parentPath, "Chefs", StringComparison.Ordinal))
+                    continue;
+                warned++;
+                var sb = new StringBuilder();
+                for (int i = 0; i < kv.Value.Count && i < 20; i++)
+                {
+                    var it = kv.Value[i];
+                    if (i > 0)
+                        sb.Append(" | ");
+                    sb.Append(it.hierarchyPath ?? "?")
+                        .Append(" @(")
+                        .Append(it.worldPosition != null ? it.worldPosition.x.ToString("0.##") : "?")
+                        .Append(",")
+                        .Append(it.worldPosition != null ? it.worldPosition.z.ToString("0.##") : "?")
+                        .Append(") id=")
+                        .Append(it.instanceId);
+                }
+                if (kv.Value.Count > 20)
+                    sb.Append(" | …共 ").Append(kv.Value.Count).Append(" 条");
+                LayoutEditorLog.LogWarning("[导出诊断] " + phase + "：重复条目 " + pid + " ×" + kv.Value.Count +
+                    "（guid " + kv.Key + "）：" + sb);
+            }
+            LayoutEditorLog.Log("[导出诊断] " + phase + "：物品总数 " + total +
+                (warned > 0
+                    ? "（重复 guid 组 " + dupGroups + "，涉及 " + dupItems + " 条，异常 " + warned + " 组见上方明细）"
+                    : dupGroups > 0
+                        ? "（重复 guid 组 " + dupGroups + " 均为 Player 多出生点，正常）"
+                        : "，无重复 guid"));
+        }
+        catch (Exception e)
+        {
+            LayoutEditorLog.LogWarning("[导出诊断] " + phase + " 失败: " + e.Message);
+        }
     }
 
     /// <summary>随机食材箱链路追踪（定位 web↔Unity 数据丢失环节）：统计 doc 中

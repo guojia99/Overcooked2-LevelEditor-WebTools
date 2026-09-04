@@ -304,6 +304,27 @@ public static class LayoutEditorStubIO
             return;
         }
 
+        // 石炉台（oven_furnace_medieval）：上游 PseudoPrefabHeatedOvenStub.heatedStation
+        // 场景引用导出为 "u:<instanceID>"（反向映射伪根，同 Terminal）。
+        var heatedOven = go.GetComponent<PseudoPrefabHeatedOvenStub>();
+        if (heatedOven != null)
+        {
+            item.stubKind = "HeatedOven";
+            var hdto = new LayoutHeatedOvenStubDto();
+            if (heatedOven.heatedStation != null)
+            {
+                var idGo = heatedOven.heatedStation;
+                var parentT = idGo.transform.parent;
+                if (parentT != null
+                    && idGo.GetComponent<HeatedStation>() != null
+                    && parentT.GetComponent<PseudoPrefab>() != null)
+                    idGo = parentT.gameObject;
+                hdto.heatedStationInstanceId = "u:" + idGo.GetInstanceID();
+            }
+            item.heatedOven = hdto;
+            return;
+        }
+
         // 大炮（dlc08/dlc09 cannon）：Cannon/PilotRotation 都在 bundle child 上，
         // 导出限位（±180 = 自由旋转）供前端往返。
         var cannonComp = go.GetComponentInChildren<Cannon>();
@@ -353,15 +374,18 @@ public static class LayoutEditorStubIO
 
         // 火锅灶台定时开关：运行时组件导出（无 stub 的火锅灶台会走到此末尾；
         // 带定时组件的其它物品理论上不存在，但此导出不依赖 stubKind）。
-        var timedComp = go.GetComponent<LayoutRuntimeTimedCookingSwitch>();
+        // 组件类型在关卡集 Stub_<set> 程序集（CustomStub.TimedCookingSwitch），
+        // 反射读取（FindCustomStubType 模式）。
+        var tsType = FindCustomStubType(go, "TimedCookingSwitch");
+        var timedComp = tsType != null ? go.GetComponent(tsType) : null;
         if (timedComp != null)
         {
             item.timedSwitch = new LayoutTimedSwitchDto
             {
-                enabled = timedComp.m_enabled,
-                onSeconds = timedComp.m_onSeconds,
-                offSeconds = timedComp.m_offSeconds,
-                startOn = timedComp.m_startOn
+                enabled = GetStubField(timedComp, "m_enabled") is bool && (bool)GetStubField(timedComp, "m_enabled"),
+                onSeconds = GetStubField(timedComp, "m_onSeconds") is float ? (float)GetStubField(timedComp, "m_onSeconds") : 30f,
+                offSeconds = GetStubField(timedComp, "m_offSeconds") is float ? (float)GetStubField(timedComp, "m_offSeconds") : 30f,
+                startOn = GetStubField(timedComp, "m_startOn") is bool && (bool)GetStubField(timedComp, "m_startOn")
             };
         }
     }
@@ -427,58 +451,123 @@ public static class LayoutEditorStubIO
             }
         }
 
-        // 火锅灶台定时开关：伪根烘焙运行时循环组件（游戏程序集，随场景保存）。
+        // 火锅灶台定时开关：伪根烘焙 customStub 运行时循环组件（关卡集 Stub_<set>
+        // 程序集，随场景保存；游戏侧由 OC2LevelRuntimeLoader 加载后解析）。
         // 必须在空 stubKind 提前 return 之前处理——火锅灶台无任何 stub 组件。
         // enabled=false 也保留组件（配置随场景往返不丢，运行时不生效）。
+        // 双通道：组件为权威；tag "TimedSwitch|e,on,off,s" 供程序集缺失时自愈。
+        //
+        // 防污染守卫（2026-09-03 s_test12/s_test2 事故）：merge 期间脏数据曾让
+        // item.timedSwitch 出现在非灶台物品上，组件+tag 被烘到全场景对象（饮料机的
+        // TimedSwitch| tag 覆盖掉 prefab 自带的机器 tag → 包装 TriggerOnObject
+        // 翻译层失效 → 开关无法切换饮料）。非灶台物品一律不烘，且清除已有残留。
         {
-            var timedComp = go.GetComponent<LayoutRuntimeTimedCookingSwitch>();
-            if (item.timedSwitch != null)
+            var burnerPid = !string.IsNullOrEmpty(item.prefabAssetPath)
+                ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+                : "";
+            if (string.IsNullOrEmpty(burnerPid))
             {
-                if (timedComp == null)
-                    timedComp = Undo.AddComponent<LayoutRuntimeTimedCookingSwitch>(go);
-                else
-                    Undo.RecordObject(timedComp, "Layout Editor Timed Cooking Switch");
-                timedComp.m_enabled = item.timedSwitch.enabled;
-                timedComp.m_onSeconds = Mathf.Max(3f, item.timedSwitch.onSeconds);
-                timedComp.m_offSeconds = Mathf.Max(3f, item.timedSwitch.offSeconds);
-                timedComp.m_startOn = item.timedSwitch.startOn;
-                EditorUtility.SetDirty(timedComp);
+                // 回退：以场景对象自身的伪 prefab SO 名判定（防 DTO 缺路径时误清合法灶台）
+                var baseStub = go.GetComponent<PseudoPrefabStub>();
+                if (baseStub != null && baseStub.pseudoPrefabSO != null)
+                    burnerPid = baseStub.pseudoPrefabSO.prefabName ?? "";
             }
-            else if (timedComp != null)
+            bool isHotpotBurner = burnerPid == "cooking_region_floorburner"
+                || burnerPid == "web_cooking_region_floorburner"
+                || burnerPid == "web_dlc10_cooking_region_floorburner";
+            var tsType = FindCustomStubType(go, "TimedCookingSwitch");
+            var timedComp = tsType != null ? go.GetComponent(tsType) : null;
+            if (item.timedSwitch != null && isHotpotBurner)
             {
-                Undo.DestroyObjectImmediate(timedComp);
+                float onSec = Mathf.Max(3f, item.timedSwitch.onSeconds);
+                float offSec = Mathf.Max(3f, item.timedSwitch.offSeconds);
+                if (tsType == null)
+                {
+                    LayoutEditorLog.LogWarning("[LayoutEditor] 关卡集缺 stub 程序集，火锅灶台定时开关仅写入 tag 载体（CustomStubCopyRequested）: " + go.name);
+                    var setName = LevelSetOfScenePath(go.scene.path);
+                    if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                        CustomStubCopyRequested(setName);
+                }
+                else
+                {
+                    if (timedComp == null)
+                        timedComp = Undo.AddComponent(go, tsType);
+                    else
+                        Undo.RecordObject(timedComp, "Layout Editor Timed Cooking Switch");
+                    SetStubField(timedComp, "m_enabled", item.timedSwitch.enabled);
+                    SetStubField(timedComp, "m_onSeconds", onSec);
+                    SetStubField(timedComp, "m_offSeconds", offSec);
+                    SetStubField(timedComp, "m_startOn", item.timedSwitch.startOn);
+                }
+                SetCustomStubTag(go, "TimedSwitch|"
+                    + (item.timedSwitch.enabled ? "1" : "0") + ","
+                    + onSecondsString(onSec) + ","
+                    + onSecondsString(offSec) + ","
+                    + (item.timedSwitch.startOn ? "1" : "0"));
+            }
+            else
+            {
+                if (item.timedSwitch != null && !isHotpotBurner)
+                    LayoutEditorLog.LogWarning("[LayoutEditor] 非火锅灶台物品携带定时开关配置，已丢弃并清除残留（防污染守卫）: " + go.name);
+                if (timedComp != null)
+                    Undo.DestroyObjectImmediate(timedComp);
+                ClearCustomStubTag(go, "TimedSwitch|");
             }
         }
 
         if (string.IsNullOrEmpty(item.stubKind))
         {
             // 可移动火锅：stubKind 为空（不挂 CookingUtensil stub），但锅具管理的
-            //  allowedIngredientGuids 仍要落到载体组件上（运行时重建许可表）。
+            //  allowedIngredientGuids 仍要落到 customStub 装配组件上（运行时重建许可表）。
+            // 组件类型在关卡集程序集（CustomStub.PushablePot），反射写入；
+            // tag 载体 "PushablePot|pot;食材节点…" 与 soArray 槽 0（prefab 自带大锅 SO）双兜底。
             var pushablePid = !string.IsNullOrEmpty(item.prefabAssetPath)
                 ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
                 : "";
-            if (pushablePid == "utensil_large_pot_01_pushable" &&
+            if (pushablePid == "web_utensil_large_pot_01_pushable" &&
                 item.cookingUtensil != null &&
-                item.cookingUtensil.allowedIngredientGuids != null &&
-                item.cookingUtensil.allowedIngredientGuids.Length > 0)
+                item.cookingUtensil.allowedIngredientGuids != null)
             {
-                var pushable = go.GetComponent<LevelEditor.LayoutRuntimePushablePot>();
-                if (pushable != null)
+                var bundles = new System.Collections.Generic.List<string>();
+                var paths = new System.Collections.Generic.List<string>();
+                foreach (var g in item.cookingUtensil.allowedIngredientGuids)
                 {
-                    var bundles = new System.Collections.Generic.List<string>();
-                    var paths = new System.Collections.Generic.List<string>();
-                    foreach (var g in item.cookingUtensil.allowedIngredientGuids)
-                    {
-                        var so = LoadPseudoPrefabSO(g);
-                        if (so == null || string.IsNullOrEmpty(so.assetPath))
-                            continue;
-                        bundles.Add(so.bundleName ?? "");
-                        paths.Add(so.assetPath);
-                    }
-                    Undo.RecordObject(pushable, "Layout Editor Pushable Pot Ingredients");
-                    pushable.m_allowedIngredientBundles = bundles.ToArray();
-                    pushable.m_allowedIngredientPaths = paths.ToArray();
+                    var so = LoadPseudoPrefabSO(g);
+                    if (so == null || string.IsNullOrEmpty(so.assetPath))
+                        continue;
+                    bundles.Add(so.bundleName ?? "");
+                    paths.Add(so.assetPath);
                 }
+
+                var ppType = FindCustomStubType(go, "PushablePot");
+                if (ppType != null)
+                {
+                    var pushable = go.GetComponent(ppType);
+                    if (pushable == null)
+                        pushable = Undo.AddComponent(go, ppType);
+                    SetStubField(pushable, "m_extraIngredientBundles", bundles.ToArray());
+                    SetStubField(pushable, "m_extraIngredientPaths", paths.ToArray());
+                }
+                else
+                {
+                    LayoutEditorLog.LogWarning("[LayoutEditor] 关卡集缺 stub 程序集，可移动火锅食材配置仅写入 tag 载体: " + go.name);
+                    var setName = LevelSetOfScenePath(go.scene.path);
+                    if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                        CustomStubCopyRequested(setName);
+                }
+
+                // tag 载体：第一项 = 大锅（soArray 槽 0 的 bundle:path），其余 = 食材节点
+                var potEntry = "";
+                var soArray = go.GetComponent<PseudoPrefabSOArray>();
+                if (soArray != null && soArray.pseudoPrefabSOs != null && soArray.pseudoPrefabSOs.Length > 0
+                    && soArray.pseudoPrefabSOs[0] != null
+                    && !string.IsNullOrEmpty(soArray.pseudoPrefabSOs[0].bundleName))
+                    potEntry = soArray.pseudoPrefabSOs[0].bundleName + ":" + soArray.pseudoPrefabSOs[0].assetPath;
+                var payload = new System.Text.StringBuilder("PushablePot|");
+                payload.Append(potEntry);
+                for (int i = 0; i < bundles.Count && i < paths.Count; i++)
+                    payload.Append(";").Append(bundles[i]).Append(":").Append(paths[i]);
+                SetCustomStubTag(go, payload.ToString());
             }
             return;
         }
@@ -550,7 +639,7 @@ public static class LayoutEditorStubIO
                 !so.assetPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
             {
                 var mapped = so.name == "dlc11onion_salad"
-                    ? AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>("Assets/common03/Ingredients/dlc11/dlc11_onion_salad.asset")
+                    ? AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>("Assets/common03/food/Ingredients/dlc11/dlc11_onion_salad.asset")
                     : null;
                 if (mapped != null)
                 {
@@ -925,6 +1014,48 @@ public static class LayoutEditorStubIO
             }
         }
 
+        if (item.stubKind == "HeatedOven")
+        {
+            // 石炉台未配置热源：宿主 PseudoPrefabHeatedOven.LateSetup 对 null
+            // heatedStation 取 childGameObject 会 NRE。降级为普通道具（同 Terminal）。
+            var ho = go.GetComponent<PseudoPrefabHeatedOvenStub>();
+            if (item.heatedOven == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] Apply HeatedOven: 石炉台未配置热源，" +
+                    "已降级为普通道具: " + go.name);
+                LayoutEditorCookingUtensilGuard.DowngradeToBase(go, ho != null ? ho.pseudoPrefabSO : null);
+                return;
+            }
+            if (ho == null)
+                return;
+
+            // 文档 id（"new:..."）指向本趟写回新建的对象：第一趟尚未创建，
+            // 交给第二趟 ApplyHeatedOvenHeatSource 解析，这里不降级。
+            var hrid0 = item.heatedOven.heatedStationInstanceId ?? "";
+            if (hrid0.StartsWith("new:", StringComparison.Ordinal))
+                return;
+
+            Undo.RecordObject(ho, "Layout Editor HeatedOven");
+            if (!string.IsNullOrEmpty(hrid0) && hrid0.StartsWith("u:", StringComparison.Ordinal))
+            {
+                int id;
+                if (int.TryParse(hrid0.Substring(2), out id))
+                    ho.heatedStation = EditorUtility.InstanceIDToObject(id) as GameObject;
+            }
+            else
+            {
+                ho.heatedStation = null;
+            }
+            if (ho.heatedStation == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] Apply HeatedOven: 热源无法解析，" +
+                    "已降级为普通道具: " + go.name);
+                LayoutEditorCookingUtensilGuard.DowngradeToBase(go, ho.pseudoPrefabSO);
+                return;
+            }
+            return;
+        }
+
         if (item.stubKind == "Cannon" && item.cannon != null)
         {
             // 大炮：Cannon/PilotRotation 在 bundle child 上；freeRotation=true 写 ±180°
@@ -1011,6 +1142,41 @@ public static class LayoutEditorStubIO
             LayoutEditorLog.LogWarning("[LayoutEditor] Apply Terminal: 终端可操控对象无法解析，" +
                 "已降级为普通道具: " + go.name);
             LayoutEditorCookingUtensilGuard.DowngradeToBase(go, terminal.pseudoPrefabSO);
+        }
+    }
+
+    /// <summary>Second pass: resolve a HeatedOven's heat source. Same id scheme as
+    /// ApplyTerminalPilotable ("u:&lt;instanceID&gt;" or document instanceId via
+    /// createdObjects). Unresolvable targets downgrade to a plain prop (host
+    /// LateSetup would otherwise NRE on null heatedStation).</summary>
+    public static void ApplyHeatedOvenHeatSource(GameObject go, string heatedStationInstanceId, System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    {
+        if (go == null || string.IsNullOrEmpty(heatedStationInstanceId))
+            return;
+
+        var ho = go.GetComponent<PseudoPrefabHeatedOvenStub>();
+        if (ho == null)
+            return;
+
+        GameObject target = null;
+        if (heatedStationInstanceId.StartsWith("u:", StringComparison.Ordinal))
+        {
+            int id;
+            if (int.TryParse(heatedStationInstanceId.Substring(2), out id))
+                target = EditorUtility.InstanceIDToObject(id) as GameObject;
+        }
+        else if (createdObjects != null)
+        {
+            createdObjects.TryGetValue(heatedStationInstanceId, out target);
+        }
+
+        Undo.RecordObject(ho, "Layout Editor HeatedOven");
+        ho.heatedStation = target;
+        if (ho.heatedStation == null)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] Apply HeatedOven: 热源无法解析，" +
+                "已降级为普通道具: " + go.name);
+            LayoutEditorCookingUtensilGuard.DowngradeToBase(go, ho.pseudoPrefabSO);
         }
     }
 
@@ -1139,9 +1305,9 @@ public static class LayoutEditorStubIO
     ///
     /// 配了按钮事件组（buttonEvents）的开关抑制直发广播（objectToTrigger 置空，
     /// 按压只走事件组 helper），避免同一目标一次按压收到两次消息（饮料机跳档）；
-    /// LayoutRuntimeSwitchLink.m_targetRoots 仍写全量目标——事件路径依赖它完成
-    /// 伪根→child 转发与监听字段接线。仅 Setup 路径（包装带 PseudoPrefabSwitch）
-    /// 抑制：非 Setup 按钮的直发由 linker 的 relay 承担且无法从场景数据侧关闭。
+    /// 事件路径由 ButtonEventBakery 的按压 helper 完成触发。仅 Setup 路径（包装带
+    /// PseudoPrefabSwitch）抑制：非 Setup 按钮的直发由宿主/模组生成的 TriggerOnObject
+    /// 承担。按钮 0.35s 自动复位由 customStub SwitchReenable（tag 载体 + 组件）承担。
     /// </summary>
     public static void ApplySwitchLinks(LayoutSwitchLinkDto[] links,
         System.Collections.Generic.Dictionary<string, GameObject> createdObjects,
@@ -1208,8 +1374,13 @@ public static class LayoutEditorStubIO
             }
 
             var sw = switchGo.GetComponent<PseudoPrefabSwitchStub>();
-            if (sw == null)
+            // ToggleSwitch（拉杆开关）用 PseudoPrefabToggleSwitchStub（同款
+            // triggerOnObject/objectToTrigger 数据通道），不能误挂 SwitchStub。
+            var toggleSw = sw == null ? switchGo.GetComponent<PseudoPrefabToggleSwitchStub>() : null;
+            if (sw == null && toggleSw == null)
                 sw = switchGo.AddComponent<PseudoPrefabSwitchStub>();
+            // 实际承载联动的 stub 组件（Switch 或 ToggleSwitch 之一）。
+            Component linkStub = sw != null ? (Component)sw : toggleSw;
 
             string trigger;
             string resolvedTrigger = triggerBySwitch.TryGetValue(switchId, out trigger) && !string.IsNullOrEmpty(trigger)
@@ -1217,9 +1388,14 @@ public static class LayoutEditorStubIO
                 : "Switch";
 
             bool hasEvents = eventSources.Contains(switchId);
-            if (!docCarriesEvents)
+            if (!docCarriesEvents && sw != null)
             {
                 var wiredPress = sw.triggerOnAnimator ?? "";
+                hasEvents = wiredPress.StartsWith("BEP_", StringComparison.Ordinal);
+            }
+            else if (!docCarriesEvents && toggleSw != null)
+            {
+                var wiredPress = toggleSw.triggerOnAnimator ?? "";
                 hasEvents = wiredPress.StartsWith("BEP_", StringComparison.Ordinal);
             }
             bool setupPath = switchGo.GetComponent<LevelEditor.PseudoPrefabSwitch>() != null;
@@ -1227,8 +1403,8 @@ public static class LayoutEditorStubIO
                 ? new GameObject[0]
                 : perSwitch[switchId].ToArray();
 
-            Undo.RecordObject(sw, "Layout Editor Switch Link");
-            var swSo = new SerializedObject(sw);
+            Undo.RecordObject(linkStub, "Layout Editor Switch Link");
+            var swSo = new SerializedObject(linkStub);
             var trigProp = swSo.FindProperty("triggerOnObject");
             if (trigProp != null)
                 trigProp.stringValue = resolvedTrigger;
@@ -1240,37 +1416,54 @@ public static class LayoutEditorStubIO
                     arrProp.GetArrayElementAtIndex(i).objectReferenceValue = directTargets[i];
                 swSo.ApplyModifiedProperties();
             }
-            else
+            else if (sw != null)
             {
                 // 兜底：字段改名时不至于整体丢失
                 sw.triggerOnObject = resolvedTrigger;
                 sw.objectToTrigger = directTargets;
             }
-
-            // 游戏编译的运行时接线组件（随场景保存，游戏包内也生效）：完成伪根→child
-            // 触发转发、机器监听字段、大炮 Cannon.m_button / 瞄准 / 发射按钮门控。
-            // 类在游戏程序集（Assembly-CSharp，经 Assembly-CSharp-Patch 编译）。
-            var linker = switchGo.GetComponent<LayoutRuntimeSwitchLink>();
-            if (linker == null)
-                linker = switchGo.AddComponent<LayoutRuntimeSwitchLink>();
-            Undo.RecordObject(linker, "Layout Editor Switch Link");
-            var lkSo = new SerializedObject(linker);
-            var lkTrig = lkSo.FindProperty("m_trigger");
-            if (lkTrig != null)
-                lkTrig.stringValue = resolvedTrigger;
-            var rootsProp = lkSo.FindProperty("m_targetRoots");
-            if (rootsProp != null)
-            {
-                GameObject[] roots = perSwitch[switchId].ToArray();
-                rootsProp.arraySize = roots.Length;
-                for (int i = 0; i < roots.Length; i++)
-                    rootsProp.GetArrayElementAtIndex(i).objectReferenceValue = roots[i];
-                lkSo.ApplyModifiedProperties();
-            }
             else
             {
-                linker.m_trigger = resolvedTrigger;
-                linker.m_targetRoots = perSwitch[switchId].ToArray();
+                toggleSw.triggerOnObject = resolvedTrigger;
+                toggleSw.objectToTrigger = directTargets;
+            }
+
+            // 大炮发射按钮的上游数据通道：联动触发名为 Launch 且目标带
+            // SetupCannonStub 时，把按钮伪根写进 stub.button —— 宿主/游戏模组的
+            // SetupCannon.LateSetup 把它解析到 child 后写入 Cannon.m_button
+            // （stub.button 为空 → Cannon.m_button 空 → ServerCannon.StartSynchronising
+            // NRE，真机大炮整体失效）。编辑器 Play 另有 LayoutEditorSwitchLinkPatch
+            // .PatchCannonLink 每帧兜底，此处烘焙随场景保存，游戏包内生效。
+            if (resolvedTrigger == "Launch")
+            {
+                var cannonTargets = perSwitch[switchId];
+                for (int i = 0; i < cannonTargets.Count; i++)
+                {
+                    var cannonStub = cannonTargets[i] != null
+                        ? cannonTargets[i].GetComponent<SetupCannonStub>() : null;
+                    if (cannonStub == null || cannonStub.button == switchGo)
+                        continue;
+                    Undo.RecordObject(cannonStub, "Layout Editor Cannon Button");
+                    cannonStub.button = switchGo;
+                }
+            }
+
+            // 按钮 0.35s 自动复位（customStub，关卡集程序集）：tag 载体 + 反射组件。
+            // 接线主链路（按钮→机器）由上游 PseudoPrefabSwitchStub.triggerOnObject /
+            // objectToTrigger 承载（宿主 Setup 与游戏模组各自消费），不再烘焙
+            // 运行时 linker（原 LayoutRuntimeSwitchLink 已按上游方案废弃）。
+            // ToggleSwitch 是双态拉杆（开/关都有效），不能自动复位——跳过。
+            if (toggleSw == null)
+            {
+                var reType = FindCustomStubType(switchGo, "SwitchReenable");
+                var reComp = reType != null ? switchGo.GetComponent(reType) : null;
+                if (reType != null)
+                {
+                    if (reComp == null)
+                        reComp = Undo.AddComponent(switchGo, reType);
+                    SetStubField(reComp, "m_resetDelay", 0.35f);
+                }
+                SetCustomStubTag(switchGo, "SwitchReenable|0.35");
             }
         }
     }
@@ -1301,10 +1494,24 @@ public static class LayoutEditorStubIO
             if (!so.assetPath.Contains("/map/"))
                 continue;
             var go = stub.gameObject;
-            if (go == null || go.GetComponent<LayoutRuntimeWorldMapDressing>() != null)
+            if (go == null)
                 continue;
-            go.AddComponent<LayoutRuntimeWorldMapDressing>();
-            added++;
+            // customStub（关卡集程序集）双通道：tag 载体 + 反射组件
+            var wmdType = FindCustomStubType(go, "WorldMapDressing");
+            var wmdComp = wmdType != null ? go.GetComponent(wmdType) : null;
+            if (wmdComp == null)
+            {
+                if (wmdType != null)
+                    wmdComp = Undo.AddComponent(go, wmdType);
+                else
+                {
+                    var setName = LevelSetOfScenePath(go.scene.path);
+                    if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                        CustomStubCopyRequested(setName);
+                }
+                SetCustomStubTag(go, "WorldMapDressing|");
+                added++;
+            }
         }
         if (added > 0)
             LayoutEditorLog.Log("[LayoutEditor] 世界地图装饰展开组件烘焙：" + added + " 个伪根");
@@ -1684,7 +1891,7 @@ public static class LayoutEditorStubIO
                 !so.assetPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
             {
                 var mapped = so.name == "dlc11onion_salad"
-                    ? AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>("Assets/common03/Ingredients/dlc11/dlc11_onion_salad.asset")
+                    ? AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>("Assets/common03/food/Ingredients/dlc11/dlc11_onion_salad.asset")
                     : null;
                 if (mapped != null)
                 {
@@ -1882,30 +2089,114 @@ public static class LayoutEditorStubIO
 
     private static Type FindRandomCrateType(string setName)
     {
-        if (string.IsNullOrEmpty(setName))
+        return FindCustomStubType(setName, "RandomCrate");
+    }
+
+    /// <summary>关卡集 stub 程序集里的 CustomStub 类反射查找（FindRandomCrateType 的
+    /// 泛化版）：TimedCookingSwitch / PushablePot / SwitchReenable / WorldMapDressing
+    /// 等新组件统一走这里。程序集缺失返回 null（烘焙方负责发 CustomStubCopyRequested
+    /// 钩子 + 写 tag 载体兜底，运行时自愈）。</summary>
+    public static Type FindCustomStubType(GameObject go, string className)
+    {
+        return FindCustomStubType(LevelSetOfScenePath(go.scene.path), className);
+    }
+
+    public static Type FindCustomStubType(string setName, string className)
+    {
+        if (string.IsNullOrEmpty(setName) || string.IsNullOrEmpty(className))
             return null;
         var sb = new System.Text.StringBuilder("Stub_");
         foreach (var ch in setName)
             sb.Append(char.IsLetterOrDigit(ch) || ch == '_' ? ch : '_');
         var asmName = sb.ToString();
+        var full = "CustomStub." + className;
 
-        var t = Type.GetType("CustomStub.RandomCrate, " + asmName);
+        var t = Type.GetType(full + ", " + asmName);
         if (t != null)
             return t;
         foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
         {
             if (asm.GetName().Name != asmName)
                 continue;
-            t = asm.GetType("CustomStub.RandomCrate", false);
+            t = asm.GetType(full, false);
             if (t != null)
                 return t;
         }
         return null;
     }
 
+    /// <summary>反射写 customStub 组件字段（组件类型来自关卡集程序集，编译期不可引用）。</summary>
+    private static void SetStubField(Component c, string fieldName, object value)
+    {
+        if (c == null)
+            return;
+        var f = c.GetType().GetField(fieldName,
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        if (f == null)
+            return;
+        Undo.RecordObject(c, "Layout Editor CustomStub Field");
+        f.SetValue(c, value);
+        EditorUtility.SetDirty(c);
+    }
+
+    private static object GetStubField(Component c, string fieldName)
+    {
+        if (c == null)
+            return null;
+        var f = c.GetType().GetField(fieldName,
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        return f != null ? f.GetValue(c) : null;
+    }
+
+    /// <summary>写 tag 载体（SpecificPseudoPrefabTag.prefabTag）。customStub 的数据
+    /// 双通道之一：组件为权威，tag 供程序集缺失时往返与运行时场景自愈还原。
+    /// 单用途约定：一个对象只承载一种 customStub 标记（各类道具互斥）。
+    /// fullReplace=true 时覆盖整串（含 null→写入）。</summary>
+    private static void SetCustomStubTag(GameObject go, string tagValue)
+    {
+        if (go == null || string.IsNullOrEmpty(tagValue))
+            return;
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        if (tag == null)
+        {
+            tag = Undo.AddComponent<SpecificPseudoPrefabTag>(go);
+        }
+        else
+        {
+            Undo.RecordObject(tag, "Layout Editor CustomStub Tag");
+        }
+        tag.prefabTag = tagValue;
+        EditorUtility.SetDirty(tag);
+    }
+
+    /// <summary>清除 customStub tag 载体（值匹配任意前缀开头即清空整串——单用途约定）。
+    /// prefix 为空则清空任何非 RandomCrate 标记。</summary>
+    private static void ClearCustomStubTag(GameObject go, string prefix)
+    {
+        if (go == null)
+            return;
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        if (tag == null || string.IsNullOrEmpty(tag.prefabTag))
+            return;
+        if (tag.prefabTag.StartsWith("RandomCrate|", StringComparison.Ordinal))
+            return; // 随机箱载体不属于本流程，保留
+        if (string.IsNullOrEmpty(prefix) || tag.prefabTag.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            Undo.RecordObject(tag, "Layout Editor CustomStub Tag Clear");
+            tag.prefabTag = "";
+            EditorUtility.SetDirty(tag);
+        }
+    }
+
     /// <summary>随机箱需要但关卡集尚无 stub 程序集时发起（参数 = 关卡集名）。
     /// 解耦钩子：CustomStubAutoBake 订阅并自动拷贝母本+编译+补烘焙；无订阅者仅告警。</summary>
     public static Action<string> CustomStubCopyRequested;
+
+    /// <summary>tag 载体浮点序列化（invariant，自愈解析端同约定）。</summary>
+    private static string onSecondsString(float v)
+    {
+        return v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     /// <summary>域重载后（如 stub 程序集编译完成）自动补烘焙活动场景里的随机箱：
     /// 找到数据载体（tag 前缀 + soArray）但组件缺失、且程序集现已可用的对象，

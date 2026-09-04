@@ -67,6 +67,8 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Dispenser: "Dispenser",
   RandomDispenser: "Dispenser",
   Backpack: "Dispenser",
+  // 正式版 common03：煤炭箱（dlc07 熔炉燃料）
+  dispenser_coal_01: "Dispenser",
   dlc08_drink_machine: "Dispenser",
   dlc11_drink_dispenser: "Dispenser",
   dlc08_condiment_dispenser: "Dispenser",
@@ -87,7 +89,9 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   BlenderCup: "CookingUtensil",
   // common03 厨具变体 wrapper（右键「锅具参数/额外食材」面板与换肤参数迁移依赖此表）
   utensil_large_pot_01: "CookingUtensil",
-  utensil_dlc10_large_pot_01: "CookingUtensil",
+  // Web 火锅（commonW1 web/hotpot/，CustomStub 轨道）
+  web_utensil_large_pot_01: "CookingUtensil",
+  web_utensil_dlc10_large_pot_01: "CookingUtensil",
   utensil_roasting_tray: "CookingUtensil",
   dlc09_utensil_roasting_tray: "CookingUtensil",
   dlc02_utensil_frying_pan: "CookingUtensil",
@@ -137,6 +141,8 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   workstation_glass_return_01: "GlassReturn",
   dlc13_workstation_plate_station: "ServingStation",
   Switch: "Switch",
+  // 正式版 common03 改名：toggleswitch → ToggleSwitch（拨动开关，带 ToggleSwitchStub）
+  ToggleSwitch: "Switch",
   // DLC8 按钮（断头台/果汁机/酱料机的触发开关）按 Switch 处理
   p_dlc08_button_drinks: "Switch",
   p_dlc08_button_condiments: "Switch",
@@ -147,7 +153,12 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   // DLC13 莲花压力开关（大/小）：压力开关特殊地板，保持为物品不并入主题地板
   dlc13_lotuspressureswitch_large: "PressureSwitch",
   dlc13_lotuspressureswitch_small: "PressureSwitch",
+  dlc13_lotuspressureswitch_small_2: "PressureSwitch",
   MultiControlTerminal: "Terminal",
+  // 正式版 dlc08 加农炮多控制终端（DLR 命名）
+  DLC08_MultiControlTerminal: "Terminal",
+  // 石炉台（中世纪熔炉烤箱）：需绑定热源（workstation_furnace_01 熔炉工作台等）
+  oven_furnace_medieval: "HeatedOven",
   // 大炮（dlc08/dlc09）：右键可配 360° 自由旋转；固定小角度模式为 prefab 默认 ±45°
   dlc08_cannon: "Cannon",
   dlc09_cannon: "Cannon",
@@ -164,13 +175,45 @@ export function isLotusPressureSwitchItem(item: {
 /** 酱料机可输出的酱料（黄芥末酱 / 番茄酱，含 DLC11 换皮，逻辑一致）。 */
 /** 特殊分配器（饮料机/酱料机）按 DLC 可输出的食材（实测 bundle 组件，dlc 各自一套）：
  *  dlc08_drink_machine → 饮料1/2/3；dlc11_drink_dispenser → 橙味汽水+沙士汽水；
- *  dlc08_condiment_dispenser → 番茄酱+芥末酱；dlc11_condiment_dispenser → dlc11 番茄酱/芥末酱。 */
+ *  dlc08_condiment_dispenser → 番茄酱+芥末酱；dlc11_condiment_dispenser → dlc11 番茄酱/芥末酱。
+ *  2026-09-03 common03 正式版换名：drink01→DLC08_Drink01、ketchup→DLC08_Ketchup 等
+ *  （dlc11 酱料为 commonW1 包装，id 未变）。 */
 const DISPENSER_INGREDIENT_IDS: Record<string, Set<string>> = {
-  dlc08_drink_machine: new Set(["drink01", "drink02", "drink03"]),
-  dlc11_drink_dispenser: new Set(["orangesoda", "rootbeer"]),
-  dlc08_condiment_dispenser: new Set(["ketchup", "mustard"]),
+  dlc08_drink_machine: new Set(["DLC08_Drink01", "DLC08_Drink02", "DLC08_Drink03"]),
+  dlc11_drink_dispenser: new Set(["DLC11_OrangeSoda", "DLC11_RootBeer"]),
+  dlc08_condiment_dispenser: new Set(["DLC08_Ketchup", "DLC08_Mustard"]),
   dlc11_condiment_dispenser: new Set(["dlc11_ketchup", "dlc11_mustard"]),
 };
+
+/** 联动目标机器的**原生**监听触发名（上游设计：机器包装 prefab 自带
+ *  TriggerOnObject 翻译层，如饮料机监听 "Next" → 对 child 发 "NextDrink"，
+ *  断头台监听 "Chop"，大炮 Cannon.m_launchTrigger="Launch" prefab 默认）。
+ *  必须用原生名——旧版 switch_{id}_{N} 自定义名依赖已删除的 LayoutRuntimeSwitchLink
+ *  运行时改写监听字段，真机不再生效。返回 null = 非机器目标。 */
+export function nativeLinkTrigger(item: EditorItem): string | null {
+  const id = prefabIdFromPath(item.prefabAssetPath);
+  if (id === "workstation_guillotine_01") return "Chop";
+  if (id === "dlc08_drink_machine" || id === "dlc11_drink_dispenser"
+    || id === "dlc08_condiment_dispenser" || id === "dlc11_condiment_dispenser") return "Next";
+  if (isCannonTarget(item)) return "Launch";
+  return null;
+}
+
+/** 旧版自定义触发名（switch_{prefabId}_{N}）的联动在目标为机器时已失效
+ *  （见 nativeLinkTrigger）：载入时归一化为原生触发名（下次写回即修复场景）。 */
+export function normalizeMachineLinkTriggers(): void {
+  let fixed = 0;
+  for (const l of S.switchLinks) {
+    const target = S.items.find((i) => i.instanceId === l.targetId);
+    if (!target) continue;
+    const native = nativeLinkTrigger(target);
+    if (native && l.trigger !== native && l.trigger.startsWith("switch_")) {
+      l.trigger = native;
+      fixed++;
+    }
+  }
+  if (fixed > 0) setStatus(`已修复 ${fixed} 条旧式开关联动触发名（→ 机器原生触发名，写回后生效）`);
+}
 
 /** 该分配器允许输出的食材 id 集合（非特殊分配器返回 null = 全部食材可选）。 */
 function specialDispenserAllowedIds(item: EditorItem): Set<string> | null {
@@ -203,7 +246,7 @@ export function stubKindOf(item: EditorItem): string {
   const prefabId = prefabIdFromPath(item.prefabAssetPath);
   // 可移动火锅：stubKind 保持空（不挂 CookingUtensil stub，宿主 Setup NRE），
   // 但 UI 按锅具处理（右键「额外食材」等）。
-  if (prefabId === "utensil_large_pot_01_pushable")
+  if (prefabId === "web_utensil_large_pot_01_pushable")
     return "CookingUtensil";
   return STUB_KIND_BY_PREFAB_ID[prefabId] ?? "";
 }
@@ -247,7 +290,9 @@ export function isSwitchLinkTarget(item: EditorItem): boolean {
 /** 火锅灶台（core / dlc10 变体）：支持定时开关（开局自动循环开/关）。 */
 export function isHotpotBurnerItem(item: EditorItem): boolean {
   const id = prefabIdFromPath(item.prefabAssetPath);
-  return id === "cooking_region_floorburner" || id === "dlc10_cooking_region_floorburner";
+  return id === "cooking_region_floorburner"
+    || id === "web_cooking_region_floorburner"
+    || id === "web_dlc10_cooking_region_floorburner";
 }
 
 export function isCollisionItem(it: EditorItem): boolean {
@@ -504,6 +549,19 @@ export function stubControlsHtml(item: EditorItem): string {
       return `<div class="ctx-stub"><div class="ctx-stub-title">控制终端参数</div>
         <label class="ctx-stub-row">控制目标 <select id="ctx-tm-target" class="ctx-input">${targetOpts.join("")}</select></label>
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">选择一个场景物件作为控制终端的目标</div></div>`;
+    }
+    case "HeatedOven": {
+      const h = item.heatedOven ?? {};
+      const heatId = h.heatedStationInstanceId;
+      let heatOpts = ['<option value="">— 未绑定 —</option>'];
+      for (const i of S.items) {
+        if (i.instanceId === item.instanceId) continue;
+        if (!i.instanceId) continue;
+        heatOpts.push(`<option value="${i.instanceId}" ${heatId === i.instanceId ? "selected" : ""}>${escHtml(itemLabel(i))}</option>`);
+      }
+      return `<div class="ctx-stub"><div class="ctx-stub-title">石炉台参数</div>
+        <label class="ctx-stub-row">热源 <select id="ctx-ho-source" class="ctx-input">${heatOpts.join("")}</select></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">选择热源物件（如熔炉工作台 workstation_furnace_01）；不绑定会在写回时降级为普通道具（宿主 Setup 需要热源）</div></div>`;
     }
     case "Player": {
       return `<div class="ctx-stub"><div class="ctx-stub-title">玩家</div>
@@ -1024,13 +1082,15 @@ export function wireStubControls(item: EditorItem) {
         pushHistory();
         const trigInput = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
         let trigger = trigInput?.value.trim() || "";
-        // 未自定义时：目标为大炮 → Launch（对应 ServerCannon.m_launchTrigger）；
+        // 未自定义时：机器目标一律用原生触发名（断头台 Chop、饮料机/酱料机 Next、
+        // 大炮 Launch——机器包装自带 TriggerOnObject 翻译层，自定义名真机不响应）；
         // 已有联动 → 沿用其触发名（一个开关一个共享触发名，与运行时一致）；
         // 否则按约定命名 switch_{目标prefabId}_1
         if (!trigger || trigger === "Switch") {
           const target = S.items.find((i) => i.instanceId === tid);
-          if (target && isCannonTarget(target)) {
-            trigger = "Launch";
+          const native = target ? nativeLinkTrigger(target) : null;
+          if (native) {
+            trigger = native;
           } else if (myLinks()[0]?.trigger) {
             trigger = myLinks()[0]!.trigger;
           } else {
@@ -1084,6 +1144,17 @@ export function wireStubControls(item: EditorItem) {
         item.terminal.pilotableObjectInstanceId = (e.target as HTMLSelectElement).value;
         draw();
         setStatus("已更新控制终端目标（写回后生效）");
+      });
+      break;
+    }
+    case "HeatedOven": {
+      num("ctx-ho-source")?.addEventListener("change", (e) => {
+        pushHistory();
+        item.stubKind = "HeatedOven";
+        if (!item.heatedOven) item.heatedOven = {};
+        item.heatedOven.heatedStationInstanceId = (e.target as HTMLSelectElement).value;
+        draw();
+        setStatus("已更新石炉台热源（写回后生效）");
       });
       break;
     }

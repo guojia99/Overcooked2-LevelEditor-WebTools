@@ -35,6 +35,43 @@ public static class LayoutEditorSetExporter
     private static string _zipFileName = "";
     private static string _zipAbsPath = "";
     private static int _fileCount;
+    /** 本趟导出是否有场景用到 CustomStub（决定 zip 是否携带 runtime bundle）。 */
+    private static bool _usesCustomStub;
+
+    /// <summary>CustomStub tag 载体前缀（SpecificPseudoPrefabTag.prefabTag）。
+    ///  与 CustomStub/EntryPoint.HealObject + loader 的 RandomCrate 解析保持同步；
+    ///  新增 stub 类型时此处必须补前缀。</summary>
+    private static readonly string[] CustomStubTagPrefixes =
+    {
+        "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|"
+    };
+
+    /// <summary>扫描当前打开的场景是否用到 CustomStub：tag 载体（含 prefab 自带的
+    ///  RandomCrate|）或命名空间 CustomStub 的组件（Stub_<set> 程序集，双通道兜底）。
+    ///  导出 prepare 阶段逐场景调用（场景此时已打开）。</summary>
+    private static bool ActiveSceneUsesCustomStub()
+    {
+        foreach (var tag in UnityEngine.Object.FindObjectsOfType<LevelEditorStub.SpecificPseudoPrefabTag>())
+        {
+            var t = tag.prefabTag;
+            if (string.IsNullOrEmpty(t))
+                continue;
+            for (int i = 0; i < CustomStubTagPrefixes.Length; i++)
+            {
+                if (t.StartsWith(CustomStubTagPrefixes[i], StringComparison.Ordinal))
+                    return true;
+            }
+        }
+        foreach (var mb in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
+        {
+            if (mb == null)
+                continue; // missing script
+            var ns = mb.GetType().Namespace;
+            if (ns == "CustomStub")
+                return true;
+        }
+        return false;
+    }
 
     public static string ExportRootAbsPath()
     {
@@ -85,6 +122,7 @@ public static class LayoutEditorSetExporter
             _zipFileName = "";
             _zipAbsPath = "";
             _fileCount = 0;
+            _usesCustomStub = false;
         }
         EditorApplication.delayCall += RunExport;
         return null;
@@ -173,6 +211,12 @@ public static class LayoutEditorSetExporter
                 "准备场景 " + i + "/" + scenes.Count + "…", (float)i / (scenes.Count + 1));
             var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             LayoutEditorPseudoReload.EnsurePrepareForBuilding();
+            if (!_usesCustomStub && ActiveSceneUsesCustomStub())
+            {
+                _usesCustomStub = true;
+                Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件）：" + scenePath
+                    + "，本集 zip 将携带 runtime bundle");
+            }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
         }
@@ -216,6 +260,15 @@ public static class LayoutEditorSetExporter
         // ---- 5. zip：打包含顶层 setName/ 文件夹的 zip ----
         var payloads = new List<string>(Directory.GetFiles(absOutDir));
         payloads.RemoveAll(HasJunkExtension);
+        // CustomStub 按需携带：本集无场景使用 tag/组件时，zip 不含 runtime bundle
+        // （loader 扫描不到 runtime 自然跳过，不注入 CustomStub 程序集）。
+        if (!_usesCustomStub)
+        {
+            int removed = payloads.RemoveAll(p =>
+                string.Equals(Path.GetFileName(p), "runtime", StringComparison.OrdinalIgnoreCase));
+            if (removed > 0)
+                Debug.Log("[SetExporter] 本集未使用 CustomStub 道具，zip 不携带 runtime bundle");
+        }
         if (payloads.Count == 0)
             throw new Exception("清理后没有可打包的 bundle 文件。");
         if (File.Exists(absOutDir + "/info_" + setName) == false)

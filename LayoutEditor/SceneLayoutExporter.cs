@@ -138,7 +138,9 @@ public static class SceneLayoutExporter
 
             // Temp-loaded bundle content under a PseudoPrefab placeholder moves with
             // the placeholder and must not be exported as a scene light.
-            if (go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>() != null)
+            // 2026-09-03：防线泛化到 Stub 基类——新式 SetupCustomPrefab 家族
+            // （dlc08_cannon 等）的 Setup 在编辑模式实例化的模型子树同样要跳过。
+            if (go.GetComponentInParent<LevelEditorStub.Stub>() != null)
                 continue;
 
             var light = go.GetComponent<Light>();
@@ -183,9 +185,27 @@ public static class SceneLayoutExporter
             if (go == null)
                 continue;
             var sw = go.GetComponent<LevelEditorStub.PseudoPrefabSwitchStub>();
-            if (sw == null || sw.objectToTrigger == null || sw.objectToTrigger.Length == 0)
+            // ToggleSwitch（拉杆）走 PseudoPrefabToggleSwitchStub，同款字段。
+            var toggleSw = go.GetComponent<LevelEditorStub.PseudoPrefabToggleSwitchStub>();
+            GameObject[] targets;
+            string triggerName;
+            if (sw != null)
+            {
+                targets = sw.objectToTrigger;
+                triggerName = sw.triggerOnObject;
+            }
+            else if (toggleSw != null)
+            {
+                targets = toggleSw.objectToTrigger;
+                triggerName = toggleSw.triggerOnObject;
+            }
+            else
+            {
                 continue;
-            foreach (var target in sw.objectToTrigger)
+            }
+            if (targets == null || targets.Length == 0)
+                continue;
+            foreach (var target in targets)
             {
                 if (target == null)
                     continue;
@@ -193,7 +213,7 @@ public static class SceneLayoutExporter
                 {
                     switchId = item.instanceId,
                     targetId = "u:" + target.GetInstanceID(),
-                    trigger = sw.triggerOnObject ?? ""
+                    trigger = triggerName ?? ""
                 });
             }
         }
@@ -258,7 +278,11 @@ public static class SceneLayoutExporter
             // placeholder: it moves with the placeholder and must not appear
             // as a separate item. The placeholder root itself carries the
             // stub, so the check must exclude the GameObject itself.
-            var stub = go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>();
+            // 2026-09-03：泛化到 Stub 基类（PseudoPrefabStub 与 SetupCannonStub 等
+            // SetupCustomPrefabStub 家族的共同基类）——否则新式炮/终端等在编辑模式
+            // 实例化的子树（RotatingPart/ModelParent/Target/PFX…）会被枚举成
+            // 独立物品（s_test7 大炮 ×16 事故实证）。
+            var stub = go.GetComponentInParent<LevelEditorStub.Stub>();
             if (stub != null && stub.gameObject != go)
                 continue;
 
@@ -365,7 +389,8 @@ public static class SceneLayoutExporter
                     continue;
 
                 // Skip PseudoPrefab-spawned temp content (see CollectUnderTransform).
-                var stub = go.GetComponentInParent<LevelEditorStub.PseudoPrefabStub>();
+                // 2026-09-03：泛化到 Stub 基类（同上，覆盖 SetupCustomPrefab 家族）。
+                var stub = go.GetComponentInParent<LevelEditorStub.Stub>();
                 if (stub != null && stub.gameObject != go)
                     continue;
 

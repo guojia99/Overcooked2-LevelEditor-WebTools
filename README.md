@@ -2,8 +2,6 @@
 
 - 作者： 嘉
 
-
-
 ![base_bg.png](layout-editor/web/public/base_bg.png)
 
 > - 起因是因为Unity2017界面不好用，所以就研发了这么一个工具。
@@ -23,58 +21,13 @@
 1. 将本仓库下载到你的本地
 - https://github.com/guojia99/Overcooked2-LevelEditor-WebTools
 - 或者在QQ群 1091785437 获取
-2. 将`LayoutEditor` 放到`../Overcooked2-LevelEditor-20260804/Assets/Editor`中
-![img_2.png](img/img_2.png)
-3. 将`layout-editor` 放到`../Overcooked2-LevelEditor-20260804/` 目录下即可
-![img_1.png](img/img_1.png)
-4. 点击菜单`Tool`菜单Open Bridge 即可使用
-   ![img.png](img/img.png)
-5. 如果你使用了较新版本, 可能会有`Assembly-CSharp-Patch` 和 `common03`文件夹，这两个文件夹按照GUA的项目指引放在对应的目录下即可。
+2. 将`LayoutEditor` 放到`../Overcooked2-LevelEditor/Assets/Editor`中
+3. 将`layout-editor` 放到`../Overcooked2-LevelEditor/` 目录下即可
+4. 将`commonW1`和`commonW1.meta` 放到`../Overcooked2-LevelEditor/Assets/`目录
 
 
-
-
-   
 ### 功能清单
-- [x] 布局编辑器
-  - [x] 地板编辑（实心 / 染色 / 图片地板 / 木筏 / 主题地板，材质选择，拖角缩放）
-  - [x] 物品编辑（调色板拖放、旋转 / 缩放、微移、世界坐标输入）
-  - [x] 装饰编辑（独立装饰层）
-  - [x] 背景编辑（主题切换：空洞 / 水 / 天空 / 沙地 / 外星黏液，背景地板）
-  - [x] 物品双向绑定与参数设定（食材箱、生成器、锅具、传送门、开关、终端、上菜台等）
-  - [x] 锅具堆叠 / Z 轴控制
-  - [x] 多选 / 框选 / 复制粘贴 / 克隆
-  - [x] 撤销 / 重做
-  - [x] 一键同步布局
-- [x] 菜单编辑器
-  - [x] 食材校验（所需食材分析、一键补齐）
-  - [x] 锅具校验（所需锅具推断、一键补齐）
-  - [x] 自动分配中间产物
-  - [x] 锅具参数批量同步
-- [x] 关卡编辑器
-  - [x] 关卡集管理（新建 / 编辑 / 删除）
-  - [x] 快捷创建关卡（自动生成 1P-4P 配置与模板场景）
-  - [x] 关卡信息便捷修改
-  - [x] 分数配置（1P-4P 星级与节奏参数）
-  - [x] AI 定分（基于官方剧情关卡建模）
-  - [x] 关卡截图上传
-  - [x] 音频配置（BGM / 音效集 / 氛围音 / 资源包依赖分析）
-  - [x] 关卡汇总页与图片导出
-- [x] 自定义菜谱管理
-  - [x] 菜谱 CRUD（组合 / 烹饪 / 搅拌三类）
-  - [x] 分类管理
-  - [x] 菜谱图标上传
-  - [x] FBX 模型 + 贴图上传
-  - [x] 3D 模型在线预览
-  - [x] FBX 贴图引用自动改名
-- [x] 菜谱清单列表
-- [x] 功能清单页（web 内置，随代码同步更新）
-- [x] 操作手册（web 内置，按功能模块图文详解：锅具图鉴 / 道具说明 / 食材图鉴）
-- [ ] 自定义音乐包管理
-- [x] Unity 双向桥接（全量 / 分层写回，自动重载场景）
-- [x] 支持上传 2D 贴图与自定义素材
-- [x] 支持上传 3D 模型与贴图
-- [x] 快捷键支持
+- 请进入web页面查看
 
 ### 报告bug
 - 你可以通过github 提交issue报告bug

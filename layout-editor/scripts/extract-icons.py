@@ -231,12 +231,13 @@ def main():
     rec_curated = load_json("recipe-icons.json", {})
     cat_curated = load_json("catalog-icons.json", {})
 
-    ing_ids = collect_ids("common01/food/Ingredients") + collect_ids("common02/food/Ingredients") + collect_ids("common03/Ingredients")
+    ing_ids = collect_ids("common01/food/Ingredients") + collect_ids("common02/food/Ingredients") + collect_ids("common03/food/Ingredients") + collect_ids("commonW1/pseudo_prefab_so/dlc11/food")
     rec_ids = (
         collect_ids("common01/food/Recipes")
         + collect_ids("common02/food/Recipes")
         + collect_ids("common01/food/CustomRecipes")
-        + collect_ids("common03/Recipes")
+        + collect_ids("common03/food/Recipes")
+        + collect_ids("commonW1/pseudo_prefab_so/dlc11/food")
     )
 
     # ---- AssetBundle sprites ----

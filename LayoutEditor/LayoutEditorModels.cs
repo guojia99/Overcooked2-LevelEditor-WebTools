@@ -272,6 +272,16 @@ public class LayoutTerminalStubDto
     public string pilotableObjectInstanceId;
 }
 
+/// <summary>石炉台（oven_furnace_medieval）热源绑定：上游
+/// PseudoPrefabHeatedOvenStub.heatedStation 指向热源伪根（如 workstation_furnace_01），
+/// 宿主 LateSetup 解析 child 的 HeatedStation 写入 HeatedCookingStation.m_heatSource。</summary>
+[Serializable]
+public class LayoutHeatedOvenStubDto
+{
+    /** "u:<instanceID>" of the heat-source GameObject, or empty. */
+    public string heatedStationInstanceId;
+}
+
 /// <summary>大炮参数（dlc08/dlc09 cannon）。
 /// freeRotation=true → PilotRotation 限位写为 ±180°（360° 自由旋转）；
 /// 缺省/未配置 = 不改动 prefab 自带限位（固定小角度 ±45°）。</summary>
@@ -333,7 +343,7 @@ public class LayoutItemDto
     public bool walkable;
     /** 空气墙（隐形碰撞块）：应用为 1×1×1.132 的 BoxCollider（1.132 为魔法数，导出据此识别），不生成 Col_Floor。 */
     public bool airWall;
-    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | CannonSwitch | PressureSwitch | Terminal | empty */
+    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | CannonSwitch | PressureSwitch | Terminal | HeatedOven | empty */
     public string stubKind;
     /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
     public string pseudoPrefabGuid;
@@ -353,6 +363,8 @@ public class LayoutItemDto
     public LayoutSwitchStubDto switchStub;
     public LayoutPressureSwitchStubDto pressureSwitch;
     public LayoutTerminalStubDto terminal;
+    /** 石炉台热源绑定（oven_furnace_medieval，上游 PseudoPrefabHeatedOvenStub）。 */
+    public LayoutHeatedOvenStubDto heatedOven;
     public LayoutMeshWithMaterialStubDto meshWithMaterial;
     public LayoutSOArrayStubDto soArray;
     /** 火锅灶台定时开关（cooking_region_floorburner / dlc10 变体）。 */

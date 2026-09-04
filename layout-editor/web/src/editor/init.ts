@@ -430,6 +430,11 @@ export async function init() {
         location.hash = "#/guide";
         location.reload();
       });
+    } else if (target === "changelog") {
+      confirmLeaveIfDirty(() => {
+        location.hash = "#/changelog";
+        location.reload();
+      });
     }
   });
 

@@ -44,6 +44,7 @@ static class LayoutEditorItemSwitcherPatch
             // 兜底超时：PseudoPrefabManager 缺失/初始化失败时不至于每帧空转
             _deadline = EditorApplication.timeSinceStartup + 10.0;
             EditorApplication.update += Tick;
+            ScheduleSyncProbe();
         }
         else if (state == PlayModeStateChange.EnteredEditMode)
         {
@@ -163,6 +164,17 @@ static class LayoutEditorItemSwitcherPatch
             }
         }
 
+        // 机器视觉槽位（酱料机瓶子动画 Condiment1/2、饮料机出口 iDrinks[]）按列表
+        // 序号硬接到 bundle 原生顺序（ClientCondiment/DrinksMachineCosmeticDecisions
+        // .OnItemSwitched 按下标 SetTrigger）——自定义列表若不保持原生序，会出现
+        // 「选 A 亮 B 瓶」的视觉对调（2026-09-04 酱料机芥末/番茄图标对调事故：
+        // 自动填充按菜谱遍历序写入 [番茄, 芥末]，原生序 = [芥末, 番茄]）。
+        // 修复：按 switcher 现存 bundle 数组的元素顺序重排新列表（引用匹配——
+        // 两边均自同一已加载 bundle 实例解析，引用相等成立），原数组没有的
+        // 新元素按 soArray 顺序追加尾部。循环集合不变，仅顺序归一。
+        prefabs = SortByOriginalOrder(switcher != null ? switcher.m_itemPrefabs : null, prefabs);
+        nodes = SortByOriginalOrder(placementSwitcher != null ? placementSwitcher.m_ingredients : null, nodes);
+
         // 主流形态：PickupItemSwitcher（开关触发 → 循环切换 PickupItemSpawner 输出）
         if (switcher != null && prefabs.Count > 0)
         {
@@ -172,6 +184,8 @@ static class LayoutEditorItemSwitcherPatch
             var spawner = child.GetComponent<PickupItemSpawner>();
             if (spawner != null)
                 spawner.m_itemPrefab = prefabs[0];
+            Debug.Log("[ItemSwitcher] Pickup 写入: " + child.name + " 列表=" + prefabs.Count
+                + " 监听=" + switcher.m_switchTrigger);
         }
 
         // 变体形态：PlacementItemSwitcher（放置时加料；m_ingredients 是 IngredientOrderNode）
@@ -180,7 +194,43 @@ static class LayoutEditorItemSwitcherPatch
             placementSwitcher.m_ingredients = nodes.ToArray();
             if (string.IsNullOrEmpty(placementSwitcher.m_switchTrigger))
                 placementSwitcher.m_switchTrigger = "Switch";
+            // 初始酱料节点与列表序号 0 对齐（dlc11 宿主 Setup 按用户序写了 nodes[0]，
+            // 此处统一回原生序首位，保证初始瓶位/出料一致）
+            var ipc = child.GetComponent<IngredientPropertiesComponent>();
+            if (ipc != null)
+                ipc.SetIngredientOrderNode(nodes[0]);
+            var names = new System.Text.StringBuilder();
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (i > 0) names.Append(",");
+                names.Append(nodes[i] != null ? nodes[i].name : "null");
+            }
+            Debug.Log("[ItemSwitcher] Placement 写入: " + child.name + " 列表=" + nodes.Count
+                + " [" + names + "] 监听=" + placementSwitcher.m_switchTrigger);
         }
+    }
+
+    /// <summary>把 fresh 列表按 original（bundle 原生数组）的元素顺序重排；
+    /// original 中未入选的跳过，fresh 中的新元素追加尾部。</summary>
+    private static List<T> SortByOriginalOrder<T>(T[] original, List<T> fresh) where T : UnityEngine.Object
+    {
+        if (original == null || original.Length == 0 || fresh == null || fresh.Count <= 1)
+            return fresh;
+        var remaining = new List<T>(fresh);
+        var sorted = new List<T>();
+        for (int i = 0; i < original.Length; i++)
+        {
+            if (original[i] == null)
+                continue;
+            int idx = remaining.IndexOf(original[i]);
+            if (idx >= 0)
+            {
+                sorted.Add(original[i]);
+                remaining.RemoveAt(idx);
+            }
+        }
+        sorted.AddRange(remaining);
+        return sorted;
     }
 
     /// <summary>直读 bundle 资源（绕过 PseudoPrefabManager.LoadAsset 的 DeInit/Init 副作用）。</summary>
@@ -190,5 +240,94 @@ static class LayoutEditorItemSwitcherPatch
         if (bundle == null)
             return null;
         return bundle.LoadAsset<T>(so.assetPath);
+    }
+
+    // ============ 链路诊断（2026-09-04 酱料机永远芥末酱事故）============
+    // 同步完成后一次性 dump 特殊分配器全链路状态：wrapper 触发翻译层配置、
+    // child 切换器监听名/列表长度、两侧同步器是否附着。断在哪一环日志直读。
+
+    private static bool s_diagRan;
+
+    private static void ScheduleSyncProbe()
+    {
+        if (s_diagRan)
+            return;
+        s_diagRan = true;
+        // 同步握手在场景加载后数秒（AsyncScanEntities → Link），双延迟探测
+        EditorApplication.delayCall += delegate
+        {
+            EditorApplication.update += ProbeWhenSynced;
+        };
+    }
+
+    private static void ProbeWhenSynced()
+    {
+        if (!Application.isPlaying)
+        {
+            EditorApplication.update -= ProbeWhenSynced;
+            return;
+        }
+        try
+        {
+            if (!MultiplayerController.IsSynchronisationActive())
+                return; // 未握手完，下一帧再试（无超时——sync 由 flow-probe 另行监控）
+        }
+        catch (Exception)
+        {
+            return;
+        }
+        EditorApplication.update -= ProbeWhenSynced;
+        DumpDispenserChain();
+    }
+
+    private static void DumpDispenserChain()
+    {
+        foreach (var stub in UnityEngine.Object.FindObjectsOfType<PseudoPrefabStub>())
+        {
+            try
+            {
+                var pseudoSO = stub.pseudoPrefabSO;
+                if (pseudoSO == null || !IsSpecialDispenser(pseudoSO.prefabName))
+                    continue;
+                var wrapper = stub.gameObject;
+                var pseudo = stub.GetComponent<PseudoPrefab>();
+                var child = pseudo != null ? pseudo.childGameObject : null;
+
+                var sb = new System.Text.StringBuilder();
+                sb.Append("[ItemSwitcherDiag] ").Append(pseudoSO.prefabName)
+                  .Append(" | child=").Append(child != null ? child.name : "未生成");
+                if (child != null)
+                {
+                    var pickup = child.GetComponent<PickupItemSwitcher>();
+                    var placement = child.GetComponent<PlacementItemSwitcher>();
+                    if (pickup != null)
+                        sb.Append(" | Pickup监听=").Append(pickup.m_switchTrigger)
+                          .Append(" 列表=").Append(pickup.m_itemPrefabs != null ? pickup.m_itemPrefabs.Length : -1);
+                    if (placement != null)
+                        sb.Append(" | Placement监听=").Append(placement.m_switchTrigger)
+                          .Append(" 列表=").Append(placement.m_ingredients != null ? placement.m_ingredients.Length : -1);
+                    sb.Append(" | child同步器: ServerPlacement=")
+                      .Append(child.GetComponent("ServerPlacementItemSwitcher") != null)
+                      .Append(" ServerPickup=")
+                      .Append(child.GetComponent("ServerPickupItemSwitcher") != null);
+                }
+                foreach (var to in wrapper.GetComponents<TriggerOnObject>())
+                {
+                    sb.Append(" | wrapper翻译层: ").Append(to.m_trigger).Append("→")
+                      .Append(to.m_triggerToFire).Append(" 目标=")
+                      .Append(to.m_targetObject != null ? to.m_targetObject.name : "空");
+                }
+                sb.Append(" | wrapper同步器: ServerTriggerOnObject=")
+                  .Append(wrapper.GetComponent("ServerTriggerOnObject") != null);
+                var soArr = wrapper.GetComponent<PseudoPrefabSOArray>();
+                sb.Append(" | soArray=")
+                  .Append(soArr != null && soArr.pseudoPrefabSOs != null ? soArr.pseudoPrefabSOs.Length : 0);
+                Debug.Log(sb.ToString());
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[ItemSwitcherDiag] 失败: " + ex.Message);
+            }
+        }
     }
 }

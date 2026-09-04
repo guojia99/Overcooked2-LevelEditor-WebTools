@@ -1,0 +1,5 @@
+is_global = true
+build_property.RootNamespace = OC2LevelRuntimeLoader
+build_property.ProjectDir = /Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/BepInExPlugins/OC2LevelRuntimeLoader/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 

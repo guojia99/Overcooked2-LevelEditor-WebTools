@@ -12,7 +12,7 @@ using UnityEngine;
 public static class LayoutEditorRecipeKnowledge
 {
     /// <summary>Bumped together with SCHEMA_VERSION in build-catalog.mjs.</summary>
-    public const int BridgeSchemaVersion = 3;
+    public const int BridgeSchemaVersion = 5;
 
     /// <summary>面粉/蛋家族（与前端 recipeKnowledge.ts 一致）：面粉系菜谱
     ///  （蛋糕/松饼/月饼/派/布丁，含 dlc09/dlc13 变体）的搅拌分组判定用。</summary>
@@ -40,7 +40,7 @@ public static class LayoutEditorRecipeKnowledge
         { "KebabSkewer", new[] { "Barbeque", "Skewer" } },
         { "ToastingFork", new[] { "Campfire", "ToastingFork" } },
         { "MixingBowl", new[] { "Mixer", "MixerBowl" } },
-        { "HotPot", new[] { "cooking_region_floorburner", "utensil_large_pot_01" } },
+        { "HotPot", new[] { "web_cooking_region_floorburner", "web_utensil_large_pot_01" } },
         { "RoastingTray", new[] { "Oven", "utensil_roasting_tray" } },
         { "OvenCakeTin", new[] { "Oven", "utensil_cake_tin_01" } },
     };
@@ -125,8 +125,9 @@ public static class LayoutEditorRecipeKnowledge
         //    普通食材并入主框，自身步骤作主图标（煎锅）；仅搅拌子菜谱 → 搅拌框 + 自身步骤标记；
         //    全生食材组成（如 Fried2_Shrimp）→ 自身烹饪步骤包裹全部（单框）。
         // 纯叶食材组成（如汤的 TomatoSO/EggSO）不是子菜谱，不应走分步展开。
+        // 布丁（pudding）组成只有面糊中间产物，展示与蛋糕一致（搅拌 + 烤箱），走面粉分支。
         if (recipe != null && recipe.compositionIds != null && recipe.compositionIds.Length > 0 &&
-            !recipe.intermediate)
+            !recipe.intermediate && type != "pudding")
         {
             var byId = new Dictionary<string, RecipeEntryDto>(StringComparer.Ordinal);
             if (allRecipes != null)
@@ -347,6 +348,8 @@ public static class LayoutEditorRecipeKnowledge
         }
 
         bool flourBranch = false;
+        // 蛋糕/布丁同族：搅拌 + 烤箱（布丁自身步骤 Mixer 是搅拌+烤箱一体工作站）
+        var cakeLike = type == "cake" || type == "pudding";
         if (type == "sushi")
         {
             foreach (var ing in ingredients)
@@ -374,9 +377,10 @@ public static class LayoutEditorRecipeKnowledge
         else if (type == "hotdog")
         {
             // 只有热狗肠需要煮；洋葱单独煎；面包/芥末/番茄酱无需烹饪
+            // （含 common03 正式版新 id：DLC08_Frankfurter 等）
             foreach (var ing in ingredients)
             {
-                if (ing == "frankfurter" || ing == "dlc11_frankfurter")
+                if (ing == "frankfurter" || ing == "dlc11_frankfurter" || ing == "DLC08_Frankfurter")
                     prep[ing] = "Pot";
                 else if (ing == "dlc08_onion" || ing == "dlc11_onion")
                     prep[ing] = "FryingPan";
@@ -389,7 +393,7 @@ public static class LayoutEditorRecipeKnowledge
             // 全程只有牛奶+巧克力需要煮；奶油/棉花糖是单独的（无需烹饪）
             foreach (var ing in ingredients)
             {
-                if (ing == "milk" || ing == "dlc09_milk" || ing == "dlc03_chocolate" || ing == "dlc09_chocolate")
+                if (ing == "milk" || ing == "dlc09_milk" || ing == "DLC03_Milk" || ing == "dlc03_chocolate" || ing == "dlc09_chocolate" || ing == "DLC03_Chocolate")
                     prep[ing] = "Pot";
                 else
                     prep[ing] = "";
@@ -400,7 +404,7 @@ public static class LayoutEditorRecipeKnowledge
             // 冰淇淋汽水：汽水单独（无需搅拌）；牛奶/口味/冰块进搅拌机（Blender）
             foreach (var ing in ingredients)
             {
-                if (ing == "orangesoda" || ing == "rootbeer")
+                if (ing == "orangesoda" || ing == "rootbeer" || ing == "DLC11_OrangeSoda" || ing == "DLC11_RootBeer")
                     prep[ing] = "";
                 else
                     prep[ing] = "Blender";
@@ -413,12 +417,12 @@ public static class LayoutEditorRecipeKnowledge
             foreach (var ing in ingredients)
                 prep[ing] = "DeepFatFryer";
         }
-        else if (type == "cake" || (ContainsAnyIngredient(ingredients, FlourIngredients) && finalStep != "Mixer" && finalStep != "MixingBowl"))
+        else if (cakeLike || (ContainsAnyIngredient(ingredients, FlourIngredients) && finalStep != "Mixer" && finalStep != "MixingBowl"))
         {
-            // 蛋糕：搅拌 + 烤箱；面糊/面团（松饼/饺子/月饼）：搅拌 + 最终锅具。
+            // 蛋糕/布丁：搅拌 + 烤箱；面糊/面团（松饼/饺子/月饼）：搅拌 + 最终锅具。
             // 面粉/蛋判定用全家族集合（FlourSO/dlc09/dlc13 变体）。
-            flourBranch = type != "cake";
-            var cookStep = type == "cake" ? "OvenTray" : (IsCookStep(finalStep) ? finalStep : "");
+            flourBranch = !cakeLike;
+            var cookStep = cakeLike ? "OvenTray" : (IsCookStep(finalStep) ? finalStep : "");
             foreach (var ing in ingredients)
             {
                 if (prep.ContainsKey(ing))

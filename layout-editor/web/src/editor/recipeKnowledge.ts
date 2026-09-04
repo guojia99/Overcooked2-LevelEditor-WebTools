@@ -16,7 +16,7 @@ export const STEP_UTENSILS: Record<string, string[]> = {
   KebabSkewer: ["Barbeque", "Skewer"],
   ToastingFork: ["Campfire", "ToastingFork"],
   MixingBowl: ["Mixer", "MixerBowl"],
-  HotPot: ["cooking_region_floorburner", "utensil_large_pot_01"],
+  HotPot: ["web_cooking_region_floorburner", "web_utensil_large_pot_01"],
   RoastingTray: ["Oven", "utensil_roasting_tray"],
   OvenCakeTin: ["Oven", "utensil_cake_tin_01"],
 };
@@ -70,8 +70,8 @@ export const CREAM_SPRAY_IDS = ["utensil_ingredient_spray_01", "dlc09_utensil_in
 /** 自动填充默认放置的奶油喷罐：DLC3 版（dlc09 版不自动填充，且其 m_OrderPrefab
  *  原版数据即损坏——由 LayoutEditorIngredientSprayPatch 在 Play 期补齐的是 dlc03 版路径）。 */
 export const CREAM_SPRAY_DEFAULT_ID = "utensil_ingredient_spray_01";
-/** 奶油喷罐可喷出的发泡奶油食材 id。 */
-export const CREAM_INGREDIENT_IDS = ["whippedcream", "dlc09_whippedcream"];
+/** 奶油喷罐可喷出的发泡奶油食材 id（含 common03 正式版新 id DLC03_WhippedCream）。 */
+export const CREAM_INGREDIENT_IDS = ["whippedcream", "dlc09_whippedcream", "DLC03_WhippedCream"];
 
 /** 识别需要奶油喷罐的菜谱：仅按「食材含发泡奶油」判定。
  *  冰淇淋汽水/冰淇淋的奶+冰+口味走搅拌机（Blender），不需要喷罐。 */
@@ -82,13 +82,14 @@ export function recipeNeedsCreamSpray(r: RecipeEntry): boolean {
 
 /** 汽水机（DLC11 饮料机）道具 id：冰淇淋汽水的汽水从这里取（放置形态 + 开关联动循环切换）。 */
 export const SODA_MACHINE_IDS = ["dlc11_drink_dispenser"];
-/** 汽水机可输出的汽水食材 id（node 型，无实体 prefab，不能进食材箱）。 */
-export const SODA_MACHINE_INGREDIENT_IDS = ["orangesoda", "rootbeer"];
+/** 汽水机可输出的汽水食材 id（node 型，无实体 prefab，不能进食材箱）。
+ *  含 common03 正式版新 id（DLC11_OrangeSoda/DLC11_RootBeer）。 */
+export const SODA_MACHINE_INGREDIENT_IDS = ["orangesoda", "rootbeer", "DLC11_OrangeSoda", "DLC11_RootBeer"];
 
 /** 饮料机（DLC8）道具 id：套餐的饮料从这里取（放置形态 + 开关联动循环切换）。 */
 export const DRINK_MACHINE_IDS = ["dlc08_drink_machine"];
-/** 饮料机可输出的饮料食材 id（drink01/02/03）。 */
-export const DRINK_MACHINE_INGREDIENT_IDS = ["drink01", "drink02", "drink03"];
+/** 饮料机可输出的饮料食材 id（含 common03 正式版新 id DLC08_Drink01/02/03）。 */
+export const DRINK_MACHINE_INGREDIENT_IDS = ["drink01", "drink02", "drink03", "DLC08_Drink01", "DLC08_Drink02", "DLC08_Drink03"];
 
 /** 识别需要汽水机的菜谱：食材含汽水（橙味汽水/沙士汽水）。
  *  汽水是 node 型食材，运行时只能由汽水机产出 —— 不建食材箱。 */
@@ -99,6 +100,22 @@ export function recipeNeedsSodaMachine(r: RecipeEntry): boolean {
 /** 识别需要饮料机（DLC8）的菜谱：食材含饮料（套餐）。 */
 export function recipeNeedsDrinkMachine(r: RecipeEntry): boolean {
   return (r.ingredients ?? []).some((i) => DRINK_MACHINE_INGREDIENT_IDS.includes(i));
+}
+
+/** 酱料机道具 id：dlc08 马戏团酱料机 + dlc11 夏季换皮（各自只出本 dlc 酱料）。 */
+export const CONDIMENT_MACHINE_IDS = ["dlc08_condiment_dispenser", "dlc11_condiment_dispenser"];
+/** 酱料食材 id（node 型，只能由酱料机产出）：dlc08 番茄酱/芥末酱 + dlc11 换皮
+ *  （含 common03 正式版新 id DLC08_Ketchup/DLC08_Mustard）。 */
+export const CONDIMENT_MACHINE_INGREDIENT_IDS = ["ketchup", "mustard", "DLC08_Ketchup", "DLC08_Mustard", "dlc11_ketchup", "dlc11_mustard"];
+/** 酱料食材 → 所属酱料机 prefab id（dlc11 换皮酱料只认 dlc11 机器，其余归 dlc08）。 */
+export function condimentMachineForIngredient(id: string): string | null {
+  if (id === "dlc11_ketchup" || id === "dlc11_mustard") return "dlc11_condiment_dispenser";
+  if (CONDIMENT_MACHINE_INGREDIENT_IDS.includes(id)) return "dlc08_condiment_dispenser";
+  return null;
+}
+/** 识别需要酱料机的菜谱：食材含酱料（热狗的番茄酱/芥末酱等，node 型，只能酱料机产出）。 */
+export function recipeNeedsCondimentMachine(r: RecipeEntry): boolean {
+  return (r.ingredients ?? []).some((i) => CONDIMENT_MACHINE_INGREDIENT_IDS.includes(i));
 }
 
 export function recipeNeedsMug(r: RecipeEntry): boolean {
@@ -118,12 +135,14 @@ export function recipeNeedsGlass(r: RecipeEntry): boolean {
 }
 
 /** 每族「重复 DLC 换皮」默认屏蔽的来源组：只保留族内首选 DLC 一版，避免菜单里出现
- *  同一道菜的多个 DLC 皮肤（换皮菜品规格一致，重复上架无意义）。火锅的厨房道具
- *  （地炉/大锅）默认是 DLC10 版，因此保留 dlc10 菜谱、屏蔽 dlc04。 */
+ *  同一道菜的多个 DLC 皮肤（换皮菜品规格一致，重复上架无意义）。
+ *  2026-09-03 common03 正式版换名后各族的唯一家：火锅=dlc04（旧 dlc10 资产已消失，
+ *  原「保留 dlc10 屏蔽 dlc04」会把火锅整族屏蔽——已修正）、热可可=dlc03、
+ *  烤肉=dlc07、布丁=dlc03、果盘=dlc04、热狗=dlc08；屏蔽项留作对应旧组资产回归时使用。 */
 export const DUPLICATE_DLC_BLOCK: Record<string, string[]> = {
   hotdog: ["dlc11"],
   hotchocolate: ["dlc09"],
-  hotpot: ["dlc04"],
+  hotpot: [],
   roast: ["dlc09"],
   pudding: ["dlc09"],
   fruitplatter: ["dlc13"],
@@ -139,7 +158,13 @@ export function isRecipeDlcBlocked(r: RecipeEntry): boolean {
 /** DLC 换皮/变体 → 功能等价的基础道具 id：场景里放了变体即视为具备基础功能
  *  （如放了 dlc09_oven 就算有了 Oven），供自动填充/缺失分析使用。
  *  唯一数据源见 itemVariants.ts（调色板合并与右键换肤同源）。 */
-export const FUNCTIONAL_BASE: Record<string, string> = VARIANT_TO_BASE;
+/** 功能等价 → 基础道具（设备需求归一化）。与 VARIANT_TO_BASE 分离：
+ *  可移动火锅（载具锅）与静态大锅功能等价（场景里放了任一款即视为「已有火锅」），
+ *  但它不是换肤变体——palette 需独立出卡（2026-09-03 Web 火锅双轨）。 */
+export const FUNCTIONAL_BASE: Record<string, string> = {
+  ...VARIANT_TO_BASE,
+  web_utensil_large_pot_01_pushable: "web_utensil_large_pot_01",
+};
 
 /** 把一个 prefab id 归一化为其功能基础 id（变体→基础；非变体→自身）。 */
 export function functionalBaseId(id: string): string {
@@ -207,7 +232,7 @@ export const STEP_CONTAINER: Record<string, string> = {
   Mixer: "MixerBowl",
   Blender: "BlenderCup",
   // 火锅：食材装进大锅（叠放在地面灶台上）
-  HotPot: "utensil_large_pot_01",
+  HotPot: "web_utensil_large_pot_01",
   // 烤菜：食材装进烤盘（叠放在烤箱/工作台上）
   RoastingTray: "utensil_roasting_tray",
   // 蛋糕：食材装进蛋糕模具（叠放在烤箱内）

@@ -207,12 +207,15 @@ export function buildPalette(catalog: Catalog, filter: string) {
       const skins = skinCounts.get(it.id) ?? 1;
       const skinBadge =
         skins > 1 ? ` <span class="variant-badge" title="同功能换肤 ${skins} 种：放置后右键可切换">×${skins}</span>` : "";
+      const stubBadge = it.needsStub
+        ? ` <span class="stub-badge" title="CustomStub 道具：游戏侧需携带关卡集 runtime（CustomStub）才能完整运行；web 导出 zip 会自动按需携带">⚙</span>`
+        : "";
       const thumb = it.ingredientDecor
         ? foodIconImg("ingredients", it.id, true)
         : it.recipeDecor
           ? foodIconImg("recipes", it.id, true)
           : "";
-      row.innerHTML = `${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
+      row.innerHTML = `${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}${stubBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
       if (animDecor) {
         row.title = animDecor.title;
         const badgeEl = document.createElement("span");

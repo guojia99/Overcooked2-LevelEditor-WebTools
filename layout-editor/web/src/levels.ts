@@ -124,6 +124,9 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
     } else if (target === "guide") {
       location.hash = "#/guide";
       location.reload();
+    } else if (target === "changelog") {
+      location.hash = "#/changelog";
+      location.reload();
     }
   });
   const back = document.getElementById("m-back");
@@ -161,7 +164,7 @@ async function renderSetList(app: HTMLElement): Promise<void> {
     .map(
       (s) => `
       <div class="m-card">
-        <h3>${esc(s.levelSetNameZH || s.setName)} <span class="muted">(${esc(s.levelSetName || s.setName)})</span></h3>
+        <h3 title="${esc((s.levelSetNameZH || "") + " " + (s.levelSetName || s.setName))}">${esc(s.levelSetNameZH || s.setName)} <span class="muted">(${esc(s.levelSetName || s.setName)})</span></h3>
         <div class="m-meta">
           作者：${esc(s.author || "—")}<br>
           版本：${esc(s.version || "—")} · 关卡数：${s.levelCount}<br>

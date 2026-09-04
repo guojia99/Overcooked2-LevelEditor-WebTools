@@ -246,7 +246,7 @@ public static class LayoutEditorRoastTrayFill
         // 与 LayoutEditorCustomIngredients.IsLocalSourceAsset 一致，只查本地源库。
         string[] roots =
         {
-            "Assets/common03/Ingredients",
+            "Assets/common03/food/Ingredients",
             "Assets/common01/food/Ingredients",
             "Assets/common02/food/Ingredients",
         };

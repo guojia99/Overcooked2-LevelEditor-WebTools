@@ -64,6 +64,9 @@ function shell(app: HTMLElement, title: string): HTMLElement {
     } else if (target === "guide") {
       location.hash = "#/guide";
       location.reload();
+    } else if (target === "changelog") {
+      location.hash = "#/changelog";
+      location.reload();
     }
   });
   return document.getElementById("cr-content")!;
@@ -245,6 +248,11 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
 
   let activeCategoryId = "";
   let searchQuery = "";
+  /** 分数过滤：全部 / 其他（不在 0/20/…/120 档位）/ 指定分数。 */
+  let scoreFilter: "all" | "other" | number = "all";
+  /** 状态多选（叠加=交集）：中间产物（score<=0）/ 搅拌物（type==="Mixed"）；都不勾 = 不限。 */
+  let filterIntermediate = false;
+  let filterMixed = false;
 
   /** 旧桥接数据无 ingredients/cookingGroups 时，用 compositionIds 反查食材名兜底。 */
   function cardRecipe(r: CustomRecipeSummary): RecipeLikeCard {
@@ -260,6 +268,14 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
 
   function filteredRecipes(): CustomRecipeSummary[] {
     let list = activeCategoryId ? recipes.filter((r) => r.category === activeCategoryId) : recipes;
+    if (filterIntermediate) list = list.filter((r) => r.score <= 0);
+    if (filterMixed) list = list.filter((r) => r.type === "Mixed");
+    if (scoreFilter !== "all") {
+      const tiers = [0, 20, 40, 60, 80, 100, 120];
+      list = list.filter((r) =>
+        scoreFilter === "other" ? !tiers.includes(r.score ?? 0) : (r.score ?? 0) === scoreFilter
+      );
+    }
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       list = list.filter((r) => {
@@ -349,24 +365,20 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     return `<div class="rl-grid">${cards}</div>`;
   }
 
-  function renderSidebar(): string {
+  /** 分类 chips（过滤栏第二行）：全部 / 各分类（含计数）+ 新建/管理分类。 */
+  function renderCatChips(): string {
     return `
-    <div class="cr-sidebar">
-      <div class="m-section-title">分类</div>
-      <div class="cr-cat-list">
-        <button class="m-btn cr-cat-item${activeCategoryId === "" ? " primary" : ""}" data-cat="">全部 (${recipes.length})</button>
-        ${categories
-          .map((c) => {
-            const count = recipes.filter((r) => r.category === c.id).length;
-            return `<button class="m-btn cr-cat-item${activeCategoryId === c.id ? " primary" : ""}" data-cat="${esc(c.id)}">${esc(catDisplay(c))} (${count})</button>`;
-          })
-          .join("")}
-        <div class="cr-cat-actions">
-          <button class="m-btn" id="cr-new-cat">+ 新建分类</button>
-          ${categories.length > 0 ? '<button class="m-btn" id="cr-manage-cat">管理分类</button>' : ""}
-        </div>
-      </div>
-    </div>`;
+      <button type="button" class="rl-chip-btn cr-cat-chip${activeCategoryId === "" ? " active" : ""}" data-cat="">全部 <span class="rl-cnt">${recipes.length}</span></button>
+      ${categories
+        .map((c) => {
+          const count = recipes.filter((r) => r.category === c.id).length;
+          return `<button type="button" class="rl-chip-btn cr-cat-chip${activeCategoryId === c.id ? " active" : ""}" data-cat="${esc(c.id)}">${esc(catDisplay(c))} <span class="rl-cnt">${count}</span></button>`;
+        })
+        .join("")}
+      <span class="cr-cat-tools">
+        <button class="m-btn" id="cr-new-cat">+ 新建分类</button>
+        ${categories.length > 0 ? '<button class="m-btn" id="cr-manage-cat">管理分类</button>' : ""}
+      </span>`;
   }
 
   content.innerHTML = `
@@ -378,11 +390,22 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     </div>
     <div class="cr-toolbar">
       <input type="search" id="cr-search" class="rl-search" placeholder="搜索菜名 / ID / 食材…" autocomplete="off">
+      <select id="cr-score-filter" class="rl-select" title="按分数过滤">
+        <option value="all">全部分数</option>
+        <option value="0">0 分</option>
+        <option value="20">20 分</option>
+        <option value="40">40 分</option>
+        <option value="60">60 分</option>
+        <option value="80">80 分</option>
+        <option value="100">100 分</option>
+        <option value="120">120 分</option>
+        <option value="other">其他分数</option>
+      </select>
+      <button type="button" class="rl-chip-btn cr-state-chip${filterIntermediate ? " active" : ""}" data-state="intermediate" title="只看 0 分半成品（可与「搅拌物」叠加 = 交集）">🧩 中间产物</button>
+      <button type="button" class="rl-chip-btn cr-state-chip${filterMixed ? " active" : ""}" data-state="mixed" title="只看 Mixed 搅拌类菜谱（可与「中间产物」叠加 = 交集）">🥣 搅拌物</button>
     </div>
-    <div class="cr-layout">
-      <div id="cr-sidebar">${renderSidebar()}</div>
-      <div id="cr-grid">${renderGrid()}</div>
-    </div>
+    <div class="cr-toolbar cr-cat-bar" id="cr-cat-chips">${renderCatChips()}</div>
+    <div id="cr-grid">${renderGrid()}</div>
   `;
 
   function refreshView(): void {
@@ -400,8 +423,8 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         hideBusy();
       }
       setStatus(`${recipes.length} 个菜谱 · UID前缀：${config.uidPrefix}`);
-      document.getElementById("cr-sidebar")!.innerHTML = renderSidebar();
-      wireSidebar();
+      document.getElementById("cr-cat-chips")!.innerHTML = renderCatChips();
+      wireCatChips();
       document.getElementById("cr-grid")!.innerHTML = renderGrid();
       wireGridButtons();
     })();
@@ -413,14 +436,29 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       document.getElementById("cr-grid")!.innerHTML = renderGrid();
       wireGridButtons();
     });
+    document.getElementById("cr-score-filter")?.addEventListener("change", (e) => {
+      const v = (e.target as HTMLSelectElement).value;
+      scoreFilter = v === "all" ? "all" : v === "other" ? "other" : Number(v);
+      document.getElementById("cr-grid")!.innerHTML = renderGrid();
+      wireGridButtons();
+    });
+    document.querySelectorAll<HTMLButtonElement>(".cr-state-chip").forEach((b) => {
+      b.addEventListener("click", () => {
+        if (b.dataset.state === "intermediate") filterIntermediate = !filterIntermediate;
+        else if (b.dataset.state === "mixed") filterMixed = !filterMixed;
+        b.classList.toggle("active");
+        document.getElementById("cr-grid")!.innerHTML = renderGrid();
+        wireGridButtons();
+      });
+    });
   }
 
-  function wireSidebar(): void {
-    document.querySelectorAll<HTMLButtonElement>(".cr-cat-item").forEach((b) => {
+  function wireCatChips(): void {
+    document.querySelectorAll<HTMLButtonElement>(".cr-cat-chip").forEach((b) => {
       b.addEventListener("click", () => {
         activeCategoryId = b.dataset.cat ?? "";
-        document.getElementById("cr-sidebar")!.innerHTML = renderSidebar();
-        wireSidebar();
+        document.getElementById("cr-cat-chips")!.innerHTML = renderCatChips();
+        wireCatChips();
         document.getElementById("cr-grid")!.innerHTML = renderGrid();
         wireGridButtons();
       });
@@ -428,7 +466,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     document.getElementById("cr-new-cat")?.addEventListener("click", () =>
       openNewCategoryModal(setName, (newId) => {
         activeCategoryId = newId ?? "";
-        // 完全重建列表页，确保新分类立即出现在侧栏
+        // 完全重建列表页，确保新分类立即出现在过滤栏
         void renderRecipeList(app, setName);
       })
     );
@@ -477,7 +515,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   }
 
   wireToolbar();
-  wireSidebar();
+  wireCatChips();
   wireGridButtons();
 
   document.getElementById("cr-back")?.addEventListener("click", () => void renderCustomRecipesView(app));

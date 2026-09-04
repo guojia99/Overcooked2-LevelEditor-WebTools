@@ -1,14 +1,14 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "group": "dlc13",
-  "itemCount": 12,
+  "itemCount": 8,
   "recipes": [
     {
       "guid": "ecfe82aeabe59ca907011ae6195f4754",
       "id": "dlc13_mixedfloureggstrawberries",
       "nameZh": "草莓面糊（DLC13）",
       "nameEn": "Strawberry Batter (DLC13)",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_mixedfloureggstrawberries.asset",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_mixedfloureggstrawberries.asset",
       "cookingStep": "Mixer",
       "platingStep": "",
       "ingredients": [
@@ -45,7 +45,7 @@
       "id": "dlc13_moonpie_strawberry",
       "nameZh": "草莓月饼",
       "nameEn": "Strawberry Moon Pie",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_moonpie_strawberry.asset",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_moonpie_strawberry.asset",
       "cookingStep": "OvenTray",
       "platingStep": "Plate",
       "ingredients": [
@@ -88,104 +88,11 @@
       "icon": true
     },
     {
-      "guid": "26c9d53207cfd6d8da449e37a523dbf7",
-      "id": "dlc13_fruitplatter_orangegrapes",
-      "nameZh": "橙子葡萄拼盘（DLC13）",
-      "nameEn": "Orange & Grapes Platter (DLC13)",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_fruitplatter_orangegrapes.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [
-        "dlc13_orange",
-        "dlc13_grapes"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 0,
-      "score": 40,
-      "isCustom": false,
-      "group": "dlc13",
-      "type": "fruitplatter",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc13_orange",
-            "dlc13_grapes"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "40b17ec8b4ee2b583b139e2825425082",
-      "id": "dlc13_fruitplatter_orangepeach",
-      "nameZh": "橙子桃子拼盘（DLC13）",
-      "nameEn": "Orange & Peach Platter (DLC13)",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_fruitplatter_orangepeach.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [
-        "dlc13_orange",
-        "dlc13_peach"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 0,
-      "score": 40,
-      "isCustom": false,
-      "group": "dlc13",
-      "type": "fruitplatter",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc13_orange",
-            "dlc13_peach"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "5dc7e42fdaec9f635e5c71c381119b9e",
-      "id": "dlc13_fruitplatter_grapespeach",
-      "nameZh": "葡萄桃子拼盘（DLC13）",
-      "nameEn": "Grapes & Peach Platter (DLC13)",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_fruitplatter_grapespeach.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [
-        "dlc13_grapes",
-        "dlc13_peach"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 0,
-      "score": 40,
-      "isCustom": false,
-      "group": "dlc13",
-      "type": "fruitplatter",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc13_grapes",
-            "dlc13_peach"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "d68ecfd0eba57b2aefae3017474c581c",
       "id": "dlc13_mixedfloureggchocolatestrawberry",
       "nameZh": "巧克力草莓面糊（DLC13）",
       "nameEn": "Chocolate & Strawberry Batter (DLC13)",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_mixedfloureggchocolatestrawberry.asset",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_mixedfloureggchocolatestrawberry.asset",
       "cookingStep": "Mixer",
       "platingStep": "",
       "ingredients": [
@@ -224,7 +131,7 @@
       "id": "dlc13_moonpie_chocolatestrawberry",
       "nameZh": "巧克力草莓月饼",
       "nameEn": "Chocolate & Strawberry Moon Pie",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_moonpie_chocolatestrawberry.asset",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_moonpie_chocolatestrawberry.asset",
       "cookingStep": "OvenTray",
       "platingStep": "Plate",
       "ingredients": [
@@ -273,7 +180,7 @@
       "id": "dlc13_mixedfloureggchocolate",
       "nameZh": "巧克力面糊（DLC13）",
       "nameEn": "Chocolate Batter (DLC13)",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_mixedfloureggchocolate.asset",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_mixedfloureggchocolate.asset",
       "cookingStep": "Mixer",
       "platingStep": "",
       "ingredients": [
@@ -310,7 +217,7 @@
       "id": "dlc13_moonpie_chocolate",
       "nameZh": "巧克力月饼",
       "nameEn": "Chocolate Moon Pie",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_moonpie_chocolate.asset",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_moonpie_chocolate.asset",
       "cookingStep": "OvenTray",
       "platingStep": "Plate",
       "ingredients": [
@@ -353,44 +260,11 @@
       "icon": true
     },
     {
-      "guid": "8a06d2cceaddeb10dde37e3c6c821db6",
-      "id": "dlc13_fruitplatter_orangepeachgrapes",
-      "nameZh": "三果拼盘（DLC13）",
-      "nameEn": "Fruit Platter (DLC13)",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_fruitplatter_orangepeachgrapes.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [
-        "dlc13_orange",
-        "dlc13_peach",
-        "dlc13_grapes"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 0,
-      "score": 60,
-      "isCustom": false,
-      "group": "dlc13",
-      "type": "fruitplatter",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc13_orange",
-            "dlc13_peach",
-            "dlc13_grapes"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "f417c0096c7f2afb2a5130d52565cb8c",
       "id": "dlc13_mixedfloureggwatermelon",
       "nameZh": "甜瓜面糊（DLC13）",
       "nameEn": "Melon Batter (DLC13)",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_mixedfloureggwatermelon.asset",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_mixedfloureggwatermelon.asset",
       "cookingStep": "Mixer",
       "platingStep": "",
       "ingredients": [
@@ -427,7 +301,7 @@
       "id": "dlc13_moonpie_watermelon",
       "nameZh": "甜瓜月饼",
       "nameEn": "Melon Moon Pie",
-      "assetPath": "Assets/common03/Recipes/dlc13/dlc13_moonpie_watermelon.asset",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_moonpie_watermelon.asset",
       "cookingStep": "OvenTray",
       "platingStep": "Plate",
       "ingredients": [

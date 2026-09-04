@@ -114,10 +114,11 @@ public static class LayoutEditorSwitchLinkPatch
     {
         bool pending = false;
 
-        // 新场景：写回时已烘焙 LayoutRuntimeSwitchLink（游戏编译，随场景保存），
-        // 转发/监听字段/大炮接线/回绿全部由它在编辑器与游戏包内完成。
-        // 这里跳过以免与 Linker 重复触发（同一按压目标收到两次消息 → 机器跳一档）。
-        if (root.GetComponent<LayoutRuntimeSwitchLink>() != null)
+        // customStub 场景自愈（关卡集程序集，含 0.35s 自动复位 SwitchReenable）：
+        // 编辑器 Play 时由 Stub_<set> 的 EntryPoint 自动安装并处理，此处跳过
+        // 编辑器版回绿中继以免同一按压收到两次 Reset。
+        var reenableType = LayoutEditorStubIO.FindCustomStubType(root, "SwitchReenable");
+        if (reenableType != null && root.GetComponent(reenableType) != null)
             return pending;
 
         if (switchChild.GetComponent<TriggerDisableScript>() != null)
@@ -234,6 +235,12 @@ public static class LayoutEditorSwitchLinkPatch
     {
         if (child == null || string.IsNullOrEmpty(trigger))
             return;
+        // 饮料机/酱料机（trigger="Next"）同样直写监听字段：补丁路径（forwarder 直转
+        // "Next" + child 监听 "Next"）与断头台同构、不依赖 ServerTriggerOnObject
+        // 同步器链接（包装 TriggerOnObject 翻译层 Next→NextDrink 在伪根上不一定
+        // 被链接，实测不触发）。child 只听 "Next"，翻译层即使存活其 "NextDrink"
+        // 也会被忽略——不会双触发跳档。（曾错误地跳过写入以保 bundle 默认
+        // "NextDrink"，导致编辑器 Play 整机不切换，2026-09-03 回退。）
         var switcher = child.GetComponent<PickupItemSwitcher>();
         if (switcher != null)
         {

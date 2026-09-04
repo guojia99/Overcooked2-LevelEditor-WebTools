@@ -19,8 +19,9 @@ function linkServing(kind: ServingReturnKind) {
 
 /**
  * 开关 → 目标（断头台/果汁机/酱料机），写文档级 switchLinks。
- * 触发消息命名为 switch_{目标prefabId}_{N}（N = 该开关已有链接数 + 1），
- * ingredientIds 非空时按 id 解析 guid 写入机器 soArray（多选列表，开关循环切换）。
+ * 触发消息用目标机器的原生触发名（断头台 Chop、饮料机/酱料机 Next——机器包装
+ *  prefab 自带 TriggerOnObject 翻译层，自定义名真机不响应），ingredientIds 非空时
+ *  按 id 解析 guid 写入机器 soArray（多选列表，开关循环切换）。
  */
 function linkSwitch(ingredientIds?: string[]) {
   return (items: EditorItem[]) => {
@@ -35,11 +36,12 @@ function linkSwitch(ingredientIds?: string[]) {
       target.soArray = { pseudoPrefabGuids: guids };
     }
     const targetPrefabId = prefabIdFromPath(target.prefabAssetPath) ?? "item";
-    const n = S.switchLinks.filter((l) => l.switchId === sw.instanceId).length + 1;
+    const trigger =
+      targetPrefabId === "workstation_guillotine_01" ? "Chop" : "Next";
     S.switchLinks.push({
       switchId: sw.instanceId,
       targetId: target.instanceId,
-      trigger: `switch_${targetPrefabId}_${n}`,
+      trigger,
     });
   };
 }
@@ -113,7 +115,7 @@ export const COMBOS: ComboDef[] = [
       { id: "dlc08_drink_machine", dx: 0, dz: 0 },
       { id: "Switch", dx: 2, dz: 0 },
     ],
-    link: linkSwitch(["drink01", "drink02", "drink03"]),
+    link: linkSwitch(["DLC08_Drink01", "DLC08_Drink02", "DLC08_Drink03"]),
   },
   {
     id: "drink_switch_icecream",
@@ -123,7 +125,7 @@ export const COMBOS: ComboDef[] = [
       { id: "dlc11_drink_dispenser", dx: 0, dz: 0 },
       { id: "Switch", dx: 2, dz: 0 },
     ],
-    link: linkSwitch(["orangesoda", "rootbeer"]),
+    link: linkSwitch(["DLC11_OrangeSoda", "DLC11_RootBeer"]),
   },
   {
     id: "condiment_switch",
@@ -133,7 +135,7 @@ export const COMBOS: ComboDef[] = [
       { id: "dlc08_condiment_dispenser", dx: 0, dz: 0 },
       { id: "Switch", dx: 2, dz: 0 },
     ],
-    link: linkSwitch(["mustard", "ketchup"]),
+    link: linkSwitch(["DLC08_Mustard", "DLC08_Ketchup"]),
   },
   {
     id: "guillotine_switch",

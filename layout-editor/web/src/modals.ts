@@ -279,10 +279,13 @@ export function openIngredientMultiPicker(
   );
 
   const panel = document.querySelector(".modal-panel");
-  if (panel) panel.classList.add("wide");
-
-  document.getElementById("ing-pick-search")?.addEventListener("input", applyFilter);
+  if (panel) {
+    panel.classList.add("wide");
+    // 定高面板：列表区撑满剩余空间（约 8 行卡片），见 .modal-panel.ing-pick 样式
+    panel.classList.add("ing-pick");
+  }
   // 分组 tab 与分类 chips 各自独立高亮/过滤（data-group / data-cat）
+  document.getElementById("ing-pick-search")?.addEventListener("input", applyFilter);
   document.querySelectorAll(".ing-group-btn[data-group]").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".ing-group-btn[data-group]").forEach((b) => b.classList.remove("active"));

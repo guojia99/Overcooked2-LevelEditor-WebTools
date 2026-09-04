@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "group": "dlc05",
   "itemCount": 14,
   "recipes": [
@@ -125,13 +125,13 @@
       "icon": true
     },
     {
-      "guid": "7be07bd0c9b0417d1112a11ae4bbfe04",
-      "id": "roastedmarshmallow",
+      "guid": "c67ffd7cdbbc0d045a2423607049fd62",
+      "id": "RoastedMarshmallow",
       "nameZh": "烤棉花糖",
       "nameEn": "Roasted Marshmallow",
-      "assetPath": "Assets/common03/Recipes/dlc05/roastedmarshmallow.asset",
+      "assetPath": "Assets/common02/food/Recipes/dlc05/RoastedMarshmallow.asset",
       "cookingStep": "ToastingFork",
-      "platingStep": "",
+      "platingStep": "Plate",
       "ingredients": [
         "DLC05_Marshmallow"
       ],
@@ -154,7 +154,7 @@
           ]
         }
       ],
-      "icon": false
+      "icon": true
     },
     {
       "guid": "67ec24d33a0983f49904bc368fb44da8",

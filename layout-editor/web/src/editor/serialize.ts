@@ -55,7 +55,7 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
   // 可移动火锅：stubKind 保持空（不挂 CookingUtensil stub，宿主 Setup NRE）——
   // 但 cookingUtensil 字段保留（allowedIngredientGuids 会落到载体组件上）。
   const serPid = prefabIdFromPath(rest.prefabAssetPath);
-  if (rest.stubKind === "CookingUtensil" && serPid === "utensil_large_pot_01_pushable") {
+  if (rest.stubKind === "CookingUtensil" && serPid === "web_utensil_large_pot_01_pushable") {
     rest.stubKind = "";
   }
   // Raft planks already expanded below are walkable:false; other floor prefabs stay walkable.

@@ -139,7 +139,8 @@ function migrateAirWallScale(raw: LayoutItem): void {
 export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
   // 历史场景里的裸 pushable_object（载体，无锅）已删除：迁移到可推动大火锅包装器。
   if (raw.prefabAssetPath === "Assets/common03/prefabs/core/mechanisms/pushable_object.prefab") {
-    raw.prefabAssetPath = "Assets/common03/prefabs/core/utensils/utensil_large_pot_01_pushable.prefab";
+    // 迁移目标随 common03 正式版重组迁至 commonW1（GUID 不变，场景引用不断）
+    raw.prefabAssetPath = "Assets/commonW1/prefabs/web/hotpot/web_utensil_large_pot_01_pushable.prefab";
   }
   // 迁移：早期版本把立式水面 quad（Water_01 家族）当作平铺 XZ 面（rotX=0，深度
   // 写在 localScale.z），而这些 quad 只有 rotX=90 才平躺（深度映射到 localScale.y），
@@ -619,9 +620,13 @@ export function addFromCatalog(
   const filterOn = floorHeightFilterActive();
   let baseY = floorHeightAt(snapped.x, snapped.z, filterOn);
   if (baseY < 0) baseY = filterOn && S.floorHeight.min != null ? S.floorHeight.min + 0.01 : 0;
-  // 可移动火锅默认贴地高度 0.2（载具自带 Rigidbody，放置即落位；不与静态锅
-  // 共用 0.6 灶台挂高——它是推上灶台的地面道具）。
-  if (cat.id === "utensil_large_pot_01_pushable") baseY = 0.2;
+  // Web 火锅家族（commonW1 web/hotpot/）默认高度统一 0.1（2026-09-03 用户实测：
+  // 静态锅/可移动锅统一贴地基准；灶台（burner）是地面件保持 0）。
+  if (cat.id === "web_utensil_large_pot_01" ||
+      cat.id === "web_utensil_dlc10_large_pot_01" ||
+      cat.id === "web_utensil_large_pot_01_pushable" ||
+      cat.id === "web_dlc10_pushable_object")
+    baseY = 0.1;
   const item: EditorItem = {
     instanceId: id,
     _editorKey: editorKey,

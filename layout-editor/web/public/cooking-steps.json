@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-01T17:33:51.330Z",
-  "schemaVersion": 3,
-  "itemCount": 35,
+  "generatedAt": "2026-09-04T07:19:23.680Z",
+  "schemaVersion": 5,
+  "itemCount": 36,
   "cookingSteps": [
     {
       "guid": "3d9eb9842fed18948886db9630423451",
@@ -149,7 +149,7 @@
       "nameZh": "火锅台",
       "nameEn": "Hot Pot",
       "kind": "cooking",
-      "assetPath": "Assets/common03/CookingSteps/HotPot.asset",
+      "assetPath": "Assets/common03/food/CookingSteps/HotPot.asset",
       "bundleName": "bundle225",
       "group": "core"
     },
@@ -279,7 +279,7 @@
       "nameZh": "烤盘",
       "nameEn": "Roasting Tray",
       "kind": "cooking",
-      "assetPath": "Assets/common03/CookingSteps/RoastingTray.asset",
+      "assetPath": "Assets/common03/food/CookingSteps/RoastingTray.asset",
       "bundleName": "bundle293",
       "group": "core"
     },
@@ -331,6 +331,16 @@
       "kind": "plating",
       "assetPath": "Assets/common02/food/PlatingSteps/Glass.asset",
       "bundleName": "bundle162",
+      "group": "core"
+    },
+    {
+      "guid": "cd51517c70ba446408c27f0227693f4b",
+      "id": "Mug",
+      "nameZh": "Mug",
+      "nameEn": "Mug",
+      "kind": "plating",
+      "assetPath": "Assets/common03/food/PlatingSteps/Mug.asset",
+      "bundleName": "bundle208",
       "group": "core"
     },
     {

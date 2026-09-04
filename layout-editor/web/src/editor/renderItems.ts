@@ -147,7 +147,7 @@ export function drawItem(item: EditorItem, selected: boolean) {
   }
   const id = prefabIdFromPath(item.prefabAssetPath);
   const isUtensil =
-    isStackUtensilCatalog(cat) || id === "Backpack" || id === "utensil_large_pot_01_pushable";
+    isStackUtensilCatalog(cat) || id === "Backpack" || id === "web_utensil_large_pot_01_pushable";
   const isPlayer = isPlayerItem(item);
   const paint = paintStyleForItem(cat, item.parentPath, selected);
 
