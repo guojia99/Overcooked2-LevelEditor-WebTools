@@ -16,6 +16,8 @@ run:
 	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.RuntimeDetour.dll.meta Plugins/
 	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.Utils.dll Plugins/
 	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.Utils.dll.meta Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/0Harmony.dll Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/0Harmony.dll.meta Plugins/
 
 	rm -rf ./layout-editor/
 	rm -rf ./LayoutEditor/
