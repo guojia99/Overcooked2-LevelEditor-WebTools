@@ -1,0 +1,691 @@
+{
+  "schemaVersion": 5,
+  "group": "dlc07",
+  "itemCount": 17,
+  "recipes": [
+    {
+      "guid": "5f2a228eb7a8555f6352dcc6f7effe1d",
+      "id": "DLC07_mixedfloureggblackberry",
+      "nameZh": "黑莓面糊（DLC07）",
+      "nameEn": "Blackberry Batter (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_mixedfloureggblackberry.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Blackberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Blackberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "131a3b8eb2250cbb1c4cd723c9490802",
+      "id": "DLC07_FruitPie_blackberry",
+      "nameZh": "黑莓派（DLC07）",
+      "nameEn": "Blackberry Pie (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_FruitPie_blackberry.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Blackberry"
+      ],
+      "compositionIds": [
+        "DLC07_mixedfloureggblackberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Blackberry"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "36309afacba05463d3acc614eb41b5ee",
+      "id": "DLC07_Roast_chickenpotatocarrotbroccoliroast",
+      "nameZh": "烤鸡什锦（DLC07）",
+      "nameEn": "Roast Chicken Potato Carrot & Broccoli (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_Roast_chickenpotatocarrotbroccoliroast.asset",
+      "cookingStep": "RoastingTray",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC07_ChickenRoast",
+        "dlc07_potato",
+        "CarrotSO",
+        "DLC07_Broccoli"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "DLC07_ChickenRoast",
+            "dlc07_potato",
+            "CarrotSO",
+            "DLC07_Broccoli"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "bd5588e77ab98362bb92322503207a6c",
+      "id": "DLC07_Roast_chickenpotatocarrotroast",
+      "nameZh": "烤鸡土豆胡萝卜（DLC07）",
+      "nameEn": "Roast Chicken Potato & Carrot (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_Roast_chickenpotatocarrotroast.asset",
+      "cookingStep": "RoastingTray",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC07_ChickenRoast",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "DLC07_ChickenRoast",
+            "dlc07_potato",
+            "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "057a978fc2c69f0d0026d365a2856b7d",
+      "id": "DLC07_Roast_beefpotatocarrotbroccoliroast",
+      "nameZh": "烤牛肉什锦（DLC07）",
+      "nameEn": "Roast Beef Potato Carrot & Broccoli (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_Roast_beefpotatocarrotbroccoliroast.asset",
+      "cookingStep": "RoastingTray",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC07_BeefRoast",
+        "dlc07_potato",
+        "CarrotSO",
+        "DLC07_Broccoli"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "DLC07_BeefRoast",
+            "dlc07_potato",
+            "CarrotSO",
+            "DLC07_Broccoli"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "5ff1e688f7d53ed0dd262ebd163e1d6d",
+      "id": "DLC07_Roast_beefpotatocarrotroast",
+      "nameZh": "烤牛肉土豆胡萝卜（DLC07）",
+      "nameEn": "Roast Beef Potato & Carrot (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_Roast_beefpotatocarrotroast.asset",
+      "cookingStep": "RoastingTray",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC07_BeefRoast",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "roast",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "RoastingTray",
+          "utensils": [
+            "Oven",
+            "utensil_roasting_tray"
+          ],
+          "ingredients": [
+            "DLC07_BeefRoast",
+            "dlc07_potato",
+            "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "074f169b75e4b6c74bd0f97f085c5e7d",
+      "id": "DLC07_mixedfloureggappleblackberry",
+      "nameZh": "苹果黑莓面糊（DLC07）",
+      "nameEn": "Apple & Blackberry Batter (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_mixedfloureggappleblackberry.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple",
+        "DLC07_Blackberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Apple",
+            "DLC07_Blackberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9bad989d7b3f4edceff931347047df6f",
+      "id": "DLC07_FruitPie_appleblackberry",
+      "nameZh": "苹果黑莓派（DLC07）",
+      "nameEn": "Apple & Blackberry Pie (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_FruitPie_appleblackberry.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple",
+        "DLC07_Blackberry"
+      ],
+      "compositionIds": [
+        "DLC07_mixedfloureggappleblackberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Apple",
+            "DLC07_Blackberry"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f315f10756df53f7bbe744a7933f4ca7",
+      "id": "DLC07_mixedfloureggapple",
+      "nameZh": "苹果面糊（DLC07）",
+      "nameEn": "Apple Batter (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_mixedfloureggapple.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Apple"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "204adb61c324b4f88574d66edce86416",
+      "id": "DLC07_FruitPie_apple",
+      "nameZh": "苹果派（DLC07）",
+      "nameEn": "Apple Pie (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_FruitPie_apple.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple"
+      ],
+      "compositionIds": [
+        "DLC07_mixedfloureggapple"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Apple"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0552850cf55d06aa15a87be6ee7efc4f",
+      "id": "DLC07_mixedfloureggapplecherry",
+      "nameZh": "苹果樱桃面糊（DLC07）",
+      "nameEn": "Apple & Cherry Batter (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_mixedfloureggapplecherry.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple",
+        "DLC07_Cherry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Apple",
+            "DLC07_Cherry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "ab5ddc545cd6953e9b8b634e7209e5b3",
+      "id": "DLC07_FruitPie_applecherry",
+      "nameZh": "苹果樱桃派（DLC07）",
+      "nameEn": "Apple & Cherry Pie (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_FruitPie_applecherry.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Apple",
+        "DLC07_Cherry"
+      ],
+      "compositionIds": [
+        "DLC07_mixedfloureggapplecherry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Apple",
+            "DLC07_Cherry"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f25725afc40bb6b700727cbceba0294b",
+      "id": "DLC07_Soup_onioncarrotpotatosoup",
+      "nameZh": "洋葱胡萝卜土豆汤（DLC07）",
+      "nameEn": "Onion Carrot & Potato Soup (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_Soup_onioncarrotpotatosoup.asset",
+      "cookingStep": "Pot",
+      "platingStep": "Plate",
+      "ingredients": [
+        "OnionSO",
+        "dlc07_potato",
+        "CarrotSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "soup",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "OnionSO",
+            "dlc07_potato",
+            "CarrotSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4db74ecac6b88fbd47992bee2c6850e1",
+      "id": "DLC07_Soup_onionpotatosoupleek",
+      "nameZh": "洋葱土豆西芹汤（DLC07）",
+      "nameEn": "Onion Potato & Leek Soup (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_Soup_onionpotatosoupleek.asset",
+      "cookingStep": "Pot",
+      "platingStep": "Plate",
+      "ingredients": [
+        "OnionSO",
+        "dlc07_potato",
+        "DLC07_Leek"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "soup",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "OnionSO",
+            "dlc07_potato",
+            "DLC07_Leek"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "798c274e2ff30885c66fd5e474e6df90",
+      "id": "DLC07_Soup_onionbroccolicheesesoup",
+      "nameZh": "洋葱西兰花芝士汤（DLC07）",
+      "nameEn": "Onion Broccoli & Cheese Soup (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_Soup_onionbroccolicheesesoup.asset",
+      "cookingStep": "Pot",
+      "platingStep": "Plate",
+      "ingredients": [
+        "OnionSO",
+        "DLC07_Broccoli",
+        "dlc07_cheese"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "soup",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "OnionSO",
+            "DLC07_Broccoli",
+            "dlc07_cheese"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "fcf7d7c9831118144b53ba39c6b68008",
+      "id": "DLC07_mixedfloureggcherry",
+      "nameZh": "樱桃面糊（DLC07）",
+      "nameEn": "Cherry Batter (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_mixedfloureggcherry.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Cherry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Cherry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "2fbdbcf0cdb233dd469b4632b6c1f80c",
+      "id": "DLC07_FruitPie_cherry",
+      "nameZh": "樱桃派（DLC07）",
+      "nameEn": "Cherry Pie (DLC07)",
+      "assetPath": "Assets/common03/food/Recipes/dlc07/DLC07_FruitPie_cherry.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "DLC07_Cherry"
+      ],
+      "compositionIds": [
+        "DLC07_mixedfloureggcherry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc07",
+      "type": "pie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "DLC07_Cherry"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    }
+  ]
+}

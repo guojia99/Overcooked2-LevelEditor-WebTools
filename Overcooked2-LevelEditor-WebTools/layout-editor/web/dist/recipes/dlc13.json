@@ -1,0 +1,347 @@
+{
+  "schemaVersion": 5,
+  "group": "dlc13",
+  "itemCount": 8,
+  "recipes": [
+    {
+      "guid": "ecfe82aeabe59ca907011ae6195f4754",
+      "id": "dlc13_mixedfloureggstrawberries",
+      "nameZh": "草莓面糊（DLC13）",
+      "nameEn": "Strawberry Batter (DLC13)",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_mixedfloureggstrawberries.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_strawberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc13",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_strawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "00d5f3f3bea77b6137529f4cebe0db96",
+      "id": "dlc13_moonpie_strawberry",
+      "nameZh": "草莓月饼",
+      "nameEn": "Strawberry Moon Pie",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_moonpie_strawberry.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_strawberry"
+      ],
+      "compositionIds": [
+        "dlc13_mixedfloureggstrawberries"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc13",
+      "type": "moonpie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_strawberry"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d68ecfd0eba57b2aefae3017474c581c",
+      "id": "dlc13_mixedfloureggchocolatestrawberry",
+      "nameZh": "巧克力草莓面糊（DLC13）",
+      "nameEn": "Chocolate & Strawberry Batter (DLC13)",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_mixedfloureggchocolatestrawberry.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate",
+        "dlc13_strawberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc13",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate",
+            "dlc13_strawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "e5aecf7764556bed71d73122cf6dd115",
+      "id": "dlc13_moonpie_chocolatestrawberry",
+      "nameZh": "巧克力草莓月饼",
+      "nameEn": "Chocolate & Strawberry Moon Pie",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_moonpie_chocolatestrawberry.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate",
+        "dlc13_strawberry"
+      ],
+      "compositionIds": [
+        "dlc13_mixedfloureggchocolatestrawberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 120,
+      "isCustom": false,
+      "group": "dlc13",
+      "type": "moonpie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate",
+            "dlc13_strawberry"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8baf05f1e92fce594409690786bb5b11",
+      "id": "dlc13_mixedfloureggchocolate",
+      "nameZh": "巧克力面糊（DLC13）",
+      "nameEn": "Chocolate Batter (DLC13)",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_mixedfloureggchocolate.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc13",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "6c7100922042afdbd0144a9693b0c014",
+      "id": "dlc13_moonpie_chocolate",
+      "nameZh": "巧克力月饼",
+      "nameEn": "Chocolate Moon Pie",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_moonpie_chocolate.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_chocolate"
+      ],
+      "compositionIds": [
+        "dlc13_mixedfloureggchocolate"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc13",
+      "type": "moonpie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_chocolate"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f417c0096c7f2afb2a5130d52565cb8c",
+      "id": "dlc13_mixedfloureggwatermelon",
+      "nameZh": "甜瓜面糊（DLC13）",
+      "nameEn": "Melon Batter (DLC13)",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_mixedfloureggwatermelon.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_melon"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc13",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_melon"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "2b390c581aa43e4b1e239dace0c3fdb3",
+      "id": "dlc13_moonpie_watermelon",
+      "nameZh": "甜瓜月饼",
+      "nameEn": "Melon Moon Pie",
+      "assetPath": "Assets/common03/food/Recipes/dlc13/dlc13_moonpie_watermelon.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc13_flour",
+        "dlc13_egg",
+        "dlc13_melon"
+      ],
+      "compositionIds": [
+        "dlc13_mixedfloureggwatermelon"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc13",
+      "type": "moonpie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "dlc13_flour",
+            "dlc13_egg",
+            "dlc13_melon"
+          ]
+        },
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    }
+  ]
+}

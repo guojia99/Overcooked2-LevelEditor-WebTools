@@ -1,0 +1,483 @@
+{
+  "schemaVersion": 5,
+  "group": "dlc11",
+  "itemCount": 13,
+  "recipes": [
+    {
+      "guid": "6cdc770ddaa0aa873ccc0ad2fdcc9a90",
+      "id": "DLC11_mixed_icecream_chocolate",
+      "nameZh": "巧克力冰淇淋（DLC11）",
+      "nameEn": "Chocolate Ice Cream (DLC11)",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_mixed_icecream_chocolate.asset",
+      "cookingStep": "Blender",
+      "platingStep": "Glass",
+      "ingredients": [
+        "ChocolateSO",
+        "DLC11_Icecube",
+        "dlc11_milk"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "icecream",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "DLC11_Icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "54aeb2d40e9638cfaa1e00dbc9d5cb39",
+      "id": "DLC11_Float_orangesodafloat_chocolate",
+      "nameZh": "巧克力橙味汽水冰淇淋（DLC11）",
+      "nameEn": "Orange Soda Ice Cream Float (Chocolate) (DLC11)",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Float_orangesodafloat_chocolate.asset",
+      "cookingStep": "Blender",
+      "platingStep": "Glass",
+      "ingredients": [
+        "ChocolateSO",
+        "DLC11_Icecube",
+        "dlc11_milk",
+        "DLC11_OrangeSoda"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC11_OrangeSoda"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "DLC11_Icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "b2e245b9af1c2e38da900abf92d41cd7",
+      "id": "DLC11_Float_rootbeerfloat_chocolate",
+      "nameZh": "巧克力沙士冰淇淋（DLC11）",
+      "nameEn": "Root Beer Ice Cream Float (Chocolate) (DLC11)",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Float_rootbeerfloat_chocolate.asset",
+      "cookingStep": "Blender",
+      "platingStep": "Glass",
+      "ingredients": [
+        "ChocolateSO",
+        "DLC11_Icecube",
+        "dlc11_milk",
+        "DLC11_RootBeer"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC11_RootBeer"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "ChocolateSO",
+            "DLC11_Icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0f3c0cb3723f9fa9a0946ec627dc40c9",
+      "id": "DLC11_Salad_tomato_cucumber_onion",
+      "nameZh": "沙拉·番茄黄瓜洋葱",
+      "nameEn": "Salad Tomato Cucumber & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_cucumber_onion.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_tomato",
+            "dlc11_cucumber",
+            "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "b4a2ac7b4f21722ee388bdc59a497af5",
+      "id": "DLC11_Salad_tomato_onion",
+      "nameZh": "沙拉·番茄洋葱",
+      "nameEn": "Salad Tomato & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_onion.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "dlc11_tomato",
+            "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f439c8b1a3e7668333bec741dfa99870",
+      "id": "DLC11_Salad_tomato_corn_onion",
+      "nameZh": "沙拉·番茄玉米洋葱",
+      "nameEn": "Salad Tomato Corn & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_corn_onion.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc11_tomato",
+        "DLC11_Corn",
+        "dlc11_onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_tomato",
+            "DLC11_Corn",
+            "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "85af1e323bd8673c9a68b9e3f17da1e2",
+      "id": "DLC11_Salad_cucumber_tomato_onion",
+      "nameZh": "沙拉·黄瓜番茄洋葱",
+      "nameEn": "Salad Cucumber Tomato & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_cucumber_tomato_onion.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_tomato",
+        "dlc11_onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_cucumber",
+            "dlc11_tomato",
+            "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9a83520c544b94e585bfd1e91d6bb0cc",
+      "id": "DLC11_Salad_cucumber_onion",
+      "nameZh": "沙拉·黄瓜洋葱",
+      "nameEn": "Salad Cucumber & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_cucumber_onion.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_cucumber",
+            "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "13c7fb32dd92fd78b20468b8e53b2d41",
+      "id": "DLC11_Salad_corn_onion",
+      "nameZh": "沙拉·玉米洋葱",
+      "nameEn": "Salad Corn & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_corn_onion.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc11_lettuce",
+        "DLC11_Corn",
+        "dlc11_onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_lettuce",
+            "DLC11_Corn",
+            "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "5af4125798dd9b9f22fbf481c0e5b3bf",
+      "id": "DLC11_mixed_icecream_vanilla",
+      "nameZh": "香草冰淇淋（DLC11）",
+      "nameEn": "Vanilla Ice Cream (DLC11)",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_mixed_icecream_vanilla.asset",
+      "cookingStep": "Blender",
+      "platingStep": "Glass",
+      "ingredients": [
+        "DLC11_Vanilla",
+        "DLC11_Icecube",
+        "dlc11_milk"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "icecream",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "DLC11_Vanilla",
+            "DLC11_Icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "19765d73b6dfd0f2d8bd10c2bad68fce",
+      "id": "DLC11_Float_orangesodafloat_vanilla",
+      "nameZh": "香草橙味汽水冰淇淋（DLC11）",
+      "nameEn": "Orange Soda Ice Cream Float (Vanilla) (DLC11)",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Float_orangesodafloat_vanilla.asset",
+      "cookingStep": "Blender",
+      "platingStep": "Glass",
+      "ingredients": [
+        "DLC11_Vanilla",
+        "DLC11_Icecube",
+        "dlc11_milk",
+        "DLC11_OrangeSoda"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC11_OrangeSoda"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "DLC11_Vanilla",
+            "DLC11_Icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0a57fffe8eb3a30ed0df23b83f58d1b7",
+      "id": "DLC11_Float_rootbeerfloat_vanilla",
+      "nameZh": "香草沙士冰淇淋（DLC11）",
+      "nameEn": "Root Beer Ice Cream Float (Vanilla) (DLC11)",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Float_rootbeerfloat_vanilla.asset",
+      "cookingStep": "Blender",
+      "platingStep": "Glass",
+      "ingredients": [
+        "DLC11_Vanilla",
+        "DLC11_Icecube",
+        "dlc11_milk",
+        "DLC11_RootBeer"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "float",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC11_RootBeer"
+          ]
+        },
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "DLC11_Vanilla",
+            "DLC11_Icecube",
+            "dlc11_milk"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8c9ad5c480eb745a670f30ea0ac5c831",
+      "id": "dlc11_boiledfrankfurter",
+      "nameZh": "煮热狗肠（DLC11）",
+      "nameEn": "Boiled Frankfurter (DLC11)",
+      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_boiledfrankfurter.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "DLC08_Frankfurter"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "DLC08_Frankfurter"
+          ]
+        }
+      ],
+      "icon": true
+    }
+  ]
+}

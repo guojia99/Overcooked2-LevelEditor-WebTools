@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 5,
+  "group": "dlc04",
+  "itemCount": 9,
+  "recipes": [
+    {
+      "guid": "ca3c392f7afd57b0f791227fe50c529d",
+      "id": "DLC04_FruitPlatter_orangegrapes",
+      "nameZh": "果盘·橙葡萄",
+      "nameEn": "Fruit Platter Orange & Grapes",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_FruitPlatter_orangegrapes.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc04_orange",
+        "DLC04_Grapes"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc04_orange",
+            "DLC04_Grapes"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "c0810453a029f5265219965bbd1139c0",
+      "id": "DLC04_FruitPlatter_orangepeach",
+      "nameZh": "果盘·橙桃",
+      "nameEn": "Fruit Platter Orange & Peach",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_FruitPlatter_orangepeach.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc04_orange",
+        "DLC04_Peach"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc04_orange",
+            "DLC04_Peach"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "676a97591b09c349c6c172551726202e",
+      "id": "DLC04_FruitPlatter_orangepeachgrapes",
+      "nameZh": "果盘·橙桃葡萄",
+      "nameEn": "Fruit Platter Orange Peach & Grapes",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_FruitPlatter_orangepeachgrapes.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "dlc04_orange",
+        "DLC04_Peach",
+        "DLC04_Grapes"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc04_orange",
+            "DLC04_Peach",
+            "DLC04_Grapes"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8e5c9f76337d76f224e9641156d04610",
+      "id": "DLC04_FruitPlatter_grapespeach",
+      "nameZh": "果盘·葡萄桃",
+      "nameEn": "Fruit Platter Grapes & Peach",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_FruitPlatter_grapespeach.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [
+        "DLC04_Grapes",
+        "DLC04_Peach"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "fruitplatter",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "DLC04_Grapes",
+            "DLC04_Peach"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "18615c49df5d3e95511a884770a901b1",
+      "id": "DLC04_Hotpot_meat",
+      "nameZh": "肉片火锅",
+      "nameEn": "Hotpot Meat",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_Hotpot_meat.asset",
+      "cookingStep": "HotPot",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_meat",
+        "DLC04_BokChoy"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "web_cooking_region_floorburner",
+            "web_utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "DLC04_Noodles",
+            "dlc04_meat",
+            "DLC04_BokChoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "dec7b24f1a33623c35dfb1224da8b652",
+      "id": "DLC04_Hotpot_mixed",
+      "nameZh": "什锦火锅",
+      "nameEn": "Hotpot Mixed",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_Hotpot_mixed.asset",
+      "cookingStep": "HotPot",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_meat",
+        "dlc04_prawn",
+        "DLC04_BokChoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "web_cooking_region_floorburner",
+            "web_utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "DLC04_Noodles",
+            "dlc04_meat",
+            "dlc04_prawn",
+            "DLC04_BokChoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3231398b456c5567a253110263d608ac",
+      "id": "DLC04_Hotpot_doublemeat",
+      "nameZh": "双肉片火锅",
+      "nameEn": "Hotpot Double Meat",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_Hotpot_doublemeat.asset",
+      "cookingStep": "HotPot",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_meat",
+        "dlc04_meat",
+        "DLC04_BokChoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "web_cooking_region_floorburner",
+            "web_utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "DLC04_Noodles",
+            "dlc04_meat",
+            "dlc04_meat",
+            "DLC04_BokChoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "a4f19c0f81e589651ef71c6c8bb6a43e",
+      "id": "DLC04_Hotpot_doubleprawn",
+      "nameZh": "双虾仁火锅",
+      "nameEn": "Hotpot Double Prawn",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_Hotpot_doubleprawn.asset",
+      "cookingStep": "HotPot",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_prawn",
+        "dlc04_prawn",
+        "DLC04_BokChoy"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "web_cooking_region_floorburner",
+            "web_utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "DLC04_Noodles",
+            "dlc04_prawn",
+            "dlc04_prawn",
+            "DLC04_BokChoy"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "3aab840f019d41e3b001b1660326191c",
+      "id": "DLC04_Hotpot_prawn",
+      "nameZh": "虾仁火锅",
+      "nameEn": "Hotpot Prawn",
+      "assetPath": "Assets/common03/food/Recipes/dlc04/DLC04_Hotpot_prawn.asset",
+      "cookingStep": "HotPot",
+      "platingStep": "Plate",
+      "ingredients": [
+        "DLC04_Noodles",
+        "dlc04_prawn",
+        "DLC04_BokChoy"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc04",
+      "type": "hotpot",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "HotPot",
+          "utensils": [
+            "web_cooking_region_floorburner",
+            "web_utensil_large_pot_01"
+          ],
+          "ingredients": [
+            "DLC04_Noodles",
+            "dlc04_prawn",
+            "DLC04_BokChoy"
+          ]
+        }
+      ],
+      "icon": true
+    }
+  ]
+}

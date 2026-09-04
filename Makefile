@@ -1,5 +1,11 @@
 all: run
 
+ZIP_NAME := OC2-Web-v0.7.zip
+
+build:
+	rm -f $(ZIP_NAME)
+	zip -r $(ZIP_NAME) . -x ".*" -x "*/.*" -x "$(ZIP_NAME)"
+
 
 run:
 	rm -rf ./layout-editor/

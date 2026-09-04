@@ -1,0 +1,338 @@
+{
+  "generatedAt": "2026-09-04T07:19:23.635Z",
+  "schemaVersion": 5,
+  "gridCellSize": 1.2,
+  "itemCount": 2527,
+  "itemChunks": [
+    "catalog/items.0.json",
+    "catalog/items.1.json",
+    "catalog/items.2.json",
+    "catalog/items.3.json",
+    "catalog/items.4.json",
+    "catalog/items.5.json",
+    "catalog/items.6.json",
+    "catalog/items.7.json",
+    "catalog/items.8.json",
+    "catalog/items.9.json",
+    "catalog/items.10.json",
+    "catalog/items.11.json",
+    "catalog/items.12.json"
+  ],
+  "paletteGroups": [
+    {
+      "key": "counters/prep",
+      "labelZh": "核心 · 台面 / 准备",
+      "labelEn": "Countertops & prep",
+      "layoutTier": "core",
+      "itemCount": 5
+    },
+    {
+      "key": "counters/cooking",
+      "labelZh": "核心 · 烤制工作站",
+      "labelEn": "Cooking stations",
+      "layoutTier": "core",
+      "itemCount": 7
+    },
+    {
+      "key": "counters/sinks",
+      "labelZh": "核心 · 水槽 / 清洁",
+      "labelEn": "Sinks & cleaning",
+      "layoutTier": "core",
+      "itemCount": 10
+    },
+    {
+      "key": "counters/service",
+      "labelZh": "核心 · 出餐 / 加工",
+      "labelEn": "Serving & processing",
+      "layoutTier": "core",
+      "itemCount": 10
+    },
+    {
+      "key": "utensils/plates",
+      "labelZh": "核心 · 盘杯器具",
+      "labelEn": "Plates & glassware",
+      "layoutTier": "core",
+      "itemCount": 8
+    },
+    {
+      "key": "utensils/cooking",
+      "labelZh": "核心 · 锅具烤具",
+      "labelEn": "Cooking utensils",
+      "layoutTier": "core",
+      "itemCount": 9
+    },
+    {
+      "key": "hotpot/web",
+      "labelZh": "火锅 · Web（CustomStub）",
+      "labelEn": "Hotpot · Web (CustomStub)",
+      "layoutTier": "core",
+      "itemCount": 6
+    },
+    {
+      "key": "utensils/mixing",
+      "labelZh": "核心 · 搅拌器具",
+      "labelEn": "Mixing & blending",
+      "layoutTier": "core",
+      "itemCount": 3
+    },
+    {
+      "key": "utensils/tools",
+      "labelZh": "核心 · 工具 / 其他",
+      "labelEn": "Tools & misc",
+      "layoutTier": "core",
+      "itemCount": 7
+    },
+    {
+      "key": "mechanisms",
+      "labelZh": "核心 · 机关",
+      "labelEn": "Mechanisms",
+      "layoutTier": "core",
+      "itemCount": 23
+    },
+    {
+      "key": "surface",
+      "labelZh": "核心 · 空气墙",
+      "labelEn": "Air walls",
+      "layoutTier": "core",
+      "itemCount": 1
+    },
+    {
+      "key": "Player",
+      "labelZh": "核心 · 厨师出生点",
+      "labelEn": "Chef spawns",
+      "layoutTier": "core",
+      "itemCount": 1
+    },
+    {
+      "key": "surface/floor",
+      "labelZh": "地板 / 背景",
+      "labelEn": "Floor & background surfaces",
+      "layoutTier": "floor",
+      "itemCount": 80
+    },
+    {
+      "key": "decor/food",
+      "labelZh": "装饰 · 食材模型",
+      "labelEn": "Decor · food props",
+      "layoutTier": "decor",
+      "itemCount": 130
+    },
+    {
+      "key": "decor/recipes",
+      "labelZh": "装饰 · 成品菜",
+      "labelEn": "Decor · plated dishes",
+      "layoutTier": "decor",
+      "itemCount": 97
+    },
+    {
+      "key": "art/npc",
+      "labelZh": "装饰 · NPC 角色",
+      "labelEn": "Decor · NPC",
+      "layoutTier": "decor",
+      "itemCount": 120
+    },
+    {
+      "key": "art/air_balloon",
+      "labelZh": "装饰 · 热气球",
+      "labelEn": "Decor · air_balloon",
+      "layoutTier": "decor",
+      "itemCount": 27
+    },
+    {
+      "key": "art/city",
+      "labelZh": "装饰 · city",
+      "labelEn": "Decor · city",
+      "layoutTier": "decor",
+      "itemCount": 0
+    },
+    {
+      "key": "art/city_sushi",
+      "labelZh": "装饰 · 寿司城市场景",
+      "labelEn": "Decor · city_sushi",
+      "layoutTier": "decor",
+      "itemCount": 99
+    },
+    {
+      "key": "art/core",
+      "labelZh": "装饰 · core",
+      "labelEn": "Decor · core",
+      "layoutTier": "decor",
+      "itemCount": 0
+    },
+    {
+      "key": "art/dlc02",
+      "labelZh": "装饰 · dlc02",
+      "labelEn": "Decor · dlc02",
+      "layoutTier": "decor",
+      "itemCount": 0
+    },
+    {
+      "key": "art/dlc02_beach",
+      "labelZh": "装饰 · 海滩 DLC",
+      "labelEn": "Decor · dlc02_beach",
+      "layoutTier": "decor",
+      "itemCount": 159
+    },
+    {
+      "key": "art/dlc03_christmas",
+      "labelZh": "装饰 · 圣诞 DLC",
+      "labelEn": "Decor · dlc03_christmas",
+      "layoutTier": "decor",
+      "itemCount": 91
+    },
+    {
+      "key": "art/dlc04",
+      "labelZh": "装饰 · 新年 · 火锅 DLC",
+      "labelEn": "Decor · dlc04",
+      "layoutTier": "decor",
+      "itemCount": 1
+    },
+    {
+      "key": "art/dlc04_chinatown",
+      "labelZh": "装饰 · dlc04_chinatown",
+      "labelEn": "Decor · dlc04_chinatown",
+      "layoutTier": "decor",
+      "itemCount": 64
+    },
+    {
+      "key": "art/dlc05",
+      "labelZh": "装饰 · dlc05",
+      "labelEn": "Decor · dlc05",
+      "layoutTier": "decor",
+      "itemCount": 0
+    },
+    {
+      "key": "art/dlc05_camping",
+      "labelZh": "装饰 · 露营 DLC",
+      "labelEn": "Decor · dlc05_camping",
+      "layoutTier": "decor",
+      "itemCount": 185
+    },
+    {
+      "key": "art/dlc07",
+      "labelZh": "装饰 · dlc07",
+      "labelEn": "Decor · dlc07",
+      "layoutTier": "decor",
+      "itemCount": 0
+    },
+    {
+      "key": "art/dlc07_horde",
+      "labelZh": "装饰 · 部落 DLC",
+      "labelEn": "Decor · dlc07_horde",
+      "layoutTier": "decor",
+      "itemCount": 414
+    },
+    {
+      "key": "art/dlc08_circus",
+      "labelZh": "装饰 · 马戏团 DLC",
+      "labelEn": "Decor · dlc08_circus",
+      "layoutTier": "decor",
+      "itemCount": 183
+    },
+    {
+      "key": "art/dlc09_festivemashup",
+      "labelZh": "装饰 · dlc09_festivemashup",
+      "labelEn": "Decor · dlc09_festivemashup",
+      "layoutTier": "decor",
+      "itemCount": 306
+    },
+    {
+      "key": "art/dlc09_wonderland",
+      "labelZh": "装饰 · 仙境 DLC",
+      "labelEn": "Decor · dlc09_wonderland",
+      "layoutTier": "decor",
+      "itemCount": 9
+    },
+    {
+      "key": "art/dlc10",
+      "labelZh": "装饰 · 新年 · 火锅 DLC2",
+      "labelEn": "Decor · dlc10",
+      "layoutTier": "decor",
+      "itemCount": 7
+    },
+    {
+      "key": "art/dlc10_lunar",
+      "labelZh": "装饰 · dlc10_lunar",
+      "labelEn": "Decor · dlc10_lunar",
+      "layoutTier": "decor",
+      "itemCount": 3
+    },
+    {
+      "key": "art/dlc11_summer",
+      "labelZh": "装饰 · 夏季饮料 DLC",
+      "labelEn": "Decor · dlc11_summer",
+      "layoutTier": "decor",
+      "itemCount": 163
+    },
+    {
+      "key": "art/dlc13",
+      "labelZh": "装饰 · 中秋 · 巧克力 DLC",
+      "labelEn": "Decor · dlc13",
+      "layoutTier": "decor",
+      "itemCount": 5
+    },
+    {
+      "key": "art/dlc13_moonfestival",
+      "labelZh": "装饰 · dlc13_moonfestival",
+      "labelEn": "Decor · dlc13_moonfestival",
+      "layoutTier": "decor",
+      "itemCount": 84
+    },
+    {
+      "key": "art/foodtruck",
+      "labelZh": "装饰 · 餐车",
+      "labelEn": "Decor · foodtruck",
+      "layoutTier": "decor",
+      "itemCount": 4
+    },
+    {
+      "key": "art/graveyard",
+      "labelZh": "装饰 · 墓地",
+      "labelEn": "Decor · graveyard",
+      "layoutTier": "decor",
+      "itemCount": 25
+    },
+    {
+      "key": "art/legacy",
+      "labelZh": "装饰 · 经典 OC1",
+      "labelEn": "Decor · legacy",
+      "layoutTier": "decor",
+      "itemCount": 2
+    },
+    {
+      "key": "art/mine",
+      "labelZh": "装饰 · 矿洞",
+      "labelEn": "Decor · mine",
+      "layoutTier": "decor",
+      "itemCount": 1
+    },
+    {
+      "key": "art/raft",
+      "labelZh": "装饰 · 木筏",
+      "labelEn": "Decor · raft",
+      "layoutTier": "decor",
+      "itemCount": 24
+    },
+    {
+      "key": "art/space",
+      "labelZh": "装饰 · 太空",
+      "labelEn": "Decor · space",
+      "layoutTier": "decor",
+      "itemCount": 51
+    },
+    {
+      "key": "art/throne",
+      "labelZh": "装饰 · 王座",
+      "labelEn": "Decor · throne",
+      "layoutTier": "decor",
+      "itemCount": 6
+    },
+    {
+      "key": "art/wizard",
+      "labelZh": "装饰 · 魔法学校",
+      "labelEn": "Decor · wizard",
+      "layoutTier": "decor",
+      "itemCount": 30
+    }
+  ]
+}

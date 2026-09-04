@@ -110,3 +110,9 @@ InitTestScene*.unity*
 
 web/node_modules
 web/dist
+
+*.zip
+./*.zip
+
+.DS_Store/
+./.DS_Store/

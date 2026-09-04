@@ -1,0 +1,122 @@
+{
+  "description": "commonW1 background placeholders (prefab + .meta only). Run layout-editor/scripts/gen-commonw1-prefabs.mjs to regenerate.",
+  "items": [
+    {
+      "id": "city_water",
+      "theme": "city",
+      "zh": "城市水面",
+      "en": "city water",
+      "cellsX": 6,
+      "cellsZ": 6,
+      "orientation": "standing"
+    },
+    {
+      "id": "dynamic_raft_water",
+      "theme": "raft",
+      "zh": "木筏动态水面",
+      "en": "dynamic raft water",
+      "cellsX": 6,
+      "cellsZ": 6,
+      "orientation": "flat"
+    },
+    {
+      "id": "SM_DLC13_WaterBase_1to2",
+      "theme": "dlc13",
+      "zh": "DLC13 水面底座 1×2",
+      "en": "DLC13 water base 1x2",
+      "cellsX": 1,
+      "cellsZ": 2,
+      "orientation": "flat"
+    },
+    {
+      "id": "sm_dlc13_water_edge",
+      "theme": "dlc13",
+      "zh": "DLC13 水面边缘",
+      "en": "DLC13 water edge",
+      "cellsX": 4,
+      "cellsZ": 1,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_dlc5_water_special",
+      "theme": "dlc05",
+      "zh": "DLC5 特殊水面",
+      "en": "DLC5 special water",
+      "cellsX": 2,
+      "cellsZ": 2,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_dlc07_1_3_water",
+      "theme": "dlc07",
+      "zh": "DLC7 水面 1×3",
+      "en": "DLC7 water 1x3",
+      "cellsX": 1,
+      "cellsZ": 3,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_dlc07_2_1_water_01",
+      "theme": "dlc07",
+      "zh": "DLC7 水面 2×1",
+      "en": "DLC7 water 2x1",
+      "cellsX": 2,
+      "cellsZ": 1,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_dlc07_water_3_2",
+      "theme": "dlc07",
+      "zh": "DLC7 水面 3×2",
+      "en": "DLC7 water 3x2",
+      "cellsX": 3,
+      "cellsZ": 2,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_dlc10_1_2_water",
+      "theme": "dlc10",
+      "zh": "DLC10 水面 1×2",
+      "en": "DLC10 water 1x2",
+      "cellsX": 1,
+      "cellsZ": 2,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_dlc2_h9_pool_water_01",
+      "theme": "dlc02",
+      "zh": "DLC2 泳池水面 H9",
+      "en": "DLC2 pool water H9",
+      "cellsX": 2,
+      "cellsZ": 2,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_mapwatercurve120_01",
+      "theme": "core",
+      "zh": "地图弯曲水面 120°",
+      "en": "map water curve 120",
+      "cellsX": 2,
+      "cellsZ": 2,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_mapwaterroad_01",
+      "theme": "core",
+      "zh": "地图水路",
+      "en": "map water road",
+      "cellsX": 4,
+      "cellsZ": 1,
+      "orientation": "flat"
+    },
+    {
+      "id": "m_mapwaterroadshort_01",
+      "theme": "core",
+      "zh": "地图短水路",
+      "en": "map water road short",
+      "cellsX": 2,
+      "cellsZ": 1,
+      "orientation": "flat"
+    }
+  ]
+}
