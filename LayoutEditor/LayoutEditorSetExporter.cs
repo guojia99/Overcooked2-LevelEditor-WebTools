@@ -39,11 +39,12 @@ public static class LayoutEditorSetExporter
     private static bool _usesCustomStub;
 
     /// <summary>CustomStub tag 载体前缀（SpecificPseudoPrefabTag.prefabTag）。
-    ///  与 CustomStub/EntryPoint.HealObject + loader 的 RandomCrate 解析保持同步；
+    ///  与 CustomStub/EntryPoint.HealObject + loader 的解析保持同步；
     ///  新增 stub 类型时此处必须补前缀。</summary>
     private static readonly string[] CustomStubTagPrefixes =
     {
-        "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|"
+        "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
+        "UtensilTiming|"
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub：tag 载体（含 prefab 自带的
@@ -57,12 +58,16 @@ public static class LayoutEditorSetExporter
             if (string.IsNullOrEmpty(t))
                 continue;
             for (int i = 0; i < CustomStubTagPrefixes.Length; i++)
-            {
-                if (t.StartsWith(CustomStubTagPrefixes[i], StringComparison.Ordinal))
-                    return true;
+                {
+                    if (t.StartsWith(CustomStubTagPrefixes[i], StringComparison.Ordinal))
+                        return true;
+                }
             }
-        }
-        foreach (var mb in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
+            // 锅具时间参数（cookTime/burnTime/mixTime/overMixTime 任一 > 0）：
+            // 应用逻辑在 Stub_<set> 程序集（CustomStub.UtensilTiming + Harmony 阈值接管），
+            // 必须随关卡包分发。写回时按 tag "UtensilTiming|" 烘焙（上方前缀已覆盖）；
+            // 此处再按命名空间 CustomStub 的组件兜底（含烘焙好的 UtensilTimingConfig）。
+            foreach (var mb in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
         {
             if (mb == null)
                 continue; // missing script

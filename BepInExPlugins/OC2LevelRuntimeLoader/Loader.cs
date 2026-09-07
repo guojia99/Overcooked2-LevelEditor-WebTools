@@ -164,8 +164,10 @@ namespace OC2LevelRuntimeLoader
                     + (typeCount >= 0 ? typeCount.ToString() : "未知") + "）"
                     + (crateType != null ? "，CustomStub.RandomCrate ✓" : "，⚠ 未找到 CustomStub.RandomCrate（旧版或空程序集）"));
                 // CustomStub EntryPoint 引导（v1.4.0+）：新 stub 组件（TimedSwitch /
-                // PushablePot / VoidFall / SwitchReenable / WorldMapDressing / Harmony
-                // KillPlane 补丁）的统一安装器。纯反射约定调用，loader 与 stub 零编译依赖；
+                // PushablePot / VoidFall / SwitchReenable / WorldMapDressing /
+                // UtensilTiming（锅具时间）/ TerminalGuard（未绑定终端防线）/
+                // Harmony KillPlane 补丁）的统一安装器。
+                // 纯反射约定调用，loader 与 stub 零编译依赖；
                 // EntryPoint 内部自带哨兵幂等（多关卡集同名程序集只装一次）。
                 var entryPoint = asm.GetType("CustomStub.EntryPoint", false);
                 if (entryPoint != null)

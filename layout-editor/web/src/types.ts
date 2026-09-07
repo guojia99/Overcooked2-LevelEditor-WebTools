@@ -119,6 +119,14 @@ export interface LayoutTeleportalStub {
 export interface LayoutCookingUtensilStub {
   capacity?: number;
   allowedIngredientGuids?: string[];
+  /** 烹饪类锅具：煮熟秒数（写 CookingHandler.m_cookingtime；空 = prefab 默认） */
+  cookTime?: number;
+  /** 烹饪类锅具：煮糊秒数（空 = 默认 2×cookTime；配置后由 CustomStub.UtensilTiming + Harmony 生效） */
+  burnTime?: number;
+  /** 搅拌类锅具：混合完成秒数（写 MixingHandler.m_mixingTime；空 = prefab 默认） */
+  mixTime?: number;
+  /** 搅拌类锅具：过度混合秒数（空 = 默认 2×mixTime） */
+  overMixTime?: number;
 }
 
 export interface LayoutTravelatorStub {
@@ -777,6 +785,41 @@ export interface LevelRecipes {
   recipeGuids: string[];
   /** 与 recipeGuids 对应的菜谱 id（文件名），前端据此按 id 兜底匹配勾选状态。 */
   recipeIds?: string[];
+  /** optionalRecipeMatchListItems 回显（菜谱管理 Optional tab）。 */
+  optionalItems?: LevelOptionalItem[];
+  /** includeRecipeMatchLists 回显（菜谱管理 Matchlist tab）。 */
+  matchlists?: LevelMatchlistRef[];
+}
+
+// ---------- Optional / Matchlist 手动管理（菜谱管理两个 tab） ----------
+
+export interface LevelOptionalItem {
+  guid: string;
+  id: string;
+  group?: string;
+  kind?: string;
+}
+
+export interface LevelMatchlistRef {
+  key: string;
+  guid: string;
+  bundleName?: string;
+}
+
+export interface OptionalPresetItem {
+  guid: string;
+  id: string;
+  group?: string;
+  kind?: string;
+  nameZh?: string;
+}
+
+export interface OptionalPresets {
+  items: OptionalPresetItem[];
+  pizzaFillGuids: string[];
+  pizzaMushroomGuids: string[];
+  hotdogFillGuidsDlc08: string[];
+  hotdogFillGuidsDlc11: string[];
 }
 
 // ---------- Level admin (sets / levels / audio) ----------
@@ -1115,4 +1158,131 @@ export interface IconStatusList {
   totalIngredients: number;
   recipesWithIcon: number;
   ingredientsWithIcon: number;
+}
+
+// ---------- Write-back History (关卡管理「工具与历史」) ----------
+
+export interface WriteBackHistoryItem {
+  record: string;
+  beginTime: string;
+  finalizeTime: string;
+  endpoints: string[];
+  semanticAvailable: boolean;
+  itemsBefore: number;
+  itemsAfter: number;
+  floorsBefore: number;
+  floorsAfter: number;
+  itemsAdded: number;
+  itemsRemoved: number;
+  itemsMoved: number;
+  itemsChanged: number;
+  floorsAdded: number;
+  floorsRemoved: number;
+  floorsChanged: number;
+  cameraChanged: boolean;
+  infoMissing: boolean;
+  sceneBytesBefore: number;
+  sceneBytesAfter: number;
+  infoBytesBefore: number;
+  infoBytesAfter: number;
+}
+
+export interface WriteBackHistoryList {
+  items: WriteBackHistoryItem[];
+}
+
+export interface WriteBackDiffEntry {
+  id: string;
+  name: string;
+  /** 变更分类（config | prefab | hierarchy；reid 条目为 ["reid"]）。 */
+  kinds?: string[];
+  /** 变更明细（前 3 条「字段: 旧 → 新」）。 */
+  detail?: string;
+}
+
+export interface WriteBackItemMove {
+  id: string;
+  name: string;
+  /** moved | rotated | scaled。 */
+  kind?: string;
+  fromPosition: string;
+  toPosition: string;
+}
+
+export interface WriteBackInfoDiff {
+  missing: boolean;
+  recipesAdded: string[];
+  recipesRemoved: string[];
+  ingredientsAdded: string[];
+  ingredientsRemoved: string[];
+  dependenciesAdded: string[];
+  dependenciesRemoved: string[];
+  audioAdded: string[];
+  audioRemoved: string[];
+  ambiencesAdded: string[];
+  ambiencesRemoved: string[];
+  optionalItemsAdded: string[];
+  optionalItemsRemoved: string[];
+  matchlistsAdded: string[];
+  matchlistsRemoved: string[];
+  configsBefore: string[];
+  configsAfter: string[];
+  screenshotBefore: string;
+  screenshotAfter: string;
+  deathEffectBefore: string;
+  deathEffectAfter: string;
+  levelNameBefore: string;
+  levelNameAfter: string;
+  minMaxOrdersBefore: string;
+  minMaxOrdersAfter: string;
+}
+
+export interface WriteBackDiff {
+  recordedAt: string;
+  scenePath: string;
+  semanticAvailable: boolean;
+  itemsAdded: WriteBackDiffEntry[];
+  itemsRemoved: WriteBackDiffEntry[];
+  itemsMoved: WriteBackItemMove[];
+  itemsChanged: WriteBackDiffEntry[];
+  /** 重编号：仅 id 变（恢复→写回后全量换 id），内容未变，不计入变动。 */
+  itemsReid?: WriteBackDiffEntry[];
+  itemsUnchanged: number;
+  floorsAdded: WriteBackDiffEntry[];
+  floorsRemoved: WriteBackDiffEntry[];
+  floorsChanged: WriteBackDiffEntry[];
+  floorsUnchanged: number;
+  cameraChanged: boolean;
+  cameraDetail?: string;
+  lightsAdded: WriteBackDiffEntry[];
+  lightsRemoved: WriteBackDiffEntry[];
+  lightsChanged: WriteBackDiffEntry[];
+  lightsUnchanged: number;
+  info: WriteBackInfoDiff | null;
+  sceneBytesBefore: number;
+  sceneBytesAfter: number;
+  infoBytesBefore: number;
+  infoBytesAfter: number;
+}
+
+export interface WriteBackMeta {
+  beginTime: string;
+  finalizeTime: string;
+  sceneAssetPath: string;
+  infoAssetPath: string;
+  endpoints: string[];
+  itemsBefore: number;
+  itemsAfter: number;
+  floorsBefore: number;
+  floorsAfter: number;
+  semanticAvailable: boolean;
+}
+
+export interface WriteBackHistoryDetail {
+  record: string;
+  meta: WriteBackMeta | null;
+  diff: WriteBackDiff | null;
+  /** 完整布局文档是否存在（旧记录只有轻量语义快照，不可恢复到画布）。 */
+  canRestoreBefore: boolean;
+  canRestoreAfter: boolean;
 }

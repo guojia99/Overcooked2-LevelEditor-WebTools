@@ -121,7 +121,20 @@ public static class AnimGroupBakery
                 {
                     assetKeys[key] = g.displayName ?? "?";
                 }
-                var err = BakeGroup(scene, g, animDir, sceneName, usedAssets);
+                // 逐组隔离（2026-09-05 level1_2 事故）：单组烘焙异常（如成员对象在
+                // 烘焙中途被销毁的 MissingReferenceException）只记错误并继续其余组，
+                // 不再沿 SyncInner 中断全部动画组烘焙（否则整轮写回报「动画控制写回异常」）。
+                string err;
+                try
+                {
+                    err = BakeGroup(scene, g, animDir, sceneName, usedAssets);
+                }
+                catch (Exception bakeEx)
+                {
+                    LayoutEditorLog.LogWarning("anim group: bake group \"" + (g.displayName ?? "?")
+                        + "\" threw, skipped: " + bakeEx);
+                    err = "动画组「" + (g.displayName ?? "?") + "」烘焙异常（其余组已继续）: " + bakeEx.Message;
+                }
                 if (!string.IsNullOrEmpty(err))
                     errors.Add(err);
             }
@@ -185,6 +198,12 @@ public static class AnimGroupBakery
             if (t != null) return t.gameObject;
         }
         return null;
+    }
+
+    /// <summary>Unity 假 null 判定：已被 DestroyImmediate 的 GameObject == null 为 true。</summary>
+    private static bool IsDead(GameObject go)
+    {
+        return go == null;
     }
 
     private static void FilterDict<TK, TV>(Dictionary<TK, TV> dict, HashSet<TK> liveKeys)
@@ -293,6 +312,10 @@ public static class AnimGroupBakery
         }
         if (members.Count == 0)
             return "动画组「" + (group.displayName ?? "?") + "」没有可解析的物品或地板";
+        // 死亡过滤（2026-09-05 level1_2 事故）：解析阶段可能拿到本轮写回已被
+        // 销毁的对象（id 恰好复用/早于烘焙清理）——假 null 成员留着必在
+        // 后续 go.name/go.transform 处抛 MissingReferenceException。
+        members.RemoveAll(IsDead);
 
         LayoutEditorLog.Log("anim group: resolved " + members.Count + " member(s) for \"" +
             (group.displayName ?? "?") + "\": " +
@@ -315,6 +338,8 @@ public static class AnimGroupBakery
         // 空气地板对齐 oc1_story 3-4：AirFloor(ObjectContainer) + Ground(碰撞)，动画驱动容器。
         for (int i = 0; i < members.Count; i++)
             members[i] = AirFloorRig.EnsureRig(members[i], groupRoot);
+        // EnsureRig 对已销毁成员静默放行（入口 go==null 直接 return），再滤一遍。
+        members.RemoveAll(IsDead);
         RemoveStaleFloorColliderChildren(groupRoot, members);
 
         // Reparent items under the group root (world position preserved), giving each
@@ -326,6 +351,8 @@ public static class AnimGroupBakery
         // "Floor (1) (1) (1)" -> "Floor (1)".
         foreach (var go in members)
         {
+            if (go == null)
+                continue; // 已销毁成员（防御；上方过滤后正常不会出现）
             var cleaned = Regex.Replace(go.name, @"(\(\d+\))( \1)+$", "$1");
             if (cleaned != go.name)
             {
@@ -2659,6 +2686,25 @@ public static class AnimGroupBakery
             if (child == null || memberSet.Contains(child.gameObject))
                 continue;
             if (!AirFloorRig.IsMoveGroupWalkCollider(child.gameObject))
+                continue;
+            // 子树保护（2026-09-05 level1_2 事故）：文档的地板成员可能是 rig 的
+            // Ground collider 而非 AirFloor 包装器（上次烘焙后按子物体导出）。
+            // 只按「直系子物体不在成员集合」判定会把 AirFloor 误当垃圾销毁，
+            // 连带杀死其子 Ground（正是成员）→ 后续 go.name 抛 MissingReference-
+            // Exception 中断整轮烘焙。任一成员位于该子物体下（含相等）即跳过。
+            bool subtreeHasMember = false;
+            for (int m = 0; m < members.Count; m++)
+            {
+                var mem = members[m];
+                if (mem == null)
+                    continue;
+                if (mem.transform.IsChildOf(child))
+                {
+                    subtreeHasMember = true;
+                    break;
+                }
+            }
+            if (subtreeHasMember)
                 continue;
             doomed.Add(child.gameObject);
         }

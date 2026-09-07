@@ -12,6 +12,7 @@ import { stubKindOf, normalizeMachineLinkTriggers } from "./stubControls";
 import { cleanOrphanedAnimControls, stopAnimPreview } from "./animControl";
 import { cleanOrphanedButtonLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
+import { cleanOrphanedStubRefs } from "./stubRefs";
 import { itemLabel } from "./labels";
 import {
   syncBackgroundForTheme,
@@ -56,11 +57,13 @@ import {
   fetchLayout,
   fetchGrid,
   fetchFloorMaterials,
+  fetchWriteBackHistoryDoc,
   setDeathTheme,
   setKillPlaneBounds,
   fetchHealth
 } from "../api";
 import type {
+  LayoutDocument,
   LayoutItem,
   FloorObject
 } from "../types";
@@ -108,94 +111,7 @@ export async function loadScene(assetPath: string) {
       `${location.pathname}?scene=${encodeURIComponent(assetPath)}${location.hash}`
     );
     const doc = await fetchLayout(assetPath);
-    const dupIds = countDuplicateInstanceIds(doc.items);
-    // 场景导出端自动去重：同 prefab 完全同位（<0.01）的物品在画布上 100% 重叠、
-    // 视觉不可见（88 个重叠炮看起来就是 1 个）——历史克隆残留。这里保留首条、
-    // 其余直接丢弃；下次写回由 Unity 侧 RemoveUnmatchedSceneItems 清理场景残留，
-    // 同时 Applier 的防堆叠守卫兜底。闭环：重新加载 → 自动去重 → 写回 → 场景干净。
-    let dedupedStacks = 0;
-    {
-      const seenPos = new Map<string, { wx: number; wz: number }>();
-      S.items = S.items.filter((it) => {
-        const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
-        if (it._wx == null || it._wz == null) return true;
-        const prev = seenPos.get(key);
-        if (prev && Math.abs(prev.wx - it._wx) < 0.01 && Math.abs(prev.wz - it._wz) < 0.01) {
-          dedupedStacks++;
-          return false;
-        }
-        if (!prev) seenPos.set(key, { wx: it._wx, wz: it._wz });
-        return true;
-      });
-    }
-    // 过滤通用碰撞块（Col_Wall / Col_Floor 等场景辅助对象）：只有空气墙
-    // （airWall=true，1×1×1.132）才作为核心层物品进入编辑器。
-    S.items = doc.items
-      .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true))
-      .map((raw, index) => enrichItem(raw, `i${index}`));
-    // 动画组必须先于 merge 赋值：merge*IntoFloors 里的「组成员跳过吸收」逻辑
-    // 读取 S.animControls，若此时尚为空/旧值，移动岛的主题地砖会被吸收成地板
-    // 矩形、写回时以新 id 挂到 Art 下重发射——永久脱离动画组（testice MidIsland
-    // 岛分裂实证）。
-    S.animControls = (doc.animControls ?? doc.moveControls)?.groups ?? [];
-    S.floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
-    mergeRaftItemsIntoFloors();
-    mergeThemedItemsIntoFloors();
-    S.walkable = doc.walkable ?? [];
-    S.deathInfo = doc.deathInfo ?? null;
-    S.cameraInfo = doc.cameraInfo ?? null;
-    S.lights = doc.lights ?? [];
-    S.switchLinks = doc.switchLinks ?? [];
-    // 旧式自定义触发名（switch_*）对机器目标已失效（真机不响应），归一化为原生触发名
-    normalizeMachineLinkTriggers();
-    S.buttonLinks = doc.buttonLinks?.links ?? [];
-    S.buttonEvents = doc.buttonEvents?.links ?? [];
-    cleanOrphanedAnimControls();
-    cleanOrphanedButtonLinks();
-    cleanOrphanedButtonEvents();
-    const itemTheme = inferBgThemeFromItems(S.items);
-    const deathThemeKey = bgThemeKeyForDeathType(S.deathInfo?.deathType);
-    const sceneThemeKey = itemTheme ?? deathThemeKey;
-    const savedTheme = localStorage.getItem("bgTheme:" + S.scenePath);
-    const normalizedSaved =
-      savedTheme === "lava" ? "void" : savedTheme;
-    if (normalizedSaved && BG_THEMES.some((t) => t.key === normalizedSaved)) {
-      S.bgThemeKey = normalizedSaved;
-    } else {
-      S.bgThemeKey = sceneThemeKey;
-    }
-    if (S.bgThemeKey === "lava") S.bgThemeKey = "void";
-    S.bgThemeDirty = S.bgThemeKey !== sceneThemeKey;
-    refreshUtensilStacks();
-    S.gridInfo = await fetchGrid();
-    S.floorMaterials = await fetchFloorMaterials(S.currentLevelSet).catch(() => []);
-    repairFloorMaterialsFromCatalog();
-    if (S.currentLayer === "floor") {
-      buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "", "floor");
-    } else if (S.currentLayer === "background") {
-      buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "", "background");
-    } else if (S.currentLayer === "anim") {
-      dom.paletteCats.innerHTML = "";
-    }
-    clearSelection();
-    S.marqueeing = false;
-    resetOverlapMarqueePending();
-    clearFloorSelection();
-    hideDetail();
-    S.history.clear();
-    clearDirty();
-    S.activeAnimGroupId = null;
-    S.activeAnimEventIdx = null;
-    S.selectedWaypointId = null;
-    S.animMode = "none";
-    S.activeAnimTab = "members";
-    S.animPickTargetGroupId = null;
-    S.collapsedGroupIds = new Set<string>();
-    stopAnimPreview();
-    S.expandedMemberId = null;
-    if (S.currentLayer === "anim") S.activeRightTab = "anim";
-    updatePanelTabButtons();
-    draw();
+    const { dupIds, dedupedStacks } = await applyLayoutDocument(doc);
     const floorNote = S.floors.length > 0 ? `、${S.floors.length} 块地板` : "";
     if (dupIds > 0) {
       setStatus(
@@ -217,6 +133,227 @@ export async function loadScene(assetPath: string) {
   }
 }
 
+export interface ApplyDocOptions {
+  /** 恢复/覆盖模式：不清 undo 栈、不 clearDirty，改为 markDirty（落盘交给用户手动写回）。 */
+  markDirtyAfter?: boolean;
+}
+
+/** 把一份完整布局文档灌入编辑器状态并重绘（loadScene 与「恢复写回快照」共用管线；
+ *  不负责取数，也不改 S.scenePath）。返回加载诊断计数供调用方组织状态栏文案。 */
+export async function applyLayoutDocument(
+  doc: LayoutDocument,
+  opts?: ApplyDocOptions
+): Promise<{ dupIds: number; dedupedStacks: number }> {
+  const dupIds = countDuplicateInstanceIds(doc.items);
+  // 过滤通用碰撞块（Col_Wall / Col_Floor 等场景辅助对象）：只有空气墙
+  //（airWall=true，1×1×1.132）才作为核心层物品进入编辑器。
+  S.items = doc.items
+    .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true))
+    .map((raw, index) => enrichItem(raw, `i${index}`));
+  // 动画组必须先于 merge 赋值：merge*IntoFloors 里的「组成员跳过吸收」逻辑
+  // 读取 S.animControls，若此时尚为空/旧值，移动岛的主题地砖会被吸收成地板
+  // 矩形、写回时以新 id 挂到 Art 下重发射——永久脱离动画组（testice MidIsland
+  // 岛分裂实证）。
+  S.animControls = (doc.animControls ?? doc.moveControls)?.groups ?? [];
+  S.floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
+  mergeRaftItemsIntoFloors();
+  mergeThemedItemsIntoFloors();
+  // 场景导出端自动去重：同 prefab 且 XYZ 完全同位（<0.01）的物品在画布上
+  // 100% 重叠、视觉不可见（88 个重叠炮看起来就是 1 个）——历史克隆残留。
+  // 这里保留首条、其余直接丢弃；下次写回由 Unity 侧 RemoveUnmatchedSceneItems
+  // 清理场景残留，同时 Applier 的防堆叠守卫兜底。闭环：重新加载 → 自动去重 →
+  // 写回 → 场景干净。注意：必须比较 Y——同 XZ 不同高度（多层关卡/墙面立柱）
+  // 是合法摆设，不能误删；也必须在 S.items 赋值之后执行（旧版在赋值前对
+  // 上一场景的残留数据去重，等于从未生效）。
+  let dedupedStacks = 0;
+  {
+    const seenPos = new Map<string, { wx: number; wy: number; wz: number }>();
+    S.items = S.items.filter((it) => {
+      const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
+      if (it._wx == null || it._wz == null) return true;
+      const wy = it.worldPosition?.y ?? it.localPosition?.y ?? 0;
+      const prev = seenPos.get(key);
+      if (
+        prev &&
+        Math.abs(prev.wx - it._wx) < 0.01 &&
+        Math.abs(prev.wz - it._wz) < 0.01 &&
+        Math.abs(prev.wy - wy) < 0.01
+      ) {
+        dedupedStacks++;
+        return false;
+      }
+      if (!prev) seenPos.set(key, { wx: it._wx, wy, wz: it._wz });
+      return true;
+    });
+  }
+  S.walkable = doc.walkable ?? [];
+  S.deathInfo = doc.deathInfo ?? null;
+  S.cameraInfo = doc.cameraInfo ?? null;
+  S.lights = doc.lights ?? [];
+  S.switchLinks = doc.switchLinks ?? [];
+  // 旧式自定义触发名（switch_*）对机器目标已失效（真机不响应），归一化为原生触发名
+  normalizeMachineLinkTriggers();
+  S.buttonLinks = doc.buttonLinks?.links ?? [];
+  S.buttonEvents = doc.buttonEvents?.links ?? [];
+  cleanOrphanedAnimControls();
+  cleanOrphanedButtonLinks();
+  cleanOrphanedButtonEvents();
+  // 自动去重/导出变更会移除物品：同步清理开关联动与上菜台/传送门/终端/加热炉
+  // 的悬空绑定引用（否则写回时被 Unity 侧静默丢弃 → 绑定失效要重新绑）。
+  cleanOrphanedStubRefs();
+  const itemTheme = inferBgThemeFromItems(S.items);
+  const deathThemeKey = bgThemeKeyForDeathType(S.deathInfo?.deathType);
+  const sceneThemeKey = itemTheme ?? deathThemeKey;
+  const savedTheme = localStorage.getItem("bgTheme:" + S.scenePath);
+  const normalizedSaved =
+    savedTheme === "lava" ? "void" : savedTheme;
+  if (normalizedSaved && BG_THEMES.some((t) => t.key === normalizedSaved)) {
+    S.bgThemeKey = normalizedSaved;
+  } else {
+    S.bgThemeKey = sceneThemeKey;
+  }
+  if (S.bgThemeKey === "lava") S.bgThemeKey = "void";
+  S.bgThemeDirty = S.bgThemeKey !== sceneThemeKey;
+  refreshUtensilStacks();
+  S.gridInfo = await fetchGrid();
+  S.floorMaterials = await fetchFloorMaterials(S.currentLevelSet).catch(() => []);
+  repairFloorMaterialsFromCatalog();
+  if (S.currentLayer === "floor") {
+    buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "", "floor");
+  } else if (S.currentLayer === "background") {
+    buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "", "background");
+  } else if (S.currentLayer === "anim") {
+    dom.paletteCats.innerHTML = "";
+  }
+  clearSelection();
+  S.marqueeing = false;
+  resetOverlapMarqueePending();
+  clearFloorSelection();
+  hideDetail();
+  if (opts?.markDirtyAfter) {
+    // 恢复模式：保留 undo 栈（恢复前状态已 pushHistory），标脏等待用户手动写回。
+    markDirty();
+  } else {
+    S.history.clear();
+    clearDirty();
+  }
+  S.activeAnimGroupId = null;
+  S.activeAnimEventIdx = null;
+  S.selectedWaypointId = null;
+  S.animMode = "none";
+  S.activeAnimTab = "members";
+  S.animPickTargetGroupId = null;
+  S.collapsedGroupIds = new Set<string>();
+  stopAnimPreview();
+  S.expandedMemberId = null;
+  if (S.currentLayer === "anim") S.activeRightTab = "anim";
+  updatePanelTabButtons();
+  draw();
+  return { dupIds, dedupedStacks };
+}
+
+/** 与后端 LayoutEditorWriteBackHistory.LevelDirFor 同口径：set/levelId 推导。 */
+function writeBackSetOfPath(sceneAssetPath: string): string {
+  const parts = (sceneAssetPath ?? "").replace(/\\/g, "/").split("/");
+  return parts.length > 2 && parts[1] === "LevelSets" ? parts[2] : "_misc";
+}
+
+function writeBackLevelIdOfPath(sceneAssetPath: string): string {
+  const fileName = ((sceneAssetPath ?? "").split("/").pop() ?? "").replace(/\.unity$/, "");
+  return fileName.startsWith("s_") && fileName.length > 2 ? fileName.slice(2) : fileName || "_unknown";
+}
+
+/** 把一条写回历史的完整快照恢复到画布（仅前端状态 + markDirty；落盘交给用户
+ *  手动点击「💾 写回 Unity」）。全量重建：所有物品/地板换新 id，写回时先删后建、
+ *  彻底覆盖，不受快照 u: 实例 id 与当前场景 id 漂移的影响；动画组成员/开关联动/
+ *  按钮事件的 instanceId 引用同步经 idMap 重映射（否则会被 cleanOrphaned* 清洗掉）。 */
+export async function restoreWriteBackSnapshot(
+  record: string,
+  side: "before" | "after",
+  label?: string
+): Promise<void> {
+  if (!S.scenePath || !record) {
+    setStatus("缺少当前场景或记录参数，无法恢复", false);
+    return;
+  }
+  const sideText = side === "before" ? "这次操作之前" : "这次操作完成时";
+  showBusy(`正在把画布恢复到${sideText}…`);
+  try {
+    const doc = await fetchWriteBackHistoryDoc(
+      writeBackSetOfPath(S.scenePath),
+      writeBackLevelIdOfPath(S.scenePath),
+      record,
+      side
+    );
+    const idMap = new Map<string, string>();
+    doc.items = (doc.items ?? []).map((raw) => {
+      const clone = JSON.parse(JSON.stringify(raw)) as LayoutItem;
+      const nextId = `new:restore:${uuid()}`;
+      if (clone.instanceId) idMap.set(clone.instanceId, nextId);
+      clone.instanceId = nextId;
+      clone.hierarchyPath = nextId;
+      return clone;
+    });
+    doc.floors = (doc.floors ?? []).map((raw) => {
+      const clone = JSON.parse(JSON.stringify(raw)) as FloorObject;
+      const nextId = `new:floor:${uuid()}`;
+      if (clone.instanceId) idMap.set(clone.instanceId, nextId);
+      clone.instanceId = nextId;
+      clone.hierarchyPath = nextId;
+      return clone;
+    });
+    const mapId = (id?: string): string => (id != null && idMap.has(id) ? idMap.get(id)! : id ?? "");
+    for (const it of doc.items) {
+      if (it.teleportal) it.teleportal.exitPortalInstanceId = mapId(it.teleportal.exitPortalInstanceId);
+      if (it.servingStation) {
+        const ss = it.servingStation;
+        if (ss.plateReturnInstanceId) ss.plateReturnInstanceId = mapId(ss.plateReturnInstanceId);
+        if (ss.plateReturnInstanceIds) {
+          ss.plateReturnInstanceIds = ss.plateReturnInstanceIds.map(mapId);
+          ss.plateReturnInstanceId = ss.plateReturnInstanceIds[0] ?? "";
+        }
+      }
+    }
+    for (const g of doc.animControls?.groups ?? []) {
+      g.itemInstanceIds = (g.itemInstanceIds ?? []).map(mapId);
+      g.floorInstanceIds = (g.floorInstanceIds ?? []).map(mapId);
+      // objectInstanceIds = 普通场景对象（不在 items/floors 内），idMap 覆盖不到，保持原值。
+      for (const mo of g.memberOffsets ?? []) mo.instanceId = mapId(mo.instanceId);
+      for (const ms of g.memberStatic ?? []) ms.instanceId = mapId(ms.instanceId);
+      for (const mg of g.memberGroups ?? []) mg.memberInstanceIds = (mg.memberInstanceIds ?? []).map(mapId);
+    }
+    for (const l of doc.switchLinks ?? []) {
+      l.switchId = mapId(l.switchId);
+      l.targetId = mapId(l.targetId);
+    }
+    for (const l of doc.buttonLinks?.links ?? []) l.sourceId = mapId(l.sourceId);
+    for (const l of doc.buttonEvents?.links ?? []) {
+      l.sourceId = mapId(l.sourceId);
+      for (const grp of l.groups ?? []) for (const ev of grp.events ?? []) ev.targetId = mapId(ev.targetId);
+    }
+    pushHistory(); // 恢复前的画布状态入 undo 栈（Ctrl+Z 可撤回一次）
+    await applyLayoutDocument(doc, { markDirtyAfter: true });
+    setStatus(
+      `已把画布恢复到${sideText}的状态${label ? `（${label} 的记录）` : ""}：${S.items.length} 物品 / ${S.floors.length} 地板，` +
+        `目前是未保存修改（可 Ctrl+Z 撤回）——确认后点「💾 写回 Unity」才会写入场景`
+    );
+  } catch (e) {
+    setStatus((e as Error).message, false);
+  } finally {
+    hideBusy();
+  }
+}
+
+/** 写回成功状态追加 Unity 侧透传的告警（绑定丢弃等）：状态栏保持"成功"色调，
+ *  但明细可见——此前只进 Unity 日志，用户直到游戏里才发现绑定失效。 */
+function applySaveStatus(base: string, warnings: string[]): string {
+  if (!warnings.length) return base;
+  const short = warnings
+    .map((w) => w.replace(/^\[LayoutEditor\]\s*/, ""))
+    .slice(0, 2);
+  return `${base}；⚠ ${warnings.length} 条绑定告警：${short.join("；")}${warnings.length > short.length ? " 等" : ""}`;
+}
+
 export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
   showBusy("写回 Unity…");
   try {
@@ -234,22 +371,30 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       return false;
     }
 
-    // 写回前堆叠检测：同 guid 且 XZ 完全同位（<0.01）的多条物品 = 重复数据
+    // 写回前堆叠检测：同 guid 且 XYZ 完全同位（<0.01）的多条物品 = 重复数据
     //（画布上完全重叠、视觉不可见；历史导出/放置 bug 的残留）。直接写回会随
     //「写回→导出→再写回」循环成倍克隆（test12 大炮堆叠事故）。阻断并列出明细。
+    // 注意：必须比较 Y——同 XZ 不同高度（多层关卡、墙面立柱等）是合法摆设，
+    // 仅比 XZ 会把正常物品误判成堆叠（莲花烛误拦截事故）。
     {
-      const seen = new Map<string, { label: string; wx: number; wz: number }>();
+      const seen = new Map<string, { label: string; wx: number; wy: number; wz: number }>();
       const stacks: string[] = [];
       for (const it of S.items) {
         const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
         const wx = it._wx;
         const wz = it._wz;
         if (wx == null || wz == null) continue;
+        const wy = it.worldPosition?.y ?? it.localPosition?.y ?? 0;
         const prev = seen.get(key);
-        if (prev && Math.abs(prev.wx - wx) < 0.01 && Math.abs(prev.wz - wz) < 0.01) {
+        if (
+          prev &&
+          Math.abs(prev.wx - wx) < 0.01 &&
+          Math.abs(prev.wz - wz) < 0.01 &&
+          Math.abs(prev.wy - wy) < 0.01
+        ) {
           stacks.push(`${prev.label} 与 ${itemLabel(it)} 完全重叠`);
         } else if (!prev) {
-          seen.set(key, { label: itemLabel(it), wx, wz });
+          seen.set(key, { label: itemLabel(it), wx, wy, wz });
         }
       }
       if (stacks.length > 0) {
@@ -259,14 +404,14 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     }
 
     if (only) {
-      await saveLayout(buildDocument(only), S.freeSnapStep, false, only);
+      const warnings = await saveLayout(buildDocument(only), S.freeSnapStep, false, only);
       const scopeNote =
         only === "items"
           ? "仅核心物品，未修改地板/背景/装饰"
           : only === "decor"
             ? "仅装饰，未修改物品/地板/背景"
             : "仅地板/背景，未修改物品/装饰";
-      setStatus(`写回成功（${scopeNote}）：请在 Unity Ctrl+S 保存场景`);
+      setStatus(applySaveStatus(`写回成功（${scopeNote}）：请在 Unity Ctrl+S 保存场景`, warnings));
       S.history.clear();
       clearDirty();
       await loadScene(S.scenePath);
@@ -308,7 +453,7 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       return false;
     }
 
-    await saveLayout(buildDocument(""), S.freeSnapStep, S.autoWalkable, "");
+    const warnings = await saveLayout(buildDocument(""), S.freeSnapStep, S.autoWalkable, "");
     if (needsThemeWrite) {
       await setDeathTheme(S.scenePath, S.bgThemeKey);
     }
@@ -328,7 +473,7 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     const walkNote = S.autoWalkable ? "，可行走碰撞体已按地板重新生成（地板间空隙=坠落坑）" : "";
     const killNote = bounds && S.autoKillPlane ? "：坠落区已覆盖整关，" : "：";
     setStatus(
-      `写回成功${themeNote}${walkNote}${killNote}请在 Unity Ctrl+S 保存场景`
+      applySaveStatus(`写回成功${themeNote}${walkNote}${killNote}请在 Unity Ctrl+S 保存场景`, warnings)
     );
     S.bgThemeDirty = false;
     S.history.clear();

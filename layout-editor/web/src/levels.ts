@@ -16,8 +16,12 @@ import type {
   PerPlayerConfig,
   RecipeEntry,
   SetExportStatus,
+  WriteBackHistoryDetail,
+  WriteBackDiffEntry,
+  WriteBackHistoryItem,
 } from "./types";
 import { closeModal, openModal } from "./modals";
+import { openDepsCheckModal } from "./editor/ui/depsCheck";
 import { showBusy, hideBusy, setBusyMessage } from "./busy";
 import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
 import { navHtml, wireNav } from "./nav";
@@ -726,6 +730,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
       <button class="m-btn" id="btn-level-config">📊 关卡配置</button>
       <button class="m-btn" id="btn-deps">📦 依赖管理</button>
       <button class="m-btn" id="btn-summary">📋 汇总</button>
+      <button class="m-btn" id="btn-tools-history" title="修复损坏 / 依赖检查 / 测试布局 / 同步布局 + 写回历史对比">🧰 工具与历史</button>
     </div>
 
     <div class="m-block">
@@ -778,6 +783,7 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
   document.getElementById("btn-layout")?.addEventListener("click", () => goLayout(detail.sceneAssetPath));
   document.getElementById("btn-deps")?.addEventListener("click", () => goDependenciesPage(setName, assetPath));
   document.getElementById("btn-summary")?.addEventListener("click", () => void renderLevelSummary(app, setName, assetPath));
+  document.getElementById("btn-tools-history")?.addEventListener("click", () => openToolsHistoryModal(detail));
   document.getElementById("btn-level-config")?.addEventListener("click", () =>
     void openConfigTabsModal(detail, setName, () => {
       void renderLevelDetail(app, setName, assetPath);
@@ -786,6 +792,470 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
 }
 
 // ==================== Level recipe summary (汇总页) ====================
+
+// ==================== Level tools & write-back history (🧰 工具与历史) ====================
+
+const AUTO_ACTION_KEY = "layoutAutoAction";
+
+/** 从关卡管理跳转布局编辑器时携带的自动动作（编辑器加载场景完成后触发一次）。 */
+export function setLayoutAutoAction(action: string): void {
+  sessionStorage.setItem(AUTO_ACTION_KEY, action);
+}
+
+export function consumeLayoutAutoAction(): string | null {
+  const v = sessionStorage.getItem(AUTO_ACTION_KEY);
+  if (v) sessionStorage.removeItem(AUTO_ACTION_KEY);
+  return v;
+}
+
+/** 与后端 LayoutEditorWriteBackHistory.LevelDirFor 同口径：场景文件名去掉 s_ 前缀。 */
+function writeBackLevelId(sceneAssetPath: string): string {
+  const fileName = (sceneAssetPath.split("/").pop() ?? "").replace(/\.unity$/, "");
+  return fileName.startsWith("s_") && fileName.length > 2 ? fileName.slice(2) : fileName || "_unknown";
+}
+
+function writeBackSet(sceneAssetPath: string): string {
+  const parts = sceneAssetPath.replace(/\\/g, "/").split("/");
+  return parts.length > 2 && parts[1] === "LevelSets" ? parts[2] : "_misc";
+}
+
+function fmtBytes(n: number): string {
+  return n > 0 ? `${(n / 1024).toFixed(0)}KB` : "—";
+}
+
+function endpointBadge(ep: string): string {
+  const zh: Record<string, string> = {
+    layout: "布局",
+    death: "死亡主题",
+    killplane: "坠落区",
+    repair: "修复损坏",
+    "level-info": "基础信息",
+    "level-config": "关卡配置",
+    "level-audio": "音频",
+    "level-recipes": "菜谱",
+    "optional-items": "可选清单",
+    matchlists: "匹配表",
+    screenshot: "截图",
+  };
+  return `<span class="wb-badge">${zh[ep] ?? ep}</span>`;
+}
+
+/** 工具与历史弹窗的可选上下文：编辑器内打开时直接执行（关弹窗后原地触发）；
+ *  关卡管理页打开时缺省 —— 测试布局/同步布局退化为跳转编辑器 + 自动动作，
+ *  恢复快照仅在编辑器内提供（关卡管理页显示提示）。 */
+export interface ToolsHistoryOptions {
+  onTestLayout?: () => void;
+  onSyncLayout?: () => void;
+  /** 编辑器内修复成功后的后续（重载场景等）；n = 移除数量。 */
+  onRepaired?: (n: number) => void;
+  /** 把一条历史快照恢复到编辑器画布（仅前端状态，用户手动写回生效）。 */
+  onRestore?: (record: string, side: "before" | "after", label?: string) => void;
+}
+
+export function openToolsHistoryModal(detail: LevelDetail, opts?: ToolsHistoryOptions): void {
+  const wbSet = writeBackSet(detail.sceneAssetPath);
+  const levelId = writeBackLevelId(detail.sceneAssetPath);
+  const title = detail.levelNameZH || detail.levelName || levelId;
+  openModal(
+    `🧰 工具与历史 · ${esc(title)}`,
+    `
+    <div class="wb-tabs">
+      <button type="button" class="wb-tab active" data-wb-tab="tools">🧰 工具</button>
+      <button type="button" class="wb-tab" data-wb-tab="history">🕘 写回历史</button>
+    </div>
+    <div id="wb-tools" class="wb-pane">
+      <div class="wb-tool-row">
+        <button type="button" class="m-btn" id="wb-repair">🔧 修复损坏</button>
+        <div class="muted">移除该关卡场景中源预制件缺失的损坏实例（pseudoPrefabSO 空引用报错）。</div>
+      </div>
+      <div class="wb-tool-row">
+        <button type="button" class="m-btn" id="wb-deps">🩺 依赖检查</button>
+        <div class="muted">检查后端服务 / Web 构建 / 菜谱库 / bundle / 音频等环境依赖是否就绪。</div>
+      </div>
+      <div class="wb-tool-row">
+        <button type="button" class="m-btn" id="wb-test">🧪 测试布局</button>
+        <div class="muted">打开布局编辑器并一键生成 30×16 测试沙盘（全部食材箱 + 核心层道具，写回后生效）。</div>
+      </div>
+      <div class="wb-tool-row">
+        <button type="button" class="m-btn" id="wb-sync">📥 同步布局</button>
+        <div class="muted">打开布局编辑器，从其他关卡复制道具、地板与背景主题（写回后生效）。</div>
+      </div>
+      <p class="modal-hint" id="wb-tool-status"></p>
+    </div>
+    <div id="wb-history" class="wb-pane" style="display:none">
+      <div class="wb-hist-toolbar">
+        <button type="button" class="m-btn small" id="wb-refresh">↻ 刷新</button>
+        <span class="muted">每次写回自动缓存最近 15 条记录（场景/Info 前后快照 + 变动差异）</span>
+      </div>
+      <div id="wb-hist-body" class="modal-scroll"><p class="muted">加载中…</p></div>
+    </div>`,
+    `<button type="button" class="modal-btn" data-cancel>关闭</button>`
+  );
+  // 大弹窗：宽幅 + 高占满（modal-body 自身滚动）。
+  document.querySelector("#modal-root .modal-panel")?.classList.add("wide", "wb-xl");
+  // data-cancel 无全局委托，须在此绑定关闭（与项目其他弹窗一致）。
+  document.querySelector("#modal-root [data-cancel]")?.addEventListener("click", closeModal);
+
+  document.querySelectorAll<HTMLButtonElement>("[data-wb-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll<HTMLButtonElement>("[data-wb-tab]").forEach((b) => b.classList.toggle("active", b === btn));
+      const tools = document.getElementById("wb-tools");
+      const hist = document.getElementById("wb-history");
+      if (tools && hist) {
+        tools.style.display = btn.dataset.wbTab === "tools" ? "" : "none";
+        hist.style.display = btn.dataset.wbTab === "history" ? "" : "none";
+      }
+      if (btn.dataset.wbTab === "history") void loadHistoryList(wbSet, levelId, opts);
+    });
+  });
+
+  document.getElementById("wb-repair")?.addEventListener("click", async () => {
+    const status = document.getElementById("wb-tool-status");
+    try {
+      status!.textContent = "修复中…";
+      const n = await api.repairBrokenPrefabs(detail.sceneAssetPath);
+      if (n > 0 && opts?.onRepaired) {
+        opts.onRepaired(n);
+        closeModal();
+        return;
+      }
+      status!.textContent =
+        n > 0 ? `已移除 ${n} 个损坏的预制件实例（重新加载场景后生效）。` : "未发现损坏的预制件实例。";
+    } catch (e) {
+      status!.textContent = (e as Error).message;
+    }
+  });
+
+  document.getElementById("wb-deps")?.addEventListener("click", () => openDepsCheckModal());
+
+  document.getElementById("wb-test")?.addEventListener("click", () => {
+    if (opts?.onTestLayout) {
+      closeModal();
+      opts.onTestLayout();
+      return;
+    }
+    setLayoutAutoAction("test-layout");
+    goLayout(detail.sceneAssetPath);
+  });
+
+  document.getElementById("wb-sync")?.addEventListener("click", () => {
+    if (opts?.onSyncLayout) {
+      closeModal();
+      opts.onSyncLayout();
+      return;
+    }
+    setLayoutAutoAction("sync-layout");
+    goLayout(detail.sceneAssetPath);
+  });
+
+  document.getElementById("wb-refresh")?.addEventListener("click", () => void loadHistoryList(wbSet, levelId, opts));
+}
+
+async function loadHistoryList(wbSet: string, levelId: string, opts?: ToolsHistoryOptions): Promise<void> {
+  const body = document.getElementById("wb-hist-body");
+  if (!body) return;
+  body.innerHTML = '<p class="muted">加载中…</p>';
+  let items: WriteBackHistoryItem[];
+  try {
+    items = await api.fetchWriteBackHistory(wbSet, levelId);
+  } catch (e) {
+    body.innerHTML = `<p class="modal-hint err">${esc((e as Error).message)}</p>`;
+    return;
+  }
+  if (items.length === 0) {
+    body.innerHTML = '<p class="muted">暂无写回历史 —— 在布局编辑器中对本关写回一次即可生成。</p>';
+    return;
+  }
+  body.innerHTML = items
+    .map((it) => {
+      const time = (it.beginTime || it.record).slice(0, 19);
+      return `
+    <div class="wb-rec" data-record="${esc(it.record)}" title="${esc(it.record)}">
+      <div class="wb-rec-head">
+        <b>${esc(time)}</b>
+        ${(it.endpoints ?? []).map(endpointBadge).join("")}
+        ${it.semanticAvailable ? "" : '<span class="wb-badge wb-badge-warn">仅快照</span>'}
+      </div>
+      <div class="wb-rec-stats">
+        物品 <span class="wb-add">+${it.itemsAdded}</span> <span class="wb-del">-${it.itemsRemoved}</span>
+        <span class="wb-mov">↔${it.itemsMoved}</span> <span class="wb-chg">✎${it.itemsChanged}</span>
+        · 地板 +${it.floorsAdded}/-${it.floorsRemoved}
+        · 快照 ${fmtBytes(it.sceneBytesBefore)} → ${fmtBytes(it.sceneBytesAfter)}
+      </div>
+    </div>`;
+    })
+    .join("");
+  body.querySelectorAll<HTMLElement>(".wb-rec").forEach((row) => {
+    row.addEventListener("click", () => void showHistoryDetail(wbSet, levelId, row.dataset.record ?? "", opts));
+  });
+}
+
+/** 变更分类 → 徽章（图标/中文标签/颜色类）。 */
+const WB_KINDS: Record<string, { icon: string; label: string; cls: string }> = {
+  moved: { icon: "↔", label: "移动", cls: "wb-mov" },
+  rotated: { icon: "⟳", label: "旋转", cls: "wb-rot" },
+  scaled: { icon: "⤢", label: "缩放", cls: "wb-scale" },
+  config: { icon: "✎", label: "参数", cls: "wb-chg" },
+  prefab: { icon: "🎨", label: "外观", cls: "wb-pfb" },
+  hierarchy: { icon: "⇄", label: "层级", cls: "wb-hier" },
+  reid: { icon: "🆔", label: "重编号", cls: "wb-reid" },
+};
+
+function kindBadges(kinds: string[] | null | undefined): string {
+  return (kinds ?? [])
+    .map((k) => {
+      const m = WB_KINDS[k];
+      return m ? `<span class="wb-kind ${m.cls}">${m.icon} ${m.label}</span>` : "";
+    })
+    .join("");
+}
+
+function wbLegend(): string {
+  return `
+    <div class="wb-legend">
+      <span class="wb-kind wb-add">＋ 新增</span>
+      <span class="wb-kind wb-del">－ 删除</span>
+      ${kindBadges(["moved"])}
+      ${kindBadges(["rotated"])}
+      ${kindBadges(["scaled"])}
+      ${kindBadges(["config"])}
+      ${kindBadges(["prefab"])}
+      ${kindBadges(["hierarchy"])}
+      <span class="muted">（明细仅列前 3 条字段变化）</span>
+    </div>`;
+}
+
+function diffEntryRows(entries: { id: string; name: string }[] | null | undefined, sign: string, cls: string): string {
+  if (!entries || entries.length === 0) return "";
+  return entries
+    .map(
+      (e) => `<div class="wb-diff-row"><span class="wb-sign ${cls}">${sign}</span><span class="wb-name">${esc(
+        e.name || e.id
+      )}</span></div>`
+    )
+    .join("");
+}
+
+/** 变更行（✎ 参数 / 🎨 外观 / ⇄ 层级）：kinds 多色徽章 + 前 3 条字段明细。 */
+function changedEntryRows(entries: WriteBackDiffEntry[] | null | undefined, sign: string, cls: string): string {
+  if (!entries || entries.length === 0) return "";
+  return entries
+    .map((e) => {
+      const detail = e.detail ? `<span class="wb-val muted">${esc(e.detail)}</span>` : "";
+      return `<div class="wb-diff-row"><span class="wb-sign ${cls}">${sign}</span><span class="wb-name">${esc(
+        e.name || e.id
+      )}</span>${kindBadges(e.kinds)}${detail}</div>`;
+    })
+    .join("");
+}
+
+function stringDiffRows(label: string, added: string[] | null | undefined, removed: string[] | null | undefined): string {
+  const a = added ?? [];
+  const r = removed ?? [];
+  if (a.length === 0 && r.length === 0) return "";
+  const parts: string[] = [];
+  if (a.length) parts.push(`<span class="wb-add">+${a.map(esc).join("、")}</span>`);
+  if (r.length) parts.push(`<span class="wb-del">-${r.map(esc).join("、")}</span>`);
+  return `<div class="wb-diff-row"><span class="wb-name">${label}</span><span class="wb-val">${parts.join(
+    " "
+  )}</span></div>`;
+}
+
+function renderHistoryDetail(detail: WriteBackHistoryDetail): string {
+  const d = detail.diff;
+  const m = detail.meta;
+  if (!d) {
+    return '<p class="modal-hint err">该记录缺少 diff 数据（可能来自早期版本记录）。</p>';
+  }
+  const reid = d.itemsReid ?? [];
+  const itemSection = d.semanticAvailable
+    ? `
+      ${wbLegend()}
+      <h4>物品（${d.itemsUnchanged} 个未变${reid.length ? `、${reid.length} 个重编号` : ""}）</h4>
+      ${diffEntryRows(d.itemsAdded, "＋", "wb-add") || '<p class="muted">无新增</p>'}
+      ${diffEntryRows(d.itemsRemoved, "－", "wb-del") || ""}
+      ${(d.itemsMoved ?? [])
+        .map((mv) => {
+          const kind = WB_KINDS[mv.kind ?? "moved"] ?? WB_KINDS.moved;
+          return `<div class="wb-diff-row"><span class="wb-sign ${kind.cls}">${kind.icon}</span><span class="wb-name">${esc(
+            mv.name || mv.id
+          )}</span><span class="wb-kind ${kind.cls}">${kind.icon} ${kind.label}</span><span class="wb-val muted">${esc(
+            mv.fromPosition
+          )} → ${esc(mv.toPosition)}</span></div>`;
+        })
+        .join("")}
+      ${changedEntryRows(d.itemsChanged, "✎", "wb-chg") || ""}
+      ${
+        reid.length
+          ? `<div class="wb-reid-block">${reid
+              .map(
+                (e) =>
+                  `<span class="wb-reid-chip">${kindBadges(["reid"])}${esc(e.name || e.id)}</span>`
+              )
+              .join("")}</div>
+             <p class="modal-hint muted">🆔 重编号 = 仅实例 id 变化（如「恢复到画布→写回」后重新盖章），内容未变，不计入变动。</p>`
+          : ""
+      }
+      <h4>地板（${d.floorsUnchanged} 个未变）</h4>
+      ${diffEntryRows(d.floorsAdded, "＋", "wb-add") || '<p class="muted">无新增</p>'}
+      ${diffEntryRows(d.floorsRemoved, "－", "wb-del") || ""}
+      ${changedEntryRows(d.floorsChanged, "✎", "wb-chg") || ""}
+      <h4>相机 / 灯光</h4>
+      <div class="wb-diff-row"><span class="wb-name">相机</span><span class="wb-val">${
+        d.cameraChanged
+          ? `<span class="wb-chg">有变化</span>${d.cameraDetail ? `<span class="muted"> ${esc(d.cameraDetail)}</span>` : ""}`
+          : '<span class="muted">未变</span>'
+      }</span></div>
+      <div class="wb-diff-row"><span class="wb-name">灯光</span><span class="wb-val"><span class="wb-add">+${
+        (d.lightsAdded ?? []).length
+      }</span> <span class="wb-del">-${(d.lightsRemoved ?? []).length}</span> <span class="wb-chg">✎${
+        (d.lightsChanged ?? []).length
+      }</span>（${d.lightsUnchanged} 个未变）</span></div>
+      ${changedEntryRows(d.lightsChanged, "✎", "wb-chg") || ""}`
+    : '<p class="modal-hint">该记录无语义对比数据（semanticAvailable=false，仅文件快照）。</p>';
+
+  const info = d.info;
+  const infoSection = !info
+    ? ""
+    : info.missing
+      ? '<h4>关卡信息 (LevelInfoSO)</h4><p class="muted">该记录无 info 摘要（关卡可能未绑定 LevelInfo）。</p>'
+      :       `
+      <h4>关卡信息 (LevelInfoSO)</h4>
+      ${stringDiffRows("菜谱", info.recipesAdded, info.recipesRemoved)}
+      ${stringDiffRows("食材", info.ingredientsAdded, info.ingredientsRemoved)}
+      ${stringDiffRows("依赖", info.dependenciesAdded, info.dependenciesRemoved)}
+      ${stringDiffRows("音频目录", info.audioAdded, info.audioRemoved)}
+      ${stringDiffRows("环境音", info.ambiencesAdded, info.ambiencesRemoved)}
+      ${stringDiffRows("可选清单", info.optionalItemsAdded, info.optionalItemsRemoved)}
+      ${stringDiffRows("匹配表", info.matchlistsAdded, info.matchlistsRemoved)}
+      ${
+        (info.configsBefore ?? []).some((c, i) => c !== (info.configsAfter ?? [])[i])
+          ? (info.configsBefore ?? [])
+              .map((c, i) =>
+                c !== (info.configsAfter ?? [])[i]
+                  ? `<div class="wb-diff-row"><span class="wb-name">配置 ${i + 1}p</span><span class="wb-val">${esc(
+                      c || "未配置"
+                    )} → <b>${esc((info.configsAfter ?? [])[i] || "未配置")}</b></span></div>`
+                  : ""
+              )
+              .join("")
+          : ""
+      }
+      ${
+        info.screenshotBefore !== info.screenshotAfter
+          ? `<div class="wb-diff-row"><span class="wb-name">截图</span><span class="wb-val">${esc(
+              info.screenshotBefore || "无"
+            )} → <b>${esc(info.screenshotAfter || "无")}</b></span></div>`
+          : ""
+      }
+      ${
+        info.deathEffectBefore !== info.deathEffectAfter
+          ? `<div class="wb-diff-row"><span class="wb-name">死亡特效</span><span class="wb-val">${esc(
+              info.deathEffectBefore || "无"
+            )} → <b>${esc(info.deathEffectAfter || "无")}</b></span></div>`
+          : ""
+      }
+      ${
+        info.minMaxOrdersBefore !== info.minMaxOrdersAfter
+          ? `<div class="wb-diff-row"><span class="wb-name">同单订单数</span><span class="wb-val">${esc(
+              info.minMaxOrdersBefore
+            )} → <b>${esc(info.minMaxOrdersAfter)}</b></span></div>`
+          : ""
+      }`;
+
+  return `
+    <div class="wb-detail-head">
+      <b>${esc((d.recordedAt || detail.record).slice(0, 19))}</b>
+      ${(m?.endpoints ?? []).map(endpointBadge).join("")}
+      <span class="muted">定稿 ${esc((m?.finalizeTime ?? "").slice(0, 19))}</span>
+    </div>
+    <p class="modal-hint muted">${esc(d.scenePath)}</p>
+    ${
+      m
+        ? `<p class="modal-hint">物品数 ${m.itemsBefore} → ${m.itemsAfter} · 地板数 ${m.floorsBefore} → ${m.floorsAfter} · 参与写回：${(
+            m.endpoints ?? []
+          ).join(" + ")}</p>`
+        : ""
+    }
+    ${itemSection}
+    ${infoSection}
+    <h4>文件快照</h4>
+    <div class="wb-diff-row"><span class="wb-name">场景 .unity</span><span class="wb-val">${fmtBytes(
+      d.sceneBytesBefore
+    )} → ${fmtBytes(d.sceneBytesAfter)}</span></div>
+    <div class="wb-diff-row"><span class="wb-name">关卡 Info .asset</span><span class="wb-val">${fmtBytes(
+      d.infoBytesBefore
+    )} → ${fmtBytes(d.infoBytesAfter)}</span></div>`;
+}
+
+async function showHistoryDetail(
+  wbSet: string,
+  levelId: string,
+  record: string,
+  opts?: ToolsHistoryOptions
+): Promise<void> {
+  const body = document.getElementById("wb-hist-body");
+  if (!body || !record) return;
+  body.innerHTML = '<p class="muted">加载记录…</p>';
+  let detail: WriteBackHistoryDetail;
+  try {
+    detail = await api.fetchWriteBackHistoryDetail(wbSet, levelId, record);
+  } catch (e) {
+    body.innerHTML = `<p class="modal-hint err">${esc((e as Error).message)}</p>`;
+    return;
+  }
+  // 恢复操作条：仅编辑器入口（opts.onRestore）提供；无完整快照的侧位禁用（旧记录/仅信息变更）。
+  const restoreBar = opts?.onRestore
+    ? `
+    <div class="wb-restore-bar">
+      <button type="button" class="m-btn small" data-restore="before" ${
+        detail.canRestoreBefore
+          ? 'title="回到这次操作开始之前的状态（相当于撤销这次修改）"'
+          : 'disabled title="这条记录没有这一侧的完整布局（旧版记录或纯信息修改），无法恢复"'
+      }>↩️ 撤销这次操作</button>
+      <button type="button" class="m-btn small" data-restore="after" ${
+        detail.canRestoreAfter
+          ? 'title="回到这次操作刚完成时的样子（之后又改过的话，可用来找回当时的状态）"'
+          : 'disabled title="这条记录没有这一侧的完整布局（旧版记录或纯信息修改），无法恢复"'
+      }>🕘 回到操作完成时</button>
+      <span class="muted">恢复 = 把当时的关卡布局放回画布（属于未保存修改，Ctrl+Z 可撤回）；再点「💾 写回 Unity」才会写入场景</span>
+    </div>`
+    : "";
+  const manageHint = !opts?.onRestore
+    ? '<p class="modal-hint muted">如需把该快照恢复到画布，请在布局编辑器工具栏的「🧰 工具与历史」中操作。</p>'
+    : "";
+  body.innerHTML = `
+    <button type="button" class="m-btn small" id="wb-back">← 返回列表</button>
+    ${restoreBar}
+    ${renderHistoryDetail(detail)}
+    ${manageHint}`;
+  document.getElementById("wb-back")?.addEventListener("click", () => void loadHistoryList(wbSet, levelId, opts));
+  body.querySelectorAll<HTMLButtonElement>("[data-restore]").forEach((btn) => {
+    if (btn.disabled) return;
+    let armed = false;
+    btn.addEventListener("click", () => {
+      if (!armed) {
+        // 两步确认：首点布防防误触，再点执行。
+        armed = true;
+        btn.classList.add("danger");
+        btn.dataset.label = btn.textContent ?? "";
+        btn.textContent = "确认覆盖画布？";
+        window.setTimeout(() => {
+          if (armed && btn.isConnected) {
+            armed = false;
+            btn.classList.remove("danger");
+            btn.textContent = btn.dataset.label ?? btn.textContent ?? "";
+          }
+        }, 4000);
+        return;
+      }
+      const side = btn.dataset.restore === "before" ? "before" : "after";
+      const label = (detail.meta?.beginTime ?? detail.diff?.recordedAt ?? record).slice(0, 19);
+      closeModal();
+      opts?.onRestore?.(record, side, label);
+    });
+  });
+}
 
 /** 汇总页：中文名 → 作者 → 关卡截图 → 按菜系分类的菜谱卡片（一个分类一行），
  *  支持按实际渲染大小一键导出 PNG。 */

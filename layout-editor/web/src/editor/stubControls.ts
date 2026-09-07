@@ -47,6 +47,7 @@ import {
   computeParamLabels,
   computeTeleportalLabels
 } from "./renderItems";
+import { functionalBaseId } from "./recipeKnowledge";
 import {
   PORTAL_COLOR_NAMES,
   BURNER_FIRE_MODES
@@ -309,6 +310,97 @@ export function defaultUtensilCapacity(_item: EditorItem): number {
   return 4;
 }
 
+/** 锅具时间参数分组：烹饪类（煮熟/煮糊）、搅拌类（混合/过度混合）、
+ *  搅拌碗双组（混合 + 进烤箱烤制蛋糕）。按功能基础 id 归一化判定
+ *  （DLC 换皮变体 → MixerBowl / BlenderCup），其余锅具一律烹饪类。 */
+export type UtensilTimingKind = "cook" | "mix" | "both";
+
+export function utensilTimingKind(item: EditorItem): UtensilTimingKind {
+  const cat = S.catalogByGuid.get(item.prefabGuid ?? "");
+  const id = cat?.id ?? prefabIdFromPath(item.prefabAssetPath ?? "");
+  const base = functionalBaseId(id ?? "");
+  if (base === "MixerBowl") return "both";
+  if (base === "BlenderCup" || base === "Mixer") return "mix";
+  return "cook";
+}
+
+/** 各锅具的原版时间（bundle 实测：CookingHandler.m_cookingtime / MixingHandler.m_mixingTime；
+ *  煮糊/过度混合原版一律 = 2× 煮熟/混合）。按功能基础 id 归一化（DLC 换皮变体同值）。 */
+const NATIVE_UTENSIL_TIMES: Record<string, { cook?: number; mix?: number }> = {
+  // 油炸篮（含 DLC08 变体）：煮熟 10s
+  FrierBasket: { cook: 10 },
+  // 搅拌碗（含全部 DLC mixer 变体）：混合 12s + 进烤箱烤制 10s
+  MixerBowl: { cook: 10, mix: 12 },
+  // 搅拌机/搅拌杯：混合 12s
+  BlenderCup: { mix: 12 },
+  Mixer: { mix: 12 }
+};
+
+/** 锅具原版时间（未配置时的真实生效值）。其余烹饪类锅具（煎锅/汤锅/蒸锅/烤盘/
+ *  蛋糕模/烤串/烤叉/铁板/火锅/可推动火锅等）一律煮熟 12s。 */
+export function defaultUtensilTimes(item: EditorItem): { cook: number; mix: number } {
+  const cat = S.catalogByGuid.get(item.prefabGuid ?? "");
+  const id = cat?.id ?? prefabIdFromPath(item.prefabAssetPath ?? "");
+  const base = functionalBaseId(id ?? "");
+  const native = NATIVE_UTENSIL_TIMES[base];
+  return {
+    cook: native?.cook ?? 12,
+    mix: native?.mix ?? 12
+  };
+}
+
+/** 时间输入 HTML（stubControls 右键面板与锅具管理弹窗共用）。
+ *  留空 = 原版默认（占位符显示各锅具真实原版时间；煮糊/过混默认 2× 联动——
+ *  已配置煮熟/混合时按其 2× 计算，未配置按原版 2×）。
+ *  idPrefix 非空时同时生成 id（右键面板单例场景）；弹窗多行场景用 data-utime 查询。
+ *  注意：Unity JsonUtility 会把未配置序列化成 0（非省略），渲染时 0 一律按未配置处理。 */
+export function utensilTimingInputsHtml(
+  item: EditorItem,
+  idPrefix: string,
+  cssClass: string
+): string {
+  const cu = item.cookingUtensil ?? {};
+  const kind = utensilTimingKind(item);
+  const def = defaultUtensilTimes(item);
+  const num = (suffix: string, value: number | undefined, placeholder: string, label: string) => {
+    const idAttr = idPrefix ? ` id="${idPrefix}${suffix}"` : "";
+    const shown = value != null && value > 0 ? value : "";
+    return `<label class="${cssClass}-time-label">${label} <input type="number"${idAttr} data-utime="${suffix}" class="${cssClass}-time" step="0.5" min="0" value="${shown}" placeholder="${placeholder}"/>秒</label>`;
+  };
+  let html = "";
+  if (kind === "cook" || kind === "both") {
+    const bake = kind === "both" ? "烤熟" : "煮熟";
+    const cookEff = (cu.cookTime ?? 0) > 0 ? cu.cookTime! : def.cook;
+    html += num("cook", cu.cookTime, `原版${def.cook}s`, bake);
+    html += num("burn", cu.burnTime, `原版${2 * cookEff}s`, kind === "both" ? "烤糊" : "煮糊");
+  }
+  if (kind === "mix" || kind === "both") {
+    const mixEff = (cu.mixTime ?? 0) > 0 ? cu.mixTime! : def.mix;
+    html += num("mix", cu.mixTime, `原版${def.mix}s`, "混合");
+    html += num("overmix", cu.overMixTime, `原版${2 * mixEff}s`, "过混");
+  }
+  return html;
+}
+
+/** 锅具时间字段的统一读写键（suffix → LayoutCookingUtensilStub 字段）。 */
+export const UTENSIL_TIME_KEYS: Record<string, "cookTime" | "burnTime" | "mixTime" | "overMixTime"> = {
+  cook: "cookTime",
+  burn: "burnTime",
+  mix: "mixTime",
+  overmix: "overMixTime"
+};
+
+/** 单个时间输入回写：空串 = 清除（回退 prefab 默认），数值 > 0 生效。
+ *  返回是否修改（调用方决定 pushHistory 时机——先调本函数*之前*比较）。 */
+export function readUtensilTimeInput(
+  raw: string
+): number | undefined {
+  const t = raw.trim();
+  const v = parseFloat(t);
+  if (t === "" || !isFinite(v) || v <= 0) return undefined;
+  return v;
+}
+
 /** autofill 装填锅具时的容量兜底：未设置 → 默认 4；
  *  旧版 autofill 曾把锅具默认成 1，凡容量仍为 1 时纠正回 4。 */
 export function utensilCapacityOrFix(item: EditorItem): number {
@@ -454,6 +546,8 @@ export function stubControlsHtml(item: EditorItem): string {
       const allowed = (cu.allowedIngredientGuids ?? []).length;
       return `<div class="ctx-stub"><div class="ctx-stub-title">厨具参数</div>
         <label class="ctx-stub-row">最多食材数 <input type="number" id="ctx-cu-cap" class="ctx-input" min="0" step="1" value="${cu.capacity ?? defaultUtensilCapacity(item)}"/></label>
+        <div class="ctx-stub-row">${utensilTimingInputsHtml(item, "ctx-cu-", "ctx-stub")}</div>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">时间留空 = 原版默认（按锅具：煮熟 10-12s，煮糊 = 2× 煮熟）；填写的特殊煮糊时间随关卡包分发</div>
         <button type="button" class="ctx-btn" id="ctx-cu-ings">额外食材 (${allowed > 0 ? `${allowed} 种` : "无 · 处理所有主线食材"})…</button></div>`;
     }
     case "Conveyor": {
@@ -820,6 +914,25 @@ export function wireStubControls(item: EditorItem) {
           ensure().capacity = v;
           setStatus(`锅具容量已设为 ${v}（写回后生效）`);
         }
+      });
+      Object.keys(UTENSIL_TIME_KEYS).forEach((suffix) => {
+        document.getElementById(`ctx-cu-${suffix}`)?.addEventListener("change", (e) => {
+          const input = e.target as HTMLInputElement;
+          const key = UTENSIL_TIME_KEYS[suffix];
+          const curRaw = item.cookingUtensil?.[key];
+          // JsonUtility 未配置会序列化成 0——按未配置处理
+          const cur = curRaw != null && curRaw > 0 ? curRaw : undefined;
+          const next = readUtensilTimeInput(input.value);
+          if (cur === next) return;
+          pushHistory();
+          if (next == null) delete item.cookingUtensil?.[key];
+          else {
+            if (!item.cookingUtensil) item.cookingUtensil = {};
+            item.cookingUtensil[key] = next;
+          }
+          draw();
+          setStatus(next == null ? "已恢复原版默认时间（写回后生效）" : "锅具时间已更新（写回后生效）");
+        });
       });
       document.getElementById("ctx-cu-ings")?.addEventListener("click", () => {
         ensure();

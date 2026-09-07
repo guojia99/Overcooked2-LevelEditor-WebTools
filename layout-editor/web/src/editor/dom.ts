@@ -36,9 +36,6 @@ export function buildLayoutDom(): void {
       <button id="btn-reload" title="重新加载当前场景">🔄 重新加载</button>
       <button id="btn-save" class="primary" title="将布局写回 Unity">💾 写回 Unity</button>
       <button id="btn-save-items" class="primary" title="仅写回核心物品（不修改地板、背景、装饰）">🎯 仅核心物品</button>
-      <button id="btn-repair-broken" type="button" title="移除当前场景中源预制件缺失的损坏实例（解决 pseudoPrefabSO 空引用导致的 NullReferenceException）">🔧 修复损坏</button>
-      <button id="btn-deps-check" type="button" title="检查后端服务、音频、bundle 等依赖是否就绪">🩺 依赖检查</button>
-      <button id="btn-test-layout" type="button" title="一键生成测试布局：30×16 地板 + 相机 FOV 56 + 全部食材箱 + 全部核心层道具（开关组合默认用组合）">🧪 测试布局</button>
       <span class="toolbar-sep"></span>
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
@@ -46,7 +43,7 @@ export function buildLayoutDom(): void {
       <button id="btn-camera-light" type="button" title="修改游戏相机背景色 / FOV 与 Art/Lights 灯光颜色、强度">🎥 相机/灯光</button>
       <button id="btn-level-audio" type="button" title="配置关卡音频">🔊 音频</button>
       <button id="btn-summary" type="button" title="查看关卡菜谱汇总并一键导出图片">📋 汇总</button>
-      <button id="btn-sync" type="button" title="从其他关卡复制道具、地板与背景主题（仅前端数据，写回后生效）">📥 同步布局…</button>
+      <button id="btn-tools-history" type="button" title="关卡工具（修复损坏 / 依赖检查 / 测试布局 / 同步布局）+ 最近 15 次写回历史与变动对比">🧰 工具与历史</button>
       <span id="status" class="status">连接中…</span>
     </div>
     <div class="toolbar-row">

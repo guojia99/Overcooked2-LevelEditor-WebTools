@@ -73,11 +73,14 @@ public static class LayoutEditorPseudoReload
             }
             LayoutEditorDispenserIconFix.SyncSeededIcons();
             LayoutEditorGridSnapGuard.RelaxGridSnapOnScene();
+            // 载具子树重建会连带销毁可移动火锅的编辑模式预览锅，重新布防补挂
+            LayoutEditorPushablePotPreview.Arm();
             return;
         }
 
         // Fallback for unpatched environments: full reload.
         SafeReinit(manager);
+        LayoutEditorPushablePotPreview.Arm();
     }
 
     /// <summary>Full Tools → Reload Pseudo Assets (bootstrap + recipes + scene).</summary>
@@ -90,6 +93,9 @@ public static class LayoutEditorPseudoReload
         EnsureCustomBundleDependency(manager);
         LayoutEditorLog.Log("[dispenser-icon] ReloadPseudoAssetsFull: begin（写回主路径）");
         SafeReinit(manager);
+        // 写回主路径：载具由 DeInit/Init 整体重建，预览锅随旧载具销毁；域重载/开场景
+        // /退 Play 三时机覆盖不到不触发编译的纯 HTTP 写回，须在此重新布防补挂。
+        LayoutEditorPushablePotPreview.Arm();
     }
 
     /// <summary>DeInit + Init，带 try/catch：宿主原版 PseudoPrefabManager 对缺失 bundle

@@ -338,7 +338,13 @@ public static class LayoutEditorCatalogApi
         if (info == null)
         {
             LayoutEditorLog.LogWarning("[Recipes] GetLevelRecipes: 未找到 LevelInfoSO, scene=" + sceneAssetPath);
-            return new LevelRecipesDto { recipeGuids = new string[0], recipeIds = new string[0] };
+            return new LevelRecipesDto
+            {
+                recipeGuids = new string[0],
+                recipeIds = new string[0],
+                optionalItems = new LevelOptionalItemDto[0],
+                matchlists = new LevelMatchlistDto[0]
+            };
         }
 
         var guids = new List<string>();
@@ -390,8 +396,78 @@ public static class LayoutEditorCatalogApi
             levelInfoAssetPath = AssetDatabase.GetAssetPath(info),
             levelName = info.levelName,
             recipeGuids = guids.ToArray(),
-            recipeIds = ids.ToArray()
+            recipeIds = ids.ToArray(),
+            optionalItems = BuildOptionalItemDtos(info),
+            matchlists = BuildMatchlistDtos(info)
         };
+    }
+
+    /// <summary>LevelInfoSO.optionalRecipeMatchListItems → dto（菜谱管理 Optional tab 回显）。
+    ///  kind 分类与 OptionalPresets 的候选一致，前端据此渲染类型徽章。</summary>
+    private static LevelOptionalItemDto[] BuildOptionalItemDtos(LevelInfoSO info)
+    {
+        if (info == null || info.optionalRecipeMatchListItems == null)
+            return new LevelOptionalItemDto[0];
+        var list = new List<LevelOptionalItemDto>();
+        var seen = new HashSet<ScriptableObject>();
+        foreach (var so in info.optionalRecipeMatchListItems)
+        {
+            if (so == null || !seen.Add(so))
+                continue;
+            var p = AssetDatabase.GetAssetPath(so);
+            if (string.IsNullOrEmpty(p))
+                continue;
+            var id = Path.GetFileNameWithoutExtension(p);
+            list.Add(new LevelOptionalItemDto
+            {
+                guid = AssetDatabase.AssetPathToGUID(p),
+                id = id,
+                group = FoodGroupOf(p),
+                kind = ClassifyOptionalItem(so, id)
+            });
+        }
+        return list.ToArray();
+    }
+
+    private static string ClassifyOptionalItem(ScriptableObject so, string id)
+    {
+        var lower = (id ?? "").ToLowerInvariant();
+        if (so is CustomRecipeSO)
+            return "custom-recipe";
+        if (Array.IndexOf(PizzaOptionalGuids, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so))) >= 0)
+            return "pizza-optional";
+        if (lower.Contains("ketchup") || lower.Contains("mustard"))
+            return "condiment";
+        if (lower.Contains("boiledfrankfurter"))
+            return "boiledfrankfurter";
+        if (so is PseudoPrefabSORecipe && lower.Contains("optional"))
+            return "hotdog-optional";
+        if (so is PseudoPrefabSORecipe)
+            return "recipe";
+        return "node";
+    }
+
+    /// <summary>LevelInfoSO.includeRecipeMatchLists → dto（菜谱管理 Matchlist tab 回显）。</summary>
+    private static LevelMatchlistDto[] BuildMatchlistDtos(LevelInfoSO info)
+    {
+        if (info == null || info.includeRecipeMatchLists == null)
+            return new LevelMatchlistDto[0];
+        var list = new List<LevelMatchlistDto>();
+        foreach (var ml in info.includeRecipeMatchLists)
+        {
+            if (ml == null)
+                continue;
+            var p = AssetDatabase.GetAssetPath(ml);
+            if (string.IsNullOrEmpty(p))
+                continue;
+            list.Add(new LevelMatchlistDto
+            {
+                key = MatchlistKeyOfPath(p),
+                guid = AssetDatabase.AssetPathToGUID(p),
+                bundleName = ml.bundleName
+            });
+        }
+        return list.ToArray();
     }
 
     /// <summary>StreamingAssets/Windows 下是否存在该 bundle 文件（插件只把已构建的 bundle
@@ -470,83 +546,10 @@ public static class LayoutEditorCatalogApi
         Undo.RecordObject(info, "Layout Editor Recipes");
         info.recipes = recipes.ToArray();
 
-        // Auto-populate optionalRecipeMatchListItems: 每次保存自动重建（覆盖，不保留旧条目）。
-        // 规则：只有食材组成（无嵌套子菜谱）的菜谱（如煎蛋 = 鸡蛋）不需要注册——
-        // 其匹配由食材 + 烹饪步骤天然覆盖；组合了其他菜谱的（如鸡蛋汉堡 = 煎蛋 + 面包）
-        // 以及 DLC/Web 原始菜谱必须注册，否则运行时内置 RecipeMatchList 无法匹配。
-        {
-            var existing = new HashSet<ScriptableObject>();
-            foreach (var r in recipes)
-            {
-                string id = null;
-                var path = AssetDatabase.GetAssetPath(r);
-                if (!string.IsNullOrEmpty(path))
-                    id = System.IO.Path.GetFileNameWithoutExtension(path);
-                if (string.IsNullOrEmpty(id))
-                    continue;
-                var type = RecipeTypeOf(id);
-                var group = FoodGroupOf(path);
-                var custom = r as CustomRecipeSO;
-
-                if (custom == null && group.StartsWith("dlc", StringComparison.Ordinal))
-                {
-                    // DLC 原始菜谱（含 common03 通用内容按 dlc 子目录归组）：游戏内置匹配表不含，需注册。
-                    existing.Add(r);
-                }
-
-                // Hotdog: 自由拼接（自选热狗）——注册游戏内置的可选热狗菜谱（optional_bun_*
-                // / optional_frankfurter_* / optional_onions_* / optionalhotdogs）与酱料
-                // （番茄酱/芥末酱，node 型食材，只能走 optionalRecipeMatchListItems，不能进
-                // allIngredients——宿主 GetIngredientOrItemOrderNode 会按 GameObject 加载而崩溃）。
-                // 只加与所选热狗同 DLC 的条目：dlc11 可选菜谱/酱料指向 bundle428/427，若关卡
-                // dependencies 未含对应 bundle，运行时 LoadAsset 会抛 KeyNotFoundException。
-                bool isHotdog = type == "hotdog"
-                    || id.IndexOf("hotdog", StringComparison.OrdinalIgnoreCase) >= 0
-                    || id.IndexOf("frankfurter", StringComparison.OrdinalIgnoreCase) >= 0;
-                if (custom == null && isHotdog)
-                {
-                    bool isDlc11 = path.IndexOf("/dlc11/", StringComparison.Ordinal) >= 0
-                        || id.IndexOf("dlc11", StringComparison.OrdinalIgnoreCase) >= 0;
-                    AddHotdogOptionalRecipes(existing, isDlc11);
-                    AddHotdogCondiments(existing, isDlc11);
-                    AddHotdogBoiledFrankfurter(existing, isDlc11);
-                }
-
-                // Pizza: add 自选披萨 optionals; mushroom pizza additionally needs 蘑菇披萨
-                if (custom == null && type == "pizza")
-                {
-                    AddOptionalGuids(existing, new[] { "c8a3b9520d25f674a89e274226dee7cf", "b38643b6c45e859479f6105f5d0ec839" });
-                    if (id.IndexOf("Mushroom", StringComparison.OrdinalIgnoreCase) >= 0)
-                        AddOptionalGuids(existing, new[] { "1072f0ef3ba328546a7a5bb84d983d6e" });
-                }
-            }
-            info.optionalRecipeMatchListItems = new ScriptableObject[existing.Count];
-            existing.CopyTo(info.optionalRecipeMatchListItems);
-        }
-
-        // Auto-populate includeRecipeMatchLists: 按所选菜谱所属 DLC，自动填入该 DLC 的
-        // recipematchlist（PseudoPrefabSO 资产，位于 common03/pseudo_prefab_so/matchlists/）。
-        // 运行时 SetupConfig 会把它并入关卡匹配表（GetAllOrderNodes 取并集），一次带齐该 DLC 的
-        // 整套匹配节点（食材/订单/可选自由拼接/套餐/烹饪步骤），避免手工逐项列 optionalRecipeMatchListItems。
-        {
-            var dlcSet = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var r in recipes)
-            {
-                var rp = AssetDatabase.GetAssetPath(r);
-                var dlc = DlcOfPath(rp);
-                if (!string.IsNullOrEmpty(dlc))
-                    dlcSet.Add(dlc);
-            }
-            var includeLists = new List<PseudoPrefabSO>();
-            foreach (var dlc in dlcSet)
-            {
-                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(
-                    "Assets/commonW1/pseudo_prefab_so/core/matchlists/" + dlc + "_recipematchlist.asset");
-                if (so != null)
-                    includeLists.Add(so);
-            }
-            info.includeRecipeMatchLists = includeLists.ToArray();
-        }
+        // optionalRecipeMatchListItems / includeRecipeMatchLists 不再自动重建：
+        // 由菜谱管理的「Optional 参数管理」「Matchlist 管理」两个 tab 手动配置
+        //（SetOptionalItems / SetMatchlists，支持披萨/Hotdog 一键填充候选），
+        // 保存菜谱只写 recipes——已有条目不会被覆盖，也不会因取消勾选菜谱被清掉。
 
         // 仅根据当前已选菜谱覆盖重建 allIngredients（不扫描场景食材箱，清除无关遗留食材）。
         LayoutEditorAllIngredientsFill.AutoFillIngredientsFromSelectedRecipes(info);
@@ -584,40 +587,245 @@ public static class LayoutEditorCatalogApi
         return null;
     }
 
-    /// <summary>从资产路径提取所属 DLC（/dlcNN/ 子目录；combineddlc 特判）。
-    ///  用于 includeRecipeMatchLists 自动填充与该 DLC 对应的 recipematchlist。</summary>
-    private static string DlcOfPath(string assetPath)
+    // ============================================================
+    // Optional / Matchlist 手动管理（菜谱管理两个 tab；替代旧自动填充）
+    // ============================================================
+
+    /// <summary>commonW1 matchlist 包装白名单（key → Assets/commonW1/.../core/matchlists/&lt;key&gt;_recipematchlist.asset）。</summary>
+    private static readonly string[] MatchlistKeys =
     {
-        if (string.IsNullOrEmpty(assetPath))
-            return null;
-        var m = System.Text.RegularExpressions.Regex.Match(assetPath, @"/(dlc\d{2})/");
-        if (m.Success)
-            return m.Groups[1].Value;
-        if (assetPath.IndexOf("/combineddlc/", StringComparison.Ordinal) >= 0)
-            return "combineddlc";
+        "dlc02", "dlc03", "dlc04", "dlc05", "dlc07",
+        "dlc08", "dlc09", "dlc10", "dlc11", "dlc13", "combineddlc",
+    };
+
+    /// <summary>自选披萨 optional 部件 guid（前 2 个通用；第 3 个为蘑菇披萨变体）。
+    ///  与旧 SetLevelRecipes 自动填充同源。</summary>
+    private static readonly string[] PizzaOptionalGuids =
+    {
+        "c8a3b9520d25f674a89e274226dee7cf",
+        "b38643b6c45e859479f6105f5d0ec839",
+        "1072f0ef3ba328546a7a5bb84d983d6e",
+    };
+
+    private static string MatchlistWrapperPath(string key)
+    {
+        return "Assets/commonW1/pseudo_prefab_so/core/matchlists/" + key + "_recipematchlist.asset";
+    }
+
+    private static string MatchlistKeyOfPath(string assetPath)
+    {
+        var name = Path.GetFileNameWithoutExtension(assetPath ?? "");
+        const string suffix = "_recipematchlist";
+        if (name.EndsWith(suffix, StringComparison.Ordinal))
+            name = name.Substring(0, name.Length - suffix.Length);
+        return name;
+    }
+
+    /// <summary>一键填充候选：hotdog（按 DLC 两套：可选菜谱 + 酱料 + 水煮香肠）与披萨部件。
+    ///  guid 与旧自动填充逻辑同源（CollectHotdog* / PizzaOptionalGuids），
+    ///  web 端「披萨/Hotdog 一键填充」按钮据此把候选加进列表，是否写回由用户决定。</summary>
+    public static OptionalPresetsDto GetOptionalPresets()
+    {
+        var items = new List<OptionalPresetItemDto>();
+        var hot08 = CollectHotdogSet(false);
+        var hot11 = CollectHotdogSet(true);
+        var hot08Guids = new List<string>();
+        var hot11Guids = new List<string>();
+
+        Action<ScriptableObject, string, string> add = (so, kind, zh) =>
+        {
+            var p = AssetDatabase.GetAssetPath(so);
+            if (string.IsNullOrEmpty(p))
+                return;
+            var g = AssetDatabase.AssetPathToGUID(p);
+            var id = Path.GetFileNameWithoutExtension(p);
+            items.Add(new OptionalPresetItemDto
+            {
+                guid = g,
+                id = id,
+                group = FoodGroupOf(p),
+                kind = kind,
+                nameZh = zh ?? ""
+            });
+        };
+        foreach (var so in hot08)
+        {
+            add(so, PresetKindOf(so), PresetZhOf(so));
+            var g = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so));
+            if (!string.IsNullOrEmpty(g))
+                hot08Guids.Add(g);
+        }
+        foreach (var so in hot11)
+        {
+            add(so, PresetKindOf(so), PresetZhOf(so));
+            var g = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so));
+            if (!string.IsNullOrEmpty(g))
+                hot11Guids.Add(g);
+        }
+        foreach (var g in PizzaOptionalGuids)
+        {
+            var p = AssetDatabase.GUIDToAssetPath(g);
+            if (string.IsNullOrEmpty(p))
+                continue;
+            items.Add(new OptionalPresetItemDto
+            {
+                guid = g,
+                id = Path.GetFileNameWithoutExtension(p),
+                group = FoodGroupOf(p),
+                kind = "pizza-optional",
+                nameZh = ""
+            });
+        }
+
+        return new OptionalPresetsDto
+        {
+            items = items.ToArray(),
+            pizzaFillGuids = new[] { PizzaOptionalGuids[0], PizzaOptionalGuids[1] },
+            pizzaMushroomGuids = new[] { PizzaOptionalGuids[2] },
+            hotdogFillGuidsDlc08 = hot08Guids.ToArray(),
+            hotdogFillGuidsDlc11 = hot11Guids.ToArray(),
+        };
+    }
+
+    private static string PresetKindOf(ScriptableObject so)
+    {
+        var p = AssetDatabase.GetAssetPath(so);
+        return ClassifyOptionalItem(so, Path.GetFileNameWithoutExtension(p ?? ""));
+    }
+
+    private static string PresetZhOf(ScriptableObject so)
+    {
+        var lower = Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(so) ?? "").ToLowerInvariant();
+        if (lower.Contains("ketchup")) return "番茄酱";
+        if (lower.Contains("mustard")) return "芥末酱";
+        if (lower.Contains("boiledfrankfurter")) return "水煮热狗肠";
+        return "";
+    }
+
+    /// <summary>覆盖写入 optionalRecipeMatchListItems（菜谱管理 Optional tab 的「写回」）。
+    ///  guid 解析失败的条目跳过并列名回告警；写后重建 bundle 依赖（EnsureWebDependencies
+    ///  含 optional 条目扫描）并立即落盘。返回 null = 成功，否则为告警文本。</summary>
+    public static string SetOptionalItems(LevelOptionalItemsUpdateDto update)
+    {
+        if (update == null || string.IsNullOrEmpty(update.levelInfoAssetPath))
+            return "Missing levelInfoAssetPath.";
+        var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(update.levelInfoAssetPath);
+        if (info == null)
+            return "LevelInfoSO not found.";
+
+        var arr = new List<ScriptableObject>();
+        var dropped = new List<string>();
+        var seen = new HashSet<UnityEngine.Object>();
+        if (update.guids != null)
+        {
+            foreach (var g in update.guids)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(g);
+                var so = string.IsNullOrEmpty(path)
+                    ? null
+                    : AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+                if (so == null)
+                {
+                    dropped.Add(string.IsNullOrEmpty(path) ? g : Path.GetFileNameWithoutExtension(path));
+                    continue;
+                }
+                if (seen.Add(so))
+                    arr.Add(so);
+            }
+        }
+
+        Undo.RecordObject(info, "Layout Editor Optional Items");
+        info.optionalRecipeMatchListItems = arr.ToArray();
+        FinalizeLevelInfoWrite(info, update.levelInfoAssetPath);
+
+        LayoutEditorLog.Log("[Optional] SetOptionalItems 完成: 写入 " + arr.Count + " 条 ["
+            + string.Join(", ", arr.ConvertAll(x => x.name).ToArray()) + "]"
+            + (dropped.Count > 0 ? ", 跳过 " + dropped.Count + " 条" : ""));
+        if (dropped.Count > 0)
+            return "已写入 " + arr.Count + " 条；以下条目 guid 无法解析，已跳过：" + string.Join("、", dropped.ToArray());
         return null;
     }
 
-    private static void AddOptionalGuids(HashSet<ScriptableObject> existing, string[] guids)
+    /// <summary>覆盖写入 includeRecipeMatchLists（菜谱管理 Matchlist tab 的「写回」）。
+    ///  key 不在白名单（MatchlistKeys）的跳过并列名。返回 null = 成功，否则为告警文本。</summary>
+    public static string SetMatchlists(LevelMatchlistsUpdateDto update)
     {
-        foreach (var g in guids)
+        if (update == null || string.IsNullOrEmpty(update.levelInfoAssetPath))
+            return "Missing levelInfoAssetPath.";
+        var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(update.levelInfoAssetPath);
+        if (info == null)
+            return "LevelInfoSO not found.";
+
+        var arr = new List<PseudoPrefabSO>();
+        var dropped = new List<string>();
+        if (update.keys != null)
         {
-            var path = AssetDatabase.GUIDToAssetPath(g);
-            if (!string.IsNullOrEmpty(path))
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var key in update.keys)
             {
-                var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
-                if (so != null)
-                    existing.Add(so);
+                if (string.IsNullOrEmpty(key) || !seen.Add(key))
+                    continue;
+                if (Array.IndexOf(MatchlistKeys, key) < 0)
+                {
+                    dropped.Add(key);
+                    continue;
+                }
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(MatchlistWrapperPath(key));
+                if (so == null)
+                {
+                    dropped.Add(key + "（包装资产缺失）");
+                    continue;
+                }
+                arr.Add(so);
             }
         }
+
+        Undo.RecordObject(info, "Layout Editor Matchlists");
+        info.includeRecipeMatchLists = arr.ToArray();
+        FinalizeLevelInfoWrite(info, update.levelInfoAssetPath);
+
+        LayoutEditorLog.Log("[Matchlist] SetMatchlists 完成: 写入 " + arr.Count + " 个 ["
+            + string.Join(", ", arr.ConvertAll(x => x.prefabName).ToArray()) + "]"
+            + (dropped.Count > 0 ? ", 跳过 " + dropped.Count + " 个" : ""));
+        if (dropped.Count > 0)
+            return "已写入 " + arr.Count + " 个；以下 key 无效或资产缺失，已跳过：" + string.Join("、", dropped.ToArray());
+        return null;
     }
 
-    /// <summary>Hotdog 自由拼接：注册 common03 里游戏内置的可选热狗菜谱
+    /// <summary>LevelInfo 写入收尾：重建 bundle 依赖 + SetDirty（含 PseudoPrefabManagerStub）
+    ///  + 立即 SaveAssets（防域重载丢失）。与 SetLevelRecipes 尾部同款。</summary>
+    private static void FinalizeLevelInfoWrite(LevelInfoSO info, string levelInfoAssetPath)
+    {
+        string levelSet = null;
+        var pathParts = (levelInfoAssetPath ?? "").Replace('\\', '/').Split('/');
+        if (pathParts.Length > 2 && pathParts[1] == "LevelSets")
+            levelSet = pathParts[2];
+        if (levelSet != null)
+            LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, info, true);
+        EditorUtility.SetDirty(info);
+        var manager = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();
+        if (manager != null && manager.levelInfo == info)
+            EditorUtility.SetDirty(manager);
+        AssetDatabase.SaveAssets();
+    }
+
+    /// <summary>Hotdog 一键填充集合（可选菜谱 + 酱料 + 水煮香肠，按 DLC 两套）。
+    ///  GetOptionalPresets 据此生成候选 guid；旧自动填充逻辑同源。</summary>
+    private static List<ScriptableObject> CollectHotdogSet(bool dlc11)
+    {
+        var set = new HashSet<ScriptableObject>();
+        CollectHotdogOptionalRecipes(set, dlc11);
+        CollectHotdogCondiments(set, dlc11);
+        CollectHotdogBoiledFrankfurter(set, dlc11);
+        return new List<ScriptableObject>(set);
+    }
+
+    /// <summary>Hotdog 自由拼接：common03 里游戏内置的可选热狗菜谱
     ///  （optional_bun_* / optional_frankfurter_* / optional_onions_* / optionalhotdogs）。
     ///  它们在 optionalRecipeMatchListItems 中按 OrderDefinitionNode 加载（PseudoPrefabSORecipe
     ///  走 PseudoPrefabSO 分支），从而让游戏能匹配「自由组装」的热狗（任意面包/香肠/浇头组合）。
     ///  <paramref name="dlc11"/> 只扫 dlc11 变体，否则只扫 dlc08（避免引入关卡未依赖的 bundle）。</summary>
-    private static void AddHotdogOptionalRecipes(HashSet<ScriptableObject> existing, bool dlc11)
+    private static void CollectHotdogOptionalRecipes(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] roots = dlc11
             ? new[] { "Assets/common03/food/Recipes/dlc11" }
@@ -643,7 +851,7 @@ public static class LayoutEditorCatalogApi
     /// <summary>Hotdog 酱料：番茄酱/芥末酱（dlc08 或 dlc11）的 node 型食材 SO。
     ///  只能进 optionalRecipeMatchListItems（宿主 allIngredients 加载路径按 GameObject
     ///  加载，node 型无 prefab 会返回 null 崩溃）；此处按 id 从 common03/Ingredients 解析。</summary>
-    private static void AddHotdogCondiments(HashSet<ScriptableObject> existing, bool dlc11)
+    private static void CollectHotdogCondiments(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] rootAndIds = dlc11
             ? new[] { "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_ketchup.asset",
@@ -662,7 +870,7 @@ public static class LayoutEditorCatalogApi
     ///  它的 OrderDefinitionNode 自带 m_platingStep + m_platingPrefab（可单独装盘），
     ///  必须进匹配表，否则玩家煮熟的肠单独放上盘子时 Plate.CanPlaceOnPlate 的
     ///  GetOrderPlatingPrefab 找不到对应节点而无法放盘。</summary>
-    private static void AddHotdogBoiledFrankfurter(HashSet<ScriptableObject> existing, bool dlc11)
+    private static void CollectHotdogBoiledFrankfurter(HashSet<ScriptableObject> existing, bool dlc11)
     {
         string[] paths = dlc11
             ? new[] { "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_boiledfrankfurter.asset" }

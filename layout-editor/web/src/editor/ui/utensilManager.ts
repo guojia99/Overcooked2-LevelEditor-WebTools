@@ -18,7 +18,11 @@ import { openIngredientMultiPicker } from "../../modals";
 import {
   stubKindOf,
   defaultUtensilCapacity,
-  utensilCapacityOrFix
+  utensilCapacityOrFix,
+  utensilTimingKind,
+  utensilTimingInputsHtml,
+  UTENSIL_TIME_KEYS,
+  readUtensilTimeInput
 } from "../stubControls";
 import {
   computeUtensilIngredientFill,
@@ -62,9 +66,10 @@ export function openUtensilManager() {
           const allowed = cu.allowedIngredientGuids ?? [];
           const allowedTxt = allowed.length > 0 ? `额外食材：${allowed.length} 种` : "额外食材：无（处理所有主线食材）";
           const dis = arr.length < 2 ? "disabled" : "";
-          return `<div class="utm-row">
+          return `<div class="utm-row" data-key="${it._editorKey}">
             <span class="utm-name">${escHtml(itemLabel(it))}${idx + 1}</span>
             <label class="utm-cap-label">容量 <input type="number" class="utm-cap" data-key="${it._editorKey}" min="0" step="1" value="${cap}"/></label>
+            ${utensilTimingInputsHtml(it, "", "utm")}
             <button type="button" class="modal-btn utm-ings" data-key="${it._editorKey}">${allowedTxt}…</button>
             <button type="button" class="modal-btn utm-sync" data-key="${it._editorKey}" ${dis}>同步给其他 ${arr.length - 1} 个</button>
           </div>`;
@@ -76,7 +81,7 @@ export function openUtensilManager() {
 
   openModal(
     "锅具管理 · 参数同步",
-    `<p class="modal-hint">可直接修改每个锅具的容量与额外食材（不选额外食材时可处理所有主线食材，选中后可额外煮这些食材），或一键把它的参数同步给所有相同类型的锅具。仅修改前端数据，写回 Unity 后生效。</p><div class="modal-scroll">${body}</div>`,
+    `<p class="modal-hint">可直接修改每个锅具的容量、时间与额外食材（不选额外食材时可处理所有主线食材，选中后可额外煮这些食材），或一键把它的参数同步给所有相同类型的锅具。时间留空 = 原版默认（输入框内灰色占位显示该锅具真实原版时间，煮糊/过混默认 2× 煮熟/混合）；特殊煮糊时间随关卡包分发。仅修改前端数据，写回 Unity 后生效。</p><div class="modal-scroll">${body}</div>`,
     `<button type="button" class="modal-btn primary" id="utm-auto-fill">🧺 按菜谱自动填充</button>
      <button type="button" class="modal-btn" data-cancel>关闭</button>`
   );
@@ -188,6 +193,41 @@ export function openUtensilManager() {
     });
   });
 
+  // 时间参数（煮熟/煮糊 · 混合/过度混合，按锅具类型分组显示）：
+  // 空串 = 清除回原版默认（糊/过混回退 2× 联动），数值 > 0 生效。
+  // Unity JsonUtility 会把未配置序列化成 0——0 一律按未配置处理。
+  document.querySelectorAll<HTMLInputElement>(".utm-time").forEach((input) => {
+    input.addEventListener("change", () => {
+      const row = input.closest(".utm-row") as HTMLElement | null;
+      const it = utensilByKey(row?.dataset.key ?? input.dataset.key);
+      if (!it) return;
+      const key = UTENSIL_TIME_KEYS[input.dataset.utime ?? ""];
+      if (!key) return;
+      const curRaw = it.cookingUtensil?.[key];
+      const cur = curRaw != null && curRaw > 0 ? curRaw : undefined;
+      const next = readUtensilTimeInput(input.value);
+      if (cur === next) return;
+      pushHistory();
+      ensureUtensil(it);
+      if (next == null) delete it.cookingUtensil?.[key];
+      else it.cookingUtensil![key] = next;
+      draw();
+      const kind = utensilTimingKind(it);
+      const names: Record<string, string> = {
+        cookTime: kind === "both" ? "烤熟时间" : "煮熟时间",
+        burnTime: kind === "both" ? "烤糊时间" : "煮糊时间",
+        mixTime: "混合时间",
+        overMixTime: "过度混合时间"
+      };
+      setStatus(
+        next == null
+          ? `${itemLabel(it)} ${names[key]}已恢复默认（写回后生效）`
+          : `${itemLabel(it)} ${names[key]}已设为 ${next}秒（写回后生效）`
+      );
+      reopen();
+    });
+  });
+
   document.querySelectorAll<HTMLButtonElement>(".utm-ings").forEach((btn) => {
     btn.addEventListener("click", () => {
       const it = utensilByKey(btn.dataset.key);
@@ -226,7 +266,17 @@ export function openUtensilManager() {
         if (it === src || stubKindOf(it) !== "CookingUtensil") continue;
         if (prefabIdFromPath(it.prefabAssetPath) !== pid) continue;
         it.stubKind = "CookingUtensil";
-        it.cookingUtensil = { capacity: cap, allowedIngredientGuids: [...allowed] };
+        // 时间字段按目标锅具类型过滤（变体同族类型一致，这里防御性拷贝全部字段，
+        // 混合/烹饪字段互不干扰：无对应 CookingHandler/MixingHandler 时后端忽略；
+        // 0 = 未配置不拷贝，保持目标原有留空语义）
+        it.cookingUtensil = {
+          capacity: cap,
+          allowedIngredientGuids: [...allowed],
+          ...(cu.cookTime != null && cu.cookTime > 0 ? { cookTime: cu.cookTime } : {}),
+          ...(cu.burnTime != null && cu.burnTime > 0 ? { burnTime: cu.burnTime } : {}),
+          ...(cu.mixTime != null && cu.mixTime > 0 ? { mixTime: cu.mixTime } : {}),
+          ...(cu.overMixTime != null && cu.overMixTime > 0 ? { overMixTime: cu.overMixTime } : {})
+        };
         n++;
       }
       draw();

@@ -35,7 +35,10 @@ public static class LayoutEditorPushablePotPreview
         Arm();
     }
 
-    private static void Arm()
+    /// <summary>重新打开扫描窗口（公开给写回路径调用：ReloadPseudoAssets* 重建载具后，
+    /// 预览锅随旧载具被销毁，须重新布防补挂——域重载/开场景/退 Play 三时机覆盖不到
+    /// 不触发编译的纯 HTTP 写回，2026-09-04 用户实测漏挂）。</summary>
+    public static void Arm()
     {
         if (Application.isPlaying)
             return;
@@ -101,7 +104,8 @@ public static class LayoutEditorPushablePotPreview
             }
             if (HasPot(carrier))
                 continue;
-            TryAttachPreview(pp.gameObject, carrier);
+            if (!TryAttachPreview(pp.gameObject, carrier))
+                pending = true; // 锅 SO/载具 bundle 尚不可用：窗口内重试（勿 Stop）
         }
         if (!pending)
             Stop();
@@ -117,18 +121,30 @@ public static class LayoutEditorPushablePotPreview
         return false;
     }
 
-    private static void TryAttachPreview(GameObject wrapper, GameObject carrier)
+    /// <summary>挂载预览锅。返回 false = 前置条件暂不满足（SOArray 空/锅 SO 空/
+    /// bundle 未加载），调用方应保留重试；true = 已挂载或该对象无需处理。</summary>
+    private static bool TryAttachPreview(GameObject wrapper, GameObject carrier)
     {
         // 锅 SO：soArray 槽 0（与运行时 PushablePot.PotSO 同源）
         var soArray = wrapper.GetComponent<PseudoPrefabSOArray>();
         if (soArray == null || soArray.pseudoPrefabSOs == null || soArray.pseudoPrefabSOs.Length == 0)
-            return;
+            return false;
         var potSO = soArray.pseudoPrefabSOs[0];
         if (potSO == null)
-            return;
-        var potPrefab = PseudoPrefabManager.LoadAsset<GameObject>(potSO);
+            return false;
+        GameObject potPrefab;
+        try
+        {
+            // bundle 未加载时宿主 GetAssetBundle（裸索引器）抛 KeyNotFoundException：
+            // 视为「暂不可用」走重试，不向 EditorApplication.update 抛异常刷屏。
+            potPrefab = PseudoPrefabManager.LoadAsset<GameObject>(potSO);
+        }
+        catch (System.Exception)
+        {
+            return false;
+        }
         if (potPrefab == null)
-            return; // bundle 未加载：等下一次扫描（窗口内重试）
+            return false; // bundle 未加载：等下一次扫描（窗口内重试）
         var pot = (GameObject)PrefabUtility.InstantiatePrefab(potPrefab);
         if (pot == null)
             pot = Object.Instantiate(potPrefab);
@@ -144,6 +160,7 @@ public static class LayoutEditorPushablePotPreview
         s_previews.Add(pot);
         LayoutEditorLog.Log("[PushablePotPreview] 编辑模式预览锅已挂载: " + wrapper.name
             + " → " + pot.name + "（进 Play 前自动移除，运行时由 CustomStub 装配）");
+        return true;
     }
 
     private static void StripAll(GameObject root, System.Type type)

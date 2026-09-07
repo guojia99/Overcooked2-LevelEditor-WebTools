@@ -1270,6 +1270,9 @@ public static class LayoutEditorLevelAdminApi
         ForcePrepareForBuilding();
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        // 写回历史：SaveScene 后、Reload 前取语义快照（覆盖 layout 的 after，
+        // 携带 layout+killplane 累计变化；无进行中记录时为 no-op）。
+        LayoutEditorWriteBackHistory.SupplySemanticAfter(sceneAssetPath);
         ReloadPseudo();
         return null;
     }

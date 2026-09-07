@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-04T07:19:23.635Z",
+  "generatedAt": "2026-09-07T07:40:19.709Z",
   "schemaVersion": 5,
   "gridCellSize": 1.2,
-  "itemCount": 2527,
+  "itemCount": 2529,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -38,7 +38,7 @@
       "labelZh": "核心 · 水槽 / 清洁",
       "labelEn": "Sinks & cleaning",
       "layoutTier": "core",
-      "itemCount": 10
+      "itemCount": 12
     },
     {
       "key": "counters/service",

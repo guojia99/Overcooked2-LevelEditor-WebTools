@@ -90,6 +90,14 @@ public class LayoutCookingUtensilStubDto
 {
     public int capacity;
     public string[] allowedIngredientGuids;
+    /** 烹饪类：煮熟秒数（0 = 未配置，保持 prefab 默认）。写 CookingHandler.m_cookingtime。 */
+    public float cookTime;
+    /** 烹饪类：煮糊秒数（0 = 默认 2×cookTime）。特殊值由 CustomStub.UtensilTiming + Harmony 生效。 */
+    public float burnTime;
+    /** 搅拌类：混合完成秒数（0 = 未配置）。写 MixingHandler.m_mixingTime。 */
+    public float mixTime;
+    /** 搅拌类：过度混合秒数（0 = 默认 2×mixTime）。 */
+    public float overMixTime;
 }
 
 [Serializable]
@@ -730,6 +738,13 @@ public class ApiErrorDto
     public string error;
 }
 
+public class ApiApplyResultDto
+{
+    public bool ok = true;
+    // 本次写回的绑定丢弃等告警（透传给 web 状态栏；空数组 = 无）。
+    public string[] warnings = new string[0];
+}
+
 [Serializable]
 public class IngredientEntryDto
 {
@@ -842,6 +857,10 @@ public class LevelRecipesDto
     public string[] recipeGuids;
     /** 与 recipeGuids 对应的菜谱 id（文件名），前端据此按 id 兜底匹配勾选状态。 */
     public string[] recipeIds;
+    /** optionalRecipeMatchListItems 回显（菜谱管理 Optional tab）。 */
+    public LevelOptionalItemDto[] optionalItems;
+    /** includeRecipeMatchLists 回显（菜谱管理 Matchlist tab）。 */
+    public LevelMatchlistDto[] matchlists;
 }
 
 [Serializable]
@@ -849,6 +868,68 @@ public class LevelRecipesUpdateDto
 {
     public string levelInfoAssetPath;
     public string[] recipeGuids;
+}
+
+// ---------- Optional / Matchlist 手动管理（菜谱管理两个 tab，替代旧自动填充） ----------
+
+/// <summary>LevelInfoSO.optionalRecipeMatchListItems 单条回显。
+///  kind: recipe(DLC原始菜谱) | custom-recipe | hotdog-optional | condiment |
+///        boiledfrankfurter | pizza-optional | node(其他 node 型 SO)</summary>
+[Serializable]
+public class LevelOptionalItemDto
+{
+    public string guid;
+    public string id;
+    public string group;
+    public string kind;
+}
+
+/// <summary>LevelInfoSO.includeRecipeMatchLists 单条回显（key = dlc02…dlc13/combineddlc）。</summary>
+[Serializable]
+public class LevelMatchlistDto
+{
+    public string key;
+    public string guid;
+    public string bundleName;
+}
+
+[Serializable]
+public class LevelOptionalItemsUpdateDto
+{
+    public string levelInfoAssetPath;
+    /** 覆盖写入的全部条目 guid（整体覆盖，空数组 = 清空）。 */
+    public string[] guids;
+}
+
+[Serializable]
+public class LevelMatchlistsUpdateDto
+{
+    public string levelInfoAssetPath;
+    /** 覆盖写入的 matchlist key（dlc02…dlc13 / combineddlc，白名单校验）。 */
+    public string[] keys;
+}
+
+/// <summary>一键填充候选条目（guid 与旧自动填充逻辑同源）。</summary>
+[Serializable]
+public class OptionalPresetItemDto
+{
+    public string guid;
+    public string id;
+    public string group;
+    public string kind;
+    public string nameZh;
+}
+
+[Serializable]
+public class OptionalPresetsDto
+{
+    public OptionalPresetItemDto[] items;
+    /** 披萨一键填充（自选披萨部件；蘑菇变体额外见 pizzaMushroomGuids）。 */
+    public string[] pizzaFillGuids;
+    public string[] pizzaMushroomGuids;
+    /** Hotdog 一键填充（按 DLC 两套：可选菜谱+酱料+水煮香肠）。 */
+    public string[] hotdogFillGuidsDlc08;
+    public string[] hotdogFillGuidsDlc11;
 }
 
 // ---------- 通用内容菜谱库（内置菜谱管理，已废弃：改为 common03 直接引用 + 静态 JSON） ----------

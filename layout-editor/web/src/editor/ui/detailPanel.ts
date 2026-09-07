@@ -56,7 +56,9 @@ import {
 } from "../servingLinks";
 import {
   stubKindOf,
-  defaultUtensilCapacity
+  defaultUtensilCapacity,
+  utensilTimingKind,
+  defaultUtensilTimes
 } from "../stubControls";
 import {
   BURNER_FIRE_MODES,
@@ -126,7 +128,26 @@ export function extraStubDetailHtml(item: EditorItem): string {
     case "CookingUtensil": {
       const cu = item.cookingUtensil ?? {};
       const allowed = (cu.allowedIngredientGuids ?? []).length;
-      return `<dt>锅具</dt><dd>最多 ${cu.capacity ?? defaultUtensilCapacity(item)} 个食材 · 额外食材：${allowed > 0 ? `${allowed} 种` : "无（处理所有主线食材）"}（右键直接修改）</dd>`;
+      const kind = utensilTimingKind(item);
+      const def = defaultUtensilTimes(item);
+      const timeParts: string[] = [];
+      if (kind === "cook" || kind === "both") {
+        const bake = kind === "both" ? "烤" : "煮";
+        const cookSet = (cu.cookTime ?? 0) > 0;
+        const burnSet = (cu.burnTime ?? 0) > 0;
+        const cookEff = cookSet ? cu.cookTime! : def.cook;
+        const burnEff = burnSet ? cu.burnTime! : 2 * cookEff;
+        timeParts.push(`${bake}熟 ${cookSet ? `${cu.cookTime}s` : `原版${def.cook}s`} · ${bake}糊 ${burnSet ? `${cu.burnTime}s` : `${burnEff}s${cookSet ? "" : "（2×）"}`}`);
+      }
+      if (kind === "mix" || kind === "both") {
+        const mixSet = (cu.mixTime ?? 0) > 0;
+        const overSet = (cu.overMixTime ?? 0) > 0;
+        const mixEff = mixSet ? cu.mixTime! : def.mix;
+        const overEff = overSet ? cu.overMixTime! : 2 * mixEff;
+        timeParts.push(`混合 ${mixSet ? `${cu.mixTime}s` : `原版${def.mix}s`} · 过混 ${overSet ? `${cu.overMixTime}s` : `${overEff}s${mixSet ? "" : "（2×）"}`}`);
+      }
+      const timeTxt = timeParts.length ? ` · ${timeParts.join(" · ")}` : "";
+      return `<dt>锅具</dt><dd>最多 ${cu.capacity ?? defaultUtensilCapacity(item)} 个食材${timeTxt} · 额外食材：${allowed > 0 ? `${allowed} 种` : "无（处理所有主线食材）"}（右键直接修改）</dd>`;
     }
     case "Travelator":
       return `<dt>移动地板</dt><dd>速度 ${(item.travelator?.speed ?? 2.5).toFixed(2)}（右键直接修改）</dd>`;

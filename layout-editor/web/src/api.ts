@@ -22,6 +22,7 @@ import type {
   LevelDetail,
   LevelList,
   LevelRecipes,
+  OptionalPresets,
   LevelSetInfo,
   LevelSetList,
   LevelSetScene,
@@ -31,6 +32,9 @@ import type {
   SetExportStatus,
   SwitchMaterialCatalog,
   SwitchMaterialOption,
+  WriteBackHistoryDetail,
+  WriteBackHistoryItem,
+  WriteBackHistoryList,
 } from "./types";
 
 const STALE_BRIDGE_MSG =
@@ -100,8 +104,9 @@ export async function repairBrokenPrefabs(assetPath?: string): Promise<number> {
   return data.removed ?? 0;
 }
 
-/** only scopes the write-back to one layer: "" = full, "items" / "decor" / "floors". */
-export async function saveLayout(doc: LayoutDocument, snap: number, syncWalkable = false, only = ""): Promise<void> {
+/** only scopes the write-back to one layer: "" = full, "items" / "decor" / "floors".
+ *  返回本次写回的告警（绑定丢弃等，Unity 侧透传；空数组 = 无）。 */
+export async function saveLayout(doc: LayoutDocument, snap: number, syncWalkable = false, only = ""): Promise<string[]> {
   const q = new URLSearchParams({ snap: String(snap) });
   if (syncWalkable) q.set("syncWalkable", "1");
   if (only) q.set("only", only);
@@ -114,6 +119,11 @@ export async function saveLayout(doc: LayoutDocument, snap: number, syncWalkable
     const err = await r.json().catch(() => ({}));
     throw new Error(err.error ?? "写回失败");
   }
+  const data = await r.json().catch(() => ({}));
+  const warnings = Array.isArray((data as { warnings?: unknown }).warnings)
+    ? (data as { warnings: unknown[] }).warnings
+    : [];
+  return warnings.filter((w): w is string => typeof w === "string");
 }
 
 export async function fetchGrid(): Promise<GridInfo> {
@@ -281,6 +291,38 @@ export async function fetchLevelRecipes(assetPath: string): Promise<LevelRecipes
   const q = new URLSearchParams({ assetPath });
   const r = await fetch(`/api/level-recipes?${q}`);
   return readApiJson<LevelRecipes>(r);
+}
+
+/** Optional 一键填充候选（hotdog 两套 / 披萨部件；guid 与旧自动填充同源）。 */
+export async function fetchOptionalPresets(): Promise<OptionalPresets> {
+  const r = await fetch("/api/level/optional-presets");
+  return readApiJson<OptionalPresets>(r);
+}
+
+/** 覆盖写入 optionalRecipeMatchListItems（菜谱管理 Optional tab 写回）。 */
+export async function saveOptionalItems(
+  levelInfoAssetPath: string,
+  guids: string[]
+): Promise<void> {
+  const r = await fetch("/api/level/optional-items", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ levelInfoAssetPath, guids }),
+  });
+  await readApiJson<{ ok?: boolean; error?: string }>(r);
+}
+
+/** 覆盖写入 includeRecipeMatchLists（菜谱管理 Matchlist tab 写回）。 */
+export async function saveMatchlists(
+  levelInfoAssetPath: string,
+  keys: string[]
+): Promise<void> {
+  const r = await fetch("/api/level/matchlists", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ levelInfoAssetPath, keys }),
+  });
+  await readApiJson<{ ok?: boolean; error?: string }>(r);
 }
 
 export async function saveLevelRecipes(
@@ -923,6 +965,36 @@ export async function fetchCounterAppearances(): Promise<CounterAppearanceCatalo
 export async function fetchSwitchMaterials(): Promise<SwitchMaterialOption[]> {
   const data = await fetchStaticCatalog<SwitchMaterialCatalog>("switch-materials.json");
   return data.materials ?? [];
+}
+
+// ---------- Write-back History（关卡管理「工具与历史」弹窗消费） ----------
+
+/** 某关最近 15 次写回记录清单（含 diff 概要计数），新→旧。 */
+export async function fetchWriteBackHistory(setName: string, levelId: string): Promise<WriteBackHistoryItem[]> {
+  const q = new URLSearchParams({ set: setName, level: levelId });
+  const data = await readApiJson<WriteBackHistoryList>(await fetch(`/api/writeback/history?${q}`));
+  return data.items ?? [];
+}
+
+/** 单条写回历史记录的完整 meta + diff（变动对比明细）。 */
+export async function fetchWriteBackHistoryDetail(
+  setName: string,
+  levelId: string,
+  record: string
+): Promise<WriteBackHistoryDetail> {
+  const q = new URLSearchParams({ set: setName, level: levelId, record });
+  return readApiJson<WriteBackHistoryDetail>(await fetch(`/api/writeback/history/detail?${q}`));
+}
+
+/** 单条写回历史记录的完整布局文档（恢复到画布用；side = before | after）。 */
+export async function fetchWriteBackHistoryDoc(
+  setName: string,
+  levelId: string,
+  record: string,
+  side: "before" | "after"
+): Promise<LayoutDocument> {
+  const q = new URLSearchParams({ set: setName, level: levelId, record, side });
+  return readApiJson<LayoutDocument>(await fetch(`/api/writeback/history/doc?${q}`));
 }
 
 export { STALE_BRIDGE_MSG };

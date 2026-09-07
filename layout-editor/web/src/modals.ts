@@ -195,8 +195,10 @@ export function openIngredientMultiPicker(
     .filter((g) => g !== "core")
     .sort();
   const hasIntermediates = intermediates && intermediates.length > 0;
-  const selectedInit = new Set(selectedGuids);
-  const hasSelected = selectedInit.size > 0;
+  // 勾选状态的唯一来源（可变）：切分组/分类/搜索会整体重建列表 DOM，勾选必须
+  // 即时同步到这里、确定时从这里收集——否则跨分类勾选丢失/写回只剩当前分类
+  // （与 openRandomCrateEditor 的 state Map 同款模式）。
+  const selected = new Set(selectedGuids);
   // 分类 chips：只显示当前列表里实际出现的分类
   const cats = INGREDIENT_CATEGORIES.filter((c) =>
     ingredients.some((i) => ingredientCategoryOf(i.id) === c.key)
@@ -222,7 +224,7 @@ export function openIngredientMultiPicker(
         <button type="button" class="ing-group-btn active" data-group="">全部</button>
         ${groups.map((g) => `        <button type="button" class="ing-group-btn" data-group="${g}">${foodGroupLabel(g)}</button>${""}`).join("")}
         ${hasIntermediates ? '<button type="button" class="ing-group-btn" data-group="__intermediate__">中间产物</button>' : ""}
-        ${hasSelected ? '<button type="button" class="ing-group-btn" data-group="__selected__" title="只显示当前已勾选的条目，便于审查与取消">✓ 已选</button>' : ""}
+        <button type="button" class="ing-group-btn" data-group="__selected__" title="只显示当前已勾选的条目，便于审查与取消">✓ 已选 (${selected.size})</button>
       </div>
     </div>
     ${cats.length > 1 ? `
@@ -235,7 +237,6 @@ export function openIngredientMultiPicker(
     </div>` : ""}`;
 
   function buildFiltered(): string {
-    const selected = new Set(selectedGuids);
     const activeGroup = (document.querySelector(".ing-groups .ing-group-btn.active[data-group]") as HTMLElement)?.dataset.group ?? "";
     const activeCat = (document.querySelector(".ing-groups .ing-group-btn.active[data-cat]") as HTMLElement)?.dataset.cat ?? "";
     const q = (document.getElementById("ing-pick-search") as HTMLInputElement)?.value?.trim()?.toLowerCase() ?? "";
@@ -306,12 +307,32 @@ export function openIngredientMultiPicker(
     onSave([]);
     closeModal();
   });
+
+  // 勾选即时同步进 state（事件委托挂在容器上——applyFilter 只替换 innerHTML，
+  // 容器与监听器存活；单选 radio 换选时先清空再写入唯一值）。
+  const syncSelectedFromInput = (t: EventTarget | null) => {
+    const el = t as HTMLInputElement | null;
+    if (!el || (el.type !== "checkbox" && el.type !== "radio")) return;
+    if (opts?.single) {
+      if (el.type === "radio" && el.checked) {
+        selected.clear();
+        selected.add(el.value);
+      }
+    } else if (el.checked) {
+      selected.add(el.value);
+    } else {
+      selected.delete(el.value);
+    }
+    const selBtn = document.querySelector<HTMLButtonElement>('.ing-group-btn[data-group="__selected__"]');
+    if (selBtn) selBtn.textContent = `✓ 已选 (${selected.size})`;
+  };
+  document.getElementById("ing-pick-container")?.addEventListener("change", (e) => {
+    syncSelectedFromInput(e.target);
+  });
+
+  // 确定从 state 收集（而非当前过滤视图的 DOM），跨分组/分类/搜索的勾选全部保留。
   document.querySelector("[data-ok]")?.addEventListener("click", () => {
-    const guids: string[] = [];
-    document.querySelectorAll<HTMLInputElement>("#ing-pick-container input:checked").forEach((el) => {
-      guids.push(el.value);
-    });
-    onSave(guids);
+    onSave(opts?.single ? [...selected].slice(-1) : [...selected]);
     closeModal();
   });
 }

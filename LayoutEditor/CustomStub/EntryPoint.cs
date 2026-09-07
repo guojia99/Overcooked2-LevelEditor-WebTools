@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Reflection;
 using HarmonyLib;
 using LevelEditorStub;
 using UnityEngine;
@@ -22,15 +23,18 @@ namespace CustomStub
     ///
     /// 职责：
     ///  1. Harmony 补丁（KillPlane 跳过 + 玩家脱离，HarmonyPatches）；
-    ///  2. HotPot / PushableVoidFall 两个常驻 ticker；
+    ///  2. HotPot / PushableVoidFall / UtensilTiming（锅具时间）/ TerminalGuard
+    ///     （未绑定终端防线）常驻 ticker；
     ///  3. sceneLoaded 场景自愈：按 SpecificPseudoPrefabTag 载体还原组件——
     ///     TimedSwitch| / PushablePot| / SwitchReenable| / WorldMapDressing|
-    ///     （RandomCrate| 由 loader 自愈，此处不重复）。
+    ///     / UtensilTiming|（RandomCrate| 由 loader 自愈，此处不重复）。
     /// </summary>
     public static class EntryPoint
     {
-        /// <summary>版本金丝雀：真机日志确认 bundle 内 DLL 新鲜度看这一行。</summary>
-        public const string Version = "v1";
+        /// <summary>版本金丝雀：真机日志确认 bundle 内 DLL 新鲜度看这一行。
+        ///  v2：TimedSwitch 自愈竞态修复（AddComponent 先禁用→Parse→再启用，
+        ///  startOn=false 不再被 OnEnable 默认相位吃掉）。</summary>
+        public const string Version = "v2";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -71,6 +75,8 @@ namespace CustomStub
                 InstallHarmony();
                 host.AddComponent<HotPotTicker>();
                 host.AddComponent<VoidFallTicker>();
+                host.AddComponent<UtensilTimingTicker>();
+                host.AddComponent<TerminalGuardTicker>();
                 SceneManager.sceneLoaded += OnSceneLoadedHeal;
                 HealScene(SceneManager.GetActiveScene());
 
@@ -98,28 +104,95 @@ namespace CustomStub
             if (target == null)
             {
                 StubLog.LogWarn("[CustomStub] ServerRespawnCollider.ObjectAdded 反射失败，KillPlane 补丁未装（无前缀安全网生效）");
-                return;
             }
+            else
+            {
+                try
+                {
+                    var harmony = new Harmony(HarmonyId);
+                    var prefixMethod = HarmonyPatches.RespawnColliderObjectAddedPrefixMethod;
+                    if (prefixMethod == null)
+                    {
+                        StubLog.LogWarn("[CustomStub] 前缀方法缺失，KillPlane 补丁未装（无前缀安全网生效）");
+                    }
+                    else
+                    {
+                        var prefix = new HarmonyMethod(prefixMethod);
+                        harmony.Patch(target, prefix);
+                        s_harmonyInstalled = true;
+                        StubLog.Log("[CustomStub] KillPlane 补丁已装: " + target.DeclaringType.Name + "." + target.Name);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // ex.Message 只有外层一句话（TypeInitializationException 不含真因），
+                    // 必须打全量（含 InnerException）才能定位（HarmonyLib.Harmony 静态构造
+                    // 在 Unity 2017.4 编辑器 Mono 上初始化失败，2026-09-04 待查真因）。
+                    StubLog.LogWarn("[CustomStub] Harmony 安装失败（可移动火锅 KillPlane 行为走无前缀安全网）: " + ex);
+                }
+            }
+            InstallUtensilTimingPatches();
+        }
+
+        /// <summary>锅具时间补丁（煮糊/过度混合 ≠ 2× 时的阈值接管）：与 KillPlane
+        /// 相互独立——任一失败不影响另一组。全零开销放行（无 UtensilTiming 时）。</summary>
+        private static bool s_utensilTimingPatched;
+
+        private static void InstallUtensilTimingPatches()
+        {
             try
             {
-                var harmony = new Harmony(HarmonyId);
-                var prefixMethod = HarmonyPatches.RespawnColliderObjectAddedPrefixMethod;
-                if (prefixMethod == null)
-                {
-                    StubLog.LogWarn("[CustomStub] 前缀方法缺失，KillPlane 补丁未装（无前缀安全网生效）");
-                    return;
-                }
-                var prefix = new HarmonyMethod(prefixMethod);
-                harmony.Patch(target, prefix);
-                s_harmonyInstalled = true;
-                StubLog.Log("[CustomStub] KillPlane 补丁已装: " + target.DeclaringType.Name + "." + target.Name);
+                var harmony = new Harmony(HarmonyId + ".utensiltiming");
+                int ok = 0, skip = 0;
+                ok += PatchPair(harmony, GameApi.CookingHandlerGetCookedStateMethod,
+                    HarmonyPatches.CookingGetCookedStatePrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.MixingHandlerGetMixedStateMethod,
+                    HarmonyPatches.MixingGetMixedStatePrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.HandlerIsBurningMethod,
+                    HarmonyPatches.ServerCookingIsBurningPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.ClientCookingIsBurningMethod,
+                    HarmonyPatches.ClientCookingIsBurningPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.ServerMixingIsOverMixedMethod,
+                    HarmonyPatches.ServerMixingIsOverMixedPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.ClientMixingIsOverMixedMethod,
+                    HarmonyPatches.ClientMixingIsOverMixedPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.ServerCookingSetProgressMethod,
+                    null, HarmonyPatches.ServerCookingSetProgressPostfixMethod, ref skip);
+                ok += PatchPair(harmony, GameApi.ServerMixingSetProgressMethod,
+                    null, HarmonyPatches.ServerMixingSetProgressPostfixMethod, ref skip);
+                ok += PatchPair(harmony, GameApi.ClientCookingApplyUpdateMethod,
+                    null, HarmonyPatches.ClientCookingApplyUpdatePostfixMethod, ref skip);
+                ok += PatchPair(harmony, GameApi.ClientMixingApplyUpdateMethod,
+                    null, HarmonyPatches.ClientMixingApplyUpdatePostfixMethod, ref skip);
+                s_utensilTimingPatched = ok > 0;
+                StubLog.Log("[CustomStub] 锅具时间补丁: 已装 " + ok + " 个" + (skip > 0 ? "，反射缺失跳过 " + skip + " 个" : ""));
             }
             catch (Exception ex)
             {
-                // ex.Message 只有外层一句话（TypeInitializationException 不含真因），
-                // 必须打全量（含 InnerException）才能定位（HarmonyLib.Harmony 静态构造
-                // 在 Unity 2017.4 编辑器 Mono 上初始化失败，2026-09-04 待查真因）。
-                StubLog.LogWarn("[CustomStub] Harmony 安装失败（可移动火锅 KillPlane 行为走无前缀安全网）: " + ex);
+                StubLog.LogWarn("[CustomStub] 锅具时间补丁安装失败（未配置煮糊/过混的锅具不受影响）: " + ex);
+            }
+        }
+
+        private static int PatchPair(Harmony harmony, MethodInfo target, MethodInfo prefix, MethodInfo postfix, ref int skip)
+        {
+            if (target == null || (prefix == null && postfix == null))
+            {
+                skip++;
+                return 0;
+            }
+            try
+            {
+                if (prefix != null)
+                    harmony.Patch(target, new HarmonyMethod(prefix));
+                if (postfix != null)
+                    harmony.Patch(target, null, new HarmonyMethod(postfix));
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 时间补丁单个绑定失败 " + target.DeclaringType.Name + "." + target.Name + ": " + ex.Message);
+                skip++;
+                return 0;
             }
         }
 
@@ -164,8 +237,15 @@ namespace CustomStub
             {
                 if (go.GetComponent<TimedCookingSwitch>() != null)
                     return;
+                // 竞态修复（2026-09-07 真机日志实证）：AddComponent 在 active 物体上会
+                // 同帧执行 OnEnable——TimedCookingSwitch.OnEnable 以【默认值】固化
+                // m_phaseOn 并立即开火，之后 Parse 补写的 m_startOn 无法回滚相位
+                // （现象：startOn=false 配置开局仍为开启）。统一先禁用、写完配置再
+                // 启用，让 OnEnable 以最终配置启动。
                 var sw = go.AddComponent<TimedCookingSwitch>();
+                sw.enabled = false;
                 ParseTimedSwitch(prefabTag.Substring(TimedCookingSwitch.TagPrefix.Length), sw);
+                sw.enabled = true;
                 StubLog.Log("[CustomStub] 自愈 TimedSwitch: " + go.name);
             }
             else if (prefabTag.StartsWith(PushablePot.TagPrefix, StringComparison.Ordinal))
@@ -191,6 +271,29 @@ namespace CustomStub
                 go.AddComponent<WorldMapDressing>();
                 StubLog.Log("[CustomStub] 自愈 WorldMapDressing: " + go.name);
             }
+            else if (prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal))
+            {
+                if (go.GetComponent<UtensilTimingConfig>() != null)
+                    return;
+                var cfg = go.AddComponent<UtensilTimingConfig>();
+                ParseUtensilTiming(prefabTag.Substring(UtensilTimingConfig.TagPrefix.Length), cfg);
+                StubLog.Log("[CustomStub] 自愈 UtensilTimingConfig: " + go.name);
+            }
+        }
+
+        /// <summary>UtensilTiming|&lt;cook&gt;,&lt;burn&gt;,&lt;mix&gt;,&lt;over&gt;（invariant 浮点，
+        /// 0 = 未配置）。组件为权威，已存在的不动。</summary>
+        private static void ParseUtensilTiming(string payload, UtensilTimingConfig cfg)
+        {
+            if (string.IsNullOrEmpty(payload))
+                return;
+            var parts = payload.Split(',');
+            if (parts.Length < 4)
+                return;
+            cfg.m_cookTime = ParseFloat(parts[0], 0f);
+            cfg.m_burnTime = ParseFloat(parts[1], 0f);
+            cfg.m_mixTime = ParseFloat(parts[2], 0f);
+            cfg.m_overMixTime = ParseFloat(parts[3], 0f);
         }
 
         /// <summary>TimedSwitch|&lt;1|0&gt;,&lt;on&gt;,&lt;off&gt;,&lt;1|0&gt;</summary>
@@ -295,6 +398,45 @@ namespace CustomStub
                 catch (Exception ex)
                 {
                     StubLog.LogWarn("[CustomStub.VoidFall] tick skipped: " + ex.Message);
+                }
+            }
+        }
+
+        /// <summary>锅具时间 ticker：每 ~0.3s（18 帧）扫一次场景烹饪/搅拌 handler，
+        /// 把伪 prefab stub 上的时间配置（cookTime/burnTime/mixTime/overMixTime）
+        /// 应用到锅具实例。未配置的关卡零改动（handler 无 stub 祖先或全 0 跳过）。</summary>
+        private class UtensilTimingTicker : MonoBehaviour
+        {
+            private void Update()
+            {
+                if (Time.frameCount % 18 != 0)
+                    return;
+                try
+                {
+                    UtensilTiming.Tick();
+                }
+                catch (Exception ex)
+                {
+                    StubLog.LogWarn("[CustomStub.UtensilTiming] tick skipped: " + ex.Message);
+                }
+            }
+        }
+
+        /// <summary>终端防线 ticker：每 ~0.5s（30 帧）扫一次未绑定可操控对象的终端
+        /// （写回降级残留），禁用交互/外观脚本防每帧 NRE。见 TerminalGuard。</summary>
+        private class TerminalGuardTicker : MonoBehaviour
+        {
+            private void Update()
+            {
+                if (Time.frameCount % 30 != 0)
+                    return;
+                try
+                {
+                    TerminalGuard.Tick();
+                }
+                catch (Exception ex)
+                {
+                    StubLog.LogWarn("[CustomStub.TerminalGuard] tick skipped: " + ex.Message);
                 }
             }
         }

@@ -421,17 +421,52 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // ---- Optional / Matchlist 手动管理（菜谱管理两个 tab）----
+
+            if (path == "/api/level/optional-presets" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCatalogApi.GetOptionalPresets()));
+                return;
+            }
+
+            if (path == "/api/level/optional-items" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelOptionalItemsUpdateDto>(body);
+                LayoutEditorWriteBackHistory.BeginForInfo("optional-items", dto != null ? dto.levelInfoAssetPath : null);
+                var err = LayoutEditorCatalogApi.SetOptionalItems(dto);
+                if (!string.IsNullOrEmpty(err)) LayoutEditorWriteBackHistory.Abort();
+                else LayoutEditorWriteBackHistory.CommitNow();
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level/matchlists" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelMatchlistsUpdateDto>(body);
+                LayoutEditorWriteBackHistory.BeginForInfo("matchlists", dto != null ? dto.levelInfoAssetPath : null);
+                var err = LayoutEditorCatalogApi.SetMatchlists(dto);
+                if (!string.IsNullOrEmpty(err)) LayoutEditorWriteBackHistory.Abort();
+                else LayoutEditorWriteBackHistory.CommitNow();
+                WriteAdminResult(response, err);
+                return;
+            }
+
             if (path == "/api/level-recipes" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);
                 var update = JsonUtility.FromJson<LevelRecipesUpdateDto>(body);
+                LayoutEditorWriteBackHistory.BeginForInfo("level-recipes", update != null ? update.levelInfoAssetPath : null);
                 var recipeErr = LayoutEditorCatalogApi.SetLevelRecipes(update);
                 if (!string.IsNullOrEmpty(recipeErr))
                 {
+                    LayoutEditorWriteBackHistory.Abort();
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = recipeErr }));
                     return;
                 }
 
+                LayoutEditorWriteBackHistory.CommitNow();
                 WriteJson(response, 200, "{\"ok\":true}");
                 return;
             }
@@ -488,6 +523,12 @@ public class LayoutEditorHttpServer
                     if (p.Length > 2 && p[1] == "LevelSets")
                         levelSet = p[2];
                 }
+
+                // 写回历史：在任何修改（SyncAllWebContent/SyncLevelInfo/Apply）之前开一条
+                // pending 记录并缓存写回前场景/info 快照；宽限期后定稿，后续 death/killplane
+                // POST 归并进同一条记录（LayoutEditorWriteBackHistory）。
+                LayoutEditorWriteBackHistory.Begin("layout", doc.sceneAssetPath, levelInfo);
+
                 if (levelSet != null)
                 {
                     LayoutEditorCustomIngredients.SyncAllWebContent(levelSet);
@@ -503,6 +544,8 @@ public class LayoutEditorHttpServer
                 var err = SceneLayoutApplier.Apply(doc, snap, syncWalkable, only);
                 if (!string.IsNullOrEmpty(err))
                 {
+                    // 场景未保存成功：丢弃本次写回历史记录（部分成功=已保存，保留记录）。
+                    LayoutEditorWriteBackHistory.Abort();
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
                     return;
                 }
@@ -511,16 +554,22 @@ public class LayoutEditorHttpServer
                 // Auto Fill All Ingredients，确保填充是基于"写完全部"之后的最终状态。
         if (levelSet != null && levelInfo != null)
                 {
-                    LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
-                    LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
-                    // 填充可能引入新的食材/音频目录引用，覆盖重建 dependencies 并合并音频 bundle。
-                    LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
-                    LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
-                    EditorUtility.SetDirty(levelInfo);
-                    AssetDatabase.SaveAssets();
-                }
+                     LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
+                     LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
+                     // 填充可能引入新的食材/音频目录引用，覆盖重建 dependencies 并合并音频 bundle。
+                     LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
+                     LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
+                     EditorUtility.SetDirty(levelInfo);
+                     AssetDatabase.SaveAssets();
+                 }
 
-                WriteJson(response, 200, "{\"ok\":true}");
+                // 写回告警透传：绑定丢弃等此前只进 Unity 日志，web 端无感知，
+                // 用户直到游戏里才发现脏盘台/饮料机失效。
+                WriteJson(response, 200, LayoutEditorJson.ToJson(new ApiApplyResultDto
+                {
+                    ok = true,
+                    warnings = LayoutEditorLog.DrainApplyWarnings(),
+                }));
                 return;
             }
 
@@ -529,7 +578,14 @@ public class LayoutEditorHttpServer
                 var assetPath = request.QueryString["assetPath"];
                 if (!string.IsNullOrEmpty(assetPath))
                     OpenSceneIfNeeded(assetPath);
+                // 写回历史：修复是立即落盘操作，独立成一条记录（场景语义前后对比）。
+                var repairedScenePath = EditorSceneManager.GetActiveScene().path;
+                var repairedInfo = LayoutEditorLevelInfoResolver.ResolveForScene(repairedScenePath);
+                LayoutEditorWriteBackHistory.Begin("repair", repairedScenePath, repairedInfo);
+                LayoutEditorWriteBackHistory.SupplySemanticBefore(repairedScenePath);
                 var removed = LayoutEditorSceneRepair.RemoveBrokenPrefabInstances();
+                LayoutEditorWriteBackHistory.SupplySemanticAfter(repairedScenePath);
+                LayoutEditorWriteBackHistory.CommitNow();
                 WriteJson(response, 200, "{\"ok\":true,\"removed\":" + removed + "}");
                 return;
             }
@@ -561,6 +617,57 @@ public class LayoutEditorHttpServer
             if (path == "/api/sets" && request.HttpMethod == "GET")
             {
                 WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanSets()));
+                return;
+            }
+
+            // 写回历史（关卡管理「工具与历史」弹窗）：list = 某关最近记录清单（含 diff 概要计数），
+            // detail = 单条完整 meta + diff。
+            if (path == "/api/writeback/history" && request.HttpMethod == "GET")
+            {
+                var set = request.QueryString["set"];
+                var level = request.QueryString["level"];
+                if (string.IsNullOrEmpty(set) || string.IsNullOrEmpty(level))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "缺少 set / level 参数。" }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorWriteBackHistory.ListRecords(set, level)));
+                return;
+            }
+
+            if (path == "/api/writeback/history/detail" && request.HttpMethod == "GET")
+            {
+                var set = request.QueryString["set"];
+                var level = request.QueryString["level"];
+                var record = request.QueryString["record"];
+                if (string.IsNullOrEmpty(set) || string.IsNullOrEmpty(level) || string.IsNullOrEmpty(record))
+                {
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "缺少 set / level / record 参数。" }));
+                    return;
+                }
+                var detail = LayoutEditorWriteBackHistory.ReadRecord(set, level, record);
+                if (detail == null)
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "未找到该写回历史记录。" }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(detail));
+                return;
+            }
+
+            // 完整布局文档（恢复到画布用；side = before | after）。
+            if (path == "/api/writeback/history/doc" && request.HttpMethod == "GET")
+            {
+                var set = request.QueryString["set"];
+                var level = request.QueryString["level"];
+                var record = request.QueryString["record"];
+                var side = request.QueryString["side"];
+                if (string.IsNullOrEmpty(set) || string.IsNullOrEmpty(level) || string.IsNullOrEmpty(record) || string.IsNullOrEmpty(side))
+                {
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "缺少 set / level / record / side 参数。" }));
+                    return;
+                }
+                var docJson = LayoutEditorWriteBackHistory.ReadDocument(set, level, record, side);
+                if (docJson == null)
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "该记录没有可恢复的完整快照。" }));
+                else
+                    WriteJson(response, 200, docJson);
                 return;
             }
 
@@ -643,7 +750,11 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<LevelInfoUpdateDto>(body);
+                // 写回历史：立即落盘的 info 变更，独立成一条记录。
+                LayoutEditorWriteBackHistory.BeginForInfo("level-info", dto != null ? dto.assetPath : null);
                 var err = LayoutEditorLevelAdminApi.UpdateLevelInfo(dto);
+                if (!string.IsNullOrEmpty(err)) LayoutEditorWriteBackHistory.Abort();
+                else LayoutEditorWriteBackHistory.CommitNow();
                 WriteAdminResult(response, err);
                 return;
             }
@@ -652,7 +763,10 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<LevelConfigUpdateDto>(body);
+                LayoutEditorWriteBackHistory.BeginForInfo("level-config", dto != null ? dto.assetPath : null);
                 var err = LayoutEditorLevelAdminApi.UpdateLevelConfig(dto);
+                if (!string.IsNullOrEmpty(err)) LayoutEditorWriteBackHistory.Abort();
+                else LayoutEditorWriteBackHistory.CommitNow();
                 WriteAdminResult(response, err);
                 return;
             }
@@ -661,7 +775,14 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<LevelAudioUpdateDto>(body);
+                var audioScene = dto != null ? dto.sceneAssetPath : null;
+                var audioInfo = string.IsNullOrEmpty(audioScene)
+                    ? null
+                    : LayoutEditorLevelInfoResolver.ResolveForScene(audioScene);
+                LayoutEditorWriteBackHistory.Begin("level-audio", audioScene, audioInfo);
                 var err = LayoutEditorLevelAdminApi.UpdateLevelAudio(dto);
+                if (!string.IsNullOrEmpty(err)) LayoutEditorWriteBackHistory.Abort();
+                else LayoutEditorWriteBackHistory.CommitNow();
                 WriteAdminResult(response, err);
                 return;
             }
@@ -705,6 +826,8 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<DeathThemeDto>(body);
+                // 写回历史：归并进同一次逻辑写回的进行中记录（心跳 + endpoints 登记）。
+                LayoutEditorWriteBackHistory.Touch("death", dto != null ? dto.sceneAssetPath : null);
                 var err = LayoutEditorLevelAdminApi.SetDeathTheme(dto != null ? dto.sceneAssetPath : null, dto != null ? dto.theme : null);
                 WriteAdminResult(response, err);
                 return;
@@ -714,6 +837,7 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<KillPlaneBoundsDto>(body);
+                LayoutEditorWriteBackHistory.Touch("killplane", dto != null ? dto.sceneAssetPath : null);
                 var err = dto == null
                     ? "缺少参数。"
                     : LayoutEditorLevelAdminApi.SetKillPlaneBounds(dto.sceneAssetPath, dto.cx, dto.cz, dto.sx, dto.sz);
@@ -742,6 +866,7 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<ScreenshotUploadDto>(body);
+                LayoutEditorWriteBackHistory.BeginForInfo("screenshot", dto != null ? dto.assetPath : null);
                 string texturePath;
                 var err = LayoutEditorLevelAdminApi.UploadScreenshot(
                     dto != null ? dto.assetPath : null,
@@ -749,9 +874,15 @@ public class LayoutEditorHttpServer
                     dto != null ? dto.base64 : null,
                     out texturePath);
                 if (!string.IsNullOrEmpty(err))
+                {
+                    LayoutEditorWriteBackHistory.Abort();
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                }
                 else
+                {
+                    LayoutEditorWriteBackHistory.CommitNow();
                     WriteJson(response, 200, LayoutEditorJson.ToJson(new ScreenshotUploadResultDto { texturePath = texturePath }));
+                }
                 return;
             }
 

@@ -44,8 +44,10 @@ import {
 import { setStatus } from "../status";
 import {
   addFromCatalog,
-  placementBase
+  placementBase,
+  itemWorldAABB
 } from "../items";
+import { itemLayerOfIt } from "../catalog";
 import { utensilCapacityOrFix } from "../stubControls";
 import { foodGroupLabel, visibleRecipes } from "../../ingredientLabels";
 import {
@@ -58,12 +60,15 @@ import {
   STALE_BRIDGE_MSG,
   fetchRecipeCatalog,
   fetchLevelRecipes,
+  fetchOptionalPresets,
+  saveOptionalItems,
+  saveMatchlists,
   saveLevelRecipes
 } from "../../api";
 import { NODE_INGREDIENT_SOURCES } from "../../recipeGroups";
-import type { RecipeEntry } from "../../types";
+import type { RecipeEntry, LevelOptionalItem, LevelRecipes, OptionalPresets } from "../../types";
 
-export type RecipeTab = "select" | "selected" | "autofill";
+export type RecipeTab = "select" | "selected" | "autofill" | "optional" | "matchlist";
 
 export interface RecipesDialogOptions {
   openTab?: RecipeTab;
@@ -75,6 +80,8 @@ const TAB_META: Record<RecipeTab, { label: string; emoji: string; needScene: boo
   select: { label: "选择菜谱", emoji: "🍽️", needScene: true },
   selected: { label: "已选菜谱", emoji: "✅", needScene: true },
   autofill: { label: "自动填充道具", emoji: "🧺", needScene: true },
+  optional: { label: "Optional 参数", emoji: "🧩", needScene: true },
+  matchlist: { label: "Matchlist", emoji: "📋", needScene: true },
 };
 
 export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
@@ -89,7 +96,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
 
   // ---------- 选择/已选 数据 ----------
   let recipes: RecipeEntry[] = [];
-  let level: { levelInfoAssetPath: string; levelName: string; recipeGuids: string[]; recipeIds?: string[] } | null = null;
+  let level: LevelRecipes | null = null;
   if (hasScene) {
     try {
       [recipes, level] = await Promise.all([
@@ -107,6 +114,24 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   }
 
   const selected = new Set<string>(level?.recipeGuids ?? []);
+  // ---------- Optional / Matchlist 手动管理状态 ----------
+  // optionalRecipeMatchListItems / includeRecipeMatchLists 不再随「保存菜谱」自动
+  // 重建，由这两个 tab 单独配置、单独写回（覆盖式；取消勾选/删除只影响对应数组）。
+  let optionalItems: LevelOptionalItem[] = (level?.optionalItems ?? []).map((i) => ({ ...i }));
+  let optionalDirty = false;
+  const matchlistKeys = new Set<string>((level?.matchlists ?? []).map((m) => m.key));
+  let matchlistDirty = false;
+  // 一键填充候选（hotdog 两套 / 披萨部件）懒加载：进 optional tab 前预取。
+  let presets: OptionalPresets | null = null;
+  void fetchOptionalPresets()
+    .then((p) => {
+      presets = p;
+      // 弹窗已关闭时跳过重渲染（rw-content 已不在 DOM）。
+      if (activeTab === "optional" && document.getElementById("rw-content")) render();
+    })
+    .catch(() => {
+      // 候选不可用（旧桥）时 tab 内提示，已保存条目仍可查看/删除。
+    });
   // 默认屏蔽重复 DLC 换皮（同一道菜的多个 DLC 皮肤只保留首选一版，已选的不隐藏）。
   let blockDupDlc = true;
   let orderable: RecipeEntry[] = [];
@@ -347,7 +372,18 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       platingSteps,
       recs
     );
-    const reqUt = hasAnySpray ? reqUt0.filter((u) => u !== CREAM_SPRAY_DEFAULT_ID) : reqUt0;
+    // 目录校验闸门：需求 id 必须在目录中真实存在且有中文翻译——幽灵 id
+    // （对应资产被删/未引入，如历史 common03 对齐上游时丢失的马克杯套装）
+    // 不再出现在清单/不再尝试放置，聚合提示而非静默忽略。
+    const ignoredUtIds = new Set<string>();
+    const catalogValidUt = (list: string[]) =>
+      list.filter((u) => {
+        const cat = catalogItemById(u);
+        if (cat && cat.nameZh) return true;
+        ignoredUtIds.add(u);
+        return false;
+      });
+    const reqUt = catalogValidUt(hasAnySpray ? reqUt0.filter((u) => u !== CREAM_SPRAY_DEFAULT_ID) : reqUt0);
     const missingUt = reqUt.filter((u) => !havePref.has(u));
     const missingIntermediateIds = missingIntermediateRecipes(recs).map((r) => r.id);
     return {
@@ -358,10 +394,48 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       reqUt,
       missingUt,
       missingIntermediateIds,
+      ignoredUtIds: [...ignoredUtIds],
     };
   };
 
   // ---------- 自动填充道具（食材箱 + 锅具/道具） ----------
+
+  /** 自动填充行空位放置：从游标起逐格右移，用落位后的真实 AABB 与场景现有
+   *  物品（含本批已放）求交（只查核心物品层），被占则撤掉重试；成功后游标
+   *  推进到已放物品右缘。此前按 idx*CELL 直线排开不检查占用——自动填充与
+   *  场景已有道具重叠的根因。 */
+  const placeAtFreeCell = (
+    catId: string,
+    cursor: { x: number },
+    rowZ: number,
+    recordHistory = true
+  ): EditorItem | null => {
+    const cat = catalogItemById(catId);
+    if (!cat) return null;
+    for (let step = 0; step < 96; step++) {
+      const it = addFromCatalog(cat, cursor.x + step * CELL, rowZ, recordHistory);
+      if (!it) return null;
+      const box = itemWorldAABB(it);
+      const EPS = 0.02;
+      const clash = S.items.some((o) => {
+        if (o === it || itemLayerOfIt(o) !== "items") return false;
+        const b2 = itemWorldAABB(o);
+        return (
+          Math.min(box.maxX, b2.maxX) - Math.max(box.minX, b2.minX) > EPS &&
+          Math.min(box.maxZ, b2.maxZ) - Math.max(box.minZ, b2.minZ) > EPS
+        );
+      });
+      if (!clash) {
+        cursor.x = Math.max(cursor.x + step * CELL, box.maxX + CELL);
+        return it;
+      }
+      const i = S.items.indexOf(it);
+      if (i >= 0) S.items.splice(i, 1);
+    }
+    setStatus(`画布空位不足，「${tidyCatalogNameZh(cat.nameZh, cat.id)}」未能放置（请先腾出一排空位）`, false);
+    return null;
+  };
+
   function fillMissingDispensers() {
     const cbs = document.querySelectorAll<HTMLInputElement>(".rw-ing-cb:checked");
     const selectedIngs = new Set<string>();
@@ -374,7 +448,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const cat = catalogItemById("Dispenser");
     if (!cat) return;
     const base = placementBase();
-    let idx = 0;
+    const cursor = { x: base.x };
     const unresolved: string[] = [];
     for (const ing of selectedIngs) {
       // 汽水是 node 型（由汽水机产出）、发泡奶油由喷罐喷出：都不建食材箱
@@ -388,10 +462,9 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         if (!byRecipeId.has(ing)) unresolved.push(ing);
         continue;
       }
-      const it = addFromCatalog(cat, base.x + idx * CELL, base.z);
+      const it = placeAtFreeCell("Dispenser", cursor, base.z);
       if (it) {
         it.dispenser = { spawnerItemPrefabGuid: guid };
-        idx++;
       }
     }
     if (unresolved.length > 0) {
@@ -402,58 +475,67 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   function fillMissingUtensils(selectedUt: Set<string>) {
     const recs = currentRecipes();
 
+    // ---------- 放置规则 ----------
+    // 1. 防重叠：placeAtFreeCell 从游标起逐格右移，用落位后的真实 AABB 与场景
+    //    现有物品（含本批已放）求交，被占则撤掉试下一格——不再与已有道具叠位。
+    // 2. 一个工作台只放一种锅具：按目录 stack 数据（stack.y+hostRule）判定堆叠对，
+    //    第 i 个锅配第 i 个灶台、各占独立空位（此前同族锅全部叠在同一坐标）；
+    //    落地件（Oven/Cooker 等 stack=None）独立放置，作为堆叠 base 被锅具消耗后
+    //    （锅数 ≥1）不再重复落地一份。
+    const catalogValid = (id: string) => {
+      const cat = catalogItemById(id);
+      return cat && cat.nameZh ? cat : null;
+    };
+    const isStackItem = (id: string) => catalogValid(id)?.stack?.y != null;
+    const stackIds = [...selectedUt].filter((u) => isStackItem(u));
+    const groundIds = [...selectedUt].filter((u) => !isStackItem(u));
+
+    // 堆叠件 → 其 base（STEP_UTENSILS 首位；hostRule=counter_standard → Counter）
     const attachBase = new Map<string, string>();
     for (const ids of Object.values(STEP_UTENSILS)) {
       if (ids.length < 2) continue;
-      const base = ids[0];
-      for (let i = 1; i < ids.length; i++) attachBase.set(ids[i], base);
+      const b = ids[0];
+      for (let i = 1; i < ids.length; i++) attachBase.set(ids[i], b);
     }
     const counterStdRule = "counter_standard";
-    const autoBases = new Set<string>();
     for (const cat of S.catalogByGuid.values()) {
       if (cat.stack?.hostRule === counterStdRule && !attachBase.has(cat.id)) {
         attachBase.set(cat.id, "Counter");
-        autoBases.add("Counter");
       }
-    }
-    const clusters = new Map<string, string[]>();
-    const standalones: string[] = [];
-    const clustered = new Set<string>();
-    for (const u of selectedUt) {
-      const baseId = attachBase.get(u);
-      if (baseId && (selectedUt.has(baseId) || autoBases.has(baseId))) {
-        if (!clusters.has(baseId)) clusters.set(baseId, []);
-        clusters.get(baseId)!.push(u);
-        clustered.add(u);
-      }
-    }
-    for (const u of selectedUt) {
-      if (!clustered.has(u) && !clusters.has(u)) standalones.push(u);
     }
 
     const base = placementBase();
-    let idx = 0;
+    const fillRowZ = base.z - 2 * CELL;
+    // placeAtFreeCell 为弹窗级共享 helper（见 fillMissingDispensers 上方），
+    // 此处统一传锅具/道具行 z；堆叠件（锅）落在自己灶台正上方不参与查占。
+    const cursor = { x: base.x };
     const placedItemIds: string[] = [];
-    for (const [baseId, attachments] of clusters) {
-      const baseWx = base.x + idx * CELL;
-      const baseWz = base.z - 2 * CELL;
-      const baseCat = catalogItemById(baseId);
-      if (baseCat) { addFromCatalog(baseCat, baseWx, baseWz); placedItemIds.push(baseId); }
-      for (const attId of attachments) {
-        const attCat = catalogItemById(attId);
-        if (!attCat) continue;
-        const item = addFromCatalog(attCat, baseWx, baseWz);
-        if (item && attCat.stack?.y) item.localPosition.y = attCat.stack.y;
-        placedItemIds.push(attId);
+    const baseConsumed = new Map<string, number>();
+    for (const attId of stackIds) {
+      const attCat = catalogValid(attId);
+      if (!attCat) continue;
+      const baseId = attachBase.get(attId);
+      if (!baseId) {
+        // 无 base 映射的堆叠件按落地件处理
+        if (placeAtFreeCell(attId, cursor, fillRowZ)) placedItemIds.push(attId);
+        continue;
       }
-      idx++;
+      const baseItem = placeAtFreeCell(baseId, cursor, fillRowZ);
+      if (!baseItem) continue;
+      placedItemIds.push(baseId);
+      baseConsumed.set(baseId, (baseConsumed.get(baseId) ?? 0) + 1);
+      // 锅具叠在自己灶台正上方（合法堆叠；不参与防重叠检查）
+      const att = addFromCatalog(attCat, baseItem._wx ?? 0, baseItem._wz ?? 0);
+      if (att && attCat.stack?.y != null) att.localPosition.y = attCat.stack.y;
+      placedItemIds.push(attId);
     }
-    for (const u of standalones) {
-      const cat = catalogItemById(u);
-      if (!cat) continue;
-      addFromCatalog(cat, base.x + idx * CELL, base.z - 2 * CELL);
-      placedItemIds.push(u);
-      idx++;
+    for (const u of groundIds) {
+      const consumed = baseConsumed.get(u) ?? 0;
+      if (consumed > 0) {
+        baseConsumed.set(u, consumed - 1);
+        continue;
+      }
+      if (placeAtFreeCell(u, cursor, fillRowZ)) placedItemIds.push(u);
     }
 
     // 奶油喷罐：发泡奶油由喷罐喷出（不建食材箱）。缺失时自动放置一个并绑定奶油食材。
@@ -482,11 +564,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       }
       if (!sprayFound) {
         const sprayCat = catalogItemById("utensil_ingredient_spray_01") ?? catalogItemById(CREAM_SPRAY_IDS[0]);
-        const it = sprayCat
-          ? addFromCatalog(sprayCat, base.x + idx * CELL, base.z - 2 * CELL, false)
-          : null;
+        const it = sprayCat ? placeAtFreeCell(sprayCat.id, cursor, fillRowZ, false) : null;
         if (it) {
-          idx++;
           bindSpray(it);
         } else {
           setStatus("⚠️ 选中菜谱需要奶油喷罐，但未能自动放置（utensil_ingredient_spray_01）", false);
@@ -510,8 +589,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         if (!machine) {
           const def = comboById("drink_switch_icecream");
           if (def) {
-            addCombo(def, base.x + idx * CELL, base.z - 3 * CELL);
-            idx++;
+            addCombo(def, cursor.x, base.z - 3 * CELL);
+            cursor.x += 4 * CELL;
             machine = machineOf();
           }
         }
@@ -558,8 +637,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         if (!machine) {
           const def = comboById("drink_switch");
           if (def) {
-            addCombo(def, base.x + idx * CELL, base.z - 3 * CELL);
-            idx++;
+            addCombo(def, cursor.x, base.z - 3 * CELL);
+            cursor.x += 4 * CELL;
             machine = machineOf();
           }
         }
@@ -613,13 +692,12 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
           if (!machine) {
             const def = machinePid === "dlc08_condiment_dispenser" ? comboById("condiment_switch") : undefined;
             if (def) {
-              addCombo(def, base.x + idx * CELL, base.z - 3 * CELL);
-              idx++;
+              addCombo(def, cursor.x, base.z - 3 * CELL);
+              cursor.x += 4 * CELL;
               machine = machineOf();
             } else {
               const mCat = catalogItemById(machinePid);
-              machine = mCat ? addFromCatalog(mCat, base.x + idx * CELL, base.z - 3 * CELL, false) : null;
-              if (machine) idx++;
+              machine = mCat ? placeAtFreeCell(machinePid, cursor, base.z - 3 * CELL, false) : null;
             }
           }
           if (machine) {
@@ -712,11 +790,13 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       select: orderable.length,
       selected: selectedIds.size,
       autofill: currentRecipes().length,
+      optional: optionalItems.length,
+      matchlist: matchlistKeys.size,
     };
     return (Object.keys(TAB_META) as RecipeTab[])
       .map((k) => {
         const m = TAB_META[k];
-        const cnt = ` <span class="rw-tab-cnt">${counts[k]}</span>`;
+        const cnt = ` <span class="rw-tab-cnt">${counts[k]}${k === "optional" && optionalDirty ? "*" : ""}${k === "matchlist" && matchlistDirty ? "*" : ""}</span>`;
         const title = m.needScene && !hasScene ? "需要先选择场景" : "";
         return `<button type="button" class="rw-tab${activeTab === k ? " active" : ""}" data-tab="${k}" title="${title}">${m.emoji} ${m.label}${cnt}</button>`;
       })
@@ -743,6 +823,14 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       if (!hasScene) { el.innerHTML = '<p class="modal-hint">请先在关卡编辑器中选择场景，再使用「自动填充道具」。</p>'; renderFooter(); return; }
       el.innerHTML = autofillHtml();
       wireAutofill();
+    } else if (activeTab === "optional") {
+      if (!hasScene) { el.innerHTML = '<p class="modal-hint">请先在关卡编辑器中选择场景，再使用「Optional 参数管理」。</p>'; renderFooter(); return; }
+      el.innerHTML = optionalTabHtml();
+      wireOptional();
+    } else if (activeTab === "matchlist") {
+      if (!hasScene) { el.innerHTML = '<p class="modal-hint">请先在关卡编辑器中选择场景，再使用「Matchlist 管理」。</p>'; renderFooter(); return; }
+      el.innerHTML = matchlistTabHtml();
+      wireMatchlist();
     }
     renderFooter();
   };
@@ -825,6 +913,16 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
           setStatus((e as Error).message, false);
         }
       });
+    } else if (activeTab === "optional") {
+      el.innerHTML = `<button type="button" class="modal-btn" data-cancel>关闭</button>
+        <button type="button" class="modal-btn primary" id="rw-save-optional">写回 Optional${optionalDirty ? `（${optionalItems.length} 条*）` : `（${optionalItems.length} 条）`}</button>`;
+      document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+      document.getElementById("rw-save-optional")?.addEventListener("click", doSaveOptional);
+    } else if (activeTab === "matchlist") {
+      el.innerHTML = `<button type="button" class="modal-btn" data-cancel>关闭</button>
+        <button type="button" class="modal-btn primary" id="rw-save-matchlist">写回 Matchlist${matchlistDirty ? `（${matchlistKeys.size} 个*）` : `（${matchlistKeys.size} 个）`}</button>`;
+      document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+      document.getElementById("rw-save-matchlist")?.addEventListener("click", doSaveMatchlist);
     } else {
       el.innerHTML = `<button type="button" class="modal-btn" data-cancel>关闭</button>`;
       document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
@@ -904,6 +1002,9 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
            </div>
            <label class="ctx-stub-row" style="display:block;margin-top:6px"><input type="checkbox" id="rw-include-main-dough" ${S.fillIncludeMainDough ? "checked" : ""}/> 同时补齐主线面团/面包皮（DoughSO / ChoppedBunSO）</label>`
         : `<p class="modal-hint ok">食材箱已齐全</p>`}
+      ${info.ignoredUtIds?.length
+        ? `<div class="rw-warn">⚠ 以下需求 id 不在道具目录中（资产缺失或未翻译），已忽略：${info.ignoredUtIds.map((u) => escHtml(u)).join("、")}</div>`
+        : ""}
       <p class="modal-hint" style="margin-top:12px">锅具 / 道具（据烹饪方式推断，✓ 已有 · ✗ 缺失）</p>
       <div class="rw-rows">${utRows || '<p class="muted">无</p>'}</div>
       ${info.missingUt.length
@@ -955,6 +1056,277 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       }
       refreshAutofill();
     });
+  };
+
+  // ---------- 🧩 Optional 参数管理 tab ----------
+  // optionalRecipeMatchListItems 手动配置：DLC 原始菜谱 / hotdog 可选部件与酱料 /
+  // 披萨部件等注册进关卡匹配表。保存菜谱不再自动重建此数组（旧关卡内容保留，
+  // 可在此增删）。是否使用一键填充由用户决定，填充后仍需「写回 Optional」。
+  let optPickerOpen = false;
+  let optFilter = "all";
+  const OPT_FILTERS = () => {
+    const groups = [...new Set(optionalCandidates().map((c) => c.group).filter(Boolean))].sort();
+    return ["all", "preset", ...groups];
+  };
+
+  const KIND_META: Record<string, { label: string; cls: string }> = {
+    "recipe": { label: "DLC菜谱", cls: "kind-recipe" },
+    "hotdog-optional": { label: "热狗可选", cls: "kind-hotdog" },
+    "condiment": { label: "酱料", cls: "kind-condiment" },
+    "boiledfrankfurter": { label: "煮肠", cls: "kind-condiment" },
+    "pizza-optional": { label: "披萨部件", cls: "kind-pizza" },
+    "custom-recipe": { label: "自定义", cls: "kind-custom" },
+    "node": { label: "节点", cls: "kind-node" },
+  };
+  const kindMetaOf = (k?: string) => KIND_META[k ?? ""] ?? KIND_META.node;
+
+  /** 候选 = 一键填充特例（presets）+ 目录中的 DLC 原始菜谱（按 guid 去重）。 */
+  const optionalCandidates = (): { guid: string; id: string; nameZh: string; group: string; kind: string }[] => {
+    const list: { guid: string; id: string; nameZh: string; group: string; kind: string }[] = [];
+    const seen = new Set<string>();
+    for (const p of presets?.items ?? []) {
+      if (!p.guid || seen.has(p.guid)) continue;
+      seen.add(p.guid);
+      list.push({ guid: p.guid, id: p.id, nameZh: p.nameZh ?? "", group: p.group ?? "", kind: p.kind ?? "node" });
+    }
+    for (const r of recipes) {
+      if (!r.group || !r.group.startsWith("dlc") || seen.has(r.guid)) continue;
+      seen.add(r.guid);
+      list.push({ guid: r.guid, id: r.id, nameZh: r.nameZh ?? "", group: r.group, kind: "recipe" });
+    }
+    return list;
+  };
+
+  const optionalDisplayName = (it: LevelOptionalItem): string => {
+    const cand = optionalCandidates().find((c) => c.guid === it.guid);
+    if (cand?.nameZh) return cand.nameZh;
+    const r = byGuid.get(it.guid) ?? byRecipeId.get(it.id);
+    if (r?.nameZh) return r.nameZh;
+    return it.id;
+  };
+
+  const addOptionalGuids = (guids: string[] | undefined, doneMsg: string) => {
+    if (!guids || guids.length === 0) return;
+    const cand = new Map(optionalCandidates().map((c) => [c.guid, c]));
+    const known = new Set(optionalItems.map((i) => i.guid));
+    let added = 0;
+    for (const g of guids) {
+      if (known.has(g)) continue;
+      const c = cand.get(g);
+      optionalItems.push({ guid: g, id: c?.id ?? g, group: c?.group, kind: c?.kind });
+      known.add(g);
+      added++;
+    }
+    optionalDirty = true;
+    setStatus(added ? `${doneMsg}（新增 ${added} 条，待写回）` : "候选条目已全部在列表中");
+    render();
+  };
+
+  const fillPizzaOptionals = () => {
+    if (!presets) { setStatus("候选尚未加载完成，稍后再试", false); return; }
+    const guids = [...presets.pizzaFillGuids];
+    // 蘑菇披萨变体：与旧自动填充一致，仅当所选菜谱包含蘑菇披萨时追加。
+    const hasMushroom = [...selected].some((g) => {
+      const r = byGuid.get(g);
+      return !!r && r.type === "pizza" && /mushroom/i.test(r.id);
+    });
+    if (hasMushroom) guids.push(...presets.pizzaMushroomGuids);
+    addOptionalGuids(guids, "已加入自选披萨部件");
+  };
+
+  const fillHotdogOptionals = () => {
+    if (!presets) { setStatus("候选尚未加载完成，稍后再试", false); return; }
+    // 与旧自动填充一致：所选热狗属 dlc11 时用 dlc11 套件，否则 dlc08。
+    const isDlc11 = [...selectedIds].some((id) => /dlc11/i.test(id) && /hotdog|frankfurter/i.test(id));
+    addOptionalGuids(
+      isDlc11 ? presets.hotdogFillGuidsDlc11 : presets.hotdogFillGuidsDlc08,
+      isDlc11 ? "已加入 Hotdog（dlc11）可选部件/酱料/煮肠" : "已加入 Hotdog（dlc08）可选部件/酱料/煮肠"
+    );
+  };
+
+  const optionalFilterLabel = (f: string) =>
+    f === "all" ? "全部"
+    : f === "preset" ? "特例(Hotdog/披萨)"
+    : foodGroupLabel(f as never) || f;
+
+  /** 候选卡片（picker 整块与局部刷新共用）。 */
+  const optCardsHtml = () => {
+    const q = (document.getElementById("rw-opt-search") as HTMLInputElement)?.value.trim().toLowerCase() ?? "";
+    const known = new Set(optionalItems.map((i) => i.guid));
+    return optionalCandidates()
+      .filter((c) => (optFilter === "all" ? true : optFilter === "preset" ? c.kind !== "recipe" : c.group === optFilter))
+      .filter((c) => !q || c.id.toLowerCase().includes(q) || c.nameZh.toLowerCase().includes(q))
+      .map((c) => {
+        const km = kindMetaOf(c.kind);
+        const has = known.has(c.guid);
+        return `<button type="button" class="pick-card rw-opt-cand${has ? " disabled" : ""}" data-oguid="${escHtml(c.guid)}"${has ? " disabled" : ""}>
+          <span class="rw-badge ${km.cls}">${km.label}</span>
+          <span class="rw-opt-name">${escHtml(c.nameZh || c.id)}</span>
+          <span class="muted rw-opt-id">${escHtml(c.id)}</span>
+        </button>`;
+      })
+      .join("");
+  };
+
+  const optPickerHtml = () => {
+    const chips = OPT_FILTERS()
+      .map((f) => `<button type="button" class="rw-chip${optFilter === f ? " active" : ""}" data-ofilter="${escHtml(f)}">${escHtml(optionalFilterLabel(f))}</button>`)
+      .join("");
+    return `<div class="rw-opt-picker">
+      <div class="rw-chips">${chips}</div>
+      <input type="search" id="rw-opt-search" class="rw-search" placeholder="搜索候选（id / 名称）…" autocomplete="off">
+      <div class="rw-opt-cand-list" id="rw-opt-cand-list">${optCardsHtml() || '<p class="muted">无匹配候选</p>'}</div>
+    </div>`;
+  };
+
+  /** 候选搜索/筛选只重建候选列表区（保持输入焦点）。 */
+  const refreshOptPickerList = () => {
+    const el = document.getElementById("rw-opt-cand-list");
+    if (!el) return;
+    el.innerHTML = optCardsHtml() || '<p class="muted">无匹配候选</p>';
+    wireOptCandCards();
+  };
+
+  const wireOptCandCards = () => {
+    document.querySelectorAll<HTMLElement>(".rw-opt-cand:not([disabled])").forEach((card) => {
+      card.addEventListener("click", () => {
+        const g = card.dataset.oguid;
+        if (!g || optionalItems.some((i) => i.guid === g)) return;
+        const c = optionalCandidates().find((x) => x.guid === g);
+        optionalItems.push({ guid: g, id: c?.id ?? g, group: c?.group, kind: c?.kind });
+        optionalDirty = true;
+        render();
+      });
+    });
+  };
+
+  const optionalTabHtml = () => {
+    const rows = optionalItems
+      .map((it, idx) => {
+        const km = kindMetaOf(it.kind);
+        return `<div class="rw-opt-row">
+          <span class="rw-badge ${km.cls}">${km.label}</span>
+          <span class="rw-opt-name">${escHtml(optionalDisplayName(it))}</span>
+          <span class="muted rw-opt-id">${escHtml(it.id)}${it.group ? ` · ${escHtml(foodGroupLabel(it.group as never) || it.group)}` : ""}</span>
+          <button type="button" class="rw-opt-del" data-odel="${idx}" title="删除该条目">✕</button>
+        </div>`;
+      })
+      .join("");
+    return `<p class="modal-hint">optionalRecipeMatchListItems：注册进关卡匹配表的额外节点（DLC 原始菜谱、Hotdog 可选部件/酱料/煮肠、自选披萨部件…）。<b>保存菜谱不再自动填充</b>，此处手动增删后单独写回；一键填充仅把候选加入列表，是否写回由你决定。</p>
+      ${presets ? "" : '<div class="rw-warn">⚠ 一键填充候选加载失败或旧桥不支持——已保存条目仍可查看/删除/写回。</div>'}
+      <div class="rw-toolbar">
+        <button type="button" class="modal-btn" id="rw-opt-fill-pizza">🍕 披萨一键填充</button>
+        <button type="button" class="modal-btn" id="rw-opt-fill-hotdog">🌭 Hotdog 一键填充</button>
+        <button type="button" class="modal-btn" id="rw-opt-toggle-picker">${optPickerOpen ? "收起添加面板" : "＋ 添加条目"}</button>
+      </div>
+      ${optPickerOpen ? optPickerHtml() : ""}
+      <div class="rw-rows rw-opt-list">${rows || '<p class="muted">暂无条目。DLC 原始菜谱/热狗酱料等不再自动注册——需要时用上方按钮或添加面板配置。</p>'}</div>`;
+  };
+
+  const wireOptional = () => {
+    document.getElementById("rw-opt-fill-pizza")?.addEventListener("click", fillPizzaOptionals);
+    document.getElementById("rw-opt-fill-hotdog")?.addEventListener("click", fillHotdogOptionals);
+    document.getElementById("rw-opt-toggle-picker")?.addEventListener("click", () => {
+      optPickerOpen = !optPickerOpen;
+      render();
+    });
+    document.querySelectorAll<HTMLElement>("[data-ofilter]").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        optFilter = chip.dataset.ofilter ?? "all";
+        document.querySelectorAll<HTMLElement>("[data-ofilter]").forEach((c) => c.classList.toggle("active", c === chip));
+        refreshOptPickerList();
+      });
+    });
+    document.getElementById("rw-opt-search")?.addEventListener("input", refreshOptPickerList);
+    wireOptCandCards();
+    document.querySelectorAll<HTMLElement>(".rw-opt-del").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.dataset.odel);
+        if (Number.isInteger(idx) && idx >= 0 && idx < optionalItems.length) {
+          optionalItems.splice(idx, 1);
+          optionalDirty = true;
+          render();
+        }
+      });
+    });
+  };
+
+  const doSaveOptional = async () => {
+    if (!level?.levelInfoAssetPath) return;
+    try {
+      await saveOptionalItems(level.levelInfoAssetPath, optionalItems.map((i) => i.guid));
+      level.optionalItems = optionalItems.map((i) => ({ ...i }));
+      optionalDirty = false;
+      setStatus(`Optional 已写回（${optionalItems.length} 条）`);
+      render();
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    }
+  };
+
+  // ---------- 📋 Matchlist 管理 tab ----------
+  // includeRecipeMatchLists 手动勾选（commonW1 包装白名单）。保存菜谱不再按 DLC
+  // 自动并入；「按已选菜谱一键填充」仅勾选，写回由用户决定。story 匹配表由
+  // 运行时无条件并入（bundle18），无需也不可在此配置。
+  const ML_KEYS = ["dlc02", "dlc03", "dlc04", "dlc05", "dlc07", "dlc08", "dlc09", "dlc10", "dlc11", "dlc13", "combineddlc"];
+
+  const matchlistTabHtml = () => {
+    const cards = ML_KEYS.map((k) => {
+      const on = matchlistKeys.has(k);
+      return `<label class="rw-ml-card${on ? " on" : ""}">
+        <input type="checkbox" data-mlkey="${escHtml(k)}" ${on ? "checked" : ""}/>
+        <span class="rw-ml-key">${escHtml(k === "combineddlc" ? "combineddlc（组合包）" : (foodGroupLabel(k as never) || k))}</span>
+      </label>`;
+    }).join("");
+    return `<p class="modal-hint">includeRecipeMatchLists：并入对应 DLC 的整套匹配节点（食材/订单/可选自由拼接/套餐）。<b>保存菜谱不再自动并入</b>——选择了 DLC 菜谱时建议在此开启对应项；story 匹配表运行时始终并入，无需配置。</p>
+      <div class="rw-toolbar">
+        <button type="button" class="modal-btn" id="rw-ml-fill-sel">按已选菜谱一键填充</button>
+      </div>
+      <div class="rw-ml-grid">${cards}</div>`;
+  };
+
+  const wireMatchlist = () => {
+    document.querySelectorAll<HTMLInputElement>("[data-mlkey]").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const k = cb.dataset.mlkey ?? "";
+        if (cb.checked) matchlistKeys.add(k);
+        else matchlistKeys.delete(k);
+        matchlistDirty = true;
+        cb.closest(".rw-ml-card")?.classList.toggle("on", cb.checked);
+        const tabsEl = document.getElementById("rw-tabs");
+        if (tabsEl) { tabsEl.innerHTML = tabsHtml(); wireTabs(); }
+        renderFooter();
+      });
+    });
+    document.getElementById("rw-ml-fill-sel")?.addEventListener("click", () => {
+      const dlcs = new Set<string>();
+      for (const g of selected) {
+        const r = byGuid.get(g);
+        if (r?.group && r.group.startsWith("dlc")) dlcs.add(r.group);
+      }
+      let added = 0;
+      for (const k of dlcs) {
+        if (ML_KEYS.includes(k) && !matchlistKeys.has(k)) { matchlistKeys.add(k); added++; }
+      }
+      matchlistDirty = true;
+      setStatus(added ? `已勾选 ${added} 个 matchlist（待写回）` : "已选菜谱未涉及新的 DLC");
+      render();
+    });
+  };
+
+  const doSaveMatchlist = async () => {
+    if (!level?.levelInfoAssetPath) return;
+    try {
+      const keys = ML_KEYS.filter((k) => matchlistKeys.has(k));
+      await saveMatchlists(level.levelInfoAssetPath, keys);
+      const prev = level.matchlists ?? [];
+      level.matchlists = keys.map((key) => ({ key, guid: prev.find((m) => m.key === key)?.guid ?? "" }));
+      matchlistDirty = false;
+      setStatus(`Matchlist 已写回（${keys.length} 个）`);
+      render();
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    }
   };
 
   openModal(

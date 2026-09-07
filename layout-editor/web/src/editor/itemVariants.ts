@@ -18,6 +18,7 @@ import type { CatalogItem } from "../types";
 import { uuid, prefabIdFromPath, escHtml, newEditorKey } from "./coords";
 import { tidyCatalogNameZh } from "../displayLabels";
 import { stubKindOf, STUB_KIND_BY_PREFAB_ID } from "./stubControls";
+import { remapAllInstanceRefs } from "./stubRefs";
 import { pushHistory } from "./historyOps";
 import { draw } from "./render";
 import { setStatus } from "./status";
@@ -229,41 +230,8 @@ export function switchItemVariant(item: EditorItem, cat: CatalogItem): void {
   setStatus(`已切换皮肤为 ${tidyCatalogNameZh(cat.nameZh, cat.id)}（写回后生效）`);
 }
 
-/** 把所有文档级/物品级引用中的旧 instanceId 改写为新 id。 */
+/** 把所有文档级/物品级引用中的旧 instanceId 改写为新 id。
+ *  统一委托 remapAllInstanceRefs（stubRefs.ts，含加热炉热源等全量引用种类）。 */
 function remapInstanceRefs(oldId: string, newId: string): void {
-  const map = (x: string) => (x === oldId ? newId : x);
-  for (const l of S.switchLinks) {
-    if (l.switchId === oldId) l.switchId = newId;
-    if (l.targetId === oldId) l.targetId = newId;
-  }
-  for (const l of S.buttonLinks) {
-    if (l.sourceId === oldId) l.sourceId = newId;
-  }
-  for (const l of S.buttonEvents) {
-    if (l.sourceId === oldId) l.sourceId = newId;
-    for (const g of l.groups) {
-      for (const ev of g.events) {
-        if (ev.targetId === oldId) ev.targetId = newId;
-      }
-    }
-  }
-  for (const mg of S.animControls) {
-    mg.itemInstanceIds = mg.itemInstanceIds.map(map);
-    if (mg.memberStatic) {
-      for (const m of mg.memberStatic) m.instanceId = map(m.instanceId);
-    }
-    if (mg.memberGroups) {
-      for (const g of mg.memberGroups) g.memberInstanceIds = g.memberInstanceIds.map(map);
-    }
-  }
-  for (const it of S.items) {
-    if (it.teleportal?.exitPortalInstanceId === oldId) it.teleportal.exitPortalInstanceId = newId;
-    if (it.terminal?.pilotableObjectInstanceId === oldId) it.terminal.pilotableObjectInstanceId = newId;
-    if (it.servingStation) {
-      if (it.servingStation.plateReturnInstanceId === oldId) it.servingStation.plateReturnInstanceId = newId;
-      if (it.servingStation.plateReturnInstanceIds) {
-        it.servingStation.plateReturnInstanceIds = it.servingStation.plateReturnInstanceIds.map(map);
-      }
-    }
-  }
+  remapAllInstanceRefs(new Map([[oldId, newId]]));
 }

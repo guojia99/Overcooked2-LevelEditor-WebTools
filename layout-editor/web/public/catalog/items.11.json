@@ -625,6 +625,38 @@
       "icon": false
     },
     {
+      "id": "workstation_mug_return",
+      "guid": "f88b1d0679b4473778fb38035edb4c8c",
+      "assetPath": "Assets/commonW1/prefabs/dlc03/counters/workstation_mug_return.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "马克杯回收台",
+      "nameEn": "Mug Return Station",
+      "icon": false
+    },
+    {
+      "id": "workstation_sink_mug_01_wood",
+      "guid": "0dc846b78b489d357e0cf8fe3352a2fd",
+      "assetPath": "Assets/commonW1/prefabs/dlc03/counters/workstation_sink_mug_01_wood.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "马克杯水槽（木制）",
+      "nameEn": "Mug Sink (Wooden)",
+      "icon": false
+    },
+    {
       "id": "apple",
       "guid": "6ab6c04c8870e8d4d843ce46383569ef",
       "assetPath": "Assets/commonW1/prefabs/dlc07/decor/food/apple.prefab",
@@ -3502,42 +3534,6 @@
       "recipeGuid": "d05c417e32601ce3651d33a69370bde5",
       "nameZh": "烤鸡什锦（DLC9）",
       "nameEn": "Roast Chicken Roast (DLC9)",
-      "icon": true
-    },
-    {
-      "id": "dlc09_chickenpotatocarrotroast",
-      "guid": "e790cc1c207e2999841368e110876383",
-      "assetPath": "Assets/commonW1/prefabs/dlc09/decor/recipes/dlc09_chickenpotatocarrotroast.prefab",
-      "category": "decor/recipes",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "recipeDecor": true,
-      "recipeGuid": "d2b6e5845daafe8529d6fd2726f03efe",
-      "nameZh": "烤鸡土豆胡萝卜（DLC9）",
-      "nameEn": "Roast Chicken Potato & Carrot (DLC9)",
-      "icon": true
-    },
-    {
-      "id": "dlc09_christmaspudding",
-      "guid": "f0e2f994d6e64c5eb7917ce943297eda",
-      "assetPath": "Assets/commonW1/prefabs/dlc09/decor/recipes/dlc09_christmaspudding.prefab",
-      "category": "decor/recipes",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "recipeDecor": true,
-      "recipeGuid": "1d3483fa52439baa192c381fdee805ba",
-      "nameZh": "圣诞布丁（DLC9）",
-      "nameEn": "Christmas Pudding (DLC9)",
       "icon": true
     }
   ]

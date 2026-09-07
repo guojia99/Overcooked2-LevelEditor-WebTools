@@ -40,6 +40,12 @@ namespace CustomStub
         public string[] m_extraIngredientBundles = new string[0];
         public string[] m_extraIngredientPaths = new string[0];
 
+        /// <summary>时间参数（web 锅具管理；0 = 原版默认，煮糊 = 2× 煮熟）。
+        /// 装配大锅时经 UtensilTiming.ApplyValues 应用（cook 直接写字段，
+        /// burn 特殊值走 Harmony 阈值接管）。</summary>
+        public float m_cookTime;
+        public float m_burnTime;
+
         /// <summary>tag 载体前缀。</summary>
         public const string TagPrefix = "PushablePot|";
 
@@ -182,12 +188,17 @@ namespace CustomStub
 
                 ApplyAllowedIngredients(pot);
 
+                // 时间参数（煮熟直接写 CookingHandler.m_cookingtime；特殊煮糊值挂
+                // UtensilTiming 由 Harmony 前缀接管阈值）——须在同步启动前完成。
+                UtensilTiming.ApplyValues(pot, m_cookTime, m_burnTime, 0f, 0f);
+
                 // 空洞/水面坠落检测 marker（PushableVoidFall 只处理带此标记的载具）
                 if (carrier.GetComponent<PushableVoidFallTarget>() == null)
                     carrier.AddComponent<PushableVoidFallTarget>();
 
                 StubLog.Log("[PushablePot] 装配完成: " + name + " → 载具 " + carrier.name
-                    + " + 大锅 " + pot.name + "（额外食材 " + (m_extraIngredientBundles != null ? m_extraIngredientBundles.Length : 0) + "）");
+                    + " + 大锅 " + pot.name + "（额外食材 " + (m_extraIngredientBundles != null ? m_extraIngredientBundles.Length : 0)
+                    + "，cook=" + m_cookTime + " burn=" + m_burnTime + "）");
             }
             catch (System.Exception ex)
             {

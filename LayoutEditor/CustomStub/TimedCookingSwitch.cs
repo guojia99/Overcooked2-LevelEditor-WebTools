@@ -34,6 +34,22 @@ namespace CustomStub
         private Behaviour m_region;
         private bool m_phaseOn;
 
+        // ---- 火焰视觉资产（绑定后一次性建立，见 BindFlameAssets） ----
+        // 灶台视觉 = ① m_flameEffects[] 火焰粒子 + ② m_glowEffect 辉光
+        //          + ③ m_burnerRenderer 材质 _EmissiveColour（炉体发光）。
+        // 宿主 ClientCookingRegion 本应每帧轮询 region.enabled 并跑完整过渡
+        // （粒子+辉光+材质渐变+音效），但同步实体未建立/未驱动时无人接管；
+        // 反射字段缺失时旧版静默跳过 → 「逻辑已关、火焰常燃」。此处双通道：
+        // 首选宿主字段（与 ClientCookingRegion 同源）；缺失/空时回退收集本
+        // 物体子树全部粒子（灶台子树内粒子只有火焰/辉光；锅是独立物品不在此树）。
+        private ParticleSystem[] m_flames = null;
+        private ParticleSystem m_glow = null;
+        private Material[] m_burnerMats = null;
+        private Color[] m_emissiveBase = null;
+        private bool m_flameSourceIsFallback = false;
+
+        private static readonly int BurnerEmissParam = Shader.PropertyToID("_EmissiveColour");
+
         /// <summary>tag 载体前缀（EntryPoint 自愈与 StubIO 烘焙共用约定）。</summary>
         public const string TagPrefix = "TimedSwitch|";
 
@@ -121,6 +137,13 @@ namespace CustomStub
                 + "（on=" + m_onSeconds.ToString("0.#") + "s off=" + m_offSeconds.ToString("0.#")
                 + "s startOn=" + m_startOn + " enabled=" + m_enabled + "）");
 
+            // 纵深防御：即使出现「OnEnable 先跑、配置后补写」的时序（AddComponent
+            // 竞态 / 外部装配器），绑定完成时也以最终 m_startOn 重置相位——
+            // 避免以默认值（true）固化的初始相位把 startOn=false 的开局关窗口吃掉。
+            m_phaseOn = m_startOn;
+
+            BindFlameAssets();
+
             var waitOn = new WaitForSeconds(Mathf.Max(3f, m_onSeconds));
             var waitOff = new WaitForSeconds(Mathf.Max(3f, m_offSeconds));
             while (true)
@@ -147,6 +170,75 @@ namespace CustomStub
             }
         }
 
+        /// <summary>建立火焰视觉资产清单（绑定成功后一次）。
+        ///  首选宿主字段通道（m_flameEffects/m_glowEffect/m_burnerRenderer，
+        ///  与 ClientCookingRegion 同源）；字段缺失或空数组时回退收集本物体
+        ///  子树全部粒子。材质发光缓存 _EmissiveColour 原色供关相位置 0。</summary>
+        private void BindFlameAssets()
+        {
+            m_flames = null;
+            m_glow = null;
+            m_flameSourceIsFallback = false;
+            try
+            {
+                if (GameApi.RegionFlameEffectsField != null)
+                    m_flames = GameApi.RegionFlameEffectsField.GetValue(m_region) as ParticleSystem[];
+                if (m_flames != null)
+                {
+                    // 剔除 null 槽位（数组可能带空尾）
+                    var live = new System.Collections.Generic.List<ParticleSystem>();
+                    for (int i = 0; i < m_flames.Length; i++)
+                        if (m_flames[i] != null) live.Add(m_flames[i]);
+                    m_flames = live.Count > 0 ? live.ToArray() : null;
+                }
+                if (GameApi.RegionGlowEffectField != null)
+                    m_glow = GameApi.RegionGlowEffectField.GetValue(m_region) as ParticleSystem;
+
+                // 回退：宿主字段不可用/为空（类型解析失败或该皮肤未配）——
+                // 收集子树全部粒子（火焰+辉光都在其中，全量即熄火语义；
+                // 与字段通道并存幂等，Play/Stop 重复无副作用）。
+                if (m_flames == null)
+                {
+                    m_flames = GetComponentsInChildren<ParticleSystem>(true);
+                    m_flameSourceIsFallback = m_flames != null && m_flames.Length > 0;
+                }
+
+                // 材质发光：m_burnerRenderer 的实例化材质（仅保留含参数的槽位）
+                if (GameApi.RegionBurnerRendererField != null)
+                {
+                    var rend = GameApi.RegionBurnerRendererField.GetValue(m_region) as Renderer;
+                    if (rend != null)
+                    {
+                        var mats = rend.materials;
+                        var keep = new System.Collections.Generic.List<Material>();
+                        var colors = new System.Collections.Generic.List<Color>();
+                        for (int i = 0; i < mats.Length; i++)
+                        {
+                            if (mats[i] != null && mats[i].HasProperty(BurnerEmissParam))
+                            {
+                                keep.Add(mats[i]);
+                                colors.Add(mats[i].GetColor(BurnerEmissParam));
+                            }
+                        }
+                        if (keep.Count > 0)
+                        {
+                            m_burnerMats = keep.ToArray();
+                            m_emissiveBase = colors.ToArray();
+                        }
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                StubLog.LogWarn("[TimedSwitch] 火焰资产收集失败（视觉兜底降级）: " + name + " " + ex.Message);
+            }
+            StubLog.Log("[TimedSwitch] 火焰资产: " + name
+                + " 粒子=" + (m_flames != null ? m_flames.Length.ToString() : "0")
+                + (m_glow != null ? "+辉光" : "")
+                + " 材质=" + (m_burnerMats != null ? m_burnerMats.Length.ToString() : "0")
+                + (m_flameSourceIsFallback ? "（子树回退）" : "（宿主字段）"));
+        }
+
         private void ApplyRegionState()
         {
             if (m_region == null)
@@ -160,31 +252,37 @@ namespace CustomStub
         {
             try
             {
-                if (GameApi.RegionFlameEffectsField != null)
+                if (m_flames != null)
                 {
-                    var effects = GameApi.RegionFlameEffectsField.GetValue(m_region) as ParticleSystem[];
-                    if (effects != null)
+                    for (int i = 0; i < m_flames.Length; i++)
                     {
-                        foreach (var pfx in effects)
-                        {
-                            if (pfx == null)
-                                continue;
-                            if (on && !pfx.isPlaying)
-                                pfx.Play();
-                            else if (!on && pfx.isPlaying)
-                                pfx.Stop();
-                        }
+                        var pfx = m_flames[i];
+                        if (pfx == null)
+                            continue;
+                        if (on && !pfx.isPlaying)
+                            pfx.Play();
+                        else if (!on && pfx.isPlaying)
+                            pfx.Stop();
                     }
                 }
-                if (GameApi.RegionGlowEffectField != null)
+                if (m_glow != null)
                 {
-                    var glow = GameApi.RegionGlowEffectField.GetValue(m_region) as ParticleSystem;
-                    if (glow != null)
+                    if (on && !m_glow.isPlaying)
+                        m_glow.Play();
+                    else if (!on && m_glow.isPlaying)
+                        m_glow.Stop();
+                }
+                // 材质发光：关相位 alpha 置 0，开相位恢复缓存原色
+                // （宿主渐变版为逐帧插值；此处开关即达，视觉语义一致）。
+                if (m_burnerMats != null && m_emissiveBase != null)
+                {
+                    for (int j = 0; j < m_burnerMats.Length; j++)
                     {
-                        if (on && !glow.isPlaying)
-                            glow.Play();
-                        else if (!on && glow.isPlaying)
-                            glow.Stop();
+                        if (m_burnerMats[j] == null)
+                            continue;
+                        Color c = m_emissiveBase[j];
+                        m_burnerMats[j].SetColor(BurnerEmissParam,
+                            on ? c : new Color(c.r, c.g, c.b, 0f));
                     }
                 }
             }

@@ -58,4 +58,29 @@ public static class LayoutEditorLog
         }
         Debug.LogWarning("[LayoutEditorLog] " + message);
     }
+
+    // ---- 写回告警收集（/api/set/layout 响应透传给 web 状态栏）----
+    // 请求都在主线程泵执行（HttpServer.EnqueueMain），无需加锁。
+    // 之前绑定丢弃只进 Unity 日志，用户在 web 端无感知，直到游戏里才发现
+    // 脏盘台/饮料机失效。Apply 开始时清空，响应构造时 Drain。
+    private static readonly System.Collections.Generic.List<string> _applyWarnings =
+        new System.Collections.Generic.List<string>();
+
+    public static void BeginApply()
+    {
+        _applyWarnings.Clear();
+    }
+
+    public static void RecordApplyWarning(string message)
+    {
+        if (_applyWarnings.Count < 50)
+            _applyWarnings.Add(message);
+    }
+
+    public static string[] DrainApplyWarnings()
+    {
+        var arr = _applyWarnings.ToArray();
+        _applyWarnings.Clear();
+        return arr;
+    }
 }

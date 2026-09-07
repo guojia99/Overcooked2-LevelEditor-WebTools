@@ -16,8 +16,7 @@ import {
   fetchSwitchMaterials,
   fetchLevelSets,
   fetchLevelRecipes,
-  fetchLevelDetail,
-  repairBrokenPrefabs
+  fetchLevelDetail
 } from "../api";
 import {
   warnIfBridgeOutdated,
@@ -25,6 +24,7 @@ import {
   loadScene,
   confirmLeaveIfDirty,
   openSyncLayoutDialog,
+  restoreWriteBackSnapshot,
   startBridgeWatch,
   selectSceneInDropdowns
 } from "./sceneIO";
@@ -33,7 +33,6 @@ import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterCha
 import { refreshScopedSaveButton } from "./serialize";
 import { scopedSaveMeta } from "./serialize";
 import { openRecipesDialog } from "./ui/recipesDialogs";
-import { openDepsCheckModal } from "./ui/depsCheck";
 import { requestTestLayout } from "./testLayout";
 import { openUtensilManager } from "./ui/utensilManager";
 import { openCameraLightModal } from "./cameraLight";
@@ -59,7 +58,9 @@ import {
   renderLevelSummary,
   openConfigTabsModal,
   openAudioModal,
-  consumeTargetScene
+  consumeTargetScene,
+  consumeLayoutAutoAction,
+  openToolsHistoryModal
 } from "../levels";
 import { goDependencies } from "../dependencies";
 import {
@@ -330,20 +331,6 @@ export async function init() {
 
   document.getElementById("btn-save")!.addEventListener("click", () => void saveToUnity(""));
   document.getElementById("btn-save-items")!.addEventListener("click", () => void saveToUnity(scopedSaveMeta().scope));
-  document.getElementById("btn-deps-check")?.addEventListener("click", () => openDepsCheckModal());
-  document.getElementById("btn-test-layout")?.addEventListener("click", () => requestTestLayout());
-  document.getElementById("btn-repair-broken")?.addEventListener("click", async () => {    try {
-      const n = await repairBrokenPrefabs(S.scenePath);
-      if (n > 0) {
-        setStatus(`已移除 ${n} 个损坏的预制件实例，请重新加载场景`, false);
-        await loadScene(S.scenePath ?? "");
-      } else {
-        setStatus("未发现损坏的预制件实例", false);
-      }
-    } catch (e) {
-      setStatus((e as Error).message, false);
-    }
-  });
   refreshScopedSaveButton();
 
   document.getElementById("btn-collapse-palette")!.addEventListener("click", () => {
@@ -413,7 +400,21 @@ export async function init() {
     )
   );
 
-  document.getElementById("btn-sync")!.addEventListener("click", () => openSyncLayoutDialog());
+  // 🧰 工具与历史：编辑器内直接执行（修复后自动重载场景；测试布局/同步布局关弹窗后原地触发；
+  // 历史快照恢复到画布 = 仅前端标脏，由用户手动点击「💾 写回 Unity」落盘）。
+  document.getElementById("btn-tools-history")!.addEventListener("click", () =>
+    void withLevelDetail((detail) =>
+      openToolsHistoryModal(detail, {
+        onTestLayout: () => requestTestLayout(),
+        onSyncLayout: () => openSyncLayoutDialog(),
+        onRepaired: (n) => {
+          setStatus(`已移除 ${n} 个损坏的预制件实例，正在重新加载场景…`, false);
+          void loadScene(S.scenePath ?? "");
+        },
+        onRestore: (record, side, label) => void restoreWriteBackSnapshot(record, side, label)
+      })
+    )
+  );
 
   wireNav((target) => {
     if (target === "manage") confirmLeaveIfDirty(() => goManage());
@@ -514,6 +515,10 @@ export async function init() {
     const pick = match ?? guojia ?? scenes[0];
     selectSceneInDropdowns(pick.assetPath);
     await loadScene(pick.assetPath);
+    // 关卡管理「🧰 工具与历史」跳转携带的一次性自动动作（sessionStorage）。
+    const auto = consumeLayoutAutoAction();
+    if (auto === "test-layout") requestTestLayout();
+    else if (auto === "sync-layout") openSyncLayoutDialog();
   }
 
   startBridgeWatch();

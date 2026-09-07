@@ -31,6 +31,10 @@ public static class SceneLayoutApplier
         if (document == null || document.items == null)
             return "Empty layout document.";
 
+        // 本次写回的告警收集起点：绑定丢弃等经 LayoutEditorLog.RecordApplyWarning
+        // 入列，由 HTTP 响应透传给 web 状态栏。
+        LayoutEditorLog.BeginApply();
+
         document.items = PruneThemeBackgroundItems(document.items);
 
         var scene = EditorSceneManager.GetActiveScene();
@@ -46,15 +50,20 @@ public static class SceneLayoutApplier
             return LayoutEditorSafety.LastError;
 
         var before = SceneLayoutExporter.ExportFromScene();
+        // 写回历史：此刻场景已打开且未做任何改动，取写回前语义快照（stripped 状态，
+        // 与 SaveScene 后的 after 快照状态一致）。
+        LayoutEditorWriteBackHistory.SupplySemanticBefore(document.sceneAssetPath);
         RemoveUnmatchedSceneItems(before, document.items, only);
 
         var usedSceneObjectIds = new HashSet<int>();
         var createdObjects = new Dictionary<string, GameObject>();
-        // 写回防堆叠守卫：同 prefab 且同一落点（XZ < 0.01）的多条 item 是重复数据
+        // 写回防堆叠守卫：同 prefab 且 XYZ 完全同落点的多条 item 是重复数据
         // （web 画布完全重叠视觉不可见；或两条 item 撞同一场景对象时旧兜底会再
         // 新建一份）。全部写入会随「写回→导出→再写回」循环成倍克隆（test12 大炮
         // 堆叠根因）。保留首条，其余跳过并打链路日志定位来源。
-        var placedFootprint = new Dictionary<string, Vector2>();
+        // 注意必须比较 Y：同 XZ 不同高度（多层关卡、墙面立柱）是合法摆设，
+        // 仅比 XZ 会静默丢件（莲花烛误删事故）。
+        var placedFootprint = new Dictionary<string, Vector3>();
         foreach (var item in document.items)
         {
             if (item == null)
@@ -116,13 +125,14 @@ public static class SceneLayoutApplier
             // ---- 防堆叠守卫（见上方注释）----
             {
                 var guardPos = worldPos.HasValue
-                    ? new Vector2(worldPos.Value.x, worldPos.Value.z)
-                    : new Vector2(pos.x, pos.z);
+                    ? new Vector3(worldPos.Value.x, worldPos.Value.y, worldPos.Value.z)
+                    : pos;
                 var guardKey = (item.prefabGuid ?? item.prefabAssetPath ?? "");
-                Vector2 prevPos;
+                Vector3 prevPos;
                 if (placedFootprint.TryGetValue(guardKey, out prevPos)
                     && Mathf.Abs(prevPos.x - guardPos.x) < 0.01f
-                    && Mathf.Abs(prevPos.y - guardPos.y) < 0.01f)
+                    && Mathf.Abs(prevPos.y - guardPos.y) < 0.01f
+                    && Mathf.Abs(prevPos.z - guardPos.z) < 0.01f)
                 {
                     LayoutEditorLog.LogWarning("[写回链路] 防堆叠守卫：跳过重复条目 "
                         + (item.displayName ?? "?") + " id=" + (item.instanceId ?? "?")
@@ -309,6 +319,9 @@ public static class SceneLayoutApplier
         LayoutEditorPseudoReload.EnsurePrepareForBuilding();
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
+        // 写回历史：SaveScene 后、Reload 前（stripped 状态）取写回后语义快照；
+        // killplane 随后的同款调用会覆盖为累计状态。
+        LayoutEditorWriteBackHistory.SupplySemanticAfter(document.sceneAssetPath);
         LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
 
         // Reload 会从 bundle 重建伪 prefab child（EditorGridSnap 的 X/Z 约束随之复位），
@@ -798,6 +811,15 @@ public static class SceneLayoutApplier
         var col = go.AddComponent<BoxCollider>();
         col.size = new Vector3(w, 0.4f, d);
         col.center = new Vector3(0f, -0.2f, 0f);
+        // 静态地面挂 ObjectContainer（IParentable）：玩家出生落地瞬间
+        // PlayerRespawnBehaviour.OnGroundChange 就把复活锚点锁定在这块静态
+        // 地板上（=出生点）；否则锚点延迟到第一次踩上 IParentable 物体才锁，
+        // 会被动画组移动地板劫持——之后所有死亡都复活在移动地板边缘并随之
+        // 移动。挂在这里（scale=1、Design/Collision 下）实体父挂载无变形；
+        // 动画组成员的碰撞走 CreateColFloorOnItem/烘焙器，成员自身已挂，不受
+        // 影响。SyncWalkableToFloors 每次写回重建碰撞体，存量场景自动治愈。
+        if (go.GetComponent<ObjectContainer>() == null)
+            Undo.AddComponent<ObjectContainer>(go);
     }
 
     /// <summary>空气地板没有可见 Plane，只有 Ground 层可行走碰撞盒（几何与普通

@@ -49,6 +49,7 @@ import {
 } from "./stubControls";
 import { cleanOrphanedButtonLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
+import { cleanOrphanedStubRefs } from "./stubRefs";
 import { isPlayerItem } from "./renderItems";
 import { itemLabel } from "./labels";
 import {
@@ -372,10 +373,10 @@ export function deleteSelected() {
       g.memberStatic = g.memberStatic.filter((m) => !deletedInstanceIds.has(m.instanceId));
   }
   S.animControls = S.animControls.filter((g) => g.itemInstanceIds.length > 0 || g.floorInstanceIds.length > 0 || g.objectInstanceIds.length > 0);
-  // 删除物品时同步清理指向它的开关联动（断头台/饮料机按钮）
-  if (deletedInstanceIds.size)
-    S.switchLinks = S.switchLinks.filter((l) => !deletedInstanceIds.has(l.switchId) && !deletedInstanceIds.has(l.targetId));
   S.items = S.items.filter((i) => !kill.has(i._editorKey));
+  // 统一清理悬空绑定引用（开关→饮料机/断头台、上菜台→脏盘台、传送门出口、
+  // 终端、加热炉热源）：必须先于按钮联动清理（事件组按存活 switchLinks 过滤）。
+  cleanOrphanedStubRefs();
   // 同步清理按钮↔动画组联动（须在物品列表更新之后：源按钮被删则联动失效）
   cleanOrphanedButtonLinks();
   // 同步清理按钮↔事件组联动（源按钮/目标物品被删则相应事件失效）
@@ -385,7 +386,6 @@ export function deleteSelected() {
     S.activeAnimEventIdx = null;
     S.selectedWaypointId = null;
   }
-  S.items = S.items.filter((i) => !kill.has(i._editorKey));
   clearSelection();
   hideDetail();
   hideContextMenu();

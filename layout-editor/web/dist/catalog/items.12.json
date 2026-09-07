@@ -1,8 +1,44 @@
 {
   "schemaVersion": 5,
   "index": 12,
-  "itemCount": 127,
+  "itemCount": 129,
   "items": [
+    {
+      "id": "dlc09_chickenpotatocarrotroast",
+      "guid": "e790cc1c207e2999841368e110876383",
+      "assetPath": "Assets/commonW1/prefabs/dlc09/decor/recipes/dlc09_chickenpotatocarrotroast.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "d2b6e5845daafe8529d6fd2726f03efe",
+      "nameZh": "烤鸡土豆胡萝卜（DLC9）",
+      "nameEn": "Roast Chicken Potato & Carrot (DLC9)",
+      "icon": true
+    },
+    {
+      "id": "dlc09_christmaspudding",
+      "guid": "f0e2f994d6e64c5eb7917ce943297eda",
+      "assetPath": "Assets/commonW1/prefabs/dlc09/decor/recipes/dlc09_christmaspudding.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "1d3483fa52439baa192c381fdee805ba",
+      "nameZh": "圣诞布丁（DLC9）",
+      "nameEn": "Christmas Pudding (DLC9)",
+      "icon": true
+    },
     {
       "id": "dlc09_hotchocolate",
       "guid": "84f4262c5368ed2bb9ed75be26d2f072",

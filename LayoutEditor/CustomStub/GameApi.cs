@@ -60,6 +60,7 @@ namespace CustomStub
         public static readonly FieldInfo RegionTriggerAreaField = Field(CookingRegionType, "m_TriggerArea");
         public static readonly FieldInfo RegionFlameEffectsField = Field(CookingRegionType, "m_flameEffects");
         public static readonly FieldInfo RegionGlowEffectField = Field(CookingRegionType, "m_glowEffect");
+        public static readonly FieldInfo RegionBurnerRendererField = Field(CookingRegionType, "m_burnerRenderer");
 
         public static readonly Type ServerCookingRegionType = Find("ServerCookingRegion");
         public static readonly Type ClientCookingRegionType = Find("ClientCookingRegion");
@@ -86,6 +87,164 @@ namespace CustomStub
             return ServerCookingHandlerType != null
                 ? ServerCookingHandlerType.GetMethod("Cook", BindingFlags.Public | BindingFlags.Instance,
                     null, new[] { typeof(float) }, null)
+                : null;
+        });
+
+        // ---- 锅具时间参数（UtensilTiming + HarmonyPatches 共用；全部 vanilla 类型） ----
+        public static readonly Type CookingHandlerType = Find("CookingHandler");
+        public static readonly FieldInfo CookingTimeField = Field(CookingHandlerType, "m_cookingtime");
+        public static readonly Type MixingHandlerType = Find("MixingHandler");
+        public static readonly FieldInfo MixingTimeField = Field(MixingHandlerType, "m_mixingTime");
+
+        public static readonly Type ClientCookingHandlerType = Find("ClientCookingHandler");
+        public static readonly Type ServerMixingHandlerType = Find("ServerMixingHandler");
+        public static readonly Type ClientMixingHandlerType = Find("ClientMixingHandler");
+
+        public static readonly MethodInfo ServerGetCookingProgressMethod = Safe(delegate
+        {
+            return ServerCookingHandlerType != null
+                ? ServerCookingHandlerType.GetMethod("GetCookingProgress", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerGetMixingProgressMethod = Safe(delegate
+        {
+            return ServerMixingHandlerType != null
+                ? ServerMixingHandlerType.GetMethod("GetMixingProgress", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientGetCookingProgressMethod = Safe(delegate
+        {
+            return ClientCookingHandlerType != null
+                ? ClientCookingHandlerType.GetMethod("GetCookingProgress", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientGetMixingProgressMethod = Safe(delegate
+        {
+            return ClientMixingHandlerType != null
+                ? ClientMixingHandlerType.GetMethod("GetMixingProgress", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+
+        // 同步消息字段（CookingStateMessage / MixingStateMessage 全 public）
+        public static readonly FieldInfo ServerCookingDataField = Field(ServerCookingHandlerType, "m_ServerData");
+        public static readonly Type CookingStateMessageType = Find("CookingStateMessage");
+        public static readonly FieldInfo CookingMsgProgressField = Field(CookingStateMessageType, "m_cookingProgress");
+        public static readonly FieldInfo CookingMsgStateField = Field(CookingStateMessageType, "m_cookingState");
+        public static readonly FieldInfo ServerMixingDataField = Field(ServerMixingHandlerType, "m_serverData");
+        public static readonly Type MixingStateMessageType = Find("MixingStateMessage");
+        public static readonly FieldInfo MixingMsgProgressField = Field(MixingStateMessageType, "m_mixingProgress");
+        public static readonly FieldInfo MixingMsgStateField = Field(MixingStateMessageType, "m_mixingState");
+
+        // 状态变更回调（ServerCookingHandler 私有事件 / ServerMixingHandler 公有字段）
+        public static readonly FieldInfo ServerCookingStateChangedField = Field(ServerCookingHandlerType, "m_cookingStateChangedCallback");
+        public static readonly FieldInfo ServerMixingStateChangedField = Field(ServerMixingHandlerType, "m_stateChangedCallback");
+
+        // 嵌套枚举（CookedCompositeOrderNode.CookingProgress / MixedCompositeOrderNode.MixingProgress /
+        // CookingUIController.State）——按名取值，勿依赖枚举数值顺序以外的信息。
+        public static readonly Type CookingProgressEnum = Safe(delegate
+        {
+            var owner = Find("CookedCompositeOrderNode");
+            return owner != null ? owner.GetNestedType("CookingProgress") : null;
+        });
+        public static readonly Type MixingProgressEnum = Safe(delegate
+        {
+            var owner = Find("MixedCompositeOrderNode");
+            return owner != null ? owner.GetNestedType("MixingProgress") : null;
+        });
+        public static readonly Type UIStateEnum = Safe(delegate
+        {
+            var owner = Find("CookingUIController");
+            return owner != null ? owner.GetNestedType("State") : null;
+        });
+
+        // Harmony 目标：阈值判定与 UI 换算（vanilla 硬编码 煮糊=2×煮熟 / 过混=2×混合）
+        public static readonly MethodInfo CookingHandlerGetCookedStateMethod = Safe(delegate
+        {
+            return CookingHandlerType != null
+                ? CookingHandlerType.GetMethod("GetCookedOrderState", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(float) }, null)
+                : null;
+        });
+        public static readonly MethodInfo MixingHandlerGetMixedStateMethod = Safe(delegate
+        {
+            return MixingHandlerType != null
+                ? MixingHandlerType.GetMethod("GetMixedOrderState", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(float) }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerMixingIsOverMixedMethod = Safe(delegate
+        {
+            return ServerMixingHandlerType != null
+                ? ServerMixingHandlerType.GetMethod("IsOverMixed", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientCookingIsBurningMethod = Safe(delegate
+        {
+            return ClientCookingHandlerType != null
+                ? ClientCookingHandlerType.GetMethod("IsBurning", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientMixingIsOverMixedMethod = Safe(delegate
+        {
+            return ClientMixingHandlerType != null
+                ? ClientMixingHandlerType.GetMethod("IsOverMixed", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerCookingSetProgressMethod = Safe(delegate
+        {
+            return ServerCookingHandlerType != null
+                ? ServerCookingHandlerType.GetMethod("SetCookingProgress", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(float) }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerMixingSetProgressMethod = Safe(delegate
+        {
+            return ServerMixingHandlerType != null
+                ? ServerMixingHandlerType.GetMethod("SetMixingProgress", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(float) }, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientCookingApplyUpdateMethod = Safe(delegate
+        {
+            var serialisable = Find("Team17.Online.Multiplayer.Messaging.Serialisable");
+            return serialisable != null && ClientCookingHandlerType != null
+                ? ClientCookingHandlerType.GetMethod("ApplyServerUpdate", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { serialisable }, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientMixingApplyUpdateMethod = Safe(delegate
+        {
+            var serialisable = Find("Team17.Online.Multiplayer.Messaging.Serialisable");
+            return serialisable != null && ClientMixingHandlerType != null
+                ? ClientMixingHandlerType.GetMethod("ApplyServerUpdate", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { serialisable }, null)
+                : null;
+        });
+
+        // 客户端进度 UI（ClientCookingHandler.m_gui / ClientMixingHandler.m_progressUI）
+        public static readonly FieldInfo ClientCookingGuiField = Field(ClientCookingHandlerType, "m_gui");
+        public static readonly FieldInfo ClientMixingUiField = Field(ClientMixingHandlerType, "m_progressUI");
+        public static readonly MethodInfo UiSetOverDoingMethod = Safe(delegate
+        {
+            var ui = Find("CookingUIController");
+            return ui != null
+                ? ui.GetMethod("SetOverDoingAmount", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(float) }, null)
+                : null;
+        });
+        public static readonly MethodInfo ClampedRemapMethod = Safe(delegate
+        {
+            var mathUtils = Find("MathUtils");
+            return mathUtils != null
+                ? mathUtils.GetMethod("ClampedRemap", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(float), typeof(float), typeof(float), typeof(float), typeof(float) }, null)
                 : null;
         });
 
@@ -341,6 +500,12 @@ namespace CustomStub
         public static readonly Type InteractableType = Find("Interactable");
         public static readonly Type EditorGridSnapType = Find("EditorGridSnap");
         public static readonly Type AttachStationType = Find("AttachStation");
+
+        // ---- 终端防线（未绑定可操控对象的降级终端防 NRE） ----
+        public static readonly Type TerminalType = Find("Terminal");
+        public static readonly FieldInfo TerminalPilotableField = Field(TerminalType, "m_pilotableObject");
+        public static readonly Type ClientTerminalCosmeticType = Find("ClientTerminalCosmeticDecisions");
+        public static readonly Type ForwardTriggerToTargetType = Find("ForwardTriggerToTarget");
 
         // ---- Harmony 目标：宿主 KillPlane ----
         public static readonly MethodInfo RespawnObjectAddedMethod = Safe(delegate

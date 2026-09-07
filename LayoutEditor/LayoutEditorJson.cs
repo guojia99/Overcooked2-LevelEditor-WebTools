@@ -29,6 +29,10 @@ public static class LayoutEditorJson
         if (err != null)
             return JsonUtility.ToJson(err);
 
+        var applyResult = obj as ApiApplyResultDto;
+        if (applyResult != null)
+            return JsonUtility.ToJson(applyResult);
+
         var item = obj as LayoutItemDto;
         if (item != null)
             return JsonUtility.ToJson(item);

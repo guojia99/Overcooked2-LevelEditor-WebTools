@@ -21,6 +21,7 @@ import { draw } from "./render";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
 import { moveBlockedAt } from "./items";
+import { remapRefsWithinItems } from "./stubRefs";
 import { finalizeFloor } from "./floors";
 import { updateFloorBar } from "./floorPalette";
 import { closeModal } from "../modals";
@@ -84,6 +85,8 @@ export function pasteClipboard(canvasMx?: number, canvasMy?: number) {
   const anchor = selectionCentroid(S.clipboard);
   const { dx: offX, dz: offZ } = pasteOffsetFromPointer(anchor, canvasMx, canvasMy);
   const pasted: string[] = [];
+  const pastedCopies: EditorItem[] = [];
+  const pasteIdMap = new Map<string, string>();
   let skipped = 0;
   for (const src of S.clipboard) {
     if (isPlayerItem(src)) {
@@ -108,7 +111,12 @@ export function pasteClipboard(canvasMx?: number, canvasMy?: number) {
     copy.worldPosition = { x: u.x, y: copy.localPosition.y, z: u.z };
     S.items.push(copy);
     pasted.push(editorKey);
+    pastedCopies.push(copy);
+    // 成套复制时绑定跟随副本（上菜台+脏盘台一起复制 → 副本互相绑定）。
+    if (src.instanceId && src.instanceId !== copy.instanceId)
+      pasteIdMap.set(src.instanceId, copy.instanceId);
   }
+  remapRefsWithinItems(pastedCopies, pasteIdMap);
   setSelection(pasted);
   hideDetail();
   hideContextMenu();
@@ -194,6 +202,8 @@ export function pasteFloors(canvasMx?: number, canvasMy?: number): void {
     if (f) finalizeFloor(f);
   }
   const pastedItems: string[] = [];
+  const pastedItemCopies: EditorItem[] = [];
+  const pasteIdMap = new Map<string, string>();
   for (const src of S.floorItemClipboard) {
     const nx = src._wx + offX;
     const nz = src._wz + offZ;
@@ -210,7 +220,11 @@ export function pasteFloors(canvasMx?: number, canvasMy?: number): void {
     copy.worldPosition = { x: u.x, y: copy.localPosition.y, z: u.z };
     S.items.push(copy);
     pastedItems.push(editorKey);
+    pastedItemCopies.push(copy);
+    if (src.instanceId && src.instanceId !== copy.instanceId)
+      pasteIdMap.set(src.instanceId, copy.instanceId);
   }
+  remapRefsWithinItems(pastedItemCopies, pasteIdMap);
   clearSelection();
   setFloorSelection(pastedKeys);
   setSelection(pastedItems);

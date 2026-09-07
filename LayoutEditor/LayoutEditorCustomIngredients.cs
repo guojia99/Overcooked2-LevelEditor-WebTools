@@ -294,8 +294,34 @@ public static class LayoutEditorCustomIngredients
                     AddDependency(deps, ml.bundleName);
             }
         }
+        // optionalRecipeMatchListItems（菜谱管理 Optional tab 手动写入的 DLC 菜谱/
+        // hotdog 酱料/披萨部件等）：按反射读 bundleName 注册（与 LevelAdminApi
+        // AnalyzeBundles 的 CollectBundleNames 同款），否则条目指向的 bundle
+        // （如 dlc11 酱料 bundle427/428）不会进 dependencies，运行时 LoadAsset 抛
+        // KeyNotFoundException。旧自动填充时代靠保存菜谱顺带写入，现在必须在此收口。
+        if (info.optionalRecipeMatchListItems != null)
+        {
+            foreach (var so in info.optionalRecipeMatchListItems)
+            {
+                if (so == null)
+                    continue;
+                var bn = ReadBundleNameField(so);
+                if (!string.IsNullOrEmpty(bn))
+                    AddDependency(deps, bn);
+            }
+        }
         info.dependencies = deps.ToArray();
         EditorUtility.SetDirty(info);
+    }
+
+    /// <summary>反射读 bundleName 公有字段（PseudoPrefabSO / PseudoPrefabSORecipe /
+    ///  CustomRecipeSO.platingStepSO 之外的各类 optional 条目统一处理）。</summary>
+    private static string ReadBundleNameField(object obj)
+    {
+        if (obj == null)
+            return null;
+        var f = obj.GetType().GetField("bundleName", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        return f != null ? f.GetValue(obj) as string : null;
     }
 
     /// <summary>在 common03/&lt;sub&gt; 下按 id 找资产并注册其 bundleName 依赖。</summary>

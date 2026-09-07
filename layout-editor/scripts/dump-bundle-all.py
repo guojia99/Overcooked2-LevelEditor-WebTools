@@ -196,17 +196,35 @@ def main():
                 "container": obj.container,
                 "file": rel.replace(os.sep, "/"),
                 "format": fmt,
+                # bundle 内 pathID（matchlist m_recipes 的 fileID 即此值，
+                # stat-matchlist-mapping.mjs 靠它做精确成员解析）。
+                "pathID": getattr(obj, "path_id", None),
             })
 
         print(f"  -> so far: {ok} ok, {fail} failed", flush=True)
 
-    with open(os.path.join(OUT, "manifest.json"), "w", encoding="utf-8") as f:
+    # 合并式写回：--only 定向重导时保留未重导 bundle 的既有条目，
+    # 只替换本次重导的 bundle（旧版直接整表覆盖，全量清单会被降级成局部）。
+    manifest_path = os.path.join(OUT, "manifest.json")
+    merged_objects = list(manifest)
+    if only and os.path.exists(manifest_path):
+        try:
+            prev = json.load(open(manifest_path, encoding="utf-8"))
+            redumped = set(files)
+            kept = [o for o in prev.get("objects", []) if o.get("bundle") not in redumped]
+            merged_objects = kept + manifest
+            print(f"  manifest merge: kept {len(kept)} existing entries, "
+                  f"replaced {len(manifest)} (redumped bundles: {sorted(redumped)})")
+        except Exception as e:
+            print(f"  manifest merge FAIL (keeping partial): {e}")
+
+    with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump({
-            "total": ok,
+            "total": len(merged_objects),
             "failed": fail,
             "formats": stats,
-            "bundles": len(files),
-            "objects": manifest,
+            "bundles": len({o.get("bundle") for o in merged_objects}),
+            "objects": merged_objects,
         }, f, ensure_ascii=False, indent=1)
 
     print(f"\nDone: {ok} objects exported, {fail} failed -> {OUT}/")
