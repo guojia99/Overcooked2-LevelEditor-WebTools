@@ -2187,7 +2187,9 @@ public static class LayoutEditorLevelAdminApi
         var containerFolders = new[]
         {
             "Assets/common01/food/PlatingSteps",
-            "Assets/common02/food/PlatingSteps"
+            "Assets/common02/food/PlatingSteps",
+            // 马克杯（Mug）在通用内容源库 common03
+            "Assets/common03/food/PlatingSteps"
         };
         foreach (var folder in containerFolders)
         {
@@ -3634,6 +3636,7 @@ public static class LayoutEditorLevelAdminApi
         "Assets/common02/food/PlatingSteps",
         "Assets/common03/food/Ingredients",
         "Assets/common03/food/CookingSteps",
+        "Assets/common03/food/PlatingSteps",
     };
 
     /// <summary>全部关卡集的旧 custom_web/Ingredients 目录（Web 内置食材拷贝，
@@ -3691,12 +3694,25 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
+    /// <summary>官方菜谱（PseudoPrefabSORecipe）查找目录：自定义组装菜可直接引用官方成品菜。</summary>
+    private static readonly string[] OfficialRecipeSearchFolders =
+    {
+        "Assets/common01/food/Recipes",
+        "Assets/common02/food/Recipes",
+        "Assets/common03/food/Recipes",
+    };
+
     private static ScriptableObject FindPseudoPrefabOrCustomRecipe(string id)
     {
         if (string.IsNullOrEmpty(id))
             return null;
 
         var found = FindAssetByIdInFolders(id, PseudoPrefabScriptGuid, PseudoPrefabSearchFolders);
+        if (found != null)
+            return found;
+
+        // 官方成品菜（组装组成里允许直接引用，如 Burger_Plain_SO）
+        found = FindAssetByIdInFolders(id, OriginalRecipeScriptGuid, OfficialRecipeSearchFolders);
         if (found != null)
             return found;
 
@@ -3720,7 +3736,9 @@ public static class LayoutEditorLevelAdminApi
         var folders = new[]
         {
             "Assets/common01/food/PlatingSteps",
-            "Assets/common02/food/PlatingSteps"
+            "Assets/common02/food/PlatingSteps",
+            // 马克杯（Mug）在通用内容源库 common03
+            "Assets/common03/food/PlatingSteps"
         };
         var so = FindAssetByIdInFolders(id, PseudoPrefabScriptGuid, folders);
         return so as PseudoPrefabSO;

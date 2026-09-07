@@ -481,7 +481,8 @@ export function stubControlsHtml(item: EditorItem): string {
   // 火锅灶台无 stub 组件（kind 为空）：定时开关是它唯一的专属参数区
   if (!kind && isHotpotBurnerItem(item)) {
     const ts = item.timedSwitch ?? {};
-    const on = ts.enabled !== false;
+    // 默认关闭：未配置过的灶台不勾选（不写回 TimedSwitch 组件 = 运行时灶台常开）
+    const on = ts.enabled === true;
     return `<div class="ctx-stub"><div class="ctx-stub-title">火锅灶台 · 定时开关</div>
       <label class="ctx-stub-row"><input type="checkbox" id="ctx-ts-enable" ${on ? "checked" : ""}/> 启用定时循环</label>
       <label class="ctx-stub-row">开启 <input type="number" id="ctx-ts-on" class="ctx-input" step="1" min="3" value="${ts.onSeconds ?? 30}"/> 秒</label>
@@ -743,7 +744,7 @@ export function wireStubControls(item: EditorItem) {
   if (isHotpotBurnerItem(item)) {
     const ensureTs = () => {
       if (!item.timedSwitch)
-        item.timedSwitch = { enabled: true, onSeconds: 30, offSeconds: 30, startOn: true };
+        item.timedSwitch = { enabled: false, onSeconds: 30, offSeconds: 30, startOn: true };
       return item.timedSwitch;
     };
     num("ctx-ts-enable")?.addEventListener("change", (e) => {

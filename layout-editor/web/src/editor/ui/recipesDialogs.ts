@@ -15,6 +15,7 @@ import {
   condimentMachineForIngredient,
   SODA_MACHINE_INGREDIENT_IDS,
   DRINK_MACHINE_INGREDIENT_IDS,
+  CONDIMENT_MACHINE_INGREDIENT_IDS,
   recipeLacksIntermediate,
   missingIntermediateRecipes,
   functionalBaseId,
@@ -358,7 +359,10 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const fromDrinkMachine = (i: string) => DRINK_MACHINE_INGREDIENT_IDS.includes(i);
     // 发泡奶油由奶油喷罐喷出（道具绑定），不建食材箱
     const fromCreamSpray = (i: string) => CREAM_INGREDIENT_IDS.includes(i);
-    const fromTool = (i: string) => fromSodaMachine(i) || fromDrinkMachine(i) || fromCreamSpray(i);
+    // 番茄酱/芥末酱由酱料机产出（node 型，机器区覆盖），不进食材箱清单
+    const fromCondimentMachine = (i: string) => CONDIMENT_MACHINE_INGREDIENT_IDS.includes(i);
+    const fromTool = (i: string) =>
+      fromSodaMachine(i) || fromDrinkMachine(i) || fromCreamSpray(i) || fromCondimentMachine(i);
     const missingIngs = [...reqIngs].filter(
       (i) => !fromTool(i) && !haveDisp.has(i) && !haveDisp.has(crateIngId(i))
     );
@@ -451,8 +455,15 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const cursor = { x: base.x };
     const unresolved: string[] = [];
     for (const ing of selectedIngs) {
-      // 汽水是 node 型（由汽水机产出）、发泡奶油由喷罐喷出：都不建食材箱
-      if (SODA_MACHINE_INGREDIENT_IDS.includes(ing) || CREAM_INGREDIENT_IDS.includes(ing)) continue;
+      // 汽水（汽水机）、饮料（饮料机）、发泡奶油（喷罐）、番茄酱/芥末酱（酱料机）：
+      // 都是机器/道具产出，不建食材箱
+      if (
+        SODA_MACHINE_INGREDIENT_IDS.includes(ing) ||
+        DRINK_MACHINE_INGREDIENT_IDS.includes(ing) ||
+        CREAM_INGREDIENT_IDS.includes(ing) ||
+        CONDIMENT_MACHINE_INGREDIENT_IDS.includes(ing)
+      )
+        continue;
       // node 型匹配节点 → 食材箱生成其整食材（如沙拉洋葱节点 → 整个沙拉洋葱）
       const crateId = NODE_INGREDIENT_SOURCES[ing] ?? ing;
       const guid = ingredientGuidById(crateId);

@@ -44,15 +44,36 @@ dotnet build -c Release -p:GameDir="D:\Games\Overcooked! 2"
 
 ## 安装与分发（位置务必放对）
 
-本插件是 **OC2DIYLevel 的配套能力扩展**（为其加载关卡内额外 C# 代码），随模组包一起分发、放在同一目录：
+本插件是 **OC2DIYLevel 的配套能力扩展**（为其加载关卡内额外 C# 代码）。
+
+**web 导出的关卡集 zip（2026-09-07 起）已一步携带本插件与 commonW1**：zip 顶层为
+`OC2LevelRuntimeLoader.dll` + `commonW1` + `levels/<set>/`，将整个 zip **解压到
+`Overcooked! 2/BepInEx/plugins/OC2DIYLevel/`** 即完成全部安装（`runtime` 与
+`info_<set>`/`s_*` 同层；不要把 `.meta`/`.manifest` 拷进去）。
+
+zip 内的 loader DLL 由研发手动维护：编辑器仓库 `layout-editor/web/public/OC2LevelRuntimeLoader.dll`，
+更新流程 = 改 Loader.cs → `./BepInExPlugins/build.sh` → 拷贝 `bin/Release/OC2LevelRuntimeLoader.dll`
+覆盖 public 下的文件（导出日志会打该文件时间戳供追溯）。
 
 | 文件 | 游戏内位置 | 说明 |
 |---|---|---|
 | `OC2LevelRuntimeLoader.dll` | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/OC2LevelRuntimeLoader.dll` | 与 `OC2DIYLevel.dll`、`LevelEditorStub.dll` 同层（BepInEx 递归扫描 plugins/，子目录插件正常加载） |
-| 关卡集 zip（含 `runtime` 文件） | 解压到 `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/levels/<set>/` | `runtime` 必须与 `info_<set>`、`s_*` 同层；**不要**把 `.meta`/`.manifest` 文件拷进去 |
-| 更新版 `commonW1` bundle | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/commonW1` | 与 `common`/`common01`/`common02` 同级，归 OC2DIYLevel 管辖加载（**不放 StreamingAssets**）；含 RandomDispenser 包装与 question_mark 图标库 |
+| 关卡 bundle（`levels/<set>/`，按需含 `runtime`） | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/levels/<set>/` | `runtime` 必须与 `info_<set>`、`s_*` 同层 |
+| `commonW1` bundle | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/commonW1` | 与 `common`/`common01`/`common02` 同级，归 OC2DIYLevel 管辖加载（**不放 StreamingAssets**）；含 RandomDispenser 包装与 question_mark 图标库 |
 
 ### 真机不生效的排查顺序（症状：随机箱只出第一个食材）
+
+0. **v1.5.1+ 环境探测日志**（排障先看这段）：所有日志行带统一前缀
+   `[HH:mm:ss.fff][主机|客机|单机|未知]`（角色=反射 `ConnectionStatus.IsInSession()/IsHost()`，
+   实时求值，随进/出房间变化）——联机排障可直接区分两台机器、对齐时序。启动首帧输出
+   - `[环境] PluginPath/GameRootPath/dataPath/streamingAssetsPath` 路径解析结果；
+   - `[环境] plugins/OC2DIYLevel` 与 `StreamingAssets/OC2DIYLevel` 两级目录清单
+     （存在即列出内容，不存在明确打"不存在"）——levels 装没装、装哪了直接可见；
+   - `[环境] AppDomain 相关程序集`——OC2DIYLevel / LevelEditorStub / Stub_* 是否就位；
+   - 所有 levels 候选目录都不存在时打 **Warning** 并逐个列出候选路径；
+   - 主路径缺失但备选路径（StreamingAssets）命中时会扫描并打 ⚠ 提示；
+   - 每次场景加载打 `场景加载: <name>（已加载关卡程序集 N 个…）`；
+   - `AssemblyResolve 未命中: Stub_*`（Warning，只报一次）= 关卡程序集没装上。
 
 1. 看 `Overcooked! 2/BepInEx/LogOutput.log`：
    - 有 `[OC2LevelRuntimeLoader] 已加载关卡程序集: Stub_xxx` → 加载器正常，问题在场景/代码；
@@ -68,6 +89,10 @@ dotnet build -c Release -p:GameDir="D:\Games\Overcooked! 2"
 
 ## 注意
 
+- **版本警戒：v1.5.0 是坏包（2026-09-08 事故）**——日志助手 `Info/Warn` 因批量改名
+  事故变成无限自递归，首个日志调用即栈溢出闪退（连 ready 行都打不出）。若真机日志
+  显示 `Loading [OC2 LevelRuntime Loader 1.5.0]` 后无任何该插件输出 → 立即换 1.5.1+。
+  教训：批量重命名后必须重读被改函数本体；不信增量编译的"0 警告"（源码未变会跳过 Csc）。
 - 不要 `Unload` 已加载的 runtime bundle——场景组件类型存活于其中的程序集；
 - 排查：看 BepInEx/LogOutput.log 里 `[OC2LevelRuntimeLoader]` 前缀的日志
   （"已加载关卡程序集: Stub_xxx" 即成功）。

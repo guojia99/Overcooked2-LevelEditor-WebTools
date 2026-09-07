@@ -110,24 +110,28 @@ export function deriveCompositionGroups(
   // 子菜谱为 Mixed 类型（mixing）时即使无 cookingStep 也按 MixingBowl 成组（搅拌）。
   const groups: CookingGroup[] = [];
   const subGroups = new Map<string, CookingGroup>();
+  const pushSubGroup = (step: string, compId: string, ings: string[]): void => {
+    // 同一子菜谱重复出现（数量叠加）时并入同一组；不同子菜谱即使步骤相同也分开。
+    const key = `${step}::${compId}`;
+    let g = subGroups.get(key);
+    if (!g) {
+      g = { step, utensils: STEP_UTENSILS[step] ?? [], ingredients: [] };
+      subGroups.set(key, g);
+      groups.push(g);
+    }
+    for (const ing of ings) g.ingredients.push(ing);
+  };
   for (const compId of compIds) {
     const sub = byId.get(compId);
     if (sub && (sub.ingredients ?? []).length > 0) {
-      const step = COOK_STEPS.has(sub.cookingStep ?? "")
-        ? sub.cookingStep!
-        : sub.mixing
-          ? "MixingBowl"
-          : "";
-      if (step) {
-        // 同一子菜谱重复出现（数量叠加）时并入同一组；不同子菜谱即使步骤相同也分开。
-        const key = `${step}::${compId}`;
-        let g = subGroups.get(key);
-        if (!g) {
-          g = { step, utensils: STEP_UTENSILS[step] ?? [], ingredients: [] };
-          subGroups.set(key, g);
-          groups.push(g);
-        }
-        for (const ing of sub.ingredients!) g.ingredients.push(ing);
+      const cookStep = COOK_STEPS.has(sub.cookingStep ?? "") ? sub.cookingStep! : "";
+      if (sub.mixing && cookStep) {
+        // 搅拌+烹饪的中间产物（如 搅拌+烤箱）：搅拌组 + 紧随的空标记组，
+        // mergeFinalMarkers 合并为一格双图标（搅拌碗 + 烹饪步骤）
+        pushSubGroup("MixingBowl", compId, sub.ingredients!);
+        pushSubGroup(cookStep, compId, []);
+      } else if (cookStep || sub.mixing) {
+        pushSubGroup(cookStep || "MixingBowl", compId, sub.ingredients!);
       } else {
         for (const ing of sub.ingredients!) plain.push(ing);
       }
@@ -146,6 +150,11 @@ export function deriveCompositionGroups(
     const keepBoxes: CookingGroup[] = [];
     for (const g of groups) {
       if (g.step === "MixingBowl") {
+        keepBoxes.push(g);
+        continue;
+      }
+      // 搅拌+烹饪子菜谱的空标记组（烹饪步骤）：跟随搅拌框，mergeFinalMarkers 并入同格双图标
+      if (g.ingredients.length === 0) {
         keepBoxes.push(g);
         continue;
       }

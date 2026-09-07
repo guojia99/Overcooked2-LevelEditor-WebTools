@@ -39,6 +39,39 @@ public static class CustomStubCopyTool
         return "Stub_" + sb;
     }
 
+    /// <summary>是否已配置 stub（stub/ 目录 + Stub_&lt;set&gt;.asmdef 存在）。web 状态端点用。</summary>
+    public static bool IsConfigured(string setName)
+    {
+        var stubDir = LevelSetsRoot + "/" + setName + "/stub";
+        return AssetDatabase.IsValidFolder(stubDir)
+            && File.Exists(stubDir + "/" + StubAssemblyName(setName) + ".asmdef");
+    }
+
+    /// <summary>检测单个关卡集 stub 副本与母本是否漂移（内容或程序集名）。
+    /// 未拷贝的关卡集返回 false（用 IsConfigured 区分）。web 状态端点用。</summary>
+    public static bool IsDrifted(string setName)
+    {
+        if (!Directory.Exists(MasterDir))
+            return false;
+        var stubDir = LevelSetsRoot + "/" + setName + "/stub";
+        if (!Directory.Exists(stubDir))
+            return false;
+        foreach (var src in Directory.GetFiles(MasterDir, "*.cs"))
+        {
+            var dst = Path.Combine(stubDir, Path.GetFileName(src));
+            if (!File.Exists(dst) || File.ReadAllText(src) != File.ReadAllText(dst))
+                return true;
+        }
+        var asmdef = Path.Combine(stubDir, StubAssemblyName(setName) + ".asmdef");
+        if (File.Exists(asmdef))
+        {
+            // 程序集名/引用漂移也视为需要同步（CopyToSet 会重写 asmdef）
+            if (!asmdef.Contains(StubAssemblyName(setName) + ".asmdef"))
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>检测各关卡集 stub 副本与母本的内容漂移，有漂移则自动同步
     /// （仅内容，不动 .meta/GUID）。返回发生同步的关卡集数。母本改动后由
     /// CustomStubAutoBake 在域重载后调用，保证副本自动跟进、无需手动同步。</summary>
@@ -47,31 +80,10 @@ public static class CustomStubCopyTool
         if (!Directory.Exists(MasterDir))
             return 0;
         var synced = 0;
-        var masterFiles = Directory.GetFiles(MasterDir, "*.cs");
         foreach (var setDir in Directory.GetDirectories(LevelSetsRoot))
         {
-            var stubDir = Path.Combine(setDir, "stub");
-            if (!Directory.Exists(stubDir))
-                continue;
-            var drifted = false;
-            foreach (var src in masterFiles)
-            {
-                var dst = Path.Combine(stubDir, Path.GetFileName(src));
-                if (!File.Exists(dst) || File.ReadAllText(src) != File.ReadAllText(dst))
-                {
-                    drifted = true;
-                    break;
-                }
-            }
             var setName = Path.GetFileName(setDir);
-            var asmdef = Path.Combine(stubDir, StubAssemblyName(setName) + ".asmdef");
-            if (File.Exists(asmdef))
-            {
-                // 程序集名/引用漂移也视为需要同步（CopyToSet 会重写 asmdef）
-                if (!asmdef.Contains(StubAssemblyName(setName) + ".asmdef"))
-                    drifted = true;
-            }
-            if (!drifted)
+            if (!IsDrifted(setName))
                 continue;
             try
             {
@@ -145,6 +157,13 @@ public static class CustomStubCopyTool
     /// <summary>执行拷贝（内容同步 + 生成 asmdef + 清理母本中已删除的脚本）。返回日志行数。</summary>
     public static string CopyToSet(string setName)
     {
+        return CopyToSet(setName, true);
+    }
+
+    /// <summary>refresh=false：只写文件不 Refresh —— web API 用（先应答 HTTP，
+    /// 再由调用方 delayCall 触发 Refresh，避免域重载把响应截断）。</summary>
+    public static string CopyToSet(string setName, bool refresh)
+    {
         if (string.IsNullOrEmpty(setName) || !Directory.Exists(MasterDir))
             return "母本目录不存在: " + MasterDir;
 
@@ -201,7 +220,8 @@ public static class CustomStubCopyTool
             removed++;
         }
 
-        AssetDatabase.Refresh();
+        if (refresh)
+            AssetDatabase.Refresh();
         return "新增 " + copied + " / 更新 " + updated + " / 清理 " + removed
             + " → " + dstDir + "（程序集 " + asmdefName + "）";
     }

@@ -12,6 +12,34 @@ using UnityEngine;
 /// </summary>
 public static class LayoutEditorAllIngredientsFill
 {
+    /// <summary>机器/道具产出的食材 id（汽水机汽水 / 饮料机饮料 1-3 / 酱料机番茄酱芥末酱，
+    ///  含 dlc11 换皮）：assetPath 恰好指向真实 prefab（如 DLC08_Drink01-03 的
+    ///  prefabs/ingredients/drink0N.prefab）时会穿透 .prefab 过滤混进 allIngredients，
+    ///  导致运行时生成器/匹配异常——显式按 id 黑名单排除（不区分大小写）。</summary>
+    private static readonly string[] MachineOnlyIngredientIds =
+    {
+        "orangesoda", "rootbeer", "DLC11_OrangeSoda", "DLC11_RootBeer",
+        "drink01", "drink02", "drink03", "DLC08_Drink01", "DLC08_Drink02", "DLC08_Drink03",
+        "ketchup", "mustard", "DLC08_Ketchup", "DLC08_Mustard", "dlc11_ketchup", "dlc11_mustard",
+    };
+
+    private static bool IsMachineOnlyIngredient(PseudoPrefabSO pseudo)
+    {
+        if (pseudo == null)
+            return false;
+        var assetPath = AssetDatabase.GetAssetPath(pseudo);
+        var fileName = string.IsNullOrEmpty(assetPath)
+            ? ""
+            : System.IO.Path.GetFileNameWithoutExtension(assetPath);
+        foreach (var id in MachineOnlyIngredientIds)
+        {
+            if (string.Equals(fileName, id, System.StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(pseudo.prefabName, id, System.StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>复刻宿主 LevelInfoSOEditor 的 "Fill All AudioDirectorySOs" 按钮：
     /// 把 common02 音频目录下的全部 PseudoPrefabSO 填进 audioDirectorySOs。
     /// 与宿主按钮一致扫描 common02（运行时 assetPath 用正斜杠，能从 bundle 内容加载），
@@ -108,6 +136,9 @@ public static class LayoutEditorAllIngredientsFill
         {
             if (pseudo == null)
                 continue;
+            // 汽水/饮料/酱料等机器产出食材：显式黑名单（assetPath 为 .prefab 的饮料会穿透后缀过滤）
+            if (IsMachineOnlyIngredient(pseudo))
+                continue;
             var bundlePath = pseudo.assetPath;
             if (string.IsNullOrEmpty(bundlePath))
                 continue;
@@ -168,6 +199,11 @@ public static class LayoutEditorAllIngredientsFill
         foreach (PseudoPrefabSO pseudo in allIngredients)
         {
             if (pseudo == null)
+            {
+                continue;
+            }
+            // 汽水/饮料/酱料等机器产出食材：显式黑名单（assetPath 为 .prefab 的饮料会穿透后缀过滤）
+            if (IsMachineOnlyIngredient(pseudo))
             {
                 continue;
             }

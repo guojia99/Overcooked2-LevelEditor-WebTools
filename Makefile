@@ -1,6 +1,6 @@
 all: run
 
-ZIP_NAME := OC2-Web-v0.7.1.zip
+ZIP_NAME := OC2-Web-v0.7.2.zip
 
 build:
 	rm -f $(ZIP_NAME)
@@ -26,9 +26,9 @@ run:
 	rm -rf ./Assembly-CSharp-Patch/
 	rm -rf ./BepInExPlugins/
 	rm -rf ./OC2LevelRuntimeLoader.dll
+	rm -rf ./OC2LevelRuntimeLoader
 
-	cp -r ../Overcooked2-LevelEditor/BepInExPlugins/OC2LevelRuntimeLoader/bin/Debug/OC2LevelRuntimeLoader.dll .
-	cp -r ../Overcooked2-LevelEditor/BepInExPlugins .
+	cp -r ../Overcooked2-LevelEditor/BepInExPlugins/OC2LevelRuntimeLoader .
 	cp -r ../Overcooked2-LevelEditor/layout-editor .
 	cp -r ../Overcooked2-LevelEditor/Assets/commonW1 .
 	cp -r ../Overcooked2-LevelEditor/Assets/commonW1.meta .
@@ -36,3 +36,4 @@ run:
 
 	rm -rf layout-editor/web/node_modules/
 	rm -rf layout-editor/scripts/.venv-audio/
+	rm -rf OC2LevelRuntimeLoader/bin OC2LevelRuntimeLoader/obj

@@ -43,6 +43,11 @@ public class LayoutEditorHttpServer
 
     public int Port { get; private set; }
 
+    /// <summary>CustomStub web API 解耦钩子：(action, setName) → JSON body。
+    /// 由 CustomStubHttpApi（[InitializeOnLoad]）注册；null = CustomStub 未安装
+    /// （相关端点返回 501，删除 CustomStub 文件后本类仍可编译）。</summary>
+    public static Func<string, string, string> CustomStubApi;
+
     public static bool HasBundledWebUi()
     {
         return LayoutEditorPaths.IsWebDistReady();
@@ -712,6 +717,33 @@ public class LayoutEditorHttpServer
                 var dto = JsonUtility.FromJson<SetExportStartDto>(body);
                 var err = LayoutEditorSetExporter.StartExport(dto != null ? dto.setName : null);
                 WriteAdminResult(response, err);
+                return;
+            }
+
+            // ---- CustomStub（随机食材箱等关卡代码）web 工具：导出弹窗三按钮 ----
+            // 解耦：经 CustomStubApi 钩子软调用（CustomStubHttpApi 注册），未安装时 501。
+            // copy/compile 会先应答再 delayCall 触发域重载，前端需容忍连接重置。
+            if (path == "/api/set/stub/status" && request.HttpMethod == "GET")
+            {
+                if (CustomStubApi == null)
+                {
+                    WriteJson(response, 501, "{\"ok\":false,\"error\":\"CustomStub 未安装\"}");
+                    return;
+                }
+                WriteJson(response, 200, CustomStubApi("status", request.QueryString["set"] ?? ""));
+                return;
+            }
+            if ((path == "/api/set/stub/copy" || path == "/api/set/stub/compile") && request.HttpMethod == "POST")
+            {
+                if (CustomStubApi == null)
+                {
+                    WriteJson(response, 501, "{\"ok\":false,\"error\":\"CustomStub 未安装\"}");
+                    return;
+                }
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<SetExportStartDto>(body);
+                var action = path.EndsWith("/compile", StringComparison.Ordinal) ? "compile" : "copy";
+                WriteJson(response, 200, CustomStubApi(action, dto != null ? dto.setName : null));
                 return;
             }
 

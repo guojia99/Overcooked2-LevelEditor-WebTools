@@ -42,6 +42,7 @@ export const EGG_INGREDIENTS = new Set(["EggSO", "DLC05_Egg", "dlc09_egg", "dlc1
 export const PLATING_STACK_BY_STEP: Record<string, string> = {
   Plate: "CleanPlateStack",
   Glass: "CleanGlassStack",
+  Mug: "cleanmugstack",
 };
 
 /** 需要的容器堆：盘子堆默认；含玻璃杯装盘的菜谱时额外要求杯子堆。 */
@@ -123,7 +124,8 @@ export function recipeNeedsCondimentMachine(r: RecipeEntry): boolean {
 }
 
 export function recipeNeedsMug(r: RecipeEntry): boolean {
-  return (r.type ?? "") === "hotchocolate";
+  // 官方热可可按类型；自定义菜谱按所选装盘容器（装盘容器下拉含马克杯）
+  return (r.type ?? "") === "hotchocolate" || (r.platingStep ?? "") === "Mug";
 }
 
 /** 拼盘/套餐类（餐盘组装装盘）：水果拼盘 + 马戏团套餐。成品放餐盘（tray）
@@ -596,7 +598,8 @@ export async function levelRequiredCrateIngredientIds(): Promise<string[]> {
       (i) =>
         !SODA_MACHINE_INGREDIENT_IDS.includes(i) &&
         !DRINK_MACHINE_INGREDIENT_IDS.includes(i) &&
-        !CREAM_INGREDIENT_IDS.includes(i)
+        !CREAM_INGREDIENT_IDS.includes(i) &&
+        !CONDIMENT_MACHINE_INGREDIENT_IDS.includes(i)
     );
   } catch {
     return [];

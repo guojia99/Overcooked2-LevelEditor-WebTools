@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T07:40:19.801Z",
+  "generatedAt": "2026-09-07T11:16:41.574Z",
   "schemaVersion": 5,
   "itemCount": 36,
   "cookingSteps": [
@@ -336,7 +336,7 @@
     {
       "guid": "cd51517c70ba446408c27f0227693f4b",
       "id": "Mug",
-      "nameZh": "Mug",
+      "nameZh": "马克杯",
       "nameEn": "Mug",
       "kind": "plating",
       "assetPath": "Assets/common03/food/PlatingSteps/Mug.asset",

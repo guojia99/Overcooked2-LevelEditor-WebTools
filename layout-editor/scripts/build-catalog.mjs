@@ -1330,19 +1330,30 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
       const mainIngs = [];
       const keepBoxes = [];
       const subGroups = new Map();
+      const pushSubGroup = (step, compId, ings) => {
+        const key = step + "::" + compId;
+        if (!subGroups.has(key)) {
+          subGroups.set(key, { step, utensils: STEP_UTENSILS[step] || [], ingredients: [] });
+        }
+        for (const ing of ings) subGroups.get(key).ingredients.push(ing);
+      };
       for (const compId of recipe.compositionIds) {
         const sub = byId.get(compId);
         if (sub && (sub.ingredients || []).length > 0) {
-          const subStep = isCookStep(sub.cookingStep) ? sub.cookingStep : sub.mixing ? "MixingBowl" : "";
+          const subCook = isCookStep(sub.cookingStep) ? sub.cookingStep : "";
+          if (sub.mixing && subCook) {
+            // 搅拌+烹饪的中间产物（如 搅拌+烤箱）：搅拌组 + 紧随的空标记组，
+            // 前端 mergeFinalMarkers 合并为一格双图标（搅拌碗 + 烹饪步骤）
+            pushSubGroup("MixingBowl", compId, sub.ingredients);
+            pushSubGroup(subCook, compId, []);
+            continue;
+          }
+          const subStep = subCook || (sub.mixing ? "MixingBowl" : "");
           if (!subStep) {
             for (const ing of sub.ingredients) compPlain.push(ing);
             continue;
           }
-          const key = subStep + "::" + compId;
-          if (!subGroups.has(key)) {
-            subGroups.set(key, { step: subStep, utensils: STEP_UTENSILS[subStep] || [], ingredients: [] });
-          }
-          for (const ing of sub.ingredients) subGroups.get(key).ingredients.push(ing);
+          pushSubGroup(subStep, compId, sub.ingredients);
         } else {
           compPlain.push(compId);
         }
@@ -1352,6 +1363,11 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
         for (const [key, g] of subGroups) {
           // Mixer / MixingBowl 都是搅拌步骤（如月饼引用的面糊 Mixer 中间产物）
           if (g.step === "MixingBowl" || g.step === "Mixer") {
+            keepBoxes.push(g);
+            continue;
+          }
+          // 搅拌+烹饪子菜谱的空标记组（烹饪步骤）：跟随搅拌框，前端合并为同格双图标
+          if (g.ingredients.length === 0) {
             keepBoxes.push(g);
             continue;
           }
@@ -1558,6 +1574,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
     "Assets/commonW1/pseudo_prefab_so/dlc11/food",
   ];
   const customByGuid = new Map();
+  const originalByGuid = new Map();
   let originals = [];
   for (const root of roots) {
     for (const file of listFilesRecursive(path.join(repoRoot, root), (n) => n.endsWith(".asset"))) {
@@ -1571,7 +1588,10 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
       if (!guid) continue;
       const entry = { file, guid, id: path.basename(file, ".asset"), assetPath: toAssetPath(file), fields, isCustom };
       if (isCustom) customByGuid.set(guid, entry);
-      else originals.push(entry);
+      else {
+        originals.push(entry);
+        originalByGuid.set(guid, entry);
+      }
     }
   }
 
@@ -1592,6 +1612,17 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge) {
         if (sub.fields.cookingStepGuid && knowledge.cookSteps.has(stepId)) stats.cooks++;
         for (const g of sub.fields.compositionGuids) expand(g);
         return;
+      }
+      // 官方成品菜（PseudoPrefabSORecipe）：按知识库展开为底层叶食材，
+      // 而不是把菜谱 id 本身当食材（镜像 LayoutEditorRecipeKnowledge.Collect）
+      const orig = originalByGuid.get(guid);
+      if (orig) {
+        const k = knowledge.recipes[orig.id] || knowledge.recipes[`${orig.fields.prefabName}_SO`];
+        if (k && (k.ingredients || []).length > 0) {
+          stats.ings += k.ingredients.length;
+          for (const ing of k.ingredients) ingredientIds.push(ing);
+          return;
+        }
       }
       stats.ings++;
       const leaf = guidIndex.get(guid);

@@ -262,7 +262,10 @@ public static class LayoutEditorSetExporter
                 File.Delete(f);
         }
 
-        // ---- 5. zip：打包含顶层 setName/ 文件夹的 zip ----
+        // ---- 5. zip：一步到位结构（整体解压到 BepInEx/plugins/OC2DIYLevel/ 即全部就位）----
+        //   levels/<set>/…              关卡 bundle（info_<set> / s_* / 按需 runtime）
+        //   commonW1                    随机箱图标库/包装 prefab 等（bundle 产物文件名为小写 commonw1）
+        //   OC2LevelRuntimeLoader.dll   BepInEx 运行时注入插件（研发手动维护，从 web/public 读取）
         var payloads = new List<string>(Directory.GetFiles(absOutDir));
         payloads.RemoveAll(HasJunkExtension);
         // CustomStub 按需携带：本集无场景使用 tag/组件时，zip 不含 runtime bundle
@@ -283,17 +286,41 @@ public static class LayoutEditorSetExporter
         var version = SanitizeVersion(FindSetVersion(setName));
         var zipFileName = setName + "_v" + version + "_" + DateTime.Now.ToString("yyyyMMdd") + ".zip";
         var zipAbsPath = ExportRootAbsPath() + "/" + zipFileName;
-        SetPhase("zip", "生成 zip：" + zipFileName + "（" + payloads.Count + " 个文件）…");
         var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
         foreach (var p in payloads)
-            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(setName + "/" + Path.GetFileName(p), p));
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource("levels/" + setName + "/" + Path.GetFileName(p), p));
+
+        // commonW1 bundle（问号图标库 / RandomDispenser / web 火锅等，与 common01/02 同级安装）
+        var commonW1Abs = AbsPath(BundlesRoot) + "/commonw1";
+        if (File.Exists(commonW1Abs))
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource("commonW1", commonW1Abs));
+        else
+            Debug.LogWarning("[SetExporter] 未找到 commonw1 bundle（" + commonW1Abs
+                + "），zip 不含 commonW1 —— 真机需另行安装，否则问号图标/CustomStub 道具缺失。");
+
+        // OC2LevelRuntimeLoader.dll（研发手动维护：layout-editor/web/public/ 下，
+        // 更新时先 ./BepInExPlugins/build.sh 再拷贝覆盖）
+        var loaderDllAbs = ProjectRootAbsPath() + "/layout-editor/web/public/OC2LevelRuntimeLoader.dll";
+        if (File.Exists(loaderDllAbs))
+        {
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource("OC2LevelRuntimeLoader.dll", loaderDllAbs));
+            Debug.Log("[SetExporter] 附带 OC2LevelRuntimeLoader.dll（"
+                + File.GetLastWriteTime(loaderDllAbs).ToString("yyyy-MM-dd HH:mm:ss") + "）：" + loaderDllAbs);
+        }
+        else
+        {
+            Debug.LogWarning("[SetExporter] 未找到 " + loaderDllAbs
+                + "，zip 不含运行时注入插件 —— 含随机箱等 CustomStub 玩法的关卡将无法生效。");
+        }
+
+        SetPhase("zip", "生成 zip：" + zipFileName + "（" + entries.Count + " 个文件）…");
         LayoutEditorZipWriter.WriteZip(zipAbsPath, entries);
 
         lock (_lock)
         {
             _zipFileName = zipFileName;
             _zipAbsPath = zipAbsPath;
-            _fileCount = payloads.Count;
+            _fileCount = entries.Count;
             _message = "导出完成：" + zipFileName;
         }
         AssetDatabase.Refresh();
@@ -373,5 +400,12 @@ public static class LayoutEditorSetExporter
         if (assetPath.StartsWith("Assets/", StringComparison.Ordinal))
             return dataPath + assetPath.Substring("Assets".Length);
         return assetPath;
+    }
+
+    /// <summary>工程根目录绝对路径（Assets 的父目录，正斜杠）。</summary>
+    private static string ProjectRootAbsPath()
+    {
+        var root = Path.GetDirectoryName(Application.dataPath.Replace('\\', '/'));
+        return (root ?? "").Replace('\\', '/');
     }
 }

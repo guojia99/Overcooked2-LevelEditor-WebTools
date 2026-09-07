@@ -250,9 +250,10 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   let searchQuery = "";
   /** 分数过滤：全部 / 其他（不在 0/20/…/120 档位）/ 指定分数。 */
   let scoreFilter: "all" | "other" | number = "all";
-  /** 状态多选（叠加=交集）：中间产物（score<=0）/ 搅拌物（type==="Mixed"）；都不勾 = 不限。 */
+  /** 状态多选（叠加=交集）：中间产物（score<=0）/ 搅拌物（type==="Mixed"）/ 成品（score>0）；都不勾 = 不限。 */
   let filterIntermediate = false;
   let filterMixed = false;
+  let filterFinished = false;
 
   /** 旧桥接数据无 ingredients/cookingGroups 时，用 compositionIds 反查食材名兜底。 */
   function cardRecipe(r: CustomRecipeSummary): RecipeLikeCard {
@@ -270,6 +271,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     let list = activeCategoryId ? recipes.filter((r) => r.category === activeCategoryId) : recipes;
     if (filterIntermediate) list = list.filter((r) => r.score <= 0);
     if (filterMixed) list = list.filter((r) => r.type === "Mixed");
+    if (filterFinished) list = list.filter((r) => r.score > 0);
     if (scoreFilter !== "all") {
       const tiers = [0, 20, 40, 60, 80, 100, 120];
       list = list.filter((r) =>
@@ -401,8 +403,9 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         <option value="120">120 分</option>
         <option value="other">其他分数</option>
       </select>
-      <button type="button" class="rl-chip-btn cr-state-chip${filterIntermediate ? " active" : ""}" data-state="intermediate" title="只看 0 分半成品（可与「搅拌物」叠加 = 交集）">🧩 中间产物</button>
-      <button type="button" class="rl-chip-btn cr-state-chip${filterMixed ? " active" : ""}" data-state="mixed" title="只看 Mixed 搅拌类菜谱（可与「中间产物」叠加 = 交集）">🥣 搅拌物</button>
+      <button type="button" class="rl-chip-btn cr-state-chip${filterIntermediate ? " active" : ""}" data-state="intermediate" title="只看 0 分半成品（可与其他状态叠加 = 交集）">🧩 中间产物</button>
+      <button type="button" class="rl-chip-btn cr-state-chip${filterMixed ? " active" : ""}" data-state="mixed" title="只看 Mixed 搅拌类菜谱（可与其他状态叠加 = 交集）">🥣 搅拌物</button>
+      <button type="button" class="rl-chip-btn cr-state-chip${filterFinished ? " active" : ""}" data-state="finished" title="只看可点单的成品菜（score>0，可与其他状态叠加 = 交集）">🍽 成品</button>
     </div>
     <div class="cr-toolbar cr-cat-bar" id="cr-cat-chips">${renderCatChips()}</div>
     <div id="cr-grid">${renderGrid()}</div>
@@ -446,6 +449,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       b.addEventListener("click", () => {
         if (b.dataset.state === "intermediate") filterIntermediate = !filterIntermediate;
         else if (b.dataset.state === "mixed") filterMixed = !filterMixed;
+        else if (b.dataset.state === "finished") filterFinished = !filterFinished;
         b.classList.toggle("active");
         document.getElementById("cr-grid")!.innerHTML = renderGrid();
         wireGridButtons();

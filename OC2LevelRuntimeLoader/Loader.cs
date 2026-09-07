@@ -27,7 +27,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.levelruntimeloader";
         public const string PluginName = "OC2 LevelRuntime Loader";
-        public const string PluginVersion = "1.4.0";
+        public const string PluginVersion = "1.5.1";
 
         private static ManualLogSource _log;
         private static readonly List<byte[]> PendingRaw = new List<byte[]>();
@@ -35,13 +35,70 @@ namespace OC2LevelRuntimeLoader
         private static readonly HashSet<string> LoadedBundles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private static bool _startupScanDone;
 
+        #region 日志前缀：时间戳 + 主/客机角色（联机排障区分两台机器）
+
+        private static MethodInfo _miIsInSession;
+        private static MethodInfo _miIsHost;
+        private static bool _roleProbed;
+
+        /// <summary>每行日志统一前缀：[HH:mm:ss.fff][主机|客机|单机|未知]。</summary>
+        private static string Prefix()
+        {
+            return "[" + DateTime.Now.ToString("HH:mm:ss.fff") + "][" + RoleTag() + "] ";
+        }
+
+        /// <summary>角色判定镜像 RandomCrate 的游戏标准写法：ConnectionStatus（internal，
+        /// 反射）IsInSession()/IsHost()。角色随进/出房间变化，故每次调用实时求值
+        /// （MethodInfo 缓存、仅场景级日志调用，开销可忽略）。</summary>
+        private static string RoleTag()
+        {
+            try
+            {
+                if (!_roleProbed)
+                {
+                    _roleProbed = true;
+                    var t = FindLoadedType("ConnectionStatus");
+                    if (t != null)
+                    {
+                        const BindingFlags F = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+                        _miIsInSession = t.GetMethod("IsInSession", F, null, Type.EmptyTypes, null);
+                        _miIsHost = t.GetMethod("IsHost", F, null, Type.EmptyTypes, null);
+                    }
+                }
+                if (_miIsInSession != null && _miIsHost != null)
+                {
+                    var inSession = _miIsInSession.Invoke(null, null);
+                    if (!(inSession is bool) || !(bool)inSession)
+                        return "单机";
+                    var host = _miIsHost.Invoke(null, null);
+                    return (host is bool && (bool)host) ? "主机" : "客机";
+                }
+            }
+            catch { }
+            return "未知";
+        }
+
+        private static void LogI(string message)
+        {
+            if (_log != null)
+                _log.LogInfo(Prefix() + message);
+        }
+
+        private static void LogW(string message)
+        {
+            if (_log != null)
+                _log.LogWarning(Prefix() + message);
+        }
+
+        #endregion
+
         private void Awake()
         {
             _log = Logger;
             // 引用顺序兜底：关卡程序集引用 LevelEditorStub / UnityEngine 等，
             // 绝大多数情况在类型首次使用时已就绪；异常时再从未加载的字节里找。
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
-            _log.LogInfo("v" + PluginVersion + " ready（启动扫一遍 + 每次场景加载幂等补扫 OC2DIYLevel/levels/*/runtime）");
+            LogI("v" + PluginVersion + " ready（启动环境探测 + 多候选路径扫描 + 每次场景加载幂等补扫）");
         }
 
         private void Update()
@@ -51,28 +108,156 @@ namespace OC2LevelRuntimeLoader
             _startupScanDone = true;
             try
             {
+                DumpEnvironment();
                 ScanOnce(true);
             }
             catch (Exception ex)
             {
-                _log.LogWarning("启动扫描异常: " + ex);
+                LogW("启动扫描异常: " + ex);
             }
         }
+
+        #region 环境探测（联机/装机排障：levels 到底在哪、mod 是否就位）
+
+        /// <summary>启动时打一份环境清单：路径解析结果、OC2DIYLevel 目录两级内容、
+        /// StreamingAssets 候选位置、AppDomain 里相关程序集。全部只读，异常不致命。</summary>
+        private static void DumpEnvironment()
+        {
+            try
+            {
+                LogI("[环境] PluginPath=" + Paths.PluginPath);
+                LogI("[环境] GameRootPath=" + Paths.GameRootPath);
+                string dataPath = null;
+                try { dataPath = Application.dataPath; } catch { }
+                LogI("[环境] Application.dataPath=" + (dataPath ?? "(不可用)"));
+                try { LogI("[环境] streamingAssetsPath=" + Application.streamingAssetsPath); }
+                catch { }
+
+                var pluginDir = Path.Combine(Paths.PluginPath, "OC2DIYLevel");
+                DumpDir("[环境] plugins/OC2DIYLevel", pluginDir);
+
+                if (dataPath != null)
+                {
+                    DumpDir("[环境] StreamingAssets/OC2DIYLevel",
+                        Path.Combine(Path.Combine(dataPath, "StreamingAssets"), "OC2DIYLevel"));
+                }
+
+                // 相关程序集清单：确认 OC2DIYLevel / LevelEditorStub / Stub_* 是否已加载及版本
+                var related = new List<string>();
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    var n = asm.GetName().Name;
+                    if (n.IndexOf("OC2DIY", StringComparison.OrdinalIgnoreCase) >= 0
+                        || n.IndexOf("LevelEditorStub", StringComparison.OrdinalIgnoreCase) >= 0
+                        || n.StartsWith("Stub_", StringComparison.OrdinalIgnoreCase)
+                        || n.IndexOf("CustomStub", StringComparison.OrdinalIgnoreCase) >= 0)
+                        related.Add(n + " " + asm.GetName().Version);
+                }
+                LogI("[环境] AppDomain 相关程序集（OC2DIY*/LevelEditorStub/Stub_*/CustomStub*）: "
+                    + (related.Count > 0 ? string.Join(", ", related.ToArray()) : "（无）"));
+            }
+            catch (Exception ex)
+            {
+                LogW("[环境] 环境探测异常（不影响后续扫描）: " + ex.Message);
+            }
+        }
+
+        /// <summary>列出目录本身及一级子项（目录再展开一层），每项带大小/类型。
+        /// 不存在时明确打"不存在"——这是判断 levels 装没装、装哪了的直接证据。</summary>
+        private static void DumpDir(string label, string dir)
+        {
+            if (!Directory.Exists(dir))
+            {
+                LogI(label + ": 不存在（" + dir + "）");
+                return;
+            }
+            LogI(label + ": 存在（" + dir + "），内容如下");
+            var count = 0;
+            foreach (var entry in Directory.GetFileSystemEntries(dir))
+            {
+                if (count++ >= 50)
+                {
+                    LogI(label + "  …（超过 50 项，截断）");
+                    break;
+                }
+                var name = Path.GetFileName(entry);
+                if (Directory.Exists(entry))
+                {
+                    var sub = Directory.GetFileSystemEntries(entry);
+                    var names = new List<string>();
+                    for (int i = 0; i < sub.Length && i < 20; i++)
+                        names.Add(Path.GetFileName(sub[i]));
+                    LogI(label + "  [目录] " + name + "/（" + sub.Length + " 项: "
+                        + string.Join(", ", names.ToArray()) + (sub.Length > 20 ? ", …" : "") + "）");
+                }
+                else
+                {
+                    LogI(label + "  [文件] " + name + "（" + new FileInfo(entry).Length + " 字节）");
+                }
+            }
+        }
+
+        /// <summary>levels 候选根目录（按优先级）。第一个存在的用作主扫描；
+        /// 其余存在的也会补扫（幂等去重），全部不存在则逐个打"不存在"便于定位装机问题。</summary>
+        private static List<string> GetLevelsRoots()
+        {
+            var roots = new List<string>();
+            roots.Add(Path.Combine(Path.Combine(Paths.PluginPath, "OC2DIYLevel"), "levels"));
+            try
+            {
+                var sa = Path.Combine(Application.streamingAssetsPath, "OC2DIYLevel");
+                roots.Add(Path.Combine(sa, "levels"));
+                roots.Add(sa);
+            }
+            catch { }
+            return roots;
+        }
+
+        #endregion
 
         /// <summary>幂等扫描：跳过已加载过的 runtime bundle。verbose=false（场景加载
         /// 补扫）时只在发现新内容才输出日志，避免刷屏。</summary>
         private static void ScanOnce(bool verbose)
         {
-            var levelsRoot = Path.Combine(Path.Combine(Paths.PluginPath, "OC2DIYLevel"), "levels");
-            if (!Directory.Exists(levelsRoot))
+            var roots = GetLevelsRoots();
+            string existingRoot = null;
+            foreach (var root in roots)
+            {
+                if (Directory.Exists(root))
+                {
+                    existingRoot = root;
+                    break;
+                }
+            }
+            if (existingRoot == null)
             {
                 if (verbose)
-                    _log.LogInfo("levels 目录不存在（未装 OC2DIYLevel 或无自定义关卡）: " + levelsRoot);
+                {
+                    LogW("所有 levels 候选目录均不存在（未装 OC2DIYLevel 关卡或目录被挪走），逐个列出供排查:");
+                    foreach (var root in roots)
+                        LogW("  不存在: " + root);
+                }
                 return;
             }
             if (verbose)
-                _log.LogInfo("扫描关卡集目录: " + levelsRoot);
+            {
+                LogI("扫描关卡集目录: " + existingRoot
+                    + (existingRoot == roots[0] ? "（主路径）" : "（⚠ 备选路径，主路径 " + roots[0] + " 不存在——若 OC2DIYLevel 改版挪了 levels 位置请告知研发同步本 loader）"));
+            }
 
+            ScanRoot(existingRoot, verbose);
+
+            // 备选根也存在时补扫（幂等：LoadedBundles 去重），拾漏混合安装
+            foreach (var root in roots)
+            {
+                if (root == existingRoot || !Directory.Exists(root))
+                    continue;
+                ScanRoot(root, verbose);
+            }
+        }
+
+        private static void ScanRoot(string levelsRoot, bool verbose)
+        {
             var setCount = 0;
             var withRuntime = 0;
             var newlyLoaded = 0;
@@ -84,7 +269,7 @@ namespace OC2LevelRuntimeLoader
                 if (!File.Exists(runtimeBundle))
                 {
                     if (verbose)
-                        _log.LogInfo("  [" + setName + "] 无 runtime 文件（该关卡集不含关卡代码）");
+                        LogI("  [" + setName + "] 无 runtime 文件（该关卡集不含关卡代码）");
                     continue;
                 }
                 withRuntime++;
@@ -92,12 +277,12 @@ namespace OC2LevelRuntimeLoader
                     continue;
                 try
                 {
-                    _log.LogInfo("  [" + setName + "] 加载 runtime bundle: " + runtimeBundle
+                    LogI("  [" + setName + "] 加载 runtime bundle: " + runtimeBundle
                         + "（" + new FileInfo(runtimeBundle).Length + " 字节）");
                     var bundle = AssetBundle.LoadFromFile(runtimeBundle);
                     if (bundle == null)
                     {
-                        _log.LogWarning("  [" + setName + "] runtime bundle 加载失败（LoadFromFile 返回 null，可能非 bundle 文件或版本不兼容）: " + runtimeBundle);
+                        LogW("  [" + setName + "] runtime bundle 加载失败（LoadFromFile 返回 null，可能非 bundle 文件或版本不兼容）: " + runtimeBundle);
                         continue;
                     }
                     LoadedBundles.Add(runtimeBundle);
@@ -111,34 +296,34 @@ namespace OC2LevelRuntimeLoader
                     {
                         if (!assetPath.EndsWith(".dll.bytes", StringComparison.OrdinalIgnoreCase))
                         {
-                            _log.LogInfo("  [" + setName + "]   跳过非 DLL 资产: " + assetPath);
+                            LogI("  [" + setName + "]   跳过非 DLL 资产: " + assetPath);
                             continue;
                         }
                         var asset = bundle.LoadAsset<TextAsset>(assetPath);
                         if (asset == null || asset.bytes == null || asset.bytes.Length == 0)
                         {
-                            _log.LogWarning("  [" + setName + "]   DLL 资产读取失败（非 TextAsset 或空）: " + assetPath);
+                            LogW("  [" + setName + "]   DLL 资产读取失败（非 TextAsset 或空）: " + assetPath);
                             continue;
                         }
                         dllCount++;
-                        _log.LogInfo("  [" + setName + "] 发现 " + assetPath + "（" + asset.bytes.Length + " 字节）");
+                        LogI("  [" + setName + "] 发现 " + assetPath + "（" + asset.bytes.Length + " 字节）");
                         if (LoadFromBytes(assetPath, asset.bytes))
                             newlyLoaded++;
                     }
                     if (dllCount == 0)
                     {
-                        _log.LogWarning("  [" + setName + "] runtime bundle 内没有任何 *.dll.bytes 资产（打错包或旧包？）。bundle 内全部资产: "
+                        LogW("  [" + setName + "] runtime bundle 内没有任何 *.dll.bytes 资产（打错包或旧包？）。bundle 内全部资产: "
                             + string.Join(", ", bundle.GetAllAssetNames()));
                     }
                 }
                 catch (Exception ex)
                 {
-                    _log.LogWarning("  [" + setName + "] runtime 处理异常: " + ex);
+                    LogW("  [" + setName + "] runtime 处理异常: " + ex);
                 }
             }
             // 汇总：启动扫描必打；场景补扫只在发现新程序集时打（避免每次切场景刷屏）
             if (verbose || newlyLoaded > 0)
-                _log.LogInfo("扫描汇总: 关卡集 " + setCount + " 个，含 runtime " + withRuntime + " 个，本次新加载程序集 " + newlyLoaded + " 个");
+                LogI("扫描汇总 [" + levelsRoot + "]: 关卡集 " + setCount + " 个，含 runtime " + withRuntime + " 个，本次新加载程序集 " + newlyLoaded + " 个");
         }
 
         /// <summary>返回 true 表示本次真正完成了程序集加载（重复跳过/失败返回 false）。</summary>
@@ -150,7 +335,7 @@ namespace OC2LevelRuntimeLoader
                 var name = asm.GetName().Name;
                 if (LoadedNames.Contains(name))
                 {
-                    _log.LogInfo("程序集已加载过，跳过重复加载: " + name);
+                    LogI("程序集已加载过，跳过重复加载: " + name);
                     return false;
                 }
                 LoadedNames.Add(name);
@@ -160,7 +345,7 @@ namespace OC2LevelRuntimeLoader
                 int typeCount;
                 try { typeCount = asm.GetTypes().Length; }
                 catch { typeCount = -1; }
-                _log.LogInfo("已加载关卡程序集: " + name + "（来自 " + displayName + "，类型数 "
+                LogI("已加载关卡程序集: " + name + "（来自 " + displayName + "，类型数 "
                     + (typeCount >= 0 ? typeCount.ToString() : "未知") + "）"
                     + (crateType != null ? "，CustomStub.RandomCrate ✓" : "，⚠ 未找到 CustomStub.RandomCrate（旧版或空程序集）"));
                 // CustomStub EntryPoint 引导（v1.4.0+）：新 stub 组件（TimedSwitch /
@@ -178,12 +363,12 @@ namespace OC2LevelRuntimeLoader
                         if (install != null)
                         {
                             var installed = install.Invoke(null, null);
-                            _log.LogInfo("CustomStub.EntryPoint.Install: " + ((installed is bool && (bool)installed) ? "已安装" : "跳过（已有实例）"));
+                            LogI("CustomStub.EntryPoint.Install: " + ((installed is bool && (bool)installed) ? "已安装" : "跳过（已有实例）"));
                         }
                     }
                     catch (Exception ex)
                     {
-                        _log.LogWarning("CustomStub.EntryPoint.Install 调用失败: " + ex.Message);
+                        LogW("CustomStub.EntryPoint.Install 调用失败: " + ex.Message);
                     }
                 }
                 return true;
@@ -191,10 +376,12 @@ namespace OC2LevelRuntimeLoader
             catch (Exception ex)
             {
                 PendingRaw.Add(raw);
-                _log.LogWarning("Assembly.Load 失败（保留字节供 AssemblyResolve 兜底）" + displayName + ": " + ex);
+                LogW("Assembly.Load 失败（保留字节供 AssemblyResolve 兜底）" + displayName + ": " + ex);
                 return false;
             }
         }
+
+        private static readonly HashSet<string> ReportedResolveMisses = new HashSet<string>(StringComparer.Ordinal);
 
         private Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
         {
@@ -209,7 +396,7 @@ namespace OC2LevelRuntimeLoader
                         PendingRaw.Remove(raw);
                         LoadedNames.Add(simpleName);
                         if (_log != null)
-                            _log.LogInfo("AssemblyResolve 兜底加载: " + simpleName);
+                            LogI("AssemblyResolve 兜底加载: " + simpleName);
                         return asm;
                     }
                 }
@@ -217,6 +404,15 @@ namespace OC2LevelRuntimeLoader
                 {
                     // 尝试下一个
                 }
+            }
+            // 关卡程序集相关的解析失败只报一次（缺引用会让组件静默失效，必须可见）
+            if ((simpleName.StartsWith("Stub_", StringComparison.OrdinalIgnoreCase)
+                    || simpleName.IndexOf("CustomStub", StringComparison.OrdinalIgnoreCase) >= 0
+                    || simpleName.IndexOf("LevelEditorStub", StringComparison.OrdinalIgnoreCase) >= 0)
+                && ReportedResolveMisses.Add(simpleName) && _log != null)
+            {
+                LogW("AssemblyResolve 未命中: " + simpleName
+                    + "（程序集未加载且无兜底字节——若这是关卡程序集，检查 levels/<set>/runtime 是否随包安装）");
             }
             return null;
         }
@@ -236,14 +432,23 @@ namespace OC2LevelRuntimeLoader
         {
             try
             {
+                LogI("场景加载: " + scene.name + "（mode=" + mode + "，已加载关卡程序集 " + LoadedNames.Count + " 个"
+                    + (LoadedNames.Count > 0 ? ": " + string.Join(", ", ToArray(LoadedNames)) : "") + "）");
                 ScanOnce(false);
                 HealScene(scene);
             }
             catch (Exception ex)
             {
                 if (_log != null)
-                    _log.LogWarning("场景补扫/自愈异常: " + ex.Message);
+                    LogW("场景补扫/自愈异常 [" + scene.name + "]: " + ex);
             }
+        }
+
+        private static string[] ToArray(HashSet<string> set)
+        {
+            var arr = new string[set.Count];
+            set.CopyTo(arr);
+            return arr;
         }
 
         private static void HealScene(Scene scene)
@@ -251,7 +456,7 @@ namespace OC2LevelRuntimeLoader
             var crateType = FindLoadedType("CustomStub.RandomCrate");
             if (crateType == null)
             {
-                _log.LogInfo("自愈检查 [" + scene.name + "]: AppDomain 中无 CustomStub.RandomCrate 类型"
+                LogI("自愈检查 [" + scene.name + "]: AppDomain 中无 CustomStub.RandomCrate 类型"
                     + "（无任何关卡 runtime 程序集被加载），跳过自愈");
                 return;
             }
@@ -260,7 +465,7 @@ namespace OC2LevelRuntimeLoader
             var textureField = crateType.GetField("m_questionMarkTexture");
             if (itemField == null || weightField == null)
             {
-                _log.LogWarning("自愈检查 [" + scene.name + "]: CustomStub.RandomCrate 字段缺失"
+                LogW("自愈检查 [" + scene.name + "]: CustomStub.RandomCrate 字段缺失"
                     + "（m_itemSOs=" + (itemField != null) + "，m_weights=" + (weightField != null)
                     + "），程序集版本不匹配？");
                 return;
@@ -298,7 +503,7 @@ namespace OC2LevelRuntimeLoader
                     var go = mb.gameObject;
                     if (go.GetComponent(crateType) != null)
                     {
-                        _log.LogInfo("自愈检查 [" + scene.name + "]: " + GetPath(go) + " 已有 RandomCrate 组件，跳过");
+                        LogI("自愈检查 [" + scene.name + "]: " + GetPath(go) + " 已有 RandomCrate 组件，跳过");
                         continue;
                     }
 
@@ -309,7 +514,7 @@ namespace OC2LevelRuntimeLoader
                     }
                     catch (Exception ex)
                     {
-                        _log.LogWarning("自愈检查 [" + scene.name + "]: " + GetPath(go) + " AddComponent(RandomCrate) 异常: " + ex.Message);
+                        LogW("自愈检查 [" + scene.name + "]: " + GetPath(go) + " AddComponent(RandomCrate) 异常: " + ex.Message);
                         continue;
                     }
                     // 候选列表：同物体 PseudoPrefabSOArray.pseudoPrefabSOs（数组实例直接回填）
@@ -369,15 +574,15 @@ namespace OC2LevelRuntimeLoader
                     if (textureField != null)
                         textureField.SetValue(comp, null);
                     healed++;
-                    _log.LogInfo("自愈检查 [" + scene.name + "]: 已挂载 RandomCrate → " + GetPath(go)
+                    LogI("自愈检查 [" + scene.name + "]: 已挂载 RandomCrate → " + GetPath(go)
                         + "（候选 " + candidateCount + (foundCarrier ? "" : "，⚠ 未找到 PseudoPrefabSOArray 载体")
                         + "，权重 " + string.Join(",", ToStringArray(weights)) + "）");
                 }
             }
             if (healed > 0)
-                _log.LogInfo("场景自愈: 动态挂载 RandomCrate × " + healed + "（" + scene.name + "，MonoScript 未解析或未烘焙）");
+                LogI("场景自愈: 动态挂载 RandomCrate × " + healed + "（" + scene.name + "，MonoScript 未解析或未烘焙）");
             else if (tagCount > 0)
-                _log.LogInfo("自愈检查 [" + scene.name + "]: 发现 " + tagCount + " 个 RandomCrate 载体，均无需挂载");
+                LogI("自愈检查 [" + scene.name + "]: 发现 " + tagCount + " 个 RandomCrate 载体，均无需挂载");
         }
 
         private static string[] ToStringArray(float[] values)
@@ -408,9 +613,9 @@ namespace OC2LevelRuntimeLoader
             if (_log == null)
                 return;
             if (warn)
-                _log.LogWarning(message);
+                LogW(message);
             else
-                _log.LogInfo(message);
+                LogI(message);
         }
 
         private static Type FindLoadedType(string fullName)

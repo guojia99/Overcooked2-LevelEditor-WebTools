@@ -205,7 +205,7 @@ export interface LayoutCannonStub {
 }
 
 /** 火锅灶台定时开关（开局自动循环：开 onSeconds 秒 → 关 offSeconds 秒）。
- *  字段存在且 enabled!==false = 生效；关闭期灶台不加热、锅具不烹饪、火焰熄灭。 */
+ *  仅 enabled===true 时生效（默认关闭）；开启后关闭期灶台不加热、锅具不烹饪、火焰熄灭。 */
 export interface LayoutTimedSwitchStub {
   enabled?: boolean;
   onSeconds?: number;
@@ -926,6 +926,19 @@ export interface SetExportStatus {
   error: string;
   zipFileName: string;
   fileCount: number;
+}
+
+/** CustomStub 状态（GET /api/set/stub/status?set=）。 */
+export interface SetStubStatus {
+  ok: boolean;
+  /** stub 目录 + Stub_<set>.asmdef 已就位（首次「拷贝到关卡集」完成） */
+  configured: boolean;
+  /** 副本与母本内容漂移（需「同步更新」） */
+  drifted: boolean;
+  /** noStub | missing（未编译） | stale（源码比 DLL 新） | fresh（就绪） */
+  dllState: "noStub" | "missing" | "stale" | "fresh";
+  asmName: string;
+  error?: string;
 }
 
 export interface LevelSummary {

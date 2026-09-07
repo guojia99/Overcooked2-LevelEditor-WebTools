@@ -602,7 +602,7 @@ export const PORTAL_COLORS = [  "#9ad7ff",
 ];
 
 export const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: string; color: string }[] = [
-  { match: (it) => isHotpotBurnerItem(it) && it.timedSwitch?.enabled !== false && !!it.timedSwitch, type: "定时灶台", color: "#e8704b" },
+  { match: (it) => isHotpotBurnerItem(it) && it.timedSwitch?.enabled === true, type: "定时灶台", color: "#e8704b" },
   { match: isServingStationItem, type: "上菜台", color: "#f9ab00" },
   { match: isPlateReturnItem, type: "脏盘台", color: "#7bd889" },
   { match: isGlassReturnItem, type: "脏杯台", color: "#5ec8e0" },

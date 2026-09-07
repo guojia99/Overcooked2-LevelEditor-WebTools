@@ -318,8 +318,8 @@ public class LayoutSOArrayStubDto
 [Serializable]
 public class LayoutTimedSwitchDto
 {
-    /** false = 配置保留但不生效（灶台常开）。 */
-    public bool enabled = true;
+    /** false = 配置保留但不生效（灶台常开）。默认 false：定时循环须显式勾选启用。 */
+    public bool enabled = false;
     /** 开启期秒数（最小 3）。 */
     public float onSeconds = 30f;
     /** 关闭期秒数（最小 3）。 */

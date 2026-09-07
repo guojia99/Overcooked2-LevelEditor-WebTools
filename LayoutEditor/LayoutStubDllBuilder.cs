@@ -174,6 +174,31 @@ public static class LayoutStubDllBuilder
         BuildPipeline.BuildAssetBundles(assetBundleDirectory, options, BuildTarget.StandaloneWindows);
     }
 
+    /// <summary>stub DLL 状态（web 状态端点用）：
+    /// noStub=无 stub 目录或无源码；missing=DLL 尚未编译；stale=源码比 DLL 新
+    /// （编辑后未编译完成）；fresh=DLL 就绪可 staging/导出。</summary>
+    public static string GetStageState(string setName)
+    {
+        var stubDir = LevelSetsRoot + "/" + setName + "/stub";
+        if (!Directory.Exists(stubDir) || Directory.GetFiles(stubDir, "*.cs").Length == 0)
+            return "noStub";
+        var asmName = CustomStubCopyTool.StubAssemblyName(setName);
+        var projectRoot = Path.GetDirectoryName(Application.dataPath).Replace('\\', '/');
+        var dllAbs = projectRoot + "/Library/ScriptAssemblies/" + asmName + ".dll";
+        if (!File.Exists(dllAbs))
+            return "missing";
+        var dllTime = File.GetLastWriteTime(dllAbs);
+        foreach (var f in Directory.GetFiles(stubDir))
+        {
+            var lower = f.ToLower();
+            if (!lower.EndsWith(".cs") && !lower.EndsWith(".asmdef"))
+                continue;
+            if (File.GetLastWriteTime(f) > dllTime.AddSeconds(2))
+                return "stale";
+        }
+        return "fresh";
+    }
+
     /// <summary>把 Library/ScriptAssemblies/Stub_&lt;set&gt;.dll staging 为 .dll.bytes 并赋 bundle 名。
     /// throwOnStale=true（导出流程）：DLL 缺失/过期直接抛错中断导出；false（手动）：弹窗提示。</summary>
     public static void StageSet(string setName, bool throwOnStale)

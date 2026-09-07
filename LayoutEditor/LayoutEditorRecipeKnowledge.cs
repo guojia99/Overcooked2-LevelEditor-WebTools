@@ -75,6 +75,29 @@ public static class LayoutEditorRecipeKnowledge
     ///  - 意面：意面煮，其余食材各自煎（分开成组）。
     ///  - 炸物：所有食材分别炸（分开成组）。
     ///  - 面糊/面团（含面粉）：面粉鸡蛋搅拌，其余进最终锅具；最终锅具图标作为标记组追加。 </summary>
+    /// <summary>组成展开子组累加：key "step::compId"，同一子菜谱重复出现并入同一组，
+    ///  不同子菜谱即使步骤相同也分开（顺序由 subOrder 保持）。 </summary>
+    private static void AddCompSubGroup(
+        Dictionary<string, List<string>> subGroups,
+        List<string> subOrder,
+        string step,
+        string compId,
+        string[] ings)
+    {
+        var key = step + "::" + compId;
+        List<string> lst;
+        if (!subGroups.TryGetValue(key, out lst))
+        {
+            lst = new List<string>();
+            subGroups[key] = lst;
+            subOrder.Add(key);
+        }
+        if (ings == null)
+            return;
+        foreach (var ing in ings)
+            lst.Add(ing);
+    }
+
     public static RecipeCookingGroupDto[] ComputeCookingGroups(RecipeEntryDto recipe, List<RecipeEntryDto> allRecipes)
     {
         var finalStep = recipe != null ? recipe.cookingStep : "";
@@ -171,23 +194,23 @@ public static class LayoutEditorRecipeKnowledge
                     if (byId.TryGetValue(compId, out sub) && sub != null &&
                         sub.ingredients != null && sub.ingredients.Length > 0)
                     {
-                        var subStep = IsCookStep(sub.cookingStep) ? sub.cookingStep : (sub.mixing ? "MixingBowl" : "");
+                        var subCook = IsCookStep(sub.cookingStep) ? sub.cookingStep : "";
+                        if (sub.mixing && subCook != "")
+                        {
+                            // 搅拌+烹饪的中间产物（如 搅拌+烤箱）：搅拌组 + 紧随的空标记组，
+                            // 前端 mergeFinalMarkers 合并为一格双图标（搅拌碗 + 烹饪步骤）
+                            AddCompSubGroup(subGroups, subOrder, "MixingBowl", compId, sub.ingredients);
+                            AddCompSubGroup(subGroups, subOrder, subCook, compId, new string[0]);
+                            continue;
+                        }
+                        var subStep = subCook != "" ? subCook : (sub.mixing ? "MixingBowl" : "");
                         if (subStep == "")
                         {
                             foreach (var ing in sub.ingredients)
                                 compPlain.Add(ing);
                             continue;
                         }
-                        var key = subStep + "::" + compId;
-                        List<string> lst;
-                        if (!subGroups.TryGetValue(key, out lst))
-                        {
-                            lst = new List<string>();
-                            subGroups[key] = lst;
-                            subOrder.Add(key);
-                        }
-                        foreach (var ing in sub.ingredients)
-                            lst.Add(ing);
+                        AddCompSubGroup(subGroups, subOrder, subStep, compId, sub.ingredients);
                     }
                     else
                     {
@@ -209,6 +232,13 @@ public static class LayoutEditorRecipeKnowledge
                         if (step == "MixingBowl" || step == "Mixer")
                         {
                             keepBoxes.Add(new RecipeCookingGroupDto { step = step, utensils = UtensilsForStep(step), ingredients = lst.ToArray() });
+                            continue;
+                        }
+                        // 搅拌+烹饪子菜谱的空标记组（烹饪步骤）：跟随搅拌框，
+                        // 前端 mergeFinalMarkers 并入同格双图标
+                        if (lst.Count == 0)
+                        {
+                            keepBoxes.Add(new RecipeCookingGroupDto { step = step, utensils = UtensilsForStep(step), ingredients = new string[0] });
                             continue;
                         }
                         foreach (var ing in lst)
@@ -756,6 +786,22 @@ public static class LayoutEditorRecipeKnowledge
                 CollectStats(sub, ref ings, ref cooks, seen);
                 continue;
             }
+            // 官方成品菜：按底层叶食材计数（与 Collect 的展开口径一致）
+            var official = c as PseudoPrefabSORecipe;
+            if (official != null)
+            {
+                var officialPath = AssetDatabase.GetAssetPath(official);
+                var pathKey = string.IsNullOrEmpty(officialPath) ? "" : Path.GetFileNameWithoutExtension(officialPath);
+                string ostep;
+                string[] oings;
+                if (TryGetOriginal(pathKey, out ostep, out oings) ||
+                    TryGetOriginal(official.prefabName + "_SO", out ostep, out oings) ||
+                    TryGetOriginal(official.prefabName, out ostep, out oings))
+                {
+                    ings += oings.Length;
+                    continue;
+                }
+            }
             ings++;
         }
     }
@@ -783,6 +829,26 @@ public static class LayoutEditorRecipeKnowledge
             {
                 Collect(sub, ids, seen);
                 continue;
+            }
+            // 官方成品菜（PseudoPrefabSORecipe）：展开为底层叶食材（对齐
+            //  LayoutEditorAllIngredientsFill.CollectCustomRecipeIngredients），
+            //  而不是把菜谱 id 本身当食材——否则菜谱管理里会把它错当成食材箱。
+            var official = c as PseudoPrefabSORecipe;
+            if (official != null)
+            {
+                var officialPath = AssetDatabase.GetAssetPath(official);
+                var pathKey = string.IsNullOrEmpty(officialPath) ? "" : Path.GetFileNameWithoutExtension(officialPath);
+                string ostep;
+                string[] oings;
+                if (TryGetOriginal(pathKey, out ostep, out oings) ||
+                    TryGetOriginal(official.prefabName + "_SO", out ostep, out oings) ||
+                    TryGetOriginal(official.prefabName, out ostep, out oings))
+                {
+                    foreach (var ing in oings)
+                        if (!string.IsNullOrEmpty(ing))
+                            ids.Add(ing);
+                    continue;
+                }
             }
             var path = AssetDatabase.GetAssetPath(c);
             if (!string.IsNullOrEmpty(path))

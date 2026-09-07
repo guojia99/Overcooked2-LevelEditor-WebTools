@@ -30,6 +30,7 @@ import type {
   PerPlayerConfig,
   RecipeEntry,
   SetExportStatus,
+  SetStubStatus,
   SwitchMaterialCatalog,
   SwitchMaterialOption,
   WriteBackHistoryDetail,
@@ -570,6 +571,38 @@ export async function startSetExport(setName: string): Promise<void> {
 export async function fetchSetExportStatus(): Promise<SetExportStatus> {
   const r = await fetch("/api/set/export/status");
   return readApiJson<SetExportStatus>(r);
+}
+
+// ==================== CustomStub（随机食材箱等关卡代码）web 工具 ====================
+
+/** 关卡集 CustomStub 状态（已拷贝/漂移/DLL 新鲜度）。编辑器未装 CustomStub 时抛错（501）。 */
+export async function fetchSetStubStatus(setName: string): Promise<SetStubStatus> {
+  const r = await fetch(`/api/set/stub/status?set=${encodeURIComponent(setName)}`);
+  return readApiJson<SetStubStatus>(r);
+}
+
+/** 拷贝母本到关卡集（首次）/ 同步更新（漂移时）。返回结果文案。
+ *  可能触发域重载（连接重置属预期），调用方需轮询 health 恢复。 */
+export async function stubCopyToSet(setName: string): Promise<string> {
+  const r = await fetch("/api/set/stub/copy", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName }),
+  });
+  const d = await readApiJson<{ ok?: boolean; message?: string }>(r);
+  return d.message ?? "";
+}
+
+/** 编译 Stub DLL 一键全链路：同步母本 → Unity 编译 → 域重载后自动 staging。
+ *  返回结果文案；连接重置属预期，调用方需轮询 health → status 至 dllState=fresh。 */
+export async function stubCompileDll(setName: string): Promise<string> {
+  const r = await fetch("/api/set/stub/compile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName }),
+  });
+  const d = await readApiJson<{ ok?: boolean; message?: string }>(r);
+  return d.message ?? "";
 }
 
 /** 下载导出的 zip。fileName 来自导出完成状态的 zipFileName（也可作为回退查找名）。 */

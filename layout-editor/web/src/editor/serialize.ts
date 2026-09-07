@@ -70,7 +70,7 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
   const isAirBalloonBridgeX3 = prefabIdFromPath(rest.prefabAssetPath) === "air_balloon_bridge_x3";
   if (rest.timedSwitch) {
     rest.timedSwitch = {
-      enabled: rest.timedSwitch.enabled !== false,
+      enabled: rest.timedSwitch.enabled === true,
       onSeconds: rest.timedSwitch.onSeconds ?? 30,
       offSeconds: rest.timedSwitch.offSeconds ?? 30,
       startOn: rest.timedSwitch.startOn !== false,

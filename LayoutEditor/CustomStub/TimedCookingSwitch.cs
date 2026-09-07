@@ -144,13 +144,24 @@ namespace CustomStub
 
             BindFlameAssets();
 
-            var waitOn = new WaitForSeconds(Mathf.Max(3f, m_onSeconds));
-            var waitOff = new WaitForSeconds(Mathf.Max(3f, m_offSeconds));
+            // 逐帧压相（2026-09-07 修复「startOn=false 开局逻辑已关、火焰常燃」）：
+            // 旧版只在相位边界应用一次——绑定当帧火焰粒子尚未 isPlaying（playOnAwake
+            // 迟一拍）时 Stop 空转，粒子随后自燃并烧满整个关相位；宿主点火过渡若在
+            // 绑定后触发同样漏压。改为每帧强制 region.enabled + 火焰状态，晚到的
+            // 点火/重燃下一帧即被压回。
+            float waitOn = Mathf.Max(3f, m_onSeconds);
+            float waitOff = Mathf.Max(3f, m_offSeconds);
+            float phaseLeft = m_phaseOn ? waitOn : waitOff;
             while (true)
             {
                 ApplyRegionState();
-                yield return m_phaseOn ? waitOn : waitOff;
-                m_phaseOn = !m_phaseOn;
+                phaseLeft -= Time.deltaTime;
+                if (phaseLeft <= 0f)
+                {
+                    m_phaseOn = !m_phaseOn;
+                    phaseLeft = m_phaseOn ? waitOn : waitOff;
+                }
+                yield return null;
             }
         }
 
@@ -272,7 +283,8 @@ namespace CustomStub
                     else if (!on && m_glow.isPlaying)
                         m_glow.Stop();
                 }
-                // 材质发光：关相位 alpha 置 0，开相位恢复缓存原色
+                // 材质发光：关相位清零（黑+alpha0；仅置 alpha 在忽略 alpha 的
+                // 发光 shader 下炉体仍然亮着），开相位恢复缓存原色
                 // （宿主渐变版为逐帧插值；此处开关即达，视觉语义一致）。
                 if (m_burnerMats != null && m_emissiveBase != null)
                 {
@@ -280,9 +292,9 @@ namespace CustomStub
                     {
                         if (m_burnerMats[j] == null)
                             continue;
-                        Color c = m_emissiveBase[j];
-                        m_burnerMats[j].SetColor(BurnerEmissParam,
-                            on ? c : new Color(c.r, c.g, c.b, 0f));
+                        Color c = on ? m_emissiveBase[j] : new Color(0f, 0f, 0f, 0f);
+                        if (m_burnerMats[j].GetColor(BurnerEmissParam) != c)
+                            m_burnerMats[j].SetColor(BurnerEmissParam, c);
                     }
                 }
             }
