@@ -9,7 +9,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 public static class LayoutEditorLevelAdminApi
 {
-    private const string LevelSetsRoot = "Assets/LevelSets";
+    internal const string LevelSetsRoot = "Assets/LevelSets";
     private const string TemplateScene = "Assets/Template/s_template.unity";
     private const string TemplateConfig1p = "Assets/Template/config_1p.asset";
     private const string TemplateConfig2p = "Assets/Template/config_2p.asset";
@@ -1445,7 +1445,7 @@ public static class LayoutEditorLevelAdminApi
         return idx >= 0 ? assetPath.Substring(0, idx) : assetPath;
     }
 
-    private static string SanitizeName(string name)
+    internal static string SanitizeName(string name)
     {
         if (string.IsNullOrEmpty(name))
             return "";
@@ -1725,6 +1725,12 @@ public static class LayoutEditorLevelAdminApi
 
     private const string CustomRecipesDir = "custom_recipes";
     private const string CommonCustomRecipesDir = "Assets/common01/food/CustomRecipes";
+    /// <summary>Burger大全共享库（Assets/commonW2，打包为 commonw2 bundle）：
+    ///  独立于关卡集的汉堡自定义菜谱，在所有关卡集的菜谱管理页以「burger」分类并入，
+    ///  关卡选用后由 EnsureWebDependencies 注入 commonW2 bundle 依赖。</summary>
+    public const string CommonW2RecipesDir = "Assets/commonW2/custom_recipes";
+    /// <summary>Burger大全分类 id（commonW2 内菜谱的固定 category）。</summary>
+    public const string BurgerCategoryId = "burger";
     private const int ProjectUidPrefix = 1000000;
 
     // ---------- 文件系统扫描（不依赖 AssetDatabase 索引） ----------
@@ -1888,6 +1894,10 @@ public static class LayoutEditorLevelAdminApi
             }
         }
 
+        // Burger大全（commonW2 共享库）作为固定分类并入，前端 chips/新建表单直接使用。
+        if (AssetFolderExists(CommonW2RecipesDir) && !catDtos.Exists(c => c.id == BurgerCategoryId))
+            catDtos.Add(new CustomRecipeCategoryDto { id = BurgerCategoryId, zh = "🍔 Burger大全", en = "Burger" });
+
         return new CustomRecipeConfigDto
         {
             uidPrefix = config.uidPrefix,
@@ -1902,6 +1912,8 @@ public static class LayoutEditorLevelAdminApi
         assets.AddRange(ScanCustomRecipeAssets(LevelSetsRoot));
         if (AssetFolderExists(CommonCustomRecipesDir))
             assets.AddRange(ScanCustomRecipeAssets(CommonCustomRecipesDir));
+        if (AssetFolderExists(CommonW2RecipesDir))
+            assets.AddRange(ScanCustomRecipeAssets(CommonW2RecipesDir));
         foreach (var asset in assets)
         {
             var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
@@ -1917,13 +1929,21 @@ public static class LayoutEditorLevelAdminApi
         if (string.IsNullOrEmpty(setName))
             return list.ToArray();
 
-        var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
-        if (!AssetFolderExists(recipesDir))
+        // 扫描根：本关卡集 custom_recipes + commonW2 Burger大全共享库（后者对所有关卡集可见）。
+        var scanRoots = new List<string>();
+        var setRecipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
+        if (AssetFolderExists(setRecipesDir))
+            scanRoots.Add(setRecipesDir);
+        if (AssetFolderExists(CommonW2RecipesDir))
+            scanRoots.Add(CommonW2RecipesDir);
+        if (scanRoots.Count == 0)
             return list.ToArray();
 
         var namesDict = LoadCustomRecipeNames(setName);
+        foreach (var kv in LoadCustomRecipeNamesFromDir(CommonW2RecipesDir))
+            namesDict[kv.Key] = kv.Value;
 
-        // 全部候选条目（本关卡集 + common01 官方 CustomRecipes），
+        // 全部候选条目（本关卡集 + common01 官方 CustomRecipes + commonW2 Burger大全），
         // 用于把组成里的子菜谱 id 解析为烹饪步骤与叶食材。
         var allEntries = BuildCustomRecipeEntryDtos(setName);
         var entryById = new Dictionary<string, RecipeEntryDto>(StringComparer.Ordinal);
@@ -1933,6 +1953,7 @@ public static class LayoutEditorLevelAdminApi
                 entryById[e.id] = e;
         }
 
+        foreach (var recipesDir in scanRoots)
         foreach (var asset in ScanCustomRecipeAssets(recipesDir))
         {
             var path = asset.assetPath;
@@ -1998,7 +2019,8 @@ public static class LayoutEditorLevelAdminApi
             string nameZh = id;
             string nameEn = id;
             NameRow nr;
-            if (namesDict.TryGetValue(id, out nr))
+            // names.json 以 recipeName 为 id；兼容按文件名命中的历史数据。
+            if ((so.recipeName != null && namesDict.TryGetValue(so.recipeName, out nr)) || namesDict.TryGetValue(id, out nr))
             {
                 nameZh = nr.Zh;
                 nameEn = nr.En;
@@ -2020,6 +2042,11 @@ public static class LayoutEditorLevelAdminApi
                 score = so.score,
                 category = category,
                 type = so.type.ToString(),
+                optionalKind = so is CustomRecipeOptionalBurgerSO ? "burger"
+                    : so is CustomRecipeOptionalPizzaSO ? "pizza" : "",
+                isFinishedBurger = !(so is CustomRecipeOptionalBurgerSO)
+                    && !(so is CustomRecipeOptionalPizzaSO)
+                    && LayoutEditorBurgerApi.IsFinishedBurgerRecipe(so),
                 compositionIds = compIds.ToArray(),
                 ingredients = entry != null ? entry.ingredients : new string[0],
                 cookingGroups = entry != null ? LayoutEditorRecipeKnowledge.ComputeCookingGroups(entry, allEntries) : new RecipeCookingGroupDto[0],
@@ -2082,6 +2109,9 @@ public static class LayoutEditorLevelAdminApi
             folders.Add(recipesDir);
         if (AssetFolderExists(CommonCustomRecipesDir))
             folders.Add(CommonCustomRecipesDir);
+        // commonW2 Burger大全：子菜谱（煎肉饼/炸虾等中间产物）参与工序分组解析。
+        if (AssetFolderExists(CommonW2RecipesDir))
+            folders.Add(CommonW2RecipesDir);
 
         foreach (var folder in folders)
         {
@@ -2127,8 +2157,43 @@ public static class LayoutEditorLevelAdminApi
 
     private static Dictionary<string, NameRow> LoadCustomRecipeNames(string setName)
     {
+        return LoadCustomRecipeNamesFromDir(LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir);
+    }
+
+    /// <summary>指定 custom_recipes 库的 names.json（recipeName → 中文名），供其它模块展示用。</summary>
+    internal static Dictionary<string, string> LoadCustomRecipeZhMap(string recipesDir)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var kv in LoadCustomRecipeNamesFromDir(recipesDir))
+            map[kv.Key] = kv.Value.Zh;
+        return map;
+    }
+
+    /// <summary>names.json 中英名（recipeName / 文件名 id）。</summary>
+    internal static bool TryGetCustomRecipeDisplayName(string recipesDir, string key, out string zh, out string en)
+    {
+        zh = key ?? "";
+        en = key ?? "";
+        if (string.IsNullOrEmpty(recipesDir) || string.IsNullOrEmpty(key))
+            return false;
+        NameRow row;
+        var dict = LoadCustomRecipeNamesFromDir(recipesDir);
+        if (dict.TryGetValue(key, out row))
+        {
+            zh = string.IsNullOrEmpty(row.Zh) ? key : row.Zh;
+            en = string.IsNullOrEmpty(row.En) ? key : row.En;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>按 custom_recipes 目录读取 names.json（id → 中英名），目录不存在时返回空表。</summary>
+    private static Dictionary<string, NameRow> LoadCustomRecipeNamesFromDir(string recipesDir)
+    {
         var dict = new Dictionary<string, NameRow>(StringComparer.Ordinal);
-        var namesPath = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir + "/names.json";
+        if (string.IsNullOrEmpty(recipesDir))
+            return dict;
+        var namesPath = recipesDir + "/names.json";
         var abs = AbsPath(namesPath);
         if (!File.Exists(abs))
             return dict;
@@ -2274,6 +2339,10 @@ public static class LayoutEditorLevelAdminApi
             "Assets/common01/food/CustomRecipes",
         };
 
+        // commonW2 Burger大全：中间产物模型（煎鸡肉饼/炸虾饼等 prefab）可被复用。
+        if (AssetFolderExists(CommonW2RecipesDir))
+            modelFolders.Add(CommonW2RecipesDir);
+
         if (!string.IsNullOrEmpty(setName))
         {
             var setRecipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
@@ -2330,20 +2399,41 @@ public static class LayoutEditorLevelAdminApi
         var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(recipeAssetPath);
         if (so == null)
             return "未找到菜谱资源。";
-        if (so.icon == null)
-            return "该菜谱没有图标。";
-        var iconPath = AssetDatabase.GetAssetPath(so.icon);
-        if (string.IsNullOrEmpty(iconPath))
-            return "无法解析图标路径。";
-        absPath = AbsPath(iconPath);
-        var ext = Path.GetExtension(absPath).ToLowerInvariant();
-        switch (ext)
+        if (so.icon != null)
         {
-            case ".jpg":
-            case ".jpeg": contentType = "image/jpeg"; break;
-            default: contentType = "image/png"; break;
+            var iconPath = AssetDatabase.GetAssetPath(so.icon);
+            if (!string.IsNullOrEmpty(iconPath))
+            {
+                absPath = AbsPath(iconPath);
+                var ext = Path.GetExtension(absPath).ToLowerInvariant();
+                switch (ext)
+                {
+                    case ".jpg":
+                    case ".jpeg": contentType = "image/jpeg"; break;
+                    default: contentType = "image/png"; break;
+                }
+                return null;
+            }
         }
-        return null;
+
+        // 回退：icon 引用丢失时仍按 models/<id>/<id>_Icon.png 约定找文件。
+        var recipeId = SanitizeName(Path.GetFileNameWithoutExtension(recipeAssetPath));
+        var modelsDir = RecipeModelsDir(recipeAssetPath);
+        var pngPath = modelsDir + "/" + recipeId + "_Icon.png";
+        var jpgPath = modelsDir + "/" + recipeId + "_Icon.jpg";
+        if (File.Exists(AbsPath(pngPath)))
+        {
+            absPath = AbsPath(pngPath);
+            contentType = "image/png";
+            return null;
+        }
+        if (File.Exists(AbsPath(jpgPath)))
+        {
+            absPath = AbsPath(jpgPath);
+            contentType = "image/jpeg";
+            return null;
+        }
+        return "该菜谱没有图标。";
     }
 
     /// <summary>菜谱专属 models 子目录：<分类>/models/<recipeId>/（每个菜谱一个文件夹，模型文件互不干扰）。</summary>
@@ -2369,6 +2459,10 @@ public static class LayoutEditorLevelAdminApi
         }
         if (!AssetFolderExists(dir))
             AssetDatabase.CreateFolder(parent, Path.GetFileName(dir));
+        var absDir = AbsPath(dir);
+        if (!Directory.Exists(absDir))
+            Directory.CreateDirectory(absDir);
+        AssetDatabase.Refresh();
         return dir;
     }
 
@@ -2763,6 +2857,15 @@ public static class LayoutEditorLevelAdminApi
         if (!GloballyUniqueRecipeName(recipeName))
             return "菜谱名称「" + recipeName + "」已被其他关卡集使用。";
 
+        var category = SanitizeName(dto.category ?? "Uncategorized");
+        if (string.IsNullOrEmpty(category))
+            category = "Uncategorized";
+
+        // 「burger」是 commonW2 Burger大全共享库的保留分类：共享库只读，
+        // 新建汉堡请走汉堡工作台（产出归属当前关卡集）。
+        if (string.Equals(category, BurgerCategoryId, StringComparison.Ordinal))
+            return "「burger」为 Burger大全共享库保留分类，不可作为本关卡集的新建目标；新建汉堡请使用汉堡工作台。";
+
         var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
         if (!AssetFolderExists(recipesDir))
             return "请先访问自定义菜谱页面以初始化配置。";
@@ -2771,10 +2874,6 @@ public static class LayoutEditorLevelAdminApi
         var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
         if (config == null)
             return "配置文件丢失，请重新进入自定义菜谱页面。";
-
-        var category = SanitizeName(dto.category ?? "Uncategorized");
-        if (string.IsNullOrEmpty(category))
-            category = "Uncategorized";
 
         var categoryDir = recipesDir + "/" + category;
         if (!AssetFolderExists(categoryDir))
@@ -2870,7 +2969,7 @@ public static class LayoutEditorLevelAdminApi
             dto.modelPivotX, dto.modelPivotY, dto.modelPivotZ);
         ApplyModelTransform(so);
 
-        AddCustomRecipeName(setName, recipeName, dto.nameZh, dto.nameEn);
+        AddCustomRecipeName(CustomRecipeNamesPath(null, assetPath), recipeName, dto.nameZh, dto.nameEn);
 
         return null;
     }
@@ -2952,13 +3051,16 @@ public static class LayoutEditorLevelAdminApi
             so.modelSO = null;
         }
 
-        so.optionalSOs = new ScriptableObject[0];
+        // 组装定义子类（OptionalBurger/OptionalPizza）的 optionalSOs 是核心数据，
+        // 通用编辑表单不展示该字段，此处不能清空（由汉堡工作台等专用入口管理）。
+        if (!(so is CustomRecipeOptionalBurgerSO) && !(so is CustomRecipeOptionalPizzaSO))
+            so.optionalSOs = new ScriptableObject[0];
 
         EditorUtility.SetDirty(so);
 
         var setName = SetNameFromPath(dto.assetPath);
         var id = Path.GetFileNameWithoutExtension(dto.assetPath);
-        UpdateCustomRecipeName(setName, id, dto.nameZh, dto.nameEn);
+        UpdateCustomRecipeName(CustomRecipeNamesPath(setName, dto.assetPath), id, dto.nameZh, dto.nameEn);
 
         AssetDatabase.SaveAssets();
         ApplyModelTransform(so);
@@ -2987,7 +3089,7 @@ public static class LayoutEditorLevelAdminApi
         if (AssetFolderExists(modelsDir))
             AssetDatabase.DeleteAsset(modelsDir);
 
-        RemoveCustomRecipeName(setName, id);
+        RemoveCustomRecipeName(CustomRecipeNamesPath(setName, assetPath), id);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         return null;
@@ -3022,12 +3124,15 @@ public static class LayoutEditorLevelAdminApi
         }
 
         File.WriteAllBytes(AbsPath(imgAssetPath), bytes);
-        AssetDatabase.Refresh();
+        AssetDatabase.ImportAsset(imgAssetPath, ImportAssetOptions.ForceUpdate);
 
         var texImporter = AssetImporter.GetAtPath(imgAssetPath) as TextureImporter;
         if (texImporter != null)
         {
             texImporter.textureType = TextureImporterType.Sprite;
+            texImporter.spriteImportMode = SpriteImportMode.Single;
+            texImporter.sRGBTexture = true;
+            texImporter.alphaIsTransparency = true;
             texImporter.SaveAndReimport();
         }
 
@@ -3048,7 +3153,38 @@ public static class LayoutEditorLevelAdminApi
 
         EditorUtility.SetDirty(so);
         AssetDatabase.SaveAssets();
+
         return null;
+    }
+
+    /// <summary>若 models 目录已有 _Icon 图但 SO 未引用，尝试重新导入并写回 icon 字段。</summary>
+    public static void TryRelinkRecipeIconFromDisk(string recipeAssetPath)
+    {
+        if (string.IsNullOrEmpty(recipeAssetPath))
+            return;
+        var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(recipeAssetPath);
+        if (so == null || so.icon != null)
+            return;
+        var recipeId = SanitizeName(Path.GetFileNameWithoutExtension(recipeAssetPath));
+        var pngPath = RecipeModelsDir(recipeAssetPath) + "/" + recipeId + "_Icon.png";
+        if (!File.Exists(AbsPath(pngPath)))
+            return;
+        var importer = AssetImporter.GetAtPath(pngPath) as TextureImporter;
+        if (importer != null)
+        {
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.sRGBTexture = true;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(pngPath);
+        if (sprite == null)
+            return;
+        Undo.RecordObject(so, "Relink Recipe Icon");
+        so.icon = sprite;
+        so.iconSO = null;
+        EditorUtility.SetDirty(so);
     }
 
     public static CustomRecipeUploadResultDto UploadCustomRecipeModel(CustomRecipeUploadDto dto)
@@ -3295,6 +3431,9 @@ public static class LayoutEditorLevelAdminApi
         var safeId = SanitizeName(dto.id);
         if (string.IsNullOrEmpty(safeId))
             return "分类ID只能包含字母数字和下划线。";
+        // 「burger」为 commonW2 Burger大全共享库保留分类 id，关卡集不可占用。
+        if (string.Equals(safeId, BurgerCategoryId, StringComparison.Ordinal))
+            return "「burger」为 Burger大全共享库保留分类 id，请换一个（如 burgers、hamburger）。";
 
         var recipesDir = LevelSetsRoot + "/" + dto.setName + "/" + CustomRecipesDir;
         if (!AssetFolderExists(recipesDir))
@@ -3331,6 +3470,9 @@ public static class LayoutEditorLevelAdminApi
         var newSafe = SanitizeName(dto.newId);
         if (string.IsNullOrEmpty(newSafe))
             return "新分类ID非法。";
+        // 「burger」为 commonW2 Burger大全共享库保留分类 id，关卡集不可占用。
+        if (string.Equals(newSafe, BurgerCategoryId, StringComparison.Ordinal) && dto.oldId != BurgerCategoryId)
+            return "「burger」为 Burger大全共享库保留分类 id，请换一个（如 burgers、hamburger）。";
 
         if (dto.oldId == newSafe)
         {
@@ -3595,7 +3737,7 @@ public static class LayoutEditorLevelAdminApi
         return 0;
     }
 
-    private static bool GloballyUniqueRecipeName(string recipeName)
+    internal static bool GloballyUniqueRecipeName(string recipeName)
     {
         if (string.IsNullOrEmpty(recipeName))
             return false;
@@ -3606,15 +3748,26 @@ public static class LayoutEditorLevelAdminApi
             if (string.Equals(id, recipeName, StringComparison.Ordinal))
                 return false;
         }
+        if (AssetFolderExists(CommonW2RecipesDir))
+        {
+            foreach (var asset in ScanCustomRecipeAssets(CommonW2RecipesDir))
+            {
+                var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+                if (string.Equals(id, recipeName, StringComparison.Ordinal))
+                    return false;
+            }
+        }
         return true;
     }
 
-    private static bool IsUidConflicting(int uid)
+    internal static bool IsUidConflicting(int uid)
     {
         var assets = new List<AssetRef>();
         assets.AddRange(ScanCustomRecipeAssets(LevelSetsRoot));
         if (AssetFolderExists(CommonCustomRecipesDir))
             assets.AddRange(ScanCustomRecipeAssets(CommonCustomRecipesDir));
+        if (AssetFolderExists(CommonW2RecipesDir))
+            assets.AddRange(ScanCustomRecipeAssets(CommonW2RecipesDir));
         foreach (var asset in assets)
         {
             var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
@@ -3626,7 +3779,7 @@ public static class LayoutEditorLevelAdminApi
 
     /// <summary>PseudoPrefabSO 的查找目录（食材/烹饪步骤/装盘容器）。
     ///  含通用内容源库（Assets/common03，游戏 DLC 内容，直接打包为 common03 bundle）。</summary>
-    private static readonly string[] PseudoPrefabSearchFolders =
+    internal static readonly string[] PseudoPrefabSearchFolders =
     {
         "Assets/common01/food/Ingredients",
         "Assets/common02/food/Ingredients",
@@ -3658,12 +3811,14 @@ public static class LayoutEditorLevelAdminApi
         return folders;
     }
 
-    /// <summary>全项目自定义菜谱查找目录（官方 + 全部关卡集）。</summary>
+    /// <summary>全项目自定义菜谱查找目录（官方 + commonW2 Burger大全 + 全部关卡集）。</summary>
     private static List<string> CustomRecipeSearchFolders()
     {
         var folders = new List<string>();
         if (AssetFolderExists(CommonCustomRecipesDir))
             folders.Add(CommonCustomRecipesDir);
+        if (AssetFolderExists(CommonW2RecipesDir))
+            folders.Add(CommonW2RecipesDir);
         var setsRoot = LevelSetsRoot;
         if (Directory.Exists(AbsPath(setsRoot)))
         {
@@ -3695,14 +3850,14 @@ public static class LayoutEditorLevelAdminApi
     }
 
     /// <summary>官方菜谱（PseudoPrefabSORecipe）查找目录：自定义组装菜可直接引用官方成品菜。</summary>
-    private static readonly string[] OfficialRecipeSearchFolders =
+    internal static readonly string[] OfficialRecipeSearchFolders =
     {
         "Assets/common01/food/Recipes",
         "Assets/common02/food/Recipes",
         "Assets/common03/food/Recipes",
     };
 
-    private static ScriptableObject FindPseudoPrefabOrCustomRecipe(string id)
+    internal static ScriptableObject FindPseudoPrefabOrCustomRecipe(string id)
     {
         if (string.IsNullOrEmpty(id))
             return null;
@@ -3719,7 +3874,7 @@ public static class LayoutEditorLevelAdminApi
         return FindAssetByIdInFolders(id, CustomRecipeScriptGuid, CustomRecipeSearchFolders());
     }
 
-    private static PseudoPrefabSO FindPseudoPrefabById(string id)
+    internal static PseudoPrefabSO FindPseudoPrefabById(string id)
     {
         if (string.IsNullOrEmpty(id))
             return null;
@@ -3773,9 +3928,32 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
-    private static void AddCustomRecipeName(string setName, string id, string zh, string en)
+    /// <summary>定位 names.json：优先按菜谱资产路径向上找 custom_recipes 目录
+    ///  （兼容 commonW2 Burger大全等非 LevelSets 库），否则按关卡集名拼装。</summary>
+    internal static string CustomRecipeNamesPath(string setName, string recipeAssetPath)
     {
-        var namesPath = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir + "/names.json";
+        if (!string.IsNullOrEmpty(recipeAssetPath))
+        {
+            var dir = Path.GetDirectoryName(recipeAssetPath.Replace('\\', '/'));
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (string.Equals(Path.GetFileName(dir), CustomRecipesDir, StringComparison.OrdinalIgnoreCase))
+                    return dir + "/names.json";
+                var parent = Path.GetDirectoryName(dir);
+                if (parent == dir)
+                    break;
+                dir = parent;
+            }
+        }
+        return string.IsNullOrEmpty(setName)
+            ? null
+            : LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir + "/names.json";
+    }
+
+    internal static void AddCustomRecipeName(string namesPath, string id, string zh, string en)
+    {
+        if (string.IsNullOrEmpty(namesPath))
+            return;
         var abs = AbsPath(namesPath);
         CustomNamesDoc doc;
         try
@@ -3806,14 +3984,15 @@ public static class LayoutEditorLevelAdminApi
         AssetDatabase.Refresh();
     }
 
-    private static void UpdateCustomRecipeName(string setName, string id, string zh, string en)
+    private static void UpdateCustomRecipeName(string namesPath, string id, string zh, string en)
     {
-        AddCustomRecipeName(setName, id, zh, en);
+        AddCustomRecipeName(namesPath, id, zh, en);
     }
 
-    private static void RemoveCustomRecipeName(string setName, string id)
+    private static void RemoveCustomRecipeName(string namesPath, string id)
     {
-        var namesPath = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir + "/names.json";
+        if (string.IsNullOrEmpty(namesPath))
+            return;
         var abs = AbsPath(namesPath);
         if (!File.Exists(abs))
             return;

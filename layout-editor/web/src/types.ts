@@ -1024,6 +1024,10 @@ export interface CustomRecipeSummary {
   score: number;
   category: string;
   type: string;
+  /** 组装定义子类标记："burger" / "pizza" / ""（普通菜谱）。 */
+  optionalKind?: string;
+  /** 成品汉堡（Composite + 组成含面包），在汉堡工作台编辑。 */
+  isFinishedBurger?: boolean;
   /** Direct composition ids (ingredient ids and/or sub-recipe ids). */
   compositionIds: string[];
   /** Leaf ingredients, recursively expanded through sub-recipes. */
@@ -1298,4 +1302,105 @@ export interface WriteBackHistoryDetail {
   /** 完整布局文档是否存在（旧记录只有轻量语义快照，不可恢复到画布）。 */
   canRestoreBefore: boolean;
   canRestoreAfter: boolean;
+}
+
+// ---------- Burger大全 组装工作台（commonW2 共享汉堡库） ----------
+
+export interface BurgerLayer {
+  guid: string;
+  id: string;
+  nameZh: string;
+  /** "custom"（自定义中间产物）/ "official-recipe" / "ingredient" */
+  kind: string;
+  /** 堆叠模型 PseudoPrefabSO 文件名（"" = 未绑定，运行时回退官方 lookup）。 */
+  modelId: string;
+  modelAssetPath: string;
+  hasDirectModel: boolean;
+}
+
+export interface BurgerDefinition {
+  assetPath: string;
+  guid: string;
+  id: string;
+  nameZh: string;
+  bunId: string;
+  /** ingredientContainerCapacity：单个汉堡最多夹心层数。 */
+  capacity: number;
+  /** optionalSOs（含重复，重复 = 同种允许叠多层）。 */
+  layers: BurgerLayer[];
+  /** true = 关卡集本地副本，false = commonW2 共享定义。 */
+  isLocal: boolean;
+}
+
+export interface BurgerCandidate {
+  guid: string;
+  id: string;
+  nameZh: string;
+  nameEn: string;
+  /** "custom" / "official-recipe" / "ingredient" */
+  kind: string;
+  assetPath: string;
+}
+
+export interface BurgerDefinitionList {
+  definitions: BurgerDefinition[];
+  candidates: BurgerCandidate[];
+  /** 汉堡面包（各 DLC ChoppedBun 等）。 */
+  buns: BurgerCandidate[];
+  models: BurgerModel[];
+  products: BurgerProduct[];
+}
+
+export interface BurgerCreateRequest {
+  /** 目标关卡集（产出归属：该关卡集的普通自定义菜谱）。 */
+  setName: string;
+  /** 关卡集内分类 id（空 = burger_local）。 */
+  category?: string;
+  /** 参考的共享组装定义（首次使用时复制为本集本地副本）。 */
+  definitionAssetPath: string;
+  recipeName: string;
+  nameZh: string;
+  nameEn: string;
+  score: number;
+  layerIds: string[];
+  iconBase64?: string;
+  /** 非空 = 更新已有成品汉堡。 */
+  updateAssetPath?: string;
+}
+
+export interface BurgerCreateResult {
+  ok: boolean;
+  error?: string;
+  assetPath?: string;
+  guid?: string;
+  uID?: number;
+  addedToDefinition?: string[];
+  updated?: boolean;
+  iconError?: string;
+}
+
+export interface BurgerDefinitionUpdate {
+  assetPath: string;
+  capacity?: number;
+  addLayerIds?: string[];
+  removeLayerGuids?: string[];
+  modelBindings?: { layerGuid: string; modelId: string }[];
+}
+
+export interface BurgerModel {
+  id: string;
+  assetPath: string;
+  prefabName: string;
+  bundleName: string;
+}
+
+export interface BurgerProduct {
+  guid: string;
+  id: string;
+  assetPath?: string;
+  recipeName: string;
+  nameZh: string;
+  score: number;
+  /** compositionSOs 的资产 id 列表（含面包底）。 */
+  compositionIds: string[];
 }

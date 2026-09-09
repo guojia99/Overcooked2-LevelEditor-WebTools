@@ -1,6 +1,6 @@
 all: run
 
-ZIP_NAME := OC2-Web-v0.7.2.zip
+ZIP_NAME := OC2-Web-v0.7.3.zip
 
 build:
 	rm -f $(ZIP_NAME)
@@ -32,6 +32,8 @@ run:
 	cp -r ../Overcooked2-LevelEditor/layout-editor .
 	cp -r ../Overcooked2-LevelEditor/Assets/commonW1 .
 	cp -r ../Overcooked2-LevelEditor/Assets/commonW1.meta .
+	cp -r ../Overcooked2-LevelEditor/Assets/commonW2 .
+	cp -r ../Overcooked2-LevelEditor/Assets/commonW2.meta .
 	cp -r ../Overcooked2-LevelEditor/Assets/Editor/LayoutEditor .
 
 	rm -rf layout-editor/web/node_modules/

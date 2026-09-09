@@ -108,7 +108,7 @@ export async function loadScene(assetPath: string) {
     window.history.replaceState(
       null,
       "",
-      `${location.pathname}?scene=${encodeURIComponent(assetPath)}${location.hash}`
+      `/layout?scene=${encodeURIComponent(assetPath)}`
     );
     const doc = await fetchLayout(assetPath);
     const { dupIds, dedupedStacks } = await applyLayoutDocument(doc);

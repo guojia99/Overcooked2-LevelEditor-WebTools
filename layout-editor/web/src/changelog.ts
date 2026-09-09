@@ -179,24 +179,5 @@ export async function renderChangelogView(app: HTMLElement): Promise<void> {
       }
     </div>`;
 
-  wireNav((target) => {
-    if (target === "layout") {
-      location.hash = "#/layout";
-      location.reload();
-    } else if (target === "manage") {
-      location.hash = "#/manage";
-      location.reload();
-    } else if (target === "dependencies") {
-      location.hash = "#/dependencies";
-      location.reload();
-    } else if (target === "custom-recipes") {
-      location.hash = "#/custom-recipes";
-      location.reload();
-    } else if (target === "recipes") {
-      location.href = "/recipes";
-    } else if (target === "guide") {
-      location.hash = "#/guide";
-      location.reload();
-    }
-  });
+  wireNav();
 }

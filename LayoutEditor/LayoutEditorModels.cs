@@ -790,6 +790,8 @@ public class RecipeEntryDto
     public bool intermediate;
     /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（卡片显示双步骤）。 */
     public bool mixing;
+    /** 组装定义：burger | pizza（CustomRecipeOptional*SO）。 */
+    public string optionalKind;
     /** Ingredient cooking groups for the recipe-list UI (recipe book grouping rules):
      *  raw group first (step = ""), then per-step groups, optional final-step marker last. */
     public RecipeCookingGroupDto[] cookingGroups;
@@ -930,6 +932,21 @@ public class OptionalPresetsDto
     /** Hotdog 一键填充（按 DLC 两套：可选菜谱+酱料+水煮香肠）。 */
     public string[] hotdogFillGuidsDlc08;
     public string[] hotdogFillGuidsDlc11;
+}
+
+[Serializable]
+public class BurgerOptionalComputeRequestDto
+{
+    public string levelInfoAssetPath;
+    public string[] recipeGuids;
+}
+
+[Serializable]
+public class BurgerOptionalComputeResultDto
+{
+    public string[] guids;
+    /** 与 guids 对应的回显元数据（id / kind / group），供 Optional tab 渲染徽章与名称。 */
+    public LevelOptionalItemDto[] items;
 }
 
 // ---------- 通用内容菜谱库（内置菜谱管理，已废弃：改为 common03 直接引用 + 静态 JSON） ----------
@@ -1400,6 +1417,10 @@ public class CustomRecipeSummaryDto
     public int score;
     public string category;
     public string type;
+    /** 组装定义子类标记："burger" / "pizza" / ""（普通菜谱）。 */
+    public string optionalKind;
+    /** 成品汉堡（Composite + 组成含面包），在汉堡工作台编辑。 */
+    public bool isFinishedBurger;
     /** Direct composition ids (ingredient ids and/or sub-recipe ids). */
     public string[] compositionIds;
     /** Leaf ingredients, recursively expanded through sub-recipes. */

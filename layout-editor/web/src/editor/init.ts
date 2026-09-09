@@ -68,6 +68,7 @@ import {
   hideBusy
 } from "../busy";
 import { wireNav } from "../nav";
+import { navigateTo } from "../route";
 import { prefabIdFromPath } from "./coords";
 import type { Catalog, LevelDetail } from "../types";
 
@@ -419,24 +420,8 @@ export async function init() {
   wireNav((target) => {
     if (target === "manage") confirmLeaveIfDirty(() => goManage());
     else if (target === "dependencies") confirmLeaveIfDirty(() => goDependencies());
-    else if (target === "custom-recipes") {
-      location.hash = "#/custom-recipes";
-      location.reload();
-    } else if (target === "recipes") {
-      confirmLeaveIfDirty(() => {
-        location.href = "/recipes";
-      });
-    } else if (target === "guide") {
-      confirmLeaveIfDirty(() => {
-        location.hash = "#/guide";
-        location.reload();
-      });
-    } else if (target === "changelog") {
-      confirmLeaveIfDirty(() => {
-        location.hash = "#/changelog";
-        location.reload();
-      });
-    }
+    else if (target === "recipes") confirmLeaveIfDirty(() => navigateTo("recipes"));
+    else confirmLeaveIfDirty(() => navigateTo(target));
   });
 
   window.addEventListener("beforeunload", (e) => {

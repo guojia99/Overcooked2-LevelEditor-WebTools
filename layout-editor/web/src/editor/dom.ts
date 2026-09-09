@@ -1,12 +1,18 @@
 import { navHtml } from "../nav";
+import { migrateLegacyUrl, parseRoute } from "../route";
 import { S } from "./state";
 
-/** 布局视图路由标记（由 URL hash 决定，模块加载时计算）。 */
-export const MANAGE_ACTIVE = /^#\/manage/.test(location.hash);
-export const DEPENDENCIES_ACTIVE = /^#\/dependencies/.test(location.hash);
-export const CUSTOM_RECIPES_ACTIVE = /^#\/custom-recipes/.test(location.hash);
-export const GUIDE_ACTIVE = /^#\/guide/.test(location.hash);
-export const CHANGELOG_ACTIVE = /^#\/changelog/.test(location.hash);
+migrateLegacyUrl();
+const _route = parseRoute();
+
+/** 布局视图路由标记（由 URL pathname 决定，模块加载时计算）。 */
+export const MANAGE_ACTIVE = _route.page === "manage";
+export const DEPENDENCIES_ACTIVE = _route.page === "dependencies";
+export const CUSTOM_RECIPES_ACTIVE = _route.page === "custom-recipes";
+export const BURGER_MAKER_ACTIVE = _route.page === "burger-maker";
+export const GUIDE_ACTIVE = _route.page === "guide";
+export const CHANGELOG_ACTIVE = _route.page === "changelog";
+export const GUIDE_PAGE_ID = _route.guidePageId;
 
 /** 全部 DOM 引用（buildLayoutDom 在布局视图填充；各模块禁止顶层访问 DOM，只在函数体内使用）。
  *  与拆分前 `document.getElementById(...) as HTMLCanvasElement` 等价：视为非空，直接使用。 */
@@ -27,7 +33,7 @@ export const dom = {
 /** 布局视图的完整 DOM 模板 + 元素引用填充（仅 layout 视图调用；manage/custom-recipes 返回空）。 */
 export function buildLayoutDom(): void {
   dom.app = document.getElementById("app")!;
-  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || CUSTOM_RECIPES_ACTIVE || GUIDE_ACTIVE || CHANGELOG_ACTIVE) return;
+  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || CUSTOM_RECIPES_ACTIVE || BURGER_MAKER_ACTIVE || GUIDE_ACTIVE || CHANGELOG_ACTIVE) return;
   document.body.classList.remove("manage-bg");
   dom.app.innerHTML = `
   ${navHtml("layout")}

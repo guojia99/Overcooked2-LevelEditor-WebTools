@@ -65,7 +65,10 @@ zip 内的 loader DLL 由研发手动维护：编辑器仓库 `layout-editor/web
 
 0. **v1.5.1+ 环境探测日志**（排障先看这段）：所有日志行带统一前缀
    `[HH:mm:ss.fff][主机|客机|单机|未知]`（角色=反射 `ConnectionStatus.IsInSession()/IsHost()`，
-   实时求值，随进/出房间变化）——联机排障可直接区分两台机器、对齐时序。启动首帧输出
+   实时求值，随进/出房间变化）——联机排障可直接区分两台机器、对齐时序。
+   **v1.5.2 起**：经 `LogFromCrate` 桥转发的 stub 日志保证带 `[Stub:...]` 段
+   （StubLog 打 `[Stub:Stub_<set>]`；旧版 stub 没带则 loader 兜底补 `[Stub]`）——
+   有 `[Stub:` 段 = stub 桥接日志，没有 = loader 原生日志。启动首帧输出
    - `[环境] PluginPath/GameRootPath/dataPath/streamingAssetsPath` 路径解析结果；
    - `[环境] plugins/OC2DIYLevel` 与 `StreamingAssets/OC2DIYLevel` 两级目录清单
      （存在即列出内容，不存在明确打"不存在"）——levels 装没装、装哪了直接可见；

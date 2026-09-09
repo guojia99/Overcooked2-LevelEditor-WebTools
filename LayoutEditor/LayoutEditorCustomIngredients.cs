@@ -33,6 +33,9 @@ public static class LayoutEditorCustomIngredients
     /// <summary>背景与食材/成品菜装饰占位源库（prefab + .meta，打包为 commonW1 bundle）。</summary>
     public const string CommonW1Root = "Assets/commonW1";
 
+    /// <summary>Burger大全共享汉堡菜谱库（打包为 commonW2 bundle）。</summary>
+    public const string CommonW2Root = "Assets/commonW2";
+
     /// <summary>旧 custom_web 拷贝目录名（机制已废弃，仅为兼容读取历史数据保留）。</summary>
     public const string CustomDirName = "custom_web";
 
@@ -41,6 +44,9 @@ public static class LayoutEditorCustomIngredients
 
     /// <summary>commonW1 bundle 名（folder meta assetBundleName）。</summary>
     public const string CommonW1BundleName = "commonW1";
+
+    /// <summary>commonW2 bundle 名（folder meta assetBundleName）。</summary>
+    public const string CommonW2BundleName = "commonW2";
 
     /// <summary>场景保存时从 doc 收集到的 common03 引用所需游戏 bundle，
     ///  由随后 SyncLevelInfo → EnsureWebDependencies 一并注册。</summary>
@@ -66,6 +72,95 @@ public static class LayoutEditorCustomIngredients
         if (string.IsNullOrEmpty(assetPath))
             return false;
         return assetPath.IndexOf("/commonW1/", StringComparison.Ordinal) >= 0;
+    }
+
+    /// <summary>关卡是否引用了 commonW2 Burger大全资产（菜谱 recipes / 组装定义 optionalRecipeMatchListItems，
+    ///  含其内部引用：关卡集本地汉堡菜谱的面包/夹心/堆叠模型可指向 commonW2 素材）。</summary>
+    private static bool ReferencesCommonW2(LevelInfoSO info)
+    {
+        if (info == null)
+            return false;
+        foreach (var r in info.recipes ?? new ScriptableObject[0])
+        {
+            if (ReferencesCommonW2Deep(r))
+                return true;
+        }
+        foreach (var r in info.optionalRecipeMatchListItems ?? new ScriptableObject[0])
+        {
+            if (ReferencesCommonW2Deep(r))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>资产本身在 commonW2，或其组成/可选夹心/面包/堆叠模型引用 commonW2 资产。</summary>
+    private static bool ReferencesCommonW2Deep(ScriptableObject so)
+    {
+        if (so == null)
+            return false;
+        if (IsCommonW2Asset(AssetDatabase.GetAssetPath(so)))
+            return true;
+        var recipe = so as CustomRecipeSO;
+        if (recipe == null)
+            return false;
+        foreach (var c in recipe.compositionSOs ?? new ScriptableObject[0])
+            if (IsCommonW2Asset(c != null ? AssetDatabase.GetAssetPath(c) : null))
+                return true;
+        foreach (var c in recipe.optionalSOs ?? new ScriptableObject[0])
+            if (IsCommonW2Asset(c != null ? AssetDatabase.GetAssetPath(c) : null))
+                return true;
+        var burger = so as CustomRecipeOptionalBurgerSO;
+        if (burger != null)
+        {
+            if (burger.bunSO != null && IsCommonW2Asset(AssetDatabase.GetAssetPath(burger.bunSO)))
+                return true;
+            foreach (var m in burger.ingredientModelSOs ?? new PseudoPrefabSO[0])
+                if (IsCommonW2Asset(m != null ? AssetDatabase.GetAssetPath(m) : null))
+                    return true;
+            foreach (var m in burger.ingredientModels ?? new GameObject[0])
+                if (IsCommonW2Asset(m != null ? AssetDatabase.GetAssetPath(m) : null))
+                    return true;
+        }
+        return false;
+    }
+
+    /// <summary>是否 commonW2 Burger大全共享库内资产。</summary>
+    public static bool IsCommonW2Asset(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        return assetPath.StartsWith(CommonW2Root + "/", StringComparison.Ordinal);
+    }
+
+    /// <summary>本关卡集是否有任意关卡需要 commonW2 bundle（导出 zip 按需携带）。
+    ///  扫描 data/ 下全部 LevelInfo（含子目录），按菜谱/组装定义实际引用判定，
+    ///  并兼容 dependencies 已写入 commonW2 的历史数据。</summary>
+    public static bool SetNeedsCommonW2Bundle(string levelSet)
+    {
+        if (string.IsNullOrEmpty(levelSet))
+            return false;
+        var dataDir = "Assets/LevelSets/" + levelSet + "/data";
+        if (!AssetDatabase.IsValidFolder(dataDir))
+            return false;
+        foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { dataDir }))
+        {
+            var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(AssetDatabase.GUIDToAssetPath(guid));
+            if (info == null)
+                continue;
+            if (ReferencesCommonW2(info))
+                return true;
+            if (info.dependencies != null)
+            {
+                for (int i = 0; i < info.dependencies.Length; i++)
+                {
+                    var d = info.dependencies[i];
+                    if (!string.IsNullOrEmpty(d) &&
+                        string.Equals(d, CommonW2BundleName, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+        }
+        return false;
     }
 
     /// <summary>是否本地源库资产（common03 / commonW1 / common01 / common02）：这些目录里的
@@ -244,6 +339,9 @@ public static class LayoutEditorCustomIngredients
         }
         AddDependency(deps, Common03BundleName);
         AddDependency(deps, CommonW1BundleName);
+        // Burger大全：仅当关卡实际选用 commonW2 菜谱/组装定义时注册 commonW2 依赖。
+        if (ReferencesCommonW2(info))
+            AddDependency(deps, CommonW2BundleName);
         foreach (var b in _pendingDocBundles)
             AddDependency(deps, b);
 

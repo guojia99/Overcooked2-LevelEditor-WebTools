@@ -20,17 +20,17 @@ public static class LayoutEditorPaths
 
     public static string WebUiUrl
     {
-        get { return "http://127.0.0.1:" + LayoutEditorHttpServer.DefaultPort + "/"; }
+        get { return "http://127.0.0.1:" + LayoutEditorHttpServer.DefaultPort + "/manage"; }
     }
 
     public static string WebUiUrlForActiveScene()
     {
-        var url = WebUiUrl;
+        var baseUrl = "http://127.0.0.1:" + LayoutEditorHttpServer.DefaultPort;
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
         var path = scene.path;
         if (!string.IsNullOrEmpty(path) && path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
-            url += "?scene=" + Uri.EscapeDataString(path);
-        return url;
+            return baseUrl + "/layout?scene=" + Uri.EscapeDataString(path);
+        return baseUrl + "/manage";
     }
 
     public static bool IsPathUnderRoot(string filePath, string rootDirectory)

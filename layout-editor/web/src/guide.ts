@@ -3,16 +3,16 @@ import { GUIDE_TREE } from "./guide/content";
 import { renderGuidePage, renderGuideSidebar, wireGuidePage } from "./guide/render";
 import type { GuideNode } from "./guide/types";
 import type { IngredientEntry, RecipeEntry } from "./types";
+import { guidePath, navigateTo, parseRoute } from "./route";
 
 export function goGuide(): void {
-  location.hash = "#/guide";
-  location.reload();
+  navigateTo("guide");
 }
 
-function pageIdFromHash(): string {
-  const m = location.hash.match(/^#\/guide\/([A-Za-z0-9_-]+)/);
-  const id = m?.[1] ?? "";
-  return GUIDE_TREE.some((c) => c.id === id) ? id : GUIDE_TREE[0].id;
+function pageIdFromPath(): string {
+  const route = parseRoute();
+  if (route.page === "guide" && route.guidePageId) return route.guidePageId;
+  return GUIDE_TREE[0]?.id ?? "overview";
 }
 
 async function loadCatalog(): Promise<{ ingredients: IngredientEntry[]; recipes: RecipeEntry[] }> {
@@ -76,7 +76,7 @@ function renderPage(app: HTMLElement, ctx: GuideCtx, pageId: string, sectionId?:
     chapters: GUIDE_TREE,
     pageId: chapter.id,
     onNavigatePage: (next, section) => {
-      history.pushState({ guidePage: next }, "", `#/guide/${next}`);
+      history.pushState({ guidePage: next }, "", guidePath(next));
       renderPage(app, ctx, next, section);
     },
   });
@@ -95,41 +95,23 @@ function renderPage(app: HTMLElement, ctx: GuideCtx, pageId: string, sectionId?:
   }
 }
 
-export async function renderGuideView(app: HTMLElement): Promise<void> {
+export async function renderGuideView(app: HTMLElement, initialPageId?: string): Promise<void> {
   document.body.classList.add("manage-bg");
   const catalog = await loadCatalog();
   const ctx = { ingredients: catalog.ingredients, recipes: catalog.recipes };
 
   app.innerHTML = shellHtml();
 
-  wireNav((target) => {
-    if (target === "layout") {
-      location.hash = "#/layout";
-      location.reload();
-    } else if (target === "manage") {
-      location.hash = "#/manage";
-      location.reload();
-    } else if (target === "dependencies") {
-      location.hash = "#/dependencies";
-      location.reload();
-    } else if (target === "custom-recipes") {
-      location.hash = "#/custom-recipes";
-      location.reload();
-    } else if (target === "recipes") {
-      location.href = "/recipes";
-    } else if (target === "changelog") {
-      location.hash = "#/changelog";
-      location.reload();
-    }
-  });
+  wireNav();
 
-  const initial = pageIdFromHash();
-  if (location.hash !== `#/guide/${initial}`) {
-    history.replaceState({ guidePage: initial }, "", `#/guide/${initial}`);
+  const initial = initialPageId ?? pageIdFromPath();
+  const canonical = guidePath(initial);
+  if (location.pathname !== canonical) {
+    history.replaceState({ guidePage: initial }, "", canonical);
   }
   renderPage(app, ctx, initial);
 
   window.addEventListener("popstate", () => {
-    renderPage(app, ctx, pageIdFromHash());
+    renderPage(app, ctx, pageIdFromPath());
   });
 }

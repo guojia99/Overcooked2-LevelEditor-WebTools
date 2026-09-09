@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83fb008bcc8e793429b02c178c430815, type: 3}
+  m_Name: FriedCornPone
+  m_EditorClassIdentifier: 
+  type: 2
+  recipeName: FriedCornPone
+  uID: 58321021
+  score: 0
+  platingStepSO: {fileID: 11400000, guid: 02b04fdf6fef0e944870fd5e06375ed1, type: 2}
+  modelSO: {fileID: 0}
+  model: {fileID: 1373111914765548, guid: dad1832fc6201234690450808a135239, type: 2}
+  iconSO: {fileID: 0}
+  icon: {fileID: 21300000, guid: 0141af4b56088384c8a49cec7786a765, type: 3}
+  compositionSOs:
+  - {fileID: 11400000, guid: 8d4a5aaf71fdf648b0648dd20ae1a920, type: 2}
+  optionalSOs: []
+  cookingStepSO: {fileID: 11400000, guid: 52427a7ce907faf448dced9054383b7d, type: 2}
+  cookingStepIconSO: {fileID: 11400000, guid: 2b17bb1b99e97ef46b5af2a198a407e7, type: 2}
+  cookingStepIcon: {fileID: 0}
+  cookingProgress: 1
+  mixingIconSO: {fileID: 0}
+  mixingIcon: {fileID: 0}
+  mixingProgress: 0

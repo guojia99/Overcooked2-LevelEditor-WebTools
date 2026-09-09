@@ -25,6 +25,7 @@ import { openDepsCheckModal } from "./editor/ui/depsCheck";
 import { showBusy, hideBusy, setBusyMessage } from "./busy";
 import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
 import { navHtml, wireNav } from "./nav";
+import { navigateTo } from "./route";
 
 const DEPS_TARGET_KEY = "depsTargetLevel";
 
@@ -32,8 +33,7 @@ function goDependenciesPage(setName?: string, levelInfoAssetPath?: string): void
   if (setName && levelInfoAssetPath) {
     sessionStorage.setItem(DEPS_TARGET_KEY, JSON.stringify({ setName, assetPath: levelInfoAssetPath }));
   }
-  location.hash = "#/dependencies";
-  location.reload();
+  location.assign("/dependencies");
 }
 import { applyRatio, computeAutoScores, computeOrderLifeTimes, ORDER_INTERVAL_SEC, PLATE_RETURN_SEC, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
@@ -50,13 +50,11 @@ const TARGET_SCENE_KEY = "layoutTargetScene";
 export function goLayout(sceneAssetPath?: string): void {
   if (sceneAssetPath) sessionStorage.setItem(TARGET_SCENE_KEY, sceneAssetPath);
   else sessionStorage.removeItem(TARGET_SCENE_KEY);
-  location.hash = "#/layout";
-  location.reload();
+  location.assign("/layout");
 }
 
 export function goManage(): void {
-  location.hash = "#/manage";
-  location.reload();
+  location.assign("/manage");
 }
 
 export function consumeTargetScene(): string | null {
@@ -120,18 +118,7 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
   wireNav((target) => {
     if (target === "layout") goLayout();
     else if (target === "dependencies") goDependenciesPage();
-    else if (target === "custom-recipes") {
-      location.hash = "#/custom-recipes";
-      location.reload();
-    } else if (target === "recipes") {
-      location.href = "/recipes";
-    } else if (target === "guide") {
-      location.hash = "#/guide";
-      location.reload();
-    } else if (target === "changelog") {
-      location.hash = "#/changelog";
-      location.reload();
-    }
+    else navigateTo(target);
   });
   const back = document.getElementById("m-back");
   if (back && onBack) back.addEventListener("click", onBack);

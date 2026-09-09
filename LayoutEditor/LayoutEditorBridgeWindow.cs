@@ -140,16 +140,10 @@ public class LayoutEditorBridgeWindow : EditorWindow
         GUI.enabled = server.IsRunning && hasStatic;
         if (GUILayout.Button("在浏览器中打开编排页", GUILayout.Height(32)))
         {
-            var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
-            var url2 = LayoutEditorPaths.WebUiUrl;
-            if (!string.IsNullOrEmpty(activeScene.path) && activeScene.path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
-                url2 += "?scene=" + Uri.EscapeDataString(activeScene.path);
-            else
-                url2 += "#/manage";
-            Application.OpenURL(url2);
+            Application.OpenURL(LayoutEditorPaths.WebUiUrlForActiveScene());
         }
         if (GUILayout.Button("打开主页", GUILayout.Height(24)))
-            Application.OpenURL(LayoutEditorPaths.WebUiUrl + "#/manage");
+            Application.OpenURL(LayoutEditorPaths.WebUiUrl);
         GUI.enabled = true;
 
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();

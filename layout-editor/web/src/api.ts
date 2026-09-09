@@ -5,6 +5,10 @@ import type {
   AudioExportManifest,
   AudioKnowledge,
   BundleAnalysis,
+  BurgerCreateRequest,
+  BurgerCreateResult,
+  BurgerDefinitionList,
+  BurgerDefinitionUpdate,
   CookingStepCatalog,
   CookingStepEntry,
   CounterAppearanceCatalog,
@@ -22,6 +26,7 @@ import type {
   LevelDetail,
   LevelList,
   LevelRecipes,
+  LevelOptionalItem,
   OptionalPresets,
   LevelSetInfo,
   LevelSetList,
@@ -311,6 +316,20 @@ export async function saveOptionalItems(
     body: JSON.stringify({ levelInfoAssetPath, guids }),
   });
   await readApiJson<{ ok?: boolean; error?: string }>(r);
+}
+
+/** 同步本关 BurgerOptional 并推导 optionalRecipeMatchListItems（所选汉堡夹心全集 + 中间产物）。 */
+export async function computeBurgerOptionals(
+  levelInfoAssetPath: string,
+  recipeGuids: string[]
+): Promise<{ guids: string[]; items: LevelOptionalItem[] }> {
+  const r = await fetch("/api/recipes/compute-burger-optionals", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ levelInfoAssetPath, recipeGuids }),
+  });
+  const data = await readApiJson<{ guids?: string[]; items?: LevelOptionalItem[] }>(r);
+  return { guids: data.guids ?? [], items: data.items ?? [] };
 }
 
 /** 覆盖写入 includeRecipeMatchLists（菜谱管理 Matchlist tab 写回）。 */
@@ -821,6 +840,32 @@ export async function fetchCustomRecipeReferences(setName: string): Promise<Cust
   const q = new URLSearchParams({ setName });
   const r = await fetch(`/api/custom-recipes/references?${q}`);
   return readApiJson<CustomRecipeReferences>(r);
+}
+
+// ---------- Burger大全 组装工作台（commonW2 共享汉堡库） ----------
+
+export async function fetchBurgerDefinitions(setName?: string): Promise<BurgerDefinitionList> {
+  const q = setName ? `?${new URLSearchParams({ setName })}` : "";
+  const r = await fetch(`/api/burger/definitions${q}`);
+  return readApiJson<BurgerDefinitionList>(r);
+}
+
+export async function createBurger(body: BurgerCreateRequest): Promise<BurgerCreateResult> {
+  const r = await fetch("/api/burger/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return readApiJson<BurgerCreateResult>(r);
+}
+
+export async function updateBurgerDefinition(body: BurgerDefinitionUpdate): Promise<void> {
+  const r = await fetch("/api/burger/definition/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
 }
 
 export async function createCustomRecipe(body: CustomRecipeEdit): Promise<void> {

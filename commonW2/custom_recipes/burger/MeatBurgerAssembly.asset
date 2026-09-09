@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7bb274eb901e2042b1c49a42ecec9df, type: 3}
+  m_Name: MeatBurgerAssembly
+  m_EditorClassIdentifier: 
+  type: 1
+  recipeName: MeatBurgerAssembly
+  uID: 58321045
+  score: 0
+  platingStepSO: {fileID: 11400000, guid: 02b04fdf6fef0e944870fd5e06375ed1, type: 2}
+  modelSO: {fileID: 11400000, guid: b65af1b8a1e4f2a4d82417a5981a1fbb, type: 2}
+  model: {fileID: 0}
+  iconSO: {fileID: 0}
+  icon: {fileID: 21300000, guid: 17b5035ff55f0a344b75d98d5dd52f1c, type: 3}
+  compositionSOs:
+  - {fileID: 11400000, guid: 7e3070b091a402f42be328cc261adff3, type: 2}
+  optionalSOs:
+  - {fileID: 11400000, guid: 8a928e5055585f34c89f8535c40fea3f, type: 2}
+  - {fileID: 11400000, guid: 45f00e942534da143a3e94855455b50b, type: 2}
+  - {fileID: 11400000, guid: 09a8ff9ede819e14e9f89df70f935402, type: 2}
+  - {fileID: 11400000, guid: b785cb39803b3be40b7d7052d54595fd, type: 2}
+  - {fileID: 11400000, guid: 4ec8a736936e7744c91d254705783c2c, type: 2}
+  - {fileID: 11400000, guid: 4ec8a736936e7744c91d254705783c2c, type: 2}
+  - {fileID: 11400000, guid: ff0a377cca6a00a45a5a5f13ac30098d, type: 2}
+  - {fileID: 11400000, guid: ff0a377cca6a00a45a5a5f13ac30098d, type: 2}
+  cookingStepSO: {fileID: 0}
+  cookingStepIconSO: {fileID: 0}
+  cookingStepIcon: {fileID: 0}
+  cookingProgress: 0
+  mixingIconSO: {fileID: 0}
+  mixingIcon: {fileID: 0}
+  mixingProgress: 0
+  bunSO: {fileID: 11400000, guid: 7e3070b091a402f42be328cc261adff3, type: 2}
+  ingredientContainerCapacity: 7
+  ingredientModelSOs: []
+  ingredientModels:
+  - {fileID: 1560826516507934, guid: e2576f385cb71f34fb9429dec22157a4, type: 2}
+  - {fileID: 0}
+  - {fileID: 1979481260764518, guid: a5510a35a72144448900bd0aae6bade1, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}

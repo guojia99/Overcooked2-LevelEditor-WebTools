@@ -62,6 +62,7 @@ import {
   fetchRecipeCatalog,
   fetchLevelRecipes,
   fetchOptionalPresets,
+  computeBurgerOptionals,
   saveOptionalItems,
   saveMatchlists,
   saveLevelRecipes
@@ -127,6 +128,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   void fetchOptionalPresets()
     .then((p) => {
       presets = p;
+      optionalItems = enrichOptionalItems(optionalItems);
       // 弹窗已关闭时跳过重渲染（rw-content 已不在 DOM）。
       if (activeTab === "optional" && document.getElementById("rw-content")) render();
     })
@@ -169,6 +171,67 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   syncSelectedIdsFromLevel();
   // 去重过滤依赖 selectedIds（已选变体保留可见），必须在 syncSelectedIdsFromLevel 之后
   recomputeGroups();
+
+  const normalizeGuid = (g: string) => g.replace(/-/g, "").toLowerCase();
+
+  /** 候选 = presets + DLC 原始菜谱 + 组装定义（burger/pizza optional）。 */
+  const optionalCandidates = (): { guid: string; id: string; nameZh: string; group: string; kind: string }[] => {
+    const list: { guid: string; id: string; nameZh: string; group: string; kind: string }[] = [];
+    const seen = new Set<string>();
+    for (const p of presets?.items ?? []) {
+      if (!p.guid || seen.has(p.guid)) continue;
+      seen.add(p.guid);
+      list.push({ guid: p.guid, id: p.id, nameZh: p.nameZh ?? "", group: p.group ?? "", kind: p.kind ?? "node" });
+    }
+    for (const r of recipes) {
+      if (!r.guid || seen.has(r.guid)) continue;
+      if (r.group && r.group.startsWith("dlc")) {
+        seen.add(r.guid);
+        list.push({ guid: r.guid, id: r.id, nameZh: r.nameZh ?? "", group: r.group, kind: "recipe" });
+        continue;
+      }
+      if (r.optionalKind === "burger" || r.optionalKind === "pizza") {
+        seen.add(r.guid);
+        list.push({
+          guid: r.guid,
+          id: r.id,
+          nameZh: r.nameZh ?? "",
+          group: r.group ?? "",
+          kind: r.optionalKind === "pizza" ? "pizza-optional" : "burger-optional",
+        });
+      }
+    }
+    return list;
+  };
+
+  const resolveOptionalMeta = (guid: string, hints?: Partial<LevelOptionalItem>): LevelOptionalItem => {
+    const ng = normalizeGuid(guid);
+    const cand = optionalCandidates().find((c) => normalizeGuid(c.guid) === ng);
+    if (cand) {
+      return { guid, id: cand.id, group: cand.group, kind: cand.kind };
+    }
+    const r = byGuid.get(guid) ?? [...byGuid.values()].find((x) => normalizeGuid(x.guid) === ng);
+    if (r) {
+      let kind = hints?.kind;
+      if (!kind) {
+        if (r.optionalKind === "burger") kind = "burger-optional";
+        else if (r.optionalKind === "pizza") kind = "pizza-optional";
+        else if (r.isCustom) kind = "custom-recipe";
+        else kind = "node";
+      }
+      return { guid, id: r.id, group: r.group ?? hints?.group, kind };
+    }
+    if (hints?.id && hints.id !== guid) {
+      let kind = hints.kind;
+      return { guid, id: hints.id, group: hints.group, kind: kind ?? "node" };
+    }
+    return { guid, id: guid, group: hints?.group, kind: hints?.kind ?? "node" };
+  };
+
+  const enrichOptionalItems = (items: LevelOptionalItem[]): LevelOptionalItem[] =>
+    items.map((it) => resolveOptionalMeta(it.guid, it));
+
+  optionalItems = enrichOptionalItems(optionalItems);
 
   const toggleSelect = (guid: string, checked: boolean) => {
     if (checked) {
@@ -1086,27 +1149,11 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     "condiment": { label: "酱料", cls: "kind-condiment" },
     "boiledfrankfurter": { label: "煮肠", cls: "kind-condiment" },
     "pizza-optional": { label: "披萨部件", cls: "kind-pizza" },
+    "burger-optional": { label: "汉堡组装", cls: "kind-custom" },
     "custom-recipe": { label: "自定义", cls: "kind-custom" },
     "node": { label: "节点", cls: "kind-node" },
   };
   const kindMetaOf = (k?: string) => KIND_META[k ?? ""] ?? KIND_META.node;
-
-  /** 候选 = 一键填充特例（presets）+ 目录中的 DLC 原始菜谱（按 guid 去重）。 */
-  const optionalCandidates = (): { guid: string; id: string; nameZh: string; group: string; kind: string }[] => {
-    const list: { guid: string; id: string; nameZh: string; group: string; kind: string }[] = [];
-    const seen = new Set<string>();
-    for (const p of presets?.items ?? []) {
-      if (!p.guid || seen.has(p.guid)) continue;
-      seen.add(p.guid);
-      list.push({ guid: p.guid, id: p.id, nameZh: p.nameZh ?? "", group: p.group ?? "", kind: p.kind ?? "node" });
-    }
-    for (const r of recipes) {
-      if (!r.group || !r.group.startsWith("dlc") || seen.has(r.guid)) continue;
-      seen.add(r.guid);
-      list.push({ guid: r.guid, id: r.id, nameZh: r.nameZh ?? "", group: r.group, kind: "recipe" });
-    }
-    return list;
-  };
 
   const optionalDisplayName = (it: LevelOptionalItem): string => {
     const cand = optionalCandidates().find((c) => c.guid === it.guid);
@@ -1116,15 +1163,15 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     return it.id;
   };
 
-  const addOptionalGuids = (guids: string[] | undefined, doneMsg: string) => {
+  const addOptionalGuids = (guids: string[] | undefined, doneMsg: string, hintItems?: LevelOptionalItem[]) => {
     if (!guids || guids.length === 0) return;
-    const cand = new Map(optionalCandidates().map((c) => [c.guid, c]));
+    const hintByGuid = new Map((hintItems ?? []).map((i) => [normalizeGuid(i.guid), i]));
     const known = new Set(optionalItems.map((i) => i.guid));
     let added = 0;
     for (const g of guids) {
       if (known.has(g)) continue;
-      const c = cand.get(g);
-      optionalItems.push({ guid: g, id: c?.id ?? g, group: c?.group, kind: c?.kind });
+      const hint = hintByGuid.get(normalizeGuid(g));
+      optionalItems.push(resolveOptionalMeta(g, hint));
       known.add(g);
       added++;
     }
@@ -1153,6 +1200,128 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
       isDlc11 ? presets.hotdogFillGuidsDlc11 : presets.hotdogFillGuidsDlc08,
       isDlc11 ? "已加入 Hotdog（dlc11）可选部件/酱料/煮肠" : "已加入 Hotdog（dlc08）可选部件/酱料/煮肠"
     );
+  };
+
+  const isBurgerBunId = (id: string): boolean =>
+    id === "ChoppedBunSO" ||
+    id.toLowerCase() === "dlc08_bun" ||
+    id.toLowerCase().includes("choppedbun");
+
+  const isBurgerRecipe = (r: RecipeEntry): boolean => {
+    if (r.type === "burger") return true;
+    const comps = r.compositionIds ?? [];
+    return comps.some((id) => isBurgerBunId(id));
+  };
+
+  const isBurgerAssemblyEntry = (it: LevelOptionalItem): boolean => {
+    if (it.kind === "burger-optional") return true;
+    if (/burgerassembly/i.test(it.id)) return true;
+    const r = byGuid.get(it.guid);
+    if (!r || (r.score ?? 0) > 0) return false;
+    return (r.compositionIds ?? []).some((id) => isBurgerBunId(id));
+  };
+
+  /** 一键填充时替换的汉堡 optional（本关 BurgerOptional + 遗留 assembly/_filler；不含用户手动的成品汉堡）。 */
+  const isAutoManagedBurgerOptional = (it: LevelOptionalItem): boolean => {
+    const r = byGuid.get(it.guid);
+    if (r && (r.score ?? 0) > 0) return false;
+    if (it.id === "BurgerOptional") return true;
+    if (/(_filler|_夹心)$/i.test(it.id)) return true;
+    if (/burgerassembly/i.test(it.id)) return true;
+    if (it.kind === "burger-optional") return true;
+    return isBurgerAssemblyEntry(it);
+  };
+
+  /** ChoppedBun 组装定义（运行时仅第一个匹配生效；DLC08 鸡肉堡等其它面包不计入）。 */
+  const isChoppedBunBurgerOptional = (it: LevelOptionalItem): boolean => {
+    const r = byGuid.get(it.guid);
+    if (r && (r.score ?? 0) > 0) return false;
+    if (/chickenburgerassembly/i.test(it.id)) return false;
+    if (it.id === "BurgerOptional") return true;
+    if (/(_filler|_夹心|burgerassembly)$/i.test(it.id)) return true;
+    if (it.kind === "burger-optional") {
+      if (r && (r.compositionIds ?? []).some((id) => isBurgerBunId(id))) return true;
+    }
+    if (!r || (r.score ?? 0) > 0) return false;
+    return (r.compositionIds ?? []).some((id) => isBurgerBunId(id));
+  };
+
+  const selectedHasBurger = (): boolean => {
+    for (const g of selected) {
+      const r = byGuid.get(g);
+      if (r && isBurgerRecipe(r)) return true;
+    }
+    return false;
+  };
+
+  const optionalHasAssembly = (): boolean => optionalItems.some(isBurgerAssemblyEntry);
+
+  const choppedBunAssemblyConflict = (): boolean =>
+    optionalItems.filter(isChoppedBunBurgerOptional).length > 1;
+
+  const replaceBurgerOptionalGuids = (
+    guids: string[],
+    doneMsg: string,
+    hintItems?: LevelOptionalItem[],
+  ): void => {
+    const kept = optionalItems.filter((it) => !isAutoManagedBurgerOptional(it));
+    const hintByGuid = new Map((hintItems ?? []).map((i) => [normalizeGuid(i.guid), i]));
+    const newItems: LevelOptionalItem[] = [];
+    const seen = new Set<string>();
+    for (const g of guids) {
+      if (seen.has(g)) continue;
+      seen.add(g);
+      const hint = hintByGuid.get(normalizeGuid(g));
+      newItems.push(resolveOptionalMeta(g, hint));
+    }
+    optionalItems = [...newItems, ...kept];
+    optionalDirty = true;
+    setStatus(`${doneMsg}（汉堡相关 ${newItems.length} 条，已替换旧组装定义）`);
+    render();
+  };
+
+  /** 旧流程遗留（_filler / BurgerAssembly 等），不含本关 BurgerOptional。 */
+  const isLegacyBurgerOptional = (it: LevelOptionalItem): boolean => {
+    if (it.id === "BurgerOptional") return false;
+    return isAutoManagedBurgerOptional(it);
+  };
+
+  const clearLegacyBurgerOptionals = (): void => {
+    const before = optionalItems.length;
+    optionalItems = optionalItems.filter((it) => !isLegacyBurgerOptional(it));
+    const removed = before - optionalItems.length;
+    if (removed === 0) {
+      setStatus("没有可清除的遗留汉堡组装（_filler / BurgerAssembly 等）", false);
+      return;
+    }
+    optionalDirty = true;
+    setStatus(`已移除 ${removed} 条遗留汉堡组装，请「写回 Optional」保存`);
+    render();
+  };
+
+  const fillBurgerOptionalsFromSelected = async () => {
+    if (!level?.levelInfoAssetPath) {
+      setStatus("未找到 LevelInfoSO", false);
+      return;
+    }
+    if (!selectedHasBurger()) {
+      setStatus("未选择汉堡菜谱（成品汉堡或自定义汉堡）", false);
+      return;
+    }
+    try {
+      const { guids, items } = await computeBurgerOptionals(level.levelInfoAssetPath, [...selected]);
+      if (guids.length === 0) {
+        setStatus("未能推导出汉堡 optional（纯面包汉堡无需填充；请确认关卡集已有 CustomRecipeConfig）", false);
+        return;
+      }
+      replaceBurgerOptionalGuids(
+        guids,
+        "已同步本关 BurgerOptional（所选汉堡夹心全集）",
+        items,
+      );
+    } catch (e) {
+      setStatus(`汉堡填充失败：${(e as Error).message}`, false);
+    }
   };
 
   const optionalFilterLabel = (f: string) =>
@@ -1204,7 +1373,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         const g = card.dataset.oguid;
         if (!g || optionalItems.some((i) => i.guid === g)) return;
         const c = optionalCandidates().find((x) => x.guid === g);
-        optionalItems.push({ guid: g, id: c?.id ?? g, group: c?.group, kind: c?.kind });
+        optionalItems.push(resolveOptionalMeta(g, c ? { id: c.id, group: c.group, kind: c.kind } : undefined));
         optionalDirty = true;
         render();
       });
@@ -1223,9 +1392,17 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         </div>`;
       })
       .join("");
-    return `<p class="modal-hint">optionalRecipeMatchListItems：注册进关卡匹配表的额外节点（DLC 原始菜谱、Hotdog 可选部件/酱料/煮肠、自选披萨部件…）。<b>保存菜谱不再自动填充</b>，此处手动增删后单独写回；一键填充仅把候选加入列表，是否写回由你决定。</p>
+    return `<p class="modal-hint">optionalRecipeMatchListItems：注册进关卡匹配表的额外节点（DLC 原始菜谱、Hotdog 可选部件/酱料/煮肠、自选披萨部件、<b>本关汉堡夹心 BurgerOptional</b>…）。<b>保存菜谱不再自动填充</b>，此处手动增删后单独写回。「按已选汉堡一键填充」会生成/更新 <code>data/{关卡}/BurgerOptional.asset</code>（所选汉堡夹心<b>全集</b>：各食材取最大重复层数），并替换列表中的旧组装定义；也可手动把<b>成品汉堡菜谱</b>加入 optional。纯面包汉堡自动跳过；披萨/Hotdog 等其它条目保留。</p>
+      ${selectedHasBurger() && !optionalHasAssembly()
+        ? '<div class="rw-warn">⚠ 已选汉堡，但 optional 未注册组装定义——运行时无法叠层，请使用「按已选汉堡一键填充」后写回。</div>'
+        : ""}
+      ${choppedBunAssemblyConflict()
+        ? '<div class="rw-warn">⚠ 检测到多个 ChoppedBun 组装定义——运行时仅第一个生效，请重新「按已选汉堡一键填充」或移除多余 assembly。</div>'
+        : ""}
       ${presets ? "" : '<div class="rw-warn">⚠ 一键填充候选加载失败或旧桥不支持——已保存条目仍可查看/删除/写回。</div>'}
       <div class="rw-toolbar">
+        <button type="button" class="modal-btn" id="rw-opt-fill-burger-sel">🍔 按已选汉堡一键填充</button>
+        <button type="button" class="modal-btn" id="rw-opt-clear-legacy-burger">清除遗留汉堡组装</button>
         <button type="button" class="modal-btn" id="rw-opt-fill-pizza">🍕 披萨一键填充</button>
         <button type="button" class="modal-btn" id="rw-opt-fill-hotdog">🌭 Hotdog 一键填充</button>
         <button type="button" class="modal-btn" id="rw-opt-toggle-picker">${optPickerOpen ? "收起添加面板" : "＋ 添加条目"}</button>
@@ -1235,6 +1412,10 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   };
 
   const wireOptional = () => {
+    document.getElementById("rw-opt-fill-burger-sel")?.addEventListener("click", () => {
+      void fillBurgerOptionalsFromSelected();
+    });
+    document.getElementById("rw-opt-clear-legacy-burger")?.addEventListener("click", clearLegacyBurgerOptionals);
     document.getElementById("rw-opt-fill-pizza")?.addEventListener("click", fillPizzaOptionals);
     document.getElementById("rw-opt-fill-hotdog")?.addEventListener("click", fillHotdogOptionals);
     document.getElementById("rw-opt-toggle-picker")?.addEventListener("click", () => {

@@ -4834,6 +4834,333 @@ body.manage-bg {
   background: rgba(255, 217, 138, 0.12);
 }
 
+/* ---- Burger大全 / 汉堡组装工作台 ---- */
+
+.cr-burger-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 0 0 12px;
+  border: 1px solid rgba(255, 178, 102, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 178, 102, 0.08);
+  font-size: 13px;
+}
+
+.cr-burger-banner > span {
+  flex: 1;
+  color: #d0d4dc;
+}
+
+.cr-burger-section {
+  margin-bottom: 20px;
+}
+
+.cr-burger-section-title {
+  margin: 4px 0 4px;
+  font-size: 15px;
+  color: #ffb266;
+}
+
+.cr-burger-section > .muted {
+  margin: 0 0 8px;
+}
+
+/* ---- 汉堡组装工作台 ---- */
+
+.bm-page {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.bm-dev-banner {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e8c88a;
+  border: 1px solid rgba(255, 178, 102, 0.45);
+  background: rgba(255, 178, 102, 0.1);
+}
+
+.bm-main-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 16px 18px;
+}
+
+.bm-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.bm-toolbar-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bm-toolbar-grow {
+  flex: 1;
+  min-width: 180px;
+}
+
+.bm-toolbar .rl-select {
+  min-width: 160px;
+}
+
+.bm-section-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #ffb266;
+  text-align: center;
+}
+
+.bm-preview-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0 8px;
+}
+
+.bm-stack-meta {
+  text-align: center;
+  margin: 0 0 12px;
+}
+
+.bm-actions-row {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0 4px;
+}
+
+/* 添加堆叠层弹窗：卡片网格 */
+.bm-pick-panel .modal-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.bm-pick-scroll {
+  flex: 1;
+  min-height: 0;
+  max-height: min(52vh, 520px);
+  overflow: auto;
+}
+
+.bm-pick-section {
+  margin-bottom: 14px;
+}
+
+.bm-pick-section:last-child {
+  margin-bottom: 0;
+}
+
+.bm-pick-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffb266;
+  margin: 0 0 8px;
+}
+
+.bm-pick-grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.bm-pick-card {
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.bm-pick-card .pc-head {
+  align-items: flex-start;
+}
+
+.bm-pick-card .food-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.bm-pick-card:active {
+  border-color: #6a9fd8;
+  background: #252a33;
+}
+
+.bm-layer-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.bm-divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 16px 0;
+}
+
+.bm-props-details {
+  margin: 0;
+}
+
+.bm-props-summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: #ffb266;
+  margin-bottom: 8px;
+  user-select: none;
+}
+
+.bm-props-body {
+  padding-top: 4px;
+}
+
+.bm-pick-panel .modal-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bm-pick-panel .modal-footer #bm-pick-count {
+  flex: 1;
+  text-align: left;
+}
+
+.bm-pick-card.selected {
+  border-color: #6a9fd8;
+  background: #252a33;
+  box-shadow: 0 0 0 1px rgba(106, 159, 216, 0.35);
+}
+
+.bm-layer-list {
+  display: flex;
+  flex-direction: column-reverse; /* 底部 = 面包，向上堆叠 */
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.bm-layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 13px;
+}
+
+.bm-layer.bun {
+  border-color: rgba(255, 178, 102, 0.5);
+  background: rgba(255, 178, 102, 0.1);
+}
+
+.bm-layer .bm-layer-name {
+  flex: 1;
+}
+
+.bm-layer .m-btn.small {
+  padding: 0 6px;
+  font-size: 12px;
+}
+
+.bm-cand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+.bm-cand:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.bm-cand .bm-cand-name {
+  flex: 1;
+}
+
+.bm-cand-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.bm-stack-preview {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 0;
+}
+
+.bm-stack-slice {
+  min-width: 120px;
+  text-align: center;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+  color: #e8e4dc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.bm-stack-slice.bm-fill {
+  background: linear-gradient(180deg, var(--bm-fill-bg1), var(--bm-fill-bg2));
+  border-color: var(--bm-fill-border);
+  color: #f5f2ec;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.bm-stack-slice.bun {
+  border-radius: 14px 14px 6px 6px;
+  background: linear-gradient(180deg, rgba(255, 200, 130, 0.45), rgba(255, 170, 90, 0.25));
+}
+
+.bm-stack-slice.bun-bottom {
+  transform: rotate(180deg);
+}
+
+.bm-stack-slice.bun-bottom .bm-stack-slice-label {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+
+.bm-def-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+.bm-def-row .bm-layer-name {
+  flex: 1;
+}
+
+.bm-model-tag {
+  font-size: 11px;
+  color: #9fe8a9;
+}
+
+.bm-model-tag.missing {
+  color: #9aa0aa;
+}
+
+
 /* ---- 3D 模型在线预览 ---- */
 
 .mp-panel {
@@ -7399,9 +7726,15 @@ body.manage-bg {
   margin-left: auto;
   font-size: 11px;
   white-space: nowrap;
+  min-width: 0;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .rw-opt-del {
   flex: none;
+  position: relative;
+  z-index: 1;
   width: 22px;
   height: 22px;
   border: none;

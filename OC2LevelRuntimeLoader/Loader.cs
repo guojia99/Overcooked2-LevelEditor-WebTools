@@ -27,7 +27,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.levelruntimeloader";
         public const string PluginName = "OC2 LevelRuntime Loader";
-        public const string PluginVersion = "1.5.1";
+        public const string PluginVersion = "1.6.0";
 
         private static ManualLogSource _log;
         private static readonly List<byte[]> PendingRaw = new List<byte[]>();
@@ -103,17 +103,18 @@ namespace OC2LevelRuntimeLoader
 
         private void Update()
         {
-            if (_startupScanDone)
-                return;
-            _startupScanDone = true;
-            try
+            if (!_startupScanDone)
             {
-                DumpEnvironment();
-                ScanOnce(true);
-            }
-            catch (Exception ex)
-            {
-                LogW("启动扫描异常: " + ex);
+                _startupScanDone = true;
+                try
+                {
+                    DumpEnvironment();
+                    ScanOnce(true);
+                }
+                catch (Exception ex)
+                {
+                    LogW("启动扫描异常: " + ex);
+                }
             }
         }
 
@@ -607,11 +608,15 @@ namespace OC2LevelRuntimeLoader
 
         /// <summary>关卡程序集（RandomCrate 等）的日志桥：它们编不进 BepInEx 插件
         /// 程序集，Debug.Log 又可能被过滤——反射调用本方法转发到插件日志通道，
-        /// 与 loader 日志在同一 [OC2 LevelRuntime Loader] 来源下可见。</summary>
+        /// 与 loader 日志在同一 [OC2 LevelRuntime Loader] 来源下可见。
+        /// v1.5.2：桥接消息统一保证带 [Stub:...] 段（旧版 stub 没带就补 [Stub]），
+        /// 与 loader 原生日志（无此段）一眼区分。</summary>
         public static void LogFromCrate(string message, bool warn)
         {
-            if (_log == null)
+            if (_log == null || message == null)
                 return;
+            if (message.IndexOf("[Stub:", StringComparison.Ordinal) < 0)
+                message = "[Stub] " + message;
             if (warn)
                 LogW(message);
             else

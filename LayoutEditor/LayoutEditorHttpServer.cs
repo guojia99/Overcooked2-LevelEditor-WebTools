@@ -446,6 +446,27 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/recipes/compute-burger-optionals" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<BurgerOptionalComputeRequestDto>(body);
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCatalogApi.ComputeBurgerOptionalFill(dto)));
+                return;
+            }
+
+            if (path == "/api/level/burger-optional" && request.HttpMethod == "GET")
+            {
+                var levelInfo = request.QueryString["levelInfoAssetPath"];
+                var def = LayoutEditorBurgerApi.GetLevelBurgerOptionalDefinition(levelInfo);
+                if (def == null)
+                {
+                    WriteJson(response, 404, "{\"error\":\"BurgerOptional not found\"}");
+                    return;
+                }
+                WriteJson(response, 200, LayoutEditorJson.ToJson(def));
+                return;
+            }
+
             if (path == "/api/level/matchlists" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);
@@ -1211,6 +1232,41 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // ---- Burger大全 组装工作台（#/burger-maker）----
+            if (path == "/api/burger/definitions" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorBurgerApi.GetDefinitions(setName)));
+                return;
+            }
+
+            if (path == "/api/burger/create" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LayoutEditorBurgerApi.BurgerCreateDto>(body);
+                LayoutEditorBurgerApi.BurgerCreateResultDto result;
+                var err = LayoutEditorBurgerApi.CreateBurger(dto, out result);
+                if (err != null)
+                {
+                    result.error = err;
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(result));
+                }
+                else
+                {
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                }
+                return;
+            }
+
+            if (path == "/api/burger/definition/update" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LayoutEditorBurgerApi.BurgerDefinitionUpdateDto>(body);
+                var err = LayoutEditorBurgerApi.UpdateDefinition(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
             if (path == "/api/custom-recipes/upload-model" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);
@@ -1250,7 +1306,7 @@ public class LayoutEditorHttpServer
                 return;
             }
 
-            if (TryServeStatic(path, response))
+            if (TryServeStatic(path, request.Url.Query, response))
                 return;
 
             WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "Not found: " + path }));
@@ -1310,10 +1366,16 @@ public class LayoutEditorHttpServer
         return new LevelSetSceneListDto { scenes = scenes.ToArray() };
     }
 
-    private static bool TryServeStatic(string path, HttpListenerResponse response)
+    private static bool TryServeStatic(string path, string query, HttpListenerResponse response)
     {
         if (path.StartsWith("/api/", StringComparison.Ordinal))
             return false;
+
+        if (path == "/index.html")
+        {
+            WriteRedirect(response, "/" + (query ?? ""));
+            return true;
+        }
 
         if (path == "/")
             path = "/index.html";
@@ -1322,6 +1384,7 @@ public class LayoutEditorHttpServer
         if (path == "/recipes" || path == "/recipes/")
             path = "/recipes.html";
 
+        // SPA 子路由（/layout、/guide/:id、/custom-recipes/burger-maker 等）→ index.html
         var webRoot = LayoutEditorPaths.WebDistRoot;
         if (!Directory.Exists(webRoot))
             return false;
@@ -1352,6 +1415,15 @@ public class LayoutEditorHttpServer
         response.OutputStream.Write(bytes, 0, bytes.Length);
         response.OutputStream.Close();
         return true;
+    }
+
+    private static void WriteRedirect(HttpListenerResponse response, string location)
+    {
+        _responseSent = true;
+        response.StatusCode = 302;
+        response.RedirectLocation = location;
+        response.ContentLength64 = 0;
+        response.OutputStream.Close();
     }
 
     private static string GetContentType(string filePath)

@@ -4,12 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OC2 关卡编辑器</title>
-    <link rel="icon" type="image/png" href="./icon.png" />
-    <script type="module" crossorigin src="./assets/main-DPqZEYi3.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/version-Cz48qlsd.js">
-    <link rel="stylesheet" crossorigin href="./assets/version-BuPLunh0.css">
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <script type="module" crossorigin src="/assets/main-CSfzI4q-.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/version-CPbf5vRQ.js">
+    <link rel="stylesheet" crossorigin href="/assets/version-CMW2dB_l.css">
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      (function () {
+        var path = location.pathname;
+        var search = location.search;
+        var hash = location.hash;
+        if (path === "/index.html" || path.endsWith("/index.html")) {
+          path = path.replace(/\/?index\.html$/, "") || "/";
+          history.replaceState(null, "", path + search + hash);
+        }
+        if (hash.indexOf("#/") === 0) {
+          history.replaceState(null, "", hash.slice(1) + search);
+        }
+      })();
+    </script>
   </body>
 </html>

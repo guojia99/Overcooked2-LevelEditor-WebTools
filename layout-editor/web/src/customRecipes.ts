@@ -11,6 +11,7 @@ import type {
 } from "./types";
 import { showBusy, hideBusy, withBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
+import { navigateTo } from "./route";
 import { foodGroupLabel, visibleIngredients, visibleRecipes } from "./ingredientLabels";
 import { recipeTypeLabel, RECIPE_TYPE_ORDER } from "./recipeTypes";
 import { closeModal, openModal } from "./modals";
@@ -29,6 +30,9 @@ function esc(s: unknown): string {
 }
 
 const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/** 列表页记住的当前分类过滤（进入新建/编辑菜谱后返回时保持）。 */
+let lastActiveCategoryId = "";
 
 function setStatus(msg: string, ok = true): void {
   const el = document.getElementById("cr-status");
@@ -49,26 +53,7 @@ function shell(app: HTMLElement, title: string): HTMLElement {
     </div>
     <div class="manage-content" id="cr-content"></div>
   `;
-  wireNav((target) => {
-    if (target === "layout") {
-      location.hash = "#/layout";
-      location.reload();
-    } else if (target === "manage") {
-      location.hash = "#/manage";
-      location.reload();
-    } else if (target === "dependencies") {
-      location.hash = "#/dependencies";
-      location.reload();
-    } else if (target === "recipes") {
-      location.href = "/recipes";
-    } else if (target === "guide") {
-      location.hash = "#/guide";
-      location.reload();
-    } else if (target === "changelog") {
-      location.hash = "#/changelog";
-      location.reload();
-    }
-  });
+  wireNav();
   return document.getElementById("cr-content")!;
 }
 
@@ -128,6 +113,11 @@ function showError(e: unknown): void {
  *  不依赖文件名约定，也不经过 data-file 的路径解析）。 */
 function crIconSrc(r: { assetPath: string }): string {
   return `/api/custom-recipes/icon?assetPath=${encodeURIComponent(r.assetPath)}`;
+}
+
+/** commonW2 Burger大全 共享库：不属于本关卡集自定义菜谱，列表页不展示。 */
+function isCommonW2Recipe(r: CustomRecipeSummary): boolean {
+  return r.assetPath.replace(/\\/g, "/").includes("/commonW2/");
 }
 
 function foodIconImg(kind: "ingredients" | "recipes", id: string | undefined): string {
@@ -238,15 +228,23 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     showError(e);
     return;
   }
-  setStatus(`${recipes.length} 个菜谱 · UID前缀：${config.uidPrefix}`);
+  /** 列表展示用：仅本关卡集 custom_recipes（不含 commonW2 共享库）。 */
+  function getDisplayRecipes(): CustomRecipeSummary[] {
+    return recipes.filter((r) => !isCommonW2Recipe(r));
+  }
+
+  setStatus(`${getDisplayRecipes().length} 个菜谱 · UID前缀：${config.uidPrefix}`);
 
   const categories = config.categories ?? [];
+  /** 分类 chip：排除 Burger大全 保留分类（共享库，非本集菜谱）。 */
+  const listCategories = categories.filter((c) => c.id !== "burger");
 
   function catDisplay(c: CustomRecipeCategory): string {
     return c.zh || c.id;
   }
 
-  let activeCategoryId = "";
+  // 从模块级记忆恢复分类过滤（进入新建/编辑后返回时保持）；分类已被删除则回退「全部」
+  let activeCategoryId = listCategories.some((c) => c.id === lastActiveCategoryId) ? lastActiveCategoryId : "";
   let searchQuery = "";
   /** 分数过滤：全部 / 其他（不在 0/20/…/120 档位）/ 指定分数。 */
   let scoreFilter: "all" | "other" | number = "all";
@@ -268,7 +266,8 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   recipeLikes = buildCompositionContext(recipes, catalog).allRecipeLikes as RecipeLikeCard[];
 
   function filteredRecipes(): CustomRecipeSummary[] {
-    let list = activeCategoryId ? recipes.filter((r) => r.category === activeCategoryId) : recipes;
+    const base = getDisplayRecipes();
+    let list = activeCategoryId ? base.filter((r) => r.category === activeCategoryId) : base;
     if (filterIntermediate) list = list.filter((r) => r.score <= 0);
     if (filterMixed) list = list.filter((r) => r.type === "Mixed");
     if (filterFinished) list = list.filter((r) => r.score > 0);
@@ -293,8 +292,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   function renderGrid(): string {
     const filtered = filteredRecipes();
 
-    if (filtered.length === 0) {
-      if (recipes.length === 0 && searchQuery === "" && activeCategoryId === "") {
+    if (filtered.length === 0) {      if (getDisplayRecipes().length === 0 && searchQuery === "" && activeCategoryId === "") {
         // 空列表时自动诊断：区分"目录确实没菜谱"与"桥接旧版/资产加载失败"
         void (async () => {
           const el = document.getElementById("cr-grid");
@@ -333,53 +331,59 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       return '<p class="muted">没有匹配的菜谱。点击右上角「+ 新建菜谱」开始创建。</p>';
     }
 
-    const cards = filtered
-      .map((r) => {
-        let cardHtml: string;
-        try {
-          cardHtml = rlCardHtml(cardRecipe(r), {
-            allRecipes: recipeLikes,
-            ingredientName: (id) => ingredientNames.get(id) ?? id,
-            iconSrc: () => crIconSrc(r),
-          });
-        } catch (e) {
-          cardHtml = `<div class="m-card"><h3>${esc(r.nameZh)}</h3><p class="muted">卡片渲染失败：${esc((e as Error).message)}</p></div>`;
-        }
-        const cat = categories.find((c) => c.id === r.category);
-        const plating = r.platingStepId ? platingNames.get(r.platingStepId) : "";
-        const compCount = (r.compositionIds ?? []).length;
-        return `
+    const cardWrapHtml = (r: CustomRecipeSummary): string => {
+      let cardHtml: string;
+      try {
+        cardHtml = rlCardHtml(cardRecipe(r), {
+          allRecipes: recipeLikes,
+          ingredientName: (id) => ingredientNames.get(id) ?? id,
+          iconSrc: () => crIconSrc(r),
+        });
+      } catch (e) {
+        cardHtml = `<div class="m-card"><h3>${esc(r.nameZh)}</h3><p class="muted">卡片渲染失败：${esc((e as Error).message)}</p></div>`;
+      }
+      const cat = categories.find((c) => c.id === r.category);
+      const plating = r.platingStepId ? platingNames.get(r.platingStepId) : "";
+      const compCount = (r.compositionIds ?? []).length;
+      // 组装定义（OptionalBurger/Pizza）与成品汉堡均在汉堡工作台编辑
+      const isAssembly = r.optionalKind === "burger" || r.optionalKind === "pizza";
+      const isFinishedBurger = Boolean(r.isFinishedBurger);
+      const gotoBurgerWorkbench = isAssembly || isFinishedBurger;
+      const burgerProductAttr = isFinishedBurger ? ` data-burger-product="${esc(r.assetPath)}"` : "";
+      return `
       <div class="cr-card-wrap">
         <div class="cr-card-inner">${cardHtml}</div>
         <div class="cr-card-foot">
           <span class="cr-cat-tag">${esc(catDisplay(cat ?? { id: r.category, zh: r.category, en: r.category }))}</span>
           ${plating ? `<span class="cr-cat-tag cr-plate-tag" title="装盘容器">🍽 ${esc(plating)}</span>` : ""}
-          <span class="muted small">UID ${r.uID} · 组成 ${compCount} 项</span>
+          <span class="muted small">${isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : `UID ${r.uID}`} · 组成 ${compCount} 项</span>
           <span style="flex:1"></span>
           ${r.hasModel ? `<button class="m-btn small" data-preview="${esc(r.assetPath)}" title="3D 模型在线预览">👁</button>` : ""}
-          <button class="m-btn small" data-edit="${esc(r.assetPath)}">编辑</button>
+          ${gotoBurgerWorkbench
+            ? `<button class="m-btn small" data-goto-burger${burgerProductAttr} title="${isFinishedBurger ? "在汉堡工作台载入并编辑此成品汉堡" : "组装定义的可选夹心与堆叠模型在汉堡工作台中管理"}">🍔 工作台</button>`
+            : `<button class="m-btn small" data-edit="${esc(r.assetPath)}">编辑</button>`}
           <button class="m-btn small danger" data-del="${esc(r.assetPath)}">删除</button>
         </div>
       </div>`;
-      })
-      .join("");
+    };
 
-    return `<div class="rl-grid">${cards}</div>`;
+    return `<div class="rl-grid">${filtered.map(cardWrapHtml).join("")}</div>`;
   }
 
   /** 分类 chips（过滤栏第二行）：全部 / 各分类（含计数）+ 新建/管理分类。 */
   function renderCatChips(): string {
+    const display = getDisplayRecipes();
     return `
-      <button type="button" class="rl-chip-btn cr-cat-chip${activeCategoryId === "" ? " active" : ""}" data-cat="">全部 <span class="rl-cnt">${recipes.length}</span></button>
-      ${categories
+      <button type="button" class="rl-chip-btn cr-cat-chip${activeCategoryId === "" ? " active" : ""}" data-cat="">全部 <span class="rl-cnt">${display.length}</span></button>
+      ${listCategories
         .map((c) => {
-          const count = recipes.filter((r) => r.category === c.id).length;
+          const count = display.filter((r) => r.category === c.id).length;
           return `<button type="button" class="rl-chip-btn cr-cat-chip${activeCategoryId === c.id ? " active" : ""}" data-cat="${esc(c.id)}">${esc(catDisplay(c))} <span class="rl-cnt">${count}</span></button>`;
         })
         .join("")}
       <span class="cr-cat-tools">
         <button class="m-btn" id="cr-new-cat">+ 新建分类</button>
-        ${categories.length > 0 ? '<button class="m-btn" id="cr-manage-cat">管理分类</button>' : ""}
+        ${listCategories.length > 0 ? '<button class="m-btn" id="cr-manage-cat">管理分类</button>' : ""}
       </span>`;
   }
 
@@ -388,6 +392,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       <button class="m-btn" id="cr-back">← 返回关卡集列表</button>
       <span class="muted">当前关卡集：<b>${esc(setName)}</b></span>
       <span style="flex:1"></span>
+      <button class="m-btn" id="cr-new-burger">🍔 新增汉堡菜谱</button>
       <button class="m-btn primary" id="cr-new-recipe">+ 新建菜谱</button>
     </div>
     <div class="cr-toolbar">
@@ -425,7 +430,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       } finally {
         hideBusy();
       }
-      setStatus(`${recipes.length} 个菜谱 · UID前缀：${config.uidPrefix}`);
+      setStatus(`${getDisplayRecipes().length} 个菜谱 · UID前缀：${config.uidPrefix}`);
       document.getElementById("cr-cat-chips")!.innerHTML = renderCatChips();
       wireCatChips();
       document.getElementById("cr-grid")!.innerHTML = renderGrid();
@@ -461,6 +466,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     document.querySelectorAll<HTMLButtonElement>(".cr-cat-chip").forEach((b) => {
       b.addEventListener("click", () => {
         activeCategoryId = b.dataset.cat ?? "";
+        lastActiveCategoryId = activeCategoryId;
         document.getElementById("cr-cat-chips")!.innerHTML = renderCatChips();
         wireCatChips();
         document.getElementById("cr-grid")!.innerHTML = renderGrid();
@@ -469,7 +475,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     });
     document.getElementById("cr-new-cat")?.addEventListener("click", () =>
       openNewCategoryModal(setName, (newId) => {
-        activeCategoryId = newId ?? "";
+        lastActiveCategoryId = newId ?? "";
         // 完全重建列表页，确保新分类立即出现在过滤栏
         void renderRecipeList(app, setName);
       })
@@ -480,6 +486,16 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   }
 
   function wireGridButtons(): void {
+    // 汉堡工作台：同 path 仅改 hash 不会整页重载，必须显式 reload 才会触发 main.ts 路由。
+    document.querySelectorAll<HTMLElement>("[data-goto-burger]").forEach((b) =>
+      b.addEventListener("click", () => {
+        sessionStorage.setItem("burgerMakerSetName", setName);
+        const productPath = b.dataset.burgerProduct;
+        if (productPath) sessionStorage.setItem("burgerMakerLoadAssetPath", productPath);
+        else sessionStorage.removeItem("burgerMakerLoadAssetPath");
+        navigateTo("burger-maker");
+      })
+    );
     document.querySelectorAll<HTMLButtonElement>("[data-edit]").forEach((b) =>
       b.addEventListener("click", () => void renderRecipeForm(app, setName, b.dataset.edit!))
     );
@@ -523,7 +539,13 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   wireGridButtons();
 
   document.getElementById("cr-back")?.addEventListener("click", () => void renderCustomRecipesView(app));
-  document.getElementById("cr-new-recipe")?.addEventListener("click", () => void renderRecipeForm(app, setName, null));
+  document.getElementById("cr-new-burger")?.addEventListener("click", () => {
+    sessionStorage.setItem("burgerMakerSetName", setName);
+    navigateTo("burger-maker");
+  });
+  document.getElementById("cr-new-recipe")?.addEventListener("click", () =>
+    void renderRecipeForm(app, setName, null, activeCategoryId ? { category: activeCategoryId } : undefined)
+  );
 }
 
 // ==================== Recipe Form Page (Create / Edit) ====================
@@ -707,7 +729,8 @@ async function renderRecipeForm(
   const mixingIconId = recipe?.mixingIconId ?? "";
   const modelPrefabId = "";
 
-  const categories = config.categories ?? [];
+  // 「burger」为 Burger大全共享库保留分类：新建/编辑本集菜谱时不可选
+  const categories = (config.categories ?? []).filter((c) => c.id !== "burger");
 
   const ingById = new Map<string, IngredientEntry>();
   for (const i of ingredients) ingById.set(i.id, i);
@@ -1732,7 +1755,8 @@ async function renderRecipeForm(
       setStatus(
         `${isEdit ? "已更新菜谱" : "已创建菜谱"} · 模型变换已保存：足迹 ${fmtCm(u2cm((footprintOf(lastRawSize ?? rawSizeOf() ?? { x: 1, y: 1, z: 1 }) || 1) * finalT.scale))} cm · 旋转 ${finalT.rotationX}°/${finalT.rotationY}°/${finalT.rotationZ}° · 位置 ${fmtCm(u2cm(finalT.positionX))}/${fmtCm(u2cm(finalT.positionY))}/${fmtCm(u2cm(finalT.positionZ))} cm（重新打开可回显，游戏内直接生效）`
       );
-      // 模型已在选择文件时预览并调整过，保存后直接返回列表
+      // 模型已在选择文件时预览并调整过，保存后直接返回列表（分类过滤跟随本菜谱实际保存的分类）
+      lastActiveCategoryId = dto.category;
       void renderRecipeList(app, setName);
     } catch (e) {
       setStatus((e as Error).message, false);

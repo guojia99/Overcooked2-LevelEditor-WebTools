@@ -9,6 +9,20 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      (function () {
+        var path = location.pathname;
+        var search = location.search;
+        var hash = location.hash;
+        if (path === "/index.html" || path.endsWith("/index.html")) {
+          path = path.replace(/\/?index\.html$/, "") || "/";
+          history.replaceState(null, "", path + search + hash);
+        }
+        if (hash.indexOf("#/") === 0) {
+          history.replaceState(null, "", hash.slice(1) + search);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

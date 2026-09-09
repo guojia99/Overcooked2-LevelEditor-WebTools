@@ -8,13 +8,19 @@ using UnityEngine;
 /// <summary>
 /// CustomStub 母本 → 关卡集 stub 目录拷贝工具。
 ///
-/// 母本：Assets/Editor/LayoutEditor/CustomStub/（编辑器平台程序集，仅作模板+语法校验）。
-/// 拷贝目标：Assets/LevelSets/&lt;set&gt;/stub/，内含关卡集专属程序集
-/// Stub_&lt;set&gt;.asmdef（references: LevelEditorStub，全平台编译）。
+/// 母本：Assets/Editor/LayoutEditor/CustomStub/（编辑器平台程序集，仅作模板+语法校验），
+/// 按功能分子文件夹：core/（StubLog/GameApi/EntryPoint/HarmonyPatches）、RandomCrate/、
+/// HotPot/（含 PushablePot/PushableVoidFall/Target）、UtensilTiming/、Switch/（定时开关
+/// +按钮复位）、Terminal/、WorldMap/。
+/// 拷贝目标：Assets/LevelSets/&lt;set&gt;/stub/（目录结构与母本镜像），内含关卡集专属
+/// 程序集 Stub_&lt;set&gt;.asmdef（references: LevelEditorStub，全平台编译，asmdef 递归
+/// 覆盖子文件夹）。
 ///
 /// GUID 约定：拷贝只复制 .cs 内容、不复制 .meta —— 首次拷贝由 Unity 生成新 GUID
 /// （每集独立脚本身份）；重复拷贝做内容同步，绝不改动已存在的 .meta
 /// （保证场景里已烘焙的脚本引用稳定）。
+/// 旧扁平布局迁移：stub/&lt;name&gt;.cs → stub/&lt;sub&gt;/&lt;name&gt;.cs 用
+/// File.Move 连 .meta 成对移动（GUID 保留，场景引用不断链）。
 /// </summary>
 public static class CustomStubCopyTool
 {
@@ -47,7 +53,24 @@ public static class CustomStubCopyTool
             && File.Exists(stubDir + "/" + StubAssemblyName(setName) + ".asmdef");
     }
 
-    /// <summary>检测单个关卡集 stub 副本与母本是否漂移（内容或程序集名）。
+    /// <summary>递归收集母本 .cs，返回相对路径列表（如 "core/StubLog.cs"，正斜杠）。</summary>
+    private static System.Collections.Generic.List<string> CollectMasterFiles()
+    {
+        var list = new System.Collections.Generic.List<string>();
+        CollectInto(MasterDir, list);
+        list.Sort(StringComparer.Ordinal);
+        return list;
+    }
+
+    private static void CollectInto(string dir, System.Collections.Generic.List<string> list)
+    {
+        foreach (var f in Directory.GetFiles(dir, "*.cs"))
+            list.Add(f.Substring(MasterDir.Length).TrimStart('/', '\\').Replace('\\', '/'));
+        foreach (var sub in Directory.GetDirectories(dir))
+            CollectInto(sub, list);
+    }
+
+    /// <summary>检测单个关卡集 stub 副本与母本是否漂移（内容、相对路径或程序集名）。
     /// 未拷贝的关卡集返回 false（用 IsConfigured 区分）。web 状态端点用。</summary>
     public static bool IsDrifted(string setName)
     {
@@ -56,10 +79,21 @@ public static class CustomStubCopyTool
         var stubDir = LevelSetsRoot + "/" + setName + "/stub";
         if (!Directory.Exists(stubDir))
             return false;
-        foreach (var src in Directory.GetFiles(MasterDir, "*.cs"))
+        var masterRels = CollectMasterFiles();
+        var masterSet = new System.Collections.Generic.HashSet<string>(masterRels, StringComparer.Ordinal);
+        foreach (var rel in masterRels)
         {
-            var dst = Path.Combine(stubDir, Path.GetFileName(src));
-            if (!File.Exists(dst) || File.ReadAllText(src) != File.ReadAllText(dst))
+            var dst = Path.Combine(stubDir, rel.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(dst))
+                return true; // 含旧扁平布局（文件还在 stub/ 根部未迁入子文件夹）
+            if (File.ReadAllText(Path.Combine(MasterDir, rel.Replace('/', Path.DirectorySeparatorChar))) != File.ReadAllText(dst))
+                return true;
+        }
+        // 副本侧多余/残留文件（母本已删除或旧扁平位置）也视为漂移
+        foreach (var dstFile in Directory.GetFiles(stubDir, "*.cs", SearchOption.AllDirectories))
+        {
+            var rel = dstFile.Substring(stubDir.Length).TrimStart('/', '\\').Replace('\\', '/');
+            if (!masterSet.Contains(rel))
                 return true;
         }
         var asmdef = Path.Combine(stubDir, StubAssemblyName(setName) + ".asmdef");
@@ -171,20 +205,48 @@ public static class CustomStubCopyTool
         if (!Directory.Exists(dstDir))
             Directory.CreateDirectory(dstDir);
 
+        var migrated = 0;
         var copied = 0;
         var updated = 0;
-        var masterNames = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+        var masterRels = CollectMasterFiles();
+        var masterSet = new System.Collections.Generic.HashSet<string>(masterRels, StringComparer.Ordinal);
 
-        foreach (var srcFile in Directory.GetFiles(MasterDir, "*.cs"))
+        foreach (var rel in masterRels)
         {
-            var fileName = Path.GetFileName(srcFile);
-            masterNames.Add(fileName);
-            var dstFile = Path.Combine(dstDir, fileName);
+            var srcFile = Path.Combine(MasterDir, rel.Replace('/', Path.DirectorySeparatorChar));
+            var dstFile = Path.Combine(dstDir, rel.Replace('/', Path.DirectorySeparatorChar));
             var content = File.ReadAllText(srcFile);
+
+            // 旧扁平布局迁移：目标在子文件夹且不存在，而 stub/ 根部旧位置存在 →
+            // .cs 与 .cs.meta 成对 File.Move（GUID 随 .meta 保留，场景引用不断链）
+            var legacyFile = Path.Combine(dstDir, Path.GetFileName(rel));
+            var isSubfolder = rel.IndexOf('/') >= 0;
+            if (isSubfolder && !string.Equals(legacyFile, dstFile, StringComparison.Ordinal))
+            {
+                if (!File.Exists(dstFile) && File.Exists(legacyFile))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(dstFile));
+                    File.Move(legacyFile, dstFile);
+                    var legacyMeta = legacyFile + ".meta";
+                    if (File.Exists(legacyMeta))
+                        File.Move(legacyMeta, dstFile + ".meta");
+                    migrated++;
+                }
+                else if (File.Exists(dstFile) && File.Exists(legacyFile))
+                {
+                    // 新旧并存的中间态（上次迁移中断）：以新为准，删旧（其 GUID 废弃）
+                    Debug.LogWarning("[CustomStub] " + setName + ": 新旧位置并存，删除旧扁平残留 "
+                        + Path.GetFileName(rel) + "（旧 GUID 废弃，若场景断链请从 git 恢复检查）");
+                    AssetDatabase.DeleteAsset(legacyFile.Replace('\\', '/'));
+                }
+            }
+
             if (File.Exists(dstFile) && File.ReadAllText(dstFile) == content)
                 continue;
+            Directory.CreateDirectory(Path.GetDirectoryName(dstFile));
+            var hadMeta = File.Exists(dstFile + ".meta");
             File.WriteAllText(dstFile, content);
-            if (File.Exists(dstFile + ".meta"))
+            if (hadMeta)
                 updated++;
             else
                 copied++;
@@ -211,19 +273,33 @@ public static class CustomStubCopyTool
 
         // 清理母本中已删除、但关卡集还残留的脚本（连同 .meta，Guid 随之废弃）
         var removed = 0;
-        foreach (var dstFile in Directory.GetFiles(dstDir, "*.cs"))
+        foreach (var dstFile in Directory.GetFiles(dstDir, "*.cs", SearchOption.AllDirectories))
         {
-            if (masterNames.Contains(Path.GetFileName(dstFile)))
+            var rel = dstFile.Substring(dstDir.Length).TrimStart('/', '\\').Replace('\\', '/');
+            if (masterSet.Contains(rel))
                 continue;
-            var assetPath = dstFile.Replace('\\', '/');
-            AssetDatabase.DeleteAsset(assetPath);
+            AssetDatabase.DeleteAsset(dstFile.Replace('\\', '/'));
             removed++;
         }
+        // 清理空子目录（连同 folder .meta；自底向上）
+        RemoveEmptyDirs(dstDir);
 
         if (refresh)
             AssetDatabase.Refresh();
-        return "新增 " + copied + " / 更新 " + updated + " / 清理 " + removed
+        return "新增 " + copied + " / 更新 " + updated + " / 迁移 " + migrated + " / 清理 " + removed
             + " → " + dstDir + "（程序集 " + asmdefName + "）";
+    }
+
+    /// <summary>自底向上删除空子目录（AssetDatabase.DeleteAsset 连同 folder .meta；
+    /// 根目录本身不动）。</summary>
+    private static void RemoveEmptyDirs(string root)
+    {
+        foreach (var dir in Directory.GetDirectories(root))
+        {
+            RemoveEmptyDirs(dir);
+            if (Directory.GetFiles(dir).Length == 0 && Directory.GetDirectories(dir).Length == 0)
+                AssetDatabase.DeleteAsset(dir.Replace('\\', '/'));
+        }
     }
 }
 
@@ -240,9 +316,11 @@ public class CustomStubCopyToolWindow : EditorWindow
     private void OnGUI()
     {
         EditorGUILayout.HelpBox(
-            "把 CustomStub 母本（Assets/Editor/LayoutEditor/CustomStub）拷贝到关卡集的 stub/ 目录，" +
-            "生成关卡集专属程序集 Stub_<set>。重复拷贝为内容同步：保留已有关卡集脚本的 GUID" +
-            "（场景引用稳定），只更新代码内容。", MessageType.Info);
+            "把 CustomStub 母本（Assets/Editor/LayoutEditor/CustomStub，按 core/RandomCrate/" +
+            "HotPot/UtensilTiming/Switch/Terminal/WorldMap 子文件夹组织）拷贝到关卡集的 stub/ 目录" +
+            "（目录结构镜像母本），生成关卡集专属程序集 Stub_<set>。重复拷贝为内容同步：保留已有" +
+            "关卡集脚本的 GUID（场景引用稳定），只更新代码内容；旧扁平布局自动迁移进子文件夹" +
+            "（.meta 随文件移动，GUID 不变）。", MessageType.Info);
 
         if (!Directory.Exists("Assets/Editor/LayoutEditor/CustomStub"))
         {

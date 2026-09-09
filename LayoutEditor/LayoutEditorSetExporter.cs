@@ -298,6 +298,18 @@ public static class LayoutEditorSetExporter
             Debug.LogWarning("[SetExporter] 未找到 commonw1 bundle（" + commonW1Abs
                 + "），zip 不含 commonW1 —— 真机需另行安装，否则问号图标/CustomStub 道具缺失。");
 
+        // commonW2 bundle（Burger大全 共享汉堡菜谱库）：本集任一关卡实际引用 commonW2 时携带。
+        var commonW2Abs = AbsPath(BundlesRoot) + "/commonw2";
+        var needsCommonW2 = LayoutEditorCustomIngredients.SetNeedsCommonW2Bundle(setName);
+        if (needsCommonW2)
+        {
+            if (File.Exists(commonW2Abs))
+                entries.Add(new LayoutEditorZipWriter.ZipEntrySource("commonW2", commonW2Abs));
+            else
+                Debug.LogWarning("[SetExporter] 本集引用 commonW2 资产但未找到 commonw2 bundle（" + commonW2Abs
+                    + "），zip 不含 commonW2 —— 真机汉堡素材将缺失。请先执行 Tools/Build AssetBundles。");
+        }
+
         // OC2LevelRuntimeLoader.dll（研发手动维护：layout-editor/web/public/ 下，
         // 更新时先 ./BepInExPlugins/build.sh 再拷贝覆盖）
         var loaderDllAbs = ProjectRootAbsPath() + "/layout-editor/web/public/OC2LevelRuntimeLoader.dll";

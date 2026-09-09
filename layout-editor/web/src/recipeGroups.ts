@@ -89,9 +89,39 @@ export function isCookStepLike(s: string | undefined): boolean {
  *  - 有自身步骤 + 全生食材组成（如 Fried2_Shrimp）：当前烹饪步骤包裹全部食材（单框）。
  *  - 无自身烹饪步骤（Composite/组装型）：子菜谱独立成组在前，普通食材归生组。
  *  Composition order defines the group order. */
+/** 子菜谱「自身工序」分组：Mixed 搅拌类按搅拌语义（与 deriveCookingGroups mixing 分支一致），
+ *  嵌套组成（compositionIds）递归展开，其余按自身烹饪步骤单组。
+ *  供 deriveCompositionGroups 展开子菜谱时使用，保留内层步骤图标（如 搅拌碗 → 烤箱）。 */
+function deriveOwnStepGroups(
+  sub: RecipeLike,
+  allRecipes: IntermediateLike[],
+  visited?: Set<string>
+): CookingGroup[] {
+  if (sub.mixing) {
+    const finalStep = sub.cookingStep ?? "";
+    const ings = [...(sub.ingredients ?? [])];
+    if (finalStep === "Blender" || finalStep === "Mixer" || finalStep === "MixingBowl") {
+      return [{ step: finalStep, utensils: STEP_UTENSILS[finalStep] ?? [], ingredients: ings }];
+    }
+    const groups: CookingGroup[] = [
+      { step: "MixingBowl", utensils: STEP_UTENSILS["MixingBowl"] ?? [], ingredients: ings },
+    ];
+    if (COOK_STEPS.has(finalStep)) {
+      groups.push({ step: finalStep, utensils: STEP_UTENSILS[finalStep] ?? [], ingredients: [] });
+    }
+    return groups;
+  }
+  if ((sub.compositionIds ?? []).length > 0) {
+    return deriveCompositionGroups(sub, allRecipes, visited);
+  }
+  const step = COOK_STEPS.has(sub.cookingStep ?? "") ? sub.cookingStep! : "";
+  return [{ step, utensils: STEP_UTENSILS[step] ?? [], ingredients: [...(sub.ingredients ?? [])] }];
+}
+
 export function deriveCompositionGroups(
   r: RecipeLike,
-  allRecipes: IntermediateLike[]
+  allRecipes: IntermediateLike[],
+  visited?: Set<string>
 ): CookingGroup[] {
   const compIds = r.compositionIds ?? [];
   if (compIds.length === 0) return [];
@@ -110,7 +140,7 @@ export function deriveCompositionGroups(
   // 子菜谱为 Mixed 类型（mixing）时即使无 cookingStep 也按 MixingBowl 成组（搅拌）。
   const groups: CookingGroup[] = [];
   const subGroups = new Map<string, CookingGroup>();
-  const pushSubGroup = (step: string, compId: string, ings: string[]): void => {
+  const pushSubGroup = (step: string, compId: string, ings: string[], src?: CookingGroup): void => {
     // 同一子菜谱重复出现（数量叠加）时并入同一组；不同子菜谱即使步骤相同也分开。
     const key = `${step}::${compId}`;
     let g = subGroups.get(key);
@@ -120,18 +150,33 @@ export function deriveCompositionGroups(
       groups.push(g);
     }
     for (const ing of ings) g.ingredients.push(ing);
+    if (src?.ingredientSteps) {
+      g.ingredientSteps = g.ingredientSteps ?? {};
+      for (const [ing, steps] of Object.entries(src.ingredientSteps)) {
+        g.ingredientSteps[ing] = [...(g.ingredientSteps[ing] ?? []), ...steps];
+      }
+    }
   };
   for (const compId of compIds) {
     const sub = byId.get(compId);
     if (sub && (sub.ingredients ?? []).length > 0) {
       const cookStep = COOK_STEPS.has(sub.cookingStep ?? "") ? sub.cookingStep! : "";
-      if (sub.mixing && cookStep) {
-        // 搅拌+烹饪的中间产物（如 搅拌+烤箱）：搅拌组 + 紧随的空标记组，
-        // mergeFinalMarkers 合并为一格双图标（搅拌碗 + 烹饪步骤）
-        pushSubGroup("MixingBowl", compId, sub.ingredients!);
-        pushSubGroup(cookStep, compId, []);
-      } else if (cookStep || sub.mixing) {
-        pushSubGroup(cookStep || "MixingBowl", compId, sub.ingredients!);
+      if (sub.mixing || ((sub.compositionIds ?? []).length > 0 && !(compId && visited?.has(compId)))) {
+        // Mixed 搅拌类 或 嵌套组成（子菜谱本身由其他菜谱组成，如 搅拌中间产物 → 烤箱 → 组装菜）：
+        // 展开子菜谱自身工序（搅拌组 + 烹饪步骤标记），保留内层步骤图标；
+        // 各组并入后由 mergeFinalMarkers 合并为一格多图标（搅拌碗 + 烤箱）。
+        const subVisited = new Set(visited ?? []);
+        if (r.id) subVisited.add(r.id);
+        for (const g of deriveOwnStepGroups(sub, allRecipes, subVisited)) {
+          if (!g.step && !g.ingredients.some((ing) => byId.has(ing))) {
+            // 全生食材组：并入普通食材，不单独成框（与拍平行为一致）
+            for (const ing of g.ingredients) plain.push(ing);
+          } else {
+            pushSubGroup(g.step, compId, g.ingredients, g);
+          }
+        }
+      } else if (cookStep) {
+        pushSubGroup(cookStep, compId, sub.ingredients!);
       } else {
         for (const ing of sub.ingredients!) plain.push(ing);
       }

@@ -1,3 +1,4 @@
+import { guidePath } from "../route";
 import type { GuideBlock, GuideNode } from "./types";
 import type { IngredientEntry, RecipeEntry } from "../types";
 import {
@@ -154,7 +155,7 @@ export function renderGuideSidebar(chapters: GuideNode[], activeId: string): str
 }
 
 function sidebarNodeHtml(node: GuideNode, depth: number): string {
-  const link = `<a class="guide-tree-link" href="#/guide" data-guide-id="${esc(node.id)}">${esc(node.title)}</a>`;
+  const link = `<a class="guide-tree-link" href="#guide-${esc(node.id)}" data-guide-id="${esc(node.id)}">${esc(node.title)}</a>`;
   if (!node.children?.length) {
     return `<li class="guide-tree-leaf" data-guide-title="${esc(node.title.toLowerCase())}" data-guide-id="${esc(node.id)}">${link}</li>`;
   }
@@ -260,7 +261,7 @@ export function wireGuidePage(root: HTMLElement, opts: GuideWireOptions): void {
       items.push(`<li class="guide-search-group">${ch.icon ?? "📄"} ${esc(ch.title)}</li>`);
       nodes.forEach((n) => {
         items.push(
-          `<li class="guide-tree-leaf"><a class="guide-tree-link" href="#/guide" data-page="${esc(ch.id)}" data-guide-id="${esc(n.id)}">${esc(n.title)}</a></li>`,
+          `<li class="guide-tree-leaf"><a class="guide-tree-link" href="${guidePath(ch.id)}" data-page="${esc(ch.id)}" data-guide-id="${esc(n.id)}">${esc(n.title)}</a></li>`,
         );
       });
     });

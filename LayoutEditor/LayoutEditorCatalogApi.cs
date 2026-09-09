@@ -80,6 +80,9 @@ public static class LayoutEditorCatalogApi
     {
         if (string.IsNullOrEmpty(assetPath))
             return "core";
+        // commonW2 Burger大全共享库：独立分组（先于 /custom_recipes/ 判定）。
+        if (assetPath.IndexOf("/commonW2/", StringComparison.Ordinal) >= 0)
+            return "burger";
         if (assetPath.IndexOf("/custom_recipes/", StringComparison.Ordinal) >= 0)
             return "levelset";
         // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：按通用内容处理
@@ -226,6 +229,10 @@ public static class LayoutEditorCatalogApi
                 folders.Add(customWebDir);
         }
 
+        // Burger大全（commonW2 共享汉堡库）：所有关卡集的关卡均可选用。
+        if (LayoutEditorLevelAdminApi.AssetFolderExists(LayoutEditorLevelAdminApi.CommonW2RecipesDir))
+            folders.Add(LayoutEditorLevelAdminApi.CommonW2RecipesDir);
+
         var seen = new HashSet<string>();
         for (int f = 0; f < folders.Count; f++)
         {
@@ -260,6 +267,15 @@ public static class LayoutEditorCatalogApi
                 var group = FoodGroupOf(path);
                 if (group == "levelset")
                     LayoutEditorManualLookup.TryGetLevelSetName(levelSet, id, out zh, out en);
+                else if (group == "burger")
+                {
+                    // Burger大全（commonW2）：按 recipeName 查共享库 names.json。
+                    var burgerNames = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW2RecipesDir);
+                    var nameKey = custom != null && !string.IsNullOrEmpty(custom.recipeName) ? custom.recipeName : id;
+                    if (!burgerNames.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))
+                        zh = id;
+                    en = nameKey;
+                }
                 else
                     LayoutEditorManualLookup.TryGet(id, out zh, out en);
 
@@ -315,9 +331,11 @@ public static class LayoutEditorCatalogApi
                     score = score,
                     isCustom = isCustom,
                     group = group,
-                    type = RecipeTypeOf(id),
+                    type = group == "burger" ? "burger" : RecipeTypeOf(id),
                     intermediate = score <= 0,
-                    mixing = isCustom && custom.type == CustomRecipeSO.RecipeType.Mixed
+                    mixing = isCustom && custom.type == CustomRecipeSO.RecipeType.Mixed,
+                    optionalKind = custom is CustomRecipeOptionalBurgerSO ? "burger"
+                        : custom is CustomRecipeOptionalPizzaSO ? "pizza" : ""
                 });
             }
         }
@@ -418,20 +436,33 @@ public static class LayoutEditorCatalogApi
             if (string.IsNullOrEmpty(p))
                 continue;
             var id = Path.GetFileNameWithoutExtension(p);
-            list.Add(new LevelOptionalItemDto
-            {
-                guid = AssetDatabase.AssetPathToGUID(p),
-                id = id,
-                group = FoodGroupOf(p),
-                kind = ClassifyOptionalItem(so, id)
-            });
+            list.Add(OptionalItemDtoFromSo(so));
         }
         return list.ToArray();
+    }
+
+    private static LevelOptionalItemDto OptionalItemDtoFromSo(ScriptableObject so)
+    {
+        if (so == null)
+            return null;
+        var p = AssetDatabase.GetAssetPath(so);
+        if (string.IsNullOrEmpty(p))
+            return null;
+        var id = Path.GetFileNameWithoutExtension(p);
+        return new LevelOptionalItemDto
+        {
+            guid = AssetDatabase.AssetPathToGUID(p),
+            id = id,
+            group = FoodGroupOf(p),
+            kind = ClassifyOptionalItem(so, id)
+        };
     }
 
     private static string ClassifyOptionalItem(ScriptableObject so, string id)
     {
         var lower = (id ?? "").ToLowerInvariant();
+        if (so is CustomRecipeOptionalBurgerSO)
+            return "burger-optional";
         if (so is CustomRecipeSO)
             return "custom-recipe";
         if (Array.IndexOf(PizzaOptionalGuids, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so))) >= 0)
@@ -677,6 +708,31 @@ public static class LayoutEditorCatalogApi
             });
         }
 
+        // Burger大全（commonW2）组装定义：汉堡关卡的 optionalRecipeMatchListItems 候选。
+        if (LayoutEditorLevelAdminApi.AssetFolderExists(LayoutEditorLevelAdminApi.CommonW2RecipesDir))
+        {
+            var zhMap = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW2RecipesDir);
+            foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
+                         LayoutEditorLevelAdminApi.CommonW2RecipesDir,
+                         LayoutEditorLevelAdminApi.OptionalBurgerScriptGuid))
+            {
+                var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
+                var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+                var nameKey = so != null && !string.IsNullOrEmpty(so.recipeName) ? so.recipeName : id;
+                string zh;
+                if (!zhMap.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))
+                    zh = id;
+                items.Add(new OptionalPresetItemDto
+                {
+                    guid = asset.guid,
+                    id = id,
+                    group = "burger",
+                    kind = "burger-optional",
+                    nameZh = zh
+                });
+            }
+        }
+
         return new OptionalPresetsDto
         {
             items = items.ToArray(),
@@ -685,6 +741,139 @@ public static class LayoutEditorCatalogApi
             hotdogFillGuidsDlc08 = hot08Guids.ToArray(),
             hotdogFillGuidsDlc11 = hot11Guids.ToArray(),
         };
+    }
+
+    /// <summary>按所选成品汉堡夹心全集同步本关 BurgerOptional，并返回 optional 候选 guid：
+    ///  [BurgerOptional] + CustomRecipeSO 中间产物。</summary>
+    public static string[] ComputeBurgerOptionalFillGuids(string levelInfoAssetPath, string[] selectedRecipeGuids)
+    {
+        var intermediates = new HashSet<ScriptableObject>();
+        var fillerGuids = new HashSet<string>(StringComparer.Ordinal);
+
+        string levelSet = null;
+        var pathParts = (levelInfoAssetPath ?? "").Replace('\\', '/').Split('/');
+        if (pathParts.Length > 2 && pathParts[1] == "LevelSets")
+            levelSet = pathParts[2];
+
+        var selectedBurgers = new List<CustomRecipeSO>();
+        if (selectedRecipeGuids != null)
+        {
+            for (int i = 0; i < selectedRecipeGuids.Length; i++)
+            {
+                var g = selectedRecipeGuids[i];
+                var path = AssetDatabase.GUIDToAssetPath(g);
+                if (string.IsNullOrEmpty(path))
+                {
+                    LayoutEditorLog.LogWarning("[Optional] 汉堡填充：菜谱 guid 无法解析: " + g);
+                    continue;
+                }
+                var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+                if (so == null || !LayoutEditorBurgerApi.IsFinishedBurgerRecipe(so))
+                    continue;
+                selectedBurgers.Add(so);
+                CollectCustomSubRecipesFromBurger(so, intermediates, fillerGuids);
+            }
+        }
+
+        if (selectedBurgers.Count == 0)
+            return new string[0];
+
+        CustomRecipeOptionalBurgerSO levelOptional;
+        var createErr = LayoutEditorBurgerApi.FindOrCreateLevelBurgerOptional(
+            levelInfoAssetPath, levelSet, out levelOptional);
+        if (createErr != null)
+        {
+            LayoutEditorLog.LogWarning("[Optional] 汉堡填充：" + createErr);
+            return new string[0];
+        }
+
+        LayoutEditorBurgerApi.SyncLevelBurgerOptionalFromBurgers(levelOptional, selectedBurgers);
+
+        if (!LayoutEditorBurgerApi.BurgerOptionalHasFillerLayers(levelOptional))
+        {
+            LayoutEditorLog.LogWarning("[Optional] 汉堡填充：所选汉堡均无夹心层（纯面包），无需注册 BurgerOptional");
+            return new string[0];
+        }
+
+        var guids = new List<string>();
+        var seenGuids = new HashSet<string>(StringComparer.Ordinal);
+        AppendOptionalGuid(levelOptional, guids, seenGuids);
+        foreach (var sub in intermediates)
+        {
+            if (sub == null || sub == levelOptional)
+                continue;
+            AppendOptionalGuid(sub, guids, seenGuids);
+        }
+
+        LayoutEditorLog.Log("[Optional] ComputeBurgerOptionalFillGuids: " + guids.Count + " 条 ["
+            + string.Join(", ", guids.ToArray()) + "]");
+        return guids.ToArray();
+    }
+
+    private static void AppendOptionalGuid(ScriptableObject so, List<string> guids, HashSet<string> seenGuids)
+    {
+        if (so == null)
+            return;
+        var p = AssetDatabase.GetAssetPath(so);
+        if (string.IsNullOrEmpty(p))
+            return;
+        var guid = AssetDatabase.AssetPathToGUID(p);
+        if (string.IsNullOrEmpty(guid) || !seenGuids.Add(guid))
+            return;
+        guids.Add(guid);
+    }
+
+    public static BurgerOptionalComputeResultDto ComputeBurgerOptionalFill(BurgerOptionalComputeRequestDto req)
+    {
+        if (req == null)
+            return new BurgerOptionalComputeResultDto
+            {
+                guids = new string[0],
+                items = new LevelOptionalItemDto[0]
+            };
+        var guids = ComputeBurgerOptionalFillGuids(req.levelInfoAssetPath, req.recipeGuids);
+        var items = new List<LevelOptionalItemDto>();
+        for (int i = 0; i < guids.Length; i++)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (string.IsNullOrEmpty(path))
+                continue;
+            var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+            var dto = OptionalItemDtoFromSo(so);
+            if (dto != null)
+                items.Add(dto);
+        }
+        return new BurgerOptionalComputeResultDto
+        {
+            guids = guids,
+            items = items.ToArray()
+        };
+    }
+
+    private static void CollectCustomSubRecipesFromBurger(
+        CustomRecipeSO recipe,
+        HashSet<ScriptableObject> resultSet,
+        HashSet<string> fillerGuids)
+    {
+        foreach (var c in recipe.compositionSOs ?? new ScriptableObject[0])
+        {
+            if (c == null)
+                continue;
+            var cp = AssetDatabase.GetAssetPath(c);
+            if (string.IsNullOrEmpty(cp))
+                continue;
+            var id = Path.GetFileNameWithoutExtension(cp);
+            if (LayoutEditorBurgerApi.IsBurgerBunId(id))
+                continue;
+            var g = AssetDatabase.AssetPathToGUID(cp);
+            if (!string.IsNullOrEmpty(g))
+                fillerGuids.Add(g);
+            var sub = c as CustomRecipeSO;
+            if (sub == null)
+                continue;
+            if (resultSet.Add(sub))
+                AddNestedCustomSubRecipes(sub, resultSet);
+        }
     }
 
     private static string PresetKindOf(ScriptableObject so)

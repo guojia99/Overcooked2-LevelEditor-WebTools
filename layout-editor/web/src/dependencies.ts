@@ -2,6 +2,7 @@ import * as api from "./api";
 import type { AudioKnowledge, BundleAnalysis, LevelDetail, LevelSetInfo, LevelSummary } from "./types";
 import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
+import { navigateTo } from "./route";
 import { goLayout, goManage } from "./levels";
 
 const DEPS_TARGET_KEY = "depsTargetLevel";
@@ -12,8 +13,7 @@ export function goDependencies(setName?: string, levelInfoAssetPath?: string): v
   } else {
     sessionStorage.removeItem(DEPS_TARGET_KEY);
   }
-  location.hash = "#/dependencies";
-  location.reload();
+  location.assign("/dependencies");
 }
 
 function consumeDepsTarget(): { setName: string; assetPath: string } | null {
@@ -60,25 +60,9 @@ function showError(e: unknown): void {
 
 function wireDepsNav(): void {
   wireNav((target) => {
-    if (target === "layout") {
-      location.hash = "#/layout";
-      location.reload();
-    } else if (target === "manage") goManage();
-    else if (target === "custom-recipes") {
-      location.hash = "#/custom-recipes";
-      location.reload();
-    } else if (target === "recipes") {
-      location.href = "/recipes";
-    } else if (target === "guide") {
-      location.hash = "#/guide";
-      location.reload();
-    } else if (target === "changelog") {
-      location.hash = "#/changelog";
-      location.reload();
-    } else if (target === "dependencies") {
-      location.hash = "#/dependencies";
-      location.reload();
-    }
+    if (target === "layout") goLayout();
+    else if (target === "manage") goManage();
+    else navigateTo(target);
   });
 }
 

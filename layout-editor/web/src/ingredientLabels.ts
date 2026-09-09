@@ -14,6 +14,7 @@ const FOOD_GROUP_ZH: Record<string, string> = {
   dlc11: "DLC11 饮料",
   dlc13: "DLC13 巧克力",
   levelset: "本关卡集",
+  burger: "🍔 Burger大全",
 };
 
 export function foodGroupLabel(group: FoodGroup | undefined): string {

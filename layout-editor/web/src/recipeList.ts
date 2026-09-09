@@ -80,16 +80,7 @@ app.innerHTML = `
   </div>
 `;
 
-// 本页是独立 HTML 入口（/recipes），hash 路由只在 index.html 下有效，
-// 跳转其他页面必须整 URL 切回 /index.html#/...
-wireNav((target) => {
-  if (target === "layout") location.href = "/index.html#/layout";
-  else if (target === "manage") location.href = "/index.html#/manage";
-  else if (target === "dependencies") location.href = "/index.html#/dependencies";
-  else if (target === "custom-recipes") location.href = "/index.html#/custom-recipes";
-  else if (target === "guide") location.href = "/index.html#/guide";
-  else if (target === "changelog") location.href = "/index.html#/changelog";
-});
+wireNav();
 
 let recipes: RecipeWithGroups[] = [];
 let ingredients: IngredientEntry[] = [];
@@ -130,11 +121,19 @@ function dedupReskins<T extends { id: string; group?: string; nameZh?: string }>
   return [...reps.values()];
 }
 
+/** 成品图标：自定义菜谱（Burger大全等）经桥接从 CustomRecipeSO.icon 读取，静态目录没有。 */
+function recipeIconUrlOf(x: { isCustom?: boolean; assetPath?: string; id: string }): string {
+  return x.isCustom && x.assetPath
+    ? `/api/custom-recipes/icon?assetPath=${encodeURIComponent(x.assetPath)}`
+    : `/icons/recipes/${encodeURIComponent(x.id)}.png`;
+}
+
 function card(r: RecipeWithGroups): string {
   return rlCardHtml(r, {
     allRecipes: recipes,
     ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
-    extraBadge: r.group === "levelset" ? "本关" : undefined,
+    extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : undefined,
+    iconSrc: recipeIconUrlOf,
   });
 }
 
@@ -326,7 +325,7 @@ async function exportAll(): Promise<void> {
         if (r.group && r.group !== "core" && r.group !== "levelset") badges.push(foodGroupLabel(r.group));
         if (!intermediate) badges.push(`⭐ ${r.score ?? 0}`);
         return {
-          iconUrl: `/icons/recipes/${encodeURIComponent(r.id)}.png`,
+          iconUrl: recipeIconUrlOf(r),
           nameZh: r.nameZh,
           nameEn: r.nameEn || r.id,
           badges,

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83fb008bcc8e793429b02c178c430815, type: 3}
+  m_Name: ChickenMushroomTwoCheeseBurger
+  m_EditorClassIdentifier: 
+  type: 1
+  recipeName: ChickenMushroomTwoCheeseBurger
+  uID: 58321011
+  score: 120
+  platingStepSO: {fileID: 11400000, guid: 02b04fdf6fef0e944870fd5e06375ed1, type: 2}
+  modelSO: {fileID: 11400000, guid: 7361adec22fc0234db4211f08cab78c0, type: 2}
+  model: {fileID: 0}
+  iconSO: {fileID: 0}
+  icon: {fileID: 21300000, guid: 52f7618aae6165344a3a218636c29edb, type: 3}
+  compositionSOs:
+  - {fileID: 11400000, guid: 81232e654b602714098c1a440b66ddd5, type: 2}
+  - {fileID: 11400000, guid: b785cb39803b3be40b7d7052d54595fd, type: 2}
+  - {fileID: 11400000, guid: b785cb39803b3be40b7d7052d54595fd, type: 2}
+  - {fileID: 11400000, guid: 83180cf71f3fb0a48baf992324ed2750, type: 2}
+  - {fileID: 11400000, guid: 0ec801b90ef3ea54e8a4fa0f8ebb171f, type: 2}
+  optionalSOs: []
+  cookingStepSO: {fileID: 0}
+  cookingStepIconSO: {fileID: 0}
+  cookingStepIcon: {fileID: 0}
+  cookingProgress: 0
+  mixingIconSO: {fileID: 0}
+  mixingIcon: {fileID: 0}
+  mixingProgress: 0

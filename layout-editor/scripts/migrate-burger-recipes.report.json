@@ -1,0 +1,1046 @@
+{
+  "recipes": [
+    {
+      "file": "BaconSausage.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "BaconSausage",
+      "zh": "培根煎香肠",
+      "uID": 58321001
+    },
+    {
+      "file": "BreakfastCheeseBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "BreakfastCheeseBurger",
+      "zh": "早餐芝士汉堡",
+      "uID": 58321002
+    },
+    {
+      "file": "BreakfastLettuceBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "BreakfastLettuceBurger",
+      "zh": "早餐生菜汉堡",
+      "uID": 58321003
+    },
+    {
+      "file": "BreakfastMeatBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "BreakfastMeatBurger",
+      "zh": "早餐牛肉汉堡",
+      "uID": 58321004
+    },
+    {
+      "file": "BreakfastOnionBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "BreakfastOnionBurger",
+      "zh": "早餐洋葱汉堡",
+      "uID": 58321005
+    },
+    {
+      "file": "CheeseChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "CheeseChickenBurger",
+      "zh": "芝士鸡肉汉堡",
+      "uID": 58321006
+    },
+    {
+      "file": "ChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "ChickenBurger",
+      "zh": "鸡肉汉堡",
+      "uID": 58321007
+    },
+    {
+      "file": "ChickenBurgerAssembly.asset",
+      "origin": "daimiao",
+      "kind": "assembly",
+      "recipeName": "ChickenBurgerAssembly",
+      "zh": "鸡肉汉堡夹心",
+      "uID": 58321008
+    },
+    {
+      "file": "ChickenLettuceCheeseTomatoBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "ChickenLettuceCheeseTomatoBurger",
+      "zh": "鸡肉生菜芝士番茄汉堡",
+      "uID": 58321009
+    },
+    {
+      "file": "ChickenMeatPineappleCucumberBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "ChickenMeatPineappleCucumberBurger",
+      "zh": "鸡肉牛肉菠萝黄瓜汉堡",
+      "uID": 58321010
+    },
+    {
+      "file": "ChickenMushroomTwoCheeseBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "ChickenMushroomTwoCheeseBurger",
+      "zh": "鸡肉蘑菇双芝汉堡",
+      "uID": 58321011
+    },
+    {
+      "file": "ChickenPatty.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "ChickenPatty",
+      "zh": "煎鸡肉饼",
+      "uID": 58321012
+    },
+    {
+      "file": "CucumberBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "CucumberBurger",
+      "zh": "黄瓜汉堡",
+      "uID": 58321013
+    },
+    {
+      "file": "CucumberChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "CucumberChickenBurger",
+      "zh": "黄瓜鸡肉汉堡",
+      "uID": 58321014
+    },
+    {
+      "file": "CucumberMeatBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "CucumberMeatBurger",
+      "zh": "黄瓜牛肉汉堡",
+      "uID": 58321015
+    },
+    {
+      "file": "DoublePineappleBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "DoublePineappleBurger",
+      "zh": "双层菠萝汉堡",
+      "uID": 58321016
+    },
+    {
+      "file": "DoublePrawnBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "DoublePrawnBurger",
+      "zh": "双层虾堡",
+      "uID": 58321017
+    },
+    {
+      "file": "EggSausage.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "EggSausage",
+      "zh": "煎蛋香肠",
+      "uID": 58321018
+    },
+    {
+      "file": "FriedCheese.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "FriedCheese",
+      "zh": "煎芝士",
+      "uID": 58321019
+    },
+    {
+      "file": "FriedChicken.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "FriedChicken",
+      "zh": "煎鸡肉",
+      "uID": 58321020
+    },
+    {
+      "file": "FriedCornPone.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "FriedCornPone",
+      "zh": "炸玉米饼",
+      "uID": 58321021
+    },
+    {
+      "file": "FriedFishPone.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "FriedFishPone",
+      "zh": "炸鱼饼",
+      "uID": 58321022
+    },
+    {
+      "file": "FriedMushroom.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "FriedMushroom",
+      "zh": "煎蘑菇",
+      "uID": 58321023
+    },
+    {
+      "file": "FriedOnion.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "FriedOnion",
+      "zh": "煎洋葱",
+      "uID": 58321024
+    },
+    {
+      "file": "FriedPepperoni.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "FriedPepperoni",
+      "zh": "煎香肠",
+      "uID": 58321025
+    },
+    {
+      "file": "FriedPineapple.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "FriedPineapple",
+      "zh": "煎菠萝",
+      "uID": 58321026
+    },
+    {
+      "file": "FriedPotatoCake.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "FriedPotatoCake",
+      "zh": "炸土豆饼",
+      "uID": 58321027
+    },
+    {
+      "file": "FriedPrawn.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "FriedPrawn",
+      "zh": "炸虾",
+      "uID": 58321028
+    },
+    {
+      "file": "FriedShrimpPone.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "FriedShrimpPone",
+      "zh": "炸虾饼",
+      "uID": 58321029
+    },
+    {
+      "file": "LettuceBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceBurger",
+      "zh": "生菜汉堡",
+      "uID": 58321030
+    },
+    {
+      "file": "LettuceCheeseChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceCheeseChickenBurger",
+      "zh": "生菜芝士鸡肉汉堡",
+      "uID": 58321031
+    },
+    {
+      "file": "LettuceChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceChickenBurger",
+      "zh": "生菜鸡肉汉堡",
+      "uID": 58321032
+    },
+    {
+      "file": "LettuceCucumberBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceCucumberBurger",
+      "zh": "生菜黄瓜汉堡",
+      "uID": 58321033
+    },
+    {
+      "file": "LettuceCucumberChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceCucumberChickenBurger",
+      "zh": "生菜黄瓜鸡肉汉堡",
+      "uID": 58321034
+    },
+    {
+      "file": "LettuceCucumberMeatBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceCucumberMeatBurger",
+      "zh": "生菜黄瓜牛肉汉堡",
+      "uID": 58321035
+    },
+    {
+      "file": "LettuceCucumberPrawnBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "LettuceCucumberPrawnBurger",
+      "zh": "生菜黄瓜虾堡",
+      "uID": 58321036
+    },
+    {
+      "file": "LettuceTomatoBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceTomatoBurger",
+      "zh": "生菜西红柿汉堡",
+      "uID": 58321037
+    },
+    {
+      "file": "LettuceTomatoChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceTomatoChickenBurger",
+      "zh": "生菜西红柿鸡肉汉堡",
+      "uID": 58321038
+    },
+    {
+      "file": "LettuceTomatoCucumberBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceTomatoCucumberBurger",
+      "zh": "生菜西红柿黄瓜汉堡",
+      "uID": 58321039
+    },
+    {
+      "file": "LettuceTomatoCucumberChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceTomatoCucumberChickenBurger",
+      "zh": "生菜西红柿黄瓜鸡肉汉堡",
+      "uID": 58321040
+    },
+    {
+      "file": "LettuceTomatoCucumberPineappleBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceTomatoCucumberPineappleBurger",
+      "zh": "全都有汉堡",
+      "uID": 58321041
+    },
+    {
+      "file": "LettuceTomatoCucumberPineappleCheeseChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceTomatoCucumberPineappleCheeseChickenBurger",
+      "zh": "汉堡皇巨无霸鸡肉堡",
+      "uID": 58321042
+    },
+    {
+      "file": "LettuceTomatoCucumberPineappleCheeseMeatBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "LettuceTomatoCucumberPineappleCheeseMeatBurger",
+      "zh": "汉堡皇巨无霸牛肉堡",
+      "uID": 58321043
+    },
+    {
+      "file": "LettuceTomatoPrawnBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "LettuceTomatoPrawnBurger",
+      "zh": "生菜番茄虾堡",
+      "uID": 58321044
+    },
+    {
+      "file": "MeatBurgerAssembly.asset",
+      "origin": "daimiao",
+      "kind": "assembly",
+      "recipeName": "MeatBurgerAssembly",
+      "zh": "牛肉汉堡夹心",
+      "uID": 58321045
+    },
+    {
+      "file": "MeatEggBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "MeatEggBurger",
+      "zh": "MeatCornBurger",
+      "uID": 58321046
+    },
+    {
+      "file": "MeatMushroomBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "MeatMushroomBurger",
+      "zh": "牛肉蘑菇汉堡",
+      "uID": 58321047
+    },
+    {
+      "file": "MeatOnionBurger.asset",
+      "origin": "100Burger",
+      "kind": "product",
+      "recipeName": "MeatOnionBurger",
+      "zh": "牛肉洋葱汉堡",
+      "uID": 58321048
+    },
+    {
+      "file": "MixedMeatEgg.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "MixedMeatEgg",
+      "zh": "搅拌牛肉蛋",
+      "uID": 58321049
+    },
+    {
+      "file": "MixedMeatMushroom.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "MixedMeatMushroom",
+      "zh": "搅拌牛肉蘑菇",
+      "uID": 58321050
+    },
+    {
+      "file": "MixedMeatOnion.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "MixedMeatOnion",
+      "zh": "搅拌牛肉洋葱",
+      "uID": 58321051
+    },
+    {
+      "file": "OptionalBurger.asset",
+      "origin": "100Burger",
+      "kind": "assembly",
+      "recipeName": "OptionalBurger",
+      "zh": "汉堡组装定义",
+      "uID": 58321052
+    },
+    {
+      "file": "PanfriedBeef.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "PanfriedBeef",
+      "zh": "煎牛肉",
+      "uID": 58321053
+    },
+    {
+      "file": "PanfriedMeatEgg.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "PanfriedMeatEgg",
+      "zh": "香煎牛肉蛋",
+      "uID": 58321054
+    },
+    {
+      "file": "PanfriedMeatMushroom.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "PanfriedMeatMushroom",
+      "zh": "香煎牛肉蘑菇",
+      "uID": 58321055
+    },
+    {
+      "file": "PanfriedMeatOnion.asset",
+      "origin": "100Burger",
+      "kind": "intermediate",
+      "recipeName": "PanfriedMeatOnion",
+      "zh": "香煎牛肉洋葱",
+      "uID": 58321056
+    },
+    {
+      "file": "PanfriedMushroom.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "PanfriedMushroom",
+      "zh": "煎蘑菇",
+      "uID": 58321057
+    },
+    {
+      "file": "PanfriedOnion.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "PanfriedOnion",
+      "zh": "煎洋葱",
+      "uID": 58321058
+    },
+    {
+      "file": "PineappleBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "PineappleBurger",
+      "zh": "菠萝汉堡",
+      "uID": 58321059
+    },
+    {
+      "file": "PineappleChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "PineappleChickenBurger",
+      "zh": "菠萝鸡肉汉堡",
+      "uID": 58321060
+    },
+    {
+      "file": "PineappleMeatBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "PineappleMeatBurger",
+      "zh": "菠萝牛肉汉堡",
+      "uID": 58321061
+    },
+    {
+      "file": "PineappleMeatBurgerAssembly.asset",
+      "origin": "daimiao",
+      "kind": "assembly",
+      "recipeName": "PineappleMeatBurgerAssembly",
+      "zh": "菠萝牛肉堡夹心",
+      "uID": 58321062
+    },
+    {
+      "file": "PineappleSlice.asset",
+      "origin": "daimiao",
+      "kind": "intermediate",
+      "recipeName": "PineappleSlice",
+      "zh": "菠萝片",
+      "uID": 58321063
+    },
+    {
+      "file": "TomatoBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "TomatoBurger",
+      "zh": "西红柿汉堡",
+      "uID": 58321064
+    },
+    {
+      "file": "TomatoCucumberBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "TomatoCucumberBurger",
+      "zh": "西红柿黄瓜汉堡",
+      "uID": 58321065
+    },
+    {
+      "file": "TomatoCucumberChickenBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "TomatoCucumberChickenBurger",
+      "zh": "西红柿黄瓜鸡肉汉堡",
+      "uID": 58321066
+    },
+    {
+      "file": "TomatoCucumberMeatBurger.asset",
+      "origin": "daimiao",
+      "kind": "product",
+      "recipeName": "TomatoCucumberMeatBurger",
+      "zh": "西红柿黄瓜牛肉汉堡",
+      "uID": 58321067
+    },
+    {
+      "file": "VeggieBurgerAssembly.asset",
+      "origin": "daimiao",
+      "kind": "assembly",
+      "recipeName": "VeggieBurgerAssembly",
+      "zh": "素汉堡夹心",
+      "uID": 58321068
+    }
+  ],
+  "extras": [
+    {
+      "file": "呆喵新菜谱/白模/肠.fbx",
+      "to": "models/Sausage.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/汉堡夹心菠萝片无材质.fbx",
+      "to": "models/BurgerPineappleSlice.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/汉堡夹心黄瓜片无材质.fbx",
+      "to": "models/BurgerCucumberSlice.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/汉堡夹心西红柿片无材质.fbx",
+      "to": "models/BurgerTomatoSlice.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/煎鸡肉.fbx",
+      "to": "models/FriedChicken.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/煎鸡肉新.fbx",
+      "to": "models/FriedChickenNew.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/煎蘑菇.fbx",
+      "to": "models/FriedMushroom.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/煎洋葱.fbx",
+      "to": "models/FriedOnion.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/煎芝士片.fbx",
+      "to": "models/FriedCheese.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/炸土豆饼.fbx",
+      "to": "models/FriedPotatoCake.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/白模/炸鱼饼.fbx",
+      "to": "models/FriedFishCake.fbx"
+    },
+    {
+      "file": "呆喵新菜谱/材质/菠萝片.mat",
+      "to": "models/PineappleSlice.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/菠萝片.png",
+      "to": "models/PineappleSlice.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/肠2.png",
+      "to": "models/Sausage2.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/黄瓜片.mat",
+      "to": "models/CucumberSlice.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/黄瓜片.png",
+      "to": "models/CucumberSlice.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/煎鸡肉 1.png",
+      "to": "models/FriedChicken_1.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/煎蘑菇1.png",
+      "to": "models/FriedMushroom1.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/煎牛肉.png",
+      "to": "models/FriedBeef.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/煎洋葱.png",
+      "to": "models/FriedOnion.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/煎芝士片.png",
+      "to": "models/FriedCheese.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/西红柿片.mat",
+      "to": "models/TomatoSlice.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/西红柿片.png",
+      "to": "models/TomatoSlice.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/炸土豆饼.png",
+      "to": "models/FriedPotatoCake.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/炸虾饼.png",
+      "to": "models/FriedShrimpCake.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/炸鱼饼.png",
+      "to": "models/FriedFishCake.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/炸玉米饼.png",
+      "to": "models/FriedCornCake.png"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/肠2.mat",
+      "to": "models/Sausage2.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/煎鸡肉 1.mat",
+      "to": "models/FriedChicken_1.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/煎蘑菇2.mat",
+      "to": "models/FriedMushroom2.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/煎牛肉.mat",
+      "to": "models/FriedBeef.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/煎洋葱 1.mat",
+      "to": "models/FriedOnion_1.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/煎芝士片.mat",
+      "to": "models/FriedCheese.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/炸土豆饼.mat",
+      "to": "models/FriedPotatoCake.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/炸虾饼 3.mat",
+      "to": "models/FriedShrimpCake_3.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/炸鱼饼 3.mat",
+      "to": "models/FriedFishCake_3.mat"
+    },
+    {
+      "file": "呆喵新菜谱/材质/Materials/炸玉米饼 1.mat",
+      "to": "models/FriedCornCake_1.mat"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/10西红柿汉堡ui.png",
+      "to": "icons/TomatoBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/12生菜鸡肉汉堡.png",
+      "to": "icons/LettuceChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/13生菜西红柿鸡肉汉堡.png",
+      "to": "icons/LettuceTomatoChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/14黄瓜鸡肉汉堡.png",
+      "to": "icons/CucumberChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/15西红柿黄瓜鸡肉汉堡.png",
+      "to": "icons/TomatoCucumberChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/16生菜黄瓜鸡肉汉堡.png",
+      "to": "icons/LettuceCucumberChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/17菠萝鸡肉汉堡.png",
+      "to": "icons/PineappleChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/18汉堡皇巨无霸堡.png",
+      "to": "icons/SupremeBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/19芝士鸡肉汉堡.png",
+      "to": "icons/CheeseChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/1生菜汉堡ui.png",
+      "to": "icons/LettuceBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/20生菜芝士鸡肉汉堡.png",
+      "to": "icons/LettuceCheeseChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/21生菜西红柿黄瓜鸡肉汉堡.png",
+      "to": "icons/LettuceTomatoCucumberChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/22生菜黄瓜牛肉汉堡.png",
+      "to": "icons/LettuceCucumberMeatBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/23黄瓜牛肉汉堡.png",
+      "to": "icons/CucumberMeatBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/24西红柿黄瓜牛肉汉堡.png",
+      "to": "icons/TomatoCucumberMeatBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/2生菜西红柿汉堡ui.png",
+      "to": "icons/LettuceTomatoBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/30鸡肉汉堡.png",
+      "to": "icons/ChickenBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/33菠萝牛肉汉堡.png",
+      "to": "icons/PineappleMeatBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/3双层菠萝汉堡ui.png",
+      "to": "icons/DoublePineappleBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/4黄瓜汉堡ui.png",
+      "to": "icons/CucumberBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/5西红柿黄瓜汉堡ui.png",
+      "to": "icons/TomatoCucumberBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/6生菜黄瓜汉堡ui.png",
+      "to": "icons/LettuceCucumberBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/7菠萝汉堡ui.png",
+      "to": "icons/PineappleBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/8全都有汉堡.png",
+      "to": "icons/LettuceTomatoCucumberPineappleBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/9生菜西红柿黄瓜汉堡ui.png",
+      "to": "icons/LettuceTomatoCucumberBurger.png"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/菠萝片.prefab",
+      "to": "models/PineappleSlice.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/黄瓜片.prefab",
+      "to": "models/CucumberSlice.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/煎鸡肉新.prefab",
+      "to": "models/FriedChickenPatty.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/煎蘑菇.prefab",
+      "to": "models/PanfriedMushroom.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/煎牛肉饼.prefab",
+      "to": "models/FriedBeefPatty.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/煎牛肉新.prefab",
+      "to": "models/FriedBeefNew.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/煎香肠.prefab",
+      "to": "models/FriedSausage.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/煎洋葱.prefab",
+      "to": "models/PanfriedOnion.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/煎芝士片.prefab",
+      "to": "models/FriedCheese.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/西红柿片.prefab",
+      "to": "models/TomatoSlice.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/炸土豆饼.prefab",
+      "to": "models/FriedPotatoCake.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/炸虾饼.prefab",
+      "to": "models/FriedShrimpCake.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/炸鱼饼.prefab",
+      "to": "models/FriedFishCake.prefab"
+    },
+    {
+      "file": "呆喵新菜谱/汉堡/炸玉米饼.prefab",
+      "to": "models/FriedCornCake.prefab"
+    },
+    {
+      "file": "Models/dlc5_plated_bacon_sausage_01.asset",
+      "to": "models/dlc5_plated_bacon_sausage_01.asset"
+    },
+    {
+      "file": "Models/dlc5_plated_egg_sausage_01.asset",
+      "to": "models/dlc5_plated_egg_sausage_01.asset"
+    },
+    {
+      "file": "Models/dlc5_recipe_bacon_egg_01.asset",
+      "to": "models/dlc5_recipe_bacon_egg_01.asset"
+    },
+    {
+      "file": "Models/dlc5_recipe_bacon_egg_sausage_01.asset",
+      "to": "models/dlc5_recipe_bacon_egg_sausage_01.asset"
+    },
+    {
+      "file": "Models/fried_prawn_model.asset",
+      "to": "models/fried_prawn_model.asset"
+    },
+    {
+      "file": "Models/p_dlc8_prep_chicken_burger_01.asset",
+      "to": "models/p_dlc8_prep_chicken_burger_01.asset"
+    },
+    {
+      "file": "Models/p_dlc8_recipe_chicken_burger_01.asset",
+      "to": "models/p_dlc8_recipe_chicken_burger_01.asset"
+    },
+    {
+      "file": "Models/p_dlc8_recipe_onionrings_01.asset",
+      "to": "models/p_dlc8_recipe_onionrings_01.asset"
+    },
+    {
+      "file": "Models/pineappleburgerslice.asset",
+      "to": "models/pineappleburgerslice.asset"
+    },
+    {
+      "file": "Models/plated_cucumber.asset",
+      "to": "models/plated_cucumber.asset"
+    },
+    {
+      "file": "Models/plated_meat.asset",
+      "to": "models/plated_meat.asset"
+    },
+    {
+      "file": "Models/ui_cheeseburger_01.png",
+      "to": "icons/ui_cheeseburger_01.png"
+    },
+    {
+      "file": "Models/ui_cheeseburgerlettuce_01.png",
+      "to": "icons/ui_cheeseburgerlettuce_01.png"
+    },
+    {
+      "file": "Models/ui_cheeseburgerlettucetomato_01.png",
+      "to": "icons/ui_cheeseburgerlettucetomato_01.png"
+    },
+    {
+      "file": "Models/ui_hawaiianburger_01.asset",
+      "to": "models/ui_hawaiianburger_01.asset"
+    },
+    {
+      "file": "Models/ui_plainburger_01.png",
+      "to": "icons/ui_plainburger_01.png"
+    },
+    {
+      "file": "Models/ui_prawn_burger_01.png",
+      "to": "icons/ui_prawn_burger_01.png"
+    },
+    {
+      "file": "Models/ui_prawn_burger_cucumber_01.png",
+      "to": "icons/ui_prawn_burger_cucumber_01.png"
+    },
+    {
+      "file": "Models/ui_prawn_burger_lettuce_01.png",
+      "to": "icons/ui_prawn_burger_lettuce_01.png"
+    },
+    {
+      "file": "Models/ui_prawn_burger_lettuce_cucumber_01.png",
+      "to": "icons/ui_prawn_burger_lettuce_cucumber_01.png"
+    },
+    {
+      "file": "Models/ui_prawn_burger_lettuce_tomato_01.png",
+      "to": "icons/ui_prawn_burger_lettuce_tomato_01.png"
+    },
+    {
+      "file": "Models/ui_prawn_burger_prawn_pineapple_01.png",
+      "to": "icons/ui_prawn_burger_prawn_pineapple_01.png"
+    }
+  ],
+  "dropped": [
+    {
+      "file": "100 Burger/OptionalBurgerExpand.asset",
+      "reason": "与 OptionalBurger.asset 内容完全相同的副本"
+    },
+    {
+      "file": "呆喵/28汉堡皇全部汉堡夹心.asset",
+      "reason": "夹心>8层 或 仅服务已剔除成品"
+    },
+    {
+      "file": "呆喵/29汉堡皇全都有巨无霸堡.asset",
+      "reason": "夹心>8层 或 仅服务已剔除成品"
+    },
+    {
+      "file": "呆喵/36超级无敌巨无霸堡.asset",
+      "reason": "夹心>8层 或 仅服务已剔除成品"
+    },
+    {
+      "file": "呆喵/37超级无敌巨无霸堡夹心.asset",
+      "reason": "夹心>8层 或 仅服务已剔除成品"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/47搅拌土豆.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/48搅拌炸土豆饼.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/49搅拌超级无敌巨无霸堡.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/50搅拌超级无敌巨无霸堡夹心.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/51搅拌玉米.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/52搅拌鱼.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/53搅拌虾.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/54搅拌炸玉米饼.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/55搅拌炸鱼饼.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/56搅拌炸虾饼.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/57搅拌洋葱.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/58煎番茄.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    },
+    {
+      "file": "呆喵/需要搅拌的汉堡/59搅拌煎洋葱.asset",
+      "reason": "搅拌系列仅服务已剔除的 49/50，整体不迁移"
+    }
+  ],
+  "remapped": [
+    "7b0da7f99b2b118f3127794b84effd06"
+  ],
+  "unresolved": [
+    {
+      "guid": "7b0da7f99b2b118f3127794b84effd06",
+      "users": [
+        "ChickenPatty.asset"
+      ],
+      "note": "已重映射"
+    },
+    {
+      "guid": "0141af4b56088384c8a49cec7786a765",
+      "users": [
+        "31煎鸡肉.asset",
+        "34煎牛肉.asset",
+        "35菠萝片.asset",
+        "38炸玉米饼.asset",
+        "39煎洋葱.asset",
+        "40煎蘑菇.asset",
+        "41煎香肠.asset",
+        "42炸虾饼.asset",
+        "43炸鱼饼.asset",
+        "44炸土豆饼.asset",
+        "45煎菠萝.asset",
+        "46煎芝士.asset"
+      ],
+      "note": "未解析（源数据缺失）"
+    }
+  ]
+}

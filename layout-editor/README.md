@@ -44,7 +44,7 @@
 
 ## 关卡管理（独立页面）
 
-顶栏 **关卡管理…** 进入独立的关卡管理页（URL `/#/manage`），与俯视图编排页相互独立，可随时通过页内按钮互跳。基于 `LevelSetInfoSO / LevelInfoSO / LevelConfigSetupPerPlayerCountSO` 这套 SO 管理关卡集与关卡：
+顶栏 **关卡管理…** 进入独立的关卡管理页（URL `/manage`），与俯视图编排页相互独立，可随时通过页内按钮互跳。基于 `LevelSetInfoSO / LevelInfoSO / LevelConfigSetupPerPlayerCountSO` 这套 SO 管理关卡集与关卡：
 
 - **关卡集**：列表查看 / 新建关卡集（自动创建 `LevelSets/<set>/data`、`scenes/` 与 `LevelSetInfo.asset`）/ 编辑英文名·中文名·作者·版本（改 version 自动重算 uid）。**关卡集不可删除**。
 - **关卡**：在每个关卡集下列出，可**新建关卡**（自动生成 `config_1p~4p`（复制模板默认值）、`LevelInfo_<id>.asset`，并复制 `Template/s_template` 到 `scenes/s_<id>.unity`、绑定 `levelInfo`），**编辑基础信息**（表单提交，含 sceneName、dependencies、disableDynamicParenting、debugRecipeCount 等），以及**删除关卡**（连同其场景、配置与关卡目录内自定义资源，二次确认）。
@@ -65,7 +65,7 @@
 
 ## 自定义菜谱管理（独立页面）
 
-顶栏 **自定义菜谱…** 进入 **`/#/custom-recipes`** 页：先选关卡集，再管理该关卡集 `custom_recipes/` 目录下的自定义菜谱（CustomRecipeSO）：
+顶栏 **自定义菜谱…** 进入 **`/custom-recipes`** 页：先选关卡集，再管理该关卡集 `custom_recipes/` 目录下的自定义菜谱（CustomRecipeSO）：
 
 - **统一模型**：中间产物（score=0，如煎鸡蛋）也是**完整菜谱**——图标、3D 模型、装盘容器全部可配，仅作为可被引用的工序而不会直接上桌。列表：顶部搜索（菜名/ID/食材）+ 成品/中间产物筛选 + 分类侧栏；每张菜谱以「菜谱清单列表」卡片展示组装效果，卡片底部信息条显示分类/装盘容器/UID/组成项数，操作按钮（👁 3D 预览 / 编辑 / 删除）置于底部；旧桥接数据自动用组成 id 反查食材名兜底。
 - **编辑/新建表单**：
@@ -145,7 +145,7 @@ python3 layout-editor/scripts/extract-icons.py --check    # 只统计覆盖率�
 | GET | `/api/grid` | 网格参数 |
 | GET | `/api/catalog/floor-materials?levelSet=...` | 地板材质列表 |
 
-关卡管理 API（`/#/manage` 页面使用）：`GET /api/sets`、`GET /api/sets/<set>/levels`、`GET /api/level?assetPath=`、`GET /api/catalog/{music,audio-directories,ambiences,death-effects}`、`POST /api/{set/create,set/info,level/create,level/info,level/config,level/audio,level/delete,reload}`。
+关卡管理 API（`/manage` 页面使用）：`GET /api/sets`、`GET /api/sets/<set>/levels`、`GET /api/level?assetPath=`、`GET /api/catalog/{music,audio-directories,ambiences,death-effects}`、`POST /api/{set/create,set/info,level/create,level/info,level/config,level/audio,level/delete,reload}`。
 
 ### 可选：Vite 开发模式
 
