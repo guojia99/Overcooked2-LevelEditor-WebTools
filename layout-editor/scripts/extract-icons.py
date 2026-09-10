@@ -65,6 +65,112 @@ def collect_ids(sub):
     return sorted(set(ids))
 
 
+def ingredient_catalog_id(file_id, prefab):
+    """Canonical ingredient id (mirrors build-catalog.mjs ingredientCatalogId)."""
+    if not prefab or prefab == file_id:
+        return file_id
+    if file_id.endswith("SO") and not prefab.endswith("SO"):
+        return file_id
+    if prefab == prefab.lower():
+        return prefab
+    return file_id
+
+
+def read_prefab_name(asset_path):
+    """Canonical ingredient id for icon output filename."""
+    prefab = None
+    try:
+        with open(asset_path, encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("prefabName:"):
+                    prefab = line.split(":", 1)[1].strip()
+                    break
+    except OSError:
+        pass
+    file_id = os.path.splitext(os.path.basename(asset_path))[0]
+    return ingredient_catalog_id(file_id, prefab)
+
+
+def collect_ingredient_ids(sub):
+    ids = []
+    for f in glob.glob(os.path.join(ROOT, "Assets", sub, "**/*.asset"), recursive=True):
+        ids.append(read_prefab_name(f))
+    return sorted(set(ids))
+
+
+# 旧图标文件名（资产文件名）→ canonical catalog id
+INGREDIENT_ICON_ALIASES = {
+    "DLC03_Chocolate": "dlc03_chocolate",
+    "DLC03_DriedFruit": "driedfruit",
+    "DLC03_Marshmallow": "marshmallow",
+    "DLC03_Milk": "milk",
+    "DLC03_Orange": "orange",
+    "DLC03_WhippedCream": "whippedcream",
+    "DLC04_Meat": "dlc04_meat",
+    "DLC04_Orange": "dlc04_orange",
+    "DLC04_Prawn": "dlc04_prawn",
+    "DLC04_BokChoy": "bokchoy",
+    "DLC04_Noodles": "noodles",
+    "DLC04_Grapes": "grapes",
+    "DLC04_Peach": "peach",
+    "DLC07_Apple": "apple",
+    "DLC07_BeefRoast": "beef_roast",
+    "DLC07_Blackberry": "blackberry",
+    "DLC07_Broccoli": "broccoli",
+    "DLC07_Cheese": "dlc07_cheese",
+    "DLC07_Cherry": "cherry",
+    "DLC07_ChickenRoast": "chicken_roast",
+    "DLC07_Leek": "leek",
+    "DLC07_Potato": "dlc07_potato",
+    "DLC08_Cheese_Sticks": "dlc08_cheese_sticks",
+    "DLC08_Chicken": "dlc08_chicken",
+    "DLC08_ChoppedBun": "dlc08_choppedbun",
+    "DLC08_Drink01": "drink01",
+    "DLC08_Drink02": "drink02",
+    "DLC08_Drink03": "drink03",
+    "DLC08_Frankfurter": "frankfurter",
+    "DLC08_HotdogBun": "hotdogbun",
+    "DLC08_Ketchup": "ketchup",
+    "DLC08_Mustard": "mustard",
+    "DLC08_Onion": "dlc08_onion",
+    "DLC08_Onion_Ring": "dlc08_onion_ring",
+    "DLC08_Potato": "dlc08_potato",
+    "DLC08_Raspberry": "raspberry",
+    "DLC11_Corn": "dlc11_corn",
+    "DLC11_Cucumber": "dlc11_cucumber",
+    "DLC11_Icecube": "icecube",
+    "DLC11_Lettuce": "dlc11_lettuce",
+    "DLC11_Milk": "dlc11_milk",
+    "DLC11_Onion_Salad": "dlc11_onion_salad",
+    "DLC11_OrangeSoda": "orangesoda",
+    "DLC11_RootBeer": "rootbeer",
+    "DLC11_Tomato": "dlc11_tomato",
+    "DLC11_Vanilla": "dlc11_vanilla",
+    "DLC13_Chocolate": "dlc13_chocolate",
+    "DLC13_Egg": "dlc13_egg",
+    "DLC13_Flour": "dlc13_flour",
+    "DLC13_Melon": "dlc13_melon",
+    "DLC13_Strawberry": "dlc13_strawberry",
+}
+
+
+def migrate_ingredient_icon_aliases():
+    """Copy legacy filename-based PNGs to prefabName ids when missing."""
+    out_dir = os.path.join(OUT, "ingredients")
+    if not os.path.isdir(out_dir):
+        return 0
+    count = 0
+    for old, new in INGREDIENT_ICON_ALIASES.items():
+        src = os.path.join(out_dir, old + ".png")
+        dest = os.path.join(out_dir, new + ".png")
+        if os.path.exists(src) and not os.path.exists(dest):
+            shutil.copy2(src, dest)
+            count += 1
+    if count:
+        print(f"migrated {count} ingredient icon aliases (filename -> prefabName)")
+    return count
+
+
 def base_name(sid):
     if sid.endswith("SO"):
         b = sid[:-2]
@@ -231,7 +337,13 @@ def main():
     rec_curated = load_json("recipe-icons.json", {})
     cat_curated = load_json("catalog-icons.json", {})
 
-    ing_ids = collect_ids("common01/food/Ingredients") + collect_ids("common02/food/Ingredients") + collect_ids("common03/food/Ingredients") + collect_ids("commonW1/pseudo_prefab_so/dlc11/food")
+    ing_ids = (
+        collect_ingredient_ids("common01/food/Ingredients")
+        + collect_ingredient_ids("common02/food/Ingredients")
+        + collect_ingredient_ids("common03/food/Ingredients")
+        + collect_ingredient_ids("commonW1/pseudo_prefab_so/dlc11/food")
+        + collect_ingredient_ids("commonW1/pseudo_prefab_so/dlc09/food")
+    )
     rec_ids = (
         collect_ids("common01/food/Recipes")
         + collect_ids("common02/food/Recipes")
@@ -267,6 +379,8 @@ def main():
             stats["ing_ok"] += 1
             if not check:
                 extract(obj, os.path.join(out_dir, sid + ".png"))
+        if not check:
+            migrate_ingredient_icon_aliases()
 
     # 中间产物食材图：复用菜谱成品图（套餐等组合菜谱的食材角标）
     emit_intermediate_ingredient_icons(ing_ids, check)

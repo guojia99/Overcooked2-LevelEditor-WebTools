@@ -28,6 +28,7 @@ import {
   startBridgeWatch,
   selectSceneInDropdowns
 } from "./sceneIO";
+import { rebuildIngredientLookup } from "./catalog";
 import { buildPalette } from "./palette";
 import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
 import { refreshScopedSaveButton } from "./serialize";
@@ -226,6 +227,7 @@ export async function init() {
     if (!S.catalogById.has(it.id)) S.catalogById.set(it.id, it);
   }
   S.ingredientsCache = await fetchIngredients().catch(() => []);
+  rebuildIngredientLookup();
   // 随机食材箱问号图标样式（异步，画布在其就绪后自动重绘）
   loadQuestionMarks();
   S.intermediatesCache = await fetchRecipeCatalog("")

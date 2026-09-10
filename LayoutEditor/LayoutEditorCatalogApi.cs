@@ -51,7 +51,7 @@ public static class LayoutEditorCatalogApi
                     continue;
 
                 var guid = HealGuidDesync(path, asset.guid);
-                var id = Path.GetFileNameWithoutExtension(path);
+                var id = IngredientCatalogId(so, Path.GetFileNameWithoutExtension(path));
                 string nameZh;
                 string nameEn;
                 LayoutEditorManualLookup.TryGet(id, out nameZh, out nameEn);
@@ -72,6 +72,22 @@ public static class LayoutEditorCatalogApi
 
         list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
         return new IngredientCatalogDto { ingredients = list.ToArray() };
+    }
+
+    /** Canonical ingredient id: lowercase prefabName when it diverges from filename;
+     *  core *SO assets keep filename (FlourSO prefabName=Flour → FlourSO). */
+    internal static string IngredientCatalogId(PseudoPrefabSO so, string fileId)
+    {
+        if (so == null || string.IsNullOrEmpty(fileId))
+            return fileId;
+        var pn = so.prefabName;
+        if (string.IsNullOrEmpty(pn) || pn == fileId)
+            return fileId;
+        if (fileId.EndsWith("SO") && !pn.EndsWith("SO"))
+            return fileId;
+        if (pn == pn.ToLowerInvariant())
+            return pn;
+        return fileId;
     }
 
     /** "core" / "custom" / "dlcXX" / "levelset" — mirrors foodGroupOf in build-catalog.mjs.

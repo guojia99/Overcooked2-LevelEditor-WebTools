@@ -256,12 +256,34 @@ public static class LayoutEditorRoastTrayFill
             if (!System.IO.Directory.Exists(absRoot))
                 continue;
             var files = System.IO.Directory.GetFiles(absRoot, id + ".asset", System.IO.SearchOption.AllDirectories);
-            if (files.Length == 0)
+            if (files.Length > 0)
+            {
+                var rel = root + files[0].Substring(absRoot.Length).Replace('\\', '/');
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(rel);
+                if (so != null)
+                    return so;
+            }
+        }
+        // 文件名大小写 / prefabName 与文件名不一致时：遍历匹配 prefabName 或文件名（忽略大小写）。
+        foreach (var root in roots)
+        {
+            var absRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../" + root));
+            if (!System.IO.Directory.Exists(absRoot))
                 continue;
-            var rel = root + files[0].Substring(absRoot.Length).Replace('\\', '/');
-            var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(rel);
-            if (so != null)
-                return so;
+            var files = System.IO.Directory.GetFiles(absRoot, "*.asset", System.IO.SearchOption.AllDirectories);
+            for (var i = 0; i < files.Length; i++)
+            {
+                var rel = root + files[i].Substring(absRoot.Length).Replace('\\', '/');
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(rel);
+                if (so == null)
+                    continue;
+                if (!string.IsNullOrEmpty(so.prefabName) &&
+                    string.Equals(so.prefabName, id, System.StringComparison.OrdinalIgnoreCase))
+                    return so;
+                var fileId = System.IO.Path.GetFileNameWithoutExtension(files[i]);
+                if (string.Equals(fileId, id, System.StringComparison.OrdinalIgnoreCase))
+                    return so;
+            }
         }
         return null;
     }

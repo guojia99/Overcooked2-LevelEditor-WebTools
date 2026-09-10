@@ -321,8 +321,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_armor_01 1",
-      "nameEn": "p_dlc07_armor_01 1",
+      "nameZh": "DLC7 盔甲 1 1",
+      "nameEn": "dlc07 armor 1 1",
       "icon": false
     },
     {
@@ -913,8 +913,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_block_01_a 1",
-      "nameEn": "p_dlc07_battlements_stone_block_01_a 1",
+      "nameZh": "DLC7 battlements 石 block 1 a 1",
+      "nameEn": "dlc07 battlements stone block 1 a 1",
       "icon": false
     },
     {
@@ -929,8 +929,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_block_02_a 1",
-      "nameEn": "p_dlc07_battlements_stone_block_02_a 1",
+      "nameZh": "DLC7 battlements 石 block 2 a 1",
+      "nameEn": "dlc07 battlements stone block 2 a 1",
       "icon": false
     },
     {
@@ -945,8 +945,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_block_03_a 1",
-      "nameEn": "p_dlc07_battlements_stone_block_03_a 1",
+      "nameZh": "DLC7 battlements 石 block 3 a 1",
+      "nameEn": "dlc07 battlements stone block 3 a 1",
       "icon": false
     },
     {
@@ -961,8 +961,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_block_04_a 1",
-      "nameEn": "p_dlc07_battlements_stone_block_04_a 1",
+      "nameZh": "DLC7 battlements 石 block 4 a 1",
+      "nameEn": "dlc07 battlements stone block 4 a 1",
       "icon": false
     },
     {
@@ -977,8 +977,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_block_05_a 1",
-      "nameEn": "p_dlc07_battlements_stone_block_05_a 1",
+      "nameZh": "DLC7 battlements 石 block 5 a 1",
+      "nameEn": "dlc07 battlements stone block 5 a 1",
       "icon": false
     },
     {
@@ -993,8 +993,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_block_06_a 1",
-      "nameEn": "p_dlc07_battlements_stone_block_06_a 1",
+      "nameZh": "DLC7 battlements 石 block 6 a 1",
+      "nameEn": "dlc07 battlements stone block 6 a 1",
       "icon": false
     },
     {
@@ -1009,8 +1009,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_block_07_a 1",
-      "nameEn": "p_dlc07_battlements_stone_block_07_a 1",
+      "nameZh": "DLC7 battlements 石 block 7 a 1",
+      "nameEn": "dlc07 battlements stone block 7 a 1",
       "icon": false
     },
     {
@@ -1079,8 +1079,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_half_block_01_a 1",
-      "nameEn": "p_dlc07_battlements_stone_half_block_01_a 1",
+      "nameZh": "DLC7 battlements 石 half block 1 a 1",
+      "nameEn": "dlc07 battlements stone half block 1 a 1",
       "icon": false
     },
     {
@@ -1095,8 +1095,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_half_block_02_a 1",
-      "nameEn": "p_dlc07_battlements_stone_half_block_02_a 1",
+      "nameZh": "DLC7 battlements 石 half block 2 a 1",
+      "nameEn": "dlc07 battlements stone half block 2 a 1",
       "icon": false
     },
     {
@@ -1111,8 +1111,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_half_block_03_a 1",
-      "nameEn": "p_dlc07_battlements_stone_half_block_03_a 1",
+      "nameZh": "DLC7 battlements 石 half block 3 a 1",
+      "nameEn": "dlc07 battlements stone half block 3 a 1",
       "icon": false
     },
     {
@@ -1127,8 +1127,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_half_block_04_a 1",
-      "nameEn": "p_dlc07_battlements_stone_half_block_04_a 1",
+      "nameZh": "DLC7 battlements 石 half block 4 a 1",
+      "nameEn": "dlc07 battlements stone half block 4 a 1",
       "icon": false
     },
     {
@@ -1143,8 +1143,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_half_block_05_a 1",
-      "nameEn": "p_dlc07_battlements_stone_half_block_05_a 1",
+      "nameZh": "DLC7 battlements 石 half block 5 a 1",
+      "nameEn": "dlc07 battlements stone half block 5 a 1",
       "icon": false
     },
     {
@@ -1159,8 +1159,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_battlements_stone_tall_block_01_a 1",
-      "nameEn": "p_dlc07_battlements_stone_tall_block_01_a 1",
+      "nameZh": "DLC7 battlements 石 tall block 1 a 1",
+      "nameEn": "dlc07 battlements stone tall block 1 a 1",
       "icon": false
     },
     {
@@ -1661,8 +1661,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_flagstone_01 1",
-      "nameEn": "p_dlc07_courtyard_flagstone_01 1",
+      "nameZh": "DLC7 庭院石板 1 1",
+      "nameEn": "dlc07 courtyard flagstone 1 1",
       "icon": false
     },
     {
@@ -2109,8 +2109,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_block_01_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_block_01_a 1",
+      "nameZh": "DLC7 庭院石 block 1 a 1",
+      "nameEn": "dlc07 courtyard stone block 1 a 1",
       "icon": false
     },
     {
@@ -2125,8 +2125,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_block_02_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_block_02_a 1",
+      "nameZh": "DLC7 庭院石 block 2 a 1",
+      "nameEn": "dlc07 courtyard stone block 2 a 1",
       "icon": false
     },
     {
@@ -2141,8 +2141,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_block_03_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_block_03_a 1",
+      "nameZh": "DLC7 庭院石 block 3 a 1",
+      "nameEn": "dlc07 courtyard stone block 3 a 1",
       "icon": false
     },
     {
@@ -2157,8 +2157,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_block_04_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_block_04_a 1",
+      "nameZh": "DLC7 庭院石 block 4 a 1",
+      "nameEn": "dlc07 courtyard stone block 4 a 1",
       "icon": false
     },
     {
@@ -2173,8 +2173,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_block_05_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_block_05_a 1",
+      "nameZh": "DLC7 庭院石 block 5 a 1",
+      "nameEn": "dlc07 courtyard stone block 5 a 1",
       "icon": false
     },
     {
@@ -2189,8 +2189,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_block_06_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_block_06_a 1",
+      "nameZh": "DLC7 庭院石 block 6 a 1",
+      "nameEn": "dlc07 courtyard stone block 6 a 1",
       "icon": false
     },
     {
@@ -2205,8 +2205,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_block_07_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_block_07_a 1",
+      "nameZh": "DLC7 庭院石 block 7 a 1",
+      "nameEn": "dlc07 courtyard stone block 7 a 1",
       "icon": false
     },
     {
@@ -2293,8 +2293,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_half_block_01_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_half_block_01_a 1",
+      "nameZh": "DLC7 庭院石 half block 1 a 1",
+      "nameEn": "dlc07 courtyard stone half block 1 a 1",
       "icon": false
     },
     {
@@ -2309,8 +2309,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_half_block_02_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_half_block_02_a 1",
+      "nameZh": "DLC7 庭院石 half block 2 a 1",
+      "nameEn": "dlc07 courtyard stone half block 2 a 1",
       "icon": false
     },
     {
@@ -2325,8 +2325,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_half_block_03_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_half_block_03_a 1",
+      "nameZh": "DLC7 庭院石 half block 3 a 1",
+      "nameEn": "dlc07 courtyard stone half block 3 a 1",
       "icon": false
     },
     {
@@ -2341,8 +2341,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_half_block_04_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_half_block_04_a 1",
+      "nameZh": "DLC7 庭院石 half block 4 a 1",
+      "nameEn": "dlc07 courtyard stone half block 4 a 1",
       "icon": false
     },
     {
@@ -2357,8 +2357,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_half_block_05_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_half_block_05_a 1",
+      "nameZh": "DLC7 庭院石 half block 5 a 1",
+      "nameEn": "dlc07 courtyard stone half block 5 a 1",
       "icon": false
     },
     {
@@ -2373,8 +2373,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_stone_tall_block_01_a 1",
-      "nameEn": "p_dlc07_courtyard_stone_tall_block_01_a 1",
+      "nameZh": "DLC7 庭院石 tall block 1 a 1",
+      "nameEn": "dlc07 courtyard stone tall block 1 a 1",
       "icon": false
     },
     {
@@ -2515,8 +2515,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_courtyard_wallsection_01 1",
-      "nameEn": "p_dlc07_courtyard_wallsection_01 1",
+      "nameZh": "DLC7 庭院 wallsection 1 1",
+      "nameEn": "dlc07 courtyard wallsection 1 1",
       "icon": false
     },
     {
@@ -3141,8 +3141,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_01",
-      "nameEn": "p_dlc07_keep_flagstone_group_01",
+      "nameZh": "DLC7 城堡石板组 1",
+      "nameEn": "dlc07 keep flagstone group 1",
       "icon": false
     },
     {
@@ -3157,8 +3157,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_02",
-      "nameEn": "p_dlc07_keep_flagstone_group_02",
+      "nameZh": "DLC7 城堡石板组 2",
+      "nameEn": "dlc07 keep flagstone group 2",
       "icon": false
     },
     {
@@ -3173,8 +3173,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_03",
-      "nameEn": "p_dlc07_keep_flagstone_group_03",
+      "nameZh": "DLC7 城堡石板组 3",
+      "nameEn": "dlc07 keep flagstone group 3",
       "icon": false
     },
     {
@@ -3189,8 +3189,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_04",
-      "nameEn": "p_dlc07_keep_flagstone_group_04",
+      "nameZh": "DLC7 城堡石板组 4",
+      "nameEn": "dlc07 keep flagstone group 4",
       "icon": false
     },
     {
@@ -3205,8 +3205,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_05",
-      "nameEn": "p_dlc07_keep_flagstone_group_05",
+      "nameZh": "DLC7 城堡石板组 5",
+      "nameEn": "dlc07 keep flagstone group 5",
       "icon": false
     },
     {
@@ -3221,8 +3221,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_06",
-      "nameEn": "p_dlc07_keep_flagstone_group_06",
+      "nameZh": "DLC7 城堡石板组 6",
+      "nameEn": "dlc07 keep flagstone group 6",
       "icon": false
     },
     {
@@ -3237,8 +3237,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_07",
-      "nameEn": "p_dlc07_keep_flagstone_group_07",
+      "nameZh": "DLC7 城堡石板组 7",
+      "nameEn": "dlc07 keep flagstone group 7",
       "icon": false
     },
     {
@@ -3253,8 +3253,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_08",
-      "nameEn": "p_dlc07_keep_flagstone_group_08",
+      "nameZh": "DLC7 城堡石板组 8",
+      "nameEn": "dlc07 keep flagstone group 8",
       "icon": false
     },
     {
@@ -3269,8 +3269,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_09",
-      "nameEn": "p_dlc07_keep_flagstone_group_09",
+      "nameZh": "DLC7 城堡石板组 9",
+      "nameEn": "dlc07 keep flagstone group 9",
       "icon": false
     },
     {
@@ -3285,8 +3285,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_10",
-      "nameEn": "p_dlc07_keep_flagstone_group_10",
+      "nameZh": "DLC7 城堡石板组 10",
+      "nameEn": "dlc07 keep flagstone group 10",
       "icon": false
     },
     {
@@ -3301,8 +3301,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_11",
-      "nameEn": "p_dlc07_keep_flagstone_group_11",
+      "nameZh": "DLC7 城堡石板组 11",
+      "nameEn": "dlc07 keep flagstone group 11",
       "icon": false
     },
     {
@@ -3317,8 +3317,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_12",
-      "nameEn": "p_dlc07_keep_flagstone_group_12",
+      "nameZh": "DLC7 城堡石板组 12",
+      "nameEn": "dlc07 keep flagstone group 12",
       "icon": false
     },
     {
@@ -3333,8 +3333,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_13",
-      "nameEn": "p_dlc07_keep_flagstone_group_13",
+      "nameZh": "DLC7 城堡石板组 13",
+      "nameEn": "dlc07 keep flagstone group 13",
       "icon": false
     },
     {
@@ -3349,8 +3349,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_14",
-      "nameEn": "p_dlc07_keep_flagstone_group_14",
+      "nameZh": "DLC7 城堡石板组 14",
+      "nameEn": "dlc07 keep flagstone group 14",
       "icon": false
     },
     {
@@ -3365,8 +3365,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc07_keep_flagstone_group_15",
-      "nameEn": "p_dlc07_keep_flagstone_group_15",
+      "nameZh": "DLC7 城堡石板组 15",
+      "nameEn": "dlc07 keep flagstone group 15",
       "icon": false
     },
     {

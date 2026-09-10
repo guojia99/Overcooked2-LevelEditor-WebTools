@@ -29,8 +29,8 @@ export const CHOPPABLE_INGREDIENTS = new Set([
   "CucumberSO",
   "MushroomSO",
   // DLC 可切食材（青菜/洋葱(DLC8)：dlc04 火锅青菜、dlc08 洋葱圈的前置；
-  // dlc10_bokchoy 经 NODE_INGREDIENT_SOURCES 已归并为 DLC04_BokChoy）
-  "DLC04_BokChoy",
+  // dlc10_bokchoy 经 NODE_INGREDIENT_SOURCES 已归并为 bokchoy）
+  "bokchoy",
   "dlc08_onion",
 ]);
 

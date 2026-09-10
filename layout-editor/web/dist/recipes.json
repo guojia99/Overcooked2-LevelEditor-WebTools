@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-07T11:16:41.572Z",
+  "generatedAt": "2026-09-09T07:46:23.518Z",
   "schemaVersion": 5,
-  "itemCount": 168,
+  "itemCount": 159,
   "groups": [
     "core",
     "custom",
@@ -11,8 +11,7 @@
     "dlc05",
     "dlc07",
     "dlc08",
-    "dlc11",
-    "dlc13"
+    "dlc11"
   ],
   "groupFiles": {
     "core": "recipes/core.json",
@@ -23,7 +22,6 @@
     "dlc05": "recipes/dlc05.json",
     "dlc07": "recipes/dlc07.json",
     "dlc08": "recipes/dlc08.json",
-    "dlc11": "recipes/dlc11.json",
-    "dlc13": "recipes/dlc13.json"
+    "dlc11": "recipes/dlc11.json"
   }
 }

@@ -5,7 +5,7 @@ import {
 import { dom } from "./dom";
 import { uuid, prefabIdFromPath, escHtml, newEditorKey } from "./coords";
 import { setStatus } from "./status";
-import { levelSetFromScenePath } from "./catalog";
+import { itemLayerOfIt, levelSetFromScenePath } from "./catalog";
 import { isPlayerItem } from "./renderItems";
 import { enrichItem, enrichFloor, checkPlayerCollisions, checkWorkstationCollisions, refreshUtensilStacks } from "./items";
 import { stubKindOf, normalizeMachineLinkTriggers } from "./stubControls";
@@ -169,6 +169,8 @@ export async function applyLayoutDocument(
   {
     const seenPos = new Map<string, { wx: number; wy: number; wz: number }>();
     S.items = S.items.filter((it) => {
+      // 装饰层允许同 prefab 同位叠放（树叶等布景），不参与加载去重。
+      if (itemLayerOfIt(it) === "decor") return true;
       const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
       if (it._wx == null || it._wz == null) return true;
       const wy = it.worldPosition?.y ?? it.localPosition?.y ?? 0;
@@ -380,6 +382,8 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       const seen = new Map<string, { label: string; wx: number; wy: number; wz: number }>();
       const stacks: string[] = [];
       for (const it of S.items) {
+        // 装饰层允许同 prefab 同位叠放，写回时不做完全重叠阻断。
+        if (itemLayerOfIt(it) === "decor") continue;
         const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
         const wx = it._wx;
         const wz = it._wz;

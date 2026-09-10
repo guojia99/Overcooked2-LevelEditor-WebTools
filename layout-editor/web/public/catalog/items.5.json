@@ -311,8 +311,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc08_clown_chef_balloon_mallet_01",
-      "nameEn": "p_dlc08_clown_chef_balloon_mallet_01",
+      "nameZh": "DLC8 clown chef 气球 mallet 1",
+      "nameEn": "dlc08 clown chef balloon mallet 1",
       "icon": false
     },
     {
@@ -2533,8 +2533,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "p_dlc08_wagon_02",
-      "nameEn": "p_dlc08_wagon_02",
+      "nameZh": "DLC8 wagon 2",
+      "nameEn": "dlc08 wagon 2",
       "icon": false
     },
     {

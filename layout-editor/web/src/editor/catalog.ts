@@ -1,6 +1,7 @@
 import type {
   CatalogItem,
-  CounterAppearanceOption
+  CounterAppearanceOption,
+  IngredientEntry
 } from "../types";
 import { isSurfaceItem } from "../floorColors";
 import {
@@ -11,6 +12,87 @@ import {
   VisibilityCategory
 } from "./state";
 import { prefabIdFromPath } from "./coords";
+import { NODE_INGREDIENT_SOURCES } from "../recipeGroups";
+
+/** 资产文件名 id → canonical catalog id（过渡期兼容旧数据/静态 json 混用）。 */
+export const INGREDIENT_ALIASES: Record<string, string> = {
+  DLC03_Chocolate: "dlc03_chocolate",
+  DLC03_DriedFruit: "driedfruit",
+  DLC03_Marshmallow: "marshmallow",
+  DLC03_Milk: "milk",
+  DLC03_Orange: "orange",
+  DLC03_WhippedCream: "whippedcream",
+  DLC04_Meat: "dlc04_meat",
+  DLC04_Orange: "dlc04_orange",
+  DLC04_Prawn: "dlc04_prawn",
+  DLC04_BokChoy: "bokchoy",
+  DLC04_Noodles: "noodles",
+  DLC04_Grapes: "grapes",
+  DLC04_Peach: "peach",
+  DLC07_Apple: "apple",
+  DLC07_BeefRoast: "beef_roast",
+  DLC07_Blackberry: "blackberry",
+  DLC07_Broccoli: "broccoli",
+  DLC07_Cheese: "dlc07_cheese",
+  DLC07_Cherry: "cherry",
+  DLC07_ChickenRoast: "chicken_roast",
+  DLC07_Leek: "leek",
+  DLC07_Potato: "dlc07_potato",
+  DLC08_Cheese_Sticks: "dlc08_cheese_sticks",
+  DLC08_Chicken: "dlc08_chicken",
+  DLC08_ChoppedBun: "dlc08_choppedbun",
+  DLC08_Drink01: "drink01",
+  DLC08_Drink02: "drink02",
+  DLC08_Drink03: "drink03",
+  DLC08_Frankfurter: "frankfurter",
+  DLC08_HotdogBun: "hotdogbun",
+  DLC08_Ketchup: "ketchup",
+  DLC08_Mustard: "mustard",
+  DLC08_Onion: "dlc08_onion",
+  DLC08_Onion_Ring: "dlc08_onion_ring",
+  DLC08_Potato: "dlc08_potato",
+  DLC08_Raspberry: "raspberry",
+  DLC11_Corn: "dlc11_corn",
+  DLC11_Cucumber: "dlc11_cucumber",
+  DLC11_Icecube: "icecube",
+  DLC11_Lettuce: "dlc11_lettuce",
+  DLC11_Milk: "dlc11_milk",
+  DLC11_Onion_Salad: "dlc11_onion_salad",
+  DLC11_OrangeSoda: "orangesoda",
+  DLC11_RootBeer: "rootbeer",
+  DLC11_Tomato: "dlc11_tomato",
+  DLC11_Vanilla: "dlc11_vanilla",
+  DLC13_Chocolate: "dlc13_chocolate",
+  DLC13_Egg: "dlc13_egg",
+  DLC13_Flour: "dlc13_flour",
+  DLC13_Melon: "dlc13_melon",
+  DLC13_Strawberry: "dlc13_strawberry",
+};
+
+let ingredientById = new Map<string, IngredientEntry>();
+let ingredientByIdLower = new Map<string, IngredientEntry>();
+
+/** 在 ingredientsCache 更新后调用，重建 O(1) 查找索引。 */
+export function rebuildIngredientLookup(): void {
+  ingredientById = new Map();
+  ingredientByIdLower = new Map();
+  for (const ing of S.ingredientsCache) {
+    ingredientById.set(ing.id, ing);
+    ingredientByIdLower.set(ing.id.toLowerCase(), ing);
+  }
+}
+
+function resolveIngredientLookupId(id: string): string {
+  if (!id) return id;
+  if (ingredientById.has(id)) return id;
+  const fromNode = NODE_INGREDIENT_SOURCES[id];
+  if (fromNode && ingredientById.has(fromNode)) return fromNode;
+  const fromAlias = INGREDIENT_ALIASES[id];
+  if (fromAlias && ingredientById.has(fromAlias)) return fromAlias;
+  const lower = ingredientByIdLower.get(id.toLowerCase());
+  if (lower) return lower.id;
+  return id;
+}
 
 /** Ambient / weather background effects (落雪（BGM）, 地球（BGM）, snowfall…):
  *  they belong to the background layer, never the decor layer. */
@@ -294,8 +376,10 @@ export function catalogItemById(id: string): CatalogItem | undefined {
   return undefined;
 }
 
-export function ingredientEntryById(id: string) {
-  return S.ingredientsCache.find((i) => i.id === id);
+export function ingredientEntryById(id: string): IngredientEntry | undefined {
+  if (!id) return undefined;
+  const resolved = resolveIngredientLookupId(id);
+  return ingredientById.get(resolved) ?? ingredientByIdLower.get(id.toLowerCase());
 }
 
 export function foodIconImg(kind: "ingredients" | "recipes", id: string | undefined, hasIcon?: boolean): string {

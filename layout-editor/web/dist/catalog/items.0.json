@@ -2455,8 +2455,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "dlc08_ground",
-      "nameEn": "dlc08_ground",
+      "nameZh": "DLC8 地面",
+      "nameEn": "dlc08 ground",
       "icon": false
     },
     {
@@ -2631,8 +2631,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "dlc09_RobinFlight_01",
-      "nameEn": "dlc09_Robin Flight_01",
+      "nameZh": "DLC9 Robin Flight 1",
+      "nameEn": "dlc09 Robin Flight 1",
       "icon": false
     },
     {
@@ -2647,8 +2647,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "dlc09_RobinGround_01",
-      "nameEn": "dlc09_Robin Ground_01",
+      "nameZh": "DLC9 Robin 地面 1",
+      "nameEn": "dlc09 Robin Ground 1",
       "icon": false
     },
     {

@@ -195,8 +195,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "dlc11_pinata_Float_Kevin_02",
-      "nameEn": "dlc11_pinata_Float_Kevin_02",
+      "nameZh": "DLC11 皮纳塔浮筒凯文 2",
+      "nameEn": "dlc11 pinata Float Kevin 2",
       "icon": false
     },
     {
@@ -319,8 +319,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "dlc11_pool_corner_01 2",
-      "nameEn": "dlc11_pool_corner_01 2",
+      "nameZh": "DLC11 泳池转角 1 2",
+      "nameEn": "dlc11 pool corner 1 2",
       "icon": false
     },
     {
@@ -335,8 +335,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "dlc11_pool_corner_02 2",
-      "nameEn": "dlc11_pool_corner_02 2",
+      "nameZh": "DLC11 泳池转角 2 2",
+      "nameEn": "dlc11 pool corner 2 2",
       "icon": false
     },
     {
@@ -387,8 +387,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "dlc11_pool_straight_01 2",
-      "nameEn": "dlc11_pool_straight_01 2",
+      "nameZh": "DLC11 泳池直 1 2",
+      "nameEn": "dlc11 pool straight 1 2",
       "icon": false
     },
     {
@@ -2693,8 +2693,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "LifeBuoyPillar 1",
-      "nameEn": "Life Buoy Pillar 1",
+      "nameZh": "救生圈柱 1",
+      "nameEn": "LifeBuoyPillar 1",
       "icon": false
     },
     {
@@ -2989,8 +2989,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "m_dlc07_drawbridge_03",
-      "nameEn": "m_dlc07_drawbridge_03",
+      "nameZh": "DLC7 drawbridge 3",
+      "nameEn": "dlc07 drawbridge 3",
       "icon": false
     },
     {

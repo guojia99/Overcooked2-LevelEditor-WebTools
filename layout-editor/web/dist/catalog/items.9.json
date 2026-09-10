@@ -1333,8 +1333,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "PFX_ConfettiRain",
-      "nameEn": "PFX_Confetti Rain",
+      "nameZh": "彩纸屑 Rain",
+      "nameEn": "Confetti Rain",
       "icon": false
     },
     {
@@ -1349,8 +1349,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "PFX_dlc11_Fireworks_Cannon_large_01",
-      "nameEn": "PFX_dlc11_Fireworks_Cannon_large_01",
+      "nameZh": "DLC11 Fireworks 炮大 1",
+      "nameEn": "dlc11 Fireworks Cannon large 1",
       "icon": false
     },
     {
@@ -1365,8 +1365,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "PFX_dlc11_Fireworks_Cannon_large_02",
-      "nameEn": "PFX_dlc11_Fireworks_Cannon_large_02",
+      "nameZh": "DLC11 Fireworks 炮大 2",
+      "nameEn": "dlc11 Fireworks Cannon large 2",
       "icon": false
     },
     {
@@ -1381,8 +1381,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "PFX_dlc11_Fireworks_Cannon_large_03",
-      "nameEn": "PFX_dlc11_Fireworks_Cannon_large_03",
+      "nameZh": "DLC11 Fireworks 炮大 3",
+      "nameEn": "dlc11 Fireworks Cannon large 3",
       "icon": false
     },
     {
@@ -1397,8 +1397,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "pfx_falling_leaves",
-      "nameEn": "pfx_falling_leaves",
+      "nameZh": "falling 树叶",
+      "nameEn": "falling leaves",
       "icon": false
     },
     {
@@ -1551,8 +1551,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "pineapple_plant_02NoFruit 1",
-      "nameEn": "pineapple_plant_02No Fruit 1",
+      "nameZh": "菠萝植物 2 No Fruit 1",
+      "nameEn": "pineapple plant 2 No Fruit 1",
       "icon": false
     },
     {
@@ -1585,8 +1585,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "pineapple_plant_03_flowers 1",
-      "nameEn": "pineapple_plant_03_flowers 1",
+      "nameZh": "菠萝植物 3 花 1",
+      "nameEn": "pineapple plant 3 flowers 1",
       "icon": false
     },
     {
@@ -2849,8 +2849,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "rock_01 2",
-      "nameEn": "rock_01 2",
+      "nameZh": "岩石 1 2",
+      "nameEn": "rock 1 2",
       "icon": false
     },
     {
@@ -2865,8 +2865,8 @@
         "cellsZ": 1
       },
       "layoutTier": "decor",
-      "nameZh": "rock_02 2",
-      "nameEn": "rock_02 2",
+      "nameZh": "岩石 2 2",
+      "nameEn": "rock 2 2",
       "icon": false
     },
     {

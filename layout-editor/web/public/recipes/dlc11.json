@@ -13,7 +13,7 @@
       "platingStep": "Glass",
       "ingredients": [
         "ChocolateSO",
-        "DLC11_Icecube",
+        "icecube",
         "dlc11_milk"
       ],
       "ingredientCount": 3,
@@ -32,7 +32,7 @@
           ],
           "ingredients": [
             "ChocolateSO",
-            "DLC11_Icecube",
+            "icecube",
             "dlc11_milk"
           ]
         }
@@ -49,9 +49,9 @@
       "platingStep": "Glass",
       "ingredients": [
         "ChocolateSO",
-        "DLC11_Icecube",
+        "icecube",
         "dlc11_milk",
-        "DLC11_OrangeSoda"
+        "orangesoda"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -65,7 +65,7 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "DLC11_OrangeSoda"
+            "orangesoda"
           ]
         },
         {
@@ -76,7 +76,7 @@
           ],
           "ingredients": [
             "ChocolateSO",
-            "DLC11_Icecube",
+            "icecube",
             "dlc11_milk"
           ]
         }
@@ -93,9 +93,9 @@
       "platingStep": "Glass",
       "ingredients": [
         "ChocolateSO",
-        "DLC11_Icecube",
+        "icecube",
         "dlc11_milk",
-        "DLC11_RootBeer"
+        "rootbeer"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -109,7 +109,7 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "DLC11_RootBeer"
+            "rootbeer"
           ]
         },
         {
@@ -120,7 +120,7 @@
           ],
           "ingredients": [
             "ChocolateSO",
-            "DLC11_Icecube",
+            "icecube",
             "dlc11_milk"
           ]
         }
@@ -128,16 +128,16 @@
       "icon": true
     },
     {
-      "guid": "0f3c0cb3723f9fa9a0946ec627dc40c9",
-      "id": "DLC11_Salad_tomato_cucumber_onion",
-      "nameZh": "沙拉·番茄黄瓜洋葱",
-      "nameEn": "Salad Tomato Cucumber & Onion",
-      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_cucumber_onion.asset",
+      "guid": "13c7fb32dd92fd78b20468b8e53b2d41",
+      "id": "DLC11_Salad_corn_onion",
+      "nameZh": "沙拉·玉米洋葱",
+      "nameEn": "Salad Corn & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_corn_onion.asset",
       "cookingStep": "",
       "platingStep": "Plate",
       "ingredients": [
-        "dlc11_tomato",
-        "dlc11_cucumber",
+        "dlc11_lettuce",
+        "dlc11_corn",
         "dlc11_onion_salad"
       ],
       "ingredientCount": 3,
@@ -152,8 +152,8 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "dlc11_tomato",
-            "dlc11_cucumber",
+            "dlc11_lettuce",
+            "dlc11_corn",
             "dlc11_onion_salad"
           ]
         }
@@ -203,7 +203,7 @@
       "platingStep": "Plate",
       "ingredients": [
         "dlc11_tomato",
-        "DLC11_Corn",
+        "dlc11_corn",
         "dlc11_onion_salad"
       ],
       "ingredientCount": 3,
@@ -219,7 +219,71 @@
           "utensils": [],
           "ingredients": [
             "dlc11_tomato",
-            "DLC11_Corn",
+            "dlc11_corn",
+            "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0f3c0cb3723f9fa9a0946ec627dc40c9",
+      "id": "DLC11_Salad_tomato_cucumber_onion",
+      "nameZh": "沙拉·番茄黄瓜洋葱",
+      "nameEn": "Salad Tomato Cucumber & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_cucumber_onion.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 0,
+      "score": 60,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_tomato",
+            "dlc11_cucumber",
+            "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "9a83520c544b94e585bfd1e91d6bb0cc",
+      "id": "DLC11_Salad_cucumber_onion",
+      "nameZh": "沙拉·黄瓜洋葱",
+      "nameEn": "Salad Cucumber & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_cucumber_onion.asset",
+      "cookingStep": "",
+      "platingStep": "Plate",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 0,
+      "score": 40,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "salad",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc11_cucumber",
             "dlc11_onion_salad"
           ]
         }
@@ -260,64 +324,32 @@
       "icon": true
     },
     {
-      "guid": "9a83520c544b94e585bfd1e91d6bb0cc",
-      "id": "DLC11_Salad_cucumber_onion",
-      "nameZh": "沙拉·黄瓜洋葱",
-      "nameEn": "Salad Cucumber & Onion",
-      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_cucumber_onion.asset",
-      "cookingStep": "",
-      "platingStep": "Plate",
+      "guid": "8c9ad5c480eb745a670f30ea0ac5c831",
+      "id": "dlc11_boiledfrankfurter",
+      "nameZh": "煮热狗肠（DLC11）",
+      "nameEn": "Boiled Frankfurter (DLC11)",
+      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_boiledfrankfurter.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
       "ingredients": [
-        "dlc11_cucumber",
-        "dlc11_onion_salad"
+        "frankfurter"
       ],
-      "ingredientCount": 2,
-      "cookingStepCount": 0,
-      "score": 40,
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
       "isCustom": false,
       "group": "dlc11",
-      "type": "salad",
-      "intermediate": false,
+      "type": "hotdog",
+      "intermediate": true,
       "cookingGroups": [
         {
-          "step": "",
-          "utensils": [],
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
           "ingredients": [
-            "dlc11_cucumber",
-            "dlc11_onion_salad"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "13c7fb32dd92fd78b20468b8e53b2d41",
-      "id": "DLC11_Salad_corn_onion",
-      "nameZh": "沙拉·玉米洋葱",
-      "nameEn": "Salad Corn & Onion",
-      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_corn_onion.asset",
-      "cookingStep": "",
-      "platingStep": "Plate",
-      "ingredients": [
-        "dlc11_lettuce",
-        "DLC11_Corn",
-        "dlc11_onion_salad"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 0,
-      "score": 60,
-      "isCustom": false,
-      "group": "dlc11",
-      "type": "salad",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc11_lettuce",
-            "DLC11_Corn",
-            "dlc11_onion_salad"
+            "frankfurter"
           ]
         }
       ],
@@ -332,8 +364,8 @@
       "cookingStep": "Blender",
       "platingStep": "Glass",
       "ingredients": [
-        "DLC11_Vanilla",
-        "DLC11_Icecube",
+        "dlc11_vanilla",
+        "icecube",
         "dlc11_milk"
       ],
       "ingredientCount": 3,
@@ -351,8 +383,8 @@
             "BlenderCup"
           ],
           "ingredients": [
-            "DLC11_Vanilla",
-            "DLC11_Icecube",
+            "dlc11_vanilla",
+            "icecube",
             "dlc11_milk"
           ]
         }
@@ -368,10 +400,10 @@
       "cookingStep": "Blender",
       "platingStep": "Glass",
       "ingredients": [
-        "DLC11_Vanilla",
-        "DLC11_Icecube",
+        "dlc11_vanilla",
+        "icecube",
         "dlc11_milk",
-        "DLC11_OrangeSoda"
+        "orangesoda"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -385,7 +417,7 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "DLC11_OrangeSoda"
+            "orangesoda"
           ]
         },
         {
@@ -395,8 +427,8 @@
             "BlenderCup"
           ],
           "ingredients": [
-            "DLC11_Vanilla",
-            "DLC11_Icecube",
+            "dlc11_vanilla",
+            "icecube",
             "dlc11_milk"
           ]
         }
@@ -412,10 +444,10 @@
       "cookingStep": "Blender",
       "platingStep": "Glass",
       "ingredients": [
-        "DLC11_Vanilla",
-        "DLC11_Icecube",
+        "dlc11_vanilla",
+        "icecube",
         "dlc11_milk",
-        "DLC11_RootBeer"
+        "rootbeer"
       ],
       "ingredientCount": 4,
       "cookingStepCount": 1,
@@ -429,7 +461,7 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "DLC11_RootBeer"
+            "rootbeer"
           ]
         },
         {
@@ -439,41 +471,9 @@
             "BlenderCup"
           ],
           "ingredients": [
-            "DLC11_Vanilla",
-            "DLC11_Icecube",
+            "dlc11_vanilla",
+            "icecube",
             "dlc11_milk"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "8c9ad5c480eb745a670f30ea0ac5c831",
-      "id": "dlc11_boiledfrankfurter",
-      "nameZh": "煮热狗肠（DLC11）",
-      "nameEn": "Boiled Frankfurter (DLC11)",
-      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_boiledfrankfurter.asset",
-      "cookingStep": "Pot",
-      "platingStep": "",
-      "ingredients": [
-        "DLC08_Frankfurter"
-      ],
-      "ingredientCount": 1,
-      "cookingStepCount": 1,
-      "score": 0,
-      "isCustom": false,
-      "group": "dlc11",
-      "type": "hotdog",
-      "intermediate": true,
-      "cookingGroups": [
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "DLC08_Frankfurter"
           ]
         }
       ],
