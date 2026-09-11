@@ -34,8 +34,50 @@ import {
 } from "../../api";
 import type { RecipeEntry } from "../../types";
 
+export type UtensilIngredientFill = Map<string, { ings: string[]; intermediates: string[] }>;
+
+/** 把 computeUtensilIngredientFill 的结果写进场景锅具的 allowedIngredientSOs。
+ *  两个入口共用：锅具管理页「按菜谱自动填充」与菜谱弹窗「安装缺失」。
+ *  ings 按 id→食材 guid、intermediates 按 id→菜谱 guid 解析；返回写入的锅具数。
+ *  可移动火锅（pushable）只写食材配置、不挂 CookingUtensil stub（挂 stub 会触发
+ *  宿主 Setup NRE，载体组装在 LayoutRuntimePushablePot）。 */
+export function applyUtensilIngredientFill(
+  fill: UtensilIngredientFill,
+  ingGuid: Map<string, string>,
+  recipeGuid: Map<string, string>
+): number {
+  const vesselOfItem = (it: EditorItem): string => {
+    const id = S.catalogByGuid.get(it.prefabGuid ?? "")?.id ?? prefabIdFromPath(it.prefabAssetPath ?? "");
+    return functionalBaseId(id ?? "");
+  };
+  let touched = 0;
+  for (const it of S.items) {
+    const isPushablePot = prefabIdFromPath(it.prefabAssetPath) === "web_utensil_large_pot_01_pushable";
+    if (stubKindOf(it) !== "CookingUtensil" && !isPushablePot) continue;
+    const f = fill.get(vesselOfItem(it));
+    if (!f) continue;
+    const add: string[] = [];
+    for (const iid of f.ings) {
+      const g = ingGuid.get(iid);
+      if (g) add.push(g);
+    }
+    for (const iid of f.intermediates) {
+      const g = recipeGuid.get(iid);
+      if (g) add.push(g);
+    }
+    if (!add.length) continue;
+    if (!isPushablePot) it.stubKind = "CookingUtensil";
+    if (!it.cookingUtensil) it.cookingUtensil = {};
+    it.cookingUtensil.capacity = utensilCapacityOrFix(it);
+    it.cookingUtensil.allowedIngredientGuids = [...new Set(add)];
+    touched++;
+  }
+  return touched;
+}
+
 export function openUtensilManager() {
   // 锅具 = CookingUtensil stub + 可移动火锅（含锅 child，有 IngredientContainer，
+  //  食材配置同样有效，但 stubKind 保持空由后端载体组装，不挂 CookingUtensil stub）
   // 食材配置同样有效，但 stubKind 保持空由后端载体组装，不挂 CookingUtensil stub）
   const utensils = S.items.filter(
     (it) =>
@@ -102,8 +144,9 @@ export function openUtensilManager() {
 
   // 按菜谱自动填充：读取当前关卡已选菜谱 → 数据驱动计算各锅具应装的食材
   // （汤料→汤锅、香肠→汤锅、洋葱→煎锅、面糊食材→搅拌碗、面糊节点→炸篮、
-  //  搅拌类→搅拌杯，含 DLC 食材如 dlc07 土豆/西芹），按功能基础 id 匹配
-  // 场景锅具（含 DLC 变体），容量默认 4；按菜谱自动填充覆盖写入食材列表。
+  //  搅拌类→搅拌杯，含 DLC 食材如 dlc07 土豆/西芹；Cooked 型中间产物按其自身
+  //  烹饪步骤节点+叶生食材双填进终锅，如 EggSausage→早餐锅、FriedMeat→煎锅），
+  //  按功能基础 id 匹配场景锅具（含 DLC 变体），容量默认 4；按菜谱自动填充覆盖写入食材列表。
   document.getElementById("utm-auto-fill")?.addEventListener("click", async () => {
     if (!S.scenePath) {
       setStatus("未选择场景，无法读取关卡菜谱", false);
@@ -137,38 +180,9 @@ export function openUtensilManager() {
     }
     const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
     const recipeGuid = new Map(recipes.map((r) => [r.id, r.guid]));
-    const vesselOfItem = (it: EditorItem): string => {
-      const id = S.catalogByGuid.get(it.prefabGuid ?? "")?.id ?? prefabIdFromPath(it.prefabAssetPath ?? "");
-      return functionalBaseId(id ?? "");
-    };
 
     pushHistory();
-    let touched = 0;
-    for (const it of S.items) {
-      const isPushablePot = prefabIdFromPath(it.prefabAssetPath) === "web_utensil_large_pot_01_pushable";
-      if (stubKindOf(it) !== "CookingUtensil" && !isPushablePot) continue;
-      const f = fill.get(vesselOfItem(it));
-      if (!f) continue;
-      const add: string[] = [];
-      for (const iid of f.ings) {
-        const g = ingGuid.get(iid);
-        if (g) add.push(g);
-      }
-      for (const iid of f.intermediates) {
-        const g = recipeGuid.get(iid);
-        if (g) add.push(g);
-      }
-      if (!add.length) continue;
-      // 可移动火锅不挂 CookingUtensil stub（载体组装在 LayoutRuntimePushablePot，
-      // 挂 stub 会触发宿主 Setup NRE）；只写食材配置。
-      if (!isPushablePot) {
-        it.stubKind = "CookingUtensil";
-      }
-      if (!it.cookingUtensil) it.cookingUtensil = {};
-      it.cookingUtensil.capacity = utensilCapacityOrFix(it);
-      it.cookingUtensil.allowedIngredientGuids = [...new Set(add)];
-      touched++;
-    }
+    const touched = applyUtensilIngredientFill(fill, ingGuid, recipeGuid);
     draw();
     const parts = [...fill.entries()].map(([v, f]) => `${v}×${f.ings.length + f.intermediates.length}`);
     setStatus(

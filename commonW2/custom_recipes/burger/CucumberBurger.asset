@@ -16,7 +16,7 @@ MonoBehaviour:
   uID: 58321013
   score: 40
   platingStepSO: {fileID: 11400000, guid: 02b04fdf6fef0e944870fd5e06375ed1, type: 2}
-  modelSO: {fileID: 11400000, guid: 7e3070b091a402f42be328cc261adff3, type: 2}
+  modelSO: {fileID: 11400000, guid: b65af1b8a1e4f2a4d82417a5981a1fbb, type: 2}
   model: {fileID: 0}
   iconSO: {fileID: 0}
   icon: {fileID: 21300000, guid: cde72a05bf0226641927d78246304b0a, type: 3}

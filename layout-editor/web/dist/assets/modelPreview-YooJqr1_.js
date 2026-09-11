@@ -1,4 +1,4 @@
-import{U as yu,V as Mu}from"./version-CcDBtc9i.js";import{f as Ws,a as mt,u as gt,b as Si,c as Xs,d as Su,C as bu,e as Cl,P as Eu}from"./customRecipes-qMdnwBS0.js";import"./main-C9R_PZJv.js";/**
+import{U as yu,V as Mu}from"./version-DLCzTXp2.js";import{f as Ws,a as mt,u as gt,b as Si,c as Xs,d as Su,C as bu,e as Cl,P as Eu}from"./customRecipes-pezNsqht.js";import"./main-BA-G9Azg.js";/**
  * @license
  * Copyright 2010-2026 Three.js Authors
  * SPDX-License-Identifier: MIT

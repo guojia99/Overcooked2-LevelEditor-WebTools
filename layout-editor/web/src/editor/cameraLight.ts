@@ -19,7 +19,7 @@ function lightTypeLabel(t: number): string {
 
 /**
  * 打开「相机 / 灯光」编辑弹窗。
- * - 相机：背景色（空洞主题下即游戏背景色）+ FOV；transform 为只读快照。
+ * - 相机：背景色（空洞主题下即游戏背景色）+ FOV + 出发点位置（X/Z 方向键，每次 0.1，Y 不变）。
  * - 灯光：Art/Lights 非 prefab 灯光的颜色 / 强度 / 范围 / 角度 / 启用，可增删。
  * 修改即时反映到画布（视野范围、空洞底色），写回 Unity 时随全量保存携带。
  */
@@ -46,11 +46,20 @@ export function openCameraLightModal(): void {
           <input type="number" id="cl-cam-fov-num" min="1" max="179" step="1" value="${cam.fieldOfView}" />
         </span>
       </div>
-      <p class="modal-hint cl-cam-snap">
-        相机快照（只读）：位置 (${fmt(cam.position?.x)}, ${fmt(cam.position?.y)}, ${fmt(cam.position?.z)})
-        · 俯角 ${fmt(cam.pitch)}° / 朝向 ${fmt(cam.yaw)}°
-        · 裁面 ${fmt(cam.nearClip)}–${fmt(cam.farClip)}
-      </p>`
+      <div class="modal-field cl-cam-pos-field">
+        <span>出发点位置</span>
+        <span class="cl-cam-pos">
+          <span class="cl-pos-pad">
+            <button type="button" class="cl-pos-btn cl-pos-up" data-cam-pos="up" title="Z +0.1">↑</button>
+            <button type="button" class="cl-pos-btn cl-pos-left" data-cam-pos="left" title="X −0.1">←</button>
+            <code class="cl-pos-val" id="cl-cam-pos-val"></code>
+            <button type="button" class="cl-pos-btn cl-pos-right" data-cam-pos="right" title="X +0.1">→</button>
+            <button type="button" class="cl-pos-btn cl-pos-down" data-cam-pos="down" title="Z −0.1">↓</button>
+          </span>
+          <button type="button" class="modal-btn" id="cl-cam-pos-reset" ${S.cameraPosOrigin ? "" : "disabled"} title="恢复场景导出时的相机位置">重置位置</button>
+        </span>
+      </div>
+      <p class="modal-hint cl-cam-snap"></p>`
     : `<p class="modal-hint">当前场景未导出相机信息（场景中找不到相机），相机设置不可用。</p>`;
 
   const body = `
@@ -116,6 +125,57 @@ export function openCameraLightModal(): void {
   if (fovNum) {
     fovNum.addEventListener("change", () => applyFov(Number(fovNum.value), "num"));
   }
+
+  // —— 出发点位置方向键（每次 ±0.1；只改 X/Z，Y 永不改动） ——
+  const CAM_POS_STEP = 0.1;
+  const posVal = document.getElementById("cl-cam-pos-val");
+  const snapEl = document.querySelector<HTMLElement>("#modal-root .cl-cam-snap");
+
+  /** 步进后 round 到 0.001，消除 0.1 累加的浮点噪声。 */
+  const stepPos = (v: number, d: number): number => Math.round((v + d) * 1000) / 1000;
+
+  const updatePosReadout = () => {
+    const c = S.cameraInfo;
+    if (!c) return;
+    if (posVal) posVal.textContent = `x ${fmt(c.position?.x)} / z ${fmt(c.position?.z)}`;
+    if (snapEl) {
+      snapEl.textContent =
+        `相机位置 (${fmt(c.position?.x)}, ${fmt(c.position?.y)}, ${fmt(c.position?.z)})，可用上方按钮微调（每次 0.1，Y 不变）` +
+        ` · 俯角 ${fmt(c.pitch)}° / 朝向 ${fmt(c.yaw)}°` +
+        ` · 裁面 ${fmt(c.nearClip)}–${fmt(c.farClip)}`;
+    }
+  };
+
+  document.querySelectorAll<HTMLButtonElement>("#modal-root [data-cam-pos]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (!S.cameraInfo) return;
+      pushHistory();
+      if (!S.cameraInfo.position) S.cameraInfo.position = { x: 0, y: 0, z: 0 };
+      const p = S.cameraInfo.position;
+      if (btn.dataset.camPos === "up") p.z = stepPos(p.z, CAM_POS_STEP);
+      else if (btn.dataset.camPos === "down") p.z = stepPos(p.z, -CAM_POS_STEP);
+      else if (btn.dataset.camPos === "left") p.x = stepPos(p.x, -CAM_POS_STEP);
+      else if (btn.dataset.camPos === "right") p.x = stepPos(p.x, CAM_POS_STEP);
+      S.cameraInfo.positionEdited = true;
+      updatePosReadout();
+      draw();
+    });
+  });
+
+  const posReset = document.getElementById("cl-cam-pos-reset");
+  posReset?.addEventListener("click", () => {
+    const c = S.cameraInfo;
+    const o = S.cameraPosOrigin;
+    if (!c || !o) return;
+    if (c.position && c.position.x === o.x && c.position.y === o.y && c.position.z === o.z) return;
+    pushHistory();
+    c.position = { x: o.x, y: o.y, z: o.z };
+    c.positionEdited = true;
+    updatePosReadout();
+    draw();
+  });
+
+  updatePosReadout();
 
   // —— 灯光列表 ——
   const listEl = document.getElementById("cl-light-list");

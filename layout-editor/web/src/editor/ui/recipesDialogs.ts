@@ -33,7 +33,6 @@ import {
 import {
   catalogItemById,
   ingredientEntryById,
-  foodIconImg,
   customRecipeIconUrl,
   ingredientGuidById,
   ingredientIdByGuid
@@ -50,6 +49,7 @@ import {
 } from "../items";
 import { itemLayerOfIt } from "../catalog";
 import { utensilCapacityOrFix } from "../stubControls";
+import { applyUtensilIngredientFill } from "./utensilManager";
 import { foodGroupLabel, visibleRecipes } from "../../ingredientLabels";
 import {
   groupRecipesByType,
@@ -68,6 +68,7 @@ import {
   saveLevelRecipes
 } from "../../api";
 import { NODE_INGREDIENT_SOURCES } from "../../recipeGroups";
+import { rlCardHtml } from "../../recipeCard";
 import type { RecipeEntry, LevelOptionalItem, LevelRecipes, OptionalPresets } from "../../types";
 
 export type RecipeTab = "select" | "selected" | "autofill" | "optional" | "matchlist";
@@ -152,7 +153,18 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     byRecipeId = new Map(recipes.map((r) => [r.id, r]));
     // 自定义菜谱（含 Composite/Mixed，score 可能为 0 被标 intermediate）一律可作为订单菜谱；
     // 只有非自定义的中间产物（如 score<=0 的匹配规则）排除在可点单之外。
-    orderable = recipes.filter((r) => !r.intermediate || r.isCustom);
+    // 例外（不进选择菜谱清单）：
+    //  - 组装定义（optionalKind=burger/pizza：OptionalBurger/*Assembly/_filler/本关
+    //    BurgerOptional）——归 Optional tab 单独管理，不是可点单菜谱；
+    //  - commonW2 Burger大全的组装配件（炸虾饼/煎肉排等 score=0 中间产物）——是成品
+    //    汉堡的组成件；关卡集本地的 0 分自定义菜谱不受影响，保持可勾选。
+    orderable = recipes.filter(
+      (r) =>
+        (!r.intermediate || r.isCustom) &&
+        r.optionalKind !== "burger" &&
+        r.optionalKind !== "pizza" &&
+        !(r.intermediate && (r.assetPath ?? "").includes("/commonW2/")),
+    );
     S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
     const vis = visibleRecipes(orderable);
     levelSetRecipes = orderable.filter((r) => r.group === "levelset");
@@ -270,38 +282,24 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
 
   function recipeCard(r: RecipeEntry): string {
     const checked = selectedIds.has(r.id) ? "checked" : "";
-    const cust = r.isCustom ? ` <span class="pc-badge" title="自定义菜谱">🔧</span>` : "";
-    const grp =
-      r.group && r.group !== "core" && r.group !== "levelset"
-        ? ` <span class="pc-badge">${escHtml(foodGroupLabel(r.group))}</span>`
-        : "";
-    const lsBadge = r.group === "levelset"
-      ? ` <span class="pc-badge" style="background:#3b82f6;color:#fff">本关</span>`
-      : "";
-    const warnBadge = recipeLacksIntermediate(r)
-      ? ` <span class="pc-badge" style="background:#b45309;color:#fff" title="该菜谱需要搅拌但缺少对应中间产物（面糊），请勿使用">⚠ 无中间产物</span>`
-      : "";
-    const chips = (r.ingredients ?? [])
-      .map((ingId) => {
-        // 建箱等价替换（如套餐面包 dlc08_bun 显示为核心汉堡面包）优先
-        const ing = ingredientEntryById(ingId) ?? ingredientEntryById(NODE_INGREDIENT_SOURCES[ingId] ?? "");
-        if (ing) {
-          return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("ingredients", ing.id, ing.icon)}${escHtml(ing.nameZh)}</span>`;
-        }
-        // 食材表查不到：多为中间产物（煎肉排/炸洋葱圈等），按菜谱条目取名与成品贴图
-        const mid = byRecipeId.get(ingId);
-        if (mid) {
-          return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("recipes", mid.id, mid.icon)}${escHtml(mid.nameZh)}</span>`;
-        }
-        return `<span class="rc-ing" title="${escHtml(ingId)}">${foodIconImg("ingredients", undefined, false)}${escHtml(ingId)}</span>`;
-      })
-      .join("");
     const searchable = `${r.nameZh} ${r.nameEn ?? ""} ${r.id}`.toLowerCase();
-    const iconSrc = customRecipeIconUrl(r) ?? (r.id && r.icon !== false ? `/icons/recipes/${encodeURIComponent(r.id)}.png` : "/icons/_placeholder.png");
-    return `<label class="pick-card recipe-card" data-name="${escHtml(searchable)}">
+    // 菜谱清单列表同款卡片（rlCardHtml）：成品区 + 食材分组 + 锅具图标；
+    // 自定义/DLC/⭐/半成品徽标由卡片徽标体系自动覆盖，「本关」「⚠ 无中间产物」
+    // 通过 extraBadge/warnBadge 附加。
+    const cardHtml = rlCardHtml(r, {
+      allRecipes: recipes,
+      ingredientName: (id) => ingredientEntryById(id)?.nameZh ?? id,
+      iconSrc: (x) =>
+        customRecipeIconUrl(x) ??
+        (x.id && x.icon !== false
+          ? `/icons/recipes/${encodeURIComponent(x.id)}.png`
+          : "/icons/_placeholder.png"),
+      extraBadge: r.group === "levelset" ? "本关" : undefined,
+      warnBadge: recipeLacksIntermediate(r) ? "⚠ 无中间产物" : undefined,
+    });
+    return `<label class="rw-recipe-pick" data-name="${escHtml(searchable)}">
       <input type="checkbox" value="${r.guid}" ${checked}>
-      <span class="rc-head"><img class="food-icon" loading="lazy" src="${escHtml(iconSrc)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'"><span class="pc-name">${escHtml(r.nameZh)}${grp}${cust}${lsBadge}${warnBadge}</span></span>
-      <span class="rc-ings">${chips || '<span class="muted small">无食材</span>'}</span>
+      ${cardHtml}
     </label>`;
   }
 
@@ -309,7 +307,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const cards = items.map(recipeCard).join("");
     return `<div class="rw-group" data-cat="${escHtml(cat)}" data-type="${escHtml(type)}">
       <div class="rw-group-header"><span class="rw-group-name">${escHtml(recipeTypeLabel(type))}</span><span class="rw-group-count"><span class="rw-group-sel">0</span>/<span class="rw-group-total">${items.length}</span></span></div>
-      <div class="pick-grid recipe-grid">${cards}</div>
+      <div class="rl-grid">${cards}</div>
     </div>`;
   }
 
@@ -327,7 +325,9 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   }
 
   function selectedViewHtml(): string {
-    const sel = visibleRecipes(orderable).filter((r) => selectedIds.has(r.id));
+    // 已选视图走全量 recipes（而非 orderable）：此前误选进 LevelInfo.recipes 的
+    // 组装定义/commonW2 组装配件在这里仍透明可见，可手动取消勾选后保存清除。
+    const sel = visibleRecipes(recipes).filter((r) => selectedIds.has(r.id));
     if (sel.length === 0) return '<p class="modal-hint">未选择菜谱，勾选左侧菜谱后显示在这里。</p>';
     const byCat: Record<string, RecipeEntry[]> = { levelset: [], core: [] };
     for (const r of sel) {
@@ -805,35 +805,16 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     // 锅具食材自动装填（数据驱动，镜像游戏 OrderDefinitionNode 组成）：
     // 汤类食材→汤锅、热狗肠→汤锅、洋葱→煎锅、搅拌类食材→搅拌杯、面糊食材→搅拌碗、
     // 面糊中间产物→炸篮等。按功能基础 id 匹配场景锅具（含 DLC 变体），覆盖写入 allowedIngredientSOs。
+    // （与锅具管理页「按菜谱自动填充」共用 applyUtensilIngredientFill：
+    //   含可移动火锅不挂 stub 的防护。）
     {
       const vesselFill = computeUtensilIngredientFill(recs);
       const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
-      const vesselOfItem = (it: { prefabGuid?: string; prefabAssetPath?: string }): string => {
-        const id = S.catalogByGuid.get(it.prefabGuid ?? "")?.id ?? prefabIdFromPath(it.prefabAssetPath ?? "");
-        return functionalBaseId(id ?? "");
-      };
-      for (const [vessel, fill] of vesselFill) {
-        const guids: string[] = [];
-        for (const iid of fill.ings) {
-          const g = ingGuid.get(iid);
-          if (g) guids.push(g);
-        }
-        for (const iid of fill.intermediates) {
-          const g = recipeById.get(iid);
-          if (g) guids.push(g);
-        }
-        if (guids.length === 0) continue;
-        for (const it of S.items) {
-          if (vesselOfItem(it) !== vessel) continue;
-          it.stubKind = "CookingUtensil";
-          if (!it.cookingUtensil) it.cookingUtensil = {};
-          it.cookingUtensil.capacity = utensilCapacityOrFix(it);
-          it.cookingUtensil.allowedIngredientGuids = [...new Set(guids)];
-        }
-      }
+      applyUtensilIngredientFill(vesselFill, ingGuid, recipeById);
     }
 
-    // 自动分配中间产物 + 搅拌杯装填
+    // 自动分配中间产物 + 搅拌杯装填（预设表补充官方菜谱家族；合并且去重，
+    // 不覆盖上面的按需填充结果）
     if (S.autoIntermediates) {
       const intermediateMap = computeIntermediatesForUtensils(recs);
       for (const [placedId, intIds] of intermediateMap) {
@@ -849,7 +830,8 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
           it.stubKind = "CookingUtensil";
           if (!it.cookingUtensil) it.cookingUtensil = {};
           it.cookingUtensil.capacity = utensilCapacityOrFix(it);
-          it.cookingUtensil.allowedIngredientGuids = [...new Set(guidsToAdd)];
+          const cur = it.cookingUtensil.allowedIngredientGuids ?? [];
+          it.cookingUtensil.allowedIngredientGuids = [...new Set([...cur, ...guidsToAdd])];
         }
       }
     }
@@ -941,7 +923,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const listEl = document.getElementById("rw-list");
     if (!listEl) return;
     listEl.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
-      const card = cb.closest(".pick-card");
+      const card = cb.closest(".rw-recipe-pick");
       if (card) card.classList.toggle("selected", cb.checked);
       cb.addEventListener("change", () => {
         toggleSelect(cb.value, cb.checked);
@@ -978,11 +960,11 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
             if (r) console.debug(`[recipes]   ${g} -> ${r.id} (${r.group}, ${r.assetPath ?? ""})`);
             else console.warn(`[recipes]   ${g} -> 不在当前目录中（后端可能丢弃该 guid）`);
           }
-          await saveLevelRecipes(level!.levelInfoAssetPath, guids);
+          const saveNote = await saveLevelRecipes(level!.levelInfoAssetPath, guids);
           selected.clear();
           for (const g of guids) selected.add(g);
           closeModal();
-          setStatus(`菜谱已覆盖写入 LevelInfo（${guids.length} 道）`);
+          setStatus(`菜谱已覆盖写入 LevelInfo（${guids.length} 道）${saveNote ? `；${saveNote}` : ""}`);
         } catch (e) {
           setStatus((e as Error).message, false);
         }
@@ -1221,10 +1203,13 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     return (r.compositionIds ?? []).some((id) => isBurgerBunId(id));
   };
 
-  /** 一键填充时替换的汉堡 optional（本关 BurgerOptional + 遗留 assembly/_filler；不含用户手动的成品汉堡）。 */
+  /** 一键填充时替换的汉堡 optional：本关 BurgerOptional + 遗留 assembly/_filler +
+   *  填充加入的中间产物（score=0 的自定义菜谱）。不含用户手动加入的成品（score>0）。
+   *  中间产物只可能来自填充（添加面板候选不含它们），重填时必须整体替换，否则每次累积。 */
   const isAutoManagedBurgerOptional = (it: LevelOptionalItem): boolean => {
     const r = byGuid.get(it.guid);
     if (r && (r.score ?? 0) > 0) return false;
+    if (r && r.isCustom) return true;
     if (it.id === "BurgerOptional") return true;
     if (/(_filler|_夹心)$/i.test(it.id)) return true;
     if (/burgerassembly/i.test(it.id)) return true;
@@ -1269,21 +1254,25 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     const newItems: LevelOptionalItem[] = [];
     const seen = new Set<string>();
     for (const g of guids) {
-      if (seen.has(g)) continue;
-      seen.add(g);
-      const hint = hintByGuid.get(normalizeGuid(g));
+      const ng = normalizeGuid(g);
+      if (seen.has(ng)) continue;
+      seen.add(ng);
+      const hint = hintByGuid.get(ng);
       newItems.push(resolveOptionalMeta(g, hint));
     }
-    optionalItems = [...newItems, ...kept];
+    // 双保险：保留条目与新集合按归一化 guid 去重，杜绝任何途径的重复。
+    optionalItems = [...newItems, ...kept.filter((it) => !seen.has(normalizeGuid(it.guid)))];
     optionalDirty = true;
     setStatus(`${doneMsg}（汉堡相关 ${newItems.length} 条，已替换旧组装定义）`);
     render();
   };
 
-  /** 旧流程遗留（_filler / BurgerAssembly 等），不含本关 BurgerOptional。 */
+  /** 旧流程遗留组装（_filler / BurgerAssembly 等），不含本关 BurgerOptional 与填充的中间产物
+   *  （中间产物组成不含面包，不会命中 isBurgerAssemblyEntry）。 */
   const isLegacyBurgerOptional = (it: LevelOptionalItem): boolean => {
     if (it.id === "BurgerOptional") return false;
-    return isAutoManagedBurgerOptional(it);
+    if (/burgerassembly/i.test(it.id) || /(_filler|_夹心)$/i.test(it.id)) return true;
+    return isBurgerAssemblyEntry(it);
   };
 
   const clearLegacyBurgerOptionals = (): void => {
@@ -1392,7 +1381,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         </div>`;
       })
       .join("");
-    return `<p class="modal-hint">optionalRecipeMatchListItems：注册进关卡匹配表的额外节点（DLC 原始菜谱、Hotdog 可选部件/酱料/煮肠、自选披萨部件、<b>本关汉堡夹心 BurgerOptional</b>…）。<b>保存菜谱不再自动填充</b>，此处手动增删后单独写回。「按已选汉堡一键填充」会生成/更新 <code>data/{关卡}/BurgerOptional.asset</code>（所选汉堡夹心<b>全集</b>：各食材取最大重复层数），并替换列表中的旧组装定义；也可手动把<b>成品汉堡菜谱</b>加入 optional。纯面包汉堡自动跳过；披萨/Hotdog 等其它条目保留。</p>
+    return `<p class="modal-hint">optionalRecipeMatchListItems：注册进关卡匹配表的额外节点（DLC 原始菜谱、Hotdog 可选部件/酱料/煮肠、自选披萨部件、<b>本关汉堡夹心 BurgerOptional</b>…）。<b>保存菜谱时汉堡条目自动同步</b>（BurgerOptional + 中间产物，替换旧组装定义；披萨/Hotdog/手动条目保持不动），其余增删在此手动配置后单独写回。「按已选汉堡一键填充」同源：生成/更新 <code>data/{关卡}/BurgerOptional.asset</code>（夹心取所选汉堡<b>全集</b>：各食材取最大重复层数，面包对齐关卡主面包），并替换列表中的旧组装定义；也可手动把<b>成品汉堡菜谱</b>加入 optional。纯面包汉堡自动跳过；一关内请统一面包——多种面包时仅主面包可自定义叠层。</p>
       ${selectedHasBurger() && !optionalHasAssembly()
         ? '<div class="rw-warn">⚠ 已选汉堡，但 optional 未注册组装定义——运行时无法叠层，请使用「按已选汉堡一键填充」后写回。</div>'
         : ""}
@@ -1527,7 +1516,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
      <div class="rw-content" id="rw-content"></div>`,
     `<div class="rw-footer" id="rw-footer"></div>`
   );
-  document.querySelector(".modal-panel")?.classList.add("wide");
+  document.querySelector(".modal-panel")?.classList.add("wide", "rw-recipes");
 
   render();
 }

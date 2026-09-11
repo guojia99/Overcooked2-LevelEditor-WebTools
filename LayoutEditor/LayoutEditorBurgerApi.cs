@@ -138,7 +138,7 @@ public static class LayoutEditorBurgerApi
     {
         public string assetPath;
         public int capacity;                  // >0 时更新 ingredientContainerCapacity
-        public string[] addLayerIds;          // 追加可选夹心种类（模型位留空）
+        public string[] addLayerIds;          // 追加可选夹心种类（模型位继承 commonW2 绑定）
         public string[] removeLayerGuids;     // 按 guid 移除该食材的全部出现
         public BurgerModelBindingDto[] modelBindings;
     }
@@ -296,17 +296,105 @@ public static class LayoutEditorBurgerApi
         return opts != null && opts.Length > 0;
     }
 
-    /// <summary>按已选成品汉堡夹心层全集（各食材最大重复数）写入本关 BurgerOptional.optionalSOs。</summary>
-    internal static void SyncLevelBurgerOptionalFromBurgers(
+    /// <summary>commonW2 组装定义的夹心模型绑定索引：optionalSO 的 guid → 堆叠模型。
+    /// OptionalBurger 主模板（绑定最全）优先，其余 *Assembly/_filler 补充，首个非空获胜。</summary>
+    internal static void CollectCommonW2LayerModelBindings(
+        out Dictionary<string, PseudoPrefabSO> modelByGuid,
+        out Dictionary<string, GameObject> modelGoByGuid)
+    {
+        modelByGuid = new Dictionary<string, PseudoPrefabSO>(StringComparer.Ordinal);
+        modelGoByGuid = new Dictionary<string, GameObject>(StringComparer.Ordinal);
+        var burgerDir = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/"
+            + LayoutEditorLevelAdminApi.BurgerCategoryId;
+        if (!LayoutEditorLevelAdminApi.AssetFolderExists(burgerDir))
+            return;
+
+        var ordered = new List<CustomRecipeOptionalBurgerSO>();
+        var master = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(
+            burgerDir + "/OptionalBurger.asset");
+        if (master != null)
+            ordered.Add(master);
+        foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
+                     burgerDir, LayoutEditorLevelAdminApi.OptionalBurgerScriptGuid))
+        {
+            var asm = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(asset.assetPath);
+            if (asm == null || asm == master)
+                continue;
+            ordered.Add(asm);
+        }
+        for (int i = 0; i < ordered.Count; i++)
+            MergeLayerModelBindings(ordered[i], modelByGuid, modelGoByGuid);
+    }
+
+    private static void MergeLayerModelBindings(
+        CustomRecipeOptionalBurgerSO asm,
+        Dictionary<string, PseudoPrefabSO> modelByGuid,
+        Dictionary<string, GameObject> modelGoByGuid)
+    {
+        var opts = asm.optionalSOs ?? new ScriptableObject[0];
+        var modelSOs = asm.ingredientModelSOs ?? new PseudoPrefabSO[0];
+        var models = asm.ingredientModels ?? new GameObject[0];
+        for (int i = 0; i < opts.Length; i++)
+        {
+            if (opts[i] == null)
+                continue;
+            var op = AssetDatabase.GetAssetPath(opts[i]);
+            if (string.IsNullOrEmpty(op))
+                continue;
+            var og = AssetDatabase.AssetPathToGUID(op);
+            if (string.IsNullOrEmpty(og))
+                continue;
+            if (!modelByGuid.ContainsKey(og) && i < modelSOs.Length && modelSOs[i] != null)
+                modelByGuid[og] = modelSOs[i];
+            if (!modelGoByGuid.ContainsKey(og) && i < models.Length && models[i] != null)
+                modelGoByGuid[og] = models[i];
+        }
+    }
+
+    /// <summary>解析单层堆叠模型：本地已有绑定优先，缺失时继承 commonW2 组装定义的绑定；
+    /// modelSO 优先于直接 GameObject 引用（避免双写）。</summary>
+    private static void ResolveLayerModel(
+        ScriptableObject layer,
+        Dictionary<string, PseudoPrefabSO> localModelByGuid,
+        Dictionary<string, GameObject> localGoByGuid,
+        Dictionary<string, PseudoPrefabSO> w2ModelByGuid,
+        Dictionary<string, GameObject> w2GoByGuid,
+        out PseudoPrefabSO modelSO,
+        out GameObject modelGo)
+    {
+        modelSO = null;
+        modelGo = null;
+        var lp = AssetDatabase.GetAssetPath(layer);
+        if (string.IsNullOrEmpty(lp))
+            return;
+        var lg = AssetDatabase.AssetPathToGUID(lp);
+        if (string.IsNullOrEmpty(lg))
+            return;
+        localModelByGuid.TryGetValue(lg, out modelSO);
+        localGoByGuid.TryGetValue(lg, out modelGo);
+        if (modelSO == null)
+            w2ModelByGuid.TryGetValue(lg, out modelSO);
+        if (modelGo == null && modelSO == null)
+            w2GoByGuid.TryGetValue(lg, out modelGo);
+    }
+
+    /// <summary>按已选成品汉堡夹心层全集（各食材最大重复数）写入本关 BurgerOptional.optionalSOs，
+    /// 并把 bunSO 同步为所选汉堡的主面包（出现次数最多；平票取首个）。
+    /// 覆盖语义：夹心/模型数组每次全量重建，模型绑定唯一来源 = commonW2 组装定义
+    /// （本关旧绑定不保留，避免错位残渣）。返回 null = 正常，否则为告警文本。</summary>
+    internal static string SyncLevelBurgerOptionalFromBurgers(
         CustomRecipeOptionalBurgerSO asm,
         IList<CustomRecipeSO> burgers)
     {
         if (asm == null || burgers == null || burgers.Count == 0)
-            return;
+            return null;
 
         var maxCount = new Dictionary<string, int>(StringComparer.Ordinal);
         var soByGuid = new Dictionary<string, ScriptableObject>(StringComparer.Ordinal);
         var order = new List<string>();
+        var bunCount = new Dictionary<string, int>(StringComparer.Ordinal);
+        var bunByGuid = new Dictionary<string, ScriptableObject>(StringComparer.Ordinal);
+        var bunOrder = new List<string>();
 
         for (int b = 0; b < burgers.Count; b++)
         {
@@ -321,11 +409,20 @@ public static class LayoutEditorBurgerApi
                 var cp = AssetDatabase.GetAssetPath(c);
                 if (string.IsNullOrEmpty(cp))
                     continue;
-                if (IsBurgerBunId(Path.GetFileNameWithoutExtension(cp)))
-                    continue;
                 var g = AssetDatabase.AssetPathToGUID(cp);
                 if (string.IsNullOrEmpty(g))
                     continue;
+                if (IsBurgerBunId(Path.GetFileNameWithoutExtension(cp)))
+                {
+                    if (!bunByGuid.ContainsKey(g))
+                    {
+                        bunByGuid[g] = c;
+                        bunOrder.Add(g);
+                        bunCount[g] = 0;
+                    }
+                    bunCount[g] = bunCount[g] + 1;
+                    continue;
+                }
                 if (!soByGuid.ContainsKey(g))
                 {
                     soByGuid[g] = c;
@@ -343,6 +440,33 @@ public static class LayoutEditorBurgerApi
             }
         }
 
+        // bunSO 同步：主面包 = 出现次数最多（平票取首个）。模板拷贝残渣（DLC08/DLC02）
+        // 会在这一步对齐到关卡实际使用的面包。
+        string warning = null;
+        PseudoPrefabSO mainBun = null;
+        int maxBunCount = 0;
+        for (int i = 0; i < bunOrder.Count; i++)
+        {
+            if (bunCount[bunOrder[i]] > maxBunCount)
+            {
+                maxBunCount = bunCount[bunOrder[i]];
+                mainBun = bunByGuid[bunOrder[i]] as PseudoPrefabSO;
+            }
+        }
+        if (bunOrder.Count > 1)
+        {
+            var names = new List<string>();
+            for (int i = 0; i < bunOrder.Count; i++)
+            {
+                var np = AssetDatabase.GUIDToAssetPath(bunOrder[i]);
+                names.Add(string.IsNullOrEmpty(np) ? bunOrder[i] : Path.GetFileNameWithoutExtension(np));
+            }
+            warning = "一关内汉堡使用了 " + bunOrder.Count + " 种面包（"
+                + string.Join("、", names.ToArray())
+                + "），BurgerOptional 仅绑定主面包 " + (mainBun != null ? mainBun.name : "?")
+                + "——其余面包沿用官方叠层规则，请统一面包";
+        }
+
         var opts = new List<ScriptableObject>();
         for (int i = 0; i < order.Count; i++)
         {
@@ -353,56 +477,54 @@ public static class LayoutEditorBurgerApi
                 opts.Add(so);
         }
 
-        var oldOpts = asm.optionalSOs ?? new ScriptableObject[0];
-        var oldModelSOs = asm.ingredientModelSOs ?? new PseudoPrefabSO[0];
-        var oldModels = asm.ingredientModels ?? new GameObject[0];
+        // 模型绑定直接覆盖：不保留本关旧绑定（旧数据可能携带错位/大小写错误的残渣），
+        // 一律以 commonW2 组装定义的规范绑定为唯一来源；要改绑定请改 commonW2 母本
+        // （OptionalBurger.asset 等），所有关卡重新填充即生效。
+        Dictionary<string, PseudoPrefabSO> w2ModelByGuid;
+        Dictionary<string, GameObject> w2GoByGuid;
+        CollectCommonW2LayerModelBindings(out w2ModelByGuid, out w2GoByGuid);
         var modelByGuid = new Dictionary<string, PseudoPrefabSO>(StringComparer.Ordinal);
         var goByGuid = new Dictionary<string, GameObject>(StringComparer.Ordinal);
-        for (int i = 0; i < oldOpts.Length; i++)
-        {
-            if (oldOpts[i] == null)
-                continue;
-            var op = AssetDatabase.GetAssetPath(oldOpts[i]);
-            if (string.IsNullOrEmpty(op))
-                continue;
-            var og = AssetDatabase.AssetPathToGUID(op);
-            if (string.IsNullOrEmpty(og) || modelByGuid.ContainsKey(og))
-                continue;
-            if (i < oldModelSOs.Length && oldModelSOs[i] != null)
-                modelByGuid[og] = oldModelSOs[i];
-            if (i < oldModels.Length && oldModels[i] != null)
-                goByGuid[og] = oldModels[i];
-        }
 
         var newModelSOs = new List<PseudoPrefabSO>();
         var newModels = new List<GameObject>();
+        var unboundCustoms = new List<string>();
         for (int i = 0; i < opts.Count; i++)
         {
-            var op = AssetDatabase.GetAssetPath(opts[i]);
-            PseudoPrefabSO mso = null;
-            GameObject mgo = null;
-            if (!string.IsNullOrEmpty(op))
-            {
-                var og = AssetDatabase.AssetPathToGUID(op);
-                if (!string.IsNullOrEmpty(og))
-                {
-                    modelByGuid.TryGetValue(og, out mso);
-                    goByGuid.TryGetValue(og, out mgo);
-                }
-            }
+            PseudoPrefabSO mso;
+            GameObject mgo;
+            ResolveLayerModel(opts[i], modelByGuid, goByGuid, w2ModelByGuid, w2GoByGuid, out mso, out mgo);
             newModelSOs.Add(mso);
             newModels.Add(mgo);
+            // 原生食材的 None 属设计内（运行时回退官方面包 oldLookup 取模型）；
+            // 自定义中间产物不在官方表内，双 None = 叠层隐形，必须提示。
+            if (mso == null && mgo == null && opts[i] is CustomRecipeSO)
+            {
+                var name = ((CustomRecipeSO)opts[i]).recipeName;
+                if (string.IsNullOrEmpty(name))
+                    name = opts[i].name;
+                if (!unboundCustoms.Contains(name))
+                    unboundCustoms.Add(name);
+            }
         }
+        if (unboundCustoms.Count > 0)
+            LayoutEditorLog.LogWarning("[Optional] BurgerOptional 以下中间产物夹心无堆叠模型绑定"
+                + "（commonW2 与官方面包表均未覆盖，叠层将不可见，请在汉堡工作台补绑定）："
+                + string.Join("、", unboundCustoms.ToArray()));
 
         Undo.RecordObject(asm, "Sync Burger Assembly From Selected");
         asm.optionalSOs = opts.ToArray();
         asm.ingredientModelSOs = newModelSOs.ToArray();
         asm.ingredientModels = newModels.ToArray();
+        if (mainBun != null)
+            asm.bunSO = mainBun;
         if (opts.Count > asm.ingredientContainerCapacity)
             asm.ingredientContainerCapacity = opts.Count;
         EditorUtility.SetDirty(asm);
         AssetDatabase.SaveAssets();
-        LayoutEditorLog.Log("[Optional] 已同步本关 BurgerOptional optionalSOs（" + opts.Count + " 层）");
+        LayoutEditorLog.Log("[Optional] 已同步本关 BurgerOptional optionalSOs（" + opts.Count + " 层，面包 "
+            + (asm.bunSO != null ? asm.bunSO.name : "无") + "）");
+        return warning;
     }
 
     /// <summary>GET /api/level/burger-optional：返回本关 BurgerOptional 组装定义。</summary>
@@ -418,19 +540,21 @@ public static class LayoutEditorBurgerApi
         return BuildDefinitionDto(optional, path, guid, zhMap);
     }
 
-    /// <summary>commonW2 参考组装定义（堆叠模型最完整）。</summary>
+    /// <summary>commonW2 参考组装定义（创建本关 BurgerOptional 的壳模板）。
+    /// 优先 OptionalBurger 主模板；bunSO 只是占位（SyncLevelBurgerOptionalFromBurgers
+    /// 会按关卡实际面包覆盖），不要再默认 ChickenBurgerAssembly（其面包是 DLC08）。</summary>
     private static CustomRecipeOptionalBurgerSO FindCommonW2BurgerModelAssembly()
     {
         var burgerDir = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/"
             + LayoutEditorLevelAdminApi.BurgerCategoryId;
         if (!LayoutEditorLevelAdminApi.AssetFolderExists(burgerDir))
             return null;
-        var chicken = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(
-            burgerDir + "/ChickenBurgerAssembly.asset");
-        if (chicken != null)
-            return chicken;
-        return AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(
+        var master = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(
             burgerDir + "/OptionalBurger.asset");
+        if (master != null)
+            return master;
+        return AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(
+            burgerDir + "/ChickenBurgerAssembly.asset");
     }
 
     private static BurgerCandidateDto[] CollectBuns()
@@ -959,9 +1083,14 @@ public static class LayoutEditorBurgerApi
             }
         }
 
-        // 2. 追加（模型位留空，运行时回退官方 lookup）
+        // 2. 追加（模型位优先继承 commonW2 组装定义的绑定，无则留空回退官方 lookup）
         if (dto.addLayerIds != null)
         {
+            Dictionary<string, PseudoPrefabSO> w2ModelByGuid;
+            Dictionary<string, GameObject> w2GoByGuid;
+            CollectCommonW2LayerModelBindings(out w2ModelByGuid, out w2GoByGuid);
+            var emptyModelByGuid = new Dictionary<string, PseudoPrefabSO>(StringComparer.Ordinal);
+            var emptyGoByGuid = new Dictionary<string, GameObject>(StringComparer.Ordinal);
             foreach (var id in dto.addLayerIds)
             {
                 if (string.IsNullOrEmpty(id))
@@ -969,9 +1098,12 @@ public static class LayoutEditorBurgerApi
                 var so = LayoutEditorLevelAdminApi.FindPseudoPrefabOrCustomRecipe(id);
                 if (so == null)
                     return "夹心无法解析：" + id;
+                PseudoPrefabSO mso;
+                GameObject mgo;
+                ResolveLayerModel(so, emptyModelByGuid, emptyGoByGuid, w2ModelByGuid, w2GoByGuid, out mso, out mgo);
                 opts.Add(so);
-                modelSOs.Add(null);
-                models.Add(null);
+                modelSOs.Add(mso);
+                models.Add(mso != null ? null : mgo);
             }
         }
 

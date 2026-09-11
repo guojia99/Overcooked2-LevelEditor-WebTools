@@ -309,6 +309,17 @@ public static class SceneLayoutApplier
             AutoEnableDynamicParenting(scene, document);
         }
 
+        // HUD 订单上限：按 LevelInfoSO.maxOrderCount 烘焙 RecipeFlowGUI /
+        // KitchenFlowControllerBase 覆盖（n>5 时真机 HUD 桌号池与出单上限的必需数据）。
+        {
+            var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
+            if (!string.IsNullOrEmpty(hudWarn))
+            {
+                LayoutEditorLog.LogWarning(hudWarn);
+                bakeError = string.IsNullOrEmpty(bakeError) ? hudWarn : bakeError + "; " + hudWarn;
+            }
+        }
+
 
         // 烤菜烤盘 / 火锅大锅：食材由前端锅具管理或菜谱自动填充写入，写回时不再追加。
         // After mutating placeholder transforms, persist with the canonical Tools workflow:
@@ -355,8 +366,9 @@ public static class SceneLayoutApplier
         return null;
     }
 
-    /// <summary>写回相机背景色（同时确保 clearFlags=SolidColor）与 FOV。
-    ///  运行时从不写这两个值，改场景序列化即生效。</summary>
+    /// <summary>写回相机背景色（同时确保 clearFlags=SolidColor）、FOV 与出发点位置。
+    ///  位置仅在 positionEdited=true 时写回 X/Z（Y 永不改动；防旧文档快照误移相机）。
+    ///  运行时从不写这些值，改场景序列化即生效。</summary>
     private static string ApplyCameraInfo(CameraInfoDto info)
     {
         if (info == null)
@@ -380,6 +392,17 @@ public static class SceneLayoutApplier
         {
             Undo.RecordObject(cam, "Layout Editor Camera");
             cam.fieldOfView = Mathf.Clamp(info.fieldOfView, 1f, 179f);
+            changed = true;
+        }
+        if (info.positionEdited && info.position != null)
+        {
+            var camT = cam.transform;
+            Undo.RecordObject(camT, "Layout Editor Camera");
+            var pos = camT.position;
+            pos.x = info.position.x;
+            pos.z = info.position.z;
+            camT.position = pos;
+            EditorUtility.SetDirty(camT);
             changed = true;
         }
         if (changed)
@@ -524,12 +547,36 @@ public static class SceneLayoutApplier
         }
     }
 
+    /// <summary>可移动火锅/可推动载具 prefab（prefabAssetPath 全路径判定；与 web
+    /// editor/items.ts 的 pushable id 集合镜像——新增可推动道具时两处同步扩）。</summary>
+    private static readonly string[] PushablePotPrefabPaths = new[]
+    {
+        "Assets/commonW1/prefabs/web/hotpot/web_utensil_large_pot_01_pushable.prefab",
+        "Assets/commonW1/prefabs/web/hotpot/web_dlc10_pushable_object.prefab",
+        // 历史场景的裸载具（web 已迁移到可推动大火锅包装器，此处防直写漏网）
+        "Assets/common03/prefabs/core/mechanisms/pushable_object.prefab",
+    };
+
+    private static bool IsPushablePotAssetPath(string path)
+    {
+        for (int i = 0; i < PushablePotPrefabPaths.Length; i++)
+        {
+            if (string.Equals(path, PushablePotPrefabPaths[i], System.StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>动画组含可行走面（floorInstanceIds 非空，或 itemInstanceIds 里有
-    /// walkable 物品成员——如地砖岛）时，把关卡 LevelInfoSO.disableDynamicParenting
-    /// 置 false（只自动关、绝不自动开；开关本身仍在 web 关卡管理里可手动调）。
+    /// walkable 物品成员——如地砖岛），或场景含可移动火锅（可推动载具是
+    /// ObjectContainer/IParentable，联机推锅人 chef 的父挂载走动态 parenting 链路）
+    /// 时，把关卡 LevelInfoSO.disableDynamicParenting 置 false（只自动关、绝不
+    /// 自动开；开关本身仍在 web 关卡管理里可手动调）。
     /// 宿主侧链路：DynamicLandscapeParenting.Awake 检查该开关，false 时实体脚下
     /// 碰撞体向上递归找 IParentable（烘焙已挂在组根的 ObjectContainer）并
-    /// SetParent —— 玩家/食材随动画组走。</summary>
+    /// SetParent —— 玩家/食材随动画组走。开关开着时 ClientChefSynchroniser 会
+    /// 跳过服务器父挂载的应用：联机推锅人 avatar 永不挂到锅上 → 隔空推锅/鬼锅
+    /// （2026-09-10 真机反馈，上游作者确认含 pushable 的关卡必须取消勾选）。</summary>
     private static void AutoEnableDynamicParenting(Scene scene, LayoutDocumentDto document)
     {
         try
@@ -549,7 +596,20 @@ public static class SceneLayoutApplier
                 }
                 if (hasWalkSurface) break;
             }
-            if (!hasWalkSurface) return;
+
+            var hasPushable = false;
+            if (document.items != null)
+            {
+                foreach (var it in document.items)
+                {
+                    if (it != null && !string.IsNullOrEmpty(it.prefabAssetPath) && IsPushablePotAssetPath(it.prefabAssetPath))
+                    {
+                        hasPushable = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasWalkSurface && !hasPushable) return;
 
             var info = LayoutEditorLevelInfoResolver.ResolveForScene(scene.path);
             if (info == null || !info.disableDynamicParenting) return;
@@ -558,8 +618,10 @@ public static class SceneLayoutApplier
             info.disableDynamicParenting = false;
             EditorUtility.SetDirty(info);
             AssetDatabase.SaveAssets();
-            LayoutEditorLog.Log("anim group: 动画组含可行走面，已自动关闭 disableDynamicParenting（"
-                + info.name + "）—— 玩家/食材将随动画组父挂载");
+            var reason = hasWalkSurface && hasPushable ? "动画组含可行走面 + 场景含可移动火锅"
+                : hasPushable ? "场景含可移动火锅" : "动画组含可行走面";
+            LayoutEditorLog.Log("dynamic parenting: " + reason + "，已自动关闭 disableDynamicParenting（"
+                + info.name + "）—— 玩家/食材将随动画组父挂载；联机推锅人 chef 将正确挂到锅上");
         }
         catch (Exception e)
         {

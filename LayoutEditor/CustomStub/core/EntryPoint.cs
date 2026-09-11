@@ -38,9 +38,11 @@ namespace CustomStub
         ///  汇总 + 安装/自愈明细；RandomCrate v6）。
         ///  v4：EntryPoint ticker 降频 + HotPot region 缓存 + UtensilTiming 早停。
         ///  v5：性能优化——4 ticker 合并为 1；FindObjectsOfType 全场景扫描改为
-        ///  ~1s 缓存/探测（无对应内容的关卡零扫描）；锅具时间 Harmony 补丁按需
-        ///  安装 + 前缀快速放行；TimedSwitch 逐帧压相降为相位边界+每 10 帧再压。</summary>
-        public const string Version = "v5";
+        /// ~1s 缓存/探测（无对应内容的关卡零扫描）；锅具时间 Harmony 补丁按需
+        /// 安装 + 前缀快速放行；TimedSwitch 逐帧压相降为相位边界+每 10 帧再压。
+        ///  v6：空气候（RandomCrate v8）——HandlePickup 前缀按需安装 +
+        /// HasAnyAirPending 快速放行；ResetSceneTickers 挂 RandomCrate.OnSceneChanged。</summary>
+        public const string Version = "v6";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -236,6 +238,42 @@ namespace CustomStub
             }
         }
 
+        /// <summary>空气取出补丁（ServerPickupItemSpawner.HandlePickup 前缀，见
+        /// HarmonyPatches.ServerPickupHandlePickupPrefix）：与 KillPlane/锅具时间补丁
+        /// 相互独立。按需安装（首个空气候掷出时由 RandomCrate.SetAirPending 触发），
+        /// 幂等；安装后前缀自身还有 RandomCrate.HasAnyAirPending 静态快速放行双保险
+        /// ——无空气待取的原版箱子只多一次静态 bool 读取。</summary>
+        private static bool s_airPickupPatched;
+        private static bool s_airPickupPatchFailed;
+
+        internal static void EnsureAirPickupPatches()
+        {
+            if (s_airPickupPatched || s_airPickupPatchFailed)
+                return;
+            try
+            {
+                var target = GameApi.ServerPickupHandlePickupMethod;
+                var prefixMethod = HarmonyPatches.ServerPickupHandlePickupPrefixMethod;
+                if (target == null || prefixMethod == null)
+                {
+                    s_airPickupPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] ServerPickupItemSpawner.HandlePickup 反射/前缀缺失，"
+                        + "空气取出补丁未装（空气箱将退化为取出兜底食材）");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".airpickup");
+                harmony.Patch(target, new HarmonyMethod(prefixMethod));
+                s_airPickupPatched = true;
+                StubLog.Log("[CustomStub] 空气取出补丁已装（按需）: "
+                    + target.DeclaringType.Name + "." + target.Name);
+            }
+            catch (Exception ex)
+            {
+                s_airPickupPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 空气取出补丁安装失败（空气箱将退化为取出兜底食材）: " + ex);
+            }
+        }
+
         private static void OnSceneLoadedHeal(Scene scene, LoadSceneMode mode)
         {
             HealScene(scene);
@@ -248,6 +286,7 @@ namespace CustomStub
             PushableVoidFall.OnSceneChanged();
             UtensilTiming.OnSceneChanged();
             TerminalGuard.OnSceneChanged();
+            RandomCrate.OnSceneChanged();
         }
 
         /// <summary>场景自愈：按 tag 载体补挂缺失组件并还原参数（组件为权威，

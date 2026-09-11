@@ -348,13 +348,14 @@ export async function saveMatchlists(
 export async function saveLevelRecipes(
   levelInfoAssetPath: string,
   recipeGuids: string[]
-): Promise<void> {
+): Promise<string | null> {
   const r = await fetch("/api/level-recipes", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ levelInfoAssetPath, recipeGuids }),
   });
-  await readApiJson<{ ok?: boolean }>(r);
+  const data = await readApiJson<{ ok?: boolean; message?: string }>(r);
+  return data.message ?? null;
 }
 
 // ---------- Level admin ----------
@@ -803,6 +804,12 @@ export async function fetchQuestionMarks(): Promise<QuestionMarkStyle[]> {
 /** 问号图标缩略图 URL（回源 PNG）。 */
 export function questionMarkIconUrl(guid: string): string {
   return `/api/catalog/questionmarks/icon?guid=${encodeURIComponent(guid)}`;
+}
+
+/** 空气候卡片图标 URL（回源 Assets/commonW1/random_crate/air_icon.png；缺失 404 →
+ * 前端回落「∅ 空气」文字占位）。 */
+export function crateAirIconUrl(): string {
+  return "/api/catalog/crate-air/icon";
 }
 
 /** Upload a level screenshot image (base64) into the level's data dir.

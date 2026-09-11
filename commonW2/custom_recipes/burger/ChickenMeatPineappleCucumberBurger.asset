@@ -21,7 +21,7 @@ MonoBehaviour:
   iconSO: {fileID: 11400000, guid: ecfd61ef5ad4eb7e12b282afbd1463d2, type: 2}
   icon: {fileID: 0}
   compositionSOs:
-  - {fileID: 11400000, guid: 81232e654b602714098c1a440b66ddd5, type: 2}
+  - {fileID: 11400000, guid: 7e3070b091a402f42be328cc261adff3, type: 2}
   - {fileID: 11400000, guid: ff0a377cca6a00a45a5a5f13ac30098d, type: 2}
   - {fileID: 11400000, guid: 09a8ff9ede819e14e9f89df70f935402, type: 2}
   - {fileID: 11400000, guid: 4ec8a736936e7744c91d254705783c2c, type: 2}

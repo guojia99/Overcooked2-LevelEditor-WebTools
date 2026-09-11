@@ -40,7 +40,6 @@ MonoBehaviour:
   ingredientModelSOs: []
   ingredientModels:
   - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 1560826516507934, guid: e2576f385cb71f34fb9429dec22157a4, type: 2}
   - {fileID: 1544824255904376, guid: df9ef1419b80f054fa564c43769855ed, type: 2}
   - {fileID: 1544824255904376, guid: df9ef1419b80f054fa564c43769855ed, type: 2}

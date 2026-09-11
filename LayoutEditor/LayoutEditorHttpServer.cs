@@ -410,6 +410,24 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // 空气候卡片图标（Assets/commonW1/random_crate/air_icon.png）：固定路径直读
+            // 回源 PNG——不依赖 AssetDatabase 导入，Unity refresh 前即可用；web 侧
+            // 404 时回落「∅ 空气」文字占位，图标缺失不阻塞功能。编辑器 UI 专用，
+            // 不设 assetBundleName → 不进 commonw1 游戏包。
+            if (path == "/api/catalog/crate-air/icon" && request.HttpMethod == "GET")
+            {
+                var airIconPath = "Assets/commonW1/random_crate/air_icon.png";
+                if (File.Exists(airIconPath))
+                {
+                    WritePngFile(response, airIconPath);
+                }
+                else
+                {
+                    WriteJson(response, 404, "{\"error\":\"crate air icon not found\"}");
+                }
+                return;
+            }
+
             if (path == "/api/recipes" && request.HttpMethod == "GET")
             {
                 var levelSet = request.QueryString["levelSet"] ?? string.Empty;
@@ -484,7 +502,8 @@ public class LayoutEditorHttpServer
                 var body = ReadBody(request);
                 var update = JsonUtility.FromJson<LevelRecipesUpdateDto>(body);
                 LayoutEditorWriteBackHistory.BeginForInfo("level-recipes", update != null ? update.levelInfoAssetPath : null);
-                var recipeErr = LayoutEditorCatalogApi.SetLevelRecipes(update);
+                string note;
+                var recipeErr = LayoutEditorCatalogApi.SetLevelRecipes(update, out note);
                 if (!string.IsNullOrEmpty(recipeErr))
                 {
                     LayoutEditorWriteBackHistory.Abort();
@@ -493,7 +512,7 @@ public class LayoutEditorHttpServer
                 }
 
                 LayoutEditorWriteBackHistory.CommitNow();
-                WriteJson(response, 200, "{\"ok\":true}");
+                WriteJson(response, 200, LayoutEditorJson.ToJson(new ApiOkDto { ok = true, message = note }));
                 return;
             }
 
@@ -1456,11 +1475,16 @@ public class LayoutEditorHttpServer
             if (LayoutEditorStubIO.IsSpecialDispenserPrefabId(pid))
                 continue;
             var rndCount = it.dispenser.randomItemGuids != null ? it.dispenser.randomItemGuids.Length : 0;
-            var isRandom = pid == "RandomDispenser" || rndCount > 0;
+            var airOn = it.dispenser.airWeight >= 1f;
+            var isRandom = pid == "RandomDispenser" || rndCount > 0 || airOn;
             if (isRandom)
             {
-                if (rndCount < 2)
-                    problems.Add((it.displayName ?? pid) + "：随机食材箱至少需要 2 种候选食材");
+                // 空气规则（与 web sceneIO 同款）：真实食材 ≥1（纯空气箱无意义），
+                // 总候选（真实+空气）≥2；1 真实 + 空气 = 合法。
+                if (rndCount < 1)
+                    problems.Add((it.displayName ?? pid) + "：随机食材箱至少需要 1 种真实食材（空气不算）");
+                else if (rndCount + (airOn ? 1 : 0) < 2)
+                    problems.Add((it.displayName ?? pid) + "：随机食材箱候选（含空气）至少 2 种");
             }
             else if (string.IsNullOrEmpty(it.dispenser.spawnerItemPrefabGuid))
             {
@@ -1578,7 +1602,10 @@ public class LayoutEditorHttpServer
                     .Append(it.dispenser.randomWeights != null
                         ? string.Join(",", System.Array.ConvertAll(it.dispenser.randomWeights,
                             delegate(float w) { return w.ToString("0.##"); }))
-                        : "").Append("]");
+                        : "").Append("]")
+                    .Append(it.dispenser.airWeight >= 1f
+                        ? " 空气×" + it.dispenser.airWeight.ToString("0.##")
+                        : "");
             }
             LayoutEditorLog.Log("[随机箱链路] " + phase + ": Dispenser " + dispensers + " 个，含随机配置 "
                 + withRandom + " 个" + (withRandom > 0 ? " → " + sb : ""));

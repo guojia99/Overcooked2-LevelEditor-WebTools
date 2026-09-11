@@ -849,8 +849,13 @@ export function wireStubControls(item: EditorItem) {
         const curW = item.dispenser?.randomWeights ?? [];
         openRandomCrateEditor(
           ings,
-          { guids: curRnd, weights: curW, iconGuid: item.dispenser?.questionMarkGuid ?? "" },
-          (guids, weights, iconGuid) => {
+          {
+            guids: curRnd,
+            weights: curW,
+            iconGuid: item.dispenser?.questionMarkGuid ?? "",
+            airWeight: item.dispenser?.airWeight ?? 0,
+          },
+          (guids, weights, iconGuid, airWeight) => {
             pushHistory();
             item.stubKind = "Dispenser";
             item.dispenser = {
@@ -858,10 +863,13 @@ export function wireStubControls(item: EditorItem) {
               spawnerItemPrefabGuid: "",
               randomItemGuids: guids,
               randomWeights: weights,
+              airWeight: airWeight >= 1 ? airWeight : 0,
               questionMarkGuid: iconGuid,
             };
             draw();
-            setStatus(`已设置随机食材箱（${guids.length} 种候选，写回后生效）`);
+            setStatus(
+              `已设置随机食材箱（${guids.length} 种食材${airWeight >= 1 ? " + 空气" : ""}，写回后生效）`
+            );
           }
         );
       });

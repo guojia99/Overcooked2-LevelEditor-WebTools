@@ -4,205 +4,6 @@
   "itemCount": 12,
   "recipes": [
     {
-      "guid": "2d19841c5faf85f4ea9b7c8cecc22dc9",
-      "id": "Smoothie_Mega",
-      "nameZh": "什锦果汁",
-      "nameEn": "Mega Smoothie",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Mega.asset",
-      "cookingStep": "Blender",
-      "platingStep": "",
-      "ingredients": [
-        "Banana",
-        "Melon",
-        "SmoothiePineapple",
-        "SmoothieStrawberry"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "smoothie",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Blender",
-          "utensils": [
-            "Blender",
-            "BlenderCup"
-          ],
-          "ingredients": [
-            "Banana",
-            "Melon",
-            "SmoothiePineapple",
-            "SmoothieStrawberry"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "6c852f425bec67044983178dbfa0dd82",
-      "id": "Burger_Hawaiian",
-      "nameZh": "夏威夷汉堡",
-      "nameEn": "Hawaiian Burger",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Burger_Hawaiian.asset",
-      "cookingStep": "FryingPan",
-      "platingStep": "",
-      "ingredients": [
-        "dlc08_choppedbun",
-        "BurgerPineapple",
-        "MeatSO",
-        "MeatSO"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "burger",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "dlc08_choppedbun",
-            "BurgerPineapple"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "MeatSO",
-            "MeatSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "aeb56bd1de590f74282da06e14ef5a25",
-      "id": "Smoothie_Melon",
-      "nameZh": "甜瓜果汁",
-      "nameEn": "Melon Smoothie",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Melon.asset",
-      "cookingStep": "Blender",
-      "platingStep": "",
-      "ingredients": [
-        "Melon",
-        "Melon",
-        "Melon"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "smoothie",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Blender",
-          "utensils": [
-            "Blender",
-            "BlenderCup"
-          ],
-          "ingredients": [
-            "Melon",
-            "Melon",
-            "Melon"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "0f3aafcc5b4b58c4bad6d33ba03aa03d",
-      "id": "Kebob_MeatMushroomPineapple",
-      "nameZh": "肉蘑菇菠萝烤串",
-      "nameEn": "Meat Mushroom Pineapple Kebab",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Kebob_MeatMushroomPineapple.asset",
-      "cookingStep": "KebabSkewer",
-      "platingStep": "",
-      "ingredients": [
-        "KebobMeat",
-        "KebobMushroom",
-        "KebobPineapple"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "kebab",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "KebabSkewer",
-          "utensils": [
-            "Barbeque",
-            "Skewer"
-          ],
-          "ingredients": [
-            "KebobMeat",
-            "KebobMushroom",
-            "KebobPineapple"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "04336c60cb33e9f49a7bb4f871ea117b",
-      "id": "Cake_StrawberryPancake",
-      "nameZh": "草莓松饼",
-      "nameEn": "Strawberry Pancake",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Cake_StrawberryPancake.asset",
-      "cookingStep": "FryingPan",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "PancakeStrawberry"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "pancake",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "MixingBowl",
-          "utensils": [
-            "Mixer",
-            "MixerBowl"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "PancakeStrawberry"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "33ae6e311fad09147a11dfaeed918dce",
       "id": "Smoothie_Strawberry",
       "nameZh": "草莓果汁",
@@ -276,110 +77,45 @@
       "icon": true
     },
     {
-      "guid": "db6171130a1cdbf4399d60b50818791a",
-      "id": "Kebob_MushroomPineappleTomato",
-      "nameZh": "蘑菇菠萝番茄烤串",
-      "nameEn": "Mushroom Pineapple Tomato Kebab",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Kebob_MushroomPineappleTomato.asset",
-      "cookingStep": "KebabSkewer",
+      "guid": "04336c60cb33e9f49a7bb4f871ea117b",
+      "id": "Cake_StrawberryPancake",
+      "nameZh": "草莓松饼",
+      "nameEn": "Strawberry Pancake",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Cake_StrawberryPancake.asset",
+      "cookingStep": "FryingPan",
       "platingStep": "",
       "ingredients": [
-        "KebobMushroom",
-        "KebobPineapple",
-        "KebobTomato"
+        "FlourSO",
+        "EggSO",
+        "PancakeStrawberry"
       ],
       "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "kebab",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "KebabSkewer",
-          "utensils": [
-            "Barbeque",
-            "Skewer"
-          ],
-          "ingredients": [
-            "KebobMushroom",
-            "KebobPineapple",
-            "KebobTomato"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "26e734a28ecc2144ab85b03ebd030fbf",
-      "id": "Smoothie_Banana",
-      "nameZh": "香蕉果汁",
-      "nameEn": "Banana Smoothie",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Banana.asset",
-      "cookingStep": "Blender",
-      "platingStep": "",
-      "ingredients": [
-        "Banana",
-        "Banana",
-        "Banana"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "dlc02",
-      "type": "smoothie",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Blender",
-          "utensils": [
-            "Blender",
-            "BlenderCup"
-          ],
-          "ingredients": [
-            "Banana",
-            "Banana",
-            "Banana"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "b8715455f33af3e458de4c4b7345e951",
-      "id": "Smoothie_BananaPineapple",
-      "nameZh": "香蕉菠萝果汁",
-      "nameEn": "Banana Pineapple Smoothie",
-      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_BananaPineapple.asset",
-      "cookingStep": "Blender",
-      "platingStep": "",
-      "ingredients": [
-        "Banana",
-        "Banana",
-        "SmoothiePineapple",
-        "SmoothiePineapple"
-      ],
-      "ingredientCount": 4,
       "cookingStepCount": 1,
       "score": 100,
       "isCustom": false,
       "group": "dlc02",
-      "type": "smoothie",
+      "type": "pancake",
       "intermediate": false,
       "cookingGroups": [
         {
-          "step": "Blender",
+          "step": "MixingBowl",
           "utensils": [
-            "Blender",
-            "BlenderCup"
+            "Mixer",
+            "MixerBowl"
           ],
           "ingredients": [
-            "Banana",
-            "Banana",
-            "SmoothiePineapple",
-            "SmoothiePineapple"
+            "FlourSO",
+            "EggSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "PancakeStrawberry"
           ]
         }
       ],
@@ -450,6 +186,270 @@
             "KebobChicken",
             "KebobMeat",
             "KebobTomato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "db6171130a1cdbf4399d60b50818791a",
+      "id": "Kebob_MushroomPineappleTomato",
+      "nameZh": "蘑菇菠萝番茄烤串",
+      "nameEn": "Mushroom Pineapple Tomato Kebab",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Kebob_MushroomPineappleTomato.asset",
+      "cookingStep": "KebabSkewer",
+      "platingStep": "",
+      "ingredients": [
+        "KebobMushroom",
+        "KebobPineapple",
+        "KebobTomato"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "kebab",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "KebabSkewer",
+          "utensils": [
+            "Barbeque",
+            "Skewer"
+          ],
+          "ingredients": [
+            "KebobMushroom",
+            "KebobPineapple",
+            "KebobTomato"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "0f3aafcc5b4b58c4bad6d33ba03aa03d",
+      "id": "Kebob_MeatMushroomPineapple",
+      "nameZh": "肉蘑菇菠萝烤串",
+      "nameEn": "Meat Mushroom Pineapple Kebab",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Kebob_MeatMushroomPineapple.asset",
+      "cookingStep": "KebabSkewer",
+      "platingStep": "",
+      "ingredients": [
+        "KebobMeat",
+        "KebobMushroom",
+        "KebobPineapple"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "kebab",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "KebabSkewer",
+          "utensils": [
+            "Barbeque",
+            "Skewer"
+          ],
+          "ingredients": [
+            "KebobMeat",
+            "KebobMushroom",
+            "KebobPineapple"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "2d19841c5faf85f4ea9b7c8cecc22dc9",
+      "id": "Smoothie_Mega",
+      "nameZh": "什锦果汁",
+      "nameEn": "Mega Smoothie",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Mega.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "Banana",
+        "Melon",
+        "SmoothiePineapple",
+        "SmoothieStrawberry"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "smoothie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "Banana",
+            "Melon",
+            "SmoothiePineapple",
+            "SmoothieStrawberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "aeb56bd1de590f74282da06e14ef5a25",
+      "id": "Smoothie_Melon",
+      "nameZh": "甜瓜果汁",
+      "nameEn": "Melon Smoothie",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Melon.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "Melon",
+        "Melon",
+        "Melon"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "smoothie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "Melon",
+            "Melon",
+            "Melon"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "6c852f425bec67044983178dbfa0dd82",
+      "id": "Burger_Hawaiian",
+      "nameZh": "夏威夷汉堡",
+      "nameEn": "Hawaiian Burger",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Burger_Hawaiian.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "dlc08_choppedbun",
+        "BurgerPineapple",
+        "MeatSO",
+        "MeatSO"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "burger",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_choppedbun",
+            "BurgerPineapple"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO",
+            "MeatSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "b8715455f33af3e458de4c4b7345e951",
+      "id": "Smoothie_BananaPineapple",
+      "nameZh": "香蕉菠萝果汁",
+      "nameEn": "Banana Pineapple Smoothie",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_BananaPineapple.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "Banana",
+        "Banana",
+        "SmoothiePineapple",
+        "SmoothiePineapple"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "smoothie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "Banana",
+            "Banana",
+            "SmoothiePineapple",
+            "SmoothiePineapple"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "26e734a28ecc2144ab85b03ebd030fbf",
+      "id": "Smoothie_Banana",
+      "nameZh": "香蕉果汁",
+      "nameEn": "Banana Smoothie",
+      "assetPath": "Assets/common02/food/Recipes/dlc02/Smoothie_Banana.asset",
+      "cookingStep": "Blender",
+      "platingStep": "",
+      "ingredients": [
+        "Banana",
+        "Banana",
+        "Banana"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": false,
+      "group": "dlc02",
+      "type": "smoothie",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Blender",
+          "utensils": [
+            "Blender",
+            "BlenderCup"
+          ],
+          "ingredients": [
+            "Banana",
+            "Banana",
+            "Banana"
           ]
         }
       ],

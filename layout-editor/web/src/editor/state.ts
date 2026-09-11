@@ -11,6 +11,7 @@ import type {
   GridInfo,
   IngredientEntry,
   LayoutItem,
+  LayoutVector3,
   LevelSetScene,
   LightInfo,
   AnimGroup,
@@ -295,6 +296,8 @@ export const S = {
   deathInfo: null as DeathInfo | null,
   /** 游戏相机（背景色/FOV；写回时随全量保存携带）。 */
   cameraInfo: null as CameraInfo | null,
+  /** 相机出发点原始位置（场景导出快照；「重置位置」回退用，会话内不变）。 */
+  cameraPosOrigin: null as LayoutVector3 | null,
   /** Art/Lights 非 prefab 灯光。 */
   lights: [] as LightInfo[],
   /** 画布上显示相机视野范围（FOV 视锥与地面交线）。 */

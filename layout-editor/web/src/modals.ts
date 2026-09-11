@@ -7,7 +7,7 @@ import {
 } from "./ingredientLabels";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { getQuestionMarkStyles } from "./editor/iconCaches";
-import { questionMarkIconUrl } from "./api";
+import { questionMarkIconUrl, crateAirIconUrl } from "./api";
 import { levelRequiredCrateIngredientIds } from "./editor/recipeKnowledge";
 
 /** Inline <img> for an ingredient/recipe: try the extracted icon PNG (unless explicitly known
@@ -341,8 +341,8 @@ export function openIngredientMultiPicker(
  *  多选候选食材（初始配额默认 5）。候选 <2 时禁用确定（写回强校验的前端闸口）。 */
 export function openRandomCrateEditor(
   ingredients: IngredientEntry[],
-  current: { guids: string[]; weights: number[]; iconGuid: string },
-  onSave: (guids: string[], weights: number[], iconGuid: string) => void
+  current: { guids: string[]; weights: number[]; iconGuid: string; airWeight?: number },
+  onSave: (guids: string[], weights: number[], iconGuid: string, airWeight: number) => void
 ) {
   const styles = getQuestionMarkStyles();
   let iconGuid = current.iconGuid || styles.find((s) => s.isDefault)?.guid || styles[0]?.guid || "";
@@ -350,6 +350,9 @@ export function openRandomCrateEditor(
   current.guids.forEach((g, i) => {
     if (g) state.set(g, current.weights[i] != null && current.weights[i] >= 1 ? current.weights[i] : 5);
   });
+  // 空气候（独立于食材 Map）：≥1 启用，默认份数与食材一致取 5
+  let airOn = (current.airWeight ?? 0) >= 1;
+  let airW = current.airWeight != null && current.airWeight >= 1 ? current.airWeight : 5;
 
   const styleRow = (): string =>
     styles.length
@@ -433,10 +436,22 @@ export function openRandomCrateEditor(
     bindTabs();
   };
 
+  // 空气候卡片（弹窗顶部固定，不随筛选重建；图标 404 时显示 ∅ 文字占位）
+  const airCard = (): string =>
+    `<div class="pick-card rc-card rc-air-card${airOn ? " selected" : ""}" title="空气：取出时不产出食材（玩家手空），与其他候选同样的权重管理与保底">
+      <label class="rc-card-main"><input type="checkbox" id="rc-air-toggle" ${airOn ? "checked" : ""}>
+        <span class="rc-air-icon-wrap"><img src="${crateAirIconUrl()}" alt="空气"
+          onerror="this.style.display='none';this.parentNode.querySelector('.rc-air-glyph').style.display=''"><span class="rc-air-glyph">∅</span></span>
+        <span class="pc-name">空气（取出不产出）<span class="muted pc-en">Air</span></span></label>
+      <input type="number" class="rc-weight" id="rc-air-weight" step="1" min="1" value="${airW}"
+        title="空气每轮份数（与食材权重同语义）" ${airOn ? "" : "disabled"}>
+    </div>`;
+
   openModal(
     "随机食材箱 · 图标与候选",
-    `<p class="modal-hint">问号图标样式（盖子显示）· 候选至少 2 种 · 初始配额（取出 -1，归零回满，默认 5）</p>
+    `<p class="modal-hint">问号图标样式（盖子显示）· 真实食材 ≥1 且候选（含空气）≥2 · 每轮份数（每轮 sum 份取用恰好出齐各份数，默认 5）</p>
      ${styleRow()}
+     <div id="rc-air-holder">${airCard()}</div>
      <div class="ing-filter-bar">
        <input type="search" id="rc-search" class="ing-search" placeholder="搜索食材…" />
        <button type="button" class="ing-group-btn" id="rc-fill-required" title="勾选本关已保存菜谱所需的全部叶食材（机器产出的汽水/饮料/奶油除外）">⚡ 填充本关所需</button>
@@ -455,11 +470,30 @@ export function openRandomCrateEditor(
     panel.classList.add("qm-editor");
   }
 
+  const bindAirCard = (): void => {
+    const holder = document.getElementById("rc-air-holder");
+    const toggle = document.getElementById("rc-air-toggle") as HTMLInputElement | null;
+    const weightInput = document.getElementById("rc-air-weight") as HTMLInputElement | null;
+    toggle?.addEventListener("change", () => {
+      airOn = toggle.checked;
+      const cardEl = holder?.querySelector(".rc-air-card");
+      cardEl?.classList.toggle("selected", airOn);
+      if (weightInput) weightInput.disabled = !airOn;
+      updateOk();
+    });
+    weightInput?.addEventListener("change", () => {
+      const w = parseFloat(weightInput.value);
+      if (isFinite(w) && w >= 1) airW = w;
+      else weightInput.value = String(airW);
+    });
+  };
+
   const updateOk = (): void => {
     const ok = document.querySelector<HTMLButtonElement>("[data-ok]");
     if (ok) {
-      ok.disabled = state.size < 2;
-      ok.textContent = state.size > 0 ? `确定（已选 ${state.size} 种）` : "确定";
+      const total = state.size + (airOn ? 1 : 0);
+      ok.disabled = total < 2 || state.size < 1;
+      ok.textContent = total > 0 ? `确定（已选 ${state.size} 种食材${airOn ? " + 空气" : ""}）` : "确定";
     }
   };
 
@@ -509,6 +543,7 @@ export function openRandomCrateEditor(
 
   bindGrid();
   bindTabs();
+  bindAirCard();
   updateOk();
 
   document.querySelectorAll<HTMLInputElement>(".qm-style input[type=radio]").forEach((radio) => {
@@ -550,10 +585,10 @@ export function openRandomCrateEditor(
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", () => {
-    if (state.size < 2) return;
+    if (state.size + (airOn ? 1 : 0) < 2 || state.size < 1) return;
     const guids = [...state.keys()];
     const weights = guids.map((g) => state.get(g) ?? 1);
-    onSave(guids, weights, iconGuid);
+    onSave(guids, weights, iconGuid, airOn ? airW : 0);
     closeModal();
   });
 }

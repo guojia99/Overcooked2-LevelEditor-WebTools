@@ -209,6 +209,7 @@ export async function runTestLayout(): Promise<void> {
     nearClip: S.cameraInfo?.nearClip ?? 0.3,
     farClip: S.cameraInfo?.farClip ?? 1000,
   };
+  if (!S.cameraPosOrigin) S.cameraPosOrigin = { x: 0, y: 0, z: 0 };
 
   const floorMinX = -(FLOOR_W / 2) * CELL;
   const floorMinZ = -(FLOOR_D / 2) * CELL;

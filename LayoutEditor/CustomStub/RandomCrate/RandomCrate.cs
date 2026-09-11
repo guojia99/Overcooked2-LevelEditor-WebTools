@@ -32,9 +32,22 @@ namespace CustomStub
     /// 5. 绘制问号（渲染器查找顺序镜像游戏 ClientItemCrateCosmeticDecisions：
     ///    盖子 Skinned → 盖子 Mesh → 根 Mesh 兜底，兼容木纹·中秋等新结构皮肤）。
     ///
-    /// 抽取机制（取出即掷 · 配额递减）：m_weights 为初始配额（默认 5）；每次取出
-    /// （服务端 ServerSpawnPrefab 同步触发注册回调，见 NetworkUtils）该食材配额 -1，
-    /// 归零回满初始值，随后立即按剩余配额掷下一个。状态纯服务端，客户端零同步负担。
+    /// 抽取机制（洗牌袋队列 + 低水位续杯 · 保底份数，v7）：m_weights 为各食材「每轮
+    /// 份数」（默认 5）。按份数展开候选索引成洗牌袋（Fisher–Yates），FIFO 队列按序
+    /// 掷出（掷骰=弹队首）；队列剩余 ≤ 阈值 T = min(max(2, 10%×轮长 N), N-1) 时，
+    /// 队尾并入一整份新洗牌袋（余量保持在新袋之前，队列永不打空）。
+    /// 硬保底（对齐周期）：每轮 N=Σ份数 次取用恰好出齐各食材份数——3:3:6 → 每 12 次
+    /// 取用必为 A×3/B×3/C×6；全 1 权重 n 种 → 每轮每种必出一次。袋流=袋段首尾相接，
+    /// 同食材最长间隔 ≤ ~2N；长期频率精确 = 权重比。代价：每轮最后 ≤T 项在其余项
+    /// 出完后可被推知（即「剩下 2 个或 10%」刷新点，用户接受的可预测尾巴）。
+    /// 空气候选（v8）：m_airWeight ≥1 时空气作为虚拟末位候选进袋（哨兵索引
+    /// _prefabs.Count），与其他候选同样的权重管理与保底。掷到空气不写
+    /// m_itemPrefab（哨兵方案，杜绝 null 副作用），挂入静态待取表，玩家取出时由
+    /// Harmony 前缀拦截 ServerPickupItemSpawner.HandlePickup：跳过原方法=不生成、
+    /// 不持取、玩家手空（调用方 ReceivePickUpEvent 在其后无任何动作，零副作用）；
+    /// host 本地补发 OnPickupItem 消息触发箱盖开启动画（远端客户端无生成消息、
+    /// 无动画，可接受）。补丁安装失败/前缀异常=安全网放行，空气退化为取出兜底食材。
+    /// 状态纯服务端，客户端零同步负担；每次进关卡/重开关卡自然重置。
     /// 兼容性：未装加载器/程序集缺失时本组件不存在（脚本缺失为惰性警告）；老模组下
     /// 箱子回落为 PseudoPrefabDispenserStub.spawnerItemPrefabSO 的固定食材箱。
     /// </summary>
@@ -42,8 +55,17 @@ namespace CustomStub
     {
         [SerializeField] public PseudoPrefabSO[] m_itemSOs;
 
-        /// <summary>各食材初始权重/配额。每次取出 -1，归零回满初始值；缺省按 5。</summary>
+        /// <summary>各食材每轮保底份数（洗牌袋队列）。每轮 sum 份取用恰好出齐各份数；
+        /// 袋剩余 ≤ max(2, 10%×轮长) 时队尾并入新洗牌袋；缺省按 5。小数权重会整数化
+        /// （乘数放大到整数，见 NormalizeBagCounts）。</summary>
         [SerializeField] public float[] m_weights;
+
+        /// <summary>空气份数（≥1 启用，0/无效=禁用）：与其他候选同样的权重管理进袋；
+        /// 掷到空气时【不置空 m_itemPrefab】（保留现值=兜底食材装饰，杜绝订单箭头/
+        /// 外观等一切 null 读取副作用），挂入静态待取表，由 Harmony 前缀
+        /// （ServerPickupItemSpawner.HandlePickup，见 HarmonyPatches）在玩家取出时
+        /// 拦截：跳过原方法=不生成、不持取、玩家手空。</summary>
+        [SerializeField] public float m_airWeight;
 
         /// <summary>箱盖问号贴图（Assets/commonW1/question_mark/question_mark_chef_hat.png，随 commonW1 bundle 分发）。
         /// 为空时保留游戏绘制的首食材图标（自然降级）。</summary>
@@ -52,12 +74,29 @@ namespace CustomStub
         // ---- 运行时状态（不序列化：每次进关卡/重开关卡自然重置） ----
         private List<GameObject> _prefabs;
         private List<float> _initial;
-        private float[] _remaining;
+        private List<int> _bagQueue;
+        private int _bagSize;
+        private int _refillThreshold;
+        private int _airCount;
         private bool _isServer;
         private Component _spawner;
 
+        // ---- 空气待取表（静态：Harmony 前缀按 spawner.gameObject 查表拦截取出） ----
+        // 键=真实箱子 PickupItemSpawner 所在 GameObject（Server/Client 组件共享该物体，
+        // 前缀侧无需反射取 PickupItemSpawner）。清场：EntryPoint.ResetSceneTickers 链
+        // （OnSceneChanged）+ 查表时假 null 修剪。
+        private static readonly Dictionary<GameObject, RandomCrate> s_airPending =
+            new Dictionary<GameObject, RandomCrate>();
+        private static bool s_hasAirPending;
+
+        /// <summary>前缀快速放行门：全场景无空气待取时零查表开销。</summary>
+        internal static bool HasAnyAirPending
+        {
+            get { return s_hasAirPending; }
+        }
+
         // ---- 日志（统一走 StubLog 桥：自动带 [Stub:<程序集>] 前缀 + loader 时间戳/角色） ----
-        private const string Version = "v6";
+        private const string Version = "v8";
 
         private static void Log(string msg)
         {
@@ -203,11 +242,12 @@ namespace CustomStub
                     yield return new WaitForSeconds(1f);
                     continue;
                 }
-                Log("[RandomCrate] 候选加载完成: " + name + "（" + PrefabSummary() + "）");
-
-                _remaining = new float[_prefabs.Count];
-                for (int i = 0; i < _initial.Count; i++)
-                    _remaining[i] = _initial[i];
+                NormalizeBagCounts();
+                ComputeBagMetrics();
+                _bagQueue = BuildShuffledBag();
+                Log("[RandomCrate] 候选加载完成: " + name + "（" + PrefabSummary()
+                    + (_airCount > 0 ? "，空气×" + _airCount : "")
+                    + "，轮长 " + _bagSize + "，续杯阈值 " + _refillThreshold + "）");
 
                 _spawner = spawner;
 
@@ -250,7 +290,7 @@ namespace CustomStub
 
                 // 注册全部候选（服务端与客户端都要——客户端网络实例化按 spawner 的
                 // 注册表解析 spawnableID；静态查表，同步后注册依然有效）。
-                // 服务端注册带回调：取出事件（ServerSpawnPrefab 内同步触发）驱动配额递减。
+                // 服务端注册带回调：取出事件（ServerSpawnPrefab 内同步触发）驱动掷下一个。
                 var callback = _isServer ? CreateSpawnCallback() : null;
                 var registered = 0;
                 for (int i = 0; i < _prefabs.Count; i++)
@@ -285,7 +325,8 @@ namespace CustomStub
             }
         }
 
-        /// <summary>按当前剩余配额随机选择下一个产出食材。</summary>
+        /// <summary>掷骰=弹出洗牌袋队首候选作为下一个产出。弹出前先保证队列低水位
+        /// 续杯（见 EnsureBagQueue），队列永不打空。</summary>
         private bool _rollStallLogged;
 
         private void RollNext()
@@ -301,27 +342,221 @@ namespace CustomStub
                 }
                 return;
             }
-            float total = 0f;
-            for (int i = 0; i < _remaining.Length; i++)
-                total += _remaining[i];
-            var r = UnityEngine.Random.value * total;
-            var pick = _prefabs[_prefabs.Count - 1];
-            for (int i = 0; i < _prefabs.Count; i++)
+            EnsureBagQueue();
+            if (_bagQueue == null || _bagQueue.Count == 0)
             {
-                r -= _remaining[i];
-                if (r <= 0f)
-                {
-                    pick = _prefabs[i];
-                    break;
-                }
+                // 理论不可达（EnsureBagQueue 后至少一整袋）；防御：重建首袋
+                LogWarn("[RandomCrate] 袋队列意外为空，重建首袋: " + name);
+                _bagQueue = BuildShuffledBag();
             }
+            var pickIndex = _bagQueue[0];
+            _bagQueue.RemoveAt(0);
+            if (pickIndex >= _prefabs.Count)
+            {
+                // 空气：哨兵方案——不写 m_itemPrefab（保留现值=兜底食材装饰，杜绝
+                // GameUtils.GetIngredientCrates 订单箭头等一切 null 读取副作用）。
+                // 挂待取表，玩家取出时由 Harmony 前缀拦截（见 OnAirTaken）。
+                SetAirPending(true);
+                Log("[RandomCrate] 掷出下一个食材: " + name + " → 空气（袋剩 "
+                    + _bagQueue.Count + " 项）");
+                return;
+            }
+            SetAirPending(false);
+            var pick = _prefabs[pickIndex];
             GameApi.SetItemPrefab(_spawner, pick);
             Log("[RandomCrate] 掷出下一个食材: " + name + " → " + pick.name
-                + "（剩余配额 " + FormatFloats(_remaining) + "）");
+                + "（袋剩 " + _bagQueue.Count + " 项）");
         }
 
-        /// <summary>取出事件（仅服务端注册本回调）。匹配被取出的食材 → 配额 -1 →
-        /// 归零回满初始值 → 按新配额掷下一个。</summary>
+        // ---- 空气待取表操作（前缀与场景清场入口均 internal，同程序集直调） ----
+
+        /// <summary>登记/撤销本箱的空气待取状态。登记时按需安装取出拦截补丁。</summary>
+        private void SetAirPending(bool pending)
+        {
+            var key = _spawner != null ? _spawner.gameObject : null;
+            if (key == null)
+                return;
+            if (pending)
+            {
+                s_airPending[key] = this;
+                s_hasAirPending = true;
+                EntryPoint.EnsureAirPickupPatches();
+            }
+            else if (s_airPending.Remove(key) && s_airPending.Count == 0)
+            {
+                s_hasAirPending = false;
+            }
+        }
+
+        /// <summary>前缀查表：按 ServerPickupItemSpawner 所在 GameObject 找空气待取箱。
+        /// 顺带修剪已销毁（假 null）条目。</summary>
+        internal static RandomCrate FindAirPending(Component serverSpawner)
+        {
+            if (serverSpawner == null || !s_hasAirPending)
+                return null;
+            RandomCrate crate;
+            if (s_airPending.TryGetValue(serverSpawner.gameObject, out crate))
+            {
+                if (crate != null)
+                    return crate;
+                s_airPending.Remove(serverSpawner.gameObject);
+                if (s_airPending.Count == 0)
+                    s_hasAirPending = false;
+            }
+            return null;
+        }
+
+        /// <summary>玩家取出了空气（仅由 Harmony 前缀在服务端调用）：清待取 →
+        /// host 本地补发 OnPickupItem 触发箱盖开启动画（远端客户端无生成消息、无动画，
+        /// 可接受）→ 掷下一个。</summary>
+        internal void OnAirTaken()
+        {
+            SetAirPending(false);
+            Log("[RandomCrate] 空气取出: " + name + "（袋剩 "
+                + (_bagQueue != null ? _bagQueue.Count : 0) + " 项）");
+            try
+            {
+                if (_spawner != null)
+                    _spawner.gameObject.SendMessage("OnPickupItem", SendMessageOptions.DontRequireReceiver);
+            }
+            catch (Exception ex)
+            {
+                LogWarn("[RandomCrate] 空气箱盖动画异常: " + ex.Message);
+            }
+            RollNext();
+        }
+
+        /// <summary>场景切换清场（挂 EntryPoint.ResetSceneTickers 链，铁律：
+        /// 新增静态缓存必须挂进这条链，关卡退出不得累积）。</summary>
+        internal static void OnSceneChanged()
+        {
+            if (s_airPending.Count > 0)
+                Log("[RandomCrate] 场景切换清空气待取表: " + s_airPending.Count + " 个");
+            s_airPending.Clear();
+            s_hasAirPending = false;
+        }
+
+        /// <summary>生成一整份洗牌袋：按 _initial 份数展开候选索引（空气=哨兵索引
+        /// _prefabs.Count），Fisher–Yates 洗牌。队列按序消费 ⇒ 每轮 N=Σ份数 次取用
+        /// 恰好出齐各食材份数（对齐周期硬保底，全 1 权重 n 种 = 每轮每种必出一次；
+        /// 空气同样保底出齐其份数）。</summary>
+        private List<int> BuildShuffledBag()
+        {
+            var bag = new List<int>();
+            for (int i = 0; i < _prefabs.Count; i++)
+                for (int c = 0; c < (int)_initial[i]; c++)
+                    bag.Add(i);
+            for (int c = 0; c < _airCount; c++)
+                bag.Add(_prefabs.Count);
+            for (int i = bag.Count - 1; i > 0; i--)
+            {
+                var j = UnityEngine.Random.Range(0, i + 1);
+                var tmp = bag[i];
+                bag[i] = bag[j];
+                bag[j] = tmp;
+            }
+            return bag;
+        }
+
+        /// <summary>低水位续杯：队列剩余 ≤ 阈值时，队尾并入一整份新洗牌袋。余量保持
+        /// 在新袋之前——袋流=袋段首尾相接，对齐周期保底不受影响；队列永不打空，
+        /// 每轮最后 ≤ 阈值 项在其余项出完后可被推知（即「剩下 2 个或 10%」的刷新点，
+        /// 可预测尾巴的上界）。</summary>
+        private void EnsureBagQueue()
+        {
+            if (_bagQueue == null)
+            {
+                _bagQueue = BuildShuffledBag();
+                return;
+            }
+            var rest = _bagQueue.Count;
+            if (rest > _refillThreshold)
+                return;
+            var fresh = BuildShuffledBag();
+            _bagQueue.AddRange(fresh);
+            Log("[RandomCrate] 新袋并入: " + name + "（余 " + rest + " 项 ≤ 阈值 "
+                + _refillThreshold + "，并入一整袋 " + _bagSize + " 项，现 " + _bagQueue.Count + " 项）");
+        }
+
+        /// <summary>权重整数化：小数权重（UI 允许键入）取乘数 m∈{1,2,4,5,10,20,50,100}
+        /// 放大到整数作为每轮份数；整数化后袋总量超上限（200）或无乘数可整时回落
+        /// m=1 四舍五入（min 1）。UI 权重本为整数≥1，常规路径 m=1 原样通过。
+        /// 空气（m_airWeight ≥1）作为附加末位参与同一乘数（保底比例一致）；
+        /// 空气 &lt;1 或未配置=0 份（禁用，不参与可整性判定与 min-1 钳位）。</summary>
+        private static readonly int[] BagScaleMultipliers = { 1, 2, 4, 5, 10, 20, 50, 100 };
+        private const float BagSizeCap = 200f;
+
+        private void NormalizeBagCounts()
+        {
+            int n = _initial.Count;
+            var raw = new float[n + 1];
+            for (int i = 0; i < n; i++)
+                raw[i] = _initial[i];
+            raw[n] = m_airWeight >= 1f ? m_airWeight : 0f;
+            var counts = null as float[];
+            for (int mi = 0; mi < BagScaleMultipliers.Length; mi++)
+            {
+                float m = BagScaleMultipliers[mi];
+                var scaled = new float[n + 1];
+                var ok = true;
+                for (int i = 0; i <= n; i++)
+                {
+                    if (raw[i] < 1f)
+                    {
+                        scaled[i] = 0f;
+                        continue;
+                    }
+                    scaled[i] = (float)Math.Round(raw[i] * m);
+                    if (Math.Abs(raw[i] * m - scaled[i]) > 0.001f)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (!ok)
+                    continue;
+                float total = 0f;
+                for (int i = 0; i <= n; i++)
+                {
+                    if (raw[i] >= 1f)
+                        scaled[i] = Math.Max(1f, scaled[i]);
+                    total += scaled[i];
+                }
+                if (total <= BagSizeCap)
+                {
+                    counts = scaled;
+                    break;
+                }
+                // 整数但超上限：更大乘数只会更大，直接回落 m=1
+                break;
+            }
+            if (counts == null)
+            {
+                counts = new float[n + 1];
+                for (int i = 0; i <= n; i++)
+                    counts[i] = raw[i] >= 1f ? Math.Max(1f, (float)Math.Round(raw[i])) : 0f;
+            }
+            for (int i = 0; i < n; i++)
+                _initial[i] = counts[i];
+            _airCount = (int)counts[n];
+        }
+
+        /// <summary>轮长 N = Σ每轮份数（含空气）；续杯阈值 T = min(max(2, 10%×N), N-1)。
+        /// 夹取上限防小袋恒触发（每次取出都续杯），下限防 N=1 时阈值悬空。</summary>
+        private void ComputeBagMetrics()
+        {
+            _bagSize = _airCount;
+            for (int i = 0; i < _initial.Count; i++)
+                _bagSize += (int)_initial[i];
+            _refillThreshold = Math.Max(2, (int)(_bagSize * 0.1f));
+            if (_refillThreshold > _bagSize - 1)
+                _refillThreshold = _bagSize - 1;
+            if (_refillThreshold < 0)
+                _refillThreshold = 0;
+        }
+
+        /// <summary>取出事件（仅服务端注册本回调）。匹配被取出的食材（袋队列已在掷骰
+        /// 时消费队首，无需再记账）→ 掷下一个（低水位时自动续杯新袋）。</summary>
         private void OnServerItemSpawned(GameObject spawned)
         {
             if (!_isServer || spawned == null || _prefabs == null)
@@ -345,11 +580,8 @@ namespace CustomStub
                     LogWarn("[RandomCrate] 取出物品无法匹配候选列表: " + spawned.name);
                     return;
                 }
-                _remaining[index] -= 1f;
-                if (_remaining[index] <= 0f)
-                    _remaining[index] = _initial[index];
                 Log("[RandomCrate] 取出: " + name + " → " + n
-                    + "（剩余配额 " + FormatFloats(_remaining) + "）");
+                    + "（袋剩 " + (_bagQueue != null ? _bagQueue.Count : 0) + " 项）");
                 RollNext();
             }
             catch (Exception ex)
@@ -363,7 +595,7 @@ namespace CustomStub
             var delegateType = GameApi.VoidGenericGameObjectType;
             if (delegateType == null)
             {
-                // 无回调 = 服务端取出事件丢失 → 配额永不递减、永远只掷第一次的结果
+                // 无回调 = 服务端取出事件丢失 → 袋份数永不递减、永远只掷第一次的结果
                 LogWarn("[RandomCrate] VoidGeneric<GameObject> 反射失败，取出回调未创建（随机箱将不退让配额）: " + name);
                 return null;
             }

@@ -191,6 +191,10 @@ export async function applyLayoutDocument(
   S.walkable = doc.walkable ?? [];
   S.deathInfo = doc.deathInfo ?? null;
   S.cameraInfo = doc.cameraInfo ?? null;
+  // 相机出发点原始快照：重置按钮回退用（深拷贝，避免与 cameraInfo.position 共享引用）。
+  S.cameraPosOrigin = doc.cameraInfo?.position
+    ? { x: doc.cameraInfo.position.x, y: doc.cameraInfo.position.y, z: doc.cameraInfo.position.z }
+    : null;
   S.lights = doc.lights ?? [];
   S.switchLinks = doc.switchLinks ?? [];
   // 旧式自定义触发名（switch_*）对机器目标已失效（真机不响应），归一化为原生触发名
@@ -434,7 +438,8 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     const addedBg = S.items.length > itemsBeforeSync;
 
     // 写回强校验：普通食材箱（含背包，不含饮料/酱料机）必须配 1 种食材；
-    // 随机食材箱必须 ≥2 种候选。违规阻断写回并列出明细（后端同款兜底）。
+    // 随机食材箱：真实食材 ≥1 且候选（含空气）≥2（空气不算真实食材）。
+    // 违规阻断写回并列出明细（后端同款兜底）。
     const violations: string[] = [];
     for (const it of S.items) {
       if (stubKindOf(it) !== "Dispenser" || !it.dispenser) continue;
@@ -445,9 +450,13 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       )
         continue;
       const rndCount = it.dispenser.randomItemGuids?.length ?? 0;
-      const isRandom = pid === "RandomDispenser" || rndCount > 0;
+      const airOn = (it.dispenser.airWeight ?? 0) >= 1;
+      const isRandom = pid === "RandomDispenser" || rndCount > 0 || airOn;
       if (isRandom) {
-        if (rndCount < 2) violations.push(`${itemLabel(it)}（随机食材箱至少 2 种候选）`);
+        if (rndCount < 1)
+          violations.push(`${itemLabel(it)}（随机食材箱至少 1 种真实食材，空气不算）`);
+        else if (rndCount + (airOn ? 1 : 0) < 2)
+          violations.push(`${itemLabel(it)}（随机食材箱候选（含空气）至少 2 种）`);
       } else if (!it.dispenser.spawnerItemPrefabGuid) {
         violations.push(`${itemLabel(it)}（普通食材箱未设置食材）`);
       }

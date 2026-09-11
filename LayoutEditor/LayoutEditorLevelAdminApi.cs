@@ -670,13 +670,47 @@ public static class LayoutEditorLevelAdminApi
     {
         if (refs == null)
             return;
+        var visited = new HashSet<UnityEngine.Object>();
         foreach (var obj in refs)
         {
             if (obj == null)
                 continue;
-            var bn = ReadBundleNameField(obj);
-            if (!string.IsNullOrEmpty(bn))
-                set.Add(bn);
+            CollectBundleNamesDeep(obj as UnityEngine.Object, set, visited);
+        }
+    }
+
+    /// <summary>递归收集 SO 引用闭包里的 bundleName：PseudoPrefabSO 读自身字段即可；
+    /// CustomRecipeSO 系（含 OptionalBurger/OptionalPizza 子类）无 bundleName 字段，
+    /// 需继续下钻 composition/optional/model/platingStep/cookingStep/bun/ingredientModel
+    /// 等嵌套引用（含嵌套 CustomRecipeSO），否则 modelSO 指向的 dlc bundle 不会报 missing。</summary>
+    private static void CollectBundleNamesDeep(UnityEngine.Object obj, HashSet<string> set, HashSet<UnityEngine.Object> visited)
+    {
+        if (obj == null || !visited.Add(obj))
+            return;
+        var bn = ReadBundleNameField(obj);
+        if (!string.IsNullOrEmpty(bn))
+        {
+            set.Add(bn);
+            return; // PseudoPrefabSO 是叶子：其余字段只有名字字符串
+        }
+        if (!(obj is CustomRecipeSO))
+            return;
+        var fields = obj.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+        for (int i = 0; i < fields.Length; i++)
+        {
+            var ft = fields[i].FieldType;
+            if (typeof(ScriptableObject).IsAssignableFrom(ft))
+            {
+                CollectBundleNamesDeep(fields[i].GetValue(obj) as UnityEngine.Object, set, visited);
+            }
+            else if (ft.IsArray && typeof(ScriptableObject).IsAssignableFrom(ft.GetElementType()))
+            {
+                var arr = fields[i].GetValue(obj) as UnityEngine.Object[];
+                if (arr == null)
+                    continue;
+                for (int j = 0; j < arr.Length; j++)
+                    CollectBundleNamesDeep(arr[j], set, visited);
+            }
         }
     }
 

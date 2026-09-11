@@ -1750,6 +1750,7 @@ public static class LayoutEditorStubIO
                     var ws = RandomCrateField(comp, "m_weights") as float[];
                     if (ws != null && ws.Length == sos.Length)
                         dto.randomWeights = (float[])ws.Clone();
+                    dto.airWeight = StubFloat(RandomCrateField(comp, "m_airWeight"));
                     var tex = RandomCrateField(comp, "m_questionMarkTexture") as Texture2D;
                     if (tex != null)
                         dto.questionMarkGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(tex));
@@ -1775,8 +1776,10 @@ public static class LayoutEditorStubIO
         }
         dto.randomItemGuids = SosToGuids(soArray.pseudoPrefabSOs);
         string iconGuid;
-        dto.randomWeights = ParseRandomCrateWeights(tag.prefabTag, soArray.pseudoPrefabSOs.Length, out iconGuid);
+        float airWeight;
+        dto.randomWeights = ParseRandomCrateWeights(tag.prefabTag, soArray.pseudoPrefabSOs.Length, out iconGuid, out airWeight);
         dto.questionMarkGuid = iconGuid;
+        dto.airWeight = airWeight;
         dto.spawnerItemPrefabGuid = "";
         LayoutEditorLog.Log("[随机箱链路] ExportRandomCrate(载体兜底): " + go.name + " → "
             + soArray.pseudoPrefabSOs.Length + " 种");
@@ -1790,27 +1793,27 @@ public static class LayoutEditorStubIO
         return guids.ToArray();
     }
 
-    /// <summary>解析载体 tag。v2：RandomCrate|&lt;iconGuid&gt;|&lt;w1,w2,...&gt;（iconGuid 可空 →
-    /// RandomCrate||w1,w2）；旧版（无图标）：RandomCrate|&lt;w1,w2,...&gt;。</summary>
-    private static float[] ParseRandomCrateWeights(string prefabTag, int count, out string iconGuid)
+    /// <summary>解析载体 tag。v3：RandomCrate|&lt;iconGuid&gt;|&lt;w1,w2,...&gt;|air=&lt;w&gt;
+    /// （air 段仅空气≥1 时追加）；v2（无空气）：RandomCrate|&lt;iconGuid&gt;|&lt;w1,w2,...&gt;
+    /// （iconGuid 可空 → RandomCrate||w1,w2）；旧版（无图标）：RandomCrate|&lt;w1,w2,...&gt;。</summary>
+    private static float[] ParseRandomCrateWeights(string prefabTag, int count, out string iconGuid, out float airWeight)
     {
         iconGuid = "";
+        airWeight = 0f;
         var result = new float[count];
         for (int i = 0; i < count; i++)
             result[i] = 5f;
         var payload = prefabTag.Substring(RandomCrateTagPrefix.Length);
         string csv;
+        var segments = payload.Split('|');
         if (payload.StartsWith("|", StringComparison.Ordinal))
         {
-            // v2 且 iconGuid 为空：|w1,w2,...
-            var segments = payload.Substring(1).Split('|');
-            iconGuid = "";
-            csv = segments.Length > 0 ? segments[0] : "";
+            // v2/v3 且 iconGuid 为空：|w1,w2,...（air 段可选尾随）
+            csv = segments.Length > 1 ? segments[1] : "";
         }
         else if (payload.IndexOf('|') >= 0)
         {
-            // v2 带图标：iconGuid|w1,w2,...
-            var segments = payload.Split('|');
+            // v2/v3 带图标：iconGuid|w1,w2,...
             iconGuid = segments[0];
             csv = segments.Length > 1 ? segments[1] : "";
         }
@@ -1818,6 +1821,17 @@ public static class LayoutEditorStubIO
         {
             // 旧版两段式：仅权重
             csv = payload;
+        }
+        // v3 尾段 air=<w>（任何位置出现即识别；未配置=0 保持 v2 语义）
+        for (int i = 0; i < segments.Length; i++)
+        {
+            if (segments[i].StartsWith("air=", StringComparison.Ordinal))
+            {
+                float a;
+                if (float.TryParse(segments[i].Substring(4), System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out a) && a >= 1f)
+                    airWeight = a;
+            }
         }
         var parts = csv.Split(',');
         for (int i = 0; i < count && i < parts.Length; i++)
@@ -1896,14 +1910,18 @@ public static class LayoutEditorStubIO
             return false;
         }
 
+        // 空气份数（≥1 启用；不进 sos 列表——独立序列化字段，杜绝与「空 SO=无效
+        // 条目」语义冲突，宿主首候选兜底也永远指向真实食材）
+        var airWeight = dto.airWeight >= 1f ? dto.airWeight : 0f;
+
         // 运行时安全兜底：单食材字段 = 首个随机食材（未装加载器/老模组回落为固定箱，
         // 也保证宿主 PseudoPrefabDispenser.Setup 不空引用）
         Undo.RecordObject(dispenserStub, "Layout Editor Random Crate");
         dispenserStub.spawnerItemPrefabSO = sos[0];
 
-        // 持久化数据载体（组件之外的独立通道）：候选列表 + 权重/图标 tag。
+        // 持久化数据载体（组件之外的独立通道）：候选列表 + 权重/图标/空气 tag。
         // stub 程序集缺失时 web 数据靠它往返；拷贝程序集后重新写回即烘焙组件。
-        WriteRandomCrateData(go, sos, weights, dto.questionMarkGuid ?? "");
+        WriteRandomCrateData(go, sos, weights, dto.questionMarkGuid ?? "", airWeight);
         EnsureRandomCrateDependencies(sos, type != null);
 
         if (type == null)
@@ -1933,21 +1951,25 @@ public static class LayoutEditorStubIO
             Undo.RecordObject(comp, "Layout Editor Random Crate");
         SetRandomCrateField(comp, "m_itemSOs", sos.ToArray());
         SetRandomCrateField(comp, "m_weights", weights.ToArray());
+        SetRandomCrateField(comp, "m_airWeight", airWeight);
         SetRandomCrateField(comp, "m_questionMarkTexture", LoadQuestionMarkTexture(dto.questionMarkGuid));
         EditorUtility.SetDirty(comp);
 
         var weightSum = 0f;
         foreach (var w in weights)
             weightSum += w;
-        LayoutEditorLog.Log("[随机箱链路] ApplyRandomCrate 成功: " + go.name + " → " + sos.Count + " 种食材（初始配额和 "
-            + weightSum.ToString("0.##") + "），组件=" + (comp != null ? "已烘焙" : "异常") + "，载体已写入");
+        LayoutEditorLog.Log("[随机箱链路] ApplyRandomCrate 成功: " + go.name + " → " + sos.Count + " 种食材（每轮份数和 "
+            + weightSum.ToString("0.##")
+            + (airWeight > 0f ? "，空气×" + airWeight.ToString("0.##") : "")
+            + "），组件=" + (comp != null ? "已烘焙" : "异常") + "，载体已写入");
         return true;
     }
 
-    /// <summary>写随机箱数据载体：PseudoPrefabSOArray=候选，SpecificPseudoPrefabTag=v2
-    /// 权重/图标串（RandomCrate|&lt;iconGuid&gt;|&lt;w1,w2,...&gt;）。
+    /// <summary>写随机箱数据载体：PseudoPrefabSOArray=候选，SpecificPseudoPrefabTag=v3
+    /// 权重/图标/空气串（RandomCrate|&lt;iconGuid&gt;|&lt;w1,w2,...&gt;|air=&lt;w&gt;，air 段仅
+    /// 空气≥1 时追加——无空气场景保持 v2 原样）。
     /// 普通食材箱的 soArray 仅由本通道使用（饮料机/酱料机不走随机路径）。</summary>
-    private static void WriteRandomCrateData(GameObject go, System.Collections.Generic.List<PseudoPrefabSO> sos, System.Collections.Generic.List<float> weights, string iconGuid)
+    private static void WriteRandomCrateData(GameObject go, System.Collections.Generic.List<PseudoPrefabSO> sos, System.Collections.Generic.List<float> weights, string iconGuid, float airWeight)
     {
         var soArray = go.GetComponent<PseudoPrefabSOArray>();
         if (soArray == null)
@@ -1965,6 +1987,8 @@ public static class LayoutEditorStubIO
                 sb.Append(',');
             sb.Append(weights[i].ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
         }
+        if (airWeight >= 1f)
+            sb.Append("|air=").Append(airWeight.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
         var tag = go.GetComponent<SpecificPseudoPrefabTag>();
         if (tag == null)
             tag = Undo.AddComponent<SpecificPseudoPrefabTag>(go);
@@ -2277,9 +2301,11 @@ public static class LayoutEditorStubIO
 
             comp = Undo.AddComponent(tag.gameObject, type);
             string iconGuid;
+            float airWeight;
             SetRandomCrateField(comp, "m_itemSOs", soArray.pseudoPrefabSOs);
             SetRandomCrateField(comp, "m_weights",
-                ParseRandomCrateWeights(tag.prefabTag, soArray.pseudoPrefabSOs.Length, out iconGuid));
+                ParseRandomCrateWeights(tag.prefabTag, soArray.pseudoPrefabSOs.Length, out iconGuid, out airWeight));
+            SetRandomCrateField(comp, "m_airWeight", airWeight);
             SetRandomCrateField(comp, "m_questionMarkTexture",
                 LoadQuestionMarkTexture(iconGuid));
             EditorUtility.SetDirty(comp);

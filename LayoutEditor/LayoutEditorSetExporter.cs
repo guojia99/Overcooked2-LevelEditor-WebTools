@@ -215,6 +215,9 @@ public static class LayoutEditorSetExporter
             EditorUtility.DisplayProgressBar("导出关卡集 " + setName,
                 "准备场景 " + i + "/" + scenes.Count + "…", (float)i / (scenes.Count + 1));
             var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
+            if (!string.IsNullOrEmpty(hudWarn))
+                Debug.LogWarning("[SetExporter] " + hudWarn);
             LayoutEditorPseudoReload.EnsurePrepareForBuilding();
             if (!_usesCustomStub && ActiveSceneUsesCustomStub())
             {

@@ -13,4 +13,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefabName: plated_meat
   bundleName: bundle47
-  assetPath: Assets/prefabs/plated/plated_meat_01.prefab
+  assetPath: assets/prefabs/plated/plated_meat_01.prefab

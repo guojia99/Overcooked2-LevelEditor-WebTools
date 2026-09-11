@@ -36,9 +36,14 @@ public class LayoutDispenserStubDto
     /// 启用随机模式时固定食材参数（spawnerItemPrefabGuid）对外清空。</summary>
     public string[] randomItemGuids;
 
-    /// <summary>随机食材箱：与 randomItemGuids 一一对应的初始权重/配额（缺省 5）。
-    /// 运行时每次取出该食材权重 -1，归零自动回满初始值（纯服务端状态）。</summary>
+    /// <summary>随机食材箱：与 randomItemGuids 一一对应的每轮保底份数（缺省 5）。
+    /// 洗牌袋队列语义：每 sum 份取用恰好出齐各份数（v7+）。</summary>
     public float[] randomWeights;
+
+    /// <summary>随机食材箱：空气份数（≥1 启用，0/未设=禁用）。空气作为虚拟候选
+    /// 同样进袋参与权重管理与保底；取出时不产出食材（Harmony 前缀拦截，
+    /// 见 CustomStub.RandomCrate v8）。</summary>
+    public float airWeight;
 
     /// <summary>随机食材箱：问号图标样式（Assets/commonW1/question_mark/*.png 的 guid；
     /// 空 = 默认样式 question_mark_chef_hat）。</summary>
@@ -568,15 +573,17 @@ public class LayoutDocumentDto
     public LightInfoDto[] lights;
 }
 
-/** 游戏相机信息：背景色与 FOV 可编辑，transform 为只读快照供前端绘制视野。 */
+/** 游戏相机信息：背景色 / FOV / 出发点位置（X/Z，需 positionEdited）可编辑，其余为只读快照供前端绘制视野。 */
 [Serializable]
 public class CameraInfoDto
 {
     /** "#rrggbb" — 运行时相机 clear 色（空洞主题无背景 prefab，即游戏背景色）。 */
     public string backgroundColor;
     public float fieldOfView;
-    /** 只读：主相机世界位置与欧拉角快照（度）。 */
+    /** 主相机世界位置快照；X/Z 可编辑（positionEdited=true 时写回，Y 永不写）。 */
     public LayoutVector3 position;
+    /** 前端出发点位置编辑标记：true 才写回 position.x/z（防旧文档/默认快照误移相机）。 */
+    public bool positionEdited;
     public float pitch;
     public float yaw;
     public float roll;
@@ -736,6 +743,13 @@ public class LevelSetSceneListDto
 public class ApiErrorDto
 {
     public string error;
+}
+
+/// <summary>POST 成功回执（message = 给前端展示的结果说明，可空）。</summary>
+public class ApiOkDto
+{
+    public bool ok;
+    public string message;
 }
 
 public class ApiApplyResultDto

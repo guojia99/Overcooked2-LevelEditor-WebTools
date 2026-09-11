@@ -53,12 +53,51 @@ namespace CustomStub
             return true;
         }
 
-        /// <summary>供 EntryPoint 手工绑定用的前缀MethodInfo（本程序集内部）。</summary>
+        // ============ 空气取出拦截（随机箱空气候，RandomCrate v8） ============
+        //
+        // 目标：ServerPickupItemSpawner.HandlePickup(ICarrier, Vector2)。
+        // 原方法内联 NetworkUtils.ServerSpawnPrefab——m_itemPrefab 为 null 时
+        // SpawnableEntityCollection.SpawnEntity 按 ID 取负下标必炸，且null 会外溢到
+        // GameUtils.GetIngredientCrates 等读取点。RandomCrate 用哨兵方案（不置空字段），
+        // 由本前缀查「空气待取表」拦截：命中=跳过原方法（不生成、不持取、玩家手空——
+        // 调用方 ReceivePickUpEvent 在 HandlePickup 返回后无任何后续动作，零副作用）；
+        // 未命中/异常=放行原方法（原版行为；异常时空气退化为取出兜底食材一次）。
+
+        /// <summary>ServerPickupItemSpawner.HandlePickup 前缀。</summary>
+        private static bool ServerPickupHandlePickupPrefix(object __instance)
+        {
+            if (!RandomCrate.HasAnyAirPending)
+                return true;
+            try
+            {
+                var crate = RandomCrate.FindAirPending(__instance as Component);
+                if (crate == null)
+                    return true;
+                crate.OnAirTaken();
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("airPickup", "[CustomStub.Harmony] 空气取出前缀异常（放行原方法=空气退化为兜底食材）: " + ex.Message);
+                return true;
+            }
+        }
+
+        /// <summary>供 EntryPoint 手工绑定用的前缀 MethodInfo（本程序集内部）。</summary>
         internal static System.Reflection.MethodInfo RespawnColliderObjectAddedPrefixMethod
         {
             get
             {
                 return typeof(HarmonyPatches).GetMethod("RespawnColliderObjectAddedPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPickupHandlePickupPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("ServerPickupHandlePickupPrefix",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
             }
         }

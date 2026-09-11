@@ -105,8 +105,10 @@ function plainGroupHtml(ingredientIds: string[], ingredientName?: (id: string) =
 export interface RlCardOptions {
   /** Full recipe catalog for cooking-group fallback derivation. */
   allRecipes?: RecipeWithGroups[];
-  /** Extra badge text (e.g. "本关" for levelset recipes). */
-  extraBadge?: string;
+  /** Extra badge text (e.g. "本关" for levelset recipes); array renders multiple. */
+  extraBadge?: string | string[];
+  /** 警示徽标（如「⚠ 无中间产物」）：琥珀色，紧随禁用徽标显示。 */
+  warnBadge?: string;
   /** 禁用原因（web 内置未放开等）：卡片置灰 + ⛔徽标。 */
   disabledReason?: string;
   /** Ingredient id → Chinese name, used for chip tooltips. */
@@ -157,11 +159,19 @@ export function rlCardHtml(r: RecipeWithGroups, opts: RlCardOptions = {}): strin
   const merged = computeCardGroups(r, opts);
   const intermediate = cardIntermediate(r);
 
+  const extras = (opts.extraBadge
+    ? Array.isArray(opts.extraBadge)
+      ? opts.extraBadge
+      : [opts.extraBadge]
+    : []
+  ).map((b) => `<span class="rl-badge rl-badge-dlc">${esc(b)}</span>`);
+
   const badges = [
     opts.disabledReason ? `<span class="rl-badge rl-badge-disabled">⛔ 禁用</span>` : "",
+    opts.warnBadge ? `<span class="rl-badge rl-badge-warn">${esc(opts.warnBadge)}</span>` : "",
     intermediate ? `<span class="rl-badge rl-badge-inter">半成品</span>` : "",
     r.isCustom ? `<span class="rl-badge rl-badge-custom">自定义</span>` : "",
-    opts.extraBadge ? `<span class="rl-badge rl-badge-dlc">${esc(opts.extraBadge)}</span>` : "",
+    ...extras,
     r.group && r.group !== "core"
       ? `<span class="rl-badge rl-badge-dlc">${esc(foodGroupLabel(r.group))}</span>`
       : "",

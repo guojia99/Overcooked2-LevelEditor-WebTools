@@ -91,9 +91,12 @@ export interface LayoutDispenserStub {
   /** 随机食材箱：候选食材 guid（空 = 普通固定食材箱）。烘焙到关卡集 stub 程序集的
    * CustomStub.RandomCrate 组件，代码随关卡包分发（<set>/runtime bundle）。 */
   randomItemGuids?: string[];
-  /** 与 randomItemGuids 一一对应的初始权重/配额（整数 ≥1，缺省 5）。
-   * 运行时每次取出该食材权重 -1，归零自动回满初始值（纯服务端状态）。 */
+  /** 与 randomItemGuids 一一对应的每轮保底份数（整数 ≥1，缺省 5）。
+   * 洗牌袋队列语义：每 sum 份取用恰好出齐各份数（v7+）。 */
   randomWeights?: number[];
+  /** 空气份数（≥1 启用，0/未设=禁用）：空气作为虚拟候选同样进袋参与权重管理
+   * 与保底；取出时不产出食材（Harmony 前缀拦截，RandomCrate v8）。 */
+  airWeight?: number;
   /** 问号图标样式 guid（Assets/commonW1/question_mark/，空 = 默认 question_mark_chef_hat）。 */
   questionMarkGuid?: string;
 }
@@ -453,6 +456,8 @@ export interface CameraInfo {
   roll: number;
   nearClip: number;
   farClip: number;
+  /** 出发点位置是否被编辑过（true 时写回 X/Z，Y 永不写；缺省 false → 后端 no-op）。 */
+  positionEdited?: boolean;
 }
 
 /** Art/Lights 子树中非 prefab instance 的灯光（prefab 灯作为普通 item 往返）。 */
@@ -700,6 +705,8 @@ export interface RecipeEntry {
   intermediate?: boolean;
   /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（卡片显示双步骤）。 */
   mixing?: boolean;
+  /** 组装定义子类标记："burger" / "pizza" / ""（普通菜谱；Optional tab 与清单过滤用）。 */
+  optionalKind?: string;
   icon?: boolean;
 }
 

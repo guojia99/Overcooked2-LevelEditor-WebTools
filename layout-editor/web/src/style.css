@@ -1951,6 +1951,31 @@ canvas.pan-active {
   padding: 0 4px;
   flex: none;
 }
+/* 随机食材箱：空气候卡片（弹窗顶部固定；图标 404 时回落 ∅ 文字占位） */
+.pick-card.rc-air-card {
+  margin: 0 0 8px;
+  border-style: dashed;
+}
+.rc-air-icon-wrap {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.rc-air-icon-wrap img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+.rc-air-glyph {
+  display: none;
+  font-size: 22px;
+  line-height: 1;
+  color: #9aa4b2;
+  font-weight: 600;
+}
 /* 随机食材箱：问号图标样式选择行（弹窗内缩略图单选）与面板缩略图 */
 .qm-style-row {
   display: flex;
@@ -3491,6 +3516,48 @@ body.manage-bg {
   font-weight: normal;
 }
 
+/* 一键定分：厨房摘要 chips / 告警 / 模型参数折叠区 */
+.cfg-kitchen-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 6px;
+}
+
+.cfg-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid #3a4048;
+  border-radius: 10px;
+  font-size: 11px;
+  color: #c7cbd1;
+  background: #262b31;
+  white-space: nowrap;
+}
+
+.cfg-kitchen-warns {
+  margin: 2px 0 6px;
+}
+
+.cfg-kitchen-warns .modal-hint {
+  margin: 2px 0;
+}
+
+.cfg-params {
+  margin: 6px 0 2px;
+  font-size: 11px;
+}
+
+.cfg-params summary {
+  cursor: pointer;
+  color: #9aa0a6;
+  user-select: none;
+}
+
+.cfg-params .cfg-ai-table {
+  margin: 4px 0;
+}
+
 .modal-hint.err {
   color: #f28b82;
 }
@@ -3537,6 +3604,16 @@ body.manage-bg {
   border: 1px solid #4a5060;
   background: #1a1d23;
   color: #e8eaed;
+}
+
+/* 菜谱管理弹窗：滚动容器（.modal-body）去掉顶部内边距——分组 sticky 头吸顶时
+ * 不再被 padding 顶下 12px、露出底下滚过的卡片；顶部间距移到不滚动的 Tab 栏上。 */
+.modal-panel.rw-recipes .modal-body {
+  padding-top: 0;
+}
+
+.modal-panel.rw-recipes .rw-tabs {
+  padding-top: 12px;
 }
 
 .rw-list {
@@ -7395,6 +7472,69 @@ body.manage-bg {
 
 .cl-cam-snap {
   margin-top: 2px;
+}
+
+.cl-cam-pos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cl-pos-pad {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  justify-items: center;
+  gap: 3px;
+}
+
+.cl-pos-btn {
+  min-width: 30px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid #4a5060;
+  background: #1a1d23;
+  color: #e8eaed;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.cl-pos-btn:hover {
+  background: #262b35;
+}
+
+.cl-pos-btn:active {
+  background: #2f3542;
+}
+
+.cl-pos-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.cl-pos-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.cl-pos-val {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 11px;
+  color: #8a909a;
+  white-space: nowrap;
+}
+
+.cl-pos-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.cl-pos-down {
+  grid-column: 2;
+  grid-row: 3;
 }
 
 .cl-light-list {

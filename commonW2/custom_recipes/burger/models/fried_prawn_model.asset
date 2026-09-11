@@ -13,4 +13,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefabName: plated_prawn
   bundleName: bundle47
-  assetPath: Assets/prefabs/ingredients/prawn_fried_01.prefab
+  assetPath: assets/prefabs/ingredients/prawn_fried_01.prefab

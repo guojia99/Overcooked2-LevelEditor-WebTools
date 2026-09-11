@@ -317,6 +317,12 @@ export function computeUtensilIngredientFill(
   //    ← 面糊中间产物节点本身（Donut comp=1 面糊节点；原版 FryableObjectsLookup 含
   //    MixedFlourEgg 系节点而非生面粉）；烤箱类工作站无 stub，跳过。
   //  - 食材直接引用混合中间产物的菜谱同面糊规则。
+  //  - Cooked 型中间产物（自带烹饪步骤，如 commonW2 的 EggSausage→GriddlePan、
+  //    FriedPrawn→DeepFatFryer、FriedMeat→FryingPan）：按其自身步骤把
+  //    节点+叶生食材双填进终锅（节点保组合许可/熟模型映射，生食材保放入自由，
+  //    对齐原版锅 lookup 的生+熟双表结构）。
+  //  - Mixed 型中间产物的终锅优先取其自身 cookingStep（无自身步骤才回退菜谱步骤，
+  //    官方面糊 + donut 语义不变）。
   const result = new Map<string, { ings: string[]; intermediates: string[] }>();
   const addIng = (ut: string, iid: string) => {
     if (!result.has(ut)) result.set(ut, { ings: [], intermediates: [] });
@@ -338,9 +344,28 @@ export function computeUtensilIngredientFill(
     const vessel = uts[uts.length - 1];
     return vessel && !WORKSTATION_UTENSILS.has(vessel) ? vessel : "";
   };
+  // 中间产物自身的终锅：其 cookingStep 的最后一个非工作站容器（空 = 无）。
+  // commonW2 的中间产物把烹饪步骤写在自己身上（如 EggSausage→GriddlePan、
+  // FriedPrawn→DeepFatFryer），不能只看引用它的菜谱自身的步骤。
+  const subVesselOf = (sub: RecipeEntry): string => {
+    const uts = STEP_UTENSILS[sub.cookingStep ?? ""] ?? [];
+    const vessel = uts[uts.length - 1];
+    return vessel && !WORKSTATION_UTENSILS.has(vessel) ? vessel : "";
+  };
 
   for (const r of recipes) {
     if (!r || r.intermediate) continue;
+    // 组成里的 Cooked 型中间产物（如 EggSausage/BaconSausage）：按其自身烹饪步骤
+    // 双填进终锅 —— 节点（组合许可/熟模型映射）+ 叶生食材（放入自由，对齐原版锅
+    // lookup 的生+熟双表结构）。放在 mix 分支之前，避免被其 continue 短路。
+    for (const cid of r.compositionIds ?? []) {
+      const sub = interById.get(cid);
+      if (!sub || isMixSub(sub)) continue;
+      const vessel = subVesselOf(sub);
+      if (!vessel) continue;
+      addInter(vessel, sub.id);
+      for (const leaf of sub.ingredients ?? []) addIng(vessel, leaf);
+    }
     // 食材直接引用混合中间产物（月饼型：食材即面糊半成品）
     const refMix = (r.ingredients ?? [])
       .map((i) => interById.get(i))
@@ -348,7 +373,7 @@ export function computeUtensilIngredientFill(
     if (refMix.length > 0) {
       for (const b of refMix) {
         for (const ing of b.ingredients ?? []) addIng("MixerBowl", ing);
-        const vessel = finalVesselOf(r);
+        const vessel = subVesselOf(b) || finalVesselOf(r);
         if (vessel) addInter(vessel, b.id);
       }
       continue;
@@ -360,7 +385,10 @@ export function computeUtensilIngredientFill(
     if (mixComps.length > 0) {
       for (const b of mixComps) {
         for (const ing of b.ingredients ?? []) addIng("MixerBowl", ing);
-        const vessel = finalVesselOf(r);
+        // 混合型（浆类）节点进终锅，但其叶食材必须先搅拌——只填节点不双填；
+        // 终锅优先取中间产物自身步骤（肉排浆/虾浆自带 FryingPan/DeepFatFryer），
+        // 无自身步骤才回退菜谱步骤（官方面糊 + donut 语义不变）。
+        const vessel = subVesselOf(b) || finalVesselOf(r);
         if (vessel) addInter(vessel, b.id);
       }
       continue;
@@ -377,7 +405,7 @@ export function computeUtensilIngredientFill(
       const batter = findBatterIntermediateForRecipe(r);
       if (batter) {
         for (const ing of batter.ingredients ?? []) addIng("MixerBowl", ing);
-        const vessel = finalVesselOf(r);
+        const vessel = subVesselOf(batter) || finalVesselOf(r);
         if (vessel) addInter(vessel, batter.id);
         continue;
       }
@@ -412,7 +440,6 @@ export function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<str
     if (!result.get(ut)!.includes(iid)) result.get(ut)!.push(iid);
   };
   const interById = new Map(S.intermediatesCache.map((x) => [x.id, x]));
-  const isMixStep = (s?: string) => s === "Mixer" || s === "MixingBowl";
   for (const r of recipes) {
     // 家族过滤：INTERMEDIATE_ASSIGN 的预设中间产物（如核心系面糊）只有其叶食材
     // ⊆ 本菜谱叶食材（经一层中间产物展开）时才适用——避免 dlc09/dlc13 变体松饼

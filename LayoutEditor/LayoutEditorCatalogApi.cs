@@ -527,8 +527,9 @@ public static class LayoutEditorCatalogApi
         return File.Exists(path);
     }
 
-    public static string SetLevelRecipes(LevelRecipesUpdateDto update)
+    public static string SetLevelRecipes(LevelRecipesUpdateDto update, out string note)
     {
+        note = null;
         if (update == null || string.IsNullOrEmpty(update.levelInfoAssetPath))
             return "Missing levelInfoAssetPath.";
 
@@ -597,9 +598,18 @@ public static class LayoutEditorCatalogApi
         // 由菜谱管理的「Optional 参数管理」「Matchlist 管理」两个 tab 手动配置
         //（SetOptionalItems / SetMatchlists，支持披萨/Hotdog 一键填充候选），
         // 保存菜谱只写 recipes——已有条目不会被覆盖，也不会因取消勾选菜谱被清掉。
+        // 例外：所选含成品汉堡时自动同步本关 BurgerOptional 并替换 auto-managed
+        // 汉堡条目（详见下方同步块），避免换菜谱后夹心残渣导致面包叠层失效。
 
         // 仅根据当前已选菜谱覆盖重建 allIngredients（不扫描场景食材箱，清除无关遗留食材）。
         LayoutEditorAllIngredientsFill.AutoFillIngredientsFromSelectedRecipes(info);
+
+        // 汉堡菜谱自动同步（必须在 EnsureWebDependencies 之前：新并入的中间产物
+        // 依赖要一并算入）。同步本关 BurgerOptional（夹心全集 + bunSO 对齐主面包），
+        // 并把 [BurgerOptional] + 中间产物（含嵌套）merge 进 optionalRecipeMatchListItems：
+        // 替换旧 auto-managed 汉堡条目（BurgerOptional/*Assembly/_filler），
+        // 保留 hotdog/pizza/用户手动加入的成品汉堡等非汉堡条目。
+        var burgerSyncNote = SyncBurgerOptionalsForSavedRecipes(update.levelInfoAssetPath, levelSet, recipes, info);
 
         // 按当前 LevelInfo 引用覆盖重建 bundle 依赖（不保留旧菜谱遗留的 dependencies）。
         if (levelSet != null)
@@ -631,7 +641,66 @@ public static class LayoutEditorCatalogApi
         if (dropped.Count > 0)
             return "已写入 " + recipes.Count + " 道菜谱；以下菜谱未能写入（guid 无法解析，或未安装到本关卡集的内置菜谱）："
                 + string.Join("、", dropped.ToArray());
+        note = burgerSyncNote;
         return null;
+    }
+
+    /// <summary>保存菜谱时的汉堡 optional 自动同步：所选含成品汉堡 → 同步本关 BurgerOptional
+    /// （夹心全集 + bunSO 对齐主面包）并把 [BurgerOptional] + 中间产物 merge 进
+    /// optionalRecipeMatchListItems（替换 auto-managed 旧条目，保留其它条目）。
+    /// 无汉堡时不改动。返回给前端展示的结果说明（null = 无事发生）。</summary>
+    private static string SyncBurgerOptionalsForSavedRecipes(
+        string levelInfoAssetPath,
+        string levelSet,
+        List<ScriptableObject> recipes,
+        LevelInfoSO info)
+    {
+        var burgers = new List<CustomRecipeSO>();
+        var intermediates = new HashSet<ScriptableObject>();
+        var fillerGuids = new HashSet<string>(StringComparer.Ordinal);
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            var cr = recipes[i] as CustomRecipeSO;
+            if (cr == null || !LayoutEditorBurgerApi.IsFinishedBurgerRecipe(cr))
+                continue;
+            burgers.Add(cr);
+            CollectCustomSubRecipesFromBurger(cr, intermediates, fillerGuids);
+        }
+        if (burgers.Count == 0)
+            return null;
+
+        var items = SyncLevelBurgerOptionalAndGetItems(levelInfoAssetPath, levelSet, burgers, intermediates);
+        if (items == null)
+            return null;
+
+        var merged = new List<ScriptableObject>();
+        var seen = new HashSet<ScriptableObject>();
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i] != null && seen.Add(items[i]))
+                merged.Add(items[i]);
+        }
+        var kept = 0;
+        var oldItems = info.optionalRecipeMatchListItems ?? new ScriptableObject[0];
+        for (int i = 0; i < oldItems.Length; i++)
+        {
+            var old = oldItems[i];
+            if (old == null || !seen.Add(old))
+                continue;
+            if (IsAutoManagedBurgerOptionalItem(old))
+                continue;
+            merged.Add(old);
+            kept++;
+        }
+        info.optionalRecipeMatchListItems = merged.ToArray();
+
+        var names = new List<string>();
+        for (int i = 0; i < merged.Count; i++)
+            names.Add(merged[i].name);
+        LayoutEditorLog.Log("[Optional] 保存菜谱自动同步：optionalRecipeMatchListItems = ["
+            + string.Join(", ", names.ToArray()) + "]（替换汉堡组装，保留其它 " + kept + " 条）");
+        return "已自动同步本关 BurgerOptional（夹心 "
+            + (merged.Count > 0 ? (merged.Count - kept) : 0) + " 条 + 保留其它 " + kept + " 条 optional）";
     }
 
     // ============================================================
@@ -791,8 +860,31 @@ public static class LayoutEditorCatalogApi
             }
         }
 
-        if (selectedBurgers.Count == 0)
+        var items = SyncLevelBurgerOptionalAndGetItems(levelInfoAssetPath, levelSet, selectedBurgers, intermediates);
+        if (items == null)
             return new string[0];
+
+        var guids = new List<string>();
+        var seenGuids = new HashSet<string>(StringComparer.Ordinal);
+        for (int i = 0; i < items.Count; i++)
+            AppendOptionalGuid(items[i], guids, seenGuids);
+
+        LayoutEditorLog.Log("[Optional] ComputeBurgerOptionalFillGuids: " + guids.Count + " 条 ["
+            + string.Join(", ", guids.ToArray()) + "]");
+        return guids.ToArray();
+    }
+
+    /// <summary>同步本关 BurgerOptional（夹心全集 + bunSO 对齐关卡主面包），返回应注册的
+    /// optional SO 列表（[BurgerOptional] + 中间产物，去重去空）。调用方需先用
+    /// CollectCustomSubRecipesFromBurger 收集中间产物。null = 无汉堡/无夹心/创建失败。</summary>
+    internal static List<ScriptableObject> SyncLevelBurgerOptionalAndGetItems(
+        string levelInfoAssetPath,
+        string levelSet,
+        List<CustomRecipeSO> selectedBurgers,
+        HashSet<ScriptableObject> intermediates)
+    {
+        if (selectedBurgers == null || selectedBurgers.Count == 0)
+            return null;
 
         CustomRecipeOptionalBurgerSO levelOptional;
         var createErr = LayoutEditorBurgerApi.FindOrCreateLevelBurgerOptional(
@@ -800,30 +892,47 @@ public static class LayoutEditorCatalogApi
         if (createErr != null)
         {
             LayoutEditorLog.LogWarning("[Optional] 汉堡填充：" + createErr);
-            return new string[0];
+            return null;
         }
 
-        LayoutEditorBurgerApi.SyncLevelBurgerOptionalFromBurgers(levelOptional, selectedBurgers);
+        var bunWarning = LayoutEditorBurgerApi.SyncLevelBurgerOptionalFromBurgers(levelOptional, selectedBurgers);
+        if (!string.IsNullOrEmpty(bunWarning))
+            LayoutEditorLog.LogWarning("[Optional] 汉堡填充：" + bunWarning);
 
         if (!LayoutEditorBurgerApi.BurgerOptionalHasFillerLayers(levelOptional))
         {
             LayoutEditorLog.LogWarning("[Optional] 汉堡填充：所选汉堡均无夹心层（纯面包），无需注册 BurgerOptional");
-            return new string[0];
+            return null;
         }
 
-        var guids = new List<string>();
-        var seenGuids = new HashSet<string>(StringComparer.Ordinal);
-        AppendOptionalGuid(levelOptional, guids, seenGuids);
-        foreach (var sub in intermediates)
+        var items = new List<ScriptableObject>();
+        var seen = new HashSet<ScriptableObject>();
+        if (levelOptional != null && seen.Add(levelOptional))
+            items.Add(levelOptional);
+        if (intermediates != null)
         {
-            if (sub == null || sub == levelOptional)
-                continue;
-            AppendOptionalGuid(sub, guids, seenGuids);
+            foreach (var sub in intermediates)
+            {
+                if (sub == null || sub == levelOptional)
+                    continue;
+                if (seen.Add(sub))
+                    items.Add(sub);
+            }
         }
+        return items;
+    }
 
-        LayoutEditorLog.Log("[Optional] ComputeBurgerOptionalFillGuids: " + guids.Count + " 条 ["
-            + string.Join(", ", guids.ToArray()) + "]");
-        return guids.ToArray();
+    /// <summary>自动管理的汉堡 optional 条目（一键填充/保存菜谱自动同步时整体替换）：
+    ///  score=0 的 CustomRecipeSO 全部算——组装定义（本关 BurgerOptional / *Assembly / *_filler）
+    ///  与填充加入的中间产物（组成不含面包）。中间产物只能来自填充（手动候选不含它们），
+    ///  整体替换可避免换菜谱后陈旧条目滞留。用户手动加入的成品（score&gt;0）与非
+    ///  CustomRecipeSO 条目（hotdog/pizza 部件、DLC 菜谱等）不算。</summary>
+    internal static bool IsAutoManagedBurgerOptionalItem(ScriptableObject so)
+    {
+        var cr = so as CustomRecipeSO;
+        if (cr == null)
+            return false;
+        return cr.score <= 0;
     }
 
     private static void AppendOptionalGuid(ScriptableObject so, List<string> guids, HashSet<string> seenGuids)

@@ -21,7 +21,7 @@ MonoBehaviour:
   iconSO: {fileID: 0}
   icon: {fileID: 0}
   compositionSOs:
-  - {fileID: 11400000, guid: 81232e654b602714098c1a440b66ddd5, type: 2}
+  - {fileID: 11400000, guid: 7e3070b091a402f42be328cc261adff3, type: 2}
   optionalSOs:
   - {fileID: 11400000, guid: 4ec8a736936e7744c91d254705783c2c, type: 2}
   - {fileID: 11400000, guid: 48c96b50622b3e944992ec3534bc2081, type: 2}
@@ -50,15 +50,15 @@ MonoBehaviour:
   mixingIconSO: {fileID: 0}
   mixingIcon: {fileID: 0}
   mixingProgress: 0
-  bunSO: {fileID: 11400000, guid: 81232e654b602714098c1a440b66ddd5, type: 2}
+  bunSO: {fileID: 11400000, guid: 7e3070b091a402f42be328cc261adff3, type: 2}
   ingredientContainerCapacity: 20
   ingredientModelSOs:
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 6c8a0c12ea9bb9a4bbe449c73b716581, type: 2}
   - {fileID: 11400000, guid: 4262be7125ebd348ca3eec3c5a70ed02, type: 2}
+  - {fileID: 11400000, guid: 73e6e64b5bd6ad37462d1edd2166e511, type: 2}
+  - {fileID: 11400000, guid: 25108b695242ea34444328da7bd1daea, type: 2}
   - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 6c8a0c12ea9bb9a4bbe449c73b716581, type: 2}
   - {fileID: 11400000, guid: 8f31e946fdc472d4296373b4c268851d, type: 2}
   - {fileID: 11400000, guid: 52f74891848e798a2df0080a5408a6ce, type: 2}
   - {fileID: 0}
@@ -72,7 +72,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3308b577f0da163b084e03e19c1d74a8, type: 2}
   - {fileID: 11400000, guid: 22c936e8521e7e5cf648b00f2144c9e9, type: 2}
   - {fileID: 11400000, guid: 93b30a74a72d4090c46fbd82e17281d9, type: 2}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 25108b695242ea34444328da7bd1daea, type: 2}
   ingredientModels:
   - {fileID: 0}
   - {fileID: 0}

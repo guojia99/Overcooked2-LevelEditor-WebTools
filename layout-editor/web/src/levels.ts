@@ -36,6 +36,8 @@ function goDependenciesPage(setName?: string, levelInfoAssetPath?: string): void
   location.assign("/dependencies");
 }
 import { applyRatio, computeAutoScores, computeOrderLifeTimes, ORDER_INTERVAL_SEC, PLATE_RETURN_SEC, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
+import { analyzeKitchen, kitchenChips, kitchenWarnings } from "./kitchenAnalysis";
+import { modelParamsSummary } from "./autoScoreKnowledge";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
 import { computeCardGroups, rlCardHtml, rlSectionHtml, STEP_ICON_SRC, type RecipeWithGroups } from "./recipeCard";
@@ -820,7 +822,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <label class="m-field">最少同时订单 minOrderCount<input type="number" id="f-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount}"></label>
         <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="f-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount}"></label>
         <label class="m-field">动态父挂载 disableDynamicParenting
-          <label class="modal-check"><input type="checkbox" id="f-disableDynamicParenting" ${detail.disableDynamicParenting ? "checked" : ""}> 勾选=禁用（含移动/升降平台关卡应取消）</label>
+          <label class="modal-check"><input type="checkbox" id="f-disableDynamicParenting" ${detail.disableDynamicParenting ? "checked" : ""}> 勾选=禁用（含移动/升降平台、可移动火锅的关卡应取消；写回时检测到可移动火锅会自动取消）</label>
         </label>
         <p class="modal-hint">Bundle 依赖（<code>dependencies</code>）请在顶栏 <b>📦 依赖管理</b> 中编辑。当前共 ${(detail.dependencies || []).length} 项。</p>
       </div>
@@ -1633,9 +1635,10 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
     const detailEl = document.getElementById("cfg-ai-detail")!;
     try {
       showBusy("推算星级分数…");
-      const [catalog, level] = await Promise.all([
+      const [catalog, level, layoutDoc] = await Promise.all([
         api.fetchRecipeCatalog(setName),
         api.fetchLevelRecipes(detail.sceneAssetPath),
+        api.fetchLayout(detail.sceneAssetPath).catch(() => null),
       ]);
       const byGuid = new Map(catalog.map((r) => [r.guid, r]));
       const selected = (level.recipeGuids ?? [])
@@ -1647,7 +1650,8 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
       }
       const topRoundTime =
         parseInt((document.getElementById("cfg-roundTime-all") as HTMLInputElement).value || "240", 10) || 240;
-      const result = computeAutoScores(selected, PLAYER_TABS.map(() => topRoundTime));
+      const kitchen = analyzeKitchen(layoutDoc);
+      const result = computeAutoScores(selected, PLAYER_TABS.map(() => topRoundTime), kitchen);
       if (!result) {
         detailEl.innerHTML = `<p class="modal-hint err">所选菜谱缺少价格信息，无法推算。</p>`;
         return;
@@ -1670,15 +1674,49 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
       const rows = result.details
         .map(
           (d) =>
-            `<tr><td>${esc(d.name)}</td><td>${esc(d.groupLabel)}</td><td>${d.ingredientCount}</td><td>${d.cookingStepCount > 0 ? "✓" : "—"}</td><td>${d.score}</td><td>${d.timeSec.toFixed(0)}s</td></tr>`
+            `<tr><td>${esc(d.name)}</td><td>${esc(d.groupLabel)}</td><td>${d.ingredientCount}</td><td>${
+              d.cookingStepCount > 0 ? "✓" : "—"
+            }</td><td>${d.fetchSec > 0 ? d.fetchSec.toFixed(1) : "—"}</td><td>${
+              d.prepSec > 0 ? d.prepSec.toFixed(1) : "—"
+            }</td><td>${d.cookSec > 0 ? d.cookSec.toFixed(1) : "—"}</td><td>${
+              d.serveSec > 0 ? d.serveSec.toFixed(1) : "—"
+            }</td><td>${d.score}</td><td>${d.timeSec.toFixed(0)}s</td></tr>`
         )
         .join("");
+      const modelTag =
+        result.model === "kitchen"
+          ? `按图定分（设备感知 · 风险×${result.hazardMult.toFixed(2)}）`
+          : "通用线性模型（未读取到场景布局）";
+      const chips = kitchenChips(kitchen);
+      const chipsHtml = chips.length
+        ? `<div class="cfg-kitchen-chips">${chips.map((c) => `<span class="cfg-chip">${esc(c)}</span>`).join("")}</div>`
+        : "";
+      const warns = kitchenWarnings(kitchen, selected);
+      const warnsHtml = warns.length
+        ? `<div class="cfg-kitchen-warns">${warns.map((w) => `<p class="modal-hint err">⚠ ${esc(w)}</p>`).join("")}</div>`
+        : "";
+      const paramsHtml = `
+        <details class="cfg-params">
+          <summary>模型参数（只读）</summary>
+          <table class="cfg-ai-table">
+            <tbody>${modelParamsSummary()
+              .map((p) => `<tr><td>${esc(p.key)}</td><td>${esc(p.value)}</td></tr>`)
+              .join("")}</tbody>
+          </table>
+        </details>`;
       detailEl.innerHTML = `
-        <p class="modal-hint ok">已按 ${result.details.length} 道菜谱推算：平均单菜约 ${result.avgTimeSec.toFixed(0)} 秒 · 平均菜价 ${result.avgPrice.toFixed(0)} 分 · 已同步修正节奏（订单超时 1P~4P：${lifeTimes.join(" / ")} 秒，关卡时长 ${topRoundTime} 秒）</p>
+        <p class="modal-hint ok">已按 ${result.details.length} 道菜谱推算（${esc(modelTag)}）：平均单菜约 ${result.avgTimeSec.toFixed(
+        0
+      )} 秒 · 平均菜价 ${result.avgPrice.toFixed(0)} 分 · 已同步修正节奏（订单超时 1P~4P：${lifeTimes.join(
+        " / "
+      )} 秒，关卡时长 ${topRoundTime} 秒）</p>
+        ${chipsHtml}
+        ${warnsHtml}
         <table class="cfg-ai-table">
-          <thead><tr><th>菜谱</th><th>来源</th><th>食材数</th><th>需烹饪</th><th>菜价</th><th>估时</th></tr></thead>
+          <thead><tr><th>菜谱</th><th>来源</th><th>食材数</th><th>需烹饪</th><th>取材s</th><th>切配s</th><th>烹饪s</th><th>装上s</th><th>菜价</th><th>估时</th></tr></thead>
           <tbody>${rows}</tbody>
-        </table>`;
+        </table>
+        ${paramsHtml}`;
     } catch (e) {
       detailEl.innerHTML = `<p class="modal-hint err">${esc((e as Error).message)}</p>`;
     } finally {

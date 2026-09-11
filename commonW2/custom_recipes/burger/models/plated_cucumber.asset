@@ -13,4 +13,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefabName: plated_cucumber
   bundleName: bundle47
-  assetPath: Assets/prefabs/plated/Plated_Cucumber.prefab
+  assetPath: assets/prefabs/plated/plated_cucumber.prefab

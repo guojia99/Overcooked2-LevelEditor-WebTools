@@ -224,6 +224,13 @@
   border-color: rgba(200, 195, 185, 0.35);
 }
 
+/* 警示徽标（如「⚠ 无中间产物」）：琥珀色 */
+.rl-badge-warn {
+  color: #fbbf24;
+  border-color: rgba(180, 83, 9, 0.65);
+  background: rgba(180, 83, 9, 0.35);
+}
+
 /* 禁用态（web 内置未放开）：卡片置灰 + ⛔徽标 */
 .rl-badge-disabled {
   color: #e08a8a;
@@ -414,6 +421,80 @@
 .sum-recipes .rl-chip img {
   width: 34px;
   height: 34px;
+}
+
+/* ===================== 菜谱管理弹窗（关卡编辑器 recipesDialogs） =====================
+ * 「选择菜谱 / 已选菜谱」Tab 复用清单卡片（rlCardHtml），外层 label.rw-recipe-pick
+ * 携带隐藏 checkbox 驱动勾选；紧凑尺寸同汇总页缩放先例（面板 wide=1100px 一行约 4 张）。 */
+
+.rw-list .rl-grid {
+  gap: 10px;
+}
+
+.rw-list .rw-recipe-pick {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rw-list .rw-recipe-pick input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+/* 选中态：绿色描边（同编辑器选中绿 #34d36f） + 左上角 ✓ 角标 */
+.rw-list .rw-recipe-pick:has(input:checked) .rl-card,
+.rw-list .rw-recipe-pick.selected .rl-card {
+  border-color: #34d36f;
+  box-shadow: 0 0 0 2px rgba(52, 211, 111, 0.5);
+}
+
+.rw-list .rw-recipe-pick:has(input:checked)::after,
+.rw-list .rw-recipe-pick.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #06281a;
+  background: #34d36f;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* 紧凑尺寸（镜像 .sum-recipes 覆盖） */
+.rw-list .rl-card {
+  min-width: 220px;
+}
+
+.rw-list .rl-card .rl-product {
+  min-height: 128px;
+  padding: 10px 10px 0;
+}
+
+.rw-list .rl-card .rl-product > img {
+  width: 68px;
+  height: 68px;
+}
+
+.rw-list .rl-group {
+  padding: 0 8px;
+}
+
+.rw-list .rl-chip img {
+  width: 32px;
+  height: 32px;
 }
 
 /* 菜谱 / 食材清单 视图切换 */

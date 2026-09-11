@@ -21,7 +21,7 @@ MonoBehaviour:
   iconSO: {fileID: 0}
   icon: {fileID: 21300000, guid: 17b5035ff55f0a344b75d98d5dd52f1c, type: 3}
   compositionSOs:
-  - {fileID: 11400000, guid: 965ff691e25e50b0c5151ea9a97899d4, type: 2}
+  - {fileID: 11400000, guid: 7e3070b091a402f42be328cc261adff3, type: 2}
   optionalSOs:
   - {fileID: 11400000, guid: 45f00e942534da143a3e94855455b50b, type: 2}
   - {fileID: 11400000, guid: 171d0a1a6e4db824291c137bebe0be87, type: 2}
@@ -38,7 +38,7 @@ MonoBehaviour:
   mixingIconSO: {fileID: 0}
   mixingIcon: {fileID: 0}
   mixingProgress: 0
-  bunSO: {fileID: 11400000, guid: 965ff691e25e50b0c5151ea9a97899d4, type: 2}
+  bunSO: {fileID: 11400000, guid: 7e3070b091a402f42be328cc261adff3, type: 2}
   ingredientContainerCapacity: 7
   ingredientModelSOs: []
   ingredientModels:

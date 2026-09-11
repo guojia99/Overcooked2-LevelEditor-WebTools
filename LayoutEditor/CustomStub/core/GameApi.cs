@@ -516,6 +516,16 @@ namespace CustomStub
                     null, new[] { typeof(GameObject) }, null)
                 : null;
         });
+
+        // ---- Harmony 目标：随机箱空气取出拦截（ServerPickupItemSpawner.HandlePickup，
+        // 参数 (ICarrier, Vector2)——ICarrier 为宿主接口，编译期不可引用，仅按名取方法） ----
+        public static readonly MethodInfo ServerPickupHandlePickupMethod = Safe(delegate
+        {
+            var t = Find("ServerPickupItemSpawner");
+            return t != null
+                ? t.GetMethod("HandlePickup", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
         // ============ 运行时辅助（不缓存，静态只读之外的部分） ============
 
         /// <summary>网络实体扫描+链接+StartSynchronising 是否全部完成。
