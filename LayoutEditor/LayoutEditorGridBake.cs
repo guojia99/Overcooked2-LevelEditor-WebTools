@@ -1,15 +1,20 @@
-using LevelEditorStub;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// 主网格半宽烘焙：把 LevelInfoSO.gridHalfSizeX/Z 写进场景
+/// 主网格半宽烘焙：把指定半宽写进场景
 /// CampaignGameEnvironment/GridManager 上的 QuadGridManager.m_gridHalfSize，
-/// 经 SerializedObject 形成 prefab instance 属性覆盖，随 SaveScene / 导出 bundle
-/// 持久化（写回与导出两处调用，与 LayoutEditorHudOrderLimits 同范式）。
+/// 经 SerializedObject 形成 prefab instance 属性覆盖，随 SaveScene / 导出 bundle 持久化。
+///
+/// 存储模型（2026-09-12）：**场景 GridManager 是唯一权威存储**——配置不再放
+/// LevelInfoSO（LevelEditorStub 为游戏侧共享程序集，禁改）。web 关卡配置弹窗
+/// GET 直接读场景磁盘值（ReadSceneMainGridHalfSize，无需打开场景）；
+/// SET（LayoutEditorLevelAdminApi.UpdateLevelInfo）在场景打开时即时烘焙。
+/// 写回/导出不再触发本烘焙（场景文件自身携带覆盖，无需第三方数据源）。
 ///
 /// 语义：网格以 GridManager 位置为中心向两侧各扩展 gridHalfSize 格（总格数 2N+1），
 /// 需覆盖全部工作台；X/Z 每轴独立，0 = 不调整该轴（保持场景现值），Y 不动（实测恒 1）。
@@ -18,20 +23,18 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public static class LayoutEditorGridBake
 {
-    /// <summary>对当前激活场景烘焙主网格半宽覆盖；返回警告文本（null = 正常 / 无需烘焙）。</summary>
-    public static string BakeActiveScene()
+    /// <summary>把主网格半宽覆盖写进指定场景（0 = 不动该轴）并落盘。
+    /// 返回警告文本（null = 已烘焙 / 无需烘焙）。</summary>
+    public static string BakeSceneHalfSize(Scene scene, int halfX, int halfZ)
     {
-        var stub = Object.FindObjectOfType<PseudoPrefabManagerStub>();
-        if (stub == null || stub.levelInfo == null)
-            return "[GridBake] 场景缺少 PseudoPrefabManagerStub/levelInfo，跳过网格半宽烘焙";
-
-        var info = stub.levelInfo;
-        var halfX = Mathf.Clamp(info.gridHalfSizeX, 0, 50);
-        var halfZ = Mathf.Clamp(info.gridHalfSizeZ, 0, 50);
+        if (!scene.IsValid() || !scene.isLoaded)
+            return "[GridBake] 场景未打开，无法烘焙网格半宽";
+        halfX = Mathf.Clamp(halfX, 0, 50);
+        halfZ = Mathf.Clamp(halfZ, 0, 50);
         if (halfX <= 0 && halfZ <= 0)
             return null; // 未设置：不动场景
 
-        var grid = FindMainGridManager();
+        var grid = FindMainGridManager(scene);
         if (grid == null)
             return "[GridBake] 未找到 CampaignGameEnvironment/GridManager 上的 QuadGridManager，跳过网格半宽烘焙";
 
@@ -68,14 +71,15 @@ public static class LayoutEditorGridBake
         }
 
         so.ApplyModifiedPropertiesWithoutUndo();
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
         return null;
     }
 
     /// <summary>定位主网格组件：根对象 CampaignGameEnvironment → 子 GridManager →
     /// QuadGridManager（游戏程序集类型，按类型名匹配）。</summary>
-    private static MonoBehaviour FindMainGridManager()
+    private static MonoBehaviour FindMainGridManager(Scene scene)
     {
-        var scene = SceneManager.GetActiveScene();
         if (!scene.IsValid())
             return null;
 

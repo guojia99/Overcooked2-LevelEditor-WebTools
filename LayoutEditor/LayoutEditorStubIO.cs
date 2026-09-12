@@ -622,8 +622,11 @@ public static class LayoutEditorStubIO
                     // 时间参数（0 = 原版默认；装配时经 CustomStub.UtensilTiming 应用）
                     SetStubField(pushable, "m_cookTime", item.cookingUtensil.cookTime > 0f ? item.cookingUtensil.cookTime : 0f);
                     SetStubField(pushable, "m_burnTime", item.cookingUtensil.burnTime > 0f ? item.cookingUtensil.burnTime : 0f);
-                    // 容量（0 = 原版默认；装配时写 IngredientContainer.m_capacity）
-                    SetStubField(pushable, "m_capacity", item.cookingUtensil.capacity > 0 ? item.cookingUtensil.capacity : 0);
+                    // 容量：未配置时写原版默认容量（大锅=4，NativeUtensilCapacityForId），
+                    // 烘焙数据永不为 0——0 会被宿主 Setup 写进 IngredientContainer 导致
+                    // 「吞菜」（LevelEditor 宿主文件禁改，守护只能落在数据侧；
+                    // CustomStub.PushablePot 装配侧 >0 才写，与此双保险）。
+                    SetStubField(pushable, "m_capacity", item.cookingUtensil.capacity > 0 ? item.cookingUtensil.capacity : NativeUtensilCapacityForId(pushablePid));
                 }
                 else if (hasIngredientList)
                 {

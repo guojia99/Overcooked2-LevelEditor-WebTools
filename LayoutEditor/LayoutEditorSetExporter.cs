@@ -219,9 +219,8 @@ public static class LayoutEditorSetExporter
             var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
             if (!string.IsNullOrEmpty(hudWarn))
                 Debug.LogWarning("[SetExporter] " + hudWarn);
-            var gridWarn = LayoutEditorGridBake.BakeActiveScene();
-            if (!string.IsNullOrEmpty(gridWarn))
-                Debug.LogWarning("[SetExporter] " + gridWarn);
+            // 网格半宽无需导出期烘焙：2026-09-12 起场景 GridManager 为唯一权威存储
+            // （LevelInfoSO 禁改），场景文件自身携带 prefab 覆盖。
             LayoutEditorPseudoReload.EnsurePrepareForBuilding();
             if (!_usesCustomStub && ActiveSceneUsesCustomStub())
             {

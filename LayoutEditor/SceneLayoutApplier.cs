@@ -320,17 +320,8 @@ public static class SceneLayoutApplier
             }
         }
 
-        // 主网格半宽：按 LevelInfoSO.gridHalfSizeX/Z 烘焙 GridManager 覆盖
-        // （0 = 不调整；X/Z 每轴独立，工作台需全部落入网格范围才可交互）。
-        {
-            var gridWarn = LayoutEditorGridBake.BakeActiveScene();
-            if (!string.IsNullOrEmpty(gridWarn))
-            {
-                LayoutEditorLog.LogWarning(gridWarn);
-                bakeError = string.IsNullOrEmpty(bakeError) ? gridWarn : bakeError + "; " + gridWarn;
-            }
-        }
-
+        // 主网格半宽：2026-09-12 起场景 GridManager 为唯一权威存储（LevelInfoSO 禁改），
+        // 写回无需再烘焙——配置经关卡配置弹窗（UpdateLevelInfo）在场景打开时即时写入场景。
 
         // 烤菜烤盘 / 火锅大锅：食材由前端锅具管理或菜谱自动填充写入，写回时不再追加。
         // After mutating placeholder transforms, persist with the canonical Tools workflow:

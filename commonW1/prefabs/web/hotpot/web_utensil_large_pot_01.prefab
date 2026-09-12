@@ -66,7 +66,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pseudoPrefabSO: {fileID: 11400000, guid: 8c4d090a2f936008374d00c5df134879, type: 2}
-  capacity: 0
+  capacity: 4
   allowedIngredientSOs: []
   allowedCookingStationTypes: 
   modelSOs: []

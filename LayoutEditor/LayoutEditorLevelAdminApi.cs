@@ -483,19 +483,11 @@ public static class LayoutEditorLevelAdminApi
         if (!string.IsNullOrEmpty(sceneName))
             sceneAssetPath = LevelSetsRoot + "/" + setName + "/scenes/" + sceneName + ".unity";
 
-        // 网格半宽：SO 未设置（0 = 不调整）的轴回填场景实际生效值（prefab 覆盖 / env prefab
-        // 默认值），让关卡配置弹窗直接显示真值；用户保存后该值被显式钉入 SO。
-        var gridHalfX = so.gridHalfSizeX;
-        var gridHalfZ = so.gridHalfSizeZ;
-        if (gridHalfX <= 0 || gridHalfZ <= 0)
-        {
-            int sceneHalfX, sceneHalfZ;
-            LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out sceneHalfX, out sceneHalfZ);
-            if (gridHalfX <= 0)
-                gridHalfX = sceneHalfX;
-            if (gridHalfZ <= 0)
-                gridHalfZ = sceneHalfZ;
-        }
+        // 网格半宽：场景 GridManager 为唯一权威存储（LevelEditorStub 共享程序集禁改，
+        // 2026-09-12 起 LevelInfoSO 不再持有该配置）——直接读场景磁盘生效值
+        // （prefab 覆盖 / env prefab 默认值），关卡配置弹窗显示即真值。
+        int gridHalfX, gridHalfZ;
+        LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out gridHalfX, out gridHalfZ);
 
         var dto = new LevelDetailDto
         {
@@ -898,6 +890,13 @@ public static class LayoutEditorLevelAdminApi
         if (so == null)
             return "未找到 LevelInfoSO。";
 
+        // 网格半宽：场景 GridManager 为唯一权威存储（LevelInfoSO 禁改，2026-09-12）。
+        // 值有变化时要求该关卡场景当前在编辑器中打开并即时烘焙进场景 prefab 覆盖；
+        // 场景未打开则整体拒绝（在任何字段写入之前返回，保证请求原子性）。
+        var gridErr = ApplyGridHalfSizeChange(dto, so);
+        if (gridErr != null)
+            return gridErr;
+
         Undo.RecordObject(so, "Edit Level Info");
         so.levelName = dto.levelName ?? so.levelName;
         so.levelNameZH = dto.levelNameZH ?? so.levelNameZH;
@@ -915,8 +914,6 @@ public static class LayoutEditorLevelAdminApi
         so.maxOrderCount = ClampOrderCount(dto.maxOrderCount, so.maxOrderCount);
         if (so.minOrderCount > so.maxOrderCount)
             so.maxOrderCount = so.minOrderCount;
-        so.gridHalfSizeX = Mathf.Clamp(dto.gridHalfSizeX, 0, 50);
-        so.gridHalfSizeZ = Mathf.Clamp(dto.gridHalfSizeZ, 0, 50);
         so.dependencies = dto.dependencies != null ? (string[])dto.dependencies.Clone() : so.dependencies;
         EditorUtility.SetDirty(so);
 
@@ -927,6 +924,37 @@ public static class LayoutEditorLevelAdminApi
         AssetDatabase.SaveAssets();
 
         ReloadPseudo();
+        return null;
+    }
+
+    /// <summary>网格半宽变更应用（场景 GridManager 为唯一权威存储，LevelInfoSO 禁改）。
+    /// dto 值与场景磁盘生效值一致 = 无变更，放行；有变更则要求该关卡场景当前已打开，
+    /// 即时烘焙为场景 prefab 覆盖并落盘；未打开返回错误文案（调用方在任何字段写入前
+    /// 调用本方法，保证请求原子性）。</summary>
+    private static string ApplyGridHalfSizeChange(LevelInfoUpdateDto dto, LevelInfoSO so)
+    {
+        var wantX = Mathf.Clamp(dto.gridHalfSizeX, 0, 50);
+        var wantZ = Mathf.Clamp(dto.gridHalfSizeZ, 0, 50);
+        var setName = SetNameFromPath(dto.assetPath);
+        var sceneAssetPath = "";
+        if (!string.IsNullOrEmpty(so.sceneName))
+            sceneAssetPath = LevelSetsRoot + "/" + setName + "/scenes/" + so.sceneName + ".unity";
+
+        int curX, curZ;
+        LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out curX, out curZ);
+        if (wantX == curX && wantZ == curZ)
+            return null; // 无变更
+
+        var scene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(sceneAssetPath);
+        if (!scene.IsValid() || !scene.isLoaded)
+            return "网格半宽有修改，但网格值直接存储在场景 GridManager 上（不再放 LevelInfoSO），"
+                + "而该关卡场景当前未在编辑器中打开——请先打开关卡场景再保存；其他设置未改动。";
+
+        var warn = LayoutEditorGridBake.BakeSceneHalfSize(scene, wantX, wantZ);
+        if (!string.IsNullOrEmpty(warn))
+            return warn;
+        LayoutEditorLog.Log("[LayoutEditor] 网格半宽已烘焙进场景: " + sceneAssetPath
+            + "（" + curX + "," + curZ + " → " + wantX + "," + wantZ + "）");
         return null;
     }
 
