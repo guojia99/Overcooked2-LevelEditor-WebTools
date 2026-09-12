@@ -706,6 +706,9 @@ public class FloorMaterialDto
     public string nameZh;
     /** Parsed dimension tag if name matches *_<W>x<H> (e.g. "12x8"), else empty. */
     public string sizeTag;
+    /** 贴图缩略图存在（layout-editor/web/public/icons/floor-materials/<id>.png，
+     *  由 extract-floormat-icons.py 生成）——材质选择器展示材质球图。 */
+    public bool icon;
 }
 
 [Serializable]
@@ -1282,6 +1285,8 @@ public class LevelDetailDto
     public bool disableDynamicParenting;
     public int minOrderCount;
     public int maxOrderCount;
+    public int gridHalfSizeX;
+    public int gridHalfSizeZ;
     public string[] dependencies;
     public PerPlayerConfigDto[] configs;
     public AudioConfigDto audio;
@@ -1307,6 +1312,8 @@ public class LevelInfoUpdateDto
     public bool disableDynamicParenting;
     public int minOrderCount;
     public int maxOrderCount;
+    public int gridHalfSizeX;
+    public int gridHalfSizeZ;
     public string[] dependencies;
 }
 

@@ -1113,6 +1113,21 @@ body {
   display: none;
 }
 
+/* 装饰层分组方式切换（主题 / 类型 / 用途），与尺寸筛选同排样式 */
+.palette-header .palette-group-mode {
+  width: 100%;
+  margin-top: 6px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid #4a5060;
+  background: #1a1d23;
+  color: #e8eaed;
+}
+
+.palette-header .palette-group-mode.hidden {
+  display: none;
+}
+
 /* ── 高度层过滤（画布左下角悬浮面板 + 唤醒按钮） ── */
 .fhf-toggle {
   position: absolute;
@@ -1699,7 +1714,7 @@ canvas {
 .item-detail {
   position: fixed;
   z-index: 1000;
-  max-width: 320px;
+  max-width: 640px;
   padding: 10px 12px;
   background: #2d323c;
   border: 1px solid #4a5060;
@@ -2864,6 +2879,31 @@ canvas.pan-active {
   padding: 4px 6px;
   cursor: pointer;
   text-align: left;
+}
+
+/* 材质球图：左缩略图右文字（extract-floormat-icons.py 产物）；无图保持原纵排 */
+.mat-pick.has-thumb {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.mat-pick .mat-thumb {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 4px;
+  border: 1px solid #3a3f4b;
+  object-fit: cover;
+  display: block;
+}
+
+.mat-pick.has-thumb .mat-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
 }
 
 .mat-pick[hidden],
@@ -7525,6 +7565,28 @@ body.manage-bg {
   font-size: 11px;
   color: #8a909a;
   white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cl-pos-val label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.cl-pos-val input {
+  width: 58px;
+  font-size: 11px;
+  padding: 1px 3px;
+}
+
+/* 方向键长按连发时禁止文本选中/系统触摸行为 */
+.cl-pos-btn {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }
 
 .cl-pos-right {
@@ -7854,6 +7916,14 @@ body.manage-bg {
 }
 .rw-opt-row:hover {
   background: #22262e;
+}
+/* 无效 optional 条目（重复注册/不应注册的自定义菜谱，历史自动填充残留） */
+.rw-opt-row.rw-opt-invalid {
+  background: rgba(230, 180, 60, 0.08);
+  outline: 1px solid rgba(230, 180, 60, 0.45);
+}
+.rw-opt-row.rw-opt-invalid:hover {
+  background: rgba(230, 180, 60, 0.14);
 }
 .rw-opt-name {
   min-width: 0;

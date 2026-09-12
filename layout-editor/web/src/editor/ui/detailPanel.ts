@@ -147,7 +147,7 @@ export function extraStubDetailHtml(item: EditorItem): string {
         timeParts.push(`混合 ${mixSet ? `${cu.mixTime}s` : `原版${def.mix}s`} · 过混 ${overSet ? `${cu.overMixTime}s` : `${overEff}s${mixSet ? "" : "（2×）"}`}`);
       }
       const timeTxt = timeParts.length ? ` · ${timeParts.join(" · ")}` : "";
-      return `<dt>锅具</dt><dd>最多 ${cu.capacity ?? defaultUtensilCapacity(item)} 个食材${timeTxt} · 额外食材：${allowed > 0 ? `${allowed} 种` : "无（处理所有主线食材）"}（右键直接修改）</dd>`;
+      return `<dt>锅具</dt><dd>最多 ${(cu.capacity ?? 0) > 0 ? cu.capacity : defaultUtensilCapacity(item)} 个食材${timeTxt} · 额外食材：${allowed > 0 ? `${allowed} 种` : "无（处理所有主线食材）"}（右键直接修改）</dd>`;
     }
     case "Travelator":
       return `<dt>移动地板</dt><dd>速度 ${(item.travelator?.speed ?? 2.5).toFixed(2)}（右键直接修改）</dd>`;
@@ -240,7 +240,7 @@ export function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY
     </div>`
     : `<dt>缩放</dt><dd id="si-scale-val">${uScale.toFixed(2)}×</dd>
     <div class="floor-edit-row">
-      <label>缩放 <input type="number" min="0.5" step="0.1" id="si-scale" value="${uScale.toFixed(2)}" /></label>
+      <label>缩放 <input type="number" min="0.1" step="0.1" id="si-scale" value="${uScale.toFixed(2)}" /></label>
       <span class="muted" style="align-self:center;font-size:11px">即时生效</span>
     </div>`;
   dom.detailEl.innerHTML = `
@@ -292,7 +292,7 @@ export function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY
   let scalePushed = false;
   const applyScale = () => {
     const v = parseFloat(scaleInput.value);
-    if (!isFinite(v) || v < 0.5) return;
+    if (!isFinite(v) || v < 0.1) return;
     if (!scalePushed) {
       pushHistory();
       scalePushed = true;
@@ -365,6 +365,20 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       <dt>Unity 坐标</dt><dd>x ${item._wx.toFixed(d)}, z ${item._wz.toFixed(d)}</dd>`
       : `<dt>世界坐标</dt><dd>x ${item._wx.toFixed(d)}, z ${item._wz.toFixed(d)}</dd>`;
 
+  // 缩放编辑：surface 装饰在 showSurfaceItemDetail / 右键菜单编辑（这里只读提示）；
+  // 空气墙（格数语义）与可调尺寸背景板（格数编辑）除外，其余物品（工作台等核心件）
+  // 一律可改 scale（默认 1/1/1）。
+  const scaleEditable = !isAirWallItem(item) && !isResizableBackgroundItem(item) && !isSurfaceItem(cat);
+  const scaleRow = isSurfaceItem(cat)
+    ? `<dt>缩放</dt><dd>${itemUniformScale(item).toFixed(2)}×（右键菜单可调整大小）</dd>`
+    : scaleEditable
+      ? `<dt>缩放</dt><dd id="si-scale-val">${itemUniformScale(item).toFixed(2)}×</dd>
+    <div class="floor-edit-row">
+      <label>缩放 <input type="number" min="0.1" step="0.1" id="si-scale" value="${itemUniformScale(item).toFixed(2)}" /></label>
+      <span class="muted" style="align-self:center;font-size:11px">即时生效 · 写回后生效</span>
+    </div>`
+      : "";
+
   dom.detailEl.innerHTML = `
     <h3>${itemLabel(item)}</h3>
     <dl>
@@ -378,7 +392,7 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       ${coordRows}
       <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(d)}, y ${item.localPosition.y.toFixed(d)}, z ${item.localPosition.z.toFixed(d)}</dd>
       <dt>旋转 Y</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
-      ${isSurfaceItem(cat) ? `<dt>缩放</dt><dd>${itemUniformScale(item).toFixed(2)}×（右键菜单可调整大小）</dd>` : ""}
+      ${scaleRow}
       <dt>分类</dt><dd>${isSurfaceItem(cat) ? surfaceKindLabelZh(cat?.surfaceKind) + "（地板层）" : cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : cat?.category ?? "—"}</dd>
       ${stackDetailHtml(item, cat)}
       ${dispenserDetailHtml(item)}
@@ -427,5 +441,28 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
     };
     hInp?.addEventListener("input", applyH);
     hInp?.addEventListener("change", applyH);
+  }
+
+  if (scaleEditable) {
+    const scaleInput = document.getElementById("si-scale") as HTMLInputElement | null;
+    let scalePushed = false;
+    const applyScale = () => {
+      const v = parseFloat(scaleInput?.value ?? "");
+      if (!isFinite(v) || v < 0.1) return;
+      if (!scalePushed) {
+        pushHistory();
+        scalePushed = true;
+      }
+      setItemUniformScale(item, v);
+      const el = document.getElementById("si-scale-val");
+      if (el) el.textContent = `${v.toFixed(2)}×`;
+      S.dirty = true;
+      draw();
+    };
+    scaleInput?.addEventListener("input", applyScale);
+    scaleInput?.addEventListener("change", applyScale);
+    scaleInput?.addEventListener("blur", () => {
+      scalePushed = false;
+    });
   }
 }

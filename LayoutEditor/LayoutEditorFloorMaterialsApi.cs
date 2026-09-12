@@ -96,7 +96,9 @@ public static class LayoutEditorFloorMaterialsApi
             folders.Add(setRoot);
 
         // Fallback / shared swatch sources.
-        foreach (var shared in new[] { "Assets/LevelSets", "Assets/common01/materials", "Assets/common02/materials", "Assets/commonW1/materials" })
+        // commonW2/materials：oc2_dlc_story 补充的 DLC 地板材质（与 build-catalog.mjs
+        // scanFloorMaterials 的共享根列表保持同步）。
+        foreach (var shared in new[] { "Assets/LevelSets", "Assets/common01/materials", "Assets/common02/materials", "Assets/commonW1/materials", "Assets/commonW2/materials" })
         {
             if (AssetDatabase.IsValidFolder(shared) && !folders.Contains(shared))
                 folders.Add(shared);
@@ -129,6 +131,7 @@ public static class LayoutEditorFloorMaterialsApi
                     assetPath = path,
                     nameZh = TidyName(id),
                     sizeTag = SizeTagOf(id),
+                    icon = File.Exists(FloorMaterialIconPath(id)),
                 });
             }
         }
@@ -166,6 +169,16 @@ public static class LayoutEditorFloorMaterialsApi
         if (!m.Success)
             return "";
         return m.Groups[1].Value + "x" + m.Groups[2].Value;
+    }
+
+    /** 材质贴图缩略图路径（extract-floormat-icons.py 生成到 web/public，
+     *  查源目录而非 dist，不受前端构建时机影响）。
+     *  注意：Unity 2017 的 .NET 框架级 Path.Combine 无 3 参重载，须链式两参。 */
+    private static string FloorMaterialIconPath(string id)
+    {
+        var dir = Path.Combine(Application.dataPath, "../layout-editor/web/public");
+        dir = Path.Combine(dir, "icons/floor-materials");
+        return Path.Combine(dir, id + ".png");
     }
 
     private static string TidyName(string id)

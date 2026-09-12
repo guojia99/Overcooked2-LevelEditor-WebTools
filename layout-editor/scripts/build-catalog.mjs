@@ -272,9 +272,78 @@ const ART_THEME_ZH = {
   dlc09_camping: "露营（dlc09 换皮）",
   dlc09_circus: "马戏团（dlc09 换皮）",
   dlc09_battlements: "堡垒（dlc09 换皮）",
+  dlc04_chinatown: "新年 · 唐人街",
+  dlc09_festivemashup: "节日混搭 DLC",
+  dlc10_lunar: "新春 · 灯会",
+  dlc13_moonfestival: "中秋 · 灯会",
   floors: "主题地板",
   legacy: "经典 OC1",
 };
+
+/** 同一 DLC 因目录名不同分裂的主题（不同素材库各自命名）→ 展示层别名合并。
+ *  只归一 categorize 返回的 theme（组键合并）；条目 guid / assetPath 不动。 */
+const ART_THEME_ALIAS = {
+  dlc13_moonfestival: "dlc13",
+  dlc10_lunar: "dlc10",
+};
+
+// ---------------------------------------------------------------------------
+// 装饰物品双维度分类（调色板「按类型 / 按用途」分组视图的数据来源）。
+// 规则按数组顺序首次命中；id 匹配不区分大小写。调整词条须与
+// layout-editor/web/src/editor/palette.ts 的分组渲染保持同一 key 语义。
+// ---------------------------------------------------------------------------
+
+/** 物品类型：按模型性质（建筑构件 / 地面铺装 / 植被 / …）。 */
+const TYPE_KIND_TAXONOMY = [
+  { key: "fx", zh: "特效粒子", re: /(^|_)(pfx|fx)(_|$)|particle|splash|fog|steam|smoke|dust|sparkle|wake|ripple|foam|bubble|puff/ },
+  { key: "creature", zh: "角色生物", re: /npc|bird|seagull|rats?\b|fish|creature|robin|crowd|parrot|octopus|squid|crab\b|whale|shark|turtle|dragon|frog|snail|dolphin/ },
+  { key: "water", zh: "水体", re: /water|river|pool|sea_|sea\b|lake|pond|waterfall|fountain|shoreline|wet_sand/ },
+  { key: "lighting", zh: "灯具光源", re: /lantern|candle|sconce|torch|brazier|campfire|firepit|flame|lamppost|lamp_post|streetlight|street_light|spotlight|(^|_)lights?($|_)|traffic_light/ },
+  { key: "ground", zh: "地面铺装", re: /tile|floor|path|road|pavement|cobble|carpet|(^|_)sand|_sand_|sand$|mud|snow(?!man)|grass_card|moss|paving|walkway|dirt|ground|decking|quad_tile|floorpiece|decal|mat\b/ },
+  { key: "vegetation", zh: "植被", re: /tree|bush|grass|plant|flower|reed|bamboo|leaf|leaves|branch|vine|hedge|shrub|fern|wheat|palm|pine\b|trunk|mushroom|lily|lotus/ },
+  { key: "building", zh: "建筑构件", re: /wall|brick|pillar|column|arch\b|arch_|door|window|fence|gate\b|roof|beam|plank|pipe|tower|lift|portcullis|canopy|awning|curtain|tent\b|hut\b|stall|market|bridge|stair|rail|balcony|chimney|battlement|keep\b|keep_|flag|banner|balloon|windmill|ladder|scaffold/ },
+  { key: "rock", zh: "山石", re: /rock|stone|cliff|boulder|pebble|iceberg|icicle|floe/ },
+  { key: "furniture", zh: "家具陈设", re: /table|chair|bench|sofa|shelf|cabinet|bed\b|sign\b|sign_|board\b|umbrella|crate|barrel|box\b|boxes|cart|trolley|hydrant|cone\b|bin\b|bucket|spade|paddle|oar\b|statue|vase|pot\b|jar|barrow|luggage|suitcase|barrier|ropeswing|beachball|airbed|clamshell|doodad|exterior|debris|sunbed|deckchair|parasol|hammock/ },
+  { key: "other", zh: "其他", re: /$^/ },
+];
+/** 食材 / 成品菜模型（decor/food、decor/recipes 两类目录归并为一个类型）。 */
+const TYPE_KIND_FOOD = { key: "food_model", zh: "食材成品菜模型" };
+
+/** 物品用途：按关卡搭建动作（铺地 / 围合砌墙 / 环境点缀 / …）。 */
+const USAGE_TAXONOMY = [
+  { key: "creature", zh: "角色生物", typeKind: "creature" },
+  { key: "waterscape", zh: "水域造景", typeKind: "water", re: /shoreline|wet_sand/ },
+  { key: "ambience", zh: "氛围特效", typeKind: ["fx", "lighting"] },
+  { key: "enclosure", zh: "围合砌墙", re: /wall|fence|gate\b|door|window|portcullis|battlement|pillar|column|arch\b|arch_/ },
+  { key: "landmark", zh: "大型地标", re: /temple|pagoda|windmill|building|castle|keep\b|keep_|throne|statue|ferris|big_wheel|hut\b|tent\b|stall|market/ },
+  { key: "flooring", zh: "铺地", typeKind: "ground" },
+];
+/** 用途兜底：绝大多数装饰都是环境点缀。 */
+const USAGE_DEFAULT = { key: "dressing", zh: "环境点缀" };
+
+function classifyTypeKind(item) {
+  if (item.category === "decor/food" || item.category === "decor/recipes") {
+    return TYPE_KIND_FOOD.key;
+  }
+  const lower = (item.id || "").toLowerCase();
+  for (const t of TYPE_KIND_TAXONOMY) {
+    if (t.re.test(lower)) return t.key;
+  }
+  return "other";
+}
+
+function classifyUsage(item) {
+  const typeKind = item.typeKind || classifyTypeKind(item);
+  const lower = (item.id || "").toLowerCase();
+  for (const u of USAGE_TAXONOMY) {
+    if (u.typeKind) {
+      const kinds = Array.isArray(u.typeKind) ? u.typeKind : [u.typeKind];
+      if (kinds.includes(typeKind)) return u.key;
+    }
+    if (u.re && u.re.test(lower)) return u.key;
+  }
+  return USAGE_DEFAULT.key;
+}
 
 /** Utensil stack rules (使用手册 §3.3, extended with DLC stations). */
 const UTENSIL_STACK = {
@@ -680,6 +749,7 @@ function categorize(assetPath) {
   let rel = assetPath.replace(/^Assets\/common0[12]\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/common03\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/commonW1\/prefabs\/?/, "");
+  rel = rel.replace(/^Assets\/commonW2\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/LevelSets\/[^/]+\/(custom_web|custom_ingredients)\/prefabs\/?/, "");
   rel = rel.replace(/^(?:core|dlc\d+)\//, "");
   const seg = rel.split("/");
@@ -689,7 +759,7 @@ function categorize(assetPath) {
     return { category: "hotpot/web", theme: null };
   }
   if (seg[0] === "backgrounds" && seg.length > 1) {
-    return { category: "art", theme: seg[1] };
+    return { category: "art", theme: ART_THEME_ALIAS[seg[1]] ?? seg[1] };
   }
   if (seg[0] === "counters") {
     const sub = COUNTER_SUBCATEGORY[id] || "counters/service";
@@ -704,11 +774,13 @@ function categorize(assetPath) {
     return over ? { category: over, theme: null } : { category: "mechanisms", theme: null };
   }
   if (seg[0] === "Player" || rel === "Player.prefab") return { category: "Player", theme: null };
-  if (seg[0] === "art" && seg.length > 1) return { category: "art", theme: seg[1] };
+  if (seg[0] === "art" && seg.length > 1) {
+    return { category: "art", theme: ART_THEME_ALIAS[seg[1]] ?? seg[1] };
+  }
   if (seg[0] === "art") return { category: "art", theme: "misc" };
   if (seg[0] === "decor" && seg[1] === "food") return { category: "decor/food", theme: null };
   if (seg[0] === "decor" && seg[1] === "recipes") return { category: "decor/recipes", theme: null };
-  return { category: "other", theme: seg[0] || "misc" };
+  return { category: "other", theme: (ART_THEME_ALIAS[seg[0]] ?? seg[0]) || "misc" };
 }
 
 function layoutMetaFor(id, category) {
@@ -982,6 +1054,8 @@ function buildPaletteGroups(byCategory) {
   }
 
   for (const key of artKeys) {
+    // 去重后为空的主题组不输出（跨库同名条目全部让位给更高优先级来源时）
+    if (!byCategory[key] || byCategory[key].length === 0) continue;
     const theme = key.slice(4);
     const themeZh = ART_THEME_ZH[theme] || theme;
     const labelZh =
@@ -1004,6 +1078,7 @@ function buildPaletteGroups(byCategory) {
       !CORE_PALETTE.some((c) => c.key === k)
   );
   for (const key of otherKeys.sort()) {
+    if (!byCategory[key] || byCategory[key].length === 0) continue;
     groups.push({
       key,
       labelZh: `其他 · ${key}`,
@@ -2032,7 +2107,7 @@ function scanFloorMaterials(dictionary, idToRow) {
         roots.push({ root: matDir, source: setName });
     }
   }
-  for (const shared of ["Assets/common01/materials", "Assets/common02/materials", "Assets/commonW1/materials"]) {
+  for (const shared of ["Assets/common01/materials", "Assets/common02/materials", "Assets/commonW1/materials", "Assets/commonW2/materials"]) {
     const abs = path.join(repoRoot, shared);
     if (fs.existsSync(abs)) roots.push({ root: abs, source: path.basename(path.dirname(shared)) });
   }
@@ -2046,6 +2121,8 @@ function scanFloorMaterials(dictionary, idToRow) {
       const id = path.basename(file, ".mat");
       const size = id.match(SIZE_TAG_RE);
       const names = lookupName(dictionary, idToRow, id);
+      // 贴图缩略图（extract-floormat-icons.py 产物；选择器展示材质球图）
+      const icon = fs.existsSync(path.join(OUT_DIR, "icons", "floor-materials", id + ".png"));
       list.push({
         guid,
         id,
@@ -2054,6 +2131,7 @@ function scanFloorMaterials(dictionary, idToRow) {
         nameEn: names.nameEn,
         sizeTag: size ? `${size[1]}x${size[2]}` : "",
         source,
+        ...(icon ? { icon: true } : {}),
       });
     }
   }
@@ -2116,6 +2194,18 @@ function main() {
   walkPrefabs(common03PrefabRoot, "Assets/common03/prefabs", items, measuredFootprints);
   const commonW1PrefabRoot = path.join(repoRoot, "Assets/commonW1/prefabs");
   walkPrefabs(commonW1PrefabRoot, "Assets/commonW1/prefabs", items, measuredFootprints);
+  // commonW2 编辑器增量装饰（dlc-first：prefabs/<dlcXX|core>/art/<theme>/）。
+  // 只收 art/（装饰层）；counters/utensils/mechanisms 不进调色板——核心层零新增，
+  // 已放置场景按 guid 引用不受影响。
+  const commonW2PrefabRoot = path.join(repoRoot, "Assets/commonW2/prefabs");
+  if (fs.existsSync(commonW2PrefabRoot)) {
+    for (const seg of fs.readdirSync(commonW2PrefabRoot)) {
+      const artDir = path.join(commonW2PrefabRoot, seg, "art");
+      if (fs.existsSync(artDir) && fs.statSync(artDir).isDirectory()) {
+        walkPrefabs(artDir, "Assets/commonW2/prefabs", items, measuredFootprints);
+      }
+    }
+  }
   for (const dir of levelSetCustomDirs("prefabs")) {
     walkPrefabs(path.join(repoRoot, dir), dir, items, measuredFootprints);
   }
@@ -2140,6 +2230,11 @@ function main() {
     const names = lookupName(dictionary, idToRow, item.id);
     item.nameZh = names.nameZh;
     item.nameEn = names.nameEn;
+    // 装饰层双维度分类（调色板「按类型 / 按用途」分组视图）
+    if (item.layoutTier === "decor" || item.layoutTier === "floor") {
+      item.typeKind = classifyTypeKind(item);
+      item.usage = classifyUsage(item);
+    }
   }
 
   items.sort((a, b) => {
@@ -2247,6 +2342,27 @@ function main() {
     itemCount: items.length,
     itemChunks: chunks.map((_, i) => `catalog/items.${i}.json`),
     paletteGroups,
+    paletteGroups,
+    taxonomy: (() => {
+      // 展示顺序（与规则匹配顺序无关）：常见大类在前，兜底在后
+      const typeOrder = [
+        "building", "ground", "furniture", "vegetation", "rock",
+        "lighting", "water", "fx", "creature", TYPE_KIND_FOOD.key, "other",
+      ];
+      const usageOrder = [
+        "flooring", "enclosure", "landmark", USAGE_DEFAULT.key,
+        "ambience", "waterscape", "creature",
+      ];
+      const pick = (arr, order) =>
+        order
+          .map((key) => arr.find((t) => t.key === key))
+          .filter((t) => t != null)
+          .map(({ key, zh }) => ({ key, zh }));
+      return {
+        typeKind: pick([TYPE_KIND_FOOD, ...TYPE_KIND_TAXONOMY], typeOrder),
+        usage: pick([...USAGE_TAXONOMY, USAGE_DEFAULT], usageOrder),
+      };
+    })(),
   });
 
   const guidIndex = buildGuidIndex([

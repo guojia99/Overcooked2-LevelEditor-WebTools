@@ -185,6 +185,11 @@ export function setLayer(layer: LayerKey): void {
   const searchEl = document.getElementById("palette-search") as HTMLInputElement;
   const sizeEl = document.getElementById("decor-size-filter") as HTMLSelectElement;
   if (sizeEl) sizeEl.classList.toggle("hidden", layer !== "decor");
+  const groupModeEl = document.getElementById("palette-group-mode") as HTMLSelectElement;
+  if (groupModeEl) {
+    groupModeEl.classList.toggle("hidden", layer !== "decor");
+    if (layer === "decor") groupModeEl.value = S.paletteGroupMode;
+  }
   syncFloorHeightUI(layer);
   if (layer === "floor") {
     searchEl.placeholder = "搜索木筏 / 地板…";
@@ -284,6 +289,15 @@ export async function init() {
   document.getElementById("decor-size-filter")?.addEventListener("change", (e) => {
     const v = (e.target as HTMLSelectElement).value;
     S.decorSizeFilter = v as typeof S.decorSizeFilter;
+    if (S.currentLayer === "decor") {
+      buildPalette(catalog, (document.getElementById("palette-search") as HTMLInputElement).value);
+    }
+  });
+
+  // 装饰层分组方式：主题（DLC/场景）/ 类型（建筑构件…）/ 用途（铺地…）
+  document.getElementById("palette-group-mode")?.addEventListener("change", (e) => {
+    const v = (e.target as HTMLSelectElement).value;
+    S.paletteGroupMode = v as typeof S.paletteGroupMode;
     if (S.currentLayer === "decor") {
       buildPalette(catalog, (document.getElementById("palette-search") as HTMLInputElement).value);
     }

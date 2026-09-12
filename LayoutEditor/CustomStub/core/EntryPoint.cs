@@ -22,12 +22,14 @@ namespace CustomStub
     /// ticker / Harmony 补丁 / 场景自愈只装一次。
     ///
     /// 职责：
-    ///  1. Harmony 补丁（KillPlane 跳过 + 玩家脱离，HarmonyPatches）；
+    ///  1. Harmony 补丁（KillPlane 跳过 + 玩家脱离，HarmonyPatches；
+    ///     触发区占用联机同步 + fallPad 清理，TriggerZoneOccupancySync）；
     ///  2. HotPot / PushableVoidFall / UtensilTiming（锅具时间）/ TerminalGuard
     ///     （未绑定终端防线）常驻 ticker；
     ///  3. sceneLoaded 场景自愈：按 SpecificPseudoPrefabTag 载体还原组件——
     ///     TimedSwitch| / PushablePot| / SwitchReenable| / WorldMapDressing|
-    ///     / UtensilTiming|（RandomCrate| 由 loader 自愈，此处不重复）。
+    ///     / UtensilTiming| / CameraOffset|（相机偏移注册+按需补丁；
+    ///     RandomCrate| 由 loader 自愈，此处不重复）。
     /// </summary>
     public static class EntryPoint
     {
@@ -41,8 +43,25 @@ namespace CustomStub
         /// ~1s 缓存/探测（无对应内容的关卡零扫描）；锅具时间 Harmony 补丁按需
         /// 安装 + 前缀快速放行；TimedSwitch 逐帧压相降为相位边界+每 10 帧再压。
         ///  v6：空气候（RandomCrate v8）——HandlePickup 前缀按需安装 +
-        /// HasAnyAirPending 快速放行；ResetSceneTickers 挂 RandomCrate.OnSceneChanged。</summary>
-        public const string Version = "v6";
+        /// HasAnyAirPending 快速放行；ResetSceneTickers 挂 RandomCrate.OnSceneChanged。
+        ///  v7：相机出发点偏移（CameraAuthoredOffset）——接替 loader v1.7.0 全局补丁
+        /// （拖全场景帧率，已移除）；CameraOffset|<x>,<z> tag 自愈时按需安装
+        /// GetIdealLocation postfix + s_activeCount 首行快速放行。
+        ///  v8：自愈跨程序集去重（2026-09-12 双装配事故：编辑器多关卡集 stub 程序集
+        /// 共存，安装权归先到程序集，其 HealObject 的 GetComponent&lt;本程序集类型&gt;
+        /// 判不到场景里其它程序集烘焙的同名组件 → 重复挂载 → 可移动火锅双锅叠装、
+        /// 食材被两口锅分流；统一按 FullName 判定）+ PushablePot 装配竞态收口
+        /// （LoadPotPrefab 耗时期间晚到者复查标记）。
+        ///  v9：相机偏移编辑器 Play 也改由 CameraAuthoredOffset 承担（2026-09-12）——
+        /// 删除 Assembly-CSharp-Patch/MultiplayerCamera.cs 整文件补丁镜像（违反
+        /// 「新功能归 CustomStub」条例），EnsurePatches 不再跳过编辑器。
+        ///  v10：触发区占用联机同步 + fallPad 清理（TriggerZoneOccupancySync，
+        /// 2026-09-12）——接替 Assembly-CSharp-Patch ServerTriggerZone/ClientTriggerZone
+        /// 源码覆盖补丁（同条例移除，文件已还原原版）：OnTriggerEnter/Exit 后缀广播
+        /// TriggerZoneMessage（接通原版死通道，联机踏板外观）、基类 ApplyServerEvent
+        /// 后缀写 m_occupied、UpdateSynchronising 前缀先正确清理 fallPad 占用列表
+        /// （规避原版正序 Remove 跳元素/销毁 collider 抛异常）。</summary>
+        public const string Version = "v10";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -171,6 +190,40 @@ namespace CustomStub
             // 无 UtensilTiming 配置的关卡连 detour 开销都不该有。改由
             // EnsureUtensilTimingPatches() 按需触发（场景自愈扫到 UtensilTiming| tag /
             // UtensilTiming.ApplyValues 遇到 burn/over>0）。
+
+            InstallTriggerZoneSyncPatches();
+        }
+
+        /// <summary>触发区占用联机同步 + fallPad 清理（TriggerZoneOccupancySync）：
+        /// 事件驱动（OnTriggerEnter/Exit）+ 基类消息分发后缀（GetType 首行门控）+
+        /// UpdateSynchronising 前缀（字段门控），均非重热路径，随装不按需。
+        /// 与 KillPlane/锅具时间/相机补丁相互独立——任一失败不影响其他组。</summary>
+        private static bool s_triggerZoneSyncPatched;
+
+        private static void InstallTriggerZoneSyncPatches()
+        {
+            if (s_triggerZoneSyncPatched)
+                return;
+            try
+            {
+                var harmony = new Harmony(HarmonyId + ".triggerzone");
+                int ok = 0, skip = 0;
+                ok += PatchPair(harmony, GameApi.ServerTriggerZoneOnTriggerEnterMethod,
+                    null, TriggerZoneOccupancySync.SyncOccupiedPostfixMethod, ref skip);
+                ok += PatchPair(harmony, GameApi.ServerTriggerZoneOnTriggerExitMethod,
+                    null, TriggerZoneOccupancySync.SyncOccupiedPostfixMethod, ref skip);
+                ok += PatchPair(harmony, GameApi.ServerTriggerZoneUpdateSynchronisingMethod,
+                    TriggerZoneOccupancySync.FallPadPrunePrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.ClientApplyServerEventMethod,
+                    null, TriggerZoneOccupancySync.ApplyServerEventPostfixMethod, ref skip);
+                s_triggerZoneSyncPatched = ok > 0;
+                StubLog.Log("[CustomStub] 触发区占用同步补丁: 已装 " + ok + " 个"
+                    + (skip > 0 ? "，反射缺失跳过 " + skip + " 个" : ""));
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 触发区占用同步补丁安装失败（踏板联机外观/fallPad 清理退化为原版行为）: " + ex);
+            }
         }
 
         /// <summary>锅具时间补丁（煮糊/过度混合 ≠ 2× 时的阈值接管）：与 KillPlane
@@ -297,6 +350,10 @@ namespace CustomStub
                 return;
             try
             {
+                // 相机偏移注册表随场景清场：清掉上一场注册（本场景若配置相机，下方
+                // 扫描会重新注册）。不挂 ResetSceneTickers——该链在 HealScene 之后
+                // 跑，会把刚注册的相机清掉。
+                CameraAuthoredOffset.OnSceneChanged();
                 var tags = UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>();
                 var stubTags = 0;
                 var healed = 0;
@@ -347,7 +404,8 @@ namespace CustomStub
                 || prefabTag.StartsWith(PushablePot.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(SwitchReenable.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(WorldMapDressing.TagPrefix, StringComparison.Ordinal)
-                || prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal);
+                || prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal)
+                || prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -362,11 +420,31 @@ namespace CustomStub
             return count;
         }
 
+        /// <summary>对象上是否已有任一程序集的同名 CustomStub 组件。编辑器里多个
+        /// 关卡集 stub 程序集共存（Stub_a/Stub_b 同名类不同类型）：安装权归先到程序集，
+        /// 其 HealObject 用 GetComponent&lt;本程序集类型&gt; 判不到场景里其它程序集
+        /// 烘焙的同名组件 → 重复挂载（2026-09-12 可移动火锅双锅叠装事故）。
+        /// 按 GetType().FullName 判定，跨程序集幂等。</summary>
+        private static bool HasStubComponentNamed(GameObject go, string className)
+        {
+            if (go == null)
+                return false;
+            var full = "CustomStub." + className;
+            var comps = go.GetComponents<Component>();
+            for (int i = 0; i < comps.Length; i++)
+            {
+                var c = comps[i];
+                if (c != null && c.GetType().FullName == full)
+                    return true;
+            }
+            return false;
+        }
+
         private static void HealObject(GameObject go, string prefabTag)
         {
             if (prefabTag.StartsWith(TimedCookingSwitch.TagPrefix, StringComparison.Ordinal))
             {
-                if (go.GetComponent<TimedCookingSwitch>() != null)
+                if (HasStubComponentNamed(go, "TimedCookingSwitch"))
                     return;
                 // 竞态修复（2026-09-07 真机日志实证）：AddComponent 在 active 物体上会
                 // 同帧执行 OnEnable——TimedCookingSwitch.OnEnable 以【默认值】固化
@@ -381,7 +459,7 @@ namespace CustomStub
             }
             else if (prefabTag.StartsWith(PushablePot.TagPrefix, StringComparison.Ordinal))
             {
-                if (go.GetComponent<PushablePot>() != null)
+                if (HasStubComponentNamed(go, "PushablePot"))
                     return;
                 var pot = go.AddComponent<PushablePot>();
                 ParsePushablePot(prefabTag.Substring(PushablePot.TagPrefix.Length), pot);
@@ -389,7 +467,7 @@ namespace CustomStub
             }
             else if (prefabTag.StartsWith(SwitchReenable.TagPrefix, StringComparison.Ordinal))
             {
-                if (go.GetComponent<SwitchReenable>() != null)
+                if (HasStubComponentNamed(go, "SwitchReenable"))
                     return;
                 var re = go.AddComponent<SwitchReenable>();
                 ParseSwitchReenable(prefabTag.Substring(SwitchReenable.TagPrefix.Length), re);
@@ -397,18 +475,33 @@ namespace CustomStub
             }
             else if (prefabTag.StartsWith(WorldMapDressing.TagPrefix, StringComparison.Ordinal))
             {
-                if (go.GetComponent<WorldMapDressing>() != null)
+                if (HasStubComponentNamed(go, "WorldMapDressing"))
                     return;
                 go.AddComponent<WorldMapDressing>();
                 StubLog.Log("[CustomStub] 自愈 WorldMapDressing: " + go.name);
             }
             else if (prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal))
             {
-                if (go.GetComponent<UtensilTimingConfig>() != null)
+                if (HasStubComponentNamed(go, "UtensilTimingConfig"))
                     return;
                 var cfg = go.AddComponent<UtensilTimingConfig>();
                 ParseUtensilTiming(prefabTag.Substring(UtensilTimingConfig.TagPrefix.Length), cfg);
                 StubLog.Log("[CustomStub] 自愈 UtensilTimingConfig: " + go.name);
+            }
+            else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
+            {
+                // CameraOffset|<x>,<z>（invariant 浮点 = 相机根节点摆放位世界 XZ，
+                // tag payload 即权威通道）。不挂组件：注册进静态表 + 按需装补丁即可。
+                var payload = prefabTag.Substring(CameraAuthoredOffset.TagPrefix.Length);
+                var parts = payload.Split(',');
+                if (parts.Length < 2)
+                {
+                    StubLog.LogWarn("[CustomStub] CameraOffset tag 格式非法（应为 CameraOffset|<x>,<z>）: "
+                        + go.name);
+                    return;
+                }
+                CameraAuthoredOffset.RegisterFromTag(go,
+                    ParseFloat(parts[0], 0f), ParseFloat(parts[1], 0f));
             }
         }
 

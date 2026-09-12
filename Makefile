@@ -1,6 +1,6 @@
 all: run
 
-ZIP_NAME := OC2-Web-v0.7.5.zip
+ZIP_NAME := OC2-Web-v0.7.6.zip
 
 build:
 	rm -f $(ZIP_NAME)

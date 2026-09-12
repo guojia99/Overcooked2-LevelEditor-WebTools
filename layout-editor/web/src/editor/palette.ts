@@ -106,23 +106,58 @@ export function applyPaletteGridCols(): void {
   cats.style.setProperty("--palette-cols", String(cols));
 }
 
+/** 装饰层「按类型 / 按用途」分组：按条目 typeKind/usage 字段动态聚合，
+ *  标签与顺序来自 catalog.taxonomy（build-catalog.mjs 关键词规则打标）。 */
+function deriveTaxonomyGroups(
+  catalog: Catalog,
+  mode: "type" | "usage"
+): { groups: NonNullable<Catalog["paletteGroups"]>; byKey: Record<string, CatalogItem[]> } {
+  const tax = catalog.taxonomy?.[mode === "type" ? "typeKind" : "usage"] ?? [];
+  const lists = new Map<string, CatalogItem[]>();
+  for (const it of catalog.items) {
+    if (it.layoutTier !== "decor") continue;
+    const key = (mode === "type" ? it.typeKind : it.usage) || "other";
+    if (!lists.has(key)) lists.set(key, []);
+    lists.get(key)!.push(it);
+  }
+  const groups: NonNullable<Catalog["paletteGroups"]> = [];
+  const byKey: Record<string, CatalogItem[]> = {};
+  for (const t of tax) {
+    const list = lists.get(t.key);
+    if (!list || list.length === 0) continue;
+    const gk = `tax/${t.key}`;
+    groups.push({ key: gk, labelZh: t.zh, labelEn: t.zh, layoutTier: "decor", itemCount: list.length });
+    byKey[gk] = list;
+  }
+  return { groups, byKey };
+}
+
 export function buildPalette(catalog: Catalog, filter: string) {
   dom.paletteCats.innerHTML = "";
   const q = filter.trim().toLowerCase();
   const sizeFilter: DecorSizeFilter =
     S.currentLayer === "decor" ? (S.decorSizeFilter ?? "all") : "all";
 
-  const groups =
-    catalog.paletteGroups ??
-    Object.keys(catalog.byCategory)
-      .sort()
-      .map((key) => ({
-        key,
-        labelZh: key,
-        labelEn: key,
-        layoutTier: key.startsWith("art/") ? ("decor" as const) : ("core" as const),
-        itemCount: catalog.byCategory[key].length,
-      }));
+  const themeMode = S.currentLayer !== "decor" || S.paletteGroupMode === "theme";
+  let byKey = catalog.byCategory;
+  let groups: NonNullable<Catalog["paletteGroups"]>;
+  if (themeMode) {
+    groups =
+      catalog.paletteGroups ??
+      Object.keys(catalog.byCategory)
+        .sort()
+        .map((key) => ({
+          key,
+          labelZh: key,
+          labelEn: key,
+          layoutTier: key.startsWith("art/") ? ("decor" as const) : ("core" as const),
+          itemCount: catalog.byCategory[key].length,
+        }));
+  } else {
+    const derived = deriveTaxonomyGroups(catalog, S.paletteGroupMode as "type" | "usage");
+    groups = derived.groups;
+    byKey = derived.byKey;
+  }
 
   S.corePaletteGroupMeta.clear();
   for (const g of groups) {
@@ -147,7 +182,7 @@ export function buildPalette(catalog: Catalog, filter: string) {
     // 核心层只显示核心玩法物品（layoutTier=core），装饰层只显示装饰物，
     // 其余一律归入装饰层（地板/背景在地板/背景层调色板）。
     if (S.currentLayer === "decor" ? group.layoutTier !== "decor" : group.layoutTier !== "core") continue;
-    const list = (catalog.byCategory[group.key] ?? []).filter((it) => {
+    const list = (byKey[group.key] ?? []).filter((it) => {
       if (it.surfaceTier === "floor" || it.surfaceTier === "background") return false;
       // Ambient / weather effects (落雪 BGM…) and water surfaces live on the
       // background layer.

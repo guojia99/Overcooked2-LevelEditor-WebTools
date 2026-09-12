@@ -63,7 +63,12 @@ const MAT_TAB_ALL = "__all__";
 
 function materialPickButtonHtml(m: FloorMaterial, activeMaterialGuid: string | undefined): string {
   const bl = materialDisplayLabel(m);
-  return `<button type="button" class="mat-pick${m.guid === activeMaterialGuid ? " active" : ""}" data-guid="${m.guid}"><span class="mat-id">${escHtml(bl.zh)}</span><span class="mat-sub">${escHtml(bl.en)}</span></button>`;
+  // 材质球图（extract-floormat-icons.py 提取的贴图缩略图）：选择时直接看到地板样式；
+  // 无图材质回退纯文字。onerror 兜底（图标被删/未同步时隐藏，不留破图）。
+  const thumb = m.icon
+    ? `<img class="mat-thumb" src="/icons/floor-materials/${encodeURIComponent(m.id)}.png" alt="" loading="lazy" onerror="this.remove()" />`
+    : "";
+  return `<button type="button" class="mat-pick${m.guid === activeMaterialGuid ? " active" : ""}${m.icon ? " has-thumb" : ""}" data-guid="${m.guid}">${thumb}<span class="mat-text"><span class="mat-id">${escHtml(bl.zh)}</span><span class="mat-sub">${escHtml(bl.en)}</span></span></button>`;
 }
 
 function materialGroupsWithMats(): { key: string; labelZh: string }[] {

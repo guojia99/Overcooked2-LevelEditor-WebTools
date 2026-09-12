@@ -848,6 +848,8 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
         disableDynamicParenting: (document.getElementById("f-disableDynamicParenting") as HTMLInputElement).checked,
         minOrderCount: Number((document.getElementById("f-minOrderCount") as HTMLInputElement).value || 2),
         maxOrderCount: Number((document.getElementById("f-maxOrderCount") as HTMLInputElement).value || 5),
+        gridHalfSizeX: detail.gridHalfSizeX ?? 0,
+        gridHalfSizeZ: detail.gridHalfSizeZ ?? 0,
         dependencies: detail.dependencies || [],
       });
       setStatus("基础信息已保存（已 reload）");
@@ -1559,6 +1561,12 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
          <label class="m-field">最少同时订单 minOrderCount<input type="number" id="cfg-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount ?? 2}"></label>
          <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="cfg-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount ?? 5}"></label>
        </div>
+       <p class="modal-hint">核心参数 · 工作台网格（CampaignGameEnvironment/GridManager）</p>
+       <div class="cfg-order-count">
+         <label class="m-field">网格半宽 X gridHalfSizeX<input type="number" id="cfg-gridHalfX" min="0" max="50" step="1" value="${detail.gridHalfSizeX ?? 0}"></label>
+         <label class="m-field">网格半宽 Z gridHalfSizeZ<input type="number" id="cfg-gridHalfZ" min="0" max="50" step="1" value="${detail.gridHalfSizeZ ?? 0}"></label>
+         <span class="muted small">默认显示场景当前生效值；0 = 不调整（保持场景现值）。网格以 GridManager 为中心向两侧各扩展 N 格（实际 2N+1 格），需覆盖全部工作台，超出的工作台无法交互。保存后随「💾 写回 Unity」或导出时写入场景。</span>
+       </div>
        <p class="modal-hint">星级分数（按人数）</p>
        <table class="cfg-matrix">
          <thead><tr><th>人数</th>${starHead}<th>难度系数</th></tr></thead>
@@ -1748,6 +1756,8 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
       showBusy("保存关卡配置…");
       const minOrderCount = Number((document.getElementById("cfg-minOrderCount") as HTMLInputElement).value || 2);
       const maxOrderCount = Number((document.getElementById("cfg-maxOrderCount") as HTMLInputElement).value || 5);
+      const gridHalfSizeX = Number((document.getElementById("cfg-gridHalfX") as HTMLInputElement).value || 0);
+      const gridHalfSizeZ = Number((document.getElementById("cfg-gridHalfZ") as HTMLInputElement).value || 0);
       await api.updateLevelInfo({
         assetPath: detail.levelInfoAssetPath,
         levelName: detail.levelName,
@@ -1757,6 +1767,8 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
         disableDynamicParenting: detail.disableDynamicParenting,
         minOrderCount,
         maxOrderCount,
+        gridHalfSizeX,
+        gridHalfSizeZ,
         dependencies: detail.dependencies,
       });
       await api.updateLevelConfig({

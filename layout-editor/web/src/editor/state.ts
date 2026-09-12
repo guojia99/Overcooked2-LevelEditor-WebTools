@@ -307,7 +307,6 @@ export const S = {
   autoKillPlane: false,
   autoWalkable: true,
   allowWorkstationOverlap: false,
-  backgroundEditable: false,
   floorMaterials: [] as FloorMaterial[],
   /** 实心地板材质选择器：上次选中的主题分类 tab。 */
   floorMaterialTabKey: "" as string,
@@ -318,6 +317,8 @@ export const S = {
   currentLayer: "items" as LayerKey,
   /** 装饰层尺寸筛选：all / small / medium / large / xl（按 footprint 判定）。 */
   decorSizeFilter: "all" as "all" | "small" | "medium" | "large" | "xl",
+  /** 装饰层调色板分组方式：主题（DLC/场景）/ 类型（建筑构件…）/ 用途（铺地…）。 */
+  paletteGroupMode: "theme" as "theme" | "type" | "usage",
   /** 地板高度过滤：层厚（每层高度带宽，可调）+ 当前显示区间 [min,max]。
    *  min/max 均为 null 表示「全部高度」不过滤。点层列表 = 设为该层区间；
    *  拖自由滑块 = 自定义区间。 */

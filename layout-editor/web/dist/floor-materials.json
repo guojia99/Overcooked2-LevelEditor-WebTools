@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-10T16:25:07.087Z",
+  "generatedAt": "2026-09-11T07:28:22.544Z",
   "schemaVersion": 5,
-  "itemCount": 345,
+  "itemCount": 395,
   "materials": [
     {
       "guid": "b731a7a89e8982119737afd17c70adad",
@@ -10,7 +10,8 @@
       "nameZh": "餐厅沙拉吧地砖",
       "nameEn": "FloorTiles Restaurant SaladBar",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "562926c1bb1b57bfe79e461d0c1654b3",
@@ -19,7 +20,8 @@
       "nameZh": "测试舱地面",
       "nameEn": "TestChamber Floor",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "0706f61c230a6bf87f43afabbc346d4f",
@@ -28,7 +30,8 @@
       "nameZh": "测试舱外地面",
       "nameEn": "TestChamber OutsideFloor",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "1ecb131e1eaedde064473fc61b155cc8",
@@ -37,7 +40,8 @@
       "nameZh": "厨房地砖 1×1",
       "nameEn": "FloorTiles Kitchen 1x1",
       "sizeTag": "1x1",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "53a5224bf40970c54fb4d8135d7edfc0",
@@ -46,7 +50,8 @@
       "nameZh": "厨房地砖 2×2",
       "nameEn": "FloorTiles Kitchen 2x2",
       "sizeTag": "2x2",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "11b529fede615493d4841c15aebfd6ca",
@@ -55,7 +60,8 @@
       "nameZh": "厨房地砖沙拉吧 2×2",
       "nameEn": "FloorTiles Kitchen 2x2 SaladBar",
       "sizeTag": "2x2",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "733f88d04d840d0ddaa9ddf8f447b879",
@@ -64,7 +70,8 @@
       "nameZh": "厨房地砖小型",
       "nameEn": "FloorTiles Kitchen Mini",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fb2b4d399f8190885abfe74c6ecafa39",
@@ -73,7 +80,8 @@
       "nameZh": "厨房地砖小型错位",
       "nameEn": "FloorTiles Kitchen Mini Offset",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "cf23a3cff92b5f3818f8d68284b863ee",
@@ -82,7 +90,8 @@
       "nameZh": "道路黄框区",
       "nameEn": "FloorTiles Road YellowBox",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fc54acd34b922b78f2543d7f4b1baf6e",
@@ -91,7 +100,8 @@
       "nameZh": "道路黄框区边条",
       "nameEn": "FloorTiles Road YellowBox Edge",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "d9f7c7395870a41b3518c2c933318aab",
@@ -100,7 +110,8 @@
       "nameZh": "道路黄框区转角",
       "nameEn": "FloorTiles Road YellowBox Corner",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e2cca0db162595c7b539c1a3c95001c7",
@@ -109,7 +120,8 @@
       "nameZh": "地狱岩浆地面 2×2",
       "nameEn": "Hell LavaFloor 2x2",
       "sizeTag": "2x2",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7265b75508e2583c87c239ae688972ca",
@@ -118,7 +130,8 @@
       "nameZh": "高档餐厅地砖",
       "nameEn": "FloorTile PoshRestaurant",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3a4a5c6198359856ef7298cb7c85a5b6",
@@ -127,7 +140,8 @@
       "nameZh": "高档餐厅地砖红色",
       "nameEn": "FloorTiles PoshRestaurant Red",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "eb06952f04139383b94dbff3d4638b35",
@@ -136,7 +150,8 @@
       "nameZh": "高档餐厅地砖蓝色",
       "nameEn": "FloorTiles PoshRestaurant Blue",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "320c6f3be62978934a321ee2e4f00ecf",
@@ -145,7 +160,8 @@
       "nameZh": "格纹地砖",
       "nameEn": "FloorTiles Chequered",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "4335896066b62db1cf15fbfe539528b4",
@@ -154,7 +170,8 @@
       "nameZh": "共享厨房·城市地台变体H3 1",
       "nameEn": "sk floor city h3 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "a3c3f044d1ef3fdb07ced678bc942492",
@@ -163,7 +180,8 @@
       "nameZh": "共享厨房·城市地台变体H3 2",
       "nameEn": "sk floor city h3 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8d6b56191058af5c8e621dda2d88e733",
@@ -172,7 +190,8 @@
       "nameZh": "共享厨房·红色寿司地砖 1 1×1",
       "nameEn": "sk floor tile sushired 01 1x1",
       "sizeTag": "1x1",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ab724f3ea9a4dd4c149e21237c3a2d86",
@@ -181,7 +200,8 @@
       "nameZh": "共享厨房·蓝色寿司地砖 1 1×1",
       "nameEn": "sk floor tile sushiblue 01 1x1",
       "sizeTag": "1x1",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "bd6eb98808050af867440d911ec68193",
@@ -190,7 +210,8 @@
       "nameZh": "共享厨房·寿司地砖 1",
       "nameEn": "sk floor tile sushi 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c8d072e0dcbe3dc33d5b1b7db43cde5a",
@@ -199,7 +220,8 @@
       "nameZh": "共享厨房·寿司地砖 1 1×2",
       "nameEn": "sk floor tile sushi 01 1x2",
       "sizeTag": "1x2",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "783de3a7b612c4258e5d51498530e6ae",
@@ -208,7 +230,8 @@
       "nameZh": "共享厨房·寿司地砖 1 16×10",
       "nameEn": "sk floor tile sushi 01 16x10",
       "sizeTag": "16x10",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3331e9f20e97e7353d01f4dc8de8cb8b",
@@ -217,7 +240,8 @@
       "nameZh": "共享厨房·寿司地砖 1 3×4",
       "nameEn": "sk floor tile sushi 01 3x4",
       "sizeTag": "3x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "870a85a45a188b8bfbae562739012c3c",
@@ -226,7 +250,8 @@
       "nameZh": "共享厨房·寿司地砖 1 3×5",
       "nameEn": "sk floor tile sushi 01 3x5",
       "sizeTag": "3x5",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e29df0fdb8bde2ff8a10e225d45b4a8f",
@@ -235,7 +260,8 @@
       "nameZh": "共享厨房·寿司地砖 1 3×6",
       "nameEn": "sk floor tile sushi 01 3x6",
       "sizeTag": "3x6",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "0ae584b3e799d032025143e4699b879a",
@@ -244,7 +270,8 @@
       "nameZh": "共享厨房·寿司地砖 1 3×7",
       "nameEn": "sk floor tile sushi 01 3x7",
       "sizeTag": "3x7",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "cdb302297f0053a579d8e0e896610109",
@@ -253,7 +280,8 @@
       "nameZh": "共享厨房·寿司地砖 1 3×8",
       "nameEn": "sk floor tile sushi 01 3x8",
       "sizeTag": "3x8",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "35f84fd290019e51fed53e81cac2305d",
@@ -262,7 +290,8 @@
       "nameZh": "共享厨房·寿司地砖 1 3×9",
       "nameEn": "sk floor tile sushi 01 3x9",
       "sizeTag": "3x9",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "82c6f02ff12be22c3a3a1550d241411a",
@@ -271,7 +300,8 @@
       "nameZh": "共享厨房·寿司地砖 1 4×5",
       "nameEn": "sk floor tile sushi 01 4x5",
       "sizeTag": "4x5",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "08c45b5f70c21db87a3149bbe87bf392",
@@ -280,7 +310,8 @@
       "nameZh": "共享厨房·寿司地砖 1-4",
       "nameEn": "sk floor tile sushi 1-4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fcf5ad2a2a715e8b88bb7640465ce2b1",
@@ -289,7 +320,8 @@
       "nameZh": "共享厨房·寿司地砖 1-4 1",
       "nameEn": "sk floor tile sushi 1-4 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2e6e43768245bd585cb789ca6ddb801e",
@@ -298,7 +330,8 @@
       "nameZh": "共享厨房·寿司地砖 1-4 2",
       "nameEn": "sk floor tile sushi 1-4 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "d8c186e41dd071118d248dd5b2aca104",
@@ -307,7 +340,8 @@
       "nameZh": "共享厨房·寿司地砖 1-4 3",
       "nameEn": "sk floor tile sushi 1-4 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ca9c655d51b70f1d27f8fefee74f1d28",
@@ -316,7 +350,8 @@
       "nameZh": "共享厨房·寿司地砖 1-5",
       "nameEn": "sk floor tile sushi 1-5",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "712c90875573eb64c365f4a7bb017987",
@@ -325,7 +360,8 @@
       "nameZh": "共享厨房·寿司地砖 2",
       "nameEn": "sk floor tile sushi 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "13462910c21102b650975bae508ea6b0",
@@ -334,7 +370,8 @@
       "nameZh": "共享厨房·寿司地砖 3",
       "nameEn": "sk floor tile sushi 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8db47e8ed697c5157d7dccf894814dfe",
@@ -343,7 +380,8 @@
       "nameZh": "共享厨房·寿司地砖白色 4",
       "nameEn": "sk floor tile sushi 04 white",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fb7ad53a7c34e95f848bb236d6136b7e",
@@ -352,7 +390,8 @@
       "nameZh": "共享厨房·寿司地砖边条 1",
       "nameEn": "sk floor tile sushi 01 edge",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5d3fbf84f8e737755ba47c8ec4bc1bc5",
@@ -361,7 +400,8 @@
       "nameZh": "共享厨房·寿司地砖边条 1 9×16",
       "nameEn": "sk floor tile sushi 01 edge 9x16",
       "sizeTag": "9x16",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9d8d4f6e62e4a9bd6e1c6be001beb11e",
@@ -370,7 +410,8 @@
       "nameZh": "共享厨房·寿司地砖侧边 1",
       "nameEn": "sk floor tile sushi 01 side",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e4e223661c36decbf8998ed9d7a7eb14",
@@ -379,7 +420,8 @@
       "nameZh": "共享厨房·寿司地砖侧边 2",
       "nameEn": "sk floor tile sushi 02 side",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5a0a6cd2dfc8984b967b746954df34e3",
@@ -388,7 +430,8 @@
       "nameZh": "共享厨房·寿司地砖蓝色 4",
       "nameEn": "sk floor tile sushi 04 blue",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "4f0e5b0827251a98251db8adcc58e187",
@@ -397,7 +440,8 @@
       "nameZh": "共享厨房·寿司地砖内角 1",
       "nameEn": "sk floor tile sushi 01 corner in",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2da3805be6a8c8d6103235262892abbc",
@@ -406,7 +450,8 @@
       "nameZh": "共享厨房·寿司地砖内角 2",
       "nameEn": "sk floor tile sushi 02 corner in",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "00615c4074448e997a5cd730c78167f8",
@@ -415,7 +460,8 @@
       "nameZh": "共享厨房·寿司地砖外角 1",
       "nameEn": "sk floor tile sushi 01 corner out",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "be235a642698a88ec951483447fa2460",
@@ -424,7 +470,8 @@
       "nameZh": "共享厨房·寿司地砖外角 2",
       "nameEn": "sk floor tile sushi 02 corner out",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "0088fef32e1bc3a50fda3a28fd97cf59",
@@ -433,7 +480,8 @@
       "nameZh": "共享厨房·寿司地砖外沿 1 14×9",
       "nameEn": "sk floor tile sushi 01 outer 14x9",
       "sizeTag": "14x9",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ce1be5feebb8770efd4aaacb3bcd8d17",
@@ -442,7 +490,8 @@
       "nameZh": "共享厨房·寿司地砖外沿 1 21×9",
       "nameEn": "sk floor tile sushi 01 outer 21x9",
       "sizeTag": "21x9",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e23756380ea6a9b0fd61bec30c50d581",
@@ -451,7 +500,8 @@
       "nameZh": "共享厨房·寿司地砖外沿 1 5-1",
       "nameEn": "sk floor tile sushi 01 outer 5 1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "f120f71c22602826b2758e769454f0e3",
@@ -460,7 +510,8 @@
       "nameZh": "共享厨房·寿司地砖外沿关 1 21×9",
       "nameEn": "sk floor tile sushi 01 outer 21x9 off",
       "sizeTag": "21x9",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7ef81689626a078c6f47595c22169a0f",
@@ -469,7 +520,8 @@
       "nameZh": "共享厨房地板 10×12 1",
       "nameEn": "sk floor 10x12 01",
       "sizeTag": "10x12",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7d49d84504b91eda652ead518124219d",
@@ -478,7 +530,8 @@
       "nameZh": "共享厨房地板 17×3",
       "nameEn": "sk floor 17x3",
       "sizeTag": "17x3",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "785c3b2968908badbe29ef10d36ebf11",
@@ -487,7 +540,8 @@
       "nameZh": "共享厨房地板 2×12",
       "nameEn": "sk floor 2x12",
       "sizeTag": "2x12",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "859804812695497dd1be5f938e289634",
@@ -496,7 +550,8 @@
       "nameZh": "共享厨房地板 3×3 1",
       "nameEn": "sk floor 3x3 01",
       "sizeTag": "3x3",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "03e604723b2c31e52834af09dc39982b",
@@ -505,7 +560,8 @@
       "nameZh": "共享厨房地板 4×5",
       "nameEn": "sk floor 4x5",
       "sizeTag": "4x5",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "74e117808c480e5cafc07bb37a6abff8",
@@ -514,7 +570,8 @@
       "nameZh": "共享厨房地板 6×14",
       "nameEn": "sk floor 6x14",
       "sizeTag": "6x14",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "a510e032b6cfcfa41ec81082565628fa",
@@ -523,7 +580,8 @@
       "nameZh": "共享厨房地板 6×5",
       "nameEn": "sk floor 6x5",
       "sizeTag": "6x5",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ac45cbfd47ce870227319c03915758fd",
@@ -532,7 +590,8 @@
       "nameZh": "共享厨房地板变体H3 1",
       "nameEn": "sk floor h3 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "245e3bb2857a9097a6cb7e5abf4606b2",
@@ -541,7 +600,8 @@
       "nameZh": "共享厨房地板变体H3 2",
       "nameEn": "sk floor h3 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "a77c4f3c23b7adc8942716d5a24e3eee",
@@ -550,7 +610,8 @@
       "nameZh": "共享厨房地板变体H3 3",
       "nameEn": "sk floor h3 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "0d136d90562e1ddd8f75140b4084f2ac",
@@ -559,7 +620,8 @@
       "nameZh": "共享厨房地板变体H3 4",
       "nameEn": "sk floor h3 04",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "4f207d7433d8c13fad68243c4b3f0352",
@@ -568,7 +630,8 @@
       "nameZh": "共享厨房地板变体H6副本 1",
       "nameEn": "sk floor h6 01 - Copy",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "49dcd71926eb0484cb98f7c1748492a2",
@@ -577,7 +640,8 @@
       "nameZh": "共享厨房地板粉色 1",
       "nameEn": "sk floor pink 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "dd1a573b74399ad15064bf185fdb48d7",
@@ -586,7 +650,8 @@
       "nameZh": "共享厨房地板混凝土 1",
       "nameEn": "sk floor concrete 1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "01b769f6aaba37c538ca5e6bb6f78eab",
@@ -595,7 +660,8 @@
       "nameZh": "海滩厨房地砖",
       "nameEn": "DLC2 FloorTiles Kitchen",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b428c3736e3395132c5a3115acb04ea2",
@@ -604,7 +670,8 @@
       "nameZh": "海滩瓷砖地板 1",
       "nameEn": "dlc2 tilefloor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3378f4d96062d8db39a644b1003a51e2",
@@ -613,7 +680,8 @@
       "nameZh": "海滩瓷砖地板2 高渲染",
       "nameEn": "dlc2 tilefloor 02HighRenderQueue",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5be4e869ea6cc11fdd4b4a7f7f34efda",
@@ -622,7 +690,8 @@
       "nameZh": "海滩地砖 1",
       "nameEn": "dlc2 floortile 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e18c1ac84737efb0ed9cfe68c9b3272d",
@@ -631,7 +700,8 @@
       "nameZh": "海滩地砖 1-3",
       "nameEn": "dlc2 floortile 1 3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "52ad1d581c6d6d8b7847361930188d16",
@@ -640,7 +710,8 @@
       "nameZh": "海滩地砖 1-4",
       "nameEn": "dlc2 floortile 1 4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "705760977ab6721fad8251be2e143caf",
@@ -649,7 +720,8 @@
       "nameZh": "海滩地砖 2",
       "nameEn": "dlc2 floortile 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8db4e1ba6caf69eeafb740793a67fe2b",
@@ -658,7 +730,8 @@
       "nameZh": "海滩地砖 2-3",
       "nameEn": "dlc2 floortile 2 3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "40fa89aa5650d07d3091fd87f533b19a",
@@ -667,7 +740,8 @@
       "nameZh": "海滩地砖 2-4",
       "nameEn": "dlc2 floortile 2 4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e18802c1555854c62dd236009b771b73",
@@ -676,7 +750,8 @@
       "nameZh": "海滩地砖厨房",
       "nameEn": "DLC2 Floortile Kitchen",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "cf75e6606f1e81407844c3ec0419fad8",
@@ -685,7 +760,8 @@
       "nameZh": "海滩地砖对抗",
       "nameEn": "dlc2 floortile vs",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "47526910e78ac98a032a666171a77e47",
@@ -694,7 +770,8 @@
       "nameZh": "海滩地砖对抗 1",
       "nameEn": "dlc2 floortile vs 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fd7aa7a7a743275ba7aae4e96cf1fa30",
@@ -703,7 +780,8 @@
       "nameZh": "海滩地砖对抗 2",
       "nameEn": "dlc2 floortile vs 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b0e0fd456c747f7f7be37d6b503ad634",
@@ -712,7 +790,8 @@
       "nameZh": "海滩地砖对抗 3",
       "nameEn": "dlc2 floortile vs 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "02486c91c6943d2bc73348f4b5b84056",
@@ -721,7 +800,8 @@
       "nameZh": "海滩地砖对抗 4",
       "nameEn": "dlc2 floortile vs 04",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "4f39e8c497c5b70892117ae196c843c5",
@@ -730,7 +810,8 @@
       "nameZh": "海滩木地板 1",
       "nameEn": "dlc2 woodenfloor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "cfe4d074bafff6986fd990e4c9593c59",
@@ -739,7 +820,8 @@
       "nameZh": "海滩木地板 1-3",
       "nameEn": "dlc2 woodenfloor 1 3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "76b631d0c68c113d9864257eb5a97a54",
@@ -748,7 +830,8 @@
       "nameZh": "海滩木地板 1-4",
       "nameEn": "dlc2 woodenfloor 1 4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "52b73157228280250b43816259d3b738",
@@ -757,7 +840,8 @@
       "nameZh": "海滩木地板 1-4A",
       "nameEn": "dlc2 woodenfloor 1 4a",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3df9056478fb145b3754cb9c7e4522df",
@@ -766,7 +850,8 @@
       "nameZh": "海滩木地板 2",
       "nameEn": "dlc2 woodenfloor 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "610ffa07dfe29e46d003a8b08e9b56aa",
@@ -775,7 +860,8 @@
       "nameZh": "海滩木地板 2-3",
       "nameEn": "dlc2 woodenfloor 2 3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e14ed8203d2b280dffcf76aa0ae6e4e1",
@@ -784,7 +870,8 @@
       "nameZh": "海滩木地板 2-4",
       "nameEn": "dlc2 woodenfloor 2 4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "50bcef80220774c72ea5afef5cc91f1e",
@@ -793,7 +880,8 @@
       "nameZh": "海滩木地板 3",
       "nameEn": "dlc2 woodenfloor 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "cb3a81fdb131317a71e04e7dfa04683f",
@@ -802,7 +890,8 @@
       "nameZh": "海滩木地板 4",
       "nameEn": "dlc2 woodenfloor 04",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "a59a51f3f05775c7db348213955ae747",
@@ -811,7 +900,8 @@
       "nameZh": "海滩木地板 5",
       "nameEn": "dlc2 woodenfloor 05",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "133b089d9d5e487ab9ca8d5a095d440c",
@@ -820,7 +910,8 @@
       "nameZh": "海滩木地板 6",
       "nameEn": "dlc2 woodenfloor 06",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "36e8b49422f00ed00164a8022983b2ab",
@@ -829,7 +920,8 @@
       "nameZh": "海滩木地板 7",
       "nameEn": "dlc2 woodenfloor 07",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7b6ae698f82ec9306a77c5e1b2cc6536",
@@ -838,7 +930,8 @@
       "nameZh": "海滩洋葱屋地板",
       "nameEn": "DLC2 OnionHouse Floor",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9d5ab1c6d2081d94b2de841d10b532ad",
@@ -847,7 +940,8 @@
       "nameZh": "货车车厢地板 1",
       "nameEn": "lorry van floor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5f50d8de4938fe7565bd82e523ede7b8",
@@ -856,7 +950,8 @@
       "nameZh": "货车车厢地板 1A",
       "nameEn": "lorry van floor 01a",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "6604f85561cfad2771eb0adc099106a1",
@@ -865,7 +960,8 @@
       "nameZh": "货车车厢地板 1B",
       "nameEn": "lorry van floor 01b",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "594c24a85503fb8885ccab169f9679ae",
@@ -874,7 +970,8 @@
       "nameZh": "货车车厢地板 2A",
       "nameEn": "lorry van floor 02a",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fdbe5b7ec6e5915cd91fef50b87b95f1",
@@ -883,7 +980,8 @@
       "nameZh": "矿洞地面 1",
       "nameEn": "mi floor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9ee181d934f014a7c617530d88df3fe7",
@@ -892,7 +990,8 @@
       "nameZh": "矿洞地面 1 1×10",
       "nameEn": "mi floor 01 1x10",
       "sizeTag": "1x10",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9cfb35e431d793633f386bc389b65747",
@@ -901,7 +1000,8 @@
       "nameZh": "矿洞地面 1 1×6",
       "nameEn": "mi floor 01 1x6",
       "sizeTag": "1x6",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "42d390e335e72821c676299dd82cfb75",
@@ -910,7 +1010,8 @@
       "nameZh": "矿洞地面 1 13×8",
       "nameEn": "mi floor 01 13x8",
       "sizeTag": "13x8",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "35ce897a22c48670908a1da282b18294",
@@ -919,7 +1020,8 @@
       "nameZh": "矿洞地面户外 1",
       "nameEn": "mi floor 01 outside",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "be05cd73af8ff40b9090900a6445b399",
@@ -928,7 +1030,8 @@
       "nameZh": "矿洞地面户外 1 1",
       "nameEn": "mi floor 01 outside 1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9c2b535136cc9172ff87173f76af2ba7",
@@ -937,7 +1040,8 @@
       "nameZh": "矿洞地面户外积水 1",
       "nameEn": "mi floor 01 outside Water",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "00e822e33a26042a7a954a5622a6285f",
@@ -946,7 +1050,8 @@
       "nameZh": "矿洞地面积水 1",
       "nameEn": "mi floor 01 water",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8cbcd8f7df9812e8e98aa57af0d71670",
@@ -955,7 +1060,8 @@
       "nameZh": "矿洞地面积水 1 1×10",
       "nameEn": "mi floor 01 1x10 water",
       "sizeTag": "1x10",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "55b845a4b948490249ed84bce54883c5",
@@ -964,7 +1070,8 @@
       "nameZh": "矿洞地面积水 1 1×6",
       "nameEn": "mi floor 01 1x6 water",
       "sizeTag": "1x6",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "766afdcd6fc3daed251728916accc3d5",
@@ -973,7 +1080,8 @@
       "nameZh": "矿洞木板地面 1 13×4",
       "nameEn": "mine floorboards 01 13x4",
       "sizeTag": "13x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "066d0d84b3a1e78f3f40cf812348d5a8",
@@ -982,7 +1090,8 @@
       "nameZh": "矿洞木板地面 2",
       "nameEn": "mine floorboards 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3f1e0e5be43383ef678e5d6145450c48",
@@ -991,7 +1100,8 @@
       "nameZh": "马戏团破碎悬崖地面 1",
       "nameEn": "dlc08 city h18 broken floor cliff 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "bc74aab59493c27f4962cf3b6ad41a16",
@@ -1000,7 +1110,8 @@
       "nameZh": "魔法地毯地面",
       "nameEn": "Magic CarpetFloor",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b94c3579f8d239aa6188c46086ea5904",
@@ -1009,7 +1120,8 @@
       "nameZh": "魔法石地面",
       "nameEn": "Magic StoneFloor",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9ce890675da2486c9f0545e83df41556",
@@ -1018,7 +1130,8 @@
       "nameZh": "魔法学校地砖 1",
       "nameEn": "wizard floortile 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "68da2d9300796971a098448450cfdceb",
@@ -1027,7 +1140,8 @@
       "nameZh": "魔法学校地砖 1 6×7",
       "nameEn": "wizard floortile 01 6x7",
       "sizeTag": "6x7",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c5c3e205588217cc7133091f5f9a99e2",
@@ -1036,7 +1150,8 @@
       "nameZh": "魔法学校地砖 2",
       "nameEn": "wizard floortile 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8fc5ee5f10518f6f62d77491f1ef43ce",
@@ -1045,7 +1160,8 @@
       "nameZh": "魔法学校地砖 3",
       "nameEn": "wizard floortile 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5315a87c80aa3483144ad1dd3e57cb99",
@@ -1054,7 +1170,8 @@
       "nameZh": "魔法学校地砖 4",
       "nameEn": "wizard floortile 04",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "38ac672c2f2c602c885e41e45194b87e",
@@ -1063,7 +1180,8 @@
       "nameZh": "魔法学校木板地面 1",
       "nameEn": "wizard floorboards 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "100946c54ef31381f1a31656fe8b6b6c",
@@ -1072,7 +1190,8 @@
       "nameZh": "魔法学校木板地面 10",
       "nameEn": "wizard floorboards 10",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "22323ef1b07b3934e9c8fcbc16d08d02",
@@ -1081,7 +1200,8 @@
       "nameZh": "魔法学校木板地面 11",
       "nameEn": "wizard floorboards 11",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ff618930bdf515408e3b01e4eee7b8d5",
@@ -1090,7 +1210,8 @@
       "nameZh": "魔法学校木板地面 4",
       "nameEn": "wizard floorboards 04",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "bea46644574caf0f09e08c9e181ae767",
@@ -1099,7 +1220,8 @@
       "nameZh": "魔法学校木板地面 5",
       "nameEn": "wizard floorboards 05",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "d70320c0cb807ee86be66a5f668b4523",
@@ -1108,7 +1230,8 @@
       "nameZh": "魔法学校木板地面 6",
       "nameEn": "wizard floorboards 06",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b06a6dcfce4e22606c6c583f5ae26ad0",
@@ -1117,7 +1240,8 @@
       "nameZh": "魔法学校木板地面 7",
       "nameEn": "wizard floorboards 07",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c7a7fff2fc1c434f6c8f5d890389fdab",
@@ -1126,7 +1250,8 @@
       "nameZh": "魔法学校木板地面 8",
       "nameEn": "wizard floorboards 08",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "1246ce01490966b80033175588d15d14",
@@ -1135,7 +1260,8 @@
       "nameZh": "魔法学校木板地面 9",
       "nameEn": "wizard floorboards 09",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "531c9b7e1aadccc448da5969d378cb28",
@@ -1144,7 +1270,8 @@
       "nameZh": "魔法学校木地板砖 2×3",
       "nameEn": "wizard wood floor tile 2x3",
       "sizeTag": "2x3",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "b5bb0b69a2422624187812668f893e67",
@@ -1153,7 +1280,8 @@
       "nameZh": "魔法学校石地板砖 03",
       "nameEn": "wizard stone floor tile 03",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "fbeb1f610964b1847be6ea4f6cbf2c51",
@@ -1162,7 +1290,8 @@
       "nameZh": "魔法学校石地板砖 04",
       "nameEn": "wizard stone floor tile 04",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "883a54ac74a33314292e55f09d097ee0",
@@ -1171,7 +1300,8 @@
       "nameZh": "魔法学校石地板砖 05",
       "nameEn": "wizard stone floor tile 05",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "35a71cb25fc3f424b15f477cd612220d",
@@ -1180,7 +1310,8 @@
       "nameZh": "墓地草地 1",
       "nameEn": "grave grass floor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "04304feedb1c2276e6dcb750fe13698b",
@@ -1189,7 +1320,8 @@
       "nameZh": "墓地草地 1 15×15",
       "nameEn": "grave grass floor 01 15x15",
       "sizeTag": "15x15",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8ad64ad9e3175d68cda80cb5f620f42b",
@@ -1198,7 +1330,8 @@
       "nameZh": "墓地厨房地板 1",
       "nameEn": "grave kitchen floor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "07e645be475930a5be88521fa7b7f153",
@@ -1207,7 +1340,8 @@
       "nameZh": "墓地地板 3",
       "nameEn": "grave floor 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "78aeccbc049bea946ae339f444c55ca9",
@@ -1216,7 +1350,8 @@
       "nameZh": "热气球地板 1",
       "nameEn": "air balloon floor 1",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "2de46e4ca11253149b801ae68e0ace87",
@@ -1225,7 +1360,8 @@
       "nameZh": "热气球地板 2",
       "nameEn": "air balloon floor 2",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "965dc41046ca35c48841be89c4e0250d",
@@ -1234,7 +1370,8 @@
       "nameZh": "热气球地板砖 05",
       "nameEn": "air balloon floor tile 05",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "b0fc584fedd6a1542a1e8f77f595c4ba",
@@ -1243,7 +1380,8 @@
       "nameZh": "热气球地板砖 08",
       "nameEn": "air balloon floor tile 08",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "db7019811a6c0d01f3dad2ce3c04369a",
@@ -1252,7 +1390,8 @@
       "nameZh": "热气球地砖 1",
       "nameEn": "airballoon floorTile 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "eae8261d6d04be37475151ef7a547382",
@@ -1261,7 +1400,8 @@
       "nameZh": "热气球地砖 1 9×4",
       "nameEn": "airballoon floorTile 01 9x4",
       "sizeTag": "9x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2d070911013ce133d1f471a9d00afd92",
@@ -1270,7 +1410,8 @@
       "nameZh": "热气球地砖 2",
       "nameEn": "airballoon floorTile 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "90b9c259d1e47c5123b9eb420c0c0add",
@@ -1279,7 +1420,8 @@
       "nameZh": "热气球地砖无贴花 1",
       "nameEn": "airballoon floorTile NoDecal 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2b63ae31a403eb3e6938504c0596f99b",
@@ -1288,7 +1430,8 @@
       "nameZh": "热气球木板地面 1",
       "nameEn": "airballoon floorboards 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e116cd2032b3a9b8efcbe35612786cbd",
@@ -1297,7 +1440,8 @@
       "nameZh": "热气球木板地面 1 ×2",
       "nameEn": "airballoon floorboards 01 x2",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "423a34f7be773c64851fc098bac7db92",
@@ -1306,7 +1450,8 @@
       "nameZh": "热气球木板地面 1 ×3",
       "nameEn": "airballoon floorboards 01 x3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5ec6b9ee7d8238afe66eea978e5ee738",
@@ -1315,7 +1460,8 @@
       "nameZh": "热气球木板地面 1 ×4",
       "nameEn": "airballoon floorboards 01 x4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "1df99dd99201de829bb350cb61640801",
@@ -1324,7 +1470,8 @@
       "nameZh": "热气球木板地面 1 ×5",
       "nameEn": "airballoon floorboards 01 x5",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "69ed696b794612bbc0c561f37aa3835d",
@@ -1333,7 +1480,8 @@
       "nameZh": "热气球木板地面 1 11×11",
       "nameEn": "airballoon floorboards 01 11x11",
       "sizeTag": "11x11",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "71ac1901ecc63fc7ce2f2b972f6a87e7",
@@ -1342,7 +1490,8 @@
       "nameZh": "热气球木板地面 1 2×6",
       "nameEn": "airballoon floorboards 01 2x6",
       "sizeTag": "2x6",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "754a8c9f1d88de7be245a14ab7bb4fc8",
@@ -1351,7 +1500,8 @@
       "nameZh": "热气球木板地面 1 4×4",
       "nameEn": "airballoon floorboards 01 4x4",
       "sizeTag": "4x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "195e0f813a423bd89f847df65d18409b",
@@ -1360,7 +1510,8 @@
       "nameZh": "热气球木板地面 1 4×5",
       "nameEn": "airballoon floorboards 01 4x5",
       "sizeTag": "4x5",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c3d825ef23db428857b4bef1274db688",
@@ -1369,7 +1520,8 @@
       "nameZh": "热气球木板地面 1 4×6",
       "nameEn": "airballoon floorboards 01 4x6",
       "sizeTag": "4x6",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "bf5d59885cc45434e706ab434f3e0310",
@@ -1378,7 +1530,8 @@
       "nameZh": "热气球木板地面 2",
       "nameEn": "airballoon floorboards 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "d0b5c83cb549e46be5d57fd4c01dec09",
@@ -1387,7 +1540,8 @@
       "nameZh": "热气球木板地面 2 2×6",
       "nameEn": "airballoon floorboards 02 2x6",
       "sizeTag": "2x6",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8eeafc479f145a00145a01dbec292047",
@@ -1396,7 +1550,8 @@
       "nameZh": "热气球木板地面 3",
       "nameEn": "airballoon floorboards 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "cd548d8bc619c7c0357bd35c6d2b97f6",
@@ -1405,7 +1560,8 @@
       "nameZh": "热气球木板地面 4",
       "nameEn": "airballoon floorboards 04",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fd5b0bca0c50126931a8bb3f682e484e",
@@ -1414,7 +1570,8 @@
       "nameZh": "热气球木板地面 5",
       "nameEn": "airballoon floorboards 05",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "69e84cf87ccf1e8e94ba01781aedf0e0",
@@ -1423,7 +1580,8 @@
       "nameZh": "热气球木板地面 6",
       "nameEn": "airballoon floorboards 06",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b43e14fa527d5e1fa001cf5d784fe299",
@@ -1432,7 +1590,8 @@
       "nameZh": "热气球木板地面 7",
       "nameEn": "airballoon floorboards 07",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "aa899509b9a2ac1e48c413f537219bdd",
@@ -1441,7 +1600,8 @@
       "nameZh": "热气球木板地面破碎 1",
       "nameEn": "airballoon floorboards 01 broken",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e3e86d01247b708e15378096d67c6977",
@@ -1450,7 +1610,8 @@
       "nameZh": "热气球木板地面无贴花 1 ×3",
       "nameEn": "airballoon floorboards 01 x3 no decal",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "211238b780ebae3cd9e8735767f1699f",
@@ -1459,7 +1620,8 @@
       "nameZh": "热气球木板地面无贴花 1 ×5",
       "nameEn": "airballoon floorboards 01 x5 no decal",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b05ad97d50a3f145e75cc8cfd3a249ee",
@@ -1468,7 +1630,8 @@
       "nameZh": "热气球木板地面无贴花 4",
       "nameEn": "airballoon floorboards 04 no decal",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "6349b71ce58bc992132ebedde9343204",
@@ -1477,7 +1640,8 @@
       "nameZh": "人行道地砖彩虹",
       "nameEn": "FloorTiles Pavement Rainbow",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fca6cd66e1e32162d25e665808b64e2f",
@@ -1486,7 +1650,8 @@
       "nameZh": "人行道地砖彩虹 1",
       "nameEn": "FloorTiles Pavement Rainbow 1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "051657825c5c7424b68e217194b41bab",
@@ -1495,7 +1660,8 @@
       "nameZh": "人行道地砖彩虹 2",
       "nameEn": "FloorTiles Pavement Rainbow 2",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "73b5d4728ccab2eba8b364f861d4320e",
@@ -1504,7 +1670,8 @@
       "nameZh": "人行道地砖道路",
       "nameEn": "FloorTiles Pavement Road",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "dcc7f652139992cd594490b20e2e8f98",
@@ -1513,7 +1680,8 @@
       "nameZh": "人行道地砖道路停止线",
       "nameEn": "FloorTiles Pavement Road StopLine",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "0dd27637fbcc6151ad8b87499df6fd44",
@@ -1522,7 +1690,8 @@
       "nameZh": "人行道地砖道路中央",
       "nameEn": "FloorTiles Pavement Road Centre",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c5b99cc4d496c755718e915d78b2d5f1",
@@ -1531,7 +1700,8 @@
       "nameZh": "人行道地砖横道线白色",
       "nameEn": "FloorTiles Pavement Crossing White",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2a8476fb500d51cd5290d52e01d74266",
@@ -1540,7 +1710,8 @@
       "nameZh": "人行道地砖裂纹",
       "nameEn": "FloorTiles Pavement RoadCracked",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e198cd7f0f2c2ffb0bf0d4232e3779c4",
@@ -1549,7 +1720,8 @@
       "nameZh": "人行道地砖直段",
       "nameEn": "FloorTiles Pavement Straight",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "6a2f1343c9421a03d1ea1253dd4d62f0",
@@ -1558,7 +1730,8 @@
       "nameZh": "人行道地砖转角",
       "nameEn": "FloorTiles Pavement Corner",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "640215ef1445618bd9405b5aa944ab22",
@@ -1567,7 +1740,8 @@
       "nameZh": "森林地面 1",
       "nameEn": "dlc5 forestfloor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "feed95b159b38d57e8849fa037ad2bbf",
@@ -1576,7 +1750,8 @@
       "nameZh": "森林地面 1-4",
       "nameEn": "dlc5 forest floor 1 4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "4e2ddc0a7779b6b8d07d078df556c387",
@@ -1585,7 +1760,8 @@
       "nameZh": "森林地面 2",
       "nameEn": "dlc5 forestfloor 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8227ef13953cc77694542a505b4dc946",
@@ -1594,7 +1770,8 @@
       "nameZh": "森林地面 3-3",
       "nameEn": "dlc5 forest floor 3 3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "4f4bc6d7162ddc8213b0e9dbbbae6c55",
@@ -1603,7 +1780,8 @@
       "nameZh": "沙漠道路",
       "nameEn": "FloorTiles DesertRoad",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2936af6a653b8eedfa35864d5442dfdb",
@@ -1612,7 +1790,8 @@
       "nameZh": "沙漠道路透明",
       "nameEn": "FloorTiles DesertRoad Alpha",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "1d95911b5c3be646dcee50a044daa255",
@@ -1621,7 +1800,8 @@
       "nameZh": "沙漠地砖",
       "nameEn": "FloorTiles Desert",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "03d63b949a26936fe28e10691d668c8b",
@@ -1630,7 +1810,8 @@
       "nameZh": "深色人行道道路",
       "nameEn": "FloorTiles DarkPavement Road",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2f0e641ebba49309c415537f42c2c653",
@@ -1639,7 +1820,8 @@
       "nameZh": "深色人行道道路中央",
       "nameEn": "FloorTiles DarkPavement Road Centre",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b17898f1060ede7b115816cf6a035f6c",
@@ -1648,7 +1830,8 @@
       "nameZh": "深色人行道直段",
       "nameEn": "FloorTiles DarkPavement Straight",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "77d9f26e12d77cf54ca325b94632459f",
@@ -1657,7 +1840,8 @@
       "nameZh": "深色人行道转角",
       "nameEn": "FloorTiles DarkPavement Corner",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ccfef2579a5692ef2c8204abc0df8b28",
@@ -1666,7 +1850,8 @@
       "nameZh": "石径地砖 1",
       "nameEn": "dlc4 floortile 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3ef03e5ec7cfb5bce0a7f84cd3fc3a92",
@@ -1675,7 +1860,8 @@
       "nameZh": "石径苔藓地面 1",
       "nameEn": "dlc4 mossfloor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8c7a6ee7216f3a0a64d702adc9e23679",
@@ -1684,7 +1870,8 @@
       "nameZh": "石质地砖",
       "nameEn": "Floortile Stone",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "91919c091e2874116b524888a19a437a",
@@ -1693,7 +1880,8 @@
       "nameZh": "太空地板",
       "nameEn": "Space Floor",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "a5873422ed0a8f57d86873db6763fe5f",
@@ -1702,7 +1890,8 @@
       "nameZh": "太空地板 1",
       "nameEn": "sp floor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "416093637d3d81a5b211d37ecae79011",
@@ -1711,7 +1900,8 @@
       "nameZh": "太空地板 2",
       "nameEn": "sp floor 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "31594e92f860d838b8cdb85c4a992473",
@@ -1720,7 +1910,8 @@
       "nameZh": "太空地板 3",
       "nameEn": "sp floor 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "1f1621abac7a9f41c5899c70ab8f9824",
@@ -1729,7 +1920,8 @@
       "nameZh": "雪地道路",
       "nameEn": "FloorTiles SnowRoad",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "0a13952f4d943f2b11fe310935c03305",
@@ -1738,7 +1930,8 @@
       "nameZh": "雪地道路侧边",
       "nameEn": "FloorTiles SnowRoad Side",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "14d5213fec675caf70b38dff6f0fb811",
@@ -1747,7 +1940,8 @@
       "nameZh": "雪地道路透明",
       "nameEn": "FloorTiles SnowRoad Alpha",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "777c7040802c541cbd07d517f2ff0b16",
@@ -1756,7 +1950,8 @@
       "nameZh": "雪地道路雪",
       "nameEn": "FloorTiles SnowRoad Snow",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e06e0b3adbda71b56247c25aa3760c96",
@@ -1765,7 +1960,8 @@
       "nameZh": "雪地道路中央",
       "nameEn": "FloorTiles SnowRoad Centre",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "393eb949df61cd08cf974dccde033d14",
@@ -1774,7 +1970,8 @@
       "nameZh": "隐秘之城地面 2",
       "nameEn": "dlc07 hiddencity floor 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "aef8e544d32288767b1de4791e228f4e",
@@ -1783,7 +1980,8 @@
       "nameZh": "原版地砖",
       "nameEn": "FloorTiles",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b7522d4cc02cb68f2dccfd979618a68d",
@@ -1792,7 +1990,8 @@
       "nameZh": "原版地砖人行道",
       "nameEn": "FloorTiles Pavement1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c0eeb6e9ddfd49bfc8aba903b9fc890f",
@@ -1801,7 +2000,8 @@
       "nameZh": "沼泽草地 1",
       "nameEn": "swamp grass floor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "234456ee832462df20ad10c4a5555bdb",
@@ -1810,7 +2010,8 @@
       "nameZh": "沼泽厨房地板 1",
       "nameEn": "swamp kitchen floor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7249678ec7fb5ad68cccd7cac8ef448a",
@@ -1819,7 +2020,8 @@
       "nameZh": "DLC13 木地板 1",
       "nameEn": "dlc13 wooden floor 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9c5a5dafb9f2bf7de6ba09e54e5fc765",
@@ -1828,7 +2030,8 @@
       "nameZh": "DLC洋葱屋地板",
       "nameEn": "DLC OnionHouse Floor",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "335108659516380429dbf8841580462b",
@@ -1837,7 +2040,8 @@
       "nameZh": "Kevin 地板 12×8",
       "nameEn": "kevin floor 12x8",
       "sizeTag": "12x8",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "393adaed86353aa4190674e51654efe1",
@@ -1846,7 +2050,8 @@
       "nameZh": "Kevin 地板 14×6",
       "nameEn": "kevin floor 14x6",
       "sizeTag": "14x6",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "0e3ba25ecc3d1ac48933ae23d43e9756",
@@ -1855,7 +2060,8 @@
       "nameZh": "Kevin 地板 3×15",
       "nameEn": "kevin floor 3x15",
       "sizeTag": "3x15",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "8f9241d62e0f0574dbd3e6d46077e9b6",
@@ -1864,7 +2070,8 @@
       "nameZh": "Kevin 地板 3×5",
       "nameEn": "kevin floor 3x5",
       "sizeTag": "3x5",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "be2ddbc7b4436b945b4380958b99b5b9",
@@ -1873,7 +2080,8 @@
       "nameZh": "Kevin 地板 5×8",
       "nameEn": "kevin floor 5x8",
       "sizeTag": "5x8",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "342d3e07e8cb90f4e8223ad4dfc2ea06",
@@ -1882,7 +2090,8 @@
       "nameZh": "Kevin 地板 6×4",
       "nameEn": "kevin floor 6x4",
       "sizeTag": "6x4",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "6214edd1fc45f27e8353ded98d973ed6",
@@ -1891,7 +2100,8 @@
       "nameZh": "城市黑砖 1",
       "nameEn": "city blacktiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e8c91839ca60979f46dc5f85102a9863",
@@ -1900,7 +2110,8 @@
       "nameZh": "城市黑砖 1 11×4",
       "nameEn": "city blacktiles 01 11x4",
       "sizeTag": "11x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e16f08618a8c77d7957fbde4f3446988",
@@ -1909,7 +2120,8 @@
       "nameZh": "城市黑砖 1 12×14",
       "nameEn": "city blacktiles 01 12x14",
       "sizeTag": "12x14",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8f561095909e2ada5c24fc653618a276",
@@ -1918,7 +2130,8 @@
       "nameZh": "城市黑砖 1 14×4",
       "nameEn": "city blacktiles 01 14x4",
       "sizeTag": "14x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "f2b35a23eaa9d42662ba32790013295c",
@@ -1927,7 +2140,8 @@
       "nameZh": "城市黑砖 1 18×8",
       "nameEn": "city blacktiles 01 18x8",
       "sizeTag": "18x8",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "4cecd4abd27928670018ac35dba98b65",
@@ -1936,7 +2150,8 @@
       "nameZh": "城市黑砖 1 3×5",
       "nameEn": "city blacktiles 01 3x5",
       "sizeTag": "3x5",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7f40c0ff96c37e3f75849425e2152a83",
@@ -1945,7 +2160,8 @@
       "nameZh": "城市黑砖 1 5×4",
       "nameEn": "city blacktiles 01 5x4",
       "sizeTag": "5x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "0cf66cc3a8753de9d0dfc7a1be3fa2ab",
@@ -1954,7 +2170,8 @@
       "nameZh": "城市黑砖 1 5×5",
       "nameEn": "city blacktiles 01 5x5",
       "sizeTag": "5x5",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ee42dce034bf2bba3ce4538887d9e62b",
@@ -1963,7 +2180,8 @@
       "nameZh": "城市黑砖 1 8×14",
       "nameEn": "city blacktiles 01 8x14",
       "sizeTag": "8x14",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "51ae641b2e1b5dfa37e4a96a07555390",
@@ -1972,7 +2190,8 @@
       "nameZh": "城市黑砖 1-4",
       "nameEn": "city blacktiles 1-4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "562925b5455608787239256b47822d51",
@@ -1981,7 +2200,8 @@
       "nameZh": "城市黑砖 1-5 1",
       "nameEn": "city blacktiles 01 5 1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "666732418c134100cc8286c5eca89d16",
@@ -1990,7 +2210,18 @@
       "nameZh": "城市黑砖 2",
       "nameEn": "city blacktiles 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
+    },
+    {
+      "guid": "2a48301222c18185a8d3bdbd43ceb2c8",
+      "id": "mat_dlc2_purple_carpet_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_purple_carpet_01.mat",
+      "nameZh": "海滩·紫色地毯",
+      "nameEn": "beach purple carpet",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
     },
     {
       "guid": "1be52d52d36440a418c00fc0ea4a1615",
@@ -1999,7 +2230,8 @@
       "nameZh": "黑色瓷砖 11×3",
       "nameEn": "black tiles 11x3",
       "sizeTag": "11x3",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "9f213de7c9c8d5f40b4642f5f880c73a",
@@ -2008,7 +2240,8 @@
       "nameZh": "黑色瓷砖 11×7",
       "nameEn": "black tiles 11x7",
       "sizeTag": "11x7",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "d99c8d26d1aa0aa43861b86f199a2c63",
@@ -2017,7 +2250,8 @@
       "nameZh": "黑色瓷砖 15×10",
       "nameEn": "black tiles 15x10",
       "sizeTag": "15x10",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "2ac48d2c677589140a00277f695f5675",
@@ -2026,7 +2260,8 @@
       "nameZh": "黑色瓷砖 15×6",
       "nameEn": "black tiles 15x6",
       "sizeTag": "15x6",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "3947a057bf57f4646a31008150d8c569",
@@ -2035,7 +2270,8 @@
       "nameZh": "黑色瓷砖 18×5",
       "nameEn": "black tiles 18x5",
       "sizeTag": "18x5",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "0cbb729f012e53940b1163837ee063da",
@@ -2044,7 +2280,8 @@
       "nameZh": "黑色瓷砖 18×6",
       "nameEn": "black tiles 18x6",
       "sizeTag": "18x6",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "d54e23239d94eca4099b91142715579d",
@@ -2053,7 +2290,8 @@
       "nameZh": "黑色瓷砖 2×1",
       "nameEn": "black tiles 2x1",
       "sizeTag": "2x1",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "5498d7dd4eae7644c8f23d1ce0fd5e79",
@@ -2062,7 +2300,8 @@
       "nameZh": "黑色瓷砖 3×5",
       "nameEn": "black tiles 3x5",
       "sizeTag": "3x5",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "ffcda9ee7975e9347968548f74d6991d",
@@ -2071,7 +2310,8 @@
       "nameZh": "黑色瓷砖 3×5",
       "nameEn": "black tiles 3x5",
       "sizeTag": "3x5",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "c72106051638ce84187c2d80868e809d",
@@ -2080,7 +2320,8 @@
       "nameZh": "黑色瓷砖 7×3",
       "nameEn": "black tiles 7x3",
       "sizeTag": "7x3",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "cd67674a0b93b3244a4cee9ec82a40b2",
@@ -2089,7 +2330,8 @@
       "nameZh": "黑色瓷砖 7×5",
       "nameEn": "black tiles 7x5",
       "sizeTag": "7x5",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "63c056970b6802540bb4e82e9340e0e5",
@@ -2098,7 +2340,8 @@
       "nameZh": "黑色瓷砖 7×7",
       "nameEn": "black tiles 7x7",
       "sizeTag": "7x7",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "61dac17caa3c9cc4683a4a1e57f9d2f0",
@@ -2107,7 +2350,8 @@
       "nameZh": "黑色瓷砖 8×4",
       "nameEn": "black tiles 8x4",
       "sizeTag": "8x4",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "224956dff54a33549a348b9d5b0f0990",
@@ -2116,7 +2360,8 @@
       "nameZh": "黑色瓷砖 9×11",
       "nameEn": "black tiles 9x11",
       "sizeTag": "9x11",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "8cdbf935788332641a1fe5ca546fdcae",
@@ -2125,7 +2370,8 @@
       "nameZh": "黑色瓷砖 9×3",
       "nameEn": "black tiles 9x3",
       "sizeTag": "9x3",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "822cea760c6cc794689e227881586afa",
@@ -2134,7 +2380,8 @@
       "nameZh": "黑色瓷砖 9×5",
       "nameEn": "black tiles 9x5",
       "sizeTag": "9x5",
-      "source": "oc1_story"
+      "source": "oc1_story",
+      "icon": true
     },
     {
       "guid": "fcb365e3916f2271a490f0d38e106424",
@@ -2143,7 +2390,8 @@
       "nameZh": "太空黑砖 1",
       "nameEn": "sp blacktiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "95421bb5d33862447984095e4ac1eabb",
@@ -2152,7 +2400,8 @@
       "nameZh": "城市路径 1",
       "nameEn": "city path 1",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "8335081f7e341fb4781b21a56f6e8285",
@@ -2161,7 +2410,8 @@
       "nameZh": "城市路径 2",
       "nameEn": "city path 2",
       "sizeTag": "",
-      "source": "test"
+      "source": "test",
+      "icon": true
     },
     {
       "guid": "1f43f863739d15b38fc480ea5e7d3f2f",
@@ -2170,7 +2420,8 @@
       "nameZh": "城市小径 1",
       "nameEn": "dlc11 mat city path 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5e7eec5c9490560b5a4dc759491bdc45",
@@ -2179,7 +2430,8 @@
       "nameZh": "城市小径 1 1×4",
       "nameEn": "city path 01 1x4",
       "sizeTag": "1x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "6f3af0bd84fbb777725a67ab66e31114",
@@ -2188,7 +2440,8 @@
       "nameZh": "城市小径 1 11×7",
       "nameEn": "city path 01 11x7",
       "sizeTag": "11x7",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b09b8e1740401d476b912d940f04c7a0",
@@ -2197,7 +2450,8 @@
       "nameZh": "城市小径 1 2×2",
       "nameEn": "city path 01 2x2",
       "sizeTag": "2x2",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ac7f9b37aa4c09385e5c69a756e18bbe",
@@ -2206,7 +2460,8 @@
       "nameZh": "城市小径 1 2×4",
       "nameEn": "city path 01 2x4",
       "sizeTag": "2x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "1760a1364f940d216fa7205ecbb6c688",
@@ -2215,7 +2470,8 @@
       "nameZh": "城市小径 1 6×4",
       "nameEn": "city path 01 6x4",
       "sizeTag": "6x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "31cde78b25fd9b6da139abbf52de52dc",
@@ -2224,7 +2480,8 @@
       "nameZh": "城市小径 1 7×4",
       "nameEn": "city path 01 7x4",
       "sizeTag": "7x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ff72a17c360101ff194387eb243bffcb",
@@ -2233,7 +2490,8 @@
       "nameZh": "城市小径 1 8×4",
       "nameEn": "city path 01 8x4",
       "sizeTag": "8x4",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2fc201d83b52d429c249646491f6a0ec",
@@ -2242,7 +2500,8 @@
       "nameZh": "城市小径 1 8×4B",
       "nameEn": "city path 01 8x4b",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e9453751ed6c7304a896637740d7a2d3",
@@ -2251,7 +2510,8 @@
       "nameZh": "城市小径 3",
       "nameEn": "city path 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7d967cd93b3b877e0d1881c2eff00c99",
@@ -2260,7 +2520,8 @@
       "nameZh": "城市小径侧边 1",
       "nameEn": "city path side 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2b3e9d0d44f95198d06d6bacbd5d4a65",
@@ -2269,7 +2530,8 @@
       "nameZh": "城市小径静态 1",
       "nameEn": "dlc11 mat city path Still 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "53d5360f824efc3a6b1aa89b33abb3fa",
@@ -2278,7 +2540,8 @@
       "nameZh": "城市小径静态 2",
       "nameEn": "dlc11 mat city path Still 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8b63e50085d6c39f431575202bc6fc23",
@@ -2287,7 +2550,8 @@
       "nameZh": "城市小径静态 3",
       "nameEn": "dlc11 mat city path Still 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "f5ab90185fd41df38a255f179c691002",
@@ -2296,7 +2560,8 @@
       "nameZh": "城市小径物体空间",
       "nameEn": "dlc11 mat city path objectspace",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "06d37836e9e4fa32b4b73ce423ac27a1",
@@ -2305,7 +2570,8 @@
       "nameZh": "城市小径转角 1",
       "nameEn": "city path corner 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "f03d1fcea2c7f30b20a378a2e8205db2",
@@ -2314,7 +2580,8 @@
       "nameZh": "海滩小径 1",
       "nameEn": "dlc2 citypath 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c422ef7355dcc3cf8e8c90f73d9aa385",
@@ -2323,7 +2590,8 @@
       "nameZh": "海滩小径 2",
       "nameEn": "dlc2 citypath 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "0056997bafe64070036fd20266b580a9",
@@ -2332,7 +2600,8 @@
       "nameZh": "海滩小径 3",
       "nameEn": "dlc2 citypath 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "259306332b8739e78edbf77d6add5217",
@@ -2341,7 +2610,8 @@
       "nameZh": "海滩小径侧边 1",
       "nameEn": "dlc2 city path side 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "835c0990f75ca80ad9e57aa950dc4cb0",
@@ -2350,7 +2620,8 @@
       "nameZh": "海滩小径转角 1",
       "nameEn": "dlc2 citypath corner 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "065fc1b4268da46c6b5ad0e8c1be1d99",
@@ -2359,7 +2630,48 @@
       "nameZh": "石径边缘 1",
       "nameEn": "dlc4 PathEdging 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
+    },
+    {
+      "guid": "6faa6669e4acc06deb308f811aa87aa9",
+      "id": "dlc11_city_path_side_01",
+      "assetPath": "Assets/commonW2/materials/dlc11_city_path_side_01.mat",
+      "nameZh": "夏日·小径侧边 01",
+      "nameEn": "summer path side 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "fa345609629d94bd7c040b0bc86e3dd7",
+      "id": "dlc11_city_path_side_objectspace",
+      "assetPath": "Assets/commonW2/materials/dlc11_city_path_side_objectspace.mat",
+      "nameZh": "夏日·小径侧边（对象空间）",
+      "nameEn": "summer path side (object space)",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "e37386d4a84734442256134c1f397378",
+      "id": "dlc11_city_path_corner_01",
+      "assetPath": "Assets/commonW2/materials/dlc11_city_path_corner_01.mat",
+      "nameZh": "夏日·小径转角 01",
+      "nameEn": "summer path corner 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "199bd34cc7356df5abc5e10b1c08fe63",
+      "id": "dlc11_city_path_corner_objectspace",
+      "assetPath": "Assets/commonW2/materials/dlc11_city_path_corner_objectspace.mat",
+      "nameZh": "夏日·小径转角（对象空间）",
+      "nameEn": "summer path corner (object space)",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
     },
     {
       "guid": "81091d99d5574cf4097b0e3e89b2605a",
@@ -2380,13 +2692,84 @@
       "source": "common01"
     },
     {
+      "guid": "2260d81a16897eb513395f1c56f506a3",
+      "id": "t_dlc07_battlements_grass_01",
+      "assetPath": "Assets/commonW2/materials/t_dlc07_battlements_grass_01.mat",
+      "nameZh": "部落·堡垒草地",
+      "nameEn": "horde battlements grass",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "7a24fb501bb8aea944533176681e1121",
+      "id": "mat_dlc07_grass_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc07_grass_01.mat",
+      "nameZh": "部落·草地 01",
+      "nameEn": "horde grass 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "1ea7919e75c61d663c909da8dce7b6cc",
+      "id": "mat_dlc07_keep_mud_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc07_keep_mud_01.mat",
+      "nameZh": "部落·城堡泥地",
+      "nameEn": "horde keep mud",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "7702d3cd3b7a4ca58aad509f7748f046",
+      "id": "mat_dlc07_city_assets_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc07_city_assets_01.mat",
+      "nameZh": "部落·城市地砖 01",
+      "nameEn": "horde city tiles 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "c02038998a51077283625d5f839bf025",
+      "id": "mat_dlc07_city_assets_02",
+      "assetPath": "Assets/commonW2/materials/mat_dlc07_city_assets_02.mat",
+      "nameZh": "部落·城市地砖 02",
+      "nameEn": "horde city tiles 02",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "69edc89b4ef1ec49651df0c255a78779",
+      "id": "t_dlc07_courtyard_grass_01",
+      "assetPath": "Assets/commonW2/materials/t_dlc07_courtyard_grass_01.mat",
+      "nameZh": "部落·庭院草地",
+      "nameEn": "horde courtyard grass",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "14491907c8316cb25bbf1e88e83f300d",
+      "id": "mat_dlc07_courtyard_water_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc07_courtyard_water_01.mat",
+      "nameZh": "部落·庭院水面",
+      "nameEn": "horde courtyard water",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
       "guid": "6eceef53b5449483fd2478755dd2fc2c",
       "id": "mat_city_road_01",
       "assetPath": "Assets/commonW1/materials/mat_city_road_01.mat",
       "nameZh": "城市道路 1",
       "nameEn": "city road 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3c3e2a3f247d6cf8b4d1a4786f6fd790",
@@ -2395,7 +2778,8 @@
       "nameZh": "城市道路 2",
       "nameEn": "city road 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e4ffe0712d396f11eefda9779c728463",
@@ -2404,7 +2788,8 @@
       "nameZh": "城市道路黄框区 1",
       "nameEn": "city road yellow box 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "828958c41b1b0dac88a4234b868c02ce",
@@ -2413,7 +2798,8 @@
       "nameZh": "城市道路裂纹 1",
       "nameEn": "city road crack 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fe114b0d3f10ac842874be5d32cae927",
@@ -2422,7 +2808,8 @@
       "nameZh": "城市道路人行横道 1",
       "nameEn": "city road crossing 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "764a384a8a261651d5dd6219a30dfef7",
@@ -2431,7 +2818,8 @@
       "nameZh": "城市道路人行横道 2",
       "nameEn": "city road crossing 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2fc014f5462f41e9533d2d7af4dc2cb4",
@@ -2440,7 +2828,8 @@
       "nameZh": "城市道路人行横道物体空间",
       "nameEn": "city road crossing objectspace",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e6e192d154bbcce6284d23052a98ed83",
@@ -2449,7 +2838,8 @@
       "nameZh": "城市道路停止线 1",
       "nameEn": "city road stop 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b44dafcbf4814cf0da779f618867d272",
@@ -2458,7 +2848,8 @@
       "nameZh": "城市道路停止线 2",
       "nameEn": "city road stop 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "130c8ecd24cce70840164f670a1dd11c",
@@ -2467,7 +2858,8 @@
       "nameZh": "城市道路停止线物体空间",
       "nameEn": "city road stop objectspace",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "13f85f95f967732b7c8e3d640179ae9a",
@@ -2476,7 +2868,8 @@
       "nameZh": "城市道路物体空间",
       "nameEn": "city road objectspace",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9d7ba55e2ca2ad673db6e6cd3f2e0ea5",
@@ -2485,7 +2878,8 @@
       "nameZh": "城市道路中央 1",
       "nameEn": "city road centre 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2ac7460547d05c1cebd306e45bf6f145",
@@ -2494,7 +2888,8 @@
       "nameZh": "城市道路中央 2",
       "nameEn": "city road centre 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "6d3333590992bd033e7999cd5b7068cd",
@@ -2503,7 +2898,8 @@
       "nameZh": "城市道路中央物体空间",
       "nameEn": "city road centre objectspace",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "81e9b4028218e6d13302eae031655a5b",
@@ -2512,7 +2908,8 @@
       "nameZh": "城市人行道花纹 1",
       "nameEn": "city pavementdeco 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "f6b8228bf93f6a8e8509f020120cc938",
@@ -2521,7 +2918,8 @@
       "nameZh": "城市人行道花纹 2",
       "nameEn": "city pavementdeco 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "d54d1461d1caa9351de373ee43e15d23",
@@ -2530,7 +2928,8 @@
       "nameZh": "城市屋顶砖 1",
       "nameEn": "dlc11 mat city rooftiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b71f70e3c04fadef0a19295718dd1569",
@@ -2539,7 +2938,28 @@
       "nameZh": "城市屋顶砖 1",
       "nameEn": "city rooftiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
+    },
+    {
+      "guid": "a2b43d1f79c34bd575c833399051f9df",
+      "id": "mat_dlc3_cobble_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc3_cobble_01.mat",
+      "nameZh": "冬季·鹅卵石",
+      "nameEn": "winter cobblestone",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "3e35fcac090a1003e1c5c1c25836d56e",
+      "id": "mat_dlc3_water_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc3_water_01.mat",
+      "nameZh": "冬季·水面 01",
+      "nameEn": "winter water 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
     },
     {
       "guid": "c75d25a05768d4a4081772c73c9ea6e0",
@@ -2548,7 +2968,168 @@
       "nameZh": "发光特效材质",
       "nameEn": "pfx glow",
       "sizeTag": "",
-      "source": "common01"
+      "source": "common01",
+      "icon": true
+    },
+    {
+      "guid": "3b04be4a097ced82336d4740409e5b29",
+      "id": "mat_dlc2_poolwater_02",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_poolwater_02.mat",
+      "nameZh": "海滩·池水 02",
+      "nameEn": "beach pool water 02",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "fdc4632e424f5ae69556c16a08a53151",
+      "id": "mat_dlc2_river_bottom02",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_river_bottom02.mat",
+      "nameZh": "海滩·河底 02",
+      "nameEn": "beach river bottom 02",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "e9346340f22c74284bfd74df5e59c3c3",
+      "id": "mat_dlc2_river_water_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_river_water_01.mat",
+      "nameZh": "海滩·河水 01",
+      "nameEn": "beach river water 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "002b0b35505c0cfddb625d69c9e07f47",
+      "id": "mat_dlc2_firepit_04",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_firepit_04.mat",
+      "nameZh": "海滩·火坑地砖 04",
+      "nameEn": "beach firepit 04",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "d60e52e7b55f168ab5810b9715f0fd0b",
+      "id": "mat_dlc2_sand_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_01.mat",
+      "nameZh": "海滩·沙地 01",
+      "nameEn": "beach sand 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "3dfce4b813b7c24fed5f6991967dc14a",
+      "id": "mat_dlc2_sand_05",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_05.mat",
+      "nameZh": "海滩·沙地 05",
+      "nameEn": "beach sand 05",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "077586fdb84e7305d652a150ce36cb03",
+      "id": "mat_dlc2_sand_07",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_07.mat",
+      "nameZh": "海滩·沙地 07",
+      "nameEn": "beach sand 07",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "e0e46b8f7f94b57eeee51bcc4fc88d28",
+      "id": "mat_dlc2_sand_09",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_09.mat",
+      "nameZh": "海滩·沙地 09",
+      "nameEn": "beach sand 09",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "6c699aeb72bedcd5575583c60a0433ec",
+      "id": "mat_dlc2_sand_09b",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_09b.mat",
+      "nameZh": "海滩·沙地 09b",
+      "nameEn": "beach sand 09b",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "369688c28a343b65f52b1df886fb7447",
+      "id": "mat_dlc2_sand_10",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_10.mat",
+      "nameZh": "海滩·沙地 10",
+      "nameEn": "beach sand 10",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "2a137edc8dad7898842a70c8e4983123",
+      "id": "mat_dlc2_sand_11",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_11.mat",
+      "nameZh": "海滩·沙地 11",
+      "nameEn": "beach sand 11",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "ad4b14a68f65237eefbffe69f33bc9b3",
+      "id": "mat_dlc2_sand_18",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_18.mat",
+      "nameZh": "海滩·沙地 18",
+      "nameEn": "beach sand 18",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "c2bc775efbf145090d0d465a31a1efab",
+      "id": "mat_dlc2_sand_decal_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_decal_01.mat",
+      "nameZh": "海滩·沙地贴花 01",
+      "nameEn": "beach sand decal 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "7564f531055918ef11610773e03497fd",
+      "id": "mat_dlc2_sand_decal_03",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_sand_decal_03.mat",
+      "nameZh": "海滩·沙地贴花 03",
+      "nameEn": "beach sand decal 03",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "11f8da737e4878f6dd35b24953bd2a63",
+      "id": "mat_dlc2_shoreline_02_wet_sand",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_shoreline_02_wet_sand.mat",
+      "nameZh": "海滩·水线湿沙 02",
+      "nameEn": "beach shoreline wet sand 02",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "909f3bb25b918a982f118c760b1a5e36",
+      "id": "mat_dlc2_shoreline_animatoncontrol_wet_sand",
+      "assetPath": "Assets/commonW2/materials/mat_dlc2_shoreline_animatoncontrol_wet_sand.mat",
+      "nameZh": "海滩·水线湿沙（动画）",
+      "nameEn": "beach shoreline wet sand (animated)",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
     },
     {
       "guid": "bad8a8c81fbf7be3b0fabb17a6f0c1f6",
@@ -2557,7 +3138,8 @@
       "nameZh": "海滩道路 1",
       "nameEn": "dlc2 cityroad 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7eaf2b81642633225b014bc385a06b58",
@@ -2566,7 +3148,8 @@
       "nameZh": "海滩道路横道线 1",
       "nameEn": "dlc2 cityroad crossing 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "934da5fed96b9afbf9f7e1ced7454f20",
@@ -2575,7 +3158,8 @@
       "nameZh": "海滩道路黄框 1",
       "nameEn": "dlc2 cityroad yellow box 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "8af622ebb34880a7553bd58aec11d5e8",
@@ -2584,7 +3168,8 @@
       "nameZh": "海滩道路裂纹 1",
       "nameEn": "dlc2 cityroad crack 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5b68e5d811abf28c3d21b99170680cea",
@@ -2593,7 +3178,8 @@
       "nameZh": "海滩道路停止线 1",
       "nameEn": "dlc2 cityroad stop 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "59ec785c5452448eab6af218fecbe517",
@@ -2602,7 +3188,8 @@
       "nameZh": "海滩道路中央 1",
       "nameEn": "dlc2 cityroad centre 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3a62837dc431909faf8f3b40dfaf4a86",
@@ -2611,7 +3198,8 @@
       "nameZh": "海滩双黄线道路 1",
       "nameEn": "dlc2 road double yellow 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5eab814f8a42d9a6856818bdb7032aa0",
@@ -2620,7 +3208,8 @@
       "nameZh": "海滩泳池砖 1",
       "nameEn": "dlc2 pooltiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e4d6cf1af7850a53b389c2856e12d3d8",
@@ -2629,7 +3218,8 @@
       "nameZh": "海滩泳池砖 2",
       "nameEn": "dlc2 pooltiles 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7e1315f93f8c55df82a99f3b84902257",
@@ -2638,7 +3228,8 @@
       "nameZh": "海滩泳池砖 3",
       "nameEn": "dlc2 pooltiles 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "6513228a68edc8c844219a8cfb5d94db",
@@ -2647,7 +3238,108 @@
       "nameZh": "海滩泳池砖 4",
       "nameEn": "dlc2 pooltiles 04",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
+    },
+    {
+      "guid": "750e7ac351a05a65dd895e6e6d3505ad",
+      "id": "mat_dlc4_grass_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_grass_01.mat",
+      "nameZh": "火锅·草地 01",
+      "nameEn": "hotpot grass 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "45be55bcbd758e236b5bb4d58ee94d04",
+      "id": "mat_dlc4_grass_02",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_grass_02.mat",
+      "nameZh": "火锅·草地 02",
+      "nameEn": "hotpot grass 02",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "1daa3f93358cf22212db784ebfc0ccbb",
+      "id": "mat_dlc4_grass_03",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_grass_03.mat",
+      "nameZh": "火锅·草地 03",
+      "nameEn": "hotpot grass 03",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "c65eb396aebd64e78cdb993bac11e4c5",
+      "id": "mat_dlc4_grass_cards_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_grass_cards_01.mat",
+      "nameZh": "火锅·草地贴片",
+      "nameEn": "hotpot grass cards",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "1b679c3227f00943cfff6b421b2edbd9",
+      "id": "mat_dlc4_crazypaving_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_crazypaving_01.mat",
+      "nameZh": "火锅·疯狂铺路",
+      "nameEn": "hotpot crazy paving",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "cd9a42c0bdda523644b56180718c0f46",
+      "id": "mat_dlc4_mud_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_mud_01.mat",
+      "nameZh": "火锅·泥地 01",
+      "nameEn": "hotpot mud 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "5feaf2da2096c054897db5c35c849156",
+      "id": "mat_dlc4_mud_02",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_mud_02.mat",
+      "nameZh": "火锅·泥地 02",
+      "nameEn": "hotpot mud 02",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "436b6f3eb838aabb5dce16647bdcbbe7",
+      "id": "mat_dlc4_mud_03",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_mud_03.mat",
+      "nameZh": "火锅·泥地 03",
+      "nameEn": "hotpot mud 03",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "cf00876df7f42aa2c2d17d560c83e20e",
+      "id": "mat_dlc4_water_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_water_01.mat",
+      "nameZh": "火锅·水面 01",
+      "nameEn": "hotpot water 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "b3a894f8f29f31744923d76399468548",
+      "id": "mat_dlc4_dressingassets_02",
+      "assetPath": "Assets/commonW2/materials/mat_dlc4_dressingassets_02.mat",
+      "nameZh": "火锅·苔藓贴片",
+      "nameEn": "hotpot moss patch",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
     },
     {
       "guid": "af23e0b3f54979c4ebd3e4621aa95ea7",
@@ -2656,7 +3348,8 @@
       "nameZh": "嘉年华泳池砖 1",
       "nameEn": "dlc11 pooltiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e1b2df42090c141d4f506b3fb0e582c6",
@@ -2665,7 +3358,8 @@
       "nameZh": "嘉年华泳池砖标线 1",
       "nameEn": "dlc11 pooltiles Marking 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3a0bd3f178a201507dd323908983a8f5",
@@ -2674,7 +3368,18 @@
       "nameZh": "嘉年华泳池砖标线 2",
       "nameEn": "dlc11 pooltiles Marking 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
+    },
+    {
+      "guid": "6be353097df4a547cdb8dd25fbc4454e",
+      "id": "mat_old_tiles",
+      "assetPath": "Assets/commonW2/materials/mat_old_tiles.mat",
+      "nameZh": "旧版厨房地砖",
+      "nameEn": "old kitchen tiles",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
     },
     {
       "guid": "c3bb392e39026fd8db10a469d98f133e",
@@ -2683,7 +3388,8 @@
       "nameZh": "矿洞碎砖 1",
       "nameEn": "mine brokentiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "f7a830e193f697a2cbb989c6dbf2bce9",
@@ -2692,7 +3398,58 @@
       "nameZh": "矿洞碎砖漩涡 1",
       "nameEn": "mine brokentiles Vortex 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
+    },
+    {
+      "guid": "037a172833653953472e99969aa75b8c",
+      "id": "mat_dlc5_grass_cards_02",
+      "assetPath": "Assets/commonW2/materials/mat_dlc5_grass_cards_02.mat",
+      "nameZh": "露营·草地贴片",
+      "nameEn": "camping grass cards",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "77bf852a7fc89f4db7ebe2d28996348e",
+      "id": "mat_dlc5_city_assets_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc5_city_assets_01.mat",
+      "nameZh": "露营·城市地砖 01",
+      "nameEn": "camping city tiles 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "f9a9ed6777c7101ac4a810be6a24f2d6",
+      "id": "mat_dlc5_water_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc5_water_01.mat",
+      "nameZh": "露营·水面 01",
+      "nameEn": "camping water 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "29b0830782f51593b5245f0a6ab28f4c",
+      "id": "mat_dlc5_cliff_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc5_cliff_01.mat",
+      "nameZh": "露营·崖壁 01",
+      "nameEn": "camping cliff 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "5098562455f0f0a0ba7bd2312f616bbb",
+      "id": "mat_dlc5_dressing_assets_02",
+      "assetPath": "Assets/commonW2/materials/mat_dlc5_dressing_assets_02.mat",
+      "nameZh": "露营·装饰贴片 02",
+      "nameEn": "camping dressing patch 02",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
     },
     {
       "guid": "ad2d40545b44fadf43d8ff028558f7c8",
@@ -2701,7 +3458,8 @@
       "nameZh": "马戏团地面 1-1",
       "nameEn": "dlc08 ground 1-1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "41d03f09df0d427d3eb81184ac8f4091",
@@ -2710,7 +3468,8 @@
       "nameZh": "马戏团地面 1-2",
       "nameEn": "dlc08 ground 1-2",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "cc5af70694901552b08a3ef0aec53727",
@@ -2719,7 +3478,8 @@
       "nameZh": "马戏团地面 1-3",
       "nameEn": "dlc08 ground 1-3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "af1ffbf10e426fb4615e3ea8c3233629",
@@ -2728,7 +3488,8 @@
       "nameZh": "马戏团地面 1-4",
       "nameEn": "dlc08 ground 1-4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e56bf9dd18ac72ae948745970dbdb4c8",
@@ -2737,7 +3498,8 @@
       "nameZh": "马戏团地面 2-1",
       "nameEn": "dlc08 ground 2-1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "a3a25e3d8f68e51f844d2c6952db17fb",
@@ -2746,7 +3508,8 @@
       "nameZh": "马戏团地面 2-2",
       "nameEn": "dlc08 ground 2-2",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "dfdac2de1e01ded5e80870950e76c4b2",
@@ -2755,7 +3518,8 @@
       "nameZh": "马戏团地面 2-4",
       "nameEn": "dlc08 ground 2-4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "5b233eefc1191dc20f722dce941c5294",
@@ -2764,7 +3528,8 @@
       "nameZh": "马戏团地面 3-1",
       "nameEn": "dlc08 ground 3-1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7fab3bcf82af5784c1ab65593c14f9f2",
@@ -2773,7 +3538,8 @@
       "nameZh": "马戏团地面 3-2",
       "nameEn": "dlc08 ground 3 2",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e733627570b3256f6e8f25f3fa7dd9e6",
@@ -2782,7 +3548,8 @@
       "nameZh": "马戏团地面 3-3",
       "nameEn": "dlc08 ground 3-3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "9091210003adc8d2eda51c11e258047a",
@@ -2791,7 +3558,8 @@
       "nameZh": "马戏团地面 3-4",
       "nameEn": "dlc08 ground 3-4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "47c3eb5ac850a44f3b0edebdfaaa2f9f",
@@ -2800,7 +3568,8 @@
       "nameZh": "马戏团地面 3-4",
       "nameEn": "dlc08 ground 3 4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3852b200047e026d9b539390692bfde2",
@@ -2809,7 +3578,8 @@
       "nameZh": "马戏团地面 3-5",
       "nameEn": "dlc08 ground 3 5",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "ac20d7671d0a7b9d8e5ba3a83bd88f4e",
@@ -2818,7 +3588,8 @@
       "nameZh": "马戏团地面变体H16",
       "nameEn": "dlc08 ground h16",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "2b430c52a3a65ede403f156d6ed1e5f2",
@@ -2827,7 +3598,8 @@
       "nameZh": "马戏团地面变体H17",
       "nameEn": "dlc08 ground h17",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e8ffe13d02446eef692d602e1d801480",
@@ -2836,7 +3608,8 @@
       "nameZh": "马戏团地面变体H17 2",
       "nameEn": "dlc08 ground h17 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7b74133d24ea66d802a56f1826283d5a",
@@ -2845,7 +3618,8 @@
       "nameZh": "马戏团地面变体H18",
       "nameEn": "dlc08 ground h18",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3116405674aad39c2bcf20e1516b2ab7",
@@ -2854,7 +3628,8 @@
       "nameZh": "马戏团地面王座",
       "nameEn": "dlc08 ground Throne",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c7562bcfb3df6f68c62a402ff8c292db",
@@ -2863,7 +3638,8 @@
       "nameZh": "魔法学校石砖 1",
       "nameEn": "wizard stonetile 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b821dc86621469bb6f1658dd85693636",
@@ -2872,7 +3648,8 @@
       "nameZh": "魔法学校石砖 2",
       "nameEn": "wizard stonetile 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "fc9249bc845e1d01bbe1a11a783664e9",
@@ -2881,7 +3658,8 @@
       "nameZh": "魔法学校石砖 3",
       "nameEn": "wizard stonetile 03",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "691b2a9416b888622ff590db6388458f",
@@ -2890,7 +3668,8 @@
       "nameZh": "魔法学校石砖 4",
       "nameEn": "wizard stonetile 04",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "a30bbe74812d2a9f900dcb196e112a12",
@@ -2899,7 +3678,8 @@
       "nameZh": "魔法学校石砖 5",
       "nameEn": "wizard stonetile 05",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "470f2b47e37b852b7697fdfdc79ac953",
@@ -2908,7 +3688,8 @@
       "nameZh": "魔法学校石砖 6",
       "nameEn": "wizard stonetile 06",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "3c8621c2c0b96fc2e7ee33898c8b736d",
@@ -2917,7 +3698,8 @@
       "nameZh": "魔法学校石砖 7",
       "nameEn": "wizard stonetile 07",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7dc1793ad83598c3f4fa0044a60c27b7",
@@ -2926,7 +3708,8 @@
       "nameZh": "魔法学校石砖 8",
       "nameEn": "wizard stonetile 08",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "489601cfa956fa77bfce9fe99e4817bd",
@@ -2935,7 +3718,8 @@
       "nameZh": "墓地碎砖 2",
       "nameEn": "grave brokentiles 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "b533fd15fdf099032ef5fafe2062c57d",
@@ -2944,7 +3728,8 @@
       "nameZh": "森林营地地面 1-1",
       "nameEn": "dlc5 ground camp 1 1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "913e1b35855fae04192aec2b3fd0019b",
@@ -2953,7 +3738,8 @@
       "nameZh": "森林营地地面 1-2",
       "nameEn": "dlc5 ground 1 2",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "1b9e919765439c52d75657225216f018",
@@ -2962,7 +3748,8 @@
       "nameZh": "森林营地地面 1-3",
       "nameEn": "dlc5 ground 1 3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "25691486b2ff47faf713a540bf4ba9a0",
@@ -2971,7 +3758,8 @@
       "nameZh": "森林营地地面 1-4",
       "nameEn": "dlc5 ground 1 4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "cf746c4fb71b90ebdcec6141d8d536b6",
@@ -2980,7 +3768,8 @@
       "nameZh": "森林营地地面 2-3",
       "nameEn": "dlc5 ground 2 3",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "a1abf13d391d17d34f6755f35ea5296f",
@@ -2989,7 +3778,8 @@
       "nameZh": "森林营地地面 2-4",
       "nameEn": "dlc5 ground 2 4",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c12e70663dd43da2e4432d02338c9edf",
@@ -2998,7 +3788,8 @@
       "nameZh": "森林营地地面 3-1",
       "nameEn": "dlc5 ground camp 3 1",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "f8e10bf13fd3988641367f8c8e2802b8",
@@ -3007,7 +3798,8 @@
       "nameZh": "森林营地地面变体H10",
       "nameEn": "dlc5 ground h10",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "621991398f73a8bea738accd22b58487",
@@ -3016,7 +3808,8 @@
       "nameZh": "森林营地地面变体H12",
       "nameEn": "dlc5 ground h12",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "917ea7574a39d14b5686be28f499eee4",
@@ -3025,7 +3818,8 @@
       "nameZh": "森林营地地面特殊",
       "nameEn": "dlc5 ground camp Special",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "92f1eba177fe439526f6131835cb53a1",
@@ -3034,7 +3828,8 @@
       "nameZh": "石径石砖 1",
       "nameEn": "dlc4 stonetile 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "7157291d7558f207dea13e8db09f0208",
@@ -3043,7 +3838,8 @@
       "nameZh": "石径石砖背 1",
       "nameEn": "dlc4 stonetileback 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "368c9ae40d6ad8bf416ddc2975edaf9c",
@@ -3052,7 +3848,8 @@
       "nameZh": "太空瓷砖 1",
       "nameEn": "sp tiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "bc0aa86d3af02c1e6018bb9903706981",
@@ -3061,7 +3858,8 @@
       "nameZh": "太空瓷砖 2",
       "nameEn": "sp tiles 02",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "22e69372a2935fedcfc55813f9b06c8b",
@@ -3070,7 +3868,8 @@
       "nameZh": "太空碎砖 1",
       "nameEn": "sp brokentiles 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "e9339fb92aed0884720d72e9787c3ff2",
@@ -3079,7 +3878,8 @@
       "nameZh": "太空碎砖漩涡 1",
       "nameEn": "sp brokentiles vortex 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     },
     {
       "guid": "c035789f5dc78a64c8cd9b63607aaa67",
@@ -3091,13 +3891,54 @@
       "source": "common01"
     },
     {
+      "guid": "61a41cb5acf029ed1d420c5c64bd6da0",
+      "id": "dlc11_mat_city_assets_01",
+      "assetPath": "Assets/commonW2/materials/dlc11_mat_city_assets_01.mat",
+      "nameZh": "夏日·城市地砖 01",
+      "nameEn": "summer city tiles 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "433eb68412f75972799436431f50e793",
+      "id": "mat_dlc09_grass_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc09_grass_01.mat",
+      "nameZh": "仙境·草地 01",
+      "nameEn": "wonderland grass 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
       "guid": "bcdbbf876e6ead7ccfb1fca97a906a3a",
       "id": "mat_dlc07_ground_2-2",
       "assetPath": "Assets/commonW1/materials/mat_dlc07_ground_2-2.mat",
       "nameZh": "隐秘之城地面 2-2",
       "nameEn": "dlc07 ground 2-2",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
+    },
+    {
+      "guid": "5e0d9e9488591001d1c30721f9dfa2b3",
+      "id": "mat_dlc13_grass_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc13_grass_01.mat",
+      "nameZh": "中秋·草地 01",
+      "nameEn": "moonfestival grass 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
+    },
+    {
+      "guid": "5e2188b284bba64e627bdf85eff832a7",
+      "id": "mat_dlc13_mud_01",
+      "assetPath": "Assets/commonW2/materials/mat_dlc13_mud_01.mat",
+      "nameZh": "中秋·泥地 01",
+      "nameEn": "moonfestival mud 01",
+      "sizeTag": "",
+      "source": "commonW2",
+      "icon": true
     },
     {
       "guid": "55ec99b14ad890d2e6cd8cd41be0d3c4",
@@ -3106,7 +3947,8 @@
       "nameZh": "DLC13 地砖 1",
       "nameEn": "dlc13 flloortile 01",
       "sizeTag": "",
-      "source": "commonW1"
+      "source": "commonW1",
+      "icon": true
     }
   ]
 }

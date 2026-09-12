@@ -402,9 +402,9 @@ export function hitTestFloorsAll(wx: number, wz: number): FloorHit[] {  const hi
     const f = S.floors[i];
     if (f.surfaceKind === "background") {
       if (!categoryVisible("background")) continue;
-      // Backgrounds are only directly editable on the dedicated background layer
-      // (or when the user explicitly unlocks them on the floor layer).
-      if (!S.backgroundEditable && S.currentLayer !== "background") continue;
+      // 地板层/背景层严格分离：背景（水面/天空/环境板）只在背景层可命中，
+      // 地板层永远只显示作衬托、不参与点选/框选/拖动/缩放。
+      if (S.currentLayer !== "background") continue;
     } else if (!categoryVisible("floors")) {
       continue;
     }

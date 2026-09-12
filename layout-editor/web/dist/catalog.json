@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-10T16:25:06.592Z",
+  "generatedAt": "2026-09-11T07:28:22.142Z",
   "schemaVersion": 5,
   "gridCellSize": 1.2,
-  "itemCount": 2529,
+  "itemCount": 2880,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -16,7 +16,9 @@
     "catalog/items.9.json",
     "catalog/items.10.json",
     "catalog/items.11.json",
-    "catalog/items.12.json"
+    "catalog/items.12.json",
+    "catalog/items.13.json",
+    "catalog/items.14.json"
   ],
   "paletteGroups": [
     {
@@ -108,7 +110,7 @@
       "labelZh": "地板 / 背景",
       "labelEn": "Floor & background surfaces",
       "layoutTier": "floor",
-      "itemCount": 80
+      "itemCount": 96
     },
     {
       "key": "decor/food",
@@ -129,7 +131,7 @@
       "labelZh": "装饰 · NPC 角色",
       "labelEn": "Decor · NPC",
       "layoutTier": "decor",
-      "itemCount": 120
+      "itemCount": 122
     },
     {
       "key": "art/air_balloon",
@@ -139,13 +141,6 @@
       "itemCount": 27
     },
     {
-      "key": "art/city",
-      "labelZh": "装饰 · city",
-      "labelEn": "Decor · city",
-      "layoutTier": "decor",
-      "itemCount": 0
-    },
-    {
       "key": "art/city_sushi",
       "labelZh": "装饰 · 寿司城市场景",
       "labelEn": "Decor · city_sushi",
@@ -153,32 +148,18 @@
       "itemCount": 99
     },
     {
-      "key": "art/core",
-      "labelZh": "装饰 · core",
-      "labelEn": "Decor · core",
-      "layoutTier": "decor",
-      "itemCount": 0
-    },
-    {
-      "key": "art/dlc02",
-      "labelZh": "装饰 · dlc02",
-      "labelEn": "Decor · dlc02",
-      "layoutTier": "decor",
-      "itemCount": 0
-    },
-    {
       "key": "art/dlc02_beach",
       "labelZh": "装饰 · 海滩 DLC",
       "labelEn": "Decor · dlc02_beach",
       "layoutTier": "decor",
-      "itemCount": 159
+      "itemCount": 181
     },
     {
       "key": "art/dlc03_christmas",
       "labelZh": "装饰 · 圣诞 DLC",
       "labelEn": "Decor · dlc03_christmas",
       "layoutTier": "decor",
-      "itemCount": 91
+      "itemCount": 95
     },
     {
       "key": "art/dlc04",
@@ -189,49 +170,35 @@
     },
     {
       "key": "art/dlc04_chinatown",
-      "labelZh": "装饰 · dlc04_chinatown",
+      "labelZh": "装饰 · 新年 · 唐人街",
       "labelEn": "Decor · dlc04_chinatown",
       "layoutTier": "decor",
       "itemCount": 64
-    },
-    {
-      "key": "art/dlc05",
-      "labelZh": "装饰 · dlc05",
-      "labelEn": "Decor · dlc05",
-      "layoutTier": "decor",
-      "itemCount": 0
     },
     {
       "key": "art/dlc05_camping",
       "labelZh": "装饰 · 露营 DLC",
       "labelEn": "Decor · dlc05_camping",
       "layoutTier": "decor",
-      "itemCount": 185
-    },
-    {
-      "key": "art/dlc07",
-      "labelZh": "装饰 · dlc07",
-      "labelEn": "Decor · dlc07",
-      "layoutTier": "decor",
-      "itemCount": 0
+      "itemCount": 229
     },
     {
       "key": "art/dlc07_horde",
       "labelZh": "装饰 · 部落 DLC",
       "labelEn": "Decor · dlc07_horde",
       "layoutTier": "decor",
-      "itemCount": 414
+      "itemCount": 431
     },
     {
       "key": "art/dlc08_circus",
       "labelZh": "装饰 · 马戏团 DLC",
       "labelEn": "Decor · dlc08_circus",
       "layoutTier": "decor",
-      "itemCount": 183
+      "itemCount": 185
     },
     {
       "key": "art/dlc09_festivemashup",
-      "labelZh": "装饰 · dlc09_festivemashup",
+      "labelZh": "装饰 · 节日混搭 DLC",
       "labelEn": "Decor · dlc09_festivemashup",
       "layoutTier": "decor",
       "itemCount": 306
@@ -241,42 +208,28 @@
       "labelZh": "装饰 · 仙境 DLC",
       "labelEn": "Decor · dlc09_wonderland",
       "layoutTier": "decor",
-      "itemCount": 9
+      "itemCount": 11
     },
     {
       "key": "art/dlc10",
       "labelZh": "装饰 · 新年 · 火锅 DLC2",
       "labelEn": "Decor · dlc10",
       "layoutTier": "decor",
-      "itemCount": 7
-    },
-    {
-      "key": "art/dlc10_lunar",
-      "labelZh": "装饰 · dlc10_lunar",
-      "labelEn": "Decor · dlc10_lunar",
-      "layoutTier": "decor",
-      "itemCount": 3
+      "itemCount": 66
     },
     {
       "key": "art/dlc11_summer",
       "labelZh": "装饰 · 夏季饮料 DLC",
       "labelEn": "Decor · dlc11_summer",
       "layoutTier": "decor",
-      "itemCount": 163
+      "itemCount": 176
     },
     {
       "key": "art/dlc13",
       "labelZh": "装饰 · 中秋 · 巧克力 DLC",
       "labelEn": "Decor · dlc13",
       "layoutTier": "decor",
-      "itemCount": 5
-    },
-    {
-      "key": "art/dlc13_moonfestival",
-      "labelZh": "装饰 · dlc13_moonfestival",
-      "labelEn": "Decor · dlc13_moonfestival",
-      "layoutTier": "decor",
-      "itemCount": 84
+      "itemCount": 92
     },
     {
       "key": "art/foodtruck",
@@ -334,5 +287,83 @@
       "layoutTier": "decor",
       "itemCount": 30
     }
-  ]
+  ],
+  "taxonomy": {
+    "typeKind": [
+      {
+        "key": "building",
+        "zh": "建筑构件"
+      },
+      {
+        "key": "ground",
+        "zh": "地面铺装"
+      },
+      {
+        "key": "furniture",
+        "zh": "家具陈设"
+      },
+      {
+        "key": "vegetation",
+        "zh": "植被"
+      },
+      {
+        "key": "rock",
+        "zh": "山石"
+      },
+      {
+        "key": "lighting",
+        "zh": "灯具光源"
+      },
+      {
+        "key": "water",
+        "zh": "水体"
+      },
+      {
+        "key": "fx",
+        "zh": "特效粒子"
+      },
+      {
+        "key": "creature",
+        "zh": "角色生物"
+      },
+      {
+        "key": "food_model",
+        "zh": "食材成品菜模型"
+      },
+      {
+        "key": "other",
+        "zh": "其他"
+      }
+    ],
+    "usage": [
+      {
+        "key": "flooring",
+        "zh": "铺地"
+      },
+      {
+        "key": "enclosure",
+        "zh": "围合砌墙"
+      },
+      {
+        "key": "landmark",
+        "zh": "大型地标"
+      },
+      {
+        "key": "dressing",
+        "zh": "环境点缀"
+      },
+      {
+        "key": "ambience",
+        "zh": "氛围特效"
+      },
+      {
+        "key": "waterscape",
+        "zh": "水域造景"
+      },
+      {
+        "key": "creature",
+        "zh": "角色生物"
+      }
+    ]
+  }
 }

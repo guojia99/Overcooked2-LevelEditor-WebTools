@@ -1,6 +1,6 @@
 # 01 · 上游补丁 Assembly-CSharp-Patch
 
-> 目录：`Assembly-CSharp-Patch/`（仓库根，44 个 .cs 文件）
+> 目录：`Assembly-CSharp-Patch/`（仓库根，42 个 .cs 文件）
 > 一句话定位：让"反编译的 Overcooked2 游戏源码"变成"可在 Unity 2017 编辑器中运行的关卡编辑器宿主"的最小覆盖补丁集。
 > 返回 [00-架构总览.md](00-架构总览.md)
 
@@ -9,7 +9,7 @@
 ## 1. 目录结构
 
 ```
-Assembly-CSharp-Patch/                     ← 44 个 .cs 文件的"补丁覆盖层"（git 跟踪）
+Assembly-CSharp-Patch/                     ← 42 个 .cs 文件的"补丁覆盖层"（git 跟踪）
 ├── *.cs                                   ← 40 个顶层文件（按游戏反编译源码的扁平命名）
 ├── GameModes/
 │   └── Horde/ClientHordeFlowController.cs
@@ -31,7 +31,7 @@ Assembly-CSharp-Patch/                     ← 44 个 .cs 文件的"补丁覆盖
 flowchart LR
     GAME["游戏 Overcooked2_Data"] -- "AssetRipper ≤1.3.14" --> EXP["ExportedProject/Assets/Scripts/Assembly-CSharp<br/>（2365 文件原版反编译）"]
     EXP -- "拷入（.gitignore 忽略）" --> AC["Assets/Scripts/Assembly-CSharp"]
-    PATCH["Assembly-CSharp-Patch/*.cs<br/>（44 文件，git 跟踪）"] == "整文件覆盖（overlay）" ==> AC
+    PATCH["Assembly-CSharp-Patch/*.cs<br/>（42 文件，git 跟踪）"] == "整文件覆盖（overlay）" ==> AC
     AC -- "Unity 2017.4.8f1 编译" --> DLL["Assembly-CSharp.dll<br/>（与 LevelEditor/ 同一程序集）"]
 ```
 
@@ -39,12 +39,12 @@ flowchart LR
 
 ## 3. 修改标记约定（如何识别 patch）
 
-1. **`// patch` 成对注释**：41/44 个文件用成对 `// patch` 包裹修改块，原逻辑以注释保留在上方——主要标记（如 `ServerTriggerZone.cs:57-59`）。
+1. **`// patch` 成对注释**：35/42 个文件用成对 `// patch` 包裹修改块，原逻辑以注释保留在上方——主要标记（如 `ServerTriggerToggleOnAnimator.cs:29-35`）。
 2. **`#if UNITY_EDITOR` 块**：`AudioManager`（音频兜底）、`PeerBase`（日志）、`GraphicsUtils`（DestroyImmediate）。
 3. **`using LevelEditor;` / `using LevelEditorStub;`**：14 个文件引入编辑器程序集，是"游戏代码 ⇄ 编辑器代码"的连接证据（PseudoPrefabManager、MultiCookingStationTypes、RecipeHelper 等被游戏侧调用）。
 4. **git 层标记**：`git log -- Assembly-CSharp-Patch` 可追溯每个补丁的动机。
 
-## 4. 全部 44 个补丁文件按功能域详解
+## 4. 全部 42 个补丁文件按功能域详解
 
 ### 4.1 关卡系统 / 编辑器集成钩子
 
@@ -96,8 +96,7 @@ flowchart LR
 
 | 文件 | 类 | 补丁作用 |
 |---|---|---|
-| `ServerTriggerZone.cs` | ServerTriggerZone | 触发区：进/出时补发 `SyncOccupied()` 服务端事件 + 清理已销毁 collider（原版 bug 修复，联机同步踏板必需） |
-| `ClientTriggerZone.cs` | ClientTriggerZone | 配套客户端：实现 `ApplyServerEvent(TriggerZoneMessage)` |
+| ~~ServerTriggerZone.cs / ClientTriggerZone.cs~~ | — | **已移除（2026-09-12）**：触发区占用联机同步（SyncOccupied 通道）+ fallPad 占用清理属新功能逻辑，迁至 CustomStub `TriggerZone/TriggerZoneOccupancySync.cs`（Harmony 运行时接线，编辑器 Play 与真机同路径）；两文件已还原原版并从本目录删除 |
 | `ServerTriggerToggleOnAnimator.cs` / `ClientTriggerToggleOnAnimator.cs` | 同名 | 触发器支持对"已启用的 TriggerOnAnimator"做双态 toggle |
 | `TriggerCallback.cs` | TriggerCallback | 基线补丁：trigger 字符串 → C# 回调注册表（编辑器/机关接线用） |
 | `ServerFireHazardSpawner.cs` | ServerFireHazardSpawner | 火焰喷射器落地：先点燃 Flammable 桌台再生成地面火 |
@@ -140,7 +139,7 @@ flowchart LR
 flowchart TD
     FE["layout-editor/web（前端）"] -- "HTTP :8765" --> BE["Assets/Editor/LayoutEditor（编辑器后端）"]
     BE -- "操作场景中 Design/Art 下的占位 prefab<br/>烘焙 *Stub 组件" --> LS["Assets/LevelSets/&lt;set&gt;/<br/>（场景 + Stub 数据 + runtime DLL）"]
-    AC["Assets/Scripts/Assembly-CSharp<br/>（本目录 44 文件覆盖进此）"] -- "同一程序集；被单向调用 LevelEditor 命名空间<br/>（PseudoPrefabManager · MultiCookingStationTypes · RecipeHelper）" --> LE["Assets/Scripts/LevelEditor<br/>+ LevelEditorStub（LevelInfoSO / *Stub）"]
+    AC["Assets/Scripts/Assembly-CSharp<br/>（本目录 42 文件覆盖进此）"] -- "同一程序集；被单向调用 LevelEditor 命名空间<br/>（PseudoPrefabManager · MultiCookingStationTypes · RecipeHelper）" --> LE["Assets/Scripts/LevelEditor<br/>+ LevelEditorStub（LevelInfoSO / *Stub）"]
     LE -- "Stub 组件类型 / SO 数据" --> LS
     LS -- "随导出 zip 分发" --> LOADER["BepInExPlugins/OC2LevelRuntimeLoader<br/>（真机加载 Stub_&lt;set&gt;.dll）"]
 ```

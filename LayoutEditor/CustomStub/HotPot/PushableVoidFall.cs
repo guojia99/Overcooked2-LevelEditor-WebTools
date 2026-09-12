@@ -42,14 +42,53 @@ namespace CustomStub
         // 原实现每 tick（15Hz）FindObjectsOfType 全场景扫描 target、且每次拖拽判定
         // 再 FindAll(PlayerControls)——无可移动火锅的关卡也照扫，是帧率腰斩主因之一。
         // 现改为 ~1s 探测重建 + PushablePot.Assemble 主动 RegisterTarget 即时注册；
-        // 无 target 时探测退避到 2s（近零开销）。玩家列表同周期缓存（开局锁定，
+        // 无 target 时探测退避 2s（近零开销）。玩家列表同周期缓存（开局锁定，
         // 1s 刷新纯兜底）。
-        private static PushableVoidFallTarget[] s_targets;
+        //
+        // 跨程序集发现（2026-09-12，EntryPoint v8 去重后回归事故「火锅无法落水」）：
+        // 编辑器多关卡集 stub 程序集共存时，装配器/标记可能是【其它程序集】的同名
+        // 类型（FindObjectsOfType<本程序集类型> 与 typeof() 判定全部失明）——
+        // 目标发现一律走共享游戏类型（PushableObject）+ 按组件 FullName 认标记。
+        private static Component[] s_targets;
         private static float s_nextTargetProbe = -1f;
         private static Component[] s_players;
         private static float s_nextPlayerProbe = -1f;
         private const float ProbeSeconds = 1f;
         private const float ProbeIdleSeconds = 2f;
+        private const string MarkerFullName = "CustomStub.PushableVoidFallTarget";
+        private const string AssemblerFullName = "CustomStub.PushablePot";
+
+        /// <summary>物体上找任一程序集的装配标记组件（按 FullName，跨程序集可见）。</summary>
+        private static Component FindPotMarker(GameObject go)
+        {
+            if (go == null)
+                return null;
+            var comps = go.GetComponents<Component>();
+            for (int i = 0; i < comps.Length; i++)
+            {
+                var c = comps[i];
+                if (c != null && c.GetType().FullName == MarkerFullName)
+                    return c;
+            }
+            return null;
+        }
+
+        /// <summary>祖先链上任一物体带指定 FullName 的 CustomStub 组件（跨程序集）。</summary>
+        private static bool HasStubNameInParent(Transform t, string fullName)
+        {
+            while (t != null)
+            {
+                var comps = t.GetComponents<Component>();
+                for (int i = 0; i < comps.Length; i++)
+                {
+                    var c = comps[i];
+                    if (c != null && c.GetType().FullName == fullName)
+                        return true;
+                }
+                t = t.parent;
+            }
+            return false;
+        }
 
         private static readonly Dictionary<Transform, PotTrackState> s_states =
             new Dictionary<Transform, PotTrackState>();
@@ -78,18 +117,36 @@ namespace CustomStub
             s_killPlaneColliders = null;
         }
 
-        /// <summary>target 列表惰性探测（~1s；空结果退避 2s）。</summary>
+        /// <summary>target 列表惰性探测（~1s；空结果退避 2s）。
+        /// 经共享游戏类型 PushableObject 枚举载具、按 FullName 认标记——
+        /// 标记可能挂在其它程序集装配的组件上（编辑器多集共存），本程序集的
+        /// FindObjectsOfType&lt;PushableVoidFallTarget&gt; 看不见它。</summary>
         private static void EnsureTargets()
         {
             if (s_targets != null && Time.unscaledTime < s_nextTargetProbe)
                 return;
-            s_targets = Object.FindObjectsOfType<PushableVoidFallTarget>();
+            var list = new List<Component>();
+            if (GameApi.PushableObjectType != null)
+            {
+                var pushables = GameApi.FindAll(GameApi.PushableObjectType);
+                for (int i = 0; i < pushables.Length; i++)
+                {
+                    var pushable = pushables[i] as Component;
+                    if (pushable == null)
+                        continue;
+                    var marker = FindPotMarker(pushable.gameObject);
+                    if (marker != null)
+                        list.Add(marker);
+                }
+            }
+            s_targets = list.ToArray();
             s_nextTargetProbe = Time.unscaledTime
                 + (s_targets.Length == 0 ? ProbeIdleSeconds : ProbeSeconds);
         }
 
-        /// <summary>装配器挂标记时主动注册（即时纳入坠落检测，不等下次探测）。</summary>
-        internal static void RegisterTarget(PushableVoidFallTarget target)
+        /// <summary>装配器挂标记时主动注册（即时纳入坠落检测，不等下次探测；
+        /// 仅同程序集调用方生效——跨程序集标记由 EnsureTargets 的名字扫描兜底）。</summary>
+        internal static void RegisterTarget(Component target)
         {
             if (target == null)
                 return;
@@ -104,7 +161,7 @@ namespace CustomStub
                 if (s_targets[i] == target)
                     return;
             }
-            var list = new List<PushableVoidFallTarget>(s_targets);
+            var list = new List<Component>(s_targets);
             list.Add(target);
             s_targets = list.ToArray();
         }
@@ -249,15 +306,17 @@ namespace CustomStub
         // ============ 公开钩子（HarmonyPatches 调用） ============
 
         /// <summary>可移动火锅由本补丁负责坠落/重生，始终跳过宿主 KillPlane，
-        /// 避免宿主 DestroyEntity 式重生（实体连同模型永久销毁）。</summary>
+        /// 避免宿主 DestroyEntity 式重生（实体连同模型永久销毁）。
+        /// 按 FullName 判定（跨程序集）：标记/装配器可能是其它程序集的同名组件，
+        /// 本程序集 typeof() 判不到会把锅漏给宿主原生重生。</summary>
         internal static bool ShouldIgnoreKillPlane(GameObject gameObject)
         {
             if (gameObject == null)
                 return true;
             // 两个白名单（与旧 LayoutRuntimePushableVoidFall 对齐）：载具标记组件，
             // 以及 wrapper 根上的 PushablePot 装配器（载具是 wrapper 的子孙）。
-            return GameApi.HasComponentInParent(gameObject.transform, typeof(PushableVoidFallTarget))
-                || GameApi.HasComponentInParent(gameObject.transform, typeof(PushablePot));
+            return HasStubNameInParent(gameObject.transform, MarkerFullName)
+                || HasStubNameInParent(gameObject.transform, AssemblerFullName);
         }
 
         /// <summary>玩家触 KillPlane 重生前强制脱离火锅，避免仍挂在锅上：
@@ -800,7 +859,7 @@ namespace CustomStub
             }
             if (!potPresent)
             {
-                var marker = carrier.GetComponent<PushableVoidFallTarget>();
+                var marker = FindPotMarker(carrier);
                 if (marker != null)
                 {
                     Object.Destroy(marker);
@@ -814,7 +873,7 @@ namespace CustomStub
                 + " activeInHierarchy=" + carrier.activeInHierarchy
                 + " renderers=" + renderers.Length + "（重开 " + reEnabled + "）"
                 + " 锅体=" + (potPresent ? "在" : "缺")
-                + " 标记=" + (carrier.GetComponent<PushableVoidFallTarget>() != null ? "在" : "无"));
+                + " 标记=" + (FindPotMarker(carrier) != null ? "在" : "无"));
         }
 
         private static GameObject FindCarrierFallback(Transform wrapper)

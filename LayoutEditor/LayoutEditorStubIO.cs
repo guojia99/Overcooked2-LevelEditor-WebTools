@@ -199,6 +199,51 @@ public static class LayoutEditorStubIO
             return;
         }
 
+        // 可移动火锅（CustomStub.PushablePot，关卡集程序集反射读回）：stubKind 保持空，
+        // 容量/时间/额外食材经 cookingUtensil 往返（与写回分支的数据通道一致；
+        // 组件为权威，无组件=未配置=导出空，web 按原版默认显示）。
+        if (dispenserPrefabId == "web_utensil_large_pot_01_pushable")
+        {
+            var ppType = FindCustomStubType(go, "PushablePot");
+            var pp = ppType != null ? go.GetComponent(ppType) : null;
+            if (pp != null)
+            {
+                var pdto = new LayoutCookingUtensilStubDto();
+                var cap = GetStubField(pp, "m_capacity");
+                if (cap is int && (int)cap > 0)
+                    pdto.capacity = (int)cap;
+                var cook = GetStubField(pp, "m_cookTime");
+                if (cook is float && (float)cook > 0f)
+                    pdto.cookTime = (float)cook;
+                var burn = GetStubField(pp, "m_burnTime");
+                if (burn is float && (float)burn > 0f)
+                    pdto.burnTime = (float)burn;
+                var bundles = GetStubField(pp, "m_extraIngredientBundles") as string[];
+                var paths = GetStubField(pp, "m_extraIngredientPaths") as string[];
+                if (bundles != null && bundles.Length > 0)
+                {
+                    var guids = new System.Collections.Generic.List<string>();
+                    for (int i = 0; i < bundles.Length; i++)
+                    {
+                        var g = FindPseudoPrefabSOGuid(bundles[i],
+                            paths != null && i < paths.Length ? paths[i] : null);
+                        if (!string.IsNullOrEmpty(g))
+                            guids.Add(g);
+                    }
+                    if (guids.Count > 0)
+                        pdto.allowedIngredientGuids = guids.ToArray();
+                }
+                item.cookingUtensil = pdto;
+            }
+            // soArray（大锅 SO 载体，槽 0）与外观皮肤 guid 必须随分支导出：
+            // 本分支提前 return，走不到方法末尾的通用导出——漏掉时 web 往返
+            // 会把 soArray 当空数据回传（2026-09-12 事故：槽 0 被清空 =
+            // 预览/Play 全部无锅模型；写回侧已加结构性数据守卫双保险）。
+            ExportSoArrayIfPresent(go, item);
+            ExportPseudoPrefabGuidIfPresent(go, item);
+            return;
+        }
+
         var travelator = go.GetComponent<PseudoPrefabTravelatorStub>();
         if (travelator != null)
         {
@@ -436,21 +481,33 @@ public static class LayoutEditorStubIO
 
         if (item.soArray != null && item.soArray.pseudoPrefabGuids != null)
         {
-            var soArray = go.GetComponent<PseudoPrefabSOArray>();
-            if (soArray == null && item.soArray.pseudoPrefabGuids.Length > 0)
+            // 可移动火锅的 soArray 是结构性数据（prefab 烘焙的「大锅 SO 槽 0」载体，
+            // 运行时 PushablePot.PotSO / 编辑器预览都靠它装配锅模型）——绝不接受
+            // web 写回改写（2026-09-12 事故：web 端空列表往返把槽 0 清成
+            // Array.size=0，预览与 Play 全部无锅模型）。
+            var soPid = !string.IsNullOrEmpty(item.prefabAssetPath)
+                ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+                : "";
+            if (soPid == "web_utensil_large_pot_01_pushable")
             {
-                // 酱料机/饮料机的多选列表（游戏内开关循环切换，见 LayoutEditorItemSwitcherPatch）：
-                // 原 prefab 没有 PseudoPrefabSOArray 组件，写回时补加。
-                var pid0 = !string.IsNullOrEmpty(item.prefabAssetPath)
-                    ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
-                    : "";
-                if (IsSpecialDispenserPrefabId(pid0))
-                    soArray = Undo.AddComponent<PseudoPrefabSOArray>(go);
+                if (item.soArray.pseudoPrefabGuids.Length > 0)
+                    LayoutEditorLog.LogWarning("[LayoutEditor] 可移动火锅的 soArray 为结构性数据（大锅 SO 载体），已忽略 web 传入的 soArray: " + go.name);
             }
-            if (soArray != null)
+            else
             {
-                Undo.RecordObject(soArray, "Layout Editor SOArray");
-                soArray.pseudoPrefabSOs = LoadPseudoPrefabSOs(item.soArray.pseudoPrefabGuids);
+                var soArray = go.GetComponent<PseudoPrefabSOArray>();
+                if (soArray == null && item.soArray.pseudoPrefabGuids.Length > 0)
+                {
+                    // 酱料机/饮料机的多选列表（游戏内开关循环切换，见 LayoutEditorItemSwitcherPatch）：
+                    // 原 prefab 没有 PseudoPrefabSOArray 组件，写回时补加。
+                    if (IsSpecialDispenserPrefabId(soPid))
+                        soArray = Undo.AddComponent<PseudoPrefabSOArray>(go);
+                }
+                if (soArray != null)
+                {
+                    Undo.RecordObject(soArray, "Layout Editor SOArray");
+                    soArray.pseudoPrefabSOs = LoadPseudoPrefabSOs(item.soArray.pseudoPrefabGuids);
+                }
             }
         }
 
@@ -521,7 +578,7 @@ public static class LayoutEditorStubIO
         if (string.IsNullOrEmpty(item.stubKind))
         {
             // 可移动火锅：stubKind 为空（不挂 CookingUtensil stub），但锅具管理的
-            //  allowedIngredientGuids 仍要落到 customStub 装配组件上（运行时重建许可表）。
+            //  allowedIngredientGuids 仍要落到 customStub 装配组件上（运行时与默认许可表合并重建）。
             // 组件类型在关卡集程序集（CustomStub.PushablePot），反射写入；
             // tag 载体 "PushablePot|pot;食材节点…" 与 soArray 槽 0（prefab 自带大锅 SO）双兜底。
             var pushablePid = !string.IsNullOrEmpty(item.prefabAssetPath)
@@ -529,9 +586,10 @@ public static class LayoutEditorStubIO
                 : "";
             bool pushableHasTimes = item.cookingUtensil != null
                 && (item.cookingUtensil.cookTime > 0f || item.cookingUtensil.burnTime > 0f);
+            bool pushableHasCapacity = item.cookingUtensil != null && item.cookingUtensil.capacity > 0;
             if (pushablePid == "web_utensil_large_pot_01_pushable" &&
                 item.cookingUtensil != null &&
-                (item.cookingUtensil.allowedIngredientGuids != null || pushableHasTimes))
+                (item.cookingUtensil.allowedIngredientGuids != null || pushableHasTimes || pushableHasCapacity))
             {
                 // 仅写时间（allowedIngredientGuids == null）时不清空已有食材配置：
                 // 食材数组与 tag 只在 guid 列表显式到场时重建。
@@ -564,6 +622,8 @@ public static class LayoutEditorStubIO
                     // 时间参数（0 = 原版默认；装配时经 CustomStub.UtensilTiming 应用）
                     SetStubField(pushable, "m_cookTime", item.cookingUtensil.cookTime > 0f ? item.cookingUtensil.cookTime : 0f);
                     SetStubField(pushable, "m_burnTime", item.cookingUtensil.burnTime > 0f ? item.cookingUtensil.burnTime : 0f);
+                    // 容量（0 = 原版默认；装配时写 IngredientContainer.m_capacity）
+                    SetStubField(pushable, "m_capacity", item.cookingUtensil.capacity > 0 ? item.cookingUtensil.capacity : 0);
                 }
                 else if (hasIngredientList)
                 {
@@ -1525,6 +1585,46 @@ public static class LayoutEditorStubIO
             : AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
     }
 
+    /// <summary>bundle:path → PseudoPrefabSO guid 反查（可移动火锅额外食材导出回 web；
+    /// 写回方向是 guid→SO→bundle:path，导出方向需要逆映射）。全量扫描结果按
+    /// "bundle|path" 缓存（SO 集合编辑期基本不变；未命中返回 null 由调用方丢弃）。</summary>
+    private static System.Collections.Generic.Dictionary<string, string> s_soGuidByBundlePath;
+
+    private static string FindPseudoPrefabSOGuid(string bundleName, string assetPath)
+    {
+        if (string.IsNullOrEmpty(bundleName) || string.IsNullOrEmpty(assetPath))
+            return null;
+        if (s_soGuidByBundlePath == null)
+        {
+            s_soGuidByBundlePath = new System.Collections.Generic.Dictionary<string, string>();
+            var roots = new[]
+            {
+                "Assets/common01/pseudo_prefab_so",
+                "Assets/common02/pseudo_prefab_so",
+                "Assets/common03/pseudo_prefab_so",
+                "Assets/commonW1/pseudo_prefab_so",
+                "Assets/commonW2/pseudo_prefab_so",
+            };
+            foreach (var root in roots)
+            {
+                if (!System.IO.Directory.Exists(root))
+                    continue;
+                foreach (var guid in AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { root }))
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(guid);
+                    var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+                    if (so == null || string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
+                        continue;
+                    var key = so.bundleName + "|" + so.assetPath;
+                    if (!s_soGuidByBundlePath.ContainsKey(key))
+                        s_soGuidByBundlePath.Add(key, guid);
+                }
+            }
+        }
+        string found;
+        return s_soGuidByBundlePath.TryGetValue(bundleName + "|" + assetPath, out found) ? found : null;
+    }
+
     /// <summary>酱料机 / 饮料机：编辑器按食材箱处理，可绑定特定酱料/饮料。</summary>
     public static bool IsSpecialDispenserPrefabId(string prefabId)
     {
@@ -2191,6 +2291,26 @@ public static class LayoutEditorStubIO
             tag.prefabTag = "";
             EditorUtility.SetDirty(tag);
         }
+    }
+
+    /// <summary>相机出发点偏移 tag：CameraOffset|&lt;x&gt;,&lt;z&gt;（invariant 浮点 =
+    /// 相机根节点摆放位世界 XZ，tag payload 即真机权威通道）。写回相机位置
+    /// （positionEdited 且 X/Z 实际变化）时由 SceneLayoutApplier.ApplyCameraInfo 调用。
+    /// tag 存在 ⟺ 该图配置了相机偏移 ⟺ 导出携带 runtime（CustomStubTagPrefixes
+    /// 前缀表）⟺ 真机场景自愈按需安装相机补丁；无 tag 的图零影响。</summary>
+    public static void SetCameraOffsetTag(GameObject rigRoot, float x, float z)
+    {
+        if (rigRoot == null)
+            return;
+        SetCustomStubTag(rigRoot, "CameraOffset|"
+            + x.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + ","
+            + z.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>清除相机偏移 tag（仅当当前值确为 CameraOffset| 前缀）。</summary>
+    public static void ClearCameraOffsetTag(GameObject rigRoot)
+    {
+        ClearCustomStubTag(rigRoot, "CameraOffset|");
     }
 
     /// <summary>随机箱需要但关卡集尚无 stub 程序集时发起（参数 = 关卡集名）。

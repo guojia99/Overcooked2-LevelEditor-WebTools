@@ -483,6 +483,20 @@ public static class LayoutEditorLevelAdminApi
         if (!string.IsNullOrEmpty(sceneName))
             sceneAssetPath = LevelSetsRoot + "/" + setName + "/scenes/" + sceneName + ".unity";
 
+        // 网格半宽：SO 未设置（0 = 不调整）的轴回填场景实际生效值（prefab 覆盖 / env prefab
+        // 默认值），让关卡配置弹窗直接显示真值；用户保存后该值被显式钉入 SO。
+        var gridHalfX = so.gridHalfSizeX;
+        var gridHalfZ = so.gridHalfSizeZ;
+        if (gridHalfX <= 0 || gridHalfZ <= 0)
+        {
+            int sceneHalfX, sceneHalfZ;
+            LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out sceneHalfX, out sceneHalfZ);
+            if (gridHalfX <= 0)
+                gridHalfX = sceneHalfX;
+            if (gridHalfZ <= 0)
+                gridHalfZ = sceneHalfZ;
+        }
+
         var dto = new LevelDetailDto
         {
             levelInfoAssetPath = assetPath,
@@ -496,6 +510,8 @@ public static class LayoutEditorLevelAdminApi
             disableDynamicParenting = so.disableDynamicParenting,
             minOrderCount = ClampOrderCount(so.minOrderCount, 2),
             maxOrderCount = ClampOrderCount(so.maxOrderCount, 5),
+            gridHalfSizeX = gridHalfX,
+            gridHalfSizeZ = gridHalfZ,
             dependencies = so.dependencies != null ? (string[])so.dependencies.Clone() : new string[0],
             configs = new[]
             {
@@ -899,6 +915,8 @@ public static class LayoutEditorLevelAdminApi
         so.maxOrderCount = ClampOrderCount(dto.maxOrderCount, so.maxOrderCount);
         if (so.minOrderCount > so.maxOrderCount)
             so.maxOrderCount = so.minOrderCount;
+        so.gridHalfSizeX = Mathf.Clamp(dto.gridHalfSizeX, 0, 50);
+        so.gridHalfSizeZ = Mathf.Clamp(dto.gridHalfSizeZ, 0, 50);
         so.dependencies = dto.dependencies != null ? (string[])dto.dependencies.Clone() : so.dependencies;
         EditorUtility.SetDirty(so);
 

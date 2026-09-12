@@ -50,11 +50,14 @@ export function openCameraLightModal(): void {
         <span>出发点位置</span>
         <span class="cl-cam-pos">
           <span class="cl-pos-pad">
-            <button type="button" class="cl-pos-btn cl-pos-up" data-cam-pos="up" title="Z +0.1">↑</button>
-            <button type="button" class="cl-pos-btn cl-pos-left" data-cam-pos="left" title="X −0.1">←</button>
-            <code class="cl-pos-val" id="cl-cam-pos-val"></code>
-            <button type="button" class="cl-pos-btn cl-pos-right" data-cam-pos="right" title="X +0.1">→</button>
-            <button type="button" class="cl-pos-btn cl-pos-down" data-cam-pos="down" title="Z −0.1">↓</button>
+            <button type="button" class="cl-pos-btn cl-pos-up" data-cam-pos="up" title="Z +0.1（长按连续调整）">↑</button>
+            <button type="button" class="cl-pos-btn cl-pos-left" data-cam-pos="left" title="X −0.1（长按连续调整）">←</button>
+            <span class="cl-pos-val">
+              <label>X <input type="number" id="cl-cam-pos-x" step="0.1" title="相机 X 世界坐标（回车生效）" /></label>
+              <label>Z <input type="number" id="cl-cam-pos-z" step="0.1" title="相机 Z 世界坐标（回车生效）" /></label>
+            </span>
+            <button type="button" class="cl-pos-btn cl-pos-right" data-cam-pos="right" title="X +0.1（长按连续调整）">→</button>
+            <button type="button" class="cl-pos-btn cl-pos-down" data-cam-pos="down" title="Z −0.1（长按连续调整）">↓</button>
           </span>
           <button type="button" class="modal-btn" id="cl-cam-pos-reset" ${S.cameraPosOrigin ? "" : "disabled"} title="恢复场景导出时的相机位置">重置位置</button>
         </span>
@@ -126,9 +129,10 @@ export function openCameraLightModal(): void {
     fovNum.addEventListener("change", () => applyFov(Number(fovNum.value), "num"));
   }
 
-  // —— 出发点位置方向键（每次 ±0.1；只改 X/Z，Y 永不改动） ——
+  // —— 出发点位置方向键（单击步进 ±0.1，长按连续调整；X/Z 也可直接输入；Y 永不改动） ——
   const CAM_POS_STEP = 0.1;
-  const posVal = document.getElementById("cl-cam-pos-val");
+  const posXInput = document.getElementById("cl-cam-pos-x") as HTMLInputElement | null;
+  const posZInput = document.getElementById("cl-cam-pos-z") as HTMLInputElement | null;
   const snapEl = document.querySelector<HTMLElement>("#modal-root .cl-cam-snap");
 
   /** 步进后 round 到 0.001，消除 0.1 累加的浮点噪声。 */
@@ -137,30 +141,93 @@ export function openCameraLightModal(): void {
   const updatePosReadout = () => {
     const c = S.cameraInfo;
     if (!c) return;
-    if (posVal) posVal.textContent = `x ${fmt(c.position?.x)} / z ${fmt(c.position?.z)}`;
+    // 输入框聚焦时不回写，避免打断正在输入的数字
+    if (posXInput && document.activeElement !== posXInput) posXInput.value = fmt(c.position?.x);
+    if (posZInput && document.activeElement !== posZInput) posZInput.value = fmt(c.position?.z);
     if (snapEl) {
       snapEl.textContent =
-        `相机位置 (${fmt(c.position?.x)}, ${fmt(c.position?.y)}, ${fmt(c.position?.z)})，可用上方按钮微调（每次 0.1，Y 不变）` +
+        `相机位置 (${fmt(c.position?.x)}, ${fmt(c.position?.y)}, ${fmt(c.position?.z)})，可用上方按钮微调（单击/长按，每次 0.1，Y 不变）或直接输入 X/Z` +
         ` · 俯角 ${fmt(c.pitch)}° / 朝向 ${fmt(c.yaw)}°` +
-        ` · 裁面 ${fmt(c.nearClip)}–${fmt(c.farClip)}`;
+        ` · 裁面 ${fmt(c.nearClip)}–${fmt(c.farClip)}` +
+        ` · Play 时以此位置为跟随中心（保留开场运镜与跟随微调）`;
     }
   };
 
+  /** 方向步进一次；push=true 压一条撤销历史（一次按压会话只在首步压入）。 */
+  const stepOnce = (dir: string, push: boolean) => {
+    if (!S.cameraInfo) return;
+    if (push) pushHistory();
+    if (!S.cameraInfo.position) S.cameraInfo.position = { x: 0, y: 0, z: 0 };
+    const p = S.cameraInfo.position;
+    if (dir === "up") p.z = stepPos(p.z, CAM_POS_STEP);
+    else if (dir === "down") p.z = stepPos(p.z, -CAM_POS_STEP);
+    else if (dir === "left") p.x = stepPos(p.x, -CAM_POS_STEP);
+    else if (dir === "right") p.x = stepPos(p.x, CAM_POS_STEP);
+    S.cameraInfo.positionEdited = true;
+    updatePosReadout();
+    draw();
+  };
+
   document.querySelectorAll<HTMLButtonElement>("#modal-root [data-cam-pos]").forEach((btn) => {
+    const dir = btn.dataset.camPos ?? "";
+    let repeatDelay: number | undefined;
+    let repeatTimer: number | undefined;
+    let suppressClick = false;
+    const stopRepeat = () => {
+      window.clearTimeout(repeatDelay);
+      window.clearInterval(repeatTimer);
+      repeatDelay = undefined;
+      repeatTimer = undefined;
+    };
+    btn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      stopRepeat();
+      suppressClick = true;
+      try {
+        btn.setPointerCapture(e.pointerId);
+      } catch {
+        // 老旧浏览器无 pointer capture，pointerleave 兜底停止
+      }
+      stepOnce(dir, true);
+      // 长按：400ms 后进入 70ms 连发
+      repeatDelay = window.setTimeout(() => {
+        repeatTimer = window.setInterval(() => stepOnce(dir, false), 70);
+      }, 400);
+    });
+    btn.addEventListener("pointerup", stopRepeat);
+    btn.addEventListener("pointercancel", stopRepeat);
+    btn.addEventListener("pointerleave", stopRepeat);
+    // 键盘激活（Enter/Space 只触发 click 而无 pointerdown）兜底单步；
+    // 鼠标/触摸的 click 已在 pointerdown 步进过，抑制避免重复。
     btn.addEventListener("click", () => {
-      if (!S.cameraInfo) return;
-      pushHistory();
-      if (!S.cameraInfo.position) S.cameraInfo.position = { x: 0, y: 0, z: 0 };
-      const p = S.cameraInfo.position;
-      if (btn.dataset.camPos === "up") p.z = stepPos(p.z, CAM_POS_STEP);
-      else if (btn.dataset.camPos === "down") p.z = stepPos(p.z, -CAM_POS_STEP);
-      else if (btn.dataset.camPos === "left") p.x = stepPos(p.x, -CAM_POS_STEP);
-      else if (btn.dataset.camPos === "right") p.x = stepPos(p.x, CAM_POS_STEP);
-      S.cameraInfo.positionEdited = true;
-      updatePosReadout();
-      draw();
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
+      stepOnce(dir, true);
     });
   });
+
+  // —— X/Z 直接输入（change = 回车/失焦提交，每次提交一条撤销历史） ——
+  const applyPosInput = (axis: "x" | "z", input: HTMLInputElement) => {
+    if (!S.cameraInfo) return;
+    const v = parseFloat(input.value);
+    if (!isFinite(v)) {
+      updatePosReadout();
+      return;
+    }
+    if (!S.cameraInfo.position) S.cameraInfo.position = { x: 0, y: 0, z: 0 };
+    const p = S.cameraInfo.position;
+    const next = Math.round(v * 1000) / 1000;
+    if (p[axis] === next) return;
+    pushHistory();
+    p[axis] = next;
+    S.cameraInfo.positionEdited = true;
+    updatePosReadout();
+    draw();
+  };
+  posXInput?.addEventListener("change", () => applyPosInput("x", posXInput));
+  posZInput?.addEventListener("change", () => applyPosInput("z", posZInput));
 
   const posReset = document.getElementById("cl-cam-pos-reset");
   posReset?.addEventListener("click", () => {

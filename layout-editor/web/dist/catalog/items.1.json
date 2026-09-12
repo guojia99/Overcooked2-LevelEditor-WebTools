@@ -4,6 +4,106 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "dlc11_fireworks_rocket_02",
+      "guid": "9c44fa635c96edfddab3923a87cef9e2",
+      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/dlc11_fireworks_rocket_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.0788841247558594
+      },
+      "height": 1.079,
+      "layoutTier": "decor",
+      "nameZh": "dlc 11 fireworks 火箭 2",
+      "nameEn": "dlc 11 fireworks rocket 2",
+      "typeKind": "rock",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "dlc11_fireworks_rocket_03",
+      "guid": "4825ad4bc0fadf8a913f2d4d6c289d21",
+      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/dlc11_fireworks_rocket_03.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.0788841247558594
+      },
+      "height": 1.079,
+      "layoutTier": "decor",
+      "nameZh": "dlc 11 fireworks 火箭 3",
+      "nameEn": "dlc 11 fireworks rocket 3",
+      "typeKind": "rock",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "dlc11_float_playable_scene_1_1_1",
+      "guid": "f9a3b401e9de7aee7464e69260d12c8a",
+      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/dlc11_float_playable_scene_1_1_1.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 4,
+        "sizeY": 4.633628845214844
+      },
+      "height": 4.634,
+      "layoutTier": "decor",
+      "nameZh": "DLC11 浮筒可玩场景 1 1 1",
+      "nameEn": "dlc11 float playable scene 1 1 1",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "dlc11_float_playable_scene_1_1_2",
+      "guid": "72c3eb93f6ee20c6f0a812b493745f39",
+      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/dlc11_float_playable_scene_1_1_2.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 4,
+        "sizeY": 5.958972930908203
+      },
+      "height": 5.959,
+      "layoutTier": "decor",
+      "nameZh": "DLC11 浮筒可玩场景 1 1 2",
+      "nameEn": "dlc11 float playable scene 1 1 2",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "dlc11_float_playable_scene_1_1_3",
+      "guid": "aa7ad952381eb2a916dea85d26dcfa2c",
+      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/dlc11_float_playable_scene_1_1_3.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 4,
+        "sizeY": 3.775362968444824
+      },
+      "height": 3.775,
+      "layoutTier": "decor",
+      "nameZh": "DLC11 浮筒可玩场景 1 1 3",
+      "nameEn": "dlc11 float playable scene 1 1 3",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
       "id": "dlc11_float_playable_scene_1_1_4",
       "guid": "5656362ceca588a62243e085419d6ceb",
       "assetPath": "Assets/common03/prefabs/art/dlc11_summer/dlc11_float_playable_scene_1_1_4.prefab",
@@ -19,6 +119,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 浮筒可玩场景 1 1 4",
       "nameEn": "dlc11 float playable scene 1 1 4",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -37,6 +139,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 浮筒可玩场景 1 1 5",
       "nameEn": "dlc11 float playable scene 1 1 5",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -55,6 +159,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 浮筒可玩场景 1 3",
       "nameEn": "dlc11 float playable scene 1 3",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "dlc11_grass_01",
+      "guid": "f67e393707ce90a50c19e4bc6d562483",
+      "assetPath": "Assets/commonW2/prefabs/dlc11/art/dlc11_summer/dlc11_grass_01.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.2000004053115845
+      },
+      "height": 1.2,
+      "layoutTier": "decor",
+      "nameZh": "dlc 11 草 1",
+      "nameEn": "dlc 11 grass 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -73,6 +199,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 市集摊位空白 1",
       "nameEn": "dlc 11 marketstall blank 1",
+      "typeKind": "building",
+      "usage": "landmark",
       "icon": false
     },
     {
@@ -91,6 +219,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 皮纳塔香蕉 1",
       "nameEn": "dlc11 pinata banana 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -109,6 +239,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 皮纳塔西兰花 1",
       "nameEn": "dlc11 pinata broccoli 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -127,6 +259,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 pinata 灌木 1",
       "nameEn": "dlc 11 pinata bush 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -145,6 +279,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 pinata 灌木 2",
       "nameEn": "dlc 11 pinata bush 2",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -163,6 +299,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 皮纳塔胡萝卜 2",
       "nameEn": "dlc11 pinata carrot 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -181,6 +319,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 皮纳塔茄子 1",
       "nameEn": "dlc11 pinata eggplant 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -197,6 +337,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 皮纳塔浮筒凯文 2",
       "nameEn": "dlc11 pinata Float Kevin 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -215,6 +357,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 皮纳塔浮筒可玩场景 1 5",
       "nameEn": "dlc11 pinata float playable scene 1 5",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -233,6 +377,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 皮纳塔葡萄 1",
       "nameEn": "dlc11 pinata grapes 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -251,6 +397,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 pinata 洋葱 2",
       "nameEn": "dlc 11 pinata onion 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -269,6 +417,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 pinata 橙 1",
       "nameEn": "dlc 11 pinata orange 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -287,6 +437,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 pinata 草莓 1",
       "nameEn": "dlc 11 pinata strawberry 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -305,6 +457,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 皮纳塔番茄 2",
       "nameEn": "dlc11 pinata tomato 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -321,6 +475,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 泳池转角 1 2",
       "nameEn": "dlc11 pool corner 1 2",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -337,6 +493,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 泳池转角 2 2",
       "nameEn": "dlc11 pool corner 2 2",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -355,6 +513,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 泳池转角 3",
       "nameEn": "dlc 11 pool corner 3",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -373,6 +533,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 泳池转角 4",
       "nameEn": "dlc 11 pool corner 4",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -389,6 +551,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 泳池直 1 2",
       "nameEn": "dlc11 pool straight 1 2",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -407,6 +571,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 泳池直 2",
       "nameEn": "dlc 11 pool straight 2",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -425,6 +591,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 度假村遮阳棚 1",
       "nameEn": "dlc 11 resort canopy 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -443,6 +611,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 屋顶瓦直 2",
       "nameEn": "dlc 11 rooftiles straight 2",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -461,6 +631,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 招牌 fireworks 1",
       "nameEn": "dlc 11 sign fireworks 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -479,6 +651,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 招牌 neon island",
       "nameEn": "dlc 11 sign neon island",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -497,6 +671,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 招牌 neon orangefloat",
       "nameEn": "dlc 11 sign neon orangefloat",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -515,6 +691,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 招牌 neon rootbeerfloat",
       "nameEn": "dlc 11 sign neon rootbeerfloat",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -533,6 +711,8 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 招牌 neon surf",
       "nameEn": "dlc 11 sign neon surf",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -551,6 +731,48 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 招牌 neon surf 2",
       "nameEn": "dlc 11 sign neon surf 2",
+      "typeKind": "furniture",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "dlc11_traffic_cone_01",
+      "guid": "b568fddae2ced948fbcf1eaab1e64279",
+      "assetPath": "Assets/commonW2/prefabs/dlc11/art/dlc11_summer/dlc11_traffic_cone_01.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.6024137735366821
+      },
+      "height": 0.602,
+      "layoutTier": "decor",
+      "nameZh": "dlc 11 交通锥桶 1",
+      "nameEn": "dlc 11 traffic cone 1",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "dlc11_traffic_light_animated_01",
+      "guid": "9b567b83f7491799cd257ddf76115e1e",
+      "assetPath": "Assets/commonW2/prefabs/dlc11/art/dlc11_summer/dlc11_traffic_light_animated_01.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 3.2487385272979736
+      },
+      "height": 3.249,
+      "layoutTier": "decor",
+      "nameZh": "dlc 11 交通灯 animated 1",
+      "nameEn": "dlc 11 traffic light animated 1",
+      "typeKind": "lighting",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -569,6 +791,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC11 货车彩旗",
       "nameEn": "dlc11 vanbunting",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -587,6 +811,28 @@
       "layoutTier": "decor",
       "nameZh": "dlc 11 墙砖窗 3",
       "nameEn": "dlc 11 wall brick window 3",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "dlc13_dispenser_crate_camping_new",
+      "guid": "795be17f2f84423248e9083b98117883",
+      "assetPath": "Assets/commonW2/prefabs/dlc13/art/dlc13/dlc13_dispenser_crate_camping_new.prefab",
+      "category": "art",
+      "theme": "dlc13",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
+      },
+      "height": 0.503,
+      "layoutTier": "decor",
+      "nameZh": "食材箱（露营）",
+      "nameEn": "Dispenser Crate (DLC13)",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -605,6 +851,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC2 横幅 1",
       "nameEn": "dlc2 banner 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -623,6 +871,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC2 横幅 2",
       "nameEn": "dlc2 banner 2",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -641,6 +891,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC2 灌木 1",
       "nameEn": "dlc2 bush 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -659,6 +911,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC2 灌木 2",
       "nameEn": "dlc2 bush 2",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -677,6 +931,8 @@
       "layoutTier": "decor",
       "nameZh": "海滩花盆",
       "nameEn": "dlc2 Planter 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -695,6 +951,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC2 花盆 2",
       "nameEn": "dlc2 planter 2",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -715,6 +973,8 @@
       "surfaceKind": "ground",
       "nameZh": "露营地地面",
       "nameEn": "dlc5 ground camp",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -733,6 +993,8 @@
       "layoutTier": "decor",
       "nameZh": "狗拉雪橇",
       "nameEn": "DogSled",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -751,6 +1013,8 @@
       "layoutTier": "decor",
       "nameZh": "雪橇行李",
       "nameEn": "DogSled Luggage",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -769,6 +1033,8 @@
       "layoutTier": "decor",
       "nameZh": "饮料 4",
       "nameEn": "drink 4",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -787,6 +1053,8 @@
       "surfaceKind": "background",
       "nameZh": "木筏动态水面",
       "nameEn": "dynamic raft water",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -805,6 +1073,8 @@
       "layoutTier": "decor",
       "nameZh": "地球（BGM）",
       "nameEn": "Earth",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -823,6 +1093,8 @@
       "layoutTier": "decor",
       "nameZh": "常青树装饰 1",
       "nameEn": "evergreen decorated 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -841,6 +1113,8 @@
       "layoutTier": "decor",
       "nameZh": "室外车蓝 1",
       "nameEn": "exterior car blue 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -859,6 +1133,8 @@
       "layoutTier": "decor",
       "nameZh": "室外车绿 1",
       "nameEn": "exterior car green 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -877,6 +1153,8 @@
       "layoutTier": "decor",
       "nameZh": "室外车黄 1",
       "nameEn": "exterior car yellow 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -895,6 +1173,8 @@
       "layoutTier": "decor",
       "nameZh": "室外消防栓 1",
       "nameEn": "exterior fire hydrant 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -913,6 +1193,8 @@
       "layoutTier": "decor",
       "nameZh": "草坪",
       "nameEn": "exterior grass 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -931,6 +1213,8 @@
       "layoutTier": "decor",
       "nameZh": "井盖 1",
       "nameEn": "exterior man hole 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -949,6 +1233,8 @@
       "layoutTier": "decor",
       "nameZh": "井盖 2",
       "nameEn": "exterior man hole 2",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -967,6 +1253,8 @@
       "layoutTier": "decor",
       "nameZh": "人行道",
       "nameEn": "exterior path 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -985,6 +1273,8 @@
       "layoutTier": "decor",
       "nameZh": "人行道转角",
       "nameEn": "exterior path corner 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1003,6 +1293,8 @@
       "layoutTier": "decor",
       "nameZh": "人行道边缘",
       "nameEn": "exterior path side 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1021,6 +1313,8 @@
       "layoutTier": "decor",
       "nameZh": "马路",
       "nameEn": "exterior road 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1039,6 +1333,8 @@
       "layoutTier": "decor",
       "nameZh": "马路中央",
       "nameEn": "exterior road centre 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1057,6 +1353,8 @@
       "layoutTier": "decor",
       "nameZh": "人行横道",
       "nameEn": "exterior road crossing 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1075,6 +1373,8 @@
       "layoutTier": "decor",
       "nameZh": "停车标线",
       "nameEn": "exterior road stop 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1093,6 +1393,8 @@
       "layoutTier": "decor",
       "nameZh": "黄色禁停区",
       "nameEn": "exterior road yellow box 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1111,6 +1413,8 @@
       "layoutTier": "decor",
       "nameZh": "室外街道长椅",
       "nameEn": "exterior street bench",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1129,6 +1433,8 @@
       "layoutTier": "decor",
       "nameZh": "绿树",
       "nameEn": "exterior tree green 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1147,6 +1453,8 @@
       "layoutTier": "decor",
       "nameZh": "粉花树",
       "nameEn": "exterior tree pink 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1165,6 +1473,8 @@
       "layoutTier": "decor",
       "nameZh": "栅栏立柱灯笼 1",
       "nameEn": "fence pillar lantern 1",
+      "typeKind": "lighting",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -1183,6 +1493,8 @@
       "layoutTier": "decor",
       "nameZh": "栅栏直 1",
       "nameEn": "fence straight 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1201,6 +1513,8 @@
       "layoutTier": "decor",
       "nameZh": "栅栏直短 1",
       "nameEn": "fence straight short 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1217,6 +1531,8 @@
       "layoutTier": "decor",
       "nameZh": "火灾隐患点",
       "nameEn": "fire hazard",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1235,6 +1551,8 @@
       "layoutTier": "decor",
       "nameZh": "消防栓",
       "nameEn": "Fire hydrant",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1253,6 +1571,8 @@
       "layoutTier": "decor",
       "nameZh": "旗帜 1",
       "nameEn": "flag 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1271,6 +1591,8 @@
       "layoutTier": "decor",
       "nameZh": "旗帜 1",
       "nameEn": "flag 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1289,6 +1611,8 @@
       "layoutTier": "decor",
       "nameZh": "旗帜 2",
       "nameEn": "flag 2",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1307,6 +1631,8 @@
       "layoutTier": "decor",
       "nameZh": "旗帜 2",
       "nameEn": "flag 2",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1327,6 +1653,8 @@
       "surfaceKind": "carpet",
       "nameZh": "紫色地毯",
       "nameEn": "floor carpet purple",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1347,6 +1675,8 @@
       "surfaceKind": "solid",
       "nameZh": "地板转角",
       "nameEn": "floor corner 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1367,6 +1697,8 @@
       "surfaceKind": "solid",
       "nameZh": "地板转角 2",
       "nameEn": "floor corner 2",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1387,6 +1719,8 @@
       "surfaceKind": "solid",
       "nameZh": "地板边缘",
       "nameEn": "floor edge 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1407,6 +1741,8 @@
       "surfaceKind": "solid",
       "nameZh": "地板边缘 2",
       "nameEn": "floor edge 2",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1425,6 +1761,8 @@
       "layoutTier": "decor",
       "nameZh": "花 1",
       "nameEn": "Flower 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1443,6 +1781,8 @@
       "layoutTier": "decor",
       "nameZh": "花 3",
       "nameEn": "flower 3",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1461,6 +1801,26 @@
       "layoutTier": "decor",
       "nameZh": "飞天灯笼组",
       "nameEn": "flyinglanternsgroup",
+      "typeKind": "lighting",
+      "usage": "ambience",
+      "icon": false
+    },
+    {
+      "id": "genericfloat_01",
+      "guid": "31370c17f6919dd9016f546e6d6acf4d",
+      "assetPath": "Assets/commonW2/prefabs/dlc02/art/dlc02_beach/genericfloat_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "通用浮筒 1",
+      "nameEn": "genericfloat 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1479,6 +1839,8 @@
       "layoutTier": "decor",
       "nameZh": "巨型拐杖糖 1",
       "nameEn": "giant candycane 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1497,6 +1859,8 @@
       "layoutTier": "decor",
       "nameZh": "巨型拐杖糖 2",
       "nameEn": "giant candycane 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1515,6 +1879,8 @@
       "layoutTier": "decor",
       "nameZh": "礼物 1",
       "nameEn": "gift 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1533,6 +1899,8 @@
       "layoutTier": "decor",
       "nameZh": "礼物 2",
       "nameEn": "gift 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1551,6 +1919,8 @@
       "layoutTier": "decor",
       "nameZh": "礼物 3",
       "nameEn": "gift 3",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1569,6 +1939,8 @@
       "layoutTier": "decor",
       "nameZh": "草 1",
       "nameEn": "grass 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1587,6 +1959,8 @@
       "layoutTier": "decor",
       "nameZh": "草 1",
       "nameEn": "grass 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1605,6 +1979,8 @@
       "layoutTier": "decor",
       "nameZh": "草 2",
       "nameEn": "grass 2",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1623,6 +1999,8 @@
       "layoutTier": "decor",
       "nameZh": "草 2",
       "nameEn": "grass 2",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1641,6 +2019,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地悬崖转角内 4",
       "nameEn": "grave cliff corner in 4",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1659,6 +2039,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地悬崖转角外 2",
       "nameEn": "grave cliff corner out 2",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1677,6 +2059,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地悬崖边缘 3",
       "nameEn": "grave cliff edge 3",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1695,6 +2079,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地悬崖边缘 4",
       "nameEn": "grave cliff edge 4",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1713,6 +2099,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地栅栏立柱 1",
       "nameEn": "grave fence pillar 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1731,6 +2119,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地草瓦片 1",
       "nameEn": "grave grass tile 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1749,6 +2139,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地墓碑 1",
       "nameEn": "grave gravestone 1",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1767,6 +2159,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地墓碑 2",
       "nameEn": "grave gravestone 2",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1785,6 +2179,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地墓碑 3",
       "nameEn": "grave gravestone 3",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1803,6 +2199,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地墓碑 4",
       "nameEn": "grave gravestone 4",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1821,6 +2219,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地墓碑 5",
       "nameEn": "grave gravestone 5",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1839,6 +2239,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地墓碑 6",
       "nameEn": "grave gravestone 6",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1857,6 +2259,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 1",
       "nameEn": "grave leaves 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1875,6 +2279,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 2",
       "nameEn": "grave leaves 2",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1893,6 +2299,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 3",
       "nameEn": "grave leaves 3",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1911,6 +2319,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 4",
       "nameEn": "grave leaves 4",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1929,6 +2339,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 5",
       "nameEn": "grave leaves 5",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1947,6 +2359,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 6",
       "nameEn": "grave leaves 6",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1965,6 +2379,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 7",
       "nameEn": "grave leaves 7",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1983,6 +2399,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 8",
       "nameEn": "grave leaves 8",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2001,6 +2419,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 9",
       "nameEn": "grave leaves 9",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2019,6 +2439,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 10",
       "nameEn": "grave leaves 10",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2037,6 +2459,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树叶 11",
       "nameEn": "grave leaves 11",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2055,6 +2479,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树 1",
       "nameEn": "grave tree 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2073,6 +2499,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树 s 1",
       "nameEn": "grave tree s 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2091,6 +2519,8 @@
       "layoutTier": "decor",
       "nameZh": "墓地树 s 2",
       "nameEn": "grave tree s 2",
+      "typeKind": "vegetation",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2107,6 +2537,30 @@
       "layoutTier": "decor",
       "nameZh": "地面 butterfly",
       "nameEn": "ground butterfly",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "h9_pool_water_01",
+      "guid": "9d0cf263b99b5390908a0f6e86dfaa32",
+      "assetPath": "Assets/commonW2/prefabs/dlc02/art/dlc02_beach/h9_pool_water_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 20,
+        "cellsZ": 12,
+        "sizeY": 5.329070200563396e-16
+      },
+      "height": 0,
+      "layoutTier": "floor",
+      "surfaceTier": "background",
+      "surfaceKind": "background",
+      "nameZh": "h 9 泳池水 1",
+      "nameEn": "h 9 pool water 1",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -2125,6 +2579,8 @@
       "layoutTier": "decor",
       "nameZh": "热可可 1",
       "nameEn": "hotchocolate 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2143,6 +2599,8 @@
       "layoutTier": "decor",
       "nameZh": "热可可 2",
       "nameEn": "hotchocolate 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2159,6 +2617,8 @@
       "layoutTier": "decor",
       "nameZh": "悬停 butterfly",
       "nameEn": "hover butterfly",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2175,6 +2635,8 @@
       "layoutTier": "decor",
       "nameZh": "飞蛾",
       "nameEn": "Hover Moth",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2193,6 +2655,28 @@
       "layoutTier": "decor",
       "nameZh": "小屋 1",
       "nameEn": "hut 1",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "hut_alt_01",
+      "guid": "f5cf8f235e51177cc8b706bf47c1c332",
+      "assetPath": "Assets/commonW2/prefabs/dlc02/art/dlc02_beach/hut_alt_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 3.494753837585449
+      },
+      "height": 3.495,
+      "layoutTier": "decor",
+      "nameZh": "小屋变体 1",
+      "nameEn": "hut alt 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2211,6 +2695,8 @@
       "layoutTier": "decor",
       "nameZh": "小屋变体 2",
       "nameEn": "hut alt 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2231,6 +2717,8 @@
       "surfaceKind": "ice",
       "nameZh": "冰面地板",
       "nameEn": "ice floor 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -2251,6 +2739,8 @@
       "surfaceKind": "ice",
       "nameZh": "冰面地板",
       "nameEn": "ice floor 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -2269,6 +2759,8 @@
       "layoutTier": "decor",
       "nameZh": "冰山 1",
       "nameEn": "iceberg 1",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2287,6 +2779,8 @@
       "layoutTier": "decor",
       "nameZh": "冰山 2",
       "nameEn": "iceberg 2",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2305,6 +2799,8 @@
       "layoutTier": "decor",
       "nameZh": "冰山 3",
       "nameEn": "iceberg 3",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2323,6 +2819,8 @@
       "layoutTier": "decor",
       "nameZh": "冰山 4",
       "nameEn": "iceberg 4",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2341,6 +2839,8 @@
       "layoutTier": "decor",
       "nameZh": "iceberg 组 1",
       "nameEn": "iceberg group 1",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2359,6 +2859,8 @@
       "layoutTier": "decor",
       "nameZh": "冰山 1",
       "nameEn": "icebergs 1",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2377,6 +2879,8 @@
       "layoutTier": "decor",
       "nameZh": "冰山 2",
       "nameEn": "icebergs 2",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2395,6 +2899,8 @@
       "layoutTier": "decor",
       "nameZh": "冰山 3",
       "nameEn": "icebergs 3",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2413,6 +2919,8 @@
       "layoutTier": "decor",
       "nameZh": "冰山 4",
       "nameEn": "icebergs 4",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2431,6 +2939,8 @@
       "layoutTier": "decor",
       "nameZh": "冰崖 hole 3x3 1",
       "nameEn": "icecliff hole 3x3 1",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2449,6 +2959,8 @@
       "layoutTier": "decor",
       "nameZh": "冰柱 1",
       "nameEn": "icicle 1",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2467,6 +2979,8 @@
       "layoutTier": "decor",
       "nameZh": "冰柱 2",
       "nameEn": "icicle 2",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2485,6 +2999,8 @@
       "layoutTier": "decor",
       "nameZh": "冰柱 3",
       "nameEn": "icicle 3",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2503,6 +3019,8 @@
       "layoutTier": "decor",
       "nameZh": "冰柱 4",
       "nameEn": "icicle 4",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2519,6 +3037,8 @@
       "layoutTier": "decor",
       "nameZh": "凯文",
       "nameEn": "kevin 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2535,6 +3055,8 @@
       "layoutTier": "decor",
       "nameZh": "凯文（露营）",
       "nameEn": "Kevin 1 DLC5",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2553,6 +3075,8 @@
       "layoutTier": "decor",
       "nameZh": "凯文（夏威夷）",
       "nameEn": "Kevin Hawaiian 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2571,6 +3095,8 @@
       "layoutTier": "decor",
       "nameZh": "厨房火坑 1",
       "nameEn": "kitchen firepit 1",
+      "typeKind": "lighting",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -2589,6 +3115,8 @@
       "layoutTier": "decor",
       "nameZh": "厨房火坑 2",
       "nameEn": "kitchen firepit 2",
+      "typeKind": "lighting",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -2607,6 +3135,8 @@
       "layoutTier": "decor",
       "nameZh": "梯子 1",
       "nameEn": "ladder 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2625,6 +3155,8 @@
       "layoutTier": "decor",
       "nameZh": "梯子 2",
       "nameEn": "ladder 2",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2643,6 +3175,8 @@
       "layoutTier": "decor",
       "nameZh": "悬挂灯笼 1",
       "nameEn": "lantern suspended 1",
+      "typeKind": "lighting",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -2661,6 +3195,8 @@
       "layoutTier": "decor",
       "nameZh": "大摊位 dressed 1",
       "nameEn": "large stall dressed 1",
+      "typeKind": "building",
+      "usage": "landmark",
       "icon": false
     },
     {
@@ -2679,6 +3215,8 @@
       "layoutTier": "decor",
       "nameZh": "救生圈柱",
       "nameEn": "LifeBuoyPillar",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -2695,6 +3233,26 @@
       "layoutTier": "decor",
       "nameZh": "救生圈柱 1",
       "nameEn": "LifeBuoyPillar 1",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "lights",
+      "guid": "004a2257ff4666408cde90bda6d0587f",
+      "assetPath": "Assets/commonW2/prefabs/dlc02/art/dlc02_beach/lights.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "灯串",
+      "nameEn": "lights",
+      "typeKind": "lighting",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -2713,6 +3271,8 @@
       "layoutTier": "decor",
       "nameZh": "长椅 1",
       "nameEn": "longbench 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2731,6 +3291,8 @@
       "layoutTier": "decor",
       "nameZh": "长桌 1",
       "nameEn": "longtable 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2749,6 +3311,8 @@
       "layoutTier": "decor",
       "nameZh": "airballoon 屋顶 3",
       "nameEn": "airballoon roof 3",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2767,6 +3331,8 @@
       "layoutTier": "decor",
       "nameZh": "airballoon 屋顶 4",
       "nameEn": "airballoon roof 4",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2785,6 +3351,8 @@
       "layoutTier": "decor",
       "nameZh": "airballoon 屋顶 5",
       "nameEn": "airballoon roof 5",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2803,6 +3371,28 @@
       "layoutTier": "decor",
       "nameZh": "城市遮阳棚",
       "nameEn": "city canopy",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "m_city_door_double_02",
+      "guid": "e8c5d2664879d560064e5e4ba98c12bf",
+      "assetPath": "Assets/commonW2/prefabs/dlc11/art/dlc11_summer/m_city_door_double_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 2
+      },
+      "height": 2,
+      "layoutTier": "decor",
+      "nameZh": "城市门双开 2",
+      "nameEn": "city door double 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -2821,6 +3411,8 @@
       "layoutTier": "decor",
       "nameZh": "凯文雕像 1",
       "nameEn": "city kevin 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2839,6 +3431,8 @@
       "layoutTier": "decor",
       "nameZh": "凯文雕像 2",
       "nameEn": "city kevin 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2855,6 +3449,8 @@
       "layoutTier": "decor",
       "nameZh": "鸽子",
       "nameEn": "city pigeon 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2873,6 +3469,8 @@
       "layoutTier": "decor",
       "nameZh": "城市墙右角内侧",
       "nameEn": "city wall right angle inside",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -2889,6 +3487,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC5 洋葱国王旗帜 1",
       "nameEn": "dlc05 onion king flag 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2907,6 +3507,8 @@
       "surfaceKind": "background",
       "nameZh": "DLC7 水面 1×3",
       "nameEn": "DLC7 water 1x3",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -2925,6 +3527,8 @@
       "surfaceKind": "background",
       "nameZh": "DLC7 水面 2×1",
       "nameEn": "DLC7 water 2x1",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     },
     {
@@ -2943,6 +3547,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 deathscreen 平面 1",
       "nameEn": "dlc07 deathscreen plane 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2959,6 +3565,8 @@
       "layoutTier": "decor",
       "nameZh": "吊桥 01",
       "nameEn": "Drawbridge 01",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2975,6 +3583,8 @@
       "layoutTier": "decor",
       "nameZh": "吊桥 02",
       "nameEn": "Drawbridge 02",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -2991,6 +3601,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 drawbridge 3",
       "nameEn": "dlc07 drawbridge 3",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_gothic_trefoil_01",
+      "guid": "5f02c9afe842c7d9193ed940e209e2a1",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/m_dlc07_gothic_trefoil_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.0031870603561401
+      },
+      "height": 1.003,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 gothic trefoil 1",
+      "nameEn": "dlc07 gothic trefoil 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -3009,6 +3641,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 大窗叉 1",
       "nameEn": "dlc07 large window fork 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3027,6 +3661,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 大窗叉 2",
       "nameEn": "dlc07 large window fork 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3045,6 +3681,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 1",
       "nameEn": "dlc07 pillar 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3063,6 +3701,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 2",
       "nameEn": "dlc07 pillar 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3081,6 +3721,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 3",
       "nameEn": "dlc07 pillar 3",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3099,6 +3741,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 4",
       "nameEn": "dlc07 pillar 4",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3117,6 +3761,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 立柱 tall 1",
       "nameEn": "dlc07 pillar tall 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3135,6 +3781,88 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 pipe 小 valve 1",
       "nameEn": "dlc07 pipe small valve 1",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_pipe_small_valve_01",
+      "guid": "5cf47a0e9085eefd7754f5bcabe77f57",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/m_dlc07_pipe_small_valve_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.17430925369262695
+      },
+      "height": 0.174,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 pipe 小 valve 1",
+      "nameEn": "dlc07 pipe small valve 1",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_pipe_vent_01",
+      "guid": "d1e8739f8ea3c56a71def6d766c36652",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/m_dlc07_pipe_vent_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.9970033168792725
+      },
+      "height": 0.997,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 pipe 通风口 1",
+      "nameEn": "dlc07 pipe vent 1",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_pipe_vent_02",
+      "guid": "a4c23b0f5196c016ab9c30d3d8c94564",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/m_dlc07_pipe_vent_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.7861972451210022
+      },
+      "height": 0.786,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 pipe 通风口 2",
+      "nameEn": "dlc07 pipe vent 2",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_pipe_vent_03",
+      "guid": "977460589d9c91160ec020ce7cfe7900",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/m_dlc07_pipe_vent_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.5947937965393066
+      },
+      "height": 0.595,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 pipe 通风口 3",
+      "nameEn": "dlc07 pipe vent 3",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -3153,6 +3881,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 portcullis 2",
       "nameEn": "dlc07 portcullis 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_portcullis_02",
+      "guid": "96441c3c73d2b948c0590f502f96005f",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/m_dlc07_portcullis_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 3.981370687484741
+      },
+      "height": 3.981,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 portcullis 2",
+      "nameEn": "dlc07 portcullis 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3171,6 +3921,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 portcullis 3",
       "nameEn": "dlc07 portcullis 3",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "m_dlc07_portcullis_03",
+      "guid": "4a0d5c48b30a2fb3460f6e32c8736472",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/m_dlc07_portcullis_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 3.981370687484741
+      },
+      "height": 3.981,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 portcullis 3",
+      "nameEn": "dlc07 portcullis 3",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -3189,402 +3961,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 石 broken block 1",
       "nameEn": "dlc07 stone broken block 1",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     },
     {
-      "id": "m_dlc07_stone_broken_block_02",
-      "guid": "f2406fefd97b2a541abf6123c0a2ac81",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/m_dlc07_stone_broken_block_02.prefab",
+      "id": "m_dlc07_stone_broken_block_01",
+      "guid": "0b7ae760d117fb2513ad0498f6919ff7",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/m_dlc07_stone_broken_block_01.prefab",
       "category": "art",
       "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 2.6413230895996094
-      },
-      "height": 2.641,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 石 broken block 2",
-      "nameEn": "dlc07 stone broken block 2",
-      "icon": false
-    },
-    {
-      "id": "m_dlc07_wall_deco_support_01",
-      "guid": "b7c7f3b90475b8245b12dfa577e65392",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/battlements/m_dlc07_wall_deco_support_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7689781188964844
-      },
-      "height": 1.769,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 墙 deco 支撑 1",
-      "nameEn": "dlc07 wall deco support 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc07_wall_deco_support_01",
-      "guid": "7374917c0c37c2544a0355ff537c7fea",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/m_dlc07_wall_deco_support_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7689781188964844
-      },
-      "height": 1.769,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 墙 deco 支撑 1",
-      "nameEn": "dlc07 wall deco support 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc07_wall_deco_support_02",
-      "guid": "dab2bad2b597c504f88287fd8cbeaa4e",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/battlements/m_dlc07_wall_deco_support_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.785880446434021
-      },
-      "height": 1.786,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 墙 deco 支撑 2",
-      "nameEn": "dlc07 wall deco support 2",
-      "icon": false
-    },
-    {
-      "id": "m_dlc07_wall_deco_support_03",
-      "guid": "ff1162185f702bd4da2b7de9a219aa3c",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/battlements/m_dlc07_wall_deco_support_03.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7731285095214844
-      },
-      "height": 1.773,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 墙 deco 支撑 3",
-      "nameEn": "dlc07 wall deco support 3",
-      "icon": false
-    },
-    {
-      "id": "m_dlc07_water_3_2",
-      "guid": "8cfa780452c855d5e84df0fb62190c01",
-      "assetPath": "Assets/commonW1/prefabs/backgrounds/dlc07/m_dlc07_water_3_2.prefab",
-      "category": "art",
-      "theme": "dlc07",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2
-      },
-      "layoutTier": "floor",
-      "surfaceTier": "background",
-      "surfaceKind": "background",
-      "nameZh": "DLC7 水面 3×2",
-      "nameEn": "DLC7 water 3x2",
-      "icon": false
-    },
-    {
-      "id": "m_dlc07_weapon_stand_01",
-      "guid": "bd9d41980104c6343944928dda0bf3b3",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/battlements/m_dlc07_weapon_stand_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 2.3440542221069336
-      },
-      "height": 2.344,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 weapon stand 1",
-      "nameEn": "dlc07 weapon stand 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_barbell_01",
-      "guid": "bf86484ebe39232c6162db86ea8b5524",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_barbell_01.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
         "cellsZ": 1,
-        "sizeY": 0.7861201763153076
+        "sizeY": 1.79911208152771
       },
-      "height": 0.786,
+      "height": 1.799,
       "layoutTier": "decor",
-      "nameZh": "DLC8 barbell 1",
-      "nameEn": "dlc08 barbell 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_bleachers_crowd_01",
-      "guid": "7d4e962ab03d9eb952be1bd07698a750",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_bleachers_crowd_01.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 5,
-        "cellsZ": 4,
-        "sizeY": 5.742776870727539
-      },
-      "height": 5.743,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 bleachers crowd 1",
-      "nameEn": "dlc08 bleachers crowd 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_circus_ball_01",
-      "guid": "a67eee35af7fb55f41edca990a4bc984",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_circus_ball_01.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.7170078754425049
-      },
-      "height": 0.717,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 马戏团 ball 1",
-      "nameEn": "dlc08 circus ball 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_circus_ball_02",
-      "guid": "6da2813a4e00abbb2a637dbb81626dfe",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_circus_ball_02.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.7170078754425049
-      },
-      "height": 0.717,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 马戏团 ball 2",
-      "nameEn": "dlc08 circus ball 2",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_circus_ball_03",
-      "guid": "f6893d798cc3710969eb8e8adcf1ae12",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_circus_ball_03.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.7170078754425049
-      },
-      "height": 0.717,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 马戏团 ball 3",
-      "nameEn": "dlc08 circus ball 3",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_circus_ball_04",
-      "guid": "6372948f7647dc5b6f266b274749ce8c",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_circus_ball_04.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.7170078754425049
-      },
-      "height": 0.717,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 马戏团 ball 4",
-      "nameEn": "dlc08 circus ball 4",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_gobstopper_01",
-      "guid": "521461df9ce623b1f9bc07dbd0ec0320",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_gobstopper_01.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.3781329393386841
-      },
-      "height": 0.378,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 gobstopper 1",
-      "nameEn": "dlc08 gobstopper 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_gobstopper_02",
-      "guid": "a0bbc7d5142663fa43476063a446466c",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_gobstopper_02.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.2925938367843628
-      },
-      "height": 0.293,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 gobstopper 2",
-      "nameEn": "dlc08 gobstopper 2",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_gobstopper_03",
-      "guid": "a102a08004a5bc78a153f46726ef2fcc",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_gobstopper_03.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.32397764921188354
-      },
-      "height": 0.324,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 gobstopper 3",
-      "nameEn": "dlc08 gobstopper 3",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_kettlebell_01",
-      "guid": "191f3d8150c4c5f72db637f7601f2aa2",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_kettlebell_01.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.023669719696045
-      },
-      "height": 1.024,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 kettlebell 1",
-      "nameEn": "dlc08 kettlebell 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_map_popcorn_01",
-      "guid": "6a10f3349a83988575c1dc616ea6a02b",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/m_dlc08_map_popcorn_01.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.22918805480003357
-      },
-      "height": 0.229,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 map popcorn 1",
-      "nameEn": "dlc08 map popcorn 1",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_map_popcorn_02",
-      "guid": "293f4f87b21df064ecc42c7f98d8eafa",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/m_dlc08_map_popcorn_02.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.3597657084465027
-      },
-      "height": 0.36,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 map popcorn 2",
-      "nameEn": "dlc08 map popcorn 2",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_map_popcorn_03",
-      "guid": "5da1974016f42b24667fb4488d59beea",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/m_dlc08_map_popcorn_03.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.23848511278629303
-      },
-      "height": 0.238,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 map popcorn 3",
-      "nameEn": "dlc08 map popcorn 3",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_map_popcorn_04",
-      "guid": "7c73595731634e3d6e3127b68079da3a",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/m_dlc08_map_popcorn_04.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.24302515387535095
-      },
-      "height": 0.243,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 map popcorn 4",
-      "nameEn": "dlc08 map popcorn 4",
-      "icon": false
-    },
-    {
-      "id": "m_dlc08_pillar_trapeze_01",
-      "guid": "ab1296395b8258349a9529a2e4eb5025",
-      "assetPath": "Assets/common03/prefabs/art/dlc08_circus/m_dlc08_pillar_trapeze_01.prefab",
-      "category": "art",
-      "theme": "dlc08_circus",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 8.350421905517578
-      },
-      "height": 8.35,
-      "layoutTier": "decor",
-      "nameZh": "DLC8 立柱 trapeze 1",
-      "nameEn": "dlc08 pillar trapeze 1",
+      "nameZh": "DLC7 石 broken block 1",
+      "nameEn": "dlc07 stone broken block 1",
+      "typeKind": "rock",
+      "usage": "dressing",
       "icon": false
     }
   ]

@@ -104,7 +104,7 @@ export function openUtensilManager() {
       const rows = arr
         .map((it, idx) => {
           const cu = it.cookingUtensil ?? {};
-          const cap = cu.capacity ?? defaultUtensilCapacity(it);
+          const cap = (cu.capacity ?? 0) > 0 ? cu.capacity! : defaultUtensilCapacity(it);
           const allowed = cu.allowedIngredientGuids ?? [];
           const allowedTxt = allowed.length > 0 ? `额外食材：${allowed.length} 种` : "额外食材：无（处理所有主线食材）";
           const dis = arr.length < 2 ? "disabled" : "";
@@ -272,7 +272,7 @@ export function openUtensilManager() {
       if (!src) return;
       const pid = prefabIdFromPath(src.prefabAssetPath);
       const cu = src.cookingUtensil ?? {};
-      const cap = cu.capacity ?? defaultUtensilCapacity(src);
+      const cap = (cu.capacity ?? 0) > 0 ? cu.capacity! : defaultUtensilCapacity(src);
       const allowed = cu.allowedIngredientGuids ?? [];
       pushHistory();
       let n = 0;

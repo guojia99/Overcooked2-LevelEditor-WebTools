@@ -98,6 +98,11 @@ export function buildLayoutDom(): void {
           <option value="large">尺寸：大</option>
           <option value="xl">尺寸：特大</option>
         </select>
+        <select id="palette-group-mode" class="palette-group-mode hidden" title="装饰分组方式：按 DLC 主题 / 按物品类型 / 按物品用途">
+          <option value="theme">分组：主题</option>
+          <option value="type">分组：类型</option>
+          <option value="usage">分组：用途</option>
+        </select>
       </div>
       <div class="palette-cats" id="palette-cats"></div>
     </aside>

@@ -48,6 +48,11 @@ public class LayoutEditorHttpServer
     /// （相关端点返回 501，删除 CustomStub 文件后本类仍可编译）。</summary>
     public static Func<string, string, string> CustomStubApi;
 
+    /// <summary>写回后 CustomStub 守卫钩子：setName → 告警文案（null = 无异常/未用到 stub）。
+    /// 由 CustomStubWriteBackGuard（[InitializeOnLoad]）注册；null = CustomStub 未安装
+    /// （写回流程不检查 stub，删除 CustomStub 文件后本类仍可编译）。</summary>
+    public static Func<string, string> CustomStubWriteBackCheck;
+
     public static bool HasBundledWebUi()
     {
         return LayoutEditorPaths.IsWebDistReady();
@@ -608,8 +613,17 @@ public class LayoutEditorHttpServer
                      AssetDatabase.SaveAssets();
                  }
 
-                // 写回告警透传：绑定丢弃等此前只进 Unity 日志，web 端无感知，
-                // 用户直到游戏里才发现脏盘台/饮料机失效。
+                 // 写回后 CustomStub 守卫：场景实际用到 stub 组件时检查副本漂移/DLL
+                 // 新鲜度，漂移自动同步母本并触发编译（先应答后 Refresh，防域重载截断响应）。
+                 if (levelSet != null && CustomStubWriteBackCheck != null)
+                 {
+                     var stubWarn = CustomStubWriteBackCheck(levelSet);
+                     if (!string.IsNullOrEmpty(stubWarn))
+                         LayoutEditorLog.RecordApplyWarning(stubWarn);
+                 }
+
+                 // 写回告警透传：绑定丢弃等此前只进 Unity 日志，web 端无感知，
+                 // 用户直到游戏里才发现脏盘台/饮料机失效。
                 WriteJson(response, 200, LayoutEditorJson.ToJson(new ApiApplyResultDto
                 {
                     ok = true,

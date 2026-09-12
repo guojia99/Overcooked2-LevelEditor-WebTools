@@ -546,7 +546,7 @@ export function stubControlsHtml(item: EditorItem): string {
       const cu = item.cookingUtensil ?? {};
       const allowed = (cu.allowedIngredientGuids ?? []).length;
       return `<div class="ctx-stub"><div class="ctx-stub-title">厨具参数</div>
-        <label class="ctx-stub-row">最多食材数 <input type="number" id="ctx-cu-cap" class="ctx-input" min="0" step="1" value="${cu.capacity ?? defaultUtensilCapacity(item)}"/></label>
+        <label class="ctx-stub-row">最多食材数 <input type="number" id="ctx-cu-cap" class="ctx-input" min="0" step="1" value="${(cu.capacity ?? 0) > 0 ? cu.capacity : defaultUtensilCapacity(item)}"/></label>
         <div class="ctx-stub-row">${utensilTimingInputsHtml(item, "ctx-cu-", "ctx-stub")}</div>
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">时间留空 = 原版默认（按锅具：煮熟 10-12s，煮糊 = 2× 煮熟）；填写的特殊煮糊时间随关卡包分发</div>
         <button type="button" class="ctx-btn" id="ctx-cu-ings">额外食材 (${allowed > 0 ? `${allowed} 种` : "无 · 处理所有主线食材"})…</button></div>`;

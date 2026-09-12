@@ -4,6 +4,854 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "NPC_Hispanic_Wizard_01",
+      "guid": "4d21f80949f28bb478976ba4d74bf33f",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（巫师）",
+      "nameEn": "NPC Hispanic Wizard 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Hispanic_Yellow_01",
+      "guid": "376e21693145be44595ba0bd91dffd03",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Hispanic_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·拉丁裔（黄）",
+      "nameEn": "NPC Hispanic Yellow 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEastern_Construction_01",
+      "guid": "c8eca34248180054cb83612813555963",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEastern_Construction_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（施工）",
+      "nameEn": "NPC Middle Eastern Construction 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEastern_HardHat_01",
+      "guid": "47e75b38c46be214f915f86f75c0a4d0",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEastern_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（安全帽）",
+      "nameEn": "NPC Middle Eastern Hard Hat 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEastern_Waiter_01",
+      "guid": "03cc9a5836749e6458b194db5b33d5b2",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEastern_Waiter_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（服务生）",
+      "nameEn": "NPC Middle Eastern Waiter 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Blue_01",
+      "guid": "5c2d07a64444b9f45a16862e7ac58479",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（蓝）",
+      "nameEn": "NPC Middle Eatern Blue 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Brown_01",
+      "guid": "a699cc9aa15bcf34ba63c34846babae5",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（棕）",
+      "nameEn": "NPC Middle Eatern Brown 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Civ_01",
+      "guid": "3f4c932b995d4b04dba178ecf80edf3d",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（便装）",
+      "nameEn": "NPC Middle Eatern Civ 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Green_01",
+      "guid": "68969b228efbaef42829655a24159bc8",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（绿）",
+      "nameEn": "NPC Middle Eatern Green 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Hawaiian_01",
+      "guid": "5c4ded2b28c860744b2f6edceb29aa6d",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_MiddleEatern_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（夏威夷）",
+      "nameEn": "NPC Middle Eatern Hawaiian 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Orange_01",
+      "guid": "9c0e65e0f2bf8a3469a83e9cd3f6367c",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（橙）",
+      "nameEn": "NPC Middle Eatern Orange 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Wizard_01",
+      "guid": "b1b635ee710620d40bbfb429589dfb24",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（巫师）",
+      "nameEn": "NPC Middle Eatern Wizard 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_MiddleEatern_Yellow_01",
+      "guid": "e16f7e6388db19149a8c9ef2ea08c9e2",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_MiddleEatern_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·中东（黄）",
+      "nameEn": "NPC Middle Eatern Yellow 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "npc_mike",
+      "guid": "9d08d0eb8624125dc4b1264b91ed2d68",
+      "assetPath": "Assets/commonW2/prefabs/core/art/npc/npc_mike.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克",
+      "nameEn": "npc mike",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Blue_01",
+      "guid": "bb240d42dbf3f4a4c8567fd9f4c96f44",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（蓝）",
+      "nameEn": "NPC Mike Blue 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Brown_01",
+      "guid": "6bd29aac6cf609f44b42124411beda00",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（棕）",
+      "nameEn": "NPC Mike Brown 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Civ_01",
+      "guid": "89d4cdd4b5ff4a04ab0a45c0c71b0edc",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（便装）",
+      "nameEn": "NPC Mike Civ 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Green_01",
+      "guid": "90ea22972d5a7534db594427180f5ade",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（绿）",
+      "nameEn": "NPC Mike Green 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_HardHat_01",
+      "guid": "9bcefe62b9e62334193e1f790d33cb2b",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（安全帽）",
+      "nameEn": "NPC Mike Hard Hat 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Hawaiian_01",
+      "guid": "ff50f1b184d68f240973946371927615",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Mike_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（夏威夷）",
+      "nameEn": "NPC Mike Hawaiian 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Orange_01",
+      "guid": "2d0f5b884454beb44ad6642a565d8a28",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（橙）",
+      "nameEn": "NPC Mike Orange 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Wizard_01",
+      "guid": "fdc7b43e250074f4caa3422faaf5d70d",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（巫师）",
+      "nameEn": "NPC Mike Wizard 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Mike_Yellow_01",
+      "guid": "59560002489486144bdda1aed5f77ebc",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Mike_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·迈克（黄）",
+      "nameEn": "NPC Mike Yellow 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Penguin",
+      "guid": "c53944d537b0149468a687e9c10db9b0",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Penguin.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "企鹅顾客",
+      "nameEn": "NPC Penguin",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Blue_01",
+      "guid": "063cae9de8a1a2c439e66cb96d5bf843",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（蓝）",
+      "nameEn": "NPC Specs Blue 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Brown_01",
+      "guid": "f837f7858f7db844db5aed24b240e50f",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（棕）",
+      "nameEn": "NPC Specs Brown 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Civ_01",
+      "guid": "5b5e1487cd9ce934bb920ee0373bcf3a",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（便装）",
+      "nameEn": "NPC Specs Civ 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Construction_01",
+      "guid": "1325631d60c040e48a658b4edc26a911",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Construction_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（施工）",
+      "nameEn": "NPC Specs Construction 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Green_01",
+      "guid": "124b8e87887f566459803f2bfddfc134",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（绿）",
+      "nameEn": "NPC Specs Green 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_HardHat_01",
+      "guid": "21b7033c3410ccf488edaf623c75c369",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_HardHat_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（安全帽）",
+      "nameEn": "NPC Specs Hard Hat 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Hawaiian_01",
+      "guid": "b4271174916d3654ab358e530a175864",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_Specs_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（夏威夷）",
+      "nameEn": "NPC Specs Hawaiian 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Orange_01",
+      "guid": "f1b6f442b8da44c44b4d94c94514a4aa",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（橙）",
+      "nameEn": "NPC Specs Orange 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Waiter_01",
+      "guid": "513100dcddf46e049b0044db12b0838d",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Waiter_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（服务生）",
+      "nameEn": "NPC Specs Waiter 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Wizard_01",
+      "guid": "e6754898a6dae8a43bacba466542ed03",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（巫师）",
+      "nameEn": "NPC Specs Wizard 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Specs_Yellow_01",
+      "guid": "8b873df2241a60640a9c13e67f305180",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_Specs_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·眼镜（黄）",
+      "nameEn": "NPC Specs Yellow 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "npc_waiters_01",
+      "guid": "310b3ccba988e14d6a7938d52a65b161",
+      "assetPath": "Assets/commonW1/prefabs/core/art/npc/npc_waiters_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·服务员 1",
+      "nameEn": "npc waiters 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Walk_Anticlockwise_47s",
+      "guid": "83cb730f1de2aa247b5fd5ff85da2dbb",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/NPC_Walk_Anticlockwise_47s.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "NPC 逆时针巡逻路径 47 秒",
+      "nameEn": "NPC Walk Anticlockwise 47s",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_Walk_Anticlockwise_67s",
+      "guid": "4c300a92f81cad24ca2bb028a36f4dfe",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/NPC_Walk_Anticlockwise_67s.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "NPC 逆时针巡逻路径 67 秒",
+      "nameEn": "NPC Walk Anticlockwise 67s",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Blue_01",
+      "guid": "a4924bfcb83ba1e46bf227e3e70b6b36",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Blue_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（蓝）",
+      "nameEn": "NPC Wiz Boy Blue 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Brown_01",
+      "guid": "080c654deec68db4c97f0175d6b0cdc0",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Brown_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（棕）",
+      "nameEn": "NPC Wiz Boy Brown 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Civ_01",
+      "guid": "ce20fcf0ed47a7046be4264772d50691",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Civ_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（便装）",
+      "nameEn": "NPC Wiz Boy Civ 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Green_01",
+      "guid": "db8c2c454cd51764995f72ffa3d438d2",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Green_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（绿）",
+      "nameEn": "NPC Wiz Boy Green 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Hawaiian_01",
+      "guid": "08491a69e6c541243b27b5b9f7927d32",
+      "assetPath": "Assets/common02/prefabs/art/npc/NPC_WizBoy_Hawaiian_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（夏威夷）",
+      "nameEn": "NPC Wiz Boy Hawaiian 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Orange_01",
+      "guid": "736f812aaa21cb348980b5653b84a0f5",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Orange_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（橙）",
+      "nameEn": "NPC Wiz Boy Orange 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Wizard_01",
+      "guid": "3b99d44fbd8f19a4c99b5f5a9a75ae8a",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Wizard_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（巫师）",
+      "nameEn": "NPC Wiz Boy Wizard 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "NPC_WizBoy_Yellow_01",
+      "guid": "7895c89304c23024e858a1e4cb806ccd",
+      "assetPath": "Assets/common01/prefabs/art/npc/NPC_WizBoy_Yellow_01.prefab",
+      "category": "art",
+      "theme": "npc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "顾客·巫师男孩（黄）",
+      "nameEn": "NPC Wiz Boy Yellow 1",
+      "typeKind": "creature",
+      "usage": "creature",
+      "icon": false
+    },
+    {
+      "id": "p_boxlantern_01",
+      "guid": "e01207539ea7e2d77e1467c7ef28202e",
+      "assetPath": "Assets/common03/prefabs/art/dlc13_moonfestival/p_boxlantern_01.prefab",
+      "category": "art",
+      "theme": "dlc13",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.8277782201766968
+      },
+      "height": 0.828,
+      "layoutTier": "decor",
+      "nameZh": "盒灯 1",
+      "nameEn": "boxlantern 1",
+      "typeKind": "lighting",
+      "usage": "ambience",
+      "icon": false
+    },
+    {
       "id": "p_camp_building_01",
       "guid": "752c77e3deb730940b043754229f5308",
       "assetPath": "Assets/common02/prefabs/art/dlc05_camping/p_camp_building_01.prefab",
@@ -19,6 +867,8 @@
       "layoutTier": "decor",
       "nameZh": "营地建筑 1",
       "nameEn": "camp building 1",
+      "typeKind": "other",
+      "usage": "landmark",
       "icon": false
     },
     {
@@ -37,6 +887,28 @@
       "layoutTier": "decor",
       "nameZh": "营地建筑 2",
       "nameEn": "camp building 2",
+      "typeKind": "other",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "p_city_fire_hydrant_01",
+      "guid": "50049f67c3aebd670f82e81275113b49",
+      "assetPath": "Assets/commonW2/prefabs/dlc05/art/dlc05_camping/p_city_fire_hydrant_01.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.9755487442016602
+      },
+      "height": 0.976,
+      "layoutTier": "decor",
+      "nameZh": "城市 fire 消防栓 1",
+      "nameEn": "city fire hydrant 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -44,7 +916,7 @@
       "guid": "78f11141667ad2272aef85982a1c5c6d",
       "assetPath": "Assets/common03/prefabs/art/dlc13_moonfestival/p_dcl13_log_float_01.prefab",
       "category": "art",
-      "theme": "dlc13_moonfestival",
+      "theme": "dlc13",
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 8,
@@ -55,6 +927,8 @@
       "layoutTier": "decor",
       "nameZh": "dcl 13 原木 float 1",
       "nameEn": "dcl 13 log float 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -73,6 +947,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门 1",
       "nameEn": "dlc07 arch 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -91,6 +967,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门 1",
       "nameEn": "dlc07 arch 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -109,6 +987,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门 2",
       "nameEn": "dlc07 arch 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -127,6 +1007,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门尽头 1",
       "nameEn": "dlc07 arch end 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -145,6 +1027,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门尽头 2",
       "nameEn": "dlc07 arch end 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_end_02",
+      "guid": "3a9e2b5f65cd7ade2e5da97327ea9b4f",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_end_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 3.9879727363586426
+      },
+      "height": 3.988,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门尽头 2",
+      "nameEn": "dlc07 arch end 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -163,6 +1067,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门中段 1",
       "nameEn": "dlc07 arch middle 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -181,6 +1087,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门中段 2",
       "nameEn": "dlc07 arch middle 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -199,6 +1107,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门中段 3",
       "nameEn": "dlc07 arch middle 3",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -217,6 +1127,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门中段 4",
       "nameEn": "dlc07 arch middle 4",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_04",
+      "guid": "c207d07c723099599110d6b6cae5e7b2",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 4",
+      "nameEn": "dlc07 arch middle 4",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -235,6 +1167,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门中段 5",
       "nameEn": "dlc07 arch middle 5",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_05",
+      "guid": "476956fdd2f82b2e864b05885063b446",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_05.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 5",
+      "nameEn": "dlc07 arch middle 5",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -253,6 +1207,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门中段 6",
       "nameEn": "dlc07 arch middle 6",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_06",
+      "guid": "ffbf5721e9d2d54bf9b4c35616838af2",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 6",
+      "nameEn": "dlc07 arch middle 6",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -271,6 +1247,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门 start 1",
       "nameEn": "dlc07 arch start 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -289,6 +1267,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门 start 2",
       "nameEn": "dlc07 arch start 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_start_02",
+      "guid": "adb07d4a8a84cff8250d41cd4a0d6b33",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_start_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门 start 2",
+      "nameEn": "dlc07 arch start 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -307,6 +1307,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 盔甲 1",
       "nameEn": "dlc07 armor 1",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_armor_01",
+      "guid": "8c12bcf5e3057b2cd1de1179e954c018",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_armor_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 2.745810031890869
+      },
+      "height": 2.746,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 盔甲 1",
+      "nameEn": "dlc07 armor 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -323,6 +1345,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 盔甲 1 1",
       "nameEn": "dlc07 armor 1 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -341,6 +1365,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 横幅 1",
       "nameEn": "dlc07 banner 1",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_banner_01",
+      "guid": "7b0ccd54490d14fd986b6a09e1d619b8",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_banner_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.698530435562134
+      },
+      "height": 2.699,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 横幅 1",
+      "nameEn": "dlc07 banner 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -359,6 +1405,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 横幅 2",
       "nameEn": "dlc07 banner 2",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_banner_02",
+      "guid": "c29feb4231fe6a3aaa0930d5fe92610c",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_banner_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.702388048171997
+      },
+      "height": 2.702,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 横幅 2",
+      "nameEn": "dlc07 banner 2",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -377,6 +1445,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlement 墙 1",
       "nameEn": "dlc07 battlement wall 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -395,6 +1465,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlement 墙 2",
       "nameEn": "dlc07 battlement wall 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -413,6 +1485,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 1",
       "nameEn": "dlc07 battlements 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -431,6 +1505,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 拱门 2",
       "nameEn": "dlc07 battlements arch 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_arch_02",
+      "guid": "c61db1f81a3528dbea64e25ddd02b88b",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_arch_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 拱门 2",
+      "nameEn": "dlc07 battlements arch 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -449,6 +1545,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 拱门尽头 2",
       "nameEn": "dlc07 battlements arch end 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -467,6 +1565,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 拱门中段 4",
       "nameEn": "dlc07 battlements arch middle 4",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_arch_middle_04",
+      "guid": "a685a494f6834f99b01285d16e3d4a65",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_arch_middle_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 拱门中段 4",
+      "nameEn": "dlc07 battlements arch middle 4",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -485,6 +1605,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 拱门中段 5",
       "nameEn": "dlc07 battlements arch middle 5",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -503,6 +1625,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 拱门中段 6",
       "nameEn": "dlc07 battlements arch middle 6",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -521,6 +1645,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 拱门 start 2",
       "nameEn": "dlc07 battlements arch start 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -539,6 +1665,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements battlement 墙 3",
       "nameEn": "dlc07 battlements battlement wall 3",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_battlement_wall_03",
+      "guid": "2f5577dbc1394beb073c7a8e5aa1aade",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_battlement_wall_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 1,
+        "sizeY": 2.028660535812378
+      },
+      "height": 2.029,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements battlement 墙 3",
+      "nameEn": "dlc07 battlements battlement wall 3",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -557,6 +1705,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements battlement 墙 4",
       "nameEn": "dlc07 battlements battlement wall 4",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_battlement_wall_04",
+      "guid": "8e75277bb5bad2731d5ecefd17ccac9f",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_battlement_wall_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 1,
+        "sizeY": 3.511629581451416
+      },
+      "height": 3.512,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements battlement 墙 4",
+      "nameEn": "dlc07 battlements battlement wall 4",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -575,6 +1745,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements battlement 墙顶部 2",
       "nameEn": "dlc07 battlements battlement wall top 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -593,6 +1765,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 1",
       "nameEn": "dlc07 battlements fog 1",
+      "typeKind": "fx",
+      "usage": "ambience",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_fog_01",
+      "guid": "391c2ac7348db8e7947d05cefb3be934",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_fog_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 14,
+        "sizeY": 8.207180976867676
+      },
+      "height": 8.207,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 雾 1",
+      "nameEn": "dlc07 battlements fog 1",
+      "typeKind": "fx",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -611,6 +1805,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 2",
       "nameEn": "dlc07 battlements fog 2",
+      "typeKind": "fx",
+      "usage": "ambience",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_fog_02",
+      "guid": "883ebe29e6a0261e7ada030e4f9a3357",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_fog_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 13,
+        "sizeY": 3.8380510807037354
+      },
+      "height": 3.838,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 雾 2",
+      "nameEn": "dlc07 battlements fog 2",
+      "typeKind": "fx",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -629,6 +1845,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 3",
       "nameEn": "dlc07 battlements fog 3",
+      "typeKind": "fx",
+      "usage": "ambience",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_fog_03",
+      "guid": "963312354feabbfec15784195a2af7a0",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_fog_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 8,
+        "sizeY": 2.5520477294921875
+      },
+      "height": 2.552,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 雾 3",
+      "nameEn": "dlc07 battlements fog 3",
+      "typeKind": "fx",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -647,6 +1885,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 4",
       "nameEn": "dlc07 battlements fog 4",
+      "typeKind": "fx",
+      "usage": "ambience",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_fog_04",
+      "guid": "8dca36e794d291af2447838646b3784e",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_fog_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 5,
+        "cellsZ": 15,
+        "sizeY": 1.7699999809265137
+      },
+      "height": 1.77,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 雾 4",
+      "nameEn": "dlc07 battlements fog 4",
+      "typeKind": "fx",
+      "usage": "ambience",
       "icon": false
     },
     {
@@ -665,6 +1925,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements grotesque 2",
       "nameEn": "dlc07 battlements grotesque 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -683,6 +1945,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 立柱 5",
       "nameEn": "dlc07 battlements pillar 5",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -701,6 +1965,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 立柱 6",
       "nameEn": "dlc07 battlements pillar 6",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -719,6 +1985,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 立柱 7",
       "nameEn": "dlc07 battlements pillar 7",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -737,6 +2005,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 立柱 8",
       "nameEn": "dlc07 battlements pillar 8",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -755,6 +2025,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 立柱 tall 2",
       "nameEn": "dlc07 battlements pillar tall 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_pillar_tall_02",
+      "guid": "aacb3c95612dc9a92198e6ae8e42537e",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_pillar_tall_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 7.657927513122559
+      },
+      "height": 7.658,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 立柱 tall 2",
+      "nameEn": "dlc07 battlements pillar tall 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -773,6 +2065,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 7",
       "nameEn": "dlc07 battlements plank 7",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_07",
+      "guid": "f63f79cf202122afcc5b66b8d1d12222",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_07.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 3,
+        "sizeY": 0.24950341880321503
+      },
+      "height": 0.25,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 7",
+      "nameEn": "dlc07 battlements plank 7",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -791,6 +2105,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 8",
       "nameEn": "dlc07 battlements plank 8",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_08",
+      "guid": "a686357a4cb447801db3d9cf0a2f492f",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_08.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 0.25032567977905273
+      },
+      "height": 0.25,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 8",
+      "nameEn": "dlc07 battlements plank 8",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -809,6 +2145,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 9",
       "nameEn": "dlc07 battlements plank 9",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_09",
+      "guid": "95fa844da5d41faa1f0e7abd3ea4ea7b",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_09.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.19750574231147766
+      },
+      "height": 0.198,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 9",
+      "nameEn": "dlc07 battlements plank 9",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -827,6 +2185,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 10",
       "nameEn": "dlc07 battlements plank 10",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -845,6 +2205,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 11",
       "nameEn": "dlc07 battlements plank 11",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_plank_11",
+      "guid": "70ff3671b0c40ce937bc65c336ef1a47",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_plank_11.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.19750574231147766
+      },
+      "height": 0.198,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 木板 11",
+      "nameEn": "dlc07 battlements plank 11",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -863,6 +2245,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 12",
       "nameEn": "dlc07 battlements plank 12",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -881,6 +2265,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements sewergrate 1",
       "nameEn": "dlc07 battlements sewergrate 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -899,6 +2285,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 小窗 2",
       "nameEn": "dlc07 battlements small window 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -915,6 +2303,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 1 a 1",
       "nameEn": "dlc07 battlements stone block 1 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -931,6 +2321,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 2 a 1",
       "nameEn": "dlc07 battlements stone block 2 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -947,6 +2339,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 3 a 1",
       "nameEn": "dlc07 battlements stone block 3 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -963,6 +2357,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 4 a 1",
       "nameEn": "dlc07 battlements stone block 4 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -979,6 +2375,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 5 a 1",
       "nameEn": "dlc07 battlements stone block 5 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -995,6 +2393,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 6 a 1",
       "nameEn": "dlc07 battlements stone block 6 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1011,6 +2411,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 7 a 1",
       "nameEn": "dlc07 battlements stone block 7 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1029,6 +2431,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block trip 4",
       "nameEn": "dlc07 battlements stone block trip 4",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1047,6 +2451,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block trip 5",
       "nameEn": "dlc07 battlements stone block trip 5",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1065,6 +2471,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block trip 6",
       "nameEn": "dlc07 battlements stone block trip 6",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1081,6 +2489,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 1 a 1",
       "nameEn": "dlc07 battlements stone half block 1 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1097,6 +2507,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 2 a 1",
       "nameEn": "dlc07 battlements stone half block 2 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1113,6 +2525,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 3 a 1",
       "nameEn": "dlc07 battlements stone half block 3 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1129,6 +2543,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 4 a 1",
       "nameEn": "dlc07 battlements stone half block 4 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1145,6 +2561,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 5 a 1",
       "nameEn": "dlc07 battlements stone half block 5 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1161,6 +2579,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 tall block 1 a 1",
       "nameEn": "dlc07 battlements stone tall block 1 a 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1179,6 +2599,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 5",
       "nameEn": "dlc07 battlements stone wall 5",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1197,6 +2619,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 6",
       "nameEn": "dlc07 battlements stone wall 6",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1215,6 +2639,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 7",
       "nameEn": "dlc07 battlements stone wall 7",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1233,6 +2659,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 8",
       "nameEn": "dlc07 battlements stone wall 8",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1251,6 +2679,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 optimized 4",
       "nameEn": "dlc07 battlements stone wall optimized 4",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_battlements_stone_wall_optimized_04",
+      "guid": "298e9a58e957642764d16d6a372f3265",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_battlements_stone_wall_optimized_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 3.503796339035034
+      },
+      "height": 3.504,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 battlements 石墙 optimized 4",
+      "nameEn": "dlc07 battlements stone wall optimized 4",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1269,6 +2719,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 optimized 5",
       "nameEn": "dlc07 battlements stone wall optimized 5",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1287,6 +2739,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 optimized 6",
       "nameEn": "dlc07 battlements stone wall optimized 6",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1305,6 +2759,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements wallsection 1",
       "nameEn": "dlc07 battlements wallsection 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1323,6 +2779,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements wallsection 拱门 1",
       "nameEn": "dlc07 battlements wallsection arch 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1341,6 +2799,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements wallsection 转角 1",
       "nameEn": "dlc07 battlements wallsection corner 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1359,6 +2819,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 遮阳棚 1",
       "nameEn": "dlc07 canopy 1",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_canopy_01",
+      "guid": "0fc0be9aca5744b821cf72d7d226d859",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_canopy_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 0.750006914138794
+      },
+      "height": 0.75,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 遮阳棚 1",
+      "nameEn": "dlc07 canopy 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1377,6 +2859,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 椅 1",
       "nameEn": "dlc07 chair 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1395,6 +2879,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 椅 1",
       "nameEn": "dlc07 chair 1",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1413,6 +2899,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 椅 2",
       "nameEn": "dlc07 chair 2",
+      "typeKind": "furniture",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1431,6 +2919,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门 2",
       "nameEn": "dlc07 courtyard arch 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_arch_02",
+      "guid": "7b81703c7e7b7e24a05a4623c476ef6a",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_arch_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院拱门 2",
+      "nameEn": "dlc07 courtyard arch 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1449,6 +2959,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门尽头 2",
       "nameEn": "dlc07 courtyard arch end 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_arch_end_02",
+      "guid": "9a053eb4e37c8321c367bb68d03e8a7f",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_arch_end_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 3.9879727363586426
+      },
+      "height": 3.988,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院拱门尽头 2",
+      "nameEn": "dlc07 courtyard arch end 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1467,6 +2999,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门中段 4",
       "nameEn": "dlc07 courtyard arch middle 4",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_arch_middle_04",
+      "guid": "1b3497c4831b4f67b153125f9adfdb49",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_arch_middle_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院拱门中段 4",
+      "nameEn": "dlc07 courtyard arch middle 4",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1485,6 +3039,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门中段 5",
       "nameEn": "dlc07 courtyard arch middle 5",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_arch_middle_05",
+      "guid": "e23f5650ba9aa1864b1b796734d792f7",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_arch_middle_05.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院拱门中段 5",
+      "nameEn": "dlc07 courtyard arch middle 5",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1503,6 +3079,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门中段 6",
       "nameEn": "dlc07 courtyard arch middle 6",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_arch_middle_06",
+      "guid": "6fc12b5aea2d6b75e62555b90df82d9f",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_arch_middle_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院拱门中段 6",
+      "nameEn": "dlc07 courtyard arch middle 6",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1521,6 +3119,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院拱门 start 2",
       "nameEn": "dlc07 courtyard arch start 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_arch_start_02",
+      "guid": "29310ed48410ddae9eb58203132ccb3d",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_arch_start_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院拱门 start 2",
+      "nameEn": "dlc07 courtyard arch start 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1539,6 +3159,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 battlement 墙 1",
       "nameEn": "dlc07 courtyard battlement wall 1",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_battlement_wall_01",
+      "guid": "35385a02f03d4830d302f0881465e85f",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_battlement_wall_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 2,
+        "sizeY": 5.497945785522461
+      },
+      "height": 5.498,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院 battlement 墙 1",
+      "nameEn": "dlc07 courtyard battlement wall 1",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1557,6 +3199,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 battlement 墙 2",
       "nameEn": "dlc07 courtyard battlement wall 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_battlement_wall_02",
+      "guid": "dbfa2d4b9c5f22d27cb1b0c300de8864",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_battlement_wall_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 2,
+        "sizeY": 5.511209487915039
+      },
+      "height": 5.511,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院 battlement 墙 2",
+      "nameEn": "dlc07 courtyard battlement wall 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1575,6 +3239,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 candelabra 1",
       "nameEn": "dlc07 courtyard candelabra 1",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_candelabra_01",
+      "guid": "f29d257524c779225af105913b5ef789",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_candelabra_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.6231138706207275
+      },
+      "height": 1.623,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院 candelabra 1",
+      "nameEn": "dlc07 courtyard candelabra 1",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1593,6 +3279,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石小路 1",
       "nameEn": "dlc07 courtyard cobble path 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1611,6 +3299,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石小路 1",
       "nameEn": "dlc07 courtyard cobble path 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1629,6 +3319,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石小路 2",
       "nameEn": "dlc07 courtyard cobble path 2",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1647,6 +3339,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 1",
       "nameEn": "dlc07 courtyard flagstone 1",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_flagstone_01",
+      "guid": "dbd43489bb6b2f2ee72dc36ccc173672",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_flagstone_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.660605251789093
+      },
+      "height": 0.661,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院石板 1",
+      "nameEn": "dlc07 courtyard flagstone 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1663,6 +3377,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 1 1",
       "nameEn": "dlc07 courtyard flagstone 1 1",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1681,6 +3397,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 2",
       "nameEn": "dlc07 courtyard flagstone 2",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_flagstone_02",
+      "guid": "d70dd33d19ba2490f59a7df848dac8df",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_flagstone_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 0.6975831985473633
+      },
+      "height": 0.698,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院石板 2",
+      "nameEn": "dlc07 courtyard flagstone 2",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1699,6 +3437,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 3",
       "nameEn": "dlc07 courtyard flagstone 3",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_flagstone_03",
+      "guid": "e4ab422cc71748a1139b98271e06140e",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_flagstone_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.678662121295929
+      },
+      "height": 0.679,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院石板 3",
+      "nameEn": "dlc07 courtyard flagstone 3",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1717,6 +3477,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 4",
       "nameEn": "dlc07 courtyard flagstone 4",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_flagstone_04",
+      "guid": "7ff94365bd4e53db1ffab4a17473cf6c",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_flagstone_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.6548405885696411
+      },
+      "height": 0.655,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院石板 4",
+      "nameEn": "dlc07 courtyard flagstone 4",
+      "typeKind": "building",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1735,6 +3517,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 1",
       "nameEn": "dlc07 courtyard grass card 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_grass_card_01",
+      "guid": "95fca33c76d16333bfda2645e90b2bd0",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_grass_card_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.7182494401931763
+      },
+      "height": 0.718,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院草 card 1",
+      "nameEn": "dlc07 courtyard grass card 1",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1753,6 +3557,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 2",
       "nameEn": "dlc07 courtyard grass card 2",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_grass_card_02",
+      "guid": "0850dc491a56ac0eada28477b0c9db93",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_grass_card_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.7182494401931763
+      },
+      "height": 0.718,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院草 card 2",
+      "nameEn": "dlc07 courtyard grass card 2",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1771,6 +3597,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 3",
       "nameEn": "dlc07 courtyard grass card 3",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_grass_card_03",
+      "guid": "52bcd9f4059bab0666213fefa357133d",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_grass_card_03.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.8636392951011658
+      },
+      "height": 0.864,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院草 card 3",
+      "nameEn": "dlc07 courtyard grass card 3",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -1789,6 +3637,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 grotesque 2",
       "nameEn": "dlc07 courtyard grotesque 2",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_grotesque_02",
+      "guid": "92b8718833966bb9dcca64a340082141",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_grotesque_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.3533568382263184
+      },
+      "height": 1.353,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院 grotesque 2",
+      "nameEn": "dlc07 courtyard grotesque 2",
+      "typeKind": "other",
+      "usage": "dressing",
       "icon": false
     },
     {
@@ -1807,6 +3677,8 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院大窗 3",
       "nameEn": "dlc07 courtyard large window 3",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1825,6 +3697,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 5",
       "nameEn": "dlc07 courtyard pillar 5",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_pillar_05",
+      "guid": "a4f98ede3d81f457a768d7ffe7949644",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_pillar_05.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
+      },
+      "height": 3.486,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院立柱 5",
+      "nameEn": "dlc07 courtyard pillar 5",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1843,6 +3737,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 6",
       "nameEn": "dlc07 courtyard pillar 6",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_pillar_06",
+      "guid": "b32e987f247511935e94374c3c1828d3",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_pillar_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
+      },
+      "height": 3.486,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院立柱 6",
+      "nameEn": "dlc07 courtyard pillar 6",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1861,6 +3777,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 7",
       "nameEn": "dlc07 courtyard pillar 7",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_pillar_07",
+      "guid": "41989497109c341a96dbadcc30b7fb3f",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_pillar_07.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 2.0153961181640625
+      },
+      "height": 2.015,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院立柱 7",
+      "nameEn": "dlc07 courtyard pillar 7",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1879,6 +3817,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 8",
       "nameEn": "dlc07 courtyard pillar 8",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_pillar_08",
+      "guid": "75bb9c66f8904dcd0e351c2604a63431",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_pillar_08.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 3.486027240753174
+      },
+      "height": 3.486,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院立柱 8",
+      "nameEn": "dlc07 courtyard pillar 8",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
@@ -1897,1620 +3857,28 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院立柱 tall 2",
       "nameEn": "dlc07 courtyard pillar tall 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     },
     {
-      "id": "p_dlc07_courtyard_plank_07",
-      "guid": "afa3192d9a9e7564c8ffe6dde225145f",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_plank_07.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 3,
-        "sizeY": 0.24950341880321503
-      },
-      "height": 0.25,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院木板 7",
-      "nameEn": "dlc07 courtyard plank 7",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_plank_08",
-      "guid": "5704a65725c62004684618eb5e1b6fc1",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_plank_08.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.25032567977905273
-      },
-      "height": 0.25,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院木板 8",
-      "nameEn": "dlc07 courtyard plank 8",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_plank_09",
-      "guid": "806fc32e2847e064d80c198de5cd1049",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_plank_09.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.19750574231147766
-      },
-      "height": 0.198,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院木板 9",
-      "nameEn": "dlc07 courtyard plank 9",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_plank_10",
-      "guid": "267c33892f3fe3841a92be7dbc1a33f2",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_plank_10.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 3,
-        "sizeY": 0.24950341880321503
-      },
-      "height": 0.25,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院木板 10",
-      "nameEn": "dlc07 courtyard plank 10",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_plank_11",
-      "guid": "988b3b16c0f3def479591224cb161fe8",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_plank_11.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.19750574231147766
-      },
-      "height": 0.198,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院木板 11",
-      "nameEn": "dlc07 courtyard plank 11",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_plank_12",
-      "guid": "de28e7d8f52671f49857aed6713e58fc",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_plank_12.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.25032567977905273
-      },
-      "height": 0.25,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院木板 12",
-      "nameEn": "dlc07 courtyard plank 12",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_portcullis_01",
-      "guid": "30c87e102eb031d45addde94094d6ea9",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_portcullis_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 9,
-        "cellsZ": 1,
-        "sizeY": 9.087871551513672
-      },
-      "height": 9.088,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院 portcullis 1",
-      "nameEn": "dlc07 courtyard portcullis 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_sconce_01",
-      "guid": "8db40968d86e3a043bc1021d0af652ca",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_sconce_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.6715567111968994
-      },
-      "height": 1.672,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院 sconce 1",
-      "nameEn": "dlc07 courtyard sconce 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_sewergrate_02",
-      "guid": "60a97974ef9b527469bac016ff884e4f",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_sewergrate_02.prefab",
+      "id": "p_dlc07_courtyard_pillar_tall_02",
+      "guid": "bf6e7a376803956825713597a3fc85fd",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_courtyard_pillar_tall_02.prefab",
       "category": "art",
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 2,
         "cellsZ": 2,
-        "sizeY": 0.8663673400878906
+        "sizeY": 7.657927513122559
       },
-      "height": 0.866,
+      "height": 7.658,
       "layoutTier": "decor",
-      "nameZh": "DLC7 庭院 sewergrate 2",
-      "nameEn": "dlc07 courtyard sewergrate 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_small_window_01",
-      "guid": "a1c270c0dbf5f7f4b956f24b4bced181",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/battlements/p_dlc07_courtyard_small_window_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 3.4860363006591797
-      },
-      "height": 3.486,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院小窗 1",
-      "nameEn": "dlc07 courtyard small window 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_small_window_02",
-      "guid": "538cb2e718e44ca4a9fdc89d29f6de0d",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_small_window_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 3.4860363006591797
-      },
-      "height": 3.486,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院小窗 2",
-      "nameEn": "dlc07 courtyard small window 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_01_a 1",
-      "guid": "fd87cccec14718247b0b6a6852a30efb",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_01_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block 1 a 1",
-      "nameEn": "dlc07 courtyard stone block 1 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_02_a 1",
-      "guid": "4ab61135779ccdc4cbc05cdeecf61992",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_02_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block 2 a 1",
-      "nameEn": "dlc07 courtyard stone block 2 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_03_a 1",
-      "guid": "2ca6f8279d4942d4f839895ba2265106",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_03_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block 3 a 1",
-      "nameEn": "dlc07 courtyard stone block 3 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_04_a 1",
-      "guid": "20002104452a83b4e9850449d0e9b2ad",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_04_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block 4 a 1",
-      "nameEn": "dlc07 courtyard stone block 4 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_05_a 1",
-      "guid": "7c54508aa533c3b43803fa9bb05b783f",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_05_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block 5 a 1",
-      "nameEn": "dlc07 courtyard stone block 5 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_06_a 1",
-      "guid": "73541feb2b2787d4b8abd40da0e90bc3",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_06_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block 6 a 1",
-      "nameEn": "dlc07 courtyard stone block 6 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_07_a 1",
-      "guid": "559cdf37aa0472b43b0dd6d1d39f7409",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_07_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block 7 a 1",
-      "nameEn": "dlc07 courtyard stone block 7 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_trip_04",
-      "guid": "14da53f2026ef8b49bf55b8afaee8cd3",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_trip_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.49676573276519775
-      },
-      "height": 0.497,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block trip 4",
-      "nameEn": "dlc07 courtyard stone block trip 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_trip_05",
-      "guid": "1c0c8acf2760d734a8b13de9f1b7dd19",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_trip_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.496765673160553
-      },
-      "height": 0.497,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block trip 5",
-      "nameEn": "dlc07 courtyard stone block trip 5",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_trip_06",
-      "guid": "3ed544ded8f892545af7e617e8612a45",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_block_trip_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.49676573276519775
-      },
-      "height": 0.497,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 block trip 6",
-      "nameEn": "dlc07 courtyard stone block trip 6",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_broken_block_01",
-      "guid": "e47632f455aaeeb498d1666635fc3e08",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_broken_block_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.79911208152771
-      },
-      "height": 1.799,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 broken block 1",
-      "nameEn": "dlc07 courtyard stone broken block 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_half_block_01_a 1",
-      "guid": "da4990957a1698b499f7feffad7ab626",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_half_block_01_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 half block 1 a 1",
-      "nameEn": "dlc07 courtyard stone half block 1 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_half_block_02_a 1",
-      "guid": "43e9b61b263645c4e9af66190ea131fe",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_half_block_02_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 half block 2 a 1",
-      "nameEn": "dlc07 courtyard stone half block 2 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_half_block_03_a 1",
-      "guid": "0f2bff23ecd7e1a4aacbb6f5bc4edda6",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_half_block_03_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 half block 3 a 1",
-      "nameEn": "dlc07 courtyard stone half block 3 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_half_block_04_a 1",
-      "guid": "6faf5b89c621cf44d870bc21ea93f1c4",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_half_block_04_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 half block 4 a 1",
-      "nameEn": "dlc07 courtyard stone half block 4 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_half_block_05_a 1",
-      "guid": "3be0f0c70b09ad94581d7af7add5ddcf",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_half_block_05_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 half block 5 a 1",
-      "nameEn": "dlc07 courtyard stone half block 5 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_tall_block_01_a 1",
-      "guid": "69f71541b5ccfd64b98969afcbc76b89",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_tall_block_01_a 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石 tall block 1 a 1",
-      "nameEn": "dlc07 courtyard stone tall block 1 a 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_wall_05",
-      "guid": "2d672536b8bdf0e49a9ea1f3e71cfe93",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_wall_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 3.500722646713257
-      },
-      "height": 3.501,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石墙 5",
-      "nameEn": "dlc07 courtyard stone wall 5",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_wall_06",
-      "guid": "7ea1f9e974a401c4cb8b32480e1d1e7c",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_wall_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 3.5001823902130127
-      },
-      "height": 3.5,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石墙 6",
-      "nameEn": "dlc07 courtyard stone wall 6",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_wall_07",
-      "guid": "41b8b9db93fede14695052da90d5bddf",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_wall_07.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 2.615952730178833
-      },
-      "height": 2.616,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石墙 7",
-      "nameEn": "dlc07 courtyard stone wall 7",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_wall_08",
-      "guid": "d9a479b8deec91840ab1510c556b5863",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_wall_08.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 3.504225969314575
-      },
-      "height": 3.504,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石墙 8",
-      "nameEn": "dlc07 courtyard stone wall 8",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_wall_optimized_04",
-      "guid": "3ec8e1e79ab8a0140816774f140b153b",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_wall_optimized_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 3.503796339035034
-      },
-      "height": 3.504,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石墙 optimized 4",
-      "nameEn": "dlc07 courtyard stone wall optimized 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_wall_optimized_05",
-      "guid": "34e1f9e409fb95548a176117f00215e0",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_wall_optimized_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 3.4974377155303955
-      },
-      "height": 3.497,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石墙 optimized 5",
-      "nameEn": "dlc07 courtyard stone wall optimized 5",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_wall_optimized_06",
-      "guid": "02e8ad729cd0b3a4994d257490880adb",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_stone_wall_optimized_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 3.5049471855163574
-      },
-      "height": 3.505,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院石墙 optimized 6",
-      "nameEn": "dlc07 courtyard stone wall optimized 6",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_wallsection_01 1",
-      "guid": "7907281ee017d06449b3fb5eb3efd97a",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_wallsection_01 1.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院 wallsection 1 1",
-      "nameEn": "dlc07 courtyard wallsection 1 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_wallsection_arch_01",
-      "guid": "76e2c06c99f65e743846ce2e31794279",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_wallsection_arch_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 7,
-        "cellsZ": 2,
-        "sizeY": 9.294590950012207
-      },
-      "height": 9.295,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院 wallsection 拱门 1",
-      "nameEn": "dlc07 courtyard wallsection arch 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_wallsection_corner_01",
-      "guid": "e178c2c056c92c54896ff55a9423a587",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc07_courtyard_wallsection_corner_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 3,
-        "sizeY": 9.780891418457031
-      },
-      "height": 9.781,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院 wallsection 转角 1",
-      "nameEn": "dlc07 courtyard wallsection corner 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_curtain_01",
-      "guid": "8d151959997442a4994c91dc77f1813e",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/city/p_dlc07_curtain_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 1.8380359411239624
-      },
-      "height": 1.838,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 curtain 1",
-      "nameEn": "dlc07 curtain 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_door_01",
-      "guid": "5484ed8ebdd9eda419a9d0b60eca0831",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/city/p_dlc07_door_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.651395559310913
-      },
-      "height": 1.651,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 门 1",
-      "nameEn": "dlc07 door 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_drawbridge_01",
-      "guid": "3e7a30aff0f9b854eadf1562bfefdc7a",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_drawbridge_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 3.4088807106018066
-      },
-      "height": 3.409,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 drawbridge 1",
-      "nameEn": "dlc07 drawbridge 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_fire_hydrant_01",
-      "guid": "f0a3742f31fbc6d448125f1427e34238",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/city/p_dlc07_fire_hydrant_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.9755487442016602
-      },
-      "height": 0.976,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 fire 消防栓 1",
-      "nameEn": "dlc07 fire hydrant 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_flagstone_01",
-      "guid": "5b142b12830ccb54ab767a1b2616eb05",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_flagstone_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.6548405885696411
-      },
-      "height": 0.655,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 石板 1",
-      "nameEn": "dlc07 flagstone 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_flagstone_02",
-      "guid": "f4318b973c14ba64cb1822f991a9503c",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_flagstone_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.6975831985473633
-      },
-      "height": 0.698,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 石板 2",
-      "nameEn": "dlc07 flagstone 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_flagstone_03",
-      "guid": "42f96ef47b988544b81294079b3be4bd",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_flagstone_03.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.660605251789093
-      },
-      "height": 0.661,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 石板 3",
-      "nameEn": "dlc07 flagstone 3",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_flagstone_04",
-      "guid": "3937324e11bb52645a9eb4afb30f0b5f",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_flagstone_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.678662121295929
-      },
-      "height": 0.679,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 石板 4",
-      "nameEn": "dlc07 flagstone 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_ghost_pfx_01",
-      "guid": "8d9964fe4144a18449337921c86e6b2b",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_ghost_pfx_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 ghost pfx 1",
-      "nameEn": "dlc07 ghost pfx 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_gothic_trefoil_01",
-      "guid": "f4c221538fdda0e41bff79e8411d2272",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_gothic_trefoil_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.0031870603561401
-      },
-      "height": 1.003,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 gothic trefoil 1",
-      "nameEn": "dlc07 gothic trefoil 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_grotesque_01",
-      "guid": "532f1839392e03d459b7dd2702260e3e",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_grotesque_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.3533568382263184
-      },
-      "height": 1.353,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 grotesque 1",
-      "nameEn": "dlc07 grotesque 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_jug_01",
-      "guid": "4dcc4eb421dbda94193f998c1b29b25b",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_jug_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5839566588401794
-      },
-      "height": 0.584,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 jug 1",
-      "nameEn": "dlc07 jug 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_02",
-      "guid": "69068b9c81cf02e49aff8131870ddf1a",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门 2",
-      "nameEn": "dlc07 keep arch 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_bricks_01",
-      "guid": "ef37ad4b709271c449ace8758d2fe6da",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_bricks_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 6,
-        "cellsZ": 1,
-        "sizeY": 5.254787445068359
-      },
-      "height": 5.255,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门 bricks 1",
-      "nameEn": "dlc07 keep arch bricks 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_end_02",
-      "guid": "1fbb36ba682f4dc4da142a1c01ddf597",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_end_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 3.9879727363586426
-      },
-      "height": 3.988,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门尽头 2",
-      "nameEn": "dlc07 keep arch end 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_gate_01",
-      "guid": "c34efa0a038a28a4e8481c432e2cce97",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_gate_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门 gate 1",
-      "nameEn": "dlc07 keep arch gate 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_gate_02",
-      "guid": "5b8a8b69669106045b4ea25c0dc44dfa",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_gate_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门 gate 2",
-      "nameEn": "dlc07 keep arch gate 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_middle_04",
-      "guid": "f66010788c311824db0a7c26e704282a",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_middle_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门中段 4",
-      "nameEn": "dlc07 keep arch middle 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_middle_05",
-      "guid": "a4d6bf46f0dbd8b49a24784019163d7c",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_middle_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门中段 5",
-      "nameEn": "dlc07 keep arch middle 5",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_middle_06",
-      "guid": "273a22fd7afa7cf42bb0f4a14c2dbb0d",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_middle_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门中段 6",
-      "nameEn": "dlc07 keep arch middle 6",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_arch_start_02",
-      "guid": "d3590723343939d43ae50cb14aa73493",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_arch_start_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡拱门 start 2",
-      "nameEn": "dlc07 keep arch start 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_battlement_wall_03",
-      "guid": "72ba73236a792bf42b6c979ba1e21d3f",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_battlement_wall_03.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 5,
-        "cellsZ": 1,
-        "sizeY": 2.028660535812378
-      },
-      "height": 2.029,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡 battlement 墙 3",
-      "nameEn": "dlc07 keep battlement wall 3",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_battlement_wall_04",
-      "guid": "d151c82a415912f4ea3b4a047e0637a8",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_battlement_wall_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 6,
-        "cellsZ": 1,
-        "sizeY": 3.511629581451416
-      },
-      "height": 3.512,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡 battlement 墙 4",
-      "nameEn": "dlc07 keep battlement wall 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_battlement_wall_top_02",
-      "guid": "7158fd831e71d6b4f86bbd23110fbccd",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_battlement_wall_top_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 5,
-        "cellsZ": 1,
-        "sizeY": 2.0153968334198
-      },
-      "height": 2.015,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡 battlement 墙顶部 2",
-      "nameEn": "dlc07 keep battlement wall top 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_01",
-      "guid": "bf99624d0474ccd48855e6ad2c5b00a8",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.660605251789093
-      },
-      "height": 0.661,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板 1",
-      "nameEn": "dlc07 keep flagstone 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_01",
-      "guid": "4aceb3cbbd7acdd409ae5b59fe4c411d",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.660605251789093
-      },
-      "height": 0.661,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板 1",
-      "nameEn": "dlc07 keep flagstone 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_02",
-      "guid": "24109ab5b76d32e43b08b0db069e5c34",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.6975831985473633
-      },
-      "height": 0.698,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板 2",
-      "nameEn": "dlc07 keep flagstone 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_02",
-      "guid": "266dd79daf2877d488d858d9b6ab4950",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.6975831985473633
-      },
-      "height": 0.698,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板 2",
-      "nameEn": "dlc07 keep flagstone 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_03",
-      "guid": "ffe3693de2f1557458f68462bc3522c0",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_03.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.678662121295929
-      },
-      "height": 0.679,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板 3",
-      "nameEn": "dlc07 keep flagstone 3",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_03",
-      "guid": "c83f3d90a0a49804a9e4bfee6b287167",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_03.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.678662121295929
-      },
-      "height": 0.679,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板 3",
-      "nameEn": "dlc07 keep flagstone 3",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_04",
-      "guid": "046fed4411628a7428d330be56d6e72c",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.6548405885696411
-      },
-      "height": 0.655,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板 4",
-      "nameEn": "dlc07 keep flagstone 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_04",
-      "guid": "7abf78790c5a04e4fb2ab2a4efd584de",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.6548405885696411
-      },
-      "height": 0.655,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板 4",
-      "nameEn": "dlc07 keep flagstone 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_01",
-      "guid": "7b02b5dbd246d3b40bd9d643e474e785",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 1",
-      "nameEn": "dlc07 keep flagstone group 1",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_02",
-      "guid": "9ade42ab13f5aad479f91103c5a11e18",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 2",
-      "nameEn": "dlc07 keep flagstone group 2",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_03",
-      "guid": "2a1d72fd9dcb0cb49acc5d16ab553c85",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_03.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 3",
-      "nameEn": "dlc07 keep flagstone group 3",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_04",
-      "guid": "19ee08573b847de468769763055ebaff",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 4",
-      "nameEn": "dlc07 keep flagstone group 4",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_05",
-      "guid": "a9f3fd2013ed5e349b65c282a8802fc4",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 5",
-      "nameEn": "dlc07 keep flagstone group 5",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_06",
-      "guid": "2510eb74e44afb7458f6176d457d00f2",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 6",
-      "nameEn": "dlc07 keep flagstone group 6",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_07",
-      "guid": "7bcfc11a85a28244d94420f89981f771",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_07.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 7",
-      "nameEn": "dlc07 keep flagstone group 7",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_08",
-      "guid": "24b251834fb60294b9bf95ea24d9f673",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_08.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 8",
-      "nameEn": "dlc07 keep flagstone group 8",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_09",
-      "guid": "13bd41ab34f9fe3448011d7fa6a0edba",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_09.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 9",
-      "nameEn": "dlc07 keep flagstone group 9",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_10",
-      "guid": "20fb22b02b31684418df78992bd39813",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_10.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 10",
-      "nameEn": "dlc07 keep flagstone group 10",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_11",
-      "guid": "aef284731162f3a4081f125737cdf7be",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_11.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 11",
-      "nameEn": "dlc07 keep flagstone group 11",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_12",
-      "guid": "a528813c967fe284da126a673dd4b8d8",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_12.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 12",
-      "nameEn": "dlc07 keep flagstone group 12",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_13",
-      "guid": "a551434a528ca0642ace178bc6c9c8d8",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_13.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 13",
-      "nameEn": "dlc07 keep flagstone group 13",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_14",
-      "guid": "8c3959699a18fb147b1a3ee47d8e658f",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_14.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 14",
-      "nameEn": "dlc07 keep flagstone group 14",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_group_15",
-      "guid": "1f0e5dc594137394983bcf3c75317e4e",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_flagstone_group_15.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 15",
-      "nameEn": "dlc07 keep flagstone group 15",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_set_01",
-      "guid": "a967e6f3be029eb4baed767d16db20f1",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_set_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 4,
-        "sizeY": 0.8013778924942017
-      },
-      "height": 0.801,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 1",
-      "nameEn": "Flagstone Set 1 (DLC7)",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_set_02",
-      "guid": "b9a4eb3a067173e45bbaad612de69400",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_set_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 5,
-        "cellsZ": 3,
-        "sizeY": 0.8375085592269897
-      },
-      "height": 0.838,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 2",
-      "nameEn": "Flagstone Set 2 (DLC7)",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_set_03",
-      "guid": "740bbe5d5f882ae4dae137824f1b8aed",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_set_03.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 4,
-        "sizeY": 0.7832937240600586
-      },
-      "height": 0.783,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 3",
-      "nameEn": "Flagstone Set 3 (DLC7)",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_set_04",
-      "guid": "072e5b8515319bf4299d60d54b1abc50",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_set_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 5,
-        "cellsZ": 5,
-        "sizeY": 1.1351319551467896
-      },
-      "height": 1.135,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 4",
-      "nameEn": "Flagstone Set 4 (DLC7)",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_set_05",
-      "guid": "286e5bbf35f5c774989b71b5b9bce98f",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_set_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.6905920505523682
-      },
-      "height": 0.691,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 5",
-      "nameEn": "Flagstone Set 5 (DLC7)",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_set_06",
-      "guid": "eb08dfd89afb97e4ca87e0ff32b9cd5b",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_set_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 0.9254854917526245
-      },
-      "height": 0.925,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 6",
-      "nameEn": "Flagstone Set 6 (DLC7)",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_flagstone_set_07",
-      "guid": "99ebbc3af091ccf41ab41ab0c87abf55",
-      "assetPath": "Assets/common01/prefabs/art/dlc07_horde/p_dlc07_keep_flagstone_set_07.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 4,
-        "sizeY": 0.6946338415145874
-      },
-      "height": 0.695,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡石板组 7",
-      "nameEn": "Flagstone Set 7 (DLC7)",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_keep_pillar_05",
-      "guid": "fe67ee2616363cf4db6ad00ad4286c6f",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_keep_pillar_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 3.486027240753174
-      },
-      "height": 3.486,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 城堡立柱 5",
-      "nameEn": "dlc07 keep pillar 5",
+      "nameZh": "DLC7 庭院立柱 tall 2",
+      "nameEn": "dlc07 courtyard pillar tall 2",
+      "typeKind": "building",
+      "usage": "enclosure",
       "icon": false
     }
   ]

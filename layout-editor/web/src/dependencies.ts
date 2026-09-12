@@ -294,6 +294,8 @@ async function renderDepsDetail(app: HTMLElement, setName: string, assetPath: st
         disableDynamicParenting: detail.disableDynamicParenting,
         minOrderCount: detail.minOrderCount,
         maxOrderCount: detail.maxOrderCount,
+        gridHalfSizeX: detail.gridHalfSizeX ?? 0,
+        gridHalfSizeZ: detail.gridHalfSizeZ ?? 0,
         dependencies: deps,
       });
       setStatus("依赖已保存（已 reload）");

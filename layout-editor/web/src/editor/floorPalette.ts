@@ -6,7 +6,6 @@ import { setStatus } from "./status";
 import { draw } from "./render";
 import { pushHistory } from "./historyOps";
 import { batchRandomRotateLotusPressureSwitches } from "./items";
-import { setFloorSelection } from "./selection";
 import {
   isThemedFloor,
   themedFloorPrefabs,
@@ -255,7 +254,6 @@ export function updateFloorBar() {
   const themeRow = `<label class="fb-theme" title="${bgThemeTooltip(bgTheme(S.bgThemeKey), S.currentLevelSet)}">背景：<select id="fb-bg-theme">${themeOpts}</select></label>`;
   const killToggle = `<label class="fb-check" title="回写 Unity 时把坠落区(KillPlane)扩大到覆盖整关，使所有非地板区域都会坠落"><input type="checkbox" id="fb-autokill" ${S.autoKillPlane ? "checked" : ""}/> 回写扩大坠落区</label>`;
   const walkToggle = `<label class="fb-check" title="回写时按可见地板重新生成可行走碰撞体(Col_Floor)：可行走=地板，地板间空隙=坠落坑"><input type="checkbox" id="fb-autowalk" ${S.autoWalkable ? "checked" : ""}/> 同步可行走到地板</label>`;
-  const bgEditToggle = `<label class="fb-check" title="默认锁定：背景板只显示，不参与点选/框选/拖动/缩放。勾选后可像普通地板一样操作背景"><input type="checkbox" id="fb-bgedit" ${S.backgroundEditable ? "checked" : ""}/> 解锁背景操作</label>`;
   const f = S.floors.find((x) => x._key === S.selectedFloorKey);
   const selItem = S.selectedKey ? S.items.find((i) => i._editorKey === S.selectedKey) : null;
   const selCat = selItem ? S.catalogByGuid.get(selItem.prefabGuid) : undefined;
@@ -285,7 +283,7 @@ export function updateFloorBar() {
     S.currentLayer === "floor"
       ? `<button type="button" id="fb-lotus-rand-rot" class="fb-btn" title="将场景中所有莲花压力开关随机设为 0° / 90° / 180° / 270°（写回后生效）">🪷 莲花随机旋转</button>`
       : "";
-  const html = `${themeRow}${killToggle}${walkToggle}${bgEditToggle}${lotusRotBtn}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+  const html = `${themeRow}${killToggle}${walkToggle}${lotusRotBtn}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
   const active = document.activeElement;
   const editing =
     !!active && dom.floorBar.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT");
@@ -308,18 +306,6 @@ export function updateFloorBar() {
   });
   document.getElementById("fb-autowalk")?.addEventListener("change", (e) => {
     S.autoWalkable = (e.target as HTMLInputElement).checked;
-  });
-  document.getElementById("fb-bgedit")?.addEventListener("change", (e) => {
-    S.backgroundEditable = (e.target as HTMLInputElement).checked;
-    if (!S.backgroundEditable) {
-      const alive = new Set(
-        S.floors.filter((x) => x.surfaceKind !== "background").map((x) => x._key)
-      );
-      if ([...S.selectedFloorKeys].some((k) => !alive.has(k))) {
-        setFloorSelection([...S.selectedFloorKeys].filter((k) => alive.has(k)));
-      }
-    }
-    draw();
   });
   document.getElementById("fb-lotus-rand-rot")?.addEventListener("click", () => {
     const n = batchRandomRotateLotusPressureSwitches();

@@ -210,7 +210,7 @@ flowchart LR
 | **ui/detailPanel.ts** | 物品点击浮动详情卡：stub 参数区 + 变体切换 + 联动摘要 |
 | **ui/contextMenu.ts** | 右键菜单（661 行）：微移/旋转/删除/批量高度/变体/动画控制/路径点/参数项 |
 | **ui/overlay.ts / ui/pickTip.ts / ui/pickOverlap.ts** | 浮层隐藏 / 通用候选选择 / 重叠候选封装 |
-| **ui/recipesDialogs.ts** | 菜谱管理大弹窗（1533 行，五 Tab）：select/selected/autofill（按菜谱自动补道具）/optional/matchlist |
+| **ui/recipesDialogs.ts** | 菜谱管理大弹窗（1533 行，五 Tab）：select/selected/autofill（按菜谱自动补道具）/optional（含无效条目检测：重复注册/自定义菜谱残留 → 警告条 + 🧹 一键清理）/matchlist |
 | **ui/utensilManager.ts** | 锅具管理弹窗：按菜谱自动装填 allowedIngredientGuids、一键同步 |
 | **ui/screenshotModal.ts** | 关卡截图：预览/选图/画布拖拽裁剪/JPEG 压缩/base64 上传 |
 | **ui/depsCheck.ts** | 依赖状态检查弹窗（读 envStatus 逐项展示） |

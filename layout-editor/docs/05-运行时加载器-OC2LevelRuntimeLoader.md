@@ -1,6 +1,6 @@
 # 05 · 运行时加载器 OC2LevelRuntimeLoader
 
-> 目录：`BepInExPlugins/OC2LevelRuntimeLoader/`（唯一源文件 `Loader.cs`，639 行，v1.6.0）
+> 目录：`BepInExPlugins/OC2LevelRuntimeLoader/`（唯一源文件 `Loader.cs`，642 行，v1.7.1）
 > 一句话定位：「Overcooked2 关卡代码分发」体系的**游戏侧运行时注入端**——把编辑器按关卡集编译、随关卡 zip 分发的 C# 程序集（`Stub_<set>.dll`，内含随机食材箱等自定义玩法逻辑）在**关卡场景加载之前**注入游戏进程的 AppDomain，使场景 bundle 里的脚本引用能解析成真实组件。
 > 返回 [00-架构总览.md](00-架构总览.md)
 
@@ -13,8 +13,8 @@ BepInExPlugins/
 ├── build.sh                               一键构建脚本（mac；Windows 用 dotnet build -p:GameDir）
 ├── LogOutput.log / LogOutput2.log         真机 BepInEx 日志样本（排障参考）
 └── OC2LevelRuntimeLoader/
-    ├── Loader.cs                          ★ 唯一源码（639 行，v1.6.0，单类）
-    ├── OC2LevelRuntimeLoader.csproj       net35 工程（BepInEx 5.4.22 + 老式整包 UnityEngine.dll）
+    ├── Loader.cs                          ★ 唯一源码（642 行，v1.7.1，纯加载器——不含任何 Harmony patch）
+    ├── OC2LevelRuntimeLoader.csproj       net35 工程（BepInEx 5.4.22 + 老式整包 UnityEngine.dll + 0Harmony 2.9（仓库内 Assets/Plugins 副本，仅编译期引用））
     ├── README.md                          机制/构建/安装/排障文档
     ├── bin/Release/OC2LevelRuntimeLoader.dll   构建产物（手动同步到 web/public/）
     └── obj/                               MSBuild 中间产物（非手写代码）
@@ -31,13 +31,13 @@ BepInExPlugins/
 2. 这些代码**不能进 Assembly-CSharp、也不能进公共 common bundle**（每个关卡集专属、可独立更新）；
 3. 所以链路是：编辑器把 `Stub_<set>.dll` 以 `*.dll.bytes` TextAsset 形式打进一个**普通（非场景）bundle**，文件名就叫 `runtime`，与 `info_<set>` / `s_*` 同层放在关卡集目录里；本插件负责扫到它、`Assembly.Load` 注入。
 
-**它不是** Harmony 玩法补丁集（v1.6.0 零 Harmony 引用），而是「**程序集装载器 + 场景自愈器 + 排障日志中枢**」三合一。
+主体是「**程序集装载器 + 场景自愈器 + 排障日志中枢**」三合一，不含任何功能性 Harmony 补丁（v1.7.0 曾短暂引入相机偏移全局补丁，因拖全场景帧率+违反「没用 runtime 的图零影响」铁律，v1.7.1 移除并移交 CustomStub 按需安装，见 §4）。
 
 ## 3. Loader.cs 详解（唯一源文件）
 
 | 项 | 内容 |
 |---|---|
-| 命名空间/类 | `OC2LevelRuntimeLoader.LevelRuntimeLoader : BaseUnityPlugin`，`[BepInPlugin("oc2.levelruntimeloader", "OC2 LevelRuntime Loader", "1.6.0")]` |
+| 命名空间/类 | `OC2LevelRuntimeLoader.LevelRuntimeLoader : BaseUnityPlugin`，`[BepInPlugin("oc2.levelruntimeloader", "OC2 LevelRuntime Loader", "1.7.1")]` |
 
 **类内状态**：`_log`（BepInEx 日志）、`PendingRaw`（Load 失败暂存字节，供 AssemblyResolve 兜底）、`LoadedNames`（程序集名去重）、`LoadedBundles`（bundle 路径去重，忽略大小写）、`_startupScanDone`（首帧只扫一次闸门）、`_miIsInSession/_miIsHost`（ConnectionStatus 反射缓存）、`ReportedResolveMisses`（解析失败只报一次防刷屏）。
 
@@ -91,7 +91,7 @@ BepInEx Chainloader 实例化插件
 
 ## 4. 与游戏本体的 Hook 点
 
-**当前 v1.6.0 不包含任何 Harmony patch**。全部接触面：
+**v1.7.1 起 loader 不含任何 Harmony patch。** 相机出发点偏移功能已移交 CustomStub（`CameraAuthoredOffset` + `CameraOffset|<x>,<z>` 载体 tag，场景自愈扫到 tag 才按需安装 `GetIdealLocation` postfix；详见 02/04 文档与 `.opencode/skills/oc2-customstub`）。历史：v1.7.0 曾在 loader 全局安装 `CameraAuthoredOffsetPatch`（`MultiplayerCamera.Awake` prefix 捕获摆放位 + `GetIdealLocation` postfix 叠加 XZ 偏移）——`GetIdealLocation` 是每个 FixedUpdate 的热方法，全局 detour 拖累整个 session 所有场景（含官方图）的帧率，且对未配置相机的图零收益，故移除。全部接触面：
 
 | 类别 | 具体点 |
 |---|---|
@@ -103,7 +103,7 @@ BepInEx Chainloader 实例化插件
 | 游戏类型（反射读字段） | `SpecificPseudoPrefabTag.prefabTag`、`PseudoPrefabSOArray.pseudoPrefabSOs` |
 | 关卡程序集类型（反射写/调） | `CustomStub.RandomCrate` 三字段、`CustomStub.EntryPoint.Install()` |
 
-**注意区分**：真机日志里大量 `Patched: ...` 行来自 **OC2DIYLevel.dll**（外部模组）与 **stub 程序集内部的 HarmonyPatches**（由 EntryPoint.Install() 安装），不经本插件代码。历史上 v1.5.3–1.5.6 曾有一组 Harmony 诊断探针（LoadLevel/LoadingScreen/MultiplayerController 等 9+N 处，用于定位"进关卡卡死"），v1.6.0 全部删除。
+**注意区分**：真机日志里大量 `Patched: ...` 行来自 **OC2DIYLevel.dll**（外部模组）与 **stub 程序集内部的 HarmonyPatches**（由 EntryPoint.Install() 及各类按需 Ensure 安装）。本插件自身不含任何 Harmony patch（v1.7.0 的相机偏移一组已随 v1.7.1 移交 CustomStub）。历史上 v1.5.3–1.5.6 曾有一组 Harmony 诊断探针（LoadLevel/LoadingScreen/MultiplayerController 等 9+N 处，用于定位"进关卡卡死"），v1.6.0 全部删除。
 
 ## 5. 与编辑器项目的配合（文件/路径约定）
 
@@ -138,11 +138,13 @@ BepInEx Chainloader 实例化插件
 | 1.5.1 | 环境探测 + 时间戳/角色前缀 + 多候选路径 |
 | 1.5.2 | 桥接消息保证 `[Stub:...]` 段 |
 | 1.5.3–1.5.6 | 加载链路 Harmony 探针（9+N 处 patch + 2s 心跳，定位"进关卡卡死"） |
-| **1.6.0（当前）** | **移除全部 Harmony 探针**，回归纯「扫描 + 加载 + 自愈 + 日志」 |
+| 1.6.0 | **移除全部 Harmony 探针**，回归纯「扫描 + 加载 + 自愈 + 日志」 |
+| 1.7.0 | 相机出发点偏移补丁（Harmony：`MultiplayerCamera` 尊重场景摆放 X/Z）；csproj 新增 0Harmony 2.9 编译期引用（仓库内 `Assets/Plugins/0Harmony.dll`）。⚠ 全局热方法 detour 拖全场景帧率，勿分发 |
+| **1.7.1（当前）** | **移除相机偏移补丁**（移交 CustomStub `CameraAuthoredOffset` + `CameraOffset|` tag 按需安装），csproj 去掉 0Harmony 引用，loader 回归纯「扫描 + 加载 + 自愈 + 日志」 |
 
 ## 7. 构建与安装
 
-- **构建**：`cd BepInExPlugins && ./build.sh`（即 `dotnet build OC2LevelRuntimeLoader/OC2LevelRuntimeLoader.csproj -c Release`）；Windows 用 `-p:GameDir="..."` 指向游戏目录。csproj：net35；引用 BepInEx.dll（5.4.22）+ **老式整包 UnityEngine.dll**（BepInEx 5.4 的 BaseUnityPlugin 编译自老式整包，必须引同名程序集做类型统一，引模块 DLL 会 CS0012）；mac 路径回退 `~/Downloads/[前置]BepInEx/...` + Unity 2017.4.8f1 Managed。
+- **构建**：`cd BepInExPlugins && ./build.sh`（即 `dotnet build OC2LevelRuntimeLoader/OC2LevelRuntimeLoader.csproj -c Release`）；Windows 用 `-p:GameDir="..."` 指向游戏目录。csproj：net35；引用 BepInEx.dll（5.4.22）+ **老式整包 UnityEngine.dll**（BepInEx 5.4 的 BaseUnityPlugin 编译自老式整包，必须引同名程序集做类型统一，引模块 DLL 会 CS0012）；mac 路径回退 `~/Downloads/[前置]BepInEx/...` + Unity 2017.4.8f1 Managed（该目录不存在时用 `./build.sh -p:BepInExCoreDir="<本机 BepInEx core 目录>"` 显式指定，如 `~/worker/code/oc2/BepInEx (1)/BepInEx/core`）。
 - **安装**：产物放 `BepInEx/plugins/OC2DIYLevel/`（随导出 zip 分发则自动就位）。
 - **排障顺序**（README）：环境探测日志 → LogOutput.log 三种特征（`AssemblyResolve 未命中` / `CustomStub.RandomCrate ✓` 缺失 / `[Stub:...]` 缺失）→ zip 新鲜度 → commonW1 存在性。v1.5.0 起警惕"坏包勿分发"。
 

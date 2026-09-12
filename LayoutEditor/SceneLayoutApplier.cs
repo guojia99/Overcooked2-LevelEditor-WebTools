@@ -320,6 +320,17 @@ public static class SceneLayoutApplier
             }
         }
 
+        // 主网格半宽：按 LevelInfoSO.gridHalfSizeX/Z 烘焙 GridManager 覆盖
+        // （0 = 不调整；X/Z 每轴独立，工作台需全部落入网格范围才可交互）。
+        {
+            var gridWarn = LayoutEditorGridBake.BakeActiveScene();
+            if (!string.IsNullOrEmpty(gridWarn))
+            {
+                LayoutEditorLog.LogWarning(gridWarn);
+                bakeError = string.IsNullOrEmpty(bakeError) ? gridWarn : bakeError + "; " + gridWarn;
+            }
+        }
+
 
         // 烤菜烤盘 / 火锅大锅：食材由前端锅具管理或菜谱自动填充写入，写回时不再追加。
         // After mutating placeholder transforms, persist with the canonical Tools workflow:
@@ -368,6 +379,14 @@ public static class SceneLayoutApplier
 
     /// <summary>写回相机背景色（同时确保 clearFlags=SolidColor）、FOV 与出发点位置。
     ///  位置仅在 positionEdited=true 时写回 X/Z（Y 永不改动；防旧文档快照误移相机）。
+    ///  位置写到 MultiplayerCamera 所在的相机根节点（而非 Camera.main 子物体）：
+    ///  子物体上的 Animator（Camera.controller：PullBackIntro→Camera_Idle）运行时
+    ///  每帧把 localPosition 钉在 0，写在子物体上的偏移 Play 时会被抹掉；
+    ///  根节点摆放位由 CustomStub.CameraAuthoredOffset 以场景摆放位为跟随中心
+    ///  （编辑器 Play 与真机同路径，按需 GetIdealLocation postfix）。子物体
+    ///  localPosition 顺带清零，清掉旧版写回残留在子物体上的历史偏移。
+    ///  X/Z 实际变化时给相机根节点烘焙 CameraOffset|<x>,<z> 载体 tag——
+    ///  CustomStub.CameraAuthoredOffset 按需补丁的唯一门票（无 tag 的图零影响）。
     ///  运行时从不写这些值，改场景序列化即生效。</summary>
     private static string ApplyCameraInfo(CameraInfoDto info)
     {
@@ -396,13 +415,29 @@ public static class SceneLayoutApplier
         }
         if (info.positionEdited && info.position != null)
         {
-            var camT = cam.transform;
-            Undo.RecordObject(camT, "Layout Editor Camera");
-            var pos = camT.position;
+            var rig = cam.GetComponentInParent<MultiplayerCamera>();
+            var targetT = rig != null ? rig.transform : cam.transform;
+            var before = targetT.position;
+            Undo.RecordObject(targetT, "Layout Editor Camera");
+            var pos = targetT.position;
             pos.x = info.position.x;
             pos.z = info.position.z;
-            camT.position = pos;
-            EditorUtility.SetDirty(camT);
+            targetT.position = pos;
+            EditorUtility.SetDirty(targetT);
+            if (targetT != cam.transform && cam.transform.localPosition != Vector3.zero)
+            {
+                Undo.RecordObject(cam.transform, "Layout Editor Camera");
+                cam.transform.localPosition = Vector3.zero;
+                EditorUtility.SetDirty(cam.transform);
+            }
+            // 相机偏移标记（CameraOffset|<x>,<z> 载体 tag，真机按需安装补丁的唯一
+            // 门票）：仅在 X/Z 实际变化时写/更新。无实际变化（含误触步进后归零）保持
+            // 原状——既有配置不丢，无配置的图也不会因一次空写回被标记。
+            if (rig != null
+                && (Mathf.Abs(pos.x - before.x) > 0.0005f || Mathf.Abs(pos.z - before.z) > 0.0005f))
+            {
+                LayoutEditorStubIO.SetCameraOffsetTag(rig.gameObject, pos.x, pos.z);
+            }
             changed = true;
         }
         if (changed)
@@ -2375,7 +2410,10 @@ public static class SceneLayoutApplier
         if (s.x <= 0f) s.x = t.localScale.x;
         if (s.y <= 0f) s.y = t.localScale.y;
         if (s.z <= 0f) s.z = t.localScale.z;
-        if (Mathf.Abs(s.x - 1f) > 0.001f || Mathf.Abs(s.y - 1f) > 0.001f || Mathf.Abs(s.z - 1f) > 0.001f)
+        // 文档显式携带 scale 即权威（含用户改回 1,1,1 的场景——旧的「≈1 则跳过」
+        // 会让改回 1 永远写不进去）；未携带（新建物件默认无 localScale）则保持
+        // prefab 默认 scale 不动。仅在与当前实例值有差异时写，避免无意义 SetDirty。
+        if ((t.localScale - s).sqrMagnitude > 0.000001f)
             t.localScale = s;
     }
 

@@ -60,6 +60,21 @@ export interface CatalogItem {
   /** 需要 CustomStub runtime（Stub_<set>）才能完整运行的道具（随机箱/火锅家族/
    *  可移动火锅/dlc09 大炮/dlc08 map_* 装饰等）。导出时由 Unity 场景扫描兜底。 */
   needsStub?: boolean;
+  /** 装饰层「按类型」分组（build-catalog.mjs 关键词规则打标）：建筑构件/地面铺装/
+   *  植被/山石/家具陈设/灯具光源/水体/特效粒子/角色生物/食材成品菜模型/其他。 */
+  typeKind?: string;
+  /** 装饰层「按用途」分组：铺地/围合砌墙/环境点缀/大型地标/氛围特效/水域造景/角色生物。 */
+  usage?: string;
+}
+
+export interface CatalogTaxonomyEntry {
+  key: string;
+  zh: string;
+}
+
+export interface CatalogTaxonomy {
+  typeKind: CatalogTaxonomyEntry[];
+  usage: CatalogTaxonomyEntry[];
 }
 
 export interface CatalogPaletteGroup {
@@ -78,6 +93,8 @@ export interface Catalog {
   items: CatalogItem[];
   byCategory: Record<string, CatalogItem[]>;
   paletteGroups?: CatalogPaletteGroup[];
+  /** 装饰层双维度分组标签表（typeKind / usage → 中文）。 */
+  taxonomy?: CatalogTaxonomy;
 }
 
 export interface LayoutVector3 {
@@ -644,6 +661,8 @@ export interface FloorMaterial {
   sizeTag?: string;
   /** Level set name or "common01"/"common02" (static floor-materials.json only). */
   source?: string;
+  /** 贴图缩略图存在（web/public/icons/floor-materials/<id>.png）——选择器展示材质球图。 */
+  icon?: boolean;
 }
 
 export interface FloorMaterialCatalog {
@@ -1001,6 +1020,9 @@ export interface LevelDetail {
   disableDynamicParenting: boolean;
   minOrderCount: number;
   maxOrderCount: number;
+  /** 主网格（CampaignGameEnvironment/GridManager）半宽格数；0 = 不调整（保持场景当前值）。 */
+  gridHalfSizeX: number;
+  gridHalfSizeZ: number;
   dependencies: string[];
   configs: PerPlayerConfig[];
   audio: AudioConfig;

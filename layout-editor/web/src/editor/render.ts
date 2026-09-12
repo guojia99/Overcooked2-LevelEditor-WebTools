@@ -310,7 +310,9 @@ export function updateMarqueeSelection() {
     const nextFloors = S.marqueeAdd ? new Set(S.selectedFloorKeys) : new Set<string>();
     for (const f of S.floors) {
       const isBg = f.surfaceKind === "background";
-      if (layerBg ? !isBg : isBg && !S.backgroundEditable) continue;
+      // 地板层/背景层严格分离：地板层框选无条件排除背景（水面等），
+      // 背景层框选只收背景。跨层选中已由 setLayer 的 clearSelection 清空。
+      if (layerBg ? !isBg : isBg) continue;
       if (!categoryVisible(isBg ? "background" : "floors")) continue;
       if (!floorInHeightFilter(f)) continue;
       if (inRect(f._wx, f._wz)) nextFloors.add(f._key);

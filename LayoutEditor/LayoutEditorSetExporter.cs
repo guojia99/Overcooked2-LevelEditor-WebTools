@@ -44,13 +44,14 @@ public static class LayoutEditorSetExporter
     private static readonly string[] CustomStubTagPrefixes =
     {
         "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
-        "UtensilTiming|"
+        "UtensilTiming|", "CameraOffset|"
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub：tag 载体（含 prefab 自带的
     ///  RandomCrate|）或命名空间 CustomStub 的组件（Stub_<set> 程序集，双通道兜底）。
-    ///  导出 prepare 阶段逐场景调用（场景此时已打开）。</summary>
-    private static bool ActiveSceneUsesCustomStub()
+    ///  导出 prepare 阶段逐场景调用（场景此时已打开）；写回守卫
+    ///  （CustomStubWriteBackGuard）在 Apply 完成后也复用本方法判定是否检查 stub。</summary>
+    public static bool ActiveSceneUsesCustomStub()
     {
         foreach (var tag in UnityEngine.Object.FindObjectsOfType<LevelEditorStub.SpecificPseudoPrefabTag>())
         {
@@ -218,6 +219,9 @@ public static class LayoutEditorSetExporter
             var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
             if (!string.IsNullOrEmpty(hudWarn))
                 Debug.LogWarning("[SetExporter] " + hudWarn);
+            var gridWarn = LayoutEditorGridBake.BakeActiveScene();
+            if (!string.IsNullOrEmpty(gridWarn))
+                Debug.LogWarning("[SetExporter] " + gridWarn);
             LayoutEditorPseudoReload.EnsurePrepareForBuilding();
             if (!_usesCustomStub && ActiveSceneUsesCustomStub())
             {

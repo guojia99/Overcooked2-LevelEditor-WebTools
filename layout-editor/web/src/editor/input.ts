@@ -279,6 +279,8 @@ export function isTypingTarget(target: EventTarget | null): boolean {
 
 /** Arrow-key nudge hold state: one undo entry per press-and-hold gesture. */
 let arrowNudgeHeld = false;
+/** 动画时间轴下空格二义：按住拖动 = 平移画布（本标记记录拖动发生），点按 = 播放/暂停预览。 */
+let spacePanDragged = false;
 
 function activeFloorDragKeys(): string[] {
   if (S.dragFloorGroupKeys.length > 0) return [...S.dragFloorGroupKeys];
@@ -362,6 +364,7 @@ export function setupCanvas() {
 
     if (e.button === 1 || (e.button === 0 && e.altKey) || (e.button === 0 && S.spaceHeld)) {
       S.panning = true;
+      if (S.spaceHeld) spacePanDragged = true;
       S.lastMx = mx;
       S.lastMy = my;
       hideDetail();
@@ -1237,13 +1240,11 @@ export function setupCanvas() {
   window.addEventListener("keydown", (e) => {
     if (e.code === "Space" && !isTypingTarget(e.target)) {
       e.preventDefault();
-      // 动画组时间轴 tab 下空格 = 播放/暂停预览；其余情况 = 平移画布。
-      if (S.currentLayer === "anim" && S.activeAnimGroupId && S.activeAnimTab === "timeline") {
-        toggleAnimPreview();
-        return;
-      }
+      // 空格始终进入平移预备；动画时间轴 tab 的播放/暂停推迟到 keyup
+      // 且未发生拖动时触发（见 keyup 的 spacePanDragged 判定）。
       if (!S.spaceHeld) {
         S.spaceHeld = true;
+        spacePanDragged = false;
         updateCanvasCursor();
       }
     }
@@ -1428,6 +1429,17 @@ export function setupCanvas() {
       S.spaceHeld = false;
       S.panning = false;
       updateCanvasCursor();
+      // 动画组时间轴 tab：空格点按（按下到抬起之间未拖动平移）= 播放/暂停预览。
+      if (
+        !spacePanDragged &&
+        S.currentLayer === "anim" &&
+        S.activeAnimGroupId &&
+        S.activeAnimTab === "timeline" &&
+        !isTypingTarget(e.target)
+      ) {
+        toggleAnimPreview();
+      }
+      spacePanDragged = false;
     }
   });
 
@@ -1435,6 +1447,7 @@ export function setupCanvas() {
     S.spaceHeld = false;
     S.panning = false;
     arrowNudgeHeld = false;
+    spacePanDragged = false;
     updateCanvasCursor();
   });
 

@@ -1,0 +1,269 @@
+{
+ "no_scenery": [],
+ "levels": {
+  "OC2_DLC02_1_2": {
+   "wanted": [
+    "m_dlc2_sanddecal_05",
+    "m_dlc2_sanddecal_06"
+   ],
+   "placed": 2
+  },
+  "OC2_DLC02_2_1": {
+   "wanted": [
+    "Sand_Quad_tile_3x1_01"
+   ],
+   "placed": 1
+  },
+  "OC2_DLC02_2_2": {
+   "wanted": [
+    "m_dlc2_floorpiece_2_2"
+   ],
+   "placed": 6
+  },
+  "OC2_DLC02_3_2": {
+   "wanted": [
+    "m_dlc2_seaplane_ThroneRoom_01 wet_sand"
+   ],
+   "placed": 3
+  },
+  "OC2_DLC03_1_2": {
+   "wanted": [
+    "m_dlc3_robin_ground_01"
+   ],
+   "placed": 4
+  },
+  "OC2_DLC04_1_2": {
+   "wanted": [
+    "m_dlc4_moss_01",
+    "m_dlc4_moss_02",
+    "m_dlc4_moss_03",
+    "m_dlc4_moss_04",
+    "m_dlc4_mossfloor_02",
+    "m_dlc4_mossfloor_03"
+   ],
+   "placed": 11
+  },
+  "OC2_DLC04_1_6": {
+   "wanted": [
+    "m_dlc4_lvl7_crazyfloor_01",
+    "m_dlc4_moss_02",
+    "m_dlc4_moss_03",
+    "m_dlc4_moss_04"
+   ],
+   "placed": 23
+  },
+  "OC2_DLC04_1_7": {
+   "wanted": [
+    "m_dlc4_lvl7_crazyfloor_01"
+   ],
+   "placed": 1
+  },
+  "OC2_DLC05_1_1": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 60
+  },
+  "OC2_DLC05_1_2": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 37
+  },
+  "OC2_DLC05_1_4": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 32
+  },
+  "OC2_DLC05_2_3": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 61
+  },
+  "OC2_DLC05_2_4": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 47
+  },
+  "OC2_DLC05_3_1": {
+   "wanted": [
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 10
+  },
+  "OC2_DLC05_3_3": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 54
+  },
+  "OC2_DLC05_SP": {
+   "wanted": [
+    "m_dlc5_camp_ground_Special",
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 17
+  },
+  "OC2_DLC05_H10": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 13
+  },
+  "OC2_DLC05_H11": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 18
+  },
+  "OC2_DLC05_H12": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 24
+  },
+  "OC2_DLC08_1_4": {
+   "wanted": [
+    "m_dlc08_ground_1_2"
+   ],
+   "placed": 1
+  },
+  "OC2_DLC08_2_1": {
+   "wanted": [
+    "m_dlc08_ground_1_2"
+   ],
+   "placed": 1
+  },
+  "OC2_DLC08_2_2": {
+   "wanted": [
+    "m_dlc08_ground_1_2"
+   ],
+   "placed": 1
+  },
+  "OC2_DLC08_H16": {
+   "wanted": [
+    "p_dlc5_grass_card_a",
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 3
+  },
+  "OC2_DLC08_H17": {
+   "wanted": [
+    "p_dlc5_grass_card_b",
+    "p_dlc5_grass_card_c"
+   ],
+   "placed": 12
+  },
+  "OC2_DLC09_1_2": {
+   "wanted": [
+    "m_dlc3_robin_ground_01"
+   ],
+   "placed": 4
+  },
+  "OC2_DLC09_1_3": {
+   "wanted": [
+    "m_dlc3_robin_ground_01"
+   ],
+   "placed": 4
+  },
+  "OC2_DLC09_1_4": {
+   "wanted": [
+    "m_dlc3_robin_ground_01"
+   ],
+   "placed": 5
+  },
+  "OC2_DLC09_1_5": {
+   "wanted": [
+    "m_dlc3_robin_ground_01"
+   ],
+   "placed": 3
+  },
+  "OC2_DLC10_1_1": {
+   "wanted": [
+    "m_dlc10_path_01"
+   ],
+   "placed": 2
+  },
+  "OC2_DLC10_1_2": {
+   "wanted": [
+    "m_dlc10_path_01",
+    "m_dlc10_path_02"
+   ],
+   "placed": 7
+  },
+  "OC2_DLC10_1_4": {
+   "wanted": [
+    "m_dlc10_path_01"
+   ],
+   "placed": 7
+  },
+  "OC2_DLC11_1_1": {
+   "wanted": [
+    "wet_sand"
+   ],
+   "placed": 2
+  },
+  "OC2_DLC11_1_4": {
+   "wanted": [
+    "wet_sand"
+   ],
+   "placed": 3
+  },
+  "OC2_DLC13_1_2": {
+   "wanted": [
+    "p_dlc13_grass_card_a"
+   ],
+   "placed": 5
+  },
+  "OC2_DLC13_1_3": {
+   "wanted": [
+    "m_dlc10_path_01",
+    "p_dlc13_grass_card_a",
+    "p_dlc13_grass_card_b",
+    "p_dlc13_grass_card_c"
+   ],
+   "placed": 43
+  },
+  "OC2_DLC13_1_4": {
+   "wanted": [
+    "m_dlc10_path_01",
+    "p_dlc13_grass_card_a",
+    "p_dlc13_grass_card_b",
+    "p_dlc13_grass_card_c"
+   ],
+   "placed": 38
+  },
+  "OC2_DLC13_1_5": {
+   "wanted": [
+    "m_dlc10_path_01"
+   ],
+   "placed": 6
+  }
+ },
+ "created_files": [],
+ "ancestry_warn": []
+}

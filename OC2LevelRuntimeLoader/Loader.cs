@@ -27,7 +27,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.levelruntimeloader";
         public const string PluginName = "OC2 LevelRuntime Loader";
-        public const string PluginVersion = "1.6.0";
+        public const string PluginVersion = "1.7.1";
 
         private static ManualLogSource _log;
         private static readonly List<byte[]> PendingRaw = new List<byte[]>();
@@ -99,6 +99,9 @@ namespace OC2LevelRuntimeLoader
             // 绝大多数情况在类型首次使用时已就绪；异常时再从未加载的字节里找。
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
             LogI("v" + PluginVersion + " ready（启动环境探测 + 多候选路径扫描 + 每次场景加载幂等补扫）");
+            // v1.7.1：相机出发点偏移补丁（v1.7.0 CameraAuthoredOffsetPatch）已移除——
+            // 全局热方法 detour 影响所有场景帧率，且违反「没用 runtime 的图零影响」铁律；
+            // 该功能移交 CustomStub（CameraAuthoredOffset + CameraOffset| tag 按需安装）。
         }
 
         private void Update()

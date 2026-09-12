@@ -140,6 +140,16 @@ export async function fetchGrid(): Promise<GridInfo> {
 
 /** 前端重建 byCategory（镜像 build-catalog.mjs categorize 的分组规则：
  *  category==='art' 且带 theme 时按 `art/{theme}` 分组，其余按 category）。 */
+/** 同 id 多来源条目的展示优先级（镜像 build-catalog.mjs catalogSourcePriority）：
+ *  commonW1 > common03 > common01/02/W2 > 关卡集旧拷贝。 */
+function catalogSourcePriority(assetPath: string | undefined): number {
+  const p = assetPath ?? "";
+  if (p.includes("/commonW1/")) return 4;
+  if (p.includes("/common03/")) return 3;
+  if (/\/custom_(web|ingredients)\//.test(p)) return 0;
+  return 2;
+}
+
 function deriveCatalogByCategory(
   items: import("./types").CatalogItem[]
 ): Record<string, import("./types").CatalogItem[]> {
@@ -147,6 +157,18 @@ function deriveCatalogByCategory(
   for (const it of items) {
     const key = it.category === "art" && it.theme ? `art/${it.theme}` : it.category;
     (by[key] ??= []).push(it);
+  }
+  // 同 id 跨库去重（仅展示分组；S.catalogById 仍含全量 guid 供引用解析）：
+  // 同名条目在多个素材库各有一份（不同 guid），不去重时调色板会重复出卡。
+  for (const key of Object.keys(by)) {
+    const byId = new Map<string, import("./types").CatalogItem>();
+    for (const it of by[key]) {
+      const prev = byId.get(it.id);
+      if (!prev || catalogSourcePriority(it.assetPath) > catalogSourcePriority(prev.assetPath)) {
+        byId.set(it.id, it);
+      }
+    }
+    by[key] = [...byId.values()];
   }
   return by;
 }
@@ -163,6 +185,7 @@ export async function loadCatalog(): Promise<import("./types").Catalog> {
     itemCount: number;
     itemChunks?: string[];
     paletteGroups?: import("./types").CatalogPaletteGroup[];
+    taxonomy?: import("./types").CatalogTaxonomy;
   };
   const items: import("./types").CatalogItem[] = [];
   const chunks = index.itemChunks ?? [];
@@ -185,6 +208,7 @@ export async function loadCatalog(): Promise<import("./types").Catalog> {
     items,
     byCategory: deriveCatalogByCategory(items),
     paletteGroups: index.paletteGroups,
+    taxonomy: index.taxonomy,
   };
 }
 
@@ -666,6 +690,8 @@ export interface LevelInfoUpdateBody {
   disableDynamicParenting: boolean;
   minOrderCount: number;
   maxOrderCount: number;
+  gridHalfSizeX: number;
+  gridHalfSizeZ: number;
   dependencies: string[];
 }
 

@@ -1,0 +1,573 @@
+{
+ "done": [
+  {
+   "id": "mat_old_tiles",
+   "zh": "旧版厨房地砖",
+   "en": "old kitchen tiles",
+   "bundle": "bundle37",
+   "texture": "FloorTiles_Kitchen_2x2_SoupKitchen",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc5_city_assets_01",
+   "zh": "露营·城市地砖 01",
+   "en": "camping city tiles 01",
+   "bundle": "bundle248",
+   "texture": "t_dlc5_city_assets_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc4_grass_cards_01",
+   "zh": "火锅·草地贴片",
+   "en": "hotpot grass cards",
+   "bundle": "bundle420",
+   "texture": "t_dlc4_grass_cards_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc4_dressingassets_02",
+   "zh": "火锅·苔藓贴片",
+   "en": "hotpot moss patch",
+   "bundle": "bundle420",
+   "texture": "t_dlc4_dressingassets_02_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc07_city_assets_01",
+   "zh": "部落·城市地砖 01",
+   "en": "horde city tiles 01",
+   "bundle": "bundle295",
+   "texture": "t_dlc07_city_assets_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc07_city_assets_02",
+   "zh": "部落·城市地砖 02",
+   "en": "horde city tiles 02",
+   "bundle": "bundle295",
+   "texture": "t_dlc07_city_assets_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc5_grass_cards_02",
+   "zh": "露营·草地贴片",
+   "en": "camping grass cards",
+   "bundle": "bundle248",
+   "texture": "t_dlc5_grass_cards_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc07_grass_01",
+   "zh": "部落·草地 01",
+   "en": "horde grass 01",
+   "bundle": "bundle295",
+   "texture": "t_dlc5_grass_cards_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_decal_01",
+   "zh": "海滩·沙地贴花 01",
+   "en": "beach sand decal 01",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_decal_03",
+   "zh": "海滩·沙地贴花 03",
+   "en": "beach sand decal 03",
+   "bundle": "bundle428",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "dlc11_city_path_side_01",
+   "zh": "夏日·小径侧边 01",
+   "en": "summer path side 01",
+   "bundle": "bundle428",
+   "texture": "t_city_path_side_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc4_mud_01",
+   "zh": "火锅·泥地 01",
+   "en": "hotpot mud 01",
+   "bundle": "bundle420",
+   "texture": "t_dlc4_mud_01_d",
+   "scale": [
+    0.30000001192092896,
+    0.30000001192092896
+   ]
+  },
+  {
+   "id": "mat_dlc4_mud_02",
+   "zh": "火锅·泥地 02",
+   "en": "hotpot mud 02",
+   "bundle": "bundle420",
+   "texture": "t_dlc4_mud_01_d",
+   "scale": [
+    0.30000001192092896,
+    0.30000001192092896
+   ]
+  },
+  {
+   "id": "mat_dlc4_mud_03",
+   "zh": "火锅·泥地 03",
+   "en": "hotpot mud 03",
+   "bundle": "bundle420",
+   "texture": "t_dlc4_mud_01_d 1",
+   "scale": [
+    0.30000001192092896,
+    0.30000001192092896
+   ]
+  },
+  {
+   "id": "mat_dlc4_grass_01",
+   "zh": "火锅·草地 01",
+   "en": "hotpot grass 01",
+   "bundle": "bundle420",
+   "texture": "t_dlc4_grass_03",
+   "scale": [
+    0.6000000238418579,
+    0.6000000238418579
+   ]
+  },
+  {
+   "id": "mat_dlc4_grass_02",
+   "zh": "火锅·草地 02",
+   "en": "hotpot grass 02",
+   "bundle": "bundle428",
+   "texture": "t_dlc4_grass_03",
+   "scale": [
+    0.6000000238418579,
+    0.6000000238418579
+   ]
+  },
+  {
+   "id": "mat_dlc4_grass_03",
+   "zh": "火锅·草地 03",
+   "en": "hotpot grass 03",
+   "bundle": "bundle428",
+   "texture": "t_dlc4_grass_03",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc5_dressing_assets_02",
+   "zh": "露营·装饰贴片 02",
+   "en": "camping dressing patch 02",
+   "bundle": "bundle248",
+   "texture": "t_dlc5_dressing_assets_02_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_purple_carpet_01",
+   "zh": "海滩·紫色地毯",
+   "en": "beach purple carpet",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_city_restaurant_carpet_01_d",
+   "scale": [
+    6.0,
+    6.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_shoreline_animatoncontrol_wet_sand",
+   "zh": "海滩·水线湿沙（动画）",
+   "en": "beach shoreline wet sand (animated)",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_sea_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc09_grass_01",
+   "zh": "仙境·草地 01",
+   "en": "wonderland grass 01",
+   "bundle": "bundle405",
+   "texture": "t_dlc5_grass_cards_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc07_keep_mud_01",
+   "zh": "部落·城堡泥地",
+   "en": "horde keep mud",
+   "bundle": "bundle295",
+   "texture": "t_dlc07_mud_01_d",
+   "scale": [
+    0.25,
+    0.25
+   ]
+  },
+  {
+   "id": "mat_dlc4_crazypaving_01",
+   "zh": "火锅·疯狂铺路",
+   "en": "hotpot crazy paving",
+   "bundle": "bundle420",
+   "texture": "t_dlc4_crazypaving_01_d",
+   "scale": [
+    0.4000000059604645,
+    0.4000000059604645
+   ]
+  },
+  {
+   "id": "dlc11_city_path_corner_01",
+   "zh": "夏日·小径转角 01",
+   "en": "summer path corner 01",
+   "bundle": "bundle428",
+   "texture": "t_city_path_corner_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc3_water_01",
+   "zh": "冬季·水面 01",
+   "en": "winter water 01",
+   "bundle": "bundle209",
+   "texture": "t_dlc3_water_01_d",
+   "scale": [
+    0.029999999329447746,
+    0.029999999329447746
+   ]
+  },
+  {
+   "id": "mat_dlc13_mud_01",
+   "zh": "中秋·泥地 01",
+   "en": "moonfestival mud 01",
+   "bundle": "bundle448",
+   "texture": "t_dlc4_mud_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_01",
+   "zh": "海滩·沙地 01",
+   "en": "beach sand 01",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_05",
+   "zh": "海滩·沙地 05",
+   "en": "beach sand 05",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_07",
+   "zh": "海滩·沙地 07",
+   "en": "beach sand 07",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_09",
+   "zh": "海滩·沙地 09",
+   "en": "beach sand 09",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    0.10000000149011612,
+    0.10000000149011612
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_09b",
+   "zh": "海滩·沙地 09b",
+   "en": "beach sand 09b",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01b",
+   "scale": [
+    0.10000000149011612,
+    0.10000000149011612
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_10",
+   "zh": "海滩·沙地 10",
+   "en": "beach sand 10",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    0.10000000149011612,
+    0.10000000149011612
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_11",
+   "zh": "海滩·沙地 11",
+   "en": "beach sand 11",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_sand_18",
+   "zh": "海滩·沙地 18",
+   "en": "beach sand 18",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_patch_detail_01",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "dlc11_mat_city_assets_01",
+   "zh": "夏日·城市地砖 01",
+   "en": "summer city tiles 01",
+   "bundle": "bundle428",
+   "texture": "t_dlc11_city_assets_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc07_courtyard_water_01",
+   "zh": "部落·庭院水面",
+   "en": "horde courtyard water",
+   "bundle": "bundle295",
+   "texture": "t_dlc7_water_01_d",
+   "scale": [
+    0.029999999329447746,
+    0.029999999329447746
+   ]
+  },
+  {
+   "id": "t_dlc07_battlements_grass_01",
+   "zh": "部落·堡垒草地",
+   "en": "horde battlements grass",
+   "bundle": "bundle295",
+   "texture": "t_dlc07_grass_01_d",
+   "scale": [
+    0.10000000149011612,
+    0.10000000149011612
+   ]
+  },
+  {
+   "id": "mat_dlc2_poolwater_02",
+   "zh": "海滩·池水 02",
+   "en": "beach pool water 02",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_poolwater_01_D",
+   "scale": [
+    0.05000000074505806,
+    0.05000000074505806
+   ]
+  },
+  {
+   "id": "mat_dlc2_shoreline_02_wet_sand",
+   "zh": "海滩·水线湿沙 02",
+   "en": "beach shoreline wet sand 02",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_sea_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_firepit_04",
+   "zh": "海滩·火坑地砖 04",
+   "en": "beach firepit 04",
+   "bundle": "bundle428",
+   "texture": "t_dlc2_planter_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc4_water_01",
+   "zh": "火锅·水面 01",
+   "en": "hotpot water 01",
+   "bundle": "bundle420",
+   "texture": "t_dlc4_water_01_d 1",
+   "scale": [
+    0.029999999329447746,
+    0.029999999329447746
+   ]
+  },
+  {
+   "id": "mat_dlc2_river_bottom02",
+   "zh": "海滩·河底 02",
+   "en": "beach river bottom 02",
+   "bundle": "bundle163",
+   "texture": "t_dlc2_river_bottom_01_d",
+   "scale": [
+    2.0,
+    -1.0
+   ]
+  },
+  {
+   "id": "mat_dlc2_river_water_01",
+   "zh": "海滩·河水 01",
+   "en": "beach river water 01",
+   "bundle": "bundle163",
+   "texture": "t_raft_water_01_d",
+   "scale": [
+    -0.7200000286102295,
+    -4.400000095367432
+   ]
+  },
+  {
+   "id": "mat_dlc3_cobble_01",
+   "zh": "冬季·鹅卵石",
+   "en": "winter cobblestone",
+   "bundle": "bundle209",
+   "texture": "t_dlc3_cobble_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "mat_dlc5_water_01",
+   "zh": "露营·水面 01",
+   "en": "camping water 01",
+   "bundle": "bundle248",
+   "texture": "t_dlc5_water_01_d 3",
+   "scale": [
+    0.029999999329447746,
+    0.029999999329447746
+   ]
+  },
+  {
+   "id": "mat_dlc5_cliff_01",
+   "zh": "露营·崖壁 01",
+   "en": "camping cliff 01",
+   "bundle": "bundle248",
+   "texture": "t_dlc5_cliff_01_d",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "t_dlc07_courtyard_grass_01",
+   "zh": "部落·庭院草地",
+   "en": "horde courtyard grass",
+   "bundle": "bundle295",
+   "texture": "t_dlc07_grass_01_d",
+   "scale": [
+    0.20000000298023224,
+    0.20000000298023224
+   ]
+  },
+  {
+   "id": "mat_dlc13_grass_01",
+   "zh": "中秋·草地 01",
+   "en": "moonfestival grass 01",
+   "bundle": "bundle448",
+   "texture": "t_dlc13_grass_01",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "dlc11_city_path_side_objectspace",
+   "zh": "夏日·小径侧边（对象空间）",
+   "en": "summer path side (object space)",
+   "bundle": "bundle428",
+   "texture": "t_city_path_side_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "id": "dlc11_city_path_corner_objectspace",
+   "zh": "夏日·小径转角（对象空间）",
+   "en": "summer path corner (object space)",
+   "bundle": "bundle428",
+   "texture": "t_city_path_corner_01_d 1",
+   "scale": [
+    1.0,
+    1.0
+   ]
+  }
+ ],
+ "failed": [
+  [
+   "mat_dlc3_snow_01",
+   "无漫反射贴图槽"
+  ],
+  [
+   "mat_dlc9_snow_02",
+   "无漫反射贴图槽"
+  ],
+  [
+   "mat_dlc07_goo_01",
+   "无漫反射贴图槽"
+  ],
+  [
+   "mat_dlc4_ripples_02",
+   "无漫反射贴图槽"
+  ]
+ ],
+ "namesAdded": 0
+}

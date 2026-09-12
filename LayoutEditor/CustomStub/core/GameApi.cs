@@ -495,6 +495,35 @@ namespace CustomStub
         public static readonly FieldInfo LookupArrayField = Field(OrderToPrefabLookupType, "m_lookupArray");
         public static readonly FieldInfo LookupContentField = Field(ContentPrefabLookupType, "m_content");
         public static readonly FieldInfo LookupPrefabField = Field(ContentPrefabLookupType, "m_prefab");
+        public static readonly FieldInfo LookupCacheFlagField = Field(OrderToPrefabLookupType, "m_cachedAssembledOrderNodes");
+        public static readonly MethodInfo LookupCacheMethod = Safe(delegate
+        {
+            return OrderToPrefabLookupType != null
+                ? OrderToPrefabLookupType.GetMethod("CacheAssembledOrderNodes",
+                    BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null)
+                : null;
+        });
+
+        // ---- 火锅：锅内漂浮食材视觉表（WokCosmeticDecisions.m_prefabLookups，
+        //      许可表合并重建后把 extras 并入视觉表，否则额外食材进锅不显示。
+        //      均为 vanilla 类型；m_prefabLookups 是 WokCosmeticDecisions 的
+        //      private 嵌套 struct（PrefabLookups），装箱后读两个 lookup SO 引用） ----
+        public static readonly FieldInfo CookableCosmeticsPrefabField = Field(CookableContainerType, "m_cosmeticsPrefab");
+        public static readonly Type WokCosmeticType = Find("WokCosmeticDecisions");
+        public static readonly FieldInfo WokPrefabLookupsField = Field(WokCosmeticType, "m_prefabLookups");
+        public static readonly Type WokPrefabLookupsType = Safe(delegate
+        {
+            return WokCosmeticType != null
+                ? WokCosmeticType.GetNestedType("PrefabLookups", BindingFlags.NonPublic)
+                : null;
+        });
+        public static readonly FieldInfo WokRawLookupField = Field(WokPrefabLookupsType, "m_rawPrefabLookup");
+        public static readonly FieldInfo WokCookedLookupField = Field(WokPrefabLookupsType, "m_cookedPrefabLookup");
+
+        // ---- 可移动火锅：容量（IngredientContainer.m_capacity；装配时写，
+        //      >0 才覆盖真实 prefab 原版值） ----
+        public static readonly Type IngredientContainerType = Find("IngredientContainer");
+        public static readonly FieldInfo IngredientCapacityField = Field(IngredientContainerType, "m_capacity");
 
         // ---- 锅上需要剥掉的游戏组件（可推动载具独占物理/交互） ----
         public static readonly Type InteractableType = Find("Interactable");
@@ -514,6 +543,85 @@ namespace CustomStub
             return t != null
                 ? t.GetMethod("ObjectAdded", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                     null, new[] { typeof(GameObject) }, null)
+                : null;
+        });
+
+        // ---- Harmony 目标：相机出发点偏移（CameraAuthoredOffset；vanilla 类型） ----
+        public static readonly Type MultiplayerCameraType = Find("MultiplayerCamera");
+        public static readonly MethodInfo MultiplayerCameraGetIdealLocationMethod = Safe(delegate
+        {
+            return MultiplayerCameraType != null
+                ? MultiplayerCameraType.GetMethod("GetIdealLocation",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+
+        // ---- Harmony 目标：触发区占用联机同步 + fallPad 清理（TriggerZoneOccupancySync；
+        // 接替 Assembly-CSharp-Patch ServerTriggerZone/ClientTriggerZone 源码覆盖补丁。
+        // 全部 vanilla 类型，游戏 AppDomain 均存在） ----
+        public static readonly Type ServerTriggerZoneType = Find("ServerTriggerZone");
+        public static readonly Type TriggerZoneType = Find("TriggerZone");
+        public static readonly Type TriggerZoneMessageType = Find("TriggerZoneMessage");
+        public static readonly Type ClientTriggerZoneType = Find("ClientTriggerZone");
+        public static readonly Type ClientSynchroniserBaseType = Find("ClientSynchroniserBase");
+        public static readonly FieldInfo ServerTriggerZoneTriggerField = Field(ServerTriggerZoneType, "m_triggerZone");
+        public static readonly FieldInfo ServerTriggerZoneDataField = Field(ServerTriggerZoneType, "m_data");
+        public static readonly FieldInfo ServerTriggerZoneCollidersField = Field(ServerTriggerZoneType, "m_collidersOccupying");
+        public static readonly FieldInfo FallPadField = Field(TriggerZoneType, "m_fallPad");
+        public static readonly FieldInfo TriggerZoneMsgOccupiedField = Field(TriggerZoneMessageType, "m_occupied");
+        public static readonly FieldInfo ClientTriggerZoneOccupiedField = Field(ClientTriggerZoneType, "m_occupied");
+        public static readonly MethodInfo TriggerZoneMsgInitialiseMethod = Safe(delegate
+        {
+            return TriggerZoneMessageType != null
+                ? TriggerZoneMessageType.GetMethod("Initialise",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { typeof(bool) }, null)
+                : null;
+        });
+        public static readonly MethodInfo SendServerEventMethod = Safe(delegate
+        {
+            var st = Find("ServerSynchroniserBase");
+            var serialisable = Find("Serialisable");
+            return st != null && serialisable != null
+                ? st.GetMethod("SendServerEvent",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { serialisable }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerTriggerZoneOnTriggerEnterMethod = Safe(delegate
+        {
+            return ServerTriggerZoneType != null
+                ? ServerTriggerZoneType.GetMethod("OnTriggerEnter",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { typeof(Collider) }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerTriggerZoneOnTriggerExitMethod = Safe(delegate
+        {
+            return ServerTriggerZoneType != null
+                ? ServerTriggerZoneType.GetMethod("OnTriggerExit",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { typeof(Collider) }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerTriggerZoneUpdateSynchronisingMethod = Safe(delegate
+        {
+            return ServerTriggerZoneType != null
+                ? ServerTriggerZoneType.GetMethod("UpdateSynchronising",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        /// <summary>ClientSynchroniserBase.ApplyServerEvent(Serialisable)——vanilla
+        /// ClientTriggerZone 不 override 该虚方法，补丁打在基类上+类型门控。</summary>
+        public static readonly MethodInfo ClientApplyServerEventMethod = Safe(delegate
+        {
+            var serialisable = Find("Serialisable");
+            return ClientSynchroniserBaseType != null && serialisable != null
+                ? ClientSynchroniserBaseType.GetMethod("ApplyServerEvent",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { serialisable }, null)
                 : null;
         });
 

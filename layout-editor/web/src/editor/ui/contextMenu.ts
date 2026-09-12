@@ -277,13 +277,13 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     ${selectionTravelatorSpeedRowHtml()}
     ${selectionAirWallHeightRowHtml()}
     ${
-      isSurface && !resizable
+      !isPlayer && !resizable
         ? `<div class="ctx-nudge-row">
       <span class="ctx-label">缩放</span>
       <div class="ctx-nudge">
-        <button type="button" data-scale="-0.5" title="缩小">−</button>
+        <button type="button" data-scale="-0.1" title="缩小 0.1">−</button>
         <span id="ctx-scale" class="ctx-scale-val">${itemUniformScale(item).toFixed(1)}×</span>
-        <button type="button" data-scale="0.5" title="放大">+</button>
+        <button type="button" data-scale="0.1" title="放大 0.1">+</button>
       </div>
     </div>`
         : ""
@@ -440,9 +440,10 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   dom.ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-scale]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const delta = parseFloat(btn.dataset.scale!);
-      const next = Math.max(0.5, +(itemUniformScale(item) + delta).toFixed(2));
+      const next = Math.max(0.1, +(itemUniformScale(item) + delta).toFixed(2));
       pushHistory();
       setItemUniformScale(item, next);
+      S.dirty = true;
       const scaleEl = document.getElementById("ctx-scale");
       if (scaleEl) scaleEl.textContent = `${next.toFixed(1)}×`;
       draw();

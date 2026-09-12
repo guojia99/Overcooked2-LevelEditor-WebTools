@@ -42,6 +42,7 @@ import {
   closeModal
 } from "../../modals";
 import { setStatus } from "../status";
+import { showBusy, hideBusy } from "../../busy";
 import {
   addFromCatalog,
   placementBase,
@@ -87,7 +88,14 @@ const TAB_META: Record<RecipeTab, { label: string; emoji: string; needScene: boo
   matchlist: { label: "Matchlist", emoji: "📋", needScene: true },
 };
 
-export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
+// 打开前要等健康检查 + 菜谱目录 + 关卡菜谱三个请求，首次较慢；
+// 用全局忙碌遮罩（与其他长耗时操作同一加载动画）过渡，遮罩持续到弹窗渲染完成。
+export function openRecipesDialog(opts: RecipesDialogOptions = {}): Promise<void> {
+  showBusy("加载菜谱数据…");
+  return openRecipesDialogInner(opts).finally(() => hideBusy());
+}
+
+async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   const health = await fetchHealthInfo();
   if (!health.recipeApi) {
     setStatus(STALE_BRIDGE_MSG, false);
@@ -1288,6 +1296,65 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
     render();
   };
 
+  // ---------- 无效 optional 检测（历史自动填充残留清理） ----------
+  // 现行设计：自定义菜谱不写入 optional（子菜谱由运行时递归展开匹配）；已在
+  // recipes 中的菜谱重复注册只会污染匹配表（optional 节点插在订单菜谱之前，
+  // uID=0/无 platingStep/无模型的条目会影响 GetOrderPlatingPrefab 缓存匹配与
+  // IsValidRecipe）。检测两类无效条目并给出一键清理：
+  //  1. guid 已在所选 recipes 中（重复注册，运行时本就按引用去重，条目无意义）；
+  //  2. score<=0 的自定义菜谱（非汉堡/披萨组装定义），且不在所选汉堡的组成树
+  //     上（汉堡填充注册的夹心中间产物是合法的，不误伤）。
+  /** 所选汉堡菜谱组成树上的全部子菜谱 id（递归）：汉堡填充的中间产物白名单。 */
+  const burgerSubRecipeIds = (): Set<string> => {
+    const legit = new Set<string>();
+    const walk = (id: string) => {
+      const r = byRecipeId.get(id);
+      if (!r) return;
+      for (const cid of r.compositionIds ?? []) {
+        if (legit.has(cid)) continue;
+        legit.add(cid);
+        walk(cid);
+      }
+    };
+    for (const g of selected) {
+      const r = byGuid.get(g);
+      if (r && isBurgerRecipe(r)) walk(r.id);
+    }
+    return legit;
+  };
+
+  const isInvalidOptionalItem = (it: LevelOptionalItem, legitBurgerSubs: Set<string>): boolean => {
+    const ng = normalizeGuid(it.guid);
+    for (const g of selected) if (normalizeGuid(g) === ng) return true;
+    const r = byGuid.get(it.guid) ?? [...byGuid.values()].find((x) => normalizeGuid(x.guid) === ng);
+    if (!r || !r.isCustom) return false;
+    if (r.optionalKind === "burger" || r.optionalKind === "pizza") return false;
+    if ((r.score ?? 0) > 0) return false;
+    if (legitBurgerSubs.has(r.id)) return false;
+    return true;
+  };
+
+  const invalidOptionalIndexes = (): Set<number> => {
+    const legit = burgerSubRecipeIds();
+    const idx = new Set<number>();
+    optionalItems.forEach((it, i) => {
+      if (isInvalidOptionalItem(it, legit)) idx.add(i);
+    });
+    return idx;
+  };
+
+  const clearInvalidOptionalItems = (): void => {
+    const invalid = invalidOptionalIndexes();
+    if (invalid.size === 0) {
+      setStatus("没有可清理的无效 optional 条目", false);
+      return;
+    }
+    optionalItems = optionalItems.filter((_, i) => !invalid.has(i));
+    optionalDirty = true;
+    setStatus(`已移除 ${invalid.size} 条无效 optional（重复注册/自定义菜谱），请「写回 Optional」保存`);
+    render();
+  };
+
   const fillBurgerOptionalsFromSelected = async () => {
     if (!level?.levelInfoAssetPath) {
       setStatus("未找到 LevelInfoSO", false);
@@ -1370,12 +1437,14 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   };
 
   const optionalTabHtml = () => {
+    const invalid = invalidOptionalIndexes();
     const rows = optionalItems
       .map((it, idx) => {
         const km = kindMetaOf(it.kind);
-        return `<div class="rw-opt-row">
+        const bad = invalid.has(idx);
+        return `<div class="rw-opt-row${bad ? " rw-opt-invalid" : ""}"${bad ? ' title="无效条目：已在所选菜谱中重复注册，或为不应注册的自定义菜谱/中间产物（历史自动填充残留）"' : ""}>
           <span class="rw-badge ${km.cls}">${km.label}</span>
-          <span class="rw-opt-name">${escHtml(optionalDisplayName(it))}</span>
+          <span class="rw-opt-name">${bad ? "⚠ " : ""}${escHtml(optionalDisplayName(it))}</span>
           <span class="muted rw-opt-id">${escHtml(it.id)}${it.group ? ` · ${escHtml(foodGroupLabel(it.group as never) || it.group)}` : ""}</span>
           <button type="button" class="rw-opt-del" data-odel="${idx}" title="删除该条目">✕</button>
         </div>`;
@@ -1389,7 +1458,11 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
         ? '<div class="rw-warn">⚠ 检测到多个 ChoppedBun 组装定义——运行时仅第一个生效，请重新「按已选汉堡一键填充」或移除多余 assembly。</div>'
         : ""}
       ${presets ? "" : '<div class="rw-warn">⚠ 一键填充候选加载失败或旧桥不支持——已保存条目仍可查看/删除/写回。</div>'}
+      ${invalid.size
+        ? `<div class="rw-warn">⚠ 检测到 <b>${invalid.size}</b> 条无效 optional（黄色行）：已在所选菜谱中重复注册，或为不应注册的自定义菜谱/中间产物——多为历史自动填充残留，会污染运行时匹配表导致出单/装盘异常。建议「🧹 清理无效条目」后写回。</div>`
+        : ""}
       <div class="rw-toolbar">
+        ${invalid.size ? `<button type="button" class="modal-btn" id="rw-opt-clear-invalid">🧹 清理无效条目（${invalid.size}）</button>` : ""}
         <button type="button" class="modal-btn" id="rw-opt-fill-burger-sel">🍔 按已选汉堡一键填充</button>
         <button type="button" class="modal-btn" id="rw-opt-clear-legacy-burger">清除遗留汉堡组装</button>
         <button type="button" class="modal-btn" id="rw-opt-fill-pizza">🍕 披萨一键填充</button>
@@ -1401,6 +1474,7 @@ export async function openRecipesDialog(opts: RecipesDialogOptions = {}) {
   };
 
   const wireOptional = () => {
+    document.getElementById("rw-opt-clear-invalid")?.addEventListener("click", clearInvalidOptionalItems);
     document.getElementById("rw-opt-fill-burger-sel")?.addEventListener("click", () => {
       void fillBurgerOptionalsFromSelected();
     });

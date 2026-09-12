@@ -655,6 +655,8 @@ export function addFromCatalog(
   if (cat.id === "Dispenser") {
     item.stubKind = "Dispenser";
     item.dispenser = {};
+    // 食材箱不再默认 scale=1.2：所有物品统一默认 1/1/1（缩放可在右键菜单/详情面板
+    // 自行调整）。旧关卡里导入的 1.2 实例保持原值、画布按真实 scale 绘制。
   }
   if (cat.id === "AttachingFoodSpawner") {
     item.stubKind = "AttachingFoodSpawner";
