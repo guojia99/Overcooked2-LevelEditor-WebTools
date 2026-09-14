@@ -298,7 +298,7 @@ LayoutDocument {
 
 核心字段：`instanceId`（`u:xxx` 场景既有 / `new:xxx` 前端新建）、`hierarchyPath/parentPath`、`prefabGuid/prefabAssetPath`、`localPosition/localRotation XYZ/localScale`、`footprint{cellsX,cellsZ}`、`walkable`、`stubKind`。
 
-**Stub 多态**（按类型挂一个可选参数对象，对应 Unity 侧组件）：`dispenser`（含随机箱 randomItemGuids+weights+问号样式）、`foodSpawner`、`conveyor`、`teleportal`、`cookingUtensil`（容量+allowedIngredientGuids+cook/burn/mix/overMixTime）、`travelator`、`flamethrower`、`cleanPlateStack`、`burner`、`player`、`servingStation`、`plateReturn`、`switchStub/pressureSwitch`、`terminal`、`heatedOven`、`cannon`、`timedSwitch`、`meshWithMaterial/soArray`、`airWall`（1×1×1.132m）。
+**Stub 多态**（按类型挂一个可选参数对象，对应 Unity 侧组件）：`dispenser`（含随机箱 randomItemGuids+weights+问号样式）、`foodSpawner`、`conveyor`、`teleportal`、`cookingUtensil`（容量+allowedIngredientGuids+cook/burn/mix/overMixTime）、`travelator`（speed + timedReverse 定时反转：enabled/forwardSeconds/backwardSeconds/startReversed/turnAngle 转角°（180=掉头 ±90=转弯），秒数下限 1，2026-09-13）、`flamethrower`、`cleanPlateStack`、`burner`、`player`、`servingStation`、`plateReturn`、`switchStub/pressureSwitch`、`terminal`、`heatedOven`、`cannon`、`timedSwitch`、`meshWithMaterial/soArray`、`airWall`（1×1×1.132m）。
 
 ### 6.3 FloorObject
 

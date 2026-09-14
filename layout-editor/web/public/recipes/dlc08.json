@@ -690,19 +690,26 @@
       "nameEn": "Chicken Burger (DLC08)",
       "assetPath": "Assets/common03/food/Recipes/dlc08/DLC08_chickenburger.asset",
       "cookingStep": "FryingPan",
-      "platingStep": "",
+      "platingStep": "Plate",
       "ingredients": [
         "dlc08_choppedbun",
         "dlc08_chicken"
       ],
       "ingredientCount": 2,
       "cookingStepCount": 1,
-      "score": 0,
+      "score": 40,
       "isCustom": false,
       "group": "dlc08",
       "type": "burger",
-      "intermediate": true,
+      "intermediate": false,
       "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "dlc08_choppedbun"
+          ]
+        },
         {
           "step": "FryingPan",
           "utensils": [
@@ -710,7 +717,6 @@
             "FryPan"
           ],
           "ingredients": [
-            "dlc08_choppedbun",
             "dlc08_chicken"
           ]
         }

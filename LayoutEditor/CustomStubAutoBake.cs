@@ -8,22 +8,20 @@ using UnityEngine;
 /// <summary>
 /// CustomStub 按需自动化（与 LayoutEditor 本体解耦的可选扩展，经钩子接入）：
 ///
-/// 1. LayoutEditorStubIO.CustomStubCopyRequested（写回随机食材箱但关卡集尚无
-///    stub 程序集时发起）→ 自动把母本拷入 Assets/LevelSets/&lt;set&gt;/stub/
-///    （CustomStubCopyTool.CopyToSet，内容同步、GUID 稳定）→ Refresh 触发编译；
-/// 2. 域重载后（编译完成/脚本变更）自动补烘焙活动场景：数据载体在而组件缺失、
-///    且程序集现已可用 → RebakeRandomCratesInActiveScene 烘焙 + 保存场景 + 同步问号；
-/// 3. LayoutEditorDispenserIconFix.AfterRandomCrateSync（SafeReinit /
-///    ReloadPseudoAssets / 自愈守卫等全部初始化路径汇聚点）→ 把已烘焙随机箱的
-///    问号图标画到编辑器预览实例的箱盖上（复用运行时 PaintQuestionMark 单一实现）。
-///    由此形成「写回 → 自动拷贝 → 编译 → 自动烘焙 → 问号可见」的零手动闭环。
+/// 1. 域重载后（编译完成/脚本变更）自动补烘焙活动场景：数据载体在而组件缺失、
+///    且统一运行时程序集现已可用 → RebakeRandomCratesInActiveScene 烘焙 + 保存场景
+///    + 同步问号；并自动 StageRuntimeQuiet（Library DLL 比 .dll.bytes 新即重打包）；
+/// 2. LayoutEditorDispenserIconFix.AfterRandomCrateSync（全部初始化路径汇聚点）→ 把
+///    已烘焙随机箱的问号图标画到编辑器预览实例的箱盖上（复用运行时 PaintQuestionMark）。
+///
+/// 统一单程序集重构后：不再有母本→每集副本的拷贝/漂移同步（CustomStubCopyRequested
+/// 钩子不再订阅）；运行时程序集 = 唯一母本 WebCustomStubRuntime。
 /// </summary>
 [InitializeOnLoad]
 public static class CustomStubAutoBake
 {
     static CustomStubAutoBake()
     {
-        LayoutEditorStubIO.CustomStubCopyRequested += OnCopyRequested;
         LayoutEditorDispenserIconFix.AfterRandomCrateSync += SyncQuestionMarks;
         // 宿主 PseudoPrefabManager.OnEnable 在编辑模式（场景打开/域重载）就会 Init——
         // 实例化子物体并画首食材图标，该路径不经过 SyncSeededIcons 钩子。这里兜底：
@@ -39,16 +37,13 @@ public static class CustomStubAutoBake
         };
         EditorApplication.delayCall += delegate
         {
-            // 母本内容漂移自动同步（改 RandomCrate.cs 后各关卡集副本自动跟进）
-            CustomStubCopyTool.SyncAllDrifted();
             // RandomDispenser 包装 prefab 幂等兜底（正常已随仓库提供）
             CustomStubCopyTool.EnsureRandomDispenserPrefab();
             RebakeActiveScene();
-            // 编译产物自动打包：Library DLL 比 .dll.bytes 新（首次拷贝编译后/源码更新后）
-            // 即自动重新 staging，保证导出永远打包最新 DLL
-            var staged = LayoutStubDllBuilder.StageAllSetsQuiet();
-            if (staged > 0)
-                Debug.Log("[CustomStub] 已自动打包 " + staged + " 个关卡集的 Stub DLL（.dll.bytes → <set>/runtime）");
+            // 编译产物自动打包：Library DLL 比 .dll.bytes 新（源码更新后）即自动重新
+            // staging，保证导出永远打包最新统一运行时 DLL
+            if (LayoutStubDllBuilder.StageRuntimeQuiet())
+                Debug.Log("[CustomStub] 已自动打包统一运行时 DLL（.dll.bytes → " + LayoutStubDllBuilder.RuntimeBundleName + "）");
             ArmIconSync();
         };
     }
@@ -102,24 +97,6 @@ public static class CustomStubAutoBake
             _iconArmed = false;
             EditorApplication.update -= SyncIconTick;
         }
-    }
-
-    private static void OnCopyRequested(string setName)
-    {
-        // 延迟到当前写回/保存流程结束后再拷贝+Refresh，避免打断主线程操作
-        EditorApplication.delayCall += delegate
-        {
-            try
-            {
-                var result = CustomStubCopyTool.CopyToSet(setName);
-                Debug.Log("[CustomStub] 自动拷贝 " + setName + ": " + result
-                    + "（编译完成后将自动烘焙随机食材箱）");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-            }
-        };
     }
 
     private static void RebakeActiveScene()

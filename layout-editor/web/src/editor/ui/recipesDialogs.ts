@@ -152,8 +152,14 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
    *  中间产物）用它回退取中文名与成品贴图（icons/recipes）。 */
   let byRecipeId = new Map<string, RecipeEntry>();
   let levelSetRecipes: RecipeEntry[] = [];
+  let officialBurgerRecipes: RecipeEntry[] = [];
   let coreRecipes: RecipeEntry[] = [];
   S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
+
+  /** 官方原生汉堡：type==burger 且非 commonW2（group!="burger"）、非本关（group!="levelset"）。
+   *  单独成一个顶层分类，与 commonW2「🍔 Burger大全」区分。 */
+  const isOfficialBurger = (r: RecipeEntry): boolean =>
+    r.type === "burger" && r.group !== "burger" && r.group !== "levelset";
 
   /** 从 recipes 重建派生集合（加载或安装/移除后刷新）。 */
   const recomputeGroups = () => {
@@ -176,8 +182,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
     const vis = visibleRecipes(orderable);
     levelSetRecipes = orderable.filter((r) => r.group === "levelset");
-    // 选择菜谱：本关自定义（levelset）+ 其余全部（core / dlcXX 通用内容），全量可用。
-    coreRecipes = vis.filter((r) => r.group !== "levelset");
+    // 官方原生汉堡（非 commonW2）单独成组；其余非本关归 core。
+    const nonLevelset = vis.filter((r) => r.group !== "levelset");
+    officialBurgerRecipes = nonLevelset.filter(isOfficialBurger);
+    coreRecipes = nonLevelset.filter((r) => !isOfficialBurger(r));
   };
   // 勾选判定按「菜谱 id」而非 guid：同 id 的 Import/拷贝视为同一菜谱；保存仍用 guid 集合。
   const selectedIds = new Set<string>();
@@ -285,8 +293,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
 
   const catMeta: Record<string, { label: string; emoji: string; color: string }> = {
     levelset: { label: "自定义菜谱", emoji: "🍽️", color: "#3b82f6" },
+    officialBurger: { label: "官方汉堡", emoji: "🍔", color: "#b45309" },
     core: { label: "Common", emoji: "📦", color: "#2d6a4f" },
   };
+
 
   function recipeCard(r: RecipeEntry): string {
     const checked = selectedIds.has(r.id) ? "checked" : "";
@@ -319,7 +329,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     </div>`;
   }
 
-  function catHtml(cat: "levelset" | "core", items: RecipeEntry[]): string {
+  function catHtml(cat: "levelset" | "officialBurger" | "core", items: RecipeEntry[]): string {
     const meta = catMeta[cat];
     // 用传入的 items（已选/已搜索过滤后的子集）分组，而不是预计算的全量 catGroups
     const groups = groupRecipesByType(items).map(([type, arr]) => typeGroupHtml(cat, type, arr)).join("");
@@ -337,13 +347,14 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     // 组装定义/commonW2 组装配件在这里仍透明可见，可手动取消勾选后保存清除。
     const sel = visibleRecipes(recipes).filter((r) => selectedIds.has(r.id));
     if (sel.length === 0) return '<p class="modal-hint">未选择菜谱，勾选左侧菜谱后显示在这里。</p>';
-    const byCat: Record<string, RecipeEntry[]> = { levelset: [], core: [] };
+    const byCat: Record<string, RecipeEntry[]> = { levelset: [], officialBurger: [], core: [] };
     for (const r of sel) {
       if (r.group === "levelset") byCat.levelset.push(r);
+      else if (isOfficialBurger(r)) byCat.officialBurger.push(r);
       else byCat.core.push(r);
     }
     let html = "";
-    for (const cat of ["levelset", "core"] as const) {
+    for (const cat of ["levelset", "officialBurger", "core"] as const) {
       if (byCat[cat].length === 0) continue;
       html += catHtml(cat, byCat[cat]);
     }
@@ -364,6 +375,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     const parts: string[] = [];
     if (activeTab === "select") {
       if (vis(levelSetRecipes).length) parts.push(catHtml("levelset", vis(levelSetRecipes)));
+      if (vis(officialBurgerRecipes).length) parts.push(catHtml("officialBurger", vis(officialBurgerRecipes)));
       if (vis(coreRecipes).length) parts.push(catHtml("core", vis(coreRecipes)));
     }
     return parts.join("") || '<p class="modal-hint">没有匹配的菜谱</p>';

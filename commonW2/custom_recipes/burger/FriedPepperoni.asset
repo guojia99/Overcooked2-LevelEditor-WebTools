@@ -19,7 +19,7 @@ MonoBehaviour:
   modelSO: {fileID: 0}
   model: {fileID: 1478827119589758, guid: fe989fc9848a8d948a51d306b4d7882a, type: 2}
   iconSO: {fileID: 0}
-  icon: {fileID: 21300000, guid: 0141af4b56088384c8a49cec7786a765, type: 3}
+  icon: {fileID: 21300000, guid: aa7f81ed9e11c0ab16e57a1c0ffce001, type: 3}
   compositionSOs:
   - {fileID: 11400000, guid: c6dc7f3809c18fd46bc41d15afb7cb9a, type: 2}
   optionalSOs: []

@@ -44,7 +44,7 @@ export function batchSetTravelatorSpeed(speed: number): number {
   pushHistory();
   for (const it of items) {
     it.stubKind = "Travelator";
-    it.travelator = { speed };
+    it.travelator = { ...it.travelator, speed };
   }
   S.dirty = true;
   return items.length;

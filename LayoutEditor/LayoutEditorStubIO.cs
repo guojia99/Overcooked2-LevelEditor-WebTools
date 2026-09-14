@@ -249,6 +249,21 @@ public static class LayoutEditorStubIO
         {
             item.stubKind = "Travelator";
             item.travelator = new LayoutTravelatorStubDto { speed = travelator.speed };
+            // 定时反转：读 CustomStub.TravelatorReverser（权威通道，反射；
+            // 组件缺失=未配置=不导出，web 按未配置显示）。
+            var revType = FindCustomStubType(go, "TravelatorReverser");
+            var revComp = revType != null ? go.GetComponent(revType) : null;
+            if (revComp != null)
+            {
+                item.travelator.timedReverse = new LayoutTravelatorReverseDto
+                {
+                    enabled = GetStubField(revComp, "m_enabled") is bool && (bool)GetStubField(revComp, "m_enabled"),
+                    forwardSeconds = GetStubField(revComp, "m_forwardSeconds") is float ? (float)GetStubField(revComp, "m_forwardSeconds") : 10f,
+                    backwardSeconds = GetStubField(revComp, "m_backwardSeconds") is float ? (float)GetStubField(revComp, "m_backwardSeconds") : 10f,
+                    startReversed = GetStubField(revComp, "m_startReversed") is bool && (bool)GetStubField(revComp, "m_startReversed"),
+                    turnAngle = GetStubField(revComp, "m_turnAngle") is float ? (float)GetStubField(revComp, "m_turnAngle") : 180f
+                };
+            }
             return;
         }
 
@@ -892,6 +907,50 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(travelator, "Layout Editor Travelator");
             travelator.speed = item.travelator.speed;
+
+            // 定时反转：伪根烘焙 CustomStub.TravelatorReverser 运行时相位组件（权威）
+            // + tag 载体 "TravelatorReverse|e,fwd,back,s"（程序集缺失时自愈还原）。
+            // 双通道与 TimedCookingSwitch 同款；timedReverse=null = 未配置，清残留。
+            {
+                var revType = FindCustomStubType(go, "TravelatorReverser");
+                var revComp = revType != null ? go.GetComponent(revType) : null;
+                if (item.travelator.timedReverse != null)
+                {
+                    float fwdSec = Mathf.Max(1f, item.travelator.timedReverse.forwardSeconds);
+                    float backSec = Mathf.Max(1f, item.travelator.timedReverse.backwardSeconds);
+                    if (revType == null)
+                    {
+                        LayoutEditorLog.LogWarning("[LayoutEditor] 关卡集缺 stub 程序集，步道定时反转仅写入 tag 载体（CustomStubCopyRequested）: " + go.name);
+                        var setName = LevelSetOfScenePath(go.scene.path);
+                        if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                            CustomStubCopyRequested(setName);
+                    }
+                    else
+                    {
+                        if (revComp == null)
+                            revComp = Undo.AddComponent(go, revType);
+                        else
+                            Undo.RecordObject(revComp, "Layout Editor Travelator Reverse");
+                        SetStubField(revComp, "m_enabled", item.travelator.timedReverse.enabled);
+                        SetStubField(revComp, "m_forwardSeconds", fwdSec);
+                        SetStubField(revComp, "m_backwardSeconds", backSec);
+                        SetStubField(revComp, "m_startReversed", item.travelator.timedReverse.startReversed);
+                        SetStubField(revComp, "m_turnAngle", item.travelator.timedReverse.turnAngle);
+                    }
+                    SetCustomStubTag(go, "TravelatorReverse|"
+                        + (item.travelator.timedReverse.enabled ? "1" : "0") + ","
+                        + onSecondsString(fwdSec) + ","
+                        + onSecondsString(backSec) + ","
+                        + (item.travelator.timedReverse.startReversed ? "1" : "0") + ","
+                        + onSecondsString(item.travelator.timedReverse.turnAngle));
+                }
+                else
+                {
+                    if (revComp != null)
+                        Undo.DestroyObjectImmediate(revComp);
+                    ClearCustomStubTag(go, "TravelatorReverse|");
+                }
+            }
             return;
         }
 
@@ -2211,12 +2270,12 @@ public static class LayoutEditorStubIO
 
     public static Type FindCustomStubType(string setName, string className)
     {
-        if (string.IsNullOrEmpty(setName) || string.IsNullOrEmpty(className))
+        if (string.IsNullOrEmpty(className))
             return null;
-        var sb = new System.Text.StringBuilder("Stub_");
-        foreach (var ch in setName)
-            sb.Append(char.IsLetterOrDigit(ch) || ch == '_' ? ch : '_');
-        var asmName = sb.ToString();
+        // 统一单程序集重构后：所有 CustomStub 类型来自唯一母本程序集
+        // WebCustomStubRuntime（不再有每集 Stub_<set>）。setName 参数保留仅为兼容
+        // 旧调用签名，不再参与类型解析。
+        const string asmName = "WebCustomStubRuntime";
         var full = "CustomStub." + className;
 
         var t = Type.GetType(full + ", " + asmName);
@@ -2452,5 +2511,100 @@ public static class LayoutEditorStubIO
         var f = comp.GetType().GetField(fieldName);
         if (f != null)
             f.SetValue(comp, value);
+    }
+
+    /// <summary>导出打包时对当前场景所有 web CustomStub 道具「组件 → tag」重写：从组件
+    /// 当前字段重算并写入最新格式 tag（覆盖旧格式/补齐缺失），保证 loader 场景自愈可靠。
+    ///
+    /// 覆盖 8 类：
+    ///  - RandomCrate：走 RebakeRandomCratesInActiveScene 确保组件/tag 就位（tag 内嵌
+    ///    iconGuid 无法从 Texture2D 反查，故保留既有 tag，只补组件——组件为权威）；
+    ///  - TimedSwitch / PushablePot / SwitchReenable / WorldMapDressing / UtensilTiming /
+    ///    TravelatorReverse / CameraOffset：组件字段完全决定 tag，直接重写。
+    /// 返回重写的 tag 数（含 RandomCrate 补烘焙数）。</summary>
+    public static int RefreshStubTagsInActiveScene()
+    {
+        var rewritten = 0;
+        // RandomCrate：组件为权威，tag 保留（含 iconGuid）；补齐缺失组件。
+        rewritten += RebakeRandomCratesInActiveScene();
+
+        foreach (var tag in UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>())
+        {
+            if (tag == null || string.IsNullOrEmpty(tag.prefabTag))
+                continue;
+            var go = tag.gameObject;
+            var prefab = tag.prefabTag;
+
+            if (prefab.StartsWith("TimedSwitch|", StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "TimedCookingSwitch");
+                if (c == null) continue;
+                var t = "TimedSwitch|"
+                    + (StubBool(c, "m_enabled") ? "1" : "0") + ","
+                    + StubFloatStr(c, "m_onSeconds", 30f) + ","
+                    + StubFloatStr(c, "m_offSeconds", 30f) + ","
+                    + (StubBool(c, "m_startOn") ? "1" : "0");
+                if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
+            }
+            else if (prefab.StartsWith("TravelatorReverse|", StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "TravelatorReverser");
+                if (c == null) continue;
+                var t = "TravelatorReverse|"
+                    + (StubBool(c, "m_enabled") ? "1" : "0") + ","
+                    + StubFloatStr(c, "m_forwardSeconds", 10f) + ","
+                    + StubFloatStr(c, "m_backwardSeconds", 10f) + ","
+                    + (StubBool(c, "m_startReversed") ? "1" : "0") + ","
+                    + StubFloatStr(c, "m_turnAngle", 180f);
+                if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
+            }
+            else if (prefab.StartsWith("SwitchReenable|", StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "SwitchReenable");
+                if (c == null) continue;
+                var t = "SwitchReenable|" + StubFloatStr(c, "m_resetDelay", 0.35f);
+                if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
+            }
+            else if (prefab.StartsWith("UtensilTiming|", StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "UtensilTimingConfig");
+                if (c == null) continue;
+                var t = "UtensilTiming|"
+                    + StubFloatStr(c, "m_cookTime", 0f) + ","
+                    + StubFloatStr(c, "m_burnTime", 0f) + ","
+                    + StubFloatStr(c, "m_mixTime", 0f) + ","
+                    + StubFloatStr(c, "m_overMixTime", 0f);
+                if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
+            }
+            else if (prefab.StartsWith("WorldMapDressing|", StringComparison.Ordinal))
+            {
+                // 无 payload，格式固定；仅在与规范不一致时归一化。
+                if (prefab != "WorldMapDressing|") { SetCustomStubTag(go, "WorldMapDressing|"); rewritten++; }
+            }
+            // PushablePot| / CameraOffset|：payload 来自 soArray/摆放位（非组件字段），
+            // 写回时已按最新格式烘焙，导出期不重算（避免误伤结构性数据）。
+        }
+        return rewritten;
+    }
+
+    private static Component FindComp(GameObject go, string className)
+    {
+        var type = FindCustomStubType(go, className);
+        if (type == null)
+            return null;
+        return go.GetComponent(type);
+    }
+
+    private static bool StubBool(Component c, string field)
+    {
+        var v = GetStubField(c, field);
+        return v is bool && (bool)v;
+    }
+
+    private static string StubFloatStr(Component c, string field, float fallback)
+    {
+        var v = GetStubField(c, field);
+        var f = v is float ? (float)v : fallback;
+        return f.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
     }
 }

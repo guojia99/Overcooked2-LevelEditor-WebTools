@@ -327,7 +327,12 @@ def main():
             report.append((rid, old_step, old_ings, step, ing_ids, ext["stepSource"]))
             updated += 1
             if not dry:
-                by_id[rid] = {"id": rid, "step": step, "ingredients": ing_ids}
+                # 保留扩展字段（composition/plating/orderable 等非提取数据），只更新 step/ingredients
+                merged = dict(old) if old else {}
+                merged["id"] = rid
+                merged["step"] = step
+                merged["ingredients"] = ing_ids
+                by_id[rid] = merged
 
     if not dry:
         knowledge["recipes"] = [v for _, v in sorted(by_id.items(), key=lambda kv: kv[0])]

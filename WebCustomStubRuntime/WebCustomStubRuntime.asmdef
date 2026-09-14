@@ -1,0 +1,8 @@
+{
+    "name": "WebCustomStubRuntime",
+    "references": [
+        "LevelEditorStub"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T07:28:22.178Z",
+  "generatedAt": "2026-09-14T09:47:00.668Z",
   "schemaVersion": 5,
   "itemCount": 111,
   "ingredients": [
@@ -229,6 +229,15 @@
       "nameEn": "Chopped Bun (DLC2)",
       "assetPath": "Assets/common02/food/Ingredients/dlc02/DLC02_ChoppedBun.asset",
       "group": "dlc02",
+      "icon": true
+    },
+    {
+      "guid": "965ff691e25e50b0c5151ea9a97899d4",
+      "id": "dlc08_choppedbun",
+      "nameZh": "汉堡面包（DLC8）",
+      "nameEn": "Chopped Bun (DLC8)",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_ChoppedBun.asset",
+      "group": "dlc08",
       "icon": true
     },
     {
@@ -973,6 +982,15 @@
       "icon": true
     },
     {
+      "guid": "8220aeba30e31f47f7921ab32b8da7af",
+      "id": "dlc08_cheese_sticks",
+      "nameZh": "芝士条",
+      "nameEn": "Cheese Sticks",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Cheese_Sticks.asset",
+      "group": "dlc08",
+      "icon": true
+    },
+    {
       "guid": "8d4a5aaf71fdf648b0648dd20ae1a920",
       "id": "dlc11_corn",
       "nameZh": "DLC11 corn",
@@ -988,24 +1006,6 @@
       "nameEn": "dlc11 vanilla",
       "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_Vanilla.asset",
       "group": "dlc11",
-      "icon": true
-    },
-    {
-      "guid": "8220aeba30e31f47f7921ab32b8da7af",
-      "id": "dlc08_cheese_sticks",
-      "nameZh": "DLC8 cheese sticks",
-      "nameEn": "dlc08 cheese sticks",
-      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Cheese_Sticks.asset",
-      "group": "dlc08",
-      "icon": true
-    },
-    {
-      "guid": "965ff691e25e50b0c5151ea9a97899d4",
-      "id": "dlc08_choppedbun",
-      "nameZh": "DLC8 choppedbun",
-      "nameEn": "dlc08 choppedbun",
-      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_ChoppedBun.asset",
-      "group": "dlc08",
       "icon": true
     }
   ]

@@ -582,8 +582,15 @@ export function stubControlsHtml(item: EditorItem): string {
         return !!it && isTravelatorItem(it);
       }).length >= 2) return "";
       const sp = item.travelator?.speed ?? 2.5;
+      const tr = item.travelator?.timedReverse;
       return `<div class="ctx-stub"><div class="ctx-stub-title">移动地板参数</div>
-        <label class="ctx-stub-row">速度 <input type="number" id="ctx-tv-speed" class="ctx-input" step="0.1" min="0" value="${sp}"/></label></div>`;
+        <label class="ctx-stub-row">速度 <input type="number" id="ctx-tv-speed" class="ctx-input" step="0.1" min="0" value="${sp}"/></label>
+        <div class="ctx-stub-title" style="margin-top:6px">定时反转</div>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-tv-rev-on" ${tr?.enabled ? "checked" : ""}/> 启用定时反转</label>
+        <label class="ctx-stub-row">正向 <input type="number" id="ctx-tv-rev-fwd" class="ctx-input" step="1" min="1" value="${tr?.forwardSeconds ?? 10}"/> 秒</label>
+        <label class="ctx-stub-row">反向 <input type="number" id="ctx-tv-rev-back" class="ctx-input" step="1" min="1" value="${tr?.backwardSeconds ?? 10}"/> 秒</label>
+        <label class="ctx-stub-row">转角 <input type="number" id="ctx-tv-rev-angle" class="ctx-input" step="90" value="${tr?.turnAngle ?? 180}"/> 度（180=掉头 ±90=转弯）</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-tv-rev-start" ${tr?.startReversed ? "checked" : ""}/> 初始反向</label></div>`;
     }
     case "Flamethrower": {
       const rate = item.flamethrower?.cookingRate ?? 4;
@@ -1002,13 +1009,59 @@ export function wireStubControls(item: EditorItem) {
       break;
     }
     case "Travelator": {
+      const ensureTr = () => {
+        item.stubKind = "Travelator";
+        if (!item.travelator) item.travelator = {};
+        if (!item.travelator.timedReverse) {
+          item.travelator.timedReverse = {
+            enabled: true, forwardSeconds: 10, backwardSeconds: 10, startReversed: false, turnAngle: 180,
+          };
+        }
+        return item.travelator.timedReverse;
+      };
       num("ctx-tv-speed")?.addEventListener("change", (e) => {
         const v = parseFloat((e.target as HTMLInputElement).value);
         if (!isFinite(v) || v < 0) return;
         pushHistory();
         item.stubKind = "Travelator";
-        item.travelator = { speed: v };
+        item.travelator = { ...item.travelator, speed: v };
         setStatus(`移动地板速度已设为 ${v}（写回后生效）`);
+      });
+      num("ctx-tv-rev-on")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensureTr().enabled = (e.target as HTMLInputElement).checked;
+        draw();
+        setStatus("已更新步道定时反转（写回后生效）");
+      });
+      num("ctx-tv-rev-fwd")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!isFinite(v) || v < 1) return;
+        pushHistory();
+        ensureTr().forwardSeconds = v;
+        draw();
+        setStatus(`步道正向 ${v}s（写回后生效）`);
+      });
+      num("ctx-tv-rev-back")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!isFinite(v) || v < 1) return;
+        pushHistory();
+        ensureTr().backwardSeconds = v;
+        draw();
+        setStatus(`步道反向 ${v}s（写回后生效）`);
+      });
+      num("ctx-tv-rev-start")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensureTr().startReversed = (e.target as HTMLInputElement).checked;
+        draw();
+        setStatus("已更新步道初始相位（写回后生效）");
+      });
+      num("ctx-tv-rev-angle")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!isFinite(v)) return;
+        pushHistory();
+        ensureTr().turnAngle = v;
+        draw();
+        setStatus(`步道转角已设为 ${v}°（写回后生效）`);
       });
       break;
     }

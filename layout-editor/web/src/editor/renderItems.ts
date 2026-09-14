@@ -610,6 +610,7 @@ export const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: stri
   { match: (it) => stubKindOf(it) === "Dispenser" && prefabIdFromPath(it.prefabAssetPath) === "Backpack", type: "背包", color: "#d4a574" },
   { match: (it) => stubKindOf(it) === "Dispenser", type: "食材箱", color: "#5b9be8" },
   { match: isFoodSpawnerItem, type: "生成器", color: "#9be88a" },
+  { match: (it) => stubKindOf(it) === "Travelator" && it.travelator?.timedReverse?.enabled === true, type: "定时步道", color: "#e8704b" },
   { match: (it) => stubKindOf(it) === "Travelator", type: "移动板", color: "#c792ea" },
   { match: isConveyorItem, type: "传送带", color: "#e8d24e" },
   { match: (it) => stubKindOf(it) === "Flamethrower", type: "喷火器", color: "#e85b5b" },

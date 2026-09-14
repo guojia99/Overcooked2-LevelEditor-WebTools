@@ -109,6 +109,22 @@ public class LayoutCookingUtensilStubDto
 public class LayoutTravelatorStubDto
 {
     public float speed = 2.5f;
+    /** 定时反转配置（null = 未配置，步道恒正向）。权威=CustomStub.TravelatorReverser 组件。 */
+    public LayoutTravelatorReverseDto timedReverse;
+}
+
+[Serializable]
+public class LayoutTravelatorReverseDto
+{
+    public bool enabled = true;
+    /** 正向期秒数（最小 1）。 */
+    public float forwardSeconds = 10f;
+    /** 反向期秒数（最小 1）。 */
+    public float backwardSeconds = 10f;
+    /** 初始相位为反向。 */
+    public bool startReversed;
+    /** 反向相位转角（度，绕 Y；180 = 掉头，+90/-90 = 转角）。 */
+    public float turnAngle = 180f;
 }
 
 [Serializable]
@@ -792,8 +808,10 @@ public class RecipeEntryDto
     /** 装盘容器 id（Plate / Glass / …；"" = 无），用于关卡编辑器推断容器堆（盘子堆/杯子堆）。 */
     public string platingStep;
     public string[] ingredients;
-    /** Direct composition ids for custom recipes (ingredient ids and/or sub-recipe ids,
-     *  "" / null for original recipes). Used by the composition-aware grouping branch. */
+    /** Direct composition ids (ingredient ids and/or sub-recipe ids).
+     *  Custom recipes: from compositionSOs; original recipes: from recipe-knowledge.json
+     *  composition[]（如 md_* 套餐 = 面包+煎肉排+炸物节点），null = 无组成信息。
+     *  Used by the composition-aware grouping branch and 锅具装填的中间产物双填。 */
     public string[] compositionIds;
     public int ingredientCount;
     public int cookingStepCount;
@@ -1218,6 +1236,8 @@ public class SetExportStatusDto
 public class SetExportStartDto
 {
     public string setName;
+    /** 导出模式：levels（仅关卡集）| deps（仅依赖包）| all（全部一起，默认）。 */
+    public string mode;
 }
 
 // ---------- Levels ----------

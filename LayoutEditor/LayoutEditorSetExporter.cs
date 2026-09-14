@@ -37,6 +37,8 @@ public static class LayoutEditorSetExporter
     private static int _fileCount;
     /** 本趟导出是否有场景用到 CustomStub（决定 zip 是否携带 runtime bundle）。 */
     private static bool _usesCustomStub;
+    /** 导出模式：levels | deps | all。 */
+    private static string _mode = "all";
 
     /// <summary>CustomStub tag 载体前缀（SpecificPseudoPrefabTag.prefabTag）。
     ///  与 CustomStub/EntryPoint.HealObject + loader 的解析保持同步；
@@ -44,7 +46,7 @@ public static class LayoutEditorSetExporter
     private static readonly string[] CustomStubTagPrefixes =
     {
         "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
-        "UtensilTiming|", "CameraOffset|"
+        "UtensilTiming|", "CameraOffset|", "TravelatorReverse|"
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub：tag 载体（含 prefab 自带的
@@ -104,8 +106,14 @@ public static class LayoutEditorSetExporter
         }
     }
 
-    /// <summary>启动导出任务（主线程调用）。返回 null 表示已启动，否则为错误信息。</summary>
+    /// <summary>启动导出任务（主线程调用）。返回 null 表示已启动，否则为错误信息。
+    /// mode：levels（仅关卡集）| deps（仅依赖包）| all（全部一起，默认/未知回落 all）。</summary>
     public static string StartExport(string setName)
+    {
+        return StartExport(setName, "all");
+    }
+
+    public static string StartExport(string setName, string mode)
     {
         if (string.IsNullOrEmpty(setName))
             return "缺少关卡集标识。";
@@ -115,6 +123,9 @@ public static class LayoutEditorSetExporter
         var setDir = LevelSetsRoot + "/" + safe;
         if (!AssetDatabase.IsValidFolder(setDir))
             return "关卡集不存在：" + safe;
+        var m = (mode ?? "all").Trim().ToLower();
+        if (m != "levels" && m != "deps" && m != "all")
+            m = "all";
 
         lock (_lock)
         {
@@ -129,6 +140,7 @@ public static class LayoutEditorSetExporter
             _zipAbsPath = "";
             _fileCount = 0;
             _usesCustomStub = false;
+            _mode = m;
         }
         EditorApplication.delayCall += RunExport;
         return null;
@@ -203,8 +215,16 @@ public static class LayoutEditorSetExporter
         var setDir = LevelSetsRoot + "/" + setName;
         var outDir = BundlesRoot + "/" + setName;
         var absOutDir = AbsPath(outDir);
+        var mode = _mode;
 
-        // ---- 1. prepare：逐场景 Open → 清临时物体（Prepare For Building）→ Save ----
+        // ---- 依赖包模式（deps）：不碰关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/ 依赖 ----
+        if (mode == "deps")
+        {
+            ExportDepsOnly(setName);
+            return;
+        }
+
+        // ---- 1. prepare：逐场景 Open → 清临时物体 → 重打 stub tag → Save ----
         var scenes = CollectScenePaths(setDir);
         if (scenes.Count == 0)
             throw new Exception("关卡集没有可用场景（" + setDir + "/scenes/ 为空）。");
@@ -219,14 +239,16 @@ public static class LayoutEditorSetExporter
             var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
             if (!string.IsNullOrEmpty(hudWarn))
                 Debug.LogWarning("[SetExporter] " + hudWarn);
-            // 网格半宽无需导出期烘焙：2026-09-12 起场景 GridManager 为唯一权威存储
-            // （LevelInfoSO 禁改），场景文件自身携带 prefab 覆盖。
+            // 打包时自动给 web CustomStub 道具重打 tag（组件→最新格式 tag，覆盖旧格式/
+            // 补齐缺失），保证 loader 场景自愈可靠、无陈旧/缺失 tag。
+            var retagged = LayoutEditorStubIO.RefreshStubTagsInActiveScene();
+            if (retagged > 0)
+                Debug.Log("[SetExporter] 已重打 " + retagged + " 个 stub tag：" + scenePath);
             LayoutEditorPseudoReload.EnsurePrepareForBuilding();
             if (!_usesCustomStub && ActiveSceneUsesCustomStub())
             {
                 _usesCustomStub = true;
-                Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件）：" + scenePath
-                    + "，本集 zip 将携带 runtime bundle");
+                Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件）：" + scenePath);
             }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -268,21 +290,16 @@ public static class LayoutEditorSetExporter
                 File.Delete(f);
         }
 
-        // ---- 5. zip：一步到位结构（整体解压到 BepInEx/plugins/OC2DIYLevel/ 即全部就位）----
-        //   levels/<set>/…              关卡 bundle（info_<set> / s_* / 按需 runtime）
-        //   commonW1                    随机箱图标库/包装 prefab 等（bundle 产物文件名为小写 commonw1）
-        //   OC2LevelRuntimeLoader.dll   BepInEx 运行时注入插件（研发手动维护，从 web/public 读取）
+        // ---- 5. zip：新结构（整体解压到 BepInEx/plugins/ 即全部就位）----
+        //   OC2DIYLevel/levels/<set>/…       关卡 bundle（info_<set> / s_*）+ requires.txt
+        //   OC2DIYLevelRuntimeWLoader/…         仅 all 模式：Loader.dll + webcustomstub_runtime
+        //                                     + commonW1 (+按需 commonW2)（依赖包，装一次）
         var payloads = new List<string>(Directory.GetFiles(absOutDir));
         payloads.RemoveAll(HasJunkExtension);
-        // CustomStub 按需携带：本集无场景使用 tag/组件时，zip 不含 runtime bundle
-        // （loader 扫描不到 runtime 自然跳过，不注入 CustomStub 程序集）。
-        if (!_usesCustomStub)
-        {
-            int removed = payloads.RemoveAll(p =>
-                string.Equals(Path.GetFileName(p), "runtime", StringComparison.OrdinalIgnoreCase));
-            if (removed > 0)
-                Debug.Log("[SetExporter] 本集未使用 CustomStub 道具，zip 不携带 runtime bundle");
-        }
+        // 旧体系 per-set runtime bundle 已废除，若产物里残留 runtime 文件一律剔除
+        // （统一运行时改由依赖包 OC2DIYLevelRuntimeWLoader/webcustomstub_runtime 分发）。
+        payloads.RemoveAll(p =>
+            string.Equals(Path.GetFileName(p), "runtime", StringComparison.OrdinalIgnoreCase));
         if (payloads.Count == 0)
             throw new Exception("清理后没有可打包的 bundle 文件。");
         if (File.Exists(absOutDir + "/info_" + setName) == false)
@@ -290,46 +307,26 @@ public static class LayoutEditorSetExporter
                 + "（关卡集根目录 AssetBundle 可能用了历史命名），将按实际产物打包。");
 
         var version = SanitizeVersion(FindSetVersion(setName));
-        var zipFileName = setName + "_v" + version + "_" + DateTime.Now.ToString("yyyyMMdd") + ".zip";
+        var modeSuffix = _mode == "levels" ? "_levels" : "";
+        var zipFileName = setName + "_v" + version + modeSuffix + "_" + DateTime.Now.ToString("yyyyMMdd") + ".zip";
         var zipAbsPath = ExportRootAbsPath() + "/" + zipFileName;
         var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
+
+        // 关卡 bundle → OC2DIYLevel/levels/<set>/（模组从此固定路径读关卡）
         foreach (var p in payloads)
-            entries.Add(new LayoutEditorZipWriter.ZipEntrySource("levels/" + setName + "/" + Path.GetFileName(p), p));
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
+                "OC2DIYLevel/levels/" + setName + "/" + Path.GetFileName(p), p));
 
-        // commonW1 bundle（问号图标库 / RandomDispenser / web 火锅等，与 common01/02 同级安装）
-        var commonW1Abs = AbsPath(BundlesRoot) + "/commonw1";
-        if (File.Exists(commonW1Abs))
-            entries.Add(new LayoutEditorZipWriter.ZipEntrySource("commonW1", commonW1Abs));
-        else
-            Debug.LogWarning("[SetExporter] 未找到 commonw1 bundle（" + commonW1Abs
-                + "），zip 不含 commonW1 —— 真机需另行安装，否则问号图标/CustomStub 道具缺失。");
+        // requires.txt：本关卡集要求的依赖包版本（= 统一运行时 SSOT 版本）；
+        // Loader 用自身 PluginVersion semver 比较，< 时警告跳过 stub 支持。
+        var requiresAbs = WriteRequiresFile(setName);
+        if (!string.IsNullOrEmpty(requiresAbs))
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
+                "OC2DIYLevel/levels/" + setName + "/requires.txt", requiresAbs));
 
-        // commonW2 bundle（Burger大全 共享汉堡菜谱库）：本集任一关卡实际引用 commonW2 时携带。
-        var commonW2Abs = AbsPath(BundlesRoot) + "/commonw2";
-        var needsCommonW2 = LayoutEditorCustomIngredients.SetNeedsCommonW2Bundle(setName);
-        if (needsCommonW2)
-        {
-            if (File.Exists(commonW2Abs))
-                entries.Add(new LayoutEditorZipWriter.ZipEntrySource("commonW2", commonW2Abs));
-            else
-                Debug.LogWarning("[SetExporter] 本集引用 commonW2 资产但未找到 commonw2 bundle（" + commonW2Abs
-                    + "），zip 不含 commonW2 —— 真机汉堡素材将缺失。请先执行 Tools/Build AssetBundles。");
-        }
-
-        // OC2LevelRuntimeLoader.dll（研发手动维护：layout-editor/web/public/ 下，
-        // 更新时先 ./BepInExPlugins/build.sh 再拷贝覆盖）
-        var loaderDllAbs = ProjectRootAbsPath() + "/layout-editor/web/public/OC2LevelRuntimeLoader.dll";
-        if (File.Exists(loaderDllAbs))
-        {
-            entries.Add(new LayoutEditorZipWriter.ZipEntrySource("OC2LevelRuntimeLoader.dll", loaderDllAbs));
-            Debug.Log("[SetExporter] 附带 OC2LevelRuntimeLoader.dll（"
-                + File.GetLastWriteTime(loaderDllAbs).ToString("yyyy-MM-dd HH:mm:ss") + "）：" + loaderDllAbs);
-        }
-        else
-        {
-            Debug.LogWarning("[SetExporter] 未找到 " + loaderDllAbs
-                + "，zip 不含运行时注入插件 —— 含随机箱等 CustomStub 玩法的关卡将无法生效。");
-        }
+        // all 模式：附带依赖包 OC2DIYLevelRuntimeWLoader/（commonW2 随本集引用按需）
+        if (_mode == "all")
+            AddDependencyEntries(entries, setName, false);
 
         SetPhase("zip", "生成 zip：" + zipFileName + "（" + entries.Count + " 个文件）…");
         LayoutEditorZipWriter.WriteZip(zipAbsPath, entries);
@@ -342,6 +339,179 @@ public static class LayoutEditorSetExporter
             _message = "导出完成：" + zipFileName;
         }
         AssetDatabase.Refresh();
+    }
+
+    /// <summary>依赖包（deps）模式：不构建关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/
+    /// （Loader.dll + webcustomstub_runtime + commonW1 + 按需 commonW2）。产物为预构建
+    /// bundle + web/public/Loader.dll，无需 BuildAssetBundles，快速导出。</summary>
+    private static void ExportDepsOnly(string setName)
+    {
+        SetPhase("build", "打包依赖 OC2DIYLevelRuntimeWLoader…");
+        // 统一运行时新鲜度校验 + staging（BeforeBuild = StageRuntime(throwOnStale)）
+        if (BeforeBuild != null)
+            BeforeBuild(setName);
+
+        // 当前打开的场景若仍有临时伪 prefab 实例（未 Prepare For Building），
+        // BuildAssetBundles 会把这些临时实例拉进构建并中途丢失 instanceID
+        // （"Asset has disappeared while building player" 崩溃）。构建前先对活动场景
+        // Prepare For Building（DeInit 清临时物体），与 all 模式逐场景准备同理。
+        try
+        {
+            LayoutEditorPseudoReload.EnsurePrepareForBuilding();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 依赖导出前 Prepare For Building 失败（继续尝试构建）: " + ex.Message);
+        }
+
+        // 删除 commonW1/commonW2 旧构建产物（+ .manifest），随后重新打包，
+        // 保证依赖包里的 commonW1/W2 是最新的、不含遗留。
+        SetPhase("clean", "清理 commonW1/commonW2 旧产物…");
+        DeleteBundleProduct("commonw1");
+        DeleteBundleProduct("commonw2");
+
+        // 重新构建 AssetBundle（增量：仅重建被删/变更的 commonW1/W2 与统一运行时）。
+        SetPhase("build", "重新打包 commonW1 / commonW2 / 统一运行时…");
+        if (!Directory.Exists(AbsPath(BundlesRoot)))
+            Directory.CreateDirectory(AbsPath(BundlesRoot));
+        var depManifest = BuildPipeline.BuildAssetBundles(
+            BundlesRoot, BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
+        if (depManifest == null)
+            throw new Exception("BuildPipeline.BuildAssetBundles 返回 null，commonW1/W2 重新打包失败（详见 Console）。");
+
+        var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
+        AddDependencyEntries(entries, setName, true); // deps 模式：commonW1/W2 均无条件携带
+        if (entries.Count == 0)
+            throw new Exception("依赖包为空：未找到 Loader.dll / webcustomstub_runtime / commonW1，"
+                + "请先执行 Layout Editor/CustomStub/Build AssetBundles（含 Runtime staging）。");
+
+        var zipFileName = "OC2DIYLevelRuntimeWLoader_v" + StubVersionValue()
+            + "_" + DateTime.Now.ToString("yyyyMMdd") + ".zip";
+        var zipAbsPath = ExportRootAbsPath() + "/" + zipFileName;
+        SetPhase("zip", "生成 zip：" + zipFileName + "（" + entries.Count + " 个文件）…");
+        LayoutEditorZipWriter.WriteZip(zipAbsPath, entries);
+        lock (_lock)
+        {
+            _zipFileName = zipFileName;
+            _zipAbsPath = zipAbsPath;
+            _fileCount = entries.Count;
+            _message = "依赖包导出完成：" + zipFileName;
+        }
+        AssetDatabase.Refresh();
+    }
+
+    /// <summary>删除 Assets/AssetBundles 下某个 bundle 产物（+ .manifest）。用于依赖包
+    /// 导出前清理 commonW1/W2 旧产物再重建，杜绝遗留。仅删构建产物本身，不碰源资产
+    /// 的 .meta（源目录 assetBundleName 已在源侧标记，勿动）。</summary>
+    private static void DeleteBundleProduct(string bundleFileName)
+    {
+        try
+        {
+            var abs = AbsPath(BundlesRoot) + "/" + bundleFileName;
+            if (File.Exists(abs))
+            {
+                File.Delete(abs);
+                Debug.Log("[SetExporter] 已删除旧产物: " + BundlesRoot + "/" + bundleFileName);
+            }
+            var manifest = abs + ".manifest";
+            if (File.Exists(manifest))
+                File.Delete(manifest);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 删除 " + bundleFileName + " 旧产物失败: " + ex.Message);
+        }
+    }
+
+    /// <summary>把依赖包内容加入 zip 条目：OC2DIYLevelRuntimeWLoader/{Loader.dll,
+    /// webcustomstub_runtime, commonW1, commonW2}。
+    /// alwaysCommonW2=true（deps 模式，依赖包通用）：无条件携带 commonW2；
+    /// false（all 模式随关卡集）：仅本集引用 commonW2 时携带。</summary>
+    private static void AddDependencyEntries(List<LayoutEditorZipWriter.ZipEntrySource> entries, string setName, bool alwaysCommonW2)
+    {
+        const string depDir = "OC2DIYLevelRuntimeWLoader/";
+
+        // Loader.dll（研发手动维护：layout-editor/web/public/Loader.dll，
+        // 更新时先编译 Assets/WebCustomStubRuntime/Loader~/ 再拷贝覆盖）
+        var loaderDllAbs = ProjectRootAbsPath() + "/layout-editor/web/public/Loader.dll";
+        if (File.Exists(loaderDllAbs))
+        {
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "Loader.dll", loaderDllAbs));
+            Debug.Log("[SetExporter] 附带 Loader.dll（"
+                + File.GetLastWriteTime(loaderDllAbs).ToString("yyyy-MM-dd HH:mm:ss") + "）");
+        }
+        else
+        {
+            Debug.LogWarning("[SetExporter] 未找到 " + loaderDllAbs
+                + "，依赖包不含 Loader.dll —— CustomStub 玩法将无法生效。");
+        }
+
+        // 统一运行时 bundle（webcustomstub_runtime）
+        var runtimeAbs = AbsPath(BundlesRoot) + "/" + LayoutStubDllBuilder.RuntimeBundleName;
+        if (File.Exists(runtimeAbs))
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
+                depDir + LayoutStubDllBuilder.RuntimeBundleName, runtimeAbs));
+        else
+            Debug.LogWarning("[SetExporter] 未找到统一运行时 bundle（" + runtimeAbs
+                + "），依赖包不含 webcustomstub_runtime —— 请先 Build AssetBundles（含 Runtime staging）。");
+
+        // commonW1（问号图标库 / RandomDispenser / web 火锅等；由 Loader 从依赖包加载）
+        var commonW1Abs = AbsPath(BundlesRoot) + "/commonw1";
+        if (File.Exists(commonW1Abs))
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "commonW1", commonW1Abs));
+        else
+            Debug.LogWarning("[SetExporter] 未找到 commonw1 bundle（" + commonW1Abs + "）。");
+
+        // commonW2：deps 模式无条件携带（依赖包通用）；all 模式仅本集引用时带
+        var commonW2Abs = AbsPath(BundlesRoot) + "/commonw2";
+        var wantCommonW2 = alwaysCommonW2 || LayoutEditorCustomIngredients.SetNeedsCommonW2Bundle(setName);
+        if (wantCommonW2)
+        {
+            if (File.Exists(commonW2Abs))
+                entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "commonW2", commonW2Abs));
+            else
+                Debug.LogWarning("[SetExporter] 未找到 commonw2 bundle（" + commonW2Abs + "）。");
+        }
+    }
+
+    /// <summary>统一运行时 SSOT 版本号（反射 CustomStub.StubVersion.Value，缺失回落）。</summary>
+    private static string StubVersionValue()
+    {
+        try
+        {
+            var t = LayoutEditorStubIO.FindCustomStubType("", "StubVersion");
+            if (t != null)
+            {
+                var f = t.GetField("Value", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                if (f != null)
+                {
+                    var v = f.GetValue(null) as string;
+                    if (!string.IsNullOrEmpty(v))
+                        return SanitizeVersion(v);
+                }
+            }
+        }
+        catch { }
+        return "0";
+    }
+
+    /// <summary>写 requires.txt 到临时目录并返回绝对路径（内容 = SSOT 版本号单行）。</summary>
+    private static string WriteRequiresFile(string setName)
+    {
+        try
+        {
+            var dir = ExportRootAbsPath();
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            var path = dir + "/._requires_" + setName + ".txt";
+            File.WriteAllText(path, StubVersionValue());
+            return path;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 写 requires.txt 失败: " + ex.Message);
+            return null;
+        }
     }
 
     private static List<string> CollectScenePaths(string setDir)

@@ -4,21 +4,33 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 关卡集 stub 程序集 → 随关卡分发的 .dll.bytes 打包工具。
+/// 统一运行时程序集 → 随依赖包分发的 .dll.bytes 打包工具（单程序集模型）。
 ///
-/// Unity 会把关卡集程序集（Stub_&lt;set&gt;，见 CustomStubCopyTool）编译到
-/// Library/ScriptAssemblies/Stub_&lt;set&gt;.dll。本工具把它复制为
-/// Assets/LevelSets/&lt;set&gt;/stub/Stub_&lt;set&gt;.dll.bytes（TextAsset），
-/// 并赋 assetBundleName = &lt;set&gt;/runtime —— 导出关卡集 zip 时与
-/// info_&lt;set&gt; / s_* 同层打包（普通 bundle，加载器插件可 LoadAsset 提取）。
+/// 统一单程序集重构后（母本 Assets/WebCustomStubRuntime/，全平台 asmdef，
+/// 程序集名 WebCustomStubRuntime）：Unity 编译到
+/// Library/ScriptAssemblies/WebCustomStubRuntime.dll。本工具把它复制为
+/// Assets/WebCustomStubRuntime/RuntimeDll/WebCustomStubRuntime.dll.bytes（TextAsset），
+/// 赋 assetBundleName = webcustomstub_runtime —— 导出「依赖包」zip 时打进
+/// OC2DIYLevelRuntimeWLoader/ 文件夹，由 Loader v2.0 从自身目录 LoadFromFile 提取注入。
+/// 不再按关卡集编译/打包（旧 Stub_&lt;set&gt; 每集 DLL 体系已废除）。
 ///
 /// 解耦：本类经 LayoutEditorSetExporter.BeforeBuild 钩子接入（[InitializeOnLoad]
-/// 订阅），没有本类时 SetExporter 行为不变；反之本类也不依赖 LayoutEditor 其他类型。
+/// 订阅），没有本类时 SetExporter 行为不变。
 /// </summary>
 [InitializeOnLoad]
 public static class LayoutStubDllBuilder
 {
-    private const string LevelSetsRoot = "Assets/LevelSets";
+    /// <summary>统一运行时程序集名（母本 asmdef name）。</summary>
+    public const string RuntimeAsmName = "WebCustomStubRuntime";
+
+    /// <summary>统一运行时 bundle 名（依赖包内文件名，Loader 固定按此加载）。</summary>
+    public const string RuntimeBundleName = "webcustomstub_runtime";
+
+    /// <summary>母本根目录（源码 + 打包产物 .dll.bytes 落位处）。</summary>
+    public const string RuntimeRoot = "Assets/WebCustomStubRuntime";
+
+    private const string RuntimeDllDir = RuntimeRoot + "/RuntimeDll";
+    private const string BytesAssetPath = RuntimeDllDir + "/" + RuntimeAsmName + ".dll.bytes";
 
     static LayoutStubDllBuilder()
     {
@@ -27,113 +39,93 @@ public static class LayoutStubDllBuilder
 
     private static void OnBeforeBuild(string setName)
     {
-        StageSet(setName, true);
+        // 导出任意关卡集/依赖包前，保证统一 runtime 新鲜（过期直接抛错中断导出）。
+        StageRuntime(true);
     }
 
-    /// <summary>域重载后的静默 staging：对每个有 stub 源码的关卡集，当 Library DLL
-    /// 比 .dll.bytes 新（或 .bytes 缺失/未赋 bundle 名）时自动重新打包。返回 staged 数。
-    /// 与 CustomStubAutoBake 的域重载钩子配合，形成「拷贝→编译→自动打包」闭环，
-    /// 杜绝导出时打进过期 DLL。</summary>
-    public static int StageAllSetsQuiet()
+    private static string ProjectRoot()
     {
-        var staged = 0;
+        return Path.GetDirectoryName(Application.dataPath).Replace('\\', '/');
+    }
+
+    private static string RuntimeDllAbs()
+    {
+        return ProjectRoot() + "/Library/ScriptAssemblies/" + RuntimeAsmName + ".dll";
+    }
+
+    private static string BytesAbs()
+    {
+        return ProjectRoot() + "/" + BytesAssetPath;
+    }
+
+    /// <summary>域重载后的静默 staging：当 Library DLL 比 .dll.bytes 新（或缺失/未赋
+    /// bundle 名）时自动重新打包。返回是否 staged。与 CustomStubAutoBake 的域重载钩子
+    /// 配合形成「改母本→编译→自动打包」闭环，杜绝导出打进过期 DLL。</summary>
+    public static bool StageRuntimeQuiet()
+    {
         try
         {
-            var projectRoot = Path.GetDirectoryName(Application.dataPath).Replace('\\', '/');
-            foreach (var folder in AssetDatabase.GetSubFolders(LevelSetsRoot))
-            {
-                var setName = folder.Substring(folder.LastIndexOf('/') + 1);
-                var stubDir = folder + "/stub";
-                if (!AssetDatabase.IsValidFolder(stubDir) || Directory.GetFiles(stubDir, "*.cs").Length == 0)
-                    continue;
-                var asmName = CustomStubCopyTool.StubAssemblyName(setName);
-                var dllAbs = projectRoot + "/Library/ScriptAssemblies/" + asmName + ".dll";
-                var bytesAbs = Application.dataPath.Replace("Assets", "") + stubDir + "/" + asmName + ".dll.bytes";
-                var importer = AssetImporter.GetAtPath(stubDir + "/" + asmName + ".dll.bytes");
-                var needsStage = !File.Exists(dllAbs)
-                    ? false // DLL 未编译（异常态，交给导出时的显式报错）
-                    : !File.Exists(bytesAbs)
-                      || File.GetLastWriteTime(dllAbs) > File.GetLastWriteTime(bytesAbs).AddSeconds(2)
-                      || (importer != null && importer.assetBundleName != setName + "/runtime");
-                if (!needsStage)
-                    continue;
-                StageSet(setName, false);
-                staged++;
-            }
+            var dllAbs = RuntimeDllAbs();
+            if (!File.Exists(dllAbs))
+                return false; // 未编译（异常态，交给导出时的显式报错）
+            var bytesAbs = BytesAbs();
+            var importer = AssetImporter.GetAtPath(BytesAssetPath);
+            var needsStage = !File.Exists(bytesAbs)
+                || File.GetLastWriteTime(dllAbs) > File.GetLastWriteTime(bytesAbs).AddSeconds(2)
+                || (importer != null && importer.assetBundleName != RuntimeBundleName);
+            if (!needsStage)
+                return false;
+            StageRuntime(false);
+            return true;
         }
         catch (Exception ex)
         {
             Debug.LogWarning("[CustomStub] 静默 staging 异常: " + ex.Message);
+            return false;
         }
-        return staged;
     }
 
-    [MenuItem("Layout Editor/CustomStub/编译打包 Stub DLL（全部关卡集）")]
-    public static void StageAllManual()
+    [MenuItem("Layout Editor/CustomStub/编译打包 Runtime DLL")]
+    public static void StageRuntimeManual()
     {
-        // 先 Refresh 触发潜在重编译，等一帧再取产物，避免取到旧 DLL
         AssetDatabase.Refresh();
         EditorApplication.delayCall += delegate
         {
-            var ok = 0;
-            var skipped = 0;
             try
             {
-                foreach (var folder in AssetDatabase.GetSubFolders(LevelSetsRoot))
-                {
-                    var setName = folder.Substring(folder.LastIndexOf('/') + 1);
-                    var stubDir = folder + "/stub";
-                    if (!AssetDatabase.IsValidFolder(stubDir) || Directory.GetFiles(stubDir, "*.cs").Length == 0)
-                    {
-                        skipped++;
-                        continue;
-                    }
-                    StageSet(setName, false);
-                    ok++;
-                }
+                StageRuntime(false);
+                EditorUtility.DisplayDialog("WebCustomStubRuntime",
+                    "已打包统一运行时 " + RuntimeAsmName + ".dll → " + BytesAssetPath
+                    + "（bundle " + RuntimeBundleName + "）。", "确定");
             }
             catch (Exception ex)
             {
                 Debug.LogException(ex);
-                EditorUtility.DisplayDialog("CustomStub DLL", "打包失败:\n" + ex.Message, "确定");
-                return;
+                EditorUtility.DisplayDialog("WebCustomStubRuntime", "打包失败:\n" + ex.Message, "确定");
             }
-            EditorUtility.DisplayDialog("CustomStub DLL",
-                "已打包 " + ok + " 个关卡集（跳过 " + skipped + " 个未配置 stub 的关卡集）。", "确定");
         };
     }
-
-    // ---- 手动 Build AssetBundles 的 staging 加固 ----
-    // 原 Tools/Build AssetBundles（CreateAssetBundles.cs，LayoutEditor 外，不改）不经过
-    // LayoutEditorSetExporter.BeforeBuild 钩子，曾导致真机 runtime 缺失/过期。
-    // 这里提供含 staging 的替代入口（同款序列：StageSet → BuildAssetBundles）。
 
     [MenuItem("Layout Editor/CustomStub/Toggle Prepare For Building", false, 11)]
     public static void TogglePrepareForBuilding()
     {
-        // 与 Tools/Toggle Prepare For Building 同款逻辑（LayoutEditor 外的原菜单不改）：
-        // 打包前清除临时加载的物体，打包后切回恢复预览。
         LevelEditor.PseudoPrefabManager.Instance.prepareForBuilding =
             !LevelEditor.PseudoPrefabManager.Instance.prepareForBuilding;
         if (LevelEditor.PseudoPrefabManager.Instance.prepareForBuilding)
-        {
             LevelEditor.PseudoPrefabManager.Instance.DeInit();
-        }
         else
-        {
             LevelEditor.PseudoPrefabManager.Instance.Init();
-        }
         Debug.Log("[CustomStub] prepareForBuilding = "
             + LevelEditor.PseudoPrefabManager.Instance.prepareForBuilding);
     }
 
-    [MenuItem("Layout Editor/CustomStub/Build AssetBundles（含 Stub staging）", false, 100)]
+    [MenuItem("Layout Editor/CustomStub/Build AssetBundles（含 Runtime staging）", false, 100)]
     public static void BuildAssetBundlesWithStaging()
     {
         BuildAssetBundlesWithStaging(BuildAssetBundleOptions.None);
     }
 
-    [MenuItem("Layout Editor/CustomStub/Build AssetBundles（含 Stub staging，ForceRebuild）", false, 101)]
+    [MenuItem("Layout Editor/CustomStub/Build AssetBundles（含 Runtime staging，ForceRebuild）", false, 101)]
     public static void BuildAssetBundlesWithStagingForceRebuild()
     {
         BuildAssetBundlesWithStaging(BuildAssetBundleOptions.ForceRebuildAssetBundle);
@@ -141,8 +133,6 @@ public static class LayoutStubDllBuilder
 
     private static void BuildAssetBundlesWithStaging(BuildAssetBundleOptions options)
     {
-        // 编译/导入进行中调用 BuildAssetBundles 会被直接取消
-        // （"Building AssetBundles was canceled"）——显式拦截并提示。
         if (EditorApplication.isCompiling || EditorApplication.isUpdating)
         {
             EditorUtility.DisplayDialog("Build AssetBundles",
@@ -150,23 +140,11 @@ public static class LayoutStubDllBuilder
             return;
         }
         var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
-        if (!TargetSceneSaveValidator.CheckPrepareForBuilding(activeScene))
+        if (!CheckPrepareForBuildingSoft(activeScene))
             return;
 
-        foreach (var folder in AssetDatabase.GetSubFolders(LevelSetsRoot))
-        {
-            var setName = folder.Substring(folder.LastIndexOf('/') + 1);
-            var stubDir = folder + "/stub";
-            if (!AssetDatabase.IsValidFolder(stubDir) || Directory.GetFiles(stubDir, "*.cs").Length == 0)
-                continue;
-            // throwOnStale=false：DLL 缺失/过期打警告但不中断 build。
-            // 切勿在此追加 AssetDatabase.Refresh()（触发脚本重编译 → build 被取消）。
-            StageSet(setName, false);
-            Debug.Log("[CustomStub] 手动 build 提醒：关卡集 " + setName + " 使用了随机食材箱，"
-                + "分发时除 info_" + setName + " / s_* 外还必须拷贝 Assets/AssetBundles/" + setName
-                + "/runtime（无扩展名，剔除 .manifest/.meta），否则真机随机箱退化为固定箱。"
-                + "推荐改用 web 导出（自动打包含 runtime 的 zip）。");
-        }
+        // 切勿在此追加 AssetDatabase.Refresh()（触发脚本重编译 → build 被取消）。
+        StageRuntime(false);
 
         var assetBundleDirectory = "Assets/AssetBundles";
         if (!Directory.Exists(assetBundleDirectory))
@@ -174,60 +152,99 @@ public static class LayoutStubDllBuilder
         BuildPipeline.BuildAssetBundles(assetBundleDirectory, options, BuildTarget.StandaloneWindows);
     }
 
-    /// <summary>stub DLL 状态（web 状态端点用）：
-    /// noStub=无 stub 目录或无源码；missing=DLL 尚未编译；stale=源码比 DLL 新
-    /// （编辑后未编译完成）；fresh=DLL 就绪可 staging/导出。</summary>
-    public static string GetStageState(string setName)
+    /// <summary>「保存/构建前须 Prepare For Building」守卫的软调用（反射优先上游实现，
+    /// 类型缺失回落内联同款检查——干净环境防 CS0103）。</summary>
+    private static bool CheckPrepareForBuildingSoft(UnityEngine.SceneManagement.Scene activeScene)
     {
-        var stubDir = LevelSetsRoot + "/" + setName + "/stub";
-        if (!Directory.Exists(stubDir) || Directory.GetFiles(stubDir, "*.cs").Length == 0)
-            return "noStub";
-        var asmName = CustomStubCopyTool.StubAssemblyName(setName);
-        var projectRoot = Path.GetDirectoryName(Application.dataPath).Replace('\\', '/');
-        var dllAbs = projectRoot + "/Library/ScriptAssemblies/" + asmName + ".dll";
+        var validatorType = FindType("TargetSceneSaveValidator");
+        if (validatorType != null)
+        {
+            try
+            {
+                var m = validatorType.GetMethod("CheckPrepareForBuilding",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                if (m != null)
+                    return (bool)m.Invoke(null, new object[] { activeScene });
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[CustomStub] TargetSceneSaveValidator 软调用失败，回落内联检查: " + ex.Message);
+            }
+        }
+        return InlinePrepareForBuildingCheck(activeScene);
+    }
+
+    private static Type FindType(string typeName)
+    {
+        var t = Type.GetType(typeName);
+        if (t != null)
+            return t;
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            t = asm.GetType(typeName);
+            if (t != null)
+                return t;
+        }
+        return null;
+    }
+
+    private static bool InlinePrepareForBuildingCheck(UnityEngine.SceneManagement.Scene activeScene)
+    {
+        if (!activeScene.IsValid())
+            return true;
+        foreach (var root in activeScene.GetRootGameObjects())
+        {
+            var mgr = root.GetComponent<LevelEditor.PseudoPrefabManager>();
+            if (mgr == null)
+                continue;
+            if (mgr.prepareForBuilding)
+                return true;
+            EditorUtility.DisplayDialog("错误",
+                "保存或构建场景前先点击 Tools - Toggle Prepare For Building 清除临时物体！", "确定");
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>统一 runtime DLL 状态（web 状态端点用）：
+    /// missing=DLL 尚未编译；stale=母本源码比 DLL 新（编辑后未编译完成）；
+    /// fresh=DLL 就绪可 staging/导出。</summary>
+    public static string GetRuntimeStageState()
+    {
+        var dllAbs = RuntimeDllAbs();
         if (!File.Exists(dllAbs))
             return "missing";
         var dllTime = File.GetLastWriteTime(dllAbs);
-        foreach (var f in Directory.GetFiles(stubDir))
+        foreach (var f in Directory.GetFiles(RuntimeRoot, "*.cs", SearchOption.AllDirectories))
         {
-            var lower = f.ToLower();
-            if (!lower.EndsWith(".cs") && !lower.EndsWith(".asmdef"))
-                continue;
             if (File.GetLastWriteTime(f) > dllTime.AddSeconds(2))
                 return "stale";
         }
+        var asmdef = RuntimeRoot + "/" + RuntimeAsmName + ".asmdef";
+        if (File.Exists(asmdef) && File.GetLastWriteTime(asmdef) > dllTime.AddSeconds(2))
+            return "stale";
         return "fresh";
     }
 
-    /// <summary>把 Library/ScriptAssemblies/Stub_&lt;set&gt;.dll staging 为 .dll.bytes 并赋 bundle 名。
-    /// throwOnStale=true（导出流程）：DLL 缺失/过期直接抛错中断导出；false（手动）：弹窗提示。</summary>
-    public static void StageSet(string setName, bool throwOnStale)
+    /// <summary>把 Library/ScriptAssemblies/WebCustomStubRuntime.dll staging 为
+    /// .dll.bytes 并赋 bundle 名。throwOnStale=true（导出流程）：DLL 缺失/过期直接
+    /// 抛错中断导出；false（手动/静默）：打警告返回。</summary>
+    public static void StageRuntime(bool throwOnStale)
     {
-        var stubDir = LevelSetsRoot + "/" + setName + "/stub";
-        if (!Directory.Exists(stubDir))
-            return;
-
-        var asmName = CustomStubCopyTool.StubAssemblyName(setName);
-        var projectRoot = Path.GetDirectoryName(Application.dataPath).Replace('\\', '/');
-        var dllAbs = projectRoot + "/Library/ScriptAssemblies/" + asmName + ".dll";
-
+        var dllAbs = RuntimeDllAbs();
         var error = "";
         if (!File.Exists(dllAbs))
         {
-            error = "未找到 " + asmName + ".dll（Library/ScriptAssemblies）。请先 Layout Editor/CustomStub/拷贝到关卡集… 并等待 Unity 编译完成。";
+            error = "未找到 " + RuntimeAsmName + ".dll（Library/ScriptAssemblies）。请等待 Unity 编译完成后重试。";
         }
         else
         {
-            // 新鲜度：DLL 必须不早于 stub 源码（.cs / .asmdef）
             var dllTime = File.GetLastWriteTime(dllAbs);
-            foreach (var f in Directory.GetFiles(stubDir))
+            foreach (var f in Directory.GetFiles(RuntimeRoot, "*.cs", SearchOption.AllDirectories))
             {
-                var lower = f.ToLower();
-                if (!lower.EndsWith(".cs") && !lower.EndsWith(".asmdef"))
-                    continue;
                 if (File.GetLastWriteTime(f) > dllTime.AddSeconds(2))
                 {
-                    error = "stub 源码比 " + asmName + ".dll 新（编辑后尚未编译完成）。请等 Unity 编译结束后重试。";
+                    error = "母本源码比 " + RuntimeAsmName + ".dll 新（编辑后尚未编译完成）。请等 Unity 编译结束后重试。";
                     break;
                 }
             }
@@ -236,25 +253,22 @@ public static class LayoutStubDllBuilder
         if (!string.IsNullOrEmpty(error))
         {
             if (throwOnStale)
-                throw new Exception("[CustomStub] " + setName + ": " + error);
-            Debug.LogWarning("[CustomStub] " + setName + ": " + error);
+                throw new Exception("[CustomStub] " + error);
+            Debug.LogWarning("[CustomStub] " + error);
             return;
         }
 
-        var bytesPath = stubDir + "/" + asmName + ".dll.bytes";
-        File.Copy(dllAbs, Application.dataPath.Replace("Assets", "") + bytesPath, true);
-        AssetDatabase.ImportAsset(bytesPath, ImportAssetOptions.ForceUpdate);
-        var importer = AssetImporter.GetAtPath(bytesPath);
-        if (importer != null)
+        if (!Directory.Exists(RuntimeDllDir))
+            Directory.CreateDirectory(RuntimeDllDir);
+        File.Copy(dllAbs, BytesAbs(), true);
+        AssetDatabase.ImportAsset(BytesAssetPath, ImportAssetOptions.ForceUpdate);
+        var importer = AssetImporter.GetAtPath(BytesAssetPath);
+        if (importer != null && importer.assetBundleName != RuntimeBundleName)
         {
-            var want = setName + "/runtime";
-            if (importer.assetBundleName != want)
-            {
-                importer.assetBundleName = want;
-                importer.SaveAndReimport();
-            }
+            importer.assetBundleName = RuntimeBundleName;
+            importer.SaveAndReimport();
         }
-        Debug.Log("[CustomStub] " + setName + ": 已打包 " + asmName + ".dll → " + bytesPath
-            + "（bundle " + setName + "/runtime）");
+        Debug.Log("[CustomStub] 已打包统一运行时 " + RuntimeAsmName + ".dll → " + BytesAssetPath
+            + "（bundle " + RuntimeBundleName + "）");
     }
 }

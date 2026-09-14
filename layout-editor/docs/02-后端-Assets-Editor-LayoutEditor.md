@@ -95,6 +95,7 @@
     ├── Switch/TimedCookingSwitch.cs      火锅灶台定时开关
     ├── Switch/SwitchReenable.cs          按钮自动复位
     ├── Terminal/TerminalGuard.cs         未绑定终端防线
+    ├── Travelator/TravelatorReverser.cs  自动步道定时反转（相位翻转 = 绕 Y 旋转可配置角度）
     ├── UtensilTiming/UtensilTiming.cs    锅具时间运行时应用（含 Harmony 接管）
     ├── UtensilTiming/UtensilTimingConfig.cs 锅具时间配置组件（权威通道）
     └── WorldMap/WorldMapDressing.cs      世界地图装饰强制展开
@@ -253,7 +254,7 @@ flowchart TD
 | **LayoutEditorCatalogApi.cs** | `ScanIngredients`（common01/02/03 + 关卡集 custom 目录；guid 脱同步自愈 `HealGuidDesync`）、`ScanRecipes`（官方 + 自定义 + commonW2，`RecipeKnowledge.ComputeCookingGroups` 分组）、`GetLevelRecipes/SetLevelRecipes`（写 LevelInfoSO.recipes → SyncLevelInfo 重建依赖 + HotPot/RoastTray Fill + **含汉堡菜谱时自动同步本关 BurgerOptional**：`SyncBurgerOptionalsForSavedRecipes` 重算夹心全集/bunSO 对齐主面包，并把 [BurgerOptional]+中间产物 merge 进 optionalRecipeMatchListItems，替换 auto-managed 旧条目、保留 hotdog/pizza/手动条目；须在 EnsureWebDependencies 之前执行以计入中间产物依赖）、Optional/Matchlist 管理（matchlist key 白名单 dlc02..dlc13/combineddlc）、`ComputeBurgerOptionalFill`（与自动同步共用 `SyncLevelBurgerOptionalAndGetItems`）、`BundleFileExists`（全项目依赖注册守门） |
 | **LayoutEditorBurgerApi.cs** | 汉堡工作台（#/burger-maker）：数据模型 = 成品汉堡 CustomRecipeSO(Composite) + 共享 `CustomRecipeOptionalBurgerSO`（bunSO + optionalSOs[] + 模型数组）；`GetDefinitions/CreateBurger/UpdateDefinition/GetLevelBurgerOptionalDefinition`；`SyncLevelBurgerOptionalFromBurgers`（**覆盖式**：夹心/bunSO/模型数组每次全量重建，模型绑定唯一来源 = commonW2 组装定义规范绑定，本关旧绑定不保留；bunSO 对齐所选汉堡主面包，多种面包告警） |
 | **LayoutEditorFloorMaterialsApi.cs** | `Scan(levelSet)`（关卡集 materials/ 优先，回退 common01/common02/commonW1）；`TryParseMaterialTilingSuffix` 等（往返恢复烘焙平铺） |
-| **LayoutEditorRecipeKnowledge.cs** | `BridgeSchemaVersion=5`；步骤→厨具表 `StepUtensils`；`ComputeCookingGroups`（与前端/build-catalog.mjs **三处镜像**）；`TryGetOriginal`（recipe-knowledge.json） |
+| **LayoutEditorRecipeKnowledge.cs** | `BridgeSchemaVersion=5`；步骤→厨具表 `StepUtensils`；`ComputeCookingGroups`（与前端/build-catalog.mjs **三处镜像**）；`TryGetOriginal`/`TryGetOriginalEntry`（recipe-knowledge.json；条目含 step/ingredients + 扩展字段 composition/plating/orderable——官方菜谱经 ScanRecipes 下发 compositionIds/platingStep 给前端，与 build-catalog.mjs 静态输出对齐；orderable=true 解除 score<=0 的 intermediate 标记，如 DLC08_chickenburger 单点鸡肉汉堡） |
 | **LayoutEditorManualLookup.cs** | 中英文名：`names-dictionary.json` → 使用手册.md 表 → id 兜底；`TryGetLevelSetName` |
 | **LayoutEditorCustomIngredients.cs** | common03/commonW1/commonW2 引用与依赖：`EnsureDocCopies`（写回前校验 + 收集 `_pendingDocBundles`）、`SyncLevelInfo/EnsureWebDependencies`（**只注册 StreamingAssets 存在的 bundle**）、`SetNeedsCommonW2Bundle`（导出 zip 按需携带判定） |
 
@@ -290,7 +291,7 @@ flowchart TD
 
 | 文件 | 详细说明 |
 |---|---|
-| **LayoutEditorSetExporter.cs** | 见 §6 导出流程。`StartExport`（立即应答 + delayCall）、`RunExportCore`（prepare→clean→build→package→zip 五阶段）、`ActiveSceneUsesCustomStub`（tag 前缀表 `CustomStubTagPrefixes`：RandomCrate\|/TimedSwitch\|/PushablePot\|/SwitchReenable\|/WorldMapDressing\|/UtensilTiming\|）、静态钩子 `BeforeBuild` |
+| **LayoutEditorSetExporter.cs** | 见 §6 导出流程。`StartExport`（立即应答 + delayCall）、`RunExportCore`（prepare→clean→build→package→zip 五阶段）、`ActiveSceneUsesCustomStub`（tag 前缀表 `CustomStubTagPrefixes`：RandomCrate\|/TimedSwitch\|/PushablePot\|/SwitchReenable\|/WorldMapDressing\|/UtensilTiming\|/CameraOffset\|/TravelatorReverse\|）、静态钩子 `BeforeBuild` |
 | **LayoutEditorZipWriter.cs** | Unity 2017 .NET 3.5 无 ZipFile，手写 Local File Header + Central Directory + EOCD，store（无压缩）模式，UTF-8 文件名，CRC32 查表——AssetBundle 自带压缩，store 不显著增大体积 |
 | **LayoutStubDllBuilder.cs** | [InitializeOnLoad] 订阅 `BeforeBuild`；`StageSet(setName)` 把 `Library/ScriptAssemblies/Stub_<set>.dll` 复制为 `Assets/LevelSets/<set>/stub/Stub_<set>.dll.bytes`（TextAsset）并赋 bundle 名 `<set>/runtime`；`StageAllSetsQuiet`（DLL 比 .bytes 新即自动重打包）；导出时 throwOnStale 显式报错 |
 | **CustomStubCopyTool.cs** | 母本 `Assets/Editor/LayoutEditor/CustomStub/` → `Assets/LevelSets/<set>/stub/` 镜像拷贝（只复制 .cs 不复制 .meta：首拷生成新 GUID、重拷内容同步不动 .meta 保证场景脚本引用稳定）；生成 `Stub_<set>.asmdef`（references LevelEditorStub）；`IsConfigured/IsDrifted`、`SyncAllDrifted`、`EnsureRandomDispenserPrefab`（RandomDispenser 包装 prefab 幂等兜底） |
@@ -321,6 +322,7 @@ flowchart TD
 | **HotPot/PushableVoidFall.cs** | 5 点 footprint 支撑检测坠落；SetActive(false) 隐藏 + 5s 归位（对齐官方 ServerUtensilRespawnBehaviour） |
 | **HotPot/PushableVoidFallTarget.cs** | 载具标记（13 行） |
 | **Switch/TimedCookingSwitch.cs** | 灶台定时开关：开/关秒数循环切换 CookingRegion.enabled + 火焰 PFX；tag `TimedSwitch|1,on,off,s` |
+| **Travelator/TravelatorReverser.cs** | 自动步道定时反转（2026-09-13）：正/反秒数相位循环，相位翻转 = Travelator 物体 localRotation 绕 Y 追加 m_turnAngle 度（180=掉头，±90=转角，回来即转回烘焙朝向；推人方向 transform.right 派生 + 皮带模型/纹理朝向一起转动，非"倒放"；m_speed 与材质保持烘焙原值）；tag `TravelatorReverse|e,fwd,back,s[,angle]`（angle 缺省 180，兼容 4 段旧载体）；联机靠各端同配置相位天然同步 |
 | **Switch/SwitchReenable.cs** | 按钮轮询式自动复位（监听 TriggerDisableScript 下降沿补发 enableTrigger） |
 | **Terminal/TerminalGuard.cs** | 未绑定终端防线：禁 Interactable / ForwardTriggerToTarget / 晚挂载 CosmeticDecisions |
 | **UtensilTiming/UtensilTimingConfig.cs** | 编辑期权威配置组件（cook/burn/mix/over 四字段；tag 前缀 `UtensilTiming|`） |

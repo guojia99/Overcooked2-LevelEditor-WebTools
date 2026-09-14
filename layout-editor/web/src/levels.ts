@@ -176,12 +176,14 @@ async function renderSetList(app: HTMLElement): Promise<void> {
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn primary" id="new-set">+ 新建关卡集</button>
+      <button class="m-btn" id="export-deps" title="单独导出 OC2DIYLevelRuntimeWLoader 依赖包（Loader.dll + 统一运行时 + commonW1/W2）——装一次即可长期复用，只要版本不变">导出依赖包</button>
     </div>
     <div class="m-section-title">关卡集列表</div>
     <div class="m-grid">${cards || '<p class="muted">暂无关卡集</p>'}</div>
   `;
 
   document.getElementById("new-set")?.addEventListener("click", () => openCreateSetModal(app));
+  document.getElementById("export-deps")?.addEventListener("click", () => confirmExportDeps(app, sets));
   content.querySelectorAll<HTMLButtonElement>("[data-open]").forEach((b) =>
     b.addEventListener("click", () => void renderLevelList(app, b.dataset.open!))
   );
@@ -264,25 +266,40 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
   const prevVersion = (s.version || "").trim();
   openModal(
     `导出关卡集 · ${esc(display)}`,
-    `<p>将打包 <b>${esc(display)}</b>（${s.levelCount} 个关卡）的 AssetBundle 并生成可发布的 zip，<b>约需 3-5 分钟</b>。期间 Unity 会逐个保存场景并构建，请勿操作 Unity 或关闭本页。</p>
+    `<p>将打包 <b>${esc(display)}</b>（${s.levelCount} 个关卡）并生成可发布的 zip，<b>约需 3-5 分钟</b>（构建 AssetBundle）。构建期间请勿操作 Unity 或关闭本页。</p>
      <p class="modal-hint">发布新版本前建议更新版本号（当前 <code>v${esc(prevVersion || "0")}</code>，会写入 LevelSetInfo）：</p>
      <label class="m-field">版本号 version<input type="text" id="exp-set-version" autocomplete="off" placeholder="${esc(prevVersion || "0.1")}" value="${esc(prevVersion)}"></label>
-     <div class="m-section-title">CustomStub（随机食材箱等关卡代码）</div>
+     <label class="m-field" style="flex-direction:row;align-items:center;gap:8px;">
+       <input type="checkbox" id="exp-with-deps" checked style="width:auto;">
+       <span>同时携带依赖包（Loader.dll + 统一运行时 + commonW1/W2）</span>
+     </label>
+     <p class="modal-hint" id="exp-deps-hint"></p>
+     <div class="m-section-title">CustomStub 统一运行时</div>
      <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
      <div class="m-actions-row">
-       <button type="button" class="m-btn" id="exp-stub-copy">拷贝到关卡集</button>
-       <button type="button" class="m-btn" id="exp-stub-compile">编译 Stub DLL</button>
-     </div>
-     <p class="modal-hint">zip 内含 <code>levels/${esc(s.setName)}/</code>（关卡 bundle，按需含 runtime）、<code>commonW1</code>（问号图标库等）与 <code>OC2LevelRuntimeLoader.dll</code>（运行时注入插件）。将整个 zip <b>解压到游戏 <code>BepInEx/plugins/OC2DIYLevel/</code> 目录</b>即完成全部安装。</p>`,
+       <button type="button" class="m-btn" id="exp-stub-compile">编译 Runtime DLL</button>
+     </div>`,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>开始导出</button>`
   );
   wireExportStubTools(s.setName);
+  const depsChk = document.getElementById("exp-with-deps") as HTMLInputElement | null;
+  const depsHint = document.getElementById("exp-deps-hint");
+  const updateDepsHint = (): void => {
+    if (!depsHint) return;
+    depsHint.textContent = (depsChk?.checked ?? true)
+      ? `zip 含 OC2DIYLevel/levels/${s.setName}/（关卡 + requires.txt）+ OC2DIYLevelRuntimeWLoader/（依赖包）。新用户一步到位；解压到 BepInEx/plugins/。`
+      : `zip 只含 OC2DIYLevel/levels/${s.setName}/（关卡 + requires.txt）。适合已装依赖的用户日常更新关卡；依赖包可用列表上方「导出依赖包」单独获取。`;
+  };
+  depsChk?.addEventListener("change", updateDepsHint);
+  updateDepsHint();
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
     if (okBtn) okBtn.disabled = true;
     const versionInput = document.getElementById("exp-set-version") as HTMLInputElement | null;
     const newVersion = (versionInput?.value ?? "").trim();
+    const withDeps = (document.getElementById("exp-with-deps") as HTMLInputElement | null)?.checked ?? true;
+    const mode: "all" | "levels" = withDeps ? "all" : "levels";
     const startAt = Date.now();
     suspendBridgeWatch(); // 构建会阻塞 Unity 主线程泵，健康探测会误报掉线
     showBusy("正在启动导出…");
@@ -297,7 +314,7 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
           version: newVersion,
         });
       }
-      await api.startSetExport(s.setName);
+      await api.startSetExport(s.setName, mode);
       closeModal();
 
       // 轮询导出进度（状态端点由桥接监听线程直答，构建期间仍可响应）。
@@ -338,75 +355,124 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
   });
 }
 
-/** 导出弹窗内的 CustomStub 工具（拷贝/同步/编译 DLL；每个关卡集首次需拷贝一次）。
- *  写盘会触发 Unity 重编译与域重载（HTTP 连接重置属预期），故先容忍断连、
- *  再轮询 health 恢复，编译按钮进一步等 DLL 新鲜。 */
+/** 单独导出依赖包 OC2DIYLevelRuntimeWLoader（Loader.dll + 统一运行时 + commonW1/W2）。
+ *  不构建关卡场景，打包现成产物，秒级完成。装一次即可长期复用（版本不变时）。 */
+function confirmExportDeps(app: HTMLElement, sets: LevelSetInfo[]): void {
+  if (!sets || sets.length === 0) {
+    setStatus("请先创建至少一个关卡集（依赖包的 commonW2 携带按关卡集判定）。", false);
+    return;
+  }
+  // 依赖包不含任何关卡；后端需要一个已存在的关卡集名做 commonW2 携带判定与路径校验。
+  const anchorSet = sets[0].setName;
+  openModal(
+    "导出依赖包 · OC2DIYLevelRuntimeWLoader",
+    `<p>将<b>重新打包</b>依赖包（<code>OC2DIYLevelRuntimeWLoader/</code>：Loader.dll + 统一运行时 webcustomstub_runtime + <b>commonW1 + commonW2</b>），<b>不含任何关卡</b>。</p>
+     <p class="modal-hint">导出前会<b>删除 commonW1/commonW2 旧构建产物并重新打包</b>（杜绝遗留）；两个 common 包<b>无条件全部携带</b>（依赖包通用，不按单关卡判定）。</p>
+     <p class="modal-hint">解压到游戏 <code>BepInEx/plugins/</code> 目录即安装。<b>只要版本号不变，装一次即可长期复用</b>——之后更新关卡只需在关卡集上导出（可不带依赖）。</p>
+     <p class="modal-hint">需先「编译 Runtime DLL」产出 webcustomstub_runtime。</p>`,
+    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>导出依赖包</button>`
+  );
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+    const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
+    if (okBtn) okBtn.disabled = true;
+    const startAt = Date.now();
+    suspendBridgeWatch();
+    showBusy("正在导出依赖包…");
+    try {
+      await api.startSetExport(anchorSet, "deps");
+      closeModal();
+      const deadline = Date.now() + 15 * 60 * 1000;
+      for (;;) {
+        if (Date.now() > deadline) throw new Error("导出超时（5 分钟），请查看 Unity Console。");
+        await new Promise((r) => setTimeout(r, 1500));
+        let st: SetExportStatus;
+        try {
+          st = await api.fetchSetExportStatus();
+        } catch {
+          continue;
+        }
+        if (st.status === "error") throw new Error(st.error || "导出失败（详见 Unity Console）。");
+        if (st.status === "done") {
+          setBusyMessage("导出完成，正在下载 zip…");
+          const res = await api.downloadSetExportZip(anchorSet, st.zipFileName);
+          const url = URL.createObjectURL(res.blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = res.fileName;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          setStatus(`已导出依赖包 ${res.fileName}（${st.fileCount} 个文件），已开始下载`);
+          break;
+        }
+        const hint = st.message || EXPORT_PHASE_HINT[st.phase] || "导出中…";
+        setBusyMessage(`${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`);
+      }
+    } catch (e) {
+      setStatus((e as Error).message, false);
+      if (okBtn) okBtn.disabled = false;
+    } finally {
+      resumeBridgeWatch();
+      hideBusy();
+    }
+  });
+}
+
+/** 导出弹窗内的 CustomStub 统一运行时工具（仅「编译 Runtime DLL」）。
+ *  统一单程序集重构后不再有「拷贝到关卡集/同步」（每集副本链已废除），
+ *  只需编译打包唯一的 WebCustomStubRuntime。写盘会触发 Unity 重编译与域重载
+ *  （HTTP 连接重置属预期），故先容忍断连、再轮询 health 恢复、等 DLL 新鲜。 */
 function wireExportStubTools(setName: string): void {
   const statusEl = document.getElementById("exp-stub-status");
-  const copyBtn = document.getElementById("exp-stub-copy") as HTMLButtonElement | null;
   const compileBtn = document.getElementById("exp-stub-compile") as HTMLButtonElement | null;
-  if (!statusEl || !copyBtn || !compileBtn) return;
+  if (!statusEl || !compileBtn) return;
 
   const setBusyState = (busy: boolean): void => {
-    copyBtn.disabled = busy;
     compileBtn.disabled = busy;
   };
 
   const refreshStatus = async (): Promise<void> => {
     try {
       const st = await api.fetchSetStubStatus(setName);
-      copyBtn.textContent = st.configured ? "同步更新" : "拷贝到关卡集";
-      if (!st.configured) {
-        statusEl.textContent = "未拷贝 —— 关卡含随机食材箱等玩法时需先「拷贝到关卡集」（每集仅首次需要），普通关卡可直接导出。";
-        return;
-      }
-      const parts = [`已配置 ${st.asmName}`];
-      parts.push(st.drifted ? "副本与母本有漂移，建议「同步更新」" : "副本与母本一致");
-      parts.push(
-        st.dllState === "fresh" ? "DLL 已就绪"
-        : st.dllState === "stale" ? "DLL 过期（源码已修改，需重新编译）"
-        : st.dllState === "missing" ? "DLL 未编译（点「编译 Stub DLL」）"
-        : "无 stub 源码"
-      );
-      statusEl.textContent = parts.join(" · ");
+      statusEl.textContent =
+        st.dllState === "fresh" ? `统一运行时 ${st.asmName} 已就绪（DLL fresh）`
+        : st.dllState === "stale" ? "统一运行时 DLL 过期（母本已修改，点「编译 Runtime DLL」）"
+        : st.dllState === "missing" ? "统一运行时 DLL 未编译（点「编译 Runtime DLL」）"
+        : "统一运行时状态未知";
     } catch (e) {
       statusEl.textContent = `CustomStub 工具不可用：${(e as Error).message}（不影响普通关卡导出）`;
-      copyBtn.disabled = true;
       compileBtn.disabled = true;
     }
   };
 
-  /** 等域重载结束（health 恢复）；waitFreshDll=true 时再等 DLL 变 fresh。 */
-  const waitSettled = async (waitFreshDll: boolean): Promise<void> => {
+  /** 等域重载结束（health 恢复）后再等 DLL 变 fresh。 */
+  const waitSettled = async (): Promise<void> => {
     const deadline = Date.now() + 3 * 60 * 1000;
     for (;;) {
       if (Date.now() > deadline) throw new Error("等待 Unity 编译超时（3 分钟），请查看 Unity Console。");
       await new Promise((r) => setTimeout(r, 1500));
       if (!(await api.fetchHealth())) continue; // 域重载中，连接重置属预期
-      if (!waitFreshDll) return;
       try {
         const st = await api.fetchSetStubStatus(setName);
-        if (st.dllState === "fresh" || st.dllState === "noStub") return;
+        if (st.dllState === "fresh") return;
       } catch {
         // 服务尚未完全就绪，继续等
       }
     }
   };
 
-  const run = async (compile: boolean): Promise<void> => {
+  const run = async (): Promise<void> => {
     setBusyState(true);
     suspendBridgeWatch(); // 域重载期间健康探测会误报掉线
-    statusEl.textContent = compile
-      ? "编译 Stub DLL 中（同步母本 → Unity 编译 → 打包 runtime，稍候自动刷新）…"
-      : "拷贝/同步中（可能触发 Unity 重编译，稍候自动刷新）…";
+    statusEl.textContent = "编译 Runtime DLL 中（Unity 编译 → 打包 webcustomstub_runtime，稍候自动刷新）…";
     try {
       let msg = "";
       try {
-        msg = compile ? await api.stubCompileDll(setName) : await api.stubCopyToSet(setName);
+        msg = await api.stubCompileDll(setName);
       } catch (e) {
         if (!(e instanceof TypeError)) throw e; // 仅容忍域重载造成的网络中断
       }
-      await waitSettled(compile);
+      await waitSettled();
       statusEl.textContent = msg ? `完成：${msg}` : "完成";
     } catch (e) {
       statusEl.textContent = `失败：${(e as Error).message}`;
@@ -417,8 +483,7 @@ function wireExportStubTools(setName: string): void {
     }
   };
 
-  copyBtn.addEventListener("click", () => void run(false));
-  compileBtn.addEventListener("click", () => void run(true));
+  compileBtn.addEventListener("click", () => void run());
   void refreshStatus();
 }
 

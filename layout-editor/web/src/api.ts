@@ -601,13 +601,16 @@ export async function updateSetInfo(body: SetInfoUpdateBody): Promise<void> {
   await readApiJson<{ ok?: boolean }>(r);
 }
 
-/** 启动关卡集导出（打包 AssetBundle → zip）。任务在 Unity 后台异步执行，
- *  进度用 fetchSetExportStatus 轮询；打包约需 3-5 分钟。 */
-export async function startSetExport(setName: string): Promise<void> {
+/** 启动关卡集导出（打包 → zip）。mode：all（关卡+依赖，默认）| levels（仅关卡集）
+ *  | deps（仅依赖包）。任务在 Unity 后台异步执行，进度用 fetchSetExportStatus 轮询。 */
+export async function startSetExport(
+  setName: string,
+  mode: "all" | "levels" | "deps" = "all"
+): Promise<void> {
   const r = await fetch("/api/set/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ setName }),
+    body: JSON.stringify({ setName, mode }),
   });
   await readApiJson<{ ok?: boolean }>(r);
 }

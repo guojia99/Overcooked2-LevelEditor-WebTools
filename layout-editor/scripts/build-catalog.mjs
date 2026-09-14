@@ -1338,6 +1338,8 @@ function loadKnowledge() {
  *  面粉系菜谱（蛋糕/松饼/月饼/派/布丁）的搅拌分组判定用。 */
 const FLOUR_INGREDIENTS = new Set(["FlourSO", "dlc09_flour", "dlc13_flour"]);
 const EGG_INGREDIENTS = new Set(["EggSO", "DLC05_Egg", "dlc09_egg", "dlc13_egg"]);
+// 汉堡类需要煎制的肉排/鸡排叶食材（镜像 recipeGroups.ts BURGER_COOKED_INGREDIENTS）
+const BURGER_COOKED_INGREDIENTS = new Set(["MeatSO", "dlc04_meat", "dlc10_meat", "dlc08_chicken", "NuggetChickenSO"]);
 const STEP_UTENSILS = {
   Pot: ["Cooker", "Pot"],
   FryingPan: ["Cooker", "FryPan"],
@@ -1416,8 +1418,15 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
       const mainIngs = [];
       const keepBoxes = [];
       const subGroups = new Map();
-      const pushSubGroup = (step, compId, ings) => {
-        const key = step + "::" + compId;
+      // 烹饪类子菜谱按出现次数计数：重复的煎/炸子菜谱（如两块煎肉排）各自成锅。
+      const cookOccur = new Map();
+      const pushSubGroup = (step, compId, ings, splitEach) => {
+        let key = step + "::" + compId;
+        if (splitEach) {
+          const n = (cookOccur.get(key) || 0) + 1;
+          cookOccur.set(key, n);
+          key = key + "#" + n;
+        }
         if (!subGroups.has(key)) {
           subGroups.set(key, { step, utensils: STEP_UTENSILS[step] || [], ingredients: [] });
         }
@@ -1439,7 +1448,8 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
             for (const ing of sub.ingredients) compPlain.push(ing);
             continue;
           }
-          pushSubGroup(subStep, compId, sub.ingredients);
+          // 纯烹饪类子菜谱（煎肉排/炸物）：每次出现各自成锅，不并入同组
+          pushSubGroup(subStep, compId, sub.ingredients, !!subCook && !sub.mixing);
         } else {
           compPlain.push(compId);
         }
@@ -1547,6 +1557,12 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
     for (const ing of ingredients) {
       prep.set(ing, ing === "frankfurter" || ing === "dlc11_frankfurter" || ing === "DLC08_Frankfurter" ? "Pot" : ing === "dlc08_onion" || ing === "dlc11_onion" ? "FryingPan" : "");
     }
+  } else if (type === "burger") {
+    // 汉堡：只有肉排/鸡排需要煎（FryingPan）；面包/菠萝/生菜/番茄/黄瓜/芝士保持生。
+    // 多块肉排各自成锅（splitPerIngredient 处理）。
+    for (const ing of ingredients) {
+      prep.set(ing, BURGER_COOKED_INGREDIENTS.has(ing) ? "FryingPan" : "");
+    }
   } else if (type === "hotchocolate") {
     // 全程只有牛奶+巧克力需要煮；奶油/棉花糖是单独的（无需烹饪）
     for (const ing of ingredients) {
@@ -1599,7 +1615,7 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
   }
 
   const splitPerIngredient =
-    (finalStep === "DeepFatFryer" && type !== "donut") || (type === "fry" && !isCookStep(finalStep)) || (finalStep === "Pot" && ingredients.includes("PastaSO"));
+    (finalStep === "DeepFatFryer" && type !== "donut") || (type === "fry" && !isCookStep(finalStep)) || (finalStep === "Pot" && ingredients.includes("PastaSO")) || type === "burger";
 
   const result = [];
   if (groupMap.has("")) result.push({ step: "", utensils: [], ingredients: groupMap.get("") });
@@ -1764,7 +1780,10 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
     }
     const group = foodGroupOf(entry.assetPath);
     const rawScore = fields.score || 0;
-    const score = entry.assetPath.includes("/common03/") && rawScore > 0 ? estimateCommon03RecipeScore(id, step, ings) : rawScore;
+    // orderable 覆盖（knowledge 显式标记，如 DLC08_chickenburger 单点鸡肉汉堡）：
+    // score<=0 的官方菜谱默认当中间产物，标记后按估算分上架、可点单。
+    const orderable = !!k.orderable;
+    const score = entry.assetPath.includes("/common03/") && (rawScore > 0 || orderable) ? estimateCommon03RecipeScore(id, step, ings) : rawScore;
     list.push({
       guid: entry.guid,
       id,
@@ -1782,7 +1801,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
       isCustom: false,
       group,
       type: recipeTypeOf(id),
-      intermediate: score <= 0,
+      intermediate: score <= 0 && !orderable,
     });
   }
 

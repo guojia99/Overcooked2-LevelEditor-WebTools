@@ -149,8 +149,13 @@ export function extraStubDetailHtml(item: EditorItem): string {
       const timeTxt = timeParts.length ? ` · ${timeParts.join(" · ")}` : "";
       return `<dt>锅具</dt><dd>最多 ${(cu.capacity ?? 0) > 0 ? cu.capacity : defaultUtensilCapacity(item)} 个食材${timeTxt} · 额外食材：${allowed > 0 ? `${allowed} 种` : "无（处理所有主线食材）"}（右键直接修改）</dd>`;
     }
-    case "Travelator":
-      return `<dt>移动地板</dt><dd>速度 ${(item.travelator?.speed ?? 2.5).toFixed(2)}（右键直接修改）</dd>`;
+    case "Travelator": {
+      const tr = item.travelator?.timedReverse;
+      const revTxt = tr
+        ? ` · 定时反转${tr.enabled ? `：正 ${tr.forwardSeconds}s / 反 ${tr.backwardSeconds}s · 转 ${tr.turnAngle ?? 180}°${tr.startReversed ? " · 初始反向" : ""}` : "（已停用）"}`
+        : "";
+      return `<dt>移动地板</dt><dd>速度 ${(item.travelator?.speed ?? 2.5).toFixed(2)}${revTxt}（右键直接修改）</dd>`;
+    }
     case "Flamethrower":
       return `<dt>喷火器</dt><dd>烹饪速率 ${(item.flamethrower?.cookingRate ?? 4).toFixed(1)}（右键直接修改）</dd>`;
     case "CleanPlateStack":

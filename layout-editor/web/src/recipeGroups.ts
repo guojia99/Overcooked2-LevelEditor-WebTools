@@ -56,12 +56,18 @@ export const STEP_UTENSILS: Record<string, string[]> = {
  *  - DLC8 汉堡胚 → 核心汉堡面包（ChoppedBunSO）：二者携带的 IngredientOrderNode
  *    uID 同为 16088（bundle 实测），订单匹配完全等价；套餐统一用核心面包，
  *    不再依赖 bundle359 的 dlc08_choppedbun。
+ *    · 汉堡大全（commonW2）成品的面皮组成用真 DLC8 面包（dlc08_choppedbun，
+ *      资产文件名 DLC08_ChoppedBun），但建箱同样归一到核心面包 ChoppedBunSO
+ *      （uID 16088 等价）——W1/W2 不自维护食材，建箱一律走 common1-3 的核心面包，
+ *      避免因建箱多引入 bundle359；面皮外观仍是 DLC8。
  *  - DLC10 火锅/拼盘食材 → DLC04 版（uID 718144~718150 一一相等，换皮复用）：
  *    dlc10_* 建箱统一映射到无前缀/dlc04 版（bundle226），少一个 bundle 依赖；
  *    混选两套换皮菜谱时也只建一套箱（uID 等价，一箱即匹配两套订单）。 */
 export const NODE_INGREDIENT_SOURCES: Record<string, string> = {
   dlc11onion_salad: "dlc11_onion_salad",
   dlc08_bun: "ChoppedBunSO",
+  DLC08_ChoppedBun: "ChoppedBunSO",
+  dlc08_choppedbun: "ChoppedBunSO",
   dlc10_bokchoy: "bokchoy",
   dlc10_meat: "dlc04_meat",
   dlc10_orange: "dlc04_orange",
@@ -72,6 +78,16 @@ export const NODE_INGREDIENT_SOURCES: Record<string, string> = {
 };
 
 const COOK_STEPS = new Set(Object.keys(STEP_UTENSILS));
+
+/** 汉堡类需要煎制（FryingPan）的肉排/鸡排叶食材；其余（面包/菠萝/生菜/番茄/
+ *  黄瓜/芝士等）在汉堡里保持生。每块肉排各自成锅（见 splitPerIngredient）。 */
+const BURGER_COOKED_INGREDIENTS = new Set<string>([
+  "MeatSO",
+  "dlc04_meat",
+  "dlc10_meat",
+  "dlc08_chicken",
+  "NuggetChickenSO",
+]);
 
 /** True when the step id is a real cooking step (pot, pan, steamer, …). */
 export function isCookStepLike(s: string | undefined): boolean {
@@ -140,9 +156,18 @@ export function deriveCompositionGroups(
   // 子菜谱为 Mixed 类型（mixing）时即使无 cookingStep 也按 MixingBowl 成组（搅拌）。
   const groups: CookingGroup[] = [];
   const subGroups = new Map<string, CookingGroup>();
-  const pushSubGroup = (step: string, compId: string, ings: string[], src?: CookingGroup): void => {
+  // 烹饪类子菜谱按出现次数计数：重复的煎/炸子菜谱（如两块煎肉排 PanfriedBeef）
+  // 各自成一锅，不并入同一组（cookOccur 使 key 唯一）。
+  const cookOccur = new Map<string, number>();
+  const pushSubGroup = (step: string, compId: string, ings: string[], src?: CookingGroup, splitEach?: boolean): void => {
     // 同一子菜谱重复出现（数量叠加）时并入同一组；不同子菜谱即使步骤相同也分开。
-    const key = `${step}::${compId}`;
+    // splitEach=true（烹饪类子菜谱）：每次出现各自成组（两块煎肉排 → 两个煎锅）。
+    let key = `${step}::${compId}`;
+    if (splitEach) {
+      const n = (cookOccur.get(key) ?? 0) + 1;
+      cookOccur.set(key, n);
+      key = `${key}#${n}`;
+    }
     let g = subGroups.get(key);
     if (!g) {
       g = { step, utensils: STEP_UTENSILS[step] ?? [], ingredients: [] };
@@ -172,11 +197,12 @@ export function deriveCompositionGroups(
             // 全生食材组：并入普通食材，不单独成框（与拍平行为一致）
             for (const ing of g.ingredients) plain.push(ing);
           } else {
-            pushSubGroup(g.step, compId, g.ingredients, g);
+            pushSubGroup(g.step, compId, g.ingredients, g, COOK_STEPS.has(g.step));
           }
         }
       } else if (cookStep) {
-        pushSubGroup(cookStep, compId, sub.ingredients!);
+        // 烹饪类子菜谱（煎肉排/炸物）：每次出现各自成锅
+        pushSubGroup(cookStep, compId, sub.ingredients!, undefined, true);
       } else {
         for (const ing of sub.ingredients!) plain.push(ing);
       }
@@ -327,6 +353,12 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
     for (const ing of ingredients) {
       prep.set(ing, ing === "frankfurter" || ing === "dlc11_frankfurter" || ing === "DLC08_Frankfurter" ? "Pot" : ing === "dlc08_onion" || ing === "dlc11_onion" ? "FryingPan" : "");
     }
+  } else if (r.type === "burger") {
+    // 汉堡：只有肉排/鸡排需要煎（FryingPan）；面包/菠萝/生菜/番茄/黄瓜/芝士保持生。
+    // 多块肉排各自成锅（splitPerIngredient 处理），不合并到一个煎锅。
+    for (const ing of ingredients) {
+      prep.set(ing, BURGER_COOKED_INGREDIENTS.has(ing) ? "FryingPan" : "");
+    }
   } else if (r.type === "hotchocolate") {
     // 全程只有牛奶+巧克力需要煮；奶油/棉花糖是单独的（无需烹饪）
     for (const ing of ingredients) {
@@ -380,7 +412,7 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   }
 
   const splitPerIngredient =
-    (finalStep === "DeepFatFryer" && r.type !== "donut") || (r.type === "fry" && !isCookStep(finalStep)) || (finalStep === "Pot" && has("PastaSO"));
+    (finalStep === "DeepFatFryer" && r.type !== "donut") || (r.type === "fry" && !isCookStep(finalStep)) || (finalStep === "Pot" && has("PastaSO")) || r.type === "burger";
 
   const result: CookingGroup[] = [];
   const raw = groupMap.get("");

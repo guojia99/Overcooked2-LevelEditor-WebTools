@@ -600,18 +600,22 @@ public class LayoutEditorHttpServer
                     return;
                 }
 
-                // 场景写回完成后：默认触发两个自动填充 —— Fill All AudioDirectorySOs 与
-                // Auto Fill All Ingredients，确保填充是基于"写完全部"之后的最终状态。
-        if (levelSet != null && levelInfo != null)
-                {
-                     LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
-                     LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
-                     // 填充可能引入新的食材/音频目录引用，覆盖重建 dependencies 并合并音频 bundle。
-                     LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
-                     LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
-                     EditorUtility.SetDirty(levelInfo);
-                     AssetDatabase.SaveAssets();
-                 }
+                 // 场景写回完成后：默认触发两个自动填充 —— Fill All AudioDirectorySOs 与
+                 // Auto Fill All Ingredients，确保填充是基于"写完全部"之后的最终状态。
+         if (levelSet != null && levelInfo != null)
+                 {
+                      LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
+                      LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
+                      // 烹饪步骤兜底：菜谱用到的 cookingStepSO（如 DLC 的 GriddlePan）未登记
+                      // 进 allCookingSteps 时，装盘反序列化会 NRE（汉堡模型不显示）——
+                      // 写回时按菜谱重建一次，存量关卡写回即自愈。
+                      LayoutEditorCatalogApi.SyncCookingStepsFromSelectedRecipes(levelInfo);
+                      // 填充可能引入新的食材/音频目录引用，覆盖重建 dependencies 并合并音频 bundle。
+                      LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
+                      LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
+                      EditorUtility.SetDirty(levelInfo);
+                      AssetDatabase.SaveAssets();
+                  }
 
                  // 写回后 CustomStub 守卫：场景实际用到 stub 组件时检查副本漂移/DLL
                  // 新鲜度，漂移自动同步母本并触发编译（先应答后 Refresh，防域重载截断响应）。
@@ -769,7 +773,9 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<SetExportStartDto>(body);
-                var err = LayoutEditorSetExporter.StartExport(dto != null ? dto.setName : null);
+                var err = LayoutEditorSetExporter.StartExport(
+                    dto != null ? dto.setName : null,
+                    dto != null ? dto.mode : "all");
                 WriteAdminResult(response, err);
                 return;
             }

@@ -844,8 +844,8 @@
     },
     {
       "id": "DLC08_ChoppedBun",
-      "zh": "切好的面包",
-      "en": "Chopped Bun"
+      "zh": "汉堡面包（DLC8）",
+      "en": "Chopped Bun (DLC8)"
     },
     {
       "id": "DLC08_Donut_chocolate",
@@ -4354,8 +4354,8 @@
     },
     {
       "id": "dlc08_cheese_sticks",
-      "zh": "DLC8 cheese sticks",
-      "en": "dlc08 cheese sticks"
+      "zh": "芝士条",
+      "en": "Cheese Sticks"
     },
     {
       "id": "dlc08_cheesesticks",
@@ -4369,8 +4369,8 @@
     },
     {
       "id": "dlc08_choppedbun",
-      "zh": "DLC8 choppedbun",
-      "en": "dlc08 choppedbun"
+      "zh": "汉堡面包（DLC8）",
+      "en": "Chopped Bun (DLC8)"
     },
     {
       "id": "dlc08_cleantraystack",
@@ -6749,12 +6749,12 @@
     },
     {
       "id": "m_dlc08_barbell_01",
-      "zh": "DLC8 barbell 1",
+      "zh": "DLC8 杠铃 1",
       "en": "dlc08 barbell 1"
     },
     {
       "id": "m_dlc08_bleachers_crowd_01",
-      "zh": "DLC8 bleachers crowd 1",
+      "zh": "DLC8 看台观众 1",
       "en": "dlc08 bleachers crowd 1"
     },
     {
@@ -6779,42 +6779,42 @@
     },
     {
       "id": "m_dlc08_gobstopper_01",
-      "zh": "DLC8 gobstopper 1",
+      "zh": "DLC8 硬糖球 1",
       "en": "dlc08 gobstopper 1"
     },
     {
       "id": "m_dlc08_gobstopper_02",
-      "zh": "DLC8 gobstopper 2",
+      "zh": "DLC8 硬糖球 2",
       "en": "dlc08 gobstopper 2"
     },
     {
       "id": "m_dlc08_gobstopper_03",
-      "zh": "DLC8 gobstopper 3",
+      "zh": "DLC8 硬糖球 3",
       "en": "dlc08 gobstopper 3"
     },
     {
       "id": "m_dlc08_kettlebell_01",
-      "zh": "DLC8 kettlebell 1",
+      "zh": "DLC8 壶铃 1",
       "en": "dlc08 kettlebell 1"
     },
     {
       "id": "m_dlc08_map_popcorn_01",
-      "zh": "DLC8 map popcorn 1",
+      "zh": "DLC8 地图爆米花 1",
       "en": "dlc08 map popcorn 1"
     },
     {
       "id": "m_dlc08_map_popcorn_02",
-      "zh": "DLC8 map popcorn 2",
+      "zh": "DLC8 地图爆米花 2",
       "en": "dlc08 map popcorn 2"
     },
     {
       "id": "m_dlc08_map_popcorn_03",
-      "zh": "DLC8 map popcorn 3",
+      "zh": "DLC8 地图爆米花 3",
       "en": "dlc08 map popcorn 3"
     },
     {
       "id": "m_dlc08_map_popcorn_04",
-      "zh": "DLC8 map popcorn 4",
+      "zh": "DLC8 地图爆米花 4",
       "en": "dlc08 map popcorn 4"
     },
     {
@@ -6824,42 +6824,42 @@
     },
     {
       "id": "m_dlc08_popcorn_01",
-      "zh": "DLC8 popcorn 1",
+      "zh": "DLC8 爆米花 1",
       "en": "dlc08 popcorn 1"
     },
     {
       "id": "m_dlc08_popcorn_02",
-      "zh": "DLC8 popcorn 2",
+      "zh": "DLC8 爆米花 2",
       "en": "dlc08 popcorn 2"
     },
     {
       "id": "m_dlc08_popcorn_03",
-      "zh": "DLC8 popcorn 3",
+      "zh": "DLC8 爆米花 3",
       "en": "dlc08 popcorn 3"
     },
     {
       "id": "m_dlc08_popcorn_04",
-      "zh": "DLC8 popcorn 4",
+      "zh": "DLC8 爆米花 4",
       "en": "dlc08 popcorn 4"
     },
     {
       "id": "m_dlc08_popcorn_05",
-      "zh": "DLC8 popcorn 5",
+      "zh": "DLC8 爆米花 5",
       "en": "dlc08 popcorn 5"
     },
     {
       "id": "m_dlc08_popcorn_06",
-      "zh": "DLC8 popcorn 6",
+      "zh": "DLC8 爆米花 6",
       "en": "dlc08 popcorn 6"
     },
     {
       "id": "m_dlc08_popcorn_07",
-      "zh": "DLC8 popcorn 7",
+      "zh": "DLC8 爆米花 7",
       "en": "dlc08 popcorn 7"
     },
     {
       "id": "m_dlc08_popcorn_08",
-      "zh": "DLC8 popcorn 8",
+      "zh": "DLC8 爆米花 8",
       "en": "dlc08 popcorn 8"
     },
     {
@@ -6879,7 +6879,7 @@
     },
     {
       "id": "m_dlc08_ticketstub_01",
-      "zh": "DLC8 ticketstub 1",
+      "zh": "DLC8 票根 1",
       "en": "dlc08 ticketstub 1"
     },
     {
@@ -12339,17 +12339,17 @@
     },
     {
       "id": "p_dlc08_accordion_01",
-      "zh": "DLC8 accordion 1",
+      "zh": "DLC8 手风琴 1",
       "en": "dlc08 accordion 1"
     },
     {
       "id": "p_dlc08_accordion_02",
-      "zh": "DLC8 accordion 2",
+      "zh": "DLC8 手风琴 2",
       "en": "dlc08 accordion 2"
     },
     {
       "id": "p_dlc08_accordion_03",
-      "zh": "DLC8 accordion 3",
+      "zh": "DLC8 手风琴 3",
       "en": "dlc08 accordion 3"
     },
     {
@@ -12414,27 +12414,27 @@
     },
     {
       "id": "p_dlc08_balloons_01",
-      "zh": "DLC8 balloons 1",
+      "zh": "DLC8 气球 1",
       "en": "dlc08 balloons 1"
     },
     {
       "id": "p_dlc08_baloon_float",
-      "zh": "DLC8 baloon float",
+      "zh": "DLC8 气球花车",
       "en": "dlc08 baloon float"
     },
     {
       "id": "p_dlc08_bendy_mirror_01",
-      "zh": "DLC8 bendy mirror 1",
+      "zh": "DLC8 哈哈镜 1",
       "en": "dlc08 bendy mirror 1"
     },
     {
       "id": "p_dlc08_bleachers_01",
-      "zh": "DLC8 bleachers 1",
+      "zh": "DLC8 看台 1",
       "en": "dlc08 bleachers 1"
     },
     {
       "id": "p_dlc08_bleachers_02",
-      "zh": "DLC8 bleachers 2",
+      "zh": "DLC8 看台 2",
       "en": "dlc08 bleachers 2"
     },
     {
@@ -12599,7 +12599,7 @@
     },
     {
       "id": "p_dlc08_cloud_clump",
-      "zh": "DLC8 cloud clump",
+      "zh": "DLC8 云朵",
       "en": "dlc08 cloud clump"
     },
     {
@@ -12619,47 +12619,47 @@
     },
     {
       "id": "p_dlc08_drum_01",
-      "zh": "DLC8 drum 1",
+      "zh": "DLC8 鼓 1",
       "en": "dlc08 drum 1"
     },
     {
       "id": "p_dlc08_hanging_cloth_01",
-      "zh": "DLC8 hanging cloth 1",
+      "zh": "DLC8 挂布 1",
       "en": "dlc08 hanging cloth 1"
     },
     {
       "id": "p_dlc08_hanging_cloth_02",
-      "zh": "DLC8 hanging cloth 2",
+      "zh": "DLC8 挂布 2",
       "en": "dlc08 hanging cloth 2"
     },
     {
       "id": "p_dlc08_hanging_cloth_03",
-      "zh": "DLC8 hanging cloth 3",
+      "zh": "DLC8 挂布 3",
       "en": "dlc08 hanging cloth 3"
     },
     {
       "id": "p_dlc08_hanging_cloth_04",
-      "zh": "DLC8 hanging cloth 4",
+      "zh": "DLC8 挂布 4",
       "en": "dlc08 hanging cloth 4"
     },
     {
       "id": "p_dlc08_hay_01",
-      "zh": "DLC8 hay 1",
+      "zh": "DLC8 干草 1",
       "en": "dlc08 hay 1"
     },
     {
       "id": "p_dlc08_hay_02",
-      "zh": "DLC8 hay 2",
+      "zh": "DLC8 干草 2",
       "en": "dlc08 hay 2"
     },
     {
       "id": "p_dlc08_hay_03",
-      "zh": "DLC8 hay 3",
+      "zh": "DLC8 干草 3",
       "en": "dlc08 hay 3"
     },
     {
       "id": "p_dlc08_hay_bale_01",
-      "zh": "DLC8 hay bale 1",
+      "zh": "DLC8 干草垛 1",
       "en": "dlc08 hay bale 1"
     },
     {
@@ -12674,22 +12674,22 @@
     },
     {
       "id": "p_dlc08_hoop_01",
-      "zh": "DLC8 hoop 1",
+      "zh": "DLC8 钻圈 1",
       "en": "dlc08 hoop 1"
     },
     {
       "id": "p_dlc08_hoop_standing_01",
-      "zh": "DLC8 hoop standing 1",
+      "zh": "DLC8 立式钻圈 1",
       "en": "dlc08 hoop standing 1"
     },
     {
       "id": "p_dlc08_horn_01",
-      "zh": "DLC8 horn 1",
+      "zh": "DLC8 号角 1",
       "en": "dlc08 horn 1"
     },
     {
       "id": "p_dlc08_juggling_pin_01",
-      "zh": "DLC8 juggling pin 1",
+      "zh": "DLC8 杂耍棒 1",
       "en": "dlc08 juggling pin 1"
     },
     {
@@ -12724,7 +12724,7 @@
     },
     {
       "id": "p_dlc08_mallet_01",
-      "zh": "DLC8 mallet 1",
+      "zh": "DLC8 大锤 1",
       "en": "dlc08 mallet 1"
     },
     {
@@ -12744,22 +12744,22 @@
     },
     {
       "id": "p_dlc08_map_balloons_01",
-      "zh": "DLC8 map balloons 1",
+      "zh": "DLC8 地图气球 1",
       "en": "dlc08 map balloons 1"
     },
     {
       "id": "p_dlc08_map_balloons_02",
-      "zh": "DLC8 map balloons 2",
+      "zh": "DLC8 地图气球 2",
       "en": "dlc08 map balloons 2"
     },
     {
       "id": "p_dlc08_map_balloons_03",
-      "zh": "DLC8 map balloons 3",
+      "zh": "DLC8 地图气球 3",
       "en": "dlc08 map balloons 3"
     },
     {
       "id": "p_dlc08_map_balloons_04",
-      "zh": "DLC8 map balloons 4",
+      "zh": "DLC8 地图气球 4",
       "en": "dlc08 map balloons 4"
     },
     {
@@ -12829,7 +12829,7 @@
     },
     {
       "id": "p_dlc08_map_citybuilding_01",
-      "zh": "DLC8 map citybuilding 1",
+      "zh": "DLC8 地图城市建筑 1",
       "en": "dlc08 map citybuilding 1"
     },
     {
@@ -12859,12 +12859,12 @@
     },
     {
       "id": "p_dlc08_map_hay_bale_01",
-      "zh": "DLC8 map hay bale 1",
+      "zh": "DLC8 地图干草垛 1",
       "en": "dlc08 map hay bale 1"
     },
     {
       "id": "p_dlc08_map_hay_bale_02",
-      "zh": "DLC8 map hay bale 2",
+      "zh": "DLC8 地图干草垛 2",
       "en": "dlc08 map hay bale 2"
     },
     {
@@ -12884,12 +12884,12 @@
     },
     {
       "id": "p_dlc08_map_hoop_01",
-      "zh": "DLC8 map hoop 1",
+      "zh": "DLC8 地图钻圈 1",
       "en": "dlc08 map hoop 1"
     },
     {
       "id": "p_dlc08_map_hoop_standing_01",
-      "zh": "DLC8 map hoop standing 1",
+      "zh": "DLC8 地图立式钻圈 1",
       "en": "dlc08 map hoop standing 1"
     },
     {
@@ -12904,62 +12904,62 @@
     },
     {
       "id": "p_dlc08_map_plants_02",
-      "zh": "DLC8 map plants 2",
+      "zh": "DLC8 地图植物 2",
       "en": "dlc08 map plants 2"
     },
     {
       "id": "p_dlc08_map_plants_03",
-      "zh": "DLC8 map plants 3",
+      "zh": "DLC8 地图植物 3",
       "en": "dlc08 map plants 3"
     },
     {
       "id": "p_dlc08_map_plants_04",
-      "zh": "DLC8 map plants 4",
+      "zh": "DLC8 地图植物 4",
       "en": "dlc08 map plants 4"
     },
     {
       "id": "p_dlc08_map_plants_05",
-      "zh": "DLC8 map plants 5",
+      "zh": "DLC8 地图植物 5",
       "en": "dlc08 map plants 5"
     },
     {
       "id": "p_dlc08_map_plants_06",
-      "zh": "DLC8 map plants 6",
+      "zh": "DLC8 地图植物 6",
       "en": "dlc08 map plants 6"
     },
     {
       "id": "p_dlc08_map_plants_07",
-      "zh": "DLC8 map plants 7",
+      "zh": "DLC8 地图植物 7",
       "en": "dlc08 map plants 7"
     },
     {
       "id": "p_dlc08_map_plants_08",
-      "zh": "DLC8 map plants 8",
+      "zh": "DLC8 地图植物 8",
       "en": "dlc08 map plants 8"
     },
     {
       "id": "p_dlc08_map_podium_01",
-      "zh": "DLC8 map podium 1",
+      "zh": "DLC8 地图表演台 1",
       "en": "dlc08 map podium 1"
     },
     {
       "id": "p_dlc08_map_popcorn_01",
-      "zh": "DLC8 map popcorn 1",
+      "zh": "DLC8 地图爆米花 1",
       "en": "dlc08 map popcorn 1"
     },
     {
       "id": "p_dlc08_map_popcorn_02",
-      "zh": "DLC8 map popcorn 2",
+      "zh": "DLC8 地图爆米花 2",
       "en": "dlc08 map popcorn 2"
     },
     {
       "id": "p_dlc08_map_popcorn_03",
-      "zh": "DLC8 map popcorn 3",
+      "zh": "DLC8 地图爆米花 3",
       "en": "dlc08 map popcorn 3"
     },
     {
       "id": "p_dlc08_map_popcorn_04",
-      "zh": "DLC8 map popcorn 4",
+      "zh": "DLC8 地图爆米花 4",
       "en": "dlc08 map popcorn 4"
     },
     {
@@ -13039,7 +13039,7 @@
     },
     {
       "id": "p_dlc08_map_ticketstub_01",
-      "zh": "DLC8 map ticketstub 1",
+      "zh": "DLC8 地图票根 1",
       "en": "dlc08 map ticketstub 1"
     },
     {
@@ -13054,7 +13054,7 @@
     },
     {
       "id": "p_dlc08_map_wagon_01",
-      "zh": "DLC8 map wagon 1",
+      "zh": "DLC8 地图大篷车 1",
       "en": "dlc08 map wagon 1"
     },
     {
@@ -13079,17 +13079,17 @@
     },
     {
       "id": "p_dlc08_podium_01",
-      "zh": "DLC8 podium 1",
+      "zh": "DLC8 表演台 1",
       "en": "dlc08 podium 1"
     },
     {
       "id": "p_dlc08_popcorn_07",
-      "zh": "DLC8 popcorn 7",
+      "zh": "DLC8 爆米花 7",
       "en": "dlc08 popcorn 7"
     },
     {
       "id": "p_dlc08_popcorn_08",
-      "zh": "DLC8 popcorn 8",
+      "zh": "DLC8 爆米花 8",
       "en": "dlc08 popcorn 8"
     },
     {
@@ -13109,12 +13109,12 @@
     },
     {
       "id": "p_dlc08_scaffolding_01",
-      "zh": "DLC8 scaffolding 1",
+      "zh": "DLC8 脚手架 1",
       "en": "dlc08 scaffolding 1"
     },
     {
       "id": "p_dlc08_sconce_01",
-      "zh": "DLC8 sconce 1",
+      "zh": "DLC8 壁灯 1",
       "en": "dlc08 sconce 1"
     },
     {
@@ -13124,7 +13124,7 @@
     },
     {
       "id": "p_dlc08_stage_entrance_01",
-      "zh": "DLC8 stage entrance 1",
+      "zh": "DLC8 舞台入口 1",
       "en": "dlc08 stage entrance 1"
     },
     {
@@ -13134,42 +13134,42 @@
     },
     {
       "id": "p_dlc08_string_lights_01",
-      "zh": "DLC8 string lights 1",
+      "zh": "DLC8 串灯 1",
       "en": "dlc08 string lights 1"
     },
     {
       "id": "p_dlc08_string_lights_02",
-      "zh": "DLC8 string lights 2",
+      "zh": "DLC8 串灯 2",
       "en": "dlc08 string lights 2"
     },
     {
       "id": "p_dlc08_string_lights_03",
-      "zh": "DLC8 string lights 3",
+      "zh": "DLC8 串灯 3",
       "en": "dlc08 string lights 3"
     },
     {
       "id": "p_dlc08_string_lights_04",
-      "zh": "DLC8 string lights 4",
+      "zh": "DLC8 串灯 4",
       "en": "dlc08 string lights 4"
     },
     {
       "id": "p_dlc08_string_lights_05",
-      "zh": "DLC8 string lights 5",
+      "zh": "DLC8 串灯 5",
       "en": "dlc08 string lights 5"
     },
     {
       "id": "p_dlc08_string_lights_06",
-      "zh": "DLC8 string lights 6",
+      "zh": "DLC8 串灯 6",
       "en": "dlc08 string lights 6"
     },
     {
       "id": "p_dlc08_string_lights_07",
-      "zh": "DLC8 string lights 7",
+      "zh": "DLC8 串灯 7",
       "en": "dlc08 string lights 7"
     },
     {
       "id": "p_dlc08_string_lights_08",
-      "zh": "DLC8 string lights 8",
+      "zh": "DLC8 串灯 8",
       "en": "dlc08 string lights 8"
     },
     {
@@ -13199,17 +13199,17 @@
     },
     {
       "id": "p_dlc08_wagon_01",
-      "zh": "DLC8 wagon 1",
+      "zh": "DLC8 大篷车 1",
       "en": "dlc08 wagon 1"
     },
     {
       "id": "p_dlc08_wagon_02",
-      "zh": "DLC8 wagon 2",
+      "zh": "DLC8 大篷车 2",
       "en": "dlc08 wagon 2"
     },
     {
       "id": "p_dlc08_wagon_candy_01",
-      "zh": "DLC8 wagon candy 1",
+      "zh": "DLC8 糖果车 1",
       "en": "dlc08 wagon candy 1"
     },
     {
@@ -13219,7 +13219,7 @@
     },
     {
       "id": "p_dlc08_wagon_popcorn_01",
-      "zh": "DLC8 wagon popcorn 1",
+      "zh": "DLC8 爆米花车 1",
       "en": "dlc08 wagon popcorn 1"
     },
     {

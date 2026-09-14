@@ -24,6 +24,11 @@ public static class LayoutEditorRecipeKnowledge
     {
         "EggSO", "DLC05_Egg", "dlc09_egg", "dlc13_egg"
     };
+    // 汉堡类需要煎制的肉排/鸡排叶食材（镜像 recipeGroups.ts BURGER_COOKED_INGREDIENTS）。
+    private static readonly HashSet<string> BurgerCookedIngredients = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "MeatSO", "dlc04_meat", "dlc10_meat", "dlc08_chicken", "NuggetChickenSO"
+    };
 
     /// <summary>Utensil / workstation sets per cooking step (mirrors STEP_UTENSILS in build-catalog.mjs
     ///  and the web frontend). First entry is the station, last entry the actual cooking vessel.</summary>
@@ -75,16 +80,31 @@ public static class LayoutEditorRecipeKnowledge
     ///  - 意面：意面煮，其余食材各自煎（分开成组）。
     ///  - 炸物：所有食材分别炸（分开成组）。
     ///  - 面糊/面团（含面粉）：面粉鸡蛋搅拌，其余进最终锅具；最终锅具图标作为标记组追加。 </summary>
+    /// <summary>烹饪类子菜谱按出现次数计数（split 拆锅用），每次 ComputeCookingGroups
+    ///  组成分支开始时清空。 </summary>
+    private static readonly Dictionary<string, int> s_cookOccur = new Dictionary<string, int>(StringComparer.Ordinal);
+
     /// <summary>组成展开子组累加：key "step::compId"，同一子菜谱重复出现并入同一组，
-    ///  不同子菜谱即使步骤相同也分开（顺序由 subOrder 保持）。 </summary>
+    ///  不同子菜谱即使步骤相同也分开（顺序由 subOrder 保持）。
+    ///  splitEach=true（纯烹饪类子菜谱，如两块煎肉排）：每次出现各自成组（key 追加 #n），
+    ///  显示为两口锅。 </summary>
     private static void AddCompSubGroup(
         Dictionary<string, List<string>> subGroups,
         List<string> subOrder,
         string step,
         string compId,
-        string[] ings)
+        string[] ings,
+        bool splitEach)
     {
         var key = step + "::" + compId;
+        if (splitEach)
+        {
+            int n;
+            s_cookOccur.TryGetValue(key, out n);
+            n += 1;
+            s_cookOccur[key] = n;
+            key = key + "#" + n;
+        }
         List<string> lst;
         if (!subGroups.TryGetValue(key, out lst))
         {
@@ -96,6 +116,16 @@ public static class LayoutEditorRecipeKnowledge
             return;
         foreach (var ing in ings)
             lst.Add(ing);
+    }
+
+    private static void AddCompSubGroup(
+        Dictionary<string, List<string>> subGroups,
+        List<string> subOrder,
+        string step,
+        string compId,
+        string[] ings)
+    {
+        AddCompSubGroup(subGroups, subOrder, step, compId, ings, false);
     }
 
     public static RecipeCookingGroupDto[] ComputeCookingGroups(RecipeEntryDto recipe, List<RecipeEntryDto> allRecipes)
@@ -186,6 +216,7 @@ public static class LayoutEditorRecipeKnowledge
                 // subOrder 记录分组顺序，最终统一转成 DTO。
                 var subGroups = new Dictionary<string, List<string>>(StringComparer.Ordinal);
                 var subOrder = new List<string>();
+                s_cookOccur.Clear();
                 foreach (var compId in recipe.compositionIds)
                 {
                     if (string.IsNullOrEmpty(compId))
@@ -210,7 +241,8 @@ public static class LayoutEditorRecipeKnowledge
                                 compPlain.Add(ing);
                             continue;
                         }
-                        AddCompSubGroup(subGroups, subOrder, subStep, compId, sub.ingredients);
+                        // 纯烹饪类子菜谱（煎肉排/炸物）：每次出现各自成锅，不并入同组
+                        AddCompSubGroup(subGroups, subOrder, subStep, compId, sub.ingredients, subCook != "" && !sub.mixing);
                     }
                     else
                     {
@@ -418,6 +450,13 @@ public static class LayoutEditorRecipeKnowledge
                     prep[ing] = "";
             }
         }
+        else if (type == "burger")
+        {
+            // 汉堡：只有肉排/鸡排需要煎（FryingPan）；面包/菠萝/生菜/番茄/黄瓜/芝士保持生。
+            // 多块肉排各自成锅（下方 splitPerIngredient 处理）。
+            foreach (var ing in ingredients)
+                prep[ing] = BurgerCookedIngredients.Contains(ing) ? "FryingPan" : "";
+        }
         else if (type == "hotchocolate")
         {
             // 全程只有牛奶+巧克力需要煮；奶油/棉花糖是单独的（无需烹饪）
@@ -505,7 +544,8 @@ public static class LayoutEditorRecipeKnowledge
 
         bool splitPerIngredient = (finalStep == "DeepFatFryer" && type != "donut") ||
             (type == "fry" && !IsCookStep(finalStep)) ||
-            (finalStep == "Pot" && Array.IndexOf(ingredients, "PastaSO") >= 0);
+            (finalStep == "Pot" && Array.IndexOf(ingredients, "PastaSO") >= 0) ||
+            type == "burger";
 
         var result = new List<RecipeCookingGroupDto>();
         List<string> raw;
@@ -546,6 +586,12 @@ public static class LayoutEditorRecipeKnowledge
     {
         public string Step;
         public string[] Ingredients;
+        /** 直接组成 id（食材/子菜谱混合，如 md_* 套餐 = 面包+煎肉排+炸薯条）；空 = 无组成信息。 */
+        public string[] Composition;
+        /** 装盘容器 id（Plate / Glass / Mug；"" = 无/未知）。 */
+        public string Plating;
+        /** score=0 但允许作为订单菜谱（如 DLC08_chickenburger 单点鸡肉汉堡）。 */
+        public bool Orderable;
     }
 
 #pragma warning disable 0649 // fields assigned by JsonUtility deserialization
@@ -564,6 +610,9 @@ public static class LayoutEditorRecipeKnowledge
         public string id;
         public string step;
         public string[] ingredients;
+        public string[] composition;
+        public string plating;
+        public bool orderable;
     }
 #pragma warning restore 0649
 
@@ -652,7 +701,14 @@ public static class LayoutEditorRecipeKnowledge
             {
                 if (r == null || string.IsNullOrEmpty(r.id))
                     continue;
-                originals[r.id] = new Entry { Step = r.step ?? "", Ingredients = r.ingredients ?? new string[0] };
+                originals[r.id] = new Entry
+                {
+                    Step = r.step ?? "",
+                    Ingredients = r.ingredients ?? new string[0],
+                    Composition = r.composition ?? new string[0],
+                    Plating = r.plating ?? "",
+                    Orderable = r.orderable,
+                };
             }
         }
 
@@ -736,6 +792,30 @@ public static class LayoutEditorRecipeKnowledge
         }
         step = "";
         ingredients = new string[0];
+        return false;
+    }
+
+    /// <summary>官方菜谱完整知识条目（步骤/叶食材/直接组成/装盘/可点单覆盖）。
+    ///  供 ScanRecipes 下发 compositionIds/platingStep 给前端（与 build-catalog.mjs 静态输出对齐）。</summary>
+    public static bool TryGetOriginalEntry(string id, out string step, out string[] ingredients,
+        out string[] composition, out string plating, out bool orderable)
+    {
+        EnsureLoaded();
+        Entry e;
+        if (id != null && _originals.TryGetValue(id, out e))
+        {
+            step = e.Step;
+            ingredients = e.Ingredients;
+            composition = e.Composition ?? new string[0];
+            plating = e.Plating ?? "";
+            orderable = e.Orderable;
+            return true;
+        }
+        step = "";
+        ingredients = new string[0];
+        composition = new string[0];
+        plating = "";
+        orderable = false;
         return false;
     }
 

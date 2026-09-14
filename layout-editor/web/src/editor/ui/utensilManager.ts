@@ -32,6 +32,10 @@ import {
   fetchRecipeCatalog,
   fetchLevelRecipes
 } from "../../api";
+import {
+  UTENSIL_KIND_BY_ID,
+  UTENSIL_KIND_ZH
+} from "../../autoScoreKnowledge";
 import type { RecipeEntry } from "../../types";
 
 export type UtensilIngredientFill = Map<string, { ings: string[]; intermediates: string[] }>;
@@ -184,11 +188,16 @@ export function openUtensilManager() {
     pushHistory();
     const touched = applyUtensilIngredientFill(fill, ingGuid, recipeGuid);
     draw();
-    const parts = [...fill.entries()].map(([v, f]) => `${v}×${f.ings.length + f.intermediates.length}`);
+    // 锅具显示中文名；×N = 该锅具可处理的食材/中间产物种类数（非锅具个数）
+    const vesselZh = (v: string) => {
+      const kind = UTENSIL_KIND_BY_ID[v];
+      return (kind && UTENSIL_KIND_ZH[kind]) || v;
+    };
+    const parts = [...fill.entries()].map(([v, f]) => `${vesselZh(v)}×${f.ings.length + f.intermediates.length} 种食材`);
     setStatus(
       touched
         ? `已按 ${recs.length} 道菜谱填充 ${touched} 个锅具（${parts.join("、")}；写回后生效）`
-        : `场景中没有匹配的锅具（需要：${parts.join("、")}）`,
+        : `场景中没有匹配的锅具（需要：${parts.join("、")}）——可先用菜谱弹窗「自动补全道具」放置缺失锅具`,
       touched > 0
     );
     reopen();

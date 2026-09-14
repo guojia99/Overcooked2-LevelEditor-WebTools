@@ -151,6 +151,21 @@ export interface LayoutCookingUtensilStub {
 
 export interface LayoutTravelatorStub {
   speed?: number;
+  /** 定时反转配置（缺省 = 恒正向）。权威 = CustomStub.TravelatorReverser 组件。 */
+  timedReverse?: LayoutTravelatorReverse;
+}
+
+export interface LayoutTravelatorReverse {
+  /** false = 配置保留但不生效（保持正向） */
+  enabled: boolean;
+  /** 正向期秒数（最小 1） */
+  forwardSeconds: number;
+  /** 反向期秒数（最小 1） */
+  backwardSeconds: number;
+  /** 初始相位为反向 */
+  startReversed: boolean;
+  /** 反向相位转角（度，绕 Y；180 = 掉头，+90/-90 = 转角） */
+  turnAngle: number;
 }
 
 export interface LayoutFlamethrowerStub {

@@ -76,6 +76,22 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
       startOn: rest.timedSwitch.startOn !== false,
     };
   }
+  // 步道定时反转：非 Travelator 物品上的一律丢弃（防污染，对齐后端守卫）；
+  // 秒数下限 1（后端写回同款钳制）。
+  if (rest.travelator?.timedReverse) {
+    if (rest.stubKind !== "Travelator") {
+      delete rest.travelator.timedReverse;
+    } else {
+      const tr = rest.travelator.timedReverse;
+      rest.travelator.timedReverse = {
+        enabled: tr.enabled === true,
+        forwardSeconds: Math.max(1, tr.forwardSeconds ?? 10),
+        backwardSeconds: Math.max(1, tr.backwardSeconds ?? 10),
+        startReversed: tr.startReversed === true,
+        turnAngle: tr.turnAngle ?? 180,
+      };
+    }
+  }
   if (rest.stubKind === "IngredientDecor" || rest.ingredientDecor) {
     const ingGuid = rest.ingredientDecor?.ingredientGuid || rest.prefabGuid;
     let ingId = prefabIdFromPath(rest.prefabAssetPath);

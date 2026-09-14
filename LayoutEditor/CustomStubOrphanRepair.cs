@@ -36,9 +36,13 @@ public static class CustomStubOrphanRepair
     // 已识别签名 → CustomStub 类型（字段名集合精确匹配）
     private static readonly string[] TimedSwitchFields = { "m_enabled", "m_onSeconds", "m_offSeconds", "m_startOn" };
     private static readonly string[] SwitchLinkFields = { "m_targetRoots", "m_trigger" };
+    private static readonly string[] TravelatorReverseFields = { "m_enabled", "m_forwardSeconds", "m_backwardSeconds", "m_startReversed", "m_turnAngle" };
+    // 初版（4 字段，无 m_turnAngle）烘焙存量的孤儿签名
+    private static readonly string[] TravelatorReverseFieldsV1 = { "m_enabled", "m_forwardSeconds", "m_backwardSeconds", "m_startReversed" };
 
     // 合法载体判定（仅这些类型有载体要求；其余已识别类型一律复活）
     private static readonly string[] BurnerPathHints = { "cooking_region", "floorburner" };
+    private static readonly string[] TravelatorPathHints = { "travelator" };
 
     private static readonly HashSet<string> BaseFields = new HashSet<string>
     {
@@ -337,6 +341,8 @@ public static class CustomStubOrphanRepair
     {
         if (SignatureEquals(fields, TimedSwitchFields))
             return "TimedCookingSwitch";
+        if (SignatureEquals(fields, TravelatorReverseFields) || SignatureEquals(fields, TravelatorReverseFieldsV1))
+            return "TravelatorReverser";
         if (SignatureEquals(fields, SwitchLinkFields))
             return "LayoutRuntimeSwitchLink(旧开关联动,含真实配置)";
         if (fields.Count == 0)
@@ -373,6 +379,21 @@ public static class CustomStubOrphanRepair
             orphan.Action = 0; // 批量误挂僵尸
             return;
         }
+        if (orphan.Kind == "TravelatorReverser")
+        {
+            if (IsCarrier(orphan.HostPath, TravelatorPathHints))
+            {
+                var newGuid = LoadStubScriptGuid(scenePath, "Travelator/TravelatorReverser.cs");
+                if (newGuid != null)
+                {
+                    orphan.Action = 1;
+                    orphan.NewGuid = newGuid;
+                }
+                return;
+            }
+            orphan.Action = 0; // 非步道宿主的误挂僵尸
+            return;
+        }
         if (orphan.Kind == "Empty(空字段)")
         {
             orphan.Action = 0;
@@ -383,9 +404,14 @@ public static class CustomStubOrphanRepair
 
     private static bool IsBurnerCarrier(string hostPath)
     {
+        return IsCarrier(hostPath, BurnerPathHints);
+    }
+
+    private static bool IsCarrier(string hostPath, string[] hints)
+    {
         if (hostPath == null)
             return false;
-        foreach (var hint in BurnerPathHints)
+        foreach (var hint in hints)
             if (hostPath.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0)
                 return true;
         return false;

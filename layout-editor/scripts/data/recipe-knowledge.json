@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "comment": "Recipe composition knowledge shared by build-catalog.mjs and LayoutEditorRecipeKnowledge.cs. recipes[]: id = recipe asset id (file name without extension); step = CookingSteps asset id, empty = no cooking; ingredients = leaf ingredient asset ids. skip[] lists runtime variants (score 0 optional/model assets) excluded from recipes.json. Recipes without an entry here and without statically parseable composition are skipped during generation.",
+  "comment": "Recipe composition knowledge shared by build-catalog.mjs and LayoutEditorRecipeKnowledge.cs. recipes[]: id = recipe asset id (file name without extension); step = CookingSteps asset id, empty = no cooking; ingredients = leaf ingredient asset ids. Optional per-recipe fields: composition = direct composition ids (e.g. md_* 套餐节点); plating = PlatingSteps asset id (Plate/Glass/Mug); orderable = true lifts the score<=0 intermediate flag (e.g. DLC08_chickenburger 单点鸡肉汉堡). skip[] lists runtime variants (score 0 optional/model assets) excluded from recipes.json. Recipes without an entry here and without statically parseable composition are skipped during generation.",
   "cookSteps": [
     "FryingPan",
     "Pot",
@@ -2474,7 +2474,9 @@
       "ingredients": [
         "dlc08_choppedbun",
         "dlc08_chicken"
-      ]
+      ],
+      "plating": "Plate",
+      "orderable": true
     },
     {
       "id": "DLC08_friedchickenburger",

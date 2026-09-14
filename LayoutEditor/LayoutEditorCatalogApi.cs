@@ -298,6 +298,8 @@ public static class LayoutEditorCatalogApi
                 string step;
                 string[] ings;
                 string[] compositionIds = null;
+                string originalPlating = "";
+                bool orderable = false;
                 int ingCount;
                 int cookCount;
                 int score;
@@ -316,17 +318,25 @@ public static class LayoutEditorCatalogApi
                     if (LayoutEditorRecipeKnowledge.IsSkipped(id) ||
                         (original != null && LayoutEditorRecipeKnowledge.IsSkipped(original.prefabName)))
                         continue;
-                    if (!LayoutEditorRecipeKnowledge.TryGetOriginal(id, out step, out ings) &&
-                        (original == null || !LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out ings)))
+                    // 官方菜谱也下发组成/装盘（与 build-catalog.mjs 静态输出对齐）：
+                    // 前端锅具装填的「组成 Cooked 中间产物双填」分支、菜谱卡片组成展开依赖
+                    // compositionIds（如 md_* 套餐 = 面包+煎肉排+炸薯条节点），缺失会导致
+                    // 汉堡套餐自动匹配锅具只剩生食材、漏掉全部中间产物节点。
+                    if (!LayoutEditorRecipeKnowledge.TryGetOriginalEntry(id, out step, out ings, out compositionIds, out originalPlating, out orderable) &&
+                        (original == null || !LayoutEditorRecipeKnowledge.TryGetOriginalEntry(original.prefabName + "_SO", out step, out ings, out compositionIds, out originalPlating, out orderable)))
                         continue;
+                    if (compositionIds != null && compositionIds.Length == 0)
+                        compositionIds = null;
                     ingCount = ings.Length;
                     cookCount = LayoutEditorRecipeKnowledge.IsCookStep(step) ? 1 : 0;
                     score = original != null ? original.score : 0;
                 }
 
                 // common03 通用菜谱：用难度估算分覆盖资产里的 100（对齐游戏攻略：20×食材+难度加成）。
-                // 中间产物（资产 score<=0，如烤棉花糖/冰淇淋）保持 0 分、不作为关卡菜谱。
-                if (path.IndexOf("/common03/", StringComparison.Ordinal) >= 0 && score > 0)
+                // 中间产物（资产 score<=0，如烤棉花糖/冰淇淋）保持 0 分、不作为关卡菜谱；
+                // orderable 覆盖（knowledge 显式标记，如 DLC08_chickenburger 单点鸡肉汉堡）
+                // 同样走估算分并可点单。
+                if (path.IndexOf("/common03/", StringComparison.Ordinal) >= 0 && (score > 0 || orderable))
                     score = LayoutEditorRecipeKnowledge.EstimateCommon03RecipeScore(id, step, ings);
 
                 list.Add(new RecipeEntryDto
@@ -337,9 +347,11 @@ public static class LayoutEditorCatalogApi
                     nameEn = en,
                     assetPath = path,
                     cookingStep = step,
-                    platingStep = isCustom && custom.platingStepSO != null
-                        ? Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(custom.platingStepSO))
-                        : "",
+                    platingStep = isCustom
+                        ? (custom.platingStepSO != null
+                            ? Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(custom.platingStepSO))
+                            : "")
+                        : originalPlating,
                     ingredients = ings,
                     compositionIds = compositionIds,
                     ingredientCount = ingCount,
@@ -348,7 +360,7 @@ public static class LayoutEditorCatalogApi
                     isCustom = isCustom,
                     group = group,
                     type = group == "burger" ? "burger" : RecipeTypeOf(id),
-                    intermediate = score <= 0,
+                    intermediate = score <= 0 && !orderable,
                     mixing = isCustom && custom.type == CustomRecipeSO.RecipeType.Mixed,
                     optionalKind = custom is CustomRecipeOptionalBurgerSO ? "burger"
                         : custom is CustomRecipeOptionalPizzaSO ? "pizza" : ""
@@ -604,6 +616,10 @@ public static class LayoutEditorCatalogApi
         // 仅根据当前已选菜谱覆盖重建 allIngredients（不扫描场景食材箱，清除无关遗留食材）。
         LayoutEditorAllIngredientsFill.AutoFillIngredientsFromSelectedRecipes(info);
 
+        // 同理覆盖重建 allCookingSteps：收集菜谱（含嵌套中间产物/汉堡夹心）用到的
+        // 烹饪步骤。缺失会在装盘时 NRE（详见 SyncCookingStepsFromSelectedRecipes 注释）。
+        SyncCookingStepsFromSelectedRecipes(info);
+
         // 汉堡菜谱自动同步（必须在 EnsureWebDependencies 之前：新并入的中间产物
         // 依赖要一并算入）。同步本关 BurgerOptional（夹心全集 + bunSO 对齐主面包），
         // 并把 [BurgerOptional] + 中间产物（含嵌套）merge 进 optionalRecipeMatchListItems：
@@ -649,8 +665,82 @@ public static class LayoutEditorCatalogApi
     /// （夹心全集 + bunSO 对齐主面包）并把 [BurgerOptional] + 中间产物 merge 进
     /// optionalRecipeMatchListItems（替换 auto-managed 旧条目，保留其它条目）。
     /// 无汉堡时不改动。返回给前端展示的结果说明（null = 无事发生）。</summary>
-    private static string SyncBurgerOptionalsForSavedRecipes(
-        string levelInfoAssetPath,
+    /// <summary>按当前已选菜谱覆盖重建 allCookingSteps：递归收集 CustomRecipeSO
+    /// （含嵌套中间产物 compositionSOs/optionalSOs、汉堡组装的夹心与面包）用到的
+    /// cookingStepSO。
+    /// 背景（2026-09-12 装盘 NRE）：GameUtils.GetCookingStepData 只认关卡
+    /// RecipeMatchList 缓存的烹饪步骤；剧情表只有本传 10 个（煎锅/深炸锅等），
+    /// DLC 步骤（GriddlePan uID=20295 等）不在其中。自定义菜谱用到而关卡未登记时，
+    /// 客户端反序列化 CookedCompositeAssembledNode.m_cookingStep = null →
+    /// IsMatch 空引用 → LayoutContents 整体异常 → 盘子里的汉堡模型全部不显示。
+    /// LevelConfigSetup 会把 allCookingSteps 并入关卡 match list，是编辑器 Play
+    /// 与真机模组的共同通路（真机模组读同一 info bundle 数据）。</summary>
+    public static void SyncCookingStepsFromSelectedRecipes(LevelInfoSO info)
+    {
+        if (info == null)
+            return;
+        var steps = new HashSet<PseudoPrefabSO>();
+        var visited = new HashSet<ScriptableObject>();
+        if (info.recipes != null)
+        {
+            foreach (var r in info.recipes)
+                CollectCookingSteps(r, steps, visited);
+        }
+        var list = new List<PseudoPrefabSO>(steps);
+        list.Sort(delegate (PseudoPrefabSO a, PseudoPrefabSO b)
+        {
+            return string.CompareOrdinal(AssetDatabase.GetAssetPath(a), AssetDatabase.GetAssetPath(b));
+        });
+        var old = info.allCookingSteps ?? new PseudoPrefabSO[0];
+        var changed = old.Length != list.Count;
+        if (!changed)
+        {
+            for (int i = 0; i < old.Length; i++)
+            {
+                if (old[i] != list[i])
+                {
+                    changed = true;
+                    break;
+                }
+            }
+        }
+        if (!changed)
+            return;
+        Undo.RecordObject(info, "Layout Editor Cooking Steps");
+        info.allCookingSteps = list.ToArray();
+        EditorUtility.SetDirty(info);
+        var names = new List<string>();
+        foreach (var s in list)
+            names.Add(s != null ? s.name : "?");
+        LayoutEditorLog.Log("[Recipes] allCookingSteps 已按菜谱重建: " + info.name
+            + " -> [" + string.Join(", ", names.ToArray()) + "]");
+    }
+
+    private static void CollectCookingSteps(ScriptableObject so, HashSet<PseudoPrefabSO> steps, HashSet<ScriptableObject> visited)
+    {
+        if (so == null || !visited.Add(so))
+            return;
+        var custom = so as CustomRecipeSO;
+        if (custom == null)
+            return; // PseudoPrefabSO（官方食材/步骤）= 叶子
+        if (custom.cookingStepSO != null)
+            steps.Add(custom.cookingStepSO);
+        if (custom.compositionSOs != null)
+        {
+            foreach (var c in custom.compositionSOs)
+                CollectCookingSteps(c, steps, visited);
+        }
+        if (custom.optionalSOs != null)
+        {
+            foreach (var o in custom.optionalSOs)
+                CollectCookingSteps(o, steps, visited);
+        }
+        var burger = so as CustomRecipeOptionalBurgerSO;
+        if (burger != null && burger.bunSO != null)
+            CollectCookingSteps(burger.bunSO, steps, visited);
+    }
+
+    private static string SyncBurgerOptionalsForSavedRecipes(        string levelInfoAssetPath,
         string levelSet,
         List<ScriptableObject> recipes,
         LevelInfoSO info)
