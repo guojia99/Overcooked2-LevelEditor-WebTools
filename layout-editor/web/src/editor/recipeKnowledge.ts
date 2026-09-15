@@ -1,7 +1,7 @@
 import { S } from "./state";
 import { VARIANT_TO_BASE } from "./itemVariants";
 import type { RecipeEntry } from "../types";
-import { NODE_INGREDIENT_SOURCES } from "../recipeGroups";
+import { crateIngredientId } from "../recipeGroups";
 import { fetchLevelRecipes, fetchRecipeCatalog } from "../api";
 
 export const STEP_UTENSILS: Record<string, string[]> = {
@@ -121,6 +121,31 @@ export function condimentMachineForIngredient(id: string): string | null {
 /** 识别需要酱料机的菜谱：食材含酱料（热狗的番茄酱/芥末酱等，node 型，只能酱料机产出）。 */
 export function recipeNeedsCondimentMachine(r: RecipeEntry): boolean {
   return (r.ingredients ?? []).some((i) => CONDIMENT_MACHINE_INGREDIENT_IDS.includes(i));
+}
+
+/** 特殊分配器（饮料机 / 汽水饮料机 / 两代酱料机）prefab id → 可输出食材 id 清单。
+ *  非特殊分配器返回 null（普通食材箱 = 全食材可选）。
+ *
+ *  ⚠ 这是**唯一**一份分配器白名单（SSOT）：直接复用上面三组「新旧双 id」清单。
+ *  历史教训（2026-09-15 修）：stubControls 曾另存一份只写 common03 正式版 id 的
+ *  白名单（DLC08_Drink01/DLC08_Ketchup/DLC11_OrangeSoda…），而 2026-09-10 起后端
+ *  LayoutEditorCatalogApi.IngredientCatalogId 改为取小写 prefabName（→ drink01 /
+ *  ketchup / orangesoda），白名单与目录 id 全部错开，交集为空 —— 酱料机/饮料机/
+ *  汽水机的选择弹窗变成空列表，组合也配不上默认输出。新增分配器一律在此登记。 */
+export function dispenserIngredientIds(prefabId: string): string[] | null {
+  if (!prefabId) return null;
+  if (DRINK_MACHINE_IDS.includes(prefabId)) return DRINK_MACHINE_INGREDIENT_IDS;
+  if (SODA_MACHINE_IDS.includes(prefabId)) return SODA_MACHINE_INGREDIENT_IDS;
+  if (CONDIMENT_MACHINE_IDS.includes(prefabId)) {
+    // dlc11 换皮酱料只认 dlc11 机器，其余归 dlc08
+    return CONDIMENT_MACHINE_INGREDIENT_IDS.filter((id) => condimentMachineForIngredient(id) === prefabId);
+  }
+  return null;
+}
+
+/** 全部特殊分配器 prefab id（自检 / 遍历用）。 */
+export function allDispenserPrefabIds(): string[] {
+  return [...DRINK_MACHINE_IDS, ...SODA_MACHINE_IDS, ...CONDIMENT_MACHINE_IDS];
 }
 
 export function recipeNeedsMug(r: RecipeEntry): boolean {
@@ -595,9 +620,11 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
 }
 
 /** 当前关卡已保存菜谱所需的「食材箱可产出」叶食材 id 清单：
- *  中间产物展开为叶子（leafIngredientIds）、node 型等价替换（NODE_INGREDIENT_SOURCES）、
- *  汽水/饮料/奶油等机器或道具产出的排除。与菜谱弹窗 analysisInfo 的 reqIngs 同一套
- *  展开规则；随机食材箱编辑器「填充本关所需」复用。 */
+ *  中间产物展开为叶子（leafIngredientIds）、node 型与汉堡面皮的等价替换
+ *  （crateIngredientId，**带菜谱上下文**：汉堡大全 commonW2 的成品推荐 DLC8 面皮
+ *  dlc08_choppedbun，其余菜谱归一到核心 ChoppedBunSO）、汽水/饮料/奶油等机器或
+ *  道具产出的排除。与菜谱弹窗 analysisInfo 的 reqIngs 同一套展开规则；
+ *  随机食材箱编辑器「填充本关所需」复用。 */
 export async function levelRequiredCrateIngredientIds(): Promise<string[]> {
   try {
     const [level, recipes] = await Promise.all([
@@ -619,7 +646,7 @@ export async function levelRequiredCrateIngredientIds(): Promise<string[]> {
     const required = new Set<string>();
     for (const r of seen)
       (r.ingredients ?? []).forEach((i) =>
-        leafIngredientIds(i).forEach((leaf) => required.add(NODE_INGREDIENT_SOURCES[leaf] ?? leaf))
+        leafIngredientIds(i).forEach((leaf) => required.add(crateIngredientId(leaf, r)))
       );
     return [...required].filter(
       (i) =>

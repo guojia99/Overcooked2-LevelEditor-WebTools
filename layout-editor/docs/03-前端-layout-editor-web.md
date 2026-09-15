@@ -102,8 +102,8 @@ flowchart LR
 | **version.ts** | `APP_VERSION` + 版本徽标 |
 | **api.ts** | ★ 全部后端通信（1078 行）：60+ 个 `fetchXxx/saveXxx/createXxx`；`readApiJson`（返回 HTML → 抛「桥过期」）；分块加载静态 JSON；`bundleClosure` |
 | **types.ts** | ★ 全部数据模型（1406 行）：约 120 个接口（见 §6） |
-| **style.css / recipeList.css** | 全站样式（135KB）/ 菜谱卡片专用 |
-| **levels.ts** | ★ 关卡管理页（2574 行）：关卡集/关卡列表、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、汇总页 + PNG 导出、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复） |
+| **style.css / recipeList.css** | 全站样式（135KB）/ 菜谱卡片专用（含汇总页 `.sum-*`；`.sum-page.has-bg` = 设了导出背景图时的作用域覆盖：卡片摘掉深色渐变底与 1px 边框、计数胶囊转半透明，**不改任何 `.rl-*` 原始规则**） |
+| **levels.ts** | ★ 关卡管理页（2574 行）：关卡集/关卡列表、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、关卡编辑页「汇总导出背景图」区块（上传到 `data/<level>/summary_bg~/`，Unity 忽略目录 → 不进 AssetBundle）、汇总页 + PNG 导出（DOM 快照，背景图 cover + 暗色遮罩内联在 `#sum-node` 上 → 预览与导出同源）、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复） |
 | **dependencies.ts** | 依赖管理页：两级列表、`BundleAnalysis` 展示（缺失红/未用黄）、手动编辑 dependencies、依赖闭包 |
 | **customRecipes.ts** | 自定义菜谱管理页（1963 行）：卡片 + 分类侧栏、新建/编辑表单（组成多选/烹饪/装盘/图标/FBX+MTL+贴图上传/cm 校准/3D 预览）、分类管理 |
 | **burgerMaker.ts** | 汉堡组装工作台：层层堆叠夹心（面包+候选层），调 `/api/burger/create` |
@@ -114,7 +114,8 @@ flowchart LR
 | **recipeTypes.ts** | 菜谱类型中文名与排序（`RECIPE_TYPE_ZH`） |
 | **ingredientLabels.ts** | 食材来源分组徽标、可见性过滤、食材分类 |
 | **autoScore.ts** | 自动评分：官方 448 星级数据点拟合（单菜耗时=食材数×9.2s+步骤×10.6s+5.1s；人数效率 1.0/1.65/2.3/2.6；星级比例 0.26/0.58/0.91/1.43） |
-| **summaryExport.ts** | 汇总页 PNG 导出：纯 SVG 组合（避免 foreignObject 污染 canvas） |
+| **summaryExport.ts** | ~~汇总页 PNG 导出~~（2026-09-15 删除，并入 domSvgExport.ts） |
+| **domSvgExport.ts** | ★ 通用「DOM → SVG 快照」PNG 导出引擎：遍历**实时渲染的 DOM**（getBoundingClientRect / getComputedStyle / Range.getClientRects）生成纯 SVG 再光栅化 —— 导出即所见，不再手抄 CSS 常量重排版。汇总页（`#sum-node` 直拍）与 /recipes 整页导出（离屏 `createOffscreenStage` 克隆 + 补页头）共用。仍坚持**不用 foreignObject**（Chrome 会污染 canvas）。文字用 `textLength+lengthAdjust="spacing"` 钉死实测行宽（消除字形步进漂移）、`text-shadow`/`filter: drop-shadow` 走 `feDropShadow`；自检页 `public/export-selftest.html`（仅 dev：三栏 DOM / SVG / difference 混合，全黑=像素级一致） |
 | **levelShotExport.ts** | 关卡集截图长图导出 |
 | **modals.ts** | 通用弹窗框架 + 领域选择器（食材单选/多选、FoodSpawner、随机食材箱、菜谱选择器） |
 | **busy.ts** | 全局忙碌遮罩（引用计数 + withBusy） |
@@ -151,7 +152,7 @@ flowchart LR
 |---|---|
 | **coords.ts** | 世界↔画布换算、`COORD_ORIGIN_OFFSET {3.5,-1.5}`、吸附摆放、footprint 解析、火锅大锅换算、uuid/escHtml |
 | **render.ts** | `draw()` 总入口：网格/坐标轴/按层绘制/框选/动画覆盖/相机视锥；`computeLevelBounds` |
-| **renderItems.ts** | 单物品绘制（footprint 矩形+图标+徽标）、绘制排序、`hitTestAll`、缩放手柄、传送门/开关/终端连线 |
+| **renderItems.ts** | 单物品绘制（footprint 矩形+图标+徽标）、绘制排序、`hitTestAll`、缩放手柄、传送门/开关/终端连线（传送门连线：单向单箭头 / 双向双箭头，门上「入/出/双」角标） |
 | **renderFloors.ts** | 地板绘制（材质色/主题/贴图平铺/图片/着色/空气地板）、接缝、可行走区、击杀面、命中测试 |
 | **labels.ts** | 画布文字/图标标签工具（换行、食材箱食材图） |
 | **iconCaches.ts** | 图片缓存（异步加载回调重绘）；`loadQuestionMarks` 拉 `/api/catalog/questionmarks` |
@@ -176,14 +177,15 @@ flowchart LR
 | **floorPalette.ts** | 地板/背景层调色板 + 画布底部地板信息条 |
 | **floorEditorModal.ts** | 地板详情弹窗（750 行）：尺寸/材质/着色/图片地板（tile/stretch/warp）/平铺/主题信息 |
 | **palette.ts** | 调色板构建：分组、搜索、双击武装 N 连放、变体家族归并卡片 |
-| **combos.ts** | 联合组合定义（一次放置多物品+自动联动）：饮料机/酱料机/断头台/传送门成对/热源+石炉 |
+| **combos.ts** | 联合组合定义（一次放置多物品+自动联动）：饮料机/酱料机/断头台/传送门成对/热源+石炉。默认输出食材一律经 `ingredientGuidById()` 解析（别名感知 + 去重），**禁止 `find(i => i.id === id)` 精确匹配** |
 | **itemVariants.ts** | DLC 换肤变体表：调色板只显示基础版，右键切换变体 |
 | **stubControls.ts** | Stub 参数中枢（1311 行）：`STUB_KIND_BY_PREFAB_ID`、锅具计时、柜台外观/开关材质选择、`wireStubControls` |
 | **stubRefs.ts** | 物品间 stub 绑定引用的统一重映射与孤儿清理 |
 | **servingLinks.ts** | 上菜台↔回收台（盘/杯/马克杯/餐盘四类）1 对多绑定 |
+| **teleportalLinks.ts** | 传送门方向模型与配对改写的唯一收口：`teleportalRole`（two/entrance/exit/unbound）、`teleportalEntrancesOf`、`setTeleportalPairDirection`（对级「双向传送」开关）、`releaseExitOnlyPartner`、`computeTeleportalLabels`；方向语义 = 出口指向 + `exitOnly`（出口门回指入口只是防 NRE 的占位） |
 | **buttonLinks.ts** | 按钮 ↔ 动画组联动（顺序/锁定/共轭对）、孤儿清理 |
 | **buttonEvents.ts** | 按钮 → 事件组顺序广播 |
-| **recipeKnowledge.ts** | 菜谱→道具需求（前端侧）：餐洗链、奶油喷罐/汽水机/饮料机需求判定、中间产物自动分配 |
+| **recipeKnowledge.ts** | 菜谱→道具需求（前端侧）：餐洗链、奶油喷罐/汽水机/饮料机需求判定、中间产物自动分配。**机器可输出食材清单的唯一数据源**（`DRINK/SODA/CONDIMENT_MACHINE_INGREDIENT_IDS` + `dispenserIngredientIds(prefabId)`）——各清单一律写「目录现行 id + common03 正式版 id」两代写法 |
 | **cameraLight.ts** | 相机/灯光弹窗（背景色 + FOV 即时反映） |
 | **testLayout.ts** | 测试布局一键生成（30×16 地板 + 全部食材箱/核心道具/菜谱） |
 
@@ -360,3 +362,8 @@ LayoutDocument {
 4. **写回前置校验闭环**：玩家碰撞 → 工作台重叠（可放行）→ 同 guid 同 XYZ 堆叠阻断（Y 必须比较）。
 5. **离线韧性**：动态 API 优先 → 静态 JSON 回退；桥看门狗 3 连败弹窗。
 6. **两层 undo**：画布 HistoryStack（20 步）与 Unity 侧写回历史（15 条完整文档快照，可恢复到画布）。
+7. **食材 id 不是稳定键，guid 才是**（2026-09-15 事故教训）：后端 `LayoutEditorCatalogApi.IngredientCatalogId` 在 prefabName 全小写且与文件名不同时取 **prefabName**（`DLC08_Drink01.asset` → id `drink01`、`DLC08_Ketchup` → `ketchup`、`DLC11_OrangeSoda` → `orangesoda`）。该规则 2026-09-10（`a9dee6027`）上线后，`stubControls` 与 `combos` 里只写 common03 正式版 id 的白名单与目录 id 全部错开 → 酱料机/饮料机/汽水机的选择弹窗静默变空列表、「机器+开关」组合也不写默认输出。规矩：
+   - 任何按 id 找食材的代码一律走 `editor/catalog.ts` 的 `ingredientEntryById / ingredientGuidById`（内含 `INGREDIENT_ALIASES` + 小写兜底），**禁止 `find(i => i.id === x)`**；
+   - 机器可输出清单只有一份，在 `recipeKnowledge.dispenserIngredientIds()`，条目写两代 id；
+   - 过滤候选按 **guid + id 双线**放行，且解析不到任何 guid 时**退化为不过滤**（绝不给用户空列表）；
+   - `editor/init.ts auditDispenserWhitelists()` 在食材目录加载后自检，白名单整组失效会 `console.warn`。

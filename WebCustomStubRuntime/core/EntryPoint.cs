@@ -28,7 +28,8 @@ namespace CustomStub
     ///     （未绑定终端防线）常驻 ticker；
     ///  3. sceneLoaded 场景自愈：按 SpecificPseudoPrefabTag 载体还原组件——
     ///     TimedSwitch| / PushablePot| / SwitchReenable| / WorldMapDressing|
-    ///     / UtensilTiming| / CameraOffset|（相机偏移注册+按需补丁；
+    ///     / UtensilTiming| / TravelatorReverse| / TeleportalExitOnly|
+    ///     / CameraOffset|（相机偏移注册+按需补丁；
     ///     RandomCrate| 由 loader 自愈，此处不重复）。
     /// </summary>
     public static class EntryPoint
@@ -74,8 +75,29 @@ namespace CustomStub
         ///  - 每次 sceneLoaded 进入 Probing（~30s 窗口，每 2s 只做 1 次单类型扫描）；
         ///  - 扫到 stub tag（HealScene）或探测命中「web 大锅 / 未绑定终端」→ Active；
         ///  - 窗口内无命中 → Dormant（ticker.enabled=false，官方图零开销）。
-        /// 哨兵与已装 Harmony 补丁保持常驻（卸载补丁风险大于收益），只切 ticker 开关。</summary>
-        public const string Version = "v12(" + StubVersion.Value + ")";
+        /// 哨兵与已装 Harmony 补丁保持常驻（卸载补丁风险大于收益），只切 ticker 开关。
+        ///  v13：传送门单向（TeleportalExitOnly，2026-09-15）——游戏侧传送门本就是
+        /// 单向（Teleportal.m_exitPortal 唯一方向源），但编辑器无法表达「出口为空」
+        /// （宿主/mod 的 LateSetup 对 null exitPortal 无判空即 NRE），出口门的 stub
+        /// 保留回指占位、由 TeleportalExitOnly| tag 自愈挂组件在运行时清回 null。
+        /// 不挂 ticker（组件自带低频协程），无该 tag 的图零开销。
+        ///  v14：可移动火锅装配时机锚定 + 联机实体诊断（2026-09-15 联机 ID 错位事故）。
+        /// 根因：实体 ID 是 EntitySerialisationRegistry 按【扫描命中顺序】发放的自增
+        /// FIFO，而 LinkAllEntitiesToSynchronisationScripts 每 0.1s yield 一帧、
+        /// 逐类型现场 GetComponentsInChildren——PushablePot 在扫描窗口期 Instantiate
+        /// 大锅，主客机插入点不同 ⇒ 从该点起全部实体 ID 整体错位 ⇒ 客机完全不能
+        /// 操作、双方厨师原地不动、生成物无模型（全程零报错）；单机侧则表现为
+        /// 「其中一口锅开局就有汤且丢不进食材」（该锅漏挂同步组件）。
+        /// 三件套修复：① EnsurePotAssemblyPatches 给 ScanEntities 打前缀，在发令
+        /// 时刻同步装配全部大锅（两机唯一确定性锚点）；② PushablePot 协程加
+        /// 「扫描期硬闸」（IsEntityScanActive 时绝不 Instantiate）；③ NetDiagnostics
+        /// 在 StartSynchronisation 前缀输出【实体指纹 + 分段指纹 + 逐锅注册自检】，
+        /// 主客机两行一比即可判定 ID 是否对齐。
+        /// 顺带修好三处常年落空的反射（GameApi.Find 加命名空间候选+兜底扫描）：
+        /// ClientSynchroniserBase/ServerSynchroniserBase/Serialisable 命名空间缺失
+        /// （=触发区占用联机同步的收发两端补丁从未真正装上）、ContainerCapacityField
+        /// 读错组件（汤面重摆从未生效）、IsLocallyControlled 反射了不存在的接口。</summary>
+        public const string Version = "v14(" + StubVersion.Value + ")";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -139,6 +161,8 @@ namespace CustomStub
                 s_corePatchesInstalled = true;
                 InstallHarmony();
             }
+            // 联机诊断打点随核心一起装（冷方法，官方图因不激活而零影响）
+            EnsureNetDiagPatches();
             SetTickerEnabled(true);
             if (!s_activationLogged)
             {
@@ -429,6 +453,90 @@ namespace CustomStub
             }
         }
 
+        /// <summary>可移动火锅「扫描前预装配」补丁（v14，2026-09-15 联机 ID 错位事故）：
+        /// 给 MultiplayerController.ScanEntities 打前缀，在网络实体扫描发令时刻把
+        /// 场景里所有大锅【同步】装配完；顺带给 StartSynchronisation 打前缀输出
+        /// 实体指纹与逐锅注册自检。两者都是每关一次的冷方法，无热路径开销。
+        ///
+        /// 为什么必须有：实体 ID 是按扫描命中顺序发放的自增 FIFO，扫描窗口期内
+        /// Instantiate 出的对象会插进序列的随机位置——主客机插入点不同就会让
+        /// 【从该点起的所有实体 ID 整体错位】，表现为客机完全不能动、双方厨师原地
+        /// 不动、生成物没模型，而日志里一条报错都没有（2026-09-15 实测）。
+        /// 按需安装（扫到 PushablePot| tag 或 PushablePot.Start），幂等；
+        /// 独立 Harmony id，与其它补丁组互不影响。</summary>
+        private static bool s_potAssemblyPatched;
+        private static bool s_potAssemblyPatchFailed;
+
+        internal static void EnsurePotAssemblyPatches()
+        {
+            if (s_potAssemblyPatched || s_potAssemblyPatchFailed)
+                return;
+            try
+            {
+                var harmony = new Harmony(HarmonyId + ".potassembly");
+                int ok = 0, skip = 0;
+                ok += PatchPair(harmony, GameApi.ScanEntitiesMethod,
+                    HarmonyPatches.MultiplayerScanEntitiesPrefixMethod, null, ref skip);
+                s_potAssemblyPatched = ok > 0;
+                s_potAssemblyPatchFailed = ok == 0;
+                if (ok > 0)
+                    StubLog.Log("[CustomStub] 实体扫描锚点补丁: 已装 " + ok + " 个"
+                        + (skip > 0 ? "，反射缺失跳过 " + skip + " 个" : "")
+                        + "（可移动火锅将在扫描前完成装配）");
+                else
+                    StubLog.LogWarn("[CustomStub] 实体扫描锚点补丁未装（反射缺失）——"
+                        + "可移动火锅退化为协程装配 + 扫描期硬闸，联机请核对实体指纹");
+            }
+            catch (Exception ex)
+            {
+                s_potAssemblyPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 实体扫描锚点补丁安装失败（退化为协程装配 + 扫描期硬闸）: " + ex);
+            }
+            // 诊断补丁与锚点补丁解耦：锚点装不上时更需要诊断日志
+            EnsureNetDiagPatches();
+        }
+
+        /// <summary>联机诊断补丁（v14）：实体指纹 + 关卡网络时序打点。
+        /// 三个目标都是每关一次的冷方法（StartSynchronisation / ClientKitchenLoader
+        /// 的 ScannedEntities、StartEntities），无热路径开销。
+        /// 随 ActivateCore 安装 = 只有 web stub 关卡才打点，官方图零影响。
+        ///
+        /// 为什么值得常开：联机 ID 错位这类事故【全程零报错】，此前唯一的线索只有
+        /// 玩家口述。有了 `[Net] 实体扫描结果 ... 指纹=XXXXXXXX`，主客机两行一比
+        /// 就能当场定性，不必再靠猜。</summary>
+        private static bool s_netDiagPatched;
+        private static bool s_netDiagPatchFailed;
+
+        internal static void EnsureNetDiagPatches()
+        {
+            if (s_netDiagPatched || s_netDiagPatchFailed)
+                return;
+            try
+            {
+                var harmony = new Harmony(HarmonyId + ".netdiag");
+                int ok = 0, skip = 0;
+                ok += PatchPair(harmony, GameApi.StartSynchronisationMethod,
+                    HarmonyPatches.MultiplayerStartSynchronisationPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.KitchenScannedEntitiesMethod,
+                    HarmonyPatches.KitchenScannedEntitiesPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.KitchenStartEntitiesMethod,
+                    HarmonyPatches.KitchenStartEntitiesPrefixMethod, null, ref skip);
+                s_netDiagPatched = ok > 0;
+                s_netDiagPatchFailed = ok == 0;
+                if (ok > 0)
+                    StubLog.Log("[CustomStub] 联机诊断补丁: 已装 " + ok + " 个"
+                        + (skip > 0 ? "，反射缺失跳过 " + skip + " 个" : "")
+                        + "（实体指纹 + 关卡网络时序打点）");
+                else
+                    StubLog.LogWarn("[CustomStub] 联机诊断补丁全部未装（反射缺失）——联机排障将缺少实体指纹");
+            }
+            catch (Exception ex)
+            {
+                s_netDiagPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 联机诊断补丁安装失败（不影响玩法，仅少日志）: " + ex.Message);
+            }
+        }
+
         /// <summary>空气取出补丁（ServerPickupItemSpawner.HandlePickup 前缀，见
         /// HarmonyPatches.ServerPickupHandlePickupPrefix）：与 KillPlane/锅具时间补丁
         /// 相互独立。按需安装（首个空气候掷出时由 RandomCrate.SetAirPending 触发），
@@ -480,9 +588,11 @@ namespace CustomStub
         {
             HotPot.OnSceneChanged();
             PushableVoidFall.OnSceneChanged();
+            PushablePot.OnSceneChanged();
             UtensilTiming.OnSceneChanged();
             TerminalGuard.OnSceneChanged();
             RandomCrate.OnSceneChanged();
+            NetDiagnostics.OnSceneChanged();
         }
 
         /// <summary>场景自愈：按 tag 载体补挂缺失组件并还原参数（组件为权威，
@@ -499,9 +609,11 @@ namespace CustomStub
                 CameraAuthoredOffset.OnSceneChanged();
                 var tags = UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>();
                 var stubTags = 0;
+                var tickerTags = 0;
                 var healed = 0;
                 var alreadyOk = 0;
                 var sawUtensilTiming = false;
+                var sawPushablePot = false;
                 for (int i = 0; i < tags.Length; i++)
                 {
                     var tag = tags[i];
@@ -510,8 +622,15 @@ namespace CustomStub
                     if (!IsStubTag(tag.prefabTag))
                         continue; // 普通伪 prefab 的载体 tag 与 stub 无关，不计入汇总
                     stubTags++;
+                    // 传送门单向是「自带低频协程、不用 ticker」的自治组件：不计入
+                    // 激活票数，否则只放单向门的关卡会白跑全套 HotPot/VoidFall 扫描
+                    // （v12 三态门控的同一条性能约定）。
+                    if (!tag.prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal))
+                        tickerTags++;
                     if (tag.prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal))
                         sawUtensilTiming = true;
+                    if (tag.prefabTag.StartsWith(PushablePot.TagPrefix, StringComparison.Ordinal))
+                        sawPushablePot = true;
                     try
                     {
                         var before = CountStubComponents(tag.gameObject);
@@ -529,12 +648,18 @@ namespace CustomStub
                 // 锅具时间补丁按需安装：扫到 UtensilTiming| tag 才 patch 宿主热方法
                 if (sawUtensilTiming)
                     EnsureUtensilTimingPatches();
-                // 关卡级门控：本场景确实用到 web stub（有 stub tag）才激活核心 ticker/Harmony。
+                // 实体扫描锚点按需安装：本场景有可移动火锅才 patch（v14）。
+                // 时序上安全——HealScene 跑在 sceneLoaded，而 ScanEntities 要等
+                // ClientKitchenLoader 收到 GameState.ScanNetworkEntities（更晚）。
+                if (sawPushablePot)
+                    EnsurePotAssemblyPatches();
+                // 关卡级门控：本场景确实用到需要 ticker 的 web stub 才激活核心 ticker/Harmony。
                 // 注意：无 tag 的 web 内容（静态 web 火锅 / 写回降级残留的未绑定终端）
                 // 由 TickProbe 的探测通道兜底激活，不在此处判定。
+                if (tickerTags > 0)
+                    ActivateCore("扫到 web stub tag × " + tickerTags);
                 if (stubTags > 0)
                 {
-                    ActivateCore("扫到 web stub tag × " + stubTags);
                     // 汇总：只在有 stub tag 的场景打（普通场景不打，避免刷屏）
                     StubLog.Log("[CustomStub] 场景自愈汇总 [" + scene.name + "]: stub tag " + stubTags
                         + " 个，补挂 " + healed + " 个，已就位/非本类 " + alreadyOk + " 个");
@@ -557,7 +682,8 @@ namespace CustomStub
                 || prefabTag.StartsWith(WorldMapDressing.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal)
-                || prefabTag.StartsWith(TravelatorReverser.TagPrefix, StringComparison.Ordinal);
+                || prefabTag.StartsWith(TravelatorReverser.TagPrefix, StringComparison.Ordinal)
+                || prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -658,6 +784,19 @@ namespace CustomStub
                 ParseTravelatorReverse(prefabTag.Substring(TravelatorReverser.TagPrefix.Length), rev);
                 rev.enabled = true;
                 StubLog.Dbg("[CustomStub] 自愈 TravelatorReverse: " + go.name);
+            }
+            else if (prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "TeleportalExitOnly"))
+                    return;
+                // AddComponent 竞态同 TimedSwitch/TravelatorReverse：OnEnable 会以默认值
+                // 立刻启动压制协程，先禁用、Parse 写完配置再启用（m_enabled=0 的
+                // 「配置保留但不生效」才不会被默认 true 吃掉）。
+                var exitOnly = go.AddComponent<TeleportalExitOnly>();
+                exitOnly.enabled = false;
+                ParseTeleportalExitOnly(prefabTag.Substring(TeleportalExitOnly.TagPrefix.Length), exitOnly);
+                exitOnly.enabled = true;
+                StubLog.Dbg("[CustomStub] 自愈 TeleportalExitOnly: " + go.name);
             }
             else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
             {
@@ -825,6 +964,15 @@ namespace CustomStub
             if (string.IsNullOrEmpty(payload))
                 return;
             re.m_resetDelay = ParseFloat(payload, 0.35f);
+        }
+
+        /// <summary>TeleportalExitOnly|&lt;1|0&gt;（1 = 仅作为出口，0 = 配置保留但不生效）。
+        /// 空 payload 按启用处理（向前兼容只写前缀的载体）。</summary>
+        private static void ParseTeleportalExitOnly(string payload, TeleportalExitOnly exitOnly)
+        {
+            if (string.IsNullOrEmpty(payload))
+                return;
+            exitOnly.m_enabled = payload.Trim() != "0";
         }
 
         private static float ParseFloat(string s, float fallback)

@@ -46,7 +46,7 @@ public static class LayoutEditorSetExporter
     private static readonly string[] CustomStubTagPrefixes =
     {
         "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
-        "UtensilTiming|", "CameraOffset|", "TravelatorReverse|"
+        "UtensilTiming|", "CameraOffset|", "TravelatorReverse|", "TeleportalExitOnly|"
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub：tag 载体（含 prefab 自带的

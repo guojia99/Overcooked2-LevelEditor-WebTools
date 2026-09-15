@@ -57,10 +57,15 @@ export function recipeImgHtml(r: RecipeEntry, cls = ""): string {
   return `<img class="${cls}" loading="lazy" src="${esc(src)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
 }
 
-/** Ingredient chip <img> with placeholder fallback. */
+/** Ingredient chip <img> with placeholder fallback.
+ *  名称走 `data-name`（CSS `::after` 即时浮动标签），不用原生 title——原生 tooltip
+ *  有约 1s 延迟且不跟随悬浮动画。
+ *  `title=""` 是必须的：按 HTML 规范空 title 表示「本元素无提示信息」，阻断向上
+ *  继承 `.rl-card` 的 `title="<菜谱 id>"`，否则悬浮食材 1 秒后原生 tooltip 会冒出来
+ *  盖住浮动标签。 */
 export function ingredientChipHtml(ingId: string, title?: string): string {
   const src = `/icons/ingredients/${encodeURIComponent(ingId)}.png`;
-  return `<span class="rl-chip" title="${esc(title || ingId)}">
+  return `<span class="rl-chip" title="" data-name="${esc(title || ingId)}">
     <img loading="lazy" src="${esc(src)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">
   </span>`;
 }
@@ -80,7 +85,7 @@ export function rlGroupHtml(g: CookingGroup, ingredientName?: (id: string) => st
       const badges = badgeSteps
         .map((s) => `<span class="rl-chip-badge">${stepIconHtml(s)}</span>`)
         .join("");
-      return `<span class="rl-chip" title="${esc(ingredientName?.(ing) || ing)}">
+      return `<span class="rl-chip" title="" data-name="${esc(ingredientName?.(ing) || ing)}">
         <img loading="lazy" src="/icons/ingredients/${encodeURIComponent(ing)}.png" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">
         ${badges}
       </span>`;
@@ -154,10 +159,40 @@ export function cardIntermediate(r: RecipeWithGroups): boolean {
   return r.isCustom ? false : !!r.intermediate;
 }
 
+/** 食材/中间产物 id → 显示名（悬浮标签与 chip 标题共用）。
+ *
+ *  `opts.ingredientName` 只查**食材目录**（ingredients.json）。但工序框里的 chip
+ *  还包含展开组成得到的**中间产物/子菜谱 id**（FriedMeat、ChickenPatty、
+ *  DLC08_friedchickenburger、Mixed_FlourEggMeat 等）——它们不在食材目录里，各调用点
+ *  约定「查不到返回 id 本身」，于是悬浮标签直接显示英文 id。
+ *
+ *  这里补一层**菜谱目录回退**（opts.allRecipes，5 个调用点全部有传），并对 id 做
+ *  大小写不敏感兜底（后端 compositionIds 取资产文件名，与 catalog id 偶有大小写
+ *  差异，如 DLC08_ChoppedBun/dlc08_choppedbun 这类历史分歧）。 */
+function makeIngredientNameResolver(opts: RlCardOptions): (id: string) => string {
+  const byId = new Map<string, RecipeWithGroups>();
+  const byIdLower = new Map<string, RecipeWithGroups>();
+  for (const rec of opts.allRecipes ?? []) {
+    if (!rec?.id) continue;
+    if (!byId.has(rec.id)) byId.set(rec.id, rec);
+    const lower = rec.id.toLowerCase();
+    if (!byIdLower.has(lower)) byIdLower.set(lower, rec);
+  }
+  return (id: string): string => {
+    const fromCatalog = opts.ingredientName?.(id);
+    // 命中食材目录（返回值与 id 不同即视为命中）
+    if (fromCatalog && fromCatalog !== id) return fromCatalog;
+    const rec = byId.get(id) ?? byIdLower.get(id.toLowerCase());
+    if (rec?.nameZh) return rec.nameZh;
+    return fromCatalog || id;
+  };
+}
+
 /** Full "菜谱清单列表" card: product area + cooking groups. */
 export function rlCardHtml(r: RecipeWithGroups, opts: RlCardOptions = {}): string {
   const merged = computeCardGroups(r, opts);
   const intermediate = cardIntermediate(r);
+  const nameOf = makeIngredientNameResolver(opts);
 
   const extras = (opts.extraBadge
     ? Array.isArray(opts.extraBadge)
@@ -180,9 +215,9 @@ export function rlCardHtml(r: RecipeWithGroups, opts: RlCardOptions = {}): strin
 
   const groupsHtml =
     merged.length > 0
-      ? merged.map((g) => rlGroupHtml(g, opts.ingredientName)).join("")
+      ? merged.map((g) => rlGroupHtml(g, nameOf)).join("")
       : (r.ingredients ?? []).length > 0
-        ? plainGroupHtml(r.ingredients ?? [], opts.ingredientName)
+        ? plainGroupHtml(r.ingredients ?? [], nameOf)
         : '<div class="rl-group"><span class="muted small">组成信息缺失</span></div>';
 
   const prodIcon = opts.iconSrc

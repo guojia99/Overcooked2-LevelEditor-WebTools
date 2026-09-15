@@ -165,6 +165,27 @@ public static class LayoutEditorStubIO
             };
             if (teleportal.exitPortal != null)
                 tdto.exitPortalInstanceId = "u:" + teleportal.exitPortal.gameObject.GetInstanceID();
+            // 单向出口侧：读 CustomStub.TeleportalExitOnly（权威通道，反射；
+            // 组件缺失 = 未配置 = 双向）。tag 载体只在程序集缺失时兜底（下方）。
+            var exitOnlyType = FindCustomStubType(go, "TeleportalExitOnly");
+            var exitOnlyComp = exitOnlyType != null ? go.GetComponent(exitOnlyType) : null;
+            if (exitOnlyComp != null)
+            {
+                var flag = GetStubField(exitOnlyComp, "m_enabled");
+                tdto.exitOnly = !(flag is bool) || (bool)flag;
+            }
+            else
+            {
+                // 程序集尚未就位（首次配置/未编译）时组件不存在，按 tag 载体还原，
+                // 否则 web 往返会把刚配的单向静默抹掉。
+                var tagComp = go.GetComponent<SpecificPseudoPrefabTag>();
+                if (tagComp != null && !string.IsNullOrEmpty(tagComp.prefabTag)
+                    && tagComp.prefabTag.StartsWith(TeleportalExitOnlyTagPrefix, StringComparison.Ordinal))
+                {
+                    var payload = tagComp.prefabTag.Substring(TeleportalExitOnlyTagPrefix.Length).Trim();
+                    tdto.exitOnly = payload != "0";
+                }
+            }
             item.teleportal = tdto;
             return;
         }
@@ -793,6 +814,11 @@ public static class LayoutEditorStubIO
         {
             // 传送门必须有出口（exitPortal）：裸传送门宿主 PseudoPrefabTeleportal.LateSetup
             // 对 null exitPortal 调用 GetComponent 抛 NRE。无出口时降级为普通道具。
+            //
+            // 单向（2026-09-15）：出口专用门【也带出口】——回指入口的占位，
+            // 运行时由 CustomStub.TeleportalExitOnly 把 Teleportal.m_exitPortal 清回
+            // null（游戏侧 m_exitPortal==null 即只收不发）。因此这里的空出口
+            // 仍然只表示「未配置」，HttpServer 侧已前置校验阻断，此处保留降级兜底。
             if (item.teleportal == null || string.IsNullOrEmpty(item.teleportal.exitPortalInstanceId))
             {
                 var ts = go.GetComponent<PseudoPrefabTeleportalStub>();
@@ -809,6 +835,7 @@ public static class LayoutEditorStubIO
             teleportal.portalColor = (PseudoPrefabTeleportalStub.PortalColor)item.teleportal.portalColor;
             teleportal.doubleSided = item.teleportal.doubleSided;
             // exitPortal is resolved in a second pass by SceneLayoutApplier.
+            ApplyTeleportalExitOnly(go, item.teleportal.exitOnly);
             return;
         }
 
@@ -1305,6 +1332,53 @@ public static class LayoutEditorStubIO
 
         Undo.RecordObject(teleportal, "Layout Editor Teleportal Exit");
         teleportal.exitPortal = exitStub;
+    }
+
+    /// <summary>传送门单向的出口侧标记（tag 载体前缀，与 CustomStub.TeleportalExitOnly
+    /// 及 EntryPoint 自愈同约定）。</summary>
+    public const string TeleportalExitOnlyTagPrefix = "TeleportalExitOnly|";
+
+    /// <summary>写「仅作为出口」：伪根烘焙 CustomStub.TeleportalExitOnly 组件（权威）
+    /// + tag 载体 "TeleportalExitOnly|&lt;1|0&gt;"（程序集缺失时由运行时自愈还原）。
+    ///
+    /// 语义提醒：出口门的 stub.exitPortal 仍保留回指入口的【占位】——宿主
+    /// PseudoPrefabTeleportal.LateSetup 与真机 mod 的同源逻辑都对 null exitPortal
+    /// 无判空直接 GetComponent（NRE）；真正的方向由运行时把 Teleportal.m_exitPortal
+    /// 清回 null 来实现（游戏侧 m_exitPortal==null = 只收不发）。
+    /// 双通道与 TravelatorReverser 同款；exitOnly=false 时清组件与 tag 残留。</summary>
+    public static void ApplyTeleportalExitOnly(GameObject go, bool exitOnly)
+    {
+        if (go == null)
+            return;
+
+        var exitOnlyType = FindCustomStubType(go, "TeleportalExitOnly");
+        var comp = exitOnlyType != null ? go.GetComponent(exitOnlyType) : null;
+        if (exitOnly)
+        {
+            if (exitOnlyType == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] 关卡集缺 stub 程序集，传送门单向仅写入 tag 载体"
+                    + "（CustomStubCopyRequested）: " + go.name);
+                var setName = LevelSetOfScenePath(go.scene.path);
+                if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                    CustomStubCopyRequested(setName);
+            }
+            else
+            {
+                if (comp == null)
+                    comp = Undo.AddComponent(go, exitOnlyType);
+                else
+                    Undo.RecordObject(comp, "Layout Editor Teleportal ExitOnly");
+                SetStubField(comp, "m_enabled", true);
+            }
+            SetCustomStubTag(go, TeleportalExitOnlyTagPrefix + "1");
+        }
+        else
+        {
+            if (comp != null)
+                Undo.DestroyObjectImmediate(comp);
+            ClearCustomStubTag(go, TeleportalExitOnlyTagPrefix);
+        }
     }
 
     /// <summary>
@@ -2504,6 +2578,33 @@ public static class LayoutEditorStubIO
         return f != null ? f.GetValue(comp) : null;
     }
 
+    /// <summary>域重载后补烘焙「仅作为出口」的传送门：tag 载体在而组件缺失
+    /// （写回时运行时程序集尚未编译出来的时序）→ 按 tag 补挂组件。
+    /// 返回补挂数量。RandomCrate 补烘焙的同款兜底。</summary>
+    public static int RebakeTeleportalExitOnlyInActiveScene()
+    {
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        var type = FindCustomStubType(LevelSetOfScenePath(scene.path), "TeleportalExitOnly");
+        if (type == null)
+            return 0;
+
+        var baked = 0;
+        foreach (var tag in UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>())
+        {
+            if (tag == null || string.IsNullOrEmpty(tag.prefabTag) ||
+                !tag.prefabTag.StartsWith(TeleportalExitOnlyTagPrefix, StringComparison.Ordinal))
+                continue;
+            if (tag.gameObject.GetComponent(type) != null)
+                continue;
+            var comp = Undo.AddComponent(tag.gameObject, type);
+            var payload = tag.prefabTag.Substring(TeleportalExitOnlyTagPrefix.Length).Trim();
+            SetStubField(comp, "m_enabled", payload != "0");
+            EditorUtility.SetDirty(comp);
+            baked++;
+        }
+        return baked;
+    }
+
     private static void SetRandomCrateField(Component comp, string fieldName, object value)
     {
         if (comp == null)
@@ -2516,11 +2617,11 @@ public static class LayoutEditorStubIO
     /// <summary>导出打包时对当前场景所有 web CustomStub 道具「组件 → tag」重写：从组件
     /// 当前字段重算并写入最新格式 tag（覆盖旧格式/补齐缺失），保证 loader 场景自愈可靠。
     ///
-    /// 覆盖 8 类：
+    /// 覆盖 9 类：
     ///  - RandomCrate：走 RebakeRandomCratesInActiveScene 确保组件/tag 就位（tag 内嵌
     ///    iconGuid 无法从 Texture2D 反查，故保留既有 tag，只补组件——组件为权威）；
     ///  - TimedSwitch / PushablePot / SwitchReenable / WorldMapDressing / UtensilTiming /
-    ///    TravelatorReverse / CameraOffset：组件字段完全决定 tag，直接重写。
+    ///    TravelatorReverse / TeleportalExitOnly / CameraOffset：组件字段完全决定 tag，直接重写。
     /// 返回重写的 tag 数（含 RandomCrate 补烘焙数）。</summary>
     public static int RefreshStubTagsInActiveScene()
     {
@@ -2580,6 +2681,13 @@ public static class LayoutEditorStubIO
             {
                 // 无 payload，格式固定；仅在与规范不一致时归一化。
                 if (prefab != "WorldMapDressing|") { SetCustomStubTag(go, "WorldMapDressing|"); rewritten++; }
+            }
+            else if (prefab.StartsWith(TeleportalExitOnlyTagPrefix, StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "TeleportalExitOnly");
+                if (c == null) continue;
+                var t = TeleportalExitOnlyTagPrefix + (StubBool(c, "m_enabled") ? "1" : "0");
+                if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
             }
             // PushablePot| / CameraOffset|：payload 来自 soArray/摆放位（非组件字段），
             // 写回时已按最新格式烘焙，导出期不重算（避免误伤结构性数据）。

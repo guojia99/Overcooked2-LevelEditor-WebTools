@@ -32,6 +32,11 @@
             "en": "CheeseChickenBurger"
         },
         {
+            "id": "CheeseMeatBurger",
+            "zh": "芝士牛肉汉堡",
+            "en": "Cheese Meat Burger"
+        },
+        {
             "id": "ChickenBurger",
             "zh": "鸡肉汉堡",
             "en": "ChickenBurger"
@@ -162,6 +167,11 @@
             "en": "LettuceCheeseChickenBurger"
         },
         {
+            "id": "LettuceCheeseMeatBurger",
+            "zh": "生菜芝士牛肉汉堡",
+            "en": "Lettuce Cheese Meat Burger"
+        },
+        {
             "id": "LettuceChickenBurger",
             "zh": "生菜鸡肉汉堡",
             "en": "LettuceChickenBurger"
@@ -185,6 +195,11 @@
             "id": "LettuceCucumberPrawnBurger",
             "zh": "生菜黄瓜虾堡",
             "en": "Lettuce Cucumber Prawn Burger"
+        },
+        {
+            "id": "LettuceMeatBurger",
+            "zh": "生菜牛肉汉堡",
+            "en": "Lettuce Meat Burger"
         },
         {
             "id": "LettuceTomatoBurger",
@@ -222,9 +237,19 @@
             "en": "LettuceTomatoCucumberPineappleCheeseMeatBurger"
         },
         {
+            "id": "LettuceTomatoMeatBurger",
+            "zh": "生菜番茄牛肉汉堡",
+            "en": "Lettuce Tomato Meat Burger"
+        },
+        {
             "id": "LettuceTomatoPrawnBurger",
             "zh": "生菜番茄虾堡",
             "en": "Lettuce Tomato Prawn Burger"
+        },
+        {
+            "id": "MeatBurger",
+            "zh": "牛肉汉堡",
+            "en": "Meat Burger"
         },
         {
             "id": "MeatBurgerAssembly",

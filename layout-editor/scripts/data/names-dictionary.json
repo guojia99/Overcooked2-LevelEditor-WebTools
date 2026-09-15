@@ -843,11 +843,6 @@
       "en": "Cheese Sticks"
     },
     {
-      "id": "DLC08_ChoppedBun",
-      "zh": "汉堡面包（DLC8）",
-      "en": "Chopped Bun (DLC8)"
-    },
-    {
       "id": "DLC08_Donut_chocolate",
       "zh": "巧克力甜甜圈（DLC08）",
       "en": "Chocolate Donut (DLC08)"
@@ -4341,11 +4336,6 @@
       "id": "dlc08_NPC_Strongman02",
       "zh": "大力士 2",
       "en": "dlc08 NPC Strongman 2"
-    },
-    {
-      "id": "dlc08_bun",
-      "zh": "汉堡胚（DLC8）",
-      "en": "Bun (DLC8)"
     },
     {
       "id": "dlc08_cannon",

@@ -7,6 +7,7 @@ import { uuid, prefabIdFromPath, escHtml, newEditorKey } from "./coords";
 import { setStatus } from "./status";
 import { itemLayerOfIt, levelSetFromScenePath } from "./catalog";
 import { isPlayerItem } from "./renderItems";
+import { isTeleportalItem, teleportalEntrancesOf } from "./teleportalLinks";
 import { enrichItem, enrichFloor, checkPlayerCollisions, checkWorkstationCollisions, refreshUtensilStacks } from "./items";
 import { stubKindOf, normalizeMachineLinkTriggers } from "./stubControls";
 import { cleanOrphanedAnimControls, stopAnimPreview } from "./animControl";
@@ -463,6 +464,35 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     }
     if (violations.length > 0) {
       setStatus(`写回被阻断，请先修复 ${violations.length} 处：${violations.join("、")}`, true);
+      return false;
+    }
+
+    // 传送门方向强校验（后端同款兜底）：出口必须有效；「仅作为出口」的门必须被
+    // 某扇入口门指向。空出口的传送门会在写回链里被降级成装饰件（宿主对空
+    // exitPortal 会 NRE），所以一律拦在前面。
+    const portalIssues: string[] = [];
+    const portalItems = S.items.filter((it) => stubKindOf(it) === "Teleportal" || isTeleportalItem(it));
+    const portalIds = new Set(portalItems.map((it) => it.instanceId));
+    for (const it of portalItems) {
+      const tp = it.teleportal;
+      const exitId = tp?.exitPortalInstanceId;
+      if (!exitId) {
+        portalIssues.push(`${itemLabel(it)}（未设置出口）`);
+        continue;
+      }
+      if (exitId === it.instanceId) {
+        portalIssues.push(`${itemLabel(it)}（出口不能指向自己）`);
+        continue;
+      }
+      if (!portalIds.has(exitId)) {
+        portalIssues.push(`${itemLabel(it)}（出口指向的对象不是传送门）`);
+        continue;
+      }
+      if (tp?.exitOnly && teleportalEntrancesOf(it).length === 0)
+        portalIssues.push(`${itemLabel(it)}（标记为「仅作为出口」但没有入口门指向它）`);
+    }
+    if (portalIssues.length > 0) {
+      setStatus(`写回被阻断，请先修复 ${portalIssues.length} 处传送门配置：${portalIssues.join("、")}`, true);
       return false;
     }
 

@@ -674,7 +674,7 @@ export function addFromCatalog(
   }
   if (cat.id === "Teleportal") {
     item.stubKind = "Teleportal";
-    item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false };
+    item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false, exitOnly: false };
   }
   if (cat.id === "AirWall") {
     // 空气墙：核心层隐形碰撞块（1.2×1.2×1.132 BoxCollider × localScale 格数倍率）。

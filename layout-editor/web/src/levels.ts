@@ -39,9 +39,8 @@ import { applyRatio, computeAutoScores, computeOrderLifeTimes, ORDER_INTERVAL_SE
 import { analyzeKitchen, kitchenChips, kitchenWarnings } from "./kitchenAnalysis";
 import { modelParamsSummary } from "./autoScoreKnowledge";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
-import { foodGroupLabel } from "./ingredientLabels";
-import { computeCardGroups, rlCardHtml, rlSectionHtml, STEP_ICON_SRC, type RecipeWithGroups } from "./recipeCard";
-import { exportSummaryPng, type SummaryCard, type SummaryExportData } from "./summaryExport";
+import { rlCardHtml, rlSectionHtml, type RecipeWithGroups } from "./recipeCard";
+import { exportNodePng } from "./domSvgExport";
 import { exportLevelShotsPng, type LevelShotExportData } from "./levelShotExport";
 import { customRecipeIconUrl } from "./editor/catalog";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
@@ -288,7 +287,7 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
     if (!depsHint) return;
     depsHint.textContent = (depsChk?.checked ?? true)
       ? `zip 含 OC2DIYLevel/levels/${s.setName}/（关卡 + requires.txt）+ OC2DIYLevelRuntimeWLoader/（依赖包）。新用户一步到位；解压到 BepInEx/plugins/。`
-      : `zip 只含 OC2DIYLevel/levels/${s.setName}/（关卡 + requires.txt）。适合已装依赖的用户日常更新关卡；依赖包可用列表上方「导出依赖包」单独获取。`;
+      : `zip 只含 OC2DIYLevel/levels/${s.setName}/（关卡 + requires.txt）。适合已装依赖的用户日常更新关卡；依赖包可用列表上方「导出依赖包」单独获取。依赖包过旧时 stub 功能整体跳过（如单向传送门会退化为双向），关卡本体照常加载。`;
   };
   depsChk?.addEventListener("change", updateDepsHint);
   updateDepsHint();
@@ -895,6 +894,31 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <button class="m-btn primary" id="save-info">保存基础信息</button>
       </div>
     </div>
+
+    <div class="m-block">
+      <h3>汇总导出背景图</h3>
+      <p class="modal-hint">
+        「📋 汇总」页与其一键导出 PNG 的整页背景（cover 铺满裁切，可叠暗色遮罩保证文字可读）。
+        图片存放在关卡 data 目录的 <code>summary_bg~/</code> —— Unity 忽略 <code>~</code> 结尾目录，
+        因此<b>不会被打进 info bundle / 玩家分发包</b>，但会随仓库版本管理。
+      </p>
+      <div class="sumbg-row">
+        <div class="sumbg-preview" id="sumbg-preview"></div>
+        <div class="sumbg-ctrl">
+          <label class="m-field">选择图片
+            <input type="file" id="sumbg-file" accept="image/png,image/jpeg,image/webp">
+          </label>
+          <label class="m-field">暗色遮罩 <span id="sumbg-dim-val">${Math.round((detail.summaryBgDim ?? 0.35) * 100)}%</span>
+            <input type="range" id="sumbg-dim" min="0" max="90" step="5" value="${Math.round((detail.summaryBgDim ?? 0.35) * 100)}">
+          </label>
+          <div class="m-actions-row">
+            <button class="m-btn primary" id="sumbg-save">保存背景图</button>
+            <button class="m-btn" id="sumbg-clear" ${detail.summaryBgPath ? "" : "disabled"}>清除</button>
+            <span class="status" id="sumbg-status"></span>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 
   wireDetailActions(app, setName, assetPath, detail);
@@ -935,6 +959,103 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
       void renderLevelDetail(app, setName, assetPath);
     })
   );
+
+  wireSummaryBgPane(assetPath, detail);
+}
+
+/** 关卡编辑页「汇总导出背景图」区块：选图 → 本地预览 → 保存到关卡 data 目录的
+ *  summary_bg~/；遮罩浓度实时预览。汇总页与导出 PNG 读同一份数据。 */
+function wireSummaryBgPane(assetPath: string, detail: LevelDetail): void {
+  const preview = document.getElementById("sumbg-preview");
+  const fileInput = document.getElementById("sumbg-file") as HTMLInputElement | null;
+  const dimInput = document.getElementById("sumbg-dim") as HTMLInputElement | null;
+  const dimVal = document.getElementById("sumbg-dim-val");
+  const saveBtn = document.getElementById("sumbg-save") as HTMLButtonElement | null;
+  const clearBtn = document.getElementById("sumbg-clear") as HTMLButtonElement | null;
+  const st = document.getElementById("sumbg-status");
+  if (!preview || !fileInput || !dimInput) return;
+
+  let pendingDataUrl = "";
+  let pendingName = "";
+
+  const say = (msg: string, ok = true): void => {
+    if (!st) return;
+    st.textContent = msg;
+    st.classList.toggle("err", !ok);
+  };
+
+  const paint = (): void => {
+    const dim = Number(dimInput.value) / 100;
+    const url = pendingDataUrl || (detail.summaryBgPath ? api.imageFloorUrl(detail.summaryBgPath) : "");
+    if (dimVal) dimVal.textContent = `${dimInput.value}%`;
+    if (url) {
+      preview.style.backgroundImage =
+        `linear-gradient(rgba(0,0,0,${dim}),rgba(0,0,0,${dim})),url('${url}')`;
+      preview.innerHTML = "";
+    } else {
+      preview.style.backgroundImage = "";
+      preview.innerHTML = '<span class="sumbg-empty">（未设置背景图）</span>';
+    }
+    if (clearBtn) clearBtn.disabled = !detail.summaryBgPath;
+  };
+  paint();
+
+  dimInput.addEventListener("input", paint);
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      pendingDataUrl = String(fr.result ?? "");
+      pendingName = file.name;
+      paint();
+      say("已选择图片，点「保存背景图」写入关卡");
+    };
+    fr.onerror = () => say("读取图片失败", false);
+    fr.readAsDataURL(file);
+  });
+
+  saveBtn?.addEventListener("click", async () => {
+    if (saveBtn) saveBtn.disabled = true;
+    try {
+      say("保存中…");
+      const dim = Number(dimInput.value) / 100;
+      if (!pendingDataUrl && !detail.summaryBgPath) {
+        say("请先选择一张背景图", false);
+        return;
+      }
+      const res = await api.saveSummaryBg(assetPath, dim, pendingName, pendingDataUrl);
+      detail.summaryBgPath = res.path;
+      detail.summaryBgDim = res.dim;
+      pendingDataUrl = "";
+      pendingName = "";
+      fileInput.value = "";
+      paint();
+      say("已保存");
+    } catch (e) {
+      say((e as Error).message, false);
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  });
+
+  clearBtn?.addEventListener("click", async () => {
+    if (clearBtn) clearBtn.disabled = true;
+    try {
+      say("清除中…");
+      await api.clearSummaryBg(assetPath);
+      detail.summaryBgPath = "";
+      pendingDataUrl = "";
+      pendingName = "";
+      fileInput.value = "";
+      paint();
+      say("已清除背景图");
+    } catch (e) {
+      say((e as Error).message, false);
+      if (clearBtn) clearBtn.disabled = false;
+    }
+  });
 }
 
 // ==================== Level recipe summary (汇总页) ====================
@@ -1461,44 +1582,6 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
     recipes: arr,
   }));
 
-  const summaryData: SummaryExportData = {
-    title: detail.levelNameZH || detail.levelName || "未命名",
-    sub: `${detail.levelName} · ${detail.sceneName}`,
-    author: `作者：${set?.author || "—"}`,
-    screenshotUrl: detail.screenshotPath ? api.imageFloorUrl(detail.screenshotPath) : "",
-    sections: grouped.map((g) => ({
-      typeLabel: g.typeLabel,
-      count: g.count,
-      cards: g.recipes.map((r): SummaryCard => {
-        const groups = computeCardGroups(r, { allRecipes: recipes });
-        const badges: string[] = [];
-        if (r.isCustom) badges.push("自定义");
-        if (r.group === "levelset") badges.push("本关");
-        if (r.group && r.group !== "core" && r.group !== "levelset") badges.push(foodGroupLabel(r.group));
-        badges.push(`⭐ ${r.score ?? 0}`);
-        return {
-          iconUrl: recipeIconUrl(r),
-          nameZh: r.nameZh,
-          nameEn: r.nameEn || r.id,
-          badges,
-          groups: groups.map((cg) => ({
-            stepIcons: [cg.step, ...(cg.extraSteps ?? []).map((e) => e.step)]
-              .filter(Boolean)
-              .map((s) => STEP_ICON_SRC[s])
-              .filter((s): s is string => !!s),
-            ingredientUrls: (cg.ingredients ?? []).map((id) => `/icons/ingredients/${encodeURIComponent(id)}.png`),
-            ingredientStepIcons: (cg.ingredients ?? []).map(
-              (id) =>
-                (cg.ingredientSteps?.[id] ?? [])
-                  .map((s) => STEP_ICON_SRC[s])
-                  .filter((s): s is string => !!s)
-            ),
-          })),
-        };
-      }),
-    })),
-  };
-
   const sections = grouped
     .map((g) =>
       rlSectionHtml(
@@ -1523,12 +1606,17 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
     ? `<img class="sum-shot-img" src="${esc(shotSrc)}" alt="关卡截图">`
     : '<div class="sum-shot-empty">（未上传关卡截图）</div>';
 
+  // 导出背景图：内联在汇总页节点上 —— 网页所见即导出所得（DOM 快照导出引擎
+  // 直接读这层 background）。遮罩用同色双停 linear-gradient 叠在图片之上。
+  // has-bg 作用域类：让卡片摘掉深色渐变底与边框，直接浮在背景图上。
+  const bgStyle = summaryBgStyle(detail);
+
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn primary" id="sum-export">🖼 一键导出图片</button>
       <span class="status" id="sum-status"></span>
     </div>
-    <div class="sum-page" id="sum-node">
+    <div class="sum-page${bgStyle ? " has-bg" : ""}" id="sum-node"${bgStyle ? ` style="${esc(bgStyle)}"` : ""}>
       <header class="sum-head">
         <h1 class="sum-title">${esc(detail.levelNameZH || detail.levelName || "未命名")}</h1>
         <div class="sum-sub">${esc(detail.levelName)} · ${esc(detail.sceneName)}</div>
@@ -1541,16 +1629,18 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
     </div>
   `;
 
-  setStatus(`共 ${selected.length} 道菜谱 · 关卡截图${summaryData.screenshotUrl ? "" : "缺失"}`);
+  setStatus(`共 ${selected.length} 道菜谱 · 关卡截图${shotSrc ? "" : "缺失"}`);
   document.getElementById("sum-export")?.addEventListener("click", async () => {
     const btn = document.getElementById("sum-export") as HTMLButtonElement | null;
     const st = document.getElementById("sum-status")!;
     if (btn) btn.disabled = true;
+    st.classList.remove("err");
+    st.textContent = "正在生成图片…";
     try {
       const node = document.getElementById("sum-node");
-      const width = node ? node.getBoundingClientRect().width : 1200;
+      if (!node) throw new Error("汇总节点不存在");
       const fileName = `${detail.levelNameZH || detail.levelName || "level"}_汇总.png`;
-      await exportSummaryPng(summaryData, width, fileName);
+      await exportNodePng(node as HTMLElement, fileName);
       st.textContent = "已导出 PNG";
     } catch (e) {
       st.textContent = (e as Error).message;
@@ -1559,6 +1649,17 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
       if (btn) btn.disabled = false;
     }
   });
+}
+
+/** 汇总页导出背景（cover 铺满 + 可调暗色遮罩）的内联 style；未设置背景图时返回 ""。 */
+function summaryBgStyle(detail: LevelDetail): string {
+  if (!detail.summaryBgPath) return "";
+  const url = api.imageFloorUrl(detail.summaryBgPath);
+  const dim = Math.max(0, Math.min(0.9, detail.summaryBgDim ?? 0.35));
+  return (
+    `background-image:linear-gradient(rgba(0,0,0,${dim}),rgba(0,0,0,${dim})),url('${url}');` +
+    "background-size:cover;background-position:center;background-repeat:no-repeat;"
+  );
 }
 
 // ==================== Config tab modal (1P/2P/3P/4P) ====================

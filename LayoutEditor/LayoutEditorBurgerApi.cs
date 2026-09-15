@@ -173,15 +173,14 @@ public static class LayoutEditorBurgerApi
         };
     }
 
-    /// <summary>汉堡面包 id 判定（ChoppedBun 系列 + 历史别名 dlc08_bun）。</summary>
+    /// <summary>汉堡面包 id 判定：核心 ChoppedBunSO / DLC02_ChoppedBun /
+    /// DLC8 dlc08_choppedbun 三种写法都含 "ChoppedBun"。
+    /// 历史别名 dlc08_bun（commonW1 装饰壳旧文件名）与 DLC08_ChoppedBun（旧资产
+    /// 文件名）已于命名统一时改名到 dlc08_choppedbun，不再需要特判。</summary>
     internal static bool IsBurgerBunId(string id)
     {
         if (string.IsNullOrEmpty(id))
             return false;
-        if (string.Equals(id, "ChoppedBunSO", StringComparison.Ordinal))
-            return true;
-        if (string.Equals(id, "dlc08_bun", StringComparison.OrdinalIgnoreCase))
-            return true;
         if (id.IndexOf("ChoppedBun", StringComparison.OrdinalIgnoreCase) >= 0)
             return true;
         return false;
@@ -464,7 +463,9 @@ public static class LayoutEditorBurgerApi
             warning = "一关内汉堡使用了 " + bunOrder.Count + " 种面包（"
                 + string.Join("、", names.ToArray())
                 + "），BurgerOptional 仅绑定主面包 " + (mainBun != null ? mainBun.name : "?")
-                + "——其余面包沿用官方叠层规则，请统一面包";
+                + "——其余面包沿用官方叠层规则。建议统一改用「🍔 Burger大全」（commonW2）的汉堡，"
+                + "它们的面皮一律是 DLC8 面皮 dlc08_choppedbun；官方 core 汉堡用的是 DLC02 面皮，"
+                + "与之混选就会触发本告警";
         }
 
         var opts = new List<ScriptableObject>();

@@ -55,6 +55,99 @@ namespace CustomStub
                 : null;
         });
 
+        // ---- 网络实体扫描窗口（2026-09-15 v14，联机 ID 错位事故） ----
+        //
+        // 背景铁律：EntitySerialisationRegistry 的实体 ID 是【按扫描命中顺序递增的
+        // FIFO】（EntitySerialisationRegistry.cs:123-129 填 1..1022，:439-442 Dequeue），
+        // 与对象身份无关。主客机各自本地跑一遍 LinkAllEntitiesToSynchronisationScripts，
+        // 靠「两边遍历出的对象序列一致」保证 ID 对齐。而该链接循环【每 0.1 秒 yield
+        // 一帧】（:197-201 / :228-232）、每个类型现场 GetComponentsInChildren——
+        // 扫描窗口期内 Instantiate 出来的对象会插进序列的随机位置，两台机器插入点不同
+        // ⇒ 从该点起全部实体 ID 整体错位 ⇒ 客机完全不能动、模型丢失。
+        //
+        // 因此运行时新建网络实体（目前只有 PushablePot 的大锅）必须满足：
+        //   扫描开始【前】完成，或扫描彻底结束【后】再做（后者只影响该对象自身）。
+        public static readonly MethodInfo ScanEntitiesMethod = Safe(delegate
+        {
+            return MultiplayerControllerType != null
+                ? MultiplayerControllerType.GetMethod("ScanEntities",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { typeof(Action) }, null)
+                : null;
+        });
+        public static readonly MethodInfo StartSynchronisationMethod = Safe(delegate
+        {
+            return MultiplayerControllerType != null
+                ? MultiplayerControllerType.GetMethod("StartSynchronisation",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        /// <summary>MultiplayerController.ScanActive（扫描协程是否在跑，:50-56）。</summary>
+        public static readonly PropertyInfo ScanActiveProperty = Safe(delegate
+        {
+            return MultiplayerControllerType != null
+                ? MultiplayerControllerType.GetProperty("ScanActive",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+
+        // ---- 实体注册表（诊断：实体指纹 / 单对象注册自检） ----
+        public static readonly Type EntityRegistryType = Find("EntitySerialisationRegistry");
+        /// <summary>链接循环进行中标志（EntitySerialisationRegistry.cs:41/165/235）——
+        /// 比 ScanActive 更精确地圈出「正在分配实体 ID」的致命窗口，两者取或。</summary>
+        public static readonly FieldInfo EntityLinkingFlagField = Safe(delegate
+        {
+            return EntityRegistryType != null
+                ? EntityRegistryType.GetField("s_bLinkingEntities",
+                    BindingFlags.NonPublic | BindingFlags.Static)
+                : null;
+        });
+        public static readonly MethodInfo EntityGetEntryMethod = Safe(delegate
+        {
+            return EntityRegistryType != null
+                ? EntityRegistryType.GetMethod("GetEntry", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(GameObject) }, null)
+                : null;
+        });
+        public static readonly MethodInfo EntityGetIdMethod = Safe(delegate
+        {
+            return EntityRegistryType != null
+                ? EntityRegistryType.GetMethod("GetId", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(GameObject) }, null)
+                : null;
+        });
+        public static readonly FieldInfo EntitiesByGameObjectField = Safe(delegate
+        {
+            return EntityRegistryType != null
+                ? EntityRegistryType.GetField("m_EntitiesByGameObject",
+                    BindingFlags.Public | BindingFlags.Static)
+                : null;
+        });
+
+        // ---- 关卡网络时序打点（诊断：主客机状态机对比） ----
+        // ClientKitchenLoader 的状态机是所有联机时序问题的主干（LoadedKitchen →
+        // ScanNetworkEntities → ScannedNetworkEntities → StartSynchronising →
+        // StartEntities），但它一条日志都不打。这两个私有无参方法是其中两个
+        // 关键节点，用无参前缀打点最安全（不依赖宿主参数名/类型）。
+        public static readonly Type ClientKitchenLoaderType = Find("ClientKitchenLoader");
+        public static readonly MethodInfo KitchenScannedEntitiesMethod = Safe(delegate
+        {
+            return ClientKitchenLoaderType != null
+                ? ClientKitchenLoaderType.GetMethod("ScannedEntities",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo KitchenStartEntitiesMethod = Safe(delegate
+        {
+            return ClientKitchenLoaderType != null
+                ? ClientKitchenLoaderType.GetMethod("StartEntities",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+
         // ---- 火锅：灶台 / 锅 ----
         public static readonly Type CookingRegionType = Find("CookingRegion");
         public static readonly FieldInfo RegionTriggerAreaField = Field(CookingRegionType, "m_TriggerArea");
@@ -308,6 +401,12 @@ namespace CustomStub
         public static readonly FieldInfo ContentsYFullField = Field(ContentsCosmeticType, "m_contentsYPositionWhenFull");
         public static readonly FieldInfo ContentsGameObjectField = Field(ContentsCosmeticType, "m_gameObject");
         public static readonly Type ClientIngredientContainerType = Find("ClientIngredientContainer");
+        // 仅用于 v14 的「大锅实体注册自检」：这两个同步器是否挂上，直接对应
+        // 「食材能不能丢进去」与「汤面会不会一开局就显示」（ClientContentsCosmetic
+        // Decisions.StartSynchronising 的 m_contentsObject.SetActive(false) 是汤面
+        // 唯一的隐藏点，没挂 = 开局就有汤）。
+        public static readonly Type ClientCookableContainerType = Find("ClientCookableContainer");
+        public static readonly Type ClientContentsCosmeticType = Find("ClientContentsCosmeticDecisions");
         public static readonly MethodInfo GetContentsMethod = Safe(delegate
         {
             return ClientIngredientContainerType != null
@@ -323,17 +422,12 @@ namespace CustomStub
         public static readonly Type MealCosmeticType = Find("MealCosmeticDecisions");
         public static readonly FieldInfo MealContainerField = Field(MealCosmeticType, "m_container");
         public static readonly Type ClientOrderDefinitionType = Find("IClientOrderDefinition");
-        public static readonly FieldInfo ContainerCapacityField = Safe(delegate
-        {
-            // m_capacity 定义在 IngredientContainer 基类（public），按声明类型查找
-            //（同 HasContentsMethod 模式）。
-            var owner = ServerIngredientContainerType != null ? ServerIngredientContainerType.BaseType : null;
-            if (owner != null && owner.Name == "IngredientContainer")
-                return owner.GetField("m_capacity", BindingFlags.Public | BindingFlags.Instance);
-            return ServerIngredientContainerType != null
-                ? ServerIngredientContainerType.GetField("m_capacity", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                : null;
-        });
+        // 注：容量字段统一走 IngredientCapacityField（声明于 IngredientContainer，见下方
+        // 「锅具容量」段）。此处曾有一个 ContainerCapacityField，按
+        // ServerIngredientContainer.BaseType 找 m_capacity——而 ServerIngredientContainer
+        // 是 ServerSynchroniserBase 的子类、只【持有】IngredientContainer 引用
+        // （ServerIngredientContainer.cs:41-45），基类名判断永远不成立 ⇒ 常年为 null
+        // ⇒ HotPot.RelayoutContents 每次早退（汤面高度重摆从未生效）。已删除（2026-09-15）。
 
         // ---- 火锅：煮熟提示音 ----
         public static readonly Type GameUtilsType = Find("GameUtils");
@@ -420,10 +514,13 @@ namespace CustomStub
         public static readonly Type DynamicLandscapeParentingType = Find("DynamicLandscapeParenting");
         public static readonly MethodInfo IsLocallyControlledMethod = Safe(delegate
         {
-            // PlayerIDProvider 的接口方法（IPlayerIDProvider.IsLocallyControlled）
-            var iface = Find("IPlayerIDProvider");
-            return iface != null
-                ? iface.GetMethod("IsLocallyControlled", BindingFlags.Public | BindingFlags.Instance,
+            // 具体类 PlayerIDProvider 上的公共方法（PlayerIDProvider.cs:40）。
+            // 曾错写成反射 "IPlayerIDProvider" 接口——宿主根本没有这个接口
+            //（PlayerControls.PlayerIDProvider 属性返回的就是具体类，PlayerControls.cs:392），
+            // 于是常年为 null，PushableVoidFall 的本地玩家判定一直走兜底分支。
+            var t = Find("PlayerIDProvider");
+            return t != null
+                ? t.GetMethod("IsLocallyControlled", BindingFlags.Public | BindingFlags.Instance,
                     null, Type.EmptyTypes, null)
                 : null;
         });
@@ -514,6 +611,18 @@ namespace CustomStub
 
         // ---- 自动步道定时反转（TravelatorReverser；vanilla 类型） ----
         public static readonly Type TravelatorType = Find("Travelator");
+
+        // ---- 传送门单向（TeleportalExitOnly；全部 vanilla 类型） ----
+        //  Teleportal.m_exitPortal 是方向的唯一来源（public 字段）；
+        //  Server/ClientTeleportal 在 StartSynchronising 里把出口的 receivers
+        //  缓存进私有 m_exitReceivers（ServerTeleportal.cs:60-63 / ClientTeleportal.cs:51-54），
+        //  清 m_exitPortal 若晚于握手则必须同时清缓存，否则该门仍会发送。
+        public static readonly Type TeleportalType = Find("Teleportal");
+        public static readonly FieldInfo TeleportalExitPortalField = Field(TeleportalType, "m_exitPortal");
+        public static readonly Type ServerTeleportalType = Find("ServerTeleportal");
+        public static readonly FieldInfo ServerTeleportalExitReceiversField = Field(ServerTeleportalType, "m_exitReceivers");
+        public static readonly Type ClientTeleportalType = Find("ClientTeleportal");
+        public static readonly FieldInfo ClientTeleportalExitReceiversField = Field(ClientTeleportalType, "m_exitReceivers");
 
         // ---- 锅具食材许可表（CookableContainer.m_approvedContentsList） ----
         public static readonly Type CookableContainerType = Find("CookableContainer");
@@ -717,6 +826,139 @@ namespace CustomStub
             }
         }
 
+        /// <summary>本机角色（日志用）：主机 / 客机 / 单机。</summary>
+        internal static string RoleLabel()
+        {
+            if (IsHostMethod == null || IsInSessionMethod == null)
+                return "未知";
+            try
+            {
+                if (!(bool)IsInSessionMethod.Invoke(null, null))
+                    return "单机";
+                return (bool)IsHostMethod.Invoke(null, null) ? "主机" : "客机";
+            }
+            catch (Exception)
+            {
+                return "未知";
+            }
+        }
+
+        /// <summary>是否处于联机会话中（非单机）。反射失败按 false。</summary>
+        internal static bool IsInSession()
+        {
+            if (IsInSessionMethod == null)
+                return false;
+            try
+            {
+                return (bool)IsInSessionMethod.Invoke(null, null);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // ---- 网络实体扫描窗口判定（v14） ----
+
+        private static Component s_multiplayerController;
+
+        /// <summary>场景里的 MultiplayerController 实例（缓存；Unity 假 null 自动失效后重找）。</summary>
+        internal static Component GetMultiplayerController()
+        {
+            if (s_multiplayerController != null)
+                return s_multiplayerController;
+            if (MultiplayerControllerType == null)
+                return null;
+            s_multiplayerController = UnityEngine.Object.FindObjectOfType(MultiplayerControllerType) as Component;
+            return s_multiplayerController;
+        }
+
+        private static bool s_scanActiveFailLogged;
+
+        /// <summary>网络实体扫描/链接是否正在进行（= 正在分配实体 ID 的致命窗口）。
+        /// 取 MultiplayerController.ScanActive 与 EntitySerialisationRegistry
+        /// .s_bLinkingEntities 的【或】：前者覆盖整段扫描协程（更宽、更安全），
+        /// 后者即便前者反射失败也能圈住真正分配 ID 的循环。
+        /// 反射全失败时返回 false（保持旧行为：不阻塞装配）。</summary>
+        internal static bool IsEntityScanActive()
+        {
+            try
+            {
+                if (EntityLinkingFlagField != null)
+                {
+                    var linking = EntityLinkingFlagField.GetValue(null);
+                    if (linking is bool && (bool)linking)
+                        return true;
+                }
+                if (ScanActiveProperty != null)
+                {
+                    var mc = GetMultiplayerController();
+                    if (mc != null)
+                    {
+                        var active = ScanActiveProperty.GetValue(mc, null);
+                        if (active is bool && (bool)active)
+                            return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!s_scanActiveFailLogged)
+                {
+                    s_scanActiveFailLogged = true;
+                    StubLog.LogWarn("[GameApi] 实体扫描状态查询异常（按「未在扫描」处理）: " + ex.Message);
+                }
+            }
+            return false;
+        }
+
+        /// <summary>对象是否已在实体注册表里（= 拿到了网络实体 ID 与同步组件）。
+        /// 反射缺失时返回 true（不误报，诊断用途宁可漏报不可错报）。</summary>
+        internal static bool HasEntityEntry(GameObject go)
+        {
+            if (go == null || EntityGetEntryMethod == null)
+                return true;
+            try
+            {
+                return EntityGetEntryMethod.Invoke(null, new object[] { go }) != null;
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+        }
+
+        /// <summary>对象的网络实体 ID（0 = 未注册 / 反射缺失）。</summary>
+        internal static uint GetEntityId(GameObject go)
+        {
+            if (go == null || EntityGetIdMethod == null)
+                return 0u;
+            try
+            {
+                var raw = EntityGetIdMethod.Invoke(null, new object[] { go });
+                return raw is uint ? (uint)raw : 0u;
+            }
+            catch (Exception)
+            {
+                return 0u;
+            }
+        }
+
+        /// <summary>实体注册表的 GameObject → entry 字典（诊断指纹用；失败返回 null）。</summary>
+        internal static System.Collections.IDictionary GetEntitiesByGameObject()
+        {
+            if (EntitiesByGameObjectField == null)
+                return null;
+            try
+            {
+                return EntitiesByGameObjectField.GetValue(null) as System.Collections.IDictionary;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         /// <summary>反射自检汇总：枚举全部缓存字段，列出为 null 的（=反射目标在
         /// 游戏 AppDomain 不存在或签名不匹配）。由 EntryPoint.Install 末尾调一次——
         /// 「反射了游戏侧不存在的类型」类事故的直接证据。</summary>
@@ -747,6 +989,12 @@ namespace CustomStub
                 else
                     StubLog.LogWarn("[GameApi] 反射自检: " + total + " 项中 " + missing.Count
                         + " 项未命中: " + string.Join(", ", missing.ToArray()));
+                if (s_fallbackResolved != null && s_fallbackResolved.Count > 0)
+                    StubLog.LogWarn("[GameApi] 以下类型靠【简单名暴力扫描】兜底命中（请把命名空间补进 NamespaceCandidates）: "
+                        + string.Join(", ", s_fallbackResolved.ToArray()));
+                if (s_findFailures != null && s_findFailures.Count > 0)
+                    StubLog.LogWarn("[GameApi] 类型解析过程中吞掉了异常（已按未命中处理）: "
+                        + string.Join(", ", s_findFailures.ToArray()));
             }
             catch (Exception ex)
             {
@@ -855,18 +1103,135 @@ namespace CustomStub
             }
         }
 
+        /// <summary>命名空间候选表（2026-09-15 v14）：宿主把网络消息层类型放在
+        /// Team17.Online.Multiplayer.Messaging 下，而本文件历来按【简单名】反射——
+        /// ClientSynchroniserBase / ServerSynchroniserBase / Serialisable /
+        /// EntitySerialisationRegistry 全部因此落空（真机自检常年报 5 项未命中，
+        /// 直接后果是「触发区占用联机同步」的收发两端补丁从未真正装上）。
+        /// 新增 type 时若简单名查不到，优先往这张表里补前缀，别依赖下面的暴力兜底。
+        ///
+        /// ⚠ 必须懒初始化（2026-09-15 实机事故）：Find 会被本类【静态字段初始化器】
+        /// 调用，而静态字段严格按【文本顺序】初始化——本表声明在文件底部，
+        /// 写成 `static readonly string[] X = {...}` 时，文件顶部那些 `= Find("…")`
+        /// 执行时它还是 null → for 循环 NRE → 静态构造抛
+        /// TypeInitializationException → GameApi 整个类永久不可用 → 全部 stub 功能
+        /// 连同可移动火锅模型一起消失。凡是 Find 依赖的状态，一律懒初始化。</summary>
+        private static string[] s_namespaceCandidates;
+
+        private static string[] GetNamespaceCandidates()
+        {
+            if (s_namespaceCandidates == null)
+                s_namespaceCandidates = new[]
+                {
+                    "Team17.Online.Multiplayer.Messaging.",
+                    "Team17.Online.Multiplayer.",
+                    "Team17.Online.",
+                    "Team17.",
+                    "BitStream.",
+                };
+            return s_namespaceCandidates;
+        }
+
+        /// <summary>类型解析缓存（含解析失败的 null，避免每次重跑暴力兜底）。
+        /// 懒初始化：Find 会被本类【静态字段初始化器】调用，而静态字段按文本顺序
+        /// 初始化——若写成字段初始化器且声明在后面，前面的 Find 调用会读到 null
+        /// 字典并抛 NRE，被 Safe 吞掉后表现为「所有反射目标全 null」。</summary>
+        private static Dictionary<string, Type> s_typeCache;
+
+        /// <summary>走了「暴力按简单名扫描」兜底才找到的类型名（诊断用，由
+        /// DumpReflectionSelfCheck 汇总上报——提醒把命名空间补进候选表）。
+        /// 同理不能用字段初始化器（见 s_typeCache 注释）。</summary>
+        private static List<string> s_fallbackResolved;
+
         internal static Type Find(string typeName)
         {
+            // 绝不抛（2026-09-15 事故防线）：Find 跑在静态字段初始化器里，任何异常
+            // 都会变成 TypeInitializationException 把整个 GameApi 永久毒化——
+            // 届时所有 stub 组件全灭，且日志只剩一句看不出真因的类型初始化失败。
+            // 宁可返回 null（该反射目标退化为「未命中」，自检会报出来）。
+            try
+            {
+                if (string.IsNullOrEmpty(typeName))
+                    return null;
+                if (s_typeCache == null)
+                    s_typeCache = new Dictionary<string, Type>();
+                Type cached;
+                if (s_typeCache.TryGetValue(typeName, out cached))
+                    return cached;
+                var resolved = FindUncached(typeName);
+                s_typeCache[typeName] = resolved;
+                return resolved;
+            }
+            catch (Exception ex)
+            {
+                RecordFindFailure(typeName, ex);
+                return null;
+            }
+        }
+
+        /// <summary>Find 内部异常记录（不能在静态初始化期打日志——StubLog 的桥接
+        /// 反射可能尚未就绪；统一攒着由 DumpReflectionSelfCheck 报出）。</summary>
+        private static List<string> s_findFailures;
+
+        private static void RecordFindFailure(string typeName, Exception ex)
+        {
+            try
+            {
+                if (s_findFailures == null)
+                    s_findFailures = new List<string>();
+                if (s_findFailures.Count < 10)
+                    s_findFailures.Add(typeName + "(" + ex.GetType().Name + ": " + ex.Message + ")");
+            }
+            catch (Exception)
+            {
+                // 记日志都失败就彻底放弃，绝不把异常传回静态初始化器
+            }
+        }
+
+        private static Type FindUncached(string typeName)
+        {
+            // 1) 简单名 + Assembly-CSharp（绝大多数宿主类型走这条）
             var t = Type.GetType(typeName + ", Assembly-CSharp");
             if (t != null)
                 return t;
+            // 2) 简单名 + 全 AppDomain
+            t = ProbeAllAssemblies(typeName);
+            if (t != null)
+                return t;
+            // 3) 已知命名空间前缀重试
+            var candidates = GetNamespaceCandidates();
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                var full = candidates[i] + typeName;
+                t = Type.GetType(full + ", Assembly-CSharp");
+                if (t != null)
+                    return t;
+                t = ProbeAllAssemblies(full);
+                if (t != null)
+                    return t;
+            }
+            // 4) 兜底：逐程序集按【简单名】暴力匹配（Assembly-CSharp 优先，避免
+            //    与其它模组的同名类型撞车）。命中会记进 s_fallbackResolved 上报。
+            t = ProbeBySimpleName(typeName);
+            if (t != null)
+            {
+                if (s_fallbackResolved == null)
+                    s_fallbackResolved = new List<string>();
+                s_fallbackResolved.Add(typeName + "→" + t.FullName);
+            }
+            return t;
+        }
+
+        private static Type ProbeAllAssemblies(string fullName)
+        {
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (asm == null)
                     continue;
+                Type t;
                 try
                 {
-                    t = asm.GetType(typeName, false);
+                    t = asm.GetType(fullName, false);
                 }
                 catch (Exception)
                 {
@@ -878,18 +1243,98 @@ namespace CustomStub
             return null;
         }
 
+        /// <summary>简单名 → 类型 的全量索引（暴力兜底用，整个会话只建一次）。
+        /// 不建索引而每次重扫的话，每个未命中的名字都要把所有程序集 GetTypes()
+        /// 跑一遍（Assembly-CSharp 上万类型），静态初始化期会被拖慢一大截。</summary>
+        private static Dictionary<string, Type> s_simpleNameIndex;
+
+        private static Type ProbeBySimpleName(string simpleName)
+        {
+            if (s_simpleNameIndex == null)
+                s_simpleNameIndex = BuildSimpleNameIndex();
+            Type t;
+            return s_simpleNameIndex.TryGetValue(simpleName, out t) ? t : null;
+        }
+
+        private static Dictionary<string, Type> BuildSimpleNameIndex()
+        {
+            var index = new Dictionary<string, Type>();
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            // 两轮：先 Assembly-CSharp（宿主优先，避免与其它模组的同名类型撞车），
+            // 再其余程序集；先到的不被覆盖。
+            for (int pass = 0; pass < 2; pass++)
+            {
+                foreach (var asm in assemblies)
+                {
+                    if (asm == null)
+                        continue;
+                    bool isHost;
+                    try
+                    {
+                        isHost = asm.GetName().Name == "Assembly-CSharp";
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                    if ((pass == 0) != isHost)
+                        continue;
+                    Type[] types;
+                    try
+                    {
+                        types = asm.GetTypes();
+                    }
+                    catch (ReflectionTypeLoadException ex)
+                    {
+                        types = ex.Types; // 部分可用，含 null 项
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                    if (types == null)
+                        continue;
+                    for (int i = 0; i < types.Length; i++)
+                    {
+                        var t = types[i];
+                        if (t == null || index.ContainsKey(t.Name))
+                            continue;
+                        index[t.Name] = t;
+                    }
+                }
+            }
+            return index;
+        }
+
         internal static FieldInfo Field(Type type, string fieldName)
         {
-            return type != null
-                ? type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                : null;
+            // 同 Find：跑在静态初始化器里，绝不抛
+            try
+            {
+                return type != null
+                    ? type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                RecordFindFailure((type != null ? type.Name : "<null>") + "." + fieldName, ex);
+                return null;
+            }
         }
 
         internal static PropertyInfo Prop(Type type, string propName)
         {
-            return type != null
-                ? type.GetProperty(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                : null;
+            try
+            {
+                return type != null
+                    ? type.GetProperty(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                RecordFindFailure((type != null ? type.Name : "<null>") + "." + propName, ex);
+                return null;
+            }
         }
     }
 }

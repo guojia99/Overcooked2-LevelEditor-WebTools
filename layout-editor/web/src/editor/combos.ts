@@ -1,6 +1,6 @@
 import { CELL, S } from "./state";
 import type { ComboDef, EditorItem } from "./state";
-import { catalogItemById } from "./catalog";
+import { catalogItemById, ingredientGuidById } from "./catalog";
 import { addFromCatalog } from "./items";
 import { setServingReturnOfType } from "./servingLinks";
 import type { ServingReturnKind } from "./servingLinks";
@@ -22,14 +22,28 @@ function linkServing(kind: ServingReturnKind) {
  * 触发消息用目标机器的原生触发名（断头台 Chop、饮料机/酱料机 Next——机器包装
  *  prefab 自带 TriggerOnObject 翻译层，自定义名真机不响应），ingredientIds 非空时
  *  按 id 解析 guid 写入机器 soArray（多选列表，开关循环切换）。
+ *
+ * ⚠ id→guid 必须走 `ingredientGuidById`（别名感知）而不是 `find(i => i.id === id)`：
+ *  食材目录 id 会随资产改名 / prefabName 归一而变（2026-09-10 起 DLC08_Drink01→drink01），
+ *  精确匹配会静默解析不到 → 组合放下去不带任何默认饮料/酱料（2026-09-15 修）。
  */
 function linkSwitch(ingredientIds?: string[]) {
   return (items: EditorItem[]) => {
     const target = items[0];
     const sw = items[1];
-    const guids = (ingredientIds ?? [])
-      .map((id) => S.ingredientsCache.find((i) => i.id === id)?.guid)
-      .filter((g): g is string => !!g);
+    const guids: string[] = [];
+    for (const id of ingredientIds ?? []) {
+      const g = ingredientGuidById(id);
+      // 去重：清单同时写了「目录 id + common03 正式版 id」两代写法，两者解析到同一
+      // guid，去重后顺序即开关循环顺序（首次出现为准）
+      if (g && !guids.includes(g)) guids.push(g);
+    }
+    if ((ingredientIds ?? []).length > 0 && guids.length === 0) {
+      console.warn(
+        `[combo] 默认输出食材一个都没解析到（${(ingredientIds ?? []).join(", ")}）——` +
+          "机器将使用内置列表。多半是食材目录 id 变了，请更新 combos/recipeKnowledge 的清单。"
+      );
+    }
     if (guids.length) {
       target.stubKind = "Dispenser";
       target.dispenser = { spawnerItemPrefabGuid: guids[0] };
@@ -72,11 +86,19 @@ function linkCannonTerminal(items: EditorItem[]): void {
   S.switchLinks.push({ switchId: sw.instanceId, targetId: cannon.instanceId, trigger: "Launch" });
 }
 
-/** 两个传送门互为出口（双向传送）。 */
+/** 传送门配对：默认【单向 A→B】——a 是入口，b 仅作为出口（回指 a 占位，
+ *  运行时由 CustomStub.TeleportalExitOnly 把 b 的出口清回 null）。
+ *  需要双向在入口门参数里勾「双向传送」即可。 */
 function linkTeleportalPair(items: EditorItem[]): void {
   const [a, b] = items;
-  if (a.teleportal) a.teleportal.exitPortalInstanceId = b.instanceId;
-  if (b.teleportal) b.teleportal.exitPortalInstanceId = a.instanceId;
+  if (a.teleportal) {
+    a.teleportal.exitPortalInstanceId = b.instanceId;
+    a.teleportal.exitOnly = false;
+  }
+  if (b.teleportal) {
+    b.teleportal.exitPortalInstanceId = a.instanceId;
+    b.teleportal.exitOnly = true;
+  }
 }
 
 /**
@@ -115,7 +137,9 @@ export const COMBOS: ComboDef[] = [
       { id: "dlc08_drink_machine", dx: 0, dz: 0 },
       { id: "Switch", dx: 2, dz: 0 },
     ],
-    link: linkSwitch(["DLC08_Drink01", "DLC08_Drink02", "DLC08_Drink03"]),
+    // 清单写两代 id（目录现行小写 id 在前决定循环顺序，common03 正式版 id 兜底，
+    // 解析到同一 guid 时自动去重）
+    link: linkSwitch(["drink01", "drink02", "drink03", "DLC08_Drink01", "DLC08_Drink02", "DLC08_Drink03"]),
   },
   {
     id: "drink_switch_icecream",
@@ -125,7 +149,7 @@ export const COMBOS: ComboDef[] = [
       { id: "dlc11_drink_dispenser", dx: 0, dz: 0 },
       { id: "Switch", dx: 2, dz: 0 },
     ],
-    link: linkSwitch(["DLC11_OrangeSoda", "DLC11_RootBeer"]),
+    link: linkSwitch(["orangesoda", "rootbeer", "DLC11_OrangeSoda", "DLC11_RootBeer"]),
   },
   {
     id: "condiment_switch",
@@ -135,7 +159,7 @@ export const COMBOS: ComboDef[] = [
       { id: "dlc08_condiment_dispenser", dx: 0, dz: 0 },
       { id: "Switch", dx: 2, dz: 0 },
     ],
-    link: linkSwitch(["DLC08_Mustard", "DLC08_Ketchup"]),
+    link: linkSwitch(["mustard", "ketchup", "DLC08_Mustard", "DLC08_Ketchup"]),
   },
   {
     id: "guillotine_switch",
@@ -170,8 +194,8 @@ export const COMBOS: ComboDef[] = [
   },
   {
     id: "teleportal_pair",
-    nameZh: "传送门 × 2（互配）",
-    hint: "自动配对：互为出口，双向传送",
+    nameZh: "传送门 × 2（配对）",
+    hint: "自动配对：左=入口 → 右=出口（单向）；右键入口门勾「双向传送」可改双向",
     parts: [
       { id: "Teleportal", dx: 0, dz: 0 },
       { id: "Teleportal", dx: 2, dz: 0 },

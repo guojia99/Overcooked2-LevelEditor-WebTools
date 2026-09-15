@@ -4,14 +4,11 @@ import { navHtml, wireNav } from "./nav";
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
 import {
-  cardIntermediate,
-  computeCardGroups,
   rlCardHtml,
   rlSectionHtml,
-  STEP_ICON_SRC,
   type RecipeWithGroups,
 } from "./recipeCard";
-import { exportSummaryPng, type SummaryCard } from "./summaryExport";
+import { createOffscreenStage, exportNodePng } from "./domSvgExport";
 import { mountVersionBadge } from "./version";
 
 mountVersionBadge();
@@ -105,18 +102,61 @@ function scoreMatches(s: number | undefined, filter: "all" | "other" | number): 
 
 /** 多 DLC 换皮去重：规范化中文名（去 DLC 后缀/空白）作聚簇键，代表 = 最高 DLC（保留后缀）。 */
 function reskinDedupKey(name: string): string {
-  return String(name ?? "").replace(/·?DLC\d+/g, "").replace(/[（）()· ]/g, "");
+  return String(name ?? "").replace(/·?DLC\d+/gi, "").replace(/[（）()· ]/g, "");
 }
+/** 完整聚簇键 = 归一中文名 + 来源 + 分值 + 烹饪步骤。
+ *  只靠中文名会把「同名但不是换皮」的菜谱误折叠（实测两例）：
+ *   - 「生菜汉堡」：commonW2 LettuceBurger（无肉，40 分）vs 官方 Burger_Lettuce_SO
+ *     （含煎肉排，60 分）——完全不同的两道菜；
+ *   - 「煎蘑菇」：commonW2 FriedMushroom（DeepFatFryer）vs PanfriedMushroom（FryingPan）
+ *     ——不同工序的两个中间产物。
+ *  真正的跨 DLC 换皮（热狗 dlc08/dlc11 等）来源、分值、步骤都相同，仍会正确折叠。 */
+function reskinClusterKey(it: {
+  nameZh?: string;
+  isCustom?: boolean;
+  score?: number;
+  cookingStep?: string;
+}): string {
+  return [
+    reskinDedupKey(it.nameZh ?? ""),
+    it.isCustom ? "custom" : "official",
+    it.score ?? 0,
+    it.cookingStep ?? "",
+  ].join("|");
+}
+/** id 里的 DLC 序号。大小写不敏感：common03 正式版菜谱是 `DLC08_chickenburger`
+ *  这种大写前缀，此前用区分大小写的正则会误判为 0。 */
 function dlcNumber(id: string): number {
-  const m = /^dlc(\d+)_/.exec(id ?? "");
+  const m = /^dlc(\d+)_/i.exec(id ?? "");
   return m ? parseInt(m[1], 10) : 0;
 }
-function dedupReskins<T extends { id: string; group?: string; nameZh?: string }>(items: T[]): T[] {
+/** 同簇代表优先级：DLC 序号高者胜；同序号时「🍔 Burger大全」（commonW2，面皮统一
+ *  为 DLC8、外观最完整）优先；再平票按 id 字典序取定值，保证任何调用顺序下结果
+ *  一致（此前依赖数组顺序，刷新一次可能换一个代表）。 */
+function reskinBetter(a: { id: string; group?: string }, b: { id: string; group?: string }): boolean {
+  const da = dlcNumber(a.id);
+  const db = dlcNumber(b.id);
+  if (da !== db) return da > db;
+  const ba = a.group === "burger" ? 1 : 0;
+  const bb = b.group === "burger" ? 1 : 0;
+  if (ba !== bb) return ba > bb;
+  return (a.id ?? "") < (b.id ?? "");
+}
+function dedupReskins<
+  T extends {
+    id: string;
+    group?: string;
+    nameZh?: string;
+    isCustom?: boolean;
+    score?: number;
+    cookingStep?: string;
+  },
+>(items: T[]): T[] {
   const reps = new Map<string, T>();
   for (const it of items) {
-    const key = reskinDedupKey(it.nameZh ?? "");
+    const key = reskinClusterKey(it);
     const cur = reps.get(key);
-    if (!cur || dlcNumber(it.id) > dlcNumber(cur.id)) reps.set(key, it);
+    if (!cur || reskinBetter(it, cur)) reps.set(key, it);
   }
   return [...reps.values()];
 }
@@ -301,68 +341,68 @@ function wire(): void {
 }
 
 /** 一键导出：把当前筛选出的全部菜谱（含分组标题/卡片/徽标/烹饪组）合成为一张 PNG 长图。
- *  复用汇总页的纯 SVG 合成管线（summaryExport.ts），布局规则与页面卡片一致。 */
+ *  走 DOM 快照导出（domSvgExport.ts）：**直接拍页面上已经渲染好的卡片**，样式与
+ *  页面 100% 一致。页面本身没有标题页头（标题在顶栏 manage-bar 里），所以克隆
+ *  #rl-content 到离屏舞台并补一个 .sum-head 页头，再整体快照。 */
 async function exportAll(): Promise<void> {
   const btn = document.getElementById("rl-export") as HTMLButtonElement | null;
-  const vis = visible();
-  if (vis.length === 0) {
-    setStatus("没有可导出的菜谱", false);
+  const content = document.getElementById("rl-content");
+  if (!content) {
+    setStatus("页面内容尚未就绪", false);
+    return;
+  }
+  const isIngredients = view === "ingredients";
+  const count = isIngredients
+    ? content.querySelectorAll(".rl-ing-card").length
+    : visible().length;
+  if (count === 0) {
+    setStatus(isIngredients ? "没有可导出的食材" : "没有可导出的菜谱", false);
     return;
   }
   if (btn) btn.disabled = true;
   setStatus("正在生成图片…");
+  let stage: HTMLDivElement | null = null;
   try {
-    const sections = groupRecipesByType(vis).map(([type, arr]) => ({
-      typeLabel: recipeTypeLabel(type),
-      count: arr.length,
-      cards: arr.map((r): SummaryCard => {
-        const groups = computeCardGroups(r, { allRecipes: recipes });
-        const intermediate = cardIntermediate(r);
-        const badges: string[] = [];
-        if (intermediate) badges.push("半成品");
-        if (r.isCustom) badges.push("自定义");
-        if (r.group === "levelset") badges.push("本关");
-        if (r.group && r.group !== "core" && r.group !== "levelset") badges.push(foodGroupLabel(r.group));
-        if (!intermediate) badges.push(`⭐ ${r.score ?? 0}`);
-        return {
-          iconUrl: recipeIconUrlOf(r),
-          nameZh: r.nameZh,
-          nameEn: r.nameEn || r.id,
-          badges,
-          groups: groups.map((cg) => ({
-            stepIcons: [cg.step, ...(cg.extraSteps ?? []).map((e) => e.step)]
-              .filter(Boolean)
-              .map((s) => STEP_ICON_SRC[s])
-              .filter((s): s is string => !!s),
-            ingredientUrls: (cg.ingredients ?? []).map(
-              (id) => `/icons/ingredients/${encodeURIComponent(id)}.png`
-            ),
-            ingredientStepIcons: (cg.ingredients ?? []).map((id) =>
-              (cg.ingredientSteps?.[id] ?? [])
-                .map((s) => STEP_ICON_SRC[s])
-                .filter((s): s is string => !!s)
-            ),
-          })),
-        };
-      }),
-    }));
-    const width = document.getElementById("rl-content")?.getBoundingClientRect().width || 1200;
     const date = new Date().toISOString().slice(0, 10);
-    await exportSummaryPng(
-      {
-        title: "菜谱清单列表",
-        sub: `共 ${vis.length} 个菜谱 · 导出于 ${date}`,
-        sections,
-      },
-      width,
-      `菜谱清单_${vis.length}个_${date}.png`
-    );
-    setStatus(`已导出 PNG（${vis.length} 个菜谱）`);
+    const title = isIngredients ? "食材清单" : "菜谱清单列表";
+    const unit = isIngredients ? "个食材" : "个菜谱";
+    const width = content.getBoundingClientRect().width || 1200;
+    // +48 = .sum-page 的左右内边距，保证舞台里的内容宽度与页面一致（不改变换行）
+    stage = createOffscreenStage(width + 48, "sum-page");
+    stage.innerHTML = `
+      <header class="sum-head">
+        <h1 class="sum-title">${esc(title)}</h1>
+        <div class="sum-sub">共 ${count} ${esc(unit)} · 导出于 ${esc(date)}</div>
+      </header>
+      <div data-export-host></div>
+    `;
+    const host = stage.querySelector("[data-export-host]")!;
+    for (const child of Array.from(content.children)) host.appendChild(child.cloneNode(true));
+    await waitForImages(stage);
+    await exportNodePng(stage, `${title}_${count}个_${date}.png`);
+    setStatus(`已导出 PNG（${count} ${unit}）`);
   } catch (e) {
     setStatus(e instanceof Error ? e.message : String(e), false);
   } finally {
+    if (stage) stage.remove();
     if (btn) btn.disabled = false;
   }
+}
+
+/** 等离屏克隆里的图片解码完成（克隆节点的 <img> 需要重新触发加载，
+ *  未完成时 currentSrc 可能为空，导出会漏图）。 */
+async function waitForImages(root: HTMLElement): Promise<void> {
+  const imgs = Array.from(root.querySelectorAll("img"));
+  await Promise.all(
+    imgs.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete) return resolve();
+          img.addEventListener("load", () => resolve(), { once: true });
+          img.addEventListener("error", () => resolve(), { once: true });
+        })
+    )
+  );
 }
 
 async function init(): Promise<void> {

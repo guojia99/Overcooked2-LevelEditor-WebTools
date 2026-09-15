@@ -53,21 +53,14 @@ export const STEP_UTENSILS: Record<string, string[]> = {
  *  - 沙拉洋葱：原版 dlc11 关卡食材箱给整个沙拉洋葱（dlc11_onion_salad，prefab 型，
  *    切 8 刀变 ChoppedOnion_Salad 匹配 dlc11onion_salad 节点）；节点本体不能进食材箱
  *    （运行时 LoadAsset<GameObject> 为 null → PseudoPrefabDispenser.Setup NRE）。
- *  - DLC8 汉堡胚 → 核心汉堡面包（ChoppedBunSO）：二者携带的 IngredientOrderNode
- *    uID 同为 16088（bundle 实测），订单匹配完全等价；套餐统一用核心面包，
- *    不再依赖 bundle359 的 dlc08_choppedbun。
- *    · 汉堡大全（commonW2）成品的面皮组成用真 DLC8 面包（dlc08_choppedbun，
- *      资产文件名 DLC08_ChoppedBun），但建箱同样归一到核心面包 ChoppedBunSO
- *      （uID 16088 等价）——W1/W2 不自维护食材，建箱一律走 common1-3 的核心面包，
- *      避免因建箱多引入 bundle359；面皮外观仍是 DLC8。
  *  - DLC10 火锅/拼盘食材 → DLC04 版（uID 718144~718150 一一相等，换皮复用）：
  *    dlc10_* 建箱统一映射到无前缀/dlc04 版（bundle226），少一个 bundle 依赖；
- *    混选两套换皮菜谱时也只建一套箱（uID 等价，一箱即匹配两套订单）。 */
+ *    混选两套换皮菜谱时也只建一套箱（uID 等价，一箱即匹配两套订单）。
+ *  注意：汉堡面皮**不在**本表内——它是「带菜谱上下文」的条件归一，见
+ *  crateIngredientId / BUN_EQUIVALENT_IDS。本表是无上下文的全局替换，下游
+ *  （crateIngId / fillMissingDispensers）会二次套用，把面皮放进来会覆盖上下文选择。 */
 export const NODE_INGREDIENT_SOURCES: Record<string, string> = {
   dlc11onion_salad: "dlc11_onion_salad",
-  dlc08_bun: "ChoppedBunSO",
-  DLC08_ChoppedBun: "ChoppedBunSO",
-  dlc08_choppedbun: "ChoppedBunSO",
   dlc10_bokchoy: "bokchoy",
   dlc10_meat: "dlc04_meat",
   dlc10_orange: "dlc04_orange",
@@ -76,6 +69,43 @@ export const NODE_INGREDIENT_SOURCES: Record<string, string> = {
   dlc10_noodles: "noodles",
   dlc10_peach: "peach",
 };
+
+/** 核心汉堡面包（common01，bundle47）。 */
+export const BUN_CORE_ID = "ChoppedBunSO";
+/** DLC8 汉堡面皮（common03，bundle359）——汉堡大全与 DLC8 套餐的规范面皮。
+ *  全仓库只用这一种写法：历史别名 `dlc08_bun`（commonW1 装饰壳文件名）与
+ *  `DLC08_ChoppedBun`（旧资产文件名）已于命名统一时一并改名到此 id。 */
+export const BUN_DLC8_ID = "dlc08_choppedbun";
+/** commonW2「🍔 Burger大全」菜谱组 id（LayoutEditorCatalogApi.FoodGroupOf）。 */
+export const BURGER_COMPENDIUM_GROUP = "burger";
+
+/** 面皮等价组：DLC8 面皮与核心汉堡面包携带的 IngredientOrderNode uID 同为 16088
+ *  （bundle 实测），任一食材箱都能满足另一方的订单匹配 —— 场景里已有其中一种时
+ *  不再重复建箱、也不误报缺失。
+ *  DLC02 面皮（DLC02_ChoppedBun）未经 uID 实测，不纳入等价组，沿用「同时补齐
+ *  主线面包皮」的显式 opt-in。 */
+export const BUN_EQUIVALENT_IDS: readonly string[] = [BUN_CORE_ID, BUN_DLC8_ID];
+
+/** 建箱 id 归一（**带菜谱上下文**）。
+ *  汉堡大全（commonW2，group="burger"）成品的面皮外观就是 DLC8，推荐食材箱也给
+ *  DLC8 面皮（代价：关卡多一个 bundle359 依赖，由 EnsureAllWebBundleDependencies
+ *  自动注册）；其余菜谱（官方 core/dlc02 汉堡、DLC8 套餐）仍归一到核心面包
+ *  ChoppedBunSO，避免仅为建箱引入 bundle359。 */
+export function crateIngredientId(ing: string, recipe?: { group?: string }): string {
+  if (ing === BUN_DLC8_ID)
+    return recipe?.group === BURGER_COMPENDIUM_GROUP ? BUN_DLC8_ID : BUN_CORE_ID;
+  return NODE_INGREDIENT_SOURCES[ing] ?? ing;
+}
+
+/** 与 id 订单匹配等价的全部食材箱 id（含自身）。 */
+export function equivalentCrateIds(id: string): string[] {
+  const out = new Set<string>([id]);
+  if (BUN_EQUIVALENT_IDS.includes(id)) for (const b of BUN_EQUIVALENT_IDS) out.add(b);
+  const equiv = NODE_INGREDIENT_SOURCES[id];
+  if (equiv) out.add(equiv);
+  for (const [from, to] of Object.entries(NODE_INGREDIENT_SOURCES)) if (to === id) out.add(from);
+  return [...out];
+}
 
 const COOK_STEPS = new Set(Object.keys(STEP_UTENSILS));
 

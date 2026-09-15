@@ -31,8 +31,10 @@ const OUT_DIR = path.join(repoRoot, "layout-editor/web/public");
 const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
 
 /** Bumped when output schema / shared data files change; the Unity bridge reports
- *  its own version via /api/health so the web UI can warn about outdated bridges. */
-const SCHEMA_VERSION = 5;
+ *  its own version via /api/health so the web UI can warn about outdated bridges.
+ *  v6（2026-09-15）：传送门方向（teleportal.exitOnly）——旧桥接会把该字段静默丢弃，
+ *  必须靠版本告警把「单向配置写回后消失」拦在前面。 */
+const SCHEMA_VERSION = 6;
 
 /**
  * CustomStub 依赖道具（needsStub=true）：游戏侧需要关卡集携带 Stub_<set> runtime

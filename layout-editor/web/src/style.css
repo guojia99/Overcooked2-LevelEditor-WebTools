@@ -3245,6 +3245,47 @@ body.manage-bg {
   font-size: 14px;
 }
 
+/* 关卡编辑页「汇总导出背景图」区块：左预览（cover + 暗色遮罩实时预览）右控件 */
+.sumbg-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.sumbg-preview {
+  flex: 0 0 auto;
+  width: 280px;
+  height: 158px;
+  border: 1px solid #3a3f4b;
+  border-radius: 6px;
+  background-color: #1a1d23;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sumbg-empty {
+  color: #8a909a;
+  font-size: 12px;
+}
+
+.sumbg-ctrl {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.sumbg-ctrl .m-actions-row {
+  margin: 4px 0 0;
+  align-items: center;
+}
+
 .modal-panel.wide {
   max-width: 1100px;
 }

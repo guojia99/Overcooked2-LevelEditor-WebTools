@@ -4382,10 +4382,10 @@
    "allIngredientsReachable": true
   },
   {
-   "id": "DLC08_ChoppedBun",
+   "id": "dlc08_choppedbun",
    "lib": "common03",
    "dlc": "dlc08",
-   "soPath": "Assets/common03/food/Ingredients/dlc08/DLC08_ChoppedBun.asset",
+   "soPath": "Assets/common03/food/Ingredients/dlc08/dlc08_choppedbun.asset",
    "loadIngredientSoOrder": 1,
    "nodeTypeOnly": false,
    "matchlistCoverage": [
@@ -7276,7 +7276,7 @@
    "dlc": "dlc02",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "BurgerPineapple",
     "MeatSO",
     "MeatSO"
@@ -8013,7 +8013,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "FriedMeat",
     "dlc08_friedchips"
    ],
@@ -8026,7 +8026,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "FriedMeat",
     "dlc08_friedchips",
     "DLC08_Drink02"
@@ -8040,7 +8040,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "FriedMeat",
     "dlc08_friedchips",
     "DLC08_friedcheese_sticks"
@@ -8054,7 +8054,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "FriedMeat",
     "DLC08_Drink01"
    ],
@@ -8067,7 +8067,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "FriedMeat",
     "DLC08_friedonion_rings"
    ],
@@ -8080,7 +8080,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "FriedMeat",
     "DLC08_friedonion_rings",
     "DLC08_Drink01"
@@ -8094,7 +8094,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "FriedMeat",
     "DLC08_friedonion_rings",
     "DLC08_friedcheese_sticks"
@@ -8108,7 +8108,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "FriedMeat",
     "DLC08_friedcheese_sticks",
     "DLC08_Drink03"
@@ -8122,7 +8122,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "dlc08_chicken"
    ],
    "matchlist": "dlc08",
@@ -8134,7 +8134,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "DLC08_friedchickenburger",
     "dlc08_friedchips",
     "DLC08_Drink03"
@@ -8148,7 +8148,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "DLC08_friedchickenburger",
     "dlc08_friedchips",
     "DLC08_friedonion_rings"
@@ -8162,7 +8162,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "DLC08_friedchickenburger",
     "dlc08_friedchips",
     "DLC08_friedcheese_sticks"
@@ -8176,7 +8176,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "DLC08_friedchickenburger",
     "DLC08_Drink03"
    ],
@@ -8189,7 +8189,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "DLC08_friedchickenburger",
     "DLC08_friedonion_rings"
    ],
@@ -8202,7 +8202,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "DLC08_friedchickenburger",
     "DLC08_friedonion_rings",
     "DLC08_Drink01"
@@ -8216,7 +8216,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "DLC08_friedchickenburger",
     "DLC08_friedcheese_sticks"
    ],
@@ -8229,7 +8229,7 @@
    "dlc": "dlc08",
    "source": "catalog",
    "ingredients": [
-    "DLC08_ChoppedBun",
+    "dlc08_choppedbun",
     "DLC08_friedchickenburger",
     "DLC08_friedcheese_sticks",
     "DLC08_Drink02"

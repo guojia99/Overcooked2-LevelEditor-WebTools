@@ -52,6 +52,17 @@ import { isServingStationItem,
   isGlassReturnItem
 } from "./servingLinks";
 import { airWallCells, airWallHeightCells } from "./items";
+import {
+  isTeleportalItem,
+  teleportals,
+  teleportalRole,
+  computeTeleportalLabels
+} from "./teleportalLinks";
+
+// 传送门方向模型与配对改写统一在 ./teleportalLinks；此处保留再导出，旧的
+// `from "./renderItems"` 引用（render / stubControls / detailPanel）无需改动。
+export { isTeleportalItem, teleportals, teleportalRole, computeTeleportalLabels };
+export type { TeleportalRole } from "./teleportalLinks";
 
 /** 空气箱（隐形碰撞块）：编辑器内以虚线框 + 半透明填充标示，游戏内不可见。 */
 function drawCollisionMarker(item: EditorItem, selected: boolean) {
@@ -392,23 +403,68 @@ export function drawTeleportalBadge(item: EditorItem, center: { x: number; y: nu
   dom.ctx.textAlign = "center";
   dom.ctx.textBaseline = "middle";
   dom.ctx.fillText(label, bx, by);
+  // 方向角标（入 / 出 / 双 / ?）：左下角小圆，与右上角的配对组号区分开。
+  const role = teleportalRoleGlyph(item);
+  if (role) {
+    const rx = center.x - r * 0.72;
+    const ry = center.y + r * 0.72;
+    dom.ctx.fillStyle = "#1a1d23";
+    dom.ctx.beginPath();
+    dom.ctx.arc(rx, ry, cellPx * 0.26, 0, Math.PI * 2);
+    dom.ctx.fill();
+    dom.ctx.strokeStyle = color;
+    dom.ctx.lineWidth = Math.max(1.2, cellPx * 0.04);
+    dom.ctx.stroke();
+    dom.ctx.fillStyle = color;
+    dom.ctx.font = `bold ${Math.max(9, Math.round(cellPx * 0.26))}px sans-serif`;
+    dom.ctx.fillText(role, rx, ry);
+  }
   dom.ctx.restore();
 }
 
+/** 传送门方向：
+ *  - "two"      双向（互指且两侧都能进）
+ *  - "entrance" 单向入口（本门发送到出口门）
+ *  - "exit"     仅作为出口（本门不发送）
+ *  - "unbound"  未绑定出口（写回会被阻断）
+ * 实现见 ./teleportalLinks（方向模型与配对改写的唯一收口）。 */
+function teleportalRoleGlyph(item: EditorItem): string {
+  switch (teleportalRole(item)) {
+    case "two":
+      return "双";
+    case "entrance":
+      return "入";
+    case "exit":
+      return "出";
+    default:
+      return "?";
+  }
+}
+
+/** 传送门连线：单向 = 单箭头指向出口门；双向 = 两端各一个箭头（只画一次）。 */
 export function drawTeleportalLinks() {
   const tp = teleportals();
   const byInst = new Map(tp.map((i) => [i.instanceId, i]));
+  const drawnPairs = new Set<string>();
   for (const t of tp) {
+    if (t.teleportal?.exitOnly) continue; // 出口门的回指占位不画（方向以入口为准）
     const exitId = t.teleportal?.exitPortalInstanceId;
     if (!exitId || exitId === t.instanceId) continue;
     const p = byInst.get(exitId);
     if (!p) continue;
+    const twoWay = teleportalRole(t, byInst) === "two";
+    if (twoWay) {
+      const key = [t.instanceId, p.instanceId].sort().join("|");
+      if (drawnPairs.has(key)) continue;
+      drawnPairs.add(key);
+    }
     const a = worldToCanvas(t._wx, t._wz);
     const b = worldToCanvas(p._wx, p._wz);
     const color = PORTAL_COLORS[t.teleportal?.portalColor ?? 0] ?? "#c792ea";
     dom.ctx.save();
     dom.ctx.strokeStyle = color;
-    dom.ctx.globalAlpha = 0.45;
+    dom.ctx.fillStyle = color;
+    dom.ctx.globalAlpha = 0.55;
     dom.ctx.lineWidth = 1.5;
     dom.ctx.setLineDash([6, 4]);
     dom.ctx.beginPath();
@@ -416,8 +472,25 @@ export function drawTeleportalLinks() {
     dom.ctx.lineTo(b.x, b.y);
     dom.ctx.stroke();
     dom.ctx.setLineDash([]);
+    drawLinkArrowHead(a, b);
+    if (twoWay) drawLinkArrowHead(b, a);
     dom.ctx.restore();
   }
+}
+
+/** 连线箭头：画在 from→to 方向、贴近 to 端（当前 ctx 的 fillStyle 即箭头色）。 */
+function drawLinkArrowHead(from: { x: number; y: number }, to: { x: number; y: number }) {
+  const rad = Math.atan2(to.y - from.y, to.x - from.x);
+  const ah = 9 * Math.max(0.6, S.scale);
+  const gap = 10 * Math.max(0.6, S.scale); // 与门中心留空，避免压住徽标
+  const tipX = to.x - Math.cos(rad) * gap;
+  const tipY = to.y - Math.sin(rad) * gap;
+  dom.ctx.beginPath();
+  dom.ctx.moveTo(tipX, tipY);
+  dom.ctx.lineTo(tipX - ah * Math.cos(rad - Math.PI / 7), tipY - ah * Math.sin(rad - Math.PI / 7));
+  dom.ctx.lineTo(tipX - ah * Math.cos(rad + Math.PI / 7), tipY - ah * Math.sin(rad + Math.PI / 7));
+  dom.ctx.closePath();
+  dom.ctx.fill();
 }
 
 /** 开关联动连线（switchLinks：开关 → 断头台/果汁机/酱料机等目标），橙色虚线 + 箭头指向目标。 */
@@ -554,32 +627,8 @@ export function hitTestItemResizeHandle(item: EditorItem, wx: number, wz: number
   return { edge, anchorX, anchorZ };
 }
 
-export function computeTeleportalLabels(): Map<string, string> {
-  const tp = teleportals();
-  const byInst = new Map(tp.map((i) => [i.instanceId, i]));
-  const label = new Map<string, string>();
-  let n = 0;
-  for (const t of tp) {
-    if (label.has(t.instanceId)) continue;
-    const lab = (++n).toString();
-    label.set(t.instanceId, lab);
-    const exitId = t.teleportal?.exitPortalInstanceId;
-    if (exitId && byInst.has(exitId) && !label.has(exitId)) label.set(exitId, lab);
-  }
-  for (const t of tp) if (!label.has(t.instanceId)) label.set(t.instanceId, "?");
-  return label;
-}
-
 export function isConveyorItem(item: EditorItem): boolean {
   return item.stubKind === "Conveyor" || prefabIdFromPath(item.prefabAssetPath) === "ConveyorStation";
-}
-
-export function isTeleportalItem(item: EditorItem): boolean {
-  return item.stubKind === "Teleportal" || prefabIdFromPath(item.prefabAssetPath) === "Teleportal";
-}
-
-export function teleportals(): EditorItem[] {
-  return S.items.filter(isTeleportalItem);
 }
 
 export function isPlayerItem(item: EditorItem): boolean {

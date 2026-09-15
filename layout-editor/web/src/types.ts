@@ -131,9 +131,17 @@ export interface LayoutConveyorStub {
 }
 
 export interface LayoutTeleportalStub {
+  /** 本门的出口（另一扇传送门的 instanceId）。
+   *  exitOnly=true 时是【回指入口的占位】——宿主/真机 mod 的 LateSetup 对空出口
+   *  会 NRE，真正的方向由运行时把 Teleportal.m_exitPortal 清回 null 实现。 */
   exitPortalInstanceId?: string;
   portalColor?: number;
+  /** 双面【外观】：背面也显示门框（宿主只克隆视觉），不影响进出方向。 */
   doubleSided?: boolean;
+  /** true = 仅作为出口（单向传送的出口侧，本门不发送）。
+   *  权威 = CustomStub.TeleportalExitOnly 组件，载体 = tag "TeleportalExitOnly|<1|0>"；
+   *  依赖包过旧时 fail-open 退化为双向。 */
+  exitOnly?: boolean;
 }
 
 export interface LayoutCookingUtensilStub {
@@ -1031,6 +1039,11 @@ export interface LevelDetail {
   hasScreenshot: boolean;
   /** Asset path of the screenshot texture ("" when none), serve via api.imageFloorUrl. */
   screenshotPath?: string;
+  /** 汇总页导出背景图（Assets/LevelSets/<set>/data/<level>/summary_bg~/bg.*，
+   *  Unity 忽略的目录 → 不进 AssetBundle）；"" = 未设置。走 api.imageFloorUrl 读取。 */
+  summaryBgPath?: string;
+  /** 背景图暗色遮罩浓度（0-0.9）。 */
+  summaryBgDim?: number;
   debugRecipeCount: number;
   disableDynamicParenting: boolean;
   minOrderCount: number;

@@ -27,7 +27,7 @@ export const GUIDE_INGREDIENT_SAMPLES: Record<string, string[]> = {
   dlc04: ["dlc04_orange", "dlc04_peach", "corn", "grapes"],
   dlc05: ["DLC05_Dough", "DLC05_Egg", "DLC05_Marshmallow", "DLC05_Strawberry", "DLC05_Banana", "DLC05_Crackers"],
   dlc07: ["dlc07_potato", "broccoli", "CarrotSO"],
-  dlc08: ["dlc08_bun", "dlc08_chicken"],
+  dlc08: ["dlc08_choppedbun", "dlc08_chicken"],
   dlc09: ["dlc09_flour", "dlc09_egg", "dlc09_potato", "dlc09_orange"],
   dlc10: ["dlc10_orange", "dlc10_grapes", "dlc10_peach"],
   dlc11: ["dlc11_tomato", "dlc11_lettuce", "dlc11_hotdogbun", "dlc11_frankfurter", "dlc11_ketchup"],

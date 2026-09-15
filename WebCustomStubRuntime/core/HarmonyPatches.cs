@@ -83,12 +83,114 @@ namespace CustomStub
             }
         }
 
+        // ============ 网络实体扫描锚点（v14，联机 ID 错位修复） ============
+        //
+        // MultiplayerController.ScanEntities 每关只调一次（冷方法，detour 零热路径
+        // 开销），是主客机唯一确定性一致的「发令时刻」：两台机器都在收到
+        // GameState.ScanNetworkEntities 时把可移动火锅同步装配完，扫描遍历到的层级
+        // 才会完全相同、实体 ID 才会对齐。
+        //
+        // 前缀必须绝对不抛：它跑在关卡加载主流程上，异常会把整关卡加载打断。
+
+        /// <summary>MultiplayerController.ScanEntities 前缀：扫描开始前把所有
+        /// 可移动火锅装配完，并记录发令时刻快照。</summary>
+        private static void MultiplayerScanEntitiesPrefix()
+        {
+            try
+            {
+                int total, assembled;
+                PushablePot.FlushPendingAssemblies(out total, out assembled);
+                if (total > 0)
+                    NetDiagnostics.OnScanEntitiesBegin(total, assembled);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("scanPrefix", "[CustomStub.Harmony] 扫描前预装配异常（放行扫描）: " + ex);
+            }
+        }
+
+        /// <summary>MultiplayerController.StartSynchronisation 前缀：输出实体指纹
+        /// 与逐锅注册自检（扫描已结束、StartSynchronisingEntry 尚未跑 = 纯净快照）。</summary>
+        private static void MultiplayerStartSynchronisationPrefix()
+        {
+            try
+            {
+                NetDiagnostics.OnStartSynchronisation();
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("startSyncPrefix", "[CustomStub.Harmony] 同步启动诊断异常（忽略）: " + ex.Message);
+            }
+        }
+
+        /// <summary>ClientKitchenLoader.ScannedEntities 前缀（无参 = 不依赖宿主参数名）。</summary>
+        private static void KitchenScannedEntitiesPrefix()
+        {
+            try
+            {
+                NetDiagnostics.OnScanCompleted();
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("kitchenScanned", "[CustomStub.Harmony] 扫描完成打点异常（忽略）: " + ex.Message);
+            }
+        }
+
+        /// <summary>ClientKitchenLoader.StartEntities 前缀。</summary>
+        private static void KitchenStartEntitiesPrefix()
+        {
+            try
+            {
+                NetDiagnostics.OnEntitiesStarted();
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("kitchenStarted", "[CustomStub.Harmony] 实体启动打点异常（忽略）: " + ex.Message);
+            }
+        }
+
         /// <summary>供 EntryPoint 手工绑定用的前缀 MethodInfo（本程序集内部）。</summary>
         internal static System.Reflection.MethodInfo RespawnColliderObjectAddedPrefixMethod
         {
             get
             {
                 return typeof(HarmonyPatches).GetMethod("RespawnColliderObjectAddedPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo MultiplayerScanEntitiesPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("MultiplayerScanEntitiesPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo MultiplayerStartSynchronisationPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("MultiplayerStartSynchronisationPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo KitchenScannedEntitiesPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("KitchenScannedEntitiesPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo KitchenStartEntitiesPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("KitchenStartEntitiesPrefix",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
             }
         }

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-14T09:47:00.668Z",
-  "schemaVersion": 5,
+  "generatedAt": "2026-09-15T06:56:11.563Z",
+  "schemaVersion": 6,
   "itemCount": 111,
   "ingredients": [
     {
@@ -236,7 +236,7 @@
       "id": "dlc08_choppedbun",
       "nameZh": "汉堡面包（DLC8）",
       "nameEn": "Chopped Bun (DLC8)",
-      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_ChoppedBun.asset",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/dlc08_choppedbun.asset",
       "group": "dlc08",
       "icon": true
     },

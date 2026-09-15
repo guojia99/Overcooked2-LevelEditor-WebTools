@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637250}
   - component: {fileID: 114967938430519460}
   m_Layer: 0
-  m_Name: dlc08_bun
+  m_Name: dlc08_choppedbun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

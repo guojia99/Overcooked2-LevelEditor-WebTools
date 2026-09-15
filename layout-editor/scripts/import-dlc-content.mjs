@@ -291,6 +291,13 @@ const INGREDIENTS = {
  * 食材 prefab 别名：部分食材在 bundle 中无同名 prefab（或名字不同），
  * 运行时 LoadAsset<GameObject>(assetPath) 必须命中真实 prefab，否则返回 null。
  * 值 = bundle 中实际存在的 prefab 容器 basename。
+ *
+ * ⚠ 这里的键（以及上方 DLC_INGREDIENTS 里的 id）是 **guid 命名空间键，永不可改**：
+ *   guid = md5("ing:<id>")。例如 md5("ing:dlc08_bun") = 965ff691e25e50b0c5151ea9a97899d4
+ *   —— 正是 DLC8 汉堡面皮 PseudoPrefabSO 的 guid，被 commonW2 汉堡大全 45 个资产引用。
+ *   工程内该食材的规范 id 已统一为 `dlc08_choppedbun`（资产文件名/catalog id/
+ *   recipe-knowledge 全部用它），但**本表的键必须保留旧写法**，否则重跑本脚本会
+ *   生成不同 guid，导致所有汉堡的面皮引用断裂。
  */
 const INGREDIENT_PREFAB_FIX = {
   "corn": "dlc11_corn",

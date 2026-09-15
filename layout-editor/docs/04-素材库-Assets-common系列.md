@@ -505,12 +505,13 @@ commonW1 的 dlcXX 是 **dlc-first** 两级结构（`dlcXX/{art,counters,decor/{
 
 ## 8. commonW2/ —— Burger 大全共享库
 
-### 8.1 全貌（69 配方 + 14 模型）
+### 8.1 全貌（74 配方 + 14 模型）
 
-- **成品汉堡（score>0）约 40 个**：单料（Lettuce/Tomato/Cucumber/Pineapple/Chicken/Cheese 各 `XBurger`）、双料组合（`LettuceTomatoBurger` 等）、三料/四料、早餐系列（`Breakfast{Cheese,Lettuce,Meat,Onion}Burger`）、特色（`DoublePineappleBurger`（含 `_filler` 变体）、`Supreme`）。
-- **中间产物（score=0）**：`Fried{Cheese,Chicken,CornPone,FishPone,Mushroom,Onion,Pepperoni,Pineapple,PotatoCake,Prawn,ShrimpPone}`、`Panfried{Beef,MeatEgg,MeatMushroom,MeatOnion,Mushroom,Onion}`、`Mixed{MeatEgg,MeatMushroom,MeatOnion}`、`EggSausage/BaconSausage/ChickenPatty` 等。
-- **组装定义（CustomRecipeOptionalBurgerSO）5 个**：`OptionalBurger、VeggieBurgerAssembly、ChickenBurgerAssembly、MeatBurgerAssembly、PineappleMeatBurgerAssembly`。
-- **models/ 14 prefab**：CucumberSlice、FriedBeefNew、FriedBeefPatty、FriedCheese、FriedChickenPatty、FriedCornCake、FriedFishCake、FriedPotatoCake、FriedSausage、FriedShrimpCake、PanfriedMushroom、PanfriedOnion、PineappleSlice、TomatoSlice（另 11 fbx、13 mat、12 视觉 SO）。icons/ 35 png（25 呆喵成品图标 + 10 张 `ui_*` 原版风格）。
+- **成品汉堡（score>0）44 个**：单料（Lettuce/Tomato/Cucumber/Pineapple/Chicken/Cheese 各 `XBurger`）、双料组合（`LettuceTomatoBurger` 等）、三料/四料、早餐系列（`Breakfast{Cheese,Lettuce,Meat,Onion}Burger`）、特色（`DoublePineappleBurger`（含 `_filler` 变体）、`Supreme`），以及**官方牛肉系汉堡的 DLC8 面皮副本 5 个**（`MeatBurger`/`CheeseMeatBurger`/`LettuceMeatBurger`/`LettuceCheeseMeatBurger`/`LettuceTomatoMeatBurger`，uID 58321069~58321073，对应官方 `Burger_Plain_SO`/`Burger_Cheese_SO`/`Burger_Lettuce_SO`/`Burger_CheeseLettuce_SO`/`Burger_LettuceTomato_SO`，牛肉夹心统一用 common01 `FriedMeat`）。
+- **中间产物（score=0）24 个**：`Fried{Cheese,Chicken,CornPone,FishPone,Mushroom,Onion,Pepperoni,Pineapple,PotatoCake,Prawn,ShrimpPone}`、`Panfried{Beef,MeatEgg,MeatMushroom,MeatOnion,Mushroom,Onion}`、`Mixed{MeatEgg,MeatMushroom,MeatOnion}`、`EggSausage/BaconSausage/ChickenPatty/PineappleSlice`。
+- **组装定义（CustomRecipeOptionalBurgerSO）6 个**：`OptionalBurger`（主模板，capacity=20）、`VeggieBurgerAssembly`、`ChickenBurgerAssembly`、`MeatBurgerAssembly`、`PineappleMeatBurgerAssembly`、`DoublePineappleBurger_filler`（uID `1179688004`，不在 58321 号段，属手工追加残留）。
+- **面皮统一**：全部 44 个成品的 `compositionSOs[0]` 与全部 6 个组装定义的 `bunSO` 一律是 **DLC8 面皮**（`Assets/common03/food/Ingredients/dlc08/dlc08_choppedbun.asset`，guid `965ff691e25e50b0c5151ea9a97899d4`），与 DLC8 套餐（`DLC08_MD_*`）同款。核心 `ChoppedBunSO`、`DLC02_ChoppedBun` 在 commonW2 中零引用。
+- **models/ 14 prefab**：CucumberSlice、FriedBeefNew、FriedBeefPatty、FriedCheese、FriedChickenPatty、FriedCornCake、FriedFishCake、FriedPotatoCake、FriedSausage、FriedShrimpCake、PanfriedMushroom、PanfriedOnion、PineappleSlice、TomatoSlice（另 11 fbx、13 mat、12 视觉 SO）。icons/ 41 png（26 呆喵成品图标 + 10 张 `ui_*` 原版风格 + 5 张官方汉堡副本图标）。
 
 ### 8.2 配方 asset 全字段
 
@@ -528,8 +529,8 @@ MonoBehaviour:
   platingStepSO: {fileID: 11400000, guid: 02b04fdf…, type: 2}   # → common01 PlatingSteps/Plate
   modelSO:       {fileID: 11400000, guid: 7361adeс…, type: 2}   # → common02 story_meals/CompositeBurger（跨库引用！）
   icon:          {fileID: 21300000, guid: 52f7618a…, type: 3}   # → commonW2 icons/ui_cheeseburger_01.png
-  compositionSOs:                                                # choppedbun + 三个煎料
-  - {fileID: 11400000, guid: 81232e65…, type: 2}   # common01 ChoppedBunSO
+  compositionSOs:                                                # 面皮 + 三个煎料
+  - {fileID: 11400000, guid: 965ff691…, type: 2}   # common03 dlc08_choppedbun（DLC8 面皮，全库统一）
   - …（省略 3 项）
   optionalSOs: []
   cookingStepSO: {fileID: 0}      # Composite 无烹饪步骤；Cooked 型此处指向 HotPot/RoastingTray
@@ -537,7 +538,7 @@ MonoBehaviour:
 
 ### 8.3 names.json 与 CustomRecipeConfig
 
-两者位于 `Assets/commonW2/custom_recipes/`（burger/ 同级）。`names.json`（带 BOM 的 UTF-8，`schemaVersion:1`，69 项，id 与 asset 文件名一致）：
+两者位于 `Assets/commonW2/custom_recipes/`（burger/ 同级）。`names.json`（带 BOM 的 UTF-8，`schemaVersion:1`，74 项，id 与 asset 文件名一致）：
 
 ```json
 { "schemaVersion": 1, "names": [
@@ -549,7 +550,7 @@ MonoBehaviour:
 
 ```yaml
   uidPrefix: 58321        # uID = 58321*1000 + 序号
-  nextSequence: 69        # 下一自增序号（新配方从 58321070 起）
+  nextSequence: 74        # 下一自增序号（新配方从 58321074 起）
   categories:
   - id: burger
     zh: "Burger\u5927\u5168"      # "Burger大全"（Unity YAML 非 ASCII 转义）

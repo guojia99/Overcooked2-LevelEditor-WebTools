@@ -24,7 +24,9 @@ import { questionMarkIconUrl } from "../api";
 import type { IngredientEntry } from "../types";
 import {
   counterTypeOfItem,
-  counterAppearanceOptions
+  counterAppearanceOptions,
+  ingredientGuidById,
+  ingredientIdByGuid
 } from "./catalog";
 import {
   isGlassReturnItem,
@@ -42,12 +44,16 @@ import {
   setServingReturnOfType,
   servingStationsForReturn
 } from "./servingLinks";
-import { teleportals } from "./renderItems";
 import {
-  computeParamLabels,
+  teleportals,
+  teleportalRole,
+  teleportalEntrancesOf,
+  setTeleportalPairDirection,
+  releaseExitOnlyPartner,
   computeTeleportalLabels
-} from "./renderItems";
-import { functionalBaseId } from "./recipeKnowledge";
+} from "./teleportalLinks";
+import { computeParamLabels } from "./renderItems";
+import { dispenserIngredientIds, functionalBaseId } from "./recipeKnowledge";
 import {
   PORTAL_COLOR_NAMES,
   BURNER_FIRE_MODES
@@ -173,18 +179,8 @@ export function isLotusPressureSwitchItem(item: {
   return id.includes("lotuspressureswitch");
 }
 
-/** 酱料机可输出的酱料（黄芥末酱 / 番茄酱，含 DLC11 换皮，逻辑一致）。 */
-/** 特殊分配器（饮料机/酱料机）按 DLC 可输出的食材（实测 bundle 组件，dlc 各自一套）：
- *  dlc08_drink_machine → 饮料1/2/3；dlc11_drink_dispenser → 橙味汽水+沙士汽水；
- *  dlc08_condiment_dispenser → 番茄酱+芥末酱；dlc11_condiment_dispenser → dlc11 番茄酱/芥末酱。
- *  2026-09-03 common03 正式版换名：drink01→DLC08_Drink01、ketchup→DLC08_Ketchup 等
- *  （dlc11 酱料为 commonW1 包装，id 未变）。 */
-const DISPENSER_INGREDIENT_IDS: Record<string, Set<string>> = {
-  dlc08_drink_machine: new Set(["DLC08_Drink01", "DLC08_Drink02", "DLC08_Drink03"]),
-  dlc11_drink_dispenser: new Set(["DLC11_OrangeSoda", "DLC11_RootBeer"]),
-  dlc08_condiment_dispenser: new Set(["DLC08_Ketchup", "DLC08_Mustard"]),
-  dlc11_condiment_dispenser: new Set(["dlc11_ketchup", "dlc11_mustard"]),
-};
+/** 特殊分配器（饮料机/汽水机/酱料机）可输出的食材：清单在
+ *  `recipeKnowledge.dispenserIngredientIds`（唯一数据源，按机器 prefab id 分家）。 */
 
 /** 联动目标机器的**原生**监听触发名（上游设计：机器包装 prefab 自带
  *  TriggerOnObject 翻译层，如饮料机监听 "Next" → 对 child 发 "NextDrink"，
@@ -216,10 +212,37 @@ export function normalizeMachineLinkTriggers(): void {
   if (fixed > 0) setStatus(`已修复 ${fixed} 条旧式开关联动触发名（→ 机器原生触发名，写回后生效）`);
 }
 
-/** 该分配器允许输出的食材 id 集合（非特殊分配器返回 null = 全部食材可选）。 */
-function specialDispenserAllowedIds(item: EditorItem): Set<string> | null {
+/** 该分配器允许输出的食材判定（非特殊分配器返回 null = 全部食材可选）。
+ *
+ *  同时按 **guid** 与 **id** 两条线放行：
+ *   - guid：目录 id 会随资产改名 / prefabName 归一而变（2026-09-10 起后端
+ *     IngredientCatalogId 取小写 prefabName，DLC08_Drink01→drink01），guid 才是稳定键；
+ *   - id：关卡集里若存在同 id 的自定义拷贝（guid 不同，visibleIngredients 按 id
+ *     让位规则只保留 levelset 那份），仅比 guid 会把它误杀。
+ *  白名单 id→guid 走 `ingredientGuidById`（别名感知，两代 id 都能解析）。
+ *
+ *  **一个 id 都解析不出时返回 null（不过滤）**：宁可让用户在全食材里挑，
+ *  也绝不再出现「弹窗空列表、根本没法选」的死路（上一版就是这么静默失效的）。 */
+function specialDispenserAllowedFilter(item: EditorItem): ((i: IngredientEntry) => boolean) | null {
   const pid = prefabIdFromPath(item.prefabAssetPath);
-  return DISPENSER_INGREDIENT_IDS[pid] ?? null;
+  const ids = dispenserIngredientIds(pid);
+  if (!ids || ids.length === 0) return null;
+  const guids = new Set<string>();
+  const allowIds = new Set<string>(ids);
+  for (const id of ids) {
+    const g = ingredientGuidById(id);
+    if (g) guids.add(g);
+    const canonical = ingredientIdByGuid(g);
+    if (canonical) allowIds.add(canonical);
+  }
+  if (guids.size === 0) {
+    console.warn(
+      `[dispenser] ${pid} 的可输出食材白名单在当前食材目录里一个都没解析到（${ids.join(", ")}）——` +
+        "已退化为全食材可选。多半是食材目录 id 又改了，请更新 recipeKnowledge 的机器食材清单。"
+    );
+    return null;
+  }
+  return (i: IngredientEntry) => guids.has(i.guid) || allowIds.has(i.id);
 }
 
 /** 普通食材箱的禁选判定：node 型食材（无实体 prefab，如沙拉洋葱/汽水）放入食材箱会在
@@ -562,6 +585,25 @@ export function stubControlsHtml(item: EditorItem): string {
       const colorOpts = PORTAL_COLOR_NAMES.map(
         (n, i) => `<option value="${i}" ${(tp.portalColor ?? 0) === i ? "selected" : ""}>${n}</option>`
       ).join("");
+      const dsRow = `<label class="ctx-stub-row"><input type="checkbox" id="ctx-tp-ds" ${tp.doubleSided ? "checked" : ""}/> 双面外观</label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">双面外观 = 背面也显示门框（仅视觉），不影响能不能从背面进入，也与传送方向无关</div>`;
+      const colorRow = `<label class="ctx-stub-row">颜色 <select id="ctx-tp-color" class="ctx-input">${colorOpts}</select></label>`;
+
+      // 出口门（仅作为出口）：方向只读，改双向/改回入口都在这里一键切换。
+      if (tp.exitOnly) {
+        const src = teleportalEntrancesOf(item);
+        const srcTxt = src.length
+          ? src.map((s) => `传送门 ${S.teleportalLabels.get(s.instanceId) ?? "?"}（${escHtml(itemLabel(s))}）`).join("、")
+          : "⚠ 没有入口门指向它（写回会被阻断，请改回双向或重新配对）";
+        return `<div class="ctx-stub"><div class="ctx-stub-title">传送门参数 · 仅作为出口</div>
+        <div class="ctx-stub-row">入口来自：${srcTxt}</div>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">本门只接收、不发送（单向传送的出口侧）；需要依赖包 ≥ 2.2.0</div>
+        <button type="button" class="ctx-btn" id="ctx-tp-make-two">改为双向传送</button>
+        ${colorRow}
+        ${dsRow}</div>`;
+      }
+
+      // 入口门：出口选择 + 对级「双向传送」开关（默认单向）
       const others = teleportals().filter((t) => t._editorKey !== item._editorKey);
       const exitOpts = ['<option value="">— 未绑定 —</option>']
         .concat(
@@ -571,10 +613,14 @@ export function stubControlsHtml(item: EditorItem): string {
           )
         )
         .join("");
-      return `<div class="ctx-stub"><div class="ctx-stub-title">传送门参数</div>
-        <label class="ctx-stub-row">颜色 <select id="ctx-tp-color" class="ctx-input">${colorOpts}</select></label>
-        <label class="ctx-stub-row"><input type="checkbox" id="ctx-tp-ds" ${tp.doubleSided ? "checked" : ""}/> 双向</label>
-        <label class="ctx-stub-row">出口 <select id="ctx-tp-exit" class="ctx-input">${exitOpts}</select></label></div>`;
+      const twoWay = teleportalRole(item) === "two";
+      const hasExit = !!tp.exitPortalInstanceId;
+      return `<div class="ctx-stub"><div class="ctx-stub-title">传送门参数 · ${hasExit ? (twoWay ? "双向" : "单向入口") : "未绑定"}</div>
+        <label class="ctx-stub-row">出口 <select id="ctx-tp-exit" class="ctx-input">${exitOpts}</select></label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-tp-two" ${twoWay ? "checked" : ""} ${hasExit ? "" : "disabled"}/> 双向传送</label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">不勾 = 单向：本门是入口，出口门只接收不发送（出口门会自动回指本门，需依赖包 ≥ 2.2.0）</div>
+        ${colorRow}
+        ${dsRow}</div>`;
     }
     case "Travelator": {
       if (selectionKeys().filter((k) => {
@@ -741,6 +787,27 @@ export function stubControlsHtml(item: EditorItem): string {
   }
 }
 
+/** 参数区就地重渲染：方向切换后传送门面板形态会变（入口 ↔ 仅作为出口），
+ *  不重开右键菜单也能立刻看到新状态。只替换 .ctx-stub 块，菜单其余部分与
+ *  已绑定的处理器不受影响。 */
+export function refreshContextStub(item: EditorItem): void {
+  const root = dom.ctxMenuEl;
+  if (!root || root.classList.contains("hidden")) return;
+  const current = root.querySelector(".ctx-stub");
+  if (!current) return;
+  const html = stubControlsHtml(item);
+  if (!html) {
+    current.remove();
+    return;
+  }
+  const holder = document.createElement("div");
+  holder.innerHTML = html;
+  const next = holder.firstElementChild;
+  if (!next) return;
+  current.replaceWith(next);
+  wireStubControls(item);
+}
+
 export function wireStubControls(item: EditorItem) {
   const kind = stubKindOf(item);
 
@@ -793,10 +860,11 @@ export function wireStubControls(item: EditorItem) {
       document.getElementById("ctx-stub-ing-pick")?.addEventListener("click", () => {
         const stype = specialDispenserType(item);
         // 全部食材可选（含未放开的 web 内置——弹窗内置灰禁选并注明原因）；
-        // 酱料机/饮料机再按各自可输出列表收窄（dlc 各自一套，见 DISPENSER_INGREDIENT_IDS）
+        // 酱料机/饮料机再按各自可输出列表收窄（dlc 各自一套，清单见
+        // recipeKnowledge.dispenserIngredientIds；按 guid 比对，抗 id 改名）
         let ings = visibleIngredients(S.ingredientsCache);
-        const allowedIds = specialDispenserAllowedIds(item);
-        if (allowedIds) ings = ings.filter((i) => allowedIds.has(i.id));
+        const allowed = specialDispenserAllowedFilter(item);
+        if (allowed) ings = ings.filter(allowed);
         ings = ings.sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
         const fieldLabel = stype === "condiment" ? "酱料" : stype === "drink" ? "饮料" : "食材";
         hideContextMenu();
@@ -987,7 +1055,8 @@ export function wireStubControls(item: EditorItem) {
     case "Teleportal": {
       const ensure = () => {
         item.stubKind = "Teleportal";
-        if (!item.teleportal) item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false };
+        if (!item.teleportal)
+          item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false, exitOnly: false };
         return item.teleportal;
       };
       num("ctx-tp-color")?.addEventListener("change", (e) => {
@@ -1002,9 +1071,48 @@ export function wireStubControls(item: EditorItem) {
       });
       num("ctx-tp-exit")?.addEventListener("change", (e) => {
         pushHistory();
-        ensure().exitPortalInstanceId = (e.target as HTMLSelectElement).value;
+        const nextExit = (e.target as HTMLSelectElement).value;
+        const tp = ensure();
+        const prevExit = tp.exitPortalInstanceId;
+        const keepTwoWay = teleportalRole(item) === "two";
+        // 旧出口门若是本门的专属出口（仅作为出口且只被本门指向），解绑时把它复位为
+        // 普通未绑定门，避免留下「没有入口指向的仅出口门」被写回校验拦截。
+        let released: EditorItem | undefined;
+        if (prevExit && prevExit !== nextExit) released = releaseExitOnlyPartner(item, prevExit);
+        tp.exitPortalInstanceId = nextExit;
+        if (nextExit) setTeleportalPairDirection(item, keepTwoWay);
         draw();
-        setStatus("已更新传送门配对（写回后生效）");
+        refreshContextStub(item);
+        const releasedTxt = released ? `；原出口「${itemLabel(released)}」已解除配对，请为它重新配对或删除` : "";
+        setStatus(
+          nextExit
+            ? `已更新传送门配对（${keepTwoWay ? "双向" : "单向"}，写回后生效）${releasedTxt}`
+            : `已解除传送门配对（未绑定的传送门写回会被阻断）${releasedTxt}`
+        );
+      });
+      num("ctx-tp-two")?.addEventListener("change", (e) => {
+        pushHistory();
+        const on = (e.target as HTMLInputElement).checked;
+        setTeleportalPairDirection(item, on);
+        draw();
+        refreshContextStub(item);
+        setStatus(on ? "已改为双向传送（写回后生效）" : "已改为单向：出口门只接收不发送（写回后生效）");
+      });
+      num("ctx-tp-make-two")?.addEventListener("click", () => {
+        pushHistory();
+        // 出口门侧的「改为双向」：解除仅出口标记；本门没有自己的出口时回指第一个入口
+        // （链式 A→B→C 时保留 B→C，此时结果是「B 变成通往 C 的入口」而非与 A 互通）。
+        const entrances = teleportalEntrancesOf(item);
+        if (item.teleportal) item.teleportal.exitOnly = false;
+        if (entrances.length && item.teleportal && !item.teleportal.exitPortalInstanceId)
+          item.teleportal.exitPortalInstanceId = entrances[0].instanceId;
+        draw();
+        refreshContextStub(item);
+        setStatus(
+          teleportalRole(item) === "two"
+            ? "已改为双向传送（写回后生效）"
+            : "已解除「仅作为出口」：本门现在会发送到自己的出口（写回后生效）"
+        );
       });
       break;
     }

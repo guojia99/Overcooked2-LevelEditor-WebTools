@@ -177,6 +177,7 @@ flowchart TD
 | `GET /api/level`、`GET /api/level/bundles`（依赖分析）、`GET /api/level/delete-preview` | 关卡查询 |
 | `POST /api/level/create \| info \| config \| audio \| delete \| reorder` | 关卡操作 |
 | `POST /api/level/image-upload`（贴图地板）、`POST /api/level/screenshot-upload`、`GET /api/level/data-file` | 上传/预览 |
+| `POST /api/level/summary-bg-upload`、`POST /api/level/summary-bg-clear` | 汇总页导出背景图：写进关卡 data 目录的 `summary_bg~/bg.*` + `meta.json{dim}`。`~` 结尾目录 Unity 完全忽略 → 不被关卡集 folder 级 `assetBundleName`（`<set>/info_<set>`）打进玩家分发包，但随 git 跟关卡版本管理；读取复用 `GET /api/level/data-file`。空 fileName/base64 = 只改遮罩浓度 |
 
 **自定义菜谱 / 汉堡工作台**
 | 路由 | 说明 |
@@ -324,6 +325,7 @@ flowchart TD
 | **Switch/TimedCookingSwitch.cs** | 灶台定时开关：开/关秒数循环切换 CookingRegion.enabled + 火焰 PFX；tag `TimedSwitch|1,on,off,s` |
 | **Travelator/TravelatorReverser.cs** | 自动步道定时反转（2026-09-13）：正/反秒数相位循环，相位翻转 = Travelator 物体 localRotation 绕 Y 追加 m_turnAngle 度（180=掉头，±90=转角，回来即转回烘焙朝向；推人方向 transform.right 派生 + 皮带模型/纹理朝向一起转动，非"倒放"；m_speed 与材质保持烘焙原值）；tag `TravelatorReverse|e,fwd,back,s[,angle]`（angle 缺省 180，兼容 4 段旧载体）；联机靠各端同配置相位天然同步 |
 | **Switch/SwitchReenable.cs** | 按钮轮询式自动复位（监听 TriggerDisableScript 下降沿补发 enableTrigger） |
+| **Teleportal/TeleportalExitOnly.cs** | 传送门单向的出口侧（2026-09-15）：低频协程把 `Teleportal.m_exitPortal` 清回 null（并反射清 Server/ClientTeleportal 已缓存的 `m_exitReceivers`）——走人（`ServerTeleportal.OnTriggerStay`）与传送带喂料（`ServerTeleportalConveyenceReceiver.CanConveyTo → CanTeleport`）两条发送路径同时封死，收货由入口侧驱动、不受影响；tag `TeleportalExitOnly\|<1\|0>`；出口门的 stub.exitPortal 保留**回指入口的占位**（宿主/mod 的 LateSetup 对空 exitPortal 会 NRE）；不挂 ticker（EntryPoint 门控不把该 tag 计入激活票数） |
 | **Terminal/TerminalGuard.cs** | 未绑定终端防线：禁 Interactable / ForwardTriggerToTarget / 晚挂载 CosmeticDecisions |
 | **UtensilTiming/UtensilTimingConfig.cs** | 编辑期权威配置组件（cook/burn/mix/over 四字段；tag 前缀 `UtensilTiming|`） |
 | **UtensilTiming/UtensilTiming.cs** | 运行时应用：扫 CookingHandler/MixingHandler 沿祖先找 tag；直写公有字段；burn/over>0 挂本组件 + Harmony 接管 |

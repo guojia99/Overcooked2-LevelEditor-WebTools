@@ -505,7 +505,13 @@ namespace CustomStub
             if (contents == null || contents.Length == 0)
                 return;
             int capacity;
-            try { capacity = (int)GameApi.ContainerCapacityField.GetValue(container); }
+            // 容量在 IngredientContainer（数据组件）上，不在 ServerIngredientContainer
+            // （同步器只是持有它的引用）——v14 前这里读的是同步器上不存在的字段，
+            // 反射常年为 null、每次都从这里早退（汤面高度重摆从未生效）。
+            var capacityHolder = GameApi.GetComponent(go, GameApi.IngredientContainerType);
+            if (capacityHolder == null || GameApi.IngredientCapacityField == null)
+                return;
+            try { capacity = (int)GameApi.IngredientCapacityField.GetValue(capacityHolder); }
             catch (System.Exception ex)
             {
                 WarnOnce(ref s_soupCapacityFailLogged, "[HotPot] 读取容器容量失败（汤面重摆跳过）: " + ex.Message);

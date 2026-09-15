@@ -25,6 +25,18 @@ namespace CustomStub
     ///
     /// 铁律（空气锅教训）：网络同步启动后（EntitySerialisationRegistry 已给载具/锅
     /// 挂上同步组件）绝不销毁重建——本组件只在「无 marker」时装配一次，幂等。
+    ///
+    /// 铁律二（2026-09-15 v14，联机 ID 错位事故）：**装配必须在网络实体扫描开始
+    /// 【之前】完成**。实体 ID 是按扫描命中顺序发放的自增 FIFO，而
+    /// LinkAllEntitiesToSynchronisationScripts 每 0.1s yield 一帧、逐类型现场
+    /// GetComponentsInChildren——扫描窗口期内 Instantiate 出的锅会插进序列的随机位置，
+    /// 主客机插入点不同 ⇒ 从该点起全部实体 ID 整体错位 ⇒ 客机完全不能动、
+    /// 生成物没模型（且全程零报错）。为此有两道防线：
+    ///  ① <see cref="FlushPendingAssemblies"/> 由 MultiplayerController.ScanEntities
+    ///     的 Harmony 前缀调用，在发令时刻把所有锅【同步】装配完；
+    ///  ② 协程 <see cref="RunInner"/> 在 GameApi.IsEntityScanActive() 为真时只等待、
+    ///     绝不 Instantiate——即便前缀没装上，最坏也只是「这口锅晚到、自己残废」
+    ///     （扫描结束后新增对象不影响已分配的 ID），不会再打崩整局联机。
     /// </summary>
     public class PushablePot : MonoBehaviour
     {
@@ -58,14 +70,33 @@ namespace CustomStub
         private static bool s_lookupReflectionWarned;
         private static bool s_containerMissingWarned;
         private static bool s_orderNodeTypeWarned;
+        private static bool s_scanWaitLogged;
+        private static bool s_lateAssembleWarned;
+
+        /// <summary>场景切换清场（挂 EntryPoint.ResetSceneTickers）。
+        /// 注意不复位 s_hostFallbackTried——编辑器宿主兜底按【每会话一次】设计
+        /// （它会触发宿主 DeInit/Init 全量重载，不能每换一张图就再来一遍）。</summary>
+        internal static void OnSceneChanged()
+        {
+            s_scanWaitLogged = false;
+            s_lateAssembleWarned = false;
+        }
 
         /// <summary>装配失败计数与告警去重（实例级，v12）。</summary>
         private int m_assembleFailures;
         private bool m_assembleFailLogged;
 
+        /// <summary>本实例装配出来的大锅与其载具（v14 诊断用：实体注册自检）。</summary>
+        private GameObject m_assembledPot;
+        private GameObject m_assembledCarrier;
+
         /// <summary>外层枚举器：C#4 禁止在有 catch 的 try 里 yield。</summary>
         private IEnumerator Start()
         {
+            // 扫描前预装配补丁按需安装（幂等）。挂在 Start 而非只挂 HealScene：
+            // 覆盖「场景里已烘焙组件但 tag 缺失」的对象；且 Start 远早于
+            // ClientKitchenLoader 收到 GameState.ScanNetworkEntities，来得及。
+            EntryPoint.EnsurePotAssemblyPatches();
             var inner = RunInner();
             while (true)
             {
@@ -100,6 +131,20 @@ namespace CustomStub
 
             while (true)
             {
+                // 【扫描期硬闸，v14】正在分配网络实体 ID 时绝不新建对象——
+                // 中途插对象 = 主客机实体序列分叉 = 全局 ID 错位（整局联机报废）。
+                // 扫描结束后再装配只影响这口锅自己，代价可接受。
+                if (GameApi.IsEntityScanActive())
+                {
+                    if (!s_scanWaitLogged)
+                    {
+                        s_scanWaitLogged = true;
+                        StubLog.Dbg("[PushablePot] 网络实体扫描进行中，装配暂停（避免实体 ID 错位）: " + name);
+                    }
+                    yield return new WaitForSeconds(0.1f);
+                    continue;
+                }
+
                 // 载具出现即装配（重开关卡后宿主重建载具，重新走一遍）
                 var carrier = FindCarrier();
                 if (carrier == null)
@@ -129,6 +174,10 @@ namespace CustomStub
                 // 装配器可能已完成装配——Instantiate 前按跨程序集标记复查，
                 // 晚到者直接转监视模式。载具本身也可能已被销毁（重开关卡），一并复查。
                 if (carrier == null || HasPotAssembled(carrier))
+                    continue;
+                // 扫描期硬闸复查（v14）：异步加载横跨若干帧，期间扫描可能刚好开跑——
+                // 顶部的门控挡不住这种情况，必须在 Instantiate 前再看一眼。
+                if (GameApi.IsEntityScanActive())
                     continue;
                 if (Assemble(carrier, potPrefab))
                 {
@@ -217,28 +266,11 @@ namespace CustomStub
         {
             m_loadedPotPrefab = null;
 
-            string bundleName = null;
-            string assetPath = null;
-            var so = PotSO();
-            if (so != null && !string.IsNullOrEmpty(so.bundleName) && !string.IsNullOrEmpty(so.assetPath))
-            {
-                bundleName = so.bundleName;
-                assetPath = so.assetPath;
-            }
-            else if (!string.IsNullOrEmpty(m_potBundle) && !string.IsNullOrEmpty(m_potPath))
-            {
-                bundleName = m_potBundle;
-                assetPath = m_potPath;
-            }
-            if (bundleName == null)
-            {
-                if (!s_potSoMissingWarned)
-                {
-                    s_potSoMissingWarned = true;
-                    StubLog.LogWarn("[PushablePot] 大锅 SO 三通道皆空（m_potSO/soArray 槽 0/m_potBundle），无法装配: " + name);
-                }
+            string bundleName;
+            string assetPath;
+            PseudoPrefabSO so;
+            if (!ResolvePotSource(out bundleName, out assetPath, out so))
                 yield break;
-            }
 
             // 发起请求（try 不能含 yield，拆两段）
             AssetBundle bundle = null;
@@ -273,11 +305,74 @@ namespace CustomStub
 
             // 直接加载失败（bundle 未在全局列表 / LoadAsset 落空）：编辑器宿主兜底
             // 再试一次（宿主链含 DeInit/Init 全量重载恢复），真机自然跳过。
+            m_loadedPotPrefab = LoadPotPrefabFallback(so, bundle, bundleName, assetPath);
+        }
+
+        /// <summary>解析大锅来源三通道（SO → soArray 槽 0 → tag 载体字段）。
+        /// 返回 false = 三通道皆空（已 warn-once）。</summary>
+        private bool ResolvePotSource(out string bundleName, out string assetPath, out PseudoPrefabSO so)
+        {
+            bundleName = null;
+            assetPath = null;
+            so = PotSO();
+            if (so != null && !string.IsNullOrEmpty(so.bundleName) && !string.IsNullOrEmpty(so.assetPath))
+            {
+                bundleName = so.bundleName;
+                assetPath = so.assetPath;
+            }
+            else if (!string.IsNullOrEmpty(m_potBundle) && !string.IsNullOrEmpty(m_potPath))
+            {
+                bundleName = m_potBundle;
+                assetPath = m_potPath;
+            }
+            if (bundleName != null)
+                return true;
+            if (!s_potSoMissingWarned)
+            {
+                s_potSoMissingWarned = true;
+                StubLog.LogWarn("[PushablePot] 大锅 SO 三通道皆空（m_potSO/soArray 槽 0/m_potBundle），无法装配: " + name);
+            }
+            return false;
+        }
+
+        /// <summary>同步加载大锅 prefab（v14）：供扫描前预装配走——那条路径必须在
+        /// 一帧之内做完（ScanEntities 前缀里不能 yield），几十 ms 的一次性卡顿发生在
+        /// 关卡加载流程内，代价可接受；换来的是主客机层级确定性一致。</summary>
+        private GameObject LoadPotPrefabSync()
+        {
+            string bundleName;
+            string assetPath;
+            PseudoPrefabSO so;
+            if (!ResolvePotSource(out bundleName, out assetPath, out so))
+                return null;
+            AssetBundle bundle = null;
             try
             {
-                m_loadedPotPrefab = LoadPotPrefabViaEditorHost(so, bundleName, assetPath);
-                if (m_loadedPotPrefab != null)
-                    yield break;
+                bundle = GameApi.GetAssetBundle(bundleName);
+                if (bundle != null)
+                {
+                    var prefab = bundle.LoadAsset<GameObject>(assetPath);
+                    if (prefab != null)
+                        return prefab;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                StubLog.LogWarn("[PushablePot] 大锅同步加载异常 " + bundleName + "/" + assetPath + ": " + ex.Message);
+                return null;
+            }
+            return LoadPotPrefabFallback(so, bundle, bundleName, assetPath);
+        }
+
+        /// <summary>加载落空后的统一兜底与分流告警（编辑器宿主链 + 各一次的诊断）。</summary>
+        private GameObject LoadPotPrefabFallback(PseudoPrefabSO so, AssetBundle bundle,
+            string bundleName, string assetPath)
+        {
+            try
+            {
+                var prefab = LoadPotPrefabViaEditorHost(so, bundleName, assetPath);
+                if (prefab != null)
+                    return prefab;
                 if (bundle == null && !s_potBundleMissingWarned)
                 {
                     s_potBundleMissingWarned = true;
@@ -295,6 +390,7 @@ namespace CustomStub
             {
                 StubLog.LogWarn("[PushablePot] 大锅兜底加载异常 " + bundleName + "/" + assetPath + ": " + ex.Message);
             }
+            return null;
         }
 
         /// <summary>编辑器宿主兜底加载：反射 LevelEditor.PseudoPrefabManager.LoadAsset
@@ -335,6 +431,18 @@ namespace CustomStub
         {
             try
             {
+                // 晚到告警（v14）：本场景的同步已启动 = 本锅错过了实体扫描，不会有
+                // 任何同步组件（表现为「开局就有汤、丢不进食材」）。此时【不会】影响
+                // 联机 ID 对齐（ID 已全部发完），所以照常装配，但必须让日志喊出来。
+                // 判据用「本场景 StartSynchronisation 已发生」而非 IsSynchronisationActive
+                // ——后者是跨关卡不复位的静态标志，会在每张新图上误报。
+                if (NetDiagnostics.SyncStartedThisScene && !s_lateAssembleWarned)
+                {
+                    s_lateAssembleWarned = true;
+                    StubLog.LogWarn("[PushablePot] ⚠ 本锅晚于网络实体扫描装配，将缺少同步组件"
+                        + "（现象：开局就有汤、食材丢不进去）: " + name
+                        + "——检查载具是否在 ScanEntities 时刻尚未生成");
+                }
                 var pot = (GameObject)Object.Instantiate(potPrefab);
                 pot.name = potPrefab.name;
                 pot.transform.SetParent(carrier.transform, false);
@@ -361,6 +469,9 @@ namespace CustomStub
                 if (fallTarget == null)
                     fallTarget = carrier.AddComponent<PushableVoidFallTarget>();
                 PushableVoidFall.RegisterTarget(fallTarget);
+
+                m_assembledPot = pot;
+                m_assembledCarrier = carrier;
 
                 StubLog.Log("[PushablePot] 装配完成: " + name + " → 载具 " + carrier.name
                     + " + 大锅 " + pot.name + "（额外食材 " + (m_extraIngredientBundles != null ? m_extraIngredientBundles.Length : 0)
@@ -406,6 +517,153 @@ namespace CustomStub
                 if (comps[i] != null)
                     Destroy(comps[i]);
             }
+        }
+
+        // ============ 扫描前预装配（v14 联机 ID 错位修复的核心） ============
+
+        /// <summary>本实例是否已装配（按载具上的跨程序集标记判定）。</summary>
+        private bool IsAssembled()
+        {
+            var carrier = FindCarrier();
+            return carrier != null && HasPotAssembled(carrier);
+        }
+
+        /// <summary>同步完成一次装配（不等协程、不等异步加载）。
+        /// 返回 true = 已就位（含「本来就已装配」）。</summary>
+        private bool EnsureAssembledNow()
+        {
+            var carrier = FindCarrier();
+            if (carrier == null)
+                return false;
+            if (HasPotAssembled(carrier))
+                return true;
+            var prefab = LoadPotPrefabSync();
+            if (prefab == null)
+                return false;
+            return Assemble(carrier, prefab);
+        }
+
+        /// <summary>【实体扫描发令时刻】把场景里所有可移动火锅同步装配完
+        /// （由 MultiplayerController.ScanEntities 的 Harmony 前缀调用）。
+        ///
+        /// 这是主客机唯一确定性一致的锚点：两台机器都在「自己收到
+        /// GameState.ScanNetworkEntities」时把锅装好，扫描遍历到的层级因而完全相同，
+        /// 实体 ID 才会对齐。锅挂在各自载具下、层级位置固定，与本方法的遍历顺序无关。
+        ///
+        /// 任何一口锅没能就位（载具还没生成 / bundle 缺失）都会拉高告警等级——
+        /// 那意味着两机层级可能不一致，联机会 ID 错位。</summary>
+        internal static void FlushPendingAssemblies(out int total, out int assembled)
+        {
+            total = 0;
+            assembled = 0;
+            PushablePot[] pots;
+            try
+            {
+                pots = FindObjectsOfType<PushablePot>();
+            }
+            catch (System.Exception ex)
+            {
+                StubLog.LogWarn("[PushablePot] 预装配扫描异常（跳过）: " + ex.Message);
+                return;
+            }
+            if (pots == null || pots.Length == 0)
+                return;
+            total = pots.Length;
+            var already = 0;
+            for (int i = 0; i < pots.Length; i++)
+            {
+                var pot = pots[i];
+                if (pot == null)
+                    continue;
+                try
+                {
+                    if (pot.IsAssembled())
+                    {
+                        already++;
+                        assembled++;
+                        continue;
+                    }
+                    if (pot.EnsureAssembledNow())
+                        assembled++;
+                }
+                catch (System.Exception ex)
+                {
+                    StubLog.LogWarn("[PushablePot] 预装配单口锅失败 " + pot.name + ": " + ex.Message);
+                }
+            }
+            var msg = "[PushablePot] 扫描前预装配: " + assembled + "/" + total + " 口锅就位"
+                + "（本次新装 " + (assembled - already) + "，此前已装 " + already + "）";
+            if (assembled < total)
+                StubLog.LogWarn(msg + " ⚠ 有锅未就位（载具未生成？bundle 缺失？）"
+                    + "——该锅将缺少同步组件，联机还可能因两机层级不一致导致实体 ID 错位");
+            else
+                StubLog.Log(msg);
+        }
+
+        /// <summary>实体注册自检（由 NetDiagnostics 在 StartSynchronisation 前缀调用）。
+        /// 此时链接循环已结束、同步组件已挂好，但 StartSynchronising 还没跑——
+        /// 正好能看出这口锅有没有拿到网络实体身份。
+        ///
+        /// 注意客机侧【没有】任何 Server* 同步器（AddSynchronisedType 只在
+        /// host/单机注册 server 类型，EntitySerialisationRegistry.cs:105-116），
+        /// 所以 SrvIngred=F 在客机上是正常的，不作为告警依据。</summary>
+        internal static void DumpRegistrationSelfCheck()
+        {
+            PushablePot[] pots;
+            try
+            {
+                pots = FindObjectsOfType<PushablePot>();
+            }
+            catch (System.Exception)
+            {
+                return;
+            }
+            if (pots == null || pots.Length == 0)
+                return;
+            var isServer = GameApi.IsServerMachine();
+            for (int i = 0; i < pots.Length; i++)
+            {
+                var self = pots[i];
+                if (self == null)
+                    continue;
+                var pot = self.m_assembledPot;
+                if (pot == null)
+                {
+                    StubLog.LogWarn("[PushablePot] 实体注册自检: " + self.name
+                        + " ⚠ 未装配大锅（这口锅本局不可用）");
+                    continue;
+                }
+                var hasEntry = GameApi.HasEntityEntry(pot);
+                var id = GameApi.GetEntityId(pot);
+                var cliIngred = HasInChildren(pot, GameApi.ClientIngredientContainerType);
+                var cliCookable = HasInChildren(pot, GameApi.ClientCookableContainerType);
+                var cliContents = HasInChildren(pot, GameApi.ClientContentsCosmeticType);
+                var srvIngred = HasInChildren(pot, GameApi.ServerIngredientContainerType);
+                var carrierId = self.m_assembledCarrier != null
+                    ? GameApi.GetEntityId(self.m_assembledCarrier) : 0u;
+                var line = "[PushablePot] 实体注册自检: " + self.name
+                    + " entry=" + (hasEntry ? "有" : "无") + " id=" + id + " 载具id=" + carrierId
+                    + " CliIngred=" + Yn(cliIngred) + " CliCookable=" + Yn(cliCookable)
+                    + " CliContents=" + Yn(cliContents) + " SrvIngred=" + Yn(srvIngred)
+                    + "（角色=" + GameApi.RoleLabel() + "）";
+                var bad = !hasEntry || id == 0u || !cliIngred || !cliContents
+                    || (isServer && !srvIngred);
+                if (bad)
+                    StubLog.LogWarn(line + " ⚠ 同步组件缺失 = 这口锅会「开局就有汤且丢不进食材」"
+                        + "——本锅错过了网络实体扫描");
+                else
+                    StubLog.Log(line);
+            }
+        }
+
+        private static string Yn(bool v)
+        {
+            return v ? "T" : "F";
+        }
+
+        private static bool HasInChildren(GameObject go, System.Type type)
+        {
+            return go != null && type != null && go.GetComponentInChildren(type, true) != null;
         }
 
         /// <summary>按额外食材配置重建锅的 CookableContainer.m_approvedContentsList

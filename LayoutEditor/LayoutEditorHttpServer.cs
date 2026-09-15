@@ -550,6 +550,15 @@ public class LayoutEditorHttpServer
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = validationError }));
                     return;
                 }
+                // 传送门方向强校验（web 侧同款规则的后端兜底）：出口必须有效，
+                // 「仅作为出口」的门必须被某扇入口门指向——否则写回链会把它降级成装饰件。
+                var teleportalError = ValidateTeleportalConfigs(doc);
+                if (teleportalError != null)
+                {
+                    LayoutEditorLog.LogWarning("[LayoutEditor] " + teleportalError);
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = teleportalError }));
+                    return;
+                }
                 var snap = 0.01f;
                 var snapStr = request.QueryString["snap"];
                 if (!string.IsNullOrEmpty(snapStr))
@@ -975,6 +984,51 @@ public class LayoutEditorHttpServer
                     LayoutEditorWriteBackHistory.CommitNow();
                     WriteJson(response, 200, LayoutEditorJson.ToJson(new ScreenshotUploadResultDto { texturePath = texturePath }));
                 }
+                return;
+            }
+
+            // 汇总页导出背景图：写进关卡 data 目录的 summary_bg~（Unity 忽略的目录，
+            // 不进 AssetBundle）；读取复用下面的 /api/level/data-file。
+            if (path == "/api/level/summary-bg-upload" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<SummaryBgUploadDto>(body);
+                string bgPath;
+                float bgDim;
+                string err;
+                if (dto == null)
+                {
+                    err = "缺少参数。";
+                    bgPath = "";
+                    bgDim = 0f;
+                }
+                else if (string.IsNullOrEmpty(dto.fileName) || string.IsNullOrEmpty(dto.base64))
+                {
+                    // 只调遮罩浓度
+                    err = LayoutEditorLevelAdminApi.SetSummaryBgDim(dto.assetPath, dto.dim, out bgPath, out bgDim);
+                }
+                else
+                {
+                    err = LayoutEditorLevelAdminApi.UploadSummaryBg(dto.assetPath, dto.fileName, dto.base64, dto.dim, out bgPath, out bgDim);
+                }
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new SummaryBgResultDto { path = bgPath, dim = bgDim }));
+                return;
+            }
+
+            if (path == "/api/level/summary-bg-clear" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<SummaryBgUploadDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.ClearSummaryBg(dto.assetPath);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new SummaryBgResultDto { path = "", dim = LayoutEditorLevelAdminApi.SummaryBgDefaultDim }));
                 return;
             }
 
@@ -1514,6 +1568,76 @@ public class LayoutEditorHttpServer
         if (problems.Count == 0)
             return null;
         return "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray());
+    }
+
+    /// <summary>写回强校验：传送门方向。
+    ///  ① 每扇传送门都必须有出口绑定——游戏侧「出口为空」= 只收不发，但编辑器无法
+    ///     直接表达（宿主/mod 的 LateSetup 对 null exitPortal 无判空即 NRE），写回链
+    ///     会把它降级成装饰件；单向一律用「仅作为出口」标记 + 回指占位表达。
+    ///  ② 出口指向必须是场景里存在的另一扇传送门（不能指向自己）。
+    ///  ③ exitOnly=true 的门必须被至少一扇【非 exitOnly】的门指向，否则没有任何
+    ///     入口能把东西送进来（配置无意义，多半是删了入口门的残留）。
+    ///  返回 null=通过。</summary>
+    private static string ValidateTeleportalConfigs(LayoutDocumentDto doc)
+    {
+        if (doc == null || doc.items == null)
+            return null;
+        var portals = new List<LayoutItemDto>();
+        foreach (var it in doc.items)
+        {
+            if (it != null && it.stubKind == "Teleportal")
+                portals.Add(it);
+        }
+        if (portals.Count == 0)
+            return null;
+
+        var byId = new Dictionary<string, LayoutItemDto>(StringComparer.Ordinal);
+        foreach (var p in portals)
+        {
+            if (!string.IsNullOrEmpty(p.instanceId) && !byId.ContainsKey(p.instanceId))
+                byId.Add(p.instanceId, p);
+        }
+        // 被哪些「非仅出口」的门指向（= 真正的入口来源）
+        var referenced = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var p in portals)
+        {
+            if (p.teleportal == null || p.teleportal.exitOnly)
+                continue;
+            var exit = p.teleportal.exitPortalInstanceId;
+            if (!string.IsNullOrEmpty(exit))
+                referenced.Add(exit);
+        }
+
+        var problems = new List<string>();
+        foreach (var p in portals)
+        {
+            var label = !string.IsNullOrEmpty(p.displayName) ? p.displayName : "传送门";
+            var tp = p.teleportal;
+            var exit = tp != null ? tp.exitPortalInstanceId : null;
+            if (tp == null || string.IsNullOrEmpty(exit))
+            {
+                problems.Add(label + "：未设置出口（单向请在入口门上取消「双向传送」，"
+                    + "出口门会自动回指入口）");
+                continue;
+            }
+            if (exit == p.instanceId)
+            {
+                problems.Add(label + "：出口不能指向自己");
+                continue;
+            }
+            if (!byId.ContainsKey(exit))
+            {
+                problems.Add(label + "：出口指向的对象不是当前场景里的传送门");
+                continue;
+            }
+            if (tp.exitOnly && !referenced.Contains(p.instanceId))
+                problems.Add(label + "：标记为「仅作为出口」但没有任何入口门指向它"
+                    + "（入口门可能已被删除）");
+        }
+        if (problems.Count == 0)
+            return null;
+        return "写回被阻断（" + problems.Count + " 处传送门配置问题），请修复后再试："
+            + string.Join("；", problems.ToArray());
     }
 
     /// <summary>导出/写回诊断（2026-09-03 大炮 ×16 事故排查）：物品总数 + 重复 guid

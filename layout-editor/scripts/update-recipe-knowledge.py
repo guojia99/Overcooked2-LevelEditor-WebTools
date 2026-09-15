@@ -207,7 +207,7 @@ ING_NAME_FIX = {
     "Noodles": "noodles",
     "DLC04Meat": "dlc04_meat",
     "DLC04Prawn": "dlc04_prawn",
-    "Bun": "dlc08_bun",
+    "Bun": "dlc08_choppedbun",
     "HotDogBun": "hotdogbun",
     "Frankfurter": "frankfurter",
     "Turkey": "TurkeySO",

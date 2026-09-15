@@ -489,6 +489,10 @@ public static class LayoutEditorLevelAdminApi
         int gridHalfX, gridHalfZ;
         LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out gridHalfX, out gridHalfZ);
 
+        string summaryBgPath;
+        float summaryBgDim;
+        ReadSummaryBg(assetPath, out summaryBgPath, out summaryBgDim);
+
         var dto = new LevelDetailDto
         {
             levelInfoAssetPath = assetPath,
@@ -498,6 +502,8 @@ public static class LayoutEditorLevelAdminApi
             sceneAssetPath = sceneAssetPath,
             hasScreenshot = so.screenshot != null,
             screenshotPath = so.screenshot != null ? AssetDatabase.GetAssetPath(so.screenshot) : "",
+            summaryBgPath = summaryBgPath,
+            summaryBgDim = summaryBgDim,
             debugRecipeCount = so.debugRecipeCount,
             disableDynamicParenting = so.disableDynamicParenting,
             minOrderCount = ClampOrderCount(so.minOrderCount, 2),
@@ -1798,6 +1804,176 @@ public static class LayoutEditorLevelAdminApi
         ReloadPseudo();
 
         texturePath = imgAssetPath;
+        return null;
+    }
+
+    // ==================== Summary export background ====================
+
+    /// <summary>汇总页导出背景图目录：关卡 data 目录下的 <c>summary_bg~</c>。
+    ///  `~` 结尾的目录被 Unity 完全忽略（不导入、无 .meta、不进任何 AssetBundle），
+    ///  所以背景图不会被关卡集根目录 folder 级 assetBundleName（&lt;set&gt;/info_&lt;set&gt;）
+    ///  打进玩家分发包；同时仍在 Assets 树内，随 git 跟关卡一起版本管理，
+    ///  读取可直接复用 /api/level/data-file（只校验 Assets/ 前缀）。</summary>
+    private const string SummaryBgDirName = "summary_bg~";
+    private const string SummaryBgFileStem = "bg";
+    private const string SummaryBgMetaFile = "meta.json";
+    public const float SummaryBgDefaultDim = 0.35f;
+
+    private static string SummaryBgDir(string levelInfoAssetPath)
+    {
+        var dir = DirectoryName(levelInfoAssetPath);
+        if (string.IsNullOrEmpty(dir))
+            return "";
+        return dir + "/" + SummaryBgDirName;
+    }
+
+    /// <summary>读取关卡的汇总导出背景图（资源路径 + 遮罩浓度）。无背景图时 path = ""。</summary>
+    public static void ReadSummaryBg(string levelInfoAssetPath, out string path, out float dim)
+    {
+        path = "";
+        dim = SummaryBgDefaultDim;
+        var dir = SummaryBgDir(levelInfoAssetPath);
+        if (string.IsNullOrEmpty(dir))
+            return;
+        var absDir = AbsPath(dir);
+        if (!Directory.Exists(absDir))
+            return;
+        foreach (var ext in SummaryBgExtensions)
+        {
+            var rel = dir + "/" + SummaryBgFileStem + ext;
+            if (File.Exists(AbsPath(rel)))
+            {
+                path = rel;
+                break;
+            }
+        }
+        var metaAbs = Path.Combine(absDir, SummaryBgMetaFile);
+        if (File.Exists(metaAbs))
+        {
+            try
+            {
+                var meta = JsonUtility.FromJson<SummaryBgMetaDto>(File.ReadAllText(metaAbs));
+                if (meta != null && meta.dim >= 0f && meta.dim <= 0.9f)
+                    dim = meta.dim;
+            }
+            catch
+            {
+                // 坏 meta 用默认值，不影响背景图本身
+            }
+        }
+    }
+
+    private static readonly string[] SummaryBgExtensions = new[] { ".png", ".jpg", ".jpeg", ".webp" };
+
+    private static void WriteSummaryBgMeta(string dir, float dim)
+    {
+        var absDir = AbsPath(dir);
+        if (!Directory.Exists(absDir))
+            Directory.CreateDirectory(absDir);
+        var meta = new SummaryBgMetaDto();
+        meta.dim = Mathf.Clamp(dim, 0f, 0.9f);
+        File.WriteAllText(Path.Combine(absDir, SummaryBgMetaFile), JsonUtility.ToJson(meta), System.Text.Encoding.UTF8);
+    }
+
+    private static void DeleteSummaryBgImages(string dir)
+    {
+        var absDir = AbsPath(dir);
+        if (!Directory.Exists(absDir))
+            return;
+        foreach (var ext in SummaryBgExtensions)
+        {
+            var f = Path.Combine(absDir, SummaryBgFileStem + ext);
+            if (File.Exists(f))
+                File.Delete(f);
+        }
+    }
+
+    /** 上传汇总导出背景图。写进关卡 data 目录的 summary_bg~ 子目录（Unity 忽略），
+     *  不调用 AssetDatabase.ImportAsset —— 这不是 Unity 资产，只给网页导出用。 */
+    public static string UploadSummaryBg(string levelInfoAssetPath, string fileName, string base64, float dim, out string path, out float outDim)
+    {
+        path = "";
+        outDim = Mathf.Clamp(dim, 0f, 0.9f);
+        if (string.IsNullOrEmpty(levelInfoAssetPath))
+            return "缺少关卡资源路径。";
+        var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(levelInfoAssetPath);
+        if (so == null)
+            return "未找到 LevelInfoSO：" + levelInfoAssetPath;
+
+        var ext = string.IsNullOrEmpty(fileName) ? ".png" : Path.GetExtension(fileName).ToLowerInvariant();
+        var extOk = false;
+        foreach (var e in SummaryBgExtensions)
+        {
+            if (e == ext)
+                extOk = true;
+        }
+        if (!extOk)
+            ext = ".png";
+
+        byte[] bytes;
+        try
+        {
+            var b64 = base64 == null ? "" : base64.Trim();
+            var comma = b64.IndexOf(',');
+            if (comma >= 0 && b64.StartsWith("data:", StringComparison.Ordinal))
+                b64 = b64.Substring(comma + 1);
+            bytes = Convert.FromBase64String(b64);
+        }
+        catch
+        {
+            return "背景图 base64 解码失败。";
+        }
+        if (bytes == null || bytes.Length == 0)
+            return "背景图数据为空。";
+
+        var dir = SummaryBgDir(levelInfoAssetPath);
+        if (string.IsNullOrEmpty(dir))
+            return "关卡数据目录不存在。";
+        var absDir = AbsPath(dir);
+        if (!Directory.Exists(absDir))
+            Directory.CreateDirectory(absDir);
+        DeleteSummaryBgImages(dir);
+        File.WriteAllBytes(Path.Combine(absDir, SummaryBgFileStem + ext), bytes);
+        WriteSummaryBgMeta(dir, outDim);
+
+        path = dir + "/" + SummaryBgFileStem + ext;
+        return null;
+    }
+
+    /** 只更新遮罩浓度（不换图）。 */
+    public static string SetSummaryBgDim(string levelInfoAssetPath, float dim, out string path, out float outDim)
+    {
+        path = "";
+        outDim = Mathf.Clamp(dim, 0f, 0.9f);
+        if (string.IsNullOrEmpty(levelInfoAssetPath))
+            return "缺少关卡资源路径。";
+        var dir = SummaryBgDir(levelInfoAssetPath);
+        if (string.IsNullOrEmpty(dir))
+            return "关卡数据目录不存在。";
+        WriteSummaryBgMeta(dir, outDim);
+        float ignored;
+        ReadSummaryBg(levelInfoAssetPath, out path, out ignored);
+        return null;
+    }
+
+    /** 清除汇总导出背景图（连同 meta 一起删掉整个 summary_bg~ 目录）。 */
+    public static string ClearSummaryBg(string levelInfoAssetPath)
+    {
+        if (string.IsNullOrEmpty(levelInfoAssetPath))
+            return "缺少关卡资源路径。";
+        var dir = SummaryBgDir(levelInfoAssetPath);
+        if (string.IsNullOrEmpty(dir))
+            return "关卡数据目录不存在。";
+        var absDir = AbsPath(dir);
+        try
+        {
+            if (Directory.Exists(absDir))
+                Directory.Delete(absDir, true);
+        }
+        catch (Exception e)
+        {
+            return "删除背景图失败：" + e.Message;
+        }
         return null;
     }
 

@@ -857,6 +857,39 @@ export async function uploadScreenshot(
   return data.texturePath ?? "";
 }
 
+// ---------- 汇总页导出背景图 ----------
+
+export interface SummaryBgResult {
+  path: string;
+  dim: number;
+}
+
+/** 上传汇总导出背景图（base64）。fileName/base64 留空 = 只更新遮罩浓度。
+ *  落盘在关卡 data 目录的 summary_bg~/（Unity 忽略 → 不进 AssetBundle、不增大分发包）。 */
+export async function saveSummaryBg(
+  assetPath: string,
+  dim: number,
+  fileName = "",
+  base64 = ""
+): Promise<SummaryBgResult> {
+  const r = await fetch("/api/level/summary-bg-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath, fileName, base64, dim }),
+  });
+  const data = await readApiJson<{ path?: string; dim?: number }>(r);
+  return { path: data.path ?? "", dim: data.dim ?? dim };
+}
+
+export async function clearSummaryBg(assetPath: string): Promise<void> {
+  const r = await fetch("/api/level/summary-bg-clear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath }),
+  });
+  await readApiJson<{ path?: string }>(r);
+}
+
 // ---------- Custom Recipe Management ----------
 
 export async function fetchCustomRecipeConfig(setName: string): Promise<CustomRecipeConfig> {

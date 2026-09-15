@@ -95,7 +95,7 @@ function makeItem(
   }
   if (cat.id === "Teleportal") {
     item.stubKind = "Teleportal";
-    item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false };
+    item.teleportal = { exitPortalInstanceId: "", portalColor: 0, doubleSided: false, exitOnly: false };
   }
   return item;
 }

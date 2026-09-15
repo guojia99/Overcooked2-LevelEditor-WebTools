@@ -49,9 +49,11 @@ function setStatus(ok: boolean, msg: string): void {
   el.classList.toggle("ok", ok && msg.length > 0);
 }
 
+/** 面包层判定：后端给的 buns 候选集优先；兜底按 id 含 "choppedbun"
+ *  （核心 ChoppedBunSO / DLC02_ChoppedBun / DLC8 dlc08_choppedbun 三种写法全覆盖，
+ *  历史别名 dlc08_bun 已统一改名，无需特判）。 */
 function isBunId(id: string, bunIds: Set<string>): boolean {
   if (bunIds.has(id)) return true;
-  if (id === "ChoppedBunSO" || id.toLowerCase() === "dlc08_bun") return true;
   return /ChoppedBun/i.test(id);
 }
 

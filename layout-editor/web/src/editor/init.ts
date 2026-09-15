@@ -28,7 +28,8 @@ import {
   startBridgeWatch,
   selectSceneInDropdowns
 } from "./sceneIO";
-import { rebuildIngredientLookup } from "./catalog";
+import { ingredientGuidById, rebuildIngredientLookup } from "./catalog";
+import { allDispenserPrefabIds, dispenserIngredientIds } from "./recipeKnowledge";
 import { buildPalette } from "./palette";
 import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
 import { refreshScopedSaveButton } from "./serialize";
@@ -210,6 +211,26 @@ export function setLayer(layer: LayerKey): void {
   draw();
 }
 
+/** 分配器白名单自检（食材目录加载后跑一次）：把「机器可输出食材 id 清单」逐个解析成
+ *  guid，一个都解析不到就报警。
+ *
+ *  2026-09-15 事故：后端 IngredientCatalogId 改取小写 prefabName（DLC08_Drink01→drink01）
+ *  后，饮料机/汽水机/酱料机的白名单与目录 id 全部错开，选择弹窗静默变成空列表、
+ *  「机器+开关」组合也不写默认输出，拖了很久才发现 —— 这里出声就能当场定位。 */
+function auditDispenserWhitelists(): void {
+  if (S.ingredientsCache.length === 0) return; // 目录没加载出来，不误报
+  for (const pid of allDispenserPrefabIds()) {
+    const ids = dispenserIngredientIds(pid) ?? [];
+    const missing = ids.filter((id) => !ingredientGuidById(id));
+    if (ids.length > 0 && missing.length === ids.length) {
+      console.warn(
+        `[dispenser] ${pid} 的可输出食材白名单全部失效（${ids.join(", ")}）——` +
+          "选择弹窗将退化为全食材可选，请更新 recipeKnowledge 的机器食材清单。"
+      );
+    }
+  }
+}
+
 export async function init() {
   const ok = await fetchHealth();
   const healthInfo = await fetchHealthInfo().catch(() => ({ ok: false, recipeApi: false }));
@@ -233,6 +254,7 @@ export async function init() {
   }
   S.ingredientsCache = await fetchIngredients().catch(() => []);
   rebuildIngredientLookup();
+  auditDispenserWhitelists();
   // 随机食材箱问号图标样式（异步，画布在其就绪后自动重绘）
   loadQuestionMarks();
   S.intermediatesCache = await fetchRecipeCatalog("")

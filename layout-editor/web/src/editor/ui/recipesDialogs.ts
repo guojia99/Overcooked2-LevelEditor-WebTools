@@ -68,7 +68,13 @@ import {
   saveMatchlists,
   saveLevelRecipes
 } from "../../api";
-import { NODE_INGREDIENT_SOURCES } from "../../recipeGroups";
+import {
+  NODE_INGREDIENT_SOURCES,
+  crateIngredientId,
+  equivalentCrateIds,
+  BUN_CORE_ID,
+  BUN_DLC8_ID,
+} from "../../recipeGroups";
 import { rlCardHtml } from "../../recipeCard";
 import type { RecipeEntry, LevelOptionalItem, LevelRecipes, OptionalPresets } from "../../types";
 
@@ -390,14 +396,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       if (it.stubKind === "Dispenser") {
         const id = ingredientIdByGuid(it.dispenser?.spawnerItemPrefabGuid);
         if (!id) continue;
-        s.add(id);
         // 等价形态互通（uID 相同的换皮/核心版）：dlc10 箱算 dlc04 需求已满足
-        // （反之亦然），dlc08 面包箱算核心面包——避免误报缺失、重复建箱。
-        const equiv = NODE_INGREDIENT_SOURCES[id];
-        if (equiv) s.add(equiv);
-        for (const [from, to] of Object.entries(NODE_INGREDIENT_SOURCES)) {
-          if (to === id) s.add(from);
-        }
+        // （反之亦然），DLC8 面皮箱与核心汉堡面包箱互认（uID 16088）——避免误报
+        // 缺失、重复建箱。
+        for (const e of equivalentCrateIds(id)) s.add(e);
       }
     }
     return s;
@@ -421,10 +423,11 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       // 组成项里的中间产物（煎肉排/炸洋葱圈等）展开为叶食材（MeatSO/dlc08_onion_ring）
       // 进食材箱清单——半成品本身无实体食材条目，不能建箱（此前报「目录中找不到
       // 对应食材资产」），改由锅具装填（computeUtensilIngredientFill）分配到对应锅具。
-      // NODE_INGREDIENT_SOURCES 同时做建箱等价替换（套餐面包 dlc08_bun → 核心
-      // 汉堡面包 ChoppedBunSO，uID 等价、订单匹配不受影响）。
+      // crateIngredientId 同时做建箱等价替换，且**带菜谱上下文**：汉堡大全
+      // （commonW2，group="burger"）的成品推荐 DLC8 面皮 dlc08_choppedbun，其余
+      // 菜谱（官方汉堡/DLC8 套餐）的面皮归一到核心 ChoppedBunSO（uID 16088 等价）。
       (r.ingredients ?? []).forEach((i) =>
-        leafIngredientIds(i).forEach((leaf) => reqIngs.add(NODE_INGREDIENT_SOURCES[leaf] ?? leaf))
+        leafIngredientIds(i).forEach((leaf) => reqIngs.add(crateIngredientId(leaf, r)))
       );
       if (r.cookingStep) steps.add(r.cookingStep);
       // 套餐等无主步骤的菜谱：加工步骤在 cookingGroups 里（FryingPan 煎肉 /
@@ -434,7 +437,9 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     }
     const haveDisp = existingDispenserIngIds();
     const havePref = existingPrefabIds();
-    // node 型匹配节点（如沙拉洋葱 dlc11onion_salad）由其整食材食材箱覆盖
+    // node 型匹配节点（如沙拉洋葱 dlc11onion_salad）由其整食材食材箱覆盖。
+    // 防御性二次归一：reqIngs 已由 crateIngredientId 带上下文归一过，这里只兜
+    // node 型；面皮不在 NODE_INGREDIENT_SOURCES 内，不会被回退改写成核心面包。
     const crateIngId = (i: string) => NODE_INGREDIENT_SOURCES[i] ?? i;
     // 汽水是 node 型，由汽水机产出（需求体现在「锅具/道具」区），不进食材箱清单
     const fromSodaMachine = (i: string) => SODA_MACHINE_INGREDIENT_IDS.includes(i);
@@ -529,7 +534,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     for (const cb of cbs) selectedIngs.add(cb.value);
     if (S.fillIncludeMainDough) {
       if (selectedIngs.has("DLC05_Dough")) selectedIngs.add("DoughSO");
-      if (selectedIngs.has("DLC02_ChoppedBun")) selectedIngs.add("ChoppedBunSO");
+      if (selectedIngs.has("DLC02_ChoppedBun")) selectedIngs.add(BUN_CORE_ID);
+      // 汉堡大全推荐的 DLC8 面皮同理：勾选该选项时额外补一个主线核心面包
+      // （uID 16088 等价，两种订单都能接；不勾则只建 DLC8 一种）。
+      if (selectedIngs.has(BUN_DLC8_ID)) selectedIngs.add(BUN_CORE_ID);
     }
     if (selectedIngs.size === 0) return;
     const cat = catalogItemById("Dispenser");
@@ -547,7 +555,9 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         CONDIMENT_MACHINE_INGREDIENT_IDS.includes(ing)
       )
         continue;
-      // node 型匹配节点 → 食材箱生成其整食材（如沙拉洋葱节点 → 整个沙拉洋葱）
+      // node 型匹配节点 → 食材箱生成其整食材（如沙拉洋葱节点 → 整个沙拉洋葱）。
+      // 面皮不在本表内：reqIngs 已按菜谱上下文定好（汉堡大全 = DLC8 面皮），
+      // 此处不得再回退到核心面包。
       const crateId = NODE_INGREDIENT_SOURCES[ing] ?? ing;
       const guid = ingredientGuidById(crateId);
       if (!guid) {
@@ -1051,7 +1061,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         const ok = !info.missingIngs.includes(i);
         let checked = !ok;
         if (i === "DoughSO" && info.reqIngs.has("DLC05_Dough")) checked = false;
-        if (i === "ChoppedBunSO" && info.reqIngs.has("DLC02_ChoppedBun")) checked = false;
+        if (i === BUN_CORE_ID && info.reqIngs.has("DLC02_ChoppedBun")) checked = false;
+        // 同关同时需要 DLC8 面皮（汉堡大全）与核心面包（官方汉堡）时，核心面包
+        // 默认不勾：二者 uID 16088 等价，一个 DLC8 面皮箱即可同时满足两种订单。
+        if (i === BUN_CORE_ID && info.reqIngs.has(BUN_DLC8_ID)) checked = false;
         const iName = ingredientEntryById(i)?.nameZh ?? byRecipeId.get(i)?.nameZh ?? i;
         return `<label class="rw-row ${ok ? "" : "miss"}"><input type="checkbox" class="rw-ing-cb" value="${i}" ${checked ? "checked" : ""}/> <span>${escHtml(iName)}</span> <span class="muted">${escHtml(i)}</span></label>`;
       })
@@ -1076,7 +1089,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
              <button type="button" class="rw-sel-none" id="rw-sel-none-ing">全不选</button>
              <button type="button" class="modal-btn primary rw-fill" id="rw-fill-ing">一键补齐选中食材</button>
            </div>
-           <label class="ctx-stub-row" style="display:block;margin-top:6px"><input type="checkbox" id="rw-include-main-dough" ${S.fillIncludeMainDough ? "checked" : ""}/> 同时补齐主线面团/面包皮（DoughSO / ChoppedBunSO）</label>`
+           <label class="ctx-stub-row" style="display:block;margin-top:6px"><input type="checkbox" id="rw-include-main-dough" ${S.fillIncludeMainDough ? "checked" : ""}/> 同时补齐主线面团/面包皮（DoughSO / ChoppedBunSO，DLC 面团/DLC8 面皮之外再加一个核心版）</label>`
         : `<p class="modal-hint ok">食材箱已齐全</p>`}
       ${info.ignoredUtIds?.length
         ? `<div class="rw-warn">⚠ 以下需求 id 不在道具目录中（资产缺失或未翻译），已忽略：${info.ignoredUtIds.map((u) => escHtml(u)).join("、")}</div>`
@@ -1204,10 +1217,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     );
   };
 
+  /** 汉堡面包 id 判定：核心 ChoppedBunSO / DLC02_ChoppedBun / DLC8 dlc08_choppedbun
+   *  三种写法都含 "choppedbun"（历史别名 dlc08_bun 已统一改名，无需特判）。 */
   const isBurgerBunId = (id: string): boolean =>
-    id === "ChoppedBunSO" ||
-    id.toLowerCase() === "dlc08_bun" ||
-    id.toLowerCase().includes("choppedbun");
+    id === BUN_CORE_ID || id.toLowerCase().includes("choppedbun");
 
   const isBurgerRecipe = (r: RecipeEntry): boolean => {
     if (r.type === "burger") return true;
@@ -1545,11 +1558,40 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         <span class="rw-ml-key">${escHtml(k === "combineddlc" ? "combineddlc（组合包）" : (foodGroupLabel(k as never) || k))}</span>
       </label>`;
     }).join("");
-    return `<p class="modal-hint">includeRecipeMatchLists：并入对应 DLC 的整套匹配节点（食材/订单/可选自由拼接/套餐）。<b>保存菜谱不再自动并入</b>——选择了 DLC 菜谱时建议在此开启对应项；story 匹配表运行时始终并入，无需配置。</p>
+    return `<p class="modal-hint">includeRecipeMatchLists：并入对应 DLC 的整套匹配节点（食材/订单/可选自由拼接/套餐）。<b>保存菜谱不再自动并入</b>——选择了 DLC 菜谱时建议在此开启对应项；story 匹配表运行时始终并入，无需配置。<br>「一键填充」会递归已选菜谱的组成件推导 DLC 归属：自定义/Burger大全菜谱自身无 DLC 归属，但其面皮（dlc08）、菠萝（dlc02）、培根蛋（dlc05）等组成件有，会一并勾上。勾选结果可手动增删后再写回。</p>
       <div class="rw-toolbar">
         <button type="button" class="modal-btn" id="rw-ml-fill-sel">按已选菜谱一键填充</button>
       </div>
       <div class="rw-ml-grid">${cards}</div>`;
+  };
+
+  /** 递归推导一个菜谱涉及的 DLC 组。
+   *  自定义/组合菜谱自身不带 DLC 归属（commonW2「Burger大全」group="burger"、
+   *  关卡集 group="levelset"、common01 自定义 group="custom"），但其组成件可能来自
+   *  各 DLC —— 汉堡大全的成品就是典型：面皮来自 dlc08（dlc08_choppedbun）、菠萝来自
+   *  dlc02（BurgerPineapple）、培根蛋来自 dlc05。只看菜谱自身 group 会漏掉它们，
+   *  「按已选菜谱一键填充」对整个 Burger大全一个 matchlist 都勾不上。
+   *  递归 compositionIds（夹心中间产物可再嵌套，如 PanfriedMeatEgg → MixedMeatEgg）
+   *  与 ingredients（叶食材），用 seen + depth 双重防环。 */
+  const dlcGroupsOfRecipe = (
+    r: RecipeEntry | undefined,
+    seen: Set<string> = new Set<string>(),
+    depth = 0,
+  ): Set<string> => {
+    const out = new Set<string>();
+    if (!r || depth > 6 || seen.has(r.id)) return out;
+    seen.add(r.id);
+    if (r.group && r.group.startsWith("dlc")) out.add(r.group);
+    for (const id of [...(r.compositionIds ?? []), ...(r.ingredients ?? [])]) {
+      const sub = byRecipeId.get(id);
+      if (sub) {
+        for (const g of dlcGroupsOfRecipe(sub, seen, depth + 1)) out.add(g);
+        continue;
+      }
+      const ing = ingredientEntryById(id);
+      if (ing?.group && ing.group.startsWith("dlc")) out.add(ing.group);
+    }
+    return out;
   };
 
   const wireMatchlist = () => {
@@ -1568,15 +1610,23 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     document.getElementById("rw-ml-fill-sel")?.addEventListener("click", () => {
       const dlcs = new Set<string>();
       for (const g of selected) {
-        const r = byGuid.get(g);
-        if (r?.group && r.group.startsWith("dlc")) dlcs.add(r.group);
+        for (const d of dlcGroupsOfRecipe(byGuid.get(g))) dlcs.add(d);
       }
       let added = 0;
+      const addedKeys: string[] = [];
       for (const k of dlcs) {
-        if (ML_KEYS.includes(k) && !matchlistKeys.has(k)) { matchlistKeys.add(k); added++; }
+        if (ML_KEYS.includes(k) && !matchlistKeys.has(k)) {
+          matchlistKeys.add(k);
+          added++;
+          addedKeys.push(k);
+        }
       }
       matchlistDirty = true;
-      setStatus(added ? `已勾选 ${added} 个 matchlist（待写回）` : "已选菜谱未涉及新的 DLC");
+      setStatus(
+        added
+          ? `已勾选 ${added} 个 matchlist（${addedKeys.join("、")}，待写回）`
+          : "已选菜谱未涉及新的 DLC",
+      );
       render();
     });
   };

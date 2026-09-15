@@ -104,14 +104,18 @@ public static class CustomStubAutoBake
         try
         {
             var baked = LayoutEditorStubIO.RebakeRandomCratesInActiveScene();
-            if (baked <= 0)
+            var portals = LayoutEditorStubIO.RebakeTeleportalExitOnlyInActiveScene();
+            if (baked <= 0 && portals <= 0)
                 return;
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             if (!scene.IsValid() || string.IsNullOrEmpty(scene.path))
                 return;
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
-            Debug.Log("[CustomStub] 已自动补烘焙 " + baked + " 个随机食材箱并保存场景: " + scene.path);
+            if (baked > 0)
+                Debug.Log("[CustomStub] 已自动补烘焙 " + baked + " 个随机食材箱并保存场景: " + scene.path);
+            if (portals > 0)
+                Debug.Log("[CustomStub] 已自动补烘焙 " + portals + " 个单向传送门（仅作为出口）并保存场景: " + scene.path);
             SyncQuestionMarks();
         }
         catch (Exception ex)

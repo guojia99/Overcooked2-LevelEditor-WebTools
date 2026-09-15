@@ -286,11 +286,99 @@
   gap: 10px;
 }
 
-/* 食材图标：只显示图标，名称仅存于 title 悬浮提示；
+/* 食材图标：只显示图标，名称走 data-name + ::after 即时浮动标签
+ * （原生 title 有约 1s 延迟且不跟随动画，已弃用）；
  * 重复食材（如夏威夷汉堡双肉排）直接显示两个图标 */
 .rl-chip {
   position: relative;
   display: block;
+  transition: transform 0.12s ease;
+}
+
+/* 悬浮即抬起放大；z-index 让抬起后的图标与名称标签压在相邻食材之上 */
+.rl-chip:hover {
+  transform: translateY(-6px) scale(1.14);
+  z-index: 6;
+}
+
+/* 食材名称浮动标签：悬浮瞬时出现在图标正上方（无延迟）。
+ * 用 ::after + attr(data-name) 而非真实节点，避免每张卡片多出几十个 DOM。
+ * ⚠ 选择器特异性必须保持 基础 < 悬浮：基础规则一旦写成
+ * `.rl-chip[data-name]:not([data-name=""])::after`（0,3,1），就会盖过
+ * `.rl-chip:hover::after`（0,2,1）的 opacity/visibility，标签永远不显示。
+ * 因此基础规则只用 `.rl-chip::after`（0,1,1），空名另用 content:none 摘除。 */
+.rl-chip::after {
+  content: attr(data-name);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%) translateY(4px) scale(0.92);
+  transform-origin: bottom center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(38, 30, 18, 0.97), rgba(14, 12, 9, 0.97));
+  border: 1px solid rgba(255, 217, 138, 0.55);
+  color: #ffe9b0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 224, 160, 0.18);
+  transition:
+    opacity 0.1s ease,
+    transform 0.12s cubic-bezier(0.2, 1.4, 0.4, 1),
+    visibility 0s linear 0.1s;
+}
+
+/* 无名称（data-name 缺失或为空）：整个伪元素摘除，不弹空胶囊。
+ * content:none 与 :hover 规则无属性冲突，不受特异性影响。 */
+.rl-chip:not([data-name])::after,
+.rl-chip[data-name=""]::after {
+  content: none;
+}
+
+.rl-chip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+  transition:
+    opacity 0.1s ease,
+    transform 0.12s cubic-bezier(0.2, 1.4, 0.4, 1),
+    visibility 0s;
+}
+
+/* 边缘对齐：.rl-card 是 overflow:hidden（圆角 + 成品背景图需要），居中的名称标签
+ * 在整行最左/最右食材上会被卡片裁掉。首个食材的标签左对齐、末个右对齐，一律朝
+ * 卡片内侧展开。单个食材的组（:only-child）不受影响，保持居中。
+ * 这几条特异性 (0,4,1)/(0,5,1) 均高于对应的基础/悬浮规则，只覆盖定位，
+ * 显隐仍由上面两条控制。 */
+.rl-group-chips > .rl-chip:first-child:not(:only-child)::after {
+  left: -4px;
+  transform: translateX(0) translateY(4px) scale(0.92);
+  transform-origin: bottom left;
+}
+
+.rl-group-chips > .rl-chip:first-child:not(:only-child):hover::after {
+  transform: translateX(0) translateY(0) scale(1);
+}
+
+.rl-group-chips > .rl-chip:last-child:not(:only-child)::after {
+  left: auto;
+  right: -4px;
+  transform: translateX(0) translateY(4px) scale(0.92);
+  transform-origin: bottom right;
+}
+
+.rl-group-chips > .rl-chip:last-child:not(:only-child):hover::after {
+  transform: translateX(0) translateY(0) scale(1);
 }
 
 .rl-chip img {
@@ -421,6 +509,31 @@
 .sum-recipes .rl-chip img {
   width: 34px;
   height: 34px;
+}
+
+/* ---- 汇总页设置了导出背景图（.sum-page.has-bg）----
+ * 卡片自带的深色渐变底 + 1px 边框在背景图上会糊成一块黑贴片，这里在
+ * 「有背景图」作用域内一次性摘掉，让成品面板（recipe-bg-main）与食材分组框
+ * （recipe-bg-group）直接浮在背景上。
+ * ⚠ 只做作用域覆盖，绝不改动上面任何 .rl-* 卡片原始规则（无背景图时零影响）。 */
+.sum-page.has-bg {
+  border-color: transparent;
+}
+
+.sum-page.has-bg .rl-card {
+  background: none;
+  border-color: transparent;
+}
+
+/* 分类标题的计数胶囊同理：实底深灰 → 半透明，贴合背景 */
+.sum-page.has-bg .rl-section-count {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* 未上传截图时的虚线占位框：在背景图上同样刺眼，弱化处理 */
+.sum-page.has-bg .sum-shot-empty {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #d5d8dd;
 }
 
 /* ===================== 菜谱管理弹窗（关卡编辑器 recipesDialogs） =====================

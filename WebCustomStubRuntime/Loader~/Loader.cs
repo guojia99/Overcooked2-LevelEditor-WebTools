@@ -32,6 +32,11 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v2.2.1（2026-09-15）：仅随统一运行时同步版本号（可移动火锅联机实体 ID 错位
+    ///     修复 + 联机实体指纹诊断，全部在 CustomStub 侧，loader 无改动）。
+    ///     ⚠ 该版本是联机致命修复，requires.txt 门控会挡下 &lt; 2.2.1 的旧依赖包。
+    /// v2.2.0（2026-09-15）：仅随统一运行时同步版本号（新增传送门单向
+    ///     TeleportalExitOnly，自愈与压制全在 CustomStub.EntryPoint 侧，loader 无改动）。
     /// v2.1.0（2026-09-14 性能审查）：
     ///  1. 关卡目录扫描（Directory/File 枚举 + requires.txt 读取）挪到 ThreadPool
     ///     后台线程——原实现在【每次场景加载】的主线程上做这些磁盘 I/O，关卡集多时
@@ -47,7 +52,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "2.1.0";
+        public const string PluginVersion = "2.2.1";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>
@@ -751,7 +756,14 @@ namespace OC2LevelRuntimeLoader
                         if (install != null)
                         {
                             var installed = install.Invoke(null, null);
-                            LogI("CustomStub.EntryPoint.Install: " + ((installed is bool && (bool)installed) ? "已安装" : "跳过（已有实例）"));
+                            // 返回 false 有两种情况：已有其它实例（正常），或 Install
+                            // 内部抛异常被自己吞掉（此时上一行必有「安装异常」告警）。
+                            // 别把后者也说成「已有实例」——2026-09-15 事故里这句话
+                            // 差点把 GameApi 静态构造失败掩盖过去。
+                            LogI("CustomStub.EntryPoint.Install: "
+                                + ((installed is bool && (bool)installed)
+                                    ? "已安装"
+                                    : "未由本次调用安装（已有实例，或安装异常——见上一行告警）"));
                         }
                     }
                     catch (Exception ex)

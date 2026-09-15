@@ -11,8 +11,9 @@ using UnityEngine;
 /// </summary>
 public static class LayoutEditorRecipeKnowledge
 {
-    /// <summary>Bumped together with SCHEMA_VERSION in build-catalog.mjs.</summary>
-    public const int BridgeSchemaVersion = 5;
+    /// <summary>Bumped together with SCHEMA_VERSION in build-catalog.mjs.
+    ///  v6（2026-09-15）：传送门方向 teleportal.exitOnly（旧桥接 JsonUtility 静默丢弃）。</summary>
+    public const int BridgeSchemaVersion = 6;
 
     /// <summary>面粉/蛋家族（与前端 recipeKnowledge.ts 一致）：面粉系菜谱
     ///  （蛋糕/松饼/月饼/派/布丁，含 dlc09/dlc13 变体）的搅拌分组判定用。</summary>

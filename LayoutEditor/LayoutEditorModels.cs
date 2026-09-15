@@ -73,11 +73,17 @@ public class LayoutConveyorStubDto
 [Serializable]
 public class LayoutTeleportalStubDto
 {
-    /** "u:<instanceID>" of the paired Teleportal's GameObject, or empty. */
+    /** "u:<instanceID>" of the paired Teleportal's GameObject, or empty.
+     *  exitOnly=true 时该字段是【回指入口的占位】（宿主/mod 的 LateSetup 对 null
+     *  exitPortal 无判空即 NRE），运行时会被 CustomStub.TeleportalExitOnly 清回 null。 */
     public string exitPortalInstanceId;
     /** PortalColor enum value (int). */
     public int portalColor;
+    /** 双面【外观】：背面也显示门框（宿主只克隆视觉），不影响进出方向。 */
     public bool doubleSided;
+    /** true = 仅作为出口（单向传送的出口侧，本门不发送）。
+     *  权威 = CustomStub.TeleportalExitOnly 组件，载体 = tag "TeleportalExitOnly|<1|0>"。 */
+    public bool exitOnly;
 }
 
 [Serializable]
@@ -1301,6 +1307,11 @@ public class LevelDetailDto
     public bool hasScreenshot;
     /** Asset path of the screenshot texture ("" when none), for the web UI to preview. */
     public string screenshotPath;
+    /** 汇总页导出背景图（关卡 data 目录下 summary_bg~/bg.*，Unity 忽略的目录，
+     *  不进 AssetBundle）。"" = 未设置。走 /api/level/data-file 读取。 */
+    public string summaryBgPath;
+    /** 背景图暗色遮罩浓度（0-0.9）。 */
+    public float summaryBgDim;
     public int debugRecipeCount;
     public bool disableDynamicParenting;
     public int minOrderCount;
@@ -1419,6 +1430,36 @@ public class ScreenshotUploadDto
 public class ScreenshotUploadResultDto
 {
     public string texturePath;
+}
+
+// ---------- 汇总页导出背景图（关卡 data 目录 summary_bg~/） ----------
+
+[Serializable]
+public class SummaryBgUploadDto
+{
+    /** LevelInfoSO asset path. */
+    public string assetPath;
+    /** 空文件名 = 只改遮罩浓度，不换图。 */
+    public string fileName;
+    /** Base64-encoded image bytes（可带 data: 前缀）。 */
+    public string base64;
+    /** 暗色遮罩浓度 0-0.9。 */
+    public float dim;
+}
+
+[Serializable]
+public class SummaryBgResultDto
+{
+    /** 背景图资源路径（走 /api/level/data-file 读取）；"" = 无。 */
+    public string path;
+    public float dim;
+}
+
+/** summary_bg~/meta.json 的落盘结构。 */
+[Serializable]
+public class SummaryBgMetaDto
+{
+    public float dim;
 }
 
 [Serializable]

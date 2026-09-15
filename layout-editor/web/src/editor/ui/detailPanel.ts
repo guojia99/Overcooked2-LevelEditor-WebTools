@@ -48,6 +48,10 @@ import {
   isTeleportalItem
 } from "../renderItems";
 import {
+  teleportalRole,
+  teleportalEntrancesOf
+} from "../teleportalLinks";
+import {
   isGlassReturnItem,
   computeReturnLabels,
   servingPlateReturn,
@@ -111,13 +115,22 @@ export function extraStubDetailHtml(item: EditorItem): string {
     const partner = exitId ? S.items.find((i) => i.instanceId === exitId) : undefined;
     const myLabel = S.teleportalLabels.get(item.instanceId) ?? "?";
     const colorName = PORTAL_COLOR_NAMES[item.teleportal?.portalColor ?? 0] ?? String(item.teleportal?.portalColor ?? 0);
-    const pairTxt = partner
-      ? `已绑定 →「${itemLabel(partner)}」（同组 ${myLabel}）`
-      : exitId
-        ? "绑定目标不在当前场景"
-        : "未绑定";
-    const ds = item.teleportal?.doubleSided ? " · 双向" : "";
-    return `<dt>传送门</dt><dd>${pairTxt} · 颜色 ${colorName}${ds}</dd>`;
+    const role = teleportalRole(item);
+    const ds = item.teleportal?.doubleSided ? " · 双面外观" : "";
+    let dirTxt: string;
+    if (role === "exit") {
+      const src = teleportalEntrancesOf(item);
+      dirTxt = src.length
+        ? `仅作为出口 ← 来自「${itemLabel(src[0])}」${src.length > 1 ? ` 等 ${src.length} 个入口` : ""}`
+        : "仅作为出口 · ⚠ 没有入口指向它（写回会被阻断）";
+    } else if (role === "two" && partner) {
+      dirTxt = `双向 ↔「${itemLabel(partner)}」（同组 ${myLabel}）`;
+    } else if (role === "entrance" && partner) {
+      dirTxt = `单向入口 →「${itemLabel(partner)}」（同组 ${myLabel}）`;
+    } else {
+      dirTxt = exitId ? "绑定目标不在当前场景" : "⚠ 未绑定出口（写回会被阻断）";
+    }
+    return `<dt>传送门</dt><dd>${dirTxt} · 颜色 ${colorName}${ds}</dd>`;
   }
   switch (stubKindOf(item)) {
     case "AttachingFoodSpawner": {

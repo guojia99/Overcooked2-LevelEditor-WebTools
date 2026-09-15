@@ -77,7 +77,9 @@ export function remapRefsWithinItems(items: EditorItem[], map: Map<string, strin
 }
 
 /** 清理指向当前物品列表之外的所有绑定引用，返回清理条数（供状态栏汇报）。
- *  空引用（""/undefined）视为未绑定，不算孤儿。 */
+ *  空引用（""/undefined）视为未绑定，不算孤儿。
+ *  传送门另有一条方向语义的收口：「仅作为出口」的门失去全部入口后复位为普通门
+ *  （否则写回校验会因「没有入口指向的仅出口门」阻断）。 */
 export function cleanOrphanedStubRefs(): number {
   const live = new Set(S.items.map((i) => i.instanceId).filter(Boolean));
   let removed = 0;
@@ -117,6 +119,23 @@ export function cleanOrphanedStubRefs(): number {
         removed++;
       }
     }
+  }
+
+  // 传送门方向复位：仅出口门在入口被删除后会变成「没人能送进来」的死门，
+  // 写回会被校验阻断——复位为普通未绑定门（用户可重新配对）。
+  for (const it of S.items) {
+    const t = it.teleportal;
+    if (!t?.exitOnly) continue;
+    const hasEntrance = S.items.some(
+      (o) =>
+        o.instanceId !== it.instanceId &&
+        !o.teleportal?.exitOnly &&
+        o.teleportal?.exitPortalInstanceId === it.instanceId
+    );
+    if (hasEntrance) continue;
+    t.exitOnly = false;
+    t.exitPortalInstanceId = "";
+    removed++;
   }
   return removed;
 }

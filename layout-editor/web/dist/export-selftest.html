@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>export-selftest</title>
+<!--
+  导出引擎自检页（仅 vite dev 可用：直接 import /src/*.ts）。
+  用法：npm run dev → http://localhost:5173/export-selftest.html
+       ?only=diff  只看差异图；?nobg=1 关掉导出背景图。
+  三栏 = 页面真实 DOM / SVG 导出 / 两者 difference 混合（全黑 = 像素级一致）。
+  改动 recipeCard.ts / recipeList.css 后可用它快速确认导出是否仍与页面一致。
+-->
+<link rel="stylesheet" href="/src/style.css">
+<link rel="stylesheet" href="/src/recipeList.css">
+<style>
+  body { margin: 0; background: #14161a; }
+  .cmp { display: flex; gap: 16px; align-items: flex-start; padding: 12px; }
+  .cmp > div { flex: 0 0 auto; }
+  .cmp h3 { color: #9aa0a6; font: 12px/1.4 sans-serif; margin: 0 0 6px; }
+</style>
+</head>
+<body>
+<div class="cmp">
+  <div><h3>DOM（页面真实渲染）</h3><div id="live"></div></div>
+  <div><h3>SVG 导出</h3><div id="out"></div></div>
+  <div><h3>差异（黑=完全一致）</h3><div id="diff" style="position:relative;background:#000"></div></div>
+</div>
+<script type="module">
+import { rlCardHtml, rlSectionHtml } from "/src/recipeCard.ts";
+import { renderNodeToSvg } from "/src/domSvgExport.ts";
+
+// 关键回归样本：同一张卡里「有煎制步骤的组」+「无步骤的组」并排
+// —— 旧导出会把无步骤组的背景框拉到和有步骤组一样高（膨胀 2 格）。
+const recipes = [
+  {
+    id: "TestBurger", guid: "g1", nameZh: "测试汉堡", nameEn: "Test Burger",
+    score: 60, group: "core", type: "burger",
+    ingredients: ["MeatSO", "LettuceSO", "TomatoSO"],
+    compositionIds: [],
+    cookingGroups: [
+      { step: "FryingPan", ingredients: ["MeatSO"], ingredientSteps: {} },
+      { step: "", ingredients: ["LettuceSO", "TomatoSO"], ingredientSteps: {} },
+    ],
+  },
+  {
+    id: "TestSoup", guid: "g2", nameZh: "一道名字很长很长很长的测试汤品", nameEn: "A Very Long Test Soup Name",
+    score: 100, group: "dlc05", type: "soup", isCustom: true,
+    ingredients: ["TomatoSO", "OnionSO"],
+    compositionIds: [],
+    cookingGroups: [
+      { step: "Pot", ingredients: ["TomatoSO", "OnionSO"], ingredientSteps: { TomatoSO: ["FryingPan"] } },
+    ],
+  },
+  {
+    id: "TestSalad", guid: "g3", nameZh: "测试沙拉", nameEn: "Extremely Long English Recipe Name That Should Wrap Into Several Lines",
+    score: 20, group: "core", type: "salad",
+    ingredients: ["LettuceSO"],
+    compositionIds: [],
+    cookingGroups: [{ step: "", ingredients: ["LettuceSO"], ingredientSteps: {} }],
+  },
+];
+
+const live = document.getElementById("live");
+live.className = "sum-page";
+live.style.width = "760px";
+// 汇总页导出背景：cover 铺满 + 双停 linear-gradient 暗色遮罩（与 levels.ts 同写法）
+if (!location.search.includes("nobg")) {
+  live.classList.add("has-bg");
+  live.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.35)),url('/base_bg.png')";
+  live.style.backgroundSize = "cover";
+  live.style.backgroundPosition = "center";
+  live.style.backgroundRepeat = "no-repeat";
+}
+live.innerHTML = `
+  <header class="sum-head">
+    <h1 class="sum-title">自检关卡</h1>
+    <div class="sum-sub">selftest · s_selftest</div>
+    <div class="sum-author">作者：tester</div>
+  </header>
+  <div class="sum-recipes">
+    ${rlSectionHtml("burger", recipes.map((r) => rlCardHtml(r, { allRecipes: recipes })).join(""), recipes.length)}
+  </div>
+`;
+
+async function run() {
+  await new Promise((r) => setTimeout(r, 400));
+  const rendered = await renderNodeToSvg(live, 1);
+  const url = URL.createObjectURL(new Blob([rendered.svg], { type: "image/svg+xml;charset=utf-8" }));
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error("svg 渲染失败")); img.src = url; });
+  document.getElementById("out").appendChild(img);
+
+  // 差异视图：DOM 克隆 + SVG 图叠加（difference 混合）—— 全黑 = 像素级一致
+  const diff = document.getElementById("diff");
+  const clone = live.cloneNode(true);
+  clone.style.margin = "0";
+  diff.appendChild(clone);
+  const over = img.cloneNode(true);
+  over.style.position = "absolute";
+  over.style.left = "0";
+  over.style.top = "0";
+  over.style.mixBlendMode = "difference";
+  diff.appendChild(over);
+
+  document.title = `done ${rendered.width}x${rendered.height} svg=${rendered.svg.length}`;
+  if (location.search.includes("only=diff")) {
+    document.querySelectorAll(".cmp > div").forEach((d, i) => { if (i < 2) d.remove(); });
+  }
+}
+run().catch((e) => { document.title = "ERR " + e.message; document.body.insertAdjacentHTML("beforeend", `<pre style="color:#f88">${e.stack}</pre>`); });
+</script>
+</body>
+</html>

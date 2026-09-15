@@ -36,7 +36,9 @@ public static class LayoutEditorDiag
             Debug.Log("[LayoutEditor-Diag] bundle47 '" + p + "' -> " + (go != null ? "OK" : "NULL"));
         }
 
-        // 2) Web 拷贝食材（dlc08_bun）：assetPath 为正斜杠大写
+        // 2) Web 拷贝食材：探测 bundle354 内 **游戏自带** 的 prefab 实名大小写。
+        //    注意 dlc08_bun 是游戏 bundle 内的真实资产名，不是本工程的食材 id
+        //    （工程内规范 id 已统一为 dlc08_choppedbun）——此处不可改名。
         var dlc = new[]
         {
             "Assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_bun.prefab",
