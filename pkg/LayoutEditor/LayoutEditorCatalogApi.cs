@@ -235,6 +235,18 @@ public static class LayoutEditorCatalogApi
         return slash > 0 ? rest.Substring(0, slash) : "";
     }
 
+    /** commonW2 共享库内，资产是否落在「burger」一级分类目录下
+     *  （custom_recipes/burger/**）。库内其它分类目录（如 fry/ 炸物）返回 false，
+     *  以便这些菜谱在 /recipes 页按真实类型（RecipeTypeOf）归组，而非一律「汉堡」。 */
+    internal static bool IsCommonW2BurgerCategory(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        var prefix = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/"
+            + LayoutEditorLevelAdminApi.BurgerCategoryId + "/";
+        return assetPath.Replace('\\', '/').StartsWith(prefix, StringComparison.Ordinal);
+    }
+
     public static RecipeCatalogDto ScanRecipes(string levelSet)
     {        var list = new List<RecipeEntryDto>();
         var folders = new List<string>
@@ -375,8 +387,10 @@ public static class LayoutEditorCatalogApi
                     score = score,
                     isCustom = isCustom,
                     group = group,
-                    type = group == "burger" ? "burger" : RecipeTypeOf(id),
-                    subtype = group == "burger" ? BurgerSubtypeOfPath(path) : "",
+                    // commonW2 共享库默认按「汉堡」类型分组；但库内 burger/ 之外的分类目录
+                    // （如 fry/ 炸物）应回落到按 id 推断的真实菜谱类型，出现在 /recipes 对应大类下。
+                    type = (group == "burger" && IsCommonW2BurgerCategory(path)) ? "burger" : RecipeTypeOf(id),
+                    subtype = (group == "burger" && IsCommonW2BurgerCategory(path)) ? BurgerSubtypeOfPath(path) : "",
                     intermediate = score <= 0 && !orderable,
                     mixing = isCustom && custom.type == CustomRecipeSO.RecipeType.Mixed,
                     optionalKind = custom is CustomRecipeOptionalBurgerSO ? "burger"

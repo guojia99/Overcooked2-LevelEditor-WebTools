@@ -224,7 +224,7 @@ export function rlCardHtml(r: RecipeWithGroups, opts: RlCardOptions = {}): strin
     ? `<img loading="lazy" src="${esc(opts.iconSrc(r))}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`
     : recipeImgHtml(r);
 
-  return `<article class="rl-card${opts.disabledReason ? " rl-card-disabled" : ""}" title="${esc(opts.disabledReason ? `${r.id}（${opts.disabledReason}）` : r.id)}">
+  return `<article class="rl-card${opts.disabledReason ? " rl-card-disabled" : ""}" data-id="${esc(r.id)}" title="${esc(opts.disabledReason ? `${r.id}（${opts.disabledReason}）` : r.id)}">
     <div class="rl-product">
       ${prodIcon}
       <div class="rl-prod-name">${esc(r.nameZh)}<span class="rl-prod-en">${esc(r.nameEn || r.id)}</span></div>

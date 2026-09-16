@@ -6,9 +6,11 @@ import { foodGroupLabel } from "./ingredientLabels";
 import {
   rlCardHtml,
   rlSectionHtml,
+  computeCardGroups,
   type RecipeWithGroups,
 } from "./recipeCard";
 import { createOffscreenStage, exportNodePng } from "./domSvgExport";
+import { openModal, closeModal } from "./modals";
 import { mountVersionBadge } from "./version";
 
 mountVersionBadge();
@@ -365,6 +367,15 @@ function wire(): void {
     });
   });
   document.getElementById("rl-export")!.addEventListener("click", () => void exportAll());
+  // 点击菜谱卡片 → 详情弹窗（食材清单视图的 .rl-ing-card 不响应）
+  document.getElementById("rl-content")!.addEventListener("click", (e) => {
+    const cardEl = (e.target as HTMLElement).closest<HTMLElement>(".rl-card");
+    if (!cardEl) return;
+    const id = cardEl.dataset.id;
+    if (!id) return;
+    const r = recipes.find((x) => x.id === id);
+    if (r) openRecipeDetail(r);
+  });
 }
 
 /** 一键导出：把当前筛选出的全部菜谱（含分组标题/卡片/徽标/烹饪组）合成为一张 PNG 长图。
@@ -417,19 +428,166 @@ async function exportAll(): Promise<void> {
 }
 
 /** 等离屏克隆里的图片解码完成（克隆节点的 <img> 需要重新触发加载，
- *  未完成时 currentSrc 可能为空，导出会漏图）。 */
+ *  未完成时 currentSrc 可能为空，导出会漏图）。
+ *
+ *  ⚠ 离屏舞台定位在 left:-100000px（视口外），克隆出的 `loading="lazy"` 图片
+ *  浏览器永远不会自动触发加载，load/error 都不会 fire——若不干预，Promise.all
+ *  会永久挂起（症状：导出卡在“正在生成图片…”，无任何 console 输出）。
+ *  这里：① 把每张图的 loading 强制改为 "eager" 逼其立即加载；② 每张图加 5s
+ *  超时兜底，杜绝个别图卡死拖垮整体。 */
 async function waitForImages(root: HTMLElement): Promise<void> {
   const imgs = Array.from(root.querySelectorAll("img"));
   await Promise.all(
     imgs.map(
       (img) =>
         new Promise<void>((resolve) => {
-          if (img.complete) return resolve();
-          img.addEventListener("load", () => resolve(), { once: true });
-          img.addEventListener("error", () => resolve(), { once: true });
+          if (img.complete && img.naturalWidth > 0) return resolve();
+          let done = false;
+          const finish = (): void => {
+            if (done) return;
+            done = true;
+            resolve();
+          };
+          img.addEventListener("load", finish, { once: true });
+          img.addEventListener("error", finish, { once: true });
+          // 逼视口外的 lazy 图立即加载：改 loading 属性并重挂 src
+          if (img.loading === "lazy") {
+            img.loading = "eager";
+            const src = img.currentSrc || img.src;
+            if (src) img.src = src;
+          }
+          if (img.complete && img.naturalWidth > 0) return finish();
+          window.setTimeout(finish, 5000);
         })
     )
   );
+}
+
+/** 烹饪步骤 id → 中文显示名（详情弹窗用）。 */
+const STEP_ZH: Record<string, string> = {
+  Pot: "煮锅",
+  FryingPan: "煎锅",
+  DeepFatFryer: "炸锅",
+  OvenTray: "烤箱",
+  Steamer: "蒸锅",
+  Mixer: "搅拌器",
+  Blender: "榨汁机",
+  MixingBowl: "搅拌碗",
+  GriddlePan: "煎烤盘",
+  KebabSkewer: "烤串",
+  ToastingFork: "烤叉",
+  HotPot: "大火锅",
+  RoastingTray: "烤托盘",
+  OvenCakeTin: "蛋糕模",
+  Plate: "盘子",
+  Glass: "玻璃杯",
+  Mug: "马克杯",
+};
+function stepZh(step: string | undefined): string {
+  if (!step) return "—";
+  return STEP_ZH[step] ? `${STEP_ZH[step]}（${step}）` : step;
+}
+
+/** 菜谱详情弹窗：完整参数 + 卡片预览 + 下载卡片图片按钮。 */
+function openRecipeDetail(r: RecipeWithGroups): void {
+  const groups = computeCardGroups(r, {
+    allRecipes: recipes,
+    ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
+  });
+  const ingNames = (r.ingredients ?? []).map(
+    (id) => ingredientById.get(id)?.nameZh ?? id
+  );
+  const compNames = (r.compositionIds ?? []).map((id) => {
+    const rec = recipes.find((x) => x.id === id);
+    return rec?.nameZh ?? ingredientById.get(id)?.nameZh ?? id;
+  });
+  const groupsText = groups
+    .map((g) => {
+      const ings = g.ingredients
+        .map((i) => esc(ingredientById.get(i)?.nameZh ?? i))
+        .join("、");
+      const steps = [g.step, ...(g.extraSteps ?? []).map((e) => e.step)]
+        .filter(Boolean)
+        .map((s) => esc(stepZh(s as string)))
+        .join(" → ");
+      return `${ings || "—"}${steps ? `  ⟶ ${steps}` : ""}`;
+    })
+    .join("<br>");
+
+  const rows: [string, string, boolean?][] = [
+    ["中文名", r.nameZh],
+    ["英文名 / ID", `${r.nameEn || r.id}  ·  ${r.id}`],
+    ["类型", recipeTypeLabel(r.type)],
+    ...(r.subtype ? ([["汉堡子类", burgerSubtypeLabel(r.subtype)]] as [string, string][]) : []),
+    ["来源", foodGroupLabel(r.group ?? "core")],
+    ["分数", r.intermediate ? "半成品（不计分）" : `⭐ ${r.score ?? 0}`],
+    ["烹饪步骤", stepZh(r.cookingStep)],
+    ["装盘容器", stepZh(r.platingStep)],
+    ["食材", ingNames.length ? ingNames.join("、") : "—"],
+    ...(compNames.length ? ([["组成", compNames.join("、")]] as [string, string][]) : []),
+    ["工序分组", groupsText || "—", true],
+    ["自定义菜谱", r.isCustom ? "是" : "否"],
+    ["搅拌类", r.mixing ? "是（先搅拌再烹饪）" : "否"],
+    ["GUID", r.guid || "—"],
+    ["资源路径", r.assetPath || "—"],
+  ];
+  const rowsHtml = rows
+    .map(
+      ([k, v, raw]) =>
+        `<tr><th>${esc(k)}</th><td>${raw ? v : esc(v)}</td></tr>`
+    )
+    .join("");
+
+  const preview = rlCardHtml(r, {
+    allRecipes: recipes,
+    ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
+    extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : undefined,
+    iconSrc: recipeIconUrlOf,
+  });
+
+  const body = `
+    <div class="rl-detail">
+      <div class="rl-detail-preview rl-grid">${preview}</div>
+      <table class="rl-detail-table">${rowsHtml}</table>
+    </div>`;
+  const footer = `
+    <button type="button" class="modal-btn" data-cancel>关闭</button>
+    <button type="button" class="modal-btn primary" data-download>🖼 下载菜谱图片</button>`;
+
+  const root = openModal(`📖 ${esc(r.nameZh)}`, body, footer);
+  root.querySelector<HTMLButtonElement>("[data-cancel]")?.addEventListener("click", () => closeModal());
+  const dl = root.querySelector<HTMLButtonElement>("[data-download]");
+  dl?.addEventListener("click", () => void downloadRecipeCard(r, dl));
+}
+
+/** 把单张菜谱卡片渲染成 PNG 下载（离屏克隆 + 等图加载，与整页导出同引擎）。 */
+async function downloadRecipeCard(r: RecipeWithGroups, btn: HTMLButtonElement): Promise<void> {
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "正在生成…";
+  let stage: HTMLDivElement | null = null;
+  try {
+    const cardHtml = rlCardHtml(r, {
+      allRecipes: recipes,
+      ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
+      extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : undefined,
+      iconSrc: recipeIconUrlOf,
+    });
+    // 卡片宽度取页面 .rl-card 实际宽度（回退 300），+48 = .sum-page 内边距
+    const sample = document.querySelector<HTMLElement>(".rl-card");
+    const cardW = sample ? Math.ceil(sample.getBoundingClientRect().width) : 300;
+    stage = createOffscreenStage(cardW + 48, "sum-page");
+    stage.innerHTML = `<div class="rl-grid">${cardHtml}</div>`;
+    await waitForImages(stage);
+    const date = new Date().toISOString().slice(0, 10);
+    await exportNodePng(stage, `${r.nameZh || r.id}_${date}.png`);
+  } catch (e) {
+    setStatus(e instanceof Error ? e.message : String(e), false);
+  } finally {
+    if (stage) stage.remove();
+    btn.disabled = false;
+    btn.textContent = original;
+  }
 }
 
 async function init(): Promise<void> {

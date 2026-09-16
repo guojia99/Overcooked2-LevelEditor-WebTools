@@ -12,9 +12,12 @@ MonoBehaviour:
   m_Name: CustomRecipeConfig
   m_EditorClassIdentifier: 
   uidPrefix: 58321
-  nextSequence: 74
+  nextSequence: 95
   categories:
   - id: burger
     zh: "Burger\u5927\u5168"
     en: Burger
+  - id: fry
+    zh: "\u70B8\u7269"
+    en: Fry
   modelTransforms: []

@@ -370,6 +370,241 @@
             "id": "VeggieBurgerAssembly",
             "zh": "素汉堡夹心",
             "en": "VeggieBurgerAssembly"
+        },
+        {
+            "id": "LettuceTomatoCucumberPineappleCheeseChickenMeatBurger",
+            "zh": "汉堡皇全都有巨无霸堡",
+            "en": "Ultimate Chicken & Meat Burger"
+        },
+        {
+            "id": "UltimateBurger",
+            "zh": "超级无敌巨无霸堡",
+            "en": "Ultimate Burger"
+        },
+        {
+            "id": "MixedUltimateBurger",
+            "zh": "搅拌超级无敌巨无霸堡",
+            "en": "Mixed Ultimate Burger"
+        },
+        {
+            "id": "BreakfastUltimateBurger",
+            "zh": "搅拌早餐巨无霸堡",
+            "en": "Breakfast Ultimate Burger"
+        },
+        {
+            "id": "PanfriedMixedMeatEgg",
+            "zh": "煎搅拌肉蛋",
+            "en": "Panfried Mixed Meat Egg"
+        },
+        {
+            "id": "PanfriedMixedMeatOnion",
+            "zh": "煎搅洋葱肉",
+            "en": "Panfried Mixed Meat Onion"
+        },
+        {
+            "id": "PanfriedMixedMeatMushroom",
+            "zh": "煎搅蘑菇肉",
+            "en": "Panfried Mixed Meat Mushroom"
+        },
+        {
+            "id": "FriedEgg",
+            "zh": "煎蛋",
+            "en": "Fried Egg"
+        },
+        {
+            "id": "PanfriedTomato",
+            "zh": "煎西红柿",
+            "en": "Panfried Tomato"
+        },
+        {
+            "id": "FriedMixedCornCake",
+            "zh": "搅拌炸玉米饼",
+            "en": "Fried Mixed Corn Cake"
+        },
+        {
+            "id": "FriedMixedShrimpCake",
+            "zh": "搅拌炸虾饼",
+            "en": "Fried Mixed Shrimp Cake"
+        },
+        {
+            "id": "FriedMixedOnion",
+            "zh": "搅拌煎洋葱",
+            "en": "Fried Mixed Onion"
+        },
+        {
+            "id": "FriedMixedFishCake",
+            "zh": "搅拌炸鱼饼",
+            "en": "Fried Mixed Fish Cake"
+        },
+        {
+            "id": "FriedMixedPotatoCake",
+            "zh": "搅拌炸土豆饼",
+            "en": "Fried Mixed Potato Cake"
+        },
+        {
+            "id": "BoiledSausage",
+            "zh": "煮肠",
+            "en": "Boiled Sausage"
+        },
+        {
+            "id": "SausageBaconEgg",
+            "zh": "香肠培根鸡蛋",
+            "en": "Sausage Bacon Egg"
+        },
+        {
+            "id": "BaconEgg",
+            "zh": "培根蛋",
+            "en": "Bacon Egg"
+        },
+        {
+            "id": "EggSausageGriddle",
+            "zh": "蛋肠",
+            "en": "Egg Sausage (Griddle)"
+        },
+        {
+            "id": "MixedMeatEggRaw",
+            "zh": "搅拌肉蛋",
+            "en": "Mixed Meat Egg (Raw)"
+        },
+        {
+            "id": "MixedMeatOnionRaw",
+            "zh": "搅洋葱肉",
+            "en": "Mixed Meat Onion (Raw)"
+        },
+        {
+            "id": "MixedMeatMushroomRaw",
+            "zh": "搅蘑菇肉",
+            "en": "Mixed Meat Mushroom (Raw)"
+        },
+        {
+            "id": "MixedCorn",
+            "zh": "搅拌玉米",
+            "en": "Mixed Corn"
+        },
+        {
+            "id": "MixedShrimp",
+            "zh": "搅拌虾",
+            "en": "Mixed Shrimp"
+        },
+        {
+            "id": "MixedOnion",
+            "zh": "搅拌洋葱",
+            "en": "Mixed Onion"
+        },
+        {
+            "id": "MixedFish",
+            "zh": "搅拌鱼",
+            "en": "Mixed Fish"
+        },
+        {
+            "id": "MixedPotato",
+            "zh": "搅拌土豆",
+            "en": "Mixed Potato"
+        },
+        {
+            "id": "ChickenMeatBurger",
+            "zh": "鸡肉牛肉汉堡",
+            "en": "Chicken Meat Burger"
+        },
+        {
+            "id": "DoubleMeatBurger",
+            "zh": "双牛肉汉堡",
+            "en": "DoubleMeat Burger"
+        },
+        {
+            "id": "DoubleChickenBurger",
+            "zh": "双鸡肉汉堡",
+            "en": "DoubleChicken Burger"
+        },
+        {
+            "id": "CheeseDoubleMeatBurger",
+            "zh": "芝士双牛肉汉堡",
+            "en": "Cheese DoubleMeat Burger"
+        },
+        {
+            "id": "CheeseDoubleChickenBurger",
+            "zh": "芝士双鸡肉汉堡",
+            "en": "Cheese DoubleChicken Burger"
+        },
+        {
+            "id": "CheeseDoubleChickenDoubleMeatBurger",
+            "zh": "芝士双鸡肉双牛肉汉堡",
+            "en": "Cheese DoubleChicken DoubleMeat Burger"
+        },
+        {
+            "id": "LettuceTomatoCheeseMeatBurger",
+            "zh": "生菜番茄芝士牛肉汉堡",
+            "en": "Lettuce Tomato Cheese Meat Burger"
+        },
+        {
+            "id": "LettuceTomatoCheeseChickenBurger",
+            "zh": "生菜番茄芝士鸡肉汉堡",
+            "en": "Lettuce Tomato Cheese Chicken Burger"
+        },
+        {
+            "id": "PineappleCheeseMeatBurger",
+            "zh": "菠萝芝士牛肉汉堡",
+            "en": "Pineapple Cheese Meat Burger"
+        },
+        {
+            "id": "PineappleCheeseChickenBurger",
+            "zh": "菠萝芝士鸡肉汉堡",
+            "en": "Pineapple Cheese Chicken Burger"
+        },
+        {
+            "id": "PineappleChickenMeatBurger",
+            "zh": "菠萝鸡肉牛肉汉堡",
+            "en": "Pineapple Chicken Meat Burger"
+        },
+        {
+            "id": "LettuceCucumberCheeseDoubleMeatBurger",
+            "zh": "生菜黄瓜芝士双牛肉汉堡",
+            "en": "Lettuce Cucumber Cheese DoubleMeat Burger"
+        },
+        {
+            "id": "LettuceTomatoCucumberCheeseMeatBurger",
+            "zh": "生菜番茄黄瓜芝士牛肉汉堡",
+            "en": "Lettuce Tomato Cucumber Cheese Meat Burger"
+        },
+        {
+            "id": "LettuceTomatoCucumberCheeseChickenBurger",
+            "zh": "生菜番茄黄瓜芝士鸡肉汉堡",
+            "en": "Lettuce Tomato Cucumber Cheese Chicken Burger"
+        },
+        {
+            "id": "LettuceTomatoCucumberChickenMeatBurger",
+            "zh": "生菜番茄黄瓜鸡肉牛肉汉堡",
+            "en": "Lettuce Tomato Cucumber Chicken Meat Burger"
+        },
+        {
+            "id": "LettucePineappleCheeseChickenMeatBurger",
+            "zh": "生菜菠萝芝士鸡肉牛肉汉堡",
+            "en": "Lettuce Pineapple Cheese Chicken Meat Burger"
+        },
+        {
+            "id": "CucumberCheeseChickenMeatBurger",
+            "zh": "黄瓜芝士鸡肉牛肉汉堡",
+            "en": "Cucumber Cheese Chicken Meat Burger"
+        },
+        {
+            "id": "TomatoCheeseDoubleMeatBurger",
+            "zh": "番茄芝士双牛肉汉堡",
+            "en": "Tomato Cheese DoubleMeat Burger"
+        },
+        {
+            "id": "LettuceCheeseDoubleChickenBurger",
+            "zh": "生菜芝士双鸡肉汉堡",
+            "en": "Lettuce Cheese DoubleChicken Burger"
+        },
+        {
+            "id": "TomatoPineappleCheeseChickenMeatBurger",
+            "zh": "番茄菠萝芝士鸡肉牛肉汉堡",
+            "en": "Tomato Pineapple Cheese Chicken Meat Burger"
+        },
+        {
+            "id": "LettuceTomatoCheeseDoubleChickenBurger",
+            "zh": "生菜番茄芝士双鸡肉汉堡",
+            "en": "Lettuce Tomato Cheese DoubleChicken Burger"
         }
     ]
 }

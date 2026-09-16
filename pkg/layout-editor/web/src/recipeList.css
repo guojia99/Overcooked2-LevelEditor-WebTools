@@ -674,3 +674,44 @@
   color: #e8eaed;
   line-height: 1.35;
 }
+
+/* 菜谱卡片可点击 → 详情弹窗（仅 /recipes 列表内容区） */
+#rl-content .rl-card {
+  cursor: pointer;
+}
+
+/* 菜谱详情弹窗 */
+.rl-detail {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.rl-detail-preview {
+  flex: 0 0 auto;
+}
+.rl-detail-table {
+  flex: 1 1 320px;
+  min-width: 300px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.rl-detail-table th,
+.rl-detail-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 6px 10px;
+  border-bottom: 1px solid #2c3242;
+  line-height: 1.5;
+}
+.rl-detail-table th {
+  white-space: nowrap;
+  color: #9aa4b8;
+  font-weight: 600;
+  width: 92px;
+}
+.rl-detail-table td {
+  color: #e8eaed;
+  word-break: break-word;
+}
+

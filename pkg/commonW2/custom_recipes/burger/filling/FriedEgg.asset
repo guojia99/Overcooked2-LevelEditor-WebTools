@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83fb008bcc8e793429b02c178c430815, type: 3}
+  m_Name: FriedEgg
+  m_EditorClassIdentifier: 
+  type: 2
+  recipeName: FriedEgg
+  uID: 1002000
+  score: 0
+  platingStepSO: {fileID: 11400000, guid: 02b04fdf6fef0e944870fd5e06375ed1, type: 2}
+  modelSO: {fileID: 0}
+  model: {fileID: 1959596943856950, guid: d74eba50db825d547937285c16a9b7bc, type: 2}
+  iconSO: {fileID: 0}
+  icon: {fileID: 21300000, guid: dbc2e939338d58d42b44d5ce75010b90, type: 3}
+  compositionSOs:
+  - {fileID: 11400000, guid: 95b82bda2a24c4942ac723feb92fc147, type: 2}
+  optionalSOs: []
+  cookingStepSO: {fileID: 11400000, guid: 48502c8d89d4ee64fb284f1665a4df43, type: 2}
+  cookingStepIconSO: {fileID: 11400000, guid: 9c68f4c54ac67974bb061643da368185, type: 2}
+  cookingStepIcon: {fileID: 0}
+  cookingProgress: 1
+  mixingIconSO: {fileID: 0}
+  mixingIcon: {fileID: 0}
+  mixingProgress: 0

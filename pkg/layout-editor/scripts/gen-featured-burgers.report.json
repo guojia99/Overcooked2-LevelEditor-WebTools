@@ -1,0 +1,340 @@
+{
+  "apply": true,
+  "generated": [
+    {
+      "name": "ChickenMeatBurger",
+      "zh": "鸡肉牛肉汉堡",
+      "en": "Chicken Meat Burger",
+      "sub": "classic",
+      "count": 2,
+      "score": 60,
+      "uID": 58321074,
+      "fillings": [
+        "Chicken",
+        "Meat"
+      ],
+      "feature": "肉食双拼：牛肉+鸡肉同堡"
+    },
+    {
+      "name": "DoubleMeatBurger",
+      "zh": "双牛肉汉堡",
+      "en": "DoubleMeat Burger",
+      "sub": "classic",
+      "count": 2,
+      "score": 60,
+      "uID": 58321075,
+      "fillings": [
+        "Meat",
+        "Meat"
+      ],
+      "feature": "纯双牛肉"
+    },
+    {
+      "name": "DoubleChickenBurger",
+      "zh": "双鸡肉汉堡",
+      "en": "DoubleChicken Burger",
+      "sub": "classic",
+      "count": 2,
+      "score": 60,
+      "uID": 58321076,
+      "fillings": [
+        "Chicken",
+        "Chicken"
+      ],
+      "feature": "纯双鸡肉"
+    },
+    {
+      "name": "CheeseDoubleMeatBurger",
+      "zh": "芝士双牛肉汉堡",
+      "en": "Cheese DoubleMeat Burger",
+      "sub": "classic",
+      "count": 3,
+      "score": 80,
+      "uID": 58321077,
+      "fillings": [
+        "Cheese",
+        "Meat",
+        "Meat"
+      ],
+      "feature": "芝士双牛肉"
+    },
+    {
+      "name": "CheeseDoubleChickenBurger",
+      "zh": "芝士双鸡肉汉堡",
+      "en": "Cheese DoubleChicken Burger",
+      "sub": "classic",
+      "count": 3,
+      "score": 80,
+      "uID": 58321078,
+      "fillings": [
+        "Cheese",
+        "Chicken",
+        "Chicken"
+      ],
+      "feature": "芝士双鸡肉"
+    },
+    {
+      "name": "CheeseDoubleChickenDoubleMeatBurger",
+      "zh": "芝士双鸡肉双牛肉汉堡",
+      "en": "Cheese DoubleChicken DoubleMeat Burger",
+      "sub": "deluxe",
+      "count": 5,
+      "score": 120,
+      "uID": 58321079,
+      "fillings": [
+        "Cheese",
+        "Chicken",
+        "Chicken",
+        "Meat",
+        "Meat"
+      ],
+      "feature": "四饼芝士满配（双牛双鸡+芝士）"
+    },
+    {
+      "name": "LettuceTomatoCheeseMeatBurger",
+      "zh": "生菜番茄芝士牛肉汉堡",
+      "en": "Lettuce Tomato Cheese Meat Burger",
+      "sub": "deluxe",
+      "count": 4,
+      "score": 100,
+      "uID": 58321080,
+      "fillings": [
+        "Lettuce",
+        "Tomato",
+        "Cheese",
+        "Meat"
+      ],
+      "feature": "经典四层：生菜番茄芝士牛肉"
+    },
+    {
+      "name": "LettuceTomatoCheeseChickenBurger",
+      "zh": "生菜番茄芝士鸡肉汉堡",
+      "en": "Lettuce Tomato Cheese Chicken Burger",
+      "sub": "deluxe",
+      "count": 4,
+      "score": 100,
+      "uID": 58321081,
+      "fillings": [
+        "Lettuce",
+        "Tomato",
+        "Cheese",
+        "Chicken"
+      ],
+      "feature": "经典四层：生菜番茄芝士鸡肉"
+    },
+    {
+      "name": "PineappleCheeseMeatBurger",
+      "zh": "菠萝芝士牛肉汉堡",
+      "en": "Pineapple Cheese Meat Burger",
+      "sub": "classic",
+      "count": 3,
+      "score": 80,
+      "uID": 58321082,
+      "fillings": [
+        "Pineapple",
+        "Cheese",
+        "Meat"
+      ],
+      "feature": "夏威夷：菠萝芝士牛肉"
+    },
+    {
+      "name": "PineappleCheeseChickenBurger",
+      "zh": "菠萝芝士鸡肉汉堡",
+      "en": "Pineapple Cheese Chicken Burger",
+      "sub": "classic",
+      "count": 3,
+      "score": 80,
+      "uID": 58321083,
+      "fillings": [
+        "Pineapple",
+        "Cheese",
+        "Chicken"
+      ],
+      "feature": "夏威夷：菠萝芝士鸡肉"
+    },
+    {
+      "name": "PineappleChickenMeatBurger",
+      "zh": "菠萝鸡肉牛肉汉堡",
+      "en": "Pineapple Chicken Meat Burger",
+      "sub": "classic",
+      "count": 3,
+      "score": 80,
+      "uID": 58321084,
+      "fillings": [
+        "Pineapple",
+        "Chicken",
+        "Meat"
+      ],
+      "feature": "菠萝肉食双拼"
+    },
+    {
+      "name": "LettuceCucumberCheeseDoubleMeatBurger",
+      "zh": "生菜黄瓜芝士双牛肉汉堡",
+      "en": "Lettuce Cucumber Cheese DoubleMeat Burger",
+      "sub": "deluxe",
+      "count": 5,
+      "score": 120,
+      "uID": 58321085,
+      "fillings": [
+        "Lettuce",
+        "Cucumber",
+        "Cheese",
+        "Meat",
+        "Meat"
+      ],
+      "feature": "蔬菜双牛肉芝士"
+    },
+    {
+      "name": "LettuceTomatoCucumberCheeseMeatBurger",
+      "zh": "生菜番茄黄瓜芝士牛肉汉堡",
+      "en": "Lettuce Tomato Cucumber Cheese Meat Burger",
+      "sub": "deluxe",
+      "count": 5,
+      "score": 120,
+      "uID": 58321086,
+      "fillings": [
+        "Lettuce",
+        "Tomato",
+        "Cucumber",
+        "Cheese",
+        "Meat"
+      ],
+      "feature": "满蔬牛肉五层"
+    },
+    {
+      "name": "LettuceTomatoCucumberCheeseChickenBurger",
+      "zh": "生菜番茄黄瓜芝士鸡肉汉堡",
+      "en": "Lettuce Tomato Cucumber Cheese Chicken Burger",
+      "sub": "deluxe",
+      "count": 5,
+      "score": 120,
+      "uID": 58321087,
+      "fillings": [
+        "Lettuce",
+        "Tomato",
+        "Cucumber",
+        "Cheese",
+        "Chicken"
+      ],
+      "feature": "满蔬鸡肉五层"
+    },
+    {
+      "name": "LettuceTomatoCucumberChickenMeatBurger",
+      "zh": "生菜番茄黄瓜鸡肉牛肉汉堡",
+      "en": "Lettuce Tomato Cucumber Chicken Meat Burger",
+      "sub": "deluxe",
+      "count": 5,
+      "score": 120,
+      "uID": 58321088,
+      "fillings": [
+        "Lettuce",
+        "Tomato",
+        "Cucumber",
+        "Chicken",
+        "Meat"
+      ],
+      "feature": "满蔬肉食双拼五层"
+    },
+    {
+      "name": "LettucePineappleCheeseChickenMeatBurger",
+      "zh": "生菜菠萝芝士鸡肉牛肉汉堡",
+      "en": "Lettuce Pineapple Cheese Chicken Meat Burger",
+      "sub": "deluxe",
+      "count": 5,
+      "score": 120,
+      "uID": 58321089,
+      "fillings": [
+        "Lettuce",
+        "Pineapple",
+        "Cheese",
+        "Chicken",
+        "Meat"
+      ],
+      "feature": "菠萝生菜芝士双拼"
+    },
+    {
+      "name": "CucumberCheeseChickenMeatBurger",
+      "zh": "黄瓜芝士鸡肉牛肉汉堡",
+      "en": "Cucumber Cheese Chicken Meat Burger",
+      "sub": "deluxe",
+      "count": 4,
+      "score": 100,
+      "uID": 58321090,
+      "fillings": [
+        "Cucumber",
+        "Cheese",
+        "Chicken",
+        "Meat"
+      ],
+      "feature": "黄瓜芝士双拼"
+    },
+    {
+      "name": "TomatoCheeseDoubleMeatBurger",
+      "zh": "番茄芝士双牛肉汉堡",
+      "en": "Tomato Cheese DoubleMeat Burger",
+      "sub": "deluxe",
+      "count": 4,
+      "score": 100,
+      "uID": 58321091,
+      "fillings": [
+        "Tomato",
+        "Cheese",
+        "Meat",
+        "Meat"
+      ],
+      "feature": "番茄芝士双牛肉"
+    },
+    {
+      "name": "LettuceCheeseDoubleChickenBurger",
+      "zh": "生菜芝士双鸡肉汉堡",
+      "en": "Lettuce Cheese DoubleChicken Burger",
+      "sub": "deluxe",
+      "count": 4,
+      "score": 100,
+      "uID": 58321092,
+      "fillings": [
+        "Lettuce",
+        "Cheese",
+        "Chicken",
+        "Chicken"
+      ],
+      "feature": "生菜芝士双鸡肉"
+    },
+    {
+      "name": "TomatoPineappleCheeseChickenMeatBurger",
+      "zh": "番茄菠萝芝士鸡肉牛肉汉堡",
+      "en": "Tomato Pineapple Cheese Chicken Meat Burger",
+      "sub": "deluxe",
+      "count": 5,
+      "score": 120,
+      "uID": 58321093,
+      "fillings": [
+        "Tomato",
+        "Pineapple",
+        "Cheese",
+        "Chicken",
+        "Meat"
+      ],
+      "feature": "番茄菠萝芝士双拼五层"
+    },
+    {
+      "name": "LettuceTomatoCheeseDoubleChickenBurger",
+      "zh": "生菜番茄芝士双鸡肉汉堡",
+      "en": "Lettuce Tomato Cheese DoubleChicken Burger",
+      "sub": "deluxe",
+      "count": 5,
+      "score": 120,
+      "uID": 58321094,
+      "fillings": [
+        "Lettuce",
+        "Tomato",
+        "Cheese",
+        "Chicken",
+        "Chicken"
+      ],
+      "feature": "生菜番茄芝士双鸡肉"
+    }
+  ],
+  "skipped": [],
+  "nextSequenceAfter": 95
+}
