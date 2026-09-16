@@ -1,0 +1,1 @@
+public delegate void OrderCompositionChangedCallback(AssembledDefinitionNode _definition);

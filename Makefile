@@ -1,6 +1,18 @@
 all: run
 
 ZIP_NAME := OC2-Web-v0.8.0.zip
+INSTALLER_ZIP := OC2-Installer.zip
+
+.PHONY: all build run installer installer-zip
+
+# Cross-compile the Windows GUI installer (installer.exe) from macOS.
+installer:
+	./installer/build.sh
+
+# Package installer.exe together with pkg/ and Assembly-CSharp/ into a distributable zip.
+installer-zip: installer
+	rm -f $(INSTALLER_ZIP)
+	zip -r $(INSTALLER_ZIP) installer.exe pkg Assembly-CSharp -x "*/.DS_Store" -x ".DS_Store"
 
 build:
 	rm -f $(ZIP_NAME)

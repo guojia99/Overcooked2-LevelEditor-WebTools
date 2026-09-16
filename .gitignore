@@ -116,3 +116,7 @@ web/dist
 
 .DS_Store/
 ./.DS_Store/
+
+
+installer.exe
+./Assembly-CSharp/

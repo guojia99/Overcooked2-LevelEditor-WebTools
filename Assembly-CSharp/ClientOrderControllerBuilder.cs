@@ -1,0 +1,1 @@
+public delegate ClientOrderControllerBase ClientOrderControllerBuilder(RecipeFlowGUI _gui);
