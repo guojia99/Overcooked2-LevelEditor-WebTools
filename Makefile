@@ -8,35 +8,24 @@ build:
 
 
 run:
-	rm -rf Plugins/*
+	rm -rf ./pkg/*
+	mkdir ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/Mono.Cecil.dll ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/Mono.Cecil.dll.meta ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.RuntimeDetour.dll ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.RuntimeDetour.dll.meta ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.Utils.dll ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.Utils.dll.meta ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/0Harmony.dll ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/0Harmony.dll.meta ./pkg/Plugins/
+	cp -r ../Overcooked2-LevelEditor/Assets/WebCustomStubRuntime ./pkg/
+	cp -r ../Overcooked2-LevelEditor/Assets/WebCustomStubRuntime.meta ./pkg/
+	cp -r ../Overcooked2-LevelEditor/layout-editor ./pkg/
+	cp -r ../Overcooked2-LevelEditor/Assets/commonW1 ./pkg/
+	cp -r ../Overcooked2-LevelEditor/Assets/commonW1.meta ./pkg/
+	cp -r ../Overcooked2-LevelEditor/Assets/commonW2 ./pkg/
+	cp -r ../Overcooked2-LevelEditor/Assets/commonW2.meta ./pkg/
+	cp -r ../Overcooked2-LevelEditor/Assets/Editor/LayoutEditor ./pkg/
 
-	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/Mono.Cecil.dll Plugins/
-	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/Mono.Cecil.dll.meta Plugins/
-	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.RuntimeDetour.dll Plugins/
-	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.RuntimeDetour.dll.meta Plugins/
-	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.Utils.dll Plugins/
-	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/MonoMod.Utils.dll.meta Plugins/
-	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/0Harmony.dll Plugins/
-	cp -r ../Overcooked2-LevelEditor/Assets/Plugins/0Harmony.dll.meta Plugins/
-
-	rm -rf ./layout-editor/
-	rm -rf ./LayoutEditor/
-	rm -rf ./common03/
-	rm -rf ./commonW1
-	rm -rf ./commonW2
-	rm -rf ./commonW1.meta
-	rm -rf ./commonW2.meta
-	rm -rf ./WebCustomStubRuntime
-	rm -rf ./WebCustomStubRuntime.meta
-
-	cp -r ../Overcooked2-LevelEditor/Assets/WebCustomStubRuntime .
-	cp -r ../Overcooked2-LevelEditor/Assets/WebCustomStubRuntime.meta .
-	cp -r ../Overcooked2-LevelEditor/layout-editor .
-	cp -r ../Overcooked2-LevelEditor/Assets/commonW1 .
-	cp -r ../Overcooked2-LevelEditor/Assets/commonW1.meta .
-	cp -r ../Overcooked2-LevelEditor/Assets/commonW2 .
-	cp -r ../Overcooked2-LevelEditor/Assets/commonW2.meta .
-	cp -r ../Overcooked2-LevelEditor/Assets/Editor/LayoutEditor .
-
-	rm -rf layout-editor/web/node_modules/
-	rm -rf layout-editor/scripts/.venv-audio/
+	rm -rf ./pkg/layout-editor/web/node_modules/
+	rm -rf ./pkg/layout-editor/scripts/.venv-audio/
