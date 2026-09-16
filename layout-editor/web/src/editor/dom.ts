@@ -1,15 +1,19 @@
 import { navHtml } from "../nav";
-import { migrateLegacyUrl, parseRoute } from "../route";
+import { migrateLegacyUrl, parseRoute, type ParsedRoute } from "../route";
 import { S } from "./state";
 
 migrateLegacyUrl();
 const _route = parseRoute();
+
+/** 当前路由解析结果（模块加载时按 URL 计算一次；带 id 的页面从这里读取目标）。 */
+export const ROUTE: ParsedRoute = _route;
 
 /** 布局视图路由标记（由 URL pathname 决定，模块加载时计算）。 */
 export const MANAGE_ACTIVE = _route.page === "manage";
 export const DEPENDENCIES_ACTIVE = _route.page === "dependencies";
 export const CUSTOM_RECIPES_ACTIVE = _route.page === "custom-recipes";
 export const BURGER_MAKER_ACTIVE = _route.page === "burger-maker";
+export const FILLING_MAKER_ACTIVE = _route.page === "filling-maker";
 export const GUIDE_ACTIVE = _route.page === "guide";
 export const CHANGELOG_ACTIVE = _route.page === "changelog";
 export const GUIDE_PAGE_ID = _route.guidePageId;
@@ -33,7 +37,7 @@ export const dom = {
 /** 布局视图的完整 DOM 模板 + 元素引用填充（仅 layout 视图调用；manage/custom-recipes 返回空）。 */
 export function buildLayoutDom(): void {
   dom.app = document.getElementById("app")!;
-  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || CUSTOM_RECIPES_ACTIVE || BURGER_MAKER_ACTIVE || GUIDE_ACTIVE || CHANGELOG_ACTIVE) return;
+  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || CUSTOM_RECIPES_ACTIVE || BURGER_MAKER_ACTIVE || FILLING_MAKER_ACTIVE || GUIDE_ACTIVE || CHANGELOG_ACTIVE) return;
   document.body.classList.remove("manage-bg");
   dom.app.innerHTML = `
   ${navHtml("layout")}

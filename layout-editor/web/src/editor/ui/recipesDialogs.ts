@@ -66,6 +66,7 @@ import {
   computeBurgerOptionals,
   saveOptionalItems,
   saveMatchlists,
+  fetchMatchlistSuggestion,
   saveLevelRecipes
 } from "../../api";
 import {
@@ -76,7 +77,7 @@ import {
   BUN_DLC8_ID,
 } from "../../recipeGroups";
 import { rlCardHtml } from "../../recipeCard";
-import type { RecipeEntry, LevelOptionalItem, LevelRecipes, OptionalPresets } from "../../types";
+import type { RecipeEntry, LevelOptionalItem, LevelRecipes, OptionalPresets, MatchlistSuggestion } from "../../types";
 
 export type RecipeTab = "select" | "selected" | "autofill" | "optional" | "matchlist";
 
@@ -138,6 +139,20 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   let optionalDirty = false;
   const matchlistKeys = new Set<string>((level?.matchlists ?? []).map((m) => m.key));
   let matchlistDirty = false;
+  // 服务端按资产引用推断的 DLC 匹配表（懒加载）：比前端 catalog group 启发式权威，
+  // 能抓到自定义菜谱深层嵌套的官方 DLC 节点（如 Burger大全早餐堡里的 dlc05
+  // Breakfast_Bacon_Egg）。保存菜谱时后端会自动补入 missing，这里只做展示与手动补全。
+  let mlSuggestion: MatchlistSuggestion | null = null;
+  if (level?.levelInfoAssetPath) {
+    void fetchMatchlistSuggestion(level.levelInfoAssetPath)
+      .then((s) => {
+        mlSuggestion = s;
+        if (activeTab === "matchlist" && document.getElementById("rw-content")) render();
+      })
+      .catch(() => {
+        // 旧桥无该端点：静默降级，tab 仍可手动勾选。
+      });
+  }
   // 一键填充候选（hotdog 两套 / 披萨部件）懒加载：进 optional tab 前预取。
   let presets: OptionalPresets | null = null;
   void fetchOptionalPresets()
@@ -1545,20 +1560,42 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   };
 
   // ---------- 📋 Matchlist 管理 tab ----------
-  // includeRecipeMatchLists 手动勾选（commonW1 包装白名单）。保存菜谱不再按 DLC
-  // 自动并入；「按已选菜谱一键填充」仅勾选，写回由用户决定。story 匹配表由
-  // 运行时无条件并入（bundle18），无需也不可在此配置。
+  // includeRecipeMatchLists 手动勾选（commonW1 包装白名单）。
+  // 2026-09-15 起：保存菜谱会由后端 LayoutEditorMatchlistMap 按资产引用**自动并集补入**
+  // 缺失的 DLC 匹配表（只增不删，手填条目一律保留）；本 tab 仍可手动增删并覆盖写回。
+  // story 匹配表由运行时无条件并入（bundle18），无需也不可在此配置。
   const ML_KEYS = ["dlc02", "dlc03", "dlc04", "dlc05", "dlc07", "dlc08", "dlc09", "dlc10", "dlc11", "dlc13", "combineddlc"];
+
+  /** 服务端推断提示条：还缺什么 / 什么补不了。 */
+  const matchlistSuggestHtml = (): string => {
+    if (!mlSuggestion) return "";
+    const miss = mlSuggestion.missing.filter((k) => !matchlistKeys.has(k));
+    const rows: string[] = [];
+    if (miss.length > 0) {
+      rows.push(`<div class="rw-ml-suggest warn">⚠️ 按已保存菜谱的资产引用推断还缺：<b>${miss.map(escHtml).join("、")}</b>
+        —— 保存菜谱时后端会自动补入；也可点右侧按钮立即勾选。
+        <button type="button" class="modal-btn" id="rw-ml-fill-suggest">补全缺失（${miss.length}）</button></div>`);
+    } else if (mlSuggestion.required.length > 0) {
+      rows.push(`<div class="rw-ml-suggest ok">✅ 服务端推断所需 DLC 匹配表（${mlSuggestion.required.map(escHtml).join("、")}）均已就位。</div>`);
+    }
+    if (mlSuggestion.skipped.length > 0) {
+      rows.push(`<div class="rw-ml-suggest warn">⛔ 以下 DLC 无法自动补入：${mlSuggestion.skipped.map(escHtml).join("；")}
+        （缺 commonW1 包装资产或 bundle 未构建，强行写入会导致运行时 KeyNotFoundException）</div>`);
+    }
+    return rows.join("");
+  };
 
   const matchlistTabHtml = () => {
     const cards = ML_KEYS.map((k) => {
       const on = matchlistKeys.has(k);
-      return `<label class="rw-ml-card${on ? " on" : ""}">
+      const needed = mlSuggestion?.required.includes(k) ?? false;
+      return `<label class="rw-ml-card${on ? " on" : ""}${needed && !on ? " needed" : ""}">
         <input type="checkbox" data-mlkey="${escHtml(k)}" ${on ? "checked" : ""}/>
-        <span class="rw-ml-key">${escHtml(k === "combineddlc" ? "combineddlc（组合包）" : (foodGroupLabel(k as never) || k))}</span>
+        <span class="rw-ml-key">${escHtml(k === "combineddlc" ? "combineddlc（组合包）" : (foodGroupLabel(k as never) || k))}${needed ? ' <span class="rw-ml-need">需要</span>' : ""}</span>
       </label>`;
     }).join("");
-    return `<p class="modal-hint">includeRecipeMatchLists：并入对应 DLC 的整套匹配节点（食材/订单/可选自由拼接/套餐）。<b>保存菜谱不再自动并入</b>——选择了 DLC 菜谱时建议在此开启对应项；story 匹配表运行时始终并入，无需配置。<br>「一键填充」会递归已选菜谱的组成件推导 DLC 归属：自定义/Burger大全菜谱自身无 DLC 归属，但其面皮（dlc08）、菠萝（dlc02）、培根蛋（dlc05）等组成件有，会一并勾上。勾选结果可手动增删后再写回。</p>
+    return `<p class="modal-hint">includeRecipeMatchLists：并入对应 DLC 的整套匹配节点（食材/订单/可选自由拼接/套餐）。<b>保存菜谱时后端会按资产引用自动补入缺失项</b>（只增不删，手填条目保留）；本页可手动增删后覆盖写回。story 匹配表运行时始终并入，无需配置。<br>「一键填充」会递归已选菜谱的组成件推导 DLC 归属：自定义/Burger大全菜谱自身无 DLC 归属，但其面皮（dlc08）、菠萝（dlc02）、培根蛋（dlc05）等组成件有，会一并勾上。</p>
+      ${matchlistSuggestHtml()}
       <div class="rw-toolbar">
         <button type="button" class="modal-btn" id="rw-ml-fill-sel">按已选菜谱一键填充</button>
       </div>
@@ -1626,6 +1663,17 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         added
           ? `已勾选 ${added} 个 matchlist（${addedKeys.join("、")}，待写回）`
           : "已选菜谱未涉及新的 DLC",
+      );
+      render();
+    });
+    document.getElementById("rw-ml-fill-suggest")?.addEventListener("click", () => {
+      const miss = (mlSuggestion?.missing ?? []).filter((k) => ML_KEYS.includes(k) && !matchlistKeys.has(k));
+      for (const k of miss) matchlistKeys.add(k);
+      matchlistDirty = miss.length > 0;
+      setStatus(
+        miss.length
+          ? `已按服务端推断勾选 ${miss.length} 个 matchlist（${miss.join("、")}，待写回）`
+          : "没有缺失的 matchlist",
       );
       render();
     });

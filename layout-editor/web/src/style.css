@@ -4406,6 +4406,20 @@ body.manage-bg {
   margin-left: 4px;
 }
 
+/* 二级分类过滤栏（分类目录下的子目录；无子目录时整行隐藏） */.cr-sub-bar {
+  margin-bottom: 12px;
+  padding-left: 14px;
+  border-left: 3px solid #d97706;
+}
+.cr-sub-chip {
+  font-size: 12px;
+}
+.cr-sub-chip.active {
+  border-color: #d97706;
+  background: #2a2318;
+  color: #fbbf24;
+}
+
 .cr-sidebar {
   width: 200px;
   flex-shrink: 0;
@@ -5028,22 +5042,11 @@ body.manage-bg {
 /* ---- 汉堡组装工作台 ---- */
 
 .bm-page {
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-.bm-dev-banner {
-  margin-bottom: 14px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: #e8c88a;
-  border: 1px solid rgba(255, 178, 102, 0.45);
-  background: rgba(255, 178, 102, 0.1);
+  width: 100%;
 }
 
 .bm-main-card {
+  width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
@@ -5096,6 +5099,63 @@ body.manage-bg {
   display: flex;
   justify-content: center;
   margin: 12px 0 4px;
+}
+
+/* 堆叠编辑：虚拟汉堡 | 可拖拽层清单 左右分布（夹心候选走弹窗） */
+.bm-stack-panes {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.bm-pane-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b6bcc6;
+  margin: 0 0 8px;
+}
+
+.bm-burger-pane {
+  flex: 0 1 36%;
+  min-width: 230px;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 12px;
+}
+
+/* 预览区拉满剩余高度：column-reverse 使汉堡堆叠锚在面板底部，像真实摆盘 */
+.bm-burger-pane .bm-preview-wrap {
+  flex: 1;
+  margin: 4px 0 8px;
+}
+
+.bm-burger-pane .bm-stack-preview {
+  height: 100%;
+}
+
+.bm-layers-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px 12px;
+}
+
+@media (max-width: 900px) {
+  .bm-stack-panes {
+    flex-direction: column;
+  }
+
+  .bm-burger-pane {
+    max-width: none;
+  }
 }
 
 /* 添加堆叠层弹窗：卡片网格 */
@@ -8066,6 +8126,43 @@ body.manage-bg {
   color: #e8eaed;
   font-size: 13px;
 }
+/* 服务端按资产引用推断为「需要」但尚未勾选：橙色描边提示 */
+.rw-ml-card.needed {
+  border-color: #d97706;
+  background: #2a2318;
+}
+.rw-ml-need {
+  color: #fbbf24;
+  font-size: 11px;
+  border: 1px solid #a16207;
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 4px;
+}
+.rw-ml-suggest {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 7px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.rw-ml-suggest.warn {
+  border: 1px solid #a16207;
+  background: #2a2318;
+  color: #fde68a;
+}
+.rw-ml-suggest.ok {
+  border: 1px solid #2f6b46;
+  background: #16251c;
+  color: #a7f3d0;
+}
+.rw-ml-suggest .modal-btn {
+  margin-left: auto;
+}
 
 /* ==================== 关卡管理 · 🧰 工具与历史 弹窗 ==================== */
 
@@ -8318,4 +8415,269 @@ body.manage-bg {
   gap: 4px;
   font-size: 12px;
   color: var(--muted, #9aa3b2);
+}
+
+/* ==================== 🎨 夹心贴图编辑器（textureEditor.ts） ==================== */
+
+.tex-editor {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.tex-canvas-wrap {
+  flex: 0 0 auto;
+  border: 1px solid #3a4050;
+  border-radius: 6px;
+  background:
+    linear-gradient(45deg, #23262d 25%, transparent 25%) 0 0/16px 16px,
+    linear-gradient(-45deg, #23262d 25%, transparent 25%) 0 8px/16px 16px,
+    #1a1d23;
+  padding: 4px;
+}
+.tex-canvas-wrap canvas {
+  display: block;
+  width: 360px;
+  height: 360px;
+  border-radius: 4px;
+  cursor: crosshair;
+  touch-action: none;
+}
+.tex-tools {
+  flex: 1 1 240px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tex-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tex-row input[type="color"] {
+  width: 44px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #3a4050;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+.tex-row input[type="range"] {
+  flex: 1;
+  min-width: 100px;
+  accent-color: #3b82f6;
+}
+
+/* ==================== 🍔 汉堡工作台 · 候选徽标与筛选 ==================== */
+
+.bm-cand-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.bm-cand-toolbar .rl-search {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+.bm-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+.bm-badge {
+  font-size: 10px;
+  line-height: 1.5;
+  padding: 0 4px;
+  border-radius: 3px;
+  border: 1px solid #3a4050;
+  color: #b7bdc8;
+  white-space: nowrap;
+}
+.bm-badge.ok {
+  border-color: #2f6b46;
+  background: #16251c;
+  color: #a7f3d0;
+}
+.bm-badge.warn {
+  border-color: #a16207;
+  background: #2a2318;
+  color: #fbbf24;
+}
+.bm-badge.err {
+  border-color: #b91c1c;
+  background: #2a1717;
+  color: #fca5a5;
+}
+.bm-badge.dlc {
+  border-color: #3b82f6;
+  background: #1f2c44;
+  color: #93c5fd;
+}
+.bm-pick-card.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.bm-cand-eye {
+  margin-left: auto;
+  padding: 0 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0.65;
+}
+.bm-cand-eye:hover {
+  opacity: 1;
+  background: #2a3040;
+}
+
+/* ==================== 🥩 夹心：编辑器增量 + 工作台页 ==================== */
+
+/* 夹心模式的顶部说明条 */
+.cr-filling-hint {
+  border-left: 3px solid #d97706;
+  background: #2a2318;
+  color: #fde68a;
+  padding: 8px 12px;
+  border-radius: 5px;
+  margin: 0 0 12px;
+}
+
+/* 模型区「零建模：模板网格 + 自制贴图」子块 */
+.cr-model-template {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px dashed #3a4050;
+  border-radius: 6px;
+  background: #1a1d23;
+}
+.m-section-title.small {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+/* 模型预览 · 只读模式（commonW2 共享库） */
+.mp-controls-ro {
+  gap: 10px;
+}
+.mp-ro-note {
+  border-left: 3px solid #a16207;
+  background: #2a2318;
+  color: #fde68a;
+  padding: 8px 10px;
+  border-radius: 5px;
+  margin: 0;
+}
+
+/* ---- 汉堡工作台 · 候选计数 / 拖动排序 ---- */
+
+/* 候选卡片外壳：承载右上角计数徽标与「−」按钮 */
+.bm-pick-cell {
+  position: relative;
+  display: flex;
+}
+.bm-pick-cell > .pick-card {
+  flex: 1;
+}
+.bm-pick-cell.picked > .pick-card {
+  border-color: #3b82f6;
+  background: #1b2740;
+}
+.bm-cand-count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 22px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 9px;
+  background: #3b82f6;
+  color: #fff;
+  pointer-events: none;
+}
+.bm-cand-count.zero {
+  display: none;
+}
+.bm-cand-minus {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  padding: 0;
+  border: 1px solid #b91c1c;
+  border-radius: 4px;
+  background: #2a1717;
+  color: #fca5a5;
+  cursor: pointer;
+  font-size: 15px;
+}
+.bm-cand-minus:hover {
+  background: #3b1d1d;
+  color: #fff;
+}
+.bm-cand-minus.hidden {
+  display: none;
+}
+
+/* 堆叠行拖动排序 */
+.bm-drag-handle {
+  cursor: grab;
+  color: #6b7280;
+  user-select: none;
+  padding: 0 2px;
+  letter-spacing: -2px;
+}
+.bm-layer.dragging {
+  opacity: 0.45;
+}
+
+/* ---- 汉堡工作台 · 夹心超规格提醒 + 卡片预览 ---- */
+
+.bm-overflow-warn {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #fde68a;
+  border: 1px solid #a16207;
+  background: #2a2318;
+}
+.bm-overflow-warn .m-btn {
+  margin-left: auto;
+}
+.bm-overflow-shot {
+  overflow-x: auto;
+  border: 1px solid #3a4050;
+  border-radius: 6px;
+  background: #101216;
+  padding: 6px;
+}
+.bm-overflow-shot img {
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+/* 工作台内的菜谱卡片预览：复用 .cr-preview 容器样式，但铺满工作台（≥80%，多层汉堡不再挤成竖条） */
+#bm-card-preview {
+  margin-bottom: 4px;
+}
+
+#bm-card-preview .rl-card {
+  width: 100%;
+  min-width: 80%;
+  max-width: none;
 }

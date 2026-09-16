@@ -68,6 +68,12 @@ export interface ModelPreviewOptions {
   pivotZ?: number;
   /** 调整回调：用户在弹窗内修改缩放/旋转/位置/原点时触发，用于写回菜谱表单。 */
   onAdjust?: (t: ModelTransformValues) => void;
+  /** 只读预览：隐藏全部调整控件，只看模型与尺寸读数。
+   *  用于 commonW2 等**共享只读库**——那里的模型变换不归本关卡集管，
+   *  给出可编辑控件只会让人以为能改（改了也无处保存）。 */
+  readonly?: boolean;
+  /** 只读时展示的原因说明（缺省给通用文案）。 */
+  readonlyReason?: string;
   /** 本地模型（选择文件后未保存）：直接解析 ArrayBuffer，不走服务器。 */
   localBuffer?: ArrayBuffer;
   /** 本地贴图（File 列表）：FBX 内嵌纹理无法加载时注入到全部材质。 */
@@ -168,7 +174,15 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     pivotY: opts.pivotY ?? 0,
     pivotZ: opts.pivotZ ?? 0,
   };
-  const controlsHtml = `<div class="mp-controls">
+  // 只读预览（commonW2 等共享库）：不给任何调整控件，只留尺寸读数与说明。
+  // 控件全部缺席是安全的 —— readTransform 已回退到 initial，各按钮查找均为可选链。
+  const readonlyControlsHtml = `<div class="mp-controls mp-controls-ro">
+    <p class="modal-hint mp-ro-note">🔒 <b>只读预览</b>：${esc(
+      opts.readonlyReason ?? "该模型来自共享素材库，变换参数不归当前关卡集管理，因此不提供调整。"
+    )}<br>需要不同的外观时，请在本关卡集<b>新建一个自己的菜谱/夹心</b>并上传模型（或用「模板网格 + 自制贴图」生成）。</p>
+    <p class="modal-hint" id="mp-size-ro">当前尺寸：—（模型加载后显示；1 模型单位 = 1 Unity 单位 = 100 cm）</p>
+  </div>`;
+  const editableControlsHtml = `<div class="mp-controls">
     <label>尺寸（水平足迹, cm）<input type="number" id="mp-size-cm" step="0.0001" min="0.0001" value="" disabled>
       <span class="muted small">模型最长水平足迹；保存并上传后按 Unity 实际尺寸精确校准</span></label>
     <label>缩放（相对倍数）<input type="number" id="mp-scale" value="${fmt4(initial.scale)}" step="0.0001" min="0.0001"></label>
@@ -203,6 +217,7 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     <button type="button" class="m-btn" id="mp-fit">✨ 自动适配</button>
     ${opts.onAdjust ? `<button type="button" class="m-btn primary" id="mp-apply">✅ 应用方向/大小到菜谱</button>` : ""}
   </div>`;
+  const controlsHtml = opts.readonly ? readonlyControlsHtml : editableControlsHtml;
   openModal(
     `3D 模型预览 · ${esc(opts.title)}`,
     `<div class="mp-layout">
@@ -212,7 +227,9 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
        </div>
        <div class="mp-side">
          ${controlsHtml}
-          <p class="modal-hint">左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b>（红/绿/蓝轴 X/Y/Z，黄色点为原点，网格按 cm 标注格距，1 单位 = 100 cm）· <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见右侧读数，6 个面各有一个中心点；<b>下拉选中的面会微微高亮</b>）· 「🎯 面中心设为原点」旋转/缩放绕该面中心 · 「⬇ 该面朝下」旋转模型让该面贴地 · 「重选原点」后可点击模型上任意点 · 「自动适配」按目标（盘子 85 cm / 杯子 37 cm）缩放，<b>位置 Y 保持 0（不自动下沉，高度手动调）</b> · 尺寸/位置单位为 cm（4 位小数精度）</p>
+          ${opts.readonly
+            ? `<p class="modal-hint">左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b> · <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见上方读数）· 视角操作不会改动任何数据。</p>`
+            : `<p class="modal-hint">左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b>（红/绿/蓝轴 X/Y/Z，黄色点为原点，网格按 cm 标注格距，1 单位 = 100 cm）· <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见右侧读数，6 个面各有一个中心点；<b>下拉选中的面会微微高亮</b>）· 「🎯 面中心设为原点」旋转/缩放绕该面中心 · 「⬇ 该面朝下」旋转模型让该面贴地 · 「重选原点」后可点击模型上任意点 · 「自动适配」按目标（盘子 85 cm / 杯子 37 cm）缩放，<b>位置 Y 保持 0（不自动下沉，高度手动调）</b> · 尺寸/位置单位为 cm（4 位小数精度）</p>`}
        </div>
      </div>`,
     `<button type="button" class="m-btn" data-cancel>关闭</button>`
@@ -636,14 +653,16 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
       const n = Number(el?.value);
       return Number.isFinite(n) ? n : fallback;
     };
+    // 兜底用 initial 而非常量：只读模式下调整控件不存在，必须回退到传入的已保存变换，
+    // 否则预览会按 scale=1 / 旋转 0 渲染，与游戏内实际效果不符。
     return {
-      scale: num(mpEls[0], 1),
-      rotationX: num(mpEls[1], 0),
-      rotationY: num(mpEls[2], 0),
-      rotationZ: num(mpEls[3], 0),
-      positionX: cm2u(num(mpEls[4], 0)),
-      positionY: cm2u(num(mpEls[5], 0)),
-      positionZ: cm2u(num(mpEls[6], 0)),
+      scale: num(mpEls[0], initial.scale),
+      rotationX: num(mpEls[1], initial.rotationX),
+      rotationY: num(mpEls[2], initial.rotationY),
+      rotationZ: num(mpEls[3], initial.rotationZ),
+      positionX: mpEls[4] ? cm2u(num(mpEls[4], 0)) : initial.positionX,
+      positionY: mpEls[5] ? cm2u(num(mpEls[5], 0)) : initial.positionY,
+      positionZ: mpEls[6] ? cm2u(num(mpEls[6], 0)) : initial.positionZ,
       pivotX: curPivot.x,
       pivotY: curPivot.y,
       pivotZ: curPivot.z,

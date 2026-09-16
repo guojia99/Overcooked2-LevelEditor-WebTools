@@ -1,7 +1,7 @@
 import * as api from "./api";
 import type { IngredientEntry } from "./types";
 import { navHtml, wireNav } from "./nav";
-import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
+import { groupRecipesByType, recipeTypeLabel, burgerSubtypeLabel, burgerSubtypeOrder } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
 import {
   rlCardHtml,
@@ -260,7 +260,34 @@ function render(): void {
     return;
   }
   el.innerHTML = groupRecipesByType(vis)
-    .map(([type, arr]) => rlSectionHtml(type, arr.map(card).join(""), arr.length))
+    .map(([type, arr]) =>
+      type === "burger"
+        ? rlSectionHtml(type, burgerSubSectionsHtml(arr), arr.length)
+        : rlSectionHtml(type, arr.map(card).join(""), arr.length)
+    )
+    .join("");
+}
+
+/** 汉堡组内按 Burger大全二级分类再分一层（经典/豪华/巨无霸/早餐/海鲜/素食/夹心/组装定义）。
+ *  非 commonW2 的官方汉堡没有 subtype，统一落到「其他汉堡」小节并排在最后。 */
+function burgerSubSectionsHtml(arr: RecipeWithGroups[]): string {
+  const bySub = new Map<string, RecipeWithGroups[]>();
+  for (const r of arr) {
+    const s = r.subtype ?? "";
+    if (!bySub.has(s)) bySub.set(s, []);
+    bySub.get(s)!.push(r);
+  }
+  // 只有一个分组（且是未分类）时不加二级标题，保持旧观感
+  if (bySub.size <= 1 && bySub.has("")) return arr.map(card).join("");
+  return [...bySub.entries()]
+    .sort((a, b) => burgerSubtypeOrder(a[0]) - burgerSubtypeOrder(b[0]))
+    .map(
+      ([sub, list]) =>
+        `<div class="rl-subsection">
+          <h3 class="rl-subsection-title">${esc(sub ? burgerSubtypeLabel(sub) : "其他汉堡")}<span class="rl-section-count">${list.length}</span></h3>
+          <div class="rl-grid">${list.map(card).join("")}</div>
+        </div>`
+    )
     .join("");
 }
 

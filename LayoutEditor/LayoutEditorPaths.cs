@@ -29,7 +29,18 @@ public static class LayoutEditorPaths
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
         var path = scene.path;
         if (!string.IsNullOrEmpty(path) && path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
-            return baseUrl + "/layout?scene=" + Uri.EscapeDataString(path);
+        {
+            // Assets/LevelSets/<set>/scenes/<scene>.unity → 严格路由 /layout/<set>/<scene>
+            var parts = path.Replace('\\', '/').Split('/');
+            if (parts.Length >= 5 && parts[parts.Length - 4] == "LevelSets" && parts[parts.Length - 2] == "scenes")
+            {
+                var setName = parts[parts.Length - 3];
+                var sceneName = parts[parts.Length - 1];
+                sceneName = sceneName.Substring(0, sceneName.Length - ".unity".Length);
+                if (!string.IsNullOrEmpty(setName) && !string.IsNullOrEmpty(sceneName))
+                    return baseUrl + "/layout/" + Uri.EscapeDataString(setName) + "/" + Uri.EscapeDataString(sceneName);
+            }
+        }
         return baseUrl + "/manage";
     }
 

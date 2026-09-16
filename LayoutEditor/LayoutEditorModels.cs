@@ -827,6 +827,10 @@ public class RecipeEntryDto
     public string group;
     /** Recipe family: burger / pizza / sushi / kebab / smoothie … — matches recipes.json. */
     public string type;
+    /** 二级分类（仅 group=="burger" 的 commonW2 汉堡大全有值）：
+     *  assembly / classic / deluxe / mega / breakfast / seafood / veggie / filling。
+     *  来源 = commonW2/custom_recipes/burger/&lt;子目录&gt;/，菜谱清单列表据此在「汉堡」组内二级分组。 */
+    public string subtype;
     /** True for score-0 half-finished products (batter, fried parts, optional pizza parts) — not orderable. */
     public bool intermediate;
     /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（卡片显示双步骤）。 */
@@ -1479,11 +1483,23 @@ public class CustomRecipeCategoryDto
 }
 
 [Serializable]
+public class CustomRecipeSubcategoryDto
+{
+    public string id;
+    public string parent;
+    public string zh;
+    public string en;
+    public int order;
+}
+
+[Serializable]
 public class CustomRecipeConfigDto
 {
     public int uidPrefix;
     public int nextSequence;
     public CustomRecipeCategoryDto[] categories;
+    /** 二级分类（分类目录下的子目录），如 Burger大全的 assembly/classic/…/filling。 */
+    public CustomRecipeSubcategoryDto[] subcategories;
 }
 
 [Serializable]
@@ -1498,6 +1514,9 @@ public class CustomRecipeSummaryDto
     public int uID;
     public int score;
     public string category;
+    /** 二级分类 = 分类目录下的子目录名（""=直接放在分类目录下）。
+     *  如 Burger大全：assembly / classic / deluxe / mega / breakfast / seafood / veggie / filling。 */
+    public string subcategory;
     public string type;
     /** 组装定义子类标记："burger" / "pizza" / ""（普通菜谱）。 */
     public string optionalKind;
@@ -1518,7 +1537,16 @@ public class CustomRecipeSummaryDto
     public string platingStepId;
     public string mixingIconId;
     public bool hasIcon;
+    /** 图标状态："own"（专属图标）/ "generic"（一图多用的占位图，如 commonW2 的
+     *  FriedGeneric.png 实为一整颗洋葱、被 26 个资产共用）/ "none"。
+     *  前端据此决定是否跳过 /api/custom-recipes/icon 直接走食材图标回退。 */
+    public string iconState;
     public bool hasModel;
+    /** modelSO（指向游戏 bundle 的模型指针）非空。commonW2 的部分夹心只有它，
+     *  此时 hasModel=false 但「确实有模型」，只是网页无法预览。 */
+    public bool hasModelSO;
+    /** 有可供网页 3D 预览的本地网格（含 model 引用共享 prefab 的情形）。 */
+    public bool previewable;
     /** 模型在游戏中的缩放/旋转/位置（应用到 prefab 根节点，运行时直接生效）。 */
     public float modelScale;
     public float modelRotationY;
@@ -1579,6 +1607,33 @@ public class CustomRecipeListDto
 public class CustomRecipeModelFileListDto
 {
     public string[] files;
+}
+
+/// <summary>菜谱可预览网格来源：上传约定目录，或 CustomRecipeSO.model 所引用 prefab 的网格源文件所在目录。
+///  modelFile = "" 表示没有可供网页预览的本地网格（如只有 modelSO 这种 bundle 指针）。</summary>
+[Serializable]
+public class CustomRecipeModelSourceDto
+{
+    public string dirAssetPath;
+    public string modelFile;
+    public string[] files;
+}
+
+/// <summary>内置模板网格（commonW2 自制模型库里的只读 FBX）：
+///  「模板网格模式」拷贝其字节到目标菜谱目录并改名，配前端生成的贴图即可零建模做夹心。</summary>
+[Serializable]
+public class CustomRecipeModelTemplateDto
+{
+    public string id;
+    public string assetPath;
+    public bool isDefault;
+    public int sizeBytes;
+}
+
+[Serializable]
+public class CustomRecipeModelTemplateListDto
+{
+    public CustomRecipeModelTemplateDto[] templates;
 }
 
 [Serializable]
@@ -1646,6 +1701,12 @@ public class CustomRecipeUploadDto
     public string base64;
     /** 多文件上传（FBX/OBJ + PNG 贴图组合）：第一个模型文件作为主模型，其余为贴图等附属文件。 */
     public CustomRecipeUploadFileDto[] files;
+    /** 模板网格模式：files 里没有 .fbx/.obj 时，从内置模板库**拷贝一份 FBX 字节**到本菜谱
+     *  models 目录并改名为 &lt;recipeId&gt;.fbx（不拷 .meta，新文件由 Unity 生成全新 guid）。
+     *  配合前端贴图编辑器（纯色/上传/画笔）即可零建模做出一个夹心模型。 */
+    public bool useTemplateMesh;
+    /** 模板网格 id（默认 FriedFishCake = 棱角球肉饼形）。 */
+    public string templateMeshId;
 }
 
 /// <summary>模型上传结果：成功时附带 Unity 导入后的原始尺寸（不含配置变换），

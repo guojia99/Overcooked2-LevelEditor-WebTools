@@ -2154,12 +2154,70 @@ public static class LayoutEditorLevelAdminApi
         if (AssetFolderExists(CommonW2RecipesDir) && !catDtos.Exists(c => c.id == BurgerCategoryId))
             catDtos.Add(new CustomRecipeCategoryDto { id = BurgerCategoryId, zh = "🍔 Burger大全", en = "Burger" });
 
+        var subDtos = new List<CustomRecipeSubcategoryDto>();
+        if (config.subcategories != null)
+        {
+            foreach (var s in config.subcategories)
+            {
+                if (s == null || string.IsNullOrEmpty(s.id))
+                    continue;
+                subDtos.Add(new CustomRecipeSubcategoryDto
+                {
+                    id = s.id,
+                    parent = s.parent ?? "",
+                    zh = string.IsNullOrEmpty(s.zh) ? s.id : s.zh,
+                    en = string.IsNullOrEmpty(s.en) ? s.id : s.en,
+                    order = s.order
+                });
+            }
+        }
+        // Burger大全的固定二级分类（目录即事实，此处只给显示名与排序）。
+        if (AssetFolderExists(CommonW2RecipesDir))
+        {
+            foreach (var s in BurgerSubcategories())
+            {
+                if (!subDtos.Exists(x => x.parent == s.parent && x.id == s.id))
+                    subDtos.Add(s);
+            }
+        }
+
         return new CustomRecipeConfigDto
         {
             uidPrefix = config.uidPrefix,
             nextSequence = config.nextSequence,
-            categories = catDtos.ToArray()
+            categories = catDtos.ToArray(),
+            subcategories = subDtos.ToArray()
         };
+    }
+
+    /// <summary>Burger大全（commonW2）二级分类显示表。
+    ///  归属以目录为准（burger/&lt;子目录&gt;/），此表只决定中文名与排列顺序。
+    ///  与 layout-editor/scripts/split-burger-subcategories.mjs 的 SUBCATEGORIES
+    ///  和前端 recipeTypes.ts 的 BURGER_SUBTYPE_ZH 三处保持一致。</summary>
+    internal static List<CustomRecipeSubcategoryDto> BurgerSubcategories()
+    {
+        var list = new List<CustomRecipeSubcategoryDto>();
+        AddBurgerSub(list, "classic", "经典汉堡", "Classic", 10);
+        AddBurgerSub(list, "deluxe", "豪华汉堡", "Deluxe", 20);
+        AddBurgerSub(list, "mega", "巨无霸汉堡", "Mega", 30);
+        AddBurgerSub(list, "breakfast", "早餐汉堡", "Breakfast", 40);
+        AddBurgerSub(list, "seafood", "海鲜汉堡", "Seafood", 50);
+        AddBurgerSub(list, "veggie", "素食汉堡", "Veggie", 60);
+        AddBurgerSub(list, "filling", "夹心/中间产物", "Filling", 70);
+        AddBurgerSub(list, "assembly", "组装定义", "Assembly", 80);
+        return list;
+    }
+
+    private static void AddBurgerSub(List<CustomRecipeSubcategoryDto> list, string id, string zh, string en, int order)
+    {
+        list.Add(new CustomRecipeSubcategoryDto
+        {
+            id = id,
+            parent = BurgerCategoryId,
+            zh = zh,
+            en = en,
+            order = order
+        });
     }
 
     private static bool IsUidPrefixConflicting(int prefix)
@@ -2220,10 +2278,19 @@ public static class LayoutEditorLevelAdminApi
             var guid = asset.guid;
             var id = Path.GetFileNameWithoutExtension(path);
             var category = "";
+            var subcategory = "";
             var rel = path.Substring(recipesDir.Length + 1).Replace('\\', '/');
             var slash = rel.IndexOf('/');
             if (slash >= 0)
+            {
                 category = rel.Substring(0, slash);
+                // 二级分类 = 再下一层目录名（Burger大全细分类：burger/breakfast/xxx.asset）。
+                // 共享资源目录（models/icons）里没有菜谱资产，不会误命中。
+                var rest = rel.Substring(slash + 1);
+                var slash2 = rest.IndexOf('/');
+                if (slash2 >= 0)
+                    subcategory = rest.Substring(0, slash2);
+            }
 
             var compIds = new List<string>();
             if (so.compositionSOs != null)
@@ -2271,6 +2338,20 @@ public static class LayoutEditorLevelAdminApi
 
             bool hasIcon = so.icon != null;
             bool hasModel = so.model != null;
+            // 图标状态：共享占位图（文件名含 Generic）不代表这道菜，前端需降级到食材图标
+            var iconState = "none";
+            if (so.icon != null)
+            {
+                var iconAssetPath = AssetDatabase.GetAssetPath(so.icon);
+                iconState = !string.IsNullOrEmpty(iconAssetPath)
+                    && Path.GetFileNameWithoutExtension(iconAssetPath)
+                        .IndexOf("Generic", StringComparison.OrdinalIgnoreCase) >= 0
+                    ? "generic"
+                    : "own";
+            }
+            // 可预览 = 上传约定目录有网格，或 model 引用的 prefab 能解析出网格源文件
+            var modelSource = ResolveRecipeModelSource(path);
+            bool previewable = modelSource != null && !string.IsNullOrEmpty(modelSource.modelFile);
 
             string nameZh = id;
             string nameEn = id;
@@ -2297,6 +2378,7 @@ public static class LayoutEditorLevelAdminApi
                 uID = so.uID,
                 score = so.score,
                 category = category,
+                subcategory = subcategory,
                 type = so.type.ToString(),
                 optionalKind = so is CustomRecipeOptionalBurgerSO ? "burger"
                     : so is CustomRecipeOptionalPizzaSO ? "pizza" : "",
@@ -2313,7 +2395,10 @@ public static class LayoutEditorLevelAdminApi
                 platingStepId = plateId,
                 mixingIconId = mixIconId,
                 hasIcon = hasIcon,
+                iconState = iconState,
                 hasModel = hasModel,
+                hasModelSO = so.modelSO != null,
+                previewable = previewable,
                 modelScale = RecipeModelScale(path),
                 modelRotationY = RecipeModelRotationY(path),
                 modelRotationX = RecipeModelTransform(path).rotationX,
@@ -3459,7 +3544,10 @@ public static class LayoutEditorLevelAdminApi
             : (!string.IsNullOrEmpty(dto.fileName) && !string.IsNullOrEmpty(dto.base64)
                 ? new[] { new CustomRecipeUploadFileDto { fileName = dto.fileName, base64 = dto.base64 } }
                 : null);
-        if (files == null || files.Length == 0)
+        // 模板网格模式允许「一个文件都不传」（纯模板 + 模板自带贴图）。
+        if (files == null)
+            files = new CustomRecipeUploadFileDto[0];
+        if (files.Length == 0 && !dto.useTemplateMesh)
             return new CustomRecipeUploadResultDto { ok = false, error = "缺少上传参数。" };
 
         CustomRecipeUploadFileDto modelFile = null;
@@ -3471,21 +3559,51 @@ public static class LayoutEditorLevelAdminApi
                 break;
             }
         }
-        if (modelFile == null)
-            return new CustomRecipeUploadResultDto { ok = false, error = "请选择 FBX 或 OBJ 模型文件。" };
+        // 模板网格模式：没上传模型文件时，从内置模板库拷一份 FBX 字节过来改名。
+        // 只拷 .fbx 不拷 .meta —— 新文件由 Unity 生成全新 guid，与模板彻底解耦，
+        // 也避免 prefab 反向引用 commonW2 网格把整个 commonW2 bundle 拖成依赖。
+        string templateMeshAbs = null;
+        if (modelFile == null && dto.useTemplateMesh)
+        {
+            string tplErr;
+            templateMeshAbs = ResolveTemplateMeshAbsPath(dto.templateMeshId, out tplErr);
+            if (templateMeshAbs == null)
+                return new CustomRecipeUploadResultDto { ok = false, error = tplErr };
+        }
+        if (modelFile == null && templateMeshAbs == null)
+            return new CustomRecipeUploadResultDto { ok = false, error = "请选择 FBX 或 OBJ 模型文件（或勾选使用模板网格）。" };
 
         var dir = DirectoryName(dto.recipeAssetPath);
         var modelsDir = EnsureRecipeModelsDir(dto.recipeAssetPath);
 
         // 先清空本条菜谱子目录里的旧模型/旧贴图（保留 <recipeName>_Icon.png 图标），再写入新文件。
         var recipeId = SanitizeName(Path.GetFileNameWithoutExtension(dto.recipeAssetPath));
-        var ext = modelFile.fileName != null && modelFile.fileName.EndsWith(".obj", StringComparison.OrdinalIgnoreCase)
+        var ext = modelFile != null
+            && modelFile.fileName != null
+            && modelFile.fileName.EndsWith(".obj", StringComparison.OrdinalIgnoreCase)
             ? ".obj" : ".fbx";
         var safeName = recipeId + ext;
         var modelAssetPath = modelsDir + "/" + safeName;
         var prefabPath = modelAssetPath.Substring(0, modelAssetPath.Length - ext.Length) + ".prefab";
 
         ClearRecipeModelFiles(modelsDir, recipeId);
+
+        // 模板网格：字节拷贝 + 改名（.meta 不拷）
+        if (templateMeshAbs != null)
+        {
+            try
+            {
+                File.Copy(templateMeshAbs, AbsPath(modelAssetPath), true);
+            }
+            catch (Exception ex)
+            {
+                return new CustomRecipeUploadResultDto
+                {
+                    ok = false,
+                    error = "模板网格拷贝失败：" + ex.Message
+                };
+            }
+        }
 
         // 写入全部文件（主模型统一命名为 <recipeName>.fbx/.obj，贴图保留原文件名）。
         var uploadedTexturePaths = new List<KeyValuePair<CustomRecipeUploadFileDto, string>>();
@@ -3502,13 +3620,13 @@ public static class LayoutEditorLevelAdminApi
             {
                 return new CustomRecipeUploadResultDto { ok = false, error = "文件「" + f.fileName + "」数据解码失败。" };
             }
-            var targetName = ReferenceEquals(f, modelFile)
+            var targetName = modelFile != null && ReferenceEquals(f, modelFile)
                 ? safeName
                 : SanitizeUploadFileName(f.fileName);
             if (string.IsNullOrEmpty(targetName))
                 continue;
             File.WriteAllBytes(AbsPath(modelsDir + "/" + targetName), bytes);
-            if (!ReferenceEquals(f, modelFile))
+            if (modelFile == null || !ReferenceEquals(f, modelFile))
                 uploadedTexturePaths.Add(new KeyValuePair<CustomRecipeUploadFileDto, string>(f, modelsDir + "/" + targetName));
         }
 
@@ -3611,6 +3729,63 @@ public static class LayoutEditorLevelAdminApi
         return n.EndsWith(".fbx") || n.EndsWith(".obj");
     }
 
+    /// <summary>内置模板网格库：commonW2 汉堡大全的自制模型目录。
+    ///  这些 FBX 是「只读模板」—— 模板网格模式只**拷贝字节**到目标菜谱目录并改名，
+    ///  绝不修改模板本身，也绝不让生成的 prefab 反向引用模板网格
+    ///  （否则关卡集本地夹心会把整个 commonW2 bundle 拖成依赖）。</summary>
+    internal const string TemplateMeshDir = "Assets/commonW2/custom_recipes/burger/models";
+
+    /// <summary>默认模板网格：棱角球肉饼形，配纯色贴图即可当夹心。</summary>
+    internal const string DefaultTemplateMeshId = "FriedFishCake";
+
+    /// <summary>GET /api/custom-recipes/model-templates：可用模板网格列表。</summary>
+    public static CustomRecipeModelTemplateListDto ListTemplateMeshes()
+    {
+        var list = new List<CustomRecipeModelTemplateDto>();
+        var abs = AbsPath(TemplateMeshDir);
+        if (Directory.Exists(abs))
+        {
+            foreach (var file in Directory.GetFiles(abs, "*.fbx"))
+            {
+                var id = Path.GetFileNameWithoutExtension(file);
+                list.Add(new CustomRecipeModelTemplateDto
+                {
+                    id = id,
+                    assetPath = TemplateMeshDir + "/" + Path.GetFileName(file),
+                    isDefault = string.Equals(id, DefaultTemplateMeshId, StringComparison.Ordinal),
+                    sizeBytes = (int)new FileInfo(file).Length
+                });
+            }
+        }
+        list.Sort(delegate (CustomRecipeModelTemplateDto a, CustomRecipeModelTemplateDto b)
+        {
+            if (a.isDefault != b.isDefault)
+                return a.isDefault ? -1 : 1;
+            return string.CompareOrdinal(a.id, b.id);
+        });
+        return new CustomRecipeModelTemplateListDto { templates = list.ToArray() };
+    }
+
+    /// <summary>模板 id → 绝对路径；不可用时返回 null 并给出原因。
+    ///  id 走白名单式校验（只认模板目录下实际存在的 .fbx），杜绝路径穿越。</summary>
+    private static string ResolveTemplateMeshAbsPath(string templateMeshId, out string error)
+    {
+        error = null;
+        var id = SanitizeName(string.IsNullOrEmpty(templateMeshId) ? DefaultTemplateMeshId : templateMeshId);
+        if (string.IsNullOrEmpty(id))
+        {
+            error = "模板网格 id 非法。";
+            return null;
+        }
+        var abs = AbsPath(TemplateMeshDir + "/" + id + ".fbx");
+        if (!File.Exists(abs))
+        {
+            error = "模板网格不存在：" + TemplateMeshDir + "/" + id + ".fbx";
+            return null;
+        }
+        return abs;
+    }
+
     /// <summary>上传文件名白名单：仅保留安全的 base 名与图片/模型扩展名。</summary>
     private static string SanitizeUploadFileName(string fileName)
     {
@@ -3657,6 +3832,93 @@ public static class LayoutEditorLevelAdminApi
     }
 
     /// <summary>列出菜谱 models 目录内的资源文件（供前端 3D 在线预览）。 */
+    /// <summary>GET /api/custom-recipes/model-source：解析一道菜谱「可供网页 3D 预览的网格来源」。
+    ///
+    ///  ListCustomRecipeModelFiles 只看上传约定目录 &lt;菜谱目录&gt;/models/&lt;id&gt;/，
+    ///  但 commonW2 的夹心/中间产物是另一种形态：`CustomRecipeSO.model` 直接引用
+    ///  `commonW2/custom_recipes/burger/models/` 这个**扁平共享目录**里的 prefab
+    ///  （四件套 fbx+png+mat+prefab）。只查约定目录会一律报「尚未上传模型文件」。
+    ///
+    ///  因此这里两路解析：
+    ///   1) 约定目录里有 .fbx/.obj → 返回该目录 + 目录内全部模型/贴图文件（原行为）；
+    ///   2) 否则看 so.model → MeshFilter.sharedMesh 的源文件（.fbx/.obj）→ 返回其所在目录，
+    ///      文件列表只收「该 prefab 实际用到的」：网格源文件 + 各 Renderer 材质的主贴图，
+    ///      避免把扁平目录下几十张无关贴图全灌给 three.js。
+    ///  modelSO（bundle 指针）没有本地网格，返回空——网页确实无法预览。</summary>
+    public static CustomRecipeModelSourceDto ResolveRecipeModelSource(string recipeAssetPath)
+    {
+        var result = new CustomRecipeModelSourceDto { dirAssetPath = "", modelFile = "", files = new string[0] };
+        if (string.IsNullOrEmpty(recipeAssetPath))
+            return result;
+
+        // 1) 上传约定目录
+        var uploadDir = RecipeModelsDir(recipeAssetPath);
+        var uploadFiles = ListCustomRecipeModelFiles(recipeAssetPath);
+        for (int i = 0; i < uploadFiles.Length; i++)
+        {
+            var ext = Path.GetExtension(uploadFiles[i]).ToLowerInvariant();
+            if (ext == ".fbx" || ext == ".obj")
+            {
+                result.dirAssetPath = uploadDir;
+                result.modelFile = uploadFiles[i];
+                result.files = uploadFiles;
+                return result;
+            }
+        }
+
+        // 2) so.model 引用的 prefab（commonW2 扁平模型库等）
+        var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(recipeAssetPath);
+        if (so == null || so.model == null)
+            return result;
+        var meshFilter = so.model.GetComponentInChildren<MeshFilter>(true);
+        if (meshFilter == null || meshFilter.sharedMesh == null)
+            return result;
+        var meshPath = AssetDatabase.GetAssetPath(meshFilter.sharedMesh);
+        if (string.IsNullOrEmpty(meshPath))
+            return result;
+        var meshExt = Path.GetExtension(meshPath).ToLowerInvariant();
+        if (meshExt != ".fbx" && meshExt != ".obj")
+            return result;
+
+        var dir = DirectoryName(meshPath);
+        var files = new List<string>();
+        files.Add(Path.GetFileName(meshPath));
+
+        // 该 prefab 各材质的主贴图（同目录的才收，跨目录 three.js 也拼不出 URL）
+        var renderers = so.model.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            var mats = renderers[i].sharedMaterials;
+            if (mats == null)
+                continue;
+            for (int m = 0; m < mats.Length; m++)
+            {
+                if (mats[m] == null || mats[m].mainTexture == null)
+                    continue;
+                var texPath = AssetDatabase.GetAssetPath(mats[m].mainTexture);
+                if (string.IsNullOrEmpty(texPath))
+                    continue;
+                if (!string.Equals(DirectoryName(texPath), dir, StringComparison.Ordinal))
+                    continue;
+                var texName = Path.GetFileName(texPath);
+                if (!files.Contains(texName))
+                    files.Add(texName);
+            }
+        }
+        // OBJ 的 MTL 同名伴随文件
+        if (meshExt == ".obj")
+        {
+            var mtl = Path.GetFileNameWithoutExtension(meshPath) + ".mtl";
+            if (File.Exists(AbsPath(dir + "/" + mtl)) && !files.Contains(mtl))
+                files.Add(mtl);
+        }
+
+        result.dirAssetPath = dir;
+        result.modelFile = Path.GetFileName(meshPath);
+        result.files = files.ToArray();
+        return result;
+    }
+
     public static string[] ListCustomRecipeModelFiles(string recipeAssetPath)
     {
         var list = new List<string>();
@@ -4035,7 +4297,7 @@ public static class LayoutEditorLevelAdminApi
 
     /// <summary>PseudoPrefabSO 的查找目录（食材/烹饪步骤/装盘容器）。
     ///  含通用内容源库（Assets/common03，游戏 DLC 内容，直接打包为 common03 bundle）。</summary>
-    internal static readonly string[] PseudoPrefabSearchFolders =
+    private static readonly string[] PseudoPrefabSearchFoldersCore =
     {
         "Assets/common01/food/Ingredients",
         "Assets/common02/food/Ingredients",
@@ -4047,6 +4309,46 @@ public static class LayoutEditorLevelAdminApi
         "Assets/common03/food/CookingSteps",
         "Assets/common03/food/PlatingSteps",
     };
+
+    private static string[] _pseudoPrefabSearchFolders;
+
+    /// <summary>PseudoPrefabSO 查找根 = 固定目录 + commonW1 的 food 子目录。
+    ///
+    ///  commonW1 补充（2026-09-15）：dlc09/dlc10/dlc11/dlc13 的 30 个食材 SO 只存在于
+    ///  Assets/commonW1/pseudo_prefab_so/&lt;dlcNN&gt;/food/，此前不在搜索根里 →
+    ///  allIngredients 自动填充静默漏掉、FindPseudoPrefabOrCustomRecipe 解析不到
+    ///  （Docs/zh/matchlist-mapping.md 第六节「LoadIngredientSo 盲区」记录的 30 项）。
+    ///  这里按目录发现动态并入，一次修复全部盲区，且不改动任何 guid。</summary>
+    internal static string[] PseudoPrefabSearchFolders
+    {
+        get
+        {
+            if (_pseudoPrefabSearchFolders != null)
+                return _pseudoPrefabSearchFolders;
+            var list = new List<string>(PseudoPrefabSearchFoldersCore);
+            list.AddRange(CommonW1FoodFolders());
+            _pseudoPrefabSearchFolders = list.ToArray();
+            return _pseudoPrefabSearchFolders;
+        }
+    }
+
+    /// <summary>Assets/commonW1/pseudo_prefab_so/&lt;dlcNN&gt;/food 目录集合（存在才返回）。</summary>
+    internal static List<string> CommonW1FoodFolders()
+    {
+        var folders = new List<string>();
+        const string root = "Assets/commonW1/pseudo_prefab_so";
+        var abs = AbsPath(root);
+        if (!Directory.Exists(abs))
+            return folders;
+        foreach (var dir in Directory.GetDirectories(abs))
+        {
+            var foodDir = root + "/" + Path.GetFileName(dir) + "/food";
+            if (AssetFolderExists(foodDir))
+                folders.Add(foodDir);
+        }
+        folders.Sort(StringComparer.Ordinal);
+        return folders;
+    }
 
     /// <summary>全部关卡集的旧 custom_web/Ingredients 目录（Web 内置食材拷贝，
     ///  机制已废弃，仅为兼容读取历史数据保留）。</summary>

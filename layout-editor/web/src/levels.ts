@@ -25,13 +25,15 @@ import { openDepsCheckModal } from "./editor/ui/depsCheck";
 import { showBusy, hideBusy, setBusyMessage } from "./busy";
 import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
 import { navHtml, wireNav } from "./nav";
-import { navigateTo } from "./route";
-
-const DEPS_TARGET_KEY = "depsTargetLevel";
+import { navigateTo, depsPath, layoutPath } from "./route";
 
 function goDependenciesPage(setName?: string, levelInfoAssetPath?: string): void {
+  // 严格路由：/dependencies/{set}/{levelId}（levelId = LevelInfo 资产所在数据目录名）
   if (setName && levelInfoAssetPath) {
-    sessionStorage.setItem(DEPS_TARGET_KEY, JSON.stringify({ setName, assetPath: levelInfoAssetPath }));
+    const parts = levelInfoAssetPath.replace(/\\/g, "/").split("/");
+    const levelId = parts.length >= 2 ? parts[parts.length - 2] : "";
+    location.assign(depsPath(setName, levelId || undefined));
+    return;
   }
   location.assign("/dependencies");
 }
@@ -42,26 +44,25 @@ import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { rlCardHtml, rlSectionHtml, type RecipeWithGroups } from "./recipeCard";
 import { exportNodePng } from "./domSvgExport";
 import { exportLevelShotsPng, type LevelShotExportData } from "./levelShotExport";
-import { customRecipeIconUrl } from "./editor/catalog";
+import { customRecipeIconUrl, levelSetFromScenePath } from "./editor/catalog";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { screenshotPaneHtml, wireScreenshotPane } from "./editor/ui/screenshotModal";
 
-const TARGET_SCENE_KEY = "layoutTargetScene";
-
 export function goLayout(sceneAssetPath?: string): void {
-  if (sceneAssetPath) sessionStorage.setItem(TARGET_SCENE_KEY, sceneAssetPath);
-  else sessionStorage.removeItem(TARGET_SCENE_KEY);
+  // 严格路由：/layout/{set}/{sceneName}；无法解析或未提供时走裸 /layout（回关卡管理）
+  if (sceneAssetPath) {
+    const set = levelSetFromScenePath(sceneAssetPath);
+    const scene = (sceneAssetPath.replace(/\\/g, "/").split("/").pop() ?? "").replace(/\.unity$/i, "");
+    if (set && scene) {
+      location.assign(layoutPath(set, scene));
+      return;
+    }
+  }
   location.assign("/layout");
 }
 
 export function goManage(): void {
   location.assign("/manage");
-}
-
-export function consumeTargetScene(): string | null {
-  const v = sessionStorage.getItem(TARGET_SCENE_KEY);
-  if (v) sessionStorage.removeItem(TARGET_SCENE_KEY);
-  return v;
 }
 
 const IDENT_RE = /^[A-Za-z0-9_]+$/;

@@ -61,7 +61,7 @@ web/
 | 撤销 | 自写 `HistoryStack<T>`（限 20 步快照） |
 | 部署 | 静态 dist/ 提交 Git，由 Unity 内嵌 HTTP 服务器（8765）伺服；开发时 Vite 5173 + `/api` 代理 |
 
-**启动与路由**：`index.html` 内联脚本规范化 URL → `editor/dom.ts` 解析路由标记 → `main.ts` 按标记懒加载页面视图或走编辑器 `init()`。**页面切换 = 整页跳转**（`location.assign`），仅 `/guide/:page` 用 history API。7 个页面：`/layout`、`/manage`、`/dependencies`、`/custom-recipes`、`/custom-recipes/burger-maker`、`/recipes`（独立 HTML）、`/guide/:id`、`/changelog`。
+**启动与路由**：`index.html` 内联脚本 + `route.ts migrateLegacyUrl()` 规范化 URL（旧 hash / `index.html` / 旧版 query 深链 `?scene=`、`?set=` 自动迁移）→ `editor/dom.ts` 解析路由（`parseRoute`，导出 `ROUTE`）→ `main.ts` 按路由懒加载页面视图或走编辑器 `init()`。**严格路由约定（2026-09-16）**：页面目标一律写进路径（`/xxxx/{集合ID}/{目标ID}`），页面加载按 URL id 自行请求数据，不再经 sessionStorage 交接（仅「工具与历史」一次性动作键保留）。整页跳转用 `location.assign`；同页子视图（custom-recipes 列表↔表单、deps 三级、guide 翻页）用 `history.pushState` + `popstate` 重分发；切集/载入目标等状态平移用 `replaceState`（不产生历史）。路由表：`/layout/{set}/{sceneName}`（裸 `/layout` → `/manage`）、`/manage`、`/dependencies[/{set}[/{levelId}]]`、`/custom-recipes`（选集）、`/custom-recipes/{set}`（列表）、`/custom-recipes/{set}/recipe/{id|new}`（编辑表单）、`/custom-recipes/burger-maker/{set}[/{burgerId}]`、`/custom-recipes/filling-maker/{set}[/{fillingId|new}]`、`/recipes`（独立 HTML）、`/guide/{id}`、`/changelog`；根 `/` 恒跳 `/manage`。
 
 **数据流**：
 
@@ -97,7 +97,7 @@ flowchart LR
 | 文件 | 职责与关键导出 |
 |---|---|
 | **main.ts** | 应用入口薄壳：版本徽标、重绘钩子、按路由标记懒加载页面视图或 `init()` |
-| **route.ts** | URL 规范化（旧 hash 迁移）、`parseRoute`、`pathFor`、`navigateTo` |
+| **route.ts** | URL 规范化（旧 hash/query 深链迁移）、`parseRoute`（严格路由解析，含各 id 段）、路径构造助手（`layoutPath/depsPath/recipeFormPath/burgerPath/fillingPath`）、`navigateTo` |
 | **nav.ts** | 顶栏导航 HTML（`navHtml/wireNav`）+ 关卡集/关卡下拉 + GitHub 弹窗 |
 | **version.ts** | `APP_VERSION` + 版本徽标 |
 | **api.ts** | ★ 全部后端通信（1078 行）：60+ 个 `fetchXxx/saveXxx/createXxx`；`readApiJson`（返回 HTML → 抛「桥过期」）；分块加载静态 JSON；`bundleClosure` |
@@ -106,7 +106,10 @@ flowchart LR
 | **levels.ts** | ★ 关卡管理页（2574 行）：关卡集/关卡列表、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、关卡编辑页「汇总导出背景图」区块（上传到 `data/<level>/summary_bg~/`，Unity 忽略目录 → 不进 AssetBundle）、汇总页 + PNG 导出（DOM 快照，背景图 cover + 暗色遮罩内联在 `#sum-node` 上 → 预览与导出同源）、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复） |
 | **dependencies.ts** | 依赖管理页：两级列表、`BundleAnalysis` 展示（缺失红/未用黄）、手动编辑 dependencies、依赖闭包 |
 | **customRecipes.ts** | 自定义菜谱管理页（1963 行）：卡片 + 分类侧栏、新建/编辑表单（组成多选/烹饪/装盘/图标/FBX+MTL+贴图上传/cm 校准/3D 预览）、分类管理 |
-| **burgerMaker.ts** | 汉堡组装工作台：层层堆叠夹心（面包+候选层），调 `/api/burger/create` |
+| **burgerMaker.ts** | 汉堡组装工作台（严格路由 `/custom-recipes/burger-maker/{set}[/{burgerId}]`，URL 中的 burgerId 自动载入已存成品）：顶部菜谱卡片实时预览（共用 `rlCardHtml`）+ 层层堆叠夹心（拖动排序、候选计数徽标）、夹心>32 层软上限提醒（含超规格实拍弹窗），调 `/api/burger/create`；候选面板按「面包/中间产物/成品菜/官方菜谱/官方食材」五组 + 徽标（DLC / bundle缺失 / 荐）+ 仅推荐/显示无模型筛选 + 👁 3D 预览 + 图标逐级降级（`candIconChain`）；「🥩 夹心工作台 ↗」新开一页跳 `/custom-recipes/filling-maker/{set}` |
+| **fillingMaker.ts** | 🥩 夹心工作台（`/custom-recipes/filling-maker/{set}[/{fillingId}]`）：关卡集选择 + 本集夹心列表 + commonW2 共享夹心只读参考 + 新建/编辑/预览/删除。**不自实现编辑逻辑**，直接调 `renderRecipeForm(..., {mode:"filling"})`，编辑器改动自动继承 |
+| **textureEditor.ts** | 夹心贴图编辑器（1024×1024 canvas）：取色纯色填充 / 上传图片 / 画笔涂抹 + 撤销；「🔍 预览模型」用模板 FBX 字节 + 当前贴图 File 实时 3D 渲染（不落盘） |
+| **recipeModelPreview.ts** | 菜谱 3D 模型预览共享实现（原为 customRecipes.ts 私有）：`modelResourceBase` / `openRecipeModelPreview` / `fetchTemplateMeshBuffer`（带缓存）/ `previewLocalModel`（本地 ArrayBuffer + File，零服务器往返） |
 | **recipeList.ts** | /recipes 入口：全量菜谱分组陈列、筛选、双视图、PNG 长图导出 |
 | **recipeCard.ts** | 菜谱卡片共享 UI：`computeCardGroups`（优先后端 cookingGroups，回退前端镜像推导） |
 | **recipeGroups.ts** | 烹饪分组算法前端镜像（**三处镜像**之一）：`deriveCookingGroups/deriveCompositionGroups/STEP_UTENSILS` |

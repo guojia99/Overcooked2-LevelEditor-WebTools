@@ -505,6 +505,34 @@ commonW1 的 dlcXX 是 **dlc-first** 两级结构（`dlcXX/{art,counters,decor/{
 
 ## 8. commonW2/ —— Burger 大全共享库
 
+### 8.0 二级分类目录（2026-09-15）
+
+`custom_recipes/burger/` 下按子目录细分，74 个菜谱资产分为 8 类；`models/`、`icons/` 留在 `burger/` 根下共享：
+
+| 子目录 | 显示名 | 条数 | 判定 |
+|---|---|---|---|
+| `assembly/` | 组装定义 | 6 | `CustomRecipeOptionalBurgerSO` 或 `*_filler` |
+| `classic/` | 经典汉堡 | 18 | 含肉/芝士，40–80 分 |
+| `deluxe/` | 豪华汉堡 | 7 | 含肉/芝士，100–140 分 |
+| `mega/` | 巨无霸汉堡 | 2 | ≥160 分 |
+| `breakfast/` | 早餐汉堡 | 4 | `Breakfast*` |
+| `seafood/` | 海鲜汉堡 | 3 | 夹心含 Prawn/Shrimp/Fish |
+| `veggie/` | 素食汉堡 | 10 | 夹心纯蔬果 |
+| `filling/` | 夹心/中间产物 | 24 | 非 Composite 或 score≤0 |
+
+为什么零破坏：`ScanCustomRecipes` 的 `category` 只取 `custom_recipes/` 下**第一段**目录名（仍是 `burger`），
+`ScanAssetsByScript` 是 `AllDirectories` 递归，`CustomRecipeNamesPath` 向上回溯找 `custom_recipes`。
+`.asset` 与 `.meta` 成对移动，guid 不变，所有按 guid 的引用不受影响。
+
+⚠ 配套代码改动：`LayoutEditorBurgerApi` 原先硬编码 `burger/OptionalBurger.asset` 的两处已改为
+`FindCommonW2Assembly(id)` 递归扫描，将来再调整分类无需改代码。
+
+显示名与排序**三处同源**：`LayoutEditorLevelAdminApi.BurgerSubcategories()` ↔
+`layout-editor/web/src/recipeTypes.ts` 的 `BURGER_SUBTYPE_ZH/ORDER` ↔
+`layout-editor/scripts/split-burger-subcategories.mjs` 的 `SUBCATEGORIES`。
+
+迁移脚本：`node layout-editor/scripts/split-burger-subcategories.mjs`（dry-run）/ `--apply`（执行 + 报告）。
+
 ### 8.1 全貌（74 配方 + 14 模型）
 
 - **成品汉堡（score>0）44 个**：单料（Lettuce/Tomato/Cucumber/Pineapple/Chicken/Cheese 各 `XBurger`）、双料组合（`LettuceTomatoBurger` 等）、三料/四料、早餐系列（`Breakfast{Cheese,Lettuce,Meat,Onion}Burger`）、特色（`DoublePineappleBurger`（含 `_filler` 变体）、`Supreme`），以及**官方牛肉系汉堡的 DLC8 面皮副本 5 个**（`MeatBurger`/`CheeseMeatBurger`/`LettuceMeatBurger`/`LettuceCheeseMeatBurger`/`LettuceTomatoMeatBurger`，uID 58321069~58321073，对应官方 `Burger_Plain_SO`/`Burger_Cheese_SO`/`Burger_Lettuce_SO`/`Burger_CheeseLettuce_SO`/`Burger_LettuceTomato_SO`，牛肉夹心统一用 common01 `FriedMeat`）。
@@ -512,6 +540,17 @@ commonW1 的 dlcXX 是 **dlc-first** 两级结构（`dlcXX/{art,counters,decor/{
 - **组装定义（CustomRecipeOptionalBurgerSO）6 个**：`OptionalBurger`（主模板，capacity=20）、`VeggieBurgerAssembly`、`ChickenBurgerAssembly`、`MeatBurgerAssembly`、`PineappleMeatBurgerAssembly`、`DoublePineappleBurger_filler`（uID `1179688004`，不在 58321 号段，属手工追加残留）。
 - **面皮统一**：全部 44 个成品的 `compositionSOs[0]` 与全部 6 个组装定义的 `bunSO` 一律是 **DLC8 面皮**（`Assets/common03/food/Ingredients/dlc08/dlc08_choppedbun.asset`，guid `965ff691e25e50b0c5151ea9a97899d4`），与 DLC8 套餐（`DLC08_MD_*`）同款。核心 `ChoppedBunSO`、`DLC02_ChoppedBun` 在 commonW2 中零引用。
 - **models/ 14 prefab**：CucumberSlice、FriedBeefNew、FriedBeefPatty、FriedCheese、FriedChickenPatty、FriedCornCake、FriedFishCake、FriedPotatoCake、FriedSausage、FriedShrimpCake、PanfriedMushroom、PanfriedOnion、PineappleSlice、TomatoSlice（另 11 fbx、13 mat、12 视觉 SO）。icons/ 41 png（26 呆喵成品图标 + 10 张 `ui_*` 原版风格 + 5 张官方汉堡副本图标）。
+- **models/ 兼作模板网格库**（2026-09-15）：这里的 `*.fbx` 是「模板网格模式」的**只读**素材源。
+  工作台新建夹心时，后端从中**拷贝一份 FBX 字节**到目标菜谱的 models 目录并改名为 `<RecipeId>.fbx`
+  （只拷 .fbx 不拷 .meta，新文件由 Unity 生成全新 guid），配前端 `textureEditor.ts` 产出的
+  1024×1024 PNG 即可零建模做出夹心。默认模板 `FriedFishCake`（棱角球肉饼形；其 `FriedFishCake.png`
+  实测就是 `#C06205` + 黑的纯色贴图，所以「纯色就够用」）。
+  **拷贝而非引用**很关键：若 prefab 反向引用 commonW2 的网格，关卡集本地夹心会把整个 commonW2 bundle
+  拖成依赖（`ReferencesCommonW2Deep` 会命中 `ingredientModels`）。
+- **原版模型池**：`layout-editor/scripts/data/burger-model-pool.json`（524 条，`gen-burger-model-pool.mjs`
+  从 `dump_bundle/manifest.json` 提取 `*/prefabs/{plated,ingredients,recipes,meals}/*.prefab` 且 bundle 已在
+  StreamingAssets；12 个 bundle 全部可用）。选用时才在 `models/` 按需生成包装 `PseudoPrefabSO`，
+  `assetPath` 逐字符照抄 bundle 内实名（大小写敏感）。
 
 ### 8.2 配方 asset 全字段
 

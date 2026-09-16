@@ -31,6 +31,7 @@ import type {
   LevelSetInfo,
   LevelSetList,
   LevelSetScene,
+  MatchlistSuggestion,
   MusicCatalog,
   PerPlayerConfig,
   RecipeEntry,
@@ -367,6 +368,25 @@ export async function saveMatchlists(
     body: JSON.stringify({ levelInfoAssetPath, keys }),
   });
   await readApiJson<{ ok?: boolean; error?: string }>(r);
+}
+
+/** 服务端按 LevelInfo 实际资产引用推断需要的 DLC 匹配表（只算不写）。
+ *  依据 = PseudoPrefabSO.assetPath 的 `Assets/downloadablecontent/<dlcNN>/` 前缀，
+ *  比前端按 catalog group 的启发式更权威（能抓到自定义菜谱深层嵌套的官方 DLC 节点，
+ *  如 Burger大全早餐堡里的 dlc05 Breakfast_Bacon_Egg）。 */
+export async function fetchMatchlistSuggestion(
+  levelInfoAssetPath: string
+): Promise<MatchlistSuggestion> {
+  const r = await fetch(
+    `/api/level/matchlists/suggest?levelInfoAssetPath=${encodeURIComponent(levelInfoAssetPath)}`
+  );
+  const d = await readApiJson<Partial<MatchlistSuggestion>>(r);
+  return {
+    required: d.required ?? [],
+    current: d.current ?? [],
+    missing: d.missing ?? [],
+    skipped: d.skipped ?? [],
+  };
 }
 
 export async function saveLevelRecipes(
@@ -913,8 +933,16 @@ export async function fetchCustomRecipeReferences(setName: string): Promise<Cust
 
 // ---------- Burger大全 组装工作台（commonW2 共享汉堡库） ----------
 
-export async function fetchBurgerDefinitions(setName?: string): Promise<BurgerDefinitionList> {
-  const q = setName ? `?${new URLSearchParams({ setName })}` : "";
+/** 汉堡工作台数据。includeModelless=true 时额外下发「无堆叠模型」的自定义菜谱候选
+ *  （默认后端过滤掉——选了运行时也看不见；开关用于排查）。 */
+export async function fetchBurgerDefinitions(
+  setName?: string,
+  includeModelless = false
+): Promise<BurgerDefinitionList> {
+  const params = new URLSearchParams();
+  if (setName) params.set("setName", setName);
+  if (includeModelless) params.set("includeModelless", "1");
+  const q = params.toString() ? `?${params}` : "";
   const r = await fetch(`/api/burger/definitions${q}`);
   return readApiJson<BurgerDefinitionList>(r);
 }
@@ -1018,11 +1046,70 @@ export async function uploadCustomRecipeModelFiles(
   return readApiJson<CustomRecipeUploadResult>(r);
 }
 
+export interface CustomRecipeModelTemplate {
+  id: string;
+  assetPath: string;
+  isDefault: boolean;
+  sizeBytes: number;
+}
+
+/** 内置模板网格列表（commonW2 自制模型库的只读 FBX）。 */
+export async function fetchModelTemplates(): Promise<CustomRecipeModelTemplate[]> {
+  const r = await fetch("/api/custom-recipes/model-templates");
+  const d = await readApiJson<{ templates?: CustomRecipeModelTemplate[] }>(r);
+  return d.templates ?? [];
+}
+
+/** 模板网格模式：不传 FBX，后端从模板库**拷贝一份字节**到本菜谱 models 目录并改名，
+ *  配前端生成的贴图即可零建模做出夹心模型。files 只放贴图（可为空）。 */
+export async function uploadCustomRecipeTemplateModel(
+  setName: string,
+  recipeAssetPath: string,
+  templateMeshId: string,
+  files: CustomRecipeUploadFile[]
+): Promise<CustomRecipeUploadResult> {
+  const r = await fetch("/api/custom-recipes/upload-model", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      setName,
+      recipeAssetPath,
+      files,
+      useTemplateMesh: true,
+      templateMeshId,
+    }),
+  });
+  return readApiJson<CustomRecipeUploadResult>(r);
+}
+
 /** 列出菜谱 models 目录内的模型/贴图文件（供 3D 在线预览）。 */
 export async function fetchCustomRecipeModelFiles(assetPath: string): Promise<string[]> {
   const r = await fetch(`/api/custom-recipes/model-files?assetPath=${encodeURIComponent(assetPath)}`);
   const data = await readApiJson<{ files?: string[] }>(r);
   return data.files ?? [];
+}
+
+export interface CustomRecipeModelSource {
+  /** 网格所在资产目录；"" = 没有可预览的本地网格。 */
+  dirAssetPath: string;
+  /** 主网格文件名（.fbx/.obj）；"" = 无。 */
+  modelFile: string;
+  /** 该目录下与本模型相关的文件（网格 + 主贴图 + 可选 .mtl）。 */
+  files: string[];
+}
+
+/** 解析菜谱可预览的网格来源。兼容两种形态：
+ *  ① 上传约定目录 `<菜谱目录>/models/<id>/`；
+ *  ② `CustomRecipeSO.model` 引用的共享 prefab（commonW2 扁平模型库）。
+ *  旧桥没有该端点时抛错，调用方需回退到 fetchCustomRecipeModelFiles。 */
+export async function fetchCustomRecipeModelSource(assetPath: string): Promise<CustomRecipeModelSource> {
+  const r = await fetch(`/api/custom-recipes/model-source?assetPath=${encodeURIComponent(assetPath)}`);
+  const d = await readApiJson<Partial<CustomRecipeModelSource>>(r);
+  return {
+    dirAssetPath: d.dirAssetPath ?? "",
+    modelFile: d.modelFile ?? "",
+    files: d.files ?? [],
+  };
 }
 
 export interface CustomRecipeScanDiag {

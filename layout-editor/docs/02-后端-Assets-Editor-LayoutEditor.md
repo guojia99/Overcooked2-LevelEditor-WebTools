@@ -25,6 +25,7 @@
 ├── LayoutEditorBridgeWindow.cs           主 EditorWindow + 服务看门狗 ★入口
 ├── LayoutEditorBundleDumper.cs           StreamingAssets bundle 全量 dump → dump_bundle/
 ├── LayoutEditorBurgerApi.cs              汉堡组装工作台后端 (1062 行)
+├── LayoutEditorMatchlistMap.cs          DLC → RecipeMatchList 自动映射 (2026-09-15 新增)
 ├── LayoutEditorCannonPatch.cs            大炮 Play 期运行时补丁
 ├── LayoutEditorCatalogApi.cs             食材/菜谱目录与关卡菜谱读写 (1134 行)
 ├── LayoutEditorCatalogLookup.cs          占地尺寸表 + 默认父路径表
@@ -165,7 +166,7 @@ flowchart TD
 |---|---|
 | `GET /api/catalog/ingredients` / `floor-materials` / `questionmarks` / `questionmarks/icon` / `music` / `audio-directories` / `ambiences` / `death-effects` | 各类目录扫描 |
 | `GET /api/recipes?levelSet=`、`GET/POST /api/level-recipes` | 关卡菜谱读写 |
-| `GET /api/level/optional-presets`、`POST /api/level/optional-items`、`POST /api/level/matchlists`、`POST /api/recipes/compute-burger-optionals`、`GET /api/level/burger-optional` | 可选部件/匹配表 |
+| `GET /api/level/optional-presets`、`POST /api/level/optional-items`、`POST /api/level/matchlists`、`GET /api/level/matchlists/suggest`、`POST /api/recipes/compute-burger-optionals`、`GET /api/level/burger-optional` | 可选部件/匹配表 |
 
 **关卡集/关卡管理**
 | 路由 | 说明 |
@@ -184,7 +185,8 @@ flowchart TD
 |---|---|
 | `GET/POST /api/custom-recipes*` | config、list、debug-scan、references、diagnose、create、update、delete、upload-icon、upload-model、category/* |
 | `GET /api/custom-recipes/model-files`、`GET /api/custom-recipes/model-files/<b64目录>/<文件>` | 3D 预览文件服务 |
-| `GET /api/burger/definitions`、`POST /api/burger/create`、`POST /api/burger/definition/update` | 汉堡工作台 |
+| `GET /api/burger/definitions`（含 `includeModelless`）、`POST /api/burger/create`、`POST /api/burger/definition/update` | 汉堡工作台 |
+| `GET /api/custom-recipes/model-templates` | 内置模板网格列表（零建模做夹心模型） |
 
 **写回历史 / 媒体 / 杂项**
 | 路由 | 说明 |
@@ -253,7 +255,8 @@ flowchart TD
 |---|---|
 | **LayoutEditorLevelAdminApi.cs**（4048 行） | 关卡集/关卡/自定义菜谱全生命周期。**目录**：`ScanMusic/ScanAudioDirectories/ScanAmbiences/ScanDeathEffects`（扫 common01/common02 pseudo_prefab_so）、`LoadAudioKnowledge`（`layout-editor/scripts/data/audio-knowledge.json`）。**关卡集**：`ScanSets`（自动补根 bundle `<set>/info_<set>`）、`CreateSet`、`DeleteSet`、`UpdateSetInfo`、`EnsureSetInfoBundle`。**关卡**：`ScanLevels`、`CreateLevel`（从 `Assets/Template` 复制场景 s_<id> 与 config_1p..4p、创建 LevelInfoSO、绑定 PseudoPrefabManagerStub.levelInfo、登记 levelInfos）、`UpdateLevelInfo/Config/Audio`、`AutoMergeAudioDependencies`、`PreviewDeleteLevel/DeleteLevel/ReorderLevels`、`SetDeathTheme`、`SetKillPlaneBounds`。**依赖分析**：`LoadBundleManifest`（bundle-manifest.json）、`BundleClosure`（传递闭包）、`AnalyzeBundles`（recipes/allIngredients/cookingSteps/matchLists/场景 YAML guid 扫描）。**上传**：`UploadImageFloor`、`UploadScreenshot`。**自定义菜谱**（约占一半）：`GetOrCreateCustomRecipeConfig`、`ScanCustomRecipes`、`GetCustomRecipeReferences`、`Create/Update/DeleteCustomRecipe`（uid 唯一性）、`UploadCustomRecipeIcon/Model`（FBX/OBJ+贴图落盘 + Unity 导入尺寸回传）、`DiagnoseCustomRecipe`、`SetRecipeModelTransform`、分类管理。模板常量均在 `Assets/Template/` |
 | **LayoutEditorCatalogApi.cs** | `ScanIngredients`（common01/02/03 + 关卡集 custom 目录；guid 脱同步自愈 `HealGuidDesync`）、`ScanRecipes`（官方 + 自定义 + commonW2，`RecipeKnowledge.ComputeCookingGroups` 分组）、`GetLevelRecipes/SetLevelRecipes`（写 LevelInfoSO.recipes → SyncLevelInfo 重建依赖 + HotPot/RoastTray Fill + **含汉堡菜谱时自动同步本关 BurgerOptional**：`SyncBurgerOptionalsForSavedRecipes` 重算夹心全集/bunSO 对齐主面包，并把 [BurgerOptional]+中间产物 merge 进 optionalRecipeMatchListItems，替换 auto-managed 旧条目、保留 hotdog/pizza/手动条目；须在 EnsureWebDependencies 之前执行以计入中间产物依赖）、Optional/Matchlist 管理（matchlist key 白名单 dlc02..dlc13/combineddlc）、`ComputeBurgerOptionalFill`（与自动同步共用 `SyncLevelBurgerOptionalAndGetItems`）、`BundleFileExists`（全项目依赖注册守门） |
-| **LayoutEditorBurgerApi.cs** | 汉堡工作台（#/burger-maker）：数据模型 = 成品汉堡 CustomRecipeSO(Composite) + 共享 `CustomRecipeOptionalBurgerSO`（bunSO + optionalSOs[] + 模型数组）；`GetDefinitions/CreateBurger/UpdateDefinition/GetLevelBurgerOptionalDefinition`；`SyncLevelBurgerOptionalFromBurgers`（**覆盖式**：夹心/bunSO/模型数组每次全量重建，模型绑定唯一来源 = commonW2 组装定义规范绑定，本关旧绑定不保留；bunSO 对齐所选汉堡主面包，多种面包告警） |
+| **LayoutEditorBurgerApi.cs** | 汉堡工作台（#/burger-maker）：数据模型 = 成品汉堡 CustomRecipeSO(Composite) + 共享 `CustomRecipeOptionalBurgerSO`（bunSO + optionalSOs[] + 模型数组）；`GetDefinitions/CreateBurger/UpdateDefinition/GetLevelBurgerOptionalDefinition`；`SyncLevelBurgerOptionalFromBurgers`（**覆盖式**：夹心/bunSO/模型数组每次全量重建；bunSO 对齐所选汉堡主面包，多种面包告警）。<br>2026-09-15：① `ResolveLayerModel` 加**第三级兜底** `CustomRecipeSO.model/modelSO`（自制夹心自动带模型，不必手工绑定）；② `CollectCandidates(setName, includeModelless)` 候选池放开为全量（官方食材 + commonW1 food 30 项盲区 + 官方菜谱节点 + 自定义中间产物/成品），每条带 modelState/iconState/iconFallbackIds/matchlistKey/bundleAvailable/recommended/previewable；自定义菜谱两条硬门槛：**成品汉堡不做夹心**（-47）、**无堆叠模型不收**（-7，`ModelStateOf` 判定，与 ResolveLayerModel 同口径），`includeModelless=1` 放行用于排查；`IsGenericIconName` 把 `FriedGeneric.png` 这类一图多用的占位图降级为 `generic`，前端据 `iconFallbackIds` 回退到叶食材图标；③ `ValidateFillerLayersAllowed` → `ValidateFillerLayers`（只硬拒 bundle 缺失，其余走 warnings）；④ `CollectModels` 双源（commonW2/models + `burger-model-pool.json` 524 条，选用时 `MaterializePoolModel` 按需落包装）；⑤ 组装定义查找改 `FindCommonW2Assembly` 递归扫描（细分类后模板在 `burger/assembly/`） |
+| **LayoutEditorMatchlistMap.cs** | DLC → RecipeMatchList 自动映射（2026-09-15 新增）：`MatchlistKeyOfAsset`（`assetPath` 的 `Assets/downloadablecontent/<dlcNN>/` 前缀）、`CollectRequiredMatchlistKeys`（递归遍历 recipes/optional/allIngredients/allCookingSteps，自定义菜谱下钻 composition/optional/bun/model/cookingStep/platingStep，visited 防环）、`EnsureRequiredMatchlists`（**只增不删 + BundleFileExists 守卫**，在 `SetLevelRecipes` 里必须早于 `EnsureWebDependencies`）、`SuggestDto`（诊断端点）。修复「早餐汉堡只能用面包接、不能用盘子接」 |
 | **LayoutEditorFloorMaterialsApi.cs** | `Scan(levelSet)`（关卡集 materials/ 优先，回退 common01/common02/commonW1）；`TryParseMaterialTilingSuffix` 等（往返恢复烘焙平铺） |
 | **LayoutEditorRecipeKnowledge.cs** | `BridgeSchemaVersion=5`；步骤→厨具表 `StepUtensils`；`ComputeCookingGroups`（与前端/build-catalog.mjs **三处镜像**）；`TryGetOriginal`/`TryGetOriginalEntry`（recipe-knowledge.json；条目含 step/ingredients + 扩展字段 composition/plating/orderable——官方菜谱经 ScanRecipes 下发 compositionIds/platingStep 给前端，与 build-catalog.mjs 静态输出对齐；orderable=true 解除 score<=0 的 intermediate 标记，如 DLC08_chickenburger 单点鸡肉汉堡） |
 | **LayoutEditorManualLookup.cs** | 中英文名：`names-dictionary.json` → 使用手册.md 表 → id 兜底；`TryGetLevelSetName` |

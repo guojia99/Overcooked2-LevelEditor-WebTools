@@ -1,0 +1,4724 @@
+{
+ "generatedAt": "2026-09-15T11:06:23.021Z",
+ "source": "dump_bundle/manifest.json",
+ "note": "汉堡堆叠层可绑定的原版模型池；assetPath 逐字符照抄 bundle 内实名（大小写敏感）。",
+ "count": 524,
+ "items": [
+  {
+   "id": "apple",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/apple.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "apple",
+   "stackable": false
+  },
+  {
+   "id": "bacon",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/bacon.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "bacon",
+   "stackable": false
+  },
+  {
+   "id": "banana",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/banana.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "banana",
+   "stackable": false
+  },
+  {
+   "id": "beef_roast",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/beef_roast.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "beefroast",
+   "stackable": false
+  },
+  {
+   "id": "blackberry",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/blackberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "blackberry",
+   "stackable": false
+  },
+  {
+   "id": "blueberry",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/blueberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "blueberry",
+   "stackable": false
+  },
+  {
+   "id": "bokchoy",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/bokchoy.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "bokchoy",
+   "stackable": false
+  },
+  {
+   "id": "broccoli",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/broccoli.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "broccoli",
+   "stackable": false
+  },
+  {
+   "id": "cherry",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/cherry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "cherry",
+   "stackable": false
+  },
+  {
+   "id": "chicken_roast",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/chicken_roast.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "chickenroast",
+   "stackable": false
+  },
+  {
+   "id": "chickenkebabchunk_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/chickenkebabchunk_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "chickenkebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "chickenkebabchunk_02",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/chickenkebabchunk_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "chickenkebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "chickenmeattomatokebab",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/chickenmeattomatokebab.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "chickenmeattomatokebab",
+   "stackable": false
+  },
+  {
+   "id": "chickentomatokebab",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/chickentomatokebab.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "chickentomatokebab",
+   "stackable": false
+  },
+  {
+   "id": "chopped_broccoli",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/chopped_broccoli.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "broccoli",
+   "stackable": false
+  },
+  {
+   "id": "chopped_pineapple_burger",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/chopped_pineapple_burger.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "pineappleburger",
+   "stackable": false
+  },
+  {
+   "id": "chopped_pineapple_smoothie",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/chopped_pineapple_smoothie.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "pineapplesmoothie",
+   "stackable": false
+  },
+  {
+   "id": "choppedapple",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/choppedapple.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "choppedapple",
+   "stackable": false
+  },
+  {
+   "id": "choppedbacon",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/choppedbacon.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedbacon",
+   "stackable": false
+  },
+  {
+   "id": "choppedbanana",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedbanana.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedbanana",
+   "stackable": false
+  },
+  {
+   "id": "choppedblackberry",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/choppedblackberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "choppedblackberry",
+   "stackable": false
+  },
+  {
+   "id": "choppedblueberry",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/choppedblueberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedblueberry",
+   "stackable": false
+  },
+  {
+   "id": "choppedbokchoy",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/choppedbokchoy.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "choppedbokchoy",
+   "stackable": false
+  },
+  {
+   "id": "choppedcherry",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/choppedcherry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "choppedcherry",
+   "stackable": false
+  },
+  {
+   "id": "choppedcucumber",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/choppedcucumber.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "choppedcucumber",
+   "stackable": false
+  },
+  {
+   "id": "choppeddriedfruit",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/choppeddriedfruit.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "choppeddriedfruit",
+   "stackable": false
+  },
+  {
+   "id": "choppedgrapes",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/choppedgrapes.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "choppedgrapes",
+   "stackable": false
+  },
+  {
+   "id": "choppedice",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/choppedice.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "choppedice",
+   "stackable": false
+  },
+  {
+   "id": "choppedkebobchicken",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedkebobchicken.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedkebobchicken",
+   "stackable": false
+  },
+  {
+   "id": "choppedkebobmeat",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedkebobmeat.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedkebobmeat",
+   "stackable": false
+  },
+  {
+   "id": "choppedkebobmushroom",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedkebobmushroom.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedkebobmushroom",
+   "stackable": false
+  },
+  {
+   "id": "choppedkebobpineapple",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedkebobpineapple.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedkebobpineapple",
+   "stackable": false
+  },
+  {
+   "id": "choppedkebobtomato",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedkebobtomato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedkebobtomato",
+   "stackable": false
+  },
+  {
+   "id": "choppedleek",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/choppedleek.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "choppedleek",
+   "stackable": false
+  },
+  {
+   "id": "choppedlettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/choppedlettuce.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "choppedlettuce",
+   "stackable": false
+  },
+  {
+   "id": "choppedmarshmallow",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/choppedmarshmallow.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "choppedmarshmallow",
+   "stackable": false
+  },
+  {
+   "id": "choppedmelon",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedmelon.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedmelon",
+   "stackable": false
+  },
+  {
+   "id": "choppedmushroom",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/choppedmushroom.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "choppedmushroom",
+   "stackable": false
+  },
+  {
+   "id": "choppedolive",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/choppedolive.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedolive",
+   "stackable": false
+  },
+  {
+   "id": "choppedonion",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/choppedonion.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "choppedonion",
+   "stackable": false
+  },
+  {
+   "id": "choppedorange",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/choppedorange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "choppedorange",
+   "stackable": false
+  },
+  {
+   "id": "choppedpancakestrawberry",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedpancakestrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedpancakestrawberry",
+   "stackable": false
+  },
+  {
+   "id": "choppedpastatomato",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/choppedpastatomato.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "choppedpastatomato",
+   "stackable": false
+  },
+  {
+   "id": "choppedpeach",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/choppedpeach.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "choppedpeach",
+   "stackable": false
+  },
+  {
+   "id": "choppedsausage",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/choppedsausage.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedsausage",
+   "stackable": false
+  },
+  {
+   "id": "choppedsmoothiestrawberry",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/choppedsmoothiestrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedsmoothiestrawberry",
+   "stackable": false
+  },
+  {
+   "id": "choppedtomato",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/choppedtomato.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "choppedtomato",
+   "stackable": false
+  },
+  {
+   "id": "compositechickennuggetsandchips",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/compositechickennuggetsandchips.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "compositechickennuggetsandchips",
+   "stackable": false
+  },
+  {
+   "id": "compositepasta",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/compositepasta.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "compositepasta",
+   "stackable": false
+  },
+  {
+   "id": "cucumber",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/cucumber.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "cucumber",
+   "stackable": false
+  },
+  {
+   "id": "dlc02_choppedbun",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/dlc02_choppedbun.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "choppedbun",
+   "stackable": false
+  },
+  {
+   "id": "dlc03_chocolate",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/dlc03_chocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "chocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc03_choppedchocolate",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/dlc03_choppedchocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "choppedchocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc04_choppedmeat",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/dlc04_choppedmeat.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "choppedmeat",
+   "stackable": false
+  },
+  {
+   "id": "dlc04_choppedorange",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/dlc04_choppedorange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "choppedorange",
+   "stackable": false
+  },
+  {
+   "id": "dlc04_choppedprawn",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/dlc04_choppedprawn.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "choppedprawn",
+   "stackable": false
+  },
+  {
+   "id": "dlc04_meat",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/dlc04_meat.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "meat",
+   "stackable": false
+  },
+  {
+   "id": "dlc04_orange",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/dlc04_orange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "orange",
+   "stackable": false
+  },
+  {
+   "id": "dlc04_prawn",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/dlc04_prawn.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "prawn",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_banana",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_banana.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "banana",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_beans",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_beans.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "beans",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_chocolate",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_chocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "chocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_choppedbanana",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_choppedbanana.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedbanana",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_choppedchocolate",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_choppedchocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedchocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_choppedmarshmallow",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_choppedmarshmallow.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedmarshmallow",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_choppedstrawberry",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_choppedstrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedstrawberry",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_choppedwood",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_choppedwood.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "choppedwood",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_crackers",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_crackers.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "crackers",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_dough",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_dough.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "dough",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_egg",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_egg.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "egg",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_marshmallow",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_marshmallow.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "marshmallow",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_pizza_base_raw",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_pizza_base_raw.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "pizzabaseraw",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_plated_olive",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_plated_olive.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "olive",
+   "stackable": true
+  },
+  {
+   "id": "dlc05_strawberry",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_strawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "strawberry",
+   "stackable": false
+  },
+  {
+   "id": "dlc05_wood",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc05_wood.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "wood",
+   "stackable": false
+  },
+  {
+   "id": "dlc07_carrot",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/dlc07_carrot.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "carrot",
+   "stackable": false
+  },
+  {
+   "id": "dlc07_cheese",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/dlc07_cheese.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "cheese",
+   "stackable": false
+  },
+  {
+   "id": "dlc07_chopped_carrot",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/dlc07_chopped_carrot.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "carrot",
+   "stackable": false
+  },
+  {
+   "id": "dlc07_chopped_potato",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/dlc07_chopped_potato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "potato",
+   "stackable": false
+  },
+  {
+   "id": "dlc07_choppedcheese",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/dlc07_choppedcheese.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "choppedcheese",
+   "stackable": false
+  },
+  {
+   "id": "dlc07_potato",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/dlc07_potato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "potato",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_cheese_sticks",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_cheese_sticks.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "cheesesticks",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_chicken",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_chicken.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "chicken",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_chopped_potato",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_chopped_potato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "potato",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_choppedbun",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_choppedbun.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "choppedbun",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_choppedcheese_sticks",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_choppedcheese_sticks.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "choppedcheesesticks",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_choppedchicken",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_choppedchicken.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "choppedchicken",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_choppedonion",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_choppedonion.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "choppedonion",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_choppedonion_ring",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_choppedonion_ring.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "choppedonionring",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_onion",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_onion.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "onion",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_onion_ring",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_onion_ring.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "onionring",
+   "stackable": false
+  },
+  {
+   "id": "dlc08_potato",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_potato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "potato",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_beef_roast",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_beef_roast.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "beefroast",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_broccoli",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_broccoli.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "broccoli",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_carrot",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_carrot.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "carrot",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_chicken_roast",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_chicken_roast.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "chickenroast",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_chocolate",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_chocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "chocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_chopped_broccoli",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_chopped_broccoli.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "broccoli",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_chopped_carrot",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_chopped_carrot.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "carrot",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_chopped_potato",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_chopped_potato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "potato",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_choppedchocolate",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_choppedchocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "choppedchocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_choppeddriedfruit",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_choppeddriedfruit.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "choppeddriedfruit",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_choppedmarshmallow",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_choppedmarshmallow.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "choppedmarshmallow",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_choppedorange",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_choppedorange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "choppedorange",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_choppedpancakestrawberry",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_choppedpancakestrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "choppedpancakestrawberry",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_driedfruit",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_driedfruit.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "driedfruit",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_egg",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_egg.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "egg",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_flour",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_flour.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "flour",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_ingredients_cream",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_ingredients_cream.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "ingredientscream",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_ingredients_cream_mallow",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_ingredients_cream_mallow.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "ingredientscreammallow",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_ingredients_cupmarshmallows",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_ingredients_cupmarshmallows.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "ingredientscupmarshmallows",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_marshmallow",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_marshmallow.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "marshmallow",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_milk",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_milk.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "milk",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_orange",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_orange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "orange",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_pancakestrawberry",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_pancakestrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "pancakestrawberry",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_potato",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_potato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "potato",
+   "stackable": false
+  },
+  {
+   "id": "dlc09_whippedcream",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/dlc09_whippedcream.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "whippedcream",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_bokchoy",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_bokchoy.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "bokchoy",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_choppedbokchoy",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_choppedbokchoy.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "choppedbokchoy",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_choppedgrapes",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_choppedgrapes.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "choppedgrapes",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_choppedmeat",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_choppedmeat.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "choppedmeat",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_choppedorange",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_choppedorange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "choppedorange",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_choppedpeach",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_choppedpeach.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "choppedpeach",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_choppedprawn",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_choppedprawn.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "choppedprawn",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_grapes",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_grapes.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "grapes",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_meat",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_meat.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "meat",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_noodles",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_noodles.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "noodles",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_noodlesoup_bnm",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_noodlesoup_bnm.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "noodlesoupbnm",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_noodlesoup_nbmm",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_noodlesoup_nbmm.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "noodlesoupnbmm",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_noodlesoup_nbmp",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_noodlesoup_nbmp.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "noodlesoupnbmp",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_noodlesoup_nbp",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_noodlesoup_nbp.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "noodlesoupnbp",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_noodlesoup_nbpp",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_noodlesoup_nbpp.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "noodlesoupnbpp",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_orange",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_orange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "orange",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_peach",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_peach.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "peach",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_plated_grapes_01",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_plated_grapes_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "grapes",
+   "stackable": true
+  },
+  {
+   "id": "dlc10_plated_orange_01",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_plated_orange_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "orange",
+   "stackable": true
+  },
+  {
+   "id": "dlc10_plated_peach_01",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_plated_peach_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "peach",
+   "stackable": true
+  },
+  {
+   "id": "dlc10_prawn",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_prawn.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "prawn",
+   "stackable": false
+  },
+  {
+   "id": "dlc10_recipe_fruitsalad_01",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_recipe_fruitsalad_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "fruitsalad",
+   "stackable": true
+  },
+  {
+   "id": "dlc10_recipe_fruitsalad_02",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_recipe_fruitsalad_02.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "fruitsalad",
+   "stackable": true
+  },
+  {
+   "id": "dlc10_recipe_fruitsalad_03",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_recipe_fruitsalad_03.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "fruitsalad",
+   "stackable": true
+  },
+  {
+   "id": "dlc10_recipe_fruitsalad_04",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/recipes/dlc10_recipe_fruitsalad_04.prefab",
+   "kind": "recipes",
+   "dlc": "dlc10",
+   "norm": "fruitsalad",
+   "stackable": true
+  },
+  {
+   "id": "dlc10_wrong_ingredients_sludge_01",
+   "bundle": "bundle421",
+   "assetPath": "assets/downloadablecontent/dlc10/dlc_assets/prefabs/ingredients/dlc10_wrong_ingredients_sludge_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc10",
+   "norm": "wrongingredientssludge",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_choppedcorn",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_choppedcorn.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "choppedcorn",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_choppedcucumber",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_choppedcucumber.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "choppedcucumber",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_choppedlettuce",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_choppedlettuce.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "choppedlettuce",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_choppedonion",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_choppedonion.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "choppedonion",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_choppedonion_salad",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_choppedonion_salad.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "choppedonionsalad",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_choppedtomato",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_choppedtomato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "choppedtomato",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_choppedvanilla",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_choppedvanilla.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "choppedvanilla",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_compositefloat",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/meals/dlc11_compositefloat.prefab",
+   "kind": "meals",
+   "dlc": "dlc11",
+   "norm": "compositefloat",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_compositesalad",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/meals/dlc11_compositesalad.prefab",
+   "kind": "meals",
+   "dlc": "dlc11",
+   "norm": "compositesalad",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_corn",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_corn.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "corn",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_cucumber",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_cucumber.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "cucumber",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_frankfurter",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_frankfurter.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurter",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_hotdogbun",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_hotdogbun.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogbun",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_hotdogbun_chopped",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_hotdogbun_chopped.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogbunchopped",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_lettuce",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_lettuce.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "lettuce",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_milk",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_milk.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "milk",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_onion",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_onion.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "onion",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_onion_salad",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_onion_salad.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "onionsalad",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_tomato",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_tomato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "tomato",
+   "stackable": false
+  },
+  {
+   "id": "dlc11_vanilla",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/dlc11_vanilla.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "vanilla",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_chocolate",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_chocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "chocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_choppedchocolate",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_choppedchocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "choppedchocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_choppedgrapes",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_choppedgrapes.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "choppedgrapes",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_choppedmelon",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_choppedmelon.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "choppedmelon",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_choppedorange",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_choppedorange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "choppedorange",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_choppedpeach",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_choppedpeach.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "choppedpeach",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_choppedstrawberry",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_choppedstrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "choppedstrawberry",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_egg",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_egg.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "egg",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_flour",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_flour.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "flour",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_grapes",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_grapes.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "grapes",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_melon",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_melon.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "melon",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_mooncakechocolate",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_mooncakechocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "mooncakechocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_mooncakestrawberry",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_mooncakestrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "mooncakestrawberry",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_mooncakestrawberrychocolate",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_mooncakestrawberrychocolate.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "mooncakestrawberrychocolate",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_mooncakewatermelon",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_mooncakewatermelon.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "mooncakewatermelon",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_orange",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_orange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "orange",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_peach",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_peach.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "peach",
+   "stackable": false
+  },
+  {
+   "id": "dlc13_strawberry",
+   "bundle": "bundle449",
+   "assetPath": "assets/downloadablecontent/dlc13/assets/prefabs/ingredients/dlc13_strawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc13",
+   "norm": "strawberry",
+   "stackable": false
+  },
+  {
+   "id": "dlc5_plated_bacon_beans_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_plated_bacon_beans_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "baconbeans",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_plated_bacon_egg_beans_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_plated_bacon_egg_beans_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "baconeggbeans",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_plated_bacon_sausage_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_plated_bacon_sausage_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "baconsausage",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_plated_bacon_sausage_beans_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_plated_bacon_sausage_beans_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "baconsausagebeans",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_plated_banana_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_plated_banana_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "banana",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_plated_egg_beans_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_plated_egg_beans_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "eggbeans",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_plated_egg_sausage_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_plated_egg_sausage_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "eggsausage",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_plated_strawberry_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_plated_strawberry_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "strawberry",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_prep_bacon_02",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_prep_bacon_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "bacon",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_prep_beans_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_prep_beans_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "beans",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_prep_egg_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_prep_egg_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "egg",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_prep_sausages_02",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_prep_sausages_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "sausages",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_prep_smores_marshmallow_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/dlc5_prep_smores_marshmallow_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "smoresmarshmallow",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_bacon_egg_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_bacon_egg_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "baconegg",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_bacon_egg_sausage_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_bacon_egg_sausage_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "baconeggsausage",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_bacon_egg_sausage_beans_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_bacon_egg_sausage_beans_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "baconeggsausagebeans",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_blueberry_pancake_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_blueberry_pancake_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "blueberrypancake",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_ruined_marshmallow_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_ruined_marshmallow_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "ruinedmarshmallow",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_sausage_beans_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_sausage_beans_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "sausagebeans",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_sausage_egg_beans_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_sausage_egg_beans_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "sausageeggbeans",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_smores_banana_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_smores_banana_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "smoresbanana",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_smores_chocolate_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_smores_chocolate_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "smoreschocolate",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_smores_marshmallow_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_smores_marshmallow_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "smoresmarshmallow",
+   "stackable": true
+  },
+  {
+   "id": "dlc5_recipe_smores_strawberry_01",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/recipes/dlc5_recipe_smores_strawberry_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc05",
+   "norm": "smoresstrawberry",
+   "stackable": true
+  },
+  {
+   "id": "driedfruit",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/driedfruit.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "driedfruit",
+   "stackable": false
+  },
+  {
+   "id": "drink01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/drink01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "drink",
+   "stackable": false
+  },
+  {
+   "id": "drink02",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/drink02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "drink",
+   "stackable": false
+  },
+  {
+   "id": "drink03",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/drink03.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "drink",
+   "stackable": false
+  },
+  {
+   "id": "frankfurter",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/frankfurter.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurter",
+   "stackable": false
+  },
+  {
+   "id": "grapes",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/grapes.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "grapes",
+   "stackable": false
+  },
+  {
+   "id": "hotdogbun",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/hotdogbun.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogbun",
+   "stackable": false
+  },
+  {
+   "id": "hotdogbun_chopped",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/hotdogbun_chopped.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogbunchopped",
+   "stackable": false
+  },
+  {
+   "id": "icecube",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/icecube.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "icecube",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_bun_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_bun_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientsbun",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_cheese_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_cheese_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientscheese",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_chicken_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_chicken_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientschicken",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_chocolate_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_chocolate_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientschocolate",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_chocolate_sliced_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_chocolate_sliced_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientschocolatesliced",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_cream_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/ingredients_cream_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "ingredientscream",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_cream_mallow_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/ingredients_cream_mallow_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "ingredientscreammallow",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_cupmarshmallows_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/ingredients_cupmarshmallows_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "ingredientscupmarshmallows",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_dough_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_dough_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientsdough",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_egg_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_egg_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientsegg",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_flour_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_flour_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientsflour",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_meat_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_meat_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientsmeat",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_pasta_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_pasta_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientspasta",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_pepperoni_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_pepperoni_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientspepperoni",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_potato_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_potato_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientspotato",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_rice_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_rice_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientsrice",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_rice_boiled_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_rice_boiled_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientsriceboiled",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_tortilla_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_tortilla_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientstortilla",
+   "stackable": false
+  },
+  {
+   "id": "ingredients_tortilla_wrapped_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/ingredients_tortilla_wrapped_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "ingredientstortillawrapped",
+   "stackable": false
+  },
+  {
+   "id": "kebobchicken",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/kebobchicken.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "kebobchicken",
+   "stackable": false
+  },
+  {
+   "id": "kebobmeat",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/kebobmeat.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "kebobmeat",
+   "stackable": false
+  },
+  {
+   "id": "kebobmushroom",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/kebobmushroom.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "kebobmushroom",
+   "stackable": false
+  },
+  {
+   "id": "kebobpineapple",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/kebobpineapple.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "kebobpineapple",
+   "stackable": false
+  },
+  {
+   "id": "kebobtomato",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/kebobtomato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "kebobtomato",
+   "stackable": false
+  },
+  {
+   "id": "leek",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/leek.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "leek",
+   "stackable": false
+  },
+  {
+   "id": "lettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/lettuce.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "lettuce",
+   "stackable": false
+  },
+  {
+   "id": "m_recipe_sushi_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/m_recipe_sushi_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "sushi",
+   "stackable": true
+  },
+  {
+   "id": "m_recipe_sushi_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/m_recipe_sushi_02.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "sushi",
+   "stackable": true
+  },
+  {
+   "id": "m_recipe_sushi_03",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/m_recipe_sushi_03.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "sushi",
+   "stackable": true
+  },
+  {
+   "id": "m_recipe_sushi_04",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/m_recipe_sushi_04.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "sushi",
+   "stackable": true
+  },
+  {
+   "id": "marshmallow",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/marshmallow.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "marshmallow",
+   "stackable": false
+  },
+  {
+   "id": "meatkebabchunk_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/meatkebabchunk_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "meatkebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "meatkebabchunk_02",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/meatkebabchunk_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "meatkebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "meatpineapplemushroomkebab",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/meatpineapplemushroomkebab.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "meatpineapplemushroomkebab",
+   "stackable": false
+  },
+  {
+   "id": "melon",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/melon.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "melon",
+   "stackable": false
+  },
+  {
+   "id": "milk",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/milk.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "milk",
+   "stackable": false
+  },
+  {
+   "id": "mushroom",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/mushroom.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "mushroom",
+   "stackable": false
+  },
+  {
+   "id": "mushroomkebabchunk_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/mushroomkebabchunk_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "mushroomkebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "mushroomkebabchunk_02",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/mushroomkebabchunk_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "mushroomkebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "mushroompineappletomatokebab",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/mushroompineappletomatokebab.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "mushroompineappletomatokebab",
+   "stackable": false
+  },
+  {
+   "id": "noodles",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/noodles.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "noodles",
+   "stackable": false
+  },
+  {
+   "id": "noodlesoup_bnm",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/noodlesoup_bnm.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "noodlesoupbnm",
+   "stackable": false
+  },
+  {
+   "id": "noodlesoup_nbmm",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/noodlesoup_nbmm.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "noodlesoupnbmm",
+   "stackable": false
+  },
+  {
+   "id": "noodlesoup_nbmp",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/noodlesoup_nbmp.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "noodlesoupnbmp",
+   "stackable": false
+  },
+  {
+   "id": "noodlesoup_nbp",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/noodlesoup_nbp.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "noodlesoupnbp",
+   "stackable": false
+  },
+  {
+   "id": "noodlesoup_nbpp",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/noodlesoup_nbpp.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "noodlesoupnbpp",
+   "stackable": false
+  },
+  {
+   "id": "olive",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/olive.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "olive",
+   "stackable": false
+  },
+  {
+   "id": "onion",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/onion.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "onion",
+   "stackable": false
+  },
+  {
+   "id": "orange",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/orange.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "orange",
+   "stackable": false
+  },
+  {
+   "id": "p_dlc09_recipe_strawberry_pancake",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc09_recipe_strawberry_pancake.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "strawberrypancake",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_frankfurter_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_frankfurter_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurter",
+   "stackable": false
+  },
+  {
+   "id": "p_dlc11_hotdog_bun_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_hotdog_bun_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogbun",
+   "stackable": false
+  },
+  {
+   "id": "p_dlc11_plated_frankfurter_k_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_frankfurter_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurterk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_frankfurter_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_frankfurter_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurterm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_frankfurter_m_k_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_frankfurter_m_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurtermk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_frankfurter_o_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_frankfurter_o_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurtero",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_frankfurter_o_k_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_frankfurter_o_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurterok",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_frankfurter_o_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_frankfurter_o_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurterom",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_hotdog_k_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_hotdog_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_hotdog_k_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_hotdog_k_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogkm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_hotdog_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_hotdog_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_hotdog_o_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_hotdog_o_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogo",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_hotdog_o_k_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_hotdog_o_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogok",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_hotdog_o_k_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_hotdog_o_k_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogokm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_hotdog_o_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_hotdog_o_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogom",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_onion_k_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_onion_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "onionk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_onion_k_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_onion_k_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "onionkm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_plated_onion_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_plated_onion_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "onionm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_prep_frank_onions_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_prep_frank_onions_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankonions",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_prep_frankfurter_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_prep_frankfurter_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "frankfurter",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_recipe_hotdog_f_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_recipe_hotdog_f_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogf",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_recipe_hotdog_f_k_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_recipe_hotdog_f_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogfk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_recipe_hotdog_f_k_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_recipe_hotdog_f_k_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogfkm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_recipe_hotdog_f_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_recipe_hotdog_f_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogfm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_recipe_hotdog_f_o_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_recipe_hotdog_f_o_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogfo",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_recipe_hotdog_f_o_k_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_recipe_hotdog_f_o_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogfok",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc11_recipe_hotdog_f_o_m_01",
+   "bundle": "bundle428",
+   "assetPath": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/ingredients/p_dlc11_recipe_hotdog_f_o_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc11",
+   "norm": "hotdogfom",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_broccoli_02",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_broccoli_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "broccoli",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_broccoli_03",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_broccoli_03.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "broccoli",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_carrot_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_carrot_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "carrot",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_carrot_02",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_carrot_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "carrot",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_potato_02",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_potato_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "potato",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_potato_03",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_potato_03.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "potato",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_roastbeef_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_roastbeef_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "roastbeef",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_roastbeef_02",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_roastbeef_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "roastbeef",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_roastchicken_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_roastchicken_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "roastchicken",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_prep_roastchicken_02",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/ingredients/p_dlc7_prep_roastchicken_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc07",
+   "norm": "roastchicken",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_beef_potato_carrot_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_beef_potato_carrot_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "beefpotatocarrot",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_beef_potato_carrot_broccoli_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_beef_potato_carrot_broccoli_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "beefpotatocarrotbroccoli",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_broccoli_cheese_soup_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_broccoli_cheese_soup_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "broccolicheesesoup",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_carrot_potato_soup_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_carrot_potato_soup_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "carrotpotatosoup",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_chicken_potato_carrot_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_chicken_potato_carrot_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "chickenpotatocarrot",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_chicken_potato_carrot_broccoli_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_chicken_potato_carrot_broccoli_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "chickenpotatocarrotbroccoli",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_leek_potato_soup_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_leek_potato_soup_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "leekpotatosoup",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_pie_apple_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_pie_apple_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "pieapple",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_pie_apple_blackberry_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_pie_apple_blackberry_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "pieappleblackberry",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_pie_apple_cherry_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_pie_apple_cherry_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "pieapplecherry",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_pie_blackberry_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_pie_blackberry_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "pieblackberry",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc7_recipe_pie_cherry_01",
+   "bundle": "bundle297",
+   "assetPath": "assets/downloadablecontent/dlc07/dlc_assets/prefabs/recipes/p_dlc7_recipe_pie_cherry_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc07",
+   "norm": "piecherry",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_frankfurter_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_frankfurter_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurter",
+   "stackable": false
+  },
+  {
+   "id": "p_dlc8_hotdog_bun_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_hotdog_bun_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogbun",
+   "stackable": false
+  },
+  {
+   "id": "p_dlc8_plated_frankfurter_k_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_frankfurter_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurterk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_frankfurter_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_frankfurter_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurterm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_frankfurter_m_k_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_frankfurter_m_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurtermk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_frankfurter_o_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_frankfurter_o_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurtero",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_frankfurter_o_k_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_frankfurter_o_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurterok",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_frankfurter_o_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_frankfurter_o_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurterom",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_hotdog_k_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_hotdog_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_hotdog_k_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_hotdog_k_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogkm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_hotdog_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_hotdog_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_hotdog_o_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_hotdog_o_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogo",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_hotdog_o_k_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_hotdog_o_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogok",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_hotdog_o_k_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_hotdog_o_k_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogokm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_hotdog_o_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_hotdog_o_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogom",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_onion_k_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_onion_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "onionk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_onion_k_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_onion_k_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "onionkm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_plated_onion_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_plated_onion_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "onionm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_prep_chicken_burger_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_prep_chicken_burger_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "chickenburger",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_prep_frank_onions_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_prep_frank_onions_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankonions",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_prep_frankfurter_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_prep_frankfurter_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "frankfurter",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_cheesestick_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_cheesestick_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "cheesestick",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_chicken_burger_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_chicken_burger_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "chickenburger",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_donuts_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_donuts_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "donuts",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_donuts_02",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_donuts_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "donuts",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_donuts_03",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_donuts_03.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "donuts",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_fries_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_fries_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "fries",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_hotdog_f_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_hotdog_f_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogf",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_hotdog_f_k_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_hotdog_f_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogfk",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_hotdog_f_k_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_hotdog_f_k_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogfkm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_hotdog_f_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_hotdog_f_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogfm",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_hotdog_f_o_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_hotdog_f_o_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogfo",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_hotdog_f_o_k_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_hotdog_f_o_k_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogfok",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_hotdog_f_o_m_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_hotdog_f_o_m_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "hotdogfom",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc8_recipe_onionrings_01",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/p_dlc8_recipe_onionrings_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "onionrings",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_prep_broccoli",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/p_dlc9_prep_broccoli.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "broccoli",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_prep_carrot",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/p_dlc9_prep_carrot.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "carrot",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_prep_christmaspudding",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/p_dlc9_prep_christmaspudding.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "christmaspudding",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_prep_mincepies",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/p_dlc9_prep_mincepies.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "mincepies",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_prep_potato",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/p_dlc9_prep_potato.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "potato",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_prep_roastbeef",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/p_dlc9_prep_roastbeef.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "roastbeef",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_prep_roastchicken",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/p_dlc9_prep_roastchicken.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "roastchicken",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_prep_strawberry_pancake",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/ingredients/p_dlc9_prep_strawberry_pancake.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc09",
+   "norm": "strawberrypancake",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_beef_potato_carrot",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_beef_potato_carrot.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "beefpotatocarrot",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_beef_potato_carrot_broccoli",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_beef_potato_carrot_broccoli.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "beefpotatocarrotbroccoli",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_chicken_potato_carrot",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_chicken_potato_carrot.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "chickenpotatocarrot",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_chicken_potato_carrot_broccoli",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_chicken_potato_carrot_broccoli.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "chickenpotatocarrotbroccoli",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_christmaspudding",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_christmaspudding.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "christmaspudding",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_hotchoc",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_hotchoc.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "hotchoc",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_hotchoc_cream",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_hotchoc_cream.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "hotchoccream",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_hotchoc_cream_mallows",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_hotchoc_cream_mallows.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "hotchoccreammallows",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_hotchoc_mallows",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_hotchoc_mallows.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "hotchocmallows",
+   "stackable": true
+  },
+  {
+   "id": "p_dlc9_recipe_mincepies",
+   "bundle": "bundle405",
+   "assetPath": "assets/downloadablecontent/dlc09/dlc_assets/prefabs/recipes/p_dlc9_recipe_mincepies.prefab",
+   "kind": "recipes",
+   "dlc": "dlc09",
+   "norm": "mincepies",
+   "stackable": true
+  },
+  {
+   "id": "pancakestrawberry",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/pancakestrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "pancakestrawberry",
+   "stackable": false
+  },
+  {
+   "id": "peach",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/peach.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "peach",
+   "stackable": false
+  },
+  {
+   "id": "pineapple_burger",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/pineapple_burger.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "pineappleburger",
+   "stackable": false
+  },
+  {
+   "id": "pineapple_smoothie",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/pineapple_smoothie.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "pineapplesmoothie",
+   "stackable": false
+  },
+  {
+   "id": "pineappleburgerslice",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/pineappleburgerslice.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "pineappleburgerslice",
+   "stackable": false
+  },
+  {
+   "id": "pineapplekebabchunk_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/pineapplekebabchunk_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "pineapplekebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "pineapplekebabchunk_02",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/pineapplekebabchunk_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "pineapplekebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "plated_bun_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_bun_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "bun",
+   "stackable": true
+  },
+  {
+   "id": "plated_bun_cheese",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_bun_cheese.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "buncheese",
+   "stackable": true
+  },
+  {
+   "id": "plated_bun_lettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_bun_lettuce.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "bunlettuce",
+   "stackable": true
+  },
+  {
+   "id": "plated_bun_meat_lettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_bun_meat_lettuce.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "bunmeatlettuce",
+   "stackable": true
+  },
+  {
+   "id": "plated_bun_meat_tomato",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_bun_meat_tomato.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "bunmeattomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_bun_tomato",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_bun_tomato.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "buntomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_burrito_chicken_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_burrito_chicken_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "burritochicken",
+   "stackable": true
+  },
+  {
+   "id": "plated_burrito_meat_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_burrito_meat_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "burritomeat",
+   "stackable": true
+  },
+  {
+   "id": "plated_burrito_mushroom_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_burrito_mushroom_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "burritomushroom",
+   "stackable": true
+  },
+  {
+   "id": "plated_burrito_rice_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_burrito_rice_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "burritorice",
+   "stackable": true
+  },
+  {
+   "id": "plated_cheese",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_cheese.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "cheese",
+   "stackable": true
+  },
+  {
+   "id": "plated_cheese_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_cheese_02.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "cheese",
+   "stackable": true
+  },
+  {
+   "id": "plated_cheese_03",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_cheese_03.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "cheese",
+   "stackable": true
+  },
+  {
+   "id": "plated_cheese_lettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_cheese_lettuce.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "cheeselettuce",
+   "stackable": true
+  },
+  {
+   "id": "plated_cheeseburger",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_cheeseburger.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "cheeseburger",
+   "stackable": true
+  },
+  {
+   "id": "plated_chicken_chips",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_chicken_chips.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "chickenchips",
+   "stackable": true
+  },
+  {
+   "id": "plated_cucumber",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_cucumber.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "cucumber",
+   "stackable": true
+  },
+  {
+   "id": "plated_cucumber_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_cucumber_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "cucumber",
+   "stackable": true
+  },
+  {
+   "id": "plated_cucumber_tomato_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_cucumber_tomato_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "cucumbertomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_dough_cheese",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_dough_cheese.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "doughcheese",
+   "stackable": true
+  },
+  {
+   "id": "plated_dough_cheese_chicken",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_dough_cheese_chicken.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "doughcheesechicken",
+   "stackable": true
+  },
+  {
+   "id": "plated_dough_cheese_pepperoni",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_dough_cheese_pepperoni.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "doughcheesepepperoni",
+   "stackable": true
+  },
+  {
+   "id": "plated_dough_chicken",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_dough_chicken.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "doughchicken",
+   "stackable": true
+  },
+  {
+   "id": "plated_dough_pepperoni",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_dough_pepperoni.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "doughpepperoni",
+   "stackable": true
+  },
+  {
+   "id": "plated_dough_tomato",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_dough_tomato.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "doughtomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_dough_tomato_chicken",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_dough_tomato_chicken.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "doughtomatochicken",
+   "stackable": true
+  },
+  {
+   "id": "plated_dough_tomato_pepperoni",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_dough_tomato_pepperoni.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "doughtomatopepperoni",
+   "stackable": true
+  },
+  {
+   "id": "plated_fish",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_fish.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "fish",
+   "stackable": true
+  },
+  {
+   "id": "plated_fish_prawn_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_fish_prawn_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "fishprawn",
+   "stackable": true
+  },
+  {
+   "id": "plated_fish_sliced_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_fish_sliced_02.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "fishsliced",
+   "stackable": true
+  },
+  {
+   "id": "plated_grapes_01",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/plated_grapes_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "grapes",
+   "stackable": true
+  },
+  {
+   "id": "plated_lettuce_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_lettuce_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "lettuce",
+   "stackable": true
+  },
+  {
+   "id": "plated_lettuce_cucumber",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_lettuce_cucumber.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "lettucecucumber",
+   "stackable": true
+  },
+  {
+   "id": "plated_lettuce_tomato",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_lettuce_tomato.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "lettucetomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_lettucetomatoburger",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_lettucetomatoburger.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "lettucetomatoburger",
+   "stackable": true
+  },
+  {
+   "id": "plated_meat_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_meat_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "meat",
+   "stackable": true
+  },
+  {
+   "id": "plated_meat_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_meat_02.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "meat",
+   "stackable": true
+  },
+  {
+   "id": "plated_meat_cheese",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_meat_cheese.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "meatcheese",
+   "stackable": true
+  },
+  {
+   "id": "plated_meat_cheese_lettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_meat_cheese_lettuce.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "meatcheeselettuce",
+   "stackable": true
+  },
+  {
+   "id": "plated_meat_lettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_meat_lettuce.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "meatlettuce",
+   "stackable": true
+  },
+  {
+   "id": "plated_meat_tomato",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_meat_tomato.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "meattomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_meat_tomato_lettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_meat_tomato_lettuce.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "meattomatolettuce",
+   "stackable": true
+  },
+  {
+   "id": "plated_mushroom_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_mushroom_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "mushroom",
+   "stackable": true
+  },
+  {
+   "id": "plated_mushroom_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_mushroom_02.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "mushroom",
+   "stackable": true
+  },
+  {
+   "id": "plated_orange_01",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/plated_orange_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "orange",
+   "stackable": true
+  },
+  {
+   "id": "plated_pasta_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pasta_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pasta",
+   "stackable": true
+  },
+  {
+   "id": "plated_pasta_fish_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pasta_fish_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pastafish",
+   "stackable": true
+  },
+  {
+   "id": "plated_pasta_prawn_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pasta_prawn_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pastaprawn",
+   "stackable": true
+  },
+  {
+   "id": "plated_pasta_wrong_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pasta_wrong_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pastawrong",
+   "stackable": true
+  },
+  {
+   "id": "plated_pasta_wrong_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pasta_wrong_02.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pastawrong",
+   "stackable": true
+  },
+  {
+   "id": "plated_peach_01",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/plated_peach_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "peach",
+   "stackable": true
+  },
+  {
+   "id": "plated_pizza_chicken",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pizza_chicken.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pizzachicken",
+   "stackable": true
+  },
+  {
+   "id": "plated_pizza_chicken_raw",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pizza_chicken_raw.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pizzachickenraw",
+   "stackable": true
+  },
+  {
+   "id": "plated_pizza_mozarella",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pizza_mozarella.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pizzamozarella",
+   "stackable": true
+  },
+  {
+   "id": "plated_pizza_pepperoni",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pizza_pepperoni.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pizzapepperoni",
+   "stackable": true
+  },
+  {
+   "id": "plated_pizza_tomato_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_pizza_tomato_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "pizzatomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_planeburger",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_planeburger.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "planeburger",
+   "stackable": true
+  },
+  {
+   "id": "plated_prawn_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_prawn_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "prawn",
+   "stackable": true
+  },
+  {
+   "id": "plated_rice",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_rice.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "rice",
+   "stackable": true
+  },
+  {
+   "id": "plated_rice_chicken",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_rice_chicken.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "ricechicken",
+   "stackable": true
+  },
+  {
+   "id": "plated_rice_fish_cucumber",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_rice_fish_cucumber.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "ricefishcucumber",
+   "stackable": true
+  },
+  {
+   "id": "plated_rice_meat",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_rice_meat.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "ricemeat",
+   "stackable": true
+  },
+  {
+   "id": "plated_rice_mushroom",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_rice_mushroom.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "ricemushroom",
+   "stackable": true
+  },
+  {
+   "id": "plated_seaweed",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_seaweed.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "seaweed",
+   "stackable": true
+  },
+  {
+   "id": "plated_seaweed_cucumber",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_seaweed_cucumber.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "seaweedcucumber",
+   "stackable": true
+  },
+  {
+   "id": "plated_seaweed_cucumber_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_seaweed_cucumber_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "seaweedcucumber",
+   "stackable": true
+  },
+  {
+   "id": "plated_seaweed_cucumber_fish",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_seaweed_cucumber_fish.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "seaweedcucumberfish",
+   "stackable": true
+  },
+  {
+   "id": "plated_seaweed_fish",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_seaweed_fish.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "seaweedfish",
+   "stackable": true
+  },
+  {
+   "id": "plated_seaweed_fish_cucumber_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_seaweed_fish_cucumber_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "seaweedfishcucumber",
+   "stackable": true
+  },
+  {
+   "id": "plated_seaweed_rice",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_seaweed_rice.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "seaweedrice",
+   "stackable": true
+  },
+  {
+   "id": "plated_steamedfish",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_steamedfish.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "steamedfish",
+   "stackable": true
+  },
+  {
+   "id": "plated_sushi_cucumber_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_sushi_cucumber_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "sushicucumber",
+   "stackable": true
+  },
+  {
+   "id": "plated_sushi_wrong_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_sushi_wrong_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "sushiwrong",
+   "stackable": true
+  },
+  {
+   "id": "plated_sushi_wrong_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_sushi_wrong_02.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "sushiwrong",
+   "stackable": true
+  },
+  {
+   "id": "plated_tomato_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_tomato_01.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "tomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_tomato_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_tomato_02.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "tomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_tomato_03",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_tomato_03.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "tomato",
+   "stackable": true
+  },
+  {
+   "id": "plated_tomato_lettuce",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_tomato_lettuce.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "tomatolettuce",
+   "stackable": true
+  },
+  {
+   "id": "plated_tortilla_chicken",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_tortilla_chicken.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "tortillachicken",
+   "stackable": true
+  },
+  {
+   "id": "plated_tortilla_meat",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_tortilla_meat.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "tortillameat",
+   "stackable": true
+  },
+  {
+   "id": "plated_tortilla_mushroom",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_tortilla_mushroom.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "tortillamushroom",
+   "stackable": true
+  },
+  {
+   "id": "plated_tortilla_rice",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/plated/plated_tortilla_rice.prefab",
+   "kind": "plated",
+   "dlc": "",
+   "norm": "tortillarice",
+   "stackable": true
+  },
+  {
+   "id": "prawn_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prawn_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "prawn",
+   "stackable": false
+  },
+  {
+   "id": "prawn_fried_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prawn_fried_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "prawnfried",
+   "stackable": false
+  },
+  {
+   "id": "prawn_sliced_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prawn_sliced_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "prawnsliced",
+   "stackable": false
+  },
+  {
+   "id": "prawn_sliced_diced_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prawn_sliced_diced_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "prawnsliceddiced",
+   "stackable": false
+  },
+  {
+   "id": "prep_chicken_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_chicken_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "chicken",
+   "stackable": true
+  },
+  {
+   "id": "prep_chicken_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_chicken_02.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "chicken",
+   "stackable": true
+  },
+  {
+   "id": "prep_christmaspudding_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/prep_christmaspudding_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "christmaspudding",
+   "stackable": true
+  },
+  {
+   "id": "prep_dough_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_dough_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "dough",
+   "stackable": true
+  },
+  {
+   "id": "prep_fish_sliced_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_fish_sliced_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "fishsliced",
+   "stackable": true
+  },
+  {
+   "id": "prep_fish_sliced_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_fish_sliced_02.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "fishsliced",
+   "stackable": true
+  },
+  {
+   "id": "prep_mincepies_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/prep_mincepies_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "mincepies",
+   "stackable": true
+  },
+  {
+   "id": "prep_mushroom_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_mushroom_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "mushroom",
+   "stackable": true
+  },
+  {
+   "id": "prep_mushroom_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_mushroom_02.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "mushroom",
+   "stackable": true
+  },
+  {
+   "id": "prep_pancake_01",
+   "bundle": "bundle185",
+   "assetPath": "assets/prefabs/ingredients/prep_pancake_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "pancake",
+   "stackable": true
+  },
+  {
+   "id": "prep_pancake_02",
+   "bundle": "bundle185",
+   "assetPath": "assets/prefabs/ingredients/prep_pancake_02.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "pancake",
+   "stackable": true
+  },
+  {
+   "id": "prep_pancake_03",
+   "bundle": "bundle185",
+   "assetPath": "assets/prefabs/ingredients/prep_pancake_03.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "pancake",
+   "stackable": true
+  },
+  {
+   "id": "prep_pepperoni_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_pepperoni_01.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "pepperoni",
+   "stackable": true
+  },
+  {
+   "id": "prep_strawberry_pancake_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/prep_strawberry_pancake_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "strawberrypancake",
+   "stackable": true
+  },
+  {
+   "id": "prep_tomato_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/prep_tomato_02.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "tomato",
+   "stackable": true
+  },
+  {
+   "id": "raspberry",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/raspberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "raspberry",
+   "stackable": false
+  },
+  {
+   "id": "raspberrychopped",
+   "bundle": "bundle359",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/raspberrychopped.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc08",
+   "norm": "raspberrychopped",
+   "stackable": false
+  },
+  {
+   "id": "recipe_bananasmoothie_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/recipe_bananasmoothie_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "bananasmoothie",
+   "stackable": true
+  },
+  {
+   "id": "recipe_cake_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_cake_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "cake",
+   "stackable": true
+  },
+  {
+   "id": "recipe_cake_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_cake_02.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "cake",
+   "stackable": true
+  },
+  {
+   "id": "recipe_cake_03",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_cake_03.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "cake",
+   "stackable": true
+  },
+  {
+   "id": "recipe_cheese_lettuce_burger_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_cheese_lettuce_burger_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "cheeselettuceburger",
+   "stackable": true
+  },
+  {
+   "id": "recipe_cheese_tomato_pizza_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_cheese_tomato_pizza_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "cheesetomatopizza",
+   "stackable": true
+  },
+  {
+   "id": "recipe_cheeseburger_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_cheeseburger_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "cheeseburger",
+   "stackable": true
+  },
+  {
+   "id": "recipe_chicken_nuggets_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_chicken_nuggets_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "chickennuggets",
+   "stackable": true
+  },
+  {
+   "id": "recipe_chicken_pizza_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_chicken_pizza_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "chickenpizza",
+   "stackable": true
+  },
+  {
+   "id": "recipe_christmaspudding_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/recipes/recipe_christmaspudding_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc03",
+   "norm": "christmaspudding",
+   "stackable": true
+  },
+  {
+   "id": "recipe_dimsum_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_dimsum_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "dimsum",
+   "stackable": true
+  },
+  {
+   "id": "recipe_dimsum_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_dimsum_02.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "dimsum",
+   "stackable": true
+  },
+  {
+   "id": "recipe_dimsum_03",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_dimsum_03.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "dimsum",
+   "stackable": true
+  },
+  {
+   "id": "recipe_fruitsalad_01",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/recipe_fruitsalad_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "fruitsalad",
+   "stackable": true
+  },
+  {
+   "id": "recipe_fruitsalad_02",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/recipe_fruitsalad_02.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "fruitsalad",
+   "stackable": true
+  },
+  {
+   "id": "recipe_fruitsalad_03",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/recipe_fruitsalad_03.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "fruitsalad",
+   "stackable": true
+  },
+  {
+   "id": "recipe_fruitsalad_04",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/recipes/recipe_fruitsalad_04.prefab",
+   "kind": "recipes",
+   "dlc": "dlc04",
+   "norm": "fruitsalad",
+   "stackable": true
+  },
+  {
+   "id": "recipe_hotchoc_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/recipes/recipe_hotchoc_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc03",
+   "norm": "hotchoc",
+   "stackable": true
+  },
+  {
+   "id": "recipe_hotchoc_cream_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/recipes/recipe_hotchoc_cream_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc03",
+   "norm": "hotchoccream",
+   "stackable": true
+  },
+  {
+   "id": "recipe_hotchoc_cream_mallows_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/recipes/recipe_hotchoc_cream_mallows_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc03",
+   "norm": "hotchoccreammallows",
+   "stackable": true
+  },
+  {
+   "id": "recipe_hotchoc_mallows_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/recipes/recipe_hotchoc_mallows_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc03",
+   "norm": "hotchocmallows",
+   "stackable": true
+  },
+  {
+   "id": "recipe_lettuce_tomato_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_lettuce_tomato_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "lettucetomato",
+   "stackable": true
+  },
+  {
+   "id": "recipe_lettuce_tomato_burger_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_lettuce_tomato_burger_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "lettucetomatoburger",
+   "stackable": true
+  },
+  {
+   "id": "recipe_lettuce_tomato_cucumber_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_lettuce_tomato_cucumber_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "lettucetomatocucumber",
+   "stackable": true
+  },
+  {
+   "id": "recipe_meat_pasta_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_meat_pasta_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "meatpasta",
+   "stackable": true
+  },
+  {
+   "id": "recipe_megasmoothie_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/recipe_megasmoothie_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "megasmoothie",
+   "stackable": true
+  },
+  {
+   "id": "recipe_melonsmoothie_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/recipe_melonsmoothie_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "melonsmoothie",
+   "stackable": true
+  },
+  {
+   "id": "recipe_mincepies_01",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/recipes/recipe_mincepies_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc03",
+   "norm": "mincepies",
+   "stackable": true
+  },
+  {
+   "id": "recipe_mushroom_pasta_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_mushroom_pasta_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "mushroompasta",
+   "stackable": true
+  },
+  {
+   "id": "recipe_pancake_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_pancake_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "pancake",
+   "stackable": true
+  },
+  {
+   "id": "recipe_pancake_02",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_pancake_02.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "pancake",
+   "stackable": true
+  },
+  {
+   "id": "recipe_pepperoni_pizza_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_pepperoni_pizza_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "pepperonipizza",
+   "stackable": true
+  },
+  {
+   "id": "recipe_pineapplesmoothie_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/recipe_pineapplesmoothie_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "pineapplesmoothie",
+   "stackable": true
+  },
+  {
+   "id": "recipe_pizzabase_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_pizzabase_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "pizzabase",
+   "stackable": true
+  },
+  {
+   "id": "recipe_plainburger_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_plainburger_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "plainburger",
+   "stackable": true
+  },
+  {
+   "id": "recipe_seafood_pasta_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_seafood_pasta_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "seafoodpasta",
+   "stackable": true
+  },
+  {
+   "id": "recipe_strawberrysmoothie_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/recipe_strawberrysmoothie_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "strawberrysmoothie",
+   "stackable": true
+  },
+  {
+   "id": "recipe_tomato_pasta_01",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/meals/recipe_tomato_pasta_01.prefab",
+   "kind": "meals",
+   "dlc": "",
+   "norm": "tomatopasta",
+   "stackable": true
+  },
+  {
+   "id": "ruined_kebab_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/ruined_kebab_01.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "ruinedkebab",
+   "stackable": false
+  },
+  {
+   "id": "sausage",
+   "bundle": "bundle250",
+   "assetPath": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/ingredients/sausage.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc05",
+   "norm": "sausage",
+   "stackable": false
+  },
+  {
+   "id": "seaweed",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/seaweed.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "seaweed",
+   "stackable": false
+  },
+  {
+   "id": "smoothiestrawberry",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/smoothiestrawberry.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "smoothiestrawberry",
+   "stackable": false
+  },
+  {
+   "id": "strawberrypancake",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/recipes/strawberrypancake.prefab",
+   "kind": "recipes",
+   "dlc": "dlc02",
+   "norm": "strawberrypancake",
+   "stackable": false
+  },
+  {
+   "id": "tomato",
+   "bundle": "bundle47",
+   "assetPath": "assets/prefabs/ingredients/tomato.prefab",
+   "kind": "ingredients",
+   "dlc": "",
+   "norm": "tomato",
+   "stackable": false
+  },
+  {
+   "id": "tomatokebabchunk_01",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/tomatokebabchunk_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "tomatokebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "tomatokebabchunk_02",
+   "bundle": "bundle167",
+   "assetPath": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/ingredients/tomatokebabchunk_02.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc02",
+   "norm": "tomatokebabchunk",
+   "stackable": false
+  },
+  {
+   "id": "whippedcream",
+   "bundle": "bundle210",
+   "assetPath": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/ingredients/whippedcream.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc03",
+   "norm": "whippedcream",
+   "stackable": false
+  },
+  {
+   "id": "wrong_ingredients_sludge_01",
+   "bundle": "bundle226",
+   "assetPath": "assets/downloadablecontent/dlc04/dlc_assets/prefabs/ingredients/wrong_ingredients_sludge_01.prefab",
+   "kind": "ingredients",
+   "dlc": "dlc04",
+   "norm": "wrongingredientssludge",
+   "stackable": false
+  }
+ ]
+}

@@ -3,7 +3,7 @@ import {
   LayerKey,
   LayerVisibility
 } from "./state";
-import { dom } from "./dom";
+import { dom, ROUTE } from "./dom";
 import { setStatus } from "./status";
 import { loadQuestionMarks } from "./iconCaches";
 import {
@@ -60,7 +60,6 @@ import {
   renderLevelSummary,
   openConfigTabsModal,
   openAudioModal,
-  consumeTargetScene,
   consumeLayoutAutoAction,
   openToolsHistoryModal
 } from "../levels";
@@ -529,13 +528,13 @@ export async function init() {
   requestAnimationFrame(draw);
 
   if (scenes.length > 0) {
-    const target = consumeTargetScene();
-    const urlScene = new URLSearchParams(location.search).get("scene") ?? "";
-    const match =
-      (target ? scenes.find((s) => s.assetPath === target) : null) ??
-      (urlScene ? scenes.find((s) => s.assetPath === urlScene) : null);
+    // 严格路由 /layout/{set}/{sceneName}：命中则直接定位；未命中回退默认场景（loadScene 会改写 URL 为实际场景）
+    const routeScene =
+      ROUTE.setId && ROUTE.sceneName
+        ? scenes.find((s) => s.levelSet === ROUTE.setId && s.sceneName === ROUTE.sceneName) ?? null
+        : null;
     const guojia = scenes.find((s) => s.assetPath.includes("guojia"));
-    const pick = match ?? guojia ?? scenes[0];
+    const pick = routeScene ?? guojia ?? scenes[0];
     selectSceneInDropdowns(pick.assetPath);
     await loadScene(pick.assetPath);
     // 关卡管理「🧰 工具与历史」跳转携带的一次性自动动作（sessionStorage）。

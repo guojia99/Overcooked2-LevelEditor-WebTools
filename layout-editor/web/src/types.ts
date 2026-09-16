@@ -743,6 +743,9 @@ export interface RecipeEntry {
   group?: FoodGroup;
   /** Recipe family: burger / pizza / sushi / kebab / smoothie / … */
   type?: string;
+  /** 二级分类（仅 Burger大全 group==="burger" 有值）：
+   *  assembly / classic / deluxe / mega / breakfast / seafood / veggie / filling。 */
+  subtype?: string;
   /** score-0 半成品（面糊/炸物部件/自选披萨部件），不可作为关卡菜谱 */
   intermediate?: boolean;
   /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（卡片显示双步骤）。 */
@@ -853,6 +856,18 @@ export interface LevelMatchlistRef {
   key: string;
   guid: string;
   bundleName?: string;
+}
+
+/** 服务端 DLC 匹配表推断结果（GET /api/level/matchlists/suggest）。 */
+export interface MatchlistSuggestion {
+  /** 按资产引用推断出的全部 DLC key。 */
+  required: string[];
+  /** LevelInfo 当前已有的 key。 */
+  current: string[];
+  /** 还缺、且包装与 bundle 都可用（保存菜谱时会自动补入）。 */
+  missing: string[];
+  /** 无法补入的（无包装资产 / bundle 未构建），含原因文本。 */
+  skipped: string[];
 }
 
 export interface OptionalPresetItem {
@@ -1064,10 +1079,21 @@ export interface CustomRecipeCategory {
   en: string;
 }
 
+/** 二级分类（分类目录下的子目录）：归属以目录为准，本表只给显示名与排序。 */
+export interface CustomRecipeSubcategory {
+  id: string;
+  /** 一级分类 id（如 "burger"）。 */
+  parent: string;
+  zh: string;
+  en: string;
+  order: number;
+}
+
 export interface CustomRecipeConfig {
   uidPrefix: number;
   nextSequence: number;
   categories: CustomRecipeCategory[];
+  subcategories?: CustomRecipeSubcategory[];
 }
 
 export interface CustomRecipeSummary {
@@ -1080,6 +1106,8 @@ export interface CustomRecipeSummary {
   uID: number;
   score: number;
   category: string;
+  /** 二级分类 = 分类目录下的子目录名（""=直接放在分类目录下）。 */
+  subcategory?: string;
   type: string;
   /** 组装定义子类标记："burger" / "pizza" / ""（普通菜谱）。 */
   optionalKind?: string;
@@ -1100,7 +1128,13 @@ export interface CustomRecipeSummary {
   platingStepId: string;
   mixingIconId?: string;
   hasIcon: boolean;
+  /** 图标状态：own（专属）/ generic（一图多用的占位图，需降级）/ none。 */
+  iconState?: "own" | "generic" | "none";
   hasModel: boolean;
+  /** modelSO（游戏 bundle 模型指针）非空：有模型但网页无法预览。 */
+  hasModelSO?: boolean;
+  /** 有可供网页 3D 预览的本地网格。 */
+  previewable?: boolean;
   /** 模型在游戏中的缩放/旋转/位置。 */
   modelScale: number;
   modelRotationY: number;
@@ -1394,9 +1428,25 @@ export interface BurgerCandidate {
   id: string;
   nameZh: string;
   nameEn: string;
-  /** "custom" / "official-recipe" / "ingredient" */
+  /** "bun" / "custom" / "official-recipe" / "ingredient" */
   kind: string;
   assetPath: string;
+  /** 堆叠模型状态：bound（commonW2 已绑定）/ own（菜谱自带模型）/ none（无模型，该层不可见）。 */
+  modelState?: "bound" | "own" | "none";
+  /** 图标状态：own（专属图标）/ generic（共享占位图，需降级）/ none。 */
+  iconState?: "own" | "generic" | "none";
+  /** 叶食材 id（递归展开）：iconState !== "own" 时按序回退取食材图标。 */
+  iconFallbackIds?: string[];
+  /** 所属 DLC 匹配表 key（dlc05 等；"" = 本传）。保存菜谱时后端会自动补入。 */
+  matchlistKey?: string;
+  bundleName?: string;
+  /** false = bundle 不在 StreamingAssets，选用会导致运行时崩溃（后端硬拒）。 */
+  bundleAvailable?: boolean;
+  /** 在 commonW2 汉堡大全既有夹心白名单内（推荐项，列表置顶）。 */
+  recommended?: boolean;
+  score?: number;
+  /** 有本地模型文件，可在网页 3D 预览。 */
+  previewable?: boolean;
 }
 
 export interface BurgerDefinitionList {
@@ -1434,6 +1484,8 @@ export interface BurgerCreateResult {
   addedToDefinition?: string[];
   updated?: boolean;
   iconError?: string;
+  /** 非阻断告警（无堆叠模型 / 需要 DLC 匹配表等）。 */
+  warnings?: string[];
 }
 
 export interface BurgerDefinitionUpdate {
@@ -1441,14 +1493,22 @@ export interface BurgerDefinitionUpdate {
   capacity?: number;
   addLayerIds?: string[];
   removeLayerGuids?: string[];
-  modelBindings?: { layerGuid: string; modelId: string }[];
+  modelBindings?: { layerGuid: string; modelId: string; modelKind?: "pseudo" | "local" }[];
 }
 
 export interface BurgerModel {
   id: string;
+  /** 包装 SO 路径；"" = 池条目尚未生成包装（选用时后端按需生成）。 */
   assetPath: string;
   prefabName: string;
   bundleName: string;
+  /** "local" = commonW2/models 已有包装；"pool" = dump_bundle 提取的原版模型池。 */
+  source?: "local" | "pool";
+  /** bundle 内实路径（池条目才有），大小写敏感。 */
+  bundleAssetPath?: string;
+  dlc?: string;
+  /** 名字含 plated/prep/recipe —— 通常最适合当堆叠层。 */
+  stackable?: boolean;
 }
 
 export interface BurgerProduct {
@@ -1457,6 +1517,8 @@ export interface BurgerProduct {
   assetPath?: string;
   recipeName: string;
   nameZh: string;
+  /** names.json 里的英文名（缺失时回退 recipeName）。 */
+  nameEn?: string;
   score: number;
   /** compositionSOs 的资产 id 列表（含面包底）。 */
   compositionIds: string[];

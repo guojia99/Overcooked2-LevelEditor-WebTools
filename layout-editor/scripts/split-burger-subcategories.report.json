@@ -1,0 +1,797 @@
+{
+  "generatedAt": "2026-09-15T10:45:19.994Z",
+  "subcategories": [
+    {
+      "id": "assembly",
+      "zh": "组装定义",
+      "en": "Assembly"
+    },
+    {
+      "id": "classic",
+      "zh": "经典汉堡",
+      "en": "Classic"
+    },
+    {
+      "id": "deluxe",
+      "zh": "豪华汉堡",
+      "en": "Deluxe"
+    },
+    {
+      "id": "mega",
+      "zh": "巨无霸汉堡",
+      "en": "Mega"
+    },
+    {
+      "id": "breakfast",
+      "zh": "早餐汉堡",
+      "en": "Breakfast"
+    },
+    {
+      "id": "seafood",
+      "zh": "海鲜汉堡",
+      "en": "Seafood"
+    },
+    {
+      "id": "veggie",
+      "zh": "素食汉堡",
+      "en": "Veggie"
+    },
+    {
+      "id": "filling",
+      "zh": "夹心/中间产物",
+      "en": "Filling"
+    }
+  ],
+  "counts": {
+    "assembly": 6,
+    "classic": 18,
+    "deluxe": 7,
+    "mega": 2,
+    "breakfast": 4,
+    "seafood": 3,
+    "veggie": 10,
+    "filling": 24
+  },
+  "moved": [
+    {
+      "id": "BaconSausage",
+      "nameZh": "培根煎香肠",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "c76135d77453ce74488f527c157e499b",
+      "from": "Assets/commonW2/custom_recipes/burger/BaconSausage.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/BaconSausage.asset"
+    },
+    {
+      "id": "BreakfastCheeseBurger",
+      "nameZh": "早餐芝士汉堡",
+      "sub": "breakfast",
+      "score": 120,
+      "type": 1,
+      "guid": "8fb5dc5c0b557fc43a042340eb251be7",
+      "from": "Assets/commonW2/custom_recipes/burger/BreakfastCheeseBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/breakfast/BreakfastCheeseBurger.asset"
+    },
+    {
+      "id": "BreakfastLettuceBurger",
+      "nameZh": "早餐生菜汉堡",
+      "sub": "breakfast",
+      "score": 120,
+      "type": 1,
+      "guid": "0191bfd6e60325346a47097f4d3a2c68",
+      "from": "Assets/commonW2/custom_recipes/burger/BreakfastLettuceBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/breakfast/BreakfastLettuceBurger.asset"
+    },
+    {
+      "id": "BreakfastMeatBurger",
+      "nameZh": "早餐牛肉汉堡",
+      "sub": "breakfast",
+      "score": 120,
+      "type": 1,
+      "guid": "e1d7ef91c43a7cb48a319fcb141a7bbf",
+      "from": "Assets/commonW2/custom_recipes/burger/BreakfastMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/breakfast/BreakfastMeatBurger.asset"
+    },
+    {
+      "id": "BreakfastOnionBurger",
+      "nameZh": "早餐洋葱汉堡",
+      "sub": "breakfast",
+      "score": 120,
+      "type": 1,
+      "guid": "72d315c6b0d27814cacd722f4a961856",
+      "from": "Assets/commonW2/custom_recipes/burger/BreakfastOnionBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/breakfast/BreakfastOnionBurger.asset"
+    },
+    {
+      "id": "CheeseChickenBurger",
+      "nameZh": "芝士鸡肉汉堡",
+      "sub": "classic",
+      "score": 60,
+      "type": 1,
+      "guid": "c8d3cab661741b34ca76e05591a3a7f3",
+      "from": "Assets/commonW2/custom_recipes/burger/CheeseChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/CheeseChickenBurger.asset"
+    },
+    {
+      "id": "CheeseMeatBurger",
+      "nameZh": "芝士牛肉汉堡",
+      "sub": "classic",
+      "score": 60,
+      "type": 1,
+      "guid": "c35dab64122b8438980a50a228d40bff",
+      "from": "Assets/commonW2/custom_recipes/burger/CheeseMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/CheeseMeatBurger.asset"
+    },
+    {
+      "id": "ChickenBurger",
+      "nameZh": "鸡肉汉堡",
+      "sub": "classic",
+      "score": 40,
+      "type": 1,
+      "guid": "7980557280d484f4d8d9be9ed69995be",
+      "from": "Assets/commonW2/custom_recipes/burger/ChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/ChickenBurger.asset"
+    },
+    {
+      "id": "ChickenBurgerAssembly",
+      "nameZh": "鸡肉汉堡夹心",
+      "sub": "assembly",
+      "score": 0,
+      "type": 1,
+      "guid": "aa60198bc4dcb3c4b86f0c929d5833b7",
+      "from": "Assets/commonW2/custom_recipes/burger/ChickenBurgerAssembly.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/assembly/ChickenBurgerAssembly.asset"
+    },
+    {
+      "id": "ChickenLettuceCheeseTomatoBurger",
+      "nameZh": "鸡肉生菜芝士番茄汉堡",
+      "sub": "deluxe",
+      "score": 120,
+      "type": 1,
+      "guid": "97a7dfef116b9144b93f49424a16c6e4",
+      "from": "Assets/commonW2/custom_recipes/burger/ChickenLettuceCheeseTomatoBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/deluxe/ChickenLettuceCheeseTomatoBurger.asset"
+    },
+    {
+      "id": "ChickenMeatPineappleCucumberBurger",
+      "nameZh": "鸡肉牛肉菠萝黄瓜汉堡",
+      "sub": "deluxe",
+      "score": 120,
+      "type": 1,
+      "guid": "248043f3204949a43ad1549739154195",
+      "from": "Assets/commonW2/custom_recipes/burger/ChickenMeatPineappleCucumberBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/deluxe/ChickenMeatPineappleCucumberBurger.asset"
+    },
+    {
+      "id": "ChickenMushroomTwoCheeseBurger",
+      "nameZh": "鸡肉蘑菇双芝汉堡",
+      "sub": "deluxe",
+      "score": 120,
+      "type": 1,
+      "guid": "e715437e433e0df4ca8c7b5b061012fd",
+      "from": "Assets/commonW2/custom_recipes/burger/ChickenMushroomTwoCheeseBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/deluxe/ChickenMushroomTwoCheeseBurger.asset"
+    },
+    {
+      "id": "ChickenPatty",
+      "nameZh": "煎鸡肉饼",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "0ec801b90ef3ea54e8a4fa0f8ebb171f",
+      "from": "Assets/commonW2/custom_recipes/burger/ChickenPatty.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/ChickenPatty.asset"
+    },
+    {
+      "id": "CucumberBurger",
+      "nameZh": "黄瓜汉堡",
+      "sub": "veggie",
+      "score": 40,
+      "type": 1,
+      "guid": "743de6bf5c44715429a9b6269e076bee",
+      "from": "Assets/commonW2/custom_recipes/burger/CucumberBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/CucumberBurger.asset"
+    },
+    {
+      "id": "CucumberChickenBurger",
+      "nameZh": "黄瓜鸡肉汉堡",
+      "sub": "classic",
+      "score": 60,
+      "type": 1,
+      "guid": "c33c2ed56f58e7a46a9e6bb5407aae5d",
+      "from": "Assets/commonW2/custom_recipes/burger/CucumberChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/CucumberChickenBurger.asset"
+    },
+    {
+      "id": "CucumberMeatBurger",
+      "nameZh": "黄瓜牛肉汉堡",
+      "sub": "classic",
+      "score": 60,
+      "type": 1,
+      "guid": "cf6b37ee1778fb74ea985aa6784f5c85",
+      "from": "Assets/commonW2/custom_recipes/burger/CucumberMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/CucumberMeatBurger.asset"
+    },
+    {
+      "id": "DoublePineappleBurger",
+      "nameZh": "双层菠萝汉堡",
+      "sub": "veggie",
+      "score": 60,
+      "type": 1,
+      "guid": "aac8701092766544888a55c4f46f8b60",
+      "from": "Assets/commonW2/custom_recipes/burger/DoublePineappleBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/DoublePineappleBurger.asset"
+    },
+    {
+      "id": "DoublePineappleBurger_filler",
+      "nameZh": "DoublePineappleBurger filler",
+      "sub": "assembly",
+      "score": 0,
+      "type": 1,
+      "guid": "5dd57b1e3c8cd374e92f81141778da85",
+      "from": "Assets/commonW2/custom_recipes/burger/DoublePineappleBurger_filler.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/assembly/DoublePineappleBurger_filler.asset"
+    },
+    {
+      "id": "DoublePrawnBurger",
+      "nameZh": "双层虾堡",
+      "sub": "seafood",
+      "score": 120,
+      "type": 1,
+      "guid": "649e11096fa349e4e95ebdac5b430ee9",
+      "from": "Assets/commonW2/custom_recipes/burger/DoublePrawnBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/seafood/DoublePrawnBurger.asset"
+    },
+    {
+      "id": "EggSausage",
+      "nameZh": "煎蛋香肠",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "2a65714aee2161a439f0b033505f87c9",
+      "from": "Assets/commonW2/custom_recipes/burger/EggSausage.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/EggSausage.asset"
+    },
+    {
+      "id": "FriedCheese",
+      "nameZh": "煎芝士",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "08cf1fc4a56b45043bdd30a72acd3de0",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedCheese.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedCheese.asset"
+    },
+    {
+      "id": "FriedChicken",
+      "nameZh": "煎鸡肉",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "171d0a1a6e4db824291c137bebe0be87",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedChicken.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedChicken.asset"
+    },
+    {
+      "id": "FriedCornPone",
+      "nameZh": "炸玉米饼",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "8dd97e6e0435a6641a010fae8d818224",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedCornPone.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedCornPone.asset"
+    },
+    {
+      "id": "FriedFishPone",
+      "nameZh": "炸鱼饼",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "098ec25714d9cb64eb7fd336f1185e56",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedFishPone.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedFishPone.asset"
+    },
+    {
+      "id": "FriedMushroom",
+      "nameZh": "煎蘑菇",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "83180cf71f3fb0a48baf992324ed2750",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedMushroom.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedMushroom.asset"
+    },
+    {
+      "id": "FriedOnion",
+      "nameZh": "煎洋葱",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "48c96b50622b3e944992ec3534bc2081",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedOnion.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedOnion.asset"
+    },
+    {
+      "id": "FriedPepperoni",
+      "nameZh": "煎香肠",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "a64245516a6d67a4e8c1ae3562b32717",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedPepperoni.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedPepperoni.asset"
+    },
+    {
+      "id": "FriedPineapple",
+      "nameZh": "煎菠萝",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "4c9fd8d1dc2a77c4b84d6995f0666850",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedPineapple.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedPineapple.asset"
+    },
+    {
+      "id": "FriedPotatoCake",
+      "nameZh": "炸土豆饼",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "a5b69334f32257442a0350d4d70f45e7",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedPotatoCake.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedPotatoCake.asset"
+    },
+    {
+      "id": "FriedPrawn",
+      "nameZh": "炸虾",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "eb0cdf253eb41134c970b7d4f0a5451a",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedPrawn.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedPrawn.asset"
+    },
+    {
+      "id": "FriedShrimpPone",
+      "nameZh": "炸虾饼",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "690115b74503fa34692eb3a08920c571",
+      "from": "Assets/commonW2/custom_recipes/burger/FriedShrimpPone.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/FriedShrimpPone.asset"
+    },
+    {
+      "id": "LettuceBurger",
+      "nameZh": "生菜汉堡",
+      "sub": "veggie",
+      "score": 40,
+      "type": 1,
+      "guid": "4eff166a3032aa54c91981a2b01a7dba",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/LettuceBurger.asset"
+    },
+    {
+      "id": "LettuceCheeseChickenBurger",
+      "nameZh": "生菜芝士鸡肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "56567fb26ab1f82448bf9c7fe55f4a44",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceCheeseChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/LettuceCheeseChickenBurger.asset"
+    },
+    {
+      "id": "LettuceCheeseMeatBurger",
+      "nameZh": "生菜芝士牛肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "ee2f4527bf302993bc009e1cc99a17fa",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceCheeseMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/LettuceCheeseMeatBurger.asset"
+    },
+    {
+      "id": "LettuceChickenBurger",
+      "nameZh": "生菜鸡肉汉堡",
+      "sub": "classic",
+      "score": 60,
+      "type": 1,
+      "guid": "cf41c5530b1624c4b9f148b12820bad2",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/LettuceChickenBurger.asset"
+    },
+    {
+      "id": "LettuceCucumberBurger",
+      "nameZh": "生菜黄瓜汉堡",
+      "sub": "veggie",
+      "score": 60,
+      "type": 1,
+      "guid": "04b577ad99e49d64bb56be9f6ad9fe45",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceCucumberBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/LettuceCucumberBurger.asset"
+    },
+    {
+      "id": "LettuceCucumberChickenBurger",
+      "nameZh": "生菜黄瓜鸡肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "bd693121a6e10014f8e30d7bfc48166c",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceCucumberChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/LettuceCucumberChickenBurger.asset"
+    },
+    {
+      "id": "LettuceCucumberMeatBurger",
+      "nameZh": "生菜黄瓜牛肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "7104dfd7fe3be5e4ab49f210a6744a61",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceCucumberMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/LettuceCucumberMeatBurger.asset"
+    },
+    {
+      "id": "LettuceCucumberPrawnBurger",
+      "nameZh": "生菜黄瓜虾堡",
+      "sub": "seafood",
+      "score": 120,
+      "type": 1,
+      "guid": "ae24100b6c641464eb4dff6ed0057ea9",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceCucumberPrawnBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/seafood/LettuceCucumberPrawnBurger.asset"
+    },
+    {
+      "id": "LettuceMeatBurger",
+      "nameZh": "生菜牛肉汉堡",
+      "sub": "classic",
+      "score": 60,
+      "type": 1,
+      "guid": "0bf7e6ae95d50e67931c04950afdb49b",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/LettuceMeatBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoBurger",
+      "nameZh": "生菜西红柿汉堡",
+      "sub": "veggie",
+      "score": 60,
+      "type": 1,
+      "guid": "f8cf8136af512cd42818f61fdd79d5e0",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/LettuceTomatoBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoChickenBurger",
+      "nameZh": "生菜西红柿鸡肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "07be704d74bcbb74ca4b5426e2c164f3",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/LettuceTomatoChickenBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoCucumberBurger",
+      "nameZh": "生菜西红柿黄瓜汉堡",
+      "sub": "veggie",
+      "score": 80,
+      "type": 1,
+      "guid": "4fcbb82d38007d04399f80e099aa1366",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoCucumberBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/LettuceTomatoCucumberBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoCucumberChickenBurger",
+      "nameZh": "生菜西红柿黄瓜鸡肉汉堡",
+      "sub": "deluxe",
+      "score": 100,
+      "type": 1,
+      "guid": "e168b36d05e5bcf4f8b7fa3085d83b0f",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoCucumberChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/deluxe/LettuceTomatoCucumberChickenBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoCucumberPineappleBurger",
+      "nameZh": "全都有汉堡",
+      "sub": "veggie",
+      "score": 100,
+      "type": 1,
+      "guid": "289cf7712cb57b44995f93cefb12d1da",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoCucumberPineappleBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/LettuceTomatoCucumberPineappleBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoCucumberPineappleCheeseChickenBurger",
+      "nameZh": "汉堡皇巨无霸鸡肉堡",
+      "sub": "mega",
+      "score": 160,
+      "type": 1,
+      "guid": "d791d3d677bdc0148a04dce31d95b5fd",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoCucumberPineappleCheeseChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/mega/LettuceTomatoCucumberPineappleCheeseChickenBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoCucumberPineappleCheeseMeatBurger",
+      "nameZh": "汉堡皇巨无霸牛肉堡",
+      "sub": "mega",
+      "score": 160,
+      "type": 1,
+      "guid": "3fc568b068c163f499c2f6f2a8b3f29f",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoCucumberPineappleCheeseMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/mega/LettuceTomatoCucumberPineappleCheeseMeatBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoMeatBurger",
+      "nameZh": "生菜番茄牛肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "93596cb46834080215871c5907b2908a",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/LettuceTomatoMeatBurger.asset"
+    },
+    {
+      "id": "LettuceTomatoPrawnBurger",
+      "nameZh": "生菜番茄虾堡",
+      "sub": "seafood",
+      "score": 120,
+      "type": 1,
+      "guid": "dbe598da698a94c4d97d70a9baaded57",
+      "from": "Assets/commonW2/custom_recipes/burger/LettuceTomatoPrawnBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/seafood/LettuceTomatoPrawnBurger.asset"
+    },
+    {
+      "id": "MeatBurger",
+      "nameZh": "牛肉汉堡",
+      "sub": "classic",
+      "score": 40,
+      "type": 1,
+      "guid": "ecda1d0448f42d23e9e92f375b85876c",
+      "from": "Assets/commonW2/custom_recipes/burger/MeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/MeatBurger.asset"
+    },
+    {
+      "id": "MeatBurgerAssembly",
+      "nameZh": "牛肉汉堡夹心",
+      "sub": "assembly",
+      "score": 0,
+      "type": 1,
+      "guid": "c1192aabc6f3f5b469783ef3323344eb",
+      "from": "Assets/commonW2/custom_recipes/burger/MeatBurgerAssembly.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/assembly/MeatBurgerAssembly.asset"
+    },
+    {
+      "id": "MeatEggBurger",
+      "nameZh": "牛肉蛋汉堡",
+      "sub": "deluxe",
+      "score": 140,
+      "type": 1,
+      "guid": "c99ef698c8e9ed648b5013ed7243cc5f",
+      "from": "Assets/commonW2/custom_recipes/burger/MeatEggBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/deluxe/MeatEggBurger.asset"
+    },
+    {
+      "id": "MeatMushroomBurger",
+      "nameZh": "牛肉蘑菇汉堡",
+      "sub": "deluxe",
+      "score": 140,
+      "type": 1,
+      "guid": "4803f57158c33c9458f2022a8c3bea4c",
+      "from": "Assets/commonW2/custom_recipes/burger/MeatMushroomBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/deluxe/MeatMushroomBurger.asset"
+    },
+    {
+      "id": "MeatOnionBurger",
+      "nameZh": "牛肉洋葱汉堡",
+      "sub": "deluxe",
+      "score": 140,
+      "type": 1,
+      "guid": "bc52ddbf56e94dd4baee6ce74b043877",
+      "from": "Assets/commonW2/custom_recipes/burger/MeatOnionBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/deluxe/MeatOnionBurger.asset"
+    },
+    {
+      "id": "MixedMeatEgg",
+      "nameZh": "搅拌牛肉蛋",
+      "sub": "filling",
+      "score": 0,
+      "type": 3,
+      "guid": "419135a151bdca14fbf89d10fb9f9a23",
+      "from": "Assets/commonW2/custom_recipes/burger/MixedMeatEgg.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/MixedMeatEgg.asset"
+    },
+    {
+      "id": "MixedMeatMushroom",
+      "nameZh": "搅拌牛肉蘑菇",
+      "sub": "filling",
+      "score": 0,
+      "type": 3,
+      "guid": "42fb625c6e7e2b8449143f6ef2f71153",
+      "from": "Assets/commonW2/custom_recipes/burger/MixedMeatMushroom.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/MixedMeatMushroom.asset"
+    },
+    {
+      "id": "MixedMeatOnion",
+      "nameZh": "搅拌牛肉洋葱",
+      "sub": "filling",
+      "score": 0,
+      "type": 3,
+      "guid": "20038de4c7169b847bd3afbb358d586c",
+      "from": "Assets/commonW2/custom_recipes/burger/MixedMeatOnion.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/MixedMeatOnion.asset"
+    },
+    {
+      "id": "OptionalBurger",
+      "nameZh": "汉堡组装定义",
+      "sub": "assembly",
+      "score": 0,
+      "type": 1,
+      "guid": "1c0db1a61286d304cb34cdddc2816fa8",
+      "from": "Assets/commonW2/custom_recipes/burger/OptionalBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/assembly/OptionalBurger.asset"
+    },
+    {
+      "id": "PanfriedBeef",
+      "nameZh": "煎牛肉",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "c9523f76bccb7c741a8332a72a8ebca6",
+      "from": "Assets/commonW2/custom_recipes/burger/PanfriedBeef.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/PanfriedBeef.asset"
+    },
+    {
+      "id": "PanfriedMeatEgg",
+      "nameZh": "香煎牛肉蛋",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "fb5005573df73f248b87a336f09bbf6a",
+      "from": "Assets/commonW2/custom_recipes/burger/PanfriedMeatEgg.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/PanfriedMeatEgg.asset"
+    },
+    {
+      "id": "PanfriedMeatMushroom",
+      "nameZh": "香煎牛肉蘑菇",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "9f34beb0d7c232e4fa282bca5379451b",
+      "from": "Assets/commonW2/custom_recipes/burger/PanfriedMeatMushroom.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/PanfriedMeatMushroom.asset"
+    },
+    {
+      "id": "PanfriedMeatOnion",
+      "nameZh": "香煎牛肉洋葱",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "4044feaa866d7704ba53b9fcf86ccf05",
+      "from": "Assets/commonW2/custom_recipes/burger/PanfriedMeatOnion.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/PanfriedMeatOnion.asset"
+    },
+    {
+      "id": "PanfriedMushroom",
+      "nameZh": "煎蘑菇",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "6090eabe61e939549a8213ccf39c6006",
+      "from": "Assets/commonW2/custom_recipes/burger/PanfriedMushroom.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/PanfriedMushroom.asset"
+    },
+    {
+      "id": "PanfriedOnion",
+      "nameZh": "煎洋葱",
+      "sub": "filling",
+      "score": 0,
+      "type": 2,
+      "guid": "dbff8086ae0293f4baa64791ab912d92",
+      "from": "Assets/commonW2/custom_recipes/burger/PanfriedOnion.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/PanfriedOnion.asset"
+    },
+    {
+      "id": "PineappleBurger",
+      "nameZh": "菠萝汉堡",
+      "sub": "veggie",
+      "score": 40,
+      "type": 1,
+      "guid": "f9cb0b2b7c5133b4fa94b10ac52086e5",
+      "from": "Assets/commonW2/custom_recipes/burger/PineappleBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/PineappleBurger.asset"
+    },
+    {
+      "id": "PineappleChickenBurger",
+      "nameZh": "菠萝鸡肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "85175460f81ef304eb0bd241a30342fb",
+      "from": "Assets/commonW2/custom_recipes/burger/PineappleChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/PineappleChickenBurger.asset"
+    },
+    {
+      "id": "PineappleMeatBurger",
+      "nameZh": "菠萝牛肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "9608bb048834721499129e4f7919080c",
+      "from": "Assets/commonW2/custom_recipes/burger/PineappleMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/PineappleMeatBurger.asset"
+    },
+    {
+      "id": "PineappleMeatBurgerAssembly",
+      "nameZh": "菠萝牛肉堡夹心",
+      "sub": "assembly",
+      "score": 0,
+      "type": 1,
+      "guid": "2a4ee0851b2e9e74ab8ee5c1781756b4",
+      "from": "Assets/commonW2/custom_recipes/burger/PineappleMeatBurgerAssembly.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/assembly/PineappleMeatBurgerAssembly.asset"
+    },
+    {
+      "id": "PineappleSlice",
+      "nameZh": "菠萝片",
+      "sub": "filling",
+      "score": 0,
+      "type": 1,
+      "guid": "bfe04e155ee5dc54396f4625aeaabb63",
+      "from": "Assets/commonW2/custom_recipes/burger/PineappleSlice.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/filling/PineappleSlice.asset"
+    },
+    {
+      "id": "TomatoBurger",
+      "nameZh": "西红柿汉堡",
+      "sub": "veggie",
+      "score": 40,
+      "type": 1,
+      "guid": "b12d9a414d403184cb77f0c62d0a0c82",
+      "from": "Assets/commonW2/custom_recipes/burger/TomatoBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/TomatoBurger.asset"
+    },
+    {
+      "id": "TomatoCucumberBurger",
+      "nameZh": "西红柿黄瓜汉堡",
+      "sub": "veggie",
+      "score": 60,
+      "type": 1,
+      "guid": "05ff3b3256728e4449b45da8951cb3d2",
+      "from": "Assets/commonW2/custom_recipes/burger/TomatoCucumberBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/veggie/TomatoCucumberBurger.asset"
+    },
+    {
+      "id": "TomatoCucumberChickenBurger",
+      "nameZh": "西红柿黄瓜鸡肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "c7b15118658e0db4cbfef88cf0016c15",
+      "from": "Assets/commonW2/custom_recipes/burger/TomatoCucumberChickenBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/TomatoCucumberChickenBurger.asset"
+    },
+    {
+      "id": "TomatoCucumberMeatBurger",
+      "nameZh": "西红柿黄瓜牛肉汉堡",
+      "sub": "classic",
+      "score": 80,
+      "type": 1,
+      "guid": "34dc4ede87eec9840aba35fd16dc895e",
+      "from": "Assets/commonW2/custom_recipes/burger/TomatoCucumberMeatBurger.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/classic/TomatoCucumberMeatBurger.asset"
+    },
+    {
+      "id": "VeggieBurgerAssembly",
+      "nameZh": "素汉堡夹心",
+      "sub": "assembly",
+      "score": 0,
+      "type": 1,
+      "guid": "c7e628beadf99a644abc0c69ba94c9de",
+      "from": "Assets/commonW2/custom_recipes/burger/VeggieBurgerAssembly.asset",
+      "to": "Assets/commonW2/custom_recipes/burger/assembly/VeggieBurgerAssembly.asset"
+    }
+  ]
+}

@@ -57,8 +57,31 @@ public static class LayoutEditorBurgerApi
         public string id;
         public string nameZh;
         public string nameEn;
-        public string kind;      // "custom"（commonW2/common01 中间产物）/ "official-recipe" / "ingredient"
+        public string kind;      // "bun" / "custom"（自定义中间产物/成品）/ "official-recipe" / "ingredient"
         public string assetPath; // custom 类候选的图标走 /api/custom-recipes/icon?assetPath=
+        /// <summary>堆叠模型状态：
+        ///  "bound"   = commonW2 组装定义里已有绑定；
+        ///  "own"     = 菜谱自带模型（CustomRecipeSO.model / modelSO），由 ResolveLayerModel 第三级兜底生效；
+        ///  "none"    = 三处都没有 —— 官方生食材属设计内（运行时回退官方面包 lookup），
+        ///              自定义菜谱则会导致叠层不可见，需要补模型。</summary>
+        public string modelState;
+        /// <summary>图标状态："own"（专属图标）/ "generic"（共享占位图，需降级到食材图标）/ "none"。</summary>
+        public string iconState;
+        /// <summary>叶食材 id（递归展开）：iconState != "own" 时前端按此顺序回退取食材图标。</summary>
+        public string[] iconFallbackIds;
+        /// <summary>该候选所属 DLC 匹配表 key（dlc05 等；"" = 本传/无需额外匹配表）。
+        ///  保存菜谱时由 LayoutEditorMatchlistMap 自动补入，这里仅作展示。</summary>
+        public string matchlistKey;
+        /// <summary>指向的游戏 bundle（PseudoPrefabSO 才有）。</summary>
+        public string bundleName;
+        /// <summary>bundle 是否已在 StreamingAssets —— false 时禁止作为夹心（运行时会崩）。</summary>
+        public bool bundleAvailable;
+        /// <summary>是否在 commonW2 汉堡大全的既有夹心白名单内（推荐项，UI 置顶）。</summary>
+        public bool recommended;
+        /// <summary>自定义菜谱分数（0 = 中间产物）。</summary>
+        public int score;
+        /// <summary>该候选有本地模型文件（models/&lt;Id&gt;/*.fbx|obj），可在网页 3D 预览。</summary>
+        public bool previewable;
     }
 
     [Serializable]
@@ -83,6 +106,8 @@ public static class LayoutEditorBurgerApi
         public string assetPath;
         public string recipeName;
         public string nameZh;
+        /// <summary>names.json 里的英文名（缺失时前端回退 recipeName）。</summary>
+        public string nameEn;
         public int score;
         /// <summary>compositionSOs 的资产 id 列表（含面包底）。</summary>
         public string[] compositionIds;
@@ -92,9 +117,17 @@ public static class LayoutEditorBurgerApi
     public class BurgerModelDto
     {
         public string id;
+        /// <summary>包装 SO 的资产路径；"" = 池条目尚未生成包装（选用时按需生成）。</summary>
         public string assetPath;
         public string prefabName;
         public string bundleName;
+        /// <summary>"local" = commonW2/models 已有包装；"pool" = dump_bundle 提取的原版模型池。</summary>
+        public string source;
+        /// <summary>bundle 内实路径（池条目才有），大小写敏感。</summary>
+        public string bundleAssetPath;
+        public string dlc;
+        /// <summary>名字含 plated/prep/recipe —— 通常是「摆在容器里的成品形态」，最适合当堆叠层。</summary>
+        public bool stackable;
     }
 
     [Serializable]
@@ -124,13 +157,18 @@ public static class LayoutEditorBurgerApi
         public string[] addedToDefinition;
         public bool updated;
         public string iconError;
+        /// <summary>非阻断告警（无堆叠模型 / 需要 DLC 匹配表等），前端保存后展示。</summary>
+        public string[] warnings;
     }
 
     [Serializable]
     public class BurgerModelBindingDto
     {
         public string layerGuid; // optionalSO 条目 guid（该食材的全部出现一并绑定）
-        public string modelId;   // PseudoPrefabSO 文件名；"" = 解绑（回退官方 lookup）
+        public string modelId;   // 模型 id；"" = 解绑（回退菜谱自带模型 / 官方 lookup）
+        /// <summary>模型通道："pseudo"（默认，bundle 指针 → ingredientModelSOs）/
+        ///  "local"（commonW2 本地 prefab → ingredientModels）。两者互斥，绑一个必清另一个。</summary>
+        public string modelKind;
     }
 
     [Serializable]
@@ -145,8 +183,9 @@ public static class LayoutEditorBurgerApi
 
     // ------------------------------------------------------------ 查询
 
-    /// <summary>GET /api/burger/definitions?setName=：commonW2 共享组装定义（工作台参考壳）。</summary>
-    public static BurgerDefinitionListDto GetDefinitions(string setName)
+    /// <summary>GET /api/burger/definitions?setName=&amp;includeModelless=：commonW2 共享组装定义（工作台参考壳）。
+    ///  includeModelless=1 时放行「无堆叠模型」的自定义菜谱候选（默认过滤，见 CollectCandidates）。</summary>
+    public static BurgerDefinitionListDto GetDefinitions(string setName, bool includeModelless)
     {
         var list = new List<BurgerDefinitionDto>();
         var dir = LayoutEditorLevelAdminApi.CommonW2RecipesDir;
@@ -166,7 +205,7 @@ public static class LayoutEditorBurgerApi
         return new BurgerDefinitionListDto
         {
             definitions = list.ToArray(),
-            candidates = CollectCandidates(),
+            candidates = CollectCandidates(setName, includeModelless),
             buns = CollectBuns(),
             models = CollectModels(),
             products = CollectProducts(setName),
@@ -297,20 +336,44 @@ public static class LayoutEditorBurgerApi
 
     /// <summary>commonW2 组装定义的夹心模型绑定索引：optionalSO 的 guid → 堆叠模型。
     /// OptionalBurger 主模板（绑定最全）优先，其余 *Assembly/_filler 补充，首个非空获胜。</summary>
+    /// <summary>commonW2 汉堡库根目录（burger/，其下按子分类分目录：
+    ///  assembly / classic / deluxe / mega / breakfast / seafood / veggie / filling
+    ///  + 共享的 models/ 与 icons/）。</summary>
+    internal static string CommonW2BurgerDir()
+    {
+        return LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/"
+            + LayoutEditorLevelAdminApi.BurgerCategoryId;
+    }
+
+    /// <summary>按文件名在 commonW2 汉堡库内递归查找组装定义（CustomRecipeOptionalBurgerSO）。
+    ///  2026-09-15 细分类迁移后组装定义落在 burger/assembly/，这里用递归扫描而不是硬编码
+    ///  二级目录，将来再调整分类也不用改代码。</summary>
+    private static CustomRecipeOptionalBurgerSO FindCommonW2Assembly(string id)
+    {
+        var burgerDir = CommonW2BurgerDir();
+        if (string.IsNullOrEmpty(id) || !LayoutEditorLevelAdminApi.AssetFolderExists(burgerDir))
+            return null;
+        foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
+                     burgerDir, LayoutEditorLevelAdminApi.OptionalBurgerScriptGuid))
+        {
+            if (string.Equals(Path.GetFileNameWithoutExtension(asset.assetPath), id, StringComparison.Ordinal))
+                return AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(asset.assetPath);
+        }
+        return null;
+    }
+
     internal static void CollectCommonW2LayerModelBindings(
         out Dictionary<string, PseudoPrefabSO> modelByGuid,
         out Dictionary<string, GameObject> modelGoByGuid)
     {
         modelByGuid = new Dictionary<string, PseudoPrefabSO>(StringComparer.Ordinal);
         modelGoByGuid = new Dictionary<string, GameObject>(StringComparer.Ordinal);
-        var burgerDir = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/"
-            + LayoutEditorLevelAdminApi.BurgerCategoryId;
+        var burgerDir = CommonW2BurgerDir();
         if (!LayoutEditorLevelAdminApi.AssetFolderExists(burgerDir))
             return;
 
         var ordered = new List<CustomRecipeOptionalBurgerSO>();
-        var master = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(
-            burgerDir + "/OptionalBurger.asset");
+        var master = FindCommonW2Assembly("OptionalBurger");
         if (master != null)
             ordered.Add(master);
         foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
@@ -350,8 +413,18 @@ public static class LayoutEditorBurgerApi
         }
     }
 
-    /// <summary>解析单层堆叠模型：本地已有绑定优先，缺失时继承 commonW2 组装定义的绑定；
-    /// modelSO 优先于直接 GameObject 引用（避免双写）。</summary>
+    /// <summary>解析单层堆叠模型：本地已有绑定优先，缺失时继承 commonW2 组装定义的绑定，
+    /// 再缺则回退该夹心菜谱自带的模型（CustomRecipeSO.model）；modelSO 优先于直接
+    /// GameObject 引用（避免双写）。
+    ///
+    /// 第三级兜底（2026-09-15）：夹心本质就是一种自定义菜谱，用「新建菜谱 + 上传模型」
+    /// 做出来的夹心已经有 so.model（&lt;菜谱目录&gt;/models/&lt;Id&gt;/&lt;Id&gt;.prefab，
+    /// 见 LayoutEditorLevelAdminApi.UploadCustomRecipeModel）。没有这级兜底时，
+    /// 自制夹心在汉堡里的叠层拿不到模型 → 运行时 OrderToPrefabLookup 取到 null →
+    /// 该层完全不可见（即 SyncLevelBurgerOptionalFromBurgers 里那条告警的成因）。
+    /// 宿主 RecipeHelper 不允许改动，所以兜底必须在编辑器侧落到 ingredientModels[i]。
+    /// 注：so.model 是为「装盘」生成的三层 prefab（带 pivot/scale），当堆叠层用可能有
+    /// 尺寸偏差 —— 但「有模型」远好于「不可见」，用户仍可在工作台手动改绑。</summary>
     private static void ResolveLayerModel(
         ScriptableObject layer,
         Dictionary<string, PseudoPrefabSO> localModelByGuid,
@@ -375,6 +448,20 @@ public static class LayoutEditorBurgerApi
             w2ModelByGuid.TryGetValue(lg, out modelSO);
         if (modelGo == null && modelSO == null)
             w2GoByGuid.TryGetValue(lg, out modelGo);
+        if (modelGo != null || modelSO != null)
+            return;
+
+        // 第三级：夹心菜谱自带模型（自制夹心的常规路径）
+        var custom = layer as CustomRecipeSO;
+        if (custom == null)
+            return;
+        if (custom.model != null)
+        {
+            modelGo = custom.model;
+            return;
+        }
+        if (custom.modelSO != null)
+            modelSO = custom.modelSO;
     }
 
     /// <summary>按已选成品汉堡夹心层全集（各食材最大重复数）写入本关 BurgerOptional.optionalSOs，
@@ -509,9 +596,10 @@ public static class LayoutEditorBurgerApi
             }
         }
         if (unboundCustoms.Count > 0)
-            LayoutEditorLog.LogWarning("[Optional] BurgerOptional 以下中间产物夹心无堆叠模型绑定"
-                + "（commonW2 与官方面包表均未覆盖，叠层将不可见，请在汉堡工作台补绑定）："
-                + string.Join("、", unboundCustoms.ToArray()));
+            LayoutEditorLog.LogWarning("[Optional] BurgerOptional 以下中间产物夹心无堆叠模型"
+                + "（commonW2 绑定、官方面包表、菜谱自带 model/modelSO 三处均为空，叠层将不可见）："
+                + string.Join("、", unboundCustoms.ToArray())
+                + "。请在汉堡工作台给它上传/生成一个模型，或手动绑定堆叠模型。");
 
         Undo.RecordObject(asm, "Sync Burger Assembly From Selected");
         asm.optionalSOs = opts.ToArray();
@@ -543,19 +631,14 @@ public static class LayoutEditorBurgerApi
 
     /// <summary>commonW2 参考组装定义（创建本关 BurgerOptional 的壳模板）。
     /// 优先 OptionalBurger 主模板；bunSO 只是占位（SyncLevelBurgerOptionalFromBurgers
-    /// 会按关卡实际面包覆盖），不要再默认 ChickenBurgerAssembly（其面包是 DLC08）。</summary>
+    /// 会按关卡实际面包覆盖），不要再默认 ChickenBurgerAssembly（其面包是 DLC08）。
+    /// 查找走 FindCommonW2Assembly 递归扫描（细分类迁移后模板位于 burger/assembly/）。</summary>
     private static CustomRecipeOptionalBurgerSO FindCommonW2BurgerModelAssembly()
     {
-        var burgerDir = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/"
-            + LayoutEditorLevelAdminApi.BurgerCategoryId;
-        if (!LayoutEditorLevelAdminApi.AssetFolderExists(burgerDir))
-            return null;
-        var master = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(
-            burgerDir + "/OptionalBurger.asset");
+        var master = FindCommonW2Assembly("OptionalBurger");
         if (master != null)
             return master;
-        return AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalBurgerSO>(
-            burgerDir + "/ChickenBurgerAssembly.asset");
+        return FindCommonW2Assembly("ChickenBurgerAssembly");
     }
 
     private static BurgerCandidateDto[] CollectBuns()
@@ -574,8 +657,13 @@ public static class LayoutEditorBurgerApi
                 var id = Path.GetFileNameWithoutExtension(asset.assetPath);
                 if (!IsBurgerBunId(id) || !seen.Add(asset.guid))
                     continue;
+                var bunSo = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(asset.assetPath);
                 string zh, en;
                 LayoutEditorManualLookup.TryGet(id, out zh, out en);
+                // ⚠ 必须显式填 bundleAvailable：DTO 里它是 bool，默认 false 会被前端判成
+                //   「bundle 缺失」直接禁用 —— 面包皮全灭。同理补 modelState/iconState，
+                //   让面包与其它候选走同一套徽标/图标口径。
+                var bunBundle = bunSo != null ? (bunSo.bundleName ?? "") : "";
                 list.Add(new BurgerCandidateDto
                 {
                     guid = asset.guid,
@@ -584,6 +672,16 @@ public static class LayoutEditorBurgerApi
                     nameEn = string.IsNullOrEmpty(en) ? id : en,
                     kind = "bun",
                     assetPath = asset.assetPath,
+                    modelState = "bound",   // 面包是底座，模型由官方 cosmetic 决定，不需要堆叠模型
+                    iconState = "none",     // 走 /icons/ingredients/<id>.png
+                    iconFallbackIds = new string[0],
+                    matchlistKey = LayoutEditorMatchlistMap.MatchlistKeyOfAsset(bunSo) ?? "",
+                    bundleName = bunBundle,
+                    bundleAvailable = string.IsNullOrEmpty(bunBundle)
+                        || LayoutEditorCatalogApi.BundleFileExists(bunBundle),
+                    recommended = true,
+                    score = 0,
+                    previewable = false,
                 });
             }
         }
@@ -622,27 +720,44 @@ public static class LayoutEditorBurgerApi
                     comps.Add(Path.GetFileNameWithoutExtension(cp));
             }
             var key = !string.IsNullOrEmpty(so.recipeName) ? so.recipeName : Path.GetFileNameWithoutExtension(asset.assetPath);
+            var fallbackId = Path.GetFileNameWithoutExtension(asset.assetPath);
             string zh;
             if (!zhMap.TryGetValue(key, out zh) || string.IsNullOrEmpty(zh))
-                zh = Path.GetFileNameWithoutExtension(asset.assetPath);
+                zh = fallbackId;
+            // 英文名：names.json 里与中文名同源，载入已有汉堡时要能回填到表单
+            string tmpZh, tmpEn;
+            var en = key;
+            if (LayoutEditorLevelAdminApi.TryGetCustomRecipeDisplayName(dir, key, out tmpZh, out tmpEn)
+                || LayoutEditorLevelAdminApi.TryGetCustomRecipeDisplayName(dir, fallbackId, out tmpZh, out tmpEn))
+            {
+                if (!string.IsNullOrEmpty(tmpEn))
+                    en = tmpEn;
+            }
             list.Add(new BurgerProductDto
             {
                 guid = asset.guid,
-                id = Path.GetFileNameWithoutExtension(asset.assetPath),
+                id = fallbackId,
                 assetPath = asset.assetPath,
                 recipeName = key,
                 nameZh = zh,
+                nameEn = en,
                 score = so.score,
                 compositionIds = comps.ToArray(),
             });
         }
     }
 
-    /// <summary>commonW2 models 目录内的堆叠模型指针（PseudoPrefabSO → 游戏 bundle 资产）。</summary>
+    /// <summary>堆叠模型来源（两路合并）：
+    ///  1. local —— commonW2 models 目录里已有的 PseudoPrefabSO 包装（14 个，可直接绑定）；
+    ///  2. pool  —— layout-editor/scripts/data/burger-model-pool.json（dump_bundle 提取的
+    ///     524 个原版 plated/prep/recipe prefab），选用时才按需生成包装 SO。
+    ///  池文件缺失时自动降级为仅 local，并给一次告警。</summary>
     private static BurgerModelDto[] CollectModels()
     {
         var list = new List<BurgerModelDto>();
-        var modelsDir = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/" + LayoutEditorLevelAdminApi.BurgerCategoryId + "/models";
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+
+        var modelsDir = CommonW2BurgerDir() + "/models";
         if (LayoutEditorLevelAdminApi.AssetFolderExists(modelsDir))
         {
             foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
@@ -651,59 +766,279 @@ public static class LayoutEditorBurgerApi
                 var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(asset.assetPath);
                 if (so == null)
                     continue;
+                var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+                if (!seen.Add(id))
+                    continue;
                 list.Add(new BurgerModelDto
                 {
-                    id = Path.GetFileNameWithoutExtension(asset.assetPath),
+                    id = id,
                     assetPath = asset.assetPath,
                     prefabName = so.prefabName ?? "",
                     bundleName = so.bundleName ?? "",
+                    source = "local",
                 });
             }
         }
-        list.Sort((a, b) => string.Compare(a.id, b.id, StringComparison.Ordinal));
+
+        foreach (var entry in LoadModelPool())
+        {
+            if (!seen.Add(entry.id))
+                continue;
+            list.Add(new BurgerModelDto
+            {
+                id = entry.id,
+                assetPath = "",              // 尚未生成包装 SO
+                prefabName = entry.id,
+                bundleName = entry.bundle,
+                source = "pool",
+                bundleAssetPath = entry.assetPath,
+                dlc = entry.dlc,
+                stackable = entry.stackable,
+            });
+        }
+
+        list.Sort(delegate (BurgerModelDto a, BurgerModelDto b)
+        {
+            if (a.source != b.source)
+                return a.source == "local" ? -1 : 1;
+            return string.Compare(a.id, b.id, StringComparison.Ordinal);
+        });
         return list.ToArray();
     }
 
-    /// <summary>夹心候选：commonW2 汉堡大全各组装定义 optionalSOs 的并集（唯一 guid）。</summary>
-    private static BurgerCandidateDto[] CollectCandidates()
+    [Serializable]
+    private class ModelPoolEntry
+    {
+        public string id;
+        public string bundle;
+        public string assetPath;
+        public string kind;
+        public string dlc;
+        public string norm;
+        public bool stackable;
+    }
+
+    [Serializable]
+    private class ModelPoolFile
+    {
+        public int count;
+        public ModelPoolEntry[] items;
+    }
+
+    private static ModelPoolEntry[] _modelPool;
+    private static bool _modelPoolWarned;
+
+    /// <summary>读取 burger-model-pool.json（由 gen-burger-model-pool.mjs 生成，已入库；
+    ///  编辑器**不依赖** 7.7GB 的 dump_bundle 本体）。缺失时返回空并告警一次。</summary>
+    private static ModelPoolEntry[] LoadModelPool()
+    {
+        if (_modelPool != null)
+            return _modelPool;
+        var path = Path.GetFullPath(Path.Combine(Application.dataPath,
+            "../layout-editor/scripts/data/burger-model-pool.json"));
+        if (!File.Exists(path))
+        {
+            if (!_modelPoolWarned)
+            {
+                _modelPoolWarned = true;
+                LayoutEditorLog.LogWarning("[Burger] 未找到原版模型池 burger-model-pool.json，"
+                    + "堆叠模型只能从 commonW2/models 里选。生成方式："
+                    + "node layout-editor/scripts/gen-burger-model-pool.mjs");
+            }
+            _modelPool = new ModelPoolEntry[0];
+            return _modelPool;
+        }
+        try
+        {
+            var file = JsonUtility.FromJson<ModelPoolFile>(File.ReadAllText(path));
+            _modelPool = file != null && file.items != null ? file.items : new ModelPoolEntry[0];
+        }
+        catch (Exception ex)
+        {
+            LayoutEditorLog.LogWarning("[Burger] 原版模型池解析失败：" + ex.Message);
+            _modelPool = new ModelPoolEntry[0];
+        }
+        return _modelPool;
+    }
+
+    /// <summary>把池条目落成 commonW2/models 下的 PseudoPrefabSO 包装（选用时才生成）。
+    ///  assetPath 逐字符照抄池里的 container —— bundle 内实名大小写敏感，写错运行时取不到。</summary>
+    private static PseudoPrefabSO MaterializePoolModel(string id)
+    {
+        var pool = LoadModelPool();
+        ModelPoolEntry entry = null;
+        for (int i = 0; i < pool.Length; i++)
+        {
+            if (string.Equals(pool[i].id, id, StringComparison.Ordinal))
+            {
+                entry = pool[i];
+                break;
+            }
+        }
+        if (entry == null)
+            return null;
+        if (!LayoutEditorCatalogApi.BundleFileExists(entry.bundle))
+        {
+            LayoutEditorLog.LogWarning("[Burger] 模型 " + id + " 所在 bundle " + entry.bundle
+                + " 不在 StreamingAssets，拒绝生成包装。");
+            return null;
+        }
+        var modelsDir = CommonW2BurgerDir() + "/models";
+        if (!LayoutEditorLevelAdminApi.AssetFolderExists(modelsDir))
+            return null;
+        var assetPath = modelsDir + "/" + id + ".asset";
+        var existing = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(assetPath);
+        if (existing != null)
+            return existing;
+
+        var so = ScriptableObject.CreateInstance<PseudoPrefabSO>();
+        so.prefabName = entry.id;
+        so.bundleName = entry.bundle;
+        so.assetPath = entry.assetPath;
+        AssetDatabase.CreateAsset(so, assetPath);
+        EditorUtility.SetDirty(so);
+        AssetDatabase.SaveAssets();
+        LayoutEditorLog.Log("[Burger] 已生成原版模型包装：" + assetPath
+            + "（" + entry.bundle + " / " + entry.assetPath + "）");
+        return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(assetPath);
+    }
+
+    /// <summary>夹心候选池（2026-09-15 放开）。
+    ///
+    /// 旧版只给「commonW2 各组装定义 optionalSOs 的并集」（约 20 项）并硬拒其余，
+    /// 导致用官方食材/官方菜谱/自制中间产物做夹心一律被挡。现在给出全量候选：
+    ///   - 官方食材        PseudoPrefabSearchFolders 的 Ingredients + commonW1 food（含 30 项盲区）
+    ///   - 官方菜谱节点    OfficialRecipeSearchFolders + commonW2/food/Recipes
+    ///   - 自定义菜谱      commonW2 汉堡大全 + common01 官方自定义 + 当前关卡集
+    /// 每条附带 modelState / matchlistKey / bundleAvailable，让前端能分组、排序、给出告警。
+    /// 真正的拦截只剩「bundle 不在 StreamingAssets」（运行时会崩），见 ValidateFillerLayers。
+    /// </summary>
+    private static BurgerCandidateDto[] CollectCandidates(string setName, bool includeModelless)
     {
         var list = new List<BurgerCandidateDto>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        var allowGuids = CollectCommonW2BurgerFillerGuids();
-        if (allowGuids.Count == 0)
-            return list.ToArray();
+        var recommended = CollectCommonW2BurgerFillerGuids();
+
+        Dictionary<string, PseudoPrefabSO> w2ModelByGuid;
+        Dictionary<string, GameObject> w2GoByGuid;
+        CollectCommonW2LayerModelBindings(out w2ModelByGuid, out w2GoByGuid);
 
         var w2Dir = LayoutEditorLevelAdminApi.CommonW2RecipesDir;
-        var orderedGuids = new List<string>(allowGuids);
-        orderedGuids.Sort(StringComparer.Ordinal);
 
-        for (int i = 0; i < orderedGuids.Count; i++)
+        // 1) 官方食材（PseudoPrefabSO）
+        foreach (var folder in LayoutEditorLevelAdminApi.PseudoPrefabSearchFolders)
         {
-            var guid = orderedGuids[i];
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            if (string.IsNullOrEmpty(path))
+            // 烹饪步骤/装盘容器不是夹心
+            if (folder.IndexOf("/CookingSteps", StringComparison.Ordinal) >= 0 ||
+                folder.IndexOf("/PlatingSteps", StringComparison.Ordinal) >= 0)
                 continue;
-            var custom = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
-            if (custom != null && !(custom is CustomRecipeOptionalBurgerSO) && !(custom is CustomRecipeOptionalPizzaSO))
+            if (!LayoutEditorLevelAdminApi.AssetFolderExists(folder))
+                continue;
+            foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
+                         folder, LayoutEditorLevelAdminApi.PseudoPrefabScriptGuid))
             {
-                AddFillerCandidate(list, seen, guid, path, custom, "custom", w2Dir);
-                continue;
+                var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+                if (IsBurgerBunId(id))
+                    continue; // 面包单列（CollectBuns）
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(asset.assetPath);
+                if (so == null)
+                    continue;
+                AddFillerCandidate(list, seen, asset.guid, asset.assetPath, so, "ingredient",
+                    w2Dir, recommended, w2ModelByGuid, w2GoByGuid);
             }
-            var ing = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
-            if (ing != null)
-                AddFillerCandidate(list, seen, guid, path, ing, "ingredient", w2Dir);
         }
 
-        list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
+        // 2) 官方菜谱节点（PseudoPrefabSORecipe）
+        //    官方成品菜一律不再作为夹心候选 —— 汤/套餐/寿司/披萨/火锅/炸物/甜甜圈……
+        //    都是「一整道菜」，夹进汉堡没有意义。
+        //    唯一例外：**Burger大全组装定义已经在用的**（recommended）。目前是 2 条
+        //    DLC05 早餐拼盘 Breakfast_Bacon_Egg / Breakfast_Bacon_Egg_Sausage，
+        //    它们是 4 个早餐汉堡的实际夹心层；若一并剔除，这些汉堡将无法再被创建或改层。
+        //    这些条目会落在前端的「⭐ 常用夹心」组，不会单独成组。
+        var recipeFolders = new List<string>(LayoutEditorLevelAdminApi.OfficialRecipeSearchFolders);
+        recipeFolders.Add("Assets/commonW2/food/Recipes");
+        foreach (var folder in recipeFolders)
+        {
+            if (!LayoutEditorLevelAdminApi.AssetFolderExists(folder))
+                continue;
+            foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
+                         folder, LayoutEditorLevelAdminApi.OriginalRecipeScriptGuid))
+            {
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(asset.assetPath);
+                if (so == null)
+                    continue;
+                if (!includeModelless && !recommended.Contains(asset.guid))
+                    continue;
+                AddFillerCandidate(list, seen, asset.guid, asset.assetPath, so, "official-recipe",
+                    w2Dir, recommended, w2ModelByGuid, w2GoByGuid);
+            }
+        }
+
+        // 3) 自定义菜谱（只收中间产物；排除组装定义自身）
+        //    三条硬门槛（2026-09-15 收口）：
+        //     a. 成品汉堡不能当夹心 —— 汉堡夹汉堡无意义，且会把 47 条成品汉堡灌进候选列表；
+        //        「载入已有汉堡」走 CollectProducts，是另一条链路，不受影响。
+        //     b. **成品菜（score > 0）不能当夹心** —— 与官方成品菜同一口径：一碗汤、一个披萨、
+        //        一块月饼都是「一整道菜」，夹进汉堡没有意义（实测共享库里就有 4 汤 + 1 披萨）。
+        //        夹心按定义是 0 分中间产物，夹心工作台也默认预设 score=0。
+        //     c. 无堆叠模型（commonW2 绑定 / 自带 model / modelSO 三处皆空）一律不收 ——
+        //        选了运行时也看不见（OrderToPrefabLookup 取到 null）。典型是 Mixed* 搅拌糊：
+        //        它们本就该先下锅变成 Panfried* 再当夹心。
+        //    b、c 的例外都是「commonW2 组装定义已在用」（recommended），避免把现有汉堡的
+        //    实际夹心层挡在门外导致无法改层；前端「显示全部候选」开关（includeModelless）
+        //    可放行全部，用于排查。
+        var customFolders = new List<string>();
+        if (LayoutEditorLevelAdminApi.AssetFolderExists(w2Dir))
+            customFolders.Add(w2Dir);
+        const string commonCustom = "Assets/common01/food/CustomRecipes";
+        if (LayoutEditorLevelAdminApi.AssetFolderExists(commonCustom))
+            customFolders.Add(commonCustom);
+        if (!string.IsNullOrEmpty(setName))
+        {
+            var setDir = LayoutEditorLevelAdminApi.LevelSetsRoot + "/" + setName + "/custom_recipes";
+            if (LayoutEditorLevelAdminApi.AssetFolderExists(setDir))
+                customFolders.Add(setDir);
+        }
+        foreach (var folder in customFolders)
+        {
+            foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
+                         folder, LayoutEditorLevelAdminApi.CustomRecipeScriptGuid))
+            {
+                var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
+                if (so == null || so is CustomRecipeOptionalBurgerSO || so is CustomRecipeOptionalPizzaSO)
+                    continue;
+                // a. 成品汉堡不做夹心
+                if (IsFinishedBurgerRecipe(so))
+                    continue;
+                // b. 成品菜（score>0）不做夹心；commonW2 已在用的除外
+                if (!includeModelless && so.score > 0 && !recommended.Contains(asset.guid))
+                    continue;
+                // c. 统一「有模型」门槛
+                if (!includeModelless
+                    && ModelStateOf(asset.guid, so, w2ModelByGuid, w2GoByGuid) == "none")
+                    continue;
+                AddFillerCandidate(list, seen, asset.guid, asset.assetPath, so, "custom",
+                    folder == w2Dir || folder == commonCustom ? w2Dir : folder,
+                    recommended, w2ModelByGuid, w2GoByGuid);
+            }
+        }
+
+        // 推荐项置顶，其余按中文名
+        list.Sort(delegate (BurgerCandidateDto a, BurgerCandidateDto b)
+        {
+            if (a.recommended != b.recommended)
+                return a.recommended ? -1 : 1;
+            return string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal);
+        });
         return list.ToArray();
     }
 
-    /// <summary>commonW2/custom_recipes/burger 下全部组装定义 optionalSOs 的去重 guid 集合。</summary>
+    /// <summary>commonW2/custom_recipes/burger 下全部组装定义 optionalSOs 的去重 guid 集合
+    ///  （递归含 assembly/ 等子分类目录）。</summary>
     internal static HashSet<string> CollectCommonW2BurgerFillerGuids()
     {
         var guids = new HashSet<string>(StringComparer.Ordinal);
-        var burgerDir = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/"
-            + LayoutEditorLevelAdminApi.BurgerCategoryId;
+        var burgerDir = CommonW2BurgerDir();
         if (!LayoutEditorLevelAdminApi.AssetFolderExists(burgerDir))
             return guids;
         foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
@@ -727,6 +1062,36 @@ public static class LayoutEditorBurgerApi
         return guids;
     }
 
+    /// <summary>堆叠模型状态，与 ResolveLayerModel 的三级回退口径完全一致：
+    ///  bound = commonW2 组装定义里已有绑定；own = 菜谱自带 model/modelSO；none = 三处皆空。
+    ///  官方食材（非 CustomRecipeSO）的 none 属设计内（运行时回退官方面包 lookup），
+    ///  故只对自定义菜谱做门槛判定。</summary>
+    private static string ModelStateOf(
+        string guid,
+        CustomRecipeSO crs,
+        Dictionary<string, PseudoPrefabSO> w2ModelByGuid,
+        Dictionary<string, GameObject> w2GoByGuid)
+    {
+        if (!string.IsNullOrEmpty(guid)
+            && (w2ModelByGuid.ContainsKey(guid) || w2GoByGuid.ContainsKey(guid)))
+            return "bound";
+        if (crs != null && (crs.model != null || crs.modelSO != null))
+            return "own";
+        return "none";
+    }
+
+    /// <summary>共享占位图标判定：文件名含 "Generic" 的图标是「一图多用」的占位图，
+    ///  不能代表这道菜。commonW2 的 FriedGeneric.png（实为一整颗洋葱）被 26 个资产共用，
+    ///  直接下发会让 24 个夹心在工作台里全是洋葱，必须降级到食材图标回退。
+    ///  库内其余图标最多被 4 个资产共用，不会误伤。</summary>
+    private static bool IsGenericIconName(string iconAssetPath)
+    {
+        if (string.IsNullOrEmpty(iconAssetPath))
+            return false;
+        return Path.GetFileNameWithoutExtension(iconAssetPath)
+            .IndexOf("Generic", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     private static void AddFillerCandidate(
         List<BurgerCandidateDto> list,
         HashSet<string> seen,
@@ -734,20 +1099,23 @@ public static class LayoutEditorBurgerApi
         string path,
         ScriptableObject so,
         string kind,
-        string w2Dir)
+        string namesDir,
+        HashSet<string> recommendedGuids,
+        Dictionary<string, PseudoPrefabSO> w2ModelByGuid,
+        Dictionary<string, GameObject> w2GoByGuid)
     {
         if (!seen.Add(guid))
             return;
         var id = Path.GetFileNameWithoutExtension(path);
         string zh = id;
         string en = id;
+        var crs = so as CustomRecipeSO;
         if (kind == "custom")
         {
-            var crs = so as CustomRecipeSO;
             var key = crs != null && !string.IsNullOrEmpty(crs.recipeName) ? crs.recipeName : id;
             string tmpZh, tmpEn;
-            if (LayoutEditorLevelAdminApi.TryGetCustomRecipeDisplayName(w2Dir, key, out tmpZh, out tmpEn)
-                || LayoutEditorLevelAdminApi.TryGetCustomRecipeDisplayName(w2Dir, id, out tmpZh, out tmpEn))
+            if (LayoutEditorLevelAdminApi.TryGetCustomRecipeDisplayName(namesDir, key, out tmpZh, out tmpEn)
+                || LayoutEditorLevelAdminApi.TryGetCustomRecipeDisplayName(namesDir, id, out tmpZh, out tmpEn))
             {
                 zh = tmpZh;
                 en = tmpEn;
@@ -763,6 +1131,28 @@ public static class LayoutEditorBurgerApi
             zh = id;
         if (string.IsNullOrEmpty(en))
             en = id;
+
+        var modelState = ModelStateOf(guid, crs, w2ModelByGuid, w2GoByGuid);
+
+        // 图标状态 + 食材回退链（自定义菜谱没有专属图标时，用叶食材图标区分）
+        var iconState = "none";
+        string[] iconFallbackIds = new string[0];
+        if (crs != null)
+        {
+            if (crs.icon != null)
+            {
+                var iconPath = AssetDatabase.GetAssetPath(crs.icon);
+                iconState = IsGenericIconName(iconPath) ? "generic" : "own";
+            }
+            var leaves = LayoutEditorRecipeKnowledge.CustomIngredients(crs);
+            if (leaves != null && leaves.Count > 0)
+                iconFallbackIds = leaves.ToArray();
+        }
+
+        var pseudo = so as PseudoPrefabSO;
+        var bundleName = pseudo != null ? (pseudo.bundleName ?? "") : "";
+        var matchlistKey = LayoutEditorMatchlistMap.MatchlistKeyOfAsset(so) ?? "";
+
         list.Add(new BurgerCandidateDto
         {
             guid = guid,
@@ -771,15 +1161,56 @@ public static class LayoutEditorBurgerApi
             nameEn = en,
             kind = kind,
             assetPath = path,
+            modelState = modelState,
+            iconState = iconState,
+            iconFallbackIds = iconFallbackIds,
+            matchlistKey = matchlistKey,
+            bundleName = bundleName,
+            // 自定义菜谱不指向游戏 bundle，恒为可用
+            bundleAvailable = string.IsNullOrEmpty(bundleName)
+                || LayoutEditorCatalogApi.BundleFileExists(bundleName),
+            recommended = recommendedGuids != null && recommendedGuids.Contains(guid),
+            score = crs != null ? crs.score : 0,
+            previewable = crs != null && HasLocalModelFiles(path),
         });
     }
 
-    private static string ValidateFillerLayersAllowed(IList<ScriptableObject> layers)
+    /// <summary>该菜谱的 models/&lt;Id&gt;/ 目录里有没有可供网页 3D 预览的本地网格。
+    ///  只有走「上传模型 / 模板网格」生成过模型的自定义菜谱才有；指向游戏 bundle 的
+    ///  PseudoPrefabSO 模型没有本地文件，网页无法预览。</summary>
+    internal static bool HasLocalModelFiles(string recipeAssetPath)
     {
-        var allowed = CollectCommonW2BurgerFillerGuids();
-        if (allowed.Count == 0)
-            return "未找到 commonW2 汉堡大全组装定义，无法校验夹心层。";
-        var bad = new List<string>();
+        var files = LayoutEditorLevelAdminApi.ListCustomRecipeModelFiles(recipeAssetPath);
+        for (int i = 0; i < files.Length; i++)
+        {
+            var ext = Path.GetExtension(files[i]).ToLowerInvariant();
+            if (ext == ".fbx" || ext == ".obj")
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>夹心层校验（2026-09-15 由「白名单硬拒」改为「只拦真正会崩的，其余给告警」）。
+    ///
+    ///  硬拒条件只剩一个：PseudoPrefabSO 指向的 bundle 不在 StreamingAssets ——
+    ///  运行时 PseudoPrefabManager.GetAssetBundle 会抛 KeyNotFoundException，必须挡住。
+    ///
+    ///  告警（不阻断，经 out warnings 回给前端）：
+    ///   - 自定义菜谱没有任何堆叠模型（commonW2 绑定 / 自带 model / modelSO 三处皆空）
+    ///     → 运行时 OrderToPrefabLookup 取到 null，该层不可见；
+    ///   - 引用了官方 DLC 资产 → 需要对应 DLC 匹配表（保存菜谱时会自动补，仅提示）。
+    ///  返回 null = 放行。</summary>
+    private static string ValidateFillerLayers(IList<ScriptableObject> layers, out string[] warnings)
+    {
+        warnings = new string[0];
+        Dictionary<string, PseudoPrefabSO> w2ModelByGuid;
+        Dictionary<string, GameObject> w2GoByGuid;
+        CollectCommonW2LayerModelBindings(out w2ModelByGuid, out w2GoByGuid);
+
+        var blocked = new List<string>();
+        var noModel = new List<string>();
+        var dlcKeys = new List<string>();
+
         foreach (var layer in layers)
         {
             if (layer == null)
@@ -789,12 +1220,45 @@ public static class LayoutEditorBurgerApi
             if (IsBurgerBunId(lid))
                 continue;
             var lg = string.IsNullOrEmpty(lp) ? "" : AssetDatabase.AssetPathToGUID(lp);
-            if (string.IsNullOrEmpty(lg) || !allowed.Contains(lg))
-                bad.Add(lid);
+
+            var pseudo = layer as PseudoPrefabSO;
+            if (pseudo != null && !string.IsNullOrEmpty(pseudo.bundleName)
+                && !LayoutEditorCatalogApi.BundleFileExists(pseudo.bundleName))
+            {
+                blocked.Add(lid + "（bundle " + pseudo.bundleName + " 未构建）");
+                continue;
+            }
+
+            var key = LayoutEditorMatchlistMap.MatchlistKeyOfAsset(layer);
+            if (!string.IsNullOrEmpty(key) && !dlcKeys.Contains(key))
+                dlcKeys.Add(key);
+
+            var crs = layer as CustomRecipeSO;
+            if (crs == null)
+                continue; // 官方生食材无模型属设计内：运行时回退官方面包 lookup
+            var hasBinding = !string.IsNullOrEmpty(lg)
+                && (w2ModelByGuid.ContainsKey(lg) || w2GoByGuid.ContainsKey(lg));
+            if (!hasBinding && crs.model == null && crs.modelSO == null)
+                noModel.Add(lid);
         }
-        if (bad.Count == 0)
-            return null;
-        return "以下夹心不在 commonW2 汉堡大全允许列表中：" + string.Join("、", bad.ToArray());
+
+        if (blocked.Count > 0)
+            return "以下夹心指向的 bundle 不在 StreamingAssets，启用会导致运行时崩溃："
+                + string.Join("、", blocked.ToArray());
+
+        var warn = new List<string>();
+        if (noModel.Count > 0)
+            warn.Add("以下夹心没有堆叠模型，游戏里该层不可见："
+                + string.Join("、", noModel.ToArray())
+                + "。可在菜谱编辑里给它上传模型，或用「模板网格 + 贴图」一键生成。");
+        if (dlcKeys.Count > 0)
+        {
+            dlcKeys.Sort(StringComparer.Ordinal);
+            warn.Add("用到了 DLC 资产（" + string.Join("、", dlcKeys.ToArray())
+                + "），保存菜谱时会自动补入对应 DLC 匹配表。");
+        }
+        warnings = warn.ToArray();
+        return null;
     }
 
     private static BurgerDefinitionDto BuildDefinitionDto(
@@ -859,7 +1323,7 @@ public static class LayoutEditorBurgerApi
     ///  （面包 + 夹心层，普通 CustomRecipeSO）。本关夹心 optional 由菜谱管理一键填充维护。</summary>
     public static string CreateBurger(BurgerCreateDto dto, out BurgerCreateResultDto result)
     {
-        result = new BurgerCreateResultDto { ok = false, addedToDefinition = new string[0] };
+        result = new BurgerCreateResultDto { ok = false, addedToDefinition = new string[0], warnings = new string[0] };
         if (dto == null || string.IsNullOrEmpty(dto.setName))
             return "缺少目标关卡集。";
         var setName = LayoutEditorLevelAdminApi.SanitizeName(dto.setName);
@@ -942,9 +1406,11 @@ public static class LayoutEditorBurgerApi
         if (firstBun == null)
             return "堆叠中至少包含一层汉堡面包。";
 
-        var fillerErr = ValidateFillerLayersAllowed(layers);
+        string[] fillerWarnings;
+        var fillerErr = ValidateFillerLayers(layers, out fillerWarnings);
         if (fillerErr != null)
             return fillerErr;
+        result.warnings = fillerWarnings;
 
         if (firstBun as PseudoPrefabSO == null)
             return "汉堡面包必须是 PseudoPrefabSO 食材：" + firstBun.name;
@@ -1108,30 +1574,40 @@ public static class LayoutEditorBurgerApi
             }
         }
 
-        // 3. 模型绑定（该食材的全部出现一并绑定/解绑）
+        // 3. 模型绑定（该食材的全部出现一并绑定/解绑）；双通道互斥：
+        //    pseudo → ingredientModelSOs（bundle 指针）；local → ingredientModels（本地 prefab）
         if (dto.modelBindings != null)
         {
             foreach (var b in dto.modelBindings)
             {
                 if (b == null || string.IsNullOrEmpty(b.layerGuid))
                     continue;
+                var wantLocal = string.Equals(b.modelKind, "local", StringComparison.Ordinal);
                 PseudoPrefabSO modelSO = null;
+                GameObject modelGo = null;
                 if (!string.IsNullOrEmpty(b.modelId))
                 {
-                    modelSO = FindBurgerModelSO(b.modelId);
-                    if (modelSO == null)
-                        return "堆叠模型无法解析：" + b.modelId;
+                    if (wantLocal)
+                    {
+                        modelGo = FindLocalBurgerModelPrefab(b.modelId);
+                        if (modelGo == null)
+                            return "本地堆叠模型无法解析：" + b.modelId;
+                    }
+                    else
+                    {
+                        modelSO = FindBurgerModelSO(b.modelId);
+                        if (modelSO == null)
+                            return "堆叠模型无法解析：" + b.modelId;
+                    }
                 }
                 for (int i = 0; i < opts.Count; i++)
                 {
                     var p = opts[i] != null ? AssetDatabase.GetAssetPath(opts[i]) : null;
                     var g = string.IsNullOrEmpty(p) ? "" : AssetDatabase.AssetPathToGUID(p);
-                    if (g == b.layerGuid)
-                    {
-                        modelSOs[i] = modelSO;
-                        if (modelSO != null)
-                            models[i] = null; // SO 绑定优先，清掉直引避免双写
-                    }
+                    if (g != b.layerGuid)
+                        continue;
+                    modelSOs[i] = modelSO;
+                    models[i] = modelGo;
                 }
             }
         }
@@ -1149,11 +1625,11 @@ public static class LayoutEditorBurgerApi
     }
 
     /// <summary>堆叠模型 PseudoPrefabSO 查找：优先 commonW2/models（Burger大全自带模型指针），
-    ///  再全项目 PseudoPrefabSO 目录。</summary>
+    ///  再全项目 PseudoPrefabSO 目录；仍未命中则尝试从原版模型池按需生成包装。</summary>
     private static PseudoPrefabSO FindBurgerModelSO(string id)
     {
         var dirs = new List<string>();
-        var modelsDir = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/" + LayoutEditorLevelAdminApi.BurgerCategoryId + "/models";
+        var modelsDir = CommonW2BurgerDir() + "/models";
         if (LayoutEditorLevelAdminApi.AssetFolderExists(modelsDir))
             dirs.Add(modelsDir);
         dirs.AddRange(LayoutEditorLevelAdminApi.PseudoPrefabSearchFolders);
@@ -1165,7 +1641,18 @@ public static class LayoutEditorBurgerApi
                     return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(a.assetPath);
             }
         }
-        return null;
+        // 原版模型池：选用时才落包装 SO（bundle 不可用会被 MaterializePoolModel 拒绝）
+        return MaterializePoolModel(id);
+    }
+
+    /// <summary>本地堆叠模型 prefab（commonW2/models 里的自制四件套产物）。</summary>
+    private static GameObject FindLocalBurgerModelPrefab(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+        var modelsDir = CommonW2BurgerDir() + "/models";
+        var path = modelsDir + "/" + id + (id.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) ? "" : ".prefab");
+        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
     }
 
     private static string FindFirstBunId(string[] ids)

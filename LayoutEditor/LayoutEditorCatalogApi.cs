@@ -218,9 +218,25 @@ public static class LayoutEditorCatalogApi
         return "other";
     }
 
-    public static RecipeCatalogDto ScanRecipes(string levelSet)
+    /// <summary>Burger大全二级分类 = commonW2/custom_recipes/burger/&lt;子目录&gt;/ 的目录名。
+    ///  未分目录（直接放 burger/ 下）返回 ""。目录即事实，显示名见
+    ///  LayoutEditorLevelAdminApi.BurgerSubcategories()。</summary>
+    internal static string BurgerSubtypeOfPath(string assetPath)
     {
-        var list = new List<RecipeEntryDto>();
+        if (string.IsNullOrEmpty(assetPath))
+            return "";
+        var prefix = LayoutEditorLevelAdminApi.CommonW2RecipesDir + "/"
+            + LayoutEditorLevelAdminApi.BurgerCategoryId + "/";
+        var normalized = assetPath.Replace('\\', '/');
+        if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
+            return "";
+        var rest = normalized.Substring(prefix.Length);
+        var slash = rest.IndexOf('/');
+        return slash > 0 ? rest.Substring(0, slash) : "";
+    }
+
+    public static RecipeCatalogDto ScanRecipes(string levelSet)
+    {        var list = new List<RecipeEntryDto>();
         var folders = new List<string>
         {
             "Assets/common01/food/Recipes",
@@ -360,6 +376,7 @@ public static class LayoutEditorCatalogApi
                     isCustom = isCustom,
                     group = group,
                     type = group == "burger" ? "burger" : RecipeTypeOf(id),
+                    subtype = group == "burger" ? BurgerSubtypeOfPath(path) : "",
                     intermediate = score <= 0 && !orderable,
                     mixing = isCustom && custom.type == CustomRecipeSO.RecipeType.Mixed,
                     optionalKind = custom is CustomRecipeOptionalBurgerSO ? "burger"
@@ -627,6 +644,12 @@ public static class LayoutEditorCatalogApi
         // 保留 hotdog/pizza/用户手动加入的成品汉堡等非汉堡条目。
         var burgerSyncNote = SyncBurgerOptionalsForSavedRecipes(update.levelInfoAssetPath, levelSet, recipes, info);
 
+        // DLC 匹配表自动补全（必须在 EnsureWebDependencies 之前：后者靠读
+        // includeRecipeMatchLists 注册 bundle 依赖，晚了就漏包）。
+        // 只增不删：Matchlist tab 手填条目一律保留。详见 LayoutEditorMatchlistMap 类注释
+        //（早餐汉堡引用 DLC05 官方节点 Breakfast_Bacon_Egg，缺 dlc05 匹配表时盘子接不起来）。
+        var matchlistNote = LayoutEditorMatchlistMap.EnsureRequiredMatchlists(info);
+
         // 按当前 LevelInfo 引用覆盖重建 bundle 依赖（不保留旧菜谱遗留的 dependencies）。
         if (levelSet != null)
             LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, info, true);
@@ -657,8 +680,18 @@ public static class LayoutEditorCatalogApi
         if (dropped.Count > 0)
             return "已写入 " + recipes.Count + " 道菜谱；以下菜谱未能写入（guid 无法解析，或未安装到本关卡集的内置菜谱）："
                 + string.Join("、", dropped.ToArray());
-        note = burgerSyncNote;
+        note = JoinNotes(burgerSyncNote, matchlistNote);
         return null;
+    }
+
+    /// <summary>拼接非空提示（保存菜谱可能同时触发汉堡同步与匹配表补全）。</summary>
+    private static string JoinNotes(string a, string b)
+    {
+        if (string.IsNullOrEmpty(a))
+            return string.IsNullOrEmpty(b) ? null : b;
+        if (string.IsNullOrEmpty(b))
+            return a;
+        return a + "；" + b;
     }
 
     /// <summary>保存菜谱时的汉堡 optional 自动同步：所选含成品汉堡 → 同步本关 BurgerOptional
@@ -818,7 +851,19 @@ public static class LayoutEditorCatalogApi
         return "Assets/commonW1/pseudo_prefab_so/core/matchlists/" + key + "_recipematchlist.asset";
     }
 
-    private static string MatchlistKeyOfPath(string assetPath)
+    /// <summary>白名单校验（供 LayoutEditorMatchlistMap 复用，避免复制常量表）。</summary>
+    internal static bool IsKnownMatchlistKey(string key)
+    {
+        return !string.IsNullOrEmpty(key) && Array.IndexOf(MatchlistKeys, key) >= 0;
+    }
+
+    /// <summary>key → 包装资产路径（供 LayoutEditorMatchlistMap 复用）。</summary>
+    internal static string MatchlistWrapperPathOf(string key)
+    {
+        return MatchlistWrapperPath(key);
+    }
+
+    internal static string MatchlistKeyOfPath(string assetPath)
     {
         var name = Path.GetFileNameWithoutExtension(assetPath ?? "");
         const string suffix = "_recipematchlist";

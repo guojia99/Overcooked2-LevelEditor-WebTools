@@ -2,31 +2,65 @@ import * as api from "./api";
 import type { AudioKnowledge, BundleAnalysis, LevelDetail, LevelSetInfo, LevelSummary } from "./types";
 import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
-import { navigateTo } from "./route";
+import { navigateTo, depsPath, parseRoute } from "./route";
 import { goLayout, goManage } from "./levels";
 
-const DEPS_TARGET_KEY = "depsTargetLevel";
-
 export function goDependencies(setName?: string, levelInfoAssetPath?: string): void {
+  // 严格路由：/dependencies/{set}/{levelId}（levelId = LevelInfo 资产所在数据目录名）
   if (setName && levelInfoAssetPath) {
-    sessionStorage.setItem(DEPS_TARGET_KEY, JSON.stringify({ setName, assetPath: levelInfoAssetPath }));
-  } else {
-    sessionStorage.removeItem(DEPS_TARGET_KEY);
+    const parts = levelInfoAssetPath.replace(/\\/g, "/").split("/");
+    const levelId = parts.length >= 2 ? parts[parts.length - 2] : "";
+    location.assign(depsPath(setName, levelId || undefined));
+    return;
   }
   location.assign("/dependencies");
 }
 
-function consumeDepsTarget(): { setName: string; assetPath: string } | null {
-  const raw = sessionStorage.getItem(DEPS_TARGET_KEY);
-  if (!raw) return null;
-  sessionStorage.removeItem(DEPS_TARGET_KEY);
+/** 把 URL 同步到当前视图（pushState；深链初载时路径已一致则不动）。 */
+function syncDepsPath(path: string): void {
+  if (location.pathname !== path) history.pushState(null, "", path);
+}
+
+/** 由 LevelInfo 资产路径推导 levelId（其所在数据目录名）。 */
+function levelIdFromAssetPath(assetPath: string): string {
+  const parts = assetPath.replace(/\\/g, "/").split("/");
+  return parts.length >= 2 ? parts[parts.length - 2] : "";
+}
+
+/** 深链解析：/dependencies/{set}/{levelId} → LevelInfo assetPath。 */
+async function resolveLevelAssetPath(setName: string, levelId: string): Promise<string | null> {
+  let levels: LevelSummary[] = [];
   try {
-    const v = JSON.parse(raw) as { setName?: string; assetPath?: string };
-    if (v.setName && v.assetPath) return { setName: v.setName, assetPath: v.assetPath };
+    levels = await api.fetchLevels(setName);
   } catch {
-    /* ignore */
+    return null;
   }
-  return null;
+  const hit =
+    levels.find((lv) => (lv.dataDir.split("/").pop() ?? "") === levelId) ??
+    levels.find((lv) => levelIdFromAssetPath(lv.assetPath) === levelId);
+  return hit?.assetPath ?? null;
+}
+
+let popstateWired = false;
+
+async function renderDepsRoute(app: HTMLElement): Promise<void> {
+  const r = parseRoute();
+  if (r.page !== "dependencies") return;
+  if (r.setId && r.levelId) {
+    const resolved = await resolveLevelAssetPath(r.setId, r.levelId);
+    if (resolved) {
+      await renderDepsDetail(app, r.setId, resolved);
+      return;
+    }
+    await renderLevelList(app, r.setId);
+    setStatus(`未找到关卡「${r.levelId}」，已返回关卡列表。`, false);
+    return;
+  }
+  if (r.setId) {
+    await renderLevelList(app, r.setId);
+    return;
+  }
+  await renderSetList(app);
 }
 
 function esc(s: unknown): string {
@@ -111,15 +145,15 @@ function renderAnalysisBox(analysis: BundleAnalysis, alwaysLoaded: Set<string>):
 }
 
 export async function renderDependenciesView(app: HTMLElement): Promise<void> {
-  const target = consumeDepsTarget();
-  if (target) {
-    await renderDepsDetail(app, target.setName, target.assetPath);
-    return;
+  if (!popstateWired) {
+    popstateWired = true;
+    window.addEventListener("popstate", () => void renderDepsRoute(app));
   }
-  await renderSetList(app);
+  await renderDepsRoute(app);
 }
 
 async function renderSetList(app: HTMLElement): Promise<void> {
+  syncDepsPath("/dependencies");
   const content = shell(app, "依赖管理 · 选择关卡集");
   setBusy("加载关卡集…");
   let sets: LevelSetInfo[] = [];
@@ -155,6 +189,7 @@ async function renderSetList(app: HTMLElement): Promise<void> {
 }
 
 async function renderLevelList(app: HTMLElement, setName: string): Promise<void> {
+  syncDepsPath(depsPath(setName));
   const content = shell(app, `依赖管理 · ${setName}`, "返回关卡集", () => void renderSetList(app));
   setBusy(`加载 ${setName} 的关卡…`);
   let levels: LevelSummary[] = [];
@@ -193,6 +228,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
 }
 
 async function renderDepsDetail(app: HTMLElement, setName: string, assetPath: string): Promise<void> {
+  syncDepsPath(depsPath(setName, levelIdFromAssetPath(assetPath) || undefined));
   const content = shell(
     app,
     `依赖管理 · ${setName}`,

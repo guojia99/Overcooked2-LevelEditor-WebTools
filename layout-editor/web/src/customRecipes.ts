@@ -11,7 +11,7 @@ import type {
 } from "./types";
 import { showBusy, hideBusy, withBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
-import { navigateTo } from "./route";
+import { burgerPath, fillingPath, parseRoute, recipeFormPath, recipeListPath } from "./route";
 import { foodGroupLabel, visibleIngredients, visibleRecipes } from "./ingredientLabels";
 import { recipeTypeLabel, RECIPE_TYPE_ORDER } from "./recipeTypes";
 import { closeModal, openModal } from "./modals";
@@ -20,6 +20,7 @@ import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { fmt4, fmtCm, footprintOf, u2cm } from "./modelUnits";
 import { sanitizeUploadFileName } from "./fbxTextureRename";
 import { ensureObjMtllib, renameMtlTextureRefs } from "./mtlTextureRename";
+import { openRecipeModelPreview } from "./recipeModelPreview";
 
 function esc(s: unknown): string {
   return String(s ?? "")
@@ -57,7 +58,63 @@ function shell(app: HTMLElement, title: string): HTMLElement {
   return document.getElementById("cr-content")!;
 }
 
+/** 把 URL 同步到当前视图（pushState；深链初载时路径已一致则不动）。 */
+function syncCrPath(path: string): void {
+  if (location.pathname !== path) history.pushState(null, "", path);
+}
+
+let crPopstateWired = false;
+
+/** /custom-recipes 路由分发：选集（无 id）/ 列表（{set}）/ 编辑表单（{set}/recipe/{id|new}）。 */
+async function renderCustomRecipesRoute(app: HTMLElement): Promise<void> {
+  const r = parseRoute();
+  if (r.page === "custom-recipes" && r.setId && r.recipeId) {
+    await openRecipeFormById(app, r.setId, r.recipeId);
+    return;
+  }
+  if (r.page === "custom-recipes" && r.setId) {
+    await renderRecipeList(app, r.setId);
+    return;
+  }
+  await renderSetChooser(app);
+}
+
+/** 深链 /custom-recipes/{set}/recipe/{id}：按菜谱 id 解析 assetPath 后打开编辑表单。 */
+async function openRecipeFormById(app: HTMLElement, setName: string, recipeId: string): Promise<void> {
+  if (recipeId === "new") {
+    await renderRecipeForm(app, setName, null);
+    return;
+  }
+  let recipes: CustomRecipeSummary[] = [];
+  try {
+    recipes = await api.fetchCustomRecipes(setName);
+  } catch (e) {
+    showError(e);
+    return;
+  }
+  // 本集菜谱优先（commonW2 共享库同 id 条目只读，不作为深链编辑目标）
+  const hit =
+    recipes.find((x) => x.id === recipeId && !isCommonW2Recipe(x)) ??
+    recipes.find((x) => x.id === recipeId) ??
+    recipes.find((x) => x.assetPath.replace(/\\/g, "/").endsWith("/" + recipeId + ".asset"));
+  if (!hit) {
+    await renderRecipeList(app, setName);
+    setStatus(`未找到菜谱「${recipeId}」，已返回列表。`, false);
+    return;
+  }
+  await renderRecipeForm(app, setName, hit.assetPath);
+}
+
 export async function renderCustomRecipesView(app: HTMLElement): Promise<void> {
+  if (!crPopstateWired) {
+    crPopstateWired = true;
+    window.addEventListener("popstate", () => void renderCustomRecipesRoute(app));
+  }
+  await renderCustomRecipesRoute(app);
+}
+
+async function renderSetChooser(app: HTMLElement): Promise<void> {
+  syncCrPath("/custom-recipes");
   const content = shell(app, "自定义菜谱管理");
   setBusy("加载关卡集…");
 
@@ -125,68 +182,6 @@ function foodIconImg(kind: "ingredients" | "recipes", id: string | undefined): s
   return `<img class="food-icon" loading="lazy" src="${src}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
 }
 
-/** 菜谱 models 目录的 3D 资源访问基地址（目录式，FBX 贴图按相对路径拼接）。
- *  目录结构：custom_recipes/<分类>/models/<菜谱id>/（每个菜谱一个文件夹）。 */
-function modelResourceBase(recipeAssetPath: string): string {
-  const id = recipeAssetPath.split("/").pop()?.replace(/\.asset$/, "") ?? "model";
-  const dir = recipeAssetPath.replace(/\/[^/]+\.asset$/, "") + "/models/" + encodeURIComponent(id);
-  const b64 = btoa(unescape(encodeURIComponent(dir)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-  return `/api/custom-recipes/model-files/${b64}/`;
-}
-
-/** 打开菜谱 3D 模型在线预览（自动从 models 目录找 .fbx/.obj；three.js 按需加载）。
- *  预览显示参考容器标的物（盘子/玻璃杯，半透明、无碰撞），容器中心 = 原点 (0,0,0)，
- *  「自动适配」按「适配目标」（fitTarget）缩放并把选中面放到容器承物面。 */
-async function openRecipeModelPreview(
-  recipeAssetPath: string,
-  title: string,
-  extra?: Partial<import("./modelPreview").ModelTransformValues> & {
-    onAdjust?: (t: import("./modelPreview").ModelTransformValues) => void
-    unitySize?: { x: number; y: number; z: number; minY: number }
-    fitTarget?: "plate" | "cup"
-  }
-): Promise<void> {
-  try {
-    const files = await api.fetchCustomRecipeModelFiles(recipeAssetPath);
-    const model = files.find((f) => /\.(fbx|obj)$/i.test(f));
-    if (!model) {
-      alert("该菜谱尚未上传模型文件。");
-      return;
-    }
-    const { openModelPreview } = await import("./modelPreview");
-    const base = modelResourceBase(recipeAssetPath);
-    const texUrls = files
-      .filter((f) => /\.(png|jpg|jpeg)$/i.test(f))
-      .map((f) => base + encodeURIComponent(f));
-    const mtl = files.find((f) => /\.mtl$/i.test(f));
-    openModelPreview({
-      title,
-      resourceBase: base,
-      modelFileName: model,
-      mtlUrl: mtl ? base + encodeURIComponent(mtl) : undefined,
-      fitTarget: extra?.fitTarget,
-      scale: extra?.scale,
-      rotationX: extra?.rotationX,
-      rotationY: extra?.rotationY,
-      rotationZ: extra?.rotationZ,
-      positionX: extra?.positionX,
-      positionY: extra?.positionY,
-      positionZ: extra?.positionZ,
-      pivotX: extra?.pivotX,
-      pivotY: extra?.pivotY,
-      pivotZ: extra?.pivotZ,
-      unitySize: extra?.unitySize,
-      onAdjust: extra?.onAdjust,
-      remoteTextures: texUrls,
-    });
-  } catch (e) {
-    alert((e as Error).message || "模型预览加载失败。");
-  }
-}
-
 // ==================== Recipe List ====================
 
 interface RecipeLikeCard extends RecipeWithGroups {}
@@ -196,6 +191,7 @@ function toRecipeCard(r: CustomRecipeSummary): RecipeLikeCard {
 }
 
 async function renderRecipeList(app: HTMLElement, setName: string): Promise<void> {
+  syncCrPath(recipeListPath(setName));
   const content = shell(app, `自定义菜谱 · ${esc(setName)}`);
   setBusy("加载菜谱配置…");
 
@@ -245,6 +241,18 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
 
   // 从模块级记忆恢复分类过滤（进入新建/编辑后返回时保持）；分类已被删除则回退「全部」
   let activeCategoryId = listCategories.some((c) => c.id === lastActiveCategoryId) ? lastActiveCategoryId : "";
+  /** 二级分类过滤（分类目录下的子目录，如 burger_filling/ 下再分层）；""=全部。 */
+  let activeSubcategoryId = "";
+  const subcategories = config.subcategories ?? [];
+  /** 子分类显示名：桥接下发的元数据优先，缺则回退目录名。 */
+  function subDisplay(parent: string, id: string): string {
+    const m = subcategories.find((s) => s.parent === parent && s.id === id);
+    return m?.zh || id;
+  }
+  function subOrder(parent: string, id: string): number {
+    const m = subcategories.find((s) => s.parent === parent && s.id === id);
+    return m?.order ?? 999;
+  }
   let searchQuery = "";
   /** 分数过滤：全部 / 其他（不在 0/20/…/120 档位）/ 指定分数。 */
   let scoreFilter: "all" | "other" | number = "all";
@@ -268,6 +276,8 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   function filteredRecipes(): CustomRecipeSummary[] {
     const base = getDisplayRecipes();
     let list = activeCategoryId ? base.filter((r) => r.category === activeCategoryId) : base;
+    if (activeCategoryId && activeSubcategoryId)
+      list = list.filter((r) => (r.subcategory ?? "") === activeSubcategoryId);
     if (filterIntermediate) list = list.filter((r) => r.score <= 0);
     if (filterMixed) list = list.filter((r) => r.type === "Mixed");
     if (filterFinished) list = list.filter((r) => r.score > 0);
@@ -349,7 +359,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       const isAssembly = r.optionalKind === "burger" || r.optionalKind === "pizza";
       const isFinishedBurger = Boolean(r.isFinishedBurger);
       const gotoBurgerWorkbench = isAssembly || isFinishedBurger;
-      const burgerProductAttr = isFinishedBurger ? ` data-burger-product="${esc(r.assetPath)}"` : "";
+      const burgerProductAttr = isFinishedBurger ? ` data-burger-product="${esc(r.id)}"` : "";
       return `
       <div class="cr-card-wrap">
         <div class="cr-card-inner">${cardHtml}</div>
@@ -358,7 +368,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
           ${plating ? `<span class="cr-cat-tag cr-plate-tag" title="装盘容器">🍽 ${esc(plating)}</span>` : ""}
           <span class="muted small">${isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : `UID ${r.uID}`} · 组成 ${compCount} 项</span>
           <span style="flex:1"></span>
-          ${r.hasModel ? `<button class="m-btn small" data-preview="${esc(r.assetPath)}" title="3D 模型在线预览">👁</button>` : ""}
+          ${r.previewable ?? r.hasModel ? `<button class="m-btn small" data-preview="${esc(r.assetPath)}" title="3D 模型在线预览">👁</button>` : ""}
           ${gotoBurgerWorkbench
             ? `<button class="m-btn small" data-goto-burger${burgerProductAttr} title="${isFinishedBurger ? "在汉堡工作台载入并编辑此成品汉堡" : "组装定义的可选夹心与堆叠模型在汉堡工作台中管理"}">🍔 工作台</button>`
             : `<button class="m-btn small" data-edit="${esc(r.assetPath)}">编辑</button>`}
@@ -387,11 +397,40 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       </span>`;
   }
 
+  /** 二级分类 chips（选中某个分类时才出现）：分类目录下的子目录。
+   *  子目录归属由后端按资产路径派生（custom_recipes/<分类>/<子分类>/xxx.asset），
+   *  显示名走桥接下发的 subcategories 元数据，缺失则直接显示目录名。 */
+  function renderSubChips(): string {
+    if (!activeCategoryId) return "";
+    const inCat = getDisplayRecipes().filter((r) => r.category === activeCategoryId);
+    const subs = new Map<string, number>();
+    for (const r of inCat) {
+      const s = r.subcategory ?? "";
+      if (!s) continue;
+      subs.set(s, (subs.get(s) ?? 0) + 1);
+    }
+    if (subs.size === 0) return "";
+    const rootCount = inCat.filter((r) => !(r.subcategory ?? "")).length;
+    const ordered = [...subs.entries()].sort(
+      (a, b) => subOrder(activeCategoryId, a[0]) - subOrder(activeCategoryId, b[0]) || a[0].localeCompare(b[0])
+    );
+    return `
+      <button type="button" class="rl-chip-btn cr-sub-chip${activeSubcategoryId === "" ? " active" : ""}" data-sub="">全部 <span class="rl-cnt">${inCat.length}</span></button>
+      ${ordered
+        .map(
+          ([id, n]) =>
+            `<button type="button" class="rl-chip-btn cr-sub-chip${activeSubcategoryId === id ? " active" : ""}" data-sub="${esc(id)}">${esc(subDisplay(activeCategoryId, id))} <span class="rl-cnt">${n}</span></button>`
+        )
+        .join("")}
+      ${rootCount > 0 ? `<span class="muted small">未分子类 ${rootCount}</span>` : ""}`;
+  }
+
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn" id="cr-back">← 返回关卡集列表</button>
       <span class="muted">当前关卡集：<b>${esc(setName)}</b></span>
       <span style="flex:1"></span>
+      <button class="m-btn" id="cr-new-filling" title="夹心 = 0 分自定义菜谱，做好后可在汉堡工作台选用">🥩 夹心工作台</button>
       <button class="m-btn" id="cr-new-burger">🍔 新增汉堡菜谱</button>
       <button class="m-btn primary" id="cr-new-recipe">+ 新建菜谱</button>
     </div>
@@ -413,6 +452,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       <button type="button" class="rl-chip-btn cr-state-chip${filterFinished ? " active" : ""}" data-state="finished" title="只看可点单的成品菜（score>0，可与其他状态叠加 = 交集）">🍽 成品</button>
     </div>
     <div class="cr-toolbar cr-cat-bar" id="cr-cat-chips">${renderCatChips()}</div>
+    <div class="cr-toolbar cr-sub-bar" id="cr-sub-chips">${renderSubChips()}</div>
     <div id="cr-grid">${renderGrid()}</div>
   `;
 
@@ -433,6 +473,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       setStatus(`${getDisplayRecipes().length} 个菜谱 · UID前缀：${config.uidPrefix}`);
       document.getElementById("cr-cat-chips")!.innerHTML = renderCatChips();
       wireCatChips();
+      refreshSubChips();
       document.getElementById("cr-grid")!.innerHTML = renderGrid();
       wireGridButtons();
     })();
@@ -462,13 +503,36 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     });
   }
 
+  /** 二级 chips 重绘 + 重新绑定（分类切换或数据刷新后调用）。 */
+  function refreshSubChips(): void {
+    const el = document.getElementById("cr-sub-chips");
+    if (!el) return;
+    el.innerHTML = renderSubChips();
+    el.style.display = el.innerHTML.trim() ? "" : "none";
+    wireSubChips();
+  }
+
+  function wireSubChips(): void {
+    document.querySelectorAll<HTMLButtonElement>(".cr-sub-chip").forEach((b) => {
+      b.addEventListener("click", () => {
+        activeSubcategoryId = b.dataset.sub ?? "";
+        refreshSubChips();
+        document.getElementById("cr-grid")!.innerHTML = renderGrid();
+        wireGridButtons();
+      });
+    });
+  }
+
   function wireCatChips(): void {
     document.querySelectorAll<HTMLButtonElement>(".cr-cat-chip").forEach((b) => {
       b.addEventListener("click", () => {
         activeCategoryId = b.dataset.cat ?? "";
         lastActiveCategoryId = activeCategoryId;
+        // 切分类时二级过滤必须清空（旧子分类在新分类下不存在）
+        activeSubcategoryId = "";
         document.getElementById("cr-cat-chips")!.innerHTML = renderCatChips();
         wireCatChips();
+        refreshSubChips();
         document.getElementById("cr-grid")!.innerHTML = renderGrid();
         wireGridButtons();
       });
@@ -486,18 +550,21 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   }
 
   function wireGridButtons(): void {
-    // 汉堡工作台：同 path 仅改 hash 不会整页重载，必须显式 reload 才会触发 main.ts 路由。
+    // 汉堡工作台：严格路由 /custom-recipes/burger-maker/{set}[/{burgerId}]（整页跳转重载）
     document.querySelectorAll<HTMLElement>("[data-goto-burger]").forEach((b) =>
       b.addEventListener("click", () => {
-        sessionStorage.setItem("burgerMakerSetName", setName);
-        const productPath = b.dataset.burgerProduct;
-        if (productPath) sessionStorage.setItem("burgerMakerLoadAssetPath", productPath);
-        else sessionStorage.removeItem("burgerMakerLoadAssetPath");
-        navigateTo("burger-maker");
+        const productId = b.dataset.burgerProduct;
+        location.assign(burgerPath(setName, productId || undefined));
       })
     );
     document.querySelectorAll<HTMLButtonElement>("[data-edit]").forEach((b) =>
-      b.addEventListener("click", () => void renderRecipeForm(app, setName, b.dataset.edit!))
+      b.addEventListener("click", () => {
+        const path = b.dataset.edit!;
+        const hit = recipes.find((x) => x.assetPath === path);
+        const rid = hit?.id ?? (path.split("/").pop() ?? "").replace(/\.asset$/, "");
+        syncCrPath(recipeFormPath(setName, rid || "new"));
+        void renderRecipeForm(app, setName, path);
+      })
     );
     document.querySelectorAll<HTMLButtonElement>("[data-preview]").forEach((b) =>
       b.addEventListener("click", () => {
@@ -536,16 +603,20 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
 
   wireToolbar();
   wireCatChips();
+  refreshSubChips();
   wireGridButtons();
 
-  document.getElementById("cr-back")?.addEventListener("click", () => void renderCustomRecipesView(app));
+  document.getElementById("cr-back")?.addEventListener("click", () => void renderSetChooser(app));
   document.getElementById("cr-new-burger")?.addEventListener("click", () => {
-    sessionStorage.setItem("burgerMakerSetName", setName);
-    navigateTo("burger-maker");
+    location.assign(burgerPath(setName));
   });
-  document.getElementById("cr-new-recipe")?.addEventListener("click", () =>
-    void renderRecipeForm(app, setName, null, activeCategoryId ? { category: activeCategoryId } : undefined)
-  );
+  document.getElementById("cr-new-filling")?.addEventListener("click", () => {
+    location.assign(fillingPath(setName));
+  });
+  document.getElementById("cr-new-recipe")?.addEventListener("click", () => {
+    syncCrPath(recipeFormPath(setName, "new"));
+    void renderRecipeForm(app, setName, null, activeCategoryId ? { category: activeCategoryId } : undefined);
+  });
 }
 
 // ==================== Recipe Form Page (Create / Edit) ====================
@@ -658,14 +729,29 @@ function buildCompositionContext(
   return { subItems, recipeIdSet, allRecipeLikes };
 }
 
-async function renderRecipeForm(
+/** 菜谱编辑器的可选预设。
+ *  `mode: "filling"` = 夹心模式：夹心本质就是一道 0 分自定义菜谱，因此**复用同一个编辑器**，
+ *  只做预设与增量（预设 0 分 / Cooked / 盘子装盘 / burger_filling 分类，模型区多一条
+ *  「模板网格 + 自制贴图」零建模通道）。普通新建菜谱行为完全不变。 */
+export interface RecipeFormPresets {
+  score?: number;
+  category?: string;
+  mode?: "filling";
+  /** 夹心模式默认模板网格 id（缺省 FriedFishCake）。 */
+  templateMeshId?: string;
+  /** 覆盖「返回」与保存后的跳转（夹心工作台页用；缺省回菜谱列表）。 */
+  onBack?: () => void;
+}
+
+export async function renderRecipeForm(
   app: HTMLElement,
   setName: string,
   assetPath: string | null,
-  presets?: { score?: number; category?: string }
+  presets?: RecipeFormPresets
 ): Promise<void> {
   const isEdit = assetPath != null;
-  const content = shell(app, isEdit ? "编辑菜谱" : "新建菜谱");
+  const isFilling = presets?.mode === "filling";
+  const content = shell(app, isEdit ? (isFilling ? "编辑夹心" : "编辑菜谱") : (isFilling ? "🥩 新建夹心" : "新建菜谱"));
   setBusy("加载参考数据…");
 
   let ingredients: IngredientEntry[] = [];
@@ -720,12 +806,16 @@ async function renderRecipeForm(
   const recipeName = recipe?.recipeName ?? "";
   const nameZh = recipe?.nameZh ?? "";
   const nameEn = recipe?.nameEn ?? "";
-  const categoryId = recipe?.category ?? presets?.category ?? (config.categories?.length > 0 ? config.categories[0].id : "");
+  const categoryId =
+    recipe?.category ??
+    presets?.category ??
+    (isFilling ? "burger_filling" : config.categories?.length > 0 ? config.categories[0].id : "");
+  // 夹心不可单独点单，恒 0 分（字段仍可编辑，只是默认值与提示不同）
   const score = recipe?.score ?? presets?.score ?? 0;
-  const type = recipe?.type ?? (presets?.score === 0 ? "Cooked" : "Composite");
+  const type = recipe?.type ?? (isFilling || presets?.score === 0 ? "Cooked" : "Composite");
   const cookingStepId = recipe?.cookingStepId ?? "";
   const cookingStepIconId = recipe?.cookingStepIconId ?? "";
-  const platingStepId = recipe?.platingStepId ?? "";
+  const platingStepId = recipe?.platingStepId ?? (isFilling ? "Plate" : "");
   const mixingIconId = recipe?.mixingIconId ?? "";
   const modelPrefabId = "";
 
@@ -1196,6 +1286,9 @@ async function renderRecipeForm(
       <button class="m-btn primary" id="cr-form-save">💾 保存</button>
     </div>
     <div class="cr-form">
+      ${isFilling ? `<p class="modal-hint cr-filling-hint">🥩 <b>夹心</b>就是一道 <b>0 分的自定义菜谱</b>——不可单独点单，只作为汉堡的一层。
+        做好并给它一个模型后，就能在「🍔 汉堡组装工作台」的候选里选用（没有模型的夹心会被过滤，因为游戏里那层看不见）。
+        下面用的是和普通菜谱完全相同的编辑器，额外多了一条「模板网格 + 自制贴图」的零建模通道。</p>` : ""}
       <div class="cr-section">
         <div class="m-section-title">组装效果（实时预览）</div>
         <div id="cr-preview" class="cr-preview"></div>
@@ -1235,7 +1328,9 @@ async function renderRecipeForm(
             </select>
           </label>
           <label class="m-field">分数<input type="number" id="cr-score" value="${score}" min="0">
-            <span class="muted small">菜谱分值（卡片展示）</span>
+            <span class="muted small">${isFilling
+              ? "夹心一般保持 <b>0 分</b>：0 分 = 中间产物，不进订单、只作为组成层"
+              : "菜谱分值（卡片展示）"}</span>
           </label>
           <label class="m-field" id="cr-cook-step-field">烹饪步骤 ${selectHtml(refs.cookingSteps, cookingStepId, "cr-cook-step")}</label>
           <label class="m-field" id="cr-cook-icon-field">烹饪图标 ${selectHtml(refs.icons, cookingStepIconId, "cr-cook-icon")}</label>
@@ -1293,6 +1388,25 @@ async function renderRecipeForm(
             </div>
             <input type="file" id="cr-model-texture" accept=".png,.jpg,.jpeg,image/png,image/jpeg" hidden>
           </div>
+          <div class="cr-model-template">
+            <div class="m-section-title small">零建模：模板网格 + 自制贴图</div>
+            <p class="muted small">不会建模也能给夹心做出模型：选一个内置模板网格，再用取色/上传/画笔做一张 1024×1024 贴图即可。
+              模板 FBX 会被<b>拷贝一份</b>到本菜谱目录（模板本身只读，拷贝后与共享库无引用关系）。
+              若上方已选了自己的 FBX/OBJ，则以你的模型为准，本区忽略。</p>
+            <div class="cr-form-grid">
+              <label class="m-field">模板网格
+                <select id="cr-tpl-mesh" class="m-select"><option value="">（不使用模板）</option></select>
+              </label>
+              <label class="m-field">贴图
+                <button type="button" class="m-btn" id="cr-tpl-tex">🎨 编辑贴图</button>
+                <span class="muted small" id="cr-tpl-tex-state">未设置</span>
+              </label>
+              <label class="m-field">预览
+                <button type="button" class="m-btn" id="cr-tpl-preview">🔍 预览模板效果</button>
+                <span class="muted small">用当前贴图实时渲染，不写盘</span>
+              </label>
+            </div>
+          </div>
           <div class="cr-model-tools">
             <label class="m-field">在线预览<button type="button" class="m-btn" id="cr-preview-model">👁 预览并调整方向/大小</button></label>
             <label class="m-field">模型诊断<button type="button" class="m-btn" id="cr-diagnose">🔍 检查装盘链路</button></label>
@@ -1309,6 +1423,89 @@ async function renderRecipeForm(
 
   renderPreview();
   renderCompList();
+
+  // ---- 模板网格 + 自制贴图（零建模通道；与上方 FBX 上传互斥，FBX 优先） ----
+
+  let tplMeshId = "";
+  let tplTexBase64 = "";
+  let tplTexColor = "#c06205";
+
+  const tplSelect = document.getElementById("cr-tpl-mesh") as HTMLSelectElement | null;
+  if (tplSelect) {
+    void api
+      .fetchModelTemplates()
+      .then((tpls) => {
+        if (tpls.length === 0) return;
+        const want = presets?.templateMeshId ?? tpls.find((t) => t.isDefault)?.id ?? tpls[0].id;
+        tplSelect.innerHTML =
+          '<option value="">（不使用模板）</option>' +
+          tpls
+            .map((t) => `<option value="${esc(t.id)}">${esc(t.id)}${t.isDefault ? "（默认）" : ""}</option>`)
+            .join("");
+        // 夹心模式默认就选上模板，降低「做不出模型」的门槛
+        if (isFilling) {
+          tplSelect.value = want;
+          tplMeshId = want;
+        }
+      })
+      .catch(() => {
+        // 旧桥没有该端点：保持「不使用模板」
+      });
+    tplSelect.addEventListener("change", () => {
+      tplMeshId = tplSelect.value;
+    });
+  }
+
+  const tplTexState = document.getElementById("cr-tpl-tex-state");
+  const setTplTexState = (): void => {
+    if (tplTexState) tplTexState.textContent = tplTexBase64 ? `已设置（${tplTexColor}）` : "未设置（用模板自带贴图）";
+  };
+  setTplTexState();
+
+  document.getElementById("cr-tpl-tex")?.addEventListener("click", () => {
+    const rname =
+      (document.getElementById("cr-rec-name") as HTMLInputElement)?.value.trim() || recipeName || "Filling";
+    void import("./textureEditor").then((m) =>
+      m.openTextureEditor({
+        fileName: `${rname}_Tex.png`,
+        templateId: tplMeshId || presets?.templateMeshId || "FriedFishCake",
+        initialColor: tplTexColor,
+        onDone: (res) => {
+          tplTexBase64 = res.base64;
+          tplTexColor = res.color;
+          setTplTexState();
+          setStatus("贴图已设置，保存时会随模板网格一起写入。");
+        },
+      })
+    );
+  });
+
+  document.getElementById("cr-tpl-preview")?.addEventListener("click", () => {
+    void (async () => {
+      const id = tplMeshId || presets?.templateMeshId || "FriedFishCake";
+      try {
+        const [{ fetchTemplateMeshBuffer, previewLocalModel }] = await Promise.all([
+          import("./recipeModelPreview"),
+        ]);
+        const buffer = await fetchTemplateMeshBuffer(id);
+        const textures: File[] = [];
+        if (tplTexBase64) {
+          const bin = atob(tplTexBase64);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          textures.push(new File([arr], "tex.png", { type: "image/png" }));
+        }
+        await previewLocalModel({
+          title: `模板模型预览 · ${id}`,
+          buffer,
+          fileName: `${id}.fbx`,
+          textures,
+        });
+      } catch (e) {
+        setStatus((e as Error).message || "模板预览失败。", false);
+      }
+    })();
+  });
 
   // ---- 交互 ----
 
@@ -1618,8 +1815,13 @@ async function renderRecipeForm(
     }
   }));
 
-  document.getElementById("cr-form-back")?.addEventListener("click", () => void renderRecipeList(app, setName));
-  document.getElementById("cr-form-back2")?.addEventListener("click", () => void renderRecipeList(app, setName));
+  /** 返回目标：夹心工作台等外部调用方可用 presets.onBack 接管；缺省回菜谱列表。 */
+  const goBack = (): void => {
+    if (presets?.onBack) presets.onBack();
+    else void renderRecipeList(app, setName);
+  };
+  document.getElementById("cr-form-back")?.addEventListener("click", goBack);
+  document.getElementById("cr-form-back2")?.addEventListener("click", goBack);
 
   const doSave = async (): Promise<void> => {
     const rname = (document.getElementById("cr-rec-name") as HTMLInputElement).value.trim();
@@ -1678,6 +1880,25 @@ async function renderRecipeForm(
         modelFiles && modelFiles.length > 0
           ? Array.from(modelFiles).find((f) => /\.(fbx|obj)$/i.test(f.name))
           : undefined;
+
+      // 零建模通道：没传自己的模型但选了模板网格 → 后端拷贝一份模板 FBX 字节到本菜谱
+      // models 目录并改名（模板只读、不拷 .meta），贴图走同一套上传管线。
+      if (!modelFile && tplMeshId) {
+        const tplUploads: { fileName: string; base64: string }[] = [];
+        if (tplTexBase64) tplUploads.push({ fileName: `${rname}_Tex.png`, base64: tplTexBase64 });
+        const diskNames0 = texDiskNames();
+        for (const cls of Object.keys(pendingTextures) as TexClass[]) {
+          const t = pendingTextures[cls];
+          const diskName = diskNames0[cls];
+          if (t && diskName) tplUploads.push({ fileName: diskName, base64: await bytesToBase64(t.bytes) });
+        }
+        const tplRes = await api.uploadCustomRecipeTemplateModel(setName, actualPath, tplMeshId, tplUploads);
+        if (tplRes && tplRes.rawSizeX != null && tplRes.rawSizeZ != null) {
+          lastRawSize = { x: tplRes.rawSizeX, y: tplRes.rawSizeY ?? 0, z: tplRes.rawSizeZ };
+        }
+        setStatus(`已用模板网格「${tplMeshId}」生成模型${tplTexBase64 ? "（含自制贴图）" : ""}。`);
+      }
+
       if (modelFile) {
         const isFbx = /\.fbx$/i.test(modelFile.name);
         // 选择文件后尚未预览过（如直接点保存）时补读模型与 MTL
@@ -1757,7 +1978,7 @@ async function renderRecipeForm(
       );
       // 模型已在选择文件时预览并调整过，保存后直接返回列表（分类过滤跟随本菜谱实际保存的分类）
       lastActiveCategoryId = dto.category;
-      void renderRecipeList(app, setName);
+      goBack();
     } catch (e) {
       setStatus((e as Error).message, false);
     } finally {

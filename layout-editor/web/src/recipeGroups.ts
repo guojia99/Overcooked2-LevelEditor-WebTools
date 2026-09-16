@@ -469,10 +469,19 @@ export function mergeFinalMarkers(groups: CookingGroup[]): CookingGroup[] {
   for (let i = 0; i < groups.length; i++) {
     const g = groups[i];
 
-    // 搅拌组 + 后续步骤组 → 合并为一格
+    // 搅拌组 + 该菜谱**自身**的后续步骤组 → 合并为一格双图标（搅拌碗 + 烹饪步骤）。
+    //
+    // ⚠ 必须要求 next.ingredients 为空：这条规则只适用于「同一道菜先搅拌再烹饪」，
+    // 此时 deriveCookingGroups / deriveCompositionGroups 产出的后续组是**空标记组**
+    // （ingredients: []），仅用来携带步骤图标。
+    //
+    // 组装菜谱（deriveCompositionGroups）里相邻的组是**互不相干的兄弟子菜谱**，
+    // 各自带着自己的食材。此前无条件合并会把它们错并成一格 —— 实测
+    // TestSuperBurger（牛肉 FryingPan + 蓝莓果酱 MixingBowl + 牛肉 FryingPan）
+    // 显示成「蓝莓果酱搅拌 + 煎制」同框，等于告诉玩家把果酱和肉一起煎。
     if (g.step === "MixingBowl" && i + 1 < groups.length) {
       const next = groups[i + 1];
-      if (next.step && next.step !== "MixingBowl") {
+      if (next.step && next.step !== "MixingBowl" && next.ingredients.length === 0) {
         out.push({
           step: g.step,
           utensils: g.utensils,

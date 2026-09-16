@@ -490,6 +490,15 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // 按当前菜谱引用推断需要的 DLC 匹配表（只算不写，供 Matchlist tab 提示 + 一键补全）。
+            if (path == "/api/level/matchlists/suggest" && request.HttpMethod == "GET")
+            {
+                var levelInfo = request.QueryString["levelInfoAssetPath"];
+                WriteJson(response, 200, LayoutEditorJson.ToJson(
+                    LayoutEditorMatchlistMap.SuggestDto(levelInfo)));
+                return;
+            }
+
             if (path == "/api/level/matchlists" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);
@@ -1057,6 +1066,23 @@ public class LayoutEditorHttpServer
 
             // ---------- Custom recipe model files (3D 在线预览) ----------
 
+            // 内置模板网格列表（模板网格模式：零建模做夹心模型）。
+            if (path == "/api/custom-recipes/model-templates" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(
+                    LayoutEditorLevelAdminApi.ListTemplateMeshes()));
+                return;
+            }
+
+            // 菜谱可预览网格来源（兼容「上传约定目录」与「model 引用共享 prefab」两种形态）。
+            if (path == "/api/custom-recipes/model-source" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(
+                    LayoutEditorLevelAdminApi.ResolveRecipeModelSource(assetPath)));
+                return;
+            }
+
             // 列出菜谱 models 目录内的模型/贴图文件。
             if (path == "/api/custom-recipes/model-files" && request.HttpMethod == "GET")
             {
@@ -1329,7 +1355,9 @@ public class LayoutEditorHttpServer
             if (path == "/api/burger/definitions" && request.HttpMethod == "GET")
             {
                 var setName = request.QueryString["setName"] ?? string.Empty;
-                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorBurgerApi.GetDefinitions(setName)));
+                var includeModelless = request.QueryString["includeModelless"] == "1";
+                WriteJson(response, 200, LayoutEditorJson.ToJson(
+                    LayoutEditorBurgerApi.GetDefinitions(setName, includeModelless)));
                 return;
             }
 

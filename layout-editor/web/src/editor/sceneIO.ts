@@ -63,6 +63,7 @@ import {
   setKillPlaneBounds,
   fetchHealth
 } from "../api";
+import { layoutPath } from "../route";
 import type {
   LayoutDocument,
   LayoutItem,
@@ -106,10 +107,12 @@ export async function loadScene(assetPath: string) {
     setStatus("加载场景…");
     S.scenePath = assetPath;
     S.currentLevelSet = levelSetFromScenePath(assetPath);
+    // 严格路由：/layout/{set}/{sceneName}（场景文件名去 .unity）；set 解析失败时退回裸 /layout
+    const sceneName = (assetPath.replace(/\\/g, "/").split("/").pop() ?? "").replace(/\.unity$/i, "");
     window.history.replaceState(
       null,
       "",
-      `/layout?scene=${encodeURIComponent(assetPath)}`
+      S.currentLevelSet && sceneName ? layoutPath(S.currentLevelSet, sceneName) : "/layout"
     );
     const doc = await fetchLayout(assetPath);
     const { dupIds, dedupedStacks } = await applyLayoutDocument(doc);
