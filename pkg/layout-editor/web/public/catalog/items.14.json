@@ -74,6 +74,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.078,
+      "baseY": 4.665,
       "layoutTier": "decor",
       "nameZh": "知更鸟（飞）",
       "nameEn": "robinflight",
@@ -92,6 +94,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.808,
+      "baseY": -0.104,
       "layoutTier": "decor",
       "nameZh": "知更鸟（地面）",
       "nameEn": "robinground 1",
@@ -110,6 +114,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.131,
+      "baseY": -1.065,
       "layoutTier": "decor",
       "nameZh": "rock_01 1",
       "nameEn": "rock_01 1",
@@ -128,6 +134,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.131,
+      "baseY": -1.065,
       "layoutTier": "decor",
       "nameZh": "岩石 1 2",
       "nameEn": "rock 1 2",
@@ -146,6 +154,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.146,
+      "baseY": -0.573,
       "layoutTier": "decor",
       "nameZh": "rock_02 1",
       "nameEn": "rock_02 1",
@@ -164,6 +174,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.146,
+      "baseY": -0.573,
       "layoutTier": "decor",
       "nameZh": "岩石 2 2",
       "nameEn": "rock 2 2",
@@ -184,6 +196,7 @@
         "sizeY": 1.0631181001663208
       },
       "height": 1.063,
+      "baseY": -0.532,
       "layoutTier": "decor",
       "nameZh": "岩石 3",
       "nameEn": "rock 3",
@@ -204,6 +217,7 @@
         "sizeY": 0.20056571066379547
       },
       "height": 0.201,
+      "baseY": -0.1,
       "layoutTier": "decor",
       "nameZh": "岩石 4",
       "nameEn": "rock 4",
@@ -224,6 +238,7 @@
         "sizeY": 0.20958685874938965
       },
       "height": 0.21,
+      "baseY": -0.105,
       "layoutTier": "decor",
       "nameZh": "岩石 5",
       "nameEn": "rock 5",
@@ -244,6 +259,7 @@
         "sizeY": 1.6821255683898926
       },
       "height": 1.682,
+      "baseY": -0.051,
       "layoutTier": "decor",
       "nameZh": "岩石 6",
       "nameEn": "rock 6",
@@ -264,6 +280,7 @@
         "sizeY": 1.6821255683898926
       },
       "height": 1.682,
+      "baseY": -0.051,
       "layoutTier": "decor",
       "nameZh": "岩石 8",
       "nameEn": "rock 8",
@@ -284,6 +301,7 @@
         "sizeY": 9.671614646911621
       },
       "height": 9.672,
+      "baseY": 0.056,
       "layoutTier": "decor",
       "nameZh": "火箭",
       "nameEn": "rocket 1",
@@ -304,6 +322,7 @@
         "sizeY": 1.2264907360076904
       },
       "height": 1.226,
+      "baseY": -0.747,
       "layoutTier": "decor",
       "nameZh": "屋顶转角",
       "nameEn": "Roof Corner",
@@ -324,6 +343,7 @@
         "sizeY": 1.0455152988433838
       },
       "height": 1.046,
+      "baseY": -0.523,
       "layoutTier": "decor",
       "nameZh": "屋顶瓦转角 1",
       "nameEn": "rooftiles corner 1",
@@ -344,6 +364,7 @@
         "sizeY": 1.1131752729415894
       },
       "height": 1.113,
+      "baseY": -0.553,
       "layoutTier": "decor",
       "nameZh": "屋顶瓦转角 2",
       "nameEn": "rooftiles corner 2",
@@ -364,6 +385,7 @@
         "sizeY": 1.0455152988433838
       },
       "height": 1.046,
+      "baseY": -0.523,
       "layoutTier": "decor",
       "nameZh": "屋顶瓦转角 3",
       "nameEn": "rooftiles corner 3",
@@ -384,6 +406,7 @@
         "sizeY": 1.1131752729415894
       },
       "height": 1.113,
+      "baseY": -0.553,
       "layoutTier": "decor",
       "nameZh": "屋顶瓦转角 4",
       "nameEn": "rooftiles corner 4",
@@ -404,6 +427,7 @@
         "sizeY": 1.117577314376831
       },
       "height": 1.118,
+      "baseY": -0.474,
       "layoutTier": "decor",
       "nameZh": "直瓦屋顶",
       "nameEn": "rooftiles straight 1",
@@ -424,6 +448,7 @@
         "sizeY": 0.16174829006195068
       },
       "height": 0.162,
+      "baseY": -0.081,
       "layoutTier": "decor",
       "nameZh": "绳 1",
       "nameEn": "rope 1",
@@ -444,6 +469,7 @@
         "sizeY": 0.635660707950592
       },
       "height": 0.636,
+      "baseY": -0.316,
       "layoutTier": "decor",
       "nameZh": "绳 3",
       "nameEn": "rope 3",
@@ -464,6 +490,7 @@
         "sizeY": 3.5463829040527344
       },
       "height": 3.546,
+      "baseY": -3.275,
       "layoutTier": "decor",
       "nameZh": "绳秋千组 1",
       "nameEn": "Rope Swing Group 1",
@@ -484,6 +511,7 @@
         "sizeY": 2.2945470809936523
       },
       "height": 2.295,
+      "baseY": -2.185,
       "layoutTier": "decor",
       "nameZh": "绳秋千组 2",
       "nameEn": "Rope Swing Group 2",
@@ -504,6 +532,7 @@
         "sizeY": 5.571089744567871
       },
       "height": 5.571,
+      "baseY": -5.479,
       "layoutTier": "decor",
       "nameZh": "绳秋千组 3",
       "nameEn": "Rope Swing Group 3",
@@ -524,6 +553,7 @@
         "sizeY": 3.8632006645202637
       },
       "height": 3.863,
+      "baseY": -3.502,
       "layoutTier": "decor",
       "nameZh": "绳秋千组 4",
       "nameEn": "Rope Swing Group 4",
@@ -544,6 +574,7 @@
         "sizeY": 4.083205223083496
       },
       "height": 4.083,
+      "baseY": -0.075,
       "layoutTier": "decor",
       "nameZh": "橡胶植物 1",
       "nameEn": "Rubber plant 1",
@@ -564,6 +595,7 @@
         "sizeY": 2.317650556564331
       },
       "height": 2.318,
+      "baseY": -0.314,
       "layoutTier": "decor",
       "nameZh": "橡胶植物 2",
       "nameEn": "Rubber plant 2",
@@ -584,6 +616,7 @@
         "sizeY": 3.3636040687561035
       },
       "height": 3.364,
+      "baseY": -0.06,
       "layoutTier": "decor",
       "nameZh": "橡胶植物 3",
       "nameEn": "Rubber plant 3",
@@ -668,6 +701,7 @@
         "sizeY": 1.2828168869018555
       },
       "height": 1.283,
+      "baseY": -0.59,
       "layoutTier": "decor",
       "nameZh": "沙地贴花 2",
       "nameEn": "sanddecal 2",
@@ -688,6 +722,7 @@
         "sizeY": 0.3126952052116394
       },
       "height": 0.313,
+      "baseY": -0.188,
       "layoutTier": "decor",
       "nameZh": "沙地贴花 3",
       "nameEn": "sanddecal 3",
@@ -708,6 +743,7 @@
         "sizeY": 0.5780831575393677
       },
       "height": 0.578,
+      "baseY": -0.294,
       "layoutTier": "decor",
       "nameZh": "沙地贴花 4",
       "nameEn": "sanddecal 4",
@@ -803,7 +839,8 @@
         "cellsZ": 2,
         "sizeY": 1.522803783416748
       },
-      "height": 1.523,
+      "height": 2.122,
+      "baseY": -0.303,
       "layoutTier": "decor",
       "nameZh": "小摩托 2",
       "nameEn": "Scooter 2",
@@ -824,6 +861,7 @@
         "sizeY": 0.19500060379505157
       },
       "height": 0.195,
+      "baseY": -0.195,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -846,6 +884,7 @@
         "sizeY": 0.20000000298023224
       },
       "height": 0.2,
+      "baseY": -0.2,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -866,6 +905,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.2,
+      "baseY": -0.2,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -888,6 +929,7 @@
         "sizeY": 0.20000000298023224
       },
       "height": 0.2,
+      "baseY": -0.2,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -910,6 +952,7 @@
         "sizeY": 0.15000000596046448
       },
       "height": 0.15,
+      "baseY": -0.15,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -930,6 +973,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.606,
       "layoutTier": "decor",
       "nameZh": "海鸥",
       "nameEn": "seagull 1",
@@ -948,6 +992,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.606,
       "layoutTier": "decor",
       "nameZh": "海鸥",
       "nameEn": "seagull 1",
@@ -966,6 +1011,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.606,
       "layoutTier": "decor",
       "nameZh": "海鸥",
       "nameEn": "seagull 1",
@@ -1022,6 +1068,7 @@
         "sizeY": 1.367103934288025
       },
       "height": 1.367,
+      "baseY": -0.063,
       "layoutTier": "decor",
       "nameZh": "鲨鱼",
       "nameEn": "shark 1",
@@ -1042,6 +1089,7 @@
         "sizeY": 1.367103934288025
       },
       "height": 1.367,
+      "baseY": -0.063,
       "layoutTier": "decor",
       "nameZh": "鲨鱼鳍",
       "nameEn": "sharkfin 1",
@@ -1062,6 +1110,7 @@
         "sizeY": 0.2763572633266449
       },
       "height": 0.276,
+      "baseY": -0.095,
       "layoutTier": "decor",
       "nameZh": "招牌 1",
       "nameEn": "sign 1",
@@ -1082,6 +1131,7 @@
         "sizeY": 0.2763572633266449
       },
       "height": 0.276,
+      "baseY": -0.095,
       "layoutTier": "decor",
       "nameZh": "招牌 1",
       "nameEn": "sign 1",
@@ -1102,6 +1152,7 @@
         "sizeY": 1.0199884176254272
       },
       "height": 1.02,
+      "baseY": -0.917,
       "layoutTier": "decor",
       "nameZh": "招牌 2",
       "nameEn": "sign 2",
@@ -1122,6 +1173,7 @@
         "sizeY": 1.0199884176254272
       },
       "height": 1.02,
+      "baseY": -0.917,
       "layoutTier": "decor",
       "nameZh": "招牌 2",
       "nameEn": "sign 2",
@@ -1162,6 +1214,7 @@
         "sizeY": 3.8413922786712646
       },
       "height": 3.841,
+      "baseY": -0.166,
       "layoutTier": "decor",
       "nameZh": "指示牌 1",
       "nameEn": "SignPost 1",
@@ -1182,6 +1235,7 @@
         "sizeY": 1398.760009765625
       },
       "height": 1398.76,
+      "baseY": -309.513,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -1204,6 +1258,7 @@
         "sizeY": 0.5329468250274658
       },
       "height": 0.533,
+      "baseY": -0.049,
       "layoutTier": "decor",
       "nameZh": "sled 尽头",
       "nameEn": "sled end",
@@ -1224,6 +1279,7 @@
         "sizeY": 0.7780622243881226
       },
       "height": 0.778,
+      "baseY": -0.059,
       "layoutTier": "decor",
       "nameZh": "sled 前端",
       "nameEn": "sled front",
@@ -1244,6 +1300,7 @@
         "sizeY": 0.5329468250274658
       },
       "height": 0.533,
+      "baseY": -0.049,
       "layoutTier": "decor",
       "nameZh": "雪橇中段",
       "nameEn": "sled mid",
@@ -1262,6 +1319,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 9.42,
+      "baseY": -4.71,
       "layoutTier": "decor",
       "nameZh": "sm_dlc13_sun",
       "nameEn": "sm_dlc13_sun",
@@ -1362,6 +1421,7 @@
         "sizeY": 0.27696773409843445
       },
       "height": 0.277,
+      "baseY": -0.169,
       "layoutTier": "decor",
       "nameZh": "sm 木板",
       "nameEn": "sm planks",
@@ -1482,6 +1542,7 @@
         "sizeY": 12.34166431427002
       },
       "height": 12.342,
+      "baseY": -12.342,
       "layoutTier": "decor",
       "nameZh": "雪地贴花 270°",
       "nameEn": "snow decal 270",
@@ -1502,6 +1563,7 @@
         "sizeY": 12.34166431427002
       },
       "height": 12.342,
+      "baseY": -12.342,
       "layoutTier": "decor",
       "nameZh": "雪地贴花 270°",
       "nameEn": "snow decal 270",
@@ -1522,6 +1584,7 @@
         "sizeY": 12.973723411560059
       },
       "height": 12.974,
+      "baseY": -12.974,
       "layoutTier": "decor",
       "nameZh": "雪地贴花 90°",
       "nameEn": "snow decal 90",
@@ -1542,6 +1605,7 @@
         "sizeY": 12.973723411560059
       },
       "height": 12.974,
+      "baseY": -12.974,
       "layoutTier": "decor",
       "nameZh": "雪地贴花 90°",
       "nameEn": "snow decal 90",
@@ -1562,6 +1626,7 @@
         "sizeY": 1.2000004053115845
       },
       "height": 1.2,
+      "baseY": -0.6,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "snow",
@@ -1584,6 +1649,7 @@
         "sizeY": 1.2000004053115845
       },
       "height": 1.2,
+      "baseY": -0.6,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "snow",
@@ -1606,6 +1672,7 @@
         "sizeY": 12.008832931518555
       },
       "height": 12.009,
+      "baseY": -12.009,
       "layoutTier": "decor",
       "nameZh": "雪地贴花·直边 1",
       "nameEn": "snow straight decal 1",
@@ -1626,6 +1693,7 @@
         "sizeY": 12.008832931518555
       },
       "height": 12.009,
+      "baseY": -12.009,
       "layoutTier": "decor",
       "nameZh": "雪地贴花·直边 1",
       "nameEn": "snow straight decal 1",
@@ -1646,6 +1714,7 @@
         "sizeY": 36.046329498291016
       },
       "height": 36.046,
+      "baseY": -34.236,
       "layoutTier": "decor",
       "nameZh": "雪地贴花·直边 2",
       "nameEn": "snow straight decal 2",
@@ -1666,6 +1735,7 @@
         "sizeY": 36.046329498291016
       },
       "height": 36.046,
+      "baseY": -34.236,
       "layoutTier": "decor",
       "nameZh": "雪地贴花·直边 2",
       "nameEn": "snow straight decal 2",
@@ -1966,6 +2036,7 @@
         "sizeY": 0.26362699270248413
       },
       "height": 0.264,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "nameZh": "雪堆 6",
       "nameEn": "snowmound 6",
@@ -1986,6 +2057,7 @@
         "sizeY": 0.26362699270248413
       },
       "height": 0.264,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "nameZh": "雪堆 6",
       "nameEn": "snowmound 6",
@@ -2006,6 +2078,7 @@
         "sizeY": 0.34923288226127625
       },
       "height": 0.349,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "雪堆 7",
       "nameEn": "snowmound 7",
@@ -2026,6 +2099,7 @@
         "sizeY": 0.34923288226127625
       },
       "height": 0.349,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "雪堆 7",
       "nameEn": "snowmound 7",
@@ -2046,6 +2120,7 @@
         "sizeY": 0.2530139684677124
       },
       "height": 0.253,
+      "baseY": -0.014,
       "layoutTier": "decor",
       "nameZh": "雪堆 8",
       "nameEn": "snowmound 8",
@@ -2066,6 +2141,7 @@
         "sizeY": 0.2530139684677124
       },
       "height": 0.253,
+      "baseY": -0.014,
       "layoutTier": "decor",
       "nameZh": "雪堆 8",
       "nameEn": "snowmound 8",
@@ -2086,6 +2162,7 @@
         "sizeY": 0.2914053201675415
       },
       "height": 0.291,
+      "baseY": 0.06,
       "layoutTier": "decor",
       "nameZh": "雪堆 1",
       "nameEn": "snowpile 1",
@@ -2106,6 +2183,7 @@
         "sizeY": 2.399339437484741
       },
       "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "太空悬崖转角内 1",
       "nameEn": "sp cliff corner in 1",
@@ -2126,6 +2204,7 @@
         "sizeY": 2.399339199066162
       },
       "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "太空悬崖转角外 1",
       "nameEn": "sp cliff corner out 1",
@@ -2146,6 +2225,7 @@
         "sizeY": 2.4518353939056396
       },
       "height": 2.452,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "太空悬崖边缘 1",
       "nameEn": "sp cliff edge 1",
@@ -2166,6 +2246,7 @@
         "sizeY": 2.399339199066162
       },
       "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "太空悬崖边缘 2",
       "nameEn": "sp cliff edge 2",
@@ -2184,6 +2265,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "sp_cliff_edge_03",
       "nameEn": "sp_cliff_edge_03",
@@ -2204,6 +2287,7 @@
         "sizeY": 2.399339199066162
       },
       "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "太空悬崖边缘 5",
       "nameEn": "sp cliff edge 5",
@@ -2224,6 +2308,7 @@
         "sizeY": 2.4102258682250977
       },
       "height": 2.41,
+      "baseY": -2.41,
       "layoutTier": "decor",
       "nameZh": "太空悬崖边缘 6",
       "nameEn": "sp cliff edge 6",
@@ -2262,6 +2347,7 @@
         "sizeY": 2.828779935836792
       },
       "height": 2.829,
+      "baseY": -0.095,
       "layoutTier": "decor",
       "nameZh": "太空岩石 1",
       "nameEn": "sp rock 1",
@@ -2282,6 +2368,7 @@
         "sizeY": 2.2263338565826416
       },
       "height": 2.226,
+      "baseY": -0.131,
       "layoutTier": "decor",
       "nameZh": "太空岩石 2",
       "nameEn": "sp rock 2",
@@ -2302,6 +2389,7 @@
         "sizeY": 1.013148307800293
       },
       "height": 1.013,
+      "baseY": -0.134,
       "layoutTier": "decor",
       "nameZh": "太空岩石 3",
       "nameEn": "sp rock 3",
@@ -2322,6 +2410,7 @@
         "sizeY": 0.8698838949203491
       },
       "height": 0.87,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "nameZh": "太空岩石 4",
       "nameEn": "sp rock 4",
@@ -2342,6 +2431,7 @@
         "sizeY": 1.4111008644104004
       },
       "height": 1.411,
+      "baseY": -0.706,
       "layoutTier": "decor",
       "nameZh": "太空椅 1",
       "nameEn": "space chair 1",
@@ -2362,6 +2452,7 @@
         "sizeY": 1.4348118305206299
       },
       "height": 1.435,
+      "baseY": -0.05,
       "layoutTier": "decor",
       "nameZh": "太空椅组 1",
       "nameEn": "Space Chairs 1",
@@ -2382,6 +2473,7 @@
         "sizeY": 3.070645809173584
       },
       "height": 3.071,
+      "baseY": -0.935,
       "layoutTier": "decor",
       "nameZh": "太空门气闸·关闭（布尔）",
       "nameEn": "Space Door Airlock Bool Close",
@@ -2402,6 +2494,7 @@
         "sizeY": 3.070645809173584
       },
       "height": 3.071,
+      "baseY": -0.935,
       "layoutTier": "decor",
       "nameZh": "太空气闸门",
       "nameEn": "Space Door Airlock Bool Open",
@@ -2422,6 +2515,7 @@
         "sizeY": 3.070645809173584
       },
       "height": 3.071,
+      "baseY": -0.935,
       "layoutTier": "decor",
       "nameZh": "太空门气闸·关闭",
       "nameEn": "Space Door Airlock Close",
@@ -2442,6 +2536,7 @@
         "sizeY": 3.070645809173584
       },
       "height": 3.071,
+      "baseY": -0.935,
       "layoutTier": "decor",
       "nameZh": "太空门气闸打开",
       "nameEn": "Space Door Airlock Open",
@@ -2482,6 +2577,7 @@
         "sizeY": 0.20471355319023132
       },
       "height": 0.205,
+      "baseY": -0.102,
       "layoutTier": "decor",
       "nameZh": "沙铲 1",
       "nameEn": "spade 1",
@@ -2502,6 +2598,7 @@
         "sizeY": 0.20471355319023132
       },
       "height": 0.205,
+      "baseY": -0.102,
       "layoutTier": "decor",
       "nameZh": "沙铲 2",
       "nameEn": "spade 2",
@@ -2653,7 +2750,8 @@
         "cellsZ": 2,
         "sizeY": 2.115077018737793
       },
-      "height": 2.115,
+      "height": 1.605,
+      "baseY": -1.316,
       "layoutTier": "decor",
       "nameZh": "楼梯",
       "nameEn": "Stairs",
@@ -2673,7 +2771,8 @@
         "cellsZ": 2,
         "sizeY": 2.76200008392334
       },
-      "height": 2.762,
+      "height": 2.165,
+      "baseY": -0.819,
       "layoutTier": "decor",
       "nameZh": "营地楼梯",
       "nameEn": "stairs campsite",
@@ -2693,7 +2792,8 @@
         "cellsZ": 1,
         "sizeY": 1.2599999904632568
       },
-      "height": 1.26,
+      "height": 0.503,
+      "baseY": -0.372,
       "layoutTier": "decor",
       "nameZh": "台阶",
       "nameEn": "Step",
@@ -2712,6 +2812,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.294,
+      "baseY": -2.902,
       "layoutTier": "decor",
       "nameZh": "steps",
       "nameEn": "steps",
@@ -2772,6 +2874,7 @@
         "sizeY": 0.5236959457397461
       },
       "height": 0.524,
+      "baseY": -0.094,
       "layoutTier": "decor",
       "nameZh": "石块 1",
       "nameEn": "stones 1",
@@ -2792,6 +2895,7 @@
         "sizeY": 0.5496677756309509
       },
       "height": 0.55,
+      "baseY": -0.157,
       "layoutTier": "decor",
       "nameZh": "石块 2",
       "nameEn": "stones 2",
@@ -2812,6 +2916,7 @@
         "sizeY": 0.4359939992427826
       },
       "height": 0.436,
+      "baseY": -0.153,
       "layoutTier": "decor",
       "nameZh": "石块 3",
       "nameEn": "stones 3",
@@ -2830,6 +2935,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.628,
+      "baseY": -2.284,
       "layoutTier": "decor",
       "nameZh": "stonewalls_01",
       "nameEn": "stonewalls_01",
@@ -2848,6 +2955,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.775,
+      "baseY": -2.436,
       "layoutTier": "decor",
       "nameZh": "stonewalls_02",
       "nameEn": "stonewalls_02",
@@ -2867,7 +2976,8 @@
         "cellsZ": 1,
         "sizeY": 0.1973648965358734
       },
-      "height": 0.197,
+      "height": 1.282,
+      "baseY": -0.194,
       "layoutTier": "decor",
       "nameZh": "剧情凯文（夏威夷）",
       "nameEn": "Story Kevin Hawaiian",
@@ -2886,6 +2996,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.556,
+      "baseY": -0.157,
       "layoutTier": "decor",
       "nameZh": "洋葱国王（露营）",
       "nameEn": "Story Onion King DLC5",
@@ -2904,6 +3016,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.556,
+      "baseY": -0.157,
       "layoutTier": "decor",
       "nameZh": "storyonionking_hawaiian",
       "nameEn": "storyonionking_hawaiian",
@@ -2922,6 +3036,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.556,
+      "baseY": -0.157,
       "layoutTier": "decor",
       "nameZh": "洋葱国王（夏威夷）",
       "nameEn": "Story Onion King Hawaiian",
@@ -2942,6 +3058,7 @@
         "sizeY": 0.4455406665802002
       },
       "height": 0.446,
+      "baseY": -0.175,
       "layoutTier": "decor",
       "nameZh": "草莓装饰 1",
       "nameEn": "Strawberry dressing 1",
@@ -3022,6 +3139,7 @@
         "sizeY": 0.19989502429962158
       },
       "height": 0.2,
+      "baseY": 0.012,
       "layoutTier": "decor",
       "nameZh": "太阳镜 1",
       "nameEn": "sunglasses 1",
@@ -3042,6 +3160,7 @@
         "sizeY": 0.9897508025169373
       },
       "height": 0.99,
+      "baseY": -0.495,
       "layoutTier": "decor",
       "nameZh": "冲浪板 1",
       "nameEn": "surfboard 1",
@@ -3060,6 +3179,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.178,
+      "baseY": -0.589,
       "layoutTier": "decor",
       "nameZh": "sushi_picture_01",
       "nameEn": "sushi_picture_01",
@@ -3078,6 +3199,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.178,
+      "baseY": -0.589,
       "layoutTier": "decor",
       "nameZh": "sushi_picture_02",
       "nameEn": "sushi_picture_02",
@@ -3138,6 +3261,7 @@
         "sizeY": 1.5198842287063599
       },
       "height": 1.52,
+      "baseY": -0.832,
       "layoutTier": "decor",
       "nameZh": "寿司招牌 1",
       "nameEn": "sushi sign 1",
@@ -3158,6 +3282,7 @@
         "sizeY": 1.5198849439620972
       },
       "height": 1.52,
+      "baseY": -0.832,
       "layoutTier": "decor",
       "nameZh": "寿司招牌 1 白天",
       "nameEn": "sushi sign 1 day",
@@ -3178,6 +3303,7 @@
         "sizeY": 1.4159889221191406
       },
       "height": 1.416,
+      "baseY": -0.775,
       "layoutTier": "decor",
       "nameZh": "寿司招牌 1b",
       "nameEn": "sushi sign 01b",
@@ -3198,6 +3324,7 @@
         "sizeY": 3.4194061756134033
       },
       "height": 3.419,
+      "baseY": -1.71,
       "layoutTier": "decor",
       "nameZh": "寿司招牌 2",
       "nameEn": "sushi sign 2",
@@ -3218,6 +3345,7 @@
         "sizeY": 4.430799961090088
       },
       "height": 4.431,
+      "baseY": -2.215,
       "layoutTier": "decor",
       "nameZh": "寿司招牌 3",
       "nameEn": "sushi sign 3",
@@ -3238,6 +3366,7 @@
         "sizeY": 4.430799961090088
       },
       "height": 4.431,
+      "baseY": -2.215,
       "layoutTier": "decor",
       "nameZh": "寿司招牌 3 白天",
       "nameEn": "sushi sign 3 day",
@@ -3258,6 +3387,7 @@
         "sizeY": 4.430799961090088
       },
       "height": 4.431,
+      "baseY": -2.215,
       "layoutTier": "decor",
       "nameZh": "寿司招牌 3b 白天",
       "nameEn": "sushi sign 03b day",
@@ -3276,6 +3406,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.52,
+      "baseY": -0.832,
       "layoutTier": "decor",
       "nameZh": "sushi_sign_04",
       "nameEn": "sushi_sign_04",
@@ -3452,6 +3584,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.566,
+      "baseY": -0.302,
       "layoutTier": "decor",
       "nameZh": "swamp_barrier_01",
       "nameEn": "swamp_barrier_01",
@@ -3470,6 +3604,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.458,
+      "baseY": -0.392,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -3490,6 +3626,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.703,
+      "baseY": -2.698,
       "layoutTier": "decor",
       "nameZh": "swamp_lantern_01_anim",
       "nameEn": "swamp_lantern_01_anim",
@@ -3508,6 +3646,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.581,
+      "baseY": -0.79,
       "layoutTier": "decor",
       "nameZh": "swamp_pickaxe_01",
       "nameEn": "swamp_pickaxe_01",
@@ -3526,6 +3666,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.402,
+      "baseY": -0.201,
       "layoutTier": "decor",
       "nameZh": "swamp_railbroken_01",
       "nameEn": "swamp_railbroken_01",
@@ -3544,6 +3686,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.118,
+      "baseY": -0.059,
       "layoutTier": "decor",
       "nameZh": "swamp_rails_01",
       "nameEn": "swamp_rails_01",
@@ -3562,6 +3706,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.063,
+      "baseY": -0.532,
       "layoutTier": "decor",
       "nameZh": "swamp_rock_02",
       "nameEn": "swamp_rock_02",
@@ -3580,6 +3726,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.806,
+      "baseY": -0.544,
       "layoutTier": "decor",
       "nameZh": "swamp_rope_01",
       "nameEn": "swamp_rope_01",
@@ -3598,6 +3746,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.761,
+      "baseY": -0.506,
       "layoutTier": "decor",
       "nameZh": "swamp_rope_02",
       "nameEn": "swamp_rope_02",
@@ -3616,6 +3766,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.11,
+      "baseY": -0.055,
       "layoutTier": "decor",
       "nameZh": "swamp_rope_straight_01",
       "nameEn": "swamp_rope_straight_01",
@@ -3634,6 +3786,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.515,
+      "baseY": -0.254,
       "layoutTier": "decor",
       "nameZh": "swamp_round_rope_01",
       "nameEn": "swamp_round_rope_01",
@@ -3652,6 +3806,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.924,
+      "baseY": -0.962,
       "layoutTier": "decor",
       "nameZh": "swamp_shovel_01",
       "nameEn": "swamp_shovel_01",
@@ -3670,6 +3826,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.487,
+      "baseY": -0.236,
       "layoutTier": "decor",
       "nameZh": "swamp_stoneblock_01",
       "nameEn": "swamp_stoneblock_01",
@@ -3688,6 +3846,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.318,
+      "baseY": -0.174,
       "layoutTier": "decor",
       "nameZh": "swamp_stoneblock_02",
       "nameEn": "swamp_stoneblock_02",
@@ -3706,6 +3866,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.418,
+      "baseY": 0.008,
       "layoutTier": "decor",
       "nameZh": "swamp_stonewall_corner_01",
       "nameEn": "swamp_stonewall_corner_01",
@@ -3724,6 +3886,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.41,
       "layoutTier": "decor",
       "nameZh": "swamp_stonewall_end_01",
       "nameEn": "swamp_stonewall_end_01",
@@ -3742,6 +3905,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.309,
+      "baseY": -0.154,
       "layoutTier": "decor",
       "nameZh": "swamp_truss_01",
       "nameEn": "swamp_truss_01",
@@ -3760,6 +3925,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.312,
+      "baseY": -0.156,
       "layoutTier": "decor",
       "nameZh": "swamp_truss_end_01",
       "nameEn": "swamp_truss_end_01",
@@ -3778,6 +3945,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.629,
+      "baseY": -0.315,
       "layoutTier": "decor",
       "nameZh": "swamp_trusslarge_01",
       "nameEn": "swamp_trusslarge_01",
@@ -3796,6 +3965,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.603,
+      "baseY": -0.302,
       "layoutTier": "decor",
       "nameZh": "swamp_trusslarge_02",
       "nameEn": "swamp_trusslarge_02",
@@ -3814,6 +3985,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.802,
+      "baseY": -0.802,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -3895,7 +4068,8 @@
         "cellsZ": 3,
         "sizeY": 1.4425148963928223
       },
-      "height": 1.443,
+      "height": 1.592,
+      "baseY": -0.014,
       "layoutTier": "decor",
       "nameZh": "餐客桌（OC1）",
       "nameEn": "Customer Table (OC1)",
@@ -3915,7 +4089,8 @@
         "cellsZ": 3,
         "sizeY": 1.4417475461959839
       },
-      "height": 1.442,
+      "height": 1.563,
+      "baseY": -0.016,
       "layoutTier": "decor",
       "nameZh": "餐客桌 2（OC1）",
       "nameEn": "Customer Table 2 (OC1)",

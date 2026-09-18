@@ -14,6 +14,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.878,
+      "baseY": -0.56,
       "layoutTier": "decor",
       "nameZh": "throne room",
       "nameEn": "throne room",
@@ -34,6 +36,7 @@
         "sizeY": 4.128539562225342
       },
       "height": 4.129,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "nameZh": "王座盔甲",
       "nameEn": "throne armor 1",
@@ -54,6 +57,7 @@
         "sizeY": 10.083115577697754
       },
       "height": 10.083,
+      "baseY": -9.703,
       "layoutTier": "decor",
       "nameZh": "王座旗帜",
       "nameEn": "throne banner 1",
@@ -72,6 +76,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.767,
+      "baseY": -0.109,
       "layoutTier": "decor",
       "nameZh": "throne_book_01",
       "nameEn": "throne_book_01",
@@ -90,6 +96,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.008,
       "layoutTier": "decor",
       "nameZh": "throne_gamesconsole_01",
       "nameEn": "throne_gamesconsole_01",
@@ -110,6 +117,7 @@
         "sizeY": 3.181330919265747
       },
       "height": 3.181,
+      "baseY": 0.022,
       "layoutTier": "decor",
       "nameZh": "凯文王座椅",
       "nameEn": "throne kevinschair 1",
@@ -150,6 +158,7 @@
         "sizeY": 1.4856857061386108
       },
       "height": 1.486,
+      "baseY": -0.743,
       "layoutTier": "decor",
       "nameZh": "王座火把",
       "nameEn": "throne torch",
@@ -168,6 +177,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 12,
+      "baseY": -5.946,
       "layoutTier": "decor",
       "nameZh": "throne_walltile_6",
       "nameEn": "throne_walltile_6x6",
@@ -186,6 +197,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 724.099,
+      "baseY": -195.986,
       "layoutTier": "decor",
       "nameZh": "timeline_dynamicstage_04",
       "nameEn": "timeline_dynamicstage_04",
@@ -204,6 +217,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 950.616,
+      "baseY": -269.417,
       "layoutTier": "decor",
       "nameZh": "timeline_tutorial_01",
       "nameEn": "timeline_tutorial_01",
@@ -224,6 +239,7 @@
         "sizeY": 0.2772817611694336
       },
       "height": 0.277,
+      "baseY": -0.139,
       "layoutTier": "decor",
       "nameZh": "毛巾 1",
       "nameEn": "towel 1",
@@ -244,6 +260,7 @@
         "sizeY": 0.25907009840011597
       },
       "height": 0.259,
+      "baseY": -0.13,
       "layoutTier": "decor",
       "nameZh": "毛巾 2",
       "nameEn": "towel 2",
@@ -264,6 +281,7 @@
         "sizeY": 1.248321294784546
       },
       "height": 1.248,
+      "baseY": -0.624,
       "layoutTier": "decor",
       "nameZh": "毛巾 3",
       "nameEn": "towel 3",
@@ -284,6 +302,7 @@
         "sizeY": 1.2031166553497314
       },
       "height": 1.203,
+      "baseY": -0.025,
       "layoutTier": "decor",
       "nameZh": "玩具拐杖糖",
       "nameEn": "toy candycane",
@@ -324,6 +343,7 @@
         "sizeY": 1.1582801342010498
       },
       "height": 1.158,
+      "baseY": -0.579,
       "layoutTier": "decor",
       "nameZh": "玩具姜饼人",
       "nameEn": "toy gingerbreadman",
@@ -424,6 +444,7 @@
         "sizeY": 0.6273922920227051
       },
       "height": 0.627,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "玩具字母积木 stack",
       "nameEn": "toy letterblock stack",
@@ -444,6 +465,7 @@
         "sizeY": 0.9497052431106567
       },
       "height": 0.95,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "nameZh": "玩具胡桃夹子",
       "nameEn": "toy nutcracker",
@@ -464,6 +486,7 @@
         "sizeY": 0.15483689308166504
       },
       "height": 0.155,
+      "baseY": -0.077,
       "layoutTier": "decor",
       "nameZh": "玩具椒盐卷饼",
       "nameEn": "toy pretzel",
@@ -504,6 +527,7 @@
         "sizeY": 0.768109917640686
       },
       "height": 0.768,
+      "baseY": 0.007,
       "layoutTier": "decor",
       "nameZh": "玩具火车",
       "nameEn": "toy train",
@@ -522,6 +546,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.772,
+      "baseY": 8.083,
       "layoutTier": "decor",
       "nameZh": "traffic jam",
       "nameEn": "traffic jam",
@@ -620,6 +646,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.249,
       "layoutTier": "decor",
       "nameZh": "traffic_light_animated_01",
       "nameEn": "traffic_light_animated_01",
@@ -638,6 +665,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.562,
       "layoutTier": "decor",
       "nameZh": "tree",
       "nameEn": "tree",
@@ -656,6 +684,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.837,
+      "baseY": 10.555,
       "layoutTier": "decor",
       "nameZh": "热带鸟群",
       "nameEn": "Tropical Birds",
@@ -674,6 +704,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.837,
+      "baseY": 10.555,
       "layoutTier": "decor",
       "nameZh": "热带鸟群（无音效）",
       "nameEn": "Tropical Birds(no Audio)",
@@ -692,6 +724,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.223,
+      "baseY": -0.066,
       "layoutTier": "decor",
       "nameZh": "turbinewind",
       "nameEn": "turbinewind",
@@ -712,6 +746,7 @@
         "sizeY": 0.25764769315719604
       },
       "height": 0.258,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "nameZh": "遮阳伞底座 1",
       "nameEn": "Umbrella base 1",
@@ -732,6 +767,7 @@
         "sizeY": 0.25764769315719604
       },
       "height": 0.258,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "nameZh": "遮阳伞底座 2",
       "nameEn": "umbrella base 2",
@@ -752,6 +788,7 @@
         "sizeY": 4.460964202880859
       },
       "height": 4.461,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "遮阳伞（合拢）",
       "nameEn": "umbrella closed 1",
@@ -772,6 +809,7 @@
         "sizeY": 4.460964202880859
       },
       "height": 4.461,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "遮阳伞合拢 2",
       "nameEn": "umbrella closed 2",
@@ -792,6 +830,7 @@
         "sizeY": 4.460964202880859
       },
       "height": 4.461,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "遮阳伞合拢 3",
       "nameEn": "umbrella closed 3",
@@ -812,6 +851,7 @@
         "sizeY": 4.460964202880859
       },
       "height": 4.461,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "遮阳伞合拢 4",
       "nameEn": "umbrella closed 4",
@@ -832,6 +872,7 @@
         "sizeY": 4.460964202880859
       },
       "height": 4.461,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "遮阳伞",
       "nameEn": "umbrella open 1",
@@ -852,6 +893,7 @@
         "sizeY": 4.460964202880859
       },
       "height": 4.461,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "遮阳伞打开 2",
       "nameEn": "umbrella open 2",
@@ -870,6 +912,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.986,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "nameZh": "unbread_a",
       "nameEn": "unbread_a",
@@ -888,6 +932,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 18.704,
+      "baseY": -2.529,
       "layoutTier": "decor",
       "nameZh": "underground crypt lights",
       "nameEn": "underground crypt lights",
@@ -908,6 +954,7 @@
         "sizeY": 1.7476214170455933
       },
       "height": 1.748,
+      "baseY": 0.036,
       "layoutTier": "decor",
       "nameZh": "瓮 1",
       "nameEn": "Urn 1",
@@ -926,6 +973,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.659,
+      "baseY": -0.79,
       "layoutTier": "decor",
       "nameZh": "walkingbread_01a",
       "nameEn": "walkingbread_01a",
@@ -944,6 +993,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.659,
+      "baseY": -0.79,
       "layoutTier": "decor",
       "nameZh": "walkingbread_01a_walking",
       "nameEn": "walkingbread_01a_walking",
@@ -962,6 +1013,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.731,
+      "baseY": -0.869,
       "layoutTier": "decor",
       "nameZh": "walkingbread_01b",
       "nameEn": "walkingbread_01b",
@@ -980,6 +1033,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.731,
+      "baseY": -0.869,
       "layoutTier": "decor",
       "nameZh": "walkingbread_01b_walking",
       "nameEn": "walkingbread_01b_walking",
@@ -998,6 +1053,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.617,
+      "baseY": -0.787,
       "layoutTier": "decor",
       "nameZh": "walkingbread_02a",
       "nameEn": "walkingbread_02a",
@@ -1016,6 +1073,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.617,
+      "baseY": -0.787,
       "layoutTier": "decor",
       "nameZh": "walkingbread_02a_walking",
       "nameEn": "walkingbread_02a_walking",
@@ -1034,6 +1093,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.619,
+      "baseY": -0.783,
       "layoutTier": "decor",
       "nameZh": "walkingbread_02b",
       "nameEn": "walkingbread_02b",
@@ -1052,6 +1113,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.619,
+      "baseY": -0.783,
       "layoutTier": "decor",
       "nameZh": "walkingbread_02b_walking",
       "nameEn": "walkingbread_02b_walking",
@@ -1070,6 +1133,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.089,
+      "baseY": -6.158,
       "layoutTier": "decor",
       "nameZh": "walkingbreadwalkingpath",
       "nameEn": "walkingbreadwalkingpath",
@@ -1090,6 +1155,7 @@
         "sizeY": 0.7929834127426147
       },
       "height": 0.793,
+      "baseY": -0.576,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1112,6 +1178,7 @@
         "sizeY": 0.6840863227844238
       },
       "height": 0.684,
+      "baseY": -0.342,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1134,6 +1201,7 @@
         "sizeY": 2.0448901653289795
       },
       "height": 2.045,
+      "baseY": -0.492,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1156,6 +1224,7 @@
         "sizeY": 2.0448901653289795
       },
       "height": 2.045,
+      "baseY": -0.492,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1178,6 +1247,7 @@
         "sizeY": 3.0571846961975098
       },
       "height": 3.057,
+      "baseY": -0.736,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1200,6 +1270,7 @@
         "sizeY": 3.0571846961975098
       },
       "height": 3.057,
+      "baseY": -0.736,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1222,6 +1293,7 @@
         "sizeY": 0.9683204889297485
       },
       "height": 0.968,
+      "baseY": 1.541,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1244,6 +1316,7 @@
         "sizeY": 1.336262583732605
       },
       "height": 1.336,
+      "baseY": -0.668,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1266,6 +1339,7 @@
         "sizeY": 0.4117784798145294
       },
       "height": 0.412,
+      "baseY": -0.206,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "walkway",
@@ -1288,6 +1362,7 @@
         "sizeY": 2.0005345344543457
       },
       "height": 2.001,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "270° 转角墙",
       "nameEn": "wall 270 1",
@@ -1308,6 +1383,7 @@
         "sizeY": 2.4967124462127686
       },
       "height": 2.497,
+      "baseY": -0.28,
       "layoutTier": "decor",
       "nameZh": "墙 90 1",
       "nameEn": "wall 90 1",
@@ -1406,6 +1482,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "wall_brick_01i",
       "nameEn": "wall_brick_01i",
@@ -1424,6 +1501,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "wall_brick_01j",
       "nameEn": "wall_brick_01j",
@@ -1442,6 +1520,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "wall_brick_corner_in_01",
       "nameEn": "wall_brick_corner_in_01",
@@ -1482,6 +1561,7 @@
         "sizeY": 2
       },
       "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "墙砖内 1",
       "nameEn": "wall brick in 1",
@@ -1502,6 +1582,7 @@
         "sizeY": 2.000001907348633
       },
       "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "砖墙外角",
       "nameEn": "wall brick out 1",
@@ -1520,6 +1601,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "wall_brick_out_02",
       "nameEn": "wall_brick_out_02",
@@ -1558,6 +1641,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "wall_brick_short_02",
       "nameEn": "wall_brick_short_02",
@@ -1576,6 +1660,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "wall_brick_short_03",
       "nameEn": "wall_brick_short_03",
@@ -1696,6 +1781,7 @@
         "sizeY": 1.9915505647659302
       },
       "height": 1.992,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "nameZh": "破损墙体 1",
       "nameEn": "wall broken 1",
@@ -1716,6 +1802,7 @@
         "sizeY": 0.6537507772445679
       },
       "height": 0.654,
+      "baseY": 1.433,
       "layoutTier": "decor",
       "nameZh": "墙体装饰 1",
       "nameEn": "wall detail 1",
@@ -1736,6 +1823,7 @@
         "sizeY": 0.6953350305557251
       },
       "height": 0.695,
+      "baseY": 1.431,
       "layoutTier": "decor",
       "nameZh": "墙体装饰 2",
       "nameEn": "wall detail 2",
@@ -1756,6 +1844,7 @@
         "sizeY": 1.0202888250350952
       },
       "height": 1.02,
+      "baseY": -0.51,
       "layoutTier": "decor",
       "nameZh": "墙体装饰 3",
       "nameEn": "wall detail 3",
@@ -1774,6 +1863,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.236,
+      "baseY": -1.151,
       "layoutTier": "decor",
       "nameZh": "wall_left_angle_inside3_tall",
       "nameEn": "wall_left_angle_inside3_tall",
@@ -1812,6 +1903,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "wall_orange_in_01",
       "nameEn": "wall_orange_in_01",
@@ -1830,6 +1923,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "wall_pink_out_01",
       "nameEn": "wall_pink_out_01",
@@ -1848,6 +1943,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.236,
+      "baseY": -1.151,
       "layoutTier": "decor",
       "nameZh": "wall_right_angle_tall",
       "nameEn": "wall_right_angle_tall",
@@ -1868,6 +1965,7 @@
         "sizeY": 2.000534772872925
       },
       "height": 2.001,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "墙直 1",
       "nameEn": "wall straight 1",
@@ -1886,6 +1984,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.001,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "wall_straight_02",
       "nameEn": "wall_straight_02",
@@ -1904,6 +2004,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.236,
+      "baseY": -1.151,
       "layoutTier": "decor",
       "nameZh": "wall_straight_03_inside1_tall",
       "nameEn": "wall_straight_03_inside1_tall",
@@ -1922,6 +2024,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.237,
+      "baseY": -1.151,
       "layoutTier": "decor",
       "nameZh": "wall_straight_tall",
       "nameEn": "wall_straight_tall",
@@ -1942,6 +2046,7 @@
         "sizeY": 0.2154250144958496
       },
       "height": 0.215,
+      "baseY": 1.793,
       "layoutTier": "decor",
       "nameZh": "墙直顶部 1",
       "nameEn": "Wall straight top 1",
@@ -1962,6 +2067,7 @@
         "sizeY": 0.2293529510498047
       },
       "height": 0.229,
+      "baseY": 1.793,
       "layoutTier": "decor",
       "nameZh": "墙直顶部 1b",
       "nameEn": "Wall straight top 01b",
@@ -1982,6 +2088,7 @@
         "sizeY": 0.2154250144958496
       },
       "height": 0.215,
+      "baseY": 1.793,
       "layoutTier": "decor",
       "nameZh": "直墙顶沿 02",
       "nameEn": "Wall straight top 2",
@@ -2002,6 +2109,7 @@
         "sizeY": 0.2293529510498047
       },
       "height": 0.229,
+      "baseY": 1.793,
       "layoutTier": "decor",
       "nameZh": "墙直顶部 2b",
       "nameEn": "Wall straight top 02b",
@@ -2042,6 +2150,7 @@
         "sizeY": 2
       },
       "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "墙纸内 1",
       "nameEn": "wall wallpaper in 1",
@@ -2062,6 +2171,7 @@
         "sizeY": 2.0002670288085938
       },
       "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "墙纸内 2",
       "nameEn": "wall wallpaper in 2",
@@ -2100,6 +2210,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "wallblock",
       "nameEn": "wallblock",
@@ -2142,6 +2253,7 @@
         "sizeY": 1.2000004053115845
       },
       "height": 1.2,
+      "baseY": -0.6,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -2164,6 +2276,7 @@
         "sizeY": 1.2000004053115845
       },
       "height": 1.2,
+      "baseY": -0.6,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -2240,6 +2353,7 @@
         "sizeY": 5.7909770011901855
       },
       "height": 5.791,
+      "baseY": -2.838,
       "layoutTier": "decor",
       "nameZh": "水车",
       "nameEn": "waterwheel",
@@ -2278,6 +2392,7 @@
         "sizeY": 0.6891587972640991
       },
       "height": 0.689,
+      "baseY": -0.352,
       "layoutTier": "decor",
       "nameZh": "魔法横幅 1",
       "nameEn": "wizard banner 1",
@@ -2296,6 +2411,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.803,
+      "baseY": -0.138,
       "layoutTier": "decor",
       "nameZh": "wizard_barrier",
       "nameEn": "wizard_barrier",
@@ -2414,6 +2531,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.319,
+      "baseY": -0.659,
       "layoutTier": "decor",
       "nameZh": "wizard_brick_01",
       "nameEn": "wizard_brick_01",
@@ -2432,6 +2551,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.721,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "wizard_candelabra_01",
       "nameEn": "wizard_candelabra_01",
@@ -2452,6 +2573,7 @@
         "sizeY": 10
       },
       "height": 10,
+      "baseY": -5,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -2474,6 +2596,7 @@
         "sizeY": 0.46266642212867737
       },
       "height": 0.463,
+      "baseY": -0.361,
       "layoutTier": "decor",
       "nameZh": "魔法长凳 1",
       "nameEn": "wizard longbench 1",
@@ -2494,6 +2617,7 @@
         "sizeY": 0.8344427347183228
       },
       "height": 0.834,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "nameZh": "魔法长桌 1",
       "nameEn": "wizard longtable 1",
@@ -2554,6 +2678,7 @@
         "sizeY": 0.14586077630519867
       },
       "height": 0.146,
+      "baseY": 0.267,
       "layoutTier": "decor",
       "nameZh": "魔法栏杆 2",
       "nameEn": "wizard rail 2",
@@ -2594,6 +2719,7 @@
         "sizeY": 1.0195958614349365
       },
       "height": 1.02,
+      "baseY": -0.013,
       "layoutTier": "decor",
       "nameZh": "魔法壁烛灯 1",
       "nameEn": "wizard sconcecandle 1",
@@ -2614,6 +2740,7 @@
         "sizeY": 0.9522345066070557
       },
       "height": 0.952,
+      "baseY": -0.066,
       "layoutTier": "decor",
       "nameZh": "魔法架子 1",
       "nameEn": "wizard shelf 1",
@@ -2634,6 +2761,7 @@
         "sizeY": 0.9522345066070557
       },
       "height": 0.952,
+      "baseY": -0.066,
       "layoutTier": "decor",
       "nameZh": "魔法架子 2",
       "nameEn": "wizard shelf 2",
@@ -2654,6 +2782,7 @@
         "sizeY": 0.7516800165176392
       },
       "height": 0.752,
+      "baseY": -0.066,
       "layoutTier": "decor",
       "nameZh": "魔法架子 3",
       "nameEn": "wizard shelf 3",
@@ -2674,6 +2803,7 @@
         "sizeY": 0.7516800165176392
       },
       "height": 0.752,
+      "baseY": -0.066,
       "layoutTier": "decor",
       "nameZh": "魔法架子 4",
       "nameEn": "wizard shelf 4",
@@ -2692,6 +2822,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.503,
+      "baseY": -0.251,
       "layoutTier": "decor",
       "nameZh": "wizard_steps_02",
       "nameEn": "wizard_steps_02",
@@ -2712,6 +2844,7 @@
         "sizeY": 0.7308006882667542
       },
       "height": 0.731,
+      "baseY": -0.354,
       "layoutTier": "decor",
       "nameZh": "魔法石块 1",
       "nameEn": "wizard stoneblock 1",
@@ -2732,6 +2865,7 @@
         "sizeY": 0.37873876094818115
       },
       "height": 0.379,
+      "baseY": -0.207,
       "layoutTier": "decor",
       "nameZh": "魔法石块 2",
       "nameEn": "wizard stoneblock 2",
@@ -2752,6 +2886,7 @@
         "sizeY": 0.32781508564949036
       },
       "height": 0.328,
+      "baseY": -0.162,
       "layoutTier": "decor",
       "nameZh": "魔法石块 3",
       "nameEn": "wizard stoneblock 3",
@@ -2772,6 +2907,7 @@
         "sizeY": 3.3538107872009277
       },
       "height": 3.354,
+      "baseY": 0.006,
       "layoutTier": "decor",
       "nameZh": "魔法石墙 1",
       "nameEn": "wizard stonewall 1",
@@ -2790,6 +2926,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.354,
+      "baseY": 0.006,
       "layoutTier": "decor",
       "nameZh": "wizard_stonewall_01_3-2",
       "nameEn": "wizard_stonewall_01_3-2",
@@ -2830,6 +2968,7 @@
         "sizeY": 2.000000476837158
       },
       "height": 2,
+      "baseY": -2,
       "layoutTier": "decor",
       "nameZh": "魔法墙砖",
       "nameEn": "wizard walltile",
@@ -2848,6 +2987,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 30,
+      "baseY": -14.865,
       "layoutTier": "decor",
       "nameZh": "wizard_walltile_15",
       "nameEn": "wizard_walltile_15x15",
@@ -2866,6 +3007,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 12,
+      "baseY": -5.946,
       "layoutTier": "decor",
       "nameZh": "wizard_walltile_3_1",
       "nameEn": "wizard_walltile_3_1",
@@ -2884,6 +3027,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6,
+      "baseY": -1.809,
       "layoutTier": "decor",
       "nameZh": "wizard_walltile_3",
       "nameEn": "wizard_walltile_3x2",
@@ -2904,6 +3049,7 @@
         "sizeY": 9.021685600280762
       },
       "height": 9.022,
+      "baseY": -10.75,
       "layoutTier": "decor",
       "nameZh": "魔法墙桁架 1",
       "nameEn": "wizard walltruss 1",
@@ -2924,6 +3070,7 @@
         "sizeY": 2.6574368476867676
       },
       "height": 2.657,
+      "baseY": -0.565,
       "layoutTier": "decor",
       "nameZh": "魔法窗 1",
       "nameEn": "wizard window 1",
@@ -2944,6 +3091,7 @@
         "sizeY": 4.258929252624512
       },
       "height": 4.259,
+      "baseY": -2.129,
       "layoutTier": "decor",
       "nameZh": "魔法窗 2",
       "nameEn": "wizard window 2",
@@ -2962,6 +3110,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 9.6,
+      "baseY": -4.8,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -2984,6 +3134,7 @@
         "sizeY": 3.005505084991455
       },
       "height": 3.006,
+      "baseY": -0.021,
       "layoutTier": "decor",
       "nameZh": "木墙",
       "nameEn": "woodenwall 1",
@@ -3004,6 +3155,7 @@
         "sizeY": 3.005505084991455
       },
       "height": 3.006,
+      "baseY": -0.021,
       "layoutTier": "decor",
       "nameZh": "木墙（夜晚）1",
       "nameEn": "woodenwall night 1",
@@ -3024,6 +3176,7 @@
         "sizeY": 1.1695109605789185
       },
       "height": 1.17,
+      "baseY": -0.585,
       "layoutTier": "decor",
       "nameZh": "木墙屋顶（变体）1",
       "nameEn": "woodenwall roof alt 1",
@@ -3042,6 +3195,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.531,
       "layoutTier": "decor",
       "nameZh": "传菜窗（部落）",
       "nameEn": "Service Hatch (Horde)",
@@ -3060,6 +3214,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.693,
       "layoutTier": "core",
       "nameZh": "灶台",
       "nameEn": "Cooker",
@@ -3076,6 +3231,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.645,
+      "baseY": -0.006,
       "layoutTier": "core",
       "nameZh": "煎炸台",
       "nameEn": "Frying Station",
@@ -3092,6 +3249,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.896,
       "layoutTier": "core",
       "nameZh": "烤箱",
       "nameEn": "Oven",
@@ -3108,6 +3266,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.247,
+      "baseY": 0.075,
       "layoutTier": "core",
       "nameZh": "烧烤架",
       "nameEn": "Barbeque",
@@ -3124,6 +3284,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.817,
+      "baseY": -0.261,
       "layoutTier": "core",
       "nameZh": "篝火",
       "nameEn": "Campfire",
@@ -3140,6 +3302,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.132,
       "layoutTier": "core",
       "nameZh": "烤炉（石炉）",
       "nameEn": "Furnace Oven",
@@ -3156,6 +3319,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.087,
       "layoutTier": "core",
       "nameZh": "石炉台",
       "nameEn": "Furnace Station",
@@ -3172,6 +3336,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.5,
       "layoutTier": "core",
       "nameZh": "工作台",
       "nameEn": "Counter",
@@ -3188,6 +3353,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.5,
       "layoutTier": "core",
       "nameZh": "转角工作台",
       "nameEn": "Counter Corner",
@@ -3204,6 +3370,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.738,
       "layoutTier": "core",
       "nameZh": "切菜台",
       "nameEn": "Chopping Counter",
@@ -3220,6 +3387,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.554,
+      "baseY": -0.048,
       "layoutTier": "core",
       "nameZh": "悬浮转角台",
       "nameEn": "Floating Corner Counter",
@@ -3236,6 +3405,7 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 2.858,
       "layoutTier": "core",
       "nameZh": "断头台",
       "nameEn": "Guillotine",
@@ -3252,6 +3422,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.503,
       "layoutTier": "core",
       "nameZh": "食材箱",
       "nameEn": "Dispenser",
@@ -3268,6 +3439,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.588,
       "layoutTier": "core",
       "nameZh": "搅拌台",
       "nameEn": "Mixer",
@@ -3284,6 +3456,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.771,
       "layoutTier": "core",
       "nameZh": "搅拌机",
       "nameEn": "Blender",
@@ -3300,6 +3473,7 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 2.531,
       "layoutTier": "core",
       "nameZh": "上菜台",
       "nameEn": "Serving Station",
@@ -3316,6 +3490,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.527,
+      "baseY": -0.498,
       "layoutTier": "core",
       "nameZh": "传送带食材生成器",
       "nameEn": "Attaching Food Spawner",
@@ -3332,6 +3508,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.372,
+      "baseY": -0.182,
       "layoutTier": "core",
       "nameZh": "背包",
       "nameEn": "Backpack",
@@ -3348,6 +3526,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.573,
       "layoutTier": "core",
       "nameZh": "煤箱",
       "nameEn": "Coal Dispenser",
@@ -3364,6 +3543,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.628,
+      "baseY": -0.04,
       "layoutTier": "core",
       "nameZh": "搅拌台（马戏团）",
       "nameEn": "Mixer Station (Circus)",
@@ -3380,6 +3561,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.503,
       "layoutTier": "core",
       "needsStub": true,
       "nameZh": "随机食材箱",
@@ -3397,6 +3579,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.771,
       "layoutTier": "core",
       "nameZh": "搅拌工作站（DLC2）",
       "nameEn": "Blender Station (DLC2)",
@@ -3413,6 +3596,8 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 1.415,
+      "baseY": -0.102,
       "layoutTier": "core",
       "nameZh": "水槽",
       "nameEn": "Sink",
@@ -3429,6 +3614,8 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 1.352,
+      "baseY": -0.043,
       "layoutTier": "core",
       "nameZh": "洗杯槽",
       "nameEn": "Sink Glass",
@@ -3445,6 +3632,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.549,
       "layoutTier": "core",
       "nameZh": "垃圾箱",
       "nameEn": "Bin",
@@ -3461,6 +3649,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.503,
       "layoutTier": "core",
       "nameZh": "脏盘台",
       "nameEn": "Plate Return",
@@ -3477,6 +3666,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.673,
+      "baseY": -0.014,
       "layoutTier": "core",
       "nameZh": "脏杯台",
       "nameEn": "Glass Return",
@@ -3493,6 +3684,8 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 1.433,
+      "baseY": -0.121,
       "layoutTier": "core",
       "nameZh": "洗餐盘水槽（马戏团）",
       "nameEn": "Tray Sink (Circus)",
@@ -3509,6 +3702,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.503,
       "layoutTier": "core",
       "nameZh": "餐盘回收台",
       "nameEn": "Tray Return Station",
@@ -3525,6 +3719,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.549,
       "layoutTier": "core",
       "nameZh": "垃圾桶（DLC13）",
       "nameEn": "Bin (DLC13)",
@@ -3541,6 +3736,8 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 1.352,
+      "baseY": -0.076,
       "layoutTier": "core",
       "nameZh": "洗杯水槽",
       "nameEn": "Mug Sink",
@@ -3557,6 +3754,8 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 1.433,
+      "baseY": -0.121,
       "layoutTier": "core",
       "nameZh": "洗托盘水槽",
       "nameEn": "Tray Sink",
@@ -3573,6 +3772,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.503,
       "layoutTier": "core",
       "nameZh": "马克杯回收台",
       "nameEn": "Mug Return Station",
@@ -3589,6 +3789,8 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 1.352,
+      "baseY": -0.076,
       "layoutTier": "core",
       "nameZh": "马克杯水槽（木制）",
       "nameEn": "Mug Sink (Wooden)",
@@ -3605,6 +3807,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.811,
+      "baseY": 0.021,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "68f5f658353ad8162036803a8bf13cc1",
@@ -3625,6 +3829,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.28,
+      "baseY": 0.037,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "5e15cf0dda7163a48901aa33a88e993d",
@@ -3645,6 +3851,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.322,
+      "baseY": 0.217,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "b6f2aa157beed2140a12c5cc8a66f8c1",
@@ -3665,6 +3873,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.554,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "e177ae873a0fd11ddb634f83169196d5",
@@ -3685,6 +3894,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.731,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "1e87aab4d91d5e2b460a8de8fe55b737",
@@ -3705,6 +3916,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.65,
+      "baseY": 0.055,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "a192356a1fd01504eadf0d90ffa2de62",
@@ -3725,6 +3938,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.522,
+      "baseY": 0.065,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "d141ea96f54b43c0843b7b7a4a195e92",
@@ -3745,6 +3960,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.684,
+      "baseY": 0.035,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "4562e236d5380f78a99753febcfcf033",
@@ -3765,6 +3982,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.865,
+      "baseY": -0.036,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "ff0a377cca6a00a45a5a5f13ac30098d",
@@ -3785,6 +4004,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.534,
+      "baseY": -0.076,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "85bd4a3b88782714091204aeb3e85e6d",

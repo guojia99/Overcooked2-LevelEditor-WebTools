@@ -1728,6 +1728,174 @@ canvas {
   cursor: crosshair;
 }
 
+/* ── 3D 视口 ────────────────────────────────────────────────── */
+
+/* 与 #canvas 同容器叠放，由 viewMode 决定谁可见（.hidden = display:none，
+   因此 2D 的指针事件在 3D 模式下天然收不到，无需逐个解绑）。 */
+#canvas3d {
+  position: absolute;
+  inset: 0;
+  cursor: default;
+}
+
+#canvas.hidden,
+#canvas3d.hidden {
+  display: none;
+}
+
+/* 视图切换 tabs：与图层 tabs 同款视觉。 */
+.view-tabs {
+  display: inline-flex;
+  gap: 2px;
+  background: #1a1d23;
+  border: 1px solid #4a5060;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.view-tab {
+  background: transparent;
+  border: none;
+  color: #9aa0a6;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.view-tab.active {
+  background: #2f9e6e;
+  color: #fff;
+}
+
+/* 仅 3D 模式可见的工具（Y 轴、板厚、居中）。 */
+.view3d-only {
+  display: none;
+}
+
+body.view-3d .view3d-only {
+  display: inline-flex;
+  align-items: center;
+}
+
+#btn-y-drag.active {
+  background: #2f9e6e;
+  border-color: #2f9e6e;
+  color: #fff;
+}
+
+/* 3D 框选矩形：画在 DOM 上，零成本拿到与 2D 一致的虚线观感。 */
+.marquee3d {
+  position: absolute;
+  border: 1px dashed #8ab4f8;
+  background: rgba(138, 180, 248, 0.12);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.marquee3d.hidden {
+  display: none;
+}
+
+/* 底部提示条按视图模式切换。 */
+.hint-3d {
+  display: none;
+}
+
+body.view-3d .hint-2d {
+  display: none;
+}
+
+body.view-3d .hint-3d {
+  display: block;
+}
+
+/* 3D 视口屏幕控件：方向平移盘 + 缩放。
+   3D 下右键拖是环绕视角，平移只有中键/空格+左键这些隐藏手势，
+   触控板与单键鼠标用户够不着，所以补一组显式按钮。 */
+.hud3d {
+  position: absolute;
+  right: 14px;
+  bottom: 34px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.hud3d-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 30px);
+  grid-template-rows: repeat(3, 30px);
+  gap: 2px;
+}
+
+.hud3d-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.hud3d-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.hud3d-home {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.hud3d-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.hud3d-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.hud3d-zoom {
+  display: flex;
+  gap: 2px;
+}
+
+.hud3d-zoom .hud3d-btn {
+  width: 30px;
+  height: 26px;
+}
+
+.hud3d-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #4a5060;
+  border-radius: 5px;
+  background: rgba(26, 29, 35, 0.82);
+  color: #c8ccd4;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hud3d-btn:hover {
+  background: rgba(45, 50, 60, 0.95);
+  color: #fff;
+  border-color: #6b7383;
+}
+
+.hud3d-btn:active {
+  background: #2f9e6e;
+  border-color: #2f9e6e;
+  color: #fff;
+}
+
+.hud3d-home {
+  font-size: 14px;
+}
+
 .hint {
   position: absolute;
   bottom: 8px;

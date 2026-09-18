@@ -14,6 +14,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.552,
+      "baseY": -0.127,
       "layoutTier": "decor",
       "nameZh": "1_5_hazardspawner_01",
       "nameEn": "1_5_hazardspawner_01",
@@ -34,6 +36,7 @@
         "sizeY": 2.3813226222991943
       },
       "height": 2.381,
+      "baseY": -0.03,
       "layoutTier": "decor",
       "nameZh": "登船板",
       "nameEn": "aboard 1",
@@ -54,6 +57,7 @@
         "sizeY": 28.56077766418457
       },
       "height": 28.561,
+      "baseY": -14.28,
       "layoutTier": "decor",
       "nameZh": "热气球·球体 1",
       "nameEn": "air balloon balloon 1",
@@ -74,6 +78,7 @@
         "sizeY": 25.447715759277344
       },
       "height": 25.448,
+      "baseY": -12.724,
       "layoutTier": "decor",
       "nameZh": "热气球·球体 2",
       "nameEn": "air balloon balloon 2",
@@ -94,6 +99,7 @@
         "sizeY": 16.557836532592773
       },
       "height": 16.558,
+      "baseY": -8.279,
       "layoutTier": "decor",
       "nameZh": "热气球·球体 3",
       "nameEn": "air balloon balloon 3",
@@ -112,6 +118,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 25.418,
+      "baseY": 1,
       "layoutTier": "decor",
       "nameZh": "air_balloon_balloon_04",
       "nameEn": "air_balloon_balloon_04",
@@ -130,6 +138,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 25.418,
+      "baseY": 1,
       "layoutTier": "decor",
       "nameZh": "air_balloon_balloon_05",
       "nameEn": "air_balloon_balloon_05",
@@ -148,6 +158,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 25.418,
+      "baseY": 1,
       "layoutTier": "decor",
       "nameZh": "air_balloon_balloon_06",
       "nameEn": "air_balloon_balloon_06",
@@ -168,6 +180,7 @@
         "sizeY": 0.24613463878631592
       },
       "height": 0.246,
+      "baseY": -0.106,
       "layoutTier": "decor",
       "nameZh": "热气球·桥（三格）",
       "nameEn": "air balloon bridge x3",
@@ -188,6 +201,7 @@
         "sizeY": 0.24236023426055908
       },
       "height": 0.242,
+      "baseY": 0.139,
       "layoutTier": "decor",
       "nameZh": "热气球·桥（五格）",
       "nameEn": "air balloon bridge x5",
@@ -206,6 +220,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.463,
+      "baseY": -0.374,
       "layoutTier": "decor",
       "nameZh": "air_balloon_broken side_ani_01",
       "nameEn": "air_balloon_broken side_ani_01",
@@ -224,6 +240,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 15.061,
+      "baseY": -2.026,
       "layoutTier": "decor",
       "nameZh": "air_balloon_broken_corner_01",
       "nameEn": "air_balloon_broken_corner_01",
@@ -242,6 +260,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.316,
+      "baseY": -1.952,
       "layoutTier": "decor",
       "nameZh": "air_balloon_broken_side_01",
       "nameEn": "air_balloon_broken_side_01",
@@ -260,6 +280,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.079,
+      "baseY": -1.953,
       "layoutTier": "decor",
       "nameZh": "air_balloon_broken_side_02",
       "nameEn": "air_balloon_broken_side_02",
@@ -278,6 +300,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.03,
+      "baseY": -1.953,
       "layoutTier": "decor",
       "nameZh": "air_balloon_broken_side_03",
       "nameEn": "air_balloon_broken_side_03",
@@ -296,6 +320,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.333,
+      "baseY": -1.702,
       "layoutTier": "decor",
       "nameZh": "air_balloon_broken_side_04",
       "nameEn": "air_balloon_broken_side_04",
@@ -314,6 +340,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.316,
+      "baseY": -1.94,
       "layoutTier": "decor",
       "nameZh": "air_balloon_broken_side_05",
       "nameEn": "air_balloon_broken_side_05",
@@ -332,6 +360,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.322,
+      "baseY": -1.954,
       "layoutTier": "decor",
       "nameZh": "air_balloon_broken_side_06",
       "nameEn": "air_balloon_broken_side_06",
@@ -352,6 +382,7 @@
         "sizeY": 0.8114393949508667
       },
       "height": 0.811,
+      "baseY": -0.428,
       "layoutTier": "decor",
       "nameZh": "热气球·彩旗 1",
       "nameEn": "air balloon bunting 1",
@@ -371,7 +402,8 @@
         "cellsZ": 5,
         "sizeY": 0.5602359175682068
       },
-      "height": 0.56,
+      "height": 2.1,
+      "baseY": -1.795,
       "layoutTier": "decor",
       "nameZh": "热气球·彩旗 5",
       "nameEn": "air balloon bunting 5",
@@ -392,6 +424,7 @@
         "sizeY": 1.2082713842391968
       },
       "height": 1.208,
+      "baseY": -0.029,
       "layoutTier": "decor",
       "nameZh": "热气球·燃烧器标准",
       "nameEn": "air balloon burner standard",
@@ -412,6 +445,7 @@
         "sizeY": 1.932571530342102
       },
       "height": 1.933,
+      "baseY": -0.966,
       "layoutTier": "decor",
       "nameZh": "热气球·烟囱",
       "nameEn": "Chimney 1",
@@ -432,6 +466,7 @@
         "sizeY": 0.4664550721645355
       },
       "height": 0.466,
+      "baseY": -0.215,
       "layoutTier": "decor",
       "nameZh": "热气球·旗帜 1",
       "nameEn": "air balloon flag 1",
@@ -452,6 +487,7 @@
         "sizeY": 1.28977632522583
       },
       "height": 1.29,
+      "baseY": -0.645,
       "layoutTier": "decor",
       "nameZh": "热气球·救生圈",
       "nameEn": "Lifebelt 1",
@@ -472,6 +508,7 @@
         "sizeY": 0.115546815097332
       },
       "height": 0.116,
+      "baseY": -0.058,
       "layoutTier": "decor",
       "nameZh": "热气球·屋顶 1",
       "nameEn": "air balloon roof 1",
@@ -492,6 +529,7 @@
         "sizeY": 0.30000004172325134
       },
       "height": 0.3,
+      "baseY": -0.15,
       "layoutTier": "decor",
       "nameZh": "热气球·屋顶 2",
       "nameEn": "air balloon roof 2",
@@ -512,6 +550,7 @@
         "sizeY": 0.1750161349773407
       },
       "height": 0.175,
+      "baseY": -0.088,
       "layoutTier": "decor",
       "nameZh": "热气球·屋顶 3",
       "nameEn": "air balloon roof 3",
@@ -530,6 +569,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.3,
+      "baseY": -0.15,
       "layoutTier": "decor",
       "nameZh": "air_balloon_roof_ridge_01",
       "nameEn": "air_balloon_roof_ridge_01",
@@ -550,6 +591,7 @@
         "sizeY": 1.768412709236145
       },
       "height": 1.768,
+      "baseY": -1.588,
       "layoutTier": "decor",
       "nameZh": "热气球·屋顶段 1",
       "nameEn": "air balloon roof roof section 1",
@@ -570,6 +612,7 @@
         "sizeY": 11.865135192871094
       },
       "height": 11.865,
+      "baseY": -0.341,
       "layoutTier": "decor",
       "nameZh": "热气球·绳顶部侧边 1",
       "nameEn": "air balloon rope top side 1",
@@ -588,6 +631,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.677,
+      "baseY": -0.341,
       "layoutTier": "decor",
       "nameZh": "air_balloon_rope_top_side_02",
       "nameEn": "air_balloon_rope_top_side_02",
@@ -606,6 +651,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.342,
+      "baseY": -0.671,
       "layoutTier": "decor",
       "nameZh": "air_balloon_sandbag_01",
       "nameEn": "air_balloon_sandbag_01",
@@ -626,6 +673,7 @@
         "sizeY": 4.010983943939209
       },
       "height": 4.011,
+      "baseY": -1.956,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边 2",
       "nameEn": "air balloon side 2",
@@ -644,6 +692,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.178,
+      "baseY": -1.944,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_03",
       "nameEn": "air_balloon_side_03",
@@ -662,6 +712,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.085,
+      "baseY": -1.959,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_04",
       "nameEn": "air_balloon_side_04",
@@ -680,6 +732,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.126,
+      "baseY": -1.956,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_05",
       "nameEn": "air_balloon_side_05",
@@ -698,6 +752,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.011,
+      "baseY": -2.27,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_07",
       "nameEn": "air_balloon_side_07",
@@ -716,6 +772,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 15.064,
+      "baseY": -2.029,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_corner_01",
       "nameEn": "air_balloon_side_corner_01",
@@ -734,6 +792,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.253,
+      "baseY": -2.028,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_corner_02",
       "nameEn": "air_balloon_side_corner_02",
@@ -752,6 +812,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.169,
+      "baseY": -2.027,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_corner_03",
       "nameEn": "air_balloon_side_corner_03",
@@ -772,6 +834,7 @@
         "sizeY": 4.25370979309082
       },
       "height": 4.254,
+      "baseY": -2.028,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边转角 4",
       "nameEn": "air balloon side corner 4",
@@ -792,6 +855,7 @@
         "sizeY": 3.203536033630371
       },
       "height": 3.204,
+      "baseY": -2.027,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边转角（低）1",
       "nameEn": "air balloon side corner low 1",
@@ -810,6 +874,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 5.605,
+      "baseY": -4.429,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_corner_low_x2_01",
       "nameEn": "air_balloon_side_corner_low_x2_01",
@@ -828,6 +894,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.653,
+      "baseY": -4.428,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_corner_x2_02",
       "nameEn": "air_balloon_side_corner_x2_02",
@@ -846,6 +914,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.569,
+      "baseY": -3.284,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_corner_x2_03",
       "nameEn": "air_balloon_side_corner_x2_03",
@@ -864,6 +934,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.569,
+      "baseY": -3.284,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_corner_x2_05",
       "nameEn": "air_balloon_side_corner_x2_05",
@@ -884,6 +956,7 @@
         "sizeY": 4.010983943939209
       },
       "height": 4.011,
+      "baseY": -1.956,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边尽头 1",
       "nameEn": "air balloon side end 1",
@@ -902,6 +975,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.109,
+      "baseY": -1.957,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_end_02",
       "nameEn": "air_balloon_side_end_02",
@@ -920,6 +995,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.531,
+      "baseY": -4.357,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_end_v2_02",
       "nameEn": "air_balloon_side_end_v2_02",
@@ -938,6 +1015,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.411,
+      "baseY": -4.357,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_end_x2_01",
       "nameEn": "air_balloon_side_end_x2_01",
@@ -956,6 +1035,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.426,
+      "baseY": -2.146,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_ladder_01",
       "nameEn": "air_balloon_side_ladder_01",
@@ -976,6 +1057,7 @@
         "sizeY": 2.967554807662964
       },
       "height": 2.968,
+      "baseY": -1.956,
       "layoutTier": "decor",
       "nameZh": "热气球·侧边（低）1",
       "nameEn": "air balloon side low 1",
@@ -994,6 +1076,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 5.368,
+      "baseY": -4.31,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_low_x2_01",
       "nameEn": "air_balloon_side_low_x2_01",
@@ -1012,6 +1096,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.411,
+      "baseY": -4.357,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_x2_01",
       "nameEn": "air_balloon_side_x2_01",
@@ -1030,6 +1116,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.011,
+      "baseY": -1.957,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_x2_02",
       "nameEn": "air_balloon_side_x2_02",
@@ -1048,6 +1136,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.527,
+      "baseY": -4.364,
       "layoutTier": "decor",
       "nameZh": "air_balloon_side_x2_05",
       "nameEn": "air_balloon_side_x2_05",
@@ -1068,6 +1158,7 @@
         "sizeY": 11.204585075378418
       },
       "height": 11.205,
+      "baseY": -5.602,
       "layoutTier": "decor",
       "nameZh": "热气球·涡轮 1",
       "nameEn": "Turbine 1",
@@ -1088,6 +1179,7 @@
         "sizeY": 18.392757415771484
       },
       "height": 18.393,
+      "baseY": -9.916,
       "layoutTier": "decor",
       "nameZh": "热气球·涡轮 2",
       "nameEn": "Turbine 2",
@@ -1108,6 +1200,7 @@
         "sizeY": 11.083613395690918
       },
       "height": 11.084,
+      "baseY": -4.992,
       "layoutTier": "decor",
       "nameZh": "热气球·涡轮 3",
       "nameEn": "Turbine 3",
@@ -1126,6 +1219,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.243,
+      "baseY": -0.12,
       "layoutTier": "decor",
       "nameZh": "air_balloon_wing_01",
       "nameEn": "air_balloon_wing_01",
@@ -1144,6 +1239,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.696,
+      "baseY": -0.573,
       "layoutTier": "decor",
       "nameZh": "airballoon_banner_01",
       "nameEn": "airballoon_banner_01",
@@ -1164,6 +1261,7 @@
         "sizeY": 0.8136734366416931
       },
       "height": 0.814,
+      "baseY": -0.16,
       "layoutTier": "decor",
       "nameZh": "热气球护栏",
       "nameEn": "airballoon barrier",
@@ -1182,6 +1280,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.208,
+      "baseY": -0.029,
       "layoutTier": "decor",
       "nameZh": "airballoon_burner off",
       "nameEn": "airballoon_burner off",
@@ -1200,6 +1300,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.208,
+      "baseY": -0.029,
       "layoutTier": "decor",
       "nameZh": "airballoon_burner_standard_blue",
       "nameEn": "airballoon_burner_standard_blue",
@@ -1218,6 +1320,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.466,
+      "baseY": -0.215,
       "layoutTier": "decor",
       "nameZh": "airballoon_flag_01",
       "nameEn": "airballoon_flag_01",
@@ -1236,6 +1340,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.083,
+      "baseY": -0.583,
       "layoutTier": "decor",
       "nameZh": "airballoon_frontspike_01",
       "nameEn": "airballoon_frontspike_01",
@@ -1254,6 +1360,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.624,
+      "baseY": -0.12,
       "layoutTier": "decor",
       "nameZh": "airballoon_nail_01",
       "nameEn": "airballoon_nail_01",
@@ -1272,6 +1380,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.78,
+      "baseY": -2.463,
       "layoutTier": "decor",
       "nameZh": "热气球绳索底部沙袋 1（动画）",
       "nameEn": "airballoon rope bottom sandbag 1 ani",
@@ -1290,6 +1400,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.466,
+      "baseY": -3.129,
       "layoutTier": "decor",
       "nameZh": "热气球绳索顶部沙袋 1（动画）",
       "nameEn": "airballoon rope top sandbag 1 ani",
@@ -1308,6 +1420,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.077,
+      "baseY": -0.539,
       "layoutTier": "decor",
       "nameZh": "airballoon_side_end_short_01",
       "nameEn": "airballoon_side_end_short_01",
@@ -1328,6 +1442,7 @@
         "sizeY": 0.5635550022125244
       },
       "height": 0.564,
+      "baseY": -0.569,
       "layoutTier": "decor",
       "nameZh": "充气床 1",
       "nameEn": "Airbed 1",
@@ -1348,6 +1463,7 @@
         "sizeY": 1.2000004053115845
       },
       "height": 1.2,
+      "baseY": -0.6,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "alien",
@@ -1470,6 +1586,7 @@
         "sizeY": 0.6952760219573975
       },
       "height": 0.695,
+      "baseY": -0.695,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -1491,7 +1608,8 @@
         "cellsZ": 4,
         "sizeY": 0.5564079284667969
       },
-      "height": 0.556,
+      "height": 8.043,
+      "baseY": -4.411,
       "layoutTier": "decor",
       "nameZh": "外星触手",
       "nameEn": "Alien Tentacle 1",
@@ -1511,7 +1629,8 @@
         "cellsZ": 12,
         "sizeY": 29.14591407775879
       },
-      "height": 29.146,
+      "height": 30.165,
+      "baseY": -8.715,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -1532,6 +1651,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.987,
+      "baseY": -0.246,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -1552,6 +1673,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 7.353,
+      "baseY": -4.142,
       "layoutTier": "decor",
       "nameZh": "balloon_rotor_support",
       "nameEn": "balloon_rotor_support",
@@ -1572,6 +1695,7 @@
         "sizeY": 2.404592275619507
       },
       "height": 2.405,
+      "baseY": -2.172,
       "layoutTier": "decor",
       "nameZh": "木桶筏 2",
       "nameEn": "Barrelraft 2",
@@ -1592,6 +1716,7 @@
         "sizeY": 2.404592275619507
       },
       "height": 2.405,
+      "baseY": -2.172,
       "layoutTier": "decor",
       "nameZh": "木桶筏 3",
       "nameEn": "barrelraft 3",
@@ -1612,6 +1737,7 @@
         "sizeY": 1.3282750844955444
       },
       "height": 1.328,
+      "baseY": -0.031,
       "layoutTier": "decor",
       "nameZh": "护栏 1",
       "nameEn": "barrier 1",
@@ -1632,6 +1758,7 @@
         "sizeY": 0.21597504615783691
       },
       "height": 0.216,
+      "baseY": 0.898,
       "layoutTier": "decor",
       "nameZh": "绳索护栏（1格）",
       "nameEn": "barrier rope 1unit 1",
@@ -1651,6 +1778,7 @@
         "cellsZ": 1
       },
       "height": 0.609,
+      "baseY": 0.625,
       "layoutTier": "decor",
       "nameZh": "绳索护栏（2格）",
       "nameEn": "barrier rope 2unit 1",
@@ -1669,6 +1797,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.762,
+      "baseY": 0.085,
       "layoutTier": "decor",
       "nameZh": "海滩飞鹦鹉（蓝）",
       "nameEn": "Beach Air Parrot Blue",
@@ -1687,6 +1817,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.762,
+      "baseY": 0.085,
       "layoutTier": "decor",
       "nameZh": "海滩飞鹦鹉（紫）",
       "nameEn": "Beach Air Parrot Purple",
@@ -1705,6 +1837,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.762,
+      "baseY": 0.085,
       "layoutTier": "decor",
       "nameZh": "海滩飞鹦鹉（红）",
       "nameEn": "Beach Air Parrot Red",
@@ -1723,6 +1857,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.088,
+      "baseY": -0.176,
       "layoutTier": "decor",
       "nameZh": "海滩鹦鹉（蓝）",
       "nameEn": "Beach Ground Parrot Blue",
@@ -1741,6 +1877,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.088,
+      "baseY": -0.176,
       "layoutTier": "decor",
       "nameZh": "海滩鹦鹉（蓝）",
       "nameEn": "Beach Ground Parrot Blue",
@@ -1759,6 +1897,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.088,
+      "baseY": -0.176,
       "layoutTier": "decor",
       "nameZh": "海滩鹦鹉（紫）",
       "nameEn": "Beach Ground Parrot Purple",
@@ -1777,6 +1917,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.088,
+      "baseY": -0.176,
       "layoutTier": "decor",
       "nameZh": "海滩鹦鹉（紫）",
       "nameEn": "Beach Ground Parrot Purple",
@@ -1795,6 +1937,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.088,
+      "baseY": -0.176,
       "layoutTier": "decor",
       "nameZh": "海滩鹦鹉（红）",
       "nameEn": "Beach Ground Parrot Red",
@@ -1813,6 +1957,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.088,
+      "baseY": -0.176,
       "layoutTier": "decor",
       "nameZh": "海滩鹦鹉（红）",
       "nameEn": "Beach Ground Parrot Red",
@@ -1873,6 +2019,7 @@
         "sizeY": 2.014803647994995
       },
       "height": 2.015,
+      "baseY": 0.006,
       "layoutTier": "decor",
       "nameZh": "海滩石墙转角 1",
       "nameEn": "Beach stonewall corner 1",
@@ -1893,6 +2040,7 @@
         "sizeY": 2.014803647994995
       },
       "height": 2.015,
+      "baseY": 0.006,
       "layoutTier": "decor",
       "nameZh": "海滩石墙转角 2",
       "nameEn": "beach stonewall corner 2",
@@ -1953,6 +2101,7 @@
         "sizeY": 1.5090829133987427
       },
       "height": 1.509,
+      "baseY": -0.755,
       "layoutTier": "decor",
       "nameZh": "沙滩球 1",
       "nameEn": "beachball 1",
@@ -1973,6 +2122,7 @@
         "sizeY": 1.5090829133987427
       },
       "height": 1.509,
+      "baseY": -0.755,
       "layoutTier": "decor",
       "nameZh": "沙滩球 2",
       "nameEn": "beachball 2",
@@ -2065,6 +2215,7 @@
         "sizeY": 0.09747807681560516
       },
       "height": 0.097,
+      "baseY": 0.036,
       "layoutTier": "decor",
       "nameZh": "海滩鹅卵石 3",
       "nameEn": "beachdoodads pebbles 3",
@@ -2103,6 +2254,7 @@
         "sizeY": 0.10576053708791733
       },
       "height": 0.106,
+      "baseY": 0.011,
       "layoutTier": "decor",
       "nameZh": "海星 2",
       "nameEn": "beachdoodads starfish 2",
@@ -2123,6 +2275,7 @@
         "sizeY": 0.10576053708791733
       },
       "height": 0.106,
+      "baseY": 0.011,
       "layoutTier": "decor",
       "nameZh": "beachdoodads 海星 3",
       "nameEn": "beachdoodads starfish 3",
@@ -2183,6 +2336,7 @@
         "sizeY": 1.5954118967056274
       },
       "height": 1.595,
+      "baseY": -1.336,
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 1",
       "nameEn": "bow 1",
@@ -2203,6 +2357,7 @@
         "sizeY": 1.5954118967056274
       },
       "height": 1.595,
+      "baseY": -1.336,
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 2",
       "nameEn": "bow 2",
@@ -2223,6 +2378,7 @@
         "sizeY": 1.5954118967056274
       },
       "height": 1.595,
+      "baseY": -1.336,
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 3",
       "nameEn": "bow 3",
@@ -2243,6 +2399,7 @@
         "sizeY": 1.5954118967056274
       },
       "height": 1.595,
+      "baseY": -1.336,
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 4",
       "nameEn": "bow 4",
@@ -2263,6 +2420,7 @@
         "sizeY": 0.2143014669418335
       },
       "height": 0.214,
+      "baseY": -0.107,
       "layoutTier": "decor",
       "nameZh": "碎砖 1",
       "nameEn": "brokentiles 1",
@@ -2283,6 +2441,7 @@
         "sizeY": 0.08295905590057373
       },
       "height": 0.083,
+      "baseY": -0.041,
       "layoutTier": "decor",
       "nameZh": "碎砖 2",
       "nameEn": "brokentiles 2",
@@ -2301,6 +2460,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.083,
+      "baseY": -0.041,
       "layoutTier": "decor",
       "nameZh": "brokentiles_02 (16)",
       "nameEn": "brokentiles_02 (16)",
@@ -2321,6 +2482,7 @@
         "sizeY": 0.08306027203798294
       },
       "height": 0.083,
+      "baseY": -0.042,
       "layoutTier": "decor",
       "nameZh": "碎砖 3",
       "nameEn": "brokentiles 3",
@@ -2341,6 +2503,7 @@
         "sizeY": 0.174858957529068
       },
       "height": 0.175,
+      "baseY": -0.087,
       "layoutTier": "decor",
       "nameZh": "碎砖 4",
       "nameEn": "brokentiles 4",
@@ -2361,6 +2524,7 @@
         "sizeY": 0.22356446087360382
       },
       "height": 0.224,
+      "baseY": -0.112,
       "layoutTier": "decor",
       "nameZh": "碎砖 5",
       "nameEn": "brokentiles 5",
@@ -2381,6 +2545,7 @@
         "sizeY": 0.7353320717811584
       },
       "height": 0.735,
+      "baseY": -0.367,
       "layoutTier": "decor",
       "nameZh": "水桶 1",
       "nameEn": "bucket 1",
@@ -2399,6 +2564,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.752,
+      "baseY": 1.574,
       "layoutTier": "decor",
       "nameZh": "building_roof",
       "nameEn": "building_roof",
@@ -2417,6 +2584,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.547,
+      "baseY": -1.682,
       "layoutTier": "decor",
       "nameZh": "building_walls",
       "nameEn": "building_walls",
@@ -2437,6 +2606,7 @@
         "sizeY": 1.0248289108276367
       },
       "height": 1.025,
+      "baseY": 0.209,
       "layoutTier": "decor",
       "nameZh": "彩旗 1",
       "nameEn": "bunting 1",
@@ -2457,6 +2627,7 @@
         "sizeY": 0.9726099967956543
       },
       "height": 0.973,
+      "baseY": 0.261,
       "layoutTier": "decor",
       "nameZh": "彩旗 2",
       "nameEn": "bunting 2",
@@ -2477,6 +2648,7 @@
         "sizeY": 1.0325121879577637
       },
       "height": 1.033,
+      "baseY": 0.201,
       "layoutTier": "decor",
       "nameZh": "彩旗 3",
       "nameEn": "bunting 3",
@@ -2497,6 +2669,7 @@
         "sizeY": 1.1291813850402832
       },
       "height": 1.129,
+      "baseY": -0.26,
       "layoutTier": "decor",
       "nameZh": "浮标 1",
       "nameEn": "Buoy 1",
@@ -2515,6 +2688,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.347,
+      "baseY": 6.436,
       "layoutTier": "decor",
       "nameZh": "蝴蝶飞行轨迹",
       "nameEn": "butterflies flightpath",
@@ -2553,6 +2728,7 @@
         "sizeY": 1.721008062362671
       },
       "height": 1.721,
+      "baseY": 3.61,
       "layoutTier": "decor",
       "nameZh": "蜡烛位 1",
       "nameEn": "Candle 1 Position",
@@ -2573,6 +2749,7 @@
         "sizeY": 1.721008062362671
       },
       "height": 1.721,
+      "baseY": 6.085,
       "layoutTier": "decor",
       "nameZh": "蜡烛位 2",
       "nameEn": "Candle 2 Position",
@@ -2593,6 +2770,7 @@
         "sizeY": 1.721008062362671
       },
       "height": 1.721,
+      "baseY": 2.55,
       "layoutTier": "decor",
       "nameZh": "蜡烛位 3",
       "nameEn": "Candle 3 Position",
@@ -2691,6 +2869,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 5.482,
+      "baseY": -2.026,
       "layoutTier": "decor",
       "nameZh": "castsshadow_misc",
       "nameEn": "castsshadow_misc",
@@ -2709,6 +2889,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.628,
+      "baseY": -2.284,
       "layoutTier": "decor",
       "nameZh": "castsshadow_stonewall_01",
       "nameEn": "castsshadow_stonewall_01",
@@ -2727,6 +2909,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.628,
+      "baseY": -2.284,
       "layoutTier": "decor",
       "nameZh": "castsshadow_stonewall_02",
       "nameEn": "castsshadow_stonewall_02",
@@ -2745,6 +2929,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.628,
+      "baseY": -1.314,
       "layoutTier": "decor",
       "nameZh": "castsshadow_stonewall_03",
       "nameEn": "castsshadow_stonewall_03",
@@ -2765,6 +2951,7 @@
         "sizeY": 1.3030353784561157
       },
       "height": 1.303,
+      "baseY": 0.039,
       "layoutTier": "decor",
       "nameZh": "椅 1",
       "nameEn": "chair 1",
@@ -2783,6 +2970,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.882,
+      "baseY": -0.158,
       "layoutTier": "decor",
       "nameZh": "city_bridge",
       "nameEn": "city_bridge",
@@ -2801,6 +2990,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 4.679,
+      "baseY": -0.158,
       "layoutTier": "decor",
       "nameZh": "city_bridge_02",
       "nameEn": "city_bridge_02",
@@ -2821,6 +3012,7 @@
         "sizeY": 2
       },
       "height": 2,
+      "baseY": 0.064,
       "layoutTier": "decor",
       "nameZh": "城市门双开 1",
       "nameEn": "city door double 1",
@@ -2841,6 +3033,7 @@
         "sizeY": 3.1784393787384033
       },
       "height": 3.178,
+      "baseY": -1.481,
       "layoutTier": "decor",
       "nameZh": "城市旗帜 1",
       "nameEn": "city flag 1",
@@ -2860,7 +3053,8 @@
         "cellsZ": 3,
         "sizeY": 1.874986171722412
       },
-      "height": 1.875,
+      "height": 2.066,
+      "baseY": -0.068,
       "layoutTier": "decor",
       "nameZh": "城市凯文 2",
       "nameEn": "city kevin 2",
@@ -2880,7 +3074,8 @@
         "cellsZ": 3,
         "sizeY": 1.874986171722412
       },
-      "height": 1.875,
+      "height": 2.066,
+      "baseY": -0.068,
       "layoutTier": "decor",
       "nameZh": "凯文雕像",
       "nameEn": "City kevin 2",
@@ -2901,6 +3096,7 @@
         "sizeY": 0.11048725247383118
       },
       "height": 0.11,
+      "baseY": -0.094,
       "layoutTier": "decor",
       "nameZh": "城市小路转角 1",
       "nameEn": "City path corner 1",
@@ -2921,6 +3117,7 @@
         "sizeY": 0.11048725247383118
       },
       "height": 0.11,
+      "baseY": -0.094,
       "layoutTier": "decor",
       "nameZh": "城市路缘",
       "nameEn": "City path side 1",
@@ -2999,6 +3196,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.123,
       "layoutTier": "decor",
       "nameZh": "city_stairs_02",
       "nameEn": "city_stairs_02",
@@ -3017,6 +3215,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.123,
       "layoutTier": "decor",
       "nameZh": "city_stairs_03",
       "nameEn": "city_stairs_03",
@@ -3035,6 +3234,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.123,
       "layoutTier": "decor",
       "nameZh": "city_stairs_04",
       "nameEn": "city_stairs_04",
@@ -3053,6 +3253,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.008,
       "layoutTier": "decor",
       "nameZh": "city_stonewall_01",
       "nameEn": "city_stonewall_01",
@@ -3111,6 +3312,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.394,
+      "baseY": -1.394,
       "layoutTier": "decor",
       "nameZh": "city_wall_straight_tall_01",
       "nameEn": "city_wall_straight_tall_01",
@@ -3211,6 +3414,7 @@
         "sizeY": 2.000001907348633
       },
       "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "城市墙砖外 2",
       "nameEn": "Citywall brick out 2",
@@ -3331,6 +3535,7 @@
         "sizeY": 2
       },
       "height": 2,
+      "baseY": -1,
       "layoutTier": "decor",
       "nameZh": "城市墙纸内角墙",
       "nameEn": "Citywall wallpaper corner in 1",
@@ -3351,6 +3556,7 @@
         "sizeY": 0.24155543744564056
       },
       "height": 0.242,
+      "baseY": -0.121,
       "layoutTier": "decor",
       "nameZh": "卵石 1",
       "nameEn": "cobble 1",
@@ -3371,6 +3577,7 @@
         "sizeY": 0.24155543744564056
       },
       "height": 0.242,
+      "baseY": -0.121,
       "layoutTier": "decor",
       "nameZh": "卵石 2",
       "nameEn": "cobble 2",
@@ -3391,6 +3598,7 @@
         "sizeY": 0.22883281111717224
       },
       "height": 0.229,
+      "baseY": -0.114,
       "layoutTier": "decor",
       "nameZh": "卵石 3",
       "nameEn": "cobble 3",
@@ -3411,6 +3619,7 @@
         "sizeY": 0.26368018984794617
       },
       "height": 0.264,
+      "baseY": -0.098,
       "layoutTier": "decor",
       "nameZh": "卵石 tiled 1",
       "nameEn": "cobble tiled 1",
@@ -3429,6 +3638,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.501,
       "layoutTier": "decor",
       "nameZh": "conveyorstationprop",
       "nameEn": "conveyorstationprop",
@@ -3447,6 +3657,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.543,
       "layoutTier": "decor",
       "nameZh": "countertop_01_standard_corner_swamp",
       "nameEn": "countertop_01_standard_corner_swamp",
@@ -3465,6 +3676,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.62,
+      "baseY": -0.048,
       "layoutTier": "decor",
       "nameZh": "countertop_02_standard_medieval_corner",
       "nameEn": "countertop_02_standard_medieval_corner",
@@ -3485,6 +3698,7 @@
         "sizeY": 0.7085577249526978
       },
       "height": 0.709,
+      "baseY": -0.416,
       "layoutTier": "decor",
       "nameZh": "木筏板条箱",
       "nameEn": "crate raft 1",
@@ -3504,6 +3718,7 @@
         "cellsZ": 1
       },
       "height": 0.724,
+      "baseY": -0.424,
       "layoutTier": "decor",
       "nameZh": "木筏板条箱（十格）",
       "nameEn": "Crate raft x10 1",
@@ -3523,6 +3738,7 @@
         "cellsZ": 1
       },
       "height": 0.709,
+      "baseY": -0.417,
       "layoutTier": "decor",
       "nameZh": "木筏板条箱（双格）",
       "nameEn": "crate raft x2 1",
@@ -3542,6 +3758,7 @@
         "cellsZ": 1
       },
       "height": 0.709,
+      "baseY": -0.417,
       "layoutTier": "decor",
       "nameZh": "木筏板条箱（三格）",
       "nameEn": "Crate raft x3 1",
@@ -3560,6 +3777,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_black",
       "nameEn": "customer_countertop_01_black",
@@ -3578,6 +3796,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_black_corner_in",
       "nameEn": "customer_countertop_01_black_corner_in",
@@ -3596,6 +3815,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_black_corner_out",
       "nameEn": "customer_countertop_01_black_corner_out",
@@ -3614,6 +3834,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_black_light",
       "nameEn": "customer_countertop_01_black_light",
@@ -3632,6 +3853,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_oranges",
       "nameEn": "customer_countertop_01_oranges",
@@ -3650,6 +3872,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_oranges_corner_in",
       "nameEn": "customer_countertop_01_oranges_corner_in",
@@ -3668,6 +3891,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_oranges_corner_out",
       "nameEn": "customer_countertop_01_oranges_corner_out",
@@ -3686,6 +3910,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_oranges_corner_out_2",
       "nameEn": "customer_countertop_01_oranges_corner_out_2",
@@ -3704,6 +3929,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.93,
       "layoutTier": "decor",
       "nameZh": "customer_countertop_01_oranges_light",
       "nameEn": "customer_countertop_01_oranges_light",
@@ -3722,6 +3948,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.44,
+      "baseY": -0.785,
       "layoutTier": "decor",
       "nameZh": "debris",
       "nameEn": "debris",
@@ -3742,6 +3970,7 @@
         "sizeY": 3.380126476287842
       },
       "height": 3.38,
+      "baseY": -1.69,
       "layoutTier": "decor",
       "nameZh": "残骸 1",
       "nameEn": "debris 1",
@@ -3762,6 +3991,7 @@
         "sizeY": 0.5477998852729797
       },
       "height": 0.548,
+      "baseY": -0.274,
       "layoutTier": "decor",
       "nameZh": "残骸 2",
       "nameEn": "debris 2",
@@ -3782,6 +4012,7 @@
         "sizeY": 0.36381545662879944
       },
       "height": 0.364,
+      "baseY": -0.182,
       "layoutTier": "decor",
       "nameZh": "残骸 3",
       "nameEn": "debris 3",
@@ -3802,6 +4033,7 @@
         "sizeY": 1.0543756484985352
       },
       "height": 1.054,
+      "baseY": -0.527,
       "layoutTier": "decor",
       "nameZh": "残骸 4",
       "nameEn": "debris 4",
@@ -3822,6 +4054,7 @@
         "sizeY": 1.2415627241134644
       },
       "height": 1.242,
+      "baseY": -0.621,
       "layoutTier": "decor",
       "nameZh": "残骸 5",
       "nameEn": "debris 5",

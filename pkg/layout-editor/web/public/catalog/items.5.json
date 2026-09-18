@@ -14,6 +14,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（夏威夷）",
       "nameEn": "NPC Middle Eatern Hawaiian 1",
@@ -32,6 +34,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（橙）",
       "nameEn": "NPC Middle Eatern Orange 1",
@@ -50,6 +54,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（巫师）",
       "nameEn": "NPC Middle Eatern Wizard 1",
@@ -68,6 +74,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（黄）",
       "nameEn": "NPC Middle Eatern Yellow 1",
@@ -86,6 +94,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.333,
+      "baseY": -0.027,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克",
       "nameEn": "npc mike",
@@ -104,6 +114,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.193,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（蓝）",
       "nameEn": "NPC Mike Blue 1",
@@ -122,6 +134,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.193,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（棕）",
       "nameEn": "NPC Mike Brown 1",
@@ -140,6 +154,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.193,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（便装）",
       "nameEn": "NPC Mike Civ 1",
@@ -158,6 +174,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.193,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（绿）",
       "nameEn": "NPC Mike Green 1",
@@ -176,6 +194,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.459,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（安全帽）",
       "nameEn": "NPC Mike Hard Hat 1",
@@ -194,6 +214,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.193,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_mike_hawaiian_01",
       "nameEn": "npc_mike_hawaiian_01",
@@ -212,6 +234,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.193,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（夏威夷）",
       "nameEn": "NPC Mike Hawaiian 1",
@@ -230,6 +254,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.193,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（橙）",
       "nameEn": "NPC Mike Orange 1",
@@ -248,6 +274,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（巫师）",
       "nameEn": "NPC Mike Wizard 1",
@@ -266,6 +294,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.193,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·迈克（黄）",
       "nameEn": "NPC Mike Yellow 1",
@@ -284,6 +314,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.072,
+      "baseY": 0.063,
       "layoutTier": "decor",
       "nameZh": "企鹅顾客",
       "nameEn": "NPC Penguin",
@@ -302,6 +334,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（蓝）",
       "nameEn": "NPC Specs Blue 1",
@@ -320,6 +354,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（棕）",
       "nameEn": "NPC Specs Brown 1",
@@ -338,6 +374,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（便装）",
       "nameEn": "NPC Specs Civ 1",
@@ -356,6 +394,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.429,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（施工）",
       "nameEn": "NPC Specs Construction 1",
@@ -374,6 +414,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（绿）",
       "nameEn": "NPC Specs Green 1",
@@ -392,6 +434,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.429,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（安全帽）",
       "nameEn": "NPC Specs Hard Hat 1",
@@ -410,6 +454,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_specs_hawaiian_01",
       "nameEn": "npc_specs_hawaiian_01",
@@ -428,6 +474,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（夏威夷）",
       "nameEn": "NPC Specs Hawaiian 1",
@@ -446,6 +494,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（橙）",
       "nameEn": "NPC Specs Orange 1",
@@ -464,6 +514,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（服务生）",
       "nameEn": "NPC Specs Waiter 1",
@@ -482,6 +534,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（巫师）",
       "nameEn": "NPC Specs Wizard 1",
@@ -500,6 +554,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.189,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜（黄）",
       "nameEn": "NPC Specs Yellow 1",
@@ -519,7 +575,8 @@
         "cellsZ": 1,
         "sizeY": 0.19478154182434082
       },
-      "height": 0.195,
+      "height": 1.471,
+      "baseY": -0.115,
       "layoutTier": "decor",
       "nameZh": "顾客·服务员",
       "nameEn": "npc waiter",
@@ -538,6 +595,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·服务员 1",
       "nameEn": "npc waiters 1",
@@ -556,6 +615,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "NPC 逆时针巡逻路径 47 秒",
       "nameEn": "NPC Walk Anticlockwise 47s",
@@ -574,6 +635,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "NPC 逆时针巡逻路径 67 秒",
       "nameEn": "NPC Walk Anticlockwise 67s",
@@ -592,6 +655,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·巫师男孩（蓝）",
       "nameEn": "NPC Wiz Boy Blue 1",
@@ -610,6 +675,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·巫师男孩（棕）",
       "nameEn": "NPC Wiz Boy Brown 1",
@@ -628,6 +695,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·巫师男孩（便装）",
       "nameEn": "NPC Wiz Boy Civ 1",
@@ -646,6 +715,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·巫师男孩（绿）",
       "nameEn": "NPC Wiz Boy Green 1",
@@ -664,6 +735,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_wizboy_hawaiian_01",
       "nameEn": "npc_wizboy_hawaiian_01",
@@ -682,6 +755,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·巫师男孩（夏威夷）",
       "nameEn": "NPC Wiz Boy Hawaiian 1",
@@ -700,6 +775,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·巫师男孩（橙）",
       "nameEn": "NPC Wiz Boy Orange 1",
@@ -718,6 +795,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·巫师男孩（巫师）",
       "nameEn": "NPC Wiz Boy Wizard 1",
@@ -736,6 +815,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.281,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·巫师男孩（黄）",
       "nameEn": "NPC Wiz Boy Yellow 1",
@@ -754,6 +835,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.194,
       "layoutTier": "decor",
       "nameZh": "onion_recipebook",
       "nameEn": "onion_recipebook",
@@ -772,6 +854,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.556,
+      "baseY": -0.157,
       "layoutTier": "decor",
       "nameZh": "onionking_01",
       "nameEn": "onionking_01",
@@ -792,6 +876,7 @@
         "sizeY": 0.8277782201766968
       },
       "height": 0.828,
+      "baseY": 0.019,
       "layoutTier": "decor",
       "nameZh": "盒灯 1",
       "nameEn": "boxlantern 1",
@@ -812,6 +897,7 @@
         "sizeY": 5.804478645324707
       },
       "height": 5.804,
+      "baseY": -0.226,
       "layoutTier": "decor",
       "nameZh": "营地建筑 1",
       "nameEn": "camp building 1",
@@ -832,6 +918,7 @@
         "sizeY": 4.5648016929626465
       },
       "height": 4.565,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "nameZh": "营地建筑 2",
       "nameEn": "camp building 2",
@@ -872,6 +959,7 @@
         "sizeY": 0.685204267501831
       },
       "height": 0.685,
+      "baseY": -0.235,
       "layoutTier": "decor",
       "nameZh": "dcl 13 原木 float 1",
       "nameEn": "dcl 13 log float 1",
@@ -1290,6 +1378,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.746,
       "layoutTier": "decor",
       "nameZh": "DLC7 盔甲 1 1",
       "nameEn": "dlc07 armor 1 1",
@@ -1308,6 +1397,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.746,
       "layoutTier": "decor",
       "nameZh": "DLC7 盔甲 1 1",
       "nameEn": "dlc07 armor 1 1",
@@ -1328,6 +1418,7 @@
         "sizeY": 2.698530435562134
       },
       "height": 2.699,
+      "baseY": -2.557,
       "layoutTier": "decor",
       "nameZh": "DLC7 横幅 1",
       "nameEn": "dlc07 banner 1",
@@ -1348,6 +1439,7 @@
         "sizeY": 2.698530435562134
       },
       "height": 2.699,
+      "baseY": -2.557,
       "layoutTier": "decor",
       "nameZh": "DLC7 横幅 1",
       "nameEn": "dlc07 banner 1",
@@ -1368,6 +1460,7 @@
         "sizeY": 2.702388048171997
       },
       "height": 2.702,
+      "baseY": -2.559,
       "layoutTier": "decor",
       "nameZh": "DLC7 横幅 2",
       "nameEn": "dlc07 banner 2",
@@ -1388,6 +1481,7 @@
         "sizeY": 2.702388048171997
       },
       "height": 2.702,
+      "baseY": -2.559,
       "layoutTier": "decor",
       "nameZh": "DLC7 横幅 2",
       "nameEn": "dlc07 banner 2",
@@ -1408,6 +1502,7 @@
         "sizeY": 5.497945785522461
       },
       "height": 5.498,
+      "baseY": -3.982,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlement 墙 1",
       "nameEn": "dlc07 battlement wall 1",
@@ -1428,6 +1523,7 @@
         "sizeY": 5.511209487915039
       },
       "height": 5.511,
+      "baseY": -3.982,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlement 墙 2",
       "nameEn": "dlc07 battlement wall 2",
@@ -1448,6 +1544,7 @@
         "sizeY": 2.028660535812378
       },
       "height": 2.029,
+      "baseY": 7.266,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 1",
       "nameEn": "dlc07 battlements 1",
@@ -1628,6 +1725,7 @@
         "sizeY": 2.028660535812378
       },
       "height": 2.029,
+      "baseY": -0.499,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements battlement 墙 3",
       "nameEn": "dlc07 battlements battlement wall 3",
@@ -1648,6 +1746,7 @@
         "sizeY": 2.028660535812378
       },
       "height": 2.029,
+      "baseY": -0.499,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements battlement 墙 3",
       "nameEn": "dlc07 battlements battlement wall 3",
@@ -1668,6 +1767,7 @@
         "sizeY": 3.511629581451416
       },
       "height": 3.512,
+      "baseY": -0.499,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements battlement 墙 4",
       "nameEn": "dlc07 battlements battlement wall 4",
@@ -1688,6 +1788,7 @@
         "sizeY": 3.511629581451416
       },
       "height": 3.512,
+      "baseY": -0.499,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements battlement 墙 4",
       "nameEn": "dlc07 battlements battlement wall 4",
@@ -1708,6 +1809,7 @@
         "sizeY": 2.0153968334198
       },
       "height": 2.015,
+      "baseY": -0.499,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements battlement 墙顶部 2",
       "nameEn": "dlc07 battlements battlement wall top 2",
@@ -1728,6 +1830,7 @@
         "sizeY": 8.207180976867676
       },
       "height": 8.207,
+      "baseY": -0.098,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 1",
       "nameEn": "dlc07 battlements fog 1",
@@ -1748,6 +1851,7 @@
         "sizeY": 8.207180976867676
       },
       "height": 8.207,
+      "baseY": -0.098,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 1",
       "nameEn": "dlc07 battlements fog 1",
@@ -1768,6 +1872,7 @@
         "sizeY": 3.8380510807037354
       },
       "height": 3.838,
+      "baseY": 0.881,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 2",
       "nameEn": "dlc07 battlements fog 2",
@@ -1788,6 +1893,7 @@
         "sizeY": 3.8380510807037354
       },
       "height": 3.838,
+      "baseY": 0.881,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 2",
       "nameEn": "dlc07 battlements fog 2",
@@ -1808,6 +1914,7 @@
         "sizeY": 2.5520477294921875
       },
       "height": 2.552,
+      "baseY": -1.977,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 3",
       "nameEn": "dlc07 battlements fog 3",
@@ -1828,6 +1935,7 @@
         "sizeY": 2.5520477294921875
       },
       "height": 2.552,
+      "baseY": -1.977,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 3",
       "nameEn": "dlc07 battlements fog 3",
@@ -1848,6 +1956,7 @@
         "sizeY": 1.7699999809265137
       },
       "height": 1.77,
+      "baseY": -0.74,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 4",
       "nameEn": "dlc07 battlements fog 4",
@@ -1868,6 +1977,7 @@
         "sizeY": 1.7699999809265137
       },
       "height": 1.77,
+      "baseY": -0.74,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 雾 4",
       "nameEn": "dlc07 battlements fog 4",
@@ -1888,6 +1998,7 @@
         "sizeY": 1.7214696407318115
       },
       "height": 1.721,
+      "baseY": -0.788,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements grotesque 2",
       "nameEn": "dlc07 battlements grotesque 2",
@@ -2028,6 +2139,7 @@
         "sizeY": 0.24950341880321503
       },
       "height": 0.25,
+      "baseY": -0.125,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 7",
       "nameEn": "dlc07 battlements plank 7",
@@ -2048,6 +2160,7 @@
         "sizeY": 0.24950341880321503
       },
       "height": 0.25,
+      "baseY": -0.125,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 7",
       "nameEn": "dlc07 battlements plank 7",
@@ -2068,6 +2181,7 @@
         "sizeY": 0.25032567977905273
       },
       "height": 0.25,
+      "baseY": -0.125,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 8",
       "nameEn": "dlc07 battlements plank 8",
@@ -2088,6 +2202,7 @@
         "sizeY": 0.25032567977905273
       },
       "height": 0.25,
+      "baseY": -0.125,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 8",
       "nameEn": "dlc07 battlements plank 8",
@@ -2108,6 +2223,7 @@
         "sizeY": 0.19750574231147766
       },
       "height": 0.198,
+      "baseY": -0.099,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 9",
       "nameEn": "dlc07 battlements plank 9",
@@ -2128,6 +2244,7 @@
         "sizeY": 0.19750574231147766
       },
       "height": 0.198,
+      "baseY": -0.099,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 9",
       "nameEn": "dlc07 battlements plank 9",
@@ -2148,6 +2265,7 @@
         "sizeY": 0.24950341880321503
       },
       "height": 0.25,
+      "baseY": -0.125,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 10",
       "nameEn": "dlc07 battlements plank 10",
@@ -2168,6 +2286,7 @@
         "sizeY": 0.19750574231147766
       },
       "height": 0.198,
+      "baseY": -0.099,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 11",
       "nameEn": "dlc07 battlements plank 11",
@@ -2188,6 +2307,7 @@
         "sizeY": 0.19750574231147766
       },
       "height": 0.198,
+      "baseY": -0.099,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 11",
       "nameEn": "dlc07 battlements plank 11",
@@ -2208,6 +2328,7 @@
         "sizeY": 0.25032567977905273
       },
       "height": 0.25,
+      "baseY": -0.125,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 木板 12",
       "nameEn": "dlc07 battlements plank 12",
@@ -2228,6 +2349,7 @@
         "sizeY": 0.8663673400878906
       },
       "height": 0.866,
+      "baseY": -0.689,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements sewergrate 1",
       "nameEn": "dlc07 battlements sewergrate 1",
@@ -2266,6 +2388,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 1 a 1",
       "nameEn": "dlc07 battlements stone block 1 a 1",
@@ -2284,6 +2407,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 1 a 1",
       "nameEn": "dlc07 battlements stone block 1 a 1",
@@ -2302,6 +2426,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.879,
       "layoutTier": "decor",
       "nameZh": "p_dlc07_battlements_stone_block_01_b 1",
       "nameEn": "p_dlc07_battlements_stone_block_01_b 1",
@@ -2320,6 +2445,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 2 a 1",
       "nameEn": "dlc07 battlements stone block 2 a 1",
@@ -2338,6 +2464,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.885,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 2 a 1",
       "nameEn": "dlc07 battlements stone block 2 a 1",
@@ -2356,6 +2483,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 3 a 1",
       "nameEn": "dlc07 battlements stone block 3 a 1",
@@ -2374,6 +2502,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.894,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 3 a 1",
       "nameEn": "dlc07 battlements stone block 3 a 1",
@@ -2392,6 +2521,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.88,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 4 a 1",
       "nameEn": "dlc07 battlements stone block 4 a 1",
@@ -2410,6 +2540,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.89,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 5 a 1",
       "nameEn": "dlc07 battlements stone block 5 a 1",
@@ -2428,6 +2559,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 6 a 1",
       "nameEn": "dlc07 battlements stone block 6 a 1",
@@ -2446,6 +2578,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.884,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 7 a 1",
       "nameEn": "dlc07 battlements stone block 7 a 1",
@@ -2464,6 +2598,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.884,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block 7 a 1",
       "nameEn": "dlc07 battlements stone block 7 a 1",
@@ -2484,6 +2620,7 @@
         "sizeY": 0.49676573276519775
       },
       "height": 0.497,
+      "baseY": -0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block trip 4",
       "nameEn": "dlc07 battlements stone block trip 4",
@@ -2504,6 +2641,7 @@
         "sizeY": 0.496765673160553
       },
       "height": 0.497,
+      "baseY": -0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block trip 5",
       "nameEn": "dlc07 battlements stone block trip 5",
@@ -2524,6 +2662,7 @@
         "sizeY": 0.49676573276519775
       },
       "height": 0.497,
+      "baseY": -0.497,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 block trip 6",
       "nameEn": "dlc07 battlements stone block trip 6",
@@ -2542,6 +2681,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 1 a 1",
       "nameEn": "dlc07 battlements stone half block 1 a 1",
@@ -2560,6 +2700,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 2 a 1",
       "nameEn": "dlc07 battlements stone half block 2 a 1",
@@ -2578,6 +2719,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.882,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 2 a 1",
       "nameEn": "dlc07 battlements stone half block 2 a 1",
@@ -2596,6 +2738,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 3 a 1",
       "nameEn": "dlc07 battlements stone half block 3 a 1",
@@ -2614,6 +2757,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 3 a 1",
       "nameEn": "dlc07 battlements stone half block 3 a 1",
@@ -2632,6 +2776,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.893,
+      "baseY": -0.015,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 4 a 1",
       "nameEn": "dlc07 battlements stone half block 4 a 1",
@@ -2650,6 +2796,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 5 a 1",
       "nameEn": "dlc07 battlements stone half block 5 a 1",
@@ -2668,6 +2815,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.878,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 half block 5 a 1",
       "nameEn": "dlc07 battlements stone half block 5 a 1",
@@ -2686,6 +2834,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.59,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石 tall block 1 a 1",
       "nameEn": "dlc07 battlements stone tall block 1 a 1",
@@ -2786,6 +2935,7 @@
         "sizeY": 3.503796339035034
       },
       "height": 3.504,
+      "baseY": -0.006,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 optimized 4",
       "nameEn": "dlc07 battlements stone wall optimized 4",
@@ -2806,6 +2956,7 @@
         "sizeY": 3.503796339035034
       },
       "height": 3.504,
+      "baseY": -0.006,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements 石墙 optimized 4",
       "nameEn": "dlc07 battlements stone wall optimized 4",
@@ -2866,6 +3017,7 @@
         "sizeY": 9.784927368164062
       },
       "height": 9.785,
+      "baseY": -0.49,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements wallsection 1",
       "nameEn": "dlc07 battlements wallsection 1",
@@ -2906,6 +3058,7 @@
         "sizeY": 9.780891418457031
       },
       "height": 9.781,
+      "baseY": -0.496,
       "layoutTier": "decor",
       "nameZh": "DLC7 battlements wallsection 转角 1",
       "nameEn": "dlc07 battlements wallsection corner 1",
@@ -2926,6 +3079,7 @@
         "sizeY": 0.750006914138794
       },
       "height": 0.75,
+      "baseY": 1.123,
       "layoutTier": "decor",
       "nameZh": "DLC7 遮阳棚 1",
       "nameEn": "dlc07 canopy 1",
@@ -2946,6 +3100,7 @@
         "sizeY": 0.750006914138794
       },
       "height": 0.75,
+      "baseY": 1.123,
       "layoutTier": "decor",
       "nameZh": "DLC7 遮阳棚 1",
       "nameEn": "dlc07 canopy 1",
@@ -2966,6 +3121,7 @@
         "sizeY": 1.4397097826004028
       },
       "height": 1.44,
+      "baseY": -0.006,
       "layoutTier": "decor",
       "nameZh": "DLC7 椅 1",
       "nameEn": "dlc07 chair 1",
@@ -2986,6 +3142,7 @@
         "sizeY": 1.4397097826004028
       },
       "height": 1.44,
+      "baseY": -0.006,
       "layoutTier": "decor",
       "nameZh": "DLC7 椅 1",
       "nameEn": "dlc07 chair 1",
@@ -3004,6 +3161,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.871,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "nameZh": "p_dlc07_chair_01 1",
       "nameEn": "p_dlc07_chair_01 1",
@@ -3024,6 +3183,7 @@
         "sizeY": 1.4397097826004028
       },
       "height": 1.44,
+      "baseY": -0.006,
       "layoutTier": "decor",
       "nameZh": "DLC7 椅 2",
       "nameEn": "dlc07 chair 2",
@@ -3042,6 +3202,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.204,
+      "baseY": -2.57,
       "layoutTier": "decor",
       "nameZh": "p_dlc07_cobble_path_01 (11)",
       "nameEn": "p_dlc07_cobble_path_01 (11)",
@@ -3060,6 +3222,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.204,
+      "baseY": -2.57,
       "layoutTier": "decor",
       "nameZh": "p_dlc07_cobble_path_01 (23)",
       "nameEn": "p_dlc07_cobble_path_01 (23)",
@@ -3320,6 +3484,7 @@
         "sizeY": 5.497945785522461
       },
       "height": 5.498,
+      "baseY": -3.982,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 battlement 墙 1",
       "nameEn": "dlc07 courtyard battlement wall 1",
@@ -3340,6 +3505,7 @@
         "sizeY": 5.497945785522461
       },
       "height": 5.498,
+      "baseY": -3.982,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 battlement 墙 1",
       "nameEn": "dlc07 courtyard battlement wall 1",
@@ -3360,6 +3526,7 @@
         "sizeY": 5.511209487915039
       },
       "height": 5.511,
+      "baseY": -3.982,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 battlement 墙 2",
       "nameEn": "dlc07 courtyard battlement wall 2",
@@ -3380,6 +3547,7 @@
         "sizeY": 5.511209487915039
       },
       "height": 5.511,
+      "baseY": -3.982,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 battlement 墙 2",
       "nameEn": "dlc07 courtyard battlement wall 2",
@@ -3400,6 +3568,7 @@
         "sizeY": 1.6231138706207275
       },
       "height": 1.623,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 candelabra 1",
       "nameEn": "dlc07 courtyard candelabra 1",
@@ -3420,6 +3589,7 @@
         "sizeY": 1.6231138706207275
       },
       "height": 1.623,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 candelabra 1",
       "nameEn": "dlc07 courtyard candelabra 1",
@@ -3440,6 +3610,7 @@
         "sizeY": 0.20405054092407227
       },
       "height": 0.204,
+      "baseY": -2.57,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石小路 1",
       "nameEn": "dlc07 courtyard cobble path 1",
@@ -3460,6 +3631,7 @@
         "sizeY": 0.20405054092407227
       },
       "height": 0.204,
+      "baseY": -2.57,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石小路 1",
       "nameEn": "dlc07 courtyard cobble path 1",
@@ -3480,6 +3652,7 @@
         "sizeY": 0.20405054092407227
       },
       "height": 0.204,
+      "baseY": -2.57,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石小路 2",
       "nameEn": "dlc07 courtyard cobble path 2",
@@ -3500,6 +3673,7 @@
         "sizeY": 0.660605251789093
       },
       "height": 0.661,
+      "baseY": -0.33,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 1",
       "nameEn": "dlc07 courtyard flagstone 1",
@@ -3520,6 +3694,7 @@
         "sizeY": 0.660605251789093
       },
       "height": 0.661,
+      "baseY": -0.33,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 1",
       "nameEn": "dlc07 courtyard flagstone 1",
@@ -3538,6 +3713,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.915,
+      "baseY": -0.529,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 1 1",
       "nameEn": "dlc07 courtyard flagstone 1 1",
@@ -3556,6 +3733,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.915,
+      "baseY": -0.529,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 1 1",
       "nameEn": "dlc07 courtyard flagstone 1 1",
@@ -3576,6 +3755,7 @@
         "sizeY": 0.6975831985473633
       },
       "height": 0.698,
+      "baseY": -0.349,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 2",
       "nameEn": "dlc07 courtyard flagstone 2",
@@ -3596,6 +3776,7 @@
         "sizeY": 0.6975831985473633
       },
       "height": 0.698,
+      "baseY": -0.349,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 2",
       "nameEn": "dlc07 courtyard flagstone 2",
@@ -3616,6 +3797,7 @@
         "sizeY": 0.678662121295929
       },
       "height": 0.679,
+      "baseY": -0.339,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 3",
       "nameEn": "dlc07 courtyard flagstone 3",
@@ -3636,6 +3818,7 @@
         "sizeY": 0.678662121295929
       },
       "height": 0.679,
+      "baseY": -0.339,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 3",
       "nameEn": "dlc07 courtyard flagstone 3",
@@ -3656,6 +3839,7 @@
         "sizeY": 0.6548405885696411
       },
       "height": 0.655,
+      "baseY": -0.327,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 4",
       "nameEn": "dlc07 courtyard flagstone 4",
@@ -3676,6 +3860,7 @@
         "sizeY": 0.6548405885696411
       },
       "height": 0.655,
+      "baseY": -0.327,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院石板 4",
       "nameEn": "dlc07 courtyard flagstone 4",
@@ -3696,6 +3881,7 @@
         "sizeY": 0.7182494401931763
       },
       "height": 0.718,
+      "baseY": -0.027,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 1",
       "nameEn": "dlc07 courtyard grass card 1",
@@ -3716,6 +3902,7 @@
         "sizeY": 0.7182494401931763
       },
       "height": 0.718,
+      "baseY": -0.027,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 1",
       "nameEn": "dlc07 courtyard grass card 1",
@@ -3736,6 +3923,7 @@
         "sizeY": 0.7182494401931763
       },
       "height": 0.718,
+      "baseY": -0.027,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 2",
       "nameEn": "dlc07 courtyard grass card 2",
@@ -3756,6 +3944,7 @@
         "sizeY": 0.7182494401931763
       },
       "height": 0.718,
+      "baseY": -0.027,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 2",
       "nameEn": "dlc07 courtyard grass card 2",
@@ -3776,6 +3965,7 @@
         "sizeY": 0.8636392951011658
       },
       "height": 0.864,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 3",
       "nameEn": "dlc07 courtyard grass card 3",
@@ -3796,6 +3986,7 @@
         "sizeY": 0.8636392951011658
       },
       "height": 0.864,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院草 card 3",
       "nameEn": "dlc07 courtyard grass card 3",
@@ -3816,6 +4007,7 @@
         "sizeY": 1.3533568382263184
       },
       "height": 1.353,
+      "baseY": -0.619,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 grotesque 2",
       "nameEn": "dlc07 courtyard grotesque 2",
@@ -3836,6 +4028,7 @@
         "sizeY": 1.3533568382263184
       },
       "height": 1.353,
+      "baseY": -0.619,
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院 grotesque 2",
       "nameEn": "dlc07 courtyard grotesque 2",

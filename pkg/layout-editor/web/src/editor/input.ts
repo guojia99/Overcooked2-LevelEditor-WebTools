@@ -955,6 +955,9 @@ export function setupCanvas() {
   });
 
   window.addEventListener("mousemove", (e) => {
+    // 3D 模式由 scene3d/input3d.ts 接管指针；这里必须短路，否则两套拖拽状态机
+    // 会同时跑（例如 3D 地板缩放设了 S.dragFloorKey，2D 的 mouseup 会重复收尾）。
+    if (S.viewMode === "3d") return;
     const rect = dom.canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
@@ -1110,6 +1113,7 @@ export function setupCanvas() {
   });
 
   window.addEventListener("mouseup", () => {
+    if (S.viewMode === "3d") return; // 见上：3D 的收尾在 input3d.ts
     if (S.panning) {
       S.panning = false;
       updateCanvasCursor();

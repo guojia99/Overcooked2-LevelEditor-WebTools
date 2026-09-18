@@ -278,8 +278,16 @@ export function pasteGridDelta(
   return { dx: (tcx - acx) * CELL, dz: (tcz - acz) * CELL };
 }
 
-/** 粘贴目标世界坐标：优先画布指针，否则画布中心。 */
+/** 粘贴目标世界坐标：优先指针（2D 画布指针 / 3D 地面射线），否则画布中心。
+ *  3D 视口没有 canvas 像素坐标，改走 S.hoverWx/hoverWz 世界坐标；
+ *  必须按 viewMode 分流，否则切回 2D 后会拿到 3D 遗留的陈旧指针位置。 */
 export function pastePointerWorld(mx?: number, my?: number): { x: number; z: number } {
+  if (S.viewMode === "3d" && mx == null && my == null) {
+    if (Number.isFinite(S.hoverWx) && Number.isFinite(S.hoverWz)) {
+      return { x: S.hoverWx, z: S.hoverWz };
+    }
+    return { x: 0, z: 0 };
+  }
   const cx = mx ?? (S.hoverCx >= 0 ? S.hoverCx : dom.canvas.width / 2);
   const cy = my ?? (S.hoverCy >= 0 ? S.hoverCy : dom.canvas.height / 2);
   return canvasToWorld(cx, cy);

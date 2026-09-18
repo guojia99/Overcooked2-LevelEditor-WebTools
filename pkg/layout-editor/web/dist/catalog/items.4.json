@@ -74,6 +74,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.385,
+      "baseY": -0.451,
       "layoutTier": "decor",
       "nameZh": "m_mine_bigplatform",
       "nameEn": "m_mine_bigplatform",
@@ -92,6 +94,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.168,
+      "baseY": -0.084,
       "layoutTier": "decor",
       "nameZh": "m_mine_goldore_01",
       "nameEn": "m_mine_goldore_01",
@@ -110,6 +114,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.386,
+      "baseY": -0.193,
       "layoutTier": "decor",
       "nameZh": "m_mine_goldore_02",
       "nameEn": "m_mine_goldore_02",
@@ -128,6 +134,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.535,
+      "baseY": -0.267,
       "layoutTier": "decor",
       "nameZh": "m_mine_goldore_03",
       "nameEn": "m_mine_goldore_03",
@@ -146,6 +154,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.806,
+      "baseY": -0.544,
       "layoutTier": "decor",
       "nameZh": "m_mine_rope_03",
       "nameEn": "m_mine_rope_03",
@@ -164,6 +174,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.761,
+      "baseY": -0.506,
       "layoutTier": "decor",
       "nameZh": "m_mine_rope_04",
       "nameEn": "m_mine_rope_04",
@@ -182,6 +194,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.808,
+      "baseY": -0.544,
       "layoutTier": "decor",
       "nameZh": "m_mine_rope_05",
       "nameEn": "m_mine_rope_05",
@@ -200,6 +214,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.477,
+      "baseY": -0.235,
       "layoutTier": "decor",
       "nameZh": "m_mine_rope_06",
       "nameEn": "m_mine_rope_06",
@@ -218,6 +234,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.156,
+      "baseY": -0.078,
       "layoutTier": "decor",
       "nameZh": "m_mine_sign_01",
       "nameEn": "m_mine_sign_01",
@@ -256,6 +274,7 @@
         "sizeY": 0.5658819675445557
       },
       "height": 0.566,
+      "baseY": -0.283,
       "layoutTier": "decor",
       "nameZh": "木筏护栏 1",
       "nameEn": "raft barrier 1",
@@ -276,6 +295,7 @@
         "sizeY": 0.3193880319595337
       },
       "height": 0.319,
+      "baseY": -0.121,
       "layoutTier": "decor",
       "nameZh": "木筏绳索护栏",
       "nameEn": "raft barrier rope 1",
@@ -294,6 +314,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.63,
       "layoutTier": "decor",
       "nameZh": "m_sk_cooker_01",
       "nameEn": "m_sk_cooker_01",
@@ -312,6 +333,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.317,
+      "baseY": -0.158,
       "layoutTier": "decor",
       "nameZh": "m_sk_spice_jar_01",
       "nameEn": "m_sk_spice_jar_01",
@@ -332,6 +355,7 @@
         "sizeY": 2.399339437484741
       },
       "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "太空悬崖转角内",
       "nameEn": "sp cliff corner in",
@@ -352,6 +376,7 @@
         "sizeY": 2.399339199066162
       },
       "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "悬崖外转角",
       "nameEn": "sp cliff corner out 1",
@@ -372,6 +397,7 @@
         "sizeY": 2.4518353939056396
       },
       "height": 2.452,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "悬崖边缘 1",
       "nameEn": "sp cliff edge 1",
@@ -392,6 +418,7 @@
         "sizeY": 2.399339199066162
       },
       "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "悬崖边缘 2",
       "nameEn": "sp cliff edge 2",
@@ -410,6 +437,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "m_sp_cliff_edge_04",
       "nameEn": "m_sp_cliff_edge_04",
@@ -430,6 +459,7 @@
         "sizeY": 2.399339199066162
       },
       "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "悬崖边缘 5",
       "nameEn": "sp cliff edge 5",
@@ -450,6 +480,7 @@
         "sizeY": 2.4102258682250977
       },
       "height": 2.41,
+      "baseY": -2.41,
       "layoutTier": "decor",
       "nameZh": "悬崖边缘 6",
       "nameEn": "sp cliff edge 6",
@@ -488,6 +519,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.325,
+      "baseY": 0.036,
       "layoutTier": "decor",
       "nameZh": "m_sp_countertop_detail_01",
       "nameEn": "m_sp_countertop_detail_01",
@@ -526,6 +559,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.408,
       "layoutTier": "decor",
       "nameZh": "m_wizard_bookcase_02",
       "nameEn": "m_wizard_bookcase_02",
@@ -564,6 +598,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.204,
+      "baseY": -0.193,
       "layoutTier": "decor",
       "nameZh": "m_wizard_portalfloat_01",
       "nameEn": "m_wizard_portalfloat_01",
@@ -582,6 +618,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.593,
+      "baseY": 0.107,
       "layoutTier": "decor",
       "nameZh": "m_wizard_portalfloat_02",
       "nameEn": "m_wizard_portalfloat_02",
@@ -600,6 +638,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.512,
       "layoutTier": "decor",
       "nameZh": "magic_countertopa",
       "nameEn": "magic_countertopa",
@@ -620,6 +659,7 @@
         "sizeY": 0.6374117136001587
       },
       "height": 0.637,
+      "baseY": 0.112,
       "layoutTier": "decor",
       "nameZh": "map 岩石 3 1",
       "nameEn": "map rock 3 1",
@@ -639,7 +679,8 @@
         "cellsZ": 1,
         "sizeY": 1.3213986158370972
       },
-      "height": 1.321,
+      "height": 0.972,
+      "baseY": 0.021,
       "layoutTier": "decor",
       "nameZh": "map 树 2",
       "nameEn": "map tree 2",
@@ -660,6 +701,7 @@
         "sizeY": 0.5025426745414734
       },
       "height": 0.503,
+      "baseY": -0.251,
       "layoutTier": "decor",
       "nameZh": "市集板条箱 1",
       "nameEn": "Market Crate 1",
@@ -680,6 +722,7 @@
         "sizeY": 0.3951902985572815
       },
       "height": 0.395,
+      "baseY": -0.251,
       "layoutTier": "decor",
       "nameZh": "市集板条箱 2",
       "nameEn": "Market Crate 2",
@@ -700,6 +743,7 @@
         "sizeY": 2.080369710922241
       },
       "height": 2.08,
+      "baseY": -1.04,
       "layoutTier": "decor",
       "nameZh": "市集摊位空白 1",
       "nameEn": "marketstall blank 1",
@@ -720,6 +764,7 @@
         "sizeY": 2.080369710922241
       },
       "height": 2.08,
+      "baseY": -1.04,
       "layoutTier": "decor",
       "nameZh": "市集摊位 1",
       "nameEn": "marksetstall 1",
@@ -740,6 +785,7 @@
         "sizeY": 4.718239784240723
       },
       "height": 4.718,
+      "baseY": 2.322,
       "layoutTier": "decor",
       "nameZh": "medium 摊位 dressed 1",
       "nameEn": "medium stall dressed 1",
@@ -760,6 +806,7 @@
         "sizeY": 4.718239784240723
       },
       "height": 4.718,
+      "baseY": 3.421,
       "layoutTier": "decor",
       "nameZh": "medium 摊位 dressed 2",
       "nameEn": "medium stall dressed 2",
@@ -778,6 +825,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.184,
+      "baseY": -0.092,
       "layoutTier": "decor",
       "nameZh": "mi_brokentiles_01",
       "nameEn": "mi_brokentiles_01",
@@ -796,6 +845,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.071,
+      "baseY": -0.036,
       "layoutTier": "decor",
       "nameZh": "mi_brokentiles_02",
       "nameEn": "mi_brokentiles_02",
@@ -814,6 +865,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.071,
+      "baseY": -0.036,
       "layoutTier": "decor",
       "nameZh": "mi_brokentiles_03",
       "nameEn": "mi_brokentiles_03",
@@ -832,6 +885,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.15,
+      "baseY": -0.075,
       "layoutTier": "decor",
       "nameZh": "mi_brokentiles_04",
       "nameEn": "mi_brokentiles_04",
@@ -850,6 +905,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.192,
+      "baseY": -0.096,
       "layoutTier": "decor",
       "nameZh": "mi_brokentiles_05",
       "nameEn": "mi_brokentiles_05",
@@ -868,6 +925,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.021,
+      "baseY": -2.279,
       "layoutTier": "decor",
       "nameZh": "mi_carrot_01",
       "nameEn": "mi_carrot_01",
@@ -886,6 +945,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.021,
+      "baseY": -2.279,
       "layoutTier": "decor",
       "nameZh": "mi_carrot_02",
       "nameEn": "mi_carrot_02",
@@ -904,6 +965,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.554,
+      "baseY": -0.277,
       "layoutTier": "decor",
       "nameZh": "mi_cart_01",
       "nameEn": "mi_cart_01",
@@ -922,6 +985,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.528,
+      "baseY": -0.149,
       "layoutTier": "decor",
       "nameZh": "mi_cart_middle_01",
       "nameEn": "mi_cart_middle_01",
@@ -940,6 +1005,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.4,
+      "baseY": -2.4,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_corner_in_01",
       "nameEn": "mi_cliff_corner_in_01",
@@ -958,6 +1025,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.4,
+      "baseY": -2.4,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_corner_in_01_outside",
       "nameEn": "mi_cliff_corner_in_01_outside",
@@ -978,6 +1047,7 @@
         "sizeY": 5.977893829345703
       },
       "height": 5.978,
+      "baseY": -5.978,
       "layoutTier": "decor",
       "nameZh": "mi 悬崖转角内 2",
       "nameEn": "mi cliff corner in 2",
@@ -998,6 +1068,7 @@
         "sizeY": 5.977893829345703
       },
       "height": 5.978,
+      "baseY": -5.978,
       "layoutTier": "decor",
       "nameZh": "mi 悬崖转角内 2",
       "nameEn": "mi cliff corner in 2",
@@ -1016,6 +1087,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.399,
+      "baseY": -2.399,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_corner_in_02_outside",
       "nameEn": "mi_cliff_corner_in_02_outside",
@@ -1034,6 +1107,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.4,
+      "baseY": -2.4,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_corner_out_01",
       "nameEn": "mi_cliff_corner_out_01",
@@ -1052,6 +1127,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.4,
+      "baseY": -2.4,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_corner_out_01_outside",
       "nameEn": "mi_cliff_corner_out_01_outside",
@@ -1070,6 +1147,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.4,
+      "baseY": -2.4,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_edge_01",
       "nameEn": "mi_cliff_edge_01",
@@ -1088,6 +1167,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.4,
+      "baseY": -2.4,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_edge_01_outside",
       "nameEn": "mi_cliff_edge_01_outside",
@@ -1106,6 +1187,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.4,
+      "baseY": -2.4,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_edge_02",
       "nameEn": "mi_cliff_edge_02",
@@ -1124,6 +1207,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.4,
+      "baseY": -2.4,
       "layoutTier": "decor",
       "nameZh": "mi_cliff_edge_02_outside",
       "nameEn": "mi_cliff_edge_02_outside",
@@ -1142,6 +1227,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.508,
+      "baseY": -0.754,
       "layoutTier": "decor",
       "nameZh": "mi_crystal_02",
       "nameEn": "mi_crystal_02",
@@ -1160,6 +1247,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.437,
+      "baseY": -0.61,
       "layoutTier": "decor",
       "nameZh": "mi_crystals_01",
       "nameEn": "mi_crystals_01",
@@ -1178,6 +1267,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.127,
+      "baseY": -0.479,
       "layoutTier": "decor",
       "nameZh": "mi_crystals_01_green",
       "nameEn": "mi_crystals_01_green",
@@ -1196,6 +1287,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.437,
+      "baseY": -0.61,
       "layoutTier": "decor",
       "nameZh": "mi_crystals_02",
       "nameEn": "mi_crystals_02",
@@ -1232,6 +1325,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.946,
+      "baseY": 1.004,
       "layoutTier": "decor",
       "nameZh": "mi_door_03",
       "nameEn": "mi_door_03",
@@ -1250,6 +1345,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.703,
+      "baseY": -0.467,
       "layoutTier": "decor",
       "nameZh": "mi_door_minecart",
       "nameEn": "mi_door_minecart",
@@ -1268,6 +1365,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.951,
+      "baseY": -0.891,
       "layoutTier": "decor",
       "nameZh": "mi_elevatedrails_01",
       "nameEn": "mi_elevatedrails_01",
@@ -1368,6 +1467,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.917,
+      "baseY": -0.626,
       "layoutTier": "decor",
       "nameZh": "mi_gold_01",
       "nameEn": "mi_gold_01",
@@ -1386,6 +1487,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.703,
+      "baseY": -2.698,
       "layoutTier": "decor",
       "nameZh": "mi_lantern_01_anim",
       "nameEn": "mi_lantern_01_anim",
@@ -1406,6 +1509,7 @@
         "sizeY": 1.2810544967651367
       },
       "height": 1.281,
+      "baseY": -0.641,
       "layoutTier": "decor",
       "nameZh": "矿洞灯笼",
       "nameEn": "mi lantern 2",
@@ -1424,6 +1528,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.81,
+      "baseY": -1.013,
       "layoutTier": "decor",
       "nameZh": "mi_minecart_crystals",
       "nameEn": "mi_minecart_crystals",
@@ -1442,6 +1548,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.81,
+      "baseY": -1.013,
       "layoutTier": "decor",
       "nameZh": "mi_minecart_crystals green",
       "nameEn": "mi_minecart_crystals green",
@@ -1460,6 +1568,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.206,
+      "baseY": -0.599,
       "layoutTier": "decor",
       "nameZh": "mi_minecart_gold",
       "nameEn": "mi_minecart_gold",
@@ -1514,6 +1624,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.897,
+      "baseY": -0.948,
       "layoutTier": "decor",
       "nameZh": "mi_pickaxe_01",
       "nameEn": "mi_pickaxe_01",
@@ -1532,6 +1644,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.402,
+      "baseY": -0.201,
       "layoutTier": "decor",
       "nameZh": "mi_railbroken_01",
       "nameEn": "mi_railbroken_01",
@@ -1550,6 +1664,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.118,
+      "baseY": -0.059,
       "layoutTier": "decor",
       "nameZh": "mi_rails_01",
       "nameEn": "mi_rails_01",
@@ -1568,6 +1684,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.802,
+      "baseY": -0.901,
       "layoutTier": "decor",
       "nameZh": "mi_rockwall_01",
       "nameEn": "mi_rockwall_01",
@@ -1586,6 +1704,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.717,
+      "baseY": -0.859,
       "layoutTier": "decor",
       "nameZh": "mi_rockwall_02",
       "nameEn": "mi_rockwall_02",
@@ -1604,6 +1724,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.556,
+      "baseY": -0.778,
       "layoutTier": "decor",
       "nameZh": "mi_ropecoil_01",
       "nameEn": "mi_ropecoil_01",
@@ -1622,6 +1744,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.89,
+      "baseY": -0.319,
       "layoutTier": "decor",
       "nameZh": "mi_scaffold_01",
       "nameEn": "mi_scaffold_01",
@@ -1640,6 +1764,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.309,
+      "baseY": -1.155,
       "layoutTier": "decor",
       "nameZh": "mi_shovel_01",
       "nameEn": "mi_shovel_01",
@@ -1660,6 +1786,7 @@
         "sizeY": 2.3092775344848633
       },
       "height": 2.309,
+      "baseY": -1.155,
       "layoutTier": "decor",
       "nameZh": "mi 铲子 2",
       "nameEn": "mi shovel 2",
@@ -1734,6 +1861,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.41,
       "layoutTier": "decor",
       "nameZh": "mi_stonewall_01",
       "nameEn": "mi_stonewall_01",
@@ -1752,6 +1880,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.41,
       "layoutTier": "decor",
       "nameZh": "mi_stonewall_end_01",
       "nameEn": "mi_stonewall_end_01",
@@ -1790,6 +1919,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.358,
+      "baseY": -0.679,
       "layoutTier": "decor",
       "nameZh": "mi_torch",
       "nameEn": "mi_torch",
@@ -1808,6 +1939,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.309,
+      "baseY": -0.154,
       "layoutTier": "decor",
       "nameZh": "mi_truss_01",
       "nameEn": "mi_truss_01",
@@ -1826,6 +1959,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.312,
+      "baseY": -0.156,
       "layoutTier": "decor",
       "nameZh": "mi_truss_02",
       "nameEn": "mi_truss_02",
@@ -1844,6 +1979,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.629,
+      "baseY": -0.315,
       "layoutTier": "decor",
       "nameZh": "mi_trusslarge_01",
       "nameEn": "mi_trusslarge_01",
@@ -1862,6 +1999,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.603,
+      "baseY": -0.302,
       "layoutTier": "decor",
       "nameZh": "mi_trusslarge_02",
       "nameEn": "mi_trusslarge_02",
@@ -1880,6 +2019,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.421,
+      "baseY": -0.211,
       "layoutTier": "decor",
       "nameZh": "mi_window_01",
       "nameEn": "mi_window_01",
@@ -1900,6 +2041,7 @@
         "sizeY": 4
       },
       "height": 4,
+      "baseY": -2,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -1922,6 +2064,7 @@
         "sizeY": 0.5747966766357422
       },
       "height": 0.575,
+      "baseY": 0.222,
       "layoutTier": "decor",
       "nameZh": "肉馅派 1",
       "nameEn": "mince pies 1",
@@ -1940,6 +2083,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.063,
+      "baseY": -0.532,
       "layoutTier": "decor",
       "nameZh": "mine_rock_01",
       "nameEn": "mine_rock_01",
@@ -1958,6 +2103,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.201,
+      "baseY": -0.1,
       "layoutTier": "decor",
       "nameZh": "mine_rock_02",
       "nameEn": "mine_rock_02",
@@ -1976,6 +2123,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.255,
+      "baseY": -0.128,
       "layoutTier": "decor",
       "nameZh": "mine_rock_03",
       "nameEn": "mine_rock_03",
@@ -1994,6 +2143,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.923,
+      "baseY": -0.277,
       "layoutTier": "decor",
       "nameZh": "minecartparent_01",
       "nameEn": "minecartparent_01",
@@ -2012,6 +2163,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.337,
+      "baseY": -0.231,
       "layoutTier": "decor",
       "nameZh": "movingplatform",
       "nameEn": "movingplatform",
@@ -2030,6 +2183,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.201,
       "layoutTier": "decor",
       "nameZh": "ms_pfx_teleport_1",
       "nameEn": "ms_pfx_teleport_1",
@@ -2066,6 +2220,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 5.008,
+      "baseY": -1.682,
       "layoutTier": "decor",
       "nameZh": "noncastsshadow_building",
       "nameEn": "noncastsshadow_building",
@@ -2084,6 +2240,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 6.668,
+      "baseY": -4.789,
       "layoutTier": "decor",
       "nameZh": "noncastsshadow_misc",
       "nameEn": "noncastsshadow_misc",
@@ -2102,6 +2260,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.338,
+      "baseY": -2.219,
       "layoutTier": "decor",
       "nameZh": "noncastsshadow_planks",
       "nameEn": "noncastsshadow_planks",
@@ -2122,6 +2282,7 @@
         "sizeY": 2.0651562213897705
       },
       "height": 2.065,
+      "baseY": -2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖转角 270°",
       "nameEn": "m dlc3 icecliff 270",
@@ -2142,6 +2303,7 @@
         "sizeY": 2.0651562213897705
       },
       "height": 2.065,
+      "baseY": -2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖转角 270°",
       "nameEn": "m dlc3 icecliff 270",
@@ -2162,6 +2324,7 @@
         "sizeY": 2.0651559829711914
       },
       "height": 2.065,
+      "baseY": -2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖转角 90°",
       "nameEn": "m dlc3 icecliff 90",
@@ -2182,6 +2345,7 @@
         "sizeY": 2.0651559829711914
       },
       "height": 2.065,
+      "baseY": -2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖转角 90°",
       "nameEn": "m dlc3 icecliff 90",
@@ -2202,6 +2366,7 @@
         "sizeY": 2.0727806091308594
       },
       "height": 2.073,
+      "baseY": -2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖直边 1",
       "nameEn": "m dlc3 icecliff straight 1",
@@ -2222,6 +2387,7 @@
         "sizeY": 2.0727806091308594
       },
       "height": 2.073,
+      "baseY": -2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖直边 1",
       "nameEn": "m dlc3 icecliff straight 1",
@@ -2242,6 +2408,7 @@
         "sizeY": 2.0651559829711914
       },
       "height": 2.065,
+      "baseY": -2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖直边 2",
       "nameEn": "m dlc3 icecliff straight 2",
@@ -2262,6 +2429,7 @@
         "sizeY": 2.0651559829711914
       },
       "height": 2.065,
+      "baseY": -2.065,
       "layoutTier": "decor",
       "nameZh": "冰崖直边 2",
       "nameEn": "m dlc3 icecliff straight 2",
@@ -2280,6 +2448,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.328,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_alien_green_01",
       "nameEn": "npc_alien_green_01",
@@ -2298,6 +2468,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.328,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·外星人（绿）",
       "nameEn": "NPC Alien Green 1",
@@ -2316,6 +2488,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.328,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_alien_pink_01",
       "nameEn": "npc_alien_pink_01",
@@ -2334,6 +2508,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.328,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·外星人（粉）",
       "nameEn": "NPC Alien Pink 1",
@@ -2352,6 +2528,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（蓝）",
       "nameEn": "NPC Asian Blue 1",
@@ -2370,6 +2548,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（棕）",
       "nameEn": "NPC Asian Brown 1",
@@ -2388,6 +2568,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（便装）",
       "nameEn": "NPC Asian Civ 1",
@@ -2406,6 +2588,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.453,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（施工）",
       "nameEn": "NPC Asian Construction 1",
@@ -2424,6 +2608,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（绿）",
       "nameEn": "NPC Asian Green 1",
@@ -2442,6 +2628,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.453,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（安全帽）",
       "nameEn": "NPC Asian Hard Hat 1",
@@ -2460,6 +2648,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_asian_hawaiian_01",
       "nameEn": "npc_asian_hawaiian_01",
@@ -2478,6 +2668,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（夏威夷）",
       "nameEn": "NPC Asian Hawaiian 1",
@@ -2496,6 +2688,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（橙）",
       "nameEn": "NPC Asian Orange 1",
@@ -2514,6 +2708,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（服务生）",
       "nameEn": "NPC Asian Waiter 1",
@@ -2532,6 +2728,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（巫师）",
       "nameEn": "NPC Asian Wizard 1",
@@ -2550,6 +2748,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.209,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·亚裔（黄）",
       "nameEn": "NPC Asian Yellow 1",
@@ -2568,6 +2768,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（蓝）",
       "nameEn": "NPC Beard Blue 1",
@@ -2586,6 +2788,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（棕）",
       "nameEn": "NPC Beard Brown 1",
@@ -2604,6 +2808,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（便装）",
       "nameEn": "NPC Beard Civ 1",
@@ -2622,6 +2828,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（绿）",
       "nameEn": "NPC Beard Green 1",
@@ -2640,6 +2848,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_beard_hawaiian_01",
       "nameEn": "npc_beard_hawaiian_01",
@@ -2658,6 +2868,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（夏威夷）",
       "nameEn": "NPC Beard Hawaiian 1",
@@ -2676,6 +2888,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（橙）",
       "nameEn": "NPC Beard Orange 1",
@@ -2694,6 +2908,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（服务生）",
       "nameEn": "NPC Beard Waiter 1",
@@ -2712,6 +2928,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（巫师）",
       "nameEn": "NPC Beard Wizard 1",
@@ -2730,6 +2948,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.179,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·大胡子（黄）",
       "nameEn": "NPC Beard Yellow 1",
@@ -2748,6 +2968,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.618,
+      "baseY": -0.349,
       "layoutTier": "decor",
       "nameZh": "DLC 顾客 04",
       "nameEn": "NPC DLC 4",
@@ -2766,6 +2988,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.268,
+      "baseY": -0.071,
       "layoutTier": "decor",
       "nameZh": "DLC 顾客 05",
       "nameEn": "NPC DLC 5",
@@ -2784,6 +3008,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.268,
+      "baseY": -0.071,
       "layoutTier": "decor",
       "nameZh": "DLC 顾客 06",
       "nameEn": "NPC DLC 6",
@@ -2802,6 +3028,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·朵拉（蓝）",
       "nameEn": "NPC Dora Blue 1",
@@ -2820,6 +3048,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·朵拉（棕）",
       "nameEn": "NPC Dora Brown 1",
@@ -2838,6 +3068,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·朵拉（便装）",
       "nameEn": "NPC Dora Civ 1",
@@ -2856,6 +3088,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·朵拉（绿）",
       "nameEn": "NPC Dora Green 1",
@@ -2874,6 +3108,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_dora_hawaiian_01",
       "nameEn": "npc_dora_hawaiian_01",
@@ -2892,6 +3128,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·朵拉（夏威夷）",
       "nameEn": "NPC Dora Hawaiian 1",
@@ -2910,6 +3148,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·朵拉（橙）",
       "nameEn": "NPC Dora Orange 1",
@@ -2928,6 +3168,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·朵拉（巫师）",
       "nameEn": "NPC Dora Wizard 1",
@@ -2946,6 +3188,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·朵拉（黄）",
       "nameEn": "NPC Dora Yellow 1",
@@ -2964,6 +3208,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（蓝）",
       "nameEn": "NPC Dora Blonde Blue 1",
@@ -2982,6 +3228,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（棕）",
       "nameEn": "NPC Dora Blonde Brown 1",
@@ -3000,6 +3248,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（便装）",
       "nameEn": "NPC Dora Blonde Civ 1",
@@ -3018,6 +3268,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（绿）",
       "nameEn": "NPC Dora Blonde Green 1",
@@ -3036,6 +3288,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_dorablonde_hawaiian_01",
       "nameEn": "npc_dorablonde_hawaiian_01",
@@ -3054,6 +3308,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（夏威夷）",
       "nameEn": "NPC Dora Blonde Hawaiian 1",
@@ -3072,6 +3328,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（橙）",
       "nameEn": "NPC Dora Blonde Orange 1",
@@ -3090,6 +3348,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（服务生）",
       "nameEn": "NPC Dora Blonde Waiter 1",
@@ -3108,6 +3368,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（巫师）",
       "nameEn": "NPC Dora Blonde Wizard 1",
@@ -3126,6 +3388,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.24,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·金发朵拉（黄）",
       "nameEn": "NPC Dora Blonde Yellow 1",
@@ -3144,6 +3408,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.285,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（蓝）",
       "nameEn": "NPC Ginger Blue 1",
@@ -3162,6 +3428,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.285,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（棕）",
       "nameEn": "NPC Ginger Brown 1",
@@ -3180,6 +3448,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.285,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（便装）",
       "nameEn": "NPC Ginger Civ 1",
@@ -3198,6 +3468,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.522,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（施工）",
       "nameEn": "NPC Ginger Construction 1",
@@ -3216,6 +3488,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.285,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（绿）",
       "nameEn": "NPC Ginger Green 1",
@@ -3234,6 +3508,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.522,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（安全帽）",
       "nameEn": "NPC Ginger Hard Hat 1",
@@ -3252,6 +3528,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.285,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_ginger_hawaiian_01",
       "nameEn": "npc_ginger_hawaiian_01",
@@ -3270,6 +3548,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.285,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（夏威夷）",
       "nameEn": "NPC Ginger Hawaiian 1",
@@ -3288,6 +3568,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.285,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（橙）",
       "nameEn": "NPC Ginger Orange 1",
@@ -3306,6 +3588,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.285,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·姜发（黄）",
       "nameEn": "NPC Ginger Yellow 1",
@@ -3324,6 +3608,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.256,
+      "baseY": -0.027,
       "layoutTier": "decor",
       "nameZh": "顾客·眼镜男",
       "nameEn": "npc glasses",
@@ -3342,6 +3628,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（蓝）",
       "nameEn": "NPC Hispanic Blue 1",
@@ -3360,6 +3648,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（棕）",
       "nameEn": "NPC Hispanic Brown 1",
@@ -3378,6 +3668,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（便装）",
       "nameEn": "NPC Hispanic Civ 1",
@@ -3396,6 +3688,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（绿）",
       "nameEn": "NPC Hispanic Green 1",
@@ -3414,6 +3708,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.459,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（安全帽）",
       "nameEn": "NPC Hispanic Hard Hat 1",
@@ -3432,6 +3728,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_hispanic_hawaiian_01",
       "nameEn": "npc_hispanic_hawaiian_01",
@@ -3450,6 +3748,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（夏威夷）",
       "nameEn": "NPC Hispanic Hawaiian 1",
@@ -3468,6 +3768,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（橙）",
       "nameEn": "NPC Hispanic Orange 1",
@@ -3486,6 +3788,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（服务生）",
       "nameEn": "NPC Hispanic Waiter 1",
@@ -3504,6 +3808,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.686,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（巫师）",
       "nameEn": "NPC Hispanic Wizard 1",
@@ -3522,6 +3828,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.202,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·拉丁裔（黄）",
       "nameEn": "NPC Hispanic Yellow 1",
@@ -3540,6 +3848,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.355,
+      "baseY": -0.027,
       "layoutTier": "decor",
       "nameZh": "顾客·梅尔",
       "nameEn": "npc mel",
@@ -3558,6 +3868,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.459,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（施工）",
       "nameEn": "NPC Middle Eastern Construction 1",
@@ -3576,6 +3888,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.459,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（安全帽）",
       "nameEn": "NPC Middle Eastern Hard Hat 1",
@@ -3594,6 +3908,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（服务生）",
       "nameEn": "NPC Middle Eastern Waiter 1",
@@ -3612,6 +3928,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（蓝）",
       "nameEn": "NPC Middle Eatern Blue 1",
@@ -3630,6 +3948,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（棕）",
       "nameEn": "NPC Middle Eatern Brown 1",
@@ -3648,6 +3968,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（便装）",
       "nameEn": "NPC Middle Eatern Civ 1",
@@ -3666,6 +3988,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "顾客·中东（绿）",
       "nameEn": "NPC Middle Eatern Green 1",
@@ -3684,6 +4008,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.242,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "nameZh": "npc_middleeatern_hawaiian_01",
       "nameEn": "npc_middleeatern_hawaiian_01",

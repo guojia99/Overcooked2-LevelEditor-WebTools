@@ -27,6 +27,8 @@ export const dom = {
   paletteCats: null as unknown as HTMLElement,
   canvas: null as unknown as HTMLCanvasElement,
   ctx: null as unknown as CanvasRenderingContext2D,
+  /** 3D 视口画布（与 #canvas 同容器叠放，由 viewMode 决定谁可见）。 */
+  canvas3d: null as unknown as HTMLCanvasElement,
   detailEl: null as unknown as HTMLElement,
   ctxMenuEl: null as unknown as HTMLElement,
   pickTipEl: null as unknown as HTMLElement,
@@ -64,6 +66,20 @@ export function buildLayoutDom(): void {
         <button type="button" data-layer="background" class="layer-tab">🌊 背景层</button>
         <button type="button" data-layer="anim" class="layer-tab">🎬 动画层</button>
       </div>
+      <span class="toolbar-sep"></span>
+      <div class="view-tabs" id="view-tabs" title="2D 俯视平面 / 3D 立体视口（共享同一份数据，随时切换）">
+        <button type="button" data-view="2d" class="view-tab${S.viewMode === "2d" ? " active" : ""}">🗺️ 2D 平面</button>
+        <button type="button" data-view="3d" class="view-tab${S.viewMode === "3d" ? " active" : ""}">🧊 3D 立体</button>
+      </div>
+      <button type="button" id="btn-y-drag" class="view3d-only${S.yAxisDrag ? " active" : ""}" title="开启后在 3D 里拖动 = 沿 Y 轴升降（XZ 锁死，避免误拖）；关闭则沿地面平移">⬆ Y 轴</button>
+      <label class="toolbar-check view3d-only" title="3D 地板板厚。真实 0.4 = 与 Unity 烘焙的 Col_Floor 碰撞体完全一致；自适应 = 贴着下层收缩，台地更清晰；薄片 = 最接近 2D 平面观感">🧱 板厚
+        <select id="floor-slab-mode">
+          <option value="real">真实 0.4</option>
+          <option value="auto">自适应</option>
+          <option value="thin">薄片</option>
+        </select>
+      </label>
+      <button type="button" id="btn-fit-3d" class="view3d-only" title="把整关框进视野">🎯 居中</button>
       <span class="toolbar-sep"></span>
       <div class="vis-wrap">
         <button type="button" id="btn-visibility" title="控制当前层显示哪些类别的内容">👁 图层显示</button>
@@ -114,6 +130,7 @@ export function buildLayoutDom(): void {
     <button type="button" class="panel-collapse" id="btn-collapse-palette" title="收起 / 展开物品栏">◀</button>
     <div class="canvas-wrap">
       <canvas id="canvas"></canvas>
+      <canvas id="canvas3d" class="canvas3d hidden"></canvas>
       <div id="item-detail" class="item-detail hidden" role="dialog"></div>
       <div id="ctx-menu" class="ctx-menu hidden" role="dialog"></div>
       <div id="pick-tip" class="pick-tip hidden" role="dialog"></div>
@@ -135,7 +152,8 @@ export function buildLayoutDom(): void {
           <div class="fhf-range-vals"><span class="fhf-val" id="fhf-min-val">0.00</span> ~ <span class="fhf-val" id="fhf-max-val">2.00</span></div>
         </div>
       </div>
-      <div class="hint">拖拽空白框选 · Shift 加选 · Ctrl+C/V/X 复制/粘贴/裁切 · Ctrl+Z 撤回 · Ctrl+Shift+Z 重做 · 重叠点击弹出选择 · 空格+拖动平移 · 右键微移/旋转/改参数 · Del 删除 · R/Shift+R 旋转90° · 滚轮缩放</div>
+      <div class="hint hint-2d">拖拽空白框选 · Shift 加选 · Ctrl+C/V/X 复制/粘贴/裁切 · Ctrl+Z 撤回 · Ctrl+Shift+Z 重做 · 重叠点击弹出选择 · 空格+拖动平移 · 右键微移/旋转/改参数 · Del 删除 · R/Shift+R 旋转90° · 滚轮缩放</div>
+      <div class="hint hint-3d">左键拖空白=框选 · 左键拖物体=移动 · 右键拖=旋转视角 · 中键/空格+左键拖=平移（或用右下方向盘） · 滚轮=以鼠标位置为准缩放 · 右键点击=菜单 · Shift 加选 · ⬆Y轴=升降 · 角柄拖拽=改尺寸 · Ctrl+C/V/X · Ctrl+Z · Del · R 旋转90°</div>
     </div>
     <button type="button" class="panel-collapse" id="btn-collapse-items" title="收起 / 展开物品清单">▶</button>
     <div class="panel-resizer" id="panel-resizer" title="拖动调整宽度（最长占一半）"></div>
@@ -157,6 +175,7 @@ export function buildLayoutDom(): void {
   dom.paletteCats = document.getElementById("palette-cats")!;
   dom.canvas = document.getElementById("canvas") as HTMLCanvasElement;
   dom.ctx = (dom.canvas && dom.canvas.getContext("2d")) as CanvasRenderingContext2D;
+  dom.canvas3d = document.getElementById("canvas3d") as HTMLCanvasElement;
   dom.detailEl = document.getElementById("item-detail")!;
   dom.ctxMenuEl = document.getElementById("ctx-menu")!;
   dom.pickTipEl = document.getElementById("pick-tip")!;

@@ -1,7 +1,9 @@
 import {
   S,
   LayerKey,
-  LayerVisibility
+  LayerVisibility,
+  ViewMode,
+  FloorSlabMode
 } from "./state";
 import { dom, ROUTE } from "./dom";
 import { setStatus } from "./status";
@@ -152,6 +154,39 @@ export function syncFloorHeightUI(layer = S.currentLayer): void {
   }
   if (panel) panel.classList.toggle("hidden", !(applies && S.floorHeightPanelOpen));
   if (applies) refreshFloorHeightPanel();
+}
+
+/** 视图模式切换：2D 俯视画布 ↔ 3D 立体视口。
+ *
+ *  平滑切换的要点：两个视口共享同一份 S，所以选择集 / 图层 / 高度过滤 / 历史
+ *  全部天然保留；只需把视野（2D 的 pan/scale ↔ 3D 的注视点+视距）互相承接。
+ *  three.js 走动态 import，2D 用户永远不会下载那 600KB。 */
+export async function setViewMode(mode: ViewMode): Promise<void> {
+  if (mode === S.viewMode) return;
+  S.viewMode = mode;
+  localStorage.setItem("viewMode", mode);
+  document.querySelectorAll(".view-tab").forEach((b) =>
+    b.classList.toggle("active", (b as HTMLElement).dataset.view === mode)
+  );
+  document.body.classList.toggle("view-3d", mode === "3d");
+  dom.canvas.classList.toggle("hidden", mode === "3d");
+  dom.canvas3d.classList.toggle("hidden", mode !== "3d");
+  // 切换会中断进行中的拖拽/框选，先归零避免状态残留。
+  S.marqueeing = false;
+  S.dragItemKey = null;
+  S.dragFloorKey = null;
+  S.panning = false;
+  hideContextMenu();
+  hideDetail();
+
+  if (mode === "3d") {
+    const mod = await import("./scene3d");
+    mod.mountScene3D();
+  } else {
+    const mod = await import("./scene3d");
+    mod.unmountScene3D();
+  }
+  draw();
 }
 
 /** Programmatic layer switch (used by the layer tabs and the anim-layer wizards). */
@@ -506,6 +541,39 @@ export async function init() {
     });
   });
 
+  document.querySelectorAll<HTMLButtonElement>(".view-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      void setViewMode((btn.dataset.view as ViewMode) ?? "2d");
+    });
+  });
+
+  const yDragBtn = document.getElementById("btn-y-drag");
+  if (yDragBtn) {
+    yDragBtn.addEventListener("click", () => {
+      S.yAxisDrag = !S.yAxisDrag;
+      yDragBtn.classList.toggle("active", S.yAxisDrag);
+      draw();
+    });
+  }
+
+  const slabSel = document.getElementById("floor-slab-mode") as HTMLSelectElement | null;
+  if (slabSel) {
+    slabSel.value = S.floorSlabMode;
+    slabSel.addEventListener("change", () => {
+      S.floorSlabMode = slabSel.value as FloorSlabMode;
+      localStorage.setItem("floorSlabMode", S.floorSlabMode);
+      draw();
+    });
+  }
+
+  const fitBtn = document.getElementById("btn-fit-3d");
+  if (fitBtn) {
+    fitBtn.addEventListener("click", () => {
+      if (S.viewMode !== "3d") return;
+      void import("./scene3d").then((m) => m.fitScene3D());
+    });
+  }
+
   document.querySelectorAll<HTMLButtonElement>(".panel-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       const tab = btn.dataset.tab as "items" | "anim" | "bevents";
@@ -541,6 +609,13 @@ export async function init() {
     const auto = consumeLayoutAutoAction();
     if (auto === "test-layout") requestTestLayout();
     else if (auto === "sync-layout") openSyncLayoutDialog();
+  }
+
+  // 恢复上次的视图模式（localStorage）。放在场景加载之后，3D 首帧就有内容，
+  // 避免挂载一个空场景再重建。
+  if (S.viewMode === "3d") {
+    S.viewMode = "2d"; // setViewMode 是状态机，先归位再切过去
+    await setViewMode("3d");
   }
 
   startBridgeWatch();

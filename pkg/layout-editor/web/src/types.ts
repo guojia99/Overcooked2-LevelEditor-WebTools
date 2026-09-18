@@ -20,7 +20,7 @@ export interface CatalogItem {
   nameZh: string;
   nameEn: string;
   defaultParent: string;
-  footprint: { cellsX: number; cellsZ: number };
+  footprint: { cellsX: number; cellsZ: number; sizeY?: number };
   /** core = gameplay; decor = art / NPC props; floor = floor/background surfaces */
   layoutTier?: "core" | "decor" | "floor";
   /** Floor-layer classification (set for floor/background catalog items). */
@@ -43,8 +43,14 @@ export interface CatalogItem {
   stack?: CatalogStackMeta;
   /** Intrinsic model height (measured renderer bounds size Y, world units).
    *  Flat floor tiles ~0.1; tall pieces (ice cliffs, blocks) 1+. Used by the
-   *  floor palette's height-range filter. Undefined when not measured. */
+   *  floor palette's height-range filter and the 3D view's box extrusion.
+   *  Undefined when not measured. */
   height?: number;
+  /** Bottom face offset from the pivot (world units), from the full-prefab
+   *  bounds dump. 0/undefined for base-pivoted props (counters), negative for
+   *  centre-pivoted ones (pots). 3D draws the box from localPosition.y + baseY
+   *  upwards by `height`; without it centre-pivoted props float or sink. */
+  baseY?: number;
   /** True when an extracted icon PNG exists under web/public/icons/catalog/<id>.png. */
   icon?: boolean;
   /** Catalog flag: decor/food wrapper prefab (icon from ingredients/). */

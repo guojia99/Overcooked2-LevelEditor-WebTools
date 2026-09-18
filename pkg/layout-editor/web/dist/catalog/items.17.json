@@ -14,6 +14,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.895,
+      "baseY": 0.14,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b445ecf89df5e2e7bd2b6b84139a94bd",
@@ -34,6 +36,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.895,
+      "baseY": 0.14,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "cd7c4499bd28f51cb259875d792a3844",
@@ -54,6 +58,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.057,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "e6f7799dd9a57455b994ffbeb2532edb",
@@ -74,6 +79,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.107,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "c81c7c9da76d37ea05fac526a4043acf",
@@ -94,6 +101,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.087,
+      "baseY": -0.017,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "22c338bd43c00cd62b281890ebc3a9d0",
@@ -114,6 +123,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.047,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "6ce040c520df87b1bfedfcacaef3de51",
@@ -134,6 +144,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.057,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "9d9e94daf9a2a988eb93331bc87d1ae5",
@@ -154,6 +165,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.414,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "49e5144eb6d3bb092b21620ec01d05be",
@@ -174,6 +186,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.255,
+      "baseY": -0.029,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "c2f8705f8186a77bf7ef0eda07967341",
@@ -194,6 +208,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.414,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "50c40c1ae85837acbf0a0329dd19847c",
@@ -214,6 +229,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.414,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "6838b446a555b6c2793ab287f98fca91",
@@ -234,6 +250,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.318,
+      "baseY": -0.025,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "3c010f3d8f5de9539b614cf2dcef3726",
@@ -254,6 +272,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.255,
+      "baseY": -0.029,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "12ceb139fe9d25a5a17ce7acb2167484",
@@ -274,6 +294,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.302,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "82db8c5203f19e30b3d44993ba366878",
@@ -294,6 +316,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.234,
+      "baseY": -0.016,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "7725c2b72d7c5338254878eca31af150",
@@ -314,6 +338,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.282,
+      "baseY": -0.03,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "1e7d19a6b7b9b37317d9306c6986328b",
@@ -334,6 +360,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.304,
+      "baseY": -0.013,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "6f4ca5886bbcfd498e7585ff43946064",
@@ -354,6 +382,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 0.356,
+      "baseY": -0.274,
       "layoutTier": "core",
       "needsStub": true,
       "nameZh": "火锅灶台（Web）",
@@ -371,6 +401,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 0.356,
+      "baseY": -0.274,
       "layoutTier": "core",
       "needsStub": true,
       "nameZh": "火锅灶台（Web·新年）",
@@ -388,6 +420,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 1.142,
+      "baseY": 0.11,
       "layoutTier": "core",
       "stack": {
         "y": 0.1,
@@ -409,6 +443,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 1.142,
+      "baseY": -0.012,
       "layoutTier": "core",
       "stack": {
         "y": 0.1,
@@ -430,6 +466,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 1.142,
+      "baseY": -0.012,
       "layoutTier": "core",
       "stack": {
         "y": 0.1,
@@ -472,6 +510,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.208,
+      "baseY": -0.029,
       "layoutTier": "core",
       "nameZh": "明火灶",
       "nameEn": "Burner",
@@ -488,6 +528,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.159,
       "layoutTier": "core",
       "nameZh": "控制终端标记",
       "nameEn": "Control Terminal Marker",
@@ -504,6 +545,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.501,
       "layoutTier": "core",
       "nameZh": "传送带站",
       "nameEn": "Conveyor Station",
@@ -520,6 +562,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 0.356,
+      "baseY": -0.274,
       "layoutTier": "core",
       "nameZh": "火锅灶台（原版）",
       "nameEn": "Hotpot Burner (vanilla)",
@@ -552,6 +596,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.18,
       "layoutTier": "core",
       "nameZh": "酱料机（马戏团）",
       "nameEn": "Condiment Dispenser",
@@ -568,6 +613,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.327,
       "layoutTier": "core",
       "nameZh": "饮料机",
       "nameEn": "Drink Machine",
@@ -584,6 +630,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.438,
       "layoutTier": "core",
       "nameZh": "加农炮控制终端",
       "nameEn": "Multi Control Terminal",
@@ -600,6 +647,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 2.214,
+      "baseY": -0.011,
       "layoutTier": "core",
       "needsStub": true,
       "nameZh": "大炮（DLC9）",
@@ -617,6 +666,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.18,
       "layoutTier": "core",
       "nameZh": "酱料机",
       "nameEn": "Condiment Dispenser",
@@ -633,6 +683,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 3.447,
       "layoutTier": "core",
       "nameZh": "汽水饮料机",
       "nameEn": "Drink Dispenser",
@@ -649,6 +700,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 0.24,
+      "baseY": -0.239,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -669,6 +722,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.235,
+      "baseY": -0.207,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -689,6 +744,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.182,
+      "baseY": -0.207,
       "layoutTier": "core",
       "nameZh": "莲花压力开关（小二型）",
       "nameEn": "Lotus Pressure Switch Small 2",
@@ -705,6 +762,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.438,
       "layoutTier": "core",
       "nameZh": "多路控制终端",
       "nameEn": "Multi Control Terminal",
@@ -721,6 +779,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.705,
       "layoutTier": "core",
       "nameZh": "大炮按钮",
       "nameEn": "Cannon Button",
@@ -737,6 +796,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.705,
       "layoutTier": "core",
       "nameZh": "酱料机按钮",
       "nameEn": "Condiment Dispenser Button",
@@ -753,6 +813,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.705,
       "layoutTier": "core",
       "nameZh": "饮料机按钮",
       "nameEn": "Drink Machine Button",
@@ -769,6 +830,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.705,
       "layoutTier": "core",
       "needsStub": true,
       "nameZh": "大炮按钮（DLC9）",
@@ -786,6 +848,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.096,
+      "baseY": -0.042,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -806,6 +870,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.705,
       "layoutTier": "core",
       "nameZh": "开关",
       "nameEn": "Switch",
@@ -822,6 +887,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.203,
       "layoutTier": "core",
       "nameZh": "传送门",
       "nameEn": "Teleportal",
@@ -838,6 +904,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.354,
+      "baseY": -0.06,
       "layoutTier": "core",
       "nameZh": "拨动开关",
       "nameEn": "Toggle Switch",
@@ -854,6 +922,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.362,
+      "baseY": -0.346,
       "layoutTier": "core",
       "surfaceTier": "floor",
       "surfaceKind": "conveyor",
@@ -872,6 +942,8 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 1.142,
+      "baseY": -0.012,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -892,6 +964,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.416,
+      "baseY": 0.342,
       "layoutTier": "core",
       "nameZh": "风雪（向左）",
       "nameEn": "Wind Snow Left",
@@ -908,6 +982,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.914,
+      "baseY": 0.815,
       "layoutTier": "core",
       "nameZh": "风雪（向右）",
       "nameEn": "Wind Snow Right",
@@ -924,6 +1000,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2.777,
+      "baseY": -0.591,
       "layoutTier": "core",
       "nameZh": "厨师出生点",
       "nameEn": "Player",
@@ -957,6 +1035,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.295,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -977,6 +1056,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.51,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -997,6 +1077,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.927,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1017,6 +1098,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.48,
+      "baseY": -0.05,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1037,6 +1120,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.112,
+      "baseY": -0.01,
       "layoutTier": "core",
       "stack": {
         "y": 1,
@@ -1057,6 +1142,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.268,
+      "baseY": 0.024,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1077,6 +1164,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.329,
+      "baseY": -0.164,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1113,6 +1202,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.164,
+      "baseY": 0.019,
       "layoutTier": "core",
       "stack": {
         "y": 0.1,
@@ -1133,6 +1224,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.401,
+      "baseY": 0.042,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1153,6 +1246,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 1.011,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1173,6 +1267,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 1.011,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1193,6 +1288,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 2.076,
       "layoutTier": "core",
       "stack": {
         "y": 0.5,
@@ -1213,6 +1309,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 2,
+      "baseY": 0.007,
       "layoutTier": "core",
       "stack": {
         "y": 0.5,
@@ -1233,6 +1331,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.564,
+      "baseY": -0.017,
       "layoutTier": "core",
       "stack": {
         "y": 0.5,
@@ -1253,6 +1353,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.546,
+      "baseY": 0.089,
       "layoutTier": "core",
       "stack": {
         "y": 0.5,
@@ -1273,6 +1375,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.146,
+      "baseY": 0.089,
       "layoutTier": "core",
       "stack": {
         "y": 0.5,
@@ -1293,6 +1397,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.72,
+      "baseY": 0.007,
       "layoutTier": "core",
       "stack": {
         "y": 0.5,
@@ -1313,6 +1419,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.796,
       "layoutTier": "core",
       "stack": {
         "y": 0.5,
@@ -1333,6 +1440,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.164,
+      "baseY": -0.017,
       "layoutTier": "core",
       "stack": {
         "y": 0.5,
@@ -1353,6 +1462,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.731,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1373,6 +1483,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.886,
       "layoutTier": "core",
       "stack": {
         "y": 1,
@@ -1393,6 +1504,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.678,
+      "baseY": -0.022,
       "layoutTier": "core",
       "stack": {
         "y": 1,
@@ -1413,6 +1526,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.542,
+      "baseY": -0.033,
       "layoutTier": "core",
       "stack": {
         "y": 0.6,
@@ -1433,6 +1548,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.516,
       "layoutTier": "core",
       "stack": {
         "y": 1,
@@ -1453,6 +1569,7 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.981,
       "layoutTier": "core",
       "stack": {
         "y": 1,
@@ -1473,6 +1590,8 @@
         "cellsX": 0.9,
         "cellsZ": 0.9
       },
+      "height": 0.745,
+      "baseY": -0.205,
       "layoutTier": "core",
       "stack": {
         "y": 1,

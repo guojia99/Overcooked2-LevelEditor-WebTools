@@ -176,6 +176,11 @@ export function themedFloorPrefabs(): CatalogItem[] {
 
 export function dragFloor(f: EditorFloor, mx: number, my: number) {
   const { x: wx, z: wz } = canvasToWorld(mx, my);
+  dragFloorWorld(f, wx, wz);
+}
+
+/** 世界坐标版拖拽（2D 由 dragFloor 换算后调用；3D 视口直接用射线交点调用）。 */
+export function dragFloorWorld(f: EditorFloor, wx: number, wz: number) {
   if (S.dragFloorMode === "move") {
     if (f.surfaceKind === "raft") {
       f._wx = wx;

@@ -224,6 +224,50 @@ function loadMeasuredFootprints() {
   }
 }
 
+/** Vertical model bounds for EVERY prefab (not just decor), generated inside Unity
+ *  via "导出 3D 高度数据（全部 prefab）" (LayoutEditorFootprintDump.DumpBounds).
+ *  Deliberately a separate file from measured-footprints.json: that one's
+ *  cellsX/cellsZ is gated to decor only, and mixing measured gameplay footprints
+ *  in would override the hand-tuned FOOTPRINT_OVERRIDES. The 3D view consumes
+ *  only sizeY (box height) and minY (bottom face offset from the pivot). */
+let MEASURED_BOUNDS = new Map();
+
+function loadMeasuredBounds() {
+  const file = path.join(__dirname, "data", "measured-bounds.json");
+  if (!fs.existsSync(file)) {
+    console.warn("WARN: measured-bounds.json missing; 3D box heights fall back to 1.0.");
+    return new Map();
+  }
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+    const map = new Map();
+    for (const it of raw.items || []) {
+      if (it && it.id && it.sizeY > 0) {
+        map.set(it.id, {
+          sizeY: it.sizeY,
+          minY: Number.isFinite(it.minY) ? it.minY : 0,
+        });
+      }
+    }
+    console.log(`Measured bounds: ${map.size} entries`);
+    return map;
+  } catch (e) {
+    console.warn(`WARN: measured-bounds.json unreadable: ${e.message}`);
+    return new Map();
+  }
+}
+
+/** catalog 的高度字段：优先全量实测，回退装饰实测（bounds 文件缺失时保持旧行为）。 */
+function heightFieldsFor(id, decorMeasured) {
+  const b = MEASURED_BOUNDS.get(id);
+  const sizeY = b && b.sizeY > 0 ? b.sizeY : decorMeasured && decorMeasured.sizeY > 0 ? decorMeasured.sizeY : 0;
+  if (!(sizeY > 0)) return {};
+  const out = { height: Math.round(sizeY * 1000) / 1000 };
+  // baseY 只在明显偏离 pivot 时写出（中心 pivot 的锅具等），省体积。
+  if (b && Math.abs(b.minY) > 0.005) out.baseY = Math.round(b.minY * 1000) / 1000;
+  return out;
+}
+
 const DEFAULT_PARENT = {
   "hotpot/web": "Design/Counters",
   counters: "Design/Counters",
@@ -864,6 +908,7 @@ function injectLegacyWaterPrefabs(items, measuredFootprints) {
         theme: spec.theme,
         defaultParent: "Art",
         footprint: fp,
+        ...heightFieldsFor(spec.id, measured),
         layoutTier: "decor",
       });
       console.log(`Injected legacy water prefab: ${spec.id} (${rel})`);
@@ -968,10 +1013,9 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
         defaultParent: DEFAULT_PARENT[category] || DEFAULT_PARENT[category.split("/")[0]] || "Art",
         footprint: fp,
         // Intrinsic model height (measured bounds size Y) for the height-range
-        // palette filter: flat floor tiles ~0.1, tall pieces (ice cliffs…) 1+.
-        ...(measured && measured.sizeY > 0
-          ? { height: Math.round(measured.sizeY * 1000) / 1000 }
-          : {}),
+        // palette filter AND the 3D view's box extrusion; baseY is the bottom
+        // face offset from the pivot (centre-pivoted pots are negative).
+        ...heightFieldsFor(id, measured),
         ...layoutMetaFor(id, category),
         // CustomStub 依赖标签（web 打标 + 真机按需载入依据）
         ...(needsStubFor(id, assetPath) ? { needsStub: true } : {}),
@@ -2203,6 +2247,7 @@ function main() {
 
   const items = [];
   const measuredFootprints = loadMeasuredFootprints();
+  MEASURED_BOUNDS = loadMeasuredBounds();
   for (const root of PREFAB_ROOTS) {
     const base = root.includes("common01") ? "Assets/common01/prefabs" : "Assets/common02/prefabs";
     walkPrefabs(root, base, items, measuredFootprints);

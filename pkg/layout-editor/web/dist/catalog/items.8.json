@@ -76,6 +76,7 @@
         "sizeY": 13.664750099182129
       },
       "height": 13.665,
+      "baseY": -1.809,
       "layoutTier": "decor",
       "nameZh": "DLC7 树 1",
       "nameEn": "dlc07 tree 1",
@@ -96,6 +97,7 @@
         "sizeY": 13.664750099182129
       },
       "height": 13.665,
+      "baseY": -1.809,
       "layoutTier": "decor",
       "nameZh": "DLC7 树 1",
       "nameEn": "dlc07 tree 1",
@@ -116,6 +118,7 @@
         "sizeY": 0.3988683223724365
       },
       "height": 0.399,
+      "baseY": 1.316,
       "layoutTier": "decor",
       "nameZh": "DLC7 通风口 1",
       "nameEn": "dlc07 vent 1",
@@ -136,6 +139,7 @@
         "sizeY": 0.3988683223724365
       },
       "height": 0.399,
+      "baseY": 1.316,
       "layoutTier": "decor",
       "nameZh": "DLC7 通风口 1",
       "nameEn": "dlc07 vent 1",
@@ -156,6 +160,7 @@
         "sizeY": 0.33341729640960693
       },
       "height": 0.333,
+      "baseY": 1.444,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙砖 1",
       "nameEn": "dlc07 wall brick 1",
@@ -176,6 +181,7 @@
         "sizeY": 0.33341729640960693
       },
       "height": 0.333,
+      "baseY": 1.444,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙砖 1",
       "nameEn": "dlc07 wall brick 1",
@@ -196,6 +202,7 @@
         "sizeY": 0.3280273675918579
       },
       "height": 0.328,
+      "baseY": 1.11,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙砖 3",
       "nameEn": "dlc07 wall brick 3",
@@ -216,6 +223,7 @@
         "sizeY": 0.3280273675918579
       },
       "height": 0.328,
+      "baseY": 1.11,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙砖 3",
       "nameEn": "dlc07 wall brick 3",
@@ -436,6 +444,7 @@
         "sizeY": 0.20746588706970215
       },
       "height": 0.207,
+      "baseY": 1.793,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙直顶部 1",
       "nameEn": "dlc07 wall straight top 1",
@@ -456,6 +465,7 @@
         "sizeY": 0.2232804298400879
       },
       "height": 0.223,
+      "baseY": 1.793,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙直顶部 1b",
       "nameEn": "dlc07 wall straight top 01b",
@@ -496,6 +506,7 @@
         "sizeY": 0.5489521026611328
       },
       "height": 0.549,
+      "baseY": 1.184,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙窗 1 glass",
       "nameEn": "dlc07 wall window 1 glass",
@@ -556,6 +567,7 @@
         "sizeY": 1.3230245113372803
       },
       "height": 1.323,
+      "baseY": 0.469,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙窗 2 glass",
       "nameEn": "dlc07 wall window 2 glass",
@@ -614,6 +626,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "DLC7 墙窗",
       "nameEn": "dlc07 Wall Window",
@@ -634,6 +647,7 @@
         "sizeY": 2.3440542221069336
       },
       "height": 2.344,
+      "baseY": 0.01,
       "layoutTier": "decor",
       "nameZh": "DLC7 weapon stand 1",
       "nameEn": "dlc07 weapon stand 1",
@@ -654,6 +668,7 @@
         "sizeY": 2.3440542221069336
       },
       "height": 2.344,
+      "baseY": 0.01,
       "layoutTier": "decor",
       "nameZh": "DLC7 weapon stand 1",
       "nameEn": "dlc07 weapon stand 1",
@@ -672,6 +687,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 2,
       "layoutTier": "decor",
       "nameZh": "DLC7 宽墙 1",
       "nameEn": "dlc07 Wide Wall 1",
@@ -712,6 +728,7 @@
         "sizeY": 1.5797646045684814
       },
       "height": 1.58,
+      "baseY": 0.007,
       "layoutTier": "decor",
       "nameZh": "DLC8 手风琴 1",
       "nameEn": "dlc08 accordion 1",
@@ -732,6 +749,7 @@
         "sizeY": 1.5797646045684814
       },
       "height": 1.58,
+      "baseY": 0.007,
       "layoutTier": "decor",
       "nameZh": "DLC8 手风琴 2",
       "nameEn": "dlc08 accordion 2",
@@ -752,6 +770,7 @@
         "sizeY": 2.6798810958862305
       },
       "height": 2.68,
+      "baseY": -0.017,
       "layoutTier": "decor",
       "nameZh": "DLC8 手风琴 3",
       "nameEn": "dlc08 accordion 3",
@@ -772,6 +791,7 @@
         "sizeY": 6.101938724517822
       },
       "height": 6.102,
+      "baseY": -0.088,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 1",
       "nameEn": "dlc08 balloon 1",
@@ -792,6 +812,7 @@
         "sizeY": 6.101938724517822
       },
       "height": 6.102,
+      "baseY": -0.179,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 2",
       "nameEn": "dlc08 balloon 2",
@@ -812,6 +833,7 @@
         "sizeY": 6.101937770843506
       },
       "height": 6.102,
+      "baseY": -0.174,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 3",
       "nameEn": "dlc08 balloon 3",
@@ -832,6 +854,7 @@
         "sizeY": 1.2024319171905518
       },
       "height": 1.202,
+      "baseY": -0.601,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 butterfly 1",
       "nameEn": "dlc08 balloon butterfly 1",
@@ -852,6 +875,7 @@
         "sizeY": 1.2024319171905518
       },
       "height": 1.202,
+      "baseY": -0.601,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 butterfly 2",
       "nameEn": "dlc08 balloon butterfly 2",
@@ -872,6 +896,7 @@
         "sizeY": 1.2520884275436401
       },
       "height": 1.252,
+      "baseY": -0.473,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 dog 1",
       "nameEn": "dlc08 balloon dog 1",
@@ -892,6 +917,7 @@
         "sizeY": 1.2520885467529297
       },
       "height": 1.252,
+      "baseY": -0.443,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 dog 2",
       "nameEn": "dlc08 balloon dog 2",
@@ -912,6 +938,7 @@
         "sizeY": 1.3056421279907227
       },
       "height": 1.306,
+      "baseY": -0.412,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 elephant 1",
       "nameEn": "dlc08 balloon elephant 1",
@@ -932,6 +959,7 @@
         "sizeY": 1.3056421279907227
       },
       "height": 1.306,
+      "baseY": -0.401,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 elephant 2",
       "nameEn": "dlc08 balloon elephant 2",
@@ -952,6 +980,7 @@
         "sizeY": 2.198007822036743
       },
       "height": 2.198,
+      "baseY": -0.488,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 giraffe 1",
       "nameEn": "dlc08 balloon giraffe 1",
@@ -972,6 +1001,7 @@
         "sizeY": 2.198007583618164
       },
       "height": 2.198,
+      "baseY": -0.496,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 giraffe 2",
       "nameEn": "dlc08 balloon giraffe 2",
@@ -992,6 +1022,7 @@
         "sizeY": 3.913191556930542
       },
       "height": 3.913,
+      "baseY": -3.913,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 string 1",
       "nameEn": "dlc08 balloon string 1",
@@ -1012,6 +1043,7 @@
         "sizeY": 4.366038799285889
       },
       "height": 4.366,
+      "baseY": -0.851,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球 1",
       "nameEn": "dlc08 balloons 1",
@@ -1032,6 +1064,7 @@
         "sizeY": 2.7162399291992188
       },
       "height": 2.716,
+      "baseY": 5.062,
       "layoutTier": "decor",
       "nameZh": "DLC8 气球花车",
       "nameEn": "dlc08 baloon float",
@@ -1072,6 +1105,7 @@
         "sizeY": 5.742776870727539
       },
       "height": 5.743,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "DLC8 看台 1",
       "nameEn": "dlc08 bleachers 1",
@@ -1092,6 +1126,7 @@
         "sizeY": 5.742776870727539
       },
       "height": 5.743,
+      "baseY": -0.028,
       "layoutTier": "decor",
       "nameZh": "DLC8 看台 2",
       "nameEn": "dlc08 bleachers 2",
@@ -1352,6 +1387,7 @@
         "sizeY": 0.36189472675323486
       },
       "height": 0.362,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 1",
       "nameEn": "dlc08 box lid 1",
@@ -1372,6 +1408,7 @@
         "sizeY": 0.36189472675323486
       },
       "height": 0.362,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 1",
       "nameEn": "dlc08 box lid 1",
@@ -1392,6 +1429,7 @@
         "sizeY": 0.6440919637680054
       },
       "height": 0.644,
+      "baseY": -0.03,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 2",
       "nameEn": "dlc08 box lid 2",
@@ -1412,6 +1450,7 @@
         "sizeY": 0.6440919637680054
       },
       "height": 0.644,
+      "baseY": -0.03,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 3",
       "nameEn": "dlc08 box lid 3",
@@ -1432,6 +1471,7 @@
         "sizeY": 0.36189472675323486
       },
       "height": 0.362,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 4",
       "nameEn": "dlc08 box lid 4",
@@ -1452,6 +1492,7 @@
         "sizeY": 0.36189472675323486
       },
       "height": 0.362,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 4",
       "nameEn": "dlc08 box lid 4",
@@ -1472,6 +1513,7 @@
         "sizeY": 0.36189472675323486
       },
       "height": 0.362,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 5",
       "nameEn": "dlc08 box lid 5",
@@ -1492,6 +1534,7 @@
         "sizeY": 0.36189472675323486
       },
       "height": 0.362,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 6",
       "nameEn": "dlc08 box lid 6",
@@ -1512,6 +1555,7 @@
         "sizeY": 0.6440919637680054
       },
       "height": 0.644,
+      "baseY": -0.03,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 7",
       "nameEn": "dlc08 box lid 7",
@@ -1532,6 +1576,7 @@
         "sizeY": 0.6440919637680054
       },
       "height": 0.644,
+      "baseY": -0.03,
       "layoutTier": "decor",
       "nameZh": "DLC8 箱子盖 8",
       "nameEn": "dlc08 box lid 8",
@@ -1572,6 +1617,7 @@
         "sizeY": 0.7170078754425049
       },
       "height": 0.717,
+      "baseY": -0.359,
       "layoutTier": "decor",
       "nameZh": "DLC8 马戏团 ball 1",
       "nameEn": "dlc08 circus ball 1",
@@ -1592,6 +1638,7 @@
         "sizeY": 0.7170078754425049
       },
       "height": 0.717,
+      "baseY": -0.359,
       "layoutTier": "decor",
       "nameZh": "DLC8 马戏团 ball 2",
       "nameEn": "dlc08 circus ball 2",
@@ -1612,6 +1659,7 @@
         "sizeY": 0.7170078754425049
       },
       "height": 0.717,
+      "baseY": -0.359,
       "layoutTier": "decor",
       "nameZh": "DLC8 马戏团 ball 3",
       "nameEn": "dlc08 circus ball 3",
@@ -1632,6 +1680,7 @@
         "sizeY": 0.7170078754425049
       },
       "height": 0.717,
+      "baseY": -0.359,
       "layoutTier": "decor",
       "nameZh": "DLC8 马戏团 ball 4",
       "nameEn": "dlc08 circus ball 4",
@@ -1652,6 +1701,7 @@
         "sizeY": 0.8716381192207336
       },
       "height": 0.872,
+      "baseY": -0.035,
       "layoutTier": "decor",
       "nameZh": "DLC8 城市长椅 1",
       "nameEn": "dlc08 city bench 1",
@@ -1672,6 +1722,7 @@
         "sizeY": 0.26240217685699463
       },
       "height": 0.262,
+      "baseY": -0.262,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -1694,6 +1745,7 @@
         "sizeY": 0.26240217685699463
       },
       "height": 0.262,
+      "baseY": -0.262,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -1716,6 +1768,7 @@
         "sizeY": 0.26240217685699463
       },
       "height": 0.262,
+      "baseY": -0.262,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -1738,6 +1791,7 @@
         "sizeY": 0.26240217685699463
       },
       "height": 0.262,
+      "baseY": -0.262,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -1760,6 +1814,7 @@
         "sizeY": 3.8664114475250244
       },
       "height": 3.866,
+      "baseY": -0.022,
       "layoutTier": "decor",
       "nameZh": "DLC8 城市树 1",
       "nameEn": "dlc08 city tree 1",
@@ -1780,6 +1835,7 @@
         "sizeY": 3.669656753540039
       },
       "height": 3.67,
+      "baseY": 1.143,
       "layoutTier": "decor",
       "nameZh": "DLC8 云朵",
       "nameEn": "dlc08 cloud clump",
@@ -1798,6 +1854,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.76,
+      "baseY": -0.167,
       "layoutTier": "decor",
       "nameZh": "DLC8 clown chef 气球 mallet 1",
       "nameEn": "dlc08 clown chef balloon mallet 1",
@@ -1818,6 +1876,7 @@
         "sizeY": 0.5454768538475037
       },
       "height": 0.545,
+      "baseY": 0.007,
       "layoutTier": "decor",
       "nameZh": "DLC8 饮料垃圾 1",
       "nameEn": "dlc08 drink trash 1",
@@ -1838,6 +1897,7 @@
         "sizeY": 0.5454768538475037
       },
       "height": 0.545,
+      "baseY": 0.007,
       "layoutTier": "decor",
       "nameZh": "DLC8 饮料垃圾 1",
       "nameEn": "dlc08 drink trash 1",
@@ -1858,6 +1918,7 @@
         "sizeY": 0.5454768538475037
       },
       "height": 0.545,
+      "baseY": 0.007,
       "layoutTier": "decor",
       "nameZh": "DLC8 饮料垃圾 2",
       "nameEn": "dlc08 drink trash 2",
@@ -1878,6 +1939,7 @@
         "sizeY": 0.9955379962921143
       },
       "height": 0.996,
+      "baseY": -0.486,
       "layoutTier": "decor",
       "nameZh": "DLC8 鼓 1",
       "nameEn": "dlc08 drum 1",
@@ -1898,6 +1960,7 @@
         "sizeY": 7.275077819824219
       },
       "height": 7.275,
+      "baseY": -7.285,
       "layoutTier": "decor",
       "nameZh": "DLC8 挂布 1",
       "nameEn": "dlc08 hanging cloth 1",
@@ -1918,6 +1981,7 @@
         "sizeY": 7.351363658905029
       },
       "height": 7.351,
+      "baseY": -7.338,
       "layoutTier": "decor",
       "nameZh": "DLC8 挂布 2",
       "nameEn": "dlc08 hanging cloth 2",
@@ -1938,6 +2002,7 @@
         "sizeY": 8.415596961975098
       },
       "height": 8.416,
+      "baseY": -7.951,
       "layoutTier": "decor",
       "nameZh": "DLC8 挂布 3",
       "nameEn": "dlc08 hanging cloth 3",
@@ -1958,6 +2023,7 @@
         "sizeY": 10.47838020324707
       },
       "height": 10.478,
+      "baseY": -10.499,
       "layoutTier": "decor",
       "nameZh": "DLC8 挂布 4",
       "nameEn": "dlc08 hanging cloth 4",
@@ -1978,6 +2044,7 @@
         "sizeY": 0.057440344244241714
       },
       "height": 0.057,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "nameZh": "DLC8 干草 1",
       "nameEn": "dlc08 hay 1",
@@ -1998,6 +2065,7 @@
         "sizeY": 0.11195019632577896
       },
       "height": 0.112,
+      "baseY": 0.024,
       "layoutTier": "decor",
       "nameZh": "DLC8 干草 2",
       "nameEn": "dlc08 hay 2",
@@ -2018,6 +2086,7 @@
         "sizeY": 0.09151789546012878
       },
       "height": 0.092,
+      "baseY": 0.018,
       "layoutTier": "decor",
       "nameZh": "DLC8 干草 3",
       "nameEn": "dlc08 hay 3",
@@ -2038,6 +2107,7 @@
         "sizeY": 1.3565224409103394
       },
       "height": 1.357,
+      "baseY": -0.678,
       "layoutTier": "decor",
       "nameZh": "DLC8 干草垛 1",
       "nameEn": "dlc08 hay bale 1",
@@ -2058,6 +2128,7 @@
         "sizeY": 1.7959824800491333
       },
       "height": 1.796,
+      "baseY": -0.066,
       "layoutTier": "decor",
       "nameZh": "DLC8 hay 堆 1",
       "nameEn": "dlc08 hay pile 1",
@@ -2078,6 +2149,7 @@
         "sizeY": 1.6165400743484497
       },
       "height": 1.617,
+      "baseY": -0.078,
       "layoutTier": "decor",
       "nameZh": "DLC8 hay 堆 2",
       "nameEn": "dlc08 hay pile 2",
@@ -2098,6 +2170,7 @@
         "sizeY": 2.64823842048645
       },
       "height": 2.648,
+      "baseY": -1.324,
       "layoutTier": "decor",
       "nameZh": "DLC8 钻圈 1",
       "nameEn": "dlc08 hoop 1",
@@ -2138,6 +2211,7 @@
         "sizeY": 1.2825946807861328
       },
       "height": 1.283,
+      "baseY": -0.643,
       "layoutTier": "decor",
       "nameZh": "DLC8 号角 1",
       "nameEn": "dlc08 horn 1",
@@ -2158,6 +2232,7 @@
         "sizeY": 1.4277173280715942
       },
       "height": 1.428,
+      "baseY": -1.089,
       "layoutTier": "decor",
       "nameZh": "DLC8 杂耍棒 1",
       "nameEn": "dlc08 juggling pin 1",
@@ -2178,6 +2253,7 @@
         "sizeY": 0.42197147011756897
       },
       "height": 0.422,
+      "baseY": -0.211,
       "layoutTier": "decor",
       "nameZh": "DLC8 城堡木板 13",
       "nameEn": "dlc08 keep plank 13",
@@ -2198,6 +2274,7 @@
         "sizeY": 0.3243544399738312
       },
       "height": 0.324,
+      "baseY": -0.162,
       "layoutTier": "decor",
       "nameZh": "DLC8 城堡木板 14",
       "nameEn": "dlc08 keep plank 14",
@@ -2218,6 +2295,7 @@
         "sizeY": 0.19750574231147766
       },
       "height": 0.198,
+      "baseY": -0.099,
       "layoutTier": "decor",
       "nameZh": "DLC8 城堡木板 15",
       "nameEn": "dlc08 keep plank 15",
@@ -2238,6 +2316,7 @@
         "sizeY": 0.42197147011756897
       },
       "height": 0.422,
+      "baseY": -0.211,
       "layoutTier": "decor",
       "nameZh": "DLC8 城堡木板 16",
       "nameEn": "dlc08 keep plank 16",
@@ -2258,6 +2337,7 @@
         "sizeY": 0.3329334259033203
       },
       "height": 0.333,
+      "baseY": -0.166,
       "layoutTier": "decor",
       "nameZh": "DLC8 城堡木板 17",
       "nameEn": "dlc08 keep plank 17",
@@ -2278,6 +2358,7 @@
         "sizeY": 0.3243544399738312
       },
       "height": 0.324,
+      "baseY": -0.162,
       "layoutTier": "decor",
       "nameZh": "DLC8 城堡木板 18",
       "nameEn": "dlc08 keep plank 18",
@@ -2298,6 +2379,7 @@
         "sizeY": 2.4337267875671387
       },
       "height": 2.434,
+      "baseY": -1.217,
       "layoutTier": "decor",
       "nameZh": "DLC8 大锤 1",
       "nameEn": "dlc08 mallet 1",
@@ -2318,6 +2400,7 @@
         "sizeY": 0.6906919479370117
       },
       "height": 0.691,
+      "baseY": -0.006,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 气球 dog 1",
@@ -2339,6 +2422,7 @@
         "sizeY": 0.7172562479972839
       },
       "height": 0.717,
+      "baseY": -0.035,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 气球 elephant 1",
@@ -2360,6 +2444,7 @@
         "sizeY": 1.045263648033142
       },
       "height": 1.045,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 气球 giraffe 1",
@@ -2381,6 +2466,7 @@
         "sizeY": 1.663756251335144
       },
       "height": 1.664,
+      "baseY": -0.037,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图气球 1",
@@ -2402,6 +2488,7 @@
         "sizeY": 1.9515209197998047
       },
       "height": 1.952,
+      "baseY": 0.032,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图气球 2",
@@ -2423,6 +2510,7 @@
         "sizeY": 1.9515208005905151
       },
       "height": 1.952,
+      "baseY": 0.057,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图气球 3",
@@ -2444,6 +2532,7 @@
         "sizeY": 1.9515209197998047
       },
       "height": 1.952,
+      "baseY": 0.02,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图气球 4",
@@ -2465,6 +2554,7 @@
         "sizeY": 0.6230564117431641
       },
       "height": 0.623,
+      "baseY": -0.024,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子 1",
@@ -2486,6 +2576,7 @@
         "sizeY": 0.5985313057899475
       },
       "height": 0.599,
+      "baseY": -0.029,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子 2",
@@ -2507,6 +2598,7 @@
         "sizeY": 0.8618990182876587
       },
       "height": 0.862,
+      "baseY": -0.033,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子 3",
@@ -2528,6 +2620,7 @@
         "sizeY": 0.8088271021842957
       },
       "height": 0.809,
+      "baseY": -0.039,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子 4",
@@ -2549,6 +2642,7 @@
         "sizeY": 0.6972886919975281
       },
       "height": 0.697,
+      "baseY": -0.029,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子 5",
@@ -2570,6 +2664,7 @@
         "sizeY": 0.5985312461853027
       },
       "height": 0.599,
+      "baseY": -0.031,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子 6",
@@ -2591,6 +2686,7 @@
         "sizeY": 0.8939332962036133
       },
       "height": 0.894,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子 7",
@@ -2612,6 +2708,7 @@
         "sizeY": 0.31911030411720276
       },
       "height": 0.319,
+      "baseY": -0.013,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子盖 1",
@@ -2633,6 +2730,7 @@
         "sizeY": 0.17356938123703003
       },
       "height": 0.174,
+      "baseY": -0.04,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 箱子盖 2",
@@ -2654,6 +2752,7 @@
         "sizeY": 1.2063286304473877
       },
       "height": 1.206,
+      "baseY": -0.24,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 马戏团 ball 1",
@@ -2675,6 +2774,7 @@
         "sizeY": 0.7170078754425049
       },
       "height": 0.717,
+      "baseY": -0.257,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 马戏团 ball 2",
@@ -2696,6 +2796,7 @@
         "sizeY": 0.9011864066123962
       },
       "height": 0.901,
+      "baseY": -0.155,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 马戏团 ball 3",
@@ -2717,6 +2818,7 @@
         "sizeY": 0.8959460854530334
       },
       "height": 0.896,
+      "baseY": -0.404,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 马戏团 ball 4",
@@ -2738,6 +2840,7 @@
         "sizeY": 1.7450025081634521
       },
       "height": 1.745,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图城市建筑 1",
@@ -2759,6 +2862,7 @@
         "sizeY": 1.0328983068466187
       },
       "height": 1.033,
+      "baseY": -0.032,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 悬崖 1",
@@ -2780,6 +2884,7 @@
         "sizeY": 0.6559012532234192
       },
       "height": 0.656,
+      "baseY": 0.069,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 悬崖 2",
@@ -2801,6 +2906,7 @@
         "sizeY": 0.6374117136001587
       },
       "height": 0.637,
+      "baseY": 0.112,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 悬崖 3",
@@ -2822,6 +2928,7 @@
         "sizeY": 0.4341716468334198
       },
       "height": 0.434,
+      "baseY": 0.065,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 蕨 1",
@@ -2843,6 +2950,7 @@
         "sizeY": 0.6386153697967529
       },
       "height": 0.639,
+      "baseY": 0.082,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 蕨 2",
@@ -2864,6 +2972,7 @@
         "sizeY": 0.6214714050292969
       },
       "height": 0.621,
+      "baseY": -0.047,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图干草垛 1",
@@ -2885,6 +2994,7 @@
         "sizeY": 1.207707166671753
       },
       "height": 1.208,
+      "baseY": -0.103,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图干草垛 2",
@@ -2906,6 +3016,7 @@
         "sizeY": 0.08204071968793869
       },
       "height": 0.082,
+      "baseY": 0.119,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map hay 堆 1",
@@ -2927,6 +3038,7 @@
         "sizeY": 0.14871592819690704
       },
       "height": 0.149,
+      "baseY": 0.098,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map hay 堆 2",
@@ -2948,6 +3060,7 @@
         "sizeY": 0.16966094076633453
       },
       "height": 0.17,
+      "baseY": 0.08,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map hay 堆 3",
@@ -2969,6 +3082,7 @@
         "sizeY": 0.13185475766658783
       },
       "height": 0.132,
+      "baseY": -0.066,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图钻圈 1",
@@ -2990,6 +3104,7 @@
         "sizeY": 1.5718011856079102
       },
       "height": 1.572,
+      "baseY": -0.03,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图立式钻圈 1",
@@ -3011,6 +3126,7 @@
         "sizeY": 0.28539884090423584
       },
       "height": 0.285,
+      "baseY": -0.023,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 树叶 1",
@@ -3032,6 +3148,7 @@
         "sizeY": 1.3094871044158936
       },
       "height": 1.309,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 松 1",
@@ -3186,6 +3303,7 @@
         "sizeY": 0.6819068789482117
       },
       "height": 0.682,
+      "baseY": -0.043,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图表演台 1",
@@ -3207,6 +3325,7 @@
         "sizeY": 0.22918808460235596
       },
       "height": 0.229,
+      "baseY": 0.093,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图爆米花 1",
@@ -3228,6 +3347,7 @@
         "sizeY": 0.3597657382488251
       },
       "height": 0.36,
+      "baseY": 0.076,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图爆米花 2",
@@ -3249,6 +3369,7 @@
         "sizeY": 0.23848514258861542
       },
       "height": 0.238,
+      "baseY": 0.077,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图爆米花 3",
@@ -3270,6 +3391,7 @@
         "sizeY": 0.24302518367767334
       },
       "height": 0.243,
+      "baseY": 0.056,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图爆米花 4",
@@ -3291,6 +3413,7 @@
         "sizeY": 0.5845734477043152
       },
       "height": 0.585,
+      "baseY": -0.105,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 岩石 1",
@@ -3312,6 +3435,7 @@
         "sizeY": 0.6135643720626831
       },
       "height": 0.614,
+      "baseY": -0.175,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 岩石 2",
@@ -3333,6 +3457,7 @@
         "sizeY": 0.48667651414871216
       },
       "height": 0.487,
+      "baseY": -0.171,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 岩石 3",
@@ -3354,6 +3479,7 @@
         "sizeY": 1.309874415397644
       },
       "height": 1.31,
+      "baseY": -0.093,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 绳栅栏 1",
@@ -3375,6 +3501,7 @@
         "sizeY": 1.3044376373291016
       },
       "height": 1.304,
+      "baseY": -0.087,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 绳栅栏 2",
@@ -3396,6 +3523,7 @@
         "sizeY": 1.305529236793518
       },
       "height": 1.306,
+      "baseY": -0.088,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 绳栅栏 3",
@@ -3417,6 +3545,7 @@
         "sizeY": 0.9290920495986938
       },
       "height": 0.929,
+      "baseY": -0.048,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map standing 招牌 1",
@@ -3514,6 +3643,7 @@
         "sizeY": 0.6545541882514954
       },
       "height": 0.655,
+      "baseY": 0.126,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 树桩 1",
@@ -3556,6 +3686,7 @@
         "sizeY": 2.470428466796875
       },
       "height": 2.47,
+      "baseY": -0.045,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 帐篷 2",
@@ -3598,6 +3729,7 @@
         "sizeY": 0.16771754622459412
       },
       "height": 0.168,
+      "baseY": 0.128,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图票根 1",
@@ -3619,6 +3751,7 @@
         "sizeY": 3.3665130138397217
       },
       "height": 3.367,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 树 1",
@@ -3640,6 +3773,7 @@
         "sizeY": 3.4967844486236572
       },
       "height": 3.497,
+      "baseY": -0.131,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 树 2",
@@ -3661,6 +3795,7 @@
         "sizeY": 1.7408493757247925
       },
       "height": 1.741,
+      "baseY": -0.045,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 地图大篷车 1",
@@ -3682,6 +3817,7 @@
         "sizeY": 0.7812602519989014
       },
       "height": 0.781,
+      "baseY": -0.061,
       "layoutTier": "decor",
       "needsStub": true,
       "nameZh": "DLC8 map 木立柱 1",
@@ -3724,6 +3860,7 @@
         "sizeY": 6.783965587615967
       },
       "height": 6.784,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "nameZh": "DLC8 立柱 entrance 1",
       "nameEn": "dlc08 pillar entrance 1",
@@ -3804,6 +3941,7 @@
         "sizeY": 1.7527434825897217
       },
       "height": 1.753,
+      "baseY": -0.025,
       "layoutTier": "decor",
       "nameZh": "DLC8 脚手架立柱 1",
       "nameEn": "dlc08 scaffold pillar 1",
@@ -3824,6 +3962,7 @@
         "sizeY": 1.7527434825897217
       },
       "height": 1.753,
+      "baseY": -0.025,
       "layoutTier": "decor",
       "nameZh": "DLC8 脚手架立柱 1",
       "nameEn": "dlc08 scaffold pillar 1",
@@ -3844,6 +3983,7 @@
         "sizeY": 1.7527434825897217
       },
       "height": 1.753,
+      "baseY": -0.025,
       "layoutTier": "decor",
       "nameZh": "DLC8 脚手架立柱 2",
       "nameEn": "dlc08 scaffold pillar 2",
@@ -3864,6 +4004,7 @@
         "sizeY": 1.7527475357055664
       },
       "height": 1.753,
+      "baseY": -0.878,
       "layoutTier": "decor",
       "nameZh": "DLC8 脚手架 1",
       "nameEn": "dlc08 scaffolding 1",
@@ -3884,6 +4025,7 @@
         "sizeY": 2.3649799823760986
       },
       "height": 2.365,
+      "baseY": -0.874,
       "layoutTier": "decor",
       "nameZh": "DLC8 壁灯 1",
       "nameEn": "dlc08 sconce 1",
@@ -3924,6 +4066,7 @@
         "sizeY": 3.0602035522460938
       },
       "height": 3.06,
+      "baseY": -0.061,
       "layoutTier": "decor",
       "nameZh": "DLC8 立式招牌 1",
       "nameEn": "Standing Sign 1",
@@ -3944,6 +4087,7 @@
         "sizeY": 3.0602035522460938
       },
       "height": 3.06,
+      "baseY": -0.061,
       "layoutTier": "decor",
       "nameZh": "DLC8 立式招牌 1",
       "nameEn": "Standing Sign 1",
@@ -3962,6 +4106,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.288,
+      "baseY": -0.058,
       "layoutTier": "decor",
       "nameZh": "p_dlc08_step_01",
       "nameEn": "p_dlc08_step_01",
@@ -4000,6 +4146,7 @@
         "sizeY": 3.6504173278808594
       },
       "height": 3.65,
+      "baseY": -3.648,
       "layoutTier": "decor",
       "nameZh": "DLC8 串灯 1",
       "nameEn": "dlc08 string lights 1",
@@ -4020,6 +4167,7 @@
         "sizeY": 3.6504173278808594
       },
       "height": 3.65,
+      "baseY": -3.648,
       "layoutTier": "decor",
       "nameZh": "DLC8 串灯 1",
       "nameEn": "dlc08 string lights 1",
@@ -4040,6 +4188,7 @@
         "sizeY": 1.9136440753936768
       },
       "height": 1.914,
+      "baseY": -1.865,
       "layoutTier": "decor",
       "nameZh": "DLC8 串灯 2",
       "nameEn": "dlc08 string lights 2",

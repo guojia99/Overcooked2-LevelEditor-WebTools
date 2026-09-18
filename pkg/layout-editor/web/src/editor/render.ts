@@ -54,6 +54,7 @@ import {
   computeTeleportalLabels,
   computeParamLabels
 } from "./renderItems";
+import { scene3dInvalidate } from "./scene3dBridge";
 
 let refreshHooks: () => void = () => {};
 export function setRefreshHooks(fn: () => void): void {
@@ -400,6 +401,15 @@ function drawPreviewFloorGhosts(pos: PreviewPosMap): void {
 }
 
 export function draw() {
+  // 3D 模式：跳过全部 2D 绘制，改为标脏 3D 场景图（内部增量 diff + rAF 合并）。
+  // 约 200 处 draw() 调用点因此自动变成「通知 3D」，无需逐处改造。
+  // refreshHooks 仍要跑：右侧物品清单与地板状态条与视口无关。
+  if (S.viewMode === "3d") {
+    scene3dInvalidate();
+    refreshHooks();
+    return;
+  }
+
   const w = dom.canvas.clientWidth;
   const h = dom.canvas.clientHeight;
   if (dom.canvas.width !== w || dom.canvas.height !== h) {

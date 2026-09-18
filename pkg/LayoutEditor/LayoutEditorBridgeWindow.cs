@@ -156,6 +156,8 @@ public class LayoutEditorBridgeWindow : EditorWindow
         GUILayout.Space(4f);
         if (GUILayout.Button("导出装饰实测尺寸", GUILayout.Height(26)))
             LayoutEditorFootprintDump.Dump();
+        if (GUILayout.Button("导出 3D 高度数据（全部 prefab）", GUILayout.Height(26)))
+            LayoutEditorFootprintDump.DumpBounds();
         if (GUILayout.Button("导出音频依赖", GUILayout.Height(26)))
             LayoutEditorAudioExporter.ExportAudioForWeb();
         if (GUILayout.Button("导出 Bundle 全部内容", GUILayout.Height(26)))

@@ -59,6 +59,12 @@ export interface ComboDef {
 
 export type LayerKey = "items" | "decor" | "floor" | "background" | "anim";
 
+/** 视图模式：2D 俯视画布 / 3D 立体视口（共享同一份 state）。 */
+export type ViewMode = "2d" | "3d";
+
+/** 3D 地板板厚档位。real = 0.4（Unity Col_Floor 真实厚度，见 SceneLayoutApplier.CreateColFloor）。 */
+export type FloorSlabMode = "real" | "auto" | "thin";
+
 /** Content categories that can be shown / hidden on the canvas per layer. */
 export type VisibilityCategory = "items" | "decor" | "floors" | "background";
 
@@ -315,6 +321,17 @@ export const S = {
   selectedFloorKey: null as string | null,
   selectedFloorKeys: new Set<string>(),
   currentLayer: "items" as LayerKey,
+  /** 视图模式：2D 俯视画布 / 3D 立体视口。两者共享本 state，切换不重载场景。 */
+  viewMode: (localStorage.getItem("viewMode") === "3d" ? "3d" : "2d") as ViewMode,
+  /** 3D 专用：开启后拖动沿 Y 轴（竖直）而非 XZ 平面。XZ 在该模式下锁死，避免误拖。 */
+  yAxisDrag: false,
+  /** 3D 地板板厚档位：real = 0.4（与 Unity Col_Floor 一致）/ auto = 自适应 / thin = 0.05。 */
+  floorSlabMode: (["real", "auto", "thin"].includes(localStorage.getItem("floorSlabMode") || "")
+    ? localStorage.getItem("floorSlabMode")
+    : "real") as FloorSlabMode,
+  /** 指针世界坐标（两个视口共同写入；粘贴落点等视口无关逻辑读它）。 */
+  hoverWx: Number.NaN,
+  hoverWz: Number.NaN,
   /** 装饰层尺寸筛选：all / small / medium / large / xl（按 footprint 判定）。 */
   decorSizeFilter: "all" as "all" | "small" | "medium" | "large" | "xl",
   /** 装饰层调色板分组方式：主题（DLC/场景）/ 类型（建筑构件…）/ 用途（铺地…）。 */

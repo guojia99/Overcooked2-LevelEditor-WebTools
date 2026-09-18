@@ -14,6 +14,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.206,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "4c54ee4dbc00db742a827110f1aea22d",
@@ -34,6 +35,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.375,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "a02996980ffbb23499219aa012ea9ca1",
@@ -54,6 +57,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.377,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "b785cb39803b3be40b7d7052d54595fd",
@@ -74,6 +78,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.769,
+      "baseY": 0.045,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "4817ce28632a97d7fda2712f3cb47ac6",
@@ -94,6 +100,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.434,
+      "baseY": 0.012,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "bd167913cd87017f14773a28bbcc1c22",
@@ -114,6 +122,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.534,
+      "baseY": -0.076,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "f5e2ed0b5f84bfb4da375a513302084e",
@@ -134,6 +144,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.23,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "d2a417e941d3a3f4181cfadf039d720d",
@@ -174,6 +185,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.568,
+      "baseY": 0.066,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "8d4a5aaf71fdf648b0648dd20ae1a920",
@@ -194,6 +207,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.337,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "09a8ff9ede819e14e9f89df70f935402",
@@ -234,6 +248,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.23,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "30e53740fcc7be49a00685e29a46793d",
@@ -254,6 +269,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.206,
+      "baseY": 0.092,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "e27d2085bff69fb1125400036a60daaf",
@@ -274,6 +291,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.787,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "c0721b5197a5193a62cac90b2e010560",
@@ -294,6 +313,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.777,
+      "baseY": 0.021,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "f1f203ca0b2f02bd64622cb03f7d7068",
@@ -314,6 +335,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.322,
+      "baseY": 0.217,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "fd102576fe1c8ff40abbdb5f2f64a0c9",
@@ -334,6 +357,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.71,
+      "baseY": 0.013,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "1d180e6bcff709d4d9abc1d3420346e4",
@@ -354,6 +379,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.23,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "9107a2832a94d894e83ae22aae1c764d",
@@ -394,6 +420,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.436,
+      "baseY": 0.016,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "07ddbb4392cfa5b47b83abc476c435da",
@@ -414,6 +442,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.753,
+      "baseY": -0.044,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "ad56741d152e35d459da75d1531b494c",
@@ -434,6 +464,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.769,
+      "baseY": 0.026,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "2a88d8f3685df8144b0c7b1ab3c6f87f",
@@ -454,6 +486,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.702,
+      "baseY": 0.019,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "de4f19d5464ae7149a090a4cea5b6cf5",
@@ -474,6 +508,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.592,
+      "baseY": -0.009,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "2d89a2cd05903554b8aabd5617534acf",
@@ -494,6 +530,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.377,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "c06417ddfb515faff7cddcd76ed361fc",
@@ -514,6 +551,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.642,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "ce4bbf2d10d28f927611e1845005c9cb",
@@ -534,6 +573,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.377,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "8220aeba30e31f47f7921ab32b8da7af",
@@ -554,6 +594,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.534,
+      "baseY": -0.076,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "60adb1f0c4d250dffb7581931157b10f",
@@ -594,6 +636,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.745,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "fd657e9082619a2e2eea4c700a1643fc",
@@ -614,6 +658,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.745,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "8dd97968f2d87b4bee73088e62641b94",
@@ -634,6 +680,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.642,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "f6cb4e3da992420e9f63b4c96204ce1a",
@@ -654,6 +702,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.554,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "5f5bd4c5334c025c08fdb17252ff1b98",
@@ -674,6 +723,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.684,
+      "baseY": 0.035,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "b3b094506fa9d8471efde9fb629d5895",
@@ -694,6 +745,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.375,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "2e4ec9369bab73ad0d11b395b1dd6ea4",
@@ -714,6 +767,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.434,
+      "baseY": 0.012,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "451514ac42b67ec34c2051fbd80948db",
@@ -734,6 +789,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.23,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "8f9450fb817169cb2da96efcd411cf34",
@@ -754,6 +810,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.405,
+      "baseY": -0.022,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "4f431764532b70320505d1fc85a4ff48",
@@ -774,6 +832,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.753,
+      "baseY": -0.044,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "235de95296062e0013e62a313599be3f",
@@ -794,6 +854,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.376,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "7d38cbf897c601251772a91369bf91e3",
@@ -814,6 +875,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.769,
+      "baseY": 0.026,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "4bd025be3d1160fee29c4d8102a2a497",
@@ -834,6 +897,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.157,
+      "baseY": -0.017,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "c3fa6001600f1022fd4f272205c9a9b7",
@@ -854,6 +919,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.787,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "10b3c3653b7f62ad8d9fdcf38321a487",
@@ -874,6 +941,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.702,
+      "baseY": 0.019,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "032cccd35c7d625b0f86a57a273e26c7",
@@ -894,6 +963,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.642,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "b9d6ab9ce433c50b451f8b40ac00fb15",
@@ -914,6 +985,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.753,
+      "baseY": -0.044,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "9db0036e8add98fc2c2c635d80de7d04",
@@ -934,6 +1007,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.522,
+      "baseY": 0.065,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "d5d3abb6779245c85f8088e1099a23b7",
@@ -954,6 +1029,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.758,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "99fe31d55e0df7276004539ee10c8c48",
@@ -974,6 +1050,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.206,
+      "baseY": 0.092,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "852b272581ed4b91f902ef670dd48ad3",
@@ -994,6 +1072,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.428,
+      "baseY": -0.018,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "aaee3cc1889350164a7cc93272f7c3f8",
@@ -1014,6 +1094,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.787,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "61f6238c4a7f1d00da02bdc43d9f9e20",
@@ -1034,6 +1116,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.944,
+      "baseY": 0.008,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "e7e98cc5fccac28fa0c61b3de8fabe3b",
@@ -1054,6 +1138,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.777,
+      "baseY": 0.021,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "e301217df07dd1e7d6e1ee8bbab65599",
@@ -1074,6 +1160,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.337,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "346c97285c09802fc24b95dd5ed2c4ed",
@@ -1094,6 +1181,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.306,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "4e6b0329086fa5fd6545242ea18c7e48",
@@ -1114,6 +1203,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.35,
+      "baseY": 0.027,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "6854c00f61ca788818a1e5ab65a5be92",
@@ -1134,6 +1225,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.798,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "a981e8745a1cda0a67d5b89c7dc72790",
@@ -1154,6 +1246,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.157,
+      "baseY": -0.017,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "af1fe45a85aaf6448f00b5bdd59a7002",
@@ -1174,6 +1268,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.745,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "b5640719abc62ad8926b11503c94671e",
@@ -1194,6 +1290,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.745,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "1d5a4daa4406430cac79e018fea51a55",
@@ -1214,6 +1312,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.844,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "8f92929d152f8c5d1148ad15a002b20c",
@@ -1234,6 +1333,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.23,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "77756e92ea75974685830fcce784de82",
@@ -1254,6 +1354,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.753,
+      "baseY": -0.044,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "e833705be1021c7a961806d30805040e",
@@ -1274,6 +1376,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.376,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "ab8564c1b0bdf0809204963ae2833ea5",
@@ -1294,6 +1397,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.758,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "0c774556fe6b3e9fc6419dd8385dac7c",
@@ -1314,6 +1418,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.794,
+      "baseY": -0.022,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "45bdb5ed5832eac5c5f3a59332dd4f66",
@@ -1334,6 +1440,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.787,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "64167ae8beb587f196013c072553e924",
@@ -1354,6 +1462,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.944,
+      "baseY": 0.008,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "28f64062a66ccccaaaef0f0e9d1cc5e8",
@@ -1374,6 +1484,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.702,
+      "baseY": 0.019,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "68dcd1a17e4e64004bf8c889ca83e078",
@@ -1394,6 +1506,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.436,
+      "baseY": 0.016,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "72928b14d0bc3de44843e321fcca23a7",
@@ -1414,6 +1528,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.405,
+      "baseY": -0.022,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "bcf86bac680eb09dde226524d7bebd0c",
@@ -1434,6 +1550,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.926,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "f9bbf21e5ccefe21a5f1930d0b7f35fc",
@@ -1454,6 +1571,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.926,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "f3cc6bff9d659a4839558753b2545026",
@@ -1474,6 +1592,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.926,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "6b6a757bceaccc918c209005aa68d642",
@@ -1494,6 +1613,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.753,
+      "baseY": -0.044,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "95b82bda2a24c4942ac723feb92fc147",
@@ -1514,6 +1635,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.361,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "797864ae4f61afc4f80a85c4c3d8b552",
@@ -1534,6 +1657,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.376,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "03519de205ed57142ac8e4686730babf",
@@ -1554,6 +1678,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.306,
+      "baseY": -0.012,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "76a07f5e12f0d7449b908a6e81fbb645",
@@ -1574,6 +1700,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.758,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "067651d383836c606d0d325fe3b3dbd7",
@@ -1594,6 +1721,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.261,
+      "baseY": 0.074,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "122895ac50bba48499d9a8ad16e03582",
@@ -1614,6 +1743,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.35,
+      "baseY": 0.027,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "53d2a928cf32627d7918d862face4b7d",
@@ -1634,6 +1765,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.618,
+      "baseY": -0.025,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "ef868e413995bdf5ea3c0058f6dd5db0",
@@ -1654,6 +1787,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.534,
+      "baseY": -0.076,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "bea5e20c34dbde846a1728adecc9f3a8",
@@ -1674,6 +1809,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.206,
+      "baseY": 0.092,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "dc32be47fbff96049b0555160a9015c1",
@@ -1694,6 +1831,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.716,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "1163b73ff1565244787b2a59f8bbca10",
@@ -1714,6 +1852,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.865,
+      "baseY": -0.036,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "24db4b587e15e92458a05516d4c84bad",
@@ -1734,6 +1874,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.844,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "9f37a90546adba743b3b44e893f5912a",
@@ -1754,6 +1895,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.441,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "09eef04c11b4a891aa802e9f0707ffae",
@@ -1774,6 +1916,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.798,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "45f00e942534da143a3e94855455b50b",
@@ -1794,6 +1937,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.769,
+      "baseY": 0.026,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "8d2603aa9ff8aaef86c943501260c693",
@@ -1814,6 +1959,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.206,
+      "baseY": 0.092,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "c14c19bf0f3fa884bb60dee315a91b18",
@@ -1834,6 +1981,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.794,
+      "baseY": -0.022,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "f57c067108d7dd543873dd5df1414aea",
@@ -1854,6 +2003,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.157,
+      "baseY": -0.017,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "7f8657a5292f561670c991f7783a097e",
@@ -1874,6 +2025,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.716,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "2b710142f4f6a0a4f8ad21e3170ad9b3",
@@ -1894,6 +2046,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.428,
+      "baseY": -0.018,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "6be7388a76972e2ee30f9ca26891ed26",
@@ -1914,6 +2068,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.534,
+      "baseY": -0.076,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "fb531a6ac7ad9a24aa4f2a806350b1e4",
@@ -1934,6 +2090,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.756,
+      "baseY": 0.006,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "e967eab522af0e642b3d6cfbe694c06b",
@@ -1954,6 +2112,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.745,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "1d97426e890100348ac91825774d1184",
@@ -1974,6 +2134,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.787,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "f8ea29fcb550c639d77d76981792285f",
@@ -1994,6 +2156,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.702,
+      "baseY": 0.019,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "01bdf18c64f2c5b41ab41a9c898397a1",
@@ -2014,6 +2178,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.459,
+      "baseY": 0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "7ac8ffa91f182f14c8d14bfe5badd2ac",
@@ -2034,6 +2200,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.844,
+      "baseY": 0.012,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "c4c6ab478c937f14f8269ff080ba7206",
@@ -2054,6 +2222,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.944,
+      "baseY": 0.008,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "c4a38be9154f4a2dfba533c6fdb72aa9",
@@ -2074,6 +2244,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.54,
+      "baseY": 0.012,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "c6dc7f3809c18fd46bc41d15afb7cb9a",
@@ -2094,6 +2266,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.642,
+      "baseY": -0.011,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "091a84ec23abdeb4199567f108341d56",
@@ -2114,6 +2288,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.777,
+      "baseY": 0.021,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "dcc2cc58768a02345a47efe3f0cdf788",
@@ -2134,6 +2310,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.675,
+      "baseY": 0.009,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "2c4b11eca006b60f3ae5a95e5cf4c609",
@@ -2154,6 +2332,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.338,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "d628cc1cba14ca24f927c76c83ae9463",
@@ -2174,6 +2353,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.572,
+      "baseY": 0.031,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "0bac7a72dc228024fb5f36278fab79d6",
@@ -2194,6 +2375,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.192,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "5eed196a512449c439f00bc8757ed190",
@@ -2214,6 +2396,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.865,
+      "baseY": -0.036,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "6207742210e05564daf15e9c5d4c727b",
@@ -2234,6 +2418,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.702,
+      "baseY": 0.019,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "e1e6338f70e25804d8a1081909bcb066",
@@ -2254,6 +2440,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.361,
+      "baseY": -0.019,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "bbf0e92641aa4ab49bda6bc68117e01f",
@@ -2274,6 +2462,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.777,
+      "baseY": -0.042,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "df4a04d1549f9ee41a991153bd723110",
@@ -2294,6 +2484,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.338,
+      "baseY": 0.007,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "da6efd0b90360e34b9443171826d5c12",
@@ -2314,6 +2506,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.844,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "8a928e5055585f34c89f8535c40fea3f",
@@ -2354,6 +2547,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.504,
+      "baseY": -0.038,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "f16eb735da1f7ec44a2a5a0b02d1fd77",
@@ -2374,6 +2569,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.236,
+      "baseY": -0.04,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "73c28675ea0968be18f65b2d948e3227",
@@ -2394,6 +2591,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.753,
+      "baseY": -0.044,
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "929a10c33aebfc05481414ed68a7a4a3",
@@ -2414,6 +2613,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.332,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "7933df74b859d36c78324a044a42b221",
@@ -2434,6 +2635,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.332,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "98e36d4ed81904e419575fd82af5090d",
@@ -2454,6 +2657,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.157,
+      "baseY": -0.018,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b5aeef9071accaa905faa6bf726ae368",
@@ -2474,6 +2679,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.193,
+      "baseY": -0.035,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "05f3b8b976359f0d8356278893d8551a",
@@ -2494,6 +2701,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.191,
+      "baseY": -0.029,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "939a16385df87ea10809c699f41f865a",
@@ -2514,6 +2723,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.193,
+      "baseY": -0.031,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "777a77386e358913d45c8882881c31fc",
@@ -2534,6 +2745,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.199,
+      "baseY": -0.037,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b17208bbd01b8ef55342b352c04df889",
@@ -2554,6 +2767,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.506,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "2cf2ea01cb7f5bf9effc973621ade2d8",
@@ -2574,6 +2788,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.268,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b65af1b8a1e4f2a4d82417a5981a1fbb",
@@ -2594,6 +2810,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.268,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b65af1b8a1e4f2a4d82417a5981a1fbb",
@@ -2614,6 +2832,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.268,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b65af1b8a1e4f2a4d82417a5981a1fbb",
@@ -2634,6 +2854,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.466,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "841e32d9bffdb316cd3952dbee579474",
@@ -2654,6 +2875,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.195,
+      "baseY": 0.08,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "fc75ee9707ce263e068e442ff5fe4f59",
@@ -2674,6 +2897,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.19,
+      "baseY": 0.07,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "eabcdf8fa260cc551977e631c58c853d",
@@ -2694,6 +2919,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.2,
+      "baseY": 0.12,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "5c87486941cb2d2d0cef11347590249c",
@@ -2714,6 +2941,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.27,
+      "baseY": 0.053,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "69330a09d2e3ee14c8c67fc0b0807a8a",
@@ -2734,6 +2963,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.243,
+      "baseY": 0.074,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b667cf54f1c16b6554d6f6c820b64b20",
@@ -2754,6 +2985,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.451,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "e17aedb08b25964c7e450b6c1ad4ed86",
@@ -2774,6 +3006,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.451,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "2ea69d964456c99ec3434b6ec9d2eabc",
@@ -2794,6 +3027,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.451,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "758e34c95d3809f0bf09ca4354f7bce5",
@@ -2814,6 +3048,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.243,
+      "baseY": 0.074,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "45156b272e4b252a35845fbe26390d4a",
@@ -2834,6 +3070,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.234,
+      "baseY": 0.053,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "f46af4b19fad8784cafa5b40895f1898",
@@ -2854,6 +3092,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.466,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "836055176e2b5b3c0434a2bbf1ae9f65",
@@ -2874,6 +3113,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.294,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b2cb3bba509e2f5d3865c0f3e1828899",
@@ -2894,6 +3135,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.294,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "897bf1ea13f95cf5cb574a859872e8ec",
@@ -2914,6 +3157,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.765,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "248de58949feb26e3f94374dc273d7c5",
@@ -2934,6 +3178,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.765,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "f05eceb5dd016e22a9f56f3152a1e8d7",
@@ -2954,6 +3199,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.332,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "667621d8df5212123f47d41abbd591af",
@@ -2974,6 +3221,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.332,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "4e6d89ac2c5898af7c516dfe4768ec37",
@@ -2994,6 +3243,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.294,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "d05c417e32601ce3651d33a69370bde5",
@@ -3014,6 +3265,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.294,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "d2b6e5845daafe8529d6fd2726f03efe",
@@ -3034,6 +3287,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.765,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "1d3483fa52439baa192c381fdee805ba",
@@ -3074,6 +3328,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.234,
+      "baseY": 0.053,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "42e7fd3f329bb8b37cbfffc671c8369f",
@@ -3094,6 +3350,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.319,
+      "baseY": -0.026,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "6d6a36c1dc006d3f06c6e0dd564e19a0",
@@ -3114,6 +3372,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.203,
+      "baseY": 0.017,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "0eb9ca9a4c62dda29d6706fff0956383",
@@ -3134,6 +3394,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.332,
+      "baseY": -0.024,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "67d9afe695ef18f4205af1263ed51451",
@@ -3154,6 +3416,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.256,
+      "baseY": -0.017,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "6d283d0908f20b1b0d525b01acaef1e2",
@@ -3194,6 +3458,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.374,
+      "baseY": -0.123,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "04c876d7b4d4aae9a2ecde744d75045f",
@@ -3214,6 +3480,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.42,
+      "baseY": -0.024,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "291507577faa3b18f6f4db386207382a",
@@ -3254,6 +3522,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.428,
+      "baseY": 0.664,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "ffd00dcf0f47c12611009c46908bed2b",
@@ -3274,6 +3544,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.545,
+      "baseY": 0.533,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "326efacb4f545b7088948255334ec68f",
@@ -3294,6 +3566,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.44,
+      "baseY": 0.653,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "20272c81e1f9c270c414af019f4cb932",
@@ -3314,6 +3588,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.316,
+      "baseY": -0.02,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "076c6a37e047b0674f636cb65886a905",
@@ -3334,6 +3610,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.319,
+      "baseY": -0.021,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "2e9ed922ce15aced63f74879cabdf9ac",
@@ -3354,6 +3632,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.329,
+      "baseY": -0.025,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "8dce02183bcce9cc2b0916bd8222960b",
@@ -3374,6 +3654,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.33,
+      "baseY": -0.034,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "41cde9e510a7e5cb1c664c9262c62fe3",
@@ -3394,6 +3676,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.364,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "3a47006a53649d496b521bc43a79e821",
@@ -3414,6 +3698,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.364,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "9c605ebbeb90ed1d7696ca762a6fb26a",
@@ -3434,6 +3720,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.364,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "75c85896c9ca7df71675b89c8ee79793",
@@ -3454,6 +3742,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.364,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "259ed528575d179b43167d3a7dd01d7a",
@@ -3474,6 +3764,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.364,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "1c423cc150f030537d7a505e9eacd77c",
@@ -3494,6 +3786,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.364,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "332de9be847c7b9ccf5a94558bdd2d42",
@@ -3514,6 +3808,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.364,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "749ffabd996b768383fb7b8852a620ae",
@@ -3534,6 +3830,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.364,
+      "baseY": -0.008,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "90e56b4751b48db118af0b1d94e76a41",
@@ -3554,6 +3852,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.329,
+      "baseY": -0.025,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "65bd3084ce113338ba81ca00c9a15885",
@@ -3574,6 +3874,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.27,
+      "baseY": 0.053,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "69330a09d2e3ee14c8c67fc0b0807a8a",
@@ -3594,6 +3896,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.234,
+      "baseY": 0.053,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "f46af4b19fad8784cafa5b40895f1898",
@@ -3614,6 +3918,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.045,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "66a723f252d3c9098344e28c3481309c",
@@ -3634,6 +3939,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.322,
+      "baseY": -0.049,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "63376b466b280361af710f426849f82b",
@@ -3654,6 +3961,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.421,
+      "baseY": 0.611,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "a9bd5a13c604de1d31321cdd98b30577",
@@ -3674,6 +3983,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.313,
+      "baseY": -0.014,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "6379992e256a8743e0c67fda3b4171e8",
@@ -3694,6 +4005,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.309,
+      "baseY": -0.01,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "742d3425f2c59aa1a5a7a851ae864cf9",
@@ -3714,6 +4027,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.331,
+      "baseY": -0.017,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "f16ac0b02bc8f3728985f888c10ac144",
@@ -3734,6 +4049,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.313,
+      "baseY": -0.014,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "06a3032d794545b303608ac69e4ff34f",
@@ -3754,6 +4071,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.137,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
@@ -3774,6 +4093,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.137,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
@@ -3794,6 +4115,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.137,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
@@ -3814,6 +4137,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.137,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
@@ -3834,6 +4159,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.137,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
@@ -3854,6 +4181,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.137,
+      "baseY": -0.007,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
@@ -3874,6 +4203,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.304,
+      "baseY": -0.013,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "46b74660183ee3924a2ebdc4848db469",
@@ -3894,6 +4225,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.304,
+      "baseY": -0.013,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "85f4adf3369b527b9b6b6a694905b74e",
@@ -3914,6 +4247,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.239,
+      "baseY": -0.032,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "09e46b6a76400d3a4015ad77928fe962",
@@ -3934,6 +4269,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.239,
+      "baseY": -0.032,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "d16dc53ea087e60e48efbc94b8ccd779",
@@ -3954,6 +4291,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.997,
+      "baseY": 0.038,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "b91405d5821bbc7a5037d74dcee5c5c1",
@@ -3974,6 +4313,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.895,
+      "baseY": 0.14,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "1f65eb58b2662dc80a5145503b606c46",
@@ -3994,6 +4335,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 1.011,
+      "baseY": 0.14,
       "layoutTier": "decor",
       "recipeDecor": true,
       "recipeGuid": "2fab439c889ab9f4eaaaf524717df134",
