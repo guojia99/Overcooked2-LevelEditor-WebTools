@@ -62,11 +62,6 @@
             "en": "Chicken Mushroom Two Cheese Burger"
         },
         {
-            "id": "ChickenPatty",
-            "zh": "煎鸡肉饼",
-            "en": "Chicken Patty"
-        },
-        {
             "id": "CucumberBurger",
             "zh": "黄瓜汉堡",
             "en": "CucumberBurger"
@@ -290,11 +285,6 @@
             "id": "OptionalBurger",
             "zh": "汉堡组装定义",
             "en": "Optional Burger"
-        },
-        {
-            "id": "PanfriedBeef",
-            "zh": "煎牛肉",
-            "en": "PanfriedBeef"
         },
         {
             "id": "PanfriedMeatEgg",
@@ -535,11 +525,6 @@
             "id": "LettuceTomatoCheeseMeatBurger",
             "zh": "生菜番茄芝士牛肉汉堡",
             "en": "Lettuce Tomato Cheese Meat Burger"
-        },
-        {
-            "id": "LettuceTomatoCheeseChickenBurger",
-            "zh": "生菜番茄芝士鸡肉汉堡",
-            "en": "Lettuce Tomato Cheese Chicken Burger"
         },
         {
             "id": "PineappleCheeseMeatBurger",

@@ -25,7 +25,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ff0a377cca6a00a45a5a5f13ac30098d, type: 2}
   - {fileID: 11400000, guid: 09a8ff9ede819e14e9f89df70f935402, type: 2}
   - {fileID: 11400000, guid: 4ec8a736936e7744c91d254705783c2c, type: 2}
-  - {fileID: 11400000, guid: 0ec801b90ef3ea54e8a4fa0f8ebb171f, type: 2}
+  - {fileID: 11400000, guid: 171d0a1a6e4db824291c137bebe0be87, type: 2}
   optionalSOs: []
   cookingStepSO: {fileID: 0}
   cookingStepIconSO: {fileID: 0}

@@ -77,7 +77,7 @@ export function showSurfaceOverlapPickTip(
     for (const fh of fHits) {
       const key = fh.floor._key;
       const fhH = floorWalkY(fh.floor);
-      const hTag = fhH > 0.005 ? ` · h=${fhH.toFixed(2)} L${floorLayerIndex(fhH)}` : "";
+      const hTag = Math.abs(fhH) > 0.005 ? ` · h=${fhH.toFixed(2)} L${floorLayerIndex(fhH)}` : "";
       candidates.push({
         title: `${surfaceKindLabelZh(fh.floor.surfaceKind)} ${fh.floor._wCells}×${fh.floor._dCells}格${hTag}`,
         sub: `地板 · ${isThemedFloor(fh.floor) ? fh.floor.displayName : (fh.floor.materialName ?? "无材质")}`,

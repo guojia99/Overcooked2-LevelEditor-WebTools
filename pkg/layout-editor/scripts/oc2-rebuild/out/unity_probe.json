@@ -1,0 +1,8 @@
+{
+ "scenes": [
+  {"scene": "Assets/LevelSets/__probe/scenes/s_oc2_dlc03_1_5.unity", "objects": 4609, "missingComponents": 8, "ok": false, "error": "", "logs": [], "missingPaths": ["Art/Scenery/m_streetlamp_01 (1)/m_streetlamp_01 <- ", "Art/Scenery/m_streetlamp_01/m_streetlamp_01 <- ", "Art/Scenery/m_streetlamp_01 (2)/m_streetlamp_01 <- ", "Art/Scenery/m_streetlamp_01 (3)/m_streetlamp_01 <- ", "Art/Scenery/m_streetlamp_01 (4)/m_streetlamp_01 <- ", "Art/Scenery/m_streetlamp_01 (5)/m_streetlamp_01 <- ", "Art/Scenery/m_streetlamp_01 (6)/m_streetlamp_01 <- ", "Art/Scenery/m_streetlamp_01 (7)/m_streetlamp_01 <- "]},
+  {"scene": "Assets/LevelSets/__probe/scenes/s_oc2_dlc05_1_3.unity", "objects": 2790, "missingComponents": 98, "ok": false, "error": "", "logs": [], "missingPaths": ["Art/Scenery/p_dlc5_hanging_masonjar (1)/p_dlc5_hanging_masonjar <- ", "Art/Scenery/p_dlc5_hanging_masonjar (1)/p_dlc5_hanging_masonjar/m_dlc5_hanging_masonjar_01 <- ", "Art/Scenery/p_dlc5_hanging_masonjar (1)/p_dlc5_hanging_masonjar/m_dlc5_hanging_masonjar_01/m_dlc5_glassjar <- ", "Art/Scenery/p_dlc5_hanging_masonjar (1)/p_dlc5_hanging_masonjar/m_dlc5_hanging_masonjar_01/m_dlc5_masonjar_rope <- ", "Art/Scenery/p_dlc5_hanging_masonjar (1)/p_dlc5_hanging_masonjar/m_dlc5_hanging_masonjar_01/m_dlc5_masonjar_cork <- ", "Art/Scenery/p_dlc5_hanging_masonjar (1)/p_dlc5_hanging_masonjar/Particle System <- ", "Art/Scenery/p_dlc5_hanging_masonjar (1)/p_dlc5_hanging_masonjar/glow (1) <- ", "Art/Scenery/p_dlc5_hanging_masonjar (1)/p_dlc5_hanging_masonjar/Point light <- "]}
+ ],
+ "total": 2,
+ "failed": 2
+}

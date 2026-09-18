@@ -615,11 +615,12 @@ export function addFromCatalog(
   if (recordHistory) pushHistory();
   const id = `new:${cat.guid}:${uuid()}`;
   const editorKey = newEditorKey();
-  // 落在抬高的地板（高台）上时，物品初始 Y = 该处行走面高度，否则会埋进高台里。
+  // 落在抬高的地板（高台）或下沉地板（负高度）上时，物品初始 Y = 该处行走面高度，
+  // 否则会埋进高台/悬空在下沉层之上。
   // 高度过滤激活时：只取当前区间内的地板；该点无可用地板则落在区间底（当前层）。
   const filterOn = floorHeightFilterActive();
   let baseY = floorHeightAt(snapped.x, snapped.z, filterOn);
-  if (baseY < 0) baseY = filterOn && S.floorHeight.min != null ? S.floorHeight.min + 0.01 : 0;
+  if (!Number.isFinite(baseY)) baseY = filterOn && S.floorHeight.min != null ? S.floorHeight.min + 0.01 : 0;
   // Web 火锅家族（commonW1 web/hotpot/）默认高度统一 0.1（2026-09-03 用户实测：
   // 静态锅/可移动锅统一贴地基准；灶台（burner）是地面件保持 0）。
   if (cat.id === "web_utensil_large_pot_01" ||

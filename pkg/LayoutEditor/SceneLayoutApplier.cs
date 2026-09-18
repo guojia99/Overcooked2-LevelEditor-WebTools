@@ -875,14 +875,16 @@ public static class SceneLayoutApplier
             || go.name.StartsWith("Col_Floor (", StringComparison.Ordinal);
     }
 
-    /// <summary>Walk-surface height convention shared with the web editor: legacy
-    /// default floors sit at visual y=-0.05 (plane) / 0.01 (themed) while their walk
-    /// surface is 0, so small |y| values all mean "ground level". Only genuinely
-    /// raised floors (y &gt; 0.05) lift the Col_Floor collider — keeping legacy
-    /// scenes' colliders exactly at y=0 as before.</summary>
+    /// <summary>Walk-surface height convention shared with the web editor (floorHeight.ts):
+    /// legacy default floors sit at visual y=-0.05 (plane) / 0.01 (themed) / 0 (air)
+    /// while their walk surface is 0, so the dead zone [-0.05, 0.05] all means
+    /// "ground level". Genuinely raised floors (y &gt; 0.05) lift the Col_Floor
+    /// collider; genuinely sunken floors (y &lt; -0.05) lower it below ground
+    /// (negative walk heights) — keeping legacy scenes' colliders exactly at y=0
+    /// as before.</summary>
     private static float FloorWalkY(float y)
     {
-        return y <= 0.05f ? 0f : y;
+        return (y >= -0.051f && y <= 0.05f) ? 0f : y;
     }
 
     private static void CreateColFloor(Transform parent, int groundLayer, float cx, float cz, float w, float d, float y, float rotY, string colliderName = null)
@@ -2234,8 +2236,11 @@ public static class SceneLayoutApplier
             if (item.localScale != null)
             {
                 var sc = item.localScale.ToVector3();
-                if (sc.x > 0f && sc.y > 0f && sc.z > 0f)
-                    go.transform.localScale = sc;
+                var cur = go.transform.localScale;
+                if (IsInvalidScaleComponent(sc.x)) sc.x = cur.x;
+                if (IsInvalidScaleComponent(sc.y)) sc.y = cur.y;
+                if (IsInvalidScaleComponent(sc.z)) sc.z = cur.z;
+                go.transform.localScale = sc;
             }
             var col = go.AddComponent<BoxCollider>();
             // 空气墙：1 格占地 = GridCellSize（1.2）×1.132 高；1.132 为魔法数供导出识别。
@@ -2393,14 +2398,25 @@ public static class SceneLayoutApplier
         }
     }
 
+    /// <summary>缩放分量是否为「脏数据」（0 / NaN / Infinity），需要回退到当前值。
+    /// 负数是合法的 Unity 镜像约定（如 DLC4 池塘/路径装饰的 localScale.x=-7），
+    /// 必须原样保留——2026-09-17 之前这里用 `s.x &lt;= 0f`，把负数也当脏数据回退，
+    /// 对「同步布局」新建的物件（CreateInstance 里 t.localScale 是刚实例化预制体
+    /// 的默认缩放，通常是 1）会把镜像装饰的负号和量级一起冲掉，同步后镜像水体/
+    /// 路径装饰被压扁成默认大小（dlc04 池塘同步到 jia_carnival 复现）。</summary>
+    private static bool IsInvalidScaleComponent(float v)
+    {
+        return v == 0f || float.IsNaN(v) || float.IsInfinity(v);
+    }
+
     private static void ApplyItemScale(Transform t, LayoutItemDto item)
     {
         if (item == null || item.localScale == null)
             return;
         var s = item.localScale.ToVector3();
-        if (s.x <= 0f) s.x = t.localScale.x;
-        if (s.y <= 0f) s.y = t.localScale.y;
-        if (s.z <= 0f) s.z = t.localScale.z;
+        if (IsInvalidScaleComponent(s.x)) s.x = t.localScale.x;
+        if (IsInvalidScaleComponent(s.y)) s.y = t.localScale.y;
+        if (IsInvalidScaleComponent(s.z)) s.z = t.localScale.z;
         // 文档显式携带 scale 即权威（含用户改回 1,1,1 的场景——旧的「≈1 则跳过」
         // 会让改回 1 永远写不进去）；未携带（新建物件默认无 localScale）则保持
         // prefab 默认 scale 不动。仅在与当前实例值有差异时写，避免无意义 SetDirty。

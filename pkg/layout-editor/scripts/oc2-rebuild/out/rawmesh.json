@@ -1,0 +1,1531 @@
+{
+ "builtinByType": {
+  "Plane": 133,
+  "Quad": 9533,
+  "Cube": 81,
+  "Sphere": 7
+ },
+ "builtinMaterials": [
+  {
+   "name": "mat_old_tiles",
+   "count": 18166,
+   "levels": [
+    "OC2_DLC02_3_1",
+    "OC2_DLC04_1_4",
+    "OC2_DLC04_1_5",
+    "OC2_DLC04_1_7",
+    "OC2_DLC05_1_1",
+    "OC2_DLC05_1_3",
+    "OC2_DLC05_1_4",
+    "OC2_DLC05_2_1",
+    "OC2_DLC05_2_2",
+    "OC2_DLC05_2_3",
+    "OC2_DLC05_3_1",
+    "OC2_DLC05_3_2",
+    "OC2_DLC05_3_3",
+    "OC2_DLC05_H10",
+    "OC2_DLC05_H11",
+    "OC2_DLC05_H12",
+    "OC2_DLC05_SP",
+    "OC2_DLC07_1_1",
+    "OC2_DLC07_1_2",
+    "OC2_DLC07_1_3",
+    "OC2_DLC07_2_1",
+    "OC2_DLC07_3_1",
+    "OC2_DLC07_3_2",
+    "OC2_DLC07_3_3",
+    "OC2_DLC07_H15",
+    "OC2_DLC08_1_1",
+    "OC2_DLC08_1_2",
+    "OC2_DLC08_1_3",
+    "OC2_DLC08_1_4",
+    "OC2_DLC08_2_1",
+    "OC2_DLC08_2_4",
+    "OC2_DLC08_3_1",
+    "OC2_DLC08_3_2",
+    "OC2_DLC08_3_3",
+    "OC2_DLC08_3_4",
+    "OC2_DLC08_H16",
+    "OC2_DLC08_H17",
+    "OC2_DLC08_H18",
+    "OC2_DLC09_1_1",
+    "OC2_DLC09_1_2",
+    "OC2_DLC09_1_3",
+    "OC2_DLC09_1_4",
+    "OC2_DLC09_1_5",
+    "OC2_DLC10_1_1",
+    "OC2_DLC10_1_2",
+    "OC2_DLC10_1_3",
+    "OC2_DLC10_1_4",
+    "OC2_DLC10_1_5",
+    "OC2_DLC11_1_1",
+    "OC2_DLC11_1_2",
+    "OC2_DLC11_1_3",
+    "OC2_DLC11_1_4",
+    "OC2_DLC13_1_1",
+    "OC2_DLC13_1_2",
+    "OC2_DLC13_1_3",
+    "OC2_DLC13_1_4",
+    "OC2_DLC13_1_5"
+   ],
+   "source": "bundle37 :: assets/models/overcooked_legacy/mat_old_tiles.mat"
+  },
+  {
+   "name": "Default_Material",
+   "count": 99,
+   "levels": [
+    "OC2_DLC04_1_4",
+    "OC2_DLC04_1_7",
+    "OC2_DLC13_1_1"
+   ],
+   "source": "bundle34 :: assets/models/overcooked_legacy/chef/materials/default_material.mat"
+  },
+  {
+   "name": "mat_dlc2_pooltiles_01",
+   "count": 98,
+   "levels": [
+    "OC2_DLC02_1_4",
+    "OC2_DLC02_2_3",
+    "OC2_DLC02_2_4",
+    "OC2_DLC02_3_1",
+    "OC2_DLC02_3_2",
+    "OC2_DLC02_H9"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_pooltiles_01.mat"
+  },
+  {
+   "name": "mat_sp_floor_01",
+   "count": 83,
+   "levels": [
+    "OC2_Story_30",
+    "OC2_Story_36"
+   ],
+   "source": "bundle44 :: assets/models/themes/space/meshes/materials/mat_sp_floor_01.mat"
+  },
+  {
+   "name": "mat_dlc11_blg_inside_light_block",
+   "count": 49,
+   "levels": [
+    "OC2_DLC11_1_5"
+   ],
+   "source": "bundle428 :: assets/downloadablecontent/dlc11/dlc_assets/materials/mat_dlc11_blg_inside_light_block.mat"
+  },
+  {
+   "name": "0000000000000000f000000000000000",
+   "count": 44,
+   "levels": [
+    "OC2_DLC04_1_4",
+    "OC2_DLC07_2_2",
+    "OC2_DLC08_H17",
+    "OC2_DLC09_1_2",
+    "OC2_DLC09_1_4",
+    "OC2_DLC11_1_3",
+    "OC2_DLC11_1_5",
+    "OC2_DLC13_1_4",
+    "OC2_Story_00_Tutorial",
+    "OC2_Story_19",
+    "OC2_Story_20",
+    "OC2_Story_35",
+    "OC2_Story_36"
+   ],
+   "source": ""
+  },
+  {
+   "name": "FloorTiles_Chequered",
+   "count": 36,
+   "levels": [
+    "OC2_DLC07_H15"
+   ],
+   "source": "bundle36 :: assets/models/overcooked_legacy/kitchen/materials/floortiles_chequered.mat"
+  },
+  {
+   "name": "DLC2_FloorTiles_Kitchen",
+   "count": 36,
+   "levels": [
+    "OC2_DLC08_H16"
+   ],
+   "source": "bundle21 :: assets/downloadablecontent/overcooked_legacy/dlc2/dlc_assets/models/materials/dlc2_floortiles_kitchen.mat"
+  },
+  {
+   "name": "mat_dlc2_purple_carpet_01",
+   "count": 35,
+   "levels": [
+    "OC2_DLC05_H10"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_purple_carpet_01.mat"
+  },
+  {
+   "name": "mat_sk_floor_tile_sushi_04_white",
+   "count": 23,
+   "levels": [
+    "OC2_DLC05_2_1",
+    "OC2_Story_06"
+   ],
+   "source": "bundle39 :: assets/models/shared kitchen/meshes/materials/mat_sk_floor_tile_sushi_04_white.mat"
+  },
+  {
+   "name": "mat_wizard_floorboards_05",
+   "count": 18,
+   "levels": [
+    "OC2_Story_14",
+    "OC2_Story_15",
+    "OC2_Story_16",
+    "OC2_Story_28",
+    "OC2_Story_30"
+   ],
+   "source": "bundle45 :: assets/models/themes/wizards_school/meshes/materials/mat_wizard_floorboards_05.mat"
+  },
+  {
+   "name": "mat_grave_kitchen_floor_01",
+   "count": 14,
+   "levels": [
+    "OC2_Story_36"
+   ],
+   "source": "bundle42 :: assets/models/themes/graveyard/meshes/materials/mat_grave_kitchen_floor_01.mat"
+  },
+  {
+   "name": "mat_dlc13_grass_01",
+   "count": 13,
+   "levels": [
+    "OC2_DLC13_1_1",
+    "OC2_DLC13_1_3",
+    "OC2_DLC13_1_5"
+   ],
+   "source": "bundle448 :: assets/downloadablecontent/dlc13/assets/models/dressing/materials/mat_dlc13_grass_01.mat"
+  },
+  {
+   "name": "mat_dlc2_pooltiles_04",
+   "count": 8,
+   "levels": [
+    "OC2_DLC02_1_4"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_pooltiles_04.mat"
+  },
+  {
+   "name": "mat_dlc2_woodenfloor_02",
+   "count": 8,
+   "levels": [
+    "OC2_DLC02_1_4"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_woodenfloor_02.mat"
+  },
+  {
+   "name": "mat_wizard_stonetile_01",
+   "count": 5,
+   "levels": [
+    "OC2_Story_30"
+   ],
+   "source": "bundle45 :: assets/models/themes/wizards_school/meshes/materials/mat_wizard_stonetile_01.mat"
+  },
+  {
+   "name": "mat_dlc2_floortile_01",
+   "count": 4,
+   "levels": [
+    "OC2_DLC02_1_4"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_floortile_01.mat"
+  },
+  {
+   "name": "EmissivePlane",
+   "count": 4,
+   "levels": [
+    "OC2_DLC07_2_3"
+   ],
+   "source": "bundle295 :: assets/downloadablecontent/dlc07/dlc_assets/models/dressing assets/materials/emissiveplane.mat"
+  },
+  {
+   "name": "mat_dlc08_black_01",
+   "count": 4,
+   "levels": [
+    "OC2_DLC08_H18"
+   ],
+   "source": "bundle355 :: assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/materials/mat_dlc08_black_01.mat"
+  },
+  {
+   "name": "m_sp_light_occluder_01",
+   "count": 4,
+   "levels": [
+    "OC2_Story_36"
+   ],
+   "source": "bundle44 :: assets/models/themes/space/meshes/materials/m_sp_light_occluder_01.mat"
+  },
+  {
+   "name": "mat_raft_floor_fill",
+   "count": 3,
+   "levels": [
+    "OC2_Story_07",
+    "OC2_Story_17"
+   ],
+   "source": "bundle44 :: assets/models/themes/raft/meshes/materials/mat_raft_floor_fill.mat"
+  },
+  {
+   "name": "mat_dlc2_floortile_1_4",
+   "count": 2,
+   "levels": [
+    "OC2_DLC02_1_4"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_floortile_1_4.mat"
+  },
+  {
+   "name": "mat_dlc2_river_water_01",
+   "count": 2,
+   "levels": [
+    "OC2_DLC02_2_2"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_river_water_01.mat"
+  },
+  {
+   "name": "mat_dlc2_river_bottom",
+   "count": 2,
+   "levels": [
+    "OC2_DLC02_2_2"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_river_bottom.mat"
+  },
+  {
+   "name": "mat_dlc2_floortile_2_3",
+   "count": 2,
+   "levels": [
+    "OC2_DLC02_2_3"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_floortile_2_3.mat"
+  },
+  {
+   "name": "mat_city_path_01_1x4",
+   "count": 2,
+   "levels": [
+    "OC2_Story_19"
+   ],
+   "source": "bundle40 :: assets/models/themes/city_sushi/meshes/materials/mat_city_path_01_1x4.mat"
+  },
+  {
+   "name": "mat_city_path_03",
+   "count": 2,
+   "levels": [
+    "OC2_Story_19"
+   ],
+   "source": "bundle40 :: assets/models/themes/city_sushi/meshes/materials/mat_city_path_03.mat"
+  },
+  {
+   "name": "PitchBlack",
+   "count": 2,
+   "levels": [
+    "OC2_Story_36"
+   ],
+   "source": "bundle38 :: assets/models/overcooked_legacy/onionhouse/materials/pitchblack.mat"
+  },
+  {
+   "name": "mat_dlc2_woodenfloor_03",
+   "count": 1,
+   "levels": [
+    "OC2_DLC02_3_2"
+   ],
+   "source": "bundle163 :: assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/materials/mat_dlc2_woodenfloor_03.mat"
+  },
+  {
+   "name": "Blue",
+   "count": 1,
+   "levels": [
+    "OC2_DLC02_SP"
+   ],
+   "source": "bundle38 :: assets/models/overcooked_legacy/overcooked_legacy_materials/blue.mat"
+  },
+  {
+   "name": "mat_dlc5_ground_1_2",
+   "count": 1,
+   "levels": [
+    "OC2_DLC05_1_2"
+   ],
+   "source": "bundle248 :: assets/downloadablecontent/dlc05/dlc_assets/models/dressing assets/materials/mat_dlc5_ground_1_2.mat"
+  },
+  {
+   "name": "mat_dlc5_ripples_01",
+   "count": 1,
+   "levels": [
+    "OC2_DLC05_1_2"
+   ],
+   "source": "bundle248 :: assets/downloadablecontent/dlc05/dlc_assets/models/dressing assets/materials/mat_dlc5_ripples_01.mat"
+  },
+  {
+   "name": "mat_dlc5_ground_camp_3_1",
+   "count": 1,
+   "levels": [
+    "OC2_DLC05_3_1"
+   ],
+   "source": "bundle248 :: assets/downloadablecontent/dlc05/dlc_assets/models/dressing assets/materials/mat_dlc5_ground_camp_3_1.mat"
+  },
+  {
+   "name": "mat_raft_water",
+   "count": 1,
+   "levels": [
+    "OC2_DLC07_3_1"
+   ],
+   "source": "bundle44 :: assets/models/themes/raft/meshes/materials/mat_raft_water.mat"
+  },
+  {
+   "name": "mat_dlc7_city_dark_01",
+   "count": 1,
+   "levels": [
+    "OC2_DLC07_H13"
+   ],
+   "source": "bundle295 :: assets/downloadablecontent/dlc07/dlc_assets/models/dressing assets/materials/city/mat_dlc7_city_dark_01.mat"
+  },
+  {
+   "name": "DLC2_Floortile_Kitchen",
+   "count": 1,
+   "levels": [
+    "OC2_DLC08_2_1"
+   ],
+   "source": "bundle21 :: assets/downloadablecontent/overcooked_legacy/dlc2/dlc_assets/models/materials/dlc2_floortile_kitchen.mat"
+  },
+  {
+   "name": "mat_dlc08_ground_h18",
+   "count": 1,
+   "levels": [
+    "OC2_DLC08_H18"
+   ],
+   "source": "bundle355 :: assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/materials/mat_dlc08_ground_h18.mat"
+  },
+  {
+   "name": "mat_dlc13_water_01",
+   "count": 1,
+   "levels": [
+    "OC2_DLC13_1_2"
+   ],
+   "source": "bundle448 :: assets/downloadablecontent/dlc13/assets/models/dressing/materials/mat_dlc13_water_01.mat"
+  },
+  {
+   "name": "mat_grave_grass_floor_01_15x15",
+   "count": 1,
+   "levels": [
+    "OC2_Story_00_Tutorial"
+   ],
+   "source": "bundle42 :: assets/models/themes/graveyard/meshes/materials/mat_grave_grass_floor_01_15x15.mat"
+  },
+  {
+   "name": "mat_raft_water_bottom_02",
+   "count": 1,
+   "levels": [
+    "OC2_Story_18"
+   ],
+   "source": "bundle44 :: assets/models/themes/raft/meshes/materials/mat_raft_water_bottom_02.mat"
+  },
+  {
+   "name": "raft_water",
+   "count": 1,
+   "levels": [
+    "OC2_Story_18"
+   ],
+   "source": "bundle88 :: assets/standard assets/environment/water/water/materials/raft_water.mat"
+  },
+  {
+   "name": "mat_raft_sky",
+   "count": 1,
+   "levels": [
+    "OC2_Story_18"
+   ],
+   "source": "bundle44 :: assets/models/themes/raft/meshes/materials/mat_raft_sky.mat"
+  },
+  {
+   "name": "mat_wizard_floorboards_06",
+   "count": 1,
+   "levels": [
+    "OC2_Story_28"
+   ],
+   "source": "bundle45 :: assets/models/themes/wizards_school/meshes/materials/mat_wizard_floorboards_06.mat"
+  },
+  {
+   "name": "mat_sp_blacktiles_01",
+   "count": 1,
+   "levels": [
+    "OC2_Story_30"
+   ],
+   "source": "bundle44 :: assets/models/themes/space/meshes/materials/mat_sp_blacktiles_01.mat"
+  },
+  {
+   "name": "mat_UI_WarpTileableClouds2",
+   "count": 1,
+   "levels": [
+    "OC2_Story_30"
+   ],
+   "source": "bundle42 :: assets/models/themes/dynamic_03/meshes/materials/mat_ui_warptileableclouds2.mat"
+  },
+  {
+   "name": "mat_grave_grass_floor_01",
+   "count": 1,
+   "levels": [
+    "OC2_Story_36"
+   ],
+   "source": "bundle42 :: assets/models/themes/graveyard/meshes/materials/mat_grave_grass_floor_01.mat"
+  }
+ ],
+ "noModelContainer": [
+  {
+   "mesh": "models/themes/raft/meshes/raft_wake_03.asset",
+   "count": 220,
+   "sample": "Design/Animated Objects/Section_01/Dressing/foam (4)"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_gear_rack_middle_01.asset",
+   "count": 112,
+   "sample": "Design/Animated Objects/AnimatedBridges/BridgeTop/Rack/m_dlc7_drawbridge_gear_rack_middle_01"
+  },
+  {
+   "mesh": "models/shared kitchen/meshes/MovingPlatform_Straight_Inner.asset",
+   "count": 72,
+   "sample": "Design/MovingPlatformSystem/MovingSection/StraightB5/MovingPlatform_Straight_Inner"
+  },
+  {
+   "mesh": "models/themes/raft/meshes/raft_wake_02.asset",
+   "count": 51,
+   "sample": "Design/Animated Objects/MovingRaft/Raft (Moving)/raft_floor_10x5 (1)/Plane (3)"
+  },
+  {
+   "mesh": "models/overcooked_legacy/kitchen/arctic/Ice_StraightA_0.asset",
+   "count": 45,
+   "sample": "Design/Floors/Ice_StraightB 15 (38)"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_bolt_01.asset",
+   "count": 40,
+   "sample": "Art/Dressing/m_dlc7_drawbridge_bolt_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc03/dlc_assets/models/winterwonderland/ripple_2.asset",
+   "count": 30,
+   "sample": "Design/Animated/Animated Objects/ScrollingIslands/Island 1/Platform Mesh (1)/Ripple/ripple"
+  },
+  {
+   "mesh": "models/themes/city_sushi/meshes/wheel_RF.asset",
+   "count": 29,
+   "sample": "Art/Animated Objects/TropicalTraffic/UP/Car_LightBlue/wheel_RF"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_gear_arm_01.asset",
+   "count": 28,
+   "sample": "Art/Scenery/animated objects/m_dlc07_drawbridge_02/Cogs/m_dlc7_drawbridge_gear_arm_01"
+  },
+  {
+   "mesh": "models/themes/mine/meshes/m_mine_rope_01.asset",
+   "count": 27,
+   "sample": "Art/Animated Objects/m_mine_rope_01_ani/m_mine_rope_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc03/dlc_assets/models/winterwonderland/ripple.asset",
+   "count": 21,
+   "sample": "Art/Scenery/Top Land/icecliff_snow_270 (11)/ripple"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/dressingassets/m_dlc4_coyfish_01_0.asset",
+   "count": 20,
+   "sample": "Art/Animated Objects/Coyfish_Generic01/m_dlc4_coyfish_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/dressingassets/m_dlc4_coyfish_02.asset",
+   "count": 20,
+   "sample": "Art/Animated Objects/Coyfish_Generic01/m_dlc4_coyfish_02"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_gear_alt_01.asset",
+   "count": 18,
+   "sample": "Design/Animated Objects/AnimatedBridges/GearsTop/m_dlc7_drawbridge_gear_alt_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_gear_main_01.asset",
+   "count": 18,
+   "sample": "Design/Animated Objects/AnimatedBridges/GearsTop/m_dlc7_drawbridge_gear_main_01"
+  },
+  {
+   "mesh": "models/themes/city_sushi/meshes/glass.asset",
+   "count": 17,
+   "sample": "Art/Animated Objects/TropicalTraffic/UP/Car_LightBlue/glass"
+  },
+  {
+   "mesh": "models/shared kitchen/meshes/MovingPlatform_Straight_Inner_0.asset",
+   "count": 16,
+   "sample": "Design/MovingPlatformSystem/MovingSection/CornerTL/MovingPlatform_Corner_Inner"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_gear_rack_end_01.asset",
+   "count": 14,
+   "sample": "Design/Animated Objects/AnimatedBridges/BridgeTop/Rack/m_dlc7_drawbridge_gear_rack_end_01"
+  },
+  {
+   "mesh": "models/themes/air_balloon/meshes/m_airballoon_rope_3units_01_0.asset",
+   "count": 13,
+   "sample": "Design/Animated Objects/StageAnimation/Balloon Basket/m_airballoon_rope_3units_01_ani (3)/m_airballoon_rope_3units_01"
+  },
+  {
+   "mesh": "models/overcooked_legacy/props/switch/m_sk_switch_base_01.asset",
+   "count": 12,
+   "sample": "Design/RestOfLevel/Gameplay Stations/RightSwitch/Base"
+  },
+  {
+   "mesh": "models/overcooked_legacy/props/switch/m_sk_switch_pad_01.asset",
+   "count": 12,
+   "sample": "Design/RestOfLevel/Gameplay Stations/RightSwitch/Pad"
+  },
+  {
+   "mesh": "downloadablecontent/dlc03/dlc_assets/models/winterwonderland/ripple_1.asset",
+   "count": 10,
+   "sample": "Design/Animated/Animated Objects/ScrollingIslands/Island 1/Platform Mesh (1)/Ripple/ripple"
+  },
+  {
+   "mesh": "models/themes/air_balloon/meshes/m_airballoon_rope_top_01_0.asset",
+   "count": 9,
+   "sample": "Stage/Design/Walls/Air Ballon Sides/Phase_1/GameObject/air_balloon_straight_01/m_airballoon_rope_top_01_ani/m_airballoon_rope_top_01"
+  },
+  {
+   "mesh": "models/themes/city_sushi/meshes/wheel_LR.asset",
+   "count": 8,
+   "sample": "Art/Animated Objects/TropicalTraffic/UP/Car_LightBlue/wheel_LR"
+  },
+  {
+   "mesh": "models/themes/city_sushi/meshes/wheel_LR1.asset",
+   "count": 8,
+   "sample": "Art/Animated Objects/TropicalTraffic/UP/Car_LightBlue/wheel_LR1"
+  },
+  {
+   "mesh": "models/themes/air_balloon/meshes/m_air_balloon_sky.asset",
+   "count": 7,
+   "sample": "CamerShakeGroup/CameraShakeParent/MultiplayerGameCamera/Background/skyPlane"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/characters/m_dlc4_dragon_head_01.asset",
+   "count": 6,
+   "sample": "Design/Animated Objects/Dragon/Segment_01_Pos/Segment_01_Rot/DragonHead_01/m_dlc4_dragon_01/m_dlc4_dragon_head_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_bolt_02.asset",
+   "count": 6,
+   "sample": "Art/Scenery/animated objects/m_dlc07_drawbridge_02/Stone Frame/m_dlc7_drawbridge_bolt_02"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_bolt_03.asset",
+   "count": 6,
+   "sample": "Art/Scenery/animated objects/m_dlc07_drawbridge_02/Stone Frame/m_dlc7_drawbridge_bolt_03"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_bolt_04.asset",
+   "count": 6,
+   "sample": "Art/Scenery/animated objects/m_dlc07_drawbridge_02/Stone Frame/m_dlc7_drawbridge_bolt_04"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_bolt_05.asset",
+   "count": 6,
+   "sample": "Art/Scenery/animated objects/m_dlc07_drawbridge_02/Stone Frame/m_dlc7_drawbridge_bolt_05"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/shared kitchen/m_dlc7_drawbridge_gear_rack_end_02.asset",
+   "count": 6,
+   "sample": "Design/Animated Objects/AnimatedBridges/BridgeTop/Rack/m_dlc7_drawbridge_gear_rack_end_02"
+  },
+  {
+   "mesh": "downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc5_buntingrope_02.asset",
+   "count": 6,
+   "sample": "Art/Scenery/m_dlc08_rope_bridge_01 (1)/m_dlc5_buntingrope_02"
+  },
+  {
+   "mesh": "models/themes/city_sushi/meshes/wheel_RR.asset",
+   "count": 5,
+   "sample": "Art/Animated Objects/TropicalTraffic/UP/Car_LightBlue/wheel_RR"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/characters/m_dlc4_dragon_05.asset",
+   "count": 5,
+   "sample": "Design/Animated Objects/Dragon/Segment_07_Pos/Segment_07_Rot/DragonBody_07/m_dlc4_dragon_03"
+  },
+  {
+   "mesh": "downloadablecontent/dlc08/dlc_assets/models/dressing assets/tent roof/a_tent_roof_placeholder.asset",
+   "count": 4,
+   "sample": "Art/tent_roof/a_tent_roof_placeholder"
+  },
+  {
+   "mesh": "downloadablecontent/dlc08/dlc_assets/models/dressing assets/tent roof/tent_roof_placeholder_b.asset",
+   "count": 4,
+   "sample": "Art/tent_roof/tent_roof_placeholder_b"
+  },
+  {
+   "mesh": "downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_rail_shaft.asset",
+   "count": 4,
+   "sample": "Design/Animated Objects/Moving Section/m_dlc08_cart_wheel_01 (1)/m_dlc08_rail_shaft"
+  },
+  {
+   "mesh": "downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_rail_stop_plate.asset",
+   "count": 4,
+   "sample": "Design/Animated Objects/Moving Section/m_dlc08_cart_wheel_01 (1)/m_dlc08_rail_stop_plate"
+  },
+  {
+   "mesh": "downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_rail_wheels.asset",
+   "count": 4,
+   "sample": "Design/Animated Objects/Moving Section/m_dlc08_cart_wheel_01 (1)/m_dlc08_rail_wheels"
+  },
+  {
+   "mesh": "models/themes/mine/meshes/m_mine_rope_02.asset",
+   "count": 4,
+   "sample": "Art/Exterior_decoration/Decoration/m_mine_rope_02_ani (2)/m_mine_rope_02"
+  },
+  {
+   "mesh": "models/overcooked_legacy/kitchen/Box001_0.asset",
+   "count": 4,
+   "sample": "Stage/Space/Art/Gameplay Stations/ChoppingBoard2"
+  },
+  {
+   "mesh": "models/characters/chefs/meshes/Knife_2.asset",
+   "count": 4,
+   "sample": "Stage/Space/Art/Gameplay Stations/Knife"
+  },
+  {
+   "mesh": "models/themes/city_sushi/meshes/m_city_pallett_01.asset",
+   "count": 4,
+   "sample": "Design/Animated Objects/Kitchen/Block_1/m_city_pallet_01 (2)"
+  },
+  {
+   "mesh": "models/themes/wizards_school/meshes/m_wizard_platform_4x4_02.asset",
+   "count": 3,
+   "sample": "Design/Moving Platform Stuff/MovingPlatform/MovingSection/m_wizard_platform_4x4_01 (1)"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_sewer_stones_01.asset",
+   "count": 3,
+   "sample": "Art/dressing/m_dlc07_sewer_stones_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/dressingassets/m_dlc4_lvl4_river_01.asset",
+   "count": 2,
+   "sample": "Art/Foliage/m_dlc4_lvl4_river_01/m_dlc4_lvl4_river_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/dressingassets/m_dlc4_lvl4_river_ripples_01.asset",
+   "count": 2,
+   "sample": "Art/Foliage/m_dlc4_lvl4_river_01/m_dlc4_lvl4_river_ripples_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/shadow_caster_Mesh.asset",
+   "count": 2,
+   "sample": "Shadow Casters/Shadowcast_Combined"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_camp_ripple_Special.asset",
+   "count": 2,
+   "sample": "Art/Animated Objects/m_dlc5_water_special/m_dlc5_camp_ripple_Special"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_camp_water_Special.asset",
+   "count": 2,
+   "sample": "Art/Animated Objects/m_dlc5_water_special/m_dlc5_camp_water_Special"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_slime_01.asset",
+   "count": 2,
+   "sample": "Art/Dressing/m_dlc07_1_3_slime/m_dlc07_slime_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_slime_ripples_01.asset",
+   "count": 2,
+   "sample": "Art/Dressing/m_dlc07_1_3_slime/m_dlc07_slime_ripples_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_window_frame.asset",
+   "count": 2,
+   "sample": "Art/dressing/m_dlc07_large_window_01/m_dlc07_window_frame"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_ripples_3_2_01.asset",
+   "count": 2,
+   "sample": "Art/m_dlc07_water_3_2/m_dlc07_ripples_3_2_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_water_3_2_01.asset",
+   "count": 2,
+   "sample": "Art/m_dlc07_water_3_2/m_dlc07_water_3_2_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_city_brokenfloor_02.asset",
+   "count": 2,
+   "sample": "Design/MovingPlatforms/MovingPlatformSystem/Counters/floor_2 (1)"
+  },
+  {
+   "mesh": "models/themes/mine/meshes/m_mine_planks_01.asset",
+   "count": 2,
+   "sample": "Design/Animated Objects/Platform/m_mine_planks_01 (1)"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Float_Banana.asset",
+   "count": 2,
+   "sample": "Design/Animated Objects/Floats/TopFloats/Float_1/1_2_Float_Banana"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Float_Chilli.asset",
+   "count": 2,
+   "sample": "Design/Animated Objects/Floats/TopFloats/Float_2/1_2_Float_Chilli"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Float_Broccoli.asset",
+   "count": 2,
+   "sample": "Design/Animated Objects/Floats/TopFloats/Float_3/1_2_Float_Broccoli"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Float_Kevin.asset",
+   "count": 2,
+   "sample": "Design/Animated Objects/Floats/TopFloats/Float_4/1_2_Float_Kevin"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Float_Tomato.asset",
+   "count": 2,
+   "sample": "Design/Animated Objects/Floats/TopFloats/Float_5/1_2_Float_Tomato"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Float_Eggplant.asset",
+   "count": 2,
+   "sample": "Design/Animated Objects/Floats/TopFloats/Float_6/1_2_Float_Eggplant"
+  },
+  {
+   "mesh": "models/overcooked_legacy/kitchen/city/pPlane1.asset",
+   "count": 2,
+   "sample": "Design/Animated Objects/Raft One/glow_01 (1)"
+  },
+  {
+   "mesh": "models/themes/city_sushi/meshes/m_city_woodenslats_01.asset",
+   "count": 2,
+   "sample": "Art/Walls/m_city_woodslats_01 (1)"
+  },
+  {
+   "mesh": "models/themes/city_sushi/meshes/m_city_wall_window_02_inside1.asset",
+   "count": 2,
+   "sample": "Art/Walls/brick wall window 02 (12)/m_city_wall_window_02_inside_02/m_city_wall_window_02_inside1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc03/dlc_assets/models/winterwonderland/m_dlc3_level_02_snowfloor_0.asset",
+   "count": 1,
+   "sample": "Art/Scenery/Top Land/m_dlc3_level_02_snowfloor_03"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/dressingassets/mud.asset",
+   "count": 1,
+   "sample": "Art/Scenery/m_dlc4_mud_1-1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/dressingassets/m_dlc4_floor_Stone1_2_08.asset",
+   "count": 1,
+   "sample": "Art/Scenery/Floors/m_dlc4_floor_Stone1_2_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_camp_4_1_river.asset",
+   "count": 1,
+   "sample": "Art/water/m_dlc5_camp_4_1_river_01/m_dlc5_camp_4_1_river"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_camp_4_1_river_ripples.asset",
+   "count": 1,
+   "sample": "Art/water/m_dlc5_camp_4_1_river_01/m_dlc5_camp_4_1_river_ripples"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_cliffs_1_4.asset",
+   "count": 1,
+   "sample": "Art/m_dlc5_forest_floor_1_4_01/m_dlc5_cliffs_1_4"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_forest_floor_1_4.asset",
+   "count": 1,
+   "sample": "Art/m_dlc5_forest_floor_1_4_01/m_dlc5_forest_floor_1_4"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_grasscards_1_4.asset",
+   "count": 1,
+   "sample": "Art/m_dlc5_forest_floor_1_4_01/m_dlc5_grasscards_1_4"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_cliff_2_3.asset",
+   "count": 1,
+   "sample": "Art/Terrain/m_dlc5_2_3_floor_01/m_dlc5_cliff_2_3"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_grasscards_2_3.asset",
+   "count": 1,
+   "sample": "Art/Terrain/m_dlc5_2_3_floor_01/m_dlc5_grasscards_2_3"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_ground_2_5.asset",
+   "count": 1,
+   "sample": "Art/Terrain/m_dlc5_2_3_floor_01/m_dlc5_ground_2_5"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/ripples.asset",
+   "count": 1,
+   "sample": "Design/m_groundmesh_2_4/ripples"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_camp_4_1_river_0.asset",
+   "count": 1,
+   "sample": "Art/Scenery/Assets/m_dlc5_camp_3_3_river_01/m_dlc5_camp_4_1_river"
+  },
+  {
+   "mesh": "downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_camp_4_1_river_ripples_0.asset",
+   "count": 1,
+   "sample": "Art/Scenery/Assets/m_dlc5_camp_3_3_river_01/m_dlc5_camp_4_1_river_ripples"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_1_3_ripples.asset",
+   "count": 1,
+   "sample": "m_dlc07_1_3_water/m_dlc07_1_3_ripples"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_1_3_water.asset",
+   "count": 1,
+   "sample": "m_dlc07_1_3_water/m_dlc07_1_3_water 1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_2_1_ripples_01.asset",
+   "count": 1,
+   "sample": "Art/Floor/m_dlc07_2_1_water_01/m_dlc07_2_1_ripples_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_2_1_water_01.asset",
+   "count": 1,
+   "sample": "Art/Floor/m_dlc07_2_1_water_01/m_dlc07_2_1_water_01 1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_3_3_slime_01.asset",
+   "count": 1,
+   "sample": "Art/m_dlc07_3_3_slime_01/m_dlc07_3_3_slime_01 1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_3_3_slime_ripples_01.asset",
+   "count": 1,
+   "sample": "Art/m_dlc07_3_3_slime_01/m_dlc07_3_3_slime_ripples_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc07/dlc_assets/models/dressing assets/m_dlc07_city_brokenfloor_01.asset",
+   "count": 1,
+   "sample": "Scenery/StreetDressing/m_dlc07_hiddencity_floor_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_ring_2_1.asset",
+   "count": 1,
+   "sample": "Art/Props/m_dlc08_ring_2-1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc08/dlc_assets/models/dressing assets/glass_0.asset",
+   "count": 1,
+   "sample": "Art/Props/m_dlc08_conveyorcover_h18/glass"
+  },
+  {
+   "mesh": "downloadablecontent/dlc10/dlc_assets/models/dressingassets/m_dlc10_ripples.asset",
+   "count": 1,
+   "sample": "Art/Scenery/m_dlc10_1_2_water/m_dlc10_ripples"
+  },
+  {
+   "mesh": "downloadablecontent/dlc10/dlc_assets/models/dressingassets/m_dlc10_water_middle.asset",
+   "count": 1,
+   "sample": "Art/Scenery/m_dlc10_1_2_water/m_dlc10_water_middle"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_1/Transparent_0.asset",
+   "count": 1,
+   "sample": "Art/Scenery/Static/Transparent"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Reciever_Bake_2.asset",
+   "count": 1,
+   "sample": "Art/Baked/1_2_Reciever_Bake_2"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Reciever_Bake_1.asset",
+   "count": 1,
+   "sample": "Art/Baked/1_2_Reciever_Bake_1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_2/_1_2_Caster_Bake_1.asset",
+   "count": 1,
+   "sample": "Art/Baked/1_2_Caster_Bake_1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_3/_mesh_shadow_caster_1.asset",
+   "count": 1,
+   "sample": "Art/Scenery/-mesh_shadow_caster_1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/prefabs/dressing/m_parrot_q1.asset",
+   "count": 1,
+   "sample": "Art/Animated Objects/Birds/m_Beach_Parrot_03/m_parrot:q1"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_4/_mesh_3.asset",
+   "count": 1,
+   "sample": "Art/Scenery/CastingShaddows_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB1_Alpha_Caster.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_NB1_Art_Baked/NB1_Art/NB1_Alpha_Caster"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB1_Alpha_NonCaster.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_NB1_Art_Baked/NB1_Art/NB1_Alpha_NonCaster"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB1_Items_receive_cast.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_NB1_Art_Baked/NB1_Art/NB1_Items_receive_cast"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB1_Road_receive_noCast_Building.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_NB1_Art_Baked/NB1_Art/NB1_Road_receive_noCast_Building"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB1_Road_receive_noCast_Road.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_NB1_Art_Baked/NB1_Art/NB1_Road_receive_noCast_Road"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_01_Glass.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Building_01_Glass"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_01_rooftiles.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Building_01_rooftiles"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_01_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Building_01_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_02_glass.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Building_02_glass"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_02_roof.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Building_02_roof"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_02_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Building_02_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_03_rooftiles.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Building_03_rooftiles"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_03_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Building_03_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Confetti_01.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Confetti_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Floor_Path_Road.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Floor_Path_Road"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB4_Alpha.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section NB4_Art_Baked/NB4_Art/NB4_Alpha"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB4_Items_receive_cast.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section NB4_Art_Baked/NB4_Art/NB4_Items_receive_cast"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB4_Road_receive_noCast_Building.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section NB4_Art_Baked/NB4_Art/NB4_Road_receive_noCast_Building"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/NB4_Road_receive_noCast_Road.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section NB4_Art_Baked/NB4_Art/NB4_Road_receive_noCast_Road"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_04_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section_04_baked/Building_04_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_05_Glass.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section_04_baked/Building_05_Glass"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_05_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section_04_baked/Building_05_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Buildint_05_Rooftiles.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section_04_baked/Buildint_05_Rooftiles"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Confetti_04.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section_04_baked/Confetti_04"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Floor_Road_Path_04.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section_04_baked/Floor_Road_Path_04"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Props_04.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_4/Section_04_baked/Props_04"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB2_Alpha.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_SB2_Art_Baked/SB2_Art/SB2_Alpha"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB2_Items_receive_cast_Bunting.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_SB2_Art_Baked/SB2_Art/SB2_Items_receive_cast_Bunting"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB2_Items_receive_cast_Stuff.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_SB2_Art_Baked/SB2_Art/SB2_Items_receive_cast_Stuff"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB2_Road_receive_noCast_Building.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_SB2_Art_Baked/SB2_Art/SB2_Road_receive_noCast_Building"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB2_Road_receive_noCast_Road.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_SB2_Art_Baked/SB2_Art/SB2_Road_receive_noCast_Road"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_07_roof.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_02_baked/Building_07_roof"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_07_Walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_02_baked/Building_07_Walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_08_glass.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_02_baked/Building_08_glass"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_08_rooftiles.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_02_baked/Building_08_rooftiles"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_08_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_02_baked/Building_08_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Floor_Confetti_02.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_02_baked/Floor_Confetti_02"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Floor_Path_Road_02.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_02_baked/Floor_Path_Road_02"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Props_02.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_2/Section_02_baked/Props_02"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB3_Alpha_Caster.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_SB3_Art_Baked/SB3_Art/SB3_Alpha_Caster"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB3_Alpha_NonCaster.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_SB3_Art_Baked/SB3_Art/SB3_Alpha_NonCaster"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB3_Items_receive_cast.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_SB3_Art_Baked/SB3_Art/SB3_Items_receive_cast"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB3_Road_receive_noCast_Building_01.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_SB3_Art_Baked/SB3_Art/SB3_Road_receive_noCast_Building_01"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB3_Road_receive_noCast_Building_02.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_SB3_Art_Baked/SB3_Art/SB3_Road_receive_noCast_Building_02"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/new/SB3_Road_receive_noCast_Road.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_SB3_Art_Baked/SB3_Art/SB3_Road_receive_noCast_Road"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_09_roof.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Building_09_roof"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_09_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Building_09_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_11_glass.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Building_11_glass"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_11_roof.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Building_11_roof"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_11_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Building_11_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_12_glass.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Building_12_glass"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_12_roof.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Building_12_roof"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Building_12_walls.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Building_12_walls"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Floor_confetti_03.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Floor_confetti_03"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Floor_Path_Road_03.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Floor_Path_Road_03"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Props_03_Back.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Props_03_Back"
+  },
+  {
+   "mesh": "downloadablecontent/dlc11/dlc_assets/models/s_summer_1_5/Props_03_front.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/SouthBank/SB_3/Section_03_baked/Props_03_front"
+  },
+  {
+   "mesh": "models/characters/kevin/meshes/KevinGlasses.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/m_kevin_Summer_01/KevinGlasses"
+  },
+  {
+   "mesh": "models/characters/kevin/meshes/M_Kevin_02.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/m_kevin_Summer_01/M_Kevin_02"
+  },
+  {
+   "mesh": "downloadablecontent/dlc04/dlc_assets/models/dressingassets/canopy_1.asset",
+   "count": 1,
+   "sample": "Art/Merged Dressing/Dressing/p_dlc13_tree_green 1/canopy"
+  },
+  {
+   "mesh": "models/themes/air_balloon/meshes/m_airballoon_rope_bottom_03_0.asset",
+   "count": 1,
+   "sample": "Stage/Art/Sushi 1/m_airballoon_rope_bottom_03_ani/m_airballoon_rope_bottom_03"
+  },
+  {
+   "mesh": "models/themes/air_balloon/meshes/m_airballoon_rope_top_04_0.asset",
+   "count": 1,
+   "sample": "Stage/Art/Sushi 1/m_airballoon_rope_top_04_ani/m_airballoon_rope_top_04"
+  },
+  {
+   "mesh": "models/overcooked_legacy/kitchen/boat/Seagull1.asset",
+   "count": 1,
+   "sample": "Art/External Decoration/Seagull (1)/Seagull1"
+  }
+ ],
+ "sceneEmbedded": [
+  {
+   "mesh": "guid:",
+   "count": 50,
+   "sample": "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/m_map_bird_01"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_64.asset",
+   "count": 23,
+   "sample": "Design/Rest Of Level/Floors/mi_cliff_corner_in_02/mi_cliff_corner_in_02"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_86.asset",
+   "count": 15,
+   "sample": "Stage/Design/Walls/Air Ballon Sides/Phase_1/GameObject/air_balloon_straight_01/m_airballoon_side_01"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_40.asset",
+   "count": 12,
+   "sample": "Art/LightBlockers/City/Cube (1)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_45.asset",
+   "count": 7,
+   "sample": "Art/Scenery/PoolWaterSurfaceCombined Floor Tile"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_25.asset",
+   "count": 7,
+   "sample": "Design/Walls/fence_pillar_01 (1)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_41.asset",
+   "count": 6,
+   "sample": "Art/Scenery/LightBakingBlockers/Cube"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_34.asset",
+   "count": 6,
+   "sample": "Art/External Decoration/m_city_grass_01 (4)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_33.asset",
+   "count": 6,
+   "sample": "Art/External Decoration/m_city_grass_01 (3)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_35.asset",
+   "count": 5,
+   "sample": "Art/External Decoration/m_city_grass_01 (1)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_61.asset",
+   "count": 5,
+   "sample": "Design/Walls/grave_door_01/Plane"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_89.asset",
+   "count": 4,
+   "sample": "Design/Gameplay Stations/Switch_Right/Switch_Base"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_87.asset",
+   "count": 4,
+   "sample": "Design/Gameplay Stations/p_dlc08_button_01 (1)/Switch_Base"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_70.asset",
+   "count": 4,
+   "sample": "Design/Gameplay Stations/LeftSwitch/Switch_Base"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_67.asset",
+   "count": 4,
+   "sample": "Design/Gameplay Stations/RightSwitch/Switch_Base"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_57.asset",
+   "count": 4,
+   "sample": "Design/Gameplay Stations/Switch_Green/Switch_Base"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_37.asset",
+   "count": 4,
+   "sample": "Design/Work Surfaces/countertop_fake (5)/Worktop/Mesh"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene) 2_0.asset",
+   "count": 4,
+   "sample": "Design/Walls/mi_stone_wall_02_13x8 (4)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_147.asset",
+   "count": 4,
+   "sample": "Design/Rest Of Stage/KitchenPieces/Floor/Floors/Kitchen_Tile_ 3 (230)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_114.asset",
+   "count": 3,
+   "sample": "Design/Floors/Kitchen_Tile_ 3 (75)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_140.asset",
+   "count": 3,
+   "sample": "Art/Balloon Decoration/m_airballoon_bunting_01 (1)/m_airballoon_bunting_01"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_32.asset",
+   "count": 3,
+   "sample": "Art/External Decoration/m_city_grass_01 (2)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_138.asset",
+   "count": 3,
+   "sample": "Art/Balloon Decoration/m_airballoon_bunting_01 (1)/m_airballoon_bunting_01"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_47.asset",
+   "count": 2,
+   "sample": "Art/Scenery/Right_Building/First_Floor/Roof_Flooring (1)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_46.asset",
+   "count": 2,
+   "sample": "Art/Scenery/First_Floor/Roof_Flooring"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_126.asset",
+   "count": 2,
+   "sample": "Design/RestOfLevel/Gameplay Stations/RightSwitch/Switch_Base"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_83.asset",
+   "count": 2,
+   "sample": "Design/Gameplay Stations/SliderButton/Switch_Base"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene) 4.asset",
+   "count": 2,
+   "sample": "Art/Scenery/Flooring_01"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_62.asset",
+   "count": 2,
+   "sample": "Art/Decoration/mi_crystals_01_Green (1)/m_mine_crystal_02 (3)"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_137.asset",
+   "count": 2,
+   "sample": "Design/Environment Objects/air_balloon_burner_flame_on/Mesh"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_112.asset",
+   "count": 2,
+   "sample": "Art/Walls/brick wall window 02 (12)/m_city_wall_window_02_glass"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_101.asset",
+   "count": 2,
+   "sample": "Design/Restaurant Floor/floor_carpet_purple_h3_01"
+  },
+  {
+   "mesh": "Mesh/Quad_122.asset",
+   "count": 1,
+   "sample": "Art/Scenery/Sand"
+  },
+  {
+   "mesh": "Mesh/Quad_120.asset",
+   "count": 1,
+   "sample": "Art/Scenery/River/raft_water_Combined Floor Tile"
+  },
+  {
+   "mesh": "Mesh/Quad_121.asset",
+   "count": 1,
+   "sample": "Art/Scenery/River/Water_Bottom_Combined Floor Tile"
+  },
+  {
+   "mesh": "Mesh/Quad_47.asset",
+   "count": 1,
+   "sample": "Art/Scenery/Pool/Roof_Flooring (2)"
+  },
+  {
+   "mesh": "Mesh/Quad_7.asset",
+   "count": 1,
+   "sample": "Art/Scenery/Large Water"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_106.asset",
+   "count": 1,
+   "sample": "Design/Gameplay Stations/Bin 1/Worktop/Mesh"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene) 3_0.asset",
+   "count": 1,
+   "sample": "Art/Scenery/-mesh_Alpha"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_39.asset",
+   "count": 1,
+   "sample": "Art/Scenery/-mesh_shadow_caster_2"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene) 2.asset",
+   "count": 1,
+   "sample": "Art/Scenery/-mesh_shadow_receiver"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene) 3.asset",
+   "count": 1,
+   "sample": "Art/Scenery/RightSideBuilding_01"
+  },
+  {
+   "mesh": "Mesh/Mesh_211.asset",
+   "count": 1,
+   "sample": "Design/Animated Objects/Banks/NordBank/NB_1/Section_01_baked/Props_01"
+  },
+  {
+   "mesh": "Mesh/Combined Mesh (root_ scene)_141.asset",
+   "count": 1,
+   "sample": "Design/Rest Of Stage/Gameplay Stations/Burner/airballoon_burner_standard (2)/Mesh"
+  },
+  {
+   "mesh": "Mesh/Quad_93.asset",
+   "count": 1,
+   "sample": "Stage/Design/Floors/Sushi Only Floor/Kitchen Floor/Combined Floor Black Tile"
+  },
+  {
+   "mesh": "Mesh/Quad_98.asset",
+   "count": 1,
+   "sample": "Stage/Design/Floors/Sushi Only Floor/Kitchen Floor/Combined Floor Black Tile"
+  },
+  {
+   "mesh": "Mesh/Quad_99.asset",
+   "count": 1,
+   "sample": "Stage/Design/Floors/Sushi Only Floor/Kitchen Floor/Combined Floor Blue Tile"
+  },
+  {
+   "mesh": "Mesh/Quad_90.asset",
+   "count": 1,
+   "sample": "Stage/Design/Floors/Sushi Only Floor/Kitchen Floor/Combined Floor Blue Tile"
+  },
+  {
+   "mesh": "Mesh/Quad_91.asset",
+   "count": 1,
+   "sample": "Stage/Design/Floors/Sushi Only Floor/Kitchen Floor/Combined Floor Blue Tile"
+  },
+  {
+   "mesh": "Mesh/Quad_96.asset",
+   "count": 1,
+   "sample": "Stage/Design/Floors/Sushi Only Floor/Kitchen Floor/Combined Floor White Tile"
+  },
+  {
+   "mesh": "Mesh/Quad_95.asset",
+   "count": 1,
+   "sample": "Stage/Design/Floors/Sushi Only Floor/Kitchen Floor/Combined Floor White Tile"
+  }
+ ]
+}

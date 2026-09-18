@@ -1,0 +1,152 @@
+{
+ "total": 75879,
+ "skewed": 872,
+ "buckets": {
+  "1~5cm": 225,
+  "<1cm": 570,
+  ">20cm": 28,
+  "5~20cm": 49
+ },
+ "worst": [
+  [
+   50.145,
+   "OC2_Story_18",
+   "Stage/Mine Section 2/WaterPlane/dynamic_raft_water/splahes rock (4)"
+  ],
+  [
+   50.145,
+   "OC2_Story_18",
+   "Stage/Mine Section 2/WaterPlane/dynamic_raft_water/splahes rock (3)"
+  ],
+  [
+   50.145,
+   "OC2_Story_18",
+   "Stage/Mine Section 2/WaterPlane/dynamic_raft_water/splahes rock (2)"
+  ],
+  [
+   50.145,
+   "OC2_Story_18",
+   "Stage/Mine Section 2/WaterPlane/dynamic_raft_water/splahes rock (1)"
+  ],
+  [
+   15.371,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_02 (2)/ripple_1 (10)"
+  ],
+  [
+   9.258,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (8)/ripple_1 (13)"
+  ],
+  [
+   9.17,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (8)/ripple_1 (12)"
+  ],
+  [
+   9.083,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (8)/ripple_1 (11)"
+  ],
+  [
+   6.004,
+   "OC2_DLC02_SP",
+   "Design/Animated Objects/Tide/Sea/TopParent/TopLayerWaveRight/FloatDirection/Debris2/WaveFloat_Generic (2)/m_sp_alien_gue_edge_01"
+  ],
+  [
+   6.004,
+   "OC2_DLC02_SP",
+   "Design/Animated Objects/Tide/Sea/TopParent/TopLayerWaveRight/FloatDirection/Debris2 (1)/WaveFloat_Generic (2)/m_sp_alien_gue_edge_01"
+  ],
+  [
+   5.844,
+   "OC2_DLC02_SP",
+   "Design/Animated Objects/Tide/Sea/TopParent/TopLayerWaveRight/FloatDirection/Debris/WaveFloat_Generic/m_sp_alien_gue_edge_01"
+  ],
+  [
+   5.046,
+   "OC2_DLC02_SP",
+   "Design/Animated Objects/Tide/Sea/TopParent/TopLayerWaveRight/FloatDirection/Crate/WaveFloat_Generic (1)/m_sp_alien_gue_edge_01"
+  ],
+  [
+   5.046,
+   "OC2_DLC02_SP",
+   "Design/Animated Objects/Tide/Sea/TopParent/TopLayerWaveRight/FloatDirection/Crate (2)/WaveFloat_Generic (1)/m_sp_alien_gue_edge_01"
+  ],
+  [
+   5.046,
+   "OC2_DLC02_SP",
+   "Design/Animated Objects/Tide/Sea/TopParent/TopLayerWaveRight/FloatDirection/Crate (1)/WaveFloat_Generic (1)/m_sp_alien_gue_edge_01"
+  ],
+  [
+   4.721,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (3)/ripple_1 (15)"
+  ],
+  [
+   4.701,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (3)/ripple_1 (14)"
+  ],
+  [
+   4.68,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (3)/ripple_1 (13)"
+  ],
+  [
+   2.333,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_02 (5)/ripple_1 (9)"
+  ],
+  [
+   1.788,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_02 (1)/ripple_1 (12)"
+  ],
+  [
+   1.174,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_03 (1)/ripple_1 (12)"
+  ],
+  [
+   0.564,
+   "OC2_Story_06",
+   "Stage/Art/Sushi 1/Balloon/m_airballoon_balloon_01"
+  ],
+  [
+   0.366,
+   "OC2_Story_18",
+   "Stage/Mine Section 1/Top Section/Art/Animated Objects/waterfall/splahes background (2)"
+  ],
+  [
+   0.334,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (4)/ripple_1 (16)"
+  ],
+  [
+   0.331,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (4)/ripple_1 (15)"
+  ],
+  [
+   0.328,
+   "OC2_DLC02_3_3",
+   "Art/Scenery/RockCliff/rock_01 (4)/ripple_1 (14)"
+  ],
+  [
+   0.327,
+   "OC2_Story_30",
+   "Stage/Space Section/Design/Level/Walls/Walls_Design/WallBlock 65 (106)"
+  ],
+  [
+   0.251,
+   "OC2_Story_26",
+   "Art/Balloon Decoration/m_airballoon_rope_top_corner_01/rope pivot/m_airballoon_ropehighres_01"
+  ],
+  [
+   0.245,
+   "OC2_DLC10_1_4",
+   "Art/Scenery/GameObject (2)/GameObject/p_dlc10_flooredge_02 (84)"
+  ]
+ ]
+}

@@ -1,0 +1,1481 @@
+[
+ {
+  "id": "OC2_DLC02_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -9148191338865610265
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "89ab2fc8ef3072cf65b7a865fa02eb2f",
+  "label": "Text.Menu.DLC02Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   6981024618382943529
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "34fce1fa473e65c174285205c11ba7b5",
+  "label": "Text.Menu.DLC02Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   1464327950628727597
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "5e5c1f4546ac6849fc09813caed597ef",
+  "label": "Text.Menu.DLC02Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -3958898066806330103
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "0539a696fac63e8102e4f7110be9e6a7",
+  "label": "Text.Menu.DLC02Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_2_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -8984368849813084666
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "b70dfa938dfb9585f56528b7cbecdb97",
+  "label": "Text.Menu.DLC02Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_2_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_2_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -8139538415732320384
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "8dcad21751bb43d8fe83b4be6c00208c",
+  "label": "Text.Menu.DLC02Level06",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_2_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_2_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -1467519108238258024
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "13cdac6ecd3548a9bae903890d9ef266",
+  "label": "Text.Menu.DLC02Level07",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_2_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_2_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -230913951847100092
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "89133d6989e6652241bdeaed418db754",
+  "label": "Text.Menu.DLC02Level08",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_2_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_3_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -4800574641207108426
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "01bc74b801a34d81f253b61776b43a81",
+  "label": "Text.Menu.DLC02Level09",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_3_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_3_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -2066790606491025665
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "7bc9b3d049873b140f6ad57cf3e4eadd",
+  "label": "Text.Menu.DLC02Level10",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_3_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_3_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   308789387424380331
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "c3a67786d531e56a02b079a14019ea5a",
+  "label": "Text.Menu.DLC02Level11",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_3_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_SP",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -8061243920681466583
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "804f825620429c69ef80749f281fdd33",
+  "label": "Text.Menu.DLC02Level12",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_SP/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC02_H9",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   5672273099933930349
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "14a4c7b11fff99969a5019ac7b4e5c2e",
+  "label": "Text.Menu.DLC02HiddenLevel01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC02_H9/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC03_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   6522997851520705861
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "f8abb981be486d500761fd333f32fda0",
+  "label": "Text.Menu.DLC03Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC03_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC03_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -2394838574577189008
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "7f93557147208a4999ac30a3c377cfda",
+  "label": "Text.Menu.DLC03Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC03_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC03_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   845505380793545658
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "bb2eec56a749027f1b297db4d62aef94",
+  "label": "Text.Menu.DLC03Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC03_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC03_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   8,
+   2780368088416727831
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "c9145df26e423a956fdbf4215b964e3a",
+  "label": "Text.Menu.DLC03Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC03_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC03_1_5",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   8,
+   -1497728624002528204
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "df9d83da41bb8eb1d784e6b061578608",
+  "label": "Text.Menu.DLC03Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC03_1_5/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC04_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -7180573955418613072
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "49116966037ed34ed845bf0fed447bce",
+  "label": "Text.Menu.DLC04Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC04_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC04_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   5518724264236654090
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "0bfb107898a9021e14467f71065b80f2",
+  "label": "Text.Menu.DLC04Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC04_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC04_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   8720705107656163246
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "9dc1eb0a44989783e19635eb208f1db2",
+  "label": "Text.Menu.DLC04Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC04_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC04_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   6249883766553553680
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "730546a3467f6b831f3c2a99a2711756",
+  "label": "Text.Menu.DLC04Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC04_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC04_1_5",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -3849952059685603571
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "51b261d16823ff31cf1c6302f58034d0",
+  "label": "Text.Menu.DLC04Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC04_1_5/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC04_1_6",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -2899728378467810123
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "de0bdd05db3e4a9b674a14edbf0b167f",
+  "label": "Text.Menu.DLC04Level06",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC04_1_6/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC04_1_7",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   2,
+   -2951713781817497565
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "764007ee7d3575dd63cdf41e107f7769",
+  "label": "Text.Menu.DLC04Level07",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC04_1_7/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -7095561944958534475
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "7a2e928fadb86305308b0fd60b9dfc63",
+  "label": "Text.Menu.DLC05Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -3961026279463893571
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "3f2134394e84599e8abdce437816648d",
+  "label": "Text.Menu.DLC05Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -6323857931139987211
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "cdea19d571151ca4a4a2be997f247d62",
+  "label": "Text.Menu.DLC05Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   3627945647513585514
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "b44c723541ee90114dacd0a64527c85b",
+  "label": "Text.Menu.DLC05Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_2_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   6028262581518260308
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "210531f541f969ef8f54b14706c184ec",
+  "label": "Text.Menu.DLC05Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_2_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_2_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -7023264075889666900
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "6f6acc69bd382fea6ecb12ad5c17a9c5",
+  "label": "Text.Menu.DLC05Level06",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_2_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_2_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -7312530813329201190
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "6cdfa3cfb046e1ce8866f7ad3be952dc",
+  "label": "Text.Menu.DLC05Level07",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_2_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_2_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   5134144827967918976
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "3e1815910383c48484610bca81d3d393",
+  "label": "Text.Menu.DLC05Level08",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_2_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_3_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -5048243592100263935
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "e698a1cd5b3b83e498ebfa86e7181053",
+  "label": "Text.Menu.DLC05Level09",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_3_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_3_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   4372167802321343540
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "666606cb3a4320cbb626030d27f96980",
+  "label": "Text.Menu.DLC05Level10",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_3_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_3_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -6699229332602894901
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "ec5c01935aa92acd8402050b5c3e09a9",
+  "label": "Text.Menu.DLC05Level11",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_3_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_SP",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   4008862290349840300
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "fa7ca9c36265eb2180d6a39415965c14",
+  "label": "Text.Menu.DLC05Level12",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_SP/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_H10",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   9102052428910700341
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "105f507a8cd1d899938af11b32f7be08",
+  "label": "Text.Menu.DLC05HiddenLevel01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_H10/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_H11",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   2982556720012625197
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "baecdb5fc493d16e08ffda4f35b93b76",
+  "label": "Text.Menu.DLC05HiddenLevel02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_H11/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC05_H12",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   5215853205925491060
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "22b64585b93376d97948607b62aa09fe",
+  "label": "Text.Menu.DLC05HiddenLevel03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC05_H12/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   6745394979844140599
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "2a27c5af23523c868049044f4d616a2b",
+  "label": "Text.Menu.DLC07Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -7647865452821928162
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "943b3fed41bf1dc90b56cae7a76fb690",
+  "label": "Text.Menu.DLC07Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   5067578685064135195
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "657341a52f49c141ddd15540bb67b406",
+  "label": "Text.Menu.DLC07Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_2_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   6845820533215049705
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "91d44227beaf52e3924f9ed7e71adc4b",
+  "label": "Text.Menu.DLC07Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_2_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_2_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   7734562227505826108
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "b1d4510b18c55d09cc4914e606a664ba",
+  "label": "Text.Menu.DLC07Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_2_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_2_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   8286523510160093984
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "5ea765ee0912cf6d732580484e4183f4",
+  "label": "Text.Menu.DLC07Level06",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_2_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_3_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   9,
+   7573866892365636257
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "83a635b36e9e362996b3bee2ec91164a",
+  "label": "Text.Menu.DLC07Level07",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_3_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_3_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   9,
+   -3974644984852024540
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "d55c19b3d40e12511c1088346d1ea437",
+  "label": "Text.Menu.DLC07Level08",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_3_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_3_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   9,
+   722590530142867826
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "24415306073ef55587ec4a9745f57569",
+  "label": "Text.Menu.DLC07Level09",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_3_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_H13",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   9,
+   7618797492779335451
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "ccd6de6be50915ac81e21c3c965bc603",
+  "label": "Text.Menu.DLC07HiddenLevel01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_H13/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_H14",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   9,
+   -6734142975213266120
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "0bcb10e26d29fe249b0b6fa6aa848b67",
+  "label": "Text.Menu.DLC07HiddenLevel02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_H14/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC07_H15",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   9,
+   7444200849479401342
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "056eba2f1aa060cf760ad0b4ef8a6960",
+  "label": "Text.Menu.DLC07HiddenLevel03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC07_H15/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   8181434536697589370
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "5ca25f35486819cae70a49567886d705",
+  "label": "Text.Menu.DLC08Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   2496784099663535584
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "b1f773d679ca2948a35b7ffd0a4a59cd",
+  "label": "Text.Menu.DLC08Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   6574896172112430324
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "9f1a5cfe30bce0bb068eb68442a3515c",
+  "label": "Text.Menu.DLC08Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   1437215042441246485
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "8d1c605ee1f26474689c822701f1393a",
+  "label": "Text.Menu.DLC08Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_2_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -3465403319759898491
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "b19c4ffb7704ce76accf06f60b69eb15",
+  "label": "Text.Menu.DLC08Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_2_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_2_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   4761379780485367275
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "8cfa9f3f1912de568d1c03a956d49104",
+  "label": "Text.Menu.DLC08Level06",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_2_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_2_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -6736310445325693251
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "4beab366121d1a834150c2848ae99d9b",
+  "label": "Text.Menu.DLC08Level07",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_2_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_2_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -8531519222987671947
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "5e7e59b849d6cc03ea6367f9dd8ee0c0",
+  "label": "Text.Menu.DLC08Level08",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_2_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_3_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   6716469643928668035
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "3664e67d60b9fe7009afe1b298734ac0",
+  "label": "Text.Menu.DLC08Level09",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_3_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_3_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   2829738082859672045
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "2b8ff7a33ee5ee25c7799433184d61ef",
+  "label": "Text.Menu.DLC08Level10",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_3_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_3_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -4472323386763960144
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "27e54c17116c25ca880c1c0eea737a8b",
+  "label": "Text.Menu.DLC08Level11",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_3_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_3_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -8097293588548997577
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "f93ffb2e8151ccbb5820eb2158da3f1e",
+  "label": "Text.Menu.DLC08Level12",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_3_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_H16",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   2320634608452189355
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "8c8b39dc4d54651900b4b9b8ed34e261",
+  "label": "Text.Menu.DLC08HiddenLevel01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_H16/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_H17",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -5594970418844450321
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "be3e8dfed351382bfab0ad8b89bdaa5f",
+  "label": "Text.Menu.DLC08HiddenLevel02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_H17/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC08_H18",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   784533854737010301
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "9cae00df7a5215edaa3b1737fba8764e",
+  "label": "Text.Menu.DLC08HiddenLevel03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC08_H18/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC09_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   5820148821861258174
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "954e1ee466e9ad663d08935c2e852acd",
+  "label": "Text.Menu.DLC09Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC09_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC09_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -4000533131193228079
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "b0ffcbf08afae29732c137e269bb8741",
+  "label": "Text.Menu.DLC09Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC09_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC09_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -6920563918185274677
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "4fa5b4524f5889761c2e2a075d2f5d56",
+  "label": "Text.Menu.DLC09Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC09_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC09_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   -8313899718020060484
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "68516905f3c31ad34f34fc515cf9d0a1",
+  "label": "Text.Menu.DLC09Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC09_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC09_1_5",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   0,
+   5325741508511313437
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "f88f52d58168bfefcb4239499c3cdb3c",
+  "label": "Text.Menu.DLC09Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC09_1_5/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC10_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   17,
+   -4960836825921200037
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "4db3373187abba4a9412ec2dbd4bf1a6",
+  "label": "Text.Menu.DLC10Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC10_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC10_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   17,
+   -7823668997638889100
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "4b82f2b553f59fb89dac0750dfe7e93c",
+  "label": "Text.Menu.DLC10Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC10_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC10_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   17,
+   8761364904873250209
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "127d57d2ffd4d5c434f108082cdf3861",
+  "label": "Text.Menu.DLC10Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC10_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC10_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   17,
+   -2897924031272480169
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "c08a1e02a9a7d421989639d03f8ec045",
+  "label": "Text.Menu.DLC10Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC10_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC10_1_5",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   17,
+   4611031140406811760
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "0585562da8e6222b70e78735e9e8f129",
+  "label": "Text.Menu.DLC10Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC10_1_5/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC11_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   18,
+   -1836812716150732265
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "d532d664a806c97fdb1cfd46f4de941e",
+  "label": "Text.Menu.DLC11Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC11_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC11_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   18,
+   -1293996309034664911
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "d42648f46bb21fb6d0d5d32134c3b837",
+  "label": "Text.Menu.DLC11Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC11_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC11_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   18,
+   -2413840471626508295
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "3d8b838f3d76948d6da516e978dc6014",
+  "label": "Text.Menu.DLC11Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC11_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC11_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   18,
+   2757169594216565094
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "c8caf5f27ff07fafb7d564090e65140c",
+  "label": "Text.Menu.DLC11Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC11_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC11_1_5",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   18,
+   -843119297219462870
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "66beb0699f8c3229a0d61f8a1e758f16",
+  "label": "Text.Menu.DLC11Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC11_1_5/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC13_1_1",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   19,
+   2927532615125459280
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "d6108056fd2e7005fa7da52c266c3b79",
+  "label": "Text.Menu.DLC13Level01",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC13_1_1/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC13_1_2",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   19,
+   -2103392455709396224
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "bfb454be0c0d6f29e5838e608930c393",
+  "label": "Text.Menu.DLC13Level02",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC13_1_2/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC13_1_3",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   19,
+   3225474887465013331
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "1a40a1182a7b3f432cf9385ebaf4dadb",
+  "label": "Text.Menu.DLC13Level03",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC13_1_3/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC13_1_4",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   19,
+   -2364186670975886251
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "25c898fd03c118dab03a03774b0cdbaa",
+  "label": "Text.Menu.DLC13Level04",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC13_1_4/screenshot.png"
+ },
+ {
+  "id": "OC2_DLC13_1_5",
+  "set": "oc2_dlc_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   19,
+   -3717959755924653448
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "00b1d80a940565595ecd5cb7fd29a73b",
+  "label": "Text.Menu.DLC13Level05",
+  "written": "Assets/LevelSets/oc2_dlc_story/data/OC2_DLC13_1_5/screenshot.png"
+ }
+]

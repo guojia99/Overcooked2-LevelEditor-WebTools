@@ -40,11 +40,19 @@ MonoBehaviour:
   mixingProgress: 0
   bunSO: {fileID: 11400000, guid: 965ff691e25e50b0c5151ea9a97899d4, type: 2}
   ingredientContainerCapacity: 7
-  ingredientModelSOs: []
+  ingredientModelSOs:
+  - {fileID: 0}
+  - {fileID: 11400000, guid: 3308b577f0da163b084e03e19c1d74a8, type: 2}
+  - {fileID: 11400000, guid: 3308b577f0da163b084e03e19c1d74a8, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   ingredientModels:
   - {fileID: 0}
-  - {fileID: 1816414911090194, guid: f0c82106d05ad864bad90bf75ac9fae1, type: 2}
-  - {fileID: 1816414911090194, guid: f0c82106d05ad864bad90bf75ac9fae1, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 1560826516507934, guid: e2576f385cb71f34fb9429dec22157a4, type: 2}
   - {fileID: 1979481260764518, guid: a5510a35a72144448900bd0aae6bade1, type: 2}
   - {fileID: 1544824255904376, guid: df9ef1419b80f054fa564c43769855ed, type: 2}

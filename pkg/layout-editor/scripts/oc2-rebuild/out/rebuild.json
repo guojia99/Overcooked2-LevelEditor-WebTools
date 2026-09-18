@@ -1,0 +1,178 @@
+{
+ "generatedAt": "2026-09-17 14:13:33",
+ "dry": true,
+ "levels": [
+  {
+   "id": "OC2_DLC02_2_2",
+   "set": "oc2_dlc_story",
+   "scene": "s_oc2_dlc02_2_2",
+   "ok": true,
+   "stats": {
+    "items": 558,
+    "counters": 43,
+    "utensils": 6,
+    "scenery": 509,
+    "skewed": 26,
+    "walls": 43,
+    "killplanes": 4,
+    "floors": 4,
+    "players": 4,
+    "lights": 1,
+    "stubs": 24,
+    "drops": 158,
+    "skips": 6,
+    "dropDetail": {
+     "scene-embedded-mesh": 2,
+     "mesh-no-model-container": 46,
+     "empty": 97,
+     "mesh-unresolved": 13
+    },
+    "skipDetail": {
+     "fx": 2,
+     "subtree:lightmap_0_baker": 1,
+     "subtree:lightmap_1_baker": 1,
+     "subtree:lightmap_2_baker": 1,
+     "particle": 1
+    },
+    "dropPaths": [
+     "Art/Scenery/River/raft_water_Combined Floor Tile",
+     "Art/Scenery/River/Water_Bottom_Combined Floor Tile",
+     "Design/Animated Objects/Section_01/Dressing/foam (4)",
+     "Design/Animated Objects/Section_01/Dressing/foam (5)",
+     "Design/Animated Objects/Section_01/Dressing/foam (6)",
+     "Design/Animated Objects/Section_01/Dressing/foam (7)",
+     "Design/Animated Objects/Section_01/Dressing/foam (8)",
+     "Design/Animated Objects/Section_01/Dressing/foam (9)",
+     "Design/Animated Objects/Section_01/Dressing/foam (10)",
+     "Design/Animated Objects/Section_01/Dressing/foam (11)",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:LLeg/Bird_takeoff_flight_and_landing:LFoot",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:LWing/Bird_takeoff_flight_and_landing:LTip",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:Neck/Bird_takeoff_flight_and_landing:Head",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:RLeg/Bird_takeoff_flight_and_landing:RFoot",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:RWing/Bird_takeoff_flight_and_landing:RTip",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:Tail",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/m_map_bird_01",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (3)/transform1",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (4)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:LLeg/Bird_takeoff_flight_and_landing:LFoot",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (4)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:LWing/Bird_takeoff_flight_and_landing:LTip",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (4)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:Neck/Bird_takeoff_flight_and_landing:Head",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (4)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:RLeg/Bird_takeoff_flight_and_landing:RFoot",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (4)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:RWing/Bird_takeoff_flight_and_landing:RTip",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (4)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:Tail",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (4)/m_map_bird_01",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (4)/transform1",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (5)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:LLeg/Bird_takeoff_flight_and_landing:LFoot",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (5)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:LWing/Bird_takeoff_flight_and_landing:LTip",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (5)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:Neck/Bird_takeoff_flight_and_landing:Head",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (5)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:RLeg/Bird_takeoff_flight_and_landing:RFoot",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (5)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:RWing/Bird_takeoff_flight_and_landing:RTip",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (5)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:Tail",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (5)/m_map_bird_01",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (5)/transform1",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (6)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:LLeg/Bird_takeoff_flight_and_landing:LFoot",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (6)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:LWing/Bird_takeoff_flight_and_landing:LTip",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (6)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:Neck/Bird_takeoff_flight_and_landing:Head",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (6)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:RLeg/Bird_takeoff_flight_and_landing:RFoot",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (6)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:RWing/Bird_takeoff_flight_and_landing:RTip",
+     "Design/Animated Objects/Section_01/Dressing/seagull_01 (6)/Bird_takeoff_flight_and_landing:group1/Bird_takeoff_flight_and_landing:Base/Bird_takeoff_flight_and_landing:Tail"
+    ],
+    "floorMaterialsMissing": []
+   },
+   "bundles": [
+    "bundle163",
+    "bundle167",
+    "bundle47"
+   ],
+   "gridHalf": [
+    11,
+    5
+   ],
+   "cell": 1.2,
+   "envRoot": "CampaignGameEnvironment",
+   "seconds": 1.82,
+   "verify": {
+    "counters": {
+     "src": 43,
+     "gen": 43,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "utensils": {
+     "src": 6,
+     "gen": 6,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "scenery": {
+     "src": 509,
+     "gen": 509,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "chefs": {
+     "src": 4,
+     "gen": 4,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "walls": {
+     "src": 44,
+     "gen": 44,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "killplanes": {
+     "src": 4,
+     "gen": 4,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "floors": {
+     "src": 4,
+     "gen": 4,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "total": 0
+   }
+  }
+ ],
+ "createdAssets": [],
+ "materials": {
+  "created": [],
+  "reused": [
+   "mat_dlc2_river_bottom",
+   "mat_dlc2_river_water_01"
+  ],
+  "mismatched": [],
+  "failed": []
+ }
+}

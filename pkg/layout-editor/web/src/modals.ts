@@ -73,7 +73,18 @@ export function ensureModalRoot(): HTMLElement {
   return root;
 }
 
-export function openModal(title: string, bodyHtml: string, footerHtml: string): HTMLElement {
+export interface ModalOptions {
+  /** 关闭点背景遮罩关闭弹窗（默认允许）。设为 false 时只能通过按钮关闭，
+   *  避免误触遮罩导致已填写内容丢失。 */
+  closeOnBackdrop?: boolean;
+}
+
+export function openModal(
+  title: string,
+  bodyHtml: string,
+  footerHtml: string,
+  opts?: ModalOptions
+): HTMLElement {
   const root = ensureModalRoot();
   root.innerHTML = `
     <div class="modal-backdrop" data-modal-backdrop>
@@ -84,9 +95,11 @@ export function openModal(title: string, bodyHtml: string, footerHtml: string): 
       </div>
     </div>
   `;
-  root.querySelector("[data-modal-backdrop]")?.addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) closeModal();
-  });
+  if (opts?.closeOnBackdrop !== false) {
+    root.querySelector("[data-modal-backdrop]")?.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+  }
   return root;
 }
 

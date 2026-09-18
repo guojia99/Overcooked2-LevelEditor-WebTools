@@ -5,7 +5,7 @@
  * 来源：
  *  A. otherRepicesData/100 Burger/          全量（成品11 + 中间产物13 + 组装定义 OptionalBurger）
  *     - 丢弃 OptionalBurgerExpand.asset（与 OptionalBurger.asset 内容完全相同的副本）
- *     - 修复 ChickenPatty 的悬空食材引用 7b0da7f9… → common01 ChickenSO（f5e2ed0b…）
+ *     - 修复 ChickenPatty 的悬空食材引用 7b0da7f9… → common03 DLC08_Chicken（60adb1f0…）
  *  B. otherRepicesData/custom_recipes 2/呆喵新菜谱/汉堡/
  *     - 成品汉堡：剔除夹心 >8 层（29全都有巨无霸 9层、36超级无敌巨无霸 16层）
  *     - 夹心定义（CustomRecipeOptionalBurgerSO）：保留 11素/26鸡肉/27牛肉/33菠萝牛肉 四个；
@@ -57,9 +57,13 @@ const SCRIPT_GUIDS = new Set([
  *  覆盖源数据中的 0（100 Burger 中间产物/组装定义）与旧号段（呆喵 1000xxx / 成品 19990xxx）。 */
 const UID_PREFIX = 58321;
 
-/** ChickenPatty 悬空引用修复：源数据的生鸡肉 guid 在全仓库无对应资产 → common01 ChickenSO */
+/** ChickenPatty 悬空引用修复：源数据的生鸡肉 guid 在全仓库无对应资产。
+ *  历史上曾错误地顶成 common01 ChickenSO（f5e2ed0b…，bundle47 OC1 legacy 鸡），
+ *  与呆喵源 FriedChicken 用的 DLC08_Chicken 形成"两种生鸡肉"双轨（2026-09-18 已统一）。
+ *  commonW2 口径：**鸡肉一律 DLC08**（食材 common03/dlc08/DLC08_Chicken，
+ *  夹心模型 p_dlc8_recipe_chicken_burger_01），与"面皮一律 DLC8"同级纪律。 */
 const GUID_REMAP = new Map([
-  ["7b0da7f99b2b118f3127794b84effd06", "f5e2ed0b5f84bfb4da375a513302084e"],
+  ["7b0da7f99b2b118f3127794b84effd06", "60adb1f0c4d250dffb7581931157b10f"],
 ]);
 
 /** 呆喵 recipeName 去重修正（文件名 → 新 recipeName）：

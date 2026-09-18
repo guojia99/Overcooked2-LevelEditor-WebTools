@@ -351,7 +351,7 @@ export function openFloorEditorModal(f: EditorFloor) {
       <label>宽(格) <input type="number" min="1" id="fe-w" value="${f._wCells}" /></label>
       <label>高(格) <input type="number" min="1" id="fe-d" value="${f._dCells}" /></label>
       <label>旋转(°) <input type="number" step="90" id="fe-rot" value="${normalizeRot(f.localRotationY)}" /></label>
-      <label title="行走面高度：0=地面层；抬高后站上地板的物品会一起抬升，写回时碰撞盒跟随">高度 <input type="number" min="0" step="0.05" id="fe-h" value="${walkH.toFixed(2)}" /></label>
+      <label title="行走面高度：0=地面层；负值=下沉层（地下/地坑）；抬高后站上地板的物品会一起抬升，写回时碰撞盒跟随">高度 <input type="number" step="0.05" id="fe-h" value="${walkH.toFixed(2)}" /></label>
       <span class="muted" style="align-self:center;font-size:11px">实时应用 · 也可 R / Shift+R</span>
     </div>
     ${isPlainSolid ? `<div class="floor-edit-row">
@@ -454,14 +454,16 @@ export function openFloorEditorModal(f: EditorFloor) {
   feRot?.addEventListener("input", applyRotLive);
   feRot?.addEventListener("change", applyRotLive);
 
-  // 行走面高度：h=0 回落类型默认视觉 Y（实心 -0.05 / 主题 0.01 / 空气 0），h>0
-  // 时视觉=行走面。站上地板的物品（Y≈h0）随动抬升，写回时碰撞盒由后端跟随。
+  // 行走面高度：|h|<=0.05 回落类型默认视觉 Y（实心 -0.05 / 主题 0.01 / 空气 0），
+  // 其余（抬高或下沉）视觉=行走面。站上地板的物品（Y≈h0）随动升降，写回时碰撞盒由后端跟随。
   const feH = document.getElementById("fe-h") as HTMLInputElement | null;
   let hPushed = false;
   const applyHeightLive = () => {
     const v = parseFloat(feH?.value ?? "");
-    if (!Number.isFinite(v) || v < 0) return;
-    const h1 = Math.round(v * 100) / 100;
+    if (!Number.isFinite(v)) return;
+    const h1Raw = Math.round(v * 100) / 100;
+    // 与 floorWalkY 同一死区约定：|h|<=0.05 一律落到地面层 0（不设下限，负值=下沉层）。
+    const h1 = h1Raw >= -0.05 - 1e-6 && h1Raw <= 0.05 ? 0 : h1Raw;
     const h0 = floorWalkY(f);
     if (Math.abs(h1 - h0) < 1e-6) return;
     if (!hPushed) {

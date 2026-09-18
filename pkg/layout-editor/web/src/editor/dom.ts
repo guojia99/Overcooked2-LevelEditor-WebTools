@@ -129,8 +129,8 @@ export function buildLayoutDom(): void {
         <div id="fhf-layers" class="fhf-layers"></div>
         <div class="fhf-sliders" title="自由高度区间（与上方层列表联动：点层=设为该层区间，拖滑块=自定义区间）">
           <div class="fhf-dual">
-            <input type="range" id="fhf-min" min="0" max="2" step="0.05" value="0" />
-            <input type="range" id="fhf-max" min="0" max="2" step="0.05" value="2" />
+            <input type="range" id="fhf-min" min="-2" max="2" step="0.05" value="0" />
+            <input type="range" id="fhf-max" min="-2" max="2" step="0.05" value="2" />
           </div>
           <div class="fhf-range-vals"><span class="fhf-val" id="fhf-min-val">0.00</span> ~ <span class="fhf-val" id="fhf-max-val">2.00</span></div>
         </div>

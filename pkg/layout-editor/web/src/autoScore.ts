@@ -40,7 +40,7 @@ export const ORDER_INTERVAL_SEC = [15, 10, 10, 10];
 export const PLATE_RETURN_SEC = 7;
 // 订单超时 = 最复杂菜谱估时 × 倍率：1P 取 1.75~2.5 的中值 2.0，人越多节奏越快。
 // 验证：T≈90（复杂菜谱）→ 180/135/120/110，与官方图 180/130/130/100 吻合；
-//       T≈50（简单菜谱）→ 100/75/70/60，与 jia_level1_1 的 100/90/75/75 同量级。
+//       T≈50（简单菜谱）→ 100/75/70/60，与 jia_level_1_1 的 100/90/75/75 同量级。
 const ORDER_LIFE_MULT = [2.0, 1.5, 1.35, 1.2];
 const ORDER_LIFE_MIN = 60;
 const ORDER_LIFE_MAX = 250;

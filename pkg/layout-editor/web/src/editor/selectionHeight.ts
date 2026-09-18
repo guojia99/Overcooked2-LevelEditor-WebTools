@@ -64,14 +64,19 @@ export function selectionHeightSummary(): {
   };
 }
 
-/** 将一块地板的行走面高度设为 h（与地板编辑弹窗一致；可选抬升板上物品）。 */
+/** 与 floorWalkY 同一死区约定：|h|<=0.05 一律落到地面层 0。 */
+function normalizeWalkHeight(h: number): number {
+  return h >= -0.05 - 1e-6 && h <= 0.05 ? 0 : h;
+}
+
+/** 将一块地板的行走面高度设为 h（与地板编辑弹窗一致；可选抬升/降下板上物品）。 */
 export function applyFloorWalkHeight(
   f: EditorFloor,
   h1: number,
   liftItems = false
 ): number {
   const h0 = floorWalkY(f);
-  const target = Math.round(h1 * 100) / 100;
+  const target = normalizeWalkHeight(Math.round(h1 * 100) / 100);
   if (Math.abs(target - h0) < 1e-6) return 0;
   const kind = isAirFloor(f) ? "air" : isThemedFloor(f) ? "themed" : "plane";
   const y = floorVisualYForWalkHeight(target, kind);
@@ -112,7 +117,7 @@ export function batchAdjustSelectionHeight(opts: {
   const step = S.freeSnapStep;
 
   if (opts.absoluteY != null && isFinite(opts.absoluteY)) {
-    const y = snapValue(opts.absoluteY, step);
+    const y = normalizeWalkHeight(snapValue(opts.absoluteY, step));
     for (const f of floors) {
       if (Math.abs(floorWalkY(f) - y) >= 1e-6) {
         lifted += applyFloorWalkHeight(f, y, !!opts.liftItemsOnFloors);
@@ -131,7 +136,7 @@ export function batchAdjustSelectionHeight(opts: {
     const dy = opts.deltaY;
     const lift = opts.liftItemsOnFloors !== false;
     for (const f of floors) {
-      const next = snapValue(floorWalkY(f) + dy, step);
+      const next = normalizeWalkHeight(snapValue(floorWalkY(f) + dy, step));
       if (Math.abs(next - floorWalkY(f)) >= 1e-6) {
         lifted += applyFloorWalkHeight(f, next, lift);
         floorN++;

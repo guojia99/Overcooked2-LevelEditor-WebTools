@@ -1,0 +1,9 @@
+{
+ "scenes": [
+  {"scene": "Assets/LevelSets/__probe/scenes/old_s_oc2_dlc07_1_2.unity", "objects": 2057, "missingComponents": 0, "ok": false, "error": "", "logs": ["UnassignedReferenceException: The variable heatedStation of PseudoPrefabHeatedOvenStub has not been assigned. You probably need to assign the heatedStation variable of the PseudoPrefabHeatedOvenStub script in the inspector."], "missingPaths": []},
+  {"scene": "Assets/LevelSets/__probe/scenes/old_s_oc2_dlc09_1_5.unity", "objects": 3967, "missingComponents": 6, "ok": false, "error": "", "logs": ["Component (Transform) has a broken GameObject reference. Fixing!", "NullReferenceException: Object reference not set to an instance of an object"], "missingPaths": ["Scenery/p_dlc09_streetlamp_01 (5)/p_dlc09_streetlamp_01 <- ", "Scenery/p_dlc09_streetlamp_01 (4)/p_dlc09_streetlamp_01 <- ", "Scenery/p_dlc09_streetlamp_01 (3)/p_dlc09_streetlamp_01 <- ", "Scenery/p_dlc09_streetlamp_01 (2)/p_dlc09_streetlamp_01 <- ", "Scenery/p_dlc09_streetlamp_01 (1)/p_dlc09_streetlamp_01 <- ", "Scenery/p_dlc09_streetlamp_01/p_dlc09_streetlamp_01 <- "]},
+  {"scene": "Assets/LevelSets/__probe/scenes/old_s_oc2_dlc11_1_3.unity", "objects": 1815, "missingComponents": 0, "ok": false, "error": "", "logs": ["UnassignedReferenceException: The variable pilotableObject of PseudoPrefabTerminalStub has not been assigned. You probably need to assign the pilotableObject variable of the PseudoPrefabTerminalStub script in the inspector."], "missingPaths": []}
+ ],
+ "total": 3,
+ "failed": 3
+}

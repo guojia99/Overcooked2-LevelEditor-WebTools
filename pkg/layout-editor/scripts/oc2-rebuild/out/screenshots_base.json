@@ -1,0 +1,722 @@
+[
+ {
+  "id": "OC2_Story_00_Tutorial",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   8495869215250914996
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "d338c45ab588a7ae1c087c0b2bfcc43a",
+  "label": "Text.Menu.TutorialLevel"
+ },
+ {
+  "id": "OC2_Story_01",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   2481907511542235079
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "5faa3c2f0dbdd8b815ad604381863bc2",
+  "label": "Text.Menu.Level01"
+ },
+ {
+  "id": "OC2_Story_02",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   -5769341038838731947
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "240f47100a1f19fe2c2bac076873aa1b",
+  "label": "Text.Menu.Level02"
+ },
+ {
+  "id": "OC2_Story_03",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   -2701253971577862468
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "af21d2c84341873f910253d61686df5d",
+  "label": "Text.Menu.Level03"
+ },
+ {
+  "id": "OC2_Story_04",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   6686972838583238928
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "eecb1d1a2a5477ef4c2dae0781ca2e93",
+  "label": "Text.Menu.Level04"
+ },
+ {
+  "id": "OC2_Story_05",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   -5910138758613652833
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "0a482e8ddc8af0736565dfcfe955c6be",
+  "label": "Text.Menu.Level05"
+ },
+ {
+  "id": "OC2_Story_06",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   -1655777281032989459
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "2015ee28e7a4450aba7dbae7e59c4952",
+  "label": "Text.Menu.Level06"
+ },
+ {
+  "id": "OC2_Story_07",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   -1522162256881212199
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "ddaa077ef4f2cd65b802cca8a15e96e6",
+  "label": "Text.Menu.Level07"
+ },
+ {
+  "id": "OC2_Story_08",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   953766303486211570
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "4eba9301af1567ffcbe310c412cabe51",
+  "label": "Text.Menu.Level08"
+ },
+ {
+  "id": "OC2_Story_09",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   7404207922658814753
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "6de7f3404934013198d3c4f6ea1fd5cc",
+  "label": "Text.Menu.Level09"
+ },
+ {
+  "id": "OC2_Story_10",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   6,
+   -1058094790620408257
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "901b3040e02680c9dbc1841d20219f63",
+  "label": "Text.Menu.Level10"
+ },
+ {
+  "id": "OC2_Story_11",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -5582316159053675658
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "34b9da085d3f699cc4f8b2c2eb99e2b4",
+  "label": "Text.Menu.Level11"
+ },
+ {
+  "id": "OC2_Story_12",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -312340439615043431
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "99778ebf772f4cda5ba962025c4cac2a",
+  "label": "Text.Menu.Level12"
+ },
+ {
+  "id": "OC2_Story_13",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   6723062860264304907
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "6aef673c7a99ae498b9af9d644d719cd",
+  "label": "Text.Menu.Level13"
+ },
+ {
+  "id": "OC2_Story_14",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -3515820438396775646
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "3d39f8d4d6e6e5413f3d86d5fe5b4903",
+  "label": "Text.Menu.Level14"
+ },
+ {
+  "id": "OC2_Story_15",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -5680319598362558652
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "48a1342a22a18f68734467d40d28c2aa",
+  "label": "Text.Menu.Level15"
+ },
+ {
+  "id": "OC2_Story_16",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -6230803679023593641
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "03f7e99892657b3623e806faee9fe6c0",
+  "label": "Text.Menu.Level16"
+ },
+ {
+  "id": "OC2_Story_17",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -5907891267003252439
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "199647deaa0a058aca4f8b0ca49e822f",
+  "label": "Text.Menu.Level17"
+ },
+ {
+  "id": "OC2_Story_18",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   2566883219058568289
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "09b61438532f2d4be654bd6f9a4c94f3",
+  "label": "Text.Menu.Level18"
+ },
+ {
+  "id": "OC2_Story_19",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -9100702850063366065
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "9131553f0b868f06e3cf38eab13e2adb",
+  "label": "Text.Menu.Level19"
+ },
+ {
+  "id": "OC2_Story_20",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -1844146930036120101
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "27811761b306bb26372d0c45e3265d70",
+  "label": "Text.Menu.Level20"
+ },
+ {
+  "id": "OC2_Story_21",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   4280781662266563692
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "1b5270b58b318146c8577fd888caedd4",
+  "label": "Text.Menu.Level21"
+ },
+ {
+  "id": "OC2_Story_22",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   3577901990718244841
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "bb65a4dc4bd85d8c38bd23d62e9ec788",
+  "label": "Text.Menu.Level22"
+ },
+ {
+  "id": "OC2_Story_23",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   1686351530798613808
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "844eb9cefdf7b969e2f17d291ecab312",
+  "label": "Text.Menu.Level23"
+ },
+ {
+  "id": "OC2_Story_24",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   838869820752152019
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "baa8b6573ccebbaff3c21f4c8b53b1fb",
+  "label": "Text.Menu.Level24"
+ },
+ {
+  "id": "OC2_Story_25",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   3905598743341759464
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "aa94ea0737ddf259fd4da610aba985f4",
+  "label": "Text.Menu.Level25"
+ },
+ {
+  "id": "OC2_Story_26",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -5005620954143456263
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "1f943928f9f78bd5cc7f2b01eec32d89",
+  "label": "Text.Menu.Level26"
+ },
+ {
+  "id": "OC2_Story_27",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   7808661917817892943
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "b5094f1d9772b1751b9acbc14227df84",
+  "label": "Text.Menu.Level27"
+ },
+ {
+  "id": "OC2_Story_28",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -6545353439446802206
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "ed7e723c2147664bce7850bc9c44392f",
+  "label": "Text.Menu.Level28"
+ },
+ {
+  "id": "OC2_Story_29",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   96319641180144604
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "7ed01f11c5590eefcdf4c60a2302931b",
+  "label": "Text.Menu.Level29"
+ },
+ {
+  "id": "OC2_Story_30",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   2456129381798980869
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "e1088b7d164e3cbb9d1d9a9b58b04f87",
+  "label": "Text.Menu.Level30"
+ },
+ {
+  "id": "OC2_Story_31",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -1330636084153750395
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "be1f7a5532c9c0a94d4c0434a419c4c1",
+  "label": "Text.Menu.Level31"
+ },
+ {
+  "id": "OC2_Story_32",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -630078429418242960
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "5057f1e007b528c592d6a7de6025adc3",
+  "label": "Text.Menu.Level32"
+ },
+ {
+  "id": "OC2_Story_33",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -6239880973517375981
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "d694b6cc44895f5157f3f1bdab5d4ff0",
+  "label": "Text.Menu.Level33"
+ },
+ {
+  "id": "OC2_Story_34",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -5153038544425987779
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "a00238032a0acb664136db42dc17ace1",
+  "label": "Text.Menu.Level34"
+ },
+ {
+  "id": "OC2_Story_35",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -4249141913160641014
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "944ab7e18ca42cb6b286108da3d89014",
+  "label": "Text.Menu.Level35"
+ },
+ {
+  "id": "OC2_Story_36",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -1778814671638892657
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "40838435adb7a115552797fbd64c46cc",
+  "label": "Text.Menu.Level36"
+ },
+ {
+  "id": "OC2_Story_H01",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -6256805484818954861
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "369b01e641b4eb968fdc9a786a0e7e2d",
+  "label": "Text.Menu.KevinLevel01"
+ },
+ {
+  "id": "OC2_Story_H02",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   889920738743361683
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "7826cd2f7f5a9e47376d07929b842cc0",
+  "label": "Text.Menu.KevinLevel02"
+ },
+ {
+  "id": "OC2_Story_H03",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -3008391391928854064
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "e0a37913e75e845d493203fa8f9907fb",
+  "label": "Text.Menu.KevinLevel03"
+ },
+ {
+  "id": "OC2_Story_H04",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -2898348720131203804
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "cef1fc86fca294df2cf9fb3685251e68",
+  "label": "Text.Menu.KevinLevel04"
+ },
+ {
+  "id": "OC2_Story_H05",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   -7299770367326137203
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "aedc1fdbff2df54df678369a03f372a8",
+  "label": "Text.Menu.KevinLevel05"
+ },
+ {
+  "id": "OC2_Story_H06",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   4384268119691888189
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "2202563fc60d75e8fc713199a9e6eaab",
+  "label": "Text.Menu.KevinLevel06"
+ },
+ {
+  "id": "OC2_Story_H07",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   2838255802743888026
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "6d29f3c2f79bd6b42e9a9782b6b0e7d7",
+  "label": "Text.Menu.KevinLevel07"
+ },
+ {
+  "id": "OC2_Story_H08",
+  "set": "oc2_story",
+  "ok": true,
+  "source": "lso",
+  "ptr": [
+   37,
+   4317898962916992309
+  ],
+  "size": [
+   526,
+   308
+  ],
+  "md5": "a7a00e8bfcf83c0d16fe673a733c7579",
+  "label": "Text.Menu.KevinLevel08"
+ }
+]

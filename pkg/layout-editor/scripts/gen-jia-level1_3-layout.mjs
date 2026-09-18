@@ -13,8 +13,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CELL = 1.2;
 const HALF = 0.6;
 const FLOOR_Y = 0;
-const SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level1_3.unity";
-const LEVEL_INFO = "Assets/LevelSets/jia_carnival/data/jia_level1_3/LevelInfo_jia_level1_3.asset";
+const SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level_1_3.unity";
+const LEVEL_INFO = "Assets/LevelSets/jia_carnival/data/jia_level_1_3/LevelInfo_jia_level_1_3.asset";
 
 const cx = (i) => HALF + CELL * i;
 const cz = (j) => HALF + CELL * j;

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * gen-jia-level1_2-layout.mjs — 把 my_test/testice 的冰雪布局同步到
- * jia_carnival / s_jia_level1_2（Level1-2 Snowy Plum Loft 梅雪凇阁），并带两项修复：
+ * jia_carnival / s_jia_level_1_2（Level1-2 Snowy Plum Loft 梅雪凇阁），并带两项修复：
  *
  *   1) 三个主岛（左/中/右，含走廊庭院）的边缘贴花向岛心内缩 EDGE_INSET=0.15m
  *      （直边沿法线、凸角沿对角线、凹角不动；scale 保持 0.0125 —— 缩小会重蹈
@@ -31,7 +31,7 @@ const CELL = 1.2;
 const HALF = 0.6;
 // 行走层高度：必须为 0（FLOOR_Y 铁律，见 testice 生成器注释）。
 const FLOOR_Y = 0;
-const SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level1_2.unity";
+const SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level_1_2.unity";
 
 // 边缘贴花内缩量（米）：三个主岛用；约 1/8 格。Play 后如需调整改这一个数重跑。
 const EDGE_INSET = 0.15;

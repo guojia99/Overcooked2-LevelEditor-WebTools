@@ -35,8 +35,8 @@ const EXTERIOR_Y = {
   decoration_bamboo_02: 0,
 };
 const decorY = (pfDef) => EXTERIOR_Y[pfDef.id] ?? 0.01;
-const SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level1_4.unity";
-const LEVEL_INFO = "Assets/LevelSets/jia_carnival/data/jia_level1_4/LevelInfo_jia_level1_4.asset";
+const SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level_1_4.unity";
+const LEVEL_INFO = "Assets/LevelSets/jia_carnival/data/jia_level_1_4/LevelInfo_jia_level_1_4.asset";
 
 const cx = (i) => HALF + CELL * i;
 const cz = (j) => HALF + CELL * j;

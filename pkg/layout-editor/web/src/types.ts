@@ -1458,6 +1458,46 @@ export interface BurgerDefinitionList {
   products: BurgerProduct[];
 }
 
+// ---------- 一键统一面包皮（自定义菜谱页 🍞） ----------
+
+/** 一处面包层引用（一道菜谱可能有多条）。 */
+export interface BunUsage {
+  assetPath: string;
+  guid: string;
+  /** 菜谱资产文件名。 */
+  id: string;
+  nameZh: string;
+  /** 成品汉堡（Composite + 组成含面包）。 */
+  isFinishedBurger: boolean;
+  /** 组装定义子类（CustomRecipeOptionalBurgerSO）。 */
+  isAssembly: boolean;
+  /** 当前面包皮 id（ChoppedBunSO / DLC02_ChoppedBun / dlc08_choppedbun）。 */
+  bunId: string;
+  bunGuid: string;
+  /** compositionSOs 下标；-1 = 组装定义的 bunSO 字段。 */
+  layerIndex: number;
+}
+
+export interface BunUsageReport {
+  /** 可选目标面包皮（复用汉堡工作台候选池，带 bundleName / bundleAvailable）。 */
+  buns: BurgerCandidate[];
+  /** 本关卡集 custom_recipes 内的面包层（可替换）。 */
+  usages: BunUsage[];
+  /** commonW2 共享库内的面包层（只读展示，后端硬拒替换）。 */
+  sharedUsages: BunUsage[];
+}
+
+export interface BunReplaceResult {
+  /** 实际改动的菜谱数。 */
+  changed: number;
+  /** 实际改动的面包层数（一道菜谱可能有多层）。 */
+  layers: number;
+  recipes: string[];
+  /** 被跳过的条目（含原因），路径闸门拦下的也在这里。 */
+  skipped: string[];
+  warnings: string[];
+}
+
 export interface BurgerCreateRequest {
   /** 目标关卡集（产出归属：该关卡集的普通自定义菜谱）。 */
   setName: string;

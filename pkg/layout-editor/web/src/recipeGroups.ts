@@ -76,6 +76,9 @@ export const BUN_CORE_ID = "ChoppedBunSO";
  *  全仓库只用这一种写法：历史别名 `dlc08_bun`（commonW1 装饰壳文件名）与
  *  `DLC08_ChoppedBun`（旧资产文件名）已于命名统一时一并改名到此 id。 */
 export const BUN_DLC8_ID = "dlc08_choppedbun";
+/** DLC2 汉堡面皮（common02，bundle167）——官方 core 汉堡知识表里用的就是它。
+ *  刻意**不在** BUN_EQUIVALENT_IDS 内，见下方注释。 */
+export const BUN_DLC2_ID = "DLC02_ChoppedBun";
 /** commonW2「🍔 Burger大全」菜谱组 id（LayoutEditorCatalogApi.FoodGroupOf）。 */
 export const BURGER_COMPENDIUM_GROUP = "burger";
 

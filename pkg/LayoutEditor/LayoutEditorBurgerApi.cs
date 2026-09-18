@@ -641,7 +641,9 @@ public static class LayoutEditorBurgerApi
         return FindCommonW2Assembly("ChickenBurgerAssembly");
     }
 
-    private static BurgerCandidateDto[] CollectBuns()
+    /// <summary>面包皮候选池（恒为 ChoppedBunSO / DLC02_ChoppedBun / dlc08_choppedbun 三个）。
+    ///  internal：「一键统一面包皮」（LayoutEditorBunSwapApi）复用同一份候选与 bundle 可用性判定。</summary>
+    internal static BurgerCandidateDto[] CollectBuns()
     {
         var list = new List<BurgerCandidateDto>();
         var seen = new HashSet<string>(StringComparer.Ordinal);

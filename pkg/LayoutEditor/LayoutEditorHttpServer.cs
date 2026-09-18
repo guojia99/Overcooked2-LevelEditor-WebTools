@@ -1342,6 +1342,26 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // ---- 一键统一面包皮（自定义菜谱页 🍞）----
+            // 只改本关卡集 custom_recipes 内的面包层；路径闸门在 LayoutEditorBunSwapApi 里，
+            // commonW2 共享库与官方库一律拒绝。
+            if (path == "/api/custom-recipes/bun-usage" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorBunSwapApi.GetUsage(setName)));
+                return;
+            }
+
+            if (path == "/api/custom-recipes/replace-bun" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LayoutEditorBunSwapApi.BunReplaceRequestDto>(body);
+                var result = LayoutEditorBunSwapApi.Replace(dto);
+                WriteJson(response, string.IsNullOrEmpty(result.error) ? 200 : 400,
+                    LayoutEditorJson.ToJson(result));
+                return;
+            }
+
             if (path == "/api/custom-recipes/upload-icon" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);

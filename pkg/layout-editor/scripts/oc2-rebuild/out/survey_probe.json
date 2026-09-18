@@ -1,0 +1,1870 @@
+{
+ "generatedAt": "2026-09-17 12:45:26",
+ "levels": [
+  {
+   "id": "OC2_DLC02_1_1",
+   "set": "oc2_dlc_story",
+   "sceneName": "s_beach_1_1",
+   "source": "Assets/downloadablecontent/dlc02/dlc_assets/Scenes/01_Beach/s_beach_1_1.unity",
+   "ok": true,
+   "seconds": 0.14,
+   "nodes": 2294,
+   "roots": [
+    "Art",
+    "CampaignGameEnvironment",
+    "Chefs",
+    "Design",
+    "Lightmap_-1_Baker",
+    "Lightmap_-2_Baker",
+    "Lightmap_0_Baker",
+    "MultiplayerGameCamera"
+   ],
+   "envRoot": "CampaignGameEnvironment",
+   "cameraRoot": "MultiplayerGameCamera",
+   "counts": {
+    "group": 31,
+    "prefab": 277,
+    "prefab:by-signature": 15,
+    "model": 4,
+    "drop": 5
+   },
+   "drops": {
+    "scene-embedded-mesh": 1,
+    "empty": 4
+   },
+   "skips": {},
+   "bakerNodes": 10,
+   "skewedNodes": 23,
+   "players": 4,
+   "collisionGroups": 1,
+   "killplaneGroups": 1,
+   "lightGroups": 2,
+   "missingSo": {
+    "traffic jam": 1,
+    "ripple_1 (8)": 2,
+    "m_dlc2_umbrealla_open_02": 3,
+    "p_dlc07_map_rock_outermap_06": 2,
+    "p_dlc07_map_rock_outermap_05": 1,
+    "m_dlc_hut_03": 1
+   },
+   "builtinMaterials": {},
+   "weakSample": [],
+   "ambiguousSample": [
+    {
+     "node": "Art/Animated Objects/NPC_DoraBlonde_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Ginger_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_MiddleEatern_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_middleeatern_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_WizBoy_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_wizboy_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Asian_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (4)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (5)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (6)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (7)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/sign_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sign_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/Walkway Dudes/Group_1_Right/Front/NPC_MiddleEatern_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_middleeatern_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/Walkway Dudes/Group_1_Right/Back/NPC_Dora_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/Walkway Dudes/Group_1_Right/Back/NPC_Ginger_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/Walkway Dudes/Group_1_Right/Back/NPC_DoraBlonde_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/Walkway Dudes/Group_1_left/NPC_Mike_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_mike_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/Walkway Dudes/Group_1_left/NPC_Beard_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/Walkway Dudes/Group_1_left/NPC_Asian_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/Walkway Dudes/Group_2_Right/Front/NPC_Ginger_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    }
+   ],
+   "prefabContainers": {
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_purple.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_blue.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_red.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_middleeatern_hawaiian_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_wizboy_hawaiian_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab": 3,
+    "assets/prefabs/themes/city_sushi/traffic jam.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sea_shore_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/barrier_rope_2unit_01.prefab": 17,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachball_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/ripple_1 (8).prefab": 2,
+    "assets/prefabs/themes/air_balloon/air_balloon_lifebelt_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/tropicalbirds.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/planks_3_01.prefab": 31,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/planks_3_02.prefab": 16,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/umbrella_closed_01.prefab": 1,
+    "assets/prefabs/themes/city_sushi/prefabs/exterior_road_01.prefab": 12,
+    "assets/prefabs/themes/city_sushi/prefabs/exterior_grass_01.prefab": 1,
+    "assets/prefabs/themes/city_sushi/prefabs/exterior_man_hole_01.prefab": 1,
+    "assets/prefabs/themes/city_sushi/prefabs/traffic_cone_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/barrier_01.prefab": 14,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/stones_01.prefab": 1,
+    "assets/downloadablecontent/dlc07/dlc_assets/prefabs/map/outermapdressing/p_dlc07_map_rock_outermap_06.prefab": 2,
+    "assets/downloadablecontent/dlc07/dlc_assets/prefabs/map/outermapdressing/p_dlc07_map_rock_outermap_05.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_02.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_table_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_02.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_starfish_01.prefab": 7,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_clamshell_01.prefab": 5,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_02.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_03.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_04.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_02.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/umbrella_closed_02.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/stone_slab_01.prefab": 39,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/spade_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/bucket_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_pillar_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_rope_02.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/aboard_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/m_dlc2_sandcastle_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sign_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/dinghy.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_mike_hawaiian_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_specs_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/utensil_blender_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_blender_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/equipment_glass_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab": 12,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_choppingboard_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_glass_return_01.prefab": 1,
+    "assets/prefabs/shared_kitchen/workstation_plate_station.prefab": 1,
+    "assets/prefabs/shared_kitchen/dispenser_crate_01.prefab": 2,
+    "assets/prefabs/shared_kitchen/workstation_bin_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_sink_01_dlc2.prefab": 1
+   },
+   "modelContainers": {
+    "assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/m_dlc2_umbrealla_open_02.fbx": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/m_dlc_hut_03.fbx": 1
+   }
+  },
+  {
+   "id": "OC2_DLC02_1_2",
+   "set": "oc2_dlc_story",
+   "sceneName": "s_beach_1_2",
+   "source": "Assets/downloadablecontent/dlc02/dlc_assets/Scenes/01_Beach/s_beach_1_2.unity",
+   "ok": true,
+   "seconds": 0.2,
+   "nodes": 2496,
+   "roots": [
+    "Art",
+    "CampaignGameEnvironment",
+    "Chefs",
+    "Design",
+    "Lightmap_0_Baker",
+    "Lightmap_1_Baker",
+    "Lightmap_2_Baker",
+    "MultiplayerGameCamera"
+   ],
+   "envRoot": "CampaignGameEnvironment",
+   "cameraRoot": "MultiplayerGameCamera",
+   "counts": {
+    "group": 65,
+    "prefab": 449,
+    "prefab:weak-shape": 5,
+    "prefab:by-signature": 97,
+    "model": 3,
+    "drop": 3
+   },
+   "drops": {
+    "empty": 3
+   },
+   "skips": {},
+   "bakerNodes": 10,
+   "skewedNodes": 272,
+   "players": 4,
+   "collisionGroups": 1,
+   "killplaneGroups": 1,
+   "lightGroups": 2,
+   "missingSo": {
+    "ripple_1 (8)": 53,
+    "m_dlc2_umbrealla_open_02": 3,
+    "rock_02 1": 2,
+    "mine_rock_01": 1,
+    "rock_01 1": 1,
+    "watersplash_particle_001": 12
+   },
+   "builtinMaterials": {},
+   "weakSample": [
+    {
+     "node": "Art/Animated Objects/DinghyDuckBeachBall/Dinghy",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/dinghy.prefab",
+     "score": 0.3409090909090909,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Animated Objects/PlankGenericFloat_01/plank (43)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Animated Objects/PlankGenericFloat_01/plank (42)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/palmtree_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_01.prefab",
+     "score": 0.3,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Design/AnimatedObjects/FloatingCrates/Set_02/Set_02_E/Set_02_Float_E/Animation (4)/crate_raft_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/crate_raft_01.prefab",
+     "score": 0.35,
+     "why": "weak-shape"
+    }
+   ],
+   "ambiguousSample": [
+    {
+     "node": "Art/Animated Objects/NPC_Beard_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Hispanic_Hawaiian_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Dora_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Hispanic_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_WizBoy_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_wizboy_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Asian_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Dora_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_DoraBlonde_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Ginger_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (4)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (5)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (6)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (7)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (8)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    }
+   ],
+   "prefabContainers": {
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_wizboy_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/dinghy.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachball_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/ripple_1 (8).prefab": 53,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/barrier_rope_2unit_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_blue.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_purple.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_red.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/tropicalbirds.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank.prefab": 68,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/planks_middle_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/seashore_pfx_02.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/umbrella_base_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sea_shore_extended.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pillar_end_01.prefab": 17,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pillar_middle_01.prefab": 68,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rope_01.prefab": 22,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/flag_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/floor_edge_01.prefab": 58,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_rope_02.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_pillar_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_02.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sanddecal_04.prefab": 9,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_starfish_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/spade_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/bucket_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_02.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_clamshell_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/stones_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_04.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_table_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/m_dlc2_sandcastle_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sanddecal_06.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sanddecal_05.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sand_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rock_02 1.prefab": 2,
+    "assets/prefabs/themes/mine/mine_rock_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rock_01 1.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/table_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_02.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/chair_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_03.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/lifebuoypillar.prefab": 1,
+    "assets/prefabs/shared_kitchen/dispenser_crate_01.prefab": 11,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/crate_raft_x2_01.prefab": 6,
+    "assets/prefabs/shared_kitchen/countertop_01_chopping_board_wood_no_edge.prefab": 6,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/crate_raft_01.prefab": 6,
+    "assets/prefabs/shared_kitchen/dispenser_crate_03.prefab": 1,
+    "assets/prefabs/particles/watersplash_particle_001.prefab": 12,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/utensil_blender_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_blender_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/equipment_glass_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab": 10,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_sink_01_dlc2.prefab": 1,
+    "assets/prefabs/shared_kitchen/workstation_plate_station.prefab": 1,
+    "assets/prefabs/shared_kitchen/workstation_bin_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_glass_return_01.prefab": 1
+   },
+   "modelContainers": {
+    "assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/m_dlc2_umbrealla_open_02.fbx": 3
+   }
+  },
+  {
+   "id": "OC2_DLC02_1_3",
+   "set": "oc2_dlc_story",
+   "sceneName": "s_resort_1_3",
+   "source": "Assets/downloadablecontent/dlc02/dlc_assets/Scenes/02_Resort/s_resort_1_3.unity",
+   "ok": true,
+   "seconds": 0.15,
+   "nodes": 2060,
+   "roots": [
+    "Art",
+    "CampaignGameEnvironment",
+    "Chefs",
+    "Design",
+    "Lightmap_0_Baker",
+    "Lightmap_1_Baker",
+    "Lightmap_2_Baker",
+    "MultiplayerGameCamera"
+   ],
+   "envRoot": "CampaignGameEnvironment",
+   "cameraRoot": "MultiplayerGameCamera",
+   "counts": {
+    "group": 30,
+    "prefab": 336,
+    "prefab:by-signature": 30,
+    "prefab:weak-shape": 41,
+    "drop": 18
+   },
+   "drops": {
+    "empty": 14,
+    "scene-embedded-mesh": 4
+   },
+   "skips": {},
+   "bakerNodes": 12,
+   "skewedNodes": 139,
+   "players": 4,
+   "collisionGroups": 1,
+   "killplaneGroups": 1,
+   "lightGroups": 2,
+   "missingSo": {
+    "ripple_1 (8)": 7,
+    "airballoon_nail_01": 1,
+    "countertop_02": 4
+   },
+   "builtinMaterials": {},
+   "weakSample": [
+    {
+     "node": "Art/Scenery/Pool/pool_straight_01 1 (4)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_straight_01 1.prefab",
+     "score": 0.35,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Pool/pool_straight_01 1 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_straight_01 1.prefab",
+     "score": 0.35,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Pool/pool_straight_01 1 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_straight_01 1.prefab",
+     "score": 0.35,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Pool/pool_corner_01 1",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_corner_01 1.prefab",
+     "score": 0.35,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Pool/pool_straight_01 1 (5)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_straight_01 1.prefab",
+     "score": 0.35,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Pool/pool_corner_01 1 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_corner_01 1.prefab",
+     "score": 0.35,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Pool/divingboard_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/divingboard_01.prefab",
+     "score": 0.35,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (7)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (8)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (9)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (10)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (11)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (12)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (13)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (21)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (23)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (24)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (26)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (27)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (56)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (57)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (58)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (59)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Planks/plank_02 (60)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Planks/plank_02 (29)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.4666666666666666,
+     "why": "weak-shape"
+    }
+   ],
+   "ambiguousSample": [
+    {
+     "node": "Art/Animated Objects/NPC_Specs_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_specs_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_DoraBlonde_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/seagull_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/seagull_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/seagull_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/seagull_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_MiddleEatern_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_middleeatern_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Ginger_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Dora_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (4)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (5)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (7)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (8)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (4)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (5)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (6)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (7)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (10)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (12)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (13)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    }
+   ],
+   "prefabContainers": {
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/barrier_rope_2unit_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_specs_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/seagull_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/tropicalbirds.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_blue.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_purple.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_red.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/m_dlc2_duck_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/ripple_1 (8).prefab": 7,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_middleeatern_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachball_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_corner_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab": 9,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sand_floor_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sanddecal_04.prefab": 9,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_table_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_04.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/barrier_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/m_dlc2_pineapple_plant_02nofruit.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/dlc2_bush_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/umbrella_closed_02.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_03.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunglasses_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rubber_plant_02.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_wall_straight_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_wall_corner_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/quad_tile2x2_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_straight_01 1.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_corner_01 1.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/ladder_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/divingboard_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_starfish_02.prefab": 1,
+    "assets/prefabs/themes/city_sushi/prefabs/exterior_grass_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_02.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_clamshell_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sea_shore_simple_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_floor_01.prefab": 20,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_pillar_01.prefab": 5,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_pillars_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_rope_02.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pillar_end_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pillar_middle_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rope_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sand_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/spade_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/bucket_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_starfish_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_01.prefab": 1,
+    "assets/prefabs/themes/air_balloon/air_balloon_lifebelt_01.prefab": 1,
+    "assets/prefabs/themes/air_balloon/airballoon_nail_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_stonewall_01.prefab": 18,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/stone_slab_01.prefab": 41,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_02.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pineapple_plant_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pineapple_plant_02nofruit.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rubber_plant_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_02.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/umbrella_open_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/table_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/chair_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab": 58,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/utensil_water_gun_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/dlc02_utensil_frying_pan.prefab": 2,
+    "assets/prefabs/utensils/utensil_fire_extinguisher_01.prefab": 1,
+    "assets/prefabs/shared_kitchen/equipment_plate_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab": 17,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_02.prefab": 4,
+    "assets/prefabs/shared_kitchen/workstation_cooker_01.prefab": 2,
+    "assets/prefabs/shared_kitchen/workstation_bin_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_choppingboard_01.prefab": 2,
+    "assets/prefabs/shared_kitchen/workstation_plate_return.prefab": 1,
+    "assets/prefabs/shared_kitchen/dispenser_crate_01.prefab": 6,
+    "assets/prefabs/shared_kitchen/workstation_plate_station.prefab": 1
+   },
+   "modelContainers": {}
+  },
+  {
+   "id": "OC2_DLC02_1_4",
+   "set": "oc2_dlc_story",
+   "sceneName": "s_resort_1_4",
+   "source": "Assets/downloadablecontent/dlc02/dlc_assets/Scenes/02_Resort/s_resort_1_4.unity",
+   "ok": true,
+   "seconds": 0.18,
+   "nodes": 2642,
+   "roots": [
+    "Art",
+    "CampaignGameEnvironment",
+    "Chefs",
+    "Design",
+    "Lightmap_0_Baker",
+    "MultiplayerGameCamera",
+    "_Baker 1_Baker",
+    "utensil_water_gun_01"
+   ],
+   "envRoot": "CampaignGameEnvironment",
+   "cameraRoot": "MultiplayerGameCamera",
+   "counts": {
+    "group": 37,
+    "prefab": 417,
+    "prefab:by-signature": 17,
+    "drop": 38,
+    "prefab:weak-shape": 43,
+    "skip": 1
+   },
+   "drops": {
+    "builtin-mesh": 29,
+    "scene-embedded-mesh": 7,
+    "empty": 2
+   },
+   "skips": {
+    "subtree:combinedmesh-lightmap_0_baker": 1
+   },
+   "bakerNodes": 8,
+   "skewedNodes": 80,
+   "players": 4,
+   "collisionGroups": 1,
+   "killplaneGroups": 1,
+   "lightGroups": 1,
+   "missingSo": {
+    "ripple_1 (8)": 2,
+    "m_dlc2_palmtree_canopy_01 (1)": 4
+   },
+   "builtinMaterials": {
+    "mat_dlc2_pooltiles_04": 8,
+    "mat_dlc2_pooltiles_01": 7,
+    "mat_dlc2_floortile_1_4": 2,
+    "mat_dlc2_floortile_01": 4,
+    "mat_dlc2_woodenfloor_02": 8
+   },
+   "weakSample": [
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (6)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (7)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (8)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (9)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (10)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (4)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (11)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/Ground_Floor/Resort_wall_straight_01 (12)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (11)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (13)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (14)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (15)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (16)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (17)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (18)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (19)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Right_Building/First_Floor/Resort_wall_straight_01 (20)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Building/Ground_Floor/Resort_wall_straight_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Building/Ground_Floor/Resort_wall_straight_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Building/Ground_Floor/Resort_wall_straight_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/Left_Building/Ground_Floor/Resort_wall_straight_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    }
+   ],
+   "ambiguousSample": [
+    {
+     "node": "Art/Animated Objects/seagull_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/seagull_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_DoraBlonde_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Beard_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Specs_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_specs_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/NPC_Asian_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/NPC_Dora_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/NPC_WizBoy_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_wizboy_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/NPC_Mike_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_mike_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Animated Objects/NPC_Hispanic_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_choppingboard_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_choppingboard_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_corner_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (4)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (5)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_choppingboard_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_choppingboard_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_choppingboard_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_choppingboard_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_choppingboard_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_choppingboard_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (6)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Design/Work Surfaces/countertop_01 (7)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab",
+     "score": 1.0,
+     "n": 2
+    }
+   ],
+   "prefabContainers": {
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_blue.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_purple.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_red.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/seagull_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/tropicalbirds.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/bucket_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/ripple_1 (8).prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachball_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_specs_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/quad_tile2x2_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_straight_01 1.prefab": 10,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_corner_01 1.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_straight_01.prefab": 5,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_corner_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_wall_straight_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_wall_corner_02.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/ladder_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/divingboard_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_starfish_02.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/towel_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/towel_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/stone_slab_01.prefab": 76,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/umbrella_closed_02.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_out_01.prefab": 12,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_straight_01.prefab": 42,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/resort_wall_window_01.prefab": 6,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/roof_corner.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_roof_alt_01.prefab": 34,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/flower_01.prefab": 16,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/dlc2_bush_01.prefab": 5,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rubber_plant_02.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/m_dlc2_palmtree_canopy_01 (1).prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sanddecal_04.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/m_dlc2_pineapple_plant_02nofruit.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunglasses_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_03.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_02.prefab": 1,
+    "assets/prefabs/themes/city_sushi/prefabs/exterior_grass_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pineapple_plant_02nofruit.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pineapple_plant_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rubber_plant_03.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_02.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/umbrella_open_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/table_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/chair_01.prefab": 6,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_floor_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_stonewall_01.prefab": 20,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_stonewall_corner_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab": 36,
+    "assets/prefabs/characters/npc_waiters_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_wizboy_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_mike_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/utensil_blender_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_blender_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/equipment_glass_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_choppingboard_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab": 2,
+    "assets/prefabs/shared_kitchen/workstation_plate_station.prefab": 2,
+    "assets/prefabs/shared_kitchen/workstation_bin_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_glass_return_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/utensil_water_gun_01.prefab": 1
+   },
+   "modelContainers": {}
+  },
+  {
+   "id": "OC2_DLC02_2_1",
+   "set": "oc2_dlc_story",
+   "sceneName": "s_beach_2_1",
+   "source": "Assets/downloadablecontent/dlc02/dlc_assets/Scenes/01_Beach/s_beach_2_1.unity",
+   "ok": true,
+   "seconds": 0.21,
+   "nodes": 2471,
+   "roots": [
+    "Art",
+    "CampaignGameEnvironment",
+    "Chefs",
+    "Design",
+    "Lightmap_0_Baker",
+    "Lightmap_1_Baker",
+    "Lightmap_2_Baker",
+    "MultiplayerGameCamera"
+   ],
+   "envRoot": "CampaignGameEnvironment",
+   "cameraRoot": "MultiplayerGameCamera",
+   "counts": {
+    "group": 29,
+    "prefab": 593,
+    "prefab:by-signature": 62,
+    "prefab:weak-shape": 8,
+    "model": 2,
+    "drop": 2
+   },
+   "drops": {
+    "empty": 2
+   },
+   "skips": {},
+   "bakerNodes": 10,
+   "skewedNodes": 197,
+   "players": 4,
+   "collisionGroups": 1,
+   "killplaneGroups": 1,
+   "lightGroups": 1,
+   "missingSo": {
+    "ripple_1 (8)": 1,
+    "quad_tile_3x1_01": 1,
+    "m_dlc2_umbrealla_open_02": 2
+   },
+   "builtinMaterials": {},
+   "weakSample": [
+    {
+     "node": "Art/Scenery/plank_02 (32)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.3333333333333333,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Art/Scenery/plank_02 (34)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab",
+     "score": 0.5,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Design/Environment Objects/Stairs/Step",
+     "cont": "assets/models/themes/wizards_school/prefabs/step.prefab",
+     "score": 0.47,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Design/Environment Objects/Stairs/Step 2",
+     "cont": "assets/models/themes/wizards_school/prefabs/step.prefab",
+     "score": 0.47,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Design/Environment Objects/Stairs (1)/Step",
+     "cont": "assets/models/themes/wizards_school/prefabs/step.prefab",
+     "score": 0.47,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Design/Environment Objects/Stairs (1)/Step 2",
+     "cont": "assets/models/themes/wizards_school/prefabs/step.prefab",
+     "score": 0.47,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Design/Environment Objects/Stairs (2)/Step",
+     "cont": "assets/models/themes/wizards_school/prefabs/step.prefab",
+     "score": 0.47,
+     "why": "weak-shape"
+    },
+    {
+     "node": "Design/Environment Objects/Stairs (2)/Step 2",
+     "cont": "assets/models/themes/wizards_school/prefabs/step.prefab",
+     "score": 0.47,
+     "why": "weak-shape"
+    }
+   ],
+   "ambiguousSample": [
+    {
+     "node": "Art/Animated Objects/NPC_Hispanic_Hawaiian_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Dora_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Asian_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_DoraBlonde_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Beard_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Hispanic_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_WizBoy_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_wizboy_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Ginger_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Mike_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_mike_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Hispanic_Hawaiian_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Beard_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Dora_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Hispanic_Hawaiian_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_DoraBlonde_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Asian_Hawaiian_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Animated Objects/NPC_Dora_Hawaiian_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01 (1)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (2)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_02 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01 (3)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    },
+    {
+     "node": "Art/Scenery/grass_01 (4)",
+     "cont": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab",
+     "score": 1.0,
+     "n": 2
+    }
+   ],
+   "prefabContainers": {
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_hispanic_hawaiian_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dora_hawaiian_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_asian_hawaiian_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_dorablonde_hawaiian_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_beard_hawaiian_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_wizboy_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_ginger_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/characters/npc_mike_hawaiian_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/ripple_1 (8).prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachball_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/barrier_rope_2unit_01.prefab": 30,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/tropicalbirds.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_blue.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_purple.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beach_groundparrot_red.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/seashore_pfx.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sea_shore_simple_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/plank_02.prefab": 44,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/quad_tile_3x1_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/umbrella_base_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/planks_end_01.prefab": 26,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/planks_middle_01.prefab": 22,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/barrier_01.prefab": 38,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/walkway_pillar_01.prefab": 57,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/barrier_rope_1unit_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/palmtree_03.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/urn_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/pool_corner_01.prefab": 16,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/rock_05.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_02.prefab": 5,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/grass_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_clamshell_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_pebbles_02.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/beachdoodads_starfish_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sanddecal_03.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/surfboard_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_02.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_03.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/smoothie_04.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/table_01.prefab": 3,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/chair_01.prefab": 8,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/aboard_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_table_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sunbed_01.prefab": 5,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/bucket_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/spade_01.prefab": 4,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/m_dlc2_sandcastle_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/towel_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/towel_02.prefab": 3,
+    "assets/prefabs/themes/city_sushi/prefabs/exterior_path_01.prefab": 92,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/stone_slab_01.prefab": 102,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/scooter_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/workstation_barbeque_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/utensil_skewer_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/utensil_water_gun_01.prefab": 1,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/utensil_bellows_01.prefab": 1,
+    "assets/prefabs/shared_kitchen/equipment_plate_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab": 19,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_choppingboard_01.prefab": 2,
+    "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_corner_01.prefab": 6,
+    "assets/prefabs/shared_kitchen/workstation_plate_station.prefab": 1,
+    "assets/prefabs/shared_kitchen/dispenser_crate_01.prefab": 5,
+    "assets/prefabs/shared_kitchen/workstation_plate_return.prefab": 1,
+    "assets/prefabs/shared_kitchen/workstation_bin_01.prefab": 1,
+    "assets/models/themes/wizards_school/prefabs/step.prefab": 6
+   },
+   "modelContainers": {
+    "assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/m_dlc2_umbrealla_open_02.fbx": 2
+   }
+  }
+ ],
+ "aggregate": {
+  "levels": 5,
+  "failed": [],
+  "counts": {
+   "group": 192,
+   "prefab": 2072,
+   "prefab:by-signature": 221,
+   "model": 9,
+   "drop": 66,
+   "prefab:weak-shape": 97,
+   "skip": 1
+  },
+  "drops": {
+   "scene-embedded-mesh": 12,
+   "empty": 25,
+   "builtin-mesh": 29
+  },
+  "skips": {
+   "subtree:combinedmesh-lightmap_0_baker": 1
+  },
+  "distinctPrefabContainers": 156,
+  "distinctModelContainers": 2,
+  "missingSoCount": 14,
+  "missingSoTop": [
+   [
+    "ripple_1 (8)",
+    65
+   ],
+   [
+    "watersplash_particle_001",
+    12
+   ],
+   [
+    "m_dlc2_umbrealla_open_02",
+    8
+   ],
+   [
+    "countertop_02",
+    4
+   ],
+   [
+    "m_dlc2_palmtree_canopy_01 (1)",
+    4
+   ],
+   [
+    "p_dlc07_map_rock_outermap_06",
+    2
+   ],
+   [
+    "rock_02 1",
+    2
+   ],
+   [
+    "traffic jam",
+    1
+   ],
+   [
+    "p_dlc07_map_rock_outermap_05",
+    1
+   ],
+   [
+    "m_dlc_hut_03",
+    1
+   ],
+   [
+    "mine_rock_01",
+    1
+   ],
+   [
+    "rock_01 1",
+    1
+   ],
+   [
+    "airballoon_nail_01",
+    1
+   ],
+   [
+    "quad_tile_3x1_01",
+    1
+   ]
+  ],
+  "builtinMaterialCount": 5,
+  "builtinMaterials": [
+   [
+    "mat_dlc2_pooltiles_04",
+    8
+   ],
+   [
+    "mat_dlc2_woodenfloor_02",
+    8
+   ],
+   [
+    "mat_dlc2_pooltiles_01",
+    7
+   ],
+   [
+    "mat_dlc2_floortile_01",
+    4
+   ],
+   [
+    "mat_dlc2_floortile_1_4",
+    2
+   ]
+  ],
+  "skewedNodes": 711,
+  "bakerNodes": 50,
+  "envMissing": []
+ }
+}

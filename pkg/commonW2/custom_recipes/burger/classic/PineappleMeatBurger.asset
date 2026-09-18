@@ -23,8 +23,8 @@ MonoBehaviour:
   compositionSOs:
   - {fileID: 11400000, guid: 965ff691e25e50b0c5151ea9a97899d4, type: 2}
   - {fileID: 11400000, guid: bfe04e155ee5dc54396f4625aeaabb63, type: 2}
-  - {fileID: 11400000, guid: c9523f76bccb7c741a8332a72a8ebca6, type: 2}
-  - {fileID: 11400000, guid: c9523f76bccb7c741a8332a72a8ebca6, type: 2}
+  - {fileID: 11400000, guid: 4ec8a736936e7744c91d254705783c2c, type: 2}
+  - {fileID: 11400000, guid: 4ec8a736936e7744c91d254705783c2c, type: 2}
   optionalSOs: []
   cookingStepSO: {fileID: 0}
   cookingStepIconSO: {fileID: 0}

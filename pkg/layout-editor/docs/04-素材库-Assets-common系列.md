@@ -507,18 +507,19 @@ commonW1 的 dlcXX 是 **dlc-first** 两级结构（`dlcXX/{art,counters,decor/{
 
 ### 8.0 二级分类目录（2026-09-15）
 
-`custom_recipes/burger/` 下按子目录细分，74 个菜谱资产分为 8 类；`models/`、`icons/` 留在 `burger/` 根下共享：
+`custom_recipes/burger/` 下按子目录细分，菜谱资产分为 8 类；`models/`、`icons/` 留在 `burger/` 根下共享
+（另有同级 `custom_recipes/fry/` 4 个）。条数为 2026-09-18 实测：
 
 | 子目录 | 显示名 | 条数 | 判定 |
 |---|---|---|---|
 | `assembly/` | 组装定义 | 6 | `CustomRecipeOptionalBurgerSO` 或 `*_filler` |
-| `classic/` | 经典汉堡 | 18 | 含肉/芝士，40–80 分 |
-| `deluxe/` | 豪华汉堡 | 7 | 含肉/芝士，100–140 分 |
-| `mega/` | 巨无霸汉堡 | 2 | ≥160 分 |
+| `classic/` | 经典汉堡 | 26 | 含肉/芝士，40–80 分 |
+| `deluxe/` | 豪华汉堡 | 19 | 含肉/芝士，100–140 分 |
+| `mega/` | 巨无霸汉堡 | 6 | ≥160 分 |
 | `breakfast/` | 早餐汉堡 | 4 | `Breakfast*` |
 | `seafood/` | 海鲜汉堡 | 3 | 夹心含 Prawn/Shrimp/Fish |
 | `veggie/` | 素食汉堡 | 10 | 夹心纯蔬果 |
-| `filling/` | 夹心/中间产物 | 24 | 非 Composite 或 score≤0 |
+| `filling/` | 夹心/中间产物 | 40 | 非 Composite 或 score≤0 |
 
 为什么零破坏：`ScanCustomRecipes` 的 `category` 只取 `custom_recipes/` 下**第一段**目录名（仍是 `burger`），
 `ScanAssetsByScript` 是 `AllDirectories` 递归，`CustomRecipeNamesPath` 向上回溯找 `custom_recipes`。
@@ -533,13 +534,31 @@ commonW1 的 dlcXX 是 **dlc-first** 两级结构（`dlcXX/{art,counters,decor/{
 
 迁移脚本：`node layout-editor/scripts/split-burger-subcategories.mjs`（dry-run）/ `--apply`（执行 + 报告）。
 
-### 8.1 全貌（74 配方 + 14 模型）
+### 8.1 全貌（burger 114 + fry 4 配方，15 模型 prefab；2026-09-18 实测）
 
-- **成品汉堡（score>0）44 个**：单料（Lettuce/Tomato/Cucumber/Pineapple/Chicken/Cheese 各 `XBurger`）、双料组合（`LettuceTomatoBurger` 等）、三料/四料、早餐系列（`Breakfast{Cheese,Lettuce,Meat,Onion}Burger`）、特色（`DoublePineappleBurger`（含 `_filler` 变体）、`Supreme`），以及**官方牛肉系汉堡的 DLC8 面皮副本 5 个**（`MeatBurger`/`CheeseMeatBurger`/`LettuceMeatBurger`/`LettuceCheeseMeatBurger`/`LettuceTomatoMeatBurger`，uID 58321069~58321073，对应官方 `Burger_Plain_SO`/`Burger_Cheese_SO`/`Burger_Lettuce_SO`/`Burger_CheeseLettuce_SO`/`Burger_LettuceTomato_SO`，牛肉夹心统一用 common01 `FriedMeat`）。
-- **中间产物（score=0）24 个**：`Fried{Cheese,Chicken,CornPone,FishPone,Mushroom,Onion,Pepperoni,Pineapple,PotatoCake,Prawn,ShrimpPone}`、`Panfried{Beef,MeatEgg,MeatMushroom,MeatOnion,Mushroom,Onion}`、`Mixed{MeatEgg,MeatMushroom,MeatOnion}`、`EggSausage/BaconSausage/ChickenPatty/PineappleSlice`。
+- **成品汉堡（score>0）**：单料（Lettuce/Tomato/Cucumber/Pineapple/Chicken/Cheese 各 `XBurger`）、双料组合（`LettuceTomatoBurger` 等）、三料/四料、早餐系列（`Breakfast{Cheese,Lettuce,Meat,Onion}Burger`）、特色（`DoublePineappleBurger`（含 `_filler` 变体）、`Supreme`），以及**官方牛肉系汉堡的 DLC8 面皮副本 5 个**（`MeatBurger`/`CheeseMeatBurger`/`LettuceMeatBurger`/`LettuceCheeseMeatBurger`/`LettuceTomatoMeatBurger`，uID 58321069~58321073，对应官方 `Burger_Plain_SO`/`Burger_Cheese_SO`/`Burger_Lettuce_SO`/`Burger_CheeseLettuce_SO`/`Burger_LettuceTomato_SO`，牛肉夹心统一用 common01 `FriedMeat`）。
+- **中间产物（score=0）**：`Fried{Cheese,Chicken,CornPone,FishPone,Mushroom,Onion,Pepperoni,Pineapple,PotatoCake,Prawn,ShrimpPone}`、`Panfried{MeatEgg,MeatMushroom,MeatOnion,Mushroom,Onion,Tomato}`、`Mixed{MeatEgg,MeatMushroom,MeatOnion}`、`EggSausage/BaconSausage/PineappleSlice` 等。
+  ⚠ `ChickenPatty`、`PanfriedBeef` 已于 2026-09-18 合并删除（见下「鸡肉/牛肉统一」）。
 - **组装定义（CustomRecipeOptionalBurgerSO）6 个**：`OptionalBurger`（主模板，capacity=20）、`VeggieBurgerAssembly`、`ChickenBurgerAssembly`、`MeatBurgerAssembly`、`PineappleMeatBurgerAssembly`、`DoublePineappleBurger_filler`（uID `1179688004`，不在 58321 号段，属手工追加残留）。
-- **面皮统一**：全部 44 个成品的 `compositionSOs[0]` 与全部 6 个组装定义的 `bunSO` 一律是 **DLC8 面皮**（`Assets/common03/food/Ingredients/dlc08/dlc08_choppedbun.asset`，guid `965ff691e25e50b0c5151ea9a97899d4`），与 DLC8 套餐（`DLC08_MD_*`）同款。核心 `ChoppedBunSO`、`DLC02_ChoppedBun` 在 commonW2 中零引用。
-- **models/ 14 prefab**：CucumberSlice、FriedBeefNew、FriedBeefPatty、FriedCheese、FriedChickenPatty、FriedCornCake、FriedFishCake、FriedPotatoCake、FriedSausage、FriedShrimpCake、PanfriedMushroom、PanfriedOnion、PineappleSlice、TomatoSlice（另 11 fbx、13 mat、12 视觉 SO）。icons/ 41 png（26 呆喵成品图标 + 10 张 `ui_*` 原版风格 + 5 张官方汉堡副本图标）。
+- **面皮统一**：全部成品的 `compositionSOs[0]` 与全部 6 个组装定义的 `bunSO` 一律是 **DLC8 面皮**（`Assets/common03/food/Ingredients/dlc08/dlc08_choppedbun.asset`，guid `965ff691e25e50b0c5151ea9a97899d4`），与 DLC8 套餐（`DLC08_MD_*`）同款。核心 `ChoppedBunSO`、`DLC02_ChoppedBun` 在 commonW2 中零引用。
+- **鸡肉统一（2026-09-18，与面皮统一同级纪律）**：commonW2 内鸡肉只有一条轨道 `filling/FriedChicken.asset`（uID 58321020）——
+  生食材 `common03/food/Ingredients/dlc08/DLC08_Chicken`（`60adb1f0…`，bundle359），
+  夹心模型 `models/p_dlc8_recipe_chicken_burger_01`（`3308b577…`，同 bundle359）。
+  **common01 `ChickenSO`（`f5e2ed0b…`，bundle47 OC1 legacy 鸡）在 commonW2 中零引用。**
+  历史双轨来源：`migrate-burger-recipes.mjs` 的 `GUID_REMAP` 曾把 100 Burger 源数据里的悬空生鸡肉 guid
+  `7b0da7f9…` 错顶成 common01 `ChickenSO`，造出第二条鸡肉 `ChickenPatty`（58321012）。
+  合并时 `ChickenPatty` 的 4 处引用（`OptionalBurger` slot[16] + 3 道 deluxe）全部改指 `FriedChicken`，
+  脚本 `GUID_REMAP` 已同步改为映射到 `DLC08_Chicken`（否则重跑迁移会回退）。
+  连带删除组成撞车的 `deluxe/LettuceTomatoCheeseChickenBurger`（58321081，100 分），
+  保留组成相同但分数更高的 `deluxe/ChickenLettuceCheeseTomatoBurger`（58321009，120 分）。
+- **牛肉统一（2026-09-18）**：煎牛肉只有一条轨道 `common01/food/CustomRecipes/Burger/FriedMeat`（`4ec8a736…`）。
+  commonW2 原有的平行夹心 `filling/PanfriedBeef`（58321053，呆喵 `FriedBeefPatty` 模型）与 `FriedMeat`
+  **组成完全等价**（`MeatSO` + 煎锅 + progress=1），已删除；6 处引用改指 `FriedMeat`，
+  `PineappleMeatBurgerAssembly` 的两个牛肉槽模型改用 `models/plated_meat`（`6c8a0c12…`，bundle47），
+  与 `OptionalBurger` 的 `FriedMeat` 槽写法一致。
+- **模型资产保留不删**：`FriedChickenPatty.prefab` / `FriedChicken*.fbx|mat|png` / `FriedBeef*.prefab|mat|png`
+  即使已无菜谱引用也**必须留着**——`models/` 兼作汉堡工作台的「模板网格库」（见下方 models/ 条目），删了会砍掉模板池。
+- **models/ 15 prefab**：CucumberSlice、FriedBeefNew、FriedBeefPatty、FriedCheese、FriedChickenPatty、FriedCornCake、FriedEgg、FriedFishCake、FriedPotatoCake、FriedSausage、FriedShrimpCake、PanfriedMushroom、PanfriedOnion、PineappleSlice、TomatoSlice（另 11 fbx、13 mat、12 视觉 SO）。icons/ 41 png（26 呆喵成品图标 + 10 张 `ui_*` 原版风格 + 5 张官方汉堡副本图标）。
 - **models/ 兼作模板网格库**（2026-09-15）：这里的 `*.fbx` 是「模板网格模式」的**只读**素材源。
   工作台新建夹心时，后端从中**拷贝一份 FBX 字节**到目标菜谱的 models 目录并改名为 `<RecipeId>.fbx`
   （只拷 .fbx 不拷 .meta，新文件由 Unity 生成全新 guid），配前端 `textureEditor.ts` 产出的
@@ -577,7 +596,9 @@ MonoBehaviour:
 
 ### 8.3 names.json 与 CustomRecipeConfig
 
-两者位于 `Assets/commonW2/custom_recipes/`（burger/ 同级）。`names.json`（带 BOM 的 UTF-8，`schemaVersion:1`，74 项，id 与 asset 文件名一致）：
+两者位于 `Assets/commonW2/custom_recipes/`（burger/ 同级）。`names.json`（带 BOM 的 UTF-8，`schemaVersion:1`，
+118 项，id 与 asset 文件名一致；条目数可多于资产数——删菜谱时要手工同步删条目，2026-09-18 已删
+`ChickenPatty`/`PanfriedBeef`/`LettuceTomatoCheeseChickenBurger` 三条）：
 
 ```json
 { "schemaVersion": 1, "names": [
@@ -589,15 +610,50 @@ MonoBehaviour:
 
 ```yaml
   uidPrefix: 58321        # uID = 58321*1000 + 序号
-  nextSequence: 74        # 下一自增序号（新配方从 58321074 起）
+  nextSequence: 95        # 下一自增序号（新配方从 58321095 起）；删菜谱时**不回退**，uID 永不复用
   categories:
   - id: burger
     zh: "Burger\u5927\u5168"      # "Burger大全"（Unity YAML 非 ASCII 转义）
     en: Burger
+  - id: fry
+    zh: "\u70B8\u7269"            # "炸物"
+    en: Fry
   modelTransforms: []     # 每菜谱模型 scale/rotation 微调，避免改宿主类定义
 ```
 
 编辑器接入：`LayoutEditorCustomIngredients.ReferencesCommonW2()` 深层判定（含 composition/model 引用）决定是否注册 commonW2 依赖；`CommonW2RecipesDir` 是所有关卡集可见的固定菜谱分类扫描根。
+
+### 8.4 食材口径一致性（已统一 / 遗留待办）
+
+commonW2 的菜谱来自三批合并（100 Burger / 呆喵新菜谱 / 2026-09-17「补充汉堡」手工追加），
+**每批对同一种食材选了不同的 SO**，是本库最主要的系统性缺陷来源。
+
+**判定"等价撞车"的标准**：`compositionSOs` 多重集 + `cookingStepSO` + `type` + `cookingProgress/mixingProgress`
+四项全同 ⇒ 游戏内是同一道菜（`CompositeOrderNode` 匹配与层序无关），订单匹配会出现歧义。
+
+已统一：
+
+| 食材 | 统一口径 | 备注 |
+|---|---|---|
+| 面包皮 | `common03` `dlc08_choppedbun` | 见 8.1 |
+| 生鸡肉 | `common03` `DLC08_Chicken` | 2026-09-18；`common01 ChickenSO` 零引用 |
+| 煎鸡肉夹心 | `commonW2` `FriedChicken`（模型 DLC08 `p_dlc8_recipe_chicken_burger_01`） | 2026-09-18 |
+| 煎牛肉夹心 | `common01` `FriedMeat`（模型 `plated_meat`） | 2026-09-18；`PanfriedBeef` 已删 |
+| 生菜/芝士/黄瓜/番茄 | `common01` | 本来就一致 |
+| 菠萝 | `common02` `dlc02/BurgerPineapple` | 本来就一致 |
+| 香肠/培根 | `common02` `dlc05` | 本来就一致 |
+| 玉米 | `common03` `dlc11/DLC11_Corn` | 本来就一致 |
+
+遗留待办（**本次未处理**，均为已存在的等价撞车或双源）：
+
+| 级别 | 问题 | 详情 |
+|---|---|---|
+| 🔴 | `FriedPrawn`(58321028) vs `FriedShrimpPone`(58321029) | 均为 `PrawnSO` + `DeepFatFryer` + progress=1，完全等价 |
+| 🔴 | `MixedMeatMushroom`(58321050) vs `MixedMeatMushroomRaw`(1001016) | `MeatSO`+`MushroomSO` 搅拌，完全等价；下游 `PanfriedMeatMushroom` vs `PanfriedMixedMeatMushroom` 同样成对 |
+| 🔴 | `MixedMeatOnion`(58321051) vs `MixedMeatOnionRaw`(1001014) | 同上；下游 `PanfriedMeatOnion` vs `PanfriedMixedMeatOnion` |
+| 🟠 | 鸡蛋双源 | `common01 EggSO` vs `common02 dlc05/DLC05_Egg`：`MixedMeatEgg`(DLC05) vs `MixedMeatEggRaw`(EggSO)；`EggSausage`(DLC05) vs `EggSausageGriddle`(EggSO，零引用) |
+| 🟡 | uID 号段分裂 | 规范段 58321xxx；2026-09-17 批次用了 1000xxx~1004xxx，另有 `DoublePineappleBurger_filler` 的 1179688004 |
+| 🟢 | 非缺陷 | `FriedMushroom`(油炸锅)/`PanfriedMushroom`(煎锅)、`FriedOnion`/`PanfriedOnion`、`FriedPineapple`(煎)/`PineappleSlice`(生切)——`cookingStepSO` 不同，是合法的不同产物，只是命名容易混 
 
 ---
 

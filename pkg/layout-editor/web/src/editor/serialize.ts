@@ -153,6 +153,8 @@ export function buildRaftItemsForDoc(): LayoutItem[] {
       const id = `new:raft:${uuid()}`;
       const px = f._wx + p.dx;
       const pz = f._wz + p.dz;
+      // 拼块跟随地板自身高度（含负高度下沉木筏），碰撞盒由地板矩形的 walkY 决定。
+      const py = f.localPosition?.y ?? 0;
       raftItems.push({
         instanceId: id,
         hierarchyPath: id,
@@ -160,8 +162,8 @@ export function buildRaftItemsForDoc(): LayoutItem[] {
         prefabAssetPath: cat.assetPath,
         parentPath: cat.defaultParent,
         displayName: cat.id,
-        localPosition: { x: px, y: 0, z: pz },
-        worldPosition: { x: px, y: 0, z: pz },
+        localPosition: { x: px, y: py, z: pz },
+        worldPosition: { x: px, y: py, z: pz },
         localRotationY: p.rotY,
         footprint: cat.footprint,
         // Walkability comes from the retained raft floor rect (one Col_Floor),

@@ -785,7 +785,8 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
     <label class="m-field">中文名 levelNameZH<input type="text" id="lv-zh" placeholder="第一关"></label>
     <p class="modal-hint">将自动生成 4 份分数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景 s_template 到 scenes/。</p>
     `,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`
+    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`,
+    { closeOnBackdrop: false }
   );
   wireIdentInput("lv-id");
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);

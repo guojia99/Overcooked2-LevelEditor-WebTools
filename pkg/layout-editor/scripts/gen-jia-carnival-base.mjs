@@ -34,7 +34,7 @@
  * 只放轻道具。全部生成物 walkable:false（行走碰撞只来自 img_floor 的 floors 条目，
  * 该条目从现有布局 verbatim 回传）。
  *
- * 地面：road y=-0.09 / path y=0（s_jia_level1_1 实测同值）。
+ * 地面：road y=-0.09 / path y=0（s_jia_level_1_1 实测同值）。
  * 音频：BGM → DLC_08_FairgroundDay_Theme；保留现有 2 个音频目录 + DLC08AudioDirectory。
  *
  * 用法：

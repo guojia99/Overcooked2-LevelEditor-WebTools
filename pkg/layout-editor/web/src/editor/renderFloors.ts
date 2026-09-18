@@ -162,7 +162,7 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
   const { center, bw, bh, rot } = floorRectPx(f);
   const paint = surfacePaint(f.surfaceKind, selected);
   const walkH = floorWalkY(f);
-  const hTag = walkH > 0.005 ? ` · h=${walkH.toFixed(2)} L${floorLayerIndex(walkH)}` : "";
+  const hTag = Math.abs(walkH) > 0.005 ? ` · h=${walkH.toFixed(2)} L${floorLayerIndex(walkH)}` : "";
   // 空气地板：无可见地板，仅可行走区——半透明橙色虚线框 + 标注。
   if (f.airFloor) {
     dom.ctx.save();
@@ -250,11 +250,15 @@ export function drawFloorPlane(f: EditorFloor, selected: boolean, ghost: boolean
     dom.ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
   }
 
-  // 高度叠加：抬高的地板按层增亮（同层同色、层越高越亮），图片/染色地板
-  // 同样以叠加层实现，不破坏原有填色。
-  if (walkH > 0.005) {
+  // 高度叠加：抬高的地板按层增亮（同层同色、层越高越亮），下沉层（负高度）按层暗化，
+  // 图片/染色地板同样以叠加层实现，不破坏原有填色。
+  if (Math.abs(walkH) > 0.005) {
     const li = floorLayerIndex(walkH);
-    dom.ctx.fillStyle = `rgba(255,255,255,${Math.min(0.4, 0.08 + li * 0.09)})`;
+    if (li >= 0) {
+      dom.ctx.fillStyle = `rgba(255,255,255,${Math.min(0.4, 0.08 + li * 0.09)})`;
+    } else {
+      dom.ctx.fillStyle = `rgba(0,0,0,${Math.min(0.4, 0.08 + Math.abs(li) * 0.09)})`;
+    }
     dom.ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
   }
 

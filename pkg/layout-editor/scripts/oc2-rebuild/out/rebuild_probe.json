@@ -1,0 +1,141 @@
+{
+ "generatedAt": "2026-09-17 13:25:47",
+ "dry": false,
+ "levels": [
+  {
+   "id": "OC2_DLC02_1_1",
+   "set": "oc2_dlc_story",
+   "scene": "s_oc2_dlc02_1_1",
+   "ok": true,
+   "stats": {
+    "items": 281,
+    "counters": 30,
+    "utensils": 5,
+    "scenery": 246,
+    "skewed": 0,
+    "walls": 22,
+    "killplanes": 6,
+    "floors": 0,
+    "players": 4,
+    "lights": 1,
+    "drops": 5,
+    "skips": 0,
+    "dropDetail": {
+     "scene-embedded-mesh": 1,
+     "empty": 4
+    },
+    "skipDetail": {},
+    "dropPaths": [
+     "Art/Scenery/Sand",
+     "Design/Walls",
+     "Design/Floors",
+     "Design/Utensils",
+     "Design/Environment Objects"
+    ],
+    "floorMaterialsMissing": []
+   },
+   "bundles": [
+    "bundle167",
+    "bundle297",
+    "bundle47"
+   ],
+   "gridHalf": [
+    9,
+    5
+   ],
+   "cell": 1.2,
+   "envRoot": "CampaignGameEnvironment",
+   "seconds": 0.15,
+   "guid": "c873a501899c9307046ca84ab26a6aca",
+   "verify": {
+    "counters": {
+     "src": 30,
+     "gen": 30,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "utensils": {
+     "src": 5,
+     "gen": 5,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "scenery": {
+     "src": 246,
+     "gen": 246,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "chefs": {
+     "src": 4,
+     "gen": 4,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "walls": {
+     "src": 23,
+     "gen": 23,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "killplanes": {
+     "src": 6,
+     "gen": 6,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "floors": {
+     "src": 0,
+     "gen": 0,
+     "missing": 0,
+     "extra": 0,
+     "rotMismatch": 0,
+     "scaleMismatch": 0,
+     "worstDist": 0.0,
+     "worstName": ""
+    },
+    "total": 0
+   }
+  }
+ ],
+ "createdAssets": [
+  "Assets/commonW1/prefabs/oc2rebuild/core/art/city_sushi/traffic jam.prefab",
+  "Assets/commonW1/prefabs/oc2rebuild/dlc02/art/beach_theme/ripple_1 (8).prefab",
+  "Assets/commonW1/prefabs/oc2rebuild/dlc07/art/outermapdressing/p_dlc07_map_rock_outermap_05.prefab",
+  "Assets/commonW1/prefabs/oc2rebuild/dlc07/art/outermapdressing/p_dlc07_map_rock_outermap_06.prefab",
+  "Assets/commonW1/pseudo_prefab_so/oc2rebuild/core/art/city_sushi/traffic jam.asset",
+  "Assets/commonW1/pseudo_prefab_so/oc2rebuild/dlc02/art/beach_theme/ripple_1 (8).asset",
+  "Assets/commonW1/pseudo_prefab_so/oc2rebuild/dlc07/art/outermapdressing/p_dlc07_map_rock_outermap_05.asset",
+  "Assets/commonW1/pseudo_prefab_so/oc2rebuild/dlc07/art/outermapdressing/p_dlc07_map_rock_outermap_06.asset"
+ ],
+ "materials": {
+  "created": [],
+  "reused": [],
+  "mismatched": [],
+  "failed": []
+ }
+}

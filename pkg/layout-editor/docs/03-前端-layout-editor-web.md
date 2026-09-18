@@ -105,7 +105,7 @@ flowchart LR
 | **style.css / recipeList.css** | 全站样式（135KB）/ 菜谱卡片专用（含汇总页 `.sum-*`；`.sum-page.has-bg` = 设了导出背景图时的作用域覆盖：卡片摘掉深色渐变底与 1px 边框、计数胶囊转半透明，**不改任何 `.rl-*` 原始规则**） |
 | **levels.ts** | ★ 关卡管理页（2574 行）：关卡集/关卡列表、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、关卡编辑页「汇总导出背景图」区块（上传到 `data/<level>/summary_bg~/`，Unity 忽略目录 → 不进 AssetBundle）、汇总页 + PNG 导出（DOM 快照，背景图 cover + 暗色遮罩内联在 `#sum-node` 上 → 预览与导出同源）、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复） |
 | **dependencies.ts** | 依赖管理页：两级列表、`BundleAnalysis` 展示（缺失红/未用黄）、手动编辑 dependencies、依赖闭包 |
-| **customRecipes.ts** | 自定义菜谱管理页（1963 行）：卡片 + 分类侧栏、新建/编辑表单（组成多选/烹饪/装盘/图标/FBX+MTL+贴图上传/cm 校准/3D 预览）、分类管理 |
+| **customRecipes.ts** | 自定义菜谱管理页（1963 行）：卡片 + 分类侧栏、新建/编辑表单（组成多选/烹饪/装盘/图标/FBX+MTL+贴图上传/cm 校准/3D 预览）、分类管理。<br>2026-09-17：顶栏「🍞 统一面包皮」→ `openBunSwapModal`（`groupBunUsages` 把面包层按菜谱合并成行；目标三选一默认 `BUN_DLC8_ID`，切目标后整体重绘因「已是目标」行会变；调 `api.fetchBunUsage` / `api.replaceBun`）。只改本集 custom_recipes 资产，关卡 BurgerOptional/matchlist/依赖与场景食材箱不联动，弹窗底部固定提醒作者自行处理 |
 | **burgerMaker.ts** | 汉堡组装工作台（严格路由 `/custom-recipes/burger-maker/{set}[/{burgerId}]`，URL 中的 burgerId 自动载入已存成品）：顶部菜谱卡片实时预览（共用 `rlCardHtml`）+ 层层堆叠夹心（拖动排序、候选计数徽标）、夹心>32 层软上限提醒（含超规格实拍弹窗），调 `/api/burger/create`；候选面板按「面包/中间产物/成品菜/官方菜谱/官方食材」五组 + 徽标（DLC / bundle缺失 / 荐）+ 仅推荐/显示无模型筛选 + 👁 3D 预览 + 图标逐级降级（`candIconChain`）；「🥩 夹心工作台 ↗」新开一页跳 `/custom-recipes/filling-maker/{set}` |
 | **fillingMaker.ts** | 🥩 夹心工作台（`/custom-recipes/filling-maker/{set}[/{fillingId}]`）：关卡集选择 + 本集夹心列表 + commonW2 共享夹心只读参考 + 新建/编辑/预览/删除。**不自实现编辑逻辑**，直接调 `renderRecipeForm(..., {mode:"filling"})`，编辑器改动自动继承 |
 | **textureEditor.ts** | 夹心贴图编辑器（1024×1024 canvas）：取色纯色填充 / 上传图片 / 画笔涂抹 + 撤销；「🔍 预览模型」用模板 FBX 字节 + 当前贴图 File 实时 3D 渲染（不落盘） |

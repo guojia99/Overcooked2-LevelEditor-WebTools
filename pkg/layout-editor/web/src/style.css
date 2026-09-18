@@ -1641,6 +1641,32 @@ body {
   font-size: 10px;
 }
 
+/* 一键选中所有同名物品（纯前端装饰层） */
+.scene-item-samename {
+  float: right;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid #3a4150;
+  border-radius: 4px;
+  background: #262b34;
+  color: #9aa0a6;
+  font-size: 10px;
+  line-height: 16px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.scene-item-row:hover .scene-item-samename {
+  opacity: 1;
+}
+
+.scene-item-samename:hover {
+  background: #31435f;
+  border-color: #5b9be8;
+  color: #e8eaed;
+}
+
 /* 自带动画 NPC 空态说明：类型卡片美化 */
 .npc-types-empty {
   padding: 8px 10px;
@@ -8680,4 +8706,130 @@ body.manage-bg {
   width: 100%;
   min-width: 80%;
   max-width: none;
+}
+
+/* ---- 🍞 统一面包皮弹窗（自定义菜谱页） ---- */
+.bs-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bs-targets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.bs-target {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid #3a3f4a;
+  border-radius: 6px;
+  background: #12141a;
+  cursor: pointer;
+  font-size: 12px;
+}
+.bs-target:hover {
+  border-color: #5a616e;
+}
+.bs-target.active {
+  border-color: #e8915b;
+  background: #1c1a17;
+}
+.bs-target.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.bs-target input {
+  margin-top: 3px;
+}
+.bs-target-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.bs-note {
+  line-height: 1.4;
+}
+
+.bs-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 46vh;
+  overflow-y: auto;
+  border: 1px solid #3a3f4a;
+  border-radius: 6px;
+  padding: 6px;
+  background: #12141a;
+}
+.bs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.bs-row:hover {
+  background: #1b1e25;
+}
+.bs-row.done {
+  opacity: 0.45;
+  cursor: default;
+}
+.bs-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.bs-row-swap {
+  color: #9aa0a6;
+  white-space: nowrap;
+}
+.bs-row-swap b {
+  color: #e8915b;
+  margin: 0 3px;
+}
+
+.bs-shared {
+  margin-top: 12px;
+  font-size: 12px;
+}
+.bs-shared summary {
+  cursor: pointer;
+  color: #9aa0a6;
+}
+.bs-shared-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 20vh;
+  overflow-y: auto;
+  margin-top: 6px;
+}
+.bs-shared-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bs-remind {
+  margin-top: 14px;
+  padding: 9px 11px;
+  border-left: 3px solid #e8915b;
+  background: #1c1a17;
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.bs-remind ol {
+  margin: 5px 0 0;
+  padding-left: 20px;
 }

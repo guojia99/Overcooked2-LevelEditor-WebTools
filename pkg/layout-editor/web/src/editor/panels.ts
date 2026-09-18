@@ -185,6 +185,7 @@ export function refreshSceneItemList(): void {
         parts.push(
           `<div class="scene-item-row${isSelected(it._editorKey) ? " active" : ""}" data-key="${it._editorKey}">` +
             `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${escHtml(prefabIdFromPath(it.prefabAssetPath) || "—")}</span>` +
+            `<button type="button" class="scene-item-samename" data-samename="${it._editorKey}" title="选中所有同名物品">⌂</button>` +
             `</div>`
         );
       }
@@ -268,6 +269,7 @@ export function refreshSceneItemList(): void {
         parts.push(
           `<div class="scene-item-row${isSelected(it._editorKey) ? " active" : ""}" data-key="${it._editorKey}">` +
             `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${escHtml(id)}</span>` +
+            `<button type="button" class="scene-item-samename" data-samename="${it._editorKey}" title="选中所有同名物品">⌂</button>` +
             `</div>`
         );
       }
@@ -283,6 +285,21 @@ export function refreshSceneItemList(): void {
       if (!it) return;
       setSelection([key]);
       ensureItemVisible(it);
+      draw();
+    });
+  });
+
+  body.querySelectorAll<HTMLElement>(".scene-item-samename[data-samename]").forEach((btn) => {
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      const key = btn.dataset.samename!;
+      const base = S.items.find((i) => i._editorKey === key);
+      if (!base) return;
+      const name = itemLabel(base);
+      const matches = S.items.filter((i) => itemLabel(i) === name);
+      const keys = matches.map((i) => i._editorKey);
+      setSelection(keys, key);
+      ensureItemVisible(base);
       draw();
     });
   });

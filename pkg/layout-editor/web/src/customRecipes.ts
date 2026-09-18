@@ -1,5 +1,7 @@
 import * as api from "./api";
 import type {
+  BunUsage,
+  BunUsageReport,
   CustomRecipeCategory,
   CustomRecipeConfig,
   CustomRecipeEdit,
@@ -12,6 +14,7 @@ import type {
 import { showBusy, hideBusy, withBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
 import { burgerPath, fillingPath, parseRoute, recipeFormPath, recipeListPath } from "./route";
+import { BUN_CORE_ID, BUN_DLC2_ID, BUN_DLC8_ID } from "./recipeGroups";
 import { foodGroupLabel, visibleIngredients, visibleRecipes } from "./ingredientLabels";
 import { recipeTypeLabel, RECIPE_TYPE_ORDER } from "./recipeTypes";
 import { closeModal, openModal } from "./modals";
@@ -430,6 +433,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       <button class="m-btn" id="cr-back">← 返回关卡集列表</button>
       <span class="muted">当前关卡集：<b>${esc(setName)}</b></span>
       <span style="flex:1"></span>
+      <button class="m-btn" id="cr-unify-bun" title="把本关卡集自定义菜谱里的汉堡面包皮统一换成同一种">🍞 统一面包皮</button>
       <button class="m-btn" id="cr-new-filling" title="夹心 = 0 分自定义菜谱，做好后可在汉堡工作台选用">🥩 夹心工作台</button>
       <button class="m-btn" id="cr-new-burger">🍔 新增汉堡菜谱</button>
       <button class="m-btn primary" id="cr-new-recipe">+ 新建菜谱</button>
@@ -607,6 +611,9 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   wireGridButtons();
 
   document.getElementById("cr-back")?.addEventListener("click", () => void renderSetChooser(app));
+  document.getElementById("cr-unify-bun")?.addEventListener("click", () =>
+    openBunSwapModal(setName, refreshView)
+  );
   document.getElementById("cr-new-burger")?.addEventListener("click", () => {
     location.assign(burgerPath(setName));
   });
@@ -617,6 +624,260 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     syncCrPath(recipeFormPath(setName, "new"));
     void renderRecipeForm(app, setName, null, activeCategoryId ? { category: activeCategoryId } : undefined);
   });
+}
+
+// ==================== 🍞 一键统一面包皮 ====================
+
+/** 目标面包皮的代价/风险说明（按 id）。等价性结论见 recipeGroups.ts BUN_EQUIVALENT_IDS。 */
+function bunTargetNote(id: string): string {
+  if (id === BUN_DLC8_ID)
+    return "Burger大全规范面皮；与核心面包 IngredientOrderNode uID 同为 16088，订单匹配等价。";
+  if (id === BUN_CORE_ID)
+    return "主线核心面包，不引入额外 DLC 依赖；与 DLC8 面皮 uID 16088 等价。";
+  if (id === BUN_DLC2_ID)
+    return "⚠️ 未经 uID 实测，不在核心面包/DLC8 面皮的等价组内 —— 已有食材箱可能接不上订单。";
+  return "";
+}
+
+/** 一道菜谱的面包层汇总（多层合并成一行）。 */
+interface BunRecipeRow {
+  assetPath: string;
+  id: string;
+  nameZh: string;
+  isAssembly: boolean;
+  isFinishedBurger: boolean;
+  /** 当前面包皮 id（去重，通常只有一种）。 */
+  bunIds: string[];
+  /** 面包层数（含组装定义的 bunSO 字段）。 */
+  layers: number;
+}
+
+function groupBunUsages(usages: BunUsage[]): BunRecipeRow[] {
+  const byPath = new Map<string, BunRecipeRow>();
+  for (const u of usages) {
+    let row = byPath.get(u.assetPath);
+    if (!row) {
+      row = {
+        assetPath: u.assetPath,
+        id: u.id,
+        nameZh: u.nameZh,
+        isAssembly: u.isAssembly,
+        isFinishedBurger: u.isFinishedBurger,
+        bunIds: [],
+        layers: 0,
+      };
+      byPath.set(u.assetPath, row);
+    }
+    if (!row.bunIds.includes(u.bunId)) row.bunIds.push(u.bunId);
+    row.layers++;
+  }
+  return [...byPath.values()].sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
+}
+
+/**
+ * 🍞 一键统一面包皮：把本关卡集 `custom_recipes/` 内自定义菜谱的面包层统一换成同一种。
+ *
+ * 只改菜谱资产 —— 引用这些菜谱的关卡（BurgerOptional.bunSO 重算 / DLC 匹配表补全 /
+ * bundle 依赖重建，均在 POST /api/level-recipes 里）与场景食材箱都**不动**，
+ * 只在弹窗与结果里提醒作者自行处理。commonW2 共享库与官方汉堡由后端路径闸门硬拒。
+ */
+async function openBunSwapModal(setName: string, onDone: () => void): Promise<void> {
+  showBusy("扫描面包皮…");
+  let report: BunUsageReport;
+  try {
+    report = await api.fetchBunUsage(setName);
+  } catch (e) {
+    setStatus(e instanceof Error ? e.message : String(e), false);
+    return;
+  } finally {
+    hideBusy();
+  }
+
+  const rows = groupBunUsages(report.usages);
+  const sharedRows = groupBunUsages(report.sharedUsages);
+  const bunById = new Map(report.buns.map((b) => [b.id, b]));
+  const bunName = (id: string): string => bunById.get(id)?.nameZh ?? id;
+
+  if (rows.length === 0) {
+    openModal(
+      "🍞 统一面包皮",
+      `<p class="modal-hint">关卡集 <b>${esc(setName)}</b> 的 <code>custom_recipes/</code> 里没有引用汉堡面包皮的自定义菜谱，无需统一。</p>
+       ${sharedRows.length > 0 ? `<p class="muted small">（commonW2 共享库里有 ${sharedRows.length} 道含面包的汉堡，属全关卡集共用资产，本工具不会修改。）</p>` : ""}`,
+      '<button class="m-btn" data-close>关闭</button>'
+    );
+    document.querySelector<HTMLButtonElement>("[data-close]")?.addEventListener("click", closeModal);
+    return;
+  }
+
+  // 默认目标：DLC8 面皮（Burger大全规范面皮）；不可用时回退到候选池第一个。
+  const available = report.buns.filter((b) => b.bundleAvailable !== false);
+  let target =
+    available.find((b) => b.id === BUN_DLC8_ID)?.id ?? available[0]?.id ?? report.buns[0]?.id ?? "";
+  /** 用户手动取消勾选的菜谱（其余默认全选）。 */
+  const unchecked = new Set<string>();
+
+  /** 该行是否已全部是目标面包皮（无需替换，置灰）。 */
+  const isDone = (r: BunRecipeRow): boolean => r.bunIds.length === 1 && r.bunIds[0] === target;
+  const pendingRows = (): BunRecipeRow[] => rows.filter((r) => !isDone(r));
+  const selectedRows = (): BunRecipeRow[] => pendingRows().filter((r) => !unchecked.has(r.assetPath));
+
+  const targetHtml = (): string =>
+    report.buns
+      .map((b) => {
+        const disabled = b.bundleAvailable === false;
+        const note = bunTargetNote(b.id);
+        return `<label class="bs-target${disabled ? " disabled" : ""}${b.id === target ? " active" : ""}">
+          <input type="radio" name="bs-target" value="${esc(b.id)}" ${b.id === target ? "checked" : ""} ${disabled ? "disabled" : ""}>
+          ${foodIconImg("ingredients", b.id)}
+          <span class="bs-target-text">
+            <b>${esc(b.nameZh)}</b> <span class="muted small">${esc(b.id)}${b.bundleName ? ` · ${esc(b.bundleName)}` : ""}</span>
+            ${disabled ? '<span class="mp-status err">bundle 未就绪，不可选</span>' : ""}
+            ${note ? `<span class="muted small bs-note">${esc(note)}</span>` : ""}
+          </span>
+        </label>`;
+      })
+      .join("");
+
+  const rowsHtml = (): string =>
+    rows
+      .map((r) => {
+        const done = isDone(r);
+        const checked = !done && !unchecked.has(r.assetPath);
+        const kind = r.isAssembly ? "组装定义" : r.isFinishedBurger ? "成品汉堡" : "菜谱";
+        const from = r.bunIds.map((b) => esc(bunName(b))).join(" / ");
+        return `<label class="bs-row${done ? " done" : ""}">
+          <input type="checkbox" class="bs-cb" value="${esc(r.assetPath)}" ${checked ? "checked" : ""} ${done ? "disabled" : ""}>
+          <span class="bs-row-main">
+            <b>${esc(r.nameZh)}</b>
+            <span class="muted small">${esc(r.id)} · ${kind} · ${r.layers} 层面包</span>
+          </span>
+          <span class="bs-row-swap">${done ? `<span class="muted">已是 ${esc(bunName(target))}</span>` : `${from} <b>→</b> ${esc(bunName(target))}`}</span>
+        </label>`;
+      })
+      .join("");
+
+  const sharedHtml = (): string => {
+    if (sharedRows.length === 0) return "";
+    return `<details class="bs-shared">
+      <summary>不可修改的 ${sharedRows.length} 项（commonW2 共享库）</summary>
+      <p class="muted small">commonW2「🍔 Burger大全」是<b>全关卡集共用</b>的共享库，改它会污染所有关卡集，后端会硬拒。
+      官方汉堡（Burger_Plain_SO 等）的面包锁死在游戏 bundle 内是 DLC2 面皮，同样无法更改。</p>
+      <div class="bs-shared-list">${sharedRows
+        .map(
+          (r) =>
+            `<div class="muted small">${esc(r.nameZh)} <span>${esc(r.bunIds.map(bunName).join(" / "))}</span></div>`
+        )
+        .join("")}</div>
+    </details>`;
+  };
+
+  const body = `
+    <p class="modal-hint">把关卡集 <b>${esc(setName)}</b> 的 <code>custom_recipes/</code> 内自定义菜谱的汉堡面包皮统一换成同一种（成品汉堡的组成层 + 本地组装定义的 bunSO）。</p>
+    <div class="m-section-title">目标面包皮</div>
+    <div class="bs-targets" id="bs-targets">${targetHtml()}</div>
+    <div class="m-section-title bs-head">受影响的菜谱 <span class="muted small" id="bs-count"></span>
+      <span style="flex:1"></span>
+      <button type="button" class="m-btn small" id="bs-all">全选</button>
+      <button type="button" class="m-btn small" id="bs-none">全不选</button>
+    </div>
+    <div class="bs-rows" id="bs-rows">${rowsHtml()}</div>
+    ${sharedHtml()}
+    <div class="bs-remind">
+      <b>替换后需要你自己做的两件事（本工具不联动）：</b>
+      <ol>
+        <li>对<b>引用了这些菜谱的关卡</b>各重存一次菜谱 —— 才会重算 <code>BurgerOptional.bunSO</code>、补全 DLC 匹配表、重建 bundle 依赖。</li>
+        <li>检查这些关卡场景里的<b>食材箱</b>是否还给着旧面包皮，需要的话自行替换。</li>
+      </ol>
+    </div>
+    <p class="mp-status" id="bs-status"></p>
+  `;
+
+  openModal(
+    "🍞 统一面包皮",
+    body,
+    `<button class="m-btn" id="bs-cancel">取消</button>
+     <button class="m-btn primary" id="bs-apply">执行替换</button>`,
+    { closeOnBackdrop: false }
+  );
+  document.querySelector(".modal-panel")?.classList.add("wide");
+
+  const $rows = document.getElementById("bs-rows")!;
+  const $count = document.getElementById("bs-count")!;
+  const $apply = document.getElementById("bs-apply") as HTMLButtonElement;
+  const $status = document.getElementById("bs-status")!;
+
+  function refreshCount(): void {
+    const n = selectedRows().length;
+    const done = rows.length - pendingRows().length;
+    $count.textContent = `已选 ${n} / 待替换 ${pendingRows().length}${done > 0 ? ` · ${done} 项已是目标` : ""}`;
+    $apply.disabled = n === 0;
+    $apply.textContent = n > 0 ? `执行替换（${n} 道）` : "执行替换";
+  }
+
+  function wireRows(): void {
+    $rows.querySelectorAll<HTMLInputElement>(".bs-cb").forEach((cb) =>
+      cb.addEventListener("change", () => {
+        if (cb.checked) unchecked.delete(cb.value);
+        else unchecked.add(cb.value);
+        refreshCount();
+      })
+    );
+  }
+
+  function redrawRows(): void {
+    $rows.innerHTML = rowsHtml();
+    wireRows();
+    refreshCount();
+  }
+
+  document.getElementById("bs-targets")?.addEventListener("change", (e) => {
+    const input = e.target as HTMLInputElement;
+    if (input.name !== "bs-target") return;
+    target = input.value;
+    // 切目标后「已是目标」的行会变，必须整体重绘
+    document.getElementById("bs-targets")!.innerHTML = targetHtml();
+    redrawRows();
+  });
+  document.getElementById("bs-all")?.addEventListener("click", () => {
+    unchecked.clear();
+    redrawRows();
+  });
+  document.getElementById("bs-none")?.addEventListener("click", () => {
+    for (const r of pendingRows()) unchecked.add(r.assetPath);
+    redrawRows();
+  });
+  document.getElementById("bs-cancel")?.addEventListener("click", closeModal);
+
+  $apply.addEventListener("click", () => {
+    void (async () => {
+      const picked = selectedRows();
+      if (picked.length === 0) return;
+      $apply.disabled = true;
+      $status.textContent = "替换中…";
+      $status.className = "mp-status";
+      try {
+        const res = await api.replaceBun({
+          setName,
+          targetBunId: target,
+          assetPaths: picked.map((r) => r.assetPath),
+        });
+        closeModal();
+        const warn = res.warnings.length > 0 ? ` · ${res.warnings.join(" ")}` : "";
+        const skip = res.skipped.length > 0 ? ` · 跳过 ${res.skipped.length} 项` : "";
+        setStatus(
+          `已把 ${res.changed} 道菜谱的 ${res.layers} 个面包层换成「${bunName(target)}」${skip}${warn}`,
+          true
+        );
+        onDone();
+      } catch (e) {
+        $apply.disabled = false;
+        $status.textContent = e instanceof Error ? e.message : String(e);
+        $status.className = "mp-status err";
+      }
+    })();
+  });
+
+  redrawRows();
 }
 
 // ==================== Recipe Form Page (Create / Edit) ====================

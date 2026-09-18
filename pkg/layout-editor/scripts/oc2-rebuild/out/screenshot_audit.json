@@ -1,0 +1,1322 @@
+[
+ {
+  "id": "OC2_DLC02_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_beach_1_1",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level01",
+  "shot": "0:-9148191338865610265",
+  "lso": "0:-9148191338865610265"
+ },
+ {
+  "id": "OC2_DLC02_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_beach_1_2",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level02",
+  "shot": "0:6981024618382943529",
+  "lso": "0:6981024618382943529"
+ },
+ {
+  "id": "OC2_DLC02_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_resort_1_3",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level03",
+  "shot": "0:1464327950628727597",
+  "lso": "0:1464327950628727597"
+ },
+ {
+  "id": "OC2_DLC02_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_resort_1_4",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level04",
+  "shot": "0:-3958898066806330103",
+  "lso": "0:-3958898066806330103"
+ },
+ {
+  "id": "OC2_DLC02_2_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_beach_2_1",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level05",
+  "shot": "0:-8984368849813084666",
+  "lso": "0:-8984368849813084666"
+ },
+ {
+  "id": "OC2_DLC02_2_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_beach_2_2",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level06",
+  "shot": "0:-8139538415732320384",
+  "lso": "0:-8139538415732320384"
+ },
+ {
+  "id": "OC2_DLC02_2_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_resort_2_3",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level07",
+  "shot": "0:-1467519108238258024",
+  "lso": "0:-1467519108238258024"
+ },
+ {
+  "id": "OC2_DLC02_2_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_resort_2_4",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level08",
+  "shot": "0:-230913951847100092",
+  "lso": "0:-230913951847100092"
+ },
+ {
+  "id": "OC2_DLC02_3_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_resort_3_1",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level09",
+  "shot": "0:-4800574641207108426",
+  "lso": "0:-4800574641207108426"
+ },
+ {
+  "id": "OC2_DLC02_3_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_beach_3_2",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level10",
+  "shot": "0:-2066790606491025665",
+  "lso": "0:-2066790606491025665"
+ },
+ {
+  "id": "OC2_DLC02_3_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_beach_3_3",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level11",
+  "shot": "0:308789387424380331",
+  "lso": "0:308789387424380331"
+ },
+ {
+  "id": "OC2_DLC02_SP",
+  "set": "oc2_dlc_story",
+  "scene": "s_beach_special",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02Level12",
+  "shot": "0:-8061243920681466583",
+  "lso": "0:-8061243920681466583"
+ },
+ {
+  "id": "OC2_DLC02_H9",
+  "set": "oc2_dlc_story",
+  "scene": "s_city_h9",
+  "dirs": 4,
+  "dir": "Assets/downloadablecontent/dlc02/dlc_assets/data/dlc02_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC02HiddenLevel01",
+  "shot": "0:5672273099933930349",
+  "lso": "0:5672273099933930349"
+ },
+ {
+  "id": "OC2_DLC03_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_wonderland_1_1",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc03/dlc_assets/data/dlc03_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC03Level01",
+  "shot": "0:6522997851520705861",
+  "lso": "0:6522997851520705861"
+ },
+ {
+  "id": "OC2_DLC03_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_wonderland_1_2",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc03/dlc_assets/data/dlc03_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC03Level02",
+  "shot": "0:-2394838574577189008",
+  "lso": "0:-2394838574577189008"
+ },
+ {
+  "id": "OC2_DLC03_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_wonderland_1_3",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc03/dlc_assets/data/dlc03_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC03Level03",
+  "shot": "0:845505380793545658",
+  "lso": "0:845505380793545658"
+ },
+ {
+  "id": "OC2_DLC03_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_wonderland_1_4",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc03/dlc_assets/data/dlc03_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC03Level04",
+  "shot": "0:2780368088416727831",
+  "lso": "0:2780368088416727831"
+ },
+ {
+  "id": "OC2_DLC03_1_5",
+  "set": "oc2_dlc_story",
+  "scene": "s_wonderland_1_5",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc03/dlc_assets/data/dlc03_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC03Level05",
+  "shot": "0:-1497728624002528204",
+  "lso": "0:-1497728624002528204"
+ },
+ {
+  "id": "OC2_DLC04_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_chinatown_1_1",
+  "dirs": 20,
+  "dir": "Assets/downloadablecontent/dlc04/dlc_assets/data/dlc04_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC04Level01",
+  "shot": "0:-7180573955418613072",
+  "lso": "0:-7180573955418613072"
+ },
+ {
+  "id": "OC2_DLC04_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_chinatown_1_2",
+  "dirs": 20,
+  "dir": "Assets/downloadablecontent/dlc04/dlc_assets/data/dlc04_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC04Level02",
+  "shot": "0:5518724264236654090",
+  "lso": "0:5518724264236654090"
+ },
+ {
+  "id": "OC2_DLC04_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_chinatown_1_3",
+  "dirs": 20,
+  "dir": "Assets/downloadablecontent/dlc04/dlc_assets/data/dlc04_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC04Level03",
+  "shot": "0:8720705107656163246",
+  "lso": "0:8720705107656163246"
+ },
+ {
+  "id": "OC2_DLC04_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_chinatown_1_4",
+  "dirs": 20,
+  "dir": "Assets/downloadablecontent/dlc04/dlc_assets/data/dlc04_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC04Level04",
+  "shot": "0:6249883766553553680",
+  "lso": "0:6249883766553553680"
+ },
+ {
+  "id": "OC2_DLC04_1_5",
+  "set": "oc2_dlc_story",
+  "scene": "s_chinatown_1_5",
+  "dirs": 20,
+  "dir": "Assets/downloadablecontent/dlc04/dlc_assets/data/dlc04_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC04Level05",
+  "shot": "0:-3849952059685603571",
+  "lso": "0:-3849952059685603571"
+ },
+ {
+  "id": "OC2_DLC04_1_6",
+  "set": "oc2_dlc_story",
+  "scene": "s_chinatown_1_6",
+  "dirs": 20,
+  "dir": "Assets/downloadablecontent/dlc04/dlc_assets/data/dlc04_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC04Level06",
+  "shot": "0:-2899728378467810123",
+  "lso": "0:-2899728378467810123"
+ },
+ {
+  "id": "OC2_DLC04_1_7",
+  "set": "oc2_dlc_story",
+  "scene": "s_chinatown_1_7",
+  "dirs": 20,
+  "dir": "Assets/downloadablecontent/dlc04/dlc_assets/data/dlc04_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC04Level07",
+  "shot": "0:-2951713781817497565",
+  "lso": "0:-2951713781817497565"
+ },
+ {
+  "id": "OC2_DLC05_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_campsite_1_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level01",
+  "shot": "0:-7095561944958534475",
+  "lso": "0:-7095561944958534475"
+ },
+ {
+  "id": "OC2_DLC05_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_campsite_1_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level02",
+  "shot": "0:-3961026279463893571",
+  "lso": "0:-3961026279463893571"
+ },
+ {
+  "id": "OC2_DLC05_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_treehouse_1_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level03",
+  "shot": "0:-6323857931139987211",
+  "lso": "0:-6323857931139987211"
+ },
+ {
+  "id": "OC2_DLC05_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_campsite_1_4",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level04",
+  "shot": "0:3627945647513585514",
+  "lso": "0:3627945647513585514"
+ },
+ {
+  "id": "OC2_DLC05_2_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_treehouse_2_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level05",
+  "shot": "0:6028262581518260308",
+  "lso": "0:6028262581518260308"
+ },
+ {
+  "id": "OC2_DLC05_2_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_treehouse_2_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level06",
+  "shot": "0:-7023264075889666900",
+  "lso": "0:-7023264075889666900"
+ },
+ {
+  "id": "OC2_DLC05_2_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_campsite_2_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level07",
+  "shot": "0:-7312530813329201190",
+  "lso": "0:-7312530813329201190"
+ },
+ {
+  "id": "OC2_DLC05_2_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_campsite_2_4",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level08",
+  "shot": "0:5134144827967918976",
+  "lso": "0:5134144827967918976"
+ },
+ {
+  "id": "OC2_DLC05_3_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_campsite_3_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level09",
+  "shot": "0:-5048243592100263935",
+  "lso": "0:-5048243592100263935"
+ },
+ {
+  "id": "OC2_DLC05_3_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_treehouse_3_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level10",
+  "shot": "0:4372167802321343540",
+  "lso": "0:4372167802321343540"
+ },
+ {
+  "id": "OC2_DLC05_3_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_campsite_3_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level11",
+  "shot": "0:-6699229332602894901",
+  "lso": "0:-6699229332602894901"
+ },
+ {
+  "id": "OC2_DLC05_SP",
+  "set": "oc2_dlc_story",
+  "scene": "s_campsite_special",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05Level12",
+  "shot": "0:4008862290349840300",
+  "lso": "0:4008862290349840300"
+ },
+ {
+  "id": "OC2_DLC05_H10",
+  "set": "oc2_dlc_story",
+  "scene": "s_city_h10",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05HiddenLevel01",
+  "shot": "0:9102052428910700341",
+  "lso": "0:9102052428910700341"
+ },
+ {
+  "id": "OC2_DLC05_H11",
+  "set": "oc2_dlc_story",
+  "scene": "s_city_h11",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05HiddenLevel02",
+  "shot": "0:2982556720012625197",
+  "lso": "0:2982556720012625197"
+ },
+ {
+  "id": "OC2_DLC05_H12",
+  "set": "oc2_dlc_story",
+  "scene": "s_city_h12",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc05/dlc_assets/data/dlc05_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC05HiddenLevel03",
+  "shot": "0:5215853205925491060",
+  "lso": "0:5215853205925491060"
+ },
+ {
+  "id": "OC2_DLC07_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_courtyard_1_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level01",
+  "shot": "0:6745394979844140599",
+  "lso": "0:6745394979844140599"
+ },
+ {
+  "id": "OC2_DLC07_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_keep_1_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level02",
+  "shot": "0:-7647865452821928162",
+  "lso": "0:-7647865452821928162"
+ },
+ {
+  "id": "OC2_DLC07_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_keep_1_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level03",
+  "shot": "0:5067578685064135195",
+  "lso": "0:5067578685064135195"
+ },
+ {
+  "id": "OC2_DLC07_2_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_courtyard_2_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level04",
+  "shot": "0:6845820533215049705",
+  "lso": "0:6845820533215049705"
+ },
+ {
+  "id": "OC2_DLC07_2_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_courtyard_2_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level05",
+  "shot": "0:7734562227505826108",
+  "lso": "0:7734562227505826108"
+ },
+ {
+  "id": "OC2_DLC07_2_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_keep_2_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level06",
+  "shot": "0:8286523510160093984",
+  "lso": "0:8286523510160093984"
+ },
+ {
+  "id": "OC2_DLC07_3_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_courtyard_3_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level07",
+  "shot": "0:7573866892365636257",
+  "lso": "0:7573866892365636257"
+ },
+ {
+  "id": "OC2_DLC07_3_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_keep_3_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level08",
+  "shot": "0:-3974644984852024540",
+  "lso": "0:-3974644984852024540"
+ },
+ {
+  "id": "OC2_DLC07_3_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_keep_3_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07Level09",
+  "shot": "0:722590530142867826",
+  "lso": "0:722590530142867826"
+ },
+ {
+  "id": "OC2_DLC07_H13",
+  "set": "oc2_dlc_story",
+  "scene": "s_city_h13",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07HiddenLevel01",
+  "shot": "0:7618797492779335451",
+  "lso": "0:7618797492779335451"
+ },
+ {
+  "id": "OC2_DLC07_H14",
+  "set": "oc2_dlc_story",
+  "scene": "s_city_h14",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07HiddenLevel02",
+  "shot": "0:-6734142975213266120",
+  "lso": "0:-6734142975213266120"
+ },
+ {
+  "id": "OC2_DLC07_H15",
+  "set": "oc2_dlc_story",
+  "scene": "s_city_h15",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc07/dlc_assets/data/dlc07_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC07HiddenLevel03",
+  "shot": "0:7444200849479401342",
+  "lso": "0:7444200849479401342"
+ },
+ {
+  "id": "OC2_DLC08_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_Day_1_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level01",
+  "shot": "0:8181434536697589370",
+  "lso": "0:8181434536697589370"
+ },
+ {
+  "id": "OC2_DLC08_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_Inside_1_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level02",
+  "shot": "0:2496784099663535584",
+  "lso": "0:2496784099663535584"
+ },
+ {
+  "id": "OC2_DLC08_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_Inside_1_3",
+  "dirs": 12,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level03",
+  "shot": "0:6574896172112430324",
+  "lso": "0:6574896172112430324"
+ },
+ {
+  "id": "OC2_DLC08_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_Night_1_4",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level04",
+  "shot": "0:1437215042441246485",
+  "lso": "0:1437215042441246485"
+ },
+ {
+  "id": "OC2_DLC08_2_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_Day_2_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level05",
+  "shot": "0:-3465403319759898491",
+  "lso": "0:-3465403319759898491"
+ },
+ {
+  "id": "OC2_DLC08_2_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_Night_2_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level06",
+  "shot": "0:4761379780485367275",
+  "lso": "0:4761379780485367275"
+ },
+ {
+  "id": "OC2_DLC08_2_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_Inside_2_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level07",
+  "shot": "0:-6736310445325693251",
+  "lso": "0:-6736310445325693251"
+ },
+ {
+  "id": "OC2_DLC08_2_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_Night_2_4",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level08",
+  "shot": "0:-8531519222987671947",
+  "lso": "0:-8531519222987671947"
+ },
+ {
+  "id": "OC2_DLC08_3_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_Day_3_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level09",
+  "shot": "0:6716469643928668035",
+  "lso": "0:6716469643928668035"
+ },
+ {
+  "id": "OC2_DLC08_3_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_Inside_3_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level10",
+  "shot": "0:2829738082859672045",
+  "lso": "0:2829738082859672045"
+ },
+ {
+  "id": "OC2_DLC08_3_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_Night_3_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level11",
+  "shot": "0:-4472323386763960144",
+  "lso": "0:-4472323386763960144"
+ },
+ {
+  "id": "OC2_DLC08_3_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_Day_3_4",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08Level12",
+  "shot": "0:-8097293588548997577",
+  "lso": "0:-8097293588548997577"
+ },
+ {
+  "id": "OC2_DLC08_H16",
+  "set": "oc2_dlc_story",
+  "scene": "s_City_H16",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08HiddenLevel01",
+  "shot": "0:2320634608452189355",
+  "lso": "0:2320634608452189355"
+ },
+ {
+  "id": "OC2_DLC08_H17",
+  "set": "oc2_dlc_story",
+  "scene": "s_City_H17",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08HiddenLevel02",
+  "shot": "0:-5594970418844450321",
+  "lso": "0:-5594970418844450321"
+ },
+ {
+  "id": "OC2_DLC08_H18",
+  "set": "oc2_dlc_story",
+  "scene": "s_City_H18",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/dlc08/dlc_assets/data/dlc08_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC08HiddenLevel03",
+  "shot": "0:784533854737010301",
+  "lso": "0:784533854737010301"
+ },
+ {
+  "id": "OC2_DLC09_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_festivemashup_1_1",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc09/dlc_assets/data/dlc09_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC09Level01",
+  "shot": "0:5820148821861258174",
+  "lso": "0:5820148821861258174"
+ },
+ {
+  "id": "OC2_DLC09_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_festivemashup_1_2",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc09/dlc_assets/data/dlc09_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC09Level02",
+  "shot": "0:5820148821861258174",
+  "lso": "0:-4000533131193228079"
+ },
+ {
+  "id": "OC2_DLC09_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_festivemashup_1_3",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc09/dlc_assets/data/dlc09_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC09Level03",
+  "shot": "0:5820148821861258174",
+  "lso": "0:-6920563918185274677"
+ },
+ {
+  "id": "OC2_DLC09_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_festivemashup_1_4",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc09/dlc_assets/data/dlc09_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC09Level04",
+  "shot": "0:5820148821861258174",
+  "lso": "0:-8313899718020060484"
+ },
+ {
+  "id": "OC2_DLC09_1_5",
+  "set": "oc2_dlc_story",
+  "scene": "s_festivemashup_1_5",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc09/dlc_assets/data/dlc09_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC09Level05",
+  "shot": "0:5820148821861258174",
+  "lso": "0:5325741508511313437"
+ },
+ {
+  "id": "OC2_DLC10_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_lunar_1_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC10Level01",
+  "shot": "0:-4960836825921200037",
+  "lso": "0:-4960836825921200037"
+ },
+ {
+  "id": "OC2_DLC10_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_lunar_1_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC10Level02",
+  "shot": "0:-7823668997638889100",
+  "lso": "0:-7823668997638889100"
+ },
+ {
+  "id": "OC2_DLC10_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_lunar_1_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC10Level03",
+  "shot": "0:8761364904873250209",
+  "lso": "0:8761364904873250209"
+ },
+ {
+  "id": "OC2_DLC10_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_lunar_1_4",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC10Level04",
+  "shot": "0:-2897924031272480169",
+  "lso": "0:-2897924031272480169"
+ },
+ {
+  "id": "OC2_DLC10_1_5",
+  "set": "oc2_dlc_story",
+  "scene": "s_lunar_1_5",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC10Level05",
+  "shot": "0:4611031140406811760",
+  "lso": "0:4611031140406811760"
+ },
+ {
+  "id": "OC2_DLC11_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_summer_1_1",
+  "dirs": 16,
+  "dir": "Assets/downloadablecontent/dlc11/dlc_assets/data/dlc11_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC11Level01",
+  "shot": "0:8181434536697589370",
+  "lso": "0:-1836812716150732265"
+ },
+ {
+  "id": "OC2_DLC11_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_summer_1_2",
+  "dirs": 24,
+  "dir": "Assets/downloadablecontent/dlc11/dlc_assets/data/dlc11_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC11Level02",
+  "shot": "0:-1293996309034664911",
+  "lso": "0:-1293996309034664911"
+ },
+ {
+  "id": "OC2_DLC11_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_Summer_1_3",
+  "dirs": 20,
+  "dir": "Assets/downloadablecontent/dlc11/dlc_assets/data/dlc11_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC11Level03",
+  "shot": "0:6574896172112430324",
+  "lso": "0:-2413840471626508295"
+ },
+ {
+  "id": "OC2_DLC11_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_summer_1_4",
+  "dirs": 24,
+  "dir": "Assets/downloadablecontent/dlc11/dlc_assets/data/dlc11_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC11Level04",
+  "shot": "0:2757169594216565094",
+  "lso": "0:2757169594216565094"
+ },
+ {
+  "id": "OC2_DLC11_1_5",
+  "set": "oc2_dlc_story",
+  "scene": "s_summer_1_5",
+  "dirs": 24,
+  "dir": "Assets/downloadablecontent/dlc11/dlc_assets/data/dlc11_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC11Level05",
+  "shot": "0:-843119297219462870",
+  "lso": "0:-843119297219462870"
+ },
+ {
+  "id": "OC2_DLC13_1_1",
+  "set": "oc2_dlc_story",
+  "scene": "s_moonfestival_1_1",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC13Level01",
+  "shot": "0:2927532615125459280",
+  "lso": "0:2927532615125459280"
+ },
+ {
+  "id": "OC2_DLC13_1_2",
+  "set": "oc2_dlc_story",
+  "scene": "s_moonfestival_1_2",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC13Level02",
+  "shot": "0:-2103392455709396224",
+  "lso": "0:-2103392455709396224"
+ },
+ {
+  "id": "OC2_DLC13_1_3",
+  "set": "oc2_dlc_story",
+  "scene": "s_moonfestival_1_3",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC13Level03",
+  "shot": "0:3225474887465013331",
+  "lso": "0:3225474887465013331"
+ },
+ {
+  "id": "OC2_DLC13_1_4",
+  "set": "oc2_dlc_story",
+  "scene": "s_moonfestival_1_4",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC13Level04",
+  "shot": "0:-2364186670975886251",
+  "lso": "0:-2364186670975886251"
+ },
+ {
+  "id": "OC2_DLC13_1_5",
+  "set": "oc2_dlc_story",
+  "scene": "s_moonfestival_1_5",
+  "dirs": 8,
+  "dir": "Assets/downloadablecontent/combineddlc/dlc_assets/data/combineddlc_coopgamescenedirectory.json",
+  "label": "Text.Menu.DLC13Level05",
+  "shot": "0:-3717959755924653448",
+  "lso": "0:-3717959755924653448"
+ },
+ {
+  "id": "OC2_Story_00_Tutorial",
+  "set": "oc2_story",
+  "scene": "s_tutorial_01",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.TutorialLevel",
+  "shot": "0:8495869215250914996",
+  "lso": "0:8495869215250914996"
+ },
+ {
+  "id": "OC2_Story_01",
+  "set": "oc2_story",
+  "scene": "s_sushi_1_1",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level01",
+  "shot": "0:2481907511542235079",
+  "lso": "0:2481907511542235079"
+ },
+ {
+  "id": "OC2_Story_02",
+  "set": "oc2_story",
+  "scene": "s_sushi_1_2",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level02",
+  "shot": "0:-5769341038838731947",
+  "lso": "0:-5769341038838731947"
+ },
+ {
+  "id": "OC2_Story_03",
+  "set": "oc2_story",
+  "scene": "s_sushi_1_3",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level03",
+  "shot": "0:-2701253971577862468",
+  "lso": "0:-2701253971577862468"
+ },
+ {
+  "id": "OC2_Story_04",
+  "set": "oc2_story",
+  "scene": "s_sushi_1_4",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level04",
+  "shot": "0:6686972838583238928",
+  "lso": "0:6686972838583238928"
+ },
+ {
+  "id": "OC2_Story_05",
+  "set": "oc2_story",
+  "scene": "s_balloon_1_5",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level05",
+  "shot": "0:-5910138758613652833",
+  "lso": "0:-5910138758613652833"
+ },
+ {
+  "id": "OC2_Story_06",
+  "set": "oc2_story",
+  "scene": "s_dynamic_Stage_01",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level06",
+  "shot": "0:-1655777281032989459",
+  "lso": "0:-1655777281032989459"
+ },
+ {
+  "id": "OC2_Story_07",
+  "set": "oc2_story",
+  "scene": "s_rapids_2_1",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level07",
+  "shot": "0:-1522162256881212199",
+  "lso": "0:-1522162256881212199"
+ },
+ {
+  "id": "OC2_Story_08",
+  "set": "oc2_story",
+  "scene": "s_balloon_2_3",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level08",
+  "shot": "0:953766303486211570",
+  "lso": "0:953766303486211570"
+ },
+ {
+  "id": "OC2_Story_09",
+  "set": "oc2_story",
+  "scene": "s_balloon_2_2",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level09",
+  "shot": "0:7404207922658814753",
+  "lso": "0:7404207922658814753"
+ },
+ {
+  "id": "OC2_Story_10",
+  "set": "oc2_story",
+  "scene": "s_mine_2_4",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level10",
+  "shot": "0:-1058094790620408257",
+  "lso": "0:-1058094790620408257"
+ },
+ {
+  "id": "OC2_Story_11",
+  "set": "oc2_story",
+  "scene": "s_mine_2_5",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level11",
+  "shot": "0:-5582316159053675658",
+  "lso": "0:-5582316159053675658"
+ },
+ {
+  "id": "OC2_Story_12",
+  "set": "oc2_story",
+  "scene": "s_mine_2_6",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level12",
+  "shot": "0:-312340439615043431",
+  "lso": "0:-312340439615043431"
+ },
+ {
+  "id": "OC2_Story_13",
+  "set": "oc2_story",
+  "scene": "s_wizard_3_1",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level13",
+  "shot": "0:6723062860264304907",
+  "lso": "0:6723062860264304907"
+ },
+ {
+  "id": "OC2_Story_14",
+  "set": "oc2_story",
+  "scene": "s_wizard_5_5",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level14",
+  "shot": "0:-3515820438396775646",
+  "lso": "0:-3515820438396775646"
+ },
+ {
+  "id": "OC2_Story_15",
+  "set": "oc2_story",
+  "scene": "s_wizard_3_2",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level15",
+  "shot": "0:-5680319598362558652",
+  "lso": "0:-5680319598362558652"
+ },
+ {
+  "id": "OC2_Story_16",
+  "set": "oc2_story",
+  "scene": "s_wizard_3_3",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level16",
+  "shot": "0:-6230803679023593641",
+  "lso": "0:-6230803679023593641"
+ },
+ {
+  "id": "OC2_Story_17",
+  "set": "oc2_story",
+  "scene": "s_rapids_3_5",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level17",
+  "shot": "0:-5907891267003252439",
+  "lso": "0:-5907891267003252439"
+ },
+ {
+  "id": "OC2_Story_18",
+  "set": "oc2_story",
+  "scene": "s_dynamic_stage_02",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level18",
+  "shot": "0:2566883219058568289",
+  "lso": "0:2566883219058568289"
+ },
+ {
+  "id": "OC2_Story_19",
+  "set": "oc2_story",
+  "scene": "s_sushi_4_1",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level19",
+  "shot": "0:-9100702850063366065",
+  "lso": "0:-9100702850063366065"
+ },
+ {
+  "id": "OC2_Story_20",
+  "set": "oc2_story",
+  "scene": "s_rapids_4_2A",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level20",
+  "shot": "0:-1844146930036120101",
+  "lso": "0:-1844146930036120101"
+ },
+ {
+  "id": "OC2_Story_21",
+  "set": "oc2_story",
+  "scene": "s_mine_4_3",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level21",
+  "shot": "0:4280781662266563692",
+  "lso": "0:4280781662266563692"
+ },
+ {
+  "id": "OC2_Story_22",
+  "set": "oc2_story",
+  "scene": "s_mine_5_3",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level22",
+  "shot": "0:3577901990718244841",
+  "lso": "0:3577901990718244841"
+ },
+ {
+  "id": "OC2_Story_23",
+  "set": "oc2_story",
+  "scene": "s_sushi_4_5",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level23",
+  "shot": "0:1686351530798613808",
+  "lso": "0:1686351530798613808"
+ },
+ {
+  "id": "OC2_Story_24",
+  "set": "oc2_story",
+  "scene": "s_mine_4_6",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level24",
+  "shot": "0:838869820752152019",
+  "lso": "0:838869820752152019"
+ },
+ {
+  "id": "OC2_Story_25",
+  "set": "oc2_story",
+  "scene": "MovingPlatform4",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level25",
+  "shot": "0:3905598743341759464",
+  "lso": "0:3905598743341759464"
+ },
+ {
+  "id": "OC2_Story_26",
+  "set": "oc2_story",
+  "scene": "s_balloon_5_2",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level26",
+  "shot": "0:-5005620954143456263",
+  "lso": "0:-5005620954143456263"
+ },
+ {
+  "id": "OC2_Story_27",
+  "set": "oc2_story",
+  "scene": "MovingPlatform5",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level27",
+  "shot": "0:7808661917817892943",
+  "lso": "0:7808661917817892943"
+ },
+ {
+  "id": "OC2_Story_28",
+  "set": "oc2_story",
+  "scene": "s_wizard_school_3_4",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level28",
+  "shot": "0:-6545353439446802206",
+  "lso": "0:-6545353439446802206"
+ },
+ {
+  "id": "OC2_Story_29",
+  "set": "oc2_story",
+  "scene": "MovingPlatform2",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level29",
+  "shot": "0:96319641180144604",
+  "lso": "0:96319641180144604"
+ },
+ {
+  "id": "OC2_Story_30",
+  "set": "oc2_story",
+  "scene": "s_dynamic_stage_03",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level30",
+  "shot": "0:2456129381798980869",
+  "lso": "0:2456129381798980869"
+ },
+ {
+  "id": "OC2_Story_31",
+  "set": "oc2_story",
+  "scene": "s_balloon_6_4",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level31",
+  "shot": "0:-1330636084153750395",
+  "lso": "0:-1330636084153750395"
+ },
+ {
+  "id": "OC2_Story_32",
+  "set": "oc2_story",
+  "scene": "s_space_6_2",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level32",
+  "shot": "0:-630078429418242960",
+  "lso": "0:-630078429418242960"
+ },
+ {
+  "id": "OC2_Story_33",
+  "set": "oc2_story",
+  "scene": "s_sushi_5_1",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level33",
+  "shot": "0:-6239880973517375981",
+  "lso": "0:-6239880973517375981"
+ },
+ {
+  "id": "OC2_Story_34",
+  "set": "oc2_story",
+  "scene": "MovingPlatform3",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level34",
+  "shot": "0:-5153038544425987779",
+  "lso": "0:-5153038544425987779"
+ },
+ {
+  "id": "OC2_Story_35",
+  "set": "oc2_story",
+  "scene": "s_space_6_5_GTG",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level35",
+  "shot": "0:-4249141913160641014",
+  "lso": "0:-4249141913160641014"
+ },
+ {
+  "id": "OC2_Story_36",
+  "set": "oc2_story",
+  "scene": "s_dynamic_stage_04",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.Level36",
+  "shot": "0:-1778814671638892657",
+  "lso": "0:-1778814671638892657"
+ },
+ {
+  "id": "OC2_Story_H01",
+  "set": "oc2_story",
+  "scene": "s_city_h1",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.KevinLevel01",
+  "shot": "0:-6256805484818954861",
+  "lso": "0:-6256805484818954861"
+ },
+ {
+  "id": "OC2_Story_H02",
+  "set": "oc2_story",
+  "scene": "s_city_h2",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.KevinLevel02",
+  "shot": "0:889920738743361683",
+  "lso": "0:889920738743361683"
+ },
+ {
+  "id": "OC2_Story_H03",
+  "set": "oc2_story",
+  "scene": "s_city_h3",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.KevinLevel03",
+  "shot": "0:-3008391391928854064",
+  "lso": "0:-3008391391928854064"
+ },
+ {
+  "id": "OC2_Story_H04",
+  "set": "oc2_story",
+  "scene": "s_city_h4",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.KevinLevel04",
+  "shot": "0:-2898348720131203804",
+  "lso": "0:-2898348720131203804"
+ },
+ {
+  "id": "OC2_Story_H05",
+  "set": "oc2_story",
+  "scene": "s_city_h5",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.KevinLevel05",
+  "shot": "0:-7299770367326137203",
+  "lso": "0:-7299770367326137203"
+ },
+ {
+  "id": "OC2_Story_H06",
+  "set": "oc2_story",
+  "scene": "s_city_h6",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.KevinLevel06",
+  "shot": "0:4384268119691888189",
+  "lso": "0:4384268119691888189"
+ },
+ {
+  "id": "OC2_Story_H07",
+  "set": "oc2_story",
+  "scene": "s_city_h7",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.KevinLevel07",
+  "shot": "0:2838255802743888026",
+  "lso": "0:2838255802743888026"
+ },
+ {
+  "id": "OC2_Story_H08",
+  "set": "oc2_story",
+  "scene": "s_city_h8",
+  "dirs": 8,
+  "dir": "Assets/data/datafile/coopgamescenedirectory.json",
+  "label": "Text.Menu.KevinLevel08",
+  "shot": "0:4317898962916992309",
+  "lso": "0:4317898962916992309"
+ }
+]

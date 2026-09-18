@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>Editor-time checks for AnimGroupBakery asset key generation.</summary>
 public static class AnimGroupBakeryTests
 {
-    private const string SceneName = "s_jia_level1_3";
+    private const string SceneName = "s_jia_level_1_3";
 
     [MenuItem("Layout Editor/Tests/Run AnimGroupBakery Tests")]
     public static void RunAll()

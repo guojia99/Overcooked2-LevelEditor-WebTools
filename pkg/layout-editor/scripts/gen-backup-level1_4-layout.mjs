@@ -3,7 +3,7 @@
  * gen-backup-level1_4-layout.mjs — backup/level1_4「枫醉秋亭」
  *
  * 厨房（地板 + Structure 墙体 + 房内装饰 + 空气墙 + 4 出生点 + 相机/灯光）：
- *   逐字复制**手改版** s_jia_level1_4（GET 实时读取当前场景，不用旧脚本数学）。
+ *   逐字复制**手改版** s_jia_level_1_4（GET 实时读取当前场景，不用旧脚本数学）。
  *   厨房内部不新增任何元素。
  *   手改版结构：264 块 floor_carpet_purple 直接挂 Art/（非 Art/MainIsland），
  *   房内竹景在 Art/Decoration（沿用）；Art/Backdrop 旧外围件不复制（外围重建）。
@@ -36,8 +36,8 @@ const LEVEL_ID = "level1_4";
 const LEVEL_NAME = "Level 1-4 Maple Drunken Pavilion";
 const LEVEL_NAME_ZH = "枫醉秋亭";
 
-const SRC_SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level1_4.unity";
-const SRC_INFO = "Assets/LevelSets/jia_carnival/data/jia_level1_4/LevelInfo_jia_level1_4.asset";
+const SRC_SCENE = "Assets/LevelSets/jia_carnival/scenes/s_jia_level_1_4.unity";
+const SRC_INFO = "Assets/LevelSets/jia_carnival/data/jia_level_1_4/LevelInfo_jia_level_1_4.asset";
 const DST_SCENE = "Assets/LevelSets/backup/scenes/s_level1_4.unity";
 const DST_INFO = "Assets/LevelSets/backup/data/level1_4/LevelInfo_level1_4.asset";
 
@@ -309,7 +309,7 @@ function diffMultiset(expected, actual) {
 async function main() {
   await health();
 
-  // 1. 读源（手改版 s_jia_level1_4）
+  // 1. 读源（手改版 s_jia_level_1_4）
   const src = await api(`/api/scene/layout?assetPath=${encodeURIComponent(SRC_SCENE)}`);
   const srcItems = src.items || [];
   const kitchenSrc = srcItems.filter(isKitchen);

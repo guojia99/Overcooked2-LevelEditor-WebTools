@@ -5,6 +5,8 @@ import type {
   AudioExportManifest,
   AudioKnowledge,
   BundleAnalysis,
+  BunReplaceResult,
+  BunUsageReport,
   BurgerCreateRequest,
   BurgerCreateResult,
   BurgerDefinitionList,
@@ -929,6 +931,42 @@ export async function fetchCustomRecipeReferences(setName: string): Promise<Cust
   const q = new URLSearchParams({ setName });
   const r = await fetch(`/api/custom-recipes/references?${q}`);
   return readApiJson<CustomRecipeReferences>(r);
+}
+
+// ---------- 一键统一面包皮 ----------
+
+/** 扫描本关卡集 custom_recipes 内全部面包层 + 可选目标面包皮（commonW2 的只读展示）。 */
+export async function fetchBunUsage(setName: string): Promise<BunUsageReport> {
+  const q = new URLSearchParams({ setName });
+  const r = await fetch(`/api/custom-recipes/bun-usage?${q}`);
+  const data = await readApiJson<Partial<BunUsageReport>>(r);
+  return {
+    buns: data.buns ?? [],
+    usages: data.usages ?? [],
+    sharedUsages: data.sharedUsages ?? [],
+  };
+}
+
+/** 把选中菜谱里的面包层原位换成 targetBunId。只改菜谱资产，不联动关卡/场景。 */
+export async function replaceBun(body: {
+  setName: string;
+  targetBunId: string;
+  assetPaths: string[];
+  dryRun?: boolean;
+}): Promise<BunReplaceResult> {
+  const r = await fetch("/api/custom-recipes/replace-bun", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await readApiJson<Partial<BunReplaceResult>>(r);
+  return {
+    changed: data.changed ?? 0,
+    layers: data.layers ?? 0,
+    recipes: data.recipes ?? [],
+    skipped: data.skipped ?? [],
+    warnings: data.warnings ?? [],
+  };
 }
 
 // ---------- Burger大全 组装工作台（commonW2 共享汉堡库） ----------
