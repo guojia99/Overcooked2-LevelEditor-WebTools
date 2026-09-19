@@ -39,6 +39,7 @@ public static class LayoutEditorStubIO
         item.meshWithMaterial = null;
         item.soArray = null;
         item.timedSwitch = null;
+        item.ratHeist = null;
 
         var playerStub = go.GetComponent<PseudoPrefabPlayerStub>();
         if (playerStub != null)
@@ -109,6 +110,18 @@ public static class LayoutEditorStubIO
             item.stubKind = "Dispenser";
             item.dispenser = new LayoutDispenserStubDto();
             ExportSoArrayIfPresent(go, item);
+            ExportPseudoPrefabGuidIfPresent(go, item);
+            return;
+        }
+
+        // 老鼠偷食材（RatHeist）：组件优先，tag 兜底（镜像 ExportRandomCrate）。
+        // wrapper 无专属 PseudoPrefab stub——识别靠 CustomStub.RatHeist 组件或
+        // "RatHeist|" tag 载体。
+        if (FindComp(go, "RatHeist") != null || HasRatHeistTag(go))
+        {
+            item.stubKind = "RatHeist";
+            item.ratHeist = new LayoutRatHeistStubDto();
+            ExportRatHeist(go, item.ratHeist);
             ExportPseudoPrefabGuidIfPresent(go, item);
             return;
         }
@@ -836,6 +849,15 @@ public static class LayoutEditorStubIO
             teleportal.doubleSided = item.teleportal.doubleSided;
             // exitPortal is resolved in a second pass by SceneLayoutApplier.
             ApplyTeleportalExitOnly(go, item.teleportal.exitOnly);
+            return;
+        }
+
+        if (item.stubKind == "RatHeist")
+        {
+            if (item.ratHeist != null)
+                ApplyRatHeist(go, item.ratHeist);
+            else
+                RemoveRatHeist(go);
             return;
         }
 
@@ -1593,6 +1615,7 @@ public static class LayoutEditorStubIO
             // （stub.button 为空 → Cannon.m_button 空 → ServerCannon.StartSynchronising
             // NRE，真机大炮整体失效）。编辑器 Play 另有 LayoutEditorSwitchLinkPatch
             // .PatchCannonLink 每帧兜底，此处烘焙随场景保存，游戏包内生效。
+            bool isCannonLaunchButton = false;
             if (resolvedTrigger == "Launch")
             {
                 var cannonTargets = perSwitch[switchId];
@@ -1600,7 +1623,10 @@ public static class LayoutEditorStubIO
                 {
                     var cannonStub = cannonTargets[i] != null
                         ? cannonTargets[i].GetComponent<SetupCannonStub>() : null;
-                    if (cannonStub == null || cannonStub.button == switchGo)
+                    if (cannonStub == null)
+                        continue;
+                    isCannonLaunchButton = true;
+                    if (cannonStub.button == switchGo)
                         continue;
                     Undo.RecordObject(cannonStub, "Layout Editor Cannon Button");
                     cannonStub.button = switchGo;
@@ -1612,7 +1638,19 @@ public static class LayoutEditorStubIO
             // objectToTrigger 承载（宿主 Setup 与游戏模组各自消费），不再烘焙
             // 运行时 linker（原 LayoutRuntimeSwitchLink 已按上游方案废弃）。
             // ToggleSwitch 是双态拉杆（开/关都有效），不能自动复位——跳过。
-            if (toggleSw == null)
+            // 大炮发射按钮同样不自动复位（2026-09-19 真机事故）：复位会把空炮按钮
+            // 重新点亮 → 空炮可发射 → ServerCannon.m_flying 永久 true（客户端
+            // LaunchProjectile(null) NRE）→ 大炮从此拒入。其可用性由 CustomStub
+            // CannonGuard 按「炮内是否有人」门控；重写回时摘除旧烘焙的组件/tag。
+            if (isCannonLaunchButton)
+            {
+                var reType = FindCustomStubType(switchGo, "SwitchReenable");
+                var reComp = reType != null ? switchGo.GetComponent(reType) : null;
+                if (reComp != null)
+                    Undo.DestroyObjectImmediate(reComp);
+                ClearCustomStubTag(switchGo, "SwitchReenable|");
+            }
+            else if (toggleSw == null)
             {
                 var reType = FindCustomStubType(switchGo, "SwitchReenable");
                 var reComp = reType != null ? switchGo.GetComponent(reType) : null;
@@ -2321,6 +2359,189 @@ public static class LayoutEditorStubIO
         return rest.Substring(0, slash);
     }
 
+    // ==================== 老鼠偷食材（RatHeist） ====================
+
+    private const string RatHeistTagPrefix = "RatHeist|";
+    /// <summary>复古鼠 prefab 三元组（本体包：模型 bundle34 / 动画 bundle0 / prefab bundle47）。</summary>
+    private static readonly string[] RatHeistBaseBundles = { "bundle0", "bundle34", "bundle47" };
+    /// <summary>dlc08 皮肤贴图所在 bundle（官方 h18 关同款：复古鼠模型 + dlc08 老鼠贴图）。</summary>
+    private const string RatHeistSkinBundle = "bundle355";
+
+    private static bool HasRatHeistTag(GameObject go)
+    {
+        var tag = go != null ? go.GetComponent<SpecificPseudoPrefabTag>() : null;
+        return tag != null && !string.IsNullOrEmpty(tag.prefabTag)
+            && tag.prefabTag.StartsWith(RatHeistTagPrefix, StringComparison.Ordinal);
+    }
+
+    /// <summary>导出：组件优先；无组件（程序集缺失）时读 tag 载体兜底，保证 web 往返不丢。</summary>
+    private static void ExportRatHeist(GameObject go, LayoutRatHeistStubDto dto)
+    {
+        if (dto == null)
+            return;
+
+        var comp = FindComp(go, "RatHeist");
+        if (comp != null)
+        {
+            dto.interval = StubFloatOr(comp, "m_interval", 20f);
+            dto.radius = StubFloatOr(comp, "m_radius", 0f);
+            dto.speed = StubFloatOr(comp, "m_speed", 1f);
+            var skin = GetStubField(comp, "m_skin") as string;
+            dto.skin = !string.IsNullOrEmpty(skin) ? skin : "retro";
+            dto.stealRaw = StubBoolOr(comp, "m_stealRaw", true);
+            dto.stealPlated = StubBoolOr(comp, "m_stealPlated", false);
+            dto.stealUtensil = StubBoolOr(comp, "m_stealUtensil", false);
+            return;
+        }
+
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        if (tag == null || string.IsNullOrEmpty(tag.prefabTag) ||
+            !tag.prefabTag.StartsWith(RatHeistTagPrefix, StringComparison.Ordinal))
+            return;
+        ParseRatHeistTag(tag.prefabTag, dto);
+    }
+
+    /// <summary>解析 tag 载体：
+    /// RatHeist|&lt;interval&gt;,&lt;radius&gt;,&lt;speed&gt;,&lt;skin&gt;,&lt;raw 1|0&gt;,&lt;plated 1|0&gt;,&lt;utensil 1|0&gt;
+    /// （与 CustomStub.EntryPoint.ParseRatHeist 同格式，段缺省回落 DTO 当前值）。</summary>
+    private static void ParseRatHeistTag(string prefabTag, LayoutRatHeistStubDto dto)
+    {
+        var payload = prefabTag.Substring(RatHeistTagPrefix.Length);
+        if (string.IsNullOrEmpty(payload))
+            return;
+        var parts = payload.Split(',');
+        float f;
+        if (parts.Length >= 1 && float.TryParse(parts[0], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out f) && f >= 2f)
+            dto.interval = f;
+        if (parts.Length >= 2 && float.TryParse(parts[1], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out f) && f >= 0f)
+            dto.radius = f;
+        if (parts.Length >= 3 && float.TryParse(parts[2], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out f) && f >= 0.1f)
+            dto.speed = f;
+        if (parts.Length >= 4 && !string.IsNullOrEmpty(parts[3].Trim()))
+            dto.skin = parts[3].Trim();
+        if (parts.Length >= 5)
+            dto.stealRaw = parts[4].Trim() != "0";
+        if (parts.Length >= 6)
+            dto.stealPlated = parts[5].Trim() == "1";
+        if (parts.Length >= 7)
+            dto.stealUtensil = parts[6].Trim() == "1";
+    }
+
+    /// <summary>写回：双通道（组件权威 + tag 自愈载体）+ 皮肤依赖注册。镜像
+    /// ApplyTeleportalExitOnly。dto==null 时调 RemoveRatHeist。</summary>
+    private static void ApplyRatHeist(GameObject go, LayoutRatHeistStubDto dto)
+    {
+        var type = FindCustomStubType(go, "RatHeist");
+        var comp = type != null ? go.GetComponent(type) : null;
+        if (type == null)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] 关卡集缺 stub 程序集，老鼠偷食材仅写入 tag 载体"
+                + "（CustomStubCopyRequested）: " + go.name);
+            var setName = LevelSetOfScenePath(go.scene.path);
+            if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                CustomStubCopyRequested(setName);
+        }
+        else
+        {
+            if (comp == null)
+                comp = Undo.AddComponent(go, type);
+            else
+                Undo.RecordObject(comp, "Layout Editor RatHeist");
+            SetStubField(comp, "m_interval", Mathf.Max(2f, dto.interval));
+            SetStubField(comp, "m_radius", Mathf.Max(0f, dto.radius));
+            SetStubField(comp, "m_speed", Mathf.Max(0.1f, dto.speed));
+            SetStubField(comp, "m_skin", string.IsNullOrEmpty(dto.skin) ? "retro" : dto.skin);
+            SetStubField(comp, "m_stealRaw", dto.stealRaw);
+            SetStubField(comp, "m_stealPlated", dto.stealPlated);
+            SetStubField(comp, "m_stealUtensil", dto.stealUtensil);
+        }
+        SetCustomStubTag(go, RatHeistTagPrefix
+            + Mathf.Max(2f, dto.interval).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + ","
+            + Mathf.Max(0f, dto.radius).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + ","
+            + Mathf.Max(0.1f, dto.speed).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + ","
+            + (string.IsNullOrEmpty(dto.skin) ? "retro" : dto.skin) + ","
+            + (dto.stealRaw ? "1" : "0") + ","
+            + (dto.stealPlated ? "1" : "0") + ","
+            + (dto.stealUtensil ? "1" : "0"));
+        EnsureRatHeistDependencies(string.IsNullOrEmpty(dto.skin) ? "retro" : dto.skin);
+    }
+
+    /// <summary>清除老鼠组件与 tag 残留（stubKind 变空/对象转普通道具时）。</summary>
+    private static void RemoveRatHeist(GameObject go)
+    {
+        var type = FindCustomStubType(go, "RatHeist");
+        if (type != null)
+        {
+            var comp = go.GetComponent(type);
+            if (comp != null)
+                Undo.DestroyObjectImmediate(comp);
+        }
+        ClearCustomStubTag(go, RatHeistTagPrefix);
+    }
+
+    /// <summary>注册老鼠资产依赖：本体三包（动画 bundle0 / 模型 bundle34 /
+    /// prefab bundle47，StreamingAssets 原版包必有）+ dlc08 皮肤包 bundle355
+    /// （仅 skin=dlc08 时）。模式镜像 EnsureRandomCrateDependencies。</summary>
+    private static void EnsureRatHeistDependencies(string skin)
+    {
+        PseudoPrefabManagerStub managerStub = null;
+        foreach (var ms in UnityEngine.Object.FindObjectsOfType<PseudoPrefabManagerStub>())
+        {
+            if (ms != null && ms.levelInfo != null)
+            {
+                managerStub = ms;
+                break;
+            }
+        }
+        if (managerStub == null)
+            return;
+
+        var info = managerStub.levelInfo;
+        var deps = new System.Collections.Generic.List<string>(info.dependencies ?? new string[0]);
+        var changed = false;
+
+        System.Action<string> tryAdd = delegate(string bundle)
+        {
+            if (string.IsNullOrEmpty(bundle) || deps.Contains(bundle))
+                return;
+            if (!System.IO.File.Exists(System.IO.Path.Combine(
+                System.IO.Path.Combine(Application.streamingAssetsPath, "Windows"), bundle)))
+            {
+                Debug.LogWarning("[LayoutEditor] 老鼠依赖的 bundle 不存在于 StreamingAssets/Windows，暂不注册: " + bundle);
+                return;
+            }
+            deps.Add(bundle);
+            changed = true;
+        };
+
+        foreach (var b in RatHeistBaseBundles)
+            tryAdd(b);
+        if (skin == "dlc08")
+            tryAdd(RatHeistSkinBundle);
+
+        if (changed)
+        {
+            Undo.RecordObject(info, "Layout Editor RatHeist Dependencies");
+            info.dependencies = deps.ToArray();
+            EditorUtility.SetDirty(info);
+        }
+    }
+
+    private static float StubFloatOr(Component c, string field, float fallback)
+    {
+        var v = GetStubField(c, field);
+        return v is float ? (float)v : fallback;
+    }
+
+    private static bool StubBoolOr(Component c, string field, bool fallback)
+    {
+        var v = GetStubField(c, field);
+        return v is bool ? (bool)v : fallback;
+    }
+
     /// <summary>定位关卡集 stub 程序集（Stub_&lt;set&gt;）里的 CustomStub.RandomCrate。
     /// 程序集缺失返回 null —— LayoutEditor 本体零依赖。（公开：CustomStubAutoBake 复用）</summary>
     public static Type FindRandomCrateType(GameObject go)
@@ -2687,6 +2908,20 @@ public static class LayoutEditorStubIO
                 var c = FindComp(go, "TeleportalExitOnly");
                 if (c == null) continue;
                 var t = TeleportalExitOnlyTagPrefix + (StubBool(c, "m_enabled") ? "1" : "0");
+                if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
+            }
+            else if (prefab.StartsWith(RatHeistTagPrefix, StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "RatHeist");
+                if (c == null) continue;
+                var t = RatHeistTagPrefix
+                    + StubFloatStr(c, "m_interval", 20f) + ","
+                    + StubFloatStr(c, "m_radius", 0f) + ","
+                    + StubFloatStr(c, "m_speed", 1f) + ","
+                    + (GetStubField(c, "m_skin") as string ?? "retro") + ","
+                    + (StubBool(c, "m_stealRaw") ? "1" : "0") + ","
+                    + (StubBool(c, "m_stealPlated") ? "1" : "0") + ","
+                    + (StubBool(c, "m_stealUtensil") ? "1" : "0");
                 if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
             }
             // PushablePot| / CameraOffset|：payload 来自 soArray/摆放位（非组件字段），

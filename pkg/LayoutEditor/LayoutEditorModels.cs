@@ -87,6 +87,32 @@ public class LayoutTeleportalStubDto
 }
 
 [Serializable]
+public class LayoutRatHeistStubDto
+{
+    /** 出洞间隔（秒，≥2）。权威 = CustomStub.RatHeist 组件，载体 = tag
+     *  "RatHeist|<interval>,<radius>,<speed>,<skin>,<raw>,<plated>,<utensil>"。 */
+    public float interval = 20f;
+
+    /** 偷取半径（格，CELL=1.2m；0 = 全厨房）。 */
+    public float radius;
+
+    /** 移动速度倍率（GridNavigator 基速 4.5 m/s）。 */
+    public float speed = 1f;
+
+    /** 皮肤：retro（默认）/ dlc08（官方 h18 同款贴图换肤，需 dlc08 bundle 依赖）。 */
+    public string skin = "retro";
+
+    /** 偷原材料（台面自由食材，切没切好都算；正在被切的在容器内部天然偷不到）。 */
+    public bool stealRaw = true;
+
+    /** 偷盘子（含盘中菜）。 */
+    public bool stealPlated;
+
+    /** 偷锅具厨具（正在加热/搅拌台上的仍排除）。 */
+    public bool stealUtensil;
+}
+
+[Serializable]
 public class LayoutFoodSpawnerStubDto
 {
     public bool spawnInOrder = true;
@@ -378,7 +404,7 @@ public class LayoutItemDto
     public bool walkable;
     /** 空气墙（隐形碰撞块）：应用为 1×1×1.132 的 BoxCollider（1.132 为魔法数，导出据此识别），不生成 Col_Floor。 */
     public bool airWall;
-    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | CannonSwitch | PressureSwitch | Terminal | HeatedOven | empty */
+    /** Dispenser | AttachingFoodSpawner | Conveyor | Teleportal | CookingUtensil | Travelator | Flamethrower | CleanPlateStack | Burner | Player | ServingStation | PlateReturn | GlassReturn | Switch | CannonSwitch | PressureSwitch | Terminal | HeatedOven | RatHeist | empty */
     public string stubKind;
     /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
     public string pseudoPrefabGuid;
@@ -386,6 +412,7 @@ public class LayoutItemDto
     public LayoutDispenserStubDto dispenser;
     public LayoutConveyorStubDto conveyor;
     public LayoutTeleportalStubDto teleportal;
+    public LayoutRatHeistStubDto ratHeist;
     public LayoutFoodSpawnerStubDto foodSpawner;
     public LayoutCookingUtensilStubDto cookingUtensil;
     public LayoutTravelatorStubDto travelator;

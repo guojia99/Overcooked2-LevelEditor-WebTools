@@ -470,6 +470,22 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       return false;
     }
 
+    // 老鼠偷食材强校验（后端同款兜底）：interval≥2s；三个偷取开关至少开一个
+    // （全关 = 老鼠出洞永远空手而归，配置无意义）。
+    const ratIssues: string[] = [];
+    for (const it of S.items) {
+      if (stubKindOf(it) !== "RatHeist" || !it.ratHeist) continue;
+      const r = it.ratHeist;
+      if (isFinite(r.interval ?? 20) && (r.interval ?? 20) < 2)
+        ratIssues.push(`${itemLabel(it)}（出洞间隔至少 2 秒）`);
+      if (!(r.stealRaw ?? true) && !r.stealPlated && !r.stealUtensil)
+        ratIssues.push(`${itemLabel(it)}（原材料/盘子/锅具开关至少开一个）`);
+    }
+    if (ratIssues.length > 0) {
+      setStatus(`写回被阻断，请先修复 ${ratIssues.length} 处：${ratIssues.join("、")}`, true);
+      return false;
+    }
+
     // 传送门方向强校验（后端同款兜底）：出口必须有效；「仅作为出口」的门必须被
     // 某扇入口门指向。空出口的传送门会在写回链里被降级成装饰件（宿主对空
     // exitPortal 会 NRE），所以一律拦在前面。

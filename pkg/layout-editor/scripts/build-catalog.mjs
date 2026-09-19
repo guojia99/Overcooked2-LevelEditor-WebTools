@@ -33,8 +33,10 @@ const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
 /** Bumped when output schema / shared data files change; the Unity bridge reports
  *  its own version via /api/health so the web UI can warn about outdated bridges.
  *  v6（2026-09-15）：传送门方向（teleportal.exitOnly）——旧桥接会把该字段静默丢弃，
- *  必须靠版本告警把「单向配置写回后消失」拦在前面。 */
-const SCHEMA_VERSION = 6;
+ *  必须靠版本告警把「单向配置写回后消失」拦在前面。
+ *  v7（2026-09-19）：老鼠偷食材（ratHeist stub DTO）——旧桥不认识 stubKind=RatHeist /
+ *  item.ratHeist，写回会静默丢参数，靠版本告警拦旧桥。 */
+const SCHEMA_VERSION = 7;
 
 /**
  * CustomStub 依赖道具（needsStub=true）：游戏侧需要关卡集携带 Stub_<set> runtime
@@ -44,6 +46,7 @@ const SCHEMA_VERSION = 6;
  */
 const NEEDS_STUB_PREFAB_IDS = new Set([
   "RandomDispenser", // RandomCrate| 随机食材箱
+  "RatHeist", // RatHeist| 老鼠偷食材（藏身工作台下定时偷台面物品）
   // 火锅家族 · Web 版（commonW1 web/hotpot/，2026-09-03 起与 common03 原版并存双轨）：
   // HotPot 运行时（抬格层/wok_flame 常燃/煮熟提示音/汤面兜底）+ 可选 TimedSwitch|
   "web_utensil_large_pot_01",
@@ -393,6 +396,9 @@ function classifyUsage(item) {
 
 /** Utensil stack rules (使用手册 §3.3, extended with DLC stations). */
 const UTENSIL_STACK = {
+  // 老鼠偷食材：藏身工作台底下（y≈0 贴地），hostRule 豁免工作台 AABB 叠放检测
+  // 并吸附台面中心（藏身台即摆放吸附的那张台面）
+  RatHeist: { y: 0.05, hostRule: "counter_standard" },
   Plate: { y: 0.5, hostRule: "counter_standard" },
   CleanPlateStack: { y: 0.5, hostRule: "counter_standard" },
   Glass: { y: 0.5, hostRule: "counter_standard" },
@@ -1412,7 +1418,9 @@ const STEP_UTENSILS = {
  *  - 棉花糖饼干：只有棉花糖烤，其余不处理。
  *  - 意面：意面煮，其余食材各自煎（分开成组）。
  *  - 炸物：所有食材分别炸（分开成组）。
- *  - 面糊/面团（含面粉）：面粉鸡蛋搅拌，其余进最终锅具；最终锅具图标作为标记组追加。 */
+ *  - 面糊/面团（含面粉，非蛋糕族）：**全部食材一起搅拌**；最终锅具图标作为标记组追加
+ *    （前端 mergeFinalMarkers 合并为一格双图标，如 烧麦 = 搅拌碗 + 蒸笼）。
+ *  - 蛋糕/布丁：面粉鸡蛋搅拌，其余进烤箱。 */
 function computeCookingGroups(recipe, allRecipes, cookSteps) {
   const { cookingStep: finalStep, ingredients, type, intermediate } = recipe;
   if (!ingredients || !ingredients.length) return [];
@@ -1627,13 +1635,20 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
     cakeLike ||
     (ingredients.some((i) => FLOUR_INGREDIENTS.has(i)) && finalStep !== "Mixer" && finalStep !== "MixingBowl")
   ) {
-    // 蛋糕/布丁：搅拌 + 烤箱；面糊/面团（松饼/饺子/月饼）：搅拌 + 最终锅具。
+    // 蛋糕/布丁：面粉/蛋搅拌 + 其余进烤箱（保持原分组，勿动）。
+    // 面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，最终锅具退化为空标记组
+    //   —— bundle 实测原版就是这条链：SteamedSpecial_Carrot ← MixedFlourCarrot
+    //   （面粉+胡萝卜整体搅拌）→ Steamer；Pancake_Chocolate ← MixedFlourEggChocolate
+    //   （面粉+蛋+巧克力整体搅拌）→ FryingPan。此前把非面粉食材丢进终锅，既让卡片
+    //   显示成两个独立框，也让自动填充往蒸笼/煎锅塞生食材（顶掉原版 lookup，
+    //   这道菜在游戏里直接做不出来）。
     // 面粉/蛋判定用全家族集合（FlourSO/dlc09/dlc13 变体），dlc 变体菜谱同样分组。
     flourBranch = !cakeLike;
     const cookStep = cakeLike ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
     for (const ing of ingredients) {
       if (!prep.has(ing)) {
-        prep.set(ing, FLOUR_INGREDIENTS.has(ing) || EGG_INGREDIENTS.has(ing) ? "MixingBowl" : cookStep);
+        if (!cakeLike) prep.set(ing, "MixingBowl");
+        else prep.set(ing, FLOUR_INGREDIENTS.has(ing) || EGG_INGREDIENTS.has(ing) ? "MixingBowl" : cookStep);
       }
     }
   }

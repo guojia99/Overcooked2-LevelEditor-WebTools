@@ -590,6 +590,16 @@
             "id": "LettuceTomatoCheeseDoubleChickenBurger",
             "zh": "生菜番茄芝士双鸡肉汉堡",
             "en": "Lettuce Tomato Cheese DoubleChicken Burger"
+        },
+        {
+            "id": "Pasta_Boiled",
+            "zh": "煮意面",
+            "en": "Boiled Pasta"
+        },
+        {
+            "id": "Pasta_MeatSteak",
+            "zh": "肉酱意面（web）",
+            "en": "Meat Pasta (Web)"
         }
     ]
 }

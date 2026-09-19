@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "index": 17,
-  "itemCount": 79,
+  "itemCount": 80,
   "items": [
     {
       "id": "Smoothie_Melon",
@@ -857,6 +857,27 @@
       "nameEn": "Pressure Switch",
       "typeKind": "other",
       "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "RatHeist",
+      "guid": "dd84bc7e0f043d41fdf0d0a3fa5ac5c9",
+      "assetPath": "Assets/commonW1/prefabs/mechanisms/RatHeist.prefab",
+      "category": "mechanisms",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "stack": {
+        "y": 0.05,
+        "hostRule": "counter_standard"
+      },
+      "needsStub": true,
+      "nameZh": "老鼠（偷食材）",
+      "nameEn": "Rat (steals ingredients)",
       "icon": false
     },
     {

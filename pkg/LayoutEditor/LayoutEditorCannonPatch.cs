@@ -11,15 +11,16 @@ using UnityEngine;
 /// （cannon.m_button / m_launchTrigger 已写入）。但宿主 ServerCannonSessionInteractable
 /// 不会把玩家摇杆分配给大炮的 ServerPilotRotation（对比 ServerTerminal 会分配），
 /// 导致进炮后无法旋转炮管瞄准；且发射按钮空炮时也可点击（TriggerDisableScript
-/// startEnabled=1），发射空炮时 ClientCannon 对 null 目标会异常。
+/// startEnabled=1）。
 ///
-/// 本补丁在 Play 期持续校正每个已接线的大炮：
+/// 按钮空炮门控与空炮发射拦截已移交 CustomStub CannonGuard（2026-09-19，编辑器
+/// Play 与真机统一路径：Harmony 前缀拦 ServerCannon.OnTrigger 空炮 + 按占用状态
+/// 网络化发 Disable/Reset）。本补丁只保留编辑器侧专有职责：
 ///   1) 瞄准：玩家 Load 时把 PlayerControls.ControlScheme 分配给 ServerPilotRotation
 ///      （左摇杆旋转 RotatingPart → 挂在它下面的 Target（落点）随之移动，玩家即可
-///      控制落点）；Unload 时清空。
-///   2) 按钮门控：只有炮内有人才允许按发射按钮（直接控制按钮 Interactable.enabled，
-///      空炮置灰、加载点亮），并移除按钮上的 LayoutEditorSwitchReenableRelay
-///      （避免空炮时 0.35s 自动回绿与门控打架）。
+///      控制落点）；Unload 时清空。真机的瞄准走控制终端（MultiControlTerminal）。
+///   2) 移除按钮上的 LayoutEditorSwitchReenableRelay（编辑器版 0.35s 回绿中继，
+///      空炮时会把 CannonGuard 置灰的按钮重新点亮；真机无此组件）。
 /// </summary>
 [InitializeOnLoad]
 public static class LayoutEditorCannonPatch
@@ -140,16 +141,16 @@ public static class LayoutEditorCannonPatch
             }
         }
 
-        // 2) 按钮门控：只有炮内有人才允许按发射按钮。
+        // 2) 移除按钮上的编辑器版 0.35s 回绿中继（空炮时会把 CannonGuard 置灰的
+        //    按钮重新点亮）。按钮可用性门控已归 CustomStub CannonGuard（网络化
+        //    Disable/Reset，编辑器 Play 与真机同路径），此处不再直写
+        //    Interactable.enabled（那只影响本机，联机客机外观会不同步）。
         var button = cannon.m_button;
         if (button != null)
         {
             var relay = button.GetComponent<LayoutEditorSwitchReenableRelay>();
             if (relay != null)
                 UnityEngine.Object.Destroy(relay);
-            var interactable = button.GetComponent<Interactable>();
-            if (interactable != null && interactable.enabled != loaded)
-                interactable.enabled = loaded;
         }
     }
 

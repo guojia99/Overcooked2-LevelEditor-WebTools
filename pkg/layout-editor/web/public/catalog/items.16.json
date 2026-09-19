@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "index": 16,
   "itemCount": 200,
   "items": [
@@ -18,7 +18,7 @@
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "4c54ee4dbc00db742a827110f1aea22d",
-      "nameZh": "卷饼肉馅",
+      "nameZh": "肉馅",
       "nameEn": "Burrito Meat",
       "typeKind": "food_model",
       "usage": "dressing",

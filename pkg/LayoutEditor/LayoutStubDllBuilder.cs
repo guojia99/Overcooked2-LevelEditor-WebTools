@@ -226,6 +226,99 @@ public static class LayoutStubDllBuilder
         return "fresh";
     }
 
+    // ---- 启动/聚焦自动强制编译（闭环最后一环，之后无需手动点「编译」） ----
+    // 指纹守卫（静态字段，随域重载重置）：同一份源码最多自动尝试 2 次。成功编译必带来
+    // 域重载（重置后 state=fresh 收尾）；编译失败/Refresh 无实效则不重载、计数保留，
+    // 第 2 次起强制重导入最新源文件逼 Unity 重编，仍无效=多半编译错误 → 告警一次放弃，
+    // 源码再变更（指纹变化）自动重新开始。
+    private static long s_forceFingerprint;
+    private static int s_forceAttempts;
+    private static bool s_forceWarned;
+
+    /// <summary>Unity 启动（域重载后）/重新聚焦时自动强制编译：母本源码比 DLL 新
+    /// （外部改动未被 Unity 自动编译）或 DLL 缺失时自动触发一次编译；编译完成的域重载
+    /// 由 CustomStubAutoBake 自动 staging .dll.bytes。返回 true=已触发编译（调用方
+    /// 本轮可跳过 staging，等域重载后重来）。</summary>
+    public static bool RequestCompileIfStale()
+    {
+        try
+        {
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                // 编译/导入进行中：稍后复查（若它带来域重载，重载后会再走这里）
+                EditorApplication.delayCall += delegate { RequestCompileIfStale(); };
+                return false;
+            }
+            if (EditorApplication.isPlaying)
+                return false; // Play 中不编译（Unity 会推迟到退出 Play；聚焦复查兜底）
+            var state = GetRuntimeStageState();
+            if (state == "fresh")
+                return false;
+            string newestFile;
+            var fingerprint = GetNewestSourceTicks(out newestFile);
+            if (s_forceFingerprint == fingerprint && s_forceAttempts >= 2)
+            {
+                if (!s_forceWarned)
+                {
+                    s_forceWarned = true;
+                    Debug.LogWarning("[CustomStub] 自动强制编译后运行时 DLL 仍为 " + state
+                        + "（多半母本存在编译错误，详见 Console）；修复源码后将自动重新编译。");
+                }
+                return false;
+            }
+            if (s_forceFingerprint != fingerprint)
+            {
+                s_forceFingerprint = fingerprint;
+                s_forceAttempts = 0;
+                s_forceWarned = false;
+            }
+            s_forceAttempts++;
+            var relPath = newestFile != null ? newestFile.Replace('\\', '/') : null;
+            if (s_forceAttempts >= 2 && relPath != null)
+                AssetDatabase.ImportAsset(relPath, ImportAssetOptions.ForceUpdate);
+            Debug.Log("[CustomStub] 统一运行时源码已更新（" + state + "），自动触发编译"
+                + (s_forceAttempts >= 2 && relPath != null ? "（强制重导入 " + relPath + "）" : "") + "…");
+            AssetDatabase.Refresh();
+            // Refresh 未引发域重载（编译失败/无实际变动）时由这里递归复查收尾
+            EditorApplication.delayCall += delegate { RequestCompileIfStale(); };
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[CustomStub] 自动强制编译异常: " + ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>母本全部 .cs + asmdef 的最新 mtime（既当指纹，也定位强制重导入目标）。</summary>
+    private static long GetNewestSourceTicks(out string newestFile)
+    {
+        long newest = 0;
+        newestFile = null;
+        if (!Directory.Exists(RuntimeRoot))
+            return 0;
+        foreach (var f in Directory.GetFiles(RuntimeRoot, "*.cs", SearchOption.AllDirectories))
+        {
+            var ticks = File.GetLastWriteTime(f).Ticks;
+            if (ticks > newest)
+            {
+                newest = ticks;
+                newestFile = f;
+            }
+        }
+        var asmdef = RuntimeRoot + "/" + RuntimeAsmName + ".asmdef";
+        if (File.Exists(asmdef))
+        {
+            var ticks = File.GetLastWriteTime(asmdef).Ticks;
+            if (ticks > newest)
+            {
+                newest = ticks;
+                newestFile = asmdef;
+            }
+        }
+        return newest;
+    }
+
     /// <summary>把 Library/ScriptAssemblies/WebCustomStubRuntime.dll staging 为
     /// .dll.bytes 并赋 bundle 名。throwOnStale=true（导出流程）：DLL 缺失/过期直接
     /// 抛错中断导出；false（手动/静默）：打警告返回。</summary>

@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-18T08:14:07.682Z",
-  "schemaVersion": 6,
+  "generatedAt": "2026-09-19T10:19:42.115Z",
+  "schemaVersion": 7,
   "gridCellSize": 1.2,
-  "itemCount": 3479,
+  "itemCount": 3480,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -92,7 +92,7 @@
       "labelZh": "核心 · 机关",
       "labelEn": "Mechanisms",
       "layoutTier": "core",
-      "itemCount": 23
+      "itemCount": 24
     },
     {
       "key": "surface",

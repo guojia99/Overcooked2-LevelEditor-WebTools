@@ -4477,6 +4477,13 @@ body.manage-bg {
   font-weight: 600;
 }
 
+.ctx-menu .ctx-stub-hint {
+  color: #6b7280;
+  font-size: 10.5px;
+  line-height: 1.5;
+  margin-bottom: 2px;
+}
+
 .ctx-menu .ctx-stub-row {
   display: flex;
   align-items: center;

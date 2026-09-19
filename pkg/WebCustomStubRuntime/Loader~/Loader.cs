@@ -32,6 +32,8 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v2.3.0（2026-09-19）：仅随统一运行时同步版本号（新增老鼠偷食材 RatHeist，
+    ///     自愈与状态机全在 CustomStub 侧，loader 无改动）。
     /// v2.2.1（2026-09-15）：仅随统一运行时同步版本号（可移动火锅联机实体 ID 错位
     ///     修复 + 联机实体指纹诊断，全部在 CustomStub 侧，loader 无改动）。
     ///     ⚠ 该版本是联机致命修复，requires.txt 门控会挡下 &lt; 2.2.1 的旧依赖包。
@@ -52,7 +54,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "2.2.1";
+        public const string PluginVersion = "2.4.0";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>

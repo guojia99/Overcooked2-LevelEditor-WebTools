@@ -96,8 +96,16 @@ namespace CustomStub
         /// 顺带修好三处常年落空的反射（GameApi.Find 加命名空间候选+兜底扫描）：
         /// ClientSynchroniserBase/ServerSynchroniserBase/Serialisable 命名空间缺失
         /// （=触发区占用联机同步的收发两端补丁从未真正装上）、ContainerCapacityField
-        /// 读错组件（汤面重摆从未生效）、IsLocallyControlled 反射了不存在的接口。</summary>
-        public const string Version = "v14(" + StubVersion.Value + ")";
+        /// 读错组件（汤面重摆从未生效）、IsLocallyControlled 反射了不存在的接口。
+        ///  v15（2.4.0）：大炮防线（CannonGuard，2026-09-19 真机事故）——①空炮发射
+        /// 拦截：ServerCannon.OnTrigger 前缀（m_loadedObject 为空或玩家已脱离
+        /// AttachPoint 即跳过原方法；原版此路径会让 m_flying 永久 true + 客户端
+        /// LaunchProjectile(null) NRE，大炮从此拒入）；②按钮占用门控：StubTicker
+        /// 按「炮内是否有人」迁移时发 Disable/Reset（走原版 ServerTriggerDisableScript
+        /// 网络通道，双端变灰/点亮），空炮不再常亮可按；③SwitchReenable 复查跳过
+        /// 大炮按钮 + 烘焙侧不再给 CannonSwitch 烤自动复位（存量场景写回摘除）。
+        /// 只认 SetupCannonStub 根的 web 大炮，官方 dlc08/09 图零影响。</summary>
+        public const string Version = "v15(" + StubVersion.Value + ")";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -120,6 +128,10 @@ namespace CustomStub
         private const int TerminalGuardDiscoverPhase = 29;
         private const int TerminalGuardRefreshIntervalFrames = 30;
         private const int TerminalGuardRefreshPhase = 11;
+        private const int CannonGuardDiscoverIntervalFrames = 60;
+        private const int CannonGuardDiscoverPhase = 41;
+        private const int CannonGuardRefreshIntervalFrames = 30;
+        private const int CannonGuardRefreshPhase = 23;
 
         private static bool s_installedThisAssembly;
         private static GameObject s_host;
@@ -207,11 +219,12 @@ namespace CustomStub
                 s_ticker.enabled = enabled;
         }
 
-        /// <summary>无 tag 通道探测（每次只做 1 次单类型全场景扫描，4 槽轮转）：
-        ///  - 槽 0~2：web 大锅（ServerCookingHandler / WokEffects / ContentsCosmetic，
-        ///    三者轮转——客机没有 Server* 同步器，只认单一类型会漏判）；
-        ///  - 槽 3：未绑定可操控对象的 Terminal（写回降级残留，同样无 tag）。
-        /// 窗口结束仍无命中 ⇒ Dormant。</summary>
+    /// <summary>无 tag 通道探测（每次只做 1 次单类型全场景扫描，5 槽轮转）：
+    ///  - 槽 0~2：web 大锅（ServerCookingHandler / WokEffects / ContentsCosmetic，
+    ///    三者轮转——客机没有 Server* 同步器，只认单一类型会漏判）；
+    ///  - 槽 3：未绑定可操控对象的 Terminal（写回降级残留，同样无 tag）；
+    ///  - 槽 4：web 大炮（CannonGuard——SetupCannonStub 根，无专属 tag）。
+    /// 窗口结束仍无命中 ⇒ Dormant。</summary>
         private static void TickProbe()
         {
             var now = Time.unscaledTime;
@@ -219,15 +232,20 @@ namespace CustomStub
                 return;
             var cursor = s_probeCursor++;
             s_nextProbeAt = now + (cursor < ProbeFastCount ? ProbeFastSeconds : ProbeSlowSeconds);
-            var slot = cursor & 3;
+            // 5 槽轮转（v15）：0~2 web 大锅（三者轮转——客机没有 Server* 同步器）；
+            // 3 未绑定可操控对象的 Terminal；4 web 大炮（CannonGuard，无 tag 通道）。
+            var slot = cursor % 5;
             bool hit;
             if (slot < 3)
                 hit = HotPot.ProbeHasLargePot(slot);
-            else
+            else if (slot == 3)
                 hit = TerminalGuard.ProbeHasUnboundTerminal();
+            else
+                hit = CannonGuard.ProbeHasCannon();
             if (hit)
             {
-                ActivateCore(slot < 3 ? "探测到 web 大锅（无 tag 通道）" : "探测到未绑定可操控对象的终端");
+                ActivateCore(slot < 3 ? "探测到 web 大锅（无 tag 通道）"
+                    : (slot == 3 ? "探测到未绑定可操控对象的终端" : "探测到 web 大炮"));
                 return;
             }
             if (now >= s_probeDeadline)
@@ -573,6 +591,42 @@ namespace CustomStub
             }
         }
 
+        /// <summary>大炮空炮发射拦截（ServerCannon.OnTrigger 前缀，v15，见
+        /// HarmonyPatches.ServerCannonOnTriggerPrefix / CannonGuard.AllowLaunch）：
+        /// 目标是按钮按压/联动触发才走的冷方法，无热路径开销。按需安装
+        /// （CannonGuard 发现 web 大炮时触发），幂等；失败仅损失拦截防线
+        /// （按钮门控不受影响），独立 Harmony id 与其它补丁组互不影响。</summary>
+        private static bool s_cannonPatched;
+        private static bool s_cannonPatchFailed;
+
+        internal static void EnsureCannonPatches()
+        {
+            if (s_cannonPatched || s_cannonPatchFailed)
+                return;
+            try
+            {
+                var target = GameApi.ServerCannonOnTriggerMethod;
+                var prefixMethod = HarmonyPatches.ServerCannonOnTriggerPrefixMethod;
+                if (target == null || prefixMethod == null)
+                {
+                    s_cannonPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] ServerCannon.OnTrigger 反射/前缀缺失，"
+                        + "空炮发射拦截未装（真机空炮发射仍会拒入软锁）");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".cannon");
+                harmony.Patch(target, new HarmonyMethod(prefixMethod));
+                s_cannonPatched = true;
+                StubLog.Log("[CustomStub] 大炮空炮发射拦截补丁已装（按需）: "
+                    + target.DeclaringType.Name + "." + target.Name);
+            }
+            catch (Exception ex)
+            {
+                s_cannonPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 大炮空炮发射拦截补丁安装失败: " + ex);
+            }
+        }
+
         private static void OnSceneLoadedHeal(Scene scene, LoadSceneMode mode)
         {
             // v12：每次场景加载重评估门控——先回到探测态（ticker 暂以低频探测跑），
@@ -591,7 +645,9 @@ namespace CustomStub
             PushablePot.OnSceneChanged();
             UtensilTiming.OnSceneChanged();
             TerminalGuard.OnSceneChanged();
+            CannonGuard.OnSceneChanged();
             RandomCrate.OnSceneChanged();
+            RatHeist.OnSceneChanged();
             NetDiagnostics.OnSceneChanged();
         }
 
@@ -683,7 +739,8 @@ namespace CustomStub
                 || prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(TravelatorReverser.TagPrefix, StringComparison.Ordinal)
-                || prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal);
+                || prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal)
+                || prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -797,6 +854,16 @@ namespace CustomStub
                 ParseTeleportalExitOnly(prefabTag.Substring(TeleportalExitOnly.TagPrefix.Length), exitOnly);
                 exitOnly.enabled = true;
                 StubLog.Dbg("[CustomStub] 自愈 TeleportalExitOnly: " + go.name);
+            }
+            else if (prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "RatHeist"))
+                    return;
+                // 老鼠状态机在 Start 协程里自行等待同步，OnEnable 无副作用，无需
+                // 先禁用再启用。
+                var rat = go.AddComponent<RatHeist>();
+                ParseRatHeist(prefabTag.Substring(RatHeist.TagPrefix.Length), rat);
+                StubLog.Dbg("[CustomStub] 自愈 RatHeist: " + go.name);
             }
             else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
             {
@@ -975,6 +1042,32 @@ namespace CustomStub
             exitOnly.m_enabled = payload.Trim() != "0";
         }
 
+        /// <summary>RatHeist|&lt;interval&gt;,&lt;radius&gt;,&lt;speed&gt;,&lt;skin&gt;,&lt;raw 1|0&gt;,&lt;plated 1|0&gt;,&lt;utensil 1|0&gt;
+        /// （interval 秒 / radius 格 0=全图 / speed 倍率 / skin retro|dlc08；
+        /// 段缺省回落组件默认值）。</summary>
+        private static void ParseRatHeist(string payload, RatHeist rat)
+        {
+            if (string.IsNullOrEmpty(payload))
+                return;
+            var parts = payload.Split(',');
+            if (parts.Length < 1)
+                return;
+            if (parts.Length >= 1)
+                rat.m_interval = Mathf.Max(2f, ParseFloat(parts[0], rat.m_interval));
+            if (parts.Length >= 2)
+                rat.m_radius = Mathf.Max(0f, ParseFloat(parts[1], rat.m_radius));
+            if (parts.Length >= 3)
+                rat.m_speed = Mathf.Max(0.1f, ParseFloat(parts[2], rat.m_speed));
+            if (parts.Length >= 4 && !string.IsNullOrEmpty(parts[3].Trim()))
+                rat.m_skin = parts[3].Trim();
+            if (parts.Length >= 5)
+                rat.m_stealRaw = parts[4].Trim() != "0";
+            if (parts.Length >= 6)
+                rat.m_stealPlated = parts[5].Trim() == "1";
+            if (parts.Length >= 7)
+                rat.m_stealUtensil = parts[6].Trim() == "1";
+        }
+
         private static float ParseFloat(string s, float fallback)
         {
             float v;
@@ -1044,6 +1137,10 @@ namespace CustomStub
                         TerminalGuard.TickDiscover();
                     if ((frame + TerminalGuardRefreshPhase) % TerminalGuardRefreshIntervalFrames == 0)
                         TerminalGuard.TickRefreshGuarded();
+                    if ((frame + CannonGuardDiscoverPhase) % CannonGuardDiscoverIntervalFrames == 0)
+                        CannonGuard.TickDiscover();
+                    if ((frame + CannonGuardRefreshPhase) % CannonGuardRefreshIntervalFrames == 0)
+                        CannonGuard.TickRefresh();
                 }
                 catch (Exception ex)
                 {

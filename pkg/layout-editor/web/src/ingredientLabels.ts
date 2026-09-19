@@ -14,7 +14,11 @@ const FOOD_GROUP_ZH: Record<string, string> = {
   dlc11: "DLC11 饮料",
   dlc13: "DLC13 巧克力",
   levelset: "本关卡集",
+  // commonW2 共享库分两组（后端 LayoutEditorCatalogApi.FoodGroupOf）：
+  //   burger   = custom_recipes/burger/ 子树（真·汉堡大全）
+  //   commonw2 = 库内其余分类（fry/ 炸物、pasta/ 意面…）
   burger: "🍔 Burger大全",
+  commonw2: "📚 扩展菜谱",
 };
 
 export function foodGroupLabel(group: FoodGroup | undefined): string {

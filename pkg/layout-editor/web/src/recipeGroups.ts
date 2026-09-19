@@ -112,6 +112,14 @@ export function equivalentCrateIds(id: string): string[] {
 
 const COOK_STEPS = new Set(Object.keys(STEP_UTENSILS));
 
+/** 面粉/蛋家族（镜像 build-catalog.mjs 的 FLOUR/EGG_INGREDIENTS 与
+ *  LayoutEditorRecipeKnowledge.cs 的 FlourIngredients/EggIngredients）：
+ *  面粉系菜谱（松饼/烧麦/蛋糕/月饼/派/布丁）的搅拌分组判定用。
+ *  唯一数据源放在本文件——editor/recipeKnowledge.ts 从这里再导出，避免两份清单漂移
+ *  （此前 recipeGroups 只认字面 "FlourSO"，dlc09/dlc13 变体分组与后端不一致）。 */
+export const FLOUR_INGREDIENTS = new Set(["FlourSO", "dlc09_flour", "dlc13_flour"]);
+export const EGG_INGREDIENTS = new Set(["EggSO", "DLC05_Egg", "dlc09_egg", "dlc13_egg"]);
+
 /** 汉堡类需要煎制（FryingPan）的肉排/鸡排叶食材；其余（面包/菠萝/生菜/番茄/
  *  黄瓜/芝士等）在汉堡里保持生。每块肉排各自成锅（见 splitPerIngredient）。 */
 const BURGER_COOKED_INGREDIENTS = new Set<string>([
@@ -300,6 +308,7 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
 
   const isCookStep = (s: string | undefined): boolean => !!s && COOK_STEPS.has(s);
   const has = (id: string): boolean => ingredients.includes(id);
+  const hasAny = (set: Set<string>): boolean => ingredients.some((i) => set.has(i));
 
   // 半成品：直接按自身烹饪步骤成组
   if (r.intermediate) {
@@ -408,14 +417,21 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
     for (const ing of ingredients) prep.set(ing, "DeepFatFryer");
   } else if (
     cakeLike ||
-    (has("FlourSO") && finalStep !== "Mixer" && finalStep !== "MixingBowl")
+    (hasAny(FLOUR_INGREDIENTS) && finalStep !== "Mixer" && finalStep !== "MixingBowl")
   ) {
-    // 蛋糕/布丁：搅拌 + 烤箱；面糊/面团（松饼/饺子）：搅拌 + 最终锅具
+    // 蛋糕/布丁：面粉/蛋搅拌 + 其余进烤箱（保持原分组，勿动）。
+    // 面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，最终锅具退化为空标记组
+    //   —— bundle 实测原版就是这条链：SteamedSpecial_Carrot ← MixedFlourCarrot
+    //   （面粉+胡萝卜整体搅拌）→ Steamer；Pancake_Chocolate ← MixedFlourEggChocolate
+    //   （面粉+蛋+巧克力整体搅拌）→ FryingPan。此前把非面粉食材丢进终锅，既让卡片
+    //   显示成两个独立框，也让自动填充往蒸笼/煎锅塞生食材（顶掉原版 lookup）。
+    // 面粉/蛋判定用全家族集合（FlourSO/dlc09/dlc13 变体），与另两处镜像对齐。
     flourBranch = !cakeLike;
     const cookStep = cakeLike ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
     for (const ing of ingredients) {
       if (!prep.has(ing)) {
-        prep.set(ing, ing === "FlourSO" || ing === "EggSO" ? "MixingBowl" : cookStep);
+        if (!cakeLike) prep.set(ing, "MixingBowl");
+        else prep.set(ing, FLOUR_INGREDIENTS.has(ing) || EGG_INGREDIENTS.has(ing) ? "MixingBowl" : cookStep);
       }
     }
   }

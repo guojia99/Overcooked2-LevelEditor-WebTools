@@ -1,7 +1,7 @@
 import { S } from "./state";
 import { VARIANT_TO_BASE } from "./itemVariants";
 import type { RecipeEntry } from "../types";
-import { crateIngredientId } from "../recipeGroups";
+import { crateIngredientId, FLOUR_INGREDIENTS, EGG_INGREDIENTS } from "../recipeGroups";
 import { fetchLevelRecipes, fetchRecipeCatalog } from "../api";
 
 export const STEP_UTENSILS: Record<string, string[]> = {
@@ -34,8 +34,8 @@ export const CHOPPABLE_INGREDIENTS = new Set([
   "dlc08_onion",
 ]);
 
-export const FLOUR_INGREDIENTS = new Set(["FlourSO", "dlc09_flour", "dlc13_flour"]);
-export const EGG_INGREDIENTS = new Set(["EggSO", "DLC05_Egg", "dlc09_egg", "dlc13_egg"]);
+/** 面粉/蛋家族：唯一数据源在 recipeGroups.ts（分组算法与填充算法共用同一份清单）。 */
+export { FLOUR_INGREDIENTS, EGG_INGREDIENTS };
 
 /** 装盘容器 id → 对应的容器堆道具 id（PlatingStep → CleanPlateStack 类）。
  *  关卡菜谱分析区据此推荐盘子堆/杯子堆。 */
@@ -331,9 +331,22 @@ export function leafIngredientIds(id: string): string[] {
   return ings && ings.length > 0 ? ings : [id];
 }
 
+/** 单个容器的填充结果。
+ *  - clear = **强制清空指令**：把锅具的 allowedIngredientSOs 写成空数组，让运行时
+ *    回落原版 lookup（见 computeUtensilIngredientFill 里的「整锅下锅」说明）。
+ *    clear 优先级高于 ings/intermediates —— 同一口锅既被「整锅下锅」的菜谱占用、
+ *    又被别的菜谱塞生食材时，部分覆盖会把两边都做废，清空才能同时服务。
+ *  - capacity = 该容器「一份菜同时要装几件」，多菜谱取最大值、下限 1。 */
+export interface UtensilFillEntry {
+  ings: string[];
+  intermediates: string[];
+  capacity: number;
+  clear: boolean;
+}
+
 export function computeUtensilIngredientFill(
   recipes: RecipeEntry[]
-): Map<string, { ings: string[]; intermediates: string[] }> {
+): Map<string, UtensilFillEntry> {
   // 数据驱动（与游戏 OrderDefinitionNode / FryableObjectsLookup 一致，bundle 实测）：
   //  - 汤类：全部叶食材直接进汤锅（OnionCarrotPotatoSoup comp=3 食材节点, step=Pot）；
   //  - 热狗：香肠进汤锅、洋葱进煎锅（面包/酱料不加热，按 cookingGroups 分组）；
@@ -348,16 +361,39 @@ export function computeUtensilIngredientFill(
   //    对齐原版锅 lookup 的生+熟双表结构）。
   //  - Mixed 型中间产物的终锅优先取其自身 cookingStep（无自身步骤才回退菜谱步骤，
   //    官方面糊 + donut 语义不变）。
-  const result = new Map<string, { ings: string[]; intermediates: string[] }>();
+  //  - **搅拌后整锅下终锅、且编辑器没有对应面糊中间产物的菜谱（烧麦/核心松饼）**：
+  //    搅拌碗 ← 全部叶食材；终锅（蒸笼/煎锅）标记为 clear = **清空**。理由（bundle 实测）：
+  //      · SteamerPrefabLookup = [uncookedfish, MixedFlourCarrot, MixedFlourPrawns,
+  //        MixedFlourMeat]，FryableObjectsLookup = [meat, mixedflouregg,
+  //        mixedfloureggchocolate, prawn, uncookedfish, mushroom, …]
+  //        —— 原版表本来就同时认得面团和生食材；
+  //      · PseudoPrefabCookingUtensil.Setup 只在 allowedIngredientSOs 非空时才**整表替换**
+  //        原版 lookup，所以「不写」才是对的。此前往蒸笼塞 [CarrotSO] 顶掉原版表，
+  //        面团进不去，这道菜在游戏里直接做不出来。
+  //      · 搅拌碗写生食材是安全的：那是 MixableContainer.m_ApprovedIngredients（准入），
+  //        输出模型走另一张 MixerPrefabLookup（含 mixedflourcarrot/meat/prawns），不被覆盖。
+  const result = new Map<string, UtensilFillEntry>();
+  const entry = (ut: string): UtensilFillEntry => {
+    let e = result.get(ut);
+    if (!e) {
+      e = { ings: [], intermediates: [], capacity: 0, clear: false };
+      result.set(ut, e);
+    }
+    return e;
+  };
   const addIng = (ut: string, iid: string) => {
-    if (!result.has(ut)) result.set(ut, { ings: [], intermediates: [] });
-    const e = result.get(ut)!;
+    const e = entry(ut);
     if (!e.ings.includes(iid)) e.ings.push(iid);
   };
   const addInter = (ut: string, iid: string) => {
-    if (!result.has(ut)) result.set(ut, { ings: [], intermediates: [] });
-    const e = result.get(ut)!;
+    const e = entry(ut);
     if (!e.intermediates.includes(iid)) e.intermediates.push(iid);
+  };
+  /** 容量：按「单道菜谱一次要装几件」取最大值（汤锅 3、搅拌碗 2~4、蒸笼/煎锅 1），
+   *  与 bundle 实测的原版容量一致；不按跨菜谱食材种类数累加。 */
+  const bump = (ut: string, n: number) => {
+    const e = entry(ut);
+    if (n > e.capacity) e.capacity = n;
   };
 
   const interById = new Map(S.intermediatesCache.map((x) => [x.id, x]));
@@ -389,7 +425,9 @@ export function computeUtensilIngredientFill(
       const vessel = subVesselOf(sub);
       if (!vessel) continue;
       addInter(vessel, sub.id);
-      for (const leaf of sub.ingredients ?? []) addIng(vessel, leaf);
+      const leafs = sub.ingredients ?? [];
+      for (const leaf of leafs) addIng(vessel, leaf);
+      bump(vessel, Math.max(1, leafs.length));
     }
     // 食材直接引用混合中间产物（月饼型：食材即面糊半成品）
     const refMix = (r.ingredients ?? [])
@@ -397,9 +435,14 @@ export function computeUtensilIngredientFill(
       .filter((x): x is RecipeEntry => !!x && isMixSub(x));
     if (refMix.length > 0) {
       for (const b of refMix) {
-        for (const ing of b.ingredients ?? []) addIng("MixerBowl", ing);
+        const leafs = b.ingredients ?? [];
+        for (const ing of leafs) addIng("MixerBowl", ing);
+        bump("MixerBowl", Math.max(1, leafs.length));
         const vessel = subVesselOf(b) || finalVesselOf(r);
-        if (vessel) addInter(vessel, b.id);
+        if (vessel) {
+          addInter(vessel, b.id);
+          bump(vessel, 1);
+        }
       }
       continue;
     }
@@ -409,39 +452,63 @@ export function computeUtensilIngredientFill(
       .filter((x): x is RecipeEntry => !!x && isMixSub(x));
     if (mixComps.length > 0) {
       for (const b of mixComps) {
-        for (const ing of b.ingredients ?? []) addIng("MixerBowl", ing);
+        const leafs = b.ingredients ?? [];
+        for (const ing of leafs) addIng("MixerBowl", ing);
+        bump("MixerBowl", Math.max(1, leafs.length));
         // 混合型（浆类）节点进终锅，但其叶食材必须先搅拌——只填节点不双填；
         // 终锅优先取中间产物自身步骤（肉排浆/虾浆自带 FryingPan/DeepFatFryer），
         // 无自身步骤才回退菜谱步骤（官方面糊 + donut 语义不变）。
         const vessel = subVesselOf(b) || finalVesselOf(r);
-        if (vessel) addInter(vessel, b.id);
+        if (vessel) {
+          addInter(vessel, b.id);
+          bump(vessel, 1);
+        }
       }
       continue;
     }
     // Mixed 类型：叶食材直接进搅拌碗（如 mooncake_Orange 四料直接搅拌）
     if (r.mixing && isFlourBranchRecipe(r)) {
-      for (const ing of r.ingredients ?? []) addIng("MixerBowl", ing);
+      const leafs = r.ingredients ?? [];
+      for (const ing of leafs) addIng("MixerBowl", ing);
+      bump("MixerBowl", Math.max(1, leafs.length));
       const vessel = finalVesselOf(r);
-      if (vessel) addInter(vessel, r.id);
+      if (vessel) {
+        addInter(vessel, r.id);
+        bump(vessel, 1);
+      }
       continue;
     }
     // 面粉系：面糊中间产物为准（其食材表=真实下搅拌碗的内容）
     if (isFlourBranchRecipe(r)) {
       const batter = findBatterIntermediateForRecipe(r);
       if (batter) {
-        for (const ing of batter.ingredients ?? []) addIng("MixerBowl", ing);
+        const leafs = batter.ingredients ?? [];
+        for (const ing of leafs) addIng("MixerBowl", ing);
+        bump("MixerBowl", Math.max(1, leafs.length));
         const vessel = subVesselOf(batter) || finalVesselOf(r);
-        if (vessel) addInter(vessel, batter.id);
+        if (vessel) {
+          addInter(vessel, batter.id);
+          bump(vessel, 1);
+        }
         continue;
       }
-      // 无面糊中间产物：按展示分组兜底（面粉/鸡蛋→搅拌碗）
+      // 无面糊中间产物：按展示分组兜底（全部叶食材→搅拌碗 + 终锅空标记组）
     }
     // 直接加热类：按 cookingGroups 的步骤分组把叶食材放进对应容器；
     // 组成员是混合中间产物时——混合容器（搅拌碗）加其叶食材、加热容器加中间产物节点。
+    // 容量按**单个分组**的件数取最大（炸物/汉堡的分锅组各自 1 件，汤锅一组 3 件）。
     for (const g of r.cookingGroups ?? []) {
       const container = STEP_CONTAINER[g.step];
       if (!container) continue;
-      for (const ing of g.ingredients ?? []) {
+      const gIngs = g.ingredients ?? [];
+      if (gIngs.length === 0) {
+        // 空标记组（搅拌后整锅下终锅）：把终锅标记为清空，让运行时保留原版 lookup
+        // （蒸笼认得三种烧麦面团 + 鱼、煎锅认得松饼面糊 + 肉/虾/鱼）。
+        entry(container).clear = true;
+        bump(container, 1);
+        continue;
+      }
+      for (const ing of gIngs) {
         const sub = interById.get(ing);
         if (sub && isMixSub(sub)) {
           if (container === "MixerBowl") {
@@ -453,7 +520,11 @@ export function computeUtensilIngredientFill(
           addIng(container, ing);
         }
       }
+      bump(container, gIngs.length);
     }
+  }
+  for (const e of result.values()) {
+    if (e.capacity < 1) e.capacity = 1;
   }
   return result;
 }

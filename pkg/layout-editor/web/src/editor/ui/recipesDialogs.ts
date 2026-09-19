@@ -49,7 +49,7 @@ import {
   itemWorldAABB
 } from "../items";
 import { itemLayerOfIt } from "../catalog";
-import { utensilCapacityOrFix } from "../stubControls";
+import { utensilCapacityOrDefault } from "../stubControls";
 import { applyUtensilIngredientFill } from "./utensilManager";
 import { foodGroupLabel, visibleRecipes } from "../../ingredientLabels";
 import {
@@ -671,7 +671,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         sprayFound = true;
         it.stubKind = "CookingUtensil";
         if (!it.cookingUtensil) it.cookingUtensil = {};
-        it.cookingUtensil.capacity = utensilCapacityOrFix(it);
+        it.cookingUtensil.capacity = utensilCapacityOrDefault(it);
         it.cookingUtensil.allowedIngredientGuids = [...creamGuids];
       };
       for (const sprayId of CREAM_SPRAY_IDS) {
@@ -874,7 +874,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
           if (it.prefabGuid !== itCat.guid) continue;
           it.stubKind = "CookingUtensil";
           if (!it.cookingUtensil) it.cookingUtensil = {};
-          it.cookingUtensil.capacity = utensilCapacityOrFix(it);
+          it.cookingUtensil.capacity = utensilCapacityOrDefault(it);
           const cur = it.cookingUtensil.allowedIngredientGuids ?? [];
           it.cookingUtensil.allowedIngredientGuids = [...new Set([...cur, ...guidsToAdd])];
         }

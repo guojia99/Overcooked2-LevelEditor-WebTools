@@ -14,6 +14,38 @@ namespace CustomStub
     public static class StubVersion
     {
         /// <summary>权威 semver 版本号（形如 2.0.0）。
+        /// 2.4.0（2026-09-19）：
+        ///  - 新增大炮防线 CannonGuard（编辑器 Play 与真机统一路径）：
+        ///    ① 空炮发射拦截——ServerCannon.OnTrigger 前缀，m_loadedObject 为空或
+        ///    玩家已脱离 AttachPoint 即跳过原方法。原版此路径 m_flying 永久 true +
+        ///    客户端 LaunchProjectile(null) NRE，大炮从此拒入（真机实测：空炮按
+        ///    一次后谁都进不去炮）。
+        ///    ② 按钮占用门控——按「炮内是否有人（挂 AttachPoint 下）」状态迁移时
+        ///    发 Disable/Reset（走原版 ServerTriggerDisableScript 网络通道，双端
+        ///    变灰/点亮+不可按/可按），空炮不再常亮可按。
+        ///    ③ SwitchReenable 绑定前/复位前双重复查跳过大炮发射按钮（旧烘焙场景
+        ///    不重写回即受保护）；烘焙侧同步改为大炮联动按钮不烤自动复位。
+        ///  - GameApi 新增 Cannon/ServerCannon/SetupCannonStub 反射组 + 命名空间
+        ///    候选表补 LevelEditorStub. 前缀。
+        /// 2.3.0（2026-09-19）：
+        ///  - 新增老鼠偷食材（RatHeist）：开局藏身工作台下，按可调间隔出洞，
+        ///    服务端权威偷取台面/地面物品（TakeItem→Carry/Attach→DestroyObject
+        ///    全走官方网络消息），拖回销毁循环；玩家交互键=打一下掉落食材+逃回家；
+        ///    无目标时随机巡逻（≥5 格）再回洞。
+        ///  - 分类开关（默认只偷原材料，排除正在烹饪/搅拌的锅）、半径/速度/皮肤
+        ///    （retro / dlc08 官方 h18 同款贴图换肤）全参数化；客户端影子演出
+        ///    以携带/销毁同步事件矫正。tag 载体 RatHeist|。
+        ///  - 实测修复①：rat.prefab 无 "Attachment" 子物体 → PlayerAttachmentCarrier
+        ///    挂点全 null → 物品 Attach 后不跟鼠走。双端补建同名挂点+反射直写
+        ///    m_attachPoints。
+        ///  - 实测修复②：老鼠未被实体扫描同步化时无 ServerPlayerAttachmentCarrier
+        ///    → CarryItem 从未执行（物品 TakeItem 后掉地上）。官方路径优先，
+        ///    兜底直接 ServerPhysicalAttachment.Attach(PlayerAttachmentCarrier)。
+        ///  - 实测修复③：食材判定组件错误——IngredientPropertiesComponent 仅
+        ///    切好食材（ChoppedX）才有，生食材（Tomato 等）只有
+        ///    IngredientDisposalBehaviour → 生食材/地上的生食材全部漏判。
+        ///    改为 IngredientDisposalBehaviour 为主（垃圾桶识别食材的官方通道，
+        ///    生/切好全有）+ IPC 兜底。
         /// 2.2.1（2026-09-15）：
         ///  - **联机致命修复**：可移动火锅在网络实体扫描窗口期 Instantiate 大锅，
         ///    导致主客机实体 ID 整体错位（客机完全不能动、双方厨师原地不动、
@@ -39,6 +71,6 @@ namespace CustomStub
         ///    改为推进到 IsBurning 为止 + 宿主双驱动时观测让位；客户端「锅在灶台上」
         ///    标志按触发区直驱（原先恒 false 导致烧糊预警图标被 vanilla 吞掉）。
         /// Loader 的 PluginVersion 必须同步为同值。</summary>
-        public const string Value = "2.2.1";
+        public const string Value = "2.4.0";
     }
 }

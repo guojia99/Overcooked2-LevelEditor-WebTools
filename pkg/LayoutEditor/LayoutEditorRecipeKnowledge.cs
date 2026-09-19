@@ -12,8 +12,10 @@ using UnityEngine;
 public static class LayoutEditorRecipeKnowledge
 {
     /// <summary>Bumped together with SCHEMA_VERSION in build-catalog.mjs.
-    ///  v6（2026-09-15）：传送门方向 teleportal.exitOnly（旧桥接 JsonUtility 静默丢弃）。</summary>
-    public const int BridgeSchemaVersion = 6;
+    ///  v6（2026-09-15）：传送门方向 teleportal.exitOnly（旧桥接 JsonUtility 静默丢弃）。
+    ///  v7（2026-09-19）：老鼠偷食材 ratHeist stub DTO（旧桥不认识 stubKind=RatHeist，
+    ///  写回会静默丢参数）。</summary>
+    public const int BridgeSchemaVersion = 7;
 
     /// <summary>面粉/蛋家族（与前端 recipeKnowledge.ts 一致）：面粉系菜谱
     ///  （蛋糕/松饼/月饼/派/布丁，含 dlc09/dlc13 变体）的搅拌分组判定用。</summary>
@@ -80,7 +82,9 @@ public static class LayoutEditorRecipeKnowledge
     ///  - 棉花糖饼干：只有棉花糖烤，其余不处理。
     ///  - 意面：意面煮，其余食材各自煎（分开成组）。
     ///  - 炸物：所有食材分别炸（分开成组）。
-    ///  - 面糊/面团（含面粉）：面粉鸡蛋搅拌，其余进最终锅具；最终锅具图标作为标记组追加。 </summary>
+    ///  - 面糊/面团（含面粉，非蛋糕族）：全部食材一起搅拌；最终锅具图标作为标记组追加
+    ///    （前端 mergeFinalMarkers 合并为一格双图标，如 烧麦 = 搅拌碗 + 蒸笼）。
+    ///  - 蛋糕/布丁：面粉鸡蛋搅拌，其余进烤箱。 </summary>
     /// <summary>烹饪类子菜谱按出现次数计数（split 拆锅用），每次 ComputeCookingGroups
     ///  组成分支开始时清空。 </summary>
     private static readonly Dictionary<string, int> s_cookOccur = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -489,7 +493,12 @@ public static class LayoutEditorRecipeKnowledge
         }
         else if (cakeLike || (ContainsAnyIngredient(ingredients, FlourIngredients) && finalStep != "Mixer" && finalStep != "MixingBowl"))
         {
-            // 蛋糕/布丁：搅拌 + 烤箱；面糊/面团（松饼/饺子/月饼）：搅拌 + 最终锅具。
+            // 蛋糕/布丁：面粉/蛋搅拌 + 其余进烤箱（保持原分组，勿动）。
+            // 面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，最终锅具退化为空标记组
+            //   —— bundle 实测原版就是这条链：SteamedSpecial_Carrot ← MixedFlourCarrot
+            //   （面粉+胡萝卜整体搅拌）→ Steamer；Pancake_Chocolate ← MixedFlourEggChocolate
+            //   （面粉+蛋+巧克力整体搅拌）→ FryingPan。此前把非面粉食材丢进终锅，既让卡片
+            //   显示成两个独立框，也让自动填充往蒸笼/煎锅塞生食材（顶掉原版 lookup）。
             // 面粉/蛋判定用全家族集合（FlourSO/dlc09/dlc13 变体）。
             flourBranch = !cakeLike;
             var cookStep = cakeLike ? "OvenTray" : (IsCookStep(finalStep) ? finalStep : "");
@@ -497,9 +506,12 @@ public static class LayoutEditorRecipeKnowledge
             {
                 if (prep.ContainsKey(ing))
                     continue;
-                prep[ing] = (FlourIngredients.Contains(ing) || EggIngredients.Contains(ing))
-                    ? "MixingBowl"
-                    : cookStep;
+                if (!cakeLike)
+                    prep[ing] = "MixingBowl";
+                else
+                    prep[ing] = (FlourIngredients.Contains(ing) || EggIngredients.Contains(ing))
+                        ? "MixingBowl"
+                        : cookStep;
             }
         }
 
@@ -750,7 +762,11 @@ public static class LayoutEditorRecipeKnowledge
         Put(d, "OnionCarrotPotatoSoup_SO", "Pot", "OnionSO", "CarrotSO", "PotatoSO");
 
         Put(d, "Pasta_Marinara_SO", "Pot", "PastaSO", "FishSO", "PrawnSO");
-        Put(d, "Pasta_MeatOnly_SO", "Pot", "PastaSO", "MeatSO");
+        // 肉酱意面用的是绞肉 BurritoMeat（uID 19964），不是肉排 Meat（12958）：
+        // bundle 实测 Pasta_MeatOnly_New = Composite([BoiledPasta, FriedBurritoMeat])，
+        // 而 FriedBurritoMeat = Cooked([BurritoMeat], FryingPan)。写成 MeatSO 会让煎好的
+        // 肉排与意面在盘子里合不上（结构不匹配），订单永远无法完成。
+        Put(d, "Pasta_MeatOnly_SO", "Pot", "PastaSO", "BurritoMeatSO");
         Put(d, "Pasta_MushroomOnly_SO", "Pot", "PastaSO", "MushroomSO");
         Put(d, "Pasta_TomatoOnly_SO", "Pot", "PastaSO", "TomatoSO");
 

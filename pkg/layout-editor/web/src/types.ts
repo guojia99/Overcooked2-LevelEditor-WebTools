@@ -198,6 +198,24 @@ export interface LayoutBurnerStub {
   hideVisual?: boolean;
 }
 
+export interface LayoutRatHeistStub {
+  /** 出洞间隔（秒，≥2；缺省 20）。权威 = CustomStub.RatHeist 组件，
+   *  载体 = tag "RatHeist|<interval>,<radius>,<speed>,<skin>,<raw>,<plated>,<utensil>"。 */
+  interval?: number;
+  /** 偷取半径（格，CELL=1.2m；0 = 全厨房）。 */
+  radius?: number;
+  /** 移动速度倍率（基速 4.5 m/s）。 */
+  speed?: number;
+  /** 皮肤：retro（默认）/ dlc08（官方 h18 同款贴图换肤）。 */
+  skin?: string;
+  /** 偷原材料（台面自由食材，切没切好都算；正在被切的在容器内部天然偷不到）。 */
+  stealRaw?: boolean;
+  /** 偷盘子（含盘中菜）。 */
+  stealPlated?: boolean;
+  /** 偷锅具厨具（正在加热/搅拌台上的仍排除）。 */
+  stealUtensil?: boolean;
+}
+
 export interface LayoutPlayerStub {
   playerID?: number;
 }
@@ -286,6 +304,7 @@ export interface LayoutItem {
   dispenser?: LayoutDispenserStub;
   conveyor?: LayoutConveyorStub;
   teleportal?: LayoutTeleportalStub;
+  ratHeist?: LayoutRatHeistStub;
   foodSpawner?: LayoutFoodSpawnerStub;
   cookingUtensil?: LayoutCookingUtensilStub;
   travelator?: LayoutTravelatorStub;
@@ -713,7 +732,19 @@ export interface LevelSetScene {
   sceneName: string;
 }
 
-export type FoodGroup = "core" | "custom" | "dlc02" | "dlc05" | "levelset" | "web" | string;
+/** 食材/菜谱来源组（后端 LayoutEditorCatalogApi.FoodGroupOf）。
+ *  commonW2 共享库分两组：`burger`=custom_recipes/burger/ 子树（🍔 Burger大全）、
+ *  `commonw2`=库内其余分类（fry/ 炸物、pasta/ 意面…，📚 扩展菜谱）。 */
+export type FoodGroup =
+  | "core"
+  | "custom"
+  | "dlc02"
+  | "dlc05"
+  | "levelset"
+  | "web"
+  | "burger"
+  | "commonw2"
+  | string;
 
 export interface IngredientEntry {
   guid: string;

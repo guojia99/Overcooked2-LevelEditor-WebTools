@@ -14,7 +14,7 @@
  */
 import { CELL, S, EditorItem, EditorFloor, type ComboDef } from "./state";
 import type { CatalogItem } from "../types";
-import { uuid, newEditorKey, prefabIdFromPath } from "./coords";
+import { uuid, newEditorKey } from "./coords";
 import { catalogItemById } from "./catalog";
 import { addCombo, comboById, comboDisabledReason } from "./combos";
 import { setSelection, setFloorSelection } from "./selection";
@@ -23,8 +23,8 @@ import { draw } from "./render";
 import { setStatus } from "./status";
 import { openModal, closeModal } from "../modals";
 import { fetchRecipeCatalog, fetchLevelRecipes, saveLevelRecipes } from "../api";
-import { computeUtensilIngredientFill, functionalBaseId } from "./recipeKnowledge";
-import { stubKindOf, utensilCapacityOrFix } from "./stubControls";
+import { computeUtensilIngredientFill } from "./recipeKnowledge";
+import { applyUtensilIngredientFill } from "./ui/utensilManager";
 
 const FLOOR_W = 30;
 const FLOOR_D = 16;
@@ -318,34 +318,15 @@ export async function runTestLayout(): Promise<void> {
       recipeNote = "未找到 LevelInfo，菜谱未写入";
     }
 
-    // 锅具自动装填（与「锅具管理 → 按菜谱自动填充」同一套数据驱动）
+    // 锅具自动装填（与「锅具管理 → 按菜谱自动填充」同一套数据驱动，共用同一个
+    // applyUtensilIngredientFill —— 含「clear 条目 = 清空、沿用原版 lookup」与
+    // 「容量按菜谱单份用量」两条规则，避免第三份拷贝漂移）
     S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
     const fill = computeUtensilIngredientFill(orderable);
     if (fill.size > 0) {
       const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
       const recipeGuid = new Map(recipes.map((r) => [r.id, r.guid]));
-      let touched = 0;
-      for (const it of S.items) {
-        if (stubKindOf(it) !== "CookingUtensil") continue;
-        const id = S.catalogByGuid.get(it.prefabGuid ?? "")?.id ?? prefabIdFromPath(it.prefabAssetPath ?? "");
-        const f = fill.get(functionalBaseId(id ?? ""));
-        if (!f) continue;
-        const add: string[] = [];
-        for (const iid of f.ings) {
-          const g = ingGuid.get(iid);
-          if (g) add.push(g);
-        }
-        for (const iid of f.intermediates) {
-          const g = recipeGuid.get(iid);
-          if (g) add.push(g);
-        }
-        if (!add.length) continue;
-        it.stubKind = "CookingUtensil";
-        if (!it.cookingUtensil) it.cookingUtensil = {};
-        it.cookingUtensil.capacity = utensilCapacityOrFix(it);
-        it.cookingUtensil.allowedIngredientGuids = add;
-        touched++;
-      }
+      const touched = applyUtensilIngredientFill(fill, ingGuid, recipeGuid);
       utensilNote = `锅具装填 ${touched} 个`;
     }
   } catch (e) {

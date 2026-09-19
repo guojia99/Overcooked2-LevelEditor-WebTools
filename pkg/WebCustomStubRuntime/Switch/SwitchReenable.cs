@@ -68,6 +68,15 @@ namespace CustomStub
             float waited = 0f;
             while (!m_bound)
             {
+                // 大炮发射按钮不自动复位（v15，2026-09-19 真机事故：复位会把空炮按钮
+                // 重新点亮→可对空炮发射）。其可用性由 CannonGuard 按「炮内是否有人」
+                // 门控。旧场景已烘焙的本组件由此静默退出；绑定可能早于大炮发现，
+                // 故复位发送前还会再复查一次。
+                if (CannonGuard.IsCannonButton(gameObject))
+                {
+                    StubLog.Dbg("[SwitchReenable] 大炮发射按钮不自动复位，协程退出: " + name);
+                    yield break;
+                }
                 TryBind();
                 if (m_bound)
                     break;
@@ -94,8 +103,15 @@ namespace CustomStub
                 {
                     // 下降沿 = 按下 → 复位计时
                     yield return new WaitForSeconds(Mathf.Max(0.05f, m_resetDelay));
-                    if (m_watched != null && !m_watched.enabled)
+                    if (m_watched == null || !m_watched.enabled)
                     {
+                        // 复查（绑定时刻可能早于 CannonGuard 发现该大炮）：大炮按钮的
+                        // 灰=空炮门控，复位会重新点亮空炮按钮 → 退出不补发
+                        if (CannonGuard.IsCannonButton(gameObject))
+                        {
+                            StubLog.Dbg("[SwitchReenable] 复位前发现是大炮发射按钮，协程退出: " + name);
+                            yield break;
+                        }
                         GameApi.SendTrigger(m_watched.gameObject, m_enableTrigger);
                         if (!m_firstResetLogged)
                         {

@@ -678,6 +678,30 @@ namespace CustomStub
         public static readonly Type ClientTerminalCosmeticType = Find("ClientTerminalCosmeticDecisions");
         public static readonly Type ForwardTriggerToTargetType = Find("ForwardTriggerToTarget");
 
+        // ---- 大炮防线（CannonGuard：空炮发射拦截 + 按钮占用门控，2026-09-19）。
+        //      Cannon/ServerCannon 均 vanilla 类型（Assembly-CSharp，编辑器宿主与
+        //      真机同在）；SetupCannonStub 在编辑器宿主属 Assembly-CSharp
+        //      （LevelEditorStub 命名空间）、真机属 LevelEditorStub.dll——简单名
+        //      两级解析均能命中（命名空间候选表已补 "LevelEditorStub."）。 ----
+        public static readonly Type CannonType = Find("Cannon");
+        public static readonly Type ServerCannonType = Find("ServerCannon");
+        public static readonly Type SetupCannonStubType = Find("SetupCannonStub");
+        public static readonly FieldInfo CannonButtonField = Field(CannonType, "m_button");
+        public static readonly FieldInfo CannonAttachPointField = Field(CannonType, "m_attachPoint");
+        public static readonly FieldInfo CannonLaunchTriggerField = Field(CannonType, "m_launchTrigger");
+        public static readonly FieldInfo CannonEnableTriggerField = Field(CannonType, "m_enableTrigger");
+        public static readonly FieldInfo CannonDisableTriggerField = Field(CannonType, "m_disableTrigger");
+        public static readonly FieldInfo ServerCannonCannonField = Field(ServerCannonType, "m_cannon");
+        public static readonly FieldInfo ServerCannonLoadedObjectField = Field(ServerCannonType, "m_loadedObject");
+        public static readonly MethodInfo ServerCannonOnTriggerMethod = Safe(delegate
+        {
+            return ServerCannonType != null
+                ? ServerCannonType.GetMethod("OnTrigger",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { typeof(string) }, null)
+                : null;
+        });
+
         // ---- Harmony 目标：宿主 KillPlane ----
         public static readonly MethodInfo RespawnObjectAddedMethod = Safe(delegate
         {
@@ -1128,6 +1152,7 @@ namespace CustomStub
                     "Team17.Online.",
                     "Team17.",
                     "BitStream.",
+                    "LevelEditorStub.",
                 };
             return s_namespaceCandidates;
         }

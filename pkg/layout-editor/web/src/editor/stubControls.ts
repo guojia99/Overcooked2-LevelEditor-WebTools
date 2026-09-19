@@ -83,6 +83,7 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   AttachingFoodSpawner: "AttachingFoodSpawner",
   ConveyorStation: "Conveyor",
   Teleportal: "Teleportal",
+  RatHeist: "RatHeist",
   Pot: "CookingUtensil",
   FryPan: "CookingUtensil",
   Steamer: "CookingUtensil",
@@ -424,13 +425,14 @@ export function readUtensilTimeInput(
   return v;
 }
 
-/** autofill 装填锅具时的容量兜底：未设置 → 默认 4；
- *  旧版 autofill 曾把锅具默认成 1，凡容量仍为 1 时纠正回 4。 */
-export function utensilCapacityOrFix(item: EditorItem): number {
+/** 已配置容量优先，未配置（或 <=0）时取默认值。
+ *  ⚠ 旧版 `utensilCapacityOrFix` 还有一条「容量为 1 一律纠正回 4」的迁移补丁，
+ *  已删除：自动填充改为按菜谱单份用量算容量后，1 是蒸笼/煎锅的**正确**原版容量
+ *  （bundle 实测 SteamerPrefabLookup 的 amountAllowed=1），再纠正回 4 反而是错的。 */
+export function utensilCapacityOrDefault(item: EditorItem): number {
   const cur = item.cookingUtensil?.capacity;
-  if (cur == null) return 4;
-  if (cur === 1) return 4;
-  return cur;
+  if (cur != null && cur > 0) return cur;
+  return defaultUtensilCapacity(item);
 }
 
 export function counterAppearanceHtml(item: EditorItem): string {
@@ -659,6 +661,25 @@ export function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row">空中时间 <input type="number" id="ctx-bn-air" class="ctx-input" step="0.1" min="0" value="${b.airTime ?? 2}"/> 秒</label>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-rand" ${b.randomTargetOrder ? "checked" : ""}/> 随机目标顺序</label>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-hide" ${b.hideVisual ? "checked" : ""}/> 隐藏模型</label></div>`;
+    }
+    case "RatHeist": {
+      const r = item.ratHeist ?? {};
+      const skins = [
+        ["retro", "复古像素鼠（默认）"],
+        ["dlc08", "高清鼠（DLC8 皮肤）"],
+      ];
+      const skinOpts = skins
+        .map(([v, n]) => `<option value="${v}" ${(r.skin ?? "retro") === v ? "selected" : ""}>${n}</option>`)
+        .join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">老鼠偷食材</div>
+        <div class="ctx-stub-hint">藏身摆放吸附的工作台底下，定时出洞偷台面物品拖回销毁；面对老鼠按交互键 = 打落食材。</div>
+        <label class="ctx-stub-row">出洞间隔 <input type="number" id="ctx-rat-interval" class="ctx-input" step="1" min="2" value="${r.interval ?? 20}"/> 秒</label>
+        <label class="ctx-stub-row">偷取半径 <input type="number" id="ctx-rat-radius" class="ctx-input" step="0.5" min="0" value="${r.radius ?? 0}"/> 格（0=全图）</label>
+        <label class="ctx-stub-row">移动速度 <input type="number" id="ctx-rat-speed" class="ctx-input" step="0.1" min="0.1" value="${r.speed ?? 1}"/> ×</label>
+        <label class="ctx-stub-row">皮肤 <select id="ctx-rat-skin" class="ctx-input">${skinOpts}</select></label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-rat-raw" ${(r.stealRaw ?? true) ? "checked" : ""}/> 偷原材料（含已切好）</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-rat-plated" ${r.stealPlated ? "checked" : ""}/> 偷盘子（含盘中菜）</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-rat-utensil" ${r.stealUtensil ? "checked" : ""}/> 偷锅具（烹饪/搅拌中除外）</label></div>`;
     }
     case "Switch":
     case "CannonSwitch": {
@@ -1224,6 +1245,58 @@ export function wireStubControls(item: EditorItem) {
       num("ctx-bn-hide")?.addEventListener("change", (e) => {
         pushHistory();
         ensure().hideVisual = (e.target as HTMLInputElement).checked;
+      });
+      break;
+    }
+    case "RatHeist": {
+      const ensure = () => {
+        item.stubKind = "RatHeist";
+        if (!item.ratHeist) item.ratHeist = {};
+        if (item.ratHeist.interval == null) item.ratHeist.interval = 20;
+        if (item.ratHeist.radius == null) item.ratHeist.radius = 0;
+        if (item.ratHeist.speed == null) item.ratHeist.speed = 1;
+        if (item.ratHeist.skin == null) item.ratHeist.skin = "retro";
+        if (item.ratHeist.stealRaw == null) item.ratHeist.stealRaw = true;
+        if (item.ratHeist.stealPlated == null) item.ratHeist.stealPlated = false;
+        if (item.ratHeist.stealUtensil == null) item.ratHeist.stealUtensil = false;
+        return item.ratHeist;
+      };
+      num("ctx-rat-interval")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (isFinite(v) && v >= 2) {
+          pushHistory();
+          ensure().interval = v;
+        }
+      });
+      num("ctx-rat-radius")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (isFinite(v) && v >= 0) {
+          pushHistory();
+          ensure().radius = v;
+        }
+      });
+      num("ctx-rat-speed")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (isFinite(v) && v >= 0.1) {
+          pushHistory();
+          ensure().speed = v;
+        }
+      });
+      num("ctx-rat-skin")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensure().skin = (e.target as HTMLSelectElement).value || "retro";
+      });
+      num("ctx-rat-raw")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensure().stealRaw = (e.target as HTMLInputElement).checked;
+      });
+      num("ctx-rat-plated")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensure().stealPlated = (e.target as HTMLInputElement).checked;
+      });
+      num("ctx-rat-utensil")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensure().stealUtensil = (e.target as HTMLInputElement).checked;
       });
       break;
     }

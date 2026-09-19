@@ -1,6 +1,6 @@
 all: run
 
-ZIP_NAME := OC2-Web-v0.8.2.zip
+ZIP_NAME := OC2-Web-v0.8.3.zip
 INSTALLER_ZIP := OC2-Installer.zip
 
 .PHONY: all build run installer installer-zip

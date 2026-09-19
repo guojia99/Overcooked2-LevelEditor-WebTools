@@ -83,6 +83,29 @@ namespace CustomStub
             }
         }
 
+        // ============ 空炮发射拦截（CannonGuard，2026-09-19 真机事故） ============
+        //
+        // 目标：ServerCannon.OnTrigger(string)。空炮发射（m_loadedObject 为 null
+        // 或玩家已脱离 AttachPoint——宿主 Unload 不清该字段）= m_flying 永久 true +
+        // 客户端 ClientCannon.LaunchProjectile(null) 在 transform.SetParent 处 NRE，
+        // 协程死在 EndCannonRoutine 之前 → ServerCannonSessionInteractable.
+        // CanInteract(!IsFlying()) 永远 false，大炮从此拒入（原版软锁）。
+        // 命中=跳过原方法（拦截一次无效发射，零副作用）；未命中/异常=放行原方法。
+
+        /// <summary>ServerCannon.OnTrigger 前缀（判定委托 CannonGuard.AllowLaunch）。</summary>
+        private static bool ServerCannonOnTriggerPrefix(object __instance, string _trigger)
+        {
+            try
+            {
+                return CannonGuard.AllowLaunch(__instance, _trigger);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("cannonLaunch", "[CustomStub.Harmony] 大炮发射前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
         // ============ 网络实体扫描锚点（v14，联机 ID 错位修复） ============
         //
         // MultiplayerController.ScanEntities 每关只调一次（冷方法，detour 零热路径
@@ -200,6 +223,15 @@ namespace CustomStub
             get
             {
                 return typeof(HarmonyPatches).GetMethod("ServerPickupHandlePickupPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerCannonOnTriggerPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("ServerCannonOnTriggerPrefix",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
             }
         }

@@ -7,6 +7,11 @@ using UnityEngine;
 
 public static class LayoutEditorCatalogApi
 {
+    /// <summary>commonW2 共享库内**非汉堡**分类（fry/ 炸物、pasta/ 意面…）的 food group id。
+    ///  库内 custom_recipes/burger/ 子树仍为 "burger"（🍔 Burger大全）。
+    ///  ⚠ 三处同步：本常量 ↔ 前端 ingredientLabels.ts 的 FOOD_GROUP_ZH ↔ recipeList.ts 徽标分支。</summary>
+    internal const string CommonW2Group = "commonw2";
+
     /// <summary>meta 直读 guid 与 AssetDatabase 注册 guid 脱同步（插件直写 meta /
     ///  陈旧内存注册）时强制重导入修复，返回 AssetDatabase 认可的 guid。
     ///  保存菜谱时 GUIDToAssetPath 依赖 AssetDatabase 映射，此处必须保证一致。</summary>
@@ -96,9 +101,12 @@ public static class LayoutEditorCatalogApi
     {
         if (string.IsNullOrEmpty(assetPath))
             return "core";
-        // commonW2 Burger大全共享库：独立分组（先于 /custom_recipes/ 判定）。
+        // commonW2 共享库：独立分组（先于 /custom_recipes/ 判定）。
+        // ⚠ commonW2 ≠ 汉堡大全：库内 custom_recipes/burger/ 子树才是「🍔 Burger大全」，
+        //   其余一级分类（fry/ 炸物、pasta/ 意面…）归中性组 "commonw2"（前端「📚 扩展菜谱」）。
+        //   前端 FOOD_GROUP_ZH（ingredientLabels.ts）与徽标（recipeList.ts）按这两个组分别渲染。
         if (assetPath.IndexOf("/commonW2/", StringComparison.Ordinal) >= 0)
-            return "burger";
+            return IsCommonW2BurgerCategory(assetPath) ? "burger" : CommonW2Group;
         if (assetPath.IndexOf("/custom_recipes/", StringComparison.Ordinal) >= 0)
             return "levelset";
         // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：按通用内容处理
@@ -311,12 +319,13 @@ public static class LayoutEditorCatalogApi
                 var group = FoodGroupOf(path);
                 if (group == "levelset")
                     LayoutEditorManualLookup.TryGetLevelSetName(levelSet, id, out zh, out en);
-                else if (group == "burger")
+                else if (group == "burger" || group == CommonW2Group)
                 {
-                    // Burger大全（commonW2）：按 recipeName 查共享库 names.json。
-                    var burgerNames = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW2RecipesDir);
+                    // commonW2 共享库（汉堡大全 burger/ 与其余分类 fry/、pasta/…）：
+                    // 一律按 recipeName 查共享库 names.json（两个 group 同一份字典）。
+                    var sharedNames = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW2RecipesDir);
                     var nameKey = custom != null && !string.IsNullOrEmpty(custom.recipeName) ? custom.recipeName : id;
-                    if (!burgerNames.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))
+                    if (!sharedNames.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))
                         zh = id;
                     en = nameKey;
                 }
@@ -387,8 +396,9 @@ public static class LayoutEditorCatalogApi
                     score = score,
                     isCustom = isCustom,
                     group = group,
-                    // commonW2 共享库默认按「汉堡」类型分组；但库内 burger/ 之外的分类目录
-                    // （如 fry/ 炸物）应回落到按 id 推断的真实菜谱类型，出现在 /recipes 对应大类下。
+                    // 汉堡大全 = commonW2/custom_recipes/burger/ 子树（FoodGroupOf 已据此判出
+                    // group=="burger"；库内其余分类为 group==CommonW2Group）。非该子树一律回落
+                    // 到按 id 推断的真实菜谱类型，出现在 /recipes 对应大类下（fry→炸物、pasta→意面）。
                     type = (group == "burger" && IsCommonW2BurgerCategory(path)) ? "burger" : RecipeTypeOf(id),
                     subtype = (group == "burger" && IsCommonW2BurgerCategory(path)) ? BurgerSubtypeOfPath(path) : "",
                     intermediate = score <= 0 && !orderable,

@@ -229,7 +229,7 @@
     },
     {
       "id": "BurritoMeatSO",
-      "zh": "卷饼肉馅",
+      "zh": "肉馅",
       "en": "Burrito Meat"
     },
     {
@@ -2781,6 +2781,11 @@
       "id": "RapidsAudioDirectorySO",
       "zh": "急流音效集",
       "en": "Rapids Audio Directory"
+    },
+    {
+      "id": "RatHeist",
+      "zh": "老鼠（偷食材）",
+      "en": "Rat (steals ingredients)"
     },
     {
       "id": "RatsAudioDirectory",

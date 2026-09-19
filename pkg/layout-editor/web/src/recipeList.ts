@@ -174,7 +174,7 @@ function card(r: RecipeWithGroups): string {
   return rlCardHtml(r, {
     allRecipes: recipes,
     ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
-    extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : undefined,
+    extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : r.group === "commonw2" ? "📚" : undefined,
     iconSrc: recipeIconUrlOf,
   });
 }
@@ -541,7 +541,7 @@ function openRecipeDetail(r: RecipeWithGroups): void {
   const preview = rlCardHtml(r, {
     allRecipes: recipes,
     ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
-    extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : undefined,
+    extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : r.group === "commonw2" ? "📚" : undefined,
     iconSrc: recipeIconUrlOf,
   });
 
@@ -570,7 +570,7 @@ async function downloadRecipeCard(r: RecipeWithGroups, btn: HTMLButtonElement): 
     const cardHtml = rlCardHtml(r, {
       allRecipes: recipes,
       ingredientName: (id) => ingredientById.get(id)?.nameZh ?? id,
-      extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : undefined,
+      extraBadge: r.group === "levelset" ? "本关" : r.group === "burger" ? "🍔" : r.group === "commonw2" ? "📚" : undefined,
       iconSrc: recipeIconUrlOf,
     });
     // 卡片宽度取页面 .rl-card 实际宽度（回退 300），+48 = .sum-page 内边距

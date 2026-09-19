@@ -18,7 +18,6 @@ import { openIngredientMultiPicker } from "../../modals";
 import {
   stubKindOf,
   defaultUtensilCapacity,
-  utensilCapacityOrFix,
   utensilTimingKind,
   utensilTimingInputsHtml,
   UTENSIL_TIME_KEYS,
@@ -26,7 +25,8 @@ import {
 } from "../stubControls";
 import {
   computeUtensilIngredientFill,
-  functionalBaseId
+  functionalBaseId,
+  type UtensilFillEntry
 } from "../recipeKnowledge";
 import {
   fetchRecipeCatalog,
@@ -38,13 +38,20 @@ import {
 } from "../../autoScoreKnowledge";
 import type { RecipeEntry } from "../../types";
 
-export type UtensilIngredientFill = Map<string, { ings: string[]; intermediates: string[] }>;
+export type UtensilIngredientFill = Map<string, UtensilFillEntry>;
 
 /** 把 computeUtensilIngredientFill 的结果写进场景锅具的 allowedIngredientSOs。
  *  两个入口共用：锅具管理页「按菜谱自动填充」与菜谱弹窗「安装缺失」。
  *  ings 按 id→食材 guid、intermediates 按 id→菜谱 guid 解析；返回写入的锅具数。
  *  可移动火锅（pushable）只写食材配置、不挂 CookingUtensil stub（挂 stub 会触发
- *  宿主 Setup NRE，载体组装在 LayoutRuntimePushablePot）。 */
+ *  宿主 Setup NRE，载体组装在 LayoutRuntimePushablePot）。
+ *
+ *  ⚠ `clear` 条目 = **强制清空**（不是「跳过」）：烧麦/核心松饼这类「搅拌后整锅下
+ *  终锅」的菜谱，终锅必须保持空列表 —— PseudoPrefabCookingUtensil.Setup 只在
+ *  allowedIngredientSOs 非空时才整表替换原版 lookup，而原版 SteamerPrefabLookup /
+ *  FryableObjectsLookup 本就同时含面团与生食材。存量关卡里被旧版 autofill 写进蒸笼
+ *  的生胡萝卜也靠这条洗掉。
+ *  容量一律取 fill 算出的「单份用量」（蒸笼 1 / 搅拌碗 2~4 / 汤锅 3），与原版一致。 */
 export function applyUtensilIngredientFill(
   fill: UtensilIngredientFill,
   ingGuid: Map<string, string>,
@@ -61,18 +68,21 @@ export function applyUtensilIngredientFill(
     const f = fill.get(vesselOfItem(it));
     if (!f) continue;
     const add: string[] = [];
-    for (const iid of f.ings) {
-      const g = ingGuid.get(iid);
-      if (g) add.push(g);
+    if (!f.clear) {
+      for (const iid of f.ings) {
+        const g = ingGuid.get(iid);
+        if (g) add.push(g);
+      }
+      for (const iid of f.intermediates) {
+        const g = recipeGuid.get(iid);
+        if (g) add.push(g);
+      }
+      // guid 全部解析失败（目录缺项）时不动既有配置
+      if (!add.length) continue;
     }
-    for (const iid of f.intermediates) {
-      const g = recipeGuid.get(iid);
-      if (g) add.push(g);
-    }
-    if (!add.length) continue;
     if (!isPushablePot) it.stubKind = "CookingUtensil";
     if (!it.cookingUtensil) it.cookingUtensil = {};
-    it.cookingUtensil.capacity = utensilCapacityOrFix(it);
+    it.cookingUtensil.capacity = Math.max(1, f.capacity);
     it.cookingUtensil.allowedIngredientGuids = [...new Set(add)];
     touched++;
   }
@@ -149,8 +159,9 @@ export function openUtensilManager() {
   // 按菜谱自动填充：读取当前关卡已选菜谱 → 数据驱动计算各锅具应装的食材
   // （汤料→汤锅、香肠→汤锅、洋葱→煎锅、面糊食材→搅拌碗、面糊节点→炸篮、
   //  搅拌类→搅拌杯，含 DLC 食材如 dlc07 土豆/西芹；Cooked 型中间产物按其自身
-  //  烹饪步骤节点+叶生食材双填进终锅，如 EggSausage→早餐锅、FriedMeat→煎锅），
-  //  按功能基础 id 匹配场景锅具（含 DLC 变体），容量默认 4；按菜谱自动填充覆盖写入食材列表。
+  //  烹饪步骤节点+叶生食材双填进终锅，如 EggSausage→早餐锅、FriedMeat→煎锅；
+  //  烧麦/核心松饼这类「搅拌后整锅下终锅」的菜谱，终锅清空、保留原版 lookup），
+  //  按功能基础 id 匹配场景锅具（含 DLC 变体），容量按菜谱单份用量；覆盖写入食材列表。
   document.getElementById("utm-auto-fill")?.addEventListener("click", async () => {
     if (!S.scenePath) {
       setStatus("未选择场景，无法读取关卡菜谱", false);
@@ -188,12 +199,18 @@ export function openUtensilManager() {
     pushHistory();
     const touched = applyUtensilIngredientFill(fill, ingGuid, recipeGuid);
     draw();
-    // 锅具显示中文名；×N = 该锅具可处理的食材/中间产物种类数（非锅具个数）
+    // 锅具显示中文名；×N = 该锅具可处理的食材/中间产物种类数（非锅具个数）；
+    // 「沿用原版」= 清空额外食材、保留原版 lookup（如烧麦的蒸笼）
     const vesselZh = (v: string) => {
       const kind = UTENSIL_KIND_BY_ID[v];
       return (kind && UTENSIL_KIND_ZH[kind]) || v;
     };
-    const parts = [...fill.entries()].map(([v, f]) => `${vesselZh(v)}×${f.ings.length + f.intermediates.length} 种食材`);
+    const parts = [...fill.entries()].map(([v, f]) => {
+      const n = f.ings.length + f.intermediates.length;
+      return f.clear || n === 0
+        ? `${vesselZh(v)} 沿用原版（容量 ${f.capacity}）`
+        : `${vesselZh(v)}×${n} 种食材（容量 ${f.capacity}）`;
+    });
     setStatus(
       touched
         ? `已按 ${recs.length} 道菜谱填充 ${touched} 个锅具（${parts.join("、")}；写回后生效）`

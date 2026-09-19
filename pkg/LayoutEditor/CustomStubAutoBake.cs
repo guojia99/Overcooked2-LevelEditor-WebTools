@@ -39,13 +39,39 @@ public static class CustomStubAutoBake
         {
             // RandomDispenser 包装 prefab 幂等兜底（正常已随仓库提供）
             CustomStubCopyTool.EnsureRandomDispenserPrefab();
+            // RatHeist 包装 prefab + PseudoPrefabSO 幂等兜底
+            CustomStubCopyTool.EnsureRatHeistPrefab();
             RebakeActiveScene();
+            ArmIconSync();
+            // 启动自动强制编译：母本源码比 DLL 新（外部改动未被 Unity 自动编译）时自动
+            // 触发一次编译，编译域重载后回到本钩子自动打包——之后无需手动点击「编译」
+            if (LayoutStubDllBuilder.RequestCompileIfStale())
+                return; // 即将编译+域重载，staging 留给下一轮
             // 编译产物自动打包：Library DLL 比 .dll.bytes 新（源码更新后）即自动重新
             // staging，保证导出永远打包最新统一运行时 DLL
             if (LayoutStubDllBuilder.StageRuntimeQuiet())
                 Debug.Log("[CustomStub] 已自动打包统一运行时 DLL（.dll.bytes → " + LayoutStubDllBuilder.RuntimeBundleName + "）");
-            ArmIconSync();
         };
+        // 聚焦监视：回到 Unity（编辑中改了源码、Unity 未自动编译的场景）即自动检查一次
+        EditorApplication.update += FocusCompileTick;
+    }
+
+    // ---- 聚焦触发自动编译（一次性守卫：每次聚焦只检查一回，防重复 Refresh） ----
+    private static bool _hadFocus;
+    private static double _focusCheckAt = double.MaxValue;
+
+    private static void FocusCompileTick()
+    {
+        var focused = EditorWindow.focusedWindow != null;
+        if (focused && !_hadFocus)
+            _focusCheckAt = EditorApplication.timeSinceStartup + 1.0; // 去抖：让聚焦自带刷新先跑
+        _hadFocus = focused;
+        if (!focused || EditorApplication.timeSinceStartup < _focusCheckAt)
+            return;
+        _focusCheckAt = double.MaxValue; // 本轮聚焦只检查一次，失焦后再聚焦重置
+        if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlaying)
+            return;
+        LayoutStubDllBuilder.RequestCompileIfStale();
     }
 
     // ---- 问号补画轮询（同 LayoutEditorDispenserIconHeal 的短程守卫模式） ----
