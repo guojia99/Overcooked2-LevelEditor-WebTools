@@ -140,7 +140,12 @@ BepInEx Chainloader 实例化插件
 | 1.5.3–1.5.6 | 加载链路 Harmony 探针（9+N 处 patch + 2s 心跳，定位"进关卡卡死"） |
 | 1.6.0 | **移除全部 Harmony 探针**，回归纯「扫描 + 加载 + 自愈 + 日志」 |
 | 1.7.0 | 相机出发点偏移补丁（Harmony：`MultiplayerCamera` 尊重场景摆放 X/Z）；csproj 新增 0Harmony 2.9 编译期引用（仓库内 `Assets/Plugins/0Harmony.dll`）。⚠ 全局热方法 detour 拖全场景帧率，勿分发 |
-| **1.7.1（当前）** | **移除相机偏移补丁**（移交 CustomStub `CameraAuthoredOffset` + `CameraOffset|` tag 按需安装），csproj 去掉 0Harmony 引用，loader 回归纯「扫描 + 加载 + 自愈 + 日志」 |
+| 1.7.1 | 移除相机偏移补丁（移交 CustomStub `CameraAuthoredOffset` + `CameraOffset|` tag 按需安装），loader 回归纯「扫描 + 加载 + 自愈 + 日志」 |
+| 2.x | 统一运行时体系：`requires.txt` semver 门控、自身目录加载 commonW1/W2 + `webcustomstub_runtime` 统一运行时、扫描挪后台线程、`[Logging] Verbose` |
+| 3.0.0 | 目录扫描启动一次化；同名程序集冲突诊断 |
+| 3.1.0 | 旧版关卡包向下兼容护栏（Harmony 前缀滤 null 节点；csproj 恢复 0Harmony 编译期引用） |
+| 3.2.0 | 依赖 bundle 动态发现（commonW1/W2/W3...） |
+| **3.2.1（当前）** | **兼容护栏修正**：v3.1.0 在 BepInEx 5.4.22 的 HarmonyX 上「触发但没拦住」（前缀改 `__args` 不回写，null 仍进原方法照崩，debug_20260921 23:53 实测）——改为检出 null 即跳过原方法、反射重建滤空查找表（`Equals` 去重 + `m_amountAllowed` 累加 + `m_lookupArray` 语义原样），重建异常退空查找表保会话；新增关卡集/关卡定位上下文（`SetupConfig` / `SetupSceneDirectoryData(LevelSetInfoSO)` 前缀），`[兼容]` 告警与 `[PLAYER]` 提示明确到「哪个关卡集的哪一关哪个菜谱」，同（关卡,菜谱）组合每会话只完整告警一次。上游 OC2DIYLevel.dll 与编辑器镜像 `Assets/Scripts/LevelEditor/RecipeHelper.cs` 均不动，修复只在 loader 侧 |
 
 ## 7. 构建与安装
 

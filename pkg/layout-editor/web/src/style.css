@@ -3951,6 +3951,182 @@ body.manage-bg {
   color: #e8eaed;
 }
 
+.rw-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.rw-filters {
+  position: relative;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid #3a4050;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.rw-filter-section {
+  margin-bottom: 8px;
+}
+
+.rw-filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.rw-filter-label {
+  display: block;
+  font-size: 11px;
+  color: #9aa0a6;
+  margin-bottom: 4px;
+}
+
+.rw-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.rw-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  border: 1px solid #4a5060;
+  border-radius: 999px;
+  background: #1a1d23;
+  color: #c6cad1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rw-filter-chip img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.rw-filter-chip:hover {
+  border-color: #8ab4f8;
+}
+
+.rw-filter-chip.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.rw-filter-row-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.rw-filter-row-inline .rw-filter-label {
+  display: inline;
+  margin-bottom: 0;
+}
+
+.rw-score-select {
+  font-size: 12px;
+  padding: 3px 6px;
+}
+
+.rw-ing-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.rw-ing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 4px;
+  font-size: 11px;
+  border: 1px solid #4a5060;
+  border-radius: 999px;
+  background: #232834;
+  color: #e8eaed;
+}
+
+.rw-ing-chip img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.rw-ing-chip-rm {
+  border: none;
+  background: transparent;
+  color: #9aa0a6;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.rw-ing-chip-rm:hover {
+  color: #f28b82;
+}
+
+.rw-ing-popover {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  width: min(360px, 100%);
+  max-height: 240px;
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #4a5060;
+  border-radius: 6px;
+  background: #1a1d23;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.rw-ing-popover.hidden {
+  display: none;
+}
+
+.rw-ing-popover-list {
+  margin-top: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rw-ing-pick-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.rw-ing-pick-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rw-ing-pick-item.hidden {
+  display: none;
+}
+
+.rw-ing-pick-item img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
 /* 大类标题（自定义关卡 / Web内置 / Common） */
 .rw-cat {
   margin-bottom: 10px;

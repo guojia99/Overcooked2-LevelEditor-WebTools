@@ -292,8 +292,9 @@ public static class LayoutEditorSetExporter
 
         // ---- 5. zip：新结构（整体解压到 BepInEx/plugins/ 即全部就位）----
         //   OC2DIYLevel/levels/<set>/…       关卡 bundle（info_<set> / s_*）+ requires.txt
-        //   OC2DIYLevelRuntimeWLoader/…         仅 all 模式：Loader.dll + webcustomstub_runtime
-        //                                     + commonW1 (+按需 commonW2)（依赖包，装一次）
+        //   OC2DIYLevelRuntimeWLoader/…         仅 all 模式：Loader.dll + debugLog.dll + 配置
+        //                                     + webcustomstub_runtime
+        //                                     + commonW1/commonW2/...（依赖包，装一次）
         var payloads = new List<string>(Directory.GetFiles(absOutDir));
         payloads.RemoveAll(HasJunkExtension);
         // 旧体系 per-set runtime bundle 已废除，若产物里残留 runtime 文件一律剔除
@@ -424,9 +425,9 @@ public static class LayoutEditorSetExporter
     }
 
     /// <summary>把依赖包内容加入 zip 条目：OC2DIYLevelRuntimeWLoader/{Loader.dll,
-    /// webcustomstub_runtime, commonW1, commonW2}。
-    /// alwaysCommonW2=true（deps 模式，依赖包通用）：无条件携带 commonW2；
-    /// false（all 模式随关卡集）：仅本集引用 commonW2 时携带。</summary>
+    /// webcustomstub_runtime, commonW1, commonW2, commonW3...}。
+    /// commonW1 必须携带；commonW2 仍按本集需要决定；commonW3 及以后自动携带，
+    /// 避免新增公共资源包后旧的导出逻辑漏分发。</summary>
     private static void AddDependencyEntries(List<LayoutEditorZipWriter.ZipEntrySource> entries, string setName, bool alwaysCommonW2)
     {
         const string depDir = "OC2DIYLevelRuntimeWLoader/";
@@ -446,6 +447,53 @@ public static class LayoutEditorSetExporter
                 + "，依赖包不含 Loader.dll —— CustomStub 玩法将无法生效。");
         }
 
+        // version.txt 与 Loader/debugLog 的构建输出保持一致，随依赖包一起分发，
+        // 方便玩家和开发者确认 DLL 是否来自同一套构建产物。
+        var versionAbs = ProjectRootAbsPath() + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/version.txt";
+        if (File.Exists(versionAbs))
+        {
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "version.txt", versionAbs));
+            Debug.Log("[SetExporter] 附带 version.txt（"
+                + File.GetLastWriteTime(versionAbs).ToString("yyyy-MM-dd HH:mm:ss") + "）");
+        }
+        else
+        {
+            Debug.LogWarning("[SetExporter] 未找到 " + versionAbs
+                + "，依赖包不含 version.txt —— 请先构建 Loader。");
+        }
+
+        // debugLog.dll 与 Loader 同级分发。日志默认 info 级别，缺失时不阻断关卡包导出。
+        var debugDllAbs = ProjectRootAbsPath() + "/layout-editor/web/public/debugLog.dll";
+        if (File.Exists(debugDllAbs))
+        {
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "debugLog.dll", debugDllAbs));
+            Debug.Log("[SetExporter] 附带 debugLog.dll（v2.0.0，会话日志/BepInEx 捕捉）");
+        }
+        else
+        {
+            Debug.LogWarning("[SetExporter] 未找到 " + debugDllAbs + "，依赖包不含 debugLog.dll（不影响游戏运行）。");
+        }
+
+        var debugConfigAbs = ProjectRootAbsPath() + "/layout-editor/web/public/log_config.txt";
+        if (File.Exists(debugConfigAbs))
+        {
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "log_config.txt", debugConfigAbs));
+        }
+        else
+        {
+            Debug.LogWarning("[SetExporter] 未找到 " + debugConfigAbs + "，debugLog.dll 将使用内置默认配置。");
+        }
+
+        var readmeAbs = ProjectRootAbsPath() + "/layout-editor/web/public/readme.txt";
+        if (File.Exists(readmeAbs))
+        {
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "readme.txt", readmeAbs));
+        }
+        else
+        {
+            Debug.LogWarning("[SetExporter] 未找到 " + readmeAbs + "，依赖包不含使用说明。");
+        }
+
         // 统一运行时 bundle（webcustomstub_runtime）
         var runtimeAbs = AbsPath(BundlesRoot) + "/" + LayoutStubDllBuilder.RuntimeBundleName;
         if (File.Exists(runtimeAbs))
@@ -455,14 +503,10 @@ public static class LayoutEditorSetExporter
             Debug.LogWarning("[SetExporter] 未找到统一运行时 bundle（" + runtimeAbs
                 + "），依赖包不含 webcustomstub_runtime —— 请先 Build AssetBundles（含 Runtime staging）。");
 
-        // commonW1（问号图标库 / RandomDispenser / web 火锅等；由 Loader 从依赖包加载）
-        var commonW1Abs = AbsPath(BundlesRoot) + "/commonw1";
-        if (File.Exists(commonW1Abs))
-            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "commonW1", commonW1Abs));
-        else
-            Debug.LogWarning("[SetExporter] 未找到 commonw1 bundle（" + commonW1Abs + "）。");
+        // commonW1（问号图标库 / RandomDispenser / web 火锅等；由 Loader 从依赖包加载）。
+        AddCommonWEntry(entries, depDir, 1, true);
 
-        // commonW2：deps 模式无条件携带（依赖包通用）；all 模式仅本集引用时带
+        // commonW2：deps 模式无条件携带（依赖包通用）；all 模式仅本集引用时带。
         var commonW2Abs = AbsPath(BundlesRoot) + "/commonw2";
         var wantCommonW2 = alwaysCommonW2 || LayoutEditorCustomIngredients.SetNeedsCommonW2Bundle(setName);
         if (wantCommonW2)
@@ -472,6 +516,50 @@ public static class LayoutEditorSetExporter
             else
                 Debug.LogWarning("[SetExporter] 未找到 commonw2 bundle（" + commonW2Abs + "）。");
         }
+
+        // commonW3 及以后为可选扩展包：只要构建产物存在就自动分发，Loader 会按数字顺序读取。
+        try
+        {
+            var bundleFiles = Directory.GetFiles(AbsPath(BundlesRoot));
+            var addedCommonW = new HashSet<int>();
+            for (int i = 0; i < bundleFiles.Length; i++)
+            {
+                var fileName = Path.GetFileName(bundleFiles[i]);
+                int index;
+                if (!TryGetCommonWIndex(fileName, out index) || index < 3)
+                    continue;
+                if (!addedCommonW.Add(index))
+                    continue;
+                entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
+                    depDir + "commonW" + index, bundleFiles[i]));
+                Debug.Log("[SetExporter] 自动附带扩展依赖 commonW" + index + "（" + fileName + "）。");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 扫描 commonW3+ 扩展依赖失败（不影响已识别依赖）：" + ex.Message);
+        }
+    }
+
+    private static bool TryGetCommonWIndex(string fileName, out int index)
+    {
+        index = 0;
+        if (string.IsNullOrEmpty(fileName)
+            || !fileName.StartsWith("commonw", StringComparison.OrdinalIgnoreCase))
+            return false;
+        var suffix = fileName.Substring("commonw".Length);
+        return suffix.Length > 0 && int.TryParse(suffix, out index) && index > 0;
+    }
+
+    private static void AddCommonWEntry(List<LayoutEditorZipWriter.ZipEntrySource> entries,
+        string depDir, int index, bool required)
+    {
+        var fileName = "commonw" + index;
+        var abs = AbsPath(BundlesRoot) + "/" + fileName;
+        if (File.Exists(abs))
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "commonW" + index, abs));
+        else if (required)
+            Debug.LogWarning("[SetExporter] 未找到 " + fileName + " bundle（" + abs + "）。");
     }
 
     /// <summary>统一运行时 SSOT 版本号（反射 CustomStub.StubVersion.Value，缺失回落）。</summary>

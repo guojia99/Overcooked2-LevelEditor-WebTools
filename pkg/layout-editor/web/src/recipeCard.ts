@@ -17,6 +17,7 @@ import {
   normalizeCookingGroups,
   type CookingGroup,
 } from "./recipeGroups";
+import { COOK_STEP_LABEL_ZH, recipeCookSteps } from "./recipePickerFilters";
 
 /** RecipeEntry from the bridge/static JSON plus the backend-computed cooking groups
  *  (absent in stale data — recipeGroups.deriveCookingGroups is the fallback). */
@@ -242,4 +243,42 @@ export function rlSectionHtml(type: string, cardsHtml: string, count: number): s
     <h2 class="rl-section-title">${esc(recipeTypeLabel(type))}<span class="rl-section-count">${count}</span></h2>
     <div class="rl-grid">${cardsHtml}</div>
   </section>`;
+}
+
+function compactTagsFor(r: RecipeWithGroups, opts: RlCardOptions): string[] {
+  const intermediate = cardIntermediate(r);
+  const tags: string[] = [];
+  if (opts.disabledReason) tags.push("⛔");
+  if (opts.warnBadge) tags.push("⚠");
+  if (intermediate) tags.push("半成品");
+  if (r.isCustom) tags.push("自定义");
+  const extras = opts.extraBadge
+    ? Array.isArray(opts.extraBadge)
+      ? opts.extraBadge
+      : [opts.extraBadge]
+    : [];
+  tags.push(...extras);
+  if (r.group && r.group !== "core") tags.push(foodGroupLabel(r.group));
+  if (!intermediate) tags.push(`⭐${r.score ?? 0}`);
+  const steps = recipeCookSteps(r, opts.allRecipes).slice(0, 2);
+  for (const s of steps) tags.push(COOK_STEP_LABEL_ZH[s] ?? s);
+  return tags;
+}
+
+/** Compact recipe card: icon left, name + tags right (level-editor picker). */
+export function rlCompactCardHtml(r: RecipeWithGroups, opts: RlCardOptions = {}): string {
+  const tags = compactTagsFor(r, opts)
+    .map((t) => `<span class="rl-compact-tag">${esc(t)}</span>`)
+    .join("");
+  const prodIcon = opts.iconSrc
+    ? `<img class="rl-compact-icon" loading="lazy" src="${esc(opts.iconSrc(r))}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`
+    : `<img class="rl-compact-icon" loading="lazy" src="/icons/recipes/${encodeURIComponent(r.id)}.png" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
+
+  return `<article class="rl-card rl-card-compact${opts.disabledReason ? " rl-card-disabled" : ""}" data-id="${esc(r.id)}" title="${esc(opts.disabledReason ? `${r.id}（${opts.disabledReason}）` : r.nameZh || r.id)}">
+    ${prodIcon}
+    <div class="rl-compact-main">
+      <div class="rl-compact-name">${esc(r.nameZh)}</div>
+      <div class="rl-compact-tags">${tags}</div>
+    </div>
+  </article>`;
 }

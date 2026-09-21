@@ -31,6 +31,7 @@ Assembly-CSharp / common 包**。
 | 引用 | mac 回退路径 | Windows |
 |---|---|---|
 | `BepInEx.dll`（5.4.22） | `~/Downloads/[前置]BepInEx/BepInEx/core` | `-p:GameDir=...` → `<GameDir>/BepInEx/core` |
+| `0Harmony.dll`（HarmonyX，仅编译期） | `deps/BepInEx/0Harmony.dll`（= `Assets/Plugins/0Harmony.dll`，BepInEx core 204KB 版） | `<GameDir>/BepInEx/core` |
 | `UnityEngine.dll`（老式整包） | Unity 2017.4.8f1 编辑器安装目录 `Managed/` | `<GameDir>/Overcooked2_Data/Managed` |
 
 > 注意：BepInEx 5.4.22 的 `BaseUnityPlugin` 编译自老式整包 `UnityEngine.dll`，
@@ -46,8 +47,8 @@ dotnet build -c Release -p:GameDir="D:\Games\Overcooked! 2"
 
 本插件是 **OC2DIYLevel 的配套能力扩展**（为其加载关卡内额外 C# 代码）。
 
-**web 导出的关卡集 zip（2026-09-07 起）已一步携带本插件与 commonW1**：zip 顶层为
-`OC2LevelRuntimeLoader.dll` + `commonW1` + `levels/<set>/`，将整个 zip **解压到
+**web 导出的关卡集 zip（2026-09-07 起）已一步携带本插件与 commonW* 依赖包**：zip 顶层为
+`OC2LevelRuntimeLoader.dll` + `commonW1/commonW2/...` + `levels/<set>/`，将整个 zip **解压到
 `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/`** 即完成全部安装（`runtime` 与
 `info_<set>`/`s_*` 同层；不要把 `.meta`/`.manifest` 拷进去）。
 
@@ -59,7 +60,7 @@ zip 内的 loader DLL 由研发手动维护：编辑器仓库 `layout-editor/web
 |---|---|---|
 | `OC2LevelRuntimeLoader.dll` | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/OC2LevelRuntimeLoader.dll` | 与 `OC2DIYLevel.dll`、`LevelEditorStub.dll` 同层（BepInEx 递归扫描 plugins/，子目录插件正常加载） |
 | 关卡 bundle（`levels/<set>/`，按需含 `runtime`） | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/levels/<set>/` | `runtime` 必须与 `info_<set>`、`s_*` 同层 |
-| `commonW1` bundle | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/commonW1` | 与 `common`/`common01`/`common02` 同级，归 OC2DIYLevel 管辖加载（**不放 StreamingAssets**）；含 RandomDispenser 包装与 question_mark 图标库 |
+| `commonW*` bundle | `Overcooked! 2/BepInEx/plugins/OC2DIYLevel/commonW1`、`commonW2`、`commonW3`… | Loader 自动读取自身目录下所有严格命名为 `commonW` + 数字的 bundle，按数字顺序加载；与 `common`/`common01`/`common02` 同级，**不放 StreamingAssets** |
 
 ### 真机不生效的排查顺序（症状：随机箱只出第一个食材）
 
@@ -91,6 +92,44 @@ zip 内的 loader DLL 由研发手动维护：编辑器仓库 `layout-editor/web
 - 玩家：随「[前置]BepInEx + OC2DIYLevel」模组包整包分发（更新版 commonW1 同批）。
 
 ## 注意
+
+- **v3.1.0 旧版关卡包向下兼容护栏**：玩家把「旧编辑器导出的关卡集」与「新版依赖包」
+  混装时，自定义汉堡菜谱（`CustomRecipeOptionalBurgerSO.optionalSOs`）的跨 bundle
+  食材引用可能解析失败（`GetOrderDefinitionNode` 返回 null），原版
+  `RecipeHelper.GetOrderToPrefabLookup` 会在 `Dictionary[null]` 抛
+  `ArgumentNullException`，把 `StartEmptySession` 炸成「游戏运行时出现严重错误」。
+  v3.1.0 起 loader 用 Harmony 前缀滤除 null 节点并打 `[兼容]` 告警（含菜谱名），
+  该菜谱少一个夹心候选但可正常进关；彻底修复 = 用最新编辑器重新导出该关卡集。
+  修复只在 loader 侧（游戏内运行时打补丁），不改上游 OC2DIYLevel.dll，也不改
+  编辑器侧 `Assets/Scripts/LevelEditor/RecipeHelper.cs`。
+- **v3.2.1 护栏修正（重要）**：v3.1.0 的拦截方式（前缀改 `__args`）在 BepInEx
+  5.4.22 的 HarmonyX 上**不回写**——护栏触发了但 null 仍进原方法照崩。v3.2.1 改为
+  检出 null 即跳过原方法、反射重建滤空查找表（含 Equals 去重/m_amountAllowed/
+  m_lookupArray 原语义），重建异常退空查找表保会话。告警同时给出定位上下文：
+  「关卡 X（关卡集 Y，菜谱 Z）跳过 N 个失效食材引用」——关卡名/关卡集名来自
+  `SetupConfig` / `SetupSceneDirectoryData(LevelSetInfoSO)` 前缀；同（关卡,菜谱）
+  组合每会话只完整告警一次，重复归 verbose。
+
+## 日志与排障文件
+
+Loader 与 debugLog 会在 `Loader.dll` 同级创建 `logs/`，每次游戏启动建立一个
+`logs_info_yyyyMMdd_HHmmss/` 会话目录，默认保留最近 21 次启动。目录内文件为：
+
+- `info.log`：正常运行、警告和错误；
+- `debug.log`：配置 `level=debug` 时的详细诊断；
+- `player.log`：面向玩家的中文重大问题提示；
+- `BepInExDebugLog.log`：通过 BepInEx 日志监听器捕捉的独立日志。
+
+配置文件为同目录的 `log_config.txt`，采用 `xxx=yyy` 格式，空行和 `#` 注释行会被忽略。
+默认开启 `info` 级别、Unity 日志和 BepInEx 日志捕捉。日志目录无法创建不会阻止游戏启动，
+但应将该问题和游戏目录权限一并反馈给开发者。
+
+- `level=warning`：只保存警告和错误；
+- `level=info`：保存信息、警告和错误；
+- `level=debug`：额外保存阶段断点和详细诊断。
+
+Loader 的启动、依赖加载、运行时程序集加载、关卡扫描、场景补扫和程序集解析失败均有
+`[断点:...]` 或 `[PLAYER]` 标记，发生问题时优先查看同一次启动目录下的四个文件。
 
 - **版本警戒：v1.5.0 是坏包（2026-09-08 事故）**——日志助手 `Info/Warn` 因批量改名
   事故变成无限自递归，首个日志调用即栈溢出闪退（连 ready 行都打不出）。若真机日志

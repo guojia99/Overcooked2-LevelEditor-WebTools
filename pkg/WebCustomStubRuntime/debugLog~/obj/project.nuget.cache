@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "zBGly3mxi00=",
+  "success": true,
+  "projectFilePath": "/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/debugLog.csproj",
+  "expectedPackageFiles": [
+    "/Users/guojia/.nuget/packages/microsoft.netframework.referenceassemblies/1.0.3/microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
+    "/Users/guojia/.nuget/packages/microsoft.netframework.referenceassemblies.net35/1.0.3/microsoft.netframework.referenceassemblies.net35.1.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

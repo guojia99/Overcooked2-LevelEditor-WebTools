@@ -76,7 +76,17 @@ import {
   BUN_CORE_ID,
   BUN_DLC8_ID,
 } from "../../recipeGroups";
-import { rlCardHtml } from "../../recipeCard";
+import { rlCardHtml, rlCompactCardHtml, STEP_ICON_SRC } from "../../recipeCard";
+import {
+  emptyRecipePickerFilters,
+  COOK_STEP_LABEL_ZH,
+  collectCookStepsFromRecipes,
+  collectUtensilsFromRecipes,
+  collectLeafIngredientsFromRecipes,
+  recipeMatchesFilters,
+  type RecipePickerFilterState,
+  type ScoreFilter,
+} from "../../recipePickerFilters";
 import type { RecipeEntry, LevelOptionalItem, LevelRecipes, OptionalPresets, MatchlistSuggestion } from "../../types";
 
 export type RecipeTab = "select" | "selected" | "autofill" | "optional" | "matchlist";
@@ -167,6 +177,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     });
   // 默认屏蔽重复 DLC 换皮（同一道菜的多个 DLC 皮肤只保留首选一版，已选的不隐藏）。
   let blockDupDlc = true;
+  let pickerFilters: RecipePickerFilterState = emptyRecipePickerFilters();
+  let filtersExpanded = true;
+  let compactCardMode = false;
+  let ingPopoverOpen = false;
   let orderable: RecipeEntry[] = [];
   let byGuid = new Map<string, RecipeEntry>();
   /** id → 菜谱/中间产物条目：套餐等组成项里查不到食材表的（FriedMeat 等
@@ -319,27 +333,112 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   };
 
 
+  const cardOpts = (r: RecipeEntry) => ({
+    allRecipes: recipes,
+    ingredientName: (id: string) => ingredientEntryById(id)?.nameZh ?? id,
+    iconSrc: (x: RecipeEntry) =>
+      customRecipeIconUrl(x) ??
+      (x.id && x.icon !== false
+        ? `/icons/recipes/${encodeURIComponent(x.id)}.png`
+        : "/icons/_placeholder.png"),
+    extraBadge: r.group === "levelset" ? "本关" : undefined,
+    warnBadge: recipeLacksIntermediate(r) ? "⚠ 无中间产物" : undefined,
+  });
+
   function recipeCard(r: RecipeEntry): string {
     const checked = selectedIds.has(r.id) ? "checked" : "";
     const searchable = `${r.nameZh} ${r.nameEn ?? ""} ${r.id}`.toLowerCase();
-    // 菜谱清单列表同款卡片（rlCardHtml）：成品区 + 食材分组 + 锅具图标；
-    // 自定义/DLC/⭐/半成品徽标由卡片徽标体系自动覆盖，「本关」「⚠ 无中间产物」
-    // 通过 extraBadge/warnBadge 附加。
-    const cardHtml = rlCardHtml(r, {
-      allRecipes: recipes,
-      ingredientName: (id) => ingredientEntryById(id)?.nameZh ?? id,
-      iconSrc: (x) =>
-        customRecipeIconUrl(x) ??
-        (x.id && x.icon !== false
-          ? `/icons/recipes/${encodeURIComponent(x.id)}.png`
-          : "/icons/_placeholder.png"),
-      extraBadge: r.group === "levelset" ? "本关" : undefined,
-      warnBadge: recipeLacksIntermediate(r) ? "⚠ 无中间产物" : undefined,
-    });
+    const opts = cardOpts(r);
+    const cardHtml = compactCardMode ? rlCompactCardHtml(r, opts) : rlCardHtml(r, opts);
     return `<label class="rw-recipe-pick" data-name="${escHtml(searchable)}">
       <input type="checkbox" value="${r.guid}" ${checked}>
       ${cardHtml}
     </label>`;
+  }
+
+  const ingNameOf = (id: string): string => ingredientEntryById(id)?.nameZh ?? id;
+
+  function filterToolbarHtml(): string {
+    if (activeTab !== "select") return "";
+    const steps = collectCookStepsFromRecipes(orderable);
+    const utensils = collectUtensilsFromRecipes(orderable);
+    const stepChips = steps
+      .map((s) => {
+        const active = pickerFilters.cookSteps.has(s);
+        const icon = STEP_ICON_SRC[s] ?? "";
+        return `<button type="button" class="rw-filter-chip${active ? " active" : ""}" data-step="${escHtml(s)}" title="${escHtml(COOK_STEP_LABEL_ZH[s] ?? s)}">${icon ? `<img src="${icon}" alt="" onerror="this.style.display='none'">` : ""}${escHtml(COOK_STEP_LABEL_ZH[s] ?? s)}</button>`;
+      })
+      .join("");
+    const utensilChips = utensils
+      .map((u) => {
+        const cat = catalogItemById(u);
+        const label = cat ? tidyCatalogNameZh(cat.nameZh, u) : u;
+        const active = pickerFilters.utensils.has(u);
+        return `<button type="button" class="rw-filter-chip${active ? " active" : ""}" data-utensil="${escHtml(u)}">${escHtml(label)}</button>`;
+      })
+      .join("");
+    const selectedIngChips = [...pickerFilters.ingredients]
+      .map(
+        (id) =>
+          `<span class="rw-ing-chip"><img src="/icons/ingredients/${encodeURIComponent(id)}.png" alt="" onerror="this.style.display='none'"><span>${escHtml(ingNameOf(id))}</span><button type="button" class="rw-ing-chip-rm" data-rm-ing="${escHtml(id)}" title="移除">×</button></span>`
+      )
+      .join("");
+    const scoreVal =
+      pickerFilters.score === "all" ? "all" : String(pickerFilters.score);
+    const scoreOptions = [
+      ["all", "全部分数"],
+      ["20", "20 分"],
+      ["40", "40 分"],
+      ["60", "60 分"],
+      ["80", "80 分"],
+      ["100", "100 分"],
+      ["120", "120 分"],
+      ["other", "其他"],
+    ]
+      .map(
+        ([v, label]) =>
+          `<option value="${v}"${scoreVal === v ? " selected" : ""}>${label}</option>`
+      )
+      .join("");
+    const leafIds = collectLeafIngredientsFromRecipes(orderable, leafIngredientIds).sort(
+      (a, b) => ingNameOf(a).localeCompare(ingNameOf(b), "zh")
+    );
+    const popoverItems = leafIds
+      .map((id) => {
+        const on = pickerFilters.ingredients.has(id);
+        return `<label class="rw-ing-pick-item"><input type="checkbox" data-ing-id="${escHtml(id)}" ${on ? "checked" : ""}><img src="/icons/ingredients/${encodeURIComponent(id)}.png" alt="" onerror="this.style.display='none'"><span>${escHtml(ingNameOf(id))}</span></label>`;
+      })
+      .join("");
+    return `<div class="rw-toolbar-row">
+        <button type="button" class="rw-collapse-all" id="rw-toggle-filters">${filtersExpanded ? "▼" : "▶"} 筛选</button>
+        <label class="rw-tool-check"><input type="checkbox" id="rw-compact"${compactCardMode ? " checked" : ""}> 简易卡片</label>
+      </div>
+      ${filtersExpanded ? `<div class="rw-filters" id="rw-filters">
+        <div class="rw-filter-section">
+          <span class="rw-filter-label">烹饪方式</span>
+          <div class="rw-filter-chips">
+            <button type="button" class="rw-filter-chip rw-filter-clear" data-clear-steps>全部</button>
+            ${stepChips || '<span class="muted small">—</span>'}
+          </div>
+        </div>
+        <div class="rw-filter-section">
+          <span class="rw-filter-label">锅具</span>
+          <div class="rw-filter-chips rw-filter-chips-wrap">
+            <button type="button" class="rw-filter-chip rw-filter-clear" data-clear-utensils>全部</button>
+            ${utensilChips || '<span class="muted small">—</span>'}
+          </div>
+        </div>
+        <div class="rw-filter-section rw-filter-row-inline">
+          <span class="rw-filter-label">分数</span>
+          <select id="rw-score" class="rl-select rw-score-select">${scoreOptions}</select>
+          <button type="button" class="rw-collapse-all" id="rw-pick-ing">+ 食材</button>
+          <div class="rw-ing-chips">${selectedIngChips}</div>
+        </div>
+        <div class="rw-ing-popover${ingPopoverOpen ? "" : " hidden"}" id="rw-ing-popover">
+          <input type="search" id="rw-ing-search" class="ing-search" placeholder="搜索食材…" autocomplete="off">
+          <div class="rw-ing-popover-list" id="rw-ing-popover-list">${popoverItems}</div>
+        </div>
+      </div>` : ""}`;
   }
 
   function typeGroupHtml(cat: string, type: string, items: RecipeEntry[]): string {
@@ -388,9 +487,16 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       items.filter((r) => {
         // 默认屏蔽重复 DLC 换皮（已勾选的不隐藏，便于查看/取消）
         if (blockDupDlc && isRecipeDlcBlocked(r) && !selectedIds.has(r.id)) return false;
-        if (!lower) return true;
-        const hay = `${r.nameZh} ${r.nameEn ?? ""} ${r.id} ${(r.ingredients ?? []).join(" ")}`.toLowerCase();
-        return hay.includes(lower);
+        if (
+          activeTab === "select" &&
+          !recipeMatchesFilters(r, pickerFilters, leafIngredientIds, recipes)
+        )
+          return false;
+        if (lower) {
+          const hay = `${r.nameZh} ${r.nameEn ?? ""} ${r.id} ${(r.ingredients ?? []).join(" ")}`.toLowerCase();
+          if (!hay.includes(lower)) return false;
+        }
+        return true;
       });
     if (activeTab === "selected") return selectedViewHtml();
     const parts: string[] = [];
@@ -917,7 +1023,8 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
           ${activeTab === "select" ? `<button type="button" class="rw-collapse-all" id="rw-block-dup" title="${blockDupDlc ? "同一道菜的多个 DLC 皮肤只保留首选一版（热狗保留 DLC8、热可可保留 DLC3、火锅保留 DLC10、烤菜/布丁保留 DLC7/DLC3、水果拼盘保留 DLC4）" : "显示所有 DLC 皮肤变体"}">${blockDupDlc ? "屏蔽重复DLC ✓" : "显示重复DLC"}</button>` : ""}
           ${activeTab === "select" ? '<button type="button" class="rw-collapse-all" id="rw-collapse-all">收起全部</button>' : ""}
         </div>
-        <div class="rw-list" id="rw-list">${listHtmlFor(q)}</div>`;
+        ${filterToolbarHtml()}
+        <div class="rw-list${compactCardMode && activeTab === "select" ? " compact-mode" : ""}" id="rw-list">${listHtmlFor(q)}</div>`;
       wireToolbarButtons();
       wireListCards();
     } else if (activeTab === "autofill") {
@@ -941,8 +1048,100 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     const q = (document.getElementById("rw-search") as HTMLInputElement)?.value.trim().toLowerCase() ?? "";
     const listEl = document.getElementById("rw-list");
     if (!listEl) return;
+    listEl.classList.toggle("compact-mode", compactCardMode && activeTab === "select");
     listEl.innerHTML = listHtmlFor(q);
     wireListCards();
+  };
+
+  const refreshFilterToolbar = () => {
+    const content = contentEl();
+    if (!document.getElementById("rw-list")) return;
+    const temp = document.createElement("div");
+    temp.innerHTML = filterToolbarHtml();
+    const newRow = temp.querySelector(".rw-toolbar-row");
+    const newFilters = temp.querySelector(".rw-filters");
+    const oldRow = content.querySelector(".rw-toolbar-row");
+    const oldFilters = content.querySelector(".rw-filters");
+    if (newRow) oldRow?.replaceWith(newRow);
+    if (newFilters) oldFilters?.replaceWith(newFilters);
+    else oldFilters?.remove();
+    wireFilterButtons();
+  };
+
+  const wireFilterButtons = () => {
+    document.getElementById("rw-toggle-filters")?.addEventListener("click", () => {
+      filtersExpanded = !filtersExpanded;
+      render();
+    });
+    document.getElementById("rw-compact")?.addEventListener("change", (e) => {
+      compactCardMode = (e.target as HTMLInputElement).checked;
+      renderList();
+    });
+    document.getElementById("rw-score")?.addEventListener("change", (e) => {
+      const v = (e.target as HTMLSelectElement).value;
+      pickerFilters.score =
+        v === "all" ? "all" : v === "other" ? "other" : (parseInt(v, 10) as ScoreFilter);
+      renderList();
+    });
+    document.querySelectorAll<HTMLElement>("[data-step]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const s = btn.dataset.step!;
+        if (pickerFilters.cookSteps.has(s)) pickerFilters.cookSteps.delete(s);
+        else pickerFilters.cookSteps.add(s);
+        btn.classList.toggle("active", pickerFilters.cookSteps.has(s));
+        renderList();
+      });
+    });
+    document.querySelectorAll<HTMLElement>("[data-utensil]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const u = btn.dataset.utensil!;
+        if (pickerFilters.utensils.has(u)) pickerFilters.utensils.delete(u);
+        else pickerFilters.utensils.add(u);
+        btn.classList.toggle("active", pickerFilters.utensils.has(u));
+        renderList();
+      });
+    });
+    document.querySelector("[data-clear-steps]")?.addEventListener("click", () => {
+      pickerFilters.cookSteps.clear();
+      refreshFilterToolbar();
+      renderList();
+    });
+    document.querySelector("[data-clear-utensils]")?.addEventListener("click", () => {
+      pickerFilters.utensils.clear();
+      refreshFilterToolbar();
+      renderList();
+    });
+    document.getElementById("rw-pick-ing")?.addEventListener("click", () => {
+      ingPopoverOpen = !ingPopoverOpen;
+      document.getElementById("rw-ing-popover")?.classList.toggle("hidden", !ingPopoverOpen);
+    });
+    document.querySelectorAll<HTMLElement>("[data-rm-ing]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        pickerFilters.ingredients.delete(btn.dataset.rmIng!);
+        refreshFilterToolbar();
+        renderList();
+      });
+    });
+    const ingSearch = document.getElementById("rw-ing-search") as HTMLInputElement | null;
+    const filterPopoverItems = (q: string) => {
+      const lower = q.trim().toLowerCase();
+      document.querySelectorAll<HTMLElement>(".rw-ing-pick-item").forEach((row) => {
+        const id = row.querySelector<HTMLInputElement>("input")?.dataset.ingId ?? "";
+        const name = row.querySelector("span")?.textContent ?? "";
+        const show = !lower || id.toLowerCase().includes(lower) || name.toLowerCase().includes(lower);
+        row.classList.toggle("hidden", !show);
+      });
+    };
+    ingSearch?.addEventListener("input", () => filterPopoverItems(ingSearch.value));
+    document.querySelectorAll<HTMLInputElement>("#rw-ing-popover-list input[type=checkbox]").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const id = cb.dataset.ingId!;
+        if (cb.checked) pickerFilters.ingredients.add(id);
+        else pickerFilters.ingredients.delete(id);
+        refreshFilterToolbar();
+        renderList();
+      });
+    });
   };
 
   /** 工具栏（搜索框 / 屏蔽重复DLC / 收起全部）接线 —— 仅整页 render 时调用。 */
@@ -961,6 +1160,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       const btn = document.getElementById("rw-collapse-all");
       if (btn) btn.textContent = allCollapsed ? "收起全部" : "展开全部";
     });
+    if (activeTab === "select") wireFilterButtons();
   };
 
   /** 列表卡片接线：勾选 / 分组折叠（重建 #rw-list 后需重挂）。 */

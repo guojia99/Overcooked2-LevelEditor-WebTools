@@ -1,0 +1,8 @@
+/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/obj/Release/debugLog.csproj.AssemblyReference.cache
+/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/obj/Release/debugLog.GeneratedMSBuildEditorConfig.editorconfig
+/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/obj/Release/debugLog.csproj.CoreCompileInputs.cache
+/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/obj/Release/debugLog.sourcelink.json
+/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/bin/Release/debugLog.dll
+/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/bin/Release/debugLog.pdb
+/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/obj/Release/debugLog.dll
+/Users/guojia/Desktop/oc2_editor/Overcooked2-LevelEditor/Assets/WebCustomStubRuntime/debugLog~/obj/Release/debugLog.pdb

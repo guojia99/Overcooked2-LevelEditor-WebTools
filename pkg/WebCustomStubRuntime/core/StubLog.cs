@@ -121,6 +121,11 @@ namespace CustomStub
             Bridge(msg, true);
         }
 
+        internal static void Player(string msg)
+        {
+            Bridge("[PLAYER] " + msg, true);
+        }
+
         /// <summary>诊断日志（默认关闭，见类头注释）。</summary>
         internal static void Dbg(string msg)
         {

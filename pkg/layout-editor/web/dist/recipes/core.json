@@ -44,7 +44,7 @@
       "platingStep": "",
       "ingredients": [
         "PastaSO",
-        "TomatoSO"
+        "PastaTomatoSO"
       ],
       "ingredientCount": 2,
       "cookingStepCount": 1,
@@ -71,7 +71,7 @@
             "FryPan"
           ],
           "ingredients": [
-            "TomatoSO"
+            "PastaTomatoSO"
           ]
         }
       ],

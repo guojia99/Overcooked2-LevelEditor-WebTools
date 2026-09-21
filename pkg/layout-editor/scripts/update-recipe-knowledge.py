@@ -227,6 +227,21 @@ ING_NAME_FIX = {
 }
 
 
+# 条目级护栏（id -> step/ingredients）：按名字匹配提取条目时，编辑器 SO 的
+# assetPath 可能指向 _New 变体而提取数据取到同名旧条目，或新旧条目 leaves
+# 不一致（如番茄意面旧节点叶子是 Tomato、_New 是 PastaTomato）。此处强制
+# 以编辑器 SO 实际指向的 _New 节点为准，防止重跑本脚本把修正冲回旧值。
+# 注意：意面族 step 必须保持 Pot —— build-catalog.computeCookingGroups 依赖
+# 「step==Pot 且含 PastaSO」做 Pasta→Pot / 其余→FryingPan 分组，改成
+# _New 条目的 FryingPan 会破坏锅具自动填充分组。
+RECIPE_ENTRY_OVERRIDE = {
+    "Pasta_TomatoOnly_SO": {
+        "step": "Pot",
+        "ingredients": ["PastaSO", "PastaTomatoSO"],
+    },
+}
+
+
 def norm(s):
     return re.sub(r"[\s_\-()]", "", (s or "").lower())
 
@@ -332,6 +347,21 @@ def main():
                 merged["id"] = rid
                 merged["step"] = step
                 merged["ingredients"] = ing_ids
+                by_id[rid] = merged
+
+    # 条目护栏最后应用：提取数据与护栏冲突时以护栏为准（并保留扩展字段）。
+    for rid, force in RECIPE_ENTRY_OVERRIDE.items():
+        old = by_id.get(rid)
+        old_step = old["step"] if old else None
+        old_ings = old["ingredients"] if old else None
+        if old_step != force["step"] or old_ings != force["ingredients"]:
+            report.append((rid, old_step, old_ings, force["step"], force["ingredients"], "override"))
+            updated += 1
+            if not dry:
+                merged = dict(old) if old else {}
+                merged["id"] = rid
+                merged["step"] = force["step"]
+                merged["ingredients"] = list(force["ingredients"])
                 by_id[rid] = merged
 
     if not dry:

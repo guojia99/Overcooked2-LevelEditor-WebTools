@@ -563,7 +563,10 @@
 .rw-list .rw-recipe-pick {
   position: relative;
   display: block;
-  flex: 0 0 auto;
+  /* 按食材内容收缩；不 flex-grow，避免行末单独一张卡撑满整行 */
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
   cursor: pointer;
   user-select: none;
 }
@@ -602,9 +605,19 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
-/* 紧凑尺寸（镜像 .sum-recipes 覆盖） */
-.rw-list .rl-card {
+/* 紧凑尺寸（镜像 .sum-recipes 覆盖）：宽度随食材组实际内容，上限为容器宽 */
+.rw-list .rl-card:not(.rl-card-compact) {
+  width: fit-content;
+  max-width: 100%;
   min-width: 220px;
+}
+
+.rw-list .rl-groups {
+  max-width: 100%;
+}
+
+.rw-list .rl-group-chips {
+  flex-wrap: wrap;
 }
 
 .rw-list .rl-card .rl-product {
@@ -624,6 +637,79 @@
 .rw-list .rl-chip img {
   width: 32px;
   height: 32px;
+}
+
+/* 简易卡片模式：左图右名 + 标签，一行至少 4 列 */
+.rw-list.compact-mode .rl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .rw-list.compact-mode .rl-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.rw-list.compact-mode .rw-recipe-pick {
+  flex: none;
+  min-width: 0;
+}
+
+.rw-list .rl-card-compact {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+.rw-list .rl-card-compact .rl-compact-icon {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.rw-list .rl-card-compact .rl-compact-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rw-list .rl-card-compact .rl-compact-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fdf3dd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.rw-list .rl-card-compact .rl-compact-tags {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.rw-list .rl-card-compact .rl-compact-tag {
+  flex: 0 0 auto;
+  font-size: 9px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(10, 12, 16, 0.72);
+  color: #ffd98a;
+  border: 1px solid rgba(255, 217, 138, 0.35);
+  white-space: nowrap;
 }
 
 /* 菜谱 / 食材清单 视图切换 */

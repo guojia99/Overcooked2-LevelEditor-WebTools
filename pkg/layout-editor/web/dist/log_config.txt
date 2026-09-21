@@ -1,0 +1,32 @@
+# 是否启用独立日志插件
+enabled=true
+
+# 最高保存等级：warning / info / debug
+level=info
+
+# 是否捕捉 Unity 日志
+captureUnityLog=true
+
+# 是否捕捉 BepInEx 日志
+captureBepInExLog=true
+
+# 是否保存 Unity 堆栈
+captureStackTrace=true
+
+# 是否保存玩家可读的重大错误
+capturePlayerLog=true
+
+# 是否记录 FPS
+captureFps=false
+
+# 是否记录 debug 阶段断点
+captureCheckpoints=true
+
+# 内存队列最大条数
+maxQueue=512
+
+# 最多保留的启动日志会话数
+maxLogSessions=21
+
+# 相同消息去重秒数
+deduplicateSeconds=5

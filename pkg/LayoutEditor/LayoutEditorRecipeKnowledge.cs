@@ -768,7 +768,12 @@ public static class LayoutEditorRecipeKnowledge
         // 肉排与意面在盘子里合不上（结构不匹配），订单永远无法完成。
         Put(d, "Pasta_MeatOnly_SO", "Pot", "PastaSO", "BurritoMeatSO");
         Put(d, "Pasta_MushroomOnly_SO", "Pot", "PastaSO", "MushroomSO");
-        Put(d, "Pasta_TomatoOnly_SO", "Pot", "PastaSO", "TomatoSO");
+        // 番茄意面的番茄是意面番茄 PastaTomato（uID 16506），不是沙拉番茄 Tomato（15580）：
+        // bundle 实测 Pasta_TomatoOnly_New = Mixed([BoiledPasta, PanFriedTomatoes])，
+        // PanFriedTomatoes = Cooked([PastaTomato], FryingPan)。写成 TomatoSO 会让普通番茄
+        // 进煎锅（自动填充白名单放行），煎出的 Cooked(Tomato) 在 matchlist 中没有
+        // platingStep=Plate 的装盘节点 → 盘子接不住煎番茄（GetOrderPlatingPrefab 返回 null）。
+        Put(d, "Pasta_TomatoOnly_SO", "Pot", "PastaSO", "PastaTomatoSO");
 
         Put(d, "Pizza_Plain_SO", "OvenTray", "DLC05_Dough", "TomatoSO", "CheeseSO");
         Put(d, "Pizza_Peperoni_SO", "OvenTray", "DLC05_Dough", "TomatoSO", "CheeseSO", "PepperoniSO");
