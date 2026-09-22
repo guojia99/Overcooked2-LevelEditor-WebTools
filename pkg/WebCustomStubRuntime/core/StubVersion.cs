@@ -14,6 +14,11 @@ namespace CustomStub
     public static class StubVersion
     {
         /// <summary>权威 semver 版本号（形如 2.0.0）。
+        /// 3.2.1（2026-09-22）：
+        ///  - Loader 动态读取自身目录下所有 commonW1、commonW2、commonW3...
+        ///    依赖包，导出器同步自动分发 commonW3 及更高扩展包；
+        ///  - 依赖包导出目录增加 version.txt，记录 Loader/debugLog 版本。
+        ///
         /// 2.4.0（2026-09-19）：
         ///  - 新增大炮防线 CannonGuard（编辑器 Play 与真机统一路径）：
         ///    ① 空炮发射拦截——ServerCannon.OnTrigger 前缀，m_loadedObject 为空或
@@ -71,6 +76,6 @@ namespace CustomStub
         ///    改为推进到 IsBurning 为止 + 宿主双驱动时观测让位；客户端「锅在灶台上」
         ///    标志按触发区直驱（原先恒 false 导致烧糊预警图标被 vanilla 吞掉）。
         /// Loader 的 PluginVersion 必须同步为同值。</summary>
-        public const string Value = "2.4.0";
+        public const string Value = "3.2.1";
     }
 }
