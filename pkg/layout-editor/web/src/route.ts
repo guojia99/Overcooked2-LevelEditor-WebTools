@@ -9,12 +9,14 @@ export type NavPage =
   | "recipes"
   | "guide"
   | "dependencies"
+  | "assignment"
   | "changelog";
 
 export type AppPage =
   | "layout"
   | "manage"
   | "dependencies"
+  | "assignment"
   | "custom-recipes"
   | "burger-maker"
   | "filling-maker"
@@ -34,8 +36,10 @@ export interface ParsedRoute {
   burgerId?: string;
   /** /custom-recipes/filling-maker/{set}/{fillingId}；保留字 "new" = 新建。 */
   fillingId?: string;
-  /** /dependencies/{set}/{levelId}（关卡数据目录名）。 */
+  /** /dependencies/{set}/{levelId}、/manage/{set}/{levelId}、/assignment/{set}/{levelId}（关卡数据目录名）。 */
   levelId?: string;
+  /** /manage/{set}/{levelId}/summary（汇总页）；缺省 = 关卡详细编辑。 */
+  manageView?: "summary";
 }
 
 function defaultGuidePageId(): string {
@@ -67,6 +71,25 @@ export function layoutPath(set: string, scene: string): string {
 export function depsPath(set?: string, levelId?: string): string {
   if (!set) return "/dependencies";
   return levelId ? `/dependencies/${encSeg(set)}/${encSeg(levelId)}` : `/dependencies/${encSeg(set)}`;
+}
+
+// ---- /manage 子路由（关卡列表 → 关卡详细编辑 / 汇总页；levelId = 关卡数据目录名）----
+
+export function manageLevelListPath(set: string): string {
+  return `/manage/${encSeg(set)}`;
+}
+
+export function manageLevelDetailPath(set: string, levelId: string): string {
+  return `/manage/${encSeg(set)}/${encSeg(levelId)}`;
+}
+
+export function manageLevelSummaryPath(set: string, levelId: string): string {
+  return `/manage/${encSeg(set)}/${encSeg(levelId)}/summary`;
+}
+
+/** 菜谱分工（关卡级）：/assignment/{set}/{levelId}（levelId = LevelInfo 资产所在数据目录名）。 */
+export function assignmentPath(set: string, levelId: string): string {
+  return `/assignment/${encSeg(set)}/${encSeg(levelId)}`;
 }
 
 export function recipeListPath(set: string): string {
@@ -152,6 +175,13 @@ export function parseRoute(pathname = location.pathname): ParsedRoute {
   if (m) return { page: "layout", setId: seg(m[1]), sceneName: seg(m[2]) };
 
   if (path === "/manage") return { page: "manage" };
+  // /manage 子路由（注意先匹配三段 summary，再两段详细编辑，最后一段关卡列表）
+  m = /^\/manage\/([^/]+)\/([^/]+)\/summary$/.exec(path);
+  if (m) return { page: "manage", setId: seg(m[1]), levelId: seg(m[2]), manageView: "summary" };
+  m = /^\/manage\/([^/]+)\/([^/]+)$/.exec(path);
+  if (m) return { page: "manage", setId: seg(m[1]), levelId: seg(m[2]) };
+  m = /^\/manage\/([^/]+)$/.exec(path);
+  if (m) return { page: "manage", setId: seg(m[1]) };
   if (path === "/changelog") return { page: "changelog" };
 
   if (path === "/dependencies") return { page: "dependencies" };
@@ -159,6 +189,10 @@ export function parseRoute(pathname = location.pathname): ParsedRoute {
   if (m) return { page: "dependencies", setId: seg(m[1]), levelId: seg(m[2]) };
   m = /^\/dependencies\/([^/]+)$/.exec(path);
   if (m) return { page: "dependencies", setId: seg(m[1]) };
+
+  // 菜谱分工（关卡级严格路由；裸 /assignment 无意义，落到默认 layout→manage）
+  m = /^\/assignment\/([^/]+)\/([^/]+)$/.exec(path);
+  if (m) return { page: "assignment", setId: seg(m[1]), levelId: seg(m[2]) };
 
   m = /^\/custom-recipes\/burger-maker\/([^/]+)\/([^/]+)$/.exec(path);
   if (m) return { page: "burger-maker", setId: seg(m[1]), burgerId: seg(m[2]) };

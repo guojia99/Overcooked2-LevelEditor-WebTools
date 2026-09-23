@@ -77,6 +77,8 @@ export interface ModalOptions {
   /** 关闭点背景遮罩关闭弹窗（默认允许）。设为 false 时只能通过按钮关闭，
    *  避免误触遮罩导致已填写内容丢失。 */
   closeOnBackdrop?: boolean;
+  /** Optional class added to the dialog panel for domain-specific layouts. */
+  panelClass?: string;
 }
 
 export function openModal(
@@ -88,7 +90,7 @@ export function openModal(
   const root = ensureModalRoot();
   root.innerHTML = `
     <div class="modal-backdrop" data-modal-backdrop>
-      <div class="modal-panel" role="dialog">
+       <div class="modal-panel${opts?.panelClass ? ` ${opts.panelClass}` : ""}" role="dialog">
         <h2 class="modal-title">${title}</h2>
         <div class="modal-body">${bodyHtml}</div>
         <div class="modal-footer">${footerHtml}</div>

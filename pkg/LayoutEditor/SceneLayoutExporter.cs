@@ -25,18 +25,40 @@ public static class SceneLayoutExporter
         var sceneName = System.IO.Path.GetFileNameWithoutExtension(scene.path);
         var imported = AnimGroupImporter.ImportFromScene(scene, sceneName,
             AnimGroupBakery.GetAnimationsFolder(scene.path));
-        AnimControlDataDto animControls = null;
-        if (imported.Count > 0)
-            animControls = new AnimControlDataDto { groups = imported.ToArray() };
 
         LayoutEditorLog.Log("anim group: export " + scene.name + " -> " +
-            (animControls != null ? animControls.groups.Length : 0) + " group(s)");
+            imported.Count + " group(s)");
 
         // 按钮↔动画组联动也从场景重建（Design/Button Logic 下的 helper 接线）。
         var buttonLinks = ButtonLinkBakery.ImportFromScene(scene, imported, items);
+        // Older baked controllers did not persist triggerMode in their source
+        // asset. Infer it from the reconstructed button links so those groups
+        // remain available in the button-link editor after a write-back/reload.
+        var buttonGroupNames = new HashSet<string>();
+        foreach (var link in buttonLinks)
+        {
+            if (link == null || link.groupNames == null) continue;
+            foreach (var name in link.groupNames)
+                if (!string.IsNullOrEmpty(name)) buttonGroupNames.Add(name);
+        }
+        foreach (var group in imported)
+        {
+            if (group != null && buttonGroupNames.Contains(group.displayName))
+                group.triggerMode = "button";
+        }
 
         // 按钮↔事件组联动同样从场景重建（Design/Button Event Logic 下的 helper 接线）。
         var buttonEvents = ButtonEventBakery.ImportFromScene(scene, items);
+
+        var switchLinks = CollectSwitchLinks(items);
+        // 遗留迁移：switchLink "Animate"（旧传送带直连方案，运行时投递链已证实
+        // 无法送达）→ 节点环开关动画组 + ButtonLink，统一到动画组模型。
+        MigrateLegacyConveyorAnimateLinks(items, imported, switchLinks, buttonLinks);
+
+        // 迁移可能向 imported 追加组，文档快照必须在迁移之后构建。
+        AnimControlDataDto animControls = imported.Count > 0
+            ? new AnimControlDataDto { groups = imported.ToArray() }
+            : null;
 
         var doc = new LayoutDocumentDto
         {
@@ -46,7 +68,7 @@ public static class SceneLayoutExporter
             walkable = SceneWalkabilityReader.ReadWalkable().ToArray(),
             deathInfo = SceneWalkabilityReader.ReadDeathInfo(),
             animControls = animControls,
-            switchLinks = CollectSwitchLinks(items).ToArray(),
+            switchLinks = switchLinks.ToArray(),
             buttonLinks = buttonLinks.Count > 0
                 ? new LayoutButtonLinkDataDto { links = buttonLinks.ToArray() }
                 : null,
@@ -57,6 +79,125 @@ public static class SceneLayoutExporter
             lights = CollectLights().ToArray()
         };
         return doc;
+    }
+
+    /// <summary>旧「传送带 + 按钮」联动（switchLink trigger="Animate" + 传送带
+    ///  buttonControlled）迁移为节点环开关动画组：组内两个 rotate 节点
+    ///  （+180° / −180°），ButtonLink 单组循环绑定 —— 每按一次翻转一次传送方向。
+    ///  迁移只改导出的文档模型（web 端即见统一表示）；写回时按新链路烘焙，
+    ///  开关 stub 的 objectToTrigger 直连随之消失。</summary>
+    private static void MigrateLegacyConveyorAnimateLinks(
+        System.Collections.Generic.List<LayoutItemDto> items,
+        System.Collections.Generic.List<AnimGroupDto> groups,
+        System.Collections.Generic.List<LayoutSwitchLinkDto> switchLinks,
+        System.Collections.Generic.List<LayoutButtonLinkDto> buttonLinks)
+    {
+        for (int i = switchLinks.Count - 1; i >= 0; i--)
+        {
+            var link = switchLinks[i];
+            if (link == null || link.trigger != "Animate") continue;
+            var target = items.Find(it => it != null && it.instanceId == link.targetId);
+            if (target == null || target.conveyor == null || !target.conveyor.buttonControlled)
+                continue; // 非按钮控制传送带：保持原样（ApplySwitchLinks 会告警）
+
+            var source = items.Find(it => it != null && it.instanceId == link.switchId);
+            if (source == null)
+                continue;
+
+            // 组名去重：沿用旧预设命名习惯，避免与既有组冲突。
+            string baseName = "传送带开关 " + target.displayName;
+            string name = baseName;
+            int n = 1;
+            while (groups.Exists(g => g != null && g.displayName == name))
+                name = baseName + " (" + (++n) + ")";
+
+            var evtCw = new AnimGroupEventDto
+            {
+                type = "rotate",
+                triggerName = "FlipOn",
+                startTime = 0f,
+                delay = 0f,
+                rotateDegrees = 180f,
+                rotateDirection = "cw",
+                rotateSeconds = 0.4f
+            };
+            var evtCcw = new AnimGroupEventDto
+            {
+                type = "rotate",
+                triggerName = "FlipOff",
+                startTime = 1f,
+                delay = 0f,
+                rotateDegrees = 180f,
+                rotateDirection = "ccw",
+                rotateSeconds = 0.4f
+            };
+            // 跨会话兜底：旋转-only 组无曲线可供回退分析识别，必须带 hierarchyPath
+            //（AnimGroupSource 通道，见 PersistAuthoringSource）。
+            string memberPath = null;
+            int targetIid;
+            if (link.targetId.StartsWith("u:", System.StringComparison.Ordinal) &&
+                int.TryParse(link.targetId.Substring(2), out targetIid))
+            {
+                var targetGo = EditorUtility.InstanceIDToObject(targetIid) as GameObject;
+                if (targetGo != null)
+                    memberPath = LayoutEditorHierarchy.GetHierarchyPath(targetGo.transform);
+            }
+            var group = new AnimGroupDto
+            {
+                id = "migrated:conveyor:" + link.targetId,
+                displayName = name,
+                groupKind = "members",
+                triggerMode = "button",
+                advanceMode = "press",
+                itemInstanceIds = new[] { link.targetId },
+                floorInstanceIds = new string[0],
+                objectInstanceIds = new string[0],
+                memberOffsets = new[]
+                {
+                    new AnimGroupMemberOffsetDto
+                    {
+                        instanceId = link.targetId,
+                        x = 0f,
+                        z = 0f,
+                        displayName = target.displayName,
+                        hierarchyPath = memberPath
+                    }
+                },
+                memberStatic = new AnimGroupMemberDto[0],
+                memberGroups = new AnimGroupMemberGroupDto[0],
+                startDelay = 0f,
+                loop = false,
+                waitForFinished = true,
+                waypoints = new AnimGroupWaypointDto[0],
+                events = new[] { evtCw, evtCcw }
+            };
+            groups.Add(group);
+
+            // 同一开关的多条 Animate 联动合并进一条 ButtonLink（组序列）。
+            var existing = buttonLinks.Find(l => l != null && l.sourceId == link.switchId
+                && string.IsNullOrEmpty(l.pairId));
+            if (existing != null)
+            {
+                var names = new System.Collections.Generic.List<string>(existing.groupNames ?? new string[0]);
+                if (!names.Contains(name)) names.Add(name);
+                existing.groupNames = names.ToArray();
+            }
+            else
+            {
+                buttonLinks.Add(new LayoutButtonLinkDto
+                {
+                    id = "migrated:conveyorlink:" + link.switchId,
+                    sourceId = link.switchId,
+                    groupNames = new[] { name },
+                    sequenceMode = "loop",
+                    lockUntilFinished = true
+                });
+            }
+
+            switchLinks.RemoveAt(i);
+            LayoutEditorLog.Log("conveyor migrate: 传送带 Animate 联动已迁移为开关动画组「" +
+                name + "」（按钮 " + source.displayName + " → 每按一次翻转 180°）");
+        }
     }
 
     /// <summary>导出游戏相机（背景色 / FOV + 只读 transform 快照）。

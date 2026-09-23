@@ -22,7 +22,7 @@ import { sceneNpcAnimItems, npcTypesHintHtml } from "./npcAnimations";
 import { matchBuiltinAnimDecor, sceneEnvAnimDecorItems, envAnimTypesHintHtml } from "./builtinAnimDecor";
 import { draw } from "./render";
 import { renderAnimControlPanel, groupVisibleInLayer, updateAnimPickBar } from "./animControl";
-import { renderButtonEventPanel } from "./buttonEvents";
+import { renderTriggerSourcePanel } from "./triggerOrchestrator";
 import { applyPaletteGridCols } from "./palette";
 
 /** Drag the left palette's right edge to resize it (min 180px, max half the window). */
@@ -306,7 +306,7 @@ export function refreshSceneItemList(): void {
 }
 
 export function maybeRefreshSceneItemList(): void {
-  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeAnimGroupId}|${S.activeAnimEventIdx}|${S.animMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.animControls.length}|${S.buttonEvents.length}|${S.dirty}`;
+  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeAnimGroupId}|${S.activeAnimEventIdx}|${S.animMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.animControls.length}|${S.buttonEvents.length}|${S.buttonLinks.length}|${S.switchLinks.length}|${S.dirty}`;
   if (sig === S.sceneItemListSig) return;
   S.sceneItemListSig = sig;
   renderRightPanel();
@@ -350,8 +350,8 @@ export function renderRightPanel(): void {
     if (countEl) countEl.textContent = "";
     const layerGroups = S.animControls.filter((g) => groupVisibleInLayer(g));
     if (animCountEl) animCountEl.textContent = layerGroups.length > 0 ? `(${layerGroups.length})` : "";
-  } else if (S.activeRightTab === "bevents") {
-    renderButtonEventPanel(body);
+  } else if (S.activeRightTab === "triggers") {
+    renderTriggerSourcePanel(body);
     if (countEl) countEl.textContent = "";
     if (animCountEl) animCountEl.textContent = "";
   } else {

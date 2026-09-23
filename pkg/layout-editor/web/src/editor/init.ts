@@ -59,7 +59,7 @@ import { draw } from "./render";
 import { setupCanvas, resetOverlapMarqueePending } from "./input";
 import {
   goManage,
-  renderLevelSummary,
+  goManageSummary,
   openConfigTabsModal,
   openAudioModal,
   consumeLayoutAutoAction,
@@ -467,9 +467,10 @@ export async function init() {
     })
   );
 
+  // 📋 汇总：整页跳转严格路由 /manage/{set}/{levelId}/summary（可刷新/分享）
   document.getElementById("btn-summary")!.addEventListener("click", () =>
     confirmLeaveIfDirty(() =>
-      void withLevelDetail((detail) => renderLevelSummary(dom.app, S.currentLevelSet, detail.levelInfoAssetPath))
+      void withLevelDetail((detail) => goManageSummary(S.currentLevelSet, detail.levelInfoAssetPath))
     )
   );
 
@@ -576,7 +577,7 @@ export async function init() {
 
   document.querySelectorAll<HTMLButtonElement>(".panel-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab as "items" | "anim" | "bevents";
+      const tab = btn.dataset.tab as "items" | "anim" | "triggers";
       if (tab === S.activeRightTab) return;
       S.activeRightTab = tab;
       updatePanelTabButtons();

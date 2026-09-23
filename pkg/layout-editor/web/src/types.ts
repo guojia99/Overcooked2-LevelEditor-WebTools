@@ -134,6 +134,8 @@ export interface LayoutFoodSpawnerStub {
 
 export interface LayoutConveyorStub {
   conveySpeed?: number;
+  /** 由按钮动画组旋转时刷新服务端实际传送目标。 */
+  buttonControlled?: boolean;
 }
 
 export interface LayoutTeleportalStub {
@@ -442,6 +444,12 @@ export interface AnimGroup {
    *  事件仅 shake/flash/wait，单一特效类型——shake 驱动相机、flash 驱动
    *  Lights/FX_Lightning 专用方向光，宿主不同故不允许混排）。 */
   groupKind?: "members" | "fx";
+  /** 自动播放或仅由按钮序列触发。缺省 = auto，兼容旧关卡。 */
+  triggerMode?: "auto" | "button";
+  /** 按钮组的节点推进语义：timeline = 每次按压整组按时间轴连播（一组=一个节点）；
+   *  press = 组内每个事件一个节点，每次按压只推进一个事件（节点环控制器，
+   *  用于「同一物体往返翻转」等一个成员进不了两个组的场景）。缺省 = timeline。 */
+  advanceMode?: "timeline" | "press";
   /** Unity instance ids ("u:xxx"/"new:xxx") of the items driven by this group. */
   itemInstanceIds: string[];
   /** Unity instance ids of the floor (Plane/Quad) objects driven by this group. */
@@ -563,6 +571,8 @@ export interface ButtonLink {
   sourceId: string;
   /** 按顺序触发的动画组 displayName 列表（displayName 是跨保存的稳定键）。 */
   groupNames: string[];
+  /** loop = A-B-C-A；pingpong = A-B-C-B-A。缺省 = loop。 */
+  sequenceMode?: "loop" | "pingpong";
   /** true = 动画组运行期间忽略按压（完成后才接受下一次按压）。 */
   lockUntilFinished: boolean;
   /** 共轭对 id（两个 link 共享；空/缺省 = 非共轭）。 */
@@ -570,6 +580,7 @@ export interface ButtonLink {
   /** 共轭对中本按钮初始为抬起（可按）状态。 */
   pairStartsUp?: boolean;
 }
+
 
 export interface ButtonLinkData {
   links: ButtonLink[];
@@ -789,6 +800,11 @@ export interface RecipeEntry {
   mixing?: boolean;
   /** 组装定义子类标记："burger" / "pizza" / ""（普通菜谱；Optional tab 与清单过滤用）。 */
   optionalKind?: string;
+  /** 自定义菜谱一级分类 id（关卡集 CustomRecipeConfig 或 commonW2 的 "burger"）；仅 isCustom 有值，
+   *  汇总页/分工页按它给自定义菜谱做子分组。 */
+  category?: string;
+  /** 自定义菜谱二级分类（分类目录下的子目录名，""=直接放在分类目录下）。 */
+  subcategory?: string;
   icon?: boolean;
 }
 
@@ -1020,6 +1036,7 @@ export interface LevelSetList {
 /** 关卡集导出任务状态（GET /api/set/export/status，构建期间由桥接监听线程直答）。 */
 export interface SetExportStatus {
   status: "idle" | "running" | "done" | "error";
+  /** 导出标识：单集 = 集名；多集合并导出 = 各集名 "+" 连接（如 "setA+setB"）。 */
   setName: string;
   /** queued | prepare | clean | build | package | zip | done */
   phase: string;
@@ -1075,11 +1092,35 @@ export interface PerPlayerConfig {
 export interface AudioConfig {
   inLevelMusicGuid: string;
   inLevelMusicId: string;
+  /** 自定义 BGM 文件名（data/bgm/ 下，含扩展名）；"" = 未使用直引。 */
+  customMusicFile?: string;
+  /** 自定义 BGM 显示名（去扩展名）。 */
+  customMusicName?: string;
+  /** 自定义 BGM 时长（秒）。 */
+  customMusicSec?: number;
   ambiences: string[];
   audioDirectoryGuids: string[];
   audioDirectoryIds: string[];
   onDeathEffectGuid: string;
   onDeathEffectId: string;
+}
+
+/** 关卡集 data/bgm/ 下的自定义 BGM 条目。 */
+export interface CustomMusicEntry {
+  fileName: string;
+  name: string;
+  sizeBytes: number;
+  lengthSec: number;
+  /** 是否已被关卡集内至少一关引用。 */
+  used: boolean;
+}
+
+export interface CustomMusicUploadResult {
+  fileName: string;
+  assetPath: string;
+  guid: string;
+  sizeBytes: number;
+  lengthSec: number;
 }
 
 export interface LevelDetail {
@@ -1106,6 +1147,32 @@ export interface LevelDetail {
   dependencies: string[];
   configs: PerPlayerConfig[];
   audio: AudioConfig;
+}
+
+// ---------- 关卡 data 目录数据文件（菜谱分工 / readme 说明，`~` 目录不进包） ----------
+
+export type AssignmentMode = "2p" | "3p" | "4p";
+
+export interface AssignmentPlayer {
+  /** 分配给该玩家的菜谱 guid 列表（可与其他玩家重复 = 可多派）。 */
+  recipes: string[];
+}
+
+/** 分工配置（data/&lt;level&gt;/assignment~/assignment.json，前端唯一读写方）。
+ *  modes 中未出现的模式 = 未配置；players 数组长度 = 模式人数（2p→2、3p→3、4p→4）。 */
+export interface LevelAssignmentData {
+  schemaVersion: number;
+  modes: Partial<Record<AssignmentMode, { players: AssignmentPlayer[] }>>;
+}
+
+export interface AssignmentResult {
+  exists: boolean;
+  json: string;
+}
+
+export interface LevelReadmeResult {
+  exists: boolean;
+  html: string;
 }
 
 // ---------- Custom Recipe Management ----------
@@ -1533,6 +1600,48 @@ export interface BunReplaceResult {
   /** 被跳过的条目（含原因），路径闸门拦下的也在这里。 */
   skipped: string[];
   warnings: string[];
+}
+
+// ---------- 资产瘦身（自定义菜谱页 📦） ----------
+
+/** 一张贴图的当前导入状态（瘦身扫描）。 */
+export interface AssetTextureUsage {
+  path: string;
+  isIcon: boolean;
+  /** importer 当前 maxTextureSize（未显式设置 = Unity 默认 2048）。 */
+  maxTextureSize: number;
+  /** 导入后实际宽高（0 = 加载失败）。 */
+  width: number;
+  height: number;
+}
+
+/** 一个模型（FBX/OBJ）的当前导入状态。 */
+export interface AssetModelUsage {
+  path: string;
+  vertices: number;
+  /** 三角形合计；-1 = 读写已关无法读取。 */
+  triangles: number;
+  subMeshes: number;
+  isReadable: boolean;
+  /** Off / Low / Medium / High。 */
+  meshCompression: string;
+}
+
+export interface AssetOptimizeUsage {
+  setName: string;
+  recipesDir: string;
+  dirExists: boolean;
+  textures: AssetTextureUsage[];
+  models: AssetModelUsage[];
+}
+
+export interface AssetOptimizeResult {
+  texturesChanged: number;
+  modelsChanged: number;
+  /** 逐资产 变更前→后 摘要。 */
+  details: string[];
+  /** 被跳过的条目（含原因）。 */
+  skipped: string[];
 }
 
 export interface BurgerCreateRequest {

@@ -1,5 +1,6 @@
 import { CELL, S } from "./state";
 import type { ComboDef, EditorItem } from "./state";
+import type { AnimGroup } from "../types";
 import { catalogItemById, ingredientGuidById } from "./catalog";
 import { addFromCatalog } from "./items";
 import { setServingReturnOfType } from "./servingLinks";
@@ -8,7 +9,7 @@ import { pushHistory } from "./historyOps";
 import { setSelection } from "./selection";
 import { setStatus } from "./status";
 import { draw } from "./render";
-import { escHtml, prefabIdFromPath } from "./coords";
+import { escHtml, prefabIdFromPath, uuid } from "./coords";
 
 /** 上菜台 → 回收台（脏盘/脏杯/马克杯/餐盘）自动绑定。 */
 function linkServing(kind: ServingReturnKind) {
@@ -84,6 +85,104 @@ function linkCannonTerminal(items: EditorItem[]): void {
   if (!sw.switchStub) sw.switchStub = {};
   sw.switchStub.startEnabled = true;
   S.switchLinks.push({ switchId: sw.instanceId, targetId: cannon.instanceId, trigger: "Launch" });
+}
+
+/** 传送带站 + 按钮（开关动画组 v2）：
+ *  一个「节点环」开关动画组（triggerMode=button + advanceMode=press）：两个 rotate
+ *  节点 +180°/−180°，按钮每按一次只推进一个节点 —— 第一次按翻转传送方向、再按转回。
+ *  旋转由动画组烘焙的原生 Animator 驱动传送带伪根（组员），站体 child 随动；
+ *  ConveyorDirectionSync（buttonControlled tag）只做旋转后的相邻接收器刷新。
+ *  同一传送带站绝不能拆成两个动画组（烘焙 reparent 互斥）——往返翻转必须在
+ *  同一组内用节点环表达。 */
+function linkConveyorSwitch(items: EditorItem[]): void {
+  const conveyor = items[0];
+  const sw = items[1];
+  conveyor.conveyor = { ...(conveyor.conveyor ?? {}), buttonControlled: true };
+  sw.stubKind = "Switch";
+  if (!sw.switchStub) sw.switchStub = {};
+  sw.switchStub.startEnabled = true;
+
+  // 组名去重（重复套用组合时追加序号）。
+  let name = `传送带开关 ${S.animControls.length + 1}`;
+  if (S.animControls.some((g) => g.displayName === name)) {
+    let n = 1;
+    while (S.animControls.some((g) => g.displayName === `传送带开关 ${S.animControls.length + 1} (${n})`)) n++;
+    name = `传送带开关 ${S.animControls.length + 1} (${n})`;
+  }
+
+  const group: AnimGroup = {
+    id: uuid(),
+    displayName: name,
+    groupKind: "members",
+    triggerMode: "button",
+    advanceMode: "press",
+    itemInstanceIds: [conveyor.instanceId],
+    floorInstanceIds: [],
+    objectInstanceIds: [],
+    memberOffsets: [],
+    memberStatic: [],
+    memberGroups: [],
+    startDelay: 0,
+    loop: false,
+    loopDelay: 2,
+    waitForFinished: true,
+    waypoints: [],
+    events: [
+      {
+        id: uuid(),
+        type: "rotate",
+        triggerName: "FlipOn",
+        delay: 0,
+        startTime: 0,
+        rotateDegrees: 180,
+        rotateDirection: "cw",
+        rotateSeconds: 0.4,
+      },
+      {
+        id: uuid(),
+        type: "rotate",
+        triggerName: "FlipOff",
+        delay: 0,
+        startTime: 1,
+        rotateDegrees: 180,
+        rotateDirection: "ccw",
+        rotateSeconds: 0.4,
+      },
+    ],
+  };
+  S.animControls.push(group);
+
+  // 同一开关旧的传送带 ButtonLink / v1 双组表示 / v3 Animate 直连一并清理。
+  const legacyNames = new Set<string>();
+  for (const g of S.animControls) {
+    if (
+      g.id !== group.id &&
+      g.itemInstanceIds.includes(conveyor.instanceId) &&
+      (g.displayName.startsWith("传送带开关 ") || g.triggerMode === "button")
+    ) {
+      legacyNames.add(g.displayName);
+    }
+  }
+  if (legacyNames.size > 0) {
+    S.animControls = S.animControls.filter((g) => !legacyNames.has(g.displayName));
+    S.buttonLinks = S.buttonLinks.filter(
+      (link) => !link.groupNames.some((n) => legacyNames.has(n))
+    );
+  }
+  S.switchLinks = S.switchLinks.filter(
+    (l) => !(l.targetId === conveyor.instanceId && l.trigger === "Animate")
+  );
+  S.buttonLinks = S.buttonLinks.filter(
+    (l) => !(l.sourceId === sw.instanceId && (l.groupNames.some((n) => legacyNames.has(n)) || l.groupNames.length === 0))
+  );
+
+  S.buttonLinks.push({
+    id: uuid(),
+    sourceId: sw.instanceId,
+    groupNames: [group.displayName],
+    sequenceMode: "loop",
+    lockUntilFinished: true,
+  });
 }
 
 /** 传送门配对：默认【单向 A→B】——a 是入口，b 仅作为出口（回指 a 占位，
@@ -170,6 +269,16 @@ export const COMBOS: ComboDef[] = [
       { id: "Switch", dx: 2.5, dz: 0 },
     ],
     link: linkSwitch(),
+  },
+  {
+    id: "conveyor_switch",
+    nameZh: "传送带站 + 按钮",
+    hint: "开关动画组（节点环）：按一次旋转 180° 切换传送方向、再按转回；绝不自动播放，动画期间按钮锁定。在右侧「🔘 触发源」可查看联动",
+    parts: [
+      { id: "ConveyorStation", dx: 0, dz: 0 },
+      { id: "Switch", dx: 2, dz: 0 },
+    ],
+    link: linkConveyorSwitch,
   },
   {
     id: "cannon_switch",

@@ -740,7 +740,8 @@ namespace CustomStub
                 || prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(TravelatorReverser.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal)
-                || prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal);
+                 || prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(ConveyorDirectionSync.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -864,6 +865,16 @@ namespace CustomStub
                 var rat = go.AddComponent<RatHeist>();
                 ParseRatHeist(prefabTag.Substring(RatHeist.TagPrefix.Length), rat);
                 StubLog.Dbg("[CustomStub] 自愈 RatHeist: " + go.name);
+            }
+            else if (prefabTag.StartsWith(ConveyorDirectionSync.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "ConveyorDirectionSync"))
+                    return;
+                var sync = go.AddComponent<ConveyorDirectionSync>();
+                sync.enabled = false;
+                sync.m_enabled = true;
+                sync.enabled = true;
+                StubLog.Dbg("[CustomStub] 自愈 ConveyorDirectionSync: " + go.name);
             }
             else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
             {

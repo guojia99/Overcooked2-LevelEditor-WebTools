@@ -1550,6 +1550,72 @@ body {
   flex: 1;
   position: relative;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 画布舞台：承载 2D/3D 画布与全部画布浮层；底部编排台停靠时它收缩，
+ * 画布随之变小，预览不被遮挡（编排台是它的兄弟，不是遮罩）。 */
+.canvas-stage {
+  flex: 1 1 auto;
+  position: relative;
+  min-height: 0;
+}
+
+/* 底部「动画与联动编排台」停靠面板（非模态）。 */
+.anim-dock {
+  flex: 0 0 auto;
+  height: 360px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  background: #1c2029;
+  border-top: 1px solid #3a3f4b;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.anim-dock.hidden {
+  display: none;
+}
+
+/* 顶边高度拖拽把手。 */
+.anim-dock-grip {
+  flex: 0 0 auto;
+  height: 8px;
+  cursor: ns-resize;
+  background: linear-gradient(#2b303b, #23272f);
+  border-bottom: 1px solid #33384300;
+  position: relative;
+}
+
+.anim-dock-grip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 46px;
+  height: 3px;
+  border-radius: 2px;
+  background: #565d6b;
+}
+
+.anim-dock-grip:hover::after {
+  background: #7f8896;
+}
+
+.anim-dock-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 14px 14px;
+}
+
+body.anim-dock-resizing,
+body.anim-dock-resizing * {
+  cursor: ns-resize !important;
+  user-select: none;
 }
 
 /* Collapsible side panels (palette left, scene item list right). */
@@ -2417,6 +2483,75 @@ canvas.pan-active {
 .audio-grid .m-field {
   margin: 0;
 }
+
+/* ---- Custom BGM upload box ---- */
+.au-custom-box {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #1e222b;
+  border: 1px solid #3a4050;
+  border-radius: 8px;
+}
+.au-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 6px;
+  flex-wrap: wrap;
+}
+.au-upload-row input[type="file"] {
+  max-width: 240px;
+  font-size: 12px;
+  color: #c8ccd4;
+}
+.au-upload-row select {
+  flex: 1;
+  min-width: 200px;
+  max-width: 460px;
+}
+.au-name-input {
+  width: 150px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: #252932;
+  border: 1px solid #3a4050;
+  border-radius: 4px;
+  color: #c8ccd4;
+}
+#au-custom-info {
+  margin: 4px 0;
+}
+.au-custom-list {
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 6px;
+}
+.au-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+.au-custom-row + .au-custom-row {
+  margin-top: 4px;
+}
+.au-custom-row:hover {
+  background: #252932;
+}
+.au-custom-row-active {
+  border-color: #3d6ea5;
+  background: #1f2a3a;
+}
+.au-custom-name {
+  font-size: 13px;
+  color: #dde1e8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
 .modal-actions {
   display: flex;
   align-items: center;
@@ -3225,6 +3360,24 @@ body.manage-bg {
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
+}
+
+/* 关卡集卡片「合并导出」勾选框：右上角悬浮，不占标题行高 */
+.m-card-check {
+  float: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #9aa0a6;
+  cursor: pointer;
+  user-select: none;
+}
+
+.m-card-check input {
+  width: auto;
+  margin: 0;
+  accent-color: #4f8cff;
 }
 
 .m-card .m-meta {
@@ -6126,6 +6279,11 @@ body.manage-bg {
   background: #2d323c;
 }
 
+.anim-group-card.active {
+  background: #252d3b;
+  box-shadow: inset 3px 0 0 #7ea5ff;
+}
+
 .mgc-color {
   width: 4px;
   flex: 0 0 4px;
@@ -6222,6 +6380,261 @@ body.manage-bg {
   margin-top: 6px;
   font-size: 13px;
   padding: 6px 16px;
+}
+
+/* The animation editor + trigger orchestrator now live in the bottom dock
+ * (`.anim-dock-body`), a non-modal panel that shrinks the canvas instead of
+ * covering it, so the on-canvas preview stays visible while authoring. */
+.anim-dock-body .anim-editor-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -10px -14px 8px;
+  padding: 10px 14px;
+  background: #20242c;
+  border-bottom: 1px solid #333843;
+}
+
+/* Timeline scroll area caps to the dock's own height (not the viewport). */
+.anim-dock-body .anim-tl-scroll {
+  max-height: none;
+}
+
+/* -------------------- 触发编排台（模式 B：按下 → 事件组 → 动画组） -------------------- */
+.trig-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -10px -14px 10px;
+  padding: 10px 14px;
+  background: #20242c;
+  border-bottom: 1px solid #333843;
+}
+
+.trig-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #e6e9ee;
+}
+
+.trig-kind {
+  font-size: 11px;
+  color: #9aa0a6;
+  border: 1px solid #3a3f4b;
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
+.trig-flowhint {
+  margin-left: auto;
+  font-size: 11px;
+  color: #7f8896;
+}
+
+.trig-flow {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trig-col {
+  flex: 1 1 260px;
+  min-width: 240px;
+  background: #232833;
+  border: 1px solid #333843;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.trig-col-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #d5d9df;
+  background: #272d38;
+  border-bottom: 1px solid #333843;
+}
+
+.trig-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3d6bf3;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.trig-col-body {
+  padding: 8px 10px 10px;
+  overflow: auto;
+}
+
+.trig-arrow {
+  align-self: center;
+  color: #6b7280;
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
+.trig-hint {
+  font-size: 11px;
+  color: #8a909a;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.trig-subhead {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c7ccd3;
+  margin: 12px 0 6px;
+  padding-top: 8px;
+  border-top: 1px dashed #333843;
+}
+
+.trig-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.trig-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1d2129;
+  border: 1px solid #333843;
+  border-radius: 6px;
+  padding: 5px 7px;
+}
+
+.trig-step-idx {
+  flex: 0 0 auto;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: #2f9e6e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.trig-step-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  color: #dfe3e8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trig-addrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.trig-select,
+.trig-input {
+  background: #14171c;
+  border: 1px solid #3a3f4b;
+  border-radius: 6px;
+  color: #e6e9ee;
+  padding: 4px 8px;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.trig-select {
+  flex: 1 1 120px;
+}
+
+.trig-field,
+.trig-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #c7ccd3;
+  margin: 6px 0;
+}
+
+.trig-field .trig-input,
+.trig-field .trig-select {
+  flex: 1 1 auto;
+}
+
+/* -------------------- 右侧「触发源」列表 -------------------- */
+.trig-panel-note {
+  font-size: 11px;
+  color: #8a909a;
+  padding: 6px 10px 10px;
+  line-height: 1.5;
+}
+
+.trig-src-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #2a2e37;
+  cursor: pointer;
+}
+
+.trig-src-card:hover {
+  background: #232833;
+}
+
+.trig-src-card.active {
+  background: #26314a;
+}
+
+.trig-src-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.trig-src-name {
+  font-size: 13px;
+  color: #e6e9ee;
+  font-weight: 600;
+}
+
+.trig-src-sub {
+  font-size: 11px;
+  color: #8a909a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .trig-arrow {
+    display: none;
+  }
+  .trig-col {
+    flex: 1 1 100%;
+  }
 }
 
 /* Group editor header */

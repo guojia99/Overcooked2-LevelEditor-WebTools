@@ -224,6 +224,7 @@ public static class SceneLayoutApplier
         // 只在文档携带链接时写入；空/缺失时不动场景里既有的联动（避免误清手工配置）。
         // buttonEvents 一并传入：配了事件组的开关抑制直发广播（按压只走事件组）。
         LayoutEditorStubIO.ApplySwitchLinks(document.switchLinks, createdObjects, document.buttonEvents);
+        ConveyorAnimationBakery.Sync(scene, document, createdObjects);
 
         // 世界地图装饰（bundle map/ 家族，如 dlc08 绳栏）：烘焙运行时强制展开组件
         // （游戏编译，随场景保存）。全场景扫描、幂等，scoped writes 同样执行。
@@ -2575,5 +2576,4 @@ public static class LayoutEditorSafety
         return true;
     }
 }
-
 

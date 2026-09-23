@@ -26,6 +26,8 @@ export function normalizeCustomRecipeCard(r: CustomRecipeSummary): RecipeEntry {
     mixing: r.type === "Mixed",
     group: r.group,
     type: "custom",
+    category: r.category,
+    subcategory: r.subcategory ?? "",
     // 不携带 cookingGroups：由 recipeCard.computeCardGroups 统一走前端推导
     cookingGroups: undefined,
   } as RecipeEntry;

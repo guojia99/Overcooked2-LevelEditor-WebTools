@@ -59,16 +59,15 @@ import {
   BURNER_FIRE_MODES
 } from "./ui/constants";
 import {
-  buttonLinkSummaryHtml,
-  openButtonLinkModal,
+  buttonLinkSummaryText,
   isButtonLinkSource
 } from "./buttonLinks";
 import {
-  buttonEventSummaryHtml,
-  openButtonEventModal,
-  isButtonEventSource,
+  buttonEventSummaryText,
+  eventLinkOfSource,
   cleanOrphanedButtonEvents
 } from "./buttonEvents";
+import { openTriggerOrchestrator } from "./triggerOrchestrator";
 
 export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Dispenser: "Dispenser",
@@ -500,6 +499,17 @@ export function pressureSwitchMaterialHtml(item: EditorItem): string {
     <label class="ctx-stub-row">松开外观 <select id="ctx-ps-unocc" class="ctx-input">${unoccOpts}</select></label>`;
 }
 
+/** 右键菜单中的触发编排入口：事件组 + 动画组摘要 + 「打开触发编排」按钮。
+ *  详细编排在底部非模态编排台中进行（不遮挡预览）。 */
+function triggerOrchestrateEntryHtml(item: EditorItem): string {
+  const evLink = eventLinkOfSource(item.instanceId ?? "");
+  const evN = evLink?.groups.length ?? 0;
+  return `<div class="ctx-stub-title" style="margin-top:6px">触发编排（事件组 · 动画组）</div>
+    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">🔁 ${escHtml(buttonEventSummaryText(evN > 0 ? evLink : undefined))}</div>
+    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">🎬 ${escHtml(buttonLinkSummaryText(item))}</div>
+    <label class="ctx-stub-row"><button type="button" class="ctx-btn" id="ctx-trig-config" style="width:100%">🎛 打开触发编排…</button></label>`;
+}
+
 export function stubControlsHtml(item: EditorItem): string {
   const kind = stubKindOf(item);
   computeParamLabels(); // refresh per-type sequence numbers so menus match the canvas
@@ -695,15 +705,13 @@ export function stubControlsHtml(item: EditorItem): string {
           <button type="button" class="ctx-btn" id="ctx-sw-linkadd">添加</button></label>
         <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" value="Launch" placeholder="Launch"/></label>
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">按下按钮时对目标对象广播该消息${isCannon ? "（大炮须为 Launch，对应游戏内发射触发）" : "（默认 Switch；同一开关的所有联动共享此消息）"}；配置了「联动事件组」后按压以事件组为准，直发自动停用</div>
-        ${isCannon ? "" : buttonEventSummaryHtml(item)}
-        ${isCannon ? "" : buttonLinkSummaryHtml(item)}</div>`;
+        ${isCannon ? "" : triggerOrchestrateEntryHtml(item)}</div>`;
     }
     case "PressureSwitch": {
       const matHtml = pressureSwitchMaterialHtml(item);
       return `<div class="ctx-stub"><div class="ctx-stub-title">压力开关参数</div>
         ${matHtml || '<div class="ctx-stub-row">此物件无用户可配置参数，配置内置于预制件中</div>'}
-        ${buttonEventSummaryHtml(item)}
-        ${buttonLinkSummaryHtml(item)}</div>`;
+        ${triggerOrchestrateEntryHtml(item)}</div>`;
     }
     case "Terminal": {
       const t = item.terminal ?? {};
@@ -1517,17 +1525,10 @@ export function wireStubControls(item: EditorItem) {
   }
   }
 
-  if (isButtonEventSource(item)) {
-    document.getElementById("ctx-bev-config")?.addEventListener("click", () => {
-      hideContextMenu();
-      openButtonEventModal(item);
-    });
-  }
-
   if (isButtonLinkSource(item)) {
-    document.getElementById("ctx-bl-config")?.addEventListener("click", () => {
+    document.getElementById("ctx-trig-config")?.addEventListener("click", () => {
       hideContextMenu();
-      openButtonLinkModal(item);
+      openTriggerOrchestrator(item);
     });
   }
 

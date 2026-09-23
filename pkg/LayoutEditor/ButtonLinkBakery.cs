@@ -11,7 +11,7 @@ using LevelEditorStub;
 /// 按钮/压力开关 ↔ 动画组联动烘焙。在 Design/Button Logic/Btn(Logic|Pair)_*&lt;key&gt; 下创建
 /// 隐藏逻辑物体（Animator + 生成的 controller + TriggerOnAnimator 中继），全部用宿主原语实现：
 ///  - 顺序触发：状态环 Ready_i --Advance--> Run_i（进入即用 SendTriggerToObject 启动组 i）
-///    --Done_i--> Ready_{i+1 mod n}（最后一组后循环回第一组）；
+///    --Done_i--> Ready_{i+1}；支持 loop（A-B-C-A）和 pingpong（A-B-C-B-A）；
 ///  - 运行期锁定（lockUntilFinished）：Run_i 无 Advance 出口且挂 ClearTriggerDuringState，
 ///    组运行期间的按压被忽略且不会锁存（"动画组完成后才可再按"）；
 ///  - 共轭对（一对一，每方至多 2 组）：AReady→ARun→(两组均完成的 AND 门)→BReady→BRun→…→
@@ -204,6 +204,10 @@ public static class ButtonLinkBakery
                     LayoutEditorLog.LogWarning("button link: 动画组「" + gname + "」不存在，跳过绑定");
                     continue;
                 }
+                // The link is authoritative for imported/legacy groups too.
+                // Persisting this marker keeps them visible in the web button
+                // group picker after the next scene round-trip.
+                g.triggerMode = "button";
                 if (!boundGroups.Add(gname))
                 {
                     LayoutEditorLog.LogWarning("button link: 动画组「" + gname + "」已被其他联动绑定，跳过后续绑定");
@@ -211,6 +215,12 @@ public static class ButtonLinkBakery
                 }
                 g.startTrigger = GoTrigger(trigBase, side, i);
                 g.endTrigger = DoneTrigger(trigBase, side, i);
+                // 完成回报必须等 clip 真正播完：waitForFinished=false 时队列不等
+                // AnimationFinished 就 AdvanceQueue，endTrigger（BLDone）会立即返回
+                // helper ——「动画组完成后才可再按」的运行期锁定形同虚设。
+                // 置 true 后 clip 会在烘焙期内嵌完成事件（AnimGroupBakery 依据
+                // 本字段决定是否嵌入），链路才是真正的「播完才解锁」。
+                g.waitForFinished = true;
                 if (g.startDelay > 0f)
                 {
                     LayoutEditorLog.LogWarning("button link: 动画组「" + gname +
@@ -374,7 +384,7 @@ public static class ButtonLinkBakery
 
         var controllerPath = animDir + "/" + sceneName + "_" + helperName + ".controller";
         var controller = BuildSequenceController(controllerPath, helperName, rootNames, goTrigs, doneTrigs,
-            link.lockUntilFinished);
+            link.lockUntilFinished, link.sequenceMode);
         if (controller == null)
             return "按钮联动：controller 创建失败 " + controllerPath;
         usedAssets.Add(controllerPath);
@@ -588,10 +598,11 @@ public static class ButtonLinkBakery
     }
 
     /// <summary>顺序联动状态机：Ready_i --Advance--> Run_i（进入即启动组 i）
-    ///  --Done_i--> Ready_{i+1 mod n}。锁定模式：Run_i 上的按压被 ClearTriggerDuringState
+    ///  --Done_i--> 下一步骤。锁定模式：Run_i 上的按压被 ClearTriggerDuringState
     ///  吞掉（组完成后才接受下一次）；非锁定：Run_i --Advance--> Run_{i+1} 直接连发。</summary>
     private static AnimatorController BuildSequenceController(string path, string helperName,
-        string[] rootNames, string[] goTrigs, string[] doneTrigs, bool lockUntilFinished)
+        string[] rootNames, string[] goTrigs, string[] doneTrigs, bool lockUntilFinished,
+        string sequenceMode)
     {
         AnimGroupBakery.DeleteAssetIfExists(path);
         var ctrl = AnimatorController.CreateAnimatorControllerAtPath(path);
@@ -606,21 +617,29 @@ public static class ButtonLinkBakery
 
         var sm = ctrl.layers[0].stateMachine;
         int n = rootNames.Length;
-        var ready = new AnimatorState[n];
-        var run = new AnimatorState[n];
-        for (int i = 0; i < n; i++)
+        var order = new List<int>();
+        for (int i = 0; i < n; i++) order.Add(i);
+        if (sequenceMode == "pingpong" && n > 2)
+        {
+            for (int i = n - 2; i > 0; i--) order.Add(i);
+        }
+
+        var ready = new AnimatorState[order.Count];
+        var run = new AnimatorState[order.Count];
+        for (int i = 0; i < order.Count; i++)
         {
             ready[i] = NewState(sm, "Ready_" + i);
             run[i] = NewState(sm, "Run_" + i);
         }
         sm.defaultState = ready[0];
 
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < order.Count; i++)
         {
-            int next = (i + 1) % n;
+            int sourceIndex = order[i];
+            int next = (i + 1) % order.Count;
             AddTrigTransition(ready[i], run[i], adv);
-            AddSendTrigger(run[i], rootNames[i], goTrigs[i]);
-            AddTrigTransition(run[i], ready[next], doneTrigs[i]);
+            AddSendTrigger(run[i], rootNames[sourceIndex], goTrigs[sourceIndex]);
+            AddTrigTransition(run[i], ready[next], doneTrigs[sourceIndex]);
             if (lockUntilFinished)
             {
                 // 运行期锁定：按压被吞掉且不锁存（"动画组完成后才可再按"）。
@@ -633,7 +652,7 @@ public static class ButtonLinkBakery
                 // Done_j 可能在其他状态到达（无消费过渡）→ 清空防锁存误触发。
                 for (int j = 0; j < n; j++)
                 {
-                    if (j == i) continue;
+                    if (j == sourceIndex) continue;
                     AddClearTrigger(run[i], doneTrigs[j]);
                     AddClearTrigger(ready[i], doneTrigs[j]);
                 }
@@ -824,6 +843,29 @@ public static class ButtonLinkBakery
             groupNames.Add(g.displayName);
         }
 
+        // pingpong 烘焙会把中间步骤反向追加为 A-B-C-B。
+        // 回导时压回唯一的正向半段，避免下一次写回产生重复动画组。
+        string sequenceMode = null;
+        for (int half = 2; half <= groupNames.Count; half++)
+        {
+            if (groupNames.Count != half * 2 - 2) continue;
+            bool matches = true;
+            for (int i = 1; i < half - 1; i++)
+            {
+                if (groupNames[half - 1 + i] != groupNames[half - 1 - i])
+                {
+                    matches = false;
+                    break;
+                }
+            }
+            if (matches)
+            {
+                groupNames.RemoveRange(half, groupNames.Count - half);
+                sequenceMode = "pingpong";
+                break;
+            }
+        }
+
         var sourceId = FindSourceId(items, anim, AdvanceTrigger(helperName));
         if (string.IsNullOrEmpty(sourceId))
         {
@@ -836,6 +878,7 @@ public static class ButtonLinkBakery
             id = ImportedSeqMarker + helperName,
             sourceId = sourceId,
             groupNames = groupNames.ToArray(),
+            sequenceMode = sequenceMode,
             lockUntilFinished = helperName.StartsWith(HelperSeqPrefix, StringComparison.Ordinal),
         });
     }

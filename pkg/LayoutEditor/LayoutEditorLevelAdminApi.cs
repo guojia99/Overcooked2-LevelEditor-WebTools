@@ -833,7 +833,9 @@ public static class LayoutEditorLevelAdminApi
         var config3 = AssetDatabase.LoadAssetAtPath<LevelConfigSetupPerPlayerCountSO>(c3Path);
         var config4 = AssetDatabase.LoadAssetAtPath<LevelConfigSetupPerPlayerCountSO>(c4Path);
 
-        var sceneName = "s_" + levelId;
+        // 2026-09-22 起关卡 id 不再自带 s_ 前缀：场景名 = levelId（旧关卡的 s_ 历史名保留，
+        // 可用 /api/level/rename 重命名时统一迁移到新约定）。
+        var sceneName = levelId;
         var info = ScriptableObject.CreateInstance<LevelInfoSO>();
         info.levelName = !string.IsNullOrEmpty(dto.levelName) ? dto.levelName : levelId;
         info.levelNameZH = !string.IsNullOrEmpty(dto.levelNameZH) ? dto.levelNameZH : levelId;
@@ -906,14 +908,8 @@ public static class LayoutEditorLevelAdminApi
         Undo.RecordObject(so, "Edit Level Info");
         so.levelName = dto.levelName ?? so.levelName;
         so.levelNameZH = dto.levelNameZH ?? so.levelNameZH;
-        if (!string.IsNullOrEmpty(dto.sceneName))
-        {
-            so.sceneName = dto.sceneName;
-            var setName = SetNameFromPath(dto.assetPath);
-            var scenePath = LevelSetsRoot + "/" + setName + "/scenes/" + dto.sceneName + ".unity";
-            if (File.Exists(AbsPath(scenePath)))
-                SetAssetBundleName(scenePath, setName + "/" + dto.sceneName);
-        }
+        // sceneName 不再支持表单直改（直改字符串不挪文件会导致场景失联），
+        // 统一走 /api/level/rename 原子改名（2026-09-22）。
         so.debugRecipeCount = dto.debugRecipeCount;
         so.disableDynamicParenting = dto.disableDynamicParenting;
         so.minOrderCount = ClampOrderCount(dto.minOrderCount, so.minOrderCount);
@@ -992,8 +988,21 @@ public static class LayoutEditorLevelAdminApi
         if (info == null)
             return "未找到该场景对应的 LevelInfoSO，请先为关卡绑定 LevelInfo。";
 
+        // 自定义 BGM：customMusicFile 非空 → 直引 data/bgm/ 下的 clip（无 SO 包装，
+        // 随 info_<set> bundle 打包导出），并清空 inLevelMusicSO（互斥）；
+        // 空 → 回到原 SO 引用通道并清空直引。
+        AudioClip customClip = null;
+        if (!string.IsNullOrEmpty(dto.customMusicFile))
+        {
+            var setNameForBgm = SetNameOfAssetPath(AssetDatabase.GetAssetPath(info));
+            customClip = LoadCustomMusicClip(setNameForBgm, dto.customMusicFile);
+            if (customClip == null)
+                return "自定义 BGM 文件不存在：" + dto.customMusicFile + "（set=" + setNameForBgm + "）";
+        }
+
         Undo.RecordObject(info, "Edit Level Audio");
-        info.inLevelMusicSO = LoadPseudoByGuid(dto.inLevelMusicGuid);
+        info.inLevelMusic = customClip;
+        info.inLevelMusicSO = customClip != null ? null : LoadPseudoByGuid(dto.inLevelMusicGuid);
 
         var ambList = new List<LevelInfoSO.GameLoopingAudioTag>();
         var ambAvailable = GetAvailableAmbiences();
@@ -1107,6 +1116,203 @@ public static class LayoutEditorLevelAdminApi
         AutoMergeAudioDependencies(info);
     }
 
+    // ==================== Custom BGM (data/bgm/) ====================
+    // 自定义关卡 BGM：.ogg/.wav 文件存 Assets/LevelSets/<set>/data/bgm/，
+    // 由 LevelInfoSO.inLevelMusic 直引（无 PseudoPrefabSO 包装），随关卡集
+    // 根目录 bundle（<set>/info_<set>）自动打包导出，真机经 OC2DIYLevel 加载。
+    // 编辑器 Play 优先级：PseudoPrefabManager 取 inLevelMusic 直引 > inLevelMusicSO。
+
+    /** 自定义 BGM 在关卡集内的目录（相对 set 根，asset path 形式）。 */
+    private const string CustomBgmRelFolder = "data/bgm";
+    /** 单文件上传上限（字节）。 */
+    public const long CustomBgmMaxBytes = 20L * 1024 * 1024;
+
+    private static string CustomBgmDirAssetPath(string setName)
+    {
+        return LevelSetsRoot + "/" + setName + "/" + CustomBgmRelFolder;
+    }
+
+    /// <summary>"Assets/LevelSets/&lt;set&gt;/..." → &lt;set&gt;；不在 LevelSets 下返回 ""。</summary>
+    private static string SetNameOfAssetPath(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return "";
+        var prefix = LevelSetsRoot + "/";
+        if (!assetPath.StartsWith(prefix, StringComparison.Ordinal))
+            return "";
+        var rest = assetPath.Substring(prefix.Length);
+        var slash = rest.IndexOf('/');
+        return slash > 0 ? rest.Substring(0, slash) : rest;
+    }
+
+    /// <summary>列出关卡集 data/bgm/ 下全部自定义 BGM（含时长/大小/引用状态）。</summary>
+    public static CustomMusicListDto ListCustomMusic(string setName)
+    {
+        var dto = new CustomMusicListDto { files = new CustomMusicEntryDto[0] };
+        if (string.IsNullOrEmpty(setName))
+            return dto;
+        var dir = CustomBgmDirAssetPath(setName);
+        if (!AssetDatabase.IsValidFolder(dir))
+            return dto;
+
+        var list = new List<CustomMusicEntryDto>();
+        var guids = AssetDatabase.FindAssets("t:AudioClip", new[] { dir });
+        foreach (var guid in guids)
+        {
+            var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            var fileName = Path.GetFileName(assetPath);
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(assetPath);
+            var abs = AbsPath(assetPath);
+            long size = File.Exists(abs) ? new FileInfo(abs).Length : 0;
+            list.Add(new CustomMusicEntryDto
+            {
+                fileName = fileName,
+                name = Path.GetFileNameWithoutExtension(fileName),
+                sizeBytes = size,
+                lengthSec = clip != null ? clip.length : 0f,
+                used = FindCustomMusicUsers(setName, assetPath).Count > 0
+            });
+        }
+        list.Sort((a, b) => string.CompareOrdinal(a.fileName, b.fileName));
+        dto.files = list.ToArray();
+        return dto;
+    }
+
+    /// <summary>保存自定义 BGM 字节到 data/bgm/&lt;name&gt;.ogg|.wav 并导入工程。
+    /// 返回 null 成功（result 给出导入结果），否则返回错误信息。</summary>
+    public static string SaveCustomMusic(string setName, string rawFileName, byte[] data, out CustomMusicUploadResultDto result)
+    {
+        result = null;
+        if (string.IsNullOrEmpty(setName) || SanitizeName(setName) != setName)
+            return "关卡集标识非法：" + setName;
+        if (data == null || data.Length == 0)
+            return "上传内容为空。";
+        if (data.Length > CustomBgmMaxBytes)
+            return "文件超过上限 20MB。";
+        var ext = Path.GetExtension(rawFileName ?? "").ToLowerInvariant();
+        if (ext != ".ogg" && ext != ".wav")
+            return "仅支持 .ogg / .wav 落盘（请在网页端压缩转码）。";
+
+        var baseName = SanitizeName(Path.GetFileNameWithoutExtension(rawFileName));
+        if (string.IsNullOrEmpty(baseName))
+            return "文件名非法（仅保留字母数字下划线后为空）。";
+        var fileName = baseName + ext;
+
+        var setDir = LevelSetsRoot + "/" + setName;
+        if (!AssetDatabase.IsValidFolder(setDir))
+            return "关卡集不存在：" + setName;
+        // 逐级建 data/bgm 目录（data 正常已存在）
+        var dir = setDir;
+        foreach (var part in CustomBgmRelFolder.Split('/'))
+        {
+            var child = dir + "/" + part;
+            if (!AssetDatabase.IsValidFolder(child))
+                AssetDatabase.CreateFolder(dir, part);
+            dir = child;
+        }
+
+        var assetPath = CustomBgmDirAssetPath(setName) + "/" + fileName;
+        var abs = AbsPath(assetPath);
+        File.WriteAllBytes(abs, data);
+        // 新文件入库：ForceSynchronousImport 保证随后的 AudioImporter / LoadAssetAtPath 可用
+        AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+
+        // 导入设置：BGM 用流式加载 + Vorbis（WAV 保持 PCM），后台加载防主线程卡顿。
+        var importer = AssetImporter.GetAtPath(assetPath) as AudioImporter;
+        if (importer == null)
+            return "导入失败：Unity 无法识别该音频文件（" + fileName + "）。";
+        importer.forceToMono = false;
+        importer.loadInBackground = true;
+        var settings = importer.defaultSampleSettings;
+        settings.loadType = AudioClipLoadType.Streaming;
+        settings.compressionFormat = ext == ".ogg" ? AudioCompressionFormat.Vorbis : AudioCompressionFormat.PCM;
+        settings.sampleRateSetting = AudioSampleRateSetting.PreserveSampleRate;
+        importer.defaultSampleSettings = settings;
+        // bundle 归属与 data/ 其余资产一致：读取关卡集根目录 meta 的实际 bundle 名
+        // （历史关卡集可能是 test_level/info_test_level 等旧名，不能假设 <set>/info_<set>），
+        // 显式写到文件 meta 上，保证随 info bundle 打包导出。
+        var setImporter = AssetImporter.GetAtPath(setDir);
+        var infoBundle = setImporter != null ? setImporter.assetBundleName : null;
+        if (!string.IsNullOrEmpty(infoBundle) && importer.assetBundleName != infoBundle)
+            importer.SetAssetBundleNameAndVariant(infoBundle, "");
+        importer.SaveAndReimport();
+
+        var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(assetPath);
+        if (clip == null)
+            return "导入完成但无法加载为 AudioClip（格式可能损坏）。";
+        AssetDatabase.SaveAssets();
+
+        result = new CustomMusicUploadResultDto
+        {
+            fileName = fileName,
+            assetPath = assetPath,
+            guid = AssetDatabase.AssetPathToGUID(assetPath),
+            sizeBytes = new FileInfo(abs).Length,
+            lengthSec = clip.length
+        };
+        return null;
+    }
+
+    /// <summary>删除自定义 BGM（连同 .meta）。被关卡引用时拒绝并返回引用方列表。</summary>
+    public static string DeleteCustomMusic(string setName, string fileName)
+    {
+        if (string.IsNullOrEmpty(setName) || SanitizeName(setName) != setName)
+            return "关卡集标识非法：" + setName;
+        var safeFile = Path.GetFileName(fileName ?? "");
+        var ext = Path.GetExtension(safeFile).ToLowerInvariant();
+        if (ext != ".ogg" && ext != ".wav")
+            return "仅允许删除 data/bgm/ 下的 .ogg/.wav 文件。";
+        var assetPath = CustomBgmDirAssetPath(setName) + "/" + safeFile;
+        if (!AssetDatabase.IsValidFolder(CustomBgmDirAssetPath(setName)) || !File.Exists(AbsPath(assetPath)))
+            return "文件不存在：" + safeFile;
+
+        var users = FindCustomMusicUsers(setName, assetPath);
+        if (users.Count > 0)
+            return "该 BGM 正在被关卡引用（" + string.Join("、", users.ToArray()) + "），请先在关卡音频配置中改用其他 BGM。";
+
+        if (!AssetDatabase.DeleteAsset(assetPath))
+            return "删除失败（文件可能被占用）。";
+        AssetDatabase.SaveAssets();
+        return null;
+    }
+
+    /// <summary>扫描关卡集内引用了指定自定义 BGM 的 LevelInfoSO（返回关卡名列表）。</summary>
+    private static List<string> FindCustomMusicUsers(string setName, string bgmAssetPath)
+    {
+        var users = new List<string>();
+        var dataDir = LevelSetsRoot + "/" + setName + "/data";
+        if (!AssetDatabase.IsValidFolder(dataDir))
+            return users;
+        foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { dataDir }))
+        {
+            var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(AssetDatabase.GUIDToAssetPath(guid));
+            if (info == null || info.inLevelMusic == null)
+                continue;
+            if (AssetDatabase.GetAssetPath(info.inLevelMusic) == bgmAssetPath)
+            {
+                var dirName = Path.GetFileName(Path.GetDirectoryName(AssetDatabase.GetAssetPath(info)));
+                users.Add(string.IsNullOrEmpty(info.levelNameZH) ? dirName : info.levelNameZH);
+            }
+        }
+        return users;
+    }
+
+    /// <summary>加载关卡集 data/bgm/ 下指定文件名为 AudioClip；不存在返回 null。</summary>
+    private static AudioClip LoadCustomMusicClip(string setName, string fileName)
+    {
+        if (string.IsNullOrEmpty(setName) || string.IsNullOrEmpty(fileName))
+            return null;
+        var assetPath = CustomBgmDirAssetPath(setName) + "/" + Path.GetFileName(fileName);
+        return File.Exists(AbsPath(assetPath)) ? AssetDatabase.LoadAssetAtPath<AudioClip>(assetPath) : null;
+    }
+
+    /// <summary>自定义 BGM 流式试听的磁盘绝对路径（HttpServer 用；不校验存在性）。</summary>
+    public static string CustomMusicAbsPath(string setName, string fileName)
+    {
+        var safeFile = Path.GetFileName(fileName ?? "");
+        return AbsPath(CustomBgmDirAssetPath(setName) + "/" + safeFile);
+    }
+
     public static AssetPathListDto PreviewDeleteLevel(string setName, string levelId)
     {
         var dto = new AssetPathListDto { paths = new string[0] };
@@ -1118,10 +1324,12 @@ public static class LayoutEditorLevelAdminApi
 
         var setDir = LevelSetsRoot + "/" + setName;
         var levelDataDir = setDir + "/data/" + levelId;
-        var scenePath = setDir + "/scenes/s_" + levelId + ".unity";
+        // sceneName 不再强制 s_ 前缀（2026-09-22）：以 LevelInfoSO.sceneName 为锚点，
+        // 兜底尝试新旧两种文件名约定。
+        var scenePath = ResolveLevelScenePath(setName, levelId, levelDataDir);
 
         var list = new List<string>();
-        if (File.Exists(AbsPath(scenePath)))
+        if (!string.IsNullOrEmpty(scenePath))
             list.Add(scenePath);
         if (AssetDatabase.IsValidFolder(levelDataDir))
         {
@@ -1156,9 +1364,9 @@ public static class LayoutEditorLevelAdminApi
         if (!AssetDatabase.IsValidFolder(levelDataDir))
             return "关卡不存在：" + levelId;
 
-        var sceneName = "s_" + levelId;
-        var scenePath = setDir + "/scenes/" + sceneName + ".unity";
-        if (EditorSceneManager.GetActiveScene().path == scenePath)
+        // sceneName 不再强制 s_ 前缀：以 LevelInfoSO.sceneName 为锚点定位场景（可空）。
+        var scenePath = ResolveLevelScenePath(setName, levelId, levelDataDir);
+        if (!string.IsNullOrEmpty(scenePath) && EditorSceneManager.GetActiveScene().path == scenePath)
         {
             var fallback = FindFallbackScene(setName, scenePath);
             if (!string.IsNullOrEmpty(fallback))
@@ -1188,7 +1396,7 @@ public static class LayoutEditorLevelAdminApi
             EditorUtility.SetDirty(setInfo);
         }
 
-        if (File.Exists(AbsPath(scenePath)))
+        if (!string.IsNullOrEmpty(scenePath) && File.Exists(AbsPath(scenePath)))
             AssetDatabase.DeleteAsset(scenePath);
         AssetDatabase.DeleteAsset(levelDataDir);
 
@@ -1196,6 +1404,190 @@ public static class LayoutEditorLevelAdminApi
         AssetDatabase.Refresh();
         ReloadPseudo();
         return null;
+    }
+
+    /// <summary>关卡场景定位（2026-09-22 起 sceneName 不再强制 s_ 前缀）：
+    /// 优先读 data/&lt;levelId&gt;/ 下 LevelInfoSO.sceneName（权威字段），缺失/失联时
+    /// 兜底尝试 s_&lt;levelId&gt;.unity（旧约定）与 &lt;levelId&gt;.unity（新约定）。
+    /// 找不到返回 null（调用方按“无场景”处理）。</summary>
+    private static string ResolveLevelScenePath(string setName, string levelId, string levelDataDir)
+    {
+        var scenesDir = LevelSetsRoot + "/" + setName + "/scenes";
+        var candidates = new List<string>();
+        if (AssetDatabase.IsValidFolder(levelDataDir))
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { levelDataDir }))
+            {
+                var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(AssetDatabase.GUIDToAssetPath(guid));
+                if (so != null && !string.IsNullOrEmpty(so.sceneName))
+                    candidates.Add(so.sceneName);
+            }
+        }
+        candidates.Add("s_" + levelId);
+        candidates.Add(levelId);
+        foreach (var sceneName in candidates)
+        {
+            if (string.IsNullOrEmpty(sceneName))
+                continue;
+            var p = scenesDir + "/" + sceneName + ".unity";
+            if (File.Exists(AbsPath(p)))
+                return p;
+        }
+        return null;
+    }
+
+    // ==================== Levels (rename) ====================
+
+    /// <summary>重命名关卡 id（原子改名，2026-09-22）：
+    /// ① scenes/&lt;旧场景名&gt;.unity → scenes/&lt;newId&gt;.unity（旧 s_ 前缀关卡顺势迁移到无前缀新约定；
+    ///    MoveAsset 保 GUID，场景内 stub.levelInfo / Animator 引用不断链）；
+    /// ② 场景 AssetBundle 名显式覆盖为 &lt;set&gt;/&lt;newId&gt;（EnsureSceneBundleNames 只补空值，必须显式改）；
+    /// ③ data/&lt;oldId&gt;/ → data/&lt;newId&gt;/，内部 LevelInfo_&lt;实际名&gt;.asset → LevelInfo_&lt;newId&gt;.asset
+    ///    （config/截图/summary_bg~ / assignment~ / readme~ 全部随目录迁移）；
+    /// ④ LevelInfoSO.sceneName = newId；
+    /// ⑤ animations/ 下旧场景名前缀资产改 &lt;newId&gt;_ 前缀（GUID 保持，改名不留孤儿资产）；
+    /// ⑥ writeback_history/&lt;set&gt;/&lt;oldId&gt;/ 目录搬移。
+    /// LevelSetInfoSO.levelInfos 为 GUID 引用，文件移动不影响，无需改写。
+    /// 全部校验通过后才动第一个文件；重命名后玩家侧 zip 需重新导出。</summary>
+    public static string RenameLevel(LevelRenameDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.levelId))
+            return "缺少关卡集或关卡标识。";
+        var setName = dto.setName;
+        var oldId = SanitizeName(dto.levelId);
+        var newId = SanitizeName(dto.newLevelId);
+        if (string.IsNullOrEmpty(oldId) || string.IsNullOrEmpty(newId))
+            return "关卡标识只能包含字母数字和下划线。";
+        if (oldId == newId)
+            return null;
+        if (newId.Equals("LevelSetInfo", StringComparison.OrdinalIgnoreCase))
+            return "新关卡标识非法。";
+
+        var setDir = LevelSetsRoot + "/" + setName;
+        var oldDataDir = setDir + "/data/" + oldId;
+        if (!AssetDatabase.IsValidFolder(oldDataDir))
+            return "关卡不存在：" + oldId;
+        if (AssetDatabase.IsValidFolder(setDir + "/data/" + newId))
+            return "目标关卡已存在：" + newId;
+
+        // ---- 定位 LevelInfoSO（文件名允许历史偏差，如 LevelInfo_Test_1.asset）----
+        LevelInfoSO info = null;
+        var infoPath = "";
+        foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { oldDataDir }))
+        {
+            var p = AssetDatabase.GUIDToAssetPath(guid);
+            var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(p);
+            if (so != null)
+            {
+                info = so;
+                infoPath = p;
+                break;
+            }
+        }
+        if (info == null)
+            return "未找到该关卡的 LevelInfoSO。";
+
+        // ---- 定位旧场景（sceneName 为锚点；失联时按新旧两种约定兜底）----
+        var oldScenePath = ResolveLevelScenePath(setName, oldId, oldDataDir);
+        var newScenePath = setDir + "/scenes/" + newId + ".unity";
+        if (File.Exists(AbsPath(newScenePath)))
+            return "目标场景已存在：" + newId + ".unity";
+
+        // 目标场景正被打开时先切走（MoveAsset 不允许移动打开中的场景）
+        if (!string.IsNullOrEmpty(oldScenePath) && EditorSceneManager.GetActiveScene().path == oldScenePath)
+        {
+            var fallback = FindFallbackScene(setName, oldScenePath);
+            if (!string.IsNullOrEmpty(fallback))
+                EditorSceneManager.OpenScene(fallback);
+            else
+                EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        }
+
+        var oldSceneName = !string.IsNullOrEmpty(oldScenePath)
+            ? Path.GetFileNameWithoutExtension(oldScenePath)
+            : "";
+
+        // ---- 1. 场景改名 + 显式覆盖 bundle 名 ----
+        if (!string.IsNullOrEmpty(oldScenePath))
+        {
+            var errScene = AssetDatabase.MoveAsset(oldScenePath, newScenePath);
+            if (!string.IsNullOrEmpty(errScene))
+                return "场景改名失败：" + errScene;
+            SetAssetBundleName(newScenePath, setName + "/" + newId);
+        }
+
+        // ---- 2. data 目录改名 + LevelInfo 资产改名 ----
+        var newDataDir = setDir + "/data/" + newId;
+        var errDir = AssetDatabase.MoveAsset(oldDataDir, newDataDir);
+        if (!string.IsNullOrEmpty(errDir))
+            return "关卡数据目录改名失败：" + errDir;
+        var infoFileName = infoPath.Substring(infoPath.LastIndexOf('/') + 1);
+        var newInfoPath = newDataDir + "/LevelInfo_" + newId + ".asset";
+        var currentInfoPath = newDataDir + "/" + infoFileName;
+        if (!string.Equals(currentInfoPath, newInfoPath, StringComparison.Ordinal))
+        {
+            var errInfo = AssetDatabase.MoveAsset(currentInfoPath, newInfoPath);
+            if (!string.IsNullOrEmpty(errInfo))
+                return "LevelInfo 资产改名失败：" + errInfo;
+        }
+
+        // ---- 3. LevelInfoSO.sceneName 同步 ----
+        Undo.RecordObject(info, "Rename Level");
+        info.sceneName = newId;
+        EditorUtility.SetDirty(info);
+
+        // ---- 4. animations/ 前缀迁移（GUID 保持，场景 Animator 引用不断链）----
+        if (!string.IsNullOrEmpty(oldSceneName))
+            MigratePrefixedAssets(setDir + "/animations", oldSceneName + "_", newId + "_");
+
+        // ---- 5. 写回历史目录搬移（非 Unity 资产，直接文件系统移动）----
+        try
+        {
+            var histRoot = Path.Combine(Path.Combine(Application.dataPath, ".."), "writeback_history");
+            var oldHist = Path.Combine(Path.Combine(histRoot, setName), oldId);
+            if (Directory.Exists(oldHist))
+            {
+                var newHist = Path.Combine(Path.Combine(histRoot, setName), newId);
+                if (!Directory.Exists(newHist))
+                    Directory.Move(oldHist, newHist);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[LevelAdmin] 写回历史目录搬移失败（不影响关卡本身）：" + e.Message);
+        }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        ReloadPseudo();
+        return null;
+    }
+
+    /// <summary>把 animDir 下 oldPrefix 开头的动画资产（.controller/.anim，目录平铺无子层级）
+    /// 改名为 newPrefix 开头。AssetDatabase.MoveAsset 同步搬 .meta、GUID 不变，场景内
+    /// Animator 引用不受影响。逐文件容错：单个失败记 warning 不中断整体改名。</summary>
+    private static void MigratePrefixedAssets(string animDir, string oldPrefix, string newPrefix)
+    {
+        if (!AssetDatabase.IsValidFolder(animDir))
+            return;
+        string[] files;
+        try { files = Directory.GetFiles(AbsPath(animDir)); }
+        catch { return; }
+        foreach (var f in files)
+        {
+            var name = Path.GetFileName(f);
+            if (name.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (!name.StartsWith(oldPrefix, StringComparison.Ordinal))
+                continue;
+            var oldAsset = animDir + "/" + name;
+            var newAsset = animDir + "/" + newPrefix + name.Substring(oldPrefix.Length);
+            if (File.Exists(AbsPath(newAsset)))
+                continue;
+            var err = AssetDatabase.MoveAsset(oldAsset, newAsset);
+            if (!string.IsNullOrEmpty(err))
+                Debug.LogWarning("[LevelAdmin] 动画资产改名跳过 " + name + "：" + err);
+        }
     }
 
     // ==================== Levels (reorder) ====================
@@ -1559,6 +1951,18 @@ public static class LayoutEditorLevelAdminApi
         // 旧关卡的 LevelInfoSO 可能缺少音频字段（反序列化为 null），全部做空值防御。
         var musicGuid = GuidOf(info.inLevelMusicSO);
         var deathGuid = GuidOf(info.onDeathEffectSO);
+
+        // 自定义 BGM 直引（inLevelMusic）：任何直引 clip 都按自定义处理显示。
+        if (info.inLevelMusic != null)
+        {
+            var customPath = AssetDatabase.GetAssetPath(info.inLevelMusic);
+            if (!string.IsNullOrEmpty(customPath))
+            {
+                dto.customMusicFile = Path.GetFileName(customPath);
+                dto.customMusicName = Path.GetFileNameWithoutExtension(customPath);
+                dto.customMusicSec = info.inLevelMusic.length;
+            }
+        }
 
         var dirGuids = new List<string>();
         if (info.audioDirectorySOs != null)
@@ -1977,6 +2381,167 @@ public static class LayoutEditorLevelAdminApi
         return null;
     }
 
+    // ==================== Level assignment & readme（关卡 data 目录数据文件） ====================
+
+    /// <summary>菜谱分工配置目录 <c>assignment~</c> 与汇总页 readme 目录 <c>readme~</c>。
+    ///  与 summary_bg~ 同范式：关卡 data 目录（LevelInfoSO 所在目录）下的 `~` 结尾目录
+    ///  被 Unity 完全忽略（不导入、无 .meta、不进 AssetBundle），不会被打进玩家分发包，
+    ///  但仍在 Assets 树内随 git 版本管理。</summary>
+    private const string AssignmentDirName = "assignment~";
+    private const string AssignmentFileName = "assignment.json";
+    private const string ReadmeDirName = "readme~";
+    private const string ReadmeFileName = "readme.json";
+    private const int AssignmentMaxBytes = 512 * 1024;
+    private const int ReadmeMaxBytes = 256 * 1024;
+
+    private static string LevelDataSubDir(string levelInfoAssetPath, string dirName)
+    {
+        var dir = DirectoryName(levelInfoAssetPath);
+        if (string.IsNullOrEmpty(dir))
+            return "";
+        return dir + "/" + dirName;
+    }
+
+    /// <summary>关卡 data 目录写守卫：只允许 LevelSets 内的 LevelInfoSO 路径，防越界写/路径穿越。</summary>
+    private static string ValidateLevelInfoPath(string levelInfoAssetPath)
+    {
+        if (string.IsNullOrEmpty(levelInfoAssetPath))
+            return "缺少关卡资源路径。";
+        levelInfoAssetPath = levelInfoAssetPath.Replace('\\', '/').Trim();
+        if (levelInfoAssetPath.Contains(".."))
+            return "非法路径。";
+        if (!levelInfoAssetPath.StartsWith("Assets/LevelSets/", StringComparison.OrdinalIgnoreCase))
+            return "只支持关卡集内的关卡（Assets/LevelSets/…）。";
+        return null;
+    }
+
+    private static string ReadLevelDataText(string levelInfoAssetPath, string dirName, string fileName, out bool exists)
+    {
+        exists = false;
+        var dir = LevelDataSubDir(levelInfoAssetPath, dirName);
+        if (string.IsNullOrEmpty(dir))
+            return "";
+        var abs = Path.Combine(AbsPath(dir), fileName);
+        if (!File.Exists(abs))
+            return "";
+        try
+        {
+            exists = true;
+            return File.ReadAllText(abs, System.Text.Encoding.UTF8);
+        }
+        catch (Exception e)
+        {
+            exists = false;
+            return "";
+        }
+    }
+
+    private static string WriteLevelDataText(string levelInfoAssetPath, string dirName, string fileName, string text, int maxBytes)
+    {
+        var err = ValidateLevelInfoPath(levelInfoAssetPath);
+        if (err != null)
+            return err;
+        if (text == null)
+            text = "";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(text);
+        if (bytes.Length > maxBytes)
+            return "内容过大（上限 " + (maxBytes / 1024) + "KB）。";
+        var dir = LevelDataSubDir(levelInfoAssetPath, dirName);
+        if (string.IsNullOrEmpty(dir))
+            return "关卡数据目录不存在。";
+        var absDir = AbsPath(dir);
+        if (!Directory.Exists(absDir))
+            Directory.CreateDirectory(absDir);
+        // `~` 目录不是 Unity 资产，无需 AssetDatabase.Refresh（与 UploadSummaryBg 一致）。
+        File.WriteAllText(Path.Combine(absDir, fileName), text, System.Text.Encoding.UTF8);
+        return null;
+    }
+
+    private static string ClearLevelDataDir(string levelInfoAssetPath, string dirName)
+    {
+        var err = ValidateLevelInfoPath(levelInfoAssetPath);
+        if (err != null)
+            return err;
+        var dir = LevelDataSubDir(levelInfoAssetPath, dirName);
+        if (string.IsNullOrEmpty(dir))
+            return "关卡数据目录不存在。";
+        var absDir = AbsPath(dir);
+        try
+        {
+            if (Directory.Exists(absDir))
+                Directory.Delete(absDir, true);
+        }
+        catch (Exception e)
+        {
+            return "删除失败：" + e.Message;
+        }
+        return null;
+    }
+
+    /** 读取菜谱分工配置（assignment~/assignment.json 原文）。 */
+    public static string ReadLevelAssignment(string levelInfoAssetPath, out AssignmentResultDto result)
+    {
+        result = new AssignmentResultDto();
+        var err = ValidateLevelInfoPath(levelInfoAssetPath);
+        if (err != null)
+            return err;
+        result.json = ReadLevelDataText(levelInfoAssetPath, AssignmentDirName, AssignmentFileName, out result.exists);
+        return null;
+    }
+
+    /** 保存菜谱分工配置。JSON 内部结构由前端负责，这里只做轻校验（对象字面量 + 大小上限）。 */
+    public static string SaveLevelAssignment(string levelInfoAssetPath, string json)
+    {
+        var trimmed = json == null ? "" : json.Trim();
+        if (trimmed.Length > 0 && trimmed[0] != '{')
+            return "分工配置必须是 JSON 对象。";
+        return WriteLevelDataText(levelInfoAssetPath, AssignmentDirName, AssignmentFileName, trimmed, AssignmentMaxBytes);
+    }
+
+    /** 清除菜谱分工配置（删除整个 assignment~ 目录）。 */
+    public static string ClearLevelAssignment(string levelInfoAssetPath)
+    {
+        return ClearLevelDataDir(levelInfoAssetPath, AssignmentDirName);
+    }
+
+    /** 读取汇总页 readme（readme~/readme.json → html 字段）。 */
+    public static string ReadLevelReadme(string levelInfoAssetPath, out ReadmeResultDto result)
+    {
+        result = new ReadmeResultDto();
+        var err = ValidateLevelInfoPath(levelInfoAssetPath);
+        if (err != null)
+            return err;
+        var raw = ReadLevelDataText(levelInfoAssetPath, ReadmeDirName, ReadmeFileName, out result.exists);
+        if (!result.exists)
+            return null;
+        try
+        {
+            var file = JsonUtility.FromJson<ReadmeFileDto>(raw);
+            result.html = file == null || file.html == null ? "" : file.html;
+        }
+        catch
+        {
+            // 坏文件按空内容处理（不阻塞页面渲染），exists 仍为 true 便于重新保存覆盖
+            result.html = "";
+        }
+        return null;
+    }
+
+    /** 保存汇总页 readme（HTML 白名单净化在前端完成，这里限长度 + 包一层 schemaVersion）。 */
+    public static string SaveLevelReadme(string levelInfoAssetPath, string html)
+    {
+        var file = new ReadmeFileDto();
+        file.schemaVersion = 1;
+        file.html = html == null ? "" : html;
+        return WriteLevelDataText(levelInfoAssetPath, ReadmeDirName, ReadmeFileName, JsonUtility.ToJson(file), ReadmeMaxBytes);
+    }
+
+    /** 清除汇总页 readme（删除整个 readme~ 目录）。 */
+    public static string ClearLevelReadme(string levelInfoAssetPath)
+    {
+        return ClearLevelDataDir(levelInfoAssetPath, ReadmeDirName);
+    }
+
     // ==================== Custom Recipe Management ====================
 
     private const string CustomRecipesDir = "custom_recipes";
@@ -2299,8 +2864,23 @@ public static class LayoutEditorLevelAdminApi
                 {
                     if (c == null) continue;
                     var cp = AssetDatabase.GetAssetPath(c);
-                    if (!string.IsNullOrEmpty(cp))
-                        compIds.Add(Path.GetFileNameWithoutExtension(cp));
+                    if (string.IsNullOrEmpty(cp))
+                        continue;
+                    var fileId = Path.GetFileNameWithoutExtension(cp);
+                    // 食材组成规范化为目录 id（DLC 食材目录 id 与文件名不同，如 cherry
+                    // vs DLC07_Cherry）：前端编辑表单/菜谱卡片按目录 id 匹配名称与图标。
+                    // 官方菜谱（PseudoPrefabSORecipe）与自定义子菜谱保持资产文件名——
+                    // 菜谱目录（ScanRecipes）的官方菜谱 id 就是文件名，规范化会错开。
+                    var recipeSo = c as PseudoPrefabSORecipe;
+                    if (recipeSo != null)
+                        compIds.Add(fileId);
+                    else
+                    {
+                        var ingSo = c as PseudoPrefabSO;
+                        compIds.Add(ingSo != null
+                            ? LayoutEditorCatalogApi.IngredientCatalogId(ingSo, fileId)
+                            : fileId);
+                    }
                 }
             }
 
@@ -3216,6 +3796,13 @@ public static class LayoutEditorLevelAdminApi
         if (config == null)
             return "配置文件丢失，请重新进入自定义菜谱页面。";
 
+        // 组成项预校验：全部解析成功才继续（在创建目录/分配 uid 等任何改动之前，
+        // 报错路径零副作用）。
+        ScriptableObject[] resolvedComps;
+        var resolveErr = ResolveCompositionIds(dto.compositionIds, out resolvedComps);
+        if (resolveErr != null)
+            return resolveErr;
+
         var categoryDir = recipesDir + "/" + category;
         if (!AssetFolderExists(categoryDir))
         {
@@ -3257,18 +3844,7 @@ public static class LayoutEditorLevelAdminApi
         so.mixingProgress = (CustomRecipeSO.MixingProgress)(dto.mixingProgress >= 0 && dto.mixingProgress <= 2 ? dto.mixingProgress : 1);
 
         if (dto.compositionIds != null && dto.compositionIds.Length > 0)
-        {
-            var comps = new List<ScriptableObject>();
-            foreach (var compId in dto.compositionIds)
-            {
-                if (string.IsNullOrEmpty(compId))
-                    continue;
-                var soFound = FindPseudoPrefabOrCustomRecipe(compId);
-                if (soFound != null)
-                    comps.Add(soFound);
-            }
-            so.compositionSOs = comps.ToArray();
-        }
+            so.compositionSOs = resolvedComps;
 
         if (!string.IsNullOrEmpty(dto.cookingStepId))
             so.cookingStepSO = FindPseudoPrefabById(dto.cookingStepId);
@@ -3324,6 +3900,13 @@ public static class LayoutEditorLevelAdminApi
         if (so == null)
             return "未找到菜谱资源。";
 
+        // 组成项预校验：全部解析成功才进入改动（Undo.RecordObject 之前，
+        // 报错路径零副作用、无半保存状态）。
+        ScriptableObject[] resolvedComps;
+        var resolveErr = ResolveCompositionIds(dto.compositionIds, out resolvedComps);
+        if (resolveErr != null)
+            return resolveErr;
+
         Undo.RecordObject(so, "Edit Custom Recipe");
         so.score = dto.score;
 
@@ -3352,18 +3935,7 @@ public static class LayoutEditorLevelAdminApi
             dto.modelPivotX, dto.modelPivotY, dto.modelPivotZ);
 
         if (dto.compositionIds != null)
-        {
-            var comps = new List<ScriptableObject>();
-            foreach (var compId in dto.compositionIds)
-            {
-                if (string.IsNullOrEmpty(compId))
-                    continue;
-                var soFound = FindPseudoPrefabOrCustomRecipe(compId);
-                if (soFound != null)
-                    comps.Add(soFound);
-            }
-            so.compositionSOs = comps.ToArray();
-        }
+            so.compositionSOs = resolvedComps;
 
         if (!string.IsNullOrEmpty(dto.cookingStepId))
             so.cookingStepSO = FindPseudoPrefabById(dto.cookingStepId);
@@ -3474,6 +4046,9 @@ public static class LayoutEditorLevelAdminApi
             texImporter.spriteImportMode = SpriteImportMode.Single;
             texImporter.sRGBTexture = true;
             texImporter.alphaIsTransparency = true;
+            // 上传即瘦身：图标按默认档导入（只写 .meta，不改源 PNG）。
+            if (texImporter.maxTextureSize > LayoutEditorCustomRecipeOptimizeApi.DefaultTextureMaxSize)
+                texImporter.maxTextureSize = LayoutEditorCustomRecipeOptimizeApi.DefaultTextureMaxSize;
             texImporter.SaveAndReimport();
         }
 
@@ -3632,19 +4207,35 @@ public static class LayoutEditorLevelAdminApi
 
         AssetDatabase.Refresh();
 
-        // normal 贴图标记为 NormalMap，避免 Unity 按默认贴图类型导入法线图。
+        // 上传即瘦身：贴图一律按默认档导入（只写 .meta 的 maxTextureSize，不改源文件，
+        // 源图更小时保持原尺寸不放大）；normal 贴图额外标记为 NormalMap，
+        // 避免 Unity 按默认贴图类型导入法线图。
         foreach (var kv in uploadedTexturePaths)
         {
             var p = kv.Value;
-            if (p == null || p.IndexOf("_normal.", StringComparison.OrdinalIgnoreCase) < 0)
+            if (string.IsNullOrEmpty(p))
                 continue;
             var imp = AssetImporter.GetAtPath(p) as TextureImporter;
-            if (imp != null && imp.textureType != TextureImporterType.NormalMap)
+            if (imp == null)
+                continue;
+            var changed = false;
+            if (p.IndexOf("_normal.", StringComparison.OrdinalIgnoreCase) >= 0
+                && imp.textureType != TextureImporterType.NormalMap)
             {
                 imp.textureType = TextureImporterType.NormalMap;
-                imp.SaveAndReimport();
+                changed = true;
             }
+            if (imp.maxTextureSize != LayoutEditorCustomRecipeOptimizeApi.DefaultTextureMaxSize)
+            {
+                imp.maxTextureSize = LayoutEditorCustomRecipeOptimizeApi.DefaultTextureMaxSize;
+                changed = true;
+            }
+            if (changed)
+                imp.SaveAndReimport();
         }
+
+        // 上传即瘦身：FBX/OBJ 默认导入档（顶点量化 Medium + 关读写副本 + 网格优化）。
+        LayoutEditorCustomRecipeOptimizeApi.TryApplyDefaultModelSettings(modelAssetPath);
 
         // FBX 内部贴图引用名已由前端在上传前改写为贴图落盘文件名（fbxTextureRename），
         // 服务端不再按引用名复制贴图。
@@ -4404,6 +4995,24 @@ public static class LayoutEditorLevelAdminApi
                     return AssetDatabase.LoadAssetAtPath<ScriptableObject>(asset.assetPath);
             }
         }
+        // 规范 id 回退：DLC 食材的目录 id 取全小写 prefabName（IngredientCatalogId 规则），
+        // 与资产文件名不同（如 cherry vs DLC07_Cherry，51 个 DLC 食材全体）。此前仅按
+        // 文件名精确匹配，前端从食材目录选出的 id 解析不到 → 保存时被静默丢弃。
+        // 这里用与目录生成同一个函数计算规范 id 再比对，按构造保证一致。
+        foreach (var folder in folders)
+        {
+            foreach (var asset in ScanAssetsByScript(folder, scriptGuid))
+            {
+                var pp = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(asset.assetPath);
+                if (pp == null)
+                    continue;
+                var fileId = Path.GetFileNameWithoutExtension(asset.assetPath);
+                var canonicalId = LayoutEditorCatalogApi.IngredientCatalogId(pp, fileId);
+                if (!string.Equals(canonicalId, fileId, StringComparison.Ordinal) &&
+                    string.Equals(canonicalId, id, StringComparison.Ordinal))
+                    return pp;
+            }
+        }
         return null;
     }
 
@@ -4414,6 +5023,35 @@ public static class LayoutEditorLevelAdminApi
         "Assets/common02/food/Recipes",
         "Assets/common03/food/Recipes",
     };
+
+    /// <summary>组成 id 列表 → SO 引用（保存前预校验）。
+    ///
+    ///  任一非空 id 解析不到（FindPseudoPrefabOrCustomRecipe 返回 null）即返回错误
+    /// 「无法解析以下组成项，已取消保存：…」并整体取消保存——杜绝历史静默丢数据
+    /// （DLC 食材目录 id 与文件名不一致时组成项被直接跳过，保存后消失）。
+    /// 调用方必须在改动任何 SO/配置之前先做本校验，保证报错路径零副作用。</summary>
+    private static string ResolveCompositionIds(string[] compositionIds, out ScriptableObject[] resolved)
+    {
+        resolved = new ScriptableObject[0];
+        if (compositionIds == null || compositionIds.Length == 0)
+            return null;
+        var comps = new List<ScriptableObject>();
+        var unresolved = new List<string>();
+        foreach (var compId in compositionIds)
+        {
+            if (string.IsNullOrEmpty(compId))
+                continue;
+            var soFound = FindPseudoPrefabOrCustomRecipe(compId);
+            if (soFound != null)
+                comps.Add(soFound);
+            else
+                unresolved.Add(compId);
+        }
+        if (unresolved.Count > 0)
+            return "无法解析以下组成项，已取消保存：" + string.Join("、", unresolved.ToArray());
+        resolved = comps.ToArray();
+        return null;
+    }
 
     internal static ScriptableObject FindPseudoPrefabOrCustomRecipe(string id)
     {

@@ -34,7 +34,14 @@ from importlib.machinery import SourceFileLoader
 gla = SourceFileLoader("gen_level_assets", os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "gen-level-assets.py")).load_module()
 
-OUT_SCENES = os.path.join(ASSETS, "LevelSets", "oc2_dlc_story", "scenes")
+OUT_SCENES = None  # 懒取：gla.SET_NAME() 可被 set_override 切换
+
+
+def out_scenes():
+    global OUT_SCENES
+    if OUT_SCENES is None:
+        OUT_SCENES = os.path.join(ASSETS, "LevelSets", gla.SET_NAME(), "scenes")
+    return OUT_SCENES
 TEMPLATE = os.path.join(ASSETS, "Template", "s_template.unity")
 
 # ---- 模板骨架固定 fileID ----
@@ -226,7 +233,9 @@ class SourceInfo:
 
     def _parse(self):
         sc = self.scene
-        env = sc.find_root("CampaignGameEnvironment")
+        # 合作关卡根为 CampaignGameEnvironment；敌群（Horde）关卡根为
+        # HordeGameEnvironment —— 两者内部 GridManager/KillPlane 子结构一致
+        env = sc.find_root("CampaignGameEnvironment") or sc.find_root("HordeGameEnvironment")
         for c in sc.children.get(env, []):
             go = sc.tr2go.get(c)
             nm = sc.go_name(go)
@@ -744,7 +753,8 @@ def build_scene(level):
     # PseudoPrefabManager stub 数据（与 LevelInfo 同源）
     music_guid, dir_guids, amb_hex, _b, _w = gla.audio_for_level(level)
     lid = level["id"]
-    info_guid = deterministic_guid("oc2_dlc_story", f"{lid}/LevelInfo_{lid}.asset")
+    set_name = gla.SET_NAME()
+    info_guid = deterministic_guid(set_name, f"{lid}/LevelInfo_{lid}.asset")
     mgr_block = re.sub(r"levelInfo: \{fileID: 11400000, guid: [0-9a-f]+, type: 2\}",
                        f"levelInfo: {{fileID: 11400000, guid: {info_guid}, type: 2}}",
                        mgr_block)
@@ -779,7 +789,7 @@ def build_scene(level):
 
 def merge_level_info_deps(lid, item_bundles):
     """把场景物件 SO 的 bundle 并入 LevelInfo.dependencies。"""
-    p = os.path.join(ASSETS, "LevelSets", "oc2_dlc_story", "data", lid,
+    p = os.path.join(ASSETS, "LevelSets", gla.SET_NAME(), "data", lid,
                      f"LevelInfo_{lid}.asset")
     if not os.path.exists(p):
         return
@@ -810,11 +820,11 @@ def main():
             continue
         text, info, info_guid, item_bundles = build_scene(lv)
         scene_name = lv["editorSceneName"]
-        os.makedirs(OUT_SCENES, exist_ok=True)
-        path = os.path.join(OUT_SCENES, scene_name + ".unity")
+        os.makedirs(out_scenes(), exist_ok=True)
+        path = os.path.join(out_scenes(), scene_name + ".unity")
         with open(path, "w", encoding="utf-8") as f:
             f.write(text)
-        guid = deterministic_guid("oc2_dlc_story", f"scenes/{scene_name}.unity")
+        guid = deterministic_guid(gla.SET_NAME(), f"scenes/{scene_name}.unity")
         with open(path + ".meta", "w", encoding="utf-8") as f:
             f.write(SCENE_META_TMPL.format(guid=guid))
         merge_level_info_deps(lv["id"], item_bundles)

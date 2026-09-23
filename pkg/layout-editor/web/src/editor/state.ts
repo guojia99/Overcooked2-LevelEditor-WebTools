@@ -379,7 +379,7 @@ export const S = {
   /** Canvas-placed waypoints are appended to the active event's route right away. */
   animRouteAutoAdd: true,
   expandedMemberId: null as string | null,
-  activeRightTab: "items" as "items" | "anim" | "bevents",
+  activeRightTab: "items" as "items" | "anim" | "triggers",
   draggingWaypointId: null as string | null,
   scale: 1,
   panX: 0,

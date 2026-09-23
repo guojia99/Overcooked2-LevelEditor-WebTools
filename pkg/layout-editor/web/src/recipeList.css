@@ -801,3 +801,709 @@
   word-break: break-word;
 }
 
+
+/* ===================== 汇总页 · 自定义菜谱子分类区块 =====================
+ * 自定义菜谱不再全部挤进一个「自定义菜谱」组：category 一级（.sum-cat-title）、
+ * subcategory 二级（.sum-sub-title）子分组；组内按分数升序（summaryRecipes.ts）。 */
+
+.sum-custom {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #3a3f4b;
+}
+
+.sum-cat {
+  margin-bottom: 16px;
+}
+
+.sum-cat-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c9d4e8;
+  letter-spacing: 0.03em;
+}
+
+.sum-cat-title::before {
+  content: "";
+  width: 4px;
+  height: 14px;
+  background: #7f8fb0;
+  border-radius: 2px;
+}
+
+.sum-sub-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9aa4b8;
+}
+
+.sum-sub-title::before {
+  content: "·";
+  color: #6b7a94;
+  font-weight: 700;
+}
+
+/* ===================== 汇总页 · readme 说明（富文本，仅文字） ===================== */
+
+.sum-readme {
+  margin: 0 auto 20px;
+  max-width: 900px;
+  padding: 14px 18px;
+  border: 1px solid #3a3f4b;
+  border-left: 4px solid #e8b04b;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #dfe3ea;
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.sum-readme h2 {
+  margin: 10px 0 6px;
+  font-size: 17px;
+  color: #f0d9a8;
+}
+
+.sum-readme h3 {
+  margin: 8px 0 4px;
+  font-size: 15px;
+  color: #e8d5ac;
+}
+
+.sum-readme p {
+  margin: 6px 0;
+}
+
+.sum-readme ul,
+.sum-readme ol {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+
+.sum-readme blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid #7f8fb0;
+  color: #b8c0cc;
+  background: rgba(127, 143, 176, 0.08);
+  border-radius: 4px;
+}
+
+.sum-readme a {
+  color: #8ab4f8;
+  text-decoration: underline;
+}
+
+.sum-readme br {
+  line-height: 1.7;
+}
+
+/* ===================== 汇总页 · 菜谱分工区块（有配置才展示） ===================== */
+
+.sum-assignment {
+  margin-top: 22px;
+  padding-top: 6px;
+  border-top: 1px dashed #3a3f4b;
+}
+
+.sum-as-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0d9a8;
+}
+
+.sum-as-title::before {
+  content: "";
+  width: 4px;
+  height: 15px;
+  background: #e8b04b;
+  border-radius: 2px;
+}
+
+.sum-as-mode {
+  margin-bottom: 18px;
+}
+
+.sum-as-mode-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c9d4e8;
+}
+
+.sum-as-mode-title span {
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a909a;
+  background: #262b36;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
+/* 玩家条目从上到下排列（导出长图与汇总页共用），每条占满整行 */
+.sum-as-cols {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.sum-as-col {
+  border: 1px solid #3a3f4b;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 10px 12px;
+}
+
+/* 玩家条目按序淡色底（蓝/绿/橙/紫），标题同色系，导出图与汇总页共用 */
+.sum-as-col.sum-as-p0 {
+  background: rgba(96, 150, 230, 0.1);
+  border-color: rgba(96, 150, 230, 0.35);
+}
+
+.sum-as-col.sum-as-p0 .sum-as-player {
+  color: #9fc3f5;
+}
+
+.sum-as-col.sum-as-p1 {
+  background: rgba(120, 195, 140, 0.1);
+  border-color: rgba(120, 195, 140, 0.35);
+}
+
+.sum-as-col.sum-as-p1 .sum-as-player {
+  color: #9fd8ae;
+}
+
+.sum-as-col.sum-as-p2 {
+  background: rgba(235, 170, 90, 0.1);
+  border-color: rgba(235, 170, 90, 0.35);
+}
+
+.sum-as-col.sum-as-p2 .sum-as-player {
+  color: #f2c48d;
+}
+
+.sum-as-col.sum-as-p3 {
+  background: rgba(185, 130, 235, 0.1);
+  border-color: rgba(185, 130, 235, 0.35);
+}
+
+.sum-as-col.sum-as-p3 .sum-as-player {
+  color: #cfa9f2;
+}
+
+/* 玩家条目内部的分类子分组：小标题 + 卡片网格（每行最多 3 格） */
+.sum-as-subgroup {
+  margin-top: 6px;
+}
+
+.sum-as-subgroup + .sum-as-subgroup {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #2c3242;
+}
+
+.sum-as-sub-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9aa4b8;
+}
+
+.sum-as-sub-title::before {
+  content: "·";
+  color: #6b7a94;
+  font-weight: 700;
+}
+
+.sum-as-sub-title span {
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a909a;
+  background: #262b36;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
+.sum-as-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0d9a8;
+  margin-bottom: 8px;
+}
+
+.sum-as-player span {
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a909a;
+}
+
+/* 每个玩家条目内的菜谱卡片：菜谱清单同款完整卡片（.rl-card），
+ * 与 .rl-grid 一致的按宽度自适应换行（不固定每行格数；
+ * 汇总页分工区块与导出长图共用）。 */
+.sum-as-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.sum-as-cards .rl-card {
+  flex: 0 1 auto;
+  min-width: 220px;
+  max-width: 100%;
+}
+
+/* 兜底占位（guid 已不在菜谱池时） */
+.sum-as-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px dashed #3a3f4b;
+  border-radius: 6px;
+  background: #262b36;
+  font-size: 12px;
+  color: #9aa0a6;
+  min-width: 0;
+}
+
+.sum-as-empty {
+  color: #8a909a;
+  font-size: 12px;
+}
+
+/* 有背景图时分工列/说明框贴底色弱化边框 */
+.sum-page.has-bg .sum-as-col,
+.sum-page.has-bg .sum-as-card {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* 导出分工长图的离屏舞台（复用 .sum-page 深色底） */
+.as-export-stage {
+  padding: 32px;
+}
+
+/* ===================== 分工模式页（左备选池 1/3 + 右玩家列，拖拽分配） ===================== */
+
+.as-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.as-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.as-tab {
+  border: 1px solid #3a3f4b;
+  background: #22262e;
+  color: #c9ccd4;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.as-tab span {
+  font-size: 11px;
+  color: #8a909a;
+}
+
+.as-tab:hover {
+  border-color: #5a6274;
+}
+
+.as-tab.active {
+  border-color: #e8b04b;
+  color: #f0d9a8;
+  background: rgba(232, 176, 75, 0.1);
+}
+
+.as-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.as-hint {
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.as-warn {
+  color: #e8b04b;
+}
+
+.as-ok {
+  color: #81c995;
+}
+
+.as-workspace {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+
+/* ---- 左：菜谱备选池（~1/3 宽，独立滚动；条目两列紧凑排布；
+ *     已分配置灰但可继续拖给其他玩家） ---- */
+
+.as-pool {
+  flex: 0 0 32%;
+  max-width: 32%;
+  border: 1px solid #3a3f4b;
+  border-radius: 10px;
+  background: #1b1f27;
+  padding: 10px;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+  min-height: 320px;
+}
+
+.as-pool.drag-over {
+  border-color: #d9636a;
+  background: rgba(217, 99, 106, 0.08);
+}
+
+.as-pool-group {
+  margin-bottom: 10px;
+}
+
+.as-pool-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f0d9a8;
+  position: sticky;
+  top: -10px;
+  background: #1b1f27;
+  padding: 6px 0 4px;
+  z-index: 1;
+}
+
+.as-pool-group-title span {
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a909a;
+  background: #262b36;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
+/* 条目两列网格（grid），分组标题跨满两列 */
+.as-pool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.as-pool-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: #22262e;
+  min-width: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.as-pool-item:hover {
+  border-color: #e8b04b;
+}
+
+.as-pool-item img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.as-pool-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  color: #e8eaed;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.as-pool-score {
+  font-size: 10.5px;
+  color: #9aa4b8;
+  flex: 0 0 auto;
+}
+
+/* 已分给任一玩家：置灰（降透明 + 灰滤镜），但依旧可拖给其他玩家 */
+.as-pool-item.used {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.as-pool-item.used .as-pool-name {
+  color: #9aa0a6;
+}
+
+.as-pool-item.dragging {
+  opacity: 0.3;
+}
+
+/* ---- 右：玩家拖拽框，两列网格布局（2P=2×1、3P=2+1、4P=2×2），
+ *     固定高度 + 卡片区内部滚动 ---- */
+
+.as-players {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.as-col {
+  display: flex;
+  flex-direction: column;
+  border: 1px dashed #3a3f4b;
+  border-radius: 10px;
+  background: #1b1f27;
+  padding: 10px;
+  height: clamp(280px, 40vh, 420px);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+/* 编辑页玩家框同款按序淡色（与导出图一致，拖拽时便于辨认玩家） */
+.as-col.as-p0 {
+  background: rgba(96, 150, 230, 0.07);
+}
+
+.as-col.as-p0 .as-col-head {
+  color: #9fc3f5;
+}
+
+.as-col.as-p1 {
+  background: rgba(120, 195, 140, 0.07);
+}
+
+.as-col.as-p1 .as-col-head {
+  color: #9fd8ae;
+}
+
+.as-col.as-p2 {
+  background: rgba(235, 170, 90, 0.07);
+}
+
+.as-col.as-p2 .as-col-head {
+  color: #f2c48d;
+}
+
+.as-col.as-p3 {
+  background: rgba(185, 130, 235, 0.07);
+}
+
+.as-col.as-p3 .as-col-head {
+  color: #cfa9f2;
+}
+
+.as-col.drag-over {
+  border-color: #e8b04b;
+  border-style: solid;
+  background: rgba(232, 176, 75, 0.08);
+}
+
+.as-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0d9a8;
+  margin-bottom: 8px;
+  flex: 0 0 auto;
+}
+
+.as-col-head span {
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a909a;
+}
+
+.as-col-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 40px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.as-col-empty {
+  border: 1px dashed #2c3242;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 12px;
+  text-align: center;
+  padding: 18px 8px;
+}
+
+/* 玩家框内卡片 = 完整菜谱卡预览（rlCardHtml）的包装层：可拖拽 + ✕ 悬浮角标 */
+.as-col-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  cursor: grab;
+  user-select: none;
+}
+
+.as-col-card .rl-card {
+  min-width: 0;
+  width: 100%;
+}
+
+.as-col-card.dragging {
+  opacity: 0.35;
+}
+
+.as-card-x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(20, 23, 29, 0.85);
+  color: #c9ccd4;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.as-card-x:hover {
+  background: #d9636a;
+  color: #fff;
+}
+
+/* ===================== readme 富文本编辑弹窗 ===================== */
+
+.rt-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 70vh;
+}
+
+.rt-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #3a3f4b;
+  border-radius: 8px;
+  background: #1b1f27;
+}
+
+.rt-btn {
+  border: 1px solid #3a3f4b;
+  background: #22262e;
+  color: #c9ccd4;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.rt-btn:hover {
+  border-color: #e8b04b;
+  color: #f0d9a8;
+}
+
+.rt-editor {
+  flex: 1 1 auto;
+  min-height: 260px;
+  overflow-y: auto;
+  padding: 12px 14px;
+  border: 1px solid #3a3f4b;
+  border-radius: 8px;
+  background: #14171d;
+  color: #dfe3ea;
+  font-size: 14px;
+  line-height: 1.7;
+  outline: none;
+}
+
+.rt-editor:focus {
+  border-color: #5a6274;
+}
+
+.rt-editor h2 {
+  margin: 10px 0 6px;
+  font-size: 17px;
+  color: #f0d9a8;
+}
+
+.rt-editor h3 {
+  margin: 8px 0 4px;
+  font-size: 15px;
+  color: #e8d5ac;
+}
+
+.rt-editor p {
+  margin: 6px 0;
+}
+
+.rt-editor ul,
+.rt-editor ol {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+
+.rt-editor blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid #7f8fb0;
+  color: #b8c0cc;
+  background: rgba(127, 143, 176, 0.08);
+  border-radius: 4px;
+}
+
+.rt-editor a {
+  color: #8ab4f8;
+}

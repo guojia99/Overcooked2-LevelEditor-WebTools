@@ -32,7 +32,21 @@ from oc2_common import (ROOT, ASSETS, WEB_PUBLIC, EditorIndex, Scene, map_item,
 SCAN = SourceFileLoader("scan_levels", os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "scan-levels.py")).load_module()
 DUMP = os.path.join(ROOT, "dump_bundle")
-OUT_SETS = os.path.join(ASSETS, "LevelSets", "oc2_dlc_story")
+# 目标关卡集：默认 oc2_dlc_story（历史行为不变）；import-horde-set.py 以
+# set_override("oc2_horde") 切换输出目录与确定性 guid 前缀。
+_state = {"set": "oc2_dlc_story"}
+
+
+def set_override(name):
+    _state["set"] = name
+
+
+def SET_NAME():
+    return _state["set"]
+
+
+def OUT_SETS():
+    return os.path.join(ASSETS, "LevelSets", _state["set"])
 
 GUID_LEVEL_INFO = "9613355741a1a7e429f1ad97a816f6de"      # LevelInfoSO
 GUID_LEVEL_CONFIG = "29722fa34ea4be545b2b4160dc3b3f12"   # LevelConfigSetupPerPlayerCountSO
@@ -163,6 +177,8 @@ def content_bundles(kind):
         rl_pat = re.compile(r"recipes?lists?", re.I)
         for o in m["objects"]:
             c = o["container"]
+            if not c:
+                continue
             if rl_pat.search(c) and o["bundle"] not in _content_bundles["recipelists"]:
                 _content_bundles["recipelists"].append(o["bundle"])
             if ("orderdefinitions" in c or "recipeitems" in c) and \
@@ -180,6 +196,8 @@ def candidate_bundles(dlc):
     out = []
     for o in m["objects"]:
         c = o["container"]
+        if not c:
+            continue
         if f"/{dlc}/" in c or "/combineddlc/" in c:
             if o["bundle"] not in out:
                 out.append(o["bundle"])
@@ -201,6 +219,7 @@ MUSIC_BY_DLC = {
 MUSIC_BY_THEME = {
     ("dlc07", "courtyard"): "DLC_07_Courtyard",
     ("dlc07", "keep"): "DLC_07_Keep",
+    ("dlc07", "battlements"): "DLC_07_Battlements",
     ("dlc07", "city"): "DLC_07_City",
     ("dlc08", "day"): "DLC_08_FairgroundDay_Theme",
     ("dlc08", "night"): "DLC_08_FairgroundNight_Theme",
@@ -345,10 +364,11 @@ def gen_level(level, dry=False):
     lid = level["id"]
     warns = []
     deps = set()
-    data_dir = os.path.join(OUT_SETS, "data", lid)
-    guids = {pc: deterministic_guid("oc2_dlc_story", f"{lid}/config_{pc}p.asset")
+    set_name = SET_NAME()
+    data_dir = os.path.join(OUT_SETS(), "data", lid)
+    guids = {pc: deterministic_guid(set_name, f"{lid}/config_{pc}p.asset")
              for pc in ("1", "2", "3", "4")}
-    info_guid = deterministic_guid("oc2_dlc_story", f"{lid}/LevelInfo_{lid}.asset")
+    info_guid = deterministic_guid(set_name, f"{lid}/LevelInfo_{lid}.asset")
 
     # ---- config_Xp ----
     cfgs = {}
@@ -387,7 +407,10 @@ def gen_level(level, dry=False):
         ddp = json.load(f)["MonoBehaviour"].get("m_disableDynamicParenting", True)
 
     num = "_".join(lid.split("_")[2:])
-    level_name = num.replace("_", "-") if not num.startswith("H") else num
+    if level.get("levelName"):
+        level_name = level["levelName"]
+    else:
+        level_name = num.replace("_", "-") if not num.startswith("H") else num
     lines = [
         "%YAML 1.1",
         "%TAG !u! tag:unity3d.com,2011:",

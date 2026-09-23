@@ -325,7 +325,6 @@ async function renderDepsDetail(app: HTMLElement, setName: string, assetPath: st
         assetPath,
         levelName: detail.levelName,
         levelNameZH: detail.levelNameZH,
-        sceneName: detail.sceneName,
         debugRecipeCount: detail.debugRecipeCount,
         disableDynamicParenting: detail.disableDynamicParenting,
         minOrderCount: detail.minOrderCount,

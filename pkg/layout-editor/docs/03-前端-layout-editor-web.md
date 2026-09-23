@@ -61,7 +61,7 @@ web/
 | 撤销 | 自写 `HistoryStack<T>`（限 20 步快照） |
 | 部署 | 静态 dist/ 提交 Git，由 Unity 内嵌 HTTP 服务器（8765）伺服；开发时 Vite 5173 + `/api` 代理 |
 
-**启动与路由**：`index.html` 内联脚本 + `route.ts migrateLegacyUrl()` 规范化 URL（旧 hash / `index.html` / 旧版 query 深链 `?scene=`、`?set=` 自动迁移）→ `editor/dom.ts` 解析路由（`parseRoute`，导出 `ROUTE`）→ `main.ts` 按路由懒加载页面视图或走编辑器 `init()`。**严格路由约定（2026-09-16）**：页面目标一律写进路径（`/xxxx/{集合ID}/{目标ID}`），页面加载按 URL id 自行请求数据，不再经 sessionStorage 交接（仅「工具与历史」一次性动作键保留）。整页跳转用 `location.assign`；同页子视图（custom-recipes 列表↔表单、deps 三级、guide 翻页）用 `history.pushState` + `popstate` 重分发；切集/载入目标等状态平移用 `replaceState`（不产生历史）。路由表：`/layout/{set}/{sceneName}`（裸 `/layout` → `/manage`）、`/manage`、`/dependencies[/{set}[/{levelId}]]`、`/custom-recipes`（选集）、`/custom-recipes/{set}`（列表）、`/custom-recipes/{set}/recipe/{id|new}`（编辑表单）、`/custom-recipes/burger-maker/{set}[/{burgerId}]`、`/custom-recipes/filling-maker/{set}[/{fillingId|new}]`、`/recipes`（独立 HTML）、`/guide/{id}`、`/changelog`；根 `/` 恒跳 `/manage`。
+**启动与路由**：`index.html` 内联脚本 + `route.ts migrateLegacyUrl()` 规范化 URL（旧 hash / `index.html` / 旧版 query 深链 `?scene=`、`?set=` 自动迁移）→ `editor/dom.ts` 解析路由（`parseRoute`，导出 `ROUTE`）→ `main.ts` 按路由懒加载页面视图或走编辑器 `init()`。**严格路由约定（2026-09-16）**：页面目标一律写进路径（`/xxxx/{集合ID}/{目标ID}`），页面加载按 URL id 自行请求数据，不再经 sessionStorage 交接（仅「工具与历史」一次性动作键保留）。整页跳转用 `location.assign`；同页子视图（custom-recipes 列表↔表单、deps 三级、guide 翻页）用 `history.pushState` + `popstate` 重分发；切集/载入目标等状态平移用 `replaceState`（不产生历史）。路由表：`/layout/{set}/{sceneName}`（裸 `/layout` → `/manage`）、`/manage[/{set}[/{levelId}[/summary]]]`（集列表 → 关卡列表 → 详细编辑；`/summary` 段 = 汇总页；与 custom-recipes 同款 popstate 重分发 + pushState 子视图，levelId = 关卡数据目录名，`summary` 为保留字）、`/dependencies[/{set}[/{levelId}]]`、`/assignment/{set}/{levelId}`（菜谱分工，关卡级；裸路径 → `/manage`）、`/custom-recipes`（选集）、`/custom-recipes/{set}`（列表）、`/custom-recipes/{set}/recipe/{id|new}`（编辑表单）、`/custom-recipes/burger-maker/{set}[/{burgerId}]`、`/custom-recipes/filling-maker/{set}[/{fillingId|new}]`、`/recipes`（独立 HTML）、`/guide/{id}`、`/changelog`；根 `/` 恒跳 `/manage`。编辑器顶栏「📋 汇总」与分工页「返回汇总」均整页跳转 `/manage/{set}/{levelId}/summary`。
 
 **数据流**：
 
@@ -97,15 +97,18 @@ flowchart LR
 | 文件 | 职责与关键导出 |
 |---|---|
 | **main.ts** | 应用入口薄壳：版本徽标、重绘钩子、按路由标记懒加载页面视图或 `init()` |
-| **route.ts** | URL 规范化（旧 hash/query 深链迁移）、`parseRoute`（严格路由解析，含各 id 段）、路径构造助手（`layoutPath/depsPath/recipeFormPath/burgerPath/fillingPath`）、`navigateTo` |
+| **route.ts** | URL 规范化（旧 hash/query 深链迁移）、`parseRoute`（严格路由解析，含各 id 段）、路径构造助手（`layoutPath/depsPath/assignmentPath/recipeFormPath/burgerPath/fillingPath`）、`navigateTo` |
 | **nav.ts** | 顶栏导航 HTML（`navHtml/wireNav`）+ 关卡集/关卡下拉 + GitHub 弹窗 |
 | **version.ts** | `APP_VERSION` + 版本徽标 |
 | **api.ts** | ★ 全部后端通信（1078 行）：60+ 个 `fetchXxx/saveXxx/createXxx`；`readApiJson`（返回 HTML → 抛「桥过期」）；分块加载静态 JSON；`bundleClosure` |
 | **types.ts** | ★ 全部数据模型（1406 行）：约 120 个接口（见 §6） |
 | **style.css / recipeList.css** | 全站样式（135KB）/ 菜谱卡片专用（含汇总页 `.sum-*`；`.sum-page.has-bg` = 设了导出背景图时的作用域覆盖：卡片摘掉深色渐变底与 1px 边框、计数胶囊转半透明，**不改任何 `.rl-*` 原始规则**） |
-| **levels.ts** | ★ 关卡管理页（2574 行）：关卡集/关卡列表、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、关卡编辑页「汇总导出背景图」区块（上传到 `data/<level>/summary_bg~/`，Unity 忽略目录 → 不进 AssetBundle）、汇总页 + PNG 导出（DOM 快照，背景图 cover + 暗色遮罩内联在 `#sum-node` 上 → 预览与导出同源）、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复） |
+| **levels.ts** | ★ 关卡管理页（2800+ 行）：关卡集/关卡列表、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、关卡编辑页「汇总导出背景图」区块（上传到 `data/<level>/summary_bg~/`，Unity 忽略目录 → 不进 AssetBundle）、汇总页 + PNG 导出（DOM 快照，背景图 cover + 暗色遮罩内联在 `#sum-node` 上 → 预览与导出同源；官方菜谱按类型分组 + 自定义菜谱独立区块按 category→subcategory 子分类（`buildSummaryGroups`），组内默认分数升序；readme 说明区块（截图后、菜谱前）；**双视图 switch，内容互斥**（`#sum-view-switch`，复用 `.rl-view-switch` 样式，纯客户端状态不进 URL、模块级记忆跨重渲染）：「📋 全部菜谱」= 分组主体（**不含分工区块**）；「🧑‍🍳 分工模式」= 各已配置模式（双人/三人/四人）`assignmentModeBlockHtml` 为主体（未配置 → 空态 + 去分工模式按钮）；切换 = 重写 `#sum-node` 内层 → 导出 PNG 所见即所得（文件名带 `_分工汇总`）、「✏️ 编辑分工」按钮跳分工编辑页；导出倍率下拉 `exportScaleSelectHtml` 见 domSvgExport.ts）、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复） |
+| **summaryRecipes.ts** | 汇总页/分工页共用分组：官方按 `RECIPE_TYPE_ORDER`、自定义按 `category→subcategory`（显示名取 `fetchCustomRecipeConfig`，缺配置回退 id）；每个分组/子分类内部按分数升序（`byScoreAsc`，同分稳定保持原顺序） |
+| **levelAssignment.ts** | 🧑‍🍳 菜谱分工模式页（**关卡级严格路由 `/assignment/{set}/{levelId}`**，汇总页「🧑‍🍳 分工模式」经 `goAssignment` 整页跳转，可刷新/分享；标题落到具体关卡名）：左菜谱备选池（约 1/3，分组+分数排序，**条目两列网格**）+ 右玩家拖拽框（**两列网格：2P=2×1、3P=2+1、4P=2×2，固定高度+内部滚动**；HTML5 DnD：池→框 = 分配、框间 = 移动、拖回池/✕ = 移除；框内自动去重，已用菜谱池中置灰仍可拖；**落卡后显示完整菜谱卡预览** rlCardHtml + ✕ 悬浮角标）。2P/3P/4P 三套独立配置，JSON 落盘 `data/<level>/assignment~/assignment.json`（前端唯一读写方）；分工区块/导出图：玩家条目**从上到下**、每个玩家内部按汇总分组**子分类**，卡片**按宽度自适应换行（同 .rl-grid，不固定每行格数）**；导出图头部含**关卡名/场景名/作者/关卡截图**（`exportPng` 离屏 `createOffscreenStage` 1280px + `assignmentModeBlockHtml`，与汇总页分工区块共用渲染） |
+| **richText.ts** | 汇总页 readme 富文本（仅文字）：`sanitizeRichTextHtml` 白名单净化（p/h2/h3/b/i/u/s/ul/ol/li/blockquote/br/a[href^=http]，未放行标签拆壳保文字、剥全部属性）+ contenteditable 编辑弹窗（execCommand 工具条、粘贴转纯文本）；存 `readme~/readme.json` |
 | **dependencies.ts** | 依赖管理页：两级列表、`BundleAnalysis` 展示（缺失红/未用黄）、手动编辑 dependencies、依赖闭包 |
-| **customRecipes.ts** | 自定义菜谱管理页（1963 行）：卡片 + 分类侧栏、新建/编辑表单（组成多选/烹饪/装盘/图标/FBX+MTL+贴图上传/cm 校准/3D 预览）、分类管理。<br>2026-09-17：顶栏「🍞 统一面包皮」→ `openBunSwapModal`（`groupBunUsages` 把面包层按菜谱合并成行；目标三选一默认 `BUN_DLC8_ID`，切目标后整体重绘因「已是目标」行会变；调 `api.fetchBunUsage` / `api.replaceBun`）。只改本集 custom_recipes 资产，关卡 BurgerOptional/matchlist/依赖与场景食材箱不联动，弹窗底部固定提醒作者自行处理 |
+| **customRecipes.ts** | 自定义菜谱管理页（1963 行）：卡片 + 分类侧栏、新建/编辑表单（组成多选/烹饪/装盘/图标/FBX+MTL+贴图上传/cm 校准/3D 预览）、分类管理。<br>2026-09-17：顶栏「🍞 统一面包皮」→ `openBunSwapModal`（`groupBunUsages` 把面包层按菜谱合并成行；目标三选一默认 `BUN_DLC8_ID`，切目标后整体重绘因「已是目标」行会变；调 `api.fetchBunUsage` / `api.replaceBun`）。只改本集 custom_recipes 资产，关卡 BurgerOptional/matchlist/依赖与场景食材箱不联动，弹窗底部固定提醒作者自行处理。<br>2026-09-23：顶栏「📦 资产瘦身」→ `openAssetOptimizeModal`（`api.fetchAssetOptimizeUsage` 概览贴图档位/模型面数分桶 → 材质贴图/图标各选档（128~1024，默认 256）+ 网格精度档（off~high，默认 medium）→ `api.optimizeCustomRecipeAssets` 只改 .meta 导入参数，源 FBX/PNG 不动、GUID 不变；结果弹窗逐项列 变更前→后；commonW2 后端不枚举） |
 | **burgerMaker.ts** | 汉堡组装工作台（严格路由 `/custom-recipes/burger-maker/{set}[/{burgerId}]`，URL 中的 burgerId 自动载入已存成品）：顶部菜谱卡片实时预览（共用 `rlCardHtml`）+ 层层堆叠夹心（拖动排序、候选计数徽标）、夹心>32 层软上限提醒（含超规格实拍弹窗），调 `/api/burger/create`；候选面板按「面包/中间产物/成品菜/官方菜谱/官方食材」五组 + 徽标（DLC / bundle缺失 / 荐）+ 仅推荐/显示无模型筛选 + 👁 3D 预览 + 图标逐级降级（`candIconChain`）；「🥩 夹心工作台 ↗」新开一页跳 `/custom-recipes/filling-maker/{set}` |
 | **fillingMaker.ts** | 🥩 夹心工作台（`/custom-recipes/filling-maker/{set}[/{fillingId}]`）：关卡集选择 + 本集夹心列表 + commonW2 共享夹心只读参考 + 新建/编辑/预览/删除。**不自实现编辑逻辑**，直接调 `renderRecipeForm(..., {mode:"filling"})`，编辑器改动自动继承 |
 | **textureEditor.ts** | 夹心贴图编辑器（1024×1024 canvas）：取色纯色填充 / 上传图片 / 画笔涂抹 + 撤销；「🔍 预览模型」用模板 FBX 字节 + 当前贴图 File 实时 3D 渲染（不落盘） |
@@ -251,6 +254,8 @@ flowchart LR
 | GET | `/api/level/optional-presets`；POST `/api/level/optional-items`、`/api/level/matchlists`、`/api/recipes/compute-burger-optionals` | 可选部件/匹配表 |
 | POST | `/api/scene/death`、`/api/scene/killplane` | 死亡主题/击杀面 |
 | POST | `/api/level/image-upload`；GET `/api/level/data-file?path=` | 图片地板 |
+| GET | `/api/level/assignment?assetPath=`；POST `/api/level/assignment-save`、`/api/level/assignment-clear` | 菜谱分工配置（汇总页「分工模式」页读写；`assignment~/assignment.json`） |
+| GET | `/api/level/readme?assetPath=`；POST `/api/level/readme-save`、`/api/level/readme-clear` | 汇总页 readme 富文本（`readme~/readme.json`，净化 HTML 仅文字） |
 | GET | `/api/writeback/history`、`/detail`、`/doc?side=` | 写回历史（恢复到画布） |
 
 ### 5.2 关卡管理（/manage）
@@ -259,7 +264,7 @@ flowchart LR
 |---|---|---|
 | GET | `/api/sets`、`/api/sets/{set}/levels`、`/api/level?assetPath=` | 列表/详情 |
 | POST | `/api/set/create / delete / info` | 关卡集 |
-| POST | `/api/level/create / info / config / audio / delete / reorder / screenshot-upload` | 关卡 |
+| POST | `/api/level/create / info / config / audio / delete / reorder / rename / screenshot-upload` | 关卡 |
 | GET | `/api/level/delete-preview?setName=&levelId=` | 删除预览 |
 | POST | `/api/reload` | 触发 Reload Pseudo Assets |
 | POST | `/api/set/export`；GET `/api/set/export/status`、`/download?setName=&fileName=` | 异步导出（轮询+下载） |
@@ -268,6 +273,8 @@ flowchart LR
 ### 5.3 音频 / 依赖
 
 `GET /api/catalog/music | audio-directories | ambiences | death-effects`、`/api/audio/exports`、`/api/audio/stream?path=`、`/api/level/bundles?assetPath=`（BundleAnalysis）、`/api/icons/status`、`/api/env/status`
+
+自定义 BGM（`api.fetchCustomMusic / uploadCustomMusic / deleteCustomMusic / getCustomMusicStreamUrl`）：`GET /api/level/music/custom?set=`、`POST .../upload?set=&file=`（浏览器端压缩为 OGG/WAV 后上传）、`POST .../delete`、`GET .../stream?set=&file=`。编码在 `src/audio/encode.ts`（decodeAudioFile + encodeBgm，预设 BGM_PRESETS：OGG 7 档 VBR q-1~q8 + WAV 3 档，下拉按格式分组、`recommended` 为默认；wasm-media-encoders 内联 base64 离线可用）。静态托管（无桥）时上传区整体隐藏。
 
 ### 5.4 自定义菜谱 / 汉堡
 

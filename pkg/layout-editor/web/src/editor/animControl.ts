@@ -29,6 +29,8 @@ import {
 import { isCollisionItem } from "./stubControls";
 import { renameGroupInButtonLinks, linkBindingGroup, cleanOrphanedButtonLinks } from "./buttonLinks";
 import { openModal, closeModal } from "../modals";
+import { openAnimDock, closeAnimDock } from "./animDock";
+import { clearTriggerSource } from "./triggerOrchestrator";
 import { setLayer } from "./init";
 import type {
   AnimGroup,
@@ -153,6 +155,56 @@ export function groupFxType(group: AnimGroup): "shake" | "flash" | null {
 export function activeGroup(): AnimGroup | null {
   if (!S.activeAnimGroupId) return null;
   return S.animControls.find((g) => g.id === S.activeAnimGroupId) ?? null;
+}
+
+/** Body element of the currently open group editor inside the bottom dock, if any.
+ *  The right panel stays a list; the full authoring surface lives in the dock. */
+let animEditorModalBody: HTMLElement | null = null;
+
+export function closeAnimGroupEditor(): void {
+  stopAnimPreview();
+  animEditorModalBody = null;
+  S.activeAnimEventIdx = null;
+  S.selectedWaypointId = null;
+  S.animMode = "none";
+  S.animPickTargetGroupId = null;
+  clearAnimSelection();
+  updateAnimPickBar();
+  closeAnimDock();
+  renderRightPanel();
+  draw();
+}
+
+/** 在底部编排台中打开某动画组的单组编排（模式 A）。取代旧全屏弹窗。 */
+export function openAnimGroupEditor(group: AnimGroup): void {
+  clearTriggerSource();
+  S.activeAnimTab = "timeline";
+  const body = openAnimDock();
+  animEditorModalBody = body;
+  renderGroupEditor(body, group);
+}
+
+/** 让出编排台宿主（切到触发编排模式时调用）：停预览并解除单组编辑器绑定，
+ *  避免残留的刷新回调把触发编排内容覆盖掉。 */
+export function detachGroupEditorHost(): void {
+  stopAnimPreview();
+  animEditorModalBody = null;
+}
+
+/** 按 id 打开动画组编排台（供触发编排「编辑动画组」跳转使用）。 */
+export function openAnimGroupEditorById(groupId: string): void {
+  const g = S.animControls.find((x) => x.id === groupId);
+  if (!g) return;
+  S.activeAnimGroupId = g.id;
+  S.activeAnimEventIdx = null;
+  S.selectedWaypointId = null;
+  S.animMode = "none";
+  S.activeAnimTab = "timeline";
+  S.animPickTargetGroupId = null;
+  clearAnimSelection();
+  renderRightPanel();
+  draw();
+  openAnimGroupEditor(g);
 }
 
 function clearAnimSelection(): void {
@@ -1613,12 +1665,16 @@ function groupCardHtml(g: AnimGroup): string {
     : fxT === "flash"
       ? `<span class="mgc-chip chip-item">⚡ 闪电</span>`
       : "";
-  return `<div class="anim-group-card" data-group-id="${g.id}">
+  const triggerChip = g.triggerMode === "button"
+    ? `<span class="mgc-chip chip-floor">按钮触发${g.advanceMode === "press" ? " · 逐节点" : ""}</span>`
+    : "";
+  return `<div class="anim-group-card${S.activeAnimGroupId === g.id ? " active" : ""}" data-group-id="${g.id}">
     <div class="mgc-color" style="background:${col}"></div>
     <div class="mgc-main">
       <div class="mgc-name">${escHtml(g.displayName)}${loopMark}</div>
       <div class="mgc-members">
         ${fxChip}
+        ${triggerChip}
         ${itemN ? `<span class="mgc-chip chip-item">物品 ${itemN}</span>` : ""}
         ${floorN ? `<span class="mgc-chip chip-floor">地板 ${floorN}</span>` : ""}
         ${objN ? `<span class="mgc-chip chip-obj">其他 ${objN}</span>` : ""}
@@ -1630,7 +1686,6 @@ function groupCardHtml(g: AnimGroup): string {
 }
 
 function renderGroupList(body: HTMLElement): void {
-  if (S.animPreview) stopAnimPreview();
   const groups = S.animControls.filter((g) => groupVisibleInLayer(g));
   const head = `<div class="anim-list-head">
     <span class="anim-list-title">🎬 动画组${groups.length ? ` (${groups.length})` : ""}</span>
@@ -1672,6 +1727,7 @@ function renderGroupList(body: HTMLElement): void {
       }
       renderRightPanel();
       draw();
+      if (group) openAnimGroupEditor(group);
     });
   });
 }
@@ -1702,6 +1758,7 @@ function createGroup(name: string, itemIds: string[], floorIds: string[]): void 
     id: uuid(),
     displayName: name,
     groupKind: "members",
+    triggerMode: "auto",
     itemInstanceIds: itemIds,
     floorInstanceIds: floorIds,
     objectInstanceIds: [],
@@ -2079,13 +2136,6 @@ function curveTotal(group: AnimGroup, evtIdx: number): number {
 
 export function renderAnimControlPanel(body: HTMLElement): void {
   updateAnimPickBar();
-  const group = activeGroup();
-  if (group) {
-    syncPreview(group);
-    renderGroupEditor(body, group);
-    return;
-  }
-  if (S.animPreview) stopAnimPreview();
   renderGroupList(body);
 }
 
@@ -2666,6 +2716,9 @@ function renderTimelineTab(
     }
   }
   let warnHtml = "";
+  if (group.triggerMode === "button" && group.advanceMode === "press") {
+    warnHtml += `<div class="anim-tl-warn">🔘 节点环模式：每个事件 = 一个节点，按钮每按一次只推进一个节点（事件在时间轴上的先后即节点顺序，间距被忽略）；到末尾后环回第一个节点。循环 / 往返不生效。</div>`;
+  }
   if (moveOverlap) {
     warnHtml += fxGrp
       ? `<div class="anim-tl-warn">⚠ 特效事件时间重叠：重叠时只有最先开始的那个生效（其余被忽略），请错开时间 —— 间隔即节奏。</div>`
@@ -2869,12 +2922,22 @@ function renderSettingsTab(group: AnimGroup): string {
   const boundHint = boundLink
     ? `<div class="sub anim-wp-hint" style="color:#e8b35a">⚠ 该组已被按钮联动绑定：不再自动执行，启动/结束触发器由联动自动管理（在此处手动修改无效，写回时会被联动覆盖）。</div>`
     : "";
+  const isBtn = group.triggerMode === "button";
+  const isPress = isBtn && group.advanceMode === "press";
+  const advanceField = isBtn
+    ? `<label>按钮推进方式<select class="group-advance-mode">
+        <option value="timeline"${isPress ? "" : " selected"}>整组连播（一组 = 一个节点）</option>
+        <option value="press"${isPress ? " selected" : ""}>逐节点推进（每按一次 = 下一个事件）</option>
+      </select></label>
+      <div class="sub anim-wp-hint">逐节点用于「同一物体往返翻转」（如传送带 +180°/−180° 必须同组成员）：按钮每按一次只播下一个事件，末尾环回；每次按压的完成回报等待当前节点播完。</div>`
+    : "";
   return `<div class="anim-section">
     ${sectionTitle("⚙", "组设置", "", "#8b93a3")}
     <div class="anim-settings-grid">
       <label>启动延迟 (秒)<input type="number" class="group-start-delay" value="${group.startDelay}" step="0.1" min="0" /></label>
-      <label class="check"><input type="checkbox" class="group-loop"${group.loop ? " checked" : ""} /> 循环整个序列</label>
-      <label class="group-loop-delay-wrap"${group.loop ? "" : ' style="display:none"'}>循环间隔 (秒)<input type="number" class="group-loop-delay" value="${group.loopDelay}" step="0.1" min="0" /></label>
+      <label class="check"><input type="checkbox" class="group-loop"${group.loop ? " checked" : ""}${isPress ? " disabled" : ""} /> 循环整个序列${isPress ? "（逐节点模式不支持）" : ""}</label>
+      <label class="group-loop-delay-wrap"${group.loop && !isPress ? "" : ' style="display:none"'}>循环间隔 (秒)<input type="number" class="group-loop-delay" value="${group.loopDelay}" step="0.1" min="0" /></label>
+      ${advanceField}
     </div>
   </div>
   <div class="anim-section">
@@ -2921,7 +2984,7 @@ function renderGroupEditor(body: HTMLElement, group: AnimGroup): void {
   const fxLabel = fxType === "shake" ? "🌍 全屏抖动" : fxType === "flash" ? "⚡ 闪电" : "✨ 特效";
 
   let html = `<div class="anim-editor-head">
-    <button type="button" class="btn-small" id="btn-anim-back">◀ 返回</button>
+    <button type="button" class="btn-small" id="btn-anim-back">✕ 关闭</button>
     <span class="anim-editor-color" style="background:${col}"></span>
     <input type="text" id="group-name" value="${escHtml(group.displayName)}" title="组名（回车生效）" />
   </div>`;
@@ -2964,20 +3027,16 @@ function renderGroupEditor(body: HTMLElement, group: AnimGroup): void {
 function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
   const refresh = () => {
     renderRightPanel();
+    if (animEditorModalBody === body) {
+      const current = findGroupById(group.id);
+      if (current) renderGroupEditor(body, current);
+      else closeAnimGroupEditor();
+    }
     draw();
   };
 
   body.querySelector("#btn-anim-back")?.addEventListener("click", () => {
-    S.activeAnimGroupId = null;
-    S.activeAnimEventIdx = null;
-    S.selectedWaypointId = null;
-    S.animMode = "none";
-    S.activeAnimTab = "members";
-    S.animPickTargetGroupId = null;
-    stopAnimPreview();
-    clearAnimSelection();
-    updateAnimPickBar();
-    refresh();
+    closeAnimGroupEditor();
   });
 
   // ---- tabs
@@ -3698,6 +3757,23 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
     pushHistory();
     group.loopDelay = v;
     S.dirty = true;
+  });
+  body.querySelector<HTMLSelectElement>(".group-advance-mode")?.addEventListener("change", (e) => {
+    const sel = e.target as HTMLSelectElement;
+    const v = sel.value === "press" ? "press" : "timeline";
+    if (group.advanceMode === v || (v === "timeline" && !group.advanceMode)) return;
+    pushHistory();
+    group.advanceMode = v;
+    if (v === "press") {
+      // 节点必须终止才能回报完成（BLDone）：剥离整组循环与事件循环。
+      group.loop = false;
+      for (const evt of group.events) {
+        evt.loop = false;
+        evt.pingpong = false;
+      }
+    }
+    S.dirty = true;
+    refresh();
   });
 
   // ---- trigger / animator fields (TriggerQueue · TriggerTimer · Animator)

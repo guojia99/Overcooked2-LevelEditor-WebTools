@@ -14,6 +14,7 @@
     "vite": "^5.4.11"
   },
   "dependencies": {
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "wasm-media-encoders": "^0.7.0"
   }
 }

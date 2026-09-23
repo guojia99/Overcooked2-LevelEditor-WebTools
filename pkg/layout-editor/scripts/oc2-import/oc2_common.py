@@ -19,7 +19,10 @@ import re
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 ASSETS = os.path.join(ROOT, "Assets")
 WEB_PUBLIC = os.path.join(ROOT, "layout-editor", "web", "public")
-RIPPER = os.path.join(os.path.dirname(ROOT), "AssetRipper_export_20260728_091744", "ExportedProject")
+# AssetRipper 导出工程：原位置已清理，现存于 backup_20260826（2026-09 确认）
+_RIPPER_PRIMARY = os.path.join(os.path.dirname(ROOT), "AssetRipper_export_20260728_091744", "ExportedProject")
+_RIPPER_BACKUP = os.path.join(os.path.dirname(ROOT), "backup_20260826", "AssetRipper_export_20260728_091744", "ExportedProject")
+RIPPER = _RIPPER_PRIMARY if os.path.isdir(_RIPPER_PRIMARY) else _RIPPER_BACKUP
 
 # ---------------------------------------------------------------------------
 # YAML 场景解析（AssetRipper 2017 格式）

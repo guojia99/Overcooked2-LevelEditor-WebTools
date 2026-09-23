@@ -9,7 +9,7 @@ import {
   computeCardGroups,
   type RecipeWithGroups,
 } from "./recipeCard";
-import { createOffscreenStage, exportNodePng } from "./domSvgExport";
+import { createOffscreenStage, exportNodePng, exportScaleSelectHtml, resolveExportScale, wireExportScaleSelects } from "./domSvgExport";
 import { openModal, closeModal } from "./modals";
 import { mountVersionBadge } from "./version";
 
@@ -48,6 +48,7 @@ app.innerHTML = `
     <span class="status" id="rl-status">加载中…</span>
     <span style="flex: 1"></span>
     <button type="button" class="m-btn" id="rl-export" title="把当前筛选出的菜谱合成一张 PNG 长图（重置筛选即导出全部）">🖼 导出图片</button>
+    ${exportScaleSelectHtml("rl-export-scale")}
     <label class="rl-tool-check" title="显示面糊、炸物部件、自选披萨部件等半成品">
       <input type="checkbox" id="rl-intermediates"> 含半成品
     </label>
@@ -80,6 +81,7 @@ app.innerHTML = `
 `;
 
 wireNav();
+wireExportScaleSelects();
 
 let recipes: RecipeWithGroups[] = [];
 let ingredients: IngredientEntry[] = [];
@@ -417,8 +419,13 @@ async function exportAll(): Promise<void> {
     const host = stage.querySelector("[data-export-host]")!;
     for (const child of Array.from(content.children)) host.appendChild(child.cloneNode(true));
     await waitForImages(stage);
-    await exportNodePng(stage, `${title}_${count}个_${date}.png`);
-    setStatus(`已导出 PNG（${count} ${unit}）`);
+    const scale = resolveExportScale();
+    const used = await exportNodePng(stage, `${title}_${count}个_${date}.png`, { scale });
+    setStatus(
+      used < scale
+        ? `已导出 PNG（${count} ${unit}，超画布上限自动降至 ${used}x）`
+        : `已导出 PNG（${count} ${unit}）`
+    );
   } catch (e) {
     setStatus(e instanceof Error ? e.message : String(e), false);
   } finally {
@@ -580,7 +587,7 @@ async function downloadRecipeCard(r: RecipeWithGroups, btn: HTMLButtonElement): 
     stage.innerHTML = `<div class="rl-grid">${cardHtml}</div>`;
     await waitForImages(stage);
     const date = new Date().toISOString().slice(0, 10);
-    await exportNodePng(stage, `${r.nameZh || r.id}_${date}.png`);
+    await exportNodePng(stage, `${r.nameZh || r.id}_${date}.png`, { scale: resolveExportScale() });
   } catch (e) {
     setStatus(e instanceof Error ? e.message : String(e), false);
   } finally {

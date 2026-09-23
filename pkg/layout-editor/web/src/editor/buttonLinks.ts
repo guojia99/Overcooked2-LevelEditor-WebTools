@@ -2,11 +2,10 @@ import {
   S,
   EditorItem
 } from "./state";
-import type { ButtonLink } from "../types";
+import type { AnimGroup, ButtonLink } from "../types";
 import { stubKindOf } from "./stubControls";
 import { itemLabel } from "./labels";
 import { uuid, escHtml } from "./coords";
-import { closeModal, openModal } from "../modals";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
 import { draw } from "./render";
@@ -84,30 +83,67 @@ function groupLabel(name: string): string {
   return g ? `${escHtml(name)}（${members} 成员/${g.events.length} 事件）` : escHtml(name);
 }
 
+function createSwitchAnimGroup(source: EditorItem): AnimGroup {
+  const x = source._wx;
+  const z = source._wz;
+  const waypointId = uuid();
+  return {
+    id: uuid(),
+    displayName: `开关动画组 ${S.animControls.length + 1}`,
+    groupKind: "members",
+    triggerMode: "button",
+    itemInstanceIds: [],
+    floorInstanceIds: [],
+    objectInstanceIds: [],
+    memberOffsets: [],
+    memberStatic: [],
+    memberGroups: [],
+    startDelay: 0,
+    loop: false,
+    loopDelay: 2,
+    // 按钮组的完成回报必须等 clip 播完（BLDone 由 AnimationFinished 驱动），
+    // 否则「完成后才可再按」的锁定立即解锁。写回时 PrepareGroups 也会强制。
+    waitForFinished: true,
+    waypoints: [{ id: waypointId, x, z }],
+    events: [{
+      id: uuid(),
+      type: "move",
+      delay: 0,
+      startTime: 0,
+      intervalSeconds: 2,
+      waypointIds: [waypointId],
+    }],
+  };
+}
+
 // ---------------------------------------------------------------- UI
 
-/** 右键菜单中的联动摘要 + 「配置…」按钮（详细配置在独立弹窗中进行）。 */
-export function buttonLinkSummaryHtml(item: EditorItem): string {
+/** 触发编排「③ 动画组序列」分区渲染选项。 */
+export interface ButtonLinkSectionOpts {
+  /** 「编辑」某动画组：切到单组编排（模式 A）。 */
+  onEditGroup: (groupId: string) => void;
+  /** 结构性变更后重绘整个编排台（跨分区联动）。 */
+  rerender: () => void;
+}
+
+/** 联动摘要文案（右键菜单/触发源列表复用）。 */
+export function buttonLinkSummaryText(item: EditorItem): string {
   const link = linkOfSource(item.instanceId ?? "");
   const n = link?.groupNames.length ?? 0;
   const partner = link ? partnerOf(link) : undefined;
-  const summary =
-    !link || n === 0
-      ? "— 未绑定动画组 —"
-      : `已绑 ${n} 组${link.lockUntilFinished !== false ? " · 完成后才可再按" : ""}${partner ? " · 共轭配对" : ""}`;
-  return `<div class="ctx-stub-title" style="margin-top:6px">联动动画组（按顺序触发）</div>
-    <label class="ctx-stub-row"><span class="ctx-input" style="opacity:${n > 0 ? 1 : 0.6}">${escHtml(summary)}</span>
-    <button type="button" class="ctx-btn" id="ctx-bl-config">配置…</button></label>`;
+  return !link || n === 0
+    ? "— 未绑定动画组 —"
+    : `已绑 ${n} 组 · ${link.sequenceMode === "pingpong" ? "往返" : "循环"}${link.lockUntilFinished !== false ? " · 完成后才可再按" : ""}${partner ? " · 共轭配对" : ""}`;
 }
 
 function pairHintText(partner: ButtonLink | undefined): string {
   if (!partner)
-    return "不配对时为顺序触发：每次按压启动下一组（最后一组后循环回第一组）。";
+    return "不配对时每次按压启动下一组；可选择循环或往返模式。";
   const partnerItem = S.items.find((i) => i.instanceId === partner.sourceId);
   return `共轭模式：与「${partnerItem ? itemLabel(partnerItem) : "?"}」互斥，每个按钮需各绑 ${PAIR_GROUP_LIMIT} 个动画组；按下时两组同时启动，全部完成后对方抬起。`;
 }
 
-function buttonLinkModalBodyHtml(item: EditorItem): string {
+function buttonLinkSectionHtml(item: EditorItem): string {
   const link = linkOfSource(item.instanceId ?? "");
   const partner = link ? partnerOf(link) : undefined;
 
@@ -123,37 +159,34 @@ function buttonLinkModalBodyHtml(item: EditorItem): string {
     )
     .join("");
 
-  return `<p class="modal-hint">绑定后每次按压按顺序触发下一组（循环）；绑定的组不再自动执行，启动/结束触发器由联动自动管理。</p>
-    <div class="blm-sec">联动动画组（按顺序触发）</div>
-    <div id="blm-groups"></div>
-    <div class="blm-addrow"><select id="blm-groupadd" class="modal-select"></select>
-      <button type="button" class="modal-btn" id="blm-add">添加</button></div>
-    <label class="modal-check"><input type="checkbox" id="blm-lock" ${!link || link.lockUntilFinished !== false ? "checked" : ""}/> 动画组完成后才可再按（运行期忽略按压）</label>
-    <div class="blm-sec">共轭按钮（一对一）</div>
-    <label class="modal-field">配对按钮 <select id="blm-pair" class="modal-select">${pairOpts}</select></label>
-    <label class="modal-check"><input type="checkbox" id="blm-startup" ${link?.pairStartsUp ? "checked" : ""} ${partner ? "" : "disabled"}/> 初始为抬起（可按）状态</label>
-    <p class="modal-hint" id="blm-pair-hint">${escHtml(pairHintText(partner))}</p>`;
+  const mode = link?.sequenceMode ?? "loop";
+  return `<p class="trig-hint">每次按压进入下一步动画组；动画完成后才进入下一次。启动 / 结束触发器由联动自动管理（无需在动画组里手动设置）。</p>
+    <div id="blm-groups" class="trig-list"></div>
+     <div class="trig-addrow"><select id="blm-groupadd" class="trig-select"></select>
+       <button type="button" class="btn-small" id="blm-add">添加已有组</button>
+       <button type="button" class="btn-small primary" id="blm-new-group">＋ 新建并编辑</button></div>
+    <label class="trig-check"><input type="checkbox" id="blm-lock" ${!link || link.lockUntilFinished !== false ? "checked" : ""}/> 动画组完成后才可再按（运行期忽略按压）</label>
+    <label class="trig-field">播放模式 <select id="blm-mode" class="trig-select">
+      <option value="loop" ${mode === "loop" ? "selected" : ""}>循环：A → B → C → A</option>
+      <option value="pingpong" ${mode === "pingpong" ? "selected" : ""}>往返：A → B → C → B → A</option>
+    </select></label>
+    <div class="trig-subhead">共轭按钮（一对一）</div>
+    <label class="trig-field">配对按钮 <select id="blm-pair" class="trig-select">${pairOpts}</select></label>
+    <label class="trig-check"><input type="checkbox" id="blm-startup" ${link?.pairStartsUp ? "checked" : ""} ${partner ? "" : "disabled"}/> 初始为抬起（可按）状态</label>
+    <p class="trig-hint" id="blm-pair-hint">${escHtml(pairHintText(partner))}</p>`;
 }
 
-export function openButtonLinkModal(item: EditorItem): void {
+/** 在给定容器内渲染 + 接线「③ 动画组序列」分区（供触发编排台调用）。 */
+export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opts: ButtonLinkSectionOpts): void {
   const myId = item.instanceId ?? "";
-  if (!myId) return;
-  const kindName = stubKindOf(item) === "PressureSwitch" ? "压力开关" : "按钮";
-  openModal(
-    `${kindName}联动配置 · ${itemLabel(item)}`,
-    buttonLinkModalBodyHtml(item),
-    `<button type="button" class="modal-btn primary" data-close>关闭</button>`
-  );
-  document.querySelector("[data-close]")?.addEventListener("click", closeModal);
-  wireButtonLinkModal(item);
-}
+  if (!myId) {
+    host.innerHTML = '<p class="trig-hint">该物件无实例 id，无法配置。</p>';
+    return;
+  }
+  host.innerHTML = buttonLinkSectionHtml(item);
 
-function wireButtonLinkModal(item: EditorItem): void {
-  const myId = item.instanceId ?? "";
-  if (!myId) return;
-
-  const groupsEl = document.getElementById("blm-groups");
-  const addSel = document.getElementById("blm-groupadd") as HTMLSelectElement | null;
+  const groupsEl = host.querySelector<HTMLElement>("#blm-groups");
+  const addSel = host.querySelector<HTMLSelectElement>("#blm-groupadd");
   if (!groupsEl || !addSel) return;
 
   const link = () => linkOfSource(myId);
@@ -161,16 +194,24 @@ function wireButtonLinkModal(item: EditorItem): void {
   const refresh = () => {
     const l = link();
     if (!l || l.groupNames.length === 0) {
-      groupsEl.innerHTML = '<p class="modal-hint">未绑定动画组</p>';
+      groupsEl.innerHTML = '<p class="trig-hint">未绑定动画组</p>';
     } else {
       groupsEl.innerHTML = l.groupNames
         .map(
-          (n, i) => `<div class="blm-row"><span class="blm-row-label">${i + 1}. ${groupLabel(n)}</span>
-            <button type="button" class="modal-btn blm-mini" data-bl-up="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
-            <button type="button" class="modal-btn blm-mini" data-bl-down="${i}" ${i === l.groupNames.length - 1 ? "disabled" : ""}>↓</button>
-            <button type="button" class="modal-btn blm-mini" data-bl-del="${i}">移除</button></div>`
+          (n, i) => `<div class="trig-step"><span class="trig-step-idx">${i + 1}</span>
+            <span class="trig-step-label">${groupLabel(n)}</span>
+            <button type="button" class="btn-small" data-bl-edit="${escHtml(n)}" title="编辑该动画组的成员与时间轴">✎ 编辑</button>
+            <button type="button" class="btn-small blm-mini" data-bl-up="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
+            <button type="button" class="btn-small blm-mini" data-bl-down="${i}" ${i === l.groupNames.length - 1 ? "disabled" : ""}>↓</button>
+            <button type="button" class="btn-small blm-mini" data-bl-del="${i}">移除</button></div>`
         )
         .join("");
+      groupsEl.querySelectorAll<HTMLButtonElement>("[data-bl-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const g = S.animControls.find((gr) => gr.displayName === btn.dataset.blEdit);
+          if (g) opts.onEditGroup(g.id);
+        });
+      });
       groupsEl.querySelectorAll<HTMLButtonElement>("[data-bl-up]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const i = parseInt(btn.dataset.blUp!, 10);
@@ -214,7 +255,8 @@ function wireButtonLinkModal(item: EditorItem): void {
     const mine = new Set(l?.groupNames ?? []);
     const paired = !!(l && partnerOf(l));
     const limitReached = paired && mine.size >= PAIR_GROUP_LIMIT;
-    const opts = S.animControls
+    const opt = S.animControls
+      .filter((g) => g.triggerMode === "button")
       .filter((g) => !mine.has(g.displayName))
       .map((g) => {
         const boundBy = linkBindingGroup(g.displayName);
@@ -223,13 +265,13 @@ function wireButtonLinkModal(item: EditorItem): void {
         return `<option value="${escHtml(g.displayName)}" ${disabled}>${escHtml(g.displayName)}${suffix}</option>`;
       })
       .join("");
-    addSel.innerHTML = opts || '<option value="">— 无可绑定的动画组 —</option>';
+    addSel.innerHTML = opt || '<option value="">— 无可绑定的动画组 —</option>';
   };
 
   refresh();
   refreshAddSel();
 
-  document.getElementById("blm-add")?.addEventListener("click", () => {
+  host.querySelector("#blm-add")?.addEventListener("click", () => {
     const name = addSel.value;
     if (!name) return;
     if (linkBindingGroup(name)) {
@@ -244,6 +286,7 @@ function wireButtonLinkModal(item: EditorItem): void {
     }
     l.groupNames.push(name);
     const g = S.animControls.find((gr) => gr.displayName === name);
+    if (g) g.triggerMode = "button";
     if (g && g.loop) {
       setStatus(`已绑定「${name}」（写回后生效）⚠ 该组循环执行不会结束，开启锁定时按钮将无法再按`, true);
     } else {
@@ -254,20 +297,35 @@ function wireButtonLinkModal(item: EditorItem): void {
     draw();
   });
 
-  const lockEl = document.getElementById("blm-lock") as HTMLInputElement | null;
+  host.querySelector("#blm-new-group")?.addEventListener("click", () => {
+    const group = createSwitchAnimGroup(item);
+    pushHistory();
+    S.animControls.push(group);
+    ensureLink(myId).groupNames.push(group.displayName);
+    setStatus(`已创建开关动画组「${group.displayName}」，正在打开单组编排…（写回后生效）`);
+    opts.onEditGroup(group.id);
+  });
+
+  const lockEl = host.querySelector<HTMLInputElement>("#blm-lock");
   lockEl?.addEventListener("change", () => {
     pushHistory();
     ensureLink(myId).lockUntilFinished = lockEl.checked;
     setStatus(`已${lockEl.checked ? "开启" : "关闭"}运行期锁定（写回后生效）`);
   });
 
-  const pairSel = document.getElementById("blm-pair") as HTMLSelectElement | null;
-  const startupEl = document.getElementById("blm-startup") as HTMLInputElement | null;
-  const pairHintEl = document.getElementById("blm-pair-hint");
+  const modeEl = host.querySelector<HTMLSelectElement>("#blm-mode");
+  modeEl?.addEventListener("change", () => {
+    pushHistory();
+    ensureLink(myId).sequenceMode = modeEl.value === "pingpong" ? "pingpong" : "loop";
+    setStatus(`按钮动画序列已切换为${modeEl.value === "pingpong" ? "往返" : "循环"}模式（写回后生效）`);
+  });
+
+  const pairSel = host.querySelector<HTMLSelectElement>("#blm-pair");
+  const startupEl = host.querySelector<HTMLInputElement>("#blm-startup");
+  const pairHintEl = host.querySelector<HTMLElement>("#blm-pair-hint");
   pairSel?.addEventListener("change", () => {
     pushHistory();
     const l = ensureLink(myId);
-    // 解除旧配对
     const old = partnerOf(l);
     if (old) {
       old.pairId = undefined;
@@ -283,7 +341,6 @@ function wireButtonLinkModal(item: EditorItem): void {
       const other = ensureLink(pid);
       l.pairId = shared;
       other.pairId = shared;
-      // 默认本按钮抬起、对方按下
       l.pairStartsUp = startupEl?.checked ?? true;
       other.pairStartsUp = !l.pairStartsUp;
       const otherItem = S.items.find((i) => i.instanceId === pid);
@@ -291,7 +348,6 @@ function wireButtonLinkModal(item: EditorItem): void {
     }
     refreshAddSel();
     if (pairHintEl) pairHintEl.textContent = pairHintText(partnerOf(l));
-    // 更新初始状态复选框可用性
     if (startupEl) {
       startupEl.disabled = !l.pairId;
       startupEl.checked = !!l.pairStartsUp;

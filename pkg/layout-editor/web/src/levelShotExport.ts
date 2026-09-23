@@ -3,7 +3,7 @@
  *  与 summaryExport.ts 同思路：纯 SVG 组合（rect + <image> data URL + <text>）
  *  绘入 canvas 后导出 PNG，避免 foreignObject 导致的 canvas 污染。
  *  导出内容：页头为关卡集中/英文名，卡片仅含每关截图 + 中文名 + 英文名；
- *  不含 s_* 场景/关卡标识等元信息，也不含任何操作按钮。 */
+ *  不含场景/关卡标识等元信息，也不含任何操作按钮。 */
 
 export interface LevelShotCard {
   /** 关卡截图 URL（"" 或加载失败 = 「无截图」占位）。 */

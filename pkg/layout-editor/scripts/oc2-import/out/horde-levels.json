@@ -1,0 +1,413 @@
+{
+ "count": 8,
+ "levels": [
+  {
+   "id": "OC2_DLC07_B01",
+   "dlc": "dlc07",
+   "label": "Text.Menu.DLC07Battlements01",
+   "world": -1,
+   "order": 101,
+   "hidden": false,
+   "levelName": "B1",
+   "sceneName": "s_battlements_01",
+   "editorSceneName": "s_oc2_horde_b01",
+   "sourceScene": "../backup_20260826/AssetRipper_export_20260728_091744/ExportedProject/Assets/downloadablecontent/dlc07/dlc_assets/Scenes/03_Battlements/s_battlements_01.unity",
+   "theme": "battlements",
+   "variants": {
+    "1": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_01_1p.json",
+     "stars": {
+      "one": 200,
+      "two": 280,
+      "three": 400,
+      "four": 460
+     }
+    },
+    "2": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_01_2p.json",
+     "stars": {
+      "one": 360,
+      "two": 500,
+      "three": 720,
+      "four": 900
+     }
+    },
+    "3": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_01_3p.json",
+     "stars": {
+      "one": 460,
+      "two": 640,
+      "three": 920,
+      "four": 1050
+     }
+    },
+    "4": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_01_4p.json",
+     "stars": {
+      "one": 620,
+      "two": 880,
+      "three": 1260,
+      "four": 1400
+     }
+    }
+   }
+  },
+  {
+   "id": "OC2_DLC07_B02",
+   "dlc": "dlc07",
+   "label": "Text.Menu.DLC07Battlements02",
+   "world": -1,
+   "order": 102,
+   "hidden": false,
+   "levelName": "B2",
+   "sceneName": "s_battlements_02",
+   "editorSceneName": "s_oc2_horde_b02",
+   "sourceScene": "../backup_20260826/AssetRipper_export_20260728_091744/ExportedProject/Assets/downloadablecontent/dlc07/dlc_assets/Scenes/03_Battlements/s_battlements_02.unity",
+   "theme": "battlements",
+   "variants": {
+    "1": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_02_1p.json",
+     "stars": {
+      "one": 200,
+      "two": 280,
+      "three": 400,
+      "four": 460
+     }
+    },
+    "2": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_02_2p.json",
+     "stars": {
+      "one": 360,
+      "two": 500,
+      "three": 720,
+      "four": 900
+     }
+    },
+    "3": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_02_3p.json",
+     "stars": {
+      "one": 460,
+      "two": 640,
+      "three": 920,
+      "four": 1050
+     }
+    },
+    "4": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_02_4p.json",
+     "stars": {
+      "one": 620,
+      "two": 880,
+      "three": 1260,
+      "four": 1400
+     }
+    }
+   }
+  },
+  {
+   "id": "OC2_DLC07_B03",
+   "dlc": "dlc07",
+   "label": "Text.Menu.DLC07Battlements03",
+   "world": -1,
+   "order": 103,
+   "hidden": false,
+   "levelName": "B3",
+   "sceneName": "s_battlements_03",
+   "editorSceneName": "s_oc2_horde_b03",
+   "sourceScene": "../backup_20260826/AssetRipper_export_20260728_091744/ExportedProject/Assets/downloadablecontent/dlc07/dlc_assets/Scenes/03_Battlements/s_battlements_03.unity",
+   "theme": "battlements",
+   "variants": {
+    "1": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_03_1p.json",
+     "stars": {
+      "one": 200,
+      "two": 280,
+      "three": 400,
+      "four": 460
+     }
+    },
+    "2": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_03_2p.json",
+     "stars": {
+      "one": 360,
+      "two": 500,
+      "three": 720,
+      "four": 900
+     }
+    },
+    "3": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_03_3p.json",
+     "stars": {
+      "one": 460,
+      "two": 640,
+      "three": 920,
+      "four": 1050
+     }
+    },
+    "4": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_03_4p.json",
+     "stars": {
+      "one": 620,
+      "two": 880,
+      "three": 1260,
+      "four": 1400
+     }
+    }
+   }
+  },
+  {
+   "id": "OC2_DLC07_B04",
+   "dlc": "dlc07",
+   "label": "Text.Menu.DLC07Battlements04",
+   "world": -1,
+   "order": 104,
+   "hidden": false,
+   "levelName": "B4",
+   "sceneName": "s_battlements_04",
+   "editorSceneName": "s_oc2_horde_b04",
+   "sourceScene": "../backup_20260826/AssetRipper_export_20260728_091744/ExportedProject/Assets/downloadablecontent/dlc07/dlc_assets/Scenes/03_Battlements/s_battlements_04.unity",
+   "theme": "battlements",
+   "variants": {
+    "1": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_04_1p.json",
+     "stars": {
+      "one": 200,
+      "two": 280,
+      "three": 400,
+      "four": 460
+     }
+    },
+    "2": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_04_2p.json",
+     "stars": {
+      "one": 360,
+      "two": 500,
+      "three": 720,
+      "four": 900
+     }
+    },
+    "3": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_04_3p.json",
+     "stars": {
+      "one": 460,
+      "two": 640,
+      "three": 920,
+      "four": 1050
+     }
+    },
+    "4": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_04_4p.json",
+     "stars": {
+      "one": 620,
+      "two": 880,
+      "three": 1260,
+      "four": 1400
+     }
+    }
+   }
+  },
+  {
+   "id": "OC2_DLC07_B05",
+   "dlc": "dlc07",
+   "label": "Text.Menu.DLC07Battlements05",
+   "world": -1,
+   "order": 105,
+   "hidden": false,
+   "levelName": "B5",
+   "sceneName": "s_battlements_05",
+   "editorSceneName": "s_oc2_horde_b05",
+   "sourceScene": "../backup_20260826/AssetRipper_export_20260728_091744/ExportedProject/Assets/downloadablecontent/dlc07/dlc_assets/Scenes/03_Battlements/s_battlements_05.unity",
+   "theme": "battlements",
+   "variants": {
+    "1": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_05_1p.json",
+     "stars": {
+      "one": 200,
+      "two": 280,
+      "three": 400,
+      "four": 460
+     }
+    },
+    "2": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_05_2p.json",
+     "stars": {
+      "one": 360,
+      "two": 500,
+      "three": 720,
+      "four": 900
+     }
+    },
+    "3": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_05_3p.json",
+     "stars": {
+      "one": 460,
+      "two": 640,
+      "three": 920,
+      "four": 1050
+     }
+    },
+    "4": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_05_4p.json",
+     "stars": {
+      "one": 620,
+      "two": 880,
+      "three": 1260,
+      "four": 1400
+     }
+    }
+   }
+  },
+  {
+   "id": "OC2_DLC07_B06",
+   "dlc": "dlc07",
+   "label": "Text.Menu.DLC07Battlements06",
+   "world": -1,
+   "order": 106,
+   "hidden": false,
+   "levelName": "B6",
+   "sceneName": "s_battlements_06",
+   "editorSceneName": "s_oc2_horde_b06",
+   "sourceScene": "../backup_20260826/AssetRipper_export_20260728_091744/ExportedProject/Assets/downloadablecontent/dlc07/dlc_assets/Scenes/03_Battlements/s_battlements_06.unity",
+   "theme": "battlements",
+   "variants": {
+    "1": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_06_1p.json",
+     "stars": {
+      "one": 200,
+      "two": 280,
+      "three": 400,
+      "four": 460
+     }
+    },
+    "2": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_06_2p.json",
+     "stars": {
+      "one": 360,
+      "two": 500,
+      "three": 720,
+      "four": 900
+     }
+    },
+    "3": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_06_3p.json",
+     "stars": {
+      "one": 460,
+      "two": 640,
+      "three": 920,
+      "four": 1050
+     }
+    },
+    "4": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_06_4p.json",
+     "stars": {
+      "one": 620,
+      "two": 880,
+      "three": 1260,
+      "four": 1400
+     }
+    }
+   }
+  },
+  {
+   "id": "OC2_DLC07_B07",
+   "dlc": "dlc07",
+   "label": "Text.Menu.DLC07Battlements07",
+   "world": -1,
+   "order": 107,
+   "hidden": false,
+   "levelName": "B7",
+   "sceneName": "s_battlements_07",
+   "editorSceneName": "s_oc2_horde_b07",
+   "sourceScene": "../backup_20260826/AssetRipper_export_20260728_091744/ExportedProject/Assets/downloadablecontent/dlc07/dlc_assets/Scenes/03_Battlements/s_battlements_07.unity",
+   "theme": "battlements",
+   "variants": {
+    "1": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_07_1p.json",
+     "stars": {
+      "one": 200,
+      "two": 280,
+      "three": 400,
+      "four": 460
+     }
+    },
+    "2": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_07_2p.json",
+     "stars": {
+      "one": 360,
+      "two": 500,
+      "three": 720,
+      "four": 900
+     }
+    },
+    "3": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_07_3p.json",
+     "stars": {
+      "one": 460,
+      "two": 640,
+      "three": 920,
+      "four": 1050
+     }
+    },
+    "4": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_07_4p.json",
+     "stars": {
+      "one": 620,
+      "two": 880,
+      "three": 1260,
+      "four": 1400
+     }
+    }
+   }
+  },
+  {
+   "id": "OC2_DLC07_B08",
+   "dlc": "dlc07",
+   "label": "Text.Menu.DLC07Battlements08",
+   "world": -1,
+   "order": 108,
+   "hidden": false,
+   "levelName": "B8",
+   "sceneName": "s_battlements_08",
+   "editorSceneName": "s_oc2_horde_b08",
+   "sourceScene": "../backup_20260826/AssetRipper_export_20260728_091744/ExportedProject/Assets/downloadablecontent/dlc07/dlc_assets/Scenes/03_Battlements/s_battlements_08.unity",
+   "theme": "battlements",
+   "variants": {
+    "1": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_08_1p.json",
+     "stars": {
+      "one": 200,
+      "two": 280,
+      "three": 400,
+      "four": 460
+     }
+    },
+    "2": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_08_2p.json",
+     "stars": {
+      "one": 360,
+      "two": 500,
+      "three": 720,
+      "four": 900
+     }
+    },
+    "3": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_08_3p.json",
+     "stars": {
+      "one": 460,
+      "two": 640,
+      "three": 920,
+      "four": 1050
+     }
+    },
+    "4": {
+     "config": "dump_bundle/Assets/downloadablecontent/dlc07/dlc_assets/data/levelconfigs/battlements_08_4p.json",
+     "stars": {
+      "one": 620,
+      "two": 880,
+      "three": 1260,
+      "four": 1400
+     }
+    }
+   }
+  }
+ ]
+}

@@ -4,6 +4,9 @@ import type {
   AudioDirectoryCatalog,
   AudioExportManifest,
   AudioKnowledge,
+  AssignmentResult,
+  AssetOptimizeResult,
+  AssetOptimizeUsage,
   BundleAnalysis,
   BunReplaceResult,
   BunUsageReport,
@@ -14,6 +17,8 @@ import type {
   CookingStepCatalog,
   CookingStepEntry,
   CounterAppearanceCatalog,
+  CustomMusicEntry,
+  CustomMusicUploadResult,
   CustomRecipeConfig,
   CustomRecipeEdit,
   CustomRecipeReferences,
@@ -25,10 +30,12 @@ import type {
   IconStatusList,
   IngredientEntry,
   LayoutDocument,
+  LevelAssignmentData,
   LevelDetail,
   LevelList,
   LevelRecipes,
   LevelOptionalItem,
+  LevelReadmeResult,
   OptionalPresets,
   LevelSetInfo,
   LevelSetList,
@@ -623,16 +630,18 @@ export async function updateSetInfo(body: SetInfoUpdateBody): Promise<void> {
   await readApiJson<{ ok?: boolean }>(r);
 }
 
-/** 启动关卡集导出（打包 → zip）。mode：all（关卡+依赖，默认）| levels（仅关卡集）
- *  | deps（仅依赖包）。任务在 Unity 后台异步执行，进度用 fetchSetExportStatus 轮询。 */
+/** 启动关卡集导出（打包 → zip）。setNames 传多个集名即合并导出到同一 zip
+ *  （OC2DIYLevel/levels/<set1>/、<set2>/… 并列，依赖包只带一份）。
+ *  mode：all（关卡+依赖，默认）| levels（仅关卡集）| deps（仅依赖包）。
+ *  任务在 Unity 后台异步执行，进度用 fetchSetExportStatus 轮询。 */
 export async function startSetExport(
-  setName: string,
+  setNames: string[],
   mode: "all" | "levels" | "deps" = "all"
 ): Promise<void> {
   const r = await fetch("/api/set/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ setName, mode }),
+    body: JSON.stringify({ setNames, mode }),
   });
   await readApiJson<{ ok?: boolean }>(r);
 }
@@ -706,11 +715,20 @@ export async function createLevel(body: LevelCreateBody): Promise<void> {
   await readApiJson<{ ok?: boolean }>(r);
 }
 
+export async function renameLevel(setName: string, levelId: string, newLevelId: string): Promise<void> {
+  const r = await fetch("/api/level/rename", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, levelId, newLevelId }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
 export interface LevelInfoUpdateBody {
   assetPath: string;
   levelName: string;
   levelNameZH: string;
-  sceneName: string;
+  // sceneName 已移除直改入口（不挪文件的直改会导致场景失联），改名走 renameLevel。
   debugRecipeCount: number;
   disableDynamicParenting: boolean;
   minOrderCount: number;
@@ -749,6 +767,8 @@ export async function updateLevelConfig(body: LevelConfigUpdateBody): Promise<vo
 export interface LevelAudioUpdateBody {
   sceneAssetPath: string;
   inLevelMusicGuid: string;
+  /** 自定义 BGM 文件名（data/bgm/ 下，含扩展名）；非空时优先于 inLevelMusicGuid。 */
+  customMusicFile: string;
   ambiences: string[];
   audioDirectoryGuids: string[];
   onDeathEffectGuid: string;
@@ -761,6 +781,43 @@ export async function updateLevelAudio(body: LevelAudioUpdateBody): Promise<void
     body: JSON.stringify(body),
   });
   await readApiJson<{ ok?: boolean }>(r);
+}
+
+// ---------- Custom level BGM (data/bgm/) ----------
+
+export async function fetchCustomMusic(setName: string): Promise<CustomMusicEntry[]> {
+  const r = await fetch(`/api/level/music/custom?set=${encodeURIComponent(setName)}`);
+  const data = await readApiJson<{ files?: CustomMusicEntry[] }>(r);
+  return data.files ?? [];
+}
+
+export async function uploadCustomMusic(
+  setName: string,
+  fileName: string,
+  data: ArrayBuffer | Uint8Array | Blob
+): Promise<CustomMusicUploadResult> {
+  const r = await fetch(
+    `/api/level/music/custom/upload?set=${encodeURIComponent(setName)}&file=${encodeURIComponent(fileName)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/octet-stream" },
+      body: data as BodyInit,
+    }
+  );
+  return await readApiJson<CustomMusicUploadResult>(r);
+}
+
+export async function deleteCustomMusic(setName: string, fileName: string): Promise<void> {
+  const r = await fetch("/api/level/music/custom/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, fileName }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export function getCustomMusicStreamUrl(setName: string, fileName: string): string {
+  return `/api/level/music/custom/stream?set=${encodeURIComponent(setName)}&file=${encodeURIComponent(fileName)}`;
 }
 
 export async function deleteLevel(setName: string, levelId: string): Promise<void> {
@@ -912,6 +969,65 @@ export async function clearSummaryBg(assetPath: string): Promise<void> {
   await readApiJson<{ path?: string }>(r);
 }
 
+// ---------- 菜谱分工配置 / 汇总页 readme（关卡 data 目录数据文件，`~` 目录不进包） ----------
+
+/** 读取分工配置；未配置或文件缺失返回 null。 */
+export async function fetchLevelAssignment(assetPath: string): Promise<LevelAssignmentData | null> {
+  const q = new URLSearchParams({ assetPath });
+  const r = await fetch(`/api/level/assignment?${q}`);
+  const data = await readApiJson<AssignmentResult>(r);
+  if (!data.exists || !data.json) return null;
+  try {
+    return JSON.parse(data.json) as LevelAssignmentData;
+  } catch {
+    throw new Error("分工配置解析失败（assignment.json 不是合法 JSON，可在分工模式页重新保存覆盖）");
+  }
+}
+
+export async function saveLevelAssignment(assetPath: string, data: LevelAssignmentData): Promise<void> {
+  const r = await fetch("/api/level/assignment-save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath, json: JSON.stringify(data) }),
+  });
+  await readApiJson<AssignmentResult>(r);
+}
+
+export async function clearLevelAssignment(assetPath: string): Promise<void> {
+  const r = await fetch("/api/level/assignment-clear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath }),
+  });
+  await readApiJson<AssignmentResult>(r);
+}
+
+/** 读取汇总页 readme HTML；未编辑过返回 ""。 */
+export async function fetchLevelReadme(assetPath: string): Promise<string> {
+  const q = new URLSearchParams({ assetPath });
+  const r = await fetch(`/api/level/readme?${q}`);
+  const data = await readApiJson<LevelReadmeResult>(r);
+  return data.exists ? data.html ?? "" : "";
+}
+
+export async function saveLevelReadme(assetPath: string, html: string): Promise<void> {
+  const r = await fetch("/api/level/readme-save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath, html }),
+  });
+  await readApiJson<LevelReadmeResult>(r);
+}
+
+export async function clearLevelReadme(assetPath: string): Promise<void> {
+  const r = await fetch("/api/level/readme-clear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath }),
+  });
+  await readApiJson<LevelReadmeResult>(r);
+}
+
 // ---------- Custom Recipe Management ----------
 
 export async function fetchCustomRecipeConfig(setName: string): Promise<CustomRecipeConfig> {
@@ -966,6 +1082,45 @@ export async function replaceBun(body: {
     recipes: data.recipes ?? [],
     skipped: data.skipped ?? [],
     warnings: data.warnings ?? [],
+  };
+}
+
+// ---------- 资产瘦身（自定义菜谱页 📦） ----------
+
+/** 扫描本关卡集 custom_recipes 的贴图/模型导入参数（瘦身前概览，不改任何文件）。 */
+export async function fetchAssetOptimizeUsage(setName: string): Promise<AssetOptimizeUsage> {
+  const q = new URLSearchParams({ setName });
+  const r = await fetch(`/api/custom-recipes/optimize-usage?${q}`);
+  const data = await readApiJson<Partial<AssetOptimizeUsage>>(r);
+  return {
+    setName: data.setName ?? setName,
+    recipesDir: data.recipesDir ?? "",
+    dirExists: data.dirExists ?? false,
+    textures: data.textures ?? [],
+    models: data.models ?? [],
+  };
+}
+
+/** 一键瘦身：只改 .meta 导入参数（贴图 maxTextureSize / 模型 meshCompression+读写+优化），
+ *  不改源 FBX/PNG；重新导出关卡集后 bundle 变小。 */
+export async function optimizeCustomRecipeAssets(body: {
+  setName: string;
+  textureMaxSize: number;
+  iconMaxSize: number;
+  meshCompression: string;
+  dryRun?: boolean;
+}): Promise<AssetOptimizeResult> {
+  const r = await fetch("/api/custom-recipes/optimize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await readApiJson<Partial<AssetOptimizeResult>>(r);
+  return {
+    texturesChanged: data.texturesChanged ?? 0,
+    modelsChanged: data.modelsChanged ?? 0,
+    details: data.details ?? [],
+    skipped: data.skipped ?? [],
   };
 }
 

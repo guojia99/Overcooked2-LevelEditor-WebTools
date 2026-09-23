@@ -791,8 +791,14 @@ public class LayoutEditorHttpServer
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<SetExportStartDto>(body);
+                // setNames（多集合并导出）非空时优先，否则回落单集 setName。
+                var setNames = new List<string>();
+                if (dto != null && dto.setNames != null && dto.setNames.Count > 0)
+                    setNames.AddRange(dto.setNames);
+                else if (dto != null && !string.IsNullOrEmpty(dto.setName))
+                    setNames.Add(dto.setName);
                 var err = LayoutEditorSetExporter.StartExport(
-                    dto != null ? dto.setName : null,
+                    setNames,
                     dto != null ? dto.mode : "all");
                 WriteAdminResult(response, err);
                 return;
@@ -856,6 +862,15 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/level/rename" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelRenameDto>(body);
+                var err = LayoutEditorLevelAdminApi.RenameLevel(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
             if (path == "/api/level/info" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);
@@ -893,6 +908,50 @@ public class LayoutEditorHttpServer
                 var err = LayoutEditorLevelAdminApi.UpdateLevelAudio(dto);
                 if (!string.IsNullOrEmpty(err)) LayoutEditorWriteBackHistory.Abort();
                 else LayoutEditorWriteBackHistory.CommitNow();
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            // ---------- Custom level BGM (data/bgm/) ----------
+            if (path == "/api/level/music/custom" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["set"] ?? "";
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ListCustomMusic(setName)));
+                return;
+            }
+
+            if (path == "/api/level/music/custom/upload" && request.HttpMethod == "POST")
+            {
+                var setName = request.QueryString["set"] ?? "";
+                var rawFile = request.QueryString["file"] ?? "";
+                byte[] data;
+                try { data = ReadBodyBytes(request, LayoutEditorLevelAdminApi.CustomBgmMaxBytes); }
+                catch (System.Exception ex)
+                {
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "读取上传内容失败：" + ex.Message }));
+                    return;
+                }
+                if (data == null)
+                {
+                    WriteJson(response, 413, LayoutEditorJson.ToJson(new ApiErrorDto { error = "上传内容超过上限 20MB。" }));
+                    return;
+                }
+                CustomMusicUploadResultDto result;
+                var err = LayoutEditorLevelAdminApi.SaveCustomMusic(setName, rawFile, data, out result);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/music/custom/delete" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<CustomMusicDeleteDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.DeleteCustomMusic(dto.setName, dto.fileName);
                 WriteAdminResult(response, err);
                 return;
             }
@@ -1041,6 +1100,96 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // ---------- 菜谱分工配置（关卡 data 目录 assignment~/assignment.json） ----------
+
+            if (path == "/api/level/assignment" && request.HttpMethod == "GET")
+            {
+                AssignmentResultDto result;
+                var err = LayoutEditorLevelAdminApi.ReadLevelAssignment(request.QueryString["assetPath"], out result);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/assignment-save" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<AssignmentSaveDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.SaveLevelAssignment(dto.assetPath, dto.json);
+                if (!string.IsNullOrEmpty(err))
+                {
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                    return;
+                }
+                AssignmentResultDto result;
+                LayoutEditorLevelAdminApi.ReadLevelAssignment(dto.assetPath, out result);
+                WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/assignment-clear" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelAssetPathDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.ClearLevelAssignment(dto.assetPath);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new AssignmentResultDto { exists = false, json = "" }));
+                return;
+            }
+
+            // ---------- 汇总页 readme 说明（关卡 data 目录 readme~/readme.json） ----------
+
+            if (path == "/api/level/readme" && request.HttpMethod == "GET")
+            {
+                ReadmeResultDto result;
+                var err = LayoutEditorLevelAdminApi.ReadLevelReadme(request.QueryString["assetPath"], out result);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/readme-save" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<ReadmeSaveDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.SaveLevelReadme(dto.assetPath, dto.html);
+                if (!string.IsNullOrEmpty(err))
+                {
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                    return;
+                }
+                ReadmeResultDto result;
+                LayoutEditorLevelAdminApi.ReadLevelReadme(dto.assetPath, out result);
+                WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/readme-clear" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelAssetPathDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.ClearLevelReadme(dto.assetPath);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new ReadmeResultDto { exists = false, html = "" }));
+                return;
+            }
+
             if (path == "/api/level/data-file" && request.HttpMethod == "GET")
             {
                 // Serve a raw file from the project (used to preview image-floor
@@ -1164,6 +1313,13 @@ public class LayoutEditorHttpServer
             {
                 try { ServeAudioStream(request, response); }
                 catch (System.Exception ex) { Debug.LogWarning("Layout Editor audio stream: " + ex.Message); }
+                return;
+            }
+
+            if (path == "/api/level/music/custom/stream" && request.HttpMethod == "GET")
+            {
+                try { ServeCustomMusicStream(request, response); }
+                catch (System.Exception ex) { Debug.LogWarning("Layout Editor custom music stream: " + ex.Message); }
                 return;
             }
 
@@ -1357,6 +1513,28 @@ public class LayoutEditorHttpServer
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<LayoutEditorBunSwapApi.BunReplaceRequestDto>(body);
                 var result = LayoutEditorBunSwapApi.Replace(dto);
+                WriteJson(response, string.IsNullOrEmpty(result.error) ? 200 : 400,
+                    LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            // ---- 自定义菜谱资产瘦身（自定义菜谱页 📦）----
+            // 只改本关卡集 custom_recipes/** 的导入参数（.meta）：贴图 maxTextureSize、
+            // 模型 meshCompression/isReadable/optimizeMesh。commonW2 共享库不会被碰
+            // （Optimize 只枚举关卡集自己的 custom_recipes 目录，不接收任意 assetPath）。
+            if (path == "/api/custom-recipes/optimize-usage" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(
+                    LayoutEditorCustomRecipeOptimizeApi.GetUsage(setName)));
+                return;
+            }
+
+            if (path == "/api/custom-recipes/optimize" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LayoutEditorCustomRecipeOptimizeApi.OptimizeRequestDto>(body);
+                var result = LayoutEditorCustomRecipeOptimizeApi.Optimize(dto);
                 WriteJson(response, string.IsNullOrEmpty(result.error) ? 200 : 400,
                     LayoutEditorJson.ToJson(result));
                 return;
@@ -1959,6 +2137,41 @@ public class LayoutEditorHttpServer
             return;
         }
 
+        ServeAudioFile(request, response, absPath);
+    }
+
+    /// <summary>自定义 BGM 试听流：读取 Assets/LevelSets/&lt;set&gt;/data/bgm/&lt;file&gt;。
+    ///  set/file 均做路径穿越防护（GetFullPath 必须仍落在 bgm 目录内）。</summary>
+    private static void ServeCustomMusicStream(HttpListenerRequest request, HttpListenerResponse response)
+    {
+        var setName = request.QueryString["set"] ?? "";
+        var file = request.QueryString["file"] ?? "";
+        if (string.IsNullOrEmpty(setName) || string.IsNullOrEmpty(file))
+        {
+            WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "缺少参数 set / file。" }));
+            return;
+        }
+
+        var absPath = LayoutEditorLevelAdminApi.CustomMusicAbsPath(setName, file);
+        var bgmRoot = Path.GetFullPath(Path.GetDirectoryName(absPath));
+        if (!Directory.Exists(bgmRoot))
+        {
+            WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "该关卡集尚无自定义 BGM 目录。" }));
+            return;
+        }
+        absPath = Path.GetFullPath(absPath);
+        if (!absPath.StartsWith(bgmRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal) || !File.Exists(absPath))
+        {
+            WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "音频文件不存在。" }));
+            return;
+        }
+
+        ServeAudioFile(request, response, absPath);
+    }
+
+    /// <summary>音频文件直出（含 Range 分支），两个试听端点共用。</summary>
+    private static void ServeAudioFile(HttpListenerRequest request, HttpListenerResponse response, string absPath)
+    {
         // 以下直接写流（Range 分支/普通分支），不再走 WriteText。
         _responseSent = true;
         var ext = Path.GetExtension(absPath).ToLowerInvariant();
@@ -2025,6 +2238,25 @@ public class LayoutEditorHttpServer
         }
 
         response.OutputStream.Close();
+    }
+
+    /// <summary>读取原始字节请求体（自定义 BGM 上传等）。超过 maxBytes 返回 null（413）。</summary>
+    private static byte[] ReadBodyBytes(HttpListenerRequest request, long maxBytes)
+    {
+        if (!request.HasEntityBody)
+            return new byte[0];
+        using (var ms = new MemoryStream())
+        {
+            var buf = new byte[65536];
+            int read;
+            while ((read = request.InputStream.Read(buf, 0, buf.Length)) > 0)
+            {
+                if (ms.Length + read > maxBytes)
+                    return null;
+                ms.Write(buf, 0, read);
+            }
+            return ms.ToArray();
+        }
     }
 
     // ---------- Internal DTOs for icon status JSON parsing (not shared!) ----------

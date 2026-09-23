@@ -29,6 +29,8 @@ public static class LayoutEditorSetExporter
     private static readonly object _lock = new object();
     private static string _status = "idle"; // idle | running | done | error
     private static string _setName = "";
+    /** 本趟导出的关卡集列表（多集合并导出；单集 = 1 个元素）。 */
+    private static List<string> _setNames = new List<string>();
     private static string _phase = "";
     private static string _message = "";
     private static string _error = "";
@@ -46,7 +48,8 @@ public static class LayoutEditorSetExporter
     private static readonly string[] CustomStubTagPrefixes =
     {
         "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
-        "UtensilTiming|", "CameraOffset|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|"
+        "UtensilTiming|", "CameraOffset|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|",
+        "ConveyorDirectionSync|",
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub：tag 载体（含 prefab 自带的
@@ -115,24 +118,52 @@ public static class LayoutEditorSetExporter
 
     public static string StartExport(string setName, string mode)
     {
-        if (string.IsNullOrEmpty(setName))
+        var list = new List<string>();
+        if (!string.IsNullOrEmpty(setName))
+            list.Add(setName);
+        return StartExport(list, mode);
+    }
+
+    /// <summary>多集合并导出：一次打包多个关卡集到同一 zip（OC2DIYLevel/levels/&lt;set1&gt;/、
+    /// levels/&lt;set2&gt;/… 并列，依赖包只带一份）。单集时行为与旧接口完全一致。
+    /// deps 模式与集无关（统一运行时依赖包），多于一个集时只取第一个。</summary>
+    public static string StartExport(List<string> setNames, string mode)
+    {
+        if (setNames == null || setNames.Count == 0)
             return "缺少关卡集标识。";
-        var safe = setName.Trim();
-        if (safe.IndexOf('/') >= 0 || safe.IndexOf('\\') >= 0 || safe == "." || safe == "..")
-            return "关卡集标识非法。";
-        var setDir = LevelSetsRoot + "/" + safe;
-        if (!AssetDatabase.IsValidFolder(setDir))
-            return "关卡集不存在：" + safe;
+        var safeList = new List<string>();
+        foreach (var raw in setNames)
+        {
+            if (string.IsNullOrEmpty(raw))
+                continue;
+            var safe = raw.Trim();
+            if (safeList.Contains(safe))
+                continue; // 去重（保序）
+            safeList.Add(safe);
+        }
+        if (safeList.Count == 0)
+            return "缺少关卡集标识。";
         var m = (mode ?? "all").Trim().ToLower();
         if (m != "levels" && m != "deps" && m != "all")
             m = "all";
+        if (m == "deps" && safeList.Count > 1)
+            safeList.RemoveRange(1, safeList.Count - 1); // 依赖包与集无关，取第一个
+
+        foreach (var safe in safeList)
+        {
+            if (safe.IndexOf('/') >= 0 || safe.IndexOf('\\') >= 0 || safe == "." || safe == "..")
+                return "关卡集标识非法：" + safe;
+            if (!AssetDatabase.IsValidFolder(LevelSetsRoot + "/" + safe))
+                return "关卡集不存在：" + safe;
+        }
 
         lock (_lock)
         {
             if (_status == "running")
                 return "已有导出任务正在进行（" + _setName + "），请等待完成后再试。";
             _status = "running";
-            _setName = safe;
+            _setName = string.Join("+", safeList.ToArray());
+            _setNames = safeList;
             _phase = "queued";
             _message = "任务已排队…";
             _error = "";
@@ -175,12 +206,12 @@ public static class LayoutEditorSetExporter
 
     private static void RunExport()
     {
-        var setName = "";
-        lock (_lock) { setName = _setName; }
+        var setNames = new List<string>();
+        lock (_lock) { setNames.AddRange(_setNames); }
         var prevActive = EditorSceneManager.GetActiveScene().path;
         try
         {
-            RunExportCore(setName);
+            RunExportCore(setNames);
             lock (_lock) { _status = "done"; }
         }
         catch (Exception ex)
@@ -210,125 +241,151 @@ public static class LayoutEditorSetExporter
         }
     }
 
-    private static void RunExportCore(string setName)
+    private static void RunExportCore(List<string> setNames)
     {
-        var setDir = LevelSetsRoot + "/" + setName;
-        var outDir = BundlesRoot + "/" + setName;
-        var absOutDir = AbsPath(outDir);
         var mode = _mode;
+        var joinedName = string.Join("+", setNames.ToArray());
 
         // ---- 依赖包模式（deps）：不碰关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/ 依赖 ----
         if (mode == "deps")
         {
-            ExportDepsOnly(setName);
+            ExportDepsOnly(setNames[0]);
             return;
         }
 
-        // ---- 1. prepare：逐场景 Open → 清临时物体 → 重打 stub tag → Save ----
-        var scenes = CollectScenePaths(setDir);
-        if (scenes.Count == 0)
-            throw new Exception("关卡集没有可用场景（" + setDir + "/scenes/ 为空）。");
-        var i = 0;
-        foreach (var scenePath in scenes)
+        // ---- 1. prepare：逐集逐场景 Open → 清临时物体 → 重打 stub tag → Save ----
+        var perSetScenes = new List<KeyValuePair<string, List<string>>>();
+        var totalScenes = 0;
+        foreach (var setName in setNames)
         {
-            i++;
-            SetPhase("prepare", "准备场景 " + i + "/" + scenes.Count + "：" + Path.GetFileName(scenePath));
-            EditorUtility.DisplayProgressBar("导出关卡集 " + setName,
-                "准备场景 " + i + "/" + scenes.Count + "…", (float)i / (scenes.Count + 1));
-            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-            var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
-            if (!string.IsNullOrEmpty(hudWarn))
-                Debug.LogWarning("[SetExporter] " + hudWarn);
-            // 打包时自动给 web CustomStub 道具重打 tag（组件→最新格式 tag，覆盖旧格式/
-            // 补齐缺失），保证 loader 场景自愈可靠、无陈旧/缺失 tag。
-            var retagged = LayoutEditorStubIO.RefreshStubTagsInActiveScene();
-            if (retagged > 0)
-                Debug.Log("[SetExporter] 已重打 " + retagged + " 个 stub tag：" + scenePath);
-            LayoutEditorPseudoReload.EnsurePrepareForBuilding();
-            if (!_usesCustomStub && ActiveSceneUsesCustomStub())
+            var scenes = CollectScenePaths(LevelSetsRoot + "/" + setName);
+            if (scenes.Count == 0)
+                throw new Exception("关卡集没有可用场景（" + LevelSetsRoot + "/" + setName
+                    + "/scenes/ 为空）。");
+            perSetScenes.Add(new KeyValuePair<string, List<string>>(setName, scenes));
+            totalScenes += scenes.Count;
+        }
+        var i = 0;
+        foreach (var pair in perSetScenes)
+        {
+            foreach (var scenePath in pair.Value)
             {
-                _usesCustomStub = true;
-                Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件）：" + scenePath);
+                i++;
+                SetPhase("prepare", "准备场景 " + i + "/" + totalScenes + "（" + pair.Key + "）："
+                    + Path.GetFileName(scenePath));
+                EditorUtility.DisplayProgressBar("导出关卡集 " + joinedName,
+                    "准备场景 " + i + "/" + totalScenes + "…", (float)i / (totalScenes + 1));
+                var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
+                if (!string.IsNullOrEmpty(hudWarn))
+                    Debug.LogWarning("[SetExporter] " + hudWarn);
+                // 打包时自动给 web CustomStub 道具重打 tag（组件→最新格式 tag，覆盖旧格式/
+                // 补齐缺失），保证 loader 场景自愈可靠、无陈旧/缺失 tag。
+                var retagged = LayoutEditorStubIO.RefreshStubTagsInActiveScene();
+                if (retagged > 0)
+                    Debug.Log("[SetExporter] 已重打 " + retagged + " 个 stub tag：" + scenePath);
+                LayoutEditorPseudoReload.EnsurePrepareForBuilding();
+                if (!_usesCustomStub && ActiveSceneUsesCustomStub())
+                {
+                    _usesCustomStub = true;
+                    Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件）：" + scenePath);
+                }
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
             }
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
         }
         AssetDatabase.SaveAssets();
 
-        // ---- 2. clean：仅删除本关卡集的旧产物目录（其他目录不动）----
-        SetPhase("clean", "清理旧构建产物：" + outDir);
-        if (AssetDatabase.IsValidFolder(outDir))
-            AssetDatabase.DeleteAsset(outDir);
-        else if (Directory.Exists(absOutDir))
-            Directory.Delete(absOutDir, true);
-        var absDirMeta = absOutDir + ".meta";
-        if (File.Exists(absDirMeta))
-            File.Delete(absDirMeta);
+        // ---- 2. clean：逐集仅删除本集旧产物目录（其他目录不动）----
+        foreach (var setName in setNames)
+        {
+            var outDir = BundlesRoot + "/" + setName;
+            var absOutDir = AbsPath(outDir);
+            SetPhase("clean", "清理旧构建产物：" + outDir);
+            if (AssetDatabase.IsValidFolder(outDir))
+                AssetDatabase.DeleteAsset(outDir);
+            else if (Directory.Exists(absOutDir))
+                Directory.Delete(absOutDir, true);
+            var absDirMeta = absOutDir + ".meta";
+            if (File.Exists(absDirMeta))
+                File.Delete(absDirMeta);
+        }
         AssetDatabase.Refresh();
 
-        // ---- 3. build：构建 AssetBundle（阻塞，约 3-5 分钟）----
+        // ---- 3. build：构建 AssetBundle（阻塞，约 3-5 分钟；一次全量构建覆盖所有集）----
         SetPhase("build", "构建 AssetBundle（约 3-5 分钟）…");
-        LayoutEditorLevelAdminApi.EnsureSetInfoBundle(setName);
-        EnsureSceneBundleNames(setName, scenes);
+        foreach (var pair in perSetScenes)
+        {
+            LayoutEditorLevelAdminApi.EnsureSetInfoBundle(pair.Key);
+            EnsureSceneBundleNames(pair.Key, pair.Value);
+        }
         if (BeforeBuild != null)
-            BeforeBuild(setName);
+            BeforeBuild(setNames[0]); // 钩子为统一运行时 staging，与集名无关，只调一次
         if (!Directory.Exists(AbsPath(BundlesRoot)))
             Directory.CreateDirectory(AbsPath(BundlesRoot));
         var manifest = BuildPipeline.BuildAssetBundles(
             BundlesRoot, BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
         if (manifest == null)
             throw new Exception("BuildPipeline.BuildAssetBundles 返回 null，构建失败（详见 Console）。");
-        if (!Directory.Exists(absOutDir))
-            throw new Exception("构建完成但没有输出目录 " + outDir + "（bundle 名可能未设置，请检查关卡集根目录与场景的 AssetBundle）。");
-
-        // ---- 4. package：删除 .manifest / *.meta 等带后缀文件 ----
-        SetPhase("package", "清理 manifest 与 meta 文件…");
-        foreach (var f in Directory.GetFiles(absOutDir))
+        foreach (var setName in setNames)
         {
-            var lower = f.ToLower();
-            if (lower.EndsWith(".manifest") || lower.EndsWith(".meta"))
-                File.Delete(f);
+            if (!Directory.Exists(AbsPath(BundlesRoot + "/" + setName)))
+                throw new Exception("构建完成但没有输出目录 " + BundlesRoot + "/" + setName
+                    + "（bundle 名可能未设置，请检查关卡集根目录与场景的 AssetBundle）。");
+        }
+
+        // ---- 4. package：逐集删除 .manifest / *.meta 等带后缀文件 ----
+        SetPhase("package", "清理 manifest 与 meta 文件…");
+        foreach (var setName in setNames)
+        {
+            foreach (var f in Directory.GetFiles(AbsPath(BundlesRoot + "/" + setName)))
+            {
+                var lower = f.ToLower();
+                if (lower.EndsWith(".manifest") || lower.EndsWith(".meta"))
+                    File.Delete(f);
+            }
         }
 
         // ---- 5. zip：新结构（整体解压到 BepInEx/plugins/ 即全部就位）----
-        //   OC2DIYLevel/levels/<set>/…       关卡 bundle（info_<set> / s_*）+ requires.txt
+        //   OC2DIYLevel/levels/<set1>/… <set2>/…   各集关卡 bundle（info_<set> / s_*）+ requires.txt（逐集）
         //   OC2DIYLevelRuntimeWLoader/…         仅 all 模式：Loader.dll + debugLog.dll + 配置
         //                                     + webcustomstub_runtime
-        //                                     + commonW1/commonW2/...（依赖包，装一次）
-        var payloads = new List<string>(Directory.GetFiles(absOutDir));
-        payloads.RemoveAll(HasJunkExtension);
-        // 旧体系 per-set runtime bundle 已废除，若产物里残留 runtime 文件一律剔除
-        // （统一运行时改由依赖包 OC2DIYLevelRuntimeWLoader/webcustomstub_runtime 分发）。
-        payloads.RemoveAll(p =>
-            string.Equals(Path.GetFileName(p), "runtime", StringComparison.OrdinalIgnoreCase));
-        if (payloads.Count == 0)
-            throw new Exception("清理后没有可打包的 bundle 文件。");
-        if (File.Exists(absOutDir + "/info_" + setName) == false)
-            Debug.LogWarning("[SetExporter] 未找到 info_" + setName
-                + "（关卡集根目录 AssetBundle 可能用了历史命名），将按实际产物打包。");
-
-        var version = SanitizeVersion(FindSetVersion(setName));
-        var modeSuffix = _mode == "levels" ? "_levels" : "";
-        var zipFileName = setName + "_v" + version + modeSuffix + "_" + DateTime.Now.ToString("yyyyMMdd") + ".zip";
-        var zipAbsPath = ExportRootAbsPath() + "/" + zipFileName;
+        //                                     + commonW1/commonW2/...（依赖包只带一份）
         var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
+        foreach (var setName in setNames)
+        {
+            var absOutDir = AbsPath(BundlesRoot + "/" + setName);
+            var payloads = new List<string>(Directory.GetFiles(absOutDir));
+            payloads.RemoveAll(HasJunkExtension);
+            // 旧体系 per-set runtime bundle 已废除，若产物里残留 runtime 文件一律剔除
+            // （统一运行时改由依赖包 OC2DIYLevelRuntimeWLoader/webcustomstub_runtime 分发）。
+            payloads.RemoveAll(p =>
+                string.Equals(Path.GetFileName(p), "runtime", StringComparison.OrdinalIgnoreCase));
+            if (payloads.Count == 0)
+                throw new Exception("清理后没有可打包的 bundle 文件（" + setName + "）。");
+            if (!File.Exists(absOutDir + "/info_" + setName))
+                Debug.LogWarning("[SetExporter] 未找到 info_" + setName
+                    + "（关卡集根目录 AssetBundle 可能用了历史命名），将按实际产物打包。");
 
-        // 关卡 bundle → OC2DIYLevel/levels/<set>/（模组从此固定路径读关卡）
-        foreach (var p in payloads)
-            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
-                "OC2DIYLevel/levels/" + setName + "/" + Path.GetFileName(p), p));
+            // 关卡 bundle → OC2DIYLevel/levels/<set>/（模组从此固定路径读关卡）
+            foreach (var p in payloads)
+                entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
+                    "OC2DIYLevel/levels/" + setName + "/" + Path.GetFileName(p), p));
 
-        // requires.txt：本关卡集要求的依赖包版本（= 统一运行时 SSOT 版本）；
-        // Loader 用自身 PluginVersion semver 比较，< 时警告跳过 stub 支持。
-        var requiresAbs = WriteRequiresFile(setName);
-        if (!string.IsNullOrEmpty(requiresAbs))
-            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
-                "OC2DIYLevel/levels/" + setName + "/requires.txt", requiresAbs));
+            // requires.txt：本关卡集要求的依赖包版本（= 统一运行时 SSOT 版本）；
+            // Loader 用自身 PluginVersion semver 比较，< 时警告跳过 stub 支持。
+            var requiresAbs = WriteRequiresFile(setName);
+            if (!string.IsNullOrEmpty(requiresAbs))
+                entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
+                    "OC2DIYLevel/levels/" + setName + "/requires.txt", requiresAbs));
+        }
 
-        // all 模式：附带依赖包 OC2DIYLevelRuntimeWLoader/（commonW2 随本集引用按需）
-        if (_mode == "all")
-            AddDependencyEntries(entries, setName, false);
+        // all 模式：附带依赖包 OC2DIYLevelRuntimeWLoader/（commonW2 随任一集引用按需）
+        if (mode == "all")
+            AddDependencyEntries(entries, setNames, false);
 
+        var zipFileName = BuildZipFileName(setNames, mode);
+        var zipAbsPath = ExportRootAbsPath() + "/" + zipFileName;
         SetPhase("zip", "生成 zip：" + zipFileName + "（" + entries.Count + " 个文件）…");
         LayoutEditorZipWriter.WriteZip(zipAbsPath, entries);
 
@@ -340,6 +397,20 @@ public static class LayoutEditorSetExporter
             _message = "导出完成：" + zipFileName;
         }
         AssetDatabase.Refresh();
+    }
+
+    /// <summary>导出 zip 文件名：单集 = &lt;set&gt;_v&lt;ver&gt;[_levels]_&lt;yyyyMMdd&gt;.zip（与历史
+    /// 完全一致）；多集 = 各集 name_v&lt;ver&gt; 用 + 连接（超长时回落 multi&lt;N&gt;sets）。</summary>
+    private static string BuildZipFileName(List<string> setNames, string mode)
+    {
+        var parts = new List<string>();
+        foreach (var setName in setNames)
+            parts.Add(setName + "_v" + SanitizeVersion(FindSetVersion(setName)));
+        var modeSuffix = mode == "levels" ? "_levels" : "";
+        var baseName = string.Join("+", parts.ToArray());
+        if (baseName.Length > 120)
+            baseName = "multi" + setNames.Count + "sets";
+        return baseName + modeSuffix + "_" + DateTime.Now.ToString("yyyyMMdd") + ".zip";
     }
 
     /// <summary>依赖包（deps）模式：不构建关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/
@@ -381,7 +452,7 @@ public static class LayoutEditorSetExporter
             throw new Exception("BuildPipeline.BuildAssetBundles 返回 null，commonW1/W2 重新打包失败（详见 Console）。");
 
         var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
-        AddDependencyEntries(entries, setName, true); // deps 模式：commonW1/W2 均无条件携带
+        AddDependencyEntries(entries, new List<string> { setName }, true); // deps 模式：commonW1/W2 均无条件携带
         if (entries.Count == 0)
             throw new Exception("依赖包为空：未找到 Loader.dll / webcustomstub_runtime / commonW1，"
                 + "请先执行 Layout Editor/CustomStub/Build AssetBundles（含 Runtime staging）。");
@@ -425,10 +496,12 @@ public static class LayoutEditorSetExporter
     }
 
     /// <summary>把依赖包内容加入 zip 条目：OC2DIYLevelRuntimeWLoader/{Loader.dll,
-    /// webcustomstub_runtime, commonW1, commonW2, commonW3...}。
-    /// commonW1 必须携带；commonW2 仍按本集需要决定；commonW3 及以后自动携带，
+    /// webcustomstub_runtime, commonW1, commonW2, commonW3...}。多集合并导出时整包
+    /// 只带一份（调用一次）。commonW1 必须携带；commonW2 在 deps 模式无条件携带，
+    /// all 模式任一集引用即携带；commonW3 及以后自动携带，
     /// 避免新增公共资源包后旧的导出逻辑漏分发。</summary>
-    private static void AddDependencyEntries(List<LayoutEditorZipWriter.ZipEntrySource> entries, string setName, bool alwaysCommonW2)
+    private static void AddDependencyEntries(List<LayoutEditorZipWriter.ZipEntrySource> entries,
+        List<string> setNames, bool alwaysCommonW2)
     {
         const string depDir = "OC2DIYLevelRuntimeWLoader/";
 
@@ -506,9 +579,20 @@ public static class LayoutEditorSetExporter
         // commonW1（问号图标库 / RandomDispenser / web 火锅等；由 Loader 从依赖包加载）。
         AddCommonWEntry(entries, depDir, 1, true);
 
-        // commonW2：deps 模式无条件携带（依赖包通用）；all 模式仅本集引用时带。
+        // commonW2：deps 模式无条件携带（依赖包通用）；all 模式任一集引用时带。
         var commonW2Abs = AbsPath(BundlesRoot) + "/commonw2";
-        var wantCommonW2 = alwaysCommonW2 || LayoutEditorCustomIngredients.SetNeedsCommonW2Bundle(setName);
+        var wantCommonW2 = alwaysCommonW2;
+        if (!wantCommonW2)
+        {
+            foreach (var setName in setNames)
+            {
+                if (LayoutEditorCustomIngredients.SetNeedsCommonW2Bundle(setName))
+                {
+                    wantCommonW2 = true;
+                    break;
+                }
+            }
+        }
         if (wantCommonW2)
         {
             if (File.Exists(commonW2Abs))

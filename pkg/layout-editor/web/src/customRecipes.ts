@@ -1,5 +1,6 @@
 import * as api from "./api";
 import type {
+  AssetOptimizeUsage,
   BunUsage,
   BunUsageReport,
   CustomRecipeCategory,
@@ -434,6 +435,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       <span class="muted">当前关卡集：<b>${esc(setName)}</b></span>
       <span style="flex:1"></span>
       <button class="m-btn" id="cr-unify-bun" title="把本关卡集自定义菜谱里的汉堡面包皮统一换成同一种">🍞 统一面包皮</button>
+      <button class="m-btn" id="cr-optimize-assets" title="只调 .meta 导入参数（贴图分辨率/网格精度）缩小导出包；不改源 FBX/PNG">📦 资产瘦身</button>
       <button class="m-btn" id="cr-new-filling" title="夹心 = 0 分自定义菜谱，做好后可在汉堡工作台选用">🥩 夹心工作台</button>
       <button class="m-btn" id="cr-new-burger">🍔 新增汉堡菜谱</button>
       <button class="m-btn primary" id="cr-new-recipe">+ 新建菜谱</button>
@@ -613,6 +615,9 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   document.getElementById("cr-back")?.addEventListener("click", () => void renderSetChooser(app));
   document.getElementById("cr-unify-bun")?.addEventListener("click", () =>
     openBunSwapModal(setName, refreshView)
+  );
+  document.getElementById("cr-optimize-assets")?.addEventListener("click", () =>
+    void openAssetOptimizeModal(setName)
   );
   document.getElementById("cr-new-burger")?.addEventListener("click", () => {
     location.assign(burgerPath(setName));
@@ -878,6 +883,157 @@ async function openBunSwapModal(setName: string, onDone: () => void): Promise<vo
   });
 
   redrawRows();
+}
+
+// ==================== 📦 资产瘦身 ====================
+
+/** 贴图档位（2 的幂：DXT 压缩格式不回退；128~512 区间相邻档即 128 步进）。 */
+const ASSET_SIZE_STEPS = [128, 256, 512, 1024];
+
+/** 网格精度档（顶点量化，Unity 导入参数没有真正的「减面」）。 */
+const MESH_COMPRESSION_TIERS: ReadonlyArray<{ id: string; label: string }> = [
+  { id: "off", label: "关闭（体积最大）" },
+  { id: "low", label: "Low（轻度量化）" },
+  { id: "medium", label: "Medium（推荐）" },
+  { id: "high", label: "High（体积最小）" },
+];
+
+function countBuckets(items: { key: string; count: number }[]): string {
+  return items.map((i) => `${i.key}×${i.count}`).join("、");
+}
+
+/**
+ * 📦 资产瘦身：把关卡集 `custom_recipes/` 的贴图与模型**导入参数（.meta）**调小档位，
+ * 缩小导出 bundle。源 FBX/PNG 字节不动、GUID 不变、prefab/SO 引用不受影响。
+ * 只处理本关卡集目录（commonW2 共享库后端不枚举）；新上传的资产已在上传时自动套默认档。
+ */
+async function openAssetOptimizeModal(setName: string): Promise<void> {
+  showBusy("扫描资产…");
+  let usage: AssetOptimizeUsage;
+  try {
+    usage = await api.fetchAssetOptimizeUsage(setName);
+  } catch (e) {
+    setStatus(e instanceof Error ? e.message : String(e), false);
+    return;
+  } finally {
+    hideBusy();
+  }
+
+  if (!usage.dirExists || (usage.textures.length === 0 && usage.models.length === 0)) {
+    openModal(
+      "📦 资产瘦身",
+      `<p class="modal-hint">关卡集 <b>${esc(setName)}</b> 的 <code>custom_recipes/</code> 里没有可调整的贴图或模型。</p>`,
+      '<button class="m-btn" data-close>关闭</button>'
+    );
+    document.querySelector<HTMLButtonElement>("[data-close]")?.addEventListener("click", closeModal);
+    return;
+  }
+
+  // 当前状态汇总：贴图按导入档位分桶，模型按精度档分桶 + 三角形合计。
+  const icons = usage.textures.filter((t) => t.isIcon);
+  const materialTex = usage.textures.filter((t) => !t.isIcon);
+  const texBuckets = new Map<number, number>();
+  for (const t of usage.textures) texBuckets.set(t.maxTextureSize, (texBuckets.get(t.maxTextureSize) ?? 0) + 1);
+  const texBucketText = countBuckets(
+    [...texBuckets.entries()].sort((a, b) => b[0] - a[0]).map(([key, count]) => ({ key: String(key), count }))
+  );
+  const meshBuckets = new Map<string, number>();
+  for (const m of usage.models) meshBuckets.set(m.meshCompression, (meshBuckets.get(m.meshCompression) ?? 0) + 1);
+  const meshBucketText = countBuckets([...meshBuckets.entries()].map(([key, count]) => ({ key, count })));
+  const totalTris = usage.models.reduce((s, m) => s + Math.max(m.triangles, 0), 0);
+  const unreadableModels = usage.models.filter((m) => m.triangles < 0).length;
+  const trisText =
+    usage.models.length === 0
+      ? ""
+      : `合计约 ${(totalTris / 1000).toFixed(1)}k 三角形${unreadableModels > 0 ? `（${unreadableModels} 个已关读写不可读）` : ""}`;
+
+  const sizeOptions = (sel: number): string =>
+    ASSET_SIZE_STEPS.map((s) => `<option value="${s}"${s === sel ? " selected" : ""}>${s}</option>`).join("");
+  const meshOptions = (sel: string): string =>
+    MESH_COMPRESSION_TIERS.map((t) => `<option value="${t.id}"${t.id === sel ? " selected" : ""}>${t.label}</option>`).join("");
+  const selectRow = (id: string, label: string, options: string): string => `
+    <label style="display:flex;align-items:center;gap:12px;margin:8px 0">
+      <span style="flex:1">${label}</span>
+      <select id="${id}" class="rl-select" style="min-width:160px">${options}</select>
+    </label>`;
+
+  const body = `
+    <p class="modal-hint">只调整 <b>${esc(setName)}</b> 的 <code>custom_recipes/</code> 内资产的<b>导入参数（.meta）</b>：源 FBX/PNG 不动、GUID 不变、引用不受影响；<b>重新导出关卡集</b>后产物体积变小。已达标的资产不会被重导入。</p>
+    <div class="m-section-title">当前资产</div>
+    <div class="muted small" style="margin-bottom:4px">贴图 ${usage.textures.length} 张（材质 ${materialTex.length} + 图标 ${icons.length}）· 当前档位：${esc(texBucketText)}</div>
+    ${usage.models.length > 0 ? `<div class="muted small">模型 ${usage.models.length} 个 · ${esc(trisText)} · 精度：${esc(meshBucketText)}</div>` : ""}
+    <div class="m-section-title">目标档位</div>
+    ${selectRow("ao-tex", "材质贴图（base_color / normal / roughness / metallic …）", sizeOptions(256))}
+    ${selectRow("ao-icon", "图标（_Icon.png，游戏内点单 UI）", sizeOptions(256))}
+    ${selectRow("ao-mesh", "模型网格精度（顶点量化 + 关读写副本 + 网格优化）", meshOptions("medium"))}
+    <p class="muted small">提示：贴图是体积大头（2048→256 约缩小 98%）；Unity 导入参数没有真正的「减面」，网格只做顶点数据量化。压缩后编辑器内贴图会变糊，属正常现象。</p>
+    <p class="mp-status" id="ao-status"></p>
+  `;
+
+  openModal(
+    "📦 资产瘦身",
+    body,
+    `<button class="m-btn" id="ao-cancel">取消</button>
+     <button class="m-btn primary" id="ao-apply">执行瘦身</button>`,
+    { closeOnBackdrop: false }
+  );
+
+  document.getElementById("ao-cancel")?.addEventListener("click", closeModal);
+  const $apply = document.getElementById("ao-apply") as HTMLButtonElement;
+  const $status = document.getElementById("ao-status")!;
+
+  $apply.addEventListener("click", () => {
+    void (async () => {
+      const textureMaxSize = Number((document.getElementById("ao-tex") as HTMLSelectElement).value);
+      const iconMaxSize = Number((document.getElementById("ao-icon") as HTMLSelectElement).value);
+      const meshCompression = (document.getElementById("ao-mesh") as HTMLSelectElement).value;
+      $apply.disabled = true;
+      $status.textContent = "瘦身中（贴图/模型重导入，可能需要几十秒）…";
+      $status.className = "mp-status";
+      try {
+        const res = await api.optimizeCustomRecipeAssets({
+          setName,
+          textureMaxSize,
+          iconMaxSize,
+          meshCompression,
+        });
+        closeModal();
+        const skipNote = res.skipped.length > 0 ? ` · 跳过 ${res.skipped.length} 项` : "";
+        const detailHtml =
+          res.details.length > 0
+            ? `<details style="margin-top:8px"><summary>查看逐项变更（${res.details.length}）</summary>
+               <div style="max-height:240px;overflow:auto">${res.details
+                 .map((d) => `<div class="muted small" style="font-family:monospace;word-break:break-all">${esc(d)}</div>`)
+                 .join("")}</div></details>`
+            : "";
+        const skippedHtml =
+          res.skipped.length > 0
+            ? `<details style="margin-top:8px"><summary>跳过 ${res.skipped.length} 项（含原因）</summary>
+               <div style="max-height:160px;overflow:auto">${res.skipped
+                 .map((d) => `<div class="muted small" style="font-family:monospace;word-break:break-all">${esc(d)}</div>`)
+                 .join("")}</div></details>`
+            : "";
+        const allDone = res.texturesChanged === 0 && res.modelsChanged === 0 && res.skipped.length === 0;
+        const summary = allDone
+          ? "全部资产已达标，无需调整。"
+          : `已调整 ${res.texturesChanged} 张贴图、${res.modelsChanged} 个模型的导入参数${skipNote}。<b>重新导出关卡集</b>后产物体积变小。`;
+        openModal(
+          allDone ? "📦 资产瘦身" : "📦 资产瘦身完成",
+          `<p class="modal-hint">${summary}</p>${detailHtml}${skippedHtml}`,
+          '<button class="m-btn" data-close>关闭</button>'
+        );
+        document.querySelector<HTMLButtonElement>("[data-close]")?.addEventListener("click", closeModal);
+        setStatus(
+          allDone ? "资产瘦身：全部资产已达标。" : `资产瘦身完成：贴图 ×${res.texturesChanged}，模型 ×${res.modelsChanged}${skipNote}`,
+          true
+        );
+      } catch (e) {
+        $apply.disabled = false;
+        $status.textContent = e instanceof Error ? e.message : String(e);
+        $status.className = "mp-status err";
+      }
+    })();
+  });
 }
 
 // ==================== Recipe Form Page (Create / Edit) ====================

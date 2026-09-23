@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 [Serializable]
 public class LayoutVector3
@@ -68,6 +69,8 @@ public class QuestionMarkStyleListDto
 public class LayoutConveyorStubDto
 {
     public float conveySpeed = 0.5f;
+    /** 按钮动画旋转后刷新 ServerConveyorStation 的相邻接收器。 */
+    public bool buttonControlled;
 }
 
 [Serializable]
@@ -275,6 +278,8 @@ public class LayoutButtonLinkDto
     public string sourceId;
     /** 按顺序触发的动画组 displayName 列表（displayName 为跨保存稳定键）。 */
     public string[] groupNames;
+    /** loop = A-B-C-A；pingpong = A-B-C-B-A。缺省 = loop。 */
+    public string sequenceMode;
     /** true = 组运行期间忽略按压（完成后才接受下一次按压）。 */
     public bool lockUntilFinished = true;
     /** 共轭对 id（两条 link 共享；空 = 非共轭）。 */
@@ -550,6 +555,13 @@ public class AnimGroupDto
      *  事件仅 shake/flash/wait，单一特效类型——shake 驱动相机、flash 驱动
      *  Lights/FX_Lightning 专用方向光，宿主不同故不允许混排）。 */
     public string groupKind;
+    /** auto = 开局/自身触发；button = 专供按钮顺序联动。缺省 = auto。 */
+    public string triggerMode;
+    /** 按钮组的节点推进语义：timeline = 每次按压整组按时间轴连播（一组=一个节点）；
+     *  press = 组内每个事件一个节点，每次按压只推进一个事件（节点环控制器，
+     *  用于「同一物体往返翻转」等一个成员进不了两个组的场景）。缺省 = timeline。
+     *  仅 triggerMode == "button" 时生效。 */
+    public string advanceMode;
     /** Unity instance ids ("u:xxx"/"new:xxx") of the items driven by this group. */
     public string[] itemInstanceIds;
     /** Unity instance ids of the floor (Plane/Quad) objects driven by this group. */
@@ -1273,6 +1285,8 @@ public class SetExportStatusDto
 public class SetExportStartDto
 {
     public string setName;
+    /** 多集合并导出（≥1 个，与 setName 二选一，非空时优先）。 */
+    public List<string> setNames;
     /** 导出模式：levels（仅关卡集）| deps（仅依赖包）| all（全部一起，默认）。 */
     public string mode;
 }
@@ -1320,11 +1334,44 @@ public class AudioConfigDto
 {
     public string inLevelMusicGuid;
     public string inLevelMusicId;
+    /** 自定义 BGM 文件名（Assets/LevelSets/<set>/data/bgm/ 下，含扩展名），"" = 未使用直引。 */
+    public string customMusicFile;
+    /** 自定义 BGM 显示名（去扩展名）。 */
+    public string customMusicName;
+    /** 自定义 BGM 时长（秒）。 */
+    public float customMusicSec;
     public string[] ambiences;
     public string[] audioDirectoryGuids;
     public string[] audioDirectoryIds;
     public string onDeathEffectGuid;
     public string onDeathEffectId;
+}
+
+[Serializable]
+public class CustomMusicEntryDto
+{
+    public string fileName;
+    public string name;
+    public long sizeBytes;
+    public float lengthSec;
+    /** 是否已被该关卡集内至少一个 LevelInfoSO 引用。 */
+    public bool used;
+}
+
+[Serializable]
+public class CustomMusicListDto
+{
+    public CustomMusicEntryDto[] files;
+}
+
+[Serializable]
+public class CustomMusicUploadResultDto
+{
+    public string fileName;
+    public string assetPath;
+    public string guid;
+    public long sizeBytes;
+    public float lengthSec;
 }
 
 [Serializable]
@@ -1364,12 +1411,22 @@ public class LevelCreateDto
 }
 
 [Serializable]
+public class LevelRenameDto
+{
+    public string setName;
+    /** 旧关卡标识（= data/ 目录名）。 */
+    public string levelId;
+    /** 新关卡标识（同时成为新场景名，无 s_ 前缀）。 */
+    public string newLevelId;
+}
+
+[Serializable]
 public class LevelInfoUpdateDto
 {
     public string assetPath;
     public string levelName;
     public string levelNameZH;
-    public string sceneName;
+    // sceneName 已移除直改入口（不挪文件的直改会导致场景失联），改名统一走 LevelRenameDto。
     public int debugRecipeCount;
     public bool disableDynamicParenting;
     public int minOrderCount;
@@ -1394,9 +1451,19 @@ public class LevelAudioUpdateDto
 {
     public string sceneAssetPath;
     public string inLevelMusicGuid;
+    /** 自定义 BGM 文件名（data/bgm/ 下，含扩展名）。非空时优先于 inLevelMusicGuid：
+     *  inLevelMusic 直引 clip、inLevelMusicSO 置空。 */
+    public string customMusicFile;
     public string[] ambiences;
     public string[] audioDirectoryGuids;
     public string onDeathEffectGuid;
+}
+
+[Serializable]
+public class CustomMusicDeleteDto
+{
+    public string setName;
+    public string fileName;
 }
 
 [Serializable]
@@ -1491,6 +1558,61 @@ public class SummaryBgResultDto
 public class SummaryBgMetaDto
 {
     public float dim;
+}
+
+// ---------- 菜谱分工配置（关卡 data 目录 assignment~/） ----------
+
+[Serializable]
+public class AssignmentResultDto
+{
+    /** assignment.json 是否存在。 */
+    public bool exists;
+    /** assignment.json 原文（后端不解析内部结构，前端唯一读写方）；exists=false 时为 ""。 */
+    public string json;
+}
+
+[Serializable]
+public class AssignmentSaveDto
+{
+    /** LevelInfoSO asset path. */
+    public string assetPath;
+    /** 完整 assignment.json 文本。 */
+    public string json;
+}
+
+[Serializable]
+public class LevelAssetPathDto
+{
+    /** LevelInfoSO asset path. */
+    public string assetPath;
+}
+
+// ---------- 汇总页 readme 说明（关卡 data 目录 readme~/） ----------
+
+[Serializable]
+public class ReadmeResultDto
+{
+    /** readme~/readme.json 是否存在。 */
+    public bool exists;
+    /** readme HTML 原文；exists=false 时为 ""。 */
+    public string html;
+}
+
+[Serializable]
+public class ReadmeSaveDto
+{
+    /** LevelInfoSO asset path. */
+    public string assetPath;
+    /** 白名单净化后的 HTML（仅文字排版，无图片/脚本）。 */
+    public string html;
+}
+
+/** readme~/readme.json 的落盘结构。 */
+[Serializable]
+public class ReadmeFileDto
+{
+    public int schemaVersion;
+    public string html;
 }
 
 [Serializable]

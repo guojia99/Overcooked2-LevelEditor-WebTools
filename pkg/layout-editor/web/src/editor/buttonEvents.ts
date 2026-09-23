@@ -7,12 +7,8 @@ import { isButtonLinkSource } from "./buttonLinks";
 import { stubKindOf } from "./stubControls";
 import { itemLabel } from "./labels";
 import { uuid, escHtml } from "./coords";
-import { closeModal, openModal } from "../modals";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
-import { draw } from "./render";
-import { setSelection } from "./selection";
-import { ensureItemVisible } from "./panels";
 
 // ---------------------------------------------------------------- data
 
@@ -76,9 +72,9 @@ function defaultEventTrigger(sourceId: string, target: EditorItem): string {
   return linkTriggerOf(sourceId, target.instanceId) ?? "Switch";
 }
 
-// ---------------------------------------------------------------- 右侧面板
+// ---------------------------------------------------------------- 摘要
 
-function summary(link?: ButtonEventLink): string {
+export function buttonEventSummaryText(link?: ButtonEventLink): string {
   const groups = link?.groups ?? [];
   if (groups.length === 0) return "— 未配置事件组 —";
   const total = groups.reduce((sum, g) => sum + g.events.length, 0);
@@ -89,68 +85,7 @@ function summary(link?: ButtonEventLink): string {
   return `已绑 ${groups.length} 组 / ${total} 条事件${gated > 0 ? `（${gated} 条带完成触发器）` : ""} · 按顺序广播，组内完成后才可再按`;
 }
 
-/** 右侧面板「按钮事件组」Tab。 */
-export function renderButtonEventPanel(body: HTMLElement): void {
-  const sources = S.items.filter((i) => i.instanceId && isButtonEventSource(i));
-  const countEl = document.getElementById("bevents-count");
-  if (countEl) countEl.textContent = sources.length > 0 ? `(${sources.length})` : "";
-
-  const parts: string[] = [];
-  parts.push(
-    `<div class="muted" style="padding:8px 10px;">一个按钮可绑定多个事件组：每次按压按顺序向下一组广播全部事件（循环）；组内全部事件完成（完成触发器）后才可再按。事件目标仅限开关右键菜单「联动目标」中的物件。配置在按钮右键菜单或下方列表中打开。</div>`
-  );
-  for (const src of sources) {
-    const link = eventLinkOfSource(src.instanceId ?? "");
-    const n = link?.groups.length ?? 0;
-    parts.push(
-      `<div class="scene-item-row" data-bevsrc="${escHtml(src.instanceId ?? "")}">` +
-        `<span class="zh">${escHtml(itemLabel(src))}</span> ` +
-        `<span class="id">${escHtml(summary(n > 0 ? link : undefined))}</span>` +
-        `<button type="button" class="ctx-btn" style="margin-left:auto" data-bevcfg="${escHtml(src.instanceId ?? "")}">配置…</button>` +
-        `</div>`
-    );
-  }
-  if (sources.length === 0) {
-    parts.push(`<div class="muted" style="padding:10px;">场景中暂无开关/压力开关。先放置一个按钮（核心层 · 机制 → 开关）。</div>`);
-  }
-  body.innerHTML = parts.join("");
-
-  body.querySelectorAll<HTMLButtonElement>("[data-bevcfg]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const src = S.items.find((i) => i.instanceId === btn.dataset.bevcfg);
-      if (src) openButtonEventModal(src);
-    });
-  });
-  body.querySelectorAll<HTMLElement>("[data-bevsrc]").forEach((row) => {
-    row.addEventListener("click", () => {
-      const src = S.items.find((i) => i.instanceId === row.dataset.bevsrc);
-      if (!src) return;
-      setSelection([src._editorKey]);
-      ensureItemVisible(src);
-      draw();
-    });
-  });
-}
-
-/** 事件组 Tab 激活时即时重绘（组内容编辑后调用）。 */
-export function refreshButtonEventPanelIfActive(): void {
-  if (S.activeRightTab !== "bevents") return;
-  const body = document.getElementById("scene-items-body");
-  if (body) renderButtonEventPanel(body);
-}
-
-// ---------------------------------------------------------------- 右键菜单
-
-/** 右键菜单中的事件组摘要 + 「配置…」入口。 */
-export function buttonEventSummaryHtml(item: EditorItem): string {
-  const link = eventLinkOfSource(item.instanceId ?? "");
-  const n = link?.groups.length ?? 0;
-  return `<div class="ctx-stub-title" style="margin-top:6px">联动事件组（按顺序广播）</div>
-    <label class="ctx-stub-row"><span class="ctx-input" style="opacity:${n > 0 ? 1 : 0.6}">${escHtml(summary(n > 0 ? link : undefined))}</span>
-    <button type="button" class="ctx-btn" id="ctx-bev-config">配置…</button></label>`;
-}
-
-// ---------------------------------------------------------------- 配置弹窗
+// ---------------------------------------------------------------- 编排台分区
 
 /** 事件目标下拉：仅限本开关的联动目标（运行时监听字段只由联动路径接线，
  *  未联动的目标收了消息也不会响应）。 */
@@ -167,33 +102,18 @@ function targetOptionsHtml(excludeIds: Set<string>, allowedTargets: Set<string>)
     .join("");
 }
 
-function modalBodyHtml(link: ButtonEventLink | undefined): string {
-  const n = link?.groups.length ?? 0;
-  return `<p class="modal-hint">每次按压按顺序向下一事件组广播全部事件（最后一组后循环回第一组）。事件目标仅限开关右键菜单「联动目标」里的物件；触发消息固定取联动的共享触发名（在开关右键菜单修改）。事件可配「完成触发器」：目标完成事件时广播该触发名，组内全部完成后按钮才可再按；未配完成触发器的事件视为立即完成。</p>
-    <div class="blm-sec">事件组（共 ${n} 组，按下时顺序切换）</div>
-    <div id="bev-groups"></div>
-    <div class="blm-addrow"><button type="button" class="modal-btn" id="bev-addgroup">＋ 添加事件组</button></div>`;
-}
-
-export function openButtonEventModal(item: EditorItem): void {
+/** 在给定容器内渲染 + 接线「② 事件组序列」分区（供触发编排台调用）。 */
+export function renderButtonEventSection(host: HTMLElement, item: EditorItem): void {
   const myId = item.instanceId ?? "";
-  if (!myId) return;
-  const kindName = stubKindOf(item) === "PressureSwitch" ? "压力开关" : "按钮";
-  const link = eventLinkOfSource(myId);
-  openModal(
-    `${kindName}事件组配置 · ${itemLabel(item)}`,
-    modalBodyHtml(link),
-    `<button type="button" class="modal-btn primary" data-close>关闭</button>`
-  );
-  document.querySelector("[data-close]")?.addEventListener("click", closeModal);
-  wireButtonEventModal(item);
-}
+  if (!myId) {
+    host.innerHTML = '<p class="trig-hint">该物件无实例 id，无法配置。</p>';
+    return;
+  }
+  host.innerHTML = `<p class="trig-hint">每次按压按顺序向下一事件组广播全部事件（末组后循环回第一组）。事件目标仅限「① 直连机器目标」里的物件；触发消息固定取联动共享触发名。可配「完成触发器」：组内全部完成后按钮才可再按。</p>
+    <div id="bev-groups" class="trig-list"></div>
+    <div class="trig-addrow"><button type="button" class="btn-small primary" id="bev-addgroup">＋ 添加事件组</button></div>`;
 
-function wireButtonEventModal(item: EditorItem): void {
-  const myId = item.instanceId ?? "";
-  if (!myId) return;
-
-  const groupsEl = document.getElementById("bev-groups");
+  const groupsEl = host.querySelector<HTMLElement>("#bev-groups");
   if (!groupsEl) return;
 
   const link = () => eventLinkOfSource(myId);
@@ -265,7 +185,6 @@ function wireButtonEventModal(item: EditorItem): void {
         }
         setStatus("已移除事件（写回后生效）");
         refresh();
-        refreshButtonEventPanelIfActive();
       });
     });
     groupsEl.querySelectorAll<HTMLButtonElement>("[data-bevg-up]").forEach((btn) => {
@@ -298,7 +217,6 @@ function wireButtonEventModal(item: EditorItem): void {
         if (l.groups.length === 0) S.buttonEvents = S.buttonEvents.filter((x) => x !== l);
         setStatus("已删除事件组（写回后生效）");
         refresh();
-        refreshButtonEventPanelIfActive();
       });
     });
     groupsEl.querySelectorAll<HTMLButtonElement>("[data-bev-add]").forEach((btn) => {
@@ -315,19 +233,17 @@ function wireButtonEventModal(item: EditorItem): void {
         g.events.push({ targetId: tid, trigger: defaultEventTrigger(myId, target) });
         setStatus(`已向事件组 ${gi + 1} 添加事件 → ${itemLabel(target)}（写回后生效）`);
         refresh();
-        refreshButtonEventPanelIfActive();
       });
     });
   };
 
   refresh();
 
-  document.getElementById("bev-addgroup")?.addEventListener("click", () => {
+  host.querySelector("#bev-addgroup")?.addEventListener("click", () => {
     pushHistory();
     const l = ensureEventLink(myId);
     l.groups.push({ id: uuid(), events: [] } as ButtonEventGroup);
     setStatus(`已添加事件组 ${l.groups.length}（写回后生效）`);
     refresh();
-    refreshButtonEventPanelIfActive();
   });
 }

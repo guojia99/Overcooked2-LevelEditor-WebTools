@@ -643,6 +643,43 @@ function paintImg(ctx: Ctx, el: HTMLImageElement, cs: CSSStyleDeclaration, rect:
   if (clipId) ctx.parts.push("</g>");
 }
 
+// ---------------------------------------------------------------- 导出倍率
+
+const EXPORT_SCALE_KEY = "exportScale";
+const EXPORT_SCALE_OPTIONS = [1, 2, 3];
+
+/** 当前生效的导出倍率：localStorage 持久化（汇总/清单/分工三处导出页共用），
+ *  默认 2x，非法值回退。 */
+export function resolveExportScale(): number {
+  const saved = parseInt(localStorage.getItem(EXPORT_SCALE_KEY) ?? "", 10);
+  return EXPORT_SCALE_OPTIONS.includes(saved) ? saved : 2;
+}
+
+/** 清晰度下拉（select[data-export-scale]）。放在导出按钮旁即可；
+ *  值三处同步（同一份 localStorage）。 */
+export function exportScaleSelectHtml(id: string): string {
+  const cur = resolveExportScale();
+  return (
+    `<label class="rl-tool-check export-scale-wrap" title="导出 PNG 的清晰度倍率：文字/边框随倍率更清晰，图标受原图分辨率上限">清晰度` +
+    `<select id="${id}" data-export-scale class="rl-select">` +
+    EXPORT_SCALE_OPTIONS.map((s) => `<option value="${s}"${s === cur ? " selected" : ""}>${s}x</option>`).join("") +
+    "</select></label>"
+  );
+}
+
+/** 接线页面上的清晰度下拉：初始选中 + 变更写回 localStorage（重复调用安全）。 */
+export function wireExportScaleSelects(): void {
+  document.querySelectorAll<HTMLSelectElement>("select[data-export-scale]").forEach((sel) => {
+    if (sel.dataset.wired) return;
+    sel.dataset.wired = "1";
+    sel.value = String(resolveExportScale());
+    sel.addEventListener("change", () => {
+      const v = parseInt(sel.value, 10);
+      if (EXPORT_SCALE_OPTIONS.includes(v)) localStorage.setItem(EXPORT_SCALE_KEY, String(v));
+    });
+  });
+}
+
 // ---------------------------------------------------------------- 出口
 
 export interface ExportNodeOptions {
@@ -693,13 +730,31 @@ export async function renderNodeToSvg(node: HTMLElement, scale = 1): Promise<Ren
   };
 }
 
-/** 把一个已渲染的 DOM 节点导出为 PNG（无损，尺寸不设上限）。 */
+/** 浏览器 canvas 尺寸上限（Chrome：单边 65535、总面积约 268M px）。
+ *  长图高倍率超限时会被自动下调，否则 toDataURL 输出空白画布。 */
+const CANVAS_EDGE_MAX = 65535;
+const CANVAS_AREA_MAX = 268435456;
+
+function clampCanvasScale(scale: number, cssW: number, cssH: number): number {
+  const byEdge = Math.min(CANVAS_EDGE_MAX / cssW, CANVAS_EDGE_MAX / cssH);
+  const byArea = CANVAS_AREA_MAX / (cssW * cssH);
+  return Math.floor(Math.min(scale, byEdge, byArea) * 100) / 100;
+}
+
+/** 把一个已渲染的 DOM 节点导出为 PNG（无损）。返回实际使用的倍率
+ *  （超出 canvas 上限的长图会被自动降档）。 */
 export async function exportNodePng(
   node: HTMLElement,
   fileName: string,
   opts: ExportNodeOptions = {}
-): Promise<void> {
-  const scale = opts.scale && opts.scale > 0 ? opts.scale : 1;
+): Promise<number> {
+  const requested = opts.scale && opts.scale > 0 ? opts.scale : 1;
+  const rect = node.getBoundingClientRect();
+  const scale = clampCanvasScale(
+    requested,
+    Math.max(1, Math.round(rect.width)),
+    Math.max(1, Math.round(rect.height))
+  );
   const rendered = await renderNodeToSvg(node, scale);
   const bg = opts.background || rendered.background;
   const outW = rendered.outWidth;
@@ -727,6 +782,7 @@ export async function exportNodePng(
     a.href = canvas.toDataURL("image/png");
     a.download = fileName;
     a.click();
+    return scale;
   } finally {
     URL.revokeObjectURL(url);
   }

@@ -24,6 +24,15 @@ public static class AnimGroupBakery
     private const string AnimatedObjectsRootName = "Animated Objects";
     private const string OldMoveAnimsFolderName = "move_anims";
     private const string QueueStartTrigger = "Start";
+    /// <summary>节点环（press 推进）组的共享推进触发名：队列每次启动只发一次，
+    /// 由 Animator 当前所在 Idle 决定推进到哪个节点（全部节点共用同一条转移条件）。</summary>
+    private const string PressAdvanceTrigger = "BLPress";
+
+    /// <summary>按钮组且开启「按压逐事件推进」（节点环）模式。</summary>
+    internal static bool IsPressAdvance(AnimGroupDto group)
+    {
+        return group != null && group.triggerMode == "button" && group.advanceMode == "press";
+    }
     /// <summary>嵌入每组 .controller 的 TextAsset 子资产名：存放本轮烘焙使用的
     /// 原始编排 JSON（AnimGroupDto），回读时优先反序列化它（见
     /// AnimGroupImporter.TryImportFromSource），避免「烘焙→片段分析回读」的
@@ -257,6 +266,29 @@ public static class AnimGroupBakery
                     e.type + "）：抖动/闪电事件需要特效组（创建时选「全屏特效组」）";
         }
 
+        // 节点环（press 推进）模式归一化：每个节点必须终止才能回报完成——剥离
+        // loop/pingpong（自循环节点永不结束会让 TriggerQueue 卡死、按钮永久锁死），
+        // 强制 waitForFinished（clip 需要内嵌 AnimationFinished 事件驱动队列推进与
+        // BLDone 完成回报，这是 ButtonLink「完成后才可再按」锁定的前提）。
+        if (IsPressAdvance(group))
+        {
+            if (group.loop)
+            {
+                LayoutEditorLog.LogWarning("anim group: 节点环组「" + (group.displayName ?? "?") +
+                    "」不支持整组循环，已忽略（按钮每次按压就是一次重触发）");
+                group.loop = false;
+            }
+            foreach (var e in group.events)
+            {
+                if (e == null || (!e.loop && !e.pingpong)) continue;
+                LayoutEditorLog.LogWarning("anim group: 节点环组「" + (group.displayName ?? "?") +
+                    "」的事件 " + e.triggerName + " loop/pingpong 不支持，已按单次播放烘焙");
+                e.loop = false;
+                e.pingpong = false;
+            }
+            group.waitForFinished = true;
+        }
+
         // Cross-session fallback: instance ids go stale after a Unity restart /
         // domain reload, which would make every member unresolvable ("没有可解析
         // 的物品") and abort the bake. The importer stamps each member's
@@ -464,17 +496,45 @@ public static class AnimGroupBakery
 
         // 时间簇：事件时间区间 [start, start+dur) 与簇区间重叠即并入同一簇，
         // 簇内所有事件烘焙为一个组合 clip（单状态 Animator 的并行 = 曲线合并）。
-        var clusters = BuildClusters(animEvents, wpById);
+        // 节点环（press）模式强制「每事件一簇」：每个事件就是一个独立节点，
+        // 不允许时间重叠合并（合并即节点数减少，按压语义退化）。
+        List<EventCluster> clusters;
+        if (IsPressAdvance(group))
+        {
+            clusters = new List<EventCluster>();
+            foreach (var e in animEvents)
+            {
+                var c = new EventCluster();
+                c.events.Add(e);
+                c.start = e.startTime;
+                c.end = e.startTime + EventDuration(e, wpById);
+                clusters.Add(c);
+            }
+        }
+        else
+        {
+            clusters = BuildClusters(animEvents, wpById);
+        }
         var queueTriggers = new List<string>();
         var queueDelays = new List<float>();
-        float prevClusterStart = 0f;
-        for (int ci = 0; ci < clusters.Count; ci++)
+        if (IsPressAdvance(group))
         {
-            queueTriggers.Add(clusters[ci].events[0].triggerName);
-            // TriggerQueue 语义：delays[i] 相对上一触发 firing 时刻（waitForFinished
-            // 时相对上一 clip 完成回调）——ΔstartTime 恰好表达时间轴绝对调度。
-            queueDelays.Add(Mathf.Max(0f, clusters[ci].start - prevClusterStart));
-            prevClusterStart = clusters[ci].start;
+            // 节点环：队列只携带共享推进触发名，每次按压（BLGo 启动队列）只发一次；
+            // 推进到哪个节点由 Animator 当前 Idle 状态决定（见 BuildController）。
+            queueTriggers.Add(PressAdvanceTrigger);
+            queueDelays.Add(0f);
+        }
+        else
+        {
+            float prevClusterStart = 0f;
+            for (int ci = 0; ci < clusters.Count; ci++)
+            {
+                queueTriggers.Add(clusters[ci].events[0].triggerName);
+                // TriggerQueue 语义：delays[i] 相对上一触发 firing 时刻（waitForFinished
+                // 时相对上一 clip 完成回调）——ΔstartTime 恰好表达时间轴绝对调度。
+                queueDelays.Add(Mathf.Max(0f, clusters[ci].start - prevClusterStart));
+                prevClusterStart = clusters[ci].start;
+            }
         }
 
         // First waypoint of the first move event anchors every member's start pose;
@@ -1267,6 +1327,24 @@ public static class AnimGroupBakery
             pathById[m.instanceId] = m.hierarchyPath;
         }
 
+        // Newly-created groups may only have flat item/floor/object ids. Add the
+        // metadata needed by the source importer before persisting the controller;
+        // otherwise a rotation-only group has no curves for the legacy importer to
+        // discover and disappears on the next scene export.
+        var knownMembers = new HashSet<string>();
+        foreach (var o in group.memberOffsets ?? new AnimGroupMemberOffsetDto[0])
+            if (o != null && !string.IsNullOrEmpty(o.instanceId)) knownMembers.Add(o.instanceId);
+        foreach (var m in group.memberStatic ?? new AnimGroupMemberDto[0])
+            if (m != null && !string.IsNullOrEmpty(m.instanceId)) knownMembers.Add(m.instanceId);
+        foreach (var id in FlatMemberIds(group))
+        {
+            if (string.IsNullOrEmpty(id) || knownMembers.Contains(id)) continue;
+            var go = ResolveMember(id, pathById);
+            if (go == null) continue;
+            group.memberOffsets = AppendOffset(group.memberOffsets, id, go);
+            knownMembers.Add(id);
+        }
+
         var idRemap = new Dictionary<string, string>();
         foreach (var o in group.memberOffsets ?? new AnimGroupMemberOffsetDto[0])
         {
@@ -1335,6 +1413,28 @@ public static class AnimGroupBakery
         {
             LayoutEditorLog.LogWarning("anim group: source embed failed: " + e.Message);
         }
+    }
+
+    private static IEnumerable<string> FlatMemberIds(AnimGroupDto group)
+    {
+        foreach (var id in group.itemInstanceIds ?? new string[0]) yield return id;
+        foreach (var id in group.floorInstanceIds ?? new string[0]) yield return id;
+        foreach (var id in group.objectInstanceIds ?? new string[0]) yield return id;
+    }
+
+    private static AnimGroupMemberOffsetDto[] AppendOffset(AnimGroupMemberOffsetDto[] source,
+        string id, GameObject go)
+    {
+        var list = new List<AnimGroupMemberOffsetDto>(source ?? new AnimGroupMemberOffsetDto[0]);
+        list.Add(new AnimGroupMemberOffsetDto
+        {
+            instanceId = id,
+            x = 0f,
+            z = 0f,
+            displayName = go.name,
+            hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(go.transform)
+        });
+        return list.ToArray();
     }
 
     /// <summary>把 id 列表中的成员 id 重映射为当前会话 id：先查 idRemap，
@@ -2340,6 +2440,52 @@ public static class AnimGroupBakery
         }
 
         var sm = controller.layers[0].stateMachine;
+
+        // ---- 节点环（press 推进）拓扑：Idle_0 --BLPress--> Node_0 --exit--> Idle_1
+        // --BLPress--> Node_1 --exit--> ... -- 环回 Idle_0。全部节点共用同一触发名，
+        // 每次按压（ButtonLink 的 BLGo 启动队列发一次 BLPress）只推进一个节点；
+        // clip 按事件序烘焙为绝对曲线（rotAccum 等序贯状态在烘焙期已叠加），
+        // 节点 i 的起始姿态恰为节点 i-1 的终态——环回即回到初始姿态。
+        if (IsPressAdvance(group))
+        {
+            if (controller.parameters.All(p => p.name != PressAdvanceTrigger))
+                controller.AddParameter(PressAdvanceTrigger, AnimatorControllerParameterType.Trigger);
+            var idleRing = new List<AnimatorState>();
+            var nodeRing = new List<AnimatorState>();
+            for (int i = 0; i < animEvents.Count; i++)
+            {
+                AnimationClip clip;
+                if (!clips.TryGetValue(animEvents[i].triggerName, out clip)) continue;
+                var idle = sm.AddState("Idle_" + idleRing.Count);
+                idle.writeDefaultValues = false;
+                var node = sm.AddState(animEvents[i].triggerName);
+                node.motion = clip;
+                node.writeDefaultValues = false;
+                idleRing.Add(idle);
+                nodeRing.Add(node);
+            }
+            if (idleRing.Count > 0)
+            {
+                sm.defaultState = idleRing[0];
+                for (int i = 0; i < idleRing.Count; i++)
+                {
+                    int next = (i + 1) % idleRing.Count;
+                    var tIn = idleRing[i].AddTransition(nodeRing[i]);
+                    tIn.hasExitTime = false;
+                    tIn.exitTime = 0.75f;
+                    tIn.duration = 0.25f;
+                    tIn.hasFixedDuration = true;
+                    tIn.AddCondition(AnimatorConditionMode.If, 0f, PressAdvanceTrigger);
+                    var tOut = nodeRing[i].AddTransition(idleRing[next]);
+                    tOut.hasExitTime = true;
+                    tOut.exitTime = 1f;
+                    tOut.duration = 0f;
+                    tOut.hasFixedDuration = true;
+                }
+            }
+            return controller;
+        }
+
         var idleStates = new List<AnimatorState>();
         int idleCount = animEvents.Count + (group.loop ? 0 : 1);
         for (int i = 0; i < idleCount; i++)
@@ -2484,8 +2630,13 @@ public static class AnimGroupBakery
         queue.m_cancelTrigger = string.IsNullOrEmpty(group.cancelTrigger) ? null : group.cancelTrigger;
         queue.m_endTrigger = string.IsNullOrEmpty(group.endTrigger) ? null : group.endTrigger;
         queue.m_endTriggerTarget = null;
-        queue.m_startOnAwake = string.IsNullOrEmpty(queue.m_startTrigger) && group.startDelay <= 0f;
-        queue.m_loopWhenFinished = group.loop;
+        // 按钮组绝不自动启动：未绑定的 button 组 startTrigger 为空时也保持待命
+        // （曾因缺省 true 出现「未绑定的开关动画组开局自动播一次」违反隔离约定）。
+        queue.m_startOnAwake = string.IsNullOrEmpty(queue.m_startTrigger) && group.startDelay <= 0f
+            && group.triggerMode != "button";
+        // 按钮组的重触发由 ButtonLink 每次按压驱动，整组循环没有意义且会让
+        // endTrigger 永不发出（按钮永久锁死）。
+        queue.m_loopWhenFinished = group.triggerMode == "button" ? false : group.loop;
         queue.m_loopDelay = Mathf.Max(0f, group.loopDelay);
         queue.m_waitForFinished = group.waitForFinished;
         queue.m_finishedTrigger = string.IsNullOrEmpty(group.finishedTrigger)

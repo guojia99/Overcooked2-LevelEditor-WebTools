@@ -5,10 +5,13 @@ import type {
   AudioExportSfxDir,
   AudioItemRule,
   AudioKnowledge,
+  CustomMusicEntry,
+  CustomRecipeConfig,
   CustomRecipeSummary,
   DeathEffectEntry,
   DirectoryEvent,
   IngredientEntry,
+  LevelAssignmentData,
   LevelDetail,
   LevelSetInfo,
   LevelSummary,
@@ -25,7 +28,18 @@ import { openDepsCheckModal } from "./editor/ui/depsCheck";
 import { showBusy, hideBusy, setBusyMessage } from "./busy";
 import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
 import { navHtml, wireNav } from "./nav";
-import { navigateTo, depsPath, layoutPath } from "./route";
+import { navigateTo, depsPath, layoutPath, manageLevelListPath, manageLevelDetailPath, manageLevelSummaryPath, parseRoute } from "./route";
+import {
+  BGM_PRESETS,
+  BGM_MAX_BYTES,
+  BGM_WARN_SECONDS,
+  decodeAudioFile,
+  encodeBgm,
+  estimateSizeBytes,
+  formatBytes,
+  formatDuration,
+  type BgmPreset,
+} from "./audio/encode";
 
 function goDependenciesPage(setName?: string, levelInfoAssetPath?: string): void {
   // 严格路由：/dependencies/{set}/{levelId}（levelId = LevelInfo 资产所在数据目录名）
@@ -40,13 +54,25 @@ function goDependenciesPage(setName?: string, levelInfoAssetPath?: string): void
 import { applyRatio, computeAutoScores, computeOrderLifeTimes, ORDER_INTERVAL_SEC, PLATE_RETURN_SEC, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
 import { analyzeKitchen, kitchenChips, kitchenWarnings } from "./kitchenAnalysis";
 import { modelParamsSummary } from "./autoScoreKnowledge";
-import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { rlCardHtml, rlSectionHtml, type RecipeWithGroups } from "./recipeCard";
-import { exportNodePng } from "./domSvgExport";
+import { exportNodePng, exportScaleSelectHtml, resolveExportScale, wireExportScaleSelects } from "./domSvgExport";
 import { exportLevelShotsPng, type LevelShotExportData } from "./levelShotExport";
 import { customRecipeIconUrl, levelSetFromScenePath } from "./editor/catalog";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { screenshotPaneHtml, wireScreenshotPane } from "./editor/ui/screenshotModal";
+import { buildSummaryGroups } from "./summaryRecipes";
+import {
+  ASSIGNMENT_MODES,
+  ASSIGNMENT_MODE_LABEL_ZH,
+  assignmentHasAny,
+  assignmentOverviewHtml,
+  goAssignment,
+  levelIdFromAssetPath,
+  modeHasAssignments,
+  resolveLevelAssetPath,
+  type AssignmentCardSource,
+} from "./levelAssignment";
+import { openReadmeEditorModal, sanitizeRichTextHtml } from "./richText";
 
 export function goLayout(sceneAssetPath?: string): void {
   // 严格路由：/layout/{set}/{sceneName}；无法解析或未提供时走裸 /layout（回关卡管理）
@@ -63,6 +89,56 @@ export function goLayout(sceneAssetPath?: string): void {
 
 export function goManage(): void {
   location.assign("/manage");
+}
+
+/** 跨页整页跳转到某关汇总页（严格路由 /manage/{set}/{levelId}/summary，可刷新/分享）；
+ *  levelId 或集合解析失败时回 /manage。 */
+export function goManageSummary(setName: string, levelInfoAssetPath: string): void {
+  const levelId = levelIdFromAssetPath(levelInfoAssetPath);
+  if (setName && levelId) {
+    location.assign(manageLevelSummaryPath(setName, levelId));
+    return;
+  }
+  location.assign("/manage");
+}
+
+/** 把 URL 同步到当前 manage 子视图（pushState；深链初载时路径已一致则不动）。 */
+function syncManagePath(path: string): void {
+  if (location.pathname !== path) history.pushState(null, "", path);
+}
+
+let managePopstateWired = false;
+
+/** /manage 路由分发（与自定义菜谱同款严格路由）：
+ *  集列表（/manage）/ 关卡列表（/manage/{set}）/ 详细编辑（/manage/{set}/{levelId}）/
+ *  汇总页（/manage/{set}/{levelId}/summary）。 */
+async function renderManageRoute(app: HTMLElement): Promise<void> {
+  const r = parseRoute();
+  if (r.page !== "manage") return;
+  if (r.setId && r.levelId) {
+    const assetPath = await resolveLevelAssetPath(r.setId, r.levelId);
+    if (!assetPath) {
+      await renderLevelList(app, r.setId);
+      setStatus(`未找到关卡「${r.levelId}」，已返回列表。`, false);
+      return;
+    }
+    if (r.manageView === "summary") await renderLevelSummary(app, r.setId, assetPath);
+    else await renderLevelDetail(app, r.setId, assetPath);
+    return;
+  }
+  if (r.setId) {
+    await renderLevelList(app, r.setId);
+    return;
+  }
+  await renderSetList(app);
+}
+
+export async function renderManageView(app: HTMLElement): Promise<void> {
+  if (!managePopstateWired) {
+    managePopstateWired = true;
+    window.addEventListener("popstate", () => void renderManageRoute(app));
+  }
+  await renderManageRoute(app);
 }
 
 const IDENT_RE = /^[A-Za-z0-9_]+$/;
@@ -135,13 +211,10 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
   return document.getElementById("manage-content")!;
 }
 
-export async function renderManageView(app: HTMLElement): Promise<void> {
-  await renderSetList(app);
-}
-
 // ==================== Set list ====================
 
 async function renderSetList(app: HTMLElement): Promise<void> {
+  syncManagePath("/manage");
   const content = shell(app, "关卡集管理");
   setBusy("加载关卡集…");
   let sets: LevelSetInfo[] = [];
@@ -157,6 +230,9 @@ async function renderSetList(app: HTMLElement): Promise<void> {
     .map(
       (s) => `
       <div class="m-card">
+        <label class="m-card-check" title="勾选 ≥2 个关卡集后可合并导出为一个 zip">
+          <input type="checkbox" data-check="${esc(s.setName)}"> 合并导出
+        </label>
         <h3 title="${esc((s.levelSetNameZH || "") + " " + (s.levelSetName || s.setName))}">${esc(s.levelSetNameZH || s.setName)} <span class="muted">(${esc(s.levelSetName || s.setName)})</span></h3>
         <div class="m-meta">
           作者：${esc(s.author || "—")}<br>
@@ -176,18 +252,38 @@ async function renderSetList(app: HTMLElement): Promise<void> {
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn primary" id="new-set">+ 新建关卡集</button>
+      <button class="m-btn" id="export-multi" disabled title="勾选 ≥2 个关卡集后合并导出为一个 zip（OC2DIYLevel/levels/ 下各集目录并列，依赖包只带一份）">📦 合并导出所选 (<span id="export-multi-count">0</span>)</button>
       <button class="m-btn" id="export-deps" title="单独导出 OC2DIYLevelRuntimeWLoader 依赖包（Loader.dll + 统一运行时 + commonW1/W2）——装一次即可长期复用，只要版本不变">导出依赖包</button>
     </div>
     <div class="m-section-title">关卡集列表</div>
     <div class="m-grid">${cards || '<p class="muted">暂无关卡集</p>'}</div>
   `;
 
+  const setMap = new Map(sets.map((s) => [s.setName, s]));
   document.getElementById("new-set")?.addEventListener("click", () => openCreateSetModal(app));
   document.getElementById("export-deps")?.addEventListener("click", () => confirmExportDeps(app, sets));
+  // 合并导出所选：勾选数 ≥2 时可用（按关卡集列表顺序收集）。
+  const multiBtn = document.getElementById("export-multi") as HTMLButtonElement | null;
+  const multiCount = document.getElementById("export-multi-count");
+  const syncMultiBtn = (): void => {
+    const n = content.querySelectorAll<HTMLInputElement>("[data-check]:checked").length;
+    if (multiCount) multiCount.textContent = String(n);
+    if (multiBtn) multiBtn.disabled = n < 2;
+  };
+  content.querySelectorAll<HTMLInputElement>("[data-check]").forEach((c) =>
+    c.addEventListener("change", syncMultiBtn)
+  );
+  multiBtn?.addEventListener("click", () => {
+    const checked = Array.from(content.querySelectorAll<HTMLInputElement>("[data-check]:checked"))
+      .map((c) => setMap.get(c.dataset.check!))
+      .filter((s): s is LevelSetInfo => !!s);
+    if (checked.length < 2) return;
+    confirmExportMultiSet(app, checked);
+  });
+  syncMultiBtn();
   content.querySelectorAll<HTMLButtonElement>("[data-open]").forEach((b) =>
     b.addEventListener("click", () => void renderLevelList(app, b.dataset.open!))
   );
-  const setMap = new Map(sets.map((s) => [s.setName, s]));
   content.querySelectorAll<HTMLButtonElement>("[data-edit]").forEach((b) =>
     b.addEventListener("click", () => {
       const s = setMap.get(b.dataset.edit!);
@@ -261,6 +357,38 @@ function fmtElapsed(ms: number): string {
   return `${m}:${(sec % 60).toString().padStart(2, "0")}`;
 }
 
+/** 轮询导出进度直至完成并下载 zip（单集 / 多集合并导出共用）。
+ *  expectedKey：与后端状态 setName 匹配的标识（单集 = 集名；多集 = "+" 连接串）。 */
+async function awaitExportAndDownload(expectedKey: string, startAt: number): Promise<void> {
+  // 状态端点由桥接监听线程直答，构建期间仍可响应。
+  const deadline = Date.now() + 15 * 60 * 1000;
+  for (;;) {
+    if (Date.now() > deadline) throw new Error("导出超时（15 分钟），请查看 Unity Console。");
+    await new Promise((r) => setTimeout(r, 2000));
+    let st: SetExportStatus;
+    try {
+      st = await api.fetchSetExportStatus();
+    } catch {
+      continue; // 瞬时网络抖动，继续轮询
+    }
+    if (st.status === "error") throw new Error(st.error || "导出失败（详见 Unity Console）。");
+    if (st.status === "done" && st.setName === expectedKey) {
+      setBusyMessage("导出完成，正在下载 zip…");
+      const res = await api.downloadSetExportZip(expectedKey, st.zipFileName);
+      const url = URL.createObjectURL(res.blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.fileName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setStatus(`已导出 ${res.fileName}（${st.fileCount} 个文件），已开始下载`);
+      return;
+    }
+    const hint = st.message || EXPORT_PHASE_HINT[st.phase] || "导出中…";
+    setBusyMessage(`${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`);
+  }
+}
+
 function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
   const display = s.levelSetNameZH || s.levelSetName || s.setName;
   const prevVersion = (s.version || "").trim();
@@ -314,36 +442,96 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
           version: newVersion,
         });
       }
-      await api.startSetExport(s.setName, mode);
+      await api.startSetExport([s.setName], mode);
       closeModal();
 
-      // 轮询导出进度（状态端点由桥接监听线程直答，构建期间仍可响应）。
-      const deadline = Date.now() + 15 * 60 * 1000;
-      for (;;) {
-        if (Date.now() > deadline) throw new Error("导出超时（15 分钟），请查看 Unity Console。");
-        await new Promise((r) => setTimeout(r, 2000));
-        let st: SetExportStatus;
-        try {
-          st = await api.fetchSetExportStatus();
-        } catch {
-          continue; // 瞬时网络抖动，继续轮询
+      await awaitExportAndDownload(s.setName, startAt);
+      await renderSetList(app);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+      if (okBtn) okBtn.disabled = false; // 允许重试（弹窗此时可能仍打开）
+    } finally {
+      resumeBridgeWatch();
+      hideBusy();
+    }
+  });
+}
+
+/** 多集合并导出：一次打包多个关卡集到同一 zip（OC2DIYLevel/levels/&lt;set1&gt;/、
+ *  &lt;set2&gt;/… 并列，依赖包勾选时整包只带一份）。弹窗内可逐集改版本号
+ *  （导出前逐个保存，写入 LevelSetInfo 与 zip 文件名）。 */
+function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
+  const joinedKey = sets.map((s) => s.setName).join("+");
+  const displayName = (s: LevelSetInfo): string => s.levelSetNameZH || s.levelSetName || s.setName;
+  const versionRows = sets
+    .map(
+      (s) => `
+      <label class="m-field">版本号 · ${esc(displayName(s))}（${esc(s.setName)}，${s.levelCount} 关，当前 v${esc((s.version || "").trim() || "0")}）
+        <input type="text" class="exp-multi-version" data-set="${esc(s.setName)}" autocomplete="off"
+               placeholder="${esc((s.version || "").trim() || "0.1")}" value="${esc((s.version || "").trim())}">
+      </label>`
+    )
+    .join("");
+  openModal(
+    `合并导出 ${sets.length} 个关卡集`,
+    `<p>将把 <b>${sets.map((s) => esc(displayName(s))).join("、")}</b> 打包到<b>同一个 zip</b>：<code>OC2DIYLevel/levels/</code> 下各集目录并列（${sets.map((s) => esc(s.setName)).join("、")}），<b>约需 3-5 分钟</b>（构建 AssetBundle）。构建期间请勿操作 Unity 或关闭本页。</p>
+     <p class="modal-hint">各集版本号（写入 LevelSetInfo 与 zip 文件名，不改则沿用当前值）：</p>
+     ${versionRows}
+     <label class="m-field" style="flex-direction:row;align-items:center;gap:8px;">
+       <input type="checkbox" id="exp-with-deps" checked style="width:auto;">
+       <span>同时携带依赖包（Loader.dll + 统一运行时 + commonW1/W2，整包只带一份）</span>
+     </label>
+     <p class="modal-hint" id="exp-deps-hint"></p>
+     <div class="m-section-title">CustomStub 统一运行时</div>
+     <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
+     <div class="m-actions-row">
+       <button type="button" class="m-btn" id="exp-stub-compile">编译 Runtime DLL</button>
+     </div>`,
+    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>开始导出</button>`
+  );
+  wireExportStubTools(sets[0].setName); // 统一运行时与集无关，任取一个集名查询即可
+  const depsChk = document.getElementById("exp-with-deps") as HTMLInputElement | null;
+  const depsHint = document.getElementById("exp-deps-hint");
+  const updateDepsHint = (): void => {
+    if (!depsHint) return;
+    depsHint.textContent = (depsChk?.checked ?? true)
+      ? `zip 含各集 OC2DIYLevel/levels/${sets.map((s) => s.setName).join("、")}/（关卡 + requires.txt）+ OC2DIYLevelRuntimeWLoader/（依赖包，整包只带一份）。新用户一步到位；解压到 BepInEx/plugins/。`
+      : `zip 只含各集 OC2DIYLevel/levels/…（关卡 + requires.txt），无依赖包。适合已装依赖的用户日常更新关卡；依赖包可用列表上方「导出依赖包」单独获取。依赖包过旧时 stub 功能整体跳过（如单向传送门会退化为双向），关卡本体照常加载。`;
+  };
+  depsChk?.addEventListener("change", updateDepsHint);
+  updateDepsHint();
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+    const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
+    if (okBtn) okBtn.disabled = true;
+    const withDeps = (document.getElementById("exp-with-deps") as HTMLInputElement | null)?.checked ?? true;
+    const mode: "all" | "levels" = withDeps ? "all" : "levels";
+    const startAt = Date.now();
+    suspendBridgeWatch(); // 构建会阻塞 Unity 主线程泵，健康探测会误报掉线
+    showBusy("正在启动合并导出…");
+    try {
+      // 逐集保存有变化的版本号（与单集导出弹窗同链路）。
+      const inputs = document.querySelectorAll<HTMLInputElement>(".exp-multi-version");
+      for (const inp of Array.from(inputs)) {
+        const s = sets.find((x) => x.setName === (inp.dataset.set || ""));
+        if (!s) continue;
+        const newVersion = inp.value.trim();
+        const prevVersion = (s.version || "").trim();
+        if (newVersion && newVersion !== prevVersion) {
+          setBusyMessage(`保存版本号（${s.setName}）…`);
+          await api.updateSetInfo({
+            setName: s.setName,
+            levelSetName: s.levelSetName,
+            levelSetNameZH: s.levelSetNameZH,
+            author: s.author,
+            version: newVersion,
+          });
         }
-        if (st.status === "error") throw new Error(st.error || "导出失败（详见 Unity Console）。");
-        if (st.status === "done" && st.setName === s.setName) {
-          setBusyMessage("导出完成，正在下载 zip…");
-          const res = await api.downloadSetExportZip(s.setName, st.zipFileName);
-          const url = URL.createObjectURL(res.blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = res.fileName;
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setStatus(`已导出 ${res.fileName}（${st.fileCount} 个文件），已开始下载`);
-          break;
-        }
-        const hint = st.message || EXPORT_PHASE_HINT[st.phase] || "导出中…";
-        setBusyMessage(`${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`);
       }
+      await api.startSetExport(sets.map((s) => s.setName), mode);
+      closeModal();
+
+      await awaitExportAndDownload(joinedKey, startAt);
       await renderSetList(app);
     } catch (e) {
       setStatus((e as Error).message, false);
@@ -380,7 +568,7 @@ function confirmExportDeps(app: HTMLElement, sets: LevelSetInfo[]): void {
     suspendBridgeWatch();
     showBusy("正在导出依赖包…");
     try {
-      await api.startSetExport(anchorSet, "deps");
+      await api.startSetExport([anchorSet], "deps");
       closeModal();
       const deadline = Date.now() + 15 * 60 * 1000;
       for (;;) {
@@ -560,6 +748,7 @@ function openEditSetModal(app: HTMLElement, s: LevelSetInfo): void {
 // ==================== Level list ====================
 
 async function renderLevelList(app: HTMLElement, setName: string): Promise<void> {
+  syncManagePath(manageLevelListPath(setName));
   const content = shell(app, `关卡列表 · ${setName}`, "返回关卡集", () => void renderSetList(app));
   setBusy(`加载 ${setName} 的关卡…`);
   let levels: LevelSummary[] = [];
@@ -604,6 +793,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
           <button class="m-btn primary" data-edit="${esc(lv.assetPath)}">编辑</button>
           <button class="m-btn" data-summary="${esc(lv.assetPath)}">📋 汇总</button>
           <button class="m-btn" data-layout="${esc(lv.sceneAssetPath)}">打开布局</button>
+          <button class="m-btn" data-rename="${esc(id)}" data-rename-scene="${esc(lv.sceneName)}">✏️ 重命名</button>
           <button class="m-btn danger" data-del="${esc(id)}">删除</button>
         </div>
       </div>`;
@@ -632,7 +822,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
       const exportData: LevelShotExportData = {
         title: setInfo?.levelSetNameZH || setInfo?.levelSetName || setName,
         sub: `${setInfo?.levelSetName || setName} · 共 ${levels.length} 关`,
-        // 仅中英文名 + 截图：不带 s_* 标识/序号元信息与按钮（无名的关卡回退为「第 N 关」）
+        // 仅中英文名 + 截图：不带关卡标识/序号元信息与按钮（无名的关卡回退为「第 N 关」）
         cards: levels.map((lv, idx) => ({
           screenshotUrl: lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "",
           nameZh: lv.levelNameZH || lv.levelName || `第 ${idx + 1} 关`,
@@ -661,6 +851,13 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
   );
   content.querySelectorAll<HTMLButtonElement>("[data-del]").forEach((b) =>
     b.addEventListener("click", () => confirmDeleteLevel(app, setName, b.dataset.del!))
+  );
+  content.querySelectorAll<HTMLButtonElement>("[data-rename]").forEach((b) =>
+    b.addEventListener("click", () =>
+      openRenameLevelModal(setName, b.dataset.rename!, b.dataset.renameScene ?? "", () =>
+        renderLevelList(app, setName)
+      )
+    )
   );
 }
 
@@ -780,10 +977,10 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
   openModal(
     `新建关卡 · ${setName}`,
     `
-    <label class="m-field">关卡标识（仅字母/数字/下划线，用于目录/场景名 s_&lt;标识&gt;）<input type="text" id="lv-id" placeholder="level_1"></label>
+    <label class="m-field">关卡标识（仅字母/数字/下划线，用于目录与场景名，不再自动加 s_ 前缀）<input type="text" id="lv-id" placeholder="level_1"></label>
     <label class="m-field">英文名 levelName<input type="text" id="lv-en" placeholder="Level 1"></label>
     <label class="m-field">中文名 levelNameZH<input type="text" id="lv-zh" placeholder="第一关"></label>
-    <p class="modal-hint">将自动生成 4 份分数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景 s_template 到 scenes/。</p>
+    <p class="modal-hint">将自动生成 4 份分数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景到 scenes/&lt;标识&gt;.unity。</p>
     `,
     `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`,
     { closeOnBackdrop: false }
@@ -851,9 +1048,64 @@ async function confirmDeleteLevel(app: HTMLElement, setName: string, levelId: st
   });
 }
 
+/** 重命名关卡 id：后端原子改名 data/ 目录、LevelInfo 资产、场景文件与 sceneName、
+ *  场景 bundle 名、animations/ 前缀、写回历史目录（GUID 引用随 MoveAsset 保持不断链）。
+ *  旧 s_ 前缀场景名顺势迁移到无前缀新约定。完成后调用 onDone 刷新页面。 */
+function openRenameLevelModal(
+  setName: string,
+  levelId: string,
+  oldSceneName: string,
+  onDone: () => Promise<void>
+): void {
+  const migrateHint =
+    oldSceneName && oldSceneName.startsWith("s_")
+      ? "当前场景名带 s_ 前缀，重命名后将顺势迁移到无前缀新约定（场景名 = 新 id）。"
+      : "重命名后场景名 = 新 id。";
+  openModal(
+    `重命名关卡 · ${esc(levelId)}`,
+    `
+    <label class="m-field">新关卡标识（仅字母/数字/下划线）<input type="text" id="lv-new-id" placeholder="level_2" value="${esc(levelId)}"></label>
+    <p class="modal-hint">
+      将一次性同步改名：data/&lt;id&gt;/ 目录、LevelInfo_&lt;id&gt;.asset、场景文件与 sceneName、
+      场景 AssetBundle 名、animations/ 动画资产前缀、写回历史目录（引用按 GUID 保持，不会断链）。${migrateHint}
+      已导出的玩家分发包不会自动更新，改名后需重新导出关卡集。
+    </p>
+    `,
+    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>确认重命名</button>`,
+    { closeOnBackdrop: false }
+  );
+  wireIdentInput("lv-new-id");
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+    const newId = (document.getElementById("lv-new-id") as HTMLInputElement).value.trim();
+    if (!newId) return setStatus("请填写新关卡标识", false);
+    if (!IDENT_RE.test(newId)) return setStatus("关卡标识仅允许英文字母/数字/下划线", false);
+    if (newId === levelId) {
+      closeModal();
+      return setStatus("关卡标识未变化");
+    }
+    const okBtn = document.querySelector<HTMLButtonElement>("[data-ok]");
+    if (okBtn) okBtn.disabled = true;
+    try {
+      showBusy("重命名关卡（目录/场景/动画前缀同步迁移）…");
+      await api.renameLevel(setName, levelId, newId);
+      closeModal();
+      setStatus(`已重命名为 ${newId}（如需分发请重新导出关卡集）`);
+      await onDone();
+    } catch (e) {
+      setStatus((e as Error).message, false);
+      if (okBtn) okBtn.disabled = false;
+    } finally {
+      hideBusy();
+    }
+  });
+}
+
 // ==================== Level detail ====================
 
 async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: string): Promise<void> {
+  const detailLevelId = levelIdFromAssetPath(assetPath);
+  if (detailLevelId) syncManagePath(manageLevelDetailPath(setName, detailLevelId));
   const content = shell(app, `关卡编辑 · ${setName}`, "返回关卡列表", () => void renderLevelList(app, setName));
   setBusy("加载关卡数据…");
   let detail: LevelDetail;
@@ -872,6 +1124,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
   content.innerHTML = `
     <div class="m-actions-row">
       <button class="m-btn" id="btn-layout">打开关卡编辑器</button>
+      <button class="m-btn" id="btn-rename">✏️ 重命名 id</button>
       <button class="m-btn" id="btn-level-config">📊 关卡配置</button>
       <button class="m-btn" id="btn-deps">📦 依赖管理</button>
       <button class="m-btn" id="btn-summary">📋 汇总</button>
@@ -883,7 +1136,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
       <div class="m-form">
         <label class="m-field">英文名 levelName<input type="text" id="f-levelName" value="${esc(detail.levelName)}"></label>
         <label class="m-field">中文名 levelNameZH<input type="text" id="f-levelNameZH" value="${esc(detail.levelNameZH)}"></label>
-        <label class="m-field">场景名 sceneName<input type="text" id="f-sceneName" value="${esc(detail.sceneName)}"></label>
+        <label class="m-field">场景名 sceneName（由关卡 id 决定，用「✏️ 重命名 id」统一改名）<input type="text" value="${esc(detail.sceneName)}" readonly></label>
         <label class="m-field">调试菜谱数 debugRecipeCount<input type="number" id="f-debugRecipeCount" value="${detail.debugRecipeCount}"></label>
         <label class="m-field">最少同时订单 minOrderCount<input type="number" id="f-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount}"></label>
         <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="f-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount}"></label>
@@ -934,7 +1187,6 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
         assetPath,
         levelName: (document.getElementById("f-levelName") as HTMLInputElement).value.trim(),
         levelNameZH: (document.getElementById("f-levelNameZH") as HTMLInputElement).value.trim(),
-        sceneName: (document.getElementById("f-sceneName") as HTMLInputElement).value.trim(),
         debugRecipeCount: Number((document.getElementById("f-debugRecipeCount") as HTMLInputElement).value || 0),
         disableDynamicParenting: (document.getElementById("f-disableDynamicParenting") as HTMLInputElement).checked,
         minOrderCount: Number((document.getElementById("f-minOrderCount") as HTMLInputElement).value || 2),
@@ -953,6 +1205,11 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
   });
 
   document.getElementById("btn-layout")?.addEventListener("click", () => goLayout(detail.sceneAssetPath));
+  document.getElementById("btn-rename")?.addEventListener("click", () =>
+    openRenameLevelModal(setName, levelIdFromAssetPath(assetPath), detail.sceneName, () =>
+      renderLevelList(app, setName)
+    )
+  );
   document.getElementById("btn-deps")?.addEventListener("click", () => goDependenciesPage(setName, assetPath));
   document.getElementById("btn-summary")?.addEventListener("click", () => void renderLevelSummary(app, setName, assetPath));
   document.getElementById("btn-tools-history")?.addEventListener("click", () => openToolsHistoryModal(detail));
@@ -1526,9 +1783,16 @@ async function showHistoryDetail(
   });
 }
 
-/** 汇总页：中文名 → 作者 → 关卡截图 → 按菜系分类的菜谱卡片（一个分类一行），
- *  支持按实际渲染大小一键导出 PNG。 */
+/** 汇总页：中文名 → 作者 → 关卡截图 → readme 说明 → 按菜系分类的菜谱卡片
+ *  （自定义菜谱独立区块，按 category→subcategory 子分类）→ 菜谱分工（有配置才展示），
+ *  支持按实际渲染大小一键导出 PNG。分组/子分类内部默认按分数升序。 */
+/** 汇总页当前视图（纯客户端状态不进 URL，与 /recipes 页双视图同款惯例；
+ *  模块级保存 → readme 保存后整页重渲染仍停留在原视图）。 */
+let summaryView: "all" | "assignment" = "all";
+
 export async function renderLevelSummary(app: HTMLElement, setName: string, assetPath: string): Promise<void> {
+  const summaryLevelId = levelIdFromAssetPath(assetPath);
+  if (summaryLevelId) syncManagePath(manageLevelSummaryPath(setName, summaryLevelId));
   const content = shell(app, `汇总 · ${setName}`, "返回关卡列表", () => void renderLevelList(app, setName));
   setBusy("加载汇总…");
   let detail: LevelDetail;
@@ -1548,12 +1812,20 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
   let recipes: RecipeWithGroups[];
   let ingredients: IngredientEntry[];
   let customRecipes: CustomRecipeSummary[] = [];
+  let customConfig: CustomRecipeConfig;
+  let assignment: LevelAssignmentData | null = null;
+  let readmeRaw = "";
   try {
-    [level, recipes, ingredients, customRecipes] = await Promise.all([
+    [level, recipes, ingredients, customRecipes, customConfig, assignment, readmeRaw] = await Promise.all([
       api.fetchLevelRecipes(detail.sceneAssetPath),
       api.fetchRecipeCatalog(setName),
       api.fetchIngredients().catch(() => [] as IngredientEntry[]),
       api.fetchCustomRecipes(setName).catch(() => [] as CustomRecipeSummary[]),
+      api.fetchCustomRecipeConfig(setName).catch(
+        () => ({ uidPrefix: 0, nextSequence: 1, categories: [], subcategories: [] }) as CustomRecipeConfig
+      ),
+      api.fetchLevelAssignment(assetPath).catch(() => null),
+      api.fetchLevelReadme(assetPath).catch(() => ""),
     ]);
   } catch (e) {
     showError(e);
@@ -1577,61 +1849,177 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
     // 自定义菜谱（含 Composite/Mixed，score 可能为 0 被标 intermediate）也计入汇总
     .filter((r): r is RecipeEntry => !!r && (!r.intermediate || !!r.isCustom));
 
-  const grouped = groupRecipesByType(selected).map(([type, arr]) => ({
-    type,
-    typeLabel: recipeTypeLabel(type),
-    count: arr.length,
-    recipes: arr,
-  }));
-
-  const sections = grouped
-    .map((g) =>
-      rlSectionHtml(
-        g.type,
-        g.recipes
-          .map((r) =>
-            rlCardHtml(r, {
-              allRecipes: recipes,
-              ingredientName,
-              extraBadge: r.group === "levelset" ? "本关" : undefined,
-              iconSrc: recipeIconUrl,
-            })
-          )
-          .join(""),
-        g.count
-      )
-    )
+  // 分组：官方按类型；自定义独立区块按 category→subcategory 子分类；组内分数升序。
+  const groups = buildSummaryGroups(selected, customConfig);
+  const cardOf = (r: RecipeEntry): string =>
+    rlCardHtml(r, {
+      allRecipes: recipes,
+      ingredientName,
+      extraBadge: r.group === "levelset" ? "本关" : undefined,
+      iconSrc: recipeIconUrl,
+    });
+  const officialSections = groups.official
+    .map((g) => rlSectionHtml(g.key, g.recipes.map(cardOf).join(""), g.recipes.length))
     .join("");
+  const customTotal = groups.custom.reduce((n, g) => n + g.recipes.length, 0);
+  const customBlock =
+    groups.custom.length > 0
+      ? `<section class="rl-section sum-custom">
+      <h2 class="rl-section-title">自定义菜谱<span class="rl-section-count">${customTotal}</span></h2>
+      ${groups.custom
+        .map((cat) => {
+          const body = cat.subs
+            ? cat.subs
+                .map(
+                  (s) => `<h4 class="sum-sub-title">${esc(s.label)}<span class="rl-section-count">${s.recipes.length}</span></h4>
+              <div class="rl-grid">${s.recipes.map(cardOf).join("")}</div>`
+                )
+                .join("")
+            : `<div class="rl-grid">${cat.recipes.map(cardOf).join("")}</div>`;
+          return `<div class="sum-cat">
+          <h3 class="sum-cat-title">${esc(cat.label)}<span class="rl-section-count">${cat.recipes.length}</span></h3>
+          ${body}
+        </div>`;
+        })
+        .join("")}
+    </section>`
+      : "";
 
   const shotSrc = detail.screenshotPath ? api.imageFloorUrl(detail.screenshotPath) : "";
   const shotHtml = shotSrc
     ? `<img class="sum-shot-img" src="${esc(shotSrc)}" alt="关卡截图">`
     : '<div class="sum-shot-empty">（未上传关卡截图）</div>';
 
+  // readme 说明（富文本 HTML，白名单净化；空 = 不展示区块）。位于截图之后、菜谱之前，
+  // 渲染进 #sum-node → 随「一键导出图片」一起进汇总 PNG。
+  const readmeHtml = sanitizeRichTextHtml(readmeRaw ?? "");
+  const readmeBlock = readmeHtml ? `<div class="sum-readme" id="sum-readme">${readmeHtml}</div>` : "";
+
+  // 菜谱分工区块：任一模式（2p/3p/4p）有配置才展示；空配置返回 ""。
+  // 卡片与菜谱区块同款（rlCardHtml，含工序分组与徽章），玩家条目内部按分组做子分类。
+  const asGroupLabelByGuid = new Map<string, string>();
+  const asGroupOrder: string[] = [];
+  for (const g of groups.official) {
+    asGroupOrder.push(g.label);
+    for (const r of g.recipes) asGroupLabelByGuid.set(r.guid, g.label);
+  }
+  for (const cat of groups.custom) {
+    if (cat.subs) {
+      for (const s of cat.subs) {
+        const label = `${cat.label} › ${s.label}`;
+        asGroupOrder.push(label);
+        for (const r of s.recipes) asGroupLabelByGuid.set(r.guid, label);
+      }
+    } else {
+      const label = `自定义 · ${cat.label}`;
+      asGroupOrder.push(label);
+      for (const r of cat.recipes) asGroupLabelByGuid.set(r.guid, label);
+    }
+  }
+  const asSrc: AssignmentCardSource = {
+    card: (g) => {
+      const r = byGuid.get(g);
+      return r
+        ? cardOf(r)
+        : `<div class="sum-as-card"><span>${esc(g)}（菜谱已移除）</span></div>`;
+    },
+    groupOf: (g) => asGroupLabelByGuid.get(g) ?? "未分组",
+    groupOrder: asGroupOrder,
+  };
+  const assignmentBlock = assignmentOverviewHtml(assignment, asSrc);
+
   // 导出背景图：内联在汇总页节点上 —— 网页所见即导出所得（DOM 快照导出引擎
   // 直接读这层 background）。遮罩用同色双停 linear-gradient 叠在图片之上。
   // has-bg 作用域类：让卡片摘掉深色渐变底与边框，直接浮在背景图上。
   const bgStyle = summaryBgStyle(detail);
 
+  // 双视图 switch：共用页头/截图/readme/背景图，内容互斥——「全部菜谱」= 官方分组 +
+  //  自定义区块（纯菜谱）；「分工模式」= 按模式（双人/三人/四人）→ 玩家分组的分工卡。
   content.innerHTML = `
     <div class="m-actions-row">
+      <div class="rl-view-switch" id="sum-view-switch">
+        <button type="button" class="m-btn rl-view-btn${summaryView === "all" ? " active" : ""}" data-sum-view="all">📋 全部菜谱</button>
+        <button type="button" class="m-btn rl-view-btn${summaryView === "assignment" ? " active" : ""}" data-sum-view="assignment">🧑‍🍳 分工模式</button>
+      </div>
       <button class="m-btn primary" id="sum-export">🖼 一键导出图片</button>
+      ${exportScaleSelectHtml("sum-export-scale")}
+      <button class="m-btn" id="sum-readme-edit">📝 ${readmeHtml ? "编辑说明" : "添加说明"}</button>
+      <button class="m-btn" id="sum-assignment-open" title="在分工模式页编辑双人/三人/四人的菜谱分配">✏️ 编辑分工</button>
       <span class="status" id="sum-status"></span>
     </div>
-    <div class="sum-page${bgStyle ? " has-bg" : ""}" id="sum-node"${bgStyle ? ` style="${esc(bgStyle)}"` : ""}>
+    <div class="sum-page${bgStyle ? " has-bg" : ""}" id="sum-node"${bgStyle ? ` style="${esc(bgStyle)}"` : ""}></div>
+  `;
+  wireExportScaleSelects();
+
+  const sumHeadHtml = `
       <header class="sum-head">
         <h1 class="sum-title">${esc(detail.levelNameZH || detail.levelName || "未命名")}</h1>
         <div class="sum-sub">${esc(detail.levelName)} · ${esc(detail.sceneName)}</div>
         <div class="sum-author">作者：${esc(set?.author || "—")}</div>
       </header>
       <div class="sum-shot">${shotHtml}</div>
-      <div class="sum-recipes">
-        ${sections || '<p class="muted">该关卡尚未配置菜谱</p>'}
-      </div>
-    </div>
-  `;
+      ${readmeBlock}`;
 
-  setStatus(`共 ${selected.length} 道菜谱 · 关卡截图${shotSrc ? "" : "缺失"}`);
+  // 分工视图空态（未配置任何模式时）：引导去分工模式页。
+  const assignmentEmptyHtml = `
+    <section class="sum-assignment" id="sum-assignment">
+      <h2 class="sum-as-title">🧑‍🍳 菜谱分工</h2>
+      <p class="muted">尚未配置分工。可在分工模式页为双人/三人/四人分别分配菜谱。</p>
+      <div class="m-actions-row"><button class="m-btn primary" id="sum-as-empty-go">🧑‍🍳 去分工模式</button></div>
+    </section>`;
+
+  const statusLine = (): string => {
+    if (summaryView !== "assignment") {
+      const parts = [`共 ${selected.length} 道菜谱`, `关卡截图${shotSrc ? "" : "缺失"}`];
+      if (readmeHtml) parts.push("说明 ✓");
+      if (assignmentHasAny(assignment)) parts.push("分工 ✓");
+      return parts.join(" · ");
+    }
+    const configured = ASSIGNMENT_MODES.filter((m) => modeHasAssignments(assignment?.modes[m]));
+    if (!configured.length) return "分工视图 · 尚未配置分工";
+    return (
+      "分工视图 · " +
+      configured
+        .map((m) => {
+          const total = (assignment?.modes[m]?.players ?? []).reduce((n, p) => n + (p?.recipes?.length ?? 0), 0);
+          return `${ASSIGNMENT_MODE_LABEL_ZH[m]} ${total} 道`;
+        })
+        .join(" · ")
+    );
+  };
+
+  /** 按当前视图重写 #sum-node（重渲染而非 CSS 隐藏 → 「一键导出图片」DOM 快照所见即所得）。 */
+  const renderSumNode = (): void => {
+    const node = document.getElementById("sum-node");
+    if (!node) return;
+    const body =
+      summaryView === "assignment"
+        ? assignmentBlock || assignmentEmptyHtml
+        : `
+      <div class="sum-recipes">
+        ${officialSections || ""}
+        ${customBlock || ""}
+        ${officialSections || customBlock ? "" : '<p class="muted">该关卡尚未配置菜谱</p>'}
+      </div>`;
+    node.innerHTML = sumHeadHtml + body;
+    document.querySelectorAll<HTMLButtonElement>("#sum-view-switch .rl-view-btn").forEach((b) =>
+      b.classList.toggle("active", b.dataset.sumView === summaryView)
+    );
+    document.getElementById("sum-as-empty-go")?.addEventListener("click", () => goAssignment(setName, assetPath));
+    setStatus(statusLine());
+  };
+
+  renderSumNode();
+
+  document.querySelectorAll<HTMLButtonElement>("#sum-view-switch .rl-view-btn").forEach((b) =>
+    b.addEventListener("click", () => {
+      const v = b.dataset.sumView === "assignment" ? "assignment" : "all";
+      if (v === summaryView) return;
+      summaryView = v;
+      renderSumNode();
+    })
+  );
+
   document.getElementById("sum-export")?.addEventListener("click", async () => {
     const btn = document.getElementById("sum-export") as HTMLButtonElement | null;
     const st = document.getElementById("sum-status")!;
@@ -1641,15 +2029,37 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
     try {
       const node = document.getElementById("sum-node");
       if (!node) throw new Error("汇总节点不存在");
-      const fileName = `${detail.levelNameZH || detail.levelName || "level"}_汇总.png`;
-      await exportNodePng(node as HTMLElement, fileName);
-      st.textContent = "已导出 PNG";
+      const fileName = `${detail.levelNameZH || detail.levelName || "level"}_${summaryView === "assignment" ? "分工汇总" : "汇总"}.png`;
+      const scale = resolveExportScale();
+      const used = await exportNodePng(node as HTMLElement, fileName, { scale });
+      st.textContent = used < scale ? `已导出 PNG（超画布上限，自动降至 ${used}x）` : "已导出 PNG";
     } catch (e) {
       st.textContent = (e as Error).message;
       st.classList.add("err");
     } finally {
       if (btn) btn.disabled = false;
     }
+  });
+
+  // 📝 readme 编辑：净化 → 空内容走 clear 接口（区块消失），否则保存后整页重载。
+  document.getElementById("sum-readme-edit")?.addEventListener("click", () => {
+    openReadmeEditorModal(readmeHtml, async (html) => {
+      const st = document.getElementById("sum-status");
+      try {
+        if (html.trim()) await api.saveLevelReadme(assetPath, html);
+        else await api.clearLevelReadme(assetPath);
+        void renderLevelSummary(app, setName, assetPath);
+      } catch (e) {
+        st?.classList.add("err");
+        if (st) st.textContent = (e as Error).message;
+      }
+    });
+  });
+
+  // ✏️ 编辑分工：跳分工模式编辑页（关卡级严格路由 /assignment/{set}/{levelId}，URL 可
+  //  刷新/分享；返回时回到汇总页刷新分工视图）。
+  document.getElementById("sum-assignment-open")?.addEventListener("click", () => {
+    goAssignment(setName, assetPath);
   });
 }
 
@@ -1930,7 +2340,6 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
         assetPath: detail.levelInfoAssetPath,
         levelName: detail.levelName,
         levelNameZH: detail.levelNameZH,
-        sceneName: detail.sceneName,
         debugRecipeCount: detail.debugRecipeCount,
         disableDynamicParenting: detail.disableDynamicParenting,
         minOrderCount,
@@ -2096,11 +2505,43 @@ export async function openAudioModal(
   // ---- mutable state ----
   const state = {
     musicGuid: cur.inLevelMusicGuid || "",
+    customMusicFile: cur.customMusicFile || "",
     deathGuid: cur.onDeathEffectGuid || "",
     dirGuids: new Set<string>((cur.audioDirectoryGuids || []).filter((g) => dirByGuid.has(g))),
     ambiences: new Set<string>(
       (cur.ambiences || []).filter((a) => ambiances.includes(a) && (!ambValidSet || ambValidSet.has(a)))
     ),
+  };
+
+  // ---- custom BGM (data/bgm/) ----
+  // setName 从场景路径推导；bridge 不可用（静态托管）时该区整体隐藏。
+  const customSetName = levelSetFromScenePath(detail.sceneAssetPath) || "";
+  let customFiles: CustomMusicEntry[] = [];
+  let customAvailable = false;
+  if (customSetName) {
+    try {
+      customFiles = await api.fetchCustomMusic(customSetName);
+      customAvailable = true;
+    } catch {
+      customAvailable = false;
+    }
+  }
+  const customEntryOf = (fileName: string): CustomMusicEntry | undefined =>
+    customFiles.find((f) => f.fileName === fileName);
+  const refreshCustomList = async (): Promise<void> => {
+    if (!customAvailable) return;
+    try {
+      customFiles = await api.fetchCustomMusic(customSetName);
+    } catch {
+      /* keep stale */
+    }
+    renderCustomList();
+    renderCustomState();
+  };
+  const clearCustomSelection = (): void => {
+    state.customMusicFile = "";
+    renderCustomState();
+    renderCustomList();
   };
 
   // always force the mandatory directories in
@@ -2172,6 +2613,23 @@ export async function openAudioModal(
         return `<optgroup label="${esc(label)}">${opts}</optgroup>`;
       })
       .join("");
+
+  // 自定义 BGM 压缩预设下拉（OGG / WAV 分组，recommended 为默认选中）
+  const customPresetHtml = (["ogg", "wav"] as const)
+    .map((g) => {
+      const label =
+        g === "ogg"
+          ? "OGG Vorbis（压缩，推荐 BGM 使用）"
+          : "WAV（PCM 无压缩，最兼容）";
+      const opts = BGM_PRESETS.filter((p) => p.group === g)
+        .map(
+          (p) =>
+            `<option value="${esc(p.key)}"${p.recommended ? " selected" : ""}>${esc(p.label)}</option>`
+        )
+        .join("");
+      return `<optgroup label="${esc(label)}">${opts}</optgroup>`;
+    })
+    .join("");
 
   // ---- death options ----
   const deathOptHtml = `<option value="" ${!state.deathGuid ? "selected" : ""}>(无)</option>` +
@@ -2351,7 +2809,7 @@ export async function openAudioModal(
     ? `检测到主题：${detectedThemes.map((t) => esc(themeLabelZh(t))).join("、")}`
     : "未检测到明显主题（可手动选择）";
   // 已选 BGM 的关卡默认打开「音乐」tab，直接显示当前 BGM
-  const defaultTab = state.musicGuid ? "music" : "check";
+  const defaultTab = state.musicGuid || state.customMusicFile ? "music" : "check";
 
   openModal(
     `音频配置 · ${detail.levelName || detail.levelNameZH}`,
@@ -2376,12 +2834,27 @@ export async function openAudioModal(
     <!-- === TAB: 音乐 / 特效 === -->
     <div class="au-pane" data-pane="music" ${defaultTab === "music" ? "" : 'style="display:none"'}>
       <div class="audio-grid">
-        <label class="m-field">关卡 BGM (InLevelMusicSO)<select id="au-music">${bgmOptHtml}</select></label>
+        <label class="m-field">关卡 BGM · 原版曲库 (InLevelMusicSO)<select id="au-music">${bgmOptHtml}</select></label>
         <div id="au-music-warn" class="dep-warn dep-miss" style="display:none"></div>
         <label class="m-field">死亡特效 (OnDeathEffectSO)<select id="au-death">${deathOptHtml}</select>
           <span class="muted small">快捷：<button type="button" class="link-btn" data-death-theme="water">水面</button> / <button type="button" class="link-btn" data-death-theme="goo">黏液</button></span>
         </label>
       </div>
+      ${customAvailable ? `
+      <div class="au-custom-box">
+        <div class="mand-heading">🎧 自定义 BGM —— 浏览器端压缩（OGG/WAV），直引 LevelInfoSO.inLevelMusic，随关卡集 info bundle 自动打包；与原版曲库二选一</div>
+        <div id="au-custom-state"></div>
+        <div class="au-upload-row">
+          <input type="file" id="au-custom-file" accept=".mp3,.ogg,.wav,.m4a,.mp4,.aac,.flac,.opus,.aiff,audio/*" />
+          <input type="text" id="au-custom-name" class="au-name-input" placeholder="名称（字母数字下划线）" />
+          <select id="au-custom-preset">${customPresetHtml}</select>
+          <button type="button" class="m-btn small" id="au-custom-encode">⚙️ 压缩</button>
+        </div>
+        <div id="au-custom-info" class="muted small"></div>
+        <div id="au-custom-result"></div>
+        <div class="mand-heading" style="margin-top:10px">已上传（关卡集 data/bgm/，集内共享）</div>
+        <div class="modal-scroll au-custom-list" id="au-custom-list"></div>
+      </div>` : ""}
     </div>
 
     <!-- === TAB: 强制音效集 === -->
@@ -2407,7 +2880,7 @@ export async function openAudioModal(
       <div class="modal-scroll">${ambGroupsHtml || '<p class="muted">无</p>'}</div>
     </div>
 
-    ${exports ? "" : `<div class="dep-warn dep-miss" style="margin-top:10px">🎧 试听不可用：尚未导出音频数据。请在 Unity Editor 的 Bridge 窗口（菜单 Layout Editor → Open Bridge）点击「导出音频依赖」，完成后刷新页面即可试听。</div>`}
+    ${exports ? "" : `<div class="dep-warn dep-miss" style="margin-top:10px">🎧 原版曲库/音效试听不可用：尚未导出音频数据。请在 Unity Editor 的 Bridge 窗口（菜单 Layout Editor → Open Bridge）点击「导出音频依赖」，完成后刷新页面即可试听。自定义 BGM 的上传与试听不受影响。</div>`}
     <div class="au-player ${exports ? "" : "au-player-hidden"}" id="au-player">
       <button type="button" class="au-play-btn" id="au-player-btn" title="播放/暂停">▶</button>
       <span class="au-player-label" id="au-player-label"></span>
@@ -2454,6 +2927,11 @@ export async function openAudioModal(
   // ---- wire events ----
   document.getElementById("au-music")?.addEventListener("change", (e) => {
     state.musicGuid = (e.target as HTMLSelectElement).value;
+    if (state.musicGuid && state.customMusicFile) {
+      state.customMusicFile = "";
+      renderCustomState();
+      renderCustomList();
+    }
     refreshMusicWarn();
   });
   document.getElementById("au-death")?.addEventListener("change", (e) => {
@@ -2559,9 +3037,9 @@ export async function openAudioModal(
 
   refreshMusicWarn();
 
-  // ---- Audio player ----
-  if (exports) {
-    const playerEl = document.getElementById("au-player")!;
+  // ---- Audio player（原版曲库试听 + 自定义 BGM 预览共用） ----
+  let customBlobUrl: string | null = null;
+  const playerEl = document.getElementById("au-player")!;
     const audio = document.createElement("audio");
     audio.preload = "auto";
     audio.style.display = "none";
@@ -2576,6 +3054,10 @@ export async function openAudioModal(
         /* ignore */
       }
       audio.remove();
+      if (customBlobUrl) {
+        try { URL.revokeObjectURL(customBlobUrl); } catch { /* ignore */ }
+        customBlobUrl = null;
+      }
     };
     const modalRoot = document.getElementById("modal-root");
     if (modalRoot) {
@@ -2592,11 +3074,6 @@ export async function openAudioModal(
     const playerTime = document.getElementById("au-player-time")!;
     const playerProgress = document.getElementById("au-player-progress") as HTMLInputElement;
     let currentPlaying: string | null = null;
-
-    const bgmByGuid = new Map<string, string>();
-    for (const b of exports.bgm) bgmByGuid.set(b.guid, b.filename);
-    const ambByTag = new Map<string, string>();
-    for (const a of exports.ambiences) if (a.found && a.filename) ambByTag.set(a.tag, a.filename);
 
     function formatTime(s: number): string {
       if (!isFinite(s) || s < 0) return "--:--";
@@ -2690,6 +3167,198 @@ export async function openAudioModal(
       audio.currentTime = t;
     });
 
+  // ---- Custom BGM section（上传 / 压缩 / 试听 / 应用 / 删除） ----
+  const sanitizeBgmName = (raw: string): string => {
+    const base = raw.replace(/\.[^.]+$/, "").replace(/[^0-9A-Za-z_]/g, "");
+    return (base || "bgm").slice(0, 60);
+  };
+  const presetOf = (key: string): BgmPreset =>
+    BGM_PRESETS.find((p) => p.key === key) || BGM_PRESETS[0];
+  let customDecoded: AudioBuffer | null = null;
+  let customSourceFile: File | null = null;
+
+  const renderCustomState = (): void => {
+    const el = document.getElementById("au-custom-state");
+    if (!el) return;
+    if (state.customMusicFile) {
+      const e = customEntryOf(state.customMusicFile);
+      const sec = e ? e.lengthSec : cur.customMusicSec || 0;
+      el.innerHTML = `<div class="dep-ok">当前使用自定义 BGM：<b>${esc(state.customMusicFile)}</b>（${formatDuration(sec)}）
+        <button type="button" class="au-play-btn small" data-custom-play-self title="试听">▶</button>
+        <button type="button" class="link-btn" data-custom-clear>取消使用</button></div>`;
+      el.querySelector("[data-custom-play-self]")?.addEventListener("click", () => {
+        playUrl(
+          api.getCustomMusicStreamUrl(customSetName, state.customMusicFile),
+          state.customMusicFile,
+          `custom:${state.customMusicFile}`
+        );
+      });
+      el.querySelector("[data-custom-clear]")?.addEventListener("click", () => {
+        clearCustomSelection();
+        setStatus("已取消自定义 BGM（保存后生效）");
+      });
+    } else if (state.musicGuid) {
+      el.innerHTML = `<div class="muted small">当前使用原版曲库 BGM（在上方选择框修改）。</div>`;
+    } else {
+      el.innerHTML = `<div class="muted small">当前未设置关卡 BGM。</div>`;
+    }
+  };
+
+  const renderCustomList = (): void => {
+    const el = document.getElementById("au-custom-list");
+    if (!el) return;
+    if (!customFiles.length) {
+      el.innerHTML = `<p class="muted">尚未上传自定义 BGM。选择音频文件 → 选压缩档位 → 压缩 → 试听 → 上传。</p>`;
+      return;
+    }
+    el.innerHTML = customFiles
+      .map((f) => {
+        const active = f.fileName === state.customMusicFile;
+        return `<div class="au-custom-row${active ? " au-custom-row-active" : ""}">
+          <button type="button" class="au-play-btn small" data-cplay="${esc(f.fileName)}" title="试听">▶</button>
+          <span class="au-custom-name">${esc(f.fileName)}</span>
+          <span class="muted small">${formatDuration(f.lengthSec)} · ${formatBytes(f.sizeBytes)}</span>
+          ${f.used ? '<span class="rec-tag">已引用</span>' : ""}
+          <button type="button" class="m-btn small${active ? "" : " primary"}" data-capply="${esc(f.fileName)}">${active ? "✔ 使用中" : "应用"}</button>
+          <button type="button" class="m-btn small" data-cdel="${esc(f.fileName)}" title="删除">🗑</button>
+        </div>`;
+      })
+      .join("");
+    el.querySelectorAll<HTMLButtonElement>("[data-cplay]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const fn = b.dataset.cplay!;
+        playUrl(api.getCustomMusicStreamUrl(customSetName, fn), fn, `custom:${fn}`);
+      })
+    );
+    el.querySelectorAll<HTMLButtonElement>("[data-capply]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const fn = b.dataset.capply!;
+        state.customMusicFile = fn;
+        state.musicGuid = "";
+        const sel = document.getElementById("au-music") as HTMLSelectElement | null;
+        if (sel) sel.value = "";
+        refreshMusicWarn();
+        renderCustomState();
+        renderCustomList();
+        setStatus(`已选自定义 BGM：${fn}（保存后写入关卡）`);
+      })
+    );
+    el.querySelectorAll<HTMLButtonElement>("[data-cdel]").forEach((b) =>
+      b.addEventListener("click", async () => {
+        const fn = b.dataset.cdel!;
+        if (!confirm(`删除自定义 BGM「${fn}」？不可恢复。`)) return;
+        try {
+          await api.deleteCustomMusic(customSetName, fn);
+          setStatus(`已删除 ${fn}`);
+          if (state.customMusicFile === fn) clearCustomSelection();
+          await refreshCustomList();
+        } catch (e) {
+          setStatus((e as Error).message, false);
+        }
+      })
+    );
+  };
+
+  document.getElementById("au-custom-file")?.addEventListener("change", async (e) => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files && input.files[0];
+    customDecoded = null;
+    customSourceFile = file || null;
+    const info = document.getElementById("au-custom-info");
+    const result = document.getElementById("au-custom-result");
+    if (result) result.innerHTML = "";
+    if (!file) {
+      if (info) info.textContent = "";
+      return;
+    }
+    const nameInput = document.getElementById("au-custom-name") as HTMLInputElement | null;
+    if (nameInput && !nameInput.value) nameInput.value = sanitizeBgmName(file.name);
+    if (info) info.innerHTML = `解码 ${esc(file.name)}（${formatBytes(file.size)}）…`;
+    try {
+      customDecoded = await decodeAudioFile(file);
+      const preset = presetOf(
+        (document.getElementById("au-custom-preset") as HTMLSelectElement | null)?.value || ""
+      );
+      const est = estimateSizeBytes(preset, customDecoded.duration);
+      const durWarn =
+        customDecoded.duration > BGM_WARN_SECONDS
+          ? ` <span class="dep-miss">⚠ 时长超过 8 分钟，建议先裁剪</span>`
+          : "";
+      const sizeWarn =
+        est > BGM_MAX_BYTES ? ` <span class="dep-miss">⚠ 预计超出 20MB 上限</span>` : "";
+      if (info)
+        info.innerHTML = `${esc(file.name)} · ${formatBytes(file.size)} · 时长 ${formatDuration(customDecoded.duration)} → 预计压缩后 ${formatBytes(est)}${durWarn}${sizeWarn}`;
+    } catch (err) {
+      customDecoded = null;
+      if (info)
+        info.innerHTML = `<span class="dep-miss">解码失败：${esc((err as Error).message || "浏览器不支持该格式")}</span>`;
+    }
+  });
+
+  document.getElementById("au-custom-encode")?.addEventListener("click", async () => {
+    if (!customDecoded || !customSourceFile) {
+      setStatus("请先选择可解码的音频文件", false);
+      return;
+    }
+    const preset = presetOf(
+      (document.getElementById("au-custom-preset") as HTMLSelectElement | null)?.value || ""
+    );
+    const nameInput = document.getElementById("au-custom-name") as HTMLInputElement | null;
+    const baseName = sanitizeBgmName(nameInput && nameInput.value ? nameInput.value : customSourceFile.name);
+    if (nameInput) nameInput.value = baseName;
+    const outName = baseName + (preset.format === "wav" ? ".wav" : ".ogg");
+    const result = document.getElementById("au-custom-result");
+    if (!result) return;
+    showBusy(`压缩 ${outName}（${preset.format.toUpperCase()}）…`);
+    try {
+      const blob = await encodeBgm(customDecoded, preset);
+      hideBusy();
+      if (customBlobUrl) URL.revokeObjectURL(customBlobUrl);
+      customBlobUrl = URL.createObjectURL(blob);
+      const ratio = customSourceFile.size > 0 ? Math.round((blob.size / customSourceFile.size) * 100) : 100;
+      result.innerHTML = `
+        <div class="dep-ok">✅ ${esc(outName)} · ${formatBytes(customSourceFile.size)} → <b>${formatBytes(blob.size)}</b>（${ratio}%）</div>
+        <div class="modal-actions">
+          <button type="button" class="m-btn small" id="au-custom-preview">▶ 试听压缩结果</button>
+          <button type="button" class="m-btn small primary" id="au-custom-upload">⬆ 上传并应用</button>
+        </div>`;
+      document.getElementById("au-custom-preview")?.addEventListener("click", () => {
+        if (customBlobUrl) playUrl(customBlobUrl, `${outName}（本地预览）`, `local:${outName}`);
+      });
+      document.getElementById("au-custom-upload")?.addEventListener("click", async () => {
+        showBusy(`上传 ${outName}…`);
+        try {
+          const res = await api.uploadCustomMusic(customSetName, outName, blob);
+          setStatus(`已上传自定义 BGM：${res.fileName}（${formatDuration(res.lengthSec)}）`);
+          state.customMusicFile = res.fileName;
+          state.musicGuid = "";
+          const sel = document.getElementById("au-music") as HTMLSelectElement | null;
+          if (sel) sel.value = "";
+          refreshMusicWarn();
+          await refreshCustomList();
+          result.innerHTML = `<div class="dep-ok">已上传并应用：${esc(res.fileName)}（保存音频配置后写入关卡）</div>`;
+        } catch (e) {
+          setStatus((e as Error).message, false);
+        } finally {
+          hideBusy();
+        }
+      });
+    } catch (e) {
+      hideBusy();
+      setStatus("压缩失败：" + (e as Error).message, false);
+    }
+  });
+
+  renderCustomState();
+  renderCustomList();
+
+  // ---- exports-only wiring（原版曲库/音效试听依赖 audio-exports） ----
+  if (exports) {
+    const bgmByGuid = new Map<string, string>();
+    for (const b of exports.bgm) bgmByGuid.set(b.guid, b.filename);
+    const ambByTag = new Map<string, string>();
+    for (const a of exports.ambiences) if (a.found && a.filename) ambByTag.set(a.tag, a.filename);
+
     // ---- BGM play button ----
     // ---- BGM auto-play on selection change ----
     let lastAutoPlayedGuid = state.musicGuid;
@@ -2776,6 +3445,7 @@ export async function openAudioModal(
       await api.updateLevelAudio({
         sceneAssetPath: detail.sceneAssetPath,
         inLevelMusicGuid: state.musicGuid,
+        customMusicFile: state.customMusicFile,
         ambiences,
         audioDirectoryGuids,
         onDeathEffectGuid: state.deathGuid,

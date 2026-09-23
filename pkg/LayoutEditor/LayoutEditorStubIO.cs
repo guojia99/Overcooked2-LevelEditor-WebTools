@@ -162,7 +162,12 @@ public static class LayoutEditorStubIO
         if (conveyor != null)
         {
             item.stubKind = "Conveyor";
-            item.conveyor = new LayoutConveyorStubDto { conveySpeed = conveyor.conveySpeed };
+            item.conveyor = new LayoutConveyorStubDto
+            {
+                conveySpeed = conveyor.conveySpeed,
+                buttonControlled = HasCustomStubTag(go, "ConveyorDirectionSync|")
+                    || FindCustomStubType(go, "ConveyorDirectionSync") != null
+            };
             ExportPseudoPrefabGuidIfPresent(go, item);
             return;
         }
@@ -820,6 +825,7 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(conveyor, "Layout Editor Conveyor");
             conveyor.conveySpeed = item.conveyor.conveySpeed;
+            ApplyConveyorDirectionSync(go, item.conveyor.buttonControlled);
             return;
         }
 
@@ -1494,7 +1500,11 @@ public static class LayoutEditorStubIO
         System.Collections.Generic.Dictionary<string, GameObject> createdObjects,
         LayoutButtonEventDataDto buttonEvents)
     {
-        if (links == null || links.Length == 0)
+        // links != null 即文档对联动权威（items/decor/全量保存都携带；floors 作用域
+        // 不携带 = null，不动场景）。空数组也要走清理：文档说“没有任何联动”时，
+        // 场景里残留的直连痕迹必须清掉，否则下次导出会“复活”已删除/已迁移的联动
+        //（传送带 Animate → 开关动画组迁移的幂等性依赖这里）。
+        if (links == null)
             return;
 
         // Group targets per switch so multi-target buttons end up with one array write.
@@ -1506,6 +1516,13 @@ public static class LayoutEditorStubIO
         {
             if (link == null || string.IsNullOrEmpty(link.switchId) || string.IsNullOrEmpty(link.targetId))
                 continue;
+
+            if (link.trigger == "Animate")
+            {
+                WarnApply("[LayoutEditor] 传送带 Animate 直连已废弃（宿主 SendTrigger 只投递 " +
+                    "ITriggerReceiver，ConveyorDirectionSync 收不到）：请在触发编排中改用「开关动画组」" +
+                    "（每按一次翻转 180°）。重新加载场景可自动迁移。");
+            }
 
             var target = ResolveRefObject(link.targetId, createdObjects);
             if (target == null)
@@ -1662,6 +1679,55 @@ public static class LayoutEditorStubIO
                 }
                 SetCustomStubTag(switchGo, "SwitchReenable|0.35");
             }
+        }
+
+        // ---- 文档权威清理：场景里带直连烘焙痕迹（objectToTrigger 非空）但文档
+        // 没有对应联动的开关，清空其 triggerOnObject/objectToTrigger。不碰
+        // triggerOnAnimator/animatorToTrigger（ButtonLink 通道，由 WireSource 管理）。
+        // 这保证「删除联动」「Animate 迁移为动画组」在写回后真正从场景消失，
+        // 否则 CollectSwitchLinks 下次导出会把旧联动读回来（迁移重复建组）。
+        ClearStaleSwitchDirectLinks(perSwitch, createdObjects);
+    }
+
+    /// <summary>清掉不在文档联动集合里的开关直连痕迹（triggerOnObject/
+    /// objectToTrigger；Switch 与 ToggleSwitch 两种 stub）。文档 id 经
+    /// ResolveRefObject 归一到场景 instanceId 再比对（new: 前缀新建开关）。</summary>
+    private static void ClearStaleSwitchDirectLinks(
+        System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<GameObject>> perSwitch,
+        System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    {
+        var liveIds = new System.Collections.Generic.HashSet<string>();
+        foreach (var key in perSwitch.Keys)
+        {
+            var liveGo = ResolveRefObject(key, createdObjects);
+            if (liveGo != null)
+                liveIds.Add("u:" + liveGo.GetInstanceID());
+        }
+        var stubs = new System.Collections.Generic.List<Component>();
+        foreach (var s in UnityEngine.Object.FindObjectsOfType<PseudoPrefabSwitchStub>())
+            stubs.Add(s);
+        foreach (var s in UnityEngine.Object.FindObjectsOfType<PseudoPrefabToggleSwitchStub>())
+            stubs.Add(s);
+        foreach (var stub in stubs)
+        {
+            if (stub == null)
+                continue;
+            var go = stub.gameObject;
+            if (liveIds.Contains("u:" + go.GetInstanceID()))
+                continue; // 文档里仍有该开关的联动
+            var so = new SerializedObject(stub);
+            var arr = so.FindProperty("objectToTrigger");
+            var trig = so.FindProperty("triggerOnObject");
+            bool hasStale = (arr != null && arr.arraySize > 0) ||
+                (trig != null && !string.IsNullOrEmpty(trig.stringValue));
+            if (!hasStale)
+                continue;
+            if (arr != null) arr.arraySize = 0;
+            if (trig != null) trig.stringValue = "";
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(stub);
+            WarnApply("[LayoutEditor] 已清除开关 " + go.name +
+                " 的失效直连联动（文档中已不存在；Animate 直连已迁移为开关动画组则属预期）");
         }
     }
 
@@ -2924,10 +2990,69 @@ public static class LayoutEditorStubIO
                     + (StubBool(c, "m_stealUtensil") ? "1" : "0");
                 if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
             }
+            else if (prefab.StartsWith("ConveyorDirectionSync|", StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "ConveyorDirectionSync");
+                if (c == null) continue;
+                if (prefab != "ConveyorDirectionSync|")
+                {
+                    SetCustomStubTag(go, "ConveyorDirectionSync|");
+                    rewritten++;
+                }
+            }
             // PushablePot| / CameraOffset|：payload 来自 soArray/摆放位（非组件字段），
             // 写回时已按最新格式烘焙，导出期不重算（避免误伤结构性数据）。
         }
         return rewritten;
+    }
+
+    private static void ApplyConveyorDirectionSync(GameObject go, bool enabled)
+    {
+        var type = FindCustomStubType(go, "ConveyorDirectionSync");
+        var comp = type != null ? go.GetComponent(type) : null;
+        if (enabled)
+        {
+            if (type == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] 关卡集缺 stub 程序集，传送带方向同步仅写入 tag 载体: " + go.name);
+                var setName = LevelSetOfScenePath(go.scene.path);
+                if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                    CustomStubCopyRequested(setName);
+            }
+            else
+            {
+                if (comp == null) comp = Undo.AddComponent(go, type);
+                SetStubField(comp, "m_enabled", true);
+            }
+            SetCustomStubTag(go, "ConveyorDirectionSync|");
+        }
+        else
+        {
+            if (comp != null) Undo.DestroyObjectImmediate(comp);
+            ClearCustomStubTag(go, "ConveyorDirectionSync|");
+        }
+    }
+
+    private static Component FindChildComponent(GameObject root, string typeName)
+    {
+        if (root == null)
+            return null;
+        var direct = root.GetComponent(typeName);
+        if (direct != null)
+            return direct;
+        foreach (var component in root.GetComponentsInChildren<Component>(true))
+        {
+            if (component != null && component.GetType().Name == typeName)
+                return component;
+        }
+        return null;
+    }
+
+    private static bool HasCustomStubTag(GameObject go, string prefix)
+    {
+        var tag = go != null ? go.GetComponent<SpecificPseudoPrefabTag>() : null;
+        return tag != null && !string.IsNullOrEmpty(tag.prefabTag)
+            && tag.prefabTag.StartsWith(prefix, StringComparison.Ordinal);
     }
 
     private static Component FindComp(GameObject go, string className)
