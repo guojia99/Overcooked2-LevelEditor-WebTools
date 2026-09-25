@@ -714,6 +714,10 @@ namespace CustomStub
                 // 由 TickProbe 的探测通道兜底激活，不在此处判定。
                 if (tickerTags > 0)
                     ActivateCore("扫到 web stub tag × " + tickerTags);
+                // 动画组成员格子换装器：Design/Animated Objects 下全部（孙级）成员补挂
+                // AnimGridMemberSync（零配置、免 tag；编辑器 Play 侧烘焙件在场则跳过）。
+                // 真机上烘焙的 CustomStub 组件是 Missing Script 死件，必须运行时补挂。
+                HealAnimGridMembers();
                 if (stubTags > 0)
                 {
                     // 汇总：只在有 stub tag 的场景打（普通场景不打，避免刷屏）
@@ -741,7 +745,8 @@ namespace CustomStub
                 || prefabTag.StartsWith(TravelatorReverser.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal)
-                 || prefabTag.StartsWith(ConveyorDirectionSync.TagPrefix, StringComparison.Ordinal);
+                 || prefabTag.StartsWith(ConveyorDirectionSync.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith("BLRelay|", StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -876,6 +881,13 @@ namespace CustomStub
                 sync.enabled = true;
                 StubLog.Dbg("[CustomStub] 自愈 ConveyorDirectionSync: " + go.name);
             }
+            else if (prefabTag.StartsWith("BLRelay|", StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "ButtonLogicRelay"))
+                    return; // 编辑器烘活的组件在场（编辑器 Play）；真机烘焙件为
+                            // Missing Script（GetType 非 CustomStub.*），下方补挂。
+                HealButtonLogicRelay(go, prefabTag);
+            }
             else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
             {
                 // CameraOffset|<x>,<z>（invariant 浮点 = 相机根节点摆放位世界 XZ，
@@ -891,6 +903,126 @@ namespace CustomStub
                 CameraAuthoredOffset.RegisterFromTag(go,
                     ParseFloat(parts[0], 0f), ParseFloat(parts[1], 0f));
             }
+        }
+
+        /// <summary>动画组成员补挂 AnimGridMemberSync（Static→DynamicGridLocation 换装，
+        /// 让传送带喂料目标随动画移动跟随）。扫 Design/Animated Objects 的组根下全部
+        /// 直接子物体（= 成员 wrapper）；幂等（按 FullName 判重，编辑器烘焙件优先）。</summary>
+        private static void HealAnimGridMembers()
+        {
+            try
+            {
+                var animatedRoot = GameObject.Find("Design/Animated Objects");
+                if (animatedRoot == null)
+                    return;
+                int healed = 0;
+                for (int g = 0; g < animatedRoot.transform.childCount; g++)
+                {
+                    var groupRoot = animatedRoot.transform.GetChild(g);
+                    for (int m = 0; m < groupRoot.childCount; m++)
+                    {
+                        var member = groupRoot.GetChild(m);
+                        if (HasStubComponentNamed(member.gameObject, "AnimGridMemberSync"))
+                            continue;
+                        member.gameObject.AddComponent<AnimGridMemberSync>();
+                        healed++;
+                    }
+                }
+                if (healed > 0)
+                    StubLog.Log("[CustomStub] 自愈 AnimGridMemberSync × " + healed +
+                        "（动画成员占格将随移动跟随）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] AnimGridMemberSync 扫描失败: " + ex.Message);
+            }
+        }
+
+        /// <summary>BLRelay 自愈：从 tag payload 还原 ButtonLogicRelay 全部接线配置。
+        /// 格式（烘焙侧 ButtonLinkBakery.WriteRelayTag 对称编码，字段内 %,;>| 转 %XX）：
+        ///   BLRelay|P:按压名,..|B:封禁1;封禁2|E:状态>触发>目标;..|D:完成名,..</summary>
+        private static void HealButtonLogicRelay(GameObject go, string prefabTag)
+        {
+            try
+            {
+                var parts = prefabTag.Split('|');
+                string p = null, b = null, e = null, d = null, n = null;
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    if (parts[i].StartsWith("P:", StringComparison.Ordinal)) p = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("B:", StringComparison.Ordinal)) b = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("E:", StringComparison.Ordinal)) e = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("D:", StringComparison.Ordinal)) d = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("N:", StringComparison.Ordinal)) n = parts[i].Substring(2);
+                }
+                if (string.IsNullOrEmpty(e))
+                {
+                    StubLog.LogWarn("[CustomStub] BLRelay tag 缺少分发条目，跳过自愈: " + go.name);
+                    return;
+                }
+                var relay = go.AddComponent<ButtonLogicRelay>();
+                relay.enabled = false;
+                relay.m_pressTriggers = SplitUnesc(p, ',');
+                relay.m_pressBlockedStates = SplitUnesc(b, ';');
+                var entryParts = e.Split(';');
+                var states = new System.Collections.Generic.List<string>();
+                var gos = new System.Collections.Generic.List<string>();
+                var targets = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < entryParts.Length; i++)
+                {
+                    if (entryParts[i].Length == 0) continue;
+                    var f = entryParts[i].Split('>');
+                    if (f.Length < 3) continue;
+                    states.Add(UnescTag(f[0]));
+                    gos.Add(UnescTag(f[1]));
+                    targets.Add(UnescTag(f[2]));
+                }
+                relay.m_stateNames = states.ToArray();
+                relay.m_goTriggers = gos.ToArray();
+                relay.m_targetNames = targets.ToArray();
+                relay.m_doneTriggers = SplitUnesc(d, ',');
+                relay.m_buttonRootNames = SplitUnesc(n, ',');
+                relay.RebuildHashes();
+                relay.enabled = true;
+                StubLog.Log("[CustomStub] 自愈 ButtonLogicRelay: " + go.name + "（" +
+                    states.Count + " 条分发）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] BLRelay 自愈失败 " + go.name + ": " + ex.Message);
+            }
+        }
+
+        private static string[] SplitUnesc(string joined, char sep)
+        {
+            if (string.IsNullOrEmpty(joined))
+                return new string[0];
+            var parts = joined.Split(sep);
+            for (int i = 0; i < parts.Length; i++)
+                parts[i] = UnescTag(parts[i]);
+            return parts;
+        }
+
+        /// <summary>tag 字段解码（与 ButtonLinkBakery.EscTag 对称）。</summary>
+        private static string UnescTag(string s)
+        {
+            if (string.IsNullOrEmpty(s) || s.IndexOf('%') < 0)
+                return s;
+            var sb = new System.Text.StringBuilder(s.Length);
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (s[i] == '%' && i + 2 < s.Length)
+                {
+                    var hex = s.Substring(i + 1, 2);
+                    if (hex == "25") { sb.Append('%'); i += 2; continue; }
+                    if (hex == "2C") { sb.Append(','); i += 2; continue; }
+                    if (hex == "3B") { sb.Append(';'); i += 2; continue; }
+                    if (hex == "3E") { sb.Append('>'); i += 2; continue; }
+                    if (hex == "7C") { sb.Append('|'); i += 2; continue; }
+                }
+                sb.Append(s[i]);
+            }
+            return sb.ToString();
         }
 
         /// <summary>RandomCrate 自愈（统一单程序集后由 EntryPoint 承担，取代 loader

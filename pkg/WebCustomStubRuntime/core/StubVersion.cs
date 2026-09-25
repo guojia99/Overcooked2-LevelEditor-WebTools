@@ -14,6 +14,61 @@ namespace CustomStub
     public static class StubVersion
     {
         /// <summary>权威 semver 版本号（形如 2.0.0）。
+        /// 3.3.5（2026-09-25 热修：3.3.4 吸附写错物体致传送带乱飞）：吸附把 90°
+        ///  整数绝对旋转写到了【组根】世界旋转——组根位于原点时成员绕原点公转
+        ///  飞出（Play 一按即飞）。修复：改为在【wrapper】（站点祖先链上、组根
+        ///  的直接子，即 clip 曲线目标）上施加 ≤5° 的相对修正（绕自身轴就地
+        ///  旋转，与节点 clip 同款驱动方式）。⚠ 3.3.4 勿分发。
+        ///
+        /// 3.3.4（2026-09-25 传送带旋转停位差几度修复）：节点环 Idle 原为空状态
+        ///  （无曲线+WD=off），exit-time 瞬时转移的接管帧不写旋转——transform
+        ///  残留结束前最后一帧采样（几度级残差，是否命中结束帧取决于帧时机，
+        ///  时准时不准；clip 烘焙数据本身端点精确）。双层修复：①运行时
+        ///  ConveyorDirectionSync 停稳位姿吸附——相对基准 Y 残差 ≤5° 容差归整到
+        ///  最近 90° 倍数（写动画祖先 wrapper 防累积漂移；tag 自愈通道，存量
+        ///  场景无需重写回）；②烘焙侧 Idle 挂「节点起始姿态」定持 clip（接管帧
+        ///  起每帧重写精确姿态，根治）+ 入口混合时长钳制 ≤clip 一半（防短 clip
+        ///  混合未完被 exit 打断）——②需重新写回生效。吸附带监控日志
+        ///  （残差角度全量打点）。
+        ///
+        /// 3.3.3（2026-09-25 12:47 真机「按一次永红」残留修复）：3.3.2 的按钮
+        /// 生命周期接管在真机仍失效——ResolveButtonChild 反射的 PseudoPrefab
+        /// 是编辑器专用程序集脚本，真机 Missing Script，静默返回 null（真机日志
+        /// 实证：动画链两次旋转正常、[ButtonLogicRelay] 零日志）。修复：解析加
+        /// 通道 2 兜底——子树扫 TriggerDisableScript（vanilla，真机可解析，
+        /// SwitchReenable 同款模式）；复位触发名按实例 m_enableTrigger 读取而非
+        /// 硬编码 "Reset"。监控增强：Disable/Reset 投递打 sent/total 全量打点，
+        /// child 解析失败按按钮根一次性告警，新增 Run 状态卡死（BLDone 丢失）
+        /// 30s 看门狗告警。
+        ///
+        /// 3.3.2（2026-09-25 真机按钮永红修复）：ButtonLogicRelay 接管按钮生命周期——
+        ///  进入 Run 向全部配对按钮 child 发 Disable（共轭：按一个双锁），离开 Run
+        ///  （动画完成）发 Reset（一起变绿）。根因：香草开关无自复位，回绿通道
+        ///  （编辑器 LayoutEditorSwitchLinkPatch / 真机 SwitchReenable tag）此前只随
+        ///  机器联动（switchLinks）烘焙，纯 ButtonLink 按钮两头都没配上（真机实测
+        ///  02:02：两次旋转正常、按钮各按一次后双双永红）。tag 载体加 N: 按钮根名段。
+        ///
+        /// 3.3.1（2026-09-25 真机按钮锁死修复）：ButtonLogicRelay / AnimGridMemberSync
+        ///  此前作为场景烘焙组件分发——真机无 CustomStub 脚本注册表，烘焙件是
+        ///  Missing Script 死件 → BLGo 无人分发 → BLDone 永不到达 → 锁定模式下
+        ///  BLAdv 永久挂起 = 「按一次就无法再按」。修复：接线配置编码进 BLRelay|
+        ///  tag（BLRelay|P:..|B:..|E:状态>触发>目标|D:..，%,;>| 转义），EntryPoint
+        ///  自愈补挂；AnimGridMemberSync 免 tag（扫 Design/Animated Objects 成员
+        ///  直接补挂，零配置）；导出前缀表补 BLRelay|。
+        ///
+        /// 3.3.0（2026-09-24 按钮动画联动 v3）：
+        ///  - 新增 ButtonLogicRelay：按钮联动 helper 的「状态→组分发」场景组件——
+        ///    controller 内嵌 SendTriggerToObject/ClearTriggerDuringState SMB 在
+        ///    Unity 2017.4 资产往返中不持久化（运行期按压无分发 + 回导恒空），
+        ///    分发整体迁移到场景组件（含锁定/共轭互斥/迟到 done 防锁存）。
+        ///  - 新增 AnimGridMemberSync：动画成员子树 StaticGridLocation → vanilla
+        ///    DynamicGridLocation 换装，传送带喂料目标随动画移动自动跟随。
+        ///  - ConveyorDirectionSync 重写刷新时序：位姿停稳 + 自身无在途投递才
+        ///    刷新投递目标（修「旋转后整排传送卡死」——m_receiving 永久卡 true），
+        ///    并支持平移后的格位回写（m_gridIndex）。
+        ///  - 配套编辑器侧能力（烘焙于 Editor 程序集）：开关动画组节点环（逐节点
+        ///    推进/同 startTime 并行/单旋转自动往返）、多源共控按钮、同按模式。
+        ///
         /// 3.2.1（2026-09-22）：
         ///  - Loader 动态读取自身目录下所有 commonW1、commonW2、commonW3...
         ///    依赖包，导出器同步自动分发 commonW3 及更高扩展包；
@@ -76,6 +131,6 @@ namespace CustomStub
         ///    改为推进到 IsBurning 为止 + 宿主双驱动时观测让位；客户端「锅在灶台上」
         ///    标志按触发区直驱（原先恒 false 导致烧糊预警图标被 vanilla 吞掉）。
         /// Loader 的 PluginVersion 必须同步为同值。</summary>
-        public const string Value = "3.2.1";
+        public const string Value = "3.3.5";
     }
 }

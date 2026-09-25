@@ -185,6 +185,102 @@ function linkConveyorSwitch(items: EditorItem[]): void {
   });
 }
 
+/** 传送带阵 ×4 + 双按钮（共控·同按）：4 个**独立**动画组（每站一组、+90°/−90°
+ *  两个逐节点，方便单独编辑/控制），同按联动让一次按压同时启动全部 4 组（各自
+ *  推进一个节点 = 4 站同时旋转 90°，再按全部转回）；两个按钮接线到同一联动
+ *  （sharedSourceIds），任一按压都推进。每站带 buttonControlled 监视器（旋转停稳
+ *  后刷新投递目标）。 */
+function linkConveyorArraySwitch(items: EditorItem[]): void {
+  const conveyors = items.slice(0, 4);
+  const swA = items[4];
+  const swB = items[5];
+  for (const c of conveyors) {
+    c.conveyor = { ...(c.conveyor ?? {}), buttonControlled: true };
+  }
+  for (const sw of [swA, swB]) {
+    sw.stubKind = "Switch";
+    if (!sw.switchStub) sw.switchStub = {};
+    sw.switchStub.startEnabled = true;
+  }
+
+  // 组名基号去重（重复套用组合时）。
+  let base = S.animControls.length + 1;
+  const taken = (k: number) => S.animControls.some((g) => g.displayName.startsWith(`传送带阵 ${k} `));
+  while (taken(base)) base++;
+
+  const groupNames: string[] = [];
+  conveyors.forEach((c, i) => {
+    const name = `传送带阵 ${base} · ${i + 1}`;
+    const group: AnimGroup = {
+      id: uuid(),
+      displayName: name,
+      groupKind: "members",
+      triggerMode: "button",
+      advanceMode: "press",
+      itemInstanceIds: [c.instanceId],
+      floorInstanceIds: [],
+      objectInstanceIds: [],
+      memberOffsets: [],
+      memberStatic: [],
+      memberGroups: [],
+      startDelay: 0,
+      loop: false,
+      loopDelay: 2,
+      waitForFinished: true,
+      waypoints: [],
+      events: [
+        {
+          id: uuid(),
+          type: "rotate",
+          triggerName: "FlipOn",
+          delay: 0,
+          startTime: 0,
+          rotateDegrees: 90,
+          rotateDirection: "cw",
+          rotateSeconds: 0.4,
+        },
+        {
+          id: uuid(),
+          type: "rotate",
+          triggerName: "FlipOff",
+          delay: 0,
+          startTime: 1,
+          rotateDegrees: 90,
+          rotateDirection: "ccw",
+          rotateSeconds: 0.4,
+        },
+      ],
+    };
+    S.animControls.push(group);
+    groupNames.push(name);
+  });
+
+  // 重复套用组合时清掉旧的传送带阵组（成员与本次任一传送带重叠即视为旧组）。
+  const newIds = new Set(conveyors.map((c) => c.instanceId));
+  const legacyNames = new Set<string>();
+  for (const g of S.animControls) {
+    if (groupNames.includes(g.displayName)) continue;
+    if (g.displayName.startsWith("传送带阵") && g.itemInstanceIds.some((id) => newIds.has(id))) {
+      legacyNames.add(g.displayName);
+    }
+  }
+  if (legacyNames.size > 0) {
+    S.animControls = S.animControls.filter((g) => !legacyNames.has(g.displayName));
+    S.buttonLinks = S.buttonLinks.filter((l) => !l.groupNames.some((n2) => legacyNames.has(n2)));
+  }
+  S.buttonLinks = S.buttonLinks.filter((l) => l.sourceId !== swA.instanceId && l.sourceId !== swB.instanceId);
+
+  S.buttonLinks.push({
+    id: uuid(),
+    sourceId: swA.instanceId,
+    sharedSourceIds: [swB.instanceId],
+    groupNames,
+    sequenceMode: "loop",
+    lockUntilFinished: true,
+    simultaneous: true,
+  });
+}
+
 /** 传送门配对：默认【单向 A→B】——a 是入口，b 仅作为出口（回指 a 占位，
  *  运行时由 CustomStub.TeleportalExitOnly 把 b 的出口清回 null）。
  *  需要双向在入口门参数里勾「双向传送」即可。 */
@@ -279,6 +375,20 @@ export const COMBOS: ComboDef[] = [
       { id: "Switch", dx: 2, dz: 0 },
     ],
     link: linkConveyorSwitch,
+  },
+  {
+    id: "conveyor_array_switch",
+    nameZh: "传送带阵 ×4 + 双按钮",
+    hint: "4 个独立动画组（每站一组，可单独编辑）+ 同按联动：按任一按钮，4 站同时旋转 90°、再按全部转回（每站投递方向自动跟随）",
+    parts: [
+      { id: "ConveyorStation", dx: 0, dz: 0 },
+      { id: "ConveyorStation", dx: 1, dz: 0 },
+      { id: "ConveyorStation", dx: 2, dz: 0 },
+      { id: "ConveyorStation", dx: 3, dz: 0 },
+      { id: "Switch", dx: 1, dz: 2 },
+      { id: "Switch", dx: 2, dz: 2 },
+    ],
+    link: linkConveyorArraySwitch,
   },
   {
     id: "cannon_switch",

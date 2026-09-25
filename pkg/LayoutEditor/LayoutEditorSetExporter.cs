@@ -49,7 +49,7 @@ public static class LayoutEditorSetExporter
     {
         "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
         "UtensilTiming|", "CameraOffset|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|",
-        "ConveyorDirectionSync|",
+        "ConveyorDirectionSync|", "BLRelay|",
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub：tag 载体（含 prefab 自带的
@@ -436,11 +436,12 @@ public static class LayoutEditorSetExporter
             Debug.LogWarning("[SetExporter] 依赖导出前 Prepare For Building 失败（继续尝试构建）: " + ex.Message);
         }
 
-        // 删除 commonW1/commonW2 旧构建产物（+ .manifest），随后重新打包，
-        // 保证依赖包里的 commonW1/W2 是最新的、不含遗留。
-        SetPhase("clean", "清理 commonW1/commonW2 旧产物…");
+        // 删除 commonW1/commonW2/commonW3 旧构建产物（+ .manifest），随后重新打包，
+        // 保证依赖包里的 commonW* 是最新的、不含遗留。
+        SetPhase("clean", "清理 commonW1/commonW2/commonW3 旧产物…");
         DeleteBundleProduct("commonw1");
         DeleteBundleProduct("commonw2");
+        DeleteBundleProduct("commonw3");
 
         // 重新构建 AssetBundle（增量：仅重建被删/变更的 commonW1/W2 与统一运行时）。
         SetPhase("build", "重新打包 commonW1 / commonW2 / 统一运行时…");

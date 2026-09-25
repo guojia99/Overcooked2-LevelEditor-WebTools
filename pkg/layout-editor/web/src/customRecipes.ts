@@ -98,7 +98,7 @@ async function openRecipeFormById(app: HTMLElement, setName: string, recipeId: s
   }
   // 本集菜谱优先（commonW2 共享库同 id 条目只读，不作为深链编辑目标）
   const hit =
-    recipes.find((x) => x.id === recipeId && !isCommonW2Recipe(x)) ??
+    recipes.find((x) => x.id === recipeId && !isSharedCompendiumRecipe(x)) ??
     recipes.find((x) => x.id === recipeId) ??
     recipes.find((x) => x.assetPath.replace(/\\/g, "/").endsWith("/" + recipeId + ".asset"));
   if (!hit) {
@@ -176,9 +176,10 @@ function crIconSrc(r: { assetPath: string }): string {
   return `/api/custom-recipes/icon?assetPath=${encodeURIComponent(r.assetPath)}`;
 }
 
-/** commonW2 Burger大全 共享库：不属于本关卡集自定义菜谱，列表页不展示。 */
-function isCommonW2Recipe(r: CustomRecipeSummary): boolean {
-  return r.assetPath.replace(/\\/g, "/").includes("/commonW2/");
+/** commonW2 Burger大全 / commonW3 沙拉大全共享库：不属于本关卡集自定义菜谱，列表页不展示。 */
+function isSharedCompendiumRecipe(r: CustomRecipeSummary): boolean {
+  const p = r.assetPath.replace(/\\/g, "/");
+  return p.includes("/commonW2/") || p.includes("/commonW3/");
 }
 
 function foodIconImg(kind: "ingredients" | "recipes", id: string | undefined): string {
@@ -230,7 +231,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   }
   /** 列表展示用：仅本关卡集 custom_recipes（不含 commonW2 共享库）。 */
   function getDisplayRecipes(): CustomRecipeSummary[] {
-    return recipes.filter((r) => !isCommonW2Recipe(r));
+    return recipes.filter((r) => !isSharedCompendiumRecipe(r));
   }
 
   setStatus(`${getDisplayRecipes().length} 个菜谱 · UID前缀：${config.uidPrefix}`);

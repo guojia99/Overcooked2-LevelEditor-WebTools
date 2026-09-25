@@ -276,12 +276,18 @@ public class LayoutButtonLinkDto
     public string id;
     /** 触发源物品 id（Switch / PressureSwitch；"u:<instanceID>" 或 "new:..."）。 */
     public string sourceId;
+    /** 共控触发源 id 列表（与 sourceId 同款接线到同一 helper：任一按钮按压都推进
+     *  同一动画组序列；如「双按钮共控传送带阵同时旋转」）。回导时重建。 */
+    public string[] sharedSourceIds;
     /** 按顺序触发的动画组 displayName 列表（displayName 为跨保存稳定键）。 */
     public string[] groupNames;
     /** loop = A-B-C-A；pingpong = A-B-C-B-A。缺省 = loop。 */
     public string sequenceMode;
     /** true = 组运行期间忽略按压（完成后才接受下一次按压）。 */
     public bool lockUntilFinished = true;
+    /** 同按模式：一次按压同时启动全部绑定组（各组独立推进/回环，最快组完成即解锁；
+     *  缺省 false = 顺序环（每次按压进下一组）。用于「多组同时旋转/同时动作」。 */
+    public bool simultaneous;
     /** 共轭对 id（两条 link 共享；空 = 非共轭）。 */
     public string pairId;
     /** 共轭对中本按钮初始为抬起（可按）状态。 */

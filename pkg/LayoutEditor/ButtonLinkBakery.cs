@@ -383,8 +383,18 @@ public static class ButtonLinkBakery
         }
 
         var controllerPath = animDir + "/" + sceneName + "_" + helperName + ".controller";
-        var controller = BuildSequenceController(controllerPath, helperName, rootNames, goTrigs, doneTrigs,
-            link.lockUntilFinished, link.sequenceMode);
+        AnimatorController controller;
+        if (link.simultaneous)
+        {
+            // 同按模式：单步环 Ready --BLAdv--> Run（进入即同时启动全部组）
+            // --BLDone_0--> Ready（最快组完成即解锁；时长一致即同时完成）。
+            controller = BuildSimultaneousController(controllerPath, helperName, doneTrigs);
+        }
+        else
+        {
+            controller = BuildSequenceController(controllerPath, helperName, rootNames, goTrigs, doneTrigs,
+                link.lockUntilFinished, link.sequenceMode);
+        }
         if (controller == null)
             return "按钮联动：controller 创建失败 " + controllerPath;
         usedAssets.Add(controllerPath);
@@ -393,7 +403,83 @@ public static class ButtonLinkBakery
         RebuildDoneRelays(helper.gameObject, anim, doneTrigs);
         for (int i = 0; i < n; i++)
             WireGroupQueue(roots[i], doneTrigs[i], helper.gameObject);
+
+        // 状态→组分发：优先 ButtonLogicRelay 场景组件（持久化可靠）；类型缺失时
+        // 回退烘焙 SMB（Unity 2017.4 上不可靠，仅防御）。
+        var order = new List<int>();
+        for (int i = 0; i < n; i++) order.Add(i);
+        if (!link.simultaneous && link.sequenceMode == "pingpong" && n > 2)
+        {
+            for (int i = n - 2; i > 0; i--) order.Add(i);
+        }
+        var stateNames = new List<string>();
+        var relayGo = new List<string>();
+        var relayTargets = new List<string>();
+        if (link.simultaneous)
+        {
+            // 同按：全部组都挂在同一个 "Run" 状态上（relay 对同状态多条目逐条分发）。
+            for (int i = 0; i < n; i++)
+            {
+                stateNames.Add("Run");
+                relayGo.Add(goTrigs[i]);
+                relayTargets.Add(rootNames[i]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < order.Count; i++)
+            {
+                stateNames.Add("Run_" + i);
+                relayGo.Add(goTrigs[order[i]]);
+                relayTargets.Add(rootNames[order[i]]);
+            }
+        }
+        // 锁定模式的按压封禁状态 = 运行态；非锁定 = 不封禁（环语义有直连出口/排队）。
+        var blocked = new List<string>();
+        if (link.lockUntilFinished)
+        {
+            blocked.Add(link.simultaneous ? "Run" : "Run_" + 0);
+            if (!link.simultaneous)
+                for (int i = 1; i < order.Count; i++) blocked.Add("Run_" + i);
+        }
+        // 配对按钮（主源 + 共控）：relay 在 Run 进入/离开时对它们发 Disable/Reset
+        // （真机上这是纯 ButtonLink 按钮唯一的回绿通道 + 共轭「按一个双锁」语义）。
+        var buttonRoots = new List<string>();
+        buttonRoots.Add(sourceGo.name);
+        foreach (var sid in link.sharedSourceIds ?? new string[0])
+        {
+            if (string.IsNullOrEmpty(sid) || sid == link.sourceId) continue;
+            var sharedGo = ResolveObject(sid, createdObjects);
+            if (sharedGo == null)
+            {
+                LayoutEditorLog.LogWarning("button link: 共控按钮不在场景中，跳过 " + sid);
+                continue;
+            }
+            if (!buttonRoots.Contains(sharedGo.name))
+                buttonRoots.Add(sharedGo.name);
+        }
+        if (!AttachGoRelay(helper.gameObject, anim,
+            new[] { AdvanceTrigger(helperName) },
+            new[] { string.Join(",", blocked.ToArray()) },
+            stateNames.ToArray(), relayGo.ToArray(), relayTargets.ToArray(), doneTrigs,
+            buttonRoots.ToArray()))
+        {
+            if (link.simultaneous)
+                AttachSmbSimultaneousFallback(controller, rootNames, goTrigs,
+                    link.lockUntilFinished, AdvanceTrigger(helperName));
+            else
+                AttachSmbFallback(controller, order, rootNames, goTrigs, doneTrigs,
+                    link.lockUntilFinished, AdvanceTrigger(helperName));
+        }
         WireSource(sourceGo, AdvanceTrigger(helperName), anim);
+        // 共控按钮：与主源同款接线（同一 BLAdv → 同一 helper 环，任一按压都推进）。
+        foreach (var sid in link.sharedSourceIds ?? new string[0])
+        {
+            if (string.IsNullOrEmpty(sid) || sid == link.sourceId) continue;
+            var sharedGo = ResolveObject(sid, createdObjects);
+            if (sharedGo == null) continue;
+            WireSource(sharedGo, AdvanceTrigger(helperName), anim);
+        }
         return null;
     }
 
@@ -456,12 +542,211 @@ public static class ButtonLinkBakery
         RebuildDoneRelays(helper.gameObject, anim, allDone.ToArray());
         for (int i = 0; i < nA; i++) WireGroupQueue(rootsA[i], doneA[i], helper.gameObject);
         for (int i = 0; i < nB; i++) WireGroupQueue(rootsB[i], doneB[i], helper.gameObject);
+
+        // relay 分发：ARun 同时启动 A 方各组、BRun 启动 B 方各组；
+        // 互斥封禁 = 对方就绪态 + 双方运行态（原 ClearTrigger SMB 的职责）。
+        var stateNames = new List<string>();
+        var relayGo = new List<string>();
+        var relayTargets = new List<string>();
+        for (int i = 0; i < nA; i++)
+        {
+            stateNames.Add("ARun");
+            relayGo.Add(goA[i]);
+            relayTargets.Add(namesA[i]);
+        }
+        for (int i = 0; i < nB; i++)
+        {
+            stateNames.Add("BRun");
+            relayGo.Add(goB[i]);
+            relayTargets.Add(namesB[i]);
+        }
+        var blockedA = "AReady,ARun,BRun,AWait1,AWait0";
+        var blockedB = "BReady,BRun,ARun,BWait1,BWait0";
+        if (!AttachGoRelay(helper.gameObject, anim,
+            new[] { PressTrigger(helperName, "A"), PressTrigger(helperName, "B") },
+            new[] { blockedA, blockedB },
+            stateNames.ToArray(), relayGo.ToArray(), relayTargets.ToArray(), allDone.ToArray(),
+            new[] { srcA.name, srcB.name }))
+        {
+            AttachSmbPairFallback(controller, namesA, goA, namesB, goB);
+        }
         WireSource(srcA, PressTrigger(helperName, "A"), anim);
         WireSource(srcB, PressTrigger(helperName, "B"), anim);
         return null;
     }
 
     // ---------------------------------------------------------------- components
+
+    /// <summary>在 helper 上挂/重建 ButtonLogicRelay（CustomStub.ButtonLogicRelay，
+    /// WebCustomStubRuntime，反射挂载）。返回 false = 类型不可用（调用方回退 SMB）。</summary>
+    private static bool AttachGoRelay(GameObject helper, Animator anim,
+        string[] pressTriggers, string[] pressBlockedStates,
+        string[] stateNames, string[] goTriggers, string[] targetNames, string[] doneTriggers,
+        string[] buttonRootNames)
+    {
+        var relayType = LayoutEditorStubIO.FindCustomStubType(helper, "ButtonLogicRelay");
+        if (relayType == null)
+        {
+            LayoutEditorLog.LogWarning("button link: 找不到 CustomStub.ButtonLogicRelay" +
+                "（WebCustomStubRuntime 未编译？）——回退 controller 内嵌 SMB 分发" +
+                "（Unity 2017.4 上可能不持久化，按钮联动可能在重载后失效）");
+            return false;
+        }
+        foreach (var old in helper.GetComponents(relayType))
+            Undo.DestroyObjectImmediate(old);
+        var relay = Undo.AddComponent(helper, relayType);
+        SetRelayField(relay, "m_pressTriggers", pressTriggers);
+        SetRelayField(relay, "m_pressBlockedStates", pressBlockedStates);
+        SetRelayField(relay, "m_stateNames", stateNames);
+        SetRelayField(relay, "m_goTriggers", goTriggers);
+        SetRelayField(relay, "m_targetNames", targetNames);
+        SetRelayField(relay, "m_doneTriggers", doneTriggers);
+        SetRelayField(relay, "m_buttonRootNames", buttonRootNames ?? new string[0]);
+        var rebuild = relay.GetType().GetMethod("RebuildHashes", System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.Instance);
+        if (rebuild != null)
+            rebuild.Invoke(relay, null);
+        EditorUtility.SetDirty(relay);
+        // 真机自愈载体：CustomStub 组件按脚本 GUID 序列化，游戏侧无此脚本注册表，
+        // 烘焙件在真机是 Missing Script 死件——配置必须编码进 tag，由 EntryPoint
+        // 运行时补挂（与 RandomCrate/SwitchReenable 同一可靠通道）。
+        WriteRelayTag(helper, pressTriggers, pressBlockedStates, stateNames, goTriggers, targetNames, doneTriggers, buttonRootNames);
+        LayoutEditorLog.Log("button link: helper " + helper.name + " 挂载 ButtonLogicRelay（" +
+            stateNames.Length + " 条分发：" + string.Join("/", stateNames) + " → " +
+            string.Join("/", targetNames) + "）");
+        return true;
+    }
+
+    /// <summary>写 BLRelay 自愈 tag（单组件约定：helper 上无其他 tag，可整串覆写）。
+    /// 格式 BLRelay|P:按压名,..|B:封禁1;封禁2|E:状态>触发>目标;..|D:完成名,..|N:按钮根名,..
+    /// 字段内 %,;>| 做 %XX 转义（用户组名可能含任意字符）。EntryPoint 解析回填。</summary>
+    private static void WriteRelayTag(GameObject helper,
+        string[] pressTriggers, string[] pressBlockedStates,
+        string[] stateNames, string[] goTriggers, string[] targetNames, string[] doneTriggers,
+        string[] buttonRootNames)
+    {
+        try
+        {
+            var sb = new System.Text.StringBuilder("BLRelay");
+            sb.Append("|P:").Append(JoinEsc(pressTriggers, ','));
+            sb.Append("|B:").Append(JoinEsc(pressBlockedStates, ';'));
+            sb.Append("|E:");
+            for (int i = 0; i < stateNames.Length; i++)
+            {
+                if (i > 0) sb.Append(';');
+                sb.Append(EscTag(stateNames[i])).Append('>')
+                  .Append(EscTag(i < goTriggers.Length ? goTriggers[i] : ""))
+                  .Append('>')
+                  .Append(EscTag(i < targetNames.Length ? targetNames[i] : ""));
+            }
+            sb.Append("|D:").Append(JoinEsc(doneTriggers, ','));
+            sb.Append("|N:").Append(JoinEsc(buttonRootNames, ','));
+            var tag = helper.GetComponent<LevelEditorStub.SpecificPseudoPrefabTag>();
+            if (tag == null)
+            {
+                tag = Undo.AddComponent<LevelEditorStub.SpecificPseudoPrefabTag>(helper);
+            }
+            else
+            {
+                Undo.RecordObject(tag, "Layout Editor Button Link Relay Tag");
+            }
+            tag.prefabTag = sb.ToString();
+            EditorUtility.SetDirty(tag);
+        }
+        catch (Exception ex)
+        {
+            // tag 失败仅损失真机自愈通道（编辑器 Play 不受影响），记录后继续。
+            LayoutEditorLog.LogWarning("button link: BLRelay tag 写入失败 " + helper.name + ": " + ex.Message);
+        }
+    }
+
+    private static string JoinEsc(string[] parts, char sep)
+    {
+        var sb = new System.Text.StringBuilder();
+        if (parts == null) return sb.ToString();
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (i > 0) sb.Append(sep);
+            sb.Append(EscTag(parts[i]));
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>tag 字段转义：%,;>| 保留字符 → %XX（EntryPoint 侧对称解码）。</summary>
+    private static string EscTag(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        return s.Replace("%", "%25").Replace(",", "%2C").Replace(";", "%3B")
+            .Replace(">", "%3E").Replace("|", "%7C");
+    }
+
+    private static void SetRelayField(Component relay, string field, string[] value)
+    {
+        var f = relay.GetType().GetField(field, System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.Instance);
+        if (f != null)
+        {
+            Undo.RecordObject(relay, "Layout Editor Button Link Relay");
+            f.SetValue(relay, value);
+        }
+    }
+
+    /// <summary>relay 不可用时的防御路径：给已建 controller 的 Run_i 状态补
+    ///  SendTriggerToObject / ClearTriggerDuringState SMB（旧方案，可能不持久化）。</summary>
+    private static void AttachSmbFallback(AnimatorController controller, List<int> order,
+        string[] rootNames, string[] goTrigs, string[] doneTrigs, bool lockUntilFinished,
+        string advTrigger)
+    {
+        var sm = controller.layers[0].stateMachine;
+        foreach (var cs in sm.states)
+        {
+            var st = cs.state;
+            if (st == null || !st.name.StartsWith("Run_", StringComparison.Ordinal)) continue;
+            int idx;
+            if (!int.TryParse(st.name.Substring(4), out idx) || idx >= order.Count) continue;
+            AddSendTrigger(st, rootNames[order[idx]], goTrigs[order[idx]]);
+            if (lockUntilFinished)
+                AddClearTrigger(st, advTrigger);
+        }
+        LayoutEditorLog.LogWarning("button link: 已回退 SMB 分发（ButtonLogicRelay 不可用）");
+    }
+
+    /// <summary>同按模式的 SMB 兜底（relay 不可用时）：全部组挂在单一 Run 状态。</summary>
+    private static void AttachSmbSimultaneousFallback(AnimatorController controller,
+        string[] rootNames, string[] goTrigs, bool lockUntilFinished, string advTrigger)
+    {
+        var sm = controller.layers[0].stateMachine;
+        foreach (var cs in sm.states)
+        {
+            var st = cs.state;
+            if (st == null || st.name != "Run") continue;
+            for (int i = 0; i < rootNames.Length; i++)
+                AddSendTrigger(st, rootNames[i], goTrigs[i]);
+            if (lockUntilFinished)
+                AddClearTrigger(st, advTrigger);
+        }
+        LayoutEditorLog.LogWarning("button link: 同按模式已回退 SMB 分发（ButtonLogicRelay 不可用）");
+    }
+
+    private static void AttachSmbPairFallback(AnimatorController controller,
+        string[] namesA, string[] goA, string[] namesB, string[] goB)
+    {
+        var sm = controller.layers[0].stateMachine;
+        foreach (var cs in sm.states)
+        {
+            var st = cs.state;
+            if (st == null) continue;
+            if (st.name == "ARun")
+            {
+                for (int i = 0; i < namesA.Length; i++) AddSendTrigger(st, namesA[i], goA[i]);
+            }
+            else if (st.name == "BRun")
+            {
+                for (int i = 0; i < namesB.Length; i++) AddSendTrigger(st, namesB[i], goB[i]);
+            }
+        }
+        LayoutEditorLog.LogWarning("button link: 共轭已回退 SMB 分发（ButtonLogicRelay 不可用）");
+    }
 
     private static Transform EnsureHelper(string helperName)
     {
@@ -523,7 +808,9 @@ public static class ButtonLinkBakery
     }
 
     /// <summary>写触发源 stub：Switch 用 triggerOnAnimator/animatorToTrigger（按压驱动
-    ///  逻辑 Animator）；PressureSwitch 用 triggerOnAnimatorEnter（Exit 指向 BLNoop 占位）。</summary>
+    ///  逻辑 Animator）；PressureSwitch 用 triggerOnAnimatorEnter（Exit 指向 BLNoop 占位）；
+    ///  ToggleSwitch（拨动开关）与 Switch 同款 animator 通道（PseudoPrefabToggleSwitch.Setup
+    ///  会在 child 上接线 TriggerOnAnimator，m_triggerToReceive="Switch"）。</summary>
     private static void WireSource(GameObject sourceGo, string pressTrigger, Animator targetAnim)
     {
         var sw = sourceGo.GetComponent<PseudoPrefabSwitchStub>();
@@ -533,6 +820,15 @@ public static class ButtonLinkBakery
             sw.triggerOnAnimator = pressTrigger;
             sw.animatorToTrigger = targetAnim;
             EditorUtility.SetDirty(sw);
+            return;
+        }
+        var toggleSw = sourceGo.GetComponent<PseudoPrefabToggleSwitchStub>();
+        if (toggleSw != null)
+        {
+            Undo.RecordObject(toggleSw, "Layout Editor Button Link");
+            toggleSw.triggerOnAnimator = pressTrigger;
+            toggleSw.animatorToTrigger = targetAnim;
+            EditorUtility.SetDirty(toggleSw);
             return;
         }
         var ps = sourceGo.GetComponent<PseudoPrefabPressureSwitchStub>();
@@ -546,7 +842,7 @@ public static class ButtonLinkBakery
             return;
         }
         LayoutEditorLog.LogWarning("button link: 触发源 " + sourceGo.name +
-            " 上没有 Switch/PressureSwitch stub，无法接线");
+            " 上没有 Switch/ToggleSwitch/PressureSwitch stub，无法接线");
     }
 
     // ---------------------------------------------------------------- controller
@@ -597,9 +893,13 @@ public static class ButtonLinkBakery
         return st;
     }
 
-    /// <summary>顺序联动状态机：Ready_i --Advance--> Run_i（进入即启动组 i）
-    ///  --Done_i--> 下一步骤。锁定模式：Run_i 上的按压被 ClearTriggerDuringState
-    ///  吞掉（组完成后才接受下一次）；非锁定：Run_i --Advance--> Run_{i+1} 直接连发。</summary>
+    /// <summary>顺序联动状态机：Ready_i --Advance--> Run_i --Done_i--> 下一步骤。
+    ///  「进入 Run_i 即启动组 i」的分发由 helper 上的 ButtonLogicRelay 场景组件承担
+    ///  （controller 内嵌 SendTriggerToObject/ClearTriggerDuringState SMB 在 Unity
+    ///  2017.4 资产往返中不可靠持久化——2026-09-24 事故：回导恒空 + 运行期无分发，
+    ///  是「按钮无法触发动画组」的根因；场景组件的持久性已被 TriggerOnAnimator
+    ///  完成中继实证）。锁定（运行期吞按压）与 done 防锁存同样由 relay 处理。
+    ///  relay 类型缺失时由 BakeSequence 回退烘焙 SMB（防御路径）。</summary>
     private static AnimatorController BuildSequenceController(string path, string helperName,
         string[] rootNames, string[] goTrigs, string[] doneTrigs, bool lockUntilFinished,
         string sequenceMode)
@@ -638,33 +938,48 @@ public static class ButtonLinkBakery
             int sourceIndex = order[i];
             int next = (i + 1) % order.Count;
             AddTrigTransition(ready[i], run[i], adv);
-            AddSendTrigger(run[i], rootNames[sourceIndex], goTrigs[sourceIndex]);
             AddTrigTransition(run[i], ready[next], doneTrigs[sourceIndex]);
-            if (lockUntilFinished)
-            {
-                // 运行期锁定：按压被吞掉且不锁存（"动画组完成后才可再按"）。
-                AddClearTrigger(run[i], adv);
-            }
-            else
+            if (!lockUntilFinished)
             {
                 // 非锁定：运行中再按直接触发下一组。
                 AddTrigTransition(run[i], run[next], adv);
-                // Done_j 可能在其他状态到达（无消费过渡）→ 清空防锁存误触发。
-                for (int j = 0; j < n; j++)
-                {
-                    if (j == sourceIndex) continue;
-                    AddClearTrigger(run[i], doneTrigs[j]);
-                    AddClearTrigger(ready[i], doneTrigs[j]);
-                }
             }
         }
-        AddClearTrigger(ready[0], NoopTrigger);
         return ctrl;
     }
 
     /// <summary>共轭对状态机：AReady --PA--> ARun（同时启动 A 方各组）→ A 方全部完成
     ///  （AND 门，m=2 时两条顺序无关路径）→ BReady --PB--> BRun → … → AReady。
     ///  对方的按压在任意非就绪态都被吞掉（功能上的"按下状态不可再按"）。</summary>
+    /// <summary>同按模式状态机：Ready --Advance--> Run（进入即由 relay 同时启动全部
+    ///    绑定组，各组独立推进）--BLDone_0--> Ready（最快组完成即解锁；各组时长
+    ///    一致时即同时完成）。迟到的其余 BLDone 由 relay 换状态时统一清空防锁存。</summary>
+    private static AnimatorController BuildSimultaneousController(string path, string helperName,
+        string[] doneTrigs)
+    {
+        AnimGroupBakery.DeleteAssetIfExists(path);
+        var ctrl = AnimatorController.CreateAnimatorControllerAtPath(path);
+        if (ctrl == null) return null;
+        ctrl.name = Path.GetFileNameWithoutExtension(path);
+
+        var adv = AdvanceTrigger(helperName);
+        ctrl.AddParameter(adv, AnimatorControllerParameterType.Trigger);
+        ctrl.AddParameter(NoopTrigger, AnimatorControllerParameterType.Trigger);
+        for (int i = 0; i < doneTrigs.Length; i++)
+            ctrl.AddParameter(doneTrigs[i], AnimatorControllerParameterType.Trigger);
+
+        var sm = ctrl.layers[0].stateMachine;
+        var ready = NewState(sm, "Ready");
+        var run = NewState(sm, "Run");
+        sm.defaultState = ready;
+        AddTrigTransition(ready, run, adv);
+        // 解锁取第一个完成信号；其余组完成信号稍后到达时已在 Ready（无消费过渡），
+        // 由 relay 在下一次状态切换时 ResetTrigger 清空。
+        if (doneTrigs.Length > 0)
+            AddTrigTransition(run, ready, doneTrigs[0]);
+        return ctrl;
+    }
+
     private static AnimatorController BuildPairController(string path, string helperName,
         string[] namesA, string[] goA, string[] doneA,
         string[] namesB, string[] goB, string[] doneB, bool aStartsUp)
@@ -691,18 +1006,9 @@ public static class ButtonLinkBakery
         var bRun = NewState(sm, "BRun");
         sm.defaultState = aStartsUp ? aReady : bReady;
 
-        for (int i = 0; i < namesA.Length; i++)
-            AddSendTrigger(aRun, namesA[i], goA[i]);
-        for (int i = 0; i < namesB.Length; i++)
-            AddSendTrigger(bRun, namesB[i], goB[i]);
-
-        AddClearTrigger(aReady, pb); // A 抬起时 B 的按压被吞掉
-        AddClearTrigger(bReady, pa);
-        foreach (var st in new[] { aRun, bRun })
-        {
-            AddClearTrigger(st, pa);
-            AddClearTrigger(st, pb);
-        }
+        // 「进入 ARun/BRun 同时启动各方全部组」的分发由 ButtonLogicRelay 承担
+        // （SMB 持久化不可靠，见 BuildSequenceController 注释）。对方按压的
+        // 吞除同样由 relay 的 lock 机制处理。
 
         AddTrigTransition(aReady, aRun, pa);
         AddTrigTransition(bReady, bRun, pb);
@@ -782,7 +1088,10 @@ public static class ButtonLinkBakery
     // ------------------------------------------------------------------- import
 
     /// <summary>从场景重建按钮联动（场景是唯一事实源）：扫描 Design/Button Logic 下的
-    ///  helper，按 controller 状态里的 SendTriggerToObject 反查动画组，按 stub 接线反查触发源。</summary>
+    ///  helper，重建顺序 = ① ButtonLogicRelay 场景组件的序列化字段（2026-09-24 v3 起
+    ///  的权威载体）→ ② 组根 TriggerQueue 接线（m_startTrigger=BLGo_*_i +
+    ///  m_endTriggerTarget=helper，纯场景数据）→ ③ controller 内嵌 SMB（旧场景遗留，
+    ///  Unity 2017.4 持久化不可靠，仅兜底）。触发源仍按开关 stub 接线反查。</summary>
     public static List<LayoutButtonLinkDto> ImportFromScene(Scene scene,
         List<AnimGroupDto> groups, List<LayoutItemDto> items)
     {
@@ -799,70 +1108,240 @@ public static class ButtonLinkBakery
             if (!groupByStartTrigger.ContainsKey(g.startTrigger))
                 groupByStartTrigger[g.startTrigger] = g;
         }
+        var groupNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var g in groups ?? new List<AnimGroupDto>())
+            if (g != null && !string.IsNullOrEmpty(g.displayName))
+                groupNames.Add(g.displayName);
 
         for (int i = 0; i < root.childCount; i++)
         {
             var helper = root.GetChild(i);
             var anim = helper.GetComponent<Animator>();
             var ctrl = anim != null ? anim.runtimeAnimatorController as AnimatorController : null;
-            if (ctrl == null || ctrl.layers.Length == 0) continue;
-            var sm = ctrl.layers[0].stateMachine;
-            if (sm == null) continue;
+            var sm = ctrl != null && ctrl.layers.Length > 0 ? ctrl.layers[0].stateMachine : null;
 
             var name = helper.name;
             if (name.StartsWith(HelperPairPrefix, StringComparison.Ordinal))
-                ImportPair(result, name, helper.gameObject, anim, sm, groupByStartTrigger, items);
+                ImportPair(result, name, helper.gameObject, anim, sm, groupByStartTrigger, groupNames, items);
             else if (name.StartsWith(HelperSeqPrefix, StringComparison.Ordinal) ||
                      name.StartsWith(HelperSeqNoLockPrefix, StringComparison.Ordinal))
-                ImportSequence(result, name, helper.gameObject, anim, sm, groupByStartTrigger, items);
+                ImportSequence(result, name, helper.gameObject, anim, sm, groupByStartTrigger, groupNames, items);
         }
         return result;
     }
 
-    private static void ImportSequence(List<LayoutButtonLinkDto> result, string helperName,
-        GameObject helperGo, Animator anim, AnimatorStateMachine sm,
-        Dictionary<string, AnimGroupDto> groupByStartTrigger, List<LayoutItemDto> items)
+    /// <summary>helper 的组接线条目（重建顺序用）。</summary>
+    private class WiringEntry
     {
-        // Run_i 状态按序号排列，读取其 SendTriggerToObject 反查动画组。
-        var runStates = new SortedDictionary<int, AnimatorState>();
+        public string side; // "" = 顺序；"A"/"B" = 共轭
+        public int idx;
+        public string groupName;
+    }
+
+    /// <summary>① ButtonLogicRelay 组件读取（反射，字段即接线）。</summary>
+    private static List<WiringEntry> ReadRelayEntries(GameObject helperGo)
+    {
+        var relay = FindRelayComponent(helperGo);
+        if (relay == null) return null;
+        var stateNames = RelayStringArray(relay, "m_stateNames");
+        var targetNames = RelayStringArray(relay, "m_targetNames");
+        if (stateNames == null || stateNames.Length == 0) return null;
+        var entries = new List<WiringEntry>();
+        for (int i = 0; i < stateNames.Length && i < targetNames.Length; i++)
+        {
+            var e = new WiringEntry { groupName = targetNames[i], idx = 0 };
+            var sn = stateNames[i];
+            if (sn == "ARun") e.side = "A";
+            else if (sn == "BRun") e.side = "B";
+            else if (sn == "Run")
+            {
+                // 同按模式：全部组挂在单一 Run 状态（多条目）。
+            }
+            else if (sn.StartsWith("Run_", StringComparison.Ordinal))
+            {
+                int v;
+                int.TryParse(sn.Substring(4), out v);
+                e.idx = v;
+            }
+            else continue;
+            entries.Add(e);
+        }
+        return entries.Count > 0 ? entries : null;
+    }
+
+    private static Component FindRelayComponent(GameObject helperGo)
+    {
+        var relayType = LayoutEditorStubIO.FindCustomStubType(helperGo, "ButtonLogicRelay");
+        return relayType != null ? helperGo.GetComponent(relayType) : null;
+    }
+
+    private static string[] RelayStringArray(Component relay, string field)
+    {
+        var f = relay.GetType().GetField(field, System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.Instance);
+        return f != null ? f.GetValue(relay) as string[] : null;
+    }
+
+    /// <summary>② 组根 TriggerQueue 接线读取：m_endTriggerTarget 指向 helper 的组，
+    ///  按 m_startTrigger（BLGo_&lt;helper&gt;_[A|B]&lt;i&gt;）的尾标排序。纯场景数据，
+    ///  不依赖 controller 资产（2026-09-24 SMB 回导恒空事故后的事实权威）。</summary>
+    private static List<WiringEntry> ReadQueueWiring(string helperName, GameObject helperGo)
+    {
+        var animatedRoot = LayoutEditorHierarchy.FindByPath("Design/Animated Objects");
+        if (animatedRoot == null) return null;
+        var entries = new List<WiringEntry>();
+        var prefix = "BLGo_" + helperName + "_";
+        for (int i = 0; i < animatedRoot.childCount; i++)
+        {
+            var groupRoot = animatedRoot.GetChild(i);
+            var q = groupRoot.GetComponent<TriggerQueue>();
+            if (q == null || q.m_endTriggerTarget != helperGo) continue;
+            var st = q.m_startTrigger;
+            if (string.IsNullOrEmpty(st) || !st.StartsWith(prefix, StringComparison.Ordinal)) continue;
+            var tail = st.Substring(prefix.Length);
+            var e = new WiringEntry { groupName = groupRoot.name, idx = 0 };
+            if (tail.Length > 0 && (tail[0] == 'A' || tail[0] == 'B'))
+            {
+                e.side = tail[0].ToString();
+                tail = tail.Substring(1);
+            }
+            int v;
+            int.TryParse(tail, out v);
+            e.idx = v;
+            entries.Add(e);
+        }
+        entries.Sort((a, b) =>
+        {
+            int c = string.CompareOrdinal(a.side, b.side);
+            return c != 0 ? c : a.idx.CompareTo(b.idx);
+        });
+        return entries.Count > 0 ? entries : null;
+    }
+
+    /// <summary>③ controller Run 状态 SMB 读取（旧场景兜底）。</summary>
+    private static List<WiringEntry> ReadSmbEntries(AnimatorStateMachine sm,
+        Dictionary<string, AnimGroupDto> groupByStartTrigger, string runStatePrefix)
+    {
+        if (sm == null) return null;
+        var entries = new List<WiringEntry>();
         foreach (var cs in sm.states)
         {
             var st = cs.state;
-            if (st == null || !st.name.StartsWith("Run_", StringComparison.Ordinal)) continue;
-            int idx;
-            if (!int.TryParse(st.name.Substring(4), out idx)) continue;
-            runStates[idx] = st;
-        }
-        if (runStates.Count == 0) return;
-
-        var groupNames = new List<string>();
-        foreach (var kv in runStates)
-        {
-            var g = GroupOfState(kv.Value, groupByStartTrigger);
-            if (g == null) return; // 引用的组已被删除 → 整条联动视为失效
-            groupNames.Add(g.displayName);
-        }
-
-        // pingpong 烘焙会把中间步骤反向追加为 A-B-C-B。
-        // 回导时压回唯一的正向半段，避免下一次写回产生重复动画组。
-        string sequenceMode = null;
-        for (int half = 2; half <= groupNames.Count; half++)
-        {
-            if (groupNames.Count != half * 2 - 2) continue;
-            bool matches = true;
-            for (int i = 1; i < half - 1; i++)
+            if (st == null) continue;
+            string side = null;
+            int idx = 0;
+            if (runStatePrefix == "ARun" || runStatePrefix == "BRun")
             {
-                if (groupNames[half - 1 + i] != groupNames[half - 1 - i])
+                if (st.name != runStatePrefix) continue;
+                side = runStatePrefix.Substring(0, 1);
+            }
+            else if (st.name.StartsWith("Run_", StringComparison.Ordinal))
+            {
+                if (!int.TryParse(st.name.Substring(4), out idx)) continue;
+            }
+            else continue;
+            foreach (var trigger in ReadSendTriggers(st))
+            {
+                AnimGroupDto g;
+                if (!groupByStartTrigger.TryGetValue(trigger, out g)) continue;
+                entries.Add(new WiringEntry { side = side, idx = idx, groupName = g.displayName });
+                break;
+            }
+        }
+        if (entries.Count == 0) return null;
+        entries.Sort((a, b) =>
+        {
+            int c = string.CompareOrdinal(a.side, b.side);
+            return c != 0 ? c : a.idx.CompareTo(b.idx);
+        });
+        return entries;
+    }
+
+    /// <summary>三通道合一：任一通道给出接线即用（relay → 组根接线 → SMB）。</summary>
+    private static List<WiringEntry> CollectEntries(string helperName, GameObject helperGo,
+        AnimatorStateMachine sm, Dictionary<string, AnimGroupDto> groupByStartTrigger,
+        string smbRunPrefix)
+    {
+        var entries = ReadRelayEntries(helperGo);
+        if (entries != null && entries.Count > 0) return entries;
+        entries = ReadQueueWiring(helperName, helperGo);
+        if (entries != null && entries.Count > 0) return entries;
+        return ReadSmbEntries(sm, groupByStartTrigger, smbRunPrefix);
+    }
+
+    private static void ImportSequence(List<LayoutButtonLinkDto> result, string helperName,
+        GameObject helperGo, Animator anim, AnimatorStateMachine sm,
+        Dictionary<string, AnimGroupDto> groupByStartTrigger, HashSet<string> groupNames,
+        List<LayoutItemDto> items)
+    {
+        var entries = CollectEntries(helperName, helperGo, sm, groupByStartTrigger, "Run_");
+        if (entries == null || entries.Count == 0)
+        {
+            LayoutEditorLog.LogWarning("button link: helper " + helperName +
+                " 的组接线三通道（relay/组根TriggerQueue/SMB）全部为空，联动无法回导——" +
+                "请在网页触发编排中重新绑定动画组");
+            return;
+        }
+        var names = new List<string>();
+        foreach (var e in entries)
+        {
+            if (string.IsNullOrEmpty(e.groupName)) continue;
+            if (!groupNames.Contains(e.groupName))
+            {
+                LayoutEditorLog.LogWarning("button link: helper " + helperName + " 接线的组「" +
+                    e.groupName + "」已不存在，整条联动跳过导入");
+                return;
+            }
+            names.Add(e.groupName);
+        }
+        if (names.Count == 0) return;
+
+        // 同按模式识别：relay 有 ≥2 条 "Run" 条目（全组挂单一状态）；relay 缺失时
+        // 退回控制器形状（存在 "Run" 且无 "Run_0" + 多组接线）。
+        bool simultaneous = false;
+        var relaySns = RelayStringArray(FindRelayComponent(helperGo), "m_stateNames");
+        if (relaySns != null)
+        {
+            int runCount = 0;
+            foreach (var sn in relaySns)
+                if (sn == "Run") runCount++;
+            simultaneous = runCount >= 2;
+        }
+        else if (sm != null && entries.Count >= 2)
+        {
+            bool hasRun = false, hasRun0 = false;
+            foreach (var cs in sm.states)
+            {
+                if (cs.state == null) continue;
+                if (cs.state.name == "Run") hasRun = true;
+                if (cs.state.name == "Run_0") hasRun0 = true;
+            }
+            simultaneous = hasRun && !hasRun0;
+        }
+
+        string sequenceMode = null;
+        if (!simultaneous)
+        {
+            // pingpong 烘焙会把中间步骤反向追加为 A-B-C-B。
+            // 回导时压回唯一的正向半段，避免下一次写回产生重复动画组。
+            for (int half = 2; half <= names.Count; half++)
+            {
+                if (names.Count != half * 2 - 2) continue;
+                bool matches = true;
+                for (int i = 1; i < half - 1; i++)
                 {
-                    matches = false;
+                    if (names[half - 1 + i] != names[half - 1 - i])
+                    {
+                        matches = false;
+                        break;
+                    }
+                }
+                if (matches)
+                {
+                    names.RemoveRange(half, names.Count - half);
+                    sequenceMode = "pingpong";
                     break;
                 }
-            }
-            if (matches)
-            {
-                groupNames.RemoveRange(half, groupNames.Count - half);
-                sequenceMode = "pingpong";
-                break;
             }
         }
 
@@ -873,19 +1352,25 @@ public static class ButtonLinkBakery
             return;
         }
 
+        // 共控按钮：其余接线到同一 helper（同触发名）的开关全部回导为 sharedSourceIds。
+        var shared = FindAllSourceIds(items, anim, AdvanceTrigger(helperName));
+        shared.Remove(sourceId);
         result.Add(new LayoutButtonLinkDto
         {
             id = ImportedSeqMarker + helperName,
             sourceId = sourceId,
-            groupNames = groupNames.ToArray(),
+            sharedSourceIds = shared.Count > 0 ? shared.ToArray() : null,
+            groupNames = names.ToArray(),
             sequenceMode = sequenceMode,
+            simultaneous = simultaneous,
             lockUntilFinished = helperName.StartsWith(HelperSeqPrefix, StringComparison.Ordinal),
         });
     }
 
     private static void ImportPair(List<LayoutButtonLinkDto> result, string helperName,
         GameObject helperGo, Animator anim, AnimatorStateMachine sm,
-        Dictionary<string, AnimGroupDto> groupByStartTrigger, List<LayoutItemDto> items)
+        Dictionary<string, AnimGroupDto> groupByStartTrigger, HashSet<string> groupNames,
+        List<LayoutItemDto> items)
     {
         var pairId = ImportedPairMarker + helperName;
         var srcA = FindSourceId(items, anim, PressTrigger(helperName, "A"));
@@ -896,11 +1381,25 @@ public static class ButtonLinkBakery
             return;
         }
 
-        var groupsA = GroupsOfRunState(sm, "ARun", groupByStartTrigger);
-        var groupsB = GroupsOfRunState(sm, "BRun", groupByStartTrigger);
-        if (groupsA == null || groupsB == null || groupsA.Count == 0 || groupsB.Count == 0)
+        var entries = CollectEntries(helperName, helperGo, sm, groupByStartTrigger, "ARun");
+        if (entries == null || entries.Count == 0)
         {
-            LayoutEditorLog.LogWarning("button link: 共轭 helper " + helperName + " 的动画组不完整，跳过导入");
+            LayoutEditorLog.LogWarning("button link: 共轭 helper " + helperName +
+                " 的组接线三通道（relay/组根TriggerQueue/SMB）全部为空，跳过导入");
+            return;
+        }
+        var groupsA = new List<string>();
+        var groupsB = new List<string>();
+        foreach (var e in entries)
+        {
+            if (string.IsNullOrEmpty(e.groupName) || !groupNames.Contains(e.groupName)) continue;
+            if (e.side == "A") groupsA.Add(e.groupName);
+            else if (e.side == "B") groupsB.Add(e.groupName);
+        }
+        if (groupsA.Count == 0 || groupsB.Count == 0)
+        {
+            LayoutEditorLog.LogWarning("button link: 共轭 helper " + helperName + " 的动画组不完整（A=" +
+                groupsA.Count + " B=" + groupsB.Count + "），跳过导入");
             return;
         }
 
@@ -923,39 +1422,6 @@ public static class ButtonLinkBakery
             pairId = pairId,
             pairStartsUp = !aStartsUp,
         });
-    }
-
-    /// <summary>读取 Run 状态上全部 SendTriggerToObject 的触发名，反查动画组（顺序任意，
-    ///  组内顺序对共轭无意义——两组同时启动）。任一组缺失返回 null。</summary>
-    private static List<string> GroupsOfRunState(AnimatorStateMachine sm, string stateName,
-        Dictionary<string, AnimGroupDto> groupByStartTrigger)
-    {
-        foreach (var cs in sm.states)
-        {
-            var st = cs.state;
-            if (st == null || st.name != stateName) continue;
-            var names = new List<string>();
-            foreach (var trigger in ReadSendTriggers(st))
-            {
-                AnimGroupDto g;
-                if (!groupByStartTrigger.TryGetValue(trigger, out g)) return null;
-                names.Add(g.displayName);
-            }
-            return names;
-        }
-        return null;
-    }
-
-    private static AnimGroupDto GroupOfState(AnimatorState st,
-        Dictionary<string, AnimGroupDto> groupByStartTrigger)
-    {
-        foreach (var trigger in ReadSendTriggers(st))
-        {
-            AnimGroupDto g;
-            if (groupByStartTrigger.TryGetValue(trigger, out g))
-                return g;
-        }
-        return null;
     }
 
     /// <summary>读取状态上所有 SendTriggerToObject 的 m_triggerToSend（私有字段走
@@ -982,6 +1448,15 @@ public static class ButtonLinkBakery
     /// <summary>反查触发源：stub 的 animatorToTrigger 指向该 helper 且触发名匹配。 </summary>
     private static string FindSourceId(List<LayoutItemDto> items, Animator anim, string pressTrigger)
     {
+        foreach (var id in FindAllSourceIds(items, anim, pressTrigger))
+            return id;
+        return null;
+    }
+
+    /// <summary>反查【全部】接线到该 helper（同触发名）的触发源（主源 + 共控按钮）。</summary>
+    private static List<string> FindAllSourceIds(List<LayoutItemDto> items, Animator anim, string pressTrigger)
+    {
+        var found = new List<string>();
         foreach (var item in items ?? new List<LayoutItemDto>())
         {
             if (item == null || string.IsNullOrEmpty(item.instanceId)) continue;
@@ -989,11 +1464,20 @@ public static class ButtonLinkBakery
             if (go == null) continue;
             var sw = go.GetComponent<PseudoPrefabSwitchStub>();
             if (sw != null && sw.animatorToTrigger == anim && sw.triggerOnAnimator == pressTrigger)
-                return item.instanceId;
+            {
+                found.Add(item.instanceId);
+                continue;
+            }
+            var toggleSw = go.GetComponent<PseudoPrefabToggleSwitchStub>();
+            if (toggleSw != null && toggleSw.animatorToTrigger == anim && toggleSw.triggerOnAnimator == pressTrigger)
+            {
+                found.Add(item.instanceId);
+                continue;
+            }
             var ps = go.GetComponent<PseudoPrefabPressureSwitchStub>();
             if (ps != null && ps.animatorToTrigger == anim && ps.triggerOnAnimatorEnter == pressTrigger)
-                return item.instanceId;
+                found.Add(item.instanceId);
         }
-        return null;
+        return found;
     }
 }

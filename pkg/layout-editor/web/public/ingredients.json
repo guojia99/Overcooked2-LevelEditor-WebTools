@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-20T07:21:11.938Z",
+  "generatedAt": "2026-09-24T14:08:04.069Z",
   "schemaVersion": 7,
   "itemCount": 111,
   "ingredients": [
@@ -820,6 +820,15 @@
       "icon": true
     },
     {
+      "guid": "73c28675ea0968be18f65b2d948e3227",
+      "id": "dlc11_vanilla",
+      "nameZh": "香草（DLC11）",
+      "nameEn": "Vanilla (DLC11)",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_Vanilla.asset",
+      "group": "dlc11",
+      "icon": true
+    },
+    {
       "guid": "0bac7a72dc228024fb5f36278fab79d6",
       "id": "Sausage",
       "nameZh": "香肠",
@@ -955,6 +964,15 @@
       "icon": true
     },
     {
+      "guid": "8d4a5aaf71fdf648b0648dd20ae1a920",
+      "id": "dlc11_corn",
+      "nameZh": "玉米（DLC11）",
+      "nameEn": "Corn (DLC11)",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_Corn.asset",
+      "group": "dlc11",
+      "icon": true
+    },
+    {
       "guid": "eba97984fecfb8940a72e730a55ea89f",
       "id": "TortillaSO",
       "nameZh": "玉米薄饼",
@@ -988,24 +1006,6 @@
       "nameEn": "Cheese Sticks",
       "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Cheese_Sticks.asset",
       "group": "dlc08",
-      "icon": true
-    },
-    {
-      "guid": "8d4a5aaf71fdf648b0648dd20ae1a920",
-      "id": "dlc11_corn",
-      "nameZh": "DLC11 corn",
-      "nameEn": "dlc11 corn",
-      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_Corn.asset",
-      "group": "dlc11",
-      "icon": true
-    },
-    {
-      "guid": "73c28675ea0968be18f65b2d948e3227",
-      "id": "dlc11_vanilla",
-      "nameZh": "DLC11 vanilla",
-      "nameEn": "dlc11 vanilla",
-      "assetPath": "Assets/common03/food/Ingredients/dlc11/DLC11_Vanilla.asset",
-      "group": "dlc11",
       "icon": true
     }
   ]

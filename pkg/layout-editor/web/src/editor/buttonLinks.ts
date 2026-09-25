@@ -17,7 +17,10 @@ export function isButtonLinkSource(it: EditorItem): boolean {
 }
 
 export function linkOfSource(sourceId: string): ButtonLink | undefined {
-  return S.buttonLinks.find((l) => l.sourceId === sourceId);
+  return (
+    S.buttonLinks.find((l) => l.sourceId === sourceId) ??
+    S.buttonLinks.find((l) => (l.sharedSourceIds ?? []).includes(sourceId))
+  );
 }
 
 export function ensureLink(sourceId: string): ButtonLink {
@@ -50,12 +53,17 @@ export const PAIR_GROUP_LIMIT = 2;
 /**
  * 清理失效联动：源物品被删、动画组被删/改名、配对另一方缺失。
  * 动画组以 displayName 引用（跨保存稳定），改名由 animControl 的改名处同步。
+ * 共控按钮：逐个剔除已删 id；主源被删但有存活共控按钮时提升首个共控为主源。
  */
 export function cleanOrphanedButtonLinks(): void {
   const itemIds = new Set(S.items.map((i) => i.instanceId).filter(Boolean));
   const groupNames = new Set(S.animControls.map((g) => g.displayName));
   for (const l of S.buttonLinks) {
     l.groupNames = l.groupNames.filter((n) => groupNames.has(n));
+    l.sharedSourceIds = (l.sharedSourceIds ?? []).filter((id) => itemIds.has(id) && id !== l.sourceId);
+    if (!itemIds.has(l.sourceId) && (l.sharedSourceIds ?? []).length > 0) {
+      l.sourceId = l.sharedSourceIds.shift()!;
+    }
   }
   S.buttonLinks = S.buttonLinks.filter(
     (l) => itemIds.has(l.sourceId) && l.groupNames.length > 0
@@ -75,12 +83,6 @@ export function renameGroupInButtonLinks(oldName: string, newName: string): void
   for (const l of S.buttonLinks) {
     l.groupNames = l.groupNames.map((n) => (n === oldName ? newName : n));
   }
-}
-
-function groupLabel(name: string): string {
-  const g = S.animControls.find((gr) => gr.displayName === name);
-  const members = g ? g.itemInstanceIds.length + g.floorInstanceIds.length + g.objectInstanceIds.length : 0;
-  return g ? `${escHtml(name)}（${members} 成员/${g.events.length} 事件）` : escHtml(name);
 }
 
 function createSwitchAnimGroup(source: EditorItem): AnimGroup {
@@ -130,10 +132,11 @@ export interface ButtonLinkSectionOpts {
 export function buttonLinkSummaryText(item: EditorItem): string {
   const link = linkOfSource(item.instanceId ?? "");
   const n = link?.groupNames.length ?? 0;
+  const shared = link?.sharedSourceIds?.length ?? 0;
   const partner = link ? partnerOf(link) : undefined;
   return !link || n === 0
     ? "— 未绑定动画组 —"
-    : `已绑 ${n} 组 · ${link.sequenceMode === "pingpong" ? "往返" : "循环"}${link.lockUntilFinished !== false ? " · 完成后才可再按" : ""}${partner ? " · 共轭配对" : ""}`;
+    : `已绑 ${n} 组 · ${link.simultaneous ? "同按" : link.sequenceMode === "pingpong" ? "往返" : "循环"}${link.lockUntilFinished !== false ? " · 完成后才可再按" : ""}${shared > 0 ? ` · ${shared} 个共控按钮` : ""}${partner ? " · 共轭配对" : ""}`;
 }
 
 function pairHintText(partner: ButtonLink | undefined): string {
@@ -160,12 +163,18 @@ function buttonLinkSectionHtml(item: EditorItem): string {
     .join("");
 
   const mode = link?.sequenceMode ?? "loop";
-  return `<p class="trig-hint">每次按压进入下一步动画组；动画完成后才进入下一次。启动 / 结束触发器由联动自动管理（无需在动画组里手动设置）。</p>
+  const paired = !!partner;
+  return `<p class="trig-hint">每次按压触发下一步动画组；「逐节点」的组每按一次只推进一个事件节点（相同开始时间的事件并行，末尾环回）。启动 / 结束触发器由联动自动管理（无需在动画组里手动设置）。</p>
     <div id="blm-groups" class="trig-list"></div>
      <div class="trig-addrow"><select id="blm-groupadd" class="trig-select"></select>
        <button type="button" class="btn-small" id="blm-add">添加已有组</button>
        <button type="button" class="btn-small primary" id="blm-new-group">＋ 新建并编辑</button></div>
-    <label class="trig-check"><input type="checkbox" id="blm-lock" ${!link || link.lockUntilFinished !== false ? "checked" : ""}/> 动画组完成后才可再按（运行期忽略按压）</label>
+     ${paired ? "" : `<div class="trig-subhead">共控按钮（任一按压都推进同一序列）</div>
+     <div id="blm-shared" class="trig-list"></div>
+     <div class="trig-addrow"><select id="blm-shared-add" class="trig-select"></select>
+       <button type="button" class="btn-small" id="blm-shared-btn">＋ 添加共控按钮</button></div>`}
+     <label class="trig-check"><input type="checkbox" id="blm-lock" ${!link || link.lockUntilFinished !== false ? "checked" : ""}/> 动画组完成后才可再按（运行期忽略按压）</label>
+     <label class="trig-check"><input type="checkbox" id="blm-simul" ${link?.simultaneous ? "checked" : ""}/> 同按模式：一次按压同时启动全部组（各组独立推进，最快组完成即解锁）</label>
     <label class="trig-field">播放模式 <select id="blm-mode" class="trig-select">
       <option value="loop" ${mode === "loop" ? "selected" : ""}>循环：A → B → C → A</option>
       <option value="pingpong" ${mode === "pingpong" ? "selected" : ""}>往返：A → B → C → B → A</option>
@@ -196,16 +205,52 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     if (!l || l.groupNames.length === 0) {
       groupsEl.innerHTML = '<p class="trig-hint">未绑定动画组</p>';
     } else {
-      groupsEl.innerHTML = l.groupNames
-        .map(
-          (n, i) => `<div class="trig-step"><span class="trig-step-idx">${i + 1}</span>
-            <span class="trig-step-label">${groupLabel(n)}</span>
+      const sharedBanner = l.sourceId !== myId
+        ? `<div class="trig-hint" style="color:#7ec8a9">🔗 该按钮与「${escHtml(S.items.find((i) => i.instanceId === l.sourceId) ? itemLabel(S.items.find((i) => i.instanceId === l.sourceId)!) : l.sourceId)}」共控同一序列（任一按压都推进）</div>`
+        : "";
+      groupsEl.innerHTML = sharedBanner + l.groupNames
+        .map((n, i) => {
+          const g = S.animControls.find((gr) => gr.displayName === n);
+          const press = g?.advanceMode === "press";
+          const advSel = g
+            ? `<select class="trig-select blm-adv" data-bl-adv="${escHtml(n)}" title="整组连播：一按播完整组（组内事件按时间轴连播）&#10;逐节点：一按只推进一个事件节点，相同开始时间的事件并行，末尾环回第一个节点&#10;单个旋转事件自动往返：按一次转过去、再按转回">
+                <option value="timeline"${press ? "" : " selected"}>▶ 整组连播</option>
+                <option value="press"${press ? " selected" : ""}>⏭ 逐节点</option>
+              </select>`
+            : "";
+          return `<div class="trig-step"><span class="trig-step-idx">${i + 1}</span>
+            <span class="trig-step-label">${escHtml(n)}</span>
+            ${advSel}
             <button type="button" class="btn-small" data-bl-edit="${escHtml(n)}" title="编辑该动画组的成员与时间轴">✎ 编辑</button>
             <button type="button" class="btn-small blm-mini" data-bl-up="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
             <button type="button" class="btn-small blm-mini" data-bl-down="${i}" ${i === l.groupNames.length - 1 ? "disabled" : ""}>↓</button>
-            <button type="button" class="btn-small blm-mini" data-bl-del="${i}">移除</button></div>`
-        )
+            <button type="button" class="btn-small blm-mini" data-bl-del="${i}">移除</button></div>`;
+        })
         .join("");
+      groupsEl.querySelectorAll<HTMLSelectElement>(".blm-adv").forEach((sel) => {
+        sel.addEventListener("change", () => {
+          const g = S.animControls.find((gr) => gr.displayName === sel.dataset.blAdv);
+          if (!g) return;
+          const v = sel.value === "press" ? "press" : "timeline";
+          if (g.advanceMode === v || (v === "timeline" && !g.advanceMode)) return;
+          pushHistory();
+          g.advanceMode = v;
+          if (v === "press") {
+            // 节点必须终止才能回报完成：剥离整组循环与事件循环（与组设置同款约束）。
+            g.loop = false;
+            for (const evt of g.events) {
+              evt.loop = false;
+              evt.pingpong = false;
+            }
+            setStatus(`「${g.displayName}」已切换为逐节点：每按一次推进一个事件节点（相同开始时间并行）`);
+          } else {
+            setStatus(`「${g.displayName}」已切换为整组连播：每按一次播完整组`);
+          }
+          S.dirty = true;
+          refresh();
+          refreshAddSel();
+        });
+      });
       groupsEl.querySelectorAll<HTMLButtonElement>("[data-bl-edit]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const g = S.animControls.find((gr) => gr.displayName === btn.dataset.blEdit);
@@ -255,21 +300,93 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     const mine = new Set(l?.groupNames ?? []);
     const paired = !!(l && partnerOf(l));
     const limitReached = paired && mine.size >= PAIR_GROUP_LIMIT;
+    // 候选包含全部成员组（不限 triggerMode——自动组绑定后即转为按钮触发，
+    // 添加处理里已自动打标）；特效组（shake/flash）宿主在相机/灯、不在
+    // Design/Animated Objects 下，无法走 ButtonLink 绑定，排除。
     const opt = S.animControls
-      .filter((g) => g.triggerMode === "button")
+      .filter((g) => g.groupKind !== "fx")
       .filter((g) => !mine.has(g.displayName))
       .map((g) => {
         const boundBy = linkBindingGroup(g.displayName);
         const disabled = boundBy || limitReached ? "disabled" : "";
-        const suffix = boundBy ? "（已被其他按钮绑定）" : limitReached ? `（共轭模式最多 ${PAIR_GROUP_LIMIT} 组）` : "";
+        const suffix = boundBy
+          ? "（已被其他按钮绑定）"
+          : limitReached
+            ? `（共轭模式最多 ${PAIR_GROUP_LIMIT} 组）`
+            : g.triggerMode === "button"
+              ? ""
+              : "（自动组 · 绑定后转为按钮触发）";
         return `<option value="${escHtml(g.displayName)}" ${disabled}>${escHtml(g.displayName)}${suffix}</option>`;
       })
       .join("");
-    addSel.innerHTML = opt || '<option value="">— 无可绑定的动画组 —</option>';
+    addSel.innerHTML = opt || '<option value="">— 无可绑定的动画组（场景中还没有动画组，可「＋ 新建并编辑」） —</option>';
   };
 
   refresh();
   refreshAddSel();
+
+  // ---- 共控按钮（任一按压都推进同一序列）----
+  const sharedEl = host.querySelector<HTMLElement>("#blm-shared");
+  const sharedAddSel = host.querySelector<HTMLSelectElement>("#blm-shared-add");
+  const refreshShared = () => {
+    if (!sharedEl || !sharedAddSel) return;
+    const l = link();
+    const sharedIds = l?.sharedSourceIds ?? [];
+    if (!l || l.groupNames.length === 0) {
+      sharedEl.innerHTML = '<p class="trig-hint">先绑定动画组，再添加共控按钮</p>';
+      sharedAddSel.innerHTML = "";
+      return;
+    }
+    sharedEl.innerHTML = sharedIds.length
+      ? sharedIds
+          .map((id) => {
+            const it = S.items.find((i) => i.instanceId === id);
+            return `<div class="trig-step"><span class="trig-step-idx">🔗</span>
+              <span class="trig-step-label">${escHtml(it ? itemLabel(it) : id)}</span>
+              <button type="button" class="btn-small blm-mini" data-unshare="${escHtml(id)}">移除</button></div>`;
+          })
+          .join("")
+      : '<p class="trig-hint">无共控按钮（只有本按钮触发）</p>';
+    sharedEl.querySelectorAll<HTMLButtonElement>("[data-unshare]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const l2 = link();
+        if (!l2) return;
+        pushHistory();
+        l2.sharedSourceIds = (l2.sharedSourceIds ?? []).filter((id) => id !== btn.dataset.unshare);
+        setStatus("已移除共控按钮（写回后生效）");
+        refreshShared();
+        opts.rerender();
+      });
+    });
+    const candidates = S.items.filter(
+      (i) =>
+        i.instanceId &&
+        i.instanceId !== myId &&
+        i.instanceId !== l.sourceId &&
+        !sharedIds.includes(i.instanceId) &&
+        isButtonLinkSource(i)
+    );
+    sharedAddSel.innerHTML =
+      candidates
+        .map((i) => `<option value="${escHtml(i.instanceId!)}">${escHtml(itemLabel(i))}</option>`)
+        .join("") || '<option value="">— 场景中没有其他开关 —</option>';
+  };
+  refreshShared();
+  host.querySelector("#blm-shared-btn")?.addEventListener("click", () => {
+    const id = sharedAddSel?.value ?? "";
+    if (!id) return;
+    const l = link();
+    if (!l || l.groupNames.length === 0) {
+      setStatus("请先绑定动画组，再添加共控按钮", false);
+      return;
+    }
+    pushHistory();
+    l.sharedSourceIds = [...(l.sharedSourceIds ?? []), id];
+    const it = S.items.find((i) => i.instanceId === id);
+    setStatus(`已添加共控按钮「${it ? itemLabel(it) : id}」（任一按压都推进同一序列，写回后生效）`);
+    refreshShared();
+    opts.rerender();
+  });
 
   host.querySelector("#blm-add")?.addEventListener("click", () => {
     const name = addSel.value;
@@ -311,6 +428,27 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     pushHistory();
     ensureLink(myId).lockUntilFinished = lockEl.checked;
     setStatus(`已${lockEl.checked ? "开启" : "关闭"}运行期锁定（写回后生效）`);
+  });
+
+  const simulEl = host.querySelector<HTMLInputElement>("#blm-simul");
+  simulEl?.addEventListener("change", () => {
+    const l = linkOfSource(myId);
+    if (!l || l.groupNames.length === 0) {
+      setStatus("请先绑定动画组，再切换同按模式", false);
+      simulEl.checked = false;
+      return;
+    }
+    if (l.groupNames.length < 2) {
+      setStatus("只绑定 1 组时同按与整组等价，无需开启", false);
+    }
+    pushHistory();
+    l.simultaneous = simulEl.checked;
+    setStatus(
+      simulEl.checked
+        ? "已开启同按模式：一次按压同时启动全部组（写回后生效）"
+        : "已关闭同按模式：恢复逐组轮转（写回后生效）"
+    );
+    opts.rerender();
   });
 
   const modeEl = host.querySelector<HTMLSelectElement>("#blm-mode");

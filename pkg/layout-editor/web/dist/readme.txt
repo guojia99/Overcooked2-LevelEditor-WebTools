@@ -11,8 +11,8 @@ OC2DIYLevelRuntimeWLoader
 当前版本
 --------
 
-  Loader.dll    v3.0.0
-  debugLog.dll  v1.0.0
+  Loader.dll    v3.3.0
+  debugLog.dll  v2.0.0
 
 主要功能
 --------

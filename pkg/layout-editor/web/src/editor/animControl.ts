@@ -2717,7 +2717,7 @@ function renderTimelineTab(
   }
   let warnHtml = "";
   if (group.triggerMode === "button" && group.advanceMode === "press") {
-    warnHtml += `<div class="anim-tl-warn">🔘 节点环模式：每个事件 = 一个节点，按钮每按一次只推进一个节点（事件在时间轴上的先后即节点顺序，间距被忽略）；到末尾后环回第一个节点。循环 / 往返不生效。</div>`;
+    warnHtml += `<div class="anim-tl-warn">🔘 节点环模式：相同开始时间的事件合并为一个节点（并行播放，如旋转+移动一次按压同时完成），不同开始时间 = 不同节点；按钮每按一次推进一个节点，末尾环回第一个节点。只有单个旋转事件时自动往返（按一次转、再按转回）。循环 / 往返不生效。</div>`;
   }
   if (moveOverlap) {
     warnHtml += fxGrp
@@ -2927,9 +2927,9 @@ function renderSettingsTab(group: AnimGroup): string {
   const advanceField = isBtn
     ? `<label>按钮推进方式<select class="group-advance-mode">
         <option value="timeline"${isPress ? "" : " selected"}>整组连播（一组 = 一个节点）</option>
-        <option value="press"${isPress ? " selected" : ""}>逐节点推进（每按一次 = 下一个事件）</option>
+        <option value="press"${isPress ? " selected" : ""}>逐节点推进（每按一次 = 下一个节点）</option>
       </select></label>
-      <div class="sub anim-wp-hint">逐节点用于「同一物体往返翻转」（如传送带 +180°/−180° 必须同组成员）：按钮每按一次只播下一个事件，末尾环回；每次按压的完成回报等待当前节点播完。</div>`
+      <div class="sub anim-wp-hint">逐节点用于「往返翻转 / 分步移动」（如传送带 +180°/−180°、工作台逐段挪位）：相同开始时间的事件合并为一个节点（旋转+移动并行），每按一次推进一个节点，末尾环回；只有单个旋转事件时自动往返（按一次转、再按转回）。每次按压的完成回报等待当前节点播完。</div>`
     : "";
   return `<div class="anim-section">
     ${sectionTitle("⚙", "组设置", "", "#8b93a3")}

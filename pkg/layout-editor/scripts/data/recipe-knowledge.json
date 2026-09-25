@@ -2075,6 +2075,7 @@
       "id": "DLC11_Salad_cucumber_onion",
       "step": "",
       "ingredients": [
+        "dlc11_lettuce",
         "dlc11_cucumber",
         "dlc11_onion_salad"
       ],
@@ -2094,8 +2095,9 @@
       "id": "DLC11_Salad_cucumber_tomato_onion",
       "step": "",
       "ingredients": [
-        "dlc11_cucumber",
+        "dlc11_lettuce",
         "dlc11_tomato",
+        "dlc11_cucumber",
         "dlc11_onion_salad"
       ],
       "plating": "Plate"

@@ -569,12 +569,16 @@ export interface ButtonLink {
   id: string;
   /** 触发源物品 instanceId（Switch / PressureSwitch）。 */
   sourceId: string;
+  /** 共控按钮 instanceId 列表：与主源接线到同一动画组序列，任一按压都推进。 */
+  sharedSourceIds?: string[];
   /** 按顺序触发的动画组 displayName 列表（displayName 是跨保存的稳定键）。 */
   groupNames: string[];
   /** loop = A-B-C-A；pingpong = A-B-C-B-A。缺省 = loop。 */
   sequenceMode?: "loop" | "pingpong";
   /** true = 动画组运行期间忽略按压（完成后才接受下一次按压）。 */
   lockUntilFinished: boolean;
+  /** 同按模式：一次按压同时启动全部绑定组（各组独立推进，最快组完成即解锁）。 */
+  simultaneous?: boolean;
   /** 共轭对 id（两个 link 共享；空/缺省 = 非共轭）。 */
   pairId?: string;
   /** 共轭对中本按钮初始为抬起（可按）状态。 */
@@ -745,7 +749,8 @@ export interface LevelSetScene {
 
 /** 食材/菜谱来源组（后端 LayoutEditorCatalogApi.FoodGroupOf）。
  *  commonW2 共享库分两组：`burger`=custom_recipes/burger/ 子树（🍔 Burger大全）、
- *  `commonw2`=库内其余分类（fry/ 炸物、pasta/ 意面…，📚 扩展菜谱）。 */
+ *  `commonw2`=库内其余分类（fry/ 炸物、pasta/ 意面…，📚 扩展菜谱）。
+ *  commonW3 沙拉大全（DLC11 食材全排列，🥗 Web 沙拉）。 */
 export type FoodGroup =
   | "core"
   | "custom"
@@ -755,6 +760,7 @@ export type FoodGroup =
   | "web"
   | "burger"
   | "commonw2"
+  | "commonw3"
   | string;
 
 export interface IngredientEntry {

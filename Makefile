@@ -33,10 +33,7 @@ run:
 	cp -r ../Overcooked2-LevelEditor/Assets/WebCustomStubRuntime ./pkg/
 	cp -r ../Overcooked2-LevelEditor/Assets/WebCustomStubRuntime.meta ./pkg/
 	cp -r ../Overcooked2-LevelEditor/layout-editor ./pkg/
-	cp -r ../Overcooked2-LevelEditor/Assets/commonW1 ./pkg/
-	cp -r ../Overcooked2-LevelEditor/Assets/commonW1.meta ./pkg/
-	cp -r ../Overcooked2-LevelEditor/Assets/commonW2 ./pkg/
-	cp -r ../Overcooked2-LevelEditor/Assets/commonW2.meta ./pkg/
+	cp -r ../Overcooked2-LevelEditor/Assets/commonW* ./pkg/
 	cp -r ../Overcooked2-LevelEditor/Assets/Editor/LayoutEditor ./pkg/
 
 	rm -rf ./pkg/layout-editor/web/node_modules/

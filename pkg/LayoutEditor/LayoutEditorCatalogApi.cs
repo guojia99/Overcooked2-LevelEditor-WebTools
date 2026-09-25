@@ -12,6 +12,10 @@ public static class LayoutEditorCatalogApi
     ///  ⚠ 三处同步：本常量 ↔ 前端 ingredientLabels.ts 的 FOOD_GROUP_ZH ↔ recipeList.ts 徽标分支。</summary>
     internal const string CommonW2Group = "commonw2";
 
+    /// <summary>commonW3 沙拉大全共享库（DLC11 食材全排列）的 food group id。
+    ///  ⚠ 三处同步：本常量 ↔ 前端 ingredientLabels.ts 的 FOOD_GROUP_ZH ↔ recipeList.ts 徽标分支。</summary>
+    internal const string CommonW3Group = "commonw3";
+
     /// <summary>meta 直读 guid 与 AssetDatabase 注册 guid 脱同步（插件直写 meta /
     ///  陈旧内存注册）时强制重导入修复，返回 AssetDatabase 认可的 guid。
     ///  保存菜谱时 GUIDToAssetPath 依赖 AssetDatabase 映射，此处必须保证一致。</summary>
@@ -107,6 +111,9 @@ public static class LayoutEditorCatalogApi
         //   前端 FOOD_GROUP_ZH（ingredientLabels.ts）与徽标（recipeList.ts）按这两个组分别渲染。
         if (assetPath.IndexOf("/commonW2/", StringComparison.Ordinal) >= 0)
             return IsCommonW2BurgerCategory(assetPath) ? "burger" : CommonW2Group;
+        // commonW3 沙拉大全共享库：整库一个分类（custom_recipes/salad/）。
+        if (assetPath.IndexOf("/commonW3/", StringComparison.Ordinal) >= 0)
+            return CommonW3Group;
         if (assetPath.IndexOf("/custom_recipes/", StringComparison.Ordinal) >= 0)
             return "levelset";
         // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：按通用内容处理
@@ -285,6 +292,10 @@ public static class LayoutEditorCatalogApi
         if (LayoutEditorLevelAdminApi.AssetFolderExists(LayoutEditorLevelAdminApi.CommonW2RecipesDir))
             folders.Add(LayoutEditorLevelAdminApi.CommonW2RecipesDir);
 
+        // 沙拉大全（commonW3 共享沙拉库）：同上，所有关卡集的关卡均可选用。
+        if (LayoutEditorLevelAdminApi.AssetFolderExists(LayoutEditorLevelAdminApi.CommonW3RecipesDir))
+            folders.Add(LayoutEditorLevelAdminApi.CommonW3RecipesDir);
+
         var seen = new HashSet<string>();
         for (int f = 0; f < folders.Count; f++)
         {
@@ -326,6 +337,15 @@ public static class LayoutEditorCatalogApi
                     var sharedNames = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW2RecipesDir);
                     var nameKey = custom != null && !string.IsNullOrEmpty(custom.recipeName) ? custom.recipeName : id;
                     if (!sharedNames.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))
+                        zh = id;
+                    en = nameKey;
+                }
+                else if (group == CommonW3Group)
+                {
+                    // commonW3 沙拉大全：查本库自己的 names.json（Web 前缀命名）。
+                    var w3Names = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW3RecipesDir);
+                    var nameKey = custom != null && !string.IsNullOrEmpty(custom.recipeName) ? custom.recipeName : id;
+                    if (!w3Names.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))
                         zh = id;
                     en = nameKey;
                 }
@@ -1394,8 +1414,15 @@ public static class LayoutEditorCatalogApi
             if (c == null)
                 continue;
             var cp = AssetDatabase.GetAssetPath(c);
-            if (!string.IsNullOrEmpty(cp))
-                ids.Add(Path.GetFileNameWithoutExtension(cp));
+            if (string.IsNullOrEmpty(cp))
+                continue;
+            var fileId = Path.GetFileNameWithoutExtension(cp);
+            // 子菜谱保留菜谱 id；食材 SO 规范化为目录 id（对齐 CustomIngredients，
+            // DLC11_Cucumber → dlc11_cucumber），前端按 id 解析中文名与工序分组。
+            var pseudo = c as PseudoPrefabSO;
+            ids.Add(pseudo != null
+                ? IngredientCatalogId(pseudo, fileId)
+                : fileId);
         }
         return ids.ToArray();
     }

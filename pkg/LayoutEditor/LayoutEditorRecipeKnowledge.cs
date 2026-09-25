@@ -953,12 +953,18 @@ public static class LayoutEditorRecipeKnowledge
                 }
             }
             var path = AssetDatabase.GetAssetPath(c);
-            if (!string.IsNullOrEmpty(path))
-            {
-                var iid = Path.GetFileNameWithoutExtension(path);
-                if (!string.IsNullOrEmpty(iid))
-                    ids.Add(iid);
-            }
+            if (string.IsNullOrEmpty(path))
+                continue;
+            var fileId = Path.GetFileNameWithoutExtension(path);
+            if (string.IsNullOrEmpty(fileId))
+                continue;
+            // 规范化为目录 id（DLC11_Cucumber → dlc11_cucumber，与食材字典/前端
+            // INGREDIENT_ALIASES 同一套规则）：否则菜谱卡片直接显示未翻译的文件名，
+            // 且 BurgerCookedIngredients 等小写白名单匹配不到（煎制分组失效）。
+            var pseudo = c as PseudoPrefabSO;
+            ids.Add(pseudo != null
+                ? LayoutEditorCatalogApi.IngredientCatalogId(pseudo, fileId)
+                : fileId);
         }
     }
 

@@ -235,13 +235,14 @@
       "cookingStep": "",
       "platingStep": "Plate",
       "ingredients": [
-        "dlc11_cucumber",
+        "dlc11_lettuce",
         "dlc11_tomato",
+        "dlc11_cucumber",
         "dlc11_onion_salad"
       ],
-      "ingredientCount": 3,
+      "ingredientCount": 4,
       "cookingStepCount": 0,
-      "score": 60,
+      "score": 80,
       "isCustom": false,
       "group": "dlc11",
       "type": "salad",
@@ -251,8 +252,9 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "dlc11_cucumber",
+            "dlc11_lettuce",
             "dlc11_tomato",
+            "dlc11_cucumber",
             "dlc11_onion_salad"
           ]
         }
@@ -268,12 +270,13 @@
       "cookingStep": "",
       "platingStep": "Plate",
       "ingredients": [
+        "dlc11_lettuce",
         "dlc11_cucumber",
         "dlc11_onion_salad"
       ],
-      "ingredientCount": 2,
+      "ingredientCount": 3,
       "cookingStepCount": 0,
-      "score": 40,
+      "score": 60,
       "isCustom": false,
       "group": "dlc11",
       "type": "salad",
@@ -283,6 +286,7 @@
           "step": "",
           "utensils": [],
           "ingredients": [
+            "dlc11_lettuce",
             "dlc11_cucumber",
             "dlc11_onion_salad"
           ]

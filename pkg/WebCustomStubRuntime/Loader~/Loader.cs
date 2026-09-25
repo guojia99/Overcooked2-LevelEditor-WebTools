@@ -33,6 +33,17 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v3.3.2（2026-09-25 真机按钮永红修复）：仅随统一运行时同步版本号（relay 接管
+    ///     按钮 Disable/Reset 生命周期 + 共轭双锁语义，全在 CustomStub 侧）。
+    /// v3.3.1（2026-09-25 真机按钮锁死修复）：仅随统一运行时同步版本号
+    ///     （BLRelay/AnimGridMemberSync 改 tag/扫描自愈——烘焙组件在真机是
+    ///     Missing Script 死件；自愈全在 CustomStub 侧，loader 无改动）。
+    ///     ⚠ 按钮联动关卡必须用 &gt;= 本版依赖包重新导出。
+    /// v3.3.0（2026-09-24 按钮动画联动 v3）：仅随统一运行时同步版本号（新增
+    ///     ButtonLogicRelay 分发器 / AnimGridMemberSync 格子换装 / ConveyorDirectionSync
+    ///     停稳+空闲刷新时序，自愈与分发全在 CustomStub 侧，loader 无改动）。
+    ///     ⚠ 按钮触发动画组的关卡需要 &gt;= 本版依赖包（旧版按钮链路的 SMB 分发
+    ///     不持久化，运行期按压无响应）。
     /// v3.0.0（2026-09-21）：目录扫描简化为启动时一次，场景切换不再重复遍历所有地图集；
     /// 只加载实际存在的 *_custom_runtime，普通地图不产生额外扫描开销；新增同名程序集
     /// 来源/版本冲突诊断。
@@ -71,7 +82,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "3.2.1";
+        public const string PluginVersion = "3.3.5";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>

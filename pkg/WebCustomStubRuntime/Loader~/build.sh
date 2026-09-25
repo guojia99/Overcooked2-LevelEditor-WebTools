@@ -11,7 +11,14 @@ command -v "$DOTNET" >/dev/null 2>&1 || DOTNET="$HOME/.dotnet/dotnet"
 "$DOTNET" build Loader.csproj -c Release "$@"
 DLL="bin/Release/Loader.dll"
 VERSION_FILE="bin/Release/version.txt"
-printf '%s\n' 'Loader=3.2.1' 'debugLog=2.0.0' > "$VERSION_FILE"
+# 版本号从 Loader.cs 的 PluginVersion 常量自动读取（与编译进 DLL 的值同源，
+# 不再手写——2026-09-24 事故：硬编码 3.2.1 导致导出包 version.txt 落后）。
+LOADER_VER=$(sed -n 's/.*PluginVersion = "\([^"]*\)".*/\1/p' Loader.cs | head -1)
+if [ -z "$LOADER_VER" ]; then
+  echo "!! 未能从 Loader.cs 解析 PluginVersion，version.txt 未更新" >&2
+  exit 1
+fi
+printf '%s\n' "Loader=$LOADER_VER" 'debugLog=2.0.0' > "$VERSION_FILE"
 echo ""
 echo "→ 产物: Assets/WebCustomStubRuntime/Loader~/$DLL"
 ls -la "$DLL"

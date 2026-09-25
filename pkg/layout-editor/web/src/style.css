@@ -2783,6 +2783,16 @@ canvas.pan-active {
   font-size: 11px;
 }
 
+/* 触发编排「③ 动画组序列」行内的推进方式切换器（整组连播/逐节点） */
+.modal-select.blm-adv,
+select.blm-adv {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
 /* Button event group config modal (按钮事件组配置弹窗) */
 .bev-group {
   border: 1px solid #3a4150;

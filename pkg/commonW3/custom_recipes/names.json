@@ -1,0 +1,110 @@
+﻿{
+  "schemaVersion": 1,
+  "names": [
+    {
+      "id": "Web_Salad_Lettuce",
+      "zh": "Web 生菜沙拉",
+      "en": "Web Lettuce Salad"
+    },
+    {
+      "id": "Web_Salad_Tomato",
+      "zh": "Web 番茄沙拉",
+      "en": "Web Tomato Salad"
+    },
+    {
+      "id": "Web_Salad_Cucumber",
+      "zh": "Web 黄瓜沙拉",
+      "en": "Web Cucumber Salad"
+    },
+    {
+      "id": "Web_Salad_Corn",
+      "zh": "Web 玉米沙拉",
+      "en": "Web Corn Salad"
+    },
+    {
+      "id": "Web_Salad_CucumberCorn",
+      "zh": "Web 黄瓜玉米沙拉",
+      "en": "Web Cucumber Corn Salad"
+    },
+    {
+      "id": "Web_Salad_TomatoCucumberCorn",
+      "zh": "Web 番茄黄瓜玉米沙拉",
+      "en": "Web Tomato Cucumber Corn Salad"
+    },
+    {
+      "id": "Web_Salad_LettuceTomato",
+      "zh": "Web 生菜番茄沙拉",
+      "en": "Web Lettuce Tomato Salad"
+    },
+    {
+      "id": "Web_Salad_LettuceCucumber",
+      "zh": "Web 生菜黄瓜沙拉",
+      "en": "Web Lettuce Cucumber Salad"
+    },
+    {
+      "id": "Web_Salad_LettuceCorn",
+      "zh": "Web 生菜玉米沙拉",
+      "en": "Web Lettuce Corn Salad"
+    },
+    {
+      "id": "Web_Salad_LettuceTomatoCucumber",
+      "zh": "Web 生菜番茄黄瓜沙拉",
+      "en": "Web Lettuce Tomato Cucumber Salad"
+    },
+    {
+      "id": "Web_Salad_LettuceTomatoCorn",
+      "zh": "Web 生菜番茄玉米沙拉",
+      "en": "Web Lettuce Tomato Corn Salad"
+    },
+    {
+      "id": "Web_Salad_LettuceCucumberCorn",
+      "zh": "Web 生菜黄瓜玉米沙拉",
+      "en": "Web Lettuce Cucumber Corn Salad"
+    },
+    {
+      "id": "Web_Salad_LettuceTomatoCucumberCorn",
+      "zh": "Web 田园全家福沙拉",
+      "en": "Web Garden Salad"
+    },
+    {
+      "id": "Web_LSalad_Lettuce",
+      "zh": "Web 纯生菜沙拉",
+      "en": "Web Plain Lettuce Salad"
+    },
+    {
+      "id": "Web_LSalad_Tomato",
+      "zh": "Web 生菜底番茄沙拉",
+      "en": "Web Tomato Salad (Lettuce Base)"
+    },
+    {
+      "id": "Web_LSalad_Cucumber",
+      "zh": "Web 生菜底黄瓜沙拉",
+      "en": "Web Cucumber Salad (Lettuce Base)"
+    },
+    {
+      "id": "Web_LSalad_Corn",
+      "zh": "Web 生菜底玉米沙拉",
+      "en": "Web Corn Salad (Lettuce Base)"
+    },
+    {
+      "id": "Web_LSalad_TomatoCucumber",
+      "zh": "Web 生菜底番茄黄瓜沙拉",
+      "en": "Web Tomato Cucumber Salad (Lettuce Base)"
+    },
+    {
+      "id": "Web_LSalad_TomatoCorn",
+      "zh": "Web 生菜底番茄玉米沙拉",
+      "en": "Web Tomato Corn Salad (Lettuce Base)"
+    },
+    {
+      "id": "Web_LSalad_CucumberCorn",
+      "zh": "Web 生菜底黄瓜玉米沙拉",
+      "en": "Web Cucumber Corn Salad (Lettuce Base)"
+    },
+    {
+      "id": "Web_LSalad_TomatoCucumberCorn",
+      "zh": "Web 生菜底番茄黄瓜玉米沙拉",
+      "en": "Web Tomato Cucumber Corn Salad (Lettuce Base)"
+    }
+  ]
+}

@@ -2550,6 +2550,10 @@ public static class LayoutEditorLevelAdminApi
     ///  独立于关卡集的汉堡自定义菜谱，在所有关卡集的菜谱管理页以「burger」分类并入，
     ///  关卡选用后由 EnsureWebDependencies 注入 commonW2 bundle 依赖。</summary>
     public const string CommonW2RecipesDir = "Assets/commonW2/custom_recipes";
+    /// <summary>沙拉大全共享库（Assets/commonW3，打包为 commonW3 bundle）：
+    ///  DLC11 食材全排列的自定义沙拉（Web 前缀命名，与官方组成零重复），
+    ///  在所有关卡集的菜谱管理页以「commonw3」分类并入，关卡选用后注入 commonW3 bundle 依赖。</summary>
+    public const string CommonW3RecipesDir = "Assets/commonW3/custom_recipes";
     /// <summary>Burger大全分类 id（commonW2 内菜谱的固定 category）。</summary>
     public const string BurgerCategoryId = "burger";
     private const int ProjectUidPrefix = 1000000;

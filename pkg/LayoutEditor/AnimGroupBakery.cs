@@ -419,6 +419,12 @@ public static class AnimGroupBakery
             // 动画走（挂在组根上等于挂到永不移动的物体）。无碰撞的装饰成员挂着无副作用。
             if (!AirFloorRig.IsColliderObject(go) && go.GetComponent<ObjectContainer>() == null)
                 Undo.AddComponent<ObjectContainer>(go);
+            // 格子占位跟随换装器：参与传送带喂料的成员（ConveyorStation /
+            // TabletopConveyenceReceiver / TeleportalConveyenceReceiver，Awake 注册
+            // StaticGridLocation 占格且永不更新）被动画平移后，运行时由该组件把
+            // 子树 StaticGridLocation 换装成 vanilla DynamicGridLocation（逐帧跟随
+            // 重占格）。静止成员空转零副作用。反射挂载（CustomStub 运行时类型）。
+            AttachAnimGridMemberSync(go);
         }
 
         // User member groups become named sub-roots under the group root; their
@@ -496,19 +502,59 @@ public static class AnimGroupBakery
 
         // 时间簇：事件时间区间 [start, start+dur) 与簇区间重叠即并入同一簇，
         // 簇内所有事件烘焙为一个组合 clip（单状态 Animator 的并行 = 曲线合并）。
-        // 节点环（press）模式强制「每事件一簇」：每个事件就是一个独立节点，
-        // 不允许时间重叠合并（合并即节点数减少，按压语义退化）。
+        // 节点环（press）模式按「相同 startTime = 同一节点」分簇：一按 = 一簇
+        // 并行动作（旋转+移动合成一个节点，BuildClusterClip 合并曲线），不同
+        // startTime = 不同节点；不允许时间区间重叠导致的意外合并（节点数与
+        // 用户的节点编排一一对应）。
+        //
+        // 单事件旋转自动往返：绝对曲线重放不会动（第二次按仍从 0°→d° 写起，
+        // 物体已在 d° → 无动作）。只有一个 rotate 事件的逐节点组自动合成镜像
+        // 节点（+d 后 −d 环回），每按一次翻转一次；文档/源数据保持 1 个事件，
+        // 烘焙确定性强、回导无损。
+        if (IsPressAdvance(group) && animEvents.Count == 1 && animEvents[0].type == "rotate")
+        {
+            var orig = animEvents[0];
+            var mirror = new AnimGroupEventDto
+            {
+                id = (orig.id ?? "") + "_mirror",
+                type = "rotate",
+                triggerName = (string.IsNullOrEmpty(orig.triggerName) ? "Rotate" : orig.triggerName) + "Back",
+                startTime = SnapTime(orig.startTime) + 1f,
+                delay = 0f,
+                rotateDegrees = orig.rotateDegrees,
+                rotateDirection = orig.rotateDirection == "ccw" ? "cw" : "ccw",
+                rotateSeconds = orig.rotateSeconds,
+                loop = false,
+                pingpong = false
+            };
+            animEvents.Add(mirror);
+            LayoutEditorLog.Log("anim group: 节点环组「" + (group.displayName ?? "?") +
+                "」只有单个旋转事件，已自动合成往返镜像节点 " + mirror.triggerName +
+                "（每按一次翻转 " + (orig.rotateDegrees > 0f ? orig.rotateDegrees : 180f) + "°）");
+        }
         List<EventCluster> clusters;
         if (IsPressAdvance(group))
         {
             clusters = new List<EventCluster>();
             foreach (var e in animEvents)
             {
-                var c = new EventCluster();
-                c.events.Add(e);
-                c.start = e.startTime;
-                c.end = e.startTime + EventDuration(e, wpById);
-                clusters.Add(c);
+                var snapped = SnapTime(e.startTime);
+                if (clusters.Count > 0 &&
+                    Mathf.Abs(clusters[clusters.Count - 1].start - snapped) < 0.001f)
+                {
+                    clusters[clusters.Count - 1].events.Add(e);
+                    clusters[clusters.Count - 1].end = Mathf.Max(
+                        clusters[clusters.Count - 1].end,
+                        snapped + EventDuration(e, wpById));
+                }
+                else
+                {
+                    var c = new EventCluster();
+                    c.events.Add(e);
+                    c.start = snapped;
+                    c.end = snapped + EventDuration(e, wpById);
+                    clusters.Add(c);
+                }
             }
         }
         else
@@ -863,7 +909,7 @@ public static class AnimGroupBakery
 
         // Controller: each cluster is one state (keyed by the head event's trigger).
         var clusterHeads = clusters.Select(c => c.events[0]).ToList();
-        var controller = BuildController(controllerPath, key, group, clusterHeads, clips);
+        var controller = BuildController(controllerPath, key, group, clusterHeads, clips, usedAssets);
         if (controller == null)
             return "动画组「" + (group.displayName ?? "?") + "」：AnimatorController 创建失败";
         usedAssets.Add(controllerPath);
@@ -1014,7 +1060,7 @@ public static class AnimGroupBakery
             return "特效组「" + (group.displayName ?? "?") + "」：所有事件都没有可烘焙内容";
 
         var clusterHeads = clusters.Select(c => c.events[0]).ToList();
-        var controller = BuildController(controllerPath, key, group, clusterHeads, clips);
+        var controller = BuildController(controllerPath, key, group, clusterHeads, clips, usedAssets);
         if (controller == null)
             return "特效组「" + (group.displayName ?? "?") + "」：AnimatorController 创建失败";
         usedAssets.Add(controllerPath);
@@ -1677,6 +1723,28 @@ public static class AnimGroupBakery
     /// +degrees. Quaternion curves keyed every ≤90° so the arc is exact; linear
     /// tangents keep angular velocity constant. Loop = self-transition replay
     /// (BuildController), so clip.loopTime stays off (Unity 2017 gap).</summary>
+    /// <summary>Idle 定持 clip：复制源 clip 全部绑定在首（或末）关键帧的常量值。
+    /// 两关键帧（0 / 0.05s）保证 clip 长度非零；无动画事件、不循环。挂在节点环
+    /// Idle 状态上，让「静止期」每帧重写精确节点姿态（根治 exit-time 瞬时转移
+    /// 的采样残差——2026-09-25 真机「旋转停位差几度」事故）。</summary>
+    private static AnimationClip BuildIdleHoldClip(AnimationClip source, bool fromEnd, string path)
+    {
+        var hold = new AnimationClip();
+        hold.name = System.IO.Path.GetFileNameWithoutExtension(path);
+        hold.legacy = false;
+        hold.frameRate = 60f;
+        foreach (var binding in AnimationUtility.GetCurveBindings(source))
+        {
+            var curve = AnimationUtility.GetEditorCurve(source, binding);
+            if (curve == null || curve.length == 0) continue;
+            var value = fromEnd ? curve.keys[curve.length - 1].value : curve.keys[0].value;
+            var hc = new AnimationCurve(new Keyframe(0f, value), new Keyframe(0.05f, value));
+            AnimationUtility.SetEditorCurve(hold, binding, hc);
+        }
+        AssetDatabase.CreateAsset(hold, path);
+        return hold;
+    }
+
     private static AnimationClip BuildRotateClip(string key, string suffix,
         List<GameObject> members, Transform groupRoot, AnimGroupEventDto evt,
         float rotAccum, string finishedTrigger, HashSet<string> staticSet,
@@ -2424,7 +2492,7 @@ public static class AnimGroupBakery
 
     private static AnimatorController BuildController(string controllerPath, string key,
         AnimGroupDto group, List<AnimGroupEventDto> animEvents,
-        Dictionary<string, AnimationClip> clips)
+        Dictionary<string, AnimationClip> clips, HashSet<string> usedAssets)
     {
         var controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
         if (controller == null) return null;
@@ -2446,23 +2514,36 @@ public static class AnimGroupBakery
         // 每次按压（ButtonLink 的 BLGo 启动队列发一次 BLPress）只推进一个节点；
         // clip 按事件序烘焙为绝对曲线（rotAccum 等序贯状态在烘焙期已叠加），
         // 节点 i 的起始姿态恰为节点 i-1 的终态——环回即回到初始姿态。
+        //
+        // Idle 定持 clip（2026-09-25「旋转停位差几度」根治）：Idle 原是空状态
+        // （无曲线 + WD=off），exit-time 瞬时转移的接管帧不写任何曲线——transform
+        // 残留结束前最后一帧采样（几度级、帧时机相关）。给每个 Idle 挂「节点 i
+        // 起始姿态」的常量 clip：接管帧起每帧重写精确节点姿态，任何采样/混合
+        // 残差在进入 Idle 的当帧即被矫正；入口混合也从精确定持位姿出发。
         if (IsPressAdvance(group))
         {
             if (controller.parameters.All(p => p.name != PressAdvanceTrigger))
                 controller.AddParameter(PressAdvanceTrigger, AnimatorControllerParameterType.Trigger);
             var idleRing = new List<AnimatorState>();
             var nodeRing = new List<AnimatorState>();
+            var nodeClips = new List<AnimationClip>();
             for (int i = 0; i < animEvents.Count; i++)
             {
                 AnimationClip clip;
                 if (!clips.TryGetValue(animEvents[i].triggerName, out clip)) continue;
+                var holdPath = controllerPath.Substring(0,
+                    controllerPath.Length - ".controller".Length) + "_idlehold_" + i + ".anim";
+                var hold = BuildIdleHoldClip(clip, false, holdPath);
+                usedAssets.Add(holdPath);
                 var idle = sm.AddState("Idle_" + idleRing.Count);
+                idle.motion = hold;
                 idle.writeDefaultValues = false;
                 var node = sm.AddState(animEvents[i].triggerName);
                 node.motion = clip;
                 node.writeDefaultValues = false;
                 idleRing.Add(idle);
                 nodeRing.Add(node);
+                nodeClips.Add(clip);
             }
             if (idleRing.Count > 0)
             {
@@ -2473,7 +2554,10 @@ public static class AnimGroupBakery
                     var tIn = idleRing[i].AddTransition(nodeRing[i]);
                     tIn.hasExitTime = false;
                     tIn.exitTime = 0.75f;
-                    tIn.duration = 0.25f;
+                    // 入口混合不超过节点 clip 的一半：clip 短于混合时长时会在
+                    // 混合未完成时被 exit-time 打断（姿态残差的另一来源）。
+                    var nodeLen = nodeClips[i] != null ? nodeClips[i].length : 0.5f;
+                    tIn.duration = Mathf.Min(0.25f, nodeLen * 0.5f);
                     tIn.hasFixedDuration = true;
                     tIn.AddCondition(AnimatorConditionMode.If, 0f, PressAdvanceTrigger);
                     var tOut = nodeRing[i].AddTransition(idleRing[next]);
@@ -2904,6 +2988,29 @@ public static class AnimGroupBakery
         var namePart = DeriveNamePart(group.displayName);
         var idPart = DeriveIdPart(group);
         return SanitizeFileName(sceneName + "_" + namePart + "_" + idPart);
+    }
+
+    /// <summary>成员 wrapper 上反射挂载 CustomStub.AnimGridMemberSync（类型缺失仅
+    /// 告警跳过——静止/无喂料成员本来就不需要）。</summary>
+    private static void AttachAnimGridMemberSync(GameObject member)
+    {
+        try
+        {
+            var syncType = LayoutEditorStubIO.FindCustomStubType(member, "AnimGridMemberSync");
+            if (syncType == null)
+            {
+                Debug.LogWarning("[LayoutEditor] anim group: 找不到 CustomStub.AnimGridMemberSync" +
+                    "（WebCustomStubRuntime 未编译？）——传送带喂料类成员被动画移动后投料目标不跟随");
+                return;
+            }
+            if (member.GetComponent(syncType) != null)
+                return; // 幂等
+            Undo.AddComponent(member, syncType);
+        }
+        catch (Exception e)
+        {
+            LayoutEditorLog.LogWarning("anim group: 挂载 AnimGridMemberSync 失败 " + member.name + ": " + e.Message);
+        }
     }
 
     private static string DeriveNamePart(string displayName)
