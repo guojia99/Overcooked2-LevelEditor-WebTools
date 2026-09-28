@@ -8,6 +8,9 @@ public static class SceneLayoutExporter
     /// <summary>空气墙在 web catalog 中的合成 guid（与 build-catalog.mjs 一致）。</summary>
     public const string AirWallCatalogGuid = "0d0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a";
 
+    /// <summary>空气斜坡在 web catalog 中的合成 guid（= md5("synthetic:AirSlope")，与 build-catalog.mjs 一致）。</summary>
+    public const string AirSlopeCatalogGuid = "ad9efda5019002d0edbfb92d10e6a306";
+
     private static readonly string[] ExportRootNames = { "Design", "Art", "Chefs" };
     private static readonly HashSet<string> SkippedSubtrees = new HashSet<string>
     {
@@ -50,6 +53,9 @@ public static class SceneLayoutExporter
         // 按钮↔事件组联动同样从场景重建（Design/Button Event Logic 下的 helper 接线）。
         var buttonEvents = ButtonEventBakery.ImportFromScene(scene, items);
 
+        // 同轴按钮组从场景重建（Design/Coaxial Logic 下的 helper 组件/tag）。
+        var coaxialLinks = CoaxialButtonBakery.ImportFromScene(scene);
+
         var switchLinks = CollectSwitchLinks(items);
         // 遗留迁移：switchLink "Animate"（旧传送带直连方案，运行时投递链已证实
         // 无法送达）→ 节点环开关动画组 + ButtonLink，统一到动画组模型。
@@ -59,10 +65,13 @@ public static class SceneLayoutExporter
         AnimControlDataDto animControls = imported.Count > 0
             ? new AnimControlDataDto { groups = imported.ToArray() }
             : null;
+        float ceilingHeight;
 
         var doc = new LayoutDocumentDto
         {
             sceneAssetPath = scene.path,
+            hasCeilingHeight = TryReadCeilingHeight(out ceilingHeight),
+            ceilingHeight = ceilingHeight,
             items = items.ToArray(),
             floors = SceneFloorExporter.ExportFromScene().ToArray(),
             walkable = SceneWalkabilityReader.ReadWalkable().ToArray(),
@@ -75,10 +84,52 @@ public static class SceneLayoutExporter
             buttonEvents = buttonEvents.Count > 0
                 ? new LayoutButtonEventDataDto { links = buttonEvents.ToArray() }
                 : null,
+            coaxialLinks = coaxialLinks.Count > 0
+                ? new LayoutCoaxialLinkDataDto { links = coaxialLinks.ToArray() }
+                : null,
             cameraInfo = CollectCameraInfo(),
             lights = CollectLights().ToArray()
         };
         return doc;
+    }
+
+    /// <summary>读取场景中 KitchenLoaderManager 的 Ceiling Height。旧场景未启用
+    /// OptionalFloat 时按游戏默认值 2 导出，但标记为未配置，避免写回时改变旧场景。</summary>
+    public static bool TryReadCeilingHeight(out float value)
+    {
+        value = 2f;
+        var loader = FindKitchenLoaderManager();
+        if (loader == null)
+            return false;
+
+        var so = new SerializedObject(loader);
+        var optional = so.FindProperty("m_ceilingHeight");
+        if (optional == null)
+            return false;
+        var hasValue = optional.FindPropertyRelative("m_hasValue");
+        var rawValue = optional.FindPropertyRelative("m_value");
+        if (hasValue == null || rawValue == null || !hasValue.boolValue)
+            return false;
+        value = Mathf.Clamp(rawValue.floatValue, 0f, 10f);
+        return true;
+    }
+
+    private static KitchenLoaderManager FindKitchenLoaderManager()
+    {
+        var go = GameObject.Find("CampaignGameEnvironment/KitchenLoaderManager");
+        if (go != null)
+        {
+            var direct = go.GetComponent<KitchenLoaderManager>();
+            if (direct != null)
+                return direct;
+        }
+
+        foreach (var loader in UnityEngine.Object.FindObjectsOfType<KitchenLoaderManager>())
+        {
+            if (loader != null && loader.name == "KitchenLoaderManager")
+                return loader;
+        }
+        return null;
     }
 
     /// <summary>旧「传送带 + 按钮」联动（switchLink trigger="Animate" + 传送带
@@ -450,6 +501,7 @@ public static class SceneLayoutExporter
                 worldPosition = LayoutVector3.From(t.position),
                 localRotationX = t.localEulerAngles.x,
                 localRotationY = eulerY,
+                localRotationZ = t.localEulerAngles.z,
                 localScale = LayoutVector3.From(t.localScale),
                 footprint = ResolveFootprint(go, path, prefabAsset.name)
             });
@@ -535,6 +587,19 @@ public static class SceneLayoutExporter
                 if (stub != null && stub.gameObject != go)
                     continue;
 
+                // 空气斜坡根节点（名称识别，仿 Col_AirFloor）：根无碰撞体（碰撞在
+                // Step 子级上），必须在 BoxCollider 过滤器【之前】检查。
+                if (go.name == SceneLayoutApplier.AirSlopeColliderName)
+                {
+                    var slopeDto = BuildAirSlopeDto(t, go);
+                    if (slopeDto != null)
+                        items.Add(slopeDto);
+                    continue;
+                }
+                // 斜坡的台阶子级不单独导出（参数由根统一反推）。
+                if (t.parent != null && t.parent.gameObject.name == SceneLayoutApplier.AirSlopeColliderName)
+                    continue;
+
                 var mr = go.GetComponent<MeshRenderer>();
                 var mf = go.GetComponent<MeshFilter>();
                 var col = go.GetComponent<BoxCollider>();
@@ -594,5 +659,155 @@ public static class SceneLayoutExporter
     {
         return Mathf.Approximately(v, 1f)
             || Mathf.Approximately(v, LayoutEditorCatalogLookup.GridCellSize);
+    }
+
+    /// <summary>
+    /// 空气斜坡导出：从阶梯子级【精确反推】文档参数（与 ApplyAirSlopeItem /
+    /// RebuildAirSlopeSteps 的构造互逆）。
+    ///   根：position = 锚点（俯视占地中心 + startY），rotation = (0, yaw, 0)，无碰撞体；
+    ///   Step_i：localPosition = (0, (i+1)·stepH − t/2, z_i)，size = (width, t, stepRun+overlap)。
+    /// 反推：rise = 末级 localPos.y + t/2；run = N × (size.z − overlap)；
+    ///   angle = atan2(rise, run)；startY = 根 y。worldPosition/localPosition 均存锚点。
+    /// </summary>
+    private static LayoutItemDto BuildAirSlopeDto(Transform t, GameObject go)
+    {
+        var euler = t.localEulerAngles;
+        float yaw = euler.y;
+
+        // 收集 Step 子级（按 localPosition.z 升序）。
+        var stepCols = new List<BoxCollider>();
+        var stepLocal = new List<Vector3>();
+        for (int i = 0; i < t.childCount; i++)
+        {
+            var c = t.GetChild(i);
+            var bc = c.GetComponent<BoxCollider>();
+            if (bc == null || c.name != "Step") continue;
+            stepCols.Add(bc);
+            stepLocal.Add(c.localPosition);
+        }
+        // 按 z 排序（同录同序，索引对齐）。
+        for (int i = 0; i < stepLocal.Count; i++)
+        {
+            for (int j = i + 1; j < stepLocal.Count; j++)
+            {
+                if (stepLocal[j].z < stepLocal[i].z)
+                {
+                    var tz = stepLocal[i]; stepLocal[i] = stepLocal[j]; stepLocal[j] = tz;
+                    var tc = stepCols[i]; stepCols[i] = stepCols[j]; stepCols[j] = tc;
+                }
+            }
+        }
+        if (stepCols.Count == 0)
+        {
+            // 兼容 v1/v2 遗留结构（倾斜 BoxCollider 直接挂根）：按旧倾斜盒数学反推，
+            // 保证「先导出后写回」顺序下斜坡不从画布丢失；下次写回即重建为阶梯。
+            var rootCol = t.GetComponent<BoxCollider>();
+            if (rootCol == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] AirSlope 无台阶子级且无碰撞体，跳过导出: " + t.name);
+                return null;
+            }
+            float rawX = euler.x > 180f ? euler.x - 360f : euler.x;
+            float legAngle = Mathf.Clamp(-rawX, 0.5f, 58f);
+            float legRad = legAngle * Mathf.Deg2Rad;
+            float legYawRad = yaw * Mathf.Deg2Rad;
+            var legDir = new Vector3(Mathf.Sin(legYawRad), 0f, Mathf.Cos(legYawRad));
+            var legN = new Vector3(-legDir.x * Mathf.Sin(legRad), Mathf.Cos(legRad), -legDir.z * Mathf.Sin(legRad));
+            float legRun = rootCol.size.z * Mathf.Cos(legRad);
+            float legRise = Mathf.Tan(legRad) * legRun;
+            var legTopMid = t.position + legN * (rootCol.size.y * 0.5f);
+            var legAnchor = new Vector3(legTopMid.x, legTopMid.y - legRise * 0.5f, legTopMid.z);
+
+            var legPath = LayoutEditorHierarchy.GetHierarchyPath(t);
+            var legParent = t.parent != null
+                ? LayoutEditorHierarchy.GetHierarchyPath(t.parent)
+                : string.Empty;
+            var legCell = LayoutEditorCatalogLookup.GridCellSize;
+            return new LayoutItemDto
+            {
+                instanceId = "u:" + go.GetInstanceID(),
+                hierarchyPath = legPath,
+                prefabGuid = AirSlopeCatalogGuid,
+                prefabAssetPath = "",
+                parentPath = legParent,
+                displayName = "AirSlope",
+                localPosition = LayoutVector3.From(legAnchor),
+                worldPosition = LayoutVector3.From(legAnchor),
+                localRotationX = 0f,
+                localRotationY = yaw,
+                localRotationZ = 0f,
+                localScale = LayoutVector3.From(t.localScale),
+                footprint = new LayoutFootprint { cellsX = 1, cellsZ = 1 },
+                stubKind = "Collision",
+                airSlope = true,
+                slope = new LayoutAirSlopeDto
+                {
+                    angleDeg = legAngle,
+                    lengthCells = legRun / legCell,
+                    widthCells = rootCol.size.x / legCell,
+                    startY = legAnchor.y,
+                },
+                walkable = false
+            };
+        }
+
+        float thickness = stepCols[0].size.y;
+        float width = stepCols[0].size.x;
+        float stepRun = stepCols[0].size.z - SceneLayoutApplier.AirSlopeStepOverlap;
+        float run = stepRun * stepCols.Count;
+        // rise = 末级顶面相对根的高度（末级中心 y + t/2）。
+        float rise = stepLocal[stepLocal.Count - 1].y + thickness * 0.5f;
+        float angle = Mathf.Atan2(rise, run) * Mathf.Rad2Deg;
+        float startY = t.position.y;
+
+        var cell = LayoutEditorCatalogLookup.GridCellSize;
+        var path = LayoutEditorHierarchy.GetHierarchyPath(t);
+        var parentPath = t.parent != null
+            ? LayoutEditorHierarchy.GetHierarchyPath(t.parent)
+            : string.Empty;
+        var anchor = new Vector3(t.position.x, startY, t.position.z);
+
+        // 调试显示色：从 DebugVis 子节点的材质颜色反推（rgb，忽略固定淡显 alpha）。
+        string debugColor = "";
+        var debugVis = t.Find("DebugVis");
+        if (debugVis != null)
+        {
+            var dmr = debugVis.GetComponent<MeshRenderer>();
+            if (dmr != null && dmr.sharedMaterial != null)
+                debugColor = "#" + ColorUtility.ToHtmlStringRGB(dmr.sharedMaterial.color);
+        }
+
+        return new LayoutItemDto
+        {
+            instanceId = "u:" + go.GetInstanceID(),
+            hierarchyPath = path,
+            prefabGuid = AirSlopeCatalogGuid,
+            prefabAssetPath = "",
+            parentPath = parentPath,
+            displayName = "AirSlope",
+            // localPosition 与 worldPosition 均存【锚点】：web 载入后 enrichItem 用
+            // localPosition.y 覆写 slope.startY，两端一致即不会漂移（v1 版导出盒中心
+            // 曾造成「起点 0 → 重载 0.95 → 再写回 0.95 →…」逐轮攀升）。
+            localPosition = LayoutVector3.From(anchor),
+            worldPosition = LayoutVector3.From(anchor),
+            // X/Z 欧拉清零：坡几何由 slope 参数唯一决定（写回按参数重建阶梯，
+            // 不读文档欧拉），导出原始欧拉只会污染文档。
+            localRotationX = 0f,
+            localRotationY = yaw,
+            localRotationZ = 0f,
+            localScale = LayoutVector3.From(t.localScale),
+            footprint = new LayoutFootprint { cellsX = 1, cellsZ = 1 },
+            stubKind = "Collision",
+            airSlope = true,
+            slope = new LayoutAirSlopeDto
+            {
+                angleDeg = angle,
+                lengthCells = run / cell,
+                widthCells = width / cell,
+                startY = startY,
+                debugColor = debugColor,
+            },
+            walkable = false
+        };
     }
 }

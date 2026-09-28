@@ -9,7 +9,8 @@
 import * as THREE from "three";
 import { S, CELL, EditorFloor, EditorItem } from "../state";
 import { normalizeRot } from "../coords";
-import { isAirWallItem } from "../stubControls";
+import { isAirWallItem, isAirSlopeItem } from "../stubControls";
+import { isPlayerItem } from "../renderItems";
 import { isResizableBackgroundItem } from "../catalog";
 import { ORDER } from "./constants";
 import { Scene3DCtx, clearGroup, floorByKey, itemByKey, tagPickable } from "./ctx";
@@ -46,6 +47,9 @@ export function rebuildHandles(ctx: Scene3DCtx): void {
     if (it) {
       if (isAirWallItem(it) || isResizableBackgroundItem(it)) addItemSizeHandles(ctx.handleRoot, it);
       if (isAirWallItem(it)) addItemTopHandle(ctx.handleRoot, it);
+      // 旋转环（v9）：默认开启，可在工具栏关闭（S.rotGizmo）。玩家不可旋转；
+      // 斜坡倾斜由坡角唯一决定，只留 Y 环（转向）。
+      if (S.rotGizmo && !isPlayerItem(it)) addItemRotationHandles(ctx.handleRoot, it, isAirSlopeItem(it));
       if (S.yAxisDrag) {
         const b = itemBoxOf(it);
         addYHandle(ctx.handleRoot, b.cx, b.baseY + b.h, b.cz, "item", it._editorKey);
@@ -111,6 +115,39 @@ function addItemSizeHandles(root: THREE.Group, it: EditorItem): void {
       handle: { owner: "item", ownerKey: it._editorKey, edge: cornerToPickEdge(c.edge) },
     });
     mesh.userData.edgeCode = c.edge;
+    root.add(mesh);
+  }
+}
+
+/** 旋转环（v9）：选中单个物件时显示 X/Y/Z 三色环，拖拽 = 绕轴旋转（Shift 吸附 15°）。
+ *  slopeOnlyY=true 时只显示 Y 环（斜坡倾斜由坡角唯一决定）。 */
+function addItemRotationHandles(root: THREE.Group, it: EditorItem, slopeOnlyY = false): void {
+  const b = itemBoxOf(it);
+  // 环半径包住盒体：取水平对角与高度的最大值，最小 0.55 防止小物件环太小难抓。
+  const radius = Math.max(0.55, Math.max(b.w, b.d) * 0.62, b.h * 0.6);
+  const tube = Math.max(0.02, radius * 0.04);
+  // 环心：盒体竖直中心（斜坡等中心 pivot 几何用 baseY 即中心高度）。
+  const cy = b.kind === "airslope" ? b.baseY : b.baseY + b.h / 2;
+  // TorusGeometry 默认在 XY 平面（孔沿 Z）。绕 X = 孔沿 X（转 y=π/2）；绕 Y = 孔沿 Y（转 x=π/2）。
+  const defs: { edge: "rotx" | "roty" | "rotz"; color: number; rx: number; ry: number }[] = [
+    { edge: "rotx", color: 0xff6b6b, rx: 0, ry: Math.PI / 2 },
+    { edge: "roty", color: 0x7ee787, rx: Math.PI / 2, ry: 0 },
+    { edge: "rotz", color: 0x6cb6ff, rx: 0, ry: 0 },
+  ];
+  for (const d of defs) {
+    if (slopeOnlyY && d.edge !== "roty") continue;
+    const mesh = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, tube, 10, 48),
+      new THREE.MeshBasicMaterial({ color: d.color, depthTest: false, transparent: true, opacity: 0.8 })
+    );
+    mesh.rotation.set(d.rx, d.ry, 0);
+    mesh.position.set(b.cx, cy, toSceneZ(b.cz));
+    mesh.renderOrder = ORDER.handle;
+    tagPickable(mesh, {
+      kind: "handle",
+      key: it._editorKey + ":" + d.edge,
+      handle: { owner: "item", ownerKey: it._editorKey, edge: d.edge },
+    });
     root.add(mesh);
   }
 }

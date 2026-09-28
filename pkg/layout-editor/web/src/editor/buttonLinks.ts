@@ -2,7 +2,7 @@ import {
   S,
   EditorItem
 } from "./state";
-import type { AnimGroup, ButtonLink } from "../types";
+import type { AnimGroup, ButtonLink, CoaxialLink } from "../types";
 import { stubKindOf } from "./stubControls";
 import { itemLabel } from "./labels";
 import { uuid, escHtml } from "./coords";
@@ -36,7 +36,7 @@ export function ensureLink(sourceId: string): ButtonLink {
   return link;
 }
 
-/** 共轭对中的另一方（同 pairId 的另一条 link）。 */
+/** 互锁对中的另一方（同 pairId 的另一条 link）。 */
 export function partnerOf(link: ButtonLink): ButtonLink | undefined {
   if (!link.pairId) return undefined;
   return S.buttonLinks.find((l) => l !== link && l.pairId === link.pairId);
@@ -47,15 +47,42 @@ export function linkBindingGroup(groupName: string): ButtonLink | undefined {
   return S.buttonLinks.find((l) => l.groupNames.includes(groupName));
 }
 
-/** 共轭模式下单个按钮最多绑定的动画组数（两组同时启动、全部完成后翻转）。 */
+/** 互锁模式下单个按钮最多绑定的动画组数（两组同时启动、全部完成后翻转）。 */
 export const PAIR_GROUP_LIMIT = 2;
 
 /**
  * 清理失效联动：源物品被删、动画组被删/改名、配对另一方缺失。
  * 动画组以 displayName 引用（跨保存稳定），改名由 animControl 的改名处同步。
- * 共控按钮：逐个剔除已删 id；主源被删但有存活共控按钮时提升首个共控为主源。
+ * 共轭按钮：逐个剔除已删 id；主源被删但有存活共轭按钮时提升首个共轭为主源。
  */
+function animGroupHasMembers(g: AnimGroup): boolean {
+  return (
+    (g.itemInstanceIds?.length ?? 0) > 0 ||
+    (g.floorInstanceIds?.length ?? 0) > 0 ||
+    (g.objectInstanceIds?.length ?? 0) > 0
+  );
+}
+
+/** 去掉共轭/互锁自动创建的零成员占位动画组（动画应在触发编排里单独配置）。 */
+export function pruneEmptyPartnerPlaceholderGroups(): void {
+  const placeholder =
+    /^(共轭双按钮 |互锁双按钮 |共轭 · |互锁 · )/;
+  S.animControls = S.animControls.filter((g) => {
+    if (!placeholder.test(g.displayName)) return true;
+    if (animGroupHasMembers(g)) return true;
+    return false;
+  });
+}
+
+function linkHasPurpose(l: ButtonLink): boolean {
+  if (l.groupNames.length > 0) return true;
+  if ((l.sharedSourceIds ?? []).length > 0) return true;
+  if (l.pairId) return true;
+  return false;
+}
+
 export function cleanOrphanedButtonLinks(): void {
+  pruneEmptyPartnerPlaceholderGroups();
   const itemIds = new Set(S.items.map((i) => i.instanceId).filter(Boolean));
   const groupNames = new Set(S.animControls.map((g) => g.displayName));
   for (const l of S.buttonLinks) {
@@ -66,7 +93,7 @@ export function cleanOrphanedButtonLinks(): void {
     }
   }
   S.buttonLinks = S.buttonLinks.filter(
-    (l) => itemIds.has(l.sourceId) && l.groupNames.length > 0
+    (l) => itemIds.has(l.sourceId) && linkHasPurpose(l)
   );
   // 配对完整性：partner 缺失时解除配对。
   for (const l of S.buttonLinks) {
@@ -77,6 +104,39 @@ export function cleanOrphanedButtonLinks(): void {
   }
 }
 
+// ---------- 同轴按钮组 ----------
+
+/** 某按钮所在的同轴组（一只按钮只属一组）。 */
+export function coaxialGroupOf(sourceId: string): CoaxialLink | undefined {
+  return S.coaxialLinks.find((g) => g.sourceIds.includes(sourceId));
+}
+
+/** 清理失效同轴组：成员/目标被删时剔除引用；成员 <2 的组整体移除；
+ *  目标与触发名平行（triggers 按剩余目标截齐）。 */
+export function cleanOrphanedCoaxialLinks(): void {
+  const itemIds = new Set(S.items.map((i) => i.instanceId).filter(Boolean));
+  for (const g of S.coaxialLinks) {
+    g.sourceIds = g.sourceIds.filter((id) => itemIds.has(id));
+    const kept: string[] = [];
+    const keptTriggers: string[] = [];
+    (g.targetIds ?? []).forEach((id, i) => {
+      if (!itemIds.has(id)) return;
+      kept.push(id);
+      keptTriggers.push(g.triggers?.[i] ?? "");
+    });
+    g.targetIds = kept;
+    g.triggers = keptTriggers;
+    g.windowSeconds = Math.max(0.35, Math.min(5, g.windowSeconds || 1));
+  }
+  S.coaxialLinks = S.coaxialLinks.filter((g) => g.sourceIds.length >= 2);
+}
+
+/** 移除与任一指定按钮相关的同轴组（重套组合/换绑前清旧）。 */
+export function clearCoaxialGroupsForSwitches(...ids: (string | undefined)[]): void {
+  const idSet = new Set(ids.filter(Boolean) as string[]);
+  S.coaxialLinks = S.coaxialLinks.filter((g) => !g.sourceIds.some((id) => idSet.has(id)));
+}
+
 /** 动画组改名时同步联动里的引用（displayName 是引用键）。 */
 export function renameGroupInButtonLinks(oldName: string, newName: string): void {
   if (!oldName || oldName === newName) return;
@@ -85,13 +145,14 @@ export function renameGroupInButtonLinks(oldName: string, newName: string): void
   }
 }
 
-function createSwitchAnimGroup(source: EditorItem): AnimGroup {
+/** 为开关联动创建占位动画组（waypoint 落在开关位置，供 combos / 编排台复用）。 */
+export function createSwitchAnimGroup(source: EditorItem, displayName?: string): AnimGroup {
   const x = source._wx;
   const z = source._wz;
   const waypointId = uuid();
   return {
     id: uuid(),
-    displayName: `开关动画组 ${S.animControls.length + 1}`,
+    displayName: displayName ?? `开关动画组 ${S.animControls.length + 1}`,
     groupKind: "members",
     triggerMode: "button",
     itemInstanceIds: [],
@@ -131,19 +192,30 @@ export interface ButtonLinkSectionOpts {
 /** 联动摘要文案（右键菜单/触发源列表复用）。 */
 export function buttonLinkSummaryText(item: EditorItem): string {
   const link = linkOfSource(item.instanceId ?? "");
-  const n = link?.groupNames.length ?? 0;
-  const shared = link?.sharedSourceIds?.length ?? 0;
-  const partner = link ? partnerOf(link) : undefined;
-  return !link || n === 0
-    ? "— 未绑定动画组 —"
-    : `已绑 ${n} 组 · ${link.simultaneous ? "同按" : link.sequenceMode === "pingpong" ? "往返" : "循环"}${link.lockUntilFinished !== false ? " · 完成后才可再按" : ""}${shared > 0 ? ` · ${shared} 个共控按钮` : ""}${partner ? " · 共轭配对" : ""}`;
+  if (!link) return "— 未配置 —";
+  const mode = buttonPartnerMode(item);
+  const n = link.groupNames.length;
+  const parts: string[] = [];
+  if (mode === "conjugate") parts.push("共轭配对");
+  else if (mode === "interlock") parts.push("互锁配对");
+  if (n > 0) {
+    parts.push(
+      `已绑 ${n} 组 · ${link.simultaneous ? "同按" : link.sequenceMode === "pingpong" ? "往返" : "循环"}`
+    );
+    if (link.lockUntilFinished !== false) parts.push("完成后才可再按");
+  } else if (mode !== "none") {
+    parts.push("动画在触发编排中单独配置");
+  } else {
+    return "— 未绑定动画组 —";
+  }
+  return parts.join(" · ");
 }
 
 function pairHintText(partner: ButtonLink | undefined): string {
   if (!partner)
     return "不配对时每次按压启动下一组；可选择循环或往返模式。";
   const partnerItem = S.items.find((i) => i.instanceId === partner.sourceId);
-  return `共轭模式：与「${partnerItem ? itemLabel(partnerItem) : "?"}」互斥，每个按钮需各绑 ${PAIR_GROUP_LIMIT} 个动画组；按下时两组同时启动，全部完成后对方抬起。`;
+  return `互锁模式：与「${partnerItem ? itemLabel(partnerItem) : "?"}」互斥，每个按钮需各绑至多 ${PAIR_GROUP_LIMIT} 个动画组；按下时本侧各组同时启动，全部完成后对方抬起。`;
 }
 
 function buttonLinkSectionHtml(item: EditorItem): string {
@@ -169,19 +241,19 @@ function buttonLinkSectionHtml(item: EditorItem): string {
      <div class="trig-addrow"><select id="blm-groupadd" class="trig-select"></select>
        <button type="button" class="btn-small" id="blm-add">添加已有组</button>
        <button type="button" class="btn-small primary" id="blm-new-group">＋ 新建并编辑</button></div>
-     ${paired ? "" : `<div class="trig-subhead">共控按钮（任一按压都推进同一序列）</div>
+     ${paired ? "" : `<div class="trig-subhead">共轭按钮（同时开/关，任一按压等同）</div>
      <div id="blm-shared" class="trig-list"></div>
      <div class="trig-addrow"><select id="blm-shared-add" class="trig-select"></select>
-       <button type="button" class="btn-small" id="blm-shared-btn">＋ 添加共控按钮</button></div>`}
+       <button type="button" class="btn-small" id="blm-shared-btn">＋ 添加共轭按钮</button></div>`}
      <label class="trig-check"><input type="checkbox" id="blm-lock" ${!link || link.lockUntilFinished !== false ? "checked" : ""}/> 动画组完成后才可再按（运行期忽略按压）</label>
      <label class="trig-check"><input type="checkbox" id="blm-simul" ${link?.simultaneous ? "checked" : ""}/> 同按模式：一次按压同时启动全部组（各组独立推进，最快组完成即解锁）</label>
     <label class="trig-field">播放模式 <select id="blm-mode" class="trig-select">
       <option value="loop" ${mode === "loop" ? "selected" : ""}>循环：A → B → C → A</option>
       <option value="pingpong" ${mode === "pingpong" ? "selected" : ""}>往返：A → B → C → B → A</option>
     </select></label>
-    <div class="trig-subhead">共轭按钮（一对一）</div>
+    <div class="trig-subhead">互锁按钮（一对一）</div>
     <label class="trig-field">配对按钮 <select id="blm-pair" class="trig-select">${pairOpts}</select></label>
-    <label class="trig-check"><input type="checkbox" id="blm-startup" ${link?.pairStartsUp ? "checked" : ""} ${partner ? "" : "disabled"}/> 初始为抬起（可按）状态</label>
+    <label class="trig-check"><input type="checkbox" id="blm-startup" ${link?.pairStartsUp !== false ? "checked" : ""} ${partner ? "" : "disabled"}/> 初始为抬起（可按）状态</label>
     <p class="trig-hint" id="blm-pair-hint">${escHtml(pairHintText(partner))}</p>`;
 }
 
@@ -206,7 +278,7 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
       groupsEl.innerHTML = '<p class="trig-hint">未绑定动画组</p>';
     } else {
       const sharedBanner = l.sourceId !== myId
-        ? `<div class="trig-hint" style="color:#7ec8a9">🔗 该按钮与「${escHtml(S.items.find((i) => i.instanceId === l.sourceId) ? itemLabel(S.items.find((i) => i.instanceId === l.sourceId)!) : l.sourceId)}」共控同一序列（任一按压都推进）</div>`
+        ? `<div class="trig-hint" style="color:#7ec8a9">🔗 该按钮与「${escHtml(S.items.find((i) => i.instanceId === l.sourceId) ? itemLabel(S.items.find((i) => i.instanceId === l.sourceId)!) : l.sourceId)}」共轭联动（同时开/关，任一按压等同）</div>`
         : "";
       groupsEl.innerHTML = sharedBanner + l.groupNames
         .map((n, i) => {
@@ -308,11 +380,16 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
       .filter((g) => !mine.has(g.displayName))
       .map((g) => {
         const boundBy = linkBindingGroup(g.displayName);
-        const disabled = boundBy || limitReached ? "disabled" : "";
+        // 互锁共享环：组被【本对 partner】绑定时允许本侧同绑（ARun/BRun 分发
+        // 同一组、交替推进，如「传送带阵 ×4 + 互锁双按钮」）。
+        const partnerShared = !!(l?.pairId && boundBy && boundBy.pairId === l.pairId);
+        const disabled = (boundBy && !partnerShared) || limitReached ? "disabled" : "";
         const suffix = boundBy
-          ? "（已被其他按钮绑定）"
+          ? partnerShared
+            ? "（互锁共享）"
+            : "（已被其他按钮绑定）"
           : limitReached
-            ? `（共轭模式最多 ${PAIR_GROUP_LIMIT} 组）`
+            ? `（互锁模式最多 ${PAIR_GROUP_LIMIT} 组）`
             : g.triggerMode === "button"
               ? ""
               : "（自动组 · 绑定后转为按钮触发）";
@@ -325,7 +402,7 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
   refresh();
   refreshAddSel();
 
-  // ---- 共控按钮（任一按压都推进同一序列）----
+  // ---- 共轭按钮（同时开/关，任一按压等同）----
   const sharedEl = host.querySelector<HTMLElement>("#blm-shared");
   const sharedAddSel = host.querySelector<HTMLSelectElement>("#blm-shared-add");
   const refreshShared = () => {
@@ -333,7 +410,7 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     const l = link();
     const sharedIds = l?.sharedSourceIds ?? [];
     if (!l || l.groupNames.length === 0) {
-      sharedEl.innerHTML = '<p class="trig-hint">先绑定动画组，再添加共控按钮</p>';
+      sharedEl.innerHTML = '<p class="trig-hint">先绑定动画组，再添加共轭按钮</p>';
       sharedAddSel.innerHTML = "";
       return;
     }
@@ -346,14 +423,14 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
               <button type="button" class="btn-small blm-mini" data-unshare="${escHtml(id)}">移除</button></div>`;
           })
           .join("")
-      : '<p class="trig-hint">无共控按钮（只有本按钮触发）</p>';
+      : '<p class="trig-hint">无共轭按钮（只有本按钮触发）</p>';
     sharedEl.querySelectorAll<HTMLButtonElement>("[data-unshare]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const l2 = link();
         if (!l2) return;
         pushHistory();
         l2.sharedSourceIds = (l2.sharedSourceIds ?? []).filter((id) => id !== btn.dataset.unshare);
-        setStatus("已移除共控按钮（写回后生效）");
+        setStatus("已移除共轭按钮（写回后生效）");
         refreshShared();
         opts.rerender();
       });
@@ -377,13 +454,22 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     if (!id) return;
     const l = link();
     if (!l || l.groupNames.length === 0) {
-      setStatus("请先绑定动画组，再添加共控按钮", false);
+      setStatus("请先绑定动画组，再添加共轭按钮", false);
       return;
     }
     pushHistory();
+    if (l.pairId) {
+      const p = partnerOf(l);
+      l.pairId = undefined;
+      l.pairStartsUp = undefined;
+      if (p) {
+        p.pairId = undefined;
+        p.pairStartsUp = undefined;
+      }
+    }
     l.sharedSourceIds = [...(l.sharedSourceIds ?? []), id];
     const it = S.items.find((i) => i.instanceId === id);
-    setStatus(`已添加共控按钮「${it ? itemLabel(it) : id}」（任一按压都推进同一序列，写回后生效）`);
+    setStatus(`已添加共轭按钮「${it ? itemLabel(it) : id}」（同时开/关，任一按压等同，写回后生效）`);
     refreshShared();
     opts.rerender();
   });
@@ -391,14 +477,20 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
   host.querySelector("#blm-add")?.addEventListener("click", () => {
     const name = addSel.value;
     if (!name) return;
-    if (linkBindingGroup(name)) {
-      setStatus("该动画组已被其他按钮绑定", false);
-      return;
+    const binder = linkBindingGroup(name);
+    if (binder) {
+      // 互锁共享环：partner 绑定的组允许本侧同绑（同组交替分发）。
+      const cur = linkOfSource(myId);
+      const partnerShared = !!(cur?.pairId && binder.pairId && cur.pairId === binder.pairId);
+      if (!partnerShared) {
+        setStatus("该动画组已被其他按钮绑定", false);
+        return;
+      }
     }
     pushHistory();
     const l = ensureLink(myId);
     if (partnerOf(l) && l.groupNames.length >= PAIR_GROUP_LIMIT) {
-      setStatus(`共轭模式每个按钮最多绑定 ${PAIR_GROUP_LIMIT} 个动画组`, false);
+      setStatus(`互锁模式每个按钮最多绑定 ${PAIR_GROUP_LIMIT} 个动画组`, false);
       return;
     }
     l.groupNames.push(name);
@@ -473,16 +565,21 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     if (!pid) {
       l.pairId = undefined;
       l.pairStartsUp = undefined;
-      setStatus("已解除共轭配对（写回后生效）");
+      setStatus("已解除互锁配对（写回后生效）");
     } else {
       const shared = uuid();
       const other = ensureLink(pid);
+      l.sharedSourceIds = undefined;
+      other.sharedSourceIds = undefined;
       l.pairId = shared;
       other.pairId = shared;
       l.pairStartsUp = startupEl?.checked ?? true;
       other.pairStartsUp = !l.pairStartsUp;
       const otherItem = S.items.find((i) => i.instanceId === pid);
-      setStatus(`已与「${otherItem ? itemLabel(otherItem) : pid}」结为共轭按钮（写回后生效）`);
+      const meItem = S.items.find((i) => i.instanceId === myId);
+      if (meItem && otherItem) applyInterlockSwitchVisuals(meItem, otherItem, l.pairStartsUp);
+      draw(); // 初始关闭侧的画布红底/「关」角标即时刷新
+      setStatus(`已与「${otherItem ? itemLabel(otherItem) : pid}」结为互锁按钮（写回后生效）`);
     }
     refreshAddSel();
     if (pairHintEl) pairHintEl.textContent = pairHintText(partnerOf(l));
@@ -498,6 +595,220 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     l.pairStartsUp = startupEl.checked;
     const other = partnerOf(l);
     if (other) other.pairStartsUp = !startupEl.checked;
+    const meItem = S.items.find((i) => i.instanceId === myId);
+    const otherItem = other ? S.items.find((i) => i.instanceId === other.sourceId) : undefined;
+    if (meItem && otherItem) applyInterlockSwitchVisuals(meItem, otherItem, startupEl.checked);
+    draw(); // 初始关闭侧的画布红底/「关」角标即时刷新
     setStatus(`已设为初始${startupEl.checked ? "抬起（可按）" : "按下（锁定）"}（写回后生效）`);
+  });
+}
+
+// ---------------------------------------------------------------- 右键菜单 · 共轭/互锁
+
+export type ButtonPartnerMode = "none" | "conjugate" | "interlock";
+
+/** 当前开关与其它按钮的共轭/互锁关系（无动画组时仍可能为 none）。 */
+export function buttonPartnerMode(item: EditorItem): ButtonPartnerMode {
+  const id = item.instanceId ?? "";
+  if (!id) return "none";
+  const link = linkOfSource(id);
+  if (!link) return "none";
+  if (link.pairId && partnerOf(link)) return "interlock";
+  if ((link.sharedSourceIds ?? []).length > 0 || link.sourceId !== id) return "conjugate";
+  return "none";
+}
+
+export function buttonPartnerId(item: EditorItem): string {
+  const id = item.instanceId ?? "";
+  const mode = buttonPartnerMode(item);
+  if (mode === "none") return "";
+  const link = linkOfSource(id);
+  if (!link) return "";
+  if (mode === "conjugate") {
+    return link.sourceId === id ? (link.sharedSourceIds?.[0] ?? "") : link.sourceId;
+  }
+  const mine = S.buttonLinks.find((l) => l.sourceId === id && l.pairId);
+  return mine ? (partnerOf(mine)?.sourceId ?? "") : "";
+}
+
+export function clearButtonPartnerBinding(instanceId: string): void {
+  if (!instanceId) return;
+  const mine = S.buttonLinks.find((l) => l.sourceId === instanceId);
+  if (mine?.pairId) {
+    const other = partnerOf(mine);
+    if (other) {
+      other.pairId = undefined;
+      other.pairStartsUp = undefined;
+    }
+    mine.pairId = undefined;
+    mine.pairStartsUp = undefined;
+  }
+  if (mine?.sharedSourceIds?.length) mine.sharedSourceIds = undefined;
+  for (const l of S.buttonLinks) {
+    if ((l.sharedSourceIds ?? []).includes(instanceId)) {
+      l.sharedSourceIds = l.sharedSourceIds!.filter((id) => id !== instanceId);
+    }
+  }
+}
+
+/** 应用共轭/互锁配对（会清除双方旧配对；不创建占位动画组）。 */
+export function applyButtonPartnerBinding(
+  item: EditorItem,
+  mode: ButtonPartnerMode,
+  partnerId: string,
+  pairStartsUp: boolean
+): void {
+  const myId = item.instanceId ?? "";
+  if (!myId) return;
+  clearButtonPartnerBinding(myId);
+  if (partnerId) clearButtonPartnerBinding(partnerId);
+  if (mode === "none" || !partnerId) return;
+
+  const partner = S.items.find((i) => i.instanceId === partnerId);
+  if (!partner || !isButtonLinkSource(partner)) return;
+
+  if (mode === "conjugate") {
+    const l = ensureLink(myId);
+    l.sharedSourceIds = [partnerId];
+    l.pairId = undefined;
+    l.pairStartsUp = undefined;
+    const other = ensureLink(partnerId);
+    other.pairId = undefined;
+    other.pairStartsUp = undefined;
+    other.sharedSourceIds = undefined;
+    for (const sw of [item, partner]) {
+      if (!sw.switchStub) sw.switchStub = {};
+      sw.switchStub.startEnabled = true;
+    }
+    return;
+  }
+
+  const pairId = uuid();
+  const linkA = ensureLink(myId);
+  const linkB = ensureLink(partnerId);
+  linkA.sharedSourceIds = undefined;
+  linkB.sharedSourceIds = undefined;
+  linkA.pairId = pairId;
+  linkB.pairId = pairId;
+  linkA.pairStartsUp = pairStartsUp;
+  linkB.pairStartsUp = !pairStartsUp;
+  applyInterlockSwitchVisuals(item, partner, pairStartsUp);
+}
+
+/** 互锁初始外观：一侧抬起（可按）、另一侧按下（锁定）。 */
+export function applyInterlockSwitchVisuals(
+  swA: EditorItem,
+  swB: EditorItem,
+  aStartsUp: boolean
+): void {
+  if (!swA.switchStub) swA.switchStub = {};
+  if (!swB.switchStub) swB.switchStub = {};
+  swA.switchStub.startEnabled = aStartsUp;
+  swB.switchStub.startEnabled = !aStartsUp;
+}
+
+function partnerCandidateOptions(myId: string, selectedId: string): string {
+  const opts = ['<option value="">— 选择按钮 —</option>'];
+  for (const i of S.items) {
+    if (!i.instanceId || i.instanceId === myId || !isButtonLinkSource(i)) continue;
+    const sel = i.instanceId === selectedId ? "selected" : "";
+    opts.push(`<option value="${escHtml(i.instanceId)}" ${sel}>${escHtml(itemLabel(i))}</option>`);
+  }
+  return opts.join("");
+}
+
+/** 右键菜单：共轭/互锁配置 + 动画摘要 + 编排入口。 */
+export function buttonLinkCtxHtml(item: EditorItem, eventHint?: string): string {
+  const mode = buttonPartnerMode(item);
+  const pid = buttonPartnerId(item);
+  const link = linkOfSource(item.instanceId ?? "");
+  const startsUp = link?.pairStartsUp !== false;
+  const showPartner = mode !== "none";
+  return `<div class="ctx-stub-block">
+    <div class="ctx-stub-title">按钮联动</div>
+    <div class="ctx-stub-row ctx-bl-mode-row">
+      <select id="ctx-bl-mode" class="ctx-input" title="共轭=同时开/关；互锁=轮流可按、各绑独立动画组">
+        <option value="none" ${mode === "none" ? "selected" : ""}>无配对</option>
+        <option value="conjugate" ${mode === "conjugate" ? "selected" : ""}>共轭（同时开/关）</option>
+        <option value="interlock" ${mode === "interlock" ? "selected" : ""}>互锁（轮流）</option>
+      </select>
+    </div>
+    <div id="ctx-bl-partner-wrap" class="ctx-bl-partner-wrap" style="display:${showPartner ? "block" : "none"}">
+      <label class="ctx-stub-row">配对按钮
+        <select id="ctx-bl-partner" class="ctx-input">${partnerCandidateOptions(item.instanceId ?? "", pid)}</select>
+      </label>
+      <label class="ctx-stub-row ctx-bl-interlock-only" style="display:${mode === "interlock" ? "flex" : "none"}">
+        <input type="checkbox" id="ctx-bl-startup" ${startsUp ? "checked" : ""}/> 初始抬起（可按）
+      </label>
+      <p class="ctx-stub-hint" id="ctx-bl-hint">${mode === "conjugate" ? "仅配置按钮配对；动画在触发编排中单独创建。场景中以青色双箭头连线。" : mode === "interlock" ? "仅配置互锁配对；各侧动画在触发编排中单独配置。场景中以琥珀色双箭头连线。" : "选择模式并指定配对按钮。"}</p>
+    </div>
+    <p class="ctx-stub-hint">🎬 ${escHtml(buttonLinkSummaryText(item))}</p>
+    ${eventHint ? `<p class="ctx-stub-hint">${eventHint}</p>` : ""}
+    <button type="button" class="ctx-btn ctx-btn-block" id="ctx-trig-config">🎛 打开触发编排…</button>
+  </div>`;
+}
+
+/** 接线右键菜单中的共轭/互锁控件。 */
+export function wireButtonLinkCtx(item: EditorItem): void {
+  const myId = item.instanceId ?? "";
+  const modeSel = document.getElementById("ctx-bl-mode") as HTMLSelectElement | null;
+  const partnerWrap = document.getElementById("ctx-bl-partner-wrap");
+  const partnerSel = document.getElementById("ctx-bl-partner") as HTMLSelectElement | null;
+  const startupRow = document.querySelector<HTMLElement>(".ctx-bl-interlock-only");
+  const startupEl = document.getElementById("ctx-bl-startup") as HTMLInputElement | null;
+
+  const refreshUi = () => {
+    const mode = buttonPartnerMode(item);
+    if (modeSel) modeSel.value = mode;
+    const pid = buttonPartnerId(item);
+    if (partnerSel) partnerSel.innerHTML = partnerCandidateOptions(myId, pid);
+    if (partnerWrap) partnerWrap.style.display = mode === "none" ? "none" : "block";
+    if (startupRow) startupRow.style.display = mode === "interlock" ? "flex" : "none";
+    if (startupEl && mode === "interlock") {
+      const l = S.buttonLinks.find((x) => x.sourceId === myId);
+      startupEl.checked = l?.pairStartsUp !== false;
+    }
+    const hint = document.getElementById("ctx-bl-hint");
+    if (hint) {
+      hint.textContent =
+        mode === "conjugate"
+          ? "仅配置按钮配对；动画在触发编排中单独创建。场景中以青色双箭头连线。"
+          : mode === "interlock"
+            ? "仅配置互锁配对；各侧动画在触发编排中单独配置。场景中以琥珀色双箭头连线。"
+            : "选择模式并指定配对按钮。";
+    }
+  };
+
+  const apply = () => {
+    const mode = (modeSel?.value ?? "none") as ButtonPartnerMode;
+    const pid = partnerSel?.value ?? "";
+    if (mode !== "none" && !pid) {
+      setStatus("请选择配对按钮", false);
+      refreshUi();
+      return;
+    }
+    pushHistory();
+    applyButtonPartnerBinding(item, mode, pid, startupEl?.checked ?? true);
+    S.dirty = true;
+    const partner = S.items.find((i) => i.instanceId === pid);
+    if (mode === "none") setStatus("已解除按钮配对（写回后生效）");
+    else if (mode === "conjugate")
+      setStatus(`已与「${partner ? itemLabel(partner) : pid}」设为共轭（写回后生效）`);
+    else setStatus(`已与「${partner ? itemLabel(partner) : pid}」设为互锁（写回后生效）`);
+    refreshUi();
+    draw();
+  };
+
+  modeSel?.addEventListener("change", apply);
+  partnerSel?.addEventListener("change", apply);
+  startupEl?.addEventListener("change", () => {
+    if (buttonPartnerMode(item) !== "interlock") return;
+    const pid = partnerSel?.value ?? buttonPartnerId(item);
+    if (!pid) return;
+    pushHistory();
+    applyButtonPartnerBinding(item, "interlock", pid, startupEl.checked);
+    setStatus(`已设为初始${startupEl.checked ? "抬起（可按）" : "按下（锁定）"}（写回后生效）`);
+    S.dirty = true;
+    draw();
   });
 }

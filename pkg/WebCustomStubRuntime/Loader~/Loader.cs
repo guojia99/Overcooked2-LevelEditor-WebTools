@@ -6,7 +6,6 @@ using System.Threading;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -20,11 +19,12 @@ namespace OC2LevelRuntimeLoader
     /// 关卡集仍在 BepInEx/plugins/OC2DIYLevel/levels/&lt;set&gt;/（模组固定读取路径）。
     ///
     /// 职责（统一单程序集重构后）：
-    ///  1. Awake 最早时机：从自身目录（Loader.dll 同级）把所有 commonW+数字 bundle
-    ///     LoadFromFile 进内存并常驻（幂等：已加载则跳过），供所有关卡的 stub 组件
-    ///     经 AssetBundle.GetAllLoadedAssetBundles 按名解析；再从自身目录加载统一运行时
-    ///     bundle webcustomstub_runtime → Assembly.Load(WebCustomStubRuntime) →
-    ///     反射 CustomStub.EntryPoint.Install()。只接管 W1/W2，原版 bundle 仍靠 OC2DIYLevel。
+    ///  1. 启动扫描（后台线程）汇总 levels/&lt;set&gt;/stub_levels.txt 逐关卡清单 →
+    ///     WebManifest。清单为空 = 完全休眠（零加载零事件零介入）；非空 = 激活：
+    ///     挂 AssemblyResolve + 从自身目录把所有 commonW+数字 bundle LoadFromFile
+    ///     常驻（幂等）+ 加载统一运行时 bundle webcustomstub_runtime →
+    ///     Assembly.Load(WebCustomStubRuntime) → 反射 CustomStub.EntryPoint.Install()
+    ///     （EntryPoint 反射读 WebManifest 做逐关卡闸门）。原版 bundle 仍靠 OC2DIYLevel。
     ///  2. 每关卡集 *_custom_runtime 文件（预留：某关卡专属代码）仍支持加载；
     ///     旧版 runtime 文件（含旧每集 Stub_&lt;set&gt; 代码）一律忽略并告警（不识别旧代码）。
     ///  3. 版本门控：关卡集 requires.txt（= 依赖包 SSOT 版本）与自身 PluginVersion semver
@@ -33,6 +33,24 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v3.5.0（2026-09-28 零介入铁律 · 清单驱动的逐关卡按需挂载）：
+    ///  - 铁律：未使用 web 导出的关卡（官方图/旧导出集/无自定义关卡），本 loader 及其
+    ///    注入的全部运行时对游戏零介入——不 hook 任何函数、不装任何补丁、不做任何
+    ///    场景扫描/探测。已装 web 集但当前玩非 web 场景时同样零介入。
+    ///  - 机制：导出器逐场景扫描写出 levels/&lt;set&gt;/stub_levels.txt（每行
+    ///    "&lt;关卡&gt;|&lt;特征,...&gt;"）；loader 启动扫描汇总为 WebManifest
+    ///    （"集|关卡|特征,..."）注入 CustomStub.EntryPoint（反射读 WebManifest 字段，
+    ///    镜像 StubLog→LogFromCrate 桥模式）。EntryPoint 按 scene.path 解析 (集,关卡)
+    ///    查清单：未命中直接休眠归零；命中按特征挂载（KillPlane 仅 pushable、ticker
+    ///    子系统轮询各按特征）。编辑器 Play（无 loader）= 无约束模式，行为不变。
+    ///  - 启动重排：Awake 不再预载依赖/运行时、不挂 AssemblyResolve——先等后台扫描
+    ///    汇总清单；清单为空（无任何 web stub 关卡）= 完全休眠，一个字节都不加载。
+    ///  - 删除 v3.1.0/v3.2.1 的 RecipeHelper 兼容护栏（按铁律「不主动 hook 非 web
+    ///    关卡路径的函数」；旧导出集混装崩溃回归 = 用最新编辑器重新导出解决）。
+    ///  - 兼容期（3.5.0 ≤ PluginVersion &lt; 4.0.0，2026-09-28 用户决策）：旧版导出集
+    ///    （有 requires.txt、无 stub_levels.txt，如 3.2.1 导出）生成 "集|*|legacy"
+    ///    兼容条目，EntryPoint 维持 v3.4 行为（探测+tag 自愈）——已分发旧集无需
+    ///    重导出。v4.0.0 起严格按 stub_levels.txt 清单（届时旧集需重新导出一次）。
     /// v3.3.2（2026-09-25 真机按钮永红修复）：仅随统一运行时同步版本号（relay 接管
     ///     按钮 Disable/Reset 生命周期 + 共轭双锁语义，全在 CustomStub 侧）。
     /// v3.3.1（2026-09-25 真机按钮锁死修复）：仅随统一运行时同步版本号
@@ -82,7 +100,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "3.3.5";
+        public const string PluginVersion = "3.5.0";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>
@@ -90,6 +108,17 @@ namespace OC2LevelRuntimeLoader
 
         /// <summary>每关卡自定义 runtime 文件后缀（预留通道；不识别旧版 runtime）。</summary>
         private const string CustomRuntimeSuffix = "_custom_runtime";
+
+        /// <summary>清单兼容截止版本（2026-09-28 用户决策）：PluginVersion &lt; 本值时，
+        /// 旧版导出集（有 requires.txt、无 stub_levels.txt）生成兼容条目 "集|*|legacy"，
+        /// EntryPoint 对其维持 v3.4 行为（探测 + tag 自愈）——**3.2.1 等已分发关卡集
+        /// 无需重导出即可继续工作**；到达 4.0.0 后不再生成兼容条目，严格按
+        /// stub_levels.txt 逐关卡清单（届时旧集需重新导出一次）。
+        /// ⚠ 长期准则（v3.5.0 起，详见 .opencode/skills/oc2-customstub「Loader 版本
+        /// 兼容规范」）：**任一版本必须保留对上一版导出格式的兼容**——本常量推移时，
+        /// 被越过的「上一版格式」仍必须兼容（如 4.0.0 移除 ≤3.4 legacy 时，3.5.0 的
+        /// stub_levels.txt 清单格式继续支持）；不允许当版直接砍掉上一版格式。</summary>
+        private const string LegacyCompatCutoff = "4.0.0";
 
         private static ManualLogSource _log;
         private static readonly List<byte[]> PendingRaw = new List<byte[]>();
@@ -99,6 +128,14 @@ namespace OC2LevelRuntimeLoader
         private static bool _startupScanDone;
         private static bool _filesystemScanDone;
         private static bool _depsLoaded;
+        private static bool _resolveHooked;
+
+        /// <summary>web stub 关卡清单（v3.5.0，stub 侧 CustomStub.EntryPoint 反射读取，
+        /// 与 StubLog 读取 LogFromCrate 同款桥接方向）。每条 "集|关卡|特征1,特征2,..."，
+        /// 由启动扫描汇总 levels/&lt;set&gt;/stub_levels.txt 而来。清单为空 = 本机无任何
+        /// web 导出 stub 关卡 = 加载器整体休眠。EntryPoint 据此做逐关卡闸门：清单未命中
+        /// 的场景（官方图/旧集/未用 CustomStub 的 web 关卡）一律零介入。</summary>
+        public static string[] WebManifest = new string[0];
 
         #region 日志前缀：时间戳 + 主/客机角色（联机排障区分两台机器）
 
@@ -203,352 +240,17 @@ namespace OC2LevelRuntimeLoader
             _cfgVerbose = Config.Bind("Logging", "Verbose", false,
                 "输出 CustomStub 运行时与本加载器的诊断级日志（掷骰/取出、逐物体自愈、反射自检、"
                 + "目录清单等）。默认关闭——这些日志在稳态游玩期是每秒数条的纯开销。排障时开启。");
-            AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
-            LogI("v" + PluginVersion + " ready（自身目录加载 commonW1/W2 + 统一运行时；关卡目录只认 *_custom_runtime）"
+            // v3.5.0 零介入铁律：Awake 不再预载依赖/统一运行时、不挂 AssemblyResolve。
+            // 先等启动后台扫描汇总 levels/<set>/stub_levels.txt 清单，只有存在
+            // web 导出的 stub 关卡（清单非空）才激活（ApplyScanResult）——未用 web
+            // 导出的环境自此一个字节都不加载、一个事件都不挂。
+            // 激活时机的时序安全性：扫描在 Update 首帧发起、数帧内 Drain，仍远早于
+            // 任何关卡场景加载（主菜单在前）；EntryPoint.Install 只需早于场景里
+            // MonoScript 的程序集解析即可。
+            LogI("v" + PluginVersion + " ready（清单驱动：仅当存在 web 导出 stub 关卡时才加载依赖/运行时）"
                 + (VerboseEnabled ? "｜诊断日志已开启" : ""));
-            LogI("[断点:启动] Loader 已进入 Awake，开始加载依赖包");
-            // 最早时机：加载依赖（commonW1/W2）+ 统一运行时，先于任何关卡场景，
-            // 避免首帧问号/大锅贴图竞态；异常不致命。
-            // 注意：本条链路【刻意保持同步】——EntryPoint.Install 必须早于场景里
-            // MonoScript 的程序集解析，异步化会引入脚本引用解析失败的竞态。
-            try
-            {
-                LoadDependenciesAndRuntime();
-            }
-            catch (Exception ex)
-            {
-                LogW("Awake 依赖/运行时加载异常: " + ex);
-                LogP("自定义关卡运行组件启动失败，部分自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: " + ex.Message);
-            }
-
-            // 旧版关卡包向下兼容护栏（v3.1.0）：必须在玩家进入任何 DIY 会话前装好
-            // （崩点在存档槽选择 → StartEmptySession，晚于本 Awake，时机充分）。
-            InstallCompatPatches();
         }
 
-        #region 旧版关卡包向下兼容护栏（v3.1.0；v3.2.1 修正拦截方式+定位上下文）
-
-        // 事故（debug_20260921）：多个关卡集与新版依赖包混装，自定义汉堡菜谱
-        // （CustomRecipeOptionalBurgerSO.optionalSOs）里的跨 bundle 食材引用
-        // 解析失败 → RecipeHelper.GetOrderDefinitionNode 返回 null →
-        // GetOrderToPrefabLookup(OrderDefinitionNode[], GameObject[]) 里
-        // Dictionary[null] 抛 ArgumentNullException → StartEmptySession 整个炸掉，
-        // 玩家看到「游戏运行时出现严重错误」弹窗，任何关卡都进不去。
-        //
-        // ⚠ v3.1.0 的教训（debug_20260921 23:53 实测）：本环境 HarmonyX（BepInEx
-        // 5.4.22）对前缀修改 __args 不做回写——护栏触发了、日志打了，但 null 仍进
-        // 原方法照崩。v3.2.1 改为：检测到 null 节点时前缀返回 false 跳过原方法，
-        // 用反射原样重建（含 Equals 去重 + m_amountAllowed 累加 + m_lookupArray）
-        // 的滤空查找表作为 __result——不依赖任何参数回写语义，行为确定。
-        //
-        // 定位上下文（v3.2.1）：菜谱名（5 参重载前缀）+ 关卡名（SetupConfig 前缀）
-        // + 关卡集名（SetupSceneDirectoryData(LevelSetInfoSO) 前缀）——告警和玩家
-        // 提示明确指出是哪个关卡集的哪一关出了问题。
-        private static bool _compatPatched;
-        private static string _lookupRecipeContext;
-        private static string _compatLevelContext;
-        private static string _compatSetContext;
-        private static Type _lookup2ReturnType;
-        private static readonly HashSet<string> _compatReportedKeys = new HashSet<string>(StringComparer.Ordinal);
-
-        private static void InstallCompatPatches()
-        {
-            if (_compatPatched)
-                return;
-            try
-            {
-                var recipeHelper = FindRecipeHelperType();
-                if (recipeHelper == null)
-                {
-                    // OC2DIYLevel.dll 尚未进 AppDomain（异常时序）——场景加载时再试一次。
-                    LogV("[兼容] 未找到 OC2DIYLevel.RecipeHelper，将在下次场景加载时重试");
-                    return;
-                }
-                var lookup2 = FindLookupMethod(recipeHelper, 2);
-                var lookup5 = FindLookupMethod(recipeHelper, 5);
-                if (lookup2 == null)
-                {
-                    LogW("[兼容] 未找到 GetOrderToPrefabLookup(OrderDefinitionNode[], GameObject[])，护栏未安装（OC2DIYLevel 版本变动？）");
-                    _compatPatched = true;
-                    return;
-                }
-                _lookup2ReturnType = lookup2.ReturnType;
-                var self = typeof(LevelRuntimeLoader);
-                var harmony = new Harmony("oc2.oc2diylevelruntimewloader.compat");
-                harmony.Patch(lookup2, prefix: new HarmonyMethod(self.GetMethod(
-                    "CompatLookupNullGuardPrefix", BindingFlags.NonPublic | BindingFlags.Static)));
-                if (lookup5 != null)
-                {
-                    harmony.Patch(lookup5, prefix: new HarmonyMethod(self.GetMethod(
-                        "CompatLookupContextPrefix", BindingFlags.NonPublic | BindingFlags.Static)));
-                }
-                InstallContextPatches(harmony, self);
-                _compatPatched = true;
-                LogI("[兼容] RecipeHelper.GetOrderToPrefabLookup 空节点护栏已安装（重建式拦截，"
-                    + (lookup5 != null ? "含菜谱名" : "无菜谱名") + "）——旧版/混装关卡包的失效食材引用将降级跳过而不再致命");
-            }
-            catch (Exception ex)
-            {
-                _compatPatched = true; // 不反复重试，避免每次场景加载刷异常
-                LogW("[兼容] 护栏补丁安装失败（其它功能不受影响；旧版关卡包仍可能触发原崩溃）: " + ex);
-            }
-        }
-
-        /// <summary>装上下文补丁：SetupConfig（关卡名）与 SetupSceneDirectoryData(LevelSetInfoSO)
-        /// （关卡集名）。仅读参数，不改行为；失败只影响告警的定位精度。</summary>
-        private static void InstallContextPatches(Harmony harmony, Type self)
-        {
-            try
-            {
-                var cfg = FindLoadedType("OC2DIYLevel.LevelConfigSetup");
-                if (cfg == null) return;
-                const BindingFlags F = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
-                foreach (var m in cfg.GetMethods(F))
-                {
-                    var ps = m.GetParameters();
-                    if (m.Name == "SetupConfig" && ps.Length == 3)
-                    {
-                        harmony.Patch(m, prefix: new HarmonyMethod(self.GetMethod(
-                            "CompatLevelContextPrefix", BindingFlags.NonPublic | BindingFlags.Static)));
-                    }
-                    else if (m.Name == "SetupSceneDirectoryData" && ps.Length == 2
-                        && ps[1].ParameterType.Name == "LevelSetInfoSO")
-                    {
-                        harmony.Patch(m, prefix: new HarmonyMethod(self.GetMethod(
-                            "CompatSetContextPrefix", BindingFlags.NonPublic | BindingFlags.Static)));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogV("[兼容] 上下文补丁未装（仅影响告警定位精度）: " + ex.Message);
-            }
-        }
-
-        /// <summary>定位游戏侧 RecipeHelper（OC2DIYLevel 命名空间；兼容任意程序集名）。</summary>
-        private static Type FindRecipeHelperType()
-        {
-            var t = FindLoadedType("OC2DIYLevel.RecipeHelper");
-            if (t != null)
-                return t;
-            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                Type[] types;
-                try { types = asm.GetTypes(); }
-                catch { continue; } // ReflectionTypeLoadException 等——跳过该程序集
-                foreach (var cand in types)
-                {
-                    if (cand.Name == "RecipeHelper"
-                        && cand.GetMethod("GetOrderToPrefabLookup", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static) != null)
-                        return cand;
-                }
-            }
-            return null;
-        }
-
-        /// <summary>按参数个数定位 GetOrderToPrefabLookup 重载（2 = 私有查找表构造；
-        /// 5 = 公开包装，首参为 string recipeName，用于告警上下文）。</summary>
-        private static MethodInfo FindLookupMethod(Type recipeHelper, int paramCount)
-        {
-            const BindingFlags F = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
-            foreach (var m in recipeHelper.GetMethods(F))
-            {
-                if (m.Name != "GetOrderToPrefabLookup")
-                    continue;
-                var ps = m.GetParameters();
-                if (ps.Length != paramCount)
-                    continue;
-                if (paramCount == 2 && !(ps[0].ParameterType.IsArray && ps[1].ParameterType.IsArray))
-                    continue;
-                if (paramCount == 5 && ps[0].ParameterType != typeof(string))
-                    continue;
-                return m;
-            }
-            return null;
-        }
-
-        /// <summary>5 参重载前缀：记录当前菜谱名，供护栏告警定位是哪份菜谱失效。</summary>
-        private static void CompatLookupContextPrefix(object[] __args)
-        {
-            try
-            {
-                var s = __args != null && __args.Length > 0 ? __args[0] as string : null;
-                _lookupRecipeContext = string.IsNullOrEmpty(s) ? null : s;
-            }
-            catch { }
-        }
-
-        /// <summary>SetupConfig 前缀：记录当前关卡名（LevelInfoSO 资产名）。</summary>
-        private static void CompatLevelContextPrefix(object[] __args)
-        {
-            try
-            {
-                _compatLevelContext = __args != null && __args.Length > 1 ? SoName(__args[1]) : null;
-            }
-            catch { }
-        }
-
-        /// <summary>SetupSceneDirectoryData(LevelSetInfoSO) 前缀：记录当前关卡集名。</summary>
-        private static void CompatSetContextPrefix(object[] __args)
-        {
-            try
-            {
-                _compatSetContext = __args != null && __args.Length > 1 ? SoName(__args[1]) : null;
-            }
-            catch { }
-        }
-
-        /// <summary>UnityEngine.Object 的资产名（LevelInfoSO/LevelSetInfoSO 的 .name）。</summary>
-        private static string SoName(object obj)
-        {
-            if (obj == null) return null;
-            try
-            {
-                var p = obj.GetType().GetProperty("name", BindingFlags.Public | BindingFlags.Instance);
-                var v = p != null ? p.GetValue(obj, null) as string : null;
-                return string.IsNullOrEmpty(v) ? null : v;
-            }
-            catch { return null; }
-        }
-
-        /// <summary>2 参重载前缀：发现 null 的 OrderDefinitionNode 时【跳过原方法】
-        /// （返回 false），用反射原样重建滤空后的查找表写入 __result——绝不依赖
-        /// __args 回写（本环境 HarmonyX 不回写，v3.1.0 因此失效）。无 null 时返回
-        /// true 原方法照跑，零行为差异。任何内部异常都只记录、绝不外抛。</summary>
-        private static bool CompatLookupNullGuardPrefix(object[] __args, ref object __result)
-        {
-            try
-            {
-                if (__args == null || __args.Length < 2)
-                    return true;
-                var nodes = __args[0] as Array;
-                if (nodes == null || nodes.Length == 0)
-                    return true;
-                var models = __args[1] as Array;
-                var keep = new List<int>();
-                for (int i = 0; i < nodes.Length; i++)
-                {
-                    if (nodes.GetValue(i) != null)
-                        keep.Add(i);
-                }
-                if (keep.Count == nodes.Length)
-                    return true; // 无 null，零开销放行原方法
-                int skipped = nodes.Length - keep.Count;
-                __result = BuildCompatFilteredLookup(nodes, models, keep);
-                ReportCompatDegradation(skipped);
-                return false; // 跳过原方法，__result 已重建
-            }
-            catch (Exception ex)
-            {
-                // 重建失败也绝不放行原方法（放行=必然 ArgumentNullException 崩会话）：
-                // 退回空查找表——该菜谱暂时不可夹任何食材，但会话存活。
-                LogW("[兼容] 空节点护栏重建异常（退回空查找表保会话）: " + ex);
-                try
-                {
-                    __result = BuildCompatEmptyLookup();
-                }
-                catch { }
-                return false;
-            }
-        }
-
-        /// <summary>统一告警（含定位上下文）+ 玩家提示。同一（关卡, 菜谱）组合每会话
-        /// 只完整告警一次，重复触发归入 verbose——SetupConfig 每关跑 4 趟（1-4 人），
-        /// 关卡加载期 GetIngredientPrefabForOptional 也会重复触发，不刷屏。</summary>
-        private static void ReportCompatDegradation(int skipped)
-        {
-            var where = "关卡 " + (_compatLevelContext ?? "?")
-                + "（关卡集 " + (_compatSetContext ?? "?") + "）"
-                + (_lookupRecipeContext != null ? "，菜谱 " + _lookupRecipeContext : "");
-            var key = (_compatSetContext ?? "?") + "|" + (_compatLevelContext ?? "?") + "|" + (_lookupRecipeContext ?? "?");
-            if (_compatReportedKeys.Add(key))
-            {
-                LogW("[兼容] " + where + "跳过 " + skipped + " 个无法解析的食材引用——该关卡集由旧版编辑器导出、"
-                    + "或与当前依赖包素材版本不一致。已自动降级，可正常进入关卡（该菜谱少这 " + skipped
-                    + " 个夹心候选）；用最新编辑器重新导出关卡集 " + (_compatSetContext ?? "?") + " 可恢复完整食材。");
-                LogP(where + "有 " + skipped + " 个食材引用失效（旧版导出/依赖版本不一致），本次运行已自动跳过、可正常游玩。"
-                    + "建议用最新编辑器重新导出关卡集 " + (_compatSetContext ?? "?") + " 以恢复完整食材。");
-            }
-            else
-            {
-                LogV("[兼容] " + where + "再次跳过 " + skipped + " 个失效食材引用（已告警过）");
-            }
-        }
-
-        /// <summary>反射原样重建滤空后的 OrderToPrefabLookup：与原方法语义一致——
-        /// 按 key.Equals(ingredientNode) 去重、命中 m_amountAllowed += 1、否则建新条目
-        /// （m_content/m_prefab/m_amountAllowed=1），最后写 m_lookupArray。
-        /// 全部走非泛型接口与晚期绑定，不依赖游戏类型编译期可见。</summary>
-        private static object BuildCompatFilteredLookup(Array nodes, Array models, List<int> keep)
-        {
-            var lookupType = _lookup2ReturnType;
-            var lookup = ScriptableObject.CreateInstance(lookupType);
-            var contentT = lookupType.GetNestedType("ContentPrefabLookup",
-                BindingFlags.Public | BindingFlags.NonPublic);
-            var nodeT = nodes.GetType().GetElementType();
-            var dictT = typeof(Dictionary<,>).MakeGenericType(nodeT, contentT);
-            var dict = (System.Collections.IDictionary)Activator.CreateInstance(dictT);
-            var equalsMi = typeof(object).GetMethod("Equals", new Type[] { typeof(object) });
-            const BindingFlags FF = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-            var fContent = contentT.GetField("m_content", FF);
-            var fPrefab = contentT.GetField("m_prefab", FF);
-            var fAmount = contentT.GetField("m_amountAllowed", FF);
-            for (int j = 0; j < keep.Count; j++)
-            {
-                int i = keep[j];
-                var node = nodes.GetValue(i);
-                object matchKey = null;
-                foreach (var k in dict.Keys)
-                {
-                    if ((bool)equalsMi.Invoke(k, new object[] { node }))
-                    {
-                        matchKey = k;
-                        break;
-                    }
-                }
-                if (matchKey != null)
-                {
-                    var hit = dict[matchKey];
-                    fAmount.SetValue(hit, ((int)fAmount.GetValue(hit)) + 1);
-                }
-                else
-                {
-                    var entry = Activator.CreateInstance(contentT);
-                    fContent.SetValue(entry, node);
-                    fPrefab.SetValue(entry, models != null && i < models.Length ? models.GetValue(i) : null);
-                    fAmount.SetValue(entry, 1);
-                    dict[node] = entry;
-                }
-            }
-            SetCompatLookupArray(lookupType, lookup, contentT, dict);
-            return lookup;
-        }
-
-        /// <summary>空查找表（护栏重建异常时的兜底：会话存活优先）。</summary>
-        private static object BuildCompatEmptyLookup()
-        {
-            var lookupType = _lookup2ReturnType;
-            var lookup = ScriptableObject.CreateInstance(lookupType);
-            var contentT = lookupType.GetNestedType("ContentPrefabLookup",
-                BindingFlags.Public | BindingFlags.NonPublic);
-            var dictT = typeof(Dictionary<,>).MakeGenericType(lookupType, contentT); // 键类型此处无所谓，仅取空 Values
-            var dict = (System.Collections.IDictionary)Activator.CreateInstance(dictT);
-            SetCompatLookupArray(lookupType, lookup, contentT, dict);
-            return lookup;
-        }
-
-        private static void SetCompatLookupArray(Type lookupType, object lookup, Type contentT, System.Collections.IDictionary dict)
-        {
-            var values = Array.CreateInstance(contentT, dict.Count);
-            int idx = 0;
-            foreach (var v in dict.Values)
-                values.SetValue(v, idx++);
-            var field = lookupType.GetField("m_lookupArray",
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-            field.SetValue(lookup, values);
-        }
-
-        #endregion
 
         /// <summary>Loader.dll 所在目录（= OC2DIYLevelRuntimeWLoader 文件夹）。</summary>
         private static string OwnDir()
@@ -568,11 +270,14 @@ namespace OC2LevelRuntimeLoader
         }
 
         /// <summary>从自身目录加载所有 commonW+数字 bundle（幂等：已在全局表则跳过，不 Unload）
-        /// + 统一运行时 webcustomstub_runtime → Assembly.Load → EntryPoint.Install。</summary>
+        /// + 统一运行时 webcustomstub_runtime → Assembly.Load → EntryPoint.Install。
+        /// v3.5.0：清单为空（休眠模式）时一个字节都不加载。</summary>
         private static void LoadDependenciesAndRuntime()
         {
             if (_depsLoaded)
                 return;
+            if (WebManifest.Length == 0)
+                return; // 零介入休眠：无任何 web stub 关卡，不加载依赖/运行时
             _depsLoaded = true;
             var dir = OwnDir();
             if (string.IsNullOrEmpty(dir))
@@ -881,6 +586,11 @@ namespace OC2LevelRuntimeLoader
             public readonly List<string> Warns = new List<string>();
             /// <summary>待主线程加载的 *_custom_runtime 文件（已按存在性筛过）。</summary>
             public readonly List<string> RuntimeFiles = new List<string>();
+            /// <summary>v3.5.0 web stub 关卡清单：每条 "集|关卡|特征1,特征2,..."
+            /// （来自 levels/&lt;set&gt;/stub_levels.txt）。为空 = 休眠模式。</summary>
+            public readonly List<string> ManifestEntries = new List<string>();
+            /// <summary>清单命中的关卡集数（诊断用）。</summary>
+            public int SetsWithManifest;
             public bool NoRootFound;
         }
 
@@ -961,6 +671,45 @@ namespace OC2LevelRuntimeLoader
             {
                 LogP("未找到自定义关卡目录。若您安装了自定义关卡，请确认它位于 BepInEx/plugins/OC2DIYLevel/levels/。");
                 return;
+            }
+
+            // ---- v3.5.0 闸门：清单为空 = 本机没有任何 web 导出的 stub 关卡 ----
+            // → 加载器整体休眠：不加载 commonW*/统一运行时/自定义 runtime，
+            //   不挂 AssemblyResolve（此前未挂过）——对游戏零介入。
+            WebManifest = result.ManifestEntries.ToArray();
+            if (WebManifest.Length == 0)
+            {
+                LogI("未发现任何 web 导出的 stub 关卡（stub_levels.txt 无条目）——加载器休眠，对游戏零介入"
+                    + (result.SetCount > 0 ? "（已装关卡集 " + result.SetCount + " 个均未使用 CustomStub）" : ""));
+                return;
+            }
+
+            // 清单非空 → 激活：挂 AssemblyResolve（引用顺序兜底）+ 预载依赖/统一运行时。
+            // 预载保持启动期（决策已确认）：程序集必须先于 web 关卡场景加载进 AppDomain，
+            // 否则场景 MonoScript 解析竞态失败；纯数据/程序集驻留不 hook 任何函数。
+            if (!_resolveHooked)
+            {
+                _resolveHooked = true;
+                AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+            }
+            var legacyCount = 0;
+            for (int i = 0; i < WebManifest.Length; i++)
+            {
+                if (WebManifest[i] != null && WebManifest[i].EndsWith("|*|legacy", StringComparison.Ordinal))
+                    legacyCount++;
+            }
+            LogI("stub 关卡清单命中 " + (WebManifest.Length - legacyCount) + " 关（分布于 "
+                + result.SetsWithManifest + " 个关卡集）"
+                + (legacyCount > 0 ? "，另含 " + legacyCount + " 个旧版导出集（兼容模式：探测+自愈）" : "")
+                + "——激活依赖/运行时加载");
+            try
+            {
+                LoadDependenciesAndRuntime();
+            }
+            catch (Exception ex)
+            {
+                LogW("依赖/运行时加载异常: " + ex);
+                LogP("自定义关卡运行组件启动失败，部分自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: " + ex.Message);
             }
 
             var newlyLoaded = 0;
@@ -1088,6 +837,37 @@ namespace OC2LevelRuntimeLoader
                     continue;
                 }
 
+                // v3.5.0 逐关卡清单：web 导出（=有 requires.txt）且门控通过的集必有
+                // stub_levels.txt（每行 "<关卡>|<特征,...>"，'#' 注释/空行忽略）。
+                // 旧版导出（无 stub_levels.txt）：兼容期（< LegacyCompatCutoff=4.0.0）
+                // 生成 "集|*|legacy" 兼容条目——EntryPoint 对该集维持 v3.4 行为
+                // （探测+自愈），旧集无需重导出；4.0.0 起不再生成 → 零介入 + 提示重导出。
+                // 非 web 集（无 requires.txt）本就不归本加载器管。
+                var manifestPath = Path.Combine(setDir, "stub_levels.txt");
+                if (File.Exists(manifestPath))
+                {
+                    var added = ReadStubLevels(setName, manifestPath, result);
+                    if (added > 0)
+                        result.SetsWithManifest++;
+                    else if (result.Verbose)
+                        result.Infos.Add("  [" + setName + "] stub 清单存在但无条目（该集未用 CustomStub）");
+                }
+                else if (!string.IsNullOrEmpty(requires))
+                {
+                    if (CompareSemver(PluginVersion, LegacyCompatCutoff) < 0)
+                    {
+                        result.ManifestEntries.Add(setName + "|*|legacy");
+                        result.SetsWithManifest++;
+                        result.Infos.Add("  [" + setName + "] 旧版导出（无 stub_levels.txt）→ 兼容模式（探测+自愈，同 v3.4 行为，无需重导出）；"
+                            + "v4.0.0 起将严格按清单，届时请重新导出");
+                    }
+                    else
+                    {
+                        result.Warns.Add("  [" + setName + "] 旧版导出（无 stub_levels.txt），CustomStub 运行时对该集零介入；"
+                            + "请用最新编辑器重新导出该关卡集以启用自定义玩法运行时支持");
+                    }
+                }
+
                 // 每关卡自定义 runtime（预留通道）：只认 *_custom_runtime。
                 string[] files;
                 try { files = Directory.GetFiles(setDir); }
@@ -1114,6 +894,44 @@ namespace OC2LevelRuntimeLoader
                 return s != null ? s.Trim() : null;
             }
             catch { return null; }
+        }
+
+        /// <summary>v3.5.0 读关卡集 stub_levels.txt → 汇总进扫描结果。
+        /// 每行 "&lt;关卡&gt;|&lt;特征1,特征2,...&gt;"（特征段可为空 = 仅自愈无 ticker/补丁需求）；
+        /// '#' 开头注释与空行忽略；格式非法的行跳过并告警。返回有效条目数。</summary>
+        private static int ReadStubLevels(string setName, string manifestPath, ScanResult result)
+        {
+            int added = 0;
+            try
+            {
+                var lines = File.ReadAllLines(manifestPath);
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    var line = lines[i].Trim();
+                    if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
+                        continue;
+                    var sep = line.IndexOf('|');
+                    if (sep <= 0 || sep >= line.Length - 1)
+                    {
+                        result.Warns.Add("  [" + setName + "] stub_levels.txt 第 " + (i + 1) + " 行格式非法（应为 关卡|特征,...）: "
+                            + line + "，已跳过");
+                        continue;
+                    }
+                    var level = line.Substring(0, sep);
+                    if (level.IndexOf('|') >= 0 || level.IndexOf('/') >= 0)
+                    {
+                        result.Warns.Add("  [" + setName + "] stub_levels.txt 第 " + (i + 1) + " 行关卡名非法: " + level + "，已跳过");
+                        continue;
+                    }
+                    result.ManifestEntries.Add(setName + "|" + line);
+                    added++;
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Warns.Add("  [" + setName + "] stub_levels.txt 读取失败（该集按旧版处理，零介入）: " + ex.Message);
+            }
+            return added;
         }
 
         /// <summary>semver 比较（a &lt; b 返回 &lt;0；相等 0；a &gt; b 返回 &gt;0）。仅比较数字段，
@@ -1240,7 +1058,7 @@ namespace OC2LevelRuntimeLoader
 
         private static readonly HashSet<string> ReportedResolveMisses = new HashSet<string>(StringComparer.Ordinal);
 
-        private Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+        private static Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
         {
             var simpleName = args.Name.Split(',')[0].Trim();
             foreach (var raw in PendingRaw)
@@ -1282,19 +1100,25 @@ namespace OC2LevelRuntimeLoader
             SceneManager.sceneLoaded += OnSceneLoadedHeal;
         }
 
-        /// <summary>每次场景加载：先确保依赖/统一运行时已加载，再幂等补扫关卡目录的
-        /// *_custom_runtime（拾漏：启动后才安装/更新的关卡集）。场景自愈（RandomCrate|
-        /// 等 tag → 挂组件）统一由 CustomStub.EntryPoint 承担，loader 不再自行 HealScene。
-        /// v2.1：补扫改为后台线程（BeginScan），程序集清单只在数量变化时打。</summary>
+        /// <summary>每次场景加载：先确保依赖/统一运行时已加载（休眠模式下为空操作），
+        /// 再幂等补扫关卡目录的 *_custom_runtime（拾漏：启动后才安装/更新的关卡集）。
+        /// 场景自愈（RandomCrate| 等 tag → 挂组件）与逐关卡闸门统一由
+        /// CustomStub.EntryPoint 承担（反射读 WebManifest）。v3.5.0：休眠模式
+        /// （清单为空）下只保留补扫重试，日志降级 verbose。</summary>
         private static int _lastReportedAsmCount = -1;
 
         private static void OnSceneLoadedHeal(Scene scene, LoadSceneMode mode)
         {
             try
             {
+                if (!_filesystemScanDone)
+                    BeginScan(false);
+                if (WebManifest.Length == 0)
+                {
+                    LogV("场景加载: " + scene.name + "（清单为空=休眠模式，零介入）");
+                    return;
+                }
                 LoadDependenciesAndRuntime();
-                if (!_compatPatched)
-                    InstallCompatPatches();
                 if (LoadedNames.Count != _lastReportedAsmCount)
                 {
                     _lastReportedAsmCount = LoadedNames.Count;
@@ -1307,8 +1131,6 @@ namespace OC2LevelRuntimeLoader
                 }
                 // v3：启动扫描已经覆盖所有关卡集。场景切换只确保统一依赖已加载，
                 // 不再次触发全量磁盘扫描；避免地图集合变多后进场景变慢。
-                if (!_filesystemScanDone)
-                    BeginScan(false);
             }
             catch (Exception ex)
             {

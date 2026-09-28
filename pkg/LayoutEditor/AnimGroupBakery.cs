@@ -343,7 +343,11 @@ public static class AnimGroupBakery
             members.Add(go);
         }
         if (members.Count == 0)
-            return "动画组「" + (group.displayName ?? "?") + "」没有可解析的物品或地板";
+        {
+            LayoutEditorLog.LogWarning("anim group: \"" + (group.displayName ?? "?") +
+                "\" has no resolvable members — skipped (configure members in the editor or remove the group)");
+            return null;
+        }
         // 死亡过滤（2026-09-05 level1_2 事故）：解析阶段可能拿到本轮写回已被
         // 销毁的对象（id 恰好复用/早于烘焙清理）——假 null 成员留着必在
         // 后续 go.name/go.transform 处抛 MissingReferenceException。

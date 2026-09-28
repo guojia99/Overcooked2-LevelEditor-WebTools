@@ -15,6 +15,8 @@ using LevelEditorStub;
 ///   收到 "Reset"（m_enableTrigger）才重新启用（变绿）。
 /// 本补丁解决三个运行时问题：
 ///   1) 开关可反复按：按压周期结束后自动补发 "Reset"（短暂红色反馈后回绿）。
+///      —— 同轴按钮组成员例外：按下侧须保持红直到窗口超时/集齐触发
+///      （Disable/Reset 由 CustomStub.CoaxialButtonGroup 统一投递）。
 ///   2) 触发名同步：switchLinks 的自定义触发名（switch_{目标id}_{N}）写入目标机器
 ///      PickupItemSwitcher/PlacementItemSwitcher.m_switchTrigger 与断头台
 ///      AutoWorkstation.m_workTrigger（这些字段都在 OnTrigger 中实时读取）；
@@ -29,6 +31,8 @@ public static class LayoutEditorSwitchLinkPatch
 {
     private static bool _armed;
     private static double _deadline;
+    /// <summary>同轴组成员伪根名缓存（每次 Play 会话算一次；null = 未解析）。</summary>
+    private static HashSet<string> _coaxialMembers;
 
     static LayoutEditorSwitchLinkPatch()
     {
@@ -40,6 +44,7 @@ public static class LayoutEditorSwitchLinkPatch
         if (state == PlayModeStateChange.EnteredPlayMode)
         {
             _armed = true;
+            _coaxialMembers = null;
             // 兜底超时：PseudoPrefabManager 缺失/初始化失败时不至于每帧空转
             _deadline = EditorApplication.timeSinceStartup + 10.0;
             EditorApplication.update += Tick;
@@ -47,8 +52,39 @@ public static class LayoutEditorSwitchLinkPatch
         else if (state == PlayModeStateChange.EnteredEditMode)
         {
             _armed = false;
+            _coaxialMembers = null;
             EditorApplication.update -= Tick;
         }
+    }
+
+    /// <summary>同轴按钮组成员伪根名集合：扫场景里全部 CoaxialButtonGroup（编辑器
+    ///  Play 组件为活件），反射读 m_buttonRootNames。这些按钮的 Disable/Reset 生命
+    /// 周期由组件按「窗口超时弹回 / 集齐触发后锁 0.35s 弹回」统一投递——编辑器
+    /// 0.35s 自动复位中继不得干预（否则按下侧提前回绿，可无限连按，2026-09-28
+    /// 同轴按钮「按 A 不保持关闭」根因；互锁按钮同日同款事故）。</summary>
+    private static HashSet<string> CoaxialMemberNames()
+    {
+        if (_coaxialMembers != null)
+            return _coaxialMembers;
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        var groupType = LayoutEditorStubIO.FindCustomStubType("", "CoaxialButtonGroup");
+        if (groupType != null)
+        {
+            var field = groupType.GetField("m_buttonRootNames",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var comps = UnityEngine.Object.FindObjectsOfType(groupType);
+            foreach (var c in comps)
+            {
+                var comp = c as Component;
+                if (comp == null || field == null) continue;
+                var arr = field.GetValue(comp) as string[];
+                if (arr == null) continue;
+                foreach (var n in arr)
+                    if (!string.IsNullOrEmpty(n)) names.Add(n);
+            }
+        }
+        _coaxialMembers = names;
+        return names;
     }
 
     private static void Tick()
@@ -88,7 +124,6 @@ public static class LayoutEditorSwitchLinkPatch
 
                 if (sw != null && PatchSwitchRoot(stub.gameObject, sw, child))
                     pending = true;
-
                 // 事件组 done 中继：烘焙期写在伪根上，child 就绪后挂到 child
                 // （开关也可作为事件目标，转发器与中继照常处理）
                 if (hasRelays && PatchDoneRelays(stub.gameObject, child, doneRelays))
@@ -119,6 +154,23 @@ public static class LayoutEditorSwitchLinkPatch
         // 编辑器版回绿中继以免同一按压收到两次 Reset。
         var reenableType = LayoutEditorStubIO.FindCustomStubType(root, "SwitchReenable");
         if (reenableType != null && root.GetComponent(reenableType) != null)
+            return pending;
+
+        // ButtonLink/事件组联动源（triggerOnAnimator = BLP_/BLAdv_/BEP_ 指向逻辑
+        // helper）：按钮 Disable/Reset 生命周期由 ButtonLogicRelay 按状态机统一
+        // 投递（互锁按下侧须【保持红】直到对方完成）。写回时已摘除其 SwitchReenable，
+        // 若在此处按"无组件=裸开关"兜底补挂编辑器 0.35s 自动复位，会把互锁按下侧
+        // 拉回绿（2026-09-28 编辑器 Play「按 A 后 A 不关」根因）。
+        var wiredPress = sw.triggerOnAnimator ?? "";
+        if (wiredPress.StartsWith("BLP_", StringComparison.Ordinal) ||
+            wiredPress.StartsWith("BLAdv_", StringComparison.Ordinal) ||
+            wiredPress.StartsWith("BEP_", StringComparison.Ordinal))
+            return pending;
+
+        // 同轴按钮组成员：Disable/Reset 由 CustomStub.CoaxialButtonGroup 统一投递
+        // （按下侧须【保持红】直到窗口超时弹回 / 集齐触发后锁 0.35s 弹回）。
+        // 同互锁同理，编辑器 0.35s 自动复位不得把等待侧提前拉回绿。
+        if (CoaxialMemberNames().Contains(root.name))
             return pending;
 
         if (switchChild.GetComponent<TriggerDisableScript>() != null)

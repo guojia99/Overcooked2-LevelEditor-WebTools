@@ -133,6 +133,40 @@ public static class LayoutEditorRecipeKnowledge
         AddCompSubGroup(subGroups, subOrder, step, compId, ings, false);
     }
 
+    private static bool IsFlourBranchRecipe(RecipeEntryDto recipe)
+    {
+        if (recipe == null || recipe.ingredients == null)
+            return false;
+        var flour = false;
+        var egg = false;
+        foreach (var i in recipe.ingredients)
+        {
+            if (FlourIngredients.Contains(i)) flour = true;
+            if (EggIngredients.Contains(i)) egg = true;
+        }
+        return flour && egg;
+    }
+
+    /// <summary>Mixed 自定义菜谱是否走搅拌杯（BlenderCup）而非搅拌碗。
+    ///  Web 果汁清空 cookingStepSO，仅靠 mixing=true 会误入 MixingBowl。</summary>
+    private static bool IsBlenderMixRecipe(RecipeEntryDto recipe)
+    {
+        if (recipe == null || !recipe.mixing)
+            return false;
+        var step = recipe.cookingStep ?? "";
+        if (step == "Blender")
+            return true;
+        if (step == "Mixer" || step == "MixingBowl")
+            return false;
+        if (IsFlourBranchRecipe(recipe))
+            return false;
+        if (!string.IsNullOrEmpty(step) && IsCookStep(step))
+            return false;
+        var type = recipe.type ?? "";
+        var plating = recipe.platingStep ?? "";
+        return type == "smoothie" || plating == "Glass";
+    }
+
     public static RecipeCookingGroupDto[] ComputeCookingGroups(RecipeEntryDto recipe, List<RecipeEntryDto> allRecipes)
     {
         var finalStep = recipe != null ? recipe.cookingStep : "";
@@ -154,15 +188,19 @@ public static class LayoutEditorRecipeKnowledge
         // Mixed 类型自定义菜谱：
         //  - 若自身烹饪步骤本身就是混合步骤（Blender / Mixer / MixingBowl），
         //    该步骤即搅拌本身 → 只显示该混合图标（单图标，如冰蓝莓沙 = 搅拌机）。
+        //  - Web/官方果汁（Mixed + Glass 装盘 / type=smoothie）：无 cookingStep 时走 Blender。
         //  - 否则先搅拌（MixingBowl）再烹饪（最终步骤标记，并入同格双图标），
         //    例：面团+肉搅拌 → MixingBowl 组 + 烹饪步骤标记组。
         if (recipe != null && recipe.mixing)
         {
-            if (finalStep == "Blender" || finalStep == "Mixer" || finalStep == "MixingBowl")
+            var mixStep = finalStep;
+            if (mixStep != "Blender" && mixStep != "Mixer" && mixStep != "MixingBowl")
+                mixStep = IsBlenderMixRecipe(recipe) ? "Blender" : "MixingBowl";
+            if (mixStep == "Blender" || mixStep == "Mixer" || mixStep == "MixingBowl")
             {
                 return new[]
                 {
-                    new RecipeCookingGroupDto { step = finalStep, utensils = UtensilsForStep(finalStep), ingredients = ingredients }
+                    new RecipeCookingGroupDto { step = mixStep, utensils = UtensilsForStep(mixStep), ingredients = ingredients }
                 };
             }
             var mixGroups = new List<RecipeCookingGroupDto>

@@ -132,11 +132,11 @@ function renderSwitchTargetSection(host: HTMLElement, item: EditorItem, rerender
     return opts || '<option value="">— 无可联动目标（仅断头台/饮料机/酱料机/大炮） —</option>';
   };
 
-  host.innerHTML = `<p class="trig-hint">按下按钮时向这些机器广播触发消息（默认取机器原生触发名；同一开关的所有机器联动共享一个触发名）。事件组的目标只能从这里选。</p>
+  host.innerHTML = `<p class="trig-hint">按下按钮时向这些机器广播触发消息（机器目标自动用原生触发名 Chop/Next/Launch，留空即可；同一开关的所有联动共享一个触发名）。事件组的目标只能从这里选。按钮被按的信号本身是游戏固定的 "Switch" 消息，无需配置；动画组/互锁联动的触发名由系统自动生成（BLP_/BLAdv_，全局唯一）。</p>
     <div id="trig-sw-links" class="trig-list"></div>
     <div class="trig-addrow"><select id="trig-sw-target" class="trig-select">${linkTargetOptsHtml()}</select>
       <button type="button" class="btn-small primary" id="trig-sw-add">＋ 添加目标</button></div>
-    <label class="trig-field" id="trig-sw-trigger-field">触发消息 <input id="trig-sw-trigger" class="trig-input" value="${escHtml(myLinks()[0]?.trigger ?? "Switch")}" placeholder="Switch"/></label>`;
+    <label class="trig-field" id="trig-sw-trigger-field">触发消息 <input id="trig-sw-trigger" class="trig-input" value="${escHtml(myLinks()[0]?.trigger ?? "")}" placeholder="自动（机器目标用原生触发名）"/></label>`;
 
   const linksEl = host.querySelector<HTMLElement>("#trig-sw-links");
 
@@ -200,17 +200,35 @@ function renderSwitchTargetSection(host: HTMLElement, item: EditorItem, rerender
 
   host.querySelector("#trig-sw-trigger")?.addEventListener("change", () => {
     const inp = host.querySelector<HTMLInputElement>("#trig-sw-trigger");
-    const trig = inp?.value.trim() || "Switch";
+    const raw = inp?.value.trim() ?? "";
     const links = myLinks();
     if (!links.length) return;
     pushHistory();
-    for (const l of links) l.trigger = trig;
-    // 事件组触发名固定取联动共享触发名：联动改名时同步事件
+    // 留空 = 自动：每条联动取其目标的原生触发名（机器目标），非机器兜底 Switch。
+    let resolved = raw;
+    for (const l of links) {
+      if (raw) {
+        l.trigger = raw;
+        continue;
+      }
+      const t = S.items.find((i) => i.instanceId === l.targetId);
+      l.trigger = (t ? nativeLinkTrigger(t) : null) ?? "Switch";
+      if (!resolved) resolved = l.trigger;
+    }
+    if (inp && !raw) inp.value = resolved;
+    // 事件组触发名跟随联动（按各自目标取，监听字段是每台机器单值）
     for (const bl of S.buttonEvents) {
       if (bl.sourceId !== myId) continue;
-      for (const g of bl.groups) for (const e of g.events) e.trigger = trig;
+      for (const g of bl.groups) {
+        for (const e of g.events) {
+          const lt = S.switchLinks.find(
+            (sl) => sl.switchId === myId && sl.targetId === e.targetId
+          )?.trigger;
+          if (lt) e.trigger = lt;
+        }
+      }
     }
-    setStatus(`已更新触发消息为 ${trig}（写回后生效）`);
+    setStatus(`已更新触发消息（${resolved}，写回后生效）`);
   });
 }
 

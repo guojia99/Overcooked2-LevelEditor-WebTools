@@ -14,6 +14,51 @@ namespace CustomStub
     public static class StubVersion
     {
         /// <summary>权威 semver 版本号（形如 2.0.0）。
+        /// 3.5.0（2026-09-28 零介入铁律 · 清单驱动的逐关卡按需挂载）：
+        ///  - 铁律：未使用 web 导出的关卡（官方图/旧导出集/无自定义关卡），loader
+        ///    与本运行时对游戏零介入——不 hook 任何函数、不装任何补丁、不做任何
+        ///    场景扫描/探测；web 关卡集里未用 CustomStub 的关卡同样零监控零对局钩子。
+        ///  - 机制：导出器逐场景扫描写出 levels/&lt;set&gt;/stub_levels.txt（每行
+        ///    "关卡|特征,..."，15 类特征：crate/pushable/hotpot/timing/switch/
+        ///    startvisual/blrelay/animgrid/conveyor/camera/travelator/teleportal/
+        ///    rat/worldmap/terminal/cannon）；loader 汇总为 WebManifest 注入
+        ///    EntryPoint（反射桥）；sceneLoaded 按 scene.path 解析 (集,关卡) 查
+        ///    清单决定归零或按特征挂载。
+        ///  - KillPlane 补丁拆出核心组：仅 pushable 特征关卡安装；ticker 子系统
+        ///    （HotPot/VoidFall/UtensilTiming/TerminalGuard/CannonGuard）各按特征
+        ///    开关轮询；触发区占用同步 + 联机诊断随核心（清单命中即装）。
+        ///  - TickProbe 30 秒探测通道真机退役（清单权威化，消灭 IsLargePot 名字
+        ///    子串误判类风险），仅无约束模式（编辑器 Play）保留。
+        ///  - loader 侧：删除 v3.1.0/v3.2.1 RecipeHelper 兼容护栏（不主动 hook
+        ///    非 web 关卡路径的函数；旧集混装崩溃回归 = 重新导出解决）；清单为空
+        ///    = 加载器整体休眠（不加载任何 bundle/程序集）。
+        ///  - **兼容期（2026-09-28 用户决策）**：3.5.0 ≤ 版本 &lt; 4.0.0 期间，
+        ///    旧版导出集（有 requires.txt、无 stub_levels.txt，如 3.2.1 导出）由
+        ///    loader 生成 "集|*|legacy" 兼容条目——EntryPoint 维持 v3.4 行为
+        ///    （探测+tag 自愈+特征全开），**已分发旧集无需重导出即可继续工作**；
+        ///    v4.0.0 起严格按 stub_levels.txt 逐关卡清单（届时旧集需重新导出一次
+        ///    以生成清单）。新导出的集始终走严格清单路径（本版导出器即写出清单）。
+        ///
+        /// 3.4.0（2026-09-28 互锁/共轭外观与初始关闭色）：
+        ///  - 新增 SwitchStartVisual：初始关闭（startEnabled=false）开关开局即显示
+        ///    关闭色并预禁用交互（此前宿主 Setup 先设绿材质，关闭色要等同步期
+        ///    ClientSwitchCosmeticDecisions 轮询，开局一段绿闪、真机无保障）。
+        ///    编辑器写回烘焙组件；真机由 EntryPoint 扫 PseudoPrefabSwitchStub
+        ///    .startEnabled 补挂（无 tag 载体）。编辑器侧另有编辑态预览 pass。
+        ///  - ButtonLogicRelay：启动摘要日志（模式=互锁 A=/B=｜初始状态｜分发数，
+        ///    一眼识别「互锁退化为共轭」）+ 互锁翻转投递结果打点（✓/✗）+
+        ///    child 解析失败告警提示撞名/旧烘焙。
+        ///  - 按压防抖 ≥0.35s（MinPressIntervalSeconds）：无绑定组互锁换手改为
+        ///    0.35s 脉冲态（原 AReady↔BReady 瞬时换手零防抖，连按可每帧来回翻）；
+        ///    relay 对运行期不足最短间隔的联动延迟回绿/换手并吞掉窗口内按压触发
+        ///    （快速动画/脉冲场景连按只算一次）。
+        ///  - 无绑定组共轭修复：stateNames 补 "Run" 态 + 0.35s 合成脉冲 clip——
+        ///    此前 relay 检测不到 Run、「按一个另一个不动」。
+        ///  - 配套烘焙侧（Editor 程序集）：互锁 BLRelay tag 写入 |X:A,B（此前漏传
+        ///    导致互锁运行期退化共轭）；联动源按钮唯一命名 <原名>_BL<n>（N:/X: 与
+        ///    GameObject.Find 的身份键不再依赖 Switch (N) 自动后缀）；联动源停用
+        ///    SwitchReenable 自动复位（互锁按下侧不再被 0.35s 拉回绿）。
+        ///
         /// 3.3.5（2026-09-25 热修：3.3.4 吸附写错物体致传送带乱飞）：吸附把 90°
         ///  整数绝对旋转写到了【组根】世界旋转——组根位于原点时成员绕原点公转
         ///  飞出（Play 一按即飞）。修复：改为在【wrapper】（站点祖先链上、组根
@@ -131,6 +176,6 @@ namespace CustomStub
         ///    改为推进到 IsBurning 为止 + 宿主双驱动时观测让位；客户端「锅在灶台上」
         ///    标志按触发区直驱（原先恒 false 导致烧糊预警图标被 vanilla 吞掉）。
         /// Loader 的 PluginVersion 必须同步为同值。</summary>
-        public const string Value = "3.3.5";
+        public const string Value = "3.5.0";
     }
 }

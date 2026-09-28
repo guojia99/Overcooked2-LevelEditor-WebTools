@@ -23,8 +23,11 @@ export function snapshotState(): EditorSnapshot {
     switchLinks: S.switchLinks,
     buttonLinks: S.buttonLinks,
     buttonEvents: S.buttonEvents,
+    coaxialLinks: S.coaxialLinks,
     cameraInfo: S.cameraInfo,
     lights: S.lights,
+    ceilingHeight: S.ceilingHeight,
+    hasCeilingHeight: S.hasCeilingHeight,
   })) as EditorSnapshot;
 }
 
@@ -56,8 +59,11 @@ export function applySnapshot(snap: EditorSnapshot): void {
   S.switchLinks = snap.switchLinks ?? [];
   S.buttonLinks = snap.buttonLinks ?? [];
   S.buttonEvents = snap.buttonEvents ?? [];
+  S.coaxialLinks = snap.coaxialLinks ?? [];
   S.cameraInfo = snap.cameraInfo ?? null;
   S.lights = snap.lights ?? [];
+  S.ceilingHeight = snap.ceilingHeight ?? 2;
+  S.hasCeilingHeight = snap.hasCeilingHeight ?? false;
   // Restore anim-group selection only when the group still exists.
   if (S.activeAnimGroupId && !S.animControls.some((g) => g.id === S.activeAnimGroupId)) {
     S.activeAnimGroupId = null;

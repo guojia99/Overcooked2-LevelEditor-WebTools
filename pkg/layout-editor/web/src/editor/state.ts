@@ -4,6 +4,7 @@ import type {
   ButtonLink,
   CameraInfo,
   CatalogItem,
+  CoaxialLink,
   CounterAppearanceCatalog,
   DeathInfo,
   FloorMaterial,
@@ -103,10 +104,16 @@ export interface EditorSnapshot {
   buttonLinks: ButtonLink[];
   /** 按钮 ↔ 事件组联动（undo/redo 一并恢复）。 */
   buttonEvents: ButtonEventLink[];
+  /** 同轴按钮组（undo/redo 一并恢复）。 */
+  coaxialLinks: CoaxialLink[];
   /** 相机（背景色/FOV，undo/redo 一并恢复）。 */
   cameraInfo: CameraInfo | null;
   /** Art/Lights 非 prefab 灯光（undo/redo 一并恢复）。 */
   lights: LightInfo[];
+  /** Scene KitchenLoaderManager ceiling height. */
+  ceilingHeight: number;
+  /** Whether the scene currently has OptionalFloat.m_hasValue enabled. */
+  hasCeilingHeight: boolean;
 }
 
 /** Move layer interaction mode. "members" = pick/box-select members (items + floors);
@@ -291,7 +298,7 @@ export const LARGE_POT_PREFAB_IDS = new Set([
 
 /** 全部编辑器可变状态（单例）。模块间共享，禁止顶层访问 DOM 的状态也在此。 */
 export const S = {
-  freeSnapStep: 0.01,
+  freeSnapStep: 0.1,
   catalogByGuid: new Map<string, CatalogItem>(),
   catalogById: new Map<string, CatalogItem>(),
   counterAppearances: null as CounterAppearanceCatalog | null,
@@ -306,6 +313,8 @@ export const S = {
   cameraPosOrigin: null as LayoutVector3 | null,
   /** Art/Lights 非 prefab 灯光。 */
   lights: [] as LightInfo[],
+  ceilingHeight: 2,
+  hasCeilingHeight: false,
   /** 画布上显示相机视野范围（FOV 视锥与地面交线）。 */
   showCameraFov: localStorage.getItem("showCameraFov") !== "0",
   bgThemeKey: "void",
@@ -325,6 +334,8 @@ export const S = {
   viewMode: (localStorage.getItem("viewMode") === "3d" ? "3d" : "2d") as ViewMode,
   /** 3D 专用：开启后拖动沿 Y 轴（竖直）而非 XZ 平面。XZ 在该模式下锁死，避免误拖。 */
   yAxisDrag: false,
+  /** 3D 专用：选中单个物件时显示旋转环（X/Y/Z 三色，拖拽旋转，Shift 吸附 15°）。 */
+  rotGizmo: true,
   /** 3D 地板板厚档位：real = 0.4（与 Unity Col_Floor 一致）/ auto = 自适应 / thin = 0.05。 */
   floorSlabMode: (["real", "auto", "thin"].includes(localStorage.getItem("floorSlabMode") || "")
     ? localStorage.getItem("floorSlabMode")
@@ -359,6 +370,7 @@ export const S = {
   switchLinks: [] as SwitchLink[],
   buttonLinks: [] as ButtonLink[],
   buttonEvents: [] as ButtonEventLink[],
+  coaxialLinks: [] as CoaxialLink[],
   activeAnimGroupId: null as string | null,
   activeAnimEventIdx: null as number | null,
   selectedWaypointId: null as string | null,

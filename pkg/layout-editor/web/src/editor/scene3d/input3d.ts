@@ -17,7 +17,7 @@ import { snapshotState, pushHistory, commitDragSnapshot } from "../historyOps";
 import { isSelected, setSelection, clearSelection, setFloorSelection, clearFloorSelection, selectionKeys } from "../selection";
 import { syncLocalFromWorld, warnItemVoid, moveBlockedAt, addFromCatalog, addFromCatalogBatch } from "../items";
 import { dragFloorWorld, finalizeFloor, maybeSyncMaterialTilingOnResize, addFloorAt, addAirFloorAt } from "../floors";
-import { setItemPlaneSize, setAirWallSize, setAirWallHeight, airWallHeightCells } from "../items";
+import { setItemPlaneSize, setAirWallSize, setAirWallHeight, airWallHeightCells, setItemRotationAxis } from "../items";
 import { isAirWallItem } from "../stubControls";
 import { isResizableBackgroundItem, itemCategoryOf } from "../catalog";
 import { showContextMenu, showWaypointContextMenu, showBatchHeightMenu } from "../ui/contextMenu";
@@ -45,6 +45,7 @@ type DragKind =
   | "marquee"
   | "item-move"
   | "item-y"
+  | "item-rotate"
   | "floor-move"
   | "floor-y"
   | "floor-resize"
@@ -69,6 +70,12 @@ interface DragState {
   startPointerY: number;
   /** 多选 Y 轴拖动：每个 key 的起始高度。必须快照，否则每帧叠加 dy 会越飘越远。 */
   startYByKey: Map<string, number>;
+  /** 旋转环拖动（v9）：轴 / 起始欧拉角 / 指针绕物件屏幕中心的起始方位角。 */
+  rotAxis: "x" | "y" | "z";
+  startRotDeg: number;
+  startScreenAngle: number;
+  rotCenterX: number;
+  rotCenterY: number;
   key: string;
   groupKeys: string[];
   edge: CornerEdge | null;
@@ -89,6 +96,11 @@ const EMPTY_DRAG: DragState = {
   startValue: 0,
   startPointerY: 0,
   startYByKey: new Map<string, number>(),
+  rotAxis: "y",
+  startRotDeg: 0,
+  startScreenAngle: 0,
+  rotCenterX: 0,
+  rotCenterY: 0,
   key: "",
   groupKeys: [],
   edge: null,
@@ -268,6 +280,9 @@ export function attachInput3D(ctx: Scene3DCtx): void {
       case "item-height":
         dragItemHeight(ctx, e);
         return;
+      case "item-rotate":
+        dragItemRotate(e);
+        return;
       case "waypoint":
         dragWaypoint(ctx, e);
         return;
@@ -312,6 +327,11 @@ export function attachInput3D(ctx: Scene3DCtx): void {
         syncLocalFromWorld(it);
         warnItemVoid(it);
       }
+      commitDragSnapshot();
+    }
+    if (kind === "item-rotate") {
+      // 旋转不改 XZ 占地，无需 syncLocalFromWorld；但 Y 轴绝对角设置已含占地换算。
+      S.dirty = true;
       commitDragSnapshot();
     }
     if (kind === "floor-move" || kind === "floor-resize" || kind === "floor-y") {
@@ -445,6 +465,26 @@ function beginHandleDrag(
 
   const it = itemByKey(handle.ownerKey);
   if (!it) return false;
+  if (handle.edge === "rotx" || handle.edge === "roty" || handle.edge === "rotz") {
+    drag.kind = "item-rotate";
+    drag.rotAxis = handle.edge === "rotx" ? "x" : handle.edge === "roty" ? "y" : "z";
+    drag.startRotDeg =
+      drag.rotAxis === "x"
+        ? it.localRotationX ?? 0
+        : drag.rotAxis === "y"
+          ? it.localRotationY
+          : it.localRotationZ ?? 0;
+    // 屏幕中心：物件盒体中心投影到画布（之后指针绕它的方位角变化 = 旋转量）。
+    const b = itemBoxOf(it);
+    const v = new THREE.Vector3(b.cx, b.kind === "airslope" ? b.baseY : b.baseY + b.h / 2, toSceneZ(b.cz));
+    v.project(ctx.cam.camera);
+    const rect = ctx.canvas.getBoundingClientRect();
+    drag.rotCenterX = rect.left + ((v.x + 1) / 2) * rect.width;
+    drag.rotCenterY = rect.top + ((1 - v.y) / 2) * rect.height;
+    drag.startScreenAngle = Math.atan2(e.clientY - drag.rotCenterY, e.clientX - drag.rotCenterX);
+    setSelection([it._editorKey]);
+    return true;
+  }
   if (handle.edge === "y") {
     drag.kind = "item-y";
     drag.groupKeys = S.selectedKeys.size > 1 ? selectionKeys() : [];
@@ -764,6 +804,26 @@ function dragItemHeight(ctx: Scene3DCtx, e: MouseEvent): void {
   if (y == null) return;
   const dCells = Math.round((y - drag.startPointerY) / CELL);
   setAirWallHeight(it, Math.max(1, drag.startValue + dCells));
+  draw();
+}
+
+/**
+ * 旋转环拖动（v9）：指针绕物件屏幕中心的方位角变化量 → Unity 欧拉角绝对值。
+ *   - 屏幕角以 atan2(dy, dx) 度量（画布 y 向下 = 视觉顺时针为正）；
+ *   - Y 轴：顺时针 = Unity yaw 增大（与 2D 俯视的 R 键转向方向一致）；
+ *   - X 轴：取负（屏幕顺时针 = Unity rotX 减小，俯仰方向与直觉一致）；
+ *   - Z 轴：取负（镜像 Z 后滚转旋向翻转）。
+ *   Shift = 15° 吸附。
+ */
+function dragItemRotate(e: MouseEvent): void {
+  const it = itemByKey(drag.key);
+  if (!it) return;
+  const angle = Math.atan2(e.clientY - drag.rotCenterY, e.clientX - drag.rotCenterX);
+  let deltaDeg = ((angle - drag.startScreenAngle) * 180) / Math.PI;
+  if (drag.shift) deltaDeg = Math.round(deltaDeg / 15) * 15;
+  const sign = drag.rotAxis === "y" ? 1 : -1;
+  setItemRotationAxis(it, drag.rotAxis, drag.startRotDeg + sign * deltaDeg);
+  S.dirty = true;
   draw();
 }
 

@@ -11,7 +11,7 @@ import { isTeleportalItem, teleportalEntrancesOf } from "./teleportalLinks";
 import { enrichItem, enrichFloor, checkPlayerCollisions, checkWorkstationCollisions, refreshUtensilStacks } from "./items";
 import { stubKindOf, normalizeMachineLinkTriggers } from "./stubControls";
 import { cleanOrphanedAnimControls, stopAnimPreview } from "./animControl";
-import { cleanOrphanedButtonLinks } from "./buttonLinks";
+import { cleanOrphanedButtonLinks, cleanOrphanedCoaxialLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
 import { cleanOrphanedStubRefs } from "./stubRefs";
 import { itemLabel } from "./labels";
@@ -69,6 +69,7 @@ import type {
   LayoutItem,
   FloorObject
 } from "../types";
+import { airSlopeEndY } from "./items";
 
 export function selectSceneInDropdowns(assetPath: string): void {
   if (!assetPath) return;
@@ -116,6 +117,7 @@ export async function loadScene(assetPath: string) {
     );
     const doc = await fetchLayout(assetPath);
     const { dupIds, dedupedStacks } = await applyLayoutDocument(doc);
+    maybePromptAirSlopeCeiling();
     const floorNote = S.floors.length > 0 ? `、${S.floors.length} 块地板` : "";
     if (dupIds > 0) {
       setStatus(
@@ -137,6 +139,25 @@ export async function loadScene(assetPath: string) {
   }
 }
 
+function maybePromptAirSlopeCeiling(): void {
+  const slopes = S.items.filter((it) => it.airSlope);
+  if (slopes.length === 0) return;
+  const key = `airSlopeCeilingPrompt:${S.scenePath}`;
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, "1");
+  const maxEndY = Math.max(...slopes.map((it) => airSlopeEndY(it)));
+  const recommended = Math.min(10, Math.max(2, Math.ceil(maxEndY) + 1));
+  if (!window.confirm(
+    `检测到本关卡首次使用空气斜坡。\n\n` +
+    `当前斜坡最高高度约 ${maxEndY.toFixed(1)}m，建议将 KitchenLoaderManager 的 Ceiling Height 设置为 ${recommended}。\n\n` +
+    `点击“确定”自动设置，点击“取消”可稍后在“关卡配置”中手动修改。`
+  )) return;
+  S.ceilingHeight = recommended;
+  S.hasCeilingHeight = true;
+  markDirty();
+  setStatus(`已自动设置 Ceiling Height=${recommended}，请写回 Unity 保存`, false);
+}
+
 export interface ApplyDocOptions {
   /** 恢复/覆盖模式：不清 undo 栈、不 clearDirty，改为 markDirty（落盘交给用户手动写回）。 */
   markDirtyAfter?: boolean;
@@ -150,9 +171,9 @@ export async function applyLayoutDocument(
 ): Promise<{ dupIds: number; dedupedStacks: number }> {
   const dupIds = countDuplicateInstanceIds(doc.items);
   // 过滤通用碰撞块（Col_Wall / Col_Floor 等场景辅助对象）：只有空气墙
-  //（airWall=true，1×1×1.132）才作为核心层物品进入编辑器。
+  //（airWall=true）与空气斜坡（airSlope=true，v9）才作为核心层物品进入编辑器。
   S.items = doc.items
-    .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true))
+    .filter((raw) => !(raw.stubKind === "Collision" && raw.airWall !== true && raw.airSlope !== true))
     .map((raw, index) => enrichItem(raw, `i${index}`));
   // 动画组必须先于 merge 赋值：merge*IntoFloors 里的「组成员跳过吸收」逻辑
   // 读取 S.animControls，若此时尚为空/旧值，移动岛的主题地砖会被吸收成地板
@@ -200,14 +221,24 @@ export async function applyLayoutDocument(
     ? { x: doc.cameraInfo.position.x, y: doc.cameraInfo.position.y, z: doc.cameraInfo.position.z }
     : null;
   S.lights = doc.lights ?? [];
+  S.hasCeilingHeight = doc.hasCeilingHeight === true;
+  S.ceilingHeight = S.hasCeilingHeight ? Math.max(0, Math.min(10, doc.ceilingHeight ?? 2)) : 2;
   S.switchLinks = doc.switchLinks ?? [];
   // 旧式自定义触发名（switch_*）对机器目标已失效（真机不响应），归一化为原生触发名
   normalizeMachineLinkTriggers();
   S.buttonLinks = doc.buttonLinks?.links ?? [];
   S.buttonEvents = doc.buttonEvents?.links ?? [];
+  S.coaxialLinks = (doc.coaxialLinks?.links ?? []).map((l) => ({
+    ...l,
+    windowSeconds: Math.max(0.35, Math.min(5, l.windowSeconds || 1)),
+    sourceIds: l.sourceIds ?? [],
+    targetIds: l.targetIds ?? [],
+    triggers: l.triggers ?? [],
+  }));
   cleanOrphanedAnimControls();
   cleanOrphanedButtonLinks();
   cleanOrphanedButtonEvents();
+  cleanOrphanedCoaxialLinks();
   // 自动去重/导出变更会移除物品：同步清理开关联动与上菜台/传送门/终端/加热炉
   // 的悬空绑定引用（否则写回时被 Unity 侧静默丢弃 → 绑定失效要重新绑）。
   cleanOrphanedStubRefs();
@@ -340,6 +371,10 @@ export async function restoreWriteBackSnapshot(
     for (const l of doc.buttonEvents?.links ?? []) {
       l.sourceId = mapId(l.sourceId);
       for (const grp of l.groups ?? []) for (const ev of grp.events ?? []) ev.targetId = mapId(ev.targetId);
+    }
+    for (const l of doc.coaxialLinks?.links ?? []) {
+      l.sourceIds = (l.sourceIds ?? []).map(mapId);
+      l.targetIds = (l.targetIds ?? []).map(mapId);
     }
     pushHistory(); // 恢复前的画布状态入 undo 栈（Ctrl+Z 可撤回一次）
     await applyLayoutDocument(doc, { markDirtyAfter: true });

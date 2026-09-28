@@ -268,8 +268,10 @@ public class LayoutPressureSwitchStubDto
 ///  下的隐藏 Animator 逻辑物体）。
 ///  顺序触发：每次按压按 groupNames 顺序启动下一组（循环）；
 ///  lockUntilFinished：组运行期间忽略按压（组完成后才接受下一次）；
-///  共轭对：两条 link 共享 pairId（一对一，各方最多 2 组），按下时本方各组同时启动，
-///  全部完成后对方按钮抬起、本方按下（反之亦然）。</summary>
+///  共控/共轭按钮（sharedSourceIds）：多个按钮共用同一条 link，任一按压推进同一
+///  动画组序列，运行期同锁、完成后同解锁（「同时开/关」）；
+///  互锁对（pairId，一对一，各方最多 2 组）：按下时本方各组同时启动，
+///  全部完成后对方按钮抬起、本方按下（反之亦然）——两按钮中始终只有一个可按。</summary>
 [Serializable]
 public class LayoutButtonLinkDto
 {
@@ -288,9 +290,9 @@ public class LayoutButtonLinkDto
     /** 同按模式：一次按压同时启动全部绑定组（各组独立推进/回环，最快组完成即解锁；
      *  缺省 false = 顺序环（每次按压进下一组）。用于「多组同时旋转/同时动作」。 */
     public bool simultaneous;
-    /** 共轭对 id（两条 link 共享；空 = 非共轭）。 */
+    /** 互锁对 id（两条 link 共享；空 = 非互锁）。 */
     public string pairId;
-    /** 共轭对中本按钮初始为抬起（可按）状态。 */
+    /** 互锁对中本按钮初始为抬起（可按）状态。 */
     public bool pairStartsUp;
 }
 
@@ -335,6 +337,32 @@ public class LayoutButtonEventLinkDto
 public class LayoutButtonEventDataDto
 {
     public LayoutButtonEventLinkDto[] links;
+}
+
+/// <summary>同轴按钮组（CoaxialButtonBakery 烘焙为 Design/Coaxial Logic 下的隐藏
+///  逻辑物体，运行时 CustomStub.CoaxialButtonGroup）。
+///  组内全部按钮在窗口时间内（从第一个按下起计时，默认 1s，可调 0.35~5s）先后
+///  按下才向全部目标广播触发消息（双断头台 = 两台齐落 Chop）；窗口超时未集齐则
+///  已按按钮自动弹回且不触发任何事件；成功触发后全组锁定 0.35s 再弹回。</summary>
+[Serializable]
+public class LayoutCoaxialLinkDto
+{
+    public string id;
+    /** 成员按钮 id 列表（≥2；"u:<instanceID>" 或 "new:..."；一只按钮只属一组）。 */
+    public string[] sourceIds;
+    /** 同按窗口（秒，0.35~5；写回/烘焙两端 clamp）。 */
+    public float windowSeconds = 1f;
+    /** 目标机器 id 列表（可空 = 纯同轴组，事后在右键菜单接目标）。 */
+    public string[] targetIds;
+    /** 与 targetIds 平行的触发消息名（空 = 按目标机器原生名：断头台 Chop /
+     *  饮料酱料机 Next / 大炮 Launch）。 */
+    public string[] triggers;
+}
+
+[Serializable]
+public class LayoutCoaxialLinkDataDto
+{
+    public LayoutCoaxialLinkDto[] links;
 }
 
 [Serializable]
@@ -442,6 +470,33 @@ public class LayoutItemDto
     public LayoutSOArrayStubDto soArray;
     /** 火锅灶台定时开关（cooking_region_floorburner / dlc10 变体）。 */
     public LayoutTimedSwitchDto timedSwitch;
+    /** 空气斜坡（可行走斜坡）：v9。场景应用为 Ground 层隐形阶梯（根节点
+     *  Col_AirSlope + Step 子级，每级 ≤0.3m 且挂游戏原生 Steppable 上步组件），
+     *  玩家可沿坡在不同高度地板间行走。 */
+    public bool airSlope;
+    /** 斜坡参数（airSlope=true 时有效；导出时从场景几何精确反推）。 */
+    public LayoutAirSlopeDto slope;
+}
+
+[Serializable]
+public class LayoutAirSlopeDto
+{
+    /** 坡角（度，0 < angle <= 58；GroundCast c_maxGroundAngle=58 硬上限，
+     *  原版矿洞斜坡 40~46.5°）。 */
+    public float angleDeg = 30f;
+
+    /** 坡道水平投影长度（格，沿 localRotationY 朝向）。 */
+    public float lengthCells = 3f;
+
+    /** 坡道宽度（格，垂直于朝向）。 */
+    public float widthCells = 1f;
+
+    /** 起点顶面高度（世界 Y，米）= 坡道低端顶面与低端地板对齐的高度。 */
+    public float startY = 0f;
+
+    /** 调试显示色（"#RRGGBB"，空 = 隐藏）：非空时场景生成半透明薄板（DebugVis
+     *  子节点），游戏内可见，用于排查坡向/衔接；正式导出前建议关闭。 */
+    public string debugColor;
 }
 
 [Serializable]
@@ -615,6 +670,9 @@ public class AnimControlDataDto
 public class LayoutDocumentDto
 {
     public string sceneAssetPath;
+    /** CampaignGameEnvironment/KitchenLoaderManager ceiling height. */
+    public bool hasCeilingHeight;
+    public float ceilingHeight;
     public LayoutItemDto[] items;
     /** Editable floor/background objects (plane floors + themed floor prefabs). */
     public FloorDto[] floors;
@@ -634,6 +692,8 @@ public class LayoutDocumentDto
     public LayoutButtonLinkDataDto buttonLinks;
     /** 按钮 ↔ 事件组联动（仅全量写回携带）。 */
     public LayoutButtonEventDataDto buttonEvents;
+    /** 同轴按钮组（≥2 按钮时间窗内集齐才触发；仅全量写回携带）。 */
+    public LayoutCoaxialLinkDataDto coaxialLinks;
     /** 游戏相机（背景色 / FOV；仅全量写回携带）。 */
     public CameraInfoDto cameraInfo;
     /** Art/Lights 下非 prefab 灯光（颜色/强度/范围/启用；仅全量写回携带）。 */
@@ -1583,6 +1643,22 @@ public class AssignmentSaveDto
     /** LevelInfoSO asset path. */
     public string assetPath;
     /** 完整 assignment.json 文本。 */
+    public string json;
+}
+
+// ---------- 工作量推测（关卡 data 目录 workload~/） ----------
+
+[Serializable]
+public class WorkloadResultDto
+{
+    public bool exists;
+    public string json;
+}
+
+[Serializable]
+public class WorkloadSaveDto
+{
+    public string assetPath;
     public string json;
 }
 

@@ -13,8 +13,8 @@ import { S, CELL, EditorItem } from "../state";
 import { catalogItemForGuidOrPath, isBackgroundPlaneCat, itemPlaneCells, ingredientIdByGuid } from "../catalog";
 import { resolveFootprint, itemScaleX, itemScaleZ, itemVisualCenterXZ } from "../coords";
 import { itemDisplayRotationY } from "../renderItems";
-import { isCollisionItem, isAirWallItem } from "../stubControls";
-import { airWallCells, airWallHeightCells } from "../items";
+import { isCollisionItem, isAirWallItem, isAirSlopeItem } from "../stubControls";
+import { airWallCells, airWallHeightCells, defaultAirSlopeParams } from "../items";
 import { isSurfaceItem } from "../../floorColors";
 import { paintStyleForItem } from "../../itemColors";
 import { isSelected } from "../selection";
@@ -37,7 +37,7 @@ import {
 } from "./constants";
 import { tagPickable, disposeObject } from "./ctx";
 import { labelTexture, iconTexture, parseCssColor } from "./materials";
-import { toSceneZ, toSceneRotY } from "./space";
+import { toSceneZ, applySceneEuler } from "./space";
 
 export interface ItemBox {
   /** 盒体中心 XZ（视觉中心，已修正 pivot 三族）。 */
@@ -51,7 +51,10 @@ export interface ItemBox {
   h: number;
   /** 显示朝向（度，Unity 左手系）。 */
   rotDeg: number;
-  kind: "normal" | "airwall" | "collision" | "surface" | "plane";
+  /** 绕 X/Z 轴倾斜角（度，Unity 欧拉分量；v9 起支持，默认 0）。 */
+  rotXDeg: number;
+  rotZDeg: number;
+  kind: "normal" | "airwall" | "airslope" | "collision" | "surface" | "plane";
 }
 
 /**
@@ -89,6 +92,8 @@ function computeItemBox(item: EditorItem): ItemBox {
   const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
   const center = itemVisualCenterXZ(item);
   const rotDeg = itemDisplayRotationY(item);
+  const rotXDeg = item.localRotationX ?? 0;
+  const rotZDeg = item.localRotationZ ?? 0;
   const itemY = item.localPosition?.y ?? 0;
 
   if (isAirWallItem(item)) {
@@ -102,7 +107,32 @@ function computeItemBox(item: EditorItem): ItemBox {
       d: c.dCells * CELL,
       h: Math.max(MIN_ITEM_HEIGHT, airWallHeightCells(item) * CELL),
       rotDeg: 0,
+      rotXDeg,
+      rotZDeg,
       kind: "airwall",
+    };
+  }
+  if (isAirSlopeItem(item)) {
+    // 倾斜薄板【视觉近似】：Unity 实际生成的是隐形阶梯（每级 ≤0.3m + Steppable
+    // 上步组件，见 SceneLayoutApplier.RebuildAirSlopeSteps），这里仍画光滑坡面
+    // 便于把握坡向与起止高度。baseY = 坡面中点高度。
+    const s = item.slope ?? defaultAirSlopeParams();
+    const radA = (s.angleDeg * Math.PI) / 180;
+    const run = s.lengthCells * CELL;
+    const rise = Math.tan(radA) * run;
+    const slabLen = run / Math.cos(radA);
+    const t = 0.2;
+    return {
+      cx: item._wx,
+      cz: item._wz,
+      baseY: (item.localPosition?.y ?? 0) + rise / 2 - Math.cos(radA) * (t / 2),
+      w: s.widthCells * CELL,
+      d: slabLen,
+      h: t,
+      rotDeg: item.localRotationY,
+      rotXDeg: -s.angleDeg,
+      rotZDeg: 0,
+      kind: "airslope",
     };
   }
   if (isCollisionItem(item)) {
@@ -115,6 +145,8 @@ function computeItemBox(item: EditorItem): ItemBox {
       d: fp.cellsZ * CELL * itemScaleZ(item),
       h: Math.max(MIN_ITEM_HEIGHT, CELL),
       rotDeg,
+      rotXDeg,
+      rotZDeg,
       kind: "collision",
     };
   }
@@ -131,6 +163,8 @@ function computeItemBox(item: EditorItem): ItemBox {
       d: c.dCells * CELL,
       h: planeH,
       rotDeg,
+      rotXDeg,
+      rotZDeg,
       kind: "plane",
     };
   }
@@ -162,6 +196,8 @@ function computeItemBox(item: EditorItem): ItemBox {
     d,
     h,
     rotDeg,
+    rotXDeg,
+    rotZDeg,
     kind: surface ? "surface" : "normal",
   };
 }
@@ -222,6 +258,8 @@ export function itemGeomSignature(item: EditorItem, dimmed: boolean, hasGuest: b
     b.w.toFixed(3),
     b.d.toFixed(3),
     b.h.toFixed(3),
+    // 斜坡调试显示色参与签名：换色必须重建 mesh（快路径只刷 transform）。
+    b.kind === "airslope" ? item.slope?.debugColor ?? "" : "",
     isSelected(item._editorKey) ? "1" : "0",
     dimmed ? "1" : "0",
     hasGuest ? "1" : "0",
@@ -283,29 +321,38 @@ export function buildItemNode(item: EditorItem, opts: BuildItemOpts): THREE.Grou
   const fill = parseCssColor(paint.fill);
   const stroke = parseCssColor(paint.stroke);
 
+  // 空气斜坡调试显示色：设了 debugColor 就用该色 + 更实的透明度（与游戏内
+  // DebugVis 半透明薄板所见一致）；未设保持默认幽灵绿。
+  const slopeDebug = box.kind === "airslope" && /^#[0-9a-fA-F]{6}$/.test(item.slope?.debugColor ?? "")
+    ? parseCssColor(item.slope!.debugColor!)
+    : null;
+
   const group = new THREE.Group();
   group.name = "item:" + item._editorKey;
 
-  const isGhostBox = box.kind === "airwall" || box.kind === "collision";
+  const isGhostBox = box.kind === "airwall" || box.kind === "airslope" || box.kind === "collision";
   let opacity = opts.dimmed
     ? Math.min(0.28, fill.alpha)
     : isGhostBox
       ? 0.22
       : fill.alpha;
+  if (slopeDebug && !opts.dimmed) opacity = 0.5;
   // 嵌套可见性：搅拌碗放进搅拌台后完全被宿主盒体包住，2D 靠画序区分，
   // 3D 有深度缓冲就彻底看不见了。宿主降到半透明，让里面那件透出来。
   if (opts.hasGuest && !opts.dimmed && !selected) opacity = Math.min(opacity, 0.42);
 
   const geo = new THREE.BoxGeometry(box.w, box.h, box.d);
   const mat = new THREE.MeshLambertMaterial({
-    color: fill.color,
+    color: slopeDebug ? slopeDebug.color : fill.color,
     transparent: opacity < 1,
     opacity,
     side: THREE.FrontSide, // R4
     depthWrite: opacity > 0.85,
   });
   const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.y = box.h / 2;
+  // 普通盒体：几何从 0 往上（底在 group 原点）。斜坡薄板：几何以 group 原点居中
+  //（与 Unity 碰撞盒 col.center=0 一致，旋转绕盒中心）。
+  mesh.position.y = box.kind === "airslope" ? 0 : box.h / 2;
   mesh.renderOrder = box.kind === "surface" ? ORDER.surfaceItem : isGhostBox ? ORDER.airWall : ORDER.item;
   if (box.kind === "surface" || box.kind === "plane") {
     // R3/R5：薄片贴在地板顶面上，靠 polygonOffset 压住共面闪烁。
@@ -326,7 +373,7 @@ export function buildItemNode(item: EditorItem, opts: BuildItemOpts): THREE.Grou
       depthTest: !isGhostBox && !opts.isGuest,
     })
   );
-  edges.position.y = box.h / 2;
+  edges.position.y = box.kind === "airslope" ? 0 : box.h / 2;
   edges.renderOrder = opts.isGuest ? ORDER.item + 3 : ORDER.item + 1;
   group.add(edges);
 
@@ -353,8 +400,9 @@ export function buildItemNode(item: EditorItem, opts: BuildItemOpts): THREE.Grou
   applyItemDecal(group, item, opts.dimmed);
 
   group.position.set(box.cx, box.baseY, toSceneZ(box.cz));
-  // 手性换算见 space.ts：镜像 Z 后朝向是 π-θ，不是简单取负。
-  group.rotation.y = toSceneRotY(box.rotDeg);
+  // 手性换算见 space.ts：镜像 Z 后朝向是 π−θ，不是简单取负；X/Z 倾斜经
+  // toSceneEuler 统一推导（纯 yaw 时与 toSceneRotY 等价）。
+  applySceneEuler(group, box.rotXDeg, box.rotDeg, box.rotZDeg);
 
   tagPickable(group, { kind: "item", key: item._editorKey });
   if (opts.dimmed) {

@@ -31,6 +31,8 @@ import type {
   IngredientEntry,
   LayoutDocument,
   LevelAssignmentData,
+  LevelWorkloadData,
+  WorkloadResult,
   LevelDetail,
   LevelList,
   LevelRecipes,
@@ -1000,6 +1002,22 @@ export async function clearLevelAssignment(assetPath: string): Promise<void> {
     body: JSON.stringify({ assetPath }),
   });
   await readApiJson<AssignmentResult>(r);
+}
+
+export async function fetchLevelWorkload(assetPath: string): Promise<LevelWorkloadData | null> {
+  const q = new URLSearchParams({ assetPath });
+  const data = await readApiJson<WorkloadResult>(await fetch(`/api/level/workload?${q}`));
+  if (!data.exists || !data.json) return null;
+  return JSON.parse(data.json) as LevelWorkloadData;
+}
+
+export async function saveLevelWorkload(assetPath: string, data: LevelWorkloadData): Promise<void> {
+  const r = await fetch("/api/level/workload-save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath, json: JSON.stringify(data) }),
+  });
+  await readApiJson<WorkloadResult>(r);
 }
 
 /** 读取汇总页 readme HTML；未编辑过返回 ""。 */

@@ -56,8 +56,10 @@ export function buildLayoutDom(): void {
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
       <button id="btn-level-config" type="button" title="配置各玩家分数与关卡截图">📊 关卡配置</button>
+      <button id="btn-ceiling-height" type="button" title="修改 KitchenLoaderManager Ceiling Height">⬆ 天花板高度</button>
       <button id="btn-camera-light" type="button" title="修改游戏相机背景色 / FOV 与 Art/Lights 灯光颜色、强度">🎥 相机/灯光</button>
       <button id="btn-level-audio" type="button" title="配置关卡音频">🔊 音频</button>
+      <button id="btn-workload" type="button" title="配置玩家工作区域并推测工作量">📈 工作量推测</button>
       <button id="btn-summary" type="button" title="查看关卡菜谱汇总并一键导出图片">📋 汇总</button>
       <button id="btn-tools-history" type="button" title="关卡工具（修复损坏 / 依赖检查 / 测试布局 / 同步布局）+ 最近 15 次写回历史与变动对比">🧰 工具与历史</button>
       <span id="status" class="status">连接中…</span>
@@ -76,6 +78,7 @@ export function buildLayoutDom(): void {
         <button type="button" data-view="3d" class="view-tab${S.viewMode === "3d" ? " active" : ""}">🧊 3D 立体</button>
       </div>
       <button type="button" id="btn-y-drag" class="view3d-only${S.yAxisDrag ? " active" : ""}" title="开启后在 3D 里拖动 = 沿 Y 轴升降（XZ 锁死，避免误拖）；关闭则沿地面平移">⬆ Y 轴</button>
+      <button type="button" id="btn-rot-gizmo" class="view3d-only${S.rotGizmo ? " active" : ""}" title="选中物件时显示旋转环（红=X 轴倾斜 / 绿=Y 轴朝向 / 蓝=Z 轴侧倾），拖拽旋转，Shift 吸附 15°">⟳ 旋转</button>
       <label class="toolbar-check view3d-only" title="3D 地板板厚。真实 0.4 = 与 Unity 烘焙的 Col_Floor 碰撞体完全一致；自适应 = 贴着下层收缩，台地更清晰；薄片 = 最接近 2D 平面观感">🧱 板厚
         <select id="floor-slab-mode">
           <option value="real">真实 0.4</option>
@@ -99,8 +102,10 @@ export function buildLayoutDom(): void {
       <label class="toolbar-check" title="距半格网格 0.1 内自动吸附到网格，其余位置按所选精度自由摆放"><input type="checkbox" id="snap-grid" checked /> 🧲 吸附格子</label>
       <label class="toolbar-check">🎯 精度
         <select id="snap-free-step" title="自由摆放 / 微移的精度">
-          <option value="0.1">0.1</option>
-          <option value="0.01" selected>0.01</option>
+          <option value="1">1.0</option>
+          <option value="0.5">0.5</option>
+          <option value="0.1" selected>0.1</option>
+          <option value="0.01">0.01</option>
           <option value="0.001">0.001</option>
         </select>
       </label>

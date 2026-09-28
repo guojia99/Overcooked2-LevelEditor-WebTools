@@ -176,7 +176,12 @@ export function drawCannonSwitchStarIcon(
 export function itemLabel(item: EditorItem): string {
   const id = prefabIdFromPath(item.prefabAssetPath);
   if (item.stubKind === "Collision") {
-    return item.displayName === "AirWall" ? "空气墙（隐形碰撞）" : item.displayName || "碰撞块";
+    if (item.displayName === "AirWall" || item.airWall) return "空气墙（隐形碰撞）";
+    if (item.displayName === "AirSlope" || item.airSlope) {
+      const s = item.slope;
+      return s ? `空气斜坡 ${s.angleDeg.toFixed(0)}°` : "空气斜坡（可行走）";
+    }
+    return item.displayName || "碰撞块";
   }
   const isDispenser =
     (item.stubKind === "Dispenser" || id === "Dispenser") && id !== "Backpack";

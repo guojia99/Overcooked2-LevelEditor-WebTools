@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using HarmonyLib;
@@ -17,20 +18,36 @@ namespace CustomStub
     ///  - 编辑器 Play：[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] 自动安装
     ///    （Stub_&lt;set&gt; 程序集在编辑器内由 Unity 编译，进入 Play 时触发）。
     ///
+    /// 逐关卡清单闸门（v16 / 3.5.0 零介入铁律）：
+    ///  - 权威数据 = 导出器逐场景扫描写出的 levels/&lt;set&gt;/stub_levels.txt
+    ///    （每行 "&lt;关卡&gt;|&lt;特征,...&gt;"），loader 汇总为 WebManifest 注入；
+    ///    本类反射读取（镜像 StubLog→LogFromCrate 桥方向，解决「程序集加载即
+    ///    Install」的时序环）。loader 不在场（编辑器 Play）= null = 无约束模式，
+    ///    维持探测 + tag 自愈的旧行为。
+    ///  - sceneLoaded 按 scene.path 解析 (集,关卡) 查清单：精确命中按清单特征挂载
+    ///    （KillPlane 仅 pushable、ticker 子系统轮询各按特征）；**旧版导出集
+    ///    （"集|*|legacy" 兼容条目，loader 兼容期 3.5.0≤v&lt;4.0.0 生成）= v3.4
+    ///    行为（探测+自愈）——已分发旧集无需重导出**；未命中（官方图/未用
+    ///    CustomStub 的 web 关卡/主菜单/世界地图）直接休眠归零——零扫描、零探测、
+    ///    零补丁。TickProbe 30 秒探测通道在无约束模式与旧版兼容分支保留。
+    ///
     /// 幂等性：多个关卡集各有一份同名程序集（CustomStub.* 类重复定义），用
     /// 哨兵 GameObject（"CustomStub.Runtime"，DontDestroyOnLoad）保证全套
     /// ticker / Harmony 补丁 / 场景自愈只装一次。
     ///
     /// 职责：
-    ///  1. Harmony 补丁（KillPlane 跳过 + 玩家脱离，HarmonyPatches；
-    ///     触发区占用联机同步 + fallPad 清理，TriggerZoneOccupancySync）；
+    ///  1. Harmony 补丁（触发区占用联机同步 + fallPad 清理，TriggerZoneOccupancySync，
+    ///     随核心装；KillPlane 跳过 + 玩家脱离，HarmonyPatches，仅 pushable 特征；
+    ///     锅具时间/空气取出/大炮/相机/实体扫描锚点按需）；
     ///  2. HotPot / PushableVoidFall / UtensilTiming（锅具时间）/ TerminalGuard
-    ///     （未绑定终端防线）常驻 ticker；
+    ///     （未绑定终端防线）常驻 ticker（各分支按清单特征开关）；
     ///  3. sceneLoaded 场景自愈：按 SpecificPseudoPrefabTag 载体还原组件——
     ///     TimedSwitch| / PushablePot| / SwitchReenable| / WorldMapDressing|
     ///     / UtensilTiming| / TravelatorReverse| / TeleportalExitOnly|
-    ///     / CameraOffset|（相机偏移注册+按需补丁；
-    ///     RandomCrate| 由 loader 自愈，此处不重复）。
+    ///     / CameraOffset|（相机偏移注册+按需补丁；RandomCrate| 统一收编于此）；
+    ///     无 tag 通道：动画组成员格子换装（Design/Animated Objects）、初始关闭
+    ///     开关闭色（PseudoPrefabSwitchStub.startEnabled）——均在 HealScene 内，
+    ///     随逐关卡闸门一并归零。
     /// </summary>
     public static class EntryPoint
     {
@@ -104,8 +121,23 @@ namespace CustomStub
         /// 按「炮内是否有人」迁移时发 Disable/Reset（走原版 ServerTriggerDisableScript
         /// 网络通道，双端变灰/点亮），空炮不再常亮可按；③SwitchReenable 复查跳过
         /// 大炮按钮 + 烘焙侧不再给 CannonSwitch 烤自动复位（存量场景写回摘除）。
-        /// 只认 SetupCannonStub 根的 web 大炮，官方 dlc08/09 图零影响。</summary>
-        public const string Version = "v15(" + StubVersion.Value + ")";
+        /// 只认 SetupCannonStub 根的 web 大炮，官方 dlc08/09 图零影响。
+        ///  v16（3.5.0 零介入铁律 · 逐关卡清单闸门）：只有「web 导出且实际使用
+        /// CustomStub」的关卡才挂载对应监听——权威数据 = 导出器逐场景特征扫描
+        /// 写出的 levels/&lt;set&gt;/stub_levels.txt（loader 汇总注入 WebManifest，
+        /// 本类反射读取；null=无约束=编辑器 Play 维持旧行为）。清单未命中的场景
+        /// （官方图/未用 CustomStub 的 web 关卡/主菜单/世界地图）直接休眠归零：
+        /// HealScene/无 tag 扫描（AnimGridMemberSync/SwitchStartVisual）/TickProbe
+        /// 探测全部不跑。命中场景按特征挂载：KillPlane 补丁仅 pushable；ticker
+        /// 子系统轮询各按特征（HotPot←hotpot|pushable、VoidFall←pushable、
+        /// UtensilTiming←timing、TerminalGuard←terminal、CannonGuard←cannon）；
+        /// 触发区占用同步 + 联机诊断随核心（清单命中即装）。**兼容期（3.5.0≤
+        /// 版本&lt;4.0.0，用户决策）：旧版导出集（如 3.2.1，无 stub_levels.txt）
+        /// 由 loader 生成 "集|*|legacy" 兼容条目，本类对其维持 v3.4 行为（探测+
+        /// 自愈+特征全开），已分发旧集无需重导出；4.0.0 起严格按清单。**
+        /// TickProbe 30 秒探测通道在无约束模式与旧版兼容分支保留（新导出集的
+        /// 真机路径不再依赖名字子串探测）。</summary>
+        public const string Version = "v16(" + StubVersion.Value + ")";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -162,7 +194,166 @@ namespace CustomStub
         private static bool s_corePatchesInstalled;
         private static bool s_activationLogged;
 
-        /// <summary>核心激活：安装常驻 Harmony 补丁（一次）并启用 ticker。幂等。</summary>
+        // ---- 逐关卡清单闸门（v16 / 3.5.0 零介入铁律） ----
+        // 权威数据 = 导出器逐场景扫描写出的 levels/<set>/stub_levels.txt，由 loader
+        // 汇总为 WebManifest（"集|关卡|特征,..."）注入；本类经反射读取（loader 先于
+        // 本程序集加载，字段在 Install 前已就绪；镜像 StubLog→LogFromCrate 桥方向，
+        // 解决「程序集一加载就 Install、来不及先注字段」的时序环）。
+        // null = 无约束（编辑器 Play，无 loader）——维持 v12 探测+tag 激活行为。
+
+        private static string[] s_manifest;
+        private static bool s_manifestProbed;
+        private static bool s_scenePathWarned;
+        private static readonly string[] NoFeatures = new string[0];
+        /// <summary>当前场景的清单特征（无约束模式恒 null = 全部允许）。</summary>
+        private static string[] s_activeFeatures = NoFeatures;
+
+        // ticker 子系统特征闸（RefreshFeatureFlags 缓存，Update 每帧只读 bool）。
+        private static bool s_fHotPot;
+        private static bool s_fVoidFall;
+        private static bool s_fTiming;
+        private static bool s_fTerminal;
+        private static bool s_fCannon;
+
+        /// <summary>解析（至多一次）loader 注入的 web stub 关卡清单。</summary>
+        private static string[] ResolveManifest()
+        {
+            if (s_manifestProbed)
+                return s_manifest;
+            s_manifestProbed = true;
+            try
+            {
+                var loaderType = FindLoaderType();
+                if (loaderType != null)
+                {
+                    var f = loaderType.GetField("WebManifest",
+                        BindingFlags.Public | BindingFlags.Static);
+                    if (f != null)
+                        s_manifest = f.GetValue(null) as string[];
+                }
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] stub 清单读取失败（回落无约束模式，行为同旧版）: " + ex.Message);
+            }
+            if (s_manifest == null)
+                StubLog.Dbg("[CustomStub] loader 清单不可用（编辑器 Play 或旧版 loader）——无约束模式");
+            else if (s_manifest.Length == 0)
+                StubLog.Dbg("[CustomStub] loader 清单为空（无 stub 关卡）——运行时将全程零介入");
+            return s_manifest;
+        }
+
+        private static Type FindLoaderType()
+        {
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                var t = asm.GetType("OC2LevelRuntimeLoader.LevelRuntimeLoader", false);
+                if (t != null)
+                    return t;
+            }
+            return null;
+        }
+
+        /// <summary>场景路径 → (集, 关卡)：只认 assets/levelsets/&lt;set&gt;/scenes/&lt;level&gt;.unity
+        /// （bundle 场景 = 内部资产路径；编辑器场景同款相对路径，大小写不敏感）。
+        /// 解析不出 = 非 web 关卡场景（官方图/主菜单/世界地图）。</summary>
+        private static bool ParseSceneLevelPath(string path, out string set, out string level)
+        {
+            set = null;
+            level = null;
+            if (string.IsNullOrEmpty(path))
+                return false;
+            const string marker = "/levelsets/";
+            var lower = path.ToLowerInvariant();
+            var idx = lower.IndexOf(marker, StringComparison.Ordinal);
+            if (idx < 0)
+                return false;
+            var rest = path.Substring(idx + marker.Length);
+            var slash = rest.IndexOf('/');
+            if (slash <= 0)
+                return false;
+            set = rest.Substring(0, slash);
+            rest = rest.Substring(slash + 1);
+            if (rest.ToLowerInvariant().StartsWith("scenes/", StringComparison.Ordinal))
+                rest = rest.Substring("scenes/".Length);
+            if (rest.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
+                rest = rest.Substring(0, rest.Length - ".unity".Length);
+            if (rest.Length == 0 || rest.IndexOf('/') >= 0)
+                return false; // 关卡名必须是 scenes/ 下单段文件名
+            level = rest;
+            return true;
+        }
+
+        /// <summary>查清单三态。LevelExact：features=该关特征（可为空数组=仅自愈类）；
+        /// LevelLegacy：旧版导出集兼容条目 "集|*|legacy"（loader 仅在兼容期
+        /// 3.5.0 ≤ 版本 &lt; 4.0.0 生成）——该集按 v3.4 行为探测+自愈，特征全开；
+        /// LevelMiss：零介入。条目格式 "集|关卡|特征1,特征2,..."。</summary>
+        private const int LevelMiss = 0;
+        private const int LevelExact = 1;
+        private const int LevelLegacy = 2;
+
+        private static int LookupManifestLevel(string[] manifest, string set, string level, out string[] features)
+        {
+            features = null;
+            var wanted = set + "|" + level + "|";
+            var legacy = set + "|*|";
+            for (int i = 0; i < manifest.Length; i++)
+            {
+                var e = manifest[i];
+                if (e == null)
+                    continue;
+                if (e.StartsWith(legacy, StringComparison.OrdinalIgnoreCase))
+                    return LevelLegacy;
+                if (!e.StartsWith(wanted, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var lastBar = e.LastIndexOf('|');
+                var csv = lastBar >= 0 ? e.Substring(lastBar + 1) : "";
+                var raw = csv.Split(',');
+                var feats = new List<string>();
+                for (int j = 0; j < raw.Length; j++)
+                {
+                    var f = raw[j].Trim();
+                    if (f.Length > 0)
+                        feats.Add(f);
+                }
+                features = feats.ToArray();
+                return LevelExact;
+            }
+            return LevelMiss;
+        }
+
+        /// <summary>当前场景是否具备某特征（无约束模式恒 true）。</summary>
+        private static bool HasFeature(string feature)
+        {
+            var f = s_activeFeatures;
+            if (f == null)
+                return true;
+            for (int i = 0; i < f.Length; i++)
+            {
+                if (string.Equals(f[i], feature, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>按当前场景特征刷新 ticker 子系统开关（缓存 bool，Update 零分配）。</summary>
+        private static void RefreshFeatureFlags()
+        {
+            s_fHotPot = HasFeature("hotpot") || HasFeature("pushable");
+            s_fVoidFall = HasFeature("pushable");
+            s_fTiming = HasFeature("timing");
+            s_fTerminal = HasFeature("terminal");
+            s_fCannon = HasFeature("cannon");
+        }
+
+        private static string JoinFeatures(string[] features)
+        {
+            return features != null && features.Length > 0 ? string.Join(",", features) : "无";
+        }
+
+        /// <summary>核心激活：安装常驻 Harmony 补丁（一次）并启用 ticker。幂等。
+        /// v16：核心组 = 触发区占用同步 + 联机诊断（冷方法/事件驱动）；KillPlane
+        /// 拆到 EnsureKillPlanePatches（仅 pushable 特征，按需）。</summary>
         private static void ActivateCore(string reason)
         {
             if (s_state == StateActive)
@@ -171,17 +362,16 @@ namespace CustomStub
             if (!s_corePatchesInstalled)
             {
                 s_corePatchesInstalled = true;
-                InstallHarmony();
+                InstallTriggerZoneSyncPatches();
             }
-            // 联机诊断打点随核心一起装（冷方法，官方图因不激活而零影响）
+            // 联机诊断打点随核心一起装（冷方法，未激活场景因零介入而零影响）
             EnsureNetDiagPatches();
             SetTickerEnabled(true);
             if (!s_activationLogged)
             {
                 s_activationLogged = true;
                 StubLog.Log("[CustomStub " + Version + "] 核心激活（" + reason + "）"
-                    + "：Harmony=" + (s_harmonyInstalled ? "OK" : "失败，依赖无前缀安全网")
-                    + "，Stub ticker（HotPot/VoidFall/UtensilTiming/TerminalGuard 合一）已启用");
+                    + "：触发区占用同步/联机诊断已装，Stub ticker 已启用（子系统按特征开关）");
             }
             else
             {
@@ -189,7 +379,7 @@ namespace CustomStub
             }
         }
 
-        /// <summary>进入探测态（每次场景加载的起点）。本场景若有 stub tag，
+        /// <summary>进入探测态（仅无约束模式使用）。本场景若有 stub tag，
         /// 紧随其后的 HealScene 会立即提升为 Active。</summary>
         private static void BeginProbe()
         {
@@ -224,7 +414,9 @@ namespace CustomStub
     ///    三者轮转——客机没有 Server* 同步器，只认单一类型会漏判）；
     ///  - 槽 3：未绑定可操控对象的 Terminal（写回降级残留，同样无 tag）；
     ///  - 槽 4：web 大炮（CannonGuard——SetupCannonStub 根，无专属 tag）。
-    /// 窗口结束仍无命中 ⇒ Dormant。</summary>
+    /// 窗口结束仍无命中 ⇒ Dormant。
+    /// v16：真机由 stub_levels.txt 清单权威化（编辑器导出扫描比运行时名字子串
+    /// 探测可靠），本通道仅在无约束模式（编辑器 Play）保留。</summary>
         private static void TickProbe()
         {
             var now = Time.unscaledTime;
@@ -290,17 +482,17 @@ namespace CustomStub
                 SetTickerEnabled(false);
 
                 SceneManager.sceneLoaded += OnSceneLoadedHeal;
-                // 每场景重评估的起点：先进探测态，HealScene 扫到 tag 会立刻提升为 Active
-                BeginProbe();
-                HealScene(SceneManager.GetActiveScene());
-                ResetSceneTickers();
+                // v16：不再无条件探测/自愈当前场景——ProcessScene 按清单闸门决定：
+                // 真机（清单可用）启动时当前场景=主菜单 → 休眠归零，待 sceneLoaded
+                // 逐关判定；编辑器 Play（无约束）→ 探测态起步，行为同旧版。
+                ProcessScene(SceneManager.GetActiveScene());
 
                 // 反射自检汇总：列出游戏 AppDomain 里未命中的反射目标（直接定位
                 // 「反射了游戏侧不存在的类型」类事故）。
                 GameApi.DumpReflectionSelfCheck();
 
                 StubLog.Log("[CustomStub " + Version + "] EntryPoint 安装完成"
-                    + "（哨兵已就位，ticker/Harmony 由三态门控按场景内容惰性启停）");
+                    + "（哨兵已就位；逐关卡清单闸门生效，ticker/补丁按特征惰性启停）");
                 return true;
             }
             catch (Exception ex)
@@ -327,51 +519,46 @@ namespace CustomStub
             }
         }
 
-        /// <summary>Harmony 是否装上（2026-09-04 事故：编辑器 Play 里 HarmonyLib.Harmony
-        /// 静态构造抛异常 → KillPlane 前缀缺失 → 玩家挂锅落水被宿主原生重生卡死。
-        /// 无前缀时的安全网见 PushableVoidFall.BeginPotFall/松手路径的主动脱离。）</summary>
-        private static bool s_harmonyInstalled;
+        /// <summary>KillPlane 补丁（可移动火锅/落水重生安全网，2026-09-04 事故：
+        /// 编辑器 Play 里 HarmonyLib.Harmony 静态构造抛异常 → 前缀缺失 → 玩家挂锅
+        /// 落水被宿主原生重生卡死。无前缀时的安全网见 PushableVoidFall.BeginPotFall/
+        /// 松手路径的主动脱离）。
+        /// v16 起按特征挂载：仅 pushable 特征关卡（清单特征或 PushablePot| tag）
+        /// 安装，纯随机箱等关卡不再挂该 detour。幂等；独立 Harmony id。</summary>
+        private static bool s_killPlanePatched;
+        private static bool s_killPlanePatchFailed;
 
-        private static void InstallHarmony()
+        internal static void EnsureKillPlanePatches()
         {
-            s_harmonyInstalled = false;
-            var target = GameApi.RespawnObjectAddedMethod;
-            if (target == null)
+            if (s_killPlanePatched || s_killPlanePatchFailed)
+                return;
+            try
             {
-                StubLog.LogWarn("[CustomStub] ServerRespawnCollider.ObjectAdded 反射失败，KillPlane 补丁未装（无前缀安全网生效）");
+                var target = GameApi.RespawnObjectAddedMethod;
+                var prefixMethod = HarmonyPatches.RespawnColliderObjectAddedPrefixMethod;
+                if (target == null || prefixMethod == null)
+                {
+                    s_killPlanePatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] KillPlane 反射/前缀缺失，补丁未装（无前缀安全网生效）");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".killplane");
+                harmony.Patch(target, new HarmonyMethod(prefixMethod));
+                s_killPlanePatched = true;
+                StubLog.Log("[CustomStub] KillPlane 补丁已装（按需·pushable）: "
+                    + target.DeclaringType.Name + "." + target.Name);
             }
-            else
+            catch (Exception ex)
             {
-                try
-                {
-                    var harmony = new Harmony(HarmonyId);
-                    var prefixMethod = HarmonyPatches.RespawnColliderObjectAddedPrefixMethod;
-                    if (prefixMethod == null)
-                    {
-                        StubLog.LogWarn("[CustomStub] 前缀方法缺失，KillPlane 补丁未装（无前缀安全网生效）");
-                    }
-                    else
-                    {
-                        var prefix = new HarmonyMethod(prefixMethod);
-                        harmony.Patch(target, prefix);
-                        s_harmonyInstalled = true;
-                        StubLog.Log("[CustomStub] KillPlane 补丁已装: " + target.DeclaringType.Name + "." + target.Name);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // ex.Message 只有外层一句话（TypeInitializationException 不含真因），
-                    // 必须打全量（含 InnerException）才能定位（HarmonyLib.Harmony 静态构造
-                    // 在 Unity 2017.4 编辑器 Mono 上初始化失败，2026-09-04 待查真因）。
-                    StubLog.LogWarn("[CustomStub] Harmony 安装失败（可移动火锅 KillPlane 行为走无前缀安全网）: " + ex);
-                }
+                s_killPlanePatchFailed = true;
+                // ex.Message 只有外层一句话（TypeInitializationException 不含真因），
+                // 必须打全量（含 InnerException）才能定位（HarmonyLib.Harmony 静态构造
+                // 在 Unity 2017.4 编辑器 Mono 上初始化失败，2026-09-04 待查真因）。
+                StubLog.LogWarn("[CustomStub] KillPlane 安装失败（可移动火锅落水走无前缀安全网）: " + ex);
             }
-            // 锅具时间补丁不再随安装无条件打：目标方法是宿主「每帧×每锅具」的热方法，
-            // 无 UtensilTiming 配置的关卡连 detour 开销都不该有。改由
-            // EnsureUtensilTimingPatches() 按需触发（场景自愈扫到 UtensilTiming| tag /
+            // 锅具时间补丁不在此列：目标方法是宿主「每帧×每锅具」的热方法，
+            // 由 EnsureUtensilTimingPatches() 按需触发（场景自愈扫到 UtensilTiming| tag /
             // UtensilTiming.ApplyValues 遇到 burn/over>0）。
-
-            InstallTriggerZoneSyncPatches();
         }
 
         /// <summary>触发区占用联机同步 + fallPad 清理（TriggerZoneOccupancySync）：
@@ -629,11 +816,94 @@ namespace CustomStub
 
         private static void OnSceneLoadedHeal(Scene scene, LoadSceneMode mode)
         {
-            // v12：每次场景加载重评估门控——先回到探测态（ticker 暂以低频探测跑），
-            // HealScene 扫到 stub tag 会立刻提升为 Active；都没有则 ~30s 后自动休眠。
-            // 这条是「玩过 web 图后官方图仍被扫描/灶台被改写」的修复点。
-            BeginProbe();
             s_tickWarned.Clear();
+            // 附加场景加载（UI/覆盖层等）不重估闸门——防止关卡中途被非 stub 附加
+            // 场景误休眠；除非附加加载的本身就是清单命中（精确或旧版兼容）的场景。
+            if (mode == LoadSceneMode.Additive)
+            {
+                var manifest = ResolveManifest();
+                string set, level;
+                string[] feats;
+                if (manifest != null && ParseSceneLevelPath(scene.path, out set, out level)
+                    && LookupManifestLevel(manifest, set, level, out feats) != LevelMiss)
+                    ProcessScene(scene);
+                return;
+            }
+            ProcessScene(scene);
+        }
+
+        /// <summary>逐场景处理入口（sceneLoaded 与 Install 首跑共用）。
+        /// v16 逐关卡清单闸门：
+        ///  - 无约束模式（清单不可用 = 编辑器 Play / 旧版 loader）：维持 v12 行为
+        ///    ——探测态起步，HealScene 扫到 stub tag 立即激活，~30s 无命中休眠；
+        ///  - 清单模式（真机）：scene.path 解析 (集,关卡) 查 stub_levels 清单——
+        ///    精确命中按清单特征挂载（KillPlane 仅 pushable、ticker 子系统各按特征）；
+        ///    旧版导出集（"集|*|legacy" 兼容条目，loader 兼容期 &lt;4.0.0 生成）=
+        ///    v3.4 行为（探测+自愈+特征全开）；未命中（官方图/旧集*/未用 CustomStub
+        ///    的 web 关卡/主菜单/世界地图）一切监听归零（仅保留 ResetSceneTickers
+        ///    纯托管清场，防跨场景引用泄漏，零场景查询）。
+        /// 这条是「玩过 web 图后官方图仍被扫描/灶台被改写」的根治点（v12 修复的
+        /// 强化版：官方图连 30s 探测窗口都不再有）。*旧集在兼容期内走 legacy 分支；
+        /// 4.0.0 后 loader 不再生成兼容条目，旧集同样归零（需重新导出）。</summary>
+        private static void ProcessScene(Scene scene)
+        {
+            var manifest = ResolveManifest();
+            if (manifest == null)
+            {
+                // 无约束模式：特征全开（null = HasFeature 恒 true）
+                s_activeFeatures = null;
+                RefreshFeatureFlags();
+                BeginProbe();
+                HealScene(scene);
+                ResetSceneTickers();
+                return;
+            }
+
+            string set, level;
+            if (!ParseSceneLevelPath(scene.path, out set, out level))
+            {
+                if (!s_scenePathWarned)
+                {
+                    s_scenePathWarned = true;
+                    StubLog.Dbg("[CustomStub] 场景路径非 levelsets（官方图/菜单/世界地图，零介入）: "
+                        + scene.name + " path=" + scene.path);
+                }
+                s_activeFeatures = NoFeatures;
+                RefreshFeatureFlags();
+                GoDormant();
+                ResetSceneTickers();
+                return;
+            }
+
+            string[] features;
+            var lookup = LookupManifestLevel(manifest, set, level, out features);
+            if (lookup == LevelMiss)
+            {
+                StubLog.Dbg("[CustomStub] 关卡未命中 stub 清单，零介入: " + set + "/" + level);
+                s_activeFeatures = NoFeatures;
+                RefreshFeatureFlags();
+                GoDormant();
+                ResetSceneTickers();
+                return;
+            }
+            if (lookup == LevelLegacy)
+            {
+                // 兼容期（<4.0.0）：旧版导出集维持 v3.4 行为——探测态起步 + tag 自愈，
+                // 特征全开（旧集无逐关卡清单，无从按特征挂载）。
+                StubLog.Dbg("[CustomStub] 旧版导出集（兼容模式，探测+自愈）: " + set + "/" + level);
+                s_activeFeatures = null;
+                RefreshFeatureFlags();
+                BeginProbe();
+                HealScene(scene);
+                ResetSceneTickers();
+                return;
+            }
+
+            s_activeFeatures = features;
+            RefreshFeatureFlags();
+            ActivateCore("stub 清单命中 " + set + "/" + level + " 特征=" + JoinFeatures(features));
+            if (s_fVoidFall)
+                EnsureKillPlanePatches();
             HealScene(scene);
             ResetSceneTickers();
         }
@@ -704,20 +974,27 @@ namespace CustomStub
                 // 锅具时间补丁按需安装：扫到 UtensilTiming| tag 才 patch 宿主热方法
                 if (sawUtensilTiming)
                     EnsureUtensilTimingPatches();
-                // 实体扫描锚点按需安装：本场景有可移动火锅才 patch（v14）。
+                // 实体扫描锚点 + KillPlane 按需安装：本场景有可移动火锅才 patch
+                // （v14 锚点；v16 KillPlane 拆出核心组，pushable 关卡专属）。
                 // 时序上安全——HealScene 跑在 sceneLoaded，而 ScanEntities 要等
                 // ClientKitchenLoader 收到 GameState.ScanNetworkEntities（更晚）。
                 if (sawPushablePot)
+                {
                     EnsurePotAssemblyPatches();
-                // 关卡级门控：本场景确实用到需要 ticker 的 web stub 才激活核心 ticker/Harmony。
-                // 注意：无 tag 的 web 内容（静态 web 火锅 / 写回降级残留的未绑定终端）
-                // 由 TickProbe 的探测通道兜底激活，不在此处判定。
+                    EnsureKillPlanePatches();
+                }
+                // 关卡级门控（无约束模式的主通道；清单模式下此处恒已 Active）：
+                // 本场景确实用到需要 ticker 的 web stub 才激活核心 ticker/补丁组。
                 if (tickerTags > 0)
                     ActivateCore("扫到 web stub tag × " + tickerTags);
                 // 动画组成员格子换装器：Design/Animated Objects 下全部（孙级）成员补挂
                 // AnimGridMemberSync（零配置、免 tag；编辑器 Play 侧烘焙件在场则跳过）。
                 // 真机上烘焙的 CustomStub 组件是 Missing Script 死件，必须运行时补挂。
                 HealAnimGridMembers();
+                // 初始关闭开关开局关闭色（v3.4.0）：真机烘焙件是 Missing Script，
+                // 按 PseudoPrefabSwitchStub.startEnabled 扫描补挂（stub 组件随
+                // 场景序列化，sceneLoaded 时已在；child 实例化由组件内协程等待）。
+                HealSwitchStartVisuals();
                 if (stubTags > 0)
                 {
                     // 汇总：只在有 stub tag 的场景打（普通场景不打，避免刷屏）
@@ -746,7 +1023,8 @@ namespace CustomStub
                 || prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(ConveyorDirectionSync.TagPrefix, StringComparison.Ordinal)
-                 || prefabTag.StartsWith("BLRelay|", StringComparison.Ordinal);
+                 || prefabTag.StartsWith("BLRelay|", StringComparison.Ordinal)
+                 || prefabTag.StartsWith(CoaxialButtonGroup.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -888,6 +1166,12 @@ namespace CustomStub
                             // Missing Script（GetType 非 CustomStub.*），下方补挂。
                 HealButtonLogicRelay(go, prefabTag);
             }
+            else if (prefabTag.StartsWith(CoaxialButtonGroup.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "CoaxialButtonGroup"))
+                    return; // 同上：编辑器烘活组件在场则跳过，真机 Missing Script 补挂。
+                HealCoaxialButtonGroup(go, prefabTag);
+            }
             else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
             {
                 // CameraOffset|<x>,<z>（invariant 浮点 = 相机根节点摆放位世界 XZ，
@@ -938,15 +1222,43 @@ namespace CustomStub
             }
         }
 
+        /// <summary>初始关闭开关补挂 SwitchStartVisual（开局关闭色 + 预禁用交互）。
+        /// 真机场景里编辑器烘焙的本组件是 Missing Script 死件；权威数据 = 同物体
+        /// PseudoPrefabSwitchStub.startEnabled（LevelEditorStub 随包分发，可直接
+        /// 扫描）——无 tag 载体。编辑器 Play 侧烘焙组件在场则跳过。</summary>
+        private static void HealSwitchStartVisuals()
+        {
+            try
+            {
+                var stubs = UnityEngine.Object.FindObjectsOfType<LevelEditorStub.PseudoPrefabSwitchStub>();
+                int healed = 0;
+                foreach (var stub in stubs)
+                {
+                    if (stub == null || stub.startEnabled) continue;
+                    var go = stub.gameObject;
+                    if (go == null || HasStubComponentNamed(go, "SwitchStartVisual")) continue;
+                    go.AddComponent<SwitchStartVisual>();
+                    healed++;
+                }
+                if (healed > 0)
+                    StubLog.Log("[CustomStub] 自愈 SwitchStartVisual × " + healed +
+                        "（初始关闭开关开局显示关闭色）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] SwitchStartVisual 自愈失败: " + ex.Message);
+            }
+        }
+
         /// <summary>BLRelay 自愈：从 tag payload 还原 ButtonLogicRelay 全部接线配置。
         /// 格式（烘焙侧 ButtonLinkBakery.WriteRelayTag 对称编码，字段内 %,;>| 转 %XX）：
-        ///   BLRelay|P:按压名,..|B:封禁1;封禁2|E:状态>触发>目标;..|D:完成名,..</summary>
+        ///   BLRelay|P:按压名,..|B:封禁1;封禁2|E:状态>触发>目标;..|D:完成名,..|N:按钮根名,..|X:A,B</summary>
         private static void HealButtonLogicRelay(GameObject go, string prefabTag)
         {
             try
             {
                 var parts = prefabTag.Split('|');
-                string p = null, b = null, e = null, d = null, n = null;
+                string p = null, b = null, e = null, d = null, n = null, x = null;
                 for (int i = 1; i < parts.Length; i++)
                 {
                     if (parts[i].StartsWith("P:", StringComparison.Ordinal)) p = parts[i].Substring(2);
@@ -954,10 +1266,11 @@ namespace CustomStub
                     else if (parts[i].StartsWith("E:", StringComparison.Ordinal)) e = parts[i].Substring(2);
                     else if (parts[i].StartsWith("D:", StringComparison.Ordinal)) d = parts[i].Substring(2);
                     else if (parts[i].StartsWith("N:", StringComparison.Ordinal)) n = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("X:", StringComparison.Ordinal)) x = parts[i].Substring(2);
                 }
-                if (string.IsNullOrEmpty(e))
+                if (string.IsNullOrEmpty(e) && string.IsNullOrEmpty(n) && string.IsNullOrEmpty(x))
                 {
-                    StubLog.LogWarn("[CustomStub] BLRelay tag 缺少分发条目，跳过自愈: " + go.name);
+                    StubLog.LogWarn("[CustomStub] BLRelay tag 缺少有效条目，跳过自愈: " + go.name);
                     return;
                 }
                 var relay = go.AddComponent<ButtonLogicRelay>();
@@ -982,14 +1295,78 @@ namespace CustomStub
                 relay.m_targetNames = targets.ToArray();
                 relay.m_doneTriggers = SplitUnesc(d, ',');
                 relay.m_buttonRootNames = SplitUnesc(n, ',');
+                if (!string.IsNullOrEmpty(x))
+                {
+                    var sides = SplitUnesc(x, ',');
+                    relay.m_interlockPair = sides != null && sides.Length >= 2;
+                    relay.m_interlockSideA = sides != null && sides.Length > 0 ? sides[0] : null;
+                    relay.m_interlockSideB = sides != null && sides.Length > 1 ? sides[1] : null;
+                }
                 relay.RebuildHashes();
                 relay.enabled = true;
+                // 互锁字段单列：真机排查「互锁退化为共轭」时先看这行有没有 A=/B=——
+                // 没有 = 场景 tag 未含 |X:（旧烘焙，重新写回即可修复）。
+                string interlockInfo = string.Empty;
+                if (relay.m_interlockPair)
+                    interlockInfo = "，互锁 A=" + relay.m_interlockSideA +
+                        " B=" + relay.m_interlockSideB;
                 StubLog.Log("[CustomStub] 自愈 ButtonLogicRelay: " + go.name + "（" +
-                    states.Count + " 条分发）");
+                    states.Count + " 条分发" + interlockInfo + "）");
             }
             catch (Exception ex)
             {
                 StubLog.LogWarn("[CustomStub] BLRelay 自愈失败 " + go.name + ": " + ex.Message);
+            }
+        }
+
+        /// <summary>同轴按钮组自愈：从 tag payload 还原 CoaxialButtonGroup 全部配置。
+        /// 格式（烘焙侧 CoaxialButtonBakery 对称编码，字段内 %,;>| 转 %XX）：
+        ///   Coaxial|W:&lt;window&gt;|N:&lt;按钮根名,..&gt;|T:&lt;目标名&gt;,&lt;触发&gt;;..</summary>
+        private static void HealCoaxialButtonGroup(GameObject go, string prefabTag)
+        {
+            try
+            {
+                var parts = prefabTag.Split('|');
+                string w = null, n = null, t = null;
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    if (parts[i].StartsWith("W:", StringComparison.Ordinal)) w = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("N:", StringComparison.Ordinal)) n = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("T:", StringComparison.Ordinal)) t = parts[i].Substring(2);
+                }
+                var buttons = SplitUnesc(n, ',');
+                if (buttons.Length < 2)
+                {
+                    StubLog.LogWarn("[CustomStub] Coaxial tag 成员不足 2 个，跳过自愈: " + go.name);
+                    return;
+                }
+                var grp = go.AddComponent<CoaxialButtonGroup>();
+                grp.enabled = false;
+                grp.m_buttonRootNames = buttons;
+                grp.m_windowSeconds = Mathf.Clamp(
+                    ParseFloat(w, 1f),
+                    CoaxialButtonGroup.MinWindowSeconds, CoaxialButtonGroup.MaxWindowSeconds);
+                var names = new System.Collections.Generic.List<string>();
+                var trigs = new System.Collections.Generic.List<string>();
+                var entries = (t ?? "").Split(';');
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    if (entries[i].Length == 0) continue;
+                    var f = entries[i].Split(',');
+                    if (f.Length < 2) continue;
+                    names.Add(UnescTag(f[0]));
+                    trigs.Add(UnescTag(f[1]));
+                }
+                grp.m_targetNames = names.ToArray();
+                grp.m_targetTriggers = trigs.ToArray();
+                grp.enabled = true;
+                StubLog.Log("[CustomStub] 自愈 CoaxialButtonGroup: " + go.name + "（" +
+                    buttons.Length + " 按钮｜窗口 " + grp.m_windowSeconds.ToString("0.##") +
+                    "s｜目标 " + names.Count + " 个）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] Coaxial 自愈失败 " + go.name + ": " + ex.Message);
             }
         }
 
@@ -1259,31 +1636,43 @@ namespace CustomStub
                     }
                     var frame = Time.frameCount;
                     m_cookAccum += Time.deltaTime;
-                    if ((frame + HotPotCookPhase) % HotPotCookIntervalFrames == 0)
+                    // v16 特征闸：各子系统按当前关卡的清单特征开关（无约束模式
+                    // 恒 true，编辑器 Play 行为不变）——纯随机箱等关卡不再有
+                    // HotPot/TerminalGuard/CannonGuard 的 ~1-2s 惰性空扫。
+                    if (s_fHotPot)
                     {
-                        if (m_cookAccum > 0f)
+                        if ((frame + HotPotCookPhase) % HotPotCookIntervalFrames == 0)
                         {
-                            HotPot.CookPotsOverBurner(m_cookAccum);
-                            m_cookAccum = 0f;
+                            if (m_cookAccum > 0f)
+                            {
+                                HotPot.CookPotsOverBurner(m_cookAccum);
+                                m_cookAccum = 0f;
+                            }
                         }
+                        if ((frame + HotPotFlamePhase) % HotPotFlameIntervalFrames == 0)
+                            HotPot.TickWokFlame();
+                        if ((frame + HotPotMaintenancePhase) % HotPotMaintenanceIntervalFrames == 0)
+                            HotPot.TickMaintenance();
                     }
-                    if ((frame + HotPotFlamePhase) % HotPotFlameIntervalFrames == 0)
-                        HotPot.TickWokFlame();
-                    if ((frame + HotPotMaintenancePhase) % HotPotMaintenanceIntervalFrames == 0)
-                        HotPot.TickMaintenance();
-                    if ((frame + VoidFallPhase) % VoidFallIntervalFrames == 0)
+                    if (s_fVoidFall && (frame + VoidFallPhase) % VoidFallIntervalFrames == 0)
                         PushableVoidFall.Tick();
-                    if ((frame + UtensilTimingPhase) % UtensilTimingIntervalFrames == 0
+                    if (s_fTiming && (frame + UtensilTimingPhase) % UtensilTimingIntervalFrames == 0
                         && !UtensilTiming.IsScanComplete())
                         UtensilTiming.Tick();
-                    if ((frame + TerminalGuardDiscoverPhase) % TerminalGuardDiscoverIntervalFrames == 0)
-                        TerminalGuard.TickDiscover();
-                    if ((frame + TerminalGuardRefreshPhase) % TerminalGuardRefreshIntervalFrames == 0)
-                        TerminalGuard.TickRefreshGuarded();
-                    if ((frame + CannonGuardDiscoverPhase) % CannonGuardDiscoverIntervalFrames == 0)
-                        CannonGuard.TickDiscover();
-                    if ((frame + CannonGuardRefreshPhase) % CannonGuardRefreshIntervalFrames == 0)
-                        CannonGuard.TickRefresh();
+                    if (s_fTerminal)
+                    {
+                        if ((frame + TerminalGuardDiscoverPhase) % TerminalGuardDiscoverIntervalFrames == 0)
+                            TerminalGuard.TickDiscover();
+                        if ((frame + TerminalGuardRefreshPhase) % TerminalGuardRefreshIntervalFrames == 0)
+                            TerminalGuard.TickRefreshGuarded();
+                    }
+                    if (s_fCannon)
+                    {
+                        if ((frame + CannonGuardDiscoverPhase) % CannonGuardDiscoverIntervalFrames == 0)
+                            CannonGuard.TickDiscover();
+                        if ((frame + CannonGuardRefreshPhase) % CannonGuardRefreshIntervalFrames == 0)
+                            CannonGuard.TickRefresh();
+                    }
                 }
                 catch (Exception ex)
                 {

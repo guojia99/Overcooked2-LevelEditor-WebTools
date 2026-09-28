@@ -45,9 +45,10 @@ import {
 import {
   isCollisionItem,
   isAirWallItem,
+  isAirSlopeItem,
   isLotusPressureSwitchItem
 } from "./stubControls";
-import { cleanOrphanedButtonLinks } from "./buttonLinks";
+import { cleanOrphanedButtonLinks, cleanOrphanedCoaxialLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
 import { cleanOrphanedStubRefs } from "./stubRefs";
 import { isPlayerItem } from "./renderItems";
@@ -64,7 +65,7 @@ import {
 import { pointInWalkable, parseMaterialTilingFromName } from "./floors";
 import { floorHeightAt, floorHeightFilterActive } from "./floorHeight";
 import { draw } from "./render";
-import { pushHistory } from "./historyOps";
+import { pushHistory, markDirty } from "./historyOps";
 import { setStatus } from "./status";
 import { snapValue } from "../snap";
 import {
@@ -158,6 +159,11 @@ export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
     if (!raw.localScale) raw.localScale = { x: 1, y: 1, z: 1 };
     if (!(raw.localScale.y > 0)) raw.localScale.y = 1;
     ensureAirWallColliderCenter(raw);
+  }
+  if (raw.airSlope) {
+    // 兜底参数 + 起点高度以物件 Y 为准（导出的 slope.startY 与 localPosition.y 同源）。
+    ensureAirSlopeParams(raw);
+    raw.slope!.startY = raw.localPosition?.y ?? 0;
   }
   migrateIngredientDecorToWrapper(raw);
   migrateDecorCommon03ToCommonW1(raw);
@@ -284,6 +290,34 @@ export function rotateItemByDelta(item: EditorItem, deltaDeg: number) {
   syncLocalFromWorld(item);
 }
 
+/**
+ * X/Z 轴旋转（v9）：倾斜不改俯视占地，直接改欧拉分量再同步局部坐标即可。
+ * 火锅灶台/大锅的 stub↔视觉中心换算只对 Y 有意义，X/Z 分支一律跳过。
+ * X/Z 允许归零（区别于后端旧行为：全量应用语义，见 SceneLayoutApplier 注释）。
+ */
+export function rotateItemByDeltaAxis(item: EditorItem, axis: "x" | "z", deltaDeg: number) {
+  if (axis === "x") {
+    item.localRotationX = normalizeRot((item.localRotationX ?? 0) + deltaDeg);
+  } else {
+    item.localRotationZ = normalizeRot((item.localRotationZ ?? 0) + deltaDeg);
+  }
+  syncItemLocalFromEditor(item);
+}
+
+/** 三轴绝对角设置：Y 走既有 rotateItemByDelta（保留占地中心换算），X/Z 走倾斜通道。 */
+export function setItemRotationAxis(item: EditorItem, axis: "x" | "y" | "z", deg: number) {
+  if (!isFinite(deg)) return;
+  const target = normalizeRot(deg);
+  if (axis === "y") {
+    const delta = normalizeRot(target - item.localRotationY);
+    if (delta !== 0) rotateItemByDelta(item, delta);
+    return;
+  }
+  const cur = axis === "x" ? (item.localRotationX ?? 0) : (item.localRotationZ ?? 0);
+  const delta = normalizeRot(target - cur);
+  if (delta !== 0) rotateItemByDeltaAxis(item, axis, delta);
+}
+
 const LOTUS_RANDOM_ROTATIONS = [0, 90, 180, 270];
 
 /** 将场景中全部莲花压力开关随机旋转为 0° / 90° / 180° / 270°（各实例独立随机）。 */
@@ -381,6 +415,8 @@ export function deleteSelected() {
   cleanOrphanedButtonLinks();
   // 同步清理按钮↔事件组联动（源按钮/目标物品被删则相应事件失效）
   cleanOrphanedButtonEvents();
+  // 同步清理同轴按钮组（成员/目标被删剔除引用，成员 <2 的组整体移除）
+  cleanOrphanedCoaxialLinks();
   if (S.activeAnimGroupId && !S.animControls.some((g) => g.id === S.activeAnimGroupId)) {
     S.activeAnimGroupId = null;
     S.activeAnimEventIdx = null;
@@ -425,7 +461,11 @@ export function checkPlayerCollisions(): string[] {
 export function itemWorldAABB(item: EditorItem): { minX: number; minZ: number; maxX: number; maxZ: number } {
   let spanW: number;
   let spanD: number;
-  if (isAirWallItem(item)) {
+  if (isAirSlopeItem(item)) {
+    const c = airSlopeCells(item);
+    spanW = c.wCells * CELL;
+    spanD = c.dCells * CELL;
+  } else if (isAirWallItem(item)) {
     const c = airWallCells(item);
     spanW = c.wCells * CELL;
     spanD = c.dCells * CELL;
@@ -529,6 +569,69 @@ export function setAirWallSize(item: EditorItem, wCells: number, dCells: number)
   item.localScale = swapped
     ? { x: dCellsClamped, y, z: wCellsClamped }
     : { x: wCellsClamped, y, z: dCellsClamped };
+}
+
+// ============================ 空气斜坡（v9） ============================
+
+/** GroundCast c_maxGroundAngle=58°：超过此角的坡面命中被丢弃，玩家走不上去。 */
+export const AIR_SLOPE_MAX_ANGLE = 58;
+
+/** 原版矿洞斜坡坡度区间（40~46.5°），超过 45° 时 UI 给提醒。 */
+export const AIR_SLOPE_WARN_ANGLE = 45;
+
+export function defaultAirSlopeParams(): NonNullable<LayoutItem["slope"]> {
+  return { angleDeg: 30, lengthCells: 3, widthCells: 1, startY: 0 };
+}
+
+export function ensureAirSlopeParams(item: EditorItem | LayoutItem): void {
+  if (!item.airSlope) return;
+  if (!item.slope) item.slope = defaultAirSlopeParams();
+}
+
+/** 斜坡爬升高度（米）= tan(angle) × run。 */
+export function airSlopeRiseMeters(item: EditorItem): number {
+  const s = item.slope ?? defaultAirSlopeParams();
+  return Math.tan((s.angleDeg * Math.PI) / 180) * s.lengthCells * CELL;
+}
+
+/** 斜坡终点高度（米）：起点顶面高度 + 爬升。UI 显示「1.0m → 2.0m」用。 */
+export function airSlopeEndY(item: EditorItem): number {
+  return (item.localPosition?.y ?? 0) + airSlopeRiseMeters(item);
+}
+
+/** 斜坡俯视占地（格）：长度沿朝向、宽度垂直朝向；旋转 90/270 时宽长互换。 */
+export function airSlopeCells(item: EditorItem): { wCells: number; dCells: number } {
+  const s = item.slope ?? defaultAirSlopeParams();
+  const rot = normalizeRot(item.localRotationY);
+  const swapped = rot === 90 || rot === 270;
+  return swapped
+    ? { wCells: s.lengthCells, dCells: s.widthCells }
+    : { wCells: s.widthCells, dCells: s.lengthCells };
+}
+
+/** 修改斜坡参数（角度/长度/宽度）；同步 footprint 占地。 */
+export function setAirSlopeParams(
+  item: EditorItem,
+  patch: Partial<NonNullable<LayoutItem["slope"]>>
+): void {
+  ensureAirSlopeParams(item);
+  const s = item.slope!;
+  if (patch.angleDeg != null && isFinite(patch.angleDeg)) {
+    s.angleDeg = Math.min(AIR_SLOPE_MAX_ANGLE, Math.max(0.5, patch.angleDeg));
+  }
+  if (patch.lengthCells != null && isFinite(patch.lengthCells)) {
+    s.lengthCells = Math.max(0.5, patch.lengthCells);
+  }
+  if (patch.widthCells != null && isFinite(patch.widthCells)) {
+    s.widthCells = Math.max(0.5, patch.widthCells);
+  }
+  if (patch.startY != null && isFinite(patch.startY)) {
+    s.startY = patch.startY;
+    item.localPosition.y = patch.startY;
+  }
+  if (patch.debugColor !== undefined) {
+    s.debugColor = patch.debugColor;
+  }
 }
 
 export function itemIntersectsWorldRect(
@@ -688,6 +791,18 @@ export function addFromCatalog(
     item.localScale = { x: 1, y: 1, z: 1 };
     item.colliderCenter = defaultAirWallColliderCenter();
   }
+  if (cat.id === "AirSlope") {
+    // 空气斜坡（v9）：可行走斜坡。Unity 侧 = Ground 层隐形阶梯（Col_AirSlope 根 +
+    //  Step 子级，每级挂游戏原生 Steppable 上步组件），玩家可沿坡在不同高度地板间
+    //  行走。参数模型 = 高度+长度+角度。
+    item.stubKind = "Collision";
+    item.airSlope = true;
+    item.prefabAssetPath = "";
+    item.parentPath = cat.defaultParent;
+    item.walkable = false;
+    item.footprint = { cellsX: 1, cellsZ: 1 };
+    item.slope = defaultAirSlopeParams();
+  }
   // Background surface planes (water / sand / sea…) default to a manageable 6×6
   // and are laid flat via their native rotX (standing water quads need rotX=90,
   // with depth on localScale.y) so they don't spawn 1×1 or as a vertical strip.
@@ -696,6 +811,25 @@ export function addFromCatalog(
     item.footprint = planeCatalogFootprint(item);
   }
   S.items.push(item);
+  if (cat.id === "AirSlope" && !S.items.some((it) => it !== item && it.airSlope)) {
+    const key = `airSlopeCeilingPrompt:${S.scenePath}`;
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, "1");
+      const endY = airSlopeEndY(item);
+      const recommended = Math.min(10, Math.max(2, Math.ceil(endY) + 1));
+      const apply = window.confirm(
+        `首次使用空气斜坡。\n\n` +
+        `当前斜坡最高高度约 ${endY.toFixed(1)}m，建议将 KitchenLoaderManager 的 Ceiling Height 设置为 ${recommended}。\n\n` +
+        `点击“确定”自动设置为 ${recommended}，点击“取消”可稍后通过“天花板高度”按钮手动修改。`
+      );
+      if (apply) {
+        S.ceilingHeight = recommended;
+        S.hasCeilingHeight = true;
+        markDirty();
+        setStatus(`已自动设置 Ceiling Height=${recommended}，请写回 Unity 保存`, false);
+      }
+    }
+  }
   trySnapUtensilToHost(item, cat, S.items, S.catalogByGuid);
   if (!silent) {
     setSelection([editorKey]);

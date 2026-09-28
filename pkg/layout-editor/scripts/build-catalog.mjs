@@ -291,7 +291,7 @@ const CORE_PALETTE = [
   { key: "utensils/mixing", labelZh: "核心 · 搅拌器具", labelEn: "Mixing & blending" },
   { key: "utensils/tools", labelZh: "核心 · 工具 / 其他", labelEn: "Tools & misc" },
   { key: "mechanisms", labelZh: "核心 · 机关", labelEn: "Mechanisms" },
-  { key: "surface", labelZh: "核心 · 空气墙", labelEn: "Air walls" },
+  { key: "surface", labelZh: "核心 · 空气墙/斜坡", labelEn: "Air walls & slopes" },
   { key: "Player", labelZh: "核心 · 厨师出生点", labelEn: "Chef spawns" },
 ];
 
@@ -1434,11 +1434,22 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
   // Mixed 类型自定义菜谱：
   //  - 若自身烹饪步骤本身就是混合步骤（Blender / Mixer / MixingBowl），
   //    该步骤即搅拌本身 → 只显示该混合图标（单图标，如冰蓝莓沙 = 搅拌机）。
+  //  - Web/官方果汁（Mixed + Glass / type=smoothie）：无 cookingStep 时走 Blender。
   //  - 否则先搅拌（MixingBowl）再烹饪（最终步骤标记，并入同格双图标），
   //    例：面团+肉搅拌 → MixingBowl 组 + 烹饪步骤标记组。
   if (recipe.mixing) {
-    if (finalStep === "Blender" || finalStep === "Mixer" || finalStep === "MixingBowl") {
-      return [{ step: finalStep, utensils: STEP_UTENSILS[finalStep] || [], ingredients: [...ingredients] }];
+    let mixStep = finalStep;
+    if (mixStep !== "Blender" && mixStep !== "Mixer" && mixStep !== "MixingBowl") {
+      const flourBranch =
+        ingredients.some((i) => FLOUR_INGREDIENTS.has(i)) && ingredients.some((i) => EGG_INGREDIENTS.has(i));
+      const smoothie =
+        !flourBranch &&
+        !isCookStep(finalStep) &&
+        (type === "smoothie" || recipe.platingStep === "Glass");
+      mixStep = smoothie ? "Blender" : "MixingBowl";
+    }
+    if (mixStep === "Blender" || mixStep === "Mixer" || mixStep === "MixingBowl") {
+      return [{ step: mixStep, utensils: STEP_UTENSILS[mixStep] || [], ingredients: [...ingredients] }];
     }
     const groups = [{ step: "MixingBowl", utensils: STEP_UTENSILS["MixingBowl"] || [], ingredients: [...ingredients] }];
     if (isCookStep(finalStep)) {
@@ -2305,6 +2316,23 @@ function main() {
     footprint: { cellsX: 1, cellsZ: 1 },
     layoutTier: "core",
     surfaceKind: "airwall",
+  });
+
+  // 合成核心物品：空气斜坡（可行走斜坡，v9）。Ground 层旋转 BoxCollider
+  //（名称 Col_AirSlope 识别；SlopedGround 层与 Players 的物理碰撞在本工程矩阵
+  // 中关闭、玩家会穿过，故用 Ground）：玩家可沿坡在不同高度地板间行走
+  //（例：1m → 2m）。guid = md5("synthetic:AirSlope")，与
+  // SceneLayoutExporter.AirSlopeCatalogGuid 逐字符一致。
+  items.push({
+    id: "AirSlope",
+    guid: "ad9efda5019002d0edbfb92d10e6a306",
+    assetPath: "",
+    category: "surface",
+    theme: null,
+    defaultParent: "Design/Collision",
+    footprint: { cellsX: 1, cellsZ: 1 },
+    layoutTier: "core",
+    surfaceKind: "airslope",
   });
 
   for (const item of items) {

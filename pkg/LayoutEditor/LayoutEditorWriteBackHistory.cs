@@ -450,7 +450,7 @@ public static class LayoutEditorWriteBackHistory
                 return;
             // 双写：semantic_*.json = 轻量子集（diff 用，兼容旧记录）；doc_*.json = 完整
             // LayoutDocument（含 animControls/walkable/deathInfo/switchLinks/buttonLinks/
-            // buttonEvents，供「恢复到画布」）。同一份导出，零额外遍历。
+            // buttonEvents/coaxialLinks，供「恢复到画布」）。同一份导出，零额外遍历。
             WriteJsonFile(Path.Combine(pendingDir, fileName), SnapshotSubsetOf(doc));
             WriteJsonFile(Path.Combine(pendingDir, fileName.Replace("semantic_", "doc_")), doc);
             // 覆盖写不更新目录 mtime，显式续期宽限窗口。
@@ -660,6 +660,11 @@ public static class LayoutEditorWriteBackHistory
             { "stubKind", "功能类型" },
             { "walkable", "可行走" },
             { "airWall", "空气墙" },
+            { "airSlope", "空气斜坡" },
+            { "slope.angleDeg", "斜坡角度" },
+            { "slope.lengthCells", "斜坡长度" },
+            { "slope.widthCells", "斜坡宽度" },
+            { "slope.startY", "斜坡起点高度" },
             { "footprint", "占地尺寸" },
             { "colliderCenter", "碰撞盒中心" },
             { "burner.fuelCostPerUse", "燃料消耗" },

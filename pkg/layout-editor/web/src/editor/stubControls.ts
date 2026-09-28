@@ -59,9 +59,11 @@ import {
   BURNER_FIRE_MODES
 } from "./ui/constants";
 import {
-  buttonLinkSummaryText,
-  isButtonLinkSource
+  buttonLinkCtxHtml,
+  isButtonLinkSource,
+  wireButtonLinkCtx
 } from "./buttonLinks";
+import { coaxialCtxHtml, wireCoaxialCtx } from "./coaxialControls";
 import {
   buttonEventSummaryText,
   eventLinkOfSource,
@@ -196,20 +198,22 @@ export function nativeLinkTrigger(item: EditorItem): string | null {
   return null;
 }
 
-/** 旧版自定义触发名（switch_{prefabId}_{N}）的联动在目标为机器时已失效
- *  （见 nativeLinkTrigger）：载入时归一化为原生触发名（下次写回即修复场景）。 */
+/** 旧版/默认触发名的联动在目标为机器时真机不响应（见 nativeLinkTrigger）：
+ *  载入时归一化为原生触发名（switch_* 自造名与遗留 "Switch"/空值都修，
+ *  下次写回即修复场景）。 */
 export function normalizeMachineLinkTriggers(): void {
   let fixed = 0;
   for (const l of S.switchLinks) {
     const target = S.items.find((i) => i.instanceId === l.targetId);
     if (!target) continue;
     const native = nativeLinkTrigger(target);
-    if (native && l.trigger !== native && l.trigger.startsWith("switch_")) {
+    const stale = !l.trigger || l.trigger === "Switch" || l.trigger.startsWith("switch_");
+    if (native && l.trigger !== native && stale) {
       l.trigger = native;
       fixed++;
     }
   }
-  if (fixed > 0) setStatus(`已修复 ${fixed} 条旧式开关联动触发名（→ 机器原生触发名，写回后生效）`);
+  if (fixed > 0) setStatus(`已修复 ${fixed} 条开关联动触发名（→ 机器原生触发名，写回后生效）`);
 }
 
 /** 该分配器允许输出的食材判定（非特殊分配器返回 null = 全部食材可选）。
@@ -326,6 +330,11 @@ export function isCollisionItem(it: EditorItem): boolean {
 /** 核心层空气墙（隐形碰撞块，非场景 Col_Wall 等辅助碰撞）。 */
 export function isAirWallItem(it: EditorItem): boolean {
   return !!it.airWall;
+}
+
+/** 核心层空气斜坡（可行走斜坡，v9）。 */
+export function isAirSlopeItem(it: EditorItem): boolean {
+  return !!it.airSlope;
 }
 
 /** 厨具默认容量：统一为 4。 */
@@ -504,10 +513,9 @@ export function pressureSwitchMaterialHtml(item: EditorItem): string {
 function triggerOrchestrateEntryHtml(item: EditorItem): string {
   const evLink = eventLinkOfSource(item.instanceId ?? "");
   const evN = evLink?.groups.length ?? 0;
-  return `<div class="ctx-stub-title" style="margin-top:6px">触发编排（事件组 · 动画组）</div>
-    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">🔁 ${escHtml(buttonEventSummaryText(evN > 0 ? evLink : undefined))}</div>
-    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">🎬 ${escHtml(buttonLinkSummaryText(item))}</div>
-    <label class="ctx-stub-row"><button type="button" class="ctx-btn" id="ctx-trig-config" style="width:100%">🎛 打开触发编排…</button></label>`;
+  const eventHint =
+    evN > 0 ? `🔁 ${escHtml(buttonEventSummaryText(evLink))}` : undefined;
+  return buttonLinkCtxHtml(item, eventHint);
 }
 
 export function stubControlsHtml(item: EditorItem): string {
@@ -703,9 +711,9 @@ export function stubControlsHtml(item: EditorItem): string {
         <div id="ctx-sw-links"></div>
         <label class="ctx-stub-row"><select id="ctx-sw-linktarget" class="ctx-input"></select>
           <button type="button" class="ctx-btn" id="ctx-sw-linkadd">添加</button></label>
-        <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" value="Launch" placeholder="Launch"/></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">按下按钮时对目标对象广播该消息${isCannon ? "（大炮须为 Launch，对应游戏内发射触发）" : "（默认 Switch；同一开关的所有联动共享此消息）"}；配置了「联动事件组」后按压以事件组为准，直发自动停用</div>
-        ${isCannon ? "" : triggerOrchestrateEntryHtml(item)}</div>`;
+        <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" placeholder="${isCannon ? "Launch" : "自动（机器原生触发名）"}"/></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">仅直连机器需要此消息${isCannon ? "（大炮须为 Launch，对应游戏内发射触发）" : "（留空自动取机器原生触发名 Chop/Next/Launch；按钮被按的信号本身是游戏固定的「Switch」消息，无需配置）"}；配置了「联动事件组」后按压以事件组为准，直发自动停用</div>
+        ${isCannon ? "" : coaxialCtxHtml(item)}${isCannon ? "" : triggerOrchestrateEntryHtml(item)}</div>`;
     }
     case "PressureSwitch": {
       const matHtml = pressureSwitchMaterialHtml(item);
@@ -1436,7 +1444,7 @@ export function wireStubControls(item: EditorItem) {
         const sel = document.getElementById("ctx-sw-linktarget") as HTMLSelectElement | null;
         if (sel) sel.innerHTML = linkTargetOptsHtml();
         const trig = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
-        if (trig && document.activeElement !== trig) trig.value = myLinks()[0]?.trigger ?? (isCannon ? "Launch" : "Switch");
+        if (trig && document.activeElement !== trig) trig.value = myLinks()[0]?.trigger ?? "";
       };
       refreshLinks();
       num("ctx-sw-linkadd")?.addEventListener("click", () => {
@@ -1456,7 +1464,7 @@ export function wireStubControls(item: EditorItem) {
           if (native) {
             trigger = native;
           } else if (myLinks()[0]?.trigger) {
-            trigger = myLinks()[0]!.trigger;
+            trigger = myLinks()[0]!.trigger ?? "Switch";
           } else {
             const prefabId = target ? prefabIdFromPath(target.prefabAssetPath) ?? "item" : "item";
             trigger = `switch_${prefabId}_1`;
@@ -1468,18 +1476,40 @@ export function wireStubControls(item: EditorItem) {
         refreshLinks();
       });
       num("ctx-sw-trigger")?.addEventListener("change", () => {
-        const trig = (document.getElementById("ctx-sw-trigger") as HTMLInputElement).value.trim() || (isCannon ? "Launch" : "Switch");
+        const raw = (document.getElementById("ctx-sw-trigger") as HTMLInputElement).value.trim();
         const links = myLinks();
         if (!links.length) return;
         pushHistory();
-        for (const l of links) l.trigger = trig;
-        // 事件组触发名固定取联动共享触发名：联动改名时同步事件
+        // 留空 = 自动：每条联动取其目标的原生触发名（机器目标），兜底 Launch/Switch。
+        let resolved = raw;
+        for (const l of links) {
+          if (raw) {
+            l.trigger = raw;
+            continue;
+          }
+          const t = S.items.find((i) => i.instanceId === l.targetId);
+          l.trigger = (t ? nativeLinkTrigger(t) : null) ?? (isCannon ? "Launch" : "Switch");
+          if (!resolved) resolved = l.trigger;
+        }
+        const inp = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
+        if (inp && !raw) inp.value = resolved;
+        // 事件组触发名跟随各自目标的联动触发名（监听字段是每台机器单值）
         for (const bl of S.buttonEvents) {
           if (bl.sourceId !== myId) continue;
-          for (const g of bl.groups) for (const e of g.events) e.trigger = trig;
+          for (const g of bl.groups) {
+            for (const e of g.events) {
+              const lt = S.switchLinks.find(
+                (sl) => sl.switchId === myId && sl.targetId === e.targetId
+              )?.trigger;
+              if (lt) e.trigger = lt;
+            }
+          }
         }
-        setStatus(`已更新触发消息为 ${trig}（写回后生效）`);
+        setStatus(`已更新触发消息（${resolved}，写回后生效）`);
       });
+
+      // ---- 同轴组（S.coaxialLinks，文档级；大炮开关不参与） ----
+      if (!isCannon) wireCoaxialCtx(item);
       break;
     }
     case "PressureSwitch": {
@@ -1526,6 +1556,7 @@ export function wireStubControls(item: EditorItem) {
   }
 
   if (isButtonLinkSource(item)) {
+    wireButtonLinkCtx(item);
     document.getElementById("ctx-trig-config")?.addEventListener("click", () => {
       hideContextMenu();
       openTriggerOrchestrator(item);

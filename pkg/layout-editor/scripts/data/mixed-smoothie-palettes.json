@@ -1,0 +1,92 @@
+{
+  "_comment": "Web 混果汁色板。drink=液面 glass=杯身 straw=吸管 umbrella=伞。HSV 换色见 gen-mega-smoothie-textures.mjs。",
+  "variants": [
+    {
+      "id": "Web_Smoothie_Mix_Red",
+      "drink": "#FF3030",
+      "glass": "#E01818",
+      "straw": "#F02020",
+      "umbrella": "#FF4848"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Orange",
+      "drink": "#FF8818",
+      "glass": "#E87008",
+      "straw": "#FF9808",
+      "umbrella": "#FFA028"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Yellow",
+      "drink": "#FFE818",
+      "glass": "#E8D010",
+      "straw": "#FFF020",
+      "umbrella": "#FFF030"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Green",
+      "drink": "#38D848",
+      "glass": "#28C038",
+      "straw": "#30E040",
+      "umbrella": "#48F058"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Pink",
+      "drink": "#FF68B0",
+      "glass": "#E85098",
+      "straw": "#FF58A8",
+      "umbrella": "#FF78C0"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Brown",
+      "drink": "#784028",
+      "glass": "#603018",
+      "straw": "#683820",
+      "umbrella": "#885030",
+      "drinkSatBoost": 1.55
+    },
+    {
+      "id": "Web_Smoothie_Mix_Coral",
+      "drink": "#FF6850",
+      "glass": "#E85040",
+      "straw": "#FF5848",
+      "umbrella": "#FF7860"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Tropical",
+      "drink": "#FFB818",
+      "glass": "#E8A008",
+      "straw": "#FFC808",
+      "umbrella": "#FFD028"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Berry",
+      "drink": "#D030A0",
+      "glass": "#B01880",
+      "straw": "#C02890",
+      "umbrella": "#E040B0",
+      "drinkSatBoost": 1.55
+    },
+    {
+      "id": "Web_Smoothie_Mix_Sunrise",
+      "drink": "#FF9830",
+      "glass": "#E88020",
+      "straw": "#FF9028",
+      "umbrella": "#FFA840"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Meadow",
+      "drink": "#D8E838",
+      "glass": "#B8C828",
+      "straw": "#C8E030",
+      "umbrella": "#E8F040"
+    },
+    {
+      "id": "Web_Smoothie_Mix_Bramble",
+      "drink": "#6020A8",
+      "glass": "#481088",
+      "straw": "#501898",
+      "umbrella": "#7028C0",
+      "drinkSatBoost": 1.6
+    }
+  ]
+}

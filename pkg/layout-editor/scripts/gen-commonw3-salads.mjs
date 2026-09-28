@@ -354,7 +354,28 @@ MonoBehaviour:
   assetPath: Assets/downloadablecontent/dlc11/dlc_assets/prefabs/meals/dlc11_compositesalad.prefab
 `;
 
-const CONFIG_ASSET = `%YAML 1.1
+/** 读取现有 CustomRecipeConfig（保留 smoothie 等后续分类与更高 nextSequence）。 */
+function loadExistingConfig() {
+  const p = path.join(repoRoot, "Assets/commonW3/custom_recipes/CustomRecipeConfig.asset");
+  if (!fs.existsSync(p)) return { nextSequence: RECIPES.length + 1, extraCategories: [] };
+  const text = fs.readFileSync(p, "utf8");
+  const seqM = text.match(/nextSequence:\s*(\d+)/);
+  const nextSequence = seqM ? Math.max(parseInt(seqM[1], 10), RECIPES.length + 1) : RECIPES.length + 1;
+  const extraCategories = [];
+  const catRe = /- id: (\w+)\s*\n\s*zh: "([^"]*)"\s*\n\s*en: (\w+)/g;
+  let m;
+  while ((m = catRe.exec(text)) !== null) {
+    if (m[1] !== "salad") extraCategories.push({ id: m[1], zh: m[2].replace(/\\u([0-9A-Fa-f]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16))), en: m[3] });
+  }
+  return { nextSequence, extraCategories };
+}
+
+function buildConfigAsset() {
+  const { nextSequence, extraCategories } = loadExistingConfig();
+  const extraYaml = extraCategories
+    .map((c) => `  - id: ${c.id}\n    zh: "${yamlStr(c.zh)}"\n    en: ${c.en}`)
+    .join("\n");
+  return `%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -368,14 +389,15 @@ MonoBehaviour:
   m_Name: CustomRecipeConfig
   m_EditorClassIdentifier: 
   uidPrefix: ${UID_PREFIX}
-  nextSequence: ${RECIPES.length + 1}
+  nextSequence: ${nextSequence}
   categories:
   - id: salad
     zh: "${yamlStr("沙拉大全")}"
     en: Salad
-  subcategories: []
+${extraYaml ? extraYaml + "\n" : ""}  subcategories: []
   modelTransforms: []
 `;
+}
 
 // ---------------------------------------------------------------- 输出计划
 
@@ -400,10 +422,21 @@ function buildPlan() {
 
   // 成品模型 SO + 配置 + names.json
   add(`${W3}/pseudo_prefab_so/dlc11_compositesalad.asset`, COMPOSITE_SALAD_SO, ASSET_META, compositeSaladGuid);
-  add(`${W3}/custom_recipes/CustomRecipeConfig.asset`, CONFIG_ASSET, ASSET_META);
+  add(`${W3}/custom_recipes/CustomRecipeConfig.asset`, buildConfigAsset(), ASSET_META);
+  const saladIds = new Set(RECIPES.map((r) => r.id));
+  const namesPath = path.join(repoRoot, `${W3}/custom_recipes/names.json`);
+  let preserved = [];
+  if (fs.existsSync(namesPath)) {
+    const raw = fs.readFileSync(namesPath, "utf8").replace(/^\uFEFF/, "");
+    try {
+      preserved = (JSON.parse(raw).names ?? []).filter((n) => !saladIds.has(n.id));
+    } catch {
+      preserved = [];
+    }
+  }
   const names = {
     schemaVersion: 1,
-    names: RECIPES.map((r) => ({ id: r.id, zh: r.zh, en: r.en })),
+    names: [...RECIPES.map((r) => ({ id: r.id, zh: r.zh, en: r.en })), ...preserved],
   };
   // 与 commonW2 一致：UTF-8 BOM + 2 空格缩进
   add(

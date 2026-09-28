@@ -31,7 +31,8 @@ import type {
   LayoutDocument,
   AnimControlData,
   ButtonLinkData,
-  ButtonEventData
+  ButtonEventData,
+  CoaxialLinkData
 } from "../types";
 
 export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz, ...rest }: EditorItem): LayoutItem {
@@ -113,13 +114,18 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
     }
   }
   const ly = rest.localPosition?.y ?? 0;
+  // 空气斜坡：起点高度跟随物件 Y（唯一真源=localPosition.y），序列化时同步进 slope
+  // 参数——后端写回以 worldPosition 为锚，slope.startY 供展示/校验用。
+  if (rest.airSlope && rest.slope) {
+    rest.slope = { ...rest.slope, startY: ly };
+  }
   const unityXZ = editorItemUnityWorldXZ({ _wx, _wz, localRotationY: rest.localRotationY, prefabAssetPath: rest.prefabAssetPath, prefabGuid: rest.prefabGuid });
   return {
     ...rest,
     footprint: fp,
     localPosition: { x: unityXZ.x - _parentWx, y: ly, z: unityXZ.z - _parentWz },
     worldPosition: { x: unityXZ.x, y: ly, z: unityXZ.z },
-    walkable: isAirWall || isPressureSwitch
+    walkable: isAirWall || rest.airSlope === true || isPressureSwitch
       ? false
       : !isRaftPlank && (!!(cat && cat.surfaceTier === "floor") || isAirBalloonBridgeX3),
   };
@@ -246,9 +252,16 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     return { links: S.buttonEvents };
   };
 
+  // 同轴按钮组引用场景物品，与 animControls 一样只在全量保存时携带。
+  const coaxialLinkDoc = (): CoaxialLinkData | undefined => {
+    if (only) return undefined;
+    return { links: S.coaxialLinks };
+  };
+
   if (only === "items" || only === "decor") {
     return {
       sceneAssetPath: S.scenePath,
+      hasCeilingHeight: false,
       items: S.items
         .filter((it) => itemLayerOfIt(it) === only)
         .map(serializeItemForDoc),
@@ -268,6 +281,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
   if (only === "floors") {
     return {
       sceneAssetPath: S.scenePath,
+      hasCeilingHeight: false,
       // Surface-tier prefab items (travelators, water/background props, …) ride
       // along so Unity can move/delete them; themed/raft are regenerated.
       items: S.items
@@ -284,12 +298,15 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
 
   return {
     sceneAssetPath: S.scenePath,
+    hasCeilingHeight: S.hasCeilingHeight,
+    ceilingHeight: Math.max(0, Math.min(10, S.ceilingHeight)),
     items: S.items.map(serializeItemForDoc).concat(raftItems).concat(themedItems),
     floors: serializeFloorsForDoc(),
     animControls: animDoc(),
     switchLinks: S.switchLinks,
     buttonLinks: buttonLinkDoc(),
     buttonEvents: buttonEventDoc(),
+    coaxialLinks: coaxialLinkDoc(),
     // 相机与灯光仅随全量写回（作用域保存不携带，Unity 侧 likewise no-op）。
     // cameraInfo 为 null 时省略字段（JSON.stringify 丢弃 undefined），
     // 后端 JsonUtility 对缺失字段得 null → ApplyCameraInfo no-op。

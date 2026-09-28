@@ -18,6 +18,11 @@
       "en": "Air Wall"
     },
     {
+      "id": "AirSlope",
+      "zh": "空气斜坡（可行走）",
+      "en": "Air Slope"
+    },
+    {
       "id": "Airbed_01",
       "zh": "充气床 1",
       "en": "Airbed 1"

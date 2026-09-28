@@ -15,6 +15,7 @@
 ├── AnimGroupImporter.cs                  场景动画组 → 文档模型反向导入 (1302 行)
 ├── ButtonEventBakery.cs                  按钮↔事件组联动烘焙
 ├── ButtonLinkBakery.cs                   按钮↔动画组联动烘焙 (956 行)
+├── CoaxialButtonBakery.cs                同轴按钮组烘焙（≥2 按钮时间窗内集齐→目标广播）
 ├── CustomRecipeConfigSO.cs               自定义菜谱配置 SO（LevelEditorStub 命名空间）
 ├── CustomStubAutoBake.cs                 CustomStub 按需自动化（拷贝/编译/补烘焙闭环）
 ├── CustomStubCopyTool.cs                 CustomStub 母本 → 关卡集 stub/ 拷贝工具
@@ -251,6 +252,7 @@ flowchart TD
 | **AnimGroupImporter.cs** | `ImportFromScene`：扫描场景候选（TriggerQueue/TriggerTimer + Animator 含 Transform 曲线）→ `TryImportFromSource`（优先反序列化嵌入 AnimGroupSource）→ 回退片段分析（路线/相位匹配/静态成员/lift 剖面提取）。只有形状平行的成员才保证再烘焙保真 |
 | **ButtonLinkBakery.cs** | 按钮/压力开关 → 动画组联动，烘焙到 `Design/Button Logic/Btn(Logic|Pair)_*`：顺序触发状态环（Ready_i→Run_i→Ready_{i+1}）、lockUntilFinished（ClearTriggerDuringState）、共轭对 AND 门（pairId，每方 ≤2 组）；`PrepareGroups/Sync/ImportFromScene/CleanupStale` |
 | **ButtonEventBakery.cs** | 按钮 → 事件组联动（事件 = 向目标广播 trigger + doneTrigger 完成信号），烘焙到 `Design/Button Event Logic`，按压触发名 `BEP_<helper>` |
+| **CoaxialButtonBakery.cs** | 同轴按钮组：≥2 按钮时间窗内（0.35~5s，默认 1s，首个按下起计时）集齐才向目标机器广播触发（断头台 Chop 等）；超时已按按钮弹回零触发、成功后锁 0.35s 全组弹回。烘焙到 **`Design/Coaxial Logic/Coax_<hash>`**（独立根，防被 ButtonLinkBakery.CleanupStale 误删；无 Animator 资产）+ 反射挂 `CustomStub.CoaxialButtonGroup` + tag `Coaxial\|W:窗口\|N:按钮名,..\|T:目标,触发;..`；成员复用 `_BL<n>` 唯一命名 + 停用 SwitchReenable；文档字段 `coaxialLinks`（仅全量写回） |
 | **AnimGroupBakeryTests.cs** | 菜单 `Layout Editor/Tests/...`：asset key 唯一性/稳定性 + Timeline 迁移 + FX 事件断言 |
 
 ### 3.5 管理端 API

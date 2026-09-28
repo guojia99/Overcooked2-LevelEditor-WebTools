@@ -8,6 +8,7 @@
  *  - it.terminal                  终端 → 可操控对象（大炮等）
  *  - it.heatedOven                石炉台 → 热源工作台
  *  - S.buttonLinks / S.buttonEvents   按钮联动（sourceId/events.targetId 为 instanceId）
+ *  - S.coaxialLinks               同轴按钮组（sourceIds/targetIds 为 instanceId）
  *  - S.animControls               动画组成员 id
  *
  * 历史问题：这些引用分散在各处维护——删除物品只清了开关/按钮联动，
@@ -44,6 +45,7 @@ export function remapAllInstanceRefs(map: Map<string, string>): void {
   }
   for (const l of S.buttonLinks) {
     l.sourceId = m(l.sourceId);
+    l.sharedSourceIds = (l.sharedSourceIds ?? []).map(m);
   }
   for (const l of S.buttonEvents) {
     l.sourceId = m(l.sourceId);
@@ -52,6 +54,10 @@ export function remapAllInstanceRefs(map: Map<string, string>): void {
         ev.targetId = m(ev.targetId);
       }
     }
+  }
+  for (const c of S.coaxialLinks) {
+    c.sourceIds = c.sourceIds.map(m);
+    c.targetIds = (c.targetIds ?? []).map(m);
   }
   for (const mg of S.animControls) {
     mg.itemInstanceIds = mg.itemInstanceIds.map(m);

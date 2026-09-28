@@ -20,6 +20,7 @@ export interface RecipeLike {
   id?: string;
   type?: string;
   cookingStep?: string;
+  platingStep?: string;
   ingredients?: string[];
   /** Direct composition ids for custom recipes (sub-recipe ids and/or ingredient ids). */
   compositionIds?: string[];
@@ -319,11 +320,21 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   // Mixed 类型自定义菜谱：
   //  - 若自身烹饪步骤本身就是混合步骤（Blender / Mixer / MixingBowl），
   //    该步骤即搅拌本身 → 只显示该混合图标（单图标，如冰蓝莓沙 = 搅拌机）。
+  //  - Web/官方果汁（Mixed + Glass / type=smoothie）：无 cookingStep 时走 Blender。
   //  - 否则先搅拌（MixingBowl）再烹饪（最终步骤标记，并入同格双图标），
   //    例：面团+肉搅拌 → MixingBowl 组 + 烹饪步骤标记组。
   if (r.mixing) {
-    if (finalStep === "Blender" || finalStep === "Mixer" || finalStep === "MixingBowl") {
-      return [{ step: finalStep, utensils: STEP_UTENSILS[finalStep] ?? [], ingredients: [...ingredients] }];
+    let mixStep = finalStep;
+    if (mixStep !== "Blender" && mixStep !== "Mixer" && mixStep !== "MixingBowl") {
+      const flour = ingredients.some((i) => FLOUR_INGREDIENTS.has(i)) && ingredients.some((i) => EGG_INGREDIENTS.has(i));
+      const smoothie =
+        !flour &&
+        !isCookStep(finalStep) &&
+        (r.type === "smoothie" || r.platingStep === "Glass");
+      mixStep = smoothie ? "Blender" : "MixingBowl";
+    }
+    if (mixStep === "Blender" || mixStep === "Mixer" || mixStep === "MixingBowl") {
+      return [{ step: mixStep, utensils: STEP_UTENSILS[mixStep] ?? [], ingredients: [...ingredients] }];
     }
     const groups: CookingGroup[] = [
       { step: "MixingBowl", utensils: STEP_UTENSILS["MixingBowl"] ?? [], ingredients: [...ingredients] },

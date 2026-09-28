@@ -2094,7 +2094,18 @@ const STAR_FIELDS: Array<[keyof PerPlayerConfig, string]> = [
 const PLAYER_TABS = ["1p", "2p", "3p", "4p"] as const;
 const PLAYER_ROW_LABELS = ["1P", "2P", "3P", "4P"];
 
-export async function openConfigTabsModal(detail: LevelDetail, setName: string, onSaved: () => void): Promise<void> {
+export interface SceneConfigOptions {
+  ceilingHeight: number;
+  hasCeilingHeight: boolean;
+  onCeilingHeightChange?: (value: number) => void;
+}
+
+export async function openConfigTabsModal(
+  detail: LevelDetail,
+  setName: string,
+  onSaved: () => void,
+  sceneConfig?: SceneConfigOptions
+): Promise<void> {
   const starHead = STAR_FIELDS.map(([, label]) => `<th>${label}</th>`).join("");
   const matrixRows = PLAYER_TABS.map((t, ti) => {
     const cfg = detail.configs[ti] ?? ({ exists: false } as PerPlayerConfig);
@@ -2135,7 +2146,7 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
           <span class="muted small">修改时长后点击「一键定分」重新修订；定分会同步修正订单超时 / 间隔 / 回盘</span>
        </div>
        <p class="modal-hint">订单数量（LevelInfoSO）</p>
-       <div class="cfg-order-count">
+        <div class="cfg-order-count">
          <label class="m-field">最少同时订单 minOrderCount<input type="number" id="cfg-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount ?? 2}"></label>
          <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="cfg-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount ?? 5}"></label>
        </div>
@@ -2143,8 +2154,13 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
        <div class="cfg-order-count">
          <label class="m-field">网格半宽 X gridHalfSizeX<input type="number" id="cfg-gridHalfX" min="0" max="50" step="1" value="${detail.gridHalfSizeX ?? 0}"></label>
          <label class="m-field">网格半宽 Z gridHalfSizeZ<input type="number" id="cfg-gridHalfZ" min="0" max="50" step="1" value="${detail.gridHalfSizeZ ?? 0}"></label>
-         <span class="muted small">默认显示场景当前生效值；0 = 不调整（保持场景现值）。网格以 GridManager 为中心向两侧各扩展 N 格（实际 2N+1 格），需覆盖全部工作台，超出的工作台无法交互。保存后随「💾 写回 Unity」或导出时写入场景。</span>
-       </div>
+          <span class="muted small">默认显示场景当前生效值；0 = 不调整（保持场景现值）。网格以 GridManager 为中心向两侧各扩展 N 格（实际 2N+1 格），需覆盖全部工作台，超出的工作台无法交互。保存后随「💾 写回 Unity」或导出时写入场景。</span>
+        </div>
+        ${sceneConfig ? `<p class="modal-hint">核心参数 · 空气斜坡（CampaignGameEnvironment/KitchenLoaderManager）</p>
+        <div class="cfg-order-count">
+          <label class="m-field">Ceiling Height<input type="number" id="cfg-ceilingHeight" min="0" max="10" step="1" value="${sceneConfig.ceilingHeight}"></label>
+          <span class="muted small">默认值为 2；空气斜坡首次使用时建议设置为「最高斜坡高度向上取整 + 1」，最高不超过 10。保存关卡配置后仍需点击「写回 Unity」保存场景。</span>
+        </div>` : ""}
        <p class="modal-hint">星级分数（按人数）</p>
        <table class="cfg-matrix">
          <thead><tr><th>人数</th>${starHead}<th>难度系数</th></tr></thead>
@@ -2336,6 +2352,11 @@ export async function openConfigTabsModal(detail: LevelDetail, setName: string, 
       const maxOrderCount = Number((document.getElementById("cfg-maxOrderCount") as HTMLInputElement).value || 5);
       const gridHalfSizeX = Number((document.getElementById("cfg-gridHalfX") as HTMLInputElement).value || 0);
       const gridHalfSizeZ = Number((document.getElementById("cfg-gridHalfZ") as HTMLInputElement).value || 0);
+      const ceilingInput = document.getElementById("cfg-ceilingHeight") as HTMLInputElement | null;
+      if (ceilingInput && sceneConfig) {
+        const ceilingHeight = Math.max(0, Math.min(10, Number(ceilingInput.value || 2)));
+        sceneConfig.onCeilingHeightChange?.(ceilingHeight);
+      }
       await api.updateLevelInfo({
         assetPath: detail.levelInfoAssetPath,
         levelName: detail.levelName,

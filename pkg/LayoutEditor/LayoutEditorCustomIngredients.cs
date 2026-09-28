@@ -36,7 +36,7 @@ public static class LayoutEditorCustomIngredients
     /// <summary>Burger大全共享汉堡菜谱库（打包为 commonW2 bundle）。</summary>
     public const string CommonW2Root = "Assets/commonW2";
 
-    /// <summary>沙拉大全共享沙拉菜谱库（打包为 commonW3 bundle）。</summary>
+    /// <summary>Web 扩展菜谱共享库（沙拉 + 果汁，打包为 commonW3 bundle）。</summary>
     public const string CommonW3Root = "Assets/commonW3";
 
     /// <summary>旧 custom_web 拷贝目录名（机制已废弃，仅为兼容读取历史数据保留）。</summary>

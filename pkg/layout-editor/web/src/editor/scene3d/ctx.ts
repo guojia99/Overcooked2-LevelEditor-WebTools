@@ -19,8 +19,8 @@ export interface Pickable {
   handle?: {
     owner: "floor" | "item";
     ownerKey: string;
-    /** 角柄：四角之一；轴柄：y。 */
-    edge: "nw" | "ne" | "sw" | "se" | "y" | "top";
+    /** 角柄：四角之一；轴柄：y；空气墙高度：top；旋转环（v9）：rotx/roty/rotz。 */
+    edge: "nw" | "ne" | "sw" | "se" | "y" | "top" | "rotx" | "roty" | "rotz";
   };
 }
 

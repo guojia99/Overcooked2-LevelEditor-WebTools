@@ -53,6 +53,12 @@ public static class SceneLayoutApplier
         // 写回历史：此刻场景已打开且未做任何改动，取写回前语义快照（stripped 状态，
         // 与 SaveScene 后的 after 快照状态一致）。
         LayoutEditorWriteBackHistory.SupplySemanticBefore(document.sceneAssetPath);
+        if (only == null && document.hasCeilingHeight)
+        {
+            var ceilingError = ApplyCeilingHeight(document.ceilingHeight);
+            if (!string.IsNullOrEmpty(ceilingError))
+                return ceilingError;
+        }
         RemoveUnmatchedSceneItems(before, document.items, only);
 
         var usedSceneObjectIds = new HashSet<int>();
@@ -71,7 +77,10 @@ public static class SceneLayoutApplier
 
             if (item.stubKind == "Collision")
             {
-                ApplyCollisionItem(item, snapStep, usedSceneObjectIds, createdObjects);
+                if (item.airSlope)
+                    ApplyAirSlopeItem(item, snapStep, usedSceneObjectIds, createdObjects);
+                else
+                    ApplyCollisionItem(item, snapStep, usedSceneObjectIds, createdObjects);
                 continue;
             }
 
@@ -152,6 +161,16 @@ public static class SceneLayoutApplier
             else
             {
                 var t = FindItemTransform(item);
+                if (t != null && LayoutEditorStubIO.IsUnderManagerEnvironment(t))
+                {
+                    // 管理器环境 rig 物体（CheatManager/RatManager 等）禁止被物品匹配
+                    // （stale u:/路径兜底误命中时会在 rig 上钉物品组件，Play Init NRE
+                    // 中断全部初始化——2026-09-28 test_juice 事故）；按未匹配处理，
+                    // 走 CreateInstance 在 Design/ 下重建正确物品。
+                    LayoutEditorLog.LogWarning("[LayoutEditor] 物品 " + (item.displayName ?? "?") +
+                        " 误匹配到管理器环境物体 " + t.name + "——跳过并在 Design/ 下重建");
+                    t = null;
+                }
                 if (t != null)
                 {
                     var objectId = t.gameObject.GetInstanceID();
@@ -170,8 +189,10 @@ public static class SceneLayoutApplier
                         posFull.z = SnapScalar(posFull.z, itemSnap);
                         t.localPosition = posFull;
                     }
-                    var rotX = item.localRotationX != 0f ? item.localRotationX : t.localEulerAngles.x;
-                    t.localEulerAngles = new Vector3(rotX, rotY, t.localEulerAngles.z);
+                    // X/Z 全量应用（web 权威）：JsonUtility 无法区分「字段缺省」与 0，
+                    // 保留场景值的回退会让「旋转后归零」永远无法落盘。水面 quad 的
+                    // x=90 由 web enrichItem 迁移强制携带，不怕被 0 冲掉。
+                    t.localEulerAngles = new Vector3(item.localRotationX, rotY, item.localRotationZ);
                     ApplyItemScale(t, item);
                     LayoutEditorStubIO.ApplyStub(t.gameObject, item);
                     EnsureUniqueSiblingName(t);
@@ -310,6 +331,18 @@ public static class SceneLayoutApplier
             AutoEnableDynamicParenting(scene, document);
         }
 
+        // 同轴按钮组：独立逻辑 helper（Design/Coaxial Logic），仅全量写回
+        // （scoped writes 不携带 coaxialLinks，场景既有组不动）。
+        if (only == null && document.coaxialLinks != null)
+        {
+            var coaxError = CoaxialButtonBakery.Sync(scene, document, createdObjects);
+            if (!string.IsNullOrEmpty(coaxError))
+            {
+                LayoutEditorLog.LogWarning(coaxError);
+                bakeError = string.IsNullOrEmpty(bakeError) ? coaxError : bakeError + "; " + coaxError;
+            }
+        }
+
         // HUD 订单上限：按 LevelInfoSO.maxOrderCount 烘焙 RecipeFlowGUI /
         // KitchenFlowControllerBase 覆盖（n>5 时真机 HUD 桌号池与出单上限的必需数据）。
         {
@@ -337,6 +370,9 @@ public static class SceneLayoutApplier
         // killplane 随后的同款调用会覆盖为累计状态。
         LayoutEditorWriteBackHistory.SupplySemanticAfter(document.sceneAssetPath);
         LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
+        // 初始关闭开关的编辑态预览：child 刚由 Reload 重建（prefab 默认绿材质），
+        // 此处补关闭色（Play/真机开局由 CustomStub SwitchStartVisual 接管）。
+        LayoutEditorStubIO.ApplySwitchStartVisualsInActiveScene();
 
         // Reload 会从 bundle 重建伪 prefab child（EditorGridSnap 的 X/Z 约束随之复位），
         // 写回末尾即时解除断头台/石炉台的半格约束，防编辑模式每帧拉回整格。
@@ -348,6 +384,50 @@ public static class SceneLayoutApplier
         return string.IsNullOrEmpty(partialError)
             ? null
             : "部分写回失败（场景已保存）：" + partialError;
+    }
+
+    /// <summary>只通过场景序列化数据修改 KitchenLoaderManager，不修改游戏源码。
+    /// OptionalFloat 未启用时自动启用，范围限制为 0~10。</summary>
+    private static string ApplyCeilingHeight(float requested)
+    {
+        var loader = FindKitchenLoaderManager();
+        if (loader == null)
+            return "未找到 CampaignGameEnvironment/KitchenLoaderManager，无法修改 Ceiling Height。";
+
+        var so = new SerializedObject(loader);
+        var optional = so.FindProperty("m_ceilingHeight");
+        if (optional == null)
+            return "KitchenLoaderManager 缺少 m_ceilingHeight 字段。";
+        var hasValue = optional.FindPropertyRelative("m_hasValue");
+        var rawValue = optional.FindPropertyRelative("m_value");
+        if (hasValue == null || rawValue == null)
+            return "无法读取 KitchenLoaderManager 的 Ceiling Height 字段。";
+
+        var value = Mathf.Clamp(requested, 0f, 10f);
+        Undo.RecordObject(loader, "Layout Editor Ceiling Height");
+        hasValue.boolValue = true;
+        rawValue.floatValue = value;
+        so.ApplyModifiedProperties();
+        EditorUtility.SetDirty(loader);
+        return null;
+    }
+
+    private static KitchenLoaderManager FindKitchenLoaderManager()
+    {
+        var go = GameObject.Find("CampaignGameEnvironment/KitchenLoaderManager");
+        if (go != null)
+        {
+            var direct = go.GetComponent<KitchenLoaderManager>();
+            if (direct != null)
+                return direct;
+        }
+
+        foreach (var loader in UnityEngine.Object.FindObjectsOfType<KitchenLoaderManager>())
+        {
+            if (loader != null && loader.name == "KitchenLoaderManager")
+                return loader;
+        }
+        return null;
     }
 
     /// <summary>定位场景游戏相机：优先 tag=MainCamera，兜底第一个启用相机。</summary>
@@ -2274,10 +2354,7 @@ public static class SceneLayoutApplier
             pos.x = SnapScalar(pos.x, itemSnap);
             pos.z = SnapScalar(pos.z, itemSnap);
             t.localPosition = pos;
-            t.localEulerAngles = new Vector3(
-                item.localRotationX != 0f ? item.localRotationX : t.localEulerAngles.x,
-                item.localRotationY,
-                item.localRotationZ != 0f ? item.localRotationZ : t.localEulerAngles.z);
+            t.localEulerAngles = new Vector3(item.localRotationX, item.localRotationY, item.localRotationZ);
             ApplyItemScale(t, item);
             // 修复空气墙碰撞几何：水平 1.2×1.2（一格）、高 1.132，center 与文档一致。
             if (item.airWall)
@@ -2305,6 +2382,243 @@ public static class SceneLayoutApplier
     private static float SnapStepForItem(LayoutItemDto item, float snapStep)
     {
         return snapStep;
+    }
+
+    // ============================ 空气斜坡（v9） ============================
+
+    /// <summary>场景中空气斜坡根节点的固定名称（导出按名称识别，仿 Col_AirFloor）。</summary>
+    public const string AirSlopeColliderName = "Col_AirSlope";
+
+    /// <summary>每级台阶的碰撞厚度（米）。</summary>
+    private const float AirSlopeStepThickness = 0.2f;
+
+    /// <summary>相邻台阶的水平搭接（米），消除台间缝隙。导出反推 run 时扣除，须与
+    /// SceneLayoutExporter 共用，故 public。</summary>
+    public const float AirSlopeStepOverlap = 0.05f;
+
+    /// <summary>GroundCast c_maxGroundAngle = 58°：文档坡角硬上限（UI/校验同款）。</summary>
+    private const float AirSlopeMaxAngle = 58f;
+
+    /// <summary>
+    /// 空气斜坡 = 隐形阶梯（Ground 层）+ 游戏原生 Steppable 上步机制。
+    ///
+    /// 演进史（两次实测失败后的终版方案）：
+    ///  v1 SlopedGround 层倾斜盒 —— 本工程矩阵 Players(8)×SlopedGround(28) 关闭，
+    ///     玩家物理上碰不到，直接穿过；
+    ///  v2 Ground 层倾斜盒 —— 碰撞与落地检测都通，但纯物理攀爬被每固定步的
+    ///     SetVelocity（按当前地面切平面重写速度，ProgressVelocityWrtFriction）
+    ///     干扰，实测 10° 坡仍走不上去；
+    ///  v3（本版）阶梯 + Steppable —— 游戏自带的上步机制：chef 撞上带 Steppable
+    ///     的碰撞体时（ClientPlayerControlsImpl_Default.OnCollisionEnter →
+    ///     StepOntoObject），把接触点竖直投影到该 Steppable 平面并【直接传送】
+    ///     上去（升高 ≤ StepHeightMax=0.65 才放行）。每级台阶 ≤0.3m，逐级触发
+    ///     = 确定性行走，不依赖任何物理攀爬假设；这正是原版跨高度地形的机制。
+    ///
+    /// 结构：根节点 Col_AirSlope（无碰撞体，position=锚点：俯视占地中心 + startY，
+    /// rotation=(0,yaw,0)），子节点 Step×N（BoxCollider + Steppable + PlaneTransform
+    /// 孙节点标记台面平面）。每级顶面 = startY + (i+1)·stepH，沿 local +Z 逐级抬升。
+    /// yaw 即 localRotationY（Unity 前向语义）。
+    /// </summary>
+    private static void ApplyAirSlopeItem(LayoutItemDto item, float snapStep, HashSet<int> usedSceneObjectIds, Dictionary<string, GameObject> createdObjects)
+    {
+        var slope = item.slope;
+        if (slope == null)
+        {
+            Debug.LogWarning("[LayoutEditor] ApplyAirSlopeItem: missing slope params for " + (item.displayName ?? "?"));
+            return;
+        }
+
+        var cell = LayoutEditorCatalogLookup.GridCellSize;
+        float angle = Mathf.Clamp(slope.angleDeg, 0.5f, AirSlopeMaxAngle);
+        float run = Mathf.Max(cell * 0.5f, slope.lengthCells * cell);
+        float width = Mathf.Max(cell * 0.5f, slope.widthCells * cell);
+
+        // 解析锚点（俯视占地中心；y = 低端地板顶面高度 = 第一级前方地面）。
+        Vector3 anchor;
+        if (item.worldPosition != null)
+        {
+            anchor = item.worldPosition.ToVector3();
+            anchor.x = SnapScalar(anchor.x, snapStep);
+            anchor.z = SnapScalar(anchor.z, snapStep);
+        }
+        else if (item.localPosition != null)
+        {
+            anchor = item.localPosition.ToVector3();
+            anchor.x = SnapScalar(anchor.x, snapStep);
+            anchor.z = SnapScalar(anchor.z, snapStep);
+        }
+        else
+        {
+            anchor = Vector3.zero;
+        }
+
+        // 阶梯量化：目标每级 ≤0.2m；水平长度下限（每级 ≥0.35m，防长坡级数爆炸）
+        // 只在步高安全（≤0.45m，给 StepHeightMax=0.65 留余量）时生效——陡坡宁可
+        // 级密也不允许步高逼近上限（0.64m 的台沿会撞 0.65 校验失败）。
+        float rise = Mathf.Tan(angle * Mathf.Deg2Rad) * run;
+        int steps = Mathf.Clamp(Mathf.CeilToInt(rise / 0.2f), 2, 64);
+        int maxByRun = Mathf.Max(2, Mathf.FloorToInt(run / 0.35f));
+        if (steps > maxByRun && rise / maxByRun <= 0.45f)
+            steps = maxByRun;
+        if (rise / steps > 0.45f)
+            steps = Mathf.Clamp(Mathf.CeilToInt(rise / 0.45f), 2, 64);
+        float stepRun = run / steps;
+        float stepH = rise / steps;
+
+        // Ground 层（矩阵 Players×Ground 开启；SlopedGround(28) 与 Players 的物理
+        // 碰撞在本工程矩阵中关闭，实测玩家会穿过 28 层——见方法头注释）。
+        int slopeLayer = LayerMask.NameToLayer("Ground");
+        if (slopeLayer < 0)
+            slopeLayer = 9;
+
+        // ---- 更新已有实例（根节点保持 instanceId 稳定，子级重建）----
+        var t = FindItemTransform(item);
+        if (t != null)
+        {
+            var objectId = t.gameObject.GetInstanceID();
+            if (usedSceneObjectIds.Contains(objectId))
+                return;
+            usedSceneObjectIds.Add(objectId);
+            Undo.RecordObject(t, "Layout Editor Air Slope");
+            t.position = anchor;
+            t.localEulerAngles = new Vector3(0f, item.localRotationY, 0f);
+            RebuildAirSlopeSteps(t, width, steps, stepRun, stepH, run, slopeLayer, angle, rise, slope.debugColor);
+            if (!string.IsNullOrEmpty(item.instanceId))
+                createdObjects[item.instanceId] = t.gameObject;
+            return;
+        }
+
+        // ---- 新建 ----
+        var parentPath = !string.IsNullOrEmpty(item.parentPath) ? item.parentPath : "Design/Collision";
+        var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
+        if (parent == null)
+        {
+            Debug.LogWarning("[LayoutEditor] ApplyAirSlopeItem: parent path not found \"" + parentPath + "\"");
+            return;
+        }
+        var go = new GameObject(AirSlopeColliderName);
+        Undo.RegisterCreatedObjectUndo(go, "Layout Editor Air Slope");
+        go.transform.SetParent(parent, false);
+        go.transform.position = anchor;
+        go.transform.localEulerAngles = new Vector3(0f, item.localRotationY, 0f);
+        RebuildAirSlopeSteps(go.transform, width, steps, stepRun, stepH, run, slopeLayer, angle, rise, slope.debugColor);
+        if (!string.IsNullOrEmpty(item.instanceId))
+            createdObjects[item.instanceId] = go;
+    }
+
+    /// <summary>（重）建阶梯子级：Step_i = Ground 层 BoxCollider + Steppable（含
+    /// PlaneTransform 孙节点）。顶面高度 = (i+1)·stepH（相对根 = startY），
+    /// 第 i 级覆盖 local z ∈ [−run/2 + i·stepRun, −run/2 + (i+1)·stepRun]。
+    /// debugColor 非空时追加 DebugVis 子节点（半透明薄板，游戏内可见，排查用）。</summary>
+    private static void RebuildAirSlopeSteps(Transform root, float width, int steps, float stepRun, float stepH, float run, int layer, float angleDeg, float rise, string debugColor)
+    {
+        for (int i = root.childCount - 1; i >= 0; i--)
+            Undo.DestroyObjectImmediate(root.GetChild(i).gameObject);
+
+        // 旧版结构残留：v1/v2 曾把倾斜 BoxCollider 直接挂在根上，必须清掉，
+        // 否则会与新台阶并存成一块隐形歪板。
+        var staleCol = root.GetComponent<BoxCollider>();
+        if (staleCol != null)
+            Undo.DestroyObjectImmediate(staleCol);
+        root.gameObject.layer = 0;
+
+        for (int i = 0; i < steps; i++)
+        {
+            var seg = new GameObject("Step");
+            Undo.RegisterCreatedObjectUndo(seg, "Layout Editor Air Slope Step");
+            seg.transform.SetParent(root, false);
+            seg.transform.localPosition = new Vector3(0f, (i + 1) * stepH - AirSlopeStepThickness * 0.5f, -run * 0.5f + (i + 0.5f) * stepRun);
+            seg.transform.localRotation = Quaternion.identity;
+            seg.layer = layer;
+            var col = seg.AddComponent<BoxCollider>();
+            col.size = new Vector3(width, AirSlopeStepThickness, stepRun + AirSlopeStepOverlap);
+            col.center = Vector3.zero;
+
+            // Steppable 平面标记：位于本台阶顶面中心、朝向 = 根朝向（水平面）。
+            var plane = new GameObject("PlaneTransform");
+            plane.transform.SetParent(seg.transform, false);
+            plane.transform.localPosition = new Vector3(0f, AirSlopeStepThickness * 0.5f, 0f);
+
+            var steppable = Undo.AddComponent<Steppable>(seg);
+            var so = new SerializedObject(steppable);
+            var prop = so.FindProperty("m_planeTransform");
+            if (prop != null)
+            {
+                prop.objectReferenceValue = plane.transform;
+                so.ApplyModifiedProperties();
+            }
+            else
+            {
+                // 字段改名兜底：找不到序列化路径时按字段反射（Steppable 私有字段）。
+                var field = typeof(Steppable).GetField("m_planeTransform", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                    field.SetValue(steppable, plane.transform);
+            }
+        }
+
+        // ---- 调试显示（可选）：贴着理想坡面的半透明薄板，游戏内可见。 ----
+        Color dbg;
+        if (!string.IsNullOrEmpty(debugColor) && ColorUtility.TryParseHtmlString(debugColor, out dbg))
+            CreateAirSlopeDebugVis(root, width, angleDeg, rise, run, dbg);
+    }
+
+    /// <summary>调试薄板厚度（米）：比台阶薄、不与台面共面，避免深度争夺。</summary>
+    private const float AirSlopeDebugThickness = 0.12f;
+
+    /// <summary>调试薄板透明度（“淡颜色”）：固定淡显，颜色由 debugColor 决定。</summary>
+    private const float AirSlopeDebugAlpha = 0.35f;
+
+    /// <summary>调试材质缓存（按 hex 键）：与 _tintedFloorMats 同款内存实例模式，
+    /// 场景保存/打包时会嵌入场景（MPB 才会丢，见 ApplyFloorMaterial 注释）。</summary>
+    private static readonly Dictionary<string, Material> _slopeDebugMats = new Dictionary<string, Material>();
+
+    private static Material SlopeDebugMaterial(Color c)
+    {
+        var key = ColorUtility.ToHtmlStringRGBA(c);
+        Material m;
+        if (!_slopeDebugMats.TryGetValue(key, out m) || m == null)
+        {
+            var shader = Shader.Find("Standard");
+            if (shader == null)
+                shader = Shader.Find("UI/Default");
+            m = new Material(shader);
+            // Standard 透明（Fade/AlphaBlend）配方（Unity 2017 手工切换渲染模式）。
+            m.SetFloat("_Mode", 2f);
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetInt("_ZWrite", 0);
+            m.DisableKeyword("_ALPHATEST_ON");
+            m.EnableKeyword("_ALPHABLEND_ON");
+            m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            m.color = new Color(c.r, c.g, c.b, AirSlopeDebugAlpha);
+            m.name = "airslope_debug_" + key;
+            _slopeDebugMats[key] = m;
+        }
+        return m;
+    }
+
+    /// <summary>在根下创建 DebugVis 子节点：Cube 薄板贴理想坡面（根局部系：
+    /// 表面从 (0,0,−run/2) 到 (0,rise,+run/2)，绕 X 轴 −angle 倾斜）。</summary>
+    private static void CreateAirSlopeDebugVis(Transform root, float width, float angleDeg, float rise, float run, Color c)
+    {
+        var vis = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var col = vis.GetComponent<Collider>();
+        if (col != null)
+            UnityEngine.Object.DestroyImmediate(col);
+        Undo.RegisterCreatedObjectUndo(vis, "Layout Editor Air Slope DebugVis");
+        vis.name = "DebugVis";
+        vis.transform.SetParent(root, false);
+        float rad = angleDeg * Mathf.Deg2Rad;
+        float cosA = Mathf.Cos(rad);
+        float sinA = Mathf.Sin(rad);
+        float slabLen = run / cosA;
+        // 根局部系：坡面中点 (0, rise/2, 0)，法线 (0, cosA, −sinA)；盒中心沿法线退半厚。
+        vis.transform.localPosition = new Vector3(0f, rise * 0.5f - cosA * (AirSlopeDebugThickness * 0.5f), sinA * (AirSlopeDebugThickness * 0.5f));
+        vis.transform.localRotation = Quaternion.Euler(new Vector3(-angleDeg, 0f, 0f));
+        vis.transform.localScale = new Vector3(width, AirSlopeDebugThickness, slabLen);
+        var mr = vis.GetComponent<MeshRenderer>();
+        mr.sharedMaterial = SlopeDebugMaterial(c);
     }
 
     private static GameObject CreateInstance(LayoutItemDto item, GameObject prefab, string assetPath, Vector3 pos, float rotY, Vector3? worldPos = null)
@@ -2335,9 +2649,10 @@ public static class SceneLayoutApplier
             instance.transform.position = worldPos.Value;
         else
             instance.transform.localPosition = pos;
-        // Preserve the doc's euler X (quad floor tiles lie flat via x=90) instead
-        // of forcing identity — otherwise recreated tiles render standing up.
-        instance.transform.localEulerAngles = new Vector3(item.localRotationX, rotY, 0f);
+        // Preserve the doc's euler X/Z (quad floor tiles lie flat via x=90; Z rotation
+        // is web-editable since v9) instead of forcing identity — otherwise recreated
+        // tiles render standing up and tilted decor loses its lean.
+        instance.transform.localEulerAngles = new Vector3(item.localRotationX, rotY, item.localRotationZ);
         ApplyItemScale(instance.transform, item);
 
         if (!string.IsNullOrEmpty(item.displayName))
@@ -2576,4 +2891,3 @@ public static class LayoutEditorSafety
         return true;
     }
 }
-

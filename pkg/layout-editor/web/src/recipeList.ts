@@ -26,6 +26,11 @@ function esc(s: unknown): string {
     .replace(/"/g, "&quot;");
 }
 
+/** commonW3 共享库徽标：果汁用 🥤，沙拉用 🥗。 */
+function commonW3RecipeBadge(r: RecipeWithGroups): string {
+  return r.type === "smoothie" ? "🥤" : "🥗";
+}
+
 function setStatus(msg: string, ok = true): void {
   const el = document.getElementById("rl-status");
   if (!el) return;
@@ -184,7 +189,7 @@ function card(r: RecipeWithGroups): string {
           : r.group === "commonw2"
             ? "📚"
             : r.group === "commonw3"
-              ? "🥗"
+              ? commonW3RecipeBadge(r)
               : undefined,
     iconSrc: recipeIconUrlOf,
   });
@@ -565,7 +570,7 @@ function openRecipeDetail(r: RecipeWithGroups): void {
           : r.group === "commonw2"
             ? "📚"
             : r.group === "commonw3"
-              ? "🥗"
+              ? commonW3RecipeBadge(r)
               : undefined,
     iconSrc: recipeIconUrlOf,
   });
@@ -603,7 +608,7 @@ async function downloadRecipeCard(r: RecipeWithGroups, btn: HTMLButtonElement): 
           : r.group === "commonw2"
             ? "📚"
             : r.group === "commonw3"
-              ? "🥗"
+              ? commonW3RecipeBadge(r)
               : undefined,
       iconSrc: recipeIconUrlOf,
     });

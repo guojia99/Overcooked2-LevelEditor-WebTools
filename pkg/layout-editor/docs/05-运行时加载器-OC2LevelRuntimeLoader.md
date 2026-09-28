@@ -1,7 +1,8 @@
 # 05 · 运行时加载器 OC2LevelRuntimeLoader
 
-> 目录：`BepInExPlugins/OC2LevelRuntimeLoader/`（唯一源文件 `Loader.cs`，642 行，v1.7.1）
-> 一句话定位：「Overcooked2 关卡代码分发」体系的**游戏侧运行时注入端**——把编辑器按关卡集编译、随关卡 zip 分发的 C# 程序集（`Stub_<set>.dll`，内含随机食材箱等自定义玩法逻辑）在**关卡场景加载之前**注入游戏进程的 AppDomain，使场景 bundle 里的脚本引用能解析成真实组件。
+> 目录：`Assets/WebCustomStubRuntime/Loader~/`（唯一源文件 `Loader.cs`，v3.5.0；`~` 后缀 Unity 忽略，dotnet 单独编译）
+> 一句话定位：「Overcooked2 关卡代码分发」体系的**游戏侧运行时注入端**——把编辑器按关卡集编译、随关卡 zip 分发的 C# 程序集（统一运行时 `WebCustomStubRuntime`，内含随机食材箱等自定义玩法逻辑）在**关卡场景加载之前**注入游戏进程的 AppDomain，使场景 bundle 里的脚本引用能解析成真实组件。
+> **零介入铁律（v3.5.0）**：未使用 web 导出的关卡（官方图/旧导出集/无自定义关卡），loader 及其注入的运行时对游戏**零介入**——不 hook 任何函数、不装任何补丁、不做任何场景扫描/探测；web 关卡集里未用 CustomStub 的关卡同样零监控零对局钩子。
 > 返回 [00-架构总览.md](00-架构总览.md)
 
 ---
@@ -9,101 +10,118 @@
 ## 1. 文件列表
 
 ```
-BepInExPlugins/
-├── build.sh                               一键构建脚本（mac；Windows 用 dotnet build -p:GameDir）
-├── LogOutput.log / LogOutput2.log         真机 BepInEx 日志样本（排障参考）
-└── OC2LevelRuntimeLoader/
-    ├── Loader.cs                          ★ 唯一源码（642 行，v1.7.1，纯加载器——不含任何 Harmony patch）
-    ├── OC2LevelRuntimeLoader.csproj       net35 工程（BepInEx 5.4.22 + 老式整包 UnityEngine.dll + 0Harmony 2.9（仓库内 Assets/Plugins 副本，仅编译期引用））
-    ├── README.md                          机制/构建/安装/排障文档
-    ├── bin/Release/OC2LevelRuntimeLoader.dll   构建产物（手动同步到 web/public/）
-    └── obj/                               MSBuild 中间产物（非手写代码）
+Assets/WebCustomStubRuntime/
+├── Loader~/                                （`~` 目录 Unity 忽略，dotnet 单独编译）
+│   ├── Loader.cs                           ★ 唯一源码（v3.5.0，纯加载器——不含任何 Harmony patch）
+│   ├── Loader.csproj                       net35 工程（BepInEx 5.4.22 + 老式整包 UnityEngine.dll；无 0Harmony 引用）
+│   ├── build.sh                            一键构建（版本号从 Loader.cs 自动提取）
+│   ├── bin/Release/Loader.dll              构建产物（手动同步到 web/public/）
+│   └── README.md                           机制/构建/安装/排障文档
+├── core/EntryPoint.cs                      ★ 逐关卡清单闸门 + 特征挂载（运行时侧）
+└── RuntimeDll/WebCustomStubRuntime.dll.bytes   统一运行时 staging（AutoBake 自动）
 ```
 
 要点：
 - 本插件**不携带任何资源**——图标库、prefab 走 `commonW1` bundle，由 OC2DIYLevel 模组管辖。
-- 分发副本 `layout-editor/web/public/OC2LevelRuntimeLoader.dll` 与 `bin/Release/` 产物需**手动保持同步**（改 Loader.cs 后 build → 拷贝覆盖）。
+- 分发副本 `layout-editor/web/public/Loader.dll` 与 `bin/Release/` 产物需**手动保持同步**（改 Loader.cs 后 build → 拷贝覆盖）。
 
 ## 2. 项目定位：解决什么问题
 
 背景约束（决定了它必须存在）：
 1. 自定义关卡场景是 **AssetBundle 场景**，场景里的自定义组件（如 `CustomStub.RandomCrate`）引用的脚本类必须**先于场景加载**进入 AppDomain，否则 Unity 的 MonoScript 解析失败，组件变 "Missing Script"；
-2. 这些代码**不能进 Assembly-CSharp、也不能进公共 common bundle**（每个关卡集专属、可独立更新）；
-3. 所以链路是：编辑器把 `Stub_<set>.dll` 以 `*.dll.bytes` TextAsset 形式打进一个**普通（非场景）bundle**，文件名就叫 `runtime`，与 `info_<set>` / `s_*` 同层放在关卡集目录里；本插件负责扫到它、`Assembly.Load` 注入。
+2. 这些代码**不能进 Assembly-CSharp、也不能进公共 common bundle**（统一运行时随依赖包分发）；
+3. 所以链路是：编辑器把 `WebCustomStubRuntime.dll` 以 `.dll.bytes` TextAsset 形式打进依赖包的 `webcustomstub_runtime` bundle；本插件负责扫到它、`Assembly.Load` 注入。
 
-主体是「**程序集装载器 + 场景自愈器 + 排障日志中枢**」三合一，不含任何功能性 Harmony 补丁（v1.7.0 曾短暂引入相机偏移全局补丁，因拖全场景帧率+违反「没用 runtime 的图零影响」铁律，v1.7.1 移除并移交 CustomStub 按需安装，见 §4）。
+主体是「**程序集装载器 + 逐关卡清单闸门 + 排障日志中枢**」三合一，不含任何功能性 Harmony 补丁（v3.5.0 起连旧包兼容护栏也已移除）。
 
 ## 3. Loader.cs 详解（唯一源文件）
 
 | 项 | 内容 |
 |---|---|
-| 命名空间/类 | `OC2LevelRuntimeLoader.LevelRuntimeLoader : BaseUnityPlugin`，`[BepInPlugin("oc2.levelruntimeloader", "OC2 LevelRuntime Loader", "1.7.1")]` |
+| 命名空间/类 | `OC2LevelRuntimeLoader.LevelRuntimeLoader : BaseUnityPlugin`，`[BepInPlugin("oc2.oc2diylevelruntimewloader", "OC2DIYLevelRuntimeWLoader", "3.5.0")]` |
 
-**类内状态**：`_log`（BepInEx 日志）、`PendingRaw`（Load 失败暂存字节，供 AssemblyResolve 兜底）、`LoadedNames`（程序集名去重）、`LoadedBundles`（bundle 路径去重，忽略大小写）、`_startupScanDone`（首帧只扫一次闸门）、`_miIsInSession/_miIsHost`（ConnectionStatus 反射缓存）、`ReportedResolveMisses`（解析失败只报一次防刷屏）。
+**类内状态**：`_log`（BepInEx 日志）、`PendingRaw`（Load 失败暂存字节，供 AssemblyResolve 兜底）、`LoadedNames`（程序集名去重）、`LoadedBundles`（bundle 路径去重，忽略大小写）、`_startupScanDone`/`_filesystemScanDone`/`_depsLoaded`/`_resolveHooked`（幂等闸门）、**`WebManifest`**（web stub 关卡清单，`public static string[]`，stub 侧 EntryPoint 反射读取）、`ReportedResolveMisses`（解析失败只报一次防刷屏）。
 
-### 3.1 执行流程（何时加载、从哪加载、加载什么）
+### 3.1 执行流程（v3.5.0 清单驱动）
 
 ```
 BepInEx Chainloader 实例化插件
-  ├─ Awake()：_log = Logger；AppDomain.AssemblyResolve += OnAssemblyResolve（引用顺序兜底）
-  ├─ Update() 首帧：DumpEnvironment()（环境探测）+ ScanOnce(verbose=true)（正式扫描+加载）
-  ├─ Start()：SceneManager.sceneLoaded += OnSceneLoadedHeal
-  └─ 每次场景加载（切关卡/重开都会触发）
-       └─ OnSceneLoadedHeal：ScanOnce(verbose=false)（幂等补扫）+ HealScene(scene)（自愈）
+  ├─ Awake()：仅日志/配置绑定（不预载、不挂事件）
+  ├─ Update() 首帧：DumpEnvironment() + BeginScan(true)（后台线程磁盘扫描）
+  ├─ ApplyScanResult（主线程 Drain）：
+  │    读 levels/<set>/stub_levels.txt → WebManifest（"集|关卡|特征,..."）
+  │    ├─ 清单为空 → 【完全休眠】不加载 bundle/程序集、不挂 AssemblyResolve，
+  │    │   一个字节都不加载（未用 web 导出的环境零介入）
+  │    └─ 非空 → 挂 AssemblyResolve → LoadDependenciesAndRuntime()
+  │        （commonW* + webcustomstub_runtime → Assembly.Load → EntryPoint.Install）
+  │        → 再加载 levels/<set>/*_custom_runtime（预留通道）
+  └─ 每次场景加载：OnSceneLoadedHeal（休眠模式=verbose 日志即返回）
+       逐关卡闸门在 CustomStub.EntryPoint.ProcessScene（见 §4）
 ```
 
-**候选根目录**（`GetLevelsRoots()`，按优先级）：
-1. `<BepInEx>/plugins/OC2DIYLevel/levels`（主路径）
-2. `<dataPath>/StreamingAssets/OC2DIYLevel/levels`
-3. `<dataPath>/StreamingAssets/OC2DIYLevel`
+**版本门控**：`requires.txt`（= 依赖包 SSOT 版本）与 PluginVersion semver 比较，过低则该集跳过 stub 支持（维持原行为）。
 
-第一个存在的作主扫描根；其余存在的也会补扫（容纳混合安装）。全部不存在时逐条 Warning 列出候选路径。
-
-**对每个 `<levelsRoot>/<set>/`**：
-- 无 `runtime` 文件 → 打日志「该关卡集不含关卡代码」，跳过；
-- 有 → `AssetBundle.LoadFromFile(runtime)`（**绝不 Unload**——场景组件的类型活在其中加载的程序集里）；
-- 遍历 `bundle.GetAllAssetNames()`，筛选**资产路径**以 `.dll.bytes` 结尾的条目 → `LoadAsset<TextAsset>` → `LoadFromBytes()`。
-
-> **关键历史 bug（v1.2.0 及之前）**：Unity 导入 `.bytes` 时会把扩展名从**资产名**剥掉（`Stub_x.dll.bytes` → `asset.name == "Stub_x.dll"`），旧代码用 `asset.name.EndsWith(".dll.bytes")` 永远漏匹配、静默不加载。v1.3.1 起改按 `GetAllAssetNames()` 的完整路径匹配。
+**清单规则**：
+- `stub_levels.txt`（v3.5.0 导出器逐场景写出）：每行 `<关卡名>|<特征1,特征2,...>`（'#' 注释/空行忽略）；**每个集都写（含空清单）**；
+- **旧版导出集兼容（3.5.0 ≤ 版本 < 4.0.0，用户决策 2026-09-28）**：有 `requires.txt` 无 `stub_levels.txt` 的集（如 3.2.1 导出）→ loader 生成 `"集|*|legacy"` 兼容条目，EntryPoint 对其维持 v3.4 行为（探测 + tag 自愈 + 特征全开）——**已分发旧集无需重导出即可继续工作**；v4.0.0 起 loader 不再生成兼容条目（`LegacyCompatCutoff`），旧集归零、需重新导出一次。新导出的集始终走严格清单路径；
+- 无 `requires.txt` 的集（前 web 导出时代）本就不归 loader 管（旧 `runtime` 文件自 v2.0 起忽略+告警）。
 
 **`LoadFromBytes(displayName, raw)` 装载流程**：
 1. `Assembly.Load(raw)`；失败 → 存入 `PendingRaw` 交 `AssemblyResolve` 兜底；
-2. 程序集短名去重；
-3. 内容自检：`asm.GetType("CustomStub.RandomCrate")` 存在 → 日志打 `CustomStub.RandomCrate ✓`（DLL 新鲜度第一道金丝雀）；
-4. **EntryPoint 引导（v1.4.0+）**：反射查找并调用 `CustomStub.EntryPoint.Install()`（public static、无参）——stub 套件（TimedSwitch/PushablePot/VoidFall/SwitchReenable/WorldMapDressing/UtensilTiming/TerminalGuard/Harmony KillPlane 补丁/统一 StubTicker）的安装入口。loader 与 stub **零编译依赖**（纯反射约定）。
+2. 程序集短名去重（同名冲突保留先载版本并打诊断日志）；
+3. **EntryPoint 引导**：反射调用 `CustomStub.EntryPoint.Install()`——loader 与 stub **零编译依赖**（纯反射约定）。
 
-### 3.2 HealScene 场景自愈（RandomCrate 专用保险）
+### 3.2 EntryPoint 逐关卡闸门（core/EntryPoint.cs，v16）
 
-- `FindLoadedType("CustomStub.RandomCrate")` 找不到 → 无任何关卡 runtime 程序集，跳过；
-- 反射取字段 `m_itemSOs / m_weights / m_questionMarkTexture`（缺任一 → 版本不匹配警告，返回）；
-- 遍历场景全部根对象的全部 MonoBehaviour（含未激活），找类型名 `SpecificPseudoPrefabTag` 且 `prefabTag` 以 **`RandomCrate|`** 开头的载体组件；
-- 若该物体**没有** RandomCrate 组件（覆盖 MonoScript 解析失败、烘焙缺失、关卡后装等一切情况）→ 动态 `AddComponent(crateType)`：
-  - 候选列表：从兄弟组件 `PseudoPrefabSOArray.pseudoPrefabSOs` 直接回填 `m_itemSOs`；
-  - 权重：解析 tag——v2 格式 `RandomCrate|<iconGuid>|<w1,w2,...>`（兼容旧两段式），逐段 `float.TryParse`（<1 或失败回落默认 5f）；
-  - 问号贴图：`m_questionMarkTexture = null`（游戏侧无法从 guid 反查 → 自然回落原版首食材图标，随机逻辑不受影响）；
-- 逐物体打日志（层级路径、候选数、权重）+ 场景级汇总。
+- **清单注入**：EntryPoint 反射读 loader 的 `WebManifest` 静态字段（镜像 StubLog→LogFromCrate 桥方向，规避「程序集一加载就 Install」的时序环）；**null = 无约束**（编辑器 Play，无 loader）→ 维持 v12 探测+tag 自愈旧行为。
+- **场景闸门**（sceneLoaded 与 Install 首跑共用 `ProcessScene`）：`scene.path` 解析 `assets/levelsets/<集>/scenes/<关卡>`（大小写不敏感）→ 查清单三态：
+  - **未命中**（官方图/主菜单/世界地图/未用 CustomStub 的 web 关卡）→ 直接休眠归零：HealScene、无 tag 扫描（AnimGridMemberSync/SwitchStartVisual）、TickProbe 探测全部不跑，仅保留 `ResetSceneTickers` 纯托管清场（防跨场景引用泄漏，零场景查询）；
+  - **旧版兼容条目 `"集|*|legacy"`**（loader 兼容期 3.5.0≤v<4.0.0 为无清单旧集生成）→ v3.4 行为（探测态起步 + tag 自愈 + 特征全开），旧集无需重导出；
+  - **精确命中** → `ActivateCore`（触发区占用同步 + 联机诊断随核心装）+ **按特征挂载** + HealScene；
+- **按特征挂载**：KillPlane 补丁仅 `pushable`；ticker 子系统轮询各按特征（HotPot←hotpot|pushable、VoidFall←pushable、UtensilTiming←timing、TerminalGuard←terminal、CannonGuard←cannon）；锅具时间/空气取出/大炮/相机/实体扫描锚点维持 tag 触发的按需安装（与特征闸双保险）；
+- **TickProbe 30 秒探测通道**在无约束模式（编辑器）与旧版兼容分支保留；新导出集的真机路径不依赖名字子串探测（清单权威化，消灭 IsLargePot 误判类风险）。
 
-### 3.3 日志体系（联机排障）
+### 3.3 特征表（stub_levels.txt，编辑器 → 运行时契约）
 
-- `Prefix()`：`[HH:mm:ss.fff][主机|客机|单机|未知] `；`RoleTag()` 反射游戏 internal 类 `ConnectionStatus.IsInSession()/IsHost()`（随进/出房间实时变化）；
-- `LogFromCrate(string, bool)`（public static）：**stub 日志桥**——stub 侧 `StubLog` 反射查找此方法转发，使全部日志汇入同一 `[OC2 LevelRuntime Loader]` 来源；**有 `[Stub:...]` 段 = stub 桥接日志，无 = loader 原生**；
-- `DumpEnvironment()`（启动首帧）：四路路径探测 + `plugins/OC2DIYLevel` 与 `StreamingAssets/OC2DIYLevel` 两级目录清单（levels 装没装、装哪了直接可见）+ AppDomain 程序集清单过滤。
+| 特征 | 编辑器检测通道 | 运行时挂载单元 |
+|---|---|---|
+| crate | RandomCrate\| tag / 组件 | 自愈（组件自治，无补丁无 ticker） |
+| pushable | PushablePot\| tag / 组件 / `pot_01_pushable`/`pushable_object` 名字子串 | KillPlane 补丁 + 实体扫描锚点 + ticker VoidFall/HotPot |
+| hotpot | `large_pot` 名字子串（镜像运行时 IsLargePot） | ticker HotPot |
+| timing | UtensilTiming\| tag / 组件 | UtensilTiming 补丁组 + ticker 分支 |
+| switch | TimedSwitch\|/SwitchReenable\| tag / 组件 | 自愈 + ticker 压相 |
+| startvisual | PseudoPrefabSwitchStub.startEnabled==false | HealSwitchStartVisuals |
+| blrelay | BLRelay\| tag / ButtonLogicRelay 组件 | 自愈（组件自治） |
+| coaxial | Coaxial\| tag / CoaxialButtonGroup 组件 | 自愈（同轴按钮组，组件自治） |
+| animgrid | Design/Animated Objects 有组根 | HealAnimGridMembers |
+| conveyor | ConveyorDirectionSync\| tag / 组件 | 自愈 |
+| camera / travelator / teleportal / rat / worldmap | 对应 tag / 组件 | 自愈（camera 加注册+按需补丁） |
+| terminal | Terminal.m_pilotableObject==null | ticker TerminalGuard |
+| cannon | SetupCannonStub 根 | ticker CannonGuard + 大炮补丁 |
+| stub | 未知 CustomStub 组件兜底（导出告警） | 核心（保底激活） |
+
+> **新增 stub 类型四处同步**：① `CustomStubTagPrefixes`、② `StubTagFeatureMap`、③ `StubComponentFeatureMap`（均 LayoutEditorSetExporter.cs）、④ 运行时特征消费方（EntryPoint.ProcessScene / StubTicker）。
+
+### 3.4 日志体系（联机排障）
+
+- `Prefix()`：`[HH:mm:ss.fff][主机|客机|单机|未知] `（RoleTag 反射 ConnectionStatus，按帧缓存）；
+- `LogFromCrate(string, bool)`（public static）：stub 日志桥（`[Stub:...]` 段 = stub 桥接，无 = loader 原生）；
+- `DumpEnvironment()`（启动首帧）：路径探测 + （Verbose 时）目录清单 + AppDomain 相关程序集。
 
 ## 4. 与游戏本体的 Hook 点
 
-**v1.7.1 起 loader 不含任何 Harmony patch。** 相机出发点偏移功能已移交 CustomStub（`CameraAuthoredOffset` + `CameraOffset|<x>,<z>` 载体 tag，场景自愈扫到 tag 才按需安装 `GetIdealLocation` postfix；详见 02/04 文档与 `.opencode/skills/oc2-customstub`）。历史：v1.7.0 曾在 loader 全局安装 `CameraAuthoredOffsetPatch`（`MultiplayerCamera.Awake` prefix 捕获摆放位 + `GetIdealLocation` postfix 叠加 XZ 偏移）——`GetIdealLocation` 是每个 FixedUpdate 的热方法，全局 detour 拖累整个 session 所有场景（含官方图）的帧率，且对未配置相机的图零收益，故移除。全部接触面：
+**v3.5.0 起 loader 不含任何 Harmony patch（0Harmony 编译期引用已从 csproj 移除）。** 全部接触面：
 
-| 类别 | 具体点 |
-|---|---|
-| BepInEx 生命周期 | `Awake/Start/Update` |
-| .NET 运行时事件 | `AppDomain.AssemblyResolve` |
-| Unity 场景事件 | `SceneManager.sceneLoaded` |
-| Unity 资源 API | `AssetBundle.LoadFromFile/GetAllAssetNames/LoadAsset<TextAsset>`、`AddComponent(Type)` |
-| 游戏类型（反射只读） | `ConnectionStatus.IsInSession()/IsHost()` |
-| 游戏类型（反射读字段） | `SpecificPseudoPrefabTag.prefabTag`、`PseudoPrefabSOArray.pseudoPrefabSOs` |
-| 关卡程序集类型（反射写/调） | `CustomStub.RandomCrate` 三字段、`CustomStub.EntryPoint.Install()` |
+| 类别 | 具体点 | 生效条件 |
+|---|---|---|
+| BepInEx 生命周期 | `Awake/Start/Update` | 总是（纯托管） |
+| .NET 运行时事件 | `AppDomain.AssemblyResolve` | **清单非空才挂** |
+| Unity 场景事件 | `SceneManager.sceneLoaded`（loader 侧仅幂等补扫；EntryPoint 侧为闸门入口） | EntryPoint 已安装（=清单非空或编辑器） |
+| Unity 资源 API | `AssetBundle.LoadFromFile/GetAllAssetNames/LoadAsset<TextAsset>` | 清单非空 |
+| 游戏类型（反射只读） | `ConnectionStatus.IsInSession()/IsHost()`（日志前缀） | 有日志输出时 |
+| 关卡程序集类型（反射调） | `CustomStub.EntryPoint.Install()`、`WebManifest` 字段读取（反向） | 清单非空 |
 
-**注意区分**：真机日志里大量 `Patched: ...` 行来自 **OC2DIYLevel.dll**（外部模组）与 **stub 程序集内部的 HarmonyPatches**（由 EntryPoint.Install() 及各类按需 Ensure 安装）。本插件自身不含任何 Harmony patch（v1.7.0 的相机偏移一组已随 v1.7.1 移交 CustomStub）。历史上 v1.5.3–1.5.6 曾有一组 Harmony 诊断探针（LoadLevel/LoadingScreen/MultiplayerController 等 9+N 处，用于定位"进关卡卡死"），v1.6.0 全部删除。
+**stub 侧补丁组全部条件化**：触发区占用同步+联机诊断 = 清单命中（核心）；KillPlane = pushable 特征；锅具时间/空气取出/大炮/相机/实体扫描锚点 = tag/事件按需；ticker 子系统 = 清单特征。官方图与未用 CustomStub 的关卡**零 detour、零扫描、零 Update 开销**（哨兵对象与已装补丁跨场景保留——卸载补丁风险大于收益，ticker 已 disable）。
 
 ## 5. 与编辑器项目的配合（文件/路径约定）
 
@@ -111,68 +129,60 @@ BepInEx Chainloader 实例化插件
 
 | 编辑器侧产物 | 游戏侧落位（zip 解压到 `BepInEx/plugins/OC2DIYLevel/`） | 说明 |
 |---|---|---|
-| `Assets/LevelSets/<set>/stub/Stub_<set>.dll.bytes`（bundle 名 `<set>/runtime`） | `levels/<set>/runtime`（**无扩展名**，与 info_<set>/s_* 同层） | 本插件扫描并 LoadFromFile 的目标 |
-| `Assets/AssetBundles/commonw1` | `commonW1` | **不由本插件加载**（归 OC2DIYLevel）；含 question_mark 图标库 + RandomDispenser prefab + web 火锅 |
-| `layout-editor/web/public/OC2LevelRuntimeLoader.dll` | zip 顶层 | 即本插件自身 |
-| `Assets/AssetBundles/commonw2` | `commonW2`（按需） | 汉堡菜谱库，与本插件无关 |
+| `Assets/WebCustomStubRuntime/RuntimeDll/WebCustomStubRuntime.dll.bytes`（bundle `webcustomstub_runtime`，依赖包目录） | `OC2DIYLevelRuntimeWLoader/webcustomstub_runtime` | 本插件扫描并 LoadFromFile 的目标 |
+| `Assets/AssetBundles/commonw1` 等 | `OC2DIYLevelRuntimeWLoader/commonW1`（与 common01/02 同级） | 由本插件幂等加载（清单非空时） |
+| `layout-editor/web/public/Loader.dll` | 依赖包目录 | 即本插件自身 |
+| `levels/<set>/requires.txt + stub_levels.txt` | 与 info_<set>/s_* 同层 | 版本门控 + 逐关卡清单（§3） |
 
 ### 5.2 命名/路径约定汇总
 
-- **`runtime`**：无扩展名 bundle 文件名，约定为"该关卡集含 C# 关卡代码"的标志；`LayoutEditorSetExporter` 在 prepare 阶段检测场景未使用 CustomStub 时，zip 里**不带** runtime。
-- **`*.dll.bytes`**：bundle 内 DLL 资产的**路径**后缀（资产名会被 Unity 剥掉 `.bytes`——v1.3.1 修复的根因）。
-- **`Stub_<set>`**：每集程序集名；由 `LayoutStubDLLBuilder.StageSet` 从 `Library/ScriptAssemblies/` 拷贝为 `.dll.bytes` 并赋 bundle 名，带新鲜度守卫（源码比 DLL 新即 stale，导出显式报错）。
-- **tag 载体协议**：`RandomCrate|<iconGuid>|<w1,w2,...>`（v2，兼容旧两段式）——loader 的 HealScene 与编辑器 `LayoutEditorStubIO`、`EntryPoint.HealObject`、`LayoutEditorSetExporter.CustomStubTagPrefixes` **多处同步维护**（loader 只管 `RandomCrate|`，其余前缀归 EntryPoint 自愈）。
-- **维护流程**：改 `Loader.cs` → `./BepInExPlugins/build.sh` → 拷 `bin/Release/OC2LevelRuntimeLoader.dll` 覆盖 `layout-editor/web/public/` 同名文件；导出日志会打该文件时间戳供追溯。
-- **双向反射约定**：stub 侧 `StubLog` 反射查找 `LogFromCrate`；loader 反射调 `EntryPoint.Install()`。双向零编译依赖，编辑器宿主（无 loader 类型）自动回落 `Debug.Log` / `[RuntimeInitializeOnLoadMethod]` 自装。
+- **`stub_levels.txt`**：逐关卡清单（v3.5.0+）。loader 汇总注入 EntryPoint 做逐关卡闸门与按特征挂载；**旧导出的集没有此文件 = 运行时休眠，重新导出即恢复**。
+- **`requires.txt`**：依赖包版本门控（semver）。
+- **`*_custom_runtime`**：每关卡自定义代码预留通道。
+- **`scene.path` 契约**：关卡场景 bundle 内部路径必须保持 `assets/levelsets/<set>/scenes/<level>.unity`（闸门的解析依据；真机 Verbose 日志可验证 path 有值）。
+- **维护流程**：改 `Loader.cs` → `./build.sh`（版本号自动从源码提取）→ 拷 `bin/Release/Loader.dll` 覆盖 `layout-editor/web/public/`。
+- **双向反射约定**：stub 侧 `StubLog`→`LogFromCrate`、`EntryPoint`→`WebManifest`；loader 侧→`EntryPoint.Install()`。双向零编译依赖。
 
-## 6. 版本演进史
+## 6. 版本演进史（摘要）
 
 | 版本 | 关键变化 |
 |---|---|
-| ≤1.2.0 | 按 `asset.name` 匹配 `.dll.bytes`——因 Unity 剥扩展名而**静默失效** |
-| 1.3.0 | 日志体系（Info 常开） |
-| 1.3.1 | **改按 `GetAllAssetNames()` 资产路径匹配**（决定性修复） |
-| 1.3.2 | `LogFromCrate` 日志桥 |
-| 1.4.0 | `Assembly.Load` 后反射调用 `CustomStub.EntryPoint.Install()` |
-| 1.5.0 | **坏包勿分发**：批量改名事故致日志助手自递归栈溢出闪退 |
-| 1.5.1 | 环境探测 + 时间戳/角色前缀 + 多候选路径 |
-| 1.5.2 | 桥接消息保证 `[Stub:...]` 段 |
-| 1.5.3–1.5.6 | 加载链路 Harmony 探针（9+N 处 patch + 2s 心跳，定位"进关卡卡死"） |
-| 1.6.0 | **移除全部 Harmony 探针**，回归纯「扫描 + 加载 + 自愈 + 日志」 |
-| 1.7.0 | 相机出发点偏移补丁（Harmony：`MultiplayerCamera` 尊重场景摆放 X/Z）；csproj 新增 0Harmony 2.9 编译期引用（仓库内 `Assets/Plugins/0Harmony.dll`）。⚠ 全局热方法 detour 拖全场景帧率，勿分发 |
-| 1.7.1 | 移除相机偏移补丁（移交 CustomStub `CameraAuthoredOffset` + `CameraOffset|` tag 按需安装），loader 回归纯「扫描 + 加载 + 自愈 + 日志」 |
-| 2.x | 统一运行时体系：`requires.txt` semver 门控、自身目录加载 commonW1/W2 + `webcustomstub_runtime` 统一运行时、扫描挪后台线程、`[Logging] Verbose` |
-| 3.0.0 | 目录扫描启动一次化；同名程序集冲突诊断 |
-| 3.1.0 | 旧版关卡包向下兼容护栏（Harmony 前缀滤 null 节点；csproj 恢复 0Harmony 编译期引用） |
-| 3.2.0 | 依赖 bundle 动态发现（commonW1/W2/W3...） |
-| **3.2.1（当前）** | **兼容护栏修正**：v3.1.0 在 BepInEx 5.4.22 的 HarmonyX 上「触发但没拦住」（前缀改 `__args` 不回写，null 仍进原方法照崩，debug_20260921 23:53 实测）——改为检出 null 即跳过原方法、反射重建滤空查找表（`Equals` 去重 + `m_amountAllowed` 累加 + `m_lookupArray` 语义原样），重建异常退空查找表保会话；新增关卡集/关卡定位上下文（`SetupConfig` / `SetupSceneDirectoryData(LevelSetInfoSO)` 前缀），`[兼容]` 告警与 `[PLAYER]` 提示明确到「哪个关卡集的哪一关哪个菜谱」，同（关卡,菜谱）组合每会话只完整告警一次。上游 OC2DIYLevel.dll 与编辑器镜像 `Assets/Scripts/LevelEditor/RecipeHelper.cs` 均不动，修复只在 loader 侧 |
+| ≤1.6.0 | 早期：`.dll.bytes` 路径匹配修复、日志桥、EntryPoint 引导、移除探针回归纯加载器 |
+| 2.x | 统一运行时体系：`requires.txt` semver 门控、commonW 动态发现、扫描挪后台线程、Verbose 配置 |
+| 3.0–3.2.1 | 扫描启动一次化；同名程序集冲突诊断；旧包兼容护栏（RecipeHelper 空节点） |
+| 3.3.x–3.4.0 | 随统一运行时功能同步版本号（按钮联动/传送带/开关初始色，loader 侧无改动） |
+| **3.5.0（当前）** | **零介入铁律**：① 删除兼容护栏（不主动 hook 非 web 关卡路径的函数；旧集混装崩溃=重导出解决）；② `stub_levels.txt` 逐关卡清单 + `WebManifest` 注入 + EntryPoint 逐关卡闸门（未命中场景零扫描/零探测/零补丁）；③ 按特征挂载（KillPlane 仅 pushable、ticker 子系统按特征）；④ 清单为空=加载器整体休眠；⑤ **兼容期（<4.0.0）：旧版导出集走 `"集|*|legacy"` 条目维持 v3.4 行为（探测+自愈），已分发旧集无需重导出；v4.0.0 起严格按清单**；⑥ 新导出集的真机路径不再依赖 TickProbe 名字子串探测 |
 
 ## 7. 构建与安装
 
-- **构建**：`cd BepInExPlugins && ./build.sh`（即 `dotnet build OC2LevelRuntimeLoader/OC2LevelRuntimeLoader.csproj -c Release`）；Windows 用 `-p:GameDir="..."` 指向游戏目录。csproj：net35；引用 BepInEx.dll（5.4.22）+ **老式整包 UnityEngine.dll**（BepInEx 5.4 的 BaseUnityPlugin 编译自老式整包，必须引同名程序集做类型统一，引模块 DLL 会 CS0012）；mac 路径回退 `~/Downloads/[前置]BepInEx/...` + Unity 2017.4.8f1 Managed（该目录不存在时用 `./build.sh -p:BepInExCoreDir="<本机 BepInEx core 目录>"` 显式指定，如 `~/worker/code/oc2/BepInEx (1)/BepInEx/core`）。
-- **安装**：产物放 `BepInEx/plugins/OC2DIYLevel/`（随导出 zip 分发则自动就位）。
-- **排障顺序**（README）：环境探测日志 → LogOutput.log 三种特征（`AssemblyResolve 未命中` / `CustomStub.RandomCrate ✓` 缺失 / `[Stub:...]` 缺失）→ zip 新鲜度 → commonW1 存在性。v1.5.0 起警惕"坏包勿分发"。
+- **构建**：`cd Assets/WebCustomStubRuntime/Loader~ && ./build.sh`（版本号从 Loader.cs 自动提取）；Windows 用 `dotnet build Loader.csproj -c Release -p:GameDir="..."`。csproj：net35；引用 BepInEx.dll（5.4.22）+ **老式整包 UnityEngine.dll**（BepInEx 5.4 的 BaseUnityPlugin 编译自老式整包，必须引同名程序集做类型统一，引模块 DLL 会 CS0012）；**无 0Harmony 引用**（v3.5.0 随兼容护栏移除）。
+- **安装**：产物随依赖包 zip 落 `BepInEx/plugins/OC2DIYLevelRuntimeWLoader/`。
+- **排障顺序**：环境探测日志 → 休眠/激活状态行（「未发现任何 web 导出的 stub 关卡…休眠」= 清单空；「stub 关卡清单命中 N 关…激活」= 正常）→ `AssemblyResolve 未命中` / `[Stub:...]` 缺失 → zip 新鲜度（含 stub_levels.txt）→ commonW1 存在性。
 
 ## 8. 一图总结数据流
 
 ```mermaid
 flowchart TD
     subgraph EDITOR["编辑器（本仓库）"]
-        CS["Assets/Editor/LayoutEditor/CustomStub/<br/>母本"] -- "CustomStubCopyTool.CopyToSet<br/>（.cs 不带 .meta → 每集新 GUID）" --> SETSTUB["Assets/LevelSets/&lt;set&gt;/stub/<br/>（asmdef：Stub_&lt;set&gt;）"]
-        SETSTUB -- "Unity 编译" --> SA["Library/ScriptAssemblies/Stub_&lt;set&gt;.dll"]
-        SA -- "LayoutStubDLLBuilder.StageSet<br/>（新鲜度守卫）" --> BYTES["Assets/LevelSets/&lt;set&gt;/stub/Stub_&lt;set&gt;.dll.bytes<br/>（bundle 名 &lt;set&gt;/runtime）→ BuildAssetBundles"]
-        BYTES --> ZIP["web 导出 zip"]
+        SRC["Assets/WebCustomStubRuntime/（母本）<br/>+ AutoBake staging"] --> RT["RuntimeDll/WebCustomStubRuntime.dll.bytes<br/>（依赖包 bundle webcustomstub_runtime）"]
+        PREP["SetExporter prepare：逐场景<br/>CollectActiveSceneStubFeatures<br/>（tag/组件/无 tag 内容三通道）"] --> MANIFEST["levels/&lt;set&gt;/stub_levels.txt<br/>（每行 关卡|特征,...）"]
+        RT --> ZIP["web 导出 zip（含 requires.txt + stub_levels.txt）"]
+        MANIFEST --> ZIP
     end
 
     subgraph PLAYER["玩家真机（Windows + BepInEx）"]
-        ZIP2["web 导出 zip"] -- "解压" --> ROOT["BepInEx/plugins/OC2DIYLevel/"]
-        ROOT --> L1["OC2LevelRuntimeLoader.dll<br/>（BepInEx 递归扫描加载）"]
-        ROOT --> L2["commonW1（question_mark / RandomDispenser / …）"]
-        ROOT --> L3["levels/&lt;set&gt;/（info_&lt;set&gt; / s_* / 按需 runtime）"]
-        L1 -- "启动首帧 + 每次场景加载幂等" --> STEP1["AssetBundle.LoadFromFile(runtime)<br/>→ *.dll.bytes → Assembly.Load"]
-        STEP1 --> STEP2["EntryPoint.Install() 反射引导"]
-        STEP2 --> STEP3["sceneLoaded：ScanOnce 补扫<br/>+ HealScene（RandomCrate| tag 载体<br/>→ AddComponent 回填）"]
-        STEP3 --> OK["场景 MonoScript 解析成功<br/>CustomStub 玩法生效"]
-        L3 -.-> STEP1
+        ZIP2["web 导出 zip"] -- "解压" --> ROOT["BepInEx/plugins/"]
+        ROOT --> L1["OC2DIYLevelRuntimeWLoader/Loader.dll"]
+        ROOT --> L2["OC2DIYLevelRuntimeWLoader/<br/>commonW* + webcustomstub_runtime"]
+        ROOT --> L3["OC2DIYLevel/levels/&lt;set&gt;/<br/>info / s_* / requires.txt / stub_levels.txt"]
+        L1 -- "启动扫描：stub_levels.txt 为空？" --> GATE{"清单非空？"}
+        GATE -- "空（无 web stub 关卡）" --> DORM["【完全休眠】零加载零事件零介入"]
+        GATE -- "非空" --> LOAD["挂 AssemblyResolve + 预载<br/>commonW* → Assembly.Load(统一运行时)<br/>→ EntryPoint.Install → WebManifest 注入"]
+        LOAD --> STEP3["sceneLoaded：ProcessScene 逐关卡闸门<br/>scene.path → (集,关卡) 查清单三态"]
+        STEP3 -- "未命中（官方图/未用 stub 的 web 关卡）" --> ZERO["零扫描/零探测/零补丁"]
+        STEP3 -- "旧版集（集|*|legacy 兼容条目，<4.0.0）" --> LEGACY["v3.4 行为：探测+tag 自愈<br/>（旧集无需重导出）"]
+        STEP3 -- "精确命中" --> ACT["核心（触发区同步+联机诊断）<br/>+ 按特征挂载（KillPlane←pushable、<br/>ticker 子系统各按特征）+ HealScene"]
+        ACT --> OK["CustomStub 玩法生效"]
+        L3 -.-> L1
     end
 ```

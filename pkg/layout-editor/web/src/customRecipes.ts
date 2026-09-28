@@ -176,7 +176,7 @@ function crIconSrc(r: { assetPath: string }): string {
   return `/api/custom-recipes/icon?assetPath=${encodeURIComponent(r.assetPath)}`;
 }
 
-/** commonW2 Burger大全 / commonW3 沙拉大全共享库：不属于本关卡集自定义菜谱，列表页不展示。 */
+/** commonW2 Burger大全 / commonW3 Web 扩展菜谱共享库：不属于本关卡集自定义菜谱，列表页不展示。 */
 function isSharedCompendiumRecipe(r: CustomRecipeSummary): boolean {
   const p = r.assetPath.replace(/\\/g, "/");
   return p.includes("/commonW2/") || p.includes("/commonW3/");

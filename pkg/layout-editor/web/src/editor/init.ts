@@ -36,10 +36,12 @@ import { buildPalette } from "./palette";
 import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
 import { refreshScopedSaveButton } from "./serialize";
 import { scopedSaveMeta } from "./serialize";
+import { markDirty } from "./historyOps";
 import { openRecipesDialog } from "./ui/recipesDialogs";
 import { requestTestLayout } from "./testLayout";
 import { openUtensilManager } from "./ui/utensilManager";
 import { openCameraLightModal } from "./cameraLight";
+import { openWorkloadModal } from "./workloadModal";
 import {
   applyPanelCollapse,
   updatePanelTabButtons,
@@ -74,6 +76,20 @@ import { wireNav } from "../nav";
 import { navigateTo } from "../route";
 import { prefabIdFromPath } from "./coords";
 import type { Catalog, LevelDetail } from "../types";
+
+function editCeilingHeight(): void {
+  const raw = window.prompt("KitchenLoaderManager · Ceiling Height（0~10）", String(S.ceilingHeight));
+  if (raw == null) return;
+  const value = Number(raw);
+  if (!Number.isFinite(value)) {
+    setStatus("Ceiling Height 必须是数字", false);
+    return;
+  }
+  S.ceilingHeight = Math.max(0, Math.min(10, value));
+  S.hasCeilingHeight = true;
+  markDirty();
+  setStatus(`Ceiling Height 已设为 ${S.ceilingHeight}，请写回 Unity 保存`, false);
+}
 
 /** Catalog cache so `setLayer` can rebuild the palette without re-fetching. */
 let layoutCatalog: Catalog = {
@@ -423,6 +439,7 @@ export async function init() {
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
   document.getElementById("btn-utensils")!.addEventListener("click", () => openUtensilManager());
   document.getElementById("btn-camera-light")!.addEventListener("click", () => openCameraLightModal());
+  document.getElementById("btn-ceiling-height")!.addEventListener("click", editCeilingHeight);
   document.getElementById("chk-auto-intermediates")!.addEventListener("change", (e) => {
     S.autoIntermediates = (e.target as HTMLInputElement).checked;
   });
@@ -448,7 +465,15 @@ export async function init() {
     }
   };
   document.getElementById("btn-level-config")!.addEventListener("click", () =>
-    void withLevelDetail((detail) => openConfigTabsModal(detail, S.currentLevelSet, () => {}))
+    void withLevelDetail((detail) => openConfigTabsModal(detail, S.currentLevelSet, () => {}, {
+      ceilingHeight: S.ceilingHeight,
+      hasCeilingHeight: S.hasCeilingHeight,
+      onCeilingHeightChange: (value) => {
+        S.ceilingHeight = value;
+        S.hasCeilingHeight = true;
+        markDirty();
+      },
+    }))
   );
   document.getElementById("btn-level-audio")!.addEventListener("click", () =>
     void withLevelDetail((detail) => {
@@ -466,6 +491,7 @@ export async function init() {
       openAudioModal(detail, { themes, raft, deathTheme, itemIds }, () => {});
     })
   );
+  document.getElementById("btn-workload")!.addEventListener("click", () => void openWorkloadModal());
 
   // 📋 汇总：整页跳转严格路由 /manage/{set}/{levelId}/summary（可刷新/分享）
   document.getElementById("btn-summary")!.addEventListener("click", () =>
@@ -508,7 +534,7 @@ export async function init() {
   });
 
   document.getElementById("snap-free-step")!.addEventListener("change", (e) => {
-    S.freeSnapStep = parseFloat((e.target as HTMLSelectElement).value) || 0.01;
+    S.freeSnapStep = parseFloat((e.target as HTMLSelectElement).value) || 0.1;
   });
 
   document.getElementById("show-grid")!.addEventListener("change", (e) => {
@@ -553,6 +579,15 @@ export async function init() {
     yDragBtn.addEventListener("click", () => {
       S.yAxisDrag = !S.yAxisDrag;
       yDragBtn.classList.toggle("active", S.yAxisDrag);
+      draw();
+    });
+  }
+
+  const rotGizmoBtn = document.getElementById("btn-rot-gizmo");
+  if (rotGizmoBtn) {
+    rotGizmoBtn.addEventListener("click", () => {
+      S.rotGizmo = !S.rotGizmo;
+      rotGizmoBtn.classList.toggle("active", S.rotGizmo);
       draw();
     });
   }

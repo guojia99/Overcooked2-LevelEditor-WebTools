@@ -12,6 +12,7 @@ import { S, CELL, isFloorLikeLayer } from "../state";
 import { floorWalkY } from "../floorHeight";
 import { bgTheme } from "../../floorColors";
 import { stubKindOf } from "../stubControls";
+import { collectButtonPartnerEdges, collectCoaxialGroups } from "../renderItems";
 import { ORDER } from "./constants";
 import { Scene3DCtx, disposeObject } from "./ctx";
 import { decalMaterial, parseCssColor } from "./materials";
@@ -219,6 +220,46 @@ function addLinks(root: THREE.Group): void {
     const color = PORTAL_COLORS[t.teleportal?.portalColor ?? 0] ?? "#c792ea";
     root.add(linkLine(a, b, new THREE.Color(color), 0.65));
     root.add(arrowHead(a, b, new THREE.Color(color)));
+  }
+
+  // 共轭 / 互锁双按钮
+  const drawnPartner = new Set<string>();
+  for (const e of collectButtonPartnerEdges()) {
+    const key = [e.aId, e.bId].sort().join("|");
+    if (drawnPartner.has(key)) continue;
+    drawnPartner.add(key);
+    const a = linkTop(e.aId);
+    const b = linkTop(e.bId);
+    if (!a || !b) continue;
+    const color = e.mode === "conjugate" ? new THREE.Color(0x5be8b5) : new THREE.Color(0xe8a14b);
+    root.add(linkLine(a, b, color, 0.62));
+    root.add(arrowHead(a, b, color));
+    root.add(arrowHead(b, a, color));
+  }
+
+  // 同轴按钮组：成员链（双向）+ 质心 → 目标（单向），紫色
+  for (const g of collectCoaxialGroups()) {
+    const tops = g.memberIds
+      .map((id) => linkTop(id))
+      .filter((p): p is THREE.Vector3 => !!p);
+    if (tops.length < 2) continue;
+    const coaxColor = new THREE.Color(0xb48ef0);
+    for (let i = 0; i + 1 < tops.length; i++) {
+      root.add(linkLine(tops[i], tops[i + 1], coaxColor, 0.62));
+      root.add(arrowHead(tops[i], tops[i + 1], coaxColor));
+      root.add(arrowHead(tops[i + 1], tops[i], coaxColor));
+    }
+    if (g.targetIds.length > 0) {
+      const center = tops
+        .reduce((acc, p) => acc.add(p.clone()), new THREE.Vector3())
+        .multiplyScalar(1 / tops.length);
+      for (const tid of g.targetIds) {
+        const b = linkTop(tid);
+        if (!b) continue;
+        root.add(linkLine(center, b, coaxColor, 0.55));
+        root.add(arrowHead(center, b, coaxColor));
+      }
+    }
   }
 
   // 开关 → 目标

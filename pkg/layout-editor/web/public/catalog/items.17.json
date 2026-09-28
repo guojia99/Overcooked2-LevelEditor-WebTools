@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "index": 17,
-  "itemCount": 80,
+  "itemCount": 81,
   "items": [
     {
       "id": "Smoothie_Melon",
@@ -1026,6 +1026,23 @@
       "layoutTier": "core",
       "nameZh": "厨师出生点",
       "nameEn": "Player",
+      "icon": false
+    },
+    {
+      "id": "AirSlope",
+      "guid": "ad9efda5019002d0edbfb92d10e6a306",
+      "assetPath": "",
+      "category": "surface",
+      "theme": null,
+      "defaultParent": "Design/Collision",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "surfaceKind": "airslope",
+      "nameZh": "空气斜坡（可行走）",
+      "nameEn": "Air Slope",
       "icon": false
     },
     {

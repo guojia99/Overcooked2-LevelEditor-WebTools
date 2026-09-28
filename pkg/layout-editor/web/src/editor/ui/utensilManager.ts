@@ -37,6 +37,7 @@ import {
   UTENSIL_KIND_ZH
 } from "../../autoScoreKnowledge";
 import type { RecipeEntry } from "../../types";
+import { visibleIngredients } from "../../ingredientLabels";
 
 export type UtensilIngredientFill = Map<string, UtensilFillEntry>;
 
@@ -272,10 +273,15 @@ export function openUtensilManager() {
     btn.addEventListener("click", () => {
       const it = utensilByKey(btn.dataset.key);
       if (!it) return;
+      const baseId = functionalBaseId(prefabIdFromPath(it.prefabAssetPath) ?? "");
+      const hint =
+        baseId === "BlenderCup"
+          ? "allowedIngredientSOs（不选 = 处理所有主线食材；选中的作为额外可煮食材）。Web 果汁多用 DLC4 水果（葡萄/橙子/桃子）与莓果，请用「全部」或「水果」分类查找，勿只筛 DLC2（原版果汁节点仅草莓/菠萝碎等少数几种）。"
+          : "allowedIngredientSOs（不选 = 处理所有主线食材；选中的作为额外可煮食材）";
       openIngredientMultiPicker(
         `锅具 · 额外食材（${itemLabel(it)}）`,
-        "allowedIngredientSOs（不选 = 处理所有主线食材；选中的作为额外可煮食材）",
-        S.ingredientsCache,
+        hint,
+        visibleIngredients(S.ingredientsCache),
         it.cookingUtensil?.allowedIngredientGuids ?? [],
         (guids) => {
           pushHistory();

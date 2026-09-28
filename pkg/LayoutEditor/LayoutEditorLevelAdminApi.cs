@@ -2389,9 +2389,12 @@ public static class LayoutEditorLevelAdminApi
     ///  但仍在 Assets 树内随 git 版本管理。</summary>
     private const string AssignmentDirName = "assignment~";
     private const string AssignmentFileName = "assignment.json";
+    private const string WorkloadDirName = "workload~";
+    private const string WorkloadFileName = "workload.json";
     private const string ReadmeDirName = "readme~";
     private const string ReadmeFileName = "readme.json";
     private const int AssignmentMaxBytes = 512 * 1024;
+    private const int WorkloadMaxBytes = 4 * 1024 * 1024;
     private const int ReadmeMaxBytes = 256 * 1024;
 
     private static string LevelDataSubDir(string levelInfoAssetPath, string dirName)
@@ -2504,6 +2507,32 @@ public static class LayoutEditorLevelAdminApi
         return ClearLevelDataDir(levelInfoAssetPath, AssignmentDirName);
     }
 
+    /** 读取工作量推测配置（workload~/workload.json 原文）。 */
+    public static string ReadLevelWorkload(string levelInfoAssetPath, out WorkloadResultDto result)
+    {
+        result = new WorkloadResultDto();
+        var err = ValidateLevelInfoPath(levelInfoAssetPath);
+        if (err != null)
+            return err;
+        result.json = ReadLevelDataText(levelInfoAssetPath, WorkloadDirName, WorkloadFileName, out result.exists);
+        return null;
+    }
+
+    /** 保存工作量推测配置。JSON 内部结构由前端负责。 */
+    public static string SaveLevelWorkload(string levelInfoAssetPath, string json)
+    {
+        var trimmed = json == null ? "" : json.Trim();
+        if (trimmed.Length > 0 && trimmed[0] != '{')
+            return "工作量配置必须是 JSON 对象。";
+        return WriteLevelDataText(levelInfoAssetPath, WorkloadDirName, WorkloadFileName, trimmed, WorkloadMaxBytes);
+    }
+
+    /** 清除工作量推测配置。 */
+    public static string ClearLevelWorkload(string levelInfoAssetPath)
+    {
+        return ClearLevelDataDir(levelInfoAssetPath, WorkloadDirName);
+    }
+
     /** 读取汇总页 readme（readme~/readme.json → html 字段）。 */
     public static string ReadLevelReadme(string levelInfoAssetPath, out ReadmeResultDto result)
     {
@@ -2550,8 +2579,8 @@ public static class LayoutEditorLevelAdminApi
     ///  独立于关卡集的汉堡自定义菜谱，在所有关卡集的菜谱管理页以「burger」分类并入，
     ///  关卡选用后由 EnsureWebDependencies 注入 commonW2 bundle 依赖。</summary>
     public const string CommonW2RecipesDir = "Assets/commonW2/custom_recipes";
-    /// <summary>沙拉大全共享库（Assets/commonW3，打包为 commonW3 bundle）：
-    ///  DLC11 食材全排列的自定义沙拉（Web 前缀命名，与官方组成零重复），
+    /// <summary>Web 扩展菜谱共享库（Assets/commonW3，打包为 commonW3 bundle；salad/ + smoothie/）：
+    ///  DLC11 沙拉全排列 + Web 果汁（Web 前缀命名），
     ///  在所有关卡集的菜谱管理页以「commonw3」分类并入，关卡选用后注入 commonW3 bundle 依赖。</summary>
     public const string CommonW3RecipesDir = "Assets/commonW3/custom_recipes";
     /// <summary>Burger大全分类 id（commonW2 内菜谱的固定 category）。</summary>
@@ -4078,6 +4107,54 @@ public static class LayoutEditorLevelAdminApi
     }
 
     /// <summary>若 models 目录已有 _Icon 图但 SO 未引用，尝试重新导入并写回 icon 字段。</summary>
+    /// <summary>从菜谱 models 子目录已有 FBX/贴图生成 prefab 并写回 CustomRecipeSO.model
+    /// （供 gen-commonw3-smoothies.mjs 落盘后的 Unity 后处理）。</summary>
+    public static CustomRecipeUploadResultDto BakeCustomRecipeModelFromDisk(string recipeAssetPath)
+    {
+        if (string.IsNullOrEmpty(recipeAssetPath))
+            return new CustomRecipeUploadResultDto { ok = false, error = "缺少菜谱路径。" };
+
+        var recipeId = SanitizeName(Path.GetFileNameWithoutExtension(recipeAssetPath));
+        var modelsDir = RecipeModelsDir(recipeAssetPath);
+        var absDir = AbsPath(modelsDir);
+        if (!Directory.Exists(absDir))
+            return new CustomRecipeUploadResultDto { ok = false, error = "models 目录不存在：" + modelsDir };
+
+        var uploadFiles = new List<CustomRecipeUploadFileDto>();
+        foreach (var file in Directory.GetFiles(absDir))
+        {
+            var name = Path.GetFileName(file);
+            if (name.EndsWith(".meta", StringComparison.Ordinal))
+                continue;
+            if (name.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (name.StartsWith(recipeId + "_Icon", StringComparison.OrdinalIgnoreCase))
+                continue;
+            uploadFiles.Add(new CustomRecipeUploadFileDto
+            {
+                fileName = name,
+                base64 = System.Convert.ToBase64String(File.ReadAllBytes(file))
+            });
+        }
+        var hasModel = false;
+        for (int i = 0; i < uploadFiles.Count; i++)
+        {
+            if (IsModelFileName(uploadFiles[i].fileName))
+            {
+                hasModel = true;
+                break;
+            }
+        }
+        if (!hasModel)
+            return new CustomRecipeUploadResultDto { ok = false, error = "未找到 FBX/OBJ：" + modelsDir };
+
+        return UploadCustomRecipeModel(new CustomRecipeUploadDto
+        {
+            recipeAssetPath = recipeAssetPath,
+            files = uploadFiles.ToArray()
+        });
+    }
+
     public static void TryRelinkRecipeIconFromDisk(string recipeAssetPath)
     {
         if (string.IsNullOrEmpty(recipeAssetPath))

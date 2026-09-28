@@ -44,7 +44,7 @@ import {
 } from "./renderFloors";
 import { drawAnimControlOverlay, previewMemberPositions, previewFxState } from "./animControl";
 import { floorInHeightFilter, itemInHeightFilter } from "./floorHeight";
-import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks } from "./renderItems";
+import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks, drawButtonPartnerLinks, drawCoaxialLinks } from "./renderItems";
 import { drawServingLinks } from "./servingLinks";
 import {
   isSurfaceItem,
@@ -576,6 +576,8 @@ export function draw() {
     }
     drawTeleportalLinks();
     drawSwitchLinks();
+    drawButtonPartnerLinks();
+    drawCoaxialLinks();
     drawTerminalLinks();
     drawServingLinks();
   }

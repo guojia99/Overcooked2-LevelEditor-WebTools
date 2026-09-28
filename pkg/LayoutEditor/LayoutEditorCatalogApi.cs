@@ -12,7 +12,7 @@ public static class LayoutEditorCatalogApi
     ///  ⚠ 三处同步：本常量 ↔ 前端 ingredientLabels.ts 的 FOOD_GROUP_ZH ↔ recipeList.ts 徽标分支。</summary>
     internal const string CommonW2Group = "commonw2";
 
-    /// <summary>commonW3 沙拉大全共享库（DLC11 食材全排列）的 food group id。
+    /// <summary>commonW3 Web 扩展菜谱共享库（沙拉大全 + Web 果汁大全）的 food group id。
     ///  ⚠ 三处同步：本常量 ↔ 前端 ingredientLabels.ts 的 FOOD_GROUP_ZH ↔ recipeList.ts 徽标分支。</summary>
     internal const string CommonW3Group = "commonw3";
 
@@ -111,7 +111,7 @@ public static class LayoutEditorCatalogApi
         //   前端 FOOD_GROUP_ZH（ingredientLabels.ts）与徽标（recipeList.ts）按这两个组分别渲染。
         if (assetPath.IndexOf("/commonW2/", StringComparison.Ordinal) >= 0)
             return IsCommonW2BurgerCategory(assetPath) ? "burger" : CommonW2Group;
-        // commonW3 沙拉大全共享库：整库一个分类（custom_recipes/salad/）。
+        // commonW3 Web 扩展菜谱共享库：salad/ + smoothie/ 等同组（custom_recipes/*）。
         if (assetPath.IndexOf("/commonW3/", StringComparison.Ordinal) >= 0)
             return CommonW3Group;
         if (assetPath.IndexOf("/custom_recipes/", StringComparison.Ordinal) >= 0)
@@ -292,7 +292,7 @@ public static class LayoutEditorCatalogApi
         if (LayoutEditorLevelAdminApi.AssetFolderExists(LayoutEditorLevelAdminApi.CommonW2RecipesDir))
             folders.Add(LayoutEditorLevelAdminApi.CommonW2RecipesDir);
 
-        // 沙拉大全（commonW3 共享沙拉库）：同上，所有关卡集的关卡均可选用。
+        // Web 扩展菜谱（commonW3 共享库）：同上，所有关卡集的关卡均可选用。
         if (LayoutEditorLevelAdminApi.AssetFolderExists(LayoutEditorLevelAdminApi.CommonW3RecipesDir))
             folders.Add(LayoutEditorLevelAdminApi.CommonW3RecipesDir);
 
@@ -342,7 +342,7 @@ public static class LayoutEditorCatalogApi
                 }
                 else if (group == CommonW3Group)
                 {
-                    // commonW3 沙拉大全：查本库自己的 names.json（Web 前缀命名）。
+                    // commonW3 Web 扩展菜谱：查本库自己的 names.json（Web 前缀命名）。
                     var w3Names = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW3RecipesDir);
                     var nameKey = custom != null && !string.IsNullOrEmpty(custom.recipeName) ? custom.recipeName : id;
                     if (!w3Names.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))

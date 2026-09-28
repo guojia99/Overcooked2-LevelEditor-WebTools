@@ -35,6 +35,7 @@ import {
   stubKindOf,
   isHotpotBurnerItem,
   isAirWallItem,
+  isAirSlopeItem,
   isTravelatorItem
 } from "./stubControls";
 import { isSelected } from "./selection";
@@ -51,7 +52,7 @@ import { isServingStationItem,
   isPlateReturnItem,
   isGlassReturnItem
 } from "./servingLinks";
-import { airWallCells, airWallHeightCells } from "./items";
+import { airWallCells, airWallHeightCells, airSlopeEndY } from "./items";
 import {
   isTeleportalItem,
   teleportals,
@@ -90,6 +91,70 @@ function drawCollisionMarker(item: EditorItem, selected: boolean) {
   ctx.fillStyle = selected ? "rgba(255,220,120,0.95)" : "rgba(150,190,255,0.75)";
   drawLabelInBox(ctx, hCells > 1 ? `空气墙·${hCells}格` : "空气墙", dw, dh);
   if (showItemResizeHandles(item, selected)) drawItemResizeHandles(dw, dh);
+  ctx.restore();
+}
+
+/** 空气斜坡（可行走斜坡）：渐变梯形 + 起止高度标注（如 1.0→2.0m），游戏内不可见。 */
+function drawAirSlopeMarker(item: EditorItem, selected: boolean) {
+  const rot = normalizeRot(item.localRotationY);
+  const center = worldToCanvas(item._wx, item._wz);
+  const cellPx = CELL * PX_PER_UNIT * S.scale;
+  // 旋转帧内用【局部系】尺寸：宽 = widthCells（横向），长 = lengthCells（沿坡向）；
+  // ctx.rotate 已承担朝向（与 drawCollisionMarker 同款约定）。
+  const s = item.slope;
+  const w = (s?.widthCells ?? 1) * cellPx;
+  const h = (s?.lengthCells ?? 3) * cellPx;
+  const startY = item.localPosition?.y ?? 0;
+  const endY = airSlopeEndY(item);
+  const ctx = dom.ctx;
+
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  // 画布 y 向下 = 编辑器 -Z；朝向角 rot（Unity 语义 forward=(sinθ,0,cosθ)）在画布
+  // 上的旋转与 drawCollisionMarker 同款 rot 弧度，局部 -y 方向 = 坡的抬升方向。
+  ctx.rotate((rot * Math.PI) / 180);
+
+  // 坡面渐变：局部 -y（远端=高处）亮，+y（近端=低处）暗。设了调试显示色则
+  // 用该色系（与游戏内 DebugVis 薄板所见一致）。
+  const dbg = item.slope?.debugColor;
+  const useDbg = typeof dbg === "string" && /^#[0-9a-fA-F]{6}$/.test(dbg);
+  const grad = ctx.createLinearGradient(0, h / 2, 0, -h / 2);
+  if (useDbg) {
+    grad.addColorStop(0, `${dbg}26`);
+    grad.addColorStop(1, `${dbg}66`);
+  } else {
+    grad.addColorStop(0, selected ? "rgba(249,171,0,0.18)" : "rgba(110,200,160,0.10)");
+    grad.addColorStop(1, selected ? "rgba(249,171,0,0.42)" : "rgba(110,200,160,0.34)");
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(-w / 2, -h / 2, w, h);
+  ctx.strokeStyle = selected ? "#f9ab00" : "rgba(110,200,160,0.7)";
+  ctx.lineWidth = selected ? 2.5 : 1.2;
+  ctx.setLineDash(selected ? [] : [4, 3]);
+  ctx.strokeRect(-w / 2, -h / 2, w, h);
+  ctx.setLineDash([]);
+
+  // 登坡箭头：指向局部 -y（抬升方向），居中。
+  const arrowLen = Math.min(h * 0.5, cellPx * 1.4);
+  const headW = Math.min(w * 0.3, cellPx * 0.4);
+  ctx.beginPath();
+  ctx.moveTo(0, arrowLen / 2);
+  ctx.lineTo(0, -arrowLen / 2);
+  ctx.moveTo(-headW / 2, -arrowLen / 2 + headW * 0.9);
+  ctx.lineTo(0, -arrowLen / 2);
+  ctx.lineTo(headW / 2, -arrowLen / 2 + headW * 0.9);
+  ctx.strokeStyle = selected ? "rgba(255,220,120,0.95)" : "rgba(150,230,190,0.85)";
+  ctx.lineWidth = Math.max(1.5, cellPx * 0.06);
+  ctx.stroke();
+
+  // 起止高度标注（沿坡向，低端在 +y 下沿、高端在 -y 上沿）。
+  ctx.fillStyle = selected ? "rgba(255,235,170,0.95)" : "rgba(170,235,205,0.85)";
+  ctx.font = `bold ${Math.max(8, Math.round(cellPx * 0.17))}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const fmt = (v: number) => v.toFixed(1);
+  ctx.fillText(`${fmt(startY)}m`, 0, h / 2 - cellPx * 0.18);
+  ctx.fillText(`${fmt(endY)}m`, 0, -h / 2 + cellPx * 0.18);
   ctx.restore();
 }
 
@@ -133,6 +198,10 @@ export function itemDisplayRotationY(item: EditorItem): number {
 }
 
 export function drawItem(item: EditorItem, selected: boolean) {
+  if (isAirSlopeItem(item)) {
+    drawAirSlopeMarker(item, selected);
+    return;
+  }
   if (isCollisionItem(item)) {
     drawCollisionMarker(item, selected);
     return;
@@ -161,6 +230,11 @@ export function drawItem(item: EditorItem, selected: boolean) {
     isStackUtensilCatalog(cat) || id === "Backpack" || id === "web_utensil_large_pot_01_pushable";
   const isPlayer = isPlayerItem(item);
   const paint = paintStyleForItem(cat, item.parentPath, selected);
+  // 初始关闭开关（互锁按下侧 / 手动关初始态）：画布直接呈现关闭色 + 「关」角标
+  // （与运行时开局外观一致——CustomStub SwitchStartVisual）。
+  const swStartOff =
+    (stubKindOf(item) === "Switch" || stubKindOf(item) === "CannonSwitch") &&
+    item.switchStub?.startEnabled === false;
 
   const inset = isUtensil ? Math.min(cellPx * 0.22, 10) : 0;
   const bw = Math.max(4, w - inset * 2);
@@ -176,7 +250,7 @@ export function drawItem(item: EditorItem, selected: boolean) {
   dom.ctx.translate(center.x, center.y);
   dom.ctx.rotate(rotRad);
 
-  dom.ctx.fillStyle = paint.fill;
+  dom.ctx.fillStyle = swStartOff ? "#9c4a42" : paint.fill;
   dom.ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
 
   dom.ctx.strokeStyle = paint.stroke;
@@ -246,6 +320,54 @@ export function drawItem(item: EditorItem, selected: boolean) {
   const pBadge = S.paramLabels.get(item.instanceId);
   if (pBadge)
     drawNumberBadge(center, bw, bh, cellPx, pBadge, S.paramColors.get(item.instanceId) ?? "#f9ab00", rot);
+  drawTiltBadge(item, center, bh, cellPx, rot);
+  if (swStartOff)
+    drawNumberBadge(center, bw, bh, cellPx, "关", "#e07b6d", rot);
+}
+
+/**
+ * X/Z 倾斜角标（v9）：俯视图无法表达倾斜，在物件下沿画一个小胶囊标注当前倾角。
+ * 与参数角标错开：参数角标在右上角，倾斜角标在下沿中央。
+ */
+export function drawTiltBadge(
+  item: EditorItem,
+  center: { x: number; y: number },
+  h: number,
+  cellPx: number,
+  rot = 0
+) {
+  const rx = item.localRotationX ?? 0;
+  const rz = item.localRotationZ ?? 0;
+  if (rx === 0 && rz === 0) return;
+  const label = `X${Math.round(rx)}°Z${Math.round(rz)}°`;
+  const fontPx = Math.max(8, Math.round(cellPx * 0.16));
+  dom.ctx.save();
+  dom.ctx.font = `bold ${fontPx}px sans-serif`;
+  const tw = dom.ctx.measureText(label).width + fontPx * 0.7;
+  const th = fontPx * 1.25;
+  const rad = (-rot * Math.PI) / 180;
+  const lx = 0;
+  const ly = h / 2 + th * 0.7;
+  const bx = center.x + lx * Math.cos(rad) - ly * Math.sin(rad);
+  const by = center.y + lx * Math.sin(rad) + ly * Math.cos(rad);
+  dom.ctx.fillStyle = "rgba(125,140,255,0.92)";
+  dom.ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  dom.ctx.lineWidth = 1;
+  const r = th / 2;
+  dom.ctx.beginPath();
+  dom.ctx.moveTo(bx - tw / 2 + r, by - th / 2);
+  dom.ctx.lineTo(bx + tw / 2 - r, by - th / 2);
+  dom.ctx.arc(bx + tw / 2 - r, by, r, -Math.PI / 2, Math.PI / 2);
+  dom.ctx.lineTo(bx - tw / 2 + r, by + th / 2);
+  dom.ctx.arc(bx - tw / 2 + r, by, r, Math.PI / 2, -Math.PI / 2);
+  dom.ctx.closePath();
+  dom.ctx.fill();
+  dom.ctx.stroke();
+  dom.ctx.fillStyle = "#fff";
+  dom.ctx.textAlign = "center";
+  dom.ctx.textBaseline = "middle";
+  dom.ctx.fillText(label, bx, by);
+  dom.ctx.restore();
 }
 
 export function drawSurfaceItem(item: EditorItem, selected: boolean) {
@@ -491,6 +613,157 @@ function drawLinkArrowHead(from: { x: number; y: number }, to: { x: number; y: n
   dom.ctx.lineTo(tipX - ah * Math.cos(rad + Math.PI / 7), tipY - ah * Math.sin(rad + Math.PI / 7));
   dom.ctx.closePath();
   dom.ctx.fill();
+}
+
+export interface ButtonPartnerEdge {
+  aId: string;
+  bId: string;
+  mode: "conjugate" | "interlock";
+}
+
+/** 共轭/互锁配对边（每对只出现一次；供 2D/3D 连线）。 */
+export function collectButtonPartnerEdges(): ButtonPartnerEdge[] {
+  const edges: ButtonPartnerEdge[] = [];
+  const seenPair = new Set<string>();
+  const seenConj = new Set<string>();
+  for (const l of S.buttonLinks) {
+    if (l.pairId) {
+      if (seenPair.has(l.pairId)) continue;
+      const p = S.buttonLinks.find((x) => x !== l && x.pairId === l.pairId);
+      if (!p) continue;
+      seenPair.add(l.pairId);
+      edges.push({ aId: l.sourceId, bId: p.sourceId, mode: "interlock" });
+      continue;
+    }
+    for (const sid of l.sharedSourceIds ?? []) {
+      if (!sid || sid === l.sourceId) continue;
+      const key = [l.sourceId, sid].sort().join("|");
+      if (seenConj.has(key)) continue;
+      seenConj.add(key);
+      edges.push({ aId: l.sourceId, bId: sid, mode: "conjugate" });
+    }
+  }
+  return edges;
+}
+
+/** 共轭（青）/ 互锁（琥珀）双按钮配对连线，双向箭头。 */
+export function drawButtonPartnerLinks() {
+  const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
+  for (const e of collectButtonPartnerEdges()) {
+    const a = byInst.get(e.aId);
+    const b = byInst.get(e.bId);
+    if (!a || !b) continue;
+    const p1 = worldToCanvas(a._wx, a._wz);
+    const p2 = worldToCanvas(b._wx, b._wz);
+    const color = e.mode === "conjugate" ? "#5be8b5" : "#e8a14b";
+    dom.ctx.save();
+    dom.ctx.strokeStyle = color;
+    dom.ctx.globalAlpha = 0.65;
+    dom.ctx.lineWidth = 2;
+    dom.ctx.setLineDash(e.mode === "interlock" ? [5, 4] : [8, 4]);
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(p1.x, p1.y);
+    dom.ctx.lineTo(p2.x, p2.y);
+    dom.ctx.stroke();
+    dom.ctx.setLineDash([]);
+    const drawArrow = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+      const rad = Math.atan2(to.y - from.y, to.x - from.x);
+      const ah = 7 * Math.max(0.6, S.scale);
+      const gap = 10 * Math.max(0.6, S.scale);
+      const tipX = to.x - Math.cos(rad) * gap;
+      const tipY = to.y - Math.sin(rad) * gap;
+      dom.ctx.fillStyle = color;
+      dom.ctx.beginPath();
+      dom.ctx.moveTo(tipX, tipY);
+      dom.ctx.lineTo(tipX - ah * Math.cos(rad - 0.45), tipY - ah * Math.sin(rad - 0.45));
+      dom.ctx.lineTo(tipX - ah * Math.cos(rad + 0.45), tipY - ah * Math.sin(rad + 0.45));
+      dom.ctx.closePath();
+      dom.ctx.fill();
+    };
+    drawArrow(p1, p2);
+    drawArrow(p2, p1);
+    dom.ctx.restore();
+  }
+}
+
+/** 同轴组可视化数据（2D/3D 共用）：存活成员 + 目标 + 窗口秒数。 */
+export interface CoaxialGroupVis {
+  memberIds: string[];
+  targetIds: string[];
+  windowSeconds: number;
+}
+
+/** 同轴按钮组数据（成员/目标已按存活物品过滤）。 */
+export function collectCoaxialGroups(): CoaxialGroupVis[] {
+  return S.coaxialLinks
+    .map((g) => ({
+      memberIds: g.sourceIds.filter((id) => S.items.some((i) => i.instanceId === id)),
+      targetIds: (g.targetIds ?? []).filter((id) => S.items.some((i) => i.instanceId === id)),
+      windowSeconds: g.windowSeconds,
+    }))
+    .filter((g) => g.memberIds.length >= 2);
+}
+
+/** 同轴按钮组连线（紫色）：成员链（双向箭头虚线）+ 成员质心 → 目标（箭头）。 */
+export function drawCoaxialLinks() {
+  const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
+  const color = "#b48ef0";
+  const drawArrow = (from: { x: number; y: number }, to: { x: number; y: number }, both: boolean) => {
+    const rad = Math.atan2(to.y - from.y, to.x - from.x);
+    const ah = 7 * Math.max(0.6, S.scale);
+    const gap = 10 * Math.max(0.6, S.scale);
+    const tipX = to.x - Math.cos(rad) * gap;
+    const tipY = to.y - Math.sin(rad) * gap;
+    dom.ctx.fillStyle = color;
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(tipX, tipY);
+    dom.ctx.lineTo(tipX - ah * Math.cos(rad - 0.45), tipY - ah * Math.sin(rad - 0.45));
+    dom.ctx.lineTo(tipX - ah * Math.cos(rad + 0.45), tipY - ah * Math.sin(rad + 0.45));
+    dom.ctx.closePath();
+    dom.ctx.fill();
+    if (both) drawArrow(to, from, false);
+  };
+  for (const g of collectCoaxialGroups()) {
+    const pts = g.memberIds
+      .map((id) => byInst.get(id))
+      .filter((i): i is NonNullable<typeof i> => !!i)
+      .map((i) => ({ x: i._wx, y: i._wz }));
+    if (pts.length < 2) continue;
+    dom.ctx.save();
+    dom.ctx.strokeStyle = color;
+    dom.ctx.globalAlpha = 0.6;
+    dom.ctx.lineWidth = 2;
+    dom.ctx.setLineDash([10, 5]);
+    // 成员链：相邻成员两两相连（双向箭头 = 同组共进退）
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const p1 = worldToCanvas(pts[i].x, pts[i].y);
+      const p2 = worldToCanvas(pts[i + 1].x, pts[i + 1].y);
+      dom.ctx.beginPath();
+      dom.ctx.moveTo(p1.x, p1.y);
+      dom.ctx.lineTo(p2.x, p2.y);
+      dom.ctx.stroke();
+      drawArrow(p1, p2, true);
+    }
+    dom.ctx.setLineDash([6, 4]);
+    dom.ctx.lineWidth = 1.5;
+    dom.ctx.globalAlpha = 0.55;
+    // 质心 → 每个目标（单向箭头 = 集齐后广播）
+    const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+    const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+    const center = worldToCanvas(cx, cy);
+    for (const tid of g.targetIds) {
+      const t = byInst.get(tid);
+      if (!t) continue;
+      const b = worldToCanvas(t._wx, t._wz);
+      dom.ctx.beginPath();
+      dom.ctx.moveTo(center.x, center.y);
+      dom.ctx.lineTo(b.x, b.y);
+      dom.ctx.stroke();
+      drawArrow(center, b, false);
+    }
+    dom.ctx.setLineDash([]);
+    dom.ctx.restore();
+  }
 }
 
 /** 开关联动连线（switchLinks：开关 → 断头台/果汁机/酱料机等目标），橙色虚线 + 箭头指向目标。 */

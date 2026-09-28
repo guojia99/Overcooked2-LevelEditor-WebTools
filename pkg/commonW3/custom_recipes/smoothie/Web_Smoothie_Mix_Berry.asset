@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83fb008bcc8e793429b02c178c430815, type: 3}
+  m_Name: Web_Smoothie_Mix_Berry
+  m_EditorClassIdentifier: 
+  type: 3
+  recipeName: Web_Smoothie_Mix_Berry
+  uID: 58322034
+  score: 100
+  platingStepSO: {fileID: 11400000, guid: 9f2781f346fbd6d42a008e004f255d92, type: 2}
+  modelSO: {fileID: 0}
+  model: {fileID: 100000, guid: e50e3d77391eabe35462a7831102421a, type: 3}
+  iconSO: {fileID: 0}
+  icon: {fileID: 21300000, guid: af6330ac59eb918a70ea83353fe96aec, type: 3}
+  compositionSOs:
+  - {fileID: 11400000, guid: a192356a1fd01504eadf0d90ffa2de62, type: 2}
+  - {fileID: 11400000, guid: 1e87aab4d91d5e2b460a8de8fe55b737, type: 2}
+  - {fileID: 11400000, guid: e1e6338f70e25804d8a1081909bcb066, type: 2}
+  - {fileID: 11400000, guid: 2c4b11eca006b60f3ae5a95e5cf4c609, type: 2}
+  optionalSOs: []
+  cookingStepSO: {fileID: 0}
+  cookingStepIconSO: {fileID: 0}
+  cookingStepIcon: {fileID: 0}
+  cookingProgress: 0
+  mixingIconSO: {fileID: 11400000, guid: 7a77fe98553178640a4b8a48d10057bc, type: 2}
+  mixingIcon: {fileID: 0}
+  mixingProgress: 1

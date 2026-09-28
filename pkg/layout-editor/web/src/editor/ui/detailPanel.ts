@@ -41,8 +41,8 @@ import {
 import { pushHistory } from "../historyOps";
 import { draw } from "../render";
 import { updateFloorBar } from "../floorPalette";
-import { setItemPlaneSize, airWallCells, airWallHeightCells, setAirWallHeight } from "../items";
-import { isAirWallItem } from "../stubControls";
+import { setItemPlaneSize, airWallCells, airWallHeightCells, setAirWallHeight, setItemRotationAxis } from "../items";
+import { isAirWallItem, isAirSlopeItem } from "../stubControls";
 import {
   isConveyorItem,
   isTeleportalItem
@@ -409,7 +409,12 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       ${airWallHeightRow}
       ${coordRows}
       <dt>本地坐标</dt><dd>x ${item.localPosition.x.toFixed(d)}, y ${item.localPosition.y.toFixed(d)}, z ${item.localPosition.z.toFixed(d)}</dd>
-      <dt>旋转 Y</dt><dd>${normalizeRot(item.localRotationY)}°</dd>
+      <dt>旋转</dt><dd id="si-rot-val">Y ${normalizeRot(item.localRotationY)}° · X ${normalizeRot(item.localRotationX ?? 0)}° · Z ${normalizeRot(item.localRotationZ ?? 0)}°</dd>
+      ${isAirSlopeItem(item) ? `<div class="floor-edit-row"><span class="muted" style="align-self:center;font-size:11px">斜坡倾斜由坡角决定（右键菜单调整）</span></div>` : `<div class="floor-edit-row">
+        <label>X <input type="number" min="0" max="359" step="1" id="si-rot-x" value="${normalizeRot(item.localRotationX ?? 0)}" /></label>
+        <label>Z <input type="number" min="0" max="359" step="1" id="si-rot-z" value="${normalizeRot(item.localRotationZ ?? 0)}" /></label>
+        <span class="muted" style="align-self:center;font-size:11px">倾斜角(度) · 右键菜单还有 Y 轴</span>
+      </div>`}
       ${scaleRow}
       <dt>分类</dt><dd>${isSurfaceItem(cat) ? surfaceKindLabelZh(cat?.surfaceKind) + "（地板层）" : cat?.layoutTier === "decor" ? "装饰道具" : "核心玩法"} · ${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : cat?.category ?? "—"}</dd>
       ${stackDetailHtml(item, cat)}
@@ -482,5 +487,32 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
     scaleInput?.addEventListener("blur", () => {
       scalePushed = false;
     });
+  }
+
+  // X/Z 轴倾斜编辑（v9）：绝对角语义，与右键菜单一致；只有首个输入事件进历史。
+  {
+    const rotXInput = document.getElementById("si-rot-x") as HTMLInputElement | null;
+    const rotZInput = document.getElementById("si-rot-z") as HTMLInputElement | null;
+    let rotPushed = false;
+    const applyTilt = (axis: "x" | "z") => {
+      const input = axis === "x" ? rotXInput : rotZInput;
+      const v = parseFloat(input?.value ?? "");
+      if (!isFinite(v)) return;
+      if (!rotPushed) {
+        pushHistory();
+        rotPushed = true;
+      }
+      setItemRotationAxis(item, axis, v);
+      const el = document.getElementById("si-rot-val");
+      if (el) {
+        el.textContent = `Y ${normalizeRot(item.localRotationY)}° · X ${normalizeRot(item.localRotationX ?? 0)}° · Z ${normalizeRot(item.localRotationZ ?? 0)}°`;
+      }
+      S.dirty = true;
+      draw();
+    };
+    rotXInput?.addEventListener("input", () => applyTilt("x"));
+    rotZInput?.addEventListener("input", () => applyTilt("z"));
+    rotXInput?.addEventListener("blur", () => { rotPushed = false; });
+    rotZInput?.addEventListener("blur", () => { rotPushed = false; });
   }
 }

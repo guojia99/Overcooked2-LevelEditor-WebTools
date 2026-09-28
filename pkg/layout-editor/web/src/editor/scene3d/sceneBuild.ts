@@ -28,7 +28,7 @@ import {
   endBoxCache,
 } from "./meshItems";
 import { buildFloorNode, floorSignature, floorDrawOrder } from "./meshFloors";
-import { toSceneZ, toSceneRotY } from "./space";
+import { toSceneZ, toSceneRotY, applySceneEuler } from "./space";
 import { rebuildOverlays } from "./overlays3d";
 import { rebuildAnim } from "./anim3d";
 import { rebuildHandles } from "./handles3d";
@@ -128,7 +128,7 @@ function syncItems(ctx: Scene3DCtx): void {
       // 几何没变：只刷新 transform（拖动的快路径）。
       const box = itemBoxOf(it);
       node.group.position.set(box.cx, box.baseY, toSceneZ(box.cz));
-      node.group.rotation.y = toSceneRotY(box.rotDeg);
+      applySceneEuler(node.group, box.rotXDeg, box.rotDeg, box.rotZDeg);
       // 图标是异步到达的：只换顶面贴花，不重建盒体，避免加载期整片卡顿。
       if (node.decalSignature !== decalSig) {
         applyItemDecal(node.group, it, dimmed);

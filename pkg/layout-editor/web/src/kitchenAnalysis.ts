@@ -154,8 +154,9 @@ export function analyzeKitchen(doc: LayoutDocument | null | undefined): KitchenS
     stats.utensils[kind as UtensilKind] = { count: arr.length, capacity, cookSec, station: rule.station };
   }
 
-  // 断头台按钮：switchLinks 的目标是断头台 → 记为“带按钮”（严格按联动数据判定，
-  // 未接按钮的断头台无法落刀，由 kitchenWarnings 提示并按切菜台 3s/个回退估时）
+  // 断头台按钮：switchLinks 的目标是断头台、或同轴组（coaxialLinks）的目标是
+  // 断头台 → 记为“带按钮”（严格按联动数据判定，未接按钮的断头台无法落刀，
+  // 由 kitchenWarnings 提示并按切菜台 3s/个回退估时）
   stats.guillotineTotal = stats.stations.guillotine ?? 0;
   const byInstance = new Map(doc.items.map((it) => [it.instanceId, it]));
   const linkedGuillotines = new Set<string>();
@@ -163,6 +164,14 @@ export function analyzeKitchen(doc: LayoutDocument | null | undefined): KitchenS
     const target = byInstance.get(link.targetId);
     if (target && STATION_CLASS_BY_ID[itemCatalogId(target)] === "guillotine") {
       linkedGuillotines.add(link.targetId);
+    }
+  }
+  for (const group of doc.coaxialLinks?.links ?? []) {
+    for (const tid of group.targetIds ?? []) {
+      const target = byInstance.get(tid);
+      if (target && STATION_CLASS_BY_ID[itemCatalogId(target)] === "guillotine") {
+        linkedGuillotines.add(tid);
+      }
     }
   }
   stats.guillotineWithButton = Math.min(stats.guillotineTotal, linkedGuillotines.size);

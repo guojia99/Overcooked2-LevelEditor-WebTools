@@ -285,6 +285,17 @@ export function isFlourBranchRecipe(r: RecipeEntry): boolean {
   return ings.some((i) => FLOUR_INGREDIENTS.has(i)) && ings.some((i) => EGG_INGREDIENTS.has(i));
 }
 
+/** Mixed 自定义菜谱是否走搅拌杯（BlenderCup）。Web 果汁清空 cookingStepSO，仅靠 mixing 会误入搅拌碗。 */
+export function isBlenderMixRecipe(r: RecipeEntry): boolean {
+  if (!r.mixing) return false;
+  const step = r.cookingStep ?? "";
+  if (step === "Blender") return true;
+  if (step === "Mixer" || step === "MixingBowl") return false;
+  if (isFlourBranchRecipe(r)) return false;
+  if (step && step !== "Blender" && STEP_UTENSILS[step]) return false;
+  return r.type === "smoothie" || r.platingStep === "Glass";
+}
+
 /** 搅拌型中间产物：官方面糊用 cookingStep=Mixer/MixingBowl；自定义 Mixed 类型用 mixing 标记。 */
 export function isMixIntermediate(inter: RecipeEntry): boolean {
   const step = inter.cookingStep ?? "";
@@ -464,6 +475,13 @@ export function computeUtensilIngredientFill(
           bump(vessel, 1);
         }
       }
+      continue;
+    }
+    // 果汁（Mixed + Glass / smoothie）：叶食材进搅拌杯，与官方 Smoothie_* 一致
+    if (isBlenderMixRecipe(r)) {
+      const leafs = r.ingredients ?? [];
+      for (const ing of leafs) addIng("BlenderCup", ing);
+      bump("BlenderCup", Math.max(1, leafs.length));
       continue;
     }
     // Mixed 类型：叶食材直接进搅拌碗（如 mooncake_Orange 四料直接搅拌）

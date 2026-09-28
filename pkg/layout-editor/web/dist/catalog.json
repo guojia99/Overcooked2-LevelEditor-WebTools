@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-24T14:08:04.048Z",
+  "generatedAt": "2026-09-25T08:08:43.438Z",
   "schemaVersion": 7,
   "gridCellSize": 1.2,
-  "itemCount": 3480,
+  "itemCount": 3481,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -96,10 +96,10 @@
     },
     {
       "key": "surface",
-      "labelZh": "核心 · 空气墙",
-      "labelEn": "Air walls",
+      "labelZh": "核心 · 空气墙/斜坡",
+      "labelEn": "Air walls & slopes",
       "layoutTier": "core",
-      "itemCount": 1
+      "itemCount": 2
     },
     {
       "key": "Player",

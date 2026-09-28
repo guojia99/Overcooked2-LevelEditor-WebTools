@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -56,12 +57,19 @@ namespace CustomStub
         ///  唯一的回绿通道（SwitchReenable 只随机器联动烘焙，2026-09-25 真机
         ///  「按一次永红」事故根因）。</summary>
         public string[] m_buttonRootNames;
+        /// <summary>互锁对（BtnPair）：在 AReady/BReady 切换时一升一降，而非共轭式同时 Reset。</summary>
+        public bool m_interlockPair;
+        public string m_interlockSideA;
+        public string m_interlockSideB;
 
         private Animator m_animator;
         private int[] m_stateHashes;
         private int[][] m_blockedHashes;
         private int m_lastHash;
         private bool m_wasInRun;
+        private int m_aReadyHash;
+        private int m_bReadyHash;
+        private bool m_interlockBootstrapped;
         private float m_runEnterTime = -1f;
         private bool m_runStuckWarned;
         private HashSet<string> m_resolveWarned;
@@ -74,6 +82,14 @@ namespace CustomStub
         /// 永久红锁且零日志——超时告警把这类故障从「玩家口述」变成日志可见。</summary>
         private const float RunStuckWarnSeconds = 30f;
 
+        /// <summary>按压最小间隔（秒，防抖）：任一次运行期总时长不足此值时，
+        /// 回绿/换手延迟补足，且窗口内到达的按压触发一律吞掉（快速动画/脉冲
+        /// 场景下连按只算一次，2026-09-28 防抖需求）。</summary>
+        private const float MinPressIntervalSeconds = 0.35f;
+
+        /// <summary>防抖窗口截止时刻（Time.time；-1 = 无窗口）。</summary>
+        private float m_pressUnblockTime = -1f;
+
         private void Awake()
         {
             RebuildHashes();
@@ -85,6 +101,59 @@ namespace CustomStub
             m_wasInRun = false;
             m_runEnterTime = -1f;
             m_runStuckWarned = false;
+            m_interlockBootstrapped = false;
+            m_pressUnblockTime = -1f;
+        }
+
+        private void Start()
+        {
+            BootstrapInterlockVisual();
+            LogStartupSummary();
+        }
+
+        /// <summary>启动摘要（一次性，常开日志）：模式（互锁/共轭/顺序）、互锁 A/B
+        /// 侧名、初始 Animator 状态、分发条数——「互锁配置是否真正生效」的第一
+        /// 诊断行。若此处打出【共轭】而期望互锁，即 |X: tag / relay 字段断链
+        /// （旧烘焙场景未重新写回，或 WriteRelayTag 未写入互锁侧）。</summary>
+        private void LogStartupSummary()
+        {
+            if (m_animator == null)
+                m_animator = GetComponent<Animator>();
+            string mode;
+            bool interlock = m_interlockPair;
+            if (interlock)
+                mode = "互锁（A=" + m_interlockSideA + " B=" + m_interlockSideB + "）";
+            else if (m_buttonRootNames != null && m_buttonRootNames.Length > 1)
+                mode = "共轭（" + m_buttonRootNames.Length + " 按钮）";
+            else
+                mode = "顺序/单源";
+            int dispatch = m_stateNames != null ? m_stateNames.Length : 0;
+            string line = "[ButtonLogicRelay] " + name + " 启动：模式=" + mode +
+                "｜初始状态=" + CurrentStateLabel() + "｜分发 " + dispatch + " 条";
+            // 互锁/共轭是玩法级配置（每关数量少）→ 常开；顺序联动可能很多条 → 诊断级。
+            if (interlock || (m_buttonRootNames != null && m_buttonRootNames.Length > 1))
+                StubLog.Log(line);
+            else
+                StubLog.Dbg(line);
+        }
+
+        /// <summary>当前 Animator 状态的可读名（已知状态名比对；未知打 hash）。</summary>
+        private string CurrentStateLabel()
+        {
+            if (m_animator == null)
+                return "无 Animator";
+            var si = m_animator.GetCurrentAnimatorStateInfo(0);
+            if (si.shortNameHash == m_aReadyHash) return "AReady";
+            if (si.shortNameHash == m_bReadyHash) return "BReady";
+            if (m_stateHashes != null && m_stateNames != null)
+            {
+                for (int i = 0; i < m_stateHashes.Length && i < m_stateNames.Length; i++)
+                {
+                    if (si.shortNameHash == m_stateHashes[i])
+                        return m_stateNames[i];
+                }
+            }
+            return "state#" + si.shortNameHash;
         }
 
         /// <summary>烘焙器写完字段后调用（反射）；也可在 Inspector 改动后手动生效。</summary>
@@ -107,6 +176,24 @@ namespace CustomStub
                 m_blockedHashes[i] = list.ToArray();
             }
             m_targetCache.Clear();
+            m_aReadyHash = Animator.StringToHash("AReady");
+            m_bReadyHash = Animator.StringToHash("BReady");
+        }
+
+        private void BootstrapInterlockVisual()
+        {
+            if (!m_interlockPair || m_interlockBootstrapped)
+                return;
+            if (m_animator == null)
+                m_animator = GetComponent<Animator>();
+            if (m_animator == null)
+                return;
+            var si = m_animator.GetCurrentAnimatorStateInfo(0);
+            if (si.shortNameHash == m_aReadyHash)
+                ApplyInterlockVisual(true);
+            else if (si.shortNameHash == m_bReadyHash)
+                ApplyInterlockVisual(false);
+            m_interlockBootstrapped = true;
         }
 
         private void Update()
@@ -120,23 +207,31 @@ namespace CustomStub
 
             var si = m_animator.GetCurrentAnimatorStateInfo(0);
 
-            // 按压封禁：处于封禁状态时持续 ResetTrigger（脚本 Update 先于 Animator
-            // 求值，本帧到达的 SetTrigger 会在被消费前清掉——吞掉且不锁存）。
+            // 按压封禁：处于封禁状态或防抖窗口内时持续 ResetTrigger（脚本 Update
+            // 先于 Animator 求值，本帧到达的 SetTrigger 会在被消费前清掉——吞掉
+            // 且不锁存）。
             if (m_pressTriggers != null && m_blockedHashes != null)
             {
+                bool debouncing = Time.time < m_pressUnblockTime;
                 for (int i = 0; i < m_pressTriggers.Length && i < m_blockedHashes.Length; i++)
                 {
                     if (string.IsNullOrEmpty(m_pressTriggers[i]))
                         continue;
-                    var blocked = m_blockedHashes[i];
-                    for (int j = 0; j < blocked.Length; j++)
+                    bool swallow = debouncing;
+                    if (!swallow)
                     {
-                        if (si.shortNameHash == blocked[j])
+                        var blocked = m_blockedHashes[i];
+                        for (int j = 0; j < blocked.Length; j++)
                         {
-                            m_animator.ResetTrigger(m_pressTriggers[i]);
-                            break;
+                            if (si.shortNameHash == blocked[j])
+                            {
+                                swallow = true;
+                                break;
+                            }
                         }
                     }
+                    if (swallow)
+                        m_animator.ResetTrigger(m_pressTriggers[i]);
                 }
             }
 
@@ -159,20 +254,51 @@ namespace CustomStub
                 }
             }
 
-            // 按钮生命周期：进入 Run → 全部配对按钮 Disable（共轭：按一个双锁）；
-            // 离开 Run（动画完成回 Ready）→ 全部 Reset（一起变绿）。
-            // SendMessage 直达 child 上的 ServerTriggerDisableScript（网络通道，
-            // 双端状态一致；客户端本机无 Server* 组件，落空无害——与 BLGo 同款）。
-            if (nowInRun && !m_wasInRun)
+            if (m_interlockPair)
             {
-                m_runEnterTime = Time.time;
-                m_runStuckWarned = false;
-                SendToPairedButtons("Disable");
+                if (si.shortNameHash == m_aReadyHash)
+                    ApplyInterlockVisual(true, m_wasInRun ? RunDeficit() : 0f);
+                else if (si.shortNameHash == m_bReadyHash)
+                    ApplyInterlockVisual(false, m_wasInRun ? RunDeficit() : 0f);
+                if (nowInRun && !m_wasInRun)
+                {
+                    m_runEnterTime = Time.time;
+                    m_runStuckWarned = false;
+                    SendToPairedButtons("Disable");
+                }
+                else if (!nowInRun && m_wasInRun)
+                {
+                    // 换手防抖：动画快于最短间隔时，登记吞按压窗口（抬起侧的
+                    // 延迟回绿由 ApplyInterlockVisual 的 upDelay 承担）。
+                    SchedulePressDebounce(RunDeficit());
+                    m_runEnterTime = -1f;
+                }
             }
-            else if (!nowInRun && m_wasInRun)
+            else if (m_buttonRootNames != null && m_buttonRootNames.Length > 0)
             {
-                m_runEnterTime = -1f;
-                SendToPairedButtons("Reset");
+                // 共轭：进入 Run → 全部配对按钮 Disable；离开 Run（动画完成）→ 全部 Reset
+                // （一起变绿）。运行期不足最短间隔时延迟 Reset 补足防抖。
+                if (nowInRun && !m_wasInRun)
+                {
+                    m_runEnterTime = Time.time;
+                    m_runStuckWarned = false;
+                    SendToPairedButtons("Disable");
+                }
+                else if (!nowInRun && m_wasInRun)
+                {
+                    float deficit = RunDeficit();
+                    SchedulePressDebounce(deficit);
+                    m_runEnterTime = -1f;
+                    if (deficit > 0f)
+                    {
+                        StartCoroutine(PairedButtonsLater("Reset", deficit));
+                        StubLog.Log("[ButtonLogicRelay] " + name + " 运行期不足 " +
+                            MinPressIntervalSeconds.ToString("0.##") + "s，延迟 " +
+                            deficit.ToString("0.##") + "s 回绿（防抖）");
+                    }
+                    else
+                        SendToPairedButtons("Reset");
+                }
             }
             m_wasInRun = nowInRun;
 
@@ -203,6 +329,72 @@ namespace CustomStub
             }
         }
 
+        /// <summary>互锁：A 抬起时 B 按下，反之亦然。每次翻转打投递结果
+        /// （✓/✗）——状态机已换手但按钮外观未变时，靠这行区分「消息没发出」
+        /// （✗，见 WarnResolveOnce 的根名/child 解析失败）与「已发出」（✓，
+        /// 则是按钮 child 侧接收问题）。upDelay：抬起侧延迟回绿（运行期不足
+        /// 最短按压间隔时的防抖补足；按下侧总是立即）。</summary>
+        private void ApplyInterlockVisual(bool aUp, float upDelay = 0f)
+        {
+            bool aSent = true;
+            bool bSent = true;
+            if (!string.IsNullOrEmpty(m_interlockSideA))
+            {
+                if (aUp && upDelay > 0f)
+                    StartCoroutine(ButtonSendLater(m_interlockSideA, "Reset", upDelay));
+                else
+                    aSent = SendToButtonRoot(m_interlockSideA, aUp ? "Reset" : "Disable");
+            }
+            if (!string.IsNullOrEmpty(m_interlockSideB))
+            {
+                if (!aUp && upDelay > 0f)
+                    StartCoroutine(ButtonSendLater(m_interlockSideB, "Reset", upDelay));
+                else
+                    bSent = SendToButtonRoot(m_interlockSideB, aUp ? "Disable" : "Reset");
+            }
+            StubLog.Log("[ButtonLogicRelay] " + name + " 互锁翻转：" +
+                (aUp ? "A 抬起 / B 按下" : "B 抬起 / A 按下") +
+                "（A " + DeliveryMark(aSent) + "，B " + DeliveryMark(bSent) + ")" +
+                (upDelay > 0f ? "，抬起侧延迟 " + upDelay.ToString("0.##") + "s 回绿（防抖）" : ""));
+        }
+
+        private static string DeliveryMark(bool sent)
+        {
+            return sent ? "✓" : "✗ 未投递";
+        }
+
+        /// <summary>运行期距最短按压间隔的差额（秒；已足额或无记录 = 0）。</summary>
+        private float RunDeficit()
+        {
+            if (m_runEnterTime < 0f)
+                return 0f;
+            float d = MinPressIntervalSeconds - (Time.time - m_runEnterTime);
+            return d > 0f ? d : 0f;
+        }
+
+        /// <summary>登记防抖窗口：窗口内到达的按压触发一律吞掉（与封禁状态吞除
+        /// 同一通道，见 Update 开头）。</summary>
+        private void SchedulePressDebounce(float deficit)
+        {
+            if (deficit <= 0f)
+                return;
+            float until = Time.time + deficit;
+            if (until > m_pressUnblockTime)
+                m_pressUnblockTime = until;
+        }
+
+        private IEnumerator PairedButtonsLater(string trigger, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            SendToPairedButtons(trigger);
+        }
+
+        private IEnumerator ButtonSendLater(string rootName, string trigger, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            SendToButtonRoot(rootName, trigger);
+        }
+
         /// <summary>向全部配对按钮的 child 广播 Disable/Reset（伪根→PseudoPrefab.
         /// childGameObject 反射解析，真机回落扫描解析，懒加载缓存）。</summary>
         private void SendToPairedButtons(string trigger)
@@ -212,15 +404,8 @@ namespace CustomStub
             int sent = 0;
             for (int i = 0; i < m_buttonRootNames.Length; i++)
             {
-                var child = ResolveButtonChild(m_buttonRootNames[i]);
-                if (child == null)
-                    continue;
-                // 复位触发名读各按钮实例自身的 m_enableTrigger（SwitchReenable 同款，
-                // 拨动/踏板等其它开关 prefab 未必叫 "Reset"）；禁用侧统一 "Disable"
-                // （香草按压链同款触发名，编辑器 Play 3.3.2 已实证）。
-                var fire = trigger == "Reset" ? ResolveEnableTrigger(child) : trigger;
-                child.SendMessage("OnTrigger", fire, SendMessageOptions.DontRequireReceiver);
-                sent++;
+                if (SendToButtonRoot(m_buttonRootNames[i], trigger))
+                    sent++;
             }
             // sent/total 全量打点：部分投递失败（sent < total）一眼可见，
             // 失败明细由 WarnResolveOnce 一次性告警补充（2026-09-25 12:47 真机
@@ -241,6 +426,16 @@ namespace CustomStub
                     return t;
             }
             return "Reset";
+        }
+
+        private bool SendToButtonRoot(string rootName, string trigger)
+        {
+            var child = ResolveButtonChild(rootName);
+            if (child == null)
+                return false;
+            var fire = trigger == "Reset" ? ResolveEnableTrigger(child) : trigger;
+            child.SendMessage("OnTrigger", fire, SendMessageOptions.DontRequireReceiver);
+            return true;
         }
 
         private GameObject ResolveButtonChild(string rootName)
@@ -282,7 +477,8 @@ namespace CustomStub
                 var disableScript = FindDisableScript(root);
                 if (disableScript == null)
                 {
-                    WarnResolveOnce(rootName, "根上无活 PseudoPrefab，子树也无 TriggerDisableScript");
+                    WarnResolveOnce(rootName, "根上无活 PseudoPrefab，子树也无 TriggerDisableScript" +
+                        "（GameObject.Find 命中的可能不是按钮——名称撞车或场景为旧烘焙，重写回生成 _BL 唯一名可根治）");
                     return null;
                 }
                 child = disableScript.gameObject;

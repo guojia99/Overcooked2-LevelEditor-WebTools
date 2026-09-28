@@ -10,6 +10,7 @@ import { setSelection } from "./selection";
 import { setStatus } from "./status";
 import { draw } from "./render";
 import { escHtml, prefabIdFromPath, uuid } from "./coords";
+import { applyInterlockSwitchVisuals, clearCoaxialGroupsForSwitches } from "./buttonLinks";
 
 /** 上菜台 → 回收台（脏盘/脏杯/马克杯/餐盘）自动绑定。 */
 function linkServing(kind: ServingReturnKind) {
@@ -185,10 +186,10 @@ function linkConveyorSwitch(items: EditorItem[]): void {
   });
 }
 
-/** 传送带阵 ×4 + 双按钮（共控·同按）：4 个**独立**动画组（每站一组、+90°/−90°
+/** 传送带阵 ×4 + 双按钮（共轭·同按）：4 个**独立**动画组（每站一组、+90°/−90°
  *  两个逐节点，方便单独编辑/控制），同按联动让一次按压同时启动全部 4 组（各自
  *  推进一个节点 = 4 站同时旋转 90°，再按全部转回）；两个按钮接线到同一联动
- *  （sharedSourceIds），任一按压都推进。每站带 buttonControlled 监视器（旋转停稳
+ *  （sharedSourceIds），同时开/关。每站带 buttonControlled 监视器（旋转停稳
  *  后刷新投递目标）。 */
 function linkConveyorArraySwitch(items: EditorItem[]): void {
   const conveyors = items.slice(0, 4);
@@ -281,6 +282,210 @@ function linkConveyorArraySwitch(items: EditorItem[]): void {
   });
 }
 
+/** 传送带阵 ×4 + 互锁双按钮：单组节点环（4 站成员、+90°/−90° 两节点），
+ *  互锁双方绑【同一个组】（共享环）——ARun/BRun 分发同一 BLGo，环按按压交替
+ *  推进节点：A 恒 +90°、B 恒 −90°（按钮交替与节点交替天然同步），只有抬起的
+ *  一侧能按；动画（0.4s）完成后对方抬起。 */
+function linkConveyorArrayInterlockSwitch(items: EditorItem[]): void {
+  const conveyors = items.slice(0, 4);
+  const swA = items[4];
+  const swB = items[5];
+  for (const c of conveyors) {
+    c.conveyor = { ...(c.conveyor ?? {}), buttonControlled: true };
+  }
+  for (const sw of [swA, swB]) {
+    sw.stubKind = "Switch";
+    if (!sw.switchStub) sw.switchStub = {};
+  }
+  applyInterlockSwitchVisuals(swA, swB, true);
+
+  // 组名基号去重（重复套用组合时）。
+  let base = S.animControls.length + 1;
+  const taken = (k: number) => S.animControls.some((g) => g.displayName.startsWith(`传送带阵 ${k} `));
+  while (taken(base)) base++;
+
+  const name = `传送带阵 ${base} · 环`;
+  const group: AnimGroup = {
+    id: uuid(),
+    displayName: name,
+    groupKind: "members",
+    triggerMode: "button",
+    advanceMode: "press",
+    itemInstanceIds: conveyors.map((c) => c.instanceId),
+    floorInstanceIds: [],
+    objectInstanceIds: [],
+    memberOffsets: [],
+    memberStatic: [],
+    memberGroups: [],
+    startDelay: 0,
+    loop: false,
+    loopDelay: 2,
+    waitForFinished: true,
+    waypoints: [],
+    events: [
+      {
+        id: uuid(),
+        type: "rotate",
+        triggerName: "FlipOn",
+        delay: 0,
+        startTime: 0,
+        rotateDegrees: 90,
+        rotateDirection: "cw",
+        rotateSeconds: 0.4,
+      },
+      {
+        id: uuid(),
+        type: "rotate",
+        triggerName: "FlipOff",
+        delay: 0,
+        startTime: 1,
+        rotateDegrees: 90,
+        rotateDirection: "ccw",
+        rotateSeconds: 0.4,
+      },
+    ],
+  };
+  S.animControls.push(group);
+
+  // 重复套用组合时清掉旧的传送带阵组（成员与本次任一传送带重叠即视为旧组）。
+  const newIds = new Set(conveyors.map((c) => c.instanceId));
+  const legacyNames = new Set<string>();
+  for (const g of S.animControls) {
+    if (g.id === group.id) continue;
+    if (g.displayName.startsWith("传送带阵") && g.itemInstanceIds.some((id) => newIds.has(id))) {
+      legacyNames.add(g.displayName);
+    }
+  }
+  if (legacyNames.size > 0) {
+    S.animControls = S.animControls.filter((g) => !legacyNames.has(g.displayName));
+    S.buttonLinks = S.buttonLinks.filter((l) => !l.groupNames.some((n2) => legacyNames.has(n2)));
+  }
+  clearButtonLinksForSwitches(swA.instanceId, swB.instanceId);
+
+  // 互锁双方绑同一组（共享环）：A 恒 +90°（初始可按）、B 恒 −90°（初始按下）。
+  const pairId = uuid();
+  S.buttonLinks.push({
+    id: uuid(),
+    sourceId: swA.instanceId,
+    groupNames: [name],
+    lockUntilFinished: true,
+    pairId,
+    pairStartsUp: true,
+  });
+  S.buttonLinks.push({
+    id: uuid(),
+    sourceId: swB.instanceId,
+    groupNames: [name],
+    lockUntilFinished: true,
+    pairId,
+    pairStartsUp: false,
+  });
+}
+
+function initSwitchPair(items: EditorItem[]): [EditorItem, EditorItem] {
+  const [swA, swB] = items;
+  for (const sw of [swA, swB]) {
+    sw.stubKind = "Switch";
+    if (!sw.switchStub) sw.switchStub = {};
+    sw.switchStub.startEnabled = true;
+  }
+  return [swA, swB];
+}
+
+function clearButtonLinksForSwitches(...ids: (string | undefined)[]): void {
+  const idSet = new Set(ids.filter(Boolean));
+  const pairIdsToRemove = new Set<string>();
+  for (const l of S.buttonLinks) {
+    if (!l.pairId) continue;
+    if (idSet.has(l.sourceId)) pairIdsToRemove.add(l.pairId);
+  }
+  S.buttonLinks = S.buttonLinks.filter((l) => {
+    if (idSet.has(l.sourceId)) return false;
+    if ((l.sharedSourceIds ?? []).some((sid) => idSet.has(sid))) return false;
+    if (l.pairId && pairIdsToRemove.has(l.pairId)) return false;
+    return true;
+  });
+}
+
+/** 共轭双按钮：两开关共享一条 ButtonLink，按任一等同；动画在触发编排中单独配置。 */
+function linkConjugateSwitchPair(items: EditorItem[]): void {
+  const [swA, swB] = initSwitchPair(items);
+  clearButtonLinksForSwitches(swA.instanceId, swB.instanceId);
+
+  S.buttonLinks.push({
+    id: uuid(),
+    sourceId: swA.instanceId,
+    sharedSourceIds: [swB.instanceId],
+    groupNames: [],
+    sequenceMode: "loop",
+    lockUntilFinished: true,
+  });
+}
+
+/** 互锁双按钮：一对一互锁，初始一升一降；各侧动画在触发编排中单独配置。 */
+function linkInterlockSwitchPair(items: EditorItem[]): void {
+  const [swA, swB] = initSwitchPair(items);
+  applyInterlockSwitchVisuals(swA, swB, true);
+  clearButtonLinksForSwitches(swA.instanceId, swB.instanceId);
+
+  const pairId = uuid();
+  S.buttonLinks.push({
+    id: uuid(),
+    sourceId: swA.instanceId,
+    groupNames: [],
+    lockUntilFinished: true,
+    pairId,
+    pairStartsUp: true,
+  });
+  S.buttonLinks.push({
+    id: uuid(),
+    sourceId: swB.instanceId,
+    groupNames: [],
+    lockUntilFinished: true,
+    pairId,
+    pairStartsUp: false,
+  });
+}
+
+/** 同轴按钮 + 双断头台：两按钮在时间窗内（首个按下起默认 1s 计时）先后按下 →
+ *  两台同时落刀（Chop）；超时未集齐已按按钮自动弹回、不落刀。窗口在开关右键
+ *  菜单「同轴组」可调（0.35~5s）。 */
+function linkCoaxialGuillotines(items: EditorItem[]): void {
+  const [g1, g2, swA, swB] = items;
+  clearCoaxialGroupsForSwitches(swA.instanceId, swB.instanceId);
+  for (const sw of [swA, swB]) {
+    sw.stubKind = "Switch";
+    if (!sw.switchStub) sw.switchStub = {};
+    sw.switchStub.startEnabled = true;
+  }
+  S.coaxialLinks.push({
+    id: uuid(),
+    sourceIds: [swA.instanceId, swB.instanceId],
+    windowSeconds: 1,
+    targetIds: [g1.instanceId, g2.instanceId],
+    triggers: ["Chop", "Chop"],
+  });
+}
+
+/** 同轴双按钮（裸组）：时间窗内两按钮都按下才触发（首个按下起默认 1s 计时，
+ *  超时自动弹回不触发）；目标机器事后在开关右键菜单「同轴组」里接。 */
+function linkCoaxialPair(items: EditorItem[]): void {
+  const [swA, swB] = items;
+  clearCoaxialGroupsForSwitches(swA.instanceId, swB.instanceId);
+  for (const sw of [swA, swB]) {
+    sw.stubKind = "Switch";
+    if (!sw.switchStub) sw.switchStub = {};
+    sw.switchStub.startEnabled = true;
+  }
+  S.coaxialLinks.push({
+    id: uuid(),
+    sourceIds: [swA.instanceId, swB.instanceId],
+    windowSeconds: 1,
+    targetIds: [],
+    triggers: [],
+  });
+}
+
 /** 传送门配对：默认【单向 A→B】——a 是入口，b 仅作为出口（回指 a 占位，
  *  运行时由 CustomStub.TeleportalExitOnly 把 b 的出口清回 null）。
  *  需要双向在入口门参数里勾「双向传送」即可。 */
@@ -367,6 +572,18 @@ export const COMBOS: ComboDef[] = [
     link: linkSwitch(),
   },
   {
+    id: "coaxial_double_guillotine",
+    nameZh: "同轴按钮 + 双断头台",
+    hint: "同轴联动：两按钮在时间窗内（默认 1s，可调 0.35~5s）先后按下 → 双断头台同时落刀；超时已按按钮自动弹回、不落刀",
+    parts: [
+      { id: "workstation_guillotine_01", dx: 0, dz: 0 },
+      { id: "workstation_guillotine_01", dx: 2.5, dz: 0 },
+      { id: "Switch", dx: 0, dz: 2 },
+      { id: "Switch", dx: 2.5, dz: -2 },
+    ],
+    link: linkCoaxialGuillotines,
+  },
+  {
     id: "conveyor_switch",
     nameZh: "传送带站 + 按钮",
     hint: "开关动画组（节点环）：按一次旋转 180° 切换传送方向、再按转回；绝不自动播放，动画期间按钮锁定。在右侧「🔘 触发源」可查看联动",
@@ -377,9 +594,39 @@ export const COMBOS: ComboDef[] = [
     link: linkConveyorSwitch,
   },
   {
+    id: "conjugate_switch_pair",
+    nameZh: "共轭双按钮",
+    hint: "两开关同时开/关：按任一等同推进同一动画序列，动画期间双按钮同步锁定与回绿",
+    parts: [
+      { id: "Switch", dx: 0, dz: 0 },
+      { id: "Switch", dx: 2, dz: 0 },
+    ],
+    link: linkConjugateSwitchPair,
+  },
+  {
+    id: "interlock_switch_pair",
+    nameZh: "互锁双按钮",
+    hint: "一对一互锁：仅一方可按，各绑独立动画组，初始一升一降；完成后对方才可按",
+    parts: [
+      { id: "Switch", dx: 0, dz: 0 },
+      { id: "Switch", dx: 2, dz: 0 },
+    ],
+    link: linkInterlockSwitchPair,
+  },
+  {
+    id: "coaxial_switch_pair",
+    nameZh: "同轴按钮",
+    hint: "同轴双按钮：时间窗内（默认 1s，可调 0.35~5s）两按钮都按下才触发，超时自动弹回不触发；目标在开关右键菜单「同轴组」里接（如断头台）",
+    parts: [
+      { id: "Switch", dx: 0, dz: 0 },
+      { id: "Switch", dx: 2, dz: 0 },
+    ],
+    link: linkCoaxialPair,
+  },
+  {
     id: "conveyor_array_switch",
     nameZh: "传送带阵 ×4 + 双按钮",
-    hint: "4 个独立动画组（每站一组，可单独编辑）+ 同按联动：按任一按钮，4 站同时旋转 90°、再按全部转回（每站投递方向自动跟随）",
+    hint: "4 个独立动画组（每站一组，可单独编辑）+ 共轭同按：按任一按钮，4 站同时旋转 90°、再按全部转回（每站投递方向自动跟随）",
     parts: [
       { id: "ConveyorStation", dx: 0, dz: 0 },
       { id: "ConveyorStation", dx: 1, dz: 0 },
@@ -389,6 +636,20 @@ export const COMBOS: ComboDef[] = [
       { id: "Switch", dx: 2, dz: 2 },
     ],
     link: linkConveyorArraySwitch,
+  },
+  {
+    id: "conveyor_array_interlock_switch",
+    nameZh: "传送带阵 ×4 + 互锁双按钮",
+    hint: "共享环节点环 + 一对一互锁：A 恒旋转 +90°、B 恒旋转 −90°，初始 A 可按；每次旋转 0.4s 完成后对方才可按（方向切换不会连续）",
+    parts: [
+      { id: "ConveyorStation", dx: 0, dz: 0 },
+      { id: "ConveyorStation", dx: 1, dz: 0 },
+      { id: "ConveyorStation", dx: 2, dz: 0 },
+      { id: "ConveyorStation", dx: 3, dz: 0 },
+      { id: "Switch", dx: 1, dz: 2 },
+      { id: "Switch", dx: 2, dz: 2 },
+    ],
+    link: linkConveyorArrayInterlockSwitch,
   },
   {
     id: "cannon_switch",

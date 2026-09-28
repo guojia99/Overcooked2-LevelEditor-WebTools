@@ -191,6 +191,7 @@ flowchart LR
 | **teleportalLinks.ts** | 传送门方向模型与配对改写的唯一收口：`teleportalRole`（two/entrance/exit/unbound）、`teleportalEntrancesOf`、`setTeleportalPairDirection`（对级「双向传送」开关）、`releaseExitOnlyPartner`、`computeTeleportalLabels`；方向语义 = 出口指向 + `exitOnly`（出口门回指入口只是防 NRE 的占位） |
 | **buttonLinks.ts** | 按钮 ↔ 动画组联动（顺序/锁定/共轭对）、孤儿清理 |
 | **buttonEvents.ts** | 按钮 → 事件组顺序广播 |
+| **coaxialControls.ts** | 同轴按钮组右键编辑块（成员/时间窗 0.35~5s/目标机器，挂在开关参数面板）；`cleanOrphanedCoaxialLinks` 在 buttonLinks.ts |
 | **recipeKnowledge.ts** | 菜谱→道具需求（前端侧）：餐洗链、奶油喷罐/汽水机/饮料机需求判定、中间产物自动分配。**机器可输出食材清单的唯一数据源**（`DRINK/SODA/CONDIMENT_MACHINE_INGREDIENT_IDS` + `dispenserIngredientIds(prefabId)`）——各清单一律写「目录现行 id + common03 正式版 id」两代写法 |
 | **cameraLight.ts** | 相机/灯光弹窗（背景色 + FOV 即时反映） |
 | **testLayout.ts** | 测试布局一键生成（30×16 地板 + 全部食材箱/核心道具/菜谱） |
@@ -245,7 +246,7 @@ flowchart LR
 |---|---|---|
 | GET | `/api/health` | 3s 轮询看门狗 |
 | GET | `/api/level-sets` | 关卡场景清单 |
-| GET | `/api/scene/layout?assetPath=` | LayoutDocument（items+floors+walkable+deathInfo+animControls+switchLinks+buttonLinks+buttonEvents+cameraInfo+lights） |
+| GET | `/api/scene/layout?assetPath=` | LayoutDocument（items+floors+walkable+deathInfo+animControls+switchLinks+buttonLinks+buttonEvents+coaxialLinks+cameraInfo+lights） |
 | POST | `/api/scene/layout?snap=&syncWalkable=&only=` | 写回（only=""/items/decor/floors 作用域）；返回 `{warnings}` |
 | POST | `/api/scene/repair-broken?assetPath=` | 移除损坏实例 |
 | GET | `/api/grid` | GridInfo |
@@ -301,6 +302,7 @@ LayoutDocument {
   switchLinks?: SwitchLink[]     // 开关→机器
   buttonLinks?: ButtonLinkData   // 按钮→动画组
   buttonEvents?: ButtonEventData // 按钮→事件组
+  coaxialLinks?: CoaxialLinkData // 同轴按钮组（≥2 按钮时间窗内集齐→目标广播）
   cameraInfo?: CameraInfo|null   // 背景色+FOV
   lights?: LightInfo[]           // Art/Lights 非 prefab 灯光
 }

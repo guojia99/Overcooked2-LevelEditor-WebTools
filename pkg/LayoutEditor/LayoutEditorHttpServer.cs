@@ -568,6 +568,14 @@ public class LayoutEditorHttpServer
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = teleportalError }));
                     return;
                 }
+                // 空气斜坡强校验：坡角 >58° 的命中会被 GroundCast 丢弃（玩家走不上去）。
+                var slopeError = ValidateAirSlopeConfigs(doc);
+                if (slopeError != null)
+                {
+                    LayoutEditorLog.LogWarning("[LayoutEditor] " + slopeError);
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = slopeError }));
+                    return;
+                }
                 var snap = 0.01f;
                 var snapStr = request.QueryString["snap"];
                 if (!string.IsNullOrEmpty(snapStr))
@@ -1142,6 +1150,47 @@ public class LayoutEditorHttpServer
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
                 else
                     WriteJson(response, 200, LayoutEditorJson.ToJson(new AssignmentResultDto { exists = false, json = "" }));
+                return;
+            }
+
+            // ---------- 工作量推测（关卡 data 目录 workload~/workload.json） ----------
+
+            if (path == "/api/level/workload" && request.HttpMethod == "GET")
+            {
+                WorkloadResultDto result;
+                var err = LayoutEditorLevelAdminApi.ReadLevelWorkload(request.QueryString["assetPath"], out result);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/workload-save" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<WorkloadSaveDto>(body);
+                var err = dto == null ? "缺少参数。" : LayoutEditorLevelAdminApi.SaveLevelWorkload(dto.assetPath, dto.json);
+                if (!string.IsNullOrEmpty(err))
+                {
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                    return;
+                }
+                WorkloadResultDto result;
+                LayoutEditorLevelAdminApi.ReadLevelWorkload(dto.assetPath, out result);
+                WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/workload-clear" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelAssetPathDto>(body);
+                var err = dto == null ? "缺少参数。" : LayoutEditorLevelAdminApi.ClearLevelWorkload(dto.assetPath);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new WorkloadResultDto { exists = false, json = "" }));
                 return;
             }
 
@@ -1758,6 +1807,37 @@ public class LayoutEditorHttpServer
             case ".png": return "image/png";
             default: return "application/octet-stream";
         }
+    }
+
+    /// <summary>写回强校验：空气斜坡。坡角 >58° 会被 GroundCast 丢弃（c_maxGroundAngle，
+    /// 玩家走不上去）；>45° 给出原版坡度范围提醒但不阻断。返回 null=通过。</summary>
+    private static string ValidateAirSlopeConfigs(LayoutDocumentDto doc)
+    {
+        if (doc == null || doc.items == null)
+            return null;
+        var problems = new List<string>();
+        foreach (var it in doc.items)
+        {
+            if (it == null || !it.airSlope)
+                continue;
+            if (it.slope == null)
+            {
+                problems.Add((it.displayName ?? "AirSlope") + "：空气斜坡缺少坡参数");
+                continue;
+            }
+            if (it.slope.angleDeg > 58f + 0.01f || it.slope.angleDeg < 0.5f)
+                problems.Add((it.displayName ?? "AirSlope") + "：坡角必须在 0.5°~58°（GroundCast 上限 58°，超过玩家无法走上）");
+            else if (it.slope.angleDeg > 45f)
+                LayoutEditorLog.LogWarning("[LayoutEditor] " + (it.displayName ?? "AirSlope")
+                    + "：坡角 " + it.slope.angleDeg.ToString("0.#") + "° 偏陡（原版斜坡 40~46.5°），可能出现上坡卡顿");
+            if (it.slope.lengthCells < 0.5f)
+                problems.Add((it.displayName ?? "AirSlope") + "：坡道长度至少 0.5 格");
+            if (it.slope.widthCells < 0.5f)
+                problems.Add((it.displayName ?? "AirSlope") + "：坡道宽度至少 0.5 格");
+        }
+        if (problems.Count == 0)
+            return null;
+        return "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray());
     }
 
     /// <summary>写回强校验：普通食材箱（含背包，不含饮料/酱料机）必须配 1 种食材；

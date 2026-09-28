@@ -90,6 +90,19 @@
 # 刷新全部资源目录（会同步到 web/public 与 web/dist）
 node layout-editor/scripts/build-catalog.mjs
 
+# 生成 / 更新 commonW3 Web 单果汁（葡萄/橙子/桃子）
+node layout-editor/scripts/gen-commonw3-smoothies.mjs --apply
+
+# 生成 / 更新 commonW3 Web 混果汁（12 款，共用官方什锦果汁 OBJ）
+node layout-editor/scripts/gen-mega-smoothie-textures.mjs --apply
+node layout-editor/scripts/gen-commonw3-mixed-smoothies.mjs --apply
+# 图标：从 backup_rebuild/12果汁.png（3×4 精灵图）导入：
+node layout-editor/scripts/gen-commonw3-mixed-smoothies.mjs --import-icons --apply
+# 或手动放入 icons/ 后仅同步：
+node layout-editor/scripts/gen-commonw3-mixed-smoothies.mjs --sync-icons
+
+# 随后在 Unity：Layout Editor → Bake commonW3 Smoothie Models → Build AssetBundles（commonW3）
+
 # 重新打包前端
 cd layout-editor/web
 npm install

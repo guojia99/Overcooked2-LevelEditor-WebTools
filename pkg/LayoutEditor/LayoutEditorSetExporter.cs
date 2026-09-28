@@ -49,39 +49,149 @@ public static class LayoutEditorSetExporter
     {
         "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
         "UtensilTiming|", "CameraOffset|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|",
-        "ConveyorDirectionSync|", "BLRelay|",
+        "ConveyorDirectionSync|", "BLRelay|", "Coaxial|",
     };
 
-    /// <summary>扫描当前打开的场景是否用到 CustomStub：tag 载体（含 prefab 自带的
-    ///  RandomCrate|）或命名空间 CustomStub 的组件（Stub_<set> 程序集，双通道兜底）。
+    /// <summary>tag 前缀 → 清单特征（v3.5.0 stub_levels.txt 数据源之一）。
+    ///  新增 stub 类型时四处同步：① CustomStubTagPrefixes、② 本表、
+    ///  ③ StubComponentFeatureMap、④ 运行时特征消费方（EntryPoint 逐关卡闸门）。</summary>
+    private static readonly Dictionary<string, string> StubTagFeatureMap =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        { "RandomCrate|", "crate" },
+        { "TimedSwitch|", "switch" },
+        { "PushablePot|", "pushable" },
+        { "SwitchReenable|", "switch" },
+        { "WorldMapDressing|", "worldmap" },
+        { "UtensilTiming|", "timing" },
+        { "CameraOffset|", "camera" },
+        { "TravelatorReverse|", "travelator" },
+        { "TeleportalExitOnly|", "teleportal" },
+        { "RatHeist|", "rat" },
+        { "ConveyorDirectionSync|", "conveyor" },
+        { "BLRelay|", "blrelay" },
+        { "Coaxial|", "coaxial" },
+    };
+
+    /// <summary>CustomStub 命名空间组件名 → 清单特征（双通道兜底：tag 缺失/旧格式时
+    ///  场景里烘焙的组件仍能标出该关卡用 stub）。</summary>
+    private static readonly Dictionary<string, string> StubComponentFeatureMap =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        { "RandomCrate", "crate" },
+        { "TimedCookingSwitch", "switch" },
+        { "PushablePot", "pushable" },
+        { "SwitchReenable", "switch" },
+        { "WorldMapDressing", "worldmap" },
+        { "UtensilTimingConfig", "timing" },
+        { "TravelatorReverser", "travelator" },
+        { "TeleportalExitOnly", "teleportal" },
+        { "RatHeist", "rat" },
+        { "ConveyorDirectionSync", "conveyor" },
+        { "ButtonLogicRelay", "blrelay" },
+        { "CoaxialButtonGroup", "coaxial" },
+        { "AnimGridMemberSync", "animgrid" },
+        { "SwitchStartVisual", "startvisual" },
+    };
+
+    /// <summary>扫描当前打开的场景是否用到 CustomStub（= 逐场景特征收集的非空判定）。
     ///  导出 prepare 阶段逐场景调用（场景此时已打开）；写回守卫
     ///  （CustomStubWriteBackGuard）在 Apply 完成后也复用本方法判定是否检查 stub。</summary>
     public static bool ActiveSceneUsesCustomStub()
     {
+        return CollectActiveSceneStubFeatures().Count > 0;
+    }
+
+    /// <summary>逐场景收集 CustomStub 清单特征（v3.5.0，stub_levels.txt 数据源；
+    ///  运行时 EntryPoint 据此做逐关卡零介入闸门与按特征挂载）。三通道：
+    ///  ① stub tag 前缀（StubTagFeatureMap）；
+    ///  ② 命名空间 CustomStub 的组件（StubComponentFeatureMap；未知类型按 "stub"
+    ///     兜底 + 告警——防止新增组件漏映射导致该关卡被闸门误杀）；
+    ///  ③ 无 tag 内容：web 大锅/可移动火锅（名字子串，镜像运行时 HotPot.IsLargePot
+    ///     → hotpot/pushable）、web 大炮（SetupCannonStub 根 → cannon）、未绑定终端
+    ///     （Terminal.m_pilotableObject==null → terminal）、初始关闭开关
+    ///     （PseudoPrefabSwitchStub.startEnabled==false → startvisual）、动画组成员
+    ///     （Design/Animated Objects 有组根 → animgrid）。
+    ///  场景必须处于打开状态（导出 prepare 阶段逐场景调用）。</summary>
+    public static List<string> CollectActiveSceneStubFeatures()
+    {
+        var feats = new HashSet<string>(StringComparer.Ordinal);
+
+        // ① tag 通道
         foreach (var tag in UnityEngine.Object.FindObjectsOfType<LevelEditorStub.SpecificPseudoPrefabTag>())
         {
             var t = tag.prefabTag;
             if (string.IsNullOrEmpty(t))
                 continue;
-            for (int i = 0; i < CustomStubTagPrefixes.Length; i++)
+            foreach (var kv in StubTagFeatureMap)
+            {
+                if (t.StartsWith(kv.Key, StringComparison.Ordinal))
                 {
-                    if (t.StartsWith(CustomStubTagPrefixes[i], StringComparison.Ordinal))
-                        return true;
+                    feats.Add(kv.Value);
+                    break;
                 }
             }
-            // 锅具时间参数（cookTime/burnTime/mixTime/overMixTime 任一 > 0）：
-            // 应用逻辑在 Stub_<set> 程序集（CustomStub.UtensilTiming + Harmony 阈值接管），
-            // 必须随关卡包分发。写回时按 tag "UtensilTiming|" 烘焙（上方前缀已覆盖）；
-            // 此处再按命名空间 CustomStub 的组件兜底（含烘焙好的 UtensilTimingConfig）。
-            foreach (var mb in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
+        }
+
+        // ② 组件通道 + 未绑定终端探测（Terminal.m_pilotableObject==null）
+        foreach (var mb in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
         {
             if (mb == null)
                 continue; // missing script
-            var ns = mb.GetType().Namespace;
-            if (ns == "CustomStub")
-                return true;
+            var type = mb.GetType();
+            if (type.Namespace == "CustomStub")
+            {
+                string f;
+                if (StubComponentFeatureMap.TryGetValue(type.Name, out f))
+                    feats.Add(f);
+                else
+                {
+                    feats.Add("stub");
+                    Debug.LogWarning("[SetExporter] 未知 CustomStub 组件未进特征表（按 stub 兜底，运行时激活核心但不确定子系统）: "
+                        + type.Name + " @ " + mb.gameObject.name + "——请在 StubComponentFeatureMap 补映射");
+                }
+                continue;
+            }
+            if (type.Name == "Terminal")
+            {
+                var pilotable = type.GetField("m_pilotableObject",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (pilotable != null && pilotable.GetValue(mb) == null)
+                    feats.Add("terminal");
+            }
         }
-        return false;
+
+        // ③ 无 tag 通道（续）：web 大锅/可移动火锅（名字子串镜像 HotPot.IsLargePot）
+        foreach (var tr in UnityEngine.Object.FindObjectsOfType<Transform>())
+        {
+            var n = tr.name;
+            if (n.IndexOf("pot_01_pushable", StringComparison.OrdinalIgnoreCase) >= 0
+                || n.IndexOf("pushable_object", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                feats.Add("pushable");
+                feats.Add("hotpot");
+            }
+            else if (n.IndexOf("large_pot", StringComparison.OrdinalIgnoreCase) >= 0)
+                feats.Add("hotpot");
+        }
+        // web 大炮（SetupCannonStub 根）
+        if (UnityEngine.Object.FindObjectsOfType<LevelEditorStub.SetupCannonStub>().Length > 0)
+            feats.Add("cannon");
+        // 初始关闭开关（开局关闭色补挂目标；startEnabled 为公开序列化字段）
+        foreach (var sw in UnityEngine.Object.FindObjectsOfType<LevelEditorStub.PseudoPrefabSwitchStub>())
+        {
+            if (sw != null && !sw.startEnabled)
+            {
+                feats.Add("startvisual");
+                break;
+            }
+        }
+        // 动画组成员（Design/Animated Objects 组根 → AnimGridMemberSync 换装目标）
+        var animatedRoot = GameObject.Find("Design/Animated Objects");
+        if (animatedRoot != null && animatedRoot.transform.childCount > 0)
+            feats.Add("animgrid");
+
+        return new List<string>(feats);
     }
 
     public static string ExportRootAbsPath()
@@ -255,6 +365,8 @@ public static class LayoutEditorSetExporter
 
         // ---- 1. prepare：逐集逐场景 Open → 清临时物体 → 重打 stub tag → Save ----
         var perSetScenes = new List<KeyValuePair<string, List<string>>>();
+        // v3.5.0 逐关卡清单：每条 "集|关卡|特征1,特征2,..."（stub_levels.txt 数据源）。
+        var stubManifestLines = new List<string>();
         var totalScenes = 0;
         foreach (var setName in setNames)
         {
@@ -285,10 +397,18 @@ public static class LayoutEditorSetExporter
                 if (retagged > 0)
                     Debug.Log("[SetExporter] 已重打 " + retagged + " 个 stub tag：" + scenePath);
                 LayoutEditorPseudoReload.EnsurePrepareForBuilding();
-                if (!_usesCustomStub && ActiveSceneUsesCustomStub())
+                // v3.5.0 逐场景特征收集（stub_levels.txt 数据源；tag 重打之后扫，
+                // 与运行时自愈将看到的内容一致）。
+                var feats = CollectActiveSceneStubFeatures();
+                if (feats.Count > 0)
                 {
-                    _usesCustomStub = true;
-                    Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件）：" + scenePath);
+                    stubManifestLines.Add(pair.Key + "|" + Path.GetFileNameWithoutExtension(scenePath)
+                        + "|" + string.Join(",", feats.ToArray()));
+                    if (!_usesCustomStub)
+                    {
+                        _usesCustomStub = true;
+                        Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件/无 tag 内容）：" + scenePath);
+                    }
                 }
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
@@ -378,6 +498,16 @@ public static class LayoutEditorSetExporter
             if (!string.IsNullOrEmpty(requiresAbs))
                 entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
                     "OC2DIYLevel/levels/" + setName + "/requires.txt", requiresAbs));
+
+            // stub_levels.txt（v3.5.0 逐关卡清单）：loader/EntryPoint 据此做逐关卡
+            // 零介入闸门（清单未命中的场景不扫描/不探测/不装补丁）与按特征挂载。
+            // 每个集都写（含空清单）——文件缺失会被 loader 按「旧版导出」处理。
+            var prefix = setName + "|";
+            var levelLines = stubManifestLines.FindAll(l => l.StartsWith(prefix, StringComparison.Ordinal));
+            var manifestAbs = WriteStubLevelsFile(setName, levelLines);
+            if (!string.IsNullOrEmpty(manifestAbs))
+                entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
+                    "OC2DIYLevel/levels/" + setName + "/stub_levels.txt", manifestAbs));
         }
 
         // all 模式：附带依赖包 OC2DIYLevelRuntimeWLoader/（commonW2 随任一集引用按需）
@@ -683,6 +813,39 @@ public static class LayoutEditorSetExporter
         catch (Exception ex)
         {
             Debug.LogWarning("[SetExporter] 写 requires.txt 失败: " + ex.Message);
+            return null;
+        }
+    }
+
+    /// <summary>v3.5.0 写 stub_levels.txt（逐关卡清单）到临时目录并返回绝对路径。
+    /// 内容：'#' 头注释 + 每行 "&lt;关卡&gt;|&lt;特征1,特征2,...&gt;"（levelLines 为
+    /// "集|关卡|特征" 前缀匹配后的关卡段）。空清单也写文件（文件缺失会被 loader
+    /// 按「旧版导出」处理，导致该集 stub 运行时休眠）。</summary>
+    private static string WriteStubLevelsFile(string setName, List<string> levelLines)
+    {
+        try
+        {
+            var dir = ExportRootAbsPath();
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            var path = dir + "/._stublevals_" + setName + ".txt";
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("# web stub level manifest (v3.5.0+). Format: <level>|<feature,feature,...>");
+            sb.AppendLine("# Written by the level-set exporter; consumed by OC2LevelRuntimeLoader/");
+            sb.AppendLine("# CustomStub.EntryPoint for per-level gating. Do not edit by hand.");
+            for (int i = 0; i < levelLines.Count; i++)
+            {
+                var line = levelLines[i];
+                var firstBar = line.IndexOf('|');
+                if (firstBar >= 0 && firstBar < line.Length - 1)
+                    sb.AppendLine(line.Substring(firstBar + 1));
+            }
+            File.WriteAllText(path, sb.ToString());
+            return path;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 写 stub_levels.txt 失败（该集将被 loader 按旧版处理，运行时休眠）: " + ex.Message);
             return null;
         }
     }

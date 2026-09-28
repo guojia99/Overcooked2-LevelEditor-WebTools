@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using LevelEditor;
 using LevelEditorStub;
 using UnityEditor;
@@ -496,6 +497,16 @@ public static class LayoutEditorStubIO
     {
         if (go == null || item == null)
             return;
+
+        // 管理器环境 rig 防误挂守卫：rig 物体（CheatManager/RatManager 等）绝不接受
+        // 物品 stub——一旦钉上（且 baseStub 不存在 → pseudoPrefabSO 空）Play 期
+        // Init 即 NRE 中断全部初始化（2026-09-28 test_juice 事故）。
+        if (IsUnderManagerEnvironment(go.transform))
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] ApplyStub 拒绝：目标物体 " + go.name +
+                " 位于管理器环境 rig 内（物品 " + (item.displayName ?? "?") + " 的组件不得挂载于此）");
+            return;
+        }
 
         if (!string.IsNullOrEmpty(item.pseudoPrefabGuid))
         {
@@ -1149,6 +1160,35 @@ public static class LayoutEditorStubIO
                 sw.activeMaterial = LoadPseudoPrefabSO(item.switchStub.activeMaterialGuid);
             if (!string.IsNullOrEmpty(item.switchStub.inactiveMaterialGuid))
                 sw.inactiveMaterial = LoadPseudoPrefabSO(item.switchStub.inactiveMaterialGuid);
+
+            // 初始关闭外观（SwitchStartVisual）：编辑器写回烘焙组件（编辑器 Play
+            // 直用）；真机由 EntryPoint 按 PseudoPrefabSwitchStub.startEnabled 扫描
+            // 自愈（stub 组件随场景分发，无需 tag 载体）。开局即显示关闭色，
+            // 不等同步期 ClientSwitchCosmeticDecisions 轮询（宿主 Setup 先设了绿）。
+            bool startOff = item.switchStub.startEnabled == false;
+            var ssvType = FindCustomStubType(go, "SwitchStartVisual");
+            if (ssvType != null)
+            {
+                var ssv = go.GetComponent(ssvType);
+                if (startOff)
+                {
+                    if (ssv == null)
+                    {
+                        Undo.AddComponent(go, ssvType);
+                        LayoutEditorLog.Log("switch start visual: " + go.name +
+                            " 初始关闭，已烘焙 SwitchStartVisual（开局关闭色 + 预禁用交互）");
+                    }
+                }
+                else if (ssv != null)
+                {
+                    Undo.DestroyObjectImmediate(ssv);
+                }
+            }
+            else if (startOff)
+            {
+                LayoutEditorLog.LogWarning("switch start visual: 找不到 CustomStub.SwitchStartVisual" +
+                    "（WebCustomStubRuntime 未编译？）——" + go.name + " 的初始关闭外观可能不生效");
+            }
             return;
         }
 
@@ -2629,6 +2669,77 @@ public static class LayoutEditorStubIO
         return FindCustomStubType(LevelSetOfScenePath(go.scene.path), className);
     }
 
+    // ------------------------------------------------ 管理器环境 rig 防护（2026-09-28）
+
+    /// <summary>管理器环境 rig 根节点 id 缓存（懒建；场景切换/新建失效重建）。
+    /// rig = PseudoPrefabManagerStub 引用的全部管理器物体（FlowManager/CheatManager/
+    /// RatManager/...）所在层级树的根（如 CampaignGameEnvironment）——宿主管理器 rig，
+    /// 与编辑器管理的 Design/Art/Chefs 根完全隔离（导出白名单也从不含它）。</summary>
+    private static HashSet<int> s_managerRigRootIds;
+    private static bool s_managerRigHooked;
+
+    /// <summary>物体是否位于管理器环境 rig 内。用途：ApplyStub / 物品匹配的防误挂
+    /// 守卫——历史事故（test_juice：CheatManager 被钉上盘堆组件、RatManager 被钉上
+    /// 锅具组件，pseudoPrefabSO 全空）导致 Play 期 PseudoPrefabManager.Init 的
+    /// ResetAllPseudoPrefabs 在 LoadAsset(null SO) NRE、整个初始化中断，其后全部
+    /// 物品子物体未创建（CleanPlateStack.SetupAfterStartSynchronising 连锁 NRE）。</summary>
+    public static bool IsUnderManagerEnvironment(Transform t)
+    {
+        if (t == null)
+            return false;
+        EnsureManagerRigRoots();
+        if (s_managerRigRootIds.Count == 0)
+            return false;
+        var cur = t;
+        while (cur != null)
+        {
+            if (s_managerRigRootIds.Contains(cur.GetInstanceID()))
+                return true;
+            cur = cur.parent;
+        }
+        return false;
+    }
+
+    private static void EnsureManagerRigRoots()
+    {
+        if (!s_managerRigHooked)
+        {
+            s_managerRigHooked = true;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += (scene, mode) => s_managerRigRootIds = null;
+        }
+        if (s_managerRigRootIds != null)
+            return;
+        var ids = new HashSet<int>();
+        try
+        {
+            foreach (var stub in UnityEngine.Object.FindObjectsOfType<PseudoPrefabManagerStub>())
+            {
+                if (stub == null) continue;
+                AddRigRoot(ids, stub.transform);
+                var fields = stub.GetType().GetFields(System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.Instance);
+                foreach (var f in fields)
+                {
+                    if (f.FieldType != typeof(GameObject)) continue;
+                    var go = f.GetValue(stub) as GameObject;
+                    if (go != null) AddRigRoot(ids, go.transform);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] 管理器 rig 根扫描失败（防护降级为不拦截）: " + ex.Message);
+        }
+        s_managerRigRootIds = ids;
+    }
+
+    private static void AddRigRoot(HashSet<int> ids, Transform t)
+    {
+        var root = t.root;
+        if (root != null)
+            ids.Add(root.GetInstanceID());
+    }
+
     public static Type FindCustomStubType(string setName, string className)
     {
         if (string.IsNullOrEmpty(className))
@@ -2680,6 +2791,58 @@ public static class LayoutEditorStubIO
     /// 双通道之一：组件为权威，tag 供程序集缺失时往返与运行时场景自愈还原。
     /// 单用途约定：一个对象只承载一种 customStub 标记（各类道具互斥）。
     /// fullReplace=true 时覆盖整串（含 null→写入）。</summary>
+    /// <summary>停用开关的 0.35s 自动复位（组件 + tag 双清）。ButtonLink 联动源按钮的
+    /// Disable/Reset 生命周期由 ButtonLogicRelay 按状态机统一投递（Run 离开 Reset /
+    /// 互锁换手一升一降），SwitchReenable 的下降沿复位会把互锁按下侧 0.35s 后提前
+    /// 拉回绿。返回是否有实际摘除（幂等）。</summary>
+    public static bool DisarmSwitchReenable(GameObject go)
+    {
+        if (go == null) return false;
+        bool touched = false;
+        var reType = FindCustomStubType(go, "SwitchReenable");
+        if (reType != null)
+        {
+            var reComp = go.GetComponent(reType);
+            if (reComp != null)
+            {
+                Undo.DestroyObjectImmediate(reComp);
+                touched = true;
+            }
+        }
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        if (tag != null && !string.IsNullOrEmpty(tag.prefabTag) &&
+            tag.prefabTag.StartsWith("SwitchReenable|", StringComparison.Ordinal))
+        {
+            ClearCustomStubTag(go, "SwitchReenable|");
+            touched = true;
+        }
+        return touched;
+    }
+
+    /// <summary>编辑态预览：初始关闭（startEnabled=false）的开关 child 应用其
+    /// SwitchCosmeticDecisions.m_inactiveMaterial（材质引用 bundle 自带，无需 SO
+    /// 解析）。Play/真机开局外观由 CustomStub SwitchStartVisual 接管（宿主 Setup
+    /// 会重设绿材质，组件随后覆盖）；本 pass 只服务 Unity 场景视图所见即所得，
+    /// 在 ReloadPseudoAssetsFull（child 重建）之后调用。</summary>
+    public static void ApplySwitchStartVisualsInActiveScene()
+    {
+        int applied = 0;
+        foreach (var stub in UnityEngine.Object.FindObjectsOfType<PseudoPrefabSwitchStub>())
+        {
+            if (stub == null || stub.startEnabled) continue;
+            var pseudo = stub.GetComponent<LevelEditor.PseudoPrefab>();
+            var child = pseudo != null ? pseudo.childGameObject : null;
+            if (child == null) continue;
+            var cos = child.GetComponent<SwitchCosmeticDecisions>();
+            if (cos == null || cos.m_buttonBit == null || cos.m_inactiveMaterial == null) continue;
+            cos.m_buttonBit.sharedMaterial = cos.m_inactiveMaterial;
+            applied++;
+        }
+        if (applied > 0)
+            LayoutEditorLog.Log("switch start visual: " + applied +
+                " 个初始关闭开关已应用关闭材质（编辑态预览）");
+    }
+
     private static void SetCustomStubTag(GameObject go, string tagValue)
     {
         if (go == null || string.IsNullOrEmpty(tagValue))

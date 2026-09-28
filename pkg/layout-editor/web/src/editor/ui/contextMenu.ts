@@ -17,7 +17,7 @@ import {
 import { itemLabel } from "../labels";
 import { itemCategoryOf, isResizableBackgroundItem, itemPlaneCells } from "../catalog";
 import { setItemPlaneSize, airWallCells, setAirWallSize } from "../items";
-import { isAirWallItem } from "../stubControls";
+import { isAirWallItem, isAirSlopeItem } from "../stubControls";
 import { isSurfaceItem } from "../../floorColors";
 import {
   isPlayerItem,
@@ -33,7 +33,8 @@ import {
   syncLocalFromWorld,
   deleteSelected,
   updateCtxCoord,
-  rotateItemByDelta
+  rotateItemByDelta,
+  setItemRotationAxis
 } from "../items";
 import {
   copySelection,
@@ -69,6 +70,7 @@ import {
   wireAirWallHeightRow,
   wireSelectionAirWallHeightRow,
 } from "../selectionAirWallHeight";
+import { airSlopeRowHtml, wireAirSlopeRow } from "../selectionAirSlopeParams";
 import {
   batchRotationRowHtml,
   batchDisperseRowHtml,
@@ -215,6 +217,39 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   const stubHtml = stubControlsHtml(item);
   const appearHtml = counterAppearanceHtml(item);
   const rot = normalizeRot(item.localRotationY);
+  const rotX = normalizeRot(item.localRotationX ?? 0);
+  const rotZ = normalizeRot(item.localRotationZ ?? 0);
+  // 旋转 Y/X/Z 合并为一行；斜坡倾斜由坡角参数决定，不开放 X/Z。
+  const rotationRow =
+    isPlayer || batchTransform
+      ? ""
+      : `<div class="ctx-nudge-row ctx-rot-combo-row">
+      <span class="ctx-label">旋转</span>
+      <div class="ctx-rot-combo">
+        <span class="ctx-rot-axis" title="绕 Y 轴（水平转向）">
+          <span class="ctx-rot-axis-lbl">Y</span>
+          <button type="button" data-rot="-90" title="逆时针 90°">−90°</button>
+          <input type="number" id="ctx-rot-input" class="ctx-input ctx-rot-input ctx-rot-input-compact" min="0" max="359" step="1" value="${rot}" title="绕 Y 轴 (0~359)" />
+          <button type="button" data-rot="90" title="顺时针 90°">+90°</button>
+        </span>
+        ${
+          isAirSlopeItem(item)
+            ? ""
+            : `<span class="ctx-rot-axis" title="绕 X 轴（俯仰）">
+          <span class="ctx-rot-axis-lbl">X</span>
+          <button type="button" data-rot-x="-90" title="绕 X 轴 −90°">−90°</button>
+          <input type="number" id="ctx-rot-x-input" class="ctx-input ctx-rot-input ctx-rot-input-compact" min="0" max="359" step="1" value="${rotX}" title="绕 X 轴 (0~359)" />
+          <button type="button" data-rot-x="90" title="绕 X 轴 +90°">+90°</button>
+        </span>
+        <span class="ctx-rot-axis" title="绕 Z 轴（侧倾）">
+          <span class="ctx-rot-axis-lbl">Z</span>
+          <button type="button" data-rot-z="-90" title="绕 Z 轴 −90°">−90°</button>
+          <input type="number" id="ctx-rot-z-input" class="ctx-input ctx-rot-input ctx-rot-input-compact" min="0" max="359" step="1" value="${rotZ}" title="绕 Z 轴 (0~359)" />
+          <button type="button" data-rot-z="90" title="绕 Z 轴 +90°">+90°</button>
+        </span>`
+        }
+      </div>
+    </div>`;
   // Prepend the per-type sequence badge (e.g. 上菜台1) to the header for parameterized items.
   const pInfo = paramBadgeInfo(item);
   const pNum = pInfo ? S.paramLabels.get(item.instanceId) : undefined;
@@ -265,14 +300,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
         ? ""
         : batchTransform
           ? `${batchRotationRowHtml()}${batchDisperseRowHtml()}`
-          : `<div class="ctx-nudge-row">
-      <span class="ctx-label">旋转 <span id="ctx-rot" class="ctx-scale-val">${rot}°</span></span>
-      <div class="ctx-nudge">
-        <button type="button" data-rot="-90" title="逆时针 90°">−90°</button>
-        <input type="number" id="ctx-rot-input" class="ctx-input ctx-rot-input" min="0" max="359" step="1" value="${rot}" title="任意角度 (0~359)" />
-        <button type="button" data-rot="90" title="顺时针 90°">+90°</button>
-      </div>
-    </div>`
+          : rotationRow
     }
     ${selectionTravelatorSpeedRowHtml()}
     ${selectionAirWallHeightRowHtml()}
@@ -301,6 +329,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
         : ""
     }
     ${isAirWallItem(item) && !batchHeight ? airWallHeightRowHtml(item) : ""}
+    ${isAirSlopeItem(item) && !batchHeight ? airSlopeRowHtml(item) : ""}
     ${stubHtml}
     ${appearHtml}
     ${itemVariantHtml(item)}
@@ -395,6 +424,9 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   if (isAirWallItem(item) && !batchHeight) {
     wireAirWallHeightRow(dom.ctxMenuEl, item);
   }
+  if (isAirSlopeItem(item) && !batchHeight) {
+    wireAirSlopeRow(dom.ctxMenuEl, item);
+  }
   wireSelectionAirWallHeightRow(dom.ctxMenuEl, () => {
     draw();
     updateFloorBar();
@@ -486,6 +518,53 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     const onRotInput = () => applyRotationAbsolute(parseFloat(rotInput?.value ?? ""));
     rotInput?.addEventListener("input", onRotInput);
     rotInput?.addEventListener("change", onRotInput);
+
+    // ---- X/Z 轴倾斜（v9）：±90 步进 + 任意角输入，绝对角语义与 Y 一致 ----
+    const tiltAxisLabel = { x: "ctx-rot-x", z: "ctx-rot-z" } as const;
+    let tiltPushed = false;
+    const applyTiltAbsolute = (axis: "x" | "z", deg: number) => {
+      if (!isFinite(deg)) return;
+      if (!tiltPushed) {
+        pushHistory();
+        tiltPushed = true;
+      }
+      setItemRotationAxis(item, axis, deg);
+      S.dirty = true;
+      const lbl = document.getElementById(tiltAxisLabel[axis]);
+      if (lbl) lbl.textContent = `${normalizeRot(axis === "x" ? (item.localRotationX ?? 0) : (item.localRotationZ ?? 0))}°`;
+      draw();
+    };
+    const wireTiltAxis = (axis: "x" | "z") => {
+      dom.ctxMenuEl.querySelectorAll<HTMLButtonElement>(`[data-rot-${axis}]`).forEach((btn) => {
+        btn.addEventListener("click", () => {
+          pushHistory();
+          rotateItemByDeltaAxisLocal(axis, parseFloat(btn.dataset[`rot${axis.toUpperCase()}`] ?? "0"));
+        });
+      });
+      const input = document.getElementById(`ctx-rot-${axis}-input`) as HTMLInputElement | null;
+      const onInput = () => applyTiltAbsolute(axis, parseFloat(input?.value ?? ""));
+      input?.addEventListener("input", onInput);
+      input?.addEventListener("change", onInput);
+    };
+    const rotateItemByDeltaAxisLocal = (axis: "x" | "z", delta: number) => {
+      if (!delta || !isFinite(delta)) return;
+      setItemRotationAxis(
+        item,
+        axis,
+        normalizeRot((axis === "x" ? (item.localRotationX ?? 0) : (item.localRotationZ ?? 0)) + delta)
+      );
+      S.dirty = true;
+      const lbl = document.getElementById(tiltAxisLabel[axis]);
+      if (lbl) lbl.textContent = `${normalizeRot(axis === "x" ? (item.localRotationX ?? 0) : (item.localRotationZ ?? 0))}°`;
+      const inp = document.getElementById(`ctx-rot-${axis}-input`) as HTMLInputElement | null;
+      if (inp) inp.value = String(normalizeRot(axis === "x" ? (item.localRotationX ?? 0) : (item.localRotationZ ?? 0)));
+      draw();
+    };
+    // 斜坡的倾斜由坡角参数唯一决定（写回按坡参数重建 euler），不开放 X/Z 旋转。
+    if (!isAirSlopeItem(item)) {
+      wireTiltAxis("x");
+      wireTiltAxis("z");
+    }
   }
   wireStubControls(item);
   wireItemVariant(item);

@@ -19,8 +19,8 @@ const FOOD_GROUP_ZH: Record<string, string> = {
   //   commonw2 = 库内其余分类（fry/ 炸物、pasta/ 意面…）
   burger: "🍔 Burger大全",
   commonw2: "📚 扩展菜谱",
-  // commonW3 沙拉大全（DLC11 食材全排列，Web 前缀命名）
-  commonw3: "🥗 沙拉大全",
+  // commonW3 Web 扩展菜谱（沙拉大全 + Web 果汁大全，Web 前缀命名）
+  commonw3: "🥤 Web 扩展菜谱",
 };
 
 export function foodGroupLabel(group: FoodGroup | undefined): string {

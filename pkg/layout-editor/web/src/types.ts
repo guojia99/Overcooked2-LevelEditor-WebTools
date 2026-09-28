@@ -303,6 +303,11 @@ export interface LayoutItem {
   stubKind?: string;
   /** 空气墙：隐形碰撞块。 */
   airWall?: boolean;
+  /** 空气斜坡（v9）：可行走斜坡。Unity 侧 = Ground 层隐形阶梯（Col_AirSlope 根 +
+   *  Step 子级，每级挂游戏原生 Steppable 上步组件，逐级 ≤0.3m），玩家可沿坡行走。 */
+  airSlope?: boolean;
+  /** 斜坡参数（airSlope=true 时有效；Unity 导出时从场景几何精确反推）。 */
+  slope?: LayoutAirSlopeStub;
   dispenser?: LayoutDispenserStub;
   conveyor?: LayoutConveyorStub;
   teleportal?: LayoutTeleportalStub;
@@ -334,6 +339,20 @@ export interface LayoutItem {
 
 export interface LayoutIngredientDecorStub {
   ingredientGuid: string;
+}
+
+/** 空气斜坡参数（v9）：高度+长度+手动角度模型。startY=坡道低端顶面高度（米）。 */
+export interface LayoutAirSlopeStub {
+  /** 坡角（度，0.5~58；GroundCast 硬上限 58，>45 提醒偏陡）。 */
+  angleDeg: number;
+  /** 坡道水平投影长度（格，沿 localRotationY 朝向）。 */
+  lengthCells: number;
+  /** 坡道宽度（格，垂直朝向）。 */
+  widthCells: number;
+  /** 起点顶面高度（世界 Y，米）。 */
+  startY: number;
+  /** 调试显示色（"#RRGGBB"，空/未设 = 隐藏）：写回后游戏内生成半透明薄板可见坡面。 */
+  debugColor?: string;
 }
 
 // ---------- Animation Groups (Animated Objects groups) ----------
@@ -491,6 +510,9 @@ export interface AnimControlData {
 
 export interface LayoutDocument {
   sceneAssetPath: string;
+  /** KitchenLoaderManager Ceiling Height; absent means keep the scene default. */
+  hasCeilingHeight?: boolean;
+  ceilingHeight?: number;
   items: LayoutItem[];
   /** Editable floor/background plane objects (scene-embedded). */
   floors?: FloorObject[];
@@ -505,12 +527,15 @@ export interface LayoutDocument {
   /** 开关联动（按钮 → 断头台/饮料机/酱料机等目标）。
    *  id 约定同传送门："u:<instanceID>"（既有场景对象）或文档 instanceId（"new:..."）。 */
   switchLinks?: SwitchLink[];
-  /** 按钮/压力开关 ↔ 动画组联动（顺序触发 / 运行期锁定 / 共轭对）。
+  /** 按钮/压力开关 ↔ 动画组联动（顺序触发 / 运行期锁定 / 共轭 / 互锁）。
    *  仅全量保存携带（引用动画组，与 animControls 同策略）。 */
   buttonLinks?: ButtonLinkData;
   /** 按钮 ↔ 事件组联动（顺序广播多事件组 / 完成门控）。
    *  仅全量保存携带（引用场景物品）。 */
   buttonEvents?: ButtonEventData;
+  /** 同轴按钮组（≥2 按钮时间窗内集齐才触发目标）。
+   *  仅全量保存携带（引用场景物品）。 */
+  coaxialLinks?: CoaxialLinkData;
   /** 游戏相机（背景色 / FOV；仅全量保存携带）。 */
   cameraInfo?: CameraInfo | null;
   /** Art/Lights 非 prefab 灯光（颜色/强度/范围/启用；仅全量保存携带）。 */
@@ -563,13 +588,14 @@ export interface SwitchLink {
 /** 按钮/压力开关 → 动画组联动。
  *  顺序触发：每按一次按 groupNames 顺序启动下一组（最后一组后循环回第一组）；
  *  lockUntilFinished：组运行期间忽略按压（组完成后才接受下一次）。
- *  共轭对：两个 link 共享 pairId（一对一），每个按钮各绑 2 个动画组——
- *  按下时两组同时启动，两组全部完成后对方按钮抬起、本按钮按下（反之亦然）。 */
+ *  共轭（sharedSourceIds）：多按钮共享同一序列，同时开/关，按任一等同推进。
+ *  互锁（pairId）：两个 link 共享 pairId（一对一），各绑独立动画组——
+ *  仅一方可按，本侧各组全部完成后对方抬起（反之亦然）。 */
 export interface ButtonLink {
   id: string;
   /** 触发源物品 instanceId（Switch / PressureSwitch）。 */
   sourceId: string;
-  /** 共控按钮 instanceId 列表：与主源接线到同一动画组序列，任一按压都推进。 */
+  /** 共轭按钮 instanceId 列表：与主源接线到同一动画组序列，同时开/关。 */
   sharedSourceIds?: string[];
   /** 按顺序触发的动画组 displayName 列表（displayName 是跨保存的稳定键）。 */
   groupNames: string[];
@@ -579,9 +605,9 @@ export interface ButtonLink {
   lockUntilFinished: boolean;
   /** 同按模式：一次按压同时启动全部绑定组（各组独立推进，最快组完成即解锁）。 */
   simultaneous?: boolean;
-  /** 共轭对 id（两个 link 共享；空/缺省 = 非共轭）。 */
+  /** 互锁对 id（两个 link 共享；空/缺省 = 非互锁）。 */
   pairId?: string;
-  /** 共轭对中本按钮初始为抬起（可按）状态。 */
+  /** 互锁对中本按钮初始为抬起（可按）状态。 */
   pairStartsUp?: boolean;
 }
 
@@ -619,6 +645,28 @@ export interface ButtonEventLink {
 
 export interface ButtonEventData {
   links: ButtonEventLink[];
+}
+
+// ---------- 同轴按钮组（多按钮时间窗内集齐 → 目标广播） ----------
+
+/** 同轴按钮组：全部成员按钮在窗口时间内（从第一个按下起计时，0.35~5s，默认 1s）
+ *  先后按下才向全部目标广播触发消息（断头台 Chop 等）；超时未集齐自动弹回已按
+ *  按钮且不触发；成功后全组锁定 0.35s 再弹回（可立刻下一轮）。一只按钮只属一组。 */
+export interface CoaxialLink {
+  id: string;
+  /** 成员按钮 instanceId 列表（≥2；Switch / PressureSwitch）。 */
+  sourceIds: string[];
+  /** 同按窗口（秒，0.35~5）。 */
+  windowSeconds: number;
+  /** 目标物品 instanceId 列表（可空 = 纯同轴组，事后在右键菜单接目标）。 */
+  targetIds: string[];
+  /** 与 targetIds 平行的触发消息（空串 = 按目标机器原生名：断头台 Chop /
+   *  饮料酱料机 Next / 大炮 Launch）。 */
+  triggers: string[];
+}
+
+export interface CoaxialLinkData {
+  links: CoaxialLink[];
 }
 
 export type SurfaceKind =
@@ -750,7 +798,7 @@ export interface LevelSetScene {
 /** 食材/菜谱来源组（后端 LayoutEditorCatalogApi.FoodGroupOf）。
  *  commonW2 共享库分两组：`burger`=custom_recipes/burger/ 子树（🍔 Burger大全）、
  *  `commonw2`=库内其余分类（fry/ 炸物、pasta/ 意面…，📚 扩展菜谱）。
- *  commonW3 沙拉大全（DLC11 食材全排列，🥗 Web 沙拉）。 */
+ *  commonW3 Web 扩展菜谱（沙拉大全 + Web 果汁大全，Web 前缀命名）。 */
 export type FoodGroup =
   | "core"
   | "custom"
@@ -793,6 +841,8 @@ export interface RecipeEntry {
   ingredientCount?: number;
   cookingStepCount?: number;
   score?: number;
+  /** Order appearance weight from the active level recipe list. */
+  weight?: number;
   isCustom?: boolean;
   group?: FoodGroup;
   /** Recipe family: burger / pizza / sushi / kebab / smoothie / … */
@@ -812,6 +862,32 @@ export interface RecipeEntry {
   /** 自定义菜谱二级分类（分类目录下的子目录名，""=直接放在分类目录下）。 */
   subcategory?: string;
   icon?: boolean;
+}
+
+export type WorkloadMode = "2p" | "3p" | "4p";
+
+export interface WorkloadModeData {
+  players: Array<{ cells: string[] }>;
+}
+
+export interface WorkloadSnapshot {
+  algorithmVersion: number;
+  savedAt: string;
+  layout: LayoutDocument;
+  recipes: RecipeEntry[];
+  configs: PerPlayerConfig[];
+  parameters: { washSec: number; walkSpeed: number };
+}
+
+export interface LevelWorkloadData {
+  schemaVersion: number;
+  modes: Partial<Record<WorkloadMode, WorkloadModeData>>;
+  calculationSnapshot?: WorkloadSnapshot;
+}
+
+export interface WorkloadResult {
+  exists: boolean;
+  json: string;
 }
 
 export interface CookingStepEntry {
