@@ -8,7 +8,7 @@ export type GuideBlock =
   | { type: "kbdTable"; rows: [string, string][] }
   | { type: "table"; header: string[]; rows: string[][] }
   | { type: "link"; label: string; href: string; external?: boolean }
-  | { type: "dynamic"; kind: "ingredient-samples" | "recipe-samples" | "utensil-icons" | "icon-paths" };
+  | { type: "dynamic"; kind: "ingredient-samples" | "recipe-samples" | "utensil-icons" | "icon-paths" | "changelog" };
 
 /**
  * Tree node: branch (children) or leaf (blocks). Both may coexist (intro + children).

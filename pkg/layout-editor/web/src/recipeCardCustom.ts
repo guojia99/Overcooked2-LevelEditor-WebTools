@@ -18,6 +18,8 @@ export function normalizeCustomRecipeCard(r: CustomRecipeSummary): RecipeEntry {
     nameEn: r.nameEn || undefined,
     assetPath: r.assetPath,
     cookingStep: r.cookingStepId || undefined,
+    /** 装盘容器（Glass → 搅拌杯图标；normalize 时 type 恒为 custom，需靠此字段识别果汁） */
+    platingStep: r.platingStepId || undefined,
     ingredients: r.ingredients,
     compositionIds: r.compositionIds,
     score: r.score,

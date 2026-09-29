@@ -12,6 +12,7 @@ public static class LayoutEditorGridReader
             cellSize = LayoutVector3.From(new Vector3(1.2f, 1f, 1.2f)),
             origin = 0f,
             gridHalfSizeX = 0,
+            gridHalfSizeY = 1,
             gridHalfSizeZ = 0,
             worldPosition = LayoutVector3.From(Vector3.zero)
         };
@@ -51,15 +52,18 @@ public static class LayoutEditorGridReader
         if (half != null)
         {
             var x = half.FindPropertyRelative("X");
+            var y = half.FindPropertyRelative("Y");
             var z = half.FindPropertyRelative("Z");
-            if (x != null && z != null)
+            if (x != null && y != null && z != null)
             {
                 dto.gridHalfSizeX = x.intValue;
+                dto.gridHalfSizeY = y.intValue;
                 dto.gridHalfSizeZ = z.intValue;
             }
             else if (half.propertyType == SerializedPropertyType.Vector3)
             {
                 dto.gridHalfSizeX = Mathf.RoundToInt(half.vector3Value.x);
+                dto.gridHalfSizeY = Mathf.RoundToInt(half.vector3Value.y);
                 dto.gridHalfSizeZ = Mathf.RoundToInt(half.vector3Value.z);
             }
         }
@@ -69,6 +73,7 @@ public static class LayoutEditorGridReader
             if (half != null && half.propertyType == SerializedPropertyType.Vector3)
             {
                 dto.gridHalfSizeX = Mathf.RoundToInt(half.vector3Value.x);
+                dto.gridHalfSizeY = Mathf.RoundToInt(half.vector3Value.y);
                 dto.gridHalfSizeZ = Mathf.RoundToInt(half.vector3Value.z);
             }
         }

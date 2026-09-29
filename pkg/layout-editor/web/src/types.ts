@@ -208,7 +208,7 @@ export interface LayoutRatHeistStub {
   radius?: number;
   /** 移动速度倍率（基速 4.5 m/s）。 */
   speed?: number;
-  /** 皮肤：retro（默认）/ dlc08（官方 h18 同款贴图换肤）。 */
+  /** 皮肤：retro（默认）/ dlc08（官方 h18 同款贴图换肤）/ cockroach（commonW3 蟑螂低模）。 */
   skin?: string;
   /** 偷原材料（台面自由食材，切没切好都算；正在被切的在容器内部天然偷不到）。 */
   stealRaw?: boolean;
@@ -785,6 +785,7 @@ export interface GridInfo {
   worldPosition: LayoutVector3;
   cellSize: LayoutVector3;
   gridHalfSizeX: number;
+  gridHalfSizeY: number;
   gridHalfSizeZ: number;
   origin: number;
 }
@@ -1223,8 +1224,9 @@ export interface LevelDetail {
   disableDynamicParenting: boolean;
   minOrderCount: number;
   maxOrderCount: number;
-  /** 主网格（CampaignGameEnvironment/GridManager）半宽格数；0 = 不调整（保持场景当前值）。 */
+  /** 主网格（CampaignGameEnvironment/GridManager）半宽格数；0 = 不调整（保持场景当前值）。Y 默认 1。 */
   gridHalfSizeX: number;
+  gridHalfSizeY: number;
   gridHalfSizeZ: number;
   dependencies: string[];
   configs: PerPlayerConfig[];

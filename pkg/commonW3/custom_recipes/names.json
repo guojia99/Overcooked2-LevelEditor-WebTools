@@ -107,36 +107,6 @@
       "en": "Web Tomato Cucumber Corn Salad (Lettuce Base)"
     },
     {
-      "id": "Web_Smoothie_Grape",
-      "zh": "Web 葡萄果汁",
-      "en": "Web Grape Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Orange",
-      "zh": "Web 橙子果汁",
-      "en": "Web Orange Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Peach",
-      "zh": "Web 桃子果汁",
-      "en": "Web Peach Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Blueberry",
-      "zh": "Web 蓝莓果汁",
-      "en": "Web Blueberry Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Blackberry",
-      "zh": "Web 黑莓果汁",
-      "en": "Web Blackberry Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Raspberry",
-      "zh": "Web 覆盆子果汁",
-      "en": "Web Raspberry Smoothie"
-    },
-    {
       "id": "Web_Smoothie_Mix_Red",
       "zh": "Web 红果混饮",
       "en": "Web Red Fruit Mix"
@@ -195,6 +165,36 @@
       "id": "Web_Smoothie_Mix_Bramble",
       "zh": "Web 野莓混饮",
       "en": "Web Bramble Berry Mix"
+    },
+    {
+      "id": "Web_Smoothie_Grape",
+      "zh": "Web 葡萄果汁",
+      "en": "Web Grape Smoothie"
+    },
+    {
+      "id": "Web_Smoothie_Orange",
+      "zh": "Web 橙子果汁",
+      "en": "Web Orange Smoothie"
+    },
+    {
+      "id": "Web_Smoothie_Peach",
+      "zh": "Web 桃子果汁",
+      "en": "Web Peach Smoothie"
+    },
+    {
+      "id": "Web_Smoothie_Blueberry",
+      "zh": "Web 蓝莓果汁",
+      "en": "Web Blueberry Smoothie"
+    },
+    {
+      "id": "Web_Smoothie_Blackberry",
+      "zh": "Web 黑莓果汁",
+      "en": "Web Blackberry Smoothie"
+    },
+    {
+      "id": "Web_Smoothie_Raspberry",
+      "zh": "Web 覆盆子果汁",
+      "en": "Web Raspberry Smoothie"
     }
   ]
 }

@@ -736,6 +736,7 @@ export interface LevelInfoUpdateBody {
   minOrderCount: number;
   maxOrderCount: number;
   gridHalfSizeX: number;
+  gridHalfSizeY: number;
   gridHalfSizeZ: number;
   dependencies: string[];
 }
@@ -1054,6 +1055,12 @@ export async function fetchCustomRecipeConfig(setName: string): Promise<CustomRe
   return readApiJson<CustomRecipeConfig>(r);
 }
 
+export async function fetchLibraryCustomRecipeConfig(libraryId: string): Promise<CustomRecipeConfig> {
+  const q = new URLSearchParams({ libraryId });
+  const r = await fetch(`/api/custom-recipes/config?${q}`);
+  return readApiJson<CustomRecipeConfig>(r);
+}
+
 export async function fetchCustomRecipes(setName: string): Promise<CustomRecipeSummary[]> {
   const q = new URLSearchParams({ setName });
   const r = await fetch(`/api/custom-recipes?${q}`);
@@ -1061,8 +1068,21 @@ export async function fetchCustomRecipes(setName: string): Promise<CustomRecipeS
   return data.recipes ?? [];
 }
 
+export async function fetchLibraryCustomRecipes(libraryId: string): Promise<CustomRecipeSummary[]> {
+  const q = new URLSearchParams({ libraryId });
+  const r = await fetch(`/api/custom-recipes?${q}`);
+  const data = await readApiJson<{ recipes?: CustomRecipeSummary[] }>(r);
+  return data.recipes ?? [];
+}
+
 export async function fetchCustomRecipeReferences(setName: string): Promise<CustomRecipeReferences> {
   const q = new URLSearchParams({ setName });
+  const r = await fetch(`/api/custom-recipes/references?${q}`);
+  return readApiJson<CustomRecipeReferences>(r);
+}
+
+export async function fetchLibraryCustomRecipeReferences(libraryId: string): Promise<CustomRecipeReferences> {
+  const q = new URLSearchParams({ libraryId });
   const r = await fetch(`/api/custom-recipes/references?${q}`);
   return readApiJson<CustomRecipeReferences>(r);
 }

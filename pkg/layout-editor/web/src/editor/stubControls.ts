@@ -59,7 +59,8 @@ import {
   BURNER_FIRE_MODES
 } from "./ui/constants";
 import {
-  buttonLinkCtxHtml,
+  buttonPartnerCtxHtml,
+  buttonEventsOrchestrateCtxHtml,
   isButtonLinkSource,
   wireButtonLinkCtx
 } from "./buttonLinks";
@@ -70,6 +71,7 @@ import {
   cleanOrphanedButtonEvents
 } from "./buttonEvents";
 import { openTriggerOrchestrator } from "./triggerOrchestrator";
+import { clampContextMenuInViewport } from "./ui/contextMenuChrome";
 
 export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Dispenser: "Dispenser",
@@ -508,14 +510,68 @@ export function pressureSwitchMaterialHtml(item: EditorItem): string {
     <label class="ctx-stub-row">松开外观 <select id="ctx-ps-unocc" class="ctx-input">${unoccOpts}</select></label>`;
 }
 
-/** 右键菜单中的触发编排入口：事件组 + 动画组摘要 + 「打开触发编排」按钮。
- *  详细编排在底部非模态编排台中进行（不遮挡预览）。 */
-function triggerOrchestrateEntryHtml(item: EditorItem): string {
+function switchEventsPanelHtml(item: EditorItem): string {
   const evLink = eventLinkOfSource(item.instanceId ?? "");
   const evN = evLink?.groups.length ?? 0;
   const eventHint =
     evN > 0 ? `🔁 ${escHtml(buttonEventSummaryText(evLink))}` : undefined;
-  return buttonLinkCtxHtml(item, eventHint);
+  return buttonEventsOrchestrateCtxHtml(item, eventHint);
+}
+
+function switchTabBarHtml(tabs: { id: string; label: string }[]): string {
+  return `<div class="ctx-sw-tabs" role="tablist">${tabs
+    .map(
+      (t, i) =>
+        `<button type="button" class="ctx-sw-tab${i === 0 ? " active" : ""}" data-sw-tab="${t.id}" role="tab" aria-selected="${i === 0 ? "true" : "false"}">${t.label}</button>`
+    )
+    .join("")}</div>`;
+}
+
+function switchPanelHtml(id: string, active: boolean, content: string): string {
+  return `<div class="ctx-sw-panel${active ? " active" : ""}" data-sw-panel="${id}" role="tabpanel">${content}</div>`;
+}
+
+function switchLinkPanelHtml(isCannon: boolean): string {
+  const machineHint = isCannon
+    ? "按下开关向大炮广播 Launch 触发消息（机器包装自带翻译层，须为 Launch）。"
+    : "断头台 / 饮料机 / 酱料机 / 大炮；留空触发消息时自动取原生名 Chop / Next / Launch。";
+  const triggerHint = isCannon
+    ? "大炮须为 Launch；配置了「联动事件组」后按压以事件组为准，直发自动停用。"
+    : "仅直连机器需要此消息（按钮被按的信号本身是游戏固定的「Switch」，无需配置）；配置了「联动事件组」后按压以事件组为准，直发自动停用。";
+  return `<div class="ctx-stub-section-title">直连机器</div>
+    <p class="ctx-stub-hint">${machineHint}</p>
+    <div id="ctx-sw-links"></div>
+    <label class="ctx-stub-row"><select id="ctx-sw-linktarget" class="ctx-input"></select>
+      <button type="button" class="ctx-btn" id="ctx-sw-linkadd">添加</button></label>
+    <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" placeholder="${isCannon ? "Launch" : "自动（机器原生触发名）"}"/></label>
+    <p class="ctx-stub-hint">${triggerHint}</p>`;
+}
+
+function switchSpecialPanelHtml(item: EditorItem): string {
+  return `<div class="ctx-stub-section-title">同轴组</div>
+    <p class="ctx-stub-hint">≥2 按钮在时间窗内先后按下（首个按下起计时）才触发；超时自动弹回。</p>
+    ${coaxialCtxHtml(item)}
+    <div class="ctx-stub-section-title ctx-stub-section-gap">按钮配对</div>
+    <p class="ctx-stub-hint">共轭同时开/关，互锁轮流可按；与同轴组独立，可并存。</p>
+    ${buttonPartnerCtxHtml(item)}`;
+}
+
+function wireSwitchTabs(): void {
+  const root = document.querySelector(".ctx-stub-switch");
+  if (!root) return;
+  const activate = (tab: string) => {
+    root.querySelectorAll<HTMLElement>(".ctx-sw-tab").forEach((btn) => {
+      const on = btn.dataset.swTab === tab;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    root.querySelectorAll<HTMLElement>(".ctx-sw-panel").forEach((panel) => {
+      panel.classList.toggle("active", panel.dataset.swPanel === tab);
+    });
+  };
+  root.querySelectorAll<HTMLButtonElement>(".ctx-sw-tab").forEach((btn) => {
+    btn.addEventListener("click", () => activate(btn.dataset.swTab ?? "basic"));
+  });
 }
 
 export function stubControlsHtml(item: EditorItem): string {
@@ -685,6 +741,7 @@ export function stubControlsHtml(item: EditorItem): string {
       const skins = [
         ["retro", "复古像素鼠（默认）"],
         ["dlc08", "高清鼠（DLC8 皮肤）"],
+        ["cockroach", "蟑螂低模（commonW3 内置）"],
       ];
       const skinOpts = skins
         .map(([v, n]) => `<option value="${v}" ${(r.skin ?? "retro") === v ? "selected" : ""}>${n}</option>`)
@@ -704,22 +761,40 @@ export function stubControlsHtml(item: EditorItem): string {
       const isCannon = kind === "CannonSwitch";
       const sw = item.switchStub ?? {};
       const matHtml = switchMaterialHtml(item);
-      return `<div class="ctx-stub"><div class="ctx-stub-title">${isCannon ? "大炮开关参数" : "开关参数"}</div>
-        <label class="ctx-stub-row"><input type="checkbox" id="ctx-sw-start" ${sw.startEnabled !== false ? "checked" : ""}/> 初始开启</label>
-        ${matHtml}
-        <div class="ctx-stub-title" style="margin-top:6px">联动目标${isCannon ? "（大炮，触发消息 Launch）" : "（仅断头台/饮料机/酱料机/大炮）"}</div>
-        <div id="ctx-sw-links"></div>
-        <label class="ctx-stub-row"><select id="ctx-sw-linktarget" class="ctx-input"></select>
-          <button type="button" class="ctx-btn" id="ctx-sw-linkadd">添加</button></label>
-        <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" placeholder="${isCannon ? "Launch" : "自动（机器原生触发名）"}"/></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">仅直连机器需要此消息${isCannon ? "（大炮须为 Launch，对应游戏内发射触发）" : "（留空自动取机器原生触发名 Chop/Next/Launch；按钮被按的信号本身是游戏固定的「Switch」消息，无需配置）"}；配置了「联动事件组」后按压以事件组为准，直发自动停用</div>
-        ${isCannon ? "" : coaxialCtxHtml(item)}${isCannon ? "" : triggerOrchestrateEntryHtml(item)}</div>`;
+      const basicPanel = `<label class="ctx-stub-row"><input type="checkbox" id="ctx-sw-start" ${sw.startEnabled !== false ? "checked" : ""}/> 初始开启</label>
+        ${matHtml}`;
+      const tabs = isCannon
+        ? [{ id: "basic", label: "基础" }, { id: "link", label: "联动" }]
+        : [
+            { id: "basic", label: "基础" },
+            { id: "link", label: "联动" },
+            { id: "special", label: "特殊按钮" },
+            { id: "events", label: "事件" },
+          ];
+      const panels = [
+        switchPanelHtml("basic", true, basicPanel),
+        switchPanelHtml("link", false, switchLinkPanelHtml(isCannon)),
+      ];
+      if (!isCannon) {
+        panels.push(
+          switchPanelHtml("special", false, switchSpecialPanelHtml(item)),
+          switchPanelHtml("events", false, switchEventsPanelHtml(item))
+        );
+      }
+      return `<div class="ctx-stub ctx-stub-switch"><div class="ctx-stub-title">${isCannon ? "大炮开关参数" : "开关参数"}</div>
+        ${switchTabBarHtml(tabs)}
+        <div class="ctx-sw-panels">${panels.join("")}</div></div>`;
     }
     case "PressureSwitch": {
       const matHtml = pressureSwitchMaterialHtml(item);
-      return `<div class="ctx-stub"><div class="ctx-stub-title">压力开关参数</div>
-        ${matHtml || '<div class="ctx-stub-row">此物件无用户可配置参数，配置内置于预制件中</div>'}
-        ${triggerOrchestrateEntryHtml(item)}</div>`;
+      const basicPanel =
+        matHtml || '<div class="ctx-stub-row">此物件无用户可配置参数，配置内置于预制件中</div>';
+      return `<div class="ctx-stub ctx-stub-switch"><div class="ctx-stub-title">压力开关参数</div>
+        ${switchTabBarHtml([{ id: "basic", label: "基础" }, { id: "events", label: "事件" }])}
+        <div class="ctx-sw-panels">
+          ${switchPanelHtml("basic", true, basicPanel)}
+          ${switchPanelHtml("events", false, switchEventsPanelHtml(item))}
+        </div></div>`;
     }
     case "Terminal": {
       const t = item.terminal ?? {};
@@ -843,6 +918,7 @@ export function refreshContextStub(item: EditorItem): void {
   if (!next) return;
   current.replaceWith(next);
   wireStubControls(item);
+  requestAnimationFrame(() => clampContextMenuInViewport());
 }
 
 export function wireStubControls(item: EditorItem) {
@@ -1508,6 +1584,7 @@ export function wireStubControls(item: EditorItem) {
         setStatus(`已更新触发消息（${resolved}，写回后生效）`);
       });
 
+      wireSwitchTabs();
       // ---- 同轴组（S.coaxialLinks，文档级；大炮开关不参与） ----
       if (!isCannon) wireCoaxialCtx(item);
       break;
@@ -1528,6 +1605,7 @@ export function wireStubControls(item: EditorItem) {
         ensure().unoccupiedMaterialGuid = (e.target as HTMLSelectElement).value || undefined;
         setStatus("已更新压力开关松开外观（写回后生效）");
       });
+      wireSwitchTabs();
       break;
     }
     case "Terminal": {

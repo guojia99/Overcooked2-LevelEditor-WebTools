@@ -20,6 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 423519800100000002}
   - component: {fileID: 114610300100000003}
+  - component: {fileID: 114610300100000005}
   - component: {fileID: 114610300100000004}
   m_Layer: 0
   m_Name: RatHeist
@@ -53,6 +54,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pseudoPrefabSO: {fileID: 11400000, guid: b43a3de88599c21b26eeaa773ad7f32d, type: 2}
+--- !u!114 &114610300100000005
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 153092800100000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d58b99f9c4313714e9c4b11f1534ae6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114610300100000004
 MonoBehaviour:
   m_ObjectHideFlags: 1

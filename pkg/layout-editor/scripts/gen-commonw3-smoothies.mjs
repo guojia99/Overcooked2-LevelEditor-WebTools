@@ -25,6 +25,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { fbxToNormalizedObj } from "./lib/fbx-mesh-to-obj.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const workspaceRoot = path.resolve(repoRoot, "..");
@@ -370,6 +371,93 @@ TextureImporter:
   assetBundleVariant: 
 `;
 
+const OBJ_META = (guid) => `fileFormatVersion: 2
+guid: ${guid}
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName: {}
+  externalObjects: {}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+`;
+
 const FBX_META = (guid) => `fileFormatVersion: 2
 guid: ${guid}
 ModelImporter:
@@ -457,6 +545,10 @@ ModelImporter:
   assetBundleVariant: 
 `;
 
+function modelExtForRecipe(r) {
+  return r.berryBackup ? "obj" : "fbx";
+}
+
 /** 从 models/<id>/<id>.{fbx|obj}.meta 解析 model 引用（对齐 backup_20260911/汁）。 */
 function modelRefForRecipe(recipeId, ext) {
   const metaPath = path.join(SMOOTHIE_MODELS_DIR, recipeId, `${recipeId}.${ext}.meta`);
@@ -468,8 +560,9 @@ function modelRefForRecipe(recipeId, ext) {
       return { fileID, guid };
     }
   }
-  // 首次落盘前 Unity 尚未生成 .meta，用与 FBX_META 相同的确定性 guid
-  return { fileID: 100002, guid: modelGuid(recipeId) };
+  // 首次落盘前 Unity 尚未生成 .meta；OBJ 莓果与混果汁一致用 100000
+  const fileID = ext === "obj" ? 100000 : 100002;
+  return { fileID, guid: modelGuid(recipeId) };
 }
 
 const RECIPE_ASSET = (r, uid, modelRef) => `%YAML 1.1
@@ -672,7 +765,8 @@ function buildPlan() {
 
   RECIPES.forEach((r, i) => {
     const uid = recipeUid(r, i);
-    add(`${W3}/custom_recipes/smoothie/${r.id}.asset`, RECIPE_ASSET(r, uid, modelRefForRecipe(r.id, "fbx")), ASSET_META, recipeGuid(r.id), {
+    const modelExt = modelExtForRecipe(r);
+    add(`${W3}/custom_recipes/smoothie/${r.id}.asset`, RECIPE_ASSET(r, uid, modelRefForRecipe(r.id, modelExt)), ASSET_META, recipeGuid(r.id), {
       note: `${r.zh} uid=${uid}`,
     });
 
@@ -690,7 +784,6 @@ function buildPlan() {
     }
 
     const srcDir = recipeSrcDir(r);
-    const fbxRel = `${modelDir}/${r.id}.fbx`;
     const fbxSrc = path.join(srcDir, r.fbxSrc);
     if (!fs.existsSync(fbxSrc)) throw new Error(`FBX 缺失: ${fbxSrc}`);
 
@@ -698,12 +791,29 @@ function buildPlan() {
     for (const tex of r.textures) {
       diskNames[tex.cls] = texDiskName(r.id, tex.cls, tex.src);
     }
-    const fbxRaw = new Uint8Array(fs.readFileSync(fbxSrc));
-    const { bytes: fbxPatched, renamed } = renameFbxOnDisk(fbxRaw, diskNames);
-    add(fbxRel, Buffer.from(fbxPatched), FBX_META, modelGuid(r.id), {
-      binary: true,
-      note: `← ${r.fbxSrc}（FBX 贴图引用改写 ${renamed} 处）`,
-    });
+
+    if (r.berryBackup) {
+      // 莓果源模型杯体偏胖（Z/Y≈0.72 vs 葡萄≈0.55）：归一化到 Web_Smoothie_Grape 包围盒后导出 OBJ
+      const baseColorFile = diskNames.base_color;
+      const { obj, mtl, vertexCount, faceCount } = fbxToNormalizedObj(fs.readFileSync(fbxSrc), {
+        recipeId: r.id,
+        baseColorFile,
+      });
+      const objRel = `${modelDir}/${r.id}.obj`;
+      const mtlRel = `${modelDir}/${r.id}.mtl`;
+      add(objRel, obj, OBJ_META, modelGuid(r.id), {
+        note: `← ${r.fbxSrc} 归一化杯体（${vertexCount}v/${faceCount}f，对齐葡萄果汁比例）`,
+      });
+      add(mtlRel, mtl, TEXT_META, assetGuid(mtlRel), { note: "OBJ 材质" });
+    } else {
+      const fbxRel = `${modelDir}/${r.id}.fbx`;
+      const fbxRaw = new Uint8Array(fs.readFileSync(fbxSrc));
+      const { bytes: fbxPatched, renamed } = renameFbxOnDisk(fbxRaw, diskNames);
+      add(fbxRel, Buffer.from(fbxPatched), FBX_META, modelGuid(r.id), {
+        binary: true,
+        note: `← ${r.fbxSrc}（FBX 贴图引用改写 ${renamed} 处）`,
+      });
+    }
 
     for (const tex of r.textures) {
       const texSrc = path.join(srcDir, tex.src);
@@ -753,7 +863,7 @@ const plan = buildPlan();
 const modelKeeps = new Map();
 for (const r of RECIPES) {
   const modelDir = `${W3}/custom_recipes/smoothie/models/${r.id}`;
-  const names = [`${r.id}.fbx`];
+  const names = r.berryBackup ? [`${r.id}.obj`, `${r.id}.mtl`] : [`${r.id}.fbx`];
   for (const tex of r.textures) names.push(texDiskName(r.id, tex.cls, tex.src));
   modelKeeps.set(modelDir, names);
 }

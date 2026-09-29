@@ -16,6 +16,8 @@
  * 变体切换的重映射漏了加热炉热源。指向已删/已换 id 的引用会在写回时
  * 被 Unity 侧丢弃（绑定失效要重新绑的根因之一），必须在这里统一收口。
  */
+import type { ButtonEventLink, CoaxialLink, SwitchLink } from "../types";
+import { uuid } from "./coords";
 import { S, EditorItem } from "./state";
 
 /** 单个物品内的引用按映射表改写（m 不在表内的原样返回）。 */
@@ -80,6 +82,49 @@ export function remapRefsWithinItems(items: EditorItem[], map: Map<string, strin
   if (map.size === 0) return;
   const m = (x: string) => map.get(x) ?? x;
   for (const it of items) remapItemRefs(it, m);
+}
+
+/** 跨页/批次粘贴：文档级链接按 pasteIdMap 改写 instanceId（生成新 link/group id 避免冲突）。 */
+export function remapSwitchLinksForPaste(
+  links: SwitchLink[],
+  map: Map<string, string>
+): SwitchLink[] {
+  const m = (x: string) => map.get(x) ?? x;
+  return links.map((l) => ({
+    ...l,
+    switchId: m(l.switchId),
+    targetId: m(l.targetId),
+  }));
+}
+
+export function remapCoaxialLinksForPaste(
+  links: CoaxialLink[],
+  map: Map<string, string>
+): CoaxialLink[] {
+  const m = (x: string) => map.get(x) ?? x;
+  return links.map((l) => ({
+    ...l,
+    id: uuid(),
+    sourceIds: l.sourceIds.map(m),
+    targetIds: (l.targetIds ?? []).map(m),
+  }));
+}
+
+export function remapButtonEventsForPaste(
+  links: ButtonEventLink[],
+  map: Map<string, string>
+): ButtonEventLink[] {
+  const m = (x: string) => map.get(x) ?? x;
+  return links.map((l) => ({
+    ...l,
+    id: uuid(),
+    sourceId: m(l.sourceId),
+    groups: l.groups.map((g) => ({
+      ...g,
+      id: uuid(),
+      events: g.events.map((e) => ({ ...e, targetId: m(e.targetId) })),
+    })),
+  }));
 }
 
 /** 清理指向当前物品列表之外的所有绑定引用，返回清理条数（供状态栏汇报）。

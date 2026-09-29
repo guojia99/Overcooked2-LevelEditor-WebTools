@@ -1,5 +1,8 @@
 /** Recipe picker filter helpers for the level-editor recipes dialog (select tab). */
 import type { RecipeEntry } from "./types";
+import { tidyCatalogNameZh } from "./displayLabels";
+import { UTENSIL_KIND_BY_ID, STATION_CLASS_ZH, STATION_CLASS_BY_ID } from "./autoScoreKnowledge";
+import { functionalBaseId } from "./editor/recipeKnowledge";
 import {
   STEP_UTENSILS,
   deriveCookingGroups,
@@ -35,6 +38,52 @@ export const COOK_STEP_LABEL_ZH: Record<string, string> = {
   RoastingTray: "烤托盘",
   OvenCakeTin: "蛋糕模",
 };
+
+/** 工作台/道具 catalog id → 中文（过滤芯片与自动填充清单）。 */
+const UTENSIL_CATALOG_LABEL_ZH: Record<string, string> = {
+  Cooker: "灶台",
+  FryingStation: "炸台",
+  Oven: "烤箱",
+  Mixer: "搅拌台",
+  Blender: "搅拌机",
+  Barbeque: "烧烤架",
+  Campfire: "篝火",
+  ChoppingCounter: "切菜台",
+  workstation_guillotine_01: "断头台",
+  ServingStation: "上菜台",
+  Bin: "垃圾箱",
+  Counter: "操作台",
+  Switch: "按钮",
+  CleanPlateStack: "干净盘子堆",
+  CleanGlassStack: "干净玻璃杯堆",
+  cleanmugstack: "干净马克杯堆",
+  dlc08_cleantraystack: "干净餐盘堆",
+  Sink: "水槽",
+  SinkPlate: "洗盘子水槽",
+  SinkGlass: "洗杯子水槽",
+  PlateReturn: "脏盘回收台",
+  GlassReturn: "脏杯回收台",
+  Dispenser: "食材箱",
+};
+
+/** 锅具/道具过滤与清单展示用中文名（含未进目录的 DLC 网格 id）。 */
+export function utensilFilterLabel(
+  id: string,
+  catalog?: { nameZh?: string; id?: string } | null
+): string {
+  const cid = catalog?.id ?? id;
+  const fromCatalog = catalog?.nameZh ? tidyCatalogNameZh(catalog.nameZh, cid) : "";
+  if (fromCatalog && fromCatalog !== id) return fromCatalog;
+  const kind = UTENSIL_KIND_BY_ID[id];
+  if (kind && COOK_STEP_LABEL_ZH[kind]) return COOK_STEP_LABEL_ZH[kind];
+  if (COOK_STEP_LABEL_ZH[id]) return COOK_STEP_LABEL_ZH[id];
+  const station = STATION_CLASS_BY_ID[id];
+  if (station && STATION_CLASS_ZH[station]) return STATION_CLASS_ZH[station];
+  if (UTENSIL_CATALOG_LABEL_ZH[id]) return UTENSIL_CATALOG_LABEL_ZH[id];
+  const base = functionalBaseId(id);
+  if (base !== id) return utensilFilterLabel(base, null);
+  return fromCatalog || id;
+}
 
 const STANDARD_SCORES = [20, 40, 60, 80, 100, 120];
 

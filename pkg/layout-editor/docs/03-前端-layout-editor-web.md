@@ -170,6 +170,8 @@ flowchart LR
 | **input.ts** | 画布全部鼠标/键盘交互（1458 行）：拖放、点选/框选、重叠候选、平移缩放、移动/缩放、右键菜单、快捷键（含输入框焦点守卫）、动画层拾取 |
 | **selection.ts / selectionTransform.ts / selectionHeight.ts / selectionAirWallHeight.ts / selectionTravelator.ts** | 选区读写 / 批量旋转/随机旋转/聚散/微移 / 高度调整 / 空气墙高度 / 传送带速度 |
 | **clipboard.ts** | 复制/裁切/粘贴（网格对齐增量、批次轮转避让、地板连带 surface 物品） |
+| **clipboardPaste.ts** | 同页/跨页共用的批次粘贴 helper（新 instanceId、网格偏移、物品内引用重映射） |
+| **crossTabClipboard.ts** | 跨标签页素材剪贴板（localStorage + BroadcastChannel）：复制时旁路同步；`Ctrl+Shift+V` 粘贴素材 + switchLinks / coaxialLinks / buttonEvents（不含动画组） |
 | **historyOps.ts** | undo/redo 与脏标记（快照含动画/联动/相机/灯光） |
 
 **领域逻辑**

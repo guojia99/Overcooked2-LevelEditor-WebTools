@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using LevelEditorStub;
 using UnityEngine;
@@ -59,7 +60,7 @@ namespace CustomStub
         /// <summary>移动速度倍率（GridNavigator 基速 4.5 m/s）。</summary>
         [SerializeField] public float m_speed = 1f;
 
-        /// <summary>皮肤：retro（默认，原版像素材质）/ dlc08（官方 h18 同款贴图换肤）。</summary>
+        /// <summary>皮肤：retro（默认）/ dlc08（高清鼠贴图）/ cockroach（commonW3 内置蟑螂低模）。</summary>
         [SerializeField] public string m_skin = "retro";
 
         [SerializeField] public bool m_stealRaw = true;
@@ -77,9 +78,29 @@ namespace CustomStub
         private const string SkinBundle = "bundle355";
         private const string SkinTexturePath =
             "assets/downloadablecontent/dlc08/dlc_assets/models/characters/textures/t_dlc08_rat_01_d.png";
+        private const string CockroachBundle = "commonW3";
+        private const string CockroachModelPath =
+            "assets/commonw3/rat/models/web_cockroach_low/web_cockroach_low.fbx";
+        private const string CockroachEditorAssetPath =
+            "Assets/commonW3/rat/models/Web_Cockroach_Low/Web_Cockroach_Low.fbx";
+        private const string CockroachBaseColorPath =
+            "assets/commonw3/rat/models/web_cockroach_low/web_cockroach_low_base_color.jpg";
+        private const string CockroachNormalPath =
+            "assets/commonw3/rat/models/web_cockroach_low/web_cockroach_low_normal.jpg";
+        private const string CockroachBaseColorEditorPath =
+            "Assets/commonW3/rat/models/Web_Cockroach_Low/Web_Cockroach_Low_base_color.jpg";
+        private const string CockroachNormalEditorPath =
+            "Assets/commonW3/rat/models/Web_Cockroach_Low/Web_Cockroach_Low_normal.jpg";
+        /// <summary>蟑螂低模对齐复古鼠包围盒：绕 Y +90° 后非均匀缩放（见 gen-commonw3-rat-cockroach.mjs），
+        /// 在基准比例上再放大 1.4×。</summary>
+        private static readonly Vector3 CockroachLocalScale = new Vector3(1.82f, 1.90f, 1.44f);
+        private const float CockroachYawDeg = 90f;
         private const float HideDropY = 1.05f;
         /// <summary>无目标巡逻的最少单程距离（格）。</summary>
         private const float MinPatrolCells = 5f;
+        /// <summary>地板射线（对齐 PushableVoidFall：Ground 层 Col_Floor）。</summary>
+        private const float GroundRayStartY = 2.5f;
+        private const float GroundRayDistance = 5f;
 
         // ---- 运行时状态（不序列化） ----
         private GameObject _rat;
@@ -91,13 +112,21 @@ namespace CustomStub
         private Vector3 _homePos;
         private Renderer[] _ratRenderers;
         private Collider[] _ratColliders;
+        private GameObject _cockroachVisual;
         private bool _skinApplied;
+        private bool _hitHooked;
+        private Coroutine _fleeRoutine;
         private GameObject _targetStation; // 服务端本轮占用的目标台面（s_targets 配套）
         private float _channelWaited;      // 已等待 wrapper 通道的秒数（超过阈值走兜底）
 
         /// <summary>本机（服务端）目标占用表：多鼠不同时盯同一台面。
         /// 清场：OnSceneChanged（挂 EntryPoint.ResetSceneTickers 链）。</summary>
         private static readonly HashSet<GameObject> s_targets = new HashSet<GameObject>();
+        private static int s_groundMask;
+        private static bool s_groundMaskReady;
+        /// <summary>是否已把 GridNavSpace 无地板格标为不可走（每场景一次）。</summary>
+        private static bool s_navVoidPatched;
+        private static bool s_navVoidPatchWarned;
 
         private static void Log(string msg)
         {
@@ -115,6 +144,9 @@ namespace CustomStub
             if (s_targets.Count > 0)
                 Log("[RatHeist] 场景切换清目标占用表: " + s_targets.Count + " 个");
             s_targets.Clear();
+            s_groundMaskReady = false;
+            s_navVoidPatched = false;
+            s_navVoidPatchWarned = false;
         }
 
         /// <summary>外层协程：C#4 禁止在有 catch 的 try 里 yield，嵌套枚举器给整个
@@ -198,11 +230,14 @@ namespace CustomStub
                     continue;
                 }
 
-                // 3. 分端就绪
+                // 3. 分端就绪（晚生成老鼠补挂同步器 + 打鼠回调）
                 _isServer = GameApi.IsServerMachine();
-                if (_isServer)
-                    HookInteraction();
-                Log("[RatHeist] 网络同步就绪: " + name + "（isServer=" + _isServer + "）");
+                EnsureRatNetworkSync();
+                TryHookInteraction();
+                Log("[RatHeist] 网络同步就绪: " + name + "（isServer=" + _isServer
+                    + "，实体=" + GameApi.HasEntityEntry(_rat) + "，打鼠="
+                    + _hitHooked + "）");
+                EnsureNavVoidMask();
 
                 // 4. 状态机主循环（重开关卡后 _rat 失效 → 回外层重装配）
                 while (_rat != null)
@@ -275,13 +310,28 @@ namespace CustomStub
                 s_targets.Add(stationGo);
             ShowRat();
             // —— 去程 ——
-            RatApi.NavMoveTo(_nav, targetPos);
+            if (!TryNavMoveTo(targetPos))
+            {
+                ReleaseTarget();
+                var goHomeEarly = ReturnHome();
+                while (goHomeEarly.MoveNext())
+                    yield return goHomeEarly.Current;
+                yield break;
+            }
             while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null)
             {
                 yield return null;
                 if (_fleeing || _rat == null)
                 {
                     ReleaseTarget();
+                    yield break;
+                }
+                if (AbortNavIfOverVoid())
+                {
+                    ReleaseTarget();
+                    var goHomeVoid = ReturnHome();
+                    while (goHomeVoid.MoveNext())
+                        yield return goHomeVoid.Current;
                     yield break;
                 }
             }
@@ -317,7 +367,12 @@ namespace CustomStub
             Log("[RatHeist] 偷到: " + name + " → " + taken.name
                 + (stationGo == null ? "（地面）" : ""));
             // —— 回程 ——
-            RatApi.NavMoveTo(_nav, _homePos);
+            if (!TryNavMoveTo(_homePos))
+            {
+                ReleaseTarget();
+                HideRat();
+                yield break;
+            }
             while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null)
             {
                 yield return null;
@@ -327,6 +382,12 @@ namespace CustomStub
                     ReleaseTarget();
                     yield break;
                 }
+                if (AbortNavIfOverVoid())
+                {
+                    ReleaseTarget();
+                    HideRat();
+                    yield break;
+                }
             }
             // —— 到家销毁 ——
             var carried = _carried;
@@ -334,6 +395,7 @@ namespace CustomStub
             ReleaseTarget();
             if (carried != null)
             {
+                RatApi.RatDrop(_rat, carried);
                 RatApi.DestroyObject(carried);
                 Log("[RatHeist] 销毁食材: " + name + " → " + carried.name);
             }
@@ -359,44 +421,82 @@ namespace CustomStub
         }
 
         /// <summary>回家并藏起（不操作可见性——调用方保证当前可见）。守卫超时防
-        /// 不可达时卡死（HasCompletedRoute 恒 false 的防御）。</summary>
-        private IEnumerator ReturnHome()
+        /// 不可达时卡死（HasCompletedRoute 恒 false 的防御）。
+        /// abortOnFlee：被打逃亡时 FleeHome 独占回家，其它协程里的 ReturnHome 应立即让出。</summary>
+        private IEnumerator ReturnHome(bool hideWhenDone = true, bool abortOnFlee = true)
         {
-            RatApi.NavMoveTo(_nav, _homePos);
-            var guard = 0f;
-            while (!RatApi.NavCompleted(_nav) && _rat != null && guard < 15f)
+            if (abortOnFlee && _fleeing)
+                yield break;
+            if (TryNavMoveTo(_homePos))
             {
-                guard += RatApi.DeltaTime(_rat);
-                yield return null;
+                var guard = 0f;
+                while (!RatApi.NavCompleted(_nav) && _rat != null && guard < 15f)
+                {
+                    if (abortOnFlee && _fleeing)
+                        yield break;
+                    guard += RatApi.DeltaTime(_rat);
+                    yield return null;
+                    if (AbortNavIfOverVoid())
+                        break;
+                }
             }
-            HideRat();
+            if (abortOnFlee && _fleeing)
+                yield break;
+            if (hideWhenDone)
+                HideRat();
         }
 
         /// <summary>被打回调（服务端，ServerInteractable.TriggerInteract 委托）。
-        /// 掉落携带物（物理落地，官方 PhysicsObjectSynchroniser 同步）+ 逃亡标记，
-        /// 逃亡的实际移动由 FleeHome 协程完成。</summary>
+        /// 立刻停导航、释放偷取目标、掉落携带物，并从当前位置逃回洞穴。</summary>
         internal void OnRatHit(GameObject interacter, Vector2 directionXZ)
         {
             if (!_isServer || _fleeing)
                 return;
             Log("[RatHeist] 被打: " + name + (interacter != null ? "（by " + interacter.name + "）" : ""));
             _fleeing = true;
+            ReleaseTarget();
             RatApi.NavClear(_nav);
-            if (_carried != null)
+            DropCarriedNow();
+            SetRatVisible(true);
+            if (_fleeRoutine != null)
             {
-                RatApi.RatDrop(_rat, _carried); // Detach：物品物理落地
-                _carried = null;
+                StopCoroutine(_fleeRoutine);
+                _fleeRoutine = null;
             }
-            StartCoroutine(FleeHome());
+            _fleeRoutine = StartCoroutine(FleeHome());
         }
 
+        /// <summary>被打后从当前位置寻路回洞（不传送回 home，避免「瞬移回家」穿帮）。</summary>
         private IEnumerator FleeHome()
         {
-            ShowRat();
-            var goHome = ReturnHome();
+            RatApi.NavClear(_nav);
+            var goHome = ReturnHome(true, false);
             while (goHome.MoveNext())
+            {
+                if (_rat == null)
+                    break;
                 yield return goHome.Current;
+            }
             _fleeing = false;
+            _fleeRoutine = null;
+        }
+
+        /// <summary>掉落嘴上/缓存的携带物（被打时同步落地，不销毁）。</summary>
+        private void DropCarriedNow()
+        {
+            if (_rat == null)
+                return;
+            if (_carried != null)
+            {
+                RatApi.RatDrop(_rat, _carried);
+                _carried = null;
+                return;
+            }
+            if (_attachPoint == null || _attachPoint.childCount == 0)
+                return;
+            var onMouth = _attachPoint.GetChild(0).gameObject;
+            if (onMouth != null)
+                RatApi.RatDrop(_rat, onMouth);
         }
 
         // ==================== 客户端影子演出 ====================
@@ -407,18 +507,43 @@ namespace CustomStub
         private IEnumerator Patrol()
         {
             ShowRat();
-            var ang = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
-            var dist = UnityEngine.Random.Range(MinPatrolCells + 0.5f, MinPatrolCells + 4f) * CellSize;
-            var target = _homePos + new Vector3(Mathf.Cos(ang) * dist, 0f, Mathf.Sin(ang) * dist);
-            RatApi.NavMoveTo(_nav, target);
+            var target = _homePos;
+            var found = false;
+            for (int attempt = 0; attempt < 8; attempt++)
+            {
+                var ang = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+                var dist = UnityEngine.Random.Range(MinPatrolCells + 0.5f, MinPatrolCells + 4f) * CellSize;
+                var candidate = _homePos + new Vector3(Mathf.Cos(ang) * dist, 0f, Mathf.Sin(ang) * dist);
+                if (HasGroundSupport(candidate.x, candidate.z))
+                {
+                    target = candidate;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found || !TryNavMoveTo(target))
+            {
+                var goHomeEarly = ReturnHome();
+                while (goHomeEarly.MoveNext())
+                {
+                    if (_rat == null)
+                        break;
+                    yield return goHomeEarly.Current;
+                }
+                yield break;
+            }
             var guard = 0f;
             while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null && guard < 25f)
             {
                 guard += RatApi.DeltaTime(_rat);
                 yield return null;
                 if (_fleeing || _rat == null)
-                    yield break; // FleeHome 接管
+                    yield break;
+                if (AbortNavIfOverVoid())
+                    break;
             }
+            if (_fleeing)
+                yield break;
             var goHome = ReturnHome();
             while (goHome.MoveNext())
             {
@@ -449,12 +574,28 @@ namespace CustomStub
             }
             var targetPos = stationGo != null ? stationGo.transform.position : itemGo.transform.position;
             ShowRat();
-            RatApi.NavMoveTo(_nav, targetPos);
+            if (!TryNavMoveTo(targetPos))
+            {
+                var goHomeFail = ReturnHome();
+                while (goHomeFail.MoveNext())
+                    yield return goHomeFail.Current;
+                yield break;
+            }
             while (!RatApi.NavCompleted(_nav) && _rat != null
                 && (_attachPoint == null || _attachPoint.childCount == 0)
-                && StillValidTarget(stationGo, itemGo))
+                && StillValidTarget(stationGo, itemGo)
+                && !_fleeing)
+            {
+                if (AbortNavIfOverVoid())
+                {
+                    var goHomeVoid = ReturnHome();
+                    while (goHomeVoid.MoveNext())
+                        yield return goHomeVoid.Current;
+                    yield break;
+                }
                 yield return null;
-            if (_rat == null)
+            }
+            if (_fleeing || _rat == null)
                 yield break;
             // 到位（或嘴上提前出现物品/目标已被服务端偷走）：稍等看有没有挂上嘴
             var wait = 0f;
@@ -536,6 +677,8 @@ namespace CustomStub
 
         private void CollectCandidate(GameObject stationGo, Vector3 pos, GameObject item)
         {
+            if (!HasGroundSupport(pos.x, pos.z))
+                return;
             // 藏身格（wrapper 同格台面/家里地面）不偷：距家格中心 < 0.6 格视为同格
             var hdx = pos.x - _homePos.x;
             var hdz = pos.z - _homePos.z;
@@ -683,6 +826,9 @@ namespace CustomStub
                 rb.isKinematic = true; // 完全由 GridNavigator 驱动，不参与物理推送
             RatApi.NavSetSpeed(_nav, m_speed > 0.05f ? m_speed : 1f);
             _skinApplied = false;
+            _hitHooked = false;
+            EnsureRatGridLocation(rat);
+            EnsureRatInteractable(rat);
         }
 
         /// <summary>确保老鼠有可用的携带挂点（真机实证 2026-09-19：rat.prefab 是 OC1
@@ -740,13 +886,18 @@ namespace CustomStub
             return front;
         }
 
-        /// <summary>dlc08 皮肤：官方 h18 关同款（复古鼠模型 + dlc08 老鼠贴图）。</summary>
+        /// <summary>皮肤：dlc08 换贴图；cockroach 隐藏鼠模并挂 commonW3 蟑螂低模（行为组件不变）。</summary>
         private void ApplySkin()
         {
-            if (_skinApplied || _ratRenderers == null || _ratRenderers.Length == 0)
+            if (_skinApplied || _rat == null)
                 return;
             _skinApplied = true;
-            if (m_skin != "dlc08")
+            if (m_skin == "cockroach")
+            {
+                ApplyCockroachModel();
+                return;
+            }
+            if (m_skin != "dlc08" || _ratRenderers == null || _ratRenderers.Length == 0)
                 return;
             var bundle = GameApi.GetAssetBundle(SkinBundle);
             if (bundle == null)
@@ -786,6 +937,371 @@ namespace CustomStub
             }
         }
 
+        /// <summary>蟑螂皮肤：保留 rat.prefab 的寻路/交互/携带，仅替换可见网格。</summary>
+        private void ApplyCockroachModel()
+        {
+            try
+            {
+                var modelPrefab = LoadCockroachModelPrefab();
+                if (modelPrefab == null)
+                {
+                    LogWarn("[RatHeist] cockroach 模型加载失败（commonW3 未加载或未重打 bundle"
+                        + "；编辑器可直读工程 FBX）: " + name);
+                    return;
+                }
+                AttachCockroachVisual(modelPrefab);
+            }
+            catch (Exception ex)
+            {
+                LogWarn("[RatHeist] cockroach 模型应用异常: " + name + ": " + ex.Message);
+            }
+        }
+
+        private void AttachCockroachVisual(GameObject modelPrefab)
+        {
+            if (_ratRenderers != null)
+            {
+                for (int i = 0; i < _ratRenderers.Length; i++)
+                {
+                    if (_ratRenderers[i] != null)
+                        _ratRenderers[i].enabled = false;
+                }
+            }
+            if (_cockroachVisual != null)
+                Destroy(_cockroachVisual);
+            _cockroachVisual = (GameObject)Instantiate(modelPrefab, _rat.transform);
+            _cockroachVisual.name = "CockroachVisual";
+            _cockroachVisual.transform.localPosition = Vector3.zero;
+            _cockroachVisual.transform.localRotation = Quaternion.Euler(0f, CockroachYawDeg, 0f);
+            _cockroachVisual.transform.localScale = CockroachLocalScale;
+            DisableCollidersOnVisual(_cockroachVisual);
+            _ratRenderers = _cockroachVisual.GetComponentsInChildren<Renderer>(true);
+            ApplyCockroachMaterials();
+            Log("[RatHeist] cockroach 模型已应用: " + name);
+        }
+
+        /// <summary>视觉子树碰撞体不参与交互扫描（Interactable 在老鼠根节点）。</summary>
+        private static void DisableCollidersOnVisual(GameObject visualRoot)
+        {
+            if (visualRoot == null)
+                return;
+            var cols = visualRoot.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < cols.Length; i++)
+            {
+                if (cols[i] != null)
+                    cols[i].enabled = false;
+            }
+        }
+
+        /// <summary>运行时从 commonW3 绑定贴图（bundle 直读 FBX 不会自动链贴图，否则白模）。</summary>
+        private void ApplyCockroachMaterials()
+        {
+            if (_cockroachVisual == null)
+                return;
+            var baseTex = LoadCockroachTexture(CockroachBaseColorPath, CockroachBaseColorEditorPath);
+            if (baseTex == null)
+            {
+                LogWarn("[RatHeist] cockroach 基础色贴图加载失败: " + name);
+                return;
+            }
+            var normalTex = LoadCockroachTexture(CockroachNormalPath, CockroachNormalEditorPath);
+            var renderers = _cockroachVisual.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var r = renderers[i];
+                if (r == null)
+                    continue;
+                var mats = r.sharedMaterials;
+                if (mats == null)
+                    continue;
+                for (int m = 0; m < mats.Length; m++)
+                {
+                    if (mats[m] == null)
+                        continue;
+                    var clone = new Material(mats[m]);
+                    AssignCockroachAlbedo(clone, baseTex);
+                    if (normalTex != null)
+                        AssignCockroachNormal(clone, normalTex);
+                    mats[m] = clone;
+                }
+                r.sharedMaterials = mats;
+            }
+        }
+
+        private static void AssignCockroachAlbedo(Material mat, Texture2D tex)
+        {
+            mat.mainTexture = tex;
+            if (mat.HasProperty("_MainTex"))
+                mat.SetTexture("_MainTex", tex);
+            if (mat.HasProperty("_Diffuse_Map"))
+                mat.SetTexture("_Diffuse_Map", tex);
+        }
+
+        private static void AssignCockroachNormal(Material mat, Texture2D tex)
+        {
+            if (mat.HasProperty("_BumpMap"))
+                mat.SetTexture("_BumpMap", tex);
+            if (mat.HasProperty("_Normal"))
+                mat.SetTexture("_Normal", tex);
+            if (mat.HasProperty("_NormalMap1"))
+                mat.SetTexture("_NormalMap1", tex);
+        }
+
+        private Texture2D LoadCockroachTexture(string bundlePath, string editorPath)
+        {
+            var bundle = TryResolveCockroachBundle();
+            if (bundle != null)
+            {
+                var tex = bundle.LoadAsset<Texture2D>(bundlePath);
+                if (tex != null)
+                    return tex;
+                tex = bundle.LoadAsset<Texture2D>(editorPath);
+                if (tex != null)
+                    return tex;
+                var names = bundle.GetAllAssetNames();
+                var suffix = Path.GetFileName(bundlePath);
+                for (int i = 0; i < names.Length; i++)
+                {
+                    if (names[i].EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        tex = bundle.LoadAsset<Texture2D>(names[i]);
+                        if (tex != null)
+                            return tex;
+                    }
+                }
+            }
+            return LoadCockroachTextureViaEditorHost(editorPath);
+        }
+
+        private static Texture2D LoadCockroachTextureViaEditorHost(string editorPath)
+        {
+            try
+            {
+                var assetDb = GameApi.Find("UnityEditor.AssetDatabase, UnityEditor");
+                if (assetDb == null)
+                    return null;
+                var m = assetDb.GetMethod("LoadAssetAtPath",
+                    BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(string), typeof(Type) }, null);
+                if (m == null)
+                    return null;
+                return m.Invoke(null, new object[] { editorPath, typeof(Texture2D) }) as Texture2D;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>按名取已加载 commonW3；未加载时从 StreamingAssets 或
+        /// Assets/AssetBundles 兜底 LoadFromFile（编辑器 Play 常见）。</summary>
+        private static AssetBundle TryResolveCockroachBundle()
+        {
+            var bundle = GameApi.GetAssetBundle(CockroachBundle);
+            if (bundle != null)
+                return bundle;
+            var streamingWindows = Path.Combine(Application.streamingAssetsPath, "Windows");
+            var projectBundles = Path.Combine(Application.dataPath, "AssetBundles");
+            var candidates = new string[]
+            {
+                Path.Combine(streamingWindows, "commonw3"),
+                Path.Combine(streamingWindows, CockroachBundle),
+                Path.Combine(projectBundles, "commonw3"),
+                Path.Combine(projectBundles, CockroachBundle),
+            };
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (!File.Exists(candidates[i]))
+                    continue;
+                try
+                {
+                    var loaded = AssetBundle.LoadFromFile(candidates[i]);
+                    if (loaded != null)
+                        return loaded;
+                }
+                catch
+                {
+                }
+            }
+            return null;
+        }
+
+        private GameObject LoadCockroachModelPrefab()
+        {
+            var bundle = TryResolveCockroachBundle();
+            if (bundle != null)
+            {
+                var prefab = bundle.LoadAsset<GameObject>(CockroachModelPath);
+                if (prefab != null)
+                    return prefab;
+                prefab = bundle.LoadAsset<GameObject>(CockroachEditorAssetPath);
+                if (prefab != null)
+                    return prefab;
+                var names = bundle.GetAllAssetNames();
+                for (int i = 0; i < names.Length; i++)
+                {
+                    var assetName = names[i];
+                    if (assetName.IndexOf("cockroach", StringComparison.OrdinalIgnoreCase) < 0
+                        || assetName.IndexOf(".fbx", StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+                    prefab = bundle.LoadAsset<GameObject>(assetName);
+                    if (prefab != null)
+                        return prefab;
+                }
+            }
+            return LoadCockroachViaEditorHost();
+        }
+
+        /// <summary>编辑器宿主兜底：bundle 未构建/未打进 commonW3 时直读工程 FBX。</summary>
+        private static GameObject LoadCockroachViaEditorHost()
+        {
+            try
+            {
+                var assetDb = GameApi.Find("UnityEditor.AssetDatabase, UnityEditor");
+                if (assetDb == null)
+                    return null;
+                var m = assetDb.GetMethod("LoadAssetAtPath",
+                    BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(string), typeof(Type) }, null);
+                if (m == null)
+                    return null;
+                return m.Invoke(null, new object[] { CockroachEditorAssetPath, typeof(GameObject) })
+                    as GameObject;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // ==================== 地板 / 虚空寻路守卫 ====================
+
+        private static void EnsureGroundMask()
+        {
+            if (s_groundMaskReady)
+                return;
+            s_groundMaskReady = true;
+            int layer = LayerMask.NameToLayer("Ground");
+            s_groundMask = layer >= 0 ? (1 << layer) : (1 << 9);
+        }
+
+        private static bool HasGroundSupport(float x, float z)
+        {
+            EnsureGroundMask();
+            return Physics.Raycast(
+                new Vector3(x, GroundRayStartY, z),
+                Vector3.down,
+                GroundRayDistance,
+                s_groundMask,
+                QueryTriggerInteraction.Ignore);
+        }
+
+        /// <summary>官方 GridNavSpace 只排除格子占用物，虚空格仍可走——开局用
+        /// Ground 层射线把无 Col_Floor 的格标为不可走（每场景一次）。</summary>
+        private static void EnsureNavVoidMask()
+        {
+            if (s_navVoidPatched)
+                return;
+            try
+            {
+                var gameUtilsType = GameApi.Find("GameUtils");
+                if (gameUtilsType == null)
+                    return;
+                var getNavSpace = gameUtilsType.GetMethod("GetGridNavSpace",
+                    BindingFlags.Public | BindingFlags.Static);
+                if (getNavSpace == null)
+                    return;
+                var navSpace = getNavSpace.Invoke(null, null);
+                if (navSpace == null)
+                    return;
+
+                var navSpaceType = navSpace.GetType();
+                var nodeMapField = navSpaceType.GetField("m_nodeMap",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                var offsetField = navSpaceType.GetField("m_mapOffset",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                var gridMgrField = navSpaceType.GetField("m_gridManager",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (nodeMapField == null || offsetField == null || gridMgrField == null)
+                    return;
+
+                var nodeMap = nodeMapField.GetValue(navSpace) as bool[,];
+                if (nodeMap == null)
+                    return; // GridNavSpace.Start 尚未构建 nodeMap，下轮老鼠再试
+
+                var offset = offsetField.GetValue(navSpace);
+                var gridMgr = gridMgrField.GetValue(navSpace);
+                if (offset == null || gridMgr == null)
+                    return;
+
+                var point2Type = GameApi.Find("Point2");
+                var gridIndexType = GameApi.Find("GridIndex");
+                if (point2Type == null || gridIndexType == null)
+                    return;
+
+                int offsetX = (int)point2Type.GetField("X").GetValue(offset);
+                int offsetY = (int)point2Type.GetField("Y").GetValue(offset);
+                var getPosMethod = gridMgr.GetType().GetMethod("GetPosFromGridLocation",
+                    BindingFlags.Public | BindingFlags.Instance);
+                if (getPosMethod == null)
+                    return;
+
+                int blocked = 0;
+                int width = nodeMap.GetLength(0);
+                int height = nodeMap.GetLength(1);
+                for (int i = 0; i < width; i++)
+                {
+                    for (int j = 0; j < height; j++)
+                    {
+                        if (!nodeMap[i, j])
+                            continue;
+                        int gx = i - offsetX;
+                        int gz = j - offsetY;
+                        var gridIndex = Activator.CreateInstance(gridIndexType, gx, 0, gz);
+                        var worldPos = (Vector3)getPosMethod.Invoke(gridMgr, new[] { gridIndex });
+                        if (!HasGroundSupport(worldPos.x, worldPos.z))
+                        {
+                            nodeMap[i, j] = false;
+                            blocked++;
+                        }
+                    }
+                }
+                s_navVoidPatched = true;
+                if (blocked > 0)
+                    Log("[RatHeist] GridNav 虚空格已屏蔽: " + blocked + " 格");
+            }
+            catch (Exception ex)
+            {
+                if (!s_navVoidPatchWarned)
+                {
+                    s_navVoidPatchWarned = true;
+                    LogWarn("[RatHeist] GridNav 虚空屏蔽失败（仍用移动中射线守卫）: " + ex.Message);
+                }
+            }
+        }
+
+        private bool TryNavMoveTo(Vector3 pos)
+        {
+            EnsureNavVoidMask();
+            if (!HasGroundSupport(pos.x, pos.z))
+            {
+                LogWarn("[RatHeist] 目标无地板，取消寻路: " + name + " → " + pos.ToString("0.##"));
+                return false;
+            }
+            RatApi.NavMoveTo(_nav, pos);
+            return true;
+        }
+
+        /// <summary>移动中踏入虚空 → 立刻停导航（防 GridNavigator 沿空路径滑行）。</summary>
+        private bool AbortNavIfOverVoid()
+        {
+            if (_rat == null || HasGroundSupport(_rat.transform.position.x, _rat.transform.position.z))
+                return false;
+            LogWarn("[RatHeist] 踏入虚空，中止寻路: " + name);
+            RatApi.NavClear(_nav);
+            return true;
+        }
+
         // ==================== 显隐与移动 ====================
 
         private void ShowRat()
@@ -794,6 +1310,8 @@ namespace CustomStub
                 return;
             _rat.transform.position = _homePos;
             SetRatVisible(true);
+            EnsureRatNetworkSync();
+            TryHookInteraction();
         }
 
         /// <summary>藏进工作台底下：移到台下 + 渲染/碰撞/动画全关（不挡交互与寻路）。</summary>
@@ -829,21 +1347,73 @@ namespace CustomStub
                 animator.enabled = visible;
         }
 
+        /// <summary>晚于实体扫描生成的老鼠补挂 Interactable 同步器（Server/Client
+        /// Interactable）。根因：wrapper 缺 PseudoPrefab 时老鼠 5s 后才兜底实例化，
+        /// 会错过 AsyncScanEntities 窗口。</summary>
+        private void EnsureRatNetworkSync()
+        {
+            if (_rat == null)
+                return;
+            EnsureRatInteractable(_rat);
+            if (!GameApi.IsSynchronisationActive() || GameApi.HasEntityEntry(_rat))
+                return;
+            if (GameApi.ServerRegisterObject(_rat))
+                Log("[RatHeist] 老鼠已补注册网络实体（Interactable 同步器）: " + name);
+            else
+                LogWarn("[RatHeist] 老鼠网络实体补注册失败（打鼠可能无效）: " + name);
+        }
+
+        /// <summary>确保老鼠根节点有 Interactable（rat.prefab 自带；兜底实例化路径保险）。</summary>
+        private static void EnsureRatInteractable(GameObject rat)
+        {
+            if (rat == null || RatApi.InteractableType == null)
+                return;
+            if (rat.GetComponent(RatApi.InteractableType) != null)
+                return;
+            rat.AddComponent(RatApi.InteractableType);
+            Log("[RatHeist] 补挂 Interactable: " + rat.name);
+        }
+
+        /// <summary>老鼠会移动：StaticGridLocation 占格不更新会导致 gridSelection
+        /// 关卡面对可见老鼠却打不到；无占格组件时补 DynamicGridLocation。</summary>
+        private static void EnsureRatGridLocation(GameObject rat)
+        {
+            if (rat == null)
+                return;
+            var dynamicType = RatApi.DynamicGridLocationType;
+            if (dynamicType == null)
+                return;
+            if (rat.GetComponent(dynamicType) != null)
+                return;
+            foreach (var component in rat.GetComponentsInChildren<Component>(true))
+            {
+                if (component == null)
+                    continue;
+                if (component.GetType().Name != "StaticGridLocation")
+                    continue;
+                var go = component.gameObject;
+                DestroyImmediate(component);
+                go.AddComponent(dynamicType);
+                Log("[RatHeist] StaticGridLocation → DynamicGridLocation: " + rat.name);
+                return;
+            }
+            rat.AddComponent(dynamicType);
+            Log("[RatHeist] 补挂 DynamicGridLocation（占格随移动）: " + rat.name);
+        }
+
         /// <summary>服务端：把本鼠的被打回调挂到 ServerInteractable（同步系统在
         /// 实体扫描后自动挂载该组件；RegisterTriggerCallbacks 官方委托通道，
         /// 玩家按交互键 → ChefEventMessage.TriggerInteract → 此回调）。</summary>
-        private void HookInteraction()
+        private void TryHookInteraction()
         {
+            if (_hitHooked || _rat == null || !_isServer)
+                return;
             try
             {
                 var serverInteract = RatApi.GetComponent(_rat, RatApi.ServerInteractableType);
                 if (serverInteract == null || RatApi.RegisterTriggerCallbacksMethod == null
                     || RatApi.BeginInteractCallbackType == null)
-                {
-                    LogWarn("[RatHeist] ServerInteractable 不可用（组件=" + (serverInteract != null)
-                        + "），被打将不生效: " + name);
                     return;
-                }
                 var method = typeof(RatHeist).GetMethod("OnRatHit",
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if (method == null)
@@ -853,6 +1423,7 @@ namespace CustomStub
                 }
                 var d = Delegate.CreateDelegate(RatApi.BeginInteractCallbackType, this, method);
                 RatApi.RegisterTriggerCallbacksMethod.Invoke(serverInteract, new object[] { d });
+                _hitHooked = true;
                 Log("[RatHeist] 打鼠交互已挂载: " + name);
             }
             catch (Exception ex)
@@ -885,6 +1456,8 @@ namespace CustomStub
             public static readonly Type GridNavigatorType = Find("GridNavigator");
             public static readonly Type AttachStationType = Find("AttachStation");
             public static readonly Type ServerAttachStationType = Find("ServerAttachStation");
+            public static readonly Type InteractableType = Find("Interactable");
+            public static readonly Type DynamicGridLocationType = Find("DynamicGridLocation");
             public static readonly Type ServerInteractableType = Find("ServerInteractable");
             public static readonly Type PlateType = Find("Plate");
             public static readonly Type CookableContainerType = Find("CookableContainer");
@@ -944,15 +1517,22 @@ namespace CustomStub
                     : null;
             });
 
-            // —— 老鼠携带（ServerPlayerAttachmentCarrier.CarryItem/TakeItem 官方优先，
-            //     ChefCarryMessage 全网同步；老鼠未被实体扫描同步化（无 Server 同步器，
-            //     真机 2026-09-19 现象：物品 TakeItem 后掉地上、老鼠空嘴）时兜底直接
-            //     ServerPhysicalAttachment.Attach(PlayerAttachmentCarrier)——prefab 自带
-            //     场景组件不依赖同步化，挂点由 EnsureAttachPoints 保证）——
+            // —— 老鼠携带：只用 ServerPhysicalAttachment.Attach/Detach（PhysicalAttachMessage
+            //     双端一致）。禁止 ChefCarryMessage——ClientPlayerAttachmentCarrier.TakeItem
+            //     在主机联机下会对已 Detach 的 ClientPhysicalAttachment 抛 MissingReferenceException。
             public static readonly Type ServerCarrierType = Find("ServerPlayerAttachmentCarrier");
             public static readonly Type PlayerAttachmentCarrierType = Find("PlayerAttachmentCarrier");
             public static readonly FieldInfo CarrierAttachPointsField = Field(
                 PlayerAttachmentCarrierType, "m_attachPoints");
+            public static readonly FieldInfo ServerCarrierObjectsField = Field(
+                ServerCarrierType, "m_carriedObjects");
+            public static readonly Type IAttachmentType = Find("IAttachment");
+            public static readonly MethodInfo AttachmentAccessGameObjectMethod = Safe(delegate
+            {
+                return IAttachmentType != null
+                    ? IAttachmentType.GetMethod("AccessGameObject", Type.EmptyTypes)
+                    : null;
+            });
             public static readonly Type ServerPhysicalAttachmentType = Find("ServerPhysicalAttachment");
             public static readonly Type IParentableType = Find("IParentable");
             public static readonly MethodInfo AttachMethod = Safe(delegate
@@ -971,18 +1551,6 @@ namespace CustomStub
             {
                 return ServerPhysicalAttachmentType != null
                     ? ServerPhysicalAttachmentType.GetMethod("IsAttached", Type.EmptyTypes)
-                    : null;
-            });
-            public static readonly MethodInfo CarryItemMethod = Safe(delegate
-            {
-                return ServerCarrierType != null
-                    ? ServerCarrierType.GetMethod("CarryItem", new[] { typeof(GameObject) })
-                    : null;
-            });
-            public static readonly MethodInfo CarrierTakeItemMethod = Safe(delegate
-            {
-                return ServerCarrierType != null
-                    ? ServerCarrierType.GetMethod("TakeItem", Type.EmptyTypes)
                     : null;
             });
 
@@ -1110,27 +1678,12 @@ namespace CustomStub
 
             public static void RatCarry(GameObject rat, GameObject item)
             {
-                var serverCarrier = GetComponent(rat, ServerCarrierType);
-                if (serverCarrier != null && CarryItemMethod != null)
-                {
-                    try
-                    {
-                        CarryItemMethod.Invoke(serverCarrier, new object[] { item });
-                        return;
-                    }
-                    catch (Exception ex)
-                    {
-                        LogWarn("[RatHeist] CarryItem 异常，转兜底挂接: " + ex.Message);
-                    }
-                }
-                // 兜底：直接 Attach 到 prefab 自带的 PlayerAttachmentCarrier
                 var carrier = GetComponent(rat, PlayerAttachmentCarrierType);
                 var attachment = GetComponent(item, ServerPhysicalAttachmentType);
                 if (carrier == null || attachment == null || AttachMethod == null)
                 {
-                    LogWarn("[RatHeist] 挂接兜底不可用（serverCarrier=" + (serverCarrier != null)
-                        + "，carrier=" + (carrier != null) + "，attachment=" + (attachment != null)
-                        + "），物品将落地");
+                    LogWarn("[RatHeist] 挂接不可用（carrier=" + (carrier != null)
+                        + "，attachment=" + (attachment != null) + "）: " + item.name);
                     return;
                 }
                 try
@@ -1139,37 +1692,63 @@ namespace CustomStub
                 }
                 catch (Exception ex)
                 {
-                    LogWarn("[RatHeist] Attach 兜底异常（物品将落地）: " + ex.Message);
+                    LogWarn("[RatHeist] Attach 异常（物品将落地）: " + ex.Message);
                 }
             }
 
+            /// <summary>物理 Detach 落地（PhysicalAttachMessage）；并静默清服务端 carrier
+            /// 槽位（不发 ChefCarryMessage，避免客户端 TakeItem 崩溃）。</summary>
             public static void RatDrop(GameObject rat, GameObject item)
             {
                 if (item == null)
                     return;
-                var serverCarrier = GetComponent(rat, ServerCarrierType);
-                if (serverCarrier != null && CarrierTakeItemMethod != null)
-                {
-                    try
-                    {
-                        CarrierTakeItemMethod.Invoke(serverCarrier, null);
-                        return;
-                    }
-                    catch (Exception ex)
-                    {
-                        LogWarn("[RatHeist] 掉落异常，转兜底: " + ex.Message);
-                    }
-                }
+                ClearServerCarrierSlotSilent(rat, item);
+                if (!IsAttached(item))
+                    return;
                 var attachment = GetComponent(item, ServerPhysicalAttachmentType);
                 if (attachment == null || DetachMethod == null)
                     return;
                 try
                 {
-                    DetachMethod.Invoke(attachment, null); // 物理落地
+                    DetachMethod.Invoke(attachment, null);
                 }
                 catch (Exception ex)
                 {
-                    LogWarn("[RatHeist] Detach 兜底异常: " + ex.Message);
+                    LogWarn("[RatHeist] Detach 异常: " + ex.Message);
+                }
+            }
+
+            /// <summary>清 ServerPlayerAttachmentCarrier.m_carriedObjects 里对该物的引用，
+            /// 不调用 TakeItem（= 不发 ChefCarryMessage）。兼容旧版曾走 CarryItem 的存档。</summary>
+            private static void ClearServerCarrierSlotSilent(GameObject rat, GameObject item)
+            {
+                if (rat == null || item == null || ServerCarrierObjectsField == null
+                    || AttachmentAccessGameObjectMethod == null)
+                    return;
+                var serverCarrier = GetComponent(rat, ServerCarrierType);
+                if (serverCarrier == null)
+                    return;
+                var arr = ServerCarrierObjectsField.GetValue(serverCarrier) as Array;
+                if (arr == null)
+                    return;
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    var slot = arr.GetValue(i);
+                    if (slot == null)
+                        continue;
+                    GameObject go = null;
+                    try
+                    {
+                        go = AttachmentAccessGameObjectMethod.Invoke(slot, null) as GameObject;
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                    if (go != item)
+                        continue;
+                    arr.SetValue(null, i);
+                    return;
                 }
             }
 

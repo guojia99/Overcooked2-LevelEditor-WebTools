@@ -1,8 +1,8 @@
 import * as api from "./api";
-import type { AudioKnowledge, BundleAnalysis, LevelDetail, LevelSetInfo, LevelSummary } from "./types";
+import type { AudioKnowledge, BundleAnalysis, LevelDetail, LevelSummary } from "./types";
 import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
-import { navigateTo, depsPath, parseRoute } from "./route";
+import { navigateTo, depsPath, manageLevelListPath, parseRoute } from "./route";
 import { goLayout, goManage } from "./levels";
 
 export function goDependencies(setName?: string, levelInfoAssetPath?: string): void {
@@ -13,7 +13,11 @@ export function goDependencies(setName?: string, levelInfoAssetPath?: string): v
     location.assign(depsPath(setName, levelId || undefined));
     return;
   }
-  location.assign("/dependencies");
+  if (setName) {
+    location.assign(depsPath(setName));
+    return;
+  }
+  location.assign("/manage");
 }
 
 /** 把 URL 同步到当前视图（pushState；深链初载时路径已一致则不动）。 */
@@ -46,6 +50,10 @@ let popstateWired = false;
 async function renderDepsRoute(app: HTMLElement): Promise<void> {
   const r = parseRoute();
   if (r.page !== "dependencies") return;
+  if (!r.setId) {
+    goManage();
+    return;
+  }
   if (r.setId && r.levelId) {
     const resolved = await resolveLevelAssetPath(r.setId, r.levelId);
     if (resolved) {
@@ -56,11 +64,7 @@ async function renderDepsRoute(app: HTMLElement): Promise<void> {
     setStatus(`未找到关卡「${r.levelId}」，已返回关卡列表。`, false);
     return;
   }
-  if (r.setId) {
-    await renderLevelList(app, r.setId);
-    return;
-  }
-  await renderSetList(app);
+  await renderLevelList(app, r.setId);
 }
 
 function esc(s: unknown): string {
@@ -100,10 +104,14 @@ function wireDepsNav(): void {
   });
 }
 
+function goManageLevelList(setName: string): void {
+  location.assign(manageLevelListPath(setName));
+}
+
 function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () => void): HTMLElement {
   document.body.classList.add("manage-bg");
   app.innerHTML = `
-    ${navHtml("dependencies")}
+    ${navHtml("manage")}
     <div class="manage-bar">
       ${backLabel ? `<button class="m-btn" id="dep-back">← ${esc(backLabel)}</button>` : ""}
       <h1 class="m-title">${esc(title)}</h1>
@@ -152,45 +160,9 @@ export async function renderDependenciesView(app: HTMLElement): Promise<void> {
   await renderDepsRoute(app);
 }
 
-async function renderSetList(app: HTMLElement): Promise<void> {
-  syncDepsPath("/dependencies");
-  const content = shell(app, "依赖管理 · 选择关卡集");
-  setBusy("加载关卡集…");
-  let sets: LevelSetInfo[] = [];
-  try {
-    sets = await api.fetchSets();
-  } catch (e) {
-    showError(e);
-    return;
-  }
-  setStatus(`共 ${sets.length} 个关卡集`);
-
-  const cards = sets
-    .map(
-      (s) => `
-      <div class="m-card">
-        <h3>${esc(s.levelSetNameZH || s.setName)}</h3>
-        <div class="m-meta muted">${esc(s.levelSetName || "")} · ${esc(s.setName)}</div>
-        <div class="m-actions">
-          <button class="m-btn primary" data-set="${esc(s.setName)}">选择关卡</button>
-        </div>
-      </div>`
-    )
-    .join("");
-
-  content.innerHTML = `
-    <p class="modal-hint">管理 <code>LevelInfoSO.dependencies</code>：查看 bundle 分析、手动编辑依赖列表。场景写回与菜谱保存后会自动重建 dependencies。</p>
-    <div class="m-grid">${cards || '<p class="muted">暂无关卡集</p>'}</div>
-  `;
-
-  content.querySelectorAll<HTMLButtonElement>("[data-set]").forEach((b) =>
-    b.addEventListener("click", () => void renderLevelList(app, b.dataset.set!))
-  );
-}
-
 async function renderLevelList(app: HTMLElement, setName: string): Promise<void> {
   syncDepsPath(depsPath(setName));
-  const content = shell(app, `依赖管理 · ${setName}`, "返回关卡集", () => void renderSetList(app));
+  const content = shell(app, `依赖管理 · ${setName}`, "返回关卡列表", () => goManageLevelList(setName));
   setBusy(`加载 ${setName} 的关卡…`);
   let levels: LevelSummary[] = [];
   try {
@@ -217,7 +189,9 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
     })
     .join("");
 
-  content.innerHTML = `<div class="m-grid">${cards || '<p class="muted">暂无关卡</p>'}</div>`;
+  content.innerHTML = `
+    <p class="modal-hint">管理 <code>LevelInfoSO.dependencies</code>：查看 bundle 分析、手动编辑依赖列表。场景写回与菜谱保存后会自动重建 dependencies。</p>
+    <div class="m-grid">${cards || '<p class="muted">暂无关卡</p>'}</div>`;
 
   content.querySelectorAll<HTMLButtonElement>("[data-deps]").forEach((b) =>
     b.addEventListener("click", () => void renderDepsDetail(app, setName, b.dataset.deps!))
@@ -330,6 +304,7 @@ async function renderDepsDetail(app: HTMLElement, setName: string, assetPath: st
         minOrderCount: detail.minOrderCount,
         maxOrderCount: detail.maxOrderCount,
         gridHalfSizeX: detail.gridHalfSizeX ?? 0,
+        gridHalfSizeY: detail.gridHalfSizeY ?? 1,
         gridHalfSizeZ: detail.gridHalfSizeZ ?? 0,
         dependencies: deps,
       });

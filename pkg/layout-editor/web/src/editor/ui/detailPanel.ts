@@ -68,24 +68,10 @@ import {
   BURNER_FIRE_MODES,
   PORTAL_COLOR_NAMES
 } from "./constants";
+import { floatingDragBarHtml, positionFloatingAt } from "./floatingPanelDrag";
 
 export function positionFloating(el: HTMLElement, clientX: number, clientY: number) {
-  const margin = 8;
-  let left = clientX + margin;
-  let top = clientY + margin;
-  el.style.left = `${left}px`;
-  el.style.top = `${top}px`;
-  requestAnimationFrame(() => {
-    const rect = el.getBoundingClientRect();
-    if (rect.right > window.innerWidth - margin) {
-      left = Math.max(margin, clientX - rect.width - margin);
-      el.style.left = `${left}px`;
-    }
-    if (rect.bottom > window.innerHeight - margin) {
-      top = Math.max(margin, clientY - rect.height - margin);
-      el.style.top = `${top}px`;
-    }
-  });
+  positionFloatingAt(el, clientX, clientY);
 }
 
 export function positionDetail(clientX: number, clientY: number) {
@@ -262,7 +248,7 @@ export function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY
       <span class="muted" style="align-self:center;font-size:11px">即时生效</span>
     </div>`;
   dom.detailEl.innerHTML = `
-    <h3>${surfaceKindLabelZh(cat?.surfaceKind)} · ${itemLabel(item)}</h3>
+    ${floatingDragBarHtml(`<h3>${surfaceKindLabelZh(cat?.surfaceKind)} · ${itemLabel(item)}</h3>`)}
     <dl>
       <dt>类型</dt><dd>${surfaceKindLabelZh(cat?.surfaceKind)}（地板层 prefab）</dd>
       <dt>占地</dt><dd>${fp.cellsX} × ${fp.cellsZ} 格</dd>
@@ -271,7 +257,7 @@ export function showSurfaceItemDetail(item: EditorItem, clientX: number, clientY
       ${rotXNote}
       ${sizeRow}
     </dl>
-    <p class="close-hint">右键菜单可微移/旋转 · 大小请用宽×深(格) · R/Shift+R 旋转90° · Del 删除 · Esc 关闭</p>
+    <p class="close-hint">长按顶部拖动 · 右键菜单可微移/旋转 · Esc 关闭</p>
   `;
   dom.detailEl.classList.remove("hidden");
   positionDetail(clientX, clientY);
@@ -398,7 +384,7 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       : "";
 
   dom.detailEl.innerHTML = `
-    <h3>${itemLabel(item)}</h3>
+    ${floatingDragBarHtml(`<h3>${itemLabel(item)}</h3>`)}
     <dl>
       <dt>Prefab ID</dt><dd>${id}</dd>
       <dt>中文名</dt><dd>${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : "—"}</dd>
@@ -421,27 +407,11 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
       ${dispenserDetailHtml(item)}
       ${extraStubDetailHtml(item)}
     </dl>
-    <p class="close-hint">Esc 关闭</p>
+    <p class="close-hint">长按顶部拖动 · Esc 关闭</p>
   `;
 
-  const margin = 8;
-  let left = clientX + margin;
-  let top = clientY + margin;
   dom.detailEl.classList.remove("hidden");
-  dom.detailEl.style.left = `${left}px`;
-  dom.detailEl.style.top = `${top}px`;
-
-  requestAnimationFrame(() => {
-    const rect = dom.detailEl.getBoundingClientRect();
-    if (rect.right > window.innerWidth - margin) {
-      left = Math.max(margin, clientX - rect.width - margin);
-      dom.detailEl.style.left = `${left}px`;
-    }
-    if (rect.bottom > window.innerHeight - margin) {
-      top = Math.max(margin, clientY - rect.height - margin);
-      dom.detailEl.style.top = `${top}px`;
-    }
-  });
+  positionFloating(dom.detailEl, clientX, clientY);
 
   if (isAirWallItem(item)) {
     const hInp = document.getElementById("si-aw-h") as HTMLInputElement | null;

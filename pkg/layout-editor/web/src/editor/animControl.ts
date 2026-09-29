@@ -461,13 +461,18 @@ export function updateAnimPickBar(): void {
   const tgt = pickTarget(group!);
   const addLabel = tgt ? `＋ 加入「${escHtml(tgt.name)}」` : "＋ 加入分组";
   bar.innerHTML =
-    `<span class="mpb-title">🎯 组「${escHtml(group!.displayName)}」· 框选成员</span>` +
-    `<span class="mpb-count">已选 物品 <b>${itemN}</b> · 地板 <b>${floorN}</b></span>` +
-    `<span class="mpb-actions">` +
-    `<button type="button" class="btn-small pick-add" id="mpb-add-members"${canAdd ? "" : " disabled"}>` +
-    `${addLabel}${canAdd ? `（${itemN} 物品 · ${floorN} 地板）` : ""}</button>` +
-    `<button type="button" class="btn-small" id="mpb-exit">退出模式</button>` +
-    `</span>`;
+    `<div class="floating-drag-bar anim-pick-drag" data-floating-drag-handle title="长按此处拖动">
+      <span class="floating-drag-grip" aria-hidden="true">⋮⋮</span>
+      <div class="floating-drag-body anim-pick-drag-body">
+        <span class="mpb-title">🎯 组「${escHtml(group!.displayName)}」· 框选成员</span>
+        <span class="mpb-count">已选 物品 <b>${itemN}</b> · 地板 <b>${floorN}</b></span>
+        <span class="mpb-actions">
+          <button type="button" class="btn-small pick-add" id="mpb-add-members"${canAdd ? "" : " disabled"}>${addLabel}${canAdd ? `（${itemN} 物品 · ${floorN} 地板）` : ""}</button>
+          <button type="button" class="btn-small" id="mpb-exit">退出模式</button>
+        </span>
+      </div>
+      <span class="floating-drag-hint">按住拖动</span>
+    </div>`;
   bar.classList.remove("hidden");
   bar.querySelector("#mpb-add-members")?.addEventListener("click", addSelectedToGroup);
   bar.querySelector("#mpb-exit")?.addEventListener("click", () => exitAnimMode());

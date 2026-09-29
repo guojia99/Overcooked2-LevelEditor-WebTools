@@ -1414,6 +1414,12 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/custom-recipes/config" && request.HttpMethod == "GET")
             {
+                var libraryId = request.QueryString["libraryId"] ?? string.Empty;
+                if (!string.IsNullOrEmpty(libraryId))
+                {
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetLibraryCustomRecipeConfig(libraryId)));
+                    return;
+                }
                 var setName = request.QueryString["setName"] ?? string.Empty;
                 WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetOrCreateCustomRecipeConfig(setName)));
                 return;
@@ -1463,6 +1469,12 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/custom-recipes" && request.HttpMethod == "GET")
             {
+                var libraryId = request.QueryString["libraryId"] ?? string.Empty;
+                if (!string.IsNullOrEmpty(libraryId))
+                {
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new CustomRecipeListDto { recipes = LayoutEditorLevelAdminApi.ScanLibraryCustomRecipes(libraryId) }));
+                    return;
+                }
                 var setName = request.QueryString["setName"] ?? string.Empty;
                 WriteJson(response, 200, LayoutEditorJson.ToJson(new CustomRecipeListDto { recipes = LayoutEditorLevelAdminApi.ScanCustomRecipes(setName) }));
                 return;
@@ -1508,6 +1520,12 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/custom-recipes/references" && request.HttpMethod == "GET")
             {
+                var libraryId = request.QueryString["libraryId"] ?? string.Empty;
+                if (!string.IsNullOrEmpty(libraryId))
+                {
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetLibraryCustomRecipeReferences(libraryId)));
+                    return;
+                }
                 var setName = request.QueryString["setName"] ?? string.Empty;
                 WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetCustomRecipeReferences(setName)));
                 return;

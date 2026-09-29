@@ -2672,7 +2672,7 @@ function main() {
     console.log(`Copied bundle-manifest.json to ${path.basename(OUT_DIR)}`);
   }
 
-  // Copy the update log (layout-editor/UPDATE_LOG.md) for the web「更新日志」page
+  // Copy the update log (layout-editor/UPDATE_LOG.md) for 功能说明 → 更新日志
   // (fetch /UPDATE_LOG.md → parseChangelog in web/src/changelog.ts).
   const updateLogSrc = path.resolve(__dirname, "../UPDATE_LOG.md");
   if (fs.existsSync(updateLogSrc)) {

@@ -3,7 +3,7 @@ import {
   EditorItem,
   EditorFloor
 } from "./state";
-import { uuid, newEditorKey, syncItemLocalFromEditor, editorItemUnityWorldXZ, pasteGridDelta, pastePointerWorld } from "./coords";
+import { pasteGridDelta, pastePointerWorld } from "./coords";
 import { isPlayerItem } from "./renderItems";
 import { deleteSelected } from "./items";
 import {
@@ -20,23 +20,17 @@ import {
 import { draw } from "./render";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
-import { moveBlockedAt } from "./items";
-import { remapRefsWithinItems } from "./stubRefs";
-import { finalizeFloor } from "./floors";
 import { updateFloorBar } from "./floorPalette";
 import { closeModal } from "../modals";
 import { isSurfaceItem } from "../floorColors";
+import { publishCrossTabClipboard } from "./crossTabClipboard";
+import {
+  selectionCentroid,
+  pasteItemsWithOffset,
+  pasteFloorsWithOffset,
+} from "./clipboardPaste";
 
-function selectionCentroid(items: { _wx: number; _wz: number }[]): { x: number; z: number } {
-  if (!items.length) return { x: 0, z: 0 };
-  let sx = 0;
-  let sz = 0;
-  for (const it of items) {
-    sx += it._wx;
-    sz += it._wz;
-  }
-  return { x: sx / items.length, z: sz / items.length };
-}
+export { selectionCentroid, pasteItemsWithOffset, pasteFloorsWithOffset } from "./clipboardPaste";
 
 function pasteOffsetFromPointer(
   anchor: { x: number; z: number },
@@ -45,6 +39,10 @@ function pasteOffsetFromPointer(
 ): { dx: number; dz: number } {
   const ptr = pastePointerWorld(canvasMx, canvasMy);
   return pasteGridDelta(anchor.x, anchor.z, ptr.x, ptr.z);
+}
+
+function crossTabSuffix(): string {
+  return publishCrossTabClipboard() ? "；已同步跨页剪贴板" : "";
 }
 
 export function copySelection() {
@@ -62,7 +60,7 @@ export function copySelection() {
     setStatus("玩家不可复制", false);
     return;
   }
-  setStatus(`已复制 ${S.clipboard.length} 个物品（Ctrl/Cmd+V 粘贴）`);
+  setStatus(`已复制 ${S.clipboard.length} 个物品（Ctrl/Cmd+V 粘贴）${crossTabSuffix()}`);
 }
 
 export function cutSelection() {
@@ -78,50 +76,18 @@ export function cutSelection() {
 
 export function pasteClipboard(canvasMx?: number, canvasMy?: number) {
   if (!S.clipboard.length) {
-    setStatus("剪贴板为空（先 Ctrl/Cmd+V 复制）", false);
+    setStatus("剪贴板为空（先 Ctrl/Cmd+C 复制）", false);
     return;
   }
   pushHistory();
   const anchor = selectionCentroid(S.clipboard);
   const { dx: offX, dz: offZ } = pasteOffsetFromPointer(anchor, canvasMx, canvasMy);
-  const pasted: string[] = [];
-  const pastedCopies: EditorItem[] = [];
-  const pasteIdMap = new Map<string, string>();
-  let skipped = 0;
-  for (const src of S.clipboard) {
-    if (isPlayerItem(src)) {
-      skipped++;
-      continue;
-    }
-    const nx = src._wx + offX;
-    const nz = src._wz + offZ;
-    if (moveBlockedAt(src, nx, nz)) {
-      skipped++;
-      continue;
-    }
-    const editorKey = newEditorKey();
-    const copy = JSON.parse(JSON.stringify(src)) as EditorItem;
-    copy._editorKey = editorKey;
-    copy.instanceId = `new:copy:${uuid()}`;
-    copy.hierarchyPath = copy.instanceId;
-    copy._wx = nx;
-    copy._wz = nz;
-    syncItemLocalFromEditor(copy);
-    const u = editorItemUnityWorldXZ(copy);
-    copy.worldPosition = { x: u.x, y: copy.localPosition.y, z: u.z };
-    S.items.push(copy);
-    pasted.push(editorKey);
-    pastedCopies.push(copy);
-    // 成套复制时绑定跟随副本（上菜台+脏盘台一起复制 → 副本互相绑定）。
-    if (src.instanceId && src.instanceId !== copy.instanceId)
-      pasteIdMap.set(src.instanceId, copy.instanceId);
-  }
-  remapRefsWithinItems(pastedCopies, pasteIdMap);
-  setSelection(pasted);
+  const { pastedKeys, skipped } = pasteItemsWithOffset(S.clipboard, offX, offZ);
+  setSelection(pastedKeys);
   hideDetail();
   hideContextMenu();
   draw();
-  setStatus(`已粘贴 ${pasted.length} 个物品${skipped ? `（${skipped} 个因与玩家重叠被跳过）` : ""}`);
+  setStatus(`已粘贴 ${pastedKeys.length} 个物品${skipped ? `（${skipped} 个因与玩家重叠被跳过）` : ""}`);
 }
 
 export function copyFloors(): void {
@@ -149,7 +115,7 @@ export function copyFloors(): void {
     return;
   }
   setStatus(
-    `已复制 ${S.floorClipboard.length} 块地板${S.floorItemClipboard.length ? `、${S.floorItemClipboard.length} 个地板物品` : ""}（Ctrl/Cmd+V 粘贴）`
+    `已复制 ${S.floorClipboard.length} 块地板${S.floorItemClipboard.length ? `、${S.floorItemClipboard.length} 个地板物品` : ""}（Ctrl/Cmd+V 粘贴）${crossTabSuffix()}`
   );
 }
 
@@ -183,57 +149,16 @@ export function pasteFloors(canvasMx?: number, canvasMy?: number): void {
   const allAnchors = [...S.floorClipboard, ...S.floorItemClipboard];
   const anchor = selectionCentroid(allAnchors);
   const { dx: offX, dz: offZ } = pasteOffsetFromPointer(anchor, canvasMx, canvasMy);
-  const pastedKeys: string[] = [];
-  for (const src of S.floorClipboard) {
-    const key = newEditorKey();
-    const copy = JSON.parse(JSON.stringify(src)) as EditorFloor;
-    copy._key = key;
-    copy.instanceId = `new:floor:${uuid()}`;
-    copy.hierarchyPath = copy.instanceId;
-    copy._wx = src._wx + offX;
-    copy._wz = src._wz + offZ;
-    copy.localPosition = { x: copy._wx, y: copy.localPosition?.y ?? -0.05, z: copy._wz };
-    copy.worldPosition = { x: copy._wx, y: copy.localPosition.y, z: copy._wz };
-    S.floors.push(copy);
-    pastedKeys.push(key);
-  }
-  for (const k of pastedKeys) {
-    const f = S.floors.find((x) => x._key === k);
-    if (f) finalizeFloor(f);
-  }
-  const pastedItems: string[] = [];
-  const pastedItemCopies: EditorItem[] = [];
-  const pasteIdMap = new Map<string, string>();
-  for (const src of S.floorItemClipboard) {
-    const nx = src._wx + offX;
-    const nz = src._wz + offZ;
-    if (moveBlockedAt(src, nx, nz)) continue;
-    const editorKey = newEditorKey();
-    const copy = JSON.parse(JSON.stringify(src)) as EditorItem;
-    copy._editorKey = editorKey;
-    copy.instanceId = `new:copy:${uuid()}`;
-    copy.hierarchyPath = copy.instanceId;
-    copy._wx = nx;
-    copy._wz = nz;
-    syncItemLocalFromEditor(copy);
-    const u = editorItemUnityWorldXZ(copy);
-    copy.worldPosition = { x: u.x, y: copy.localPosition.y, z: u.z };
-    S.items.push(copy);
-    pastedItems.push(editorKey);
-    pastedItemCopies.push(copy);
-    if (src.instanceId && src.instanceId !== copy.instanceId)
-      pasteIdMap.set(src.instanceId, copy.instanceId);
-  }
-  remapRefsWithinItems(pastedItemCopies, pasteIdMap);
+  const result = pasteFloorsWithOffset(S.floorClipboard, S.floorItemClipboard, offX, offZ);
   clearSelection();
-  setFloorSelection(pastedKeys);
-  setSelection(pastedItems);
+  setFloorSelection(result.pastedFloorKeys);
+  setSelection(result.pastedItemKeys);
   closeModal();
   hideDetail();
   draw();
   updateFloorBar();
   setStatus(
-    `已粘贴 ${pastedKeys.length} 块地板${pastedItems.length ? `、${pastedItems.length} 个地板物品` : ""}`
+    `已粘贴 ${result.pastedFloorKeys.length} 块地板${result.pastedItemKeys.length ? `、${result.pastedItemKeys.length} 个地板物品` : ""}`
   );
 }
 

@@ -102,7 +102,7 @@ public class LayoutRatHeistStubDto
     /** 移动速度倍率（GridNavigator 基速 4.5 m/s）。 */
     public float speed = 1f;
 
-    /** 皮肤：retro（默认）/ dlc08（官方 h18 同款贴图换肤，需 dlc08 bundle 依赖）。 */
+    /** 皮肤：retro（默认）/ dlc08（官方 h18 同款贴图换肤）/ cockroach（commonW3 蟑螂低模）。 */
     public string skin = "retro";
 
     /** 偷原材料（台面自由食材，切没切好都算；正在被切的在容器内部天然偷不到）。 */
@@ -851,6 +851,7 @@ public class GridInfoDto
     public LayoutVector3 worldPosition;
     public LayoutVector3 cellSize;
     public int gridHalfSizeX;
+    public int gridHalfSizeY;
     public int gridHalfSizeZ;
     public float origin;
 }
@@ -1461,6 +1462,7 @@ public class LevelDetailDto
     public int minOrderCount;
     public int maxOrderCount;
     public int gridHalfSizeX;
+    public int gridHalfSizeY;
     public int gridHalfSizeZ;
     public string[] dependencies;
     public PerPlayerConfigDto[] configs;
@@ -1498,6 +1500,7 @@ public class LevelInfoUpdateDto
     public int minOrderCount;
     public int maxOrderCount;
     public int gridHalfSizeX;
+    public int gridHalfSizeY;
     public int gridHalfSizeZ;
     public string[] dependencies;
 }

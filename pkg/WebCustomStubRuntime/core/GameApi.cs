@@ -124,6 +124,21 @@ namespace CustomStub
                     BindingFlags.Public | BindingFlags.Static)
                 : null;
         });
+        public static readonly MethodInfo EntityServerRegisterMethod = Safe(delegate
+        {
+            return EntityRegistryType != null
+                ? EntityRegistryType.GetMethod("ServerRegisterObject",
+                    BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(GameObject) }, null)
+                : null;
+        });
+        public static readonly Type ComponentCacheRegistryType = Find("ComponentCacheRegistry");
+        public static readonly MethodInfo ComponentCacheUpdateMethod = Safe(delegate
+        {
+            return ComponentCacheRegistryType != null
+                ? ComponentCacheRegistryType.GetMethod("UpdateObject",
+                    BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(GameObject) }, null)
+                : null;
+        });
 
         // ---- 关卡网络时序打点（诊断：主客机状态机对比） ----
         // ClientKitchenLoader 的状态机是所有联机时序问题的主干（LoadedKitchen →
@@ -934,6 +949,28 @@ namespace CustomStub
                 }
             }
             return false;
+        }
+
+        /// <summary>晚于实体扫描生成的对象补注册（ServerRegisterObject + 组件缓存刷新）。
+        /// 仅在同步已激活且本机为服务端时执行；失败返回 false。</summary>
+        internal static bool ServerRegisterObject(GameObject go)
+        {
+            if (go == null || EntityServerRegisterMethod == null || !IsSynchronisationActive())
+                return false;
+            if (!IsServerMachine())
+                return false;
+            try
+            {
+                EntityServerRegisterMethod.Invoke(null, new object[] { go });
+                if (ComponentCacheUpdateMethod != null)
+                    ComponentCacheUpdateMethod.Invoke(null, new object[] { go });
+                return HasEntityEntry(go);
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[GameApi] ServerRegisterObject 异常: " + ex.Message);
+                return false;
+            }
         }
 
         /// <summary>对象是否已在实体注册表里（= 拿到了网络实体 ID 与同步组件）。

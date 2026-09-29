@@ -57,8 +57,11 @@ import {
   hideDetail,
   hideContextMenu
 } from "./ui/overlay";
+import { initContextMenuDrag } from "./ui/contextMenuChrome";
+import { initFloatingPanelDrag, pinCenteredBar } from "./ui/floatingPanelDrag";
 import { draw } from "./render";
 import { setupCanvas, resetOverlapMarqueePending } from "./input";
+import { initCrossTabClipboardListener } from "./crossTabClipboard";
 import {
   goManage,
   goManageSummary,
@@ -67,7 +70,6 @@ import {
   consumeLayoutAutoAction,
   openToolsHistoryModal
 } from "../levels";
-import { goDependencies } from "../dependencies";
 import {
   showBusy,
   hideBusy
@@ -518,7 +520,6 @@ export async function init() {
 
   wireNav((target) => {
     if (target === "manage") confirmLeaveIfDirty(() => goManage());
-    else if (target === "dependencies") confirmLeaveIfDirty(() => goDependencies());
     else if (target === "recipes") confirmLeaveIfDirty(() => navigateTo("recipes"));
     else confirmLeaveIfDirty(() => navigateTo(target));
   });
@@ -628,6 +629,14 @@ export async function init() {
   initPaletteResizer();
   wireVisibilityPopover();
   setupCanvas();
+  initContextMenuDrag();
+  initFloatingPanelDrag(dom.detailEl, { draggingClass: "item-detail-dragging" });
+  initFloatingPanelDrag(dom.pickTipEl, { draggingClass: "pick-tip-dragging" });
+  initFloatingPanelDrag(dom.animPickBar, {
+    draggingClass: "anim-pick-bar-dragging",
+    onDragStart: () => pinCenteredBar(dom.animPickBar),
+  });
+  initCrossTabClipboardListener();
   syncFloorHeightUI();
   requestAnimationFrame(draw);
 

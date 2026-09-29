@@ -15,6 +15,16 @@ function pageIdFromPath(): string {
   return GUIDE_TREE[0]?.id ?? "overview";
 }
 
+async function loadChangelogMd(): Promise<string> {
+  try {
+    const r = await fetch("/UPDATE_LOG.md");
+    if (r.ok) return await r.text();
+  } catch {
+    /* 拉取失败按无数据处理 */
+  }
+  return "";
+}
+
 async function loadCatalog(): Promise<{ ingredients: IngredientEntry[]; recipes: RecipeEntry[] }> {
   try {
     const ingRes = await fetch("/ingredients.json");
@@ -44,7 +54,7 @@ async function loadCatalog(): Promise<{ ingredients: IngredientEntry[]; recipes:
   }
 }
 
-type GuideCtx = { ingredients: IngredientEntry[]; recipes: RecipeEntry[] };
+type GuideCtx = { ingredients: IngredientEntry[]; recipes: RecipeEntry[]; changelogMd: string };
 
 const shellHtml = () => `
   ${navHtml("guide")}
@@ -97,8 +107,8 @@ function renderPage(app: HTMLElement, ctx: GuideCtx, pageId: string, sectionId?:
 
 export async function renderGuideView(app: HTMLElement, initialPageId?: string): Promise<void> {
   document.body.classList.add("manage-bg");
-  const catalog = await loadCatalog();
-  const ctx = { ingredients: catalog.ingredients, recipes: catalog.recipes };
+  const [catalog, changelogMd] = await Promise.all([loadCatalog(), loadChangelogMd()]);
+  const ctx = { ingredients: catalog.ingredients, recipes: catalog.recipes, changelogMd };
 
   app.innerHTML = shellHtml();
 

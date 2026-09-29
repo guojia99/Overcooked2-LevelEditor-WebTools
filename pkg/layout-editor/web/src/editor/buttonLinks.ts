@@ -717,16 +717,20 @@ function partnerCandidateOptions(myId: string, selectedId: string): string {
   return opts.join("");
 }
 
-/** 右键菜单：共轭/互锁配置 + 动画摘要 + 编排入口。 */
-export function buttonLinkCtxHtml(item: EditorItem, eventHint?: string): string {
+/** 右键菜单「特殊按钮」Tab：共轭 / 互锁配对。 */
+export function buttonPartnerCtxHtml(item: EditorItem): string {
   const mode = buttonPartnerMode(item);
   const pid = buttonPartnerId(item);
   const link = linkOfSource(item.instanceId ?? "");
   const startsUp = link?.pairStartsUp !== false;
   const showPartner = mode !== "none";
-  return `<div class="ctx-stub-block">
-    <div class="ctx-stub-title">按钮联动</div>
-    <div class="ctx-stub-row ctx-bl-mode-row">
+  const hintText =
+    mode === "conjugate"
+      ? "仅配置按钮配对；动画在「事件」页编排。场景中以青色双箭头连线。"
+      : mode === "interlock"
+        ? "仅配置互锁配对；各侧动画在「事件」页单独配置。场景中以琥珀色双箭头连线。"
+        : "选择模式并指定配对按钮。";
+  return `<div class="ctx-stub-row ctx-bl-mode-row">
       <select id="ctx-bl-mode" class="ctx-input" title="共轭=同时开/关；互锁=轮流可按、各绑独立动画组">
         <option value="none" ${mode === "none" ? "selected" : ""}>无配对</option>
         <option value="conjugate" ${mode === "conjugate" ? "selected" : ""}>共轭（同时开/关）</option>
@@ -740,11 +744,25 @@ export function buttonLinkCtxHtml(item: EditorItem, eventHint?: string): string 
       <label class="ctx-stub-row ctx-bl-interlock-only" style="display:${mode === "interlock" ? "flex" : "none"}">
         <input type="checkbox" id="ctx-bl-startup" ${startsUp ? "checked" : ""}/> 初始抬起（可按）
       </label>
-      <p class="ctx-stub-hint" id="ctx-bl-hint">${mode === "conjugate" ? "仅配置按钮配对；动画在触发编排中单独创建。场景中以青色双箭头连线。" : mode === "interlock" ? "仅配置互锁配对；各侧动画在触发编排中单独配置。场景中以琥珀色双箭头连线。" : "选择模式并指定配对按钮。"}</p>
-    </div>
-    <p class="ctx-stub-hint">🎬 ${escHtml(buttonLinkSummaryText(item))}</p>
-    ${eventHint ? `<p class="ctx-stub-hint">${eventHint}</p>` : ""}
-    <button type="button" class="ctx-btn ctx-btn-block" id="ctx-trig-config">🎛 打开触发编排…</button>
+      <p class="ctx-stub-hint" id="ctx-bl-hint">${hintText}</p>
+    </div>`;
+}
+
+/** 右键菜单「事件」Tab：动画 / 事件组摘要 + 编排入口。 */
+export function buttonEventsOrchestrateCtxHtml(item: EditorItem, eventHint?: string): string {
+  const emptyHint =
+    '<p class="ctx-stub-hint">未配置事件组；按压后按「机器 → 事件组 → 动画组」顺序执行，点下方按钮打开编排台。</p>';
+  return `<p class="ctx-stub-hint">🎬 ${escHtml(buttonLinkSummaryText(item))}</p>
+    ${eventHint ? `<p class="ctx-stub-hint">${eventHint}</p>` : emptyHint}
+    <button type="button" class="ctx-btn ctx-btn-block" id="ctx-trig-config">🎛 打开触发编排…</button>`;
+}
+
+/** 右键菜单：共轭/互锁配置 + 动画摘要 + 编排入口（未分 Tab 时整段使用）。 */
+export function buttonLinkCtxHtml(item: EditorItem, eventHint?: string): string {
+  return `<div class="ctx-stub-block">
+    <div class="ctx-stub-title">按钮联动</div>
+    ${buttonPartnerCtxHtml(item)}
+    ${buttonEventsOrchestrateCtxHtml(item, eventHint)}
   </div>`;
 }
 
@@ -772,9 +790,9 @@ export function wireButtonLinkCtx(item: EditorItem): void {
     if (hint) {
       hint.textContent =
         mode === "conjugate"
-          ? "仅配置按钮配对；动画在触发编排中单独创建。场景中以青色双箭头连线。"
+          ? "仅配置按钮配对；动画在「事件」页编排。场景中以青色双箭头连线。"
           : mode === "interlock"
-            ? "仅配置互锁配对；各侧动画在触发编排中单独配置。场景中以琥珀色双箭头连线。"
+            ? "仅配置互锁配对；各侧动画在「事件」页单独配置。场景中以琥珀色双箭头连线。"
             : "选择模式并指定配对按钮。";
     }
   };

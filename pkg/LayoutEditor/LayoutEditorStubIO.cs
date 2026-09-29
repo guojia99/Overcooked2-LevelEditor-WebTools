@@ -2472,6 +2472,7 @@ public static class LayoutEditorStubIO
     private static readonly string[] RatHeistBaseBundles = { "bundle0", "bundle34", "bundle47" };
     /// <summary>dlc08 皮肤贴图所在 bundle（官方 h18 关同款：复古鼠模型 + dlc08 老鼠贴图）。</summary>
     private const string RatHeistSkinBundle = "bundle355";
+    private const string RatHeistCockroachBundle = "commonW3";
 
     private static bool HasRatHeistTag(GameObject go)
     {
@@ -2590,7 +2591,8 @@ public static class LayoutEditorStubIO
 
     /// <summary>注册老鼠资产依赖：本体三包（动画 bundle0 / 模型 bundle34 /
     /// prefab bundle47，StreamingAssets 原版包必有）+ dlc08 皮肤包 bundle355
-    /// （仅 skin=dlc08 时）。模式镜像 EnsureRandomCrateDependencies。</summary>
+    /// （仅 skin=dlc08 时）+ commonW3（仅 skin=cockroach 时）。模式镜像
+    /// EnsureRandomCrateDependencies。</summary>
     private static void EnsureRatHeistDependencies(string skin)
     {
         PseudoPrefabManagerStub managerStub = null;
@@ -2613,10 +2615,11 @@ public static class LayoutEditorStubIO
         {
             if (string.IsNullOrEmpty(bundle) || deps.Contains(bundle))
                 return;
-            if (!System.IO.File.Exists(System.IO.Path.Combine(
-                System.IO.Path.Combine(Application.streamingAssetsPath, "Windows"), bundle)))
+            if (!RatHeistBundleFileExists(bundle))
             {
-                Debug.LogWarning("[LayoutEditor] 老鼠依赖的 bundle 不存在于 StreamingAssets/Windows，暂不注册: " + bundle);
+                Debug.LogWarning("[LayoutEditor] 老鼠依赖的 bundle 不存在（StreamingAssets/Windows"
+                    + " 或 Assets/AssetBundles），暂不注册: " + bundle
+                    + "（请先 Build AssetBundles）");
                 return;
             }
             deps.Add(bundle);
@@ -2627,6 +2630,8 @@ public static class LayoutEditorStubIO
             tryAdd(b);
         if (skin == "dlc08")
             tryAdd(RatHeistSkinBundle);
+        if (skin == "cockroach")
+            tryAdd(RatHeistCockroachBundle);
 
         if (changed)
         {
@@ -2634,6 +2639,29 @@ public static class LayoutEditorStubIO
             info.dependencies = deps.ToArray();
             EditorUtility.SetDirty(info);
         }
+    }
+
+    /// <summary>老鼠 stub 依赖包是否已构建：编辑器 Play 读 StreamingAssets，
+    /// 关卡集导出读 Assets/AssetBundles（二者任一侧存在即可注册）。</summary>
+    private static bool RatHeistBundleFileExists(string bundleName)
+    {
+        if (string.IsNullOrEmpty(bundleName))
+            return false;
+        var lower = bundleName.ToLowerInvariant();
+        var roots = new[]
+        {
+            System.IO.Path.Combine(Application.streamingAssetsPath, "Windows"),
+            "Assets/AssetBundles",
+        };
+        for (int i = 0; i < roots.Length; i++)
+        {
+            if (System.IO.File.Exists(System.IO.Path.Combine(roots[i], bundleName)))
+                return true;
+            if (!string.Equals(bundleName, lower, StringComparison.Ordinal)
+                && System.IO.File.Exists(System.IO.Path.Combine(roots[i], lower)))
+                return true;
+        }
+        return false;
     }
 
     private static float StubFloatOr(Component c, string field, float fallback)

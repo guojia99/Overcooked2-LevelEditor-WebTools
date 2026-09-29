@@ -1,5 +1,6 @@
 import { dom } from "../dom";
 import { positionFloating } from "./detailPanel";
+import { floatingDragBarHtml } from "./floatingPanelDrag";
 import { hidePickTip } from "./overlay";
 import { escHtml } from "../coords";
 import type { PickCandidate, PickTipHeaderAction } from "../state";
@@ -39,10 +40,12 @@ function renderPickTip(
       ? "重叠对象 · 可选批量微调或单独操作："
       : `此处有 ${candidates.length} 个重叠对象，请选择要操作的对象：`;
   const headText = options.headText ?? defaultHead;
-  const footHint = toggleMode ? "点击列表项切换选中 · Shift 拖动可框选加选 · 点击外部或 Esc 关闭" : "点击外部或 Esc 关闭";
+  const footHint = toggleMode
+    ? "长按顶部拖动 · 点击列表项切换选中 · Esc 关闭"
+    : "长按顶部拖动 · 点击外部或 Esc 关闭";
 
   dom.pickTipEl.innerHTML =
-    `<div class="pick-tip-head">${escHtml(headText)}</div>` +
+    floatingDragBarHtml(`<div class="pick-tip-head">${escHtml(headText)}</div>`) +
     headerHtml +
     candidates
       .map((c, i) => {

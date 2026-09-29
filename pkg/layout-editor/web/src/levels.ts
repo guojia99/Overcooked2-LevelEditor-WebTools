@@ -49,7 +49,11 @@ function goDependenciesPage(setName?: string, levelInfoAssetPath?: string): void
     location.assign(depsPath(setName, levelId || undefined));
     return;
   }
-  location.assign("/dependencies");
+  if (setName) {
+    location.assign(depsPath(setName));
+    return;
+  }
+  location.assign("/manage");
 }
 import { applyRatio, computeAutoScores, computeOrderLifeTimes, ORDER_INTERVAL_SEC, PLATE_RETURN_SEC, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
 import { analyzeKitchen, kitchenChips, kitchenWarnings } from "./kitchenAnalysis";
@@ -195,7 +199,6 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
   `;
   wireNav((target) => {
     if (target === "layout") goLayout();
-    else if (target === "dependencies") goDependenciesPage();
     else navigateTo(target);
   });
   const back = document.getElementById("m-back");
@@ -805,6 +808,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
       <button class="m-btn primary" id="new-level">+ 新建关卡</button>
       ${levels.length > 1 ? '<button class="m-btn" id="reorder-levels">⇅ 调整顺序</button>' : ""}
       ${levels.length > 0 ? '<button class="m-btn" id="shots-export">🖼 一键导出关卡截图</button>' : ""}
+      <button class="m-btn" id="set-deps" title="Bundle 依赖分析与 LevelInfoSO.dependencies 编辑">📦 依赖管理</button>
       <span class="muted">当前关卡集：<b>${setDisplay}</b></span>
     </div>
     <div class="m-section-title">关卡</div>
@@ -812,6 +816,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
   `;
 
   document.getElementById("new-level")?.addEventListener("click", () => openCreateLevelModal(app, setName));
+  document.getElementById("set-deps")?.addEventListener("click", () => goDependenciesPage(setName));
   document.getElementById("reorder-levels")?.addEventListener("click", () => openReorderModal(app, setName, levels));
   document.getElementById("shots-export")?.addEventListener("click", async () => {
     const btn = document.getElementById("shots-export") as HTMLButtonElement | null;
@@ -1143,7 +1148,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <label class="m-field">动态父挂载 disableDynamicParenting
           <label class="modal-check"><input type="checkbox" id="f-disableDynamicParenting" ${detail.disableDynamicParenting ? "checked" : ""}> 勾选=禁用（含移动/升降平台、可移动火锅的关卡应取消；写回时检测到可移动火锅会自动取消）</label>
         </label>
-        <p class="modal-hint">Bundle 依赖（<code>dependencies</code>）请在顶栏 <b>📦 依赖管理</b> 中编辑。当前共 ${(detail.dependencies || []).length} 项。</p>
+        <p class="modal-hint">Bundle 依赖（<code>dependencies</code>）请在本页 <b>📦 依赖管理</b> 按钮中编辑。当前共 ${(detail.dependencies || []).length} 项。</p>
       </div>
       <div class="m-actions-row">
         <button class="m-btn primary" id="save-info">保存基础信息</button>
@@ -1192,6 +1197,7 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
         minOrderCount: Number((document.getElementById("f-minOrderCount") as HTMLInputElement).value || 2),
         maxOrderCount: Number((document.getElementById("f-maxOrderCount") as HTMLInputElement).value || 5),
         gridHalfSizeX: detail.gridHalfSizeX ?? 0,
+        gridHalfSizeY: detail.gridHalfSizeY ?? 1,
         gridHalfSizeZ: detail.gridHalfSizeZ ?? 0,
         dependencies: detail.dependencies || [],
       });
@@ -2153,8 +2159,9 @@ export async function openConfigTabsModal(
        <p class="modal-hint">核心参数 · 工作台网格（CampaignGameEnvironment/GridManager）</p>
        <div class="cfg-order-count">
          <label class="m-field">网格半宽 X gridHalfSizeX<input type="number" id="cfg-gridHalfX" min="0" max="50" step="1" value="${detail.gridHalfSizeX ?? 0}"></label>
+         <label class="m-field">网格半宽 Y gridHalfSizeY<input type="number" id="cfg-gridHalfY" min="0" max="50" step="1" value="${detail.gridHalfSizeY ?? 1}"></label>
          <label class="m-field">网格半宽 Z gridHalfSizeZ<input type="number" id="cfg-gridHalfZ" min="0" max="50" step="1" value="${detail.gridHalfSizeZ ?? 0}"></label>
-          <span class="muted small">默认显示场景当前生效值；0 = 不调整（保持场景现值）。网格以 GridManager 为中心向两侧各扩展 N 格（实际 2N+1 格），需覆盖全部工作台，超出的工作台无法交互。保存后随「💾 写回 Unity」或导出时写入场景。</span>
+          <span class="muted small">默认显示场景当前生效值；0 = 不调整（保持场景现值）。X/Z 为水平半宽（2N+1 格），Y 默认 1。需覆盖全部工作台，超出的工作台无法交互。保存时场景须在 Unity 中打开。</span>
         </div>
         ${sceneConfig ? `<p class="modal-hint">核心参数 · 空气斜坡（CampaignGameEnvironment/KitchenLoaderManager）</p>
         <div class="cfg-order-count">
@@ -2351,6 +2358,7 @@ export async function openConfigTabsModal(
       const minOrderCount = Number((document.getElementById("cfg-minOrderCount") as HTMLInputElement).value || 2);
       const maxOrderCount = Number((document.getElementById("cfg-maxOrderCount") as HTMLInputElement).value || 5);
       const gridHalfSizeX = Number((document.getElementById("cfg-gridHalfX") as HTMLInputElement).value || 0);
+      const gridHalfSizeY = Number((document.getElementById("cfg-gridHalfY") as HTMLInputElement).value || 1);
       const gridHalfSizeZ = Number((document.getElementById("cfg-gridHalfZ") as HTMLInputElement).value || 0);
       const ceilingInput = document.getElementById("cfg-ceilingHeight") as HTMLInputElement | null;
       if (ceilingInput && sceneConfig) {
@@ -2366,6 +2374,7 @@ export async function openConfigTabsModal(
         minOrderCount,
         maxOrderCount,
         gridHalfSizeX,
+        gridHalfSizeY,
         gridHalfSizeZ,
         dependencies: detail.dependencies,
       });
@@ -2835,7 +2844,7 @@ export async function openAudioModal(
   openModal(
     `音频配置 · ${detail.levelName || detail.levelNameZH}`,
     `
-    <p class="modal-hint">写入场景的 <code>PseudoPrefabManagerStub</code>。保存时会自动打开/保存场景、Reload，并<b>把所选 BGM / 音效集所需 bundle 并入 <code>LevelInfoSO.dependencies</code></b>。Bundle 分析与清理请使用顶栏 <b>📦 依赖管理</b>。</p>
+    <p class="modal-hint">写入场景的 <code>PseudoPrefabManagerStub</code>。保存时会自动打开/保存场景、Reload，并<b>把所选 BGM / 音效集所需 bundle 并入 <code>LevelInfoSO.dependencies</code></b>。Bundle 分析与清理请使用关卡管理 → <b>📦 依赖管理</b>。</p>
     <div class="cfg-tabs">
       <button type="button" class="cfg-tab-btn ${defaultTab === "check" ? "active" : ""}" data-tab="check">🔍 检查</button>
       <button type="button" class="cfg-tab-btn ${defaultTab === "music" ? "active" : ""}" data-tab="music">🎵 音乐 / 特效</button>

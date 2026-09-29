@@ -1,5 +1,9 @@
 import type { IngredientEntry, LayoutItem, RecipeEntry } from "./types";
 import {
+  floatingDragBarHtml,
+  setupModalPanelDrag,
+} from "./editor/ui/floatingPanelDrag";
+import {
   foodGroupLabel,
   visibleIngredients,
   ingredientCategoryOf,
@@ -91,14 +95,17 @@ export function openModal(
   root.innerHTML = `
     <div class="modal-backdrop" data-modal-backdrop>
        <div class="modal-panel${opts?.panelClass ? ` ${opts.panelClass}` : ""}" role="dialog">
-        <h2 class="modal-title">${title}</h2>
+        ${floatingDragBarHtml(`<h2 class="modal-title">${title}</h2>`)}
         <div class="modal-body">${bodyHtml}</div>
         <div class="modal-footer">${footerHtml}</div>
       </div>
     </div>
   `;
+  const backdrop = root.querySelector<HTMLElement>("[data-modal-backdrop]");
+  const panel = root.querySelector<HTMLElement>(".modal-panel");
+  if (backdrop && panel) setupModalPanelDrag(panel, backdrop);
   if (opts?.closeOnBackdrop !== false) {
-    root.querySelector("[data-modal-backdrop]")?.addEventListener("click", (e) => {
+    backdrop?.addEventListener("click", (e) => {
       if (e.target === e.currentTarget) closeModal();
     });
   }

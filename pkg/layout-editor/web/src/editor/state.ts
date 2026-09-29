@@ -447,6 +447,12 @@ export const S = {
   /** 地板层复制携带的地板层物品（压力开关等 surface 物品，随地板一起复制/粘贴）。 */
   floorItemClipboard: [] as EditorItem[],
   floorPasteRound: 0,
+  /** 跨标签页剪贴板元信息（localStorage 同步；同页 S.clipboard 不受影响）。 */
+  crossTabClipboardMeta: null as {
+    available: boolean;
+    sourceLayer?: LayerKey;
+    copiedAt?: number;
+  } | null,
   sceneItemListSig: "",
   paletteCollapsed: localStorage.getItem("paletteCollapsed") === "1",
   itemsPanelCollapsed: localStorage.getItem("itemsPanelCollapsed") === "1",

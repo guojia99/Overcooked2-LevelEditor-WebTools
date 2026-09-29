@@ -1,8 +1,7 @@
-/** 「更新日志」页面：读取 /UPDATE_LOG.md（由 build-catalog.mjs 从 layout-editor/UPDATE_LOG.md
+/** 更新日志解析与渲染：读取 /UPDATE_LOG.md（由 build-catalog.mjs 从 layout-editor/UPDATE_LOG.md
  *  拷入 public/dist），按其格式解析出版本（## v0.7.0）、日期（### 2026-09-04，
  *  可带时间）、每个子标题（#### 子标题，或独立的 **加粗** 行）与条目列表，
- *  以时间轴卡片展示。 */
-import { navHtml, wireNav } from "./nav";
+ *  以时间轴卡片展示（入口在功能说明 → 更新日志）。 */
 
 export interface ChangelogItem {
   text: string;
@@ -153,31 +152,15 @@ function entryHtml(e: ChangelogEntry, index: number): string {
   </section>`;
 }
 
-export async function renderChangelogView(app: HTMLElement): Promise<void> {
-  document.body.classList.add("manage-bg");
+const EMPTY_HINT =
+  '<p class="modal-hint">未读取到 UPDATE_LOG.md：请先运行 <code>node layout-editor/scripts/build-catalog.mjs</code> 生成到 web/public。</p>';
 
-  let md = "";
-  try {
-    const r = await fetch("/UPDATE_LOG.md");
-    if (r.ok) md = await r.text();
-  } catch {
-    /* 拉取失败按无数据处理 */
-  }
-  const entries = parseChangelog(md);
+/** 将已解析条目或原始 Markdown 渲染为时间轴 HTML（功能说明页复用）。 */
+export function renderChangelogTimelineHtml(entries: ChangelogEntry[]): string {
+  if (!entries.length) return EMPTY_HINT;
+  return `<div class="clog-timeline">${entries.map(entryHtml).join("")}</div>`;
+}
 
-  app.innerHTML = `
-    ${navHtml("changelog")}
-    <div class="manage-bar">
-      <h1 class="m-title">📜 更新日志</h1>
-      <span class="muted small">共 ${entries.length} 个版本</span>
-    </div>
-    <div class="manage-content changelog-content">
-      ${
-        entries.length
-          ? `<div class="clog-timeline">${entries.map(entryHtml).join("")}</div>`
-          : '<p class="modal-hint">未读取到 UPDATE_LOG.md：请先运行 <code>node layout-editor/scripts/build-catalog.mjs</code> 生成到 web/public。</p>'
-      }
-    </div>`;
-
-  wireNav();
+export function renderChangelogFromMd(md: string): string {
+  return renderChangelogTimelineHtml(parseChangelog(md));
 }

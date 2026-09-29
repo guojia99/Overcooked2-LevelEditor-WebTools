@@ -73,6 +73,7 @@ import {
   pasteFloors,
   duplicateFloors
 } from "./clipboard";
+import { pasteCrossTabClipboard } from "./crossTabClipboard";
 import {
   pushHistory,
   undo,
@@ -1327,6 +1328,16 @@ export function setupCanvas() {
     if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C") && !isTypingTarget(e.target)) {
       if (S.currentLayer === "floor" || S.currentLayer === "background") copyFloors();
       else copySelection();
+      e.preventDefault();
+      return;
+    }
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      e.shiftKey &&
+      (e.key === "v" || e.key === "V") &&
+      !isTypingTarget(e.target)
+    ) {
+      pasteCrossTabClipboard();
       e.preventDefault();
       return;
     }

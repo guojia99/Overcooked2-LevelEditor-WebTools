@@ -17,7 +17,7 @@ using UnityEngine.SceneManagement;
 /// 写回/导出不再触发本烘焙（场景文件自身携带覆盖，无需第三方数据源）。
 ///
 /// 语义：网格以 GridManager 位置为中心向两侧各扩展 gridHalfSize 格（总格数 2N+1），
-/// 需覆盖全部工作台；X/Z 每轴独立，0 = 不调整该轴（保持场景现值），Y 不动（实测恒 1）。
+/// 需覆盖全部工作台；X/Y/Z 每轴独立，0 = 不调整该轴（保持场景现值）；Y 默认 1。
 /// 字段双形态：游戏程序集内 QuadGridManager 的 m_gridHalfSize 为自定义结构
 /// （.X/.Y/.Z int 相对属性）或 Vector3 —— 与 LayoutEditorGridReader 读法一致。
 /// </summary>
@@ -25,13 +25,14 @@ public static class LayoutEditorGridBake
 {
     /// <summary>把主网格半宽覆盖写进指定场景（0 = 不动该轴）并落盘。
     /// 返回警告文本（null = 已烘焙 / 无需烘焙）。</summary>
-    public static string BakeSceneHalfSize(Scene scene, int halfX, int halfZ)
+    public static string BakeSceneHalfSize(Scene scene, int halfX, int halfY, int halfZ)
     {
         if (!scene.IsValid() || !scene.isLoaded)
             return "[GridBake] 场景未打开，无法烘焙网格半宽";
         halfX = Mathf.Clamp(halfX, 0, 50);
+        halfY = Mathf.Clamp(halfY, 0, 50);
         halfZ = Mathf.Clamp(halfZ, 0, 50);
-        if (halfX <= 0 && halfZ <= 0)
+        if (halfX <= 0 && halfY <= 0 && halfZ <= 0)
             return null; // 未设置：不动场景
 
         var grid = FindMainGridManager(scene);
@@ -48,11 +49,14 @@ public static class LayoutEditorGridBake
             return "[GridBake] QuadGridManager 序列化字段缺失（脚本版本异常），跳过网格半宽烘焙";
 
         var x = half.FindPropertyRelative("X");
+        var y = half.FindPropertyRelative("Y");
         var z = half.FindPropertyRelative("Z");
-        if (x != null && z != null)
+        if (x != null && y != null && z != null)
         {
             if (halfX > 0)
                 x.intValue = halfX;
+            if (halfY > 0)
+                y.intValue = halfY;
             if (halfZ > 0)
                 z.intValue = halfZ;
         }
@@ -61,13 +65,15 @@ public static class LayoutEditorGridBake
             var v = half.vector3Value;
             if (halfX > 0)
                 v.x = halfX;
+            if (halfY > 0)
+                v.y = halfY;
             if (halfZ > 0)
                 v.z = halfZ;
             half.vector3Value = v;
         }
         else
         {
-            return "[GridBake] m_gridHalfSize 形态无法识别（既无 .X/.Z 相对属性也非 Vector3），跳过";
+            return "[GridBake] m_gridHalfSize 形态无法识别（既无 .X/.Y/.Z 相对属性也非 Vector3），跳过";
         }
 
         so.ApplyModifiedPropertiesWithoutUndo();
@@ -108,7 +114,7 @@ public static class LayoutEditorGridBake
     // 因此各段之间用有界 [\s\S] 窗口而非固定空白。
     private static readonly Regex GridOverrideRe = new Regex(
         "target: \\{fileID: -?\\d+, guid: ([0-9a-f]{32}),[\\s\\S]{0,30}?type: 2\\}"
-        + "[\\s\\S]{0,30}?propertyPath: m_gridHalfSize\\.([XZ])[\\s\\S]{0,30}?value: (-?\\d+)",
+        + "[\\s\\S]{0,30}?propertyPath: m_gridHalfSize\\.([XYZ])[\\s\\S]{0,30}?value: (-?\\d+)",
         RegexOptions.Multiline);
 
     private static readonly Regex PrefabGridRe = new Regex(
@@ -117,9 +123,10 @@ public static class LayoutEditorGridBake
     /// <summary>从场景磁盘文件解析主网格（CampaignGameEnvironment/GridManager）当前生效的
     /// m_gridHalfSize：场景 prefab 覆盖优先，无覆盖回退 env prefab 默认值。
     /// 解析不到（非模板场景等）返回 0/0。</summary>
-    public static void ReadSceneMainGridHalfSize(string sceneAssetPath, out int halfX, out int halfZ)
+    public static void ReadSceneMainGridHalfSize(string sceneAssetPath, out int halfX, out int halfY, out int halfZ)
     {
         halfX = 0;
+        halfY = 0;
         halfZ = 0;
         if (string.IsNullOrEmpty(sceneAssetPath))
             return;
@@ -150,20 +157,24 @@ public static class LayoutEditorGridBake
             int.TryParse(m.Groups[3].Value, out v);
             if (m.Groups[2].Value == "X")
                 halfX = v;
+            else if (m.Groups[2].Value == "Y")
+                halfY = v;
             else
                 halfZ = v;
         }
-        if (halfX > 0 && halfZ > 0)
+        if (halfX > 0 && halfY > 0 && halfZ > 0)
             return;
 
         // 无覆盖的轴回退 env prefab 默认值（common01 本体为 20/1/20）。
         var prefabPath = !string.IsNullOrEmpty(envGuid)
             ? AssetDatabase.GUIDToAssetPath(envGuid)
             : EnvPrefabFallbackPath;
-        int defX, defZ;
-        ReadPrefabDefaultGridHalfSize(prefabPath, out defX, out defZ);
+        int defX, defY, defZ;
+        ReadPrefabDefaultGridHalfSize(prefabPath, out defX, out defY, out defZ);
         if (halfX <= 0)
             halfX = defX;
+        if (halfY <= 0)
+            halfY = defY;
         if (halfZ <= 0)
             halfZ = defZ;
     }
@@ -177,9 +188,10 @@ public static class LayoutEditorGridBake
             && path.EndsWith("CampaignGameEnvironment.prefab", System.StringComparison.Ordinal);
     }
 
-    private static void ReadPrefabDefaultGridHalfSize(string prefabPath, out int halfX, out int halfZ)
+    private static void ReadPrefabDefaultGridHalfSize(string prefabPath, out int halfX, out int halfY, out int halfZ)
     {
         halfX = 0;
+        halfY = 1;
         halfZ = 0;
         if (string.IsNullOrEmpty(prefabPath))
             return;
@@ -192,6 +204,7 @@ public static class LayoutEditorGridBake
             if (m.Success)
             {
                 int.TryParse(m.Groups[1].Value, out halfX);
+                int.TryParse(m.Groups[2].Value, out halfY);
                 int.TryParse(m.Groups[3].Value, out halfZ);
             }
         }

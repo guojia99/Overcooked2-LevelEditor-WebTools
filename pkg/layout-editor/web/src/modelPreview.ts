@@ -966,10 +966,11 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
       if (ext === "obj") {
         const text = new TextDecoder("utf-8").decode(opts.localBuffer);
         if (opts.localMtl) {
-          // MTL + OBJ：MTLLoader 解析材质（贴图引用由 MTL 指定），OBJLoader 组合
-          const materials = new MTLLoader().parse(opts.localMtl, "");
+          // MTL + OBJ：MTLLoader 返回 MaterialCreator（含 create），不可传 .materials 缓存对象
+          const materialCreator = new MTLLoader().parse(opts.localMtl, opts.resourceBase || "");
+          materialCreator.preload();
           const loader = new OBJLoader();
-          loader.setMaterials(materials.materials as never);
+          loader.setMaterials(materialCreator);
           const group = loader.parse(text);
           if (opts.localTextures && opts.localTextures.length > 0) {
             injectLocalTextures(group, opts.localTextures);
@@ -1007,11 +1008,14 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
   } else if (ext === "obj") {
     // OBJ：优先 MTL + 贴图（目录式服务），MTL 缺失时仅几何体
     if (opts.mtlUrl) {
-      new MTLLoader().load(
+      const mtlLoader = new MTLLoader();
+      if (opts.resourceBase) mtlLoader.setPath(opts.resourceBase);
+      mtlLoader.load(
         opts.mtlUrl,
-        (materials) => {
+        (materialCreator) => {
+          materialCreator.preload();
           const loader = new OBJLoader();
-          loader.setMaterials(materials.materials as never);
+          loader.setMaterials(materialCreator);
           loader.load(opts.resourceBase + encodeURIComponent(opts.modelFileName), onLoaded, undefined, onError);
         },
         undefined,

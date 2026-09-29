@@ -82,6 +82,7 @@ import {
   COOK_STEP_LABEL_ZH,
   collectCookStepsFromRecipes,
   collectUtensilsFromRecipes,
+  utensilFilterLabel,
   collectLeafIngredientsFromRecipes,
   recipeMatchesFilters,
   type RecipePickerFilterState,
@@ -372,7 +373,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     const utensilChips = utensils
       .map((u) => {
         const cat = catalogItemById(u);
-        const label = cat ? tidyCatalogNameZh(cat.nameZh, u) : u;
+        const label = utensilFilterLabel(u, cat);
         const active = pickerFilters.utensils.has(u);
         return `<button type="button" class="rw-filter-chip${active ? " active" : ""}" data-utensil="${escHtml(u)}">${escHtml(label)}</button>`;
       })
@@ -1288,7 +1289,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       .map((u) => {
         const ok = !info.missingUt.includes(u);
         const cat = catalogItemById(u);
-        const label = cat ? tidyCatalogNameZh(cat.nameZh, cat.id) : u;
+        const label = utensilFilterLabel(u, cat);
         return `<label class="rw-row ${ok ? "" : "miss"}"><input type="checkbox" class="rw-ut-cb" value="${u}" ${ok ? "" : "checked"}/> <span>${escHtml(label)}</span> <span class="muted">${escHtml(u)}</span></label>`;
       })
       .join("");

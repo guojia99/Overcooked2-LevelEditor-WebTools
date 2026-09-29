@@ -7,6 +7,7 @@ import {
   renderRecipeSamples,
   renderUtensilIcons,
 } from "./icons";
+import { renderChangelogFromMd } from "../changelog";
 
 function esc(s: unknown): string {
   return String(s ?? "")
@@ -14,6 +15,126 @@ function esc(s: unknown): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]+>/g, "");
+}
+
+/** 侧栏结果里把 query 包成 <mark>（纯文本输入）。 */
+function highlightMatch(text: string, query: string): string {
+  if (!query) return esc(text);
+  const lower = text.toLowerCase();
+  const q = query.toLowerCase();
+  let out = "";
+  let i = 0;
+  while (i < text.length) {
+    const idx = lower.indexOf(q, i);
+    if (idx < 0) {
+      out += esc(text.slice(i));
+      break;
+    }
+    out += esc(text.slice(i, idx));
+    out += `<mark class="guide-search-mark">${esc(text.slice(idx, idx + q.length))}</mark>`;
+    i = idx + q.length;
+  }
+  return out;
+}
+
+/** 可搜索正文：标题 + 各 block 纯文本（不含 dynamic）。 */
+function nodeSearchText(node: GuideNode): string {
+  const parts: string[] = [node.title];
+  for (const b of node.blocks ?? []) {
+    switch (b.type) {
+      case "paragraph":
+        parts.push(stripHtml(b.text));
+        break;
+      case "steps":
+      case "bullets":
+        parts.push(...b.items.map(stripHtml));
+        break;
+      case "callout":
+      case "note":
+        parts.push(b.text);
+        break;
+      case "table":
+        parts.push(...b.header, ...b.rows.flat().map(stripHtml));
+        break;
+      case "kbdTable":
+        parts.push(...b.rows.flat());
+        break;
+      case "link":
+        parts.push(b.label);
+        break;
+      default:
+        break;
+    }
+  }
+  return parts.join(" ");
+}
+
+function nodeMatchesQuery(node: GuideNode, q: string): boolean {
+  return nodeSearchText(node).toLowerCase().includes(q);
+}
+
+function clearBodySearchHighlights(body: HTMLElement): void {
+  body.querySelectorAll("mark.guide-search-mark").forEach((mark) => {
+    const parent = mark.parentNode;
+    if (!parent) return;
+    parent.replaceChild(document.createTextNode(mark.textContent ?? ""), mark);
+    parent.normalize();
+  });
+  body.querySelectorAll(".guide-search-match").forEach((el) => el.classList.remove("guide-search-match"));
+}
+
+/** 在元素子树文本节点中包裹匹配片段（跳过已有 mark）。 */
+function highlightTextNodes(root: HTMLElement, query: string): void {
+  const q = query.toLowerCase();
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (node.parentElement?.closest("mark.guide-search-mark")) return NodeFilter.FILTER_REJECT;
+      const t = node.textContent ?? "";
+      return t.trim() && t.toLowerCase().includes(q) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+    },
+  });
+  const nodes: Text[] = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+
+  for (const node of nodes) {
+    const text = node.textContent ?? "";
+    const lower = text.toLowerCase();
+    let idx = lower.indexOf(q);
+    if (idx < 0) continue;
+    const frag = document.createDocumentFragment();
+    let last = 0;
+    while (idx >= 0) {
+      if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
+      const mark = document.createElement("mark");
+      mark.className = "guide-search-mark";
+      mark.textContent = text.slice(idx, idx + query.length);
+      frag.appendChild(mark);
+      last = idx + query.length;
+      idx = lower.indexOf(q, last);
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode?.replaceChild(frag, node);
+  }
+}
+
+function applyBodySearchHighlights(
+  body: HTMLElement,
+  query: string,
+  index: { node: GuideNode; pageId: string }[],
+): void {
+  clearBodySearchHighlights(body);
+  if (!query) return;
+  const matchIds = new Set(index.filter(({ node }) => nodeMatchesQuery(node, query)).map(({ node }) => node.id));
+  body.querySelectorAll<HTMLElement>(".guide-anchor").forEach((el) => {
+    const id = el.dataset.guideId;
+    if (!id || !matchIds.has(id)) return;
+    el.classList.add("guide-search-match");
+    highlightTextNodes(el, query);
+  });
 }
 
 function renderBlock(block: GuideBlock, ctx: GuideRenderContext): string {
@@ -50,6 +171,8 @@ function renderBlock(block: GuideBlock, ctx: GuideRenderContext): string {
           return renderRecipeSamples(ctx.recipes);
         case "utensil-icons":
           return renderUtensilIcons();
+        case "changelog":
+          return `<div class="changelog-content guide-changelog">${renderChangelogFromMd(ctx.changelogMd ?? "")}</div>`;
         default:
           return "";
       }
@@ -99,6 +222,7 @@ function sectionHtml(node: GuideNode, ctx: GuideRenderContext, depth: number): s
 export type GuideRenderContext = {
   ingredients: IngredientEntry[];
   recipes: RecipeEntry[];
+  changelogMd?: string;
 };
 
 /** Render one full chapter page: hero + sections/cards. */
@@ -241,13 +365,15 @@ export function wireGuidePage(root: HTMLElement, opts: GuideWireOptions): void {
     if (!q) {
       list.hidden = true;
       list.innerHTML = "";
+      clearBodySearchHighlights(bodyEl);
       treeRoots.forEach((t) => (t.style.display = ""));
       if (subtreeTitle) subtreeTitle.style.display = "";
       return;
     }
     treeRoots.forEach((t) => (t.style.display = "none"));
     if (subtreeTitle) subtreeTitle.style.display = "none";
-    const hits = index.filter(({ node }) => node.title.toLowerCase().includes(q));
+    const hits = index.filter(({ node }) => nodeMatchesQuery(node, q));
+    applyBodySearchHighlights(bodyEl, q, index);
     const byPage = new Map<string, GuideNode[]>();
     hits.forEach(({ node, pageId }) => {
       const arr = byPage.get(pageId) ?? [];
@@ -255,13 +381,16 @@ export function wireGuidePage(root: HTMLElement, opts: GuideWireOptions): void {
       byPage.set(pageId, arr);
     });
     const items: string[] = [];
+    if (hits.length) {
+      items.push(`<li class="guide-search-count">找到 ${hits.length} 个小节</li>`);
+    }
     opts.chapters.forEach((ch) => {
       const nodes = byPage.get(ch.id);
       if (!nodes?.length) return;
       items.push(`<li class="guide-search-group">${ch.icon ?? "📄"} ${esc(ch.title)}</li>`);
       nodes.forEach((n) => {
         items.push(
-          `<li class="guide-tree-leaf"><a class="guide-tree-link" href="${guidePath(ch.id)}" data-page="${esc(ch.id)}" data-guide-id="${esc(n.id)}">${esc(n.title)}</a></li>`,
+          `<li class="guide-tree-leaf guide-search-hit"><a class="guide-tree-link guide-search-link" href="${guidePath(ch.id)}" data-page="${esc(ch.id)}" data-guide-id="${esc(n.id)}">${highlightMatch(n.title, q)}</a></li>`,
         );
       });
     });

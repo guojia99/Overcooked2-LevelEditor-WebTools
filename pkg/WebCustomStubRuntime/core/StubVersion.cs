@@ -175,7 +175,11 @@ namespace CustomStub
         ///  - web 火锅烧糊修复：直驱不再在「刚熟」停止（进度到不了 1.3×预警 / 2×烧糊），
         ///    改为推进到 IsBurning 为止 + 宿主双驱动时观测让位；客户端「锅在灶台上」
         ///    标志按触发区直驱（原先恒 false 导致烧糊预警图标被 vanilla 吞掉）。
+        /// 3.5.1（2026-09-29）：
+        ///  - RatHeist 打鼠修复：包装 prefab 补 PseudoPrefab（实体扫描前生成老鼠）；
+        ///    晚生成路径 ServerRegisterObject 补挂 Interactable 同步器；DynamicGridLocation
+        ///    占格跟随；蟑螂视觉子树碰撞体禁用以免挡交互扫描。
         /// Loader 的 PluginVersion 必须同步为同值。</summary>
-        public const string Value = "3.5.0";
+        public const string Value = "3.5.1";
     }
 }

@@ -19,6 +19,7 @@ export interface CookingGroup {
 export interface RecipeLike {
   id?: string;
   type?: string;
+  category?: string;
   cookingStep?: string;
   platingStep?: string;
   ingredients?: string[];
@@ -330,7 +331,7 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
       const smoothie =
         !flour &&
         !isCookStep(finalStep) &&
-        (r.type === "smoothie" || r.platingStep === "Glass");
+        (r.type === "smoothie" || r.platingStep === "Glass" || r.category === "smoothie");
       mixStep = smoothie ? "Blender" : "MixingBowl";
     }
     if (mixStep === "Blender" || mixStep === "Mixer" || mixStep === "MixingBowl") {

@@ -1,4 +1,5 @@
 using System;
+using LevelEditor;
 using LevelEditorStub;
 using UnityEditor;
 using UnityEngine;
@@ -81,18 +82,11 @@ public static class CustomStubCopyTool
                 Debug.Log("[CustomStub] 已生成老鼠 PseudoPrefabSO: " + RatHeistSoPath);
             }
 
-            // 2. 包装 prefab（全新壳）
+            // 2. 包装 prefab（全新壳 / 已有则自愈）
             var existing = AssetDatabase.LoadAssetAtPath<GameObject>(RatHeistPrefabPath);
             if (existing != null)
             {
-                // SO 引用自愈（prefab 在而 SO 重建过 guid 变化）
-                var stub = existing.GetComponent<PseudoPrefabStub>();
-                if (stub != null && stub.pseudoPrefabSO == null)
-                {
-                    stub.pseudoPrefabSO = so;
-                    EditorUtility.SetDirty(existing);
-                    AssetDatabase.SaveAssets();
-                }
+                HealRatHeistPrefabContents(so);
                 return;
             }
             EnsureFolder("Assets/commonW1/prefabs/mechanisms");
@@ -101,6 +95,7 @@ public static class CustomStubCopyTool
             {
                 var stub = go.AddComponent<PseudoPrefabStub>();
                 stub.pseudoPrefabSO = so;
+                go.AddComponent<PseudoPrefab>();
                 var tag = go.AddComponent<SpecificPseudoPrefabTag>();
                 tag.prefabTag = "RatHeist|";
                 PrefabUtility.CreatePrefab(RatHeistPrefabPath, go);
@@ -114,6 +109,34 @@ public static class CustomStubCopyTool
         catch (Exception ex)
         {
             Debug.LogWarning("[CustomStub] RatHeist 生成异常: " + ex.Message);
+        }
+    }
+
+    /// <summary>已有 RatHeist 包装 prefab：补 PseudoPrefab（实体扫描前生成老鼠）、
+    /// 补 SO 引用（Unity 5 兼容：直接改 prefab 资产，不用 LoadPrefabContents）。</summary>
+    private static void HealRatHeistPrefabContents(PseudoPrefabSO so)
+    {
+        var go = AssetDatabase.LoadAssetAtPath<GameObject>(RatHeistPrefabPath);
+        if (go == null)
+            return;
+        var changed = false;
+        var stub = go.GetComponent<PseudoPrefabStub>();
+        if (stub != null && stub.pseudoPrefabSO == null)
+        {
+            stub.pseudoPrefabSO = so;
+            changed = true;
+        }
+        if (go.GetComponent<PseudoPrefab>() == null)
+        {
+            go.AddComponent<PseudoPrefab>();
+            changed = true;
+            Debug.Log("[CustomStub] RatHeist 已补挂 PseudoPrefab（Play 前生成老鼠）: "
+                + RatHeistPrefabPath);
+        }
+        if (changed)
+        {
+            EditorUtility.SetDirty(go);
+            AssetDatabase.SaveAssets();
         }
     }
 

@@ -1,4 +1,5 @@
 import { GUIDE_TREE } from "./guide/content";
+import type { SharedLibraryId } from "./devMode";
 
 export type NavPage =
   | "layout"
@@ -9,8 +10,7 @@ export type NavPage =
   | "recipes"
   | "guide"
   | "dependencies"
-  | "assignment"
-  | "changelog";
+  | "assignment";
 
 export type AppPage =
   | "layout"
@@ -20,8 +20,7 @@ export type AppPage =
   | "custom-recipes"
   | "burger-maker"
   | "filling-maker"
-  | "guide"
-  | "changelog";
+  | "guide";
 
 export interface ParsedRoute {
   page: AppPage;
@@ -30,6 +29,8 @@ export interface ParsedRoute {
   setId?: string;
   /** /layout/{set}/{sceneName}（场景文件名，不含 .unity）。 */
   sceneName?: string;
+  /** /custom-recipes/library/{commonW2|commonW3}（开发者模式共享库）。 */
+  libraryId?: SharedLibraryId;
   /** /custom-recipes/{set}/recipe/{recipeId}；保留字 "new" = 新建。 */
   recipeId?: string;
   /** /custom-recipes/burger-maker/{set}/{burgerId}（已保存成品汉堡的菜谱 id）。 */
@@ -101,6 +102,14 @@ export function recipeFormPath(set: string, recipeId: string): string {
   return `/custom-recipes/${encSeg(set)}/recipe/${encSeg(recipeId)}`;
 }
 
+export function libraryRecipeListPath(libraryId: SharedLibraryId): string {
+  return `/custom-recipes/library/${encSeg(libraryId)}`;
+}
+
+export function libraryRecipeFormPath(libraryId: SharedLibraryId, recipeId: string): string {
+  return `/custom-recipes/library/${encSeg(libraryId)}/recipe/${encSeg(recipeId)}`;
+}
+
 export function burgerPath(set?: string, burgerId?: string): string {
   if (!set) return "/custom-recipes/burger-maker";
   return burgerId
@@ -162,6 +171,16 @@ export function migrateLegacyUrl(): void {
     return;
   }
 
+  if (path === "/changelog") {
+    history.replaceState(null, "", "/guide/changelog");
+    return;
+  }
+
+  if (path === "/dependencies") {
+    history.replaceState(null, "", "/manage");
+    return;
+  }
+
   if (path === "/") {
     history.replaceState(null, "", "/manage");
   }
@@ -182,8 +201,6 @@ export function parseRoute(pathname = location.pathname): ParsedRoute {
   if (m) return { page: "manage", setId: seg(m[1]), levelId: seg(m[2]) };
   m = /^\/manage\/([^/]+)$/.exec(path);
   if (m) return { page: "manage", setId: seg(m[1]) };
-  if (path === "/changelog") return { page: "changelog" };
-
   if (path === "/dependencies") return { page: "dependencies" };
   m = /^\/dependencies\/([^/]+)\/([^/]+)$/.exec(path);
   if (m) return { page: "dependencies", setId: seg(m[1]), levelId: seg(m[2]) };
@@ -207,6 +224,10 @@ export function parseRoute(pathname = location.pathname): ParsedRoute {
   if (path === "/custom-recipes/filling-maker") return { page: "filling-maker" };
 
   if (path === "/custom-recipes") return { page: "custom-recipes" };
+  m = /^\/custom-recipes\/library\/(commonW2|commonW3)\/recipe\/([^/]+)$/.exec(path);
+  if (m) return { page: "custom-recipes", libraryId: seg(m[1]) as SharedLibraryId, recipeId: seg(m[2]) };
+  m = /^\/custom-recipes\/library\/(commonW2|commonW3)$/.exec(path);
+  if (m) return { page: "custom-recipes", libraryId: seg(m[1]) as SharedLibraryId };
   m = /^\/custom-recipes\/([^/]+)\/recipe\/([^/]+)$/.exec(path);
   if (m) return { page: "custom-recipes", setId: seg(m[1]), recipeId: seg(m[2]) };
   m = /^\/custom-recipes\/([^/]+)$/.exec(path);

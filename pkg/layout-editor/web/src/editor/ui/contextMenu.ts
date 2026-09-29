@@ -41,10 +41,15 @@ import {
   cutSelection,
   pasteClipboard
 } from "../clipboard";
+import { canPasteCrossTab, pasteCrossTabClipboard } from "../crossTabClipboard";
 import { pushHistory } from "../historyOps";
 import { draw } from "../render";
 import { setSelection } from "../selection";
 import { hideContextMenu } from "./overlay";
+import {
+  contextMenuDragBarHtml,
+  positionContextMenuAt
+} from "./contextMenuChrome";
 import {
   showSurfaceItemDetail,
   showDetail
@@ -138,7 +143,7 @@ export function showBatchHeightMenu(clientX: number, clientY: number) {
   const step = S.freeSnapStep;
   const nudgeLabel = batchNudgeRowLabel() || `微移 ${step.toFixed(stepDecimals(step))}`;
   dom.ctxMenuEl.innerHTML = `
-    <div class="ctx-head">批量调整</div>
+    ${contextMenuDragBarHtml(`<div class="ctx-head">批量调整</div>`)}
     ${
       batch
         ? `<div class="ctx-nudge-row">
@@ -157,25 +162,9 @@ export function showBatchHeightMenu(clientX: number, clientY: number) {
     ${selectionHeightRowHtml()}
     ${selectionTravelatorSpeedRowHtml()}
     ${selectionAirWallHeightRowHtml()}
-    <p class="close-hint">地板按行走面高度 · 物品按本地 Y · 空气墙碰撞高度按格 · Esc 关闭</p>
+    <p class="close-hint">长按顶部拖动 · 地板按行走面高度 · Esc 关闭</p>
   `;
-  const margin = 8;
-  let left = clientX + margin;
-  let top = clientY + margin;
-  dom.ctxMenuEl.classList.remove("hidden");
-  dom.ctxMenuEl.style.left = `${left}px`;
-  dom.ctxMenuEl.style.top = `${top}px`;
-  requestAnimationFrame(() => {
-    const rect = dom.ctxMenuEl.getBoundingClientRect();
-    if (rect.right > window.innerWidth - margin) {
-      left = Math.max(margin, clientX - rect.width - margin);
-      dom.ctxMenuEl.style.left = `${left}px`;
-    }
-    if (rect.bottom > window.innerHeight - margin) {
-      top = Math.max(margin, clientY - rect.height - margin);
-      dom.ctxMenuEl.style.top = `${top}px`;
-    }
-  });
+  positionContextMenuAt(clientX, clientY);
   wireSelectionHeightRow(dom.ctxMenuEl, () => {
     draw();
     updateFloorBar();
@@ -259,7 +248,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
       : "";
 
   dom.ctxMenuEl.innerHTML = `
-    <div class="ctx-head">${headBadge}${itemLabel(item)}</div>
+    ${contextMenuDragBarHtml(`<div class="ctx-head">${headBadge}${itemLabel(item)}</div>`)}
     <div class="ctx-coord" id="ctx-coord">x ${item._wx.toFixed(stepDisplayDecimals(S.freeSnapStep))} · z ${item._wz.toFixed(stepDisplayDecimals(S.freeSnapStep))}</div>
     ${
       isPlayer
@@ -336,9 +325,10 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     <div class="ctx-actions">
       <div class="ctx-actions-row">
         <button type="button" class="ctx-btn" data-act="detail">详情…</button>
-        ${isPlayer ? "" : `<button type="button" class="ctx-btn" data-act="copy" title="Ctrl+C">复制</button>
+        ${isPlayer ? "" : `<button type="button" class="ctx-btn" data-act="copy" title="Ctrl+C（同时写入跨页剪贴板）">复制</button>
         <button type="button" class="ctx-btn" data-act="cut" title="Ctrl+X">裁切</button>`}
         <button type="button" class="ctx-btn" data-act="paste" title="Ctrl+V">粘贴</button>
+        <button type="button" class="ctx-btn" data-act="paste-cross" title="Ctrl+Shift+V" ${canPasteCrossTab() ? "" : "disabled"}>跨页粘贴</button>
       </div>
       ${
         isPlayer
@@ -349,26 +339,10 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
       </div>`
       }
     </div>
-    <p class="close-hint">点击外部或 Esc 关闭</p>
+    <p class="close-hint">长按顶部拖动 · 点击外部或 Esc 关闭</p>
   `;
 
-  const margin = 8;
-  let left = clientX + margin;
-  let top = clientY + margin;
-  dom.ctxMenuEl.classList.remove("hidden");
-  dom.ctxMenuEl.style.left = `${left}px`;
-  dom.ctxMenuEl.style.top = `${top}px`;
-  requestAnimationFrame(() => {
-    const rect = dom.ctxMenuEl.getBoundingClientRect();
-    if (rect.right > window.innerWidth - margin) {
-      left = Math.max(margin, clientX - rect.width - margin);
-      dom.ctxMenuEl.style.left = `${left}px`;
-    }
-    if (rect.bottom > window.innerHeight - margin) {
-      top = Math.max(margin, clientY - rect.height - margin);
-      dom.ctxMenuEl.style.top = `${top}px`;
-    }
-  });
+  positionContextMenuAt(clientX, clientY);
 
   const refreshCtxPosInputs = () => {
     const xInp = document.getElementById("ctx-x-input") as HTMLInputElement | null;
@@ -606,6 +580,11 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     const rect = dom.canvas.getBoundingClientRect();
     pasteClipboard(clientX - rect.left, clientY - rect.top);
   });
+  dom.ctxMenuEl.querySelector('[data-act="paste-cross"]')?.addEventListener("click", () => {
+    hideContextMenu();
+    const rect = dom.canvas.getBoundingClientRect();
+    pasteCrossTabClipboard(clientX - rect.left, clientY - rect.top);
+  });
 }
 
 /** Waypoint right-click menu: world coordinates + precision nudge, exactly like
@@ -625,7 +604,7 @@ export function showWaypointContextMenu(wpId: string, clientX: number, clientY: 
   const inRoute = !!evtMove && !!evt.waypointIds?.includes(wpId);
 
   dom.ctxMenuEl.innerHTML = `
-    <div class="ctx-head">路点 #${num} <span class="ctx-head-sub">${escHtml(group.displayName)}</span></div>
+    ${contextMenuDragBarHtml(`<div class="ctx-head">路点 #${num} <span class="ctx-head-sub">${escHtml(group.displayName)}</span></div>`)}
     <div class="ctx-coord">x ${wp.x.toFixed(d)} · z ${wp.z.toFixed(d)}</div>
     <div class="ctx-nudge-row">
       <span class="ctx-label">坐标(世界)</span>
@@ -648,26 +627,10 @@ export function showWaypointContextMenu(wpId: string, clientX: number, clientY: 
       ${inRoute ? `<button type="button" class="ctx-btn" data-wp-act="remove-route">从当前事件路线移除</button>` : ""}
       <button type="button" class="ctx-btn danger" data-wp-act="delete">删除路点</button>
     </div>
-    <p class="close-hint">点击外部或 Esc 关闭</p>
+    <p class="close-hint">长按顶部拖动 · 点击外部或 Esc 关闭</p>
   `;
 
-  const margin = 8;
-  let left = clientX + margin;
-  let top = clientY + margin;
-  dom.ctxMenuEl.classList.remove("hidden");
-  dom.ctxMenuEl.style.left = `${left}px`;
-  dom.ctxMenuEl.style.top = `${top}px`;
-  requestAnimationFrame(() => {
-    const rect = dom.ctxMenuEl.getBoundingClientRect();
-    if (rect.right > window.innerWidth - margin) {
-      left = Math.max(margin, clientX - rect.width - margin);
-      dom.ctxMenuEl.style.left = `${left}px`;
-    }
-    if (rect.bottom > window.innerHeight - margin) {
-      top = Math.max(margin, clientY - rect.height - margin);
-      dom.ctxMenuEl.style.top = `${top}px`;
-    }
-  });
+  positionContextMenuAt(clientX, clientY);
 
   const refreshInputs = () => {
     const xi = document.getElementById("wp-ctx-x") as HTMLInputElement | null;

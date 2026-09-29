@@ -36,11 +36,9 @@ function candidateSwitches(excludeId: string, extraExclude: Set<string>): Editor
   );
 }
 
-/** 右键菜单「同轴组」区块 HTML（内容动态渲染在 #ctx-coax-body）。 */
-export function coaxialCtxHtml(item: EditorItem): string {
-  void item;
-  return `<div class="ctx-stub-title" style="margin-top:6px">同轴组（时间窗内集齐才触发）</div>
-    <div id="ctx-coax-body"></div>`;
+/** 右键菜单「特殊按钮」Tab 内同轴组区块（内容动态渲染在 #ctx-coax-body）。 */
+export function coaxialCtxHtml(_item: EditorItem): string {
+  return `<div id="ctx-coax-body"></div>`;
 }
 
 /** 渲染 + 接线 #ctx-coax-body（stubControls 的 Switch case 末尾调用）。 */

@@ -14,7 +14,25 @@ import type {
 } from "./types";
 import { showBusy, hideBusy, withBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
-import { burgerPath, fillingPath, parseRoute, recipeFormPath, recipeListPath } from "./route";
+import {
+  burgerPath,
+  fillingPath,
+  libraryRecipeFormPath,
+  libraryRecipeListPath,
+  parseRoute,
+  recipeFormPath,
+  recipeListPath,
+} from "./route";
+import {
+  type RecipeAdminScope,
+  type SharedLibraryId,
+  SHARED_LIBRARIES,
+  isDeveloperModeEnabled,
+  isInLibraryCustomRecipes,
+  libraryLabel,
+  scopeTitle,
+  setDeveloperModeEnabled,
+} from "./devMode";
 import { BUN_CORE_ID, BUN_DLC2_ID, BUN_DLC8_ID } from "./recipeGroups";
 import { foodGroupLabel, visibleIngredients, visibleRecipes } from "./ingredientLabels";
 import { recipeTypeLabel, RECIPE_TYPE_ORDER } from "./recipeTypes";
@@ -69,44 +87,89 @@ function syncCrPath(path: string): void {
 
 let crPopstateWired = false;
 
-/** /custom-recipes 路由分发：选集（无 id）/ 列表（{set}）/ 编辑表单（{set}/recipe/{id|new}）。 */
+function toSetScope(setName: string): RecipeAdminScope {
+  return { kind: "set", setName };
+}
+
+function toLibraryScope(libraryId: SharedLibraryId): RecipeAdminScope {
+  return { kind: "library", libraryId };
+}
+
+function syncScopePath(scope: RecipeAdminScope, recipeId?: string): void {
+  if (scope.kind === "set") {
+    syncCrPath(recipeId ? recipeFormPath(scope.setName, recipeId) : recipeListPath(scope.setName));
+    return;
+  }
+  syncCrPath(
+    recipeId ? libraryRecipeFormPath(scope.libraryId, recipeId) : libraryRecipeListPath(scope.libraryId)
+  );
+}
+
+/** /custom-recipes 路由分发：选集 / 关卡集 / 共享库（开发者）/ 编辑表单。 */
 async function renderCustomRecipesRoute(app: HTMLElement): Promise<void> {
   const r = parseRoute();
+  if (r.page === "custom-recipes" && r.libraryId) {
+    if (!isDeveloperModeEnabled()) {
+      await renderSetChooser(app);
+      setStatus("请先开启开发者模式以编辑共享菜谱库。", false);
+      return;
+    }
+    const scope = toLibraryScope(r.libraryId);
+    if (r.recipeId) {
+      await openRecipeFormById(app, scope, r.recipeId);
+      return;
+    }
+    await renderRecipeList(app, scope);
+    return;
+  }
   if (r.page === "custom-recipes" && r.setId && r.recipeId) {
-    await openRecipeFormById(app, r.setId, r.recipeId);
+    await openRecipeFormById(app, toSetScope(r.setId), r.recipeId);
     return;
   }
   if (r.page === "custom-recipes" && r.setId) {
-    await renderRecipeList(app, r.setId);
+    await renderRecipeList(app, toSetScope(r.setId));
     return;
   }
   await renderSetChooser(app);
 }
 
-/** 深链 /custom-recipes/{set}/recipe/{id}：按菜谱 id 解析 assetPath 后打开编辑表单。 */
-async function openRecipeFormById(app: HTMLElement, setName: string, recipeId: string): Promise<void> {
+async function fetchRecipesForScope(scope: RecipeAdminScope): Promise<CustomRecipeSummary[]> {
+  return scope.kind === "set"
+    ? api.fetchCustomRecipes(scope.setName)
+    : api.fetchLibraryCustomRecipes(scope.libraryId);
+}
+
+/** 深链：按菜谱 id 解析 assetPath 后打开编辑表单。 */
+async function openRecipeFormById(app: HTMLElement, scope: RecipeAdminScope, recipeId: string): Promise<void> {
   if (recipeId === "new") {
-    await renderRecipeForm(app, setName, null);
+    if (scope.kind === "library") {
+      await renderRecipeList(app, scope);
+      setStatus("共享菜谱库不支持新建，仅可编辑已有菜谱。", false);
+      return;
+    }
+    await renderRecipeForm(app, scope, null);
     return;
   }
   let recipes: CustomRecipeSummary[] = [];
   try {
-    recipes = await api.fetchCustomRecipes(setName);
+    recipes = await fetchRecipesForScope(scope);
   } catch (e) {
     showError(e);
     return;
   }
-  // 本集菜谱优先（commonW2 共享库同 id 条目只读，不作为深链编辑目标）
   const hit =
-    recipes.find((x) => x.id === recipeId && !isSharedCompendiumRecipe(x)) ??
-    recipes.find((x) => x.id === recipeId) ??
-    recipes.find((x) => x.assetPath.replace(/\\/g, "/").endsWith("/" + recipeId + ".asset"));
+    scope.kind === "set"
+      ? (recipes.find((x) => x.id === recipeId && !isSharedCompendiumRecipe(x)) ??
+        recipes.find((x) => x.id === recipeId) ??
+        recipes.find((x) => x.assetPath.replace(/\\/g, "/").endsWith("/" + recipeId + ".asset")))
+      : (recipes.find((x) => x.id === recipeId) ??
+        recipes.find((x) => x.assetPath.replace(/\\/g, "/").endsWith("/" + recipeId + ".asset")));
   if (!hit) {
-    await renderRecipeList(app, setName);
+    await renderRecipeList(app, scope);
     setStatus(`未找到菜谱「${recipeId}」，已返回列表。`, false);
     return;
   }
-  await renderRecipeForm(app, setName, hit.assetPath);
+  await renderRecipeForm(app, scope, hit.assetPath);
 }
 
 export async function renderCustomRecipesView(app: HTMLElement): Promise<void> {
@@ -153,7 +216,42 @@ async function renderSetChooser(app: HTMLElement): Promise<void> {
   `;
 
   content.querySelectorAll<HTMLButtonElement>("[data-open]").forEach((b) =>
-    b.addEventListener("click", () => void renderRecipeList(app, b.dataset.open!))
+    b.addEventListener("click", () => void renderRecipeList(app, toSetScope(b.dataset.open!)))
+  );
+
+  const devOn = isDeveloperModeEnabled();
+  const devSection = `
+    <div class="m-section-title" style="margin-top:2rem">开发者模式 · 共享菜谱库</div>
+    <p class="modal-hint">
+      <label class="cr-dev-toggle">
+        <input type="checkbox" id="cr-dev-mode" ${devOn ? "checked" : ""}>
+        开启开发者模式（直接修改 commonW2 / commonW3 已有菜谱；<b>影响全关卡集</b>，不支持新建/删除）
+      </label>
+    </p>
+    ${
+      devOn
+        ? `<div class="m-grid">${SHARED_LIBRARIES
+            .map(
+              (lib) => `
+      <div class="m-card cr-dev-card">
+        <h3>${esc(lib.title)}</h3>
+        <div class="m-meta">${esc(lib.desc)}</div>
+        <div class="m-actions">
+          <button class="m-btn primary" data-open-lib="${esc(lib.id)}">编辑共享库</button>
+        </div>
+      </div>`
+            )
+            .join("")}</div>`
+        : '<p class="muted">开启后可编辑 commonW2（Burger大全等）与 commonW3（沙拉/果汁）共享库中的已有菜谱。</p>'
+    }
+  `;
+  content.insertAdjacentHTML("beforeend", devSection);
+  document.getElementById("cr-dev-mode")?.addEventListener("change", (e) => {
+    setDeveloperModeEnabled((e.target as HTMLInputElement).checked);
+    void renderSetChooser(app);
+  });
+  content.querySelectorAll<HTMLButtonElement>("[data-open-lib]").forEach((b) =>
+    b.addEventListener("click", () => void renderRecipeList(app, toLibraryScope(b.dataset.openLib! as SharedLibraryId)))
   );
 }
 
@@ -195,9 +293,14 @@ function toRecipeCard(r: CustomRecipeSummary): RecipeLikeCard {
   return normalizeCustomRecipeCard(r) as RecipeLikeCard;
 }
 
-async function renderRecipeList(app: HTMLElement, setName: string): Promise<void> {
-  syncCrPath(recipeListPath(setName));
-  const content = shell(app, `自定义菜谱 · ${esc(setName)}`);
+async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Promise<void> {
+  const isLibrary = scope.kind === "library";
+  const setName = scope.kind === "set" ? scope.setName : "";
+  syncScopePath(scope);
+  const content = shell(
+    app,
+    isLibrary ? `开发者 · ${esc(libraryLabel(scope.libraryId))}` : `自定义菜谱 · ${esc(setName)}`
+  );
   setBusy("加载菜谱配置…");
 
   let config: CustomRecipeConfig;
@@ -209,10 +312,14 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   let recipeLikes: RecipeLikeCard[] = [];
   try {
     [config, recipes] = await Promise.all([
-      api.fetchCustomRecipeConfig(setName),
-      api.fetchCustomRecipes(setName),
+      isLibrary
+        ? api.fetchLibraryCustomRecipeConfig(scope.libraryId)
+        : api.fetchCustomRecipeConfig(setName),
+      fetchRecipesForScope(scope),
     ]);
-    const refs = await api.fetchCustomRecipeReferences(setName).catch(() => null);
+    const refs = isLibrary
+      ? await api.fetchLibraryCustomRecipeReferences(scope.libraryId).catch(() => null)
+      : await api.fetchCustomRecipeReferences(setName).catch(() => null);
     for (const c of refs?.platingContainers ?? []) platingNames.set(c.id, c.nameZh || c.id);
     let ingLoadFailed = false;
     const [ings, catalogFetched] = await Promise.all([
@@ -220,7 +327,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         ingLoadFailed = true;
         return [] as IngredientEntry[];
       }),
-      api.fetchRecipeCatalog(setName).catch(() => [] as RecipeEntry[]),
+      isLibrary ? Promise.resolve([] as RecipeEntry[]) : api.fetchRecipeCatalog(setName).catch(() => [] as RecipeEntry[]),
     ]);
     catalog = catalogFetched;
     for (const i of ings) ingredientNames.set(i.id, i.nameZh);
@@ -229,16 +336,17 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
     showError(e);
     return;
   }
-  /** 列表展示用：仅本关卡集 custom_recipes（不含 commonW2 共享库）。 */
+  /** 列表展示用：关卡集模式排除 commonW2/W3；库模式显示该库全部菜谱。 */
   function getDisplayRecipes(): CustomRecipeSummary[] {
+    if (isLibrary) return recipes;
     return recipes.filter((r) => !isSharedCompendiumRecipe(r));
   }
 
   setStatus(`${getDisplayRecipes().length} 个菜谱 · UID前缀：${config.uidPrefix}`);
 
   const categories = config.categories ?? [];
-  /** 分类 chip：排除 Burger大全 保留分类（共享库，非本集菜谱）。 */
-  const listCategories = categories.filter((c) => c.id !== "burger");
+  /** 分类 chip：关卡集模式排除 Burger大全 保留分类；库模式显示库内全部分类。 */
+  const listCategories = isLibrary ? categories : categories.filter((c) => c.id !== "burger");
 
   function catDisplay(c: CustomRecipeCategory): string {
     return c.zh || c.id;
@@ -276,7 +384,13 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   }
 
   // 组成推导上下文（与「组装效果（实时预览）」一致）：含官方成品菜与本关卡集全部自定义菜谱。
-  recipeLikes = buildCompositionContext(recipes, catalog).allRecipeLikes as RecipeLikeCard[];
+  recipeLikes = buildCompositionContext(
+    recipes,
+    catalog,
+    null,
+    isLibrary ? undefined : setName,
+    isLibrary ? scope.libraryId : undefined
+  ).allRecipeLikes as RecipeLikeCard[];
 
   function filteredRecipes(): CustomRecipeSummary[] {
     const base = getDisplayRecipes();
@@ -307,7 +421,11 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   function renderGrid(): string {
     const filtered = filteredRecipes();
 
-    if (filtered.length === 0) {      if (getDisplayRecipes().length === 0 && searchQuery === "" && activeCategoryId === "") {
+    if (filtered.length === 0) {
+      if (isLibrary && getDisplayRecipes().length === 0) {
+        return `<div class="m-block"><h3>共享库为空</h3><p class="muted">${esc(scope.libraryId)} 下未扫描到任何菜谱资产。</p></div>`;
+      }
+      if (getDisplayRecipes().length === 0 && searchQuery === "" && activeCategoryId === "") {
         // 空列表时自动诊断：区分"目录确实没菜谱"与"桥接旧版/资产加载失败"
         void (async () => {
           const el = document.getElementById("cr-grid");
@@ -343,7 +461,9 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         })();
         return '<p class="muted">加载中…</p>';
       }
-      return '<p class="muted">没有匹配的菜谱。点击右上角「+ 新建菜谱」开始创建。</p>';
+      return isLibrary
+        ? '<p class="muted">没有匹配的菜谱。</p>'
+        : '<p class="muted">没有匹配的菜谱。点击右上角「+ 新建菜谱」开始创建。</p>';
     }
 
     const cardWrapHtml = (r: CustomRecipeSummary): string => {
@@ -374,10 +494,14 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
           <span class="muted small">${isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : `UID ${r.uID}`} · 组成 ${compCount} 项</span>
           <span style="flex:1"></span>
           ${r.previewable ?? r.hasModel ? `<button class="m-btn small" data-preview="${esc(r.assetPath)}" title="3D 模型在线预览">👁</button>` : ""}
-          ${gotoBurgerWorkbench
-            ? `<button class="m-btn small" data-goto-burger${burgerProductAttr} title="${isFinishedBurger ? "在汉堡工作台载入并编辑此成品汉堡" : "组装定义的可选夹心与堆叠模型在汉堡工作台中管理"}">🍔 工作台</button>`
-            : `<button class="m-btn small" data-edit="${esc(r.assetPath)}">编辑</button>`}
-          <button class="m-btn small danger" data-del="${esc(r.assetPath)}">删除</button>
+          ${
+            isLibrary
+              ? `<button class="m-btn small" data-edit="${esc(r.assetPath)}">编辑</button>`
+              : gotoBurgerWorkbench
+                ? `<button class="m-btn small" data-goto-burger${burgerProductAttr} title="${isFinishedBurger ? "在汉堡工作台载入并编辑此成品汉堡" : "组装定义的可选夹心与堆叠模型在汉堡工作台中管理"}">🍔 工作台</button>`
+                : `<button class="m-btn small" data-edit="${esc(r.assetPath)}">编辑</button>`
+          }
+          ${isLibrary ? "" : `<button class="m-btn small danger" data-del="${esc(r.assetPath)}">删除</button>`}
         </div>
       </div>`;
     };
@@ -396,10 +520,14 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
           return `<button type="button" class="rl-chip-btn cr-cat-chip${activeCategoryId === c.id ? " active" : ""}" data-cat="${esc(c.id)}">${esc(catDisplay(c))} <span class="rl-cnt">${count}</span></button>`;
         })
         .join("")}
-      <span class="cr-cat-tools">
+      ${
+        isLibrary
+          ? ""
+          : `<span class="cr-cat-tools">
         <button class="m-btn" id="cr-new-cat">+ 新建分类</button>
         ${listCategories.length > 0 ? '<button class="m-btn" id="cr-manage-cat">管理分类</button>' : ""}
-      </span>`;
+      </span>`
+      }`;
   }
 
   /** 二级分类 chips（选中某个分类时才出现）：分类目录下的子目录。
@@ -430,16 +558,24 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       ${rootCount > 0 ? `<span class="muted small">未分子类 ${rootCount}</span>` : ""}`;
   }
 
-  content.innerHTML = `
-    <div class="m-actions-row">
-      <button class="m-btn" id="cr-back">← 返回关卡集列表</button>
-      <span class="muted">当前关卡集：<b>${esc(setName)}</b></span>
-      <span style="flex:1"></span>
+  const libraryBanner = isLibrary
+    ? `<div class="m-block cr-dev-banner"><b>⚠️ 开发者模式</b>：正在编辑 <b>${esc(libraryLabel(scope.libraryId))}</b>。保存会立即影响所有引用该库的关卡集；仅支持修改已有菜谱，不支持新建或删除。</div>`
+    : "";
+  const toolbarExtra = isLibrary
+    ? ""
+    : `
       <button class="m-btn" id="cr-unify-bun" title="把本关卡集自定义菜谱里的汉堡面包皮统一换成同一种">🍞 统一面包皮</button>
       <button class="m-btn" id="cr-optimize-assets" title="只调 .meta 导入参数（贴图分辨率/网格精度）缩小导出包；不改源 FBX/PNG">📦 资产瘦身</button>
       <button class="m-btn" id="cr-new-filling" title="夹心 = 0 分自定义菜谱，做好后可在汉堡工作台选用">🥩 夹心工作台</button>
       <button class="m-btn" id="cr-new-burger">🍔 新增汉堡菜谱</button>
-      <button class="m-btn primary" id="cr-new-recipe">+ 新建菜谱</button>
+      <button class="m-btn primary" id="cr-new-recipe">+ 新建菜谱</button>`;
+  content.innerHTML = `
+    ${libraryBanner}
+    <div class="m-actions-row">
+      <button class="m-btn" id="cr-back">← ${isLibrary ? "返回" : "返回关卡集列表"}</button>
+      <span class="muted">${isLibrary ? `共享库：<b>${esc(scope.libraryId)}</b>` : `当前关卡集：<b>${esc(setName)}</b>`}</span>
+      <span style="flex:1"></span>
+      ${toolbarExtra}
     </div>
     <div class="cr-toolbar">
       <input type="search" id="cr-search" class="rl-search" placeholder="搜索菜名 / ID / 食材…" autocomplete="off">
@@ -468,8 +604,10 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
       showBusy("加载…");
       try {
         [config, recipes] = await Promise.all([
-          api.fetchCustomRecipeConfig(setName),
-          api.fetchCustomRecipes(setName),
+          isLibrary
+            ? api.fetchLibraryCustomRecipeConfig(scope.libraryId)
+            : api.fetchCustomRecipeConfig(setName),
+          fetchRecipesForScope(scope),
         ]);
       } catch (e) {
         showError(e);
@@ -544,16 +682,17 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         wireGridButtons();
       });
     });
-    document.getElementById("cr-new-cat")?.addEventListener("click", () =>
-      openNewCategoryModal(setName, (newId) => {
-        lastActiveCategoryId = newId ?? "";
-        // 完全重建列表页，确保新分类立即出现在过滤栏
-        void renderRecipeList(app, setName);
-      })
-    );
-    document.getElementById("cr-manage-cat")?.addEventListener("click", () =>
-      openManageCategoriesModal(setName, config.categories, () => void renderRecipeList(app, setName))
-    );
+    if (!isLibrary) {
+      document.getElementById("cr-new-cat")?.addEventListener("click", () =>
+        openNewCategoryModal(setName, (newId) => {
+          lastActiveCategoryId = newId ?? "";
+          void renderRecipeList(app, scope);
+        })
+      );
+      document.getElementById("cr-manage-cat")?.addEventListener("click", () =>
+        openManageCategoriesModal(setName, config.categories, () => void renderRecipeList(app, scope))
+      );
+    }
   }
 
   function wireGridButtons(): void {
@@ -569,8 +708,8 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         const path = b.dataset.edit!;
         const hit = recipes.find((x) => x.assetPath === path);
         const rid = hit?.id ?? (path.split("/").pop() ?? "").replace(/\.asset$/, "");
-        syncCrPath(recipeFormPath(setName, rid || "new"));
-        void renderRecipeForm(app, setName, path);
+        syncScopePath(scope, rid || "new");
+        void renderRecipeForm(app, scope, path);
       })
     );
     document.querySelectorAll<HTMLButtonElement>("[data-preview]").forEach((b) =>
@@ -580,6 +719,7 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         const r = recipes.find((x) => x.assetPath === path);
         const s = r && r.modelScale > 0 ? r.modelScale : 1;
         void openRecipeModelPreview(path, path.split("/").pop() ?? path, {
+          readonly: isLibrary ? false : undefined,
           fitTarget: r?.platingStepId === "Glass" ? "cup" : "plate",
           scale: r?.modelScale ?? 1,
           rotationX: r?.modelRotationX ?? 0,
@@ -603,9 +743,11 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
         });
       })
     );
-    document.querySelectorAll<HTMLButtonElement>("[data-del]").forEach((b) =>
-      b.addEventListener("click", () => confirmDeleteRecipe(app, setName, b.dataset.del!, refreshView))
-    );
+    if (!isLibrary) {
+      document.querySelectorAll<HTMLButtonElement>("[data-del]").forEach((b) =>
+        b.addEventListener("click", () => confirmDeleteRecipe(app, scope, b.dataset.del!, refreshView))
+      );
+    }
   }
 
   wireToolbar();
@@ -614,22 +756,24 @@ async function renderRecipeList(app: HTMLElement, setName: string): Promise<void
   wireGridButtons();
 
   document.getElementById("cr-back")?.addEventListener("click", () => void renderSetChooser(app));
-  document.getElementById("cr-unify-bun")?.addEventListener("click", () =>
-    openBunSwapModal(setName, refreshView)
-  );
-  document.getElementById("cr-optimize-assets")?.addEventListener("click", () =>
-    void openAssetOptimizeModal(setName)
-  );
-  document.getElementById("cr-new-burger")?.addEventListener("click", () => {
-    location.assign(burgerPath(setName));
-  });
-  document.getElementById("cr-new-filling")?.addEventListener("click", () => {
-    location.assign(fillingPath(setName));
-  });
-  document.getElementById("cr-new-recipe")?.addEventListener("click", () => {
-    syncCrPath(recipeFormPath(setName, "new"));
-    void renderRecipeForm(app, setName, null, activeCategoryId ? { category: activeCategoryId } : undefined);
-  });
+  if (!isLibrary) {
+    document.getElementById("cr-unify-bun")?.addEventListener("click", () =>
+      openBunSwapModal(setName, refreshView)
+    );
+    document.getElementById("cr-optimize-assets")?.addEventListener("click", () =>
+      void openAssetOptimizeModal(setName)
+    );
+    document.getElementById("cr-new-burger")?.addEventListener("click", () => {
+      location.assign(burgerPath(setName));
+    });
+    document.getElementById("cr-new-filling")?.addEventListener("click", () => {
+      location.assign(fillingPath(setName));
+    });
+    document.getElementById("cr-new-recipe")?.addEventListener("click", () => {
+      syncScopePath(scope, "new");
+      void renderRecipeForm(app, scope, null, activeCategoryId ? { category: activeCategoryId } : undefined);
+    });
+  }
 }
 
 // ==================== 🍞 一键统一面包皮 ====================
@@ -1060,12 +1204,27 @@ function categoryFromAssetPath(assetPath: string): string {
   return m ? m[1] : "";
 }
 
+/** 资产路径是否属于指定关卡集的 custom_recipes/ 目录。 */
+function isInSetCustomRecipes(assetPath: string, setName: string): boolean {
+  if (!setName) return false;
+  const p = assetPath.replace(/\\/g, "/");
+  return p.includes(`/LevelSets/${setName}/custom_recipes/`);
+}
+
 /** 组成选择器上下文：关卡集自定义菜谱 + 目录全部菜谱（含官方成品与中间产物）。 */
 function buildCompositionContext(
   levelsetRecipes: CustomRecipeSummary[],
   catalog: RecipeEntry[],
-  excludeAssetPath?: string | null
-): { subItems: SubItem[]; recipeIdSet: Set<string>; allRecipeLikes: RecipeWithGroups[] } {
+  excludeAssetPath?: string | null,
+  scopeSetName?: string,
+  scopeLibraryId?: SharedLibraryId
+): {
+  subItems: SubItem[];
+  recipeIdSet: Set<string>;
+  allRecipeLikes: RecipeWithGroups[];
+  scopeSetName?: string;
+  scopeLibraryId?: SharedLibraryId;
+} {
   const subItems: SubItem[] = [];
   const seen = new Set<string>();
   const recipeIdSet = new Set<string>();
@@ -1073,6 +1232,9 @@ function buildCompositionContext(
   const likesSeen = new Set<string>();
 
   const addSummary = (r: CustomRecipeSummary): void => {
+    if (isSharedCompendiumRecipe(r)) {
+      if (!scopeLibraryId || !isInLibraryCustomRecipes(r.assetPath, scopeLibraryId)) return;
+    }
     if (excludeAssetPath && r.assetPath === excludeAssetPath) return;
     if (seen.has(r.id)) return;
     seen.add(r.id);
@@ -1097,7 +1259,7 @@ function buildCompositionContext(
     if (seen.has(c.id)) return;
     seen.add(c.id);
     recipeIdSet.add(c.id);
-    const isLevelset = !!(c.isCustom && c.group === "levelset");
+    const isLevelset = !!(c.isCustom && c.group === "levelset" && (!scopeSetName || isInSetCustomRecipes(c.assetPath, scopeSetName)));
     subItems.push({
       id: c.id,
       nameZh: c.nameZh,
@@ -1144,7 +1306,7 @@ function buildCompositionContext(
       a.nameZh.localeCompare(b.nameZh, "zh")
   );
 
-  return { subItems, recipeIdSet, allRecipeLikes };
+  return { subItems, recipeIdSet, allRecipeLikes, scopeSetName, scopeLibraryId };
 }
 
 /** 菜谱编辑器的可选预设。
@@ -1163,13 +1325,33 @@ export interface RecipeFormPresets {
 
 export async function renderRecipeForm(
   app: HTMLElement,
-  setName: string,
+  scopeOrSetName: RecipeAdminScope | string,
   assetPath: string | null,
   presets?: RecipeFormPresets
 ): Promise<void> {
+  const scope: RecipeAdminScope =
+    typeof scopeOrSetName === "string" ? toSetScope(scopeOrSetName) : scopeOrSetName;
+  const isLibrary = scope.kind === "library";
+  const setName = scope.kind === "set" ? scope.setName : "";
   const isEdit = assetPath != null;
+  if (isLibrary && !isEdit) {
+    await renderRecipeList(app, scope);
+    setStatus("共享菜谱库不支持新建。", false);
+    return;
+  }
   const isFilling = presets?.mode === "filling";
-  const content = shell(app, isEdit ? (isFilling ? "编辑夹心" : "编辑菜谱") : (isFilling ? "🥩 新建夹心" : "新建菜谱"));
+  const content = shell(
+    app,
+    isLibrary
+      ? `开发者 · 编辑 ${esc(scopeTitle(scope))}`
+      : isEdit
+        ? isFilling
+          ? "编辑夹心"
+          : "编辑菜谱"
+        : isFilling
+          ? "🥩 新建夹心"
+          : "新建菜谱"
+  );
   setBusy("加载参考数据…");
 
   let ingredients: IngredientEntry[] = [];
@@ -1191,16 +1373,19 @@ export async function renderRecipeForm(
   try {
     [ingredients, refs, config] = await Promise.all([
       api.fetchIngredients().catch(() => [] as IngredientEntry[]),
-      api.fetchCustomRecipeReferences(setName).catch(() => EMPTY_REFS),
-      api.fetchCustomRecipeConfig(setName),
+      isLibrary
+        ? api.fetchLibraryCustomRecipeReferences(scope.libraryId).catch(() => EMPTY_REFS)
+        : api.fetchCustomRecipeReferences(setName).catch(() => EMPTY_REFS),
+      isLibrary ? api.fetchLibraryCustomRecipeConfig(scope.libraryId) : api.fetchCustomRecipeConfig(setName),
     ]);
     ingredients = visibleIngredients(ingredients);
     [levelsetRecipes, catalog] = await Promise.all([
-      api.fetchCustomRecipes(setName).catch(() => [] as CustomRecipeSummary[]),
+      fetchRecipesForScope(scope).catch(() => [] as CustomRecipeSummary[]),
       api.fetchRecipeCatalog(setName).catch(() => [] as RecipeEntry[]),
     ]);
     if (isEdit) {
       recipe = levelsetRecipes.find((r) => r.assetPath === assetPath);
+      if (recipe) syncScopePath(scope, recipe.id);
     }
   } catch (e) {
     showError(e);
@@ -1210,8 +1395,20 @@ export async function renderRecipeForm(
   hideBusy();
 
   // ---- 组成状态：id → 数量（同一种食材/中间产物可出现多次） ----
-  const compositionCtx = buildCompositionContext(levelsetRecipes, catalog, isEdit ? assetPath : null);
-  const { subItems, recipeIdSet: subIdSet, allRecipeLikes } = compositionCtx;
+  const compositionCtx = buildCompositionContext(
+    levelsetRecipes,
+    catalog,
+    isEdit ? assetPath : null,
+    isLibrary ? undefined : setName,
+    isLibrary ? scope.libraryId : undefined
+  );
+  const {
+    subItems,
+    recipeIdSet: subIdSet,
+    allRecipeLikes,
+    scopeSetName: compScopeSet,
+    scopeLibraryId: compScopeLibrary,
+  } = compositionCtx;
 
   const selectedIng = new Map<string, number>();
   const selectedSub = new Map<string, number>();
@@ -1237,8 +1434,10 @@ export async function renderRecipeForm(
   const mixingIconId = recipe?.mixingIconId ?? "";
   const modelPrefabId = "";
 
-  // 「burger」为 Burger大全共享库保留分类：新建/编辑本集菜谱时不可选
-  const categories = (config.categories ?? []).filter((c) => c.id !== "burger");
+  // 关卡集模式：「burger」为 Burger大全共享库保留分类，不可选；库模式显示全部分类。
+  const categories = isLibrary
+    ? (config.categories ?? [])
+    : (config.categories ?? []).filter((c) => c.id !== "burger");
 
   const ingById = new Map<string, IngredientEntry>();
   for (const i of ingredients) ingById.set(i.id, i);
@@ -1272,7 +1471,8 @@ export async function renderRecipeForm(
     if (!categories.some((c) => c.id === categoryId) && categoryId) {
       options += `<option value="${esc(categoryId)}" selected>${esc(categoryId)}</option>`;
     }
-    return `<select id="cr-type-cat" class="m-select">${options}</select>`;
+    const disabled = isLibrary ? " disabled" : "";
+    return `<select id="cr-type-cat" class="m-select"${disabled}>${options}</select>`;
   }
 
   function selectHtml(entries: { guid?: string; id: string; nameZh: string }[], current: string, fieldId: string): string {
@@ -1349,7 +1549,12 @@ export async function renderRecipeForm(
     function recipeMatchesTab(s: SubItem): boolean {
       if (filter === "sub") return s.source === "official" && s.score > 0;
       if (filter === "inter") return s.source === "official" && s.score <= 0;
-      if (filter === "levelset") return s.source === "levelset";
+      if (filter === "levelset") {
+        if (compScopeLibrary) {
+          return s.source === "levelset" && isInLibraryCustomRecipes(s.assetPath, compScopeLibrary);
+        }
+        return s.source === "levelset" && (!compScopeSet || isInSetCustomRecipes(s.assetPath, compScopeSet));
+      }
       return true;
     }
 
@@ -1697,9 +1902,10 @@ export async function renderRecipeForm(
   // ---- 表单 DOM ----
 
   content.innerHTML = `
+    ${isLibrary ? `<div class="m-block cr-dev-banner"><b>⚠️ 开发者模式</b>：修改将写入共享库 <b>${esc(scope.libraryId)}</b>，影响全关卡集。仅支持更新已有菜谱。</div>` : ""}
     <div class="m-actions-row">
       <button class="m-btn" id="cr-form-back">← 返回菜谱列表</button>
-      <span class="muted">关卡集：<b>${esc(setName)}</b> · ${isEdit ? `编辑 ${esc(recipeName)}` : "新建菜谱"}</span>
+      <span class="muted">${isLibrary ? `共享库：<b>${esc(scope.libraryId)}</b>` : `关卡集：<b>${esc(setName)}</b>`} · ${isEdit ? `编辑 ${esc(recipeName)}` : "新建菜谱"}</span>
       <span style="flex:1"></span>
       <button class="m-btn primary" id="cr-form-save">💾 保存</button>
     </div>
@@ -1720,7 +1926,7 @@ export async function renderRecipeForm(
           <label class="m-field">中文名<input type="text" id="cr-zh" value="${esc(nameZh)}" placeholder="我的菜谱"></label>
           <label class="m-field">英文名<input type="text" id="cr-en" value="${esc(nameEn)}" placeholder="My Recipe"></label>
           <label class="m-field">分类 ${catSelectHtml()}
-            <button type="button" class="m-btn" id="cr-new-cat-inline" style="margin-top:6px">+ 新建分类</button>
+            ${isLibrary ? "" : '<button type="button" class="m-btn" id="cr-new-cat-inline" style="margin-top:6px">+ 新建分类</button>'}
           </label>
           <label class="m-field">UID（自动生成）<input type="text" value="${recipe?.uID ?? (isNew ? config.uidPrefix * 1000 + config.nextSequence : "—")}" disabled></label>
           <label class="m-field">菜谱图标（PNG，卡片图）<input type="file" id="cr-icon-upload" accept="image/png">
@@ -2129,6 +2335,7 @@ export async function renderRecipeForm(
     const plateSel = document.getElementById("cr-plate-step") as HTMLSelectElement | null;
     void withBusy("正在加载 3D 预览（首次加载较慢）…", async () => {
       await openRecipeModelPreview(assetPath, recipeName || (assetPath.split("/").pop() ?? assetPath), {
+        readonly: isLibrary ? false : undefined,
         fitTarget: plateSel?.value === "Glass" ? "cup" : "plate",
         ...readModelTransform(),
         unitySize: computeUnitySize(),
@@ -2224,19 +2431,25 @@ export async function renderRecipeForm(
   });
   updateTypeFields();
 
-  document.getElementById("cr-new-cat-inline")?.addEventListener("click", () => openNewCategoryModalInline(setName, async (newId) => {
-    config = await api.fetchCustomRecipeConfig(setName);
-    const sel = document.getElementById("cr-type-cat") as HTMLSelectElement;
-    if (sel && newId) {
-      sel.innerHTML = config.categories.map((c) => `<option value="${esc(c.id)}">${esc(c.zh || c.id)}</option>`).join("");
-      sel.value = newId;
-    }
-  }));
+  if (!isLibrary) {
+    document.getElementById("cr-new-cat-inline")?.addEventListener("click", () =>
+      openNewCategoryModalInline(setName, async (newId) => {
+        config = await api.fetchCustomRecipeConfig(setName);
+        const sel = document.getElementById("cr-type-cat") as HTMLSelectElement;
+        if (sel && newId) {
+          sel.innerHTML = config.categories
+            .map((c) => `<option value="${esc(c.id)}">${esc(c.zh || c.id)}</option>`)
+            .join("");
+          sel.value = newId;
+        }
+      })
+    );
+  }
 
   /** 返回目标：夹心工作台等外部调用方可用 presets.onBack 接管；缺省回菜谱列表。 */
   const goBack = (): void => {
     if (presets?.onBack) presets.onBack();
-    else void renderRecipeList(app, setName);
+    else void renderRecipeList(app, scope);
   };
   document.getElementById("cr-form-back")?.addEventListener("click", goBack);
   document.getElementById("cr-form-back2")?.addEventListener("click", goBack);
@@ -2278,19 +2491,27 @@ export async function renderRecipeForm(
     };
 
     showBusy("保存中…");
+    const uploadSetName = isLibrary ? "" : setName;
     try {
-      if (isEdit) {
+      if (isLibrary) {
+        if (!isEdit) throw new Error("共享菜谱库不支持新建。");
+        await api.updateCustomRecipe(dto);
+      } else if (isEdit) {
         await api.updateCustomRecipe(dto);
       } else {
         await api.createCustomRecipe(dto);
       }
 
-      const actualPath = assetPath || `Assets/LevelSets/${setName}/custom_recipes/${dto.category}/${rname}.asset`;
+      const actualPath =
+        assetPath ||
+        (isLibrary
+          ? ""
+          : `Assets/LevelSets/${setName}/custom_recipes/${dto.category}/${rname}.asset`);
 
       const iconFile = (document.getElementById("cr-icon-upload") as HTMLInputElement).files?.[0];
-      if (iconFile) {
+      if (iconFile && actualPath) {
         const base64 = await fileToBase64(iconFile);
-        await api.uploadCustomRecipeIcon(setName, actualPath, iconFile.name, base64);
+        await api.uploadCustomRecipeIcon(uploadSetName, actualPath, iconFile.name, base64);
       }
 
       const modelFiles = (document.getElementById("cr-model-file") as HTMLInputElement).files;
@@ -2310,7 +2531,7 @@ export async function renderRecipeForm(
           const diskName = diskNames0[cls];
           if (t && diskName) tplUploads.push({ fileName: diskName, base64: await bytesToBase64(t.bytes) });
         }
-        const tplRes = await api.uploadCustomRecipeTemplateModel(setName, actualPath, tplMeshId, tplUploads);
+        const tplRes = await api.uploadCustomRecipeTemplateModel(uploadSetName, actualPath, tplMeshId, tplUploads);
         if (tplRes && tplRes.rawSizeX != null && tplRes.rawSizeZ != null) {
           lastRawSize = { x: tplRes.rawSizeX, y: tplRes.rawSizeY ?? 0, z: tplRes.rawSizeZ };
         }
@@ -2354,7 +2575,7 @@ export async function renderRecipeForm(
         for (const img of rawModelImages) {
           uploads.push({ fileName: img.disk, base64: await bytesToBase64(img.bytes) });
         }
-        const uploadRes = await api.uploadCustomRecipeModelFiles(setName, actualPath, uploads);
+        const uploadRes = await api.uploadCustomRecipeModelFiles(uploadSetName, actualPath, uploads);
         // 上传成功后按 Unity 实际导入尺寸自动校准缩放/位置（three.js 预览尺寸可能与 Unity 相差百倍；
         // 目标足迹：盘子 85 cm（对齐官方蛋炒饭参考 82~87 cm，游戏盘子直径 100 cm）、杯子 37 cm；
         // 以容器中心为原点：盘子承物面在中心上方 4.77 cm、杯内底在中心下方 23.8 cm（模型底面放过去）
@@ -2432,7 +2653,7 @@ export async function renderRecipeForm(
 
 // ==================== Delete Confirmation ====================
 
-function confirmDeleteRecipe(_app: HTMLElement, _setName: string, assetPath: string, onDone: () => void): void {
+function confirmDeleteRecipe(_app: HTMLElement, _scope: RecipeAdminScope, assetPath: string, onDone: () => void): void {
   const fileName = assetPath.split("/").pop() ?? assetPath;
   openModal(
     `删除菜谱 · ${esc(fileName)}`,

@@ -5,10 +5,10 @@ export type { NavPage } from "./route";
 
 const GUIDE_FEATURES: [string, string, string][] = [
   ["🗺️", "关卡编辑器", "俯视图编排物品 / 装饰 / 地板层，叠放吸附、半格对齐、旋转删除，一键写回 Unity 场景"],
-  ["📋", "关卡管理", "关卡集与关卡增删改，1P~4P 人数配置、音频与菜谱绑定"],
-  ["📦", "依赖管理", "Bundle 依赖分析、手动编辑 LevelInfoSO.dependencies，清理未用 bundle"],
+  ["📋", "关卡管理", "关卡集与关卡增删改，Bundle 依赖、1P~4P 人数配置、音频与菜谱绑定、导出 zip"],
   ["📖", "菜谱清单列表", "全部菜谱按类型分组陈列，搜索筛选，按烹饪步骤展示食材与锅具"],
   ["🍽️", "自定义菜谱", "按关卡集管理 CustomRecipeSO：组成、烹饪、装盘、图标与 3D 模型；汉堡请用工作台单独创建"],
+  ["📘", "功能说明", "全部功能说明与版本更新日志，按章节分页查阅"],
   ["⚙️", "与 Unity 无缝协作", "HTTP 桥接自动 Prepare For Building，资源目录一键生成"],
 ];
 
@@ -39,11 +39,9 @@ export function navHtml(active: NavPage): string {
     <span class="topnav-brand">Overcooked!2 关卡工具</span>
     <button type="button" class="topnav-link${active === "layout" ? " active" : ""}" data-nav="layout">🗺️ 关卡编辑器</button>
     <button type="button" class="topnav-link${active === "manage" ? " active" : ""}" data-nav="manage">📋 关卡管理</button>
-    <button type="button" class="topnav-link${active === "dependencies" ? " active" : ""}" data-nav="dependencies">📦 依赖管理</button>
     <button type="button" class="topnav-link${active === "custom-recipes" ? " active" : ""}" data-nav="custom-recipes">🍽️ 自定义菜谱</button>
     <button type="button" class="topnav-link${active === "recipes" ? " active" : ""}" data-nav="recipes">📖 菜谱清单列表</button>
     <button type="button" class="topnav-link${active === "guide" ? " active" : ""}" data-nav="guide">📘 功能说明</button>
-    <button type="button" class="topnav-link${active === "changelog" ? " active" : ""}" data-nav="changelog">📜 更新日志</button>
     <span class="topnav-spacer"></span>
     ${sceneControls}
     <button type="button" class="topnav-github" data-nav-github title="作者介绍 · guojia99">${GITHUB_SVG}<span>关于</span></button>

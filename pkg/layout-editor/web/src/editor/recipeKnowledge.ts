@@ -2,6 +2,7 @@ import { S } from "./state";
 import { VARIANT_TO_BASE } from "./itemVariants";
 import type { RecipeEntry } from "../types";
 import { crateIngredientId, FLOUR_INGREDIENTS, EGG_INGREDIENTS } from "../recipeGroups";
+import { CHOP_INGREDIENT_PATTERN, CHOP_WHOLE_IDS } from "../autoScoreKnowledge";
 import { fetchLevelRecipes, fetchRecipeCatalog } from "../api";
 
 export const STEP_UTENSILS: Record<string, string[]> = {
@@ -33,6 +34,12 @@ export const CHOPPABLE_INGREDIENTS = new Set([
   "bokchoy",
   "dlc08_onion",
 ]);
+
+/** 需切菜台处理的食材（已切好的变体不算）。 */
+export function ingredientNeedsChopCounter(id: string): boolean {
+  if (CHOP_INGREDIENT_PATTERN.test(id)) return false;
+  return CHOP_WHOLE_IDS.has(id) || CHOPPABLE_INGREDIENTS.has(id);
+}
 
 /** 面粉/蛋家族：唯一数据源在 recipeGroups.ts（分组算法与填充算法共用同一份清单）。 */
 export { FLOUR_INGREDIENTS, EGG_INGREDIENTS };
@@ -293,7 +300,7 @@ export function isBlenderMixRecipe(r: RecipeEntry): boolean {
   if (step === "Mixer" || step === "MixingBowl") return false;
   if (isFlourBranchRecipe(r)) return false;
   if (step && step !== "Blender" && STEP_UTENSILS[step]) return false;
-  return r.type === "smoothie" || r.platingStep === "Glass";
+  return r.type === "smoothie" || r.platingStep === "Glass" || r.category === "smoothie";
 }
 
 /** 搅拌型中间产物：官方面糊用 cookingStep=Mixer/MixingBowl；自定义 Mixed 类型用 mixing 标记。 */
@@ -690,7 +697,7 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
     (STEP_UTENSILS[step] ?? []).forEach((u) => set.add(u));
   }
   for (const ing of ingredientIds) {
-    if (CHOPPABLE_INGREDIENTS.has(ing)) set.add("ChoppingCounter");
+    if (ingredientNeedsChopCounter(ing)) set.add("ChoppingCounter");
     if (ing === "FlourSO") {
       set.add("Mixer");
       set.add("MixerBowl");
@@ -701,6 +708,11 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
     }
     if (ing === "PastaSO") {
       set.add("FryPan");
+    }
+  }
+  for (const r of recs) {
+    for (const ing of r.ingredients ?? []) {
+      if (ingredientNeedsChopCounter(ing)) set.add("ChoppingCounter");
     }
   }
   // 输出统一为家族基准 id（变体→基础）：与 existingPrefabIds 的 functionalBaseId

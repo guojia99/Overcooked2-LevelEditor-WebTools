@@ -486,8 +486,8 @@ public static class LayoutEditorLevelAdminApi
         // 网格半宽：场景 GridManager 为唯一权威存储（LevelEditorStub 共享程序集禁改，
         // 2026-09-12 起 LevelInfoSO 不再持有该配置）——直接读场景磁盘生效值
         // （prefab 覆盖 / env prefab 默认值），关卡配置弹窗显示即真值。
-        int gridHalfX, gridHalfZ;
-        LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out gridHalfX, out gridHalfZ);
+        int gridHalfX, gridHalfY, gridHalfZ;
+        LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out gridHalfX, out gridHalfY, out gridHalfZ);
 
         string summaryBgPath;
         float summaryBgDim;
@@ -509,6 +509,7 @@ public static class LayoutEditorLevelAdminApi
             minOrderCount = ClampOrderCount(so.minOrderCount, 2),
             maxOrderCount = ClampOrderCount(so.maxOrderCount, 5),
             gridHalfSizeX = gridHalfX,
+            gridHalfSizeY = gridHalfY,
             gridHalfSizeZ = gridHalfZ,
             dependencies = so.dependencies != null ? (string[])so.dependencies.Clone() : new string[0],
             configs = new[]
@@ -936,15 +937,18 @@ public static class LayoutEditorLevelAdminApi
     private static string ApplyGridHalfSizeChange(LevelInfoUpdateDto dto, LevelInfoSO so)
     {
         var wantX = Mathf.Clamp(dto.gridHalfSizeX, 0, 50);
+        var wantY = Mathf.Clamp(dto.gridHalfSizeY, 0, 50);
         var wantZ = Mathf.Clamp(dto.gridHalfSizeZ, 0, 50);
         var setName = SetNameFromPath(dto.assetPath);
         var sceneAssetPath = "";
         if (!string.IsNullOrEmpty(so.sceneName))
             sceneAssetPath = LevelSetsRoot + "/" + setName + "/scenes/" + so.sceneName + ".unity";
 
-        int curX, curZ;
-        LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out curX, out curZ);
-        if (wantX == curX && wantZ == curZ)
+        int curX, curY, curZ;
+        LayoutEditorGridBake.ReadSceneMainGridHalfSize(sceneAssetPath, out curX, out curY, out curZ);
+        // Y 未传（0）= 不调整该轴，与 X/Z 语义一致；旧版 web 未带 gridHalfSizeY 时不误触烘焙。
+        var cmpY = wantY > 0 ? wantY : curY;
+        if (wantX == curX && cmpY == curY && wantZ == curZ)
             return null; // 无变更
 
         var scene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(sceneAssetPath);
@@ -952,11 +956,11 @@ public static class LayoutEditorLevelAdminApi
             return "网格半宽有修改，但网格值直接存储在场景 GridManager 上（不再放 LevelInfoSO），"
                 + "而该关卡场景当前未在编辑器中打开——请先打开关卡场景再保存；其他设置未改动。";
 
-        var warn = LayoutEditorGridBake.BakeSceneHalfSize(scene, wantX, wantZ);
+        var warn = LayoutEditorGridBake.BakeSceneHalfSize(scene, wantX, wantY, wantZ);
         if (!string.IsNullOrEmpty(warn))
             return warn;
         LayoutEditorLog.Log("[LayoutEditor] 网格半宽已烘焙进场景: " + sceneAssetPath
-            + "（" + curX + "," + curZ + " → " + wantX + "," + wantZ + "）");
+            + "（" + curX + "," + curY + "," + curZ + " → " + wantX + "," + wantY + "," + wantZ + "）");
         return null;
     }
 
@@ -2587,6 +2591,36 @@ public static class LayoutEditorLevelAdminApi
     public const string BurgerCategoryId = "burger";
     private const int ProjectUidPrefix = 1000000;
 
+    /// <summary>共享菜谱库 id → custom_recipes 根目录（开发者模式只读编辑）。</summary>
+    public static string LibraryRecipesDir(string libraryId)
+    {
+        if (string.Equals(libraryId, "commonW2", StringComparison.OrdinalIgnoreCase))
+            return CommonW2RecipesDir;
+        if (string.Equals(libraryId, "commonW3", StringComparison.OrdinalIgnoreCase))
+            return CommonW3RecipesDir;
+        return null;
+    }
+
+    /// <summary>资产是否在 commonW2/commonW3 共享 custom_recipes 树下。</summary>
+    public static bool IsSharedLibraryRecipePath(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        var n = assetPath.Replace('\\', '/');
+        return n.IndexOf("/commonW2/custom_recipes/", StringComparison.Ordinal) >= 0
+            || n.IndexOf("/commonW3/custom_recipes/", StringComparison.Ordinal) >= 0;
+    }
+
+    /// <summary>资产是否属于指定共享库 custom_recipes 目录。</summary>
+    public static bool IsInLibraryCustomRecipes(string assetPath, string libraryId)
+    {
+        var dir = LibraryRecipesDir(libraryId);
+        if (string.IsNullOrEmpty(dir) || string.IsNullOrEmpty(assetPath))
+            return false;
+        var prefix = dir.Replace('\\', '/').TrimEnd('/') + "/";
+        return assetPath.Replace('\\', '/').StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+    }
+
     // ---------- 文件系统扫描（不依赖 AssetDatabase 索引） ----------
 
     public const string CustomRecipeScriptGuid = "83fb008bcc8e793429b02c178c430815";
@@ -2835,11 +2869,126 @@ public static class LayoutEditorLevelAdminApi
         return false;
     }
 
+    /// <summary>开发者模式：只扫描指定共享库（commonW2 / commonW3）下的全部菜谱。</summary>
+    public static CustomRecipeSummaryDto[] ScanLibraryCustomRecipes(string libraryId)
+    {
+        var recipesDir = LibraryRecipesDir(libraryId);
+        if (string.IsNullOrEmpty(recipesDir) || !AssetFolderExists(recipesDir))
+            return new CustomRecipeSummaryDto[0];
+
+        var scanRoots = new List<string> { recipesDir };
+        var namesDict = LoadCustomRecipeNamesFromDir(recipesDir);
+        var allEntries = BuildCustomRecipeEntryDtosFromFolders(new List<string> { recipesDir });
+        return ScanCustomRecipesAtRoots(scanRoots, namesDict, allEntries);
+    }
+
+    /// <summary>开发者模式：只读加载共享库 CustomRecipeConfig（不自动创建）。</summary>
+    public static CustomRecipeConfigDto GetLibraryCustomRecipeConfig(string libraryId)
+    {
+        var recipesDir = LibraryRecipesDir(libraryId);
+        if (string.IsNullOrEmpty(recipesDir) || !AssetFolderExists(recipesDir))
+            return new CustomRecipeConfigDto { uidPrefix = 0, nextSequence = 1, categories = new CustomRecipeCategoryDto[0] };
+
+        var configPath = recipesDir + "/CustomRecipeConfig.asset";
+        var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
+        if (config == null)
+            return new CustomRecipeConfigDto { uidPrefix = 0, nextSequence = 1, categories = new CustomRecipeCategoryDto[0] };
+
+        var catDtos = new List<CustomRecipeCategoryDto>();
+        if (config.categories != null)
+        {
+            foreach (var c in config.categories)
+                catDtos.Add(new CustomRecipeCategoryDto { id = c.id, zh = c.zh ?? c.id, en = c.en ?? c.id });
+        }
+
+        var subDtos = new List<CustomRecipeSubcategoryDto>();
+        if (config.subcategories != null)
+        {
+            foreach (var s in config.subcategories)
+            {
+                if (s == null || string.IsNullOrEmpty(s.id))
+                    continue;
+                subDtos.Add(new CustomRecipeSubcategoryDto
+                {
+                    id = s.id,
+                    parent = s.parent ?? "",
+                    zh = string.IsNullOrEmpty(s.zh) ? s.id : s.zh,
+                    en = string.IsNullOrEmpty(s.en) ? s.id : s.en,
+                    order = s.order
+                });
+            }
+        }
+
+        if (string.Equals(libraryId, "commonW2", StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var s in BurgerSubcategories())
+            {
+                if (!subDtos.Exists(x => x.parent == s.parent && x.id == s.id))
+                    subDtos.Add(s);
+            }
+        }
+
+        return new CustomRecipeConfigDto
+        {
+            uidPrefix = config.uidPrefix,
+            nextSequence = config.nextSequence,
+            categories = catDtos.ToArray(),
+            subcategories = subDtos.ToArray()
+        };
+    }
+
+    /// <summary>开发者模式：引用表（烹饪/装盘/可复用模型），共享库目录优先纳入模型池。</summary>
+    public static CustomRecipeReferencesDto GetLibraryCustomRecipeReferences(string libraryId)
+    {
+        var dto = GetCustomRecipeReferences(null);
+        var libDir = LibraryRecipesDir(libraryId);
+        if (string.IsNullOrEmpty(libDir) || !AssetFolderExists(libDir))
+            return dto;
+
+        var modelList = new List<CustomRecipeReferenceEntryDto>(dto.reusableModels ?? new CustomRecipeReferenceEntryDto[0]);
+        var modelSeen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var m in modelList)
+        {
+            if (!string.IsNullOrEmpty(m.assetPath))
+                modelSeen.Add(m.assetPath);
+        }
+
+        foreach (var asset in ScanCustomRecipeAssets(libDir))
+        {
+            var path = asset.assetPath;
+            var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+            if (so == null || so.model == null)
+                continue;
+
+            var modelPath = AssetDatabase.GetAssetPath(so.model);
+            if (string.IsNullOrEmpty(modelPath) || !modelSeen.Add(modelPath))
+                continue;
+
+            var id = Path.GetFileNameWithoutExtension(modelPath);
+            string zh, en;
+            LayoutEditorManualLookup.TryGet(id, out zh, out en);
+            if (string.IsNullOrEmpty(zh) || zh == id)
+                zh = so.recipeName ?? id;
+
+            modelList.Add(new CustomRecipeReferenceEntryDto
+            {
+                guid = ReadAssetGuid(modelPath + ".meta") ?? AssetDatabase.AssetPathToGUID(modelPath),
+                id = id,
+                recipeId = Path.GetFileNameWithoutExtension(path),
+                nameZh = zh,
+                nameEn = en,
+                assetPath = modelPath
+            });
+        }
+
+        dto.reusableModels = modelList.ToArray();
+        return dto;
+    }
+
     public static CustomRecipeSummaryDto[] ScanCustomRecipes(string setName)
     {
-        var list = new List<CustomRecipeSummaryDto>();
         if (string.IsNullOrEmpty(setName))
-            return list.ToArray();
+            return new CustomRecipeSummaryDto[0];
 
         // 扫描根：本关卡集 custom_recipes + commonW2 Burger大全共享库（后者对所有关卡集可见）。
         var scanRoots = new List<string>();
@@ -2849,15 +2998,22 @@ public static class LayoutEditorLevelAdminApi
         if (AssetFolderExists(CommonW2RecipesDir))
             scanRoots.Add(CommonW2RecipesDir);
         if (scanRoots.Count == 0)
-            return list.ToArray();
+            return new CustomRecipeSummaryDto[0];
 
         var namesDict = LoadCustomRecipeNames(setName);
         foreach (var kv in LoadCustomRecipeNamesFromDir(CommonW2RecipesDir))
             namesDict[kv.Key] = kv.Value;
 
-        // 全部候选条目（本关卡集 + common01 官方 CustomRecipes + commonW2 Burger大全），
-        // 用于把组成里的子菜谱 id 解析为烹饪步骤与叶食材。
         var allEntries = BuildCustomRecipeEntryDtos(setName);
+        return ScanCustomRecipesAtRoots(scanRoots, namesDict, allEntries);
+    }
+
+    private static CustomRecipeSummaryDto[] ScanCustomRecipesAtRoots(
+        List<string> scanRoots,
+        Dictionary<string, NameRow> namesDict,
+        List<RecipeEntryDto> allEntries)
+    {
+        var list = new List<CustomRecipeSummaryDto>();
         var entryById = new Dictionary<string, RecipeEntryDto>(StringComparer.Ordinal);
         foreach (var e in allEntries)
         {
@@ -3055,7 +3211,6 @@ public static class LayoutEditorLevelAdminApi
     ///  覆盖本关卡集目录与 common01 官方 CustomRecipes，供工序分组解析子菜谱。</summary>
     private static List<RecipeEntryDto> BuildCustomRecipeEntryDtos(string setName)
     {
-        var list = new List<RecipeEntryDto>();
         var folders = new List<string>();
 
         var recipesDir = LevelSetsRoot + "/" + setName + "/" + CustomRecipesDir;
@@ -3066,6 +3221,13 @@ public static class LayoutEditorLevelAdminApi
         // commonW2 Burger大全：子菜谱（煎肉饼/炸虾等中间产物）参与工序分组解析。
         if (AssetFolderExists(CommonW2RecipesDir))
             folders.Add(CommonW2RecipesDir);
+
+        return BuildCustomRecipeEntryDtosFromFolders(folders);
+    }
+
+    private static List<RecipeEntryDto> BuildCustomRecipeEntryDtosFromFolders(List<string> folders)
+    {
+        var list = new List<RecipeEntryDto>();
 
         foreach (var folder in folders)
         {
@@ -3808,6 +3970,9 @@ public static class LayoutEditorLevelAdminApi
         if (string.IsNullOrEmpty(setName) || string.IsNullOrEmpty(recipeName))
             return "标识只能包含字母数字和下划线。";
 
+        if (LibraryRecipesDir(setName) != null)
+            return "共享菜谱库不支持新建菜谱；请使用开发者模式编辑已有资产。";
+
         if (!GloballyUniqueRecipeName(recipeName))
             return "菜谱名称「" + recipeName + "」已被其他关卡集使用。";
 
@@ -4017,6 +4182,9 @@ public static class LayoutEditorLevelAdminApi
     {
         if (string.IsNullOrEmpty(assetPath))
             return "缺少资源路径。";
+
+        if (IsSharedLibraryRecipePath(assetPath))
+            return "共享菜谱库不支持删除；请用版本控制回滚，或在关卡集内新建副本。";
 
         var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(assetPath);
         if (so == null)
