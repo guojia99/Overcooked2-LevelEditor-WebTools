@@ -1,41 +1,80 @@
+<div align="center">
+
 # OC2 LevelEditor Web Tools
 
-- 作者： 嘉
+**《Overcooked! 2》自定义关卡 Web 可视化编辑器**
 
-![base_bg.png](layout-editor/web/public/base_bg.png)
+![preview](pkg/layout-editor/web/public/base_bg.png)
 
-> - 起因是因为Unity2017界面不好用，所以就研发了这么一个工具。
+[![Version](https://img.shields.io/badge/version-v0.9.0-orange)](UPDATE_LOG.md)
+[![License](https://img.shields.io/badge/License-AGPL--3.0-blue)](LICENSE)
+[![QQ Group](https://img.shields.io/badge/QQ%E7%BE%A4-1091785437-52c41a)]()
+![Platform](https://img.shields.io/badge/Platform-Unity%202017-lightgrey)
 
-### 注意事项
-- 注意，在更新版本或者操作文件之前，需要把Unity关闭，以免出现意外错误。
-  - 实测丢失了一些数据的。
-- 本项目无法保证百分百不会出问题，在使用前请使用测试关卡试用，以免丢失数据。
-- 本项目无法代替unity，只是减少了繁琐的unity的操作，最终调试还是需要使用unity。
+作者：嘉 ｜ 起因：Unity 2017 界面不好用，于是做了这个工具
 
+</div>
 
-### 环境准备
-- 基于GUA老师的编辑器，请正确安装好GUA老师的项目后再继续
-- https://github.com/gua248/Overcooked2-LevelEditor
+---
 
-#### 安装和开始方法
-1. 将本仓库下载到你的本地
-- https://github.com/guojia99/Overcooked2-LevelEditor-WebTools
-- 或者在QQ群 1091785437 获取
-- 打开`pkg`目录
-2. 将`LayoutEditor` 放到`../Overcooked2-LevelEditor/Assets/Editor`中
-3. 将`layout-editor` 放到`../Overcooked2-LevelEditor/` 目录下即可
-4. 将`commonW1`和`commonW1.meta` 放到`../Overcooked2-LevelEditor/Assets/`目录
-5. 将`commonW2`和`commonW2.meta` 放到`../Overcooked2-LevelEditor/Assets/`目录
-6. 将`WebCustomStubRuntime`和`WebCustomStubRuntime.meta` 放到`../Overcooked2-LevelEditor/Assets/`目录
-7. 将`Plugins` 中的所有组件 拷贝到`./Overcooked2-LevelEditor/Assets/Plugins`中
+## 目录
 
+- [注意事项](#注意事项)
+- [环境准备](#环境准备)
+- [安装和开始方法](#安装和开始方法)
+- [功能亮点](#功能亮点)
+- [报告 Bug](#报告-bug)
+- [免责声明](#免责声明)
+- [开源协议](#开源协议)
 
-### 功能清单
-- 请进入web页面查看
+## 注意事项
 
-### 报告bug
-- 你可以通过github 提交issue报告bug
-- 或者加入QQ群聊 1091785437
+> [!WARNING]
+> - **更新版本或操作文件之前，请先关闭 Unity**，以免出现意外错误（实测丢失过数据）。
+> - 本项目无法保证百分百不出问题，**使用前请先用测试关卡试用**，以免丢失数据。
+> - 本项目**无法替代 Unity**，只是减少了繁琐的 Unity 操作，最终调试仍需使用 Unity。
+
+## 环境准备
+
+- 本工具基于 GUA 老师的编辑器，请先正确安装 GUA 老师的项目再继续：
+  - <https://github.com/gua248/Overcooked2-LevelEditor>
+
+## 安装和开始方法
+
+1. 将本仓库下载到本地：
+   - <https://github.com/guojia99/Overcooked2-LevelEditor-WebTools>
+   - 或在 QQ 群 `1091785437` 获取
+2. 打开 `pkg` 目录，按下表将各组件复制到 `Overcooked2-LevelEditor` 项目的对应位置：
+
+| `pkg` 目录下的内容 | 复制到 |
+| --- | --- |
+| `LayoutEditor` | `Overcooked2-LevelEditor/Assets/Editor` |
+| `layout-editor` | `Overcooked2-LevelEditor/` |
+| `commonW1` `commonW1.meta` | `Overcooked2-LevelEditor/Assets/` |
+| `commonW2` `commonW2.meta` | `Overcooked2-LevelEditor/Assets/` |
+| `commonW3` `commonW3.meta` | `Overcooked2-LevelEditor/Assets/` |
+| `WebCustomStubRuntime` `WebCustomStubRuntime.meta` | `Overcooked2-LevelEditor/Assets/` |
+| `Plugins` 中的所有组件 | `Overcooked2-LevelEditor/Assets/Plugins` |
+
+## 功能亮点
+
+- **编辑体验**：四套页面主题（黑金 / 粉红 / 天蓝 / 纯白）、3D 模式（beta）、跨页面拷贝、三轴旋转、精度 0.1 可调
+- **关卡管理**：多关卡集打包、关卡截图直接生成导入、关卡集改名、汇总页说明与多人菜谱分工
+- **菜谱与菜单**：庞大菜谱库（沙拉、果汁、冰沙、冰淇淋、炒饭、布丁、汤等）、自定义菜谱 / 菜单、可自定义菜谱模型面数
+- **动画组**：支持旋转、并行、时间轴控制、动态镜头抖动与闪电特效
+- **机关与开关**：开关组合、共轭开关、互锁开关、开关事件组
+- **音频**：音乐导入和压缩、音频查看
+- **模型与自定义**：老鼠自定义模型、内置蟑螂模型
+- **相机与灯光**：初始视角、视距、背景颜色、灯光暖度 / 强度调整
+- **锅具管理**：烹饪时间配置、煮糊时间独立设定
+- **其他**：历史记录恢复、AI 自动评分、工作量推测（实验性）
+
+> 完整功能清单请进入 Web 页面查看，更新历史见 [UPDATE_LOG.md](UPDATE_LOG.md)。
+
+## 报告 Bug
+
+- 通过 GitHub 提交 [Issue](https://github.com/guojia99/Overcooked2-LevelEditor-WebTools/issues)
+- 或加入 QQ 群聊 `1091785437`
 
 ## 免责声明
 
