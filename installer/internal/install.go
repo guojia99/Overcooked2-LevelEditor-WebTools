@@ -59,6 +59,7 @@ func VerifyPkg(pkg string) error {
 		"layout-editor",
 		"commonW1", "commonW1.meta",
 		"commonW2", "commonW2.meta",
+		"commonW3", "commonW3.meta",
 		"WebCustomStubRuntime", "WebCustomStubRuntime.meta",
 		"Plugins",
 	}
@@ -90,7 +91,7 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 
 	// Step 0: pre-decompiled Assembly-CSharp -> Assets/Scripts/Assembly-CSharp
 	if asmSrc != "" {
-		log("[1/7] 拷贝反编译代码 Assets/Scripts/Assembly-CSharp ...")
+		log("[1/8] 拷贝反编译代码 Assets/Scripts/Assembly-CSharp ...")
 		asmDst := filepath.Join(assets, "Scripts", "Assembly-CSharp")
 		if err := ReplaceDir(asmSrc, asmDst); err != nil {
 			return err
@@ -109,11 +110,11 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 			log("      警告：未找到 Assembly-CSharp-Patch，跳过补丁（可能导致编译报错）")
 		}
 	} else {
-		log("[1/7] 跳过 Assembly-CSharp（未提供源目录）")
+		log("[1/8] 跳过 Assembly-CSharp（未提供源目录）")
 	}
 
 	// Step: LayoutEditor -> Assets/Editor/LayoutEditor
-	log("[2/7] 替换 Assets/Editor/LayoutEditor ...")
+	log("[2/8] 替换 Assets/Editor/LayoutEditor ...")
 	if err := ReplaceDir(
 		filepath.Join(pkg, "LayoutEditor"),
 		filepath.Join(assets, "Editor", "LayoutEditor"),
@@ -122,7 +123,7 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 	}
 
 	// Step: layout-editor -> <project root>/layout-editor
-	log("[3/7] 替换 layout-editor (工程根目录) ...")
+	log("[3/8] 替换 layout-editor (工程根目录) ...")
 	if err := ReplaceDir(
 		filepath.Join(pkg, "layout-editor"),
 		filepath.Join(target, "layout-editor"),
@@ -131,7 +132,7 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 	}
 
 	// Step: commonW1 (+ meta) -> Assets/
-	log("[4/7] 替换 Assets/commonW1 ...")
+	log("[4/8] 替换 Assets/commonW1 ...")
 	if err := ReplaceDir(filepath.Join(pkg, "commonW1"), filepath.Join(assets, "commonW1")); err != nil {
 		return err
 	}
@@ -140,7 +141,7 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 	}
 
 	// Step: commonW2 (+ meta) -> Assets/
-	log("[5/7] 替换 Assets/commonW2 ...")
+	log("[5/8] 替换 Assets/commonW2 ...")
 	if err := ReplaceDir(filepath.Join(pkg, "commonW2"), filepath.Join(assets, "commonW2")); err != nil {
 		return err
 	}
@@ -148,8 +149,17 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 		return err
 	}
 
+	// Step: commonW3 (+ meta) -> Assets/
+	log("[6/8] 替换 Assets/commonW3 ...")
+	if err := ReplaceDir(filepath.Join(pkg, "commonW3"), filepath.Join(assets, "commonW3")); err != nil {
+		return err
+	}
+	if err := ReplaceFile(filepath.Join(pkg, "commonW3.meta"), filepath.Join(assets, "commonW3.meta")); err != nil {
+		return err
+	}
+
 	// Step: WebCustomStubRuntime (+ meta) -> Assets/
-	log("[6/7] 替换 Assets/WebCustomStubRuntime ...")
+	log("[7/8] 替换 Assets/WebCustomStubRuntime ...")
 	if err := ReplaceDir(
 		filepath.Join(pkg, "WebCustomStubRuntime"),
 		filepath.Join(assets, "WebCustomStubRuntime"),
@@ -164,7 +174,7 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 	}
 
 	// Step: Plugins files -> Assets/Plugins (overwrite only listed files)
-	log("[7/7] 覆盖 Assets/Plugins 中的组件 ...")
+	log("[8/8] 覆盖 Assets/Plugins 中的组件 ...")
 	pluginsDst := filepath.Join(assets, "Plugins")
 	if err := os.MkdirAll(pluginsDst, 0o755); err != nil {
 		return fmt.Errorf("创建 %s 失败: %w", pluginsDst, err)

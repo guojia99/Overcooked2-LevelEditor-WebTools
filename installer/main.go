@@ -8,6 +8,7 @@ import (
 	_ "image/png"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"oc2-installer/internal"
 
@@ -19,16 +20,28 @@ import (
 //go:embed banner.png
 var bannerPNG []byte
 
+var (
+	colStep = walk.RGB(31, 78, 121)   // step titles
+	colSub  = walk.RGB(0, 102, 153)   // sub-section titles
+	colOK   = walk.RGB(0, 140, 0)     // success status
+	colErr  = walk.RGB(200, 0, 0)     // error / warning status
+	colGrey = walk.RGB(120, 120, 120) // hints
+)
+
 type appState struct {
 	mw            *walk.MainWindow
-	pathEdit      *walk.LineEdit
 	logBox        *walk.TextEdit
+	pathEdit      *walk.LineEdit
+	mirrorCombo   *walk.ComboBox
 	downloadBtn   *walk.PushButton
+	browseBtn     *walk.PushButton
 	copyResBtn    *walk.PushButton
 	installBtn    *walk.PushButton
 	progressBar   *walk.ProgressBar
 	progressLabel *walk.Label
 	resStatus     *walk.Label
+	resDetails    *walk.Composite // step-2 hints + button, shown when NOT configured
+	reCopyLink    *walk.LinkLabel // shown when already configured
 	banner        *walk.ImageView
 
 	target string
@@ -41,9 +54,9 @@ func main() {
 	if err := (MainWindow{
 		AssignTo: &st.mw,
 		Title:    "OC2 WebTools 安装器",
-		MinSize:  Size{Width: 640, Height: 480},
-		Size:     Size{Width: 860, Height: 860},
-		Layout:   VBox{},
+		MinSize:  Size{Width: 660, Height: 560},
+		Size:     Size{Width: 880, Height: 880},
+		Layout:   VBox{Margins: Margins{Left: 12, Top: 10, Right: 12, Bottom: 10}, Spacing: 10},
 		Children: []Widget{
 			ImageView{
 				AssignTo: &st.banner,
@@ -52,23 +65,40 @@ func main() {
 				Mode:     ImageViewModeZoom,
 			},
 			Label{
-				Text:      "操作前请务必先关闭 Unity，以免数据丢失！",
-				TextColor: walk.RGB(200, 0, 0),
+				Text:      "⚠ 操作前请务必先关闭 Unity，以免数据丢失！",
+				TextColor: colErr,
+				Font:      Font{PointSize: 10, Bold: true},
 			},
 
-			// Four steps arranged in a 2x2 grid.
+			// Steps arranged in a 2-column grid (original structure).
 			Composite{
 				Layout: Grid{Columns: 2, Spacing: 8},
 				Children: []Widget{
-					// Step 1: download upstream project
+					// Step 1: get the project directory — download OR pick a local one.
 					GroupBox{
-						Title:  "第 1 步 · 获取上游项目 (gua248/Overcooked2-LevelEditor)",
-						Layout: VBox{},
+						Title:  "第 1 步 · 获取项目目录（二选一）",
+						Layout: VBox{Spacing: 6},
 						Children: []Widget{
-							Label{Text: "若尚未下载上游编辑器，点击下方按钮自动下载并解压（会自动填入项目目录）。"},
+							Label{
+								Text:      "方式 A · 在线下载上游项目 (gua248/Overcooked2-LevelEditor)",
+								TextColor: colSub,
+								Font:      Font{PointSize: 9, Bold: true},
+							},
+							Label{Text: "下载源（默认自动，失败自动切换）："},
+							ComboBox{
+								AssignTo: &st.mirrorCombo,
+								Model:    internal.MirrorNames(),
+								MinSize:  Size{Width: 330, Height: 26},
+							},
+							LinkLabel{
+								Text: `更多下载源：<a href="http://toolwa.com/github/">toolwa.com/github/</a>（网页工具，需手动粘贴链接）`,
+								OnLinkActivated: func(link *walk.LinkLabelLink) {
+									openURL(link.URL())
+								},
+							},
 							PushButton{
 								AssignTo:  &st.downloadBtn,
-								Text:      "下载并解压上游项目…",
+								Text:      "方式 A：下载并解压上游项目…",
 								MinSize:   Size{Height: 34},
 								OnClicked: st.onDownload,
 							},
@@ -81,73 +111,86 @@ func main() {
 								AssignTo: &st.progressLabel,
 								Text:     "",
 							},
-							VSpacer{},
-						},
-					},
-
-					// Step 2: select project directory
-					GroupBox{
-						Title:  "第 2 步 · 选择项目目录",
-						Layout: VBox{},
-						Children: []Widget{
-							Label{Text: "选择（或由第 1 步自动填入）Overcooked2-LevelEditor 项目目录："},
+							Label{
+								Text:      "────────────  或者  ────────────",
+								TextColor: colGrey,
+							},
+							Label{
+								Text:      "方式 B · 选择本地已有的项目目录（方式 A 下载成功后会自动填入）",
+								TextColor: colSub,
+								Font:      Font{PointSize: 9, Bold: true},
+							},
 							LineEdit{
 								AssignTo: &st.pathEdit,
 								ReadOnly: true,
 							},
 							PushButton{
-								Text:      "浏览…",
+								AssignTo:  &st.browseBtn,
+								Text:      "方式 B：浏览选择项目目录…",
 								MinSize:   Size{Height: 34},
 								OnClicked: st.onBrowse,
 							},
-							VSpacer{},
 						},
 					},
 
-					// Step 3: copy game resource base
+					// Step 2: game resource base — auto-detected, shown only when needed.
 					GroupBox{
-						Title:  "第 3 步 · 拷贝游戏资源底包 (StreamingAssets/Windows)",
-						Layout: VBox{},
+						Title:  "第 2 步 · 拷贝游戏资源底包 (StreamingAssets/Windows)",
+						Layout: VBox{Spacing: 6},
 						Children: []Widget{
 							Label{
-								Text:      "当前项目资源底包状态：请先选择项目目录",
 								AssignTo:  &st.resStatus,
-								TextColor: walk.RGB(120, 120, 120),
+								Text:      "状态：待检测 …",
+								TextColor: colGrey,
 							},
-							Label{Text: "————————————————————————"},
-							Label{
-								Text:      "【参考位置，仅供参考，请勿直接填写此路径】游戏 StreamingAssets 目录通常在：",
-								TextColor: walk.RGB(120, 120, 120),
+							Composite{
+								AssignTo: &st.resDetails,
+								Layout:   VBox{Spacing: 4},
+								Children: []Widget{
+									Label{Text: "————————————————————————", TextColor: colGrey},
+									Label{
+										Text:      "【参考位置，仅供参考，请勿直接填写此路径】游戏 StreamingAssets 目录通常在：",
+										TextColor: colGrey,
+									},
+									Label{
+										Text:      `C:\...\Overcooked! 2\Overcooked2_Data\StreamingAssets`,
+										TextColor: colGrey,
+									},
+									Label{Text: "————————————————————————", TextColor: colGrey},
+									Label{Text: "请点击下方按钮，在弹窗中【自行选择】你电脑上的游戏 StreamingAssets 目录完成拷贝："},
+									PushButton{
+										AssignTo:  &st.copyResBtn,
+										Text:      "选择游戏目录并拷贝资源底包…",
+										MinSize:   Size{Height: 34},
+										OnClicked: st.onCopyResources,
+									},
+								},
 							},
-							Label{
-								Text:      `C:\...\Overcooked! 2\Overcooked2_Data\StreamingAssets`,
-								TextColor: walk.RGB(120, 120, 120),
+							LinkLabel{
+								AssignTo: &st.reCopyLink,
+								Visible:  false,
+								Text:     `<a href="recopy">资源底包已配置 ✓ —— 如需强制重新拷贝，请点这里…</a>`,
+								OnLinkActivated: func(*walk.LinkLabelLink) {
+									st.onCopyResources()
+								},
 							},
-							Label{Text: "————————————————————————"},
-							Label{Text: "点击下方按钮，在弹窗中【自行选择】你电脑上的游戏 StreamingAssets 目录："},
-							PushButton{
-								AssignTo:  &st.copyResBtn,
-								Text:      "选择游戏目录并拷贝资源底包…",
-								MinSize:   Size{Height: 34},
-								OnClicked: st.onCopyResources,
-							},
-							VSpacer{},
 						},
 					},
 
-					// Step 4: install
+					// Step 3: install — spans both columns, always the last step.
 					GroupBox{
-						Title:  "第 4 步 · 安装（自动检测 → 覆盖安装，含反编译代码）",
-						Layout: VBox{},
+						Title:      "第 3 步 · 安装（自动检测 → 覆盖安装，含反编译代码）",
+						ColumnSpan: 2,
+						Layout:     VBox{Spacing: 6},
 						Children: []Widget{
-							Label{Text: "确认前 3 步就绪后，点击下方按钮开始安装。"},
+							Label{Text: "确认前 2 步就绪后，点击下方按钮开始安装。"},
 							PushButton{
 								AssignTo:  &st.installBtn,
 								Text:      "开 始 安 装",
-								MinSize:   Size{Height: 42},
+								MinSize:   Size{Height: 46},
+								Font:      Font{PointSize: 11, Bold: true},
 								OnClicked: st.onInstall,
 							},
-							VSpacer{},
 						},
 					},
 				},
@@ -163,7 +206,7 @@ func main() {
 						AssignTo: &st.logBox,
 						ReadOnly: true,
 						VScroll:  true,
-						MinSize:  Size{Height: 180},
+						MinSize:  Size{Height: 160},
 					},
 				},
 			},
@@ -184,10 +227,20 @@ func main() {
 
 	st.loadBanner()
 	st.setProgress(0, 0, false)
+	st.mirrorCombo.SetCurrentIndex(0) // 下载源默认选中「自动」
+	st.refreshResStatus()             // auto-detect step-2 state on startup
 	st.log("欢迎使用 OC2 WebTools 安装器。")
-	st.log("流程：① 下载上游项目 → ② 选择项目目录 → ③ 拷贝游戏资源底包 → ④ 开始安装。")
+	st.log("流程：① 获取项目目录（在线下载 或 本地选择，任选其一） → ② 拷贝游戏资源底包（自动检测） → ③ 开始安装。")
 	st.log("提示：反编译代码由安装器自动提供，无需手动反编译；安装为覆盖式，可重复安装。")
 	st.mw.Run()
+}
+
+// openURL opens a URL with the system default handler.
+func openURL(u string) {
+	win.ShellExecute(0,
+		syscall.StringToUTF16Ptr("open"),
+		syscall.StringToUTF16Ptr(u),
+		nil, nil, win.SW_SHOWNORMAL)
 }
 
 func (st *appState) loadBanner() {
@@ -238,25 +291,36 @@ func (st *appState) setBusy(b bool) {
 	st.busy = b
 	enabled := !b
 	st.downloadBtn.SetEnabled(enabled)
+	st.browseBtn.SetEnabled(enabled)
+	st.mirrorCombo.SetEnabled(enabled)
 	st.copyResBtn.SetEnabled(enabled)
 	st.installBtn.SetEnabled(enabled)
 }
 
-// refreshResStatus updates the step-3 status label based on the current target.
+// refreshResStatus auto-detects the step-2 resource state for the current
+// target and toggles the UI accordingly: when configured, the hints/button are
+// hidden (only a compact green status + force-re-copy link remains); when not
+// configured, the step expands so the user can do the copy themselves.
 // Must be called on the UI thread.
 func (st *appState) refreshResStatus() {
 	if st.target == "" {
-		st.resStatus.SetText("当前项目资源底包状态：请先选择项目目录")
-		st.resStatus.SetTextColor(walk.RGB(120, 120, 120))
+		st.resStatus.SetText("状态：待配置 —— 请先完成第 1 步（下载或选择项目目录）")
+		st.resStatus.SetTextColor(colGrey)
+		st.resDetails.SetVisible(true)
+		st.reCopyLink.SetVisible(false)
 		return
 	}
 	ok, n := internal.StreamingAssetsConfigured(st.target)
 	if ok {
-		st.resStatus.SetText(fmt.Sprintf("当前项目资源底包状态：已配置 ✓（StreamingAssets/Windows 含 %d 项，无需重复拷贝）", n))
-		st.resStatus.SetTextColor(walk.RGB(0, 140, 0))
+		st.resStatus.SetText(fmt.Sprintf("状态：已配置 ✓（StreamingAssets/Windows 含 %d 项，无需重复拷贝，可直接进入第 3 步安装）", n))
+		st.resStatus.SetTextColor(colOK)
+		st.resDetails.SetVisible(false)
+		st.reCopyLink.SetVisible(true)
 	} else {
-		st.resStatus.SetText("当前项目资源底包状态：未配置 ✗（需从游戏目录拷贝 StreamingAssets/Windows）")
-		st.resStatus.SetTextColor(walk.RGB(200, 0, 0))
+		st.resStatus.SetText("状态：未配置 ✗ —— 缺少资源底包，请按下方提示自行选择游戏目录完成拷贝")
+		st.resStatus.SetTextColor(colErr)
+		st.resDetails.SetVisible(true)
+		st.reCopyLink.SetVisible(false)
 	}
 }
 
@@ -280,9 +344,10 @@ func (st *appState) onDownload() {
 		return
 	}
 
+	mirrorSel := st.mirrorCombo.CurrentIndex()
 	st.setBusy(true)
 	st.setProgress(0, 1, true)
-	st.log("开始从 codeload 下载上游项目 ...")
+	st.log("开始下载上游项目（下载源失败时会自动切换）...")
 
 	onProgress := func(downloaded, total int64) {
 		st.mw.Synchronize(func() {
@@ -291,7 +356,7 @@ func (st *appState) onDownload() {
 	}
 
 	go func() {
-		finalDir, err := internal.DownloadAndExtract(parent, st.log, onProgress)
+		finalDir, err := internal.DownloadAndExtract(parent, mirrorSel, st.log, onProgress)
 		st.mw.Synchronize(func() {
 			st.setBusy(false)
 			st.setProgress(0, 0, false)
@@ -305,7 +370,7 @@ func (st *appState) onDownload() {
 			st.refreshResStatus()
 			st.log("上游项目已就绪：" + finalDir)
 			walk.MsgBox(st.mw, "完成",
-				"上游项目已下载并解压到:\n"+finalDir+"\n\n请继续第 3 步拷贝资源底包。",
+				"上游项目已下载并解压到:\n"+finalDir+"\n\n请继续第 2 步拷贝资源底包（若已配置可跳过）。",
 				walk.MsgBoxIconInformation)
 		})
 	}()
@@ -332,7 +397,7 @@ func (st *appState) onCopyResources() {
 		return
 	}
 	if st.target == "" {
-		walk.MsgBox(st.mw, "提示", "请先在第 2 步选择/下载项目目录，再拷贝资源底包。", walk.MsgBoxIconInformation)
+		walk.MsgBox(st.mw, "提示", "请先在第 1 步选择/下载项目目录，再拷贝资源底包。", walk.MsgBoxIconInformation)
 		return
 	}
 
@@ -368,9 +433,9 @@ func (st *appState) onCopyResources() {
 				walk.MsgBox(st.mw, "失败", err.Error(), walk.MsgBoxIconError)
 				return
 			}
-			st.log("资源底包已就绪，可点击第 4 步「开始安装」。")
+			st.log("资源底包已就绪，可点击第 3 步「开始安装」。")
 			walk.MsgBox(st.mw, "完成",
-				"资源底包 StreamingAssets/Windows 拷贝完成。\n请点击第 4 步「开始安装」。",
+				"资源底包 StreamingAssets/Windows 拷贝完成。\n请点击第 3 步「开始安装」。",
 				walk.MsgBoxIconInformation)
 		})
 	}()
@@ -399,7 +464,7 @@ func (st *appState) onInstall() {
 		return
 	}
 	if st.target == "" {
-		walk.MsgBox(st.mw, "提示", "请先在第 2 步选择/下载项目目录。", walk.MsgBoxIconInformation)
+		walk.MsgBox(st.mw, "提示", "请先在第 1 步选择/下载项目目录。", walk.MsgBoxIconInformation)
 		return
 	}
 
@@ -415,9 +480,9 @@ func (st *appState) onInstall() {
 		return
 	}
 	if !rep.EnvOK() {
-		st.log("环境依赖检测未通过：请先用第 3 步拷贝游戏资源底包 StreamingAssets/Windows。")
+		st.log("环境依赖检测未通过：请先用第 2 步拷贝游戏资源底包 StreamingAssets/Windows。")
 		walk.MsgBox(st.mw, "无法安装",
-			"缺少资源底包 StreamingAssets/Windows。\n请先用第 3 步从游戏目录拷贝。",
+			"缺少资源底包 StreamingAssets/Windows。\n请先用第 2 步从游戏目录拷贝。",
 			walk.MsgBoxIconError)
 		return
 	}
