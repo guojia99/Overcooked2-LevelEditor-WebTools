@@ -41,6 +41,35 @@
 
 ## 安装和开始方法
 
+### 方式一 · 图形化安装器（推荐，Windows）
+
+使用随仓库提供的 `installer.exe`，全程图形化操作，**无需手动复制文件、无需手动反编译**，且为覆盖式安装、可重复执行（升级版本时重新运行即可）。
+
+1. 将本仓库（或发行包 `OC2-Installer.zip`）下载并解压到本地，确认 `installer.exe`、`pkg`、`Assembly-CSharp` 三者位于同一目录：
+   - <https://github.com/guojia99/Overcooked2-LevelEditor-WebTools>
+   - 或在 QQ 群 `1091785437` 获取
+2. **关闭 Unity** 后，双击运行 `installer.exe`，按界面三步操作：
+
+| 步骤 | 操作 | 说明 |
+| --- | --- | --- |
+| 第 1 步 · 获取项目目录 | **方式 A**：在线下载上游项目（可选下载源，失败自动切换）<br>**方式 B**：浏览选择本地已有的 `Overcooked2-LevelEditor` 目录 | 二选一，方式 A 成功后自动填入 |
+| 第 2 步 · 拷贝游戏资源底包 | 选择游戏的 `StreamingAssets` 目录（或 `Overcooked2_Data` / 游戏根目录） | 安装器自动检测是否已配置，已配置可跳过 |
+| 第 3 步 · 开始安装 | 点击「开始安装」按钮 | 安装前自动进行目录结构与环境检测、版本比对 |
+
+3. 确认弹窗后等待日志显示「安装完成」即可。
+
+安装器会自动完成以下工作：
+
+- 拷贝反编译代码到 `Assets/Scripts/Assembly-CSharp`（安装器自带，**无需再用 AssetRipper 手动反编译**），并在存在 `Assembly-CSharp-Patch` 时自动打补丁
+- 将 `pkg` 中的 `LayoutEditor`、`layout-editor`、`commonW1/2/3`、`WebCustomStubRuntime` 及 `Plugins` 组件替换到工程对应位置（即方式二表格的全部内容）
+- 将游戏资源底包拷贝到 `Assets/StreamingAssets/Windows`
+
+> [!NOTE]
+> - 非 Windows 系统或不想使用安装器时，请使用下面的手动安装方式。
+> - 安装只会替换上述列出的目录 / 文件，工程中的其他内容不受影响。
+
+### 方式二 · 手动安装
+
 1. 将本仓库下载到本地：
    - <https://github.com/guojia99/Overcooked2-LevelEditor-WebTools>
    - 或在 QQ 群 `1091785437` 获取
