@@ -2,7 +2,7 @@
 /**
  * 从 backup 冰沙 FBX（内嵌 PBR 贴图）生成 commonW3 牛奶冰沙模型目录。
  *
- * 流程：提取内嵌贴图 → 压缩至 1024 → FBX 网格归一化导出 OBJ（对齐 Web 果汁杯体比例）→ 绑定菜谱 model 字段。
+ * 流程：提取内嵌贴图 → 压缩至 512 → FBX 网格归一化导出 OBJ（对齐 Web 果汁杯体比例）→ 绑定菜谱 model 字段。
  * 目录结构对齐 smoothie/models/Web_Smoothie_Blackberry/。
  *
  * 用法：

@@ -2,17 +2,7 @@ fileFormatVersion: 2
 guid: 10cb0af0a8f3818881ae63bee624dead
 ModelImporter:
   serializedVersion: 22
-  fileIDToRecycleName:
-    100000: default
-    100002: //RootNode
-    100004: Web_IceCream_Banana_root
-    400000: default
-    400002: //RootNode
-    400004: Web_IceCream_Banana_root
-    2100000: mat_Web_IceCream_Banana
-    2300000: default
-    3300000: default
-    4300000: default
+  fileIDToRecycleName: {}
   externalObjects: {}
   materials:
     importMaterials: 1

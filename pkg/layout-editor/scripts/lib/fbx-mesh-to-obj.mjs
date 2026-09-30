@@ -5,8 +5,8 @@
 import { parseBinary } from "fbx-parser";
 import { simplifyWeldedMesh } from "./mesh-simplify.mjs";
 
-/** commonW3 手持杯体目标面数（Web 端盘展示，约 25k 三角面）。 */
-export const DEFAULT_MAX_FACE_COUNT = 25_000;
+/** commonW3 手持杯体目标面数（Web 端盘展示，约 15k 三角面）。 */
+export const DEFAULT_MAX_FACE_COUNT = 15_000;
 
 /** @type {{ min: number[]; max: number[]; size: number[] }} */
 export const SMOOTHIE_REFERENCE_BOUNDS = {

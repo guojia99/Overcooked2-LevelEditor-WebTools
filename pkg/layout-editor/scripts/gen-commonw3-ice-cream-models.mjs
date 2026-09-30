@@ -2,7 +2,7 @@
 /**
  * 从 backup 冰淇淋 FBX（内嵌 PBR 贴图）生成 commonW3 模型目录。
  *
- * 流程：提取内嵌贴图 → 压缩至 1024 → FBX 原始比例导出 OBJ（约 1.1× 放大 + 高度 15% 上移，不做果汁/冰沙杯体拉伸）→ 绑定菜谱 model 字段。
+ * 流程：提取内嵌贴图 → 压缩至 512 → FBX 原始比例导出 OBJ（约 1.1× 放大 + 高度 15% 上移，不做果汁/冰沙杯体拉伸）→ 绑定菜谱 model 字段。
  * 目录结构对齐 milk_slush/models/Web_MilkSlush_Blackberry/。
  *
  * 用法：

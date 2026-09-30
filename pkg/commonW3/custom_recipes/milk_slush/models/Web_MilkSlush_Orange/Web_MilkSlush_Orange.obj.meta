@@ -2,17 +2,7 @@ fileFormatVersion: 2
 guid: 65c6ff7713d9556921578a8c6c386be0
 ModelImporter:
   serializedVersion: 22
-  fileIDToRecycleName:
-    100000: default
-    100002: //RootNode
-    100004: Web_MilkSlush_Orange_root
-    400000: default
-    400002: //RootNode
-    400004: Web_MilkSlush_Orange_root
-    2100000: mat_Web_MilkSlush_Orange
-    2300000: default
-    3300000: default
-    4300000: default
+  fileIDToRecycleName: {}
   externalObjects: {}
   materials:
     importMaterials: 1

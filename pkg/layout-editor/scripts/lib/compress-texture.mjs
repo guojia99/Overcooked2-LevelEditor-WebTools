@@ -1,13 +1,13 @@
 /**
  * commonW3 手持饮品模型贴图压缩（sips 缩边 + PNG 落盘）。
- * 2048 → 1024 约减 70% 体积，杯体细节在端盘尺度仍足够。
+ * 1024 → 512 进一步减体积，端盘手持尺度足够。
  */
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 
 /** Web 端盘展示推荐最长边（像素）。 */
-export const DEFAULT_TEXTURE_MAX = 1024;
+export const DEFAULT_TEXTURE_MAX = 512;
 
 const TEX_EXT = new Set([".png", ".jpg", ".jpeg"]);
 

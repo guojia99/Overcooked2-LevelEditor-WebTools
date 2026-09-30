@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 将果汁 / 冰淇淋 / 冰沙模型目录内 PBR 贴图压缩到 1024（就地覆盖）。
+ * 将果汁 / 冰淇淋 / 冰沙模型目录内 PBR 贴图压缩到 512（就地覆盖）。
  *
  * 用法：
  *   node recompress-commonw3-drink-textures.mjs           # dry-run 统计
