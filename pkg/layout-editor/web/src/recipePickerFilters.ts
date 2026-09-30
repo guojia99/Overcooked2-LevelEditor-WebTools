@@ -90,6 +90,8 @@ const STANDARD_SCORES = [20, 40, 60, 80, 100, 120];
 export type ScoreFilter = "all" | "other" | number;
 
 export interface RecipePickerFilterState {
+  /** 菜谱分类（type 字段，如 burger / pizza / sushi），多选 OR。 */
+  types: Set<string>;
   cookSteps: Set<string>;
   utensils: Set<string>;
   ingredients: Set<string>;
@@ -98,11 +100,23 @@ export interface RecipePickerFilterState {
 
 export function emptyRecipePickerFilters(): RecipePickerFilterState {
   return {
+    types: new Set(),
     cookSteps: new Set(),
     utensils: new Set(),
     ingredients: new Set(),
     score: "all",
   };
+}
+
+/** 当前已启用的筛选条件数量（用于工具栏徽标）。 */
+export function countActivePickerFilters(filters: RecipePickerFilterState): number {
+  let n = 0;
+  if (filters.types.size > 0) n++;
+  if (filters.cookSteps.size > 0) n++;
+  if (filters.utensils.size > 0) n++;
+  if (filters.ingredients.size > 0) n++;
+  if (filters.score !== "all") n++;
+  return n;
 }
 
 export function scoreMatches(s: number | undefined, filter: ScoreFilter): boolean {
@@ -162,6 +176,11 @@ export function recipeMatchesFilters(
 ): boolean {
   if (!scoreMatches(r.score, filters.score)) return false;
 
+  if (filters.types.size > 0) {
+    const t = r.type ?? "other";
+    if (!filters.types.has(t)) return false;
+  }
+
   if (filters.cookSteps.size > 0) {
     const steps = recipeCookSteps(r, allRecipes);
     if (!steps.some((s) => filters.cookSteps.has(s))) return false;
@@ -180,6 +199,33 @@ export function recipeMatchesFilters(
   }
 
   return true;
+}
+
+/** 锅具 catalog id → 图标（优先 catalog 缩略图）。 */
+export function utensilIconSrc(id: string): string {
+  return `/icons/catalog/${encodeURIComponent(id)}.png`;
+}
+
+/** 从菜谱列表汇总可选分类 type（按 RECIPE_TYPE_ORDER 稳定排序）。 */
+export function collectTypesFromRecipes(
+  recipes: RecipeEntry[],
+  order: readonly string[]
+): { type: string; count: number; iconRecipeId?: string }[] {
+  const byType = new Map<string, { count: number; iconRecipeId?: string }>();
+  for (const r of recipes) {
+    const t = r.type ?? "other";
+    const cur = byType.get(t) ?? { count: 0, iconRecipeId: undefined };
+    cur.count++;
+    if (!cur.iconRecipeId && r.id && r.icon !== false) cur.iconRecipeId = r.id;
+    byType.set(t, cur);
+  }
+  const rank = (t: string) => {
+    const i = order.indexOf(t);
+    return i < 0 ? 99 : i;
+  };
+  return [...byType.entries()]
+    .sort((a, b) => rank(a[0]) - rank(b[0]) || a[0].localeCompare(b[0]))
+    .map(([type, meta]) => ({ type, ...meta }));
 }
 
 /** 从菜谱列表汇总可选烹饪步骤（排序稳定）。 */

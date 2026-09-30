@@ -24,8 +24,8 @@ export const SHARED_LIBRARIES: { id: SharedLibraryId; title: string; desc: strin
   },
   {
     id: "commonW3",
-    title: "commonW3 · 沙拉 / 果汁",
-    desc: "Web 扩展沙拉与果汁菜谱库。修改会影响所有引用该库的关卡集。",
+    title: "commonW3 · 沙拉 / 果汁 / 炒饭 / 汤粥 / 冰淇淋 / 布丁 / 牛奶冰沙",
+    desc: "Web 扩展共享菜谱库（沙拉、果汁、炒饭、汤粥、冰淇淋、布丁、牛奶冰沙）。修改会影响所有引用该库的关卡集。",
   },
 ];
 

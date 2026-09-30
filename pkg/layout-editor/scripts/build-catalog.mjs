@@ -719,15 +719,22 @@ function recipeTypeOf(id) {
   if (has("fruitplatter")) return "fruitplatter";
   if (has("moonpie")) return "moonpie";
   if (has("christmaspudding")) return "pudding";
+  // Web_Pudding_*（commonW3 布丁）归入官方布丁大类。
+  if (lower.startsWith("web_pudding")) return "pudding";
   if (has("hotpot")) return "hotpot";
   if (has("hotchoc")) return "hotchocolate";
   if (has("sodafloat") || has("float")) return "float";
+  // Web_IceCream_*（commonW3 冰淇淋）与官方 IceCream 区分目录分类。
+  if (has("icecream") && lower.startsWith("web_icecream")) return "ice_cream";
   if (has("icecream")) return "icecream";
+  if (has("milkslush")) return "milk_slush";
   if (has("donut")) return "donut";
   if (has("hotdog") || has("frankfurter")) return "hotdog";
   if (has("fruitpie")) return "pie";
   if (has("roastedmarshmallow")) return "smores"; // 烤棉花糖归入棉花糖饼干（先于 roast）
   if (has("roast")) return "roast";
+  // Web_FriedRice_*（commonW3 炒饭）须在通用 fried→fry 之前判定。
+  if (has("friedrice")) return "fried_rice";
   if (has("fried")) return "fry";
   if (has("cheesestick") || has("onionrings")) return "fry";
   if (has("smoothie")) return "smoothie";

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83fb008bcc8e793429b02c178c430815, type: 3}
+  m_Name: Web_MilkSlush_Strawberry
+  m_EditorClassIdentifier: 
+  type: 3
+  recipeName: Web_MilkSlush_Strawberry
+  uID: 58322069
+  score: 100
+  platingStepSO: {fileID: 11400000, guid: 9f2781f346fbd6d42a008e004f255d92, type: 2}
+  modelSO: {fileID: 0}
+  model: {fileID: 100000, guid: f8231de25312eab5b8e47eaf821e7069, type: 3}
+  iconSO: {fileID: 0}
+  icon: {fileID: 21300000, guid: c4b011d8366abf20cfc310f8f08c5001, type: 3}
+  compositionSOs:
+  - {fileID: 11400000, guid: af1fe45a85aaf6448f00b5bdd59a7002, type: 2}
+  - {fileID: 11400000, guid: ef868e413995bdf5ea3c0058f6dd5db0, type: 2}
+  - {fileID: 11400000, guid: e1e6338f70e25804d8a1081909bcb066, type: 2}
+  - {fileID: 11400000, guid: e1e6338f70e25804d8a1081909bcb066, type: 2}
+  optionalSOs: []
+  cookingStepSO: {fileID: 0}
+  cookingStepIconSO: {fileID: 0}
+  cookingStepIcon: {fileID: 0}
+  cookingProgress: 0
+  mixingIconSO: {fileID: 11400000, guid: 7a77fe98553178640a4b8a48d10057bc, type: 2}
+  mixingIcon: {fileID: 0}
+  mixingProgress: 1

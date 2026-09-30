@@ -6,6 +6,9 @@ export const RECIPE_TYPE_ZH: Record<string, string> = {
   burrito: "卷饼",
   pizza: "披萨",
   pasta: "意面",
+  fried_rice: "炒饭",
+  ice_cream: "冰淇淋",
+  milk_slush: "牛奶冰沙",
   sushi: "寿司",
   salad: "沙拉",
   soup: "汤",
@@ -39,6 +42,9 @@ export const RECIPE_TYPE_ORDER = [
   "burrito",
   "pizza",
   "pasta",
+  "fried_rice",
+  "ice_cream",
+  "milk_slush",
   "sushi",
   "salad",
   "soup",
@@ -64,6 +70,23 @@ export const RECIPE_TYPE_ORDER = [
   "batter",
   "other",
 ];
+
+/** commonW3 / 关卡集 custom_recipes 目录分类（与 CustomRecipeConfig.categories 对齐；缺配置时的回退）。 */
+export const CUSTOM_CATEGORY_ZH: Record<string, string> = {
+  salad: "沙拉大全",
+  smoothie: "Web 果汁大全",
+  fried_rice: "炒饭",
+  soup: "汤粥",
+  ice_cream: "冰淇淋",
+  pudding: "布丁",
+  milk_slush: "牛奶冰沙",
+};
+
+export function customCategoryLabel(categoryId: string | undefined): string {
+  const id = categoryId ?? "";
+  if (!id) return "未分类";
+  return CUSTOM_CATEGORY_ZH[id] ?? RECIPE_TYPE_ZH[id] ?? id;
+}
 
 export function recipeTypeLabel(type: string | undefined): string {
   return RECIPE_TYPE_ZH[type ?? "other"] ?? type ?? "其他";

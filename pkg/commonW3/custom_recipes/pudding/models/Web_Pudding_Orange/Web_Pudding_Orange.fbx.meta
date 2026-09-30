@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 859224d9423215ad3172004620e84a51
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName: {}
+  externalObjects: {}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+  isReadable: 1
+  importAnimation: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

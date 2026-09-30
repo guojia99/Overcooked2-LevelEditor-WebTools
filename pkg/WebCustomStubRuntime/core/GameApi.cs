@@ -55,6 +55,42 @@ namespace CustomStub
                 : null;
         });
 
+        // ---- 节点环步数对账（3.6.0 联机偶发丢步修复：ClientTimedQueue 一帧连发
+        //      两次 DoEvent 时两次 SetTrigger(BLPress) 被 Mecanim 单值 Trigger 合并
+        //      → 该端少转一步/差 90°。postfix 只做注册表寻址+转发，非节点环实体
+        //      首行早退零开销） ----
+        public static readonly Type TimedQueueMessageType = Find("TimedQueueMessage");
+        public static readonly FieldInfo TimedQueueMsgTypeField = Safe(delegate
+        {
+            return TimedQueueMessageType != null
+                ? TimedQueueMessageType.GetField("m_msgType", BindingFlags.Public | BindingFlags.Instance)
+                : null;
+        });
+        public static readonly FieldInfo TimedQueueMsgIndexField = Safe(delegate
+        {
+            return TimedQueueMessageType != null
+                ? TimedQueueMessageType.GetField("m_index", BindingFlags.Public | BindingFlags.Instance)
+                : null;
+        });
+        public static readonly Type ClientTimedQueueType = Find("ClientTimedQueue");
+        /// <summary>ClientTimedQueue.ApplyServerEvent(Serialisable)——TimedQueue 家族
+        /// 的消息入口（ClientTriggerQueue 继承基类实现），节点环权威步数来源。</summary>
+        public static readonly MethodInfo ClientTimedQueueApplyServerEventMethod = Safe(delegate
+        {
+            return ClientTimedQueueType != null
+                ? ClientTimedQueueType.GetMethod("ApplyServerEvent", BindingFlags.Public | BindingFlags.Instance)
+                : null;
+        });
+        public static readonly Type ClientTriggerQueueType = Find("ClientTriggerQueue");
+        /// <summary>ClientTriggerQueue.DoEvent(int)——到点 SetTrigger 的实际执行点
+        /// （protected override；计数用于诊断同帧合并丢步）。</summary>
+        public static readonly MethodInfo ClientTriggerQueueDoEventMethod = Safe(delegate
+        {
+            return ClientTriggerQueueType != null
+                ? ClientTriggerQueueType.GetMethod("DoEvent", BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+
         // ---- 网络实体扫描窗口（2026-09-15 v14，联机 ID 错位事故） ----
         //
         // 背景铁律：EntitySerialisationRegistry 的实体 ID 是【按扫描命中顺序递增的

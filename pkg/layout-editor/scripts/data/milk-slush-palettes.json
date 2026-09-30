@@ -1,0 +1,117 @@
+{
+  "_comment": "Web 牛奶冰沙视觉配置。共用 Web_MilkSlush_SharedCup 杯体；slush=冰沙液面、glass=杯身、straw=吸管；garnish=杯口装饰。风格提示词供 icon/贴图 AI 或手绘参考。",
+  "_styleBaseZh": "胡闹厨房 Overcooked 风格卡通饮品、玻璃杯、绵密牛奶冰沙质感、顶部真实水果装饰、柔和 PBR、无描边、干净背景、45° 产品展示",
+  "_styleBaseEn": "Overcooked-style cartoon drink, clear glass cup, creamy milk slush texture, fresh fruit garnish on rim, soft PBR, no outline, clean background, 45-degree product shot",
+  "variants": [
+    {
+      "id": "Web_MilkSlush_Strawberry",
+      "zh": "草莓牛奶冰沙",
+      "slush": "#FFB8C8",
+      "glass": "#F0E8F0",
+      "straw": "#9B59B6",
+      "garnishZh": "杯沿半颗草莓 + 一片小叶",
+      "garnishEn": "half strawberry on rim with small leaf",
+      "stylePromptZh": "粉红色绵密牛奶冰沙、紫色吸管、草莓装饰；奶感明显、冰晶细腻、甜系少女风",
+      "stylePromptEn": "pink creamy milk slush, purple straw, strawberry garnish; milky, fine ice crystals, sweet pastel look"
+    },
+    {
+      "id": "Web_MilkSlush_Grape",
+      "zh": "葡萄牛奶冰沙",
+      "slush": "#C8B0E8",
+      "glass": "#E8E0F0",
+      "straw": "#84CC16",
+      "garnishZh": "杯沿 2 颗紫葡萄（带短枝）",
+      "garnishEn": "two purple grapes on short stem at rim",
+      "stylePromptZh": "淡紫葡萄色牛奶冰沙、青柠绿吸管、葡萄装饰；半透明奶紫、微气泡感",
+      "stylePromptEn": "lavender grape milk slush, lime-green straw, grape garnish; milky purple, subtle bubbles"
+    },
+    {
+      "id": "Web_MilkSlush_Orange",
+      "zh": "橙子牛奶冰沙",
+      "slush": "#FFC878",
+      "glass": "#F5EDE0",
+      "straw": "#14B8A6",
+      "garnishZh": "杯沿橙子圆片（露果肉纹理）",
+      "garnishEn": "orange wheel slice on rim showing pulp",
+      "stylePromptZh": "奶油橙黄牛奶冰沙、青绿吸管、橙子片装饰；阳光柑橘、清爽活力",
+      "stylePromptEn": "creamy orange-yellow milk slush, teal straw, orange slice; sunny citrus, fresh energy"
+    },
+    {
+      "id": "Web_MilkSlush_Peach",
+      "zh": "桃子牛奶冰沙",
+      "slush": "#FFD4B0",
+      "glass": "#F8EEE6",
+      "straw": "#E85D4C",
+      "garnishZh": "杯沿桃子楔形切片（粉橙渐变果肉）",
+      "garnishEn": "peach wedge on rim with pink-orange gradient flesh",
+      "stylePromptZh": "蜜桃奶油色牛奶冰沙、珊瑚红吸管、桃子片装饰；软糯温柔、夏日感",
+      "stylePromptEn": "peach cream milk slush, coral-red straw, peach slice; soft, summery, gentle"
+    },
+    {
+      "id": "Web_MilkSlush_Blueberry",
+      "zh": "蓝莓牛奶冰沙",
+      "slush": "#A8B8E8",
+      "glass": "#E8ECF5",
+      "straw": "#F4C430",
+      "garnishZh": "杯沿 3 颗蓝莓堆叠",
+      "garnishEn": "three stacked blueberries on rim",
+      "stylePromptZh": "淡蓝紫牛奶冰沙、金黄吸管、蓝莓装饰；浆果清爽、微酸奶香",
+      "stylePromptEn": "pale blue-purple milk slush, golden straw, blueberry garnish; berry-fresh, mild tangy milk"
+    },
+    {
+      "id": "Web_MilkSlush_Blackberry",
+      "zh": "黑莓牛奶冰沙",
+      "slush": "#C8A0B8",
+      "glass": "#EDE4EA",
+      "straw": "#6EE7B7",
+      "garnishZh": "杯沿黑莓 1 颗 + 小绿叶",
+      "garnishEn": "one blackberry with small leaf on rim",
+      "stylePromptZh": "深莓紫奶油冰沙、薄荷绿吸管、黑莓装饰；成熟浆果、略深色调仍保奶感",
+      "stylePromptEn": "deep berry-mauve creamy slush, mint-green straw, blackberry garnish; ripe berry, darker but still milky"
+    },
+    {
+      "id": "Web_MilkSlush_Raspberry",
+      "zh": "覆盆子牛奶冰沙",
+      "slush": "#FF98B0",
+      "glass": "#F5E8EC",
+      "straw": "#4A6FA5",
+      "garnishZh": "杯沿 2 颗覆盆子（一颗对半）",
+      "garnishEn": "two raspberries on rim, one halved",
+      "stylePromptZh": "玫红牛奶冰沙、深蓝吸管、覆盆子装饰；酸甜红莓、比草莓略艳",
+      "stylePromptEn": "rose-red milk slush, deep blue straw, raspberry garnish; tart-sweet, slightly richer than strawberry"
+    },
+    {
+      "id": "Web_MilkSlush_Banana",
+      "zh": "香蕉牛奶冰沙",
+      "slush": "#FFF0B8",
+      "glass": "#F8F4E8",
+      "straw": "#8B6914",
+      "garnishZh": "杯沿斜插香蕉圆片 1 片",
+      "garnishEn": "one angled banana coin slice on rim",
+      "stylePromptZh": "淡黄奶油香蕉冰沙、深棕吸管、香蕉片装饰；浓郁奶香、顺滑厚重",
+      "stylePromptEn": "pale banana-cream slush, dark brown straw, banana slice; rich milky banana, smooth and thick"
+    },
+    {
+      "id": "Web_MilkSlush_Melon",
+      "zh": "西瓜牛奶冰沙",
+      "slush": "#FFB8C0",
+      "glass": "#F0F5E8",
+      "straw": "#22C55E",
+      "garnishZh": "杯沿西瓜小三角（红瓤 + 绿皮）",
+      "garnishEn": "small watermelon triangle on rim with red flesh and green rind",
+      "stylePromptZh": "浅粉红西瓜奶冰沙、翠绿吸管、西瓜块装饰；清凉解渴、红瓤绿皮对比",
+      "stylePromptEn": "light pink watermelon milk slush, bright green straw, watermelon wedge; refreshing, red-green contrast"
+    },
+    {
+      "id": "Web_MilkSlush_Pineapple",
+      "zh": "菠萝牛奶冰沙",
+      "slush": "#FFE8A0",
+      "glass": "#F5F0E0",
+      "straw": "#D946A8",
+      "garnishZh": "杯沿菠萝楔形块（黄肉 + 褐边）",
+      "garnishEn": "pineapple wedge on rim with yellow flesh and brown edge",
+      "stylePromptZh": "金黄菠萝奶冰沙、品红吸管、菠萝块装饰；热带甜香、颗粒感果肉",
+      "stylePromptEn": "golden pineapple milk slush, magenta straw, pineapple wedge; tropical sweet, textured fruit bits"
+    }
+  ]
+}

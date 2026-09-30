@@ -4593,67 +4593,197 @@ body.manage-bg {
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.rw-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f0d9a8;
+  background: linear-gradient(180deg, #2a2418, #1e1a12);
+  border: 1px solid rgba(232, 176, 75, 0.45);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.rw-filter-toggle:hover {
+  color: #fff3d6;
+  border-color: rgba(232, 176, 75, 0.75);
+  background: linear-gradient(180deg, #352c1c, #241e14);
+}
+
+.rw-filter-toggle-icon {
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.rw-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: #1a1208;
+  background: #e8b04b;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.rw-filter-reset {
+  border: none;
+  background: transparent;
+  color: #9aa4b8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.rw-filter-reset:hover {
+  color: #f0d9a8;
+  background: rgba(232, 176, 75, 0.12);
 }
 
 .rw-filters {
   position: relative;
-  margin-bottom: 8px;
-  padding: 8px 10px;
-  border: 1px solid #3a4050;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.15);
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(232, 176, 75, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(35, 30, 22, 0.92), rgba(22, 20, 16, 0.88));
+  box-shadow: inset 0 1px 0 rgba(255, 224, 160, 0.06);
 }
 
 .rw-filter-section {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .rw-filter-section:last-child {
   margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.rw-filter-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .rw-filter-label {
   display: block;
   font-size: 11px;
-  color: #9aa0a6;
-  margin-bottom: 4px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #e8d5ac;
+  text-transform: none;
 }
 
 .rw-filter-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
+}
+
+.rw-filter-chips-types .rw-filter-chip {
+  min-height: 34px;
 }
 
 .rw-filter-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  font-size: 11px;
-  border: 1px solid #4a5060;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  font-size: 12px;
+  border: 1px solid rgba(122, 132, 150, 0.45);
   border-radius: 999px;
-  background: #1a1d23;
-  color: #c6cad1;
+  background: rgba(18, 20, 26, 0.85);
+  color: #dfe3ea;
   cursor: pointer;
   white-space: nowrap;
+  transition: border-color 0.12s, background 0.12s, color 0.12s, box-shadow 0.12s;
 }
 
-.rw-filter-chip img {
-  width: 14px;
-  height: 14px;
+.rw-filter-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  /* 游戏 catalog 图标多为深色剪影，需浅色底托才能看清（对齐菜谱卡片成品区） */
+  background: linear-gradient(180deg, #faf4e6 0%, #ebe0c8 100%);
+  border: 1px solid rgba(160, 130, 80, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 1px 3px rgba(0, 0, 0, 0.28);
+  flex: 0 0 auto;
+}
+
+.rw-filter-chip-icon.rw-filter-icon-missing {
+  display: none;
+}
+
+.rw-filter-chip-icon img {
+  width: 22px;
+  height: 22px;
   object-fit: contain;
+  filter: contrast(1.08) saturate(1.05);
+}
+
+.rw-filter-chip-text {
+  line-height: 1.2;
+}
+
+.rw-filter-chip-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9aa4b8;
+  background: rgba(0, 0, 0, 0.28);
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: -2px;
 }
 
 .rw-filter-chip:hover {
-  border-color: #8ab4f8;
+  border-color: rgba(232, 176, 75, 0.55);
+  color: #fff3d6;
+  background: rgba(35, 30, 22, 0.95);
 }
 
 .rw-filter-chip.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: #fff;
+  background: linear-gradient(180deg, rgba(232, 176, 75, 0.28), rgba(180, 83, 9, 0.22));
+  border-color: #e8b04b;
+  color: #fff8e8;
+  box-shadow: 0 0 0 1px rgba(232, 176, 75, 0.25);
+}
+
+.rw-filter-chip.active .rw-filter-chip-icon {
+  background: linear-gradient(180deg, #fff9ee 0%, #f5e4b8 100%);
+  border-color: rgba(232, 176, 75, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(232, 176, 75, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.rw-filter-chip.active .rw-filter-chip-count {
+  color: #fff3d6;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .rw-filter-row-inline {
@@ -4668,9 +4798,31 @@ body.manage-bg {
   margin-bottom: 0;
 }
 
+.rw-filter-add-ing {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e8d5ac;
+  background: rgba(232, 176, 75, 0.1);
+  border: 1px dashed rgba(232, 176, 75, 0.45);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rw-filter-add-ing:hover {
+  color: #fff3d6;
+  border-color: rgba(232, 176, 75, 0.75);
+  background: rgba(232, 176, 75, 0.16);
+}
+
 .rw-score-select {
   font-size: 12px;
-  padding: 3px 6px;
+  padding: 4px 8px;
+  border-color: rgba(122, 132, 150, 0.45);
+  background: rgba(18, 20, 26, 0.85);
+  color: #e8eaed;
 }
 
 .rw-ing-chips {
@@ -4683,19 +4835,20 @@ body.manage-bg {
 .rw-ing-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 6px 2px 4px;
+  gap: 5px;
+  padding: 3px 8px 3px 5px;
   font-size: 11px;
-  border: 1px solid #4a5060;
+  border: 1px solid rgba(232, 176, 75, 0.35);
   border-radius: 999px;
-  background: #232834;
-  color: #e8eaed;
+  background: rgba(35, 30, 22, 0.75);
+  color: #f0d9a8;
 }
 
 .rw-ing-chip img {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 
 .rw-ing-chip-rm {
@@ -4721,10 +4874,10 @@ body.manage-bg {
   max-height: 240px;
   margin-top: 4px;
   padding: 8px;
-  border: 1px solid #4a5060;
-  border-radius: 6px;
-  background: #1a1d23;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(232, 176, 75, 0.28);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #232018, #16140f);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
 }
 
 .rw-ing-popover.hidden {
@@ -4759,9 +4912,10 @@ body.manage-bg {
 }
 
 .rw-ing-pick-item img {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 
 /* 大类标题（自定义关卡 / Web内置 / Common） */

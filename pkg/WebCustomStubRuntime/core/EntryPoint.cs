@@ -635,6 +635,36 @@ namespace CustomStub
             }
         }
 
+        /// <summary>节点环步数对账补丁（3.6.0 联机偶发丢步修复）：postfix 把
+        /// TimedQueue 消息/SetTrigger 执行转发给组根 NodeRingSync 对账（网络突刺
+        /// 把两次 BLPress 挤进同一帧会被 Mecanim 单值 Trigger 合并丢步，客户端
+        /// 永久差 90°）。消息驱动非热路径、非节点环实体首行早退；与锅具时间
+        /// 补丁相互独立——任一失败不影响其他组。按需安装（HealNodeRingSync
+        /// 挂到节点环组才触发），幂等。</summary>
+        private static bool s_nodeRingAuditPatched;
+
+        internal static void EnsureNodeRingAuditPatches()
+        {
+            if (s_nodeRingAuditPatched)
+                return;
+            try
+            {
+                var harmony = new Harmony(HarmonyId + ".nodering");
+                int ok = 0, skip = 0;
+                ok += PatchPair(harmony, GameApi.ClientTimedQueueApplyServerEventMethod,
+                    null, HarmonyPatches.ClientTimedQueueApplyServerEventPostfixMethod, ref skip);
+                ok += PatchPair(harmony, GameApi.ClientTriggerQueueDoEventMethod,
+                    null, HarmonyPatches.ClientTriggerQueueDoEventPostfixMethod, ref skip);
+                s_nodeRingAuditPatched = ok > 0;
+                StubLog.Log("[CustomStub] 节点环对账补丁: 已装 " + ok + " 个（按需安装·联机丢步校正）"
+                    + (skip > 0 ? "，反射缺失跳过 " + skip + " 个" : ""));
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 节点环对账补丁安装失败（联机丢步不校正，本体行为不受影响）: " + ex);
+            }
+        }
+
         private static int PatchPair(Harmony harmony, MethodInfo target, MethodInfo prefix, MethodInfo postfix, ref int skip)
         {
             if (target == null || (prefix == null && postfix == null))
@@ -991,6 +1021,9 @@ namespace CustomStub
                 // AnimGridMemberSync（零配置、免 tag；编辑器 Play 侧烘焙件在场则跳过）。
                 // 真机上烘焙的 CustomStub 组件是 Missing Script 死件，必须运行时补挂。
                 HealAnimGridMembers();
+                // 节点环步数对账校正器（3.6.0 联机丢步修复）：Design/Animated Objects
+                // 组根补挂 NodeRingSync（免 tag，组件内按 BLPress 参数判定是否节点环）。
+                HealNodeRingSync();
                 // 初始关闭开关开局关闭色（v3.4.0）：真机烘焙件是 Missing Script，
                 // 按 PseudoPrefabSwitchStub.startEnabled 扫描补挂（stub 组件随
                 // 场景序列化，sceneLoaded 时已在；child 实例化由组件内协程等待）。
@@ -1219,6 +1252,46 @@ namespace CustomStub
             catch (Exception ex)
             {
                 StubLog.LogWarn("[CustomStub] AnimGridMemberSync 扫描失败: " + ex.Message);
+            }
+        }
+
+        /// <summary>节点环步数对账校正器补挂（3.6.0 联机偶发丢步修复）：Design/
+        /// Animated Objects 下有 Animator 的组根挂 NodeRingSync——组件内按
+        /// controller 参数表是否含 BLPress 判定节点环（非节点环自禁用零开销），
+        /// 免 tag 载体（判定信号由烘焙器 AnimGroupBakery 保证：BLPress 参数
+        /// 只加给 press 节点环）。特征闸遵循 3.5.0 零介入铁律：仅按钮动画/
+        /// 传送带类关卡挂载（无约束模式恒通过）。挂到即触发对账补丁安装。</summary>
+        private static void HealNodeRingSync()
+        {
+            if (!(HasFeature("blrelay") || HasFeature("animgrid") || HasFeature("conveyor")))
+                return;
+            try
+            {
+                var animatedRoot = GameObject.Find("Design/Animated Objects");
+                if (animatedRoot == null)
+                    return;
+                int healed = 0;
+                for (int g = 0; g < animatedRoot.transform.childCount; g++)
+                {
+                    var groupRoot = animatedRoot.transform.GetChild(g);
+                    var go = groupRoot.gameObject;
+                    if (go.GetComponent<Animator>() == null)
+                        continue;
+                    if (HasStubComponentNamed(go, "NodeRingSync"))
+                        continue;
+                    go.AddComponent<NodeRingSync>();
+                    healed++;
+                }
+                if (healed > 0)
+                {
+                    StubLog.Log("[CustomStub] 自愈 NodeRingSync × " + healed +
+                        "（联机节点环步数对账·丢步瞬跳校正）");
+                    EnsureNodeRingAuditPatches();
+                }
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] NodeRingSync 扫描失败: " + ex.Message);
             }
         }
 

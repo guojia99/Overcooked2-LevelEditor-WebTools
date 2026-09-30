@@ -300,7 +300,13 @@ export function isBlenderMixRecipe(r: RecipeEntry): boolean {
   if (step === "Mixer" || step === "MixingBowl") return false;
   if (isFlourBranchRecipe(r)) return false;
   if (step && step !== "Blender" && STEP_UTENSILS[step]) return false;
-  return r.type === "smoothie" || r.platingStep === "Glass" || r.category === "smoothie";
+  return (
+    r.type === "smoothie" ||
+    r.platingStep === "Glass" ||
+    r.category === "smoothie" ||
+    r.category === "milk_slush" ||
+    r.category === "ice_cream"
+  );
 }
 
 /** 搅拌型中间产物：官方面糊用 cookingStep=Mixer/MixingBowl；自定义 Mixed 类型用 mixing 标记。 */

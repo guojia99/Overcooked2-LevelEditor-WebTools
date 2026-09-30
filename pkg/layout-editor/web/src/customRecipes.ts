@@ -35,7 +35,7 @@ import {
 } from "./devMode";
 import { BUN_CORE_ID, BUN_DLC2_ID, BUN_DLC8_ID } from "./recipeGroups";
 import { foodGroupLabel, visibleIngredients, visibleRecipes } from "./ingredientLabels";
-import { recipeTypeLabel, RECIPE_TYPE_ORDER } from "./recipeTypes";
+import { customCategoryLabel, recipeTypeLabel, RECIPE_TYPE_ORDER } from "./recipeTypes";
 import { closeModal, openModal } from "./modals";
 import { rlCardHtml, type RecipeWithGroups } from "./recipeCard";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
@@ -349,7 +349,7 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
   const listCategories = isLibrary ? categories : categories.filter((c) => c.id !== "burger");
 
   function catDisplay(c: CustomRecipeCategory): string {
-    return c.zh || c.id;
+    return c.zh || customCategoryLabel(c.id);
   }
 
   // 从模块级记忆恢复分类过滤（进入新建/编辑后返回时保持）；分类已被删除则回退「全部」
@@ -489,7 +489,7 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
       <div class="cr-card-wrap">
         <div class="cr-card-inner">${cardHtml}</div>
         <div class="cr-card-foot">
-          <span class="cr-cat-tag">${esc(catDisplay(cat ?? { id: r.category, zh: r.category, en: r.category }))}</span>
+          <span class="cr-cat-tag">${esc(catDisplay(cat ?? { id: r.category, zh: customCategoryLabel(r.category), en: r.category }))}</span>
           ${plating ? `<span class="cr-cat-tag cr-plate-tag" title="装盘容器">🍽 ${esc(plating)}</span>` : ""}
           <span class="muted small">${isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : `UID ${r.uID}`} · 组成 ${compCount} 项</span>
           <span style="flex:1"></span>
@@ -1448,7 +1448,7 @@ export async function renderRecipeForm(
   for (const s of subItems) subById.set(s.id, s);
 
   function catDisplay(c: CustomRecipeCategory): string {
-    return c.zh || c.id;
+    return c.zh || customCategoryLabel(c.id);
   }
 
   /** 按 Unity 实际导入尺寸（菜谱摘要的包围盒 ÷ 已保存缩放）反推模型原始尺寸（Unity 单位），
@@ -1469,7 +1469,7 @@ export async function renderRecipeForm(
       .map((c) => `<option value="${esc(c.id)}" ${c.id === categoryId ? "selected" : ""}>${esc(catDisplay(c))}</option>`)
       .join("");
     if (!categories.some((c) => c.id === categoryId) && categoryId) {
-      options += `<option value="${esc(categoryId)}" selected>${esc(categoryId)}</option>`;
+      options += `<option value="${esc(categoryId)}" selected>${esc(customCategoryLabel(categoryId))}</option>`;
     }
     const disabled = isLibrary ? " disabled" : "";
     return `<select id="cr-type-cat" class="m-select"${disabled}>${options}</select>`;
@@ -1543,7 +1543,7 @@ export async function renderRecipeForm(
 
     const catLabel = (catId: string): string => {
       const c = categories.find((x) => x.id === catId);
-      return c ? c.zh || c.id : catId || "未分类";
+      return c ? catDisplay(c) : customCategoryLabel(catId);
     };
 
     function recipeMatchesTab(s: SubItem): boolean {

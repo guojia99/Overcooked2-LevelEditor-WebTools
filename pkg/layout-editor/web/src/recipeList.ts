@@ -26,8 +26,25 @@ function esc(s: unknown): string {
     .replace(/"/g, "&quot;");
 }
 
-/** commonW3 共享库徽标：果汁用 🥤，沙拉用 🥗。 */
+/** commonW3 共享库徽标（按 custom_recipes 子目录分类）。 */
+function commonW3CategoryFromPath(assetPath?: string): string {
+  if (!assetPath) return "";
+  const m = assetPath.replace(/\\/g, "/").match(/commonW3\/custom_recipes\/([^/]+)\//);
+  return m?.[1] ?? "";
+}
+
 function commonW3RecipeBadge(r: RecipeWithGroups): string {
+  const cat = commonW3CategoryFromPath(r.assetPath);
+  const badges: Record<string, string> = {
+    smoothie: "🥤",
+    salad: "🥗",
+    fried_rice: "🍚",
+    ice_cream: "🍦",
+    pudding: "🍮",
+    soup: "🍲",
+    milk_slush: "🧊",
+  };
+  if (cat && badges[cat]) return badges[cat];
   return r.type === "smoothie" ? "🥤" : "🥗";
 }
 

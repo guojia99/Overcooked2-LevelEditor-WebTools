@@ -331,7 +331,11 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
       const smoothie =
         !flour &&
         !isCookStep(finalStep) &&
-        (r.type === "smoothie" || r.platingStep === "Glass" || r.category === "smoothie");
+        (r.type === "smoothie" ||
+          r.platingStep === "Glass" ||
+          r.category === "smoothie" ||
+          r.category === "milk_slush" ||
+          r.category === "ice_cream");
       mixStep = smoothie ? "Blender" : "MixingBowl";
     }
     if (mixStep === "Blender" || mixStep === "Mixer" || mixStep === "MixingBowl") {

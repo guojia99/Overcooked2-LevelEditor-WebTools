@@ -54,7 +54,8 @@ import { applyUtensilIngredientFill } from "./utensilManager";
 import { foodGroupLabel, visibleRecipes } from "../../ingredientLabels";
 import {
   groupRecipesByType,
-  recipeTypeLabel
+  recipeTypeLabel,
+  RECIPE_TYPE_ORDER,
 } from "../../recipeTypes";
 import { tidyCatalogNameZh } from "../../displayLabels";
 import {
@@ -80,11 +81,14 @@ import { rlCardHtml, rlCompactCardHtml, STEP_ICON_SRC } from "../../recipeCard";
 import {
   emptyRecipePickerFilters,
   COOK_STEP_LABEL_ZH,
+  collectTypesFromRecipes,
   collectCookStepsFromRecipes,
   collectUtensilsFromRecipes,
   utensilFilterLabel,
+  utensilIconSrc,
   collectLeafIngredientsFromRecipes,
   recipeMatchesFilters,
+  countActivePickerFilters,
   type RecipePickerFilterState,
   type ScoreFilter,
 } from "../../recipePickerFilters";
@@ -361,13 +365,31 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
 
   function filterToolbarHtml(): string {
     if (activeTab !== "select") return "";
+    const activeFilterCount = countActivePickerFilters(pickerFilters);
+    const types = collectTypesFromRecipes(orderable, RECIPE_TYPE_ORDER);
     const steps = collectCookStepsFromRecipes(orderable);
     const utensils = collectUtensilsFromRecipes(orderable);
+    const typeChips = types
+      .map(({ type, count, iconRecipeId }) => {
+        const active = pickerFilters.types.has(type);
+        const icon = iconRecipeId
+          ? `/icons/recipes/${encodeURIComponent(iconRecipeId)}.png`
+          : "";
+        return `<button type="button" class="rw-filter-chip${active ? " active" : ""}" data-type="${escHtml(type)}" title="${escHtml(recipeTypeLabel(type))}">
+          ${icon ? `<span class="rw-filter-chip-icon"><img src="${icon}" alt="" onerror="this.parentElement.classList.add('rw-filter-icon-missing')"></span>` : ""}
+          <span class="rw-filter-chip-text">${escHtml(recipeTypeLabel(type))}</span>
+          <span class="rw-filter-chip-count">${count}</span>
+        </button>`;
+      })
+      .join("");
     const stepChips = steps
       .map((s) => {
         const active = pickerFilters.cookSteps.has(s);
         const icon = STEP_ICON_SRC[s] ?? "";
-        return `<button type="button" class="rw-filter-chip${active ? " active" : ""}" data-step="${escHtml(s)}" title="${escHtml(COOK_STEP_LABEL_ZH[s] ?? s)}">${icon ? `<img src="${icon}" alt="" onerror="this.style.display='none'">` : ""}${escHtml(COOK_STEP_LABEL_ZH[s] ?? s)}</button>`;
+        return `<button type="button" class="rw-filter-chip${active ? " active" : ""}" data-step="${escHtml(s)}" title="${escHtml(COOK_STEP_LABEL_ZH[s] ?? s)}">
+          ${icon ? `<span class="rw-filter-chip-icon"><img src="${icon}" alt="" onerror="this.parentElement.classList.add('rw-filter-icon-missing')"></span>` : ""}
+          <span class="rw-filter-chip-text">${escHtml(COOK_STEP_LABEL_ZH[s] ?? s)}</span>
+        </button>`;
       })
       .join("");
     const utensilChips = utensils
@@ -375,7 +397,11 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         const cat = catalogItemById(u);
         const label = utensilFilterLabel(u, cat);
         const active = pickerFilters.utensils.has(u);
-        return `<button type="button" class="rw-filter-chip${active ? " active" : ""}" data-utensil="${escHtml(u)}">${escHtml(label)}</button>`;
+        const icon = utensilIconSrc(u);
+        return `<button type="button" class="rw-filter-chip${active ? " active" : ""}" data-utensil="${escHtml(u)}" title="${escHtml(label)}">
+          <span class="rw-filter-chip-icon"><img src="${icon}" alt="" onerror="this.parentElement.classList.add('rw-filter-icon-missing')"></span>
+          <span class="rw-filter-chip-text">${escHtml(label)}</span>
+        </button>`;
       })
       .join("");
     const selectedIngChips = [...pickerFilters.ingredients]
@@ -410,29 +436,51 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         return `<label class="rw-ing-pick-item"><input type="checkbox" data-ing-id="${escHtml(id)}" ${on ? "checked" : ""}><img src="/icons/ingredients/${encodeURIComponent(id)}.png" alt="" onerror="this.style.display='none'"><span>${escHtml(ingNameOf(id))}</span></label>`;
       })
       .join("");
+    const clearAllBtn =
+      activeFilterCount > 0
+        ? `<button type="button" class="rw-filter-reset" id="rw-clear-all-filters">清空全部</button>`
+        : "";
     return `<div class="rw-toolbar-row">
-        <button type="button" class="rw-collapse-all" id="rw-toggle-filters">${filtersExpanded ? "▼" : "▶"} 筛选</button>
+        <button type="button" class="rw-filter-toggle${filtersExpanded ? " expanded" : ""}" id="rw-toggle-filters">
+          <span class="rw-filter-toggle-icon" aria-hidden="true">${filtersExpanded ? "▼" : "▶"}</span>
+          <span>筛选</span>
+          ${activeFilterCount > 0 ? `<span class="rw-filter-badge">${activeFilterCount}</span>` : ""}
+        </button>
         <label class="rw-tool-check"><input type="checkbox" id="rw-compact"${compactCardMode ? " checked" : ""}> 简易卡片</label>
+        ${clearAllBtn}
       </div>
       ${filtersExpanded ? `<div class="rw-filters" id="rw-filters">
         <div class="rw-filter-section">
-          <span class="rw-filter-label">烹饪方式</span>
+          <div class="rw-filter-section-head">
+            <span class="rw-filter-label">菜谱分类</span>
+            <button type="button" class="rw-filter-reset" data-clear-types>重置</button>
+          </div>
+          <div class="rw-filter-chips rw-filter-chips-types">
+            ${typeChips || '<span class="muted small">—</span>'}
+          </div>
+        </div>
+        <div class="rw-filter-section">
+          <div class="rw-filter-section-head">
+            <span class="rw-filter-label">烹饪方式</span>
+            <button type="button" class="rw-filter-reset" data-clear-steps>重置</button>
+          </div>
           <div class="rw-filter-chips">
-            <button type="button" class="rw-filter-chip rw-filter-clear" data-clear-steps>全部</button>
             ${stepChips || '<span class="muted small">—</span>'}
           </div>
         </div>
         <div class="rw-filter-section">
-          <span class="rw-filter-label">锅具</span>
+          <div class="rw-filter-section-head">
+            <span class="rw-filter-label">锅具</span>
+            <button type="button" class="rw-filter-reset" data-clear-utensils>重置</button>
+          </div>
           <div class="rw-filter-chips rw-filter-chips-wrap">
-            <button type="button" class="rw-filter-chip rw-filter-clear" data-clear-utensils>全部</button>
             ${utensilChips || '<span class="muted small">—</span>'}
           </div>
         </div>
         <div class="rw-filter-section rw-filter-row-inline">
           <span class="rw-filter-label">分数</span>
           <select id="rw-score" class="rl-select rw-score-select">${scoreOptions}</select>
-          <button type="button" class="rw-collapse-all" id="rw-pick-ing">+ 食材</button>
+          <button type="button" class="rw-filter-add-ing" id="rw-pick-ing">+ 食材</button>
           <div class="rw-ing-chips">${selectedIngChips}</div>
         </div>
         <div class="rw-ing-popover${ingPopoverOpen ? "" : " hidden"}" id="rw-ing-popover">
@@ -1082,23 +1130,47 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       const v = (e.target as HTMLSelectElement).value;
       pickerFilters.score =
         v === "all" ? "all" : v === "other" ? "other" : (parseInt(v, 10) as ScoreFilter);
+      refreshFilterToolbar();
       renderList();
     });
-    document.querySelectorAll<HTMLElement>("[data-step]").forEach((btn) => {
+    document.getElementById("rw-clear-all-filters")?.addEventListener("click", () => {
+      pickerFilters = emptyRecipePickerFilters();
+      ingPopoverOpen = false;
+      refreshFilterToolbar();
+      renderList();
+    });
+    document.querySelectorAll<HTMLElement>(".rw-filter-chip[data-type]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const t = btn.dataset.type!;
+        if (pickerFilters.types.has(t)) pickerFilters.types.delete(t);
+        else pickerFilters.types.add(t);
+        btn.classList.toggle("active", pickerFilters.types.has(t));
+        refreshFilterToolbar();
+        renderList();
+      });
+    });
+    document.querySelector("[data-clear-types]")?.addEventListener("click", () => {
+      pickerFilters.types.clear();
+      refreshFilterToolbar();
+      renderList();
+    });
+    document.querySelectorAll<HTMLElement>(".rw-filter-chip[data-step]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const s = btn.dataset.step!;
         if (pickerFilters.cookSteps.has(s)) pickerFilters.cookSteps.delete(s);
         else pickerFilters.cookSteps.add(s);
         btn.classList.toggle("active", pickerFilters.cookSteps.has(s));
+        refreshFilterToolbar();
         renderList();
       });
     });
-    document.querySelectorAll<HTMLElement>("[data-utensil]").forEach((btn) => {
+    document.querySelectorAll<HTMLElement>(".rw-filter-chip[data-utensil]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const u = btn.dataset.utensil!;
         if (pickerFilters.utensils.has(u)) pickerFilters.utensils.delete(u);
         else pickerFilters.utensils.add(u);
         btn.classList.toggle("active", pickerFilters.utensils.has(u));
+        refreshFilterToolbar();
         renderList();
       });
     });

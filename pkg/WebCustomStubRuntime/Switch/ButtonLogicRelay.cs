@@ -320,13 +320,183 @@ namespace CustomStub
                 var target = ResolveTarget(i);
                 if (target == null)
                     continue;
-                // 与宿主 SendTriggerToObject 相同的投递方式：SendMessage 按
-                // 方法名直达 ITriggerReceiver（ServerTimedQueue.OnTrigger）。
-                target.SendMessage("OnTrigger", m_goTriggers[i],
-                    SendMessageOptions.DontRequireReceiver);
+                DispatchGo(i, target);
+            }
+        }
+
+        // ---- 3.6.0 主机侧 BLGo 派发门控（vanilla ServerTriggerAnimationOnConveyor
+        //      的 Pending 语义复刻 + 节点环防重入） ----
+        //
+        // 背景：vanilla 旋转传送带从不边送边转——Pending 态等 !IsConveying() &&
+        // !IsReceiving() 才进 Animating 并广播；自定义按钮动画组链路此前没有该
+        // 门控，投递在途时旋转会让旧接收器 m_receiving 永久卡 true（2026-09-24
+        // 整排传送卡死事故同源风险）。另一层：目标组还在播上一节点（或对账
+        // 未平）时立即重入队列，会放大联机同帧合并丢步窗口。
+        //
+        // 仅主机侧生效（客户端 BLGo 无 Server 同步器响应，落空无害，维持直发）；
+        // 门控等待 = 玩家侧感知为「按下后动画稍迟启动」，与 vanilla 传送带行为
+        // 一致；超时 fail-open 强发（行为同旧版）并告警可见。
+
+        /// <summary>门控轮询间隔（秒）。</summary>
+        private const float DispatchPollSeconds = 0.05f;
+        /// <summary>门控等待超时（秒）：覆盖 0.4s 节点动画 + 1/speed 投递 + 余量；
+        /// 超时强发（fail-open）+ 告警。</summary>
+        private const float DispatchGateTimeoutSeconds = 2f;
+        /// <summary>按目标名累计的待发 BLGo 数（同一目标单泵协程，门控期间新到
+        /// 的按压累计而非丢弃——helper 出 Run 后封锁按压，正常时序不会到这里，
+        /// 防极端等待窗口的第二按丢失）。</summary>
+        private readonly Dictionary<string, int> m_goQueued =
+            new Dictionary<string, int>(StringComparer.Ordinal);
+
+        private void DispatchGo(int i, GameObject target)
+        {
+            if (!GameApi.IsServerMachine())
+            {
+                // 客机：BLGo 落空无害（无 Server 同步器），直发维持原行为。
+                target.SendMessage("OnTrigger", m_goTriggers[i], SendMessageOptions.DontRequireReceiver);
+                return;
+            }
+            string reason;
+            if (CanDispatchNow(target, out reason))
+            {
+                target.SendMessage("OnTrigger", m_goTriggers[i], SendMessageOptions.DontRequireReceiver);
                 StubLog.Dbg("[ButtonLogicRelay] " + name + " 进 " + m_stateNames[i] +
                     " → 发 " + m_goTriggers[i] + " 给 " + m_targetNames[i]);
+                return;
             }
+            int queued;
+            if (m_goQueued.TryGetValue(target.name, out queued))
+            {
+                m_goQueued[target.name] = queued + 1;
+                StubLog.Log("[ButtonLogicRelay] " + name + " 派发门控累计：" + m_goTriggers[i] +
+                    " → " + target.name + "（" + reason + "，待发 " + (queued + 1) + " 次）");
+                return;
+            }
+            m_goQueued[target.name] = 1;
+            StartCoroutine(DispatchWhenReady(i, target, reason));
+        }
+
+        private bool CanDispatchNow(GameObject target, out string reason)
+        {
+            reason = null;
+            var ring = target.GetComponent<NodeRingSync>();
+            if (ring != null && ring.IsBusy())
+            {
+                reason = "节点动画进行中/对账未平";
+                return false;
+            }
+            if (HasConveyingMember(target))
+            {
+                reason = "传送带在途投递";
+                return false;
+            }
+            return true;
+        }
+
+        private IEnumerator DispatchWhenReady(int i, GameObject target, string reason)
+        {
+            float startedAt = Time.time;
+            while (true)
+            {
+                float deadline = Time.time + DispatchGateTimeoutSeconds;
+                string block = reason;
+                bool open = false;
+                while (Time.time < deadline)
+                {
+                    if (target == null)
+                    {
+                        m_goQueued.Remove(m_targetNames[i]);
+                        yield break; // 目标被删
+                    }
+                    if (CanDispatchNow(target, out block))
+                    {
+                        open = true;
+                        break;
+                    }
+                    yield return new WaitForSeconds(DispatchPollSeconds);
+                }
+                if (!open && target != null && !CanDispatchNow(target, out block))
+                {
+                    StubLog.LogWarn("[ButtonLogicRelay] " + name + " 派发门控超时 " +
+                        DispatchGateTimeoutSeconds + "s 强发 " + m_goTriggers[i] + " → " +
+                        m_targetNames[i] + "（阻塞原因=" + block + "，fail-open=行为同旧版）");
+                }
+                if (target == null)
+                {
+                    m_goQueued.Remove(m_targetNames[i]);
+                    yield break;
+                }
+                target.SendMessage("OnTrigger", m_goTriggers[i], SendMessageOptions.DontRequireReceiver);
+                StubLog.Log("[ButtonLogicRelay] " + name + " 延迟派发 " + m_goTriggers[i] +
+                    " → " + m_targetNames[i] + "（" + reason + "，等待 " +
+                    (Time.time - startedAt).ToString("0.##") + "s 后放行）");
+                int remaining;
+                if (!m_goQueued.TryGetValue(target.name, out remaining) || remaining <= 1)
+                {
+                    m_goQueued.Remove(target.name);
+                    yield break;
+                }
+                m_goQueued[target.name] = remaining - 1;
+                startedAt = Time.time;
+                // 继续服务累计的后续 BLGo（等待原因重新判定）。
+                reason = "连续按压累计";
+            }
+        }
+
+        // ---- ServerConveyorStation 投递状态反射（组件名扫描 + 懒缓存，
+        //      ConveyorDirectionSync 同款模式；ServerConveyorStation 只在主机存在，
+        //      与门控仅主机执行一致） ----
+        private static System.Reflection.MethodInfo s_isConveyingMethod;
+        private static System.Reflection.FieldInfo s_receivingField;
+        private static bool s_stationReflectionResolved;
+        private static bool s_stationReflectionWarned;
+
+        /// <summary>组根子树内是否有正在投递/被投递的传送带站（IsConveying() ||
+        /// m_receiving）。反射失败 = 不门控（fail-open，行为同旧版）。</summary>
+        private static bool HasConveyingMember(GameObject groupRoot)
+        {
+            if (groupRoot == null)
+                return false;
+            var components = groupRoot.GetComponentsInChildren<Component>(true);
+            for (int c = 0; c < components.Length; c++)
+            {
+                var st = components[c];
+                if (st == null || st.GetType().Name != "ServerConveyorStation")
+                    continue;
+                if (!s_stationReflectionResolved)
+                {
+                    s_stationReflectionResolved = true;
+                    var type = st.GetType();
+                    s_isConveyingMethod = type.GetMethod("IsConveying",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    s_receivingField = type.GetField("m_receiving",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
+                try
+                {
+                    if (s_isConveyingMethod != null && (bool)s_isConveyingMethod.Invoke(st, null))
+                        return true;
+                    if (s_receivingField != null && s_receivingField.FieldType == typeof(bool) &&
+                        (bool)s_receivingField.GetValue(st))
+                        return true;
+                }
+                catch (Exception ex)
+                {
+                    if (!s_stationReflectionWarned)
+                    {
+                        s_stationReflectionWarned = true;
+                        StubLog.LogWarn("[ButtonLogicRelay] 传送带投递状态反射异常（门控降级 fail-open）: " +
+                            ex.Message);
+                    }
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        private void OnDisable()
+        {
+            m_goQueued.Clear();
         }
 
         /// <summary>互锁：A 抬起时 B 按下，反之亦然。每次翻转打投递结果

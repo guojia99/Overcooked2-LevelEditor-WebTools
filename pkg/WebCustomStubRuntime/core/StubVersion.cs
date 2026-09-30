@@ -14,6 +14,47 @@ namespace CustomStub
     public static class StubVersion
     {
         /// <summary>权威 semver 版本号（形如 2.0.0）。
+        /// 3.6.0（2026-09-29 联机「双按钮+传送带×4 偶发方向未旋转/停位不齐/动画
+        /// 未完整执行」修复，运行时逻辑变更·loader 逻辑零变更仅同步版本）：
+        ///  - 根因①（丢步/差 90°）：按钮链每步 = 主机 ServerTimedQueue 广播一条
+        ///    TimedQueueMessage(index=0)，全端 ClientTimedQueue 到点 SetTrigger(BLPress)。
+        ///    网络突刺/时钟追赶把两条消息挤进同一帧时，一帧两次 DoEvent 的两次
+        ///    SetTrigger 被 Mecanim 单值 Trigger 合并为一次过渡 → 该端永久少转
+        ///    一步（≤5° 停稳吸附救不了）；单机走本地回环分帧，必现不了。
+        ///  - 根因②（停位差几度不回正）：ConveyorDirectionSync 吸附基准在 OnEnable
+        ///    捕获，真机 station child 晚于自愈挂载实例化时退用伪根旋转（失真）
+        ///    且永不重捕 → 吸附失效。
+        ///  - 修复 F2（治本·步数对账）：新增 NodeRingSync（免 tag，HealScene 扫
+        ///    Design/Animated Objects 组根，按 controller 参数表含 BLPress 判定
+        ///    节点环）；Harmony postfix（EnsureNodeRingAuditPatches 按需装：
+        ///    ClientTimedQueue.ApplyServerEvent / ClientTriggerQueue.DoEvent）把
+        ///    权威步数（QueueEvent 计数）与 SetTrigger 计数交给组件，落后且停在
+        ///    Idle → Animator.Play(Idle_目标) 瞬跳终态（Idle 定持 clip 常值=精确
+        ///    姿态）；SetTrigger 计数 > 本地步数 = 丢步直接证据（常开日志）。
+        ///  - 修复 F1（防重入 + Pending 门控）：ButtonLogicRelay 主机侧发 BLGo 前
+        ///    检查目标组——节点动画进行中/对账未平（NodeRingSync.IsBusy）或传送带
+        ///    在途投递（ServerConveyorStation.IsConveying||m_receiving，反射）则
+        ///    推迟派发（复刻 vanilla ServerTriggerAnimationOnConveyor 的 Pending
+        ///    语义：从不边送边转）；按目标计数排队防丢，2s 超时 fail-open 强发。
+        ///  - 修复 F3（吸附基准）：station 晚就绪时首次解析到即重捕基准组（打日志）。
+        ///  - 存量关卡无需重写回（全部走运行时自愈/反射，不动烘焙资产）；
+        ///    requires.txt 门控随本版本对齐（Loader PluginVersion 同步 3.6.0）。
+        ///
+        /// 3.5.9（2026-09-29 版本对齐 · Loader 性能与排障系列收口）：
+        ///  - 本运行时**逻辑零变更**，仅将 SSOT 版本对齐 Loader v3.5.9
+        ///    （v3.5.2~3.5.9 全部为 loader 侧改动，详见 Loader.cs 头部变更记录：
+        ///    依赖 bundle 异步分帧加载修复启动读档卡 2-5 秒、帧卡顿看门狗、
+        ///    ≥100ms 慢调用定位、info bundle 预载尝试与回退、日志减负）。
+        ///  - 对齐后导出的 requires.txt/依赖包 zip 名统一为 3.5.9，与 Loader.dll
+        ///    PluginVersion 一致（本常量的同步要求恢复满足）。
+        ///  - ⚠ 编辑此文件后需 Unity 重编译 + AutoBake 重新 staging
+        ///    webcustomstub_runtime（导出新鲜度守卫会强制拦过期包）。
+        ///
+        /// 3.5.1（2026-09-29）：
+        ///  - RatHeist 打鼠修复：包装 prefab 补 PseudoPrefab（实体扫描前生成老鼠）；
+        ///    晚生成路径 ServerRegisterObject 补挂 Interactable 同步器；DynamicGridLocation
+        ///    占格跟随；蟑螂视觉子树碰撞体禁用以免挡交互扫描。
+        /// Loader 的 PluginVersion 必须同步为同值。</summary>
         /// 3.5.0（2026-09-28 零介入铁律 · 清单驱动的逐关卡按需挂载）：
         ///  - 铁律：未使用 web 导出的关卡（官方图/旧导出集/无自定义关卡），loader
         ///    与本运行时对游戏零介入——不 hook 任何函数、不装任何补丁、不做任何
@@ -175,11 +216,7 @@ namespace CustomStub
         ///  - web 火锅烧糊修复：直驱不再在「刚熟」停止（进度到不了 1.3×预警 / 2×烧糊），
         ///    改为推进到 IsBurning 为止 + 宿主双驱动时观测让位；客户端「锅在灶台上」
         ///    标志按触发区直驱（原先恒 false 导致烧糊预警图标被 vanilla 吞掉）。
-        /// 3.5.1（2026-09-29）：
-        ///  - RatHeist 打鼠修复：包装 prefab 补 PseudoPrefab（实体扫描前生成老鼠）；
-        ///    晚生成路径 ServerRegisterObject 补挂 Interactable 同步器；DynamicGridLocation
-        ///    占格跟随；蟑螂视觉子树碰撞体禁用以免挡交互扫描。
-        /// Loader 的 PluginVersion 必须同步为同值。</summary>
-        public const string Value = "3.5.1";
+
+        public const string Value = "3.6.0";
     }
 }

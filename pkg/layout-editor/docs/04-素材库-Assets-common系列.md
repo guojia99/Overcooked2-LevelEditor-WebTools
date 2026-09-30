@@ -124,23 +124,27 @@ AssetBundle assetBundle = AssetBundle.LoadFromFile(path);
 | **common03** | 后期 DLC 大合集（**上游正式版只读镜像**，2026-09 对齐上游重构） | `common03`（仅根 meta） | 35MB / 1296 prefab / 1376 SO |
 | **commonW1** | Web 版 + 编辑器自制**增量层**（火锅/问号/背景/材质/RandomDispenser/decor） | `commonW1`（五个顶层 meta 显式标记） | 24MB / 352 prefab / 241 SO / 309 mat |
 | **commonW2** | Burger 大全共享库（纯自定义菜谱数据） | `commonW2` | 5.7MB / 69 配方 / 14 模型 prefab |
-| **commonW3** | Web 扩展菜谱共享库（沙拉大全 + Web 果汁大全，纯 custom_recipe 数据包） | `commonW3` | 沙拉 21 道 + 果汁 3 道 |
+| **commonW3** | Web 扩展菜谱共享库（沙拉 / 果汁 / 炒饭 / 汤粥 / 冰淇淋 / 布丁 / 冰沙） | `commonW3` | 67 道（39 已有 + batch1 28） |
 
 > 分工速记：**common01/02 = 原版一代代理**（category-first）；**common03 = 上游正式版镜像**；**commonW1 = 上游没有/已删的编辑器增量**（dlc-first）；**commonW2/W3 = 纯数据包**。"镜像 vs 增量"的分离让同步上游变成机械操作（`b499bd15e` + `a66d607b5` 两个提交完成一次全量对齐）。
 
-### 2.1 commonW3 —— Web 扩展菜谱（沙拉 + 果汁）
+### 2.1 commonW3 —— Web 扩展菜谱
 
 | 分类目录 | 生成脚本 | 说明 |
 |---|---|---|
 | `custom_recipes/salad/` | `layout-editor/scripts/gen-commonw3-salads.mjs` | DLC11 食材全排列沙拉，`Web_Salad_*` / `Web_LSalad_*`，type 1 Composite |
-| `custom_recipes/smoothie/` | `gen-commonw3-smoothies.mjs` + `gen-commonw3-mixed-smoothies.mjs` | 单果汁 3 款（FBX）+ 混果汁 12 款（`Web_Smoothie_Mix_*`，共用官方什锦 OBJ + 分区换色贴图） |
+| `custom_recipes/smoothie/` | `gen-commonw3-smoothies.mjs` + `gen-commonw3-mixed-smoothies.mjs` | 单果汁 6 款 + 混果汁 12 款（`Web_Smoothie_Mix_*`，共用官方什锦 OBJ + 分区换色贴图） |
+| `custom_recipes/fried_rice/` | `gen-commonw3-migration-batch1.mjs` | 炒饭 6 道（3 共用网格组 + 1 独立香肠炒饭） |
+| `custom_recipes/soup/` | 同上 | 汤粥 7 道（2 官方 prefab + 自定义 OBJ + 鱼碗共用组） |
+| `custom_recipes/ice_cream/` | 同上 | 冰淇淋 12 道（2×冰+牛奶+食材；10 果味+香草/巧克力；模型/icon 待定） |
+| `custom_recipes/pudding/` | 同上 | 布丁 6 道（3 成品 + 3 中间产物） |
+| `custom_recipes/milk_slush/` | 同上 | 牛奶冰沙 10 道（冰+牛奶+2×同款水果；覆盖 Web 果汁全果；模型/icon 待定） |
 
-- 果汁配方类型 **Mixed (3)** + **Glass** 装盘 + **BlenderIcon** 搅拌杯图标（参考 `backup_20260911/汁`）；**不是** Cooked 烹饪链，也**不是** Mixer 搅拌碗。
-- 命名统一 **Web_** 前缀；显示名见 `custom_recipes/names.json`。
-- 单果汁：`smoothie/models/<id>/` 含 FBX + PBR 贴图；混果汁：共用 `backup_rebuild/Models/什锦果汁/_shared/什锦果汁.obj`，贴图索引见 `atlas-index.json`（伞/液面/吸管/杯身四象限）。
-- 混果汁生成链：`gen-mega-smoothie-textures.mjs` → `gen-commonw3-mixed-smoothies.mjs`；图标仅手动维护于 `smoothie/icons/`。
-- 落盘后 Unity 菜单 **Layout Editor → Bake commonW3 Smoothie Models**（自动扫描 `Web_Smoothie_*.asset`）生成 prefab。
-- 重跑沙拉脚本会**保留**已有 `smoothie` 分类与 names 条目（`gen-commonw3-salads.mjs` 合并逻辑）。
+- 果汁 / 冰沙 / 冰淇淋（搅拌类）：**Mixed (3)** + **Glass** + **BlenderIcon**；冰沙清空 backup 误带的 `cookingStepSO`。
+- 命名统一 **Web_** 前缀；显示名见 `custom_recipes/names.json`（zh + en）。
+- batch1 模型纪律：**默认每道独立 FBX**；仅 manifest 审计确认同网格换贴图才可 `modelShareGroup` 共用（炒饭 2 组、鱼碗 1 组、冰沙杯 1 组）。
+- 生成：`node layout-editor/scripts/gen-commonw3-migration-batch1.mjs [--apply]`；清单见 `backup_rebuild/.../自定义菜谱/_audit_docs/00-迁移清单-commonW3-batch1.md`。
+- Unity：**Bake commonW3 Smoothie Models**（果汁）+ **Bake commonW3 Migration Models**（batch1 六分类）→ Build AssetBundles（`commonW3`）。
 
 ---
 

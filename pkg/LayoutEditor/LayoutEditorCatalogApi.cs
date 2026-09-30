@@ -176,14 +176,23 @@ public static class LayoutEditorCatalogApi
             return "moonpie";
         if (lower.IndexOf("christmaspudding", StringComparison.Ordinal) >= 0)
             return "pudding";
+        // Web_Pudding_*（commonW3 布丁）归入官方布丁大类。
+        if (lower.StartsWith("web_pudding", StringComparison.Ordinal))
+            return "pudding";
         if (lower.IndexOf("hotpot", StringComparison.Ordinal) >= 0)
             return "hotpot";
         if (lower.IndexOf("hotchoc", StringComparison.Ordinal) >= 0)
             return "hotchocolate";
         if (lower.IndexOf("sodafloat", StringComparison.Ordinal) >= 0 || lower.IndexOf("float", StringComparison.Ordinal) >= 0)
             return "float";
+        // Web_IceCream_*（commonW3 冰淇淋）与官方 IceCream 区分目录分类。
+        if (lower.IndexOf("icecream", StringComparison.Ordinal) >= 0
+            && lower.StartsWith("web_icecream", StringComparison.Ordinal))
+            return "ice_cream";
         if (lower.IndexOf("icecream", StringComparison.Ordinal) >= 0)
             return "icecream";
+        if (lower.IndexOf("milkslush", StringComparison.Ordinal) >= 0)
+            return "milk_slush";
         if (lower.IndexOf("donut", StringComparison.Ordinal) >= 0)
             return "donut";
         if (lower.IndexOf("hotdog", StringComparison.Ordinal) >= 0 || lower.IndexOf("frankfurter", StringComparison.Ordinal) >= 0)
@@ -195,6 +204,9 @@ public static class LayoutEditorCatalogApi
             return "smores";
         if (lower.IndexOf("roast", StringComparison.Ordinal) >= 0)
             return "roast";
+        // Web_FriedRice_*（commonW3 炒饭）须在通用 fried→fry 之前判定。
+        if (lower.IndexOf("friedrice", StringComparison.Ordinal) >= 0)
+            return "fried_rice";
         if (lower.IndexOf("fried", StringComparison.Ordinal) >= 0)
             return "fry";
         if (lower.IndexOf("cheesestick", StringComparison.Ordinal) >= 0 || lower.IndexOf("onionrings", StringComparison.Ordinal) >= 0)

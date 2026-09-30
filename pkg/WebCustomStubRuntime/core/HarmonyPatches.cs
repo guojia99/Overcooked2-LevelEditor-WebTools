@@ -636,6 +636,75 @@ namespace CustomStub
             get { return typeof(HarmonyPatches).GetMethod("ClientMixingApplyUpdatePostfix", BF); }
         }
 
+        // ============ 节点环步数对账（3.6.0 联机偶发丢步修复） ============
+        //
+        // 背景：按钮链每一步 = 主机 ServerTimedQueue 广播 TimedQueueMessage(index=0)，
+        // 全端 ClientTimedQueue 到点 SetTrigger(BLPress)。网络突刺/时钟追赶把两条消息
+        // 挤进同一帧时，两次 SetTrigger 被 Mecanim 单值 Trigger 合并为一次过渡 →
+        // 该端永久少转一步（差 90°）。postfix 只把消息/执行计数转发给组根上的
+        // NodeRingSync（注册表 O(1) 寻址、零分配），由其对账并瞬跳补步——
+        // 非节点环实体（无 NodeRingSync）首行早退，零开销。
+
+        /// <summary>ClientTimedQueue.ApplyServerEvent 后缀：QueueEvent(index==0)
+        /// = 权威步数 +1；Cancel = 权威回退对齐本地。</summary>
+        private static void ClientTimedQueueApplyServerEventPostfix(object __instance, object serialisable)
+        {
+            try
+            {
+                var comp = __instance as Component;
+                if (comp == null || serialisable == null)
+                    return;
+                var ring = NodeRingSync.FindFor(comp);
+                if (ring == null)
+                    return; // 非节点环实体：零开销早退
+                if (GameApi.TimedQueueMsgTypeField == null || GameApi.TimedQueueMsgIndexField == null)
+                    return;
+                var msgType = GameApi.TimedQueueMsgTypeField.GetValue(serialisable);
+                if (msgType != null && msgType.ToString() == "QueueEvent")
+                {
+                    var boxed = GameApi.TimedQueueMsgIndexField.GetValue(serialisable);
+                    ring.OnAuthoritativeEvent(boxed is int ? (int)boxed : -1);
+                }
+                else
+                {
+                    ring.OnAuthoritativeCancel();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("ringEvent", "[CustomStub.Harmony] 节点环对账事件后缀异常（跳过=不补步）: " + ex.Message);
+            }
+        }
+
+        /// <summary>ClientTriggerQueue.DoEvent 后缀：SetTrigger 执行计数（诊断——
+        /// SetTrigger 次数 &gt; 本地步数 = 同帧合并丢步的直接证据）。</summary>
+        private static void ClientTriggerQueueDoEventPostfix(object __instance, int _index)
+        {
+            try
+            {
+                var comp = __instance as Component;
+                if (comp == null)
+                    return;
+                var ring = NodeRingSync.FindFor(comp);
+                if (ring != null)
+                    ring.OnTriggerFired(_index);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("ringFire", "[CustomStub.Harmony] 节点环触发计数后缀异常（忽略）: " + ex.Message);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ClientTimedQueueApplyServerEventPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ClientTimedQueueApplyServerEventPostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ClientTriggerQueueDoEventPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ClientTriggerQueueDoEventPostfix", BF); }
+        }
+
         private const System.Reflection.BindingFlags BF =
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
     }

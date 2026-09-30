@@ -8,7 +8,7 @@
  *  分类显示名优先取桥接下发的 CustomRecipeConfig（含 commonW2 Burger大全的
  *  子分类表），配置缺失时回退 RECIPE_TYPE_ZH / id 原文。 */
 import type { CustomRecipeConfig, RecipeEntry } from "./types";
-import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
+import { customCategoryLabel, groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 
 export interface SummarySubGroup {
   key: string;
@@ -49,7 +49,7 @@ export function buildSummaryGroups(selected: RecipeEntry[], customConfig: Custom
   const categories = customConfig?.categories ?? [];
   const subcategories = customConfig?.subcategories ?? [];
   const catLabel = (id: string): string =>
-    categories.find((c) => c.id === id)?.zh ?? recipeTypeLabel(id || "other");
+    categories.find((c) => c.id === id)?.zh ?? customCategoryLabel(id || "other");
   const subLabel = (cat: string, id: string): string =>
     subcategories.find((s) => s.parent === cat && s.id === id)?.zh ?? (id || UNCAT);
 

@@ -1,6 +1,6 @@
 # 05 · 运行时加载器 OC2LevelRuntimeLoader
 
-> 目录：`Assets/WebCustomStubRuntime/Loader~/`（唯一源文件 `Loader.cs`，v3.5.0；`~` 后缀 Unity 忽略，dotnet 单独编译）
+> 目录：`Assets/WebCustomStubRuntime/Loader~/`（唯一源文件 `Loader.cs`，v3.5.3；`~` 后缀 Unity 忽略，dotnet 单独编译）
 > 一句话定位：「Overcooked2 关卡代码分发」体系的**游戏侧运行时注入端**——把编辑器按关卡集编译、随关卡 zip 分发的 C# 程序集（统一运行时 `WebCustomStubRuntime`，内含随机食材箱等自定义玩法逻辑）在**关卡场景加载之前**注入游戏进程的 AppDomain，使场景 bundle 里的脚本引用能解析成真实组件。
 > **零介入铁律（v3.5.0）**：未使用 web 导出的关卡（官方图/旧导出集/无自定义关卡），loader 及其注入的运行时对游戏**零介入**——不 hook 任何函数、不装任何补丁、不做任何场景扫描/探测；web 关卡集里未用 CustomStub 的关卡同样零监控零对局钩子。
 > 返回 [00-架构总览.md](00-架构总览.md)
@@ -12,7 +12,7 @@
 ```
 Assets/WebCustomStubRuntime/
 ├── Loader~/                                （`~` 目录 Unity 忽略，dotnet 单独编译）
-│   ├── Loader.cs                           ★ 唯一源码（v3.5.0，纯加载器——不含任何 Harmony patch）
+│   ├── Loader.cs                           ★ 唯一源码（v3.5.3，纯加载器——不含任何 Harmony patch）
 │   ├── Loader.csproj                       net35 工程（BepInEx 5.4.22 + 老式整包 UnityEngine.dll；无 0Harmony 引用）
 │   ├── build.sh                            一键构建（版本号从 Loader.cs 自动提取）
 │   ├── bin/Release/Loader.dll              构建产物（手动同步到 web/public/）
@@ -38,11 +38,11 @@ Assets/WebCustomStubRuntime/
 
 | 项 | 内容 |
 |---|---|
-| 命名空间/类 | `OC2LevelRuntimeLoader.LevelRuntimeLoader : BaseUnityPlugin`，`[BepInPlugin("oc2.oc2diylevelruntimewloader", "OC2DIYLevelRuntimeWLoader", "3.5.0")]` |
+| 命名空间/类 | `OC2LevelRuntimeLoader.LevelRuntimeLoader : BaseUnityPlugin`，`[BepInPlugin("oc2.oc2diylevelruntimewloader", "OC2DIYLevelRuntimeWLoader", "3.5.3")]` |
 
-**类内状态**：`_log`（BepInEx 日志）、`PendingRaw`（Load 失败暂存字节，供 AssemblyResolve 兜底）、`LoadedNames`（程序集名去重）、`LoadedBundles`（bundle 路径去重，忽略大小写）、`_startupScanDone`/`_filesystemScanDone`/`_depsLoaded`/`_resolveHooked`（幂等闸门）、**`WebManifest`**（web stub 关卡清单，`public static string[]`，stub 侧 EntryPoint 反射读取）、`ReportedResolveMisses`（解析失败只报一次防刷屏）。
+**类内状态**：`_log`（BepInEx 日志）、`PendingRaw`（Load 失败暂存字节，供 AssemblyResolve 兜底）、`LoadedNames`（程序集名去重）、`LoadedBundles`（bundle 路径去重，忽略大小写）、`_startupScanDone`/`_filesystemScanDone`/`_resolveHooked`（幂等闸门）、**`_depLoadState`/`_queueRunning`/`_pendingOps`/`_instance`**（v3.5.2 异步加载队列状态机，替代旧布尔位 `_depsLoaded`）、**`WebManifest`**（web stub 关卡清单，`public static string[]`，stub 侧 EntryPoint 反射读取）、`ReportedResolveMisses`（解析失败只报一次防刷屏）。
 
-### 3.1 执行流程（v3.5.0 清单驱动）
+### 3.1 执行流程（v3.5.0 清单驱动；v3.5.2 依赖加载异步化）
 
 ```
 BepInEx Chainloader 实例化插件
@@ -53,11 +53,17 @@ BepInEx Chainloader 实例化插件
   │    ├─ 清单为空 → 【完全休眠】不加载 bundle/程序集、不挂 AssemblyResolve，
   │    │   一个字节都不加载（未用 web 导出的环境零介入）
   │    └─ 非空 → 挂 AssemblyResolve → LoadDependenciesAndRuntime()
-  │        （commonW* + webcustomstub_runtime → Assembly.Load → EntryPoint.Install）
-  │        → 再加载 levels/<set>/*_custom_runtime（预留通道）
-  └─ 每次场景加载：OnSceneLoadedHeal（休眠模式=verbose 日志即返回）
+  │        （入队 commonW* + webcustomstub_runtime + *_custom_runtime →
+  │          LoadQueueCoroutine 协程 LoadFromFileAsync 分帧加载 →
+  │          Assembly.Load → EntryPoint.Install，见下方「异步加载」）
+  └─ 每次场景加载：OnSceneLoadedHeal（休眠模式=verbose 日志即返回；
+       队列幂等——未启动则启动，在途/已完成直接返回）
        逐关卡闸门在 CustomStub.EntryPoint.ProcessScene（见 §4）
 ```
+
+**异步加载（v3.5.2，2026-09-29 启动读档卡顿修复）**：依赖 bundle（commonW1+W2+W3 约 56MB，LZMA 压缩）与统一运行时原在启动首几帧主线程同步 `LoadFromFile`——LZMA 须整包解压，与游戏 Bootstrap 读档窗口（`PCSaveManager.BootstrapAwake` 同样跑主线程）撞车，实测「读存档卡 2-5 秒」。现全部 `LoadFromFileAsync` 进协程分帧：解压在工作线程、主线程逐帧收结果；`Assembly.Load`/`EntryPoint.Install` 仍在主线程（协程内），完成点仍在启动期数帧内，MonoScript 程序集解析时序铁律不受影响。⚠ C#4 铁律：内层迭代器 `LoadQueueCoroutine` 的 yield 全部裸露（不得处于带 catch 的 try 内），异常防护由外层驱动器 `RunSafe`（手动 MoveNext + try/catch）承担。入队去重双保险：`LoadedBundles`（已完成）+ `IsPendingLoadOp`（在途——双重扫描产生两次 ApplyScanResult 时防同 bundle 双载）。
+
+**info bundle 预载（v3.5.8 引入，v3.5.9 整体回退——不可行，教训入档）**：根因（v3.5.6/3.5.7 资产跟踪实锤）= OC2DIYLevel 进关卡选择时对**每个**关卡集做主线程同步 `LoadFromFile`+`LoadAsset`（info bundle 为 LZMA 整包解压，实测 11 条慢调用合计 ~15s = 看门狗的 14.3s 冻结）。v3.5.8 曾尝试启动期异步预载 info_*，真机翻车：**Unity 2017.4 对同一 bundle 文件的二次 `LoadFromFile` 不返回缓存实例，而是报错 "can't be loaded because another AssetBundle with the same files is already loaded" 并返回 null** → OC2DIYLevel 全部 `failed loading file` → 关卡列表全空。结论：该卡顿**只能由上游 OC2DIYLevel 修**（启动时自己异步预载 / 加载前先查 `GetAllLoadedAssetBundles` / 改异步）。⚠ 铁律：**loader 绝不预载外部模组自己会 `LoadFromFile` 的 bundle 文件**——我们的 commonW* 预载成立仅因 OC2DIYLevel 对 commonW 系不加载（各自管各自的包）。
 
 **版本门控**：`requires.txt`（= 依赖包 SSOT 版本）与 PluginVersion semver 比较，过低则该集跳过 stub 支持（维持原行为）。
 
@@ -106,7 +112,11 @@ BepInEx Chainloader 实例化插件
 
 - `Prefix()`：`[HH:mm:ss.fff][主机|客机|单机|未知] `（RoleTag 反射 ConnectionStatus，按帧缓存）；
 - `LogFromCrate(string, bool)`（public static）：stub 日志桥（`[Stub:...]` 段 = stub 桥接，无 = loader 原生）；
-- `DumpEnvironment()`（启动首帧）：路径探测 + （Verbose 时）目录清单 + AppDomain 相关程序集。
+- `DumpEnvironment()`（启动首帧）：路径探测 + （Verbose 时）目录清单 + AppDomain 相关程序集；
+- **帧卡顿看门狗（v3.5.3 引入；v3.5.5 起 `[Logging] StallWatchdog` 默认 true，键名从 FrameStallWatch 改名——BepInEx 已保存配置值优先于新默认值，旧键存的 false 会压住改默认，故换键绕开）**：相邻帧间隔超 100ms 记一行 `[帧卡顿] Δ=Nms（frame/场景）`——本行时间=卡顿结束、上一条日志时间≈卡顿开始，**对照两行之间的日志即定位责任方**（loader 耗时行 / 游戏本体日志 / 其它模组）。纯被动计时不 hook 不扫描，休眠模式也可用（拔掉 web 关卡集仍卡 = 与 loader 无关的对照证据）；
+- **异步加载心跳（v3.5.4）**：队列等待期每 2s 一行 `[心跳] <bundle> 异步加载进行中 Ns`——心跳间隔远超 2s = 主线程在该窗口硬卡（冻结期协程不推进），与 [帧卡顿] 互相印证；
+- **主线程耗时打点（v3.5.3 常开）**：`Assembly.Load=/GetTypes=/EntryPoint.Install=` 毫秒数随行输出（Install 含 GameApi 反射初始化与自检，是异步化后的主线程残余大头）；commonW* 行附「后台解压 Nms」（不占主线程）；
+- **资源加载跟踪（v3.5.6，v3.5.7 阈值化，v3.5.8 起 `[Diagnostics] TraceAssetLoads` 默认 false，仅激活态安装）**：给 `AssetBundle.LoadFromFile / LoadAsset(string,Type) / LoadAllAssets(Type)` 三个**同步阻塞**入口挂 Harmony 计时。**仅 ≥100ms 慢调用**输出 `[资产跟踪]` 明细行（快调用只原子计数零日志零字符串，开销≈0）；10s 汇总与队列心跳均为 Verbose 级（v3.5.8 日志减负）。已立功：抓到 OC2DIYLevel 同步加载 `levels/<set>/info_<set>` bundle 的 11 条慢调用合计 ~15s（=看门狗的 14.3s 冻结）→ v3.5.8 info 预载由此而来；当前用于验证预载命中缓存（进关卡选择不应再出现 info_* 慢调用行）。⚠ v3.5.6 教训：逐条打日志在每帧 30-40 次 LoadAsset 轮询下 2 分钟 26.6 万行/65.7MB 直接拖慢加载——**该跟踪器永远不得回到逐条日志形态**。0Harmony 引用为此回到 csproj（v3.5.0 曾移除）。
 
 ## 4. 与游戏本体的 Hook 点
 

@@ -51,6 +51,10 @@ namespace CustomStub
         private bool m_haveSynced;
         /// <summary>开局基准旋转（Idle_0 位姿；位姿吸附的参考零点）。</summary>
         private Quaternion m_baseRotation;
+        /// <summary>基准待重捕：OnEnable 时 station child 尚未实例化（真机 loader
+        /// 运行期才建 child），基准退用了伪根自身旋转（失真）——首次解析到
+        /// station 后重捕（3.6.0 联机「停位差几度不回正」修复之一）。</summary>
+        private bool m_baseDirty;
         /// <summary>位姿判定阈值（米/度）：小于视为静止（写回吸附噪声容差）。</summary>
         private const float MoveEpsilon = 0.1f;
         private const float AngleEpsilon = 0.01f;
@@ -70,6 +74,7 @@ namespace CustomStub
             m_currentPosition = m_stationTransform != null ? m_stationTransform.position : transform.position;
             m_syncedRotation = m_currentRotation;
             m_baseRotation = m_currentRotation;
+            m_baseDirty = m_stationTransform == null;
             m_syncedPosition = m_currentPosition;
             m_haveSynced = true;
             m_lastFrameMoved = false;
@@ -80,7 +85,25 @@ namespace CustomStub
             if (!m_enabled)
                 return;
             if (m_stationTransform == null)
+            {
                 m_stationTransform = FindStationTransform();
+                // 基准重捕：OnEnable 时 child 未就绪 → 基准退用了伪根旋转（失真）。
+                // 首次解析到 station 的这一帧重捕全部基准——此后才开始运动检测，
+                // 解析帧的位姿差不会被误判为动画运动。自愈挂载早于玩家可操作，
+                // 首个按压前必已完成重捕。
+                if (m_stationTransform != null && m_baseDirty)
+                {
+                    m_currentRotation = m_stationTransform.rotation;
+                    m_currentPosition = m_stationTransform.position;
+                    m_syncedRotation = m_currentRotation;
+                    m_baseRotation = m_currentRotation;
+                    m_syncedPosition = m_currentPosition;
+                    m_haveSynced = true;
+                    m_baseDirty = false;
+                    StubLog.Log("[ConveyorDirectionSync] " + name + " 基准重捕：station 晚就绪，以 " +
+                        m_stationTransform.name + " 初始位姿为吸附基准（此前基准为伪根旋转，失真）");
+                }
+            }
 
             // 1) 运动检测：本帧位姿相对上一帧是否变化（动画进行中）。
             var rotation = m_stationTransform != null ? m_stationTransform.rotation : transform.rotation;

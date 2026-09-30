@@ -1,0 +1,139 @@
+{
+  "_comment": "Web 冰淇淋视觉配置。scoop=冰淇淋主色、glass=杯身、spoon=勺子（替代冰沙吸管）、garnish=杯口装饰。",
+  "_styleBaseZh": "胡闹厨房 Overcooked 风格卡通甜品、透明玻璃杯、双球冰淇淋、金属/塑料勺子插入、杯沿水果或食材装饰、柔和 PBR、无描边、干净背景、45° 产品展示",
+  "_styleBaseEn": "Overcooked-style cartoon dessert, clear glass cup, two ice cream scoops, spoon inserted, fruit or ingredient garnish on rim, soft PBR, no outline, clean background, 45-degree product shot",
+  "variants": [
+    {
+      "id": "Web_IceCream_Vanilla",
+      "zh": "香草冰淇淋",
+      "scoop": "#FFF5DC",
+      "glass": "#F0F0E8",
+      "spoon": "#D4A84B",
+      "garnishZh": "杯沿香草荚 1 根 + 小白花",
+      "garnishEn": "one vanilla bean pod and tiny white flower on rim",
+      "stylePromptZh": "奶白香草双球、金黄勺子、香草荚装饰；细腻冰晶、经典甜筒风味",
+      "stylePromptEn": "creamy ivory vanilla scoops, golden spoon, vanilla bean garnish; fine crystals, classic flavor"
+    },
+    {
+      "id": "Web_IceCream_Chocolate",
+      "zh": "巧克力冰淇淋",
+      "scoop": "#7A4E32",
+      "glass": "#E8E0D8",
+      "spoon": "#E84888",
+      "garnishZh": "杯沿巧克力方块 1 块",
+      "garnishEn": "one square chocolate chunk on rim",
+      "stylePromptZh": "浓郁巧克力棕双球、品红勺子、巧克力块装饰；可可碎点、醇厚丝滑",
+      "stylePromptEn": "rich chocolate brown scoops, magenta spoon, chocolate chunk garnish; cocoa chips, smooth and rich"
+    },
+    {
+      "id": "Web_IceCream_Strawberry",
+      "zh": "草莓冰淇淋",
+      "scoop": "#FFB0C0",
+      "glass": "#F0E8F0",
+      "spoon": "#9B59B6",
+      "garnishZh": "杯沿半颗草莓 + 小叶",
+      "garnishEn": "half strawberry on rim with small leaf",
+      "stylePromptZh": "粉红草莓双球、紫色勺子、草莓装饰；果粒感、清甜奶香",
+      "stylePromptEn": "pink strawberry scoops, purple spoon, strawberry garnish; fruit bits, sweet milky"
+    },
+    {
+      "id": "Web_IceCream_Grape",
+      "zh": "葡萄冰淇淋",
+      "scoop": "#C8A8E0",
+      "glass": "#E8E0F0",
+      "spoon": "#84CC16",
+      "garnishZh": "杯沿 2 颗紫葡萄（带短枝）",
+      "garnishEn": "two purple grapes on short stem at rim",
+      "stylePromptZh": "淡紫葡萄双球、青柠绿勺子、葡萄装饰；半透明果香",
+      "stylePromptEn": "lavender grape scoops, lime-green spoon, grape garnish; translucent fruity"
+    },
+    {
+      "id": "Web_IceCream_Orange",
+      "zh": "橙子冰淇淋",
+      "scoop": "#FFC870",
+      "glass": "#F5EDE0",
+      "spoon": "#14B8A6",
+      "garnishZh": "杯沿橙子圆片",
+      "garnishEn": "orange wheel slice on rim",
+      "stylePromptZh": "奶油橙黄双球、青绿勺子、橙子片装饰；柑橘清香",
+      "stylePromptEn": "creamy orange scoops, teal spoon, orange slice; citrus fresh"
+    },
+    {
+      "id": "Web_IceCream_Peach",
+      "zh": "桃子冰淇淋",
+      "scoop": "#FFD0A8",
+      "glass": "#F8EEE6",
+      "spoon": "#E85D4C",
+      "garnishZh": "杯沿桃子楔形切片",
+      "garnishEn": "peach wedge on rim",
+      "stylePromptZh": "蜜桃奶油双球、珊瑚红勺子、桃子片装饰；软糯夏日",
+      "stylePromptEn": "peach cream scoops, coral spoon, peach wedge; soft summery"
+    },
+    {
+      "id": "Web_IceCream_Blueberry",
+      "zh": "蓝莓冰淇淋",
+      "scoop": "#A0B0E0",
+      "glass": "#E8ECF5",
+      "spoon": "#F4C430",
+      "garnishZh": "杯沿 3 颗蓝莓",
+      "garnishEn": "three blueberries on rim",
+      "stylePromptZh": "淡蓝紫双球、金黄勺子、蓝莓装饰；浆果微酸",
+      "stylePromptEn": "pale blue-purple scoops, golden spoon, blueberry garnish; berry tang"
+    },
+    {
+      "id": "Web_IceCream_Blackberry",
+      "zh": "黑莓冰淇淋",
+      "scoop": "#B888A0",
+      "glass": "#EDE4EA",
+      "spoon": "#6EE7B7",
+      "garnishZh": "杯沿黑莓 1 颗 + 小叶",
+      "garnishEn": "one blackberry with leaf on rim",
+      "stylePromptZh": "深莓紫双球、薄荷绿勺子、黑莓装饰；成熟浆果",
+      "stylePromptEn": "deep berry scoops, mint spoon, blackberry garnish; ripe berry"
+    },
+    {
+      "id": "Web_IceCream_Raspberry",
+      "zh": "覆盆子冰淇淋",
+      "scoop": "#FF90A8",
+      "glass": "#F5E8EC",
+      "spoon": "#4A6FA5",
+      "garnishZh": "杯沿 2 颗覆盆子（一颗对半）",
+      "garnishEn": "two raspberries, one halved",
+      "stylePromptZh": "玫红覆盆子双球、深蓝勺子、覆盆子装饰；酸甜红莓",
+      "stylePromptEn": "rose raspberry scoops, navy spoon, raspberry garnish; tart-sweet"
+    },
+    {
+      "id": "Web_IceCream_Banana",
+      "zh": "香蕉冰淇淋",
+      "scoop": "#FFF0B0",
+      "glass": "#F8F4E8",
+      "spoon": "#8B6914",
+      "garnishZh": "杯沿香蕉圆片 1 片",
+      "garnishEn": "one banana coin slice on rim",
+      "stylePromptZh": "淡黄香蕉双球、深棕勺子、香蕉片装饰；浓郁奶香",
+      "stylePromptEn": "pale banana scoops, brown spoon, banana slice; rich milky"
+    },
+    {
+      "id": "Web_IceCream_Melon",
+      "zh": "西瓜冰淇淋",
+      "scoop": "#FFB0B8",
+      "glass": "#F0F5E8",
+      "spoon": "#22C55E",
+      "garnishZh": "杯沿西瓜小三角（红瓤+绿皮）",
+      "garnishEn": "watermelon triangle with rind",
+      "stylePromptZh": "浅粉西瓜双球、翠绿勺子、西瓜块装饰；清凉解渴",
+      "stylePromptEn": "light pink watermelon scoops, green spoon, watermelon wedge; refreshing"
+    },
+    {
+      "id": "Web_IceCream_Pineapple",
+      "zh": "菠萝冰淇淋",
+      "scoop": "#FFE898",
+      "glass": "#F5F0E0",
+      "spoon": "#D946A8",
+      "garnishZh": "杯沿菠萝楔形块",
+      "garnishEn": "pineapple wedge on rim",
+      "stylePromptZh": "金黄菠萝双球、品红勺子、菠萝块装饰；热带甜香",
+      "stylePromptEn": "golden pineapple scoops, magenta spoon, pineapple wedge; tropical sweet"
+    }
+  ]
+}
