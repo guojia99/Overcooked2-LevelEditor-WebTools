@@ -24,6 +24,7 @@ import { setStatus } from "./status";
 import { draw } from "./render";
 import { setSelection } from "./selection";
 import { ensureItemVisible } from "./panels";
+import { smallBtnHtml, modalBtnHtml } from "../ui/views/button";
 
 /** 当前编排台正在编排的触发源实例 id（模式 B）。 */
 let currentSourceId: string | null = null;
@@ -64,7 +65,7 @@ function renderOrchestrator(body: HTMLElement, item: EditorItem): void {
 
   body.innerHTML = `
     <div class="trig-head">
-      <button type="button" class="btn-small" id="trig-close">✕ 关闭</button>
+      ${smallBtnHtml("✕ 关闭", "default", { id: "trig-close" })}
       <span class="trig-title">🔘 触发编排 · ${escHtml(itemLabel(item))}</span>
       <span class="trig-kind">${kindName}</span>
       <span class="trig-flowhint">按下 → ${showMachines ? "① 机器 → " : ""}② 事件组 → ③ 动画组</span>
@@ -135,7 +136,7 @@ function renderSwitchTargetSection(host: HTMLElement, item: EditorItem, rerender
   host.innerHTML = `<p class="trig-hint">按下按钮时向这些机器广播触发消息（机器目标自动用原生触发名 Chop/Next/Launch，留空即可；同一开关的所有联动共享一个触发名）。事件组的目标只能从这里选。按钮被按的信号本身是游戏固定的 "Switch" 消息，无需配置；动画组/互锁联动的触发名由系统自动生成（BLP_/BLAdv_，全局唯一）。</p>
     <div id="trig-sw-links" class="trig-list"></div>
     <div class="trig-addrow"><select id="trig-sw-target" class="trig-select">${linkTargetOptsHtml()}</select>
-      <button type="button" class="btn-small primary" id="trig-sw-add">＋ 添加目标</button></div>
+      ${smallBtnHtml("＋ 添加目标", "primary", { id: "trig-sw-add" })}</div>
     <label class="trig-field" id="trig-sw-trigger-field">触发消息 <input id="trig-sw-trigger" class="trig-input" value="${escHtml(myLinks()[0]?.trigger ?? "")}" placeholder="自动（机器目标用原生触发名）"/></label>`;
 
   const linksEl = host.querySelector<HTMLElement>("#trig-sw-links");
@@ -165,7 +166,7 @@ function renderSwitchTargetSection(host: HTMLElement, item: EditorItem, rerender
           const target = S.items.find((i) => i.instanceId === l.targetId);
           return `<div class="trig-step"><span class="trig-step-idx">→</span>
             <span class="trig-step-label">${escHtml(target ? itemLabel(target) : l.targetId)}</span>
-            <button type="button" class="btn-small blm-mini" data-unlink="${escHtml(l.targetId)}">移除</button></div>`;
+            ${modalBtnHtml("移除", "btn-small blm-mini", { "data-unlink": l.targetId })}</div>`;
         })
         .join("");
       bindUnlink(linksEl);
@@ -259,7 +260,7 @@ export function renderTriggerSourcePanel(body: HTMLElement): void {
           <div class="trig-src-sub">🔁 ${escHtml(buttonEventSummaryText(evN > 0 ? evLink : undefined))}</div>
           <div class="trig-src-sub">🎬 ${escHtml(buttonLinkSummaryText(src))}</div>
         </div>
-        <button type="button" class="btn-small primary" data-trigcfg="${escHtml(id)}">编排…</button>
+        ${smallBtnHtml("编排…", "primary", { "data-trigcfg": id })}
       </div>`
     );
   }

@@ -10,10 +10,10 @@
   gap: 8px;
   margin: 0 0 8px;
   padding-left: 8px;
-  border-left: 3px solid #d97706;
+  border-left: 3px solid var(--ui-border-accent);
   font-size: 14px;
   font-weight: 600;
-  color: #fbbf24;
+  color: var(--ui-text-accent);
 }
 
 .rl-toolbar {
@@ -22,28 +22,30 @@
   gap: 12px;
   flex-wrap: wrap;
   padding: 8px 12px;
-  background: #20242d;
-  border-bottom: 1px solid #3a3f4b;
+  background: var(--ui-bg-toolbar);
+  border-bottom: 1px solid var(--ui-border);
   flex-shrink: 0;
 }
 
 .rl-search {
   width: 250px;
-  background: #171a20;
-  border: 1px solid #3a3f4b;
-  border-radius: 6px;
-  color: #e8eaed;
+  background: var(--ui-bg-input);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-text);
   padding: 6px 10px;
   font-size: 13px;
   outline: none;
+  color-scheme: var(--ui-color-scheme);
 }
 
 .rl-search:focus {
-  border-color: #3d6bf3;
+  border-color: var(--ui-border-focus);
+  box-shadow: 0 0 0 2px var(--ui-input-focus-ring);
 }
 
 .rl-search::placeholder {
-  color: #6d7480;
+  color: var(--ui-text-dim);
 }
 
 .rl-chips {
@@ -53,25 +55,27 @@
 }
 
 .rl-chip-btn {
-  border: 1px solid #3a3f4b;
-  background: #1a1d23;
-  color: #b6bcc6;
-  border-radius: 999px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg-chip);
+  color: var(--ui-text-muted);
+  border-radius: var(--ui-radius-pill);
   padding: 3px 11px;
   font-size: 12px;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: var(--ui-shadow-btn);
+  transition: color var(--ui-transition-fast), border-color var(--ui-transition-fast), background var(--ui-transition-fast), transform var(--ui-btn-bounce);
 }
 
 .rl-chip-btn:hover {
-  color: #fff;
-  border-color: #5a6070;
+  color: var(--ui-text);
+  border-color: var(--ui-border-strong);
 }
 
 .rl-chip-btn.active {
-  background: #3d6bf3;
-  border-color: #3d6bf3;
-  color: #fff;
+  background: var(--ui-bg-chip-active);
+  border-color: var(--ui-accent-action);
+  color: var(--ui-text-inverse);
 }
 
 .rl-chip-btn .rl-cnt {
@@ -85,23 +89,35 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #b6bcc6;
+  color: var(--ui-text-muted);
   cursor: pointer;
   white-space: nowrap;
 }
 
+.rl-tool-check input {
+  accent-color: var(--ui-accent-action);
+}
+
 .rl-select {
-  background: #1a1d23;
-  color: #e8eaed;
-  border: 1px solid #3a3f4b;
-  border-radius: 6px;
+  background: var(--ui-bg-input);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
   padding: 4px 8px;
   font-size: 12px;
   outline: none;
+  color-scheme: var(--ui-color-scheme);
+}
+
+.rl-select:focus {
+  border-color: var(--ui-border-focus);
+  box-shadow: 0 0 0 2px var(--ui-input-focus-ring);
 }
 
 .rl-content {
-  padding-bottom: 48px;
+  padding: 12px 16px 48px;
+  background: var(--ui-bg-page);
+  color-scheme: var(--ui-color-scheme);
 }
 
 .rl-section {
@@ -115,7 +131,7 @@
   margin: 0 0 10px;
   font-size: 14px;
   font-weight: 600;
-  color: #f0d9a8;
+  color: var(--ui-text-accent);
   letter-spacing: 0.03em;
 }
 
@@ -123,17 +139,18 @@
   content: "";
   width: 4px;
   height: 15px;
-  background: #e8b04b;
+  background: var(--ui-accent);
   border-radius: 2px;
 }
 
 .rl-section-count {
   font-size: 11px;
   font-weight: 400;
-  color: #8a909a;
-  background: #262b36;
+  color: var(--ui-text-muted);
+  background: var(--ui-bg-chip);
+  border: 1px solid var(--ui-border);
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-pill);
 }
 
 /* 卡片按内容自适应宽度：食材横向铺开无上限（10 个食材即 10 列） */
@@ -149,8 +166,8 @@
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #232834, #1a1e28);
-  border: 1px solid #333a4a;
+  background: var(--ui-rl-card-bg);
+  border: 1px solid var(--ui-rl-card-border);
   border-radius: 14px;
   overflow: hidden;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
@@ -158,8 +175,8 @@
 
 .rl-card:hover {
   transform: translateY(-3px);
-  border-color: #556078;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+  border-color: var(--ui-rl-card-hover-border);
+  box-shadow: var(--ui-rl-card-hover-shadow);
 }
 
 /* 成品区：UI_DLC07_Recipe_Background_Main_01.png 作背景，成品图标居中；
@@ -435,7 +452,7 @@
 }
 
 .rl-empty {
-  color: #8a909a;
+  color: var(--ui-text-muted);
   text-align: center;
   padding: 60px 0;
   font-size: 13px;
@@ -444,12 +461,13 @@
 /* ===================== 汇总页 ===================== */
 
 .sum-page {
-  background: #22262e;
-  border: 1px solid #3a3f4b;
-  border-radius: 10px;
+  background: var(--ui-bg-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
   padding: 24px;
   width: 100%;
   box-sizing: border-box;
+  color: var(--ui-text);
 }
 
 .sum-head {
@@ -461,20 +479,20 @@
   margin: 0 0 6px;
   font-size: 52px;
   font-weight: 700;
-  color: #fdf3dd;
+  color: var(--ui-text);
   letter-spacing: 0.04em;
 }
 
 .sum-sub {
   font-size: 13px;
-  color: #9aa0a6;
+  color: var(--ui-text-muted);
 }
 
 .sum-author {
   margin-top: 6px;
   font-size: 32px;
   font-weight: 600;
-  color: #e8eaed;
+  color: var(--ui-text-accent);
 }
 
 .sum-shot {
@@ -486,17 +504,18 @@
 .sum-shot-img {
   max-width: 100%;
   max-height: 480px;
-  border-radius: 8px;
-  border: 1px solid #3a3f4b;
+  border-radius: var(--ui-radius-md);
+  border: 1px solid var(--ui-border);
   object-fit: contain;
 }
 
 .sum-shot-empty {
   padding: 40px 60px;
-  border: 1px dashed #3a3f4b;
-  border-radius: 8px;
-  color: #8a909a;
+  border: 1px dashed var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-text-muted);
   font-size: 13px;
+  background: var(--ui-bg-elevated);
 }
 
 .sum-recipes .rl-section {
@@ -543,13 +562,16 @@
 
 /* 分类标题的计数胶囊同理：实底深灰 → 半透明，贴合背景 */
 .sum-page.has-bg .rl-section-count {
-  background: rgba(0, 0, 0, 0.35);
+  background: color-mix(in srgb, var(--ui-text) 28%, transparent);
+  border-color: color-mix(in srgb, var(--ui-text) 18%, transparent);
+  color: var(--ui-text-inverse);
 }
 
 /* 未上传截图时的虚线占位框：在背景图上同样刺眼，弱化处理 */
 .sum-page.has-bg .sum-shot-empty {
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #d5d8dd;
+  border-color: color-mix(in srgb, var(--ui-text-inverse) 35%, transparent);
+  color: color-mix(in srgb, var(--ui-text-inverse) 85%, transparent);
+  background: color-mix(in srgb, var(--ui-text) 22%, transparent);
 }
 
 /* ===================== 菜谱管理弹窗（关卡编辑器 recipesDialogs） =====================
@@ -582,8 +604,8 @@
 /* 选中态：绿色描边（同编辑器选中绿 #34d36f） + 左上角 ✓ 角标 */
 .rw-list .rw-recipe-pick:has(input:checked) .rl-card,
 .rw-list .rw-recipe-pick.selected .rl-card {
-  border-color: #34d36f;
-  box-shadow: 0 0 0 2px rgba(52, 211, 111, 0.5);
+  border-color: var(--ui-pick-card-selected-border);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-pick-card-selected-border) 50%, transparent);
 }
 
 .rw-list .rw-recipe-pick:has(input:checked)::after,
@@ -599,10 +621,10 @@
   text-align: center;
   font-size: 12px;
   font-weight: 700;
-  color: #06281a;
-  background: #34d36f;
-  border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  color: var(--ui-text-inverse);
+  background: var(--ui-pick-card-selected-border);
+  border-radius: var(--ui-radius-pill);
+  box-shadow: var(--ui-shadow-btn);
 }
 
 /* 紧凑尺寸（镜像 .sum-recipes 覆盖）：宽度随食材组实际内容，上限为容器宽 */
@@ -686,7 +708,7 @@
 .rw-list .rl-card-compact .rl-compact-name {
   font-size: 12px;
   font-weight: 600;
-  color: #fdf3dd;
+  color: var(--ui-rl-compact-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -705,10 +727,10 @@
   font-size: 9px;
   line-height: 1;
   padding: 2px 5px;
-  border-radius: 999px;
-  background: rgba(10, 12, 16, 0.72);
-  color: #ffd98a;
-  border: 1px solid rgba(255, 217, 138, 0.35);
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-rl-compact-tag-bg);
+  color: var(--ui-rl-compact-tag-text);
+  border: 1px solid var(--ui-border);
   white-space: nowrap;
 }
 
@@ -718,21 +740,24 @@
   gap: 4px;
 }
 .rl-view-btn {
-  background: #1a1d23;
-  color: #c6cad1;
-  border: 1px solid #4a5060;
-  border-radius: 5px;
+  background: var(--ui-bg-btn);
+  color: var(--ui-text-muted);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm);
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
+  transition: background var(--ui-transition-fast), border-color var(--ui-transition-fast), color var(--ui-transition-fast);
 }
 .rl-view-btn:hover {
-  border-color: #8ab4f8;
+  border-color: var(--ui-border-focus);
+  color: var(--ui-text);
+  background: var(--ui-bg-hover);
 }
 .rl-view-btn.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: #fff;
+  background: var(--ui-bg-chip-active);
+  border-color: var(--ui-accent-action);
+  color: var(--ui-text-inverse);
 }
 .rl-ing-grid {
   display: grid;
@@ -740,9 +765,9 @@
   gap: 10px;
 }
 .rl-ing-card {
-  background: #232834;
-  border: 1px solid #333a4a;
-  border-radius: 8px;
+  background: var(--ui-rl-ing-card-bg);
+  border: 1px solid var(--ui-rl-ing-card-border);
+  border-radius: var(--ui-radius-md);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -757,7 +782,7 @@
 }
 .rl-ing-name {
   font-size: 13px;
-  color: #e8eaed;
+  color: var(--ui-rl-ing-name);
   line-height: 1.35;
 }
 
@@ -781,23 +806,24 @@
   min-width: 300px;
   border-collapse: collapse;
   font-size: 13px;
+  color: var(--ui-text);
 }
 .rl-detail-table th,
 .rl-detail-table td {
   text-align: left;
   vertical-align: top;
   padding: 6px 10px;
-  border-bottom: 1px solid #2c3242;
+  border-bottom: 1px solid var(--ui-border);
   line-height: 1.5;
 }
 .rl-detail-table th {
   white-space: nowrap;
-  color: #9aa4b8;
+  color: var(--ui-text-muted);
   font-weight: 600;
   width: 92px;
 }
 .rl-detail-table td {
-  color: #e8eaed;
+  color: var(--ui-text);
   word-break: break-word;
 }
 
@@ -809,7 +835,7 @@
 .sum-custom {
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px dashed #3a3f4b;
+  border-top: 1px dashed var(--ui-border);
 }
 
 .sum-cat {
@@ -823,7 +849,7 @@
   margin: 0 0 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #c9d4e8;
+  color: var(--ui-text);
   letter-spacing: 0.03em;
 }
 
@@ -831,7 +857,7 @@
   content: "";
   width: 4px;
   height: 14px;
-  background: #7f8fb0;
+  background: var(--ui-modal-group-header-accent);
   border-radius: 2px;
 }
 
@@ -842,12 +868,12 @@
   margin: 10px 0 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #9aa4b8;
+  color: var(--ui-text-muted);
 }
 
 .sum-sub-title::before {
   content: "·";
-  color: #6b7a94;
+  color: var(--ui-text-dim);
   font-weight: 700;
 }
 
@@ -857,11 +883,11 @@
   margin: 0 auto 20px;
   max-width: 900px;
   padding: 14px 18px;
-  border: 1px solid #3a3f4b;
-  border-left: 4px solid #e8b04b;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.25);
-  color: #dfe3ea;
+  border: 1px solid var(--ui-border);
+  border-left: 4px solid var(--ui-border-accent);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg-elevated);
+  color: var(--ui-text);
   font-size: 14px;
   line-height: 1.7;
   word-break: break-word;
@@ -870,13 +896,13 @@
 .sum-readme h2 {
   margin: 10px 0 6px;
   font-size: 17px;
-  color: #f0d9a8;
+  color: var(--ui-text-accent);
 }
 
 .sum-readme h3 {
   margin: 8px 0 4px;
   font-size: 15px;
-  color: #e8d5ac;
+  color: var(--ui-text);
 }
 
 .sum-readme p {
@@ -892,14 +918,14 @@
 .sum-readme blockquote {
   margin: 8px 0;
   padding: 4px 12px;
-  border-left: 3px solid #7f8fb0;
-  color: #b8c0cc;
-  background: rgba(127, 143, 176, 0.08);
-  border-radius: 4px;
+  border-left: 3px solid var(--ui-border-focus);
+  color: var(--ui-text-muted);
+  background: color-mix(in srgb, var(--ui-accent-action) 6%, transparent);
+  border-radius: var(--ui-radius-sm);
 }
 
 .sum-readme a {
-  color: #8ab4f8;
+  color: var(--ui-text-link);
   text-decoration: underline;
 }
 
@@ -912,7 +938,7 @@
 .sum-assignment {
   margin-top: 22px;
   padding-top: 6px;
-  border-top: 1px dashed #3a3f4b;
+  border-top: 1px dashed var(--ui-border);
 }
 
 .sum-as-title {
@@ -922,14 +948,14 @@
   margin: 0 0 10px;
   font-size: 14px;
   font-weight: 600;
-  color: #f0d9a8;
+  color: var(--ui-text-accent);
 }
 
 .sum-as-title::before {
   content: "";
   width: 4px;
   height: 15px;
-  background: #e8b04b;
+  background: var(--ui-accent);
   border-radius: 2px;
 }
 
@@ -944,16 +970,17 @@
   margin: 0 0 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #c9d4e8;
+  color: var(--ui-text);
 }
 
 .sum-as-mode-title span {
   font-size: 11px;
   font-weight: 400;
-  color: #8a909a;
-  background: #262b36;
+  color: var(--ui-text-muted);
+  background: var(--ui-bg-chip);
+  border: 1px solid var(--ui-border);
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-pill);
 }
 
 /* 玩家条目从上到下排列（导出长图与汇总页共用），每条占满整行 */
@@ -965,9 +992,9 @@
 }
 
 .sum-as-col {
-  border: 1px solid #3a3f4b;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg-elevated);
   padding: 10px 12px;
 }
 
@@ -1016,7 +1043,7 @@
 .sum-as-subgroup + .sum-as-subgroup {
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px dashed #2c3242;
+  border-top: 1px dashed var(--ui-border);
 }
 
 .sum-as-sub-title {
@@ -1026,22 +1053,23 @@
   margin: 0 0 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #9aa4b8;
+  color: var(--ui-text-muted);
 }
 
 .sum-as-sub-title::before {
   content: "·";
-  color: #6b7a94;
+  color: var(--ui-text-dim);
   font-weight: 700;
 }
 
 .sum-as-sub-title span {
   font-size: 11px;
   font-weight: 400;
-  color: #8a909a;
-  background: #262b36;
+  color: var(--ui-text-muted);
+  background: var(--ui-bg-chip);
+  border: 1px solid var(--ui-border);
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-pill);
 }
 
 .sum-as-player {
@@ -1050,14 +1078,14 @@
   justify-content: space-between;
   font-size: 13px;
   font-weight: 600;
-  color: #f0d9a8;
+  color: var(--ui-text-accent);
   margin-bottom: 8px;
 }
 
 .sum-as-player span {
   font-size: 11px;
   font-weight: 400;
-  color: #8a909a;
+  color: var(--ui-text-muted);
 }
 
 /* 每个玩家条目内的菜谱卡片：菜谱清单同款完整卡片（.rl-card），
@@ -1081,16 +1109,16 @@
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  border: 1px dashed #3a3f4b;
-  border-radius: 6px;
-  background: #262b36;
+  border: 1px dashed var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg-chip);
   font-size: 12px;
-  color: #9aa0a6;
+  color: var(--ui-text-muted);
   min-width: 0;
 }
 
 .sum-as-empty {
-  color: #8a909a;
+  color: var(--ui-text-muted);
   font-size: 12px;
 }
 

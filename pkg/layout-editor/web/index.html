@@ -6,6 +6,18 @@
     <title>OC2 关卡编辑器</title>
     <link rel="icon" type="image/png" href="/icon.png" />
     <link rel="stylesheet" href="/src/style.css" />
+    <script>
+      (function () {
+        try {
+          var v = localStorage.getItem("oc2-ui-theme");
+          var t =
+            v === "pink" || v === "sky-blue" || v === "white" ? v : "black-gold";
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = "black-gold";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

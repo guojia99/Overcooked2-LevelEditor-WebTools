@@ -4,6 +4,7 @@
  */
 import { envStatus, refreshEnvStatus, type EnvStatus } from "../../envStatus";
 import { openModal, closeModal } from "../../modals";
+import { modalBtnHtml, primaryBtnHtml } from "../../ui/views/button";
 
 interface DepRow {
   name: string;
@@ -96,8 +97,8 @@ function renderBody(): string {
 /** 打开依赖状态检查弹窗。 */
 export function openDepsCheckModal(): void {
   const panel = openModal("🩺 依赖状态检查", renderBody(), `
-    <button type="button" class="modal-btn" id="deps-recheck">🔄 重新检查</button>
-    <button type="button" class="modal-btn primary" id="deps-close">关闭</button>
+    ${modalBtnHtml("🔄 重新检查", "modal-btn", { id: "deps-recheck" })}
+    ${primaryBtnHtml("关闭", { id: "deps-close" })}
   `);
   panel.querySelector("#deps-close")?.addEventListener("click", () => closeModal());
   panel.querySelector("#deps-recheck")?.addEventListener("click", async (e) => {

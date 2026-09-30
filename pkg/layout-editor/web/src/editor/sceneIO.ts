@@ -44,6 +44,11 @@ import {
   closeModal
 } from "../modals";
 import {
+  cancelBtnHtml,
+  modalBtnHtml,
+  primaryBtnHtml,
+} from "../ui/views/button";
+import {
   showBusy,
   hideBusy
 } from "../busy";
@@ -605,8 +610,7 @@ export function openSyncLayoutDialog(): void {
     "同步其他关卡的布局",
     `<label class="m-field">来源关卡<select id="sync-src">${opts}</select></label>
      <p class="modal-hint" style="color:#f28b82">将把来源关卡的<b>道具、地板与背景主题</b>复制到当前图，<b>覆盖当前图的全部内容</b>。仅修改前端数据（写回 Unity 后才落盘），可用 Ctrl+Z 撤回一次。</p>`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn danger" data-ok>覆盖并同步</button>`
+    `${cancelBtnHtml()}${modalBtnHtml("覆盖并同步", "modal-btn danger", { "data-ok": "" })}`
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", () => {
@@ -725,7 +729,7 @@ export function showBridgeStoppedModal() {
     `<p>Layout Editor 的后台 Bridge 服务已断开。</p>
      <p>最常见的原因是 <b>Unity 进入了 Play 模式</b>（Play 时编辑器服务会暂停），也可能是服务被手动停止。</p>
      <p>请退出 Play 模式后，在 Unity <b>Tools → Layout Editor → Start Server</b> 重新启动，然后刷新本页。</p>`,
-    `<button type="button" class="modal-btn primary" data-ok>知道了</button>`
+    `${primaryBtnHtml("知道了")}`
   );
   document.querySelector("[data-ok]")?.addEventListener("click", closeModal);
 }
@@ -738,9 +742,8 @@ export function confirmLeaveIfDirty(action: () => void): void {
   openModal(
     "有未保存的修改",
     `<p>当前关卡的布局修改尚未写回 Unity，离开后修改将丢失。</p>`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn danger" data-leave>直接离开</button>
-     <button type="button" class="modal-btn primary" data-save>写回并离开</button>`
+    `${cancelBtnHtml()}${modalBtnHtml("直接离开", "modal-btn danger", { "data-leave": "" })}
+     ${modalBtnHtml("写回并离开", "modal-btn primary", { "data-save": "" })}`
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", () => {
     closeModal();

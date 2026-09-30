@@ -1,4 +1,5 @@
 import { closeModal, openModal } from "../modals";
+import { cancelBtnHtml, modalBtnHtml, primaryBtnHtml } from "../ui/views/button";
 import { fetchLevelDetail, fetchLevelRecipes, fetchRecipeCatalog, fetchLevelWorkload, saveLevelWorkload } from "../api";
 import type { LevelWorkloadData, RecipeEntry, WorkloadMode } from "../types";
 import { S, CELL } from "./state";
@@ -243,7 +244,7 @@ function toolsHtml(): string {
     <aside class="wl-sidebar">
       <div class="wl-section">
         <div class="wl-section-title">人数模式</div>
-        <div class="wl-seg wl-modes">${MODES.map((m) => `<button type="button" data-wl-mode="${m}" class="${m === mode ? "active" : ""}">${MODE_LABELS[m]}</button>`).join("")}</div>
+        <div class="wl-seg wl-modes">${MODES.map((m) => modalBtnHtml(MODE_LABELS[m], m === mode ? "active" : "", { "data-wl-mode": m })).join("")}</div>
       </div>
       <div class="wl-section">
         <div class="wl-section-title">当前玩家</div>
@@ -254,16 +255,16 @@ function toolsHtml(): string {
         <div class="wl-section-title">画笔工具</div>
         <div class="wl-section-title">涂抹模式</div>
         <div class="wl-seg wl-tool-mode">
-          <button type="button" id="workload-paint" class="${erasing ? "" : "active"}">画笔</button>
-          <button type="button" id="workload-erase" class="${erasing ? "active" : ""}">橡皮擦</button>
+          ${modalBtnHtml("画笔", erasing ? "" : "active", { id: "workload-paint" })}
+          ${modalBtnHtml("橡皮擦", erasing ? "active" : "", { id: "workload-erase" })}
         </div>
         <label class="wl-field">画笔大小 <input id="workload-size" type="number" min="1" max="8" value="${brushSize}"></label>
         <div class="wl-tool-row">
-          <button type="button" id="workload-clear" class="wl-tool-btn wl-tool-btn-danger">清空当前</button>
+          ${modalBtnHtml("清空当前", "wl-tool-btn wl-tool-btn-danger", { id: "workload-clear" })}
         </div>
         <div class="wl-tool-row">
-          <button type="button" id="workload-undo" class="wl-tool-btn">撤销</button>
-          <button type="button" id="workload-redo" class="wl-tool-btn">重做</button>
+          ${modalBtnHtml("撤销", "wl-tool-btn", { id: "workload-undo" })}
+          ${modalBtnHtml("重做", "wl-tool-btn", { id: "workload-redo" })}
         </div>
       </div>
       <div class="wl-legend">${playerLegendHtml()}</div>
@@ -271,9 +272,9 @@ function toolsHtml(): string {
     </aside>
     <div class="wl-stage">
       <div class="wl-zoom-bar">
-        <button type="button" id="workload-zoom-out" class="wl-zoom-btn" title="缩小">−</button>
+        ${modalBtnHtml("−", "wl-zoom-btn", { id: "workload-zoom-out", title: "缩小" })}
         <button type="button" id="workload-zoom-reset" class="wl-zoom-btn wl-zoom-label" title="重置视图"><span id="workload-zoom-label">100%</span></button>
-        <button type="button" id="workload-zoom-in" class="wl-zoom-btn" title="放大">+</button>
+        ${modalBtnHtml("+", "wl-zoom-btn", { id: "workload-zoom-in", title: "放大" })}
       </div>
       <canvas id="workload-canvas"></canvas>
       <div class="wl-stage-hint">滚轮缩放 · Alt / 中键拖拽平移</div>
@@ -313,9 +314,9 @@ export async function openWorkloadModal(): Promise<void> {
     "工作量推测",
     toolsHtml(),
     `<span class="wl-disclaimer">试验性功能 · 仅供参考，不代表实际游玩结果</span>
-     <button class="modal-btn" data-wl-cancel>关闭</button>
-     <button class="modal-btn" id="workload-calc">计算</button>
-     <button class="modal-btn primary" id="workload-save">保存</button>`,
+     ${modalBtnHtml("关闭", "modal-btn", { "data-wl-cancel": "" })}
+     ${modalBtnHtml("计算", "modal-btn", { id: "workload-calc" })}
+     ${primaryBtnHtml("保存", { id: "workload-save" })}`,
     { panelClass: "workload-modal", closeOnBackdrop: false }
   );
 

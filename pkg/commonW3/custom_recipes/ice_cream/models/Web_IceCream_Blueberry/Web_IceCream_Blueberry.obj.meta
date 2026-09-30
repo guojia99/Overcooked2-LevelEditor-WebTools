@@ -2,7 +2,17 @@ fileFormatVersion: 2
 guid: 504b89cf92fc329c6c42572b2df0d7f2
 ModelImporter:
   serializedVersion: 22
-  fileIDToRecycleName: {}
+  fileIDToRecycleName:
+    100000: default
+    100002: //RootNode
+    100004: Web_IceCream_Blueberry_root
+    400000: default
+    400002: //RootNode
+    400004: Web_IceCream_Blueberry_root
+    2100000: mat_Web_IceCream_Blueberry
+    2300000: default
+    3300000: default
+    4300000: default
   externalObjects: {}
   materials:
     importMaterials: 1

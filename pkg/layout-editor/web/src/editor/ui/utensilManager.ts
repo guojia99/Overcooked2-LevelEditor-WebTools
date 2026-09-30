@@ -14,6 +14,7 @@ import {
   openModal,
   closeModal
 } from "../../modals";
+import { cancelBtnHtml, modalBtnHtml, primaryBtnHtml } from "../../ui/views/button";
 import { openIngredientMultiPicker } from "../../modals";
 import {
   stubKindOf,
@@ -127,8 +128,8 @@ export function openUtensilManager() {
             <span class="utm-name">${escHtml(itemLabel(it))}${idx + 1}</span>
             <label class="utm-cap-label">容量 <input type="number" class="utm-cap" data-key="${it._editorKey}" min="0" step="1" value="${cap}"/></label>
             ${utensilTimingInputsHtml(it, "", "utm")}
-            <button type="button" class="modal-btn utm-ings" data-key="${it._editorKey}">${allowedTxt}…</button>
-            <button type="button" class="modal-btn utm-sync" data-key="${it._editorKey}" ${dis}>同步给其他 ${arr.length - 1} 个</button>
+            ${modalBtnHtml(`${allowedTxt}…`, "modal-btn utm-ings", { "data-key": it._editorKey })}
+            ${modalBtnHtml(`同步给其他 ${arr.length - 1} 个`, "modal-btn utm-sync", { "data-key": it._editorKey, ...(dis ? { disabled: "" } : {}) })}
           </div>`;
         })
         .join("");
@@ -139,8 +140,8 @@ export function openUtensilManager() {
   openModal(
     "锅具管理 · 参数同步",
     `<p class="modal-hint">可直接修改每个锅具的容量、时间与额外食材（不选额外食材时可处理所有主线食材，选中后可额外煮这些食材），或一键把它的参数同步给所有相同类型的锅具。时间留空 = 原版默认（输入框内灰色占位显示该锅具真实原版时间，煮糊/过混默认 2× 煮熟/混合）；特殊煮糊时间随关卡包分发。仅修改前端数据，写回 Unity 后生效。</p><div class="modal-scroll">${body}</div>`,
-    `<button type="button" class="modal-btn primary" id="utm-auto-fill">🧺 按菜谱自动填充</button>
-     <button type="button" class="modal-btn" data-cancel>关闭</button>`
+    `${primaryBtnHtml("🧺 按菜谱自动填充", { id: "utm-auto-fill" })}
+     ${cancelBtnHtml("关闭")}`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
 

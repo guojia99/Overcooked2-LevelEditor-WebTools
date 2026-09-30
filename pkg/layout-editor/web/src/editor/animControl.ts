@@ -29,6 +29,12 @@ import {
 import { isCollisionItem } from "./stubControls";
 import { renameGroupInButtonLinks, linkBindingGroup, cleanOrphanedButtonLinks } from "./buttonLinks";
 import { openModal, closeModal } from "../modals";
+import {
+  cancelBtnHtml,
+  primaryBtnHtml,
+  modalBtnHtml,
+  smallBtnHtml,
+} from "../ui/views/button";
 import { openAnimDock, closeAnimDock } from "./animDock";
 import { clearTriggerSource } from "./triggerOrchestrator";
 import { setLayer } from "./init";
@@ -467,8 +473,8 @@ export function updateAnimPickBar(): void {
         <span class="mpb-title">🎯 组「${escHtml(group!.displayName)}」· 框选成员</span>
         <span class="mpb-count">已选 物品 <b>${itemN}</b> · 地板 <b>${floorN}</b></span>
         <span class="mpb-actions">
-          <button type="button" class="btn-small pick-add" id="mpb-add-members"${canAdd ? "" : " disabled"}>${addLabel}${canAdd ? `（${itemN} 物品 · ${floorN} 地板）` : ""}</button>
-          <button type="button" class="btn-small" id="mpb-exit">退出模式</button>
+          ${smallBtnHtml(`${addLabel}${canAdd ? `（${itemN} 物品 · ${floorN} 地板）` : ""}`, "pick-add", { id: "mpb-add-members", ...(canAdd ? {} : { disabled: "" }) })}
+          ${smallBtnHtml("退出模式", "default", { id: "mpb-exit" })}
         </span>
       </div>
       <span class="floating-drag-hint">按住拖动</span>
@@ -1694,7 +1700,7 @@ function renderGroupList(body: HTMLElement): void {
   const groups = S.animControls.filter((g) => groupVisibleInLayer(g));
   const head = `<div class="anim-list-head">
     <span class="anim-list-title">🎬 动画组${groups.length ? ` (${groups.length})` : ""}</span>
-    <button type="button" class="btn-small primary" id="btn-new-group">＋ 新增分组</button>
+    ${smallBtnHtml("＋ 新增分组", "primary", { id: "btn-new-group" })}
   </div>`;
 
   if (groups.length === 0) {
@@ -1702,7 +1708,7 @@ function renderGroupList(body: HTMLElement): void {
       <div class="anim-empty-icon">🎬</div>
       <div class="anim-empty-text">还没有动画组</div>
       <div class="anim-empty-sub">创建动画组后，物品 / 地板 / 装饰可沿路线自动移动（如传送带、巡逻的 NPC、漂移的木筏）。</div>
-      <button type="button" class="btn-small primary anim-empty-btn" id="btn-new-group">＋ 新增分组</button>
+      ${modalBtnHtml("＋ 新增分组", "btn-small primary anim-empty-btn", { id: "btn-new-group" })}
       <div class="anim-empty-sub">快捷方式：在地图上右键一个物品 →「创建动画组」</div>
     </div>`;
   } else {
@@ -1853,8 +1859,7 @@ export function openNewGroupModal(): void {
        <label class="check"><input type="radio" name="wizard-kind" value="fx-flash" /> ⚡ 全屏特效 · 闪电（专用灯明暗交替）</label>
        <label class="check"><input type="radio" name="wizard-kind" value="fx-shake" /> 🌍 全屏特效 · 抖动（相机地震）</label>
      </label>`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn primary" id="wizard-create">创建</button>`
+    `${cancelBtnHtml()}${modalBtnHtml("创建", "modal-btn primary", { id: "wizard-create" })}`
   );
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
@@ -2166,7 +2171,7 @@ function memberRowHtml(group: AnimGroup, name: string, role: string, id: string,
         <option value="">—</option>${followOpts}
       </select>
     </span>
-    <button type="button" class="btn-del" data-del-${kind}="${id}" title="移出组">×</button>
+    ${modalBtnHtml("×", "btn-del", { [`data-del-${kind}`]: id, title: "移出组" })}
   </div>`;
 }
 
@@ -2347,13 +2352,13 @@ function renderMembersTab(group: AnimGroup): string {
   html += `<div class="mv-group-section">
     <div class="mv-group-section-head">
       <span>成员组 (${views.length})</span>
-      <button type="button" class="btn-small" id="btn-new-member-group">＋ 新增成员组</button>
+      ${smallBtnHtml("＋ 新增成员组", "default", { id: "btn-new-member-group" })}
     </div>
     <div id="new-mg-form-wrap">${newMgFormOpen
       ? `<div class="mv-new-group-form">
           <input type="text" id="new-mg-name" placeholder="成员组名称，如：木筏A / 岛1" />
-          <button type="button" class="btn-small primary" id="btn-mg-create">创建</button>
-          <button type="button" class="btn-small" id="btn-mg-cancel">取消</button>
+          ${smallBtnHtml("创建", "primary", { id: "btn-mg-create" })}
+          ${smallBtnHtml("取消", "default", { id: "btn-mg-cancel" })}
         </div>`
       : ""}</div>`;
   if (views.length === 0) {
@@ -2368,9 +2373,9 @@ function renderMembersTab(group: AnimGroup): string {
         <span class="mv-group-name">${escHtml(v.name)}${v.derived ? ` <span class="mv-group-tag">物品组</span>` : ""}</span>
         <span class="mv-group-meta">${n} 成员 · ${groupEventsMeta(group)}</span>
         ${v.derived
-          ? `<button type="button" class="btn-del" data-del-${memberKindOf(group, v.rootMemberId!)}="${v.rootMemberId}" title="移出该物品组（连同其下物品）">×</button>`
-          : `<button type="button" class="btn-small" data-target-group="${v.id}" title="设为框选加入目标">🎯</button>
-             <button type="button" class="btn-del" data-del-group="${v.id}" title="删除成员组（成员保留在未分组）">×</button>`}
+          ? modalBtnHtml("×", "btn-del", { [`data-del-${memberKindOf(group, v.rootMemberId!)}`]: v.rootMemberId!, title: "移出该物品组（连同其下物品）" })
+          : `${smallBtnHtml("🎯", "default", { "data-target-group": v.id, title: "设为框选加入目标" })}
+             ${modalBtnHtml("×", "btn-del", { "data-del-group": v.id, title: "删除成员组（成员保留在未分组）" })}`}
       </div>`;
     if (!collapsed) {
       html += `<div class="mv-group-body">`;
@@ -2433,7 +2438,7 @@ function renderMembersTab(group: AnimGroup): string {
     (f) => f.surfaceKind !== "background" && !group.floorInstanceIds.includes(f.instanceId)
   );
   html += `<div class="anim-add-row">
-    <button type="button" class="btn-small pick-add" id="btn-add-members" title="地图选点：点选 / 框选地图上的物品、装饰与地板加入本组（水面等背景不可选）">📐 地图选点</button>
+    ${smallBtnHtml("📐 地图选点", "pick-add", { id: "btn-add-members", title: "地图选点：点选 / 框选地图上的物品、装饰与地板加入本组（水面等背景不可选）" })}
     ${itemCandidates.length > 0
       ? `<select class="group-add-item"><option value="">＋ 添加物品…</option>${itemCandidates
           .map((it) => `<option value="${it.instanceId}">${escHtml(itemLabel(it))}</option>`)
@@ -2496,10 +2501,10 @@ function routeEditorHtml(
 
   const nudgeBtns = () =>
     `<span class="wp-nudge-inline" title="按全局精度 ${step} 微调">
-      <button type="button" class="btn-small" data-wp-nudge="${-step},0" title="左移 ${step}">←</button>
-      <button type="button" class="btn-small" data-wp-nudge="0,${step}" title="上移 ${step}">↑</button>
-      <button type="button" class="btn-small" data-wp-nudge="0,${-step}" title="下移 ${step}">↓</button>
-      <button type="button" class="btn-small" data-wp-nudge="${step},0" title="右移 ${step}">→</button>
+      ${smallBtnHtml("←", "default", { "data-wp-nudge": `${-step},0`, title: `左移 ${step}` })}
+      ${smallBtnHtml("↑", "default", { "data-wp-nudge": `0,${step}`, title: `上移 ${step}` })}
+      ${smallBtnHtml("↓", "default", { "data-wp-nudge": `0,${-step}`, title: `下移 ${step}` })}
+      ${smallBtnHtml("→", "default", { "data-wp-nudge": `${step},0`, title: `右移 ${step}` })}
     </span>`;
 
   // 路线行：按顺序移动，行内可设停留 / 微调 / 移除（保留在池中）。
@@ -2524,7 +2529,7 @@ function routeEditorHtml(
         <span class="wp-wait-inline" title="到达该路点后停留的秒数">停<input type="number" class="wp-wait-input" data-wp-wait="${wpId}" value="${wp?.wait ?? 0}" step="0.5" min="0" />s</span>
         ${alsoTxt}
         ${sel ? nudgeBtns() : ""}
-        <button type="button" class="btn-del-sm" data-route-del="${evtIdx}:${ri}" title="从路线移除（路点保留在池中）">×</button>
+        ${modalBtnHtml("×", "btn-del-sm", { "data-route-del": `${evtIdx}:${ri}`, title: "从路线移除（路点保留在池中）" })}
       </div>`;
     });
     if (routeN === 1) {
@@ -2553,8 +2558,8 @@ function routeEditorHtml(
               <span class="wp-idx">#${group.waypoints.indexOf(wp) + 1}</span>
               <span class="wp-pos">(${wp.x.toFixed(2)}, ${wp.z.toFixed(2)})</span>
               ${sel ? nudgeBtns() : ""}
-              <button type="button" class="btn-small" data-pool-add="${evtIdx}:${wp.id}" title="把该路点加入本事件路线">＋ 编入</button>
-              <button type="button" class="btn-del" data-del-wp="${wp.id}" title="删除路点">×</button>
+              ${smallBtnHtml("＋ 编入", "default", { "data-pool-add": `${evtIdx}:${wp.id}`, title: "把该路点加入本事件路线" })}
+              ${modalBtnHtml("×", "btn-del", { "data-del-wp": wp.id, title: "删除路点" })}
             </div>`;
           })
           .join("")}
@@ -2563,10 +2568,10 @@ function routeEditorHtml(
   }
 
   return `<div class="anim-routes-toolbar">
-      <button type="button" class="mode-btn${wpModeOn ? " on" : ""}" id="btn-mode-waypoints" title="点击空白放置路点；点击 / 拖拽路点选中移动">${wpModeOn ? "✓ 放置中（点击空白放点）" : "📍 放置路点"}</button>
-      ${wpModeOn ? `<button type="button" class="btn-small" id="btn-exit-mode">退出</button>` : ""}
-      <button type="button" class="btn-small pick-add btn-add-start-wp" data-evt="${evtIdx}" title="在当前成员的中心位置添加一个起点路点，并自动编入本事件路线开头">＋ 起点（成员中心）</button>
-      <button type="button" class="btn-small" data-add-selected="${evtIdx}"${selWp && !selInRoute ? "" : " disabled"} title="把画布上选中的路点加入本事件路线">＋ 编入选中</button>
+      ${modalBtnHtml(wpModeOn ? "✓ 放置中（点击空白放点）" : "📍 放置路点", `mode-btn${wpModeOn ? " on" : ""}`, { id: "btn-mode-waypoints", title: "点击空白放置路点；点击 / 拖拽路点选中移动" })}
+      ${wpModeOn ? smallBtnHtml("退出", "default", { id: "btn-exit-mode" }) : ""}
+      ${modalBtnHtml("＋ 起点（成员中心）", "btn-small pick-add btn-add-start-wp", { "data-evt": String(evtIdx), title: "在当前成员的中心位置添加一个起点路点，并自动编入本事件路线开头" })}
+      ${smallBtnHtml("＋ 编入选中", "default", { "data-add-selected": String(evtIdx), ...(selWp && !selInRoute ? {} : { disabled: "" }), title: "把画布上选中的路点加入本事件路线" })}
       <label class="check route-auto-wrap" title="放置的路点自动按顺序编入本事件路线（取消勾选则放入路点池）">
         <input type="checkbox" class="route-auto-add" data-idx="${evtIdx}"${S.animRouteAutoAdd ? " checked" : ""} /> 放置自动编入
       </label>
@@ -2670,7 +2675,7 @@ function renderEventInspector(
       <span class="subgroup-title">事件 ${i + 1}${evt.triggerName ? ` (${escHtml(evt.triggerName)})` : ""}</span>
       <span class="subgroup-meta" style="color:${tcol}">${tStart.toFixed(1)}s~${tEnd.toFixed(1)}s${loopMark}</span>
       ${routeEmpty ? `<span class="anim-tl-warn-inline">⚠ 路线为空</span>` : ""}
-      <button type="button" class="btn-del" data-del-event="${i}" title="删除事件">×</button>
+      ${modalBtnHtml("×", "btn-del", { "data-del-event": String(i), title: "删除事件" })}
     </div>
     <div class="subgroup-section">
       <div class="subgroup-section-title">⚙ 设置</div>
@@ -2808,17 +2813,17 @@ function renderTimelineTab(
   return `<div class="anim-section anim-timeline-panel">
     ${sectionTitle("🎬", "时间轴（0.1s 对齐 · 重叠即并行）", `${group.events.length} 个事件`, "#d8703c")}
     <div class="anim-tl-toolbar">
-      <button type="button" class="btn-small" id="btn-tl-rewind" title="回到 0s">⏮</button>
-      <button type="button" class="btn-small${playing ? " preview-on" : ""}" id="btn-tl-play" title="播放 / 暂停（空格）">${playing ? "⏸" : "▶"}</button>
-      <button type="button" class="btn-small" id="btn-tl-step-back" title="后退 0.1s">−0.1</button>
-      <button type="button" class="btn-small" id="btn-tl-step-fwd" title="前进 0.1s">＋0.1</button>
+      ${smallBtnHtml("⏮", "default", { id: "btn-tl-rewind", title: "回到 0s" })}
+      ${modalBtnHtml(playing ? "⏸" : "▶", `btn-small${playing ? " preview-on" : ""}`, { id: "btn-tl-play", title: "播放 / 暂停（空格）" })}
+      ${smallBtnHtml("−0.1", "default", { id: "btn-tl-step-back", title: "后退 0.1s" })}
+      ${smallBtnHtml("＋0.1", "default", { id: "btn-tl-step-fwd", title: "前进 0.1s" })}
       <span class="anim-tl-time" id="anim-tl-time">${t.toFixed(1)}s / ${groupTimelineDuration(group).toFixed(1)}s</span>
       <span class="anim-tl-toolbar-sp"></span>
-      <button type="button" class="btn-small" id="btn-tl-zoom-out" title="缩小时间轴（Ctrl/⌘+滚轮）">🔍−</button>
+      ${smallBtnHtml("🔍−", "default", { id: "btn-tl-zoom-out", title: "缩小时间轴（Ctrl/⌘+滚轮）" })}
       <span class="anim-tl-zoom" id="anim-tl-zoom" title="当前缩放">${Math.round(tlZoom * 100)}%</span>
-      <button type="button" class="btn-small" id="btn-tl-zoom-in" title="放大时间轴（Ctrl/⌘+滚轮）">🔍＋</button>
-      <button type="button" class="btn-small" id="btn-tl-fit" title="缩放适配：把全部事件聚焦到可视区">⤢ 聚焦</button>
-      <button type="button" class="btn-small primary" id="btn-add-event">＋ 添加事件</button>
+      ${smallBtnHtml("🔍＋", "default", { id: "btn-tl-zoom-in", title: "放大时间轴（Ctrl/⌘+滚轮）" })}
+      ${smallBtnHtml("⤢ 聚焦", "default", { id: "btn-tl-fit", title: "缩放适配：把全部事件聚焦到可视区" })}
+      ${smallBtnHtml("＋ 添加事件", "primary", { id: "btn-add-event" })}
     </div>
     ${warnHtml}
     <div class="anim-tl-scroll">
@@ -2889,7 +2894,7 @@ function renderWaypointsTab(group: AnimGroup): string {
       : `<span class="wp-usage unused">未使用</span>`;
     const addBtn =
       !usedFlag && S.activeAnimEventIdx !== null && group.events[S.activeAnimEventIdx]?.type === "move"
-        ? `<button type="button" class="btn-small" data-pool-add="${S.activeAnimEventIdx}:${wp.id}" title="把该路点加入当前事件路线">＋ 编入当前事件</button>`
+        ? smallBtnHtml("＋ 编入当前事件", "default", { "data-pool-add": `${S.activeAnimEventIdx}:${wp.id}`, title: "把该路点加入当前事件路线" })
         : "";
     return `<div class="anim-wp-row${sel ? " active" : ""}" data-wp-id="${wp.id}">
       <span class="wp-dot" style="background:${waypointColor(wp.id)}"></span>
@@ -2898,7 +2903,7 @@ function renderWaypointsTab(group: AnimGroup): string {
       ${useTxt}
       <span class="wp-wait-inline" title="到达该路点后停留的秒数">停<input type="number" class="wp-wait-input" data-wp-wait="${wp.id}" value="${wp.wait ?? 0}" step="0.5" min="0" />s</span>
       ${addBtn}
-      <button type="button" class="btn-del" data-del-wp="${wp.id}" title="删除路点">×</button>
+      ${modalBtnHtml("×", "btn-del", { "data-del-wp": wp.id, title: "删除路点" })}
     </div>`;
   };
 
@@ -2959,7 +2964,7 @@ function renderSettingsTab(group: AnimGroup): string {
     </div>
   </div>
   <div class="anim-danger">
-    <button type="button" class="btn-small btn-danger" id="btn-del-move">🗑 删除动画组</button>
+    ${smallBtnHtml("🗑 删除动画组", "danger", { id: "btn-del-move" })}
     <span class="anim-wp-hint">删除后该组的所有路线与事件一并移除，物品保留在场景中。</span>
   </div>`;
 }
@@ -2989,7 +2994,7 @@ function renderGroupEditor(body: HTMLElement, group: AnimGroup): void {
   const fxLabel = fxType === "shake" ? "🌍 全屏抖动" : fxType === "flash" ? "⚡ 闪电" : "✨ 特效";
 
   let html = `<div class="anim-editor-head">
-    <button type="button" class="btn-small" id="btn-anim-back">✕ 关闭</button>
+    ${smallBtnHtml("✕ 关闭", "default", { id: "btn-anim-back" })}
     <span class="anim-editor-color" style="background:${col}"></span>
     <input type="text" id="group-name" value="${escHtml(group.displayName)}" title="组名（回车生效）" />
   </div>`;
@@ -2998,14 +3003,14 @@ function renderGroupEditor(body: HTMLElement, group: AnimGroup): void {
     <span>${fxGrp
       ? `${fxLabel} · 🔁 ${group.events.length} 事件`
       : `🧩 ${memberCount} 成员 · 📍 ${group.waypoints.length} 路点 · 🔁 ${group.events.length} 事件`}</span>
-    <button type="button" class="btn-small${previewOn ? " preview-on" : ""}" id="btn-preview" title="${fxGrp ? "在画布上模拟全屏特效（抖动 / 闪光，纯前端预览）" : "在画布上模拟成员沿路线运动（纯前端预览，写回后以游戏内为准）"}">${previewOn ? "⏸ 暂停预览" : fxGrp ? "▶ 预览特效" : "▶ 预览路线"}</button>
+    ${modalBtnHtml(previewOn ? "⏸ 暂停预览" : fxGrp ? "▶ 预览特效" : "▶ 预览路线", `btn-small${previewOn ? " preview-on" : ""}`, { id: "btn-preview", title: fxGrp ? "在画布上模拟全屏特效（抖动 / 闪光，纯前端预览）" : "在画布上模拟成员沿路线运动（纯前端预览，写回后以游戏内为准）" })}
   </div>`;
 
   html += `<div class="anim-tabs">
-    <button type="button" class="anim-tab${S.activeAnimTab === "timeline" ? " active" : ""}" data-mvtab="timeline">🎬 时间轴 (${group.events.length})</button>
-    ${fxGrp ? "" : `<button type="button" class="anim-tab${S.activeAnimTab === "members" ? " active" : ""}" data-mvtab="members">🧩 成员 (${memberCount})</button>
-    <button type="button" class="anim-tab${S.activeAnimTab === "waypoints" ? " active" : ""}" data-mvtab="waypoints">📍 路点 (${group.waypoints.length})</button>`}
-    <button type="button" class="anim-tab${S.activeAnimTab === "settings" ? " active" : ""}" data-mvtab="settings">⚙ 设置</button>
+    ${modalBtnHtml(`🎬 时间轴 (${group.events.length})`, `anim-tab${S.activeAnimTab === "timeline" ? " active" : ""}`, { "data-mvtab": "timeline" })}
+    ${fxGrp ? "" : `${modalBtnHtml(`🧩 成员 (${memberCount})`, `anim-tab${S.activeAnimTab === "members" ? " active" : ""}`, { "data-mvtab": "members" })}
+    ${modalBtnHtml(`📍 路点 (${group.waypoints.length})`, `anim-tab${S.activeAnimTab === "waypoints" ? " active" : ""}`, { "data-mvtab": "waypoints" })}`}
+    ${modalBtnHtml("⚙ 设置", `anim-tab${S.activeAnimTab === "settings" ? " active" : ""}`, { "data-mvtab": "settings" })}
   </div>`;
 
   html += `<div class="anim-tab-body">`;

@@ -4,6 +4,7 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { openModal, closeModal } from "./modals";
+import { mBtnHtml, mCancelBtnHtml } from "./ui/views/button";
 import {
   CM_PER_UNIT,
   CUP_FIT_CM,
@@ -207,15 +208,15 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
         <option value="right">右（+X）</option>
         <option value="left">左（-X）</option>
       </select></label>
-      <button type="button" class="m-btn" id="mp-face-origin" title="旋转/缩放将绕该面中心">🎯 面中心设为原点</button>
-      <button type="button" class="m-btn" id="mp-face-down" title="旋转模型使该面贴地">⬇ 该面朝下</button>
+      ${mBtnHtml("🎯 面中心设为原点", "default", { id: "mp-face-origin", title: "旋转/缩放将绕该面中心" })}
+      ${mBtnHtml("⬇ 该面朝下", "default", { id: "mp-face-down", title: "旋转模型使该面贴地" })}
     </div>
-    <button type="button" class="m-btn" id="mp-rot-x90">↻ 绕 X 转 90°</button>
-    <button type="button" class="m-btn" id="mp-rot-y90">↻ 绕 Y 转 90°</button>
-    <button type="button" class="m-btn" id="mp-rot-z90">↻ 绕 Z 转 90°</button>
-    <button type="button" class="m-btn" id="mp-pick-origin">🎯 重选原点</button>
-    <button type="button" class="m-btn" id="mp-fit">✨ 自动适配</button>
-    ${opts.onAdjust ? `<button type="button" class="m-btn primary" id="mp-apply">✅ 应用方向/大小到菜谱</button>` : ""}
+    ${mBtnHtml("↻ 绕 X 转 90°", "default", { id: "mp-rot-x90" })}
+    ${mBtnHtml("↻ 绕 Y 转 90°", "default", { id: "mp-rot-y90" })}
+    ${mBtnHtml("↻ 绕 Z 转 90°", "default", { id: "mp-rot-z90" })}
+    ${mBtnHtml("🎯 重选原点", "default", { id: "mp-pick-origin" })}
+    ${mBtnHtml("✨ 自动适配", "default", { id: "mp-fit" })}
+    ${opts.onAdjust ? mBtnHtml("✅ 应用方向/大小到菜谱", "primary", { id: "mp-apply" }) : ""}
   </div>`;
   const controlsHtml = opts.readonly ? readonlyControlsHtml : editableControlsHtml;
   openModal(
@@ -232,7 +233,7 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
             : `<p class="modal-hint">左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b>（红/绿/蓝轴 X/Y/Z，黄色点为原点，网格按 cm 标注格距，1 单位 = 100 cm）· <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见右侧读数，6 个面各有一个中心点；<b>下拉选中的面会微微高亮</b>）· 「🎯 面中心设为原点」旋转/缩放绕该面中心 · 「⬇ 该面朝下」旋转模型让该面贴地 · 「重选原点」后可点击模型上任意点 · 「自动适配」按目标（盘子 85 cm / 杯子 37 cm）缩放，<b>位置 Y 保持 0（不自动下沉，高度手动调）</b> · 尺寸/位置单位为 cm（4 位小数精度）</p>`}
        </div>
      </div>`,
-    `<button type="button" class="m-btn" data-cancel>关闭</button>`
+    mCancelBtnHtml("关闭")
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   const panel = document.querySelector(".modal-panel");

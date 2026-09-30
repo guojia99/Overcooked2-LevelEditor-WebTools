@@ -1,5 +1,12 @@
 import type { IngredientEntry, LayoutItem, RecipeEntry } from "./types";
 import {
+  cancelBtnHtml,
+  modalBtnHtml,
+  modalFooterBtnsHtml,
+  primaryBtnHtml,
+} from "./ui/views/button";
+import { modalPanelClassAttr } from "./ui/views/modal";
+import {
   floatingDragBarHtml,
   setupModalPanelDrag,
 } from "./editor/ui/floatingPanelDrag";
@@ -92,9 +99,10 @@ export function openModal(
   opts?: ModalOptions
 ): HTMLElement {
   const root = ensureModalRoot();
+  const panelCls = modalPanelClassAttr(opts?.panelClass ?? "");
   root.innerHTML = `
     <div class="modal-backdrop" data-modal-backdrop>
-       <div class="modal-panel${opts?.panelClass ? ` ${opts.panelClass}` : ""}" role="dialog">
+       <div class="${panelCls}" role="dialog">
         ${floatingDragBarHtml(`<h2 class="modal-title">${title}</h2>`)}
         <div class="modal-body">${bodyHtml}</div>
         <div class="modal-footer">${footerHtml}</div>
@@ -138,8 +146,7 @@ export function openIngredientPicker(
   openModal(
     "食材箱 · 选择食材",
     `<p class="modal-hint">点击选择食材 (spawnerItemPrefabSO)</p>${grid}`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn primary" data-ok>确定</button>`
+    modalFooterBtnsHtml()
   );
 
   // toggle .selected on click (single-select)
@@ -179,8 +186,7 @@ export function openFoodSpawnerEditor(
     <p class="modal-hint">attachmentPrefabSOs（勾选食材，权重均分）</p>
     <div class="modal-scroll">${grid}</div>
     `,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn primary" data-ok>确定</button>`
+    modalFooterBtnsHtml()
   );
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
@@ -296,9 +302,8 @@ export function openIngredientMultiPicker(
     `<p class="modal-hint">${hint}</p>
      ${filterBar}
      <div class="modal-scroll" id="ing-pick-container">${buildFiltered()}</div>`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     ${opts?.single ? '<button type="button" class="modal-btn" data-clear>清除设置</button>' : ""}
-     <button type="button" class="modal-btn primary" data-ok>确定</button>`
+    `${cancelBtnHtml()}${opts?.single ? `\n     ${modalBtnHtml("清除设置", "modal-btn", { "data-clear": "" })}` : ""}
+     ${primaryBtnHtml()}`
   );
 
   const panel = document.querySelector(".modal-panel");
@@ -482,8 +487,7 @@ export function openRandomCrateEditor(
      <div class="ing-filter-bar" id="rc-groups">${groupTabs()}</div>
      <div id="rc-cats">${catChips()}</div>
      <div class="modal-scroll" id="rc-container">${buildFiltered()}</div>`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn primary" data-ok>确定</button>`
+    modalFooterBtnsHtml()
   );
 
   const panel = document.querySelector(".modal-panel");
@@ -657,8 +661,7 @@ export function openRecipePicker(
   openModal(
     `关卡菜谱 · ${levelName || "未命名"}`,
     `<p class="modal-hint">勾选本关订单菜谱（写入 LevelInfoSO.recipes）</p><div class="modal-scroll">${list}</div>`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn primary" data-ok>保存</button>`
+    `${cancelBtnHtml()} ${primaryBtnHtml("保存")}`
   );
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);

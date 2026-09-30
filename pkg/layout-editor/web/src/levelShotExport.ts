@@ -269,10 +269,23 @@ export async function exportLevelShotsPng(data: LevelShotExportData, widthPx: nu
     ctx.fillStyle = PAGE_BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = fileName;
-    a.click();
+    await new Promise<void>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob || blob.size === 0) {
+          reject(new Error("导出失败：图片过大，浏览器无法编码 PNG。"));
+          return;
+        }
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+        resolve();
+      }, "image/png");
+    });
   } finally {
     URL.revokeObjectURL(url);
   }

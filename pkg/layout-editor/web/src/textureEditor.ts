@@ -10,6 +10,7 @@
  * PNG File 直接在浏览器里渲染，改一次颜色立刻看到上色后的 3D 模型，零服务器往返。
  */
 import { openModal, closeModal } from "./modals";
+import { mBtnHtml, mCancelBtnHtml } from "./ui/views/button";
 import { fetchTemplateMeshBuffer, previewLocalModel } from "./recipeModelPreview";
 
 /** 与模板贴图一致的尺寸（Unity TextureImporter maxTextureSize 2048，实际用 1024）。 */
@@ -80,7 +81,7 @@ export function openTextureEditor(opts: {
        <div class="tex-tools">
          <div class="tex-row"><span class="muted">主色</span>
            <input type="color" id="tex-color" value="${esc(color)}">
-           <button type="button" class="m-btn small" id="tex-fill">填充整张</button>
+           ${mBtnHtml("填充整张", "small", { id: "tex-fill" })}
          </div>
          <div class="tex-row"><span class="muted">上传图片</span>
            <input type="file" id="tex-upload" accept="image/png,image/jpeg,image/webp" class="rl-select">
@@ -90,15 +91,14 @@ export function openTextureEditor(opts: {
            <span class="muted small" id="tex-size-val">48 px</span>
          </div>
          <div class="tex-row">
-           <button type="button" class="m-btn small" id="tex-undo" title="撤销上一笔（最多 20 步）">↩ 撤销</button>
-           <button type="button" class="m-btn small" id="tex-clear">清空为主色</button>
-           <button type="button" class="m-btn small" id="tex-preview">🔍 预览模型</button>
+           ${mBtnHtml("↩ 撤销", "small", { id: "tex-undo", title: "撤销上一笔（最多 20 步）" })}
+           ${mBtnHtml("清空为主色", "small", { id: "tex-clear" })}
+           ${mBtnHtml("🔍 预览模型", "small", { id: "tex-preview" })}
          </div>
          <p class="muted small">提示：在左侧画布上按住拖动即可涂抹；橡皮 = 把画笔色设成主色再涂。</p>
        </div>
      </div>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button>
-     <button type="button" class="m-btn primary" id="tex-ok">使用这张贴图</button>`
+    `${mCancelBtnHtml()}${mBtnHtml("使用这张贴图", "primary", { id: "tex-ok" })}`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
 

@@ -1,0 +1,728 @@
+/* =============================================================================
+   UI Theme Tokens — semantic variables for app chrome (not canvas / 3D).
+   Default: black-gold (preserves existing dark editor look).
+   ============================================================================= */
+
+:root,
+[data-theme="black-gold"] {
+  --ui-color-scheme: dark;
+
+  /* Surfaces */
+  --ui-bg-page: #1a1d23;
+  --ui-bg-surface: #1f232b;
+  --ui-bg-elevated: #2a2e37;
+  --ui-bg-input: #171a20;
+  --ui-bg-hover: #2a2e37;
+  --ui-bg-active: #3d6bf3;
+  --ui-bg-toolbar: #20242d;
+  --ui-bg-panel: #1f232b;
+  --ui-bg-modal: #2d323c;
+  --ui-bg-modal-header: #343a46;
+  --ui-bg-modal-footer: #252830;
+  --ui-input-focus-ring: rgba(61, 107, 243, 0.25);
+  --ui-bg-chip: #1a1d23;
+  --ui-bg-chip-active: #3d6bf3;
+  --ui-bg-btn: #1a1d23;
+  --ui-bg-btn-hover: #2a2e37;
+  --ui-bg-btn-primary: #3d6bf3;
+  --ui-bg-btn-primary-hover: #4a7af5;
+  --ui-bg-btn-danger: #5a2326;
+  --ui-bg-btn-small: #2a2e36;
+  --ui-bg-btn-small-primary: #2e7d46;
+  --ui-bg-btn-small-primary-hover: #358c50;
+  --ui-bg-overlay: rgba(10, 12, 16, 0.45);
+
+  /* Text */
+  --ui-text: #e8eaed;
+  --ui-text-muted: #9aa0a6;
+  --ui-text-dim: #6d7480;
+  --ui-text-inverse: #fff;
+  --ui-text-accent: #c9a227;
+  --ui-text-link: #8ab4f8;
+  --ui-text-danger: #f3b3b6;
+
+  /* Borders */
+  --ui-border: #3a3f4b;
+  --ui-border-strong: #4a5060;
+  --ui-border-focus: #3d6bf3;
+  --ui-border-danger: #7a2d32;
+  --ui-border-accent: #c9a227;
+
+  /* Accent */
+  --ui-accent: #c9a227;
+  --ui-accent-action: #3d6bf3;
+  --ui-accent-success: #4caf50;
+
+  /* Radius & shadow */
+  --ui-radius-sm: 4px;
+  --ui-radius-md: 6px;
+  --ui-radius-lg: 10px;
+  --ui-radius-pill: 999px;
+  --ui-shadow-modal: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --ui-shadow-btn: none;
+  --ui-shadow-nav-active: none;
+
+  /* Gradients */
+  --ui-gradient-nav: none;
+  --ui-gradient-page: none;
+  --ui-manage-bg-overlay: rgba(15, 17, 21, 0.82);
+
+  /* Spinner */
+  --ui-spinner-track: rgba(255, 255, 255, 0.18);
+  --ui-spinner-head: #3d6bf3;
+
+  /* Transitions */
+  --ui-transition-fast: 0.15s ease;
+  --ui-btn-bounce: none;
+
+  /* Editor chrome (palette / scene list / tabs — not canvas item drawing) */
+  --ui-bg-canvas-stage: #14171c;
+  --ui-canvas-void-bg: #1a1d23;
+  --ui-bg-dock: #1c2029;
+  --ui-bg-tab-group: #1a1d23;
+  --ui-layer-tab-active-bg: #3d6bf3;
+  --ui-view-tab-active-bg: #2f9e6e;
+  --ui-panel-collapse-bg: #262a33;
+  --ui-floor-bar-bg: rgba(20, 23, 29, 0.82);
+  --ui-palette-card-text: #e8eaed;
+  --ui-palette-card-text-muted: #9aa0a6;
+  --ui-palette-card-text-sub: #7d8ab8;
+  --ui-palette-card-radius: 6px;
+  --ui-palette-card-shadow: none;
+  --ui-scene-item-hover: #2d323c;
+  --ui-scene-item-active-bg: #31435f;
+  --ui-scene-item-active-border: #5b9be8;
+  --ui-scene-item-text: #e8eaed;
+  --ui-scene-item-text-muted: #9aa0a6;
+  --ui-cat-group-title: #9aa0a6;
+  --ui-pick-card-bg: #1b1e23;
+  --ui-pick-card-border: #2a2f3a;
+  --ui-pick-card-hover-bg: #20242b;
+  --ui-pick-card-text: #e8eaed;
+  --ui-pick-card-selected-border: #34d36f;
+  --ui-pick-card-selected-bg: rgba(52, 211, 111, 0.12);
+  /* Recipe catalog cards (.rl-card shell — game art inside .rl-product unchanged) */
+  --ui-rl-card-bg: linear-gradient(180deg, #232834, #1a1e28);
+  --ui-rl-card-border: #333a4a;
+  --ui-rl-card-hover-border: #556078;
+  --ui-rl-card-hover-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+  --ui-rl-compact-text: #fdf3dd;
+  --ui-rl-compact-tag-bg: rgba(10, 12, 16, 0.72);
+  --ui-rl-compact-tag-text: #ffd98a;
+  --ui-rl-ing-card-bg: #232834;
+  --ui-rl-ing-card-border: #333a4a;
+  --ui-rl-ing-name: #e8eaed;
+  --ui-rl-alert-warn-bg: rgba(180, 83, 9, 0.12);
+  --ui-rl-alert-warn-border: #a16207;
+  --ui-rl-alert-warn-text: #fbbf24;
+  --ui-rl-alert-ok-bg: rgba(60, 130, 80, 0.12);
+  --ui-rl-alert-ok-border: #2f6b46;
+  --ui-rl-alert-ok-text: #a7f3d0;
+  --ui-rl-need-bg: #2a2318;
+  --ui-rl-need-border: #d97706;
+  --ui-rl-need-text: #fbbf24;
+  --ui-modal-group-header-bg: linear-gradient(90deg, #2d3a52, #1a1d23);
+  --ui-modal-group-header-text: #e8eaed;
+  --ui-modal-group-header-accent: #8ab4f8;
+  --ui-modal-tab-bg: #1a1d23;
+  --ui-modal-tab-active-bg: #3d6bf3;
+
+  /* Dock / trigger orchestrator / anim editor list */
+  --ui-bg-dock-head: #20242c;
+  --ui-bg-dock-col: #232833;
+  --ui-bg-dock-col-head: #272d38;
+  --ui-bg-dock-step: #1d2129;
+  --ui-bg-list-card: #1e2127;
+  --ui-bg-list-card-hover: #2d323c;
+  --ui-bg-list-card-active: #252d3b;
+  --ui-list-card-active-accent: #7ea5ff;
+  --ui-trig-src-active-bg: #26314a;
+  --ui-dock-grip-bg: linear-gradient(#2b303b, #23272f);
+  --ui-dock-grip-handle: #565d6b;
+  --ui-dock-grip-handle-hover: #7f8896;
+  --ui-trig-badge-bg: #3d6bf3;
+  --ui-trig-step-idx-bg: #2f9e6e;
+  --ui-anim-tab-bg: #262a32;
+  --ui-anim-tab-active-bg: #1e2127;
+  --ui-wp-row-active-bg: #31435f;
+}
+
+/* Pink — light, cute, bouncy */
+[data-theme="pink"] {
+  --ui-color-scheme: light;
+
+  --ui-bg-page: #fff8fc;
+  --ui-bg-surface: #ffe8f3;
+  --ui-bg-elevated: #ffd6eb;
+  --ui-bg-input: #ffffff;
+  --ui-bg-hover: #ffd6eb;
+  --ui-bg-active: #E75098;
+  --ui-bg-toolbar: #ffe8f3;
+  --ui-bg-panel: #fff0f7;
+  --ui-bg-modal: #ffffff;
+  --ui-bg-modal-header: linear-gradient(90deg, #fff0f7 0%, #ffe0f0 100%);
+  --ui-bg-modal-footer: #fff5fa;
+  --ui-input-focus-ring: rgba(231, 80, 152, 0.22);
+  --ui-bg-chip: #ffffff;
+  --ui-bg-chip-active: #E75098;
+  --ui-bg-btn: #ffffff;
+  --ui-bg-btn-hover: #ffd6eb;
+  --ui-bg-btn-primary: linear-gradient(135deg, #f06aaa 0%, #E75098 55%, #d43d86 100%);
+  --ui-bg-btn-primary-hover: linear-gradient(135deg, #f47bb8 0%, #eb5fa3 55%, #e04d92 100%);
+  --ui-bg-btn-danger: #ffe0e8;
+  --ui-bg-btn-small: #fff0f7;
+  --ui-bg-btn-small-primary: linear-gradient(135deg, #f06aaa 0%, #E75098 100%);
+  --ui-bg-btn-small-primary-hover: linear-gradient(135deg, #f47bb8 0%, #eb5fa3 100%);
+  --ui-bg-overlay: rgba(231, 80, 152, 0.18);
+
+  --ui-text: #4a2040;
+  --ui-text-muted: #8a5a7a;
+  --ui-text-dim: #b08aa8;
+  --ui-text-inverse: #ffffff;
+  --ui-text-accent: #E75098;
+  --ui-text-link: #d43d86;
+  --ui-text-danger: #c62850;
+
+  --ui-border: #f5c0dc;
+  --ui-border-strong: #e8a0c8;
+  --ui-border-focus: #E75098;
+  --ui-border-danger: #f0a0b8;
+  --ui-border-accent: #E75098;
+
+  --ui-accent: #E75098;
+  --ui-accent-action: #E75098;
+  --ui-accent-success: #e85a9a;
+
+  --ui-radius-sm: 8px;
+  --ui-radius-md: 12px;
+  --ui-radius-lg: 16px;
+  --ui-shadow-modal: 0 16px 48px rgba(231, 80, 152, 0.22);
+  --ui-shadow-btn: 0 2px 8px rgba(231, 80, 152, 0.15);
+  --ui-shadow-nav-active: 0 4px 14px rgba(231, 80, 152, 0.35);
+
+  --ui-gradient-nav: linear-gradient(90deg, #fff0f7 0%, #ffe0f0 50%, #ffd6eb 100%);
+  --ui-gradient-page: linear-gradient(180deg, #fff8fc 0%, #ffe8f3 100%);
+  --ui-manage-bg-overlay: rgba(255, 240, 247, 0.75);
+
+  --ui-spinner-track: rgba(231, 80, 152, 0.2);
+  --ui-spinner-head: #E75098;
+
+  --ui-btn-bounce: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --ui-bg-canvas-stage: #fff0f7;
+  --ui-canvas-void-bg: #2f2438;
+  --ui-bg-dock: #fff5fa;
+  --ui-bg-tab-group: #ffffff;
+  --ui-layer-tab-active-bg: linear-gradient(135deg, #f06aaa 0%, #E75098 100%);
+  --ui-view-tab-active-bg: linear-gradient(135deg, #f06aaa 0%, #E75098 100%);
+  --ui-panel-collapse-bg: #ffd6eb;
+  --ui-floor-bar-bg: rgba(255, 240, 247, 0.92);
+  --ui-palette-card-text: #3d2040;
+  --ui-palette-card-text-muted: #7a5a72;
+  --ui-palette-card-text-sub: #9a6a88;
+  --ui-palette-card-radius: 12px;
+  --ui-palette-card-shadow: 0 2px 8px rgba(231, 80, 152, 0.1);
+  --ui-scene-item-hover: #ffe0f0;
+  --ui-scene-item-active-bg: #ffd6eb;
+  --ui-scene-item-active-border: #E75098;
+  --ui-scene-item-text: #3d2040;
+  --ui-scene-item-text-muted: #8a5a7a;
+  --ui-cat-group-title: #a06088;
+  --ui-pick-card-bg: #fff8fc;
+  --ui-pick-card-border: #f5c0dc;
+  --ui-pick-card-hover-bg: #ffe8f3;
+  --ui-pick-card-text: #3d2040;
+  --ui-pick-card-selected-border: #E75098;
+  --ui-pick-card-selected-bg: #ffe0f0;
+  --ui-rl-card-bg: linear-gradient(180deg, #fff8fc, #ffe8f3);
+  --ui-rl-card-border: #f5c0dc;
+  --ui-rl-card-hover-border: #E75098;
+  --ui-rl-card-hover-shadow: 0 10px 26px rgba(231, 80, 152, 0.18);
+  --ui-rl-compact-text: #3d2040;
+  --ui-rl-compact-tag-bg: #ffe0f0;
+  --ui-rl-compact-tag-text: #8a5a7a;
+  --ui-rl-ing-card-bg: #fff8fc;
+  --ui-rl-ing-card-border: #f5c0dc;
+  --ui-rl-ing-name: #3d2040;
+  --ui-rl-alert-warn-bg: #fff8e6;
+  --ui-rl-alert-warn-border: #e8a030;
+  --ui-rl-alert-warn-text: #9a6200;
+  --ui-rl-alert-ok-bg: #ecfbf3;
+  --ui-rl-alert-ok-border: #4ab880;
+  --ui-rl-alert-ok-text: #2d6b44;
+  --ui-rl-need-bg: #fff8e6;
+  --ui-rl-need-border: #e8a030;
+  --ui-rl-need-text: #9a6200;
+  --ui-modal-group-header-bg: linear-gradient(90deg, #ffe8f3, #fff5fa);
+  --ui-modal-group-header-text: #3d2040;
+  --ui-modal-group-header-accent: #E75098;
+  --ui-modal-tab-bg: #ffffff;
+  --ui-modal-tab-active-bg: linear-gradient(135deg, #f06aaa 0%, #E75098 100%);
+
+  --ui-bg-dock-head: linear-gradient(90deg, #fff0f7 0%, #ffe8f3 100%);
+  --ui-bg-dock-col: #fff8fc;
+  --ui-bg-dock-col-head: #ffe0f0;
+  --ui-bg-dock-step: #ffffff;
+  --ui-bg-list-card: #fff8fc;
+  --ui-bg-list-card-hover: #ffe8f3;
+  --ui-bg-list-card-active: #ffd6eb;
+  --ui-list-card-active-accent: #E75098;
+  --ui-trig-src-active-bg: #ffd6eb;
+  --ui-dock-grip-bg: linear-gradient(#ffd6eb, #ffe8f3);
+  --ui-dock-grip-handle: #e8a0c8;
+  --ui-dock-grip-handle-hover: #E75098;
+  --ui-trig-badge-bg: #E75098;
+  --ui-trig-step-idx-bg: #e85a9a;
+  --ui-anim-tab-bg: #fff0f7;
+  --ui-anim-tab-active-bg: #ffffff;
+  --ui-wp-row-active-bg: #ffd6eb;
+}
+
+/* Pink — palette category card colors (solid pastels, readable on light panel) */
+[data-theme="pink"] .palette-cat-combo {
+  --card-color: #e8a030;
+  --card-bg: #fff8e6;
+  --card-bg-hover: #ffefcc;
+}
+[data-theme="pink"] .palette-cat-counters {
+  --card-color: #5a8fd4;
+  --card-bg: #eef4ff;
+  --card-bg-hover: #ddeaff;
+}
+[data-theme="pink"] .palette-cat-utensils {
+  --card-color: #e87898;
+  --card-bg: #fff0f5;
+  --card-bg-hover: #ffe0ec;
+}
+[data-theme="pink"] .palette-cat-mechanisms {
+  --card-color: #a878d8;
+  --card-bg: #f5eeff;
+  --card-bg-hover: #ebe0ff;
+}
+[data-theme="pink"] .palette-cat-player {
+  --card-color: #e878a0;
+  --card-bg: #fff0f6;
+  --card-bg-hover: #ffe0ee;
+}
+[data-theme="pink"] .palette-cat-art {
+  --card-color: #4ab880;
+  --card-bg: #ecfbf3;
+  --card-bg-hover: #ddf5e8;
+}
+[data-theme="pink"] .palette-cat-other {
+  --card-color: #98a8b8;
+  --card-bg: #f4f6f8;
+  --card-bg-hover: #e8ecf0;
+}
+
+[data-theme="pink"] .palette-card.palette-card-armed {
+  outline-color: #E75098;
+  box-shadow: 0 0 0 1px rgba(231, 80, 152, 0.35);
+}
+
+/* Sky blue — light, cool */
+[data-theme="sky-blue"] {
+  --ui-color-scheme: light;
+
+  --ui-bg-page: #f5faff;
+  --ui-bg-surface: #e8f4ff;
+  --ui-bg-elevated: #d4ebff;
+  --ui-bg-input: #ffffff;
+  --ui-bg-hover: #d4ebff;
+  --ui-bg-active: #40AEFF;
+  --ui-bg-toolbar: #e8f4ff;
+  --ui-bg-panel: #f0f8ff;
+  --ui-bg-modal: #ffffff;
+  --ui-bg-modal-header: linear-gradient(90deg, #f0f8ff 0%, #e0f0ff 100%);
+  --ui-bg-modal-footer: #f5faff;
+  --ui-input-focus-ring: rgba(64, 174, 255, 0.22);
+  --ui-bg-chip: #ffffff;
+  --ui-bg-chip-active: #40AEFF;
+  --ui-bg-btn: #ffffff;
+  --ui-bg-btn-hover: #d4ebff;
+  --ui-bg-btn-primary: linear-gradient(135deg, #6bc4ff 0%, #40AEFF 55%, #2a9ae8 100%);
+  --ui-bg-btn-primary-hover: linear-gradient(135deg, #7dceff 0%, #52b8ff 55%, #3aa8f0 100%);
+  --ui-bg-btn-danger: #ffe8ec;
+  --ui-bg-btn-small: #f0f8ff;
+  --ui-bg-btn-small-primary: linear-gradient(135deg, #6bc4ff 0%, #40AEFF 100%);
+  --ui-bg-btn-small-primary-hover: linear-gradient(135deg, #7dceff 0%, #52b8ff 100%);
+  --ui-bg-overlay: rgba(64, 174, 255, 0.15);
+
+  --ui-text: #1a3a5c;
+  --ui-text-muted: #5a7a9a;
+  --ui-text-dim: #8aa8c8;
+  --ui-text-inverse: #ffffff;
+  --ui-text-accent: #40AEFF;
+  --ui-text-link: #2a9ae8;
+  --ui-text-danger: #c62850;
+
+  --ui-border: #b8d9f5;
+  --ui-border-strong: #9ac8f0;
+  --ui-border-focus: #40AEFF;
+  --ui-border-danger: #f0a0b0;
+  --ui-border-accent: #40AEFF;
+
+  --ui-accent: #40AEFF;
+  --ui-accent-action: #40AEFF;
+  --ui-accent-success: #3d9e6e;
+
+  --ui-radius-sm: 6px;
+  --ui-radius-md: 8px;
+  --ui-radius-lg: 12px;
+  --ui-shadow-modal: 0 16px 48px rgba(64, 174, 255, 0.18);
+  --ui-shadow-btn: 0 2px 8px rgba(64, 174, 255, 0.12);
+  --ui-shadow-nav-active: 0 4px 14px rgba(64, 174, 255, 0.3);
+
+  --ui-gradient-nav: linear-gradient(90deg, #f0f8ff 0%, #e0f0ff 50%, #d4ebff 100%);
+  --ui-gradient-page: linear-gradient(180deg, #f5faff 0%, #e8f4ff 100%);
+  --ui-manage-bg-overlay: rgba(232, 244, 255, 0.78);
+
+  --ui-spinner-track: rgba(64, 174, 255, 0.2);
+  --ui-spinner-head: #40AEFF;
+
+  --ui-btn-bounce: transform 0.18s ease;
+
+  --ui-bg-canvas-stage: #f0f8ff;
+  --ui-canvas-void-bg: #1e2a38;
+  --ui-bg-dock: #f5faff;
+  --ui-bg-tab-group: #ffffff;
+  --ui-layer-tab-active-bg: linear-gradient(135deg, #6bc4ff 0%, #40AEFF 100%);
+  --ui-view-tab-active-bg: linear-gradient(135deg, #6bc4ff 0%, #40AEFF 100%);
+  --ui-panel-collapse-bg: #d4ebff;
+  --ui-floor-bar-bg: rgba(232, 244, 255, 0.92);
+  --ui-palette-card-text: #1a3a5c;
+  --ui-palette-card-text-muted: #5a7a9a;
+  --ui-palette-card-text-sub: #7a9ab8;
+  --ui-palette-card-radius: 10px;
+  --ui-palette-card-shadow: 0 2px 8px rgba(64, 174, 255, 0.1);
+  --ui-scene-item-hover: #d4ebff;
+  --ui-scene-item-active-bg: #c8e4ff;
+  --ui-scene-item-active-border: #40AEFF;
+  --ui-scene-item-text: #1a3a5c;
+  --ui-scene-item-text-muted: #5a7a9a;
+  --ui-cat-group-title: #5a8ab0;
+  --ui-pick-card-bg: #f8fcff;
+  --ui-pick-card-border: #b8d9f5;
+  --ui-pick-card-hover-bg: #e8f4ff;
+  --ui-pick-card-text: #1a3a5c;
+  --ui-pick-card-selected-border: #40AEFF;
+  --ui-pick-card-selected-bg: #d4ebff;
+  --ui-rl-card-bg: linear-gradient(180deg, #f8fcff, #e8f4ff);
+  --ui-rl-card-border: #b8d9f5;
+  --ui-rl-card-hover-border: #40AEFF;
+  --ui-rl-card-hover-shadow: 0 10px 26px rgba(64, 174, 255, 0.18);
+  --ui-rl-compact-text: #1a3a5c;
+  --ui-rl-compact-tag-bg: #d4ebff;
+  --ui-rl-compact-tag-text: #5a7a9a;
+  --ui-rl-ing-card-bg: #f8fcff;
+  --ui-rl-ing-card-border: #b8d9f5;
+  --ui-rl-ing-name: #1a3a5c;
+  --ui-rl-alert-warn-bg: #fff8e6;
+  --ui-rl-alert-warn-border: #d97706;
+  --ui-rl-alert-warn-text: #9a6200;
+  --ui-rl-alert-ok-bg: #ecfbf3;
+  --ui-rl-alert-ok-border: #38a868;
+  --ui-rl-alert-ok-text: #2d6b44;
+  --ui-rl-need-bg: #fff8e6;
+  --ui-rl-need-border: #d97706;
+  --ui-rl-need-text: #9a6200;
+  --ui-modal-group-header-bg: linear-gradient(90deg, #e8f4ff, #f5faff);
+  --ui-modal-group-header-text: #1a3a5c;
+  --ui-modal-group-header-accent: #40AEFF;
+  --ui-modal-tab-bg: #ffffff;
+  --ui-modal-tab-active-bg: linear-gradient(135deg, #6bc4ff 0%, #40AEFF 100%);
+
+  --ui-bg-dock-head: linear-gradient(90deg, #f0f8ff 0%, #e8f4ff 100%);
+  --ui-bg-dock-col: #f8fcff;
+  --ui-bg-dock-col-head: #d4ebff;
+  --ui-bg-dock-step: #ffffff;
+  --ui-bg-list-card: #f8fcff;
+  --ui-bg-list-card-hover: #d4ebff;
+  --ui-bg-list-card-active: #c8e4ff;
+  --ui-list-card-active-accent: #40AEFF;
+  --ui-trig-src-active-bg: #c8e4ff;
+  --ui-dock-grip-bg: linear-gradient(#d4ebff, #e8f4ff);
+  --ui-dock-grip-handle: #9ac8f0;
+  --ui-dock-grip-handle-hover: #40AEFF;
+  --ui-trig-badge-bg: #40AEFF;
+  --ui-trig-step-idx-bg: #3d9e6e;
+  --ui-anim-tab-bg: #f0f8ff;
+  --ui-anim-tab-active-bg: #ffffff;
+  --ui-wp-row-active-bg: #c8e4ff;
+}
+
+[data-theme="sky-blue"] .palette-cat-combo {
+  --card-color: #d97706;
+  --card-bg: #fff8e6;
+  --card-bg-hover: #ffefcc;
+}
+[data-theme="sky-blue"] .palette-cat-counters {
+  --card-color: #3b82c4;
+  --card-bg: #eef6ff;
+  --card-bg-hover: #ddeeff;
+}
+[data-theme="sky-blue"] .palette-cat-utensils {
+  --card-color: #e87898;
+  --card-bg: #fff5f8;
+  --card-bg-hover: #ffe8f0;
+}
+[data-theme="sky-blue"] .palette-cat-mechanisms {
+  --card-color: #8868c8;
+  --card-bg: #f3eeff;
+  --card-bg-hover: #e8e0ff;
+}
+[data-theme="sky-blue"] .palette-cat-player {
+  --card-color: #d86898;
+  --card-bg: #fff0f6;
+  --card-bg-hover: #ffe0ee;
+}
+[data-theme="sky-blue"] .palette-cat-art {
+  --card-color: #38a868;
+  --card-bg: #ecfbf3;
+  --card-bg-hover: #ddf5e8;
+}
+[data-theme="sky-blue"] .palette-cat-other {
+  --card-color: #88a0b8;
+  --card-bg: #f4f8fc;
+  --card-bg-hover: #e8f0f8;
+}
+
+/* White — neutral minimal light */
+[data-theme="white"] {
+  --ui-color-scheme: light;
+
+  --ui-bg-page: #ffffff;
+  --ui-bg-surface: #f7f7f8;
+  --ui-bg-elevated: #efeff1;
+  --ui-bg-input: #ffffff;
+  --ui-bg-hover: #efeff1;
+  --ui-bg-active: #3c4043;
+  --ui-bg-toolbar: #f7f7f8;
+  --ui-bg-panel: #fafafa;
+  --ui-bg-modal: #ffffff;
+  --ui-bg-modal-header: #f7f7f8;
+  --ui-bg-modal-footer: #f7f7f8;
+  --ui-input-focus-ring: rgba(60, 64, 67, 0.15);
+  --ui-bg-chip: #ffffff;
+  --ui-bg-chip-active: #3c4043;
+  --ui-bg-btn: #ffffff;
+  --ui-bg-btn-hover: #efeff1;
+  --ui-bg-btn-primary: #3c4043;
+  --ui-bg-btn-primary-hover: #5f6368;
+  --ui-bg-btn-danger: #fce8e8;
+  --ui-bg-btn-small: #f7f7f8;
+  --ui-bg-btn-small-primary: #3c4043;
+  --ui-bg-btn-small-primary-hover: #5f6368;
+  --ui-bg-overlay: rgba(0, 0, 0, 0.35);
+
+  --ui-text: #2b2b2b;
+  --ui-text-muted: #5f6368;
+  --ui-text-dim: #9aa0a6;
+  --ui-text-inverse: #ffffff;
+  --ui-text-accent: #2b2b2b;
+  --ui-text-link: #1a73e8;
+  --ui-text-danger: #c62828;
+
+  --ui-border: #e0e0e0;
+  --ui-border-strong: #d0d0d0;
+  --ui-border-focus: #5f6368;
+  --ui-border-danger: #e8a0a0;
+  --ui-border-accent: #3c4043;
+
+  --ui-accent: #3c4043;
+  --ui-accent-action: #3c4043;
+  --ui-accent-success: #2e7d46;
+
+  --ui-radius-sm: 4px;
+  --ui-radius-md: 6px;
+  --ui-radius-lg: 8px;
+  --ui-shadow-modal: 0 12px 40px rgba(0, 0, 0, 0.12);
+  --ui-shadow-btn: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --ui-shadow-nav-active: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  --ui-gradient-nav: none;
+  --ui-gradient-page: none;
+  --ui-manage-bg-overlay: rgba(255, 255, 255, 0.82);
+
+  --ui-spinner-track: rgba(0, 0, 0, 0.1);
+  --ui-spinner-head: #3c4043;
+
+  --ui-btn-bounce: none;
+
+  --ui-bg-canvas-stage: #f7f7f8;
+  --ui-canvas-void-bg: #252528;
+  --ui-bg-dock: #f7f7f8;
+  --ui-bg-tab-group: #ffffff;
+  --ui-layer-tab-active-bg: #3c4043;
+  --ui-view-tab-active-bg: #3c4043;
+  --ui-panel-collapse-bg: #efeff1;
+  --ui-floor-bar-bg: rgba(255, 255, 255, 0.92);
+  --ui-palette-card-text: #2b2b2b;
+  --ui-palette-card-text-muted: #5f6368;
+  --ui-palette-card-text-sub: #80868b;
+  --ui-palette-card-radius: 8px;
+  --ui-palette-card-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  --ui-scene-item-hover: #efeff1;
+  --ui-scene-item-active-bg: #e8e8ea;
+  --ui-scene-item-active-border: #3c4043;
+  --ui-scene-item-text: #2b2b2b;
+  --ui-scene-item-text-muted: #5f6368;
+  --ui-cat-group-title: #5f6368;
+  --ui-pick-card-bg: #ffffff;
+  --ui-pick-card-border: #e0e0e0;
+  --ui-pick-card-hover-bg: #f7f7f8;
+  --ui-pick-card-text: #2b2b2b;
+  --ui-pick-card-selected-border: #3c4043;
+  --ui-pick-card-selected-bg: #efeff1;
+  --ui-rl-card-bg: linear-gradient(180deg, #ffffff, #f7f7f8);
+  --ui-rl-card-border: #e0e0e0;
+  --ui-rl-card-hover-border: #5f6368;
+  --ui-rl-card-hover-shadow: 0 10px 26px rgba(0, 0, 0, 0.1);
+  --ui-rl-compact-text: #2b2b2b;
+  --ui-rl-compact-tag-bg: #efeff1;
+  --ui-rl-compact-tag-text: #5f6368;
+  --ui-rl-ing-card-bg: #ffffff;
+  --ui-rl-ing-card-border: #e0e0e0;
+  --ui-rl-ing-name: #2b2b2b;
+  --ui-rl-alert-warn-bg: #fffaf0;
+  --ui-rl-alert-warn-border: #c47a10;
+  --ui-rl-alert-warn-text: #8a5a00;
+  --ui-rl-alert-ok-bg: #f0faf4;
+  --ui-rl-alert-ok-border: #2e7d46;
+  --ui-rl-alert-ok-text: #2d6b44;
+  --ui-rl-need-bg: #fffaf0;
+  --ui-rl-need-border: #c47a10;
+  --ui-rl-need-text: #8a5a00;
+  --ui-modal-group-header-bg: linear-gradient(90deg, #f7f7f8, #ffffff);
+  --ui-modal-group-header-text: #2b2b2b;
+  --ui-modal-group-header-accent: #3c4043;
+  --ui-modal-tab-bg: #ffffff;
+  --ui-modal-tab-active-bg: #3c4043;
+
+  --ui-bg-dock-head: #f7f7f8;
+  --ui-bg-dock-col: #ffffff;
+  --ui-bg-dock-col-head: #efeff1;
+  --ui-bg-dock-step: #ffffff;
+  --ui-bg-list-card: #ffffff;
+  --ui-bg-list-card-hover: #efeff1;
+  --ui-bg-list-card-active: #e8e8ea;
+  --ui-list-card-active-accent: #3c4043;
+  --ui-trig-src-active-bg: #e8e8ea;
+  --ui-dock-grip-bg: linear-gradient(#efeff1, #f7f7f8);
+  --ui-dock-grip-handle: #d0d0d0;
+  --ui-dock-grip-handle-hover: #80868b;
+  --ui-trig-badge-bg: #3c4043;
+  --ui-trig-step-idx-bg: #2e7d46;
+  --ui-anim-tab-bg: #f7f7f8;
+  --ui-anim-tab-active-bg: #ffffff;
+  --ui-wp-row-active-bg: #e8e8ea;
+}
+
+[data-theme="white"] .palette-cat-combo {
+  --card-color: #c47a10;
+  --card-bg: #fffaf0;
+  --card-bg-hover: #fff3d6;
+}
+[data-theme="white"] .palette-cat-counters {
+  --card-color: #4a7ab8;
+  --card-bg: #f5f8fc;
+  --card-bg-hover: #eaf0f8;
+}
+[data-theme="white"] .palette-cat-utensils {
+  --card-color: #c86888;
+  --card-bg: #fdf8fa;
+  --card-bg-hover: #f8eef2;
+}
+[data-theme="white"] .palette-cat-mechanisms {
+  --card-color: #7868a8;
+  --card-bg: #f8f6fc;
+  --card-bg-hover: #f0ecf8;
+}
+[data-theme="white"] .palette-cat-player {
+  --card-color: #b86888;
+  --card-bg: #fdf8fa;
+  --card-bg-hover: #f8eef2;
+}
+[data-theme="white"] .palette-cat-art {
+  --card-color: #3a9868;
+  --card-bg: #f5fbf7;
+  --card-bg-hover: #eaf5ee;
+}
+[data-theme="white"] .palette-cat-other {
+  --card-color: #888888;
+  --card-bg: #f8f8f8;
+  --card-bg-hover: #f0f0f0;
+}
+
+/* Theme-specific button polish (light themes) */
+[data-theme="pink"] .modal-btn.primary,
+[data-theme="pink"] .m-btn.primary,
+[data-theme="pink"] .btn-small.primary,
+[data-theme="pink"] .topnav-link.active,
+[data-theme="pink"] .rl-chip-btn.active {
+  transition: var(--ui-btn-bounce), box-shadow var(--ui-transition-fast);
+}
+
+[data-theme="pink"] .modal-btn:hover,
+[data-theme="pink"] .m-btn:hover,
+[data-theme="pink"] .btn-small:hover {
+  transform: scale(1.03);
+}
+
+[data-theme="pink"] .modal-btn:active,
+[data-theme="pink"] .m-btn:active,
+[data-theme="pink"] .btn-small:active {
+  transform: scale(0.97);
+}
+
+[data-theme="sky-blue"] .modal-btn.primary,
+[data-theme="sky-blue"] .m-btn.primary,
+[data-theme="sky-blue"] .btn-small.primary,
+[data-theme="sky-blue"] .topnav-link.active,
+[data-theme="sky-blue"] .rl-chip-btn.active {
+  transition: var(--ui-btn-bounce), box-shadow var(--ui-transition-fast);
+}
+
+/* Theme picker in nav */
+.topnav-theme {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.topnav-theme-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--ui-border-strong);
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
+}
+
+.topnav-theme-btn:hover {
+  transform: scale(1.15);
+}
+
+.topnav-theme-btn.active {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 2px var(--ui-bg-page), 0 0 0 4px var(--ui-accent);
+}
+
+.topnav-theme-btn[data-theme-id="black-gold"] {
+  background: linear-gradient(135deg, #1a1d23 50%, #c9a227 50%);
+}
+
+.topnav-theme-btn[data-theme-id="pink"] {
+  background: #E75098;
+}
+
+.topnav-theme-btn[data-theme-id="sky-blue"] {
+  background: #40AEFF;
+}
+
+.topnav-theme-btn[data-theme-id="white"] {
+  background: #ffffff;
+  border-color: #d0d0d0;
+}

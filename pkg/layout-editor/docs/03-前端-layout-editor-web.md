@@ -98,11 +98,14 @@ flowchart LR
 |---|---|
 | **main.ts** | 应用入口薄壳：版本徽标、重绘钩子、按路由标记懒加载页面视图或 `init()` |
 | **route.ts** | URL 规范化（旧 hash/query 深链迁移）、`parseRoute`（严格路由解析，含各 id 段）、路径构造助手（`layoutPath/depsPath/assignmentPath/recipeFormPath/burgerPath/fillingPath`）、`navigateTo` |
-| **nav.ts** | 顶栏导航 HTML（`navHtml/wireNav`）+ 关卡集/关卡下拉 + GitHub 弹窗 |
+| **nav.ts** | 顶栏导航 HTML（`navHtml/wireNav`）+ 关卡集/关卡下拉 + **主题色块选择器** + GitHub 弹窗 |
 | **version.ts** | `APP_VERSION` + 版本徽标 |
 | **api.ts** | ★ 全部后端通信（1078 行）：60+ 个 `fetchXxx/saveXxx/createXxx`；`readApiJson`（返回 HTML → 抛「桥过期」）；分块加载静态 JSON；`bundleClosure` |
 | **types.ts** | ★ 全部数据模型（1406 行）：约 120 个接口（见 §6） |
-| **style.css / recipeList.css** | 全站样式（135KB）/ 菜谱卡片专用（含汇总页 `.sum-*`；`.sum-page.has-bg` = 设了导出背景图时的作用域覆盖：卡片摘掉深色渐变底与 1px 边框、计数胶囊转半透明，**不改任何 `.rl-*` 原始规则**） |
+| **theme/** | UI 主题系统：`initTheme` / `applyTheme` / `listThemes`；四套主题定义（`themes/blackGold.ts` 等）含 `publicCancelBtnViewFn` 等 ViewFn；详见 [09-前端主题系统.md](09-前端主题系统.md) |
+| **ui/views/** | 结构化 UI 渲染：`button.ts`（`cancelBtnHtml` / `primaryBtnHtml` / `mBtnHtml` …）、`modal.ts`（弹窗 class 修正）、`render.ts`（ViewFn 管道） |
+| **styles/tokens.css** | CSS 语义变量 `--ui-*` + `[data-theme]` 四套主题覆盖；由 `main.ts` 在 `style.css` 之前 import |
+| **style.css / recipeList.css** | 全站样式（135KB）/ 菜谱卡片专用；UI 外壳颜色逐步迁移为 `var(--ui-*)`（见 09）；含汇总页 `.sum-*`；`.sum-page.has-bg` = 设了导出背景图时的作用域覆盖 |
 | **levels.ts** | ★ 关卡管理页（2800+ 行）：关卡集/关卡列表、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、关卡编辑页「汇总导出背景图」区块（上传到 `data/<level>/summary_bg~/`，Unity 忽略目录 → 不进 AssetBundle）、汇总页 + PNG 导出（DOM 快照，背景图 cover + 暗色遮罩内联在 `#sum-node` 上 → 预览与导出同源；官方菜谱按类型分组 + 自定义菜谱独立区块按 category→subcategory 子分类（`buildSummaryGroups`），组内默认分数升序；readme 说明区块（截图后、菜谱前）；**双视图 switch，内容互斥**（`#sum-view-switch`，复用 `.rl-view-switch` 样式，纯客户端状态不进 URL、模块级记忆跨重渲染）：「📋 全部菜谱」= 分组主体（**不含分工区块**）；「🧑‍🍳 分工模式」= 各已配置模式（双人/三人/四人）`assignmentModeBlockHtml` 为主体（未配置 → 空态 + 去分工模式按钮）；切换 = 重写 `#sum-node` 内层 → 导出 PNG 所见即所得（文件名带 `_分工汇总`）、「✏️ 编辑分工」按钮跳分工编辑页；导出倍率下拉 `exportScaleSelectHtml` 见 domSvgExport.ts）、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复） |
 | **summaryRecipes.ts** | 汇总页/分工页共用分组：官方按 `RECIPE_TYPE_ORDER`、自定义按 `category→subcategory`（显示名取 `fetchCustomRecipeConfig`，缺配置回退 id）；每个分组/子分类内部按分数升序（`byScoreAsc`，同分稳定保持原顺序） |
 | **levelAssignment.ts** | 🧑‍🍳 菜谱分工模式页（**关卡级严格路由 `/assignment/{set}/{levelId}`**，汇总页「🧑‍🍳 分工模式」经 `goAssignment` 整页跳转，可刷新/分享；标题落到具体关卡名）：左菜谱备选池（约 1/3，分组+分数排序，**条目两列网格**）+ 右玩家拖拽框（**两列网格：2P=2×1、3P=2+1、4P=2×2，固定高度+内部滚动**；HTML5 DnD：池→框 = 分配、框间 = 移动、拖回池/✕ = 移除；框内自动去重，已用菜谱池中置灰仍可拖；**落卡后显示完整菜谱卡预览** rlCardHtml + ✕ 悬浮角标）。2P/3P/4P 三套独立配置，JSON 落盘 `data/<level>/assignment~/assignment.json`（前端唯一读写方）；分工区块/导出图：玩家条目**从上到下**、每个玩家内部按汇总分组**子分类**，卡片**按宽度自适应换行（同 .rl-grid，不固定每行格数）**；导出图头部含**关卡名/场景名/作者/关卡截图**（`exportPng` 离屏 `createOffscreenStage` 1280px + `assignmentModeBlockHtml`，与汇总页分工区块共用渲染） |

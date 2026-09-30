@@ -1,4 +1,9 @@
+import "./styles/tokens.css";
+import "./style.css";
+import "./recipeList.css";
+import { initTheme } from "./theme";
 import * as api from "./api";
+import { cancelBtnHtml, chipBtnHtml, mBtnHtml, modalBtnHtml } from "./ui/views/button";
 import type { IngredientEntry } from "./types";
 import { navHtml, wireNav } from "./nav";
 import { groupRecipesByType, recipeTypeLabel, burgerSubtypeLabel, burgerSubtypeOrder } from "./recipeTypes";
@@ -13,6 +18,7 @@ import { createOffscreenStage, exportNodePng, exportScaleSelectHtml, resolveExpo
 import { openModal, closeModal } from "./modals";
 import { mountVersionBadge } from "./version";
 
+initTheme();
 mountVersionBadge();
 
 const app = document.getElementById("app")!;
@@ -69,7 +75,7 @@ app.innerHTML = `
     <h1 class="m-title">📖 菜谱清单列表</h1>
     <span class="status" id="rl-status">加载中…</span>
     <span style="flex: 1"></span>
-    <button type="button" class="m-btn" id="rl-export" title="把当前筛选出的菜谱合成一张 PNG 长图（重置筛选即导出全部）">🖼 导出图片</button>
+    ${mBtnHtml("🖼 导出图片", "default", { id: "rl-export", title: "把当前筛选出的菜谱合成一张 PNG 长图（重置筛选即导出全部）" })}
     ${exportScaleSelectHtml("rl-export-scale")}
     <label class="rl-tool-check" title="显示面糊、炸物部件、自选披萨部件等半成品">
       <input type="checkbox" id="rl-intermediates"> 含半成品
@@ -78,8 +84,8 @@ app.innerHTML = `
   </div>
   <div class="rl-toolbar">
     <div class="rl-view-switch">
-      <button type="button" class="m-btn rl-view-btn active" data-view="recipes">菜谱视图</button>
-      <button type="button" class="m-btn rl-view-btn" data-view="ingredients">食材清单</button>
+      ${mBtnHtml("菜谱视图", "default", { "data-view": "recipes" }, "rl-view-btn active")}
+      ${mBtnHtml("食材清单", "default", { "data-view": "ingredients" }, "rl-view-btn")}
     </div>
     <input type="search" id="rl-search" class="rl-search" placeholder="搜索菜名 / 英文名 / ID / 食材…" autocomplete="off">
     <label class="rl-tool-check" title="同一道菜的多 DLC 换皮变体只保留最高 DLC 一版（如只显示「什锦火锅（DLC10）」）">
@@ -341,7 +347,7 @@ function buildFilters(): void {
   chipsEl.innerHTML = chips
     .map(
       (c) =>
-        `<button type="button" class="rl-chip-btn${c.type === typeFilter ? " active" : ""}" data-type="${esc(c.type)}">${esc(c.label)}<span class="rl-cnt">${c.count}</span></button>`
+        chipBtnHtml(c.label, c.type === typeFilter, { "data-type": c.type }, "", ` <span class="rl-cnt">${c.count}</span>`)
     )
     .join("");
 
@@ -598,8 +604,8 @@ function openRecipeDetail(r: RecipeWithGroups): void {
       <table class="rl-detail-table">${rowsHtml}</table>
     </div>`;
   const footer = `
-    <button type="button" class="modal-btn" data-cancel>关闭</button>
-    <button type="button" class="modal-btn primary" data-download>🖼 下载菜谱图片</button>`;
+    ${cancelBtnHtml("关闭")}
+    ${modalBtnHtml("🖼 下载菜谱图片", "modal-btn primary", { "data-download": "" })}`;
 
   const root = openModal(`📖 ${esc(r.nameZh)}`, body, footer);
   root.querySelector<HTMLButtonElement>("[data-cancel]")?.addEventListener("click", () => closeModal());

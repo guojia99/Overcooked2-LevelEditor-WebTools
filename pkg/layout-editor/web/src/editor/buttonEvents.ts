@@ -9,6 +9,7 @@ import { itemLabel } from "./labels";
 import { uuid, escHtml } from "./coords";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
+import { smallBtnHtml, modalBtnHtml } from "../ui/views/button";
 
 // ---------------------------------------------------------------- data
 
@@ -111,7 +112,7 @@ export function renderButtonEventSection(host: HTMLElement, item: EditorItem): v
   }
   host.innerHTML = `<p class="trig-hint">每次按压按顺序向下一事件组广播全部事件（末组后循环回第一组）。事件目标仅限「① 直连机器目标」里的物件；触发消息固定取联动共享触发名。可配「完成触发器」：组内全部完成后按钮才可再按。</p>
     <div id="bev-groups" class="trig-list"></div>
-    <div class="trig-addrow"><button type="button" class="btn-small primary" id="bev-addgroup">＋ 添加事件组</button></div>`;
+    <div class="trig-addrow">${smallBtnHtml("＋ 添加事件组", "primary", { id: "bev-addgroup" })}</div>`;
 
   const groupsEl = host.querySelector<HTMLElement>("#bev-groups");
   if (!groupsEl) return;
@@ -139,20 +140,20 @@ export function renderButtonEventSection(host: HTMLElement, item: EditorItem): v
                 <span class="blm-row-label">${gi + 1}.${ei + 1} → ${escHtml(labelOf(e.targetId))}</span>
                 <span class="modal-input" style="display:inline-flex;align-items:center;min-width:120px" title="触发消息 = 联动的共享触发名（在开关右键菜单修改）">${escHtml(e.trigger)}</span>
                 <input class="modal-input bev-done" data-bev-g="${gi}" data-bev-i="${ei}" value="${escHtml(e.doneTrigger ?? "")}" placeholder="完成触发器（可选）" title="目标完成事件时广播的触发名"/>
-                <button type="button" class="modal-btn blm-mini" data-bev-del="${gi}:${ei}">移除</button>
+                ${modalBtnHtml("移除", "modal-btn blm-mini", { "data-bev-del": `${gi}:${ei}` })}
               </div>`
             )
             .join("");
           const opts = targetOptionsHtml(new Set(g.events.map((e) => e.targetId)), allowedTargets);
           return `<div class="bev-group">
             <div class="blm-sec">事件组 ${gi + 1}（${g.events.length} 条事件）
-              <button type="button" class="modal-btn blm-mini" data-bevg-up="${gi}" ${gi === 0 ? "disabled" : ""}>↑</button>
-              <button type="button" class="modal-btn blm-mini" data-bevg-down="${gi}" ${gi === l.groups.length - 1 ? "disabled" : ""}>↓</button>
-              <button type="button" class="modal-btn blm-mini" data-bevg-del="${gi}">删除组</button>
+              ${modalBtnHtml("↑", "modal-btn blm-mini", { "data-bevg-up": String(gi), ...(gi === 0 ? { disabled: "" } : {}) })}
+              ${modalBtnHtml("↓", "modal-btn blm-mini", { "data-bevg-down": String(gi), ...(gi === l.groups.length - 1 ? { disabled: "" } : {}) })}
+              ${modalBtnHtml("删除组", "modal-btn blm-mini", { "data-bevg-del": String(gi) })}
             </div>
             ${eventRows || '<p class="modal-hint">空事件组（按下时直接跳过）</p>'}
             <div class="blm-addrow"><select id="bev-target-${gi}" class="modal-select">${opts || '<option value="">— 无联动目标可添加（先在开关右键菜单添加联动） —</option>'}</select>
-              <button type="button" class="modal-btn" data-bev-add="${gi}">＋ 添加事件</button></div>
+              ${modalBtnHtml("＋ 添加事件", "modal-btn", { "data-bev-add": String(gi) })}</div>
           </div>`;
         })
         .join("");

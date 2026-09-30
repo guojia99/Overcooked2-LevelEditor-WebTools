@@ -22,6 +22,7 @@ import { pushHistory } from "./historyOps";
 import { draw } from "./render";
 import { setStatus } from "./status";
 import { openModal, closeModal } from "../modals";
+import { cancelBtnHtml, modalBtnHtml } from "../ui/views/button";
 import { fetchRecipeCatalog, fetchLevelRecipes, saveLevelRecipes } from "../api";
 import { computeUtensilIngredientFill } from "./recipeKnowledge";
 import { applyUtensilIngredientFill } from "./ui/utensilManager";
@@ -160,8 +161,7 @@ export function requestTestLayout(): void {
        <li>${coreCount} 个核心层道具顺序平铺（开关组合默认用组合）</li>
        <li>全部菜谱加入关卡 + 锅具按菜谱自动装填</li>
      </ul>`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn primary" id="test-layout-confirm">✅ 生成</button>`
+    `${cancelBtnHtml()}${modalBtnHtml("✅ 生成", "modal-btn primary", { id: "test-layout-confirm" })}`
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.getElementById("test-layout-confirm")?.addEventListener("click", () => {

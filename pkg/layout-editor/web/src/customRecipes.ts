@@ -1,4 +1,11 @@
 import * as api from "./api";
+import {
+  chipBtnHtml,
+  dangerBtnHtml,
+  mBtnHtml,
+  mCancelBtnHtml,
+  mPrimaryBtnHtml,
+} from "./ui/views/button";
 import type {
   AssetOptimizeUsage,
   BunUsage,
@@ -207,7 +214,7 @@ async function renderSetChooser(app: HTMLElement): Promise<void> {
           作者：${esc(s.author || "—")} · 版本：${esc(s.version || "—")}
         </div>
         <div class="m-actions">
-          <button class="m-btn primary" data-open="${esc(s.setName)}">管理菜谱</button>
+          ${mBtnHtml("管理菜谱", "primary", { "data-open": esc(s.setName) })}
         </div>
       </div>`
       )
@@ -237,7 +244,7 @@ async function renderSetChooser(app: HTMLElement): Promise<void> {
         <h3>${esc(lib.title)}</h3>
         <div class="m-meta">${esc(lib.desc)}</div>
         <div class="m-actions">
-          <button class="m-btn primary" data-open-lib="${esc(lib.id)}">编辑共享库</button>
+          ${mBtnHtml("编辑共享库", "primary", { "data-open-lib": esc(lib.id) })}
         </div>
       </div>`
             )
@@ -493,15 +500,25 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
           ${plating ? `<span class="cr-cat-tag cr-plate-tag" title="装盘容器">🍽 ${esc(plating)}</span>` : ""}
           <span class="muted small">${isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : `UID ${r.uID}`} · 组成 ${compCount} 项</span>
           <span style="flex:1"></span>
-          ${r.previewable ?? r.hasModel ? `<button class="m-btn small" data-preview="${esc(r.assetPath)}" title="3D 模型在线预览">👁</button>` : ""}
+          ${r.previewable ?? r.hasModel ? mBtnHtml("👁", "small", { "data-preview": esc(r.assetPath), title: "3D 模型在线预览" }) : ""}
           ${
             isLibrary
-              ? `<button class="m-btn small" data-edit="${esc(r.assetPath)}">编辑</button>`
+              ? mBtnHtml("编辑", "small", { "data-edit": esc(r.assetPath) })
               : gotoBurgerWorkbench
-                ? `<button class="m-btn small" data-goto-burger${burgerProductAttr} title="${isFinishedBurger ? "在汉堡工作台载入并编辑此成品汉堡" : "组装定义的可选夹心与堆叠模型在汉堡工作台中管理"}">🍔 工作台</button>`
-                : `<button class="m-btn small" data-edit="${esc(r.assetPath)}">编辑</button>`
+                ? mBtnHtml(
+                    "🍔 工作台",
+                    "small",
+                    {
+                      "data-goto-burger": "",
+                      ...(isFinishedBurger ? { "data-burger-product": esc(r.id) } : {}),
+                      title: isFinishedBurger
+                        ? "在汉堡工作台载入并编辑此成品汉堡"
+                        : "组装定义的可选夹心与堆叠模型在汉堡工作台中管理",
+                    }
+                  )
+                : mBtnHtml("编辑", "small", { "data-edit": esc(r.assetPath) })
           }
-          ${isLibrary ? "" : `<button class="m-btn small danger" data-del="${esc(r.assetPath)}">删除</button>`}
+          ${isLibrary ? "" : mBtnHtml("删除", "small", { "data-del": esc(r.assetPath) }, "danger")}
         </div>
       </div>`;
     };
@@ -513,19 +530,25 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
   function renderCatChips(): string {
     const display = getDisplayRecipes();
     return `
-      <button type="button" class="rl-chip-btn cr-cat-chip${activeCategoryId === "" ? " active" : ""}" data-cat="">全部 <span class="rl-cnt">${display.length}</span></button>
+      ${chipBtnHtml("全部", activeCategoryId === "", { "data-cat": "" }, "cr-cat-chip", ` <span class="rl-cnt">${display.length}</span>`)}
       ${listCategories
         .map((c) => {
           const count = display.filter((r) => r.category === c.id).length;
-          return `<button type="button" class="rl-chip-btn cr-cat-chip${activeCategoryId === c.id ? " active" : ""}" data-cat="${esc(c.id)}">${esc(catDisplay(c))} <span class="rl-cnt">${count}</span></button>`;
+          return chipBtnHtml(
+            `${esc(catDisplay(c))} `,
+            activeCategoryId === c.id,
+            { "data-cat": esc(c.id) },
+            "cr-cat-chip",
+            `<span class="rl-cnt">${count}</span>`
+          );
         })
         .join("")}
       ${
         isLibrary
           ? ""
           : `<span class="cr-cat-tools">
-        <button class="m-btn" id="cr-new-cat">+ 新建分类</button>
-        ${listCategories.length > 0 ? '<button class="m-btn" id="cr-manage-cat">管理分类</button>' : ""}
+        ${mBtnHtml("+ 新建分类", "default", { id: "cr-new-cat" })}
+        ${listCategories.length > 0 ? mBtnHtml("管理分类", "default", { id: "cr-manage-cat" }) : ""}
       </span>`
       }`;
   }
@@ -548,11 +571,17 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
       (a, b) => subOrder(activeCategoryId, a[0]) - subOrder(activeCategoryId, b[0]) || a[0].localeCompare(b[0])
     );
     return `
-      <button type="button" class="rl-chip-btn cr-sub-chip${activeSubcategoryId === "" ? " active" : ""}" data-sub="">全部 <span class="rl-cnt">${inCat.length}</span></button>
+      ${chipBtnHtml("全部", activeSubcategoryId === "", { "data-sub": "" }, "cr-sub-chip", ` <span class="rl-cnt">${inCat.length}</span>`)}
       ${ordered
         .map(
           ([id, n]) =>
-            `<button type="button" class="rl-chip-btn cr-sub-chip${activeSubcategoryId === id ? " active" : ""}" data-sub="${esc(id)}">${esc(subDisplay(activeCategoryId, id))} <span class="rl-cnt">${n}</span></button>`
+            chipBtnHtml(
+              `${esc(subDisplay(activeCategoryId, id))} `,
+              activeSubcategoryId === id,
+              { "data-sub": esc(id) },
+              "cr-sub-chip",
+              `<span class="rl-cnt">${n}</span>`
+            )
         )
         .join("")}
       ${rootCount > 0 ? `<span class="muted small">未分子类 ${rootCount}</span>` : ""}`;
@@ -564,15 +593,15 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
   const toolbarExtra = isLibrary
     ? ""
     : `
-      <button class="m-btn" id="cr-unify-bun" title="把本关卡集自定义菜谱里的汉堡面包皮统一换成同一种">🍞 统一面包皮</button>
-      <button class="m-btn" id="cr-optimize-assets" title="只调 .meta 导入参数（贴图分辨率/网格精度）缩小导出包；不改源 FBX/PNG">📦 资产瘦身</button>
-      <button class="m-btn" id="cr-new-filling" title="夹心 = 0 分自定义菜谱，做好后可在汉堡工作台选用">🥩 夹心工作台</button>
-      <button class="m-btn" id="cr-new-burger">🍔 新增汉堡菜谱</button>
-      <button class="m-btn primary" id="cr-new-recipe">+ 新建菜谱</button>`;
+      ${mBtnHtml("🍞 统一面包皮", "default", { id: "cr-unify-bun", title: "把本关卡集自定义菜谱里的汉堡面包皮统一换成同一种" })}
+      ${mBtnHtml("📦 资产瘦身", "default", { id: "cr-optimize-assets", title: "只调 .meta 导入参数（贴图分辨率/网格精度）缩小导出包；不改源 FBX/PNG" })}
+      ${mBtnHtml("🥩 夹心工作台", "default", { id: "cr-new-filling", title: "夹心 = 0 分自定义菜谱，做好后可在汉堡工作台选用" })}
+      ${mBtnHtml("🍔 新增汉堡菜谱", "default", { id: "cr-new-burger" })}
+      ${mBtnHtml("+ 新建菜谱", "primary", { id: "cr-new-recipe" })}`;
   content.innerHTML = `
     ${libraryBanner}
     <div class="m-actions-row">
-      <button class="m-btn" id="cr-back">← ${isLibrary ? "返回" : "返回关卡集列表"}</button>
+      ${mBtnHtml(`← ${isLibrary ? "返回" : "返回关卡集列表"}`, "default", { id: "cr-back" })}
       <span class="muted">${isLibrary ? `共享库：<b>${esc(scope.libraryId)}</b>` : `当前关卡集：<b>${esc(setName)}</b>`}</span>
       <span style="flex:1"></span>
       ${toolbarExtra}
@@ -590,9 +619,9 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
         <option value="120">120 分</option>
         <option value="other">其他分数</option>
       </select>
-      <button type="button" class="rl-chip-btn cr-state-chip${filterIntermediate ? " active" : ""}" data-state="intermediate" title="只看 0 分半成品（可与其他状态叠加 = 交集）">🧩 中间产物</button>
-      <button type="button" class="rl-chip-btn cr-state-chip${filterMixed ? " active" : ""}" data-state="mixed" title="只看 Mixed 搅拌类菜谱（可与其他状态叠加 = 交集）">🥣 搅拌物</button>
-      <button type="button" class="rl-chip-btn cr-state-chip${filterFinished ? " active" : ""}" data-state="finished" title="只看可点单的成品菜（score>0，可与其他状态叠加 = 交集）">🍽 成品</button>
+      ${chipBtnHtml("🧩 中间产物", filterIntermediate, { "data-state": "intermediate", title: "只看 0 分半成品（可与其他状态叠加 = 交集）" }, "cr-state-chip")}
+      ${chipBtnHtml("🥣 搅拌物", filterMixed, { "data-state": "mixed", title: "只看 Mixed 搅拌类菜谱（可与其他状态叠加 = 交集）" }, "cr-state-chip")}
+      ${chipBtnHtml("🍽 成品", filterFinished, { "data-state": "finished", title: "只看可点单的成品菜（score>0，可与其他状态叠加 = 交集）" }, "cr-state-chip")}
     </div>
     <div class="cr-toolbar cr-cat-bar" id="cr-cat-chips">${renderCatChips()}</div>
     <div class="cr-toolbar cr-sub-bar" id="cr-sub-chips">${renderSubChips()}</div>
@@ -853,7 +882,7 @@ async function openBunSwapModal(setName: string, onDone: () => void): Promise<vo
       "🍞 统一面包皮",
       `<p class="modal-hint">关卡集 <b>${esc(setName)}</b> 的 <code>custom_recipes/</code> 里没有引用汉堡面包皮的自定义菜谱，无需统一。</p>
        ${sharedRows.length > 0 ? `<p class="muted small">（commonW2 共享库里有 ${sharedRows.length} 道含面包的汉堡，属全关卡集共用资产，本工具不会修改。）</p>` : ""}`,
-      '<button class="m-btn" data-close>关闭</button>'
+      mBtnHtml("关闭", "default", { "data-close": "" })
     );
     document.querySelector<HTMLButtonElement>("[data-close]")?.addEventListener("click", closeModal);
     return;
@@ -927,8 +956,8 @@ async function openBunSwapModal(setName: string, onDone: () => void): Promise<vo
     <div class="bs-targets" id="bs-targets">${targetHtml()}</div>
     <div class="m-section-title bs-head">受影响的菜谱 <span class="muted small" id="bs-count"></span>
       <span style="flex:1"></span>
-      <button type="button" class="m-btn small" id="bs-all">全选</button>
-      <button type="button" class="m-btn small" id="bs-none">全不选</button>
+      ${mBtnHtml("全选", "small", { id: "bs-all" })}
+      ${mBtnHtml("全不选", "small", { id: "bs-none" })}
     </div>
     <div class="bs-rows" id="bs-rows">${rowsHtml()}</div>
     ${sharedHtml()}
@@ -945,8 +974,7 @@ async function openBunSwapModal(setName: string, onDone: () => void): Promise<vo
   openModal(
     "🍞 统一面包皮",
     body,
-    `<button class="m-btn" id="bs-cancel">取消</button>
-     <button class="m-btn primary" id="bs-apply">执行替换</button>`,
+    `${mBtnHtml("取消", "default", { id: "bs-cancel" })}${mBtnHtml("执行替换", "primary", { id: "bs-apply" })}`,
     { closeOnBackdrop: false }
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
@@ -1068,7 +1096,7 @@ async function openAssetOptimizeModal(setName: string): Promise<void> {
     openModal(
       "📦 资产瘦身",
       `<p class="modal-hint">关卡集 <b>${esc(setName)}</b> 的 <code>custom_recipes/</code> 里没有可调整的贴图或模型。</p>`,
-      '<button class="m-btn" data-close>关闭</button>'
+      mBtnHtml("关闭", "default", { "data-close": "" })
     );
     document.querySelector<HTMLButtonElement>("[data-close]")?.addEventListener("click", closeModal);
     return;
@@ -1118,8 +1146,7 @@ async function openAssetOptimizeModal(setName: string): Promise<void> {
   openModal(
     "📦 资产瘦身",
     body,
-    `<button class="m-btn" id="ao-cancel">取消</button>
-     <button class="m-btn primary" id="ao-apply">执行瘦身</button>`,
+    `${mBtnHtml("取消", "default", { id: "ao-cancel" })}${mBtnHtml("执行瘦身", "primary", { id: "ao-apply" })}`,
     { closeOnBackdrop: false }
   );
 
@@ -1165,7 +1192,7 @@ async function openAssetOptimizeModal(setName: string): Promise<void> {
         openModal(
           allDone ? "📦 资产瘦身" : "📦 资产瘦身完成",
           `<p class="modal-hint">${summary}</p>${detailHtml}${skippedHtml}`,
-          '<button class="m-btn" data-close>关闭</button>'
+          mBtnHtml("关闭", "default", { "data-close": "" })
         );
         document.querySelector<HTMLButtonElement>("[data-close]")?.addEventListener("click", closeModal);
         setStatus(
@@ -1701,8 +1728,7 @@ export async function renderRecipeForm(
       "添加食材 / 菜谱",
       `<p class="modal-hint">点击卡片加入（默认 1 份），再次点击 − / ＋ 调整数量。<b>官方成品菜按类型分组；本关卡集自定义菜谱单独一页</b>（含成品与中间产物）。</p>
        <div id="cp-body">${bodyHtml()}</div>`,
-      `<button type="button" class="m-btn" data-cancel>取消</button>
-       <button type="button" class="m-btn primary" data-ok>确定</button>`
+      `${mCancelBtnHtml()}${mPrimaryBtnHtml()}`
     );
     const panel = document.querySelector(".modal-panel");
     if (panel) {
@@ -1904,10 +1930,10 @@ export async function renderRecipeForm(
   content.innerHTML = `
     ${isLibrary ? `<div class="m-block cr-dev-banner"><b>⚠️ 开发者模式</b>：修改将写入共享库 <b>${esc(scope.libraryId)}</b>，影响全关卡集。仅支持更新已有菜谱。</div>` : ""}
     <div class="m-actions-row">
-      <button class="m-btn" id="cr-form-back">← 返回菜谱列表</button>
+      ${mBtnHtml("← 返回菜谱列表", "default", { id: "cr-form-back" })}
       <span class="muted">${isLibrary ? `共享库：<b>${esc(scope.libraryId)}</b>` : `关卡集：<b>${esc(setName)}</b>`} · ${isEdit ? `编辑 ${esc(recipeName)}` : "新建菜谱"}</span>
       <span style="flex:1"></span>
-      <button class="m-btn primary" id="cr-form-save">💾 保存</button>
+      ${mBtnHtml("💾 保存", "primary", { id: "cr-form-save" })}
     </div>
     <div class="cr-form">
       ${isFilling ? `<p class="modal-hint cr-filling-hint">🥩 <b>夹心</b>就是一道 <b>0 分的自定义菜谱</b>——不可单独点单，只作为汉堡的一层。
@@ -1926,7 +1952,7 @@ export async function renderRecipeForm(
           <label class="m-field">中文名<input type="text" id="cr-zh" value="${esc(nameZh)}" placeholder="我的菜谱"></label>
           <label class="m-field">英文名<input type="text" id="cr-en" value="${esc(nameEn)}" placeholder="My Recipe"></label>
           <label class="m-field">分类 ${catSelectHtml()}
-            ${isLibrary ? "" : '<button type="button" class="m-btn" id="cr-new-cat-inline" style="margin-top:6px">+ 新建分类</button>'}
+            ${isLibrary ? "" : mBtnHtml("+ 新建分类", "default", { id: "cr-new-cat-inline", style: "margin-top:6px" })}
           </label>
           <label class="m-field">UID（自动生成）<input type="text" value="${recipe?.uID ?? (isNew ? config.uidPrefix * 1000 + config.nextSequence : "—")}" disabled></label>
           <label class="m-field">菜谱图标（PNG，卡片图）<input type="file" id="cr-icon-upload" accept="image/png">
@@ -1937,7 +1963,7 @@ export async function renderRecipeForm(
         <div class="m-section-title">组成（食材 / 菜谱）</div>
         <div class="cr-comp-list" id="cr-comp-list"></div>
         <div class="cr-comp-toolbar" style="margin-top:10px">
-          <button type="button" class="m-btn primary" id="cr-add-comp">＋ 添加食材 / 菜谱</button>
+          ${mBtnHtml("＋ 添加食材 / 菜谱", "primary", { id: "cr-add-comp" })}
           <span class="muted small" id="cr-comp-hint" style="margin-left:auto"></span>
         </div>
       </div>
@@ -2022,26 +2048,26 @@ export async function renderRecipeForm(
                 <select id="cr-tpl-mesh" class="m-select"><option value="">（不使用模板）</option></select>
               </label>
               <label class="m-field">贴图
-                <button type="button" class="m-btn" id="cr-tpl-tex">🎨 编辑贴图</button>
+                ${mBtnHtml("🎨 编辑贴图", "default", { id: "cr-tpl-tex" })}
                 <span class="muted small" id="cr-tpl-tex-state">未设置</span>
               </label>
               <label class="m-field">预览
-                <button type="button" class="m-btn" id="cr-tpl-preview">🔍 预览模板效果</button>
+                ${mBtnHtml("🔍 预览模板效果", "default", { id: "cr-tpl-preview" })}
                 <span class="muted small">用当前贴图实时渲染，不写盘</span>
               </label>
             </div>
           </div>
           <div class="cr-model-tools">
-            <label class="m-field">在线预览<button type="button" class="m-btn" id="cr-preview-model">👁 预览并调整方向/大小</button></label>
-            <label class="m-field">模型诊断<button type="button" class="m-btn" id="cr-diagnose">🔍 检查装盘链路</button></label>
+            <label class="m-field">在线预览${mBtnHtml("👁 预览并调整方向/大小", "default", { id: "cr-preview-model" })}</label>
+            <label class="m-field">模型诊断${mBtnHtml("🔍 检查装盘链路", "default", { id: "cr-diagnose" })}</label>
           </div>
         </div>
       </div>
     </div>
     <div class="cr-form-footer">
-      <button class="m-btn" id="cr-form-back2">← 返回菜谱列表</button>
+      ${mBtnHtml("← 返回菜谱列表", "default", { id: "cr-form-back2" })}
       <span style="flex:1"></span>
-      <button class="m-btn primary" id="cr-form-save2">💾 保存</button>
+      ${mBtnHtml("💾 保存", "primary", { id: "cr-form-save2" })}
     </div>
   `;
 
@@ -2382,8 +2408,7 @@ export async function renderRecipeForm(
     openModal(
       "装盘链路诊断",
       body,
-      `<button type="button" class="m-btn" id="diag-copy">📋 复制链路数据</button>
-       <button type="button" class="m-btn primary" data-cancel>关闭</button>`
+      `${mBtnHtml("📋 复制链路数据", "default", { id: "diag-copy" })}${mBtnHtml("关闭", "primary", { "data-cancel": "" })}`
     );
     document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
     const copyBtn = document.getElementById("diag-copy");
@@ -2658,7 +2683,7 @@ function confirmDeleteRecipe(_app: HTMLElement, _scope: RecipeAdminScope, assetP
   openModal(
     `删除菜谱 · ${esc(fileName)}`,
     `<p>将永久删除菜谱资源及其模型文件夹，且<b>不可恢复</b>。若其他菜谱引用了它作为子菜谱，组成将失效。</p>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn danger" data-ok>确认删除</button>`
+    `${mCancelBtnHtml()}${dangerBtnHtml("确认删除", { "data-ok": "" })}`
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
@@ -2684,7 +2709,7 @@ function openNewCategoryModal(setName: string, onDone: (id: string) => void): vo
     `<label class="m-field">分类ID（仅字母/数字/下划线，用于目录名）<input type="text" id="cr-cat-id" placeholder="MyCategory"></label>
      <label class="m-field">中文名<input type="text" id="cr-cat-zh" placeholder="我的分类"></label>
      <label class="m-field">英文名<input type="text" id="cr-cat-en" placeholder="My Category"></label>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("创建")}`
   );
   wireModalCancelOk(closeModal, async () => {
     const id = (document.getElementById("cr-cat-id") as HTMLInputElement).value.trim();
@@ -2733,8 +2758,8 @@ function openManageCategoriesModal(
       (c) => `
     <div class="m-row" style="margin-bottom:8px">
       <span style="flex:1">${esc(catDisplay(c))} <span class="muted">[${esc(c.id)}]</span></span>
-      <button class="m-btn" data-rename="${esc(c.id)}">重命名</button>
-      <button class="m-btn danger" data-delcat="${esc(c.id)}">删除</button>
+      ${mBtnHtml("重命名", "default", { "data-rename": esc(c.id) })}
+      ${mBtnHtml("删除", "danger", { "data-delcat": esc(c.id) })}
     </div>`
     )
     .join("");
@@ -2742,7 +2767,7 @@ function openManageCategoriesModal(
   openModal(
     "管理分类",
     `<div class="modal-scroll">${list || '<p class="muted">暂无分类</p>'}</div>`,
-    `<button type="button" class="m-btn" data-cancel>关闭</button>`
+    mCancelBtnHtml("关闭")
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
 
@@ -2764,7 +2789,7 @@ function openManageCategoriesModal(
       openModal(
         `删除分类 · ${esc(cat?.zh || catId)}`,
         `<p>将检查关卡使用情况。如果有关卡正在使用该分类的菜谱，则不允许删除。</p>`,
-        `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn danger" data-ok>确认删除</button>`
+        `${mCancelBtnHtml()}${dangerBtnHtml("确认删除", { "data-ok": "" })}`
       );
       document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
       document.querySelector("[data-ok]")?.addEventListener("click", async () => {
@@ -2795,7 +2820,7 @@ function openRenameCategoryModal(
     `<label class="m-field">分类ID（仅字母/数字/下划线）<input type="text" id="cr-rename-id" value="${esc(oldId)}"></label>
      <label class="m-field">中文名<input type="text" id="cr-rename-zh" value="${esc(oldZh)}"></label>
      <label class="m-field">英文名<input type="text" id="cr-rename-en" value="${esc(oldEn)}"></label>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>确认</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("确认")}`
   );
   wireModalCancelOk(closeModal, async () => {
     const newId = (document.getElementById("cr-rename-id") as HTMLInputElement).value.trim();

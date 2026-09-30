@@ -10,6 +10,7 @@
  * 卡片渲染复用共享的 recipeCard.ts / recipeCardCustom.ts（菜谱管理页与菜谱清单页同款）。
  */
 import * as api from "./api";
+import { mBtnHtml } from "./ui/views/button";
 import { navHtml, wireNav } from "./nav";
 import { showBusy, hideBusy } from "./busy";
 import { fillingPath, parseRoute } from "./route";
@@ -158,9 +159,9 @@ export async function renderFillingMakerView(app: HTMLElement): Promise<void> {
             ${readonly ? '<span class="cr-cat-tag">共享库（只读）</span>' : `<span class="cr-cat-tag">${esc(r.category)}</span>`}
             ${model}
             <span style="flex:1"></span>
-            ${r.previewable ? `<button class="m-btn small" data-fm-preview="${esc(r.assetPath)}" data-fm-name="${esc(r.nameZh)}" title="3D 模型在线预览">👁</button>` : ""}
-            ${readonly ? "" : `<button class="m-btn small" data-fm-edit="${esc(r.assetPath)}">编辑</button>`}
-            ${readonly ? "" : `<button class="m-btn small danger" data-fm-del="${esc(r.assetPath)}">删除</button>`}
+            ${r.previewable ? mBtnHtml("👁", "small", { "data-fm-preview": esc(r.assetPath), "data-fm-name": esc(r.nameZh), title: "3D 模型在线预览" }) : ""}
+            ${readonly ? "" : mBtnHtml("编辑", "small", { "data-fm-edit": esc(r.assetPath) })}
+            ${readonly ? "" : mBtnHtml("删除", "small", { "data-fm-del": esc(r.assetPath) }, "danger")}
           </div>
         </div>`;
     };
@@ -179,7 +180,7 @@ export async function renderFillingMakerView(app: HTMLElement): Promise<void> {
             .join("")}
         </select>
         <span style="flex:1"></span>
-        <button class="m-btn primary" id="fm-new">＋ 新建夹心</button>
+        ${mBtnHtml("＋ 新建夹心", "primary", { id: "fm-new" })}
       </div>
       <p class="modal-hint">夹心 = <b>0 分的自定义菜谱</b>，不可单独点单，只作为汉堡的一层。
         新建后给它一个模型（可用「模板网格 + 自制贴图」零建模），就能在

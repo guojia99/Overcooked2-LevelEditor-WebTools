@@ -1,3 +1,4 @@
+import { cancelBtnHtml, primaryBtnHtml, modalBtnHtml } from "../../ui/views/button";
 import {
   S,
   CELL,
@@ -1260,9 +1261,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   const renderFooter = () => {
     const el = footerEl();
     if (activeTab === "select" || activeTab === "selected") {
-      el.innerHTML = `<button type="button" class="modal-btn" data-cancel>取消</button>
-        <button type="button" class="modal-btn" id="rw-clear-all">清空已选</button>
-        <button type="button" class="modal-btn primary" data-ok>保存菜谱</button>`;
+      el.innerHTML = `${cancelBtnHtml()} ${modalBtnHtml("清空已选", "modal-btn", { id: "rw-clear-all" })} ${primaryBtnHtml("保存菜谱")}`;
       document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
       document.getElementById("rw-clear-all")?.addEventListener("click", () => {
         selected.clear();
@@ -1288,17 +1287,15 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         }
       });
     } else if (activeTab === "optional") {
-      el.innerHTML = `<button type="button" class="modal-btn" data-cancel>关闭</button>
-        <button type="button" class="modal-btn primary" id="rw-save-optional">写回 Optional${optionalDirty ? `（${optionalItems.length} 条*）` : `（${optionalItems.length} 条）`}</button>`;
+      el.innerHTML = `${cancelBtnHtml("关闭")} ${modalBtnHtml(`写回 Optional${optionalDirty ? `（${optionalItems.length} 条*）` : `（${optionalItems.length} 条）`}`, "modal-btn primary", { id: "rw-save-optional" })}`;
       document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
       document.getElementById("rw-save-optional")?.addEventListener("click", doSaveOptional);
     } else if (activeTab === "matchlist") {
-      el.innerHTML = `<button type="button" class="modal-btn" data-cancel>关闭</button>
-        <button type="button" class="modal-btn primary" id="rw-save-matchlist">写回 Matchlist${matchlistDirty ? `（${matchlistKeys.size} 个*）` : `（${matchlistKeys.size} 个）`}</button>`;
+      el.innerHTML = `${cancelBtnHtml("关闭")} ${modalBtnHtml(`写回 Matchlist${matchlistDirty ? `（${matchlistKeys.size} 个*）` : `（${matchlistKeys.size} 个）`}`, "modal-btn primary", { id: "rw-save-matchlist" })}`;
       document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
       document.getElementById("rw-save-matchlist")?.addEventListener("click", doSaveMatchlist);
     } else {
-      el.innerHTML = `<button type="button" class="modal-btn" data-cancel>关闭</button>`;
+      el.innerHTML = `${cancelBtnHtml("关闭")}`;
       document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
     }
   };

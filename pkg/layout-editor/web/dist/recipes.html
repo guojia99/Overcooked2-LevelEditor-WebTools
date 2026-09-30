@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>菜谱清单列表 · OC2 关卡编辑器</title>
     <link rel="icon" type="image/png" href="/icon.png" />
-    <script type="module" crossorigin src="/assets/recipes-BVsMi489.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/version-2E74eDyL.js">
-    <link rel="stylesheet" crossorigin href="/assets/version-ClGfMUNW.css">
+    <script>
+      (function () {
+        try {
+          var v = localStorage.getItem("oc2-ui-theme");
+          var t =
+            v === "pink" || v === "sky-blue" || v === "white" ? v : "black-gold";
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = "black-gold";
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/recipes-DWXbq7EX.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/version-4an3e6dy.js">
+    <link rel="stylesheet" crossorigin href="/assets/version-DyNbSqlK.css">
   </head>
   <body>
     <div id="app"></div>

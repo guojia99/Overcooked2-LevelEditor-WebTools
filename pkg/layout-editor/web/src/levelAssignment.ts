@@ -9,6 +9,7 @@
  *  - 未分配仅提醒不阻止保存；默认为空时汇总页不展示分工区块。
  *  - 导出：单模式 PNG / 已配置模式合成一张长图（离屏舞台 + DOM 快照导出引擎）。 */
 import * as api from "./api";
+import { mBtnHtml } from "./ui/views/button";
 import type {
   AssignmentMode,
   AssignmentPlayer,
@@ -209,11 +210,11 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
   app.innerHTML = `
     ${navHtml("manage")}
     <div class="manage-bar">
-      ${backLabel ? `<button class="m-btn" id="m-back">← ${esc(backLabel)}</button>` : ""}
+      ${backLabel ? mBtnHtml(`← ${esc(backLabel)}`, "default", { id: "m-back" }) : ""}
       <h1 class="m-title">${esc(title)}</h1>
       <span class="status" id="m-status"></span>
       <span style="flex:1"></span>
-      <button class="m-btn" id="m-reload" title="触发 Unity Reload Pseudo Assets">↻ Reload</button>
+      ${mBtnHtml("↻ Reload", "default", { id: "m-reload", title: "触发 Unity Reload Pseudo Assets" })}
     </div>
     <div class="manage-content" id="manage-content"></div>
   `;
@@ -579,11 +580,11 @@ export async function renderLevelAssignment(
     <div class="as-toolbar">
       <div class="as-tabs" id="as-tabs"></div>
       <div class="as-actions">
-        <button type="button" class="m-btn" id="as-export-one" title="导出当前模式的分工图">🖼 导出当前</button>
-        <button type="button" class="m-btn" id="as-export-all" title="已配置的模式竖向拼成一张长图">🖼 导出全部（长图）</button>
+        ${mBtnHtml("🖼 导出当前", "default", { id: "as-export-one", title: "导出当前模式的分工图" })}
+        ${mBtnHtml("🖼 导出全部（长图）", "default", { id: "as-export-all", title: "已配置的模式竖向拼成一张长图" })}
         ${exportScaleSelectHtml("as-export-scale")}
-        <button type="button" class="m-btn" id="as-clear">🗑 清空配置</button>
-        <button type="button" class="m-btn primary" id="as-save">💾 保存</button>
+        ${mBtnHtml("🗑 清空配置", "default", { id: "as-clear" })}
+        ${mBtnHtml("💾 保存", "primary", { id: "as-save" })}
       </div>
     </div>
     <div class="as-hint" id="as-hint"></div>

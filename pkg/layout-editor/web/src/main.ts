@@ -1,9 +1,16 @@
+import "./styles/tokens.css";
 import "./style.css";
 import "./recipeList.css";
+import { initTheme } from "./theme";
 import { dom, buildLayoutDom, ROUTE, MANAGE_ACTIVE, DEPENDENCIES_ACTIVE, ASSIGNMENT_ACTIVE, CUSTOM_RECIPES_ACTIVE, BURGER_MAKER_ACTIVE, FILLING_MAKER_ACTIVE, GUIDE_ACTIVE, GUIDE_PAGE_ID } from "./editor/dom";
 import { init } from "./editor/init";
 import { setRedraw } from "./editor/iconCaches";
 import { setRefreshHooks, draw } from "./editor/render";
+
+initTheme();
+document.addEventListener("oc2-theme-change", () => {
+  if (document.getElementById("canvas")) draw();
+});
 import { updateFloorBar } from "./editor/floorPalette";
 import { maybeRefreshSceneItemList } from "./editor/panels";
 import { goManage, renderManageView } from "./levels";

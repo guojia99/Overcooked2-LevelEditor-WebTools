@@ -9,6 +9,7 @@ import { uuid, escHtml } from "./coords";
 import { pushHistory } from "./historyOps";
 import { setStatus } from "./status";
 import { draw } from "./render";
+import { smallBtnHtml, modalBtnHtml } from "../ui/views/button";
 
 /** 触发源类型：Switch 按钮 / PressureSwitch 压力开关。 */
 export function isButtonLinkSource(it: EditorItem): boolean {
@@ -239,12 +240,12 @@ function buttonLinkSectionHtml(item: EditorItem): string {
   return `<p class="trig-hint">每次按压触发下一步动画组；「逐节点」的组每按一次只推进一个事件节点（相同开始时间的事件并行，末尾环回）。启动 / 结束触发器由联动自动管理（无需在动画组里手动设置）。</p>
     <div id="blm-groups" class="trig-list"></div>
      <div class="trig-addrow"><select id="blm-groupadd" class="trig-select"></select>
-       <button type="button" class="btn-small" id="blm-add">添加已有组</button>
-       <button type="button" class="btn-small primary" id="blm-new-group">＋ 新建并编辑</button></div>
+       ${smallBtnHtml("添加已有组", "default", { id: "blm-add" })}
+       ${smallBtnHtml("＋ 新建并编辑", "primary", { id: "blm-new-group" })}</div>
      ${paired ? "" : `<div class="trig-subhead">共轭按钮（同时开/关，任一按压等同）</div>
      <div id="blm-shared" class="trig-list"></div>
      <div class="trig-addrow"><select id="blm-shared-add" class="trig-select"></select>
-       <button type="button" class="btn-small" id="blm-shared-btn">＋ 添加共轭按钮</button></div>`}
+       ${smallBtnHtml("＋ 添加共轭按钮", "default", { id: "blm-shared-btn" })}</div>`}
      <label class="trig-check"><input type="checkbox" id="blm-lock" ${!link || link.lockUntilFinished !== false ? "checked" : ""}/> 动画组完成后才可再按（运行期忽略按压）</label>
      <label class="trig-check"><input type="checkbox" id="blm-simul" ${link?.simultaneous ? "checked" : ""}/> 同按模式：一次按压同时启动全部组（各组独立推进，最快组完成即解锁）</label>
     <label class="trig-field">播放模式 <select id="blm-mode" class="trig-select">
@@ -293,10 +294,10 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
           return `<div class="trig-step"><span class="trig-step-idx">${i + 1}</span>
             <span class="trig-step-label">${escHtml(n)}</span>
             ${advSel}
-            <button type="button" class="btn-small" data-bl-edit="${escHtml(n)}" title="编辑该动画组的成员与时间轴">✎ 编辑</button>
-            <button type="button" class="btn-small blm-mini" data-bl-up="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
-            <button type="button" class="btn-small blm-mini" data-bl-down="${i}" ${i === l.groupNames.length - 1 ? "disabled" : ""}>↓</button>
-            <button type="button" class="btn-small blm-mini" data-bl-del="${i}">移除</button></div>`;
+            ${smallBtnHtml("✎ 编辑", "default", { "data-bl-edit": n, title: "编辑该动画组的成员与时间轴" })}
+            ${modalBtnHtml("↑", "btn-small blm-mini", { "data-bl-up": String(i), ...(i === 0 ? { disabled: "" } : {}) })}
+            ${modalBtnHtml("↓", "btn-small blm-mini", { "data-bl-down": String(i), ...(i === l.groupNames.length - 1 ? { disabled: "" } : {}) })}
+            ${modalBtnHtml("移除", "btn-small blm-mini", { "data-bl-del": String(i) })}</div>`;
         })
         .join("");
       groupsEl.querySelectorAll<HTMLSelectElement>(".blm-adv").forEach((sel) => {
@@ -420,7 +421,7 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
             const it = S.items.find((i) => i.instanceId === id);
             return `<div class="trig-step"><span class="trig-step-idx">🔗</span>
               <span class="trig-step-label">${escHtml(it ? itemLabel(it) : id)}</span>
-              <button type="button" class="btn-small blm-mini" data-unshare="${escHtml(id)}">移除</button></div>`;
+              ${modalBtnHtml("移除", "btn-small blm-mini", { "data-unshare": id })}</div>`;
           })
           .join("")
       : '<p class="trig-hint">无共轭按钮（只有本按钮触发）</p>';
@@ -754,7 +755,7 @@ export function buttonEventsOrchestrateCtxHtml(item: EditorItem, eventHint?: str
     '<p class="ctx-stub-hint">未配置事件组；按压后按「机器 → 事件组 → 动画组」顺序执行，点下方按钮打开编排台。</p>';
   return `<p class="ctx-stub-hint">🎬 ${escHtml(buttonLinkSummaryText(item))}</p>
     ${eventHint ? `<p class="ctx-stub-hint">${eventHint}</p>` : emptyHint}
-    <button type="button" class="ctx-btn ctx-btn-block" id="ctx-trig-config">🎛 打开触发编排…</button>`;
+    ${modalBtnHtml("🎛 打开触发编排…", "ctx-btn ctx-btn-block", { id: "ctx-trig-config" })}`;
 }
 
 /** 右键菜单：共轭/互锁配置 + 动画摘要 + 编排入口（未分 Tab 时整段使用）。 */

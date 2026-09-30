@@ -2,7 +2,17 @@ fileFormatVersion: 2
 guid: d0b352fd440d66e36d23586370022e3e
 ModelImporter:
   serializedVersion: 22
-  fileIDToRecycleName: {}
+  fileIDToRecycleName:
+    100000: default
+    100002: //RootNode
+    100004: Web_IceCream_Chocolate_root
+    400000: default
+    400002: //RootNode
+    400004: Web_IceCream_Chocolate_root
+    2100000: mat_Web_IceCream_Chocolate
+    2300000: default
+    3300000: default
+    4300000: default
   externalObjects: {}
   materials:
     importMaterials: 1

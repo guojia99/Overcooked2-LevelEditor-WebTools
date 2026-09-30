@@ -1,4 +1,13 @@
 import * as api from "./api";
+import {
+  cancelBtnHtml,
+  dangerBtnHtml,
+  linkBtnHtml,
+  mBtnHtml,
+  mCancelBtnHtml,
+  mPrimaryBtnHtml,
+  primaryBtnHtml,
+} from "./ui/views/button";
 import type {
   AudioDirectoryEntry,
   AudioExportManifest,
@@ -189,11 +198,11 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
   app.innerHTML = `
     ${navHtml("manage")}
     <div class="manage-bar">
-      ${backLabel ? `<button class="m-btn" id="m-back">← ${esc(backLabel)}</button>` : ""}
+      ${backLabel ? mBtnHtml(`← ${esc(backLabel)}`, "default", { id: "m-back" }) : ""}
       <h1 class="m-title">${esc(title)}</h1>
       <span class="status" id="m-status"></span>
       <span style="flex:1"></span>
-      <button class="m-btn" id="m-reload" title="触发 Unity Reload Pseudo Assets">↻ Reload</button>
+      ${mBtnHtml("↻ Reload", "default", { id: "m-reload", title: "触发 Unity Reload Pseudo Assets" })}
     </div>
     <div class="manage-content" id="manage-content"></div>
   `;
@@ -233,20 +242,23 @@ async function renderSetList(app: HTMLElement): Promise<void> {
     .map(
       (s) => `
       <div class="m-card">
-        <label class="m-card-check" title="勾选 ≥2 个关卡集后可合并导出为一个 zip">
-          <input type="checkbox" data-check="${esc(s.setName)}"> 合并导出
-        </label>
-        <h3 title="${esc((s.levelSetNameZH || "") + " " + (s.levelSetName || s.setName))}">${esc(s.levelSetNameZH || s.setName)} <span class="muted">(${esc(s.levelSetName || s.setName)})</span></h3>
+        <div class="m-card-head">
+          <h3 title="${esc((s.levelSetNameZH || "") + " " + (s.levelSetName || s.setName))}">${esc(s.levelSetNameZH || s.setName)} <span class="muted">(${esc(s.levelSetName || s.setName)})</span></h3>
+          <label class="m-card-check" title="勾选 ≥2 个关卡集后可合并导出为一个 zip">
+            <input type="checkbox" data-check="${esc(s.setName)}">
+            <span>合并导出</span>
+          </label>
+        </div>
         <div class="m-meta">
           作者：${esc(s.author || "—")}<br>
           版本：${esc(s.version || "—")} · 关卡数：${s.levelCount}<br>
           <span class="muted">${esc(s.setName)}</span>
         </div>
         <div class="m-actions">
-          <button class="m-btn primary" data-open="${esc(s.setName)}">打开</button>
-          <button class="m-btn" data-edit="${esc(s.setName)}">编辑信息</button>
-          <button class="m-btn" data-export="${esc(s.setName)}">导出</button>
-          <button class="m-btn danger" data-del="${esc(s.setName)}">删除</button>
+          ${mBtnHtml("打开", "primary", { "data-open": esc(s.setName) })}
+          ${mBtnHtml("编辑信息", "default", { "data-edit": esc(s.setName) })}
+          ${mBtnHtml("导出", "default", { "data-export": esc(s.setName) })}
+          ${mBtnHtml("删除", "danger", { "data-del": esc(s.setName) })}
         </div>
       </div>`
     )
@@ -254,9 +266,19 @@ async function renderSetList(app: HTMLElement): Promise<void> {
 
   content.innerHTML = `
     <div class="m-actions-row">
-      <button class="m-btn primary" id="new-set">+ 新建关卡集</button>
-      <button class="m-btn" id="export-multi" disabled title="勾选 ≥2 个关卡集后合并导出为一个 zip（OC2DIYLevel/levels/ 下各集目录并列，依赖包只带一份）">📦 合并导出所选 (<span id="export-multi-count">0</span>)</button>
-      <button class="m-btn" id="export-deps" title="单独导出 OC2DIYLevelRuntimeWLoader 依赖包（Loader.dll + 统一运行时 + commonW1/W2）——装一次即可长期复用，只要版本不变">导出依赖包</button>
+      ${mBtnHtml("+ 新建关卡集", "primary", { id: "new-set" })}
+      ${mBtnHtml(
+        "📦 合并导出所选 (",
+        "default",
+        {
+          id: "export-multi",
+          disabled: "",
+          title: "勾选 ≥2 个关卡集后合并导出为一个 zip（OC2DIYLevel/levels/ 下各集目录并列，依赖包只带一份）",
+        },
+        "",
+        `<span id="export-multi-count">0</span>)`
+      )}
+      ${mBtnHtml("导出依赖包", "default", { id: "export-deps", title: "单独导出 OC2DIYLevelRuntimeWLoader 依赖包（Loader.dll + 统一运行时 + commonW1/W2）——装一次即可长期复用，只要版本不变" })}
     </div>
     <div class="m-section-title">关卡集列表</div>
     <div class="m-grid">${cards || '<p class="muted">暂无关卡集</p>'}</div>
@@ -315,7 +337,7 @@ function confirmDeleteSet(app: HTMLElement, s: LevelSetInfo): void {
     `<p>将永久删除关卡集 <b>${esc(display)}</b>（目录 <code>${esc(setName)}</code>）及其所有关卡、场景、资源与 AssetBundle 引用，且<b>不可恢复</b>。</p>
      <p class="modal-hint">为防止误删，请输入关卡集标识 <b>${esc(setName)}</b> 以确认：</p>
      <label class="m-field">确认标识 <input type="text" id="del-set-confirm" autocomplete="off" placeholder="${esc(setName)}"></label>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn danger" data-ok disabled>确认删除</button>`
+    `${mCancelBtnHtml()}${dangerBtnHtml("确认删除", { "data-ok": "", disabled: "" })}`
   );
   const input = document.getElementById("del-set-confirm") as HTMLInputElement | null;
   const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
@@ -408,9 +430,9 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
      <div class="m-section-title">CustomStub 统一运行时</div>
      <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
      <div class="m-actions-row">
-       <button type="button" class="m-btn" id="exp-stub-compile">编译 Runtime DLL</button>
+       ${mBtnHtml("编译 Runtime DLL", "default", { id: "exp-stub-compile" })}
      </div>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>开始导出</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("开始导出")}`
   );
   wireExportStubTools(s.setName);
   const depsChk = document.getElementById("exp-with-deps") as HTMLInputElement | null;
@@ -488,9 +510,9 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
      <div class="m-section-title">CustomStub 统一运行时</div>
      <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
      <div class="m-actions-row">
-       <button type="button" class="m-btn" id="exp-stub-compile">编译 Runtime DLL</button>
+       ${mBtnHtml("编译 Runtime DLL", "default", { id: "exp-stub-compile" })}
      </div>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>开始导出</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("开始导出")}`
   );
   wireExportStubTools(sets[0].setName); // 统一运行时与集无关，任取一个集名查询即可
   const depsChk = document.getElementById("exp-with-deps") as HTMLInputElement | null;
@@ -561,7 +583,7 @@ function confirmExportDeps(app: HTMLElement, sets: LevelSetInfo[]): void {
      <p class="modal-hint">导出前会<b>删除 commonW1/commonW2 旧构建产物并重新打包</b>（杜绝遗留）；两个 common 包<b>无条件全部携带</b>（依赖包通用，不按单关卡判定）。</p>
      <p class="modal-hint">解压到游戏 <code>BepInEx/plugins/</code> 目录即安装。<b>只要版本号不变，装一次即可长期复用</b>——之后更新关卡只需在关卡集上导出（可不带依赖）。</p>
      <p class="modal-hint">需先「编译 Runtime DLL」产出 webcustomstub_runtime。</p>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>导出依赖包</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("导出依赖包")}`
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
@@ -687,7 +709,7 @@ function openCreateSetModal(app: HTMLElement): void {  openModal(
     <label class="m-field">作者 author<input type="text" id="set-author"></label>
     <p class="modal-hint">将在 Assets/LevelSets/&lt;标识&gt;/ 下创建 data/、scenes/ 目录与 LevelSetInfo.asset。</p>
     `,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("创建")}`
   );
   wireIdentInput("set-name");
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
@@ -724,7 +746,7 @@ function openEditSetModal(app: HTMLElement, s: LevelSetInfo): void {
     <label class="m-field">版本 version<input type="text" id="se-version" value="${esc(s.version)}"></label>
     <p class="modal-hint">修改 version 会自动重算 uid（街机大厅检索用）。如需删除整个关卡集，请在列表卡片点击「删除」。</p>
     `,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>保存</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("保存")}`
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
@@ -793,11 +815,11 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
           <span class="muted">第 ${idx + 1} 关 · ${esc(lv.sceneName)} · ${esc(id)}</span>
         </div>
         <div class="m-actions">
-          <button class="m-btn primary" data-edit="${esc(lv.assetPath)}">编辑</button>
-          <button class="m-btn" data-summary="${esc(lv.assetPath)}">📋 汇总</button>
-          <button class="m-btn" data-layout="${esc(lv.sceneAssetPath)}">打开布局</button>
-          <button class="m-btn" data-rename="${esc(id)}" data-rename-scene="${esc(lv.sceneName)}">✏️ 重命名</button>
-          <button class="m-btn danger" data-del="${esc(id)}">删除</button>
+          ${mBtnHtml("编辑", "primary", { "data-edit": esc(lv.assetPath) })}
+          ${mBtnHtml("📋 汇总", "default", { "data-summary": esc(lv.assetPath) })}
+          ${mBtnHtml("打开布局", "default", { "data-layout": esc(lv.sceneAssetPath) })}
+          ${mBtnHtml("✏️ 重命名", "default", { "data-rename": esc(id), "data-rename-scene": esc(lv.sceneName) })}
+          ${mBtnHtml("删除", "danger", { "data-del": esc(id) })}
         </div>
       </div>`;
     })
@@ -805,10 +827,10 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
 
   content.innerHTML = `
     <div class="m-actions-row">
-      <button class="m-btn primary" id="new-level">+ 新建关卡</button>
-      ${levels.length > 1 ? '<button class="m-btn" id="reorder-levels">⇅ 调整顺序</button>' : ""}
-      ${levels.length > 0 ? '<button class="m-btn" id="shots-export">🖼 一键导出关卡截图</button>' : ""}
-      <button class="m-btn" id="set-deps" title="Bundle 依赖分析与 LevelInfoSO.dependencies 编辑">📦 依赖管理</button>
+      ${mBtnHtml("+ 新建关卡", "primary", { id: "new-level" })}
+      ${levels.length > 1 ? mBtnHtml("⇅ 调整顺序", "default", { id: "reorder-levels" }) : ""}
+      ${levels.length > 0 ? mBtnHtml("🖼 一键导出关卡截图", "default", { id: "shots-export" }) : ""}
+      ${mBtnHtml("📦 依赖管理", "default", { id: "set-deps", title: "Bundle 依赖分析与 LevelInfoSO.dependencies 编辑" })}
       <span class="muted">当前关卡集：<b>${setDisplay}</b></span>
     </div>
     <div class="m-section-title">关卡</div>
@@ -884,8 +906,8 @@ function openReorderModal(app: HTMLElement, setName: string, levels: LevelSummar
           <div class="m-row-sub">${esc(lv.sceneName)} · ${esc(id)}</div>
         </div>
         <span class="m-reorder-btns">
-          <button type="button" class="m-btn" data-rup title="上移一位">↑</button>
-          <button type="button" class="m-btn" data-rdown title="下移一位">↓</button>
+          ${mBtnHtml("↑", "default", { "data-rup": "", title: "上移一位" })}
+          ${mBtnHtml("↓", "default", { "data-rdown": "", title: "下移一位" })}
         </span>
       </div>`;
     })
@@ -897,8 +919,7 @@ function openReorderModal(app: HTMLElement, setName: string, levels: LevelSummar
     <p class="modal-hint">按住 ⠿ 或整行上下拖拽，调整到满意后点「保存顺序」一次性写入（列表顶部为第 1 关）。</p>
     <div class="modal-scroll"><div class="m-reorder-list" id="reorder-list">${rows}</div></div>
     `,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn primary" data-ok>保存顺序</button>`
+    `${cancelBtnHtml()} ${primaryBtnHtml("保存顺序")}`
   );
 
   const list = document.getElementById("reorder-list")!;
@@ -987,7 +1008,7 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
     <label class="m-field">中文名 levelNameZH<input type="text" id="lv-zh" placeholder="第一关"></label>
     <p class="modal-hint">将自动生成 4 份分数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景到 scenes/&lt;标识&gt;.unity。</p>
     `,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>创建</button>`,
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("创建")}`,
     { closeOnBackdrop: false }
   );
   wireIdentInput("lv-id");
@@ -1035,7 +1056,7 @@ async function confirmDeleteLevel(app: HTMLElement, setName: string, levelId: st
     `<p>将永久删除以下 <b>${paths.length}</b> 个文件/资源（含场景、LevelInfo、分数配置及关卡目录内自定义菜谱/模型），且<b>不可恢复</b>：</p>
      <div class="del-file-list">${fileList}</div>
      <p class="modal-hint">关卡集本身不会被删除。如该关卡已分配 AssetBundle，删除后请重新构建 AssetBundle。</p>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn danger" data-ok>确认删除</button>`
+    `${mCancelBtnHtml()}${dangerBtnHtml("确认删除", { "data-ok": "" })}`
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
@@ -1076,7 +1097,7 @@ function openRenameLevelModal(
       已导出的玩家分发包不会自动更新，改名后需重新导出关卡集。
     </p>
     `,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>确认重命名</button>`,
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("确认重命名")}`,
     { closeOnBackdrop: false }
   );
   wireIdentInput("lv-new-id");
@@ -1128,12 +1149,12 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
 
   content.innerHTML = `
     <div class="m-actions-row">
-      <button class="m-btn" id="btn-layout">打开关卡编辑器</button>
-      <button class="m-btn" id="btn-rename">✏️ 重命名 id</button>
-      <button class="m-btn" id="btn-level-config">📊 关卡配置</button>
-      <button class="m-btn" id="btn-deps">📦 依赖管理</button>
-      <button class="m-btn" id="btn-summary">📋 汇总</button>
-      <button class="m-btn" id="btn-tools-history" title="修复损坏 / 依赖检查 / 测试布局 / 同步布局 + 写回历史对比">🧰 工具与历史</button>
+      ${mBtnHtml("打开关卡编辑器", "default", { id: "btn-layout" })}
+      ${mBtnHtml("✏️ 重命名 id", "default", { id: "btn-rename" })}
+      ${mBtnHtml("📊 关卡配置", "default", { id: "btn-level-config" })}
+      ${mBtnHtml("📦 依赖管理", "default", { id: "btn-deps" })}
+      ${mBtnHtml("📋 汇总", "default", { id: "btn-summary" })}
+      ${mBtnHtml("🧰 工具与历史", "default", { id: "btn-tools-history", title: "修复损坏 / 依赖检查 / 测试布局 / 同步布局 + 写回历史对比" })}
     </div>
 
     <div class="m-block">
@@ -1151,7 +1172,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
         <p class="modal-hint">Bundle 依赖（<code>dependencies</code>）请在本页 <b>📦 依赖管理</b> 按钮中编辑。当前共 ${(detail.dependencies || []).length} 项。</p>
       </div>
       <div class="m-actions-row">
-        <button class="m-btn primary" id="save-info">保存基础信息</button>
+        ${mBtnHtml("保存基础信息", "primary", { id: "save-info" })}
       </div>
     </div>
 
@@ -1172,8 +1193,12 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
             <input type="range" id="sumbg-dim" min="0" max="90" step="5" value="${Math.round((detail.summaryBgDim ?? 0.35) * 100)}">
           </label>
           <div class="m-actions-row">
-            <button class="m-btn primary" id="sumbg-save">保存背景图</button>
-            <button class="m-btn" id="sumbg-clear" ${detail.summaryBgPath ? "" : "disabled"}>清除</button>
+            ${mBtnHtml("保存背景图", "primary", { id: "sumbg-save" })}
+            ${mBtnHtml(
+              "清除",
+              "default",
+              detail.summaryBgPath ? { id: "sumbg-clear" } : { id: "sumbg-clear", disabled: "" }
+            )}
             <span class="status" id="sumbg-status"></span>
           </div>
         </div>
@@ -1397,31 +1422,31 @@ export function openToolsHistoryModal(detail: LevelDetail, opts?: ToolsHistoryOp
     </div>
     <div id="wb-tools" class="wb-pane">
       <div class="wb-tool-row">
-        <button type="button" class="m-btn" id="wb-repair">🔧 修复损坏</button>
+        ${mBtnHtml("🔧 修复损坏", "default", { id: "wb-repair" })}
         <div class="muted">移除该关卡场景中源预制件缺失的损坏实例（pseudoPrefabSO 空引用报错）。</div>
       </div>
       <div class="wb-tool-row">
-        <button type="button" class="m-btn" id="wb-deps">🩺 依赖检查</button>
+        ${mBtnHtml("🩺 依赖检查", "default", { id: "wb-deps" })}
         <div class="muted">检查后端服务 / Web 构建 / 菜谱库 / bundle / 音频等环境依赖是否就绪。</div>
       </div>
       <div class="wb-tool-row">
-        <button type="button" class="m-btn" id="wb-test">🧪 测试布局</button>
+        ${mBtnHtml("🧪 测试布局", "default", { id: "wb-test" })}
         <div class="muted">打开布局编辑器并一键生成 30×16 测试沙盘（全部食材箱 + 核心层道具，写回后生效）。</div>
       </div>
       <div class="wb-tool-row">
-        <button type="button" class="m-btn" id="wb-sync">📥 同步布局</button>
+        ${mBtnHtml("📥 同步布局", "default", { id: "wb-sync" })}
         <div class="muted">打开布局编辑器，从其他关卡复制道具、地板与背景主题（写回后生效）。</div>
       </div>
       <p class="modal-hint" id="wb-tool-status"></p>
     </div>
     <div id="wb-history" class="wb-pane" style="display:none">
       <div class="wb-hist-toolbar">
-        <button type="button" class="m-btn small" id="wb-refresh">↻ 刷新</button>
+        ${mBtnHtml("↻ 刷新", "small", { id: "wb-refresh" })}
         <span class="muted">每次写回自动缓存最近 15 条记录（场景/Info 前后快照 + 变动差异）</span>
       </div>
       <div id="wb-hist-body" class="modal-scroll"><p class="muted">加载中…</p></div>
     </div>`,
-    `<button type="button" class="modal-btn" data-cancel>关闭</button>`
+    `${cancelBtnHtml("关闭")}`
   );
   // 大弹窗：宽幅 + 高占满（modal-body 自身滚动）。
   document.querySelector("#modal-root .modal-panel")?.classList.add("wide", "wb-xl");
@@ -1740,16 +1765,34 @@ async function showHistoryDetail(
   const restoreBar = opts?.onRestore
     ? `
     <div class="wb-restore-bar">
-      <button type="button" class="m-btn small" data-restore="before" ${
+      ${mBtnHtml(
+        "↩️ 撤销这次操作",
+        "small",
         detail.canRestoreBefore
-          ? 'title="回到这次操作开始之前的状态（相当于撤销这次修改）"'
-          : 'disabled title="这条记录没有这一侧的完整布局（旧版记录或纯信息修改），无法恢复"'
-      }>↩️ 撤销这次操作</button>
-      <button type="button" class="m-btn small" data-restore="after" ${
+          ? {
+              "data-restore": "before",
+              title: "回到这次操作开始之前的状态（相当于撤销这次修改）",
+            }
+          : {
+              "data-restore": "before",
+              disabled: "",
+              title: "这条记录没有这一侧的完整布局（旧版记录或纯信息修改），无法恢复",
+            }
+      )}
+      ${mBtnHtml(
+        "🕘 回到操作完成时",
+        "small",
         detail.canRestoreAfter
-          ? 'title="回到这次操作刚完成时的样子（之后又改过的话，可用来找回当时的状态）"'
-          : 'disabled title="这条记录没有这一侧的完整布局（旧版记录或纯信息修改），无法恢复"'
-      }>🕘 回到操作完成时</button>
+          ? {
+              "data-restore": "after",
+              title: "回到这次操作刚完成时的样子（之后又改过的话，可用来找回当时的状态）",
+            }
+          : {
+              "data-restore": "after",
+              disabled: "",
+              title: "这条记录没有这一侧的完整布局（旧版记录或纯信息修改），无法恢复",
+            }
+      )}
       <span class="muted">恢复 = 把当时的关卡布局放回画布（属于未保存修改，Ctrl+Z 可撤回）；再点「💾 写回 Unity」才会写入场景</span>
     </div>`
     : "";
@@ -1757,7 +1800,7 @@ async function showHistoryDetail(
     ? '<p class="modal-hint muted">如需把该快照恢复到画布，请在布局编辑器工具栏的「🧰 工具与历史」中操作。</p>'
     : "";
   body.innerHTML = `
-    <button type="button" class="m-btn small" id="wb-back">← 返回列表</button>
+    ${mBtnHtml("← 返回列表", "small", { id: "wb-back" })}
     ${restoreBar}
     ${renderHistoryDetail(detail)}
     ${manageHint}`;
@@ -1944,13 +1987,13 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
   content.innerHTML = `
     <div class="m-actions-row">
       <div class="rl-view-switch" id="sum-view-switch">
-        <button type="button" class="m-btn rl-view-btn${summaryView === "all" ? " active" : ""}" data-sum-view="all">📋 全部菜谱</button>
-        <button type="button" class="m-btn rl-view-btn${summaryView === "assignment" ? " active" : ""}" data-sum-view="assignment">🧑‍🍳 分工模式</button>
+        ${mBtnHtml("📋 全部菜谱", "default", { "data-sum-view": "all" }, `rl-view-btn${summaryView === "all" ? " active" : ""}`)}
+        ${mBtnHtml("🧑‍🍳 分工模式", "default", { "data-sum-view": "assignment" }, `rl-view-btn${summaryView === "assignment" ? " active" : ""}`)}
       </div>
-      <button class="m-btn primary" id="sum-export">🖼 一键导出图片</button>
+      ${mBtnHtml("🖼 一键导出图片", "primary", { id: "sum-export" })}
       ${exportScaleSelectHtml("sum-export-scale")}
-      <button class="m-btn" id="sum-readme-edit">📝 ${readmeHtml ? "编辑说明" : "添加说明"}</button>
-      <button class="m-btn" id="sum-assignment-open" title="在分工模式页编辑双人/三人/四人的菜谱分配">✏️ 编辑分工</button>
+      ${mBtnHtml(`📝 ${readmeHtml ? "编辑说明" : "添加说明"}`, "default", { id: "sum-readme-edit" })}
+      ${mBtnHtml("✏️ 编辑分工", "default", { id: "sum-assignment-open", title: "在分工模式页编辑双人/三人/四人的菜谱分配" })}
       <span class="status" id="sum-status"></span>
     </div>
     <div class="sum-page${bgStyle ? " has-bg" : ""}" id="sum-node"${bgStyle ? ` style="${esc(bgStyle)}"` : ""}></div>
@@ -1971,7 +2014,7 @@ export async function renderLevelSummary(app: HTMLElement, setName: string, asse
     <section class="sum-assignment" id="sum-assignment">
       <h2 class="sum-as-title">🧑‍🍳 菜谱分工</h2>
       <p class="muted">尚未配置分工。可在分工模式页为双人/三人/四人分别分配菜谱。</p>
-      <div class="m-actions-row"><button class="m-btn primary" id="sum-as-empty-go">🧑‍🍳 去分工模式</button></div>
+      <div class="m-actions-row">${mBtnHtml("🧑‍🍳 去分工模式", "primary", { id: "sum-as-empty-go" })}</div>
     </section>`;
 
   const statusLine = (): string => {
@@ -2147,7 +2190,7 @@ export async function openConfigTabsModal(
      </div>
      <div data-lpane="score">
        <div class="cfg-ai-bar">
-          <button type="button" class="m-btn primary" id="cfg-ai-fill">✨ 一键定分</button>
+          ${mBtnHtml("✨ 一键定分", "primary", { id: "cfg-ai-fill" })}
           <label class="m-field cfg-round-all">关卡时长(秒)<input type="number" id="cfg-roundTime-all" step="10" min="30" value="${defaultRoundTime}"></label>
           <span class="muted small">修改时长后点击「一键定分」重新修订；定分会同步修正订单超时 / 间隔 / 回盘</span>
        </div>
@@ -2183,7 +2226,7 @@ export async function openConfigTabsModal(
      <div data-lpane="shot" style="display:none">
        ${screenshotPaneHtml(detail)}
      </div>`,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>保存全部</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("保存全部")}`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
 
@@ -2855,9 +2898,9 @@ export async function openAudioModal(
 
     <!-- === TAB: 检查 === -->
     <div class="au-pane" data-pane="check" ${defaultTab === "check" ? "" : 'style="display:none"'}>
-      <div class="modal-actions"><button type="button" class="m-btn small" id="au-apply-rec">✨ 应用主题推荐</button> <span class="muted small">${recHint}</span></div>
+      <div class="modal-actions">${mBtnHtml("✨ 应用主题推荐", "small", { id: "au-apply-rec" })} <span class="muted small">${recHint}</span></div>
 
-      <p class="modal-hint" style="margin-top:8px">覆盖检查${allGapsCount ? ` · <span class="dep-miss">有 ${allGapsCount} 处缺失</span>` : ""} <button type="button" class="link-btn" id="au-fix-gaps" ${allGapsCount ? "" : "disabled"}>添加所有缺失</button></p>
+      <p class="modal-hint" style="margin-top:8px">覆盖检查${allGapsCount ? ` · <span class="dep-miss">有 ${allGapsCount} 处缺失</span>` : ""} ${linkBtnHtml("添加所有缺失", allGapsCount ? { id: "au-fix-gaps" } : { id: "au-fix-gaps", disabled: "" })}</p>
       <div class="dep-box">${gapHtml || itemGapHtml ? (gapHtml + itemGapHtml) : '<div class="dep-ok">所有主题与物品音频均已覆盖。</div>'}</div>
     </div>
 
@@ -2867,7 +2910,7 @@ export async function openAudioModal(
         <label class="m-field">关卡 BGM · 原版曲库 (InLevelMusicSO)<select id="au-music">${bgmOptHtml}</select></label>
         <div id="au-music-warn" class="dep-warn dep-miss" style="display:none"></div>
         <label class="m-field">死亡特效 (OnDeathEffectSO)<select id="au-death">${deathOptHtml}</select>
-          <span class="muted small">快捷：<button type="button" class="link-btn" data-death-theme="water">水面</button> / <button type="button" class="link-btn" data-death-theme="goo">黏液</button></span>
+          <span class="muted small">快捷：${linkBtnHtml("水面", { "data-death-theme": "water" })} / ${linkBtnHtml("黏液", { "data-death-theme": "goo" })}</span>
         </label>
       </div>
       ${customAvailable ? `
@@ -2878,7 +2921,7 @@ export async function openAudioModal(
           <input type="file" id="au-custom-file" accept=".mp3,.ogg,.wav,.m4a,.mp4,.aac,.flac,.opus,.aiff,audio/*" />
           <input type="text" id="au-custom-name" class="au-name-input" placeholder="名称（字母数字下划线）" />
           <select id="au-custom-preset">${customPresetHtml}</select>
-          <button type="button" class="m-btn small" id="au-custom-encode">⚙️ 压缩</button>
+          ${mBtnHtml("⚙️ 压缩", "small", { id: "au-custom-encode" })}
         </div>
         <div id="au-custom-info" class="muted small"></div>
         <div id="au-custom-result"></div>
@@ -2918,7 +2961,7 @@ export async function openAudioModal(
       <input type="range" class="au-player-progress" id="au-player-progress" min="0" max="100" value="0" step="0.1" />
     </div>
     `,
-    `<button type="button" class="m-btn" data-cancel>取消</button><button type="button" class="m-btn primary" data-ok>保存</button>`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("保存")}`
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
 
@@ -3215,7 +3258,7 @@ export async function openAudioModal(
       const sec = e ? e.lengthSec : cur.customMusicSec || 0;
       el.innerHTML = `<div class="dep-ok">当前使用自定义 BGM：<b>${esc(state.customMusicFile)}</b>（${formatDuration(sec)}）
         <button type="button" class="au-play-btn small" data-custom-play-self title="试听">▶</button>
-        <button type="button" class="link-btn" data-custom-clear>取消使用</button></div>`;
+        ${linkBtnHtml("取消使用", { "data-custom-clear": "" })}</div>`;
       el.querySelector("[data-custom-play-self]")?.addEventListener("click", () => {
         playUrl(
           api.getCustomMusicStreamUrl(customSetName, state.customMusicFile),
@@ -3249,8 +3292,8 @@ export async function openAudioModal(
           <span class="au-custom-name">${esc(f.fileName)}</span>
           <span class="muted small">${formatDuration(f.lengthSec)} · ${formatBytes(f.sizeBytes)}</span>
           ${f.used ? '<span class="rec-tag">已引用</span>' : ""}
-          <button type="button" class="m-btn small${active ? "" : " primary"}" data-capply="${esc(f.fileName)}">${active ? "✔ 使用中" : "应用"}</button>
-          <button type="button" class="m-btn small" data-cdel="${esc(f.fileName)}" title="删除">🗑</button>
+          ${mBtnHtml(active ? "✔ 使用中" : "应用", "small", { "data-capply": esc(f.fileName) }, active ? "" : "primary")}
+          ${mBtnHtml("🗑", "small", { "data-cdel": esc(f.fileName), title: "删除" })}
         </div>`;
       })
       .join("");
@@ -3349,8 +3392,8 @@ export async function openAudioModal(
       result.innerHTML = `
         <div class="dep-ok">✅ ${esc(outName)} · ${formatBytes(customSourceFile.size)} → <b>${formatBytes(blob.size)}</b>（${ratio}%）</div>
         <div class="modal-actions">
-          <button type="button" class="m-btn small" id="au-custom-preview">▶ 试听压缩结果</button>
-          <button type="button" class="m-btn small primary" id="au-custom-upload">⬆ 上传并应用</button>
+          ${mBtnHtml("▶ 试听压缩结果", "small", { id: "au-custom-preview" })}
+          ${mBtnHtml("⬆ 上传并应用", "small", { id: "au-custom-upload" }, "primary")}
         </div>`;
       document.getElementById("au-custom-preview")?.addEventListener("click", () => {
         if (customBlobUrl) playUrl(customBlobUrl, `${outName}（本地预览）`, `local:${outName}`);

@@ -1,4 +1,5 @@
 import { S } from "./state";
+import { cancelBtnHtml, modalBtnHtml } from "../ui/views/button";
 import { escHtml } from "./coords";
 import { pushHistory } from "./historyOps";
 import { draw } from "./render";
@@ -59,7 +60,7 @@ export function openCameraLightModal(): void {
             <button type="button" class="cl-pos-btn cl-pos-right" data-cam-pos="right" title="X +0.1（长按连续调整）">→</button>
             <button type="button" class="cl-pos-btn cl-pos-down" data-cam-pos="down" title="Z −0.1（长按连续调整）">↓</button>
           </span>
-          <button type="button" class="modal-btn" id="cl-cam-pos-reset" ${S.cameraPosOrigin ? "" : "disabled"} title="恢复场景导出时的相机位置">重置位置</button>
+          ${modalBtnHtml("重置位置", "modal-btn", { id: "cl-cam-pos-reset", ...(S.cameraPosOrigin ? {} : { disabled: "" }), title: "恢复场景导出时的相机位置" })}
         </span>
       </div>
       <p class="modal-hint cl-cam-snap"></p>`
@@ -71,13 +72,13 @@ export function openCameraLightModal(): void {
     <h3 class="cl-section-title">💡 灯光（Art/Lights）</h3>
     <div class="modal-scroll cl-light-list" id="cl-light-list"></div>
     <div class="cl-add-row">
-      <button type="button" class="modal-btn" id="cl-add-light">＋ 新建灯光</button>
+      ${modalBtnHtml("＋ 新建灯光", "modal-btn", { id: "cl-add-light" })}
     </div>`;
 
   openModal(
     "相机 / 灯光",
     body,
-    `<button type="button" class="modal-btn" data-cancel>关闭</button>`
+    `${cancelBtnHtml("关闭")}`
   );
   document.querySelector("#modal-root [data-cancel]")?.addEventListener("click", closeModal);
 
@@ -278,7 +279,7 @@ function renderLightList(listEl: HTMLElement): void {
           <span class="cl-light-name" title="${escHtml(l.hierarchyPath)}">${escHtml(l.displayName || l.hierarchyPath)}</span>
           <code class="muted">${escHtml(l.hierarchyPath)}</code>
           <label class="modal-check inline"><input type="checkbox" data-l-enable ${l.enabled ? "checked" : ""} /> 启用</label>
-          <button type="button" class="modal-btn cl-light-del" data-l-del title="删除该灯光（写回后从场景移除）">🗑</button>
+          ${modalBtnHtml("🗑", "modal-btn cl-light-del", { "data-l-del": "", title: "删除该灯光（写回后从场景移除）" })}
         </div>
         <div class="cl-light-ctrl">
           <label class="cl-ctrl">颜色<input type="color" data-l-color value="${normalizeHex(l.color, "#ffffff")}" /></label>

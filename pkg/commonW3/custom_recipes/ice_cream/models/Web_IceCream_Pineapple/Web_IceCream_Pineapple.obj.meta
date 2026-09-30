@@ -2,7 +2,17 @@ fileFormatVersion: 2
 guid: 5325faa552614230fc53a15a5c0d6d3c
 ModelImporter:
   serializedVersion: 22
-  fileIDToRecycleName: {}
+  fileIDToRecycleName:
+    100000: default
+    100002: //RootNode
+    100004: Web_IceCream_Pineapple_root
+    400000: default
+    400002: //RootNode
+    400004: Web_IceCream_Pineapple_root
+    2100000: mat_Web_IceCream_Pineapple
+    2300000: default
+    3300000: default
+    4300000: default
   externalObjects: {}
   materials:
     importMaterials: 1

@@ -17,6 +17,7 @@ import {
   EditorItem
 } from "./state";
 import { dom } from "./dom";
+import { getCanvasVoidBg } from "../theme";
 import {
   isActiveItemLayer,
   itemCategoryOf,
@@ -433,7 +434,7 @@ export function draw() {
     onFloor && S.bgThemeKey === "void" && isHexColor(S.cameraInfo?.backgroundColor)
       ? S.cameraInfo!.backgroundColor
       : null;
-  dom.ctx.fillStyle = camVoidBg ?? (onFloor ? theme.fill : "#1a1d23");
+  dom.ctx.fillStyle = camVoidBg ?? (onFloor ? theme.fill : getCanvasVoidBg());
   dom.ctx.fillRect(0, 0, w, h);
 
   // 相机抖动：世界层整体偏移（网格 / 地板 / 物品 / 相机视野全部随之）。

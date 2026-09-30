@@ -15,6 +15,7 @@ import {
   closeModal,
   openModal
 } from "../modals";
+import { modalBtnHtml, mBtnHtml } from "../ui/views/button";
 import {
   showBusy,
   hideBusy
@@ -284,7 +285,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   // 染色地板: pick a tint color (replaces the material list).
   const colorBlock = `<div class="mat-pick-title">染色（染色地板 = 实心 Plane + 纯色）</div>
      <div class="floor-edit-row"><label>颜色 <input type="color" id="fe-tint" value="${f.tintColor ?? "#ffffff"}"></label>
-     <button type="button" class="m-btn" id="fe-tint-clear" style="font-size:11px;padding:3px 8px;">清除颜色</button>
+     ${mBtnHtml("清除颜色", "default", { id: "fe-tint-clear", style: "font-size:11px;padding:3px 8px;" })}
      <span class="muted" style="align-self:center;font-size:11px">实时生效</span></div>`;
 
   // 图片地板: upload an image + choose tile/stretch. Image data goes to the
@@ -319,7 +320,7 @@ export function openFloorEditorModal(f: EditorFloor) {
      </div>
      <div class="floor-edit-row">
        <input type="file" id="fe-img-file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="font-size:11px;flex:1"/>
-       <button type="button" class="m-btn" id="fe-img-upload" style="font-size:11px;padding:3px 8px;">上传并应用</button>
+       ${mBtnHtml("上传并应用", "default", { id: "fe-img-upload", style: "font-size:11px;padding:3px 8px;" })}
      </div>
       <p class="modal-hint">全部铺开/平铺按宽高自动计算 · <b>透视贴合</b>：图片按游戏相机（16:9）透视预变形，画面里显示为原样、四角对齐视野四角，宽高只决定可行走碰撞盒，坐标/缩放无效（写回时按相机重新烘焙）· 写回后生效</p>`;
 
@@ -372,7 +373,7 @@ export function openFloorEditorModal(f: EditorFloor) {
     ${materialBlock}
     <p class="modal-hint">提示：拖四角缩放 · 宽高输入即时生效 · 左键拖动移动 · Esc 关闭</p>
   `;
-  const footer = `<button type="button" class="modal-btn" data-fm-copy>复制</button><button type="button" class="modal-btn" data-fm-dup>克隆</button><button type="button" class="modal-btn" data-fm-delete>删除地板</button><button type="button" class="modal-btn primary" data-fm-close>关闭</button>`;
+  const footer = `${modalBtnHtml("复制", "modal-btn", { "data-fm-copy": "" })}${modalBtnHtml("克隆", "modal-btn", { "data-fm-dup": "" })}${modalBtnHtml("删除地板", "modal-btn", { "data-fm-delete": "" })}${modalBtnHtml("关闭", "modal-btn primary", { "data-fm-close": "" })}`;
 
   openModal(`${typeLabel} · ${f.displayName}`, body, footer);
   document.querySelector(".modal-panel")?.classList.add("wide", "floor-edit");

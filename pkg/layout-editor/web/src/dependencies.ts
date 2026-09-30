@@ -1,4 +1,5 @@
 import * as api from "./api";
+import { mBtnHtml } from "./ui/views/button";
 import type { AudioKnowledge, BundleAnalysis, LevelDetail, LevelSummary } from "./types";
 import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
@@ -113,11 +114,11 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
   app.innerHTML = `
     ${navHtml("manage")}
     <div class="manage-bar">
-      ${backLabel ? `<button class="m-btn" id="dep-back">← ${esc(backLabel)}</button>` : ""}
+      ${backLabel ? mBtnHtml(`← ${esc(backLabel)}`, "default", { id: "dep-back" }) : ""}
       <h1 class="m-title">${esc(title)}</h1>
       <span class="status" id="dep-status"></span>
       <span style="flex:1"></span>
-      <button class="m-btn" id="dep-reload" title="触发 Unity Reload Pseudo Assets">↻ Reload</button>
+      ${mBtnHtml("↻ Reload", "default", { id: "dep-reload", title: "触发 Unity Reload Pseudo Assets" })}
     </div>
     <div class="manage-content" id="dep-content"></div>
   `;
@@ -182,8 +183,8 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
         <h3>${esc(title)}</h3>
         <div class="m-meta muted">${esc(lv.sceneName)} · ${esc(id)}</div>
         <div class="m-actions">
-          <button class="m-btn primary" data-deps="${esc(lv.assetPath)}">管理依赖</button>
-          ${lv.sceneAssetPath ? `<button class="m-btn" data-layout="${esc(lv.sceneAssetPath)}">打开布局</button>` : ""}
+          ${mBtnHtml("管理依赖", "primary", { "data-deps": esc(lv.assetPath) })}
+          ${lv.sceneAssetPath ? mBtnHtml("打开布局", "default", { "data-layout": esc(lv.sceneAssetPath) }) : ""}
         </div>
       </div>`;
     })
@@ -237,8 +238,12 @@ async function renderDepsDetail(app: HTMLElement, setName: string, assetPath: st
 
   content.innerHTML = `
     <div class="m-actions-row">
-      <button class="m-btn" id="dep-refresh">↻ 刷新分析</button>
-      <button class="m-btn" id="dep-open-layout" ${detail.sceneAssetPath ? "" : "disabled"}>打开关卡编辑器</button>
+      ${mBtnHtml("↻ 刷新分析", "default", { id: "dep-refresh" })}
+      ${mBtnHtml(
+        "打开关卡编辑器",
+        "default",
+        detail.sceneAssetPath ? { id: "dep-open-layout" } : { id: "dep-open-layout", disabled: "" }
+      )}
     </div>
     <div class="m-block">
       <h3>Bundle 分析 · ${esc(title)}</h3>
@@ -251,7 +256,7 @@ async function renderDepsDetail(app: HTMLElement, setName: string, assetPath: st
         <textarea id="dep-textarea" rows="12">${esc(depsText)}</textarea>
       </label>
       <div class="m-actions-row">
-        <button class="m-btn primary" id="dep-save">保存依赖</button>
+        ${mBtnHtml("保存依赖", "primary", { id: "dep-save" })}
       </div>
     </div>
   `;

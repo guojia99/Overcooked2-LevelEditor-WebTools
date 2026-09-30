@@ -2,6 +2,7 @@
  * burgerMaker.ts —— 汉堡组装工作台（/custom-recipes/burger-maker）。
  */
 import { navHtml, wireNav } from "./nav";
+import { chipBtnHtml, mBtnHtml } from "./ui/views/button";
 import { closeModal, openModal } from "./modals";
 import * as api from "./api";
 import { showBusy, hideBusy } from "./busy";
@@ -509,7 +510,16 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
             ? ` <span class="bm-badge" title="复合层：这一层展开为 ${ingN} 个食材，按 ${ingN} 计入食材数与 ${FILLING_SOFT_LIMIT} 上限">×${ingN} 食材</span>`
             : "";
         const eye = c?.previewable
-          ? `<button class="m-btn small bm-layer-preview" data-preview-path="${esc(c.assetPath)}" data-preview-name="${esc(c.nameZh)}" title="3D 预览这一层的模型">👁</button>`
+          ? mBtnHtml(
+              "👁",
+              "small",
+              {
+                "data-preview-path": esc(c.assetPath),
+                "data-preview-name": esc(c.nameZh),
+                title: "3D 预览这一层的模型",
+              },
+              "bm-layer-preview"
+            )
           : "";
         return `<div class="bm-layer" draggable="true" data-i="${i}">
           <span class="bm-drag-handle" title="按住拖动排序">⋮⋮</span>
@@ -518,9 +528,23 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
           <span class="bm-layer-name">${esc(candidateName(cands, id))}${bunTag}${warn}${dlc}${ingTag}
             <span class="muted small">${esc(candidateEn(cands, id))} · ${esc(id)}</span></span>
           ${eye}
-          <button class="m-btn small bm-up" data-i="${i}" ${i === 0 ? "disabled" : ""} title="下移">↓</button>
-          <button class="m-btn small bm-down" data-i="${i}" ${i === state.stack.length - 1 ? "disabled" : ""} title="上移">↑</button>
-          <button class="m-btn small danger bm-remove" data-i="${i}">×</button>
+          ${mBtnHtml(
+            "↓",
+            "small",
+            i === 0
+              ? { "data-i": String(i), disabled: "", title: "下移" }
+              : { "data-i": String(i), title: "下移" },
+            "bm-up"
+          )}
+          ${mBtnHtml(
+            "↑",
+            "small",
+            i === state.stack.length - 1
+              ? { "data-i": String(i), disabled: "", title: "上移" }
+              : { "data-i": String(i), title: "上移" },
+            "bm-down"
+          )}
+          ${mBtnHtml("×", "small", { "data-i": String(i) }, "danger bm-remove")}
         </div>`;
       })
       .join("");
@@ -593,7 +617,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
       ⚠️ 食材已有 <b>${n}</b> 个（含汉堡面包，复合层按叶食材数计入），超过推荐上限 <b>${FILLING_SOFT_LIMIT}</b>。
       游戏订单 UI 的食材图标是横向排布的，食材过多会导致<b>图标溢出卡片、订单条被撑爆</b>。
       仍可继续添加（不设硬上限），但请自行确认游戏内表现。
-      <button type="button" class="m-btn small" id="bm-show-overflow">📷 查看超规格实拍</button>
+      ${mBtnHtml("📷 查看超规格实拍", "small", { id: "bm-show-overflow" })}
     </div>`;
   }
 
@@ -608,7 +632,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
         <img src="/docs/burger-filling-overflow.png" alt="汉堡夹心过多导致订单 UI 溢出的游戏内截图"
              onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('p'),{className:'muted',textContent:'截图未找到：/docs/burger-filling-overflow.png'}))">
       </div>`,
-      `<button type="button" class="m-btn primary" data-cancel>知道了</button>`
+      mBtnHtml("知道了", "primary", { "data-cancel": "" })
     );
     document.querySelector(".modal-panel")?.classList.add("wide");
     document.querySelector("[data-cancel]")?.addEventListener("click", () => closeModal());
@@ -651,7 +675,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
               <img id="bm-icon-preview" class="food-icon" hidden alt="">
             </div>
           </div>
-          <div class="bm-def-row"><span style="flex:1"></span><button class="m-btn primary" id="bm-save">${editing ? "💾 保存修改" : "🍔 生成汉堡菜谱"}</button></div>
+          <div class="bm-def-row"><span style="flex:1"></span>${mBtnHtml(editing ? "💾 保存修改" : "🍔 生成汉堡菜谱", "primary", { id: "bm-save" })}</div>
         </div>
       </details>
     `;
@@ -688,7 +712,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
                 <option value="">选择已有汉堡改层另存…</option>${productOpts}
               </select>
             </label>
-            ${state.loadedProductId ? `<button type="button" class="m-btn small" id="bm-clear-loaded">清除载入</button>` : ""}
+            ${state.loadedProductId ? mBtnHtml("清除载入", "small", { id: "bm-clear-loaded" }) : ""}
           </div>
           <h3 class="bm-section-title">🧾 菜谱卡片</h3>
           <div id="bm-card-preview" class="cr-preview">${renderCardPreview()}</div>
@@ -696,7 +720,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
           <h3 class="bm-section-title">🍔 堆叠编辑</h3>
           <div id="bm-stack-host">${renderStackSection()}</div>
           <div class="bm-actions-row">
-            <button type="button" class="m-btn primary" id="bm-open-cand">+ 添加层</button>
+            ${mBtnHtml("+ 添加层", "primary", { id: "bm-open-cand" })}
           </div>
           <hr class="bm-divider">
           ${renderPropsSection()}
@@ -811,16 +835,27 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
         标了 DLC 徽标的层需要对应匹配表，保存菜谱时后端会自动补上。</p>
        <div class="bm-cand-toolbar">
          <input type="search" id="bm-cand-search" class="rl-search" placeholder="搜索名称 / 英文名 / ID…" autocomplete="off">
-         <button type="button" class="rl-chip-btn bm-cand-filter${candOnlyRecommended ? " active" : ""}" data-filter="rec">仅推荐</button>
-         <button type="button" class="rl-chip-btn bm-cand-filter${candShowModelless ? " active" : ""}" data-filter="modelless" title="放行被默认过滤的候选：无堆叠模型的夹心（游戏里那层看不见），以及全部成品菜（官方 + 自定义）">显示全部候选</button>
+         ${chipBtnHtml("仅推荐", candOnlyRecommended, { "data-filter": "rec" }, "bm-cand-filter")}
+         ${chipBtnHtml(
+           "显示全部候选",
+           candShowModelless,
+           {
+             "data-filter": "modelless",
+             title: "放行被默认过滤的候选：无堆叠模型的夹心（游戏里那层看不见），以及全部成品菜（官方 + 自定义）",
+           },
+           "bm-cand-filter"
+         )}
          <span style="flex:1"></span>
-         <button type="button" class="m-btn primary" id="bm-new-filling" title="在新标签页打开夹心工作台，做好后回来刷新即可选用">🥩 夹心工作台 ↗</button>
+         ${mBtnHtml("🥩 夹心工作台 ↗", "primary", {
+           id: "bm-new-filling",
+           title: "在新标签页打开夹心工作台，做好后回来刷新即可选用",
+         })}
        </div>
        <div class="modal-scroll bm-pick-scroll">
          <div id="bm-cand-list">${renderCandListHtml()}</div>
        </div>`,
       `<span class="muted" id="bm-pick-count">当前堆叠 ${totalIngredientCount()} 食材 · ${state.stack.length} 层</span>
-       <button type="button" class="m-btn primary" data-cancel>完成</button>`
+       ${mBtnHtml("完成", "primary", { "data-cancel": "" })}`
     );
     document.querySelector("[data-cancel]")?.addEventListener("click", () => {
       // 堆叠区在每次 +/- 时已实时刷新，这里不再整页重渲染（会清空成品信息表单）

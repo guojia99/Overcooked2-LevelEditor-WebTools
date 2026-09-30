@@ -16,6 +16,9 @@ layout-editor/web/
 │   ├── autoScore.ts     # 自动评分
 │   ├── api.ts           # API 通信（含菜谱运行时修正）
 │   ├── customRecipes.ts # 自定义菜谱创建/编辑
+│   ├── theme/           # UI 主题（四套：黑金/粉红/天蓝/纯白）
+│   ├── ui/views/        # 结构化按钮/弹窗渲染（ViewFn 管道）
+│   ├── styles/tokens.css# CSS 语义变量 --ui-*
 │   └── ...
 ├── dist/                # **构建产物，禁止直接编辑**
 │   ├── assets/          # 打包后的 JS（如 index-BR0jkxM8.js）
@@ -62,3 +65,17 @@ cd layout-editor/web && npm run dev   # 启动开发服务器（端口 5173）
 ### 静态 JSON 数据同步
 
 `public/*.json` 文件在构建时会复制到 `dist/`。如果编辑了 `public/` 中的 JSON，需要同步更新 `dist/` 中的副本（或直接 `npm run build`）。
+
+### UI 主题与按钮渲染
+
+**新按钮禁止手写 `<button class="modal-btn">`**，必须使用 `ui/views/button.ts` 中的渲染函数（`cancelBtnHtml` / `primaryBtnHtml` / `mBtnHtml` 等），以便主题 ViewFn 统一修正样式。
+
+| 改什么 | 改哪里 |
+|---|---|
+| 新增/修改主题配色 | `styles/tokens.css` + `theme/themes/*.ts` |
+| 新增主题 | 见 `docs/09-前端主题系统.md` §7 四步清单 |
+| 新弹窗/管理页按钮 | `import { … } from "./ui/views/button"`（或 `../ui/views/button`） |
+| UI 外壳颜色 | `style.css` / `recipeList.css` 中用 `var(--ui-*)` |
+| 2D 画布 / 3D 视口颜色 | **不要改** — `itemColors.ts` / `floorColors.ts` / `scene3d/*` |
+
+完整架构说明：[docs/09-前端主题系统.md](../docs/09-前端主题系统.md)

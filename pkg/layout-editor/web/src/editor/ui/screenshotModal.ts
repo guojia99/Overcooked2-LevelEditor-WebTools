@@ -12,6 +12,7 @@ import type { LevelDetail } from "../../types";
 import { showBusy, hideBusy } from "../../busy";
 import { setStatus } from "../status";
 import { uploadScreenshot, imageFloorUrl } from "../../api";
+import { modalBtnHtml, mBtnHtml } from "../../ui/views/button";
 
 /** 裁剪预览画布固定尺寸（不随源图大小变化，避免弹窗缩放/出现滚动条）。 */
 const CANVAS_W = 640;
@@ -46,7 +47,7 @@ export function screenshotPaneHtml(detail: LevelDetail): string {
     ${currentShot}
     <div class="ss-upload-row">
       <input type="file" id="ss-file" accept="image/png,image/jpeg" style="display:none">
-      <button type="button" class="modal-btn primary" id="ss-choose">选择图片</button>
+      ${modalBtnHtml("选择图片", "modal-btn primary", { id: "ss-choose" })}
       <span class="muted ss-file-name" id="ss-file-name"></span>
     </div>
     <div id="ss-crop-wrap" class="ss-crop-wrap" style="display:none">
@@ -60,7 +61,7 @@ export function screenshotPaneHtml(detail: LevelDetail): string {
       </label>
     </div>
     <div class="ss-actions-row">
-      <button type="button" class="m-btn primary" id="ss-upload" disabled>裁剪并上传</button>
+      ${mBtnHtml("裁剪并上传", "primary", { id: "ss-upload", disabled: "" })}
     </div>
     <div class="modal-hint err" id="ss-err" style="display:none"></div>
   `;

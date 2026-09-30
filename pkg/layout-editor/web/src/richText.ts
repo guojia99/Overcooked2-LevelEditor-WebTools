@@ -4,6 +4,7 @@
  *    <a> 仅放行 http(s) href；其余标签剥离全部属性，杜绝事件/样式注入。
  *  - 编辑：contenteditable + document.execCommand（本地工具页足够），粘贴一律转纯文本。 */
 import { closeModal, openModal } from "./modals";
+import { cancelBtnHtml, primaryBtnHtml } from "./ui/views/button";
 
 const ALLOWED_TAGS = new Set([
   "P",
@@ -105,8 +106,7 @@ export function openReadmeEditorModal(initialHtml: string, onSave: (html: string
       .map((t, i) => `<button type="button" class="rt-btn" data-rt-tool="${i}" title="${t.title}">${t.label}</button>`)
       .join("")}</div>
     <div class="rt-editor" id="rt-editor" contenteditable="true" spellcheck="false"></div>`,
-    `<button type="button" class="modal-btn" data-cancel>取消</button>
-     <button type="button" class="modal-btn primary" data-ok>保存</button>`,
+    `${cancelBtnHtml()} ${primaryBtnHtml("保存")}`,
     // 只能经 取消/保存 退出：防误触背景遮罩丢失已编辑内容
     { closeOnBackdrop: false }
   );

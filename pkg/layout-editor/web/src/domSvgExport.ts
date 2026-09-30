@@ -731,7 +731,7 @@ export async function renderNodeToSvg(node: HTMLElement, scale = 1): Promise<Ren
 }
 
 /** 浏览器 canvas 尺寸上限（Chrome：单边 65535、总面积约 268M px）。
- *  长图高倍率超限时会被自动下调，否则 toDataURL 输出空白画布。 */
+ *  长图高倍率超限时会被自动下调，否则光栅化会失败或输出空白图。 */
 const CANVAS_EDGE_MAX = 65535;
 const CANVAS_AREA_MAX = 268435456;
 
@@ -739,6 +739,31 @@ function clampCanvasScale(scale: number, cssW: number, cssH: number): number {
   const byEdge = Math.min(CANVAS_EDGE_MAX / cssW, CANVAS_EDGE_MAX / cssH);
   const byArea = CANVAS_AREA_MAX / (cssW * cssH);
   return Math.floor(Math.min(scale, byEdge, byArea) * 100) / 100;
+}
+
+/** 把 canvas 编码为 PNG 并触发下载。
+ *  必须用 toBlob + Object URL：全量菜谱长图（200+ 张）时 toDataURL 的 base64
+ *  字符串会超出浏览器上限，href 变成空的 `data:,`，下载文件为 0B。 */
+function downloadCanvasPng(canvas: HTMLCanvasElement, fileName: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob || blob.size === 0) {
+        reject(
+          new Error("导出失败：图片过大，浏览器无法编码 PNG。请降低「清晰度」倍率后重试。")
+        );
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      resolve();
+    }, "image/png");
+  });
 }
 
 /** 把一个已渲染的 DOM 节点导出为 PNG（无损）。返回实际使用的倍率
@@ -778,10 +803,7 @@ export async function exportNodePng(
       c2d.fillRect(0, 0, outW, outH);
     }
     c2d.drawImage(img, 0, 0, outW, outH);
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = fileName;
-    a.click();
+    await downloadCanvasPng(canvas, fileName);
     return scale;
   } finally {
     URL.revokeObjectURL(url);
