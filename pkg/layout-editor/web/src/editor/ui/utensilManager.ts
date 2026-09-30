@@ -27,6 +27,7 @@ import {
 import {
   computeUtensilIngredientFill,
   functionalBaseId,
+  utensilIntermediateRecipes,
   type UtensilFillEntry
 } from "../recipeKnowledge";
 import {
@@ -160,8 +161,8 @@ export function openUtensilManager() {
 
   // 按菜谱自动填充：读取当前关卡已选菜谱 → 数据驱动计算各锅具应装的食材
   // （汤料→汤锅、香肠→汤锅、洋葱→煎锅、面糊食材→搅拌碗、面糊节点→炸篮、
-  //  搅拌类→搅拌杯，含 DLC 食材如 dlc07 土豆/西芹；Cooked 型中间产物按其自身
-  //  烹饪步骤节点+叶生食材双填进终锅，如 EggSausage→早餐锅、FriedMeat→煎锅；
+  //  搅拌类→搅拌杯，含 DLC 食材如 dlc07 土豆/西芹；两阶段子菜谱前置锅放生食材
+  //  （汤锅←生米）、终锅填中间产物节点（煎锅←煮米），不把生米写进煎锅；
   //  烧麦/核心松饼这类「搅拌后整锅下终锅」的菜谱，终锅清空、保留原版 lookup），
   //  按功能基础 id 匹配场景锅具（含 DLC 变体），容量按菜谱单份用量；覆盖写入食材列表。
   document.getElementById("utm-auto-fill")?.addEventListener("click", async () => {
@@ -188,7 +189,7 @@ export function openUtensilManager() {
       setStatus("当前关卡未选择菜谱，先在「选择菜谱」里勾选", false);
       return;
     }
-    S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
+    S.intermediatesCache = utensilIntermediateRecipes(recipes);
 
     const fill = computeUtensilIngredientFill(recs);
     if (!fill.size) {

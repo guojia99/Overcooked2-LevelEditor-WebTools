@@ -1,405 +1,405 @@
 ﻿{
-  "schemaVersion": 1,
-  "names": [
-    {
-      "id": "Web_FriedRice_Carrot",
-      "zh": "Web 胡萝卜炒饭",
-      "en": "Web Carrot Fried Rice"
-    },
-    {
-      "id": "Web_FriedRice_CarrotPepperoni",
-      "zh": "Web 胡萝卜香肠炒饭",
-      "en": "Web Carrot Pepperoni Fried Rice"
-    },
-    {
-      "id": "Web_FriedRice_Egg",
-      "zh": "Web 蛋炒饭",
-      "en": "Web Egg Fried Rice"
-    },
-    {
-      "id": "Web_FriedRice_Lettuce",
-      "zh": "Web 生菜炒饭",
-      "en": "Web Lettuce Fried Rice"
-    },
-    {
-      "id": "Web_FriedRice_LettuceCarrot",
-      "zh": "Web 生菜胡萝卜炒饭",
-      "en": "Web Lettuce Carrot Fried Rice"
-    },
-    {
-      "id": "Web_FriedRice_RicePrep",
-      "zh": "Web 炒饭煮米（中间）",
-      "en": "Web Steamed Rice (Intermediate)"
-    },
-    {
-      "id": "Web_IceCream_Banana",
-      "zh": "Web 香蕉冰淇淋",
-      "en": "Web Banana Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Blackberry",
-      "zh": "Web 黑莓冰淇淋",
-      "en": "Web Blackberry Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Blueberry",
-      "zh": "Web 蓝莓冰淇淋",
-      "en": "Web Blueberry Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Chocolate",
-      "zh": "Web 巧克力冰淇淋",
-      "en": "Web Chocolate Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Grape",
-      "zh": "Web 葡萄冰淇淋",
-      "en": "Web Grape Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Melon",
-      "zh": "Web 西瓜冰淇淋",
-      "en": "Web Melon Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Orange",
-      "zh": "Web 橙子冰淇淋",
-      "en": "Web Orange Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Peach",
-      "zh": "Web 桃子冰淇淋",
-      "en": "Web Peach Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Pineapple",
-      "zh": "Web 菠萝冰淇淋",
-      "en": "Web Pineapple Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Raspberry",
-      "zh": "Web 覆盆子冰淇淋",
-      "en": "Web Raspberry Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Strawberry",
-      "zh": "Web 草莓冰淇淋",
-      "en": "Web Strawberry Ice Cream"
-    },
-    {
-      "id": "Web_IceCream_Vanilla",
-      "zh": "Web 香草冰淇淋",
-      "en": "Web Vanilla Ice Cream"
-    },
-    {
-      "id": "Web_LSalad_Corn",
-      "zh": "Web 生菜底玉米沙拉",
-      "en": "Web Corn Salad (Lettuce Base)"
-    },
-    {
-      "id": "Web_LSalad_Cucumber",
-      "zh": "Web 生菜底黄瓜沙拉",
-      "en": "Web Cucumber Salad (Lettuce Base)"
-    },
-    {
-      "id": "Web_LSalad_CucumberCorn",
-      "zh": "Web 生菜底黄瓜玉米沙拉",
-      "en": "Web Cucumber Corn Salad (Lettuce Base)"
-    },
-    {
-      "id": "Web_LSalad_Lettuce",
-      "zh": "Web 纯生菜沙拉",
-      "en": "Web Plain Lettuce Salad"
-    },
-    {
-      "id": "Web_LSalad_Tomato",
-      "zh": "Web 生菜底番茄沙拉",
-      "en": "Web Tomato Salad (Lettuce Base)"
-    },
-    {
-      "id": "Web_LSalad_TomatoCorn",
-      "zh": "Web 生菜底番茄玉米沙拉",
-      "en": "Web Tomato Corn Salad (Lettuce Base)"
-    },
-    {
-      "id": "Web_LSalad_TomatoCucumber",
-      "zh": "Web 生菜底番茄黄瓜沙拉",
-      "en": "Web Tomato Cucumber Salad (Lettuce Base)"
-    },
-    {
-      "id": "Web_LSalad_TomatoCucumberCorn",
-      "zh": "Web 生菜底番茄黄瓜玉米沙拉",
-      "en": "Web Tomato Cucumber Corn Salad (Lettuce Base)"
-    },
-    {
-      "id": "Web_MilkSlush_Banana",
-      "zh": "Web 香蕉牛奶冰沙",
-      "en": "Web Banana Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Blackberry",
-      "zh": "Web 黑莓牛奶冰沙",
-      "en": "Web Blackberry Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Blueberry",
-      "zh": "Web 蓝莓牛奶冰沙",
-      "en": "Web Blueberry Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Grape",
-      "zh": "Web 葡萄牛奶冰沙",
-      "en": "Web Grape Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Melon",
-      "zh": "Web 西瓜牛奶冰沙",
-      "en": "Web Melon Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Orange",
-      "zh": "Web 橙子牛奶冰沙",
-      "en": "Web Orange Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Peach",
-      "zh": "Web 桃子牛奶冰沙",
-      "en": "Web Peach Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Pineapple",
-      "zh": "Web 菠萝牛奶冰沙",
-      "en": "Web Pineapple Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Raspberry",
-      "zh": "Web 覆盆子牛奶冰沙",
-      "en": "Web Raspberry Milk Slush"
-    },
-    {
-      "id": "Web_MilkSlush_Strawberry",
-      "zh": "Web 草莓牛奶冰沙",
-      "en": "Web Strawberry Milk Slush"
-    },
-    {
-      "id": "Web_Pudding_Mix_EggMilk",
-      "zh": "Web 蛋奶糊（中间）",
-      "en": "Web Egg Milk Batter (Intermediate)"
-    },
-    {
-      "id": "Web_Pudding_Mix_EggMilkOrange",
-      "zh": "Web 橙子蛋奶糊（中间）",
-      "en": "Web Orange Egg Milk Batter (Intermediate)"
-    },
-    {
-      "id": "Web_Pudding_Mix_EggMilkStrawberry",
-      "zh": "Web 草莓蛋奶糊（中间）",
-      "en": "Web Strawberry Egg Milk Batter (Intermediate)"
-    },
-    {
-      "id": "Web_Pudding_Orange",
-      "zh": "Web 橙子布丁",
-      "en": "Web Orange Pudding"
-    },
-    {
-      "id": "Web_Pudding_Plain",
-      "zh": "Web 布丁",
-      "en": "Web Pudding"
-    },
-    {
-      "id": "Web_Pudding_Strawberry",
-      "zh": "Web 草莓布丁",
-      "en": "Web Strawberry Pudding"
-    },
-    {
-      "id": "Web_Salad_Corn",
-      "zh": "Web 玉米沙拉",
-      "en": "Web Corn Salad"
-    },
-    {
-      "id": "Web_Salad_Cucumber",
-      "zh": "Web 黄瓜沙拉",
-      "en": "Web Cucumber Salad"
-    },
-    {
-      "id": "Web_Salad_CucumberCorn",
-      "zh": "Web 黄瓜玉米沙拉",
-      "en": "Web Cucumber Corn Salad"
-    },
-    {
-      "id": "Web_Salad_Lettuce",
-      "zh": "Web 生菜沙拉",
-      "en": "Web Lettuce Salad"
-    },
-    {
-      "id": "Web_Salad_LettuceCorn",
-      "zh": "Web 生菜玉米沙拉",
-      "en": "Web Lettuce Corn Salad"
-    },
-    {
-      "id": "Web_Salad_LettuceCucumber",
-      "zh": "Web 生菜黄瓜沙拉",
-      "en": "Web Lettuce Cucumber Salad"
-    },
-    {
-      "id": "Web_Salad_LettuceCucumberCorn",
-      "zh": "Web 生菜黄瓜玉米沙拉",
-      "en": "Web Lettuce Cucumber Corn Salad"
-    },
-    {
-      "id": "Web_Salad_LettuceTomato",
-      "zh": "Web 生菜番茄沙拉",
-      "en": "Web Lettuce Tomato Salad"
-    },
-    {
-      "id": "Web_Salad_LettuceTomatoCorn",
-      "zh": "Web 生菜番茄玉米沙拉",
-      "en": "Web Lettuce Tomato Corn Salad"
-    },
-    {
-      "id": "Web_Salad_LettuceTomatoCucumber",
-      "zh": "Web 生菜番茄黄瓜沙拉",
-      "en": "Web Lettuce Tomato Cucumber Salad"
-    },
-    {
-      "id": "Web_Salad_LettuceTomatoCucumberCorn",
-      "zh": "Web 田园全家福沙拉",
-      "en": "Web Garden Salad"
-    },
-    {
-      "id": "Web_Salad_Tomato",
-      "zh": "Web 番茄沙拉",
-      "en": "Web Tomato Salad"
-    },
-    {
-      "id": "Web_Salad_TomatoCucumberCorn",
-      "zh": "Web 番茄黄瓜玉米沙拉",
-      "en": "Web Tomato Cucumber Corn Salad"
-    },
-    {
-      "id": "Web_Smoothie_Blackberry",
-      "zh": "Web 黑莓果汁",
-      "en": "Web Blackberry Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Blueberry",
-      "zh": "Web 蓝莓果汁",
-      "en": "Web Blueberry Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Grape",
-      "zh": "Web 葡萄果汁",
-      "en": "Web Grape Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Berry",
-      "zh": "Web 浆果混饮",
-      "en": "Web Berry Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Bramble",
-      "zh": "Web 野莓混饮",
-      "en": "Web Bramble Berry Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Brown",
-      "zh": "Web 深果混饮",
-      "en": "Web Dark Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Coral",
-      "zh": "Web 珊瑚混饮",
-      "en": "Web Coral Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Green",
-      "zh": "Web 青果混饮",
-      "en": "Web Green Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Meadow",
-      "zh": "Web 田园混饮",
-      "en": "Web Meadow Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Orange",
-      "zh": "Web 橙果混饮",
-      "en": "Web Orange Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Pink",
-      "zh": "Web 粉果混饮",
-      "en": "Web Pink Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Red",
-      "zh": "Web 红果混饮",
-      "en": "Web Red Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Sunrise",
-      "zh": "Web 晨曦混饮",
-      "en": "Web Sunrise Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Tropical",
-      "zh": "Web 热带混饮",
-      "en": "Web Tropical Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Mix_Yellow",
-      "zh": "Web 黄果混饮",
-      "en": "Web Yellow Fruit Mix"
-    },
-    {
-      "id": "Web_Smoothie_Orange",
-      "zh": "Web 橙子果汁",
-      "en": "Web Orange Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Peach",
-      "zh": "Web 桃子果汁",
-      "en": "Web Peach Smoothie"
-    },
-    {
-      "id": "Web_Smoothie_Raspberry",
-      "zh": "Web 覆盆子果汁",
-      "en": "Web Raspberry Smoothie"
-    },
-    {
-      "id": "Web_Soup_Carrot",
-      "zh": "Web 胡萝卜汤",
-      "en": "Web Carrot Soup"
-    },
-    {
-      "id": "Web_Soup_FishPrawnPorridge",
-      "zh": "Web 鱼虾粥",
-      "en": "Web Fish Prawn Porridge"
-    },
-    {
-      "id": "Web_Soup_FishPrawnTomato",
-      "zh": "Web 鱼虾番茄汤",
-      "en": "Web Fish Prawn Tomato Soup"
-    },
-    {
-      "id": "Web_Soup_MushroomOnionTomato",
-      "zh": "Web 蘑菇洋葱番茄汤",
-      "en": "Web Mushroom Onion Tomato Soup"
-    },
-    {
-      "id": "Web_Soup_OnionCarrotPotato",
-      "zh": "Web 蔬菜浓汤",
-      "en": "Web Vegetable Chowder"
-    },
-    {
-      "id": "Web_Soup_RiceEggTomato",
-      "zh": "Web 番茄鸡蛋烩饭汤",
-      "en": "Web Tomato Rice Egg Soup"
-    },
-    {
-      "id": "Web_Soup_TomatoFish",
-      "zh": "Web 番茄鱼汤",
-      "en": "Web Tomato Fish Soup"
-    }
-  ]
+    "schemaVersion": 1,
+    "names": [
+        {
+            "id": "Web_FriedRice_Carrot",
+            "zh": "Web 胡萝卜炒饭",
+            "en": "Web Carrot Fried Rice"
+        },
+        {
+            "id": "Web_FriedRice_CarrotPepperoni",
+            "zh": "Web 胡萝卜香肠炒饭",
+            "en": "Web Carrot Pepperoni Fried Rice"
+        },
+        {
+            "id": "Web_FriedRice_Egg",
+            "zh": "Web 蛋炒饭",
+            "en": "Web Egg Fried Rice"
+        },
+        {
+            "id": "Web_FriedRice_Lettuce",
+            "zh": "Web 生菜炒饭",
+            "en": "Web Lettuce Fried Rice"
+        },
+        {
+            "id": "Web_FriedRice_LettuceCarrot",
+            "zh": "Web 生菜胡萝卜炒饭",
+            "en": "Web Lettuce Carrot Fried Rice"
+        },
+        {
+            "id": "Web_FriedRice_RicePrep",
+            "zh": "Web 炒饭煮米（中间）",
+            "en": "Web Steamed Rice (Intermediate)"
+        },
+        {
+            "id": "Web_IceCream_Banana",
+            "zh": "Web 香蕉冰淇淋",
+            "en": "Web Banana Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Blackberry",
+            "zh": "Web 黑莓冰淇淋",
+            "en": "Web Blackberry Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Blueberry",
+            "zh": "Web 蓝莓冰淇淋",
+            "en": "Web Blueberry Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Chocolate",
+            "zh": "Web 巧克力冰淇淋",
+            "en": "Web Chocolate Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Grape",
+            "zh": "Web 葡萄冰淇淋",
+            "en": "Web Grape Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Melon",
+            "zh": "Web 西瓜冰淇淋",
+            "en": "Web Melon Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Orange",
+            "zh": "Web 橙子冰淇淋",
+            "en": "Web Orange Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Peach",
+            "zh": "Web 桃子冰淇淋",
+            "en": "Web Peach Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Pineapple",
+            "zh": "Web 菠萝冰淇淋",
+            "en": "Web Pineapple Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Raspberry",
+            "zh": "Web 覆盆子冰淇淋",
+            "en": "Web Raspberry Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Strawberry",
+            "zh": "Web 草莓冰淇淋",
+            "en": "Web Strawberry Ice Cream"
+        },
+        {
+            "id": "Web_IceCream_Vanilla",
+            "zh": "Web 香草冰淇淋",
+            "en": "Web Vanilla Ice Cream"
+        },
+        {
+            "id": "Web_LSalad_Corn",
+            "zh": "Web 生菜底玉米沙拉",
+            "en": "Web Corn Salad (Lettuce Base)"
+        },
+        {
+            "id": "Web_LSalad_Cucumber",
+            "zh": "Web 生菜底黄瓜沙拉",
+            "en": "Web Cucumber Salad (Lettuce Base)"
+        },
+        {
+            "id": "Web_LSalad_CucumberCorn",
+            "zh": "Web 生菜底黄瓜玉米沙拉",
+            "en": "Web Cucumber Corn Salad (Lettuce Base)"
+        },
+        {
+            "id": "Web_LSalad_Lettuce",
+            "zh": "Web 纯生菜沙拉",
+            "en": "Web Plain Lettuce Salad"
+        },
+        {
+            "id": "Web_LSalad_Tomato",
+            "zh": "Web 生菜底番茄沙拉",
+            "en": "Web Tomato Salad (Lettuce Base)"
+        },
+        {
+            "id": "Web_LSalad_TomatoCorn",
+            "zh": "Web 生菜底番茄玉米沙拉",
+            "en": "Web Tomato Corn Salad (Lettuce Base)"
+        },
+        {
+            "id": "Web_LSalad_TomatoCucumber",
+            "zh": "Web 生菜底番茄黄瓜沙拉",
+            "en": "Web Tomato Cucumber Salad (Lettuce Base)"
+        },
+        {
+            "id": "Web_LSalad_TomatoCucumberCorn",
+            "zh": "Web 生菜底番茄黄瓜玉米沙拉",
+            "en": "Web Tomato Cucumber Corn Salad (Lettuce Base)"
+        },
+        {
+            "id": "Web_MilkSlush_Banana",
+            "zh": "Web 香蕉牛奶冰沙",
+            "en": "Web Banana Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Blackberry",
+            "zh": "Web 黑莓牛奶冰沙",
+            "en": "Web Blackberry Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Blueberry",
+            "zh": "Web 蓝莓牛奶冰沙",
+            "en": "Web Blueberry Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Grape",
+            "zh": "Web 葡萄牛奶冰沙",
+            "en": "Web Grape Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Melon",
+            "zh": "Web 西瓜牛奶冰沙",
+            "en": "Web Melon Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Orange",
+            "zh": "Web 橙子牛奶冰沙",
+            "en": "Web Orange Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Peach",
+            "zh": "Web 桃子牛奶冰沙",
+            "en": "Web Peach Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Pineapple",
+            "zh": "Web 菠萝牛奶冰沙",
+            "en": "Web Pineapple Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Raspberry",
+            "zh": "Web 覆盆子牛奶冰沙",
+            "en": "Web Raspberry Milk Slush"
+        },
+        {
+            "id": "Web_MilkSlush_Strawberry",
+            "zh": "Web 草莓牛奶冰沙",
+            "en": "Web Strawberry Milk Slush"
+        },
+        {
+            "id": "Web_Pudding_Mix_EggMilk",
+            "zh": "Web 蛋奶糊（中间）",
+            "en": "Web Egg Milk Batter (Intermediate)"
+        },
+        {
+            "id": "Web_Pudding_Mix_EggMilkOrange",
+            "zh": "Web 橙子蛋奶糊（中间）",
+            "en": "Web Orange Egg Milk Batter (Intermediate)"
+        },
+        {
+            "id": "Web_Pudding_Mix_EggMilkStrawberry",
+            "zh": "Web 草莓蛋奶糊（中间）",
+            "en": "Web Strawberry Egg Milk Batter (Intermediate)"
+        },
+        {
+            "id": "Web_Pudding_Orange",
+            "zh": "Web 橙子布丁",
+            "en": "Web Orange Pudding"
+        },
+        {
+            "id": "Web_Pudding_Plain",
+            "zh": "Web 布丁",
+            "en": "Web Pudding"
+        },
+        {
+            "id": "Web_Pudding_Strawberry",
+            "zh": "Web 草莓布丁",
+            "en": "Web Strawberry Pudding"
+        },
+        {
+            "id": "Web_Salad_Corn",
+            "zh": "Web 玉米沙拉",
+            "en": "Web Corn Salad"
+        },
+        {
+            "id": "Web_Salad_Cucumber",
+            "zh": "Web 黄瓜沙拉",
+            "en": "Web Cucumber Salad"
+        },
+        {
+            "id": "Web_Salad_CucumberCorn",
+            "zh": "Web 黄瓜玉米沙拉",
+            "en": "Web Cucumber Corn Salad"
+        },
+        {
+            "id": "Web_Salad_Lettuce",
+            "zh": "Web 生菜沙拉",
+            "en": "Web Lettuce Salad"
+        },
+        {
+            "id": "Web_Salad_LettuceCorn",
+            "zh": "Web 生菜玉米沙拉",
+            "en": "Web Lettuce Corn Salad"
+        },
+        {
+            "id": "Web_Salad_LettuceCucumber",
+            "zh": "Web 生菜黄瓜沙拉",
+            "en": "Web Lettuce Cucumber Salad"
+        },
+        {
+            "id": "Web_Salad_LettuceCucumberCorn",
+            "zh": "Web 生菜黄瓜玉米沙拉",
+            "en": "Web Lettuce Cucumber Corn Salad"
+        },
+        {
+            "id": "Web_Salad_LettuceTomato",
+            "zh": "Web 生菜番茄沙拉",
+            "en": "Web Lettuce Tomato Salad"
+        },
+        {
+            "id": "Web_Salad_LettuceTomatoCorn",
+            "zh": "Web 生菜番茄玉米沙拉",
+            "en": "Web Lettuce Tomato Corn Salad"
+        },
+        {
+            "id": "Web_Salad_LettuceTomatoCucumber",
+            "zh": "Web 生菜番茄黄瓜沙拉",
+            "en": "Web Lettuce Tomato Cucumber Salad"
+        },
+        {
+            "id": "Web_Salad_LettuceTomatoCucumberCorn",
+            "zh": "Web 田园全家福沙拉",
+            "en": "Web Garden Salad"
+        },
+        {
+            "id": "Web_Salad_Tomato",
+            "zh": "Web 番茄沙拉",
+            "en": "Web Tomato Salad"
+        },
+        {
+            "id": "Web_Salad_TomatoCucumberCorn",
+            "zh": "Web 番茄黄瓜玉米沙拉",
+            "en": "Web Tomato Cucumber Corn Salad"
+        },
+        {
+            "id": "Web_Smoothie_Blackberry",
+            "zh": "Web 黑莓果汁",
+            "en": "Web Blackberry Smoothie"
+        },
+        {
+            "id": "Web_Smoothie_Blueberry",
+            "zh": "Web 蓝莓果汁",
+            "en": "Web Blueberry Smoothie"
+        },
+        {
+            "id": "Web_Smoothie_Grape",
+            "zh": "Web 葡萄果汁",
+            "en": "Web Grape Smoothie"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Berry",
+            "zh": "Web 浆果混饮",
+            "en": "Web Berry Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Bramble",
+            "zh": "Web 野莓混饮",
+            "en": "Web Bramble Berry Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Brown",
+            "zh": "Web 深果混饮",
+            "en": "Web Dark Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Coral",
+            "zh": "Web 珊瑚混饮",
+            "en": "Web Coral Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Green",
+            "zh": "Web 青果混饮",
+            "en": "Web Green Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Meadow",
+            "zh": "Web 田园混饮",
+            "en": "Web Meadow Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Orange",
+            "zh": "Web 橙果混饮",
+            "en": "Web Orange Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Pink",
+            "zh": "Web 粉果混饮",
+            "en": "Web Pink Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Red",
+            "zh": "Web 红果混饮",
+            "en": "Web Red Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Sunrise",
+            "zh": "Web 晨曦混饮",
+            "en": "Web Sunrise Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Tropical",
+            "zh": "Web 热带混饮",
+            "en": "Web Tropical Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Mix_Yellow",
+            "zh": "Web 黄果混饮",
+            "en": "Web Yellow Fruit Mix"
+        },
+        {
+            "id": "Web_Smoothie_Orange",
+            "zh": "Web 橙子果汁",
+            "en": "Web Orange Smoothie"
+        },
+        {
+            "id": "Web_Smoothie_Peach",
+            "zh": "Web 桃子果汁",
+            "en": "Web Peach Smoothie"
+        },
+        {
+            "id": "Web_Smoothie_Raspberry",
+            "zh": "Web 覆盆子果汁",
+            "en": "Web Raspberry Smoothie"
+        },
+        {
+            "id": "Web_Soup_Carrot",
+            "zh": "Web 胡萝卜汤",
+            "en": "Web Carrot Soup"
+        },
+        {
+            "id": "Web_Soup_FishPrawnPorridge",
+            "zh": "Web 鱼虾粥",
+            "en": "Web Fish Prawn Porridge"
+        },
+        {
+            "id": "Web_Soup_FishPrawnTomato",
+            "zh": "Web 鱼虾番茄汤",
+            "en": "Web Fish Prawn Tomato Soup"
+        },
+        {
+            "id": "Web_Soup_MushroomOnionTomato",
+            "zh": "Web 蘑菇洋葱番茄汤",
+            "en": "Web Mushroom Onion Tomato Soup"
+        },
+        {
+            "id": "Web_Soup_OnionCarrotPotato",
+            "zh": "Web 蔬菜浓汤",
+            "en": "Web Vegetable Chowder"
+        },
+        {
+            "id": "Web_Soup_RiceEggTomato",
+            "zh": "Web 番茄鸡蛋烩饭汤",
+            "en": "Web Tomato Rice Egg Soup"
+        },
+        {
+            "id": "Web_Soup_TomatoFish",
+            "zh": "Web 番茄鱼汤",
+            "en": "Web Tomato Fish Soup"
+        }
+    ]
 }

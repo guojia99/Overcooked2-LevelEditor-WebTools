@@ -70,3 +70,14 @@ MonoBehaviour:
     pivotX: 0
     pivotY: 0
     pivotZ: 0
+  - assetPath: Assets/commonW3/custom_recipes/pudding/Web_Pudding_Mix_EggMilkOrange.asset
+    scale: 1
+    rotationY: 0
+    rotationX: 0
+    rotationZ: 0
+    positionX: 0
+    positionY: 0
+    positionZ: 0
+    pivotX: 0
+    pivotY: 0
+    pivotZ: 0

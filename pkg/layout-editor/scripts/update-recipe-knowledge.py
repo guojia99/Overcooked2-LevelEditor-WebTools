@@ -239,6 +239,11 @@ RECIPE_ENTRY_OVERRIDE = {
         "step": "Pot",
         "ingredients": ["PastaSO", "PastaTomatoSO"],
     },
+    # bundle 提取无法从食材推导烤箱步骤；游戏资产 m_cookingStep=OvenTray。
+    "Pizza_Olives": {
+        "step": "OvenTray",
+        "ingredients": ["DoughSO", "TomatoSO", "CheeseSO", "Olive"],
+    },
 }
 
 
@@ -362,6 +367,8 @@ def main():
                 merged["id"] = rid
                 merged["step"] = force["step"]
                 merged["ingredients"] = list(force["ingredients"])
+                if "composition" in force:
+                    merged["composition"] = list(force["composition"])
                 by_id[rid] = merged
 
     if not dry:

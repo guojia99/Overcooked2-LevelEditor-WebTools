@@ -18,7 +18,6 @@ export function snapshotState(): EditorSnapshot {
   return JSON.parse(JSON.stringify({
     items: S.items,
     floors: S.floors,
-    bgThemeKey: S.bgThemeKey,
     animControls: S.animControls,
     switchLinks: S.switchLinks,
     buttonLinks: S.buttonLinks,
@@ -54,7 +53,6 @@ export function pushHistory(): void {
 export function applySnapshot(snap: EditorSnapshot): void {
   S.items = snap.items;
   S.floors = snap.floors;
-  S.bgThemeKey = snap.bgThemeKey;
   S.animControls = snap.animControls;
   S.switchLinks = snap.switchLinks ?? [];
   S.buttonLinks = snap.buttonLinks ?? [];

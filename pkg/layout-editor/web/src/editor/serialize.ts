@@ -325,8 +325,8 @@ export function scopedSaveMeta(): { scope: SaveScope; label: string; title: stri
   if (S.currentLayer === "floor" || S.currentLayer === "background") {
     return {
       scope: "floors",
-      label: S.currentLayer === "background" ? "🎯 仅背景" : "🎯 仅地板",
-      title: "仅写回地板 / 背景（不修改物品、装饰）",
+      label: "🎯 仅地板与背景",
+      title: "写回地板矩形、表面物与背景 prefab（不修改核心物品与装饰）",
     };
   }
   return { scope: "items", label: "🎯 仅核心物品", title: "仅写回核心物品（不修改地板、背景、装饰）" };

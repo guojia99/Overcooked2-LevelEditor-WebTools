@@ -19,7 +19,11 @@ import {
 import { groupRecipesByType, recipeTypeLabel } from "./recipeTypes";
 import { getQuestionMarkStyles } from "./editor/iconCaches";
 import { questionMarkIconUrl, crateAirIconUrl } from "./api";
-import { levelRequiredCrateIngredientIds } from "./editor/recipeKnowledge";
+import {
+  levelRequiredCrateIngredientIds,
+  recipeCategoryOf,
+  utensilIntermediateRecipes,
+} from "./editor/recipeKnowledge";
 
 /** Inline <img> for an ingredient/recipe: try the extracted icon PNG (unless explicitly known
  *  missing), else / on error fall back to the shared placeholder (MissingIngredient_Icon). */
@@ -222,14 +226,17 @@ export function openIngredientMultiPicker(
   const groups = [...new Set(ingredients.map((i) => i.group ?? "other"))]
     .filter((g) => g !== "core")
     .sort();
-  const hasIntermediates = intermediates && intermediates.length > 0;
+  const pickerIntermediates = intermediates ? utensilIntermediateRecipes(intermediates) : [];
+  const hasIntermediates = pickerIntermediates.length > 0;
   // 勾选状态的唯一来源（可变）：切分组/分类/搜索会整体重建列表 DOM，勾选必须
   // 即时同步到这里、确定时从这里收集——否则跨分类勾选丢失/写回只剩当前分类
   // （与 openRandomCrateEditor 的 state Map 同款模式）。
   const selected = new Set(selectedGuids);
-  // 分类 chips：只显示当前列表里实际出现的分类
-  const cats = INGREDIENT_CATEGORIES.filter((c) =>
-    ingredients.some((i) => ingredientCategoryOf(i.id) === c.key)
+  // 分类 chips：食材 + 中间产物实际出现的分类
+  const cats = INGREDIENT_CATEGORIES.filter(
+    (c) =>
+      ingredients.some((i) => ingredientCategoryOf(i.id) === c.key) ||
+      pickerIntermediates.some((r) => recipeCategoryOf(r) === c.key),
   );
 
   // card for intermediate recipe (uses recipe icons)
@@ -270,25 +277,44 @@ export function openIngredientMultiPicker(
     const q = (document.getElementById("ing-pick-search") as HTMLInputElement)?.value?.trim()?.toLowerCase() ?? "";
     const catMatch = (i: IngredientEntry) => !activeCat || ingredientCategoryOf(i.id) === activeCat;
     const textMatch = (i: IngredientEntry) =>
-      !q || i.nameZh.toLowerCase().includes(q) || (i.nameEn ?? "").toLowerCase().includes(q) || i.id.toLowerCase().includes(q);
+      !q ||
+      i.nameZh.toLowerCase().includes(q) ||
+      (i.nameEn ?? "").toLowerCase().includes(q) ||
+      i.id.toLowerCase().includes(q);
+    const recipeCatMatch = (r: RecipeEntry) => !activeCat || recipeCategoryOf(r) === activeCat;
+    const recipeTextMatch = (r: RecipeEntry) =>
+      !q ||
+      r.nameZh.toLowerCase().includes(q) ||
+      (r.nameEn ?? "").toLowerCase().includes(q) ||
+      r.id.toLowerCase().includes(q) ||
+      (r.ingredients ?? []).join(" ").toLowerCase().includes(q);
 
     // 已选 tab：当前勾选的食材 + 中间产物（仍受分类/搜索过滤）
     if (activeGroup === "__selected__") {
       const selIngs = ingredients.filter((i) => selected.has(i.guid) && catMatch(i) && textMatch(i));
-      const selRecs = (intermediates ?? []).filter((r) => selected.has(r.guid));
+      const selRecs = pickerIntermediates.filter(
+        (r) => selected.has(r.guid) && recipeCatMatch(r) && recipeTextMatch(r),
+      );
       return ingredientGrid(selIngs, selected, opts) + (selRecs.length ? recipeGrid(selRecs, selected) : "");
     }
 
-    // intermediates group
-    if (activeGroup === "__intermediate__" && intermediates) {
-      return recipeGrid(intermediates, selected);
+    // intermediates group：应用分类 + 搜索（与食材 tab 一致）
+    if (activeGroup === "__intermediate__" && hasIntermediates) {
+      const filtered = pickerIntermediates.filter(recipeCatMatch).filter(recipeTextMatch);
+      return filtered.length ? recipeGrid(filtered, selected) : '<p class="modal-hint">没有匹配的中间产物</p>';
     }
 
     let filtered = ingredients;
     if (activeGroup) filtered = filtered.filter((i) => (i.group ?? "other") === activeGroup);
     filtered = filtered.filter(catMatch);
     filtered = filtered.filter(textMatch);
-    return ingredientGrid(filtered, selected, opts);
+    let html = ingredientGrid(filtered, selected, opts);
+    // 搜索时：在食材分组下也列出名称匹配的中间产物（不必先切到「中间产物」tab）
+    if (q && activeGroup !== "__intermediate__" && hasIntermediates) {
+      const matched = pickerIntermediates.filter(recipeCatMatch).filter(recipeTextMatch);
+      if (matched.length) html += recipeGrid(matched, selected);
+    }
+    return html;
   }
 
   function applyFilter(): void {

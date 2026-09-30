@@ -1,31 +1,29 @@
 import { S } from "./state";
 import type { CatalogItem } from "../types";
 import { dom } from "./dom";
-import { normalizeRot } from "./coords";
+import { escHtml, normalizeRot } from "./coords";
 import { setStatus } from "./status";
 import { draw } from "./render";
-import { pushHistory } from "./historyOps";
 import { batchRandomRotateLotusPressureSwitches } from "./items";
-import {
-  isThemedFloor,
-  themedFloorPrefabs,
-  syncBackgroundForTheme,
-  effectiveMaterialTiling
-} from "./floors";
+import { isThemedFloor, themedFloorPrefabs, effectiveMaterialTiling } from "./floors";
 import { itemLabel } from "./labels";
 import {
-  BG_THEMES,
-  bgTheme,
-  bgThemeTooltip,
+  commonBackgroundPrefabIds,
   deathLabelZh,
   isSurfaceItem,
-  isThemeBackgroundPrefabId,
   surfaceKindLabelZh,
-  themeBackgroundPrefabIds
+  themeWaterPrefabId,
 } from "../floorColors";
 import { tidyCatalogNameZh } from "../displayLabels";
-import { isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
+import { defaultBackgroundPlaneCells, isAmbientBackgroundCat, isWaterBackgroundCat } from "./catalog";
 import { floorLayerSummary } from "./floorHeight";
+import {
+  applyPaletteGridCols,
+  bumpPalettePick,
+  palettePlaceCountFor,
+  clearPalettePick,
+  refreshPaletteQtyBadges,
+} from "./palette";
 
 /** 面板高度过滤：按 prefab 固有模型高度（catalog 的 height 字段，未实测按 0）
  *  是否落在当前高度区间内。未激活（全部）时恒通过。 */
@@ -56,7 +54,6 @@ export function renderFloorHeightLayers(): void {
   if (!box) return;
   box.innerHTML = "";
   const isAll = S.floorHeight.min == null || S.floorHeight.max == null;
-  // 地板层按地板计数，核心/装饰层按物品计数。
   const byItems = S.currentLayer === "items" || S.currentLayer === "decor";
   const addBtn = (label: string, active: boolean, title: string, onClick: () => void) => {
     const b = document.createElement("button");
@@ -88,13 +85,11 @@ export function renderFloorHeightLayers(): void {
   }
 }
 
-/** 高度过滤面板（悬浮）整体刷新：层列表 + 滑块位置。 */
 export function refreshFloorHeightPanel(): void {
   renderFloorHeightLayers();
   syncFloorHeightSliderUI();
 }
 
-/** 高度区间变化后的统一刷新：面板 + 物品面板（地板层）+ 画布。 */
 export function refreshAfterHeightFilterChange(): void {
   refreshFloorHeightPanel();
   if (S.currentLayer === "floor") {
@@ -104,12 +99,159 @@ export function refreshAfterHeightFilterChange(): void {
   draw();
 }
 
-/** 特殊地板：压力开关（含莲花压力开关），在地板层放置。 */
 const PRESSURE_SWITCH_SURFACE_IDS = new Set([
   "PressureSwitch",
   "dlc13_lotuspressureswitch_large",
   "dlc13_lotuspressureswitch_small",
 ]);
+
+function isSandAlienBackground(it: CatalogItem): boolean {
+  const id = it.id.toLowerCase();
+  const path = (it.assetPath ?? "").toLowerCase();
+  return (
+    /sand|alien|goo|gue/.test(id) ||
+    /sand|alien|goo/.test(path) ||
+    it.surfaceKind === "sand" ||
+    it.surfaceKind === "alien"
+  );
+}
+
+function isSkyBackground(it: CatalogItem): boolean {
+  const id = it.id.toLowerCase();
+  const path = (it.assetPath ?? "").toLowerCase();
+  const zh = `${it.nameZh} ${it.nameEn ?? ""}`;
+  return id.includes("sky") || path.includes("/sky") || /天空|远景/.test(zh);
+}
+
+function backgroundPaletteGroups(pool: CatalogItem[]): { key: string; labelZh: string; items: CatalogItem[] }[] {
+  const assigned = new Set<string>();
+  const take = (list: CatalogItem[]) => {
+    const out: CatalogItem[] = [];
+    for (const it of list) {
+      if (assigned.has(it.guid)) continue;
+      assigned.add(it.guid);
+      out.push(it);
+    }
+    return out;
+  };
+
+  const commonIds = new Set(commonBackgroundPrefabIds(S.currentLevelSet));
+  const dlcWater = themeWaterPrefabId(S.currentLevelSet);
+  const common = take(
+    pool.filter((it) => commonIds.has(it.id)).sort((a, b) => {
+      if (a.id === dlcWater) return -1;
+      if (b.id === dlcWater) return 1;
+      return a.id.localeCompare(b.id);
+    })
+  );
+
+  const water = take(pool.filter((it) => isWaterBackgroundCat(it)));
+  const sky = take(
+    pool.filter(
+      (it) =>
+        it.surfaceTier === "background" &&
+        isSkyBackground(it) &&
+        !isWaterBackgroundCat(it) &&
+        !isAmbientBackgroundCat(it)
+    )
+  );
+  const sand = take(
+    pool.filter(
+      (it) =>
+        (it.surfaceTier === "background" || isSandAlienBackground(it)) &&
+        isSandAlienBackground(it) &&
+        !isWaterBackgroundCat(it) &&
+        !isAmbientBackgroundCat(it)
+    )
+  );
+  const ambient = take(pool.filter((it) => isAmbientBackgroundCat(it)));
+  const other = take(
+    pool.filter(
+      (it) =>
+        it.surfaceTier === "background" ||
+        isWaterBackgroundCat(it) ||
+        isAmbientBackgroundCat(it) ||
+        looksLikeLooseBackground(it)
+    )
+  );
+
+  const groups: { key: string; labelZh: string; items: CatalogItem[] }[] = [];
+  if (common.length) groups.push({ key: "common", labelZh: "⭐ 常用背景", items: common });
+  if (water.length) groups.push({ key: "water", labelZh: "💧 水面 / 海洋", items: water });
+  if (sky.length) groups.push({ key: "sky", labelZh: "☁️ 天空 / 远景", items: sky });
+  if (sand.length) groups.push({ key: "sand", labelZh: "🏜️ 沙地 / 外星", items: sand });
+  if (ambient.length) groups.push({ key: "ambient", labelZh: "🌨️ 环境特效", items: ambient });
+  if (other.length) groups.push({ key: "other", labelZh: "🌊 其他背景", items: other });
+  return groups;
+}
+
+function looksLikeLooseBackground(it: CatalogItem): boolean {
+  if (it.surfaceTier === "background") return true;
+  const path = (it.assetPath ?? "").toLowerCase();
+  return path.includes("/background/") || path.includes("/environment/");
+}
+
+function cardSubId(it: CatalogItem): string {
+  const en = it.nameEn ?? "";
+  const norm = (s: string) => s.toLowerCase().replace(/[\s_\-]+/g, "");
+  if (en && norm(en) !== norm(it.id)) return `${escHtml(en)} · ${escHtml(it.id)}`;
+  return escHtml(it.id);
+}
+
+function appendBackgroundCardGrid(parent: HTMLElement, list: CatalogItem[]) {
+  const grid = document.createElement("div");
+  grid.className = "palette-grid";
+  const dlcWater = themeWaterPrefabId(S.currentLevelSet);
+
+  for (const it of list) {
+    const row = document.createElement("div");
+    row.className = "palette-card palette-bg palette-cat-background";
+    row.draggable = true;
+    row.dataset.guid = it.guid;
+    const { wCells, dCells } = defaultBackgroundPlaneCells(it);
+    const sizeBadge =
+      wCells !== 6 || dCells !== 6 ? `<div class="sub">默认 ${wCells}×${dCells} 格</div>` : "";
+    const recBadge =
+      it.id === dlcWater
+        ? `<div class="sub">推荐 · 本关 DLC</div>`
+        : it.height != null && it.height > 0.01
+          ? `<div class="sub fhf-badge">h=${it.height.toFixed(2)}</div>`
+          : "";
+    row.innerHTML =
+      `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}</div>` +
+      `<div class="id">${cardSubId(it)}</div>${sizeBadge}${recBadge}`;
+
+    let skipClick = false;
+    row.addEventListener("dragstart", (e) => {
+      skipClick = true;
+      S.dragCatalog = it;
+      S.dragCatalogBatch = palettePlaceCountFor(it.guid);
+      e.dataTransfer?.setData("text/plain", it.guid);
+    });
+    row.addEventListener("dragend", () => {
+      S.dragCatalog = null;
+      S.dragCatalogBatch = 1;
+      setTimeout(() => {
+        skipClick = false;
+      }, 0);
+    });
+    row.addEventListener("click", (e) => {
+      if (skipClick) return;
+      if ((e.target as HTMLElement).closest(".palette-qty-reset")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      bumpPalettePick(it);
+    });
+    row.addEventListener("contextmenu", (e) => {
+      if (S.palettePick?.guid !== it.guid) return;
+      e.preventDefault();
+      e.stopPropagation();
+      clearPalettePick();
+    });
+    grid.appendChild(row);
+  }
+  parent.appendChild(grid);
+}
 
 export function buildFloorPalette(filter = "", mode: "floor" | "background" = "floor") {
   dom.paletteCats.innerHTML = "";
@@ -123,14 +265,15 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
     addBtn.addEventListener("click", () => {
       S.pendingNewFloor = true;
       S.pendingNewFloorCat = null;
-      setStatus("在画布上点击以放置新地板");
+      setStatus("在画布上点击以放置新地板（Esc 取消）");
       dom.canvas.style.cursor = "crosshair";
+      updateFloorBar();
     });
     dom.paletteCats.appendChild(addBtn);
 
-    // 新增主题地板: pick a themed prefab, then click the canvas to place a floor
-    // that tiles it on write-back (a standalone floor type, not a solid plane).
-    const themedList = themedFloorPrefabs().filter((it) => matchesFloorPaletteFilter(it, q) && matchesFloorHeightFilter(it));
+    const themedList = themedFloorPrefabs().filter(
+      (it) => matchesFloorPaletteFilter(it, q) && matchesFloorHeightFilter(it)
+    );
     if (themedList.length > 0) {
       const themedRow = document.createElement("div");
       themedRow.className = "palette-add-themed";
@@ -153,84 +296,82 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
         }
         S.pendingNewFloor = true;
         S.pendingNewFloorCat = cat;
-        setStatus(`在画布上点击以放置主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}`);
+        setStatus(`在画布上点击以放置主题地板：${tidyCatalogNameZh(cat.nameZh, cat.id)}（Esc 取消）`);
         dom.canvas.style.cursor = "crosshair";
+        updateFloorBar();
       });
       themedRow.appendChild(sel);
       themedRow.appendChild(addThemedBtn);
       dom.paletteCats.appendChild(themedRow);
     }
 
-    // 新增空气地板: only a walkable Col_AirFloor collider, no visible plane.
     const airBtn = document.createElement("button");
     airBtn.className = "palette-add-floor";
     airBtn.textContent = "+ 新增空气地板";
     airBtn.title = "仅有可行走碰撞盒（Col_AirFloor），无可见地板，写回后生效";
     airBtn.addEventListener("click", () => {
       S.pendingNewAirFloor = true;
-      setStatus("在画布上点击以放置空气地板（仅可行走，无可见地板）");
+      setStatus("在画布上点击以放置空气地板（Esc 取消）");
       dom.canvas.style.cursor = "crosshair";
+      updateFloorBar();
     });
     dom.paletteCats.appendChild(airBtn);
   }
 
-  const groups: { key: string; labelZh: string; match: (it: CatalogItem) => boolean }[] =
-    mode === "background"
-      ? [
-          {
-            key: "water",
-            labelZh: "水面 / 海洋",
-            match: (it) => isWaterBackgroundCat(it),
-          },
-          {
-            key: "ambient",
-            labelZh: "环境特效（落雪 / BGM）",
-            match: (it) => isAmbientBackgroundCat(it),
-          },
-          {
-            key: "background",
-            labelZh: "背景 / 环境",
-            match: (it) => it.surfaceTier === "background" && !isThemeBackgroundPrefabId(it.id),
-          },
-        ]
-      : [
-          {
-            key: "snowice",
-            labelZh: "❄ 雪地 / 冰面（含冰崖围边）",
-            // 雪地板/冰面砖 + 冰崖围边（装饰层条目，搭高台时围边用）+ 雪堆
-            match: (it) =>
-              it.surfaceKind === "snow" ||
-              it.surfaceKind === "ice" ||
-              /icecliff|snowmound|snowpile|snowball|iceblock/i.test(it.id),
-          },
-          { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
-          { key: "ground", labelZh: "大型地面", match: (it) => it.surfaceKind === "ground" },
-          { key: "pressure", labelZh: "压力开关（特殊地板）", match: (it) => PRESSURE_SWITCH_SURFACE_IDS.has(it.id) },
-        ];
-  // Background palette also lists ambient effects (they are not surface items).
-  // Floor mode uses the full catalog too so the snow group can include ice-cliff
-  // decor pieces (placed as regular items); conveyor/ground/pressure groups are
-  // surfaceKind/ID-scoped and unaffected.
   const pool = [...S.catalogByGuid.values()];
-
   let anyGroup = false;
-  for (const group of groups) {
-    const list = pool
-      .filter((it) => group.match(it))
-      .filter((it) => matchesFloorPaletteFilter(it, q))
-      .filter((it) => mode === "background" || matchesFloorHeightFilter(it))
-      .sort((a, b) => a.id.localeCompare(b.id));
-    if (list.length === 0) continue;
-    anyGroup = true;
 
-    const details = document.createElement("details");
-    details.className = "cat-group";
-    details.open = true;
-    const summary = document.createElement("summary");
-    summary.textContent = `${group.labelZh} (${list.length})`;
-    details.appendChild(summary);
-    appendPaletteTileGrid(details, list);
-    dom.paletteCats.appendChild(details);
+  if (mode === "background") {
+    const filtered = pool
+      .filter((it) => matchesFloorPaletteFilter(it, q))
+      .sort((a, b) => a.id.localeCompare(b.id));
+    for (const group of backgroundPaletteGroups(filtered)) {
+      if (group.items.length === 0) continue;
+      anyGroup = true;
+      const details = document.createElement("details");
+      details.className = "cat-group";
+      details.open = group.key === "common";
+      const summary = document.createElement("summary");
+      summary.textContent = `${group.labelZh} (${group.items.length})`;
+      details.appendChild(summary);
+      appendBackgroundCardGrid(details, group.items);
+      dom.paletteCats.appendChild(details);
+    }
+    applyPaletteGridCols();
+    refreshPaletteQtyBadges();
+  } else {
+    const groups: { key: string; labelZh: string; match: (it: CatalogItem) => boolean }[] = [
+      {
+        key: "snowice",
+        labelZh: "❄ 雪地 / 冰面（含冰崖围边）",
+        match: (it) =>
+          it.surfaceKind === "snow" ||
+          it.surfaceKind === "ice" ||
+          /icecliff|snowmound|snowpile|snowball|iceblock/i.test(it.id),
+      },
+      { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
+      { key: "ground", labelZh: "大型地面", match: (it) => it.surfaceKind === "ground" },
+      { key: "pressure", labelZh: "压力开关（特殊地板）", match: (it) => PRESSURE_SWITCH_SURFACE_IDS.has(it.id) },
+    ];
+
+    for (const group of groups) {
+      const list = pool
+        .filter((it) => group.match(it))
+        .filter((it) => matchesFloorPaletteFilter(it, q))
+        .filter((it) => matchesFloorHeightFilter(it))
+        .sort((a, b) => a.id.localeCompare(b.id));
+      if (list.length === 0) continue;
+      anyGroup = true;
+
+      const details = document.createElement("details");
+      details.className = "cat-group";
+      details.open = true;
+      const summary = document.createElement("summary");
+      summary.textContent = `${group.labelZh} (${list.length})`;
+      details.appendChild(summary);
+      appendPaletteTileGrid(details, list);
+      dom.paletteCats.appendChild(details);
+    }
   }
 
   if (!anyGroup && q) {
@@ -241,30 +382,30 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
   }
 }
 
-export function updateFloorBar() {
-  if (S.currentLayer !== "floor" && S.currentLayer !== "background") {
-    dom.floorBar.classList.add("hidden");
-    return;
-  }
-  dom.floorBar.classList.remove("hidden");
-  const themeOpts = BG_THEMES.map(
-    (t) =>
-      `<option value="${t.key}"${t.key === S.bgThemeKey ? " selected" : ""}>${t.emoji} ${t.labelZh}</option>`
-  ).join("");
-  const themeRow = `<label class="fb-theme" title="${bgThemeTooltip(bgTheme(S.bgThemeKey), S.currentLevelSet)}">背景：<select id="fb-bg-theme">${themeOpts}</select></label>`;
-  const killToggle = `<label class="fb-check" title="回写 Unity 时把坠落区(KillPlane)扩大到覆盖整关，使所有非地板区域都会坠落"><input type="checkbox" id="fb-autokill" ${S.autoKillPlane ? "checked" : ""}/> 回写扩大坠落区</label>`;
-  const walkToggle = `<label class="fb-check" title="回写时按可见地板重新生成可行走碰撞体(Col_Floor)：可行走=地板，地板间空隙=坠落坑"><input type="checkbox" id="fb-autowalk" ${S.autoWalkable ? "checked" : ""}/> 同步可行走到地板</label>`;
+function cancelPendingPlacement(): void {
+  S.pendingNewFloor = false;
+  S.pendingNewFloorCat = null;
+  S.pendingNewAirFloor = false;
+  dom.canvas.style.cursor = "";
+  setStatus("已取消放置");
+  updateFloorBar();
+}
+
+function buildSelectionInfo(): string {
   const f = S.floors.find((x) => x._key === S.selectedFloorKey);
   const selItem = S.selectedKey ? S.items.find((i) => i._editorKey === S.selectedKey) : null;
   const selCat = selItem ? S.catalogByGuid.get(selItem.prefabGuid) : undefined;
-  let info: string;
+
   if (S.selectedFloorKeys.size > 1) {
-    info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板（拖动整体移动 · 方向键微移 · R 旋转 · Del 删除）</span>`;
-  } else if (S.selectedFloorKeys.size > 0 && S.selectedKeys.size > 0) {
-    info = `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板 · ${S.selectedKeys.size} 个表面物品（拖动任一选中项整体移动 · 方向键/R 批量变换 · Del 删除）</span>`;
-  } else if (S.selectedKeys.size > 1 && S.selectedFloorKeys.size === 0) {
-    info = `<span class="fb-info">已选 ${S.selectedKeys.size} 个表面物品（拖动整体移动 · 方向键微移 · R 旋转 · Del 删除）</span>`;
-  } else if (f) {
+    return `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板（拖动整体移动 · 方向键微移 · R 旋转 · Del 删除）</span>`;
+  }
+  if (S.selectedFloorKeys.size > 0 && S.selectedKeys.size > 0) {
+    return `<span class="fb-info">已选 ${S.selectedFloorKeys.size} 块地板 · ${S.selectedKeys.size} 个表面物品（拖动整体移动 · Del 删除）</span>`;
+  }
+  if (S.selectedKeys.size > 1 && S.selectedFloorKeys.size === 0) {
+    return `<span class="fb-info">已选 ${S.selectedKeys.size} 个表面物品（拖动整体移动 · 方向键微移 · R 旋转 · Del 删除）</span>`;
+  }
+  if (f) {
     const matFloorDetail = (() => {
       const { w: tw, d: td } = effectiveMaterialTiling(f);
       const tilingMismatch = tw !== f._wCells || td !== f._dCells;
@@ -273,34 +414,63 @@ export function updateFloorBar() {
         : `平铺 ${tw}×${td}`;
       return `${f.materialName ?? "无材质"} · ${tilingTxt}`;
     })();
-    info = `<span class="fb-info"><b>${f.airFloor ? "空气地板" : f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.airFloor ? "仅可行走（无可见地板）" : f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(S.catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : f.imageMode === "warp" ? "透视贴合" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : matFloorDetail}</span>`;
-  } else if (selItem && isSurfaceItem(selCat)) {
-    info = `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
-  } else {
-    info = `<span class="fb-info">${deathLabelZh(S.deathInfo)} · 共 ${S.floors.length} 块地板</span>`;
+    return `<span class="fb-info"><b>${f.airFloor ? "空气地板" : f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.airFloor ? "仅可行走（无可见地板）" : f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(S.catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : f.imageMode === "warp" ? "透视贴合" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : matFloorDetail}</span>`;
   }
-  const lotusRotBtn =
-    S.currentLayer === "floor"
-      ? `<button type="button" id="fb-lotus-rand-rot" class="fb-btn" title="将场景中所有莲花压力开关随机设为 0° / 90° / 180° / 270°（写回后生效）">🪷 莲花随机旋转</button>`
+  if (selItem && isSurfaceItem(selCat)) {
+    return `<span class="fb-info"><b>${surfaceKindLabelZh(selCat?.surfaceKind)}</b> · ${itemLabel(selItem)}</span>`;
+  }
+  if (S.currentLayer === "background") {
+    const bgFloors = S.floors.filter((x) => x.surfaceKind === "background").length;
+    const bgItems = S.items.filter((it) => {
+      const cat = S.catalogByGuid.get(it.prefabGuid);
+      return cat?.surfaceTier === "background" || isWaterBackgroundCat(cat) || isAmbientBackgroundCat(cat);
+    }).length;
+    return `<span class="fb-info">${deathLabelZh(S.deathInfo)} · ${bgFloors} 背景板 · ${bgItems} 背景物</span>`;
+  }
+  return `<span class="fb-info">${deathLabelZh(S.deathInfo)} · 共 ${S.floors.filter((x) => x.surfaceKind !== "background").length} 块地板</span>`;
+}
+
+export function updateFloorBar() {
+  if (S.currentLayer !== "floor" && S.currentLayer !== "background") {
+    dom.floorBar.classList.add("hidden");
+    return;
+  }
+  dom.floorBar.classList.remove("hidden");
+
+  const pending =
+    S.pendingNewFloor || S.pendingNewAirFloor
+      ? `<span class="fb-pending">${
+          S.pendingNewAirFloor
+            ? "正在放置空气地板"
+            : S.pendingNewFloorCat
+              ? `正在放置主题地板：${tidyCatalogNameZh(S.pendingNewFloorCat.nameZh, S.pendingNewFloorCat.id)}`
+              : "正在放置新地板"
+        }… <button type="button" id="fb-cancel-place" class="fb-btn">取消</button></span>`
       : "";
-  const html = `${themeRow}${killToggle}${walkToggle}${lotusRotBtn}${info}<span class="fb-hint">背景为坠落死亡区 · 拖拽空白框选 · 拖动移动 · 拖角点缩放 · 右键详情</span>`;
+
+  const info = buildSelectionInfo();
+  let actions = "";
+  let hint = "";
+
+  if (S.currentLayer === "floor") {
+    const killToggle = `<label class="fb-check" title="回写 Unity 时把坠落区(KillPlane)扩大到覆盖整关"><input type="checkbox" id="fb-autokill" ${S.autoKillPlane ? "checked" : ""}/> 回写扩大坠落区</label>`;
+    const walkToggle = `<label class="fb-check" title="回写时按可见地板重新生成可行走碰撞体"><input type="checkbox" id="fb-autowalk" ${S.autoWalkable ? "checked" : ""}/> 同步可行走到地板</label>`;
+    const lotusRotBtn = `<button type="button" id="fb-lotus-rand-rot" class="fb-btn" title="莲花压力开关随机 0/90/180/270°">🪷 莲花随机旋转</button>`;
+    actions = `${pending}${killToggle}${walkToggle}${lotusRotBtn}`;
+    hint = `<span class="fb-hint">框选 · 拖动 · 拖角缩放 · 右键地板编辑器 · Del 删除 · Esc 取消放置</span>`;
+  } else {
+    actions = `${pending}<span class="fb-death-readonly" title="坠落类型由 Unity 场景 KillPlane 决定，在「相机/灯光」中查看相机背景色">坠落类型：<b>${deathLabelZh(S.deathInfo)}</b></span>`;
+    hint = `<span class="fb-hint">拖入背景卡片放置 · 单击卡片累加数量 · 拖角缩放 · 右键铺满关卡 · Del 删除</span>`;
+  }
+
+  const html = `<div class="fb-row fb-row-actions">${actions}</div><div class="fb-row fb-row-info">${info}${hint}</div>`;
   const active = document.activeElement;
   const editing =
     !!active && dom.floorBar.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT");
   if (editing || dom.floorBar.innerHTML === html) return;
   dom.floorBar.innerHTML = html;
 
-  document.getElementById("fb-bg-theme")?.addEventListener("change", (e) => {
-    const nextTheme = (e.target as HTMLSelectElement).value || "void";
-    if (nextTheme === S.bgThemeKey) return;
-    pushHistory();
-    S.bgThemeKey = nextTheme;
-    S.bgThemeDirty = true;
-    localStorage.setItem("bgTheme:" + S.scenePath, S.bgThemeKey);
-    syncBackgroundForTheme(S.bgThemeKey);
-    updateFloorBar();
-    setStatus(`背景主题：${bgTheme(S.bgThemeKey).labelZh}（写回 Unity 后生效）`);
-  });
+  document.getElementById("fb-cancel-place")?.addEventListener("click", cancelPendingPlacement);
   document.getElementById("fb-autokill")?.addEventListener("change", (e) => {
     S.autoKillPlane = (e.target as HTMLInputElement).checked;
   });
@@ -337,20 +507,11 @@ export function appendPaletteTileGrid(parent: HTMLElement, list: CatalogItem[]) 
     row.className = "palette-item palette-tile";
     row.draggable = true;
     row.dataset.guid = it.guid;
-    const sub =
-      it.surfaceTier === "background" && themeBackgroundPrefabIds("sky").includes(it.id)
-        ? `<div class="sub">天空主题自动补齐</div>`
-        : it.id === "Water_01"
-          ? `<div class="sub">水主题自动补齐</div>`
-          : it.id === "alien_gue"
-            ? `<div class="sub">黏液主题自动补齐</div>`
-            : "";
-    // 固有模型高度徽标（实测 bounds Y）：平板 ~0.1、冰崖等高件 1+。
     const hBadge =
       it.height != null && it.height > 0.01
         ? `<div class="sub fhf-badge">h=${it.height.toFixed(2)}</div>`
         : "";
-    row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}</div><div class="id">${it.id}</div>${sub}${hBadge}`;
+    row.innerHTML = `<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}</div><div class="id">${it.id}</div>${hBadge}`;
     row.addEventListener("dragstart", (e) => {
       S.dragCatalog = it;
       e.dataTransfer?.setData("text/plain", it.guid);

@@ -564,6 +564,9 @@ public static class LayoutEditorCatalogApi
         var lower = (id ?? "").ToLowerInvariant();
         if (so is CustomRecipeOptionalBurgerSO)
             return "burger-optional";
+        // 本关 PizzaOptional_*（与 stock 同型）必须先于 CustomRecipeSO 通用分支
+        if (so is CustomRecipeOptionalPizzaSO)
+            return "pizza-optional";
         if (so is CustomRecipeSO)
             return "custom-recipe";
         if (Array.IndexOf(PizzaOptionalGuids, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so))) >= 0)
@@ -1164,6 +1167,329 @@ public static class LayoutEditorCatalogApi
             guids = guids,
             items = items.ToArray()
         };
+    }
+
+    // ============================================================
+    // 🍕 披萨一键填充（本关 PizzaOptional 生成/更新，仿汉堡 BurgerOptional 模式）
+    // ============================================================
+    // 背景（2026-09-30 橄榄披萨无法合并事故）：stock Pizza_Optional_*_SO 的
+    // optionalSOs 只有原版 5 浇头（番茄/奶酪/蘑菇/鸡肉/辣肠），注册进
+    // optionalRecipeMatchListItems 后运行时 RecipeHelper.GetIngredientPrefabForOptional
+    // 会用它整体替换面坯 prefab 的原版浇头白名单（m_containerRestrictions）——
+    // dlc05 橄榄被白名单挡掉，橄榄放不到披萨皮上。测试1~5 optional 为空时面坯
+    // 保持原版白名单（含橄榄）反而正常；原版 OC1_Story_4_1 的 optional 结构
+    //（自选披萨生/熟 + 蘑菇节点）即本填充的目标形态。
+    // 修复：不从 common01 改模板，改为按所选披萨在 data/{关卡}/ 生成
+    // PizzaOptional_{Uncooked,Cooked}.asset（CopyAsset 复制 stock 模板后把
+    // optionalSOs 扩为「原版 5 种 ∪ 所选披萨配料」；模型数组保留模板值，
+    // 新增浇头下标越界时运行时 GetOrderToPrefabLookup 自动回退原版面坯
+    // lookup 取外观）。
+
+    internal const string LevelPizzaOptionalUncookedFileName = "PizzaOptional_Uncooked";
+    internal const string LevelPizzaOptionalCookedFileName = "PizzaOptional_Cooked";
+    /** 无 CustomRecipeConfig 的关卡集使用的 uID 起始段（stock 自选披萨占 9990300-9990302）。 */
+    private const int LevelPizzaOptionalUidFallbackBase = 9990311;
+
+    private static readonly string[] PizzaDoughIds = { "DoughSO", "DLC05_Dough" };
+
+    private static bool IsPizzaDoughId(string id)
+    {
+        return !string.IsNullOrEmpty(id) && Array.IndexOf(PizzaDoughIds, id) >= 0;
+    }
+
+    private static bool IsPizzaDoughAsset(ScriptableObject so)
+    {
+        if (so == null)
+            return false;
+        var p = AssetDatabase.GetAssetPath(so);
+        if (string.IsNullOrEmpty(p))
+            return false;
+        return IsPizzaDoughId(Path.GetFileNameWithoutExtension(p));
+    }
+
+    /// <summary>data/{level}/PizzaOptional_{Uncooked,Cooked}.asset 路径（与 BurgerOptional 同目录）。</summary>
+    private static string LevelPizzaOptionalAssetPath(string levelInfoAssetPath, bool cooked)
+    {
+        if (string.IsNullOrEmpty(levelInfoAssetPath))
+            return null;
+        var dir = Path.GetDirectoryName(levelInfoAssetPath.Replace('\\', '/'));
+        if (string.IsNullOrEmpty(dir))
+            return null;
+        return dir + "/" + (cooked ? LevelPizzaOptionalCookedFileName : LevelPizzaOptionalUncookedFileName) + ".asset";
+    }
+
+    /// <summary>🍕 披萨一键填充：按所选披萨生成/更新本关 PizzaOptional_{Uncooked,Cooked}
+    ///  并返回应注册的 optional guid：[本关自选披萨生, 本关自选披萨熟] +
+    ///  （浇头含蘑菇时）Mushroom_For_Pizza_SO。所选无披萨 / 模板缺失返回空。</summary>
+    public static BurgerOptionalComputeResultDto ComputePizzaOptionalFill(BurgerOptionalComputeRequestDto req)
+    {
+        if (req == null || string.IsNullOrEmpty(req.levelInfoAssetPath))
+            return new BurgerOptionalComputeResultDto
+            {
+                guids = new string[0],
+                items = new LevelOptionalItemDto[0]
+            };
+
+        var toppings = new List<ScriptableObject>();
+        var hasPizza = CollectPizzaToppings(req.recipeGuids, toppings);
+        if (!hasPizza)
+        {
+            LayoutEditorLog.LogWarning("[Optional] 披萨填充：所选菜谱中未发现披萨（组成含面坯）");
+            return new BurgerOptionalComputeResultDto
+            {
+                guids = new string[0],
+                items = new LevelOptionalItemDto[0]
+            };
+        }
+
+        string levelSet = null;
+        var pathParts = req.levelInfoAssetPath.Replace('\\', '/').Split('/');
+        if (pathParts.Length > 2 && pathParts[1] == "LevelSets")
+            levelSet = pathParts[2];
+        CustomRecipeConfigSO config = null;
+        if (levelSet != null)
+        {
+            var recipesDir = LayoutEditorLevelAdminApi.LevelSetsRoot + "/" + levelSet + "/custom_recipes";
+            if (LayoutEditorLevelAdminApi.AssetFolderExists(recipesDir))
+                config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(recipesDir + "/CustomRecipeConfig.asset");
+        }
+
+        var uncookedPath = LevelPizzaOptionalAssetPath(req.levelInfoAssetPath, false);
+        var cookedPath = LevelPizzaOptionalAssetPath(req.levelInfoAssetPath, true);
+        CustomRecipeOptionalPizzaSO uncooked;
+        CustomRecipeOptionalPizzaSO cooked;
+        var err = SyncLevelPizzaOptionalPair(uncookedPath, cookedPath, toppings, config, out uncooked, out cooked);
+        if (err != null)
+        {
+            LayoutEditorLog.LogWarning("[Optional] 披萨填充：" + err);
+            return new BurgerOptionalComputeResultDto
+            {
+                guids = new string[0],
+                items = new LevelOptionalItemDto[0]
+            };
+        }
+
+        var guids = new List<string>();
+        var seenGuids = new HashSet<string>(StringComparer.Ordinal);
+        AppendOptionalGuid(uncooked, guids, seenGuids);
+        AppendOptionalGuid(cooked, guids, seenGuids);
+        // 蘑菇节点（与旧自动填充/OC1_Story_4_1 对齐）：浇头含蘑菇时随填充注册
+        if (ContainsMushroomTopping(toppings))
+        {
+            var mushroomPath = AssetDatabase.GUIDToAssetPath(PizzaOptionalGuids[2]);
+            if (!string.IsNullOrEmpty(mushroomPath))
+            {
+                var g = AssetDatabase.AssetPathToGUID(mushroomPath);
+                if (!string.IsNullOrEmpty(g) && seenGuids.Add(g))
+                    guids.Add(g);
+            }
+        }
+
+        var items = new List<LevelOptionalItemDto>();
+        for (int i = 0; i < guids.Count; i++)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (string.IsNullOrEmpty(path))
+                continue;
+            var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+            var dto = OptionalItemDtoFromSo(so);
+            if (dto != null)
+                items.Add(dto);
+        }
+
+        LayoutEditorLog.Log("[Optional] ComputePizzaOptionalFill: " + guids.Count + " 条 ["
+            + string.Join(", ", guids.ToArray()) + "]，浇头 "
+            + (uncooked.optionalSOs != null ? uncooked.optionalSOs.Length : 0) + " 种");
+        return new BurgerOptionalComputeResultDto
+        {
+            guids = guids.ToArray(),
+            items = items.ToArray()
+        };
+    }
+
+    /// <summary>收集所选披萨菜谱的浇头全集（去面坯）：自定义披萨（CustomRecipeSO
+    ///  组成含面坯）走 compositionSOs；DLC 原始披萨（PseudoPrefabSORecipe）走
+    ///  RecipeKnowledge 组成 → LoadIngredientSo 解析（Pizza_Olives = 面+番茄+奶酪+橄榄）。
+    ///  返回 false = 所选无披萨。</summary>
+    private static bool CollectPizzaToppings(string[] recipeGuids, List<ScriptableObject> toppings)
+    {
+        var hasPizza = false;
+        if (recipeGuids == null)
+            return false;
+        for (int i = 0; i < recipeGuids.Length; i++)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(recipeGuids[i]);
+            if (string.IsNullOrEmpty(path))
+                continue;
+            var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+            if (so == null)
+                continue;
+
+            var custom = so as CustomRecipeSO;
+            if (custom != null)
+            {
+                if (so is CustomRecipeOptionalPizzaSO)
+                    continue; // 自选披萨定义本身不算所选成品披萨
+                var comps = custom.compositionSOs;
+                if (comps == null)
+                    continue;
+                var dough = false;
+                for (int j = 0; j < comps.Length; j++)
+                    if (IsPizzaDoughAsset(comps[j]))
+                        dough = true;
+                if (!dough)
+                    continue;
+                hasPizza = true;
+                for (int j = 0; j < comps.Length; j++)
+                {
+                    if (comps[j] == null || IsPizzaDoughAsset(comps[j]))
+                        continue;
+                    if (!toppings.Contains(comps[j]))
+                        toppings.Add(comps[j]);
+                }
+                continue;
+            }
+
+            var original = so as PseudoPrefabSORecipe;
+            if (original == null)
+                continue;
+            var pathKey = Path.GetFileNameWithoutExtension(path);
+            string step;
+            string[] ings;
+            if (!LayoutEditorRecipeKnowledge.TryGetOriginal(pathKey, out step, out ings) &&
+                !LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName + "_SO", out step, out ings) &&
+                !LayoutEditorRecipeKnowledge.TryGetOriginal(original.prefabName, out step, out ings))
+                continue;
+            var doughKnown = false;
+            for (int j = 0; j < ings.Length; j++)
+                if (IsPizzaDoughId(ings[j]))
+                    doughKnown = true;
+            if (!doughKnown)
+                continue;
+            hasPizza = true;
+            for (int j = 0; j < ings.Length; j++)
+            {
+                if (IsPizzaDoughId(ings[j]))
+                    continue;
+                var ing = LayoutEditorRoastTrayFill.LoadIngredientSo(ings[j]);
+                if (ing != null && !toppings.Contains(ing))
+                    toppings.Add(ing);
+            }
+        }
+        return hasPizza;
+    }
+
+    private static bool ContainsMushroomTopping(List<ScriptableObject> toppings)
+    {
+        if (toppings == null)
+            return false;
+        for (int i = 0; i < toppings.Count; i++)
+        {
+            var p = AssetDatabase.GetAssetPath(toppings[i]);
+            if (string.IsNullOrEmpty(p))
+                continue;
+            var name = Path.GetFileNameWithoutExtension(p);
+            if (name.IndexOf("mushroom", StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>确保 data/{level}/PizzaOptional_{Uncooked,Cooked}.asset 与所选浇头同步：
+    ///  首次从 common01 stock 模板 CopyAsset（源只读），此后每次覆盖写 optionalSOs
+    ///  （模板原版 5 浇头在前 ∪ 所选披萨配料）。返回 null = 成功。</summary>
+    private static string SyncLevelPizzaOptionalPair(
+        string uncookedPath,
+        string cookedPath,
+        List<ScriptableObject> toppings,
+        CustomRecipeConfigSO config,
+        out CustomRecipeOptionalPizzaSO uncooked,
+        out CustomRecipeOptionalPizzaSO cooked)
+    {
+        uncooked = null;
+        cooked = null;
+        if (string.IsNullOrEmpty(uncookedPath) || string.IsNullOrEmpty(cookedPath))
+            return "无效的 LevelInfo 路径。";
+
+        var tmplUncooked = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalPizzaSO>(
+            AssetDatabase.GUIDToAssetPath(PizzaOptionalGuids[0]));
+        var tmplCooked = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalPizzaSO>(
+            AssetDatabase.GUIDToAssetPath(PizzaOptionalGuids[1]));
+        if (tmplUncooked == null || tmplCooked == null)
+            return "未找到 common01 自选披萨模板（Pizza_Optional_*_SO）。";
+
+        // 浇头并集：模板原版 5 种在前（顺序稳定），所选披萨配料追加在后
+        var union = new List<ScriptableObject>();
+        var seen = new HashSet<ScriptableObject>();
+        var stockOpts = tmplUncooked.optionalSOs ?? new ScriptableObject[0];
+        for (int i = 0; i < stockOpts.Length; i++)
+            if (stockOpts[i] != null && seen.Add(stockOpts[i]))
+                union.Add(stockOpts[i]);
+        for (int i = 0; i < toppings.Count; i++)
+            if (toppings[i] != null && seen.Add(toppings[i]))
+                union.Add(toppings[i]);
+        if (union.Count == 0)
+            return "自选披萨浇头为空。";
+
+        var err = SyncLevelPizzaOptionalOne(tmplUncooked, uncookedPath, LevelPizzaOptionalUncookedFileName, union, config, out uncooked);
+        if (err != null)
+            return err;
+        err = SyncLevelPizzaOptionalOne(tmplCooked, cookedPath, LevelPizzaOptionalCookedFileName, union, config, out cooked);
+        if (err != null)
+            return err;
+
+        AssetDatabase.SaveAssets();
+        LayoutEditorLog.Log("[Optional] 已同步本关自选披萨：[" + uncookedPath + ", " + cookedPath
+            + "] 浇头 " + union.Count + " 种");
+        return null;
+    }
+
+    private static string SyncLevelPizzaOptionalOne(
+        CustomRecipeOptionalPizzaSO template,
+        string assetPath,
+        string recipeName,
+        List<ScriptableObject> union,
+        CustomRecipeConfigSO config,
+        out CustomRecipeOptionalPizzaSO asset)
+    {
+        asset = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalPizzaSO>(assetPath);
+        if (asset == null)
+        {
+            var templatePath = AssetDatabase.GetAssetPath(template);
+            if (string.IsNullOrEmpty(templatePath) || !AssetDatabase.CopyAsset(templatePath, assetPath))
+                return "创建本关 " + recipeName + " 失败：" + assetPath;
+            asset = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalPizzaSO>(assetPath);
+            if (asset == null)
+                return "本关 " + recipeName + " 加载失败。";
+            asset.recipeName = recipeName;
+            asset.uID = NextPizzaOptionalUid(config);
+            // 模型数组（raw/cookedPizzaIngredientPrefabSOs/Prefabs）保持模板原值：
+            // 新增浇头（橄榄等）下标越界 → 运行时回退原版面坯 lookup 取外观
+        }
+        asset.optionalSOs = union.ToArray();
+        EditorUtility.SetDirty(asset);
+        return null;
+    }
+
+    /// <summary>自选披萨 uID：优先关卡集 CustomRecipeConfig 序列段；无 config 的
+    ///  关卡集退回固定 9990311 起（stock 自选披萨占 9990300-9990302）。</summary>
+    private static int NextPizzaOptionalUid(CustomRecipeConfigSO config)
+    {
+        if (config != null)
+        {
+            int uid;
+            do
+            {
+                uid = config.uidPrefix * 1000 + config.nextSequence;
+                config.nextSequence++;
+            } while (LayoutEditorLevelAdminApi.IsUidConflicting(uid));
+            EditorUtility.SetDirty(config);
+            return uid;
+        }
+        int fallback = LevelPizzaOptionalUidFallbackBase;
+        while (LayoutEditorLevelAdminApi.IsUidConflicting(fallback))
+            fallback++;
+        return fallback;
     }
 
     private static void CollectCustomSubRecipesFromBurger(

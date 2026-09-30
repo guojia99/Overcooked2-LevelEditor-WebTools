@@ -431,6 +431,25 @@ function texDiskName(recipeId, cls, ext = ".png") {
   return `${recipeId}_${cls}${ext}`;
 }
 
+/** FBX 模型引用的 fileID：Unity 导入模型的根对象恒为 100000；仅当 Unity 生成的
+ *  .meta 子资产表（fileIDToRecycleName）明确列出 100002（Blender「根+子节点」结构，
+ *  如 Web_Smoothie_Grape 的 "葡萄.001"）时才引用子对象以避开根节点变换。
+ *  此前对 fbx 一律硬编码 100002 —— 单 Model 节点的 Maya/Max 导出（炒饭/布丁 8 道）
+ *  并无 100002 子对象，引用悬空 → m_platingPrefab=null → 烤完无法装盘（2026-10-01 修复）。
+ *  对齐 gen-commonw3-smoothies.mjs 的 meta 检测；meta 缺失/骨架时安全默认 100000。 */
+function fbxModelFileID(r) {
+  const mid = r.meshId ?? r.id;
+  const metaPath = `${W3}/custom_recipes/${r.category}/models/${mid}/${mid}.fbx.meta`;
+  try {
+    if (fs.existsSync(metaPath) && /^\s+100002:/m.test(fs.readFileSync(metaPath, "utf8"))) {
+      return 100002;
+    }
+  } catch {
+    /* meta 不可读时按安全默认 */
+  }
+  return 100000;
+}
+
 function modelRefFor(r) {
   if (r.intermediate || r.officialModel) {
     if (r.officialModel) {
@@ -440,7 +459,8 @@ function modelRefFor(r) {
     return null;
   }
   const mid = r.meshId ?? r.id;
-  const fileID = r.meshKind === "obj" || r.meshKind === "sharedCupObj" ? 100000 : 100002;
+  const fileID =
+    r.meshKind === "obj" || r.meshKind === "sharedCupObj" ? 100000 : fbxModelFileID(r);
   return { fileID, guid: modelGuid(mid), type: 3 };
 }
 

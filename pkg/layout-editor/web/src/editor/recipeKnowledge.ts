@@ -1,9 +1,49 @@
 import { S } from "./state";
 import { VARIANT_TO_BASE } from "./itemVariants";
 import type { RecipeEntry } from "../types";
-import { crateIngredientId, FLOUR_INGREDIENTS, EGG_INGREDIENTS } from "../recipeGroups";
+import { crateIngredientId, FLOUR_INGREDIENTS, EGG_INGREDIENTS, isCookStepLike } from "../recipeGroups";
 import { CHOP_INGREDIENT_PATTERN, CHOP_WHOLE_IDS } from "../autoScoreKnowledge";
 import { fetchLevelRecipes, fetchRecipeCatalog } from "../api";
+import { ingredientCategoryOf, visibleRecipes } from "../ingredientLabels";
+
+/** 可作为锅具 allowedIngredientSOs 的中间产物节点（score≤0，非 optional 组装定义）。 */
+export function isUtensilIntermediateRecipe(r: RecipeEntry): boolean {
+  if ((r.score ?? 0) > 0) return false;
+  if (r.optionalKind === "burger" || r.optionalKind === "pizza") return false;
+  if (r.id === "OptionalBurger" || /burgerassembly/i.test(r.id)) return false;
+  return !!(r.intermediate || r.isCustom);
+}
+
+/** 从菜谱目录提取可手动/自动填入锅具的中间产物列表（去重展示层）。 */
+export function utensilIntermediateRecipes(recipes: RecipeEntry[]): RecipeEntry[] {
+  return visibleRecipes(recipes.filter(isUtensilIntermediateRecipe));
+}
+
+/** 直接组成里带烹饪步骤的子菜谱：叶食材 id → 子菜谱 id（炒饭煮米、煎肉排等）。 */
+function cookedCompositionLeafMap(
+  r: RecipeEntry,
+  interById: Map<string, RecipeEntry>,
+  isMixSub: (x: RecipeEntry) => boolean
+): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const cid of r.compositionIds ?? []) {
+    const sub = interById.get(cid);
+    if (!sub || isMixSub(sub) || !isCookStepLike(sub.cookingStep)) continue;
+    for (const leaf of sub.ingredients ?? []) map.set(leaf, sub.id);
+  }
+  return map;
+}
+
+/** 中间产物菜谱 → 食材分类（用于选择器分类 chips 与过滤）。 */
+export function recipeCategoryOf(r: RecipeEntry): string {
+  const fromId = ingredientCategoryOf(r.id);
+  if (fromId !== "other") return fromId;
+  for (const ing of r.ingredients ?? []) {
+    const c = ingredientCategoryOf(ing);
+    if (c !== "other") return c;
+  }
+  return "other";
+}
 
 export const STEP_UTENSILS: Record<string, string[]> = {
   Pot: ["Cooker", "Pot"],
@@ -19,7 +59,9 @@ export const STEP_UTENSILS: Record<string, string[]> = {
   MixingBowl: ["Mixer", "MixerBowl"],
   HotPot: ["web_cooking_region_floorburner", "web_utensil_large_pot_01"],
   RoastingTray: ["Oven", "utensil_roasting_tray"],
-  OvenCakeTin: ["Oven", "utensil_cake_tin_01"],
+  // 蛋糕模具没有独立道具：游戏里面糊就是在搅拌碗里搅拌后连碗进烤箱
+  // （utensil_cake_tin_01 从未进素材库，此前会报「不在道具目录中」幽灵 id 警告）
+  OvenCakeTin: ["Oven", "MixerBowl"],
 };
 
 export const CHOPPABLE_INGREDIENTS = new Set([
@@ -273,8 +315,9 @@ export const STEP_CONTAINER: Record<string, string> = {
   HotPot: "web_utensil_large_pot_01",
   // 烤菜：食材装进烤盘（叠放在烤箱/工作台上）
   RoastingTray: "utensil_roasting_tray",
-  // 蛋糕：食材装进蛋糕模具（叠放在烤箱内）
-  OvenCakeTin: "utensil_cake_tin_01",
+  // 蛋糕模具（OvenCakeTin）没有独立道具，容器就是搅拌碗：食材由 MixingBowl 组
+  // 直接进碗（见 STEP_UTENSILS 注释），这里不再登记——避免空标记组把碗里已装填的
+  // 食材清单 clear 掉、退化回原版 lookup。
 };
 
 export const WORKSTATION_UTENSILS = new Set([
@@ -379,10 +422,9 @@ export function computeUtensilIngredientFill(
   //    ← 面糊中间产物节点本身（Donut comp=1 面糊节点；原版 FryableObjectsLookup 含
   //    MixedFlourEgg 系节点而非生面粉）；烤箱类工作站无 stub，跳过。
   //  - 食材直接引用混合中间产物的菜谱同面糊规则。
-  //  - Cooked 型中间产物（自带烹饪步骤，如 commonW2 的 EggSausage→GriddlePan、
-  //    FriedPrawn→DeepFatFryer、FriedMeat→FryingPan）：按其自身步骤把
-  //    节点+叶生食材双填进终锅（节点保组合许可/熟模型映射，生食材保放入自由，
-  //    对齐原版锅 lookup 的生+熟双表结构）。
+  //  - Cooked 型中间产物两阶段（如炒饭）：前置锅（汤锅）← 叶生食材（生米），
+  //    终锅（煎锅）← 中间产物节点（煮米 Web_FriedRice_RicePrep），不把生米写进煎锅。
+  //    单阶段子菜谱（套餐煎肉排）仍在前置锅放生食材（MeatSO）。
   //  - Mixed 型中间产物的终锅优先取其自身 cookingStep（无自身步骤才回退菜谱步骤，
   //    官方面糊 + donut 语义不变）。
   //  - **搅拌后整锅下终锅、且编辑器没有对应面糊中间产物的菜谱（烧麦/核心松饼）**：
@@ -440,15 +482,15 @@ export function computeUtensilIngredientFill(
 
   for (const r of recipes) {
     if (!r || r.intermediate) continue;
-    // 组成里的 Cooked 型中间产物（如 EggSausage/BaconSausage）：按其自身烹饪步骤
-    // 双填进终锅 —— 节点（组合许可/熟模型映射）+ 叶生食材（放入自由，对齐原版锅
-    // lookup 的生+熟双表结构）。放在 mix 分支之前，避免被其 continue 短路。
+    const cookedLeafMap = cookedCompositionLeafMap(r, interById, isMixSub);
+    const parentVessel = finalVesselOf(r);
+    // 组成里的 Cooked 型子菜谱：在其自身前置锅填叶生食材（汤锅←生米、煎锅←生肉排）。
+    // 中间产物节点由终锅 cookingGroups 分支写入（炒饭煎锅←煮米节点）。放在 mix 分支之前。
     for (const cid of r.compositionIds ?? []) {
       const sub = interById.get(cid);
       if (!sub || isMixSub(sub)) continue;
       const vessel = subVesselOf(sub);
       if (!vessel) continue;
-      addInter(vessel, sub.id);
       const leafs = sub.ingredients ?? [];
       for (const leaf of leafs) addIng(vessel, leaf);
       bump(vessel, Math.max(1, leafs.length));
@@ -547,6 +589,11 @@ export function computeUtensilIngredientFill(
           } else {
             addInter(container, sub.id);
           }
+        } else if (parentVessel && parentVessel === container && cookedLeafMap.has(ing)) {
+          // 两阶段终锅（炒饭）：已在前置锅煮熟的叶食材 → 中间产物节点，不写回生食材
+          addInter(container, cookedLeafMap.get(ing)!);
+        } else if (sub && isCookStepLike(sub.cookingStep) && (sub.intermediate || sub.isCustom)) {
+          addInter(container, ing);
         } else {
           addIng(container, ing);
         }

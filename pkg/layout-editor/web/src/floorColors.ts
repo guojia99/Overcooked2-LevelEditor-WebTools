@@ -236,6 +236,28 @@ export function bgThemeKeyForDeathType(dt: string | undefined): string {
   return "void";
 }
 
+/** Canvas void fill / hatch derived from scene death type (read-only). */
+export function canvasVoidTheme(deathType: string | undefined): BgTheme {
+  return bgTheme(bgThemeKeyForDeathType(deathType));
+}
+
+/** Curated ids for the background palette「常用背景」group + DLC water hint. */
+export const COMMON_BACKGROUND_IDS = [
+  "Sky",
+  "Water_01",
+  "sand_01",
+  "alien_gue",
+  "raft_water",
+  "city_water",
+] as const;
+
+export function commonBackgroundPrefabIds(levelSet?: string): string[] {
+  const ids = new Set<string>(COMMON_BACKGROUND_IDS);
+  const dlcWater = themeWaterPrefabId(levelSet);
+  if (dlcWater) ids.add(dlcWater);
+  return [...ids];
+}
+
 export function deathLabelZh(info: DeathInfo | null): string {
   switch (info?.deathType) {
     case "water":

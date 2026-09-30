@@ -167,7 +167,7 @@ flowchart TD
 |---|---|
 | `GET /api/catalog/ingredients` / `floor-materials` / `questionmarks` / `questionmarks/icon` / `music` / `audio-directories` / `ambiences` / `death-effects` | 各类目录扫描 |
 | `GET /api/recipes?levelSet=`、`GET/POST /api/level-recipes` | 关卡菜谱读写 |
-| `GET /api/level/optional-presets`、`POST /api/level/optional-items`、`POST /api/level/matchlists`、`GET /api/level/matchlists/suggest`、`POST /api/recipes/compute-burger-optionals`、`GET /api/level/burger-optional` | 可选部件/匹配表 |
+| `GET /api/level/optional-presets`、`POST /api/level/optional-items`、`POST /api/level/matchlists`、`GET /api/level/matchlists/suggest`、`POST /api/recipes/compute-burger-optionals`、`POST /api/recipes/compute-pizza-optionals`、`GET /api/level/burger-optional` | 可选部件/匹配表（🍕 compute-pizza-optionals：按所选披萨生成/更新 `data/{关卡}/PizzaOptional_{Uncooked,Cooked}.asset`，浇头=原版5种∪所选披萨配料，修橄榄无法上面坯） |
 
 **关卡集/关卡管理**
 | 路由 | 说明 |

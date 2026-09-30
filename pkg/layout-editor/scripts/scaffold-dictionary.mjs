@@ -5,7 +5,9 @@
  * token rules, merges into scripts/data/names-dictionary.json (existing
  * entries always win), and prints untranslated ids for manual completion.
  *
- * Usage: node layout-editor/scripts/scaffold-dictionary.mjs
+ * Usage:
+ *   node layout-editor/scripts/scaffold-dictionary.mjs           # add missing ids
+ *   node layout-editor/scripts/scaffold-dictionary.mjs --refresh # re-draft poor zh
  */
 import fs from "fs";
 import path from "path";
@@ -179,7 +181,128 @@ const CURATED = {
   exterior_man_hole_01: "井盖 1", exterior_man_hole_02: "井盖 2",
   exterior_grass_01: "草坪", CityLivingSO: "城市生活（BGM）",
   DownTheRiverSO: "顺流而下（BGM）", OuterSpaceSO: "外太空（BGM）",
+  // water / shore / swamp backgrounds
+  m_dlc2_beach_sea_plane_wet_sand: "DLC2海滩湿沙海面",
+  m_dlc2_sanddecal_05: "DLC2沙地贴花 5",
+  m_dlc2_sanddecal_06: "DLC2沙地贴花 6",
+  m_dlc5_river_01: "DLC5河流 1",
+  m_mapwatercurve120_01: "地图弯曲水面 120°",
+  m_mapwaterroad_01: "地图水路",
+  m_mapwaterroadshort_01: "地图短水路",
+  p_dlc4_water_01: "DLC4水面 1",
+  river_edge_foam_01: "河流边缘浪花 1",
+  sea_shore_simple_01: "海岸（简约）",
+  seashore_pfx: "海岸特效",
+  seashore_pfx_02: "海岸特效 2",
+  sm_dlc13_water_edge: "DLC13水面边缘",
+  sm_dlc13_waterbase_1to2: "DLC13水面底座（1转2）",
+  SM_DLC13_WaterBase_1to2: "DLC13水面底座（1转2）",
+  sm_dlc13_sun: "DLC13太阳",
+  sm_dlc13_waterbase_1: "DLC13水面底座 1",
+  swamp_water: "沼泽水面",
+  watersplash_particle_001: "水花粒子 1",
+  watersplash_particle_003: "水花粒子 3",
+  countertop_01_standard_corner_swamp: "台面标准转角（沼泽）",
+  grave_sky_plane_01: "墓地天空平面",
+  // leftovers that token rules miss
+  "1_5_hazardspawner_01": "1.5 危险生成器",
+  backgroundbirdparent: "背景鸟群父节点",
+  camershakegroup: "镜头抖动组",
+  castsshadow_misc: "投射阴影（杂项）",
+  conveyorstationprop: "传送带站道具",
+  depth_blend_far: "远景深度混合",
+  equipment_steamer_01: "蒸锅设备",
+  firehazard: "火灾危险点",
+  "pfx_lighting_transition1": "光照过渡特效 1",
+  props: "道具组",
+  pudding: "布丁",
+  raft_dark: "木筏（暗色）",
+  ratscurry: "老鼠窜动",
+  scenery: "布景",
+  "splahes background": "溅水背景",
+  splash_raft: "木筏溅水",
+  steps: "台阶",
+  stonewalls_01: "石墙 1",
+  stonewalls_02: "石墙 2",
+  storyonionking_hawaiian: "剧情洋葱王（夏威夷）",
+  swamp_pickaxe_01: "沼泽镐",
+  swamp_railbroken_01: "沼泽断裂轨道",
+  swamp_rails_01: "沼泽轨道",
+  swamp_stoneblock_01: "沼泽石块 1",
+  swamp_stoneblock_02: "沼泽石块 2",
+  swamp_truss_01: "沼泽桁架",
+  swamp_trusslarge_01: "沼泽大桁架 1",
+  swamp_trusslarge_02: "沼泽大桁架 2",
+  timeline_dynamicstage_04: "时间轴动态关卡 4",
+  timeline_tutorial_01: "时间轴教程 1",
+  turbinewind: "涡轮风",
+  unbread_a: "未眠面包 A",
+  walkingbread_01a: "行走面包 1a",
+  walkingbread_01a_walking: "行走面包 1a（行走）",
+  walkingbread_01b: "行走面包 1b",
+  walkingbread_01b_walking: "行走面包 1b（行走）",
+  walkingbread_02a: "行走面包 2a",
+  walkingbread_02a_walking: "行走面包 2a（行走）",
+  walkingbread_02b: "行走面包 2b",
+  walkingbread_02b_walking: "行走面包 2b（行走）",
+  walkingbreadwalkingpath: "行走面包路径",
+  wallblock: "墙块",
+  optionalhotchocolate: "可选热可可",
+  flyingpigeon: "飞鸽",
+  gameobject: "游戏对象",
+  hazardspawner_a: "危险生成器 A",
+  hazardspawner_b: "危险生成器 B",
+  "hazardspawner_central (high)": "危险生成器（中央·高）",
+  island_01: "岛屿 1",
+  island_02: "岛屿 2",
+  island_03: "岛屿 3",
+  killplanes: "死亡平面组",
+  lift: "升降台",
+  m_airballoon_floorboard_broken_01: "热气球破损地板 1",
+  m_airballoon_floorboard_broken_02: "热气球破损地板 2",
+  m_airballoon_floorboard_broken_03: "热气球破损地板 3",
+  m_airballoon_ropehighres_01: "热气球高清绳 1",
+  m_bamboofloat_01: "竹筏 1",
+  m_dlc6_drawbridge_ledge_01: "DLC6吊桥檐口 1",
+  m_dlc6_drawbridge_ledge_02: "DLC6吊桥檐口 2",
+  m_dogbowl_01: "狗碗 1",
+  m_dynamic03_vortex_torus_01: "动态漩涡环面",
+  m_floormesh_level_01: "地板网格",
+  m_sk_cooker_01: "灶台 SK",
+  magic_countertopa: "魔法台面 A",
+  mi_cart_01: "矿洞矿车 1",
+  mi_crystal_02: "矿洞水晶 2",
+  mi_crystals_01: "矿洞水晶 1",
+  mi_crystals_02: "矿洞水晶 2",
+  mi_dark_01: "矿洞暗区 1",
+  mi_elevatedrails_01: "矿洞高架轨道",
+  mi_gold_01: "矿洞金矿",
+  mi_minecart_crystals: "矿车（水晶）",
+  mi_minecart_gold: "矿车（金矿）",
+  mi_mudwalls_01: "矿洞泥墙",
+  mi_mudwalls_01_outside: "矿洞泥墙（外侧）",
+  mi_pickaxe_01: "矿洞镐",
+  mi_railbroken_01: "矿洞断裂轨道",
+  mi_rails_01: "矿洞轨道",
+  mi_ropecoil_01: "矿洞绳卷",
+  mi_truss_01: "矿洞桁架 1",
+  mi_truss_02: "矿洞桁架 2",
+  mi_trusslarge_01: "矿洞大桁架 1",
+  mi_trusslarge_02: "矿洞大桁架 2",
+  minecartparent_01: "矿车父节点",
+  movingplatform: "移动平台",
+  ms_pfx_teleport_1: "传送特效 1",
+  multiplayergamecamera: "多人游戏相机",
+  noncastsshadow_misc: "无投射阴影（杂项）",
+  onionking_01: "洋葱王",
+  air_balloon_sandbag_01: "热气球沙袋",
+  air_balloon_wing_01: "热气球机翼",
+  airballoon_frontspike_01: "热气球前刺",
+  beachdoodads_clamshell_02: "海滩蛤蜊壳 2",
+  beachdoodads_starfish_03: "海滩海星 3",
 };
+
+const CURATED_IDS = new Set(Object.keys(CURATED));
 
 const NPC_PERSONA_ZH = {
   Alien: "外星人", Asian: "亚裔", Beard: "大胡子", Dora: "朵拉", DoraBlonde: "金发朵拉",
@@ -307,9 +430,98 @@ const TOKEN_ZH = {
   lotuscandle: "莲花烛", shovel: "铲子", mi: "",
   mooncake: "月饼", chocolate: "巧克力", watermelon: "西瓜",
   plants: "植物", incensepot: "香炉", plantpot: "花盆", seawavefloat: "海浪浮筒",
+  // misc tokens (decor / tech / water)
+  broken: "破损", ani: "动画", sandbag: "沙袋", rotor: "旋翼", wings: "机翼", wing: "机翼",
+  spike: "尖刺", frontspike: "前刺", pickaxe: "镐", rails: "轨道", rail: "轨道",
+  railbroken: "断裂轨道", truss: "桁架", trusslarge: "大桁架", stoneblock: "石块",
+  stonewalls: "石墙", simple: "简约", pfx: "特效", foam: "浪花", wet: "湿",
+  splash: "溅水", splahes: "溅水", particle: "粒子", particles: "粒子",
+  background: "背景", bird: "鸟", parent: "父节点", hazardspawner: "危险生成器",
+  manhole: "井盖", hole: "孔", firework: "烟花", fireworks: "烟花", neon: "霓虹",
+  animated: "动画", floating: "漂浮", counter: "柜台", street: "街",
+  fire: "火", hydrant: "消防栓", swamp: "沼泽", trusses: "桁架",
+  wet: "湿", sun: "太阳", waterbase: "水面底座", wateredge: "水面边缘",
+  beachdoodads: "海滩小物件", doodads: "小物件", robin: "知更鸟",
+  sky: "天空", decal: "贴花", offshore: "近海", extended: "延伸",
+  foam: "浪花", edge: "边缘", foamy: "泡沫", wet: "湿",
+  standard: "标准", turquoise: "青绿", rootbeerfloat: "沙士浮冰",
+  orangefloat: "橙味浮冰", surf: "冲浪", island: "岛屿", block: "块",
+  props: "道具", scenery: "布景", pudding: "布丁", steps: "台阶",
+  lift: "升降", platform: "平台", camera: "相机", game: "游戏",
+  object: "对象", optional: "可选", flying: "飞", pigeon: "鸽子",
+  walking: "行走", path: "路径", bread: "面包", unbread: "未眠面包",
+  timeline: "时间轴", tutorial: "教程", dynamicstage: "动态关卡",
+  turbinewind: "涡轮风", turbine: "涡轮", wind: "风",
+  castsshadow: "投射阴影", noncastsshadow: "无投射阴影", misc: "杂项",
+  depth: "深度", blend: "混合", far: "远", lighting: "光照",
+  transition: "过渡", equipment: "设备", steamer: "蒸锅",
+  conveyorstation: "传送带站", prop: "道具", camershake: "镜头抖动",
+  shake: "抖动", floorboard: "地板板", ropehighres: "高清绳",
+  drawbridge: "吊桥", ledge: "檐口", dogbowl: "狗碗", bamboofloat: "竹筏",
+  vortex: "漩涡", torus: "环面", floormesh: "地板网格", magic: "魔法",
+  countertopa: "台面 A", cart: "矿车", crystal: "水晶", crystals: "水晶",
+  dark: "暗", elevatedrails: "高架轨道", gold: "金", minecart: "矿车",
+  mudwalls: "泥墙", outside: "外侧", ropecoil: "绳卷", onionking: "洋葱王",
+  storyonionking: "剧情洋葱王", killplanes: "死亡平面", killplane: "死亡平面",
+  sm: "", highres: "高清", low: "低", v2: "变体2", off: "关闭",
+  burner: "燃烧器", spike: "尖刺", rotor: "旋翼", banner: "横幅",
+  flag: "旗帜", nail: "钉", standard: "标准", blue: "蓝",
+  building: "建筑", walls: "墙", roof: "屋顶", wallblock: "墙块",
+  dlc6: "DLC6", dlc06: "DLC6", dlc12: "DLC12", dlc14: "DLC14",
+  dlc15: "DLC15", dlc16: "DLC16", dlc17: "DLC17",
+  hawaiian: "夏威夷", central: "中央", high: "高",
+  robin: "知更鸟", ground: "地面",
+  airparrot: "飞鹦鹉", groundparrot: "地面鹦鹉", prefab: "",
+  boiledfrankfurter: "煮热狗肠", frankfurter: "热狗肠", boiled: "煮",
+  anim: "动画", round: "圆形", floating: "漂浮", lantern: "灯笼",
+  seafloat: "海漂", map: "地图", camp: "营地",
+  waterbase: "水面底座", water: "水", wet: "湿", sand: "沙",
+};
+
+const COMPOUND_TOKEN_ZH = {
+  beachdoodads: "海滩小物件",
+  waterbase: "水面底座",
+  hazardspawner: "危险生成器",
+  floorboard: "地板板",
+  ropehighres: "高清绳",
+  mapwatercurve120: "地图弯曲水面120°",
+  mapwaterroad: "地图水路",
+  mapwaterroadshort: "地图短水路",
+  stonewalls: "石墙",
+  frontspike: "前刺",
+  walkingbread: "行走面包",
+  walkingbreadwalkingpath: "行走面包路径",
+  optionalhotchocolate: "可选热可可",
+  flyingpigeon: "飞鸽",
+  gameobject: "游戏对象",
+  killplanes: "死亡平面组",
+  movingplatform: "移动平台",
+  multiplayergamecamera: "多人游戏相机",
+  minecartparent: "矿车父节点",
+  conveyorstationprop: "传送带站道具",
+  camershakegroup: "镜头抖动组",
+  backgroundbirdparent: "背景鸟群父节点",
+  castsshadow_misc: "投射阴影（杂项）",
+  noncastsshadow_misc: "无投射阴影（杂项）",
+  depth_blend_far: "远景深度混合",
+  airballoon_burner_standard_blue: "热气球燃烧器（标准蓝）",
+  "airballoon_burner off": "热气球燃烧器（关闭）",
 };
 
 // ---------------------------------------------------------------------------
+
+const LATIN_WORD_RE = /[a-zA-Z]{3,}/g;
+
+function latinWordCount(zh) {
+  const cleaned = zh
+    .replace(/DLC\d+/gi, "")
+    .replace(/BGM/gi, "")
+    .replace(/NPC/gi, "")
+    .replace(/PFX/gi, "")
+    .replace(/\d+°/g, "");
+  const m = cleaned.match(LATIN_WORD_RE);
+  return m ? m.length : 0;
+}
 
 function normalizeNumber(tok) {
   const m = /^0*(\d+[a-z]?)$/.exec(tok);
@@ -367,9 +579,23 @@ const SUFFIX_RULES = [
 ];
 
 /** Theme prefix rules: strip from the id before tokenizing, prepend prefixZh. */
-const PREFIX_RULES = [{ re: /^air_balloon_/, prefixZh: "热气球·" }];
+const PREFIX_RULES = [
+  { re: /^air_balloon_/, prefixZh: "热气球·" },
+  { re: /^airballoon_/, prefixZh: "热气球·" },
+  { re: /^m_airballoon_/, prefixZh: "热气球·" },
+  { re: /^swamp_/, prefixZh: "沼泽·" },
+  { re: /^sm_dlc13_/i, prefixZh: "DLC13·" },
+  { re: /^m_dlc2_beach_/, prefixZh: "DLC2海滩·" },
+  { re: /^m_dlc5_/, prefixZh: "DLC5·" },
+  { re: /^m_dlc6_/, prefixZh: "DLC6·" },
+  { re: /^m_mapwater/, prefixZh: "地图水面·" },
+  { re: /^mi_/, prefixZh: "矿洞·" },
+  { re: /^watersplash_/, prefixZh: "水花·" },
+  { re: /^beachdoodads_/, prefixZh: "海滩小物件·" },
+];
 
 function draftZh(id) {
+  if (COMPOUND_TOKEN_ZH[id]) return COMPOUND_TOKEN_ZH[id];
   if (CURATED[id]) return CURATED[id];
 
   const npc = /^NPC_([A-Za-z]+)_([A-Za-z]+)_(\d+)$/.exec(id);
@@ -415,9 +641,28 @@ function draftTokens(id) {
       parts.push(num);
       continue;
     }
-    const zh = TOKEN_ZH[tok.toLowerCase()];
-    if (zh) {
-      parts.push(zh);
+    const lower = tok.toLowerCase();
+    const compound = COMPOUND_TOKEN_ZH[lower] ?? COMPOUND_TOKEN_ZH[tok];
+    if (compound) {
+      parts.push(compound);
+      translated++;
+      continue;
+    }
+    const dlc = /^dlc(\d+)$/i.exec(lower);
+    if (dlc) {
+      parts.push(`DLC${dlc[1]}`);
+      translated++;
+      continue;
+    }
+    const toRange = /^(\d+)to(\d+)$/i.exec(lower);
+    if (toRange) {
+      parts.push(`${toRange[1]}转${toRange[2]}`);
+      translated++;
+      continue;
+    }
+    const zh = TOKEN_ZH[lower];
+    if (zh !== undefined) {
+      if (zh) parts.push(zh);
       translated++;
     } else {
       parts.push(tok);
@@ -456,9 +701,35 @@ function collectIds() {
 }
 
 function main() {
+  const refresh = process.argv.includes("--refresh");
   const doc = JSON.parse(fs.readFileSync(DICT_PATH, "utf8"));
   const names = doc.names || [];
   const have = new Set(names.map((n) => n.id));
+
+  let refreshed = 0;
+  if (refresh) {
+    for (const entry of names) {
+      const curated = CURATED[entry.id];
+      if (curated && entry.zh !== curated) {
+        entry.zh = curated;
+        entry.en = draftEn(entry.id);
+        refreshed++;
+        continue;
+      }
+      if (CURATED_IDS.has(entry.id)) continue;
+      if (latinWordCount(entry.zh) === 0) continue;
+      const newZh = draftZh(entry.id);
+      if (!newZh || newZh === entry.zh) continue;
+      const oldScore = latinWordCount(entry.zh);
+      const newScore = latinWordCount(newZh);
+      if (newScore < oldScore || (newScore === 0 && oldScore > 0)) {
+        entry.zh = newZh;
+        entry.en = draftEn(entry.id);
+        refreshed++;
+      }
+    }
+    console.log(`Refreshed ${refreshed} draft entries with leftover English.`);
+  }
 
   const ids = collectIds();
   const untranslated = [];

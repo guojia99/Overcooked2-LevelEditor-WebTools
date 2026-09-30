@@ -40,6 +40,7 @@ import { showBatchHeightMenu, showContextMenu, showWaypointContextMenu } from ".
 import { selectionHeightTargetCount } from "./selectionHeight";
 import { batchNudgeSelected, batchRotateSelected, batchTransformCount } from "./selectionTransform";
 import { openFloorEditorModal } from "./floorEditorModal";
+import { updateFloorBar } from "./floorPalette";
 import {
   addFloorAt,
   addAirFloorAt,
@@ -82,6 +83,7 @@ import {
   snapshotState
 } from "./historyOps";
 import { draw } from "./render";
+import { setStatus } from "./status";
 import { closeModal } from "../modals";
 import { hitTestAll, hitTestItemResizeHandle } from "./renderItems";
 import { hitTestFloorsAll, type FloorHit } from "./renderFloors";
@@ -1306,10 +1308,15 @@ export function setupCanvas() {
       clearPalettePick();
       S.marqueeing = false;
       resetOverlapMarqueePending();
+      const hadPending = S.pendingNewFloor || S.pendingNewAirFloor;
       S.pendingNewFloor = false;
       S.pendingNewFloorCat = null;
       S.pendingNewAirFloor = false;
       dom.canvas.style.cursor = "";
+      if (hadPending) {
+        setStatus("已取消放置");
+        updateFloorBar();
+      }
       if (S.animMode !== "none") exitAnimMode();
     }
 

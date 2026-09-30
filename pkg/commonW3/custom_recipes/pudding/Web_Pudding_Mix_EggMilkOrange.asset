@@ -28,7 +28,7 @@ MonoBehaviour:
   cookingStepSO: {fileID: 0}
   cookingStepIconSO: {fileID: 0}
   cookingStepIcon: {fileID: 0}
-  cookingProgress: 0
+  cookingProgress: 1
   mixingIconSO: {fileID: 11400000, guid: 910d8538b871c474a8359c9e5edf884a, type: 2}
   mixingIcon: {fileID: 0}
   mixingProgress: 1

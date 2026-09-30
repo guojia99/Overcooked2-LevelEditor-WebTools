@@ -24,7 +24,8 @@ import {
   CREAM_SPRAY_IDS,
   CREAM_SPRAY_DEFAULT_ID,
   CREAM_INGREDIENT_IDS,
-  isRecipeDlcBlocked
+  isRecipeDlcBlocked,
+  utensilIntermediateRecipes
 } from "../recipeKnowledge";
 import { comboById, addCombo } from "../combos";
 import {
@@ -66,6 +67,7 @@ import {
   fetchLevelRecipes,
   fetchOptionalPresets,
   computeBurgerOptionals,
+  computePizzaOptionals,
   saveOptionalItems,
   saveMatchlists,
   fetchMatchlistSuggestion,
@@ -195,7 +197,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   let levelSetRecipes: RecipeEntry[] = [];
   let officialBurgerRecipes: RecipeEntry[] = [];
   let coreRecipes: RecipeEntry[] = [];
-  S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
+  S.intermediatesCache = utensilIntermediateRecipes(recipes);
 
   /** 官方原生汉堡：type==burger 且非 commonW2（group!="burger"）、非本关（group!="levelset"）。
    *  单独成一个顶层分类，与 commonW2「🍔 Burger大全」区分。 */
@@ -220,7 +222,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         r.optionalKind !== "pizza" &&
         !(r.intermediate && (r.assetPath ?? "").includes("/commonW2/")),
     );
-    S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
+    S.intermediatesCache = utensilIntermediateRecipes(recipes);
     const vis = visibleRecipes(orderable);
     levelSetRecipes = orderable.filter((r) => r.group === "levelset");
     // 官方原生汉堡（非 commonW2）单独成组；其余非本关归 core。
@@ -765,12 +767,16 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     const stackIds = [...selectedUt].filter((u) => isStackItem(u));
     const groundIds = [...selectedUt].filter((u) => !isStackItem(u));
 
-    // 堆叠件 → 其 base（STEP_UTENSILS 首位；hostRule=counter_standard → Counter）
+    // 堆叠件 → 其 base（STEP_UTENSILS 首位；hostRule=counter_standard → Counter）。
+    // 首个映射优先（不覆盖）：搅拌碗同时出现在 Mixer 与 OvenCakeTin（蛋糕模具=
+    // 搅拌碗）两条目里，保留在搅拌台正上方——面糊先在搅拌台搅拌，再连碗进烤箱。
     const attachBase = new Map<string, string>();
     for (const ids of Object.values(STEP_UTENSILS)) {
       if (ids.length < 2) continue;
       const b = ids[0];
-      for (let i = 1; i < ids.length; i++) attachBase.set(ids[i], b);
+      for (let i = 1; i < ids.length; i++) {
+        if (!attachBase.has(ids[i])) attachBase.set(ids[i], b);
+      }
     }
     const counterStdRule = "counter_standard";
     for (const cat of S.catalogByGuid.values()) {
@@ -1480,16 +1486,69 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     render();
   };
 
-  const fillPizzaOptionals = () => {
-    if (!presets) { setStatus("候选尚未加载完成，稍后再试", false); return; }
-    const guids = [...presets.pizzaFillGuids];
-    // 蘑菇披萨变体：与旧自动填充一致，仅当所选菜谱包含蘑菇披萨时追加。
-    const hasMushroom = [...selected].some((g) => {
-      const r = byGuid.get(g);
-      return !!r && r.type === "pizza" && /mushroom/i.test(r.id);
-    });
-    if (hasMushroom) guids.push(...presets.pizzaMushroomGuids);
-    addOptionalGuids(guids, "已加入自选披萨部件");
+  /** 自动管理的披萨 optional（一键填充整体替换）：stock 自选披萨生/熟
+   *  （Pizza_Optional_*_SO，浇头白名单缺 DLC 橄榄，会收窄面坯原版白名单）、
+   *  本关 PizzaOptional_*、蘑菇节点。用户手动加入的其他条目不受影响。 */
+  const PIZZA_OPTIONAL_IDS = new Set([
+    "Pizza_Optional_Uncooked_SO",
+    "Pizza_Optional_Cooked_SO",
+    "Mushroom_For_Pizza_SO",
+    "PizzaOptional_Uncooked",
+    "PizzaOptional_Cooked",
+  ]);
+
+  const isAutoManagedPizzaOptional = (it: LevelOptionalItem): boolean =>
+    it.kind === "pizza-optional" || PIZZA_OPTIONAL_IDS.has(it.id);
+
+  const selectedHasPizza = (): boolean =>
+    [...selected].some((g) => byGuid.get(g)?.type === "pizza");
+
+  const replacePizzaOptionalGuids = (
+    guids: string[],
+    doneMsg: string,
+    hintItems?: LevelOptionalItem[],
+  ): void => {
+    const kept = optionalItems.filter((it) => !isAutoManagedPizzaOptional(it));
+    const hintByGuid = new Map((hintItems ?? []).map((i) => [normalizeGuid(i.guid), i]));
+    const newItems: LevelOptionalItem[] = [];
+    const seen = new Set<string>();
+    for (const g of guids) {
+      const ng = normalizeGuid(g);
+      if (seen.has(ng)) continue;
+      seen.add(ng);
+      const hint = hintByGuid.get(ng);
+      newItems.push(resolveOptionalMeta(g, hint));
+    }
+    // 双保险：保留条目与新集合按归一化 guid 去重。
+    optionalItems = [...newItems, ...kept.filter((it) => !seen.has(normalizeGuid(it.guid)))];
+    optionalDirty = true;
+    setStatus(`${doneMsg}（披萨相关 ${newItems.length} 条，已替换旧自选披萨条目）`);
+    render();
+  };
+
+  const fillPizzaOptionals = async () => {
+    if (!level?.levelInfoAssetPath) {
+      setStatus("未找到 LevelInfoSO", false);
+      return;
+    }
+    if (!selectedHasPizza()) {
+      setStatus("未选择披萨菜谱（如橄榄披萨/蘑菇披萨）——填充需要按所选披萨推导浇头", false);
+      return;
+    }
+    try {
+      const { guids, items } = await computePizzaOptionals(level.levelInfoAssetPath, [...selected]);
+      if (guids.length === 0) {
+        setStatus("未能生成本关自选披萨（所选菜谱无披萨，或 common01 模板缺失）", false);
+        return;
+      }
+      replacePizzaOptionalGuids(
+        guids,
+        "已生成本关自选披萨（浇头 = 原版 5 种 ∪ 所选披萨配料，含橄榄等 DLC 配料）",
+        items,
+      );
+    } catch (e) {
+      setStatus(`披萨填充失败：${(e as Error).message}`, false);
+    }
   };
 
   const fillHotdogOptionals = () => {
@@ -1775,7 +1834,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         ${invalid.size ? `<button type="button" class="modal-btn" id="rw-opt-clear-invalid">🧹 清理无效条目（${invalid.size}）</button>` : ""}
         <button type="button" class="modal-btn" id="rw-opt-fill-burger-sel">🍔 按已选汉堡一键填充</button>
         <button type="button" class="modal-btn" id="rw-opt-clear-legacy-burger">清除遗留汉堡组装</button>
-        <button type="button" class="modal-btn" id="rw-opt-fill-pizza">🍕 披萨一键填充</button>
+        <button type="button" class="modal-btn" id="rw-opt-fill-pizza">🍕 按已选披萨一键填充</button>
         <button type="button" class="modal-btn" id="rw-opt-fill-hotdog">🌭 Hotdog 一键填充</button>
         <button type="button" class="modal-btn" id="rw-opt-toggle-picker">${optPickerOpen ? "收起添加面板" : "＋ 添加条目"}</button>
       </div>
@@ -1789,7 +1848,9 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       void fillBurgerOptionalsFromSelected();
     });
     document.getElementById("rw-opt-clear-legacy-burger")?.addEventListener("click", clearLegacyBurgerOptionals);
-    document.getElementById("rw-opt-fill-pizza")?.addEventListener("click", fillPizzaOptionals);
+    document.getElementById("rw-opt-fill-pizza")?.addEventListener("click", () => {
+      void fillPizzaOptionals();
+    });
     document.getElementById("rw-opt-fill-hotdog")?.addEventListener("click", fillHotdogOptionals);
     document.getElementById("rw-opt-toggle-picker")?.addEventListener("click", () => {
       optPickerOpen = !optPickerOpen;

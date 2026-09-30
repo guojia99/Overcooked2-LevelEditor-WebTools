@@ -368,6 +368,21 @@ export async function computeBurgerOptionals(
   return { guids: data.guids ?? [], items: data.items ?? [] };
 }
 
+/** 🍕 披萨一键填充：生成/更新本关 PizzaOptional_{Uncooked,Cooked}（浇头 = 原版 5 种 ∪ 所选披萨配料，
+ *  如 dlc05 橄榄），返回应注册的 optional guid（本关自选披萨生/熟 + 蘑菇节点）。 */
+export async function computePizzaOptionals(
+  levelInfoAssetPath: string,
+  recipeGuids: string[]
+): Promise<{ guids: string[]; items: LevelOptionalItem[] }> {
+  const r = await fetch("/api/recipes/compute-pizza-optionals", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ levelInfoAssetPath, recipeGuids }),
+  });
+  const data = await readApiJson<{ guids?: string[]; items?: LevelOptionalItem[] }>(r);
+  return { guids: data.guids ?? [], items: data.items ?? [] };
+}
+
 /** 覆盖写入 includeRecipeMatchLists（菜谱管理 Matchlist tab 写回）。 */
 export async function saveMatchlists(
   levelInfoAssetPath: string,

@@ -1413,7 +1413,8 @@ const STEP_UTENSILS = {
   MixingBowl: ["Mixer", "MixerBowl"],
   HotPot: ["web_cooking_region_floorburner", "web_utensil_large_pot_01"],
   RoastingTray: ["Oven", "utensil_roasting_tray"],
-  OvenCakeTin: ["Oven", "utensil_cake_tin_01"],
+  // 蛋糕模具没有独立道具：容器就是搅拌碗（连碗进烤箱）
+  OvenCakeTin: ["Oven", "MixerBowl"],
 };
 
 /** Recipe-book ingredient grouping (mirrors ComputeCookingGroups in LayoutEditorRecipeKnowledge.cs).

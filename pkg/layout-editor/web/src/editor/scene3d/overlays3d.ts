@@ -10,7 +10,7 @@
 import * as THREE from "three";
 import { S, CELL, isFloorLikeLayer } from "../state";
 import { floorWalkY } from "../floorHeight";
-import { bgTheme } from "../../floorColors";
+import { canvasVoidTheme, bgThemeKeyForDeathType } from "../../floorColors";
 import { stubKindOf } from "../stubControls";
 import { collectButtonPartnerEdges, collectCoaxialGroups } from "../renderItems";
 import { ORDER } from "./constants";
@@ -58,7 +58,12 @@ function syncStaticOverlays(ctx: Scene3DCtx): void {
     const y = floorWalkY(f);
     if (y < lowest) lowest = y;
   }
-  const sig = [S.showGrid ? "1" : "0", lowest.toFixed(2), S.bgThemeKey, S.cameraInfo?.backgroundColor ?? ""].join("|");
+  const sig = [
+    S.showGrid ? "1" : "0",
+    lowest.toFixed(2),
+    S.deathInfo?.deathType ?? "",
+    S.cameraInfo?.backgroundColor ?? "",
+  ].join("|");
   if (staticRoot && staticRoot.parent === ctx.overlayRoot && sig === staticSignature) return;
 
   if (staticRoot) disposeObject(staticRoot);
@@ -72,10 +77,12 @@ function syncStaticOverlays(ctx: Scene3DCtx): void {
 
 /** 底色与雾色跟随主题/相机背景色（与 2D draw() 的 camVoidBg 分支同口径）。 */
 function applyBackdrop(ctx: Scene3DCtx): void {
-  const theme = bgTheme(S.bgThemeKey);
-  const camBg = S.bgThemeKey === "void" && isHexColor(S.cameraInfo?.backgroundColor)
-    ? S.cameraInfo!.backgroundColor!
-    : null;
+  const theme = canvasVoidTheme(S.deathInfo?.deathType);
+  const camBg =
+    bgThemeKeyForDeathType(S.deathInfo?.deathType) === "void" &&
+    isHexColor(S.cameraInfo?.backgroundColor)
+      ? S.cameraInfo!.backgroundColor!
+      : null;
   const col = parseCssColor(camBg ?? theme.fill ?? "#14171c").color;
   ctx.renderer.setClearColor(col, 1);
   if (ctx.scene.fog) (ctx.scene.fog as THREE.Fog).color.copy(col);
@@ -114,7 +121,7 @@ function addGrid(root: THREE.Group, lowest: number): void {
 
   // 空洞底面：一张大面片，替代 2D 的斜线填充，指示「没有地板 = 会掉下去」。
   // theme.hatch 是 rgba(...) 字符串，THREE.Color 解析不了，必须走 parseCssColor。
-  const theme = bgTheme(S.bgThemeKey);
+  const theme = canvasVoidTheme(S.deathInfo?.deathType);
   const hatch = parseCssColor(theme.hatch || "rgba(130,132,142,0.10)");
   const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(span, span),

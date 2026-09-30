@@ -95,7 +95,6 @@ export function makeLayerVisibility(): Record<LayerKey, LayerVisibility> {
 export interface EditorSnapshot {
   items: EditorItem[];
   floors: EditorFloor[];
-  bgThemeKey: string;
   /** Move-control groups (undo/redo must restore them too). */
   animControls: AnimGroup[];
   /** 开关联动（按钮 → 断头台/饮料机/酱料机；undo/redo 一并恢复）。 */
@@ -317,8 +316,6 @@ export const S = {
   hasCeilingHeight: false,
   /** 画布上显示相机视野范围（FOV 视锥与地面交线）。 */
   showCameraFov: localStorage.getItem("showCameraFov") !== "0",
-  bgThemeKey: "void",
-  bgThemeDirty: false,
   autoKillPlane: false,
   autoWalkable: true,
   allowWorkstationOverlap: false,

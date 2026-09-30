@@ -128,16 +128,16 @@
       "icon": true
     },
     {
-      "guid": "0f3c0cb3723f9fa9a0946ec627dc40c9",
-      "id": "DLC11_Salad_tomato_cucumber_onion",
-      "nameZh": "沙拉·番茄黄瓜洋葱",
-      "nameEn": "Salad Tomato Cucumber & Onion",
-      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_cucumber_onion.asset",
+      "guid": "13c7fb32dd92fd78b20468b8e53b2d41",
+      "id": "DLC11_Salad_corn_onion",
+      "nameZh": "沙拉·玉米洋葱",
+      "nameEn": "Salad Corn & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_corn_onion.asset",
       "cookingStep": "",
       "platingStep": "Plate",
       "ingredients": [
-        "dlc11_tomato",
-        "dlc11_cucumber",
+        "dlc11_lettuce",
+        "dlc11_corn",
         "dlc11_onion_salad"
       ],
       "ingredientCount": 3,
@@ -152,8 +152,8 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "dlc11_tomato",
-            "dlc11_cucumber",
+            "dlc11_lettuce",
+            "dlc11_corn",
             "dlc11_onion_salad"
           ]
         }
@@ -227,22 +227,21 @@
       "icon": true
     },
     {
-      "guid": "85af1e323bd8673c9a68b9e3f17da1e2",
-      "id": "DLC11_Salad_cucumber_tomato_onion",
-      "nameZh": "沙拉·黄瓜番茄洋葱",
-      "nameEn": "Salad Cucumber Tomato & Onion",
-      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_cucumber_tomato_onion.asset",
+      "guid": "0f3c0cb3723f9fa9a0946ec627dc40c9",
+      "id": "DLC11_Salad_tomato_cucumber_onion",
+      "nameZh": "沙拉·番茄黄瓜洋葱",
+      "nameEn": "Salad Tomato Cucumber & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_cucumber_onion.asset",
       "cookingStep": "",
       "platingStep": "Plate",
       "ingredients": [
-        "dlc11_lettuce",
         "dlc11_tomato",
         "dlc11_cucumber",
         "dlc11_onion_salad"
       ],
-      "ingredientCount": 4,
+      "ingredientCount": 3,
       "cookingStepCount": 0,
-      "score": 80,
+      "score": 60,
       "isCustom": false,
       "group": "dlc11",
       "type": "salad",
@@ -252,7 +251,6 @@
           "step": "",
           "utensils": [],
           "ingredients": [
-            "dlc11_lettuce",
             "dlc11_tomato",
             "dlc11_cucumber",
             "dlc11_onion_salad"
@@ -295,21 +293,22 @@
       "icon": true
     },
     {
-      "guid": "13c7fb32dd92fd78b20468b8e53b2d41",
-      "id": "DLC11_Salad_corn_onion",
-      "nameZh": "沙拉·玉米洋葱",
-      "nameEn": "Salad Corn & Onion",
-      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_corn_onion.asset",
+      "guid": "85af1e323bd8673c9a68b9e3f17da1e2",
+      "id": "DLC11_Salad_cucumber_tomato_onion",
+      "nameZh": "沙拉·黄瓜番茄洋葱",
+      "nameEn": "Salad Cucumber Tomato & Onion",
+      "assetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_cucumber_tomato_onion.asset",
       "cookingStep": "",
       "platingStep": "Plate",
       "ingredients": [
         "dlc11_lettuce",
-        "dlc11_corn",
+        "dlc11_tomato",
+        "dlc11_cucumber",
         "dlc11_onion_salad"
       ],
-      "ingredientCount": 3,
+      "ingredientCount": 4,
       "cookingStepCount": 0,
-      "score": 60,
+      "score": 80,
       "isCustom": false,
       "group": "dlc11",
       "type": "salad",
@@ -320,8 +319,41 @@
           "utensils": [],
           "ingredients": [
             "dlc11_lettuce",
-            "dlc11_corn",
+            "dlc11_tomato",
+            "dlc11_cucumber",
             "dlc11_onion_salad"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "8c9ad5c480eb745a670f30ea0ac5c831",
+      "id": "dlc11_boiledfrankfurter",
+      "nameZh": "煮热狗肠（DLC11）",
+      "nameEn": "Boiled Frankfurter (DLC11)",
+      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_boiledfrankfurter.asset",
+      "cookingStep": "Pot",
+      "platingStep": "",
+      "ingredients": [
+        "frankfurter"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc11",
+      "type": "hotdog",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "frankfurter"
           ]
         }
       ],
@@ -446,38 +478,6 @@
             "dlc11_vanilla",
             "icecube",
             "dlc11_milk"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "8c9ad5c480eb745a670f30ea0ac5c831",
-      "id": "dlc11_boiledfrankfurter",
-      "nameZh": "煮热狗肠（DLC11）",
-      "nameEn": "Boiled Frankfurter (DLC11)",
-      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_boiledfrankfurter.asset",
-      "cookingStep": "Pot",
-      "platingStep": "",
-      "ingredients": [
-        "frankfurter"
-      ],
-      "ingredientCount": 1,
-      "cookingStepCount": 1,
-      "score": 0,
-      "isCustom": false,
-      "group": "dlc11",
-      "type": "hotdog",
-      "intermediate": true,
-      "cookingGroups": [
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "frankfurter"
           ]
         }
       ],

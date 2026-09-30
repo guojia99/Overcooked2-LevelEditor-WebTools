@@ -1077,7 +1077,8 @@ public class OptionalPresetItemDto
 public class OptionalPresetsDto
 {
     public OptionalPresetItemDto[] items;
-    /** 披萨一键填充（自选披萨部件；蘑菇变体额外见 pizzaMushroomGuids）。 */
+    /** stock 自选披萨部件（手动添加面板候选；🍕 一键填充已改为 compute-pizza-optionals
+     *  生成浇头扩容的本关 PizzaOptional_*，见 LayoutEditorCatalogApi.ComputePizzaOptionalFill）。 */
     public string[] pizzaFillGuids;
     public string[] pizzaMushroomGuids;
     /** Hotdog 一键填充（按 DLC 两套：可选菜谱+酱料+水煮香肠）。 */
@@ -1089,6 +1090,7 @@ public class OptionalPresetsDto
 public class BurgerOptionalComputeRequestDto
 {
     public string levelInfoAssetPath;
+    /** 一键填充请求复用（汉堡/披萨）：所选菜谱 guid。 */
     public string[] recipeGuids;
 }
 

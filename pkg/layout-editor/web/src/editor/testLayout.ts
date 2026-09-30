@@ -24,7 +24,7 @@ import { setStatus } from "./status";
 import { openModal, closeModal } from "../modals";
 import { cancelBtnHtml, modalBtnHtml } from "../ui/views/button";
 import { fetchRecipeCatalog, fetchLevelRecipes, saveLevelRecipes } from "../api";
-import { computeUtensilIngredientFill } from "./recipeKnowledge";
+import { computeUtensilIngredientFill, utensilIntermediateRecipes } from "./recipeKnowledge";
 import { applyUtensilIngredientFill } from "./ui/utensilManager";
 
 const FLOOR_W = 30;
@@ -321,7 +321,7 @@ export async function runTestLayout(): Promise<void> {
     // 锅具自动装填（与「锅具管理 → 按菜谱自动填充」同一套数据驱动，共用同一个
     // applyUtensilIngredientFill —— 含「clear 条目 = 清空、沿用原版 lookup」与
     // 「容量按菜谱单份用量」两条规则，避免第三份拷贝漂移）
-    S.intermediatesCache = recipes.filter((r) => r.intermediate || r.isCustom);
+    S.intermediatesCache = utensilIntermediateRecipes(recipes);
     const fill = computeUtensilIngredientFill(orderable);
     if (fill.size > 0) {
       const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));

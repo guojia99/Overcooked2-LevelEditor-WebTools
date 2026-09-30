@@ -50,7 +50,8 @@ public static class LayoutEditorRecipeKnowledge
         { "MixingBowl", new[] { "Mixer", "MixerBowl" } },
         { "HotPot", new[] { "web_cooking_region_floorburner", "web_utensil_large_pot_01" } },
         { "RoastingTray", new[] { "Oven", "utensil_roasting_tray" } },
-        { "OvenCakeTin", new[] { "Oven", "utensil_cake_tin_01" } },
+        // 蛋糕模具没有独立道具：容器就是搅拌碗（连碗进烤箱）
+        { "OvenCakeTin", new[] { "Oven", "MixerBowl" } },
     };
 
     public static string[] UtensilsForStep(string step)
@@ -816,6 +817,7 @@ public static class LayoutEditorRecipeKnowledge
         Put(d, "Pizza_Plain_SO", "OvenTray", "DLC05_Dough", "TomatoSO", "CheeseSO");
         Put(d, "Pizza_Peperoni_SO", "OvenTray", "DLC05_Dough", "TomatoSO", "CheeseSO", "PepperoniSO");
         Put(d, "Pizza_Chicken_SO", "OvenTray", "DLC05_Dough", "TomatoSO", "CheeseSO", "ChickenSO");
+        Put(d, "Pizza_Olives", "OvenTray", "DoughSO", "TomatoSO", "CheeseSO", "Olive");
 
         Put(d, "Salad_Plain_SO", "", "LettuceSO", "TomatoSO", "OnionSO");
         Put(d, "Salad_Cucumber_SO", "", "LettuceSO", "TomatoSO", "CucumberSO");

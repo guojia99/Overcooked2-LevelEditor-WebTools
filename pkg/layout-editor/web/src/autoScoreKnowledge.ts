@@ -223,6 +223,13 @@ export const UTENSIL_RULES: Record<UtensilKind, UtensilRule> = {
   HotPotPot: { station: "hotpotBurner", cookSec: 12, capacity: 6 },
 };
 
+/** 锅具需求的「供给实体」别名：蛋糕模具没有独立道具，实体就是搅拌碗
+ *  （面糊在搅拌碗里搅拌后连碗进烤箱）——场景搅拌碗同时满足 MixerBowl /
+ *  OvenCakeTin 两类需求；工作站要求仍按各自规则（OvenCakeTin=烤箱）。 */
+export const UTENSIL_SUPPLY_ALIAS: Partial<Record<UtensilKind, UtensilKind>> = {
+  OvenCakeTin: "MixerBowl",
+};
+
 /** 菜谱 cookingStep id（Pot/FryingPan/…）→ 锅具种类。 */
 export const STEP_TO_UTENSIL: Record<string, UtensilKind> = {
   Pot: "Pot",

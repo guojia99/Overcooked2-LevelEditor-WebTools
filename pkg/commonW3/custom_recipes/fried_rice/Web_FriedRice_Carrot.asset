@@ -17,7 +17,7 @@ MonoBehaviour:
   score: 80
   platingStepSO: {fileID: 11400000, guid: 02b04fdf6fef0e944870fd5e06375ed1, type: 2}
   modelSO: {fileID: 0}
-  model: {fileID: 100002, guid: 7a92b3026ae1dc05b8f66665bd0b02b6, type: 3}
+  model: {fileID: 100000, guid: 7a92b3026ae1dc05b8f66665bd0b02b6, type: 3}
   iconSO: {fileID: 0}
   icon: {fileID: 21300000, guid: 541e40be7bf00e360c9bc93bb04c1044, type: 3}
   compositionSOs:

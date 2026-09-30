@@ -15,8 +15,10 @@ import {
   escHtml
 } from "../coords";
 import { itemLabel } from "../labels";
-import { itemCategoryOf, isResizableBackgroundItem, itemPlaneCells } from "../catalog";
+import { itemCategoryOf, isResizableBackgroundItem, isBackgroundPlaneCat, itemPlaneCells } from "../catalog";
 import { setItemPlaneSize, airWallCells, setAirWallSize } from "../items";
+import { fitBackgroundToLevelBounds } from "../floors";
+import { setStatus } from "../status";
 import { isAirWallItem, isAirSlopeItem } from "../stubControls";
 import { isSurfaceItem } from "../../floorColors";
 import {
@@ -314,7 +316,11 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
         <span class="ctx-scale-val">×</span>
         <input type="number" id="ctx-bd-input" class="ctx-input ctx-pos-input" min="1" step="1" value="${dCells}" title="高(格)（回车生效）" />
       </div>
-    </div>`
+    </div>${
+            isResizableBackgroundItem(item) && S.currentLayer === "background"
+              ? `<div class="ctx-actions-row"><button type="button" class="ctx-btn" data-act="fit-level">铺满关卡</button></div>`
+              : ""
+          }`
         : ""
     }
     ${isAirWallItem(item) && !batchHeight ? airWallHeightRowHtml(item) : ""}
@@ -542,6 +548,25 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   }
   wireStubControls(item);
   wireItemVariant(item);
+  dom.ctxMenuEl.querySelector('[data-act="fit-level"]')?.addEventListener("click", () => {
+    const cat = S.catalogByGuid.get(item.prefabGuid);
+    if (!cat || !isBackgroundPlaneCat(cat)) {
+      setStatus("该物品不是可铺满的背景平面", false);
+      hideContextMenu();
+      return;
+    }
+    pushHistory();
+    if (fitBackgroundToLevelBounds(item, cat)) {
+      S.dirty = true;
+      const cells = itemPlaneCells(item);
+      setStatus(`已铺满关卡（${cells.wCells}×${cells.dCells} 格，居中覆盖关卡范围）`);
+      draw();
+      updateFloorBar();
+    } else {
+      setStatus("无法铺满：关卡尚无可见占地范围", false);
+    }
+    hideContextMenu();
+  });
   dom.ctxMenuEl.querySelector('[data-act="detail"]')?.addEventListener("click", () => {
     if ((S.currentLayer === "floor" || S.currentLayer === "background") && isSurface) {
       showSurfaceItemDetail(item, clientX, clientY);

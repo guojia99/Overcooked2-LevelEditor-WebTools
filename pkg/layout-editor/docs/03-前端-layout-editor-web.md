@@ -257,7 +257,7 @@ flowchart LR
 | GET | `/api/grid` | GridInfo |
 | GET | `/api/catalog/floor-materials?levelSet=` / `ingredients` / `questionmarks` / `questionmarks/icon?guid=` | 目录 |
 | GET/POST | `/api/level-recipes` | 关卡菜谱读写 |
-| GET | `/api/level/optional-presets`；POST `/api/level/optional-items`、`/api/level/matchlists`、`/api/recipes/compute-burger-optionals` | 可选部件/匹配表 |
+| GET | `/api/level/optional-presets`；POST `/api/level/optional-items`、`/api/level/matchlists`、`/api/recipes/compute-burger-optionals`、`/api/recipes/compute-pizza-optionals` | 可选部件/匹配表 |
 | POST | `/api/scene/death`、`/api/scene/killplane` | 死亡主题/击杀面 |
 | POST | `/api/level/image-upload`；GET `/api/level/data-file?path=` | 图片地板 |
 | GET | `/api/level/assignment?assetPath=`；POST `/api/level/assignment-save`、`/api/level/assignment-clear` | 菜谱分工配置（汇总页「分工模式」页读写；`assignment~/assignment.json`） |

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-29T08:04:40.879Z",
+  "generatedAt": "2026-09-30T14:20:40.282Z",
   "schemaVersion": 7,
   "itemCount": 110,
   "music": [
@@ -56,7 +56,7 @@
       "id": "DLC_02_HiddenTrack",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_02_HiddenTrack.asset",
       "bundleName": "bundle159",
-      "nameZh": "DLC2 隐藏曲目（BGM）",
+      "nameZh": "DLC2 隐藏曲目",
       "nameEn": "DLC 2 Hidden Track"
     },
     {
@@ -128,7 +128,7 @@
       "id": "DLC_05_City",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_05_City.asset",
       "bundleName": "bundle242",
-      "nameZh": "DLC5 城市（BGM）",
+      "nameZh": "DLC 5 城市",
       "nameEn": "DLC 5 City"
     },
     {
@@ -184,7 +184,7 @@
       "id": "DLC_07_City",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_07_City.asset",
       "bundleName": "bundle290",
-      "nameZh": "DLC7 城市（BGM）",
+      "nameZh": "DLC 7 城市",
       "nameEn": "DLC 7 City"
     },
     {
@@ -192,7 +192,7 @@
       "id": "DLC_07_Courtyard",
       "assetPath": "Assets/common02/pseudo_prefab_so/audio/music/DLC_07_Courtyard.asset",
       "bundleName": "bundle290",
-      "nameZh": "DLC7 庭院（BGM）",
+      "nameZh": "DLC 7 庭院",
       "nameEn": "DLC 7 Courtyard"
     },
     {

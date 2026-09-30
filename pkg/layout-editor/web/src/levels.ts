@@ -826,7 +826,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
     .join("");
 
   content.innerHTML = `
-    <div class="m-actions-row">
+    <div class="m-actions-row m-sticky-toolbar">
       ${mBtnHtml("+ 新建关卡", "primary", { id: "new-level" })}
       ${levels.length > 1 ? mBtnHtml("⇅ 调整顺序", "default", { id: "reorder-levels" }) : ""}
       ${levels.length > 0 ? mBtnHtml("🖼 一键导出关卡截图", "default", { id: "shots-export" }) : ""}
@@ -895,19 +895,26 @@ function openReorderModal(app: HTMLElement, setName: string, levels: LevelSummar
     .map((lv, idx) => {
       const id = initialIds[idx];
       const title = lv.levelNameZH || lv.levelName || id;
+      const enName = lv.levelNameZH && lv.levelName ? lv.levelName : "";
       const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
+      const shotHtml = shot
+        ? `<img class="m-reorder-shot" src="${esc(shot)}" alt="" loading="lazy">`
+        : '<span class="m-reorder-shot empty"><span class="muted">无截图</span></span>';
       return `
       <div class="m-reorder-row" draggable="true" data-id="${esc(id)}">
-        <span class="m-reorder-handle" title="上下拖拽调整顺序">⠿</span>
-        <span class="m-reorder-num">${idx + 1}</span>
-        ${shot ? `<img class="m-reorder-shot" src="${esc(shot)}" alt="" loading="lazy">` : '<span class="m-reorder-shot empty"></span>'}
-        <div class="m-row-main">
-          <div class="m-row-title">${esc(title)}</div>
-          <div class="m-row-sub">${esc(lv.sceneName)} · ${esc(id)}</div>
+        <span class="m-reorder-handle" title="拖拽调整顺序" aria-hidden="true">⋮⋮</span>
+        <span class="m-reorder-num" aria-label="第 ${idx + 1} 关">${idx + 1}</span>
+        <div class="m-reorder-shot-wrap">${shotHtml}</div>
+        <div class="m-reorder-main">
+          <div class="m-reorder-title">${esc(title)}${enName ? ` <span class="muted">(${esc(enName)})</span>` : ""}</div>
+          <div class="m-reorder-meta">
+            <span class="m-reorder-scene">${esc(lv.sceneName)}</span>
+            <span class="m-reorder-id">${esc(id)}</span>
+          </div>
         </div>
         <span class="m-reorder-btns">
-          ${mBtnHtml("↑", "default", { "data-rup": "", title: "上移一位" })}
-          ${mBtnHtml("↓", "default", { "data-rdown": "", title: "下移一位" })}
+          ${mBtnHtml("↑", "default", { "data-rup": "", title: "上移一位", "aria-label": "上移一位" })}
+          ${mBtnHtml("↓", "default", { "data-rdown": "", title: "下移一位", "aria-label": "下移一位" })}
         </span>
       </div>`;
     })
@@ -916,10 +923,14 @@ function openReorderModal(app: HTMLElement, setName: string, levels: LevelSummar
   openModal(
     `调整关卡顺序 · ${esc(setName)}`,
     `
-    <p class="modal-hint">按住 ⠿ 或整行上下拖拽，调整到满意后点「保存顺序」一次性写入（列表顶部为第 1 关）。</p>
-    <div class="modal-scroll"><div class="m-reorder-list" id="reorder-list">${rows}</div></div>
+    <div class="m-reorder-head">
+      <p class="modal-hint m-reorder-hint">拖拽左侧手柄或整行上下移动；列表顶部为第 1 关，满意后点「保存顺序」一次性写入。</p>
+      <span class="m-reorder-count">共 <b>${levels.length}</b> 关</span>
+    </div>
+    <div class="modal-scroll m-reorder-scroll"><div class="m-reorder-list" id="reorder-list">${rows}</div></div>
     `,
-    `${cancelBtnHtml()} ${primaryBtnHtml("保存顺序")}`
+    `${cancelBtnHtml()} ${primaryBtnHtml("保存顺序")}`,
+    { panelClass: "wide reorder-levels", closeOnBackdrop: false }
   );
 
   const list = document.getElementById("reorder-list")!;
@@ -961,16 +972,28 @@ function openReorderModal(app: HTMLElement, setName: string, levels: LevelSummar
     });
     row.addEventListener("dragend", () => {
       row.classList.remove("dragging");
+      list.querySelectorAll(".m-reorder-row.drop-before, .m-reorder-row.drop-after").forEach((r) => {
+        r.classList.remove("drop-before", "drop-after");
+      });
       dragRow = null;
       renumber();
     });
     row.addEventListener("dragover", (e) => {
       e.preventDefault();
       if (!dragRow || dragRow === row) return;
+      list.querySelectorAll(".m-reorder-row.drop-before, .m-reorder-row.drop-after").forEach((r) => {
+        r.classList.remove("drop-before", "drop-after");
+      });
       const rect = row.getBoundingClientRect();
       const before = e.clientY < rect.top + rect.height / 2;
+      row.classList.add(before ? "drop-before" : "drop-after");
       if (before) list.insertBefore(dragRow, row);
       else list.insertBefore(dragRow, row.nextSibling);
+    });
+    row.addEventListener("dragleave", (e) => {
+      if (!e.relatedTarget || !row.contains(e.relatedTarget as Node)) {
+        row.classList.remove("drop-before", "drop-after");
+      }
     });
   });
 

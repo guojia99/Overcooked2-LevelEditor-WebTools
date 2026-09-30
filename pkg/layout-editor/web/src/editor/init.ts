@@ -31,7 +31,7 @@ import {
   selectSceneInDropdowns
 } from "./sceneIO";
 import { ingredientGuidById, rebuildIngredientLookup } from "./catalog";
-import { allDispenserPrefabIds, dispenserIngredientIds } from "./recipeKnowledge";
+import { allDispenserPrefabIds, dispenserIngredientIds, utensilIntermediateRecipes } from "./recipeKnowledge";
 import { buildPalette } from "./palette";
 import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
 import { refreshScopedSaveButton } from "./serialize";
@@ -310,7 +310,7 @@ export async function init() {
   // 随机食材箱问号图标样式（异步，画布在其就绪后自动重绘）
   loadQuestionMarks();
   S.intermediatesCache = await fetchRecipeCatalog("")
-    .then((r) => r.filter((x) => x.intermediate || x.isCustom))
+    .then((r) => utensilIntermediateRecipes(r))
     .catch(() => []);
   S.counterAppearances = await fetchCounterAppearances().catch(() => null);
   S.switchMaterialsCache = await fetchSwitchMaterials().catch(() => []);

@@ -47,7 +47,8 @@ export const STEP_UTENSILS: Record<string, string[]> = {
   MixingBowl: ["Mixer", "MixerBowl"],
   HotPot: ["web_cooking_region_floorburner", "web_utensil_large_pot_01"],
   RoastingTray: ["Oven", "utensil_roasting_tray"],
-  OvenCakeTin: ["Oven", "utensil_cake_tin_01"],
+  // 蛋糕模具没有独立道具：容器就是搅拌碗（连碗进烤箱）
+  OvenCakeTin: ["Oven", "MixerBowl"],
 };
 
 /** node 型食材（匹配节点，无实体 prefab）→ 食材箱可生成的整食材；

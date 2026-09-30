@@ -252,9 +252,10 @@ export function isStandingWaterQuadCat(cat: CatalogItem | undefined): boolean {
 const BG_PLANE_MAX_HEIGHT = 0.75;
 
 /** Background surface planes (water / sand / sea / river…) that behave like a
- *  floor plane: lie flat, resizable by width/height in cells, and default to a
- *  manageable 6×6 on placement. Standing water quads qualify (they flatten with
- *  rotX=90); tall 3D backdrops (Sky, balloon, raft_water) and ambient FX do not. */
+ *  floor plane: lie flat and resizable by width/height in cells. Coast meshes use
+ *  catalog-measured size on placement; generic water tiles default to 6×6. Standing
+ *  water quads qualify (they flatten with rotX=90); tall 3D backdrops and ambient FX
+ *  do not. */
 export function isBackgroundPlaneCat(cat: CatalogItem | undefined): boolean {
   if (!cat) return false;
   if (isAmbientBackgroundCat(cat)) return false;
@@ -296,14 +297,43 @@ export function planeCatalogFootprint(it: {
   prefabAssetPath?: string;
 }): { cellsX: number; cellsZ: number } {
   const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
-  if (isStandingWaterQuadCat(cat)) {
-    return { cellsX: 1, cellsZ: 1 };
-  }
-  const fp = cat?.footprint;
+  return catalogPlaneFootprintCells(cat);
+}
+
+/** Measured footprint cells for a catalog background plane (standing water → 1×1 tile). */
+export function catalogPlaneFootprintCells(cat: CatalogItem | undefined): { cellsX: number; cellsZ: number } {
+  if (!cat) return { cellsX: 1, cellsZ: 1 };
+  if (isStandingWaterQuadCat(cat)) return { cellsX: 1, cellsZ: 1 };
+  const fp = cat.footprint;
   if (fp && fp.cellsX > 0 && fp.cellsZ > 0) {
     return { cellsX: fp.cellsX, cellsZ: fp.cellsZ };
   }
   return { cellsX: 1, cellsZ: 1 };
+}
+
+/** Default grid size when freshly placing a background plane from the palette.
+ *  Coast / sea meshes use catalog-measured aspect at 1:1 scale; generic water tiles
+ *  default to a handy 6×6 patch (use右键「铺满关卡」for full-level water). */
+export function defaultBackgroundPlaneCells(cat: CatalogItem): { wCells: number; dCells: number } {
+  const id = cat.id.toLowerCase();
+  const native = catalogPlaneFootprintCells(cat);
+  const cx = native.cellsX;
+  const cz = native.cellsZ;
+
+  if (cx > 1 || cz > 1) {
+    return { wCells: Math.max(1, Math.round(cx)), dCells: Math.max(1, Math.round(cz)) };
+  }
+
+  // sea_shore_02 catalog is still 1×1; mesh matches sea_shore_01 (17×10).
+  if (/sea_shore/i.test(id)) {
+    return { wCells: 17, dCells: 10 };
+  }
+
+  if (isStandingWaterQuadCat(cat)) {
+    return { wCells: 6, dCells: 6 };
+  }
+
+  return { wCells: 6, dCells: 6 };
 }
 
 /** Effective footprint of a resizable background plane in grid cells, accounting

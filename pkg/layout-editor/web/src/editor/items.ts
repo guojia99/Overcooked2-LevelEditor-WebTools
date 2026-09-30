@@ -38,7 +38,7 @@ import {
   catalogItemForGuidOrPath,
   planeNativeForItem,
   planeScaleFromCells,
-  planeCatalogFootprint,
+  defaultBackgroundPlaneCells,
   catalogItemById,
   ingredientIdByGuid
 } from "./catalog";
@@ -803,11 +803,11 @@ export function addFromCatalog(
     item.footprint = { cellsX: 1, cellsZ: 1 };
     item.slope = defaultAirSlopeParams();
   }
-  // Background surface planes (water / sand / sea…) default to a manageable 6×6
-  // and are laid flat via their native rotX (standing water quads need rotX=90,
-  // with depth on localScale.y) so they don't spawn 1×1 or as a vertical strip.
+  // Background planes: native size for coast/sea meshes (17×10 shore…), 6×6 for
+  // generic water tiles; rotX/depth axis applied by setItemPlaneSize.
   if (isBackgroundPlaneCat(cat)) {
-    setItemPlaneSize(item, 6, 6);
+    const { wCells, dCells } = defaultBackgroundPlaneCells(cat);
+    setItemPlaneSize(item, wCells, dCells);
     item.footprint = planeCatalogFootprint(item);
   }
   S.items.push(item);

@@ -49,7 +49,8 @@ import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks, drawButtonPart
 import { drawServingLinks } from "./servingLinks";
 import {
   isSurfaceItem,
-  bgTheme
+  canvasVoidTheme,
+  bgThemeKeyForDeathType
 } from "../floorColors";
 import {
   computeTeleportalLabels,
@@ -428,10 +429,12 @@ export function draw() {
   const onFloor = isFloorLikeLayer(S.currentLayer);
   const layerBg = S.currentLayer === "background";
   const vis = S.layerVisibility[S.currentLayer];
-  const theme = bgTheme(S.bgThemeKey);
-  // 空洞主题没有背景物体，画布底色直接采用相机背景色（所见即所得）。
+  const theme = canvasVoidTheme(S.deathInfo?.deathType);
+  // 坠落死亡（fall）时画布底色可采用相机背景色（所见即所得）。
   const camVoidBg =
-    onFloor && S.bgThemeKey === "void" && isHexColor(S.cameraInfo?.backgroundColor)
+    onFloor &&
+    bgThemeKeyForDeathType(S.deathInfo?.deathType) === "void" &&
+    isHexColor(S.cameraInfo?.backgroundColor)
       ? S.cameraInfo!.backgroundColor
       : null;
   dom.ctx.fillStyle = camVoidBg ?? (onFloor ? theme.fill : getCanvasVoidBg());

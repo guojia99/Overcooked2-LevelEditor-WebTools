@@ -9,6 +9,7 @@ import {
   SERVE_ACTION_SEC,
   STEP_TO_UTENSIL,
   UTENSIL_RULES,
+  UTENSIL_SUPPLY_ALIAS,
   ingredientNeedsChop,
 } from "./autoScoreKnowledge";
 import {
@@ -91,9 +92,11 @@ function recipeUtensilKinds(r: RecipeEntry): string[] {
   return STEP_TO_UTENSIL[step] !== undefined ? [STEP_TO_UTENSIL[step]] : [];
 }
 
-/** 锅具稀缺排队伍乘数：同类锅具数量 < 并发需求（≈人数）时罚项。 */
+/** 锅具稀缺排队伍乘数：同类锅具数量 < 并发需求（≈人数）时罚项。
+ *  供给按别名解析（蛋糕模具由搅拌碗供给）。 */
 function utensilQueueMult(kitchen: KitchenStats, kind: string, players: number): number {
-  const info = kitchen.utensils[kind as keyof typeof kitchen.utensils];
+  const supplyKind = UTENSIL_SUPPLY_ALIAS[kind as keyof typeof UTENSIL_SUPPLY_ALIAS] ?? kind;
+  const info = kitchen.utensils[supplyKind as keyof typeof kitchen.utensils];
   const supply = info?.count ?? 0;
   if (supply >= players) return 1;
   const demand = Math.max(1, players);
@@ -121,7 +124,8 @@ function kitchenRecipeTimeSec(
   // 烹饪：各工序基准时长（场景 stub 优先）× 锅具排队罚项
   let cookSec = 0;
   for (const kind of recipeUtensilKinds(r)) {
-    const info = kitchen.utensils[kind as keyof typeof kitchen.utensils];
+    const supplyKind = UTENSIL_SUPPLY_ALIAS[kind as keyof typeof UTENSIL_SUPPLY_ALIAS] ?? kind;
+    const info = kitchen.utensils[supplyKind as keyof typeof kitchen.utensils];
     const base = info?.cookSec ?? UTENSIL_RULES[kind as keyof typeof UTENSIL_RULES]?.cookSec ?? 12;
     cookSec += base * utensilQueueMult(kitchen, kind, players);
   }

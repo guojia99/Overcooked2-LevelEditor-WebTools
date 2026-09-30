@@ -19,20 +19,12 @@ import {
   computeLevelBounds
 } from "./render";
 import { pushHistory } from "./historyOps";
-import {
-  setFloorSelection,
-  clearSelection
-} from "./selection";
-import { hideDetail } from "./ui/overlay";
-import {
-  isThemeBackgroundPrefabId,
-  themeBackgroundPrefabIds
-} from "../floorColors";
+import { setFloorSelection } from "./selection";
 import type { FloorMaterial } from "../types";
 import { tidyCatalogNameZh } from "../displayLabels";
 import { materialDisplayLabel } from "../floorMaterialLabels";
-import { catalogItemById, isBackgroundPlaneCat, isStandingWaterQuadCat } from "./catalog";
-import { addFromCatalog, setItemPlaneSize } from "./items";
+import { catalogItemById, catalogItemForGuidOrPath, isBackgroundPlaneCat, isStandingWaterQuadCat } from "./catalog";
+import { setItemPlaneSize } from "./items";
 import { defaultNewFloorY } from "./floorHeight";
 import type {
   CatalogItem,
@@ -632,90 +624,29 @@ export function mergeThemedItemsIntoFloors(): void {
   }
 }
 
-export function removeBackgroundFloors(): number {
-  const before = S.floors.length;
-  S.floors = S.floors.filter((f) => f.surfaceKind !== "background");
-  const alive = new Set(S.floors.map((f) => f._key));
-  if ([...S.selectedFloorKeys].some((k) => !alive.has(k))) {
-    setFloorSelection([...S.selectedFloorKeys].filter((k) => alive.has(k)));
-  }
-  return before - S.floors.length;
-}
-
-export function syncBackgroundForTheme(themeKey: string) {
-  const catalogHas = (id: string) => !!catalogItemById(id);
-  const wanted = themeBackgroundPrefabIds(themeKey, S.currentLevelSet, S.items, catalogHas);
-  const wantedSet = new Set(wanted);
-
-  // Drop theme-managed prefabs only when the target theme declares replacements
-  // (water/sky/sand/goo). Void has wanted=[] — must NOT strip hand-placed
-  // p_dlc13_water_02 / Water_01 etc. on every save (was causing void+manual water
-  // to never reach Unity).
-  const removedItemKeys: string[] = [];
-  if (wanted.length > 0) {
-    S.items = S.items.filter((it) => {
-      const pid = prefabIdFromPath(it.prefabAssetPath);
-      if (!isThemeBackgroundPrefabId(pid)) return true;
-      if (wantedSet.has(pid)) return true;
-      removedItemKeys.push(it._editorKey);
-      return false;
-    });
-  }
-  if (removedItemKeys.some((k) => S.selectedKeys.has(k))) {
-    clearSelection();
-    hideDetail();
-  }
-
-  // Environment backdrop planes (e.g. Art/raft_water/sky) are replaced by theme prefabs.
-  // Only remove them when there is a concrete theme prefab to take their place;
-  // the void theme has no background prefab, so hand-authored background floors
-  // must be kept instead of being permanently deleted.
-  const removedFloors = wanted.length > 0 ? removeBackgroundFloors() : 0;
-
-  if (wanted.length === 0) {
-    if (removedFloors > 0) draw();
-    return;
-  }
-
-  const pid = wanted[0];
-  const exists = S.items.some((it) => prefabIdFromPath(it.prefabAssetPath) === pid);
-  if (exists) {
-    if (removedFloors > 0) draw();
-    return;
-  }
-
+/** Resize and center a background plane item to cover the level bounds (+4 cells margin). */
+export function fitBackgroundToLevelBounds(item: EditorItem, cat?: CatalogItem): boolean {
   const bounds = computeLevelBounds();
-  const wx = bounds?.cx ?? 0;
-  const wz = bounds?.cz ?? 0;
-  const cat = catalogItemById(pid);
-  if (!cat) return;
-  const placed = addFromCatalog(cat, wx, wz, false);
-  // Theme background planes (water / sand…) should default to covering the whole
-  // playable area, centered, instead of the 6×6 starter used for manual drops.
-  // setItemPlaneSize writes the correct localScale axis (depth→Y for standing
-  // water quads) and native rotX (=90) so the plane lies flat and spans the level
-  // rather than standing up as a thin vertical strip.
-  if (placed && bounds && isBackgroundPlaneCat(cat)) {
-    const wCells = Math.max(1, Math.ceil((bounds.sx + 4 * CELL) / CELL));
-    const dCells = Math.max(1, Math.ceil((bounds.sz + 4 * CELL) / CELL));
-    setItemPlaneSize(placed, wCells, dCells);
-    // Water sits just below the island tops (walk surface y=0) so it shows around
-    // the edges (matches the scenery workflow's -0.81 water level); other planes
-    // (sand…) keep their placement height.
-    const y = isStandingWaterQuadCat(cat) ? -0.81 : placed.localPosition?.y ?? 0;
-    placed._wx = bounds.cx;
-    placed._wz = bounds.cz;
-    if (placed.localPosition) {
-      placed.localPosition.x = bounds.cx;
-      placed.localPosition.y = y;
-      placed.localPosition.z = bounds.cz;
-    }
-    if (placed.worldPosition) {
-      placed.worldPosition.x = bounds.cx;
-      placed.worldPosition.y = y;
-      placed.worldPosition.z = bounds.cz;
-    }
+  if (!bounds) return false;
+  const c = cat ?? catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
+  if (!c || !isBackgroundPlaneCat(c)) return false;
+
+  const wCells = Math.max(1, Math.ceil((bounds.sx + 4 * CELL) / CELL));
+  const dCells = Math.max(1, Math.ceil((bounds.sz + 4 * CELL) / CELL));
+  setItemPlaneSize(item, wCells, dCells);
+  const y = isStandingWaterQuadCat(c) ? -0.81 : item.localPosition?.y ?? 0;
+  item._wx = bounds.cx;
+  item._wz = bounds.cz;
+  if (item.localPosition) {
+    item.localPosition.x = bounds.cx;
+    item.localPosition.y = y;
+    item.localPosition.z = bounds.cz;
   }
-  setStatus(`已切换背景环境：${tidyCatalogNameZh(cat.nameZh, cat.id)}（${pid}）`);
-  draw();
+  if (item.worldPosition) {
+    item.worldPosition.x = bounds.cx;
+    item.worldPosition.y = y;
+    item.worldPosition.z = bounds.cz;
+  }
+  item.footprint = { cellsX: wCells, cellsZ: dCells };
+  return true;
 }

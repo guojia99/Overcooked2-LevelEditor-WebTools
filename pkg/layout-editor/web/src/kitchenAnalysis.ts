@@ -20,6 +20,7 @@ import {
   UTENSIL_KIND_BY_ID,
   UTENSIL_KIND_ZH,
   UTENSIL_RULES,
+  UTENSIL_SUPPLY_ALIAS,
   WALK_CELLS_PER_SEC,
   guillotinePerItemSec,
   ingredientNeedsChop,
@@ -276,10 +277,12 @@ export function kitchenWarnings(stats: KitchenStats, recipes: RecipeEntry[]): st
   }
 
   for (const kind of needUtensils) {
-    const info = stats.utensils[kind];
-    const zh = UTENSIL_KIND_ZH[kind];
+    // 供给按别名解析（蛋糕模具由搅拌碗供给），但工作站要求仍按本类规则（烤箱）
+    const supplyKind = UTENSIL_SUPPLY_ALIAS[kind] ?? kind;
+    const info = stats.utensils[supplyKind];
+    const zh = UTENSIL_KIND_ZH[supplyKind];
     if (!info || info.count === 0) {
-      warns.push(`菜谱需要${zh}，但场景未放置（估时按基准 ${UTENSIL_RULES[kind].cookSec}s）`);
+      warns.push(`菜谱需要${UTENSIL_KIND_ZH[kind]}，但场景未放置（估时按基准 ${UTENSIL_RULES[kind].cookSec}s）`);
       continue;
     }
     const station = UTENSIL_RULES[kind].station;

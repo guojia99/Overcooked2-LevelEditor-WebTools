@@ -16,7 +16,6 @@ import { cleanOrphanedButtonEvents } from "./buttonEvents";
 import { cleanOrphanedStubRefs } from "./stubRefs";
 import { itemLabel } from "./labels";
 import {
-  syncBackgroundForTheme,
   mergeRaftItemsIntoFloors,
   mergeThemedItemsIntoFloors,
   repairFloorMaterialsFromCatalog
@@ -53,18 +52,11 @@ import {
   hideBusy
 } from "../busy";
 import {
-  BG_THEMES,
-  bgTheme,
-  bgThemeKeyForDeathType,
-  inferBgThemeFromItems
-} from "../floorColors";
-import {
   saveLayout,
   fetchLayout,
   fetchGrid,
   fetchFloorMaterials,
   fetchWriteBackHistoryDoc,
-  setDeathTheme,
   setKillPlaneBounds,
   fetchHealth
 } from "../api";
@@ -247,19 +239,6 @@ export async function applyLayoutDocument(
   // 自动去重/导出变更会移除物品：同步清理开关联动与上菜台/传送门/终端/加热炉
   // 的悬空绑定引用（否则写回时被 Unity 侧静默丢弃 → 绑定失效要重新绑）。
   cleanOrphanedStubRefs();
-  const itemTheme = inferBgThemeFromItems(S.items);
-  const deathThemeKey = bgThemeKeyForDeathType(S.deathInfo?.deathType);
-  const sceneThemeKey = itemTheme ?? deathThemeKey;
-  const savedTheme = localStorage.getItem("bgTheme:" + S.scenePath);
-  const normalizedSaved =
-    savedTheme === "lava" ? "void" : savedTheme;
-  if (normalizedSaved && BG_THEMES.some((t) => t.key === normalizedSaved)) {
-    S.bgThemeKey = normalizedSaved;
-  } else {
-    S.bgThemeKey = sceneThemeKey;
-  }
-  if (S.bgThemeKey === "lava") S.bgThemeKey = "void";
-  S.bgThemeDirty = S.bgThemeKey !== sceneThemeKey;
   refreshUtensilStacks();
   S.gridInfo = await fetchGrid();
   S.floorMaterials = await fetchFloorMaterials(S.currentLevelSet).catch(() => []);
@@ -470,17 +449,6 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       return true;
     }
 
-    const itemTheme = inferBgThemeFromItems(S.items);
-    const deathThemeKey = bgThemeKeyForDeathType(S.deathInfo?.deathType);
-    const sceneThemeKey = itemTheme ?? deathThemeKey;
-    const expectedDeathType = bgTheme(S.bgThemeKey).deathType;
-    const needsDeathWrite = S.deathInfo?.deathType !== expectedDeathType;
-    const needsThemeWrite = S.bgThemeDirty || S.bgThemeKey !== sceneThemeKey || needsDeathWrite;
-
-    const itemsBeforeSync = S.items.length;
-    syncBackgroundForTheme(S.bgThemeKey);
-    const addedBg = S.items.length > itemsBeforeSync;
-
     // 写回强校验：普通食材箱（含背包，不含饮料/酱料机）必须配 1 种食材；
     // 随机食材箱：真实食材 ≥1 且候选（含空气）≥2（空气不算真实食材）。
     // 违规阻断写回并列出明细（后端同款兜底）。
@@ -556,9 +524,6 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     }
 
     const warnings = await saveLayout(buildDocument(""), S.freeSnapStep, S.autoWalkable, "");
-    if (needsThemeWrite) {
-      await setDeathTheme(S.scenePath, S.bgThemeKey);
-    }
     const bounds = computeLevelBounds();
     if (bounds && S.autoKillPlane) {
       try {
@@ -567,17 +532,9 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
         setStatus(`坠落区配置失败：${(kpErr as Error).message}`, false);
       }
     }
-    const themeNote = needsThemeWrite
-      ? `，背景死亡效果已应用（${bgTheme(S.bgThemeKey).labelZh}）`
-      : addedBg
-        ? `，已补齐背景环境 prefab（${bgTheme(S.bgThemeKey).labelZh}）`
-        : "";
     const walkNote = S.autoWalkable ? "，可行走碰撞体已按地板重新生成（地板间空隙=坠落坑）" : "";
     const killNote = bounds && S.autoKillPlane ? "：坠落区已覆盖整关，" : "：";
-    setStatus(
-      applySaveStatus(`写回成功${themeNote}${walkNote}${killNote}请在 Unity Ctrl+S 保存场景`, warnings)
-    );
-    S.bgThemeDirty = false;
+    setStatus(applySaveStatus(`写回成功${walkNote}${killNote}请在 Unity Ctrl+S 保存场景`, warnings));
     S.history.clear();
     clearDirty();
     await loadScene(S.scenePath);
@@ -609,7 +566,7 @@ export function openSyncLayoutDialog(): void {
   openModal(
     "同步其他关卡的布局",
     `<label class="m-field">来源关卡<select id="sync-src">${opts}</select></label>
-     <p class="modal-hint" style="color:#f28b82">将把来源关卡的<b>道具、地板与背景主题</b>复制到当前图，<b>覆盖当前图的全部内容</b>。仅修改前端数据（写回 Unity 后才落盘），可用 Ctrl+Z 撤回一次。</p>`,
+     <p class="modal-hint" style="color:#f28b82">将把来源关卡的<b>道具、地板与背景</b>复制到当前图，<b>覆盖当前图的全部内容</b>。仅修改前端数据（写回 Unity 后才落盘），可用 Ctrl+Z 撤回一次。</p>`,
     `${cancelBtnHtml()}${modalBtnHtml("覆盖并同步", "modal-btn danger", { "data-ok": "" })}`
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
@@ -664,12 +621,6 @@ export async function syncLayoutFromScene(otherPath: string): Promise<void> {
     });
     mergeRaftItemsIntoFloors();
     mergeThemedItemsIntoFloors();
-    const theme = inferBgThemeFromItems(S.items);
-    if (theme) {
-      S.bgThemeKey = theme;
-      S.bgThemeDirty = true;
-      localStorage.setItem("bgTheme:" + S.scenePath, S.bgThemeKey);
-    }
     clearSelection();
     clearFloorSelection();
     hideDetail();

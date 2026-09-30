@@ -477,6 +477,14 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/recipes/compute-pizza-optionals" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<BurgerOptionalComputeRequestDto>(body);
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCatalogApi.ComputePizzaOptionalFill(dto)));
+                return;
+            }
+
             if (path == "/api/level/burger-optional" && request.HttpMethod == "GET")
             {
                 var levelInfo = request.QueryString["levelInfoAssetPath"];
