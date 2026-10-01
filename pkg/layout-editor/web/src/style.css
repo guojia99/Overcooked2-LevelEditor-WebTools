@@ -2681,6 +2681,142 @@ canvas.pan-active {
   color: var(--ui-text-dim);
 }
 
+/* ---- Counter skin manager (桌台管理) ---- */
+.csm-global {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg-elevated);
+  flex-wrap: wrap;
+}
+.csm-missing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border: 1px dashed var(--ui-accent);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg-elevated);
+  color: var(--ui-text-muted);
+  font-size: 12px;
+}
+.csm-group {
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg-elevated);
+}
+.csm-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-text-accent);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ui-border);
+}
+.csm-dist {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--ui-text-muted);
+}
+.csm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.csm-row-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-text-muted);
+}
+.csm-sel {
+  min-width: 120px;
+  background: var(--ui-bg-input);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-text);
+  padding: 2px 6px;
+  font-size: 12px;
+  color-scheme: var(--ui-color-scheme);
+}
+.csm-items {
+  margin-top: 4px;
+}
+.csm-items summary {
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--ui-text-muted);
+  padding: 4px 0;
+  user-select: none;
+}
+.csm-item-row {
+  padding: 3px 0 3px 12px;
+  border-bottom: 1px dotted var(--ui-border);
+}
+.csm-item-row:last-child {
+  border-bottom: none;
+}
+.csm-pos {
+  min-width: 56px;
+  color: var(--ui-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.csm-apply {
+  font-size: 11px;
+  padding: 2px 8px;
+}
+.csm-thumbwrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+}
+.csm-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--ui-border);
+  object-fit: contain;
+  background: var(--ui-bg-input);
+  display: inline-block;
+  flex: none;
+}
+.csm-thumb-lg {
+  width: 128px;
+  height: 128px;
+  border-radius: var(--ui-radius-md);
+  box-shadow: var(--ui-shadow-btn);
+  image-rendering: auto;
+}
+.csm-thumb-empty {
+  background: var(--ui-bg-input);
+  border: 1px dashed var(--ui-border);
+}
+.csm-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--ui-border);
+  flex: none;
+  vertical-align: middle;
+}
+
 /* ---- Utensil timing inputs (context menu variant) ---- */
 .ctx-menu .ctx-stub-time-label {
   display: inline-flex;
@@ -4037,6 +4173,79 @@ body.manage-bg {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: 4px 0 10px;
+}
+
+/* 依赖包导出弹窗 · 打包清单（deps manifest） */
+.deps-manifest {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow: auto;
+  margin-bottom: 8px;
+}
+
+.deps-m-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg-list-card);
+}
+
+.deps-m-file {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.deps-m-file code {
+  font-size: 12px;
+  color: var(--ui-text);
+  word-break: break-all;
+}
+
+.deps-m-note {
+  font-size: 11px;
+  color: var(--ui-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deps-m-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.deps-m-state {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.deps-m-state.ok {
+  color: var(--ui-accent-success);
+}
+
+.deps-m-state.warn {
+  color: var(--ui-accent);
+}
+
+.deps-m-state.err {
+  color: var(--ui-text-danger);
+}
+
+.deps-m-size {
+  font-size: 11px;
+  color: var(--ui-text-muted);
+  min-width: 44px;
+  text-align: right;
 }
 
 .m-grid {

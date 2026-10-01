@@ -142,12 +142,14 @@ BepInEx Chainloader 实例化插件
 | `Assets/WebCustomStubRuntime/RuntimeDll/WebCustomStubRuntime.dll.bytes`（bundle `webcustomstub_runtime`，依赖包目录） | `OC2DIYLevelRuntimeWLoader/webcustomstub_runtime` | 本插件扫描并 LoadFromFile 的目标 |
 | `Assets/AssetBundles/commonw1` 等 | `OC2DIYLevelRuntimeWLoader/commonW1`（与 common01/02 同级） | 由本插件幂等加载（清单非空时） |
 | `layout-editor/web/public/Loader.dll` | 依赖包目录 | 即本插件自身 |
+| deps 导出生成（`LayoutEditorExports/._deps_pkgver.txt`） | `OC2DIYLevelRuntimeWLoader/package_version.txt` | **依赖包打包清单**：打包版本/时间/UTC 偏移/Unity 与 OS 环境/运行时与 Loader 版本 + 包内全部文件 MD5（排查玩家侧文件一致性用；自身不参与 MD5）。打包版本独立于 PluginVersion/requires.txt 门控，仅用于依赖包 zip 命名（`OC2DIYLevelRuntimeWLoader_v<打包版本>_<日期>.zip`）与升级辨识 |
 | `levels/<set>/requires.txt + stub_levels.txt` | 与 info_<set>/s_* 同层 | 版本门控 + 逐关卡清单（§3） |
 
 ### 5.2 命名/路径约定汇总
 
 - **`stub_levels.txt`**：逐关卡清单（v3.5.0+）。loader 汇总注入 EntryPoint 做逐关卡闸门与按特征挂载；**旧导出的集没有此文件 = 运行时休眠，重新导出即恢复**。
 - **`requires.txt`**：依赖包版本门控（semver）。
+- **`package_version.txt`**（deps 模式生成）：依赖包**打包版本**（编辑器弹窗可改、默认 v1.0.0，与运行时 SSOT 版本/PluginVersion 无关）+ 打包时间/环境 + 全部文件 MD5。排查真机问题时让玩家核对该文件：版本对不上=依赖包过旧，MD5 对不上=文件被改动或传输损坏。
 - **`*_custom_runtime`**：每关卡自定义代码预留通道。
 - **`scene.path` 契约**：关卡场景 bundle 内部路径必须保持 `assets/levelsets/<set>/scenes/<level>.unity`（闸门的解析依据；真机 Verbose 日志可验证 path 有值）。
 - **维护流程**：改 `Loader.cs` → `./build.sh`（版本号自动从源码提取）→ 拷 `bin/Release/Loader.dll` 覆盖 `layout-editor/web/public/`。

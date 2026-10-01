@@ -57,6 +57,48 @@ export function drawLabelInBox(
   }
 }
 
+/** 俯视渲染图上的底片标签：半透明黑底 + 白字（任何皮肤底图可读），
+ *  字号随格子/缩放自适应、超宽自动截断；过小格不绘制。 */
+export function drawTopViewBadgeLabel(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  boxW: number,
+  boxH: number
+) {
+  if (boxW < 16 || boxH < 12 || !text) return;
+  const t = text.length > 6 ? text.slice(0, 5) + "…" : text;
+  let fontSize = Math.max(9, Math.min(13, Math.min(boxW, boxH) * 0.34, 11 * S.scale));
+  ctx.font = `${fontSize}px system-ui, sans-serif`;
+  let tw = ctx.measureText(t).width;
+  const maxW = boxW - 8;
+  if (tw > maxW) {
+    fontSize = Math.max(8, Math.floor((fontSize * maxW) / tw));
+    if (fontSize < 8) return;
+    ctx.font = `${fontSize}px system-ui, sans-serif`;
+    tw = ctx.measureText(t).width;
+  }
+  const h = fontSize + 5;
+  const w = Math.min(boxW - 2, tw + 7);
+  const r = Math.min(4, h / 2);
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.beginPath();
+  ctx.moveTo(-w / 2 + r, -h / 2);
+  ctx.lineTo(w / 2 - r, -h / 2);
+  ctx.arcTo(w / 2, -h / 2, w / 2, 0, r);
+  ctx.lineTo(w / 2, h / 2 - r);
+  ctx.arcTo(w / 2, h / 2, 0, h / 2, r);
+  ctx.lineTo(-w / 2 + r, h / 2);
+  ctx.arcTo(-w / 2, h / 2, -w / 2, 0, r);
+  ctx.lineTo(-w / 2, -h / 2 + r);
+  ctx.arcTo(-w / 2, -h / 2, 0, -h / 2, r);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(t, 0, 0.5);
+}
+
 export function drawIconWithLabel(
   ctx: CanvasRenderingContext2D,
   icon: HTMLImageElement | null,
@@ -64,8 +106,9 @@ export function drawIconWithLabel(
   bw: number,
   bh: number
 ): void {
-  const iconSize = Math.min(bw * 0.8, bh * 0.46, 30 * S.scale);
-  const iconCy = -bh / 4 - 1;
+  // 与食材箱俯视图预留圆对齐：图标居中放大盖住圆环，名称下移到盒体下半区
+  const iconSize = Math.min(bw * 0.82, bh * 0.64, 36 * S.scale);
+  const iconCy = -bh * 0.04;
   if (icon) {
     ctx.drawImage(icon, -iconSize / 2, iconCy - iconSize / 2, iconSize, iconSize);
   } else {
@@ -73,12 +116,12 @@ export function drawIconWithLabel(
     ctx.strokeStyle = "rgba(255,255,255,0.25)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(0, iconCy, iconSize * 0.32, 0, Math.PI * 2);
+    ctx.arc(0, iconCy, iconSize * 0.48, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.save();
-  ctx.translate(0, bh / 4 + 1);
-  drawLabelInBox(ctx, label, bw - 4, bh / 2);
+  ctx.translate(0, bh * 0.36 + 2);
+  drawLabelInBox(ctx, label, bw - 4, bh * 0.38);
   ctx.restore();
 }
 

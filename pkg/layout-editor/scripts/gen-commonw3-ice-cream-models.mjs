@@ -9,7 +9,7 @@
  *   node gen-commonw3-ice-cream-models.mjs           # dry-run
  *   node gen-commonw3-ice-cream-models.mjs --apply
  *
- * 后处理：Unity → Layout Editor → Bake commonW3 Migration Models
+ * 后处理：commonW3 烘焙菜单已下线，如需重烘焙走 web 菜谱管理流程
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -377,7 +377,7 @@ try {
 }
 
 console.log(`\n完成：${totalOut} 道冰淇淋模型已落盘并绑定菜谱。`);
-console.log("Unity → Layout Editor → Bake commonW3 Migration Models → Build AssetBundles（commonW3）");
+console.log("如需重新烘焙走 web 菜谱管理流程 → Build AssetBundles（commonW3）");
 }
 
 main().catch((err) => {

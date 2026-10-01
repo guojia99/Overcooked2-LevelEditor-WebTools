@@ -4,24 +4,24 @@ using UnityEngine;
 
 /// <summary>
 /// 诊断工具：验证运行时 PseudoPrefabManager.LoadAsset 对各类 assetPath 的加载结果。
-/// 使用：Tools/Layout Editor → 诊断 AssetBundle 加载，然后看 Console。
+/// 使用：菜单 Layout Editor → 诊断 (Diagnostics) → 诊断 AssetBundle 加载，然后看 Console。
 /// 目的：定位「添加 Web 内置菜单后 Play 报 NullReferenceException
 ///  (RecipeHelper.GetIngredientOrderNode)」的根因 —— allIngredients/食材箱引用的
 ///  PseudoPrefabSO 在运行时 LoadAsset 返回 null。
 /// </summary>
 public static class LayoutEditorDiag
 {
-    [MenuItem("Layout Editor/诊断 AssetBundle 加载", false, 300)]
+    [MenuItem("Layout Editor/诊断 (Diagnostics)/诊断 AssetBundle 加载 (Diagnose Bundle Load)", false, 0)]
     public static void DiagAssetLoad()
     {
         var dir = Path.Combine(Application.streamingAssetsPath, "Windows");
-        Debug.Log("[LayoutEditor-Diag] bundle 目录: " + dir);
+        Debug.Log("[LayoutEditor/Diag] bundle 目录: " + dir);
 
         var b47 = AssetBundle.LoadFromFile(Path.Combine(dir, "bundle47"));
-        if (b47 == null) { Debug.LogError("[LayoutEditor-Diag] bundle47 加载失败"); return; }
+        if (b47 == null) { Debug.LogError("[LayoutEditor/Diag] bundle47 加载失败"); return; }
         var b354 = AssetBundle.LoadFromFile(Path.Combine(dir, "bundle354"));
-        if (b354 != null) Debug.Log("[LayoutEditor-Diag] bundle354 加载成功");
-        else Debug.LogError("[LayoutEditor-Diag] bundle354 加载失败");
+        if (b354 != null) Debug.Log("[LayoutEditor/Diag] bundle354 加载成功");
+        else Debug.LogError("[LayoutEditor/Diag] bundle354 加载失败");
 
         // 1) 基础食材 assetPath 变体（ChocolateSO.assetPath = 反斜杠大写）
         var variants = new[]
@@ -33,7 +33,7 @@ public static class LayoutEditorDiag
         foreach (var p in variants)
         {
             var go = b47.LoadAsset<GameObject>(p);
-            Debug.Log("[LayoutEditor-Diag] bundle47 '" + p + "' -> " + (go != null ? "OK" : "NULL"));
+            Debug.Log("[LayoutEditor/Diag] bundle47 '" + p + "' -> " + (go != null ? "OK" : "NULL"));
         }
 
         // 2) Web 拷贝食材：探测 bundle354 内 **游戏自带** 的 prefab 实名大小写。
@@ -49,12 +49,12 @@ public static class LayoutEditorDiag
             foreach (var p in dlc)
             {
                 var go = b354.LoadAsset<GameObject>(p);
-                Debug.Log("[LayoutEditor-Diag] bundle354 '" + p + "' -> " + (go != null ? "OK" : "NULL"));
+                Debug.Log("[LayoutEditor/Diag] bundle354 '" + p + "' -> " + (go != null ? "OK" : "NULL"));
             }
             // 3) 菜谱资产（chickenburger，assetPath 指向 orderdefinitions）
             var r = b354.LoadAsset<GameObject>(
                 "Assets/downloadablecontent/dlc08/dlc_assets/data/orderdefinitions/recipeitems/chickenburger.asset");
-            Debug.Log("[LayoutEditor-Diag] bundle354 recipeitems/chickenburger.asset -> " + (r != null ? "OK" : "NULL"));
+            Debug.Log("[LayoutEditor/Diag] bundle354 recipeitems/chickenburger.asset -> " + (r != null ? "OK" : "NULL"));
         }
 
         b47.Unload(true);

@@ -2088,6 +2088,18 @@ const COUNTER_TYPE_NAMES_ZH = {
 };
 
 function scanCounterAppearances(dictionary, idToRow) {
+  // 材质球提取产物（Unity 菜单 Layout Editor/导出桌台皮肤图标与主色）：
+  // guid → { color: "#rrggbb", file: "<Type>_<Theme>.png" }。缺失时不阻塞（color/icon 字段省略）。
+  let skinByGuid = new Map();
+  const skinSidecar = path.join(repoRoot, "layout-editor/scripts/data/counter-skin-icons.json");
+  if (fs.existsSync(skinSidecar)) {
+    try {
+      const sidecar = JSON.parse(fs.readFileSync(skinSidecar, "utf8"));
+      skinByGuid = new Map(Object.entries(sidecar.items ?? {}));
+    } catch (e) {
+      console.warn(`counter-skin-icons.json 解析失败，跳过合并: ${e.message}`);
+    }
+  }
   const roots = [
     "Assets/common01/pseudo_prefab_so/counters",
     "Assets/common02/pseudo_prefab_so/counters",
@@ -2136,7 +2148,8 @@ function scanCounterAppearances(dictionary, idToRow) {
       const nameZh = dict?.zh || zhDefault;
       const nameEn = dict?.en || enDefault;
       const displayZh = `${nameZh}（${nameEn}）`;
-      byType[counterType].push({
+      const skin = skinByGuid.get(guid);
+      const entry = {
         guid,
         id,
         assetPath: toAssetPath(file),
@@ -2145,7 +2158,10 @@ function scanCounterAppearances(dictionary, idToRow) {
         theme: themeSuffix,
         themeName,
         bundleName: fields.bundleName || "",
-      });
+      };
+      if (skin?.color) entry.color = skin.color;
+      if (skin?.file) entry.icon = skin.file.replace(/\.png$/, "");
+      byType[counterType].push(entry);
     }
   }
 

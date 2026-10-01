@@ -41,6 +41,8 @@ public static class LayoutEditorSetExporter
     private static bool _usesCustomStub;
     /** 导出模式：levels | deps | all。 */
     private static string _mode = "all";
+    /** 本趟依赖包打包版本（deps 模式；独立于运行时 SSOT 版本，默认 1.0.0）。 */
+    private static string _depsVersion = "1.0.0";
 
     /// <summary>CustomStub tag 载体前缀（SpecificPseudoPrefabTag.prefabTag）。
     ///  与 CustomStub/EntryPoint.HealObject + loader 的解析保持同步；
@@ -239,6 +241,13 @@ public static class LayoutEditorSetExporter
     /// deps 模式与集无关（统一运行时依赖包），多于一个集时只取第一个。</summary>
     public static string StartExport(List<string> setNames, string mode)
     {
+        return StartExport(setNames, mode, null);
+    }
+
+    /// <summary>deps 模式可带依赖包打包版本（depsVersion，独立于运行时/关卡集版本，
+    /// 规范化见 NormalizeDepsVersion）；其余模式忽略该参数。</summary>
+    public static string StartExport(List<string> setNames, string mode, string depsVersion)
+    {
         if (setNames == null || setNames.Count == 0)
             return "缺少关卡集标识。";
         var safeList = new List<string>();
@@ -282,6 +291,7 @@ public static class LayoutEditorSetExporter
             _fileCount = 0;
             _usesCustomStub = false;
             _mode = m;
+            _depsVersion = NormalizeDepsVersion(m == "deps" ? depsVersion : null);
         }
         EditorApplication.delayCall += RunExport;
         return null;
@@ -359,7 +369,7 @@ public static class LayoutEditorSetExporter
         // ---- 依赖包模式（deps）：不碰关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/ 依赖 ----
         if (mode == "deps")
         {
-            ExportDepsOnly(setNames[0]);
+            ExportDepsOnly(setNames[0], _depsVersion);
             return;
         }
 
@@ -545,8 +555,10 @@ public static class LayoutEditorSetExporter
 
     /// <summary>依赖包（deps）模式：不构建关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/
     /// （Loader.dll + webcustomstub_runtime + commonW1 + 按需 commonW2）。产物为预构建
-    /// bundle + web/public/Loader.dll，无需 BuildAssetBundles，快速导出。</summary>
-    private static void ExportDepsOnly(string setName)
+    /// bundle + web/public/Loader.dll，无需 BuildAssetBundles，快速导出。
+    /// depsVersion = 依赖包打包版本（独立于运行时 SSOT 版本，用于 zip 命名与
+    /// package_version.txt；装一次即可长期复用，版本变更即提示玩家更新）。</summary>
+    private static void ExportDepsOnly(string setName, string depsVersion)
     {
         SetPhase("build", "打包依赖 OC2DIYLevelRuntimeWLoader…");
         // 统一运行时新鲜度校验 + staging（BeforeBuild = StageRuntime(throwOnStale)）
@@ -586,13 +598,21 @@ public static class LayoutEditorSetExporter
         AddDependencyEntries(entries, new List<string> { setName }, true); // deps 模式：commonW1/W2 均无条件携带
         if (entries.Count == 0)
             throw new Exception("依赖包为空：未找到 Loader.dll / webcustomstub_runtime / commonW1，"
-                + "请先执行 Layout Editor/CustomStub/Build AssetBundles（含 Runtime staging）。");
+                + "请先执行菜单「Layout Editor/CustomStub（关卡代码分发）/构建 AssetBundles（含 Runtime 打包）」。");
 
-        var zipFileName = "OC2DIYLevelRuntimeWLoader_v" + StubVersionValue()
+        // 构建清单 package_version.txt：打包版本/时间/环境 + 包内全部文件 MD5（排查用），
+        // 作为最后一个条目进 zip（自身不参与 MD5，见 WritePackageVersionFile）。
+        var pkgVerAbs = WritePackageVersionFile(depsVersion, entries);
+        if (!string.IsNullOrEmpty(pkgVerAbs))
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
+                "OC2DIYLevelRuntimeWLoader/package_version.txt", pkgVerAbs));
+
+        var zipFileName = "OC2DIYLevelRuntimeWLoader_v" + depsVersion
             + "_" + DateTime.Now.ToString("yyyyMMdd") + ".zip";
         var zipAbsPath = ExportRootAbsPath() + "/" + zipFileName;
         SetPhase("zip", "生成 zip：" + zipFileName + "（" + entries.Count + " 个文件）…");
         LayoutEditorZipWriter.WriteZip(zipAbsPath, entries);
+        SaveLastDepsVersion(depsVersion);
         lock (_lock)
         {
             _zipFileName = zipFileName;
@@ -775,6 +795,256 @@ public static class LayoutEditorSetExporter
             entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "commonW" + index, abs));
         else if (required)
             Debug.LogWarning("[SetExporter] 未找到 " + fileName + " bundle（" + abs + "）。");
+    }
+
+    // ---- 依赖包清单（deps manifest）与构建信息（package_version.txt） ----
+
+    /// <summary>依赖包清单（GET /api/set/export/deps-manifest）：逐条镜像 AddDependencyEntries
+    ///  的条目来源与判定，供导出弹窗展示真实打包内容。只读文件系统 + mtime 比对，
+    ///  不触碰 Unity 资产 API。commonW3+ 按源目录判定（导出会删产物重建，按产物判会漏报）。</summary>
+    public static DepsManifestDto BuildDepsManifest()
+    {
+        const string depDir = "OC2DIYLevelRuntimeWLoader/";
+        var dto = new DepsManifestDto();
+        dto.ok = true;
+        dto.runtimeState = LayoutStubDllBuilder.GetRuntimeStageState();
+        dto.runtimeVersion = StubVersionValue();
+        dto.lastDepsVersion = GetLastDepsVersion();
+        var entries = new List<DepsManifestEntryDto>();
+
+        AddManifestFileEntry(entries, depDir + "Loader.dll",
+            ProjectRootAbsPath() + "/layout-editor/web/public/Loader.dll",
+            "BepInEx 插件：加载依赖与统一运行时（web/public 手动维护副本）");
+        AddManifestFileEntry(entries, depDir + "version.txt",
+            ProjectRootAbsPath() + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/version.txt",
+            "Loader/debugLog 构建版本记录（build.sh 生成）");
+        AddManifestFileEntry(entries, depDir + "debugLog.dll",
+            ProjectRootAbsPath() + "/layout-editor/web/public/debugLog.dll",
+            "会话日志插件（可选，缺失不阻断）");
+        AddManifestFileEntry(entries, depDir + "log_config.txt",
+            ProjectRootAbsPath() + "/layout-editor/web/public/log_config.txt",
+            "debugLog 配置（可选，缺失用内置默认）");
+        AddManifestFileEntry(entries, depDir + "readme.txt",
+            ProjectRootAbsPath() + "/layout-editor/web/public/readme.txt",
+            "安装与使用说明");
+
+        // 统一运行时 bundle：状态 = DLL 编译状态映射到条目契约 ok|stale|missing
+        // （fresh→ok；DLL missing 但旧产物仍在 → missing 提示先编译）。
+        var runtimeAbs = AbsPath(BundlesRoot) + "/" + LayoutStubDllBuilder.RuntimeBundleName;
+        var runtimeExists = File.Exists(runtimeAbs);
+        var runtimeEntryState = "missing";
+        if (runtimeExists && dto.runtimeState == "fresh")
+            runtimeEntryState = "ok";
+        else if (runtimeExists && dto.runtimeState == "stale")
+            runtimeEntryState = "stale";
+        AddManifestEntry(entries, depDir + LayoutStubDllBuilder.RuntimeBundleName,
+            "统一运行时 bundle（CustomStub 关卡代码）；未就绪时先「编译 Runtime DLL」",
+            runtimeEntryState,
+            runtimeExists ? new FileInfo(runtimeAbs).Length : 0);
+
+        // commonW1/W2：deps 模式无条件携带，导出时删旧产物重建（源 .meta 已标 bundle 名，
+        // 必然重新产出）——状态恒为 ok，大小按当前产物展示（仅供参考）。
+        var w1Abs = AbsPath(BundlesRoot) + "/commonw1";
+        AddManifestEntry(entries, depDir + "commonW1",
+            "编辑器增量素材（必备；导出时自动重新打包）",
+            "ok", File.Exists(w1Abs) ? new FileInfo(w1Abs).Length : 0);
+        var w2Abs = AbsPath(BundlesRoot) + "/commonw2";
+        AddManifestEntry(entries, depDir + "commonW2",
+            "汉堡菜谱素材（依赖包通用，无条件携带；导出时自动重新打包）",
+            "ok", File.Exists(w2Abs) ? new FileInfo(w2Abs).Length : 0);
+
+        // commonW3+：按源目录 Assets/commonW<数字> 判定（存在即导出时重建并携带）。
+        try
+        {
+            var addedCommonW = new HashSet<int>();
+            var assetDirs = Directory.GetDirectories(Application.dataPath.Replace('\\', '/'));
+            for (int i = 0; i < assetDirs.Length; i++)
+            {
+                int index;
+                if (!TryGetCommonWIndex(Path.GetFileName(assetDirs[i]), out index) || index < 3)
+                    continue;
+                if (!addedCommonW.Add(index))
+                    continue;
+                AddManifestEntry(entries, depDir + "commonW" + index,
+                    "扩展素材包（源目录存在即自动携带）", "ok", 0);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 清单扫描 commonW3+ 失败：" + ex.Message);
+        }
+
+        AddManifestEntry(entries, depDir + "package_version.txt",
+            "本次导出自动生成：打包版本/时间/环境 + 全部文件 MD5（排查用）", "ok", 0);
+
+        dto.entries = entries;
+        return dto;
+    }
+
+    private static void AddManifestFileEntry(List<DepsManifestEntryDto> entries,
+        string zipPath, string sourceAbs, string note)
+    {
+        var exists = File.Exists(sourceAbs);
+        AddManifestEntry(entries, zipPath, note, exists ? "ok" : "missing",
+            exists ? new FileInfo(sourceAbs).Length : 0);
+    }
+
+    private static void AddManifestEntry(List<DepsManifestEntryDto> entries,
+        string zipPath, string note, string state, long sizeBytes)
+    {
+        var e = new DepsManifestEntryDto();
+        e.zipPath = zipPath;
+        e.label = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
+        e.state = state;
+        e.sizeBytes = sizeBytes;
+        e.note = note;
+        entries.Add(e);
+    }
+
+    /// <summary>依赖包打包版本规范化：trim → 去前导 v/V → SanitizeVersion → 空/无效回落
+    ///  "1.0.0"。独立于运行时 SSOT 版本（requires.txt 门控）与关卡集版本。</summary>
+    private static string NormalizeDepsVersion(string version)
+    {
+        var v = (version ?? "").Trim();
+        if (v.Length > 1 && (v[0] == 'v' || v[0] == 'V'))
+            v = v.Substring(1).Trim();
+        v = SanitizeVersion(v);
+        return v == "0" ? "1.0.0" : v;
+    }
+
+    private const string DepsVersionFile = "deps_version.txt";
+
+    /// <summary>持久化上次依赖包导出版本（LayoutEditorExports/deps_version.txt），
+    ///  清单端点返回给导出弹窗预填（跨浏览器一致）。</summary>
+    private static void SaveLastDepsVersion(string depsVersion)
+    {
+        try
+        {
+            File.WriteAllText(ExportRootAbsPath() + "/" + DepsVersionFile, depsVersion ?? "");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 记录依赖包版本失败（不影响导出结果）: " + ex.Message);
+        }
+    }
+
+    /// <summary>上次依赖包导出版本（无记录返回 null，前端回落默认 v1.0.0）。</summary>
+    public static string GetLastDepsVersion()
+    {
+        try
+        {
+            var path = ExportRootAbsPath() + "/" + DepsVersionFile;
+            if (!File.Exists(path))
+                return null;
+            var v = (File.ReadAllText(path) ?? "").Trim();
+            return v.Length > 0 ? v : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>写依赖包构建清单（package_version.txt）到临时目录并返回绝对路径。
+    ///  内容 key=value 机器可解析：打包版本/时间（含 UTC 偏移）/Unity 与 OS 环境/
+    ///  运行时与 Loader 版本 + 包内全部条目源文件 MD5（store-only zip 源字节=解压后
+    ///  字节，校验等价；不含本文件自身——自指无法哈希）。</summary>
+    private static string WritePackageVersionFile(string depsVersion,
+        List<LayoutEditorZipWriter.ZipEntrySource> entries)
+    {
+        try
+        {
+            var dir = ExportRootAbsPath();
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            var path = dir + "/._deps_pkgver.txt";
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("# OC2DIYLevelRuntimeWLoader dependency package build info (auto-generated).");
+            sb.AppendLine("# Verify installed files against md5 below when troubleshooting.");
+            sb.AppendLine("package_version=" + depsVersion);
+            sb.AppendLine("build_time=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            sb.AppendLine("utc_offset=" + FormatUtcOffset());
+            sb.AppendLine("unity_version=" + Application.unityVersion);
+            sb.AppendLine("build_os=" + Application.platform + " (" + System.Environment.OSVersion + ")");
+            sb.AppendLine("runtime_version=" + StubVersionValue());
+            sb.AppendLine("loader_version=" + LoaderBuildVersion("Loader"));
+            sb.AppendLine("debuglog_version=" + LoaderBuildVersion("debugLog"));
+            sb.AppendLine();
+            sb.AppendLine("# file md5 (all package entries, excluding this file)");
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var source = entries[i].SourcePath;
+                if (string.IsNullOrEmpty(source) || !File.Exists(source))
+                    continue;
+                var md5 = ComputeFileMd5(source);
+                if (md5 != null)
+                    sb.AppendLine(entries[i].FileName + "=" + md5);
+            }
+            File.WriteAllText(path, sb.ToString());
+            return path;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 写 package_version.txt 失败（不影响其余依赖打包）: " + ex.Message);
+            return null;
+        }
+    }
+
+    /// <summary>解析 Loader 构建输出 version.txt 的 key=值（如 Loader=3.6.0）。缺失返回 ""。</summary>
+    private static string LoaderBuildVersion(string key)
+    {
+        try
+        {
+            var path = ProjectRootAbsPath() + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/version.txt";
+            if (!File.Exists(path))
+                return "";
+            var lines = File.ReadAllLines(path);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var line = (lines[i] ?? "").Trim();
+                if (line.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
+                    return line.Substring(key.Length + 1).Trim();
+            }
+        }
+        catch { }
+        return "";
+    }
+
+    /// <summary>本地时区 UTC 偏移（+08:00 形式；取值失败回落 +00:00）。</summary>
+    private static string FormatUtcOffset()
+    {
+        try
+        {
+            var offset = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
+            var sign = offset < TimeSpan.Zero ? "-" : "+";
+            return sign + Math.Abs(offset.Hours).ToString("00") + ":" + Math.Abs(offset.Minutes).ToString("00");
+        }
+        catch
+        {
+            return "+00:00";
+        }
+    }
+
+    /// <summary>计算文件 MD5（小写十六进制）。失败返回 null（单文件失败不阻断清单）。</summary>
+    private static string ComputeFileMd5(string absPath)
+    {
+        try
+        {
+            using (var md5 = new System.Security.Cryptography.MD5CryptoServiceProvider())
+            using (var fs = File.OpenRead(absPath))
+            {
+                var hash = md5.ComputeHash(fs);
+                var sb = new System.Text.StringBuilder(hash.Length * 2);
+                for (int i = 0; i < hash.Length; i++)
+                    sb.Append(hash[i].ToString("x2"));
+                return sb.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 计算 MD5 失败（" + absPath + "）: " + ex.Message);
+            return null;
+        }
     }
 
     /// <summary>统一运行时 SSOT 版本号（反射 CustomStub.StubVersion.Value，缺失回落）。</summary>

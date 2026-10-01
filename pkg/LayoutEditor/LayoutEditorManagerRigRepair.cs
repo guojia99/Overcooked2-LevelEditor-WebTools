@@ -30,7 +30,7 @@ using LevelEditorStub;
 /// </summary>
 public static class LayoutEditorManagerRigRepair
 {
-    [MenuItem("Layout Editor/清理管理器环境错挂的物品组件（Play Init NRE）", false, 204)]
+    [MenuItem("Layout Editor/场景修复 (Scene Repair)/修复管理器环境错挂的物品组件 (Fix Manager Rig · Play Init NRE)", false, 101)]
     public static void Run()
     {
         try
@@ -103,7 +103,7 @@ public static class LayoutEditorManagerRigRepair
                 return;
             }
 
-            LayoutEditorLog.Log("[管理器环境修复] 将删除以下错挂组件（" + doomed.Count + " 个）:\n" + detail);
+            LayoutEditorLog.Log("[LayoutEditor/SceneRepair] 管理器环境修复 将删除以下错挂组件（" + doomed.Count + " 个）:\n" + detail);
             var ok = EditorUtility.DisplayDialog("管理器环境修复",
                 "在管理器环境 rig 内发现 " + doomed.Count + " 个错挂的物品组件（详见 Console 日志）。\n" +
                 "这些组件会让 Play 进图即 NRE（初始化中断）。\n\n立即删除并保存场景？", "删除并保存", "取消");
@@ -116,14 +116,14 @@ public static class LayoutEditorManagerRigRepair
             }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-            LayoutEditorLog.Log("[管理器环境修复] 已删除 " + doomed.Count +
+            LayoutEditorLog.Log("[LayoutEditor/SceneRepair] 管理器环境修复 已删除 " + doomed.Count +
                 " 个错挂组件并保存场景 " + scene.name + "（可 Ctrl+Z 撤销，撤销后请勿保存）");
             EditorUtility.DisplayDialog("管理器环境修复",
                 "已删除 " + doomed.Count + " 个错挂组件并保存场景。\n现在 Play 应能正常进图。", "好");
         }
         catch (Exception ex)
         {
-            LayoutEditorLog.LogWarning("[管理器环境修复] 异常: " + ex);
+            LayoutEditorLog.LogWarning("[LayoutEditor/SceneRepair] 管理器环境修复 异常: " + ex);
             EditorUtility.DisplayDialog("管理器环境修复", "修复异常：" + ex.Message, "好");
         }
     }

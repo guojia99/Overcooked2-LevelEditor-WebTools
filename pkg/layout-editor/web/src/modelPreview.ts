@@ -1030,7 +1030,8 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     status.classList.add("err");
   }
 
-  const clock = new THREE.Clock();
+  // 注：原 THREE.Clock + 每帧 getDelta() 是死代码（返回值无人消费），且 three 0.185 起
+  //  Clock 已弃用、每帧 console.warn 会刷屏拖垮页面 —— 直接移除（OrbitControls 自管阻尼）。
   function animate(): void {
     if (!canvas.isConnected) {
       disposeActive();
@@ -1039,7 +1040,6 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     controls.update();
     renderer.render(scene, camera);
     active!.raf = requestAnimationFrame(animate);
-    clock.getDelta();
   }
   active = { raf: 0, renderer };
   active.raf = requestAnimationFrame(animate);

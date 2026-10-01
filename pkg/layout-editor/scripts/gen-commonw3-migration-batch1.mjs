@@ -1032,5 +1032,5 @@ if (!apply) {
 } else {
   syncLayoutEditorIcons();
   console.log(`\n完成：${plan.length} 个文件已写入。`);
-  console.log("Unity：Layout Editor → Bake commonW3 Migration Models → Build AssetBundles（commonW3）");
+  console.log("如需重新烘焙走 web 菜谱管理流程 → Build AssetBundles（commonW3）");
 }

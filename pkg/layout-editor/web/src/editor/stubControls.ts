@@ -21,6 +21,7 @@ import {
 import { ingredientOptionLabel, visibleIngredients } from "../ingredientLabels";
 import { questionMarkLabel } from "./iconCaches";
 import { questionMarkIconUrl } from "../api";
+import { openModelPreview } from "../modelPreview";
 import type { IngredientEntry } from "../types";
 import {
   counterTypeOfItem,
@@ -450,7 +451,13 @@ export function counterAppearanceHtml(item: EditorItem): string {
   if (!options.length) return "";
   const cur = item.pseudoPrefabGuid ?? "";
   const nameLookup = new Map(options.map((o) => [o.guid, o]));
-  const curName = nameLookup.get(cur)?.nameZh ?? (cur ? "未知外观" : "默认外观");
+  const curOpt = nameLookup.get(cur);
+  const curName = curOpt?.nameZh ?? (cur ? "未知外观" : "默认外观");
+  const curBadge = curOpt?.icon
+    ? `<img class="csm-thumb" src="/icons/counter-skins/${encodeURIComponent(curOpt.icon)}.png" alt="" onerror="this.remove()" />`
+    : curOpt?.color
+      ? `<span class="csm-dot" style="background:${escHtml(curOpt.color)}"></span>`
+      : "";
   const opts = ['<option value="">— 默认外观 —</option>']
     .concat(
       options.map(
@@ -460,9 +467,14 @@ export function counterAppearanceHtml(item: EditorItem): string {
     .join("");
   const ct = counterTypeOfItem(item);
   const typeName = S.counterAppearances?.typeNames[ct!] ?? ct ?? "桌台";
+  // 3D 预览按钮：当前外观（默认皮肤 → <Type>_Default）在 3D manifest 中存在时显示
+  const c3dKey = ct ? (curOpt?.icon ?? `${ct}_Default`) : "";
+  const c3dBtn = S.counter3d && c3dKey && S.counter3d.items[c3dKey]
+    ? `<button type="button" id="ctx-appear-3d" class="btn-small" data-filekey="${escHtml(c3dKey)}">👁 3D 预览</button>`
+    : "";
   return `<div class="ctx-stub"><div class="ctx-stub-title">${typeName}外观</div>
-    <label class="ctx-stub-row">外观 <select id="ctx-appear" class="ctx-input">${opts}</select></label>
-    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">当前：${escHtml(curName)}</div>
+    <label class="ctx-stub-row">外观 <select id="ctx-appear" class="ctx-input">${opts}</select>${c3dBtn}</label>
+    <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">当前：${curBadge}${escHtml(curName)}</div>
     <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">写回 Unity 时会重建关卡 dependencies（覆盖），并合并外观所需 bundle</div></div>`;
 }
 
@@ -1659,5 +1671,29 @@ export function wireCounterAppearance(item: EditorItem) {
     setStatus(`已更新外观为：${name}${bundleHint}`);
     // Re-show context menu to update the display
     dom.ctxMenuEl.classList.add("hidden");
+  });
+
+  // 3D 预览（Unity 导出的皮肤模型，只读）
+  document.getElementById("ctx-appear-3d")?.addEventListener("click", () => {
+    const btn = document.getElementById("ctx-appear-3d") as HTMLButtonElement | null;
+    const fileKey = btn?.dataset.filekey ?? "";
+    if (!fileKey) return;
+    const entry = S.counter3d?.items[fileKey];
+    if (!entry) {
+      setStatus("该皮肤没有 3D 模型数据", false);
+      return;
+    }
+    const ct = counterTypeOfItem(item);
+    const typeName = S.counterAppearances?.typeNames[ct ?? ""] ?? ct ?? "桌台";
+    openModelPreview({
+      title: `3D 预览 · ${typeName}`,
+      resourceBase: "/api/counter-skins/3d/",
+      modelFileName: entry.obj,
+      // mtlUrl 传相对文件名：MTLLoader.load 会再拼 setPath(resourceBase)，绝对 URL 会双拼成坏地址
+      mtlUrl: entry.mtl,
+      readonly: true,
+      readonlyReason: "皮肤模型由 Unity 导出，只读预览",
+      unitySize: { x: entry.size.x, y: entry.size.y, z: entry.size.z, minY: entry.minY },
+    });
   });
 }

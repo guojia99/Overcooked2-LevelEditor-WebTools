@@ -89,5 +89,5 @@
 | `validate_sets.py` | 全量结构自检 |
 | `probe_level.py` `dump_node.py` | 单关/单节点诊断 |
 
-Unity 侧批量自检：`Assets/Editor/LayoutEditor/LayoutEditorSceneBatchValidator.cs`（菜单 `OC2 Layout/校验/批量打开关卡集场景`，或命令行 `-executeMethod`）。
+Unity 侧批量自检：`Assets/Editor/LayoutEditor/LayoutEditorSceneBatchValidator.cs`（菜单 `Layout Editor/校验 (Validation)/批量打开关卡集场景`，或命令行 `-executeMethod`）。
 

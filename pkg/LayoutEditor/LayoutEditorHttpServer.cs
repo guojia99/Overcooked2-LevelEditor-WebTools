@@ -815,8 +815,17 @@ public class LayoutEditorHttpServer
                     setNames.Add(dto.setName);
                 var err = LayoutEditorSetExporter.StartExport(
                     setNames,
-                    dto != null ? dto.mode : "all");
+                    dto != null ? dto.mode : "all",
+                    dto != null ? dto.depsVersion : null);
                 WriteAdminResult(response, err);
+                return;
+            }
+
+            // 依赖包清单（deps 模式导出弹窗展示用）：条目/存在性/大小 + 运行时编译状态 +
+            // 上次打包版本。只读文件系统，常规主线程泵分派即可（弹窗打开时无构建阻塞）。
+            if (path == "/api/set/export/deps-manifest" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorSetExporter.BuildDepsManifest()));
                 return;
             }
 
@@ -1370,6 +1379,14 @@ public class LayoutEditorHttpServer
             {
                 try { ServeAudioStream(request, response); }
                 catch (System.Exception ex) { Debug.LogWarning("Layout Editor audio stream: " + ex.Message); }
+                return;
+            }
+
+            // ---------- Counter skin 3D assets (exports/counter-skins/, Unity 菜单导出) ----------
+            if (path.StartsWith("/api/counter-skins/3d/", System.StringComparison.OrdinalIgnoreCase) && request.HttpMethod == "GET")
+            {
+                try { ServeCounterSkin3dFile(path, response); }
+                catch (System.Exception ex) { Debug.LogWarning("Layout Editor counter-skins/3d: " + ex.Message); }
                 return;
             }
 
@@ -2223,6 +2240,59 @@ public class LayoutEditorHttpServer
         response.ContentLength64 = bytes.Length;
         response.OutputStream.Write(bytes, 0, bytes.Length);
         response.OutputStream.Close();
+    }
+
+    /// <summary>桌台皮肤 3D 资产只读路由：/api/counter-skins/3d/&lt;name&gt;。
+    ///  数据源 exports/counter-skins/（Unity 菜单「素材导出 (Asset Export) → 导出桌台皮肤 3D 模型与俯视图」产物）。
+    ///  文件名白名单（字母数字_-，obj/mtl/png/json）+ GetFullPath 防穿越。</summary>
+    private static void ServeCounterSkin3dFile(string path, HttpListenerResponse response)
+    {
+        string prefix = "/api/counter-skins/3d/";
+        string name = path.Substring(prefix.Length);
+        if (name.Length == 0 || name.Contains("/") || name.Contains("\\") || name.Contains(".."))
+        {
+            WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "非法文件名。" }));
+            return;
+        }
+        bool validName = true;
+        foreach (char c in name)
+        {
+            if (!(char.IsLetterOrDigit(c) || c == '_' || c == '-' || c == '.')) { validName = false; break; }
+        }
+        string ext = name.EndsWith(".obj", StringComparison.OrdinalIgnoreCase) || name.EndsWith(".mtl", StringComparison.OrdinalIgnoreCase) ||
+                     name.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                     ? name.Substring(name.LastIndexOf('.')) : "";
+        if (!validName || ext.Length == 0 || name.Split('.').Length != 2)
+        {
+            WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "非法文件名。" }));
+            return;
+        }
+
+        var root = Path.GetFullPath(Path.Combine(Application.dataPath, "../exports/counter-skins"));
+        var absPath = Path.GetFullPath(Path.Combine(root, name));
+        if (!absPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(absPath))
+        {
+            WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "文件不存在（先在 Unity 菜单「素材导出 (Asset Export) → 导出桌台皮肤 3D 模型与俯视图」运行导出）。" }));
+            return;
+        }
+
+        string contentType = ext.Equals(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "application/octet-stream";
+        byte[] bytes = File.ReadAllBytes(absPath);
+        response.StatusCode = 200;
+        response.ContentType = contentType;
+        response.Headers["Access-Control-Allow-Origin"] = "*";
+        // obj URL 不带版本参数（openModelPreview 按 resourceBase+name 拼接）→ no-cache 保证重导出后即时生效
+        response.Headers["Cache-Control"] = "no-cache";
+        response.ContentLength64 = bytes.Length;
+        try
+        {
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+        }
+        finally
+        {
+            // 项目惯例：写满后必须 Close，否则 Mono HttpListener 缓冲不 flush、大文件（OBJ）响应不终结
+            response.OutputStream.Close();
+        }
     }
 
     private static void ServeAudioStream(HttpListenerRequest request, HttpListenerResponse response)

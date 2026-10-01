@@ -18,7 +18,7 @@
  * 用法：
  *   node gen-commonw3-smoothies.mjs [--apply]（默认 dry-run）
  *   node gen-commonw3-smoothies.mjs --sync-icons（仅把 commonW3/icons 同步到 layout-editor）
- * 后处理：Unity → Layout Editor → Bake commonW3 Smoothie Models
+ * 后处理：commonW3 烘焙菜单已下线，如需重烘焙走 web 菜谱管理流程
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -891,5 +891,5 @@ if (!apply) {
   console.log("仅同步 layout-editor 图标：node gen-commonw3-smoothies.mjs --sync-icons");
 } else {
   console.log(`\n完成：${plan.length} 个文件已写入（icons/ 未改动），layout-editor 图标已同步。`);
-  console.log("请在 Unity 中：Layout Editor → Bake commonW3 Smoothie Models，然后 Build AssetBundles（commonW3）。");
+  console.log("如需重新烘焙走 web 菜谱管理流程，然后构建 AssetBundles（commonW3）。");
 }

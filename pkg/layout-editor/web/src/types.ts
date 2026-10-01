@@ -1129,6 +1129,31 @@ export interface SetExportStatus {
   fileCount: number;
 }
 
+/** 依赖包清单条目（GET /api/set/export/deps-manifest）。 */
+export interface DepsManifestEntry {
+  /** zip 内路径（OC2DIYLevelRuntimeWLoader/ 前缀）。 */
+  zipPath: string;
+  /** 展示名（zip 路径末段）。 */
+  label: string;
+  /** ok = 将打包 | missing = 源文件缺失 | stale = 运行时过期（需先编译） */
+  state: "ok" | "missing" | "stale" | string;
+  /** 源文件字节数（缺失/导出时生成 = 0）。 */
+  sizeBytes: number;
+  note: string;
+}
+
+/** 依赖包清单（GET /api/set/export/deps-manifest，deps 导出弹窗展示用）。 */
+export interface DepsExportManifest {
+  ok: boolean;
+  /** 统一运行时 DLL 状态：fresh | stale | missing（非 fresh 时弹窗硬门控）。 */
+  runtimeState: "fresh" | "stale" | "missing" | string;
+  /** 统一运行时 SSOT 版本（requires.txt 门控用；与打包版本无关）。 */
+  runtimeVersion: string;
+  /** 上次依赖包导出使用的打包版本（空 = 无记录，回落默认 v1.0.0）。 */
+  lastDepsVersion: string;
+  entries: DepsManifestEntry[];
+}
+
 /** CustomStub 状态（GET /api/set/stub/status?set=）。 */
 export interface SetStubStatus {
   ok: boolean;
@@ -1412,6 +1437,10 @@ export interface CounterAppearanceOption {
   themeName: string;
   /** 外观 prefab 所在游戏 bundle；写回 Unity 时会自动并入 LevelInfoSO.dependencies */
   bundleName?: string;
+  /** 材质球均色（Unity 提取工具生成，如 "#a86b3f"）；画布「桌台皮肤」开关着色用 */
+  color?: string;
+  /** 缩略图文件名（不含扩展，位于 /icons/counter-skins/） */
+  icon?: string;
 }
 
 export interface CounterAppearanceCatalog {
@@ -1420,6 +1449,28 @@ export interface CounterAppearanceCatalog {
   typeNames: Record<string, string>;
   themeNames: Record<string, string>;
   byType: Record<string, CounterAppearanceOption[]>;
+}
+
+/** 桌台皮肤 3D 资产（Unity 菜单导出 → exports/counter-skins/ → /api/counter-skins/3d/ 只读路由）。 */
+export interface Counter3dMat {
+  tex: string;
+}
+
+export interface Counter3dEntry {
+  /** 俯视渲染图（透明背景，宽高比 ≈ 模型 X:Z） */
+  top: string;
+  obj: string;
+  mtl: string;
+  mats: Counter3dMat[];
+  /** 模型包围盒尺寸（米）与底面高度（3D 预览 unitySize 用） */
+  size: { x: number; y: number; z: number };
+  minY: number;
+}
+
+export interface Counter3dManifest {
+  generatedAt: string;
+  items: Record<string, Counter3dEntry>;
+  failures?: Record<string, string>;
 }
 
 export interface SwitchMaterialOption {

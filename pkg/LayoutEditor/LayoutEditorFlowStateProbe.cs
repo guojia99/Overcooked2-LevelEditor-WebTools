@@ -18,13 +18,13 @@ using UnityEngine;
 ///   - PlayerIDProvider.s_AllProviders（厨师实体）及其 pseudo child 是否已生成
 ///   - EntitySerialisationRegistry 实体数、MultiplayerController/ComponentCacheRegistry.ScanActive
 ///   - KitchenLoaderManager 是否已 StartKitchen、ServerCampaignFlowController 是否存在
-/// 全部 try/catch，绝不影响运行流程。菜单：Layout Editor → Play 流程状态探针。
+/// 全部 try/catch，绝不影响运行流程。菜单：Layout Editor → 诊断 (Diagnostics) → Play 流程状态探针。
 /// </summary>
 [InitializeOnLoad]
 public static class LayoutEditorFlowStateProbe
 {
     private const string EnabledPrefKey = "LayoutEditor.FlowStateProbe.Enabled";
-    private const string ToggleMenuPath = "Layout Editor/Play 流程状态探针（[flow-probe]）";
+    private const string ToggleMenuPath = "Layout Editor/诊断 (Diagnostics)/Play 流程状态探针 (Flow State Probe)";
     private const double SampleIntervalSeconds = 2.0;
     private const double HeartbeatSeconds = 15.0;
 
@@ -41,7 +41,7 @@ public static class LayoutEditorFlowStateProbe
             Arm();
     }
 
-    [MenuItem(ToggleMenuPath, false, 303)]
+    [MenuItem(ToggleMenuPath, false, 2)]
     private static void ToggleEnabled()
     {
         EditorPrefs.SetBool(EnabledPrefKey, !IsEnabled());

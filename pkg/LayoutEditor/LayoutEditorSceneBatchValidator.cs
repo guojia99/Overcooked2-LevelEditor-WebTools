@@ -25,7 +25,7 @@ namespace LayoutEditor
         private static readonly List<string> s_errors = new List<string>();
         private static bool s_capturing;
 
-        [MenuItem("OC2 Layout/校验/批量打开关卡集场景")]
+        [MenuItem("Layout Editor/校验 (Validation)/批量打开关卡集场景 (Batch Open Scenes)", false, 400)]
         public static void RunMenu()
         {
             var sets = new List<string> { "oc2_dlc_story", "oc2_story" };
@@ -143,7 +143,7 @@ namespace LayoutEditor
                             sb.Append("\"").Append(Escape(missingPaths[li])).Append("\"");
                         }
                         sb.Append("]}");
-                        Debug.Log("[SceneCheck] " + rel + " objects=" + objects
+                        Debug.Log("[LayoutEditor/Validation] " + rel + " objects=" + objects
                                   + " missing=" + missing + " logs=" + s_errors.Count
                                   + (ok ? " OK" : " FAIL"));
                     }
@@ -160,14 +160,14 @@ namespace LayoutEditor
             string dirOut = Path.GetDirectoryName(outputPath);
             if (!string.IsNullOrEmpty(dirOut) && !Directory.Exists(dirOut)) Directory.CreateDirectory(dirOut);
             File.WriteAllText(outputPath, sb.ToString());
-            Debug.Log("[SceneCheck] 完成：" + total + " 关，失败 " + failed + "，报告 " + outputPath);
+            Debug.Log("[LayoutEditor/Validation] 完成：" + total + " 关，失败 " + failed + "，报告 " + outputPath);
         }
 
         private static void OnLog(string condition, string stackTrace, LogType type)
         {
             if (!s_capturing) return;
             if (type != LogType.Error && type != LogType.Exception && type != LogType.Assert) return;
-            if (condition != null && condition.StartsWith("[SceneCheck]")) return;
+            if (condition != null && condition.StartsWith("[LayoutEditor/Validation]")) return;
             if (s_errors.Count < 20) s_errors.Add(condition);
         }
 

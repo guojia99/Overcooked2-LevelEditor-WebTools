@@ -8,11 +8,14 @@ OC2DIYLevelRuntimeWLoader
 
   Overcooked! 2/BepInEx/plugins/OC2DIYLevelRuntimeWLoader/
 
-当前版本
+版本说明
 --------
 
-  Loader.dll    v3.3.0
-  debugLog.dll  v2.0.0
+  package_version.txt   依赖包打包版本 + 打包时间/环境 + 全部文件 MD5（排查用）
+  version.txt           Loader.dll / debugLog.dll 的构建版本（build.sh 生成）
+
+  依赖包打包版本独立于 Loader 版本与关卡集版本，仅用于辨识依赖包是否需要更新：
+  只要打包版本不变，装一次即可长期复用；版本递增后重新解压覆盖安装。
 
 主要功能
 --------
@@ -38,13 +41,16 @@ debugLog.dll：
 目录结构
 --------
 
-  Loader.dll
-  debugLog.dll
-  log_config.txt
-  readme.txt
-  webcustomstub_runtime
-  commonW1
-  commonW2              可选，只有使用汉堡等内容时需要
+  Loader.dll               BepInEx 插件（必须）
+  debugLog.dll             会话日志插件
+  log_config.txt           debugLog 配置
+  version.txt              Loader/debugLog 构建版本记录
+  package_version.txt      打包版本 + 打包时间/环境 + 文件 MD5
+  readme.txt               本说明
+  webcustomstub_runtime    统一运行时 bundle（必须）
+  commonW1                 编辑器增量素材（必须）
+  commonW2                 汉堡菜谱素材（依赖包统一携带，未用到可忽略）
+  commonW3、commonW4…      扩展素材包（存在即有效，按数字顺序加载）
 
   Loader.dll、debugLog.dll、log_config.txt 必须位于同一目录。
 
@@ -136,6 +142,22 @@ debugLog.dll 默认将日志写入自身同级目录：
 3. 排查具体异常堆栈：保持 level=warning 和 captureStackTrace=true。
 4. 排查异常频率：将 deduplicateSeconds 临时改为 0，但只建议短时间使用。
 5. 排查结束后恢复 warning，避免长期记录普通游戏日志。
+
+版本与排查
+----------
+
+  1. 查看已装依赖包版本：打开 package_version.txt，package_version= 即打包版本；
+     build_time / unity_version / build_os 为打包环境，runtime_version / loader_version
+     为统一运行时与 Loader 的版本。
+  2. 核对文件是否损坏或与分发 zip 不一致：package_version.txt 末尾列出包内全部文件
+     的 MD5。在依赖包目录执行（以 Loader.dll 为例）：
+
+       Windows（cmd）:  certutil -hashfile Loader.dll MD5
+       macOS / Linux:   md5 Loader.dll
+
+     输出与 package_version.txt 中 Loader.dll= 后面的值一致，即文件未被改动。
+  3. 排查加载或玩法问题时，把 debug.log 与 package_version.txt 一起提交给开发者，
+     便于定位版本与文件差异。
 
 注意事项
 --------

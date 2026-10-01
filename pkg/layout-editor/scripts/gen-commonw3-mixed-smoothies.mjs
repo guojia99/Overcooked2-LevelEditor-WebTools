@@ -854,5 +854,5 @@ if (apply) {
 if (!apply) {
   console.log(`\ndry-run：${plan.length} 个文件待生成（不含 icons/）。加 --apply 执行。`);
 } else {
-  console.log(`\n完成：${plan.length} 个文件已写入。请在 Unity 中 Bake commonW3 Smoothie Models。`);
+  console.log(`\n完成：${plan.length} 个文件已写入。commonW3 烘焙菜单已下线；如需重新烘焙走 web 菜谱管理流程。`);
 }

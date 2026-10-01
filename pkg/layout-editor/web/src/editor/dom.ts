@@ -54,6 +54,7 @@ export function buildLayoutDom(): void {
       <span class="toolbar-sep"></span>
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
+      <button id="btn-counters" type="button" title="按桌台类型统一皮肤（如木纹·中秋），也可单独修改">🪵 桌台管理</button>
       <button id="btn-level-config" type="button" title="配置各玩家分数与关卡截图">📊 关卡配置</button>
       <button id="btn-ceiling-height" type="button" title="修改 KitchenLoaderManager Ceiling Height">⬆ 天花板高度</button>
       <button id="btn-camera-light" type="button" title="修改游戏相机背景色 / FOV 与 Art/Lights 灯光颜色、强度">🎥 相机/灯光</button>
@@ -109,6 +110,7 @@ export function buildLayoutDom(): void {
         </select>
       </label>
       <label class="toolbar-check"><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
+      <label class="toolbar-check" title="画布桌台按所选皮肤材质主色着色（默认皮肤保持原配色；需先运行 Unity 菜单提取材质球）"><input type="checkbox" id="counter-skin-paint" /> 🎨 桌台皮肤</label>
       <label class="toolbar-check" title="在画布上显示游戏相机视野的大致范围（FOV 视锥与地面的交线，16:9 估算）"><input type="checkbox" id="show-camera-fov" ${S.showCameraFov ? "checked" : ""} /> 🎥 相机视野</label>
       <label class="toolbar-check"><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
       <label class="toolbar-check" title="勾选后允许工作台重叠时仍然写回"><input type="checkbox" id="allow-ws-overlap" /> ⚠ 允许工作台重叠</label>

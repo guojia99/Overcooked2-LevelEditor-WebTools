@@ -20,7 +20,7 @@ static class LayoutEditorDependencyRepair
         EditorApplication.delayCall += RunRepairPass;
     }
 
-    [MenuItem("Layout Editor/Repair Missing Bundle Dependencies", false, 210)]
+    [MenuItem("Layout Editor/场景修复 (Scene Repair)/修复缺失的 Bundle 依赖 (Repair Missing Bundle Deps)", false, 102)]
     private static void RunRepairPass()
     {
         try
@@ -29,7 +29,7 @@ static class LayoutEditorDependencyRepair
         }
         catch (System.Exception ex)
         {
-            Debug.LogWarning("[LayoutEditor] bundle dependency repair skipped: " + ex.Message);
+            Debug.LogWarning("[LayoutEditor/SceneRepair] Bundle 依赖修复已跳过: " + ex.Message);
         }
     }
 
@@ -59,7 +59,7 @@ static class LayoutEditorDependencyRepair
                     continue;
                 }
                 changed = true;
-                Debug.Log("[LayoutEditor] 从 LevelInfoSO 移除缺失的自定义菜谱 bundle 依赖: " + b +
+                Debug.Log("[LayoutEditor/SceneRepair] 从 LevelInfoSO 移除缺失的自定义菜谱 bundle 依赖: " + b +
                     " ← " + path + "（构建 bundle 后会在重新加载时自动补回）");
             }
             if (!changed)
@@ -74,7 +74,7 @@ static class LayoutEditorDependencyRepair
         if (anyChanged)
         {
             AssetDatabase.SaveAssets();
-            Debug.Log("[LayoutEditor] 已修复 LevelInfoSO 依赖中的缺失 bundle。");
+            Debug.Log("[LayoutEditor/SceneRepair] 已修复 LevelInfoSO 依赖中的缺失 bundle。");
         }
     }
 }

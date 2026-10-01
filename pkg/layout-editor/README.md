@@ -101,7 +101,7 @@ node layout-editor/scripts/gen-commonw3-mixed-smoothies.mjs --import-icons --app
 # 或手动放入 icons/ 后仅同步：
 node layout-editor/scripts/gen-commonw3-mixed-smoothies.mjs --sync-icons
 
-# 随后在 Unity：Layout Editor → Bake commonW3 Smoothie Models → Build AssetBundles（commonW3）
+# commonW3 模型已全部烘焙完成（原 Unity 烘焙菜单已下线）；如需重新烘焙，走 web 菜谱管理流程，随后构建 AssetBundles（commonW3）
 
 # 重新打包前端
 cd layout-editor/web

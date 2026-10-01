@@ -1,4 +1,4 @@
-import { imageFloorUrl, questionMarkIconUrl, fetchQuestionMarks } from "../api";
+import { imageFloorUrl, questionMarkIconUrl, fetchQuestionMarks, counter3dUrl } from "../api";
 
 let redraw: () => void = () => {};
 
@@ -107,5 +107,24 @@ export function getCatalogIcon(catId: string): HTMLImageElement | null {
   img.onload = () => redraw();
   img.src = `/icons/catalog/${catId}.png`;
   catalogIconCache.set(catId, img);
+  return null;
+}
+
+/** 桌台皮肤俯视渲染图缓存（Unity 导出 → /api/counter-skins/3d/<fileKey>_top.png）。
+ *  加载失败（桥离线/未导出）记入失败集不再重试，画布回退主色填充。 */
+const counterTopCache = new Map<string, HTMLImageElement>();
+const counterTopFailed = new Set<string>();
+export function getCounterTopImage(fileKey: string): HTMLImageElement | null {
+  if (!fileKey || counterTopFailed.has(fileKey)) return null;
+  const existing = counterTopCache.get(fileKey);
+  if (existing) return existing.complete && existing.naturalWidth > 0 ? existing : null;
+  const img = new Image();
+  img.onload = () => redraw();
+  img.onerror = () => {
+    counterTopFailed.add(fileKey);
+    redraw();
+  };
+  img.src = counter3dUrl(`${fileKey}_top.png`);
+  counterTopCache.set(fileKey, img);
   return null;
 }

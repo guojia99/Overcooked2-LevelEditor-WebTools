@@ -6,6 +6,7 @@ import type {
   CatalogItem,
   CoaxialLink,
   CounterAppearanceCatalog,
+  Counter3dManifest,
   DeathInfo,
   FloorMaterial,
   FloorObject,
@@ -301,6 +302,10 @@ export const S = {
   catalogByGuid: new Map<string, CatalogItem>(),
   catalogById: new Map<string, CatalogItem>(),
   counterAppearances: null as CounterAppearanceCatalog | null,
+  /** 桌台皮肤 3D 资产（俯视图 + OBJ；Unity 菜单导出，桥在线时经 /api/counter-skins/3d/；null = 回退主色）。 */
+  counter3d: null as Counter3dManifest | null,
+  /** 「🎨 桌台皮肤」开关：画布桌台按皮肤主色着色（localStorage oc2-counter-skin-paint 持久化）。 */
+  counterSkinPaint: false,
   switchMaterialsCache: [] as SwitchMaterialOption[],
   items: [] as EditorItem[],
   floors: [] as EditorFloor[],

@@ -18,14 +18,14 @@ using UnityEngine;
 ///   - 刷屏防护：同一消息（type+文本）最多写 MaxIdenticalMessages 条，超出后
 ///     只记一条「后续省略」标记，避免 Animator 每帧警告把磁盘打爆；
 ///   - 每 0.5s（或缓冲超 64KB）落盘一次；退出 Play / 回到编辑模式时强制落盘。
-/// 菜单：Layout Editor → Play 模式日志捕获（写入 logs/） 可开关，默认开启。
+/// 菜单：Layout Editor → 诊断 (Diagnostics) → Play 模式日志捕获 (Play Log Capture) 可开关，默认开启。
 /// </summary>
 [InitializeOnLoad]
 public static class LayoutEditorPlayModeLogCapture
 {
     private const string EnabledPrefKey = "LayoutEditor.PlayModeLogCapture.Enabled";
     private const string SessionFilePrefKey = "LayoutEditor.PlayModeLogCapture.SessionFile";
-    private const string ToggleMenuPath = "Layout Editor/Play 模式日志捕获（写入 logs/）";
+    private const string ToggleMenuPath = "Layout Editor/诊断 (Diagnostics)/Play 模式日志捕获 (Play Log Capture)";
     private const int MaxIdenticalMessages = 50;
     private const double FlushIntervalSeconds = 0.5;
     private const int FlushBufferChars = 64 * 1024;
@@ -51,7 +51,7 @@ public static class LayoutEditorPlayModeLogCapture
         }
     }
 
-    [MenuItem(ToggleMenuPath, false, 301)]
+    [MenuItem(ToggleMenuPath, false, 1)]
     private static void ToggleEnabled()
     {
         var enabled = !IsEnabled();
@@ -67,7 +67,7 @@ public static class LayoutEditorPlayModeLogCapture
         return true;
     }
 
-    [MenuItem("Layout Editor/打开日志目录", false, 302)]
+    [MenuItem("Layout Editor/诊断 (Diagnostics)/打开日志目录 (Open Logs Folder)", false, 3)]
     private static void OpenLogsDir()
     {
         var dir = LogsDir();

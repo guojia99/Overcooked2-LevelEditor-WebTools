@@ -55,7 +55,7 @@ public static class CustomStubOrphanRepair
         "0000000000000000f000000000000000", "0000000000000000e000000000000000"
     };
 
-    [MenuItem("Layout Editor/CustomStub/修复场景孤儿脚本引用（迁移损坏）")]
+    [MenuItem("Layout Editor/CustomStub（关卡代码分发）/修复场景孤儿脚本引用 (Fix Orphan Script Refs)", false, 24)]
     public static void Run()
     {
         try
@@ -81,7 +81,7 @@ public static class CustomStubOrphanRepair
             }
 
             var summary = BuildSummary(plans);
-            LayoutEditorLog.Log("[孤儿修复] 扫描报告:\n" + summary);
+            LayoutEditorLog.Log("[LayoutEditor/CustomStub] 孤儿修复 扫描报告:\n" + summary);
 
             var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var actionable = false;
@@ -118,13 +118,13 @@ public static class CustomStubOrphanRepair
                 EditorSceneManager.OpenScene(reopenPath, OpenSceneMode.Single);
 
             var reportPath = WriteReport(stamp, summary, report);
-            LayoutEditorLog.Log("[孤儿修复] 执行完成，报告: " + reportPath);
+            LayoutEditorLog.Log("[LayoutEditor/CustomStub] 孤儿修复 执行完成，报告: " + reportPath);
             EditorUtility.DisplayDialog("孤儿脚本引用修复",
                 "修复完成。\n\n报告: " + reportPath + "\n\n受影响关卡集需重新导出才会进游戏包。", "好");
         }
         catch (Exception ex)
         {
-            LayoutEditorLog.LogWarning("[孤儿修复] 执行异常: " + ex);
+            LayoutEditorLog.LogWarning("[LayoutEditor/CustomStub] 孤儿修复 执行异常: " + ex);
             EditorUtility.DisplayDialog("孤儿脚本引用修复", "执行异常（详见日志）:\n" + ex.Message, "知道了");
         }
     }

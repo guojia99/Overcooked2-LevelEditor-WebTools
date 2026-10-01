@@ -7,7 +7,7 @@ public static class AnimGroupBakeryTests
 {
     private const string SceneName = "s_jia_level_1_3";
 
-    [MenuItem("Layout Editor/Tests/Run AnimGroupBakery Tests")]
+    [MenuItem("Layout Editor/测试 (Tests)/运行动画组烘焙器测试 (Run AnimGroupBakery Tests)", false, 600)]
     public static void RunAll()
     {
         var failed = 0;
@@ -49,9 +49,9 @@ public static class AnimGroupBakeryTests
         failed += FxEventTests.Run();
 
         if (failed == 0)
-            Debug.Log("[LayoutEditor] AnimGroupBakery tests: all passed.");
+            Debug.Log("[LayoutEditor/Tests] 动画组烘焙器测试：全部通过。");
         else
-            Debug.LogError("[LayoutEditor] AnimGroupBakery tests: " + failed + " failed.");
+            Debug.LogError("[LayoutEditor/Tests] 动画组烘焙器测试：" + failed + " 项失败。");
     }
 
     /// <summary>时间轴模型：旧顺序事件迁移、事件时长与时间簇装箱。</summary>
@@ -119,7 +119,7 @@ public static class AnimGroupBakeryTests
         private static int AssertFloat(string label, float actual, float expected)
         {
             if (Mathf.Abs(actual - expected) < 0.001f) return 0;
-            Debug.LogError("[LayoutEditor] FAIL " + label + ": expected " + expected + ", got " + actual);
+            Debug.LogError("[LayoutEditor/Tests] 失败 " + label + "：期望 " + expected + "，实际 " + actual);
             return 1;
         }
     }
@@ -190,7 +190,7 @@ public static class AnimGroupBakeryTests
         private static int AssertFloat(string label, float actual, float expected)
         {
             if (Mathf.Abs(actual - expected) < 0.001f) return 0;
-            Debug.LogError("[LayoutEditor] FAIL " + label + ": expected " + expected + ", got " + actual);
+            Debug.LogError("[LayoutEditor/Tests] 失败 " + label + "：期望 " + expected + "，实际 " + actual);
             return 1;
         }
     }
@@ -209,8 +209,8 @@ public static class AnimGroupBakeryTests
     {
         if (string.Equals(actual, expected, StringComparison.Ordinal))
             return 0;
-        Debug.LogError("[LayoutEditor] FAIL " + label + ": expected \"" + expected +
-            "\", got \"" + actual + "\"");
+        Debug.LogError("[LayoutEditor/Tests] 失败 " + label + "：期望 \"" + expected +
+            "\"，实际 \"" + actual + "\"");
         return 1;
     }
 
@@ -218,7 +218,7 @@ public static class AnimGroupBakeryTests
     {
         if (!string.Equals(a, b, StringComparison.Ordinal))
             return 0;
-        Debug.LogError("[LayoutEditor] FAIL " + label + ": both keys are \"" + a + "\"");
+        Debug.LogError("[LayoutEditor/Tests] 失败 " + label + "：两个 key 相同 \"" + a + "\"");
         return 1;
     }
 }

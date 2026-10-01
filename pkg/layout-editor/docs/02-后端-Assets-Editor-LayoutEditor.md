@@ -117,7 +117,7 @@ Unity 启动 / Domain Reload
                  确保 LayoutEditorHttpServer 存活（限流：60s 内最多 5 次重启，间隔 ≥2s）
 ```
 
-- **主窗口**：`LayoutEditorBridgeWindow : EditorWindow`（菜单 `Layout Editor/Open Bridge`）：启动/停止服务、打开浏览器编排页（`/layout?scene=<当前场景>`）、四个导出按钮（装饰尺寸/音频/Bundle dump/素材图）、两个 CustomStub 按钮（反射软调用，扩展缺失时置灰不报错）。
+- **主窗口**：`LayoutEditorBridgeWindow : EditorWindow`（菜单 `Layout Editor/打开桥接窗口 (Open Bridge)`）：启动/停止服务、打开浏览器编排页（`/layout?scene=<当前场景>`）、四个导出按钮（装饰尺寸/音频/Bundle dump/素材图）、两个 CustomStub 按钮（反射软调用，扩展缺失时置灰不报错）。
 - **HTTP 服务**：`LayoutEditorHttpServer`（普通 C# 类，非 MonoBehaviour）。
 
 ### 2.2 通信机制（HTTP，端口 8765）
@@ -175,6 +175,7 @@ flowchart TD
 | `GET /api/sets`、`GET /api/sets/<set>/levels` | 列表 |
 | `POST /api/set/create \| info \| delete \| export` | 关卡集操作 |
 | `GET /api/set/export/status`、`GET /api/set/export/download?setName&fileName` | 导出状态/下载（fast-path） |
+| `GET /api/set/export/deps-manifest` | 依赖包清单（deps 导出弹窗展示用）：逐条目存在性/大小 + 运行时 dllState + 上次打包版本（`BuildDepsManifest`，只读文件系统） |
 | `GET /api/set/stub/status`、`POST /api/set/stub/copy \| compile` | CustomStub 状态/拷贝/编译（经 `CustomStubApi` 钩子，未安装 501） |
 | `GET /api/level`、`GET /api/level/bundles`（依赖分析）、`GET /api/level/delete-preview` | 关卡查询 |
 | `POST /api/level/create \| info \| config \| audio \| delete \| reorder \| rename` | 关卡操作（create 起 sceneName=levelId 不再加 s_ 前缀；rename 原子改 data/ 目录、LevelInfo 资产、场景+bundle 名、animations/ 前缀、写回历史目录，旧 s_ 场景名顺势迁移为无前缀） |
@@ -253,7 +254,7 @@ flowchart TD
 | **ButtonLinkBakery.cs** | 按钮/压力开关 → 动画组联动，烘焙到 `Design/Button Logic/Btn(Logic|Pair)_*`：顺序触发状态环（Ready_i→Run_i→Ready_{i+1}）、lockUntilFinished（ClearTriggerDuringState）、共轭对 AND 门（pairId，每方 ≤2 组）；`PrepareGroups/Sync/ImportFromScene/CleanupStale` |
 | **ButtonEventBakery.cs** | 按钮 → 事件组联动（事件 = 向目标广播 trigger + doneTrigger 完成信号），烘焙到 `Design/Button Event Logic`，按压触发名 `BEP_<helper>` |
 | **CoaxialButtonBakery.cs** | 同轴按钮组：≥2 按钮时间窗内（0.35~5s，默认 1s，首个按下起计时）集齐才向目标机器广播触发（断头台 Chop 等）；超时已按按钮弹回零触发、成功后锁 0.35s 全组弹回。烘焙到 **`Design/Coaxial Logic/Coax_<hash>`**（独立根，防被 ButtonLinkBakery.CleanupStale 误删；无 Animator 资产）+ 反射挂 `CustomStub.CoaxialButtonGroup` + tag `Coaxial\|W:窗口\|N:按钮名,..\|T:目标,触发;..`；成员复用 `_BL<n>` 唯一命名 + 停用 SwitchReenable；文档字段 `coaxialLinks`（仅全量写回） |
-| **AnimGroupBakeryTests.cs** | 菜单 `Layout Editor/Tests/...`：asset key 唯一性/稳定性 + Timeline 迁移 + FX 事件断言 |
+| **AnimGroupBakeryTests.cs** | 菜单 `Layout Editor/测试 (Tests)/运行动画组烘焙器测试`：asset key 唯一性/稳定性 + Timeline 迁移 + FX 事件断言 |
 
 ### 3.5 管理端 API
 
@@ -281,9 +282,9 @@ flowchart TD
 | **LayoutEditorDispenserIconFix.cs** | 新结构食材箱皮肤（木纹·中秋）触发宿主 MissingComponentException 的兼容补丁：`PreloadAndSeed`（注入 bundle + 补种子 MeshRenderer）、`SyncSeededIcons`、钩子 `AfterRandomCrateSync` |
 | **LayoutEditorGridSnapGuard.cs** | [InitializeOnLoad] 反射把场景伪预制件 child 的 `EditorGridSnap.m_constrainX/Z` 置 false（防写回的半格坐标被拉回整格） |
 | **LayoutEditorPushablePotPreview.cs** | 编辑模式下为 `web_utensil_large_pot_01_pushable` 载具实例化预览锅；进 Play 销毁（运行时由 CustomStub.PushablePot 权威装配） |
-| **LayoutEditorSceneRepair.cs** | `RemoveBrokenPrefabInstances`：删除 MissingPrefabInstance 实例；恢复被置空的 stub.pseudoPrefabSO。菜单 + `/api/scene/repair-broken` |
+| **LayoutEditorSceneRepair.cs** | `RemoveBrokenPrefabInstances`：删除 MissingPrefabInstance 实例；恢复被置空的 stub.pseudoPrefabSO。菜单（场景修复 → 清理损坏的预制件实例）+ `/api/scene/repair-broken` |
 | **LayoutEditorLevelInfoSanitizer.cs** | [InitializeOnLoad]（静态构造即跑，赶在宿主 OnEnable 前）：null 音频数组补空、空配置用模板回填、剔除死 ambience |
-| **LayoutEditorDependencyRepair.cs** | [InitializeOnLoad] + 菜单：磁盘不存在时从 LevelInfoSO.dependencies 移除**仅插件自己的** `<set>/custom_recipes` |
+| **LayoutEditorDependencyRepair.cs** | [InitializeOnLoad] + 菜单（场景修复 → 修复缺失的 Bundle 依赖）：磁盘不存在时从 LevelInfoSO.dependencies 移除**仅插件自己的** `<set>/custom_recipes` |
 
 ### 3.7 Play 期运行时补丁（编辑器内验证用）
 
@@ -315,7 +316,7 @@ flowchart TD
 | **LayoutEditorAudioExporter.cs** | `ExportAudioForWeb()`：扫 common01/02 BGM 与 AudioDirectory SO → 用 AudioFs/ 直读游戏 bundle → FSB5 提取（Vorbis→.ogg、ADPCM→.wav）→ `<repo>/audio-exports/` + `audio-exports.json`。不依赖 python/libvorbis |
 | **AudioFs/ 五件套** | 命名空间 `LayoutEditor.AudioFs`（internal）纯 C# 只读解析库：`AudioFsBundle`（UnityFS 2017.4 v6、LZ4/LZ4HC）、`AudioFsLz4`（块解码）、`AudioFsSerializedFile`（typetree 动态读值、跨文件 PPtr）、`AudioFsFsb5`（FSB5 头/样本表、Vorbis 重组 ogg、IMA ADPCM 解码、RIFF wav）、`AudioFsTables`（`oc2-common-strings.txt` 与 `vorbis-setup-tables.txt` 数据文件） |
 | **LayoutEditorFootprintDump.cs / LayoutEditorFootprintMeasure.cs** | 前者批量测量 common01/02/03/W1 美术 prefab 占地/高度 → `layout-editor/scripts/data/measured-footprints.json`；后者单实例测量（撤销 Y 旋转四分之一转、除以实例缩放） |
-| **LayoutEditorDiag.cs** | 菜单诊断：直接 LoadFromFile bundle47/bundle354 验证 assetPath 变体 |
+| **LayoutEditorDiag.cs** | 菜单诊断（诊断 → 诊断 AssetBundle 加载）：直接 LoadFromFile bundle47/bundle354 验证 assetPath 变体 |
 | **CustomRecipeConfigSO.cs** | 命名空间 `LevelEditorStub` 的 SO：uidPrefix/nextSequence（UID 分配）、categories、modelTransforms（避免改宿主 CustomRecipeSO 类定义） |
 
 ### 3.9 CustomStub/（运行时逻辑母本）
@@ -417,6 +418,8 @@ LayoutEditor 不直接修改它，但其编译产物提供编辑器 Play 期运�
 **入口**：`POST /api/set/export {setName}` → `StartExport`（校验、状态机置 running、delayCall 立即应答）。状态查询/下载走监听线程 fast-path。
 
 **多集合并导出**：`POST /api/set/export {setNames: [a, b], mode}`（`setNames` 非空时优先于 `setName`）→ `StartExport(List<string>, mode)`。zip 内 `OC2DIYLevel/levels/<set1>/`、`levels/<set2>/` 并列（各集 info/s_* + 各自 requires.txt），依赖包 `OC2DIYLevelRuntimeWLoader/` 整包只带一份（commonW2 按需 = 任一集引用即携带）。prepare/clean/build/package 逐集循环，`BuildAssetBundles` 仍只调一次（全量构建，3-5 分钟不随集数翻倍）。zip 名 = 各集 `name_v<ver>` 用 `+` 连接（超 120 字符回落 `multi<N>sets`）；状态 `setName` = 各集名 `+` 连接（前端以此为完成比对键）。deps 模式与集无关，多集时只取第一个。
+
+**依赖包单独导出（deps 模式，`ExportDepsOnly`）**：`POST /api/set/export {setNames:[锚点集], mode:"deps", depsVersion}`——不含任何关卡；`BeforeBuild`（= `StageRuntime(true)`）硬校验运行时新鲜度 → 删 `commonw1/commonw2/commonw3` 旧产物并 `BuildAssetBundles` 重建（杜绝遗留；commonW1/W2 无条件携带）→ `AddDependencyEntries(alwaysCommonW2:true)` 组条目 → 生成 `package_version.txt`（打包版本/时间/UTC 偏移/Unity 与 OS 环境/运行时与 Loader 版本 + **全部条目源文件 MD5**，store-only zip 源字节=解压字节故校验等价；自身不参与 MD5）→ zip 名 `OC2DIYLevelRuntimeWLoader_v<depsVersion>_<yyyyMMdd>.zip`。**`depsVersion` 为用户可编辑的打包版本（弹窗默认 v1.0.0，自动预填 `LayoutEditorExports/deps_version.txt` 记录的上次值；规范化 = 去前导 v + SanitizeVersion + 空回落 1.0.0），独立于运行时 SSOT 版本（requires.txt 门控不变）与关卡集版本**——版本不变即装一次长期复用。弹窗 = 实时清单（`GET /api/set/export/deps-manifest`，失败回落前端静态清单）+ 版本输入（zip 名实时预览）+「编译 Runtime DLL」按钮（`wireExportStubTools` 加 `onStateChange` 回调做**硬门控**：dllState ≠ fresh 禁用导出按钮）。
 
 ```mermaid
 flowchart TD

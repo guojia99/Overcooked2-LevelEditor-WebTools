@@ -15,6 +15,7 @@ import {
   fetchIngredients,
   fetchRecipeCatalog,
   fetchCounterAppearances,
+  fetchCounter3dManifest,
   fetchSwitchMaterials,
   fetchLevelSets,
   fetchLevelRecipes,
@@ -40,6 +41,7 @@ import { markDirty } from "./historyOps";
 import { openRecipesDialog } from "./ui/recipesDialogs";
 import { requestTestLayout } from "./testLayout";
 import { openUtensilManager } from "./ui/utensilManager";
+import { openCounterSkinManager, ensureCounter3dLoaded } from "./ui/counterSkinManager";
 import { openCameraLightModal } from "./cameraLight";
 import { openWorkloadModal } from "./workloadModal";
 import {
@@ -314,6 +316,13 @@ export async function init() {
     .catch(() => []);
   S.counterAppearances = await fetchCounterAppearances().catch(() => null);
   S.switchMaterialsCache = await fetchSwitchMaterials().catch(() => []);
+  // 3D 资产不阻塞启动；桥离线/未导出时静默为 null（画布回退主色、隐藏 3D 预览按钮）
+  void fetchCounter3dManifest()
+    .then((m) => {
+      S.counter3d = m;
+      draw();
+    })
+    .catch(() => {});
   buildPalette(catalog, "");
 
   const scenes = await fetchLevelSets().catch(() => []);
@@ -440,6 +449,7 @@ export async function init() {
 
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
   document.getElementById("btn-utensils")!.addEventListener("click", () => openUtensilManager());
+  document.getElementById("btn-counters")!.addEventListener("click", () => openCounterSkinManager());
   document.getElementById("btn-camera-light")!.addEventListener("click", () => openCameraLightModal());
   document.getElementById("btn-ceiling-height")!.addEventListener("click", editCeilingHeight);
   document.getElementById("chk-auto-intermediates")!.addEventListener("change", (e) => {
@@ -542,6 +552,19 @@ export async function init() {
     S.showGrid = (e.target as HTMLInputElement).checked;
     draw();
   });
+
+  const counterSkinPaintToggle = document.getElementById("counter-skin-paint") as HTMLInputElement | null;
+  if (counterSkinPaintToggle) {
+    S.counterSkinPaint = localStorage.getItem("oc2-counter-skin-paint") === "1";
+    counterSkinPaintToggle.checked = S.counterSkinPaint;
+    counterSkinPaintToggle.addEventListener("change", () => {
+      S.counterSkinPaint = counterSkinPaintToggle.checked;
+      localStorage.setItem("oc2-counter-skin-paint", S.counterSkinPaint ? "1" : "0");
+      draw();
+      // 开启时若 3D 资产（俯视图/3D 预览）未加载：自动重试一次；仍失败弹窗指引去 Unity 导出
+      if (S.counterSkinPaint && !S.counter3d) void ensureCounter3dLoaded(true);
+    });
+  }
 
   document.getElementById("show-camera-fov")!.addEventListener("change", (e) => {
     S.showCameraFov = (e.target as HTMLInputElement).checked;

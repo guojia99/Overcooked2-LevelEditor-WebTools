@@ -80,12 +80,12 @@ public static class LayoutStubDllBuilder
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[CustomStub] 静默 staging 异常: " + ex.Message);
+            Debug.LogWarning("[LayoutEditor/CustomStub] 静默 staging 异常: " + ex.Message);
             return false;
         }
     }
 
-    [MenuItem("Layout Editor/CustomStub/编译打包 Runtime DLL")]
+    [MenuItem("Layout Editor/CustomStub（关卡代码分发）/编译打包 Runtime DLL (Stage Runtime DLL)", false, 1)]
     public static void StageRuntimeManual()
     {
         AssetDatabase.Refresh();
@@ -106,7 +106,7 @@ public static class LayoutStubDllBuilder
         };
     }
 
-    [MenuItem("Layout Editor/CustomStub/Toggle Prepare For Building", false, 11)]
+    [MenuItem("Layout Editor/CustomStub（关卡代码分发）/切换构建准备模式 (Toggle Prepare For Building)", false, 0)]
     public static void TogglePrepareForBuilding()
     {
         LevelEditor.PseudoPrefabManager.Instance.prepareForBuilding =
@@ -115,17 +115,17 @@ public static class LayoutStubDllBuilder
             LevelEditor.PseudoPrefabManager.Instance.DeInit();
         else
             LevelEditor.PseudoPrefabManager.Instance.Init();
-        Debug.Log("[CustomStub] prepareForBuilding = "
+        Debug.Log("[LayoutEditor/CustomStub] prepareForBuilding = "
             + LevelEditor.PseudoPrefabManager.Instance.prepareForBuilding);
     }
 
-    [MenuItem("Layout Editor/CustomStub/Build AssetBundles（含 Runtime staging）", false, 100)]
+    [MenuItem("Layout Editor/CustomStub（关卡代码分发）/构建 AssetBundles（含 Runtime 打包）(Build w/ Staging)", false, 11)]
     public static void BuildAssetBundlesWithStaging()
     {
         BuildAssetBundlesWithStaging(BuildAssetBundleOptions.None);
     }
 
-    [MenuItem("Layout Editor/CustomStub/Build AssetBundles（含 Runtime staging，ForceRebuild）", false, 101)]
+    [MenuItem("Layout Editor/CustomStub（关卡代码分发）/构建 AssetBundles·强制重建 (Force Rebuild)", false, 12)]
     public static void BuildAssetBundlesWithStagingForceRebuild()
     {
         BuildAssetBundlesWithStaging(BuildAssetBundleOptions.ForceRebuildAssetBundle);
@@ -135,7 +135,7 @@ public static class LayoutStubDllBuilder
     {
         if (EditorApplication.isCompiling || EditorApplication.isUpdating)
         {
-            EditorUtility.DisplayDialog("Build AssetBundles",
+            EditorUtility.DisplayDialog("构建 AssetBundles",
                 "Unity 正在编译/导入脚本，请等待完成后再构建。", "确定");
             return;
         }
@@ -168,7 +168,7 @@ public static class LayoutStubDllBuilder
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("[CustomStub] TargetSceneSaveValidator 软调用失败，回落内联检查: " + ex.Message);
+                Debug.LogWarning("[LayoutEditor/CustomStub] TargetSceneSaveValidator 软调用失败，回落内联检查: " + ex.Message);
             }
         }
         return InlinePrepareForBuildingCheck(activeScene);
@@ -261,7 +261,7 @@ public static class LayoutStubDllBuilder
                 if (!s_forceWarned)
                 {
                     s_forceWarned = true;
-                    Debug.LogWarning("[CustomStub] 自动强制编译后运行时 DLL 仍为 " + state
+                    Debug.LogWarning("[LayoutEditor/CustomStub] 自动强制编译后运行时 DLL 仍为 " + state
                         + "（多半母本存在编译错误，详见 Console）；修复源码后将自动重新编译。");
                 }
                 return false;
@@ -276,7 +276,7 @@ public static class LayoutStubDllBuilder
             var relPath = newestFile != null ? newestFile.Replace('\\', '/') : null;
             if (s_forceAttempts >= 2 && relPath != null)
                 AssetDatabase.ImportAsset(relPath, ImportAssetOptions.ForceUpdate);
-            Debug.Log("[CustomStub] 统一运行时源码已更新（" + state + "），自动触发编译"
+            Debug.Log("[LayoutEditor/CustomStub] 统一运行时源码已更新（" + state + "），自动触发编译"
                 + (s_forceAttempts >= 2 && relPath != null ? "（强制重导入 " + relPath + "）" : "") + "…");
             AssetDatabase.Refresh();
             // Refresh 未引发域重载（编译失败/无实际变动）时由这里递归复查收尾
@@ -285,7 +285,7 @@ public static class LayoutStubDllBuilder
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[CustomStub] 自动强制编译异常: " + ex.Message);
+            Debug.LogWarning("[LayoutEditor/CustomStub] 自动强制编译异常: " + ex.Message);
             return false;
         }
     }
@@ -346,8 +346,8 @@ public static class LayoutStubDllBuilder
         if (!string.IsNullOrEmpty(error))
         {
             if (throwOnStale)
-                throw new Exception("[CustomStub] " + error);
-            Debug.LogWarning("[CustomStub] " + error);
+                throw new Exception("[LayoutEditor/CustomStub] " + error);
+            Debug.LogWarning("[LayoutEditor/CustomStub] " + error);
             return;
         }
 
@@ -361,7 +361,7 @@ public static class LayoutStubDllBuilder
             importer.assetBundleName = RuntimeBundleName;
             importer.SaveAndReimport();
         }
-        Debug.Log("[CustomStub] 已打包统一运行时 " + RuntimeAsmName + ".dll → " + BytesAssetPath
+        Debug.Log("[LayoutEditor/CustomStub] 已打包统一运行时 " + RuntimeAsmName + ".dll → " + BytesAssetPath
             + "（bundle " + RuntimeBundleName + "）");
     }
 }

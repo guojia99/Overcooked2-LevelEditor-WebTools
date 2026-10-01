@@ -1358,6 +1358,38 @@ public class SetExportStartDto
     public List<string> setNames;
     /** 导出模式：levels（仅关卡集）| deps（仅依赖包）| all（全部一起，默认）。 */
     public string mode;
+    /** deps 模式：依赖包打包版本（独立于运行时 SSOT 版本与关卡集版本，默认 1.0.0）。
+     *  用于 zip 命名与包内 package_version.txt，不参与 requires.txt 门控。 */
+    public string depsVersion;
+}
+
+// ---------- 依赖包清单（GET /api/set/export/deps-manifest） ----------
+
+[Serializable]
+public class DepsManifestEntryDto
+{
+    /** zip 内路径（OC2DIYLevelRuntimeWLoader/ 前缀）。 */
+    public string zipPath;
+    /** 展示名（zip 路径末段）。 */
+    public string label;
+    /** ok=将打包 | missing=源文件缺失 | stale=运行时过期（需先编译 Runtime DLL）。 */
+    public string state;
+    /** 源文件字节数（缺失/导出时生成=0）。 */
+    public long sizeBytes;
+    public string note;
+}
+
+[Serializable]
+public class DepsManifestDto
+{
+    public bool ok;
+    /** 统一运行时 DLL 状态：fresh | stale | missing（LayoutStubDllBuilder.GetRuntimeStageState）。 */
+    public string runtimeState;
+    /** 统一运行时 SSOT 版本（StubVersion.Value，requires.txt 门控用；与打包版本无关）。 */
+    public string runtimeVersion;
+    /** 上次依赖包导出使用的打包版本（无记录 = ""，前端回落默认 v1.0.0）。 */
+    public string lastDepsVersion;
+    public List<DepsManifestEntryDto> entries;
 }
 
 // ---------- Levels ----------

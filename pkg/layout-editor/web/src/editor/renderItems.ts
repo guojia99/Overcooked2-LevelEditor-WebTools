@@ -1,4 +1,5 @@
 import {
+
   normalizeRot,
   worldToCanvas,
   resolveFootprint,
@@ -20,11 +21,14 @@ import {
   categoryVisible,
   catalogItemForGuidOrPath,
   isResizableBackgroundItem,
-  itemPlaneCells
+  itemPlaneCells,
+  counterTypeOfItem
 } from "./catalog";
+import { getCounterTopImage } from "./iconCaches";
 import { itemInHeightFilter } from "./floorHeight";
 import {
   drawLabelInBox,
+  drawTopViewBadgeLabel,
   itemLabel,
   drawDispenserIngredient,
   drawCatalogItemIcon,
@@ -48,11 +52,53 @@ import {
   surfacePaint
 } from "../floorColors";
 import { paintStyleForItem } from "../itemColors";
+import type { CounterAppearanceCatalog } from "../types";
 import { isServingStationItem,
   isPlateReturnItem,
   isGlassReturnItem
 } from "./servingLinks";
 import { airWallCells, airWallHeightCells, airSlopeEndY } from "./items";
+
+/** 皮肤主色查表（guid→color），按 counterAppearances 引用做 WeakMap 缓存避免逐物品全表扫。 */
+const counterSkinColorCache = new WeakMap<CounterAppearanceCatalog, Map<string, string>>();
+function counterSkinColorMap(): Map<string, string> {
+  const ca = S.counterAppearances;
+  if (!ca) return new Map();
+  let m = counterSkinColorCache.get(ca);
+  if (!m) {
+    m = new Map();
+    for (const opts of Object.values(ca.byType)) {
+      for (const o of opts) if (o.color) m.set(o.guid, o.color);
+    }
+    counterSkinColorCache.set(ca, m);
+  }
+  return m;
+}
+
+/** 「🎨 桌台皮肤」开关开启且物品设了皮肤外观时返回主色，否则 null（沿用原配色）。 */
+function counterSkinFillOf(item: EditorItem): string | null {
+  if (!S.counterSkinPaint || !item.pseudoPrefabGuid) return null;
+  return counterSkinColorMap().get(item.pseudoPrefabGuid) ?? null;
+}
+
+/** 俯视渲染图（Unity 导出的模型顶拍）：开关开 → 皮肤 fileKey（无皮肤用 <Type>_Default）。
+ *  manifest 无该条目 / 图片加载失败 / 桥离线 → null（回退主色填充）。 */
+function counterTopImageOf(item: EditorItem): HTMLImageElement | null {
+  if (!S.counterSkinPaint || !S.counter3d || !S.counterAppearances) return null;
+  const ct = counterTypeOfItem(item);
+  if (!ct) return null;
+  let fileKey: string | undefined;
+  const guid = item.pseudoPrefabGuid ?? "";
+  if (guid) {
+    for (const o of S.counterAppearances.byType[ct] ?? []) {
+      if (o.guid === guid) { fileKey = o.icon; break; }
+    }
+  }
+  if (!fileKey) fileKey = `${ct}_Default`;
+  if (!S.counter3d.items[fileKey]) return null;
+  return getCounterTopImage(fileKey);
+}
+
 import {
   isTeleportalItem,
   teleportals,
@@ -250,14 +296,21 @@ export function drawItem(item: EditorItem, selected: boolean) {
   dom.ctx.translate(center.x, center.y);
   dom.ctx.rotate(rotRad);
 
-  dom.ctx.fillStyle = swStartOff ? "#9c4a42" : paint.fill;
+  const topImg = counterTopImageOf(item);
+  dom.ctx.fillStyle = swStartOff ? "#9c4a42" : counterSkinFillOf(item) ?? paint.fill;
   dom.ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+  if (topImg) {
+    // 俯视渲染图带透明度：底色（皮肤主色/原配色）透出 12%，网格与选中态隐约可见
+    dom.ctx.globalAlpha = 0.88;
+    dom.ctx.drawImage(topImg, -bw / 2, -bh / 2, bw, bh);
+    dom.ctx.globalAlpha = 1;
+  }
 
   dom.ctx.strokeStyle = paint.stroke;
   dom.ctx.lineWidth = selected ? 2 : 1;
   dom.ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
 
-  if (!isUtensil && (fp.cellsX > 1 || fp.cellsZ > 1)) {
+  if (!isUtensil && !topImg && (fp.cellsX > 1 || fp.cellsZ > 1)) {
     dom.ctx.strokeStyle = "rgba(255,255,255,0.15)";
     dom.ctx.lineWidth = 1;
     for (let i = 1; i < fp.cellsX; i++) {
@@ -301,9 +354,12 @@ export function drawItem(item: EditorItem, selected: boolean) {
   if (isPlayer) {
     drawLabelInBox(dom.ctx, itemLabel(item), bw - 4, bh - 4);
   } else {
+    // 图标链始终优先（食材图 → 目录图标 → 炮开关星标），俯视图只做皮肤底图；
+    // 全都无图时：有俯视图用底片标签（任何底图可读），否则常规文字标签
     const drawn = drawDispenserIngredient(dom.ctx, item, bw, bh) || drawCatalogItemIcon(dom.ctx, cat, item, bw, bh) || drawCannonSwitchStarIcon(dom.ctx, item, bw, bh);
     if (!drawn) {
-      drawLabelInBox(dom.ctx, itemLabel(item), bw - 4, bh - 4);
+      if (topImg) drawTopViewBadgeLabel(dom.ctx, itemLabel(item), bw, bh);
+      else drawLabelInBox(dom.ctx, itemLabel(item), bw - 4, bh - 4);
     }
   }
 

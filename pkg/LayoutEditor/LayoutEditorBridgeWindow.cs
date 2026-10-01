@@ -14,7 +14,7 @@ public class LayoutEditorBridgeWindow : EditorWindow
     private const double WatchdogIntervalSeconds = 2.0;
     private const double MinRestartIntervalSeconds = 2.0;
 
-    [MenuItem("Layout Editor/Open Bridge", false, 200)]
+    [MenuItem("Layout Editor/打开桥接窗口 (Open Bridge)", false, 0)]
     public static void OpenWindow()
     {
         var w = GetWindow<LayoutEditorBridgeWindow>(false, "Layout Editor", true);
@@ -22,23 +22,23 @@ public class LayoutEditorBridgeWindow : EditorWindow
         w.Show();
     }
 
-    [MenuItem("Layout Editor/Start Server", false, 201)]
+    [MenuItem("Layout Editor/启动服务 (Start Server)", false, 1)]
     public static void StartServerMenu()
     {
         StartServer(EnsureServer());
     }
 
-    [MenuItem("Layout Editor/Stop Server", false, 202)]
+    [MenuItem("Layout Editor/停止服务 (Stop Server)", false, 2)]
     public static void StopServerMenu()
     {
         StopServer();
     }
 
-    [MenuItem("Layout Editor/清理损坏的预制件实例", false, 203)]
+    [MenuItem("Layout Editor/场景修复 (Scene Repair)/清理损坏的预制件实例 (Clean Broken Prefabs)", false, 100)]
     public static void CleanBrokenPrefabInstancesMenu()
     {
         var n = LayoutEditorSceneRepair.RemoveBrokenPrefabInstances();
-        Debug.Log("[LayoutEditor] 清理损坏的预制件实例：" + n + " 个");
+        Debug.Log("[LayoutEditor/SceneRepair] 清理损坏的预制件实例：" + n + " 个");
     }
 
     private static LayoutEditorHttpServer EnsureServer()
@@ -56,11 +56,11 @@ public class LayoutEditorBridgeWindow : EditorWindow
         _nextWatchdogCheck = 0;
         if (server.Start())
         {
-            Debug.Log("Layout Editor: 服务已启动，自动保活已开启。");
+            Debug.Log("[LayoutEditor/Server] 服务已启动，自动保活已开启。");
         }
         else
         {
-            Debug.LogWarning("Layout Editor: 服务启动失败，看门狗将自动重试。");
+            Debug.LogWarning("[LayoutEditor/Server] 服务启动失败，看门狗将自动重试。");
         }
     }
 
@@ -98,7 +98,7 @@ public class LayoutEditorBridgeWindow : EditorWindow
             return;
 
         _restartTimes.Add(now);
-        Debug.LogWarning("Layout Editor: 检测到服务中断，正在自动重启（" + _restartTimes.Count + "/" + MaxRestartsPerMinute + " 每分钟）…");
+        Debug.LogWarning("[LayoutEditor/Server] 检测到服务中断，正在自动重启（" + _restartTimes.Count + "/" + MaxRestartsPerMinute + " 每分钟）…");
         try
         {
             if (server.IsRunning)
@@ -106,10 +106,10 @@ public class LayoutEditorBridgeWindow : EditorWindow
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("Layout editor watchdog stop: " + ex.Message);
+            Debug.LogWarning("[LayoutEditor/Server] 看门狗停止旧服务异常: " + ex.Message);
         }
         if (!server.Start())
-            Debug.LogWarning("Layout Editor: 自动重启失败，稍后自动重试。");
+            Debug.LogWarning("[LayoutEditor/Server] 自动重启失败，稍后自动重试。");
     }
 
     private void OnEnable()

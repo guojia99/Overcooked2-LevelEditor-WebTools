@@ -41,7 +41,11 @@ public static class LayoutEditorCatalogApi
             "Assets/common01/food/Ingredients",
             "Assets/common02/food/Ingredients",
             // 通用内容源库（Assets/common03）：与 common01/common02 同级直接扫描。
-            "Assets/common03/food/Ingredients"
+            "Assets/common03/food/Ingredients",
+            // 编辑器增量库（Assets/commonW1）：dlc11_ketchup/mustard 等上游已删、按需保留的
+            // 用户食材包装（与 build-catalog.mjs 静态目录同源；缺扫会让 dlc11 酱料机白名单
+            // 在桥在线时整体失效 → auditDispenserWhitelists 误报、选择弹窗退化为全食材）。
+            "Assets/commonW1/pseudo_prefab_so/dlc11/food"
         };
         roots.AddRange(LayoutEditorLevelAdminApi.LevelSetCustomIngredientFolders());
 

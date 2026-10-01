@@ -144,7 +144,7 @@ AssetBundle assetBundle = AssetBundle.LoadFromFile(path);
 - 命名统一 **Web_** 前缀；显示名见 `custom_recipes/names.json`（zh + en）。
 - batch1 模型纪律：**默认每道独立 FBX**；仅 manifest 审计确认同网格换贴图才可 `modelShareGroup` 共用（炒饭 2 组、鱼碗 1 组、冰沙杯 1 组）。
 - 生成：`node layout-editor/scripts/gen-commonw3-migration-batch1.mjs [--apply]`；清单见 `backup_rebuild/.../自定义菜谱/_audit_docs/00-迁移清单-commonW3-batch1.md`。
-- Unity：**Bake commonW3 Smoothie Models**（果汁）+ **Bake commonW3 Migration Models**（batch1 六分类）→ Build AssetBundles（`commonW3`）。
+- 烘焙：commonW3 模型已全部烘焙完成（原 `Bake commonW3 …` 菜单已下线）；如需重新烘焙走 web 菜谱管理流程 → Build AssetBundles（`commonW3`）。
 
 ---
 

@@ -27,7 +27,7 @@ public static class CustomStubLegacyCleanup
     private const string BundlesRoot = "Assets/AssetBundles";
     private const string OldLoaderPublic = "layout-editor/web/public/OC2LevelRuntimeLoader.dll";
 
-    [MenuItem("Layout Editor/CustomStub/清理旧版 Stub 残留", false, 200)]
+    [MenuItem("Layout Editor/CustomStub（关卡代码分发）/清理旧版 Stub 残留 (Clean Legacy Stub)", false, 23)]
     public static void CleanupLegacy()
     {
         var stubDirs = new List<string>();
@@ -116,7 +116,7 @@ public static class CustomStubLegacyCleanup
         foreach (var d in stubDirs)
         {
             if (AssetDatabase.DeleteAsset(d)) deleted++;
-            else { failed++; Debug.LogWarning("[CustomStub] 删除失败: " + d); }
+            else { failed++; Debug.LogWarning("[LayoutEditor/CustomStub] 删除失败: " + d); }
         }
 
         foreach (var f in bundleRuntimes)
@@ -128,13 +128,13 @@ public static class CustomStubLegacyCleanup
                 if (File.Exists(manifest)) File.Delete(manifest);
                 deleted++;
             }
-            catch (Exception ex) { failed++; Debug.LogWarning("[CustomStub] 删除失败 " + f + ": " + ex.Message); }
+            catch (Exception ex) { failed++; Debug.LogWarning("[LayoutEditor/CustomStub] 删除失败 " + f + ": " + ex.Message); }
         }
 
         foreach (var f in oldLoaders)
         {
             try { File.Delete(f); deleted++; }
-            catch (Exception ex) { failed++; Debug.LogWarning("[CustomStub] 删除失败 " + f + ": " + ex.Message); }
+            catch (Exception ex) { failed++; Debug.LogWarning("[LayoutEditor/CustomStub] 删除失败 " + f + ": " + ex.Message); }
         }
 
         AssetDatabase.Refresh();
@@ -174,7 +174,7 @@ public static class CustomStubLegacyCleanup
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[CustomStub] 场景 Missing Script 扫描异常: " + ex.Message);
+            Debug.LogWarning("[LayoutEditor/CustomStub] 场景 Missing Script 扫描异常: " + ex.Message);
         }
         return result;
     }

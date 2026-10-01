@@ -18,6 +18,7 @@ import type {
   CustomRecipeConfig,
   CustomRecipeSummary,
   DeathEffectEntry,
+  DepsManifestEntry,
   DirectoryEvent,
   IngredientEntry,
   LevelAssignmentData,
@@ -286,7 +287,7 @@ async function renderSetList(app: HTMLElement): Promise<void> {
 
   const setMap = new Map(sets.map((s) => [s.setName, s]));
   document.getElementById("new-set")?.addEventListener("click", () => openCreateSetModal(app));
-  document.getElementById("export-deps")?.addEventListener("click", () => confirmExportDeps(app, sets));
+  document.getElementById("export-deps")?.addEventListener("click", () => confirmExportDeps(sets));
   // 合并导出所选：勾选数 ≥2 时可用（按关卡集列表顺序收集）。
   const multiBtn = document.getElementById("export-multi") as HTMLButtonElement | null;
   const multiCount = document.getElementById("export-multi-count");
@@ -568,62 +569,172 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
   });
 }
 
+/** 依赖包打包版本输入规范化（镜像后端 NormalizeDepsVersion）：trim → 去前导 v →
+ *  非法字符替换为 '-'；空返回 null（由调用方阻断）。 */
+function normalizeDepsVersionInput(raw: string): string | null {
+  let v = raw.trim();
+  if (/^v/i.test(v)) v = v.replace(/^v/i, "").trim();
+  if (!v) return null;
+  return v.replace(/[^\w.-]/g, "-");
+}
+
+/** 依赖包清单渲染：逐条目（文件名 + 说明 + 状态 + 大小）。 */
+function renderDepsManifestRows(entries: DepsManifestEntry[]): string {
+  return entries
+    .map((e) => {
+      const stateHtml =
+        e.state === "ok" || e.state === "fresh"
+          ? `<span class="deps-m-state ok" title="将打包">✓</span>`
+          : e.state === "stale"
+            ? `<span class="deps-m-state warn" title="过期：先「编译 Runtime DLL」">●</span>`
+            : `<span class="deps-m-state err" title="缺失">✗</span>`;
+      const size = e.sizeBytes > 0 ? formatBytes(e.sizeBytes) : "—";
+      return `<div class="deps-m-row">
+        <div class="deps-m-file"><code>${esc(e.label)}</code><span class="deps-m-note">${esc(e.note)}</span></div>
+        <div class="deps-m-meta">${stateHtml}<span class="deps-m-size">${size}</span></div>
+      </div>`;
+    })
+    .join("");
+}
+
+/** 清单端点失败时的静态兜底（条目与后端 AddDependencyEntries 一致，不带实时状态）。 */
+const DEPS_MANIFEST_FALLBACK: DepsManifestEntry[] = [
+  { zipPath: "OC2DIYLevelRuntimeWLoader/Loader.dll", label: "Loader.dll", state: "ok", sizeBytes: 0, note: "BepInEx 插件：加载依赖与统一运行时" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/version.txt", label: "version.txt", state: "ok", sizeBytes: 0, note: "Loader/debugLog 构建版本记录" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/debugLog.dll", label: "debugLog.dll", state: "ok", sizeBytes: 0, note: "会话日志插件（可选）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/log_config.txt", label: "log_config.txt", state: "ok", sizeBytes: 0, note: "debugLog 配置（可选）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/readme.txt", label: "readme.txt", state: "ok", sizeBytes: 0, note: "安装与使用说明" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/webcustomstub_runtime", label: "webcustomstub_runtime", state: "stale", sizeBytes: 0, note: "统一运行时 bundle——需先「编译 Runtime DLL」" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW1", label: "commonW1", state: "ok", sizeBytes: 0, note: "编辑器增量素材（必备；导出时自动重新打包）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW2", label: "commonW2", state: "ok", sizeBytes: 0, note: "汉堡菜谱素材（无条件携带；导出时自动重新打包）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/package_version.txt", label: "package_version.txt", state: "ok", sizeBytes: 0, note: "导出时自动生成：打包版本/时间/环境 + 文件 MD5" },
+];
+
 /** 单独导出依赖包 OC2DIYLevelRuntimeWLoader（Loader.dll + 统一运行时 + commonW1/W2）。
- *  不构建关卡场景，打包现成产物，秒级完成。装一次即可长期复用（版本不变时）。 */
-function confirmExportDeps(app: HTMLElement, sets: LevelSetInfo[]): void {
+ *  不构建关卡场景，打包现成产物，秒级完成。装一次即可长期复用（版本不变时）。
+ *  弹窗含：实时打包清单 / 可编辑打包版本（独立于其他版本，默认 v1.0.0，预填上次值）/
+ *  「编译 Runtime DLL」按钮 + 硬门控（DLL 非 fresh 禁用导出按钮）。 */
+function confirmExportDeps(sets: LevelSetInfo[]): void {
   if (!sets || sets.length === 0) {
-    setStatus("请先创建至少一个关卡集（依赖包的 commonW2 携带按关卡集判定）。", false);
+    setStatus("请先创建至少一个关卡集（依赖包导出需要一个已存在的关卡集做路径校验）。", false);
     return;
   }
-  // 依赖包不含任何关卡；后端需要一个已存在的关卡集名做 commonW2 携带判定与路径校验。
+  // 依赖包不含任何关卡；后端需要一个已存在的关卡集名做路径校验。
   const anchorSet = sets[0].setName;
   openModal(
     "导出依赖包 · OC2DIYLevelRuntimeWLoader",
-    `<p>将<b>重新打包</b>依赖包（<code>OC2DIYLevelRuntimeWLoader/</code>：Loader.dll + 统一运行时 webcustomstub_runtime + <b>commonW1 + commonW2</b>），<b>不含任何关卡</b>。</p>
-     <p class="modal-hint">导出前会<b>删除 commonW1/commonW2 旧构建产物并重新打包</b>（杜绝遗留）；两个 common 包<b>无条件全部携带</b>（依赖包通用，不按单关卡判定）。</p>
-     <p class="modal-hint">解压到游戏 <code>BepInEx/plugins/</code> 目录即安装。<b>只要版本号不变，装一次即可长期复用</b>——之后更新关卡只需在关卡集上导出（可不带依赖）。</p>
-     <p class="modal-hint">需先「编译 Runtime DLL」产出 webcustomstub_runtime。</p>`,
-    `${mCancelBtnHtml()}${mPrimaryBtnHtml("导出依赖包")}`
+    `<p>将<b>重新打包</b>依赖包（<code>OC2DIYLevelRuntimeWLoader/</code>），<b>不含任何关卡</b>。导出前会<b>删除 commonW1/commonW2 旧构建产物并重新打包</b>（杜绝遗留）；两个 common 包<b>无条件全部携带</b>。解压到游戏 <code>BepInEx/plugins/</code> 目录即安装——<b>只要版本号不变，装一次即可长期复用</b>，之后更新关卡只需在关卡集上导出（可不带依赖）。</p>
+     <div class="m-section-title">打包清单</div>
+     <div class="deps-manifest" id="exp-deps-manifest"><p class="modal-hint">正在获取打包清单…</p></div>
+     <label class="m-field">打包版本 version<input type="text" id="exp-deps-version" autocomplete="off" placeholder="v1.0.0" value="v1.0.0"></label>
+     <p class="modal-hint" id="exp-deps-version-hint">打包版本独立于运行时版本与关卡集版本，仅用于依赖包命名与升级辨识——依赖内容变更时递增它，玩家即知需更新。</p>
+     <p class="modal-hint" id="exp-deps-zipname"></p>
+     <div class="m-section-title">CustomStub 统一运行时</div>
+     <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
+     <div class="m-actions-row">
+      ${mBtnHtml("编译 Runtime DLL", "default", { id: "exp-stub-compile" })}
+     </div>`,
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("导出依赖包", { disabled: "", title: "先编译 Runtime DLL（见下方按钮）" })}`
   );
+
+  const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
+  const manifestEl = document.getElementById("exp-deps-manifest");
+  const versionInput = document.getElementById("exp-deps-version") as HTMLInputElement | null;
+  const zipnameEl = document.getElementById("exp-deps-zipname");
+  const versionHintEl = document.getElementById("exp-deps-version-hint");
+
+  // 硬门控：DLL 非 fresh 禁用导出按钮（后端 StageRuntime 也会硬拦，这里提前拦住更友好）。
+  let lastDllState = "";
+  const setGate = (state: string): void => {
+    lastDllState = state;
+    if (!okBtn) return;
+    if (state === "fresh") {
+      okBtn.disabled = false;
+      okBtn.removeAttribute("title");
+    } else {
+      okBtn.disabled = true;
+      okBtn.title =
+        state === "error" ? "无法查询运行时状态（CustomStub 工具不可用）" : "先编译 Runtime DLL（见下方按钮）";
+    }
+  };
+  wireExportStubTools(anchorSet, (state) => setGate(state));
+
+  // zip 文件名实时预览（日期戳与后端 yyyyMMdd 一致）。
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  const updateZipPreview = (): void => {
+    const norm = normalizeDepsVersionInput(versionInput?.value ?? "");
+    if (zipnameEl)
+      zipnameEl.textContent = norm
+        ? `zip 文件名：OC2DIYLevelRuntimeWLoader_v${norm}_${stamp}.zip`
+        : "请输入打包版本（如 v1.0.0）";
+  };
+  versionInput?.addEventListener("input", updateZipPreview);
+  updateZipPreview();
+
+  // 实时清单 + 上次打包版本预填（失败回落静态清单）。
+  const loadManifest = async (): Promise<void> => {
+    if (!manifestEl) return;
+    try {
+      const m = await api.fetchDepsExportManifest();
+      manifestEl.innerHTML = renderDepsManifestRows(m.entries);
+      if (versionInput && m.lastDepsVersion) versionInput.value = `v${m.lastDepsVersion}`;
+      if (versionHintEl && m.runtimeVersion)
+        versionHintEl.textContent = `打包版本独立于运行时版本（当前 v${m.runtimeVersion}）与关卡集版本，仅用于依赖包命名与升级辨识——依赖内容变更时递增它，玩家即知需更新。`;
+      updateZipPreview();
+    } catch (e) {
+      manifestEl.innerHTML = `<p class="modal-hint">实时清单获取失败（${esc((e as Error).message)}），以下为默认打包内容：</p>${renderDepsManifestRows(DEPS_MANIFEST_FALLBACK)}`;
+    }
+  };
+  void loadManifest();
+
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
-    const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
     if (okBtn) okBtn.disabled = true;
+    const norm = normalizeDepsVersionInput(versionInput?.value ?? "");
+    if (!norm) {
+      setStatus("请输入依赖包打包版本（如 v1.0.0）。", false);
+      setGate(lastDllState || "fresh");
+      return;
+    }
     const startAt = Date.now();
     suspendBridgeWatch();
     showBusy("正在导出依赖包…");
     try {
-      await api.startSetExport([anchorSet], "deps");
+      // 兜底复查新鲜度（防竞态；后端 StageRuntime 仍会硬拦并报错）。
+      const st = await api.fetchSetStubStatus(anchorSet);
+      if (st.dllState !== "fresh") throw new Error("统一运行时 DLL 未就绪（请先点「编译 Runtime DLL」）。");
+      await api.startSetExport([anchorSet], "deps", norm);
       closeModal();
       const deadline = Date.now() + 15 * 60 * 1000;
       for (;;) {
-        if (Date.now() > deadline) throw new Error("导出超时（5 分钟），请查看 Unity Console。");
+        if (Date.now() > deadline) throw new Error("导出超时（15 分钟），请查看 Unity Console。");
         await new Promise((r) => setTimeout(r, 1500));
-        let st: SetExportStatus;
+        let st2: SetExportStatus;
         try {
-          st = await api.fetchSetExportStatus();
+          st2 = await api.fetchSetExportStatus();
         } catch {
           continue;
         }
-        if (st.status === "error") throw new Error(st.error || "导出失败（详见 Unity Console）。");
-        if (st.status === "done") {
+        if (st2.status === "error") throw new Error(st2.error || "导出失败（详见 Unity Console）。");
+        if (st2.status === "done") {
           setBusyMessage("导出完成，正在下载 zip…");
-          const res = await api.downloadSetExportZip(anchorSet, st.zipFileName);
+          const res = await api.downloadSetExportZip(anchorSet, st2.zipFileName);
           const url = URL.createObjectURL(res.blob);
           const a = document.createElement("a");
           a.href = url;
           a.download = res.fileName;
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setStatus(`已导出依赖包 ${res.fileName}（${st.fileCount} 个文件），已开始下载`);
+          setStatus(`已导出依赖包 ${res.fileName}（${st2.fileCount} 个文件），已开始下载`);
           break;
         }
-        const hint = st.message || EXPORT_PHASE_HINT[st.phase] || "导出中…";
+        const hint = st2.message || EXPORT_PHASE_HINT[st2.phase] || "导出中…";
         setBusyMessage(`${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`);
       }
     } catch (e) {
       setStatus((e as Error).message, false);
-      if (okBtn) okBtn.disabled = false;
+      setGate(lastDllState || "fresh"); // 按门控状态恢复按钮（弹窗此时可能仍打开）
     } finally {
       resumeBridgeWatch();
       hideBusy();
@@ -634,8 +745,10 @@ function confirmExportDeps(app: HTMLElement, sets: LevelSetInfo[]): void {
 /** 导出弹窗内的 CustomStub 统一运行时工具（仅「编译 Runtime DLL」）。
  *  统一单程序集重构后不再有「拷贝到关卡集/同步」（每集副本链已废除），
  *  只需编译打包唯一的 WebCustomStubRuntime。写盘会触发 Unity 重编译与域重载
- *  （HTTP 连接重置属预期），故先容忍断连、再轮询 health 恢复、等 DLL 新鲜。 */
-function wireExportStubTools(setName: string): void {
+ *  （HTTP 连接重置属预期），故先容忍断连、再轮询 health 恢复、等 DLL 新鲜。
+ *  onStateChange（可选）：dllState 变化时回调（"fresh"|"stale"|"missing"|
+ *  "noStub"|"error"），依赖包弹窗用它在 DLL 未就绪时禁用导出按钮（硬门控）。 */
+function wireExportStubTools(setName: string, onStateChange?: (dllState: string) => void): void {
   const statusEl = document.getElementById("exp-stub-status");
   const compileBtn = document.getElementById("exp-stub-compile") as HTMLButtonElement | null;
   if (!statusEl || !compileBtn) return;
@@ -652,9 +765,11 @@ function wireExportStubTools(setName: string): void {
         : st.dllState === "stale" ? "统一运行时 DLL 过期（母本已修改，点「编译 Runtime DLL」）"
         : st.dllState === "missing" ? "统一运行时 DLL 未编译（点「编译 Runtime DLL」）"
         : "统一运行时状态未知";
+      if (onStateChange) onStateChange(st.dllState);
     } catch (e) {
       statusEl.textContent = `CustomStub 工具不可用：${(e as Error).message}（不影响普通关卡导出）`;
       compileBtn.disabled = true;
+      if (onStateChange) onStateChange("error");
     }
   };
 

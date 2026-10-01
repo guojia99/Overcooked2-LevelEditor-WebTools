@@ -17,6 +17,7 @@ import type {
   CookingStepCatalog,
   CookingStepEntry,
   CounterAppearanceCatalog,
+  Counter3dManifest,
   CustomMusicEntry,
   CustomMusicUploadResult,
   CustomRecipeConfig,
@@ -24,6 +25,7 @@ import type {
   CustomRecipeReferences,
   CustomRecipeSummary,
   DeathEffectCatalog,
+  DepsExportManifest,
   FloorMaterial,
   FloorMaterialCatalog,
   GridInfo,
@@ -650,15 +652,17 @@ export async function updateSetInfo(body: SetInfoUpdateBody): Promise<void> {
 /** 启动关卡集导出（打包 → zip）。setNames 传多个集名即合并导出到同一 zip
  *  （OC2DIYLevel/levels/<set1>/、<set2>/… 并列，依赖包只带一份）。
  *  mode：all（关卡+依赖，默认）| levels（仅关卡集）| deps（仅依赖包）。
+ *  depsVersion：deps 模式的依赖包打包版本（独立于运行时/关卡集版本，默认 1.0.0）。
  *  任务在 Unity 后台异步执行，进度用 fetchSetExportStatus 轮询。 */
 export async function startSetExport(
   setNames: string[],
-  mode: "all" | "levels" | "deps" = "all"
+  mode: "all" | "levels" | "deps" = "all",
+  depsVersion?: string
 ): Promise<void> {
   const r = await fetch("/api/set/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ setNames, mode }),
+    body: JSON.stringify(depsVersion ? { setNames, mode, depsVersion } : { setNames, mode }),
   });
   await readApiJson<{ ok?: boolean }>(r);
 }
@@ -666,6 +670,13 @@ export async function startSetExport(
 export async function fetchSetExportStatus(): Promise<SetExportStatus> {
   const r = await fetch("/api/set/export/status");
   return readApiJson<SetExportStatus>(r);
+}
+
+/** 依赖包清单（deps 导出弹窗展示用）：逐条目存在性/大小 + 运行时编译状态 +
+ *  上次打包版本（预填）。 */
+export async function fetchDepsExportManifest(): Promise<DepsExportManifest> {
+  const r = await fetch("/api/set/export/deps-manifest");
+  return readApiJson<DepsExportManifest>(r);
 }
 
 // ==================== CustomStub（随机食材箱等关卡代码）web 工具 ====================
@@ -1440,6 +1451,23 @@ export async function deleteCustomRecipeCategory(setName: string, category: stri
 export async function fetchCounterAppearances(): Promise<CounterAppearanceCatalog> {
   const data = await fetchStaticCatalog<CounterAppearanceCatalog>("counter-appearances.json");
   return data;
+}
+
+/** 桌台皮肤 3D 资产 manifest（Unity 菜单导出；桥在线时经 /api/counter-skins/3d/ 只读路由）。 */
+export async function fetchCounter3dManifest(): Promise<Counter3dManifest> {
+  const r = await fetch("/api/counter-skins/3d/manifest.json");
+  if (!r.ok) throw new Error(`counter-skins/3d manifest ${r.status}`);
+  const data = await readApiJson<Counter3dManifest>(r);
+  _counter3dVersion = data.generatedAt ?? "";
+  return data;
+}
+
+let _counter3dVersion = "";
+
+/** 3D 资产文件 URL（带 generatedAt 防旧缓存）。 */
+export function counter3dUrl(name: string): string {
+  const v = _counter3dVersion;
+  return `/api/counter-skins/3d/${encodeURIComponent(name)}${v ? `?v=${encodeURIComponent(v)}` : ""}`;
 }
 
 export async function fetchSwitchMaterials(): Promise<SwitchMaterialOption[]> {
