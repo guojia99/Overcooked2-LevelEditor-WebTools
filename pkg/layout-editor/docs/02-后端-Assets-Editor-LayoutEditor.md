@@ -20,7 +20,7 @@
 ├── CustomStubAutoBake.cs                 CustomStub 按需自动化（拷贝/编译/补烘焙闭环）
 ├── CustomStubCopyTool.cs                 CustomStub 母本 → 关卡集 stub/ 拷贝工具
 ├── CustomStubHttpApi.cs                  CustomStub web API 桥（钩子注册）
-├── CustomStubOrphanRepair.cs             场景孤儿脚本引用修复（文本级 YAML 改写）
+├── CustomStubOrphanRepair.cs             场景孤儿脚本引用修复（文本级 YAML 改写；[InitializeOnLoad] 订阅 OrphanCleanHook，导出前自动安全清理）
 ├── LayoutEditorAllIngredientsFill.cs     allIngredients / 音频目录自动填充
 ├── LayoutEditorAudioExporter.cs          游戏音频提取导出（audio-exports/）
 ├── LayoutEditorBridgeWindow.cs           主 EditorWindow + 服务看门狗 ★入口
@@ -207,7 +207,10 @@ flowchart TD
 |---|---|---|
 | `LayoutEditorHttpServer.CustomStubApi : Func<action,set,json>` | HttpServer | `CustomStubHttpApi`（[InitializeOnLoad]） |
 | `LayoutEditorStubIO.CustomStubCopyRequested : Action<string>` | StubIO | `CustomStubAutoBake`（自动拷贝母本） |
-| `LayoutEditorSetExporter.BeforeBuild : Action<string>` | SetExporter | `LayoutStubDllBuilder`（导出前打包 Stub DLL） |
+| `LayoutEditorSetExporter.BeforeBuild : Action<string>` | SetExporter | `LayoutStubDllBuilder`（导出前打包统一运行时 DLL） |
+| `LayoutEditorSetExporter.RuntimeReadyGate : Func<string>` | SetExporter | `LayoutStubDllBuilder`（导出启动闸口：null=就绪 / "compiling"=已触发自动编译→任务 SessionState 挂起、域重载后 SetExporter 自动续跑 / 其他=失败原因） |
+| `LayoutEditorSetExporter.RuntimeStageState : Func<string>` | SetExporter | `LayoutStubDllBuilder`（deps 清单的运行时 dllState） |
+| `LayoutEditorSetExporter.OrphanCleanHook : Func<List<string>,string>` | SetExporter | `CustomStubOrphanRepair`（导出 prepare 前对本次场景自动清孤儿脚本引用；仅报告项不阻断） |
 | `LayoutEditorDispenserIconFix.AfterRandomCrateSync : Action` | DispenserIconFix | `CustomStubAutoBake`（问号图标补画） |
 
 ---
@@ -304,9 +307,9 @@ flowchart TD
 
 | 文件 | 详细说明 |
 |---|---|
-| **LayoutEditorSetExporter.cs** | 见 §6 导出流程。`StartExport`（立即应答 + delayCall）、`RunExportCore`（prepare→clean→build→package→zip 五阶段）、`ActiveSceneUsesCustomStub`（tag 前缀表 `CustomStubTagPrefixes`：RandomCrate\|/TimedSwitch\|/PushablePot\|/SwitchReenable\|/WorldMapDressing\|/UtensilTiming\|/CameraOffset\|/TravelatorReverse\|）、静态钩子 `BeforeBuild` |
+| **LayoutEditorSetExporter.cs** | 见 §6 导出流程。`StartExport`（立即应答 + delayCall）、`RunExport`（开头过 `RuntimeReadyGate` 闸口：stale → SessionState 挂起 + phase=compile，域重载后 `[InitializeOnLoad]` 续跑器 `ResumePendingExport` 自动重启）、`RunExportCore`（orphan-clean → prepare→clean→build→package→zip）、`ActiveSceneUsesCustomStub`（tag 前缀表 `CustomStubTagPrefixes`：RandomCrate\|/TimedSwitch\|/PushablePot\|/SwitchReenable\|/WorldMapDressing\|/UtensilTiming\|/CameraOffset\|/TravelatorReverse\|）、静态钩子 `BeforeBuild`/`RuntimeReadyGate`/`RuntimeStageState`/`OrphanCleanHook`（含 `RuntimeBundleName` 文件名契约常量，与 LayoutStubDllBuilder/Loader 三方同步） |
 | **LayoutEditorZipWriter.cs** | Unity 2017 .NET 3.5 无 ZipFile，手写 Local File Header + Central Directory + EOCD，store（无压缩）模式，UTF-8 文件名，CRC32 查表——AssetBundle 自带压缩，store 不显著增大体积 |
-| **LayoutStubDllBuilder.cs** | [InitializeOnLoad] 订阅 `BeforeBuild`；`StageSet(setName)` 把 `Library/ScriptAssemblies/Stub_<set>.dll` 复制为 `Assets/LevelSets/<set>/stub/Stub_<set>.dll.bytes`（TextAsset）并赋 bundle 名 `<set>/runtime`；`StageAllSetsQuiet`（DLL 比 .bytes 新即自动重打包）；导出时 throwOnStale 显式报错 |
+| **LayoutStubDllBuilder.cs** | [InitializeOnLoad] 订阅 `BeforeBuild` + `RuntimeReadyGate` + `RuntimeStageState`；`StageRuntime` 把 `Library/ScriptAssemblies/WebCustomStubRuntime.dll` 复制为 `Assets/WebCustomStubRuntime/RuntimeDll/WebCustomStubRuntime.dll.bytes`（bundle `webcustomstub_runtime`）；`StageRuntimeQuiet`（DLL 比 .bytes 新即自动重打包）；`RequestCompileIfStale`（母本源码比 DLL 新 → 自动 Refresh 编译，2 次尝试 + ForceUpdate 强制重导入）；`OnRuntimeReadyGate`（导出闸口实现：fresh→顺手补 staging；compiling/Play/编译失败分类应答）；导出时 throwOnStale 显式报错仅作竞态兜底 |
 | **CustomStubCopyTool.cs** | 母本 `Assets/Editor/LayoutEditor/CustomStub/` → `Assets/LevelSets/<set>/stub/` 镜像拷贝（只复制 .cs 不复制 .meta：首拷生成新 GUID、重拷内容同步不动 .meta 保证场景脚本引用稳定）；生成 `Stub_<set>.asmdef`（references LevelEditorStub）；`IsConfigured/IsDrifted`、`SyncAllDrifted`、`EnsureRandomDispenserPrefab`（RandomDispenser 包装 prefab 幂等兜底） |
 | **CustomStubHttpApi.cs** | 注册 `CustomStubApi`；status（configured/drifted/dllState）/copy/compile（先应答再 delayCall Refresh，避免域重载截断响应） |
 | **CustomStubAutoBake.cs** | [InitializeOnLoad]：订阅 `CustomStubCopyRequested`（写回随机箱但集内无 stub → 自动拷贝）；域重载后 `SyncAllDrifted + EnsureRandomDispenserPrefab + RebakeActiveScene + StageAllSetsQuiet`；订阅 `AfterRandomCrateSync` 补画问号图标 |
@@ -417,20 +420,26 @@ LayoutEditor 不直接修改它，但其编译产物提供编辑器 Play 期运�
 
 **入口**：`POST /api/set/export {setName}` → `StartExport`（校验、状态机置 running、delayCall 立即应答）。状态查询/下载走监听线程 fast-path。
 
+**统一运行时自动编译闸口（RunExport 开头）**：导出启动时经 `RuntimeReadyGate` 钩子检查母本源码 vs `Library/ScriptAssemblies/WebCustomStubRuntime.dll`——stale/missing 时自动触发编译（`RequestCompileIfStale`，含 2 次尝试 + ForceUpdate 强制重导入），任务参数（setNames/mode/depsVersion）持久化到 `SessionState` 挂起、phase=compile；编译域重载后由 `[InitializeOnLoad]` 续跑器（~1s 节流，5 分钟超时）重新走完整 `StartExport` 链自动续跑。**不再报「请等 Unity 编译结束后重试」**——只有编译真失败（母本有编译错误）/ Play 模式 / 超时才置 error（文案指向 Console）。前端轮询天然兼容：域重载断连 → `catch { continue }`，重载后 status=idle 继续等续跑。批处理（`LayoutEditorBatchExport`）同路径：挂起时状态非 done、exit 3，外层流水线等编译后再跑一遍即可。`BeforeBuild`（`StageRuntime(true)`）保留为导出进行中改源码的竞态兜底。
+
 **多集合并导出**：`POST /api/set/export {setNames: [a, b], mode}`（`setNames` 非空时优先于 `setName`）→ `StartExport(List<string>, mode)`。zip 内 `OC2DIYLevel/levels/<set1>/`、`levels/<set2>/` 并列（各集 info/s_* + 各自 requires.txt），依赖包 `OC2DIYLevelRuntimeWLoader/` 整包只带一份（commonW2 按需 = 任一集引用即携带）。prepare/clean/build/package 逐集循环，`BuildAssetBundles` 仍只调一次（全量构建，3-5 分钟不随集数翻倍）。zip 名 = 各集 `name_v<ver>` 用 `+` 连接（超 120 字符回落 `multi<N>sets`）；状态 `setName` = 各集名 `+` 连接（前端以此为完成比对键）。deps 模式与集无关，多集时只取第一个。
 
-**依赖包单独导出（deps 模式，`ExportDepsOnly`）**：`POST /api/set/export {setNames:[锚点集], mode:"deps", depsVersion}`——不含任何关卡；`BeforeBuild`（= `StageRuntime(true)`）硬校验运行时新鲜度 → 删 `commonw1/commonw2/commonw3` 旧产物并 `BuildAssetBundles` 重建（杜绝遗留；commonW1/W2 无条件携带）→ `AddDependencyEntries(alwaysCommonW2:true)` 组条目 → 生成 `package_version.txt`（打包版本/时间/UTC 偏移/Unity 与 OS 环境/运行时与 Loader 版本 + **全部条目源文件 MD5**，store-only zip 源字节=解压字节故校验等价；自身不参与 MD5）→ zip 名 `OC2DIYLevelRuntimeWLoader_v<depsVersion>_<yyyyMMdd>.zip`。**`depsVersion` 为用户可编辑的打包版本（弹窗默认 v1.0.0，自动预填 `LayoutEditorExports/deps_version.txt` 记录的上次值；规范化 = 去前导 v + SanitizeVersion + 空回落 1.0.0），独立于运行时 SSOT 版本（requires.txt 门控不变）与关卡集版本**——版本不变即装一次长期复用。弹窗 = 实时清单（`GET /api/set/export/deps-manifest`，失败回落前端静态清单）+ 版本输入（zip 名实时预览）+「编译 Runtime DLL」按钮（`wireExportStubTools` 加 `onStateChange` 回调做**硬门控**：dllState ≠ fresh 禁用导出按钮）。
+**依赖包单独导出（deps 模式，`ExportDepsOnly`）**：`POST /api/set/export {setNames:[锚点集], mode:"deps", depsVersion}`——不含任何关卡；`BeforeBuild`（= `StageRuntime(true)`）硬校验运行时新鲜度 → 删 `commonw1/commonw2/commonw3` 旧产物并 `BuildAssetBundles` 重建（杜绝遗留；commonW1/W2 无条件携带）→ `AddDependencyEntries(alwaysCommonW2:true)` 组条目 → 生成 `package_version.txt`（打包版本/时间/UTC 偏移/Unity 与 OS 环境/运行时与 Loader 版本 + **全部条目源文件 MD5**，store-only zip 源字节=解压字节故校验等价；自身不参与 MD5）→ zip 名 `OC2DIYLevelRuntimeWLoader_v<depsVersion>_<yyyyMMdd>.zip`。**`depsVersion` 为用户可编辑的打包版本（弹窗默认 v1.0.0，自动预填 `LayoutEditorExports/deps_version.txt` 记录的上次值；规范化 = 去前导 v + SanitizeVersion + 空回落 1.0.0），独立于运行时 SSOT 版本（requires.txt 门控不变）与关卡集版本**——版本不变即装一次长期复用。弹窗 = 实时清单（`GET /api/set/export/deps-manifest`，失败回落前端静态清单）+ 版本输入（zip 名实时预览）+「编译 Runtime DLL」按钮（仅手动兜底；**DLL 新鲜度由导出闸口自动处理**——非 fresh 时自动编译并续跑，弹窗不再禁用导出按钮）。
 
 ```mermaid
 flowchart TD
     A["POST /api/set/export {setName}"] --> B["StartExport：校验 / 状态机 running<br/>delayCall 立即应答"]
-    B --> C["① prepare：逐场景 OpenScene<br/>→ EnsurePrepareForBuilding<br/>→ ActiveSceneUsesCustomStub 检测（tag 前缀表）<br/>→ SaveScene"]
+    B --> G0{"RunExport 闸口：RuntimeReadyGate"}
+    G0 -- "compiling（源码比 DLL 新）" --> G1["SessionState 挂起任务<br/>phase=compile 自动编译中"]
+    G1 -- "域重载后续跑器 → fresh" --> B2["StartExport 重新启动"]
+    B2 --> C
+    G0 -- "就绪 / 编译失败置 error" --> C["⓪ orphan-clean（OrphanCleanHook）：<br/>磁盘文本级清理孤儿脚本引用<br/>（删僵尸/复活载体/仅报告项不阻断）<br/>① prepare：逐场景 OpenScene<br/>→ EnsurePrepareForBuilding<br/>→ ActiveSceneUsesCustomStub 检测（tag 前缀表）<br/>→ SaveScene"]
     C --> D["② clean：删除 Assets/AssetBundles/&lt;set&gt;/（含 .meta）+ Refresh"]
     D --> E["③ build：EnsureSetInfoBundle（&lt;set&gt;/info_&lt;set&gt;）<br/>+ EnsureSceneBundleNames（&lt;set&gt;/s_*）"]
-    E --> F["BeforeBuild 钩子 → LayoutStubDLLBuilder.StageSet<br/>Library/ScriptAssemblies/Stub_&lt;set&gt;.dll<br/>→ stub/Stub_&lt;set&gt;.dll.bytes（bundle &lt;set&gt;/runtime）"]
+    E --> F["BeforeBuild 钩子 → LayoutStubDllBuilder.StageRuntime<br/>Library/ScriptAssemblies/WebCustomStubRuntime.dll<br/>→ RuntimeDll/WebCustomStubRuntime.dll.bytes<br/>（bundle webcustomstub_runtime；竞态兜底硬校验）"]
     F --> G["BuildPipeline.BuildAssetBundles<br/>（Assets/AssetBundles, None, StandaloneWindows）<br/>★ 阻塞 3-5 分钟"]
     G --> H["④ package：删除产物内 .manifest / .meta"]
-    H --> I["⑤ zip（LayoutEditorZipWriter，store-only）：<br/>levels/&lt;set&gt;/（info、s_*、按需 runtime——未用 CustomStub 则移除）<br/>+ commonW1（无条件；缺失告警）<br/>+ commonW2（SetNeedsCommonW2Bundle 判定）<br/>+ OC2LevelRuntimeLoader.dll（web/public/ 下手动维护）"]
+    H --> I["⑤ zip（LayoutEditorZipWriter，store-only）：<br/>levels/&lt;set&gt;/（info、s_*、requires.txt、stub_levels.txt）<br/>+ commonW1（无条件；缺失告警）<br/>+ commonW2（SetNeedsCommonW2Bundle 判定）<br/>+ OC2LevelRuntimeLoader.dll（web/public/ 下手动维护）"]
     I --> J["&lt;repo&gt;/LayoutEditorExports/&lt;set&gt;_v&lt;version&gt;_&lt;yyyyMMdd&gt;.zip<br/>（version 取 LevelSetInfoSO.version，SanitizeVersion 消毒）"]
     J --> K["finally：ClearProgressBar<br/>回到导出前场景 + ReloadPseudoAssetsFull"]
 ```

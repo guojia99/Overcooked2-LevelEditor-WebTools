@@ -10440,25 +10440,294 @@ body.manage-bg {
 .rw-badge.kind-condiment { background: #7a2d3d; }
 .rw-badge.kind-pizza { background: #7a5a2d; }
 .rw-badge.kind-custom { background: #3b5aa8; }
+.rw-badge.kind-finished { background: #2563eb; }
 .rw-badge.kind-node { background: #444a56; }
 
+/* Optional tab：折叠说明 */
+.rw-opt-intro {
+  margin: 0 0 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-bg-elevated);
+}
+.rw-opt-intro > summary {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-text-accent);
+  cursor: pointer;
+  list-style: none;
+}
+.rw-opt-intro > summary::-webkit-details-marker { display: none; }
+.rw-opt-intro > summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.12s;
+}
+.rw-opt-intro[open] > summary::before { transform: rotate(90deg); }
+.rw-opt-intro .modal-hint {
+  margin: 0;
+  padding: 0 10px 8px;
+  border: none;
+}
+
+/* Optional tab：分区 */
+.rw-opt-section {
+  margin-bottom: 10px;
+}
+.rw-opt-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+  margin-bottom: 6px;
+}
+.rw-opt-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.rw-opt-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rw-opt-section-actions .modal-btn.small {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+.rw-opt-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--ui-accent-action);
+  vertical-align: middle;
+}
+
+/* Optional tab：快捷填充 */
+.rw-opt-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 6px;
+}
+.rw-opt-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-bg-elevated);
+  color: var(--ui-text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.1s, background 0.1s;
+}
+.rw-opt-quick-btn:hover {
+  border-color: var(--ui-border-focus);
+  background: var(--ui-bg-hover);
+}
+.rw-opt-quick-btn.rw-opt-quick-muted {
+  opacity: 0.85;
+}
+.rw-opt-quick-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex: none;
+}
+.rw-opt-quick-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+/* Optional tab：已注册条目 */
+.rw-opt-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-bg-elevated);
+}
+.rw-opt-item + .rw-opt-item {
+  margin-top: 4px;
+}
+.rw-opt-item:hover {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-bg-hover);
+}
+.rw-opt-item.rw-opt-invalid {
+  border-color: rgba(230, 180, 60, 0.55);
+  background: rgba(230, 180, 60, 0.08);
+}
+.rw-opt-item-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.rw-opt-item-body {
+  flex: 1;
+  min-width: 0;
+}
+.rw-opt-item-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.rw-opt-item-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.rw-opt-item-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rw-opt-del {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: var(--ui-radius-sm);
+  background: transparent;
+  color: var(--ui-text-muted);
+  cursor: pointer;
+  font-size: 13px;
+}
+.rw-opt-del:hover {
+  background: var(--ui-bg-btn-danger);
+  color: var(--ui-text-danger);
+}
+.rw-opt-list {
+  max-height: 260px;
+  overflow-y: auto;
+}
+.rw-opt-empty {
+  margin: 0;
+  padding: 16px 8px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Optional tab：添加面板 */
+.rw-opt-picker {
+  border: 1px solid var(--ui-border-accent);
+  border-radius: var(--ui-radius-md);
+  padding: 8px;
+  margin-bottom: 8px;
+  background: var(--ui-bg-elevated);
+}
+.rw-opt-picker-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.rw-opt-picker-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ui-text);
+}
+.rw-opt-pick-toolbar {
+  margin-bottom: 8px;
+}
+.rw-opt-pick-toolbar .ing-search {
+  flex: 1;
+  min-width: 140px;
+}
+.rw-opt-cand-list {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-top: 4px;
+  padding-right: 2px;
+}
+.rw-opt-pick-grid {
+  margin-bottom: 8px;
+}
+.rw-opt-pick-grid .pick-card {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+.rw-opt-pick-card {
+  cursor: pointer;
+}
+.rw-opt-pick-card.disabled {
+  opacity: 0.48;
+  cursor: default;
+}
+.rw-opt-pick-card .food-icon {
+  width: 28px;
+  height: 28px;
+}
+.rw-opt-pick-card .pc-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+.rw-opt-pick-kind {
+  display: inline-block;
+  font-size: 9px;
+  line-height: 1.3;
+  padding: 1px 5px;
+  border-radius: 6px;
+  color: #e8eaed;
+  background: #3a3f4b;
+}
+.rw-opt-pick-kind.kind-recipe { background: #2d5a3d; }
+.rw-opt-pick-kind.kind-hotdog { background: #6b4a2a; }
+.rw-opt-pick-kind.kind-condiment { background: #7a2d3d; }
+.rw-opt-pick-kind.kind-pizza { background: #7a5a2d; }
+.rw-opt-pick-kind.kind-custom { background: #3b5aa8; }
+.rw-opt-pick-kind.kind-finished { background: #2563eb; }
+.rw-opt-pick-kind.kind-node { background: #444a56; }
+.rw-opt-pick-id {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+/* 兼容旧类名（其它 tab 可能引用） */
 .rw-opt-row {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 4px 6px;
   border-radius: var(--ui-radius-sm);
-}
-.rw-opt-row:hover {
-  background: var(--ui-bg-hover);
-}
-/* 无效 optional 条目（重复注册/不应注册的自定义菜谱，历史自动填充残留） */
-.rw-opt-row.rw-opt-invalid {
-  background: rgba(230, 180, 60, 0.08);
-  outline: 1px solid rgba(230, 180, 60, 0.45);
-}
-.rw-opt-row.rw-opt-invalid:hover {
-  background: rgba(230, 180, 60, 0.14);
 }
 .rw-opt-name {
   min-width: 0;
@@ -10475,64 +10744,6 @@ body.manage-bg {
   max-width: 42%;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.rw-opt-del {
-  flex: none;
-  position: relative;
-  z-index: 1;
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: var(--ui-radius-sm);
-  background: transparent;
-  color: var(--ui-text-muted);
-  cursor: pointer;
-  font-size: 12px;
-}
-.rw-opt-del:hover {
-  background: var(--ui-bg-btn-danger);
-  color: var(--ui-text-danger);
-}
-.rw-opt-list {
-  max-height: 300px;
-  overflow-y: auto;
-  margin-top: 8px;
-}
-.rw-opt-picker {
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius-md);
-  padding: 8px;
-  margin-bottom: 8px;
-  background: var(--ui-bg-elevated);
-}
-.rw-opt-cand-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 220px;
-  overflow-y: auto;
-  margin-top: 6px;
-}
-.rw-opt-cand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border-strong);
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-pick-card-bg);
-  color: var(--ui-text);
-  cursor: pointer;
-  text-align: left;
-}
-.rw-opt-cand:hover:not(.disabled) {
-  border-color: var(--ui-border-focus);
-  background: var(--ui-pick-card-hover-bg);
-}
-.rw-opt-cand.disabled {
-  opacity: 0.45;
-  cursor: default;
 }
 
 .rw-ml-grid {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using LevelEditorStub;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,7 +15,13 @@ using UnityEngine.SceneManagement;
 /// BuildPipeline.BuildAssetBundles 会在主线程阻塞数分钟，期间 HTTP 主线程泵
 /// （PumpMainThread）无法执行——所以 /api/set/export 只负责启动任务（delayCall），
 /// 状态查询由监听线程 fast-path 直答（见 LayoutEditorHttpServer.ListenLoop），
-/// zip 下载同样不依赖主线程泵。</summary>
+/// zip 下载同样不依赖主线程泵。
+///
+/// 统一运行时自动编译闭环（RunExport 闸口）：导出启动时若母本源码比
+/// WebCustomStubRuntime.dll 新（外部改码尚未编译），经 RuntimeReadyGate 钩子自动
+/// 触发编译，任务参数持久化到 SessionState 挂起；编译引发的域重载后由本类
+/// [InitializeOnLoad] 续跑器自动重启导出——不再报「请等 Unity 编译结束后重试」。</summary>
+[InitializeOnLoad]
 public static class LayoutEditorSetExporter
 {
     private const string LevelSetsRoot = "Assets/LevelSets";
@@ -25,6 +32,26 @@ public static class LayoutEditorSetExporter
     /// <summary>导出前置扩展钩子（参数 = 关卡集名）。解耦点：无订阅者时行为不变，
     /// 例如 CustomStub 的 Stub DLL staging（LayoutStubDllBuilder）经此接入。</summary>
     public static Action<string> BeforeBuild;
+
+    /// <summary>统一运行时就绪闸口钩子（导出启动时调用；LayoutStubDllBuilder 注册）。
+    /// 返回 null=就绪；"compiling"=已触发自动编译（或正在编译），导出任务经
+    /// SessionState 挂起、域重载后由本类自动续跑；其他=不可自动恢复的原因（导出
+    /// 置 error 展示）。无订阅者（CustomStub 未安装）时视为就绪。</summary>
+    public static Func<string> RuntimeReadyGate;
+
+    /// <summary>导出前孤儿脚本引用自动清理钩子（参数 = 待导出场景路径列表）。
+    /// 返回清理汇总文案（进导出日志；null/空=没有发现）。CustomStubOrphanRepair
+    /// 注册；安全策略：删僵尸/空组件、复活合法载体，未知签名与缺失 prefab 实例
+    /// 只报告不阻断导出。无订阅者时导出行为不变。</summary>
+    public static Func<List<string>, string> OrphanCleanHook;
+
+    /// <summary>统一运行时 DLL 编译状态钩子（deps 清单用；LayoutStubDllBuilder 注册，
+    /// 返回 missing|stale|fresh）。无订阅者（CustomStub 未安装）返回 noStub。</summary>
+    public static Func<string> RuntimeStageState;
+
+    /// <summary>统一运行时 bundle 文件名（与 LayoutStubDllBuilder.RuntimeBundleName、
+    /// Loader 的固定加载名三方同步的文件名契约——解耦故不硬引用，改动时三处同改）。</summary>
+    private const string RuntimeBundleName = "webcustomstub_runtime";
 
     private static readonly object _lock = new object();
     private static string _status = "idle"; // idle | running | done | error
@@ -43,6 +70,23 @@ public static class LayoutEditorSetExporter
     private static string _mode = "all";
     /** 本趟依赖包打包版本（deps 模式；独立于运行时 SSOT 版本，默认 1.0.0）。 */
     private static string _depsVersion = "1.0.0";
+
+    // ---- 挂起导出续跑（自动编译闭环：RunExport 闸口挂起 → 域重载后续跑） ----
+    /** SessionState：挂起任务参数（setNames '\t' mode '\t' depsVersion）。 */
+    private const string PendingKey = "LayoutEditor.SetExport.Pending";
+    /** SessionState：挂起时刻 ticks（超时判定用）。 */
+    private const string PendingAtKey = "LayoutEditor.SetExport.PendingAt";
+    /** 续跑轮询的下次检查时刻（EditorApplication.timeSinceStartup）。 */
+    private static double _resumeNextCheck;
+    /** 当前 running 状态是「闸口挂起等编译」而非真实导出（区分新任务接管与自身挂起态，
+     *  防续跑轮询误清挂起任务）。 */
+    private static bool _deferredCompile;
+
+    static LayoutEditorSetExporter()
+    {
+        // 域重载后自动续跑挂起的导出（统一运行时自动编译闭环的收尾）
+        EditorApplication.delayCall += ResumePendingExport;
+    }
 
     /// <summary>CustomStub tag 载体前缀（SpecificPseudoPrefabTag.prefabTag）。
     ///  与 CustomStub/EntryPoint.HealObject + loader 的解析保持同步；
@@ -292,6 +336,7 @@ public static class LayoutEditorSetExporter
             _usesCustomStub = false;
             _mode = m;
             _depsVersion = NormalizeDepsVersion(m == "deps" ? depsVersion : null);
+            _deferredCompile = false;
         }
         EditorApplication.delayCall += RunExport;
         return null;
@@ -326,6 +371,12 @@ public static class LayoutEditorSetExporter
 
     private static void RunExport()
     {
+        // 统一运行时就绪闸口：母本源码比 DLL 新（外部改码尚未编译）→ 自动触发编译，
+        // 任务挂起（SessionState），域重载后 ResumePendingExport 自动续跑——导出不再
+        // 因「尚未编译完成」报错中断。批处理（LayoutEditorBatchExport）同路径：挂起时
+        // 状态非 done、exit 3，外层流水线等编译完成后再跑一遍即可。
+        if (!TryGateRuntimeReady())
+            return;
         var setNames = new List<string>();
         lock (_lock) { setNames.AddRange(_setNames); }
         var prevActive = EditorSceneManager.GetActiveScene().path;
@@ -361,6 +412,155 @@ public static class LayoutEditorSetExporter
         }
     }
 
+    /// <summary>导出前统一运行时就绪闸口。true=就绪继续导出；false=已挂起（编译已
+    /// 触发，域重载后自动续跑）或已置 error。闸口自身异常一律按就绪放行，由后续
+    /// BeforeBuild 硬校验兜底，绝不因闸口故障卡死导出。</summary>
+    private static bool TryGateRuntimeReady()
+    {
+        var gate = RuntimeReadyGate;
+        if (gate == null)
+            return true;
+        string verdict;
+        try
+        {
+            verdict = gate();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 运行时就绪闸口异常（按就绪继续，BeforeBuild 兜底）: " + ex.Message);
+            return true;
+        }
+        if (verdict == null)
+            return true;
+        if (verdict != "compiling")
+        {
+            lock (_lock)
+            {
+                _status = "error";
+                _error = "统一运行时未就绪：" + verdict;
+            }
+            Debug.LogWarning("[SetExporter] 导出未启动：" + _error);
+            return false;
+        }
+        List<string> pendingSets;
+        string mode;
+        string depsVersion;
+        lock (_lock)
+        {
+            pendingSets = new List<string>(_setNames);
+            mode = _mode;
+            depsVersion = _depsVersion;
+        }
+        SessionState.SetString(PendingKey,
+            string.Join("\t", pendingSets.ToArray()) + "\t" + mode + "\t" + (depsVersion ?? ""));
+        SessionState.SetString(PendingAtKey, DateTime.UtcNow.Ticks.ToString());
+        lock (_lock) { _deferredCompile = true; }
+        SetPhase("compile", "统一运行时源码已更新，自动编译中（完成后自动继续导出）…");
+        return false;
+    }
+
+    private static void ClearPendingExport()
+    {
+        SessionState.SetString(PendingKey, "");
+        SessionState.SetString(PendingAtKey, "");
+    }
+
+    /// <summary>域重载后自动续跑挂起的导出（编译完成 → 运行时就绪 → 重新走完整
+    /// StartExport 链）。~1s 节流轮询；超时（5 分钟）或闸口报失败（编译错误）才置
+    /// error 收场。</summary>
+    private static void ResumePendingExport()
+    {
+        var pending = SessionState.GetString(PendingKey, "");
+        if (string.IsNullOrEmpty(pending))
+            return;
+        lock (_lock)
+        {
+            // 已有新的导出任务接管（running 且非本任务挂起态），旧挂起任务作废
+            if (_status == "running" && !_deferredCompile)
+            {
+                ClearPendingExport();
+                return;
+            }
+        }
+        var gate = RuntimeReadyGate;
+        string verdict = null;
+        if (gate != null)
+        {
+            try { verdict = gate(); }
+            catch (Exception ex) { Debug.LogWarning("[SetExporter] 续跑闸口异常: " + ex.Message); }
+        }
+        if (verdict == null)
+        {
+            // 就绪：解包参数重新走完整启动链（全部状态字段重新初始化）
+            ClearPendingExport();
+            var parts = pending.Split('\t');
+            if (parts.Length < 3)
+                return;
+            var setNames = new List<string>();
+            for (var i = 0; i < parts.Length - 2; i++)
+            {
+                if (!string.IsNullOrEmpty(parts[i]))
+                    setNames.Add(parts[i]);
+            }
+            var mode = parts[parts.Length - 2];
+            var depsVersion = parts[parts.Length - 1];
+            var err = StartExport(setNames, mode, string.IsNullOrEmpty(depsVersion) ? null : depsVersion);
+            if (!string.IsNullOrEmpty(err))
+            {
+                lock (_lock)
+                {
+                    _status = "error";
+                    _error = "自动续跑导出失败：" + err;
+                }
+                Debug.LogWarning("[SetExporter] " + _error);
+            }
+            else
+                Debug.Log("[SetExporter] 统一运行时编译完成，已自动续跑导出（"
+                    + string.Join("+", setNames.ToArray()) + "）");
+            return;
+        }
+        if (verdict == "compiling")
+        {
+            long startedAt;
+            long.TryParse(SessionState.GetString(PendingAtKey, "0"), out startedAt);
+            if (startedAt > 0 && DateTime.UtcNow.Ticks - startedAt > TimeSpan.TicksPerMinute * 5)
+            {
+                ClearPendingExport();
+                lock (_lock)
+                {
+                    _status = "error";
+                    _error = "等待统一运行时自动编译超时（5 分钟），请查看 Unity Console 后重试导出。";
+                }
+                Debug.LogWarning("[SetExporter] " + _error);
+                return;
+            }
+            ScheduleResumeRetry();
+            return;
+        }
+        ClearPendingExport();
+        lock (_lock)
+        {
+            _status = "error";
+            _error = "统一运行时自动编译未完成：" + verdict;
+        }
+        Debug.LogWarning("[SetExporter] " + _error);
+    }
+
+    private static void ScheduleResumeRetry()
+    {
+        _resumeNextCheck = EditorApplication.timeSinceStartup + 1.0;
+        EditorApplication.update -= ResumeRetryTick;
+        EditorApplication.update += ResumeRetryTick;
+    }
+
+    private static void ResumeRetryTick()
+    {
+        if (EditorApplication.timeSinceStartup < _resumeNextCheck)
+            return;
+        EditorApplication.update -= ResumeRetryTick;
+        ResumePendingExport();
+    }
+
     private static void RunExportCore(List<string> setNames)
     {
         var mode = _mode;
@@ -387,6 +587,27 @@ public static class LayoutEditorSetExporter
             perSetScenes.Add(new KeyValuePair<string, List<string>>(setName, scenes));
             totalScenes += scenes.Count;
         }
+
+        // ---- 0. orphan-clean：导出前自动清理场景孤儿脚本引用（磁盘文本级，此时场景
+        //      尚未打开；安全策略经 OrphanCleanHook 钩子由 CustomStubOrphanRepair 提供，
+        //      仅报告项不阻断导出）----
+        if (OrphanCleanHook != null)
+        {
+            var allScenes = new List<string>();
+            foreach (var pair in perSetScenes)
+                allScenes.AddRange(pair.Value);
+            try
+            {
+                var orphanSummary = OrphanCleanHook(allScenes);
+                if (!string.IsNullOrEmpty(orphanSummary))
+                    Debug.Log("[SetExporter] 导出前孤儿脚本清理:\n" + orphanSummary);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[SetExporter] 孤儿脚本清理异常（继续导出）: " + ex.Message);
+            }
+        }
+
         var i = 0;
         foreach (var pair in perSetScenes)
         {
@@ -422,6 +643,11 @@ public static class LayoutEditorSetExporter
                 }
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
+                foreach (var w in ValidateSceneForPlayerBuild(scenePath))
+                    Debug.LogWarning("[SetExporter] Player 构建校验: " + w);
+                var commonW1Info = DescribeCommonW1PrefabRefs(scenePath);
+                if (!string.IsNullOrEmpty(commonW1Info))
+                    Debug.Log("[SetExporter] " + commonW1Info);
             }
         }
         AssetDatabase.SaveAssets();
@@ -429,16 +655,18 @@ public static class LayoutEditorSetExporter
         // ---- 2. clean：逐集仅删除本集旧产物目录（其他目录不动）----
         foreach (var setName in setNames)
         {
-            var outDir = BundlesRoot + "/" + setName;
-            var absOutDir = AbsPath(outDir);
-            SetPhase("clean", "清理旧构建产物：" + outDir);
-            if (AssetDatabase.IsValidFolder(outDir))
-                AssetDatabase.DeleteAsset(outDir);
-            else if (Directory.Exists(absOutDir))
-                Directory.Delete(absOutDir, true);
-            var absDirMeta = absOutDir + ".meta";
-            if (File.Exists(absDirMeta))
-                File.Delete(absDirMeta);
+            foreach (var outDir in CollectSetBundleOutputDirs(setName))
+            {
+                var absOutDir = AbsPath(outDir);
+                SetPhase("clean", "清理旧构建产物：" + outDir);
+                if (AssetDatabase.IsValidFolder(outDir))
+                    AssetDatabase.DeleteAsset(outDir);
+                else if (Directory.Exists(absOutDir))
+                    Directory.Delete(absOutDir, true);
+                var absDirMeta = absOutDir + ".meta";
+                if (File.Exists(absDirMeta))
+                    File.Delete(absDirMeta);
+            }
         }
         AssetDatabase.Refresh();
 
@@ -448,6 +676,8 @@ public static class LayoutEditorSetExporter
         {
             LayoutEditorLevelAdminApi.EnsureSetInfoBundle(pair.Key);
             EnsureSceneBundleNames(pair.Key, pair.Value);
+            foreach (var w in ValidateSetBundleNaming(pair.Key))
+                Debug.LogWarning("[SetExporter] " + w);
         }
         if (BeforeBuild != null)
             BeforeBuild(setNames[0]); // 钩子为统一运行时 staging，与集名无关，只调一次
@@ -459,16 +689,19 @@ public static class LayoutEditorSetExporter
             throw new Exception("BuildPipeline.BuildAssetBundles 返回 null，构建失败（详见 Console）。");
         foreach (var setName in setNames)
         {
-            if (!Directory.Exists(AbsPath(BundlesRoot + "/" + setName)))
+            if (ResolveBuiltSetBundleDir(setName) == null)
                 throw new Exception("构建完成但没有输出目录 " + BundlesRoot + "/" + setName
-                    + "（bundle 名可能未设置，请检查关卡集根目录与场景的 AssetBundle）。");
+                    + "（bundle 名可能未设置或与关卡集文件夹名不一致，如 latiao/* vs LaTiao/）。");
         }
 
         // ---- 4. package：逐集删除 .manifest / *.meta 等带后缀文件 ----
         SetPhase("package", "清理 manifest 与 meta 文件…");
         foreach (var setName in setNames)
         {
-            foreach (var f in Directory.GetFiles(AbsPath(BundlesRoot + "/" + setName)))
+            var builtDir = ResolveBuiltSetBundleDir(setName);
+            if (builtDir == null)
+                continue;
+            foreach (var f in Directory.GetFiles(builtDir))
             {
                 var lower = f.ToLower();
                 if (lower.EndsWith(".manifest") || lower.EndsWith(".meta"))
@@ -484,7 +717,9 @@ public static class LayoutEditorSetExporter
         var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
         foreach (var setName in setNames)
         {
-            var absOutDir = AbsPath(BundlesRoot + "/" + setName);
+            var absOutDir = ResolveBuiltSetBundleDir(setName);
+            if (absOutDir == null)
+                throw new Exception("没有可打包的 bundle 目录（" + setName + "）。");
             var payloads = new List<string>(Directory.GetFiles(absOutDir));
             payloads.RemoveAll(HasJunkExtension);
             // 旧体系 per-set runtime bundle 已废除，若产物里残留 runtime 文件一律剔除
@@ -493,9 +728,11 @@ public static class LayoutEditorSetExporter
                 string.Equals(Path.GetFileName(p), "runtime", StringComparison.OrdinalIgnoreCase));
             if (payloads.Count == 0)
                 throw new Exception("清理后没有可打包的 bundle 文件（" + setName + "）。");
-            if (!File.Exists(absOutDir + "/info_" + setName))
-                Debug.LogWarning("[SetExporter] 未找到 info_" + setName
-                    + "（关卡集根目录 AssetBundle 可能用了历史命名），将按实际产物打包。");
+            var infoFile = "info_" + setName;
+            if (!payloads.Exists(p => string.Equals(Path.GetFileName(p), infoFile, StringComparison.OrdinalIgnoreCase)))
+                Debug.LogWarning("[SetExporter] zip 内未找到 " + infoFile
+                    + "——OC2DIYLevel 将无法加载关卡集 info bundle（LevelInfo/地板材质等会缺失）。"
+                    + " 请确认关卡集根目录 AssetBundle = " + setName + "/info_" + setName);
 
             // 关卡 bundle → OC2DIYLevel/levels/<set>/（模组从此固定路径读关卡）
             foreach (var p in payloads)
@@ -719,10 +956,10 @@ public static class LayoutEditorSetExporter
         }
 
         // 统一运行时 bundle（webcustomstub_runtime）
-        var runtimeAbs = AbsPath(BundlesRoot) + "/" + LayoutStubDllBuilder.RuntimeBundleName;
+        var runtimeAbs = AbsPath(BundlesRoot) + "/" + RuntimeBundleName;
         if (File.Exists(runtimeAbs))
             entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
-                depDir + LayoutStubDllBuilder.RuntimeBundleName, runtimeAbs));
+                depDir + RuntimeBundleName, runtimeAbs));
         else
             Debug.LogWarning("[SetExporter] 未找到统一运行时 bundle（" + runtimeAbs
                 + "），依赖包不含 webcustomstub_runtime —— 请先 Build AssetBundles（含 Runtime staging）。");
@@ -807,7 +1044,7 @@ public static class LayoutEditorSetExporter
         const string depDir = "OC2DIYLevelRuntimeWLoader/";
         var dto = new DepsManifestDto();
         dto.ok = true;
-        dto.runtimeState = LayoutStubDllBuilder.GetRuntimeStageState();
+        dto.runtimeState = RuntimeStageState != null ? RuntimeStageState() : "noStub";
         dto.runtimeVersion = StubVersionValue();
         dto.lastDepsVersion = GetLastDepsVersion();
         var entries = new List<DepsManifestEntryDto>();
@@ -830,14 +1067,14 @@ public static class LayoutEditorSetExporter
 
         // 统一运行时 bundle：状态 = DLL 编译状态映射到条目契约 ok|stale|missing
         // （fresh→ok；DLL missing 但旧产物仍在 → missing 提示先编译）。
-        var runtimeAbs = AbsPath(BundlesRoot) + "/" + LayoutStubDllBuilder.RuntimeBundleName;
+        var runtimeAbs = AbsPath(BundlesRoot) + "/" + RuntimeBundleName;
         var runtimeExists = File.Exists(runtimeAbs);
         var runtimeEntryState = "missing";
         if (runtimeExists && dto.runtimeState == "fresh")
             runtimeEntryState = "ok";
         else if (runtimeExists && dto.runtimeState == "stale")
             runtimeEntryState = "stale";
-        AddManifestEntry(entries, depDir + LayoutStubDllBuilder.RuntimeBundleName,
+        AddManifestEntry(entries, depDir + RuntimeBundleName,
             "统一运行时 bundle（CustomStub 关卡代码）；未就绪时先「编译 Runtime DLL」",
             runtimeEntryState,
             runtimeExists ? new FileInfo(runtimeAbs).Length : 0);
@@ -1201,5 +1438,157 @@ public static class LayoutEditorSetExporter
     {
         var root = Path.GetDirectoryName(Application.dataPath.Replace('\\', '/'));
         return (root ?? "").Replace('\\', '/');
+    }
+
+    /// <summary>Unity 按 bundle 名首段建子目录；收集与关卡集文件夹同名（及历史大小写变体）的产物目录。</summary>
+    private static List<string> CollectSetBundleOutputDirs(string setName)
+    {
+        var dirs = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        Action<string> add = rel =>
+        {
+            if (string.IsNullOrEmpty(rel) || !seen.Add(rel))
+                return;
+            dirs.Add(rel);
+        };
+        add(BundlesRoot + "/" + setName);
+        var setDir = LevelSetsRoot + "/" + setName;
+        var importer = AssetImporter.GetAtPath(setDir);
+        if (importer != null && !string.IsNullOrEmpty(importer.assetBundleName))
+        {
+            var slash = importer.assetBundleName.IndexOf('/');
+            if (slash > 0)
+                add(BundlesRoot + "/" + importer.assetBundleName.Substring(0, slash));
+        }
+        return dirs;
+    }
+
+    private static string ResolveBuiltSetBundleDir(string setName)
+    {
+        foreach (var rel in CollectSetBundleOutputDirs(setName))
+        {
+            var abs = AbsPath(rel);
+            if (Directory.Exists(abs) && Directory.GetFiles(abs).Length > 0)
+                return abs;
+        }
+        return null;
+    }
+
+    /// <summary>关卡集 bundle 前缀应与文件夹名一致（LaTiao/info_LaTiao），否则 OC2DIYLevel
+    ///  找不到 info_* 文件、地板材质/LevelInfo 不会加载。</summary>
+    private static List<string> ValidateSetBundleNaming(string setName)
+    {
+        var warnings = new List<string>();
+        if (string.IsNullOrEmpty(setName))
+            return warnings;
+        var expectedInfo = setName + "/info_" + setName;
+        var setDir = LevelSetsRoot + "/" + setName;
+        var setImporter = AssetImporter.GetAtPath(setDir);
+        if (setImporter != null && !string.IsNullOrEmpty(setImporter.assetBundleName)
+            && !string.Equals(setImporter.assetBundleName, expectedInfo, StringComparison.Ordinal))
+        {
+            warnings.Add("关卡集根目录 AssetBundle「" + setImporter.assetBundleName
+                + "」与约定「" + expectedInfo + "」不一致——真机可能无法 LoadFromFile info bundle。");
+        }
+        var scenesDir = setDir + "/scenes";
+        if (!AssetDatabase.IsValidFolder(scenesDir))
+            return warnings;
+        foreach (var guid in AssetDatabase.FindAssets("t:Scene", new[] { scenesDir }))
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var sceneImporter = AssetImporter.GetAtPath(path);
+            if (sceneImporter == null || string.IsNullOrEmpty(sceneImporter.assetBundleName))
+                continue;
+            var prefix = setName + "/";
+            if (!sceneImporter.assetBundleName.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                warnings.Add("场景「" + path + "」bundle「" + sceneImporter.assetBundleName
+                    + "」前缀不是「" + prefix + "」。");
+            }
+        }
+        return warnings;
+    }
+
+    private const string EmbeddedBuiltInStandardShader =
+        "m_Shader: {fileID: 7, guid: 0000000000000000f000000000000000, type: 0}";
+
+    /// <summary>导出前扫描场景 YAML：内嵌 built-in Standard 材质在 Player 中会粉紫，
+    ///  应持久化为 LevelSets/&lt;set&gt;/materials/ 资产。</summary>
+    private static List<string> ValidateSceneForPlayerBuild(string sceneAssetPath)
+    {
+        var warnings = new List<string>();
+        var abs = AbsPath(sceneAssetPath);
+        if (string.IsNullOrEmpty(abs) || !File.Exists(abs))
+            return warnings;
+
+        var text = File.ReadAllText(abs);
+        var sections = text.Split(new[] { "--- !u!21 &" }, StringSplitOptions.None);
+        for (int i = 1; i < sections.Length; i++)
+        {
+            var block = sections[i];
+            if (!block.StartsWith("Material:", StringComparison.Ordinal)
+                && block.IndexOf("\nMaterial:", StringComparison.Ordinal) < 0)
+                continue;
+            if (!block.Contains("m_PrefabInternal: {fileID: 0}"))
+                continue;
+            if (!block.Contains(EmbeddedBuiltInStandardShader))
+                continue;
+
+            var nameMatch = Regex.Match(block, @"m_Name:\s*(.+)");
+            var matName = nameMatch.Success ? nameMatch.Groups[1].Value.Trim() : "(unknown)";
+            warnings.Add(sceneAssetPath + ": 内嵌 Standard Shader 材质「" + matName
+                + "」在 Player 中会粉紫；请持久化到 LevelSets/<set>/materials/ 资产。");
+            if (Regex.IsMatch(matName, @"_tiling\d+x\d+", RegexOptions.IgnoreCase))
+            {
+                warnings.Add(sceneAssetPath + ": 烘焙地板材质「" + matName
+                    + "」应持久化为工程 .mat 资产而非场景内嵌。");
+            }
+        }
+
+        var sceneImporter = AssetImporter.GetAtPath(sceneAssetPath);
+        if (sceneImporter != null && !string.IsNullOrEmpty(sceneImporter.assetBundleName))
+        {
+            var sceneBundle = sceneImporter.assetBundleName;
+            foreach (Match m in Regex.Matches(text, @"guid:\s*([a-f0-9]{32})", RegexOptions.IgnoreCase))
+            {
+                var refPath = AssetDatabase.GUIDToAssetPath(m.Groups[1].Value);
+                if (string.IsNullOrEmpty(refPath) || refPath.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var refImporter = AssetImporter.GetAtPath(refPath);
+                if (refImporter == null || string.IsNullOrEmpty(refImporter.assetBundleName))
+                    continue;
+                if (refImporter.assetBundleName != sceneBundle)
+                    continue;
+                warnings.Add(sceneAssetPath + ": 资产「" + refPath + "」与场景共用 bundle「"
+                    + sceneBundle + "」——Unity 禁止 scene+asset 同包，请改为 info bundle。");
+            }
+        }
+        return warnings;
+    }
+
+    /// <summary>信息级：场景引用的 commonW1 资产（由 Loader 常驻加载，非 stub）。</summary>
+    private static string DescribeCommonW1PrefabRefs(string sceneAssetPath)
+    {
+        var abs = AbsPath(sceneAssetPath);
+        if (string.IsNullOrEmpty(abs) || !File.Exists(abs))
+            return null;
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var text = File.ReadAllText(abs);
+        foreach (Match m in Regex.Matches(text, @"guid:\s*([a-f0-9]{32})", RegexOptions.IgnoreCase))
+        {
+            var path = AssetDatabase.GUIDToAssetPath(m.Groups[1].Value);
+            if (string.IsNullOrEmpty(path))
+                continue;
+            path = path.Replace('\\', '/');
+            if (!path.StartsWith("Assets/commonW1/", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+                seen.Add(path);
+        }
+        if (seen.Count == 0)
+            return null;
+        return sceneAssetPath + ": 引用 commonW1 预制体 " + seen.Count + " 个（Loader 常驻，非 CustomStub）："
+            + string.Join(", ", new List<string>(seen).ToArray());
     }
 }

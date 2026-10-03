@@ -35,12 +35,35 @@ public static class LayoutStubDllBuilder
     static LayoutStubDllBuilder()
     {
         LayoutEditorSetExporter.BeforeBuild += OnBeforeBuild;
+        LayoutEditorSetExporter.RuntimeReadyGate += OnRuntimeReadyGate;
+        LayoutEditorSetExporter.RuntimeStageState += GetRuntimeStageState;
     }
 
     private static void OnBeforeBuild(string setName)
     {
         // 导出任意关卡集/依赖包前，保证统一 runtime 新鲜（过期直接抛错中断导出）。
         StageRuntime(true);
+    }
+
+    /// <summary>导出前统一运行时就绪闸口（LayoutEditorSetExporter.RunExport 经钩子
+    /// 调用）：返回 null=就绪（顺手补一次静默 staging，把最新 DLL 迁移为 .dll.bytes）；
+    /// "compiling"=编译进行中/已触发，调用方挂起导出任务、待域重载后自动续跑；
+    /// 其他=不可自动恢复的原因（Play 模式、自动编译未生效等，调用方按错误展示）。</summary>
+    private static string OnRuntimeReadyGate()
+    {
+        if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            return "compiling";
+        var state = GetRuntimeStageState();
+        if (state == "fresh")
+        {
+            StageRuntimeQuiet(); // bytes 落后时顺手补迁移（不留窗口给 BeforeBuild）
+            return null;
+        }
+        if (EditorApplication.isPlaying)
+            return "Play 模式中无法自动编译，请退出 Play 后重新导出。";
+        if (RequestCompileIfStale())
+            return "compiling";
+        return "自动编译未生效（state=" + state + "），母本可能存在编译错误，详见 Unity Console。";
     }
 
     private static string ProjectRoot()

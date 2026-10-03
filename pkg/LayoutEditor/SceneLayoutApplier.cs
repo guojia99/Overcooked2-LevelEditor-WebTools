@@ -1600,8 +1600,9 @@ public static class SceneLayoutApplier
     private static readonly System.Collections.Generic.Dictionary<string, Material> _materialFloorMats =
         new System.Collections.Generic.Dictionary<string, Material>();
 
-    /// <summary>材质地板：按 tiling 格数烘焙 _MainTex/_BumpMap ST 到材质实例（非 MPB），
-    ///  与图片地板同策略，保证场景保存 / bundle 导出后平铺不丢失。</summary>
+    /// <summary>材质地板：按 tiling 格数烘焙 _MainTex/_BumpMap ST 到材质资产（非 MPB、
+    ///  不落场景内嵌实例），与 RotatedImageTexture 同策略，保证 bundle 导出后平铺与
+    ///  Shader 引用在真机可解析。</summary>
     private static Material BakedMaterialFloorMaterial(FloorDto floor, Material source)
     {
         if (source == null) return null;
@@ -1618,14 +1619,85 @@ public static class SceneLayoutApplier
         if (_materialFloorMats.TryGetValue(key, out m) && m != null)
             return m;
 
+        var assetPath = PersistedFloorMaterialAssetPath(source, tilingW, tilingD);
+        if (!string.IsNullOrEmpty(assetPath))
+        {
+            m = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
+            if (m != null)
+            {
+                _materialFloorMats[key] = m;
+                return m;
+            }
+        }
+
         m = new Material(source);
-        m.name = source.name + "_tiling" + tilingW + "x" + tilingD;
+        m.name = LayoutEditorFloorMaterialsApi.StripMaterialTilingSuffix(source.name)
+            + "_tiling" + tilingW + "x" + tilingD;
         if (hasTag)
             ApplyMaterialFloorStScale(m, source, tilingW, tilingD, tagW, tagH);
         else
             ApplyMaterialFloorDirectTiling(m, tilingW, tilingD);
+
+        if (!string.IsNullOrEmpty(assetPath))
+        {
+            var dir = System.IO.Path.GetDirectoryName(assetPath);
+            if (!string.IsNullOrEmpty(dir) && !AssetDatabase.IsValidFolder(dir))
+            {
+                LayoutEditorHierarchy.EnsureAssetFolder(dir);
+            }
+            AssetDatabase.CreateAsset(m, assetPath);
+            AlignFloorMaterialInfoBundle(assetPath);
+            AssetDatabase.SaveAssets();
+        }
+
         _materialFloorMats[key] = m;
         return m;
+    }
+
+    private static string PersistedFloorMaterialAssetPath(Material source, int tilingW, int tilingD)
+    {
+        var setName = ResolveLevelSetNameFromActiveScene();
+        if (string.IsNullOrEmpty(setName) || source == null)
+            return null;
+        var baseName = LayoutEditorFloorMaterialsApi.StripMaterialTilingSuffix(source.name);
+        if (string.IsNullOrEmpty(baseName))
+            baseName = source.name;
+        return "Assets/LevelSets/" + setName + "/materials/" + baseName
+            + "_tiling" + tilingW + "x" + tilingD + ".mat";
+    }
+
+    private static string ResolveLevelSetNameFromActiveScene()
+    {
+        var scene = EditorSceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return null;
+        var path = (scene.path ?? "").Replace('\\', '/');
+        const string prefix = "Assets/LevelSets/";
+        if (!path.StartsWith(prefix, StringComparison.Ordinal))
+            return null;
+        var rest = path.Substring(prefix.Length);
+        var slash = rest.IndexOf('/');
+        return slash > 0 ? rest.Substring(0, slash) : null;
+    }
+
+    /// <summary>烘焙地板材质归入关卡集 info bundle（与 data/ 自定义 BGM 等同策略），
+    ///  不可与场景共用 s_* bundle（Unity 禁止 scene+asset 同包）。</summary>
+    private static void AlignFloorMaterialInfoBundle(string materialAssetPath)
+    {
+        var setName = ResolveLevelSetNameFromActiveScene();
+        if (string.IsNullOrEmpty(setName))
+            return;
+        var setImporter = AssetImporter.GetAtPath("Assets/LevelSets/" + setName);
+        if (setImporter == null || string.IsNullOrEmpty(setImporter.assetBundleName))
+            return;
+        var matImporter = AssetImporter.GetAtPath(materialAssetPath);
+        if (matImporter == null)
+            return;
+        var infoBundle = setImporter.assetBundleName;
+        if (matImporter.assetBundleName == infoBundle)
+            return;
+        matImporter.SetAssetBundleNameAndVariant(infoBundle, "");
+        matImporter.SaveAndReimport();
     }
 
     private static void ApplyMaterialFloorStScale(Material dest, Material source,

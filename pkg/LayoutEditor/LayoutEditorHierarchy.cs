@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -98,5 +99,24 @@ public static class LayoutEditorHierarchy
         }
 
         return current;
+    }
+
+    /// <summary>递归创建 Assets 下文件夹（已存在则跳过）。</summary>
+    public static void EnsureAssetFolder(string folderPath)
+    {
+        folderPath = (folderPath ?? "").Replace('\\', '/');
+        if (string.IsNullOrEmpty(folderPath) || AssetDatabase.IsValidFolder(folderPath))
+            return;
+        if (!folderPath.StartsWith("Assets/", System.StringComparison.Ordinal))
+            return;
+        var parts = folderPath.Split('/');
+        var current = parts[0];
+        for (int i = 1; i < parts.Length; i++)
+        {
+            var next = current + "/" + parts[i];
+            if (!AssetDatabase.IsValidFolder(next))
+                AssetDatabase.CreateFolder(current, parts[i]);
+            current = next;
+        }
     }
 }

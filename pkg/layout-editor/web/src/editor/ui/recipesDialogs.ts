@@ -245,25 +245,59 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
 
   const normalizeGuid = (g: string) => g.replace(/-/g, "").toLowerCase();
 
-  /** 候选 = presets + DLC 原始菜谱 + 组装定义（burger/pizza optional）。 */
-  const optionalCandidates = (): { guid: string; id: string; nameZh: string; group: string; kind: string }[] => {
-    const list: { guid: string; id: string; nameZh: string; group: string; kind: string }[] = [];
+  type OptCand = { guid: string; id: string; nameZh: string; group: string; kind: string };
+
+  const currentSetName = opts.setName ?? S.currentLevelSet;
+
+  /** commonW1/W2/W3 共享库菜谱（assetPath 含 commonW 目录）：不是「本关」自定义菜谱。 */
+  const isSharedCompendiumRecipe = (r: RecipeEntry): boolean => {
+    const p = (r.assetPath ?? "").replace(/\\/g, "/");
+    return /\/commonW\d*\//i.test(p);
+  };
+
+  /** 当前关卡集 custom_recipes/ 下的本地自定义菜谱（排除 commonW 共享库）。 */
+  const isCurrentSetCustomRecipe = (r: RecipeEntry): boolean => {
+    if (!r.isCustom || isSharedCompendiumRecipe(r)) return false;
+    const p = (r.assetPath ?? "").replace(/\\/g, "/");
+    if (currentSetName) return p.includes(`/LevelSets/${currentSetName}/custom_recipes/`);
+    return r.group === "levelset";
+  };
+
+  /** 候选 = presets + DLC 原始菜谱 + 组装定义（burger/pizza optional）+ 本关成品菜。 */
+  const optionalCandidates = (): OptCand[] => {
+    const list: OptCand[] = [];
     const seen = new Set<string>();
+    const push = (c: OptCand) => {
+      if (!c.guid || seen.has(c.guid)) return;
+      seen.add(c.guid);
+      list.push(c);
+    };
     for (const p of presets?.items ?? []) {
-      if (!p.guid || seen.has(p.guid)) continue;
-      seen.add(p.guid);
-      list.push({ guid: p.guid, id: p.id, nameZh: p.nameZh ?? "", group: p.group ?? "", kind: p.kind ?? "node" });
+      push({ guid: p.guid, id: p.id, nameZh: p.nameZh ?? "", group: p.group ?? "", kind: p.kind ?? "node" });
+    }
+    // 本关自定义成品菜：仅当前关卡集 custom_recipes/（不含 commonW 共享库）。
+    for (const r of levelSetRecipes) {
+      if ((r.score ?? 0) <= 0 || !isCurrentSetCustomRecipe(r)) continue;
+      push({ guid: r.guid, id: r.id, nameZh: r.nameZh ?? "", group: "levelset", kind: "custom-recipe" });
     }
     for (const r of recipes) {
       if (!r.guid || seen.has(r.guid)) continue;
+      if (isCurrentSetCustomRecipe(r) && (r.score ?? 0) > 0) {
+        push({
+          guid: r.guid,
+          id: r.id,
+          nameZh: r.nameZh ?? "",
+          group: "levelset",
+          kind: "custom-recipe",
+        });
+        continue;
+      }
       if (r.group && r.group.startsWith("dlc")) {
-        seen.add(r.guid);
-        list.push({ guid: r.guid, id: r.id, nameZh: r.nameZh ?? "", group: r.group, kind: "recipe" });
+        push({ guid: r.guid, id: r.id, nameZh: r.nameZh ?? "", group: r.group, kind: "recipe" });
         continue;
       }
       if (r.optionalKind === "burger" || r.optionalKind === "pizza") {
-        seen.add(r.guid);
-        list.push({
+        push({
           guid: r.guid,
           id: r.id,
           nameZh: r.nameZh ?? "",
@@ -1444,9 +1478,27 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   // 可在此增删）。是否使用一键填充由用户决定，填充后仍需「写回 Optional」。
   let optPickerOpen = false;
   let optFilter = "all";
-  const OPT_FILTERS = () => {
-    const groups = [...new Set(optionalCandidates().map((c) => c.group).filter(Boolean))].sort();
-    return ["all", "preset", ...groups];
+
+  /** 候选语义分类（用于筛选与分区展示）。 */
+  const optCandCategory = (c: OptCand): string => {
+    if (c.kind === "custom-recipe" || c.group === "levelset" || c.group === "custom") return "levelset";
+    if (c.kind === "hotdog-optional" || c.kind === "condiment" || c.kind === "boiledfrankfurter") return "hotdog";
+    if (c.kind === "pizza-optional") return "pizza";
+    if (c.kind === "burger-optional") return "burger";
+    if (c.kind === "recipe") return c.group || "dlc";
+    return "other";
+  };
+
+  const OPT_FILTERS = (): { id: string; label: string }[] => {
+    const cands = optionalCandidates();
+    const chips: { id: string; label: string }[] = [{ id: "all", label: "全部" }];
+    if (cands.some((c) => optCandCategory(c) === "levelset")) chips.push({ id: "levelset", label: "本关成品" });
+    if (cands.some((c) => optCandCategory(c) === "hotdog")) chips.push({ id: "hotdog", label: "热狗/酱料" });
+    if (cands.some((c) => optCandCategory(c) === "pizza")) chips.push({ id: "pizza", label: "披萨部件" });
+    if (cands.some((c) => optCandCategory(c) === "burger")) chips.push({ id: "burger", label: "汉堡组装" });
+    const dlcGroups = [...new Set(cands.filter((c) => c.kind === "recipe").map((c) => c.group).filter(Boolean))].sort();
+    for (const g of dlcGroups) chips.push({ id: g, label: foodGroupLabel(g as never) || g });
+    return chips;
   };
 
   const KIND_META: Record<string, { label: string; cls: string }> = {
@@ -1456,7 +1508,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     "boiledfrankfurter": { label: "煮肠", cls: "kind-condiment" },
     "pizza-optional": { label: "披萨部件", cls: "kind-pizza" },
     "burger-optional": { label: "汉堡组装", cls: "kind-custom" },
-    "custom-recipe": { label: "自定义", cls: "kind-custom" },
+    "custom-recipe": { label: "本关成品", cls: "kind-finished" },
     "node": { label: "节点", cls: "kind-node" },
   };
   const kindMetaOf = (k?: string) => KIND_META[k ?? ""] ?? KIND_META.node;
@@ -1749,38 +1801,112 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     }
   };
 
-  const optionalFilterLabel = (f: string) =>
-    f === "all" ? "全部"
-    : f === "preset" ? "特例(Hotdog/披萨)"
-    : foodGroupLabel(f as never) || f;
+  const optItemIconSrc = (it: LevelOptionalItem): string => {
+    const r = byGuid.get(it.guid);
+    if (r) {
+      const custom = customRecipeIconUrl(r);
+      if (custom) return custom;
+      if (r.id && r.icon !== false) return `/icons/recipes/${encodeURIComponent(r.id)}.png`;
+    }
+    if (it.id) return `/icons/recipes/${encodeURIComponent(it.id)}.png`;
+    return "/icons/_placeholder.png";
+  };
+
+  const optCandIconSrc = (c: OptCand): string => {
+    const r = byGuid.get(c.guid);
+    if (r) {
+      const custom = customRecipeIconUrl(r);
+      if (custom) return custom;
+      if (r.id && r.icon !== false) return `/icons/recipes/${encodeURIComponent(r.id)}.png`;
+    }
+    if (c.id && c.kind !== "node") return `/icons/recipes/${encodeURIComponent(c.id)}.png`;
+    return "/icons/_placeholder.png";
+  };
+
+  const optPickCardHtml = (c: OptCand, has: boolean): string => {
+    const km = kindMetaOf(c.kind);
+    const icon = optCandIconSrc(c);
+    const sub =
+      c.kind === "custom-recipe"
+        ? `<span class="cr-badge-done">成品菜</span>`
+        : `<span class="rw-opt-pick-kind ${km.cls}">${km.label}</span>`;
+    return `<button type="button" class="pick-card rw-opt-pick-card${has ? " disabled selected" : ""}" data-oguid="${escHtml(c.guid)}"${has ? " disabled" : ""} title="${escHtml(c.id)}">
+      <span class="pc-head">
+        <img class="food-icon" loading="lazy" src="${escHtml(icon)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">
+        <span class="pc-name">${escHtml(c.nameZh || c.id)}${sub}</span>
+      </span>
+      <span class="muted small rw-opt-pick-id">${escHtml(c.id)}</span>
+    </button>`;
+  };
+
+  const optPickGridHtml = (items: OptCand[], known: Set<string>): string =>
+    `<div class="pick-grid rw-opt-pick-grid">${items.map((c) => optPickCardHtml(c, known.has(c.guid))).join("")}</div>`;
+
+  const optCandMatchesFilter = (c: OptCand): boolean => {
+    if (optFilter === "all") return true;
+    if (optFilter === "levelset") return optCandCategory(c) === "levelset";
+    if (optFilter === "hotdog") return optCandCategory(c) === "hotdog";
+    if (optFilter === "pizza") return optCandCategory(c) === "pizza";
+    if (optFilter === "burger") return optCandCategory(c) === "burger";
+    return c.group === optFilter;
+  };
 
   /** 候选卡片（picker 整块与局部刷新共用）。 */
   const optCardsHtml = () => {
     const q = (document.getElementById("rw-opt-search") as HTMLInputElement)?.value.trim().toLowerCase() ?? "";
     const known = new Set(optionalItems.map((i) => i.guid));
-    return optionalCandidates()
-      .filter((c) => (optFilter === "all" ? true : optFilter === "preset" ? c.kind !== "recipe" : c.group === optFilter))
-      .filter((c) => !q || c.id.toLowerCase().includes(q) || c.nameZh.toLowerCase().includes(q))
-      .map((c) => {
-        const km = kindMetaOf(c.kind);
-        const has = known.has(c.guid);
-        return `<button type="button" class="pick-card rw-opt-cand${has ? " disabled" : ""}" data-oguid="${escHtml(c.guid)}"${has ? " disabled" : ""}>
-          <span class="rw-badge ${km.cls}">${km.label}</span>
-          <span class="rw-opt-name">${escHtml(c.nameZh || c.id)}</span>
-          <span class="muted rw-opt-id">${escHtml(c.id)}</span>
-        </button>`;
-      })
-      .join("");
+    const filtered = optionalCandidates()
+      .filter(optCandMatchesFilter)
+      .filter((c) => !q || c.id.toLowerCase().includes(q) || c.nameZh.toLowerCase().includes(q));
+    if (filtered.length === 0) return "";
+
+    if (optFilter !== "all") return optPickGridHtml(filtered, known);
+
+    const sections: string[] = [];
+    const byCat = (cat: string) => filtered.filter((c) => optCandCategory(c) === cat);
+    const band = (title: string, items: OptCand[]) => {
+      if (!items.length) return;
+      sections.push(`<div class="cp-section-band">${escHtml(title)}</div>${optPickGridHtml(items, known)}`);
+    };
+
+    band("本关自定义成品菜", byCat("levelset"));
+    band("热狗可选 / 酱料 / 煮肠", byCat("hotdog"));
+    band("披萨部件", byCat("pizza"));
+    band("汉堡组装定义", byCat("burger"));
+
+    const dlcGroups = [...new Set(filtered.filter((c) => c.kind === "recipe").map((c) => c.group).filter(Boolean))].sort();
+    for (const g of dlcGroups) {
+      const items = filtered.filter((c) => c.kind === "recipe" && c.group === g);
+      band(foodGroupLabel(g as never) || g, items);
+    }
+
+    const other = filtered.filter((c) => {
+      const cat = optCandCategory(c);
+      return cat !== "levelset" && cat !== "hotdog" && cat !== "pizza" && cat !== "burger" && c.kind !== "recipe";
+    });
+    band("其它节点", other);
+
+    return sections.join("");
   };
 
   const optPickerHtml = () => {
     const chips = OPT_FILTERS()
-      .map((f) => `<button type="button" class="rw-chip${optFilter === f ? " active" : ""}" data-ofilter="${escHtml(f)}">${escHtml(optionalFilterLabel(f))}</button>`)
+      .map((f) => `<button type="button" class="cr-comp-chip${optFilter === f.id ? " active" : ""}" data-ofilter="${escHtml(f.id)}">${escHtml(f.label)}</button>`)
       .join("");
+    const known = new Set(optionalItems.map((i) => i.guid));
+    const total = optionalCandidates().length;
+    const avail = optionalCandidates().filter((c) => !known.has(c.guid)).length;
+    const levelsetCnt = optionalCandidates().filter((c) => optCandCategory(c) === "levelset").length;
     return `<div class="rw-opt-picker">
-      <div class="rw-chips">${chips}</div>
-      <input type="search" id="rw-opt-search" class="rw-search" placeholder="搜索候选（id / 名称）…" autocomplete="off">
-      <div class="rw-opt-cand-list" id="rw-opt-cand-list">${optCardsHtml() || '<p class="muted">无匹配候选</p>'}</div>
+      <div class="rw-opt-picker-head">
+        <span class="rw-opt-picker-title">添加条目</span>
+        <span class="muted small">候选 ${total} · 可添加 ${avail}${levelsetCnt ? ` · 本关成品 ${levelsetCnt}` : ""}</span>
+      </div>
+      <div class="cr-comp-toolbar rw-opt-pick-toolbar">
+        <input type="search" id="rw-opt-search" class="ing-search" placeholder="搜索候选（id / 名称）…" autocomplete="off">
+        <div class="ing-groups">${chips}</div>
+      </div>
+      <div class="rw-opt-cand-list modal-scroll" id="rw-opt-cand-list">${optCardsHtml() || '<p class="rw-opt-empty muted">无匹配候选</p>'}</div>
     </div>`;
   };
 
@@ -1788,12 +1914,12 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   const refreshOptPickerList = () => {
     const el = document.getElementById("rw-opt-cand-list");
     if (!el) return;
-    el.innerHTML = optCardsHtml() || '<p class="muted">无匹配候选</p>';
+    el.innerHTML = optCardsHtml() || '<p class="rw-opt-empty muted">无匹配候选</p>';
     wireOptCandCards();
   };
 
   const wireOptCandCards = () => {
-    document.querySelectorAll<HTMLElement>(".rw-opt-cand:not([disabled])").forEach((card) => {
+    document.querySelectorAll<HTMLElement>(".rw-opt-pick-card:not([disabled])").forEach((card) => {
       card.addEventListener("click", () => {
         const g = card.dataset.oguid;
         if (!g || optionalItems.some((i) => i.guid === g)) return;
@@ -1811,35 +1937,67 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       .map((it, idx) => {
         const km = kindMetaOf(it.kind);
         const bad = invalid.has(idx);
-        return `<div class="rw-opt-row${bad ? " rw-opt-invalid" : ""}"${bad ? ' title="无效条目：已在所选菜谱中重复注册，或为不应注册的自定义菜谱/中间产物（历史自动填充残留）"' : ""}>
-          <span class="rw-badge ${km.cls}">${km.label}</span>
-          <span class="rw-opt-name">${bad ? "⚠ " : ""}${escHtml(optionalDisplayName(it))}</span>
-          <span class="muted rw-opt-id">${escHtml(it.id)}${it.group ? ` · ${escHtml(foodGroupLabel(it.group as never) || it.group)}` : ""}</span>
-          <button type="button" class="rw-opt-del" data-odel="${idx}" title="删除该条目">✕</button>
+        const icon = optItemIconSrc(it);
+        const groupLabel = it.group ? foodGroupLabel(it.group as never) || it.group : "";
+        return `<div class="rw-opt-item${bad ? " rw-opt-invalid" : ""}"${bad ? ' title="无效条目：已在所选菜谱中重复注册，或为不应注册的自定义菜谱/中间产物（历史自动填充残留）"' : ""}>
+          <img class="rw-opt-item-icon" loading="lazy" src="${escHtml(icon)}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">
+          <div class="rw-opt-item-body">
+            <div class="rw-opt-item-head">
+              <span class="rw-badge ${km.cls}">${km.label}</span>
+              <span class="rw-opt-item-name">${bad ? "⚠ " : ""}${escHtml(optionalDisplayName(it))}</span>
+            </div>
+            <div class="rw-opt-item-meta muted">${escHtml(it.id)}${groupLabel ? ` · ${escHtml(groupLabel)}` : ""}</div>
+          </div>
+          <button type="button" class="rw-opt-del" data-odel="${idx}" title="删除该条目" aria-label="删除">✕</button>
         </div>`;
       })
       .join("");
-    return `<p class="modal-hint">optionalRecipeMatchListItems：注册进关卡匹配表的额外节点（DLC 原始菜谱、Hotdog 可选部件/酱料/煮肠、自选披萨部件、<b>本关汉堡夹心 BurgerOptional</b>…）。<b>保存菜谱时汉堡条目自动同步</b>（BurgerOptional + 中间产物，替换旧组装定义；披萨/Hotdog/手动条目保持不动），其余增删在此手动配置后单独写回。「按已选汉堡一键填充」同源：生成/更新 <code>data/{关卡}/BurgerOptional.asset</code>（夹心取所选汉堡<b>全集</b>：各食材取最大重复层数，面包对齐关卡主面包），并替换列表中的旧组装定义；也可手动把<b>成品汉堡菜谱</b>加入 optional。纯面包汉堡自动跳过；一关内请统一面包——多种面包时仅主面包可自定义叠层。</p>
+    return `<details class="rw-opt-intro">
+        <summary>什么是 Optional 参数？</summary>
+        <p class="modal-hint">注册进关卡匹配表的额外节点：DLC 原始菜谱、Hotdog 可选部件/酱料、自选披萨部件、<b>本关汉堡夹心 BurgerOptional</b>、<b>本关自定义成品菜</b> 等。保存菜谱时汉堡条目会自动同步；其余在此手动配置后单独「写回 Optional」。</p>
+      </details>
       ${selectedHasBurger() && !optionalHasAssembly()
-        ? '<div class="rw-warn">⚠ 已选汉堡，但 optional 未注册组装定义——运行时无法叠层，请使用「按已选汉堡一键填充」后写回。</div>'
+        ? '<div class="rw-warn">⚠ 已选汉堡，但 optional 未注册组装定义——运行时无法叠层，请使用「汉堡夹心」快捷填充后写回。</div>'
         : ""}
       ${choppedBunAssemblyConflict()
-        ? '<div class="rw-warn">⚠ 检测到多个 ChoppedBun 组装定义——运行时仅第一个生效，请重新「按已选汉堡一键填充」或移除多余 assembly。</div>'
+        ? '<div class="rw-warn">⚠ 检测到多个 ChoppedBun 组装定义——运行时仅第一个生效，请重新「汉堡夹心」填充或移除多余 assembly。</div>'
         : ""}
       ${presets ? "" : '<div class="rw-warn">⚠ 一键填充候选加载失败或旧桥不支持——已保存条目仍可查看/删除/写回。</div>'}
       ${invalid.size
-        ? `<div class="rw-warn">⚠ 检测到 <b>${invalid.size}</b> 条无效 optional（黄色行）：已在所选菜谱中重复注册，或为不应注册的自定义菜谱/中间产物——多为历史自动填充残留，会污染运行时匹配表导致出单/装盘异常。建议「🧹 清理无效条目」后写回。</div>`
+        ? `<div class="rw-warn">⚠ 检测到 <b>${invalid.size}</b> 条无效 optional：已在所选菜谱中重复注册，或为不应注册的中间产物。建议清理后写回。</div>`
         : ""}
-      <div class="rw-toolbar">
-        ${invalid.size ? `<button type="button" class="modal-btn" id="rw-opt-clear-invalid">🧹 清理无效条目（${invalid.size}）</button>` : ""}
-        <button type="button" class="modal-btn" id="rw-opt-fill-burger-sel">🍔 按已选汉堡一键填充</button>
-        <button type="button" class="modal-btn" id="rw-opt-clear-legacy-burger">清除遗留汉堡组装</button>
-        <button type="button" class="modal-btn" id="rw-opt-fill-pizza">🍕 按已选披萨一键填充</button>
-        <button type="button" class="modal-btn" id="rw-opt-fill-hotdog">🌭 Hotdog 一键填充</button>
-        <button type="button" class="modal-btn" id="rw-opt-toggle-picker">${optPickerOpen ? "收起添加面板" : "＋ 添加条目"}</button>
+      <div class="rw-opt-section">
+        <div class="rw-opt-section-title">快捷填充</div>
+        <div class="rw-opt-quick-grid">
+          <button type="button" class="rw-opt-quick-btn" id="rw-opt-fill-burger-sel" title="生成 BurgerOptional.asset，夹心取所选汉堡全集">
+            <span class="rw-opt-quick-icon">🍔</span>
+            <span class="rw-opt-quick-text"><b>汉堡夹心</b><span class="muted small">按已选汉堡</span></span>
+          </button>
+          <button type="button" class="rw-opt-quick-btn" id="rw-opt-fill-pizza" title="生成本关自选披萨浇头白名单">
+            <span class="rw-opt-quick-icon">🍕</span>
+            <span class="rw-opt-quick-text"><b>自选披萨</b><span class="muted small">按已选披萨</span></span>
+          </button>
+          <button type="button" class="rw-opt-quick-btn" id="rw-opt-fill-hotdog" title="加入 Hotdog 可选部件/酱料/煮肠">
+            <span class="rw-opt-quick-icon">🌭</span>
+            <span class="rw-opt-quick-text"><b>Hotdog</b><span class="muted small">dlc08 / dlc11</span></span>
+          </button>
+          <button type="button" class="rw-opt-quick-btn rw-opt-quick-muted" id="rw-opt-clear-legacy-burger" title="移除遗留 _filler / BurgerAssembly">
+            <span class="rw-opt-quick-icon">🧹</span>
+            <span class="rw-opt-quick-text"><b>清除遗留组装</b><span class="muted small">汉堡历史残留</span></span>
+          </button>
+        </div>
       </div>
-      ${optPickerOpen ? optPickerHtml() : ""}
-      <div class="rw-rows rw-opt-list">${rows || '<p class="muted">暂无条目。DLC 原始菜谱/热狗酱料等不再自动注册——需要时用上方按钮或添加面板配置。</p>'}</div>`;
+      <div class="rw-opt-section">
+        <div class="rw-opt-section-head">
+          <div class="rw-opt-section-title">已注册条目 <span class="rw-opt-count">${optionalItems.length}</span></div>
+          <div class="rw-opt-section-actions">
+            ${invalid.size ? `<button type="button" class="modal-btn small" id="rw-opt-clear-invalid">清理无效（${invalid.size}）</button>` : ""}
+            <button type="button" class="modal-btn small primary" id="rw-opt-toggle-picker">${optPickerOpen ? "收起" : "＋ 添加条目"}</button>
+          </div>
+        </div>
+        ${optPickerOpen ? optPickerHtml() : ""}
+        <div class="rw-opt-list">${rows || '<p class="rw-opt-empty muted">暂无条目。使用上方快捷填充，或点击「添加条目」从候选中选择（含本关自定义成品菜）。</p>'}</div>
+      </div>`;
   };
 
   const wireOptional = () => {
@@ -1856,10 +2014,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       optPickerOpen = !optPickerOpen;
       render();
     });
-    document.querySelectorAll<HTMLElement>("[data-ofilter]").forEach((chip) => {
+    document.querySelectorAll<HTMLElement>(".rw-opt-picker [data-ofilter]").forEach((chip) => {
       chip.addEventListener("click", () => {
         optFilter = chip.dataset.ofilter ?? "all";
-        document.querySelectorAll<HTMLElement>("[data-ofilter]").forEach((c) => c.classList.toggle("active", c === chip));
+        document.querySelectorAll<HTMLElement>(".rw-opt-picker [data-ofilter]").forEach((c) => c.classList.toggle("active", c === chip));
         refreshOptPickerList();
       });
     });

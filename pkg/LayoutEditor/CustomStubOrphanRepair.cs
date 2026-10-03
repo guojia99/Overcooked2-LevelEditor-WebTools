@@ -19,7 +19,8 @@ using UnityEngine;
 /// 本工具按【组件自身字段签名】分类处置（不按 guid——同一孤儿 guid 下存在
 /// 带字段/无字段两种变体）：
 ///  - 已识别类型 + 宿主是合法载体（TimedCookingSwitch 仅灶台：源 prefab 路径含
-///    cooking_region/floorburner）→ guid 替换为该集当前 stub guid（复活并保留配置）；
+///    cooking_region/floorburner）→ guid 替换为统一运行时当前 guid（复活并保留配置，
+///    v2.0 起复活源 = Assets/WebCustomStubRuntime，与关卡集无关）；
 ///  - 已识别类型但宿主非载体（批量误挂僵尸）、无字段空脚本 → 删除组件块
 ///   （连带清理无引用的 stripped GameObject 块 / 普通 GameObject 的 m_Component 条目）；
 ///  - 带真实配置的未知签名（如旧 LayoutRuntimeSwitchLink：m_targetRoots+m_trigger）
@@ -28,10 +29,28 @@ using UnityEngine;
 /// 实际清理用 LayoutEditorSceneRepair.RemoveBrokenPrefabInstances（需打开场景）。
 /// 安全：打开中的目标场景先保存、修复后从磁盘重开；写入前备份到
 /// writeback_history/orphan_repair/；先扫描出报告，确认后才执行。
+///
+/// 导出自动清理（CleanScenesAuto）：同一套扫描/分类/执行内核的无弹窗版，经
+/// LayoutEditorSetExporter.OrphanCleanHook 钩子在导出 prepare 前对本次待导出场景
+/// 自动执行安全策略（删僵尸/空组件、复活合法载体；未知签名与缺失 prefab 实例只
+/// 报告不阻断导出）；备份与报告照落 writeback_history/orphan_repair/&lt;时间戳&gt;/。
+/// 绝不做全局 AssetDatabase.Refresh（导出构建前 Refresh 可能触发脚本重编译导致
+/// BuildAssetBundles 被取消），只对改写的场景逐资产 ImportAsset。
 /// </summary>
+[InitializeOnLoad]
 public static class CustomStubOrphanRepair
 {
     private const string BackupRoot = "writeback_history/orphan_repair";
+
+    /// <summary>统一运行时根目录（复活替换的 guid 来源，v2.0 起与关卡集无关）。</summary>
+    private const string RuntimeRoot = "Assets/WebCustomStubRuntime";
+
+    static CustomStubOrphanRepair()
+    {
+        // 导出 prepare 前自动清理（安全策略）——经 SetExporter.OrphanCleanHook 解耦
+        // 接入，删除本文件后导出行为不变（钩子无订阅者）。
+        LayoutEditorSetExporter.OrphanCleanHook += CleanScenesAuto;
+    }
 
     // 已识别签名 → CustomStub 类型（字段名集合精确匹配）
     private static readonly string[] TimedSwitchFields = { "m_enabled", "m_onSeconds", "m_offSeconds", "m_startOn" };
@@ -126,6 +145,103 @@ public static class CustomStubOrphanRepair
         {
             LayoutEditorLog.LogWarning("[LayoutEditor/CustomStub] 孤儿修复 执行异常: " + ex);
             EditorUtility.DisplayDialog("孤儿脚本引用修复", "执行异常（详见日志）:\n" + ex.Message, "知道了");
+        }
+    }
+
+    // ============================== 导出自动清理（无弹窗） ==============================
+
+    /// <summary>导出前自动清理（LayoutEditorSetExporter.OrphanCleanHook 调用，本次
+    /// 待导出场景列表）。安全策略与手动工具一致：删僵尸/空组件、复活合法载体（guid →
+    /// 统一运行时）；未知签名与缺失 prefab 实例只写报告、绝不阻断导出。备份与报告落
+    /// writeback_history/orphan_repair/&lt;时间戳&gt;/。返回汇总文案（null=没有发现）。</summary>
+    private static string CleanScenesAuto(List<string> scenePaths)
+    {
+        if (scenePaths == null || scenePaths.Count == 0)
+            return null;
+        SaveDirtyOpenTargets(scenePaths);
+        var guidIndex = BuildGuidIndex();
+        var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var report = new StringBuilder();
+        var summary = new StringBuilder();
+        var touched = 0;
+        var edited = 0;
+        var totalRemove = 0;
+        var totalRevive = 0;
+        var totalReportOnly = 0;
+        var totalMissingPrefab = 0;
+        foreach (var scenePath in scenePaths)
+        {
+            if (string.IsNullOrEmpty(scenePath) || !File.Exists(scenePath))
+                continue;
+            ScenePlan plan;
+            try
+            {
+                plan = ScanScene(scenePath, guidIndex);
+            }
+            catch (Exception ex)
+            {
+                summary.AppendLine("  " + scenePath + "：扫描异常（跳过，不影响导出）" + ex.Message);
+                continue;
+            }
+            if (plan == null || !plan.HasWork)
+                continue;
+            touched++;
+            totalRemove += plan.CountOf(0);
+            totalRevive += plan.CountOf(1);
+            totalReportOnly += plan.CountOf(2);
+            totalMissingPrefab += plan.MissingPrefabInstances;
+            summary.AppendLine("  " + plan.Path + "：删除 " + plan.CountOf(0) + " / 复活 " + plan.CountOf(1)
+                + " / 仅报告 " + plan.CountOf(2)
+                + (plan.MissingPrefabInstances > 0 ? " / 缺失 prefab 实例 " + plan.MissingPrefabInstances + " 处" : ""));
+            if (plan.CountOf(0) + plan.CountOf(1) > 0)
+            {
+                ExecuteScene(plan, guidIndex, stamp, report);
+                edited++;
+                // 只对改写的场景逐资产重导入（绝不做全局 Refresh——导出构建前 Refresh
+                // 可能触发脚本重编译导致 BuildAssetBundles 被取消）
+                AssetDatabase.ImportAsset(plan.Path, ImportAssetOptions.ForceUpdate);
+            }
+            else
+            {
+                // 全是仅报告项：明细补进报告（ExecuteScene 不会跑）
+                foreach (var o in plan.Orphans)
+                    report.AppendLine("仅报告 " + o.Kind + " guid=" + o.ScriptGuid
+                        + " @ " + (o.HostPath ?? "(场景对象)"));
+            }
+            if (plan.MissingPrefabInstances > 0)
+                report.AppendLine("缺失 prefab 实例 " + plan.MissingPrefabInstances
+                    + " 处（需手动处理：LayoutEditorSceneRepair.RemoveBrokenPrefabInstances）");
+        }
+        if (touched == 0)
+            return null;
+        var head = "共 " + touched + " 个场景存在孤儿引用：删除 " + totalRemove + " / 复活 " + totalRevive
+            + " / 仅报告 " + totalReportOnly + " / 缺失 prefab 实例 " + totalMissingPrefab
+            + " 处；已改写 " + edited + " 个场景（备份+明细 " + BackupRoot + "/" + stamp + "/report.txt）";
+        var full = head + "\n" + summary.ToString().TrimEnd();
+        try
+        {
+            var path = BackupRoot + "/" + stamp + "/report.txt";
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllText(path, full + "\n\n==== 执行明细 ====\n" + report);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor/CustomStub] 孤儿清理报告落盘失败: " + ex.Message);
+        }
+        if (totalReportOnly > 0 || totalMissingPrefab > 0)
+            Debug.LogWarning("[LayoutEditor/CustomStub] 导出前孤儿清理（含只报告项，详见报告）:\n" + full);
+        return full;
+    }
+
+    /// <summary>清单内已打开且脏的目标场景先保存（文本改写与内存副本不打架）。</summary>
+    private static void SaveDirtyOpenTargets(List<string> targets)
+    {
+        for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+        {
+            var s = EditorSceneManager.GetSceneAt(i);
+            if (!s.IsValid() || !s.isDirty || !targets.Contains(s.path))
+                continue;
+            EditorSceneManager.SaveScene(s);
         }
     }
 
@@ -360,7 +476,8 @@ public static class CustomStubOrphanRepair
         return true;
     }
 
-    /// <summary>处置决策：合法载体→复活（换当前 guid）；僵尸/空脚本→删除；未知→仅报告。</summary>
+    /// <summary>处置决策：合法载体→复活（换统一运行时当前 guid）；僵尸/空脚本→删除；
+    /// 未知→仅报告。</summary>
     private static void DecideAction(Orphan orphan, string scenePath)
     {
         orphan.Action = 2; // 默认仅报告（未知类型绝不自动动）
@@ -368,7 +485,7 @@ public static class CustomStubOrphanRepair
         {
             if (IsBurnerCarrier(orphan.HostPath))
             {
-                var newGuid = LoadStubScriptGuid(scenePath, "Switch/TimedCookingSwitch.cs");
+                var newGuid = LoadRuntimeScriptGuid("Switch/TimedCookingSwitch.cs");
                 if (newGuid != null)
                 {
                     orphan.Action = 1;
@@ -383,7 +500,7 @@ public static class CustomStubOrphanRepair
         {
             if (IsCarrier(orphan.HostPath, TravelatorPathHints))
             {
-                var newGuid = LoadStubScriptGuid(scenePath, "Travelator/TravelatorReverser.cs");
+                var newGuid = LoadRuntimeScriptGuid("Travelator/TravelatorReverser.cs");
                 if (newGuid != null)
                 {
                     orphan.Action = 1;
@@ -417,15 +534,11 @@ public static class CustomStubOrphanRepair
         return false;
     }
 
-    /// <summary>读场景所属关卡集 stub 里某脚本的当前 guid（复活替换目标）。</summary>
-    private static string LoadStubScriptGuid(string scenePath, string stubRelative)
+    /// <summary>读统一运行时某脚本的当前 guid（复活替换目标；v2.0 后不再有每集
+    /// stub 目录，一律指向 Assets/WebCustomStubRuntime，与关卡集无关）。</summary>
+    private static string LoadRuntimeScriptGuid(string relPath)
     {
-        // scenePath = Assets/LevelSets/<set>/scenes/xxx.unity
-        var parts = scenePath.Split('/');
-        if (parts.Length < 3)
-            return null;
-        var setRoot = parts[0] + "/" + parts[1] + "/" + parts[2];
-        var meta = setRoot + "/stub/" + stubRelative + ".meta";
+        var meta = RuntimeRoot + "/" + relPath + ".meta";
         if (!File.Exists(meta))
             return null;
         var m = Regex.Match(File.ReadAllText(meta), @"^guid:\s*([0-9a-f]{32})", RegexOptions.Multiline);

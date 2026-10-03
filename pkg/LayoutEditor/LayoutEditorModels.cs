@@ -1342,7 +1342,7 @@ public class SetExportStatusDto
     /** idle | running | done | error */
     public string status;
     public string setName;
-    /** queued | prepare | clean | build | package | zip | done */
+    /** queued | compile(统一运行时自动编译中，域重载后自动续跑) | prepare | clean | build | package | zip | done */
     public string phase;
     public string message;
     public string error;

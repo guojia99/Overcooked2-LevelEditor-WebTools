@@ -370,6 +370,7 @@ function confirmDeleteSet(app: HTMLElement, s: LevelSetInfo): void {
 /** 导出各阶段的提示（后端 message 已足够描述时优先用后端的）。 */
 const EXPORT_PHASE_HINT: Record<string, string> = {
   queued: "任务已排队…",
+  compile: "统一运行时源码已更新，自动编译中（完成后自动继续导出）…",
   prepare: "准备场景（逐个保存并清除临时物体）…",
   clean: "清理旧构建产物…",
   build: "构建 AssetBundle，约需 3-5 分钟，请保持 Unity 打开…",
@@ -643,21 +644,8 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
   const zipnameEl = document.getElementById("exp-deps-zipname");
   const versionHintEl = document.getElementById("exp-deps-version-hint");
 
-  // 硬门控：DLL 非 fresh 禁用导出按钮（后端 StageRuntime 也会硬拦，这里提前拦住更友好）。
-  let lastDllState = "";
-  const setGate = (state: string): void => {
-    lastDllState = state;
-    if (!okBtn) return;
-    if (state === "fresh") {
-      okBtn.disabled = false;
-      okBtn.removeAttribute("title");
-    } else {
-      okBtn.disabled = true;
-      okBtn.title =
-        state === "error" ? "无法查询运行时状态（CustomStub 工具不可用）" : "先编译 Runtime DLL（见下方按钮）";
-    }
-  };
-  wireExportStubTools(anchorSet, (state) => setGate(state));
+  // 状态仅展示：DLL 非 fresh 时后端导出闸口会自动编译并续跑（无需手动点「编译」）。
+  wireExportStubTools(anchorSet);
 
   // zip 文件名实时预览（日期戳与后端 yyyyMMdd 一致）。
   const now = new Date();
@@ -694,16 +682,14 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     const norm = normalizeDepsVersionInput(versionInput?.value ?? "");
     if (!norm) {
       setStatus("请输入依赖包打包版本（如 v1.0.0）。", false);
-      setGate(lastDllState || "fresh");
+      if (okBtn) okBtn.disabled = false;
       return;
     }
     const startAt = Date.now();
     suspendBridgeWatch();
     showBusy("正在导出依赖包…");
     try {
-      // 兜底复查新鲜度（防竞态；后端 StageRuntime 仍会硬拦并报错）。
-      const st = await api.fetchSetStubStatus(anchorSet);
-      if (st.dllState !== "fresh") throw new Error("统一运行时 DLL 未就绪（请先点「编译 Runtime DLL」）。");
+      // DLL 新鲜度交给后端导出闸口：非 fresh 自动编译并续跑（无需手动点「编译」）。
       await api.startSetExport([anchorSet], "deps", norm);
       closeModal();
       const deadline = Date.now() + 15 * 60 * 1000;
@@ -734,7 +720,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
       }
     } catch (e) {
       setStatus((e as Error).message, false);
-      setGate(lastDllState || "fresh"); // 按门控状态恢复按钮（弹窗此时可能仍打开）
+      if (okBtn) okBtn.disabled = false; // 允许重试（弹窗此时可能仍打开）
     } finally {
       resumeBridgeWatch();
       hideBusy();
@@ -743,11 +729,11 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
 }
 
 /** 导出弹窗内的 CustomStub 统一运行时工具（仅「编译 Runtime DLL」）。
- *  统一单程序集重构后不再有「拷贝到关卡集/同步」（每集副本链已废除），
+ *  统一单程序集重构后不再有「拷贝到关卡集/同步更新」（每集副本链已废除），
  *  只需编译打包唯一的 WebCustomStubRuntime。写盘会触发 Unity 重编译与域重载
  *  （HTTP 连接重置属预期），故先容忍断连、再轮询 health 恢复、等 DLL 新鲜。
- *  onStateChange（可选）：dllState 变化时回调（"fresh"|"stale"|"missing"|
- *  "noStub"|"error"），依赖包弹窗用它在 DLL 未就绪时禁用导出按钮（硬门控）。 */
+ *  onStateChange（可选）：dllState 变化回调（"fresh"|"stale"|"missing"|
+ *  "noStub"|"error"）——仅作状态展示；DLL 新鲜度由导出闸口自动处理。 */
 function wireExportStubTools(setName: string, onStateChange?: (dllState: string) => void): void {
   const statusEl = document.getElementById("exp-stub-status");
   const compileBtn = document.getElementById("exp-stub-compile") as HTMLButtonElement | null;
@@ -762,8 +748,8 @@ function wireExportStubTools(setName: string, onStateChange?: (dllState: string)
       const st = await api.fetchSetStubStatus(setName);
       statusEl.textContent =
         st.dllState === "fresh" ? `统一运行时 ${st.asmName} 已就绪（DLL fresh）`
-        : st.dllState === "stale" ? "统一运行时 DLL 过期（母本已修改，点「编译 Runtime DLL」）"
-        : st.dllState === "missing" ? "统一运行时 DLL 未编译（点「编译 Runtime DLL」）"
+        : st.dllState === "stale" ? "统一运行时 DLL 过期（导出时将自动编译）"
+        : st.dllState === "missing" ? "统一运行时 DLL 未编译（导出时将自动编译）"
         : "统一运行时状态未知";
       if (onStateChange) onStateChange(st.dllState);
     } catch (e) {
