@@ -44,6 +44,20 @@ layout-editor/web/
 cd layout-editor/web && npm run build
 ```
 
+### MCP 同步要求
+
+新增或修改任何可被 AI 使用的关卡编辑器能力时，必须同步维护 `../mcp/`：
+
+- 更新 `mcp/src/server.ts` 的工具定义和处理逻辑；
+- 更新 `mcp/tool-manifest.json` 与对应 JSON Schema；
+- 在 `../docs/mcp/` 增加接口、调用、等待时间、重试和副作用说明；
+- 写操作必须说明验证、确认、写回后读回和失败恢复流程；
+- 长任务必须返回任务状态、轮询间隔、最大等待时间和断线恢复方式；
+- 修改 `src/api.ts`、`src/types.ts` 或后端路由时，检查 MCP 工具是否仍与实际接口一致。
+
+MCP 本地调试默认通过 `http://10.211.55.3:8765` 访问 Unity Bridge；可用
+`OC2_EDITOR_BRIDGE_URL` 覆盖 MCP 地址、`VITE_DEV_PROXY_TARGET` 覆盖 Vite 代理地址。
+
 ### 正确的修改流程
 
 | 改什么 | 改哪里 | 是否需要构建 |

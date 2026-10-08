@@ -40,7 +40,8 @@ import {
 import { updatePanelTabButtons } from "./panels";
 import {
   openModal,
-  closeModal
+  closeModal,
+  closeAllModals
 } from "../modals";
 import {
   cancelBtnHtml,
@@ -58,13 +59,18 @@ import {
   fetchFloorMaterials,
   fetchWriteBackHistoryDoc,
   setKillPlaneBounds,
-  fetchHealth
+  fetchHealth,
+  fetchSets,
+  fetchLevels,
+  imageFloorUrl
 } from "../api";
 import { layoutPath } from "../route";
 import type {
   LayoutDocument,
   LayoutItem,
-  FloorObject
+  FloorObject,
+  LevelSetInfo,
+  LevelSummary
 } from "../types";
 import { airSlopeEndY } from "./items";
 
@@ -547,34 +553,127 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
   }
 }
 
-export function openSyncLayoutDialog(): void {
+/** 同步布局弹窗的关卡列表缓存（会话级：切回已看过的关卡集不重复请求）。 */
+const syncDialogLevelsCache = new Map<string, LevelSummary[]>();
+
+export async function openSyncLayoutDialog(): Promise<void> {
   if (!S.scenePath) {
     setStatus("请先选择场景", false);
     return;
   }
-  const others = S.sceneListCache.filter((s) => s.assetPath !== S.scenePath);
-  if (!others.length) {
+  showBusy("读取关卡集列表…");
+  let sets: LevelSetInfo[] = [];
+  try {
+    sets = await fetchSets();
+  } catch (e) {
+    setStatus((e as Error).message, false);
+    return;
+  } finally {
+    hideBusy();
+  }
+  if (!sets.length) {
     setStatus("没有其他可同步的场景", false);
     return;
   }
-  const opts = others
-    .map(
-      (s) =>
-        `<option value="${escHtml(s.assetPath)}">${escHtml(s.levelSet)} / ${escHtml(s.sceneName)}</option>`
-    )
+  const currentSet = levelSetFromScenePath(S.scenePath);
+  const defaultSet = sets.some((s) => s.setName === currentSet) ? currentSet : sets[0].setName;
+  const setOpts = sets
+    .map((s) => {
+      const label = s.levelSetNameZH || s.levelSetName || s.setName;
+      return `<option value="${escHtml(s.setName)}"${s.setName === defaultSet ? " selected" : ""}>${escHtml(label)} [${escHtml(s.setName)}]</option>`;
+    })
     .join("");
   openModal(
     "同步其他关卡的布局",
-    `<label class="m-field">来源关卡<select id="sync-src">${opts}</select></label>
-     <p class="modal-hint" style="color:#f28b82">将把来源关卡的<b>道具、地板与背景</b>复制到当前图，<b>覆盖当前图的全部内容</b>。仅修改前端数据（写回 Unity 后才落盘），可用 Ctrl+Z 撤回一次。</p>`,
-    `${cancelBtnHtml()}${modalBtnHtml("覆盖并同步", "modal-btn danger", { "data-ok": "" })}`
+    `<label class="m-field">来源关卡集<select id="sync-set">${setOpts}</select></label>
+     <div class="modal-scroll sync-level-scroll"><div class="sync-level-grid" id="sync-level-grid"><p class="muted">加载关卡中…</p></div></div>
+     <p class="modal-hint" style="color:#f28b82">将把所选关卡的<b>道具、地板与背景</b>复制到当前图，<b>覆盖当前图的全部内容</b>。仅修改前端数据（写回 Unity 后才落盘），可用 Ctrl+Z 撤回一次。</p>`,
+    `${cancelBtnHtml()}${modalBtnHtml("覆盖并同步", "modal-btn danger", { "data-ok": "" })}`,
+    { panelClass: "wide sync-layout", closeOnBackdrop: false }
   );
+  const okBtn = document.querySelector<HTMLButtonElement>("[data-ok]");
+  let selectedPath = "";
+  const updateOk = (): void => {
+    if (okBtn) okBtn.disabled = !selectedPath;
+  };
+  updateOk();
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
-  document.querySelector("[data-ok]")?.addEventListener("click", () => {
-    const sel = document.getElementById("sync-src") as HTMLSelectElement;
-    closeModal();
-    void syncLayoutFromScene(sel.value);
+  okBtn?.addEventListener("click", () => {
+    if (!selectedPath) return;
+    // 确认执行：关全部（含可能压栈的「工具与历史」父弹窗），别挡住画布看同步结果。
+    closeAllModals();
+    void syncLayoutFromScene(selectedPath);
   });
+  const grid = document.getElementById("sync-level-grid")!;
+  const renderGrid = (levels: LevelSummary[]): void => {
+    selectedPath = "";
+    updateOk();
+    if (!levels.length) {
+      grid.innerHTML = '<p class="muted">该关卡集暂无关卡</p>';
+      return;
+    }
+    grid.innerHTML = levels
+      .map((lv, idx) => {
+        const id = lv.dataDir.split("/").pop() || `level${idx}`;
+        const title = lv.levelNameZH || lv.levelName || id;
+        const enName = lv.levelNameZH && lv.levelName ? lv.levelName : "";
+        const shot = lv.screenshotPath ? imageFloorUrl(lv.screenshotPath) : "";
+        const isCurrent = lv.sceneAssetPath === S.scenePath;
+        const unusable = isCurrent || !lv.hasScene;
+        const badge = isCurrent
+          ? '<span class="m-badge">当前关卡</span>'
+          : lv.hasScene
+            ? '<span class="m-badge ok">场景</span>'
+            : '<span class="m-badge warn">缺场景</span>';
+        return `
+        <div class="m-card sync-level-item${unusable ? " disabled" : ""}" data-path="${escHtml(lv.sceneAssetPath)}"${unusable ? ' aria-disabled="true"' : ""}>
+          <div class="m-level-shot${shot ? "" : " empty"}">
+            ${shot ? `<img src="${escHtml(shot)}" alt="截图" loading="lazy">` : '<span class="muted">无截图</span>'}
+          </div>
+          <div class="sync-level-body">
+            <h3 title="${escHtml(title)}">${escHtml(title)}${enName ? ` <span class="muted">(${escHtml(enName)})</span>` : ""}</h3>
+            <div class="m-meta">
+              ${badge}
+              <span class="muted">第 ${idx + 1} 关 · ${escHtml(lv.sceneName)} · ${escHtml(id)}</span>
+            </div>
+          </div>
+        </div>`;
+      })
+      .join("");
+    grid.querySelectorAll<HTMLElement>(".sync-level-item").forEach((card) => {
+      if (card.classList.contains("disabled")) return;
+      card.addEventListener("click", () => {
+        grid.querySelectorAll(".sync-level-item.selected").forEach((c) => c.classList.remove("selected"));
+        card.classList.add("selected");
+        selectedPath = card.dataset.path ?? "";
+        updateOk();
+      });
+    });
+  };
+  const loadLevels = async (setName: string): Promise<void> => {
+    const cached = syncDialogLevelsCache.get(setName);
+    if (cached) {
+      renderGrid(cached);
+      return;
+    }
+    grid.innerHTML = '<p class="muted">加载关卡中…</p>';
+    try {
+      const levels = await fetchLevels(setName);
+      syncDialogLevelsCache.set(setName, levels);
+      // 弹窗可能已关闭（grid 随之离树）：晚到的响应直接丢弃。
+      if (!grid.isConnected) return;
+      renderGrid(levels);
+    } catch (e) {
+      if (!grid.isConnected) return;
+      selectedPath = "";
+      updateOk();
+      grid.innerHTML = `<p class="muted" style="color:#f28b82">读取失败：${escHtml((e as Error).message)}</p>`;
+    }
+  };
+  document.getElementById("sync-set")?.addEventListener("change", (ev) => {
+    void loadLevels((ev.target as HTMLSelectElement).value);
+  });
+  await loadLevels(defaultSet);
 }
 
 export async function syncLayoutFromScene(otherPath: string): Promise<void> {
@@ -675,6 +774,8 @@ export function startBridgeWatch() {
 }
 
 export function showBridgeStoppedModal() {
+  // 桥断开属于全局接管：清掉弹窗栈（含一切父子弹窗）后独占屏幕。
+  closeAllModals();
   openModal(
     "后台服务已停止",
     `<p>Layout Editor 的后台 Bridge 服务已断开。</p>

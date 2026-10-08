@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["taskId", "state", "pollAfterMs", "deadlineMs"],
+  "properties": {
+    "taskId": { "type": "string" },
+    "state": { "enum": ["queued", "running", "done", "error", "cancelled"] },
+    "phase": { "type": "string" },
+    "pollAfterMs": { "type": "integer", "minimum": 0 },
+    "deadlineMs": { "type": "integer", "minimum": 1 },
+    "message": { "type": "string" },
+    "fileName": { "type": "string" }
+  },
+  "additionalProperties": false
+}

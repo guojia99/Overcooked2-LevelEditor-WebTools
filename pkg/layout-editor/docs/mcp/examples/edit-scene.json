@@ -1,0 +1,12 @@
+{
+  "steps": [
+    { "tool": "oc2_editor_health", "arguments": {} },
+    { "tool": "oc2_list_level_sets", "arguments": {} },
+    { "tool": "oc2_list_levels", "arguments": { "setName": "tester_web" } },
+    { "tool": "oc2_create_scene_draft", "arguments": { "setName": "tester_web", "levelId": "level_1", "assetPath": "<sceneAssetPath from list_levels>" } },
+    { "tool": "oc2_apply_scene_patch", "arguments": { "draftId": "<draftId>", "operations": [{ "op": "move_item", "instanceId": "u:123", "position": { "x": 3.6, "y": 0, "z": 4.8 } }] } },
+    { "tool": "oc2_validate_scene_draft", "arguments": { "draftId": "<draftId>" } },
+    { "tool": "oc2_diff_scene_draft", "arguments": { "draftId": "<draftId>" } },
+    { "tool": "oc2_commit_scene_draft", "arguments": { "draftId": "<draftId>", "confirm": true } }
+  ]
+}

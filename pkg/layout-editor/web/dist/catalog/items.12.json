@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 12,
   "itemCount": 200,
   "items": [
@@ -54,8 +54,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.06500086933374405
+        "cellsZ": 1
       },
       "height": 0.065,
       "baseY": -0.025,
@@ -75,10 +74,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 5.329070200563396e-16
+        "cellsZ": 1
       },
-      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC5 man 孔 2",
       "nameEn": "dlc5 man hole 2",
@@ -278,9 +275,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.11048725247383118
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.11,
       "baseY": -0.094,
@@ -299,9 +295,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.11048738658428192
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.11,
       "baseY": -0.094,
@@ -320,9 +315,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.11048725247383118
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.11,
       "baseY": -0.094,
@@ -341,11 +335,9 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.329070200563396e-16
+        "cellsX": 1,
+        "cellsZ": 1
       },
-      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC5 pavement 1",
       "nameEn": "dlc5 pavement 1",
@@ -361,11 +353,9 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.329070200563396e-16
+        "cellsX": 1,
+        "cellsZ": 1
       },
-      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC5 pavement 2",
       "nameEn": "dlc5 pavement 2",
@@ -503,11 +493,9 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.329070200563396e-16
+        "cellsX": 1,
+        "cellsZ": 1
       },
-      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "carpet",
@@ -526,8 +514,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2
+        "cellsZ": 1
       },
       "height": 2,
       "layoutTier": "decor",
@@ -545,9 +532,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 2
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2,
       "layoutTier": "decor",
@@ -585,8 +571,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "layoutTier": "decor",
       "nameZh": "DLC5 路 1",
@@ -603,8 +589,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "layoutTier": "decor",
       "nameZh": "DLC5 路 centreline 1",
@@ -621,8 +607,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "layoutTier": "decor",
       "nameZh": "DLC5 路 white line 1",
@@ -639,8 +625,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "layoutTier": "decor",
       "nameZh": "DLC5 路黄 x 1",
@@ -1893,11 +1879,9 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 46,
-        "cellsZ": 27,
-        "sizeY": 7.291726007481599e-16
+        "cellsX": 1,
+        "cellsZ": 1
       },
-      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC5 投影 3",
       "nameEn": "dlc5 shadowcast 3",
@@ -2138,8 +2122,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2
+        "cellsZ": 1
       },
       "height": 2,
       "layoutTier": "decor",
@@ -2178,8 +2161,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.12295663356781
+        "cellsZ": 1
       },
       "height": 1.123,
       "baseY": -0.746,
@@ -2324,8 +2306,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.6024137735366821
+        "cellsZ": 1
       },
       "height": 0.602,
       "layoutTier": "decor",
@@ -2344,8 +2325,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 3.2487385272979736
+        "cellsZ": 1
       },
       "height": 3.249,
       "layoutTier": "decor",
@@ -2989,8 +2969,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.3988683223724365
+        "cellsZ": 1
       },
       "height": 0.399,
       "baseY": 1.316,
@@ -3010,8 +2989,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.33341729640960693
+        "cellsZ": 1
       },
       "height": 0.333,
       "baseY": 1.444,
@@ -3031,8 +3009,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.3280273675918579
+        "cellsZ": 1
       },
       "height": 0.328,
       "baseY": 1.11,
@@ -3052,8 +3029,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2
+        "cellsZ": 1
       },
       "height": 2,
       "layoutTier": "decor",
@@ -3072,8 +3048,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7925341129302979
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3092,8 +3067,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7925341129302979
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3112,8 +3086,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7925341129302979
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3132,8 +3105,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7925341129302979
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3152,8 +3124,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7925341129302979
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3172,8 +3143,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7925341129302979
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3192,7 +3162,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.7925341129302979
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3211,8 +3182,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7925341129302979
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3231,8 +3201,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.7925341129302979
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3251,8 +3220,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.20746588706970215
+        "cellsZ": 1
       },
       "height": 0.207,
       "baseY": 1.793,
@@ -3272,8 +3240,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.2232804298400879
+        "cellsZ": 1
       },
       "height": 0.223,
       "baseY": 1.793,
@@ -3292,9 +3259,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.79673433303833
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.797,
       "layoutTier": "decor",
@@ -3312,9 +3278,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 0.5489521026611328
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.549,
       "baseY": 1.184,
@@ -3333,8 +3298,9 @@
       "theme": "walls",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 0.5489521026611328
       },
       "height": 0.549,
       "baseY": 1.184,
@@ -3353,9 +3319,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.7982866764068604
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.798,
       "layoutTier": "decor",
@@ -3373,9 +3338,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.7967346906661987
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.797,
       "layoutTier": "decor",
@@ -3393,9 +3357,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.3230245113372803
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.323,
       "baseY": 0.469,
@@ -3414,9 +3377,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.7928516864776611
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.793,
       "layoutTier": "decor",
@@ -3434,9 +3396,8 @@
       "theme": "dlc11_summer",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.7967346906661987
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.797,
       "layoutTier": "decor",
@@ -3454,9 +3415,8 @@
       "theme": "dlc11_summer",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.79673433303833
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.797,
       "layoutTier": "decor",
@@ -3474,9 +3434,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 2
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2,
       "layoutTier": "decor",
@@ -3495,8 +3454,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2
+        "cellsZ": 1
       },
       "height": 2,
       "layoutTier": "decor",
@@ -3972,7 +3930,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6039287447929382
       },
       "height": 0.604,
       "layoutTier": "decor",

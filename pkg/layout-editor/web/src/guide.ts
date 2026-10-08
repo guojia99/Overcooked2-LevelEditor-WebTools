@@ -90,6 +90,7 @@ function renderPage(app: HTMLElement, ctx: GuideCtx, pageId: string, sectionId?:
       renderPage(app, ctx, next, section);
     },
   });
+  wireMcpDebugPanel(body);
 
   if (sectionId) {
     requestAnimationFrame(() => {
@@ -103,6 +104,38 @@ function renderPage(app: HTMLElement, ctx: GuideCtx, pageId: string, sectionId?:
     searchInput.dispatchEvent(new Event("input", { bubbles: true }));
     if (!sectionId) searchInput.focus();
   }
+}
+
+function wireMcpDebugPanel(root: HTMLElement): void {
+  const panel = root.querySelector<HTMLElement>("[data-mcp-debug]");
+  const output = panel?.querySelector<HTMLElement>("[data-mcp-output]");
+  if (!panel || !output) return;
+  panel.querySelectorAll<HTMLButtonElement>("[data-mcp-action]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const action = button.dataset.mcpAction;
+      if (!action) return;
+      panel.querySelectorAll<HTMLButtonElement>("button").forEach((item) => (item.disabled = true));
+      output.textContent = "请求中…";
+      try {
+        let response: Response;
+        if (action === "health") response = await fetch("/api/health");
+        else if (action === "manifest") response = await fetch("/api/mcp/manifest");
+        else response = await fetch("/api/mcp/tools");
+        const text = await response.text();
+        let value: unknown = text;
+        try {
+          value = JSON.parse(text);
+        } catch {
+          /* 保留原始响应，便于识别 HTML 或域重载断线。 */
+        }
+        output.textContent = `${response.status} ${response.statusText}\n${typeof value === "string" ? value : JSON.stringify(value, null, 2)}`;
+      } catch (error) {
+        output.textContent = `请求失败\n${error instanceof Error ? error.message : String(error)}`;
+      } finally {
+        panel.querySelectorAll<HTMLButtonElement>("button").forEach((item) => (item.disabled = false));
+      }
+    });
+  });
 }
 
 export async function renderGuideView(app: HTMLElement, initialPageId?: string): Promise<void> {

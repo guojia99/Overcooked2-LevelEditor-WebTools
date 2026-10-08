@@ -193,11 +193,35 @@ export interface LayoutCleanPlateStackStub {
   platePrefabGuid?: string;
 }
 
+/** 燃烧弹射器单波落点（世界坐标格心，1.2 的倍数）。 */
+export interface BurnerWavePosition {
+  x: number;
+  z: number;
+}
+
+/** 燃烧弹射器波次：intervalSeconds = 距上一波间隔（首波 = 距开局），默认 30s；
+ *  positions 允许跨波重叠、波内重复。 */
+export interface BurnerWave {
+  intervalSeconds?: number;
+  positions?: BurnerWavePosition[];
+}
+
 export interface LayoutBurnerStub {
   fireMode?: number;
   airTime?: number;
   randomTargetOrder?: boolean;
   hideVisual?: boolean;
+  /** 开局延迟（秒，默认 10）：开局 N 秒后发射第一波；后续波按各波间隔顺延。 */
+  startDelaySeconds?: number;
+  /** 波内发射方式：false/缺省 = 齐射（整波同刻）；true = 顺序逐发——波内落点按
+   *  阅读顺序（从上到下、从左到右）依次延迟 fireStaggerSeconds 发射。 */
+  sequentialFire?: boolean;
+  /** 顺序逐发的逐发间隔（秒，默认 0.35）：第 i 个落点在波时刻 + i×间隔发射。 */
+  fireStaggerSeconds?: number;
+  /** 波次化落点编排（独立弹窗编辑器维护；写回 flatten 进 stub.targetPositions，
+   *  时序由后端 BurnerScheduleBakery 烘焙 TriggerTimer）。有 waves 时顺序发射。
+   *  时间模型：第 0 波 t = startDelaySeconds；第 k 波 = 前一波 t + interval[k]。 */
+  waves?: BurnerWave[];
 }
 
 export interface LayoutRatHeistStub {

@@ -1,0 +1,41 @@
+{
+  "$schema": "./schemas/tool-manifest.schema.json",
+  "protocolVersion": "2025-06-18",
+  "server": {
+    "name": "oc2-level-editor",
+    "version": "0.1.0",
+    "transport": "stdio+http",
+    "httpEndpoint": "/api/mcp",
+    "httpManifestEndpoint": "/api/mcp/manifest",
+    "httpToolsEndpoint": "/api/mcp/tools",
+    "bridgeUrl": "http://10.211.55.3:8765",
+    "bridgeUrlEnvironment": "OC2_EDITOR_BRIDGE_URL"
+  },
+  "defaults": {
+    "pollAfterMs": 2000,
+    "readDeadlineMs": 30000,
+    "writeDeadlineMs": 120000,
+    "exportDeadlineMs": 1800000
+  },
+  "tools": [
+    { "name": "oc2_editor_health", "category": "discovery", "sideEffect": "read", "estimatedMs": 1000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_list_level_sets", "category": "discovery", "sideEffect": "read", "estimatedMs": 5000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_list_levels", "category": "discovery", "sideEffect": "read", "estimatedMs": 5000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_get_level_detail", "category": "level", "sideEffect": "read", "estimatedMs": 5000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_get_scene_layout", "category": "scene", "sideEffect": "read", "estimatedMs": 10000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_get_grid", "category": "scene", "sideEffect": "read", "estimatedMs": 2000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_get_level_recipe_context", "category": "recipes", "sideEffect": "read", "estimatedMs": 10000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_analyze_level_dependencies", "category": "dependencies", "sideEffect": "compute", "estimatedMs": 10000, "deadlineMs": 60000, "safeToRetry": true },
+    { "name": "oc2_validate_scene", "category": "scene", "sideEffect": "compute", "estimatedMs": 10000, "deadlineMs": 60000, "safeToRetry": true },
+    { "name": "oc2_create_scene_draft", "category": "draft", "sideEffect": "draft", "estimatedMs": 10000, "deadlineMs": 60000, "safeToRetry": false },
+    { "name": "oc2_apply_scene_patch", "category": "draft", "sideEffect": "draft", "estimatedMs": 1000, "deadlineMs": 30000, "safeToRetry": false },
+    { "name": "oc2_validate_scene_draft", "category": "draft", "sideEffect": "compute", "estimatedMs": 1000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_diff_scene_draft", "category": "draft", "sideEffect": "compute", "estimatedMs": 1000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_commit_scene_draft", "category": "scene", "sideEffect": "write_scene", "estimatedMs": 30000, "deadlineMs": 120000, "safeToRetry": false, "requiresConfirmation": true },
+    { "name": "oc2_list_writeback_history", "category": "history", "sideEffect": "read", "estimatedMs": 5000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_get_writeback_diff", "category": "history", "sideEffect": "read", "estimatedMs": 5000, "deadlineMs": 30000, "safeToRetry": true },
+    { "name": "oc2_commit_scene", "category": "scene", "sideEffect": "write_scene", "estimatedMs": 30000, "deadlineMs": 120000, "safeToRetry": false, "requiresConfirmation": true, "httpOnly": true },
+    { "name": "oc2_start_export", "category": "export", "sideEffect": "build", "estimatedMs": 300000, "deadlineMs": 1800000, "pollAfterMs": 2000, "safeToRetry": false, "requiresConfirmation": true },
+    { "name": "oc2_get_export_status", "category": "export", "sideEffect": "read", "estimatedMs": 1000, "deadlineMs": 30000, "safeToRetry": true }
+  ]
+}

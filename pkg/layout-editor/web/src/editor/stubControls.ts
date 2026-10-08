@@ -55,6 +55,7 @@ import {
 } from "./teleportalLinks";
 import { computeParamLabels } from "./renderItems";
 import { dispenserIngredientIds, functionalBaseId } from "./recipeKnowledge";
+import { openBurnerEditor } from "./burnerEditor";
 import {
   PORTAL_COLOR_NAMES,
   BURNER_FIRE_MODES
@@ -739,14 +740,18 @@ export function stubControlsHtml(item: EditorItem): string {
     }
     case "Burner": {
       const b = item.burner ?? {};
-      const modeOpts = BURNER_FIRE_MODES.map(
-        (n, i) => `<option value="${i}" ${(b.fireMode ?? 1) === i ? "selected" : ""}>${n}</option>`
-      ).join("");
-      return `<div class="ctx-stub"><div class="ctx-stub-title">火焰喷射器参数</div>
-        <label class="ctx-stub-row">开火模式 <select id="ctx-bn-mode" class="ctx-input">${modeOpts}</select></label>
-        <label class="ctx-stub-row">空中时间 <input type="number" id="ctx-bn-air" class="ctx-input" step="0.1" min="0" value="${b.airTime ?? 2}"/> 秒</label>
-        <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-rand" ${b.randomTargetOrder ? "checked" : ""}/> 随机目标顺序</label>
-        <label class="ctx-stub-row"><input type="checkbox" id="ctx-bn-hide" ${b.hideVisual ? "checked" : ""}/> 隐藏模型</label></div>`;
+      const waves = b.waves ?? [];
+      const total = waves.reduce((n, w) => n + (w?.positions?.length ?? 0), 0);
+      const delay = Math.max(0, b.startDelaySeconds ?? 10);
+      let t = delay;
+      for (let i = 1; i < waves.length; i++) t += Math.max(1, waves[i]?.intervalSeconds ?? 30);
+      const summary = waves.length
+        ? `开局 ${Math.round(delay)}s 后第 1 波 · ${waves.length} 波 · ${total} 落点 · 末波 t≈${Math.round(t)}s · ${b.sequentialFire ? `顺序逐发 ${(b.fireStaggerSeconds ?? 0.35).toFixed(2)}s` : "齐射"}`
+        : "尚未编排波次";
+      return `<div class="ctx-stub"><div class="ctx-stub-title">燃烧弹射器</div>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">${escHtml(summary)} · ${BURNER_FIRE_MODES[b.fireMode ?? 1]} · 空中时间 ${b.airTime ?? 2}s</div>
+        <button type="button" id="ctx-bn-open" class="ctx-btn ctx-btn-block">🔥 打开火焰落点编辑器…</button>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">开局延迟、落点、波次与间隔在独立编辑器中修改（写回后生效）</div></div>`;
     }
     case "RatHeist": {
       const r = item.ratHeist ?? {};
@@ -1322,33 +1327,17 @@ export function wireStubControls(item: EditorItem) {
       break;
     }
     case "Burner": {
-      const ensure = () => {
+      // 基础参数与波次落点统一在独立弹窗编辑器（burnerEditor）维护；
+      // 此处仅保留默认值兜底与入口按钮。
+      document.getElementById("ctx-bn-open")?.addEventListener("click", () => {
+        hideContextMenu();
         item.stubKind = "Burner";
         if (!item.burner) item.burner = {};
         if (item.burner.fireMode == null) item.burner.fireMode = 1;
         if (item.burner.airTime == null) item.burner.airTime = 2;
         if (item.burner.randomTargetOrder == null) item.burner.randomTargetOrder = false;
         if (item.burner.hideVisual == null) item.burner.hideVisual = false;
-        return item.burner;
-      };
-      num("ctx-bn-mode")?.addEventListener("change", (e) => {
-        pushHistory();
-        ensure().fireMode = parseInt((e.target as HTMLSelectElement).value, 10) || 0;
-      });
-      num("ctx-bn-air")?.addEventListener("change", (e) => {
-        const v = parseFloat((e.target as HTMLInputElement).value);
-        if (isFinite(v) && v >= 0) {
-          pushHistory();
-          ensure().airTime = v;
-        }
-      });
-      num("ctx-bn-rand")?.addEventListener("change", (e) => {
-        pushHistory();
-        ensure().randomTargetOrder = (e.target as HTMLInputElement).checked;
-      });
-      num("ctx-bn-hide")?.addEventListener("change", (e) => {
-        pushHistory();
-        ensure().hideVisual = (e.target as HTMLInputElement).checked;
+        void openBurnerEditor(item);
       });
       break;
     }

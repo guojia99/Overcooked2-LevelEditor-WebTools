@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 6,
   "itemCount": 200,
   "items": [
@@ -630,7 +630,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -649,7 +650,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -668,7 +670,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -687,7 +690,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -706,7 +710,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -725,7 +730,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
       "height": 0.885,
       "layoutTier": "decor",
@@ -744,7 +750,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
       "height": 0.885,
       "layoutTier": "decor",
@@ -763,7 +770,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
       "height": 0.894,
       "layoutTier": "decor",
@@ -782,7 +790,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
       "height": 0.894,
       "layoutTier": "decor",
@@ -801,7 +810,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
       "height": 0.894,
       "layoutTier": "decor",
@@ -820,7 +830,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -839,7 +850,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -858,7 +870,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -877,7 +890,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -896,7 +910,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -915,7 +930,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
       "height": 0.89,
       "layoutTier": "decor",
@@ -934,7 +950,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
       "height": 0.89,
       "layoutTier": "decor",
@@ -953,7 +970,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
       "height": 0.89,
       "layoutTier": "decor",
@@ -972,7 +990,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
       "height": 0.878,
       "layoutTier": "decor",
@@ -991,7 +1010,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
       "height": 0.878,
       "layoutTier": "decor",
@@ -1010,7 +1030,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
       "height": 0.884,
       "baseY": -0.008,
@@ -1030,7 +1051,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
       "height": 0.884,
       "baseY": -0.008,
@@ -1050,7 +1072,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8841999769210815
       },
       "height": 0.884,
       "baseY": -0.008,
@@ -1175,7 +1198,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8784826397895813
       },
       "height": 0.878,
       "layoutTier": "decor",
@@ -1194,7 +1218,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8822891116142273
       },
       "height": 0.882,
       "layoutTier": "decor",
@@ -1213,7 +1238,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
       "height": 0.878,
       "layoutTier": "decor",
@@ -1232,7 +1258,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8930965065956116
       },
       "height": 0.893,
       "baseY": -0.015,
@@ -1252,7 +1279,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777384757995605
       },
       "height": 0.878,
       "layoutTier": "decor",
@@ -1271,7 +1299,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5904192924499512
       },
       "height": 1.59,
       "layoutTier": "decor",
@@ -1510,8 +1539,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 2,
+        "sizeY": 9.784927368164062
       },
       "height": 9.785,
       "baseY": -0.49,
@@ -1530,8 +1560,9 @@
       "theme": "courtyard",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 2,
+        "sizeY": 9.784927368164062
       },
       "height": 9.785,
       "baseY": -0.49,
@@ -2285,8 +2316,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.6905920505523682
       },
       "height": 0.691,
       "baseY": -0.324,
@@ -2305,8 +2337,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 5,
+        "sizeY": 1.1351319551467896
       },
       "height": 1.135,
       "baseY": -0.417,
@@ -2325,8 +2358,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 0.6310086846351624
       },
       "height": 0.631,
       "baseY": -0.316,
@@ -2387,8 +2421,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 1.1218183040618896
       },
       "height": 1.122,
       "baseY": -0.535,
@@ -2407,8 +2442,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 4,
+        "cellsZ": 4,
+        "sizeY": 0.8013778924942017
       },
       "height": 0.801,
       "baseY": -0.435,
@@ -2427,8 +2463,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 2,
+        "sizeY": 0.9254854917526245
       },
       "height": 0.925,
       "baseY": -0.383,
@@ -2447,8 +2484,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 3,
+        "sizeY": 0.8375085592269897
       },
       "height": 0.838,
       "baseY": -0.405,
@@ -2467,8 +2505,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 4,
+        "sizeY": 1.0515546798706055
       },
       "height": 1.052,
       "baseY": -0.334,
@@ -2488,7 +2527,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 2,
+        "sizeY": 0.7946901321411133
       },
       "height": 0.795,
       "baseY": -0.397,
@@ -2549,8 +2589,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 0.7832937240600586
       },
       "height": 0.783,
       "baseY": -0.422,
@@ -2569,8 +2610,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 5,
+        "sizeY": 1.183235764503479
       },
       "height": 1.183,
       "baseY": -0.854,
@@ -2589,8 +2631,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 0.8898261189460754
       },
       "height": 0.89,
       "baseY": -0.445,
@@ -2609,8 +2652,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 0.9107643961906433
       },
       "height": 0.911,
       "baseY": -0.329,
@@ -2671,8 +2715,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 0.6946338415145874
       },
       "height": 0.695,
       "baseY": -0.38,
@@ -2691,8 +2736,9 @@
       "theme": "keep",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 3,
+        "sizeY": 0.8861165046691895
       },
       "height": 0.886,
       "baseY": -0.535,
@@ -2711,8 +2757,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.6905920505523682
       },
       "height": 0.691,
       "baseY": -0.324,
@@ -2731,8 +2778,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 5,
+        "sizeY": 1.1351319551467896
       },
       "height": 1.135,
       "baseY": -0.417,
@@ -2751,8 +2799,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 0.6310086846351624
       },
       "height": 0.631,
       "baseY": -0.316,
@@ -2771,8 +2820,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 1.1218183040618896
       },
       "height": 1.122,
       "baseY": -0.535,
@@ -2791,8 +2841,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 4,
+        "cellsZ": 4,
+        "sizeY": 0.8013778924942017
       },
       "height": 0.801,
       "baseY": -0.435,
@@ -2811,8 +2862,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 2,
+        "sizeY": 0.9254854917526245
       },
       "height": 0.925,
       "baseY": -0.383,
@@ -2831,8 +2883,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 3,
+        "sizeY": 0.8375085592269897
       },
       "height": 0.838,
       "baseY": -0.405,
@@ -2851,8 +2904,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 4,
+        "sizeY": 1.0515546798706055
       },
       "height": 1.052,
       "baseY": -0.334,
@@ -2871,8 +2925,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 0.9107643961906433
       },
       "height": 0.911,
       "baseY": -0.329,
@@ -2891,8 +2946,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 0.7832937240600586
       },
       "height": 0.783,
       "baseY": -0.422,
@@ -2911,8 +2967,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 5,
+        "sizeY": 1.183235764503479
       },
       "height": 1.183,
       "baseY": -0.854,
@@ -2931,8 +2988,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 0.8898261189460754
       },
       "height": 0.89,
       "baseY": -0.445,
@@ -2951,8 +3009,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 4,
+        "sizeY": 0.6946338415145874
       },
       "height": 0.695,
       "baseY": -0.38,
@@ -2971,8 +3030,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 3,
+        "sizeY": 0.8861165046691895
       },
       "height": 0.886,
       "baseY": -0.535,
@@ -2991,8 +3051,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 13,
+        "cellsZ": 13,
+        "sizeY": 0.9966839551925659
       },
       "height": 0.997,
       "baseY": -0.884,
@@ -3553,7 +3614,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -3572,7 +3634,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -3591,7 +3654,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -3610,7 +3674,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -3629,7 +3694,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8786125183105469
       },
       "height": 0.879,
       "layoutTier": "decor",
@@ -3648,7 +3714,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
       "height": 0.885,
       "layoutTier": "decor",
@@ -3667,7 +3734,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
       "height": 0.885,
       "layoutTier": "decor",
@@ -3686,7 +3754,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
       "height": 0.885,
       "layoutTier": "decor",
@@ -3705,7 +3774,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
       "height": 0.885,
       "layoutTier": "decor",
@@ -3724,7 +3794,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8851692080497742
       },
       "height": 0.885,
       "layoutTier": "decor",
@@ -3743,7 +3814,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
       "height": 0.894,
       "layoutTier": "decor",
@@ -3762,7 +3834,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
       "height": 0.894,
       "layoutTier": "decor",
@@ -3781,7 +3854,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
       "height": 0.894,
       "layoutTier": "decor",
@@ -3800,7 +3874,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
       },
       "height": 0.894,
       "layoutTier": "decor",
@@ -3819,7 +3894,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -3838,7 +3914,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -3857,7 +3934,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -3876,7 +3954,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -3895,7 +3974,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8803297877311707
       },
       "height": 0.88,
       "layoutTier": "decor",
@@ -3914,7 +3994,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
       "height": 0.89,
       "layoutTier": "decor",
@@ -3933,7 +4014,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
       "height": 0.89,
       "layoutTier": "decor",
@@ -3952,7 +4034,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8899773359298706
       },
       "height": 0.89,
       "layoutTier": "decor",
@@ -3971,7 +4054,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
       "height": 0.878,
       "layoutTier": "decor",
@@ -3990,7 +4074,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
       "height": 0.878,
       "layoutTier": "decor",
@@ -4009,7 +4094,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8777133226394653
       },
       "height": 0.878,
       "layoutTier": "decor",

@@ -45,7 +45,7 @@ import {
 } from "./renderFloors";
 import { drawAnimControlOverlay, previewMemberPositions, previewFxState } from "./animControl";
 import { floorInHeightFilter, itemInHeightFilter } from "./floorHeight";
-import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks, drawButtonPartnerLinks, drawCoaxialLinks } from "./renderItems";
+import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks, drawButtonPartnerLinks, drawCoaxialLinks, drawBurnerFocusedMarkers } from "./renderItems";
 import { drawServingLinks } from "./servingLinks";
 import {
   isSurfaceItem,
@@ -584,6 +584,8 @@ export function draw() {
     drawCoaxialLinks();
     drawTerminalLinks();
     drawServingLinks();
+    // 燃烧弹射器：唯一选中时显示全部波次落点（核心层专属叠加）。
+    drawBurnerFocusedMarkers();
   }
 
   if ((!isFloorLikeLayer(S.currentLayer) || S.activeAnimGroupId) &&

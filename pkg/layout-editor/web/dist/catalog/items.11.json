@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 11,
   "itemCount": 200,
   "items": [
@@ -12,8 +12,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.0917446613311768
+        "cellsZ": 1
       },
       "height": 2.092,
       "baseY": 0.03,
@@ -32,9 +31,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 2.4394776821136475
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.439,
       "layoutTier": "decor",
@@ -52,9 +50,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 2.4394776821136475
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.439,
       "layoutTier": "decor",
@@ -73,8 +70,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.950559139251709
+        "cellsZ": 1
       },
       "height": 2.951,
       "baseY": -0.04,
@@ -94,8 +90,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.8520398139953613
+        "cellsZ": 1
       },
       "height": 2.852,
       "baseY": 0.009,
@@ -115,8 +110,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.950559139251709
+        "cellsZ": 1
       },
       "height": 2.951,
       "baseY": -0.04,
@@ -620,8 +614,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.2000004053115845
+        "cellsZ": 1
       },
       "height": 1.2,
       "baseY": -0.6,
@@ -1075,8 +1068,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.2000004053115845
+        "cellsZ": 1
       },
       "height": 1.2,
       "baseY": -0.6,
@@ -2140,9 +2132,9 @@
       "footprint": {
         "cellsX": 1,
         "cellsZ": 1,
-        "sizeY": 1.2000004053115845
+        "sizeY": 1.4305119577784353e-7
       },
-      "height": 1.2,
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC4 碎拼石板 1",
       "nameEn": "dlc4 crazypaving 1",
@@ -2250,9 +2242,9 @@
       "footprint": {
         "cellsX": 1,
         "cellsZ": 1,
-        "sizeY": 1.2000004053115845
+        "sizeY": 1.4305119577784353e-7
       },
-      "height": 1.2,
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -2272,9 +2264,9 @@
       "footprint": {
         "cellsX": 1,
         "cellsZ": 1,
-        "sizeY": 1.2000004053115845
+        "sizeY": 1.4305119577784353e-7
       },
-      "height": 1.2,
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC4 草 1",
       "nameEn": "dlc4 grass 1",
@@ -2541,9 +2533,9 @@
       "footprint": {
         "cellsX": 1,
         "cellsZ": 1,
-        "sizeY": 1.2000004053115845
+        "sizeY": 1.4305119577784353e-7
       },
-      "height": 1.2,
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC4 泥地 1",
       "nameEn": "dlc4 mud 1",
@@ -3181,10 +3173,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.2000004053115845
+        "cellsZ": 12,
+        "sizeY": 1.4305119577784353e-7
       },
-      "height": 1.2,
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -3286,9 +3278,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 36,
-        "cellsZ": 18,
-        "sizeY": 0.10518214106559753
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.105,
       "baseY": 0.014,
@@ -3458,9 +3449,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 0.750006914138794
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.75,
       "baseY": 1.123,
@@ -3584,9 +3574,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 1.8380359411239624
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.838,
       "baseY": 0.038,
@@ -3606,8 +3595,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.651395559310913
+        "cellsZ": 1
       },
       "height": 1.651,
       "baseY": 0.161,
@@ -3668,8 +3656,8 @@
       "theme": "dlc05_camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 40,
-        "cellsZ": 6
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "layoutTier": "floor",
       "surfaceTier": "floor",
@@ -3983,10 +3971,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 5.329070200563396e-16
+        "cellsZ": 1
       },
-      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC5 厨房瓦片 1",
       "nameEn": "dlc5 kitchen tile 1",

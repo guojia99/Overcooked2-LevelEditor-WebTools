@@ -3,7 +3,8 @@
  *
  * 功能：
  *  - 查看已上传的截图（imageFloorUrl 预览）。
- *  - 选择本地图片 → 画布上自由矩形拖拽裁剪选区（可重选）。
+ *  - 选择本地图片或读取 Unity 游戏相机画面 → 自动生成裁剪选区。
+ *  - 支持自由比例、524:308、2:3、9:16 等比例，选区可移动并通过边框/四角调整。
  *  - 画质压缩滑杆（JPEG quality 50–100%）。
  *  - 「裁剪并上传」→ 按源图坐标裁切 → JPEG base64 → /api/level/screenshot-upload
  *    （后端写入关卡 data 目录并赋给 LevelInfoSO.screenshot），上传成功后就地刷新预览。
@@ -11,12 +12,22 @@
 import type { LevelDetail } from "../../types";
 import { showBusy, hideBusy } from "../../busy";
 import { setStatus } from "../status";
-import { uploadScreenshot, imageFloorUrl } from "../../api";
+import { captureUnityScreenshot, uploadScreenshot, imageFloorUrl } from "../../api";
 import { modalBtnHtml, mBtnHtml } from "../../ui/views/button";
 
 /** 裁剪预览画布固定尺寸（不随源图大小变化，避免弹窗缩放/出现滚动条）。 */
 const CANVAS_W = 640;
 const CANVAS_H = 400;
+
+const ASPECT_PRESETS = [
+  { value: "524:308", label: "524:308（推荐）", ratio: 524 / 308 },
+  { value: "16:9", label: "16:9", ratio: 16 / 9 },
+  { value: "3:2", label: "3:2", ratio: 3 / 2 },
+  { value: "1:1", label: "1:1", ratio: 1 },
+  { value: "2:3", label: "2:3", ratio: 2 / 3 },
+  { value: "9:16", label: "9:16", ratio: 9 / 16 },
+  { value: "free", label: "自由比例", ratio: null },
+] as const;
 
 interface CropRect {
   x: number;
@@ -34,6 +45,8 @@ interface FitRect {
   dh: number;
 }
 
+type CropHandle = "move" | "n" | "s" | "e" | "w" | "nw" | "ne" | "sw" | "se";
+
 /** 截图 tab 的 pane HTML（由关卡配置弹窗嵌入；配对调用 wireScreenshotPane）。 */
 export function screenshotPaneHtml(detail: LevelDetail): string {
   const currentShot = detail.screenshotPath
@@ -45,14 +58,28 @@ export function screenshotPaneHtml(detail: LevelDetail): string {
 
   return `
     ${currentShot}
-    <div class="ss-upload-row">
+    <div class="ss-source-card">
+      <div class="ss-section-title">截图来源</div>
       <input type="file" id="ss-file" accept="image/png,image/jpeg" style="display:none">
-      ${modalBtnHtml("选择图片", "modal-btn primary", { id: "ss-choose" })}
+      <div class="ss-upload-row">
+        ${modalBtnHtml("上传本地图片", "modal-btn primary", { id: "ss-choose" })}
+        ${modalBtnHtml("读取 Unity 游戏画面", "modal-btn", { id: "ss-capture" })}
+      </div>
       <span class="muted ss-file-name" id="ss-file-name"></span>
     </div>
     <div id="ss-crop-wrap" class="ss-crop-wrap" style="display:none">
+      <div class="ss-section-title">裁剪与构图</div>
+      <div class="ss-crop-toolbar">
+        <label class="ss-aspect-label">输出比例
+          <select id="ss-aspect">
+            ${ASPECT_PRESETS.map((p) => `<option value="${p.value}"${p.value === "524:308" ? " selected" : ""}>${p.label}</option>`).join("")}
+          </select>
+        </label>
+        ${mBtnHtml("重新选择区域", "default", { id: "ss-reset-crop" })}
+        <span class="muted ss-output-size" id="ss-output-size"></span>
+      </div>
       <canvas id="ss-canvas" class="ss-canvas"></canvas>
-      <div class="muted ss-hint">在图片上拖拽画一个矩形选区，可再次拖拽调整位置与大小</div>
+      <div class="muted ss-hint">拖动框内移动选区；拖动边框或四角调整大小。切换比例会自动保持选区在图片范围内。</div>
     </div>
     <div id="ss-quality-row" class="ss-quality-row" style="display:none">
       <label class="modal-check">画质压缩（JPEG）
@@ -73,10 +100,9 @@ export function wireScreenshotPane(detail: LevelDetail): void {
   let fit: FitRect = { scale: 1, dx: 0, dy: 0, dw: 0, dh: 0 };
   // 裁剪选区（画布显示坐标）
   let crop: CropRect | null = null;
-  // 拖拽状态
-  let dragStart: { x: number; y: number } | null = null;
-  let moving = false;
-  let moveOffset: { x: number; y: number } | null = null;
+  let aspect: number | null = 524 / 308;
+  let pointerAction: { handle: CropHandle; start: { x: number; y: number }; crop: CropRect } | null = null;
+  let sourceLabel = "";
 
   const err = (msg: string) => {
     const el = document.getElementById("ss-err");
@@ -91,10 +117,31 @@ export function wireScreenshotPane(detail: LevelDetail): void {
   const uploadBtn = document.getElementById("ss-upload") as HTMLButtonElement | null;
   const qualityInput = document.getElementById("ss-quality") as HTMLInputElement | null;
   const qualityVal = document.getElementById("ss-quality-val");
+  const aspectInput = document.getElementById("ss-aspect") as HTMLSelectElement | null;
+  const outputSize = document.getElementById("ss-output-size");
+  const captureBtn = document.getElementById("ss-capture") as HTMLButtonElement | null;
 
   qualityInput?.addEventListener("input", () => {
     if (qualityVal) qualityVal.textContent = qualityInput.value + "%";
   });
+
+  const getHandlePoints = (r: CropRect) => [
+    { x: r.x, y: r.y, handle: "nw" as CropHandle },
+    { x: r.x + r.w / 2, y: r.y, handle: "n" as CropHandle },
+    { x: r.x + r.w, y: r.y, handle: "ne" as CropHandle },
+    { x: r.x + r.w, y: r.y + r.h / 2, handle: "e" as CropHandle },
+    { x: r.x + r.w, y: r.y + r.h, handle: "se" as CropHandle },
+    { x: r.x + r.w / 2, y: r.y + r.h, handle: "s" as CropHandle },
+    { x: r.x, y: r.y + r.h, handle: "sw" as CropHandle },
+    { x: r.x, y: r.y + r.h / 2, handle: "w" as CropHandle },
+  ];
+
+  const updateOutputSize = () => {
+    if (!outputSize || !img || !crop) return;
+    const w = Math.max(1, Math.round(crop.w / fit.scale));
+    const h = Math.max(1, Math.round(crop.h / fit.scale));
+    outputSize.textContent = `输出约 ${w} × ${h}px${sourceLabel ? ` · ${sourceLabel}` : ""}`;
+  };
 
   const drawCanvas = () => {
     const canvas = document.getElementById("ss-canvas") as HTMLCanvasElement | null;
@@ -131,7 +178,18 @@ export function wireScreenshotPane(detail: LevelDetail): void {
         ctx.lineTo(crop.x + crop.w, crop.y + (crop.h * i) / 3);
         ctx.stroke();
       }
+      const handles = getHandlePoints(crop);
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#12313a";
+      ctx.lineWidth = 1;
+      for (const p of handles) {
+        ctx.beginPath();
+        ctx.rect(p.x - 5, p.y - 5, 10, 10);
+        ctx.fill();
+        ctx.stroke();
+      }
     }
+    updateOutputSize();
   };
 
   const toCanvasPos = (e: MouseEvent): { x: number; y: number } => {
@@ -154,10 +212,71 @@ export function wireScreenshotPane(detail: LevelDetail): void {
     const minY = fit.dy;
     const maxX = fit.dx + fit.dw;
     const maxY = fit.dy + fit.dh;
-    crop.x = Math.max(minX, Math.min(crop.x, maxX - 4));
-    crop.y = Math.max(minY, Math.min(crop.y, maxY - 4));
-    crop.w = Math.max(8, Math.min(crop.w, maxX - crop.x));
-    crop.h = Math.max(8, Math.min(crop.h, maxY - crop.y));
+    crop.w = Math.max(8, Math.min(crop.w, maxX - minX));
+    crop.h = Math.max(8, Math.min(crop.h, maxY - minY));
+    crop.x = Math.max(minX, Math.min(crop.x, maxX - crop.w));
+    crop.y = Math.max(minY, Math.min(crop.y, maxY - crop.h));
+  };
+
+  const getPresetRatio = (value: string): number | null =>
+    ASPECT_PRESETS.find((p) => p.value === value)?.ratio ?? null;
+
+  const imageBounds = (): CropRect => ({ x: fit.dx, y: fit.dy, w: fit.dw, h: fit.dh });
+
+  const createCrop = (): CropRect | null => {
+    if (!img || fit.dw <= 0 || fit.dh <= 0) return null;
+    const bounds = imageBounds();
+    if (!aspect) return bounds;
+    let w = bounds.w;
+    let h = w / aspect;
+    if (h > bounds.h) {
+      h = bounds.h;
+      w = h * aspect;
+    }
+    return { x: bounds.x + (bounds.w - w) / 2, y: bounds.y + (bounds.h - h) / 2, w, h };
+  };
+
+  const resizeToAspect = (nextAspect: number | null) => {
+    aspect = nextAspect;
+    if (!crop) {
+      crop = createCrop();
+    } else if (aspect) {
+      const cx = crop.x + crop.w / 2;
+      const cy = crop.y + crop.h / 2;
+      let w = crop.w;
+      let h = w / aspect;
+      const bounds = imageBounds();
+      if (h > bounds.h) {
+        h = bounds.h;
+        w = h * aspect;
+      }
+      if (w > bounds.w) {
+        w = bounds.w;
+        h = w / aspect;
+      }
+      crop = { x: cx - w / 2, y: cy - h / 2, w, h };
+    }
+    clampCrop();
+    drawCanvas();
+    setUploadEnabled();
+  };
+
+  const getHandleAt = (p: { x: number; y: number }): CropHandle | null => {
+    if (!crop) return null;
+    for (const h of getHandlePoints(crop)) {
+      if (Math.abs(p.x - h.x) <= 12 && Math.abs(p.y - h.y) <= 12) return h.handle;
+    }
+    if (p.x >= crop.x && p.x <= crop.x + crop.w && p.y >= crop.y && p.y <= crop.y + crop.h) return "move";
+    return null;
+  };
+
+  const cursorForHandle = (handle: CropHandle | null): string => {
+    if (handle === "move") return "move";
+    if (handle === "n" || handle === "s") return "ns-resize";
+    if (handle === "e" || handle === "w") return "ew-resize";
+    if (handle === "nw" || handle === "se") return "nwse-resize";
+    if (handle === "ne" || handle === "sw") return "nesw-resize";
+    return "crosshair";
   };
 
   const setUploadEnabled = () => {
@@ -166,54 +285,147 @@ export function wireScreenshotPane(detail: LevelDetail): void {
 
   const canvasEl = () => document.getElementById("ss-canvas") as HTMLCanvasElement | null;
 
+  const resizeCrop = (handle: CropHandle, p: { x: number; y: number }, start: { x: number; y: number }, original: CropRect) => {
+    if (!crop || !img) return;
+    const bounds = imageBounds();
+    if (handle === "move") {
+      crop.x = original.x + p.x - start.x;
+      crop.y = original.y + p.y - start.y;
+      clampCrop();
+      return;
+    }
+    const right = original.x + original.w;
+    const bottom = original.y + original.h;
+    let left = original.x;
+    let top = original.y;
+    let nextRight = right;
+    let nextBottom = bottom;
+    if (handle.indexOf("w") >= 0) left = Math.min(p.x, right - 8);
+    if (handle.indexOf("e") >= 0) nextRight = Math.max(p.x, left + 8);
+    if (handle.indexOf("n") >= 0) top = Math.min(p.y, bottom - 8);
+    if (handle.indexOf("s") >= 0) nextBottom = Math.max(p.y, top + 8);
+    if (aspect) {
+      const isHorizontal = handle === "e" || handle === "w";
+      const isVertical = handle === "n" || handle === "s";
+      if (isHorizontal) {
+        const w = Math.abs(nextRight - left);
+        const h = w / aspect;
+        top = original.y + (original.h - h) / 2;
+        nextBottom = top + h;
+      } else if (isVertical) {
+        const h = Math.abs(nextBottom - top);
+        const w = h * aspect;
+        left = original.x + (original.w - w) / 2;
+        nextRight = left + w;
+      } else {
+        const anchorX = handle.indexOf("w") >= 0 ? right : original.x;
+        const anchorY = handle.indexOf("n") >= 0 ? bottom : original.y;
+        let w = Math.abs(p.x - anchorX);
+        let h = Math.abs(p.y - anchorY);
+        if (w / Math.max(h, 1) > aspect) h = w / aspect;
+        else w = h * aspect;
+        left = handle.indexOf("w") >= 0 ? anchorX - w : anchorX;
+        nextRight = handle.indexOf("w") >= 0 ? anchorX : anchorX + w;
+        top = handle.indexOf("n") >= 0 ? anchorY - h : anchorY;
+        nextBottom = handle.indexOf("n") >= 0 ? anchorY : anchorY + h;
+      }
+    }
+    crop = { x: left, y: top, w: Math.max(8, nextRight - left), h: Math.max(8, nextBottom - top) };
+    if (crop.w > bounds.w || crop.h > bounds.h) {
+      const scale = Math.min(bounds.w / crop.w, bounds.h / crop.h);
+      crop.w *= scale;
+      crop.h *= scale;
+    }
+    clampCrop();
+  };
+
   const wireCanvas = () => {
     const canvas = canvasEl();
     if (!canvas) return;
-    canvas.addEventListener("mousedown", (e) => {
+    canvas.addEventListener("pointerdown", (e) => {
       const p = toCanvasPos(e);
-      // 点击已存在选区内部 → 进入「移动选区」模式
-      if (crop && p.x >= crop.x && p.x <= crop.x + crop.w && p.y >= crop.y && p.y <= crop.y + crop.h) {
-        moving = true;
-        moveOffset = { x: p.x - crop.x, y: p.y - crop.y };
-        return;
+      const handle = getHandleAt(p);
+      if (handle) {
+        e.preventDefault();
+        canvas.setPointerCapture(e.pointerId);
+        pointerAction = { handle, start: p, crop: crop ? { ...crop } : { x: p.x, y: p.y, w: 8, h: 8 } };
+      } else {
+        crop = createCrop();
+        drawCanvas();
       }
-      dragStart = p;
-      crop = { x: p.x, y: p.y, w: 0, h: 0 };
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      const p = toCanvasPos(e);
+      if (pointerAction) {
+        resizeCrop(pointerAction.handle, p, pointerAction.start, pointerAction.crop);
+        drawCanvas();
+      } else {
+        canvas.style.cursor = cursorForHandle(getHandleAt(p));
+      }
+    });
+    const end = (e: PointerEvent) => {
+      if (!pointerAction) return;
+      pointerAction = null;
+      if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+      clampCrop();
       setUploadEnabled();
-    });
-    canvas.addEventListener("mousemove", (e) => {
-      if (dragStart) {
-        const p = toCanvasPos(e);
-        crop = {
-          x: Math.min(dragStart.x, p.x),
-          y: Math.min(dragStart.y, p.y),
-          w: Math.abs(p.x - dragStart.x),
-          h: Math.abs(p.y - dragStart.y),
-        };
-        drawCanvas();
-      } else if (moving && crop && moveOffset) {
-        const p = toCanvasPos(e);
-        crop.x = p.x - moveOffset.x;
-        crop.y = p.y - moveOffset.y;
-        clampCrop();
-        drawCanvas();
-      }
-    });
-    const end = () => {
-      if (dragStart || moving) {
-        dragStart = null;
-        moving = false;
-        moveOffset = null;
-        if (crop) clampCrop();
-        setUploadEnabled();
-        drawCanvas();
-      }
+      drawCanvas();
     };
-    canvas.addEventListener("mouseup", end);
-    canvas.addEventListener("mouseleave", end);
+    canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", end);
   };
 
   document.getElementById("ss-choose")?.addEventListener("click", () => fileInput?.click());
+
+  aspectInput?.addEventListener("change", () => resizeToAspect(getPresetRatio(aspectInput.value)));
+  document.getElementById("ss-reset-crop")?.addEventListener("click", () => {
+    crop = createCrop();
+    drawCanvas();
+    setUploadEnabled();
+  });
+
+  const loadImage = (image: HTMLImageElement, label: string) => {
+    img = image;
+    sourceLabel = label;
+    const s = Math.min(CANVAS_W / image.naturalWidth, CANVAS_H / image.naturalHeight);
+    const dw = image.naturalWidth * s;
+    const dh = image.naturalHeight * s;
+    fit = { scale: s, dx: (CANVAS_W - dw) / 2, dy: (CANVAS_H - dh) / 2, dw, dh };
+    crop = createCrop();
+    const wrap = document.getElementById("ss-crop-wrap");
+    if (wrap) wrap.style.display = "";
+    const qr = document.getElementById("ss-quality-row");
+    if (qr) qr.style.display = "";
+    err("");
+    setUploadEnabled();
+    drawCanvas();
+  };
+
+  captureBtn?.addEventListener("click", async () => {
+    if (!detail.levelInfoAssetPath) {
+      err("缺少关卡 LevelInfoSO 路径，无法读取 Unity 画面");
+      return;
+    }
+    const ratio = aspect || 524 / 308;
+    const width = 1048;
+    const height = Math.max(1, Math.round(width / ratio));
+    captureBtn.disabled = true;
+    showBusy("读取 Unity 游戏画面…");
+    try {
+      const captured = await captureUnityScreenshot(detail.levelInfoAssetPath, width, height, 90);
+      if (!captured.base64) throw new Error("Unity 未返回画面");
+      const image = new Image();
+      image.onload = () => loadImage(image, "Unity 游戏相机");
+      image.onerror = () => err("Unity 画面加载失败");
+      image.src = `data:image/jpeg;base64,${captured.base64}`;
+      if (fileNameEl) fileNameEl.textContent = "Unity 游戏相机画面";
+    } catch (e) {
+      err((e as Error).message);
+    } finally {
+      captureBtn.disabled = false;
+      hideBusy();
+    }
+  });
 
   fileInput?.addEventListener("change", () => {
     const file = fileInput.files?.[0];
@@ -224,21 +436,7 @@ export function wireScreenshotPane(detail: LevelDetail): void {
       const url = reader.result as string;
       const image = new Image();
       image.onload = () => {
-        img = image;
-        // contain 适配到固定画布：缩放 + 居中偏移，裁剪坐标按此换算回源图
-        const s = Math.min(CANVAS_W / image.naturalWidth, CANVAS_H / image.naturalHeight);
-        const dw = image.naturalWidth * s;
-        const dh = image.naturalHeight * s;
-        fit = { scale: s, dx: (CANVAS_W - dw) / 2, dy: (CANVAS_H - dh) / 2, dw, dh };
-        crop = null;
-        const wrap = document.getElementById("ss-crop-wrap");
-        if (wrap) wrap.style.display = "";
-        const qr = document.getElementById("ss-quality-row");
-        if (qr) qr.style.display = "";
-        err("");
-        setUploadEnabled();
-        drawCanvas();
-        wireCanvas();
+        loadImage(image, file.name);
       };
       image.onerror = () => err("图片加载失败，请换一张重试");
       image.src = url;
@@ -246,6 +444,8 @@ export function wireScreenshotPane(detail: LevelDetail): void {
     reader.onerror = () => err("读取文件失败");
     reader.readAsDataURL(file);
   });
+
+  wireCanvas();
 
   uploadBtn?.addEventListener("click", async () => {
     if (!img || !crop) return;

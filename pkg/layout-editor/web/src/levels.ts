@@ -155,12 +155,12 @@ export async function renderManageView(app: HTMLElement): Promise<void> {
   await renderManageRoute(app);
 }
 
-const IDENT_RE = /^[A-Za-z0-9_]+$/;
+const IDENT_RE = /^[a-z0-9_]+$/;
 
 function wireIdentInput(id: string): void {
   const el = document.getElementById(id) as HTMLInputElement | null;
   el?.addEventListener("input", () => {
-    const v = el.value.replace(/[^A-Za-z0-9_]/g, "");
+    const v = el.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
     if (v !== el.value) el.value = v;
   });
 }
@@ -388,9 +388,9 @@ function fmtElapsed(ms: number): string {
  *  expectedKey：与后端状态 setName 匹配的标识（单集 = 集名；多集 = "+" 连接串）。 */
 async function awaitExportAndDownload(expectedKey: string, startAt: number): Promise<void> {
   // 状态端点由桥接监听线程直答，构建期间仍可响应。
-  const deadline = Date.now() + 15 * 60 * 1000;
+  const deadline = Date.now() + 30 * 60 * 1000;
   for (;;) {
-    if (Date.now() > deadline) throw new Error("导出超时（15 分钟），请查看 Unity Console。");
+    if (Date.now() > deadline) throw new Error("导出超时（30 分钟），请查看 Unity Console。");
     await new Promise((r) => setTimeout(r, 2000));
     let st: SetExportStatus;
     try {
@@ -421,29 +421,37 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
   const prevVersion = (s.version || "").trim();
   openModal(
     `导出关卡集 · ${esc(display)}`,
-    `<p>将打包 <b>${esc(display)}</b>（${s.levelCount} 个关卡）并生成可发布的 zip，<b>约需 3-5 分钟</b>（构建 AssetBundle）。构建期间请勿操作 Unity 或关闭本页。</p>
-     <p class="modal-hint">发布新版本前建议更新版本号（当前 <code>v${esc(prevVersion || "0")}</code>，会写入 LevelSetInfo）：</p>
-     <label class="m-field">版本号 version<input type="text" id="exp-set-version" autocomplete="off" placeholder="${esc(prevVersion || "0.1")}" value="${esc(prevVersion)}"></label>
+    `<p>打包 <b>${esc(display)}</b>（勾选 <span id="exp-sel-count">${s.levelCount}</span> 个关卡），约需 3-5 分钟。</p>
+     <label class="m-field">版本号（当前 v${esc(prevVersion || "0")}）<input type="text" id="exp-set-version" autocomplete="off" placeholder="${esc(prevVersion || "0.1")}" value="${esc(prevVersion)}"></label>
      <label class="m-field" style="flex-direction:row;align-items:center;gap:8px;">
-       <input type="checkbox" id="exp-with-deps" checked style="width:auto;">
-       <span>同时携带依赖包（Loader.dll + 统一运行时 + commonW1/W2）</span>
-     </label>
+        <input type="checkbox" id="exp-with-deps" style="width:auto;">
+        <span>同时携带依赖包</span>
+      </label>
      <p class="modal-hint" id="exp-deps-hint"></p>
+     <div class="m-section-title">导出关卡</div>
+     <p class="modal-hint" id="exp-level-status">正在获取关卡列表…</p>
+     <div class="m-actions-row" id="exp-level-actions" style="display:none;">
+        ${mBtnHtml("全选", "default", { id: "exp-sel-all" })}
+        ${mBtnHtml("仅已完成（有截图）", "default", { id: "exp-sel-done" })}
+     </div>
+     <div class="exp-level-list" id="exp-level-list"></div>
      <div class="m-section-title">CustomStub 统一运行时</div>
      <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
      <div class="m-actions-row">
-       ${mBtnHtml("编译 Runtime DLL", "default", { id: "exp-stub-compile" })}
-     </div>`,
-    `${mCancelBtnHtml()}${mPrimaryBtnHtml("开始导出")}`
+        ${mBtnHtml("编译 Runtime DLL", "default", { id: "exp-stub-compile" })}
+      </div>`,
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("开始导出")}`,
+    { panelClass: "export-set" }
   );
   wireExportStubTools(s.setName);
+  void wireExportLevelSelection(s.setName);
   const depsChk = document.getElementById("exp-with-deps") as HTMLInputElement | null;
   const depsHint = document.getElementById("exp-deps-hint");
   const updateDepsHint = (): void => {
     if (!depsHint) return;
-    depsHint.textContent = (depsChk?.checked ?? true)
-      ? `zip 含 OC2DIYLevel/levels/${s.setName}/（关卡 + requires.txt）+ OC2DIYLevelRuntimeWLoader/（依赖包）。新用户一步到位；解压到 BepInEx/plugins/。`
-      : `zip 只含 OC2DIYLevel/levels/${s.setName}/（关卡 + requires.txt）。适合已装依赖的用户日常更新关卡；依赖包可用列表上方「导出依赖包」单独获取。依赖包过旧时 stub 功能整体跳过（如单向传送门会退化为双向），关卡本体照常加载。`;
+    depsHint.textContent = (depsChk?.checked ?? false)
+      ? "zip = 关卡 + 依赖包（Loader/运行时/commonW），新玩家一步到位。"
+      : "zip 只含关卡，适合已装依赖包的玩家。";
   };
   depsChk?.addEventListener("change", updateDepsHint);
   updateDepsHint();
@@ -451,9 +459,21 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
     if (okBtn) okBtn.disabled = true;
+    // 逐关卡选择：未勾选任何关卡直接拦截；全部勾选 = 全量导出（不传 selectedLevels）。
+    const boxes = Array.from(document.querySelectorAll<HTMLInputElement>(".exp-level-check"));
+    const checkedScenes = boxes
+      .filter((b) => b.checked && !b.disabled && b.dataset.scene)
+      .map((b) => b.dataset.scene!);
+    if (boxes.length > 0 && checkedScenes.length === 0) {
+      setStatus("请至少勾选一个要导出的关卡（可在下方关卡列表中勾选）。", false);
+      if (okBtn) okBtn.disabled = false;
+      return;
+    }
+    const selectedLevels =
+      boxes.length > 0 && checkedScenes.length < boxes.length ? checkedScenes : undefined;
     const versionInput = document.getElementById("exp-set-version") as HTMLInputElement | null;
     const newVersion = (versionInput?.value ?? "").trim();
-    const withDeps = (document.getElementById("exp-with-deps") as HTMLInputElement | null)?.checked ?? true;
+    const withDeps = (document.getElementById("exp-with-deps") as HTMLInputElement | null)?.checked ?? false;
     const mode: "all" | "levels" = withDeps ? "all" : "levels";
     const startAt = Date.now();
     suspendBridgeWatch(); // 构建会阻塞 Unity 主线程泵，健康探测会误报掉线
@@ -469,7 +489,7 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
           version: newVersion,
         });
       }
-      await api.startSetExport([s.setName], mode);
+      await api.startSetExport([s.setName], mode, undefined, selectedLevels);
       closeModal();
 
       await awaitExportAndDownload(s.setName, startAt);
@@ -482,6 +502,72 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
       hideBusy();
     }
   });
+}
+
+/** 导出弹窗「导出关卡」勾选区（单集导出专用）：拉取关卡列表渲染复选行，
+ *  默认勾选 = 已上传截图且场景存在（未完成关卡默认不导出，可手动勾选）。
+ *  列表获取失败时降级为提示（导出走全量）。 */
+async function wireExportLevelSelection(setName: string): Promise<void> {
+  const listEl = document.getElementById("exp-level-list");
+  const statusEl = document.getElementById("exp-level-status");
+  const actionsEl = document.getElementById("exp-level-actions");
+  if (!listEl || !statusEl) return;
+  try {
+    const levels = await api.fetchLevels(setName);
+    if (!levels || levels.length === 0) {
+      statusEl.textContent = "关卡集没有关卡，将导出空关卡集。";
+      return;
+    }
+    statusEl.textContent = "无截图的关卡默认不勾选，可手动勾选。";
+    if (actionsEl) actionsEl.style.display = "";
+    listEl.innerHTML = levels
+      .map((lv, idx) => {
+        const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
+        const name = lv.levelNameZH || lv.levelName || lv.sceneName;
+        const badge = !lv.hasScene
+          ? '<span class="exp-level-badge danger">场景缺失</span>'
+          : lv.hasScreenshot
+            ? ""
+            : '<span class="exp-level-badge warn">未上传截图</span>';
+        return `
+      <label class="exp-level-row${lv.hasScene ? "" : " no-scene"}">
+        <input type="checkbox" class="exp-level-check" data-scene="${esc(lv.sceneName)}" data-shot="${lv.hasScreenshot ? "1" : "0"}"${lv.hasScene ? "" : " disabled"}${lv.hasScreenshot && lv.hasScene ? " checked" : ""}>
+        <span class="exp-level-shot">${shot ? `<img src="${esc(shot)}" alt="" loading="lazy">` : '<span class="empty-note">无截图</span>'}</span>
+        <span class="exp-level-meta">
+          <span class="exp-level-name">${idx + 1}. ${esc(name)}</span>
+          <span class="exp-level-scene">${esc(lv.sceneName)}</span>
+        </span>
+        ${badge}
+      </label>`;
+      })
+      .join("");
+    const syncCount = (): void => {
+      const boxes = Array.from(listEl.querySelectorAll<HTMLInputElement>(".exp-level-check"));
+      const checked = boxes.filter((b) => b.checked).length;
+      const countEl = document.getElementById("exp-sel-count");
+      if (countEl) countEl.textContent = `${checked}/${boxes.length}`;
+      const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
+      if (okBtn) okBtn.disabled = checked === 0;
+    };
+    listEl.querySelectorAll<HTMLInputElement>(".exp-level-check").forEach((b) =>
+      b.addEventListener("change", syncCount)
+    );
+    document.getElementById("exp-sel-all")?.addEventListener("click", () => {
+      listEl.querySelectorAll<HTMLInputElement>(".exp-level-check").forEach((b) => {
+        if (!b.disabled) b.checked = true;
+      });
+      syncCount();
+    });
+    document.getElementById("exp-sel-done")?.addEventListener("click", () => {
+      listEl.querySelectorAll<HTMLInputElement>(".exp-level-check").forEach((b) => {
+        if (!b.disabled) b.checked = b.dataset.shot === "1";
+      });
+      syncCount();
+    });
+    syncCount();
+  } catch (e) {
+    statusEl.textContent = `关卡列表获取失败（${(e as Error).message}），将按全量导出。`;
+  }
 }
 
 /** 多集合并导出：一次打包多个关卡集到同一 zip（OC2DIYLevel/levels/&lt;set1&gt;/、
@@ -501,13 +587,13 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
     .join("");
   openModal(
     `合并导出 ${sets.length} 个关卡集`,
-    `<p>将把 <b>${sets.map((s) => esc(displayName(s))).join("、")}</b> 打包到<b>同一个 zip</b>：<code>OC2DIYLevel/levels/</code> 下各集目录并列（${sets.map((s) => esc(s.setName)).join("、")}），<b>约需 3-5 分钟</b>（构建 AssetBundle）。构建期间请勿操作 Unity 或关闭本页。</p>
-     <p class="modal-hint">各集版本号（写入 LevelSetInfo 与 zip 文件名，不改则沿用当前值）：</p>
+    `<p>打包 <b>${sets.map((s) => esc(displayName(s))).join("、")}</b> 到同一个 zip（各集目录并列），约需 3-5 分钟。</p>
+     <p class="modal-hint">合并导出包含各集全部关卡（跳过关卡请用单集导出）。各集版本号（不改则沿用）：</p>
      ${versionRows}
      <label class="m-field" style="flex-direction:row;align-items:center;gap:8px;">
-       <input type="checkbox" id="exp-with-deps" checked style="width:auto;">
-       <span>同时携带依赖包（Loader.dll + 统一运行时 + commonW1/W2，整包只带一份）</span>
-     </label>
+        <input type="checkbox" id="exp-with-deps" style="width:auto;">
+        <span>同时携带依赖包（整包只带一份）</span>
+      </label>
      <p class="modal-hint" id="exp-deps-hint"></p>
      <div class="m-section-title">CustomStub 统一运行时</div>
      <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
@@ -521,9 +607,9 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
   const depsHint = document.getElementById("exp-deps-hint");
   const updateDepsHint = (): void => {
     if (!depsHint) return;
-    depsHint.textContent = (depsChk?.checked ?? true)
-      ? `zip 含各集 OC2DIYLevel/levels/${sets.map((s) => s.setName).join("、")}/（关卡 + requires.txt）+ OC2DIYLevelRuntimeWLoader/（依赖包，整包只带一份）。新用户一步到位；解压到 BepInEx/plugins/。`
-      : `zip 只含各集 OC2DIYLevel/levels/…（关卡 + requires.txt），无依赖包。适合已装依赖的用户日常更新关卡；依赖包可用列表上方「导出依赖包」单独获取。依赖包过旧时 stub 功能整体跳过（如单向传送门会退化为双向），关卡本体照常加载。`;
+    depsHint.textContent = (depsChk?.checked ?? false)
+      ? "zip = 各集关卡 + 一份依赖包，新玩家一步到位。"
+      : "zip 只含各集关卡，适合已装依赖包的玩家。";
   };
   depsChk?.addEventListener("change", updateDepsHint);
   updateDepsHint();
@@ -531,7 +617,7 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
     if (okBtn) okBtn.disabled = true;
-    const withDeps = (document.getElementById("exp-with-deps") as HTMLInputElement | null)?.checked ?? true;
+    const withDeps = (document.getElementById("exp-with-deps") as HTMLInputElement | null)?.checked ?? false;
     const mode: "all" | "levels" = withDeps ? "all" : "levels";
     const startAt = Date.now();
     suspendBridgeWatch(); // 构建会阻塞 Unity 主线程泵，健康探测会误报掉线
@@ -606,15 +692,15 @@ const DEPS_MANIFEST_FALLBACK: DepsManifestEntry[] = [
   { zipPath: "OC2DIYLevelRuntimeWLoader/log_config.txt", label: "log_config.txt", state: "ok", sizeBytes: 0, note: "debugLog 配置（可选）" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/readme.txt", label: "readme.txt", state: "ok", sizeBytes: 0, note: "安装与使用说明" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/webcustomstub_runtime", label: "webcustomstub_runtime", state: "stale", sizeBytes: 0, note: "统一运行时 bundle——需先「编译 Runtime DLL」" },
-  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW1", label: "commonW1", state: "ok", sizeBytes: 0, note: "编辑器增量素材（必备；导出时自动重新打包）" },
-  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW2", label: "commonW2", state: "ok", sizeBytes: 0, note: "汉堡菜谱素材（无条件携带；导出时自动重新打包）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW1", label: "commonW1", state: "ok", sizeBytes: 0, note: "编辑器增量素材（必备；导出时删旧重打，此处大小为当前产物仅供参考）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW2", label: "commonW2", state: "ok", sizeBytes: 0, note: "汉堡菜谱素材（依赖包通用，无条件携带；导出时删旧重打）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW3", label: "commonW3", state: "ok", sizeBytes: 0, note: "扩展素材包（源目录存在即导出时删旧重打并携带；导出前无产物故大小显示 —，可随时用 Unity 菜单「重新打包 commonW 素材包」单独重打）" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/package_version.txt", label: "package_version.txt", state: "ok", sizeBytes: 0, note: "导出时自动生成：打包版本/时间/环境 + 文件 MD5" },
 ];
 
-/** 单独导出依赖包 OC2DIYLevelRuntimeWLoader（Loader.dll + 统一运行时 + commonW1/W2）。
- *  不构建关卡场景，打包现成产物，秒级完成。装一次即可长期复用（版本不变时）。
- *  弹窗含：实时打包清单 / 可编辑打包版本（独立于其他版本，默认 v1.0.0，预填上次值）/
- *  「编译 Runtime DLL」按钮 + 硬门控（DLL 非 fresh 禁用导出按钮）。 */
+/** 单独导出依赖包 OC2DIYLevelRuntimeWLoader（Loader.dll + 统一运行时 + commonW1/W2/W3…）。
+ *  导出按钮始终可点：统一运行时非 fresh 时后端闸口自动编译并挂起续跑（前端仅展示
+ *  状态），commonW 产物缺失由后端校验阻断并报错——前端不做检测拦截。 */
 function confirmExportDeps(sets: LevelSetInfo[]): void {
   if (!sets || sets.length === 0) {
     setStatus("请先创建至少一个关卡集（依赖包导出需要一个已存在的关卡集做路径校验）。", false);
@@ -635,7 +721,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
      <div class="m-actions-row">
       ${mBtnHtml("编译 Runtime DLL", "default", { id: "exp-stub-compile" })}
      </div>`,
-    `${mCancelBtnHtml()}${mPrimaryBtnHtml("导出依赖包", { disabled: "", title: "先编译 Runtime DLL（见下方按钮）" })}`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("导出依赖包")}`
   );
 
   const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
@@ -804,7 +890,7 @@ function wireExportStubTools(setName: string, onStateChange?: (dllState: string)
 function openCreateSetModal(app: HTMLElement): void {  openModal(
     "新建关卡集",
     `
-    <label class="m-field">关卡集标识（目录名，仅字母/数字/下划线）<input type="text" id="set-name" placeholder="my_set"></label>
+    <label class="m-field">关卡集标识（目录名，仅小写字母/数字/下划线，大写自动转小写）<input type="text" id="set-name" placeholder="my_set"></label>
     <label class="m-field">英文名 levelSetName<input type="text" id="set-en" placeholder="My Set"></label>
     <label class="m-field">中文名 levelSetNameZH<input type="text" id="set-zh" placeholder="我的关卡集"></label>
     <label class="m-field">作者 author<input type="text" id="set-author"></label>
@@ -818,7 +904,7 @@ function openCreateSetModal(app: HTMLElement): void {  openModal(
     try {
       const setName = (document.getElementById("set-name") as HTMLInputElement).value.trim();
       if (!setName) return setStatus("请填写关卡集标识", false);
-      if (!IDENT_RE.test(setName)) return setStatus("关卡集标识仅允许英文字母/数字/下划线", false);
+      if (!IDENT_RE.test(setName)) return setStatus("关卡集标识仅允许小写字母/数字/下划线", false);
       showBusy("创建关卡集…");
       await api.createSet({
         setName,
@@ -1127,7 +1213,7 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
   openModal(
     `新建关卡 · ${setName}`,
     `
-    <label class="m-field">关卡标识（仅字母/数字/下划线，用于目录与场景名，不再自动加 s_ 前缀）<input type="text" id="lv-id" placeholder="level_1"></label>
+    <label class="m-field">关卡标识（仅小写字母/数字/下划线，用于目录与场景名，不再自动加 s_ 前缀）<input type="text" id="lv-id" placeholder="level_1"></label>
     <label class="m-field">英文名 levelName<input type="text" id="lv-en" placeholder="Level 1"></label>
     <label class="m-field">中文名 levelNameZH<input type="text" id="lv-zh" placeholder="第一关"></label>
     <p class="modal-hint">将自动生成 4 份分数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景到 scenes/&lt;标识&gt;.unity。</p>
@@ -1141,7 +1227,7 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
     try {
       const levelId = (document.getElementById("lv-id") as HTMLInputElement).value.trim();
       if (!levelId) return setStatus("请填写关卡标识", false);
-      if (!IDENT_RE.test(levelId)) return setStatus("关卡标识仅允许英文字母/数字/下划线", false);
+      if (!IDENT_RE.test(levelId)) return setStatus("关卡标识仅允许小写字母/数字/下划线", false);
       showBusy("创建关卡（生成配置、复制场景）…");
       await api.createLevel({
         setName,
@@ -1214,7 +1300,7 @@ function openRenameLevelModal(
   openModal(
     `重命名关卡 · ${esc(levelId)}`,
     `
-    <label class="m-field">新关卡标识（仅字母/数字/下划线）<input type="text" id="lv-new-id" placeholder="level_2" value="${esc(levelId)}"></label>
+    <label class="m-field">新关卡标识（仅小写字母/数字/下划线）<input type="text" id="lv-new-id" placeholder="level_2" value="${esc(levelId)}"></label>
     <p class="modal-hint">
       将一次性同步改名：data/&lt;id&gt;/ 目录、LevelInfo_&lt;id&gt;.asset、场景文件与 sceneName、
       场景 AssetBundle 名、animations/ 动画资产前缀、写回历史目录（引用按 GUID 保持，不会断链）。${migrateHint}
@@ -1229,7 +1315,7 @@ function openRenameLevelModal(
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     const newId = (document.getElementById("lv-new-id") as HTMLInputElement).value.trim();
     if (!newId) return setStatus("请填写新关卡标识", false);
-    if (!IDENT_RE.test(newId)) return setStatus("关卡标识仅允许英文字母/数字/下划线", false);
+    if (!IDENT_RE.test(newId)) return setStatus("关卡标识仅允许小写字母/数字/下划线", false);
     if (newId === levelId) {
       closeModal();
       return setStatus("关卡标识未变化");
@@ -1610,8 +1696,8 @@ export function openToolsHistoryModal(detail: LevelDetail, opts?: ToolsHistoryOp
   document.getElementById("wb-deps")?.addEventListener("click", () => openDepsCheckModal());
 
   document.getElementById("wb-test")?.addEventListener("click", () => {
+    // 不先关本弹窗：确认框成为子弹窗，取消后「工具与历史」自动唤回（弹窗栈）。
     if (opts?.onTestLayout) {
-      closeModal();
       opts.onTestLayout();
       return;
     }
@@ -1620,8 +1706,8 @@ export function openToolsHistoryModal(detail: LevelDetail, opts?: ToolsHistoryOp
   });
 
   document.getElementById("wb-sync")?.addEventListener("click", () => {
+    // 同上：确认框成为子弹窗，取消后自动唤回本弹窗。
     if (opts?.onSyncLayout) {
-      closeModal();
       opts.onSyncLayout();
       return;
     }

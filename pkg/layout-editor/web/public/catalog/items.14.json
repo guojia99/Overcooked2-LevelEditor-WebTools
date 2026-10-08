@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 14,
   "itemCount": 200,
   "items": [
@@ -31,8 +31,8 @@
       "theme": "beach_theme",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 6
       },
       "layoutTier": "decor",
       "nameZh": "涟漪 1 (8)",
@@ -50,10 +50,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.8704818470341126e-17
+        "cellsZ": 1
       },
-      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -111,8 +109,9 @@
       "theme": "beach_theme",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 4,
+        "cellsZ": 4,
+        "sizeY": 2.1309120655059814
       },
       "height": 2.131,
       "baseY": -1.065,
@@ -131,8 +130,9 @@
       "theme": "dlc11_summer",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 4,
+        "cellsZ": 4,
+        "sizeY": 2.1309120655059814
       },
       "height": 2.131,
       "baseY": -1.065,
@@ -151,8 +151,9 @@
       "theme": "beach_theme",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 1.1463987827301025
       },
       "height": 1.146,
       "baseY": -0.573,
@@ -171,8 +172,9 @@
       "theme": "dlc11_summer",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 1.1463987827301025
       },
       "height": 1.146,
       "baseY": -0.573,
@@ -192,8 +194,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.0631181001663208
+        "cellsZ": 1
       },
       "height": 1.063,
       "baseY": -0.532,
@@ -213,8 +214,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.20056571066379547
+        "cellsZ": 1
       },
       "height": 0.201,
       "baseY": -0.1,
@@ -234,8 +234,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.20958685874938965
+        "cellsZ": 1
       },
       "height": 0.21,
       "baseY": -0.105,
@@ -254,9 +253,8 @@
       "theme": "dlc02_beach",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 1.6821255683898926
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.682,
       "baseY": -0.051,
@@ -902,8 +900,9 @@
       "theme": "misc",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 17,
+        "cellsZ": 10,
+        "sizeY": 0.20000000298023224
       },
       "height": 0.2,
       "baseY": -0.2,
@@ -947,9 +946,8 @@
       "theme": "dlc02_beach",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 17,
-        "cellsZ": 10,
-        "sizeY": 0.15000000596046448
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.15,
       "baseY": -0.15,
@@ -1105,9 +1103,9 @@
       "theme": "dlc02_beach",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 3,
-        "sizeY": 0.2763572633266449
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 1.9907147884368896
       },
       "height": 0.276,
       "baseY": -0.095,
@@ -1126,9 +1124,9 @@
       "theme": "dlc03_christmas",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 3,
-        "sizeY": 0.2763572633266449
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 1.9907147884368896
       },
       "height": 0.276,
       "baseY": -0.095,
@@ -1316,8 +1314,9 @@
       "theme": "dressing",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 8,
+        "sizeY": 9.419713020324707
       },
       "height": 9.42,
       "baseY": -4.71,
@@ -1339,6 +1338,7 @@
         "cellsX": 4,
         "cellsZ": 1
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -1359,6 +1359,7 @@
         "cellsX": 4,
         "cellsZ": 1
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -1376,9 +1377,11 @@
       "theme": "dressing",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 43,
+        "cellsZ": 21,
+        "sizeY": 3.1115188864103247e-16
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -1399,6 +1402,7 @@
         "cellsX": 1,
         "cellsZ": 2
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -2262,8 +2266,9 @@
       "theme": "space",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 2.399339199066162
       },
       "height": 2.399,
       "baseY": -2.399,
@@ -2809,8 +2814,9 @@
       "theme": "s_summer_1_1",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 14,
+        "cellsZ": 21,
+        "sizeY": 2.293956756591797
       },
       "height": 2.294,
       "baseY": -2.902,
@@ -2932,8 +2938,9 @@
       "theme": "s_summer_1_1",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 12,
+        "sizeY": 2.6277782917022705
       },
       "height": 2.628,
       "baseY": -2.284,
@@ -2952,8 +2959,9 @@
       "theme": "s_summer_1_1",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 11,
+        "cellsZ": 11,
+        "sizeY": 2.774778366088867
       },
       "height": 2.775,
       "baseY": -2.436,
@@ -3094,9 +3102,8 @@
       "theme": "dlc02_beach",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 1.4296733140945435
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.43,
       "layoutTier": "decor",
@@ -3177,7 +3184,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.1776095628738403
       },
       "height": 1.178,
       "baseY": -0.589,
@@ -3197,7 +3205,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.1776095628738403
       },
       "height": 1.178,
       "baseY": -0.589,
@@ -3403,8 +3412,9 @@
       "theme": "city_sushi",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 1,
+        "sizeY": 1.5198849439620972
       },
       "height": 1.52,
       "baseY": -0.832,
@@ -3423,9 +3433,11 @@
       "theme": "city_sushi",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 5,
+        "sizeY": 1.3494581632147139e-15
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "寿司墨绘 1",
       "nameEn": "sushi sumi 1",
@@ -3582,7 +3594,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 2,
+        "sizeY": 0.5658819675445557
       },
       "height": 0.566,
       "baseY": -0.302,
@@ -3601,8 +3614,9 @@
       "theme": "swamp",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 2,
+        "sizeY": 0.457844614982605
       },
       "height": 0.458,
       "baseY": -0.392,
@@ -3644,7 +3658,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5807656049728394
       },
       "height": 1.581,
       "baseY": -0.79,
@@ -3664,7 +3679,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.4024825096130371
       },
       "height": 0.402,
       "baseY": -0.201,
@@ -3684,7 +3700,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.11779043078422546
       },
       "height": 0.118,
       "baseY": -0.059,
@@ -3704,7 +3721,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0631181001663208
       },
       "height": 1.063,
       "baseY": -0.532,
@@ -3724,7 +3742,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8061234354972839
       },
       "height": 0.806,
       "baseY": -0.544,
@@ -3744,7 +3763,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7607444524765015
       },
       "height": 0.761,
       "baseY": -0.506,
@@ -3763,8 +3783,9 @@
       "theme": "swamp",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 0.1103590652346611
       },
       "height": 0.11,
       "baseY": -0.055,
@@ -3784,7 +3805,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5145459771156311
       },
       "height": 0.515,
       "baseY": -0.254,
@@ -3804,7 +3826,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9243978261947632
       },
       "height": 1.924,
       "baseY": -0.962,
@@ -3824,7 +3847,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.48720046877861023
       },
       "height": 0.487,
       "baseY": -0.236,
@@ -3844,7 +3868,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.31826797127723694
       },
       "height": 0.318,
       "baseY": -0.174,
@@ -3864,7 +3889,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.417764663696289
       },
       "height": 2.418,
       "baseY": 0.008,
@@ -3884,7 +3910,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4099974632263184
       },
       "height": 2.41,
       "layoutTier": "decor",
@@ -3903,7 +3930,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.30889901518821716
       },
       "height": 0.309,
       "baseY": -0.154,
@@ -3923,7 +3951,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3116859793663025
       },
       "height": 0.312,
       "baseY": -0.156,
@@ -3943,7 +3972,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6291986107826233
       },
       "height": 0.629,
       "baseY": -0.315,
@@ -3963,7 +3993,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.603405237197876
       },
       "height": 0.603,
       "baseY": -0.302,
@@ -3982,8 +4013,9 @@
       "theme": "swamp",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 53,
+        "cellsZ": 16,
+        "sizeY": 0.8023324012756348
       },
       "height": 0.802,
       "baseY": -0.802,

@@ -653,16 +653,23 @@ export async function updateSetInfo(body: SetInfoUpdateBody): Promise<void> {
  *  （OC2DIYLevel/levels/<set1>/、<set2>/… 并列，依赖包只带一份）。
  *  mode：all（关卡+依赖，默认）| levels（仅关卡集）| deps（仅依赖包）。
  *  depsVersion：deps 模式的依赖包打包版本（独立于运行时/关卡集版本，默认 1.0.0）。
+ *  selectedLevels：逐关卡选择性导出（仅单集；元素 = 场景名 sceneName；省略/空 =
+ *  全量导出）。部分导出时 info bundle 内 levelInfos 会被临时过滤为入选关卡，
+ *  zip 只携带入选 s_* 场景 bundle（后端构建后自动还原源资产）。
  *  任务在 Unity 后台异步执行，进度用 fetchSetExportStatus 轮询。 */
 export async function startSetExport(
   setNames: string[],
   mode: "all" | "levels" | "deps" = "all",
-  depsVersion?: string
+  depsVersion?: string,
+  selectedLevels?: string[]
 ): Promise<void> {
+  const body: Record<string, unknown> = { setNames, mode };
+  if (depsVersion) body.depsVersion = depsVersion;
+  if (selectedLevels && selectedLevels.length > 0) body.selectedLevels = selectedLevels;
   const r = await fetch("/api/set/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(depsVersion ? { setNames, mode, depsVersion } : { setNames, mode }),
+    body: JSON.stringify(body),
   });
   await readApiJson<{ ok?: boolean }>(r);
 }
@@ -963,6 +970,22 @@ export async function uploadScreenshot(
   });
   const data = await readApiJson<{ texturePath?: string; error?: string }>(r);
   return data.texturePath ?? "";
+}
+
+/** Capture the active Unity scene camera as a JPEG data URL payload. */
+export async function captureUnityScreenshot(
+  assetPath: string,
+  width: number,
+  height: number,
+  quality = 90
+): Promise<{ base64: string; width: number; height: number }> {
+  const r = await fetch("/api/level/screenshot-capture", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath, width, height, quality }),
+  });
+  const data = await readApiJson<{ base64?: string; width?: number; height?: number }>(r);
+  return { base64: data.base64 ?? "", width: data.width ?? width, height: data.height ?? height };
 }
 
 // ---------- 汇总页导出背景图 ----------

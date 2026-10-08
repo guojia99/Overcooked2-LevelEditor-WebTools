@@ -328,6 +328,25 @@ public class LayoutEditorHttpServer
         try
         {
             var path = request.Url.AbsolutePath;
+            if (path == "/api/mcp/manifest" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorMcpApi.ManifestJson());
+                return;
+            }
+
+            if (path == "/api/mcp/tools" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, "{\"tools\":" + LayoutEditorMcpApi.ToolsJson() + "}");
+                return;
+            }
+
+            if (path == "/api/mcp" && request.HttpMethod == "POST")
+            {
+                var rpcJson = HandleMcpRpc(ReadBody(request));
+                WriteJson(response, 200, rpcJson);
+                return;
+            }
+
             if (path == "/api/health")
             {
                 var staticReady = LayoutEditorPaths.IsWebDistReady();
@@ -596,77 +615,15 @@ public class LayoutEditorHttpServer
                 if (string.IsNullOrEmpty(only) && request.QueryString["itemsOnly"] == "1")
                     only = "items";
 
-                // 统一保存处理：common03 引用校验（历史 Import/custom_web
-                // 引用告警）+ 收集 doc 引用的游戏 bundle，供后续依赖注册。
-                // common03 资产直接引用、随 common03 bundle 打包，不再拷贝 custom_web。
-                var levelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(doc.sceneAssetPath);
-                string levelSet = null;
-                if (levelInfo != null)
+                ApiApplyResultDto applyResult;
+                string applyError;
+                applyResult = ApplySceneDocument(doc, snap, syncWalkable, only, out applyError);
+                if (!string.IsNullOrEmpty(applyError))
                 {
-                    var p = (doc.sceneAssetPath ?? "").Replace('\\', '/').Split('/');
-                    if (p.Length > 2 && p[1] == "LevelSets")
-                        levelSet = p[2];
-                }
-
-                // 写回历史：在任何修改（SyncAllWebContent/SyncLevelInfo/Apply）之前开一条
-                // pending 记录并缓存写回前场景/info 快照；宽限期后定稿，后续 death/killplane
-                // POST 归并进同一条记录（LayoutEditorWriteBackHistory）。
-                LayoutEditorWriteBackHistory.Begin("layout", doc.sceneAssetPath, levelInfo);
-
-                if (levelSet != null)
-                {
-                    LayoutEditorCustomIngredients.SyncAllWebContent(levelSet);
-                    LayoutEditorCustomIngredients.EnsureDocCopies(levelSet, doc);
-                }
-
-                // 依赖注册必须在 Apply 之前：Apply 结尾的 ReloadPseudoAssetsFull 按
-                // LevelInfoSO.dependencies 加载伪预制件，晚注册会让本轮 reload 缺
-                // bundle（新放 common03 道具首存必空的原因之一）。
-                if (levelSet != null && levelInfo != null)
-                    LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
-
-                var err = SceneLayoutApplier.Apply(doc, snap, syncWalkable, only);
-                if (!string.IsNullOrEmpty(err))
-                {
-                    // 场景未保存成功：丢弃本次写回历史记录（部分成功=已保存，保留记录）。
-                    LayoutEditorWriteBackHistory.Abort();
-                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = applyError }));
                     return;
                 }
-
-                 // 场景写回完成后：默认触发两个自动填充 —— Fill All AudioDirectorySOs 与
-                 // Auto Fill All Ingredients，确保填充是基于"写完全部"之后的最终状态。
-         if (levelSet != null && levelInfo != null)
-                 {
-                      LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
-                      LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
-                      // 烹饪步骤兜底：菜谱用到的 cookingStepSO（如 DLC 的 GriddlePan）未登记
-                      // 进 allCookingSteps 时，装盘反序列化会 NRE（汉堡模型不显示）——
-                      // 写回时按菜谱重建一次，存量关卡写回即自愈。
-                      LayoutEditorCatalogApi.SyncCookingStepsFromSelectedRecipes(levelInfo);
-                      // 填充可能引入新的食材/音频目录引用，覆盖重建 dependencies 并合并音频 bundle。
-                      LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
-                      LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
-                      EditorUtility.SetDirty(levelInfo);
-                      AssetDatabase.SaveAssets();
-                  }
-
-                 // 写回后 CustomStub 守卫：场景实际用到 stub 组件时检查副本漂移/DLL
-                 // 新鲜度，漂移自动同步母本并触发编译（先应答后 Refresh，防域重载截断响应）。
-                 if (levelSet != null && CustomStubWriteBackCheck != null)
-                 {
-                     var stubWarn = CustomStubWriteBackCheck(levelSet);
-                     if (!string.IsNullOrEmpty(stubWarn))
-                         LayoutEditorLog.RecordApplyWarning(stubWarn);
-                 }
-
-                 // 写回告警透传：绑定丢弃等此前只进 Unity 日志，web 端无感知，
-                 // 用户直到游戏里才发现脏盘台/饮料机失效。
-                WriteJson(response, 200, LayoutEditorJson.ToJson(new ApiApplyResultDto
-                {
-                    ok = true,
-                    warnings = LayoutEditorLog.DrainApplyWarnings(),
-                }));
+                WriteJson(response, 200, LayoutEditorJson.ToJson(applyResult));
                 return;
             }
 
@@ -816,7 +773,8 @@ public class LayoutEditorHttpServer
                 var err = LayoutEditorSetExporter.StartExport(
                     setNames,
                     dto != null ? dto.mode : "all",
-                    dto != null ? dto.depsVersion : null);
+                    dto != null ? dto.depsVersion : null,
+                    dto != null ? dto.selectedLevels : null);
                 WriteAdminResult(response, err);
                 return;
             }
@@ -1077,6 +1035,32 @@ public class LayoutEditorHttpServer
                     LayoutEditorWriteBackHistory.CommitNow();
                     WriteJson(response, 200, LayoutEditorJson.ToJson(new ScreenshotUploadResultDto { texturePath = texturePath }));
                 }
+                return;
+            }
+
+            if (path == "/api/level/screenshot-capture" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<ScreenshotCaptureDto>(body);
+                string base64 = "";
+                int width = 0;
+                int height = 0;
+                var err = "";
+                if (dto == null)
+                    err = "缺少参数。";
+                else
+                    err = LayoutEditorLevelAdminApi.CaptureScreenshot(
+                        dto.assetPath, dto.width, dto.height, dto.quality,
+                        out base64, out width, out height);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new ScreenshotCaptureResultDto
+                    {
+                        base64 = base64,
+                        width = width,
+                        height = height
+                    }));
                 return;
             }
 
@@ -1748,6 +1732,241 @@ public class LayoutEditorHttpServer
 
         if (File.Exists(assetPath))
             EditorSceneManager.OpenScene(assetPath);
+    }
+
+    private static ApiApplyResultDto ApplySceneDocument(LayoutDocumentDto doc, float snap,
+        bool syncWalkable, string only, out string error)
+    {
+        error = null;
+        if (doc == null)
+        {
+            error = "缺少场景文档。";
+            return null;
+        }
+
+        var levelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(doc.sceneAssetPath);
+        string levelSet = null;
+        if (levelInfo != null)
+        {
+            var p = (doc.sceneAssetPath ?? "").Replace('\\', '/').Split('/');
+            if (p.Length > 2 && p[1] == "LevelSets")
+                levelSet = p[2];
+        }
+
+        LayoutEditorWriteBackHistory.Begin("layout", doc.sceneAssetPath, levelInfo);
+        if (levelSet != null)
+        {
+            LayoutEditorCustomIngredients.SyncAllWebContent(levelSet);
+            LayoutEditorCustomIngredients.EnsureDocCopies(levelSet, doc);
+        }
+        if (levelSet != null && levelInfo != null)
+            LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
+
+        error = SceneLayoutApplier.Apply(doc, snap, syncWalkable, only);
+        if (!string.IsNullOrEmpty(error))
+        {
+            LayoutEditorWriteBackHistory.Abort();
+            return null;
+        }
+
+        if (levelSet != null && levelInfo != null)
+        {
+            LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
+            LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
+            LayoutEditorCatalogApi.SyncCookingStepsFromSelectedRecipes(levelInfo);
+            LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
+            LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
+            EditorUtility.SetDirty(levelInfo);
+            AssetDatabase.SaveAssets();
+        }
+
+        if (levelSet != null && CustomStubWriteBackCheck != null)
+        {
+            var stubWarn = CustomStubWriteBackCheck(levelSet);
+            if (!string.IsNullOrEmpty(stubWarn))
+                LayoutEditorLog.RecordApplyWarning(stubWarn);
+        }
+
+        return new ApiApplyResultDto
+        {
+            ok = true,
+            warnings = LayoutEditorLog.DrainApplyWarnings(),
+        };
+    }
+
+    private static string HandleMcpRpc(string body)
+    {
+        var id = ExtractJsonProperty(body, "id");
+        McpRpcRequestDto request;
+        try
+        {
+            request = JsonUtility.FromJson<McpRpcRequestDto>(body ?? "{}");
+        }
+        catch
+        {
+            return McpError(id, -32700, "Parse error");
+        }
+        if (request == null || string.IsNullOrEmpty(request.method))
+            return McpError(id, -32600, "Invalid Request");
+
+        try
+        {
+            if (request.method == "initialize")
+            {
+                return McpResult(id, "{\"protocolVersion\":\"" + LayoutEditorMcpApi.ProtocolVersion +
+                    "\",\"capabilities\":{\"tools\":{\"listChanged\":false}},\"serverInfo\":{\"name\":\"" +
+                    LayoutEditorMcpApi.ServerName + "\",\"version\":\"" + LayoutEditorMcpApi.ServerVersion + "\"}}");
+            }
+            if (request.method == "notifications/initialized")
+                return "{}";
+            if (request.method == "tools/list")
+                return McpResult(id, "{\"tools\":" + LayoutEditorMcpApi.ToolsJson() + "}");
+            if (request.method != "tools/call" || request.@params == null || string.IsNullOrEmpty(request.@params.name))
+                return McpError(id, -32601, "Unsupported MCP method");
+
+            var name = request.@params.name;
+            var args = request.@params.arguments;
+            var data = HandleMcpTool(name, args);
+            return McpResult(id, "{\"content\":[{\"type\":\"text\",\"text\":\"" +
+                EscapeJson(data) + "\"}],\"structuredContent\":" + data + "}");
+        }
+        catch (Exception ex)
+        {
+            return McpResult(id, "{\"isError\":true,\"content\":[{\"type\":\"text\",\"text\":\"" +
+                EscapeJson(ex.Message) + "\"}]}" );
+        }
+    }
+
+    private static string HandleMcpTool(string name, McpArgumentsDto args)
+    {
+        if (args == null)
+            args = new McpArgumentsDto();
+
+        if (name == "oc2_editor_health")
+            return "{\"ok\":true,\"mcp\":true}";
+        if (name == "oc2_list_level_sets")
+            return LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanSets());
+        if (name == "oc2_list_levels")
+            return LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanLevels(args.setName));
+        if (name == "oc2_get_level_detail")
+            return LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetLevel(args.assetPath));
+        if (name == "oc2_get_scene_layout")
+        {
+            OpenSceneIfNeeded(args.assetPath);
+            return LayoutEditorJson.ToJson(SceneLayoutExporter.ExportActiveScene());
+        }
+        if (name == "oc2_get_grid")
+            return LayoutEditorJson.ToJson(LayoutEditorGridReader.ReadFromActiveScene());
+        if (name == "oc2_get_level_recipe_context")
+        {
+            var recipes = LayoutEditorCatalogApi.GetLevelRecipes(args.assetPath);
+            var catalog = LayoutEditorCatalogApi.ScanRecipes(args.levelSet ?? string.Empty);
+            return "{\"levelRecipes\":" + LayoutEditorJson.ToJson(recipes) +
+                ",\"catalog\":" + LayoutEditorJson.ToJson(catalog) + "}";
+        }
+        if (name == "oc2_analyze_level_dependencies")
+            return LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.AnalyzeBundles(args.assetPath));
+        if (name == "oc2_validate_scene")
+        {
+            OpenSceneIfNeeded(args.assetPath);
+            var document = SceneLayoutExporter.ExportActiveScene();
+            var error = ValidateDispenserConfigs(document) ?? ValidateTeleportalConfigs(document) ?? ValidateAirSlopeConfigs(document);
+            return "{\"valid\":" + (error == null ? "true" : "false") +
+                ",\"error\":" + (error == null ? "null" : JsonString(error)) + "}";
+        }
+        if (name == "oc2_commit_scene")
+        {
+            if (!args.confirm)
+                throw new InvalidOperationException("写回场景必须传 confirm=true");
+            if (args.document == null)
+                throw new InvalidOperationException("缺少 document");
+            var validationError = ValidateDispenserConfigs(args.document) ?? ValidateTeleportalConfigs(args.document) ?? ValidateAirSlopeConfigs(args.document);
+            if (validationError != null)
+                throw new InvalidOperationException(validationError);
+            OpenSceneIfNeeded(args.document.sceneAssetPath);
+            string err;
+            var result = ApplySceneDocument(args.document, args.snap > 0 ? args.snap : 0.01f,
+                args.syncWalkable, args.only, out err);
+            if (!string.IsNullOrEmpty(err))
+                throw new InvalidOperationException(err);
+            return LayoutEditorJson.ToJson(result);
+        }
+        if (name == "oc2_start_export")
+        {
+            if (!args.confirm)
+                throw new InvalidOperationException("启动导出必须传 confirm=true");
+            var setNames = args.setNames;
+            if (setNames == null || setNames.Count == 0)
+            {
+                setNames = new List<string>();
+                if (!string.IsNullOrEmpty(args.setName))
+                    setNames.Add(args.setName);
+            }
+            var error = LayoutEditorSetExporter.StartExport(setNames, string.IsNullOrEmpty(args.mode) ? "all" : args.mode,
+                args.depsVersion, args.selectedLevels);
+            if (!string.IsNullOrEmpty(error))
+                throw new InvalidOperationException(error);
+            return "{\"accepted\":true,\"pollAfterMs\":2000,\"deadlineMs\":1800000}";
+        }
+        if (name == "oc2_get_export_status")
+            return LayoutEditorJson.ToJson(LayoutEditorSetExporter.GetStatus());
+        throw new InvalidOperationException("未知工具 " + name);
+    }
+
+    private static string McpResult(string id, string result)
+    {
+        return "{\"jsonrpc\":\"2.0\",\"id\":" + (id ?? "null") + ",\"result\":" + result + "}";
+    }
+
+    private static string McpError(string id, int code, string message)
+    {
+        return "{\"jsonrpc\":\"2.0\",\"id\":" + (id ?? "null") +
+            ",\"error\":{\"code\":" + code + ",\"message\":" + JsonString(message) + "}}";
+    }
+
+    private static string JsonString(string value)
+    {
+        return "\"" + EscapeJson(value) + "\"";
+    }
+
+    private static string EscapeJson(string value)
+    {
+        if (value == null)
+            return "";
+        return value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n");
+    }
+
+    private static string ExtractJsonProperty(string json, string property)
+    {
+        if (string.IsNullOrEmpty(json))
+            return null;
+        var marker = "\"" + property + "\"";
+        var start = json.IndexOf(marker, StringComparison.Ordinal);
+        if (start < 0)
+            return null;
+        start = json.IndexOf(':', start + marker.Length);
+        if (start < 0)
+            return null;
+        start++;
+        while (start < json.Length && char.IsWhiteSpace(json[start]))
+            start++;
+        if (start >= json.Length)
+            return null;
+        if (json[start] == '"')
+        {
+            var end = start + 1;
+            while (end < json.Length)
+            {
+                if (json[end] == '"' && json[end - 1] != '\\')
+                    return json.Substring(start, end - start + 1);
+                end++;
+            }
+            return null;
+        }
+        var scalarEnd = start;
+        while (scalarEnd < json.Length && ",}".IndexOf(json[scalarEnd]) < 0)
+            scalarEnd++;
+        return json.Substring(start, scalarEnd - start).Trim();
     }
 
     private static LevelSetSceneListDto ScanLevelSetScenes()

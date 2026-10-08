@@ -705,6 +705,80 @@ namespace CustomStub
             get { return typeof(HarmonyPatches).GetMethod("ClientTriggerQueueDoEventPostfix", BF); }
         }
 
+        // ---- 双 stub 自愈（2026-10-06 真机卡加载事故） ----
+        // OC2DIYLevel.PseudoPrefabManager.ResetAllPseudoPrefabs 前缀：在其 AddComponent
+        // 循环之前，把「exact 基础 PseudoPrefabStub + 派生 stub 共存」物体上的基础
+        // stub 移除——否则 PseudoPrefab.Awake 的 GetComponent<PseudoPrefabStub>() 命中
+        // 组件序第一的基础 stub，派生 Setup 开头强转 (派生Stub) 抛 InvalidCastException
+        // 中断整个初始化链（关卡永久卡加载）。官方图没有 PseudoPrefabManagerStub，
+        // 本前缀零调用零开销；存量坏包（diantang / jia_level_2_1 等）免重导出。
+
+        /// <summary>双 stub 自愈前缀（不拦截原方法）。重复调用幂等；每次进 web 关卡
+        /// 都会全场景扫一遍 stub 组件（一次性成本，非每帧）。</summary>
+        private static void DualStubHealPrefix()
+        {
+            try
+            {
+                var stubs = UnityEngine.Object.FindObjectsOfType<LevelEditorStub.PseudoPrefabStub>();
+                var seen = new System.Collections.Generic.HashSet<GameObject>();
+                int fixedCount = 0;
+                foreach (var stub in stubs)
+                {
+                    if (stub == null)
+                        continue;
+                    var go = stub.gameObject;
+                    if (!seen.Add(go))
+                        continue;
+                    if (HealDualStubObject(go))
+                        fixedCount++;
+                }
+                if (fixedCount > 0)
+                    StubLog.Log("[CustomStub] 双 stub 自愈: " + fixedCount
+                        + " 个道具已移除基础 stub（真机卡加载修复；建议用新版编辑器重导出根治）");
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("dualStub", "[CustomStub.Harmony] 双 stub 自愈前缀异常（放行原方法）: " + ex.Message);
+            }
+        }
+
+        /// <summary>物体上存在恰好为基类的 PseudoPrefabStub 且存在派生 stub →
+        ///  DestroyImmediate 基础 stub（场景加载窗口内立即生效，先于 AddComponent 循环）；
+        ///  分发器生成食材为空时回落 soArray 首项（否则派生 Setup 读空 NRE）。
+        ///  返回是否修改。</summary>
+        private static bool HealDualStubObject(GameObject go)
+        {
+            LevelEditorStub.PseudoPrefabStub baseStub = null;
+            bool hasDerived = false;
+            foreach (var s in go.GetComponents<LevelEditorStub.PseudoPrefabStub>())
+            {
+                if (s == null)
+                    continue;
+                if (s.GetType() == typeof(LevelEditorStub.PseudoPrefabStub))
+                    baseStub = s;
+                else
+                    hasDerived = true;
+            }
+            if (baseStub == null || !hasDerived)
+                return false;
+            var dispenser = go.GetComponent<LevelEditorStub.PseudoPrefabDispenserStub>();
+            if (dispenser != null && dispenser.spawnerItemPrefabSO == null)
+            {
+                var arr = go.GetComponent<LevelEditorStub.PseudoPrefabSOArray>();
+                if (arr != null && arr.pseudoPrefabSOs != null && arr.pseudoPrefabSOs.Length > 0)
+                    dispenser.spawnerItemPrefabSO = arr.pseudoPrefabSOs[0];
+            }
+            UnityEngine.Object.DestroyImmediate(baseStub);
+            StubLog.Log("[CustomStub] 双 stub 自愈: " + go.name
+                + " 移除基础 stub（派生 stub 保留，OC2DIYLevel 将按派生分类挂运行时）");
+            return true;
+        }
+
+        internal static System.Reflection.MethodInfo DualStubHealPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("DualStubHealPrefix", BF); }
+        }
+
         private const System.Reflection.BindingFlags BF =
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
     }

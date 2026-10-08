@@ -375,7 +375,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   `;
   const footer = `${modalBtnHtml("复制", "modal-btn", { "data-fm-copy": "" })}${modalBtnHtml("克隆", "modal-btn", { "data-fm-dup": "" })}${modalBtnHtml("删除地板", "modal-btn", { "data-fm-delete": "" })}${modalBtnHtml("关闭", "modal-btn primary", { "data-fm-close": "" })}`;
 
-  openModal(`${typeLabel} · ${f.displayName}`, body, footer);
+  openModal(`${typeLabel} · ${f.displayName}`, body, footer, { id: "floor-editor" });
   document.querySelector(".modal-panel")?.classList.add("wide", "floor-edit");
   if (isPlainSolid && activeMatTab) wireSolidMaterialPicker(f, activeMatTab);
 

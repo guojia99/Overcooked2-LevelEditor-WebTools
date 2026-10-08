@@ -487,6 +487,11 @@ namespace CustomStub
                 // 逐关判定；编辑器 Play（无约束）→ 探测态起步，行为同旧版。
                 ProcessScene(SceneManager.GetActiveScene());
 
+                // 双 stub 自愈补丁（2026-10-06 真机卡加载事故）：必须在任何 web 关卡
+                // 场景加载之前安装（PseudoPrefabManagerStub.Awake 在场景加载窗口内跑）。
+                // 目标方法只在 OC2DIYLevel 加载 web 关卡时被调用，官方图零介入。
+                EnsureDualStubHealPatches();
+
                 // 反射自检汇总：列出游戏 AppDomain 里未命中的反射目标（直接定位
                 // 「反射了游戏侧不存在的类型」类事故）。
                 GameApi.DumpReflectionSelfCheck();
@@ -597,6 +602,49 @@ namespace CustomStub
         /// 相互独立——任一失败不影响另一组。按需安装（v5 起），幂等；安装后前缀
         /// 自身还有 UtensilTiming.HasAnyActive 静态字段快速放行双保险。</summary>
         private static bool s_utensilTimingPatched;
+
+        /// <summary>双 stub 自愈补丁（2026-10-06 真机卡加载事故）：前缀挂在
+        /// OC2DIYLevel.PseudoPrefabManager.ResetAllPseudoPrefabs——在其 AddComponent
+        /// 循环前移除「基础 stub + 派生 stub 共存」物体上的基础 stub，否则派生
+        /// Setup 强转命中基础 stub 抛 InvalidCastException 中断初始化链（关卡永久
+        /// 卡加载；编辑器侧因基础 Setup 空操作而从未暴露）。Install 时无条件安装：
+        /// 目标方法只在 web 关卡场景加载（PseudoPrefabManagerStub.Awake）时被调用，
+        /// 官方图/主菜单零调用零开销。反射不到目标（OC2DIYLevel 缺失/改名）时
+        /// 静默跳过（存量坏包需重导出，不炸宿主）。幂等；独立 Harmony id。</summary>
+        private static bool s_dualStubHealPatched;
+
+        internal static void EnsureDualStubHealPatches()
+        {
+            if (s_dualStubHealPatched)
+                return;
+            try
+            {
+                var targetType = GameApi.Find("OC2DIYLevel.PseudoPrefabManager");
+                if (targetType == null)
+                {
+                    StubLog.Dbg("[CustomStub] 双 stub 自愈: 未找到 OC2DIYLevel.PseudoPrefabManager（跳过）");
+                    s_dualStubHealPatched = true;
+                    return;
+                }
+                var target = targetType.GetMethod("ResetAllPseudoPrefabs",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static, null, Type.EmptyTypes, null);
+                if (target == null)
+                {
+                    StubLog.Dbg("[CustomStub] 双 stub 自愈: 未找到 ResetAllPseudoPrefabs（跳过）");
+                    s_dualStubHealPatched = true;
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".dualstubheal");
+                harmony.Patch(target, new HarmonyMethod(HarmonyPatches.DualStubHealPrefixMethod));
+                s_dualStubHealPatched = true;
+                StubLog.Log("[CustomStub] 双 stub 自愈补丁已装: "
+                    + targetType.Name + "." + target.Name + "（存量坏包卡加载修复）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 双 stub 自愈补丁安装失败（存量坏包需重导出）: " + ex.Message);
+            }
+        }
 
         internal static void EnsureUtensilTimingPatches()
         {

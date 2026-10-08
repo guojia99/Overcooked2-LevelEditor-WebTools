@@ -264,9 +264,9 @@ public static class LayoutEditorLevelAdminApi
     {
         if (dto == null || string.IsNullOrEmpty(dto.setName))
             return "缺少关卡集标识。";
-        var setName = SanitizeName(dto.setName);
-        if (string.IsNullOrEmpty(setName))
-            return "关卡集标识只能包含字母数字和下划线。";
+        var setName = dto.setName.Trim();
+        if (!IsLowerIdent(setName))
+            return "关卡集标识只能包含小写字母、数字和下划线。";
 
         var setDir = LevelSetsRoot + "/" + setName;
         if (AssetDatabase.IsValidFolder(setDir))
@@ -802,9 +802,9 @@ public static class LayoutEditorLevelAdminApi
         if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.levelId))
             return "缺少关卡集或关卡标识。";
         var setName = dto.setName;
-        var levelId = SanitizeName(dto.levelId);
-        if (string.IsNullOrEmpty(levelId))
-            return "关卡标识只能包含字母数字和下划线。";
+        var levelId = dto.levelId.Trim();
+        if (!IsLowerIdent(levelId))
+            return "关卡标识只能包含小写字母、数字和下划线。";
 
         var setDir = LevelSetsRoot + "/" + setName;
         if (!AssetDatabase.IsValidFolder(setDir))
@@ -1459,9 +1459,11 @@ public static class LayoutEditorLevelAdminApi
             return "缺少关卡集或关卡标识。";
         var setName = dto.setName;
         var oldId = SanitizeName(dto.levelId);
-        var newId = SanitizeName(dto.newLevelId);
-        if (string.IsNullOrEmpty(oldId) || string.IsNullOrEmpty(newId))
-            return "关卡标识只能包含字母数字和下划线。";
+        if (string.IsNullOrEmpty(oldId))
+            return "关卡标识无效。";
+        var newId = dto.newLevelId == null ? "" : dto.newLevelId.Trim();
+        if (!IsLowerIdent(newId))
+            return "新关卡标识只能包含小写字母、数字和下划线。";
         if (oldId == newId)
             return null;
         if (newId.Equals("LevelSetInfo", StringComparison.OrdinalIgnoreCase))
@@ -1941,6 +1943,21 @@ public static class LayoutEditorLevelAdminApi
         return sb.ToString();
     }
 
+    /// <summary>新建/改名关卡与关卡集 id 的严格校验：仅小写字母、数字、下划线，且非空。
+    /// 只约束新建与重命名入口（2026-10-06 起），存量原版导入的大写 id（LaTiao、OC2_Story_*
+    /// 等）不受限，查找/删除/重命名旧 id 仍走 SanitizeName 宽松兼容。</summary>
+    internal static bool IsLowerIdent(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return false;
+        foreach (var ch in name)
+        {
+            if (!((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '_'))
+                return false;
+        }
+        return true;
+    }
+
     private static AudioConfigDto ReadAudioFromLevelInfo(LevelInfoSO info)
     {
         var dto = new AudioConfigDto
@@ -2213,6 +2230,81 @@ public static class LayoutEditorLevelAdminApi
 
         texturePath = imgAssetPath;
         return null;
+    }
+
+    /// <summary>Capture the active scene's game camera into a JPEG payload.
+    /// This captures the camera output rather than the Unity editor window, so
+    /// the returned image has a stable requested aspect ratio.</summary>
+    public static string CaptureScreenshot(string assetPath, int requestedWidth, int requestedHeight,
+        int requestedQuality, out string base64, out int width, out int height)
+    {
+        base64 = "";
+        width = Mathf.Clamp(requestedWidth, 128, 2048);
+        height = Mathf.Clamp(requestedHeight, 128, 2048);
+        var quality = Mathf.Clamp(requestedQuality, 50, 100);
+
+        if (string.IsNullOrEmpty(assetPath))
+            return "缺少关卡资源路径。";
+        if (AssetDatabase.LoadAssetAtPath<LevelInfoSO>(assetPath) == null)
+            return "未找到 LevelInfoSO：" + assetPath;
+
+        var cam = Camera.main;
+        if (cam == null)
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            if (scene.IsValid())
+            {
+                foreach (var rootGo in scene.GetRootGameObjects())
+                {
+                    cam = rootGo.GetComponentInChildren<Camera>();
+                    if (cam != null)
+                        break;
+                }
+            }
+        }
+        if (cam == null)
+            return "当前场景中未找到游戏相机，请先打开目标关卡场景。";
+
+        RenderTexture rt = null;
+        Texture2D image = null;
+        var previousTarget = cam.targetTexture;
+        var previousActive = RenderTexture.active;
+        var previousAspect = cam.aspect;
+        try
+        {
+            rt = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
+            rt.Create();
+            cam.targetTexture = rt;
+            cam.aspect = (float)width / (float)height;
+            cam.Render();
+
+            RenderTexture.active = rt;
+            image = new Texture2D(width, height, TextureFormat.RGB24, false);
+            image.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            image.Apply();
+            var bytes = image.EncodeToJPG(quality);
+            if (bytes == null || bytes.Length == 0)
+                return "Unity 游戏相机没有返回有效画面。";
+            base64 = Convert.ToBase64String(bytes);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return "读取 Unity 游戏画面失败：" + ex.Message;
+        }
+        finally
+        {
+            cam.targetTexture = previousTarget;
+            cam.aspect = previousAspect;
+            RenderTexture.active = previousActive;
+            if (image != null)
+                UnityEngine.Object.DestroyImmediate(image);
+            if (rt != null)
+            {
+                rt.Release();
+                UnityEngine.Object.DestroyImmediate(rt);
+            }
+        }
     }
 
     // ==================== Summary export background ====================

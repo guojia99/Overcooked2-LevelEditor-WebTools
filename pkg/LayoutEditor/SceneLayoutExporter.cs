@@ -15,12 +15,19 @@ public static class SceneLayoutExporter
     private static readonly HashSet<string> SkippedSubtrees = new HashSet<string>
     {
         "Design/Collision",
+        // 燃烧弹射器波次时序 helper（TriggerTimer/TriggerOnObject 逻辑载体，
+        // 由 BurnerScheduleBakery 重建，不作为物品导出/匹配/删除）。
+        "Design/Burner Logic",
     };
 
     public static LayoutDocumentDto ExportActiveScene()
     {
         var scene = SceneManager.GetActiveScene();
         var items = ExportFromScene();
+
+        // 燃烧弹射器波次：从场景 timer（新式 helper / 旧式根级 BurnerTrigger）
+        // 反推 item.burner.waves，供 web 编辑与展示。
+        BurnerScheduleBakery.ImportFromScene(scene, items);
 
         // The scene itself is the single source of truth for move groups: rebuild
         // them directly from the animated objects (Animator + TriggerQueue/Timer +

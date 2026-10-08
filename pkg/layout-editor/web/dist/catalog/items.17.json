@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 17,
   "itemCount": 81,
   "items": [
@@ -870,6 +870,8 @@
         "cellsX": 1,
         "cellsZ": 1
       },
+      "height": 0.377,
+      "baseY": -0.014,
       "layoutTier": "core",
       "stack": {
         "y": 0.05,

@@ -21,7 +21,7 @@ import { setSelection, setFloorSelection } from "./selection";
 import { pushHistory } from "./historyOps";
 import { draw } from "./render";
 import { setStatus } from "./status";
-import { openModal, closeModal } from "../modals";
+import { openModal, closeModal, closeAllModals } from "../modals";
 import { cancelBtnHtml, modalBtnHtml } from "../ui/views/button";
 import { fetchRecipeCatalog, fetchLevelRecipes, saveLevelRecipes } from "../api";
 import { computeUtensilIngredientFill, utensilIntermediateRecipes } from "./recipeKnowledge";
@@ -165,7 +165,8 @@ export function requestTestLayout(): void {
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.getElementById("test-layout-confirm")?.addEventListener("click", () => {
-    closeModal();
+    // 确认执行：关全部（含压栈的「工具与历史」父弹窗），别挡住画布查看生成结果。
+    closeAllModals();
     void runTestLayout();
   });
 }

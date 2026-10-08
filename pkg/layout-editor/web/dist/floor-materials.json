@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-01T06:49:58.225Z",
-  "schemaVersion": 7,
-  "itemCount": 412,
+  "generatedAt": "2026-10-08T06:44:39.329Z",
+  "schemaVersion": 8,
+  "itemCount": 419,
   "materials": [
     {
       "guid": "b731a7a89e8982119737afd17c70adad",
@@ -2103,6 +2103,15 @@
       "source": "commonW1"
     },
     {
+      "guid": "d957d3dd3a34344409a4aa79e664c919",
+      "id": "mat_sk_floor_tile_sushi_01_tiling8x10",
+      "assetPath": "Assets/LevelSets/NanyeLevelSet/materials/mat_sk_floor_tile_sushi_01_tiling8x10.mat",
+      "nameZh": "mat_sk_floor_tile_sushi_01_tiling8",
+      "nameEn": "mat_sk_floor_tile_sushi_01_tiling8x10",
+      "sizeTag": "",
+      "source": "NanyeLevelSet"
+    },
+    {
       "guid": "2f78055b622ffdeac0a55d2659004b91",
       "id": "raft_water",
       "assetPath": "Assets/commonW1/materials/oc2rebuild/raft_water.mat",
@@ -2717,6 +2726,33 @@
       "sizeTag": "",
       "source": "commonW2",
       "icon": true
+    },
+    {
+      "guid": "f067480ee626d5b40bee3962f5df4f12",
+      "id": "mat_city_path_02_tiling20x11",
+      "assetPath": "Assets/LevelSets/NanyeLevelSet/materials/mat_city_path_02_tiling20x11.mat",
+      "nameZh": "mat_city_path_02_tiling20",
+      "nameEn": "mat_city_path_02_tiling20x11",
+      "sizeTag": "",
+      "source": "NanyeLevelSet"
+    },
+    {
+      "guid": "42ee046c8b7190043b098155129a8747",
+      "id": "mat_city_path_02_tiling20x11",
+      "assetPath": "Assets/LevelSets/jia_carnival/materials/mat_city_path_02_tiling20x11.mat",
+      "nameZh": "mat_city_path_02_tiling20",
+      "nameEn": "mat_city_path_02_tiling20x11",
+      "sizeTag": "",
+      "source": "jia_carnival"
+    },
+    {
+      "guid": "e790cec68c226aa4cb07455c75b4c561",
+      "id": "mat_city_path_02_tiling35x35",
+      "assetPath": "Assets/LevelSets/NanyeLevelSet/materials/mat_city_path_02_tiling35x35.mat",
+      "nameZh": "mat_city_path_02_tiling35",
+      "nameEn": "mat_city_path_02_tiling35x35",
+      "sizeTag": "",
+      "source": "NanyeLevelSet"
     },
     {
       "guid": "81091d99d5574cf4097b0e3e89b2605a",
@@ -4041,6 +4077,15 @@
       "source": "commonW1"
     },
     {
+      "guid": "20ced9d671188d7418fd35001623510c",
+      "id": "mat_dlc08_ground_1-1_tiling50x30",
+      "assetPath": "Assets/LevelSets/jia_carnival/materials/mat_dlc08_ground_1-1_tiling50x30.mat",
+      "nameZh": "mat_dlc08_ground_1-1_tiling50",
+      "nameEn": "mat_dlc08_ground_1-1_tiling50x30",
+      "sizeTag": "",
+      "source": "jia_carnival"
+    },
+    {
       "guid": "6ffe866a4e9572aa99745b1bc4b156d1",
       "id": "mat_dlc11_blg_inside_light_block",
       "assetPath": "Assets/commonW1/materials/oc2rebuild/mat_dlc11_blg_inside_light_block.mat",
@@ -4068,6 +4113,15 @@
       "source": "commonW1"
     },
     {
+      "guid": "2c5c53a329437284babbff0128c06efe",
+      "id": "mat_dlc2_sand_decal_03_tiling35x35",
+      "assetPath": "Assets/LevelSets/NanyeLevelSet/materials/mat_dlc2_sand_decal_03_tiling35x35.mat",
+      "nameZh": "mat_dlc2_sand_decal_03_tiling35",
+      "nameEn": "mat_dlc2_sand_decal_03_tiling35x35",
+      "sizeTag": "",
+      "source": "NanyeLevelSet"
+    },
+    {
       "guid": "a7797dd301c977f07904ad93a499f098",
       "id": "mat_dlc5_ripples_01",
       "assetPath": "Assets/commonW1/materials/oc2rebuild/mat_dlc5_ripples_01.mat",
@@ -4093,6 +4147,15 @@
       "nameEn": "mat_UI_Warp Tileable Clouds2",
       "sizeTag": "",
       "source": "commonW1"
+    },
+    {
+      "guid": "6af8c94ab34d47979e6960bc595bd80b",
+      "id": "mat_wizard_stonetile_02_22x15",
+      "assetPath": "Assets/LevelSets/LaTiao/materials/mat_wizard_stonetile_02_22x15.mat",
+      "nameZh": "mat_wizard_stonetile_02_22",
+      "nameEn": "mat_wizard_stonetile_02_22x15",
+      "sizeTag": "22x15",
+      "source": "LaTiao"
     },
     {
       "guid": "aead2e385ad51b4516ab9cb43946709e",

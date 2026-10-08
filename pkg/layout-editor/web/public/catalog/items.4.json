@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 4,
   "itemCount": 200,
   "items": [
@@ -14,6 +14,7 @@
         "cellsX": 2,
         "cellsZ": 2
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -34,6 +35,7 @@
         "cellsX": 4,
         "cellsZ": 1
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -54,6 +56,7 @@
         "cellsX": 2,
         "cellsZ": 1
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -71,8 +74,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 7,
+        "cellsZ": 6,
+        "sizeY": 1.3848726749420166
       },
       "height": 1.385,
       "baseY": -0.451,
@@ -92,7 +96,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.16847005486488342
       },
       "height": 0.168,
       "baseY": -0.084,
@@ -112,7 +117,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.38626593351364136
       },
       "height": 0.386,
       "baseY": -0.193,
@@ -132,7 +138,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5345645546913147
       },
       "height": 0.535,
       "baseY": -0.267,
@@ -152,7 +159,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8061234354972839
       },
       "height": 0.806,
       "baseY": -0.544,
@@ -172,7 +180,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.7607444524765015
       },
       "height": 0.761,
       "baseY": -0.506,
@@ -192,7 +201,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8083275556564331
       },
       "height": 0.808,
       "baseY": -0.544,
@@ -212,7 +222,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.47741666436195374
       },
       "height": 0.477,
       "baseY": -0.235,
@@ -232,7 +243,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.15551996231079102
       },
       "height": 0.156,
       "baseY": -0.078,
@@ -312,7 +324,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6300384998321533
       },
       "height": 0.63,
       "layoutTier": "decor",
@@ -331,7 +344,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.31677716970443726
       },
       "height": 0.317,
       "baseY": -0.158,
@@ -435,7 +449,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.399339437484741
       },
       "height": 2.399,
       "baseY": -2.399,
@@ -517,7 +532,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3246777653694153
       },
       "height": 0.325,
       "baseY": 0.036,
@@ -557,7 +573,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4077563285827637
       },
       "height": 2.408,
       "layoutTier": "decor",
@@ -596,7 +613,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.2035248279571533
       },
       "height": 2.204,
       "baseY": -0.193,
@@ -616,7 +634,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5933181047439575
       },
       "height": 1.593,
       "baseY": 0.107,
@@ -636,7 +655,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5124180316925049
       },
       "height": 0.512,
       "layoutTier": "decor",
@@ -655,8 +675,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.6374117136001587
+        "cellsZ": 1
       },
       "height": 0.637,
       "baseY": 0.112,
@@ -677,7 +696,7 @@
       "footprint": {
         "cellsX": 1,
         "cellsZ": 1,
-        "sizeY": 1.3213986158370972
+        "sizeY": 0.972196102142334
       },
       "height": 0.972,
       "baseY": 0.021,
@@ -823,7 +842,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.1836869716644287
       },
       "height": 0.184,
       "baseY": -0.092,
@@ -843,7 +863,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.07110776752233505
       },
       "height": 0.071,
       "baseY": -0.036,
@@ -863,7 +884,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.07119452208280563
       },
       "height": 0.071,
       "baseY": -0.036,
@@ -882,8 +904,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 0.1498791128396988
       },
       "height": 0.15,
       "baseY": -0.075,
@@ -903,7 +926,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.19162669777870178
       },
       "height": 0.192,
       "baseY": -0.096,
@@ -922,8 +946,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 6.021026611328125
       },
       "height": 6.021,
       "baseY": -2.279,
@@ -942,8 +967,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 6.021026611328125
       },
       "height": 6.021,
       "baseY": -2.279,
@@ -962,8 +988,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 0.5536678433418274
       },
       "height": 0.554,
       "baseY": -0.277,
@@ -983,7 +1010,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.528252363204956
       },
       "height": 0.528,
       "baseY": -0.149,
@@ -1003,7 +1031,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4000000953674316
       },
       "height": 2.4,
       "baseY": -2.4,
@@ -1023,7 +1052,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4000000953674316
       },
       "height": 2.4,
       "baseY": -2.4,
@@ -1042,9 +1072,9 @@
       "theme": "dlc11_summer",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.977893829345703
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.399339199066162
       },
       "height": 5.978,
       "baseY": -5.978,
@@ -1063,9 +1093,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.977893829345703
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.399339199066162
       },
       "height": 5.978,
       "baseY": -5.978,
@@ -1085,7 +1115,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.399339199066162
       },
       "height": 2.399,
       "baseY": -2.399,
@@ -1105,7 +1136,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4000000953674316
       },
       "height": 2.4,
       "baseY": -2.4,
@@ -1125,7 +1157,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4000000953674316
       },
       "height": 2.4,
       "baseY": -2.4,
@@ -1145,7 +1178,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4000000953674316
       },
       "height": 2.4,
       "baseY": -2.4,
@@ -1165,7 +1199,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4000000953674316
       },
       "height": 2.4,
       "baseY": -2.4,
@@ -1185,7 +1220,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4000000953674316
       },
       "height": 2.4,
       "baseY": -2.4,
@@ -1205,7 +1241,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4000000953674316
       },
       "height": 2.4,
       "baseY": -2.4,
@@ -1225,7 +1262,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5081554651260376
       },
       "height": 1.508,
       "baseY": -0.754,
@@ -1245,7 +1283,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4369374513626099
       },
       "height": 1.437,
       "baseY": -0.61,
@@ -1265,7 +1304,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.1271424293518066
       },
       "height": 1.127,
       "baseY": -0.479,
@@ -1285,7 +1325,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.4369374513626099
       },
       "height": 1.437,
       "baseY": -0.61,
@@ -1304,9 +1345,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 10,
+        "cellsZ": 20,
+        "sizeY": 2.664535364979494e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "矿洞暗区 1",
       "nameEn": "mi dark 1",
@@ -1322,8 +1365,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 1.9456849098205566
       },
       "height": 1.946,
       "baseY": 1.004,
@@ -1342,8 +1386,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.7031448483467102
       },
       "height": 0.703,
       "baseY": -0.467,
@@ -1362,8 +1407,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 21,
+        "sizeY": 0.9507418870925903
       },
       "height": 0.951,
       "baseY": -0.891,
@@ -1404,9 +1450,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 13,
+        "sizeY": 2.220446049250313e-15
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -1424,9 +1472,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 10,
+        "cellsZ": 1,
+        "sizeY": 2.664535364979494e-16
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -1444,9 +1494,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 1,
+        "sizeY": 2.664535364979494e-16
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -1465,7 +1517,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.9171754717826843
       },
       "height": 0.917,
       "baseY": -0.626,
@@ -1526,7 +1579,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.8104404211044312
       },
       "height": 1.81,
       "baseY": -1.013,
@@ -1546,7 +1600,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.8104404211044312
       },
       "height": 1.81,
       "baseY": -1.013,
@@ -1566,7 +1621,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2055608034133911
       },
       "height": 1.206,
       "baseY": -0.599,
@@ -1585,9 +1641,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 10,
+        "cellsZ": 20,
+        "sizeY": 2.664535364979494e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "矿洞泥墙",
       "nameEn": "mi mudwalls 1",
@@ -1603,9 +1661,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 10,
+        "cellsZ": 20,
+        "sizeY": 2.664535364979494e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "矿洞泥墙（外侧）",
       "nameEn": "mi mudwalls 1 outside",
@@ -1622,7 +1682,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.896918773651123
       },
       "height": 1.897,
       "baseY": -0.948,
@@ -1642,7 +1703,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.4024825096130371
       },
       "height": 0.402,
       "baseY": -0.201,
@@ -1662,7 +1724,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.11779043078422546
       },
       "height": 0.118,
       "baseY": -0.059,
@@ -1682,7 +1745,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.8019100427627563
       },
       "height": 1.802,
       "baseY": -0.901,
@@ -1702,7 +1766,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.7172017097473145
       },
       "height": 1.717,
       "baseY": -0.859,
@@ -1722,7 +1787,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.556240200996399
       },
       "height": 1.556,
       "baseY": -0.778,
@@ -1742,7 +1808,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 5,
+        "sizeY": 3.890212059020996
       },
       "height": 3.89,
       "baseY": -0.319,
@@ -1762,7 +1829,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.3092775344848633
       },
       "height": 2.309,
       "baseY": -1.155,
@@ -1822,9 +1890,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 4,
+        "cellsZ": 8,
+        "sizeY": 2.664535364979494e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "mi 石墙 2 4x8",
       "nameEn": "mi stone wall 2 4x8",
@@ -1840,9 +1910,11 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 4,
+        "sizeY": 2.66453695316627e-16
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "mi 石墙 2 8x13",
       "nameEn": "mi stone wall 2 8x13",
@@ -1859,7 +1931,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4099974632263184
       },
       "height": 2.41,
       "layoutTier": "decor",
@@ -1878,7 +1951,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.4099974632263184
       },
       "height": 2.41,
       "layoutTier": "decor",
@@ -1917,7 +1991,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.3581874370574951
       },
       "height": 1.358,
       "baseY": -0.679,
@@ -1937,7 +2012,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3088991641998291
       },
       "height": 0.309,
       "baseY": -0.154,
@@ -1957,7 +2033,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.3116859793663025
       },
       "height": 0.312,
       "baseY": -0.156,
@@ -1977,7 +2054,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6291986107826233
       },
       "height": 0.629,
       "baseY": -0.315,
@@ -1997,7 +2075,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.603405237197876
       },
       "height": 0.603,
       "baseY": -0.302,
@@ -2016,8 +2095,9 @@
       "theme": "mine",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.4213140904903412
       },
       "height": 0.421,
       "baseY": -0.211,
@@ -2081,7 +2161,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0631181001663208
       },
       "height": 1.063,
       "baseY": -0.532,
@@ -2101,7 +2182,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.20056571066379547
       },
       "height": 0.201,
       "baseY": -0.1,
@@ -2121,7 +2203,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.25533634424209595
       },
       "height": 0.255,
       "baseY": -0.128,
@@ -2160,8 +2243,9 @@
       "theme": "shared_kitchen",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.33682915568351746
       },
       "height": 0.337,
       "baseY": -0.231,
@@ -2180,8 +2264,9 @@
       "theme": "meshes",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 2.2005844116210938
       },
       "height": 2.201,
       "layoutTier": "decor",
@@ -2217,8 +2302,9 @@
       "theme": "revision_02",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 4,
+        "cellsZ": 17,
+        "sizeY": 5.007757663726807
       },
       "height": 5.008,
       "baseY": -1.682,
@@ -2237,8 +2323,9 @@
       "theme": "revision_02",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 42,
+        "cellsZ": 28,
+        "sizeY": 6.668116092681885
       },
       "height": 6.668,
       "baseY": -4.789,
@@ -2257,8 +2344,9 @@
       "theme": "revision_02",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 26,
+        "cellsZ": 27,
+        "sizeY": 2.3378913402557373
       },
       "height": 2.338,
       "baseY": -2.219,
@@ -2968,7 +3056,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.618,
+      "height": 1.545,
       "baseY": -0.349,
       "layoutTier": "decor",
       "nameZh": "DLC 顾客 04",
@@ -2988,7 +3076,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.268,
+      "height": 1.248,
       "baseY": -0.071,
       "layoutTier": "decor",
       "nameZh": "DLC 顾客 05",
@@ -3008,7 +3096,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.268,
+      "height": 1.301,
       "baseY": -0.071,
       "layoutTier": "decor",
       "nameZh": "DLC 顾客 06",

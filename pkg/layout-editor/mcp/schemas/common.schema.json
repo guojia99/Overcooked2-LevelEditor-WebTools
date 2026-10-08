@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "resource": {
+      "type": "object",
+      "properties": {
+        "setName": { "type": "string" },
+        "levelId": { "type": "string" },
+        "assetPath": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "timing": {
+      "type": "object",
+      "required": ["estimatedMs", "pollAfterMs", "deadlineMs"],
+      "properties": {
+        "estimatedMs": { "type": "integer", "minimum": 0 },
+        "pollAfterMs": { "type": ["integer", "null"], "minimum": 0 },
+        "deadlineMs": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

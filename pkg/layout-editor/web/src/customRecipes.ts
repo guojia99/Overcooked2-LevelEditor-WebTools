@@ -2764,10 +2764,22 @@ function openManageCategoriesModal(
     )
     .join("");
 
+  // 子弹窗（改名/删除）操作成功后：其 closeModal 已把本弹窗（旧数据）唤回，
+  // 这里重拉分类数据并以同 id 重开替换，方便连续管理；同时刷新页面列表。
+  const reopenWithFreshCategories = async (): Promise<void> => {
+    try {
+      const cfg = await api.fetchCustomRecipeConfig(setName);
+      openManageCategoriesModal(setName, cfg.categories, onDone);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    }
+  };
+
   openModal(
     "管理分类",
     `<div class="modal-scroll">${list || '<p class="muted">暂无分类</p>'}</div>`,
-    mCancelBtnHtml("关闭")
+    mCancelBtnHtml("关闭"),
+    { id: "category-manager" }
   );
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
 
@@ -2776,7 +2788,7 @@ function openManageCategoriesModal(
       const oldId = b.dataset.rename!;
       const cat = categories.find((c) => c.id === oldId);
       openRenameCategoryModal(setName, oldId, cat?.zh ?? oldId, cat?.en ?? oldId, () => {
-        closeModal();
+        void reopenWithFreshCategories();
         onDone();
       });
     });
@@ -2798,6 +2810,7 @@ function openManageCategoriesModal(
           await api.deleteCustomRecipeCategory(setName, catId);
           closeModal();
           setStatus("已删除分类");
+          void reopenWithFreshCategories();
           onDone();
         } catch (e) {
           setStatus((e as Error).message, false);

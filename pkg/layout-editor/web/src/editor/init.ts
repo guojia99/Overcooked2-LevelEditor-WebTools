@@ -518,7 +518,7 @@ export async function init() {
     void withLevelDetail((detail) =>
       openToolsHistoryModal(detail, {
         onTestLayout: () => requestTestLayout(),
-        onSyncLayout: () => openSyncLayoutDialog(),
+        onSyncLayout: () => void openSyncLayoutDialog(),
         onRepaired: (n) => {
           setStatus(`已移除 ${n} 个损坏的预制件实例，正在重新加载场景…`, false);
           void loadScene(S.scenePath ?? "");
@@ -676,7 +676,7 @@ export async function init() {
     // 关卡管理「🧰 工具与历史」跳转携带的一次性自动动作（sessionStorage）。
     const auto = consumeLayoutAutoAction();
     if (auto === "test-layout") requestTestLayout();
-    else if (auto === "sync-layout") openSyncLayoutDialog();
+    else if (auto === "sync-layout") void openSyncLayoutDialog();
   }
 
   // 恢复上次的视图模式（localStorage）。放在场景加载之后，3D 首帧就有内容，

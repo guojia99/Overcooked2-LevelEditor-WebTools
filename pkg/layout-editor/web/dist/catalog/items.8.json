@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 8,
   "itemCount": 200,
   "items": [
@@ -603,9 +603,8 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 2
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2,
       "layoutTier": "decor",
@@ -623,8 +622,9 @@
       "theme": "dlc07_horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 2
       },
       "height": 2,
       "layoutTier": "decor",
@@ -685,7 +685,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2
       },
       "height": 2,
       "layoutTier": "decor",
@@ -1852,7 +1853,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.759618878364563
       },
       "height": 0.76,
       "baseY": -0.167,
@@ -4103,8 +4105,9 @@
       "theme": "shared_kitchen",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 0.2878745496273041
       },
       "height": 0.288,
       "baseY": -0.058,

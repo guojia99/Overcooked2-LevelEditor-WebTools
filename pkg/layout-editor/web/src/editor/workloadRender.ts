@@ -181,8 +181,11 @@ function drawWorkloadOverlays(areas: string[][]): void {
   }
 }
 
-/** 与主编辑器地板层 + 核心层一致的 2D 俯视渲染（不含装饰/背景/动画叠加）。 */
-export function drawWorkloadScene(areas: string[][]): void {
+/** 弹窗编辑器共享底图（工作量推测 / 燃烧弹射器波次编辑共用）：与主编辑器
+ *  地板层 + 核心层一致的 2D 俯视渲染——背景、网格、可行走、地板块、接缝、
+ *  表面物品、核心层物品全量（含玩家），不含装饰/背景/动画叠加与选中高亮。
+ *  必须在 withWorkloadCanvas 挂载上下文内调用。 */
+export function drawModalBaseScene(): void {
   const w = dom.canvas.width;
   const h = dom.canvas.height;
   dom.ctx.fillStyle = "#1a1d23";
@@ -201,7 +204,11 @@ export function drawWorkloadScene(areas: string[][]): void {
   for (const item of coreItems) {
     drawItem(item, false);
   }
+}
 
+/** 与主编辑器地板层 + 核心层一致的 2D 俯视渲染（不含装饰/背景/动画叠加）。 */
+export function drawWorkloadScene(areas: string[][]): void {
+  drawModalBaseScene();
   drawWorkloadOverlays(areas);
 }
 

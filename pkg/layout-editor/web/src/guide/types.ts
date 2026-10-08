@@ -5,10 +5,11 @@ export type GuideBlock =
   | { type: "bullets"; items: string[] }
   | { type: "callout"; text: string }
   | { type: "note"; text: string }
+  | { type: "code"; code: string; language?: string }
   | { type: "kbdTable"; rows: [string, string][] }
   | { type: "table"; header: string[]; rows: string[][] }
   | { type: "link"; label: string; href: string; external?: boolean }
-  | { type: "dynamic"; kind: "ingredient-samples" | "recipe-samples" | "utensil-icons" | "icon-paths" | "changelog" };
+  | { type: "dynamic"; kind: "ingredient-samples" | "recipe-samples" | "utensil-icons" | "icon-paths" | "changelog" | "mcp-http-debug" };
 
 /**
  * Tree node: branch (children) or leaf (blocks). Both may coexist (intro + children).

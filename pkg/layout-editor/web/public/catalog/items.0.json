@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 0,
   "itemCount": 200,
   "items": [
@@ -12,7 +12,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.5515438318252563
       },
       "height": 1.552,
       "baseY": -0.127,
@@ -115,8 +116,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 17,
+        "cellsZ": 17,
+        "sizeY": 25.41769790649414
       },
       "height": 25.418,
       "baseY": 1,
@@ -135,8 +137,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 17,
+        "cellsZ": 17,
+        "sizeY": 25.41769790649414
       },
       "height": 25.418,
       "baseY": 1,
@@ -155,8 +158,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 17,
+        "cellsZ": 17,
+        "sizeY": 25.41769790649414
       },
       "height": 25.418,
       "baseY": 1,
@@ -217,8 +221,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 1.4634792804718018
       },
       "height": 1.463,
       "baseY": -0.374,
@@ -237,8 +242,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 15.060502052307129
       },
       "height": 15.061,
       "baseY": -2.026,
@@ -258,7 +264,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.315902233123779
       },
       "height": 4.316,
       "baseY": -1.952,
@@ -278,7 +285,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.0787391662597656
       },
       "height": 3.079,
       "baseY": -1.953,
@@ -298,7 +306,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.029881477355957
       },
       "height": 3.03,
       "baseY": -1.953,
@@ -318,7 +327,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 2,
+        "sizeY": 4.333479404449463
       },
       "height": 4.333,
       "baseY": -1.702,
@@ -338,7 +348,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.315902233123779
       },
       "height": 4.316,
       "baseY": -1.94,
@@ -358,7 +369,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.010982036590576
       },
       "height": 4.322,
       "baseY": -1.954,
@@ -566,8 +578,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 0.30000004172325134
       },
       "height": 0.3,
       "baseY": -0.15,
@@ -629,7 +642,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.676788806915283
       },
       "height": 4.677,
       "baseY": -0.341,
@@ -649,7 +663,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.342492938041687
       },
       "height": 1.342,
       "baseY": -0.671,
@@ -690,7 +705,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.010982036590576
       },
       "height": 4.178,
       "baseY": -1.944,
@@ -710,7 +726,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.085385799407959
       },
       "height": 4.085,
       "baseY": -1.959,
@@ -730,7 +747,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.126407623291016
       },
       "height": 4.126,
       "baseY": -1.956,
@@ -750,7 +768,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 2,
+        "sizeY": 4.010982036590576
       },
       "height": 4.011,
       "baseY": -2.27,
@@ -769,8 +788,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 15.06350326538086
       },
       "height": 15.064,
       "baseY": -2.029,
@@ -789,8 +809,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 4.253341197967529
       },
       "height": 4.253,
       "baseY": -2.028,
@@ -810,7 +831,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 2,
+        "sizeY": 4.1689887046813965
       },
       "height": 4.169,
       "baseY": -2.027,
@@ -871,8 +893,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 5.604885101318359
       },
       "height": 5.605,
       "baseY": -4.429,
@@ -891,8 +914,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 6.65334415435791
       },
       "height": 6.653,
       "baseY": -4.428,
@@ -911,8 +935,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 6.568989276885986
       },
       "height": 6.569,
       "baseY": -3.284,
@@ -932,7 +957,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 2,
+        "sizeY": 6.568989276885986
       },
       "height": 6.569,
       "baseY": -3.284,
@@ -973,7 +999,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.109041213989258
       },
       "height": 4.109,
       "baseY": -1.957,
@@ -993,7 +1020,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 6.5312180519104
       },
       "height": 6.531,
       "baseY": -4.357,
@@ -1013,7 +1041,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 6.410984516143799
       },
       "height": 6.411,
       "baseY": -4.357,
@@ -1033,7 +1062,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 2,
+        "sizeY": 3.4262027740478516
       },
       "height": 3.426,
       "baseY": -2.146,
@@ -1074,7 +1104,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 5.367554664611816
       },
       "height": 5.368,
       "baseY": -4.31,
@@ -1094,7 +1125,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 6.410983562469482
       },
       "height": 6.411,
       "baseY": -4.357,
@@ -1114,7 +1146,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 4.010982036590576
       },
       "height": 4.011,
       "baseY": -1.957,
@@ -1134,7 +1167,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 6.527004241943359
       },
       "height": 6.527,
       "baseY": -4.364,
@@ -1216,8 +1250,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 5,
+        "sizeY": 0.2425229251384735
       },
       "height": 0.243,
       "baseY": -0.12,
@@ -1236,8 +1271,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 7,
+        "cellsZ": 1,
+        "sizeY": 1.6961474418640137
       },
       "height": 1.696,
       "baseY": -0.573,
@@ -1278,7 +1314,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2082713842391968
       },
       "height": 1.208,
       "baseY": -0.029,
@@ -1298,7 +1335,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.2082713842391968
       },
       "height": 1.208,
       "baseY": -0.029,
@@ -1317,8 +1355,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 1,
+        "sizeY": 0.4664550721645355
       },
       "height": 0.466,
       "baseY": -0.215,
@@ -1338,7 +1377,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 4,
+        "sizeY": 1.0832805633544922
       },
       "height": 1.083,
       "baseY": -0.583,
@@ -1358,7 +1398,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6241549253463745
       },
       "height": 0.624,
       "baseY": -0.12,
@@ -1418,7 +1459,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.0772342681884766
       },
       "height": 1.077,
       "baseY": -0.539,
@@ -1670,8 +1712,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 5,
+        "sizeY": 7.3527936935424805
       },
       "height": 7.353,
       "baseY": -4.142,
@@ -2458,7 +2501,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.08295905590057373
       },
       "height": 0.083,
       "baseY": -0.041,
@@ -2561,8 +2605,9 @@
       "theme": "s_summer_1_1",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 4,
+        "cellsZ": 17,
+        "sizeY": 1.7516027688980103
       },
       "height": 1.752,
       "baseY": 1.574,
@@ -2581,8 +2626,9 @@
       "theme": "s_summer_1_1",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 16,
+        "sizeY": 3.5467348098754883
       },
       "height": 3.547,
       "baseY": -1.682,
@@ -2866,8 +2912,9 @@
       "theme": "revision_02",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 25,
+        "cellsZ": 24,
+        "sizeY": 5.481879234313965
       },
       "height": 5.482,
       "baseY": -2.026,
@@ -2886,8 +2933,9 @@
       "theme": "revision_02",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 12,
+        "sizeY": 2.6277782917022705
       },
       "height": 2.628,
       "baseY": -2.284,
@@ -2906,8 +2954,9 @@
       "theme": "revision_02",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 12,
+        "sizeY": 2.6277782917022705
       },
       "height": 2.628,
       "baseY": -2.284,
@@ -2926,8 +2975,9 @@
       "theme": "revision_02",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 12,
+        "sizeY": 2.6277782917022705
       },
       "height": 2.628,
       "baseY": -1.314,
@@ -2967,8 +3017,9 @@
       "theme": "city_sushi",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 4,
+        "cellsZ": 11,
+        "sizeY": 4.882478713989258
       },
       "height": 4.882,
       "baseY": -0.158,
@@ -2988,7 +3039,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 12,
+        "sizeY": 4.679263114929199
       },
       "height": 4.679,
       "baseY": -0.158,
@@ -3194,7 +3246,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.1229567527770996
       },
       "height": 1.123,
       "layoutTier": "decor",
@@ -3213,7 +3266,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.1229567527770996
       },
       "height": 1.123,
       "layoutTier": "decor",
@@ -3232,7 +3286,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.1229565143585205
       },
       "height": 1.123,
       "layoutTier": "decor",
@@ -3251,7 +3306,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 2.008331298828125
       },
       "height": 2.008,
       "layoutTier": "decor",
@@ -3310,7 +3366,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.3935256004333496
       },
       "height": 3.394,
       "baseY": -1.394,
@@ -3332,6 +3389,7 @@
         "cellsX": 6,
         "cellsZ": 6
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -3352,6 +3410,7 @@
         "cellsX": 6,
         "cellsZ": 6
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -3636,7 +3695,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5010152459144592
       },
       "height": 0.501,
       "layoutTier": "decor",
@@ -3655,7 +3715,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5431906580924988
       },
       "height": 0.543,
       "layoutTier": "decor",
@@ -3674,7 +3735,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.6202110648155212
       },
       "height": 0.62,
       "baseY": -0.048,
@@ -3775,7 +3837,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3794,7 +3857,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3813,7 +3877,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3832,7 +3897,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3851,7 +3917,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3870,7 +3937,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3889,7 +3957,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3908,7 +3977,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3927,7 +3997,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.9298770427703857
       },
       "height": 1.93,
       "layoutTier": "decor",
@@ -3945,8 +4016,9 @@
       "theme": "particles",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 4,
+        "sizeY": 1.311028242111206
       },
       "height": 1.44,
       "baseY": -0.785,

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 10,
   "itemCount": 200,
   "items": [
@@ -2944,9 +2944,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 6,
-        "sizeY": 5.287168502807617
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 5.287,
       "baseY": -0.02,
@@ -2966,8 +2965,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3,
-        "sizeY": 1.867043375968933
+        "cellsZ": 1
       },
       "height": 1.867,
       "baseY": 0.01,
@@ -2986,9 +2984,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 2.433500289916992
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.434,
       "baseY": -0.387,
@@ -3007,9 +3004,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 2.299938201904297
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.3,
       "baseY": -0.076,
@@ -3028,9 +3024,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.9916880130767822
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.992,
       "baseY": 0.233,
@@ -3049,9 +3044,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 4,
-        "cellsZ": 4,
-        "sizeY": 3.7460861206054688
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 3.746,
       "baseY": -1.122,
@@ -3070,9 +3064,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 2.2963969707489014
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.296,
       "baseY": -0.688,
@@ -3091,9 +3084,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 4,
-        "cellsZ": 4,
-        "sizeY": 3.7460861206054688
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 3.746,
       "baseY": -1.122,
@@ -3112,9 +3104,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 2.511899948120117
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.512,
       "baseY": -0.141,
@@ -3133,9 +3124,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 2.512477159500122
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.512,
       "baseY": -0.138,
@@ -3154,9 +3144,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 2.511899948120117
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.512,
       "baseY": -0.141,
@@ -3217,8 +3206,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.4328689575195312
+        "cellsZ": 1
       },
       "height": 1.433,
       "baseY": -0.111,
@@ -3238,8 +3226,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.2739204466342926
+        "cellsZ": 1
       },
       "height": 0.274,
       "baseY": -0.137,
@@ -3261,8 +3248,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.24161435663700104
+        "cellsZ": 1
       },
       "height": 0.242,
       "baseY": -0.121,
@@ -3284,8 +3270,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.25089067220687866
+        "cellsZ": 1
       },
       "height": 0.251,
       "baseY": -0.125,
@@ -3328,8 +3313,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.9763060212135315
+        "cellsZ": 1
       },
       "height": 0.976,
       "baseY": -0.036,
@@ -3349,8 +3333,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.7182494401931763
+        "cellsZ": 1
       },
       "height": 0.718,
       "baseY": -0.027,
@@ -3370,8 +3353,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.7079007625579834
+        "cellsZ": 1
       },
       "height": 0.708,
       "baseY": -0.021,
@@ -3429,9 +3411,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 3.1514663696289062
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 3.151,
       "baseY": -0.01,
@@ -3451,8 +3432,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9358536005020142
+        "cellsZ": 1
       },
       "height": 1.936,
       "baseY": -1.821,
@@ -3472,8 +3452,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8822378516197205
+        "cellsZ": 1
       },
       "height": 0.882,
       "baseY": -0.028,
@@ -3512,9 +3491,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 0.45115479826927185
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.451,
       "baseY": -0.395,
@@ -3534,8 +3512,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.6911676526069641
+        "cellsZ": 1
       },
       "height": 0.691,
       "layoutTier": "decor",
@@ -3554,8 +3531,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.11957678943872452
+        "cellsZ": 1
       },
       "height": 0.12,
       "baseY": -0.007,
@@ -3575,8 +3551,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.3747807443141937
+        "cellsZ": 1
       },
       "height": 0.375,
       "layoutTier": "decor",
@@ -3595,8 +3570,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 3,
-        "sizeY": 1.4088313579559326
+        "cellsZ": 1
       },
       "height": 1.409,
       "baseY": 0.047,
@@ -3636,8 +3610,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.44985291361808777
+        "cellsZ": 1
       },
       "height": 0.45,
       "baseY": -0.212,
@@ -3657,8 +3630,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.49122264981269836
+        "cellsZ": 1
       },
       "height": 0.491,
       "baseY": -0.238,
@@ -3699,8 +3671,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.6143399477005005
+        "cellsZ": 1
       },
       "height": 0.614,
       "baseY": -0.294,
@@ -3740,8 +3711,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.702496290206909
+        "cellsZ": 1
       },
       "height": 2.702,
       "layoutTier": "decor",
@@ -3760,8 +3730,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.6629388332366943
+        "cellsZ": 1
       },
       "height": 2.663,
       "baseY": -0.007,
@@ -3780,9 +3749,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 19,
-        "cellsZ": 8,
-        "sizeY": 0.05767807364463806
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 0.058,
       "baseY": -0.034,
@@ -3822,8 +3790,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5787730813026428
+        "cellsZ": 1
       },
       "height": 0.579,
       "baseY": -0.028,
@@ -3842,9 +3809,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 1.6408379077911377
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.641,
       "baseY": -0.028,
@@ -3863,9 +3829,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 4,
-        "cellsZ": 3,
-        "sizeY": 1.5666661262512207
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.567,
       "baseY": -0.034,
@@ -3884,9 +3849,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 3,
-        "cellsZ": 3,
-        "sizeY": 1.6948745250701904
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 1.695,
       "baseY": -0.026,
@@ -3906,8 +3870,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 1.27962327003479
+        "cellsZ": 1
       },
       "height": 1.28,
       "baseY": -0.014,
@@ -3927,8 +3890,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.2833188772201538
+        "cellsZ": 1
       },
       "height": 0.283,
       "layoutTier": "decor",
@@ -3947,8 +3909,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.3007354736328125
+        "cellsZ": 1
       },
       "height": 0.301,
       "baseY": -0.008,
@@ -3968,8 +3929,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.3244960308074951
+        "cellsZ": 1
       },
       "height": 0.324,
       "baseY": -0.01,
@@ -3989,8 +3949,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.27846720814704895
+        "cellsZ": 1
       },
       "height": 0.278,
       "layoutTier": "decor",
@@ -4009,8 +3968,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.27846720814704895
+        "cellsZ": 1
       },
       "height": 0.278,
       "layoutTier": "decor",
@@ -4029,8 +3987,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.2664553225040436
+        "cellsZ": 1
       },
       "height": 0.266,
       "baseY": -0.025,
@@ -4091,9 +4048,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 6,
-        "cellsZ": 5,
-        "sizeY": 5.270464897155762
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 5.27,
       "baseY": -0.039,
@@ -4112,9 +4068,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 12,
-        "cellsZ": 12,
-        "sizeY": 12.05717658996582
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 12.057,
       "baseY": -1.295,
@@ -4133,9 +4088,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 12,
-        "cellsZ": 12,
-        "sizeY": 12.05717658996582
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 12.057,
       "baseY": -1.295,
@@ -4154,9 +4108,8 @@
       "theme": "dlc10",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 12,
-        "cellsZ": 12,
-        "sizeY": 12.05717658996582
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 12.057,
       "baseY": -1.295,

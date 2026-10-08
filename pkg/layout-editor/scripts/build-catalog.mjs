@@ -34,9 +34,11 @@ const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
  *  its own version via /api/health so the web UI can warn about outdated bridges.
  *  v6（2026-09-15）：传送门方向（teleportal.exitOnly）——旧桥接会把该字段静默丢弃，
  *  必须靠版本告警把「单向配置写回后消失」拦在前面。
- *  v7（2026-09-19）：老鼠偷食材（ratHeist stub DTO）——旧桥不认识 stubKind=RatHeist /
- *  item.ratHeist，写回会静默丢参数，靠版本告警拦旧桥。 */
-const SCHEMA_VERSION = 7;
+ * v7（2026-09-19）：老鼠偷食材（ratHeist stub DTO）——旧桥不认识 stubKind=RatHeist /
+ * item.ratHeist，写回会静默丢参数，靠版本告警拦旧桥。
+ * v8（2026-10-08）：燃烧弹射器波次（item.burner.waves）——旧桥不认识 waves 字段，
+ * 写回会静默丢落点/时序，靠版本告警拦旧桥。 */
+const SCHEMA_VERSION = 8;
 
 /**
  * CustomStub 依赖道具（needsStub=true）：游戏侧需要关卡集携带 Stub_<set> runtime

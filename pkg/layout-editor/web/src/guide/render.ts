@@ -57,6 +57,9 @@ function nodeSearchText(node: GuideNode): string {
       case "note":
         parts.push(b.text);
         break;
+      case "code":
+        parts.push(b.code);
+        break;
       case "table":
         parts.push(...b.header, ...b.rows.flat().map(stripHtml));
         break;
@@ -149,6 +152,8 @@ function renderBlock(block: GuideBlock, ctx: GuideRenderContext): string {
       return `<p class="guide-callout">${esc(block.text)}</p>`;
     case "note":
       return `<p class="guide-note">${esc(block.text)}</p>`;
+    case "code":
+      return `<pre class="guide-code"><code data-language="${esc(block.language ?? "text")}">${esc(block.code)}</code></pre>`;
     case "table":
       return `<table class="guide-table guide-table-grid"><thead><tr>${block.header
         .map((h) => `<th>${esc(h)}</th>`)
@@ -173,6 +178,15 @@ function renderBlock(block: GuideBlock, ctx: GuideRenderContext): string {
           return renderUtensilIcons();
         case "changelog":
           return `<div class="changelog-content guide-changelog">${renderChangelogFromMd(ctx.changelogMd ?? "")}</div>`;
+        case "mcp-http-debug":
+          return `<div class="mcp-http-debug" data-mcp-debug>
+            <div class="mcp-debug-actions">
+              <button type="button" class="btn secondary" data-mcp-action="health">检查 Bridge</button>
+              <button type="button" class="btn secondary" data-mcp-action="manifest">读取清单</button>
+              <button type="button" class="btn secondary" data-mcp-action="tools">读取工具</button>
+            </div>
+            <pre class="mcp-debug-output" data-mcp-output>尚未执行请求。</pre>
+          </div>`;
         default:
           return "";
       }

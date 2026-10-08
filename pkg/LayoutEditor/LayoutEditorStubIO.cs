@@ -727,6 +727,7 @@ public static class LayoutEditorStubIO
                 : "";
             var isSpecialMachine = IsSpecialDispenserPrefabId(pid);
             var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
+            var baseStub = FindExactBaseStub(go);
             if (dispenser == null)
             {
                 // 酱料机/饮料机原 prefab 无 PseudoPrefabDispenserStub：写回时补加（并复用基础 stub 的 pseudoPrefabSO）
@@ -737,10 +738,13 @@ public static class LayoutEditorStubIO
                     return;
                 }
                 dispenser = Undo.AddComponent<PseudoPrefabDispenserStub>(go);
-                var baseStub = go.GetComponent<PseudoPrefabStub>();
                 if (baseStub != null && dispenser.pseudoPrefabSO == null)
                     dispenser.pseudoPrefabSO = baseStub.pseudoPrefabSO;
             }
+
+            // 「双 stub」修复（2026-10-06 真机卡加载事故）：派生 stub 就位后移除基础组件对
+            // 并保证派生运行时存在，详见 PromoteDerivedStub 注释。
+            PromoteDerivedStub(go);
 
             // 随机食材箱：烘焙关卡集 stub 程序集的 CustomStub.RandomCrate（反射软接入；
             // 程序集缺失时写持久化数据载体并按固定箱（首候选）临时生效，不降级）
@@ -805,6 +809,19 @@ public static class LayoutEditorStubIO
             Debug.Log("[LayoutEditor] Apply Dispenser: guid=" + (item.dispenser.spawnerItemPrefabGuid ?? "<empty>")
                 + " -> " + (so != null ? so.name : "NULL"));
             dispenser.spawnerItemPrefabSO = so;
+            // 酱料机/饮料机未传单食材时回落 soArray 首项（现为派生道具挂真实运行时组件，
+            // spawnerItemPrefabSO 为空会让宿主/真机 PseudoPrefabDispenser.Setup 的
+            // GetIngredientPrefabForOptional(null) NRE——机器输出本就是 soArray 循环列表）。
+            if (so == null && isSpecialMachine && dispenser.spawnerItemPrefabSO == null)
+            {
+                var machineArray = go.GetComponent<PseudoPrefabSOArray>();
+                if (machineArray != null && machineArray.pseudoPrefabSOs != null && machineArray.pseudoPrefabSOs.Length > 0)
+                {
+                    dispenser.spawnerItemPrefabSO = machineArray.pseudoPrefabSOs[0];
+                    LayoutEditorLog.LogWarning("[随机箱链路] Apply Dispenser: 机器未配置单食材，已回落 soArray 首项: "
+                        + go.name + "（" + dispenser.spawnerItemPrefabSO.name + "）");
+                }
+            }
             return;
         }
 
@@ -1042,6 +1059,10 @@ public static class LayoutEditorStubIO
                 if (baseStub != null && baseStub.pseudoPrefabSO != null)
                     servingStub.pseudoPrefabSO = baseStub.pseudoPrefabSO;
             }
+
+            // 「双 stub」修复（2026-10-06）：同 Dispenser 分支——移除基础组件对 +
+            // 保证派生运行时存在（详见 PromoteDerivedStub 注释）。
+            PromoteDerivedStub(go);
             return;
         }
 
@@ -1058,6 +1079,9 @@ public static class LayoutEditorStubIO
                 if (baseStub != null && baseStub.pseudoPrefabSO != null)
                     returnStation.pseudoPrefabSO = baseStub.pseudoPrefabSO;
             }
+
+            // 「双 stub」修复（2026-10-06）：同上，移除基础组件对 + 保证派生运行时存在。
+            PromoteDerivedStub(go);
 
             Undo.RecordObject(returnStation, "Layout Editor Plate Return");
             returnStation.returnClean = item.plateReturn.returnClean;
@@ -1146,6 +1170,34 @@ public static class LayoutEditorStubIO
             burner.airTime = item.burner.airTime;
             burner.randomTargetOrder = item.burner.randomTargetOrder;
             burner.hideVisual = item.burner.hideVisual;
+
+            // 波次落点：flatten 进 targetPositions（顺序发射权威顺序）；
+            // 时序（何时烧哪一波）由 BurnerScheduleBakery 的 TriggerTimer 承载。
+            // 有 waves 时强制顺序发射——波次语义不允许随机打乱。
+            // 顺序模式（sequentialFire）：波内按阅读顺序（从上到下、从左到右）
+            // 排序后 flatten——与 BurnerScheduleBakery.SortWavePositions 共用排序，
+            // 保证「第 i 发 timer → targetPositions[i]」一一对应。
+            var waves = item.burner.waves;
+            if (waves != null)
+            {
+                var flat = new List<UnityEngine.Vector3>();
+                for (int w = 0; w < waves.Length; w++)
+                {
+                    var wave = waves[w];
+                    if (wave == null || wave.positions == null) continue;
+                    var ordered = item.burner.sequentialFire
+                        ? BurnerScheduleBakery.SortWavePositions(wave.positions)
+                        : wave.positions;
+                    for (int p = 0; p < ordered.Length; p++)
+                    {
+                        var pos = ordered[p];
+                        if (pos == null) continue;
+                        flat.Add(new UnityEngine.Vector3(pos.x, 0f, pos.z));
+                    }
+                }
+                burner.targetPositions = flat.ToArray();
+                burner.randomTargetOrder = false;
+            }
         }
 
         if ((item.stubKind == "Switch" || item.stubKind == "CannonSwitch") && item.switchStub != null)
@@ -1469,6 +1521,8 @@ public static class LayoutEditorStubIO
             var baseStub = go.GetComponent<PseudoPrefabStub>();
             if (baseStub != null && baseStub.pseudoPrefabSO != null)
                 serving.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+            // 「双 stub」修复（2026-10-06）：补挂派生 stub 后清理基础组件对。
+            PromoteDerivedStub(go);
         }
 
         var resolved = new System.Collections.Generic.List<PseudoPrefabPlateReturnStub>();
@@ -1500,6 +1554,8 @@ public static class LayoutEditorStubIO
                     stub = Undo.AddComponent<PseudoPrefabPlateReturnStub>(target);
                     if (targetBase.pseudoPrefabSO != null)
                         stub.pseudoPrefabSO = targetBase.pseudoPrefabSO;
+                    // 「双 stub」修复（2026-10-06）：补挂派生 stub 后清理基础组件对。
+                    PromoteDerivedStub(target);
                 }
                 if (!resolved.Contains(stub))
                     resolved.Add(stub);
@@ -1964,6 +2020,70 @@ public static class LayoutEditorStubIO
             if (p != null && p.GetType() == typeof(LevelEditor.PseudoPrefab))
                 return p;
         return null;
+    }
+
+    /// <summary>「双 stub」清理 + 派生晋升（2026-10-06 真机卡加载事故）：
+    ///  物体上存在派生 stub 时，移除恰好为基类的基础 PseudoPrefabStub / 基础 PseudoPrefab
+    ///  组件对，并保证派生 stub 对应的派生运行时组件存在。
+    ///  根因：PseudoPrefab.Awake 的 GetComponent&lt;PseudoPrefabStub&gt;() 返回组件序第一的
+    ///  stub——wrapper 升级路径补挂派生 stub 后基础对残留在前，真机 OC2DIYLevel 按派生
+    ///  stub 分类挂派生运行时，Setup 开头强转 (派生Stub)stub 命中基础 stub →
+    ///  InvalidCastException 中断 ResetAllPseudoPrefabs 全链 → 关卡永久卡加载；
+    ///  编辑器侧因基础 Setup 空操作而静默。任何补挂派生 stub 的路径都必须调用本方法。
+    ///  返回是否发生修改（供批量修复统计）。</summary>
+    internal static bool PromoteDerivedStub(GameObject go)
+    {
+        if (go == null)
+            return false;
+        var baseStub = FindExactBaseStub(go);
+        var baseRuntime = FindExactBaseRuntime(go);
+        if (baseStub == null && baseRuntime == null)
+            return false; // 无基础对：正常派生成对或纯基础，不动
+        // 移除基础对前先给派生 stub 补数据：分发器家族必须有生成食材
+        //（否则宿主/真机 PseudoPrefabDispenser.Setup 的 GetIngredientPrefabForOptional(null) NRE，
+        // 酱料机/饮料机的输出本就是 soArray 循环列表，回落首项）。
+        var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
+        if (dispenser != null && dispenser.spawnerItemPrefabSO == null)
+        {
+            var soArray = go.GetComponent<PseudoPrefabSOArray>();
+            if (soArray != null && soArray.pseudoPrefabSOs != null && soArray.pseudoPrefabSOs.Length > 0)
+            {
+                dispenser.spawnerItemPrefabSO = soArray.pseudoPrefabSOs[0];
+                LayoutEditorLog.LogWarning("[LayoutEditor] 双 stub 修复: 分发器生成食材为空，已回落 soArray 首项: "
+                    + go.name + "（" + dispenser.spawnerItemPrefabSO.name + "）");
+            }
+        }
+        if (baseRuntime != null)
+            Undo.DestroyObjectImmediate(baseRuntime);
+        if (baseStub != null)
+            Undo.DestroyObjectImmediate(baseStub);
+        EnsureDerivedRuntimeForStubs(go);
+        return true;
+    }
+
+    /// <summary>保证物体上每个派生 stub（XxxStub）都有对应的派生运行时组件
+    ///  （LevelEditor.Xxx）——基础 PseudoPrefab 的 Setup 是空操作，派生参数（食材/绑定/
+    ///  容量等）必须经派生运行时才生效。按类型名约定反射匹配，找不到对应运行时的跳过。</summary>
+    private static void EnsureDerivedRuntimeForStubs(GameObject go)
+    {
+        foreach (var stubComp in go.GetComponents<PseudoPrefabStub>())
+        {
+            if (stubComp == null)
+                continue;
+            var stubType = stubComp.GetType();
+            if (stubType == typeof(PseudoPrefabStub) || !stubType.Name.EndsWith("Stub"))
+                continue;
+            var runtimeName = stubType.Name.Substring(0, stubType.Name.Length - 4);
+            var runtimeType = Type.GetType("LevelEditor." + runtimeName + ", Assembly-CSharp");
+            if (runtimeType == null)
+                continue;
+            if (go.GetComponent(runtimeType) == null)
+            {
+                Undo.AddComponent(go, runtimeType);
+                LayoutEditorLog.LogWarning("[LayoutEditor] 双 stub 修复: 已补派生运行时组件 "
+                    + runtimeType.Name + " -> " + go.name);
+            }
+        }
     }
 
     /// <summary>容器堆 id → 容器本体 SO id（均在 common03/pseudo_prefab_so/{dlc|core}/utensils 下）。

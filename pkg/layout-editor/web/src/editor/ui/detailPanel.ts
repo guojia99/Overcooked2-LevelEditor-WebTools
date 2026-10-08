@@ -161,7 +161,15 @@ export function extraStubDetailHtml(item: EditorItem): string {
       return `<dt>盘子堆</dt><dd>${item.cleanPlateStack?.plateCount ?? 5} 个盘子（右键直接修改）</dd>`;
     case "Burner": {
       const b = item.burner ?? {};
-      return `<dt>火焰喷射器</dt><dd>${BURNER_FIRE_MODES[b.fireMode ?? 1]} · 空中时间 ${b.airTime ?? 2}s${b.randomTargetOrder ? " · 随机目标" : ""}${b.hideVisual ? " · 隐藏模型" : ""}（右键直接修改）</dd>`;
+      const waves = b.waves ?? [];
+      const posCount = waves.reduce((n, w) => n + (w?.positions?.length ?? 0), 0);
+      const delay = Math.max(0, b.startDelaySeconds ?? 10);
+      let t = delay;
+      for (let i = 1; i < waves.length; i++) t += Math.max(1, waves[i]?.intervalSeconds ?? 30);
+      const waveTxt = waves.length
+        ? `开局 ${Math.round(delay)}s 后第 1 波 · ${waves.length} 波 · ${posCount} 落点 · 末波 t≈${Math.round(t)}s · ${b.sequentialFire ? `顺序逐发 ${(b.fireStaggerSeconds ?? 0.35).toFixed(2)}s` : "齐射"}`
+        : "未编排波次";
+      return `<dt>燃烧弹射器</dt><dd>${BURNER_FIRE_MODES[b.fireMode ?? 1]} · 空中时间 ${b.airTime ?? 2}s · ${waveTxt}（右键打开火焰落点编辑器）</dd>`;
     }
     case "Cannon": {
       const free = item.cannon?.freeRotation;

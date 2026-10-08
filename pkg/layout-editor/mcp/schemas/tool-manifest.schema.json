@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["protocolVersion", "server", "defaults", "tools"],
+  "properties": {
+    "protocolVersion": { "type": "string" },
+    "server": { "type": "object" },
+    "defaults": { "type": "object" },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "category", "sideEffect", "estimatedMs", "deadlineMs", "safeToRetry"],
+        "properties": {
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "sideEffect": { "enum": ["read", "compute", "draft", "write_scene", "build"] },
+          "estimatedMs": { "type": "integer", "minimum": 0 },
+          "pollAfterMs": { "type": "integer", "minimum": 0 },
+          "deadlineMs": { "type": "integer", "minimum": 1 },
+          "safeToRetry": { "type": "boolean" },
+           "requiresConfirmation": { "type": "boolean" }
+          ,"httpOnly": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

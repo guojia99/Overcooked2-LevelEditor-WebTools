@@ -22,7 +22,7 @@ import {
   clearFloorSelection,
 } from "./selection";
 import { hideDetail, hideContextMenu } from "./ui/overlay";
-import { closeModal } from "../modals";
+import { closeAllModals } from "../modals";
 import { updateFloorBar } from "./floorPalette";
 import { setStatus } from "./status";
 import {
@@ -396,7 +396,8 @@ export function pasteCrossTabClipboard(canvasMx?: number, canvasMy?: number): vo
     clearSelection();
     setFloorSelection(result.pastedFloorKeys);
     setSelection(result.pastedItemKeys);
-    closeModal();
+    // 粘贴结果要直接看画布：关全部（含可能压栈的父弹窗），不只是顶层。
+    closeAllModals();
     statusParts.push(
       `已跨页粘贴 ${result.pastedFloorKeys.length} 块地板` +
         (result.pastedItemKeys.length

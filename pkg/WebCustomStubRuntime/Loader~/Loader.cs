@@ -22,10 +22,13 @@ namespace OC2LevelRuntimeLoader
     ///
     /// 职责（统一单程序集重构后）：
     ///  1. 启动扫描（后台线程）汇总 levels/&lt;set&gt;/stub_levels.txt 逐关卡清单 →
-    ///     WebManifest。清单为空 = 完全休眠（零加载零事件零介入）；非空 = 激活：
-    ///     挂 AssemblyResolve + 从自身目录把所有 commonW+数字 bundle LoadFromFile
-    ///     常驻（幂等）+ 加载统一运行时 bundle webcustomstub_runtime →
-    ///     Assembly.Load(WebCustomStubRuntime) → 反射 CustomStub.EntryPoint.Install()
+    ///     WebManifest。清单为空且无 web 导出集 = 完全休眠（零加载零事件零介入）；
+    ///     清单为空但存在 stub_levels.txt 文件（v3.7.0）= 仍激活（commonW 素材 +
+    ///     双 stub 自愈——commonW 包只由本加载器加载，空清单休眠会让只引用
+    ///     commonW 素材的关卡进图卡加载）；非空 = 激活：挂 AssemblyResolve +
+    ///     从自身目录把所有 commonW+数字 bundle LoadFromFile 常驻（幂等）+
+    ///     加载统一运行时 bundle webcustomstub_runtime → Assembly.Load
+    ///     (WebCustomStubRuntime) → 反射 CustomStub.EntryPoint.Install()
     ///     （EntryPoint 反射读 WebManifest 做逐关卡闸门）。原版 bundle 仍靠 OC2DIYLevel。
     ///  2. 每关卡集 *_custom_runtime 文件（预留：某关卡专属代码）仍支持加载；
     ///     旧版 runtime 文件（含旧每集 Stub_&lt;set&gt; 代码）一律忽略并告警（不识别旧代码）。
@@ -35,6 +38,30 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v3.7.0（2026-10-06 空清单休眠→进图卡加载修复·双 stub 自愈随运行时分发）：
+    ///  - 根因①（空清单休眠）：v3.5.0 零介入铁律把 commonW 素材包加载耦合在
+    ///    「stub 特征清单非空」上——只引用 commonW 素材（MixerBowl/烤盘/web 食材）
+    ///    而无 CustomStub 玩法的关卡，导出的 stub_levels.txt 为空 → 加载器休眠
+    ///    → commonW 不加载 → 场景 bundle 外部引用（cab）无法解析 → 进图卡加载
+    ///    （LaTiao 0.9.1+ 导出实锤）。修复：任一集存在 stub_levels.txt 文件（即使
+    ///    0 条目）即完整激活（commonW + 统一运行时）；导出器同步补 "web" 特征
+    ///    （场景/LevelInfo 引用 commonW 素材即写入清单行），双保险。
+    ///  - 根因②（双 stub，随本版运行时分发）：编辑器 wrapper 升级路径补挂派生
+    ///    stub 后残留基础 PseudoPrefabStub（组件序在前），真机 OC2DIYLevel 按
+    ///    派生 stub 分类挂派生运行时，PseudoPrefab.Awake 的
+    ///    GetComponent&lt;PseudoPrefabStub&gt;() 命中基础 stub → 派生 Setup 强转抛
+    ///    InvalidCastException 中断 ResetAllPseudoPrefabs 全链 → 关卡永久卡加载
+    ///    （diantang / jia_level_2_1 酱料机实锤）。修复：运行时 EntryPoint 装
+    ///    ResetAllPseudoPrefabs 前缀自愈（移除基础 stub），编辑器导出前自动
+    ///    修复（LayoutEditorDualStubRepair）。
+    ///  - 根因③（进图竞态窗口）：异步依赖队列全程 ~15s（commonW2 解压实测 ~10s），
+    ///    快速连按空格/A 跳过菜单可在队列完成前进图——commonW 未就位（场景外部
+    ///    引用无法解析）或运行时未装（自愈补丁缺席）→ 同样永久卡加载。修复：
+    ///    ①进图闸门——AssetBundleManager.LoadLevelAsync 前缀，队列未完成时同步
+    ///    收口 DrainPendingSync（在途/待队 op 阻塞取 assetBundle，解压仍在工作
+    ///    线程，主线程仅在加载界面等待；协程见 _syncTakeover 让位防双份）；
+    ///    ②运行时 bundle 优先入队——EntryPoint/自愈补丁秒级就位，不等 commonW
+    ///    长解压。闸门仅激活态安装，休眠（官方图玩家）零介入不变。
     /// v3.6.0（2026-09-29 联机按钮-传送带偶发丢步修复·版本对齐）：**loader 逻辑
     ///     零变更**，仅与 CustomStub 运行时 SSOT（StubVersion 3.6.0）对齐——本版
     ///     运行时新增 NodeRingSync 节点环步数对账（联机同帧 BLPress 合并丢步 →
@@ -173,7 +200,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "3.6.0";
+        public const string PluginVersion = "3.7.0";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>
@@ -218,12 +245,30 @@ namespace OC2LevelRuntimeLoader
         /// 协程逐个 LoadFromFileAsync 分帧消费）。</summary>
         private static readonly List<LoadOp> _pendingOps = new List<LoadOp>();
 
+        /// <summary>v3.7.0 同步收口（进图闸门）：协程被 DrainPendingSync 接管——
+        /// 协程恢复后见此标记直接退出，防双份处理（在途 op 由收口方处理完毕）。</summary>
+        private static bool _syncTakeover;
+
+        /// <summary>协程当前在途的 op 与其异步请求（收口时阻塞取回结果；主线程
+        /// 单线程，协程与闸门前缀不会并发执行，无竞态）。</summary>
+        private static AssetBundleCreateRequest _inflightReq;
+        private static LoadOp _inflightOp;
+
+        /// <summary>队列完成统计（协程/同步收口共用；EnsureQueueRunning 起队时清零）。</summary>
+        private static int _qBundlesDone;
+        private static int _qAssembliesLoaded;
+
         /// <summary>web stub 关卡清单（v3.5.0，stub 侧 CustomStub.EntryPoint 反射读取，
         /// 与 StubLog 读取 LogFromCrate 同款桥接方向）。每条 "集|关卡|特征1,特征2,..."，
-        /// 由启动扫描汇总 levels/&lt;set&gt;/stub_levels.txt 而来。清单为空 = 本机无任何
-        /// web 导出 stub 关卡 = 加载器整体休眠。EntryPoint 据此做逐关卡闸门：清单未命中
-        /// 的场景（官方图/旧集/未用 CustomStub 的 web 关卡）一律零介入。</summary>
+        /// 由启动扫描汇总 levels/&lt;set&gt;/stub_levels.txt 而来。清单为空且无 web 导出集
+        /// = 加载器整体休眠；清单为空但装有 web 导出集（v3.7.0）仍激活（commonW 素材 +
+        /// 双 stub 自愈）。EntryPoint 据此做逐关卡闸门：清单未命中的场景（官方图/旧集/
+        /// 未用 CustomStub 的 web 关卡）一律零介入。</summary>
         public static string[] WebManifest = new string[0];
+
+        /// <summary>v3.7.0：任一已装集存在 stub_levels.txt 文件（即使 0 条目）。
+        /// 空清单激活语义的开关（commonW 素材 + 双 stub 自愈，见 ApplyScanResult）。</summary>
+        private static bool _anyWebExportedSet;
 
         #region 日志前缀：时间戳 + 主/客机角色（联机排障区分两台机器）
 
@@ -394,7 +439,9 @@ namespace OC2LevelRuntimeLoader
 
         /// <summary>从自身目录加载所有 commonW+数字 bundle（幂等：已在全局表则跳过，不 Unload）
         /// + 统一运行时 webcustomstub_runtime → Assembly.Load → EntryPoint.Install。
-        /// v3.5.0：清单为空（休眠模式）时一个字节都不加载。
+        /// v3.5.0：清单为空且无任何 web 导出集（休眠模式）时一个字节都不加载。
+        /// v3.7.0：装有 web 导出集（任一集存在 stub_levels.txt 文件，即使空清单）仍激活
+        /// ——commonW 素材只由本加载器加载，空清单休眠会让该类关卡进图卡加载。
         /// v3.5.2：入队后交给 LoadQueueCoroutine 异步分帧加载（LoadFromFileAsync，
         /// 解压在工作线程）——同步 LoadFromFile 对 LZMA bundle 须主线程整包解压
         /// （commonW1+W2+W3 约 56MB），曾与游戏 Bootstrap 读档窗口撞车卡 2-5 秒。
@@ -403,8 +450,8 @@ namespace OC2LevelRuntimeLoader
         {
             if (_depLoadState != 0)
                 return; // 1=队列运行中 / 2=已完成（幂等：OnSceneLoadedHeal 每次场景都会调）
-            if (WebManifest.Length == 0)
-                return; // 零介入休眠：无任何 web stub 关卡，不加载依赖/运行时
+            if (WebManifest.Length == 0 && !_anyWebExportedSet)
+                return; // 零介入休眠：无任何 web 导出关卡集，不加载依赖/运行时
             _depLoadState = 1;
             var dir = OwnDir();
             if (string.IsNullOrEmpty(dir))
@@ -414,10 +461,37 @@ namespace OC2LevelRuntimeLoader
                 return;
             }
             LogI("依赖包目录: " + dir);
-            LogI("[断点:依赖] 开始检查 commonW1、commonW2、commonW3... 和统一运行时（异步分帧加载）");
+            LogI("[断点:依赖] 开始检查统一运行时与 commonW1、commonW2、commonW3...（异步分帧加载；运行时优先入队—— EntryPoint/双 stub 自愈补丁 ~秒级就位，不等 commonW2/W3 的长解压）");
 
-            // 1. 动态发现 commonW1、commonW2、commonW3...（供 stub 组件按名解析；
-            // 不把未来新增的依赖包写死在 Loader 中）。
+            // 1. 统一运行时 bundle → *.dll.bytes → Assembly.Load → EntryPoint.Install
+            //    （v3.7.0 起优先入队：运行时包小、秒级完成，EntryPoint 与双 stub 自愈
+            //    补丁尽早可用；commonW2/W3 解压慢（实测 ~10s）不阻塞运行时就位）。
+            try
+            {
+                var rtPath = Path.Combine(dir, RuntimeBundleFileName);
+                if (!File.Exists(rtPath))
+                {
+                    LogW("未找到统一运行时 " + RuntimeBundleFileName + "（" + rtPath
+                        + "）——CustomStub 玩法将无法生效。请安装/更新依赖包 OC2DIYLevelRuntimeWLoader。");
+                    LogP("未找到统一运行时文件，随机箱、火锅等自定义玩法无法启用。请更新 OC2DIYLevelRuntimeWLoader 依赖包。");
+                }
+                else if (LoadedBundles.Contains(rtPath))
+                {
+                    // 之前已加载过（如二次扫描），跳过
+                }
+                else
+                {
+                    _pendingOps.Add(new LoadOp(LoadOpKind.Runtime, RuntimeBundleFileName, rtPath));
+                }
+            }
+            catch (Exception ex)
+            {
+                LogW("统一运行时入队异常: " + ex);
+                LogP("自定义关卡运行组件启动失败，部分自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: " + ex.Message);
+            }
+
+            // 2. 动态发现 commonW1、commonW2、commonW3...（供 stub 组件按名解析；
+            //    不把未来新增的依赖包写死在 Loader 中）。
             var dependencyNames = GetDependencyBundleNames(dir);
             if (dependencyNames.Count == 0)
                 LogI("  未找到 commonW* 依赖包（可选），跳过");
@@ -442,31 +516,6 @@ namespace OC2LevelRuntimeLoader
                 {
                     LogW("  " + name + " 入队异常: " + ex.Message);
                 }
-            }
-
-            // 2. 统一运行时 bundle → *.dll.bytes → Assembly.Load → EntryPoint.Install
-            try
-            {
-                var rtPath = Path.Combine(dir, RuntimeBundleFileName);
-                if (!File.Exists(rtPath))
-                {
-                    LogW("未找到统一运行时 " + RuntimeBundleFileName + "（" + rtPath
-                        + "）——CustomStub 玩法将无法生效。请安装/更新依赖包 OC2DIYLevelRuntimeWLoader。");
-                    LogP("未找到统一运行时文件，随机箱、火锅等自定义玩法无法启用。请更新 OC2DIYLevelRuntimeWLoader 依赖包。");
-                }
-                else if (LoadedBundles.Contains(rtPath))
-                {
-                    // 之前已加载过（如二次扫描），跳过
-                }
-                else
-                {
-                    _pendingOps.Add(new LoadOp(LoadOpKind.Runtime, RuntimeBundleFileName, rtPath));
-                }
-            }
-            catch (Exception ex)
-            {
-                LogW("统一运行时入队异常: " + ex);
-                LogP("自定义关卡运行组件启动失败，部分自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: " + ex.Message);
             }
             EnsureQueueRunning();
         }
@@ -509,16 +558,20 @@ namespace OC2LevelRuntimeLoader
                 return;
             }
             _queueRunning = true;
+            _syncTakeover = false; // 新一轮队列：清除上一轮的同步收口接管标记
+            _qBundlesDone = 0;
+            _qAssembliesLoaded = 0;
             _instance.StartCoroutine(RunSafe(LoadQueueCoroutine()));
         }
 
         /// <summary>队列消费协程（内层迭代器）：逐个 LoadFromFileAsync → 分帧等待 →
         /// 按 kind 处理。⚠ C#4 铁律：yield 不得出现在带 catch 的 try 块内——本迭代器
-        /// 的 yield 全部裸露，各步处理各自的 try/catch 均不含 yield。</summary>
+        /// 的 yield 全部裸露，各步处理各自的 try/catch 均不含 yield。
+        /// v3.7.0：等待结束发现 _syncTakeover（进图闸门同步收口接管）→ 直接退出，
+        /// 在途 op 由 DrainPendingSync 处理（防双份）；完成统计与收场日志统一在
+        /// OnQueueFinished。</summary>
         private static IEnumerator LoadQueueCoroutine()
         {
-            int bundlesDone = 0;
-            int assembliesLoaded = 0;
             while (_pendingOps.Count > 0)
             {
                 var op = _pendingOps[0];
@@ -533,6 +586,8 @@ namespace OC2LevelRuntimeLoader
                 }
                 var swWait = System.Diagnostics.Stopwatch.StartNew();
                 var nextBeat = 2.0;
+                _inflightOp = op;
+                _inflightReq = req;
                 if (req != null)
                 {
                     while (!req.isDone)
@@ -550,105 +605,116 @@ namespace OC2LevelRuntimeLoader
                     }
                 }
                 swWait.Stop();
+                if (_syncTakeover)
+                    yield break; // 进图闸门已同步收口接管：在途 op 已被处理，防双份直接退出
                 var bundle = req == null ? null : req.assetBundle;
-                try
+                ProcessBundleResult(op, bundle, swWait.ElapsedMilliseconds);
+                _inflightOp = null;
+                _inflightReq = null;
+            }
+        }
+
+        /// <summary>单个 bundle 加载结果处理（协程与 v3.7.0 同步收口共用）：
+        /// Dep=常驻日志；Runtime=*.dll.bytes → Assembly.Load → EntryPoint.Install；
+        /// Custom=逐 DLL 加载。bundle 为 null 走告警分支。统计进 _qBundlesDone/
+        /// _qAssembliesLoaded（收场日志在 OnQueueFinished）。</summary>
+        private static void ProcessBundleResult(LoadOp op, AssetBundle bundle, long decompressMs)
+        {
+            try
+            {
+                if (bundle == null)
                 {
-                    if (bundle == null)
-                    {
-                        if (op.Kind == LoadOpKind.Dep)
-                        {
-                            LogW("  " + op.Name + " 加载失败（LoadFromFileAsync 返回 null）: " + op.Path);
-                            LogP("依赖资源 " + op.Name + " 加载失败，相关自定义关卡功能可能无法正常显示。请重新安装依赖包。");
-                        }
-                        else if (op.Kind == LoadOpKind.Runtime)
-                        {
-                            LogW("统一运行时 bundle 加载失败（LoadFromFileAsync 返回 null）: " + op.Path);
-                            LogP("统一运行时加载失败，自定义玩法无法启用。请重新安装依赖包。");
-                        }
-                        else
-                        {
-                            LogW("自定义 runtime 加载失败（LoadFromFileAsync 返回 null）: " + op.Path);
-                        }
-                        continue;
-                    }
                     if (op.Kind == LoadOpKind.Dep)
                     {
-                        LogI("  " + op.Name + " 已加载进内存并常驻（不 Unload；后台解压 "
-                            + swWait.ElapsedMilliseconds + " ms——该时长不占主线程，主线程帧间隔看 [帧卡顿]）");
+                        LogW("  " + op.Name + " 加载失败（LoadFromFileAsync 返回 null）: " + op.Path);
+                        LogP("依赖资源 " + op.Name + " 加载失败，相关自定义关卡功能可能无法正常显示。请重新安装依赖包。");
                     }
                     else if (op.Kind == LoadOpKind.Runtime)
                     {
-                        LoadedBundles.Add(op.Path);
-                        var swProc = System.Diagnostics.Stopwatch.StartNew();
-                        var loaded = 0;
-                        foreach (var assetPath in bundle.GetAllAssetNames())
-                        {
-                            if (!assetPath.EndsWith(".dll.bytes", StringComparison.OrdinalIgnoreCase))
-                                continue;
-                            var asset = bundle.LoadAsset<TextAsset>(assetPath);
-                            if (asset == null || asset.bytes == null || asset.bytes.Length == 0)
-                            {
-                                LogW("统一运行时 DLL 资产读取失败: " + assetPath);
-                                continue;
-                            }
-                            LogI("统一运行时 DLL: " + assetPath + "（" + asset.bytes.Length + " 字节）");
-                            if (LoadFromBytes(assetPath, asset.bytes))
-                            {
-                                loaded++;
-                                assembliesLoaded++;
-                            }
-                        }
-                        swProc.Stop();
-                        if (loaded == 0)
-                        {
-                            LogW("统一运行时 bundle 内无 *.dll.bytes（打错包或旧包？）");
-                            LogP("统一运行时文件内容不完整，自定义玩法无法启用。请重新导出或安装最新依赖包。");
-                        }
-                        LogI("[断点:依赖] 统一运行时加载完成，程序集数量=" + loaded
-                            + "，主线程处理耗时=" + swProc.ElapsedMilliseconds
-                            + " ms（明细见上行 Assembly.Load/Install 分项）");
+                        LogW("统一运行时 bundle 加载失败（LoadFromFileAsync 返回 null）: " + op.Path);
+                        LogP("统一运行时加载失败，自定义玩法无法启用。请重新安装依赖包。");
                     }
                     else
                     {
-                        LogI("加载自定义 runtime: " + op.Path);
-                        LoadedBundles.Add(op.Path);
-                        var dllCount = 0;
-                        foreach (var assetPath in bundle.GetAllAssetNames())
-                        {
-                            if (!assetPath.EndsWith(".dll.bytes", StringComparison.OrdinalIgnoreCase))
-                                continue;
-                            var asset = bundle.LoadAsset<TextAsset>(assetPath);
-                            if (asset == null || asset.bytes == null || asset.bytes.Length == 0)
-                            {
-                                LogW("  DLL 资产读取失败（非 TextAsset 或空）: " + assetPath);
-                                continue;
-                            }
-                            dllCount++;
-                            LogI("  发现 " + assetPath + "（" + asset.bytes.Length + " 字节）");
-                            if (LoadFromBytes(assetPath, asset.bytes))
-                                assembliesLoaded++;
-                        }
-                        if (dllCount == 0)
-                            LogW("  自定义 runtime 内没有任何 *.dll.bytes 资产。bundle 内全部资产: "
-                                + string.Join(", ", bundle.GetAllAssetNames()));
+                        LogW("自定义 runtime 加载失败（LoadFromFileAsync 返回 null）: " + op.Path);
                     }
-                    bundlesDone++;
+                    return;
                 }
-                catch (Exception ex)
+                if (op.Kind == LoadOpKind.Dep)
                 {
-                    if (op.Kind == LoadOpKind.Runtime)
+                    LogI("  " + op.Name + " 已加载进内存并常驻（不 Unload；后台解压 "
+                        + decompressMs + " ms——该时长不占主线程，主线程帧间隔看 [帧卡顿]）");
+                }
+                else if (op.Kind == LoadOpKind.Runtime)
+                {
+                    LoadedBundles.Add(op.Path);
+                    var swProc = System.Diagnostics.Stopwatch.StartNew();
+                    var loaded = 0;
+                    foreach (var assetPath in bundle.GetAllAssetNames())
                     {
-                        LogW("统一运行时加载异常: " + ex);
-                        LogP("统一运行时加载时发生错误，自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: " + ex.Message);
+                        if (!assetPath.EndsWith(".dll.bytes", StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        var asset = bundle.LoadAsset<TextAsset>(assetPath);
+                        if (asset == null || asset.bytes == null || asset.bytes.Length == 0)
+                        {
+                            LogW("统一运行时 DLL 资产读取失败: " + assetPath);
+                            continue;
+                        }
+                        LogI("统一运行时 DLL: " + assetPath + "（" + asset.bytes.Length + " 字节）");
+                        if (LoadFromBytes(assetPath, asset.bytes))
+                        {
+                            loaded++;
+                            _qAssembliesLoaded++;
+                        }
                     }
-                    else
+                    swProc.Stop();
+                    if (loaded == 0)
                     {
-                        LogW("自定义 runtime 处理异常 " + op.Path + ": " + ex);
+                        LogW("统一运行时 bundle 内无 *.dll.bytes（打错包或旧包？）");
+                        LogP("统一运行时文件内容不完整，自定义玩法无法启用。请重新导出或安装最新依赖包。");
                     }
+                    LogI("[断点:依赖] 统一运行时加载完成，程序集数量=" + loaded
+                        + "，主线程处理耗时=" + swProc.ElapsedMilliseconds
+                        + " ms（明细见上行 Assembly.Load/Install 分项）");
+                }
+                else
+                {
+                    LogI("加载自定义 runtime: " + op.Path);
+                    LoadedBundles.Add(op.Path);
+                    var dllCount = 0;
+                    foreach (var assetPath in bundle.GetAllAssetNames())
+                    {
+                        if (!assetPath.EndsWith(".dll.bytes", StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        var asset = bundle.LoadAsset<TextAsset>(assetPath);
+                        if (asset == null || asset.bytes == null || asset.bytes.Length == 0)
+                        {
+                            LogW("  DLL 资产读取失败（非 TextAsset 或空）: " + assetPath);
+                            continue;
+                        }
+                        dllCount++;
+                        LogI("  发现 " + assetPath + "（" + asset.bytes.Length + " 字节）");
+                        if (LoadFromBytes(assetPath, asset.bytes))
+                            _qAssembliesLoaded++;
+                    }
+                    if (dllCount == 0)
+                        LogW("  自定义 runtime 内没有任何 *.dll.bytes 资产。bundle 内全部资产: "
+                            + string.Join(", ", bundle.GetAllAssetNames()));
+                }
+                _qBundlesDone++;
+            }
+            catch (Exception ex)
+            {
+                if (op.Kind == LoadOpKind.Runtime)
+                {
+                    LogW("统一运行时加载异常: " + ex);
+                    LogP("统一运行时加载时发生错误，自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: " + ex.Message);
+                }
+                else
+                {
+                    LogW("自定义 runtime 处理异常 " + op.Path + ": " + ex);
                 }
             }
-            LogI("[断点:依赖] 异步加载队列完成: bundle " + bundlesDone
-                + " 个，本次新加载程序集 " + assembliesLoaded + " 个");
         }
 
         /// <summary>安全驱动器（外层手动枚举内层协程 + try/catch——C#4 不能在有
@@ -680,11 +746,136 @@ namespace OC2LevelRuntimeLoader
         }
 
         /// <summary>队列收场：清协程在途标记 + 置完成态（失败也置 2——旧版同步路径
-        /// 同样是告警后继续，不做无限重试）。</summary>
+        /// 同样是告警后继续，不做无限重试）。v3.7.0：完成统计日志统一在此（协程正常
+        /// 结束/异常终止/同步收口三条路径共用；幂等——收口先行收场后协程恢复再触发
+        /// 时早退，不重复置态/打日志）。</summary>
         private static void OnQueueFinished()
         {
+            if (!_queueRunning && _depLoadState == 2)
+                return; // 已收场（同步收口先行，协程恢复后二次触达）
             _queueRunning = false;
             _depLoadState = 2;
+            LogI("[断点:依赖] 异步加载队列完成: bundle " + _qBundlesDone
+                + " 个，本次新加载程序集 " + _qAssembliesLoaded + " 个");
+        }
+
+        /// <summary>v3.7.0 同步收口（进图闸门核心）：接管异步队列剩余 op，把「快速
+        /// 跳过菜单进图撞上加载窗口」竞态转化为加载界面里的一次性等待——
+        ///  - 在途 op：阻塞取 assetBundle（工作线程照常解压完成，主线程等待；协程
+        ///    恢复后见 _syncTakeover 直接退出，防双份处理）；
+        ///  - 未开始 op：发起 LoadFromFileAsync 后阻塞等待（解压仍走工作线程，
+        ///    不重蹈 v3.5.2 修掉的主线程 LZMA 整包解压）；
+        ///  - 逐个 ProcessBundleResult（运行时 Assembly.Load → EntryPoint.Install，
+        ///    双 stub 自愈补丁随 Install 就位）→ 收口完成后原方法继续，场景 bundle
+        ///    加载时 commonW/运行时全部就位。
+        /// 仅主线程调用（Harmony 前缀）；异常不外抛（放行原方法）。</summary>
+        private static void DrainPendingSync(string reason)
+        {
+            _syncTakeover = true; // 协程恢复后直接退出（RunSafe→OnQueueFinished，重复置态无害）
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            int drained = 0;
+            if (_inflightReq != null && _inflightOp != null)
+            {
+                var op = _inflightOp;
+                AssetBundle bundle = null;
+                var swOp = System.Diagnostics.Stopwatch.StartNew();
+                try { bundle = _inflightReq.assetBundle; } // 阻塞至工作线程完成
+                catch (Exception ex) { LogW("  [收口] 在途 bundle 取回异常 " + op.Path + ": " + ex.Message); }
+                _inflightReq = null;
+                _inflightOp = null;
+                ProcessBundleResult(op, bundle, swOp.ElapsedMilliseconds);
+                drained++;
+            }
+            while (_pendingOps.Count > 0)
+            {
+                var op = _pendingOps[0];
+                _pendingOps.RemoveAt(0);
+                AssetBundle bundle = null;
+                var swOp = System.Diagnostics.Stopwatch.StartNew();
+                try
+                {
+                    var req = AssetBundle.LoadFromFileAsync(op.Path);
+                    if (req != null)
+                        bundle = req.assetBundle; // 发起异步后阻塞等待：解压在工作线程
+                }
+                catch (Exception ex)
+                {
+                    LogW("  [收口] bundle 同步等待异常 " + op.Path + ": " + ex.Message);
+                }
+                ProcessBundleResult(op, bundle, swOp.ElapsedMilliseconds);
+                drained++;
+            }
+            OnQueueFinished();
+            LogI("[断点:依赖] 进图收口（" + reason + "）：同步等待 " + drained + " 个依赖完成，耗时 "
+                + sw.ElapsedMilliseconds + " ms（解压在工作线程，主线程等待——此后场景加载全程依赖就位）");
+        }
+
+        // ---- v3.7.0 进图闸门：AssetBundleManager.LoadLevelAsync 前缀 ----
+        // 异步依赖队列未完成时同步收口（DrainPendingSync），杜绝竞态：commonW 未就位
+        // （场景外部引用无法解析）或运行时未装（双 stub 自愈补丁缺席）时进 web 关卡
+        // → 永久卡加载。队列已完成时首行静态检查零开销放行；休眠态不装补丁（零介入
+        // 铁律不变——官方图玩家无感知）。仅激活后安装（EnsureLevelEntryGate）。
+
+        private static bool _levelGatePatched;
+
+        private static void EnsureLevelEntryGate()
+        {
+            if (_levelGatePatched)
+                return;
+            _levelGatePatched = true; // 失败不重试：闸门缺席=行为同 v3.6.0 现状，不炸宿主
+            try
+            {
+                var t = Type.GetType("AssetBundleManager, Assembly-CSharp");
+                if (t == null)
+                {
+                    foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        try { t = asm.GetType("AssetBundleManager", false); }
+                        catch { }
+                        if (t != null)
+                            break;
+                    }
+                }
+                var m = t != null
+                    ? t.GetMethod("LoadLevelAsync", BindingFlags.Public | BindingFlags.Static)
+                    : null;
+                var prefix = typeof(LevelRuntimeLoader).GetMethod("LevelEntryGatePrefix",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                if (m == null || prefix == null)
+                {
+                    LogW("[断点:依赖] 进图闸门未装：未找到 AssetBundleManager.LoadLevelAsync"
+                        + "（快速进图竞态无防护——如出现进图卡加载请把日志发给研发）");
+                    return;
+                }
+                var harmony = new Harmony("oc2.loader.levelgate");
+                harmony.Patch(m, new HarmonyMethod(prefix));
+                LogI("[断点:依赖] 进图闸门已装: AssetBundleManager.LoadLevelAsync"
+                    + "（异步队列未完成时进图同步等待收口，v3.7.0）");
+            }
+            catch (Exception ex)
+            {
+                LogW("[断点:依赖] 进图闸门安装失败（快速进图竞态无防护）: " + ex.Message);
+            }
+        }
+
+        /// <summary>LoadLevelAsync 前缀（不拦截原方法）：队列已完成且无待项 → 零开销
+        /// 放行；否则同步收口。参数名与宿主方法形参一致（Harmony 按名注入）。</summary>
+        private static void LevelEntryGatePrefix(string assetBundleName)
+        {
+            try
+            {
+                if (_depLoadState == 2 && _pendingOps.Count == 0)
+                    return; // 队列已完成：零开销放行
+                if (WebManifest.Length == 0 && !_anyWebExportedSet)
+                    return; // 休眠态（理论不可达——闸门仅在激活后安装）
+                if (_depLoadState == 0)
+                    LoadDependenciesAndRuntime(); // 尚未启动的边界情形：先启动再收口
+                DrainPendingSync("LoadLevelAsync " + (assetBundleName ?? "?"));
+            }
+            catch (Exception ex)
+            {
+                LogW("[断点:依赖] 进图收口异常（放行原方法）: " + ex.Message);
+            }
         }
 
         /// <summary>关卡集 *_custom_runtime 入队（v3.5.2 随依赖同一队列异步分帧加载，
@@ -1113,6 +1304,11 @@ namespace OC2LevelRuntimeLoader
             public readonly List<string> ManifestEntries = new List<string>();
             /// <summary>清单命中的关卡集数（诊断用）。</summary>
             public int SetsWithManifest;
+            /// <summary>v3.7.0：任一已装集存在 stub_levels.txt 文件（即使 0 条目）。
+            /// web 导出集的 commonW 素材（MixerBowl/烤盘/web 食材等）只由本加载器加载，
+            /// 清单为空即休眠会让该类关卡场景外部引用无法解析 → 进图卡加载
+            ///（2026-10-06 事故，LaTiao 实锤）。存在即激活（commonW + 运行时）。</summary>
+            public bool AnyStubLevelsFile;
             public bool NoRootFound;
         }
 
@@ -1195,18 +1391,24 @@ namespace OC2LevelRuntimeLoader
                 return;
             }
 
-            // ---- v3.5.0 闸门：清单为空 = 本机没有任何 web 导出的 stub 关卡 ----
+            // ---- v3.5.0 闸门：清单为空且无任何 web 导出集 = 本机没有 stub 关卡 ----
             // → 加载器整体休眠：不加载 commonW*/统一运行时/自定义 runtime，
             //   不挂 AssemblyResolve（此前未挂过）——对游戏零介入。
+            // v3.7.0：存在 stub_levels.txt 文件（即使 0 条目）= 装有 web 导出集——
+            // 其场景可能引用 commonW 素材（commonW 只由本加载器加载），空清单休眠
+            // 会让这类关卡进图卡加载（2026-10-06 LaTiao 实锤）。此时仍完整激活
+            //（commonW + 运行时；EntryPoint 逐关卡闸门对无特征关卡保持零 hook，
+            // 双 stub 自愈补丁随 Install 常驻——官方图不经过 OC2DIYLevel 该路径，零调用）。
             WebManifest = result.ManifestEntries.ToArray();
-            if (WebManifest.Length == 0)
+            _anyWebExportedSet = result.AnyStubLevelsFile;
+            if (WebManifest.Length == 0 && !_anyWebExportedSet)
             {
-                LogI("未发现任何 web 导出的 stub 关卡（stub_levels.txt 无条目）——加载器休眠，对游戏零介入"
-                    + (result.SetCount > 0 ? "（已装关卡集 " + result.SetCount + " 个均未使用 CustomStub）" : ""));
+                LogI("未发现任何 web 导出的关卡集（levels/ 下无 stub_levels.txt）——加载器休眠，对游戏零介入"
+                    + (result.SetCount > 0 ? "（已装关卡集 " + result.SetCount + " 个均非 web 导出或被版本门控跳过）" : ""));
                 return;
             }
 
-            // 清单非空 → 激活：挂 AssemblyResolve（引用顺序兜底）+ 预载依赖/统一运行时。
+            // 激活：挂 AssemblyResolve（引用顺序兜底）+ 预载依赖/统一运行时。
             // 预载保持启动期（决策已确认；v3.5.2 起为异步分帧——drain 后数帧内完成，
             // 仍远早于任何 web 关卡场景加载）：程序集必须先于 web 关卡场景加载进
             // AppDomain，否则场景 MonoScript 解析竞态失败；纯数据/程序集驻留不 hook 任何函数。
@@ -1221,10 +1423,18 @@ namespace OC2LevelRuntimeLoader
                 if (WebManifest[i] != null && WebManifest[i].EndsWith("|*|legacy", StringComparison.Ordinal))
                     legacyCount++;
             }
-            LogI("stub 关卡清单命中 " + (WebManifest.Length - legacyCount) + " 关（分布于 "
-                + result.SetsWithManifest + " 个关卡集）"
-                + (legacyCount > 0 ? "，另含 " + legacyCount + " 个旧版导出集（兼容模式：探测+自愈）" : "")
-                + "——激活依赖/运行时加载");
+            if (WebManifest.Length > 0)
+            {
+                LogI("stub 关卡清单命中 " + (WebManifest.Length - legacyCount) + " 关（分布于 "
+                    + result.SetsWithManifest + " 个关卡集）"
+                    + (legacyCount > 0 ? "，另含 " + legacyCount + " 个旧版导出集（兼容模式：探测+自愈）" : "")
+                    + "——激活依赖/运行时加载");
+            }
+            else
+            {
+                LogI("已装 " + result.SetCount + " 个 web 导出关卡集但均未使用 CustomStub（清单为空）"
+                    + "——仍激活依赖/运行（commonW 素材 + 双 stub 自愈；逐关卡玩法闸门保持零介入，v3.7.0）");
+            }
             // v3.5.9：info bundle 预载已整体回退（Unity 2017.4 同文件二次
             // LoadFromFile 返回 null 报错，与 OC2DIYLevel 的加载互斥——见头部
             // 变更记录）。进关卡选择的 ~15s 同步加载卡顿归上游修。
@@ -1238,7 +1448,9 @@ namespace OC2LevelRuntimeLoader
                 LogP("自定义关卡运行组件启动失败，部分自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: " + ex.Message);
             }
             // v3.5.6 资源加载跟踪：仅激活态安装（休眠=零介入不变）。
+            // v3.7.0 进图闸门：同样仅激活态安装（官方图玩家零介入）。
             EnsureAssetTracer();
+            EnsureLevelEntryGate();
 
             // v3.5.2：*_custom_runtime 改随依赖队列异步分帧加载（原主线程同步
             // LoadFromFile，与依赖包同一卡顿类别——LZMA 整包解压）。
@@ -1335,6 +1547,7 @@ namespace OC2LevelRuntimeLoader
                 var manifestPath = Path.Combine(setDir, "stub_levels.txt");
                 if (File.Exists(manifestPath))
                 {
+                    result.AnyStubLevelsFile = true; // v3.7.0：存在即 web 导出集（空清单也需 commonW）
                     var added = ReadStubLevels(setName, manifestPath, result);
                     if (added > 0)
                         result.SetsWithManifest++;
@@ -1614,13 +1827,14 @@ namespace OC2LevelRuntimeLoader
             {
                 if (!_filesystemScanDone)
                     BeginScan(false);
-                if (WebManifest.Length == 0)
+                if (WebManifest.Length == 0 && !_anyWebExportedSet)
                 {
-                    LogV("场景加载: " + scene.name + "（清单为空=休眠模式，零介入）");
+                    LogV("场景加载: " + scene.name + "（无 web 导出集=休眠模式，零介入）");
                     return;
                 }
                 LoadDependenciesAndRuntime();
                 EnsureAssetTracer();
+                EnsureLevelEntryGate();
                 if (LoadedNames.Count != _lastReportedAsmCount)
                 {
                     _lastReportedAsmCount = LoadedNames.Count;

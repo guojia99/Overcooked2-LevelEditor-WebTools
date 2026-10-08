@@ -20,7 +20,16 @@ using UnityEngine.SceneManagement;
 /// 统一运行时自动编译闭环（RunExport 闸口）：导出启动时若母本源码比
 /// WebCustomStubRuntime.dll 新（外部改码尚未编译），经 RuntimeReadyGate 钩子自动
 /// 触发编译，任务参数持久化到 SessionState 挂起；编译引发的域重载后由本类
-/// [InitializeOnLoad] 续跑器自动重启导出——不再报「请等 Unity 编译结束后重试」。</summary>
+/// [InitializeOnLoad] 续跑器自动重启导出——不再报「请等 Unity 编译结束后重试」。
+///
+/// 逐关卡选择性导出（v1 仅单集）：selectedLevels = 场景名清单，null/空 = 全量。
+/// 实现要点：① prepare 只打开入选场景（被排除场景不打开不准备；其落盘场景由
+/// 写回链路保证无临时伪 prefab 实例，磁盘增量构建安全，且绝不进 zip）；② 构建前把
+/// LevelSetInfoSO.levelInfos 临时过滤为入选关卡（玩家侧 OC2DIYLevel 按 levelInfos
+/// 枚举关卡，只从 zip 剔除 s_* 会留下打不开的死关），构建后立即还原；③ 崩溃自愈：
+/// 改写前先做磁盘级备份（LayoutEditorExports/._setinfo_backup_&lt;set&gt;），域加载 /
+/// 下次导出前检测残留备份即还原；④ 被排除场景保留 bundle 名照常增量构建（近零
+/// 成本），仅 zip 组装时过滤 s_* 文件——构建产物目录始终保持全量，无需临时目录。</summary>
 [InitializeOnLoad]
 public static class LayoutEditorSetExporter
 {
@@ -44,6 +53,11 @@ public static class LayoutEditorSetExporter
     /// 注册；安全策略：删僵尸/空组件、复活合法载体，未知签名与缺失 prefab 实例
     /// 只报告不阻断导出。无订阅者时导出行为不变。</summary>
     public static Func<List<string>, string> OrphanCleanHook;
+
+    /// <summary>双 stub 道具自动修复钩子（2026-10-06 真机卡加载事故）：导出 prepare 前
+    ///  由 LayoutEditorDualStubRepair 订阅（打开场景→PromoteDerivedStub→备份+保存，幂等）。
+    ///  无订阅者时导出行为不变。</summary>
+    public static Func<List<string>, string> DualStubCleanHook;
 
     /// <summary>统一运行时 DLL 编译状态钩子（deps 清单用；LayoutStubDllBuilder 注册，
     /// 返回 missing|stale|fresh）。无订阅者（CustomStub 未安装）返回 noStub。</summary>
@@ -70,9 +84,20 @@ public static class LayoutEditorSetExporter
     private static string _mode = "all";
     /** 本趟依赖包打包版本（deps 模式；独立于运行时 SSOT 版本，默认 1.0.0）。 */
     private static string _depsVersion = "1.0.0";
+    /** 逐关卡选择性导出（v1 仅单集；元素 = 场景名；null = 全量导出）。 */
+    private static List<string> _selectedLevels;
+
+    // ---- 逐关卡导出：LevelSetInfoSO.levelInfos 临时改写 / 还原 / 崩溃自愈 ----
+    /** 当前被改写的 LevelSetInfoSO 资产路径（null = 本趟无改写）。 */
+    private static string _setInfoMutatedAssetPath;
+    /** 被改写的关卡集名（备份文件名后缀）。 */
+    private static string _setInfoMutatedSetName;
+    /** 改写前的原始 levelInfos 引用（数组本体未动，仅替换字段，可直接写回）。 */
+    private static LevelInfoSO[] _setInfoSavedLevelInfos;
 
     // ---- 挂起导出续跑（自动编译闭环：RunExport 闸口挂起 → 域重载后续跑） ----
-    /** SessionState：挂起任务参数（setNames '\t' mode '\t' depsVersion）。 */
+    /** SessionState：挂起任务参数（setNames '\t' mode '\t' depsVersion '\t' sel=逗号连接场景名；
+     *  sel= 段为逐关卡导出新增，旧格式无此段，解析端双格式兼容）。 */
     private const string PendingKey = "LayoutEditor.SetExport.Pending";
     /** SessionState：挂起时刻 ticks（超时判定用）。 */
     private const string PendingAtKey = "LayoutEditor.SetExport.PendingAt";
@@ -86,6 +111,9 @@ public static class LayoutEditorSetExporter
     {
         // 域重载后自动续跑挂起的导出（统一运行时自动编译闭环的收尾）
         EditorApplication.delayCall += ResumePendingExport;
+        // 逐关卡导出崩溃自愈：上次导出异常中断（Unity 被杀/断电）时还原被临时
+        // 过滤的 LevelSetInfo（备份在 LayoutEditorExports/ 下持久保存）。
+        EditorApplication.delayCall += RecoverSetInfoBackups;
     }
 
     /// <summary>CustomStub tag 载体前缀（SpecificPseudoPrefabTag.prefabTag）。
@@ -237,7 +265,60 @@ public static class LayoutEditorSetExporter
         if (animatedRoot != null && animatedRoot.transform.childCount > 0)
             feats.Add("animgrid");
 
+        // ④ commonW 素材引用通道（2026-10-06 空清单休眠→进图卡加载事故）：场景引用了
+        //    commonW1/W2/W3... 素材时标 "web" 特征——commonW 包只由 Loader 激活时加载，
+        //    无 CustomStub 玩法的关卡不标特征会让清单为空 → 加载器休眠 → commonW 不加载
+        //    → 场景外部引用（cab）无法解析 → 进图卡加载。web 特征仅作激活信号（运行时
+        //    无消费方，EntryPoint 对未知特征安全忽略）。
+        try
+        {
+            var activeScenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
+            if (AssetTextReferencesCommonW(activeScenePath))
+                feats.Add("web");
+        }
+        catch
+        {
+        }
+
         return new List<string>(feats);
+    }
+
+    /// <summary>资产文本 guid 扫描：任一 guid 解析进 Assets/commonW*（素材/材质/网格/SO）
+    ///  即认为该资产需要 commonW 依赖包（stub_levels.txt "web" 特征数据源）。
+    ///  场景与 LevelInfoSO 通用。</summary>
+    private static bool AssetTextReferencesCommonW(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        string text;
+        try { text = File.ReadAllText(AbsPath(assetPath)); }
+        catch { return false; }
+        if (string.IsNullOrEmpty(text))
+            return false;
+        foreach (Match m in Regex.Matches(text, @"guid:\s*([a-f0-9]{32})"))
+        {
+            var path = AssetDatabase.GUIDToAssetPath(m.Groups[1].Value);
+            if (!string.IsNullOrEmpty(path) && path.StartsWith("Assets/commonW", StringComparison.Ordinal))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>该关 LevelInfoSO（recipes/allIngredients/matchlists）引用了 commonW 素材
+    ///  （commonW3 自定义菜谱可能只出现在订单里，场景文本扫不到，需补此通道）。</summary>
+    private static bool LevelInfoReferencesCommonW(string sceneAssetPath)
+    {
+        try
+        {
+            var info = LayoutEditorLevelInfoResolver.ResolveForScene(sceneAssetPath);
+            if (info == null)
+                return false;
+            return AssetTextReferencesCommonW(AssetDatabase.GetAssetPath(info));
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public static string ExportRootAbsPath()
@@ -292,8 +373,25 @@ public static class LayoutEditorSetExporter
     /// 规范化见 NormalizeDepsVersion）；其余模式忽略该参数。</summary>
     public static string StartExport(List<string> setNames, string mode, string depsVersion)
     {
+        return StartExport(setNames, mode, depsVersion, null);
+    }
+
+    /// <summary>逐关卡选择性导出（v1 仅单集）：selectedLevels = 场景名清单
+    /// （LevelInfoSO.sceneName / scenes/ 文件名去扩展），null/空 = 全量导出。
+    /// 部分导出时 info_&lt;set&gt; 内 levelInfos 临时过滤为入选关卡（构建后还原，
+    /// 见 ApplyLevelSelectionFilter），zip 只携带入选 s_* bundle。</summary>
+    public static string StartExport(List<string> setNames, string mode, string depsVersion,
+        List<string> selectedLevels)
+    {
         if (setNames == null || setNames.Count == 0)
             return "缺少关卡集标识。";
+        lock (_lock)
+        {
+            if (_status == "running")
+                return "已有导出任务正在进行（" + _setName + "），请等待完成后再试。";
+        }
+        // 上次导出异常中断的 LevelSetInfo 备份先还原（此刻无导出在跑，安全）
+        RecoverSetInfoBackups();
         var safeList = new List<string>();
         foreach (var raw in setNames)
         {
@@ -320,6 +418,12 @@ public static class LayoutEditorSetExporter
                 return "关卡集不存在：" + safe;
         }
 
+        // 选择清单校验/规范化：仅 levels/all 模式且单集时有效；全选 = 等价全量（置 null）。
+        List<string> sel;
+        var selErr = NormalizeSelectedLevels(safeList, m, selectedLevels, out sel);
+        if (!string.IsNullOrEmpty(selErr))
+            return selErr;
+
         lock (_lock)
         {
             if (_status == "running")
@@ -337,8 +441,50 @@ public static class LayoutEditorSetExporter
             _mode = m;
             _depsVersion = NormalizeDepsVersion(m == "deps" ? depsVersion : null);
             _deferredCompile = false;
+            _selectedLevels = sel;
+            // 逐关卡导出改写登记清零（此前已 RecoverSetInfoBackups，磁盘已自愈）
+            _setInfoMutatedAssetPath = null;
+            _setInfoMutatedSetName = null;
+            _setInfoSavedLevelInfos = null;
         }
         EditorApplication.delayCall += RunExport;
+        return null;
+    }
+
+    /// <summary>校验并规范化逐关卡选择清单。返回 null 表示通过（outSelLevels =
+    /// null 全量导出 / 非空部分导出）；返回非空字符串 = 错误信息（导出不启动）。</summary>
+    private static string NormalizeSelectedLevels(List<string> safeList, string mode,
+        List<string> selectedLevels, out List<string> outSelLevels)
+    {
+        outSelLevels = null;
+        var normalized = new List<string>();
+        if ((mode == "levels" || mode == "all")
+            && selectedLevels != null && selectedLevels.Count > 0)
+        {
+            if (safeList.Count > 1)
+                return "逐关卡选择性导出暂不支持多集合并导出（请单集导出；多集导出始终包含全部关卡）。";
+            var sceneFiles = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var p in CollectScenePaths(LevelSetsRoot + "/" + safeList[0]))
+                sceneFiles.Add(Path.GetFileNameWithoutExtension(p));
+            foreach (var raw in selectedLevels)
+            {
+                if (string.IsNullOrEmpty(raw))
+                    continue;
+                var s = raw.Trim();
+                if (s.Length == 0 || normalized.Contains(s))
+                    continue;
+                if (s.IndexOf('/') >= 0 || s.IndexOf('\\') >= 0 || s == "." || s == "..")
+                    return "所选关卡名非法：" + s;
+                if (!sceneFiles.Contains(s))
+                    return "所选关卡不存在：" + s + "（关卡集 " + safeList[0]
+                        + " 的 scenes/ 下未找到对应场景）";
+                normalized.Add(s);
+            }
+            if (normalized.Count == 0)
+                return "所选关卡清单为空。";
+            if (normalized.Count < sceneFiles.Count)
+                outSelLevels = normalized; // 部分导出；全选 = null 全量
+        }
         return null;
     }
 
@@ -378,11 +524,17 @@ public static class LayoutEditorSetExporter
         if (!TryGateRuntimeReady())
             return;
         var setNames = new List<string>();
-        lock (_lock) { setNames.AddRange(_setNames); }
+        List<string> selectedLevels = null;
+        lock (_lock)
+        {
+            setNames.AddRange(_setNames);
+            if (_selectedLevels != null)
+                selectedLevels = new List<string>(_selectedLevels);
+        }
         var prevActive = EditorSceneManager.GetActiveScene().path;
         try
         {
-            RunExportCore(setNames);
+            RunExportCore(setNames, selectedLevels);
             lock (_lock) { _status = "done"; }
         }
         catch (Exception ex)
@@ -397,6 +549,8 @@ public static class LayoutEditorSetExporter
         finally
         {
             EditorUtility.ClearProgressBar();
+            // 逐关卡导出兜底还原（正常路径 RunExportCore 内已还原；此处防异常逃逸）
+            RestoreSetInfoMutation();
             // 回到导出前的活动场景并重载伪 prefab（失败不中断导出结果）。
             try
             {
@@ -445,14 +599,18 @@ public static class LayoutEditorSetExporter
         List<string> pendingSets;
         string mode;
         string depsVersion;
+        List<string> pendingSelection;
         lock (_lock)
         {
             pendingSets = new List<string>(_setNames);
             mode = _mode;
             depsVersion = _depsVersion;
+            pendingSelection = _selectedLevels != null
+                ? new List<string>(_selectedLevels) : null;
         }
         SessionState.SetString(PendingKey,
-            string.Join("\t", pendingSets.ToArray()) + "\t" + mode + "\t" + (depsVersion ?? ""));
+            string.Join("\t", pendingSets.ToArray()) + "\t" + mode + "\t" + (depsVersion ?? "")
+            + "\t" + "sel=" + (pendingSelection != null ? string.Join(",", pendingSelection.ToArray()) : ""));
         SessionState.SetString(PendingAtKey, DateTime.UtcNow.Ticks.ToString());
         lock (_lock) { _deferredCompile = true; }
         SetPhase("compile", "统一运行时源码已更新，自动编译中（完成后自动继续导出）…");
@@ -496,15 +654,34 @@ public static class LayoutEditorSetExporter
             var parts = pending.Split('\t');
             if (parts.Length < 3)
                 return;
+            // 新格式末段 "sel=<逗号连接的场景名>"（逐关卡导出）；旧格式无此段。
+            List<string> selectedLevels = null;
+            var setCount = parts.Length - 2;
+            var mode = parts[parts.Length - 2];
+            var depsVersion = parts[parts.Length - 1];
+            if (parts[parts.Length - 1].StartsWith("sel=", StringComparison.Ordinal))
+            {
+                var selRaw = parts[parts.Length - 1].Substring("sel=".Length);
+                selectedLevels = new List<string>();
+                foreach (var s in selRaw.Split(','))
+                {
+                    if (!string.IsNullOrEmpty(s))
+                        selectedLevels.Add(s);
+                }
+                if (selectedLevels.Count == 0)
+                    selectedLevels = null;
+                setCount = parts.Length - 3;
+                mode = parts[parts.Length - 3];
+                depsVersion = parts[parts.Length - 2];
+            }
             var setNames = new List<string>();
-            for (var i = 0; i < parts.Length - 2; i++)
+            for (var i = 0; i < setCount; i++)
             {
                 if (!string.IsNullOrEmpty(parts[i]))
                     setNames.Add(parts[i]);
             }
-            var mode = parts[parts.Length - 2];
-            var depsVersion = parts[parts.Length - 1];
-            var err = StartExport(setNames, mode, string.IsNullOrEmpty(depsVersion) ? null : depsVersion);
+            var err = StartExport(setNames, mode,
+                string.IsNullOrEmpty(depsVersion) ? null : depsVersion, selectedLevels);
             if (!string.IsNullOrEmpty(err))
             {
                 lock (_lock)
@@ -561,10 +738,20 @@ public static class LayoutEditorSetExporter
         ResumePendingExport();
     }
 
-    private static void RunExportCore(List<string> setNames)
+    private static void RunExportCore(List<string> setNames, List<string> selectedLevels)
     {
         var mode = _mode;
         var joinedName = string.Join("+", setNames.ToArray());
+
+        // 逐关卡选择（v1 仅单集；StartExport 已校验）：null = 全量导出。
+        HashSet<string> includedSceneNames = null;
+        if (selectedLevels != null && selectedLevels.Count > 0)
+        {
+            includedSceneNames = new HashSet<string>(selectedLevels, StringComparer.Ordinal);
+            Debug.Log("[SetExporter] 逐关卡选择性导出：" + selectedLevels.Count + "/"
+                + CollectScenePaths(LevelSetsRoot + "/" + setNames[0]).Count + " 关（"
+                + string.Join(",", selectedLevels.ToArray()) + "）。");
+        }
 
         // ---- 依赖包模式（deps）：不碰关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/ 依赖 ----
         if (mode == "deps")
@@ -584,6 +771,16 @@ public static class LayoutEditorSetExporter
             if (scenes.Count == 0)
                 throw new Exception("关卡集没有可用场景（" + LevelSetsRoot + "/" + setName
                     + "/scenes/ 为空）。");
+            // 逐关卡导出：只准备/构建入选场景——被排除场景不打开不烘焙（落盘场景由
+            // 写回链路保证无临时伪 prefab 实例，不打开即无内存态，构建安全），其
+            // s_* 产物（若有历史 bundle 名）绝不进 zip。选择 ⇒ 单集（StartExport 已校验）。
+            if (includedSceneNames != null)
+            {
+                scenes.RemoveAll(p => !includedSceneNames.Contains(Path.GetFileNameWithoutExtension(p)));
+                if (scenes.Count == 0)
+                    throw new Exception("逐关卡导出：选择清单未命中任何场景（" + LevelSetsRoot
+                        + "/" + setName + "）。");
+            }
             perSetScenes.Add(new KeyValuePair<string, List<string>>(setName, scenes));
             totalScenes += scenes.Count;
         }
@@ -608,6 +805,25 @@ public static class LayoutEditorSetExporter
             }
         }
 
+        // ---- 0.5 dual-stub-clean：双 stub 道具自动修复（经 DualStubCleanHook 钩子由
+        //      LayoutEditorDualStubRepair 提供：打开场景→清理基础 stub 组件对→保存）----
+        if (DualStubCleanHook != null)
+        {
+            var allScenesDual = new List<string>();
+            foreach (var pair in perSetScenes)
+                allScenesDual.AddRange(pair.Value);
+            try
+            {
+                var dualStubSummary = DualStubCleanHook(allScenesDual);
+                if (!string.IsNullOrEmpty(dualStubSummary))
+                    Debug.Log("[SetExporter] 导出前双 stub 修复:\n" + dualStubSummary);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[SetExporter] 双 stub 修复异常（继续导出）: " + ex.Message);
+            }
+        }
+
         var i = 0;
         foreach (var pair in perSetScenes)
         {
@@ -629,8 +845,13 @@ public static class LayoutEditorSetExporter
                     Debug.Log("[SetExporter] 已重打 " + retagged + " 个 stub tag：" + scenePath);
                 LayoutEditorPseudoReload.EnsurePrepareForBuilding();
                 // v3.5.0 逐场景特征收集（stub_levels.txt 数据源；tag 重打之后扫，
-                // 与运行时自愈将看到的内容一致）。
+                // 与运行时自愈将看到的内容一致）。逐关卡导出时循环体只含入选场景
+                //（上方已过滤），被排除关卡自然不进清单、不进 zip。
                 var feats = CollectActiveSceneStubFeatures();
+                // web 特征补充：LevelInfoSO 引用 commonW 素材（commonW3 菜谱可能只进
+                // 订单不经场景，见 ④ 通道注释）。
+                if (!feats.Contains("web") && LevelInfoReferencesCommonW(scenePath))
+                    feats.Add("web");
                 if (feats.Count > 0)
                 {
                     stubManifestLines.Add(pair.Key + "|" + Path.GetFileNameWithoutExtension(scenePath)
@@ -652,6 +873,13 @@ public static class LayoutEditorSetExporter
         }
         AssetDatabase.SaveAssets();
 
+        // ---- 1.5 逐关卡导出：levelInfos 临时过滤（info_<set> 构建产物随之为部分集；
+        //      构建完成后在 finally 还原源资产，崩溃自愈见 RecoverSetInfoBackups）----
+        if (includedSceneNames != null)
+            ApplyLevelSelectionFilter(setNames[0], includedSceneNames);
+
+        try
+        {
         // ---- 2. clean：逐集仅删除本集旧产物目录（其他目录不动）----
         foreach (var setName in setNames)
         {
@@ -671,7 +899,8 @@ public static class LayoutEditorSetExporter
         AssetDatabase.Refresh();
 
         // ---- 3. build：构建 AssetBundle（阻塞，约 3-5 分钟；一次全量构建覆盖所有集）----
-        SetPhase("build", "构建 AssetBundle（约 3-5 分钟）…");
+        SetPhase("build", "构建 AssetBundle（约 3-5 分钟"
+            + (includedSceneNames != null ? "，本次打包 " + includedSceneNames.Count + " 关" : "") + "）…");
         foreach (var pair in perSetScenes)
         {
             LayoutEditorLevelAdminApi.EnsureSetInfoBundle(pair.Key);
@@ -714,6 +943,23 @@ public static class LayoutEditorSetExporter
         //   OC2DIYLevelRuntimeWLoader/…         仅 all 模式：Loader.dll + debugLog.dll + 配置
         //                                     + webcustomstub_runtime
         //                                     + commonW1/commonW2/...（依赖包只带一份）
+
+        // 逐关卡导出：入选场景的构建产物文件名集合（产物文件名 = assetBundleName 末段；
+        // 改名关卡可能保留历史 bundle 名，故从 importer 解析而非想当然用场景文件名）。
+        // perSetScenes 已在头部过滤为仅入选场景。
+        HashSet<string> selectedBundleFiles = null;
+        if (includedSceneNames != null)
+        {
+            selectedBundleFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var scenePath in perSetScenes[0].Value)
+            {
+                var imp = AssetImporter.GetAtPath(scenePath);
+                var bn = imp != null ? imp.assetBundleName : null;
+                if (!string.IsNullOrEmpty(bn))
+                    selectedBundleFiles.Add(bn.Substring(bn.LastIndexOf('/') + 1));
+            }
+        }
+
         var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
         foreach (var setName in setNames)
         {
@@ -726,6 +972,18 @@ public static class LayoutEditorSetExporter
             // （统一运行时改由依赖包 OC2DIYLevelRuntimeWLoader/webcustomstub_runtime 分发）。
             payloads.RemoveAll(p =>
                 string.Equals(Path.GetFileName(p), "runtime", StringComparison.OrdinalIgnoreCase));
+            // 逐关卡导出：只保留入选关卡的场景 bundle（info_<set> 恒保留；多集导出
+            // 无选择，不进此分支）。
+            if (selectedBundleFiles != null)
+            {
+                var infoFileSel = "info_" + setName;
+                payloads.RemoveAll(p =>
+                {
+                    var fn = Path.GetFileName(p);
+                    return !string.Equals(fn, infoFileSel, StringComparison.OrdinalIgnoreCase)
+                        && !selectedBundleFiles.Contains(fn);
+                });
+            }
             if (payloads.Count == 0)
                 throw new Exception("清理后没有可打包的 bundle 文件（" + setName + "）。");
             var infoFile = "info_" + setName;
@@ -773,7 +1031,177 @@ public static class LayoutEditorSetExporter
             _fileCount = entries.Count;
             _message = "导出完成：" + zipFileName;
         }
+        }
+        finally
+        {
+            // 逐关卡导出：还原 LevelSetInfoSO.levelInfos（源资产零残留）。
+            RestoreSetInfoMutation();
+        }
         AssetDatabase.Refresh();
+    }
+
+    // ==================== 逐关卡导出：LevelSetInfo 临时过滤 / 还原 / 崩溃自愈 ====================
+
+    /// <summary>关卡集 LevelSetInfoSO 资产路径（LevelSets/&lt;set&gt;/data/ 下第一个；null=未找到）。</summary>
+    private static string SetInfoAssetPath(string setName)
+    {
+        var dataDir = LevelSetsRoot + "/" + setName + "/data";
+        if (!string.IsNullOrEmpty(setName) && AssetDatabase.IsValidFolder(dataDir))
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:LevelSetInfoSO", new[] { dataDir }))
+            {
+                var p = AssetDatabase.GUIDToAssetPath(guid);
+                if (!string.IsNullOrEmpty(p))
+                    return p;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>LevelSetInfo 磁盘备份绝对路径。放 LayoutEditorExports/（Assets 外、
+    ///  持久保存）——Unity 崩溃重启会清 Temp/，放临时目录会丢自愈数据。</summary>
+    private static string SetInfoBackupAbsPath(string setName)
+    {
+        return ExportRootAbsPath() + "/._setinfo_backup_" + setName;
+    }
+
+    /// <summary>构建前把 levelInfos 过滤为入选关卡（按 LevelInfoSO.sceneName 匹配）。
+    ///  顺序：磁盘备份 → 登记改写（还原依据）→ 过滤 + SaveAssets。备份失败直接中止
+    ///  （源资产零改动）；登记后任何失败由 RestoreSetInfoMutation 兜底。</summary>
+    private static void ApplyLevelSelectionFilter(string setName, HashSet<string> includedSceneNames)
+    {
+        var assetPath = SetInfoAssetPath(setName);
+        if (string.IsNullOrEmpty(assetPath))
+            throw new Exception("逐关卡导出：未找到 LevelSetInfoSO（" + LevelSetsRoot
+                + "/" + setName + "/data/ 下应有 LevelSetInfo.asset）。");
+        var so = AssetDatabase.LoadAssetAtPath<LevelSetInfoSO>(assetPath);
+        if (so == null)
+            throw new Exception("逐关卡导出：LevelSetInfoSO 加载失败（" + assetPath + "）。");
+
+        var backupAbs = SetInfoBackupAbsPath(setName);
+        try
+        {
+            var dir = ExportRootAbsPath();
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            File.Copy(AbsPath(assetPath), backupAbs, true);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("逐关卡导出：备份 LevelSetInfo 失败，已中止（源数据未改动）: " + ex.Message);
+        }
+
+        _setInfoMutatedAssetPath = assetPath;
+        _setInfoMutatedSetName = setName;
+        _setInfoSavedLevelInfos = so.levelInfos;
+
+        var keep = new List<LevelInfoSO>();
+        var total = 0;
+        if (so.levelInfos != null)
+        {
+            total = so.levelInfos.Length;
+            foreach (var li in so.levelInfos)
+            {
+                if (li != null && includedSceneNames.Contains(li.sceneName ?? ""))
+                    keep.Add(li);
+            }
+        }
+        if (keep.Count == 0)
+            throw new Exception("逐关卡导出：选择清单与 levelInfos 不匹配（0 命中）——场景名与 "
+                + "LevelInfoSO.sceneName 不一致，请检查改名关卡。");
+        so.levelInfos = keep.ToArray();
+        EditorUtility.SetDirty(so);
+        AssetDatabase.SaveAssets();
+        Debug.Log("[SetExporter] 逐关卡导出：levelInfos 临时过滤为 " + keep.Count + "/" + total
+            + " 关（构建后自动还原；崩溃备份 " + backupAbs + "）。");
+    }
+
+    /// <summary>还原被临时过滤的 LevelSetInfoSO：优先内存写回（原数组引用直接复赋值），
+    ///  失败回落磁盘备份复制 + ImportAsset。幂等；成功后删备份并清登记。</summary>
+    private static void RestoreSetInfoMutation()
+    {
+        var assetPath = _setInfoMutatedAssetPath;
+        if (string.IsNullOrEmpty(assetPath))
+            return;
+        var setName = _setInfoMutatedSetName;
+        var backupAbs = SetInfoBackupAbsPath(setName);
+        try
+        {
+            var so = AssetDatabase.LoadAssetAtPath<LevelSetInfoSO>(assetPath);
+            var restored = false;
+            if (so != null && _setInfoSavedLevelInfos != null)
+            {
+                so.levelInfos = _setInfoSavedLevelInfos;
+                EditorUtility.SetDirty(so);
+                AssetDatabase.SaveAssets();
+                restored = true;
+            }
+            if (!restored && File.Exists(backupAbs))
+            {
+                File.Copy(backupAbs, AbsPath(assetPath), true);
+                AssetDatabase.ImportAsset(assetPath);
+                restored = true;
+            }
+            if (!restored)
+                Debug.LogWarning("[SetExporter] LevelSetInfo 还原跳过（SO 与备份均不可用）: " + assetPath);
+            else
+                Debug.Log("[SetExporter] 逐关卡导出：LevelSetInfo 已还原（" + setName + "）。");
+        }
+        catch (Exception ex)
+        {
+            // 保留备份与登记：下次 StartExport / 域加载时 RecoverSetInfoBackups 再试
+            Debug.LogError("[SetExporter] LevelSetInfo 还原失败！请手动用备份还原（" + backupAbs
+                + " → " + assetPath + "）: " + ex.Message);
+            return;
+        }
+        try
+        {
+            if (File.Exists(backupAbs))
+                File.Delete(backupAbs);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 删除 LevelSetInfo 备份失败（不影响导出结果）: " + ex.Message);
+        }
+        _setInfoMutatedAssetPath = null;
+        _setInfoMutatedSetName = null;
+        _setInfoSavedLevelInfos = null;
+    }
+
+    /// <summary>崩溃自愈：Unity 被杀/断电导致 finally 未跑时，按残留备份还原
+    ///  LevelSetInfo（域加载 delayCall 与每次 StartExport 都会调用；导出进行中跳过）。</summary>
+    private static void RecoverSetInfoBackups()
+    {
+        try
+        {
+            lock (_lock)
+            {
+                if (_status == "running")
+                    return; // 备份属于进行中的导出，不动
+            }
+            var dir = ExportRootAbsPath();
+            if (!Directory.Exists(dir))
+                return;
+            foreach (var backup in Directory.GetFiles(dir, "._setinfo_backup_*"))
+            {
+                var setName = Path.GetFileName(backup).Substring("._setinfo_backup_".Length);
+                var assetPath = SetInfoAssetPath(setName);
+                if (string.IsNullOrEmpty(assetPath) || !File.Exists(AbsPath(assetPath)))
+                {
+                    File.Delete(backup); // 关卡集已删除，备份无意义
+                    continue;
+                }
+                File.Copy(backup, AbsPath(assetPath), true);
+                AssetDatabase.ImportAsset(assetPath);
+                File.Delete(backup);
+                Debug.LogWarning("[SetExporter] 检测到上次导出异常中断，已还原关卡集关卡列表（"
+                    + setName + "）。若该集此后有编辑丢失，可从写回历史恢复。");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] LevelSetInfo 备份自愈检查失败: " + ex.Message);
+        }
     }
 
     /// <summary>导出 zip 文件名：单集 = &lt;set&gt;_v&lt;ver&gt;[_levels]_&lt;yyyyMMdd&gt;.zip（与历史
@@ -817,6 +1245,12 @@ public static class LayoutEditorSetExporter
 
         // 删除 commonW1/commonW2/commonW3 旧构建产物（+ .manifest），随后重新打包，
         // 保证依赖包里的 commonW* 是最新的、不含遗留。
+        // 2026-10-06 加固：删产物前先补回丢失的根 bundle 名（.meta 误动后 BuildAssetBundles
+        // 会静默不产出）；重建后校验产物齐全，缺失即阻断导出（此前仅 LogWarning，
+        // 打出的依赖包缺 commonW3 会让老鼠模型/新菜谱等素材失效）。
+        var fixedWNames = EnsureCommonWBundleNames();
+        if (fixedWNames != null)
+            Debug.Log("[SetExporter] 导出前已补回 commonW 根目录 bundle 名: " + fixedWNames);
         SetPhase("clean", "清理 commonW1/commonW2/commonW3 旧产物…");
         DeleteBundleProduct("commonw1");
         DeleteBundleProduct("commonw2");
@@ -830,6 +1264,11 @@ public static class LayoutEditorSetExporter
             BundlesRoot, BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
         if (depManifest == null)
             throw new Exception("BuildPipeline.BuildAssetBundles 返回 null，commonW1/W2 重新打包失败（详见 Console）。");
+        var missingW = ValidateCommonWProducts();
+        if (missingW.Count > 0)
+            throw new Exception("commonW 构建产物缺失: " + string.Join("、", missingW.ToArray())
+                + "（源目录存在但 BuildAssetBundles 未产出）——请先用菜单「Layout Editor/CustomStub（关卡代码分发）"
+                + "/重新打包 commonW 素材包 (Rebuild commonW Bundles)」修复后再导出。");
 
         var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
         AddDependencyEntries(entries, new List<string> { setName }, true); // deps 模式：commonW1/W2 均无条件携带
@@ -880,6 +1319,129 @@ public static class LayoutEditorSetExporter
         catch (Exception ex)
         {
             Debug.LogWarning("[SetExporter] 删除 " + bundleFileName + " 旧产物失败: " + ex.Message);
+        }
+    }
+
+    // ==================== commonW 素材包强制重打（2026-10-06） ====================
+    // 背景：依赖包/关卡集导出虽会删旧重打 commonW*，但没有独立入口（只想重打素材包
+    // 必须跑完整导出）；且源目录 assetBundleName 丢失（.meta 误动）时 BuildAssetBundles
+    // 静默不产出 → 依赖包缺 commonW3 等 → 真机老鼠模型/新菜谱失效，此前仅 LogWarning。
+
+    /// <summary>枚举存在的 commonW 源目录索引（Assets/commonW&lt;N&gt;，N≥1）。</summary>
+    private static List<int> CollectCommonWSourceIndices()
+    {
+        var list = new List<int>();
+        for (int i = 1; i <= 32; i++)
+        {
+            if (AssetDatabase.IsValidFolder("Assets/commonW" + i))
+                list.Add(i);
+        }
+        return list;
+    }
+
+    /// <summary>确保每个 commonW 源目录的根 assetBundleName 已设置（空值时补
+    ///  “commonw&lt;N&gt;”）。.meta 被误动/清空后 BuildAssetBundles 不会产出对应包，
+    ///  依赖包将静默缺失——此处前置修复。返回补回的 bundle 名清单（null=无需修复）。</summary>
+    internal static string EnsureCommonWBundleNames()
+    {
+        var fixedList = new List<string>();
+        foreach (var index in CollectCommonWSourceIndices())
+        {
+            var dir = "Assets/commonW" + index;
+            var importer = AssetImporter.GetAtPath(dir);
+            if (importer == null)
+                continue;
+            var expected = "commonw" + index;
+            if (string.IsNullOrEmpty(importer.assetBundleName))
+            {
+                importer.assetBundleName = expected;
+                importer.SaveAndReimport();
+                fixedList.Add(expected);
+            }
+            else if (!string.Equals(importer.assetBundleName, expected, StringComparison.Ordinal))
+            {
+                Debug.LogWarning("[SetExporter] commonW 源目录 " + dir + " 的 bundle 名为 "
+                    + importer.assetBundleName + "（≠ " + expected + "），保持不改——如非有意请手动核对。");
+            }
+        }
+        return fixedList.Count > 0 ? string.Join("、", fixedList.ToArray()) : null;
+    }
+
+    /// <summary>校验 commonW 构建产物：源目录存在的每个 commonW&lt;N&gt; 必须有
+    ///  Assets/AssetBundles/commonw&lt;N&gt; 产物。返回缺失清单（空=全部就绪）。</summary>
+    private static List<string> ValidateCommonWProducts()
+    {
+        var missing = new List<string>();
+        foreach (var index in CollectCommonWSourceIndices())
+        {
+            var abs = AbsPath(BundlesRoot) + "/commonw" + index;
+            if (!File.Exists(abs))
+                missing.Add("commonw" + index);
+        }
+        return missing;
+    }
+
+    [MenuItem("Layout Editor/CustomStub（关卡代码分发）/重新打包 commonW 素材包 (Rebuild commonW Bundles)", false, 13)]
+    public static void RebuildCommonWBundlesMenu()
+    {
+        if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+        {
+            EditorUtility.DisplayDialog("重新打包 commonW", "Unity 正在编译/导入脚本，请等待完成后再构建。", "确定");
+            return;
+        }
+        var indices = CollectCommonWSourceIndices();
+        if (indices.Count == 0)
+        {
+            EditorUtility.DisplayDialog("重新打包 commonW", "未找到任何 Assets/commonW<N> 源目录。", "确定");
+            return;
+        }
+        var names = new List<string>();
+        foreach (var index in indices)
+            names.Add("commonw" + index);
+        if (!EditorUtility.DisplayDialog("重新打包 commonW",
+            "将删除并重建 " + indices.Count + " 个 commonW 素材包（"
+            + string.Join("、", names.ToArray()) + "）的构建产物。\n"
+            + "BuildAssetBundles 为增量构建：其余 bundle（关卡集/统一运行时等）不受影响。\n继续？",
+            "开始", "取消"))
+            return;
+        try
+        {
+            var fixedNames = EnsureCommonWBundleNames();
+            if (fixedNames != null)
+                Debug.Log("[SetExporter] 已补回 commonW 根目录 bundle 名: " + fixedNames);
+            LayoutEditorPseudoReload.EnsurePrepareForBuilding();
+            foreach (var name in names)
+                DeleteBundleProduct(name);
+            EditorUtility.DisplayProgressBar("重新打包 commonW", "BuildAssetBundles 增量构建…", 0.5f);
+            if (!Directory.Exists(AbsPath(BundlesRoot)))
+                Directory.CreateDirectory(AbsPath(BundlesRoot));
+            var manifest = BuildPipeline.BuildAssetBundles(
+                BundlesRoot, BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
+            if (manifest == null)
+                throw new Exception("BuildPipeline.BuildAssetBundles 返回 null（详见 Console）。");
+            var missing = ValidateCommonWProducts();
+            if (missing.Count > 0)
+                throw new Exception("以下 commonW 源目录存在但构建产物缺失: "
+                    + string.Join("、", missing.ToArray())
+                    + "\n（常见原因：目录内无可打包内容，或 bundle 名异常——请查看 Console 的构建告警）");
+            var sb = new System.Text.StringBuilder();
+            foreach (var name in names)
+            {
+                var abs = AbsPath(BundlesRoot) + "/" + name;
+                sb.Append(name).Append(": ")
+                    .Append((new FileInfo(abs).Length / 1024f / 1024f).ToString("F2")).Append(" MB（")
+                    .Append(File.GetLastWriteTime(abs).ToString("MM-dd HH:mm")).Append("）\n");
+            }
+            EditorUtility.DisplayDialog("重新打包 commonW", "完成：\n" + sb, "确定");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+            EditorUtility.DisplayDialog("重新打包 commonW", "失败:\n" + ex.Message, "确定");
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
         }
     }
 
@@ -1083,11 +1645,11 @@ public static class LayoutEditorSetExporter
         // 必然重新产出）——状态恒为 ok，大小按当前产物展示（仅供参考）。
         var w1Abs = AbsPath(BundlesRoot) + "/commonw1";
         AddManifestEntry(entries, depDir + "commonW1",
-            "编辑器增量素材（必备；导出时自动重新打包）",
+            "编辑器增量素材（必备；导出时删旧重打，此处大小为当前产物仅供参考）",
             "ok", File.Exists(w1Abs) ? new FileInfo(w1Abs).Length : 0);
         var w2Abs = AbsPath(BundlesRoot) + "/commonw2";
         AddManifestEntry(entries, depDir + "commonW2",
-            "汉堡菜谱素材（依赖包通用，无条件携带；导出时自动重新打包）",
+            "汉堡菜谱素材（依赖包通用，无条件携带；导出时删旧重打）",
             "ok", File.Exists(w2Abs) ? new FileInfo(w2Abs).Length : 0);
 
         // commonW3+：按源目录 Assets/commonW<数字> 判定（存在即导出时重建并携带）。
@@ -1103,7 +1665,8 @@ public static class LayoutEditorSetExporter
                 if (!addedCommonW.Add(index))
                     continue;
                 AddManifestEntry(entries, depDir + "commonW" + index,
-                    "扩展素材包（源目录存在即自动携带）", "ok", 0);
+                    "扩展素材包（源目录存在即导出时删旧重打并携带；导出前无产物故大小显示 —，" +
+                    "可随时用菜单「重新打包 commonW 素材包」单独重打）", "ok", 0);
             }
         }
         catch (Exception ex)

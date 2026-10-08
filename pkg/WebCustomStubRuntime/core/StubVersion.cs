@@ -14,6 +14,32 @@ namespace CustomStub
     public static class StubVersion
     {
         /// <summary>权威 semver 版本号（形如 2.0.0）。
+        /// 3.7.0（2026-10-06 真机「部分关卡进图永久卡加载」双根因修复）：
+        ///  - 修复①（双 stub 强转崩溃·真机卡加载主因）：编辑器 wrapper 升级路径
+        ///    （酱料机/饮料机、上菜台/回收台变体）补挂派生 stub 后残留基础
+        ///    PseudoPrefabStub（组件序在前）。真机 OC2DIYLevel 按派生 stub 分类挂
+        ///    派生运行时，PseudoPrefab.Awake 的 GetComponent&lt;PseudoPrefabStub&gt;()
+        ///    命中基础 stub → 派生 Setup 开头强转 (派生Stub) 抛 InvalidCastException
+        ///    中断 ResetAllPseudoPrefabs 全链 → 关卡永久卡加载（diantang /
+        ///    jia_level_2_1 酱料机实锤）；编辑器侧因基础 Setup 空操作而静默。
+        ///    修复：EntryPoint.Install 无条件装 ResetAllPseudoPrefabs 前缀自愈
+        ///    （HarmonyPatches.DualStubHealPrefix：AddComponent 循环前移除基础
+        ///    stub + 分发器生成食材回落 soArray 首项）——存量坏包免重导出；
+        ///    编辑器侧 StubIO 三分支补齐「删 base 对」范式 + 导出前自动修复
+        ///    （LayoutEditorDualStubRepair，含存量场景修复菜单）。
+        ///  - 修复②（空清单休眠→commonW 不加载）：只引用 commonW 素材而无
+        ///    CustomStub 玩法的关卡 stub_levels.txt 为空 → 加载器休眠 → commonW
+        ///    不加载 → 场景外部引用无法解析 → 卡加载（LaTiao 0.9.1+ 导出实锤）。
+        ///    修复：Loader v3.7.0 存在 stub_levels.txt 文件（即使 0 条目）即完整
+        ///    激活；导出器补 "web" 特征（场景/LevelInfo 引用 commonW 素材即写行）。
+        ///  - 修复③（进图竞态窗口）：异步依赖队列全程 ~15s，快速连按空格/A 可在
+        ///    队列完成前进图（commonW 未就位/自愈补丁未装 → 同样卡加载）。
+        ///    修复：Loader v3.7.0 进图闸门（LoadLevelAsync 前缀同步收口，解压仍
+        ///    走工作线程）+ 运行时 bundle 优先入队（EntryPoint/自愈补丁秒级就位）。
+        ///  - 存量坏包（双 stub / 空清单）装本版依赖包即修复，无需重导出；
+        ///    重导出则根治（场景不再带基础 stub 对、清单带 web 行）。
+        ///    requires.txt 门控随本版本对齐（Loader PluginVersion 同步 3.7.0）。
+        ///
         /// 3.6.0（2026-09-29 联机「双按钮+传送带×4 偶发方向未旋转/停位不齐/动画
         /// 未完整执行」修复，运行时逻辑变更·loader 逻辑零变更仅同步版本）：
         ///  - 根因①（丢步/差 90°）：按钮链每步 = 主机 ServerTimedQueue 广播一条
@@ -217,6 +243,6 @@ namespace CustomStub
         ///    改为推进到 IsBurning 为止 + 宿主双驱动时观测让位；客户端「锅在灶台上」
         ///    标志按触发区直驱（原先恒 false 导致烧糊预警图标被 vanilla 吞掉）。
 
-        public const string Value = "3.6.0";
+        public const string Value = "3.7.0";
     }
 }

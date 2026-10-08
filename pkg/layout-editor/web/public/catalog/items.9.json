@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 9,
   "itemCount": 200,
   "items": [
@@ -75,8 +75,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 7,
-        "sizeY": 1.8182873725891113
+        "cellsZ": 6,
+        "sizeY": 1.4830552339553833
       },
       "height": 1.818,
       "baseY": -1.772,
@@ -96,8 +96,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 7,
-        "sizeY": 1.8182873725891113
+        "cellsZ": 6,
+        "sizeY": 1.4830552339553833
       },
       "height": 1.818,
       "baseY": -1.772,
@@ -117,7 +117,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 6,
+        "sizeY": 1.7348911762237549
       },
       "height": 1.735,
       "baseY": -1.69,
@@ -158,8 +159,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 6,
-        "sizeY": 1.4830552339553833
+        "cellsZ": 1
       },
       "height": 1.483,
       "baseY": -1.438,
@@ -179,8 +179,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 6,
-        "sizeY": 2.27494740486145
+        "cellsZ": 1
       },
       "height": 2.275,
       "baseY": -2.225,
@@ -324,8 +323,9 @@
       "theme": "dressing_assets",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 4,
+        "sizeY": 6.485393047332764
       },
       "height": 6.485,
       "baseY": -0.059,
@@ -344,8 +344,9 @@
       "theme": "dlc08_circus",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 4,
+        "sizeY": 6.485393047332764
       },
       "height": 6.485,
       "baseY": -0.059,
@@ -406,9 +407,9 @@
       "theme": "dlc08_circus",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 6,
+        "cellsX": 5,
         "cellsZ": 3,
-        "sizeY": 6.099215507507324
+        "sizeY": 4.62756872177124
       },
       "height": 6.099,
       "baseY": -0.054,
@@ -427,9 +428,9 @@
       "theme": "dlc08_circus",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 6,
+        "cellsX": 5,
         "cellsZ": 3,
-        "sizeY": 6.099215507507324
+        "sizeY": 4.62756872177124
       },
       "height": 6.099,
       "baseY": -0.054,
@@ -929,9 +930,8 @@
       "theme": "dlc09_festivemashup",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 5,
-        "cellsZ": 1,
-        "sizeY": 2.028660535812378
+        "cellsX": 1,
+        "cellsZ": 1
       },
       "height": 2.029,
       "baseY": -0.499,
@@ -2290,7 +2290,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.759618878364563
       },
       "height": 0.76,
       "baseY": -0.167,

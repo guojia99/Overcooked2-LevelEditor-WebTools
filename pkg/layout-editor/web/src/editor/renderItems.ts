@@ -992,7 +992,7 @@ export const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: stri
   { match: (it) => stubKindOf(it) === "Travelator", type: "移动板", color: "#c792ea" },
   { match: isConveyorItem, type: "传送带", color: "#e8d24e" },
   { match: (it) => stubKindOf(it) === "Flamethrower", type: "喷火器", color: "#e85b5b" },
-  { match: (it) => stubKindOf(it) === "Burner", type: "喷射器", color: "#d97742" },
+  { match: (it) => stubKindOf(it) === "Burner", type: "燃烧弹射器", color: "#d97742" },
   { match: (it) => stubKindOf(it) === "CleanPlateStack", type: "盘堆", color: "#8db8e8" },
   { match: (it) => stubKindOf(it) === "Cannon", type: "大炮", color: "#e8a14b" },
   { match: (it) => stubKindOf(it) === "CannonSwitch", type: "大炮开关", color: "#e8a14b" },
@@ -1020,4 +1020,140 @@ export function computeParamLabels(): void {
     S.paramLabels.set(it.instanceId, n.toString());
     S.paramColors.set(it.instanceId, info.color);
   }
+}
+
+/** 燃烧弹射器落点显示尺寸（米）：0.9×0.9，与独立弹窗编辑器一致。 */
+const BURNER_MARKER_SIZE_M = 0.9;
+/** 实测：火焰落地后维持约 20 秒。同格两波触发间隔 < 20s = 火焰重叠。 */
+const BURNER_FLAME_LIFETIME_S = 20;
+
+/** 核心层专属叠加：唯一选中的物品是燃烧弹射器时，绘制其全部波次落点
+ *  （0.9×0.9 火焰方块 + 波次号徽标；同格多波对角叠放、徽标合并显示）。
+ *  同格火焰重叠（间隔 < 20s 或波内重复落点）时改用红色警示描边/徽标。
+ *  不选中 / 多选 / 非燃烧弹射器时不显示（火焰只在聚焦时可见）。 */
+export function drawBurnerFocusedMarkers(): void {
+  if (S.selectedKeys.size !== 1) return;
+  const item = S.items.find((it) => it._editorKey === [...S.selectedKeys][0]);
+  if (!item || stubKindOf(item) !== "Burner") return;
+  const waves = item.burner?.waves ?? [];
+  if (waves.length === 0) return;
+
+  const cellPx = CELL * PX_PER_UNIT * S.scale;
+  const markerPx = BURNER_MARKER_SIZE_M * PX_PER_UNIT * S.scale;
+  const badgeFont = Math.max(9, cellPx * 0.28);
+  const ctx = dom.ctx;
+
+  // 各波累计触发时间（与独立弹窗编辑器同口径）：第 0 波 = 开局延迟（默认 10）；
+  // 第 k 波 = 前一波 + interval[k]（wave[0].interval 不参与计时）。
+  const times: number[] = [];
+  {
+    let acc = Math.max(0, item.burner?.startDelaySeconds ?? 10);
+    for (let i = 0; i < waves.length; i++) {
+      if (i > 0) acc += Math.max(1, waves[i]?.intervalSeconds ?? 30);
+      times.push(Math.round(acc * 10) / 10);
+    }
+  }
+
+  // 顺序逐发模式：各波内的逐发序号（阅读顺序：从上到下、从左到右）。
+  const sequential = item.burner?.sequentialFire === true;
+  const seqOrder = new Map<string, number>();
+  if (sequential) {
+    for (let w = 0; w < waves.length; w++) {
+      const positions = waves[w]?.positions ?? [];
+      positions
+        .map((_, i) => i)
+        .sort((a, b) => {
+          const dz = positions[a].z - positions[b].z;
+          if (Math.abs(dz) > 0.0001) return dz;
+          const dx = positions[a].x - positions[b].x;
+          if (Math.abs(dx) > 0.0001) return dx;
+          return a - b;
+        })
+        .forEach((posIdx, order) => seqOrder.set(`${w}:${posIdx}`, order + 1));
+    }
+  }
+
+  // 同格分组（跨波重叠 / 波内重复）。存 {w, p} 以支持逐发序号查询。
+  const stacks = new Map<string, { w: number; p: number }[]>();
+  for (let w = 0; w < waves.length; w++) {
+    const positions = waves[w]?.positions ?? [];
+    for (let p = 0; p < positions.length; p++) {
+      const pos = positions[p];
+      const key = `${pos.x},${pos.z}`;
+      const list = stacks.get(key) ?? [];
+      list.push({ w, p });
+      stacks.set(key, list);
+    }
+  }
+
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (const [key, refs] of stacks) {
+    const [x, z] = key.split(",").map(Number);
+    const center = worldToCanvas(x, z);
+    refs.sort((a, b) => a.w - b.w);
+    const ws = refs.map((r) => r.w);
+    const numbers = ws.map((w) => w + 1).join("·");
+    // 重叠判定：波内重复（同刻同格），或任两波时间差 < 火焰持续 20s
+    //（顺序逐发的波内 stagger < 1s，仍按波开始时刻近似判定，足够）。
+    let overlapped = false;
+    for (let i = 0; i < ws.length && !overlapped; i++) {
+      for (let j = i + 1; j < ws.length && !overlapped; j++) {
+        if (Math.abs(times[ws[j]] - times[ws[i]]) < BURNER_FLAME_LIFETIME_S) overlapped = true;
+      }
+      if (ws.indexOf(ws[i]) !== ws.lastIndexOf(ws[i])) overlapped = true;
+    }
+    for (let i = 0; i < refs.length; i++) {
+      const ref = refs[i];
+      const off = i * 0.14 * cellPx;
+      const cxp = center.x + off;
+      const cyp = center.y + off;
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = overlapped ? "rgba(255,64,64,0.45)" : "rgba(255,106,61,0.5)";
+      ctx.fillRect(cxp - markerPx / 2, cyp - markerPx / 2, markerPx, markerPx);
+      ctx.strokeStyle = overlapped ? "#ff5c5c" : "#ff8a5c";
+      ctx.lineWidth = overlapped ? Math.max(2, cellPx * 0.06) : Math.max(1, cellPx * 0.045);
+      ctx.strokeRect(cxp - markerPx / 2, cyp - markerPx / 2, markerPx, markerPx);
+      ctx.fillStyle = "rgba(255,214,140,0.85)";
+      ctx.beginPath();
+      ctx.arc(cxp, cyp, Math.max(1.5, markerPx * 0.08), 0, Math.PI * 2);
+      ctx.fill();
+      // 顺序逐发模式：标记右下角画波内发射序号。
+      if (sequential) {
+        const order = seqOrder.get(`${ref.w}:${ref.p}`);
+        if (order != null) {
+          ctx.font = `bold ${Math.max(8, markerPx * 0.3)}px system-ui, sans-serif`;
+          ctx.fillStyle = "#ffd6a5";
+          ctx.textAlign = "right";
+          ctx.textBaseline = "bottom";
+          ctx.fillText(String(order), cxp + markerPx / 2 - 1, cyp + markerPx / 2 + 1);
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+        }
+      }
+    }
+    const topOff = (refs.length - 1) * 0.14 * cellPx;
+    const bx = center.x + topOff + markerPx / 2;
+    const by = center.y + topOff - markerPx / 2;
+    ctx.globalAlpha = 1;
+    ctx.font = `bold ${badgeFont}px system-ui, sans-serif`;
+    const tw = ctx.measureText(numbers).width;
+    const pad = badgeFont * 0.32;
+    const bw = tw + pad * 2;
+    const bh = badgeFont * 1.25;
+    ctx.fillStyle = overlapped ? "#8f1d10" : "#7a2410";
+    ctx.beginPath();
+    const r = bh * 0.32;
+    ctx.moveTo(bx - bw / 2 + r, by - bh);
+    ctx.arcTo(bx + bw / 2, by - bh, bx + bw / 2, by, r);
+    ctx.arcTo(bx + bw / 2, by, bx - bw / 2, by, r);
+    ctx.arcTo(bx - bw / 2, by, bx - bw / 2, by - bh, r);
+    ctx.arcTo(bx - bw / 2, by - bh, bx + bw / 2, by - bh, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = overlapped ? "#ffd9d0" : "#ffe9d6";
+    ctx.fillText(numbers, bx, by - bh / 2 + 0.5);
+  }
+  ctx.restore();
 }

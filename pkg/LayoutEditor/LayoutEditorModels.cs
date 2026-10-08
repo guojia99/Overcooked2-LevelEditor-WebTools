@@ -176,6 +176,23 @@ public class LayoutCleanPlateStackStubDto
 }
 
 [Serializable]
+public class LayoutBurnerWavePositionDto
+{
+    /** 落点世界坐标 XZ（格心，1.2 的倍数）。 */
+    public float x;
+    public float z;
+}
+
+[Serializable]
+public class LayoutBurnerWaveDto
+{
+    /** 距上一波的间隔秒数（首波 = 距开局时间）；缺省 30。 */
+    public float intervalSeconds = 30f;
+    /** 该波全部落点（世界坐标格心；允许跨波重叠、波内重复）。 */
+    public LayoutBurnerWavePositionDto[] positions;
+}
+
+[Serializable]
 public class LayoutBurnerStubDto
 {
     /** ProjectileSpawner.FireMode enum value (int). */
@@ -183,6 +200,19 @@ public class LayoutBurnerStubDto
     public float airTime;
     public bool randomTargetOrder;
     public bool hideVisual;
+    /** 开局延迟（秒）：开局 N 秒后发射第一波（默认 10）；后续波按各波间隔顺延。 */
+    public float startDelaySeconds = 10f;
+    /** 波内发射方式：false = 齐射（整波同刻，默认）；true = 顺序逐发——波内落点按
+     *  阅读顺序（从上到下、从左到右）依次延迟 fireStaggerSeconds 发射。 */
+    public bool sequentialFire;
+    /** 顺序逐发的逐发间隔（秒，默认 0.35）：第 i 个落点在波时刻 + i×间隔发射。 */
+    public float fireStaggerSeconds = 0.35f;
+    /** 波次化落点编排（web 编辑权威数据）：写回时 flatten 进 stub.targetPositions，
+     *  时序由 BurnerScheduleBakery 烘焙 TriggerTimer 承载；有 waves 时
+     *  randomTargetOrder 强制为 false（波次语义依赖顺序发射）。
+     *  时间模型：第 0 波 t = startDelaySeconds；第 k 波 t = 前一波 t + interval[k]
+     *  （waves[0].intervalSeconds 不参与计时）。 */
+    public LayoutBurnerWaveDto[] waves;
 }
 
 [Serializable]
@@ -1361,6 +1391,44 @@ public class SetExportStartDto
     /** deps 模式：依赖包打包版本（独立于运行时 SSOT 版本与关卡集版本，默认 1.0.0）。
      *  用于 zip 命名与包内 package_version.txt，不参与 requires.txt 门控。 */
     public string depsVersion;
+    /** 逐关卡选择性导出（v1 仅单集导出有效；元素 = 场景名，即 LevelInfoSO.sceneName /
+     *  scenes/ 下文件名去扩展）。null/空 = 全量导出（与历史行为一致）。部分导出时
+     *  info_<set> 内 levelInfos 会被临时过滤为入选关卡并在构建后自动还原。 */
+    public List<string> selectedLevels;
+}
+
+[Serializable]
+public class McpRpcRequestDto
+{
+    public string jsonrpc;
+    public string method;
+    public McpRpcParamsDto @params;
+}
+
+[Serializable]
+public class McpRpcParamsDto
+{
+    public string name;
+    public McpArgumentsDto arguments;
+}
+
+[Serializable]
+public class McpArgumentsDto
+{
+    public string setName;
+    public string levelSet;
+    public string assetPath;
+    public string record;
+    public string mode;
+    public string depsVersion;
+    public string only;
+    public bool confirm;
+    public bool syncWalkable;
+    public float snap;
+    public int timeoutMs;
+    public List<string> setNames;
+    public List<string> selectedLevels;
+    public LayoutDocumentDto document;
 }
 
 // ---------- 依赖包清单（GET /api/set/export/deps-manifest） ----------
@@ -1631,6 +1699,24 @@ public class ScreenshotUploadDto
 public class ScreenshotUploadResultDto
 {
     public string texturePath;
+}
+
+[Serializable]
+public class ScreenshotCaptureDto
+{
+    /** LevelInfoSO asset path; the active Unity scene/camera is captured. */
+    public string assetPath;
+    public int width;
+    public int height;
+    public int quality;
+}
+
+[Serializable]
+public class ScreenshotCaptureResultDto
+{
+    public string base64;
+    public int width;
+    public int height;
 }
 
 // ---------- 汇总页导出背景图（关卡 data 目录 summary_bg~/） ----------

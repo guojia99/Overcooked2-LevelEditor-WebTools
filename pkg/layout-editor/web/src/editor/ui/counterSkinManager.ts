@@ -241,6 +241,8 @@ export function openCounterSkinManager() {
     cancelBtnHtml("关闭")
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
+  // 关闭按钮接线（v0.9.2 起一直漏绑，此前只能靠遮罩/Esc 关闭）
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
 
   const groupOf = (type: string | undefined) => groups.find((g) => g.type === type);
   const itemOf = (key: string | undefined) => S.items.find((i) => i._editorKey === key);

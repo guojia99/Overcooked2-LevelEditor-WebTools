@@ -343,6 +343,19 @@ public static class SceneLayoutApplier
             }
         }
 
+        // 燃烧弹射器波次时序：Design/Burner Logic 定时器烘焙（item.burner.waves 权威；
+        // 仅全量写回；含旧式根级 BurnerTrigger 接管迁移）。须在 ApplyStub（写
+        // targetPositions）之后的二轮绑定之后执行——落点与时序同文档到达。
+        if (only == null)
+        {
+            var burnerError = BurnerScheduleBakery.Sync(scene, document, createdObjects);
+            if (!string.IsNullOrEmpty(burnerError))
+            {
+                LayoutEditorLog.LogWarning(burnerError);
+                bakeError = string.IsNullOrEmpty(bakeError) ? burnerError : bakeError + "; " + burnerError;
+            }
+        }
+
         // HUD 订单上限：按 LevelInfoSO.maxOrderCount 烘焙 RecipeFlowGUI /
         // KitchenFlowControllerBase 覆盖（n>5 时真机 HUD 桌号池与出单上限的必需数据）。
         {

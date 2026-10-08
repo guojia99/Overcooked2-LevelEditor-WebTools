@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "index": 1,
   "itemCount": 200,
   "items": [
@@ -177,7 +177,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.2512861490249634
       },
       "height": 0.251,
       "baseY": -0.126,
@@ -196,9 +197,11 @@
       "theme": "particles",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 76,
+        "cellsZ": 39,
+        "sizeY": 1.3052812657297842e-15
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "远景深度混合",
       "nameEn": "depth blend far",
@@ -257,8 +260,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5034218430519104
+        "cellsZ": 1
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -277,8 +279,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5034218430519104
+        "cellsZ": 1
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -320,7 +321,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.572,
+      "height": 1.509,
       "baseY": -0.342,
       "layoutTier": "decor",
       "nameZh": "圣诞顾客",
@@ -340,7 +341,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.572,
+      "height": 1.509,
       "baseY": -0.342,
       "layoutTier": "decor",
       "nameZh": "圣诞顾客",
@@ -360,7 +361,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.582,
+      "height": 1.521,
       "baseY": -0.354,
       "layoutTier": "decor",
       "nameZh": "幽灵顾客",
@@ -380,7 +381,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.582,
+      "height": 1.521,
       "baseY": -0.354,
       "layoutTier": "decor",
       "nameZh": "幽灵顾客",
@@ -400,7 +401,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.582,
+      "height": 1.583,
       "baseY": -0.354,
       "layoutTier": "decor",
       "nameZh": "城堡顾客",
@@ -420,7 +421,7 @@
         "cellsX": 1,
         "cellsZ": 1
       },
-      "height": 1.582,
+      "height": 1.583,
       "baseY": -0.354,
       "layoutTier": "decor",
       "nameZh": "城堡顾客",
@@ -438,7 +439,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5
       },
       "height": 0.5,
       "layoutTier": "decor",
@@ -457,8 +459,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5034218430519104
+        "cellsZ": 1
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -477,8 +478,10 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 17,
+        "sizeY": 1.1920928955078125e-7
       },
+      "height": 0,
       "layoutTier": "decor",
       "nameZh": "DLC8 地面",
       "nameEn": "dlc08 ground",
@@ -695,7 +698,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5431906580924988
       },
       "height": 0.543,
       "baseY": -0.048,
@@ -715,7 +719,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5431906580924988
       },
       "height": 0.543,
       "baseY": -0.041,
@@ -735,7 +740,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5431906580924988
       },
       "height": 0.543,
       "baseY": -0.041,
@@ -755,7 +761,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -774,7 +781,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -793,7 +801,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.5034218430519104
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -812,8 +821,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5034218430519104
+        "cellsZ": 1
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -831,8 +839,9 @@
       "theme": "horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 1.9869203567504883
       },
       "height": 1.987,
       "baseY": -0.065,
@@ -891,8 +900,9 @@
       "theme": "horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 3.5183591842651367
       },
       "height": 3.518,
       "baseY": -0.194,
@@ -911,8 +921,9 @@
       "theme": "camping",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 2,
+        "sizeY": 2.76200008392334
       },
       "height": 2.165,
       "baseY": -0.819,
@@ -931,8 +942,9 @@
       "theme": "horde",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 1.4148390293121338
       },
       "height": 1.415,
       "baseY": -0.102,
@@ -952,8 +964,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5034218430519104
+        "cellsZ": 1
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -1244,8 +1255,9 @@
       "theme": "misc",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 3,
+        "sizeY": 1.7722934484481812
       },
       "height": 1.772,
       "layoutTier": "decor",
@@ -1263,8 +1275,9 @@
       "theme": "misc",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 3,
+        "sizeY": 1.7722934484481812
       },
       "height": 1.772,
       "layoutTier": "decor",
@@ -1282,8 +1295,9 @@
       "theme": "misc",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 2,
+        "cellsZ": 3,
+        "sizeY": 1.7722934484481812
       },
       "height": 1.772,
       "layoutTier": "decor",
@@ -2119,8 +2133,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.2000004053115845
+        "cellsZ": 1
       },
       "height": 1.2,
       "baseY": -0.6,
@@ -2285,8 +2298,9 @@
       "theme": "dlc11_summer",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 8,
+        "cellsZ": 8,
+        "sizeY": 8.189804077148438
       },
       "height": 8.19,
       "baseY": -0.487,
@@ -2431,8 +2445,9 @@
       "theme": "dlc11_summer",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 3.8539717197418213
       },
       "height": 3.854,
       "baseY": -3.278,
@@ -2452,7 +2467,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 3.8509843349456787
       },
       "height": 3.851,
       "baseY": -3.273,
@@ -2514,7 +2530,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 2,
+        "sizeY": 3.853971242904663
       },
       "height": 3.854,
       "baseY": -3.278,
@@ -2722,8 +2739,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.6024137735366821
+        "cellsZ": 1
       },
       "height": 0.602,
       "layoutTier": "decor",
@@ -2742,8 +2758,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 3.2487385272979736
+        "cellsZ": 1
       },
       "height": 3.249,
       "layoutTier": "decor",
@@ -2803,8 +2818,7 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5034218430519104
+        "cellsZ": 1
       },
       "height": 0.503,
       "layoutTier": "decor",
@@ -3033,6 +3047,7 @@
         "cellsX": 6,
         "cellsZ": 6
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "background",
       "surfaceKind": "background",
@@ -3072,7 +3087,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 0.8273008465766907
       },
       "height": 0.827,
       "layoutTier": "decor",
@@ -3699,8 +3715,9 @@
       "theme": "s_summer_1_1",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 42,
+        "cellsZ": 28,
+        "sizeY": 4.427426815032959
       },
       "height": 4.427,
       "baseY": -4.789,
@@ -3744,7 +3761,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1.1999999284744263
       },
       "height": 1.2,
       "baseY": -0.6,
@@ -3919,9 +3937,11 @@
       "theme": "city_sushi",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 28,
+        "cellsZ": 16,
+        "sizeY": 5.329070200563396e-16
       },
+      "height": 0,
       "layoutTier": "floor",
       "surfaceTier": "floor",
       "surfaceKind": "solid",
@@ -3962,8 +3982,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 5,
+        "cellsZ": 1,
+        "sizeY": 7.121923923492432
       },
       "height": 7.122,
       "baseY": -3.561,
@@ -3984,8 +4005,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 9,
+        "cellsZ": 1,
+        "sizeY": 11.399999618530273
       },
       "height": 11.4,
       "baseY": -5.7,
@@ -4006,8 +4028,9 @@
       "theme": "air_balloon",
       "defaultParent": "Art",
       "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
+        "cellsX": 6,
+        "cellsZ": 1,
+        "sizeY": 7.400000095367432
       },
       "height": 7.4,
       "baseY": -3.7,
@@ -4029,7 +4052,8 @@
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1
+        "cellsZ": 1,
+        "sizeY": 1
       },
       "height": 1,
       "baseY": -0.5,

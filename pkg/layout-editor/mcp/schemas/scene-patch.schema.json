@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["op", "instanceId", "position"],
+      "properties": {
+        "op": { "const": "move_item" },
+        "instanceId": { "type": "string" },
+        "position": {
+          "type": "object",
+          "required": ["x", "y", "z"],
+          "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["op", "instanceId", "y"],
+      "properties": { "op": { "const": "rotate_item" }, "instanceId": { "type": "string" }, "y": { "type": "number" } },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["op", "instanceId"],
+      "properties": { "op": { "const": "delete_item" }, "instanceId": { "type": "string" } },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["op", "item"],
+      "properties": { "op": { "const": "add_item" }, "item": { "type": "object" } },
+      "additionalProperties": false
+    }
+  ]
+}

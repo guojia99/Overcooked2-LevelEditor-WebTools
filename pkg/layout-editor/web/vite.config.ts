@@ -42,8 +42,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        // Mac 开发机 → Windows 虚拟机内的 Unity 服务时，设置 VITE_DEV_PROXY_TARGET=http://<虚拟机IP>:8765
-        target: process.env.VITE_DEV_PROXY_TARGET || "http://127.0.0.1:8765",
+        // Mac 开发机 → Windows 虚拟机内的 Unity 服务；可用 VITE_DEV_PROXY_TARGET 覆盖。
+        target: process.env.VITE_DEV_PROXY_TARGET || "http://10.211.55.3:8765",
         changeOrigin: true,
       },
     },
