@@ -30,6 +30,9 @@ import {
   isAirFloor,
   finalizeFloor,
   snapRaftCenterToGrid,
+  reanchorFloorCenterLeavingRaft,
+  reanchorFloorCenterEnteringRaft,
+  applySolidPlaneMeshFields,
   floorMatSummary,
   effectiveMaterialTiling,
   resolveFloorMaterial,
@@ -218,10 +221,16 @@ function wireSolidMaterialPicker(f: EditorFloor, activeTab: string): void {
       const m = S.floorMaterials.find((x) => x.guid === btn.dataset.guid);
       if (!m) return;
       pushHistory();
+      const wasRaft = f.surfaceKind === "raft";
       f.materialGuid = m.guid;
       f.materialAssetPath = m.assetPath;
       f.materialName = m.id;
       f.surfaceKind = "solid";
+      if (wasRaft) {
+        reanchorFloorCenterLeavingRaft(f);
+        applySolidPlaneMeshFields(f);
+      }
+      finalizeFloor(f);
       S.floorMaterialTabKey = floorMaterialGroup(m.id);
       draw();
       setStatus(`已切换材质：${materialDisplayLabel(m).zh}（写回后生效）`);
@@ -501,6 +510,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="solid"]')?.addEventListener("click", () => {
     if (isPlainSolid) return; // already solid
     pushHistory();
+    const wasRaft = f.surfaceKind === "raft";
     f.surfaceKind = "solid";
     f.airFloor = false;
     if (f.parentPath === "Design/Collision") f.parentPath = "Art/Ground";
@@ -510,6 +520,10 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.imageRotation = undefined;
     f.prefabGuid = undefined;
     f.prefabAssetPath = undefined;
+    if (wasRaft) {
+      reanchorFloorCenterLeavingRaft(f);
+      applySolidPlaneMeshFields(f);
+    }
     finalizeFloor(f);
     draw();
     setStatus("已设为实心地板（可在下方切换材质）");
@@ -518,6 +532,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="tinted"]')?.addEventListener("click", () => {
     if (isTinted) return; // already tinted
     pushHistory();
+    const wasRaft = f.surfaceKind === "raft";
     f.surfaceKind = "solid";
     f.airFloor = false;
     if (f.parentPath === "Design/Collision") f.parentPath = "Art/Ground";
@@ -528,6 +543,10 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.prefabGuid = undefined;
     f.prefabAssetPath = undefined;
     if (!f.tintColor) f.tintColor = "#9aa0a6";
+    if (wasRaft) {
+      reanchorFloorCenterLeavingRaft(f);
+      applySolidPlaneMeshFields(f);
+    }
     finalizeFloor(f);
     draw();
     setStatus("已设为染色地板（实心 Plane + 纯色，写回后生效）");
@@ -536,6 +555,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="image"]')?.addEventListener("click", () => {
     if (isImage) return; // already image
     pushHistory();
+    const wasRaft = f.surfaceKind === "raft";
     f.surfaceKind = "solid";
     f.airFloor = false;
     if (f.parentPath === "Design/Collision") f.parentPath = "Art/Ground";
@@ -543,6 +563,10 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.prefabGuid = undefined;
     f.prefabAssetPath = undefined;
     if (!f.imageMode) f.imageMode = "stretch";
+    if (wasRaft) {
+      reanchorFloorCenterLeavingRaft(f);
+      applySolidPlaneMeshFields(f);
+    }
     finalizeFloor(f);
     draw();
     setStatus("已设为图片地板，请在下方上传图片");
@@ -551,6 +575,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="raft"]')?.addEventListener("click", () => {
     if (isRaft) return; // already raft
     pushHistory();
+    reanchorFloorCenterEnteringRaft(f);
     f.surfaceKind = "raft";
     f.airFloor = false;
     f.tintEnabled = false;
@@ -573,9 +598,12 @@ export function openFloorEditorModal(f: EditorFloor) {
       return;
     }
     pushHistory();
+    const wasRaft = f.surfaceKind === "raft";
+    const nextKind = cat.surfaceKind ?? "solid";
+    if (wasRaft && nextKind !== "raft") reanchorFloorCenterLeavingRaft(f);
     f.prefabGuid = cat.guid;
     f.prefabAssetPath = cat.assetPath;
-    f.surfaceKind = cat.surfaceKind ?? "solid";
+    f.surfaceKind = nextKind;
     f.displayName = cat.id;
     f.airFloor = false;
     f.tintEnabled = false;
@@ -590,6 +618,7 @@ export function openFloorEditorModal(f: EditorFloor) {
   document.querySelector<HTMLButtonElement>('.mat-pick[data-kind="air"]')?.addEventListener("click", () => {
     if (isAir) return; // already air
     pushHistory();
+    if (f.surfaceKind === "raft") reanchorFloorCenterLeavingRaft(f);
     f.airFloor = true;
     f.surfaceKind = "solid";
     f.tintEnabled = false;
@@ -618,9 +647,12 @@ export function openFloorEditorModal(f: EditorFloor) {
       if (!cat) return;
       if (f.prefabGuid === cat.guid) return;
       pushHistory();
+      const wasRaft = f.surfaceKind === "raft";
+      const nextKind = cat.surfaceKind ?? "solid";
+      if (wasRaft && nextKind !== "raft") reanchorFloorCenterLeavingRaft(f);
       f.prefabGuid = cat.guid;
       f.prefabAssetPath = cat.assetPath;
-      f.surfaceKind = cat.surfaceKind ?? "solid";
+      f.surfaceKind = nextKind;
       f.displayName = cat.id;
       f.airFloor = false;
       f.tintEnabled = false;
@@ -719,6 +751,10 @@ export function openFloorEditorModal(f: EditorFloor) {
         return;
       }
       pushHistory();
+      if (f.surfaceKind === "raft") {
+        reanchorFloorCenterLeavingRaft(f);
+        applySolidPlaneMeshFields(f);
+      }
       f.surfaceKind = "solid";
       f.tintEnabled = false;
       f.imageTexturePath = texturePath;

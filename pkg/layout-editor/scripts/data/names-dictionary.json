@@ -1404,7 +1404,7 @@
     },
     {
       "id": "ControlTerminal_Marker",
-      "zh": "控制终端标记",
+      "zh": "摇杆灯",
       "en": "Control Terminal Marker"
     },
     {
@@ -2429,7 +2429,7 @@
     },
     {
       "id": "DLC08_Donut_raspberry",
-      "zh": "覆盆子甜甜圈（DLC08）",
+      "zh": "树莓甜甜圈（DLC08）",
       "en": "Raspberry Donut (DLC08)"
     },
     {
@@ -2634,12 +2634,12 @@
     },
     {
       "id": "DLC08_mixedfloureggraspberry",
-      "zh": "覆盆子面糊（DLC08）",
+      "zh": "树莓面糊（DLC08）",
       "en": "Raspberry Batter (DLC08)"
     },
     {
       "id": "DLC08_MultiControlTerminal",
-      "zh": "加农炮控制终端",
+      "zh": "摇杆（加农炮）",
       "en": "Multi Control Terminal"
     },
     {
@@ -4229,7 +4229,7 @@
     },
     {
       "id": "donut_raspberry",
-      "zh": "覆盆子甜甜圈",
+      "zh": "树莓甜甜圈",
       "en": "Raspberry Donut"
     },
     {
@@ -9659,7 +9659,7 @@
     },
     {
       "id": "mixedfloureggraspberry",
-      "zh": "覆盆子面糊",
+      "zh": "树莓面糊",
       "en": "Raspberry Batter"
     },
     {
@@ -9704,7 +9704,7 @@
     },
     {
       "id": "MultiControlTerminal",
-      "zh": "多路控制终端",
+      "zh": "摇杆",
       "en": "Multi Control Terminal"
     },
     {
@@ -20014,7 +20014,7 @@
     },
     {
       "id": "raspberry",
-      "zh": "覆盆子",
+      "zh": "树莓",
       "en": "Raspberry"
     },
     {

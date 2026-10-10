@@ -16,6 +16,11 @@ public static class SceneLayoutApplier
         "p_dlc10_water_01", "p_dlc13_water_02", "city_water",
     };
 
+    /// <summary>最近一次 Apply 成功后："new:…" 文档 id → 本会话真实 "u:&lt;InstanceID&gt;"。
+    /// 供 LayoutEditorPartLevelStore 在写回后重导出盖章时反查（key = new:，value = u:）。
+    /// Apply 开始时清空；失败路径保持清空（null 表示本次无新建）。</summary>
+    public static Dictionary<string, string> LastNewIdRemap;
+
     public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, bool itemsOnly = false)
     {
         return Apply(document, snapStep, syncWalkable, itemsOnly ? "items" : null);
@@ -28,6 +33,7 @@ public static class SceneLayoutApplier
     /// </summary>
     public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, string only)
     {
+        LastNewIdRemap = null;
         if (document == null || document.items == null)
             return "Empty layout document.";
 
@@ -49,6 +55,10 @@ public static class SceneLayoutApplier
         if (!LayoutEditorSafety.PrepareSceneForApply())
             return LayoutEditorSafety.LastError;
 
+        // 摇杆组绑定登记：StubIO 的 Terminal 空绑定分支据此跳过「降级为普通
+        // 道具」（绑定由 PilotGroupBakery 在烘焙期直写，晚于物品首轮 Apply）。
+        PilotGroupBakery.BeginApply(document);
+
         var before = SceneLayoutExporter.ExportFromScene();
         // 写回历史：此刻场景已打开且未做任何改动，取写回前语义快照（stripped 状态，
         // 与 SaveScene 后的 after 快照状态一致）。
@@ -60,6 +70,9 @@ public static class SceneLayoutApplier
                 return ceilingError;
         }
         RemoveUnmatchedSceneItems(before, document.items, only);
+        // 分 P：布局期确保 slot 根存在并归零（世界坐标 == 设计坐标）；
+        // park/转场烘焙在收尾 PartTransitionBakery.Sync 统一处理。
+        PartTransitionBakery.EnsureSlotRoots(document);
 
         var usedSceneObjectIds = new HashSet<int>();
         var createdObjects = new Dictionary<string, GameObject>();
@@ -132,11 +145,13 @@ public static class SceneLayoutApplier
             }
 
             // ---- 防堆叠守卫（见上方注释）----
+            // 分 P：不同阶段的物件设计坐标天然相同（P1/P2 同位桌台是常态），
+            // 守卫键必须带 partId，否则 P2 的同位物件会被当重复静默跳过。
             {
                 var guardPos = worldPos.HasValue
                     ? new Vector3(worldPos.Value.x, worldPos.Value.y, worldPos.Value.z)
                     : pos;
-                var guardKey = (item.prefabGuid ?? item.prefabAssetPath ?? "");
+                var guardKey = (item.partId ?? "base") + "|" + (item.prefabGuid ?? item.prefabAssetPath ?? "");
                 Vector3 prevPos;
                 if (placedFootprint.TryGetValue(guardKey, out prevPos)
                     && Mathf.Abs(prevPos.x - guardPos.x) < 0.01f
@@ -219,7 +234,8 @@ public static class SceneLayoutApplier
             var isServing = item.stubKind == "ServingStation" && item.servingStation != null;
             var isTerminal = item.stubKind == "Terminal" && item.terminal != null;
             var isHeatedOven = item.stubKind == "HeatedOven" && item.heatedOven != null;
-            if (!isTeleportal && !isServing && !isTerminal && !isHeatedOven)
+            var isMarkerLight = item.stubKind == "MarkerLight";
+            if (!isTeleportal && !isServing && !isTerminal && !isHeatedOven && !isMarkerLight)
                 continue;
 
             GameObject go;
@@ -235,6 +251,10 @@ public static class SceneLayoutApplier
                 LayoutEditorStubIO.ApplyTeleportalExit(go, item.teleportal.exitPortalInstanceId ?? "", createdObjects);
             else if (isTerminal)
                 LayoutEditorStubIO.ApplyTerminalPilotable(go, item.terminal.pilotableObjectInstanceId ?? "", createdObjects);
+            else if (isMarkerLight)
+                LayoutEditorStubIO.ApplyMarkerJoystickLink(go,
+                    item.markerLight != null ? (item.markerLight.joystickInstanceId ?? "") : "",
+                    createdObjects);
             else if (isHeatedOven)
                 LayoutEditorStubIO.ApplyHeatedOvenHeatSource(go, item.heatedOven.heatedStationInstanceId ?? "", createdObjects);
             else
@@ -297,7 +317,17 @@ public static class SceneLayoutApplier
                 RemapNewIds(group.objectInstanceIds, createdObjects);
             }
 
-            bakeError = AnimGroupBakery.Sync(scene, document.AnimControls);
+            // 摇杆操控组（groupKind="pilot"）：原版 PilotMovement 刚体驾驶烘焙。
+            // 先于动画组——冲突成员（同属两族）在此从动画组移除，动画组随后
+            // 烘焙的成员列表即已干净。
+            var pilotError = PilotGroupBakery.Sync(scene, document, createdObjects);
+            if (!string.IsNullOrEmpty(pilotError))
+            {
+                LayoutEditorLog.LogWarning(pilotError);
+                bakeError = string.IsNullOrEmpty(bakeError) ? pilotError : bakeError + "; " + pilotError;
+            }
+
+            bakeError = AnimGroupBakery.Sync(scene, document.AnimControls, document, createdObjects);
             if (!string.IsNullOrEmpty(bakeError))
                 LayoutEditorLog.LogWarning(bakeError);
 
@@ -376,6 +406,18 @@ public static class SceneLayoutApplier
         // saved scene) -> Save to disk -> Reload Pseudo Assets (re-load children, restore UI).
         // Groups that failed to bake are reported but never prevent the save — a write-back
         // that does not persist to disk is worse than a partial one.
+        // 分 P 收尾：slot 根 park（P2+ 停放偏移）+ 转场 Animator/时间轴链/清理载体
+        // 烘焙 + 已删阶段残留清理。必须在全部物件/地板/动画组 pass 之后、SaveScene 之前。
+        try
+        {
+            PartTransitionBakery.Sync(scene, document);
+        }
+        catch (System.Exception e)
+        {
+            // 烘焙失败不吞写回：场景已一致（slot 结构/物件已就位），告警定位。
+            LayoutEditorLog.LogWarning("[PartLevel] 转场烘焙失败（场景物件已写回）：" + e.Message);
+        }
+
         LayoutEditorPseudoReload.EnsurePrepareForBuilding();
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -390,6 +432,21 @@ public static class SceneLayoutApplier
         // Reload 会从 bundle 重建伪 prefab child（EditorGridSnap 的 X/Z 约束随之复位），
         // 写回末尾即时解除断头台/石炉台的半格约束，防编辑模式每帧拉回整格。
         LayoutEditorGridSnapGuard.RelaxGridSnapOnScene();
+
+        // 分 P 盖章用：导出本次 "new:" → 会话 "u:" 换算表（场景已保存，含部分失败路径）。
+        if (createdObjects.Count > 0)
+        {
+            var remap = new Dictionary<string, string>();
+            foreach (var kv in createdObjects)
+            {
+                if (kv.Key == null || !kv.Key.StartsWith("new:", System.StringComparison.Ordinal))
+                    continue;
+                if (kv.Value == null)
+                    continue;
+                remap[kv.Key] = "u:" + kv.Value.GetInstanceID();
+            }
+            LastNewIdRemap = remap;
+        }
 
         var partialError = cameraLightError;
         if (!string.IsNullOrEmpty(bakeError))
@@ -702,6 +759,18 @@ public static class SceneLayoutApplier
         try
         {
             var hasWalkSurface = false;
+            // 分 P：阶段地板是随 slot 根移动的可行走面 —— 同样要求动态父挂载开启。
+            if (PartTransitionBakery.IsPartEnabled(document) && document.floors != null)
+            {
+                foreach (var f in document.floors)
+                {
+                    if (f != null && PartTransitionBakery.HasPartScope(f.partId) && f.surfaceKind != "background")
+                    {
+                        hasWalkSurface = true;
+                        break;
+                    }
+                }
+            }
             foreach (var g in document.AnimControls.groups ?? new AnimGroupDto[0])
             {
                 if (g == null) continue;
@@ -766,6 +835,7 @@ public static class SceneLayoutApplier
         // 动画其 localPosition，子碰撞体随之一起移动。
         var moveMembers = new HashSet<string>();
         var moveFloorIds = new HashSet<string>();
+        var pilotFloorIds = new HashSet<string>();
         if (document != null && document.AnimControls != null && document.AnimControls.groups != null)
         {
             foreach (var g in document.AnimControls.groups)
@@ -783,8 +853,14 @@ public static class SceneLayoutApplier
                 if (g.floorInstanceIds != null)
                 {
                     foreach (var id in g.floorInstanceIds)
-                        if (!string.IsNullOrEmpty(id))
-                            moveFloorIds.Add(id);
+                    {
+                        if (string.IsNullOrEmpty(id)) continue;
+                        moveFloorIds.Add(id);
+                        // 摇杆组地板：行走面 = 组根 PilotFloor 组合包围盒，不建
+                        // 静态/成员级 Col_Floor。
+                        if (g.groupKind == "pilot")
+                            pilotFloorIds.Add(id);
+                    }
                 }
             }
         }
@@ -827,6 +903,40 @@ public static class SceneLayoutApplier
             // Background planes are visual only — no walkable collider.
             if (floor.surfaceKind == "background")
                 continue;
+            // 分 P：阶段地板的可行走碰撞挂为 plane 子物体（plane 在 slot Ground 下，
+            // 碰撞随 slot 根移动），并给 plane 挂 ObjectContainer 供
+            // DynamicLandscapeParenting 把玩家/食材父挂到移动地板上。
+            var partFloor = PartTransitionBakery.HasPartScope(floor.partId);
+            if (partFloor)
+            {
+                if (floor.airFloor)
+                {
+                    // 空气地板碰撞盒已由 ApplyAirFloorCollider 放在 slot Ground 下，随根移动。
+                    continue;
+                }
+                var partFloorGo = ResolveItemGo2(floor, createdObjects);
+                if (partFloorGo != null)
+                {
+                    for (int i = partFloorGo.transform.childCount - 1; i >= 0; i--)
+                    {
+                        var c = partFloorGo.transform.GetChild(i);
+                        if (c != null && IsEditorFloorCollider(c.gameObject))
+                            Undo.DestroyObjectImmediate(c.gameObject);
+                    }
+                    float pcx = floor.worldPosition != null ? floor.worldPosition.x : (floor.localPosition != null ? floor.localPosition.x : 0f);
+                    float pcz = floor.worldPosition != null ? floor.worldPosition.z : (floor.localPosition != null ? floor.localPosition.z : 0f);
+                    pcx = SnapScalar(pcx, snapStep);
+                    pcz = SnapScalar(pcz, snapStep);
+                    float pw = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
+                    float pd = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
+                    float pWalkY = FloorWalkY(floor.localPosition != null ? floor.localPosition.y : 0f);
+                    CreateColFloorOnItem(partFloorGo.transform, groundLayer, pcx, pcz, pw, pd, pWalkY, floor.localRotationY);
+                    if (partFloorGo.GetComponent<ObjectContainer>() == null)
+                        Undo.AddComponent<ObjectContainer>(partFloorGo);
+                    continue;
+                }
+                // 解析失败退回静态路径兜底（下方公共路径）。
+            }
             float cx = floor.worldPosition != null ? floor.worldPosition.x : (floor.localPosition != null ? floor.localPosition.x : 0f);
             float cz = floor.worldPosition != null ? floor.worldPosition.z : (floor.localPosition != null ? floor.localPosition.z : 0f);
             // Same snap as ApplyFloorTransform so Col_Floor stays glued to the visible plane
@@ -836,6 +946,27 @@ public static class SceneLayoutApplier
             float w = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
             float d = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
             float walkY = FloorWalkY(floor.localPosition != null ? floor.localPosition.y : 0f);
+
+            // 摇杆组地板：行走面 = 组根 PilotFloor 组合包围盒（PilotGroupBakery
+            // 烘焙），不建静态/成员级 Col_Floor（避免双重碰撞）。空气地板成员
+            // 的碰撞盒对象即成员（保留身份随组移动）；solid plane 清掉历史子
+            // 碰撞（曾入动画组的残留）后跳过。
+            if (pilotFloorIds.Contains(floor.instanceId))
+            {
+                if (floor.airFloor)
+                    continue;
+                var pfGo = ResolveItemGo2(floor, createdObjects);
+                if (pfGo != null)
+                {
+                    for (int i = pfGo.transform.childCount - 1; i >= 0; i--)
+                    {
+                        var c = pfGo.transform.GetChild(i);
+                        if (c != null && IsEditorFloorCollider(c.gameObject))
+                            Undo.DestroyObjectImmediate(c.gameObject);
+                    }
+                }
+                continue;
+            }
 
             if (moveFloorIds.Count > 0 && moveFloorIds.Contains(floor.instanceId))
             {
@@ -902,7 +1033,8 @@ public static class SceneLayoutApplier
                     }
                 }
 
-                if (itemGo != null && moveMembers.Contains(item.instanceId ?? ""))
+                if (itemGo != null && (moveMembers.Contains(item.instanceId ?? "")
+                        || PartTransitionBakery.HasPartScope(item.partId)))
                     CreateColFloorOnItem(itemGo.transform, groundLayer, cx, cz, w, d, walkY, item.localRotationY);
                 else
                     CreateColFloor(collision, groundLayer, cx, cz, w, d, walkY, item.localRotationY);

@@ -26,7 +26,7 @@ import {
   renderRightPanel,
   updatePanelTabButtons
 } from "./panels";
-import { isCollisionItem } from "./stubControls";
+import { isCollisionItem, stubKindOf } from "./stubControls";
 import { renameGroupInButtonLinks, linkBindingGroup, cleanOrphanedButtonLinks } from "./buttonLinks";
 import { openModal, closeModal } from "../modals";
 import {
@@ -38,6 +38,7 @@ import {
 import { openAnimDock, closeAnimDock } from "./animDock";
 import { clearTriggerSource } from "./triggerOrchestrator";
 import { setLayer } from "./init";
+import { partLevelActive } from "./partLevel";
 import type {
   AnimGroup,
   AnimGroupEvent,
@@ -146,6 +147,46 @@ export function isFxGroup(group: AnimGroup): boolean {
   return group.groupKind === "fx";
 }
 
+/** 摇杆操控组判定（groupKind="pilot"：整组成员烘成原版 PilotMovement 刚体，
+ *  由 terminalInstanceId 指向的摇杆驾驶；无路线/事件）。 */
+export function isPilotGroup(group: AnimGroup): boolean {
+  return group.groupKind === "pilot";
+}
+
+/** 组的摇杆绑定终端条目（返回 null = 未绑定）。 */
+export function pilotTerminalOf(group: AnimGroup): EditorItem | null {
+  if (!isPilotGroup(group) || !group.terminalInstanceId) return null;
+  return S.items.find((it) => it.instanceId === group.terminalInstanceId) ?? null;
+}
+
+/** 绑定了摇杆组的终端 instanceId 集合（终端右键「控制目标」等处的互斥判断）。 */
+export function pilotBoundTerminalIds(): Set<string> {
+  const ids = new Set<string>();
+  for (const g of S.animControls) {
+    if (isPilotGroup(g) && g.terminalInstanceId) ids.add(g.terminalInstanceId);
+  }
+  return ids;
+}
+
+/** 摇杆组绑定写入（唯一入口：清终端条目级旧目标，保证单一权威）。 */
+export function setPilotTerminalBinding(group: AnimGroup, terminalInstanceId: string | null): void {
+  const term = terminalInstanceId ? S.items.find((it) => it.instanceId === terminalInstanceId) : null;
+  if (terminalInstanceId && !term) return;
+  if (!term) delete group.terminalInstanceId;
+  else {
+    // 互斥：该终端若已绑其它摇杆组 / 已有条目级目标，一并清掉。
+    for (const g of S.animControls) {
+      if (g !== group && isPilotGroup(g) && g.terminalInstanceId === term.instanceId) {
+        delete g.terminalInstanceId;
+      }
+    }
+    if (term.terminal?.pilotableObjectInstanceId) delete term.terminal.pilotableObjectInstanceId;
+    group.terminalInstanceId = term.instanceId;
+  }
+  S.dirty = true;
+  draw();
+}
+
 /** 特效组的特效类型（组内首个特效事件；全 wait / 空组返回 null）。 */
 export function groupFxType(group: AnimGroup): "shake" | "flash" | null {
   if (!isFxGroup(group)) return null;
@@ -184,7 +225,7 @@ export function closeAnimGroupEditor(): void {
 /** 在底部编排台中打开某动画组的单组编排（模式 A）。取代旧全屏弹窗。 */
 export function openAnimGroupEditor(group: AnimGroup): void {
   clearTriggerSource();
-  S.activeAnimTab = "timeline";
+  S.activeAnimTab = isPilotGroup(group) ? "members" : "timeline";
   const body = openAnimDock();
   animEditorModalBody = body;
   renderGroupEditor(body, group);
@@ -205,7 +246,7 @@ export function openAnimGroupEditorById(groupId: string): void {
   S.activeAnimEventIdx = null;
   S.selectedWaypointId = null;
   S.animMode = "none";
-  S.activeAnimTab = "timeline";
+  S.activeAnimTab = isPilotGroup(g) ? "members" : "timeline";
   S.animPickTargetGroupId = null;
   clearAnimSelection();
   renderRightPanel();
@@ -307,6 +348,10 @@ export function cleanOrphanedAnimControls(): void {
     // of S.items/S.floors — keep them untouched (the backend re-captures gaps).
     // 全屏特效组没有成员（宿主是相机 rig / 专用灯，不在物品列表里）：无条件保留。
     if (g.groupKind === "fx") return true;
+    // 摇杆组：终端绑定引用失效时清掉（终端被删除）。
+    if (g.groupKind === "pilot" && g.terminalInstanceId && !liveIds.has(g.terminalInstanceId)) {
+      delete g.terminalInstanceId;
+    }
     return g.itemInstanceIds.length > 0 || g.floorInstanceIds.length > 0 || g.objectInstanceIds.length > 0;
   });
   if (S.activeAnimGroupId && !S.animControls.some((g) => g.id === S.activeAnimGroupId)) {
@@ -746,6 +791,11 @@ export function drawAnimControlOverlay(): void {
     if (isActive) {
       drawMemberMarkers(group);
     }
+
+    // 摇杆组：成员包围盒 + 🎮 徽标 + 到绑定终端的连线（无路线概念）。
+    if (isPilotGroup(group)) {
+      drawPilotGroupOverlay(group, isActive);
+    }
   }
 
   if (S.currentLayer === "anim") drawAnimLegend();
@@ -753,6 +803,53 @@ export function drawAnimControlOverlay(): void {
   if (act && S.animPreview && S.animPreview.groupId === act.id) {
     drawPreviewOverlay(act);
   }
+}
+
+/** 摇杆组画布表现：整组成员包围盒虚线框（= 游戏内行走面矩形）+ 🎮 中心
+ * 徽标 + 到绑定终端的紫色连线（终端侧互见 drawTerminalLinks）。 */
+function drawPilotGroupOverlay(group: AnimGroup, isActive: boolean): void {
+  const col = groupColor(group.id);
+  const memberIds = [...group.itemInstanceIds, ...group.floorInstanceIds, ...group.objectInstanceIds];
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  for (const id of memberIds) {
+    const it = S.items.find((i) => i.instanceId === id);
+    if (it) {
+      minX = Math.min(minX, it._wx); maxX = Math.max(maxX, it._wx);
+      minZ = Math.min(minZ, it._wz); maxZ = Math.max(maxZ, it._wz);
+      continue;
+    }
+    const f = S.floors.find((fl) => fl.instanceId === id);
+    if (f) {
+      minX = Math.min(minX, f._wx); maxX = Math.max(maxX, f._wx);
+      minZ = Math.min(minZ, f._wz); maxZ = Math.max(maxZ, f._wz);
+    }
+  }
+  if (minX === Infinity) return;
+
+  const a = worldToCanvas(minX, minZ);
+  const b = worldToCanvas(maxX, maxZ);
+  dom.ctx.save();
+  dom.ctx.globalAlpha = isActive ? 0.9 : 0.45;
+  dom.ctx.strokeStyle = col;
+  dom.ctx.lineWidth = isActive ? 2 : 1.5;
+  dom.ctx.setLineDash([8, 5]);
+  dom.ctx.strokeRect(Math.min(a.x, b.x) - 6, Math.min(a.y, b.y) - 6,
+    Math.abs(b.x - a.x) + 12, Math.abs(b.y - a.y) + 12);
+  dom.ctx.setLineDash([]);
+
+  // 🎮 徽标 + 绑定状态
+  const cx = (Math.min(a.x, b.x) + Math.max(a.x, b.x)) / 2;
+  const cy = Math.min(a.y, b.y) - 14;
+  const term = pilotTerminalOf(group);
+  const label = term ? `🎮 ${group.displayName}` : `🎮 ${group.displayName}（未绑定摇杆）`;
+  dom.ctx.font = "bold 11px sans-serif";
+  dom.ctx.textAlign = "center";
+  dom.ctx.strokeStyle = "rgba(0,0,0,0.7)";
+  dom.ctx.lineWidth = 3;
+  dom.ctx.strokeText(label, cx, cy);
+  dom.ctx.fillStyle = term ? col : "#e8b35a";
+  dom.ctx.fillText(label, cx, cy);
+  dom.ctx.restore();
 }
 
 function firstRouteFirstWp(group: AnimGroup): { x: number; z: number } | null {
@@ -1668,15 +1765,19 @@ function groupCardHtml(g: AnimGroup): string {
   ).length;
   const warnings: string[] = [];
   const fxT = groupFxType(g);
+  const pilot = isPilotGroup(g);
   if (!isFxGroup(g) && itemN + floorN + objN === 0) warnings.push("⚠ 无成员");
   if (emptyRouteEvts > 0) warnings.push(`⚠ ${emptyRouteEvts} 个事件无路线`);
   if (isFxGroup(g) && !fxT) warnings.push("⚠ 无特效事件");
+  if (pilot && !g.terminalInstanceId) warnings.push("⚠ 未绑定摇杆");
+  if (pilot && floorN === 0) warnings.push("⚠ 无地板成员");
   const fxChip = fxT === "shake"
     ? `<span class="mgc-chip chip-obj">🌍 全屏抖动</span>`
     : fxT === "flash"
       ? `<span class="mgc-chip chip-item">⚡ 闪电</span>`
       : "";
-  const triggerChip = g.triggerMode === "button"
+  const pilotChip = pilot ? `<span class="mgc-chip chip-floor">🎮 摇杆组</span>` : "";
+  const triggerChip = !pilot && g.triggerMode === "button"
     ? `<span class="mgc-chip chip-floor">按钮触发${g.advanceMode === "press" ? " · 逐节点" : ""}</span>`
     : "";
   return `<div class="anim-group-card${S.activeAnimGroupId === g.id ? " active" : ""}" data-group-id="${g.id}">
@@ -1685,12 +1786,13 @@ function groupCardHtml(g: AnimGroup): string {
       <div class="mgc-name">${escHtml(g.displayName)}${loopMark}</div>
       <div class="mgc-members">
         ${fxChip}
+        ${pilotChip}
         ${triggerChip}
         ${itemN ? `<span class="mgc-chip chip-item">物品 ${itemN}</span>` : ""}
         ${floorN ? `<span class="mgc-chip chip-floor">地板 ${floorN}</span>` : ""}
         ${objN ? `<span class="mgc-chip chip-obj">其他 ${objN}</span>` : ""}
       </div>
-      <div class="mgc-meta">${isFxGroup(g) ? "✨ 特效组" : `📍 路点 ${g.waypoints.length}`} · 🔁 事件 ${g.events.length}${warnings.length ? ` <span class="mgc-warn">${warnings.join(" · ")}</span>` : ""}</div>
+      <div class="mgc-meta">${pilot ? "🎮 玩家驾驶" : isFxGroup(g) ? "✨ 特效组" : `📍 路点 ${g.waypoints.length}`} · 🔁 事件 ${g.events.length}${warnings.length ? ` <span class="mgc-warn">${warnings.join(" · ")}</span>` : ""}</div>
       ${memberSummary(g) ? `<div class="mgc-sub">${escHtml(memberSummary(g))}</div>` : ""}
     </div>
   </div>`;
@@ -1725,7 +1827,8 @@ function renderGroupList(body: HTMLElement): void {
       S.activeAnimEventIdx = null;
       S.selectedWaypointId = null;
       S.animMode = "none";
-      S.activeAnimTab = "timeline";
+      const clickedGroup = findGroupById(S.activeAnimGroupId);
+      S.activeAnimTab = clickedGroup && isPilotGroup(clickedGroup) ? "members" : "timeline";
       S.animPickTargetGroupId = null;
       clearAnimSelection();
       const group = activeGroup();
@@ -1788,6 +1891,9 @@ function createGroup(name: string, itemIds: string[], floorIds: string[]): void 
       intervalSeconds: 2,
       waypointIds: [wp.id],
     }],
+    // 分 P：在当前 P 上创建的动画组归属该阶段（M3 烘焙时组根迁入 slot；
+    // fx 特效组保持全局，不盖章）。
+    partId: partLevelActive() && S.currentPart !== "base" ? S.currentPart : undefined,
   };
   S.animControls.push(group);
   S.activeAnimGroupId = group.id;
@@ -1844,6 +1950,45 @@ function createFxGroup(name: string, fxType: "shake" | "flash"): void {
   );
 }
 
+/** 创建摇杆操控组（无路线/事件；玩家在摇杆上驾驶整组移动）。 */
+function createPilotGroup(name: string): void {
+  pushHistory();
+  const group: AnimGroup = {
+    id: uuid(),
+    displayName: name,
+    groupKind: "pilot",
+    triggerMode: "auto",
+    itemInstanceIds: [],
+    floorInstanceIds: [],
+    objectInstanceIds: [],
+    memberOffsets: [],
+    memberStatic: [],
+    memberGroups: [],
+    startDelay: 0,
+    loop: false,
+    loopDelay: 2,
+    waypoints: [],
+    events: [],
+    moveSpeed: 2.5,
+  };
+  S.animControls.push(group);
+  S.activeAnimGroupId = group.id;
+  S.activeAnimEventIdx = null;
+  S.selectedWaypointId = null;
+  S.activeAnimTab = "members";
+  S.animPickTargetGroupId = null;
+  S.activeRightTab = "anim";
+  S.animMode = "none";
+  clearAnimSelection();
+  updatePanelTabButtons();
+  updateAnimPickBar();
+  renderRightPanel();
+  draw();
+  setStatus(
+    `已创建摇杆组「${name}」。在「🧩 成员」框选地板/物品/装饰（加地板自动带上地板上的物品），再在「⚙ 设置」绑定一个摇杆。`
+  );
+}
+
 export function openNewGroupModal(): void {
   if (S.animMode !== "none") {
     S.animMode = "none";
@@ -1852,10 +1997,11 @@ export function openNewGroupModal(): void {
   const modalName = defaultGroupName();
   openModal(
     "＋ 新增移动分组",
-    `<p class="modal-hint">动画组驱动物品 / 地板沿路线移动；全屏特效组无成员，驱动相机抖动（🌍 地震）或闪电明暗（⚡ 雷暴）。组名建议用英文（如 Island1 / Earthquake / LightningStorm）。</p>
+    `<p class="modal-hint">动画组驱动物品 / 地板沿路线移动；摇杆组让玩家用摇杆驾驶整组（地板+核心层+装饰）实时移动，相对位置保持不变；全屏特效组无成员，驱动相机抖动（🌍 地震）或闪电明暗（⚡ 雷暴）。组名建议用英文（如 Island1 / Earthquake / LightningStorm）。</p>
      <label class="modal-field">组名（英文）<input type="text" id="wizard-name" value="${escHtml(modalName)}" placeholder="如 Island1" /></label>
      <label class="modal-field">组类型
        <label class="check"><input type="radio" name="wizard-kind" value="members" checked /> 动画组（成员 + 路线）</label>
+       <label class="check"><input type="radio" name="wizard-kind" value="pilot" /> 🎮 摇杆组（玩家用摇杆驾驶整组移动）</label>
        <label class="check"><input type="radio" name="wizard-kind" value="fx-flash" /> ⚡ 全屏特效 · 闪电（专用灯明暗交替）</label>
        <label class="check"><input type="radio" name="wizard-kind" value="fx-shake" /> 🌍 全屏特效 · 抖动（相机地震）</label>
      </label>`,
@@ -1871,6 +2017,7 @@ export function openNewGroupModal(): void {
     closeModal();
     if (kind === "fx-shake") createFxGroup(name, "shake");
     else if (kind === "fx-flash") createFxGroup(name, "flash");
+    else if (kind === "pilot") createPilotGroup(name);
     else createGroup(name, [], []);
   });
   (document.getElementById("wizard-name") as HTMLInputElement | null)?.focus();
@@ -2927,6 +3074,37 @@ function renderWaypointsTab(group: AnimGroup): string {
   </div>`;
 }
 
+/** 摇杆组设置页：驾驶速度 + 摇杆绑定（v1：水平移动、松杆吸附网格、
+ *  单一矩形行走面）。 */
+function renderPilotSettingsTab(group: AnimGroup): string {
+  const bound = group.terminalInstanceId ?? "";
+  const terms = S.items.filter((it) => {
+    if (!it.instanceId) return false;
+    return stubKindOf(it) === "Terminal";
+  });
+  const termOpts = terms.length
+    ? [
+        '<option value="">— 未绑定（玩家无法驾驶）—</option>',
+        ...terms.map((it) =>
+          `<option value="${it.instanceId}" ${bound === it.instanceId ? "selected" : ""}>${escHtml(itemLabel(it))}</option>`
+        ),
+      ]
+    : ['<option value="">— 请先在调色板「核心 · 摇杆」分组放置一个摇杆 —</option>'];
+  return `<div class="anim-section">
+    ${sectionTitle("🎮", "摇杆驾驶", "", "#c75be8")}
+    <div class="anim-settings-grid">
+      <label>摇杆（控制台）<select class="group-pilot-terminal"${terms.length ? "" : " disabled"}>${termOpts.join("")}</select></label>
+      <label>驾驶速度 (米/秒)<input type="number" class="group-move-speed" value="${group.moveSpeed ?? 2.5}" step="0.1" min="0.5" max="8" /></label>
+    </div>
+    <div class="sub anim-wp-hint">玩家走上摇杆按交互键进入驾驶：摇杆方向 = 整组移动方向，松开摇杆自动吸附最近网格中心，按任意动作键退出。组内所有成员（地板/核心层/装饰）相对位置保持不变，站上移动组的玩家与食材会随组移动。摇杆可放在静态地面（起重机操作台式）或组内地板上（驾驶员随组移动）；也可在摇杆右键「控制目标」下拉里选择摇杆组。摇杆灯（核心 · 摇杆 分组）可绑到该摇杆作占用状态指示灯。</div>
+    <div class="sub anim-wp-hint" style="color:#8a909a">v1 行走面为整组单一矩形包围盒：组内有空洞（U 形/L 形缺口）会被填平为可行走，写回时会在状态栏告警；不支持垂直升降与分 P。</div>
+  </div>
+  <div class="anim-danger">
+    ${smallBtnHtml("🗑 删除摇杆组", "danger", { id: "btn-del-move" })}
+    <span class="anim-wp-hint">删除后驾驶 rig 一并移除，成员保留在场景中（不再随组移动）。</span>
+  </div>`;
+}
+
 function renderSettingsTab(group: AnimGroup): string {
   const boundLink = linkBindingGroup(group.displayName);
   const boundHint = boundLink
@@ -2974,9 +3152,14 @@ function renderGroupEditor(body: HTMLElement, group: AnimGroup): void {
   newMgFormOpen = false;
   const col = groupColor(group.id);
   const fxGrp = isFxGroup(group);
+  const pilotGrp = isPilotGroup(group);
   // 特效组没有成员/路点概念：强制回到时间轴（旧 UI 状态防御）。
   if (fxGrp && S.activeAnimTab !== "timeline" && S.activeAnimTab !== "settings") {
     S.activeAnimTab = "timeline";
+  }
+  // 摇杆组没有时间轴/路点概念：强制回到成员/设置。
+  if (pilotGrp && S.activeAnimTab !== "members" && S.activeAnimTab !== "settings") {
+    S.activeAnimTab = "members";
   }
   const selEvtIdx = S.activeAnimEventIdx;
   const activeEvt = selEvtIdx !== null ? group.events[selEvtIdx] : undefined;
@@ -2992,6 +3175,7 @@ function renderGroupEditor(body: HTMLElement, group: AnimGroup): void {
   const memberCount = flatMemberIds(group).length;
   const fxType = groupFxType(group);
   const fxLabel = fxType === "shake" ? "🌍 全屏抖动" : fxType === "flash" ? "⚡ 闪电" : "✨ 特效";
+  const boundTerm = pilotTerminalOf(group);
 
   let html = `<div class="anim-editor-head">
     ${smallBtnHtml("✕ 关闭", "default", { id: "btn-anim-back" })}
@@ -3002,14 +3186,16 @@ function renderGroupEditor(body: HTMLElement, group: AnimGroup): void {
   html += `<div class="anim-editor-summary">
     <span>${fxGrp
       ? `${fxLabel} · 🔁 ${group.events.length} 事件`
-      : `🧩 ${memberCount} 成员 · 📍 ${group.waypoints.length} 路点 · 🔁 ${group.events.length} 事件`}</span>
-    ${modalBtnHtml(previewOn ? "⏸ 暂停预览" : fxGrp ? "▶ 预览特效" : "▶ 预览路线", `btn-small${previewOn ? " preview-on" : ""}`, { id: "btn-preview", title: fxGrp ? "在画布上模拟全屏特效（抖动 / 闪光，纯前端预览）" : "在画布上模拟成员沿路线运动（纯前端预览，写回后以游戏内为准）" })}
+      : pilotGrp
+        ? `🎮 摇杆组 · 🧩 ${memberCount} 成员 · ${boundTerm ? `已绑定「${escHtml(itemLabel(boundTerm))}」` : '<span style="color:#e8b35a">未绑定摇杆</span>'}`
+        : `🧩 ${memberCount} 成员 · 📍 ${group.waypoints.length} 路点 · 🔁 ${group.events.length} 事件`}</span>
+    ${pilotGrp ? "" : modalBtnHtml(previewOn ? "⏸ 暂停预览" : fxGrp ? "▶ 预览特效" : "▶ 预览路线", `btn-small${previewOn ? " preview-on" : ""}`, { id: "btn-preview", title: fxGrp ? "在画布上模拟全屏特效（抖动 / 闪光，纯前端预览）" : "在画布上模拟成员沿路线运动（纯前端预览，写回后以游戏内为准）" })}
   </div>`;
 
   html += `<div class="anim-tabs">
-    ${modalBtnHtml(`🎬 时间轴 (${group.events.length})`, `anim-tab${S.activeAnimTab === "timeline" ? " active" : ""}`, { "data-mvtab": "timeline" })}
-    ${fxGrp ? "" : `${modalBtnHtml(`🧩 成员 (${memberCount})`, `anim-tab${S.activeAnimTab === "members" ? " active" : ""}`, { "data-mvtab": "members" })}
-    ${modalBtnHtml(`📍 路点 (${group.waypoints.length})`, `anim-tab${S.activeAnimTab === "waypoints" ? " active" : ""}`, { "data-mvtab": "waypoints" })}`}
+    ${fxGrp || pilotGrp ? "" : `${modalBtnHtml(`🎬 时间轴 (${group.events.length})`, `anim-tab${S.activeAnimTab === "timeline" ? " active" : ""}`, { "data-mvtab": "timeline" })}`}
+    ${fxGrp ? "" : `${modalBtnHtml(`🧩 成员 (${memberCount})`, `anim-tab${S.activeAnimTab === "members" ? " active" : ""}`, { "data-mvtab": "members" })}`}
+    ${fxGrp || pilotGrp ? "" : `${modalBtnHtml(`📍 路点 (${group.waypoints.length})`, `anim-tab${S.activeAnimTab === "waypoints" ? " active" : ""}`, { "data-mvtab": "waypoints" })}`}
     ${modalBtnHtml("⚙ 设置", `anim-tab${S.activeAnimTab === "settings" ? " active" : ""}`, { "data-mvtab": "settings" })}
   </div>`;
 
@@ -3025,7 +3211,7 @@ function renderGroupEditor(body: HTMLElement, group: AnimGroup): void {
       html += renderWaypointsTab(group);
       break;
     case "settings":
-      html += renderSettingsTab(group);
+      html += pilotGrp ? renderPilotSettingsTab(group) : renderSettingsTab(group);
       break;
   }
   html += `</div>`;
@@ -3746,6 +3932,20 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
   });
 
   // ---- settings tab
+  body.querySelector<HTMLSelectElement>(".group-pilot-terminal")?.addEventListener("change", (e) => {
+    const v = (e.target as HTMLSelectElement).value || null;
+    pushHistory();
+    setPilotTerminalBinding(group, v);
+    refresh();
+    setStatus(v ? "已绑定摇杆（写回后生效：玩家可在该摇杆驾驶本组）" : "已解除摇杆绑定");
+  });
+  body.querySelector<HTMLInputElement>(".group-move-speed")?.addEventListener("change", (e) => {
+    const v = Math.min(8, Math.max(0.5, parseFloat((e.target as HTMLInputElement).value) || 2.5));
+    if (Math.abs(v - (group.moveSpeed ?? 2.5)) < 0.001) return;
+    pushHistory();
+    group.moveSpeed = v;
+    S.dirty = true;
+  });
   body.querySelector<HTMLInputElement>(".group-start-delay")?.addEventListener("change", (e) => {
     const v = parseFloat((e.target as HTMLInputElement).value) || 0;
     if (v === group.startDelay) return;
@@ -3816,8 +4016,12 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
     S.dirty = true;
   });
   body.querySelector("#btn-del-move")?.addEventListener("click", () => {
-    if (!confirm(`确定删除动画组「${group.displayName}」及其 ${group.events.length} 个事件？`)) return;
+    const confirmMsg = isPilotGroup(group)
+      ? `确定删除摇杆组「${group.displayName}」？驾驶 rig 一并移除，成员保留在场景中。`
+      : `确定删除动画组「${group.displayName}」及其 ${group.events.length} 个事件？`;
+    if (!confirm(confirmMsg)) return;
     pushHistory();
+    if (isPilotGroup(group) && group.terminalInstanceId) delete group.terminalInstanceId;
     S.animControls = S.animControls.filter((g) => g.id !== S.activeAnimGroupId);
     cleanOrphanedButtonLinks();
     S.activeAnimGroupId = null;

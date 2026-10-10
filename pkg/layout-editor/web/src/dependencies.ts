@@ -5,6 +5,7 @@ import { showBusy, hideBusy } from "./busy";
 import { navHtml, wireNav } from "./nav";
 import { navigateTo, depsPath, manageLevelListPath, parseRoute } from "./route";
 import { goLayout, goManage } from "./levels";
+import { setStatus } from "./editor/status";
 
 export function goDependencies(setName?: string, levelInfoAssetPath?: string): void {
   // 严格路由：/dependencies/{set}/{levelId}（levelId = LevelInfo 资产所在数据目录名）
@@ -76,18 +77,9 @@ function esc(s: unknown): string {
     .replace(/"/g, "&quot;");
 }
 
-function setStatus(msg: string, ok = true): void {
-  const el = document.getElementById("dep-status");
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.toggle("err", !ok);
-  el.classList.toggle("ok", ok && msg.length > 0);
-}
-
 function setBusy(msg: string): void {
   const el = document.getElementById("dep-content");
   if (el) el.innerHTML = `<p class="muted">${esc(msg)}</p>`;
-  setStatus(msg);
 }
 
 function showError(e: unknown): void {
@@ -116,7 +108,6 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
     <div class="manage-bar">
       ${backLabel ? mBtnHtml(`← ${esc(backLabel)}`, "default", { id: "dep-back" }) : ""}
       <h1 class="m-title">${esc(title)}</h1>
-      <span class="status" id="dep-status"></span>
       <span style="flex:1"></span>
       ${mBtnHtml("↻ Reload", "default", { id: "dep-reload", title: "触发 Unity Reload Pseudo Assets" })}
     </div>

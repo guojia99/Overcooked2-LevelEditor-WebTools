@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 8,
+  "schemaVersion": 10,
   "index": 17,
   "itemCount": 81,
   "items": [
@@ -530,7 +530,7 @@
       },
       "height": 0.159,
       "layoutTier": "core",
-      "nameZh": "控制终端标记",
+      "nameZh": "摇杆灯",
       "nameEn": "Control Terminal Marker",
       "icon": false
     },
@@ -632,7 +632,7 @@
       },
       "height": 1.438,
       "layoutTier": "core",
-      "nameZh": "加农炮控制终端",
+      "nameZh": "摇杆（加农炮）",
       "nameEn": "Multi Control Terminal",
       "icon": false
     },
@@ -764,7 +764,7 @@
       },
       "height": 1.438,
       "layoutTier": "core",
-      "nameZh": "多路控制终端",
+      "nameZh": "摇杆",
       "nameEn": "Multi Control Terminal",
       "icon": false
     },

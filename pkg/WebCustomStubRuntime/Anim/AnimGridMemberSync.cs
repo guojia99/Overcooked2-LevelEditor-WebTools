@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CustomStub
@@ -14,8 +15,9 @@ namespace CustomStub
     /// vanilla 自带解法：DynamicGridLocation : StaticGridLocation，Update 逐帧按
     /// transform 位置重占格（DynamicGridLocation.cs:11-30）。本组件在伪预制 child
     /// 就绪后，把子树内所有 StaticGridLocation 换装成 DynamicGridLocation：
-    ///  - DestroyImmediate 旧的（OnDestroy 会释放旧格占用）→ 反射 AddComponent
-    ///    vanilla DynamicGridLocation（Awake 立即按当前位置重新占格）；
+    ///  - 先 AddComponent Dynamic（仍满足 TabletopConveyenceReceiver 等对
+    ///    StaticGridLocation 的 RequireComponent）→ DestroyImmediate 纯 Static →
+    ///    再 toggle enabled 触发重占格（与 LevelEditor PseudoPrefab 同序）；
     ///  - 静止成员（子树无 StaticGridLocation，或永不移动）完全无副作用；
     ///  - 反射操作（WebCustomStubRuntime 编译期不引用 Assembly-CSharp）。
     ///
@@ -29,19 +31,36 @@ namespace CustomStub
 
         private void Update()
         {
-            if (m_doneChild != null)
-                return;
             var pseudo = FindSelfComponent("PseudoPrefab");
             var childProp = pseudo != null
                 ? pseudo.GetType().GetField("childGameObject")
                 : null;
             var child = childProp != null ? childProp.GetValue(pseudo) as GameObject : null;
             if (child == null)
+            {
+                if (HasStaticGridLocation(transform))
+                {
+                    try
+                    {
+                        SwapGridLocations(transform);
+                    }
+                    catch (Exception ex)
+                    {
+                        StubLog.LogWarn("[AnimGridMemberSync] " + name + " 格子换装失败: " + ex.Message);
+                    }
+                }
                 return;
-            m_doneChild = child;
+            }
+            if (m_doneChild != null && m_doneChild != child)
+                m_doneChild = null;
+            if (m_doneChild != null)
+                return;
             try
             {
-                SwapGridLocations(child.transform);
+                SwapGridLocations(transform);
+                if (HasStaticGridLocation(transform))
+                    return;
+                m_doneChild = child;
             }
             catch (Exception ex)
             {
@@ -58,23 +77,61 @@ namespace CustomStub
                 StubLog.LogWarn("[AnimGridMemberSync] 找不到 vanilla DynamicGridLocation 类型，跳过换装");
                 return 0;
             }
-            int swapped = 0;
+            var pending = new List<Component>();
             foreach (var component in root.GetComponentsInChildren<Component>(true))
             {
                 if (component == null)
                     continue;
-                var type = component.GetType();
-                if (type.Name != "StaticGridLocation")
-                    continue; // 精确名匹配：已换装的 DynamicGridLocation（子类）不再动
+                if (component.GetType().Name != "StaticGridLocation")
+                    continue;
+                pending.Add(component);
+            }
+            int swapped = 0;
+            for (int i = 0; i < pending.Count; i++)
+            {
+                var component = pending[i];
+                if (component == null)
+                    continue;
                 var go = component.gameObject;
+                Component dynamic = go.GetComponent(dynamicType);
+                if (dynamic == null)
+                    dynamic = go.AddComponent(dynamicType);
+                if (dynamic == null)
+                {
+                    StubLog.LogWarn("[AnimGridMemberSync] 无法挂 DynamicGridLocation: " + go.name);
+                    continue;
+                }
                 DestroyImmediate(component);
-                go.AddComponent(dynamicType);
+                RefreshDynamicGridLocation(dynamic);
                 swapped++;
             }
             if (swapped > 0)
                 StubLog.Log("[AnimGridMemberSync] " + name + " 换装 " + swapped +
                     " 个 DynamicGridLocation（占格将随动画跟随）");
             return swapped;
+        }
+
+        private static void RefreshDynamicGridLocation(Component dynamic)
+        {
+            var behaviour = dynamic as Behaviour;
+            if (behaviour == null)
+                return;
+            behaviour.enabled = false;
+            behaviour.enabled = true;
+        }
+
+        private static bool HasStaticGridLocation(Transform root)
+        {
+            if (root == null)
+                return false;
+            foreach (var component in root.GetComponentsInChildren<Component>(true))
+            {
+                if (component == null)
+                    continue;
+                if (component.GetType().Name == "StaticGridLocation")
+                    return true;
+            }
+            return false;
         }
 
         private static Type FindGameType(string typeName)

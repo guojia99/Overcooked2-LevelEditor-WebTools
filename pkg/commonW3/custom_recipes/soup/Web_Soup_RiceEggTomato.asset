@@ -22,13 +22,13 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 4cf7be60a998ffc57b063ecf662cbebd, type: 3}
   compositionSOs:
   - {fileID: 11400000, guid: 95b82bda2a24c4942ac723feb92fc147, type: 2}
-  - {fileID: 11400000, guid: da6efd0b90360e34b9443171826d5c12, type: 2}
+  - {fileID: 11400000, guid: d628cc1cba14ca24f927c76c83ae9463, type: 2}
   - {fileID: 11400000, guid: 8a928e5055585f34c89f8535c40fea3f, type: 2}
   optionalSOs: []
   cookingStepSO: {fileID: 11400000, guid: 8687a65ff3d0dd94c91818e822af0aa4, type: 2}
   cookingStepIconSO: {fileID: 11400000, guid: 67d4429d9a2417746ab9ce083330f8ad, type: 2}
   cookingStepIcon: {fileID: 0}
-  cookingProgress: 0
+  cookingProgress: 1
   mixingIconSO: {fileID: 0}
   mixingIcon: {fileID: 0}
-  mixingProgress: 0
+  mixingProgress: 1

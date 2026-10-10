@@ -215,8 +215,22 @@ export function extraStubDetailHtml(item: EditorItem): string {
     case "Terminal": {
       const targetId = item.terminal?.pilotableObjectInstanceId;
       const target = targetId ? S.items.find((i) => i.instanceId === targetId) : undefined;
-      const name = target ? itemLabel(target) : (targetId ? "不在当前场景" : "未绑定");
-      return `<dt>控制终端</dt><dd>控制目标：${name}（右键直接修改）</dd>`;
+      const boundGroup = S.animControls.find(
+        (g) => g.groupKind === "pilot" && g.terminalInstanceId === item.instanceId
+      );
+      const boundLight = S.items.find(
+        (m) => stubKindOf(m) === "MarkerLight" && m.markerLight?.joystickInstanceId === item.instanceId
+      );
+      const name = boundGroup
+        ? `🎮 摇杆组「${boundGroup.displayName}」`
+        : target ? itemLabel(target) : (targetId ? "不在当前场景" : "未绑定");
+      const lightTxt = boundLight ? ` · 💡 ${itemLabel(boundLight)}` : "";
+      return `<dt>摇杆</dt><dd>控制目标：${name}${lightTxt}（右键直接修改）</dd>`;
+    }
+    case "MarkerLight": {
+      const jid = item.markerLight?.joystickInstanceId;
+      const j = jid ? S.items.find((i) => i.instanceId === jid) : undefined;
+      return `<dt>摇杆灯</dt><dd>${j ? `绑定：${itemLabel(j)}（有人驾驶时绿灯亮）` : "未绑定（保持熄灭）"}（右键直接修改）</dd>`;
     }
     default: {
       let html = "";

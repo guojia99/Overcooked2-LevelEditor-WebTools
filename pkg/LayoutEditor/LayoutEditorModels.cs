@@ -402,6 +402,16 @@ public class LayoutTerminalStubDto
     public string pilotableObjectInstanceId;
 }
 
+/// <summary>摇杆灯（ControlTerminal_Marker）绑定：灯 → 摇杆（Terminal 物品）。
+/// 持久化 = 伪根上的 WebCustomStubRuntime.JoystickMarkerLink 组件（序列化
+/// GameObject 引用，随场景往返；运行时灯色跟随该摇杆的占用状态亮/灭）。</summary>
+[Serializable]
+public class LayoutMarkerLightStubDto
+{
+    /** "u:<instanceID>" of the joystick (Terminal) wrapper GameObject, or empty. */
+    public string joystickInstanceId;
+}
+
 /// <summary>石炉台（oven_furnace_medieval）热源绑定：上游
 /// PseudoPrefabHeatedOvenStub.heatedStation 指向热源伪根（如 workstation_furnace_01），
 /// 宿主 LateSetup 解析 child 的 HeatedStation 写入 HeatedCookingStation.m_heatSource。</summary>
@@ -494,6 +504,8 @@ public class LayoutItemDto
     public LayoutSwitchStubDto switchStub;
     public LayoutPressureSwitchStubDto pressureSwitch;
     public LayoutTerminalStubDto terminal;
+    /** 摇杆灯绑定（ControlTerminal_Marker → 摇杆 Terminal 物品）。 */
+    public LayoutMarkerLightStubDto markerLight;
     /** 石炉台热源绑定（oven_furnace_medieval，上游 PseudoPrefabHeatedOvenStub）。 */
     public LayoutHeatedOvenStubDto heatedOven;
     public LayoutMeshWithMaterialStubDto meshWithMaterial;
@@ -506,6 +518,17 @@ public class LayoutItemDto
     public bool airSlope;
     /** 斜坡参数（airSlope=true 时有效；导出时从场景几何精确反推）。 */
     public LayoutAirSlopeDto slope;
+    /** 分 P（多阶段布局）：物件所属阶段 id。"base" = 基础层（全程常驻），
+     *  "p1".."pN" = 对应阶段 slot。仅 partLevel.enabled 时有意义；普关缺省 null。
+     *  编辑器侧真源 = 关卡数据目录 part_level~/part_level.json（scene 内无载体），
+     *  GET 导出时按 hierarchyPath 合并、POST 写回成功后按写回结果重盖章。 */
+    public string partId;
+    /** 分 P：是否随阶段切换被替换（true = partScoped 物件随 slot 根转场移动）。
+     *  P 层内新建默认 true，base 层默认 false。M1 仅作数据透传，M2 写回生效。 */
+    public bool partScoped;
+    /** 分 P：离场保护标记（true = PartSlotGuard 在退场时按世界位姿改挂常驻根，
+     *  不随 slot 下沉；如被玩家推走的可推动火锅）。M4 生效，M1 数据占位。 */
+    public bool survivesPartSwitch;
 }
 
 [Serializable]
@@ -644,7 +667,10 @@ public class AnimGroupDto
     public string displayName;
     /** 组类型："members"（默认，驱动物品/地板成员）| "fx"（全屏特效组，无成员，
      *  事件仅 shake/flash/wait，单一特效类型——shake 驱动相机、flash 驱动
-     *  Lights/FX_Lightning 专用方向光，宿主不同故不允许混排）。 */
+     *  Lights/FX_Lightning 专用方向光，宿主不同故不允许混排）| "pilot"（摇杆
+     *  操控组：整组成员（地板+核心层+装饰）烘成原版 PilotMovement 刚体组根，
+     *  由 terminalInstanceId 指向的控制终端（摇杆）驾驶移动；无路线/事件，
+     *  waypoints/events 恒空）。 */
     public string groupKind;
     /** auto = 开局/自身触发；button = 专供按钮顺序联动。缺省 = auto。 */
     public string triggerMode;
@@ -688,6 +714,22 @@ public class AnimGroupDto
     public AnimGroupEventDto[] events;
     /** Backend-owned: hierarchy path of the created "Animated Objects" group root. */
     public string groupHierarchyPath;
+    /** 分 P 动画角色：缺省/"gameplay" = 普通关卡动画（按钮、自动循环等）；
+     *  "partTransition" = 分 P 槽位转场组（成员 = slot 根，按 slot 组织，
+     *  烘焙产物挂 Design/PartTransitions/，M3 生效）；
+     *  "partStable" = 某 P 稳定期内的环境动画（预留）。
+     *  随 AnimGroupSource 嵌入 JSON 一并往返（JsonUtility 新字段，旧档缺省 gameplay）。 */
+    public string animRole;
+    /** 分 P：组所属阶段 id（"base" | "p1".."pN"）。带 partId 的普通动画组
+     *  烘焙时组根强制迁入 Design/PartSlots/<pid>/AnimGroups/（M3）。 */
+    public string partId;
+    /** groupKind="pilot"：绑定的控制终端（摇杆）item instanceId。绑定权威在本
+     *  字段（组指向终端）；终端条目级 terminal.pilotableObjectInstanceId 保持
+     *  为空，由 PilotGroupBakery 在烘焙时直写 stub.pilotableObject = 组根。 */
+    public string terminalInstanceId;
+    /** groupKind="pilot"：驾驶移速（米/秒，原版 PilotMovement.MoveSpeed；
+     *  缺省 2.5）。松开摇杆后自动吸附最近网格中心（原版行为）。 */
+    public float moveSpeed;
 }
 
 [Serializable]
@@ -695,6 +737,90 @@ public class AnimControlDataDto
 {
     public AnimGroupDto[] groups;
 }
+
+// ---------- 分 P（多阶段布局，docs/10-分P关卡功能规格.md） ----------
+
+/** slot 根停放方向：down/up = ±Y，left/right = ∓X（世界轴）。入场恒从自身 park 回零，
+ *  退/入互为反向 —— clip 关键帧为绝对坐标，每 P 单一 park 保证循环拷贝无漂移。 */
+[Serializable]
+public class PartParkDto
+{
+    /** "down"（默认）| "up" | "left" | "right" */
+    public string axis;
+    /** 停放偏移量（米，默认 30，合法 5~200）。 */
+    public float offset;
+}
+
+/** 一个阶段（P）。时长不在此（唯一权威 = transitions[].stableSeconds）。 */
+[Serializable]
+public class PartDto
+{
+    /** "p1".."pN"（稳定 id，创建后不变；编辑器显示用 label）。 */
+    public string id;
+    /** 作者可读名（如「开局」「一分钟后」）。 */
+    public string label;
+    /** 停放方向（缺省 down/30）。P1 的 park 不生效（初始偏移恒 0）。 */
+    public PartParkDto park;
+    /** 背景层是否随本 P 替换（默认 false：仅换桌台/地形时保持天空/海面不变）。 */
+    public bool replaceBackground;
+}
+
+/** 一段转场（线性链第 k 段：pk → pk+1）。preset 只定义节奏与演出；
+ *  方向由各 P 的 park 决定（决策 Q1）。 */
+[Serializable]
+public class PartTransitionDto
+{
+    public string id;
+    public string fromPartId;
+    public string toPartId;
+    /** 恒为 "partTransition"（与普通机关动画区分）。 */
+    public string kind;
+    /** "sink_then_rise"（先后：out 完成后 in 开始）| "slide_cross"（并行）|
+     *  "wave_wipe"（slide 节奏 + 预置海浪物件包 + fx，素材见 docs/10 附录 B）。 */
+    public string preset;
+    /** fromPart 的稳定时长（秒，唯一权威；>0）。 */
+    public float stableSeconds;
+    /** 转场总时长（秒）= out/in 的编排结果（校验用）。 */
+    public float totalSeconds;
+    public float outSeconds;
+    public float inSeconds;
+    /** 可选 fx 组 id（shake/flash，M3 绑定）。 */
+    public string fxGroupId;
+    /** 转场结束、新 P 稳定后是否清理旧 P 内容物（TriggerKillAttachments，默认 true）。 */
+    public bool cleanupContents;
+    /** Stable 后延迟 N 秒再执行清理（默认 0）。 */
+    public float cleanupDelaySeconds;
+    /** Design 根 Loose-only 大扫除（全场散落食材，默认 true）。 */
+    public bool killLooseEverywhere;
+}
+
+/** 分 P 顶层配置。运行时无循环（决策 Q2）——循环体验用「拷贝分 P」手动延长链。 */
+[Serializable]
+public class PartLevelDto
+{
+    public bool enabled;
+    /** 至少 1 个（1 个仅作占位，编辑器警告「至少 2 个 P 才有意义」）。 */
+    public PartDto[] parts;
+    /** 线性 N−1 段（pk → pk+1），校验器保证连贯。M1 仅数据占位，M3 烘焙生效。 */
+    public PartTransitionDto[] transitions;
+    /** 向导默认 preset（仅 UI 默认值，可不填）。 */
+    public string defaultTransitionPreset;
+}
+
+/** part_level~/part_level.json 落盘结构（JsonUtility 无字典 → 平行数组）。
+ *  key = 场景 hierarchyPath（跨会话稳定；u: InstanceID 仅会话内有效——
+ *  对齐 AnimGroupSource 的 hierarchyPath 重盖章范式）。 */
+[Serializable]
+public class PartLevelStoreDto
+{
+    public int schemaVersion;
+    public PartLevelDto partLevel;
+    public string[] itemPaths;
+    public string[] itemParts;
+    public string[] floorPaths;
+    public string[] floorParts;
+}
+
 
 [Serializable]
 public class LayoutDocumentDto
@@ -710,6 +836,10 @@ public class LayoutDocumentDto
     public WalkableRectDto[] walkable;
     /** Read-only death configuration (water / goo / fall). */
     public DeathInfoDto deathInfo;
+    /** 分 P（多阶段布局）配置。null/缺省 = 普通单阶段关卡（现行为完全一致）；
+     *  enabled=true 后不可逆（后端拒绝降级）。真源 = part_level~/part_level.json，
+     *  GET 导出合并、POST 成功后按写回结果重盖章落盘（LayoutEditorPartLevelStore）。 */
+    public PartLevelDto partLevel;
     /** 动画组（装饰 + 物品层的移动/旋转等动画；烘焙为原生 Animator 动画）。 */
     public AnimControlDataDto animControls;
     /** 旧键名（moveControls），仅读取兼容旧文档；写入一律用 animControls。 */
@@ -818,6 +948,9 @@ public class FloorDto
     /** 空气地板：仅有可行走 Col_AirFloor 碰撞盒（Ground 层，几何与普通 Col_Floor
      *  相同），无可见 Plane。导出时按名称 Col_AirFloor 识别，写回时不创建可见面。 */
     public bool airFloor;
+    /** 分 P：地板所属阶段 id（"base" | "p1".."pN"）。同 LayoutItemDto.partId，
+     *  真源在 part_level~/part_level.json（按 hierarchyPath 匹配）。 */
+    public string partId;
 }
 
 [Serializable]

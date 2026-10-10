@@ -17,6 +17,7 @@ import { fillingPath, parseRoute } from "./route";
 import { rlCardHtml, type RecipeWithGroups } from "./recipeCard";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { openRecipeModelPreview } from "./recipeModelPreview";
+import { setStatus } from "./editor/status";
 import { foodIconSrc } from "./foodIconChain";
 import { renderRecipeForm } from "./customRecipes";
 import type { CustomRecipeSummary, LevelSetInfo } from "./types";
@@ -30,14 +31,6 @@ function esc(s: unknown): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-function setStatus(msg: string, ok = true): void {
-  const el = document.getElementById("fm-status");
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.toggle("err", !ok);
-  el.classList.toggle("ok", ok && msg.length > 0);
 }
 
 /** commonW2 共享库（只读参考）。 */
@@ -98,7 +91,6 @@ export async function renderFillingMakerView(app: HTMLElement): Promise<void> {
       ${navHtml("custom-recipes")}
       <div class="manage-bar">
         <h1 class="m-title">🥩 夹心工作台</h1>
-        <span class="status" id="fm-status"></span>
         <span style="flex:1"></span>
         <a class="m-btn" href="/custom-recipes/burger-maker">🍔 汉堡组装工作台</a>
         <a class="m-btn" href="/custom-recipes">← 菜谱管理</a>

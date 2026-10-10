@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-08T06:44:39.342Z",
-  "schemaVersion": 8,
+  "generatedAt": "2026-10-10T03:24:59.167Z",
+  "schemaVersion": 10,
   "typeNames": {
     "Counter": "普通桌台",
     "CounterCorner": "角落桌台",

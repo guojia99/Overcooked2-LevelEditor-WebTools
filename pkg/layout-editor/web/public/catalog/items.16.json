@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 8,
+  "schemaVersion": 10,
   "index": 16,
   "itemCount": 200,
   "items": [
@@ -2315,7 +2315,7 @@
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "2c4b11eca006b60f3ae5a95e5cf4c609",
-      "nameZh": "覆盆子",
+      "nameZh": "树莓",
       "nameEn": "Raspberry",
       "typeKind": "food_model",
       "usage": "dressing",

@@ -5,6 +5,9 @@
  * 用法：
  *   node gen-commonw3-migration-batch1.mjs           # dry-run + 输出 manifest MD
  *   node gen-commonw3-migration-batch1.mjs --apply # 落盘资产
+ *
+ * soup OBJ 装盘 prefab + 外部材质：batch 落盘后执行
+ *   node layout-editor/scripts/repair-commonw3-soup-models.mjs --apply
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -78,10 +81,10 @@ const RECIPES = [
     en: "Web Egg Fried Rice",
     backup: "custom_recipes/Fried_Rice/Fried_rice_SO.asset",
     icon: "custom_recipes/Fried_Rice/models/Fried_rice_Icon.png",
-    modelShareGroup: "fried_rice_base",
     meshId: "Web_FriedRice_Mesh_Base",
     meshSrc: "custom_recipes/Fried_Rice/models/Fried_rice.fbx",
     meshKind: "fbx",
+    textureSrc: "custom_recipes/Fried_Rice/models/炒饭.png",
   },
   {
     id: "Web_FriedRice_Lettuce",
@@ -90,10 +93,10 @@ const RECIPES = [
     en: "Web Lettuce Fried Rice",
     backup: "custom_recipes/Fried_Rice/Fried_rice_Cabbage_SO.asset",
     icon: "custom_recipes/Fried_Rice/models/Fried_rice_Cabbage_Icon.png",
-    modelShareGroup: "fried_rice_base",
-    meshId: "Web_FriedRice_Mesh_Base",
+    meshId: "Web_FriedRice_Lettuce",
     meshSrc: "custom_recipes/Fried_Rice/models/Fried_rice.fbx",
     meshKind: "fbx",
+    textureSrc: "custom_recipes/Fried_Rice/models/Fried_rice_Cabbage_Icon.png",
   },
   {
     id: "Web_FriedRice_Carrot",
@@ -102,10 +105,10 @@ const RECIPES = [
     en: "Web Carrot Fried Rice",
     backup: "custom_recipes/Fried_Rice/Fried_rice_Carrot_SO.asset",
     icon: "custom_recipes/Fried_Rice/models/萝卜炒饭ui.png",
-    modelShareGroup: "fried_rice_carrot",
     meshId: "Web_FriedRice_Mesh_Carrot",
     meshSrc: "custom_recipes/Fried_Rice/models/胡萝卜蛋炒饭.fbx",
     meshKind: "fbx",
+    textureSrc: "custom_recipes/Fried_Rice/models/萝卜炒饭ui.png",
   },
   {
     id: "Web_FriedRice_CarrotPepperoni",
@@ -117,6 +120,7 @@ const RECIPES = [
     meshId: "Web_FriedRice_CarrotPepperoni",
     meshSrc: "custom_recipes/Fried_Rice/models/肠胡萝卜蛋炒饭.fbx",
     meshKind: "fbx",
+    textureSrc: "custom_recipes/Fried_Rice/models/肠炒饭ui.png",
   },
   {
     id: "Web_FriedRice_LettuceCarrot",
@@ -125,10 +129,10 @@ const RECIPES = [
     en: "Web Lettuce Carrot Fried Rice",
     backup: "custom_recipes/Fried_Rice/Fried_rice_with_Lettuce_Carrots_SO.asset",
     icon: "custom_recipes/Fried_Rice/models/Fried_rice_with_Lettuce_Carrots_Icon.png",
-    modelShareGroup: "fried_rice_carrot",
-    meshId: "Web_FriedRice_Mesh_Carrot",
+    meshId: "Web_FriedRice_LettuceCarrot",
     meshSrc: "custom_recipes/Fried_Rice/models/胡萝卜蛋炒饭.fbx",
     meshKind: "fbx",
+    textureSrc: "custom_recipes/Fried_Rice/models/Fried_rice_with_Lettuce_Carrots_Icon.png",
   },
   {
     id: "Web_Soup_Carrot",
@@ -450,6 +454,18 @@ function fbxModelFileID(r) {
   return 100000;
 }
 
+function soupPrefabRootFileId(mid) {
+  if (mid === "Web_Soup_Carrot") return 1285504947777672;
+  const buf = crypto.createHash("sha256").update(`commonw3-soup-prefab:${mid}`).digest();
+  const n = buf.readUInt32BE(0) & 0x7fffffff;
+  return n === 0 ? 100000001 : n;
+}
+
+function soupPrefabGuid(mid) {
+  if (mid === "Web_Soup_Carrot") return "86836f984881f7e4a966e8d7a24719b1";
+  return assetGuid(`${W3}/custom_recipes/soup/models/${mid}/${mid}.prefab`);
+}
+
 function modelRefFor(r) {
   if (r.intermediate || r.officialModel) {
     if (r.officialModel) {
@@ -459,18 +475,33 @@ function modelRefFor(r) {
     return null;
   }
   const mid = r.meshId ?? r.id;
+  if (r.category === "soup" && r.meshKind === "obj") {
+    return {
+      fileID: soupPrefabRootFileId(mid),
+      guid: soupPrefabGuid(mid),
+      type: 2,
+    };
+  }
   const fileID =
     r.meshKind === "obj" || r.meshKind === "sharedCupObj" ? 100000 : fbxModelFileID(r);
   return { fileID, guid: modelGuid(mid), type: 3 };
 }
 
 function buildRecipeYaml(r, uid, parsed, score) {
-  const type = r.fixType ?? parsed.type ?? 2;
   const cookingStepSO = r.clearCooking ? null : parsed.cookingStepSO;
   const cookingStepIconSO = r.clearCooking ? null : parsed.cookingStepIconSO;
-  const cookingProgress = r.clearCooking ? 0 : parsed.cookingProgress ?? 0;
+  const type = r.fixType ?? parsed.type ?? 2;
+  // Cooked 汤粥：backup 常缺 cookingProgress，0=Raw 会导致锅煮熟后无法匹配出锅（见 CustomRecipeSO.CookingProgress）
+  const cookingProgress = r.clearCooking
+    ? 0
+    : parsed.cookingProgress != null
+      ? parsed.cookingProgress
+      : cookingStepSO && type === 2
+        ? 1
+        : 0;
   const mixingIconSO = parsed.mixingIconSO;
-  const mixingProgress = parsed.mixingProgress ?? 0;
+  const mixingProgress =
+    parsed.mixingProgress != null ? parsed.mixingProgress : cookingStepSO && type === 2 ? 1 : 0;
   const plating = parsed.platingStepSO;
   const modelRef = modelRefFor(r);
   const compLines = parsed.compositionSOs
@@ -740,6 +771,79 @@ ModelImporter:
   assetBundleVariant: 
 `;
 
+const SOUP_OBJ_META = (objGuid, matName, matGuid) => `fileFormatVersion: 2
+guid: ${objGuid}
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: default
+    400000: default
+    2100000: ${matName}
+    2300000: default
+    4300000: default
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ${matName}
+    second: {fileID: 2100000, guid: ${matGuid}, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+  isReadable: 1
+  importAnimation: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+`;
+
+const MAT_FILE_META = (guid) => `fileFormatVersion: 2
+guid: ${guid}
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+`;
+
+const SOUP_MAT_YAML = (matName, texGuid) => `%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: ${matName}
+  m_Shader: {fileID: 7, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: ${texGuid}, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _Glossiness: 0.5
+    - _Metallic: 0
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+`;
+
 const FBX_META = (guid) => `fileFormatVersion: 2
 guid: ${guid}
 ModelImporter:
@@ -815,7 +919,18 @@ function writeSharedMesh(r, add) {
     const mtl = `newmtl mat_${mid}\nKd 1 1 1\nmap_Kd ${baseColorName}\n`;
     const obj = `mtllib ${mid}.mtl\no ${mid}\nusemtl mat_${mid}\n${objRaw.replace(/^mtllib.*\n/m, "").replace(/^#.*\n/gm, "")}`;
     add(mtlRel, mtl, TEXT_META, assetGuid(mtlRel));
-    add(objRel, obj, OBJ_META, modelGuid(mid), { note: r.meshSrc });
+    const matName = `mat_${mid}`;
+    const matRel = `${modelDir}/${matName}.mat`;
+    const texGuid = assetGuid(baseColorRel);
+    const matGuid = assetGuid(matRel);
+    if (cat === "soup") {
+      add(matRel, SOUP_MAT_YAML(matName, texGuid), MAT_FILE_META, matGuid);
+      add(objRel, obj, (g) => SOUP_OBJ_META(g, matName, matGuid), modelGuid(mid), {
+        note: r.meshSrc,
+      });
+    } else {
+      add(objRel, obj, OBJ_META, modelGuid(mid), { note: r.meshSrc });
+    }
   } else if (r.meshKind === "sharedCupObj" && mid === "Web_MilkSlush_SharedCup") {
     if (!fs.existsSync(SHARED_CUP_OBJ)) throw new Error(`共享杯体缺失: ${SHARED_CUP_OBJ}`);
     const texSrc = resolveBackup("custom_recipes/YinLiao/Models/菠萝牛奶冰沙ui.png");
@@ -1031,6 +1146,10 @@ if (!apply) {
   console.log("加 --apply 执行落盘。");
 } else {
   syncLayoutEditorIcons();
+  const repairSoup = path.join(repoRoot, "layout-editor/scripts/repair-commonw3-soup-models.mjs");
+  if (fs.existsSync(repairSoup)) {
+    execSync(`node "${repairSoup}" --apply`, { stdio: "inherit" });
+  }
   console.log(`\n完成：${plan.length} 个文件已写入。`);
   console.log("如需重新烘焙走 web 菜谱管理流程 → Build AssetBundles（commonW3）");
 }

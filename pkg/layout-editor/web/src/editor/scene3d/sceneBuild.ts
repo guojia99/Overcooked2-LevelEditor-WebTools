@@ -11,8 +11,14 @@
  */
 
 import * as THREE from "three";
-import { S, isFloorLikeLayer } from "../state";
-import { isActiveItemLayer, itemCategoryOf, floorCategoryOf, categoryVisible } from "../catalog";
+import { S, isFloorLikeLayer, EditorItem } from "../state";
+import {
+  isActiveItemLayer,
+  itemCategoryOf,
+  floorCategoryOf,
+  categoryVisible,
+  hideBackgroundContentOnFloorLayer
+} from "../catalog";
 import { itemInHeightFilter, floorInHeightFilter } from "../floorHeight";
 import { isSurfaceItem } from "../../floorColors";
 import { isStackHostCatalog, isStackUtensilCatalog } from "../../stacking";
@@ -32,10 +38,16 @@ import { toSceneZ, toSceneRotY, applySceneEuler } from "./space";
 import { rebuildOverlays } from "./overlays3d";
 import { rebuildAnim } from "./anim3d";
 import { rebuildHandles } from "./handles3d";
+import { itemInCurrentPart, floorInCurrentPart } from "../partLevel";
+import { isItemHiddenByDecorGroup } from "../decorLayerVisibility";
 
 /** 物件是否参与 3D 渲染（与 2D 的可见性口径一致）。 */
 export function itemVisible3D(it: Parameters<typeof itemCategoryOf>[0] & { localPosition?: { y: number } }): boolean {
+  // 分 P：与 2D 一致，仅当前 P 参与渲染（参考层叠显仅 2D 提供）。
+  if (!itemInCurrentPart(it as { partId?: string })) return false;
+  if (hideBackgroundContentOnFloorLayer(it)) return false;
   if (!categoryVisible(itemCategoryOf(it))) return false;
+  if (isItemHiddenByDecorGroup(it as EditorItem)) return false;
   return itemInHeightFilter(it as never);
 }
 
@@ -43,7 +55,10 @@ export function itemVisible3D(it: Parameters<typeof itemCategoryOf>[0] & { local
 export function itemPickable3D(it: Parameters<typeof isActiveItemLayer>[0]): boolean {
   const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
   // 地板层/背景层：表面物件可选，普通物件只作为参照。
-  if (isFloorLikeLayer(S.currentLayer)) return isSurfaceItem(cat);
+  if (isFloorLikeLayer(S.currentLayer)) {
+    if (hideBackgroundContentOnFloorLayer(it)) return false;
+    return isSurfaceItem(cat);
+  }
   if (S.currentLayer === "anim") return true;
   return isActiveItemLayer(it);
 }
@@ -156,6 +171,8 @@ function syncFloors(ctx: Scene3DCtx): void {
   const floorLayer = isFloorLikeLayer(S.currentLayer);
 
   for (const f of S.floors) {
+    // 分 P：与 2D 一致，仅当前 P 的地板参与渲染。
+    if (!floorInCurrentPart(f)) continue;
     if (!categoryVisible(floorCategoryOf(f))) continue;
     if (!floorInHeightFilter(f)) continue;
     alive.add(f._key);

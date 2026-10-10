@@ -2,6 +2,7 @@ import {
   S,
   EditorItem
 } from "./state";
+import { setPilotTerminalBinding } from "./animControl";
 import { dom } from "./dom";
 import {
   prefabIdFromPath,
@@ -170,6 +171,9 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   MultiControlTerminal: "Terminal",
   // 正式版 dlc08 加农炮多控制终端（DLR 命名）
   DLC08_MultiControlTerminal: "Terminal",
+  // 摇杆灯（ControlTerminal_Marker）：新放置时（stubKind 未落盘）也走
+  // MarkerLight 右键面板（绑定摇杆）。
+  ControlTerminal_Marker: "MarkerLight",
   // 石炉台（中世纪熔炉烤箱）：需绑定热源（workstation_furnace_01 熔炉工作台等）
   oven_furnace_medieval: "HeatedOven",
   // 大炮（dlc08/dlc09）：右键可配 360° 自由旋转；固定小角度模式为 prefab 默认 ±45°
@@ -816,16 +820,59 @@ export function stubControlsHtml(item: EditorItem): string {
     case "Terminal": {
       const t = item.terminal ?? {};
       const targetId = t.pilotableObjectInstanceId;
-      let targetOpts = ['<option value="">— 未绑定 —</option>'];
+      // 摇杆组绑定（组 → 终端，权威在 AnimGroup.terminalInstanceId）。
+      const boundGroup = S.animControls.find(
+        (g) => g.groupKind === "pilot" && g.terminalInstanceId === item.instanceId
+      );
+      const pilotValue = boundGroup ? `pilot:${boundGroup.id}` : "";
+      let targetOpts: string[] = [];
+      const pilotGroups = S.animControls.filter((g) => g.groupKind === "pilot");
+      if (pilotGroups.length > 0) {
+        targetOpts.push('<optgroup label="🎮 摇杆组（整组驾驶）">');
+        for (const g of pilotGroups) {
+          targetOpts.push(
+            `<option value="pilot:${g.id}" ${pilotValue === `pilot:${g.id}` ? "selected" : ""}>🎮 ${escHtml(g.displayName)}（摇杆组）</option>`
+          );
+        }
+        targetOpts.push("</optgroup>");
+        targetOpts.push('<optgroup label="物件（单项驾驶）">');
+      }
+      targetOpts.push('<option value="">— 未绑定 —</option>');
       for (const i of S.items) {
         const kind = stubKindOf(i);
-        if (kind === "Player") continue;
+        if (kind === "Player" || kind === "Terminal" || kind === "MarkerLight") continue;
         if (!i.instanceId) continue;
-        targetOpts.push(`<option value="${i.instanceId}" ${targetId === i.instanceId ? "selected" : ""}>${escHtml(itemLabel(i))}</option>`);
+        targetOpts.push(`<option value="${i.instanceId}" ${!pilotValue && targetId === i.instanceId ? "selected" : ""}>${escHtml(itemLabel(i))}</option>`);
       }
-      return `<div class="ctx-stub"><div class="ctx-stub-title">控制终端参数</div>
+      if (pilotGroups.length > 0) targetOpts.push("</optgroup>");
+      // 摇杆灯（存储在灯侧：markerLight.joystickInstanceId → 本摇杆）。
+      const boundLight = S.items.find(
+        (m) => stubKindOf(m) === "MarkerLight" && m.markerLight?.joystickInstanceId === item.instanceId
+      );
+      const lights = S.items.filter((m) => stubKindOf(m) === "MarkerLight");
+      const lightOpts = [
+        '<option value="">— 未绑定灯 —</option>',
+        ...lights.map((m) =>
+          `<option value="${m.instanceId}" ${boundLight?.instanceId === m.instanceId ? "selected" : ""}>${escHtml(itemLabel(m))}</option>`
+        ),
+      ];
+      return `<div class="ctx-stub"><div class="ctx-stub-title">摇杆参数</div>
         <label class="ctx-stub-row">控制目标 <select id="ctx-tm-target" class="ctx-input">${targetOpts.join("")}</select></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">选择一个场景物件作为控制终端的目标</div></div>`;
+        <label class="ctx-stub-row">摇杆灯 <select id="ctx-tm-light" class="ctx-input">${lightOpts.join("")}</select></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">控制目标选摇杆组（玩家驾驶整组移动，推荐）或单个物件；摇杆灯 = 状态指示灯（摇杆灯道具，核心 · 摇杆 分组），有人驾驶时亮绿色——在灯或摇杆任意一侧绑定即可</div></div>`;
+    }
+    case "MarkerLight": {
+      const bound = item.markerLight?.joystickInstanceId ?? "";
+      const joysticks = S.items.filter((i) => stubKindOf(i) === "Terminal");
+      const jOpts = [
+        '<option value="">— 未绑定（保持熄灭）—</option>',
+        ...joysticks.map((i) =>
+          `<option value="${i.instanceId}" ${bound === i.instanceId ? "selected" : ""}>${escHtml(itemLabel(i))}</option>`
+        ),
+      ];
+      return `<div class="ctx-stub"><div class="ctx-stub-title">摇杆灯参数</div>
+        <label class="ctx-stub-row">绑定摇杆 <select id="ctx-ml-joystick" class="ctx-input">${jOpts.join("")}</select></label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">绑定后灯色跟随该摇杆占用状态：有玩家在驾驶 = 绿灯亮 + 光效，空闲 = 熄灭；也可在摇杆右键「摇杆灯」反向选择</div></div>`;
     }
     case "HeatedOven": {
       const h = item.heatedOven ?? {};
@@ -1165,7 +1212,8 @@ export function wireStubControls(item: EditorItem) {
             draw();
             setStatus("已更新锅具额外食材（写回后生效）");
           },
-          S.intermediatesCache
+          S.intermediatesCache,
+          { utensilRecipeFilters: true }
         );
       });
       break;
@@ -1611,12 +1659,63 @@ export function wireStubControls(item: EditorItem) {
     }
     case "Terminal": {
       num("ctx-tm-target")?.addEventListener("change", (e) => {
+        const raw = (e.target as HTMLSelectElement).value;
         pushHistory();
         item.stubKind = "Terminal";
         if (!item.terminal) item.terminal = {};
-        item.terminal.pilotableObjectInstanceId = (e.target as HTMLSelectElement).value;
+        if (raw.startsWith("pilot:")) {
+          // 绑定摇杆组：权威写入组（清条目级旧目标 + 其它组对该终端的绑定）。
+          const group = S.animControls.find((g) => g.id === raw.slice(6) && g.groupKind === "pilot");
+          if (!group) return;
+          delete item.terminal.pilotableObjectInstanceId;
+          setPilotTerminalBinding(group, item.instanceId);
+          setStatus(`已绑定摇杆组「${group.displayName}」（写回后生效：玩家可在该终端驾驶整组移动）`);
+        } else {
+          // 绑定单项物件：清摇杆组绑定（单一权威，互斥）。
+          for (const g of S.animControls) {
+            if (g.groupKind === "pilot" && g.terminalInstanceId === item.instanceId) {
+              delete g.terminalInstanceId;
+            }
+          }
+          item.terminal.pilotableObjectInstanceId = raw;
+          setStatus("已更新摇杆控制目标（写回后生效）");
+        }
         draw();
-        setStatus("已更新控制终端目标（写回后生效）");
+      });
+      // 摇杆灯（1:1，存储在灯侧 markerLight.joystickInstanceId → 本摇杆）。
+      num("ctx-tm-light")?.addEventListener("change", (e) => {
+        const v = (e.target as HTMLSelectElement).value;
+        pushHistory();
+        for (const m of S.items) {
+          if (stubKindOf(m) !== "MarkerLight") continue;
+          if (m.markerLight?.joystickInstanceId === item.instanceId) {
+            delete m.markerLight.joystickInstanceId;
+          }
+        }
+        if (v) {
+          const light = S.items.find(
+            (m) => m.instanceId === v && stubKindOf(m) === "MarkerLight"
+          );
+          if (light) {
+            light.markerLight = { ...(light.markerLight ?? {}), joystickInstanceId: item.instanceId };
+          }
+        }
+        S.dirty = true;
+        draw();
+        setStatus(v ? "已绑定摇杆灯（写回后生效：有人驾驶时绿灯亮）" : "已解除摇杆灯绑定");
+      });
+      break;
+    }
+    case "MarkerLight": {
+      num("ctx-ml-joystick")?.addEventListener("change", (e) => {
+        const v = (e.target as HTMLSelectElement).value;
+        pushHistory();
+        if (!item.markerLight) item.markerLight = {};
+        if (v) item.markerLight.joystickInstanceId = v;
+        else delete item.markerLight.joystickInstanceId;
+        S.dirty = true;
+        draw();
+        setStatus(v ? "已绑定摇杆（写回后生效：有人驾驶该摇杆时灯亮绿色）" : "已解除绑定（灯保持熄灭，可由触发器手动驱动）");
       });
       break;
     }

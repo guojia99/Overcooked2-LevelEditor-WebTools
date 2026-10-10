@@ -24,6 +24,7 @@ import {
   itemPlaneCells,
   counterTypeOfItem
 } from "./catalog";
+import { isItemHiddenByDecorGroup } from "./decorLayerVisibility";
 import { getCounterTopImage } from "./iconCaches";
 import { itemInHeightFilter } from "./floorHeight";
 import {
@@ -53,6 +54,7 @@ import {
 } from "../floorColors";
 import { paintStyleForItem } from "../itemColors";
 import type { CounterAppearanceCatalog } from "../types";
+import { itemInCurrentPart } from "./partLevel";
 import { isServingStationItem,
   isPlateReturnItem,
   isGlassReturnItem
@@ -854,11 +856,56 @@ export function drawSwitchLinks() {
   }
 }
 
-/** 控制终端连线（Terminal.pilotableObjectInstanceId → 目标物件），紫色虚线 + 箭头指向目标。 */
+/** 摇杆连线（Terminal.pilotableObjectInstanceId → 目标物件），紫色虚线 + 箭头指向目标。
+ *  摇杆组绑定（组 → 终端）同样在此绘制：终端 → 组成员质心，标签 🎮。 */
 export function drawTerminalLinks() {
   const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
   for (const tm of S.items) {
     if (stubKindOf(tm) !== "Terminal") continue;
+
+    // 摇杆组绑定（权威在 AnimGroup.terminalInstanceId）
+    const boundGroup = S.animControls.find(
+      (g) => g.groupKind === "pilot" && g.terminalInstanceId === tm.instanceId
+    );
+    if (boundGroup) {
+      const memberIds = [...boundGroup.itemInstanceIds, ...boundGroup.floorInstanceIds, ...boundGroup.objectInstanceIds];
+      let sx = 0, sz = 0, n = 0;
+      for (const id of memberIds) {
+        const it = byInst.get(id);
+        if (it) { sx += it._wx; sz += it._wz; n++; continue; }
+        const f = S.floors.find((fl) => fl.instanceId === id);
+        if (f) { sx += f._wx; sz += f._wz; n++; }
+      }
+      if (n > 0) {
+        const a = worldToCanvas(tm._wx, tm._wz);
+        const b = worldToCanvas(sx / n, sz / n);
+        dom.ctx.save();
+        dom.ctx.strokeStyle = "#c75be8";
+        dom.ctx.globalAlpha = 0.65;
+        dom.ctx.lineWidth = 2;
+        dom.ctx.setLineDash([6, 4]);
+        dom.ctx.beginPath();
+        dom.ctx.moveTo(a.x, a.y);
+        dom.ctx.lineTo(b.x, b.y);
+        dom.ctx.stroke();
+        dom.ctx.setLineDash([]);
+        const rad = Math.atan2(b.y - a.y, b.x - a.x);
+        const ah = 9 * Math.max(0.6, S.scale);
+        dom.ctx.fillStyle = "#c75be8";
+        dom.ctx.beginPath();
+        dom.ctx.moveTo(b.x, b.y);
+        dom.ctx.lineTo(b.x - Math.cos(rad - 0.45) * ah, b.y - Math.sin(rad - 0.45) * ah);
+        dom.ctx.lineTo(b.x - Math.cos(rad + 0.45) * ah, b.y - Math.sin(rad + 0.45) * ah);
+        dom.ctx.closePath();
+        dom.ctx.fill();
+        dom.ctx.font = "10px sans-serif";
+        dom.ctx.textAlign = "center";
+        dom.ctx.fillText(`🎮 ${boundGroup.displayName}`, (a.x + b.x) / 2, (a.y + b.y) / 2 - 6);
+        dom.ctx.restore();
+      }
+      continue;
+    }
+
     const targetId = tm.terminal?.pilotableObjectInstanceId;
     if (!targetId) continue;
     const target = byInst.get(targetId);
@@ -888,6 +935,44 @@ export function drawTerminalLinks() {
   }
 }
 
+/** 摇杆灯连线（MarkerLight.joystickInstanceId → 摇杆），绿色细虚线 + 灯形箭头：
+ *  灯色跟随摇杆占用状态的绑定可视化。 */
+export function drawMarkerLightLinks() {
+  const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
+  for (const light of S.items) {
+    if (stubKindOf(light) !== "MarkerLight") continue;
+    const targetId = light.markerLight?.joystickInstanceId;
+    if (!targetId) continue;
+    const target = byInst.get(targetId);
+    if (!target) continue;
+    const a = worldToCanvas(light._wx, light._wz);
+    const b = worldToCanvas(target._wx, target._wz);
+    dom.ctx.save();
+    dom.ctx.strokeStyle = "#2ea043";
+    dom.ctx.globalAlpha = 0.55;
+    dom.ctx.lineWidth = 1.5;
+    dom.ctx.setLineDash([3, 4]);
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(a.x, a.y);
+    dom.ctx.lineTo(b.x, b.y);
+    dom.ctx.stroke();
+    dom.ctx.setLineDash([]);
+    const rad = Math.atan2(b.y - a.y, b.x - a.x);
+    const ah = 7 * Math.max(0.6, S.scale);
+    dom.ctx.fillStyle = "#2ea043";
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(b.x, b.y);
+    dom.ctx.lineTo(b.x - Math.cos(rad - 0.45) * ah, b.y - Math.sin(rad - 0.45) * ah);
+    dom.ctx.lineTo(b.x - Math.cos(rad + 0.45) * ah, b.y - Math.sin(rad + 0.45) * ah);
+    dom.ctx.closePath();
+    dom.ctx.fill();
+    dom.ctx.font = "9px sans-serif";
+    dom.ctx.textAlign = "center";
+    dom.ctx.fillText("💡", (a.x + b.x) / 2, (a.y + b.y) / 2 - 4);
+    dom.ctx.restore();
+  }
+}
+
 export function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx: number; lz: number } {
   const origin = itemVisualCenterXZ(item);
   const dx = wx - origin.x;
@@ -904,7 +989,10 @@ export function worldToItemLocal(item: EditorItem, wx: number, wz: number): { lx
 export function hitTestAll(wx: number, wz: number, allLayers?: boolean): EditorItem[] {
   const sorted = S.items
     .filter((it) => (allLayers ? true : isActiveItemLayer(it)))
+    // 分 P：点选只命中当前 P（参考层叠显不可点选；anim 成员拾取同样限当前 P）。
+    .filter(itemInCurrentPart)
     .filter((it) => categoryVisible(itemCategoryOf(it)))
+    .filter((it) => !isItemHiddenByDecorGroup(it))
     // 高度过滤：范围外的物品不参与点选/框选（「全部」时不过滤）。
     .filter(itemInHeightFilter)
     .sort((a, b) => itemDrawCompare(b, a));

@@ -23,7 +23,6 @@ export const GUIDE_PAGE_ID = _route.guidePageId;
 export const dom = {
   app: null as unknown as HTMLElement,
   sceneSelect: null as unknown as HTMLSelectElement,
-  statusEl: null as unknown as HTMLElement,
   paletteCats: null as unknown as HTMLElement,
   canvas: null as unknown as HTMLCanvasElement,
   ctx: null as unknown as CanvasRenderingContext2D,
@@ -48,22 +47,21 @@ export function buildLayoutDom(): void {
   ${navHtml("layout")}
   <div class="toolbar">
     <div class="toolbar-row">
-      <button id="btn-reload" title="重新加载当前场景">🔄 重新加载</button>
-      <button id="btn-save" class="primary" title="将布局写回 Unity">💾 写回 Unity</button>
-      <button id="btn-save-items" class="primary" title="仅写回核心物品（不修改地板、背景、装饰）">🎯 仅核心物品</button>
+      <div class="toolbar-write-group" role="group" aria-label="场景写回">
+        <button type="button" id="btn-reload" class="toolbar-btn-ghost" title="重新加载当前场景">🔄 重新加载</button>
+        <button type="button" id="btn-save" class="toolbar-btn-save-full" title="全量写回：物品、地板、背景、装饰、动画与场景参数">💾 写回 Unity</button>
+        <button type="button" id="btn-save-items" class="toolbar-btn-save-scope" title="仅写回核心物品（不修改地板、背景、装饰）">🎯 仅核心物品</button>
+      </div>
       <span class="toolbar-sep"></span>
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
       <button id="btn-counters" type="button" title="按桌台类型统一皮肤（如木纹·中秋），也可单独修改">🪵 桌台管理</button>
-      <button id="btn-level-config" type="button" title="配置各玩家分数与关卡截图">📊 关卡配置</button>
-      <button id="btn-ceiling-height" type="button" title="修改 KitchenLoaderManager Ceiling Height">⬆ 天花板高度</button>
+      <button id="btn-level-config" type="button" title="分数、环境（天花板/分 P）、音频与关卡截图">📊 关卡配置</button>
       <button id="btn-camera-light" type="button" title="修改游戏相机背景色 / FOV 与 Art/Lights 灯光颜色、强度">🎥 相机/灯光</button>
-      <button id="btn-level-audio" type="button" title="配置关卡音频">🔊 音频</button>
-      <button id="btn-workload" type="button" title="配置玩家工作区域并推测工作量">📈 工作量推测</button>
-      <button id="btn-summary" type="button" title="查看关卡菜谱汇总并一键导出图片">📋 汇总</button>
-      <button id="btn-tools-history" type="button" title="关卡工具（修复损坏 / 依赖检查 / 测试布局 / 同步布局）+ 最近 15 次写回历史与变动对比">🧰 工具与历史</button>
-      <span id="status" class="status">连接中…</span>
+      <button id="btn-tools-history" type="button" title="关卡工具、工作量推测与最近 15 次写回历史">🧰 工具与历史</button>
+      <button id="btn-part-level" type="button" class="hidden" title="分 P 管理：阶段 / 停放方向 / 转场节奏与清理">🔀 分P管理</button>
     </div>
+    <div class="part-bar hidden" id="part-bar"></div>
     <div class="toolbar-row">
       <div class="layer-tabs" id="layer-tabs">
         <button type="button" data-layer="decor" class="layer-tab">🎀 装饰层</button>
@@ -103,6 +101,7 @@ export function buildLayoutDom(): void {
       <label class="toolbar-check">🎯 精度
         <select id="snap-free-step" title="自由摆放 / 微移的精度">
           <option value="1">1.0</option>
+          <option value="0.6">0.6（半格）</option>
           <option value="0.5">0.5</option>
           <option value="0.1" selected>0.1</option>
           <option value="0.01">0.01</option>
@@ -187,7 +186,6 @@ export function buildLayoutDom(): void {
   </div>
 `;
   dom.sceneSelect = document.getElementById("scene-select") as HTMLSelectElement;
-  dom.statusEl = document.getElementById("status")!;
   dom.paletteCats = document.getElementById("palette-cats")!;
   dom.canvas = document.getElementById("canvas") as HTMLCanvasElement;
   dom.ctx = (dom.canvas && dom.canvas.getContext("2d")) as CanvasRenderingContext2D;

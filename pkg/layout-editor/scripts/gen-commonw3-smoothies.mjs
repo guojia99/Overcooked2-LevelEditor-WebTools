@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 生成 commonW3「🥤 Web 果汁大全」共享库（单果搅拌机果汁：葡萄/橙子/桃子 + 蓝莓/黑莓/覆盆子）。
+ * 生成 commonW3「🥤 Web 果汁大全」共享库（单果搅拌机果汁：葡萄/橙子/桃子 + 蓝莓/黑莓/树莓）。
  *
  * 配方字段与 backup_20260911/汁/*.asset 一致（搅拌杯，非搅拌碗）：
  *   type 3 (Mixed) + platingStepSO Glass + mixingIconSO BlenderIcon + mixingProgress Mixed；
@@ -127,7 +127,7 @@ const RECIPES = [
   },
   {
     id: "Web_Smoothie_Raspberry",
-    zh: "Web 覆盆子果汁",
+    zh: "Web 树莓果汁",
     en: "Web Raspberry Smoothie",
     ingGuid: "2c4b11eca006b60f3ae5a95e5cf4c609",
     uid: 58322040,

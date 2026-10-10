@@ -415,6 +415,124 @@ namespace CustomStub
         });
 
         public static readonly Type ServerIngredientContainerType = Find("ServerIngredientContainer");
+        public static readonly Type ServerPlateType = Find("ServerPlate");
+        public static readonly Type ServerPreparationContainerType = Find("ServerPreparationContainer");
+        public static readonly Type ServerMixableContainerType = Find("ServerMixableContainer");
+        public static readonly Type ServerCookableContainerType = Find("ServerCookableContainer");
+        public static readonly Type PreparationContainerType = Find("PreparationContainer");
+        public static readonly Type AssembledNodeTransferType = Find("AssembledNodeTransfer");
+        public static readonly Type IngredientAssembledNodeType = Find("IngredientAssembledNode");
+        public static readonly Type IIngredientContentsType = Find("IIngredientContents");
+        public static readonly Type ICarrierPlacementType = Find("ICarrierPlacement");
+
+        public static readonly FieldInfo ServerPlateIngredientField = Field(ServerPlateType, "m_ingredientContainer");
+        public static readonly MethodInfo ServerPlateIsReservedMethod = Safe(delegate
+        {
+            return ServerPlateType != null
+                ? ServerPlateType.GetMethod("IsReserved", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly FieldInfo ServerPrepItemContainerField =
+            Field(ServerPreparationContainerType, "m_itemContainer");
+        public static readonly FieldInfo ServerPrepContainerField =
+            Field(ServerPreparationContainerType, "m_preparationContainer");
+        public static readonly FieldInfo PrepIngredientOrderNodeField =
+            Field(PreparationContainerType, "m_ingredientOrderNode");
+
+        public static readonly MethodInfo ServerPlateCanTransferMethod = Safe(delegate
+        {
+            return ServerPlateType != null && IIngredientContentsType != null
+                ? ServerPlateType.GetMethod("CanTransferToContainer", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { IIngredientContentsType }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerPrepCanTransferMethod = Safe(delegate
+        {
+            return ServerPreparationContainerType != null && IIngredientContentsType != null
+                ? ServerPreparationContainerType.GetMethod("CanTransferToContainer",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { IIngredientContentsType }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerPrepTransferMethod = Safe(delegate
+        {
+            return ServerPreparationContainerType != null && ICarrierPlacementType != null
+                && IIngredientContentsType != null
+                ? ServerPreparationContainerType.GetMethod("TransferToContainer",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { ICarrierPlacementType, IIngredientContentsType, typeof(bool) }, null)
+                : null;
+        });
+
+        public static readonly MethodInfo IngredientGetContentsCountMethod = Safe(delegate
+        {
+            return ServerIngredientContainerType != null
+                ? ServerIngredientContainerType.GetMethod("GetContentsCount",
+                    BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo IngredientGetContentsMethod = Safe(delegate
+        {
+            return ServerIngredientContainerType != null
+                ? ServerIngredientContainerType.GetMethod("GetContents",
+                    BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo IngredientGetContentsElementMethod = Safe(delegate
+        {
+            return ServerIngredientContainerType != null
+                ? ServerIngredientContainerType.GetMethod("GetContentsElement",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(int) }, null)
+                : null;
+        });
+        public static readonly MethodInfo IngredientCanTakeContentsMethod = Safe(delegate
+        {
+            var nodeType = Find("AssembledDefinitionNode");
+            return IIngredientContentsType != null && nodeType != null
+                ? IIngredientContentsType.GetMethod("CanTakeContents",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { nodeType.MakeArrayType() }, null)
+                : null;
+        });
+
+        public static readonly ConstructorInfo IngredientAssembledNodeCtor = Safe(delegate
+        {
+            var orderNodeType = Find("IngredientOrderNode");
+            return IngredientAssembledNodeType != null && orderNodeType != null
+                ? IngredientAssembledNodeType.GetConstructor(new[] { orderNodeType })
+                : null;
+        });
+        public static readonly MethodInfo AssembledCanCombineMethod = Safe(delegate
+        {
+            return AssembledNodeTransferType != null && IIngredientContentsType != null
+                ? AssembledNodeTransferType.GetMethod("CanCombineWithContents",
+                    BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { Find("AssembledDefinitionNode"), IIngredientContentsType }, null)
+                : null;
+        });
+        public static readonly MethodInfo AssembledCombineMethod = Safe(delegate
+        {
+            return AssembledNodeTransferType != null && IIngredientContentsType != null
+                ? AssembledNodeTransferType.GetMethod("CombineWithContents",
+                    BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { Find("AssembledDefinitionNode"), IIngredientContentsType, typeof(bool) }, null)
+                : null;
+        });
+        public static readonly MethodInfo AssembledSimplifyMethod = Safe(delegate
+        {
+            var nodeType = Find("AssembledDefinitionNode");
+            return nodeType != null
+                ? nodeType.GetMethod("Simpilfy", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo CarrierDestroyCarriedMethod = Safe(delegate
+        {
+            return ICarrierPlacementType != null
+                ? ICarrierPlacementType.GetMethod("DestroyCarriedItem",
+                    BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null)
+                : null;
+        });
+
         public static readonly MethodInfo HasContentsMethod = Safe(delegate
         {
             // 定义在 IngredientContainer 基类上（public），按声明类型查找。
@@ -525,6 +643,12 @@ namespace CustomStub
                 : null;
         });
 
+        // ---- 摇杆灯（JoystickMarkerLink）：Terminal 会话半组件（占用状态轮询） ----
+        public static readonly Type ServerTerminalType = Find("ServerTerminal");
+        public static readonly Type ClientTerminalType = Find("ClientTerminal");
+        public static readonly Type ClientSessionInteractableType = Find("ClientSessionInteractable");
+        public static readonly FieldInfo ClientSessionField = Field(ClientSessionInteractableType, "m_session");
+
         public static readonly Type ServerPushableObjectType = Find("ServerPushableObject");
 
         // PushableObject 成员（会话判定 / 抓取点）
@@ -593,6 +717,49 @@ namespace CustomStub
                 ? PilotMovementType.GetMethod("AssignPlayer", BindingFlags.Public | BindingFlags.Instance)
                 : null;
         });
+        public static readonly FieldInfo PilotControlSchemeField = Field(PilotMovementType, "m_controlScheme");
+        public static readonly FieldInfo PilotMovementObjField = Field(PilotMovementType, "m_pilotMovement");
+        public static readonly MethodInfo PilotUpdateSynchronisingMethod = Safe(delegate
+        {
+            return PilotMovementType != null
+                ? PilotMovementType.GetMethod("UpdateSynchronising",
+                    BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo PilotStartSynchronisingMethod = Safe(delegate
+        {
+            return PilotMovementType != null
+                ? PilotMovementType.GetMethod("StartSynchronising",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(Component) }, null)
+                : null;
+        });
+
+        public static readonly Type PilotMovementVanillaType = Find("PilotMovement");
+        public static readonly PropertyInfo PilotRigidbodyMotionProperty =
+            Prop(PilotMovementVanillaType, "RigidbodyMotion");
+        public static readonly MethodInfo RigidbodySetVelocityMethod = Safe(delegate
+        {
+            return RigidbodyMotionType != null
+                ? RigidbodyMotionType.GetMethod("SetVelocity", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(Vector3) }, null)
+                : null;
+        });
+
+        public static readonly Type ControlSchemeDataType = Safe(delegate
+        {
+            var pc = Find("PlayerControls");
+            return pc != null ? pc.GetNestedType("ControlSchemeData", BindingFlags.Public) : null;
+        });
+        public static readonly FieldInfo ControlSchemeControlsField = Field(ControlSchemeDataType, "m_controls");
+
+        public static readonly Type ClientPilotMovementType = Find("ClientPilotMovement");
+        public static readonly MethodInfo ClientPilotAssignAvatarMethod = Safe(delegate
+        {
+            return ClientPilotMovementType != null
+                ? ClientPilotMovementType.GetMethod("AssignAvatar",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(GameObject) }, null)
+                : null;
+        });
 
         public static readonly Type GridManagerType = Find("GridManager");
         public static readonly Type GridIndexType = Find("GridIndex");
@@ -614,6 +781,13 @@ namespace CustomStub
         {
             return GridManagerType != null
                 ? GridManagerType.GetMethod("GetGridLocationFromPos", BindingFlags.Public | BindingFlags.Instance, null,
+                    new[] { typeof(Vector3) }, null)
+                : null;
+        });
+        public static readonly MethodInfo GridNearestPositionMethod = Safe(delegate
+        {
+            return GridManagerType != null
+                ? GridManagerType.GetMethod("GetNearestGridPosition", BindingFlags.Public | BindingFlags.Instance, null,
                     new[] { typeof(Vector3) }, null)
                 : null;
         });
@@ -720,6 +894,59 @@ namespace CustomStub
 
         // ---- 锅上需要剥掉的游戏组件（可推动载具独占物理/交互） ----
         public static readonly Type InteractableType = Find("Interactable");
+        public static readonly Type ClientInteractableType = Find("ClientInteractable");
+        public static readonly Type ServerInteractableType = Find("ServerInteractable");
+        public static readonly MethodInfo ClientInteractableCanInteractMethod = Safe(delegate
+        {
+            return FindCanInteractMethod(ClientInteractableType);
+        });
+        public static readonly MethodInfo ServerInteractableCanInteractMethod = Safe(delegate
+        {
+            return FindCanInteractMethod(ServerInteractableType);
+        });
+        public static readonly MethodInfo ServerSessionInteractableCanInteractMethod = Safe(delegate
+        {
+            return FindCanInteractMethod(ServerSessionInteractableType);
+        });
+        public static readonly Type ClientAnticipateInteractionHighlightType =
+            Find("ClientAnticipateInteractionHighlight");
+        public static readonly MethodInfo ClientAnticipateCanHighlightMethod = Safe(delegate
+        {
+            return FindBoolMethodWithArity(ClientAnticipateInteractionHighlightType, "CanHighlight", 1, null);
+        });
+        public static readonly Type InteractionObjectsType = Find("InteractionObjects");
+        public static readonly FieldInfo InteractionObjectsInteractableField =
+            Field(InteractionObjectsType, "m_interactable");
+        public static readonly FieldInfo InteractionObjectsPickupField =
+            Field(InteractionObjectsType, "m_iHandlePickup");
+        public static readonly FieldInfo InteractionObjectsPlacementField =
+            Field(InteractionObjectsType, "m_iHandlePlacement");
+        public static readonly Type ClientPlateStackBaseType = Find("ClientPlateStackBase");
+        public static readonly MethodInfo PlayerControlsSetInteractionObjectsMethod = Safe(delegate
+        {
+            return PlayerControlsType != null
+                ? PlayerControlsType.GetMethod("SetInteractionObjects",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { InteractionObjectsType }, null)
+                : null;
+        });
+        public static readonly Type ClientPlayerControlsImplType = Find("ClientPlayerControlsImpl_Default");
+        public static readonly MethodInfo ClientPlayerControlsUpdateInteractMethod = Safe(delegate
+        {
+            return ClientPlayerControlsImplType != null
+                ? ClientPlayerControlsImplType.GetMethod("Update_Interact",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { typeof(float), typeof(bool), typeof(bool) }, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientTriggerInteractableMethod = Safe(delegate
+        {
+            return FindInstanceMethodByArity(ClientPlayerControlsImplType, "TriggerInteractable", 1);
+        });
+        public static readonly MethodInfo ClientGetCurrentlyInteractingMethod = Safe(delegate
+        {
+            return FindInstanceMethodByArity(ClientPlayerControlsImplType, "GetCurrentlyInteracting", 0);
+        });
         public static readonly Type EditorGridSnapType = Find("EditorGridSnap");
         public static readonly Type AttachStationType = Find("AttachStation");
 
@@ -1184,6 +1411,58 @@ namespace CustomStub
                 t = t.parent;
             }
             return false;
+        }
+
+        private static MethodInfo FindCanInteractMethod(Type interactableSyncType)
+        {
+            return FindBoolMethodWithArity(interactableSyncType, "CanInteract", 1, PlayerControlsType);
+        }
+
+        internal static MethodInfo FindInstanceMethodByArity(Type declaringType, string methodName, int arity)
+        {
+            if (declaringType == null)
+                return null;
+            var methods = declaringType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic
+                | BindingFlags.Instance);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                var m = methods[i];
+                if (m == null || m.Name != methodName)
+                    continue;
+                if (m.GetParameters().Length != arity)
+                    continue;
+                return m;
+            }
+            return null;
+        }
+
+        private static MethodInfo FindBoolMethodWithArity(Type declaringType, string methodName, int arity,
+            Type requiredFirstParamType)
+        {
+            if (declaringType == null)
+                return null;
+            var methods = declaringType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic
+                | BindingFlags.Instance);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                var m = methods[i];
+                if (m == null || m.Name != methodName)
+                    continue;
+                if (m.ReturnType != typeof(bool))
+                    continue;
+                var ps = m.GetParameters();
+                if (ps.Length != arity)
+                    continue;
+                if (requiredFirstParamType != null && arity >= 1)
+                {
+                    var p0 = ps[0].ParameterType;
+                    if (p0 != requiredFirstParamType && !p0.IsAssignableFrom(requiredFirstParamType)
+                        && !requiredFirstParamType.IsAssignableFrom(p0))
+                        continue;
+                }
+                return m;
+            }
+            return null;
         }
 
         // ============ 反射基础 ============

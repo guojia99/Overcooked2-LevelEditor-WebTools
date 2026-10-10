@@ -13,6 +13,7 @@ import {
 } from "./coords";
 import { itemLabel } from "./labels";
 import { itemCategoryOf, isResizableBackgroundItem } from "./catalog";
+import { clampCanvasScale } from "./canvasZoom";
 import {
   isSurfaceItem,
   surfaceKindLabelZh
@@ -355,7 +356,7 @@ export function setupCanvas() {
   dom.canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
     const factor = e.deltaY > 0 ? 0.9 : 1.1;
-    S.scale = Math.min(4, Math.max(0.25, S.scale * factor));
+    S.scale = clampCanvasScale(S.scale * factor);
     draw();
   });
 
@@ -1277,7 +1278,11 @@ export function setupCanvas() {
           ? activeGroup()!.waypoints.find((w) => w.id === S.selectedWaypointId) ?? null
           : null;
       const itemKeys = S.currentLayer === "anim" ? [] : selectionKeys();
-      if (!wpNudge && itemKeys.length === 0) return;
+      const floorKeys =
+        S.currentLayer === "floor" || S.currentLayer === "background"
+          ? [...S.selectedFloorKeys]
+          : [];
+      if (!wpNudge && itemKeys.length === 0 && floorKeys.length === 0) return;
       if (!arrowNudgeHeld) {
         pushHistory();
         arrowNudgeHeld = true;
@@ -1285,6 +1290,16 @@ export function setupCanvas() {
       if (wpNudge) {
         wpNudge.x = snapValue(wpNudge.x + dx, S.freeSnapStep);
         wpNudge.z = snapValue(wpNudge.z + dz, S.freeSnapStep);
+        S.dirty = true;
+        renderRightPanel();
+      } else if (floorKeys.length > 0 && itemKeys.length === 0) {
+        for (const k of floorKeys) {
+          const f = S.floors.find((x) => x._key === k);
+          if (!f) continue;
+          f._wx += dx;
+          f._wz += dz;
+          finalizeFloor(f);
+        }
         S.dirty = true;
         renderRightPanel();
       } else {

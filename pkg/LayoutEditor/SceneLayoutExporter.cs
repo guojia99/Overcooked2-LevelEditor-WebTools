@@ -36,6 +36,12 @@ public static class SceneLayoutExporter
         var imported = AnimGroupImporter.ImportFromScene(scene, sceneName,
             AnimGroupBakery.GetAnimationsFolder(scene.path));
 
+        // 摇杆操控组（Design/Pilot Objects，原版 PilotMovement 刚体驾驶）同源
+        // 重建——同一 animControls 集合，groupKind="pilot"。
+        var importedPilot = AnimGroupImporter.ImportPilotGroups(scene);
+        if (importedPilot.Count > 0)
+            imported.AddRange(importedPilot);
+
         LayoutEditorLog.Log("anim group: export " + scene.name + " -> " +
             imported.Count + " group(s)");
 

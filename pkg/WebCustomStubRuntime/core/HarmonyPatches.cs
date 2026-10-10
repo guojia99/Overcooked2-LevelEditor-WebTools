@@ -779,6 +779,234 @@ namespace CustomStub
             get { return typeof(HarmonyPatches).GetMethod("DualStubHealPrefix", BF); }
         }
 
+        // ============ 摇杆遥控地板（AnimPilotFloorDrive，布局 pilot 组） ============
+
+        private static bool ServerPilotMovementUpdatePrefix(object __instance)
+        {
+            try
+            {
+                return AnimPilotFloorDrive.ServerUpdatePrefix(__instance);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("animPilotUpd", "[CustomStub.Harmony] 摇杆地板 Update 前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        private static void ServerPilotMovementUpdatePostfix(object __instance)
+        {
+            try
+            {
+                AnimPilotFloorDrive.ServerUpdatePostfix(__instance);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("animPilotUpdPf", "[CustomStub.Harmony] 摇杆地板 Update 后缀异常: " + ex.Message);
+            }
+        }
+
+        private static void ServerPilotMovementStartPostfix(object __instance)
+        {
+            try
+            {
+                AnimPilotFloorDrive.ServerStartPostfix(__instance);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("animPilotStart", "[CustomStub.Harmony] 摇杆地板 Start 后缀异常: " + ex.Message);
+            }
+        }
+
+        private static void ServerPilotMovementAssignPostfix(object __instance, object _controlScheme)
+        {
+            try
+            {
+                AnimPilotFloorDrive.ServerAssignPostfix(__instance, _controlScheme);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("animPilotAssign", "[CustomStub.Harmony] 摇杆地板 Assign 后缀异常: " + ex.Message);
+            }
+        }
+
+        private static void ClientPilotMovementAssignAvatarPostfix(object __instance, GameObject _avatar)
+        {
+            try
+            {
+                AnimPilotFloorDrive.ClientAssignAvatarPostfix(__instance, _avatar);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("animPilotAvatar", "[CustomStub.Harmony] 摇杆地板 AssignAvatar 后缀异常: " + ex.Message);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPilotMovementUpdatePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPilotMovementUpdatePrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPilotMovementUpdatePostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPilotMovementUpdatePostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPilotMovementStartPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPilotMovementStartPostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPilotMovementAssignPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPilotMovementAssignPostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ClientPilotMovementAssignAvatarPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ClientPilotMovementAssignAvatarPostfix", BF); }
+        }
+
+        private static void ClientInteractableCanInteractPostfix(object __instance, object _player, ref bool __result)
+        {
+            if (__result)
+                return;
+            try
+            {
+                AnimPilotJoystickInteract.ApplyProximityCanInteract(__instance as Component, _player as Component,
+                    ref __result);
+                AnimPilotMemberInteract.ApplyProximityCanInteract(__instance as Component, _player as Component,
+                    ref __result);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("pilotJoyCan", "[CustomStub.Harmony] 摇杆邻近 CanInteract 后缀异常: " + ex.Message);
+            }
+        }
+
+        private static void ServerInteractableCanInteractPostfix(object __instance, object _player, ref bool __result)
+        {
+            if (__result)
+                return;
+            try
+            {
+                AnimPilotJoystickInteract.ApplyProximityCanInteract(__instance as Component, _player as Component,
+                    ref __result);
+                AnimPilotMemberInteract.ApplyProximityCanInteract(__instance as Component, _player as Component,
+                    ref __result);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("pilotJoyCanSrv", "[CustomStub.Harmony] 摇杆邻近 CanInteract(服) 后缀异常: " + ex.Message);
+            }
+        }
+
+        private static void ServerSessionInteractableCanInteractPostfix(object __instance, object _interacter,
+            ref bool __result)
+        {
+            if (__result)
+                return;
+            try
+            {
+                AnimPilotJoystickInteract.ApplyProximityCanInteract(__instance as Component, _interacter as Component,
+                    ref __result);
+                AnimPilotMemberInteract.ApplyProximityCanInteract(__instance as Component, _interacter as Component,
+                    ref __result);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("pilotJoyCanSes", "[CustomStub.Harmony] 摇杆邻近 CanInteract(会话服) 后缀异常: " + ex.Message);
+            }
+        }
+
+        private static void PlayerControlsSetInteractionObjectsPostfix(object __instance, object _newInteractionObjects)
+        {
+            try
+            {
+                AnimPilotJoystickInteract.TryInjectPilotJoystickInteractionObjects(__instance as Component,
+                    _newInteractionObjects);
+                AnimPilotMemberInteract.TryInjectPilotMemberInteractionObjects(__instance as Component,
+                    _newInteractionObjects);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("pilotJoyIo", "[CustomStub.Harmony] 摇杆邻近 InteractionObjects 后缀异常: " + ex.Message);
+            }
+        }
+
+        private static void ClientPlayerControlsUpdateInteractPostfix(object __instance, float _deltaTime,
+            bool isUsePressed, bool justPressed)
+        {
+            try
+            {
+                AnimPilotJoystickInteract.TryTriggerNearbyPilotJoystickOnUsePressed(__instance as Component,
+                    justPressed);
+                AnimPilotMemberInteract.TryTriggerNearbyPilotMemberOnUsePressed(__instance as Component,
+                    justPressed);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("pilotJoyUse", "[CustomStub.Harmony] 摇杆邻近按交互兜底异常: " + ex.Message);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ClientInteractableCanInteractPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ClientInteractableCanInteractPostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ServerInteractableCanInteractPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerInteractableCanInteractPostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ServerSessionInteractableCanInteractPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerSessionInteractableCanInteractPostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo PlayerControlsSetInteractionObjectsPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("PlayerControlsSetInteractionObjectsPostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ClientPlayerControlsUpdateInteractPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ClientPlayerControlsUpdateInteractPostfix", BF); }
+        }
+
+        // ============ 容器转移（ContainerTransferSync，接替 Patch ServerPlate/Prep） ============
+
+        private static bool ServerPlateCanTransferPrefix(object __instance, object _container, ref bool __result)
+        {
+            return ContainerTransferSync.ServerPlateCanTransferPrefix(__instance, _container, ref __result);
+        }
+
+        private static bool ServerPrepCanTransferPrefix(object __instance, object _container, ref bool __result)
+        {
+            return ContainerTransferSync.ServerPrepCanTransferPrefix(__instance, _container, ref __result);
+        }
+
+        private static bool ServerPrepTransferPrefix(object __instance, object _carrier, object _container, bool _dontRemove)
+        {
+            return ContainerTransferSync.ServerPrepTransferPrefix(__instance, _carrier, _container, _dontRemove);
+        }
+
+        internal static System.Reflection.MethodInfo ServerPlateCanTransferPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPlateCanTransferPrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPrepCanTransferPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPrepCanTransferPrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPrepTransferPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPrepTransferPrefix", BF); }
+        }
+
         private const System.Reflection.BindingFlags BF =
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
     }

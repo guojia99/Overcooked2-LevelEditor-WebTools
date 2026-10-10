@@ -38,7 +38,7 @@ const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
  * item.ratHeist，写回会静默丢参数，靠版本告警拦旧桥。
  * v8（2026-10-08）：燃烧弹射器波次（item.burner.waves）——旧桥不认识 waves 字段，
  * 写回会静默丢落点/时序，靠版本告警拦旧桥。 */
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 10;
 
 /**
  * CustomStub 依赖道具（needsStub=true）：游戏侧需要关卡集携带 Stub_<set> runtime
@@ -292,6 +292,7 @@ const CORE_PALETTE = [
   { key: "hotpot/web", labelZh: "火锅 · Web（CustomStub）", labelEn: "Hotpot · Web (CustomStub)" },
   { key: "utensils/mixing", labelZh: "核心 · 搅拌器具", labelEn: "Mixing & blending" },
   { key: "utensils/tools", labelZh: "核心 · 工具 / 其他", labelEn: "Tools & misc" },
+  { key: "mechanisms/joystick", labelZh: "核心 · 摇杆", labelEn: "Joystick & marker light" },
   { key: "mechanisms", labelZh: "核心 · 机关", labelEn: "Mechanisms" },
   { key: "surface", labelZh: "核心 · 空气墙/斜坡", labelEn: "Air walls & slopes" },
   { key: "Player", labelZh: "核心 · 厨师出生点", labelEn: "Chef spawns" },
@@ -2393,6 +2394,30 @@ function main() {
     const key = item.category === "art" && item.theme ? `art/${item.theme}` : item.category;
     if (!byCategory[key]) byCategory[key] = [];
     byCategory[key].push(item);
+  }
+
+  // 摇杆专区：终端家族（摇杆 ×2 + 摇杆灯）从 mechanisms 单独成组
+  //（item.category 保持 mechanisms 不变——defaultParent/卡片配色按顶级类目走）。
+  const JOYSTICK_IDS = new Set([
+    "MultiControlTerminal",
+    "DLC08_MultiControlTerminal",
+    "ControlTerminal_Marker",
+  ]);
+  const joystickItems = [];
+  for (const key of Object.keys(byCategory)) {
+    const list = byCategory[key];
+    const kept = list.filter((it) => {
+      if (JOYSTICK_IDS.has(it.id)) {
+        joystickItems.push(it);
+        return false;
+      }
+      return true;
+    });
+    if (kept.length !== list.length) byCategory[key] = kept;
+  }
+  if (joystickItems.length > 0) {
+    joystickItems.sort((a, b) => a.id.localeCompare(b.id));
+    byCategory["mechanisms/joystick"] = joystickItems;
   }
 
   // 展示层去重：同一 id 多来源时优先 commonW1 > common03 > 其它 > custom_web 拷贝。

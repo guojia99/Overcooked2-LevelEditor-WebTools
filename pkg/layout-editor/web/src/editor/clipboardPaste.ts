@@ -9,6 +9,7 @@ import { isPlayerItem } from "./renderItems";
 import { moveBlockedAt } from "./items";
 import { remapRefsWithinItems } from "./stubRefs";
 import { finalizeFloor } from "./floors";
+import { stampNewItemPart, stampNewFloorPart } from "./partLevel";
 
 export function selectionCentroid(items: { _wx: number; _wz: number }[]): { x: number; z: number } {
   if (!items.length) return { x: 0, z: 0 };
@@ -59,6 +60,8 @@ export function pasteItemsWithOffset(
     syncItemLocalFromEditor(copy);
     const u = editorItemUnityWorldXZ(copy);
     copy.worldPosition = { x: u.x, y: copy.localPosition.y, z: u.z };
+    // 分 P：粘贴落点归入当前编辑的 P（跨 P 复制即「搬运布局」，决策 §3.2）。
+    stampNewItemPart(copy);
     S.items.push(copy);
     pasted.push(editorKey);
     pastedCopies.push(copy);
@@ -94,6 +97,8 @@ export function pasteFloorsWithOffset(
     copy._wz = src._wz + offZ;
     copy.localPosition = { x: copy._wx, y: copy.localPosition?.y ?? -0.05, z: copy._wz };
     copy.worldPosition = { x: copy._wx, y: copy.localPosition.y, z: copy._wz };
+    // 分 P：粘贴地板同样归入当前 P。
+    stampNewFloorPart(copy);
     S.floors.push(copy);
     pastedKeys.push(key);
   }

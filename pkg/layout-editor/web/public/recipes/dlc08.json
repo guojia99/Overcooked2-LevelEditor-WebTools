@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 8,
+  "schemaVersion": 10,
   "group": "dlc08",
   "itemCount": 36,
   "recipes": [
@@ -122,91 +122,6 @@
             "EggSO",
             "HoneycombSO"
           ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "cb3f2f86134eb1bb4931cfe5df2bc9b2",
-      "id": "DLC08_mixedfloureggraspberry",
-      "nameZh": "覆盆子面糊（DLC08）",
-      "nameEn": "Raspberry Batter (DLC08)",
-      "assetPath": "Assets/common03/food/Recipes/dlc08/DLC08_mixedfloureggraspberry.asset",
-      "cookingStep": "Mixer",
-      "platingStep": "",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "raspberry"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 0,
-      "isCustom": false,
-      "group": "dlc08",
-      "type": "batter",
-      "intermediate": true,
-      "cookingGroups": [
-        {
-          "step": "Mixer",
-          "utensils": [
-            "Mixer",
-            "MixerBowl",
-            "Oven"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO",
-            "raspberry"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "94cd242f06ced014cbd051f61e0b2373",
-      "id": "DLC08_Donut_raspberry",
-      "nameZh": "覆盆子甜甜圈（DLC08）",
-      "nameEn": "Raspberry Donut (DLC08)",
-      "assetPath": "Assets/common03/food/Recipes/dlc08/DLC08_Donut_raspberry.asset",
-      "cookingStep": "DeepFatFryer",
-      "platingStep": "Plate",
-      "ingredients": [
-        "FlourSO",
-        "EggSO",
-        "raspberry"
-      ],
-      "compositionIds": [
-        "DLC08_mixedfloureggraspberry"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 100,
-      "isCustom": false,
-      "group": "dlc08",
-      "type": "donut",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Mixer",
-          "utensils": [
-            "Mixer",
-            "MixerBowl",
-            "Oven"
-          ],
-          "ingredients": [
-            "FlourSO",
-            "EggSO",
-            "raspberry"
-          ]
-        },
-        {
-          "step": "DeepFatFryer",
-          "utensils": [
-            "FryingStation",
-            "FrierBasket"
-          ],
-          "ingredients": []
         }
       ],
       "icon": true
@@ -1309,6 +1224,91 @@
             "FlourSO",
             "EggSO",
             "ChocolateSO"
+          ]
+        },
+        {
+          "step": "DeepFatFryer",
+          "utensils": [
+            "FryingStation",
+            "FrierBasket"
+          ],
+          "ingredients": []
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "cb3f2f86134eb1bb4931cfe5df2bc9b2",
+      "id": "DLC08_mixedfloureggraspberry",
+      "nameZh": "树莓面糊（DLC08）",
+      "nameEn": "Raspberry Batter (DLC08)",
+      "assetPath": "Assets/common03/food/Recipes/dlc08/DLC08_mixedfloureggraspberry.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "raspberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "raspberry"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "94cd242f06ced014cbd051f61e0b2373",
+      "id": "DLC08_Donut_raspberry",
+      "nameZh": "树莓甜甜圈（DLC08）",
+      "nameEn": "Raspberry Donut (DLC08)",
+      "assetPath": "Assets/common03/food/Recipes/dlc08/DLC08_Donut_raspberry.asset",
+      "cookingStep": "DeepFatFryer",
+      "platingStep": "Plate",
+      "ingredients": [
+        "FlourSO",
+        "EggSO",
+        "raspberry"
+      ],
+      "compositionIds": [
+        "DLC08_mixedfloureggraspberry"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 100,
+      "isCustom": false,
+      "group": "dlc08",
+      "type": "donut",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO",
+            "raspberry"
           ]
         },
         {

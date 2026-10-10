@@ -38,6 +38,14 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v3.8.8（2026-10-11 真机 Harmony 摇杆交互补丁·版本对齐）：**loader 逻辑
+    ///     零变更**，与 CustomStub 3.8.8（SetInteractionObjects 参数名真机修复）对齐。
+    /// v3.8.7（2026-10-11 摇杆遥控地板/AnimGrid 系列·版本对齐）：**loader 逻辑
+    ///     零变更**，仅与 CustomStub 运行时 SSOT（StubVersion 3.8.7）对齐——本版
+    ///     运行时含 AnimPilotFloorDrive 摇杆地板（厨师随动、会话对账、邻近交互）、
+    ///     AnimGridMemberSync、AnimPilotMemberInteract 等（详见 StubVersion 3.8.0–3.8.7）。
+    ///     关卡集 requires.txt 已升至 3.8.x 时，旧 Loader 3.7.0 会 semver 门控跳过
+    ///     整集 stub 支持（实机只剩原版 Terminal 行为，松杆召回起点）；须装本版依赖包。
     /// v3.7.0（2026-10-06 空清单休眠→进图卡加载修复·双 stub 自愈随运行时分发）：
     ///  - 根因①（空清单休眠）：v3.5.0 零介入铁律把 commonW 素材包加载耦合在
     ///    「stub 特征清单非空」上——只引用 commonW 素材（MixerBowl/烤盘/web 食材）
@@ -200,7 +208,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "3.7.0";
+        public const string PluginVersion = "3.8.8";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>

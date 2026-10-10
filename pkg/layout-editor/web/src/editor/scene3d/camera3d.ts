@@ -7,6 +7,7 @@
 
 import * as THREE from "three";
 import { S, PX_PER_UNIT } from "../state";
+import { clampCanvasScale } from "../canvasZoom";
 import { CAMERA_NEAR, CAMERA_FAR } from "./constants";
 import { toSceneZ, toWorldZ } from "./space";
 
@@ -33,7 +34,7 @@ export class OrbitCam {
   private minPitch = 0.05;
   private maxPitch = Math.PI / 2 - 0.001;
   private minDistance = 1.5;
-  private maxDistance = 220;
+  private maxDistance = 440;
 
   constructor(aspect: number) {
     this.camera = new THREE.PerspectiveCamera(50, aspect, CAMERA_NEAR, CAMERA_FAR);
@@ -146,7 +147,7 @@ export class OrbitCam {
     const vFov = (this.camera.fov * Math.PI) / 180;
     const visibleWorldH = 2 * Math.tan(vFov / 2) * this.distance;
     const scale = viewportH / Math.max(0.0001, visibleWorldH) / PX_PER_UNIT;
-    S.scale = Math.min(4, Math.max(0.25, scale));
+    S.scale = clampCanvasScale(scale);
     const wpp = 1 / (PX_PER_UNIT * S.scale);
     S.panX = -this.target.x / wpp;
     S.panY = toWorldZ(this.target.z) / wpp;

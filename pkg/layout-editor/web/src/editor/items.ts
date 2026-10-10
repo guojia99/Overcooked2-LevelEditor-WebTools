@@ -68,6 +68,7 @@ import { draw } from "./render";
 import { pushHistory, markDirty } from "./historyOps";
 import { setStatus } from "./status";
 import { snapValue } from "../snap";
+import { itemInCurrentPart, stampNewItemPart, partLevelActive } from "./partLevel";
 import {
   trySnapUtensilToHost,
   isStackHostCatalog
@@ -167,7 +168,10 @@ export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
   }
   migrateIngredientDecorToWrapper(raw);
   migrateDecorCommon03ToCommonW1(raw);
-  const wp = raw.worldPosition ?? raw.localPosition;
+  // 分 P：P 层物件的 worldPosition 含 slot 根停放偏移（如 y-30），画布一律按
+  // slot-local 设计坐标（localPosition）取位——各 P 在画布上共享同一设计平面。
+  const isPartItem = partLevelActive() && !!raw.partId && raw.partId !== "base";
+  const wp = (!isPartItem ? raw.worldPosition : null) ?? raw.localPosition;
   // 背景水面等：Unity 导出 footprint 为渲染器实测格数（如 1×26），尺寸由
   // catalog 1×1 × localScale 表达；载入时还原为目录基准，避免与 scale 二次相乘。
   const fp = isResizableBackgroundItem(raw)
@@ -434,9 +438,11 @@ export function moveBlockedAt(_item: EditorItem, _wx: number, _wz: number, _igno
 
 export function checkPlayerCollisions(): string[] {
   const result: string[] = [];
-  const players = S.items.filter(isPlayerItem);
+  const players = S.items.filter((it) => isPlayerItem(it) && itemInCurrentPart(it));
   const nonPlayerGameplay = S.items.filter(
     (it) =>
+      // 分 P：玩家碰撞按 P 作用域校验（P1/P2 同位物件互不构成碰撞）。
+      itemInCurrentPart(it) &&
       !isPlayerItem(it) &&
       !isCollisionItem(it) &&
       itemLayerOfIt(it) === "items"
@@ -491,6 +497,8 @@ export function checkWorkstationCollisions(): string[] {
   const result: string[] = [];
   const workstations = S.items.filter(
     (it) =>
+      // 分 P：工作台重叠按 P 作用域校验。
+      itemInCurrentPart(it) &&
       itemLayerOfIt(it) === "items" &&
       isStackHostCatalog(S.catalogByGuid.get(it.prefabGuid))
   );
@@ -750,6 +758,8 @@ export function addFromCatalog(
   };
   syncItemLocalFromEditor(item);
   item.localPosition.y = baseY;
+  // 分 P：新建物件归入当前 P（P 层内默认 partScoped）。
+  stampNewItemPart(item);
   const u = editorItemUnityWorldXZ(item);
   item.worldPosition = {
     x: u.x,
@@ -820,7 +830,7 @@ export function addFromCatalog(
       const apply = window.confirm(
         `首次使用空气斜坡。\n\n` +
         `当前斜坡最高高度约 ${endY.toFixed(1)}m，建议将 KitchenLoaderManager 的 Ceiling Height 设置为 ${recommended}。\n\n` +
-        `点击“确定”自动设置为 ${recommended}，点击“取消”可稍后通过“天花板高度”按钮手动修改。`
+        `点击“确定”自动设置，点击“取消”可稍后在「关卡配置 → 环境」中手动修改。`
       );
       if (apply) {
         S.ceilingHeight = recommended;

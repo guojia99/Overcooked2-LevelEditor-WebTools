@@ -50,6 +50,7 @@ import { fmt4, fmtCm, footprintOf, u2cm } from "./modelUnits";
 import { sanitizeUploadFileName } from "./fbxTextureRename";
 import { ensureObjMtllib, renameMtlTextureRefs } from "./mtlTextureRename";
 import { openRecipeModelPreview } from "./recipeModelPreview";
+import { setStatus } from "./editor/status";
 
 function esc(s: unknown): string {
   return String(s ?? "")
@@ -64,21 +65,12 @@ const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 /** 列表页记住的当前分类过滤（进入新建/编辑菜谱后返回时保持）。 */
 let lastActiveCategoryId = "";
 
-function setStatus(msg: string, ok = true): void {
-  const el = document.getElementById("cr-status");
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.toggle("err", !ok);
-  el.classList.toggle("ok", ok && msg.length > 0);
-}
-
 function shell(app: HTMLElement, title: string): HTMLElement {
   document.body.classList.add("manage-bg");
   app.innerHTML = `
     ${navHtml("custom-recipes")}
     <div class="manage-bar">
       <h1 class="m-title">${esc(title)}</h1>
-      <span class="status" id="cr-status"></span>
       <span style="flex:1"></span>
     </div>
     <div class="manage-content" id="cr-content"></div>
@@ -769,6 +761,7 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
                   minY: ((r.boundsMinY ?? 0) - (r.modelPositionY ?? 0)) / s,
                 }
               : undefined,
+          boundsMinY: r?.boundsMinY,
         });
       })
     );
@@ -2320,6 +2313,7 @@ export async function renderRecipeForm(
         fitTarget: plateSel?.value === "Glass" ? "cup" : "plate",
         ...readModelTransform(),
         unitySize: computeUnitySize(),
+        boundsMinY: recipe?.boundsMinY,
         onAdjust: writeAdjustBack,
       });
     });
@@ -2365,6 +2359,7 @@ export async function renderRecipeForm(
         fitTarget: plateSel?.value === "Glass" ? "cup" : "plate",
         ...readModelTransform(),
         unitySize: computeUnitySize(),
+        boundsMinY: recipe?.boundsMinY,
         onAdjust: writeAdjustBack,
       });
     });

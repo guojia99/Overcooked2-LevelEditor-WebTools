@@ -96,6 +96,8 @@ export function makeLayerVisibility(): Record<LayerKey, LayerVisibility> {
 export interface EditorSnapshot {
   items: EditorItem[];
   floors: EditorFloor[];
+  /** 分 P 配置（undo/redo 一并恢复；物件 partId 随 items 走）。 */
+  partLevel: import("../types").PartLevelConfig | null;
   /** Move-control groups (undo/redo must restore them too). */
   animControls: AnimGroup[];
   /** 开关联动（按钮 → 断头台/饮料机/酱料机；undo/redo 一并恢复）。 */
@@ -309,6 +311,14 @@ export const S = {
   switchMaterialsCache: [] as SwitchMaterialOption[],
   items: [] as EditorItem[],
   floors: [] as EditorFloor[],
+  /** 分 P 配置（null = 普通单阶段关卡；enabled 后不可逆）。
+   *  真源 = 桥侧 part_level~/part_level.json，随 GET/POST 往返。 */
+  partLevel: null as import("../types").PartLevelConfig | null,
+  /** 分 P：当前编辑的阶段 id（"base" | "p1"…"pN"）。普关恒 "base"（不过滤）。 */
+  currentPart: "base",
+  /** 分 P：参考叠显层（可多选；"base" / pid）。空 = 关闭。仅 2D 半透明参考，
+   *  不可点选、不写入文档（纯视图状态）。 */
+  partReferences: new Set<string>(),
   walkable: [] as WalkableRect[],
   deathInfo: null as DeathInfo | null,
   /** 游戏相机（背景色/FOV；写回时随全量保存携带）。 */
@@ -361,6 +371,8 @@ export const S = {
   floorHeightPanelOpen: false,
   /** Per-layer canvas visibility of each content category. */
   layerVisibility: makeLayerVisibility(),
+  /** Decor layer: hidden display-name groups (view-only; cleared on scene load). */
+  decorHiddenGroups: new Set<string>(),
   scenePath: "",
   snapEnabled: true,
   showGrid: true,

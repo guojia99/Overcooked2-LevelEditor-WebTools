@@ -24,6 +24,17 @@ import {
   recipeCategoryOf,
   utensilIntermediateRecipes,
 } from "./editor/recipeKnowledge";
+import {
+  emptyUtensilRecipeFilters,
+  collectUtensilCookStepChips,
+  filterPickerRecipes,
+  recipesForPickerGroup,
+  isCustomUtensilRecipe,
+  utensilRecipeFilterBarHtml,
+  bindUtensilRecipeFilterBar,
+  utensilRecipeCardBadgesHtml,
+  type UtensilRecipeFilterState,
+} from "./utensilRecipeFilters";
 
 /** Inline <img> for an ingredient/recipe: try the extracted icon PNG (unless explicitly known
  *  missing), else / on error fall back to the shared placeholder (MissingIngredient_Icon). */
@@ -38,6 +49,10 @@ function iconImg(kind: "ingredients" | "recipes", id: string | undefined, hasIco
 export interface IngredientPickerOptions {
   single?: boolean;
   isDisabled?: (ing: IngredientEntry) => string | null;
+  /** 锅具额外食材：中间产物/自定义 Tab + 菜谱细筛。 */
+  utensilRecipeFilters?: boolean;
+  /** 与锅具管理「按菜谱自动填充」共用筛选状态时传入同一对象。 */
+  sharedUtensilRecipeFilters?: UtensilRecipeFilterState;
 }
 
 function ingredientCard(ing: IngredientEntry, checked: boolean, opts?: IngredientPickerOptions): string {
@@ -261,6 +276,10 @@ export function openIngredientMultiPicker(
     .sort();
   const pickerIntermediates = intermediates ? utensilIntermediateRecipes(intermediates) : [];
   const hasIntermediates = pickerIntermediates.length > 0;
+  const utensilFiltersOn = !!opts?.utensilRecipeFilters && hasIntermediates;
+  const recipeFilterState = opts?.sharedUtensilRecipeFilters ?? emptyUtensilRecipeFilters();
+  const hasCustomRecipes = pickerIntermediates.some((r) => isCustomUtensilRecipe(r));
+  const cookStepChips = collectUtensilCookStepChips(pickerIntermediates);
   // 勾选状态的唯一来源（可变）：切分组/分类/搜索会整体重建列表 DOM，勾选必须
   // 即时同步到这里、确定时从这里收集——否则跨分类勾选丢失/写回只剩当前分类
   // （与 openRandomCrateEditor 的 state Map 同款模式）。
@@ -275,10 +294,28 @@ export function openIngredientMultiPicker(
   // card for intermediate recipe (uses recipe icons)
   function recipeCard(r: RecipeEntry, checked: boolean): string {
     const en = (r.nameEn && r.nameEn.trim()) || "";
+    const badges = utensilFiltersOn
+      ? utensilRecipeCardBadgesHtml(r)
+      : '<span class="pc-badge">中间产物</span>';
     return `<label class="pick-card">
       <input type="checkbox" value="${r.guid}" ${checked ? "checked" : ""}>
-      <span class="pc-head">${iconImg("recipes", r.id, r.icon)}<span class="pc-name">${r.nameZh} <span class="pc-badge">中间产物</span>${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
+      <span class="pc-head">${iconImg("recipes", r.id, r.icon)}<span class="pc-name">${r.nameZh} ${badges}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
     </label>`;
+  }
+
+  function filterRecipesPool(
+    pool: RecipeEntry[],
+    recipeCatMatch: (r: RecipeEntry) => boolean,
+    recipeTextMatch: (r: RecipeEntry) => boolean
+  ): RecipeEntry[] {
+    if (!utensilFiltersOn) {
+      return pool.filter(recipeCatMatch).filter(recipeTextMatch);
+    }
+    return filterPickerRecipes(pool, recipeFilterState, recipeCatMatch, recipeTextMatch);
+  }
+
+  function isRecipePickerGroup(group: string): boolean {
+    return group === "__intermediate__" || group === "__custom__" || group === "__selected__";
   }
 
   function recipeGrid(recipes: RecipeEntry[], selected: Set<string>): string {
@@ -292,9 +329,11 @@ export function openIngredientMultiPicker(
         <button type="button" class="ing-group-btn active" data-group="">全部</button>
         ${groups.map((g) => `        <button type="button" class="ing-group-btn" data-group="${g}">${foodGroupLabel(g)}</button>${""}`).join("")}
         ${hasIntermediates ? '<button type="button" class="ing-group-btn" data-group="__intermediate__">中间产物</button>' : ""}
+        ${hasCustomRecipes && utensilFiltersOn ? '<button type="button" class="ing-group-btn" data-group="__custom__">自定义菜谱</button>' : ""}
         <button type="button" class="ing-group-btn" data-group="__selected__" title="只显示当前已勾选的条目，便于审查与取消">✓ 已选 (${selected.size})</button>
       </div>
     </div>
+    ${utensilFiltersOn ? utensilRecipeFilterBarHtml(recipeFilterState, cookStepChips, { barId: "ing-pick-recipe-filters" }) : ""}
     ${cats.length > 1 ? `
     <div class="ing-filter-bar ing-cat-bar">
       <span class="ing-cat-label">分类</span>
@@ -325,16 +364,22 @@ export function openIngredientMultiPicker(
     // 已选 tab：当前勾选的食材 + 中间产物（仍受分类/搜索过滤）
     if (activeGroup === "__selected__") {
       const selIngs = ingredients.filter((i) => selected.has(i.guid) && catMatch(i) && textMatch(i));
-      const selRecs = pickerIntermediates.filter(
-        (r) => selected.has(r.guid) && recipeCatMatch(r) && recipeTextMatch(r),
-      );
+      const selPool = pickerIntermediates.filter((r) => selected.has(r.guid));
+      const selRecs = filterRecipesPool(selPool, recipeCatMatch, recipeTextMatch);
       return ingredientGrid(selIngs, selected, opts) + (selRecs.length ? recipeGrid(selRecs, selected) : "");
     }
 
     // intermediates group：应用分类 + 搜索（与食材 tab 一致）
     if (activeGroup === "__intermediate__" && hasIntermediates) {
-      const filtered = pickerIntermediates.filter(recipeCatMatch).filter(recipeTextMatch);
+      const pool = recipesForPickerGroup(pickerIntermediates, "__intermediate__");
+      const filtered = filterRecipesPool(pool, recipeCatMatch, recipeTextMatch);
       return filtered.length ? recipeGrid(filtered, selected) : '<p class="modal-hint">没有匹配的中间产物</p>';
+    }
+
+    if (activeGroup === "__custom__" && hasCustomRecipes) {
+      const pool = recipesForPickerGroup(pickerIntermediates, "__custom__");
+      const filtered = filterRecipesPool(pool, recipeCatMatch, recipeTextMatch);
+      return filtered.length ? recipeGrid(filtered, selected) : '<p class="modal-hint">没有匹配的自定义菜谱</p>';
     }
 
     let filtered = ingredients;
@@ -343,17 +388,26 @@ export function openIngredientMultiPicker(
     filtered = filtered.filter(textMatch);
     let html = ingredientGrid(filtered, selected, opts);
     // 搜索时：在食材分组下也列出名称匹配的中间产物（不必先切到「中间产物」tab）
-    if (q && activeGroup !== "__intermediate__" && hasIntermediates) {
-      const matched = pickerIntermediates.filter(recipeCatMatch).filter(recipeTextMatch);
+    if (q && activeGroup !== "__intermediate__" && activeGroup !== "__custom__" && hasIntermediates) {
+      const matched = filterRecipesPool(pickerIntermediates, recipeCatMatch, recipeTextMatch);
       if (matched.length) html += recipeGrid(matched, selected);
     }
     return html;
+  }
+
+  function updateRecipeFilterBarVisibility(): void {
+    const bar = document.getElementById("ing-pick-recipe-filters");
+    if (!bar) return;
+    const activeGroup =
+      (document.querySelector(".ing-groups .ing-group-btn.active[data-group]") as HTMLElement)?.dataset.group ?? "";
+    bar.style.display = utensilFiltersOn && isRecipePickerGroup(activeGroup) ? "" : "none";
   }
 
   function applyFilter(): void {
     const container = document.getElementById("ing-pick-container");
     if (container) container.innerHTML = buildFiltered();
     syncPickCards(container ?? document);
+    updateRecipeFilterBarVisibility();
   }
 
   openModal(
@@ -387,6 +441,12 @@ export function openIngredientMultiPicker(
       applyFilter();
     });
   });
+
+  const modalRoot = document.querySelector(".modal-panel");
+  if (utensilFiltersOn && modalRoot) {
+    bindUtensilRecipeFilterBar(modalRoot, recipeFilterState, applyFilter);
+    updateRecipeFilterBarVisibility();
+  }
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-clear]")?.addEventListener("click", () => {

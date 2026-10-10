@@ -327,6 +327,8 @@ LayoutDocument {
 
 组 → 成员（item/floor/object InstanceIds + memberOffsets 平行轨道相位 + memberStatic）→ `waypoints[]`（世界 XZ + 停留/段时长）→ `events[]`（move/wait/lift/drop/rotate/shake/flash；`startTime` 绝对时间轴，重叠即并行烘焙为组合 clip；move 挂 waypointIds + loop/pingpong）。整组可循环 + 外部触发器（start/cancel/end/finishedTrigger）。写回时由 Unity 烘焙为原生 Animator。
 
+**摇杆操控组（`groupKind: "pilot"`，v10）**：无 waypoints/events，额外两字段 `terminalInstanceId`（绑定的摇杆 item id，权威=组→终端；摇杆右键「控制目标」下拉的 🎮 选项与组 ⚙ 设置页共用 `setPilotTerminalBinding` 单一入口，与条目级 `terminal.pilotableObjectInstanceId` 互斥）+ `moveSpeed`（默认 2.5）。组编辑器仅「🧩 成员 / ⚙ 设置」两页（无时间轴/路点/预览；摇杆下拉空时禁用并提示先在「核心 · 摇杆」分组放置）；组卡片 🎮 徽标 + 未绑定摇杆/无地板告警；画布画成员包围盒虚线 + 🎮 徽标，`drawTerminalLinks`（2D/3D）画摇杆→组质心紫线。摇杆灯（ControlTerminal_Marker，`stubKind="MarkerLight"`，`STUB_KIND_BY_PREFAB_ID` 兜底新放置件）：`markerLight.joystickInstanceId` 绑到摇杆（灯/摇杆任一侧右键可设，1:1），运行时灯色跟随占用（WebCustomStubRuntime.JoystickMarkerLink）；画布/3D 绿色 💡 连线（drawMarkerLightLinks）。保存前校验（sceneIO）：未绑定摇杆/成员跨动画组与摇杆组/partId 均阻断；孤儿清理（cleanOrphanedAnimControls + cleanOrphanedStubRefs + remapAllInstanceRefs 均覆盖 terminalInstanceId / joystickInstanceId）。
+
 ### 6.5 菜谱/食材/订单
 
 - `RecipeEntry`：guid/id/中英名/cookingStep/platingStep/`ingredients[]`/`compositionIds[]`/`cookingGroups[]`（`{step, utensils[], ingredients[]}`）/score/type/intermediate/mixing/isCustom/group。

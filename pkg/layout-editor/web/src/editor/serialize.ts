@@ -25,6 +25,7 @@ import {
 } from "./floors";
 import { raftPiecesForRect } from "../raft";
 import { STUB_KIND_BY_PREFAB_ID, isIngredientSprayId } from "./stubControls";
+import { partLevelActive, partIdOf } from "./partLevel";
 import type {
   LayoutItem,
   FloorObject,
@@ -34,6 +35,14 @@ import type {
   ButtonEventData,
   CoaxialLinkData
 } from "../types";
+
+/** 分 P：P 层物件/生成物（木筏拼板、主题地板瓦片）写回 slot 根下的子目录。
+ *  defaultParent 形如 "Design/Counters" 取末段；其余（Art 等）原样挂在 slot 下。 */
+function partParentPath(pid: string, defaultParent: string | undefined): string {
+  const dp = defaultParent ?? "";
+  const sub = dp.startsWith("Design/") && dp.length > "Design/".length ? dp.slice("Design/".length) : dp || "Art";
+  return `Design/PartSlots/${pid}/${sub}`;
+}
 
 export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz, ...rest }: EditorItem): LayoutItem {
   const fp = isResizableBackgroundItem(rest)
@@ -120,6 +129,22 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
     rest.slope = { ...rest.slope, startY: ly };
   }
   const unityXZ = editorItemUnityWorldXZ({ _wx, _wz, localRotationY: rest.localRotationY, prefabAssetPath: rest.prefabAssetPath, prefabGuid: rest.prefabGuid });
+  // 分 P：enabled 时 partId 必填（缺省补 "base"，决策 §5.2）；普关剥离 part 字段。
+  if (partLevelActive()) {
+    // 玩家固定在场景（Chefs 根），不参与 P 替换：一律钉在 base。
+    rest.partId = rest.stubKind === "Player" ? "base" : partIdOf(rest);
+    if (rest.partId !== "base") {
+      // P 层物件写回 slot 根下：Design/PartSlots/<pid>/<defaultParent 末段或 Art>。
+      // 布局期 slot 根在原点（世界坐标=设计坐标），烘焙链末尾统一 park。
+      const dp = cat?.defaultParent ?? "";
+      const sub = dp.startsWith("Design/") && dp.length > "Design/".length ? dp.slice("Design/".length) : dp || "Art";
+      rest.parentPath = `Design/PartSlots/${rest.partId}/${sub}`;
+    }
+  } else {
+    delete rest.partId;
+    delete rest.partScoped;
+    delete rest.survivesPartSwitch;
+  }
   return {
     ...rest,
     footprint: fp,
@@ -134,7 +159,16 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
 export function serializeFloorsForDoc(): FloorObject[] {
   // Keep raft floors in floors[] so Unity SyncWalkableToFloors builds one Col_Floor
   // per raft rect. ApplyFloors skips surfaceKind=="raft" (no Plane mesh).
-  return S.floors.map(({ _key, _wx, _wz, _wCells, _dCells, ...rest }) => ({
+  return S.floors.map(({ _key, _wx, _wz, _wCells, _dCells, ...rest }) => {
+    // 分 P：地板 partId 同物件归一化（普关剥离）；P 层地板写回 slot Ground 下，
+    // 可行走碰撞作为 plane 子物体随 slot 根移动（SyncWalkableToFloors 分流）。
+    if (partLevelActive()) {
+      rest.partId = partIdOf(rest);
+      if (rest.partId !== "base") rest.parentPath = `Design/PartSlots/${rest.partId}/Ground`;
+    } else {
+      delete rest.partId;
+    }
+    return {
     ...rest,
     widthCells: _wCells,
     depthCells: _dCells,
@@ -142,7 +176,8 @@ export function serializeFloorsForDoc(): FloorObject[] {
     depthUnits: _dCells * CELL,
     worldPosition: { x: _wx, y: rest.localPosition?.y ?? -0.05, z: _wz },
     localPosition: { x: _wx, y: rest.localPosition?.y ?? -0.05, z: _wz },
-  }));
+    };
+  });
 }
 
 export function buildRaftItemsForDoc(): LayoutItem[] {
@@ -159,14 +194,17 @@ export function buildRaftItemsForDoc(): LayoutItem[] {
       const id = `new:raft:${uuid()}`;
       const px = f._wx + p.dx;
       const pz = f._wz + p.dz;
-      // 拼块跟随地板自身高度（含负高度下沉木筏），碰撞盒由地板矩形的 walkY 决定。
+      // 拼板跟随地板自身高度（含负高度下沉木筏），碰撞盒由地板矩形的 walkY 决定。
       const py = f.localPosition?.y ?? 0;
+      const raftPid = partLevelActive() ? partIdOf(f) : undefined;
       raftItems.push({
         instanceId: id,
         hierarchyPath: id,
         prefabGuid: cat.guid,
         prefabAssetPath: cat.assetPath,
-        parentPath: cat.defaultParent,
+        // 分 P：木筏拼板跟随所属地板的阶段（写回 slot 根下）。
+        parentPath:
+          raftPid && raftPid !== "base" ? partParentPath(raftPid, cat.defaultParent) : cat.defaultParent,
         displayName: cat.id,
         localPosition: { x: px, y: py, z: pz },
         worldPosition: { x: px, y: py, z: pz },
@@ -175,6 +213,7 @@ export function buildRaftItemsForDoc(): LayoutItem[] {
         // Walkability comes from the retained raft floor rect (one Col_Floor),
         // not per-plank — dual lattice would otherwise stack overlapping colliders.
         walkable: false,
+        partId: raftPid,
       });
     }
   }
@@ -213,12 +252,15 @@ export function buildThemedItemsForDoc(): LayoutItem[] {
     const id = f.instanceId && f.instanceId.startsWith("new:")
       ? f.instanceId
       : `new:themed:${uuid()}`;
+    const themedPid = partLevelActive() ? partIdOf(f) : undefined;
     themedItems.push({
       instanceId: id,
       hierarchyPath: id,
       prefabGuid: cat.guid,
       prefabAssetPath: cat.assetPath,
-      parentPath: cat.defaultParent,
+      // 分 P：主题地板瓦片跟随所属地板的阶段（写回 slot 根下）。
+      parentPath:
+        themedPid && themedPid !== "base" ? partParentPath(themedPid, cat.defaultParent) : cat.defaultParent,
       displayName: cat.id,
       localPosition: { x: f._wx, y: f.localPosition?.y ?? 0, z: f._wz },
       worldPosition: { x: f._wx, y: f.localPosition?.y ?? 0, z: f._wz },
@@ -227,6 +269,7 @@ export function buildThemedItemsForDoc(): LayoutItem[] {
       localScale: sc,
       footprint: cat.footprint,
       walkable: false,
+      partId: themedPid,
     });
   }
   return themedItems;
@@ -237,6 +280,20 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     // Move controls are baked straight into the scene (no external config) and are
     // only ever written on FULL saves — scoped saves must not touch existing groups.
     if (only) return undefined;
+    // 分 P：带 partId 的动画组组根强制迁入 slot（组根随 slot 根移动，决策 D3）；
+    // 转场 fx 组 startTrigger 自动接 PartSwitch_<from>_<to>（转场开始即演出）。
+    if (partLevelActive() && S.partLevel) {
+      for (const g of S.animControls) {
+        if (g.partId && g.partId !== "base" && g.groupKind === "members") {
+          const safeName = (g.displayName || g.id).replace(/[/\\?%*:|"<>.]/g, "_");
+          g.groupHierarchyPath = `Design/PartSlots/${g.partId}/AnimGroups/${safeName}`;
+        }
+        if (g.groupKind === "fx") {
+          const t = (S.partLevel.transitions ?? []).find((tr) => tr.fxGroupId === g.id);
+          if (t) g.startTrigger = `PartSwitch_${t.fromPartId}_${t.toPartId}`;
+        }
+      }
+    }
     return { groups: S.animControls };
   };
 
@@ -262,6 +319,9 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     return {
       sceneAssetPath: S.scenePath,
       hasCeilingHeight: false,
+      // 分 P 元数据随所有作用域携带（决策 D5：物件全量携带该层所有 P，
+      // 桥侧 part_level~ 存档合并；后端 part 分桶删除在 M2 落地）。
+      partLevel: S.partLevel ?? undefined,
       items: S.items
         .filter((it) => itemLayerOfIt(it) === only)
         .map(serializeItemForDoc),
@@ -282,6 +342,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     return {
       sceneAssetPath: S.scenePath,
       hasCeilingHeight: false,
+      partLevel: S.partLevel ?? undefined,
       // Surface-tier prefab items (travelators, water/background props, …) ride
       // along so Unity can move/delete them; themed/raft are regenerated.
       items: S.items
@@ -300,6 +361,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     sceneAssetPath: S.scenePath,
     hasCeilingHeight: S.hasCeilingHeight,
     ceilingHeight: Math.max(0, Math.min(10, S.ceilingHeight)),
+    partLevel: S.partLevel ?? undefined,
     items: S.items.map(serializeItemForDoc).concat(raftItems).concat(themedItems),
     floors: serializeFloorsForDoc(),
     animControls: animDoc(),

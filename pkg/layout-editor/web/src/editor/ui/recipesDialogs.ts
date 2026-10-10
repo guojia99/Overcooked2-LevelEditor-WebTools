@@ -81,6 +81,7 @@ import {
   BUN_DLC8_ID,
 } from "../../recipeGroups";
 import { rlCardHtml, rlCompactCardHtml, STEP_ICON_SRC } from "../../recipeCard";
+import { itemInCurrentPart } from "../partLevel";
 import {
   emptyRecipePickerFilters,
   COOK_STEP_LABEL_ZH,
@@ -600,6 +601,8 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   const existingDispenserIngIds = (): Set<string> => {
     const s = new Set<string>();
     for (const it of S.items) {
+      // 分 P：缺失检测只统计当前阶段的食材箱（各 P 独立补道具）。
+      if (!itemInCurrentPart(it)) continue;
       if (it.stubKind === "Dispenser") {
         const id = ingredientIdByGuid(it.dispenser?.spawnerItemPrefabGuid);
         if (!id) continue;
@@ -614,6 +617,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   const existingPrefabIds = (): Set<string> => {
     const s = new Set<string>();
     for (const it of S.items) {
+      if (!itemInCurrentPart(it)) continue;
       const id = prefabIdFromPath(it.prefabAssetPath);
       s.add(id);
       s.add(functionalBaseId(id));
@@ -664,7 +668,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     // 奶油喷罐：需求只含默认 DLC3 款（不自动填充 dlc09 版）；
     // 场景里已有任一款（dlc03/dlc09）即视为满足，不误报缺失。
     const sprayGuids = CREAM_SPRAY_IDS.map((id) => catalogItemById(id)?.guid).filter((g): g is string => !!g);
-    const hasAnySpray = S.items.some((it) => !!it.prefabGuid && sprayGuids.includes(it.prefabGuid));
+    const hasAnySpray = S.items.some((it) => itemInCurrentPart(it) && !!it.prefabGuid && sprayGuids.includes(it.prefabGuid));
     const reqUt0 = computeRequiredUtensils(
       new Set([...reqIngs].filter((i) => !fromTool(i))),
       steps,

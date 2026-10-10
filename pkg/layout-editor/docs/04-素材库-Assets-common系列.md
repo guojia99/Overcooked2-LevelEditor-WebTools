@@ -134,7 +134,7 @@ AssetBundle assetBundle = AssetBundle.LoadFromFile(path);
 |---|---|---|
 | `custom_recipes/salad/` | `layout-editor/scripts/gen-commonw3-salads.mjs` | DLC11 食材全排列沙拉，`Web_Salad_*` / `Web_LSalad_*`，type 1 Composite |
 | `custom_recipes/smoothie/` | `gen-commonw3-smoothies.mjs` + `gen-commonw3-mixed-smoothies.mjs` | 单果汁 6 款 + 混果汁 12 款（`Web_Smoothie_Mix_*`，共用官方什锦 OBJ + 分区换色贴图） |
-| `custom_recipes/fried_rice/` | `gen-commonw3-migration-batch1.mjs` | 炒饭 6 道（3 共用网格组 + 1 独立香肠炒饭） |
+| `custom_recipes/fried_rice/` | `gen-commonw3-migration-batch1.mjs` + `repair-commonw3-fried-rice-models.mjs` | 炒饭 6 道（每道成品独立 FBX + `*_base_color.png`） |
 | `custom_recipes/soup/` | 同上 | 汤粥 7 道（2 官方 prefab + 自定义 OBJ + 鱼碗共用组） |
 | `custom_recipes/ice_cream/` | 同上 | 冰淇淋 12 道（2×冰+牛奶+食材；10 果味+香草/巧克力；模型/icon 待定） |
 | `custom_recipes/pudding/` | 同上 | 布丁 6 道（3 成品 + 3 中间产物） |

@@ -29,6 +29,32 @@ export function snapFootprintCenter(
   };
 }
 
+/** 占地边缘贴格，格网锚定在 (originX, originZ)（与 Unity QuadGridManager 一致）。 */
+export function snapFootprintCenterAligned(
+  wx: number,
+  wz: number,
+  cellsX: number,
+  cellsZ: number,
+  rotationY: number,
+  cellSize: number,
+  step: number,
+  originX: number,
+  originZ: number
+): { x: number; z: number } {
+  const rot = ((rotationY % 360) + 360) % 360;
+  const swap = rot === 90 || rot === 270;
+  const spanX = (swap ? cellsZ : cellsX) * cellSize;
+  const spanZ = (swap ? cellsX : cellsZ) * cellSize;
+  const minX = wx - spanX / 2;
+  const minZ = wz - spanZ / 2;
+  const sMinX = originX + snapValue(minX - originX, step);
+  const sMinZ = originZ + snapValue(minZ - originZ, step);
+  return {
+    x: sMinX + spanX / 2,
+    z: sMinZ + spanZ / 2,
+  };
+}
+
 /** 中心 pivot 道具专用吸附：长轴（偶数格 span）根吸到半格奇偶位
  *  ((k+0.5)·cellSize，即 0.6 mod 1.2），短轴（奇数格 span）根吸到整格点。
  *  这样两个工作位（根 ±半格）恰好落在格子中心，不会一半概率吸到错位格。 */

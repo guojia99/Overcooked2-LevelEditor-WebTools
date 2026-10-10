@@ -32,6 +32,13 @@ export function fmtCm(v: number): string {
 export const PLATE_FIT_CM = 85;
 export const CUP_FIT_CM = 37;
 
+/** equipment_glass_01 参考模型半高（m）：OBJ 杯底 y=0、几何中心在 +半高；游戏仍以容器中心为原点。 */
+export const REF_GLASS_HALF_HEIGHT_U = 0.398;
+
+/** 游戏容器中心为原点时，承物面相对中心的 Y（cm）：盘子顶面、杯内底（与自动上传校准一致）。 */
+export const PLATE_SURFACE_FROM_CENTER_CM = 4.77;
+export const CUP_INTERIOR_FLOOR_FROM_CENTER_CM = -23.8;
+
 /** 原始尺寸（Unity 单位）的水平足迹 = max(X/Z)。后端注释确认旋转只交换 X/Z、max 不变，
  *  因此足迹与旋转无关。 */
 export function footprintOf(raw: { x: number; y: number; z: number }): number {

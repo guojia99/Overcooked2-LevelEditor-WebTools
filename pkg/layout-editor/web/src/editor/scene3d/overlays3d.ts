@@ -278,16 +278,47 @@ function addLinks(root: THREE.Group): void {
     root.add(arrowHead(a, b, new THREE.Color(0xf9ab00)));
   }
 
-  // 控制终端 → 可驾驶目标
+  // 控制终端 → 可驾驶目标（含摇杆组绑定：终端 → 组成员质心）
   for (const tm of S.items) {
     if (stubKindOf(tm) !== "Terminal") continue;
+    const a = linkTop(tm.instanceId);
+    if (!a) continue;
+
+    // 摇杆组绑定（权威在 AnimGroup.terminalInstanceId）
+    const boundGroup = S.animControls.find(
+      (g) => g.groupKind === "pilot" && g.terminalInstanceId === tm.instanceId
+    );
+    if (boundGroup) {
+      const memberIds = [...boundGroup.itemInstanceIds, ...boundGroup.floorInstanceIds, ...boundGroup.objectInstanceIds];
+      const tops = memberIds.map((id) => linkTop(id)).filter((p): p is THREE.Vector3 => !!p);
+      if (tops.length > 0) {
+        const center = tops
+          .reduce((acc, p) => acc.add(p.clone()), new THREE.Vector3())
+          .multiplyScalar(1 / tops.length);
+        root.add(linkLine(a, center, new THREE.Color(0xc75be8), 0.7));
+        root.add(arrowHead(a, center, new THREE.Color(0xc75be8)));
+      }
+      continue;
+    }
+
     const targetId = tm.terminal?.pilotableObjectInstanceId;
     if (!targetId) continue;
-    const a = linkTop(tm.instanceId);
     const b = linkTop(targetId);
-    if (!a || !b) continue;
+    if (!b) continue;
     root.add(linkLine(a, b, new THREE.Color(0xc75be8), 0.6));
     root.add(arrowHead(a, b, new THREE.Color(0xc75be8)));
+  }
+
+  // 摇杆灯 → 摇杆（占用状态指示灯绑定），绿色细线
+  for (const light of S.items) {
+    if (stubKindOf(light) !== "MarkerLight") continue;
+    const targetId = light.markerLight?.joystickInstanceId;
+    if (!targetId) continue;
+    const a = linkTop(light.instanceId);
+    const b = linkTop(targetId);
+    if (!a || !b) continue;
+    root.add(linkLine(a, b, new THREE.Color(0x2ea043), 0.5));
+    root.add(arrowHead(a, b, new THREE.Color(0x2ea043)));
   }
 
   // 上菜台 → 回盘台

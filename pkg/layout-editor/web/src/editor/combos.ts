@@ -73,7 +73,7 @@ function linkCannonSwitch(items: EditorItem[]): void {
   S.switchLinks.push({ switchId: sw.instanceId, targetId: cannon.instanceId, trigger: "Launch" });
 }
 
-/** 大炮 + 摇杆（多路控制终端）+ 大炮开关：终端绑定大炮（瞄准权归终端玩家，
+/** 大炮 + 摇杆 + 大炮开关：摇杆绑定大炮（瞄准权归摇杆玩家，
  *  炮内玩家不再控角度），发射按钮联动大炮（trigger: Launch，1:1）。 */
 function linkCannonTerminal(items: EditorItem[]): void {
   const cannon = items[0];
@@ -664,7 +664,7 @@ export const COMBOS: ComboDef[] = [
   {
     id: "cannon_terminal_switch",
     nameZh: "大炮 + 摇杆 + 发射按钮",
-    hint: "自动联动：多路控制终端绑定大炮（终端玩家遥控瞄准，炮内玩家不控角度），星形按钮按下 → 发射（Launch）",
+    hint: "自动联动：摇杆绑定大炮（摇杆玩家遥控瞄准，炮内玩家不控角度），星形按钮按下 → 发射（Launch）",
     parts: [
       { id: "dlc08_cannon", dx: 0, dz: 0 },
       { id: "MultiControlTerminal", dx: 3, dz: 0 },

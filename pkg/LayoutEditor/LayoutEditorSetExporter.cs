@@ -166,6 +166,7 @@ public static class LayoutEditorSetExporter
         { "CoaxialButtonGroup", "coaxial" },
         { "AnimGridMemberSync", "animgrid" },
         { "SwitchStartVisual", "startvisual" },
+        { "AnimPilotFloorMarker", "terminal" },
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub（= 逐场景特征收集的非空判定）。
@@ -1790,20 +1791,53 @@ public static class LayoutEditorSetExporter
         }
     }
 
-    /// <summary>解析 Loader 构建输出 version.txt 的 key=值（如 Loader=3.6.0）。缺失返回 ""。</summary>
+    /// <summary>解析 Loader 构建输出 version.txt 的 key=值（如 Loader=3.6.0）。
+    /// 缺失时回落从 Loader.cs / debugLog.cs 的 PluginVersion 常量读取。</summary>
     private static string LoaderBuildVersion(string key)
     {
         try
         {
             var path = ProjectRootAbsPath() + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/version.txt";
+            if (File.Exists(path))
+            {
+                var lines = File.ReadAllLines(path);
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    var line = (lines[i] ?? "").Trim();
+                    if (line.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
+                        return line.Substring(key.Length + 1).Trim();
+                }
+            }
+        }
+        catch { }
+        return LoaderBuildVersionFromSource(key);
+    }
+
+    private static string LoaderBuildVersionFromSource(string key)
+    {
+        try
+        {
+            string rel;
+            if (string.Equals(key, "Loader", StringComparison.OrdinalIgnoreCase))
+                rel = "/Assets/WebCustomStubRuntime/Loader~/Loader.cs";
+            else if (string.Equals(key, "debugLog", StringComparison.OrdinalIgnoreCase))
+                rel = "/Assets/WebCustomStubRuntime/debugLog~/debugLog.cs";
+            else
+                return "";
+            var path = ProjectRootAbsPath() + rel;
             if (!File.Exists(path))
                 return "";
             var lines = File.ReadAllLines(path);
             for (int i = 0; i < lines.Length; i++)
             {
-                var line = (lines[i] ?? "").Trim();
-                if (line.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
-                    return line.Substring(key.Length + 1).Trim();
+                var line = lines[i] ?? "";
+                var idx = line.IndexOf("PluginVersion = \"", StringComparison.Ordinal);
+                if (idx < 0)
+                    continue;
+                var start = idx + "PluginVersion = \"".Length;
+                var end = line.IndexOf('"', start);
+                if (end > start)
+                    return line.Substring(start, end - start);
             }
         }
         catch { }

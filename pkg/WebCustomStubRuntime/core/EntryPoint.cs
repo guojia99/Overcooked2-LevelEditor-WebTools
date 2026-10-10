@@ -366,6 +366,8 @@ namespace CustomStub
             }
             // 联机诊断打点随核心一起装（冷方法，未激活场景因零介入而零影响）
             EnsureNetDiagPatches();
+            if (s_fTerminal || AnimPilotFloorDrive.ProbeHasAnimPilotFloor())
+                EnsureAnimPilotFloorPatches();
             SetTickerEnabled(true);
             if (!s_activationLogged)
             {
@@ -595,6 +597,33 @@ namespace CustomStub
             catch (Exception ex)
             {
                 StubLog.LogWarn("[CustomStub] 触发区占用同步补丁安装失败（踏板联机外观/fallPad 清理退化为原版行为）: " + ex);
+            }
+            InstallContainerTransferPatches();
+        }
+
+        private static bool s_containerTransferPatched;
+
+        private static void InstallContainerTransferPatches()
+        {
+            if (s_containerTransferPatched)
+                return;
+            try
+            {
+                var harmony = new Harmony(HarmonyId + ".containertransfer");
+                int ok = 0, skip = 0;
+                ok += PatchPair(harmony, GameApi.ServerPlateCanTransferMethod,
+                    HarmonyPatches.ServerPlateCanTransferPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.ServerPrepCanTransferMethod,
+                    HarmonyPatches.ServerPrepCanTransferPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.ServerPrepTransferMethod,
+                    HarmonyPatches.ServerPrepTransferPrefixMethod, null, ref skip);
+                s_containerTransferPatched = ok > 0;
+                if (ok > 0)
+                    StubLog.Log("[CustomStub] 容器转移补丁: 已装 " + ok + " 个（盘子/手持料 → 锅碗）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 容器转移补丁安装失败: " + ex.Message);
             }
         }
 
@@ -864,6 +893,93 @@ namespace CustomStub
         private static bool s_cannonPatched;
         private static bool s_cannonPatchFailed;
 
+        private static bool s_animPilotPatched;
+        private static bool s_animPilotPatchFailed;
+
+        /// <summary>摇杆遥控地板组：ServerPilotMovement / ClientPilotMovement Harmony
+        /// （占格释放、会话前冻结、厨师随动）。按需安装；失败仅损失布局 pilot 修复。</summary>
+        internal static void EnsureAnimPilotFloorPatches()
+        {
+            if (s_animPilotPatched || s_animPilotPatchFailed)
+                return;
+            try
+            {
+                var upd = GameApi.PilotUpdateSynchronisingMethod;
+                var updPre = HarmonyPatches.ServerPilotMovementUpdatePrefixMethod;
+                var updPost = HarmonyPatches.ServerPilotMovementUpdatePostfixMethod;
+                if (upd == null || updPre == null || updPost == null)
+                {
+                    s_animPilotPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] 摇杆地板补丁反射缺失，未装（ServerPilotMovement）");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".animpilot");
+                harmony.Patch(upd, new HarmonyMethod(updPre), new HarmonyMethod(updPost));
+
+                var start = GameApi.PilotStartSynchronisingMethod;
+                var startPost = HarmonyPatches.ServerPilotMovementStartPostfixMethod;
+                if (start != null && startPost != null)
+                    harmony.Patch(start, null, new HarmonyMethod(startPost));
+
+                var assign = GameApi.PilotAssignPlayerMethod;
+                var assignPost = HarmonyPatches.ServerPilotMovementAssignPostfixMethod;
+                if (assign != null && assignPost != null)
+                    harmony.Patch(assign, null, new HarmonyMethod(assignPost));
+
+                var clientAssign = GameApi.ClientPilotAssignAvatarMethod;
+                var clientPost = HarmonyPatches.ClientPilotMovementAssignAvatarPostfixMethod;
+                if (clientAssign != null && clientPost != null)
+                    harmony.Patch(clientAssign, null, new HarmonyMethod(clientPost));
+
+                s_animPilotPatched = true;
+                StubLog.Log("[CustomStub] 摇杆遥控地板补丁已装（AnimPilotFloorDrive·驾驶/随动）");
+                PatchAnimPilotInteractionHooks(harmony);
+            }
+            catch (Exception ex)
+            {
+                s_animPilotPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 摇杆遥控地板补丁安装失败: " + ex);
+            }
+        }
+
+        /// <summary>摇杆邻近交互补丁（CanInteract / SetInteractionObjects / 按键兜底）。
+        /// 与驾驶核心分拆：真机 HarmonyX 对参数名严格，此处失败不拖垮 PilotMovement。</summary>
+        private static void PatchAnimPilotInteractionHooks(Harmony harmony)
+        {
+            try
+            {
+                var clientCan = GameApi.ClientInteractableCanInteractMethod;
+                var clientCanPost = HarmonyPatches.ClientInteractableCanInteractPostfixMethod;
+                if (clientCan != null && clientCanPost != null)
+                    harmony.Patch(clientCan, null, new HarmonyMethod(clientCanPost));
+                var serverCan = GameApi.ServerInteractableCanInteractMethod;
+                var serverCanPost = HarmonyPatches.ServerInteractableCanInteractPostfixMethod;
+                if (serverCan != null && serverCanPost != null)
+                    harmony.Patch(serverCan, null, new HarmonyMethod(serverCanPost));
+
+                var sessionCan = GameApi.ServerSessionInteractableCanInteractMethod;
+                var sessionCanPost = HarmonyPatches.ServerSessionInteractableCanInteractPostfixMethod;
+                if (sessionCan != null && sessionCanPost != null)
+                    harmony.Patch(sessionCan, null, new HarmonyMethod(sessionCanPost));
+
+                var setIo = GameApi.PlayerControlsSetInteractionObjectsMethod;
+                var setIoPost = HarmonyPatches.PlayerControlsSetInteractionObjectsPostfixMethod;
+                if (setIo != null && setIoPost != null)
+                    harmony.Patch(setIo, null, new HarmonyMethod(setIoPost));
+
+                var updInteract = GameApi.ClientPlayerControlsUpdateInteractMethod;
+                var updInteractPost = HarmonyPatches.ClientPlayerControlsUpdateInteractPostfixMethod;
+                if (updInteract != null && updInteractPost != null)
+                    harmony.Patch(updInteract, null, new HarmonyMethod(updInteractPost));
+
+                StubLog.Log("[CustomStub] 摇杆邻近交互补丁已装（AnimPilotJoystick/MemberInteract）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 摇杆邻近交互补丁安装失败（驾驶补丁仍有效）: " + ex);
+            }
+        }
+
         internal static void EnsureCannonPatches()
         {
             if (s_cannonPatched || s_cannonPatchFailed)
@@ -982,6 +1098,8 @@ namespace CustomStub
             ActivateCore("stub 清单命中 " + set + "/" + level + " 特征=" + JoinFeatures(features));
             if (s_fVoidFall)
                 EnsureKillPlanePatches();
+            if (s_fTerminal || AnimPilotFloorDrive.ProbeHasAnimPilotFloor())
+                EnsureAnimPilotFloorPatches();
             HealScene(scene);
             ResetSceneTickers();
         }
@@ -1065,9 +1183,9 @@ namespace CustomStub
                 // 本场景确实用到需要 ticker 的 web stub 才激活核心 ticker/补丁组。
                 if (tickerTags > 0)
                     ActivateCore("扫到 web stub tag × " + tickerTags);
-                // 动画组成员格子换装器：Design/Animated Objects 下全部（孙级）成员补挂
-                // AnimGridMemberSync（零配置、免 tag；编辑器 Play 侧烘焙件在场则跳过）。
-                // 真机上烘焙的 CustomStub 组件是 Missing Script 死件，必须运行时补挂。
+                // 动画组 + 摇杆组成员格子换装器：Design/Animated Objects 与
+                // Design/Pilot Objects 下各组直系成员补挂 AnimGridMemberSync（零配置、
+                // 免 tag；编辑器烘焙件在场则跳过）。真机 Missing Script 须运行时补挂。
                 HealAnimGridMembers();
                 // 节点环步数对账校正器（3.6.0 联机丢步修复）：Design/Animated Objects
                 // 组根补挂 NodeRingSync（免 tag，组件内按 BLPress 参数判定是否节点环）。
@@ -1076,6 +1194,12 @@ namespace CustomStub
                 // 按 PseudoPrefabSwitchStub.startEnabled 扫描补挂（stub 组件随
                 // 场景序列化，sceneLoaded 时已在；child 实例化由组件内协程等待）。
                 HealSwitchStartVisuals();
+                var pilotMarkers = AnimPilotFloorDrive.HealPilotFloorMarkersInScene();
+                if (pilotMarkers > 0)
+                    StubLog.Log("[CustomStub] 自愈 AnimPilotFloorMarker × " + pilotMarkers
+                        + "（摇杆遥控地板组）");
+                if (AnimPilotFloorDrive.ProbeHasAnimPilotFloor())
+                    EnsureAnimPilotFloorPatches();
                 if (stubTags > 0)
                 {
                     // 汇总：只在有 stub tag 的场景打（普通场景不打，避免刷屏）
@@ -1270,37 +1394,60 @@ namespace CustomStub
             }
         }
 
-        /// <summary>动画组成员补挂 AnimGridMemberSync（Static→DynamicGridLocation 换装，
-        /// 让传送带喂料目标随动画移动跟随）。扫 Design/Animated Objects 的组根下全部
-        /// 直接子物体（= 成员 wrapper）；幂等（按 FullName 判重，编辑器烘焙件优先）。</summary>
+        /// <summary>与 PilotGroupBakery.WalkBoxName 一致；摇杆组 rig 行走面非玩法成员。</summary>
+        private const string PilotFloorWalkBoxName = "PilotFloor";
+
+        /// <summary>动画组 / 摇杆组成员补挂 AnimGridMemberSync（Static→DynamicGridLocation
+        /// 换装，占格随组移动）。幂等（按组件名判重，编辑器烘焙件优先）。</summary>
         private static void HealAnimGridMembers()
         {
             try
             {
-                var animatedRoot = GameObject.Find("Design/Animated Objects");
-                if (animatedRoot == null)
-                    return;
-                int healed = 0;
-                for (int g = 0; g < animatedRoot.transform.childCount; g++)
-                {
-                    var groupRoot = animatedRoot.transform.GetChild(g);
-                    for (int m = 0; m < groupRoot.childCount; m++)
-                    {
-                        var member = groupRoot.GetChild(m);
-                        if (HasStubComponentNamed(member.gameObject, "AnimGridMemberSync"))
-                            continue;
-                        member.gameObject.AddComponent<AnimGridMemberSync>();
-                        healed++;
-                    }
-                }
-                if (healed > 0)
-                    StubLog.Log("[CustomStub] 自愈 AnimGridMemberSync × " + healed +
-                        "（动画成员占格将随移动跟随）");
+                int animatedHealed = HealAnimGridMembersUnder("Design/Animated Objects", null);
+                if (animatedHealed > 0)
+                    StubLog.Log("[CustomStub] 自愈 AnimGridMemberSync × " + animatedHealed +
+                        "（Animated Objects，占格将随移动跟随）");
+                int pilotHealed = HealAnimGridMembersUnder("Design/Pilot Objects",
+                    IsPilotFloorRigMember);
+                if (pilotHealed > 0)
+                    StubLog.Log("[CustomStub] 自愈 AnimGridMemberSync × " + pilotHealed +
+                        "（Pilot Objects，摇杆地板成员占格将随移动跟随）");
             }
             catch (Exception ex)
             {
                 StubLog.LogWarn("[CustomStub] AnimGridMemberSync 扫描失败: " + ex.Message);
             }
+        }
+
+        private static bool IsPilotFloorRigMember(Transform member)
+        {
+            return member != null && member.name == PilotFloorWalkBoxName;
+        }
+
+        /// <summary>组根容器下直系成员 wrapper 补挂 AnimGridMemberSync；skipMember 为 true 时跳过。</summary>
+        private static int HealAnimGridMembersUnder(string designChildPath,
+            Func<Transform, bool> skipMember)
+        {
+            var container = GameObject.Find(designChildPath);
+            if (container == null)
+                return 0;
+            int healed = 0;
+            var containerTr = container.transform;
+            for (int g = 0; g < containerTr.childCount; g++)
+            {
+                var groupRoot = containerTr.GetChild(g);
+                for (int m = 0; m < groupRoot.childCount; m++)
+                {
+                    var member = groupRoot.GetChild(m);
+                    if (skipMember != null && skipMember(member))
+                        continue;
+                    if (HasStubComponentNamed(member.gameObject, "AnimGridMemberSync"))
+                        continue;
+                    member.gameObject.AddComponent<AnimGridMemberSync>();
+                    healed++;
+                }
+            }
+            return healed;
         }
 
         /// <summary>节点环步数对账校正器补挂（3.6.0 联机偶发丢步修复）：Design/
@@ -1794,6 +1941,8 @@ namespace CustomStub
                         if ((frame + CannonGuardRefreshPhase) % CannonGuardRefreshIntervalFrames == 0)
                             CannonGuard.TickRefresh();
                     }
+                    if (s_fTerminal || s_animPilotPatched)
+                        AnimPilotFloorDrive.TickPositionLocks();
                 }
                 catch (Exception ex)
                 {

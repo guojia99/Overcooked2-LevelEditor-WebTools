@@ -1,5 +1,6 @@
 import {
   snapFootprintCenter,
+  snapFootprintCenterAligned,
   snapCenterPivot,
   snapValue
 } from "../snap";
@@ -160,6 +161,62 @@ export function snapPlacement(
   const magnetized =
     Math.hypot(snapped.x - wx, snapped.z - wz) <= MAGNET_THRESHOLD ? snapped : free;
   return magnetized;
+}
+
+function floorGridOrigin(): { x: number; z: number } {
+  if (S.gridInfo?.found) {
+    return { x: S.gridInfo.worldPosition.x, z: S.gridInfo.worldPosition.z };
+  }
+  return { x: 0, z: 0 };
+}
+
+/** 木筏：最左/最前拼板格心为锚点，中心 = 锚 + (w-1)/2·格（与写回拼板一致）。 */
+function snapRaftCenterAligned(
+  wx: number,
+  wz: number,
+  cellsX: number,
+  cellsZ: number,
+  originX: number,
+  originZ: number,
+  step: number
+): { x: number; z: number } {
+  const halfSpanX = ((cellsX - 1) / 2) * CELL;
+  const halfSpanZ = ((cellsZ - 1) / 2) * CELL;
+  const minX = wx - halfSpanX;
+  const minZ = wz - halfSpanZ;
+  const sMinX = originX + snapValue(minX - originX, step);
+  const sMinZ = originZ + snapValue(minZ - originZ, step);
+  return { x: sMinX + halfSpanX, z: sMinZ + halfSpanZ };
+}
+
+/** 地板移动/放置：占地边贴 0.6m 半格点阵（相对场景网格原点），与物品磁吸规则一致。 */
+export function snapFloorCenter(
+  wx: number,
+  wz: number,
+  cellsX: number,
+  cellsZ: number,
+  rotY: number,
+  surfaceKind?: string
+): { x: number; z: number } {
+  const free = { x: snapValue(wx, S.freeSnapStep), z: snapValue(wz, S.freeSnapStep) };
+  if (!S.snapEnabled) return free;
+  const o = floorGridOrigin();
+  const snapped =
+    surfaceKind === "raft"
+      ? snapRaftCenterAligned(wx, wz, cellsX, cellsZ, o.x, o.z, HALF_CELL)
+      : snapFootprintCenterAligned(
+          wx,
+          wz,
+          cellsX,
+          cellsZ,
+          rotY,
+          CELL,
+          HALF_CELL,
+          o.x,
+          o.z
+        );
+  if (Math.hypot(snapped.x - wx, snapped.z - wz) <= MAGNET_THRESHOLD) return snapped;
+  return free;
 }
 
 export function normalizeRot(deg: number): number {

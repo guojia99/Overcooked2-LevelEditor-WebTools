@@ -5,13 +5,13 @@ import {
   EditorFloor,
   EditorItem
 } from "./state";
-import { snapFootprintCenter } from "../snap";
 import {
   uuid,
   normalizeRot,
   canvasToWorld,
   newEditorKey,
-  prefabIdFromPath
+  prefabIdFromPath,
+  snapFloorCenter
 } from "./coords";
 import { setStatus } from "./status";
 import {
@@ -26,6 +26,7 @@ import { materialDisplayLabel } from "../floorMaterialLabels";
 import { catalogItemById, catalogItemForGuidOrPath, isBackgroundPlaneCat, isStandingWaterQuadCat } from "./catalog";
 import { setItemPlaneSize } from "./items";
 import { defaultNewFloorY } from "./floorHeight";
+import { floorInCurrentPart, stampNewFloorPart } from "./partLevel";
 import type {
   CatalogItem,
   FloorMaterial
@@ -174,15 +175,16 @@ export function dragFloor(f: EditorFloor, mx: number, my: number) {
 /** 世界坐标版拖拽（2D 由 dragFloor 换算后调用；3D 视口直接用射线交点调用）。 */
 export function dragFloorWorld(f: EditorFloor, wx: number, wz: number) {
   if (S.dragFloorMode === "move") {
-    if (f.surfaceKind === "raft") {
-      f._wx = wx;
-      f._wz = wz;
-      snapRaftCenterToGrid(f);
-    } else {
-      const snapped = snapFootprintCenter(wx, wz, f._wCells, f._dCells, f.localRotationY ?? 0, CELL, HALF_CELL);
-      f._wx = snapped.x;
-      f._wz = snapped.z;
-    }
+    const snapped = snapFloorCenter(
+      wx,
+      wz,
+      f._wCells,
+      f._dCells,
+      f.localRotationY ?? 0,
+      f.surfaceKind
+    );
+    f._wx = snapped.x;
+    f._wz = snapped.z;
   } else {
     // Resize: opposite corner (anchor) stays fixed; compute new width/depth.
     const rad = (normalizeRot(f.localRotationY) * Math.PI) / 180;
@@ -208,35 +210,49 @@ export function dragFloorWorld(f: EditorFloor, wx: number, wz: number) {
 
 export function snapRaftCenterToGrid(f: EditorFloor): void {
   if (f.surfaceKind !== "raft") return;
-  const ox = S.gridInfo?.found ? S.gridInfo.worldPosition.x : 0;
-  const oz = S.gridInfo?.found ? S.gridInfo.worldPosition.z : 0;
+  const snapped = snapFloorCenter(f._wx, f._wz, f._wCells, f._dCells, f.localRotationY ?? 0, "raft");
+  f._wx = snapped.x;
+  f._wz = snapped.z;
+}
+
+/** 木筏矩形中心 = min + (w-1)/2·格；实心 Plane = min + w/2·格（奇数宽时差半格）。
+ *  仅在 surfaceKind 切换时调用，避免点击区域与 walkable/视觉错位。 */
+export function reanchorFloorCenterLeavingRaft(f: EditorFloor): void {
   const minX = f._wx - ((f._wCells - 1) / 2) * CELL;
   const minZ = f._wz - ((f._dCells - 1) / 2) * CELL;
-  const sMinX = ox + Math.round((minX - ox) / CELL) * CELL;
-  const sMinZ = oz + Math.round((minZ - oz) / CELL) * CELL;
-  f._wx = sMinX + ((f._wCells - 1) / 2) * CELL;
-  f._wz = sMinZ + ((f._dCells - 1) / 2) * CELL;
+  f._wx = minX + (f._wCells * CELL) / 2;
+  f._wz = minZ + (f._dCells * CELL) / 2;
+}
+
+export function reanchorFloorCenterEnteringRaft(f: EditorFloor): void {
+  const minX = f._wx - (f._wCells * CELL) / 2;
+  const minZ = f._wz - (f._dCells * CELL) / 2;
+  f._wx = minX + ((f._wCells - 1) / 2) * CELL;
+  f._wz = minZ + ((f._dCells - 1) / 2) * CELL;
+}
+
+/** 实心 Plane 写回用的 scale（Unity 默认 10×10  mesh）。 */
+export function applySolidPlaneMeshFields(f: EditorFloor): void {
+  f.meshType = "plane";
+  f.meshFileId = 10209;
+  f.localScale = {
+    x: (f._wCells * CELL) / 10,
+    y: 1,
+    z: (f._dCells * CELL) / 10,
+  };
 }
 
 export function finalizeFloor(f: EditorFloor) {
-  if (f.surfaceKind === "raft") {
-    // Raft planks snap to the global CELL grid instead of the half-cell step.
-    snapRaftCenterToGrid(f);
-  } else {
-    // Snap by footprint edges (same as items) so adjacent floors share a common grid edge
-    // instead of independently rounding centers, which can create half-cell overlaps/gaps.
-    const snapped = snapFootprintCenter(
-      f._wx,
-      f._wz,
-      f._wCells,
-      f._dCells,
-      f.localRotationY ?? 0,
-      CELL,
-      HALF_CELL
-    );
-    f._wx = snapped.x;
-    f._wz = snapped.z;
-  }
+  const snapped = snapFloorCenter(
+    f._wx,
+    f._wz,
+    f._wCells,
+    f._dCells,
+    f.localRotationY ?? 0,
+    f.surfaceKind
+  );
+  f._wx = snapped.x;
+  f._wz = snapped.z;
   f.localPosition.x = f._wx;
   f.localPosition.z = f._wz;
   f.worldPosition.x = f._wx;
@@ -327,6 +343,57 @@ export function tryMatchFloorMaterialBySize(f: EditorFloor) {
   }
 }
 
+/** 当前 P 下可编辑的地板块数（不含背景板）。 */
+export function editableFloorCount(): number {
+  return S.floors.filter((f) => f.surfaceKind !== "background" && floorInCurrentPart(f)).length;
+}
+
+/** 仅有 walkable、无 floors[] 时（木筏→实心写回后偶发），从可行走矩形恢复编辑用地板块。 */
+export function recoverFloorsFromWalkableIfNeeded(): number {
+  if (editableFloorCount() > 0 || S.walkable.length === 0) return 0;
+  pushHistory();
+  const defaultMat = S.floorMaterials.find((m) => /floor|blacktiles|path/i.test(m.id));
+  let added = 0;
+  for (const r of S.walkable) {
+    const wCells = Math.max(1, Math.round(r.sx / CELL));
+    const dCells = Math.max(1, Math.round(r.sz / CELL));
+    const key = newEditorKey();
+    const id = `new:fromWalkable:${uuid()}`;
+    const y = defaultNewFloorY(-0.05);
+    const floor: EditorFloor = {
+      instanceId: id,
+      _key: key,
+      hierarchyPath: id,
+      parentPath: "Art/Ground",
+      displayName: "Floor",
+      surfaceKind: r.surfaceType === "ice" ? "ice" : "solid",
+      meshType: "plane",
+      meshFileId: 10209,
+      materialGuid: defaultMat?.guid,
+      materialAssetPath: defaultMat?.assetPath,
+      materialName: defaultMat?.id,
+      localPosition: { x: r.cx, y, z: r.cz },
+      worldPosition: { x: r.cx, y, z: r.cz },
+      localRotationY: 0,
+      localScale: { x: (wCells * CELL) / 10, y: 1, z: (dCells * CELL) / 10 },
+      widthUnits: wCells * CELL,
+      depthUnits: dCells * CELL,
+      widthCells: wCells,
+      depthCells: dCells,
+      _wx: r.cx,
+      _wz: r.cz,
+      _wCells: wCells,
+      _dCells: dCells,
+    };
+    stampNewFloorPart(floor);
+    applySolidPlaneMeshFields(floor);
+    finalizeFloor(floor);
+    S.floors.push(floor);
+    added++;
+  }
+  return added;
+}
+
 export function pointInWalkable(wx: number, wz: number): boolean {
   for (const r of S.walkable) {
     if (Math.abs(wx - r.cx) <= r.sx / 2 + 0.01 && Math.abs(wz - r.cz) <= r.sz / 2 + 0.01)
@@ -341,7 +408,7 @@ export function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | nul
   const key = newEditorKey();
   const w = 4;
   const d = 4;
-  const snapped = snapFootprintCenter(wx, wz, w, d, 0, CELL, HALF_CELL);
+  const snapped = snapFloorCenter(wx, wz, w, d, 0);
   const defaultMat = S.floorMaterials.find((m) => /floor|blacktiles|path/i.test(m.id));
   const floor: EditorFloor = {
     instanceId: id,
@@ -371,6 +438,8 @@ export function addFloorAt(wx: number, wz: number, themedCat?: CatalogItem | nul
     _dCells: d,
   };
   if (!themedCat) syncMaterialTilingToSize(floor);
+  // 分 P：新建地板归入当前 P。
+  stampNewFloorPart(floor);
   S.floors.push(floor);
   setFloorSelection([key]);
   draw();
@@ -387,7 +456,7 @@ export function addAirFloorAt(wx: number, wz: number) {
   const key = newEditorKey();
   const w = 4;
   const d = 4;
-  const snapped = snapFootprintCenter(wx, wz, w, d, 0, CELL, HALF_CELL);
+  const snapped = snapFloorCenter(wx, wz, w, d, 0);
   const floor: EditorFloor = {
     instanceId: id,
     _key: key,
@@ -411,6 +480,8 @@ export function addAirFloorAt(wx: number, wz: number) {
     _wCells: w,
     _dCells: d,
   };
+  // 分 P：新建空气地板归入当前 P。
+  stampNewFloorPart(floor);
   S.floors.push(floor);
   setFloorSelection([key]);
   draw();
@@ -444,7 +515,8 @@ export function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | unde
 }
 
 export function mergeRaftItemsIntoFloors(): void {
-  const raftOf = (it: EditorItem) => S.catalogByGuid.get(it.prefabGuid)?.surfaceKind === "raft";
+  const raftOf = (it: EditorItem) =>
+    catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath)?.surfaceKind === "raft";
   // 动画组成员不吸收（同 mergeThemedItemsIntoFloors：吸收会让成员脱离动画组）。
   const memberIds = new Set<string>();
   for (const g of S.animControls) {
@@ -452,7 +524,8 @@ export function mergeRaftItemsIntoFloors(): void {
   }
   const rafts = S.items.filter((it) => raftOf(it) && !(it.instanceId && memberIds.has(it.instanceId)));
   if (rafts.length === 0) return;
-  const catalogId = (it: EditorItem) => S.catalogByGuid.get(it.prefabGuid)?.id ?? "";
+  const catalogId = (it: EditorItem) =>
+    catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath)?.id ?? "";
   const isPrimary = (it: EditorItem) => catalogId(it) === "raft_raft_middle_01";
 
   const TOL = 0.05;
@@ -551,6 +624,8 @@ export function mergeRaftItemsIntoFloors(): void {
       _wz: czW,
       _wCells: w,
       _dCells: d,
+      // 分 P：合并出的木筏地板继承拼板（同簇同 P）的阶段归属。
+      partId: cluster[0]?.partId,
     });
   }
 }
@@ -570,7 +645,7 @@ export function mergeThemedItemsIntoFloors(): void {
     // 缺失导致 isThemedFloorPrefab 误判也不转换）。
     if (it.stubKind === "PressureSwitch") continue;
     if (it.instanceId && memberIds.has(it.instanceId)) continue;
-    const cat = S.catalogByGuid.get(it.prefabGuid);
+    const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
     if (!isThemedFloorPrefab(cat)) continue;
     const c = cat!;
 
@@ -616,6 +691,8 @@ export function mergeThemedItemsIntoFloors(): void {
       _wz: it._wz,
       _wCells: w,
       _dCells: d,
+      // 分 P：合并出的主题地板继承源物品的阶段归属。
+      partId: it.partId,
     });
     consumed.add(it._editorKey);
   }

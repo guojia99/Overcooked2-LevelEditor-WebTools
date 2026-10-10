@@ -62,11 +62,12 @@ public static class AnimGroupBakery
     /// <summary>Bakes every group in <paramref name="data"/> into the scene, assigning
     /// auto-generated trigger names / group hierarchy paths back into the DTO.
     /// Returns an error string (non-null) when groups could not be baked.</summary>
-    public static string Sync(Scene scene, AnimControlDataDto data)
+    public static string Sync(Scene scene, AnimControlDataDto data,
+        LayoutDocumentDto document, Dictionary<string, GameObject> createdObjects)
     {
         try
         {
-            return SyncInner(scene, data);
+            return SyncInner(scene, data, document, createdObjects);
         }
         catch (Exception e)
         {
@@ -77,7 +78,8 @@ public static class AnimGroupBakery
         }
     }
 
-    private static string SyncInner(Scene scene, AnimControlDataDto data)
+    private static string SyncInner(Scene scene, AnimControlDataDto data,
+        LayoutDocumentDto document, Dictionary<string, GameObject> createdObjects)
     {
         var sceneDir = Path.GetDirectoryName(scene.path);
         if (string.IsNullOrEmpty(sceneDir)) return "Move control: scene path unavailable.";
@@ -117,6 +119,10 @@ public static class AnimGroupBakery
             foreach (var g in data.groups)
             {
                 if (g == null) continue;
+                // 摇杆操控组走 PilotGroupBakery（原版 PilotMovement 刚体驾驶，
+                // 无 Animator/剪辑/资产），此处跳过；CleanupStale 只扫
+                // Animator/TriggerQueue，不会误删其组根。
+                if (g.groupKind == "pilot") continue;
                 if (skipFx.Contains(g)) continue;
                 var key = BuildAssetKey(sceneName, g);
                 string otherName;
@@ -136,7 +142,7 @@ public static class AnimGroupBakery
                 string err;
                 try
                 {
-                    err = BakeGroup(scene, g, animDir, sceneName, usedAssets);
+                    err = BakeGroup(scene, g, animDir, sceneName, usedAssets, document, createdObjects);
                 }
                 catch (Exception bakeEx)
                 {
@@ -243,7 +249,8 @@ public static class AnimGroupBakery
     // ------------------------------------------------------------------- groups
 
     private static string BakeGroup(Scene scene, AnimGroupDto group, string animDir,
-        string sceneName, HashSet<string> usedAssets)
+        string sceneName, HashSet<string> usedAssets,
+        LayoutDocumentDto document, Dictionary<string, GameObject> createdObjects)
     {
         LayoutEditorLog.Log("anim group: baking group \"" + (group.displayName ?? "?") +
             "\" id=" + (group.id ?? "?") + " path=" + (group.groupHierarchyPath ?? "?") +
@@ -324,8 +331,11 @@ public static class AnimGroupBakery
             var go = ResolveMember(id, pathById);
             if (go == null)
             {
-                LayoutEditorLog.LogWarning("anim group: scene object not found for floor " +
-                    (group.displayName ?? "?") + " (" + id + ")");
+                if (document == null || !RaftFloorGroupMembers.IsRaftFloorMember(id, document))
+                {
+                    LayoutEditorLog.LogWarning("anim group: scene object not found for floor " +
+                        (group.displayName ?? "?") + " (" + id + ")");
+                }
                 continue;
             }
             members.Add(go);
@@ -342,6 +352,7 @@ public static class AnimGroupBakery
             }
             members.Add(go);
         }
+        RaftFloorGroupMembers.AppendRaftPlankMembers(group, document, createdObjects, members);
         if (members.Count == 0)
         {
             LayoutEditorLog.LogWarning("anim group: \"" + (group.displayName ?? "?") +
@@ -2773,6 +2784,8 @@ public static class AnimGroupBakery
                 // Button-link logic controllers (BtnLogic_/BtnPair_) are managed by
                 // ButtonLinkBakery — never treat them as stale move-control assets.
                 if (ButtonLinkBakery.IsButtonLogicAsset(norm)) continue;
+                // 分 P slot 转场资产由 PartTransitionBakery 管理生命周期。
+                if (PartTransitionBakery.IsPartSlotAsset(norm)) continue;
                 bool ours = norm.StartsWith(prefix, StringComparison.Ordinal) ||
                             norm.Contains("/" + OldMoveAnimsFolderName + "/");
                 if (!ours) continue;
@@ -2851,6 +2864,7 @@ public static class AnimGroupBakery
         {
             var path = AssetDatabase.GUIDToAssetPath(guid).Replace('\\', '/');
             if (ButtonLinkBakery.IsButtonLogicAsset(path)) continue;
+            if (PartTransitionBakery.IsPartSlotAsset(path)) continue;
             if (!path.StartsWith(prefix, StringComparison.Ordinal)) continue;
             if (usedAssets.Contains(path)) continue;
             AssetDatabase.DeleteAsset(path);
@@ -2995,8 +3009,45 @@ public static class AnimGroupBakery
     }
 
     /// <summary>成员 wrapper 上反射挂载 CustomStub.AnimGridMemberSync（类型缺失仅
-    /// 告警跳过——静止/无喂料成员本来就不需要）。</summary>
-    private static void AttachAnimGridMemberSync(GameObject member)
+    /// 告警跳过——静止/无喂料成员本来就不需要）。internal：摇杆组烘焙
+    /// （PilotGroupBakery）复用同一换装器。</summary>
+    internal static void AttachAnimPilotFloorMarker(GameObject pilotGroupRoot, GameObject joystickPseudoRoot)
+    {
+        if (pilotGroupRoot == null || joystickPseudoRoot == null)
+            return;
+        try
+        {
+            var markerType = LayoutEditorStubIO.FindCustomStubType(pilotGroupRoot, "AnimPilotFloorMarker");
+            if (markerType == null)
+            {
+                Debug.LogWarning("[LayoutEditor] pilot group: 找不到 CustomStub.AnimPilotFloorMarker"
+                    + "（WebCustomStubRuntime 未编译？）——摇杆地板会话/占格修复可能失效");
+                return;
+            }
+            var marker = pilotGroupRoot.GetComponent(markerType);
+            if (marker == null)
+                marker = Undo.AddComponent(pilotGroupRoot, markerType);
+            Undo.RecordObject(marker, "Layout Editor Pilot Group");
+            var prop = markerType.GetProperty("JoystickPseudoRoot");
+            if (prop != null && prop.CanWrite)
+                prop.SetValue(marker, joystickPseudoRoot, null);
+            else
+            {
+                var field = markerType.GetField("joystickPseudoRoot",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                if (field != null)
+                    field.SetValue(marker, joystickPseudoRoot);
+            }
+            EditorUtility.SetDirty(marker);
+        }
+        catch (Exception e)
+        {
+            LayoutEditorLog.LogWarning("pilot group: 挂载 AnimPilotFloorMarker 失败 "
+                + pilotGroupRoot.name + ": " + e.Message);
+        }
+    }
+
+    internal static void AttachAnimGridMemberSync(GameObject member)
     {
         try
         {

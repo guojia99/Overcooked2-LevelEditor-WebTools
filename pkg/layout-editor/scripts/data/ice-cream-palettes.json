@@ -93,13 +93,13 @@
     },
     {
       "id": "Web_IceCream_Raspberry",
-      "zh": "覆盆子冰淇淋",
+      "zh": "树莓冰淇淋",
       "scoop": "#FF90A8",
       "glass": "#F5E8EC",
       "spoon": "#4A6FA5",
-      "garnishZh": "杯沿 2 颗覆盆子（一颗对半）",
+      "garnishZh": "杯沿 2 颗树莓（一颗对半）",
       "garnishEn": "two raspberries, one halved",
-      "stylePromptZh": "玫红覆盆子双球、深蓝勺子、覆盆子装饰；酸甜红莓",
+      "stylePromptZh": "玫红树莓双球、深蓝勺子、树莓装饰；酸甜红莓",
       "stylePromptEn": "rose raspberry scoops, navy spoon, raspberry garnish; tart-sweet"
     },
     {

@@ -14,6 +14,7 @@ import {
 import { selectionKeys } from "./selection";
 import { isPlayerItem } from "./renderItems";
 import { pushHistory } from "./historyOps";
+import { finalizeFloor } from "./floors";
 import { setStatus } from "./status";
 import { rotateItemByDelta, moveBlockedAt } from "./items";
 import { trySnapUtensilToHost } from "../stacking";
@@ -417,8 +418,9 @@ export function batchNudgeSelected(dx: number, dz: number, dy = 0): void {
   }
   pushHistory();
   for (const f of floors) {
-    f._wx = snapValue(f._wx + dx, S.freeSnapStep);
-    f._wz = snapValue(f._wz + dz, S.freeSnapStep);
+    f._wx += dx;
+    f._wz += dz;
+    finalizeFloor(f);
   }
   for (const it of items) {
     if (moveBlockedAt(it, it._wx + dx, it._wz + dz, ignore)) continue;

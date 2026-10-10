@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-08T06:44:39.022Z",
-  "schemaVersion": 8,
+  "generatedAt": "2026-10-10T03:24:58.484Z",
+  "schemaVersion": 10,
   "itemCount": 111,
   "ingredients": [
     {
@@ -166,15 +166,6 @@
       "nameEn": "Honey",
       "assetPath": "Assets/common01/food/Ingredients/HoneycombSO.asset",
       "group": "core",
-      "icon": true
-    },
-    {
-      "guid": "2c4b11eca006b60f3ae5a95e5cf4c609",
-      "id": "raspberry",
-      "nameZh": "覆盆子",
-      "nameEn": "Raspberry",
-      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Raspberry.asset",
-      "group": "dlc08",
       "icon": true
     },
     {
@@ -718,6 +709,15 @@
       "nameEn": "Sushi Fish",
       "assetPath": "Assets/common01/food/Ingredients/SushiFishSO.asset",
       "group": "core",
+      "icon": true
+    },
+    {
+      "guid": "2c4b11eca006b60f3ae5a95e5cf4c609",
+      "id": "raspberry",
+      "nameZh": "树莓",
+      "nameEn": "Raspberry",
+      "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_Raspberry.asset",
+      "group": "dlc08",
       "icon": true
     },
     {

@@ -216,11 +216,14 @@ static class LayoutEditorCookingUtensilGuard
         }
 
         // 终端：无 pilotableObject 时宿主 PseudoPrefabTerminal.Setup 抛 UnassignedReferenceException。
+        // 摇杆组内终端由 PilotGroupBakery 烘焙期直写绑定，此处勿降级（否则丢 TerminalStub → Play NRE）。
         foreach (var runtime in UnityEngine.Object.FindObjectsOfType<PseudoPrefabTerminal>())
         {
             try
             {
                 var go = runtime.gameObject;
+                if (PilotGroupBakery.IsUnderPilotRoot(go.transform))
+                    continue;
                 var stub = go.GetComponent<PseudoPrefabTerminalStub>();
                 if (stub == null || stub.pilotableObject == null)
                 {

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-08T06:44:38.977Z",
-  "schemaVersion": 8,
+  "generatedAt": "2026-10-10T03:24:58.425Z",
+  "schemaVersion": 10,
   "gridCellSize": 1.2,
   "itemCount": 3481,
   "itemChunks": [
@@ -88,11 +88,18 @@
       "itemCount": 7
     },
     {
+      "key": "mechanisms/joystick",
+      "labelZh": "核心 · 摇杆",
+      "labelEn": "Joystick & marker light",
+      "layoutTier": "core",
+      "itemCount": 3
+    },
+    {
       "key": "mechanisms",
       "labelZh": "核心 · 机关",
       "labelEn": "Mechanisms",
       "layoutTier": "core",
-      "itemCount": 24
+      "itemCount": 21
     },
     {
       "key": "surface",

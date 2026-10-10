@@ -35,6 +35,7 @@ public static class LayoutEditorStubIO
         item.switchStub = null;
         item.pressureSwitch = null;
         item.terminal = null;
+        item.markerLight = null;
         item.cannon = null;
         item.pseudoPrefabGuid = null;
         item.meshWithMaterial = null;
@@ -393,15 +394,21 @@ public static class LayoutEditorStubIO
             var tdto = new LayoutTerminalStubDto();
             if (terminal.pilotableObject != null)
             {
-                // 反向映射：pilotable 已被重定向到伪 prefab child 时，上报其伪根
-                // instanceId（与前端 item id 对齐，往返不丢绑定显示）。
-                var idGo = terminal.pilotableObject;
-                var parentT = idGo.transform.parent;
-                if (parentT != null
-                    && parentT.GetComponent<PilotMovement>() == null
-                    && parentT.GetComponent<PseudoPrefab>() != null)
-                    idGo = parentT.gameObject;
-                tdto.pilotableObjectInstanceId = "u:" + idGo.GetInstanceID();
+                // 摇杆组根绑定不导出 "u:" id（组根每次烘焙可重建，id 会过期成
+                // 死引用 → 下次写回被误降级）；权威引用在 pilot 组的
+                // terminalInstanceId（AnimGroupImporter 反查回填）。
+                if (!PilotGroupBakery.IsUnderPilotRoot(terminal.pilotableObject.transform))
+                {
+                    // 反向映射：pilotable 已被重定向到伪 prefab child 时，上报其伪根
+                    // instanceId（与前端 item id 对齐，往返不丢绑定显示）。
+                    var idGo = terminal.pilotableObject;
+                    var parentT = idGo.transform.parent;
+                    if (parentT != null
+                        && parentT.GetComponent<PilotMovement>() == null
+                        && parentT.GetComponent<PseudoPrefab>() != null)
+                        idGo = parentT.gameObject;
+                    tdto.pilotableObjectInstanceId = "u:" + idGo.GetInstanceID();
+                }
             }
             item.terminal = tdto;
             return;
@@ -425,6 +432,30 @@ public static class LayoutEditorStubIO
                 hdto.heatedStationInstanceId = "u:" + idGo.GetInstanceID();
             }
             item.heatedOven = hdto;
+            return;
+        }
+
+        // 摇杆灯（ControlTerminal_Marker）：绑定 = 伪根上的 WebCustomStubRuntime
+        // JoystickMarkerLink 组件（序列化 GameObject 引用）。未绑定的灯也标记
+        // stubKind（前端右键面板/连线识别），markerLight 留空。
+        var markerLightStub = go.GetComponent<PseudoPrefabMarkerStub>();
+        if (markerLightStub != null)
+        {
+            item.stubKind = "MarkerLight";
+            var mdto = new LayoutMarkerLightStubDto();
+            var linkType = FindCustomStubType(go, "JoystickMarkerLink");
+            if (linkType != null)
+            {
+                var link = go.GetComponent(linkType);
+                if (link != null)
+                {
+                    var f = linkType.GetField("joystickWrapper");
+                    var jw = f != null ? f.GetValue(link) as GameObject : null;
+                    if (jw != null)
+                        mdto.joystickInstanceId = "u:" + jw.GetInstanceID();
+                }
+            }
+            item.markerLight = mdto;
             return;
         }
 
@@ -1262,8 +1293,11 @@ public static class LayoutEditorStubIO
         {
             // 终端未配置 pilotableObject：宿主 PseudoPrefabTerminal.Setup 抛
             // UnassignedReferenceException。降级为普通道具。
+            // 摇杆组绑定的终端除外（绑定由 PilotGroupBakery 烘焙期直写）。
             if (item.terminal == null)
             {
+                if (PilotGroupBakery.IsTerminalPilotBound(item.instanceId))
+                    return;
                 var ts = go.GetComponent<PseudoPrefabTerminalStub>();
                 LayoutEditorLog.LogWarning("[LayoutEditor] Apply Terminal: 终端未配置可操控对象，" +
                     "已降级为普通道具: " + go.name);
@@ -1280,6 +1314,11 @@ public static class LayoutEditorStubIO
             var rid0 = item.terminal.pilotableObjectInstanceId ?? "";
             if (string.IsNullOrEmpty(rid0))
             {
+                // 摇杆组绑定（组 → 终端，权威在 AnimGroupDto.terminalInstanceId）
+                // 由 PilotGroupBakery 在烘焙期直写 stub 字段（晚于本首轮），
+                // 不视为未配置、不降级。
+                if (PilotGroupBakery.IsTerminalPilotBound(item.instanceId))
+                    return;
                 if (terminal.pilotableObject == null)
                 {
                     LayoutEditorLog.LogWarning("[LayoutEditor] Apply Terminal: 终端未配置可操控对象，" +
@@ -1288,6 +1327,16 @@ public static class LayoutEditorStubIO
                 }
                 return;
             }
+            return;
+        }
+
+        if (item.stubKind == "MarkerLight")
+        {
+            // 摇杆灯：绑定解析在第二趟（ApplyMarkerJoystickLink，joystick 可能是
+            // 本轮 new: 物品）。此处只处理「解绑」——清掉残留 link 组件。
+            var mrid = item.markerLight != null ? (item.markerLight.joystickInstanceId ?? "") : "";
+            if (string.IsNullOrEmpty(mrid))
+                RemoveMarkerJoystickLink(go);
             return;
         }
 
@@ -1373,6 +1422,66 @@ public static class LayoutEditorStubIO
         if (pp != null && pp.childGameObject != null
             && pp.childGameObject.GetComponent<PilotMovement>() != null)
             terminal.pilotableObject = pp.childGameObject;
+    }
+
+    /// <summary>Second pass: 摇杆灯 → 摇杆绑定。目标 = 摇杆（Terminal）伪根；
+    /// 解析失败或空 id = 解绑（移除 link 组件）。组件为 WebCustomStubRuntime
+    /// JoystickMarkerLink（反射挂载，类型缺失仅告警——灯退化为纯装饰）。</summary>
+    public static void ApplyMarkerJoystickLink(GameObject go, string joystickInstanceId,
+        System.Collections.Generic.Dictionary<string, GameObject> createdObjects)
+    {
+        if (go == null)
+            return;
+        var linkType = FindCustomStubType(go, "JoystickMarkerLink");
+        if (linkType == null)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] Apply MarkerLight: 找不到 CustomStub.JoystickMarkerLink" +
+                "（WebCustomStubRuntime 未编译？）——摇杆灯绑定跳过: " + go.name);
+            return;
+        }
+        var target = string.IsNullOrEmpty(joystickInstanceId)
+            ? null
+            : ResolveRefObject(joystickInstanceId, createdObjects);
+        var link = go.GetComponent(linkType);
+        if (target == null)
+        {
+            if (link != null)
+            {
+                Undo.RecordObject(link, "Layout Editor Marker Light");
+                Undo.DestroyObjectImmediate(link);
+            }
+            return;
+        }
+        var f = linkType.GetField("joystickWrapper");
+        if (f == null)
+        {
+            WarnApply("[LayoutEditor] Apply MarkerLight: JoystickMarkerLink 缺少 joystickWrapper 字段: " + go.name);
+            return;
+        }
+        if (link == null)
+            link = Undo.AddComponent(go, linkType);
+        else
+            Undo.RecordObject(link, "Layout Editor Marker Light");
+        f.SetValue(link, target);
+        EditorUtility.SetDirty(link);
+    }
+
+    /// <summary>移除摇杆灯上的绑定组件（解绑 / 类型不可用时的清理）。</summary>
+    private static void RemoveMarkerJoystickLink(GameObject go)
+    {
+        if (go == null) return;
+        try
+        {
+            var linkType = FindCustomStubType(go, "JoystickMarkerLink");
+            if (linkType == null) return;
+            var link = go.GetComponent(linkType);
+            if (link != null)
+                Undo.DestroyObjectImmediate(link);
+        }
+        catch (Exception e)
+        {
+            LayoutEditorLog.LogWarning("marker light: 移除 JoystickMarkerLink 失败 " + go.name + ": " + e.Message);
+        }
     }
 
     /// <summary>Second pass: resolve a Terminal's pilotable object. The id is either

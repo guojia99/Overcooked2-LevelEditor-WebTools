@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -38,6 +39,45 @@ public static class LayoutEditorBatchExport
             var st = LayoutEditorSetExporter.GetStatus();
             Debug.Log("[BatchExport] 结果 set=" + st.setName + " status=" + st.status
                 + " zip=" + st.zipFileName + " files=" + st.fileCount
+                + (string.IsNullOrEmpty(st.error) ? "" : " error=" + st.error));
+            if (st.status != "done")
+                exitCode = 3;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+            exitCode = 1;
+        }
+        EditorApplication.Exit(exitCode);
+    }
+
+    /// <summary>仅导出依赖包（staging + commonW + webcustomstub_runtime + Loader.dll）：
+    ///   Unity -batchmode -quit -projectPath &lt;root&gt; -executeMethod LayoutEditorBatchExport.RunDeps -logFile &lt;path&gt;
+    /// 可选 -depsVersion=3.8.7（默认与 StubVersion 对齐）。</summary>
+    public static void RunDeps()
+    {
+        var exitCode = 0;
+        try
+        {
+            var depsVersion = "3.8.8";
+            foreach (var arg in Environment.GetCommandLineArgs())
+            {
+                if (arg.StartsWith("-depsVersion=", StringComparison.Ordinal))
+                    depsVersion = arg.Substring("-depsVersion=".Length);
+            }
+            var setNames = new List<string>();
+            setNames.Add("tester_web");
+            var err = LayoutEditorSetExporter.StartExport(setNames, "deps", depsVersion);
+            if (!string.IsNullOrEmpty(err))
+                throw new Exception(err);
+            var runExport = typeof(LayoutEditorSetExporter).GetMethod("RunExport",
+                BindingFlags.NonPublic | BindingFlags.Static);
+            if (runExport == null)
+                throw new Exception("未找到 LayoutEditorSetExporter.RunExport（导出器版本不匹配？）");
+            runExport.Invoke(null, null);
+            var st = LayoutEditorSetExporter.GetStatus();
+            Debug.Log("[BatchExport/Deps] 结果 status=" + st.status + " zip=" + st.zipFileName
+                + " files=" + st.fileCount
                 + (string.IsNullOrEmpty(st.error) ? "" : " error=" + st.error));
             if (st.status != "done")
                 exitCode = 3;

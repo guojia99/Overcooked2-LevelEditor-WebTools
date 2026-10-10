@@ -9,7 +9,7 @@ import {
   EditorFloor
 } from "./state";
 import { dom } from "./dom";
-import { categoryVisible } from "./catalog";
+import { categoryVisible, catalogItemForGuidOrPath } from "./catalog";
 import { getFloorImage } from "./iconCaches";
 import { drawLabelInBox } from "./labels";
 import { drawItem } from "./renderItems";
@@ -26,6 +26,7 @@ import {
 } from "./floorHeight";
 import { isSelected } from "./selection";
 import { effectiveMaterialTiling } from "./floors";
+import { itemInCurrentPart, floorInCurrentPart } from "./partLevel";
 
 export function floorRectPx(f: EditorFloor) {
   const center = worldToCanvas(f._wx, f._wz);
@@ -324,6 +325,8 @@ export function drawFloorPlanes(highlight: boolean, kind: "floor" | "background"
   // 最上层与命中顺序一致。
   const sorted = [...S.floors].sort((a, b) => floorWalkY(a) - floorWalkY(b));
   for (const f of sorted) {
+    // 分 P：仅绘制当前 P 的地板（视图隔离，§3.1/§3.2）。
+    if (!floorInCurrentPart(f)) continue;
     // Backdrop planes (often huge, default-white in Unity) belong to the
     // dedicated background layer; theme fill shows the void color elsewhere.
     const isBg = f.surfaceKind === "background";
@@ -404,6 +407,8 @@ export interface FloorHit {
 export function hitTestFloorsAll(wx: number, wz: number): FloorHit[] {  const hits: FloorHit[] = [];
   for (let i = S.floors.length - 1; i >= 0; i--) {
     const f = S.floors[i];
+    // 分 P：只可命中当前 P 的地板（参考层叠显不可点选）。
+    if (!floorInCurrentPart(f)) continue;
     if (f.surfaceKind === "background") {
       if (!categoryVisible("background")) continue;
       // 地板层/背景层严格分离：背景（水面/天空/环境板）只在背景层可命中，
@@ -455,11 +460,20 @@ export function drawSurfaceItems(
   previewPos: Map<string, { x: number; z: number; y?: number; rotY?: number }> | null = null
 ) {
   const sorted = [...S.items]
-    .filter((it) => isSurfaceItem(S.catalogByGuid.get(it.prefabGuid)))
+    .filter((it) => isSurfaceItem(catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath)))
+    // 分 P：表面物品（水面/地板贴片等）同样只绘制当前 P。
+    .filter(itemInCurrentPart)
     // 高度过滤：范围外的表面物品不绘制；已选中的豁免（避免拖动中消失）。
     .filter((it) => itemInHeightFilter(it) || isSelected(it._editorKey))
-    .filter((it) => (S.catalogByGuid.get(it.prefabGuid)?.surfaceTier ?? "floor") === tier)
-    .sort((a, b) => drawLayerForItem(a, S.catalogByGuid) - drawLayerForItem(b, S.catalogByGuid));
+    .filter((it) => {
+      const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
+      return (cat?.surfaceTier ?? "floor") === tier;
+    })
+    .sort(
+      (a, b) =>
+        drawLayerForItem(a, S.catalogByGuid) -
+        drawLayerForItem(b, S.catalogByGuid)
+    );
   for (const item of sorted) {
     const selected = highlight && isSelected(item._editorKey);
     // 动画预览：表面物品绘制在模拟位置（原位保留暗色残影），并应用旋转预览，

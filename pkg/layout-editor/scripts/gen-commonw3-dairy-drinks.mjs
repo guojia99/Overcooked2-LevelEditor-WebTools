@@ -41,7 +41,7 @@ const FRUITS = [
   { key: "Peach", zh: "桃子", en: "Peach", guid: "c4a38be9154f4a2dfba533c6fdb72aa9" },
   { key: "Blueberry", zh: "蓝莓", en: "Blueberry", guid: "a192356a1fd01504eadf0d90ffa2de62" },
   { key: "Blackberry", zh: "黑莓", en: "Blackberry", guid: "1e87aab4d91d5e2b460a8de8fe55b737" },
-  { key: "Raspberry", zh: "覆盆子", en: "Raspberry", guid: "2c4b11eca006b60f3ae5a95e5cf4c609" },
+  { key: "Raspberry", zh: "树莓", en: "Raspberry", guid: "2c4b11eca006b60f3ae5a95e5cf4c609" },
   { key: "Banana", zh: "香蕉", en: "Banana", guid: "b6f2aa157beed2140a12c5cc8a66f8c1" },
   { key: "Melon", zh: "西瓜", en: "Melon", guid: "f57c067108d7dd543873dd5df1414aea" },
   { key: "Pineapple", zh: "菠萝", en: "Pineapple", guid: "6207742210e05564daf15e9c5d4c727b" },

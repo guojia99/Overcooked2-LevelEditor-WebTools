@@ -243,6 +243,59 @@ namespace CustomStub
         ///    改为推进到 IsBurning 为止 + 宿主双驱动时观测让位；客户端「锅在灶台上」
         ///    标志按触发区直驱（原先恒 false 导致烧糊预警图标被 vanilla 吞掉）。
 
-        public const string Value = "3.7.0";
+        /// 3.7.4（2026-10-10 摇杆遥控地板松杆吸附 / 再驾驶修复）：
+        ///  - AnimPilotFloorDrive：松杆吸附期间不再每帧清空 m_gridTarget；静止后再
+        ///    Deoccupy 区域占格（与原版格心吸附不打架）。
+        ///  - 会话结束冻结时设 kinematic=true，再次进入驾驶或 AssignPlayer 时恢复
+        ///    kinematic=false（修复退出后无法再推地板）。
+        ///  - HealScene 补挂 Marker 时回填 JoystickPseudoRoot；导出特征表登记
+        ///    AnimPilotFloorMarker → terminal。
+        /// 3.7.5（2026-10-10 摇杆地板会话判定 / 松杆防顶走）：
+        ///  - AllowVanillaPilotUpdate：终端占用读 ServerTerminal.m_session（对齐
+        ///    JoystickMarkerLink），不再用 SessionInteractable.enabled（避免 Update
+        ///    被拦、动作键无法结束会话、摇杆再也无法交互）。
+        ///  - 会话内松杆静止后 kinematic=true，仅 HasDriveInput / 吸附 / 未停稳时
+        ///    恢复 dynamic（同组地板上玩家碰撞不再推走整组）。
+        /// 3.7.6（2026-10-10 摇杆地板松杆后平台防带跑）：
+        ///  - WantsPhysicsDrive 不再用平台速度（厨师碰台面会误判未停稳而保持 dynamic）。
+        ///  - Update 后缀每帧在松杆 idle 时重新 kinematic+清零速度（抵消原版 Update 被碰撞唤醒）。
+        /// 3.7.7（2026-10-10 摇杆地板松杆硬锁位）：
+        ///  - 松杆且格心吸附结束后跳过原版 UpdateSynchronising（仅保留摇杆输入/吸附中放行）。
+        ///  - idle 时 Rigidbody.isKinematic 直写 + 组根世界坐标锚定（防碰撞/惯性在 FixedUpdate 带跑）。
+        /// 3.7.8（2026-10-10 随组摇杆再交互）：
+        ///  - 松杆 idle 仍跑 UpdateSynchronising（动作键可结束会话）；无会话但残留 scheme 时
+        ///    AssignPlayer(null) 对账；锁位对齐 GetNearestGridPosition；回填 Terminal.pilotableObject。
+        /// 3.7.9（2026-10-10 摇杆灯靠近半格亮起）：
+        ///  - JoystickMarkerLink：终端可交互且本机玩家距摇杆 ≤0.5 格（0.6m）时 GreenMarker，
+        ///    与驾驶占用灯一致；远离或未绑定 pilot 时熄灭。
+        /// 3.8.0（2026-10-10 遥控地板摇杆邻近交互）：
+        ///  - AnimPilotJoystickProximity：同 pilot 组或水平半格内视为靠近（碰撞盒中心锚点）。
+        ///  - Client/ServerInteractable.CanInteract 后缀：邻格扫描失败时仍可按摇杆；
+        ///    JoystickMarkerLink 与交互共用同一套判定。
+        /// 3.8.1（2026-10-10 灯亮但按交互无反应）：
+        ///  - ServerSessionInteractable.CanInteract（摇杆终端实际重写路径）；
+        ///  - ClientAnticipateInteractionHighlight.CanHighlight + SetInteractionObjects 注入邻近摇杆。
+        /// 3.8.2（2026-10-10 灯仅驾驶中亮 + 交互兜底）：
+        ///  - JoystickMarkerLink：仅 m_session 占用亮绿灯（不再半格可触发亮灯）；
+        ///  - 半格内强制优先摇杆 InteractionObjects；按交互键 TriggerInteractable 兜底。
+        /// 3.8.3（2026-10-10 摇杆地板移动后交互占格）：
+        ///  - HealScene：Design/Pilot Objects 成员补挂 AnimGridMemberSync（跳过 PilotFloor）；
+        ///  - AnimGridMemberSync：child 重建或残留 StaticGridLocation 时重试换装。
+        /// 3.8.4（2026-10-10 摇杆地板半格停位高亮）：
+        ///  - AnimPilotMemberInteract：组内工作台/道具 1.35m 水平距离兜底高亮与交互；
+        ///  - AnimGridMemberSync：在成员 wrapper 整棵子树换装（非仅 pseudo child）。
+        /// 3.8.5（2026-10-10 摇杆平台脏杯高亮 NRE）：
+        ///  - 移除误补丁 ClientAnticipateInteractionHighlight.CanHighlight(Material)；
+        ///  - 注入仅扫 pilot 直系成员、排除堆叠子盘；取放已占用时不注入 interactable。
+        /// 3.8.6（2026-10-10 摇杆组工作台抢判）：
+        ///  - AnimPilotMemberInteract：兜底半径 1.35m→半格+0.08m；CanInteract 仅最近一台；
+        ///  - 水平距离锚点用 pilot 直系成员根 XZ，避免大碰撞盒拽偏邻台。
+        /// 3.8.7（2026-10-10 AnimGridMemberSync 换装顺序）：
+        ///  - Static→Dynamic：先挂 Dynamic 再删 Static（RequireComponent 传送带台面）。
+        /// 3.8.8（2026-10-11 真机 Harmony 摇杆交互补丁）：
+        ///  - SetInteractionObjects 后缀参数名对齐宿主 _newInteractionObjects（HarmonyX
+        ///    真机按名绑定，错名整组 IL 编译失败→BepInEx 严重错误/进图异常）。
+        ///  - 驾驶核心补丁与邻近交互补丁分拆安装，交互失败不拖垮 AnimPilotFloorDrive。
+        public const string Value = "3.8.8";
     }
 }

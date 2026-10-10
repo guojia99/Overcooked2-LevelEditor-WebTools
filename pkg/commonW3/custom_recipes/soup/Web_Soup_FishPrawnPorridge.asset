@@ -17,12 +17,12 @@ MonoBehaviour:
   score: 60
   platingStepSO: {fileID: 11400000, guid: 02b04fdf6fef0e944870fd5e06375ed1, type: 2}
   modelSO: {fileID: 0}
-  model: {fileID: 100000, guid: 58c1a353996bc6514a6a569f12777a55, type: 3}
+  model: {fileID: 2031207674, guid: 57a5085624f06f73f552f5ce6ff748d9, type: 2}
   iconSO: {fileID: 0}
   icon: {fileID: 21300000, guid: 0f5c5290f594325781bd82b1eaa21c91, type: 3}
   compositionSOs:
   - {fileID: 11400000, guid: bbf0e92641aa4ab49bda6bc68117e01f, type: 2}
-  - {fileID: 11400000, guid: da6efd0b90360e34b9443171826d5c12, type: 2}
+  - {fileID: 11400000, guid: d628cc1cba14ca24f927c76c83ae9463, type: 2}
   - {fileID: 11400000, guid: df4a04d1549f9ee41a991153bd723110, type: 2}
   optionalSOs: []
   cookingStepSO: {fileID: 11400000, guid: 8687a65ff3d0dd94c91818e822af0aa4, type: 2}

@@ -30,6 +30,7 @@ export function dirResourceBase(assetDir: string): string {
 export interface RecipePreviewExtra extends Partial<ModelTransformValues> {
   onAdjust?: (t: ModelTransformValues) => void;
   unitySize?: { x: number; y: number; z: number; minY: number };
+  boundsMinY?: number;
   fitTarget?: "plate" | "cup";
   /** 预览加载失败时的提示方式（默认 alert）。 */
   onError?: (msg: string) => void;
@@ -103,6 +104,7 @@ export async function openRecipeModelPreview(
       pivotY: extra?.pivotY,
       pivotZ: extra?.pivotZ,
       unitySize: extra?.unitySize,
+      boundsMinY: extra?.boundsMinY,
       // 只读时不接调整回调，彻底断掉写回路径
       onAdjust: isReadonly ? undefined : extra?.onAdjust,
       readonly: isReadonly,

@@ -6,7 +6,7 @@ import {
   FloorSlabMode
 } from "./state";
 import { dom, ROUTE } from "./dom";
-import { setStatus } from "./status";
+import { setStatus, setStatusTagged } from "./status";
 import { loadQuestionMarks } from "./iconCaches";
 import {
   loadCatalog,
@@ -35,15 +35,18 @@ import { ingredientGuidById, rebuildIngredientLookup } from "./catalog";
 import { allDispenserPrefabIds, dispenserIngredientIds, utensilIntermediateRecipes } from "./recipeKnowledge";
 import { buildPalette } from "./palette";
 import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
+import { recoverFloorsFromWalkableIfNeeded } from "./floors";
+import { refreshSceneItemList } from "./panels";
 import { refreshScopedSaveButton } from "./serialize";
 import { scopedSaveMeta } from "./serialize";
+import { partLevelActive, applyPartLevelEnable, openManageModal, renderPartBar } from "./partLevel";
+import { closeModal } from "../modals";
 import { markDirty } from "./historyOps";
 import { openRecipesDialog } from "./ui/recipesDialogs";
 import { requestTestLayout } from "./testLayout";
 import { openUtensilManager } from "./ui/utensilManager";
 import { openCounterSkinManager, ensureCounter3dLoaded } from "./ui/counterSkinManager";
 import { openCameraLightModal } from "./cameraLight";
-import { openWorkloadModal } from "./workloadModal";
 import {
   applyPanelCollapse,
   updatePanelTabButtons,
@@ -66,9 +69,7 @@ import { setupCanvas, resetOverlapMarqueePending } from "./input";
 import { initCrossTabClipboardListener } from "./crossTabClipboard";
 import {
   goManage,
-  goManageSummary,
   openConfigTabsModal,
-  openAudioModal,
   consumeLayoutAutoAction,
   openToolsHistoryModal
 } from "../levels";
@@ -81,18 +82,19 @@ import { navigateTo } from "../route";
 import { prefabIdFromPath } from "./coords";
 import type { Catalog, LevelDetail } from "../types";
 
-function editCeilingHeight(): void {
-  const raw = window.prompt("KitchenLoaderManager · Ceiling Height（0~10）", String(S.ceilingHeight));
-  if (raw == null) return;
-  const value = Number(raw);
-  if (!Number.isFinite(value)) {
-    setStatus("Ceiling Height 必须是数字", false);
-    return;
+function layoutThemeSignals(): import("../levels").ThemeSignals {
+  const themes = new Set<string>();
+  const itemIds = new Set<string>();
+  for (const it of S.items) {
+    const cat = S.catalogByGuid.get(it.prefabGuid);
+    if (cat?.theme) themes.add(cat.theme);
+    const id = cat?.id ?? prefabIdFromPath(it.prefabAssetPath);
+    if (id) itemIds.add(id);
   }
-  S.ceilingHeight = Math.max(0, Math.min(10, value));
-  S.hasCeilingHeight = true;
-  markDirty();
-  setStatus(`Ceiling Height 已设为 ${S.ceilingHeight}，请写回 Unity 保存`, false);
+  const raft = S.floors.some((f) => f.surfaceKind === "raft");
+  const dt = S.deathInfo?.deathType;
+  const deathTheme = dt === "water" ? "water" : dt === "goo" ? "goo" : "";
+  return { themes, raft, deathTheme, itemIds };
 }
 
 /** Catalog cache so `setLayer` can rebuild the palette without re-fetching. */
@@ -113,11 +115,10 @@ const LAYER_LABEL: Record<LayerKey, string> = {
 };
 
 /** Reflect S.layerVisibility of the current layer into the popover checkboxes.
- *  Background content (water/sky) is only operable on the floor / background
- *  layers — elsewhere the toggle is locked off. */
+ *  Background content (water/sky) is only operable on 🌊 背景层；地板层不叠显水面。 */
 export function syncVisibilityPopover(): void {
   const vis = S.layerVisibility[S.currentLayer];
-  const bgLocked = S.currentLayer !== "floor" && S.currentLayer !== "background";
+  const bgLocked = S.currentLayer !== "background";
   if (bgLocked) vis.background = false;
   document.querySelectorAll<HTMLInputElement>("#vis-popover input[data-vcat]").forEach((cb) => {
     const cat = cb.dataset.vcat as keyof LayerVisibility;
@@ -134,7 +135,7 @@ export function syncVisibilityPopover(): void {
   const note = document.querySelector(".vis-note");
   if (note) {
     note.textContent = bgLocked
-      ? "背景 / 水面仅在 🌊 背景层与 🗺️ 地板层显示与操作；关闭的类别不显示、也不可点选"
+      ? "背景 / 水面（含木筏水流）仅在 🌊 背景层显示与操作；关闭的类别不显示、也不可点选"
       : "关闭的类别将不显示、也不可点选（仅影响当前层）";
   }
 }
@@ -211,6 +212,11 @@ export async function setViewMode(mode: ViewMode): Promise<void> {
 
 /** Programmatic layer switch (used by the layer tabs and the anim-layer wizards). */
 export function setLayer(layer: LayerKey): void {
+  // 分 P：背景层仅基础层可编辑（背景全程常驻，不随 P 替换）。
+  if (layer === "background" && partLevelActive() && S.currentPart !== "base") {
+    setStatus("背景层仅基础层可编辑——请先在「🔀 分 P」切换到基础层", false);
+    return;
+  }
   if (layer === S.currentLayer) return;
   S.currentLayer = layer;
   document.querySelectorAll(".layer-tab").forEach((b) =>
@@ -247,6 +253,14 @@ export function setLayer(layer: LayerKey): void {
   }
   syncFloorHeightUI(layer);
   if (layer === "floor") {
+    const recovered = recoverFloorsFromWalkableIfNeeded();
+    if (recovered > 0) {
+      S.sceneItemListSig = "";
+      refreshSceneItemList();
+      setStatus(
+        `已从 ${recovered} 个可行走区恢复 ${recovered} 块编辑用地板块（原 floors[] 为空，可 Ctrl+Z 撤回；写回 Unity 可持久化）`
+      );
+    }
     searchEl.placeholder = "搜索木筏 / 地板…";
     buildFloorPalette(searchEl.value, "floor");
   } else if (layer === "background") {
@@ -288,14 +302,13 @@ function auditDispenserWhitelists(): void {
 export async function init() {
   const ok = await fetchHealth();
   const healthInfo = await fetchHealthInfo().catch(() => ({ ok: false, recipeApi: false }));
-  setStatus(
-    ok
-      ? healthInfo.recipeApi
-        ? "已连接 Unity（含菜谱 API）"
-        : "已连接 Unity（请重启 Bridge 以使用菜谱）"
-      : "未连接 Unity（请先启动 Bridge）",
-    ok
-  );
+  const bridgeMsg = ok
+    ? healthInfo.recipeApi
+      ? "已连接 Unity（含菜谱 API）"
+      : "已连接 Unity（请重启 Bridge 以使用菜谱）"
+    : "未连接 Unity（请先启动 Bridge）";
+  if (ok) setStatusTagged(bridgeMsg, true, "bridge");
+  else setStatusTagged(bridgeMsg, false, "bridge");
 
   const catalog = await loadCatalog();
   warnIfBridgeOutdated(healthInfo, catalog.schemaVersion ?? 1);
@@ -451,7 +464,6 @@ export async function init() {
   document.getElementById("btn-utensils")!.addEventListener("click", () => openUtensilManager());
   document.getElementById("btn-counters")!.addEventListener("click", () => openCounterSkinManager());
   document.getElementById("btn-camera-light")!.addEventListener("click", () => openCameraLightModal());
-  document.getElementById("btn-ceiling-height")!.addEventListener("click", editCeilingHeight);
   document.getElementById("chk-auto-intermediates")!.addEventListener("change", (e) => {
     S.autoIntermediates = (e.target as HTMLInputElement).checked;
   });
@@ -477,46 +489,38 @@ export async function init() {
     }
   };
   document.getElementById("btn-level-config")!.addEventListener("click", () =>
-    void withLevelDetail((detail) => openConfigTabsModal(detail, S.currentLevelSet, () => {}, {
-      ceilingHeight: S.ceilingHeight,
-      hasCeilingHeight: S.hasCeilingHeight,
-      onCeilingHeightChange: (value) => {
-        S.ceilingHeight = value;
-        S.hasCeilingHeight = true;
-        markDirty();
-      },
-    }))
-  );
-  document.getElementById("btn-level-audio")!.addEventListener("click", () =>
-    void withLevelDetail((detail) => {
-      const themes = new Set<string>();
-      const itemIds = new Set<string>();
-      for (const it of S.items) {
-        const cat = S.catalogByGuid.get(it.prefabGuid);
-        if (cat?.theme) themes.add(cat.theme);
-        const id = cat?.id ?? prefabIdFromPath(it.prefabAssetPath);
-        if (id) itemIds.add(id);
-      }
-      const raft = S.floors.some((f) => f.surfaceKind === "raft");
-      const dt = S.deathInfo?.deathType;
-      const deathTheme = dt === "water" ? "water" : dt === "goo" ? "goo" : "";
-      openAudioModal(detail, { themes, raft, deathTheme, itemIds }, () => {});
-    })
-  );
-  document.getElementById("btn-workload")!.addEventListener("click", () => void openWorkloadModal());
-
-  // 📋 汇总：整页跳转严格路由 /manage/{set}/{levelId}/summary（可刷新/分享）
-  document.getElementById("btn-summary")!.addEventListener("click", () =>
-    confirmLeaveIfDirty(() =>
-      void withLevelDetail((detail) => goManageSummary(S.currentLevelSet, detail.levelInfoAssetPath))
+    void withLevelDetail((detail) =>
+      openConfigTabsModal(detail, S.currentLevelSet, () => {}, {
+        ceilingHeight: S.ceilingHeight,
+        hasCeilingHeight: S.hasCeilingHeight,
+        onCeilingHeightChange: (value) => {
+          S.ceilingHeight = value;
+          S.hasCeilingHeight = true;
+          markDirty();
+        },
+        partLevel: {
+          canEdit: true,
+          active: partLevelActive(),
+          partCount: S.partLevel?.parts.length ?? 0,
+          getThemeSignals: layoutThemeSignals,
+          onApplyEnable: (count, assign) => {
+            closeModal();
+            applyPartLevelEnable(count, assign);
+          },
+          onManage: () => {
+            closeModal();
+            openManageModal();
+          },
+        },
+      })
     )
   );
-
   // 🧰 工具与历史：编辑器内直接执行（修复后自动重载场景；测试布局/同步布局关弹窗后原地触发；
   // 历史快照恢复到画布 = 仅前端标脏，由用户手动点击「💾 写回 Unity」落盘）。
   document.getElementById("btn-tools-history")!.addEventListener("click", () =>
     void withLevelDetail((detail) =>
       openToolsHistoryModal(detail, {
+        workloadSetName: S.currentLevelSet,
         onTestLayout: () => requestTestLayout(),
         onSyncLayout: () => void openSyncLayoutDialog(),
         onRepaired: (n) => {
@@ -527,6 +531,9 @@ export async function init() {
       })
     )
   );
+
+  document.getElementById("btn-part-level")!.addEventListener("click", () => openManageModal());
+  renderPartBar();
 
   wireNav((target) => {
     if (target === "manage") confirmLeaveIfDirty(() => goManage());

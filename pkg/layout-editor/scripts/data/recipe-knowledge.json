@@ -201,7 +201,7 @@
       "step": "FryingPan",
       "ingredients": [
         "TortillaSO",
-        "SushiRiceSO",
+        "RiceSO",
         "BurritoChickenSO"
       ]
     },
@@ -210,7 +210,7 @@
       "step": "FryingPan",
       "ingredients": [
         "TortillaSO",
-        "SushiRiceSO",
+        "RiceSO",
         "BurritoMeatSO"
       ]
     },
@@ -219,7 +219,7 @@
       "step": "FryingPan",
       "ingredients": [
         "TortillaSO",
-        "SushiRiceSO",
+        "RiceSO",
         "MushroomSO"
       ]
     },

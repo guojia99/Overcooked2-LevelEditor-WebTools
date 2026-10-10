@@ -4,7 +4,7 @@ import {
 } from "./state";
 import { dom } from "./dom";
 import { uuid, prefabIdFromPath, escHtml, newEditorKey } from "./coords";
-import { setStatus } from "./status";
+import { setStatus, setStatusTagged } from "./status";
 import { itemLayerOfIt, levelSetFromScenePath } from "./catalog";
 import { isPlayerItem } from "./renderItems";
 import { isTeleportalItem, teleportalEntrancesOf } from "./teleportalLinks";
@@ -18,8 +18,11 @@ import { itemLabel } from "./labels";
 import {
   mergeRaftItemsIntoFloors,
   mergeThemedItemsIntoFloors,
-  repairFloorMaterialsFromCatalog
+  repairFloorMaterialsFromCatalog,
+  recoverFloorsFromWalkableIfNeeded,
+  finalizeFloor
 } from "./floors";
+import { refreshSceneItemList } from "./panels";
 import { buildFloorPalette } from "./floorPalette";
 import { buildDocument } from "./serialize";
 import { clearSelection, clearFloorSelection } from "./selection";
@@ -38,6 +41,7 @@ import {
   computeLevelBounds
 } from "./render";
 import { updatePanelTabButtons } from "./panels";
+import { partLevelActive, partIdOf, renderPartBar, validatePartLevelForSave } from "./partLevel";
 import {
   openModal,
   closeModal,
@@ -73,6 +77,7 @@ import type {
   LevelSummary
 } from "../types";
 import { airSlopeEndY } from "./items";
+import { setLayer } from "./init";
 
 export function selectSceneInDropdowns(assetPath: string): void {
   if (!assetPath) return;
@@ -108,7 +113,6 @@ export function countDuplicateInstanceIds(list: LayoutItem[]): number {
 export async function loadScene(assetPath: string) {
   showBusy("加载场景…");
   try {
-    setStatus("加载场景…");
     S.scenePath = assetPath;
     S.currentLevelSet = levelSetFromScenePath(assetPath);
     // 严格路由：/layout/{set}/{sceneName}（场景文件名去 .unity）；set 解析失败时退回裸 /layout
@@ -119,9 +123,11 @@ export async function loadScene(assetPath: string) {
       S.currentLevelSet && sceneName ? layoutPath(S.currentLevelSet, sceneName) : "/layout"
     );
     const doc = await fetchLayout(assetPath);
-    const { dupIds, dedupedStacks } = await applyLayoutDocument(doc);
+    const { dupIds, dedupedStacks, recoveredFloors } = await applyLayoutDocument(doc);
     maybePromptAirSlopeCeiling();
     const floorNote = S.floors.length > 0 ? `、${S.floors.length} 块地板` : "";
+    const walkableRecoverNote =
+      recoveredFloors > 0 ? `（已从 ${recoveredFloors} 个可行走区恢复编辑用地板块）` : "";
     if (dupIds > 0) {
       setStatus(
         `已加载 ${S.items.length} 个物体（有 ${dupIds} 个重复 ID，请重新编译 Unity 后点「重新加载」）`,
@@ -133,7 +139,7 @@ export async function loadScene(assetPath: string) {
         false
       );
     } else {
-      setStatus(`已加载 ${S.items.length} 个物体${floorNote}`);
+      setStatus(`已加载 ${S.items.length} 个物体${floorNote}${walkableRecoverNote}`);
     }
   } catch (e) {
     setStatus((e as Error).message, false);
@@ -171,8 +177,20 @@ export interface ApplyDocOptions {
 export async function applyLayoutDocument(
   doc: LayoutDocument,
   opts?: ApplyDocOptions
-): Promise<{ dupIds: number; dedupedStacks: number }> {
+): Promise<{ dupIds: number; dedupedStacks: number; recoveredFloors: number }> {
+  S.decorHiddenGroups.clear();
   const dupIds = countDuplicateInstanceIds(doc.items);
+  // 分 P：先于 enrich 赋值——enrichItem 依赖 S.partLevel 判断 P 层物件取
+  // localPosition（slot-local 设计坐标）而非含停放偏移的 worldPosition。
+  S.partLevel = doc.partLevel?.enabled
+    ? {
+        ...doc.partLevel,
+        parts: doc.partLevel.parts ?? [],
+        transitions: doc.partLevel.transitions ?? [],
+      }
+    : null;
+  S.currentPart = S.partLevel?.parts[0]?.id ?? "base";
+  S.partReferences.clear();
   // 过滤通用碰撞块（Col_Wall / Col_Floor 等场景辅助对象）：只有空气墙
   //（airWall=true）与空气斜坡（airSlope=true，v9）才作为核心层物品进入编辑器。
   S.items = doc.items
@@ -186,6 +204,7 @@ export async function applyLayoutDocument(
   S.floors = (doc.floors ?? []).map((raw, index) => enrichFloor(raw, `f${index}`));
   mergeRaftItemsIntoFloors();
   mergeThemedItemsIntoFloors();
+  for (const f of S.floors) finalizeFloor(f);
   // 场景导出端自动去重：同 prefab 且 XYZ 完全同位（<0.01）的物品在画布上
   // 100% 重叠、视觉不可见（88 个重叠炮看起来就是 1 个）——历史克隆残留。
   // 这里保留首条、其余直接丢弃；下次写回由 Unity 侧 RemoveUnmatchedSceneItems
@@ -199,7 +218,9 @@ export async function applyLayoutDocument(
     S.items = S.items.filter((it) => {
       // 装饰层允许同 prefab 同位叠放（树叶等布景），不参与加载去重。
       if (itemLayerOfIt(it) === "decor") return true;
-      const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
+      // 分 P：不同 P 的物件设计坐标天然相同（P1/P2 同位桌台是常态），
+      // 去重键必须带 partId，否则 P2 会被当 P1 的重复静默清掉。
+      const key = (partLevelActive() ? `${partIdOf(it)}|` : "") + (it.prefabGuid ?? it.prefabAssetPath ?? "?");
       if (it._wx == null || it._wz == null) return true;
       const wy = it.worldPosition?.y ?? it.localPosition?.y ?? 0;
       const prev = seenPos.get(key);
@@ -249,6 +270,12 @@ export async function applyLayoutDocument(
   S.gridInfo = await fetchGrid();
   S.floorMaterials = await fetchFloorMaterials(S.currentLevelSet).catch(() => []);
   repairFloorMaterialsFromCatalog();
+  const recoveredFloors = recoverFloorsFromWalkableIfNeeded();
+  if (recoveredFloors > 0) {
+    repairFloorMaterialsFromCatalog();
+    S.sceneItemListSig = "";
+    refreshSceneItemList();
+  }
   if (S.currentLayer === "floor") {
     buildFloorPalette((document.getElementById("palette-search") as HTMLInputElement)?.value ?? "", "floor");
   } else if (S.currentLayer === "background") {
@@ -256,6 +283,12 @@ export async function applyLayoutDocument(
   } else if (S.currentLayer === "anim") {
     dom.paletteCats.innerHTML = "";
   }
+  // 分 P：partLevel 已在函数开头载入；这里刷新工具条（含背景层 Tab 禁用态）。
+  // currentLayer 落在背景层而当前非基础层时回退（背景仅基础层可编辑）。
+  if (partLevelActive() && S.currentPart !== "base" && S.currentLayer === "background") {
+    setLayer("floor");
+  }
+  renderPartBar();
   clearSelection();
   S.marqueeing = false;
   resetOverlapMarqueePending();
@@ -266,7 +299,8 @@ export async function applyLayoutDocument(
     markDirty();
   } else {
     S.history.clear();
-    clearDirty();
+    if (recoveredFloors > 0) markDirty();
+    else clearDirty();
   }
   S.activeAnimGroupId = null;
   S.activeAnimEventIdx = null;
@@ -280,7 +314,7 @@ export async function applyLayoutDocument(
   if (S.currentLayer === "anim") S.activeRightTab = "anim";
   updatePanelTabButtons();
   draw();
-  return { dupIds, dedupedStacks };
+  return { dupIds, dedupedStacks, recoveredFloors };
 }
 
 /** 与后端 LayoutEditorWriteBackHistory.LevelDirFor 同口径：set/levelId 推导。 */
@@ -392,7 +426,13 @@ function applySaveStatus(base: string, warnings: string[]): string {
 export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
   showBusy("写回 Unity…");
   try {
-    setStatus("写回中…");
+    // 分 P 校验（决策 §6.5）：结构错误阻断；转场/时间轴由桥在写回时自动烘焙
+    //（slot 根 + 停放 + 触发链，见 PartTransitionBakery），用户无需手动衔接。
+    const partCheck = validatePartLevelForSave();
+    if (partCheck.errors.length > 0) {
+      setStatus(`写回取消：分 P 配置错误 — ${partCheck.errors.join("；")}`, false);
+      return false;
+    }
 
     const collisions = checkPlayerCollisions();
     if (collisions.length > 0) {
@@ -415,9 +455,10 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       const seen = new Map<string, { label: string; wx: number; wy: number; wz: number }>();
       const stacks: string[] = [];
       for (const it of S.items) {
-        // 装饰层允许同 prefab 同位叠放，写回时不做完全重叠阻断。
+        // 装饰层允许同 prefab 同位叠放（装饰布景），写回时不做完全重叠阻断。
         if (itemLayerOfIt(it) === "decor") continue;
-        const key = it.prefabGuid ?? it.prefabAssetPath ?? "?";
+        // 分 P：不同 P 同位摆放是常态（P1/P2 同位桌台），堆叠键带 partId。
+        const key = (partLevelActive() ? `${partIdOf(it)}|` : "") + (it.prefabGuid ?? it.prefabAssetPath ?? "?");
         const wx = it._wx;
         const wz = it._wz;
         if (wx == null || wz == null) continue;
@@ -436,6 +477,38 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       }
       if (stacks.length > 0) {
         setStatus(`写回取消：检测到 ${stacks.length} 处完全重叠的重复物品（请在画布选中删除多余一份）— ${stacks.slice(0, 4).join("；")}${stacks.length > 4 ? " 等" : ""}`, false);
+        return false;
+      }
+    }
+
+    // 摇杆组校验：成员与动画组互斥（双烘焙互相抢人，后端会强制移除动画组
+    // 侧——这里前置阻断让用户明确处理）；分 P 布局不支持摇杆组。
+    {
+      const errs: string[] = [];
+      const pilotGroups = S.animControls.filter((g) => g.groupKind === "pilot");
+      const pilotMember = new Set<string>();
+      for (const pg of pilotGroups) {
+        if (pg.partId && pg.partId !== "base") {
+          errs.push(`摇杆组「${pg.displayName}」不支持分 P（partId=${pg.partId}）`);
+        }
+        if (!pg.terminalInstanceId) {
+          errs.push(`摇杆组「${pg.displayName}」未绑定摇杆（在 ⚙ 设置里绑定，否则玩家无法驾驶；摇杆在调色板「核心 · 摇杆」分组）`);
+        }
+        for (const id of [...pg.itemInstanceIds, ...pg.floorInstanceIds, ...pg.objectInstanceIds]) {
+          pilotMember.add(id);
+        }
+      }
+      for (const g of S.animControls) {
+        if (g.groupKind === "pilot" || g.groupKind === "fx") continue;
+        const dup = [...g.itemInstanceIds, ...g.floorInstanceIds, ...g.objectInstanceIds].filter(
+          (id) => pilotMember.has(id)
+        );
+        if (dup.length > 0) {
+          errs.push(`动画组「${g.displayName}」有 ${dup.length} 个成员同时属于摇杆组（一个成员只能属于一个组）`);
+        }
+      }
+      if (errs.length > 0) {
+        setStatus(`写回取消：摇杆组配置错误 — ${errs.join("；")}`, false);
         return false;
       }
     }
@@ -759,6 +832,9 @@ export function startBridgeWatch() {
     if (bridgeWatchSuspended) return;
     const up = await fetchHealth();
     if (up) {
+      if (S.bridgeStopAlerted) {
+        setStatusTagged("已重新连接 Unity", true, "bridge");
+      }
       S.bridgeFailCount = 0;
       S.bridgeStopAlerted = false;
     } else if (S.bridgeWasUp) {
@@ -766,7 +842,7 @@ export function startBridgeWatch() {
       if (S.bridgeFailCount >= 3 && !S.bridgeStopAlerted) {
         S.bridgeStopAlerted = true;
         showBridgeStoppedModal();
-        setStatus("未连接 Unity（后台服务已停止）", false);
+        setStatusTagged("未连接 Unity（后台服务已停止）", false, "bridge");
       }
     }
     S.bridgeWasUp = up;

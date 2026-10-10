@@ -40,8 +40,19 @@ import {
 } from "../../autoScoreKnowledge";
 import type { RecipeEntry } from "../../types";
 import { visibleIngredients } from "../../ingredientLabels";
+import { itemInCurrentPart, partLevelActive } from "../partLevel";
+import {
+  emptyUtensilRecipeFilters,
+  collectUtensilCookStepChips,
+  matchesUtensilRecipeFilters,
+  utensilRecipeFilterBarHtml,
+  bindUtensilRecipeFilterBar,
+} from "../../utensilRecipeFilters";
 
 export type UtensilIngredientFill = Map<string, UtensilFillEntry>;
+
+/** 锅具管理弹窗与额外食材选择器共用的菜谱筛选（reopen 时保留）。 */
+const utmSharedRecipeFilters = emptyUtensilRecipeFilters();
 
 /** 把 computeUtensilIngredientFill 的结果写进场景锅具的 allowedIngredientSOs。
  *  两个入口共用：锅具管理页「按菜谱自动填充」与菜谱弹窗「安装缺失」。
@@ -66,6 +77,8 @@ export function applyUtensilIngredientFill(
   };
   let touched = 0;
   for (const it of S.items) {
+    // 分 P：填充只作用于当前编辑的阶段（各 P 锅具独立配置）。
+    if (!itemInCurrentPart(it)) continue;
     const isPushablePot = prefabIdFromPath(it.prefabAssetPath) === "web_utensil_large_pot_01_pushable";
     if (stubKindOf(it) !== "CookingUtensil" && !isPushablePot) continue;
     const f = fill.get(vesselOfItem(it));
@@ -93,16 +106,31 @@ export function applyUtensilIngredientFill(
 }
 
 export function openUtensilManager() {
+  void showUtensilManagerModal();
+}
+
+async function showUtensilManagerModal() {
+  if (S.currentLevelSet) {
+    try {
+      const catalog = await fetchRecipeCatalog(S.currentLevelSet);
+      S.intermediatesCache = utensilIntermediateRecipes(catalog);
+    } catch (e) {
+      setStatus(`刷新中间产物目录失败，使用缓存：${(e as Error).message}`, false);
+    }
+  }
+
   // 锅具 = CookingUtensil stub + 可移动火锅（含锅 child，有 IngredientContainer，
   //  食材配置同样有效，但 stubKind 保持空由后端载体组装，不挂 CookingUtensil stub）
-  // 食材配置同样有效，但 stubKind 保持空由后端载体组装，不挂 CookingUtensil stub）
+  //  食材配置同样有效，但 stubKind 保持空由后端载体组装，不挂 CookingUtensil stub）
+  //  分 P：只列出当前阶段的锅具（各 P 独立填充/同步）。
   const utensils = S.items.filter(
     (it) =>
-      stubKindOf(it) === "CookingUtensil" ||
-      prefabIdFromPath(it.prefabAssetPath) === "web_utensil_large_pot_01_pushable"
+      itemInCurrentPart(it) &&
+      (stubKindOf(it) === "CookingUtensil" ||
+        prefabIdFromPath(it.prefabAssetPath) === "web_utensil_large_pot_01_pushable")
   );
   if (!utensils.length) {
-    setStatus("当前关卡没有锅具", false);
+    setStatus(partLevelActive() ? "当前阶段没有锅具（其他阶段的锅具不参与填充）" : "当前关卡没有锅具", false);
     return;
   }
 
@@ -138,13 +166,23 @@ export function openUtensilManager() {
     })
     .join("");
 
+  const autofillCookSteps = collectUtensilCookStepChips(S.intermediatesCache);
+  const autofillFilterBar = utensilRecipeFilterBarHtml(utmSharedRecipeFilters, autofillCookSteps, {
+    barId: "utm-autofill-recipe-filters",
+    hint: "仅影响「按菜谱自动填充」：在关卡已选菜谱中筛选参与推导的条目（与额外食材选择器共用筛选状态）",
+  });
+
   openModal(
     "锅具管理 · 参数同步",
-    `<p class="modal-hint">可直接修改每个锅具的容量、时间与额外食材（不选额外食材时可处理所有主线食材，选中后可额外煮这些食材），或一键把它的参数同步给所有相同类型的锅具。时间留空 = 原版默认（输入框内灰色占位显示该锅具真实原版时间，煮糊/过混默认 2× 煮熟/混合）；特殊煮糊时间随关卡包分发。仅修改前端数据，写回 Unity 后生效。</p><div class="modal-scroll">${body}</div>`,
+    `<p class="modal-hint">可直接修改每个锅具的容量、时间与额外食材（不选额外食材时可处理所有主线食材，选中后可额外煮这些食材），或一键把它的参数同步给所有相同类型的锅具。额外食材选择器含「中间产物 / 自定义菜谱」分组与细筛（0 分、搅拌等）。时间留空 = 原版默认（输入框内灰色占位显示该锅具真实原版时间，煮糊/过混默认 2× 煮熟/混合）；特殊煮糊时间随关卡包分发。仅修改前端数据，写回 Unity 后生效。</p>
+     ${autofillFilterBar}
+     <div class="modal-scroll">${body}</div>`,
     `${primaryBtnHtml("🧺 按菜谱自动填充", { id: "utm-auto-fill" })}
      ${cancelBtnHtml("关闭")}`
   );
-  document.querySelector(".modal-panel")?.classList.add("wide");
+  const panel = document.querySelector(".modal-panel");
+  panel?.classList.add("wide");
+  if (panel) bindUtensilRecipeFilterBar(panel, utmSharedRecipeFilters, () => {});
 
   const utensilByKey = (key: string | undefined) => S.items.find((i) => i._editorKey === key);
   const ensureUtensil = (it: EditorItem) => {
@@ -184,12 +222,20 @@ export function openUtensilManager() {
       return;
     }
     const byGuid = new Map(recipes.map((r) => [r.guid, r]));
-    const recs = guids.map((g) => byGuid.get(g)).filter((r): r is RecipeEntry => !!r);
-    if (!recs.length) {
+    const allSelected = guids.map((g) => byGuid.get(g)).filter((r): r is RecipeEntry => !!r);
+    if (!allSelected.length) {
       setStatus("当前关卡未选择菜谱，先在「选择菜谱」里勾选", false);
       return;
     }
     S.intermediatesCache = utensilIntermediateRecipes(recipes);
+
+    const recs = allSelected.filter((r) =>
+      matchesUtensilRecipeFilters(r, utmSharedRecipeFilters, allSelected)
+    );
+    if (!recs.length) {
+      setStatus("当前筛选下没有参与自动填充的关卡菜谱，请调整「菜谱筛选」或先在「选择菜谱」里勾选", false);
+      return;
+    }
 
     const fill = computeUtensilIngredientFill(recs);
     if (!fill.size) {
@@ -295,7 +341,11 @@ export function openUtensilManager() {
           setStatus(`${itemLabel(it)} 额外食材已更新（写回后生效）`);
           setTimeout(reopen, 0);
         },
-        S.intermediatesCache
+        S.intermediatesCache,
+        {
+          utensilRecipeFilters: true,
+          sharedUtensilRecipeFilters: utmSharedRecipeFilters,
+        }
       );
     });
   });
@@ -312,6 +362,8 @@ export function openUtensilManager() {
       let n = 0;
       for (const it of S.items) {
         if (it === src || stubKindOf(it) !== "CookingUtensil") continue;
+        // 分 P：同步只作用于与源锅具相同的阶段。
+        if (!itemInCurrentPart(it)) continue;
         if (prefabIdFromPath(it.prefabAssetPath) !== pid) continue;
         it.stubKind = "CookingUtensil";
         // 时间字段按目标锅具类型过滤（变体同族类型一致，这里防御性拷贝全部字段，

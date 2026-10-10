@@ -71,13 +71,13 @@
     },
     {
       "id": "Web_MilkSlush_Raspberry",
-      "zh": "覆盆子牛奶冰沙",
+      "zh": "树莓牛奶冰沙",
       "slush": "#FF98B0",
       "glass": "#F5E8EC",
       "straw": "#4A6FA5",
-      "garnishZh": "杯沿 2 颗覆盆子（一颗对半）",
+      "garnishZh": "杯沿 2 颗树莓（一颗对半）",
       "garnishEn": "two raspberries on rim, one halved",
-      "stylePromptZh": "玫红牛奶冰沙、深蓝吸管、覆盆子装饰；酸甜红莓、比草莓略艳",
+      "stylePromptZh": "玫红牛奶冰沙、深蓝吸管、树莓装饰；酸甜红莓、比草莓略艳",
       "stylePromptEn": "rose-red milk slush, deep blue straw, raspberry garnish; tart-sweet, slightly richer than strawberry"
     },
     {

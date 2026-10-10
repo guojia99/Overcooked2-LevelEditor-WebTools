@@ -202,6 +202,25 @@ export function floorCategoryOf(f: { surfaceKind: string }): VisibilityCategory 
   return f.surfaceKind === "background" ? "background" : "floors";
 }
 
+/** Water / raft flow / sky planes — edited on 🌊 背景层, not叠显在 🗺️ 地板层。 */
+export function isBackgroundLayerContent(it: {
+  prefabGuid: string;
+  prefabAssetPath?: string;
+  hierarchyPath?: string;
+  stubKind?: string;
+}): boolean {
+  return itemCategoryOf(it) === "background";
+}
+
+export function hideBackgroundContentOnFloorLayer(it: {
+  prefabGuid: string;
+  prefabAssetPath?: string;
+  hierarchyPath?: string;
+  stubKind?: string;
+}): boolean {
+  return S.currentLayer === "floor" && isBackgroundLayerContent(it);
+}
+
 /** Background plane items (water / sky / sand / environment backdrops) that can
  *  be resized by width/height like a floor plane. Ambient FX (落雪 / BGM…) are
  *  point emitters with no meaningful footprint, so they are excluded. */

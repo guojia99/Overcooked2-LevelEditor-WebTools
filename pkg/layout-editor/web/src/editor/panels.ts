@@ -24,6 +24,8 @@ import { draw } from "./render";
 import { renderAnimControlPanel, groupVisibleInLayer, updateAnimPickBar } from "./animControl";
 import { renderTriggerSourcePanel } from "./triggerOrchestrator";
 import { applyPaletteGridCols } from "./palette";
+import { itemInCurrentPart, floorInCurrentPart } from "./partLevel";
+import { decorGroupKey } from "./decorLayerVisibility";
 
 /** Drag the left palette's right edge to resize it (min 180px, max half the window). */
 export function initPaletteResizer(): void {
@@ -142,7 +144,7 @@ export function refreshSceneItemList(): void {
 
   const layer = S.currentLayer;
   const layerItems = S.items.filter(
-    (it) => itemLayerOfIt(it) === layer
+    (it) => itemLayerOfIt(it) === layer && itemInCurrentPart(it)
   );
   if (countEl) countEl.textContent = `（${layerItems.length}）`;
 
@@ -150,9 +152,11 @@ export function refreshSceneItemList(): void {
     // Floor-like layers: list the floors themselves + surface items of the layer.
     const layerBg = layer === "background";
     const floors = S.floors.filter((f) =>
-      layerBg ? f.surfaceKind === "background" : f.surfaceKind !== "background"
+      floorInCurrentPart(f) &&
+      (layerBg ? f.surfaceKind === "background" : f.surfaceKind !== "background")
     );
     const surfaceItems = S.items.filter((it) => {
+      if (!itemInCurrentPart(it)) return false;
       if (isCollisionItem(it)) return false;
       const cat = itemCategoryOf(it);
       return layerBg ? cat === "background" : cat === "floors";
@@ -207,8 +211,83 @@ export function refreshSceneItemList(): void {
         draw();
       });
     });
+  } else if (layer === "decor") {
+    const parts: string[] = [];
+    const npcs = sceneNpcAnimItems();
+    const npcKeys = new Set(npcs.map((it) => it._editorKey));
+    parts.push(
+      `<details class="cat-group" open><summary>🎞 自带行走动画的 NPC（${npcs.length}）</summary>` +
+        (npcs.length > 0
+          ? npcs
+              .map(
+                (it) =>
+                  `<div class="scene-item-row" data-key="${it._editorKey}">` +
+                  `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">🎞</span>` +
+                  `</div>`
+              )
+              .join("")
+          : `<div class="npc-types-empty">场景中暂无自带动画的 NPC。${npcTypesHintHtml()}</div>`) +
+        `</details>`
+    );
+    const envAnims = sceneEnvAnimDecorItems();
+    const envKeys = new Set(envAnims.map((it) => it._editorKey));
+    parts.push(
+      `<details class="cat-group" open><summary>✨ 自带环境动画的装饰（${envAnims.length}）</summary>` +
+        (envAnims.length > 0
+          ? envAnims
+              .map((it) => {
+                const id = prefabIdFromPath(it.prefabAssetPath) || it.instanceId;
+                const match = matchBuiltinAnimDecor(id, it.displayName);
+                const badge = match?.emoji ?? "✨";
+                return (
+                  `<div class="scene-item-row" data-key="${it._editorKey}">` +
+                  `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${badge}</span>` +
+                  `</div>`
+                );
+              })
+              .join("")
+          : `<div class="npc-types-empty">场景中暂无环境动画装饰。${envAnimTypesHintHtml()}</div>`) +
+        `</details>`
+    );
+
+    const nameGroups = new Map<string, EditorItem[]>();
+    for (const it of layerItems) {
+      if (npcKeys.has(it._editorKey) || envKeys.has(it._editorKey)) continue;
+      const gk = decorGroupKey(it);
+      if (!nameGroups.has(gk)) nameGroups.set(gk, []);
+      nameGroups.get(gk)!.push(it);
+    }
+    const sortedGroupNames = [...nameGroups.keys()].sort((a, b) => a.localeCompare(b, "zh"));
+    for (const gk of sortedGroupNames) {
+      const list = nameGroups.get(gk)!;
+      list.sort((a, b) => a._editorKey.localeCompare(b._editorKey));
+      const hidden = S.decorHiddenGroups.has(gk);
+      const enc = encodeURIComponent(gk);
+      parts.push(
+        `<details class="layer-group cat-group${hidden ? " layer-group-hidden" : ""}" open>` +
+          `<summary class="layer-group-summary">` +
+          `<button type="button" class="layer-eye${hidden ? " off" : ""}" data-decor-group="${enc}" title="${hidden ? "显示该组" : "隐藏该组（画布不显示、不可点选）"}">${hidden ? "👁‍🗨" : "👁"}</button>` +
+          `<span class="layer-group-title">${escHtml(gk)}</span>` +
+          `<span class="layer-group-count">（${list.length}）</span>` +
+          `</summary>`
+      );
+      for (const it of list) {
+        const id = prefabIdFromPath(it.prefabAssetPath) || "—";
+        parts.push(
+          `<div class="scene-item-row layer-child-row${isSelected(it._editorKey) ? " active" : ""}" data-key="${it._editorKey}">` +
+            `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${escHtml(id)}</span>` +
+            `<button type="button" class="scene-item-samename" data-samename="${it._editorKey}" title="选中所有同名物品">⌂</button>` +
+            `</div>`
+        );
+      }
+      parts.push("</details>");
+    }
+    if (sortedGroupNames.length === 0 && npcs.length === 0 && envAnims.length === 0) {
+      parts.push(`<div class="muted" style="padding:10px;">本层暂无装饰物。可在左侧调色板添加。</div>`);
+    }
+    body.innerHTML = parts.join("");
   } else {
-    // items / decor / move: group by catalog category, per-layer.
+    // 核心层等：按目录 category 分组。
     const groups = new Map<string, EditorItem[]>();
     for (const it of layerItems) {
       const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
@@ -223,43 +302,6 @@ export function refreshSceneItemList(): void {
     if (groups.has("__other")) orderedKeys.push("__other");
 
     const parts: string[] = [];
-    if (layer === "decor") {
-      // 自带移动动画的 NPC 清单
-      const npcs = sceneNpcAnimItems();
-      parts.push(
-        `<details class="cat-group" open><summary>🎞 自带行走动画的 NPC（${npcs.length}）</summary>` +
-          (npcs.length > 0
-            ? npcs
-                .map(
-                  (it) =>
-                    `<div class="scene-item-row" data-key="${it._editorKey}">` +
-                    `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">🎞</span>` +
-                    `</div>`
-                )
-                .join("")
-            : `<div class="npc-types-empty">场景中暂无自带动画的 NPC。${npcTypesHintHtml()}</div>`) +
-          `</details>`
-      );
-      const envAnims = sceneEnvAnimDecorItems();
-      parts.push(
-        `<details class="cat-group" open><summary>✨ 自带环境动画的装饰（${envAnims.length}）</summary>` +
-          (envAnims.length > 0
-            ? envAnims
-                .map((it) => {
-                  const id = prefabIdFromPath(it.prefabAssetPath) || it.instanceId;
-                  const match = matchBuiltinAnimDecor(id, it.displayName);
-                  const badge = match?.emoji ?? "✨";
-                  return (
-                    `<div class="scene-item-row" data-key="${it._editorKey}">` +
-                    `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${badge}</span>` +
-                    `</div>`
-                  );
-                })
-                .join("")
-            : `<div class="npc-types-empty">场景中暂无环境动画装饰。${envAnimTypesHintHtml()}</div>`) +
-          `</details>`
-      );
-    }
     for (const key of orderedKeys) {
       const list = groups.get(key)!;
       const label = S.corePaletteGroupMeta.get(key) ?? (key === "__other" ? "其他" : key);
@@ -303,10 +345,43 @@ export function refreshSceneItemList(): void {
       draw();
     });
   });
+
+  body.querySelectorAll<HTMLButtonElement>(".layer-eye[data-decor-group]").forEach((btn) => {
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      const gk = decodeURIComponent(btn.dataset.decorGroup ?? "");
+      if (!gk) return;
+      if (S.decorHiddenGroups.has(gk)) S.decorHiddenGroups.delete(gk);
+      else S.decorHiddenGroups.add(gk);
+      S.sceneItemListSig = "";
+      draw();
+      refreshSceneItemList();
+    });
+  });
+
+  body.querySelectorAll<HTMLElement>(".layer-group-summary").forEach((sum) => {
+    sum.addEventListener("dblclick", (ev) => {
+      if ((ev.target as HTMLElement).closest(".layer-eye")) return;
+      const details = sum.closest("details.layer-group");
+      const enc = details?.querySelector<HTMLButtonElement>(".layer-eye")?.dataset.decorGroup;
+      if (!enc) return;
+      const gk = decodeURIComponent(enc);
+      const keys = S.items
+        .filter((it) => itemLayerOfIt(it) === "decor" && itemInCurrentPart(it) && decorGroupKey(it) === gk)
+        .map((it) => it._editorKey);
+      if (keys.length === 0) return;
+      setSelection(keys, keys[0]);
+      const first = S.items.find((i) => i._editorKey === keys[0]);
+      if (first) ensureItemVisible(first);
+      draw();
+    });
+  });
 }
 
 export function maybeRefreshSceneItemList(): void {
-  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeAnimGroupId}|${S.activeAnimEventIdx}|${S.animMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.animControls.length}|${S.buttonEvents.length}|${S.buttonLinks.length}|${S.switchLinks.length}|${S.dirty}`;
+  const decorVisSig = [...S.decorHiddenGroups].sort().join("\0");
+  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeAnimGroupId}|${S.activeAnimEventIdx}|${S.animMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.animControls.length}|${S.buttonEvents.length}|${S.buttonLinks.length}|${S.switchLinks.length}|${S.dirty}|${decorVisSig}`;
   if (sig === S.sceneItemListSig) return;
   S.sceneItemListSig = sig;
   renderRightPanel();

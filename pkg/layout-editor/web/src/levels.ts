@@ -65,7 +65,7 @@ function goDependenciesPage(setName?: string, levelInfoAssetPath?: string): void
   }
   location.assign("/manage");
 }
-import { applyRatio, computeAutoScores, computeOrderLifeTimes, ORDER_INTERVAL_SEC, PLATE_RETURN_SEC, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
+import { applyRatio, computeAutoScores, ORDER_INTERVAL_SEC, PLATE_RETURN_SEC, round5, RATIO_MAX, RATIO_MIN, RATIO_STEP } from "./autoScore";
 import { analyzeKitchen, kitchenChips, kitchenWarnings } from "./kitchenAnalysis";
 import { modelParamsSummary } from "./autoScoreKnowledge";
 import { rlCardHtml, rlSectionHtml, type RecipeWithGroups } from "./recipeCard";
@@ -74,6 +74,8 @@ import { exportLevelShotsPng, type LevelShotExportData } from "./levelShotExport
 import { customRecipeIconUrl, levelSetFromScenePath } from "./editor/catalog";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { screenshotPaneHtml, wireScreenshotPane } from "./editor/ui/screenshotModal";
+import { setStatus } from "./editor/status";
+import { mountWorkloadEditor } from "./editor/workloadModal";
 import { buildSummaryGroups } from "./summaryRecipes";
 import {
   ASSIGNMENT_MODES,
@@ -173,18 +175,9 @@ function esc(s: unknown): string {
     .replace(/"/g, "&quot;");
 }
 
-function setStatus(msg: string, ok = true): void {
-  const el = document.getElementById("m-status");
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.toggle("err", !ok);
-  el.classList.toggle("ok", ok && msg.length > 0);
-}
-
 function setBusy(msg: string): void {
   const el = document.getElementById("manage-content");
   if (el) el.innerHTML = `<p class="muted">${esc(msg)}</p>`;
-  setStatus(msg);
 }
 
 function showError(e: unknown): void {
@@ -201,7 +194,6 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
     <div class="manage-bar">
       ${backLabel ? mBtnHtml(`← ${esc(backLabel)}`, "default", { id: "m-back" }) : ""}
       <h1 class="m-title">${esc(title)}</h1>
-      <span class="status" id="m-status"></span>
       <span style="flex:1"></span>
       ${mBtnHtml("↻ Reload", "default", { id: "m-reload", title: "触发 Unity Reload Pseudo Assets" })}
     </div>
@@ -1455,9 +1447,22 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
   document.getElementById("btn-summary")?.addEventListener("click", () => void renderLevelSummary(app, setName, assetPath));
   document.getElementById("btn-tools-history")?.addEventListener("click", () => openToolsHistoryModal(detail));
   document.getElementById("btn-level-config")?.addEventListener("click", () =>
-    void openConfigTabsModal(detail, setName, () => {
-      void renderLevelDetail(app, setName, assetPath);
-    })
+    void (async () => {
+      let sceneConfig: SceneConfigOptions | undefined;
+      try {
+        const doc = await api.fetchLayout(detail.sceneAssetPath);
+        sceneConfig = {
+          ceilingHeight: Math.max(0, Math.min(10, doc.ceilingHeight ?? 2)),
+          hasCeilingHeight: doc.hasCeilingHeight ?? true,
+          ceilingReadOnly: true,
+        };
+      } catch {
+        /* 无布局快照时仍打开分数/音频/截图 */
+      }
+      await openConfigTabsModal(detail, setName, () => {
+        void renderLevelDetail(app, setName, assetPath);
+      }, sceneConfig);
+    })()
   );
 
   wireSummaryBgPane(assetPath, detail);
@@ -1611,6 +1616,8 @@ function endpointBadge(ep: string): string {
  *  关卡管理页打开时缺省 —— 测试布局/同步布局退化为跳转编辑器 + 自动动作，
  *  恢复快照仅在编辑器内提供（关卡管理页显示提示）。 */
 export interface ToolsHistoryOptions {
+  /** 布局编辑态：提供关卡集名以显示「工作量推测」Tab（需当前画布已加载场景）。 */
+  workloadSetName?: string;
   onTestLayout?: () => void;
   onSyncLayout?: () => void;
   /** 编辑器内修复成功后的后续（重载场景等）；n = 移除数量。 */
@@ -1623,11 +1630,15 @@ export function openToolsHistoryModal(detail: LevelDetail, opts?: ToolsHistoryOp
   const wbSet = writeBackSet(detail.sceneAssetPath);
   const levelId = writeBackLevelId(detail.sceneAssetPath);
   const title = detail.levelNameZH || detail.levelName || levelId;
+  const workloadTab = opts?.workloadSetName
+    ? `<button type="button" class="wb-tab" data-wb-tab="workload">📈 工作量推测</button>`
+    : "";
   openModal(
     `🧰 工具与历史 · ${esc(title)}`,
     `
     <div class="wb-tabs">
       <button type="button" class="wb-tab active" data-wb-tab="tools">🧰 工具</button>
+      ${workloadTab}
       <button type="button" class="wb-tab" data-wb-tab="history">🕘 写回历史</button>
     </div>
     <div id="wb-tools" class="wb-pane">
@@ -1649,6 +1660,13 @@ export function openToolsHistoryModal(detail: LevelDetail, opts?: ToolsHistoryOp
       </div>
       <p class="modal-hint" id="wb-tool-status"></p>
     </div>
+    ${
+      opts?.workloadSetName
+        ? `<div id="wb-workload" class="wb-pane wb-workload-pane" style="display:none">
+      <div id="wb-workload-mount" class="wb-workload-mount"><p class="muted">加载工作量推测…</p></div>
+    </div>`
+        : ""
+    }
     <div id="wb-history" class="wb-pane" style="display:none">
       <div class="wb-hist-toolbar">
         ${mBtnHtml("↻ 刷新", "small", { id: "wb-refresh" })}
@@ -1659,20 +1677,51 @@ export function openToolsHistoryModal(detail: LevelDetail, opts?: ToolsHistoryOp
     `${cancelBtnHtml("关闭")}`
   );
   // 大弹窗：宽幅 + 高占满（modal-body 自身滚动）。
-  document.querySelector("#modal-root .modal-panel")?.classList.add("wide", "wb-xl");
+  const panel = document.querySelector("#modal-root .modal-panel");
+  panel?.classList.add("wide", "wb-xl");
+
+  let workloadHandle: { dispose: () => void; isDirty: () => boolean } | null = null;
+  let workloadLoading = false;
+
+  const showWbTab = (tab: string): void => {
+    const tools = document.getElementById("wb-tools");
+    const hist = document.getElementById("wb-history");
+    const wl = document.getElementById("wb-workload");
+    if (tools) tools.style.display = tab === "tools" ? "" : "none";
+    if (hist) hist.style.display = tab === "history" ? "" : "none";
+    if (wl) wl.style.display = tab === "workload" ? "" : "none";
+    panel?.classList.toggle("workload-modal", tab === "workload");
+  };
+
+  const ensureWorkload = async (): Promise<void> => {
+    if (!opts?.workloadSetName || workloadHandle || workloadLoading) return;
+    const mount = document.getElementById("wb-workload-mount");
+    if (!mount || mount.dataset.loaded === "1") return;
+    workloadLoading = true;
+    try {
+      workloadHandle = await mountWorkloadEditor(mount, detail, opts.workloadSetName, true);
+      mount.dataset.loaded = "1";
+    } catch (e) {
+      mount.innerHTML = `<p class="modal-hint err">${esc((e as Error).message)}</p>`;
+    } finally {
+      workloadLoading = false;
+    }
+  };
+
   // data-cancel 无全局委托，须在此绑定关闭（与项目其他弹窗一致）。
-  document.querySelector("#modal-root [data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("#modal-root [data-cancel]")?.addEventListener("click", () => {
+    if (workloadHandle?.isDirty() && !window.confirm("工作量区域尚未保存，确定关闭吗？")) return;
+    workloadHandle?.dispose();
+    closeModal();
+  });
 
   document.querySelectorAll<HTMLButtonElement>("[data-wb-tab]").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll<HTMLButtonElement>("[data-wb-tab]").forEach((b) => b.classList.toggle("active", b === btn));
-      const tools = document.getElementById("wb-tools");
-      const hist = document.getElementById("wb-history");
-      if (tools && hist) {
-        tools.style.display = btn.dataset.wbTab === "tools" ? "" : "none";
-        hist.style.display = btn.dataset.wbTab === "history" ? "" : "none";
-      }
-      if (btn.dataset.wbTab === "history") void loadHistoryList(wbSet, levelId, opts);
+      const tab = btn.dataset.wbTab ?? "tools";
+      showWbTab(tab);
+      if (tab === "history") void loadHistoryList(wbSet, levelId, opts);
+      if (tab === "workload") void ensureWorkload();
     });
   });
 
@@ -2357,6 +2406,112 @@ export interface SceneConfigOptions {
   ceilingHeight: number;
   hasCeilingHeight: boolean;
   onCeilingHeightChange?: (value: number) => void;
+  /** 关卡管理页：仅展示场景内当前值，须在布局编辑器中修改并写回。 */
+  ceilingReadOnly?: boolean;
+  partLevel?: {
+    canEdit: boolean;
+    active: boolean;
+    partCount: number;
+    onManage: () => void;
+    onApplyEnable?: (count: number, assign: "base" | "p1") => void;
+    /** 布局编辑态：同步读取画布主题信号（管理页用 themeSignalsForScene）。 */
+    getThemeSignals?: () => ThemeSignals | Promise<ThemeSignals>;
+  };
+}
+
+function prefabIdFromLayoutPath(path: string): string {
+  const base = path.split("/").pop() ?? "";
+  return base.replace(/\.prefab$/i, "");
+}
+
+/** 从布局 JSON 推断音频主题信号（关卡管理页等无画布状态时使用）。 */
+export async function themeSignalsForScene(sceneAssetPath: string): Promise<ThemeSignals> {
+  const themes = new Set<string>();
+  const itemIds = new Set<string>();
+  let raft = false;
+  let deathTheme = "";
+  try {
+    const [doc, catalog] = await Promise.all([api.fetchLayout(sceneAssetPath), api.loadCatalog()]);
+    const byGuid = new Map(catalog.items.map((c) => [c.guid, c]));
+    for (const it of doc.items ?? []) {
+      const cat = byGuid.get(it.prefabGuid);
+      if (cat?.theme) themes.add(cat.theme);
+      const id = cat?.id ?? prefabIdFromLayoutPath(it.prefabAssetPath ?? "");
+      if (id) itemIds.add(id);
+    }
+    raft = (doc.floors ?? []).some((f) => f.surfaceKind === "raft");
+    const dt = doc.deathInfo?.deathType;
+    deathTheme = dt === "water" ? "water" : dt === "goo" ? "goo" : "";
+  } catch {
+    /* 离线或布局缺失时仍允许打开音频窗（仅无主题推荐） */
+  }
+  return { themes, raft, deathTheme, itemIds };
+}
+
+function ceilingEnvPaneHtml(sceneConfig: SceneConfigOptions): string {
+  const h = Math.max(0, Math.min(10, sceneConfig.ceilingHeight));
+  const ro = sceneConfig.ceilingReadOnly;
+  const dis = ro ? " disabled" : "";
+  return `<p class="modal-hint">空气斜坡 · 天花板高度（KitchenLoaderManager）</p>
+        <div class="cfg-ceiling-card">
+          <div class="cfg-ceiling-row">
+            <input type="range" id="cfg-ceiling-slider" min="0" max="10" step="1" value="${h}"${dis} aria-label="天花板高度滑杆" />
+            <input type="number" id="cfg-ceilingHeight" class="cfg-ceiling-num" min="0" max="10" step="1" value="${h}"${dis} />
+            <span class="cfg-ceiling-val" id="cfg-ceiling-display">${h} m</span>
+          </div>
+          <div class="cfg-ceiling-presets">
+            <button type="button" class="m-btn" data-ceiling-preset="2"${dis}>默认 2</button>
+            <button type="button" class="m-btn" data-ceiling-preset="3"${dis}>3 m</button>
+            <button type="button" class="m-btn" data-ceiling-preset="4"${dis}>4 m</button>
+            <button type="button" class="m-btn" data-ceiling-preset="5"${dis}>5 m</button>
+          </div>
+          <p class="muted small">立体关卡与空气斜坡需足够高度才能正常行走。建议「最高坡顶向上取整 + 1」，上限 10。${
+            ro
+              ? "此处为场景只读快照；修改请进入布局编辑并在「保存全部」后「写回 Unity」。"
+              : "在「保存全部」后仍会写入画布状态，须再点「写回 Unity」才落盘场景。"
+          }</p>
+        </div>`;
+}
+
+function partLevelTabPaneHtml(part: NonNullable<SceneConfigOptions["partLevel"]>): string {
+  if (part.active) {
+    return `<div class="cfg-part-doc">
+        <div class="cfg-part-status dep-ok">已开启分 P · ${part.partCount} 个阶段</div>
+        <p class="muted small">写回 Unity 保存后<b>不可逆</b>。顶栏会出现阶段 Tab（基础层 / P1…）与「分P管理」；物件用右键「移到分 P」划分各阶段内容。</p>
+        <ul class="cfg-part-list muted small">
+          <li><b>基础层</b>：全程常驻的壳（墙体、通道等），不参与 P 替换。</li>
+          <li><b>P1、P2…</b>：按时间轴切换的可玩布局；转场演出期间玩家仍可移动。</li>
+          <li><b>背景层</b>：仅基础层可编辑（背景全程常驻，不随 P 替换）。</li>
+        </ul>
+        ${mBtnHtml("打开分 P 管理", "primary", { id: "cfg-part-manage" })}
+      </div>`;
+  }
+  return `<div class="cfg-part-doc">
+      <div class="part-warn cfg-part-warn">
+        <span class="part-warn-icon">⚠</span>
+        <span><b>不可逆</b>：开启并<b>写回保存</b>后，本关卡永久成为分 P 关卡，无法恢复为普通单阶段关卡（只能靠写回历史或副本关卡回退）。</span>
+      </div>
+      <p class="modal-hint">什么是分 P？</p>
+      <p class="muted small">同一关卡在一条时间轴上自动切换多套布局（P1 → P2 → …）。适合「前半段厨房 A、后半段厨房 B」一类关卡；场景结构、转场动画与时间轴由写回时自动烘焙。</p>
+      <ul class="cfg-part-list muted small">
+        <li>开启后现有物件默认归入<b>基础层</b>（推荐：全程常驻），或归入 <b>P1</b>（作为开局布局）。</li>
+        <li>各阶段玩法内容请分别移入 P1…Pn（右键「移到分 P」）；转场节奏、停放方向、清理策略在「分 P 管理」中调整。</li>
+        <li>默认转场：每段稳定 60s + 下沉再上浮 5s，可在管理面板修改。</li>
+      </ul>
+      <p class="modal-hint">启用参数</p>
+      <div class="part-form cfg-part-form">
+        <label class="m-field">阶段数量
+          <input type="number" id="cfg-part-count" min="2" max="8" value="3" />
+        </label>
+        <label class="m-field">现有物件归入
+          <select id="cfg-part-assign">
+            <option value="base" selected>基础层（推荐：现有物件 = 全程常驻）</option>
+            <option value="p1">P1（现有物件 = 开局布局）</option>
+          </select>
+        </label>
+      </div>
+      ${mBtnHtml("开启分 P", "primary", { id: "cfg-part-enable" })}
+    </div>`;
 }
 
 export async function openConfigTabsModal(
@@ -2392,17 +2547,29 @@ export async function openConfigTabsModal(
   }).join("");
   const defaultRoundTime = detail.configs[0]?.roundTime || 240;
 
+  const envPane = sceneConfig
+    ? `<div data-lpane="env" style="display:none">${ceilingEnvPaneHtml(sceneConfig)}</div>`
+    : "";
+  const partPane =
+    sceneConfig?.partLevel?.canEdit
+      ? `<div data-lpane="part" style="display:none">${partLevelTabPaneHtml(sceneConfig.partLevel!)}</div>`
+      : "";
+  const audioPane = `<div data-lpane="audio" style="display:none" id="cfg-audio-pane"><p class="muted small">加载音频资源…</p></div>`;
+
   openModal(
     `关卡配置 · ${detail.levelName || detail.levelNameZH}`,
     `<div class="cfg-ltabs">
         <button type="button" class="cfg-ltab-btn active" data-ltab="score">📊 分数</button>
+        ${envPane ? `<button type="button" class="cfg-ltab-btn" data-ltab="env">🌤 环境</button>` : ""}
+        ${partPane ? `<button type="button" class="cfg-ltab-btn" data-ltab="part">🔀 分 P</button>` : ""}
+        <button type="button" class="cfg-ltab-btn" data-ltab="audio">🔊 音频</button>
         <button type="button" class="cfg-ltab-btn" data-ltab="shot">📷 截图</button>
      </div>
      <div data-lpane="score">
        <div class="cfg-ai-bar">
           ${mBtnHtml("✨ 一键定分", "primary", { id: "cfg-ai-fill" })}
           <label class="m-field cfg-round-all">关卡时长(秒)<input type="number" id="cfg-roundTime-all" step="10" min="30" value="${defaultRoundTime}"></label>
-          <span class="muted small">修改时长后点击「一键定分」重新修订；定分会同步修正订单超时 / 间隔 / 回盘</span>
+          <span class="muted small">修改时长后点击「一键定分」按当前关卡时长修订星级分数；不改动订单超时（间隔 / 回盘仍会按官方默认填入，可再在下方节奏表中修改）</span>
        </div>
        <p class="modal-hint">订单数量（LevelInfoSO）</p>
         <div class="cfg-order-count">
@@ -2416,11 +2583,6 @@ export async function openConfigTabsModal(
          <label class="m-field">网格半宽 Z gridHalfSizeZ<input type="number" id="cfg-gridHalfZ" min="0" max="50" step="1" value="${detail.gridHalfSizeZ ?? 0}"></label>
           <span class="muted small">默认显示场景当前生效值；0 = 不调整（保持场景现值）。X/Z 为水平半宽（2N+1 格），Y 默认 1。需覆盖全部工作台，超出的工作台无法交互。保存时场景须在 Unity 中打开。</span>
         </div>
-        ${sceneConfig ? `<p class="modal-hint">核心参数 · 空气斜坡（CampaignGameEnvironment/KitchenLoaderManager）</p>
-        <div class="cfg-order-count">
-          <label class="m-field">Ceiling Height<input type="number" id="cfg-ceilingHeight" min="0" max="10" step="1" value="${sceneConfig.ceilingHeight}"></label>
-          <span class="muted small">默认值为 2；空气斜坡首次使用时建议设置为「最高斜坡高度向上取整 + 1」，最高不超过 10。保存关卡配置后仍需点击「写回 Unity」保存场景。</span>
-        </div>` : ""}
        <p class="modal-hint">星级分数（按人数）</p>
        <table class="cfg-matrix">
          <thead><tr><th>人数</th>${starHead}<th>难度系数</th></tr></thead>
@@ -2433,6 +2595,9 @@ export async function openConfigTabsModal(
          <tbody>${rhythmRows}</tbody>
        </table>
      </div>
+     ${envPane}
+     ${partPane}
+     ${audioPane}
      <div data-lpane="shot" style="display:none">
        ${screenshotPaneHtml(detail)}
      </div>`,
@@ -2440,18 +2605,82 @@ export async function openConfigTabsModal(
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
 
-  // 顶层 tab：分数（参与「保存全部」）/ 截图（即时上传，切到截图时隐藏保存按钮）
+  let audioSave: ((closeOnSave: boolean) => Promise<void>) | null = null;
+  const syncCfgSaveBtn = (): void => {
+    const tab = document.querySelector<HTMLButtonElement>(".cfg-ltab-btn.active")?.dataset.ltab ?? "score";
+    const ok = document.querySelector<HTMLButtonElement>("[data-ok]");
+    if (!ok) return;
+    if (tab === "shot") {
+      ok.style.display = "none";
+      return;
+    }
+    ok.style.display = "";
+    ok.textContent = tab === "audio" ? "保存音频" : "保存全部";
+  };
+
+  // 顶层 tab：分数/环境/分P →「保存全部」；音频 →「保存音频」；截图 → 无底部保存
   document.querySelectorAll<HTMLButtonElement>(".cfg-ltab-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       document.querySelectorAll(".cfg-ltab-btn").forEach((b) => b.classList.toggle("active", b === btn));
-      const isShot = btn.dataset.ltab === "shot";
+      const tab = btn.dataset.ltab ?? "score";
       document.querySelectorAll<HTMLElement>("[data-lpane]").forEach((p) => {
-        p.style.display = p.dataset.lpane === btn.dataset.ltab ? "" : "none";
+        p.style.display = p.dataset.lpane === tab ? "" : "none";
       });
-      document.querySelector<HTMLButtonElement>("[data-ok]")?.style.setProperty("display", isShot ? "none" : "");
+      syncCfgSaveBtn();
     })
   );
+  syncCfgSaveBtn();
+
+  const loadEmbeddedAudio = async (): Promise<void> => {
+    const pane = document.getElementById("cfg-audio-pane");
+    if (!pane || pane.dataset.audioLoaded === "1") return;
+    pane.innerHTML = `<p class="muted small">加载音频资源…</p>`;
+    try {
+      const sig = sceneConfig?.partLevel?.getThemeSignals
+        ? await Promise.resolve(sceneConfig.partLevel.getThemeSignals())
+        : await themeSignalsForScene(detail.sceneAssetPath);
+      const inner = document.createElement("div");
+      inner.className = "cfg-audio-inner";
+      pane.innerHTML = "";
+      pane.appendChild(inner);
+      const { save } = await wireAudioEditor(inner, detail, sig, onSaved);
+      audioSave = save;
+      pane.dataset.audioLoaded = "1";
+    } catch (e) {
+      pane.innerHTML = `<p class="modal-hint err">${esc((e as Error).message)}</p>`;
+    }
+  };
+  void loadEmbeddedAudio();
   wireScreenshotPane(detail);
+
+  const syncCeilingUi = (v: number): void => {
+    const c = Math.max(0, Math.min(10, Math.round(v)));
+    const num = document.getElementById("cfg-ceilingHeight") as HTMLInputElement | null;
+    const slider = document.getElementById("cfg-ceiling-slider") as HTMLInputElement | null;
+    const disp = document.getElementById("cfg-ceiling-display");
+    if (num) num.value = String(c);
+    if (slider) slider.value = String(c);
+    if (disp) disp.textContent = `${c} m`;
+  };
+  if (sceneConfig && !sceneConfig.ceilingReadOnly) {
+    document.getElementById("cfg-ceiling-slider")?.addEventListener("input", (e) =>
+      syncCeilingUi(Number((e.target as HTMLInputElement).value))
+    );
+    document.getElementById("cfg-ceilingHeight")?.addEventListener("change", (e) =>
+      syncCeilingUi(Number((e.target as HTMLInputElement).value))
+    );
+    document.querySelectorAll<HTMLButtonElement>("[data-ceiling-preset]").forEach((b) =>
+      b.addEventListener("click", () => syncCeilingUi(Number(b.dataset.ceilingPreset ?? 2)))
+    );
+  }
+  document.getElementById("cfg-part-manage")?.addEventListener("click", () => sceneConfig?.partLevel?.onManage());
+  document.getElementById("cfg-part-enable")?.addEventListener("click", () => {
+    const countEl = document.getElementById("cfg-part-count") as HTMLInputElement | null;
+    const assignEl = document.getElementById("cfg-part-assign") as HTMLSelectElement | null;
+    const count = Math.max(2, Math.min(8, Number(countEl?.value ?? 3) || 3));
+    const assign = assignEl?.value === "p1" ? "p1" : "base";
+    sceneConfig?.partLevel?.onApplyEnable?.(count, assign);
+  });
 
   // 顶部统一关卡时长：修改后广播到 1P~4P 四行（行内仍可单独微调）
   document.getElementById("cfg-roundTime-all")?.addEventListener("change", (e) => {
@@ -2518,7 +2747,6 @@ export async function openConfigTabsModal(
         detailEl.innerHTML = `<p class="modal-hint err">所选菜谱缺少价格信息，无法推算。</p>`;
         return;
       }
-      const lifeTimes = computeOrderLifeTimes(result.maxTimeSec);
       PLAYER_TABS.forEach((t, ti) => {
         baseStars[ti] = result.stars[ti].slice();
         result.stars[ti].forEach((v, j) => {
@@ -2529,7 +2757,6 @@ export async function openConfigTabsModal(
           (document.getElementById(`cfg-${t}-${key}`) as HTMLInputElement).value = String(v);
         };
         setVal("roundTime", topRoundTime);
-        setVal("orderLifeTime", lifeTimes[ti]);
         setVal("timeBetweenOrders", ORDER_INTERVAL_SEC[ti]);
         setVal("plateReturnTime", PLATE_RETURN_SEC);
       });
@@ -2569,9 +2796,7 @@ export async function openConfigTabsModal(
       detailEl.innerHTML = `
         <p class="modal-hint ok">已按 ${result.details.length} 道菜谱推算（${esc(modelTag)}）：平均单菜约 ${result.avgTimeSec.toFixed(
         0
-      )} 秒 · 平均菜价 ${result.avgPrice.toFixed(0)} 分 · 已同步修正节奏（订单超时 1P~4P：${lifeTimes.join(
-        " / "
-      )} 秒，关卡时长 ${topRoundTime} 秒）</p>
+      )} 秒 · 平均菜价 ${result.avgPrice.toFixed(0)} 分 · 已修订星级分数（关卡时长 ${topRoundTime} 秒；订单超时未改动）</p>
         ${chipsHtml}
         ${warnsHtml}
         <table class="cfg-ai-table">
@@ -2588,6 +2813,15 @@ export async function openConfigTabsModal(
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+    const activeTab = document.querySelector<HTMLButtonElement>(".cfg-ltab-btn.active")?.dataset.ltab;
+    if (activeTab === "audio") {
+      if (!audioSave) {
+        setStatus("音频尚未加载完成，请稍候", false);
+        return;
+      }
+      await audioSave(false);
+      return;
+    }
     try {
       const build = (t: string): PerPlayerConfig => {
         const getNum = (key: string) =>
@@ -2722,6 +2956,7 @@ function detectItemAudioRequirements(
   return { hits, dirIds, ambiences };
 }
 
+/** 独立音频弹窗（保留给外部调用）；关卡配置内嵌使用 wireAudioEditor。 */
 export async function openAudioModal(
   detail: LevelDetail,
   themeSignals: ThemeSignals,
@@ -2731,7 +2966,28 @@ export async function openAudioModal(
     setStatus("该关卡缺少场景路径，无法编辑音频", false);
     return;
   }
-    setStatus("加载音频资源…");
+  openModal(
+    `音频配置 · ${detail.levelName || detail.levelNameZH}`,
+    `<div id="au-editor-mount" class="cfg-audio-inner"></div>`,
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("保存")}`
+  );
+  document.querySelector(".modal-panel")?.classList.add("wide");
+  const mount = document.getElementById("au-editor-mount")!;
+  const { save } = await wireAudioEditor(mount, detail, themeSignals, onSaved);
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", () => void save(true));
+}
+
+async function wireAudioEditor(
+  mount: HTMLElement,
+  detail: LevelDetail,
+  themeSignals: ThemeSignals,
+  onSaved: () => void
+): Promise<{ save: (closeOnSave?: boolean) => Promise<void> }> {
+  if (!detail.sceneAssetPath) {
+    throw new Error("该关卡缺少场景路径，无法编辑音频");
+  }
+  setStatus("加载音频资源…");
 
   let music: MusicEntry[];
   let dirs: AudioDirectoryEntry[];
@@ -3094,9 +3350,7 @@ export async function openAudioModal(
   // 已选 BGM 的关卡默认打开「音乐」tab，直接显示当前 BGM
   const defaultTab = state.musicGuid || state.customMusicFile ? "music" : "check";
 
-  openModal(
-    `音频配置 · ${detail.levelName || detail.levelNameZH}`,
-    `
+  mount.innerHTML = `
     <p class="modal-hint">写入场景的 <code>PseudoPrefabManagerStub</code>。保存时会自动打开/保存场景、Reload，并<b>把所选 BGM / 音效集所需 bundle 并入 <code>LevelInfoSO.dependencies</code></b>。Bundle 分析与清理请使用关卡管理 → <b>📦 依赖管理</b>。</p>
     <div class="cfg-tabs">
       <button type="button" class="cfg-tab-btn ${defaultTab === "check" ? "active" : ""}" data-tab="check">🔍 检查</button>
@@ -3170,10 +3424,7 @@ export async function openAudioModal(
       <span class="au-player-time" id="au-player-time">--:-- / --:--</span>
       <input type="range" class="au-player-progress" id="au-player-progress" min="0" max="100" value="0" step="0.1" />
     </div>
-    `,
-    `${mCancelBtnHtml()}${mPrimaryBtnHtml("保存")}`
-  );
-  document.querySelector(".modal-panel")?.classList.add("wide");
+    `;
 
   // ---- tab switching ----
   document.querySelectorAll<HTMLButtonElement>(".cfg-tab-btn").forEach((btn) =>
@@ -3718,8 +3969,7 @@ export async function openAudioModal(
     });
   }
 
-  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
-  document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+  const save = async (closeOnSave = true): Promise<void> => {
     try {
       const ambiences = [...state.ambiences];
       const audioDirectoryGuids = effectiveDirGuids();
@@ -3733,7 +3983,7 @@ export async function openAudioModal(
         audioDirectoryGuids,
         onDeathEffectGuid: state.deathGuid,
       });
-      closeModal();
+      if (closeOnSave) closeModal();
       setStatus("音频配置已保存（已 reload，所需 bundle 已自动补齐）");
       onSaved();
     } catch (e) {
@@ -3741,5 +3991,6 @@ export async function openAudioModal(
     } finally {
       hideBusy();
     }
-  });
+  };
+  return { save };
 }

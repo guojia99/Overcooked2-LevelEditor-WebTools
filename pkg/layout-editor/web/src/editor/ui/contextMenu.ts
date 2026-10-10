@@ -88,6 +88,7 @@ import {
   wireBatchDisperseRow,
 } from "../selectionTransform";
 import { updateFloorBar } from "../floorPalette";
+import { partLevelActive, partMoveTargets, partLabel, moveSelectionToPart } from "../partLevel";
 
 export function animControlCtxHtml(item: EditorItem): string {
   // Players are not movable; pure background (water/sky) is not a move member.
@@ -138,9 +139,22 @@ export function enableAnimControl(item: EditorItem): void {
   draw();
 }
 
+/** 分 P：把当前选中物件/地板移到其他阶段的操作行（§3.2 严格作用域的唯一入口）。 */
+function partMoveRowHtml(): string {
+  if (!partLevelActive()) return "";
+  const targets = partMoveTargets();
+  if (targets.length === 0) return "";
+  return `
+    <div class="ctx-nudge-row">
+      <span class="ctx-label" title="把选中物件移入指定阶段（当前：${partLabel(S.currentPart)}）">移到分P</span>
+      <div class="ctx-nudge" style="flex-wrap:wrap;gap:4px">
+        ${targets.map((t) => `<button type="button" class="ctx-part-btn" data-part-move="${t.pid}" title="移入 ${t.label}">${t.label}</button>`).join("")}
+      </div>
+    </div>`;
+}
+
 /** 多选地板/物品时仅显示批量高度菜单（地板层右键）。 */
-export function showBatchHeightMenu(clientX: number, clientY: number) {
-  if (selectionHeightTargetCount() < 2) return;
+export function showBatchHeightMenu(clientX: number, clientY: number) {  if (selectionHeightTargetCount() < 2) return;
   const batch = isBatchTransform();
   const step = S.freeSnapStep;
   const nudgeLabel = batchNudgeRowLabel() || `微移 ${step.toFixed(stepDecimals(step))}`;
@@ -295,6 +309,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     }
     ${selectionTravelatorSpeedRowHtml()}
     ${selectionAirWallHeightRowHtml()}
+    ${partMoveRowHtml()}
     ${
       !isPlayer && !resizable
         ? `<div class="ctx-nudge-row">
@@ -391,6 +406,13 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   };
   document.getElementById("ctx-x-input")?.addEventListener("change", applyWorldPos);
   document.getElementById("ctx-z-input")?.addEventListener("change", applyWorldPos);
+  // 分 P：移到指定阶段（含当前选中的物件与地板）。
+  dom.ctxMenuEl.querySelectorAll<HTMLButtonElement>("[data-part-move]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      moveSelectionToPart(btn.dataset.partMove!);
+      hideContextMenu();
+    });
+  });
   if (batchHeight) {
     wireSelectionHeightRow(dom.ctxMenuEl, () => {
       draw();

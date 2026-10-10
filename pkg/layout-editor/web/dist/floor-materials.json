@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-08T06:44:39.329Z",
-  "schemaVersion": 8,
-  "itemCount": 419,
+  "generatedAt": "2026-10-10T03:24:59.154Z",
+  "schemaVersion": 10,
+  "itemCount": 421,
   "materials": [
     {
       "guid": "b731a7a89e8982119737afd17c70adad",
@@ -2084,6 +2084,15 @@
       "icon": true
     },
     {
+      "guid": "b3132a10c5e3e9440a9d15dd823db833",
+      "id": "DLC2_OnionHouse_Floor_tiling4x4",
+      "assetPath": "Assets/LevelSets/tester_web/materials/DLC2_OnionHouse_Floor_tiling4x4.mat",
+      "nameZh": "DLC2_OnionHouse_Floor_tiling4",
+      "nameEn": "DLC2_Onion House_Floor_tiling4x4",
+      "sizeTag": "",
+      "source": "tester_web"
+    },
+    {
       "guid": "9c5a5dafb9f2bf7de6ba09e54e5fc765",
       "id": "DLC_OnionHouse_Floor",
       "assetPath": "Assets/commonW1/materials/DLC_OnionHouse_Floor.mat",
@@ -2744,6 +2753,15 @@
       "nameEn": "mat_city_path_02_tiling20x11",
       "sizeTag": "",
       "source": "jia_carnival"
+    },
+    {
+      "guid": "0aca2798d23b091439aa67cec4d5553a",
+      "id": "mat_city_path_02_tiling20x11",
+      "assetPath": "Assets/LevelSets/tester_web/materials/mat_city_path_02_tiling20x11.mat",
+      "nameZh": "mat_city_path_02_tiling20",
+      "nameEn": "mat_city_path_02_tiling20x11",
+      "sizeTag": "",
+      "source": "tester_web"
     },
     {
       "guid": "e790cec68c226aa4cb07455c75b4c561",

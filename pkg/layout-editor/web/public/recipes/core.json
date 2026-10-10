@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 8,
+  "schemaVersion": 10,
   "group": "core",
   "itemCount": 35,
   "recipes": [
@@ -344,7 +344,7 @@
       "platingStep": "",
       "ingredients": [
         "TortillaSO",
-        "SushiRiceSO",
+        "RiceSO",
         "BurritoChickenSO"
       ],
       "ingredientCount": 3,
@@ -369,7 +369,7 @@
             "Pot"
           ],
           "ingredients": [
-            "SushiRiceSO"
+            "RiceSO"
           ]
         },
         {
@@ -469,7 +469,7 @@
       "platingStep": "",
       "ingredients": [
         "TortillaSO",
-        "SushiRiceSO",
+        "RiceSO",
         "MushroomSO"
       ],
       "ingredientCount": 3,
@@ -494,7 +494,7 @@
             "Pot"
           ],
           "ingredients": [
-            "SushiRiceSO"
+            "RiceSO"
           ]
         },
         {
@@ -696,7 +696,7 @@
       "platingStep": "",
       "ingredients": [
         "TortillaSO",
-        "SushiRiceSO",
+        "RiceSO",
         "BurritoMeatSO"
       ],
       "ingredientCount": 3,
@@ -721,7 +721,7 @@
             "Pot"
           ],
           "ingredients": [
-            "SushiRiceSO"
+            "RiceSO"
           ]
         },
         {

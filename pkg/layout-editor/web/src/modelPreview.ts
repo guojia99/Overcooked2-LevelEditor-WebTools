@@ -8,7 +8,10 @@ import { mBtnHtml, mCancelBtnHtml } from "./ui/views/button";
 import {
   CM_PER_UNIT,
   CUP_FIT_CM,
+  CUP_INTERIOR_FLOOR_FROM_CENTER_CM,
   PLATE_FIT_CM,
+  PLATE_SURFACE_FROM_CENTER_CM,
+  REF_GLASS_HALF_HEIGHT_U,
   cm2u,
   fmt4,
   fmtCm,
@@ -90,6 +93,8 @@ export interface ModelPreviewOptions {
   /** Unity 导入后的模型原始尺寸（不含配置变换，由后端从 prefab 包围盒反推），
    *  自动适配以 Unity 实际尺寸为准（three.js 尺寸可能与 Unity 不一致）。 */
   unitySize?: { x: number; y: number; z: number; minY: number };
+  /** Unity 世界包围盒底面 Y（容器中心为原点）；与 modelPositionY 一起比 unitySize.minY 更可靠。 */
+  boundsMinY?: number;
 }
 
 function disposeActive(): void {
@@ -306,7 +311,7 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
   }
 
   /** 坐标系辅助：原点标记 + X/Y/Z 三轴（带颜色与文字标签）+ 厘米格距标注。
-   *  轴与标注随 fit 重建，位于模型底部平面（y = 模型底面，单位与 Unity 一致，1 单位 = 100 cm）。 */
+   *  轴与网格在 y=0：参考容器包围盒中心 = 原点（与 Unity / 位置 Y 底面高度语义一致）。 */
   function setupCoordSys(originY: number, span: number, cellCm: number): void {
     if (axisGizmo) {
       scene.remove(axisGizmo);
@@ -383,9 +388,9 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     }
     const divisions = Math.max(8, Math.round(span / cell));
     grid = new THREE.GridHelper(span, divisions, 0x3d6bf3, 0x333a4a);
-    grid.position.y = box.min.y;
+    grid.position.y = 0;
     scene.add(grid);
-    setupCoordSys(box.min.y, span, Math.round(cell * 100));
+    setupCoordSys(0, span, Math.round(cell * 100));
   }
 
   let previewObj: THREE.Object3D | null = null;
@@ -396,20 +401,73 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
   let unitK = 1;
   /** 预览基准缩放：已知 Unity 尺寸时把模型显示归一化到 Unity 实际大小（1/unitK）。 */
   let unitBase = 1;
-  /** 参考容器（盘子/杯子，纯视觉标的物，无碰撞）：包围盒中心 = 原点 (0,0,0)。 */
+  /** 内容底面相对变换节点 Y 的偏移（Unity 单位、scale=1）：worldMinY ≈ positionY + this × scale。 */
+  let contentBottomLift = 0;
+  /** 当前参考容器类型（影响原点与 positionY 换算）。 */
+  let refKind: "plate" | "cup" = opts.fitTarget ?? "plate";
   let refObj: THREE.Object3D | null = null;
   let refLabel: THREE.Sprite | null = null;
 
-  /** 参考容器模型（web/public/models/，Unity 静态服务随 dist 提供）。 */
+  /** 参考容器模型（web/public/models/，Unity 静态服务随 dist 提供）。
+   *  盘子：包围盒中心 = 原点（与游戏容器中心一致）。
+   *  杯子：杯底 = 原点（OBJ 几何中心在半高；centerY=0 不再把中心钉在 y=0）。 */
   const REF_MODELS = {
-    plate: { url: "models/ref_plate.obj", centerY: -0.0643 },
-    cup: { url: "models/ref_glass.obj", centerY: -0.398 },
+    plate: { url: "/models/ref_plate.obj", centerY: -0.0643 },
+    cup: { url: "/models/ref_glass.obj", centerY: 0 },
   } as const;
 
-  /** 加载/切换参考容器：半透明显示，包围盒中心对齐原点（0,0,0）；
-   *  仅作视觉标的物（不参与射线/碰撞），盘子用于盘子目标、杯子用于杯子目标。
-   *  容器顶部带尺寸标注（cm），可直接在 web 验证容器实际大小。 */
+  /** 游戏容器中心在预览世界坐标中的 Y（盘子中心=0；杯子中心在杯底上方半杯高）。 */
+  function gameContainerCenterY(): number {
+    return refKind === "cup" ? REF_GLASS_HALF_HEIGHT_U : 0;
+  }
+
+  function isCupPreview(): boolean {
+    return refKind === "cup" || opts.fitTarget === "cup";
+  }
+
+  /** 游戏承物面相对容器中心的 Y（Unity、scale=1）：杯内底 / 盘子顶面。 */
+  function gameSurfaceMinY(): number {
+    return isCupPreview()
+      ? cm2u(CUP_INTERIOR_FLOOR_FROM_CENTER_CM)
+      : cm2u(PLATE_SURFACE_FROM_CENTER_CM);
+  }
+
+  /** 内容底面相对变换节点的 Y 偏移（Unity、scale=1）：world 底面 ≈ centerY + positionY + lift×scale。
+   *  杯模式：mesh 原点常在几何中心，不能把底面停在容器中心（杯口）；与承物面取更低者。 */
+  function recomputeContentBottomLift(positionY: number, scale: number): void {
+    const s = Math.max(1e-6, scale || 1);
+    let lift: number | null = null;
+
+    if (opts.boundsMinY != null && Number.isFinite(opts.boundsMinY)) {
+      const fromBounds = (opts.boundsMinY - positionY) / s;
+      if (Number.isFinite(fromBounds)) lift = fromBounds;
+    }
+    if (lift == null || Math.abs(lift) < 1e-6) {
+      const uy = opts.unitySize?.minY;
+      if (uy != null && Number.isFinite(uy) && Math.abs(uy) > 1e-6) lift = uy;
+    }
+    if (lift == null || Math.abs(lift) < 1e-6) {
+      if (rawBox) {
+        const fromMesh = -rawBox.min.y * unitBase;
+        if (Math.abs(fromMesh) > 1e-6) lift = fromMesh;
+      }
+    }
+
+    const surface = gameSurfaceMinY();
+    if (isCupPreview()) {
+      // 底面在容器中心附近（bounds≈0、mesh 原点在中心等）时，对齐杯内底；已明显下沉则尊重数据
+      const nearContainerCenter = lift == null || lift >= cm2u(-5);
+      contentBottomLift = nearContainerCenter ? surface : lift!;
+    } else {
+      const nearContainerCenter = lift == null || lift <= cm2u(2);
+      contentBottomLift = nearContainerCenter ? surface : lift!;
+    }
+  }
+
+  /** 加载/切换参考容器：半透明显示；盘子中心对齐原点，杯底对齐原点。
+   *  仅作视觉标的物（不参与射线/碰撞）。 */
   function loadReference(kind: "plate" | "cup"): void {
+    refKind = kind;
     if (refObj) {
       scene.remove(refObj);
       disposeGroup(refObj);
@@ -436,7 +494,6 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
             mat.color = new THREE.Color(0x8fd3ff);
           }
         });
-        // 包围盒中心 = 原点（0,0,0）：原点 = 容器中心，高度/大小都以它为准
         ref.position.y = spec.centerY;
         refObj = ref;
         scene.add(ref);
@@ -453,11 +510,22 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
         label.position.set(0, b.max.y + Math.max(dia * 0.1, 0.06), 0);
         scene.add(label);
         refLabel = label;
-        if (previewObj) fitObjects([previewObj, ref]);
+        if (previewObj) {
+          const t = readTransform();
+          recomputeContentBottomLift(t.positionY, t.scale);
+          applyTransform(t, false);
+          fitObjects([previewObj, ref]);
+        }
       },
       undefined,
-      () => {
-        // 参考模型加载失败不影响主预览
+      (err) => {
+        console.warn(
+          `[ModelPreview] 参考容器加载失败（${spec.url}）：`,
+          err,
+          "请在 Unity 执行「导出 3D 预览参考容器」或确认 web/public/models 已提交。"
+        );
+        status.textContent = `参考容器模型缺失（${spec.url}），尺寸对比不可用`;
+        status.classList.add("err");
       }
     );
   }
@@ -572,12 +640,22 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
 
   function applyTransform(t: ModelTransformValues, refit = true): void {
     if (!previewObj || !modelObj) return;
+    recomputeContentBottomLift(t.positionY, t.scale);
     previewObj.rotation.set(t.rotationX * DEG2RAD, t.rotationY * DEG2RAD, t.rotationZ * DEG2RAD);
-    previewObj.position.set(t.positionX, t.positionY, t.positionZ);
+    const centerY = gameContainerCenterY();
+    previewObj.position.set(t.positionX, centerY + t.positionY, t.positionZ);
     // 模型原点偏移（Unity 单位 → 预览单位）
     modelObj.position.set(t.pivotX * unitK, t.pivotY * unitK, t.pivotZ * unitK);
     // 模型显示尺寸 = Unity 实际尺寸 × 用户 scale（unitBase 归一化 three.js 与 Unity 的单位差异）
     previewObj.scale.setScalar(Math.max(0.0001, t.scale) * unitBase);
+    // 世界包围盒底面 ≈ positionY + contentBottomLift×scale（与 Unity boundsMinY 一致）
+    previewObj.updateMatrixWorld(true);
+    const worldBox = new THREE.Box3().setFromObject(previewObj);
+    const targetBottomY = centerY + t.positionY + contentBottomLift * t.scale;
+    const bottomGap = targetBottomY - worldBox.min.y;
+    if (Math.abs(bottomGap) > 1e-6) {
+      modelObj.position.y += bottomGap / Math.max(0.0001, previewObj.scale.y);
+    }
     updateSizeReadout(t.scale);
     // 视野跟随：交互结束后重新框住模型与参考容器（拖动/连续输入期间不跳相机，避免"飘"）
     if (refit) fitObjects([previewObj, refObj]);
@@ -721,6 +799,7 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     const faceSel = document.getElementById("mp-face") as HTMLSelectElement | null;
     fitSel?.addEventListener("change", () => {
       loadReference(fitSel.value === "cup" ? "cup" : "plate");
+      applyTransform(readTransform());
       status.textContent = fitSel.value === "cup" ? "参考容器：玻璃杯（口径 69 cm，食物放入杯中）" : "参考容器：盘子（直径 100 cm，食物放到盘面）";
       status.classList.remove("err");
     });
@@ -880,11 +959,6 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
         const footprint = Math.max(size2.x, size2.z) || 1;
         scale = Math.max(1e-6, target / footprint);
       }
-      previewObj.scale.setScalar(scale * unitBase);
-      previewObj.rotation.set(cur.rotationX * DEG2RAD, cur.rotationY * DEG2RAD, cur.rotationZ * DEG2RAD);
-      // 位置归零：Y 始终为 0（不自动下沉），高度用「位置 Y」手动调整
-      previewObj.position.set(0, 0, 0);
-      if (modelObj) modelObj.position.set(cur.pivotX * unitK, cur.pivotY * unitK, cur.pivotZ * unitK);
       const fitted: ModelTransformValues = {
         scale,
         rotationX: cur.rotationX,
@@ -898,6 +972,7 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
         pivotZ: cur.pivotZ,
       };
       writeTransform(fitted);
+      applyTransform(fitted);
       opts.onAdjust?.(fitted);
       status.textContent = `已自动适配（${kind === "cup" ? "玻璃杯目标：足迹 37 cm，食物放入杯中" : "盘子目标：足迹 85 cm，食物放到盘面"} · 位置 Y = 0（不自动下沉，高度请手动调「位置 Y」） · ${opts.unitySize ? "Unity 实际尺寸" : "预览尺寸，保存后可再次校准"}）：足迹 ${fmtCm(u2cm((footprintOf(rawSizeU ?? { x: 1, y: 1, z: 1 }) || 1) * scale))} cm（保存后游戏内生效）`;
       status.classList.remove("err");

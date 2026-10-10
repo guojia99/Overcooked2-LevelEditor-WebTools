@@ -375,9 +375,10 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     const limitReached = paired && mine.size >= PAIR_GROUP_LIMIT;
     // 候选包含全部成员组（不限 triggerMode——自动组绑定后即转为按钮触发，
     // 添加处理里已自动打标）；特效组（shake/flash）宿主在相机/灯、不在
-    // Design/Animated Objects 下，无法走 ButtonLink 绑定，排除。
+    // Design/Animated Objects 下，无法走 ButtonLink 绑定，排除；摇杆组
+    //（pilot）是玩家驾驶刚体、无 TriggerQueue 队列语义，同样排除。
     const opt = S.animControls
-      .filter((g) => g.groupKind !== "fx")
+      .filter((g) => g.groupKind !== "fx" && g.groupKind !== "pilot")
       .filter((g) => !mine.has(g.displayName))
       .map((g) => {
         const boundBy = linkBindingGroup(g.displayName);

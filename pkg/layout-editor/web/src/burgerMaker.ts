@@ -16,6 +16,7 @@ import type {
   LevelSetInfo,
   RecipeEntry,
 } from "./types";
+import { setStatus } from "./editor/status";
 
 function esc(s: unknown): string {
   return String(s ?? "")
@@ -26,7 +27,7 @@ function esc(s: unknown): string {
 }
 
 function showError(e: unknown): void {
-  setStatus(false, (e as Error).message ?? String(e));
+  setStatus((e as Error).message ?? String(e), false);
 }
 
 interface MakerState {
@@ -50,14 +51,6 @@ interface MakerState {
  *  不是硬限制 —— 超过只提醒：游戏订单 UI 的食材图标是横向排布的，
  *  食材过多会把卡片撑爆/图标溢出（见 /docs/burger-filling-overflow.png 实拍）。 */
 const FILLING_SOFT_LIMIT = 32;
-
-function setStatus(ok: boolean, msg: string): void {
-  const el = document.getElementById("bm-status");
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.toggle("err", !ok);
-  el.classList.toggle("ok", ok && msg.length > 0);
-}
 
 /** 面包层判定：后端给的 buns 候选集优先；兜底按 id 含 "choppedbun"
  *  （核心 ChoppedBunSO / DLC02_ChoppedBun / DLC8 dlc08_choppedbun 三种写法全覆盖，
@@ -256,7 +249,6 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
     ${navHtml("custom-recipes")}
     <div class="manage-bar">
       <h1 class="m-title">🍔 汉堡组装工作台 <span class="muted" style="font-size:13px;font-weight:normal">产出归属当前关卡集</span></h1>
-      <span class="status" id="bm-status"></span>
       <span style="flex:1"></span>
       <a class="m-btn" href="/custom-recipes">← 返回菜谱管理</a>
     </div>
@@ -753,7 +745,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
       if (next.join("\u0000") === state.stack.join("\u0000")) return;
       state.stack = next;
       refreshStack();
-      setStatus(true, "已调整层序。");
+      setStatus("已调整层序。");
     };
 
     list.querySelectorAll<HTMLElement>(".bm-layer").forEach((row) => {
@@ -791,7 +783,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
         if (!path) return;
         void openRecipeModelPreview(path, b.dataset.previewName ?? "夹心模型", {
           fitTarget: "plate",
-          onError: (msg) => setStatus(false, msg),
+          onError: (msg) => setStatus(msg, false),
         });
       })
     );
@@ -876,7 +868,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
         e.stopPropagation();
         void openRecipeModelPreview(eye.dataset.previewPath, eye.dataset.previewName ?? "夹心模型", {
           fitTarget: "plate",
-          onError: (msg) => setStatus(false, msg),
+          onError: (msg) => setStatus(msg, false),
         });
         return;
       }
@@ -893,7 +885,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
           state.stack.splice(idx, 1);
           refreshCandCounts();
           refreshStack();
-          setStatus(true, `已移除一层「${candidateName(cands, id)}」（剩 ${stackCountOf(id)} 层）`);
+          setStatus(`已移除一层「${candidateName(cands, id)}」（剩 ${stackCountOf(id)} 层）`);
         }
         return;
       }
@@ -904,7 +896,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
       state.stack.push(id);
       refreshCandCounts();
       refreshStack();
-      setStatus(true, `已添加「${candidateName(cands, id)}」，当前 ${stackCountOf(id)} 层`);
+      setStatus(`已添加「${candidateName(cands, id)}」，当前 ${stackCountOf(id)} 层`);
       card.classList.add("selected");
       window.setTimeout(() => card.classList.remove("selected"), 500);
     });
@@ -956,7 +948,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
   function loadProductIntoState(p: (typeof data.products)[number]): boolean {
     const ids = p.compositionIds ?? [];
     if (!stackHasBun(ids, bunIdSet())) {
-      setStatus(false, `「${p.nameZh}」的组成中没有汉堡面包，无法载入。`);
+      setStatus(`「${p.nameZh}」的组成中没有汉堡面包，无法载入。`, false);
       return false;
     }
     state.stack = ids.slice();
@@ -1051,7 +1043,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
       if (!p) return;
       if (!loadProductIntoState(p)) return;
       history.replaceState(null, "", burgerPath(state.setName, p.id));
-      setStatus(true, `已载入「${p.nameZh}」的 ${state.stack.length} 层堆叠，修改后点「保存修改」更新成品菜谱。`);
+      setStatus(`已载入「${p.nameZh}」的 ${state.stack.length} 层堆叠，修改后点「保存修改」更新成品菜谱。`);
       renderAll();
     });
 
@@ -1064,7 +1056,7 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
       state.loadedScore = 0;
       state.stack = [];
       history.replaceState(null, "", burgerPath(state.setName));
-      setStatus(true, "已清除载入，可重新堆叠新汉堡。");
+      setStatus("已清除载入，可重新堆叠新汉堡。");
       renderAll();
     });
 
@@ -1077,15 +1069,15 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
         const nameEn = (document.getElementById("bm-name-en") as HTMLInputElement).value.trim();
         const score = parseInt((document.getElementById("bm-score") as HTMLInputElement).value, 10) || 0;
         if (!/^[A-Za-z0-9_]+$/.test(recipeName)) {
-          setStatus(false, "标识只能包含字母、数字和下划线。");
+          setStatus("标识只能包含字母、数字和下划线。", false);
           return;
         }
         if (state.stack.length === 0) {
-          setStatus(false, "至少添加一层。");
+          setStatus("至少添加一层。", false);
           return;
         }
         if (!stackHasBun(state.stack, bunIdSet())) {
-          setStatus(false, "堆叠中至少包含一层汉堡面包。");
+          setStatus("堆叠中至少包含一层汉堡面包。", false);
           return;
         }
         let iconBase64 = "";
@@ -1143,7 +1135,6 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
           }
           const warnNote = allWarnings.length > 0 ? "；⚠️ " + allWarnings.join("；") : "";
           setStatus(
-            true,
             (result.updated ? "✅ 已保存「" : "✅ 汉堡「") +
               (nameZh || recipeName) +
               (result.updated ? "」的修改" : "」已生成到关卡集「" + state.setName + "」") +
@@ -1231,10 +1222,10 @@ export async function renderBurgerMakerView(app: HTMLElement): Promise<void> {
         (x.assetPath ?? "").replace(/\\/g, "/").endsWith("/" + routeBurgerId + ".asset")
       );
     if (p && loadProductIntoState(p)) {
-      setStatus(true, `已从自定义菜谱打开「${p.nameZh}」，修改后点「保存修改」。`);
+      setStatus(`已从自定义菜谱打开「${p.nameZh}」，修改后点「保存修改」。`);
       renderAll();
     } else {
-      setStatus(false, "无法在汉堡工作台载入该菜谱（请确认属于当前关卡集且为成品汉堡）。");
+      setStatus("无法在汉堡工作台载入该菜谱（请确认属于当前关卡集且为成品汉堡）。", false);
     }
   }
 }

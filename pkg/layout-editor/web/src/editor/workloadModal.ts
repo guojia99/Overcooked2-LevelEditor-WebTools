@@ -288,13 +288,26 @@ function cleanupObservers(): void {
   resizeObserver = null;
 }
 
-export async function openWorkloadModal(): Promise<void> {
-  if (!S.scenePath) return;
-  const level = await fetchLevelRecipes(S.scenePath);
-  const [catalog, detail, saved] = await Promise.all([
-    fetchRecipeCatalog(S.currentLevelSet),
-    fetchLevelDetail(level.levelInfoAssetPath),
-    fetchLevelWorkload(level.levelInfoAssetPath),
+function workloadFooterInnerHtml(): string {
+  return `<div class="wl-embedded-footer">
+    <span class="wl-disclaimer">试验性功能 · 仅供参考，不代表实际游玩结果</span>
+    ${modalBtnHtml("计算", "modal-btn", { id: "workload-calc" })}
+    ${primaryBtnHtml("保存", { id: "workload-save" })}
+  </div>`;
+}
+
+/** 挂载工作量推测 UI（工具与历史 Tab 或独立弹窗）。 */
+export async function mountWorkloadEditor(
+  mount: HTMLElement,
+  detail: import("../types").LevelDetail,
+  setName: string,
+  embedded: boolean
+): Promise<{ dispose: () => void; isDirty: () => boolean }> {
+  cleanupObservers();
+  const level = await fetchLevelRecipes(detail.sceneAssetPath);
+  const [catalog, saved] = await Promise.all([
+    fetchRecipeCatalog(setName),
+    fetchLevelWorkload(detail.levelInfoAssetPath),
   ]);
   recipes = catalog.filter((r) => level.recipeGuids.includes(r.guid) || level.recipeIds?.includes(r.id));
   data = saved ?? { schemaVersion: 2, modes: {} };
@@ -310,41 +323,36 @@ export async function openWorkloadModal(): Promise<void> {
   redoStack = [];
   hoverCell = null;
 
-  openModal(
-    "工作量推测",
-    toolsHtml(),
-    `<span class="wl-disclaimer">试验性功能 · 仅供参考，不代表实际游玩结果</span>
-     ${modalBtnHtml("关闭", "modal-btn", { "data-wl-cancel": "" })}
-     ${modalBtnHtml("计算", "modal-btn", { id: "workload-calc" })}
-     ${primaryBtnHtml("保存", { id: "workload-save" })}`,
-    { panelClass: "workload-modal", closeOnBackdrop: false }
-  );
+  mount.innerHTML = toolsHtml() + workloadFooterInnerHtml();
+  const levelInfoAssetPath = detail.levelInfoAssetPath;
+  const $ = <T extends Element = HTMLElement>(id: string): T | null =>
+    (mount.querySelector(`#${id}`) || document.getElementById(id)) as T | null;
 
-  const canvas = document.getElementById("workload-canvas") as HTMLCanvasElement;
+  const canvas = mount.querySelector("#workload-canvas") as HTMLCanvasElement;
   initWorkloadViewport(canvas);
   renderCanvas();
   syncZoomLabel();
 
-  document.getElementById("workload-zoom-in")?.addEventListener("click", () => {
+  $("workload-zoom-in")?.addEventListener("click", () => {
     workloadZoomBy(1.15);
     syncZoomLabel();
     renderCanvas();
   });
-  document.getElementById("workload-zoom-out")?.addEventListener("click", () => {
+  $("workload-zoom-out")?.addEventListener("click", () => {
     workloadZoomBy(1 / 1.15);
     syncZoomLabel();
     renderCanvas();
   });
-  document.getElementById("workload-zoom-reset")?.addEventListener("click", () => {
+  $("workload-zoom-reset")?.addEventListener("click", () => {
     resetWorkloadViewport(canvas);
     syncZoomLabel();
     renderCanvas();
   });
 
-  document.querySelectorAll<HTMLElement>("[data-wl-mode]").forEach((el) => {
+  mount.querySelectorAll<HTMLElement>("[data-wl-mode]").forEach((el) => {
     el.addEventListener("click", () => {
       mode = el.dataset.wlMode as WorkloadMode;
-      document.querySelectorAll("[data-wl-mode]").forEach((x) => x.classList.toggle("active", x === el));
+      mount.querySelectorAll("[data-wl-mode]").forEach((x) => x.classList.toggle("active", x === el));
       refreshPlayerPanel();
       renderCanvas();
     });
@@ -352,33 +360,33 @@ export async function openWorkloadModal(): Promise<void> {
 
   wirePlayerChipHandlers();
 
-  document.getElementById("workload-player")?.addEventListener("change", (e) => {
+  $("workload-player")?.addEventListener("change", (e) => {
     activePlayer = Number((e.target as HTMLSelectElement).value);
     syncPlayerChips();
   });
 
-  document.getElementById("workload-size")?.addEventListener("change", (e) => {
+  $("workload-size")?.addEventListener("change", (e) => {
     brushSize = Math.max(1, Math.min(8, Number((e.target as HTMLInputElement).value) || 1));
   });
 
-  document.getElementById("workload-paint")?.addEventListener("click", () => {
+  $("workload-paint")?.addEventListener("click", () => {
     erasing = false;
     syncToolMode();
   });
-  document.getElementById("workload-erase")?.addEventListener("click", () => {
+  $("workload-erase")?.addEventListener("click", () => {
     erasing = true;
     syncToolMode();
   });
 
-  document.getElementById("workload-clear")?.addEventListener("click", () => {
+  $("workload-clear")?.addEventListener("click", () => {
     cells()[activePlayer].length = 0;
     dirty = true;
     renderCanvas();
   });
 
-  document.getElementById("workload-calc")?.addEventListener("click", refreshResult);
+  $("workload-calc")?.addEventListener("click", refreshResult);
 
-  document.getElementById("workload-undo")?.addEventListener("click", () => {
+  $("workload-undo")?.addEventListener("click", () => {
     const previous = history.pop();
     if (!previous) return;
     redoStack.push(cloneGroups());
@@ -387,7 +395,7 @@ export async function openWorkloadModal(): Promise<void> {
     renderCanvas();
   });
 
-  document.getElementById("workload-redo")?.addEventListener("click", () => {
+  $("workload-redo")?.addEventListener("click", () => {
     const next = redoStack.pop();
     if (!next) return;
     history.push(cloneGroups());
@@ -396,7 +404,7 @@ export async function openWorkloadModal(): Promise<void> {
     renderCanvas();
   });
 
-  document.getElementById("workload-save")?.addEventListener("click", async () => {
+  $("workload-save")?.addEventListener("click", async () => {
     data.schemaVersion = 2;
     data.calculationSnapshot = {
       algorithmVersion: WORKLOAD_ALGORITHM_VERSION,
@@ -406,16 +414,18 @@ export async function openWorkloadModal(): Promise<void> {
       configs: ((window as unknown as { __workloadDetail?: { configs: any[] } }).__workloadDetail?.configs ?? []),
       parameters: { washSec: DEFAULT_WASH_SEC, walkSpeed: DEFAULT_WALK_SPEED },
     };
-    await saveLevelWorkload(level.levelInfoAssetPath, data);
+    await saveLevelWorkload(levelInfoAssetPath, data);
     dirty = false;
-    (document.getElementById("workload-save") as HTMLButtonElement).textContent = "已保存";
+    ($("workload-save") as HTMLButtonElement).textContent = "已保存";
   });
 
-  document.querySelector("[data-wl-cancel]")?.addEventListener("click", () => {
-    if (dirty && !window.confirm("工作量区域尚未保存，确定关闭吗？")) return;
-    cleanupObservers();
-    closeModal();
-  });
+  if (!embedded) {
+    document.querySelector("[data-wl-cancel]")?.addEventListener("click", () => {
+      if (dirty && !window.confirm("工作量区域尚未保存，确定关闭吗？")) return;
+      cleanupObservers();
+      closeModal();
+    });
+  }
 
   canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
@@ -462,4 +472,23 @@ export async function openWorkloadModal(): Promise<void> {
   resizeObserver = new ResizeObserver(() => renderCanvas());
   resizeObserver.observe(canvas);
   syncPlayerChips();
+
+  return {
+    dispose: cleanupObservers,
+    isDirty: () => dirty,
+  };
+}
+
+export async function openWorkloadModal(): Promise<void> {
+  if (!S.scenePath) return;
+  const level = await fetchLevelRecipes(S.scenePath);
+  const detail = await fetchLevelDetail(level.levelInfoAssetPath);
+  openModal(
+    "工作量推测",
+    `<div id="workload-mount" class="wb-workload-mount"></div>`,
+    `${modalBtnHtml("关闭", "modal-btn", { "data-wl-cancel": "" })}`,
+    { panelClass: "workload-modal", closeOnBackdrop: false }
+  );
+  const mount = document.getElementById("workload-mount")!;
+  await mountWorkloadEditor(mount, detail, S.currentLevelSet, false);
 }

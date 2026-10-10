@@ -32,7 +32,7 @@ const RECIPES = [
   { key: "Peach", zh: "桃子" },
   { key: "Blueberry", zh: "蓝莓" },
   { key: "Blackberry", zh: "黑莓" },
-  { key: "Raspberry", zh: "覆盆子" },
+  { key: "Raspberry", zh: "树莓" },
   { key: "Banana", zh: "香蕉" },
   { key: "Melon", zh: "西瓜" },
   { key: "Pineapple", zh: "菠萝" },

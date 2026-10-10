@@ -17,6 +17,7 @@ import {
 import { createOffscreenStage, exportNodePng, exportScaleSelectHtml, resolveExportScale, wireExportScaleSelects } from "./domSvgExport";
 import { openModal, closeModal } from "./modals";
 import { mountVersionBadge } from "./version";
+import { setStatus } from "./editor/status";
 
 initTheme();
 mountVersionBadge();
@@ -54,14 +55,6 @@ function commonW3RecipeBadge(r: RecipeWithGroups): string {
   return r.type === "smoothie" ? "🥤" : "🥗";
 }
 
-function setStatus(msg: string, ok = true): void {
-  const el = document.getElementById("rl-status");
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.toggle("err", !ok);
-  el.classList.toggle("ok", ok && msg.length > 0);
-}
-
 function showError(e: unknown): void {
   const msg = e instanceof Error ? e.message : String(e);
   setStatus(msg, false);
@@ -73,7 +66,6 @@ app.innerHTML = `
   ${navHtml("recipes")}
   <div class="manage-bar">
     <h1 class="m-title">📖 菜谱清单列表</h1>
-    <span class="status" id="rl-status">加载中…</span>
     <span style="flex: 1"></span>
     ${mBtnHtml("🖼 导出图片", "default", { id: "rl-export", title: "把当前筛选出的菜谱合成一张 PNG 长图（重置筛选即导出全部）" })}
     ${exportScaleSelectHtml("rl-export-scale")}

@@ -13,11 +13,13 @@ import {
 } from "./ui/overlay";
 import { draw } from "./render";
 import { setStatus } from "./status";
+import { renderPartBar } from "./partLevel";
 
 export function snapshotState(): EditorSnapshot {
   return JSON.parse(JSON.stringify({
     items: S.items,
     floors: S.floors,
+    partLevel: S.partLevel,
     animControls: S.animControls,
     switchLinks: S.switchLinks,
     buttonLinks: S.buttonLinks,
@@ -32,7 +34,7 @@ export function snapshotState(): EditorSnapshot {
 
 export function updateSaveIndicator(): void {
   const btn = document.getElementById("btn-save");
-  if (btn) btn.textContent = S.dirty ? "写回 Unity *" : "写回 Unity";
+  if (btn) btn.textContent = S.dirty ? "💾 写回 Unity *" : "💾 写回 Unity";
 }
 
 export function markDirty(): void {
@@ -53,7 +55,10 @@ export function pushHistory(): void {
 export function applySnapshot(snap: EditorSnapshot): void {
   S.items = snap.items;
   S.floors = snap.floors;
+  S.partLevel = snap.partLevel ?? null;
   S.animControls = snap.animControls;
+  // 分 P：undo/redo 可能改变 partLevel（如撤回「开启分 P」），工具条随之刷新。
+  renderPartBar();
   S.switchLinks = snap.switchLinks ?? [];
   S.buttonLinks = snap.buttonLinks ?? [];
   S.buttonEvents = snap.buttonEvents ?? [];

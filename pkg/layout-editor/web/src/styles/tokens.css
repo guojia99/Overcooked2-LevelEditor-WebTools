@@ -30,6 +30,13 @@
   --ui-bg-btn-small: #2a2e36;
   --ui-bg-btn-small-primary: #2e7d46;
   --ui-bg-btn-small-primary-hover: #358c50;
+  --ui-toolbar-save-full-bg: linear-gradient(180deg, #4d7ef7 0%, #3d6bf3 55%, #355fd6 100%);
+  --ui-toolbar-save-full-hover: linear-gradient(180deg, #5c8cff 0%, #4a7af5 55%, #3f68e0 100%);
+  --ui-toolbar-save-full-border: #6b9aff;
+  --ui-toolbar-save-scope-bg: linear-gradient(180deg, #3fa88a 0%, #2e8f72 55%, #267a61 100%);
+  --ui-toolbar-save-scope-hover: linear-gradient(180deg, #4db896 0%, #36a07f 55%, #2d8a6d 100%);
+  --ui-toolbar-save-scope-border: #5cc9a8;
+  --ui-toolbar-save-scope-text: #ffffff;
   --ui-bg-overlay: rgba(10, 12, 16, 0.45);
 
   /* Text */
@@ -173,6 +180,13 @@
   --ui-bg-btn-small: #fff0f7;
   --ui-bg-btn-small-primary: linear-gradient(135deg, #f06aaa 0%, #E75098 100%);
   --ui-bg-btn-small-primary-hover: linear-gradient(135deg, #f47bb8 0%, #eb5fa3 100%);
+  --ui-toolbar-save-full-bg: linear-gradient(180deg, #f06aaa 0%, #e75098 55%, #d43d86 100%);
+  --ui-toolbar-save-full-hover: linear-gradient(180deg, #f47bb8 0%, #eb5fa3 55%, #e04d92 100%);
+  --ui-toolbar-save-full-border: #f5a0c8;
+  --ui-toolbar-save-scope-bg: linear-gradient(180deg, #ffb347 0%, #f59e0b 55%, #d97706 100%);
+  --ui-toolbar-save-scope-hover: linear-gradient(180deg, #ffc266 0%, #fbbf24 55%, #e68a00 100%);
+  --ui-toolbar-save-scope-border: #fcd34d;
+  --ui-toolbar-save-scope-text: #4a2040;
   --ui-bg-overlay: rgba(231, 80, 152, 0.18);
 
   --ui-text: #4a2040;
@@ -346,6 +360,13 @@
   --ui-bg-btn-small: #f0f8ff;
   --ui-bg-btn-small-primary: linear-gradient(135deg, #6bc4ff 0%, #40AEFF 100%);
   --ui-bg-btn-small-primary-hover: linear-gradient(135deg, #7dceff 0%, #52b8ff 100%);
+  --ui-toolbar-save-full-bg: linear-gradient(180deg, #6bc4ff 0%, #40aeff 55%, #2a9ae8 100%);
+  --ui-toolbar-save-full-hover: linear-gradient(180deg, #7dceff 0%, #52b8ff 55%, #3aa8f0 100%);
+  --ui-toolbar-save-full-border: #9ad4ff;
+  --ui-toolbar-save-scope-bg: linear-gradient(180deg, #a78bfa 0%, #8b5cf6 55%, #7c3aed 100%);
+  --ui-toolbar-save-scope-hover: linear-gradient(180deg, #b9a3fc 0%, #9d75f8 55%, #8b5cf6 100%);
+  --ui-toolbar-save-scope-border: #c4b5fd;
+  --ui-toolbar-save-scope-text: #ffffff;
   --ui-bg-overlay: rgba(64, 174, 255, 0.15);
 
   --ui-text: #1a3a5c;
@@ -513,6 +534,13 @@
   --ui-bg-btn-small: #f7f7f8;
   --ui-bg-btn-small-primary: #3c4043;
   --ui-bg-btn-small-primary-hover: #5f6368;
+  --ui-toolbar-save-full-bg: linear-gradient(180deg, #4a4d51 0%, #3c4043 55%, #2f3134 100%);
+  --ui-toolbar-save-full-hover: linear-gradient(180deg, #5f6368 0%, #4a4d51 55%, #3c4043 100%);
+  --ui-toolbar-save-full-border: #80868b;
+  --ui-toolbar-save-scope-bg: linear-gradient(180deg, #3d9a5c 0%, #2e7d46 55%, #256b3a 100%);
+  --ui-toolbar-save-scope-hover: linear-gradient(180deg, #45b068 0%, #358c50 55%, #2d7a44 100%);
+  --ui-toolbar-save-scope-border: #6bc48a;
+  --ui-toolbar-save-scope-text: #ffffff;
   --ui-bg-overlay: rgba(0, 0, 0, 0.35);
 
   --ui-text: #2b2b2b;

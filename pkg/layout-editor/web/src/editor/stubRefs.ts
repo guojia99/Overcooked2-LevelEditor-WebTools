@@ -26,6 +26,8 @@ function remapItemRefs(it: EditorItem, m: (x: string) => string): void {
     it.teleportal.exitPortalInstanceId = m(it.teleportal.exitPortalInstanceId);
   if (it.terminal?.pilotableObjectInstanceId)
     it.terminal.pilotableObjectInstanceId = m(it.terminal.pilotableObjectInstanceId);
+  if (it.markerLight?.joystickInstanceId)
+    it.markerLight.joystickInstanceId = m(it.markerLight.joystickInstanceId);
   if (it.heatedOven?.heatedStationInstanceId)
     it.heatedOven.heatedStationInstanceId = m(it.heatedOven.heatedStationInstanceId);
   if (it.servingStation) {
@@ -68,6 +70,10 @@ export function remapAllInstanceRefs(map: Map<string, string>): void {
     }
     if (mg.memberGroups) {
       for (const g of mg.memberGroups) g.memberInstanceIds = g.memberInstanceIds.map(m);
+    }
+    // 摇杆组绑定（组 → 终端）跟随副本重映射。
+    if (mg.groupKind === "pilot" && mg.terminalInstanceId) {
+      mg.terminalInstanceId = m(mg.terminalInstanceId);
     }
   }
   for (const it of S.items) remapItemRefs(it, m);
@@ -152,6 +158,11 @@ export function cleanOrphanedStubRefs(): number {
       term.pilotableObjectInstanceId = "";
       removed++;
     }
+    const ml = it.markerLight;
+    if (ml?.joystickInstanceId && !live.has(ml.joystickInstanceId)) {
+      delete ml.joystickInstanceId;
+      removed++;
+    }
     const ho = it.heatedOven;
     if (ho?.heatedStationInstanceId && !live.has(ho.heatedStationInstanceId)) {
       ho.heatedStationInstanceId = "";
@@ -187,6 +198,14 @@ export function cleanOrphanedStubRefs(): number {
     t.exitOnly = false;
     t.exitPortalInstanceId = "";
     removed++;
+  }
+
+  // 摇杆组绑定：终端被删除 → 解绑（cleanOrphanedAnimControls 亦有同款兜底）。
+  for (const g of S.animControls) {
+    if (g.groupKind === "pilot" && g.terminalInstanceId && !live.has(g.terminalInstanceId)) {
+      delete g.terminalInstanceId;
+      removed++;
+    }
   }
   return removed;
 }

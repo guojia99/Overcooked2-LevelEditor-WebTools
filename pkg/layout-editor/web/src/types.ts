@@ -285,6 +285,13 @@ export interface LayoutTerminalStub {
   pilotableObjectInstanceId?: string;
 }
 
+/** 摇杆灯（ControlTerminal_Marker）绑定：灯 → 摇杆（Terminal 物品）。
+ *  持久化 = 伪根上的 WebCustomStubRuntime.JoystickMarkerLink 组件；运行时
+ *  灯色跟随绑定摇杆的占用状态（有人驾驶 = 绿灯亮）。 */
+export interface LayoutMarkerLightStub {
+  joystickInstanceId?: string;
+}
+
 /** 石炉台（oven_furnace_medieval）热源绑定：上游 PseudoPrefabHeatedOvenStub
  *  heatedStation 指向热源伪根（如 workstation_furnace_01 熔炉工作台）。 */
 export interface LayoutHeatedOvenStub {
@@ -348,6 +355,8 @@ export interface LayoutItem {
   switchStub?: LayoutSwitchStub;
   pressureSwitch?: LayoutPressureSwitchStub;
   terminal?: LayoutTerminalStub;
+  /** 摇杆灯（ControlTerminal_Marker）→ 摇杆绑定。 */
+  markerLight?: LayoutMarkerLightStub;
   /** 石炉台热源绑定（oven_furnace_medieval）。 */
   heatedOven?: LayoutHeatedOvenStub;
   cannon?: LayoutCannonStub;
@@ -359,6 +368,16 @@ export interface LayoutItem {
   timedSwitch?: LayoutTimedSwitchStub;
   /** @deprecated 旧版食材装饰字段；载入时迁移为 commonW1 decor/food prefab。 */
   ingredientDecor?: LayoutIngredientDecorStub;
+  /** 分 P：物件所属阶段 id。"base" = 基础层（全程常驻），"p1".."pN" = 对应阶段
+   *  slot。仅 partLevel.enabled 时有意义（普关忽略）；真源 = 桥侧
+   *  part_level~/part_level.json（GET 按 hierarchyPath 合并盖章）。 */
+  partId?: string;
+  /** 分 P：是否随阶段切换被替换（P 层内新建默认 true，base 层默认 false）。
+   *  M1 数据占位，M2 写回生效。 */
+  partScoped?: boolean;
+  /** 分 P：离场保护（PartSlotGuard 退场时按世界位姿改挂常驻根，不随 slot 下沉）。
+   *  M4 生效，M1 数据占位。 */
+  survivesPartSwitch?: boolean;
 }
 
 export interface LayoutIngredientDecorStub {
@@ -485,8 +504,17 @@ export interface AnimGroup {
   displayName: string;
   /** 组类型："members"（默认，驱动物品/地板成员）| "fx"（全屏特效组，无成员，
    *  事件仅 shake/flash/wait，单一特效类型——shake 驱动相机、flash 驱动
-   *  Lights/FX_Lightning 专用方向光，宿主不同故不允许混排）。 */
-  groupKind?: "members" | "fx";
+   *  Lights/FX_Lightning 专用方向光，宿主不同故不允许混排）| "pilot"
+   *  （摇杆操控组：整组成员（地板+核心层+装饰）烘成原版 PilotMovement 刚体，
+   *  由 terminalInstanceId 指向的摇杆驾驶；无路线/事件，waypoints/events
+   *  恒空，相对位置运行时保持不变）。 */
+  groupKind?: "members" | "fx" | "pilot";
+  /** groupKind="pilot"：绑定的摇杆 item instanceId（绑定权威：
+   *  组 → 终端；终端条目级 terminal.pilotableObjectInstanceId 保持为空）。 */
+  terminalInstanceId?: string;
+  /** groupKind="pilot"：驾驶移速（米/秒，原版 PilotMovement.MoveSpeed；缺省
+   *  2.5）。松开摇杆后自动吸附最近网格中心（原版行为）。 */
+  moveSpeed?: number;
   /** 自动播放或仅由按钮序列触发。缺省 = auto，兼容旧关卡。 */
   triggerMode?: "auto" | "button";
   /** 按钮组的节点推进语义：timeline = 每次按压整组按时间轴连播（一组=一个节点）；
@@ -526,6 +554,13 @@ export interface AnimGroup {
   memberGroups?: AnimGroupMemberGroup[];
   /** Backend-owned: hierarchy path of the created "Animated Objects" group root. */
   groupHierarchyPath?: string;
+  /** 分 P 动画角色：缺省/"gameplay" = 普通关卡动画；"partTransition" = 分 P 槽位
+   *  转场组（成员 = slot 根，按 slot 组织，M3 烘焙生效）；"partStable" = 某 P
+   *  稳定期环境动画（预留）。随 AnimGroupSource 嵌入 JSON 往返。 */
+  animRole?: "gameplay" | "partTransition" | "partStable";
+  /** 分 P：组所属阶段 id；带 partId 的普通动画组烘焙时组根强制迁入
+   *  Design/PartSlots/<pid>/AnimGroups/（M3）。 */
+  partId?: string;
 }
 
 export interface AnimControlData {
@@ -560,10 +595,71 @@ export interface LayoutDocument {
   /** 同轴按钮组（≥2 按钮时间窗内集齐才触发目标）。
    *  仅全量保存携带（引用场景物品）。 */
   coaxialLinks?: CoaxialLinkData;
-  /** 游戏相机（背景色 / FOV；仅全量保存携带）。 */
+  /** 分 P（多阶段布局）配置；缺省或 enabled:false = 普通单阶段关卡。
+   *  enabled 后不可逆（后端拒绝降级）。真源 = 桥侧 part_level~/part_level.json。 */
+  partLevel?: PartLevelConfig;
+  /** 游戏相机（背景色 / FOV；仅全量写回携带）。 */
   cameraInfo?: CameraInfo | null;
-  /** Art/Lights 非 prefab 灯光（颜色/强度/范围/启用；仅全量保存携带）。 */
+  /** Art/Lights 非 prefab 灯光（颜色/强度/范围/启用；仅全量写回携带）。 */
   lights?: LightInfo[];
+}
+
+// ---------- 分 P（多阶段布局，docs/10-分P关卡功能规格.md） ----------
+
+/** slot 根停放方向：down/up = ∓Y，left/right = ∓X（世界轴）。入场恒从自身 park
+ *  回零、退场恒 0 → park（clip 关键帧绝对坐标，每 P 单一 park → 拷贝式循环无漂移）。 */
+export interface PartParkConfig {
+  axis: "down" | "up" | "left" | "right";
+  /** 停放偏移量（米，默认 30，合法 5~200）。 */
+  offset: number;
+}
+
+/** 一个阶段（P）。时长不在此（唯一权威 = transitions[].stableSeconds，决策 D4）。 */
+export interface PartConfig {
+  /** "p1".."pN"（稳定 id，创建后不变）。 */
+  id: string;
+  /** 作者可读名（如「开局」「一分钟后」）。 */
+  label?: string;
+  /** 停放方向（缺省 down/30）。P1 的 park 不生效（初始偏移恒 0）。 */
+  park?: PartParkConfig;
+  /** 背景层是否随本 P 替换（默认 false）。 */
+  replaceBackground?: boolean;
+}
+
+/** 一段转场（线性链第 k 段：pk → pk+1）。preset 只定义节奏与演出；
+ *  方向由各 P 的 park 决定（决策 Q1）。M3 烘焙生效，M1 仅数据。 */
+export interface PartTransitionConfig {
+  id: string;
+  fromPartId: string;
+  toPartId: string;
+  /** 恒为 "partTransition"。 */
+  kind: "partTransition";
+  /** "sink_then_rise"（先后）| "slide_cross"（并行）| "wave_wipe"（slide + 海浪物件包）。 */
+  preset: "sink_then_rise" | "slide_cross" | "wave_wipe";
+  /** fromPart 的稳定时长（秒，唯一权威，>0）。 */
+  stableSeconds: number;
+  /** 转场总时长（秒，= out/in 编排结果）。 */
+  totalSeconds: number;
+  outSeconds: number;
+  inSeconds: number;
+  /** 可选 fx 组 id（shake/flash，M3 绑定）。 */
+  fxGroupId?: string;
+  /** 转场结束、新 P 稳定后清理旧 P 内容物（默认 true）。 */
+  cleanupContents?: boolean;
+  /** Stable 后延迟 N 秒再清理（默认 0）。 */
+  cleanupDelaySeconds?: number;
+  /** Design 根 Loose-only 大扫除（全场散落食材，默认 true）。 */
+  killLooseEverywhere?: boolean;
+}
+
+/** 分 P 顶层配置。运行时无循环（决策 Q2）——循环体验用「拷贝分 P」手动延长链。 */
+export interface PartLevelConfig {
+  enabled: boolean;
+  parts: PartConfig[];
+  /** 线性 N−1 段（pk → pk+1），校验器保证连贯。 */
+  transitions: PartTransitionConfig[];
+  /** 向导默认 preset（仅 UI 默认值）。 */
+  defaultTransitionPreset?: PartTransitionConfig["preset"];
 }
 
 /** 游戏相机信息：背景色与 FOV 可编辑，transform 为只读快照（绘制视野用）。 */
@@ -760,6 +856,8 @@ export interface FloorObject {
   materialTilingD?: number;
   /** 空气地板：不可见，仅可行走。 */
   airFloor?: boolean;
+  /** 分 P：地板所属阶段 id（"base" | "p1".."pN"）。同 LayoutItem.partId。 */
+  partId?: string;
 }
 
 export interface WalkableRect {

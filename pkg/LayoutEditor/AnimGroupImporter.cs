@@ -1299,4 +1299,112 @@ public static class AnimGroupImporter
         if (mesh == null) return false;
         return mesh.name == "Plane" || mesh.name == "Quad";
     }
+
+    // ------------------------------------------------------------- pilot groups
+
+    /// <summary>摇杆操控组（groupKind="pilot"）反向导入：Design/Pilot Objects/
+    /// 下的组根（挂 PilotMovement）→ AnimGroupDto。成员 = 直系子物体（跳过
+    /// rig 部件 PilotFloor；memberGroups 在摇杆组强制扁平），分类同动画组
+    /// （prefab 实例 → item；AirFloor/Plane/Quad → floor；其余 → object）；
+    /// terminalInstanceId = 场景 Terminal 反查（m_pilotableObject == 组根）；
+    /// moveSpeed 回读 PilotMovement.MoveSpeed。</summary>
+    public static List<AnimGroupDto> ImportPilotGroups(Scene scene)
+    {
+        var result = new List<AnimGroupDto>();
+        if (!scene.IsValid()) return result;
+
+        var container = LayoutEditorHierarchy.FindByPath(
+            "Design/" + PilotGroupBakery.PilotObjectsRootName);
+        if (container == null) return result;
+
+        // Terminal 绑定反查表：pilotableObject 所指 GameObject → 终端 item id。
+        var terminalByTarget = new Dictionary<GameObject, string>();
+        foreach (var stub in FindTerminalStubs(scene))
+        {
+            if (stub == null || stub.pilotableObject == null) continue;
+            if (!PilotGroupBakery.IsUnderPilotRoot(stub.pilotableObject.transform)) continue;
+            terminalByTarget[stub.pilotableObject] = "u:" + stub.gameObject.GetInstanceID();
+        }
+
+        for (int i = 0; i < container.childCount; i++)
+        {
+            var root = container.GetChild(i);
+            if (root == null) continue;
+            var pilot = root.GetComponent<PilotMovement>();
+            if (pilot == null) continue;
+
+            var members = new List<GameObject>();
+            for (int c = 0; c < root.childCount; c++)
+            {
+                var child = root.GetChild(c);
+                if (child == null || child.name == PilotGroupBakery.WalkBoxName) continue;
+                members.Add(child.gameObject);
+            }
+
+            var itemIds = new List<string>();
+            var floorIds = new List<string>();
+            var objectIds = new List<string>();
+            var offsets = new List<AnimGroupMemberOffsetDto>();
+            foreach (var m in members)
+            {
+                var id = "u:" + m.GetInstanceID();
+                if (IsPrefabInstance(m)) itemIds.Add(id);
+                else if (LooksLikeFloor(m))
+                {
+                    var colGo = AirFloorRig.GetColliderObject(m);
+                    floorIds.Add("u:" + (colGo != null ? colGo.GetInstanceID() : m.GetInstanceID()));
+                }
+                else objectIds.Add(id);
+                offsets.Add(new AnimGroupMemberOffsetDto
+                {
+                    instanceId = id,
+                    x = 0f,
+                    z = 0f,
+                    displayName = m.name,
+                    hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(m.transform)
+                });
+            }
+
+            string terminalId;
+            terminalByTarget.TryGetValue(root.gameObject, out terminalId);
+
+            var hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(root);
+            var group = new AnimGroupDto
+            {
+                id = "scene:" + hierarchyPath,
+                displayName = root.name,
+                groupKind = "pilot",
+                triggerMode = "auto",
+                itemInstanceIds = itemIds.ToArray(),
+                floorInstanceIds = floorIds.ToArray(),
+                objectInstanceIds = objectIds.ToArray(),
+                memberOffsets = offsets.ToArray(),
+                memberStatic = new AnimGroupMemberDto[0],
+                memberGroups = new AnimGroupMemberGroupDto[0],
+                startDelay = 0f,
+                loop = false,
+                waypoints = new AnimGroupWaypointDto[0],
+                events = new AnimGroupEventDto[0],
+                groupHierarchyPath = hierarchyPath,
+                terminalInstanceId = terminalId,
+                moveSpeed = pilot.MoveSpeed
+            };
+            result.Add(group);
+            LayoutEditorLog.Log("pilot group: imported " + root.name + " (" + hierarchyPath +
+                ") items:" + itemIds.Count + " floors:" + floorIds.Count +
+                " objects:" + objectIds.Count + " terminal:" + (terminalId ?? "-"));
+        }
+        return result;
+    }
+
+    private static List<LevelEditorStub.PseudoPrefabTerminalStub> FindTerminalStubs(Scene scene)
+    {
+        var list = new List<LevelEditorStub.PseudoPrefabTerminalStub>();
+        foreach (var rootGo in scene.GetRootGameObjects())
+        {
+            if (rootGo == null) continue;
+            list.AddRange(rootGo.GetComponentsInChildren<LevelEditorStub.PseudoPrefabTerminalStub>(true));
+        }
+        return list;
+    }
 }

@@ -22,8 +22,11 @@ import {
   isActiveItemLayer,
   itemCategoryOf,
   floorCategoryOf,
-  categoryVisible
+  categoryVisible,
+  hideBackgroundContentOnFloorLayer,
+  catalogItemForGuidOrPath
 } from "./catalog";
+import { isItemHiddenByDecorGroup } from "./decorLayerVisibility";
 import { isCollisionItem, isAirWallItem } from "./stubControls";
 import { itemIntersectsWorldRect } from "./items";
 import {
@@ -45,7 +48,7 @@ import {
 } from "./renderFloors";
 import { drawAnimControlOverlay, previewMemberPositions, previewFxState } from "./animControl";
 import { floorInHeightFilter, itemInHeightFilter } from "./floorHeight";
-import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks, drawButtonPartnerLinks, drawCoaxialLinks, drawBurnerFocusedMarkers } from "./renderItems";
+import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks, drawMarkerLightLinks, drawButtonPartnerLinks, drawCoaxialLinks, drawBurnerFocusedMarkers } from "./renderItems";
 import { drawServingLinks } from "./servingLinks";
 import {
   isSurfaceItem,
@@ -57,6 +60,7 @@ import {
   computeParamLabels
 } from "./renderItems";
 import { scene3dInvalidate } from "./scene3dBridge";
+import { itemInCurrentPart, itemInReferencePart, floorInCurrentPart } from "./partLevel";
 
 let refreshHooks: () => void = () => {};
 export function setRefreshHooks(fn: () => void): void {
@@ -289,6 +293,8 @@ export function updateMarqueeSelection() {
   if (S.currentLayer === "anim" && S.animMode === "members") {
     const next = S.marqueeAdd ? new Set(S.selectedKeys) : new Set<string>();
     for (const it of S.items) {
+      // 分 P：跨 P 框选会绑出跨阶段成员（转场/组根冲突），严格限制在当前 P。
+      if (!itemInCurrentPart(it)) continue;
       if (isCollisionItem(it) && !isAirWallItem(it)) continue;
       const cat = itemCategoryOf(it);
       if (cat === "background") continue;
@@ -298,6 +304,7 @@ export function updateMarqueeSelection() {
     S.selectedKeys = next;
     const nextFloors = S.marqueeAdd ? new Set(S.selectedFloorKeys) : new Set<string>();
     for (const f of S.floors) {
+      if (!floorInCurrentPart(f)) continue;
       if (f.surfaceKind === "background") continue;
       // 空气地板（仅碰撞盒）允许框选入组：其碰撞盒对象随动画组动画一起走。
       if (!categoryVisible(floorCategoryOf(f))) continue;
@@ -312,6 +319,7 @@ export function updateMarqueeSelection() {
     const layerBg = S.currentLayer === "background";
     const nextFloors = S.marqueeAdd ? new Set(S.selectedFloorKeys) : new Set<string>();
     for (const f of S.floors) {
+      if (!floorInCurrentPart(f)) continue;
       const isBg = f.surfaceKind === "background";
       // 地板层/背景层严格分离：地板层框选无条件排除背景（水面等），
       // 背景层框选只收背景。跨层选中已由 setLayer 的 clearSelection 清空。
@@ -323,6 +331,7 @@ export function updateMarqueeSelection() {
     setFloorSelection([...nextFloors]);
     const next = S.marqueeAdd ? new Set(S.selectedKeys) : new Set<string>();
     for (const it of S.items) {
+      if (!itemInCurrentPart(it)) continue;
       const cat = itemCategoryOf(it);
       if (cat !== (layerBg ? "background" : "floors")) continue;
       if (isCollisionItem(it) && !isAirWallItem(it)) continue;
@@ -337,9 +346,11 @@ export function updateMarqueeSelection() {
   }
   const next = S.marqueeAdd ? new Set(S.selectedKeys) : new Set<string>();
   for (const it of S.items) {
+    if (!itemInCurrentPart(it)) continue;
     if (!isActiveItemLayer(it)) continue;
     if (isCollisionItem(it) && !isAirWallItem(it)) continue;
     if (!categoryVisible(itemCategoryOf(it))) continue;
+    if (isItemHiddenByDecorGroup(it)) continue;
     if (!itemInHeightFilter(it)) continue;
     if (marqueeHitsItem(it)) next.add(it._editorKey);
   }
@@ -377,10 +388,27 @@ function drawItemPreview(item: EditorItem, selected: boolean, pos: PreviewPosMap
   dom.ctx.restore();
 }
 
+/** 分 P 参考叠显（§3.4）：把参考层（base 或其他 P）的物件以极低透明度画在
+ *  当前 P 之下，供作者对齐布局；纯视图状态——不可点选、不写入文档。 */
+function drawReferenceOverlay(previewPos: PreviewPosMap): void {
+  if (!S.partLevel?.enabled || S.partReferences.size === 0) return;
+  const refs = S.items.filter(
+    (it) =>
+      itemInReferencePart(it) &&
+      categoryVisible(itemCategoryOf(it)) &&
+      !isItemHiddenByDecorGroup(it) &&
+      itemInHeightFilter(it)
+  );
+  if (refs.length === 0) return;
+  dom.ctx.save();
+  dom.ctx.globalAlpha = 0.16;
+  for (const it of refs) drawItemPreview(it, false, previewPos);
+  dom.ctx.restore();
+}
+
 /** Floor members of the previewed group: translucent quad at the simulated spot
  *  (the original plane stays drawn dimmed by the normal floor pass). */
-function drawPreviewFloorGhosts(pos: PreviewPosMap): void {
-  if (!pos) return;
+function drawPreviewFloorGhosts(pos: PreviewPosMap): void {  if (!pos) return;
   const cellPx = CELL * PX_PER_UNIT * S.scale;
   for (const f of S.floors) {
     const pp = pos.get(f.instanceId);
@@ -460,7 +488,11 @@ export function draw() {
         drawFloorPlanes(false, "floor");
         dom.ctx.restore();
       }
-    } else if (vis.background && S.floors.some((f) => f.surfaceKind === "background")) {
+    } else if (
+      layerBg &&
+      vis.background &&
+      S.floors.some((f) => f.surfaceKind === "background")
+    ) {
       dom.ctx.save();
       dom.ctx.globalAlpha = 0.35;
       drawFloorPlanes(false, "background");
@@ -485,31 +517,29 @@ export function draw() {
         drawFloorPlanes(true, "floor");
         drawSurfaceItems(false, "floor", previewPos);
       }
-      if (vis.background) {
-        dom.ctx.save();
-        dom.ctx.globalAlpha = 0.4;
-        drawSurfaceItems(false, "background", previewPos);
-        dom.ctx.restore();
-      }
       drawKillPlanes();
     }
     // Selected floors stay clearly visible on both kinds.
     if (S.selectedFloorKeys.size > 0) {
       drawFloorPlanes(true, "floor");
-      drawFloorPlanes(true, "background");
+      if (layerBg) drawFloorPlanes(true, "background");
     }
     // Selected surface items (flooredge, background planes…) — same multi-select pass as floors.
     if (S.selectedKeys.size > 0) {
       drawSurfaceItems(true, "floor", previewPos);
-      drawSurfaceItems(true, "background", previewPos);
+      if (layerBg) drawSurfaceItems(true, "background", previewPos);
     }
     // Ghost items (non-surface) from other layers, dimmed by category visibility.
     // On the background layer the ambient effects (落雪 BGM…) are active content
     // and must stay fully visible with selection highlights.
     const ghostItems = S.items.filter(
       (it) =>
-        !isSurfaceItem(S.catalogByGuid.get(it.prefabGuid)) &&
+        // 分 P：仅绘制当前 P 的物件（参考层走下方专门的低透明叠显通道）。
+        itemInCurrentPart(it) &&
+        !isSurfaceItem(catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath)) &&
+        !hideBackgroundContentOnFloorLayer(it) &&
         categoryVisible(itemCategoryOf(it)) &&
+        !isItemHiddenByDecorGroup(it) &&
         (itemInHeightFilter(it) || isSelected(it._editorKey))
     );
     if (ghostItems.length > 0) {
@@ -527,6 +557,7 @@ export function draw() {
         dom.ctx.restore();
       }
     }
+    drawReferenceOverlay(previewPos);
   } else {
     if (vis.floors && S.floors.some((f) => f.surfaceKind !== "background")) {
       dom.ctx.save();
@@ -547,8 +578,11 @@ export function draw() {
     }
     const inactive = S.items.filter(
       (it) =>
+        // 分 P：动画层/非地板层同样只看当前 P；参考层低透明叠显。
+        itemInCurrentPart(it) &&
         !isActiveItemLayer(it) &&
         categoryVisible(itemCategoryOf(it)) &&
+        !isItemHiddenByDecorGroup(it) &&
         (itemInHeightFilter(it) || isSelected(it._editorKey))
     );
     if (inactive.length > 0) {
@@ -569,7 +603,13 @@ export function draw() {
     }
     const sorted = S.items
       .filter(isActiveItemLayer)
-      .filter((it) => categoryVisible(itemCategoryOf(it)) || isSelected(it._editorKey))
+      // 分 P：非地板层（核心/装饰/动画）主绘制通道同样只看当前 P。
+      .filter(itemInCurrentPart)
+      .filter(
+        (it) =>
+          (categoryVisible(itemCategoryOf(it)) && !isItemHiddenByDecorGroup(it)) ||
+          isSelected(it._editorKey)
+      )
       // 高度过滤：范围外的物品不绘制；已选中的豁免（避免拖动中消失）。
       .filter((it) => itemInHeightFilter(it) || isSelected(it._editorKey))
       .sort(itemDrawCompare);
@@ -578,11 +618,13 @@ export function draw() {
     for (const item of sorted) {
       drawItemPreview(item, isSelected(item._editorKey), previewPos);
     }
+    drawReferenceOverlay(previewPos);
     drawTeleportalLinks();
     drawSwitchLinks();
     drawButtonPartnerLinks();
     drawCoaxialLinks();
     drawTerminalLinks();
+    drawMarkerLightLinks();
     drawServingLinks();
     // 燃烧弹射器：唯一选中时显示全部波次落点（核心层专属叠加）。
     drawBurnerFocusedMarkers();

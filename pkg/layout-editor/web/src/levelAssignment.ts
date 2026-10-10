@@ -28,6 +28,7 @@ import { customRecipeIconUrl } from "./editor/catalog";
 import { normalizeCustomRecipeCard } from "./recipeCardCustom";
 import { rlCardHtml, type RecipeWithGroups } from "./recipeCard";
 import { buildSummaryGroups } from "./summaryRecipes";
+import { setStatus } from "./editor/status";
 import { createOffscreenStage, exportNodePng, exportScaleSelectHtml, resolveExportScale, wireExportScaleSelects } from "./domSvgExport";
 
 // ==================== 数据模型 helpers ====================
@@ -184,18 +185,9 @@ export function assignmentOverviewHtml(data: LevelAssignmentData | null, src: As
 
 // ==================== 页面骨架（与 levels.ts / dependencies.ts 同款惯例） ====================
 
-function setStatus(msg: string, ok = true): void {
-  const el = document.getElementById("m-status");
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.toggle("err", !ok);
-  el.classList.toggle("ok", ok && msg.length > 0);
-}
-
 function setBusy(msg: string): void {
   const el = document.getElementById("manage-content");
   if (el) el.innerHTML = `<p class="muted">${esc(msg)}</p>`;
-  setStatus(msg);
 }
 
 function showError(e: unknown): void {
@@ -212,7 +204,6 @@ function shell(app: HTMLElement, title: string, backLabel?: string, onBack?: () 
     <div class="manage-bar">
       ${backLabel ? mBtnHtml(`← ${esc(backLabel)}`, "default", { id: "m-back" }) : ""}
       <h1 class="m-title">${esc(title)}</h1>
-      <span class="status" id="m-status"></span>
       <span style="flex:1"></span>
       ${mBtnHtml("↻ Reload", "default", { id: "m-reload", title: "触发 Unity Reload Pseudo Assets" })}
     </div>

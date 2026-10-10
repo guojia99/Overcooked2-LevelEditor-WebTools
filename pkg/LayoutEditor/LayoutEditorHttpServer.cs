@@ -564,6 +564,8 @@ public class LayoutEditorHttpServer
                     OpenSceneIfNeeded(assetPath);
 
                 var doc = SceneLayoutExporter.ExportActiveScene();
+                // 分 P：合并 part_level~/part_level.json（partLevel + 物件/地板 partId 盖章）。
+                LayoutEditorPartLevelStore.MergeIntoExport(doc);
                 LogDispenserTrace("GET /api/scene/layout 导出", doc);
                 LogExportDiagnostics("GET 导出", doc);
                 WriteJson(response, 200, LayoutEditorJson.ToJson(doc));
@@ -603,6 +605,14 @@ public class LayoutEditorHttpServer
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = slopeError }));
                     return;
                 }
+                // 分 P 不可逆守卫（后端兜底）：已保存的分 P 关卡不允许降级 / parts 清空。
+                var partDowngradeError = LayoutEditorPartLevelStore.ValidateNotDowngrade(doc.sceneAssetPath, doc);
+                if (partDowngradeError != null)
+                {
+                    LayoutEditorLog.LogWarning("[PartLevel] " + partDowngradeError);
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = partDowngradeError }));
+                    return;
+                }
                 var snap = 0.01f;
                 var snapStr = request.QueryString["snap"];
                 if (!string.IsNullOrEmpty(snapStr))
@@ -623,6 +633,9 @@ public class LayoutEditorHttpServer
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = applyError }));
                     return;
                 }
+                // 分 P：写回成功后按写回结果重盖章落盘（part_level~/part_level.json）。
+                // 普关且无存档时为 no-op；scoped 写回与旧章合并、场景已删物件自动清章。
+                LayoutEditorPartLevelStore.SaveAfterApply(doc.sceneAssetPath, doc);
                 WriteJson(response, 200, LayoutEditorJson.ToJson(applyResult));
                 return;
             }
