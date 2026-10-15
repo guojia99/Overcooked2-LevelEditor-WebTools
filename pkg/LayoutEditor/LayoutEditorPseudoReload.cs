@@ -8,6 +8,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using LevelEditor;
+using LevelEditorStub;
 
 [InitializeOnLoad]
 static class LayoutEditorSceneCleanup
@@ -39,6 +40,24 @@ public static class LayoutEditorPseudoReload
             manager.prepareForBuilding = true;
             manager.DeInit();
         }
+    }
+
+    /// <summary>导出 prepare 专用：始终执行 DeInit 剥临时伪 prefab（等同 Toggle ON），
+    /// 不因 prepareForBuilding 已为 true 而跳过。OpenScene 后 OnEnable 常会 Init
+    /// 再挂上临时子物体，须在 HUD/tag 烘焙与 SaveScene 之前清理。</summary>
+    public static void ForcePrepareForBuildingForExport()
+    {
+        var manager = PseudoPrefabManager.Instance;
+        if (manager == null)
+        {
+            Debug.LogWarning("[SetExporter] Prepare For Building：场景无 PseudoPrefabManager，跳过 DeInit");
+            return;
+        }
+        var wasAlready = manager.prepareForBuilding;
+        manager.prepareForBuilding = true;
+        manager.DeInit();
+        Debug.Log("[SetExporter] Prepare For Building：已 DeInit 清除临时物体（进入前 prepareForBuilding="
+            + (wasAlready ? "true" : "false") + "）");
     }
 
     /// <summary>Refresh scene placeholders after layout write-back (avoids full recipe SetupConfig).</summary>
@@ -98,6 +117,24 @@ public static class LayoutEditorPseudoReload
         LayoutEditorPushablePotPreview.Arm();
     }
 
+    /// <summary>写回 Reload 前：饮料/酱料机不得保留 PseudoPrefabDispenser 运行时（宿主 Setup NRE）。</summary>
+    private static void HealSpecialDispenserRuntimesInScene()
+    {
+        var stubs = UnityEngine.Object.FindObjectsOfType<PseudoPrefabDispenserStub>();
+        if (stubs == null || stubs.Length == 0)
+            return;
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var stub = stubs[i];
+            if (stub == null)
+                continue;
+            string pid;
+            if (!LayoutEditorStubIO.TryGetSpecialDispenserPrefabId(stub.gameObject, out pid))
+                continue;
+            LayoutEditorStubIO.PromoteDerivedStub(stub.gameObject);
+        }
+    }
+
     /// <summary>DeInit + Init，带 try/catch：宿主原版 PseudoPrefabManager 对缺失 bundle
     ///  会抛 KeyNotFoundException，插件侧不能因此中断（缺失的应已被依赖写入守卫过滤，
     ///  这里仅作最后防线）。DeInit 会卸载全部 bundle（种子随缓存资产一并销毁），故
@@ -124,6 +161,7 @@ public static class LayoutEditorPseudoReload
             LayoutEditorLog.Log("[dispenser-icon] SafeReinit: 预载不可用，退回仅对已加载 bundle 补种子");
             LayoutEditorDispenserIconFix.SeedSceneDispenserPrefabs();
         }
+        HealSpecialDispenserRuntimesInScene();
         try
         {
             manager.Init();

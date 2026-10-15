@@ -4,6 +4,28 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "BurritoChickenSO",
+      "guid": "0de89655f2a84134e8f9acecd36b438b",
+      "assetPath": "Assets/commonW1/prefabs/core/decor/food/BurritoChickenSO.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.534,
+      "baseY": -0.076,
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "85bd4a3b88782714091204aeb3e85e6d",
+      "nameZh": "卷饼鸡肉",
+      "nameEn": "Burrito Chicken",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
       "id": "BurritoMeatSO",
       "guid": "287f4a1eb4f4fdb4dbd610a0e483d09a",
       "assetPath": "Assets/commonW1/prefabs/core/decor/food/BurritoMeatSO.prefab",
@@ -619,8 +641,8 @@
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "965ff691e25e50b0c5151ea9a97899d4",
-      "nameZh": "汉堡面包（DLC8）",
-      "nameEn": "Chopped Bun (DLC8)",
+      "nameZh": "dlc08_choppedbun",
+      "nameEn": "dlc08_choppedbun",
       "typeKind": "food_model",
       "usage": "dressing",
       "icon": true
@@ -4320,28 +4342,6 @@
       "recipeGuid": "1f65eb58b2662dc80a5145503b606c46",
       "nameZh": "香蕉菠萝果汁",
       "nameEn": "Banana Pineapple Smoothie",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "Smoothie_Mega",
-      "guid": "5a896822d197c6f6fa53ac4a88e0181d",
-      "assetPath": "Assets/commonW1/prefabs/dlc02/decor/recipes/Smoothie_Mega.prefab",
-      "category": "decor/recipes",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 1.011,
-      "baseY": 0.14,
-      "layoutTier": "decor",
-      "recipeDecor": true,
-      "recipeGuid": "2fab439c889ab9f4eaaaf524717df134",
-      "nameZh": "什锦果汁",
-      "nameEn": "Mega Smoothie",
       "typeKind": "food_model",
       "usage": "dressing",
       "icon": true

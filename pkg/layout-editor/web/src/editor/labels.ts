@@ -125,6 +125,68 @@ export function drawIconWithLabel(
   ctx.restore();
 }
 
+export function drawWebBackpackGrid(
+  ctx: CanvasRenderingContext2D,
+  item: EditorItem,
+  bw: number,
+  bh: number
+): boolean {
+  if (item.stubKind !== "WebBackpack") return false;
+  const wb = item.webBackpack ?? {};
+  const guids = wb.initialFillGuids ?? [];
+  const hasFill = guids.some((g) => !!g);
+  // 无预设填充：与原版背包相同——走画布默认文字标签（itemLabel →「Web背包」）
+  if (!hasFill) return false;
+
+  const cap = wb.capacity ?? 4;
+  const valid = [1, 2, 4, 6, 9, 12, 16, 20, 25, 30];
+  const c = valid.includes(cap) ? cap : 4;
+  // 列多行少：1→1、2/4→2、6/9→3、12/16→4、20/25→5、36→6
+  const dim =
+    c === 1 ? 1 : c === 2 || c === 4 ? 2 : c === 6 || c === 9 ? 3 : c === 12 || c === 16 ? 4 : c === 20 || c === 25 ? 5 : 6;
+  const area = Math.min(bw * 0.78, bh * 0.5);
+  const pad = 2;
+  // 按行列较大值收缩格宽，非方阵（6=3×2 等）不超出标签区
+  const rows = Math.ceil(c / dim);
+  const span = Math.max(dim, rows);
+  const gw = (area - pad * 2) / span;
+  const gh = gw;
+  const ox = -((dim - 1) * gw) / 2;
+  const oy = -bh * 0.22 - ((rows - 1) * gh) / 2;
+  for (let i = 0; i < c; i++) {
+    const row = Math.floor(i / dim);
+    const col = i % dim;
+    const x = ox + col * gw;
+    const y = oy + row * gh;
+    ctx.fillStyle = guids[i] ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)";
+    ctx.strokeStyle = "rgba(255,255,255,0.2)";
+    ctx.fillRect(x, y, gw - 1, gh - 1);
+    ctx.strokeRect(x, y, gw - 1, gh - 1);
+    const g = guids[i];
+    if (g) {
+      const ingId = ingredientIdByGuid(g);
+      if (ingId) {
+        const img = getIngredientIcon(ingId);
+        if (img && img.complete) {
+          const s = Math.min(gw - 3, gh - 3);
+          ctx.drawImage(img, x + (gw - s) / 2, y + (gh - s) / 2, s, s);
+        }
+      } else {
+        // 菜谱/中间产物填充（无食材图标）：实心圆点示意该格已占
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.arc(x + gw / 2 - 0.5, y + gh / 2 - 0.5, Math.min(gw, gh) * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.save();
+  ctx.translate(0, bh * 0.36 + 2);
+  drawLabelInBox(ctx, itemLabel(item), bw - 4, bh * 0.38);
+  ctx.restore();
+  return true;
+}
+
 export function drawDispenserIngredient(
   ctx: CanvasRenderingContext2D,
   item: EditorItem,
@@ -244,4 +306,73 @@ export function itemLabel(item: EditorItem): string {
   if (cat?.nameZh) return tidyCatalogNameZh(cat.nameZh, cat.id);
   if (item.displayName) return tidyCatalogNameZh(item.displayName, item.displayName);
   return id || "?";
+}
+
+export type InstanceOrdinal = { index: number; total: number };
+
+/** 同 prefab 实例在场景内的阅读顺序序号（先 Z 后 X；仅 total>1 时展示 #n）。 */
+export function instanceOrdinalByEditorKey(items: EditorItem[]): Map<string, InstanceOrdinal> {
+  const groups = new Map<string, EditorItem[]>();
+  for (const it of items) {
+    const k = it.prefabGuid ?? it.prefabAssetPath ?? it._editorKey;
+    const list = groups.get(k);
+    if (list) list.push(it);
+    else groups.set(k, [it]);
+  }
+  const out = new Map<string, InstanceOrdinal>();
+  for (const list of groups.values()) {
+    list.sort((a, b) => {
+      const az = a._wz ?? a.worldPosition?.z ?? a.localPosition?.z ?? 0;
+      const bz = b._wz ?? b.worldPosition?.z ?? b.localPosition?.z ?? 0;
+      if (Math.abs(az - bz) > 1e-4) return az - bz;
+      const ax = a._wx ?? a.worldPosition?.x ?? a.localPosition?.x ?? 0;
+      const bx = b._wx ?? b.worldPosition?.x ?? b.localPosition?.x ?? 0;
+      if (Math.abs(ax - bx) > 1e-4) return ax - bx;
+      return a._editorKey.localeCompare(b._editorKey);
+    });
+    const total = list.length;
+    for (let i = 0; i < total; i++) {
+      out.set(list[i]._editorKey, { index: i + 1, total });
+    }
+  }
+  return out;
+}
+
+let cachedOrdinalItemsSig = "";
+let cachedOrdinalMap = new Map<string, InstanceOrdinal>();
+
+function ordinalMapForScene(): Map<string, InstanceOrdinal> {
+  const sig = `${S.items.length}|${S.items.map((i) => i._editorKey).join(",")}`;
+  if (sig !== cachedOrdinalItemsSig) {
+    cachedOrdinalItemsSig = sig;
+    cachedOrdinalMap = instanceOrdinalByEditorKey(S.items);
+  }
+  return cachedOrdinalMap;
+}
+
+export function itemLabelDisambiguated(
+  item: EditorItem,
+  ordMap?: Map<string, InstanceOrdinal>
+): string {
+  const base = itemLabel(item);
+  const ord = (ordMap ?? ordinalMapForScene()).get(item._editorKey);
+  if (!ord || ord.total <= 1) return base;
+  return `${base} #${ord.index}`;
+}
+
+/** 联动列表副标题：prefab id + 短 instanceId。 */
+export function switchLinkTargetMeta(item: EditorItem): string {
+  const pid = prefabIdFromPath(item.prefabAssetPath) || "—";
+  const iid = item.instanceId ?? "";
+  const shortId = iid.startsWith("u:") ? iid : iid ? `u:${iid}` : "—";
+  return `${pid} · ${shortId}`;
+}
+
+/** 联动列表主标题（歧义实例名；联动序号由列表左侧序号列展示）。 */
+export function switchLinkTargetCaption(
+  item: EditorItem,
+  _linkIndex?: number,
+  ordMap?: Map<string, InstanceOrdinal>
+): string {
+  return itemLabelDisambiguated(item, ordMap);
 }

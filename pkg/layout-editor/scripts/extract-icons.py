@@ -124,7 +124,7 @@ INGREDIENT_ICON_ALIASES = {
     "DLC07_Potato": "dlc07_potato",
     "DLC08_Cheese_Sticks": "dlc08_cheese_sticks",
     "DLC08_Chicken": "dlc08_chicken",
-    "DLC08_ChoppedBun": "dlc08_choppedbun",
+    "DLC08_ChoppedBun": "DLC08_ChoppedBun",
     "DLC08_Drink01": "drink01",
     "DLC08_Drink02": "drink02",
     "DLC08_Drink03": "drink03",
@@ -284,7 +284,7 @@ def try_local_png(local_idx, recipe_id, sprite_name, out_dir, check):
 
 def emit_intermediate_ingredient_icons(ing_ids, check):
     """中间产物（非独立食材、但被其他菜谱作为食材引用的 PseudoPrefabSORecipe，
-    如 FriedMeat / dlc08_friedchips / friedcheese_sticks / friedonion_rings）在
+    如 FriedMeat / DLC08_friedchips / friedcheese_sticks / friedonion_rings）在
     `icons/ingredients/` 没有专属图，前端食材角标会显示占位图。此处复用其
     `icons/recipes/<id>.png`（成品图）作为食材图，保证套餐等组合菜谱角标有图。
 

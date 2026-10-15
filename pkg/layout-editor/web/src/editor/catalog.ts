@@ -40,7 +40,7 @@ export const INGREDIENT_ALIASES: Record<string, string> = {
   DLC07_Potato: "dlc07_potato",
   DLC08_Cheese_Sticks: "dlc08_cheese_sticks",
   DLC08_Chicken: "dlc08_chicken",
-  DLC08_ChoppedBun: "dlc08_choppedbun",
+  DLC08_ChoppedBun: "DLC08_ChoppedBun",
   DLC08_Drink01: "drink01",
   DLC08_Drink02: "drink02",
   DLC08_Drink03: "drink03",

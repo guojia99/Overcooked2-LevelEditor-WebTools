@@ -190,13 +190,14 @@ flowchart LR
 | **palette.ts** | 调色板构建：分组、搜索、双击武装 N 连放、变体家族归并卡片 |
 | **combos.ts** | 联合组合定义（一次放置多物品+自动联动）：饮料机/酱料机/断头台/传送门成对/热源+石炉。默认输出食材一律经 `ingredientGuidById()` 解析（别名感知 + 去重），**禁止 `find(i => i.id === id)` 精确匹配** |
 | **itemVariants.ts** | DLC 换肤变体表：调色板只显示基础版，右键切换变体 |
-| **stubControls.ts** | Stub 参数中枢（1311 行）：`STUB_KIND_BY_PREFAB_ID`、锅具计时、柜台外观/开关材质选择、`wireStubControls` |
+| **stubControls.ts** | Stub 参数中枢（1311 行）：`STUB_KIND_BY_PREFAB_ID`、锅具计时、柜台外观/开关材质选择、`wireStubControls`；按钮控速块（`speedControlBlockHtml`/`wireSpeedControl`，步带/传送带共用：档位列表增删改 + 启用开关）、生成器按钮批次块（`ctx-fs-btn/count/cooldown`）；`isButtonPollingStubTarget`（stub 轮询目标判定）并入 `isSwitchLinkTarget` 白名单——步带/传送带（已启用控速）与食材生成器（已启用按钮批次）可作直连目标，触发名自动置空 |
 | **stubRefs.ts** | 物品间 stub 绑定引用的统一重映射与孤儿清理 |
 | **servingLinks.ts** | 上菜台↔回收台（盘/杯/马克杯/餐盘四类）1 对多绑定 |
 | **teleportalLinks.ts** | 传送门方向模型与配对改写的唯一收口：`teleportalRole`（two/entrance/exit/unbound）、`teleportalEntrancesOf`、`setTeleportalPairDirection`（对级「双向传送」开关）、`releaseExitOnlyPartner`、`computeTeleportalLabels`；方向语义 = 出口指向 + `exitOnly`（出口门回指入口只是防 NRE 的占位） |
 | **buttonLinks.ts** | 按钮 ↔ 动画组联动（顺序/锁定/共轭对）、孤儿清理 |
 | **buttonEvents.ts** | 按钮 → 事件组顺序广播 |
 | **coaxialControls.ts** | 同轴按钮组右键编辑块（成员/时间窗 0.35~5s/目标机器，挂在开关参数面板）；`cleanOrphanedCoaxialLinks` 在 buttonLinks.ts |
+| **randomTriggerControls.ts** | 随机触发器（3.9.0）：右侧「触发源」Tab 底部节点列表 + 编辑弹窗（输入信号名/冷却/分隔符/源按钮多选/候选表格=权重+信号名+目标三选[自身/物品/RT 节点]+参数模式子表单[固定/候选/随机字符串/随机 N 位整数/数值区间]）；`cleanOrphanedRandomTriggers` 失效引用清理；状态 `S.randomTriggers`（文档级 `randomTriggers`，仅全量写回） |
 | **recipeKnowledge.ts** | 菜谱→道具需求（前端侧）：餐洗链、奶油喷罐/汽水机/饮料机需求判定、中间产物自动分配。**机器可输出食材清单的唯一数据源**（`DRINK/SODA/CONDIMENT_MACHINE_INGREDIENT_IDS` + `dispenserIngredientIds(prefabId)`）——各清单一律写「目录现行 id + common03 正式版 id」两代写法 |
 | **cameraLight.ts** | 相机/灯光弹窗（背景色 + FOV 即时反映） |
 | **testLayout.ts** | 测试布局一键生成（30×16 地板 + 全部食材箱/核心道具/菜谱） |

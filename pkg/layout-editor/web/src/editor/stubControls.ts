@@ -9,6 +9,7 @@ import {
   escHtml
 } from "./coords";
 import { itemLabel } from "./labels";
+import { mountSwitchLinkList, switchLinkTargetOptionsHtml } from "./switchLinkUi";
 import { pushHistory } from "./historyOps";
 import { draw } from "./render";
 import { setStatus } from "./status";
@@ -17,13 +18,15 @@ import { hideContextMenu } from "./ui/overlay";
 import {
   openFoodSpawnerEditor,
   openIngredientMultiPicker,
-  openRandomCrateEditor
+  openRandomCrateEditor,
+  openWebBackpackFillModal,
+  iconImg
 } from "../modals";
 import { ingredientOptionLabel, visibleIngredients } from "../ingredientLabels";
 import { questionMarkLabel } from "./iconCaches";
 import { questionMarkIconUrl } from "../api";
 import { openModelPreview } from "../modelPreview";
-import type { IngredientEntry } from "../types";
+import type { IngredientEntry, LayoutSpeedControl } from "../types";
 import {
   counterTypeOfItem,
   counterAppearanceOptions,
@@ -76,9 +79,23 @@ import {
 import { openTriggerOrchestrator } from "./triggerOrchestrator";
 import { clampContextMenuInViewport } from "./ui/contextMenuChrome";
 
+/** 致命鬼魂视觉（与 commonW4 pseudo SO / LayoutEditorStubIO 一致） */
+export const WEB_KILLER_GHOST_STYLES: { id: string; zh: string; en: string }[] = [
+  { id: "npc_ghost", zh: "DLC07 巡游鬼魂（随机头）", en: "DLC07 crowd ghost" },
+  { id: "npc_keep", zh: "DLC07 城堡鬼魂（随机头）", en: "DLC07 keep ghost" },
+  { id: "ghost_chef", zh: "幽灵厨师（带特效）", en: "Ghost chef avatar" },
+];
+
+export function normalizeWebKillerGhostStyle(style: string | undefined): string {
+  const s = (style ?? "npc_ghost").trim();
+  return WEB_KILLER_GHOST_STYLES.some((x) => x.id === s) ? s : "npc_ghost";
+}
+
 export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Dispenser: "Dispenser",
   RandomDispenser: "Dispenser",
+  web_backpack_storage_01: "WebBackpack",
+  web_killer_ghost_01: "WebKillerGhost",
   Backpack: "Dispenser",
   // 正式版 common03：煤炭箱（dlc07 熔炉燃料）
   dispenser_coal_01: "Dispenser",
@@ -309,10 +326,12 @@ export function isCannonTarget(item: EditorItem): boolean {
   return id === "dlc08_cannon" || id === "dlc09_cannon";
 }
 
-/** 可作为开关联动目标的物品白名单（与运行时接线一致：LayoutRuntimeSwitchLink
- *  只给这些机器写监听字段/接线）——断头台（AutoWorkstation.m_workTrigger）、
- *  饮料机/酱料机（Pickup/PlacementItemSwitcher.m_switchTrigger）、
- *  大炮（Cannon.m_launchTrigger）。其它物品收了消息也不会响应。 */
+/** 可作为开关联动目标的物品白名单（与运行时接线一致）：
+ *  - 机器（原生触发通道）：断头台（AutoWorkstation.m_workTrigger）、饮料机/酱料机
+ *    （Pickup/PlacementItemSwitcher.m_switchTrigger）、大炮（Cannon.m_launchTrigger）；
+ *  - stub 轮询通道（vanilla 触发投不进 stub 组件，按压由 CustomStub 组件轮询
+ *    TriggerDisableScript 下降沿捕获，触发名无意义）：步带/传送带（按钮控速）、
+ *    食材生成器（按钮批次送出）——需依赖包 ≥ 3.10.0。 */
 export function isSwitchLinkTarget(item: EditorItem): boolean {
   const id = prefabIdFromPath(item.prefabAssetPath);
   return id === "workstation_guillotine_01"
@@ -320,7 +339,20 @@ export function isSwitchLinkTarget(item: EditorItem): boolean {
     || id === "dlc11_drink_dispenser"
     || id === "dlc08_condiment_dispenser"
     || id === "dlc11_condiment_dispenser"
-    || isCannonTarget(item);
+    || isCannonTarget(item)
+    || isButtonPollingStubTarget(item);
+}
+
+/** stub 轮询通道目标：按钮控速（步带/传送带，需已启用 speedControl）或
+ *  按钮批次（食材生成器，需已启用 startByButton）——未启用时轮询组件不存在，
+ *  直连无效，不出现在目标下拉。 */
+export function isButtonPollingStubTarget(item: EditorItem): boolean {
+  const kind = stubKindOf(item);
+  const scOn = (sc: LayoutSpeedControl | undefined): boolean => !!sc && sc.enabled !== false;
+  if (kind === "Travelator") return scOn(item.travelator?.speedControl);
+  if (kind === "Conveyor") return scOn(item.conveyor?.speedControl);
+  if (kind === "AttachingFoodSpawner") return item.foodSpawner?.startByButton === true;
+  return false;
 }
 
 /** 火锅灶台（core / dlc10 变体）：支持定时开关（开局自动循环开/关）。 */
@@ -551,13 +583,13 @@ function switchPanelHtml(id: string, active: boolean, content: string): string {
 function switchLinkPanelHtml(isCannon: boolean): string {
   const machineHint = isCannon
     ? "按下开关向大炮广播 Launch 触发消息（机器包装自带翻译层，须为 Launch）。"
-    : "断头台 / 饮料机 / 酱料机 / 大炮；留空触发消息时自动取原生名 Chop / Next / Launch。";
+    : "断头台 / 饮料机 / 酱料机 / 大炮；步带·传送带（按钮控速）与食材生成器（按钮批次）也可直连——触发名留空，按压由关卡包轮询捕获。";
   const triggerHint = isCannon
     ? "大炮须为 Launch；配置了「联动事件组」后按压以事件组为准，直发自动停用。"
     : "仅直连机器需要此消息（按钮被按的信号本身是游戏固定的「Switch」，无需配置）；配置了「联动事件组」后按压以事件组为准，直发自动停用。";
   return `<div class="ctx-stub-section-title">直连机器</div>
     <p class="ctx-stub-hint">${machineHint}</p>
-    <div id="ctx-sw-links"></div>
+    <div id="ctx-sw-links" class="switch-link-host"></div>
     <label class="ctx-stub-row"><select id="ctx-sw-linktarget" class="ctx-input"></select>
       <button type="button" class="ctx-btn" id="ctx-sw-linkadd">添加</button></label>
     <label class="ctx-stub-row">触发消息 <input id="ctx-sw-trigger" class="ctx-input" placeholder="${isCannon ? "Launch" : "自动（机器原生触发名）"}"/></label>
@@ -589,6 +621,49 @@ function wireSwitchTabs(): void {
   root.querySelectorAll<HTMLButtonElement>(".ctx-sw-tab").forEach((btn) => {
     btn.addEventListener("click", () => activate(btn.dataset.swTab ?? "basic"));
   });
+}
+
+const WEB_BACKPACK_CAPACITIES = [1, 2, 4, 6, 9, 12, 16, 20, 25, 30] as const;
+
+export function normalizeWebBackpackCapacity(cap: number | undefined): number {
+  const c = cap ?? 4;
+  if ((WEB_BACKPACK_CAPACITIES as readonly number[]).includes(c)) return c;
+  // 历史兼容：曾支持 36（线上 >31 截断，已收回）→ 归一到 30
+  return c > 30 ? 30 : 4;
+}
+
+/** 宫格列数（列多行少：6=3×2、12=4×3、20=5×4）。 */
+export function webBackpackGridDim(cap: number): number {
+  const c = normalizeWebBackpackCapacity(cap);
+  if (c === 1) return 1;
+  if (c === 2 || c === 4) return 2;
+  if (c === 6 || c === 9) return 3;
+  if (c === 12 || c === 16) return 4;
+  if (c === 20 || c === 25) return 5;
+  return 6;
+}
+
+/** guid → 小宫格图标（食材；历史菜谱填充回落圆点，画布层处理）。 */
+function wbEntryIcon(guid: string): string {
+  const ing = S.ingredientsCache.find((x) => x.guid === guid);
+  if (ing) return iconImg("ingredients", ing.id, ing.icon);
+  const r = (S.intermediatesCache ?? []).find((x) => x.guid === guid);
+  if (r) return iconImg("recipes", r.id, r.icon);
+  return "";
+}
+
+function webBackpackMiniGridHtml(item: EditorItem): string {
+  const wb = item.webBackpack ?? {};
+  const cap = normalizeWebBackpackCapacity(wb.capacity);
+  const dim = webBackpackGridDim(cap);
+  const guids = wb.initialFillGuids ?? [];
+  let cells = "";
+  for (let i = 0; i < cap; i++) {
+    const g = guids[i];
+    const inner = g ? wbEntryIcon(g) : "";
+    cells += `<div class="wb-mini-cell${g ? "" : " wb-mini-cell--empty"}">${inner}</div>`;
+  }
+  return `<div class="wb-mini-grid" style="--wb-dim:${dim}">${cells}</div>`;
 }
 
 export function stubControlsHtml(item: EditorItem): string {
@@ -650,13 +725,47 @@ export function stubControlsHtml(item: EditorItem): string {
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">普通食材箱必须设置一种食材（写回校验）；需要随机产出请放置「随机食材箱」道具</div>
         </div>`;
     }
+    case "WebKillerGhost": {
+      const kg = item.webKillerGhost ?? {};
+      const r = typeof kg.hitRadius === "number" ? kg.hitRadius : 0.45;
+      const on = kg.enabled !== false;
+      const style = normalizeWebKillerGhostStyle(kg.style);
+      const styleOpts = WEB_KILLER_GHOST_STYLES.map(
+        (s) => `<option value="${s.id}" ${s.id === style ? "selected" : ""}>${escHtml(s.zh)}</option>`
+      ).join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">致命鬼魂</div>
+        <label class="ctx-stub-row">鬼魂样式 <select id="ctx-kg-style" class="ctx-input">${styleOpts}</select></label>
+        <label class="ctx-stub-row">触碰半径 <input type="number" id="ctx-kg-radius" class="ctx-input" step="0.05" min="0.15" max="2" value="${r}"/> m</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-kg-enabled" ${on ? "checked" : ""}/> 触碰击杀玩家</label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">位移请在「动画层」把本物件加入动画组；角色动画可在 Unity 改 animatorControllerSO；幽灵厨师需 DLC07 bundle351</div></div>`;
+    }
+    case "WebBackpack": {
+      const wb = item.webBackpack ?? {};
+      const cap = normalizeWebBackpackCapacity(wb.capacity);
+      const capOpts = WEB_BACKPACK_CAPACITIES.map(
+        (c) => `<option value="${c}" ${c === cap ? "selected" : ""}>${c} 格</option>`
+      ).join("");
+      return `<div class="ctx-stub"><div class="ctx-stub-title">Web 储物背包</div>
+        <label class="ctx-stub-row">容量 <select id="ctx-wb-cap" class="ctx-input">${capOpts}</select></label>
+        ${webBackpackMiniGridHtml(item)}
+        <button type="button" class="ctx-btn" id="ctx-wb-fill">初始填充（仅食材）…</button>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">严格先进先出；只能填充食材（整蔬菜/面包皮等源生物按加工链入包）；空手只取食材与基底，组合型需空盘接</div></div>`;
+    }
     case "AttachingFoodSpawner": {
       const fs = item.foodSpawner ?? {};
+      const btnOn = !!fs.startByButton;
       return `<div class="ctx-stub"><div class="ctx-stub-title">食材生成器参数</div>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-order" ${fs.spawnInOrder !== false ? "checked" : ""}/> 按顺序生成</label>
-        <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-start" ${fs.triggerAtStart !== false ? "checked" : ""}/> 开局触发</label>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-start" ${fs.triggerAtStart !== false ? "checked" : ""} ${btnOn ? "disabled" : ""}/> 开局触发${btnOn ? "（按钮模式下不适用）" : ""}</label>
         <label class="ctx-stub-row">触发间隔 <input type="number" id="ctx-fs-time" class="ctx-input" step="0.5" min="0" value="${fs.triggerTime ?? 5}"/> 秒</label>
-        <button type="button" class="ctx-btn" id="ctx-fs-ings">食材列表…</button></div>`;
+        <button type="button" class="ctx-btn" id="ctx-fs-ings">食材列表…</button>
+        <div class="ctx-stub-title" style="margin-top:6px">按钮触发</div>
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-btn" ${btnOn ? "checked" : ""}/> 按钮触发批次送出</label>
+        <div id="ctx-fs-btn-body" ${btnOn ? "" : `style="display:none"`}>
+          <label class="ctx-stub-row">每批数量 <input type="number" id="ctx-fs-count" class="ctx-input" min="1" max="50" step="1" value="${fs.batchCount ?? 1}"/> 个</label>
+          <label class="ctx-stub-row">完成后冷却 <input type="number" id="ctx-fs-cooldown" class="ctx-input" min="0" step="0.5" value="${fs.buttonCooldown ?? 5}"/> 秒</label>
+          <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">开启后开局不自动送出：每按一次按钮（触发编排①区直连本生成器的开关）立刻送第 1 个，之后每隔「触发间隔」再送 1 个直到满每批数量；一批送完后冷却 N 秒内按压无效；需依赖包 ≥ 3.10.0</div>
+        </div></div>`;
     }
     case "CookingUtensil": {
       const cu = item.cookingUtensil ?? {};
@@ -670,7 +779,8 @@ export function stubControlsHtml(item: EditorItem): string {
     case "Conveyor": {
       const sp = item.conveyor?.conveySpeed ?? 0.5;
       return `<div class="ctx-stub"><div class="ctx-stub-title">传送带参数</div>
-        <label class="ctx-stub-row">速度 <input type="number" id="ctx-cv-speed" class="ctx-input" step="0.1" value="${sp}"/>（负值反向）</label></div>`;
+        <label class="ctx-stub-row">速度 <input type="number" id="ctx-cv-speed" class="ctx-input" step="0.1" value="${sp}"/>（负值反向）</label>
+        ${speedControlBlockHtml("cv", item.conveyor?.speedControl, sp)}</div>`;
     }
     case "Teleportal": {
       const tp = item.teleportal ?? {};
@@ -729,7 +839,8 @@ export function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row">正向 <input type="number" id="ctx-tv-rev-fwd" class="ctx-input" step="1" min="1" value="${tr?.forwardSeconds ?? 10}"/> 秒</label>
         <label class="ctx-stub-row">反向 <input type="number" id="ctx-tv-rev-back" class="ctx-input" step="1" min="1" value="${tr?.backwardSeconds ?? 10}"/> 秒</label>
         <label class="ctx-stub-row">转角 <input type="number" id="ctx-tv-rev-angle" class="ctx-input" step="90" value="${tr?.turnAngle ?? 180}"/> 度（180=掉头 ±90=转弯）</label>
-        <label class="ctx-stub-row"><input type="checkbox" id="ctx-tv-rev-start" ${tr?.startReversed ? "checked" : ""}/> 初始反向</label></div>`;
+        <label class="ctx-stub-row"><input type="checkbox" id="ctx-tv-rev-start" ${tr?.startReversed ? "checked" : ""}/> 初始反向</label>
+        ${speedControlBlockHtml("tv", item.travelator?.speedControl, sp)}</div>`;
     }
     case "Flamethrower": {
       const rate = item.flamethrower?.cookingRate ?? 4;
@@ -966,6 +1077,162 @@ export function stubControlsHtml(item: EditorItem): string {
 /** 参数区就地重渲染：方向切换后传送门面板形态会变（入口 ↔ 仅作为出口），
  *  不重开右键菜单也能立刻看到新状态。只替换 .ctx-stub 块，菜单其余部分与
  *  已绑定的处理器不受影响。 */
+/** 按钮控速默认档位：基准速度为 0 时给 [1,2]（0 档会被归一过滤致配置蒸发）。 */
+export function defaultSpeedLevels(baseSpeed: number): number[] {
+  return baseSpeed !== 0 ? [baseSpeed, +(baseSpeed * 2).toFixed(2)] : [1, 2];
+}
+
+function filterSpeedLevels(levels: number[]): number[] {
+  return levels.filter((v) => isFinite(v) && v !== 0).slice(0, 8);
+}
+
+/** 写回归一：启用态档位不足时按基准速度补默认档（与面板展示一致）。 */
+/** 清除误挂在 Player 等非步带/传送带上的按钮控速（历史脏数据 / instanceId 漂移）。 */
+export function stripMisplacedSpeedControl(item: {
+  stubKind?: string;
+  travelator?: { speedControl?: LayoutSpeedControl };
+  conveyor?: { speedControl?: LayoutSpeedControl };
+}): void {
+  if (item.stubKind !== "Travelator") {
+    if (item.travelator?.speedControl) delete item.travelator.speedControl;
+    if (item.stubKind === "Player") delete item.travelator;
+  }
+  if (item.stubKind !== "Conveyor" && item.conveyor?.speedControl) {
+    delete item.conveyor.speedControl;
+  }
+}
+
+export function normalizeSpeedControlForDoc(
+  sc: LayoutSpeedControl,
+  baseSpeed: number
+): LayoutSpeedControl | undefined {
+  if (sc.enabled === false) {
+    return { enabled: false, levels: sc.levels ?? [] };
+  }
+  let levels = filterSpeedLevels(sc.levels ?? []);
+  if (levels.length < 2) levels = filterSpeedLevels(defaultSpeedLevels(baseSpeed));
+  if (levels.length < 2) return undefined;
+  return { enabled: true, levels };
+}
+
+function readSpeedLevelsFromDom(prefix: string): number[] {
+  const vals: number[] = [];
+  document.querySelectorAll(`[data-${prefix}-lv]`).forEach((inp) => {
+    const v = parseFloat((inp as HTMLInputElement).value);
+    if (isFinite(v) && v !== 0) vals.push(v);
+  });
+  return filterSpeedLevels(vals);
+}
+
+/** 按钮控速块（步带/传送带共用；prefix = cv|tv）。 */
+function speedControlBlockHtml(prefix: string, sc: LayoutSpeedControl | undefined, baseSpeed: number): string {
+  const on = !!sc && sc.enabled !== false;
+  const levels = sc?.levels?.length ? sc.levels : defaultSpeedLevels(baseSpeed);
+  const rows = levels
+    .map(
+      (lv, i) => `<div class="ctx-stub-row"><span style="min-width:3.2em">档 ${i + 1}</span>
+        <input type="number" class="ctx-input" data-${prefix}-lv="${i}" step="0.1" value="${lv}"/>
+        <button type="button" class="ctx-xbtn" data-${prefix}-del="${i}" ${levels.length <= 2 ? "disabled" : ""}>✕</button></div>`
+    )
+    .join("");
+  return `<div class="ctx-stub-title" style="margin-top:6px">按钮控速</div>
+    <label class="ctx-stub-row"><input type="checkbox" id="${prefix}-spd-on" ${on ? "checked" : ""}/> 启用按钮控速</label>
+    <div id="${prefix}-spd-body" ${on ? "" : `style="display:none"`}>
+      <div id="${prefix}-spd-rows">${rows}
+        <button type="button" class="ctx-btn" id="${prefix}-spd-add" style="margin:2px 0 4px" ${levels.length >= 8 ? "disabled" : ""}>+ 添加档位</button>
+      </div>
+      <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">按一次按钮（触发编排①区直连本目标）切到下一档，尾档回卷第 1 档；负值 = 反向；第 1 档 = 初始速度；需依赖包 ≥ 3.10.0</div>
+    </div>`;
+}
+
+/** 按钮控速块接线（与 speedControlBlockHtml 对应；变更后 refreshContextStub 重渲）。 */
+function wireSpeedControl(item: EditorItem, prefix: string, baseSpeed: number, label: string): void {
+  const get = (): LayoutSpeedControl | undefined =>
+    prefix === "tv" ? item.travelator?.speedControl : item.conveyor?.speedControl;
+  const put = (sc: LayoutSpeedControl | undefined): void => {
+    // 按面板归属显式建 stub 对象：新放置的步带尚无 item.travelator，
+    // 靠存在性猜测会静默 no-op（启用勾选回弹、配置丢失）。
+    if (prefix === "tv") item.travelator = { ...item.travelator, speedControl: sc };
+    else item.conveyor = { ...item.conveyor, speedControl: sc };
+  };
+  const persistEnabledFromUi = (): void => {
+    const cur = get();
+    if (!cur || cur.enabled === false) return;
+    const existing = filterSpeedLevels(cur.levels ?? []);
+    if (existing.length >= 2) return;
+    const fromDom = readSpeedLevelsFromDom(prefix);
+    const levels = fromDom.length >= 2 ? fromDom : defaultSpeedLevels(baseSpeed);
+    put({ enabled: true, levels: filterSpeedLevels(levels) });
+  };
+  persistEnabledFromUi();
+  const el = (id: string) => document.getElementById(id);
+  el(`${prefix}-spd-on`)?.addEventListener("change", (e) => {
+    pushHistory();
+    const on = (e.target as HTMLInputElement).checked;
+    if (on) {
+      const cur = get();
+      put({
+        enabled: true,
+        levels: cur?.levels?.length ? cur.levels : defaultSpeedLevels(baseSpeed),
+      });
+    } else {
+      const cur = get();
+      if (cur) put({ ...cur, enabled: false });
+    }
+    setStatus(on ? `已启用${label}按钮控速（写回后生效）` : `已停用${label}按钮控速（配置保留）`);
+    refreshContextStub(item);
+  });
+  const applyLevelInput = (inp: Element, recordHistory: boolean) => {
+    const idx = parseInt(inp.getAttribute(`data-${prefix}-lv`) ?? "-1", 10);
+    const v = parseFloat((inp as HTMLInputElement).value);
+    let cur = get();
+    if (idx < 0 || !cur || cur.enabled === false) return;
+    if (!cur.levels || idx >= cur.levels.length) {
+      persistEnabledFromUi();
+      cur = get();
+      if (!cur?.levels || idx >= cur.levels.length) return;
+    }
+    if (!isFinite(v) || v === 0) {
+      setStatus(`档位 ${idx + 1} 速度不能为 0 或非数值（未生效）`);
+      refreshContextStub(item);
+      return;
+    }
+    if (recordHistory) pushHistory();
+    cur.levels[idx] = v;
+    setStatus(`档位 ${idx + 1} 已设为 ${v}（写回后生效）`);
+  };
+  document.querySelectorAll(`[data-${prefix}-lv]`).forEach((inp) => {
+    inp.addEventListener("change", () => applyLevelInput(inp, true));
+    inp.addEventListener("input", () => applyLevelInput(inp, false));
+  });
+  document.querySelectorAll(`[data-${prefix}-del]`).forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const cur = get();
+      const idx = parseInt(btn.getAttribute(`data-${prefix}-del`) ?? "-1", 10);
+      if (!cur?.levels || idx < 0 || idx >= cur.levels.length || cur.levels.length <= 2) return;
+      pushHistory();
+      cur.levels.splice(idx, 1);
+      setStatus(`已删除档位 ${idx + 1}（写回后生效）`);
+      refreshContextStub(item);
+    });
+  });
+  el(`${prefix}-spd-add`)?.addEventListener("click", () => {
+    let cur = get();
+    if (!cur) return;
+    if (!cur.levels || cur.levels.length < 2) {
+      persistEnabledFromUi();
+      cur = get();
+      if (!cur) return;
+    }
+    if (cur.levels.length >= 8) return;
+    pushHistory();
+    const last = cur.levels[cur.levels.length - 1] ?? baseSpeed;
+    cur.levels.push(last);
+    setStatus(`已添加档位 ${cur.levels.length}（写回后生效）`);
+    refreshContextStub(item);
+  });
+}
+
 export function refreshContextStub(item: EditorItem): void {
   const root = dom.ctxMenuEl;
   if (!root || root.classList.contains("hidden")) return;
@@ -1127,6 +1394,66 @@ export function wireStubControls(item: EditorItem) {
       });
       break;
     }
+    case "WebKillerGhost": {
+      const ensureKg = () => {
+        item.stubKind = "WebKillerGhost";
+        if (!item.webKillerGhost) item.webKillerGhost = { hitRadius: 0.45, enabled: true, style: "npc_ghost" };
+        item.webKillerGhost.style = normalizeWebKillerGhostStyle(item.webKillerGhost.style);
+        return item.webKillerGhost;
+      };
+      document.getElementById("ctx-kg-style")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensureKg().style = normalizeWebKillerGhostStyle((e.target as HTMLSelectElement).value);
+        draw();
+      });
+      document.getElementById("ctx-kg-radius")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!Number.isFinite(v)) return;
+        pushHistory();
+        ensureKg().hitRadius = Math.min(2, Math.max(0.15, v));
+        draw();
+      });
+      document.getElementById("ctx-kg-enabled")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensureKg().enabled = (e.target as HTMLInputElement).checked;
+        draw();
+      });
+      break;
+    }
+    case "WebBackpack": {
+      const ensureWb = () => {
+        item.stubKind = "WebBackpack";
+        if (!item.webBackpack) item.webBackpack = { capacity: 4, pickMode: "fifo", initialFillGuids: [] };
+        // 3.8.10 起取出恒 FIFO：旧场景残留的 random 一律归一
+        item.webBackpack.pickMode = "fifo";
+        return item.webBackpack;
+      };
+      document.getElementById("ctx-wb-cap")?.addEventListener("change", (e) => {
+        const v = parseInt((e.target as HTMLSelectElement).value, 10);
+        if (!WEB_BACKPACK_CAPACITIES.includes(v as (typeof WEB_BACKPACK_CAPACITIES)[number])) return;
+        pushHistory();
+        const wb = ensureWb();
+        wb.capacity = v;
+        const fills = wb.initialFillGuids ?? [];
+        if (fills.length > v) wb.initialFillGuids = fills.slice(0, v);
+        draw();
+      });
+      document.getElementById("ctx-wb-fill")?.addEventListener("click", () => {
+        const wb = ensureWb();
+        const cap = normalizeWebBackpackCapacity(wb.capacity);
+        const ings = visibleIngredients(S.ingredientsCache).sort((a, b) => a.nameZh.localeCompare(b.nameZh, "zh"));
+        hideContextMenu();
+        // 仅食材：目录在启动时已加载（S.ingredientsCache），弹窗同步秒开——
+        // 此前的空窗来自菜谱池异步拉取，随"只填食材"一并移除
+        openWebBackpackFillModal(ings, cap, wb.initialFillGuids ?? [], (guids) => {
+          pushHistory();
+          wb.initialFillGuids = guids.slice(0, cap);
+          draw();
+          setStatus(`已设置 Web 背包初始填充 ${wb.initialFillGuids.length}/${cap} 格（写回后生效）`);
+        });
+      });
+      break;
+    }
     case "AttachingFoodSpawner": {
       const ensure = () => {
         item.stubKind = "AttachingFoodSpawner";
@@ -1148,12 +1475,41 @@ export function wireStubControls(item: EditorItem) {
           ensure().triggerTime = v;
         }
       });
+      num("ctx-fs-btn")?.addEventListener("change", (e) => {
+        pushHistory();
+        const on = (e.target as HTMLInputElement).checked;
+        const fs = ensure();
+        fs.startByButton = on;
+        // 互斥恢复：关闭按钮模式时把开局触发设回 true（serialize 只删
+        // startByButton，triggerAtStart:false 残留会让生成器开局不再送出）。
+        fs.triggerAtStart = !on;
+        setStatus(on
+          ? "已启用按钮触发批次送出（开局不再自动送出；触发编排①区添加开关，写回后生效）"
+          : "已关闭按钮触发（恢复开局自动送出，写回后生效）");
+        refreshContextStub(item);
+      });
+      num("ctx-fs-count")?.addEventListener("change", (e) => {
+        const v = parseInt((e.target as HTMLInputElement).value, 10);
+        if (!isFinite(v)) return;
+        pushHistory();
+        ensure().batchCount = Math.min(50, Math.max(1, v));
+        setStatus(`每批数量 = ${Math.min(50, Math.max(1, v))}（写回后生效）`);
+      });
+      num("ctx-fs-cooldown")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!isFinite(v) || v < 0) return;
+        pushHistory();
+        ensure().buttonCooldown = v;
+        setStatus(`批次完成后冷却 ${v}s（写回后生效）`);
+      });
       document.getElementById("ctx-fs-ings")?.addEventListener("click", () => {
         ensure();
         hideContextMenu();
         openFoodSpawnerEditor(item, S.ingredientsCache, (patch) => {
           pushHistory();
-          item.foodSpawner = patch;
+          // 合并而非整体替换：弹窗 patch 不含 startByButton/batchCount/
+          // buttonCooldown，直接替换会静默抹掉按钮批次配置。
+          item.foodSpawner = { ...item.foodSpawner, ...patch };
           draw();
           setStatus("已更新食材生成器参数（写回后生效）");
         });
@@ -1224,10 +1580,12 @@ export function wireStubControls(item: EditorItem) {
         if (!isFinite(v)) return;
         pushHistory();
         item.stubKind = "Conveyor";
-        item.conveyor = { conveySpeed: v };
+        // 展开保留 buttonControlled/speedControl 等既有字段
+        item.conveyor = { ...item.conveyor, conveySpeed: v };
         draw();
         setStatus(`传送带速度已设为 ${v}（写回后生效）`);
       });
+      wireSpeedControl(item, "cv", item.conveyor?.conveySpeed ?? 0.5, "传送带");
       break;
     }
     case "Teleportal": {
@@ -1313,6 +1671,7 @@ export function wireStubControls(item: EditorItem) {
         item.travelator = { ...item.travelator, speed: v };
         setStatus(`移动地板速度已设为 ${v}（写回后生效）`);
       });
+      wireSpeedControl(item, "tv", item.travelator?.speed ?? 2.5, "步带");
       num("ctx-tv-rev-on")?.addEventListener("change", (e) => {
         pushHistory();
         ensureTr().enabled = (e.target as HTMLInputElement).checked;
@@ -1524,50 +1883,17 @@ export function wireStubControls(item: EditorItem) {
       // ---- 开关联动（switchLinks，文档级） ----
       const myId = item.instanceId ?? "";
       const myLinks = () => S.switchLinks.filter((l) => l.switchId === myId);
-      const linkRowsHtml = () => {
-        const links = myLinks();
-        if (!links.length)
-          return '<div class="ctx-stub-row" style="font-size:11px;color:#8a909a">未设置联动目标</div>';
-        return links
-          .map((l) => {
-            const target = S.items.find((i) => i.instanceId === l.targetId);
-            return `<div class="ctx-stub-row">→ ${escHtml(target ? itemLabel(target) : l.targetId)}
-              <button type="button" class="ctx-btn" data-unlink="${escHtml(l.targetId)}">移除</button></div>`;
-          })
-          .join("");
-      };
-      const linkTargetOptsHtml = () => {
-        const linked = new Set(myLinks().map((l) => l.targetId));
-        const opts = S.items
-          .filter(
-            (i) =>
-              i.instanceId &&
-              i.instanceId !== myId &&
-              !linked.has(i.instanceId) &&
-              isSwitchLinkTarget(i)
-          )
-          .map((i) => `<option value="${escHtml(i.instanceId)}">${escHtml(itemLabel(i))}</option>`)
-          .join("");
-        return opts || '<option value="">— 无可联动目标（仅断头台/饮料机/酱料机/大炮） —</option>';
-      };
       const refreshLinks = () => {
-        const rows = document.getElementById("ctx-sw-links");
-        if (rows) {
-          rows.innerHTML = linkRowsHtml();
-          rows.querySelectorAll<HTMLButtonElement>("[data-unlink]").forEach((btn) => {
-            btn.addEventListener("click", () => {
-              pushHistory();
-              const tid = btn.dataset.unlink!;
-              S.switchLinks = S.switchLinks.filter((l) => !(l.switchId === myId && l.targetId === tid));
-              // 事件组目标仅限联动目标：联动被移除时同步丢弃对应事件
-              cleanOrphanedButtonEvents();
-              setStatus("已移除开关联动（写回后生效）");
-              refreshLinks();
-            });
+        const host = document.getElementById("ctx-sw-links");
+        if (host) {
+          mountSwitchLinkList(host, {
+            switchId: myId,
+            variant: "ctx",
+            onChange: refreshLinks,
           });
         }
         const sel = document.getElementById("ctx-sw-linktarget") as HTMLSelectElement | null;
-        if (sel) sel.innerHTML = linkTargetOptsHtml();
+        if (sel) sel.innerHTML = switchLinkTargetOptionsHtml(myId, myId);
         const trig = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
         if (trig && document.activeElement !== trig) trig.value = myLinks()[0]?.trigger ?? "";
       };
@@ -1579,15 +1905,25 @@ export function wireStubControls(item: EditorItem) {
         pushHistory();
         const trigInput = document.getElementById("ctx-sw-trigger") as HTMLInputElement | null;
         let trigger = trigInput?.value.trim() || "";
+        const linkTarget = S.items.find((i) => i.instanceId === tid);
+        // stub 轮询目标（步带/传送带控速、生成器批次）触发名恒置空——轮询通道
+        // 无触发名语义，不得继承共享输入框里机器联动的触发名（混合目标时机器
+        // 原生触发名不受影响）。
+        const stubTarget = !!linkTarget && isButtonPollingStubTarget(linkTarget);
         // 未自定义时：机器目标一律用原生触发名（断头台 Chop、饮料机/酱料机 Next、
         // 大炮 Launch——机器包装自带 TriggerOnObject 翻译层，自定义名真机不响应）；
+        // stub 轮询目标（步带/传送带控速、生成器批次）触发名无意义 → 置空；
         // 已有联动 → 沿用其触发名（一个开关一个共享触发名，与运行时一致）；
         // 否则按约定命名 switch_{目标prefabId}_1
-        if (!trigger || trigger === "Switch") {
-          const target = S.items.find((i) => i.instanceId === tid);
+        if (stubTarget) {
+          trigger = "";
+        } else if (!trigger || trigger === "Switch") {
+          const target = linkTarget;
           const native = target ? nativeLinkTrigger(target) : null;
           if (native) {
             trigger = native;
+          } else if (target && isButtonPollingStubTarget(target)) {
+            trigger = "";
           } else if (myLinks()[0]?.trigger) {
             trigger = myLinks()[0]!.trigger ?? "Switch";
           } else {
@@ -1605,14 +1941,19 @@ export function wireStubControls(item: EditorItem) {
         const links = myLinks();
         if (!links.length) return;
         pushHistory();
-        // 留空 = 自动：每条联动取其目标的原生触发名（机器目标），兜底 Launch/Switch。
+        // 留空 = 自动：每条联动取其目标的原生触发名（机器目标），兜底 Launch/Switch；
+        // stub 轮询目标恒置空（不参与共享触发名改写）。
         let resolved = raw;
         for (const l of links) {
+          const t = S.items.find((i) => i.instanceId === l.targetId);
+          if (t && isButtonPollingStubTarget(t)) {
+            l.trigger = "";
+            continue;
+          }
           if (raw) {
             l.trigger = raw;
             continue;
           }
-          const t = S.items.find((i) => i.instanceId === l.targetId);
           l.trigger = (t ? nativeLinkTrigger(t) : null) ?? (isCannon ? "Launch" : "Switch");
           if (!resolved) resolved = l.trigger;
         }

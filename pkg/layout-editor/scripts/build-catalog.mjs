@@ -48,6 +48,7 @@ const SCHEMA_VERSION = 10;
  */
 const NEEDS_STUB_PREFAB_IDS = new Set([
   "RandomDispenser", // RandomCrate| 随机食材箱
+  "web_backpack_storage_01", // WebBackpack| 储物背包
   "RatHeist", // RatHeist| 老鼠偷食材（藏身工作台下定时偷台面物品）
   // 火锅家族 · Web 版（commonW1 web/hotpot/，2026-09-03 起与 common03 原版并存双轨）：
   // HotPot 运行时（抬格层/wok_flame 常燃/煮熟提示音/汤面兜底）+ 可选 TimedSwitch|
@@ -99,6 +100,7 @@ const FOOTPRINT_OVERRIDES = {
   SinkMug: { cellsX: 2, cellsZ: 1 },
   SinkTray: { cellsX: 2, cellsZ: 1 },
   Pushable_Object: { cellsX: 2, cellsZ: 2 },
+  web_backpack_storage_01: { cellsX: 1, cellsZ: 1 },
   // DLC 大件：大莲花压力开关 2×2；火锅灶台铺满 2×2（大锅 2×2 锅沿外架其上）
   cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
   web_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
@@ -646,6 +648,7 @@ const COUNTER_SUBCATEGORY = {
 const MECHANISM_CATEGORY_OVERRIDE = {
   AttachingFoodSpawner: "counters/service",
   Backpack: "counters/service",
+  web_backpack_storage_01: "counters/service",
   pushable_object: "utensils/cooking",
   // 正式版新增机制
   Pushable_Object: "utensils/cooking",
@@ -812,6 +815,7 @@ function categorize(assetPath) {
   rel = rel.replace(/^Assets\/common03\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/commonW1\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/commonW2\/prefabs\/?/, "");
+  rel = rel.replace(/^Assets\/commonW4\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/LevelSets\/[^/]+\/(custom_web|custom_ingredients)\/prefabs\/?/, "");
   rel = rel.replace(/^(?:core|dlc\d+)\//, "");
   const seg = rel.split("/");
@@ -1331,6 +1335,7 @@ function levelSetCustomDirs(sub) {
 /** Canonical ingredient id: lowercase prefabName when it diverges from filename;
  *  core *SO assets keep filename (FlourSO prefabName=Flour → FlourSO). */
 function ingredientCatalogId(fields, fileId) {
+  if (/choppedbun/i.test(fileId || "")) return fileId;
   const pn = fields.prefabName && String(fields.prefabName).trim();
   if (!pn || pn === fileId) return fileId;
   if (fileId.endsWith("SO") && !pn.endsWith("SO")) return fileId;
@@ -1431,7 +1436,7 @@ const STEP_UTENSILS = {
  *  - 炸物：所有食材分别炸（分开成组）。
  *  - 面糊/面团（含面粉，非蛋糕族）：**全部食材一起搅拌**；最终锅具图标作为标记组追加
  *    （前端 mergeFinalMarkers 合并为一格双图标，如 烧麦 = 搅拌碗 + 蒸笼）。
- *  - 蛋糕/布丁：面粉鸡蛋搅拌，其余进烤箱。 */
+ *  - 蛋糕/布丁：全部食材搅拌碗，烤箱为空标记组（与松饼/烧麦同语义）。 */
 function computeCookingGroups(recipe, allRecipes, cookSteps) {
   const { cookingStep: finalStep, ingredients, type, intermediate } = recipe;
   if (!ingredients || !ingredients.length) return [];
@@ -1609,7 +1614,7 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
   }
 
   let flourBranch = false;
-  // 蛋糕/布丁同族：搅拌 + 烤箱（布丁自身步骤 Mixer 是搅拌+烤箱一体工作站）
+  let finalMarkerStep = "";
   const cakeLike = type === "cake" || type === "pudding";
   if (type === "sushi") {
     for (const ing of ingredients) {
@@ -1657,21 +1662,17 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
     cakeLike ||
     (ingredients.some((i) => FLOUR_INGREDIENTS.has(i)) && finalStep !== "Mixer" && finalStep !== "MixingBowl")
   ) {
-    // 蛋糕/布丁：面粉/蛋搅拌 + 其余进烤箱（保持原分组，勿动）。
-    // 面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，最终锅具退化为空标记组
+    // 蛋糕/布丁、面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，终锅退化为空标记组
     //   —— bundle 实测原版就是这条链：SteamedSpecial_Carrot ← MixedFlourCarrot
     //   （面粉+胡萝卜整体搅拌）→ Steamer；Pancake_Chocolate ← MixedFlourEggChocolate
     //   （面粉+蛋+巧克力整体搅拌）→ FryingPan。此前把非面粉食材丢进终锅，既让卡片
     //   显示成两个独立框，也让自动填充往蒸笼/煎锅塞生食材（顶掉原版 lookup，
     //   这道菜在游戏里直接做不出来）。
     // 面粉/蛋判定用全家族集合（FlourSO/dlc09/dlc13 变体），dlc 变体菜谱同样分组。
-    flourBranch = !cakeLike;
-    const cookStep = cakeLike ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
+    flourBranch = true;
+    finalMarkerStep = cakeLike ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
     for (const ing of ingredients) {
-      if (!prep.has(ing)) {
-        if (!cakeLike) prep.set(ing, "MixingBowl");
-        else prep.set(ing, FLOUR_INGREDIENTS.has(ing) || EGG_INGREDIENTS.has(ing) ? "MixingBowl" : cookStep);
-      }
+      prep.set(ing, "MixingBowl");
     }
   }
 
@@ -1693,8 +1694,14 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
   }
 
   const ordered = order.filter((s) => s !== "");
-  if ((flourBranch || interBranch) && isCookStep(finalStep) && !groupMap.has(finalStep) && order.length > 0) {
-    ordered.push(finalStep);
+  const markerStep =
+    flourBranch && finalMarkerStep
+      ? finalMarkerStep
+      : (flourBranch || interBranch) && isCookStep(finalStep)
+        ? finalStep
+        : "";
+  if (markerStep && isCookStep(markerStep) && !groupMap.has(markerStep) && order.length > 0) {
+    ordered.push(markerStep);
   }
 
   const splitPerIngredient =
@@ -2313,6 +2320,10 @@ function main() {
   walkPrefabs(common03PrefabRoot, "Assets/common03/prefabs", items, measuredFootprints);
   const commonW1PrefabRoot = path.join(repoRoot, "Assets/commonW1/prefabs");
   walkPrefabs(commonW1PrefabRoot, "Assets/commonW1/prefabs", items, measuredFootprints);
+  const commonW4PrefabRoot = path.join(repoRoot, "Assets/commonW4/prefabs");
+  if (fs.existsSync(commonW4PrefabRoot)) {
+    walkPrefabs(commonW4PrefabRoot, "Assets/commonW4/prefabs", items, measuredFootprints);
+  }
   // commonW2 编辑器增量装饰（dlc-first：prefabs/<dlcXX|core>/art/<theme>/）。
   // 只收 art/（装饰层）；counters/utensils/mechanisms 不进调色板——核心层零新增，
   // 已放置场景按 guid 引用不受影响。
@@ -2732,6 +2743,15 @@ function main() {
       fs.copyFileSync(updateLogSrc, path.join(dir, "UPDATE_LOG.md"));
     }
     console.log(`Copied UPDATE_LOG.md to ${path.basename(OUT_DIR)}`);
+  }
+
+  const ghostStylesSrc = path.join(__dirname, "data", "web-killer-ghost-styles.json");
+  if (fs.existsSync(ghostStylesSrc)) {
+    for (const dir of [OUT_DIR, DIST_DIR]) {
+      if (!fs.existsSync(dir)) continue;
+      fs.copyFileSync(ghostStylesSrc, path.join(dir, "web-killer-ghost-styles.json"));
+    }
+    console.log(`Copied web-killer-ghost-styles.json to ${path.basename(OUT_DIR)}`);
   }
 }
 

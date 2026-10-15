@@ -169,7 +169,7 @@ export function cardIntermediate(r: RecipeWithGroups): boolean {
  *
  *  这里补一层**菜谱目录回退**（opts.allRecipes，5 个调用点全部有传），并对 id 做
  *  大小写不敏感兜底（后端 compositionIds 取资产文件名，与 catalog id 偶有大小写
- *  差异，如 DLC08_ChoppedBun/dlc08_choppedbun 这类历史分歧）。 */
+ *  差异，如 DLC08_ChoppedBun/DLC08_ChoppedBun 这类历史分歧）。 */
 function makeIngredientNameResolver(opts: RlCardOptions): (id: string) => string {
   const byId = new Map<string, RecipeWithGroups>();
   const byIdLower = new Map<string, RecipeWithGroups>();

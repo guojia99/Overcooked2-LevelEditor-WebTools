@@ -24,7 +24,7 @@ import {
   itemPlaneCells,
   counterTypeOfItem
 } from "./catalog";
-import { isItemHiddenByDecorGroup } from "./decorLayerVisibility";
+import { isItemHiddenBySceneGroup } from "./layerGroupVisibility";
 import { getCounterTopImage } from "./iconCaches";
 import { itemInHeightFilter } from "./floorHeight";
 import {
@@ -32,6 +32,7 @@ import {
   drawTopViewBadgeLabel,
   itemLabel,
   drawDispenserIngredient,
+  drawWebBackpackGrid,
   drawCatalogItemIcon,
   drawCannonSwitchStarIcon
 } from "./labels";
@@ -44,6 +45,7 @@ import {
   isTravelatorItem
 } from "./stubControls";
 import { isSelected } from "./selection";
+import { overlapAlertPulse, workstationOverlapAlertActive } from "./workstationOverlapAlert";
 import {
   drawLayerForItem,
   isStackUtensilCatalog
@@ -275,7 +277,10 @@ export function drawItem(item: EditorItem, selected: boolean) {
   }
   const id = prefabIdFromPath(item.prefabAssetPath);
   const isUtensil =
-    isStackUtensilCatalog(cat) || id === "Backpack" || id === "web_utensil_large_pot_01_pushable";
+    isStackUtensilCatalog(cat) ||
+    id === "Backpack" ||
+    id === "web_backpack_storage_01" ||
+    id === "web_utensil_large_pot_01_pushable";
   const isPlayer = isPlayerItem(item);
   const paint = paintStyleForItem(cat, item.parentPath, selected);
   // 初始关闭开关（互锁按下侧 / 手动关初始态）：画布直接呈现关闭色 + 「关」角标
@@ -358,7 +363,11 @@ export function drawItem(item: EditorItem, selected: boolean) {
   } else {
     // 图标链始终优先（食材图 → 目录图标 → 炮开关星标），俯视图只做皮肤底图；
     // 全都无图时：有俯视图用底片标签（任何底图可读），否则常规文字标签
-    const drawn = drawDispenserIngredient(dom.ctx, item, bw, bh) || drawCatalogItemIcon(dom.ctx, cat, item, bw, bh) || drawCannonSwitchStarIcon(dom.ctx, item, bw, bh);
+    const drawn =
+      drawWebBackpackGrid(dom.ctx, item, bw, bh) ||
+      drawDispenserIngredient(dom.ctx, item, bw, bh) ||
+      drawCatalogItemIcon(dom.ctx, cat, item, bw, bh) ||
+      drawCannonSwitchStarIcon(dom.ctx, item, bw, bh);
     if (!drawn) {
       if (topImg) drawTopViewBadgeLabel(dom.ctx, itemLabel(item), bw, bh);
       else drawLabelInBox(dom.ctx, itemLabel(item), bw - 4, bh - 4);
@@ -992,7 +1001,7 @@ export function hitTestAll(wx: number, wz: number, allLayers?: boolean): EditorI
     // 分 P：点选只命中当前 P（参考层叠显不可点选；anim 成员拾取同样限当前 P）。
     .filter(itemInCurrentPart)
     .filter((it) => categoryVisible(itemCategoryOf(it)))
-    .filter((it) => !isItemHiddenByDecorGroup(it))
+    .filter((it) => !isItemHiddenBySceneGroup(it))
     // 高度过滤：范围外的物品不参与点选/框选（「全部」时不过滤）。
     .filter(itemInHeightFilter)
     .sort((a, b) => itemDrawCompare(b, a));
@@ -1073,6 +1082,7 @@ export const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: stri
   { match: isPlateReturnItem, type: "脏盘台", color: "#7bd889" },
   { match: isGlassReturnItem, type: "脏杯台", color: "#5ec8e0" },
   { match: (it) => stubKindOf(it) === "CookingUtensil", type: "锅具", color: "#e8915b" },
+  { match: (it) => stubKindOf(it) === "WebBackpack", type: "Web背包", color: "#d4a574" },
   { match: (it) => stubKindOf(it) === "Dispenser" && prefabIdFromPath(it.prefabAssetPath) === "Backpack", type: "背包", color: "#d4a574" },
   { match: (it) => stubKindOf(it) === "Dispenser", type: "食材箱", color: "#5b9be8" },
   { match: isFoodSpawnerItem, type: "生成器", color: "#9be88a" },
@@ -1244,4 +1254,45 @@ export function drawBurnerFocusedMarkers(): void {
     ctx.fillText(numbers, bx, by - bh / 2 + 0.5);
   }
   ctx.restore();
+}
+
+/** 工作台重叠写回阻断：红色脉冲描边（在常规物品绘制之后调用）。 */
+export function drawWorkstationOverlapAlertOutlines(): void {
+  if (!workstationOverlapAlertActive()) return;
+  const keys = S.workstationOverlapAlertKeys!;
+  const pulse = overlapAlertPulse();
+  const cellPx = CELL * PX_PER_UNIT * S.scale;
+  dom.ctx.save();
+  dom.ctx.strokeStyle = `rgba(255, 48, 48, ${0.55 + pulse * 0.45})`;
+  dom.ctx.lineWidth = 2.5 + pulse * 2.5;
+  dom.ctx.setLineDash([7, 5]);
+  for (const item of S.items) {
+    if (!keys.has(item._editorKey)) continue;
+    if (isAirSlopeItem(item) || isAirWallItem(item) || isCollisionItem(item)) continue;
+    const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
+    if (!cat) continue;
+    const fp = resolveFootprint(item);
+    const rot = itemDisplayRotationY(item);
+    const vc = itemVisualCenterXZ(item);
+    const center = worldToCanvas(vc.x, vc.z);
+    const sx = itemScaleX(item);
+    const sz = itemScaleZ(item);
+    let w = fp.cellsX * cellPx * sx;
+    let h = fp.cellsZ * cellPx * sz;
+    const rotRad = (-rot * Math.PI) / 180;
+    const absCos = Math.abs(Math.cos(rotRad));
+    const absSin = Math.abs(Math.sin(rotRad));
+    const bw = Math.max(4, w);
+    const bh = Math.max(4, h);
+    const cw = bw * absCos + bh * absSin;
+    const ch = bw * absSin + bh * absCos;
+    dom.ctx.save();
+    dom.ctx.translate(center.x, center.y);
+    dom.ctx.rotate(rotRad);
+    dom.ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
+    dom.ctx.restore();
+    dom.ctx.fillStyle = `rgba(255, 48, 48, ${0.12 + pulse * 0.1})`;
+    dom.ctx.fillRect(center.x - cw / 2, center.y - ch / 2, cw, ch);
+  }
+  dom.ctx.restore();
 }

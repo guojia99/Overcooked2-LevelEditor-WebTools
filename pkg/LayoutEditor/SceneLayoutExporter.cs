@@ -69,7 +69,29 @@ public static class SceneLayoutExporter
         // 同轴按钮组从场景重建（Design/Coaxial Logic 下的 helper 组件/tag）。
         var coaxialLinks = CoaxialButtonBakery.ImportFromScene(scene);
 
+        // 随机触发器从场景重建（Design/RandomTrigger Logic 下的 helper 组件/tag）。
+        var randomTriggers = RandomTriggerBakery.ImportFromScene(scene);
+
+        // 按钮控速 / 生成器批次从场景重建（Design/Speed Logic helper）：
+        // ① items 的 speedControl/startByButton 填回 stub DTO；② 触发源→目标
+        // 合并为 switchLinks（stub 轮询通道，trigger 留空）。
+        SpeedControlBakery.AttachExportData(items);
         var switchLinks = CollectSwitchLinks(items);
+        // 去重：stub 轮询目标也会被 ApplySwitchLinks 写进 objectToTrigger（vanilla
+        // 通道对 stub 组件不可达，仅残留痕迹），CollectSwitchLinks 会按 "Switch"
+        // 触发名读回——同 (开关,目标) 对以 stub 条目（trigger 空）为准。
+        var stubLinks = SpeedControlBakery.ImportSwitchLinks(scene);
+        for (int si = 0; si < stubLinks.Count; si++)
+        {
+            var stubLink = stubLinks[si];
+            for (int i = switchLinks.Count - 1; i >= 0; i--)
+            {
+                var l = switchLinks[i];
+                if (l != null && l.switchId == stubLink.switchId && l.targetId == stubLink.targetId)
+                    switchLinks.RemoveAt(i);
+            }
+            switchLinks.Add(stubLink);
+        }
         // 遗留迁移：switchLink "Animate"（旧传送带直连方案，运行时投递链已证实
         // 无法送达）→ 节点环开关动画组 + ButtonLink，统一到动画组模型。
         MigrateLegacyConveyorAnimateLinks(items, imported, switchLinks, buttonLinks);
@@ -85,6 +107,8 @@ public static class SceneLayoutExporter
             sceneAssetPath = scene.path,
             hasCeilingHeight = TryReadCeilingHeight(out ceilingHeight),
             ceilingHeight = ceilingHeight,
+            chefHeadLightsEnabled = ChefHeadLightBakery.DetectEnabledInScene(scene),
+            chefHeadLightRange = ChefHeadLightBakery.ReadHeadLightRangeFromScene(scene),
             items = items.ToArray(),
             floors = SceneFloorExporter.ExportFromScene().ToArray(),
             walkable = SceneWalkabilityReader.ReadWalkable().ToArray(),
@@ -99,6 +123,9 @@ public static class SceneLayoutExporter
                 : null,
             coaxialLinks = coaxialLinks.Count > 0
                 ? new LayoutCoaxialLinkDataDto { links = coaxialLinks.ToArray() }
+                : null,
+            randomTriggers = randomTriggers.Count > 0
+                ? new LayoutRandomTriggerDataDto { links = randomTriggers.ToArray() }
                 : null,
             cameraInfo = CollectCameraInfo(),
             lights = CollectLights().ToArray()
@@ -366,7 +393,15 @@ public static class SceneLayoutExporter
                 range = light.range,
                 spotAngle = light.spotAngle,
                 enabled = light.enabled,
-                eulerAngles = LayoutVector3.From(t.eulerAngles)
+                position = LayoutVector3.From(t.position),
+                positionEdited = false,
+                eulerAngles = LayoutVector3.From(t.eulerAngles),
+                rotationEdited = false,
+                shadows = (int)light.shadows,
+                shadowStrength = light.shadowStrength,
+                bounceIntensity = light.bounceIntensity,
+                innerSpotAngle = LayoutEditorLightCompat.ReadInnerSpotAngle(light),
+                lightmapping = (int)light.lightmapBakeType
             });
         }
     }

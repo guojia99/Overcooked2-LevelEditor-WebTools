@@ -2383,7 +2383,7 @@
       "en": "Chicken Burger (DLC08)"
     },
     {
-      "id": "dlc08_choppedbun",
+      "id": "DLC08_ChoppedBun",
       "zh": "汉堡面包（DLC8）",
       "en": "Chopped Bun (DLC8)"
     },
@@ -2473,7 +2473,7 @@
       "en": "Fried Chicken Burger (DLC08)"
     },
     {
-      "id": "dlc08_friedchips",
+      "id": "DLC08_friedchips",
       "zh": "炸薯条",
       "en": "Fried Chips"
     },
@@ -4033,22 +4033,22 @@
       "en": "Melon (DLC13)"
     },
     {
-      "id": "dlc13_mixedfloureggchocolate",
+      "id": "DLC13_mixedfloureggchocolate",
       "zh": "巧克力面糊（DLC13）",
       "en": "Chocolate Batter (DLC13)"
     },
     {
-      "id": "dlc13_mixedfloureggchocolatestrawberry",
+      "id": "DLC13_mixedfloureggchocolatestrawberry",
       "zh": "巧克力草莓面糊（DLC13）",
       "en": "Chocolate & Strawberry Batter (DLC13)"
     },
     {
-      "id": "dlc13_mixedfloureggstrawberries",
+      "id": "DLC13_mixedfloureggstrawberries",
       "zh": "草莓面糊（DLC13）",
       "en": "Strawberry Batter (DLC13)"
     },
     {
-      "id": "dlc13_mixedfloureggwatermelon",
+      "id": "DLC13_mixedfloureggwatermelon",
       "zh": "甜瓜面糊（DLC13）",
       "en": "Melon Batter (DLC13)"
     },
@@ -4073,22 +4073,22 @@
       "en": "Mooncake Watermelon"
     },
     {
-      "id": "dlc13_moonpie_chocolate",
+      "id": "DLC13_Moonpie_chocolate",
       "zh": "巧克力月饼",
       "en": "Chocolate Moon Pie"
     },
     {
-      "id": "dlc13_moonpie_chocolatestrawberry",
+      "id": "DLC13_Moonpie_chocolatestrawberry",
       "zh": "巧克力草莓月饼",
       "en": "Chocolate & Strawberry Moon Pie"
     },
     {
-      "id": "dlc13_moonpie_strawberry",
+      "id": "DLC13_Moonpie_strawberry",
       "zh": "草莓月饼",
       "en": "Strawberry Moon Pie"
     },
     {
-      "id": "dlc13_moonpie_watermelon",
+      "id": "DLC13_Moonpie_watermelon",
       "zh": "甜瓜月饼",
       "en": "Melon Moon Pie"
     },
@@ -22731,6 +22731,16 @@
       "id": "workstation_sink_mug_01_wood",
       "zh": "马克杯水槽（木制）",
       "en": "Mug Sink (Wooden)"
+    },
+    {
+      "id": "web_backpack_storage_01",
+      "zh": "Web背包",
+      "en": "Web Storage Backpack"
+    },
+    {
+      "id": "web_killer_ghost_01",
+      "zh": "致命鬼魂",
+      "en": "Killer Ghost (Web)"
     },
     {
       "id": "WorldMapAudioDirectory",

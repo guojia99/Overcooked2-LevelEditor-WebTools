@@ -1,7 +1,9 @@
 import {
   S,
   EditorItem,
-  PX_PER_UNIT
+  EditorFloor,
+  PX_PER_UNIT,
+  type SceneListLayer,
 } from "./state";
 import { dom } from "./dom";
 import {
@@ -20,12 +22,212 @@ import {
 } from "./selection";
 import { sceneNpcAnimItems, npcTypesHintHtml } from "./npcAnimations";
 import { matchBuiltinAnimDecor, sceneEnvAnimDecorItems, envAnimTypesHintHtml } from "./builtinAnimDecor";
+import { clampCanvasScale } from "./canvasZoom";
 import { draw } from "./render";
 import { renderAnimControlPanel, groupVisibleInLayer, updateAnimPickBar } from "./animControl";
+import { renderLightPanel } from "./lightPanel";
 import { renderTriggerSourcePanel } from "./triggerOrchestrator";
 import { applyPaletteGridCols } from "./palette";
 import { itemInCurrentPart, floorInCurrentPart } from "./partLevel";
-import { decorGroupKey } from "./decorLayerVisibility";
+import {
+  coreGroupKey,
+  decorGroupKey,
+  floorGroupKey,
+  hiddenSceneGroupsSig,
+  hideAllGroupsOnLayer,
+  isGroupHidden,
+  showAllGroupsOnLayer,
+  surfaceGroupKey,
+  toggleGroupHidden,
+} from "./layerGroupVisibility";
+
+const SCENE_LIST_LAYERS: SceneListLayer[] = ["decor", "floor", "background", "items"];
+
+function sceneListLayerOfCurrent(): SceneListLayer | null {
+  const l = S.currentLayer;
+  return SCENE_LIST_LAYERS.includes(l as SceneListLayer) ? (l as SceneListLayer) : null;
+}
+
+function layerEyeButtonHtml(layer: SceneListLayer, gk: string, hidden: boolean): string {
+  const enc = encodeURIComponent(gk);
+  return (
+    `<button type="button" class="layer-eye${hidden ? " off" : ""}" data-scene-layer="${layer}" data-scene-group="${enc}" ` +
+    `title="${hidden ? "显示该组" : "隐藏该组（画布不显示、不可点选）"}">${hidden ? "👁‍🗨" : "👁"}</button>`
+  );
+}
+
+function layerGroupDetailsOpen(layer: SceneListLayer, gk: string, title: string, count: number): string {
+  const hidden = isGroupHidden(layer, gk);
+  return (
+    `<details class="layer-group cat-group${hidden ? " layer-group-hidden" : ""}" open>` +
+    `<summary class="layer-group-summary">` +
+    layerEyeButtonHtml(layer, gk, hidden) +
+    `<span class="layer-group-title">${escHtml(title)}</span>` +
+    `<span class="layer-group-count">（${count}）</span>` +
+    `</summary>`
+  );
+}
+
+function groupFloorsByKey(floors: EditorFloor[]): Map<string, EditorFloor[]> {
+  const map = new Map<string, EditorFloor[]>();
+  for (const f of floors) {
+    const gk = floorGroupKey(f);
+    if (!map.has(gk)) map.set(gk, []);
+    map.get(gk)!.push(f);
+  }
+  for (const list of map.values()) {
+    list.sort((a, b) => a._key.localeCompare(b._key));
+  }
+  return map;
+}
+
+function groupSurfaceItemsByKey(items: EditorItem[]): Map<string, EditorItem[]> {
+  const map = new Map<string, EditorItem[]>();
+  for (const it of items) {
+    const gk = surfaceGroupKey(it);
+    if (!map.has(gk)) map.set(gk, []);
+    map.get(gk)!.push(it);
+  }
+  for (const list of map.values()) {
+    list.sort((a, b) => a._editorKey.localeCompare(b._editorKey));
+  }
+  return map;
+}
+
+function floorGroupTitle(gk: string, list: EditorFloor[]): string {
+  const first = list[0];
+  if (!first) return gk.replace(/^floor:/, "");
+  const kind =
+    first.surfaceKind === "raft"
+      ? "木筏"
+      : first.surfaceKind === "background"
+        ? "背景板"
+        : first.imageTexturePath
+          ? "图片地板"
+          : first.materialName ?? "地板";
+  return first.displayName || kind;
+}
+
+function surfaceGroupTitle(gk: string): string {
+  return gk.startsWith("surf:") ? gk.slice(5) : gk;
+}
+
+let layerVisBulkBound = false;
+
+function updateLayerVisBulkBar(): void {
+  const bar = document.getElementById("layer-vis-bulk");
+  if (!bar) return;
+  const layer = sceneListLayerOfCurrent();
+  const show = layer !== null && S.activeRightTab === "items";
+  bar.classList.toggle("hidden", !show);
+}
+
+export function initLayerVisBulkButtons(): void {
+  if (layerVisBulkBound) return;
+  layerVisBulkBound = true;
+  document.getElementById("layer-vis-show-all")?.addEventListener("click", () => {
+    const layer = sceneListLayerOfCurrent();
+    if (!layer) return;
+    showAllGroupsOnLayer(layer);
+    S.sceneItemListSig = "";
+    draw();
+    refreshSceneItemList();
+  });
+  document.getElementById("layer-vis-hide-all")?.addEventListener("click", () => {
+    const layer = sceneListLayerOfCurrent();
+    if (!layer) return;
+    hideAllGroupsOnLayer(layer);
+    S.sceneItemListSig = "";
+    draw();
+    refreshSceneItemList();
+  });
+}
+
+function wireSceneListGroupInteractions(body: HTMLElement): void {
+  body.querySelectorAll<HTMLButtonElement>(".layer-eye[data-scene-layer]").forEach((btn) => {
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      const layer = btn.dataset.sceneLayer as SceneListLayer;
+      const gk = decodeURIComponent(btn.dataset.sceneGroup ?? "");
+      if (!layer || !gk) return;
+      toggleGroupHidden(layer, gk);
+      S.sceneItemListSig = "";
+      draw();
+      refreshSceneItemList();
+    });
+  });
+
+  body.querySelectorAll<HTMLElement>(".layer-group-summary").forEach((sum) => {
+    sum.addEventListener("dblclick", (ev) => {
+      if ((ev.target as HTMLElement).closest(".layer-eye")) return;
+      const eye = sum.querySelector<HTMLButtonElement>(".layer-eye[data-scene-layer]");
+      if (!eye) return;
+      const layer = eye.dataset.sceneLayer as SceneListLayer;
+      const gk = decodeURIComponent(eye.dataset.sceneGroup ?? "");
+      if (!layer || !gk) return;
+
+      if (layer === "decor") {
+        const keys = S.items
+          .filter((it) => itemLayerOfIt(it) === "decor" && itemInCurrentPart(it) && decorGroupKey(it) === gk)
+          .map((it) => it._editorKey);
+        if (keys.length === 0) return;
+        setSelection(keys, keys[0]);
+        const first = S.items.find((i) => i._editorKey === keys[0]);
+        if (first) ensureItemVisible(first);
+        draw();
+        return;
+      }
+
+      if (layer === "items") {
+        const keys = S.items
+          .filter((it) => itemLayerOfIt(it) === "items" && itemInCurrentPart(it) && coreGroupKey(it) === gk)
+          .map((it) => it._editorKey);
+        if (keys.length === 0) return;
+        setSelection(keys, keys[0]);
+        const first = S.items.find((i) => i._editorKey === keys[0]);
+        if (first) ensureItemVisible(first);
+        draw();
+        return;
+      }
+
+      const layerBg = layer === "background";
+      if (gk.startsWith("floor:")) {
+        const floorKeys = S.floors
+          .filter(
+            (f) =>
+              floorInCurrentPart(f) &&
+              (layerBg ? f.surfaceKind === "background" : f.surfaceKind !== "background") &&
+              floorGroupKey(f) === gk
+          )
+          .map((f) => f._key);
+        if (floorKeys.length === 0) return;
+        setFloorSelection(floorKeys);
+        clearSelection();
+        const first = S.floors.find((f) => f._key === floorKeys[0]);
+        if (first) ensureItemVisible({ _wx: first._wx, _wz: first._wz } as EditorItem);
+        draw();
+        return;
+      }
+
+      if (gk.startsWith("surf:")) {
+        const keys = S.items
+          .filter((it) => {
+            if (!itemInCurrentPart(it) || isCollisionItem(it)) return false;
+            const cat = itemCategoryOf(it);
+            const onLayer = layerBg ? cat === "background" : cat === "floors";
+            return onLayer && surfaceGroupKey(it) === gk;
+          })
+          .map((it) => it._editorKey);
+        if (keys.length === 0) return;
+        setSelection(keys, keys[0]);
+        const first = S.items.find((i) => i._editorKey === keys[0]);
+        if (first) ensureItemVisible(first);
+        draw();
+      }
+    });
+  });
+}
 
 /** Drag the left palette's right edge to resize it (min 180px, max half the window). */
 export function initPaletteResizer(): void {
@@ -130,11 +332,49 @@ export function updatePanelTabButtons(): void {
 }
 
 export function ensureItemVisible(item: EditorItem): void {
+  const w = dom.canvas.clientWidth;
+  const h = dom.canvas.clientHeight;
+  if (dom.canvas.width !== w || dom.canvas.height !== h) {
+    dom.canvas.width = w;
+    dom.canvas.height = h;
+  }
   const p = worldToCanvas(item._wx, item._wz);
   const margin = 60;
-  if (p.x >= margin && p.x <= dom.canvas.width - margin && p.y >= margin && p.y <= dom.canvas.height - margin) return;
-  S.panX = dom.canvas.width / 2 - item._wx * PX_PER_UNIT * S.scale;
-  S.panY = dom.canvas.height / 2 + item._wz * PX_PER_UNIT * S.scale;
+  if (p.x >= margin && p.x <= w - margin && p.y >= margin && p.y <= h - margin) return;
+  const k = PX_PER_UNIT * S.scale;
+  S.panX = -item._wx * k;
+  S.panY = item._wz * k;
+}
+
+/** 将 2D 视野对准世界矩形（必要时放大），用于重叠告警等定位。 */
+export function focusWorldBounds(
+  minX: number,
+  maxX: number,
+  minZ: number,
+  maxZ: number,
+  paddingM = 1.2
+): void {
+  // 与 draw() 一致：先对齐 backing store，避免 pan 按 client 算、worldToCanvas 按 width 算而偏到角落。
+  const w = dom.canvas.clientWidth;
+  const h = dom.canvas.clientHeight;
+  if (dom.canvas.width !== w || dom.canvas.height !== h) {
+    dom.canvas.width = w;
+    dom.canvas.height = h;
+  }
+
+  const cx = (minX + maxX) / 2;
+  const cz = (minZ + maxZ) / 2;
+  const span = Math.max(maxX - minX, maxZ - minZ, 3) + paddingM * 2;
+  const margin = 72;
+  const vw = Math.max(120, w - margin * 2);
+  const vh = Math.max(120, h - margin * 2);
+  const fitScale = Math.min(vw / (span * PX_PER_UNIT), vh / (span * PX_PER_UNIT));
+  if (fitScale < S.scale) S.scale = clampCanvasScale(fitScale);
+
+  // worldToCanvas：cx = w/2 + panX + wx·K，cy = h/2 + panY - wz·K → 居中时 panX = -wx·K，panY = wz·K
+  const k = PX_PER_UNIT * S.scale;
+  S.panX = -cx * k;
+  S.panY = cz * k;
 }
 
 export function refreshSceneItemList(): void {
@@ -163,10 +403,16 @@ export function refreshSceneItemList(): void {
     });
     if (countEl) countEl.textContent = `（${floors.length} 地板 · ${surfaceItems.length} 表面物）`;
 
+    const sceneLayer: SceneListLayer = layer;
     const parts: string[] = [];
-    if (floors.length > 0) {
-      parts.push(`<details class="cat-group" open><summary>${layerBg ? "🌊 背景板" : "🗺️ 地板"}（${floors.length}）</summary>`);
-      for (const f of floors) {
+    const floorGroups = groupFloorsByKey(floors);
+    const sortedFloorKeys = [...floorGroups.keys()].sort((a, b) =>
+      floorGroupTitle(a, floorGroups.get(a)!).localeCompare(floorGroupTitle(b, floorGroups.get(b)!), "zh")
+    );
+    for (const gk of sortedFloorKeys) {
+      const list = floorGroups.get(gk)!;
+      parts.push(layerGroupDetailsOpen(sceneLayer, gk, floorGroupTitle(gk, list), list.length));
+      for (const f of list) {
         const kind =
           f.surfaceKind === "raft"
             ? "木筏"
@@ -176,18 +422,23 @@ export function refreshSceneItemList(): void {
                 ? "图片地板"
                 : f.materialName ?? "地板";
         parts.push(
-          `<div class="scene-item-row${S.selectedFloorKeys.has(f._key) ? " active" : ""}" data-floor-key="${f._key}">` +
+          `<div class="scene-item-row layer-child-row${S.selectedFloorKeys.has(f._key) ? " active" : ""}" data-floor-key="${f._key}">` +
             `<span class="zh">${escHtml(f.displayName || kind)}</span> <span class="id">${escHtml(kind)}</span>` +
             `</div>`
         );
       }
       parts.push("</details>");
     }
-    if (surfaceItems.length > 0) {
-      parts.push(`<details class="cat-group" open><summary>${layerBg ? "🌊 背景 / 环境特效" : "🧱 表面物品"}（${surfaceItems.length}）</summary>`);
-      for (const it of surfaceItems) {
+    const surfGroups = groupSurfaceItemsByKey(surfaceItems);
+    const sortedSurfKeys = [...surfGroups.keys()].sort((a, b) =>
+      surfaceGroupTitle(a).localeCompare(surfaceGroupTitle(b), "zh")
+    );
+    for (const gk of sortedSurfKeys) {
+      const list = surfGroups.get(gk)!;
+      parts.push(layerGroupDetailsOpen(sceneLayer, gk, surfaceGroupTitle(gk), list.length));
+      for (const it of list) {
         parts.push(
-          `<div class="scene-item-row${isSelected(it._editorKey) ? " active" : ""}" data-key="${it._editorKey}">` +
+          `<div class="scene-item-row layer-child-row${isSelected(it._editorKey) ? " active" : ""}" data-key="${it._editorKey}">` +
             `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${escHtml(prefabIdFromPath(it.prefabAssetPath) || "—")}</span>` +
             `<button type="button" class="scene-item-samename" data-samename="${it._editorKey}" title="选中所有同名物品">⌂</button>` +
             `</div>`
@@ -261,16 +512,7 @@ export function refreshSceneItemList(): void {
     for (const gk of sortedGroupNames) {
       const list = nameGroups.get(gk)!;
       list.sort((a, b) => a._editorKey.localeCompare(b._editorKey));
-      const hidden = S.decorHiddenGroups.has(gk);
-      const enc = encodeURIComponent(gk);
-      parts.push(
-        `<details class="layer-group cat-group${hidden ? " layer-group-hidden" : ""}" open>` +
-          `<summary class="layer-group-summary">` +
-          `<button type="button" class="layer-eye${hidden ? " off" : ""}" data-decor-group="${enc}" title="${hidden ? "显示该组" : "隐藏该组（画布不显示、不可点选）"}">${hidden ? "👁‍🗨" : "👁"}</button>` +
-          `<span class="layer-group-title">${escHtml(gk)}</span>` +
-          `<span class="layer-group-count">（${list.length}）</span>` +
-          `</summary>`
-      );
+      parts.push(layerGroupDetailsOpen("decor", gk, gk, list.length));
       for (const it of list) {
         const id = prefabIdFromPath(it.prefabAssetPath) || "—";
         parts.push(
@@ -305,11 +547,11 @@ export function refreshSceneItemList(): void {
     for (const key of orderedKeys) {
       const list = groups.get(key)!;
       const label = S.corePaletteGroupMeta.get(key) ?? (key === "__other" ? "其他" : key);
-      parts.push(`<details class="cat-group" open><summary>${escHtml(label)}（${list.length}）</summary>`);
+      parts.push(layerGroupDetailsOpen("items", key, label, list.length));
       for (const it of list) {
         const id = prefabIdFromPath(it.prefabAssetPath) || "—";
         parts.push(
-          `<div class="scene-item-row${isSelected(it._editorKey) ? " active" : ""}" data-key="${it._editorKey}">` +
+          `<div class="scene-item-row layer-child-row${isSelected(it._editorKey) ? " active" : ""}" data-key="${it._editorKey}">` +
             `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${escHtml(id)}</span>` +
             `<button type="button" class="scene-item-samename" data-samename="${it._editorKey}" title="选中所有同名物品">⌂</button>` +
             `</div>`
@@ -346,42 +588,13 @@ export function refreshSceneItemList(): void {
     });
   });
 
-  body.querySelectorAll<HTMLButtonElement>(".layer-eye[data-decor-group]").forEach((btn) => {
-    btn.addEventListener("click", (ev) => {
-      ev.stopPropagation();
-      ev.preventDefault();
-      const gk = decodeURIComponent(btn.dataset.decorGroup ?? "");
-      if (!gk) return;
-      if (S.decorHiddenGroups.has(gk)) S.decorHiddenGroups.delete(gk);
-      else S.decorHiddenGroups.add(gk);
-      S.sceneItemListSig = "";
-      draw();
-      refreshSceneItemList();
-    });
-  });
-
-  body.querySelectorAll<HTMLElement>(".layer-group-summary").forEach((sum) => {
-    sum.addEventListener("dblclick", (ev) => {
-      if ((ev.target as HTMLElement).closest(".layer-eye")) return;
-      const details = sum.closest("details.layer-group");
-      const enc = details?.querySelector<HTMLButtonElement>(".layer-eye")?.dataset.decorGroup;
-      if (!enc) return;
-      const gk = decodeURIComponent(enc);
-      const keys = S.items
-        .filter((it) => itemLayerOfIt(it) === "decor" && itemInCurrentPart(it) && decorGroupKey(it) === gk)
-        .map((it) => it._editorKey);
-      if (keys.length === 0) return;
-      setSelection(keys, keys[0]);
-      const first = S.items.find((i) => i._editorKey === keys[0]);
-      if (first) ensureItemVisible(first);
-      draw();
-    });
-  });
+  wireSceneListGroupInteractions(body);
+  updateLayerVisBulkBar();
 }
 
 export function maybeRefreshSceneItemList(): void {
-  const decorVisSig = [...S.decorHiddenGroups].sort().join("\0");
-  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeAnimGroupId}|${S.activeAnimEventIdx}|${S.animMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.animControls.length}|${S.buttonEvents.length}|${S.buttonLinks.length}|${S.switchLinks.length}|${S.dirty}|${decorVisSig}`;
+  const visSig = hiddenSceneGroupsSig();
+  const sig = `${S.currentLayer}|${S.activeRightTab}|${S.activeAnimGroupId}|${S.activeAnimEventIdx}|${S.animMode}|${S.items.length}|${S.selectedKeys.size}|${S.selectedFloorKeys.size}|${S.selectedKey}|${S.selectedLightPath}|${S.lights.length}|${S.animControls.length}|${S.buttonEvents.length}|${S.buttonLinks.length}|${S.switchLinks.length}|${S.dirty}|${visSig}`;
   if (sig === S.sceneItemListSig) return;
   S.sceneItemListSig = sig;
   renderRightPanel();
@@ -394,6 +607,13 @@ export function renderRightPanel(): void {
 
   const countEl = document.getElementById("scene-items-count");
   const animCountEl = document.getElementById("anim-control-count");
+
+  if (S.currentLayer === "lights") {
+    renderLightPanel(body);
+    if (countEl) countEl.textContent = S.lights.length > 0 ? `(${S.lights.length})` : "";
+    if (animCountEl) animCountEl.textContent = "";
+    return;
+  }
 
   if (S.currentLayer === "anim") {
     // Move layer: the move panel is always shown (dedicated management layer).

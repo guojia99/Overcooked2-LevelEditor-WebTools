@@ -42,7 +42,7 @@ public static class LayoutEditorBunSwapApi
         public bool isFinishedBurger;
         /// <summary>组装定义子类（CustomRecipeOptionalBurgerSO）。</summary>
         public bool isAssembly;
-        /// <summary>当前面包皮 id（ChoppedBunSO / DLC02_ChoppedBun / dlc08_choppedbun）。</summary>
+        /// <summary>当前面包皮 id（ChoppedBunSO / DLC02_ChoppedBun / DLC08_ChoppedBun）。</summary>
         public string bunId;
         public string bunGuid;
         /// <summary>compositionSOs 下标；-1 = 组装定义的 bunSO 字段（BunFieldLayerIndex）。</summary>

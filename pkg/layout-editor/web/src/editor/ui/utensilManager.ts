@@ -19,7 +19,6 @@ import { openIngredientMultiPicker } from "../../modals";
 import {
   stubKindOf,
   defaultUtensilCapacity,
-  utensilTimingKind,
   utensilTimingInputsHtml,
   UTENSIL_TIME_KEYS,
   readUtensilTimeInput
@@ -48,6 +47,7 @@ import {
   utensilRecipeFilterBarHtml,
   bindUtensilRecipeFilterBar,
 } from "../../utensilRecipeFilters";
+import { showBusy, hideBusy } from "../../busy";
 
 export type UtensilIngredientFill = Map<string, UtensilFillEntry>;
 
@@ -105,12 +105,60 @@ export function applyUtensilIngredientFill(
   return touched;
 }
 
+/** 打开前需拉中间产物目录，用全局忙碌遮罩过渡（与菜谱弹窗一致）。 */
 export function openUtensilManager() {
-  void showUtensilManagerModal();
+  showBusy("加载锅具数据…");
+  void showUtensilManagerModal().finally(() => hideBusy());
 }
 
-async function showUtensilManagerModal() {
-  if (S.currentLevelSet) {
+type UtensilManagerModalOpts = {
+  /** 仅「按菜谱自动填充」等批量重绘时跳过目录请求。 */
+  skipCatalogRefresh?: boolean;
+  /** 整页重绘后恢复列表滚动位置（自动填充用）。 */
+  restoreScrollTop?: number;
+};
+
+function utmModalScrollEl(): HTMLElement | null {
+  return document.querySelector('[data-modal-id="utensil-manager"] .modal-scroll');
+}
+
+function captureUtmModalScroll(): number {
+  const el = utmModalScrollEl();
+  return el ? el.scrollTop : 0;
+}
+
+function restoreUtmModalScroll(top: number): void {
+  requestAnimationFrame(() => {
+    const el = utmModalScrollEl();
+    if (el) el.scrollTop = top;
+  });
+}
+
+function extraIngredientsBtnLabel(count: number): string {
+  return count > 0 ? `额外食材：${count} 种…` : "额外食材：无（处理所有主线食材）…";
+}
+
+/** 单行就地刷新（避免整弹窗 reopen 丢滚动条位置）。 */
+function patchUtensilRowDom(it: EditorItem): void {
+  const row = document.querySelector(`.utm-row[data-key="${it._editorKey}"]`);
+  if (!row) return;
+  const cu = it.cookingUtensil ?? {};
+  const cap = (cu.capacity ?? 0) > 0 ? cu.capacity! : defaultUtensilCapacity(it);
+  const capInput = row.querySelector<HTMLInputElement>(".utm-cap");
+  if (capInput) capInput.value = String(cap);
+  const allowed = cu.allowedIngredientGuids ?? [];
+  const ingsBtn = row.querySelector<HTMLButtonElement>(".utm-ings");
+  if (ingsBtn) ingsBtn.textContent = extraIngredientsBtnLabel(allowed.length);
+  row.querySelectorAll<HTMLInputElement>(".utm-time").forEach((input) => {
+    const key = UTENSIL_TIME_KEYS[input.dataset.utime ?? ""];
+    if (!key) return;
+    const raw = cu[key];
+    input.value = raw != null && raw > 0 ? String(raw) : "";
+  });
+}
+
+async function showUtensilManagerModal(opts?: UtensilManagerModalOpts) {
+  if (S.currentLevelSet && !opts?.skipCatalogRefresh) {
     try {
       const catalog = await fetchRecipeCatalog(S.currentLevelSet);
       S.intermediatesCache = utensilIntermediateRecipes(catalog);
@@ -178,21 +226,18 @@ async function showUtensilManagerModal() {
      ${autofillFilterBar}
      <div class="modal-scroll">${body}</div>`,
     `${primaryBtnHtml("🧺 按菜谱自动填充", { id: "utm-auto-fill" })}
-     ${cancelBtnHtml("关闭")}`
+     ${cancelBtnHtml("关闭")}`,
+    { id: "utensil-manager", panelClass: "wide" }
   );
   const panel = document.querySelector(".modal-panel");
-  panel?.classList.add("wide");
   if (panel) bindUtensilRecipeFilterBar(panel, utmSharedRecipeFilters, () => {});
+  if (opts?.restoreScrollTop != null) restoreUtmModalScroll(opts.restoreScrollTop);
 
   const utensilByKey = (key: string | undefined) => S.items.find((i) => i._editorKey === key);
   const ensureUtensil = (it: EditorItem) => {
     it.stubKind = "CookingUtensil";
     if (!it.cookingUtensil) it.cookingUtensil = {};
     return it.cookingUtensil;
-  };
-  const reopen = () => {
-    closeModal();
-    openUtensilManager();
   };
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
@@ -208,65 +253,69 @@ async function showUtensilManagerModal() {
       setStatus("未选择场景，无法读取关卡菜谱", false);
       return;
     }
-    let recipes: RecipeEntry[] | null = null;
-    let guids: string[] = [];
+    showBusy("按菜谱自动填充…");
     try {
-      const [catalog, level] = await Promise.all([
-        fetchRecipeCatalog(S.currentLevelSet),
-        fetchLevelRecipes(S.scenePath),
-      ]);
-      recipes = catalog;
-      guids = level?.recipeGuids ?? [];
-    } catch (e) {
-      setStatus(`读取关卡菜谱失败：${(e as Error).message}`, false);
-      return;
-    }
-    const byGuid = new Map(recipes.map((r) => [r.guid, r]));
-    const allSelected = guids.map((g) => byGuid.get(g)).filter((r): r is RecipeEntry => !!r);
-    if (!allSelected.length) {
-      setStatus("当前关卡未选择菜谱，先在「选择菜谱」里勾选", false);
-      return;
-    }
-    S.intermediatesCache = utensilIntermediateRecipes(recipes);
+      let recipes: RecipeEntry[] | null = null;
+      let guids: string[] = [];
+      try {
+        const [catalog, level] = await Promise.all([
+          fetchRecipeCatalog(S.currentLevelSet),
+          fetchLevelRecipes(S.scenePath),
+        ]);
+        recipes = catalog;
+        guids = level?.recipeGuids ?? [];
+      } catch (e) {
+        setStatus(`读取关卡菜谱失败：${(e as Error).message}`, false);
+        return;
+      }
+      const byGuid = new Map(recipes.map((r) => [r.guid, r]));
+      const allSelected = guids.map((g) => byGuid.get(g)).filter((r): r is RecipeEntry => !!r);
+      if (!allSelected.length) {
+        setStatus("当前关卡未选择菜谱，先在「选择菜谱」里勾选", false);
+        return;
+      }
+      S.intermediatesCache = utensilIntermediateRecipes(recipes);
 
-    const recs = allSelected.filter((r) =>
-      matchesUtensilRecipeFilters(r, utmSharedRecipeFilters, allSelected)
-    );
-    if (!recs.length) {
-      setStatus("当前筛选下没有参与自动填充的关卡菜谱，请调整「菜谱筛选」或先在「选择菜谱」里勾选", false);
-      return;
-    }
+      const recs = allSelected.filter((r) =>
+        matchesUtensilRecipeFilters(r, utmSharedRecipeFilters, allSelected)
+      );
+      if (!recs.length) {
+        setStatus("当前筛选下没有参与自动填充的关卡菜谱，请调整「菜谱筛选」或先在「选择菜谱」里勾选", false);
+        return;
+      }
 
-    const fill = computeUtensilIngredientFill(recs);
-    if (!fill.size) {
-      setStatus("所选菜谱无需锅具装填（沙拉/拼盘等组装类）", false);
-      return;
-    }
-    const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
-    const recipeGuid = new Map(recipes.map((r) => [r.id, r.guid]));
+      const fill = computeUtensilIngredientFill(recs);
+      if (!fill.size) {
+        setStatus("所选菜谱无需锅具装填（沙拉/拼盘等组装类）", false);
+        return;
+      }
+      const ingGuid = new Map(S.ingredientsCache.map((i) => [i.id, i.guid]));
+      const recipeGuid = new Map(recipes.map((r) => [r.id, r.guid]));
 
-    pushHistory();
-    const touched = applyUtensilIngredientFill(fill, ingGuid, recipeGuid);
-    draw();
-    // 锅具显示中文名；×N = 该锅具可处理的食材/中间产物种类数（非锅具个数）；
-    // 「沿用原版」= 清空额外食材、保留原版 lookup（如烧麦的蒸笼）
-    const vesselZh = (v: string) => {
-      const kind = UTENSIL_KIND_BY_ID[v];
-      return (kind && UTENSIL_KIND_ZH[kind]) || v;
-    };
-    const parts = [...fill.entries()].map(([v, f]) => {
-      const n = f.ings.length + f.intermediates.length;
-      return f.clear || n === 0
-        ? `${vesselZh(v)} 沿用原版（容量 ${f.capacity}）`
-        : `${vesselZh(v)}×${n} 种食材（容量 ${f.capacity}）`;
-    });
-    setStatus(
-      touched
-        ? `已按 ${recs.length} 道菜谱填充 ${touched} 个锅具（${parts.join("、")}；写回后生效）`
-        : `场景中没有匹配的锅具（需要：${parts.join("、")}）——可先用菜谱弹窗「自动补全道具」放置缺失锅具`,
-      touched > 0
-    );
-    reopen();
+      pushHistory();
+      const touched = applyUtensilIngredientFill(fill, ingGuid, recipeGuid);
+      draw();
+      const vesselZh = (v: string) => {
+        const kind = UTENSIL_KIND_BY_ID[v];
+        return (kind && UTENSIL_KIND_ZH[kind]) || v;
+      };
+      const parts = [...fill.entries()].map(([v, f]) => {
+        const n = f.ings.length + f.intermediates.length;
+        return f.clear || n === 0
+          ? `${vesselZh(v)} 沿用原版（容量 ${f.capacity}）`
+          : `${vesselZh(v)}×${n} 种食材（容量 ${f.capacity}）`;
+      });
+      setStatus(
+        touched
+          ? `已按 ${recs.length} 道菜谱填充 ${touched} 个锅具（${parts.join("、")}；写回后生效）`
+          : `场景中没有匹配的锅具（需要：${parts.join("、")}）——可先用菜谱弹窗「自动补全道具」放置缺失锅具`,
+        touched > 0
+      );
+      const scrollTop = captureUtmModalScroll();
+      void showUtensilManagerModal({ skipCatalogRefresh: true, restoreScrollTop: scrollTop });
+    } finally {
+      hideBusy();
+    }
   });
 
   document.querySelectorAll<HTMLInputElement>(".utm-cap").forEach((input) => {
@@ -277,8 +326,6 @@ async function showUtensilManagerModal() {
       pushHistory();
       ensureUtensil(it).capacity = v;
       draw();
-      setStatus(`${itemLabel(it)} 容量已设为 ${v}（写回后生效）`);
-      reopen();
     });
   });
 
@@ -301,19 +348,6 @@ async function showUtensilManagerModal() {
       if (next == null) delete it.cookingUtensil?.[key];
       else it.cookingUtensil![key] = next;
       draw();
-      const kind = utensilTimingKind(it);
-      const names: Record<string, string> = {
-        cookTime: kind === "both" ? "烤熟时间" : "煮熟时间",
-        burnTime: kind === "both" ? "烤糊时间" : "煮糊时间",
-        mixTime: "混合时间",
-        overMixTime: "过度混合时间"
-      };
-      setStatus(
-        next == null
-          ? `${itemLabel(it)} ${names[key]}已恢复默认（写回后生效）`
-          : `${itemLabel(it)} ${names[key]}已设为 ${next}秒（写回后生效）`
-      );
-      reopen();
     });
   });
 
@@ -338,8 +372,7 @@ async function showUtensilManagerModal() {
           // capacity 缺省会写回 0（后端 int）——兜底原版默认
           if (cu.capacity == null) cu.capacity = defaultUtensilCapacity(it);
           draw();
-          setStatus(`${itemLabel(it)} 额外食材已更新（写回后生效）`);
-          setTimeout(reopen, 0);
+          patchUtensilRowDom(it);
         },
         S.intermediatesCache,
         {
@@ -359,16 +392,12 @@ async function showUtensilManagerModal() {
       const cap = (cu.capacity ?? 0) > 0 ? cu.capacity! : defaultUtensilCapacity(src);
       const allowed = cu.allowedIngredientGuids ?? [];
       pushHistory();
-      let n = 0;
+      const patched: EditorItem[] = [src];
       for (const it of S.items) {
         if (it === src || stubKindOf(it) !== "CookingUtensil") continue;
-        // 分 P：同步只作用于与源锅具相同的阶段。
         if (!itemInCurrentPart(it)) continue;
         if (prefabIdFromPath(it.prefabAssetPath) !== pid) continue;
         it.stubKind = "CookingUtensil";
-        // 时间字段按目标锅具类型过滤（变体同族类型一致，这里防御性拷贝全部字段，
-        // 混合/烹饪字段互不干扰：无对应 CookingHandler/MixingHandler 时后端忽略；
-        // 0 = 未配置不拷贝，保持目标原有留空语义）
         it.cookingUtensil = {
           capacity: cap,
           allowedIngredientGuids: [...allowed],
@@ -377,11 +406,10 @@ async function showUtensilManagerModal() {
           ...(cu.mixTime != null && cu.mixTime > 0 ? { mixTime: cu.mixTime } : {}),
           ...(cu.overMixTime != null && cu.overMixTime > 0 ? { overMixTime: cu.overMixTime } : {})
         };
-        n++;
+        patched.push(it);
       }
       draw();
-      setStatus(`已把 ${itemLabel(src)} 的参数同步给 ${n} 个相同锅具（写回后生效）`);
-      reopen();
+      for (let i = 0; i < patched.length; i++) patchUtensilRowDom(patched[i]);
     });
   });
 }

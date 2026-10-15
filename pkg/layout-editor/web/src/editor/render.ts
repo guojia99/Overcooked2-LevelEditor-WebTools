@@ -26,7 +26,7 @@ import {
   hideBackgroundContentOnFloorLayer,
   catalogItemForGuidOrPath
 } from "./catalog";
-import { isItemHiddenByDecorGroup } from "./decorLayerVisibility";
+import { isFloorHiddenBySceneGroup, isItemHiddenBySceneGroup } from "./layerGroupVisibility";
 import { isCollisionItem, isAirWallItem } from "./stubControls";
 import { itemIntersectsWorldRect } from "./items";
 import {
@@ -36,7 +36,8 @@ import {
 } from "./selection";
 import {
   drawItem,
-  itemDrawCompare
+  itemDrawCompare,
+  drawWorkstationOverlapAlertOutlines
 } from "./renderItems";
 import {
   drawFloorPlanes,
@@ -49,6 +50,7 @@ import {
 import { drawAnimControlOverlay, previewMemberPositions, previewFxState } from "./animControl";
 import { floorInHeightFilter, itemInHeightFilter } from "./floorHeight";
 import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks, drawMarkerLightLinks, drawButtonPartnerLinks, drawCoaxialLinks, drawBurnerFocusedMarkers } from "./renderItems";
+import { drawSceneLights } from "./renderLights";
 import { drawServingLinks } from "./servingLinks";
 import {
   isSurfaceItem,
@@ -326,6 +328,7 @@ export function updateMarqueeSelection() {
       if (layerBg ? !isBg : isBg) continue;
       if (!categoryVisible(isBg ? "background" : "floors")) continue;
       if (!floorInHeightFilter(f)) continue;
+      if (isFloorHiddenBySceneGroup(f)) continue;
       if (inRect(f._wx, f._wz)) nextFloors.add(f._key);
     }
     setFloorSelection([...nextFloors]);
@@ -337,6 +340,7 @@ export function updateMarqueeSelection() {
       if (isCollisionItem(it) && !isAirWallItem(it)) continue;
       if (!categoryVisible(cat)) continue;
       if (!itemInHeightFilter(it)) continue;
+      if (isItemHiddenBySceneGroup(it)) continue;
       if (inRect(it._wx, it._wz)) next.add(it._editorKey);
     }
     S.selectedKeys = next;
@@ -350,7 +354,7 @@ export function updateMarqueeSelection() {
     if (!isActiveItemLayer(it)) continue;
     if (isCollisionItem(it) && !isAirWallItem(it)) continue;
     if (!categoryVisible(itemCategoryOf(it))) continue;
-    if (isItemHiddenByDecorGroup(it)) continue;
+    if (isItemHiddenBySceneGroup(it)) continue;
     if (!itemInHeightFilter(it)) continue;
     if (marqueeHitsItem(it)) next.add(it._editorKey);
   }
@@ -396,7 +400,7 @@ function drawReferenceOverlay(previewPos: PreviewPosMap): void {
     (it) =>
       itemInReferencePart(it) &&
       categoryVisible(itemCategoryOf(it)) &&
-      !isItemHiddenByDecorGroup(it) &&
+      !isItemHiddenBySceneGroup(it) &&
       itemInHeightFilter(it)
   );
   if (refs.length === 0) return;
@@ -539,7 +543,7 @@ export function draw() {
         !isSurfaceItem(catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath)) &&
         !hideBackgroundContentOnFloorLayer(it) &&
         categoryVisible(itemCategoryOf(it)) &&
-        !isItemHiddenByDecorGroup(it) &&
+        !isItemHiddenBySceneGroup(it) &&
         (itemInHeightFilter(it) || isSelected(it._editorKey))
     );
     if (ghostItems.length > 0) {
@@ -582,7 +586,7 @@ export function draw() {
         itemInCurrentPart(it) &&
         !isActiveItemLayer(it) &&
         categoryVisible(itemCategoryOf(it)) &&
-        !isItemHiddenByDecorGroup(it) &&
+        !isItemHiddenBySceneGroup(it) &&
         (itemInHeightFilter(it) || isSelected(it._editorKey))
     );
     if (inactive.length > 0) {
@@ -607,7 +611,7 @@ export function draw() {
       .filter(itemInCurrentPart)
       .filter(
         (it) =>
-          (categoryVisible(itemCategoryOf(it)) && !isItemHiddenByDecorGroup(it)) ||
+          (categoryVisible(itemCategoryOf(it)) && !isItemHiddenBySceneGroup(it)) ||
           isSelected(it._editorKey)
       )
       // 高度过滤：范围外的物品不绘制；已选中的豁免（避免拖动中消失）。
@@ -636,6 +640,7 @@ export function draw() {
     drawAnimControlOverlay();
   }
 
+  drawSceneLights();
   if (S.showCameraFov) drawCameraFrustum();
 
   if (S.showCoords) drawCoordAxes();
@@ -651,6 +656,8 @@ export function draw() {
     dom.ctx.fillRect(0, 0, w, h);
     dom.ctx.restore();
   }
+
+  drawWorkstationOverlapAlertOutlines();
 
   if (S.marqueeing) drawMarquee();
 

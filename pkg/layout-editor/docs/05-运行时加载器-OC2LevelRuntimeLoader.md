@@ -99,8 +99,11 @@ BepInEx Chainloader 实例化插件
 | startvisual | PseudoPrefabSwitchStub.startEnabled==false | HealSwitchStartVisuals |
 | blrelay | BLRelay\| tag / ButtonLogicRelay 组件 | 自愈（组件自治） |
 | coaxial | Coaxial\| tag / CoaxialButtonGroup 组件 | 自愈（同轴按钮组，组件自治） |
+| randomtrigger | RandomTrigger\| tag / RandomTrigger 组件 | 自愈（随机触发器，组件自治，不计 ticker 票） |
 | animgrid | Design/Animated Objects 有组根 | HealAnimGridMembers |
 | conveyor | ConveyorDirectionSync\| tag / 组件 | 自愈 |
+| speedctl | SpeedCtl\| tag / ButtonSpeedControl 组件 | 自愈（按钮控速：步带 m_speed+材质 / 传送带 m_conveySpeed 循环切档，组件自治） |
+| spawnerbatch | SpawnerBatch\| tag / ButtonSpawnerBatch 组件 | 自愈（生成器按钮批次：每按一批 N 个、批次完成后冷却，组件自治；仅服务端驱动生成） |
 | camera / travelator / teleportal / rat / worldmap | 对应 tag / 组件 | 自愈（camera 加注册+按需补丁） |
 | terminal | Terminal.m_pilotableObject==null | ticker TerminalGuard |
 | cannon | SetupCannonStub 根 | ticker CannonGuard + 大炮补丁 |

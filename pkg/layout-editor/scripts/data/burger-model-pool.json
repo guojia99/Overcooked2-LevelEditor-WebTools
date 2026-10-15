@@ -761,9 +761,9 @@
    "stackable": false
   },
   {
-   "id": "dlc08_choppedbun",
+   "id": "DLC08_ChoppedBun",
    "bundle": "bundle359",
-   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/dlc08_choppedbun.prefab",
+   "assetPath": "assets/downloadablecontent/dlc08/dlc_assets/prefabs/ingredients/DLC08_ChoppedBun.prefab",
    "kind": "ingredients",
    "dlc": "dlc08",
    "norm": "choppedbun",

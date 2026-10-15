@@ -20,6 +20,7 @@ import { worldToScreen } from "./picking";
 import { itemBoxOf } from "./meshItems";
 import { floorSlabOf, gapBelowFor } from "./meshFloors";
 import { itemPickable3D } from "./sceneBuild";
+import { isFloorHiddenBySceneGroup, isItemHiddenBySceneGroup } from "../layerGroupVisibility";
 
 let marqueeEl: HTMLDivElement | null = null;
 /** 框选开始时的既有选择（Shift 加选用）。 */
@@ -92,6 +93,7 @@ export function marqueeBox(
     if (!categoryVisible(itemCategoryOf(it))) continue;
     if (!itemInHeightFilter(it)) continue;
     if (!itemPickable3D(it)) continue;
+    if (isItemHiddenBySceneGroup(it)) continue;
     if (hitsMarquee(ctx, it, minX, minY, maxX, maxY)) itemKeys.add(it._editorKey);
   }
 
@@ -99,6 +101,7 @@ export function marqueeBox(
     for (const f of S.floors) {
       if (!categoryVisible(floorCategoryOf(f))) continue;
       if (!floorInHeightFilter(f)) continue;
+      if (isFloorHiddenBySceneGroup(f)) continue;
       const isBg = f.surfaceKind === "background";
       if (floorLayer && (isBg ? S.currentLayer !== "background" : S.currentLayer === "background")) continue;
       const slab = floorSlabOf(f, gapBelowFor(f));

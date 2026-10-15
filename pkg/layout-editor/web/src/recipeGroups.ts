@@ -78,7 +78,7 @@ export const BUN_CORE_ID = "ChoppedBunSO";
 /** DLC8 汉堡面皮（common03，bundle359）——汉堡大全与 DLC8 套餐的规范面皮。
  *  全仓库只用这一种写法：历史别名 `dlc08_bun`（commonW1 装饰壳文件名）与
  *  `DLC08_ChoppedBun`（旧资产文件名）已于命名统一时一并改名到此 id。 */
-export const BUN_DLC8_ID = "dlc08_choppedbun";
+export const BUN_DLC8_ID = "DLC08_ChoppedBun";
 /** DLC2 汉堡面皮（common02，bundle167）——官方 core 汉堡知识表里用的就是它。
  *  刻意**不在** BUN_EQUIVALENT_IDS 内，见下方注释。 */
 export const BUN_DLC2_ID = "DLC02_ChoppedBun";
@@ -394,7 +394,9 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   }
 
   let flourBranch = false;
-  // 蛋糕/布丁同族：搅拌 + 烤箱（布丁自身步骤 Mixer 是搅拌+烤箱一体工作站）
+  /** 搅拌后整锅下终锅的空标记步骤（松饼→煎锅、蛋糕→烤箱；与 finalStep 不同，蛋糕主步骤常为 Mixer）。 */
+  let finalMarkerStep = "";
+  // 蛋糕/布丁同族：全部食材一起搅拌 + 烤箱（与松饼/烧麦同一展示语义）
   const cakeLike = r.type === "cake" || r.type === "pudding";
   if (r.type === "sushi") {
     for (const ing of ingredients) prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Steamer" : "");
@@ -436,20 +438,17 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
     cakeLike ||
     (hasAny(FLOUR_INGREDIENTS) && finalStep !== "Mixer" && finalStep !== "MixingBowl")
   ) {
-    // 蛋糕/布丁：面粉/蛋搅拌 + 其余进烤箱（保持原分组，勿动）。
-    // 面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，最终锅具退化为空标记组
+    // 蛋糕/布丁、面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，终锅退化为空标记组
     //   —— bundle 实测原版就是这条链：SteamedSpecial_Carrot ← MixedFlourCarrot
     //   （面粉+胡萝卜整体搅拌）→ Steamer；Pancake_Chocolate ← MixedFlourEggChocolate
     //   （面粉+蛋+巧克力整体搅拌）→ FryingPan。此前把非面粉食材丢进终锅，既让卡片
     //   显示成两个独立框，也让自动填充往蒸笼/煎锅塞生食材（顶掉原版 lookup）。
     // 面粉/蛋判定用全家族集合（FlourSO/dlc09/dlc13 变体），与另两处镜像对齐。
-    flourBranch = !cakeLike;
-    const cookStep = cakeLike ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
+    flourBranch = true;
+    finalMarkerStep = cakeLike ? "OvenTray" : isCookStep(finalStep) ? finalStep : "";
     for (const ing of ingredients) {
-      if (!prep.has(ing)) {
-        if (!cakeLike) prep.set(ing, "MixingBowl");
-        else prep.set(ing, FLOUR_INGREDIENTS.has(ing) || EGG_INGREDIENTS.has(ing) ? "MixingBowl" : cookStep);
-      }
+      // 覆盖煎锅中间产物等对蛋等的误分配；蜂蜜/巧克力等不再单独进烤箱组
+      prep.set(ing, "MixingBowl");
     }
   }
 
@@ -473,8 +472,14 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   }
 
   const ordered = order.filter((s) => s !== "");
-  if ((flourBranch || interBranch) && isCookStep(finalStep) && !groupMap.has(finalStep) && order.length > 0) {
-    ordered.push(finalStep);
+  const markerStep =
+    flourBranch && finalMarkerStep
+      ? finalMarkerStep
+      : (flourBranch || interBranch) && isCookStep(finalStep)
+        ? finalStep
+        : "";
+  if (markerStep && isCookStep(markerStep) && !groupMap.has(markerStep) && order.length > 0) {
+    ordered.push(markerStep);
   }
 
   const splitPerIngredient =

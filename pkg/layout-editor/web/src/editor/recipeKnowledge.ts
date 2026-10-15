@@ -261,10 +261,10 @@ export const INTERMEDIATE_ASSIGN: Record<string, Record<string, string[]>> = {
   // 月饼：搅拌面糊（半成品）→ 搅拌碗（烤箱为工作站，不分配食材）
   moonpie: {
     "MixerBowl": [
-      "dlc13_mixedfloureggchocolate",
-      "dlc13_mixedfloureggchocolatestrawberry",
-      "dlc13_mixedfloureggstrawberries",
-      "dlc13_mixedfloureggwatermelon",
+      "DLC13_mixedfloureggchocolate",
+      "DLC13_mixedfloureggchocolatestrawberry",
+      "DLC13_mixedfloureggstrawberries",
+      "DLC13_mixedfloureggwatermelon",
     ],
   },
 };
@@ -776,7 +776,7 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
 /** 当前关卡已保存菜谱所需的「食材箱可产出」叶食材 id 清单：
  *  中间产物展开为叶子（leafIngredientIds）、node 型与汉堡面皮的等价替换
  *  （crateIngredientId，**带菜谱上下文**：汉堡大全 commonW2 的成品推荐 DLC8 面皮
- *  dlc08_choppedbun，其余菜谱归一到核心 ChoppedBunSO）、汽水/饮料/奶油等机器或
+ *  DLC08_ChoppedBun，其余菜谱归一到核心 ChoppedBunSO）、汽水/饮料/奶油等机器或
  *  道具产出的排除。与菜谱弹窗 analysisInfo 的 reqIngs 同一套展开规则；
  *  随机食材箱编辑器「填充本关所需」复用。 */
 export async function levelRequiredCrateIngredientIds(): Promise<string[]> {

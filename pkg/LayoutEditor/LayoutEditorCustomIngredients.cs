@@ -39,6 +39,9 @@ public static class LayoutEditorCustomIngredients
     /// <summary>Web 扩展菜谱共享库（沙拉 + 果汁，打包为 commonW3 bundle）。</summary>
     public const string CommonW3Root = "Assets/commonW3";
 
+    /// <summary>Web 储物背包等机制增量（打包为 commonW4 bundle）。</summary>
+    public const string CommonW4Root = "Assets/commonW4";
+
     /// <summary>旧 custom_web 拷贝目录名（机制已废弃，仅为兼容读取历史数据保留）。</summary>
     public const string CustomDirName = "custom_web";
 
@@ -53,6 +56,8 @@ public static class LayoutEditorCustomIngredients
 
     /// <summary>commonW3 bundle 名（folder meta assetBundleName）。</summary>
     public const string CommonW3BundleName = "commonW3";
+
+    public const string CommonW4BundleName = "commonW4";
 
     /// <summary>场景保存时从 doc 收集到的 common03 引用所需游戏 bundle，
     ///  由随后 SyncLevelInfo → EnsureWebDependencies 一并注册。</summary>
@@ -257,6 +262,7 @@ public static class LayoutEditorCustomIngredients
             return false;
         return IsCommon03Asset(assetPath)
             || IsCommonW1Asset(assetPath)
+            || IsCommonW4Asset(assetPath)
             || assetPath.IndexOf("/common01/", StringComparison.Ordinal) >= 0
             || assetPath.IndexOf("/common02/", StringComparison.Ordinal) >= 0;
     }
@@ -298,8 +304,20 @@ public static class LayoutEditorCustomIngredients
             if (it.soArray != null && it.soArray.pseudoPrefabGuids != null)
                 foreach (var g in it.soArray.pseudoPrefabGuids)
                     ValidateDocGuid(g);
+            if (it.webBackpack != null && it.webBackpack.initialFillGuids != null)
+                foreach (var g in it.webBackpack.initialFillGuids)
+                    ValidateDocGuid(g);
+            if (!string.IsNullOrEmpty(it.prefabAssetPath) && IsCommonW4Asset(it.prefabAssetPath))
+                _pendingDocBundles.Add(CommonW4BundleName);
         }
         return map;
+    }
+
+    public static bool IsCommonW4Asset(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        return assetPath.StartsWith(CommonW4Root + "/", StringComparison.Ordinal);
     }
 
     /// <summary>校验单个 doc 引用 guid：历史引用告警；common03 引用收集其游戏 bundle。</summary>
@@ -430,6 +448,8 @@ public static class LayoutEditorCustomIngredients
         // 沙拉大全：仅当关卡实际选用 commonW3 菜谱（或本地菜谱引用其素材）时注册。
         if (ReferencesCommonW3(info))
             AddDependency(deps, CommonW3BundleName);
+        if (_pendingDocBundles.Contains(CommonW4BundleName))
+            AddDependency(deps, CommonW4BundleName);
         foreach (var b in _pendingDocBundles)
             AddDependency(deps, b);
 

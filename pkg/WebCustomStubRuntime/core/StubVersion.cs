@@ -296,6 +296,148 @@ namespace CustomStub
         ///  - SetInteractionObjects 后缀参数名对齐宿主 _newInteractionObjects（HarmonyX
         ///    真机按名绑定，错名整组 IL 编译失败→BepInEx 严重错误/进图异常）。
         ///  - 驾驶核心补丁与邻近交互补丁分拆安装，交互失败不拖垮 AnimPilotFloorDrive。
-        public const string Value = "3.8.8";
+        /// 3.8.9（2026-10-12 commonW4 Web 储物背包）：
+        ///  - WebBackpackStorage：多格 IngredientContainer + 背上取出/放入 + 宫格 Hover；
+        ///  - stub_levels 特征 webbackpack；编辑器 WebBackpack stub DTO 写回。
+        /// 3.8.10（2026-10-12 Web 背包重写：修取出/放入/宫格三链路 + 全菜谱初填）：
+        ///  - 修复初填节点 ctor 类型不匹配（GetOrderComposition 返回 Assembled 族，
+        ///    包 IngredientOrderNode 必抛 ArgumentException 炸死协程 → 全链失效）；
+        ///  - 修复 GameApi.GetPrefabForNodeMethod 引用后置字段（初始化期恒 null，
+        ///    节点→prefab/宫格图标永久失效）；
+        ///  - 取出生成物改为双端 RegisterSpawnablePrefab 注册（原版按 ID 查表，
+        ///    未注册 = 负下标异常/客户端无法生成；RandomCrate 同款范式）；
+        ///  - 交互模型定稿：空手 = 队首食材型节点（FIFO）；空盘族放置 = 队首节点
+        ///    注入盘中（组合型唯一取出方式）；食材放置 = 节点入包销毁手中物；
+        ///    盘装内容放置 = 节点搬入包、盘清空留手（盘永不进包）；
+        ///  - CanHandlePlacement 对 Web 背包条件覆盖（原版 CanCombine 不认空盘）；
+        ///    Placement 同步器按 worn 启停（地面背包不吞放置交互）；
+        ///  - 随机取出模式移除（恒 FIFO，tag mode 段仅格式兼容）；
+        ///  - 初填支持全菜谱/中间产物（PseudoPrefabSORecipe→bundle 订单节点资产）
+        ///    与自定义菜谱（m_initialFillCustomUids→关卡匹配表按 uID 解析）；
+        ///  - 宫格 1×1/2×1/2×2/3×3/4×4 + 构建失败闩 + 图标回落链（lookup→
+        ///    m_iconSprite→组合首子节点）；FindForDispenser 父级兜底堵注册时序洞；
+        ///  - 全链路常开诊断日志（自愈/子背包时序/容器装配/初填逐条/同步等待/
+        ///    就绪状态矩阵/worn 与门控迁移/取出与放置每个分支的决策原因）——
+        ///    交互期日志为按键频率（非热路径），排障以 [WebBackpack] 前缀逐跳定位；
+        ///  - 修复 InspectCarriedItem/CarryItem/GetOrderComposition 等重载方法的
+        ///    GetMethod 二义性（老 Mono AmbiguousMatchException 曾吞掉全部放置交互）；
+        ///    放置 referral 硬接线（worn 时 referree=背包容器）；初填失败限时重试
+        ///    + 编辑器优先走宿主 LoadAsset（瞬态 null 自愈）；空格深色底板显式可见。
+        /// 3.8.11（2026-10-12 放置/取出 parenting 根治 + 锅具同款宫格）：
+        ///  - WebBackpackChild 标记组件：背包被背起后 child 挂到厨师身上，
+        ///    GetComponentInParent 寻址全部落空（17:46 场次放置探针实证）——
+        ///    Harmony 前缀/FindForDispenser 改标记优先（层级无关）；
+        ///  - 宫格弃用自拼 hover 网格：实例化 bundle47 原版 IngredientsContentsUI
+        ///    （IngredientContentsUIContainer 自带网格/图标/空位精灵），
+        ///    SetMinimumSize(容量)+SetOrder(CompositeAssembledNode 聚合)驱动；
+        ///    commonW4 新增 web_backpack_contents_ui SO（写回自动赋值 m_contentsUiSO）；
+        ///  - 删除 referral 硬接线（直连组件路由已证实可用，反射目标未命中属死代码）。
+        /// 3.8.12（2026-10-12 放入语义三修复）：
+        ///  - 「空X接」收紧为盘族（Plate 组件：盘/杯/马克杯/托盘）——面包皮等非盘族
+        ///    容器不再接收注入（曾把背包生肉注入汉堡皮拼成汉堡）；
+        ///  - workable 源生物（整蔬菜/面包皮/冰块）可入包：源节点取自其加工形态
+        ///    节点的 composition[0]（vanilla 切分模型），取出经食材箱源链还原整品；
+        ///  - 空的非盘族 workable 容器（面包皮）可存本体（源节点+销毁手中物）；
+        ///    盘族有内容=搬入内容盘留手；任何路径均离散格位、绝不合并。
+        /// 3.8.13（2026-10-12 四问题修复：组装基底/切碎保持/熟食盘接/宫格布局）：
+        ///  - 真盘族=有 Plate 且非组装基底（无 WorkableItem、无 BurgerBun/Burrito/
+        ///    Hotdog/Pizza 组装装饰）——面包皮/卷饼皮带 Plate 也不再误接收注入；
+        ///  - 组装基底：有内容=整体一格入包（皮的 IOrderDefinition 完整组装复合
+        ///    节点，汉堡皮+夹心不再拆散）；空=存基底本体；
+        ///  - 切碎保持：原版整料与切碎共享节点 uid（全库无独立 chopped 节点资产），
+        ///    放入时按携带物 WorkableItem 形态匹配食材箱链成员注册——切好的进、
+        ///    切好的出；存储统一原始节点（去 Simpilfy，切碎/熟制包裹层原样保全）；
+        ///  - 盘接分支补齐逐步日志（背包空/队首 null/容器拒收/注入成功）；
+        ///  - 宫格布局重设：FixedColumnCount=GridCols(cap)（16 格 4×4 而非 2×8），
+        ///    格宽按容量收窄（0.5/0.36/0.30），follow 上移至 1.55~1.7、9/16 格
+        ///    整体缩放 0.9/0.85——不再偏下遮挡玩家。
+        /// 3.8.14（2026-10-13 空基底堵队 + 落水清空）：
+        ///  - 空组装基底（面包皮/切好的面包）存「复合内唯一平节点」——此前存了
+        ///    组装复合节点，组合型堵住 FIFO 队首导致空手全部取不出（实测）；
+        ///  - KillPlane 落水清空：穿戴者落水或背包本体坠水 → 服务端清空全部
+        ///    存货（webbackpack 关卡一并安装 KillPlane 前缀组）。
+        /// 3.8.15（2026-10-13 容量集扩展）：
+        ///  - 支持容量 1/2/4/6/9/12/16/20/25/36（宫格列多行少：6=3×2、12=4×3、
+        ///    20=5×4）；格宽按容量收窄（0.5→0.24），大容量宫格上移+整体缩小；
+        ///    前端容量下拉/画布小宫格/写回校验/编辑器规范同步扩展。
+        /// 3.8.16（2026-10-13 >31 内容截断修复）：
+        ///  - 原版 IngredientContainerMessage 子数仅 5 位（上限 31）——容量 36 的
+        ///    背包放入第 32 个物品时线上被截断为 0（实测宫格瞬间清零）；
+        ///  - Harmony 替换 Serialise/Deserialise：≤31 与原版逐位等价；>31 用保留
+        ///    节点类型 15（工厂 0-5 已占用）+ 6 位计数（上限 63）扩展编码。
+        /// 3.8.17（2026-10-13 回退决策：容量上限 30，不做协议扩展）：
+        ///  - 撤销 3.8.16 的 IngredientContainerMessage Serialise/Deserialise
+        ///    替换（复杂度回退，原版同步协议保持原样）；
+        ///  - 容量集改为 1/2/4/6/9/12/16/20/25/30（30=6×5）；历史 36 场景在
+        ///    运行时/写回/前端全链路自动归一为 30。
+        /// 3.8.18（2026-10-13 移除成品菜放入）：
+        ///  - 游戏内不再支持放入成品菜：拼好的组装品（面包皮+夹心）与盘装/
+        ///    容器内容一律拒绝（TryTransferContainerIntoBackpack 与整体组装
+        ///    分支移除）；保留：空盘接取出、空组装基底存本体、食材/源生物放入、
+        ///    编辑器初填（含成品菜，取出走空盘接）。
+        /// 3.9.0（2026-10-13 RandomTrigger 随机触发器）：
+        ///  - 新增 CustomStub.RandomTrigger：一个信号输入（公有 OnTrigger(string)
+        ///    SendMessage 生态 / 源按钮 TriggerDisableScript 下降沿轮询直连）→
+        ///    按权重从候选列表随机选一个发出；最终信号 = 信号名 + 分隔符（默认
+        ///    ":"，可配）+ 可编程参数值（固定 / 候选 / 随机字符串 / 随机 N 位数值 /
+        ///    数值区间[含小数位]），参数未配置只发信号名；
+        ///  - 冷却限流（N 秒内只触发一次，0=不限）；服务端权威掷骰
+        ///    （IsServerMachine 单点发出，防两端分叉）；目标物体 SendMessage 派发
+        ///    （空=自身，自环防抖）；目标 GameObject.Find + 缓存 + 假 null 修剪；
+        ///  - 每候选独立目标（物品伪根 / 动画组根 / 其他 RandomTrigger 节点，
+        ///    BLRelay 事件组同款名字寻址）；不计入 ticker 激活票数（自治组件，
+        ///    TeleportalExitOnly 同款豁免）；EntryPoint v17，自愈 tag
+        ///    RandomTrigger|I:..|C:..|S:..|N:..|E:..（%,;>|/@ 转 %XX，
+        ///    RandomTriggerBakery 编码对称）；Loader 同步 3.9.0。
+        /// 3.9.1（2026-10-13 UtensilTiming 进图卡顿修复）：
+        ///  - 扫描早停：全配置已应用/放弃即停；连续无进展 tick 放弃未匹配项；
+        ///    强制上限降至 ~8s；缓存 UtensilTiming| 包装与 handler 列表，避免每 tick
+        ///    全场景 FindObjectsOfType / 重复 FindAll；
+        ///  - cook/mix-only 应用后挂 UtensilTiming 标记组件，幂等跳过后续 tick；
+        ///  - 按名兜底剥离实例名 (Clone) 后缀；失败日志附带 prefab 名与 handler 计数；
+        ///    HealScene 末尾同步一次 Tick；Loader 同步 3.9.1。
+        /// 3.10.0（2026-10-14 按钮控速 + 按钮生成器批次）：
+        ///  - ButtonSpeedControl（SpeedCtl|E:&lt;1|0&gt;|T:&lt;目标路径&gt;|N:&lt;按钮路径,..&gt;
+        ///    |L:&lt;s1,s2,..&gt;）：按钮按压循环切换步带 Travelator.m_speed
+        ///    （+SetSpeedOnMaterial 材质同步）/传送带 ConveyorStation.m_conveySpeed
+        ///    档位；TriggerDisableScript enabled 下降沿轮询（CoaxialButtonGroup
+        ///    同款），各端本地应用；
+        ///  - ButtonSpawnerBatch（SpawnerBatch|E:&lt;1|0&gt;|T:&lt;目标路径&gt;|N:&lt;按钮路径,..&gt;
+        ///    |C:&lt;count&gt;|I:&lt;interval&gt;|D:&lt;cooldown&gt;）：食材生成器按钮批次送出——
+        ///    第 1 个立刻、之后每间隔 1 个直到 N（落点站忙补位）；批次完成后冷却
+        ///    N 秒（按压无效）；仅服务端驱动，生成复用原生 ServerTriggerAttachedSpawn
+        ///    联网链；运行时绑定后停用原生 TriggerTimer 自动循环（防双送）；
+        ///  - 分 P 修复三件套（2026-10-15，docs/10 v3.4/D15~D17）：
+        ///  ① 新增 PartSlotRespawnGuard（Assets/WebCustomStubRuntime/PartSlot/）：
+        ///    ServerUtensilRespawnBehaviour 及 4 派生类（锅/净盘/脏盘叠/灭火器）
+        ///    CanRespawnOnStation Harmony 后缀——站台位于非在场 slot（祖先
+        ///    Design/PartSlots/<pid> 且 slot 根 Animator 非 Idle_Active）时改判
+        ///    false。修复分 P 旧 P 下沉后道具滞留沉没/停泊站台（玩家视角
+        ///    「不销毁、也不出现在下一 P」）；重生重试循环等新 P 就位后落到其
+        ///    空闲站台 = 跨 P 携带（docs/10 D16）。HealScene 扫到 Design/PartSlots
+        ///    按需安装；普通关卡首行放行零影响；
+        ///  ② 配套站台优先：PartSlotRespawnGuard 增加 GetStationRespawnPriority
+        ///    后缀（基类 + 锅具派生声明）——净盘对非归还台（无
+        ///    ServerPlateReturnStation）加 +1000 距离惩罚，优先落归还台、无空闲
+        ///    归还台才落普通工作台。锅具/搅拌碗（含搅拌杯）原版已有配套硬约束
+        ///    （灶台类型匹配）+ 非灶台 +1000 惩罚，脏盘叠原版已限定只扫归还台，
+        ///    无需干预；灭火器等通用道具保持最近可用站台（base/当前 P 工作台）。
+        ///    仅分 P 场景生效（s_sceneHasSlots 门控），普关零影响；
+        ///  ③ 编辑器侧配套（LayoutEditor）：Kill_<from> 时机 = 下一 P 上浮完成
+        ///    （Stable_<to> + cleanupDelay）；修复 Kill 计时器 cleanupDelay=0
+        ///    死定时器（ServerTriggerTimer 仅 m_timer>0 倒计时——Kill 链自始
+        ///    未触发的真根因），Max(0.1f,·) 兜底，BurnerScheduleBakery 首波
+        ///    startDelay=0 同款隐患同修；废除 Design 根全场大扫除
+        ///    （KillLoose_*、D14 作废——base 层任何东西不清扫，陈旧组件由
+        ///    DestroyTimeline 前缀清理自愈）；base 物件/地板改挂棘轮解锁
+        ///    （错拖进 slot 的 base 内容写回自动搬回，修复「base 地板随旧 P
+        ///    下沉」）。
+        ///  - Loader 同步 3.10.0。
+        /// 3.10.1（2026-10-15 commonW4 致命鬼魂）：
+        ///  - WebKillerGhost + web_killer_ghost_01：DLC07_NPCs_Ghost 视觉 +
+        ///    RespawnCollider Hit 触碰击杀；动画组负责位移；stub_levels webkillerghost。
+        /// 3.10.2（2026-10-15 致命鬼魂多样式）：
+        ///  - Web 右键切换 npc_ghost / npc_keep / ghost_chef（commonW4 视觉代理 SO）。
+        public const string Value = "3.10.2";
     }
 }

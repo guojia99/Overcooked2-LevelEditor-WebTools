@@ -12,6 +12,15 @@ public static class LayoutEditorStubIO
     static LayoutEditorStubIO()
     {
         LayoutEditorLog.Log("[随机箱链路] StubIO 已加载（随机食材箱追踪 v3）");
+        foreach (var kv in WebKillerGhostStyleAssetPaths)
+        {
+            var guid = AssetDatabase.AssetPathToGUID(kv.Value);
+            if (!string.IsNullOrEmpty(guid))
+                WebKillerGhostGuidToStyle[guid] = kv.Key;
+        }
+        // 旧场景可能仍引用 common02 装饰鬼魂 SO
+        WebKillerGhostGuidToStyle["dfb9fa6b9c902584b95ff5c0e917e3d2"] = "npc_ghost";
+        WebKillerGhostGuidToStyle["b58a7826efd65334ba909d466a5bc38a"] = "npc_keep";
     }
 
     public static void ExportStub(GameObject go, LayoutItemDto item)
@@ -79,6 +88,12 @@ public static class LayoutEditorStubIO
             ExportPseudoPrefabGuidIfPresent(go, item);
             return;
         }
+
+        if (ExportWebBackpackIfPresent(go, item))
+            return;
+
+        if (ExportWebKillerGhostIfPresent(go, item))
+            return;
 
         var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
         if (dispenser != null)
@@ -751,6 +766,18 @@ public static class LayoutEditorStubIO
             return;
         }
 
+        if (item.stubKind == "WebBackpack" && item.webBackpack != null)
+        {
+            ApplyWebBackpack(go, item);
+            return;
+        }
+
+        if (item.stubKind == "WebKillerGhost" && item.webKillerGhost != null)
+        {
+            ApplyWebKillerGhost(go, item.webKillerGhost);
+            return;
+        }
+
         if (item.stubKind == "Dispenser" && item.dispenser != null)
         {
             var pid = !string.IsNullOrEmpty(item.prefabAssetPath)
@@ -884,6 +911,12 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(conveyor, "Layout Editor Conveyor");
             conveyor.conveySpeed = item.conveyor.conveySpeed;
+            // 按钮控速启用时，编辑态速度与运行时第 1 档保持一致（组件启动即压
+            // 第 0 档；levels 由 SpeedControlBakery 烘焙 Design/Speed Logic helper）。
+            if (item.conveyor.speedControl != null && item.conveyor.speedControl.enabled &&
+                item.conveyor.speedControl.levels != null &&
+                item.conveyor.speedControl.levels.Length > 0)
+                conveyor.conveySpeed = item.conveyor.speedControl.levels[0];
             ApplyConveyorDirectionSync(go, item.conveyor.buttonControlled);
             return;
         }
@@ -1021,6 +1054,12 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(travelator, "Layout Editor Travelator");
             travelator.speed = item.travelator.speed;
+            // 按钮控速启用时，编辑态速度与运行时第 1 档保持一致（组件启动即压
+            // 第 0 档；levels 由 SpeedControlBakery 烘焙 Design/Speed Logic helper）。
+            if (item.travelator.speedControl != null && item.travelator.speedControl.enabled &&
+                item.travelator.speedControl.levels != null &&
+                item.travelator.speedControl.levels.Length > 0)
+                travelator.speed = item.travelator.speedControl.levels[0];
 
             // 定时反转：伪根烘焙 CustomStub.TravelatorReverser 运行时相位组件（权威）
             // + tag 载体 "TravelatorReverse|e,fwd,back,s"（程序集缺失时自愈还原）。
@@ -1110,6 +1149,7 @@ public static class LayoutEditorStubIO
                 if (baseStub != null && baseStub.pseudoPrefabSO != null)
                     returnStation.pseudoPrefabSO = baseStub.pseudoPrefabSO;
             }
+            EnsurePlateReturnStackSOs(returnStation, go, item.stubKind == "GlassReturn");
 
             // 「双 stub」修复（2026-10-06）：同上，移除基础组件对 + 保证派生运行时存在。
             PromoteDerivedStub(go);
@@ -1650,6 +1690,8 @@ public static class LayoutEditorStubIO
                     continue;
                 }
                 var stub = target.GetComponent<PseudoPrefabPlateReturnStub>();
+                if (stub != null)
+                    EnsurePlateReturnStackSOs(stub, target);
                 if (stub == null)
                 {
                     // 回收台变体 wrapper 无专属 stub（首次写回未走过 ApplyStub 分支）：
@@ -1663,6 +1705,7 @@ public static class LayoutEditorStubIO
                     stub = Undo.AddComponent<PseudoPrefabPlateReturnStub>(target);
                     if (targetBase.pseudoPrefabSO != null)
                         stub.pseudoPrefabSO = targetBase.pseudoPrefabSO;
+                    EnsurePlateReturnStackSOs(stub, target);
                     // 「双 stub」修复（2026-10-06）：补挂派生 stub 后清理基础组件对。
                     PromoteDerivedStub(target);
                 }
@@ -2077,6 +2120,184 @@ public static class LayoutEditorStubIO
             || prefabId == "dlc08_condiment_dispenser" || prefabId == "dlc11_condiment_dispenser";
     }
 
+    /// <summary>从场景物体名或任一 PseudoPrefabStub.pseudoPrefabSO.prefabName 判定饮料/酱料机。</summary>
+    internal static bool TryGetSpecialDispenserPrefabId(GameObject go, out string prefabId)
+    {
+        prefabId = null;
+        if (go == null)
+            return false;
+        var nameId = go.name.Replace("(Clone)", "").Trim();
+        if (IsSpecialDispenserPrefabId(nameId))
+        {
+            prefabId = nameId;
+            return true;
+        }
+        foreach (var s in go.GetComponents<PseudoPrefabStub>())
+        {
+            if (s == null || s.pseudoPrefabSO == null)
+                continue;
+            var soName = s.pseudoPrefabSO.prefabName;
+            if (!string.IsNullOrEmpty(soName) && IsSpecialDispenserPrefabId(soName))
+            {
+                prefabId = soName;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private const string PlateReturnDirtyStackGuid = "17cfc7742db7efb48bcd648375a68bc4";
+    private const string PlateReturnCleanStackGuid = "e1d53b09a4034b84e94433521c49fd06";
+    private const string GlassReturnDirtyStackGuid = "7fb2a1c79d2727e42a5f7da9ccf979b0";
+    private const string GlassReturnCleanStackGuid = "8105f74eeb9a9034f907302182e60bfc";
+
+    private enum PlateReturnStackFamily
+    {
+        Plate,
+        Glass,
+        Tray,
+        Mug
+    }
+
+    private struct PlateReturnStackSpec
+    {
+        public PlateReturnStackFamily family;
+        public bool dlc09MugSkin;
+    }
+
+    /// <summary>回收台 wrapper 的 prefabName（优先任一 PseudoPrefabStub.pseudoPrefabSO）。</summary>
+    private static string ResolvePlateReturnPrefabId(GameObject go)
+    {
+        if (go == null)
+            return string.Empty;
+        var stubs = go.GetComponents<PseudoPrefabStub>();
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var s = stubs[i];
+            if (s != null && s.pseudoPrefabSO != null && !string.IsNullOrEmpty(s.pseudoPrefabSO.prefabName))
+                return s.pseudoPrefabSO.prefabName;
+        }
+        return go.name.Replace("(Clone)", "").Trim();
+    }
+
+    private static PlateReturnStackSpec ResolvePlateReturnStackSpec(GameObject go, bool glassReturn)
+    {
+        var spec = new PlateReturnStackSpec();
+        spec.family = PlateReturnStackFamily.Plate;
+        spec.dlc09MugSkin = false;
+        if (glassReturn)
+        {
+            spec.family = PlateReturnStackFamily.Glass;
+            return spec;
+        }
+        var prefabId = ResolvePlateReturnPrefabId(go);
+        if (string.IsNullOrEmpty(prefabId) && go != null)
+            prefabId = go.name ?? "";
+        if (prefabId.IndexOf("tray_return", StringComparison.OrdinalIgnoreCase) >= 0
+            || prefabId.Equals("dlc08_workstation_tray_return", StringComparison.OrdinalIgnoreCase))
+        {
+            spec.family = PlateReturnStackFamily.Tray;
+            return spec;
+        }
+        if (prefabId.IndexOf("mug_return", StringComparison.OrdinalIgnoreCase) >= 0
+            || (prefabId.IndexOf("mug", StringComparison.OrdinalIgnoreCase) >= 0
+                && prefabId.IndexOf("return", StringComparison.OrdinalIgnoreCase) >= 0))
+        {
+            spec.family = PlateReturnStackFamily.Mug;
+            spec.dlc09MugSkin = prefabId.IndexOf("dlc09", StringComparison.OrdinalIgnoreCase) >= 0;
+            return spec;
+        }
+        if (prefabId.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0
+            && prefabId.IndexOf("return", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            spec.family = PlateReturnStackFamily.Glass;
+            return spec;
+        }
+        if (go != null && go.name.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0)
+            spec.family = PlateReturnStackFamily.Glass;
+        return spec;
+    }
+
+    private static string ExpectedStackPrefabId(PlateReturnStackSpec spec, bool dirty)
+    {
+        switch (spec.family)
+        {
+            case PlateReturnStackFamily.Tray:
+                return dirty ? "dlc08_dirtytraystack" : "dlc08_cleantraystack";
+            case PlateReturnStackFamily.Mug:
+                if (spec.dlc09MugSkin)
+                    return dirty ? "dlc09_dirtymugstack" : "dlc09_cleanmugstack";
+                return dirty ? "dirtymugstack" : "cleanmugstack";
+            case PlateReturnStackFamily.Glass:
+                return dirty ? "dlc11_dirtyglassstack" : "dlc11_cleanglassstack";
+            default:
+                return dirty ? "dirtyplatestack" : "cleanplatestack";
+        }
+    }
+
+    private static PseudoPrefabSO LoadStackPseudoPrefabSO(string stackPrefabId)
+    {
+        if (string.IsNullOrEmpty(stackPrefabId))
+            return null;
+        var absRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../Assets/common03/pseudo_prefab_so"));
+        if (!System.IO.Directory.Exists(absRoot))
+            return null;
+        var files = System.IO.Directory.GetFiles(absRoot, stackPrefabId + ".asset", System.IO.SearchOption.AllDirectories);
+        if (files.Length == 0)
+            return null;
+        var rel = "Assets/common03/pseudo_prefab_so" + files[0].Substring(absRoot.Length).Replace('\\', '/');
+        return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(rel);
+    }
+
+    private static PseudoPrefabSO LoadPlateReturnStackSO(PlateReturnStackSpec spec, bool dirty)
+    {
+        if (spec.family == PlateReturnStackFamily.Plate)
+            return LoadPseudoPrefabSO(dirty ? PlateReturnDirtyStackGuid : PlateReturnCleanStackGuid);
+        if (spec.family == PlateReturnStackFamily.Glass)
+            return LoadPseudoPrefabSO(dirty ? GlassReturnDirtyStackGuid : GlassReturnCleanStackGuid);
+        return LoadStackPseudoPrefabSO(ExpectedStackPrefabId(spec, dirty));
+    }
+
+    private static bool StackSoMatchesExpected(PseudoPrefabSO so, PlateReturnStackSpec spec, bool dirty)
+    {
+        if (so == null)
+            return false;
+        var expectedId = ExpectedStackPrefabId(spec, dirty);
+        var name = so.prefabName ?? "";
+        if (name.Equals(expectedId, StringComparison.OrdinalIgnoreCase))
+            return true;
+        var expectedSo = LoadPlateReturnStackSO(spec, dirty);
+        return expectedSo != null && so == expectedSo;
+    }
+
+    /// <summary>wrapper 补挂 PseudoPrefabPlateReturnStub 时堆 SO 默认为空——宿主 Setup LoadAsset(null) NRE。
+    ///  餐盘回收台须用 dlc08_dirtytraystack（与脏盘堆不可混用），否则 GetReturnStation 无法按 Tray 分流。</summary>
+    private static void EnsurePlateReturnStackSOs(PseudoPrefabPlateReturnStub stub, GameObject go, bool glassReturn = false)
+    {
+        if (stub == null)
+            return;
+        var spec = ResolvePlateReturnStackSpec(go, glassReturn);
+        bool dirtyOk = StackSoMatchesExpected(stub.dirtyPlateStackSO, spec, true);
+        bool cleanOk = StackSoMatchesExpected(stub.cleanPlateStackSO, spec, false);
+        if (dirtyOk && cleanOk)
+            return;
+        var goLabel = go != null ? go.name : "?";
+        if (!dirtyOk)
+        {
+            if (stub.dirtyPlateStackSO != null)
+                WarnApply("[LayoutEditor] 回收台脏堆 SO 与类型不匹配，已更正: " + goLabel
+                    + " → " + ExpectedStackPrefabId(spec, true));
+            stub.dirtyPlateStackSO = LoadPlateReturnStackSO(spec, true);
+        }
+        if (!cleanOk)
+        {
+            if (stub.cleanPlateStackSO != null)
+                WarnApply("[LayoutEditor] 回收台净堆 SO 与类型不匹配，已更正: " + goLabel
+                    + " → " + ExpectedStackPrefabId(spec, false));
+            stub.cleanPlateStackSO = LoadPlateReturnStackSO(spec, false);
+        }
+    }
+
     /// <summary>导出 PseudoPrefabSOArray（饮料机/酱料机的多选循环列表）为 dto；
     ///  无组件或列表为空时不写。供 ExportStub 各提前 return 的分支复用。</summary>
     private static void ExportSoArrayIfPresent(GameObject go, LayoutItemDto item)
@@ -2147,7 +2368,17 @@ public static class LayoutEditorStubIO
         var baseStub = FindExactBaseStub(go);
         var baseRuntime = FindExactBaseRuntime(go);
         if (baseStub == null && baseRuntime == null)
+        {
+            // 已写坏场景：饮料/酱料机只剩 PseudoPrefabDispenser 运行时，无基础对。
+            string orphanPid;
+            if (TryGetSpecialDispenserPrefabId(go, out orphanPid)
+                && go.GetComponent<PseudoPrefabDispenser>() != null)
+            {
+                EnsureDerivedRuntimeForStubs(go);
+                return true;
+            }
             return false; // 无基础对：正常派生成对或纯基础，不动
+        }
         // 移除基础对前先给派生 stub 补数据：分发器家族必须有生成食材
         //（否则宿主/真机 PseudoPrefabDispenser.Setup 的 GetIngredientPrefabForOptional(null) NRE，
         // 酱料机/饮料机的输出本就是 soArray 循环列表，回落首项）。
@@ -2175,6 +2406,8 @@ public static class LayoutEditorStubIO
     ///  容量等）必须经派生运行时才生效。按类型名约定反射匹配，找不到对应运行时的跳过。</summary>
     private static void EnsureDerivedRuntimeForStubs(GameObject go)
     {
+        string specialPid;
+        bool isSpecialDispenser = TryGetSpecialDispenserPrefabId(go, out specialPid);
         foreach (var stubComp in go.GetComponents<PseudoPrefabStub>())
         {
             if (stubComp == null)
@@ -2183,6 +2416,9 @@ public static class LayoutEditorStubIO
             if (stubType == typeof(PseudoPrefabStub) || !stubType.Name.EndsWith("Stub"))
                 continue;
             var runtimeName = stubType.Name.Substring(0, stubType.Name.Length - 4);
+            // 饮料/酱料机：保留 DispenserStub 数据，但不用宿主 PseudoPrefabDispenser.Setup（无箱盖组件会 NRE）。
+            if (isSpecialDispenser && runtimeName == "PseudoPrefabDispenser")
+                continue;
             var runtimeType = Type.GetType("LevelEditor." + runtimeName + ", Assembly-CSharp");
             if (runtimeType == null)
                 continue;
@@ -2191,6 +2427,21 @@ public static class LayoutEditorStubIO
                 Undo.AddComponent(go, runtimeType);
                 LayoutEditorLog.LogWarning("[LayoutEditor] 双 stub 修复: 已补派生运行时组件 "
                     + runtimeType.Name + " -> " + go.name);
+            }
+        }
+        if (isSpecialDispenser && go.GetComponent<PseudoPrefabDispenserStub>() != null)
+        {
+            var badRuntime = go.GetComponent<PseudoPrefabDispenser>();
+            if (badRuntime != null)
+            {
+                Undo.DestroyObjectImmediate(badRuntime);
+                LayoutEditorLog.LogWarning("[LayoutEditor] 饮料/酱料机: 已移除 PseudoPrefabDispenser 运行时（改用基础 PseudoPrefab）: "
+                    + go.name);
+            }
+            if (go.GetComponent<PseudoPrefab>() == null)
+            {
+                Undo.AddComponent<PseudoPrefab>(go);
+                LayoutEditorLog.LogWarning("[LayoutEditor] 饮料/酱料机: 已补基础 PseudoPrefab 运行时: " + go.name);
             }
         }
     }
@@ -2302,6 +2553,517 @@ public static class LayoutEditorStubIO
             sos.Add(so);
         }
         return sos.ToArray();
+    }
+
+    // -------------------------------------------------------------
+    // Web 储物背包（CustomStub.WebBackpackStorage）
+    // -------------------------------------------------------------
+
+    private const string WebBackpackTagPrefix = "WebBackpack|";
+    private static readonly int[] WebBackpackValidCapacities =
+        new[] { 1, 2, 4, 6, 9, 12, 16, 20, 25, 30 };
+
+    private static bool IsWebBackpackPrefabId(string pid)
+    {
+        return string.Equals(pid, "web_backpack_storage_01", StringComparison.Ordinal);
+    }
+
+    private static bool HasWebBackpackTag(GameObject go)
+    {
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        return tag != null && !string.IsNullOrEmpty(tag.prefabTag)
+            && tag.prefabTag.StartsWith(WebBackpackTagPrefix, StringComparison.Ordinal);
+    }
+
+    private static int NormalizeWebBackpackCapacity(int cap)
+    {
+        for (int i = 0; i < WebBackpackValidCapacities.Length; i++)
+        {
+            if (WebBackpackValidCapacities[i] == cap)
+                return cap;
+        }
+        // 历史兼容：曾支持 36（线上 >31 截断，3.8.17 收回）→ 归一到 30
+        return cap > 30 ? 30 : 4;
+    }
+
+    private static bool ExportWebBackpackIfPresent(GameObject go, LayoutItemDto item)
+    {
+        var pid = !string.IsNullOrEmpty(item.prefabAssetPath)
+            ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+            : "";
+        var wbType = FindCustomStubType(go, "WebBackpackStorage");
+        var hasComp = wbType != null && go.GetComponent(wbType) != null;
+        if (!IsWebBackpackPrefabId(pid) && !HasWebBackpackTag(go) && !hasComp)
+            return false;
+
+        item.stubKind = "WebBackpack";
+        var dto = new LayoutWebBackpackStubDto();
+        dto.pickMode = "fifo"; // 3.8.10 起恒 FIFO
+        var comp = hasComp ? go.GetComponent(wbType) : null;
+        if (comp != null)
+        {
+            var capObj = GetStubField(comp, "m_capacity");
+            dto.capacity = NormalizeWebBackpackCapacity(capObj is int ? (int)capObj : 4);
+            var fills = GetStubField(comp, "m_initialFillSOs") as PseudoPrefabSO[];
+            var customUids = GetStubField(comp, "m_initialFillCustomUids") as int[];
+            if (customUids != null && customUids.Length > 0 && HasWebBackpackTag(go))
+            {
+                // 有自定义菜谱填充：完整顺序只在 tag guid 段（Apply 写入），
+                // 优先用它回读；soArray 无法承载 CustomRecipeSO（非 PseudoPrefabSO）。
+                ParseWebBackpackTag(go.GetComponent<SpecificPseudoPrefabTag>().prefabTag, dto, go);
+            }
+            else if (fills != null && fills.Length > 0)
+            {
+                var guids = new System.Collections.Generic.List<string>();
+                foreach (var so in fills)
+                {
+                    if (so == null) continue;
+                    var g = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so));
+                    if (!string.IsNullOrEmpty(g))
+                        guids.Add(g);
+                }
+                dto.initialFillGuids = guids.ToArray();
+            }
+        }
+        else if (HasWebBackpackTag(go))
+            ParseWebBackpackTag(go.GetComponent<SpecificPseudoPrefabTag>().prefabTag, dto, go);
+
+        item.webBackpack = dto;
+        ExportPseudoPrefabGuidIfPresent(go, item);
+        var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
+        if (dispenser != null && dispenser.spawnerItemPrefabSO != null
+            && (dto.initialFillGuids == null || dto.initialFillGuids.Length == 0))
+        {
+            item.dispenser = new LayoutDispenserStubDto
+            {
+                spawnerItemPrefabGuid = AssetDatabase.AssetPathToGUID(
+                    AssetDatabase.GetAssetPath(dispenser.spawnerItemPrefabSO))
+            };
+        }
+        return true;
+    }
+
+    private static void ParseWebBackpackTag(string prefabTag, LayoutWebBackpackStubDto dto, GameObject go)
+    {
+        if (string.IsNullOrEmpty(prefabTag) || !prefabTag.StartsWith(WebBackpackTagPrefix, StringComparison.Ordinal))
+            return;
+        var payload = prefabTag.Substring(WebBackpackTagPrefix.Length);
+        var segs = payload.Split('|');
+        if (segs.Length > 0)
+        {
+            int cap;
+            dto.capacity = int.TryParse(segs[0], out cap)
+                ? NormalizeWebBackpackCapacity(cap)
+                : 4;
+        }
+        dto.pickMode = "fifo"; // segs[1] 为历史 mode 段（3.8.10 起忽略）
+        // segs[2] = 初始填充 guid 顺序列表（Apply 写入；含 CustomRecipeSO guid）
+        if (segs.Length > 2 && !string.IsNullOrEmpty(segs[2]))
+        {
+            var guids = new System.Collections.Generic.List<string>();
+            foreach (var g in segs[2].Split(','))
+            {
+                var t = g.Trim();
+                if (!string.IsNullOrEmpty(t))
+                    guids.Add(t);
+            }
+            if (guids.Count > 0)
+            {
+                dto.initialFillGuids = guids.ToArray();
+                return;
+            }
+        }
+        var soArray = go.GetComponent<PseudoPrefabSOArray>();
+        if (soArray != null && soArray.pseudoPrefabSOs != null && soArray.pseudoPrefabSOs.Length > 0)
+        {
+            var guids = new System.Collections.Generic.List<string>();
+            foreach (var so in soArray.pseudoPrefabSOs)
+            {
+                if (so == null) continue;
+                var g = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so));
+                if (!string.IsNullOrEmpty(g))
+                    guids.Add(g);
+            }
+            dto.initialFillGuids = guids.ToArray();
+        }
+    }
+
+    private static void ApplyWebBackpack(GameObject go, LayoutItemDto item)
+    {
+        var dto = item.webBackpack;
+        if (dto == null)
+            return;
+        dto.capacity = NormalizeWebBackpackCapacity(dto.capacity);
+        dto.pickMode = "fifo"; // 3.8.10 起取出恒 FIFO
+
+        var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
+        if (dispenser == null)
+        {
+            dispenser = Undo.AddComponent<PseudoPrefabDispenserStub>(go);
+            var baseStub = FindExactBaseStub(go);
+            if (baseStub != null && dispenser.pseudoPrefabSO == null)
+                dispenser.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+        }
+        PromoteDerivedStub(go);
+
+        // 初填分类：PseudoPrefabSO（含菜谱/中间产物 PseudoPrefabSORecipe）走 SO 通道；
+        // CustomRecipeSO（非 PseudoPrefabSO、不在游戏 bundle）走 uID 通道 + match list 注入。
+        var fills = new System.Collections.Generic.List<PseudoPrefabSO>();
+        var customUids = new System.Collections.Generic.List<int>();
+        var orderedGuids = new System.Collections.Generic.List<string>();
+        if (dto.initialFillGuids != null)
+        {
+            foreach (var g in dto.initialFillGuids)
+            {
+                if (fills.Count + customUids.Count >= dto.capacity)
+                    break;
+                if (string.IsNullOrEmpty(g))
+                    continue;
+                var so = LoadPseudoPrefabSO(g);
+                if (so != null)
+                {
+                    fills.Add(so);
+                    orderedGuids.Add(g);
+                    continue;
+                }
+                var path = AssetDatabase.GUIDToAssetPath(g);
+                var custom = string.IsNullOrEmpty(path)
+                    ? null
+                    : AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+                if (custom != null)
+                {
+                    customUids.Add(custom.uID);
+                    orderedGuids.Add(g);
+                }
+                else
+                {
+                    LayoutEditorLog.LogWarning("[WebBackpack] 初填 guid 无法解析（非 PseudoPrefabSO/CustomRecipeSO），已跳过: " + g);
+                }
+            }
+        }
+        // 哨兵食材（PickupItemSpawner.m_itemPrefab）：只用 prefab 型初填（非
+        // PseudoPrefabSORecipe——菜谱 SO 的 assetPath 是订单节点资产，装到生成器
+        // 上会拿到 null prefab，炸原版 ClientBackpackCosmeticDecisions）。
+        var spawnerSo = FindFirstPrefabBackedFill(fills);
+        if (spawnerSo != null)
+        {
+            Undo.RecordObject(dispenser, "Layout Editor Web Backpack");
+            dispenser.spawnerItemPrefabSO = spawnerSo;
+        }
+        else if (item.dispenser != null && !string.IsNullOrEmpty(item.dispenser.spawnerItemPrefabGuid))
+        {
+            var fallback = LoadPseudoPrefabSO(item.dispenser.spawnerItemPrefabGuid);
+            if (fallback != null)
+            {
+                Undo.RecordObject(dispenser, "Layout Editor Web Backpack");
+                dispenser.spawnerItemPrefabSO = fallback;
+            }
+        }
+
+        var soArray = go.GetComponent<PseudoPrefabSOArray>();
+        if (soArray == null)
+            soArray = Undo.AddComponent<PseudoPrefabSOArray>(go);
+        Undo.RecordObject(soArray, "Layout Editor Web Backpack");
+        soArray.pseudoPrefabSOs = fills.ToArray();
+
+        SetCustomStubTag(go, BuildWebBackpackTag(dto, orderedGuids));
+
+        var type = FindCustomStubType(go, "WebBackpackStorage");
+        if (type != null)
+        {
+            var comp = go.GetComponent(type);
+            if (comp == null)
+                comp = Undo.AddComponent(go, type);
+            else
+                Undo.RecordObject(comp, "Layout Editor Web Backpack");
+            SetStubField(comp, "m_capacity", dto.capacity);
+            SetStubField(comp, "m_initialFillSOs", fills.ToArray());
+            SetStubField(comp, "m_initialFillCustomUids", customUids.ToArray());
+            SetStubField(comp, "m_contentsUiSO", LoadWebBackpackContentsUiSO());
+            EditorUtility.SetDirty(comp);
+        }
+
+        LayoutEditorLog.Log("[WebBackpack] Apply: " + go.name + " cap=" + dto.capacity
+            + " fill=" + fills.Count + " custom=" + customUids.Count);
+    }
+
+    /// <summary>初填列表里第一个「prefab 型」SO（食材；PseudoPrefabSORecipe 的
+    /// assetPath 指向订单节点资产，不能作生成器哨兵）。全部非 prefab 型返回 null。</summary>
+    private static PseudoPrefabSO FindFirstPrefabBackedFill(
+        System.Collections.Generic.List<PseudoPrefabSO> fills)
+    {
+        for (int i = 0; i < fills.Count; i++)
+        {
+            var so = fills[i];
+            if (so != null && !(so is PseudoPrefabSORecipe))
+                return so;
+        }
+        return null;
+    }
+
+    /// <summary>Web 背包宫格 UI SO（commonW4 → bundle47 原版 IngredientsContentsUI）。
+    /// 缺失时返回 null（运行时另有 bundle47 硬兜底）。</summary>
+    private const string WebBackpackContentsUiSoPath =
+        "Assets/commonW4/pseudo_prefab_so/ui/web_backpack_contents_ui.asset";
+
+    private static PseudoPrefabSO LoadWebBackpackContentsUiSO()
+    {
+        return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(WebBackpackContentsUiSoPath);
+    }
+
+    private static string BuildWebBackpackTag(LayoutWebBackpackStubDto dto,
+        System.Collections.Generic.List<string> orderedFillGuids)
+    {
+        // WebBackpack|<cap>|fifo|<fillGuid,...>（guid 段 = 完整顺序，含自定义菜谱；
+        // CustomRecipeSO 无法进 soArray，导出侧靠本段回读顺序）
+        var guidSeg = orderedFillGuids != null && orderedFillGuids.Count > 0
+            ? string.Join(",", orderedFillGuids.ToArray())
+            : "";
+        return WebBackpackTagPrefix + dto.capacity + "|fifo|" + guidSeg;
+    }
+
+    // -------------------------------------------------------------
+    // Web 致命鬼魂（commonW4 · CustomStub.WebKillerGhost + 原版 RespawnCollider Hit）
+    // -------------------------------------------------------------
+
+    private const string WebKillerGhostTagPrefix = "WebKillerGhost|";
+    private const string WebKillerGhostDefaultStyle = "npc_ghost";
+
+    private static readonly Dictionary<string, string> WebKillerGhostStyleAssetPaths =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            { "npc_ghost", "Assets/commonW4/pseudo_prefab_so/mechanisms/web_killer_ghost_01.asset" },
+            { "npc_keep", "Assets/commonW4/pseudo_prefab_so/mechanisms/web_killer_ghost_visual_keep.asset" },
+            { "ghost_chef", "Assets/commonW4/pseudo_prefab_so/mechanisms/web_killer_ghost_visual_chef.asset" },
+        };
+
+    private static readonly Dictionary<string, string> WebKillerGhostGuidToStyle =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    private static bool IsWebKillerGhostPrefabId(string pid)
+    {
+        return string.Equals(pid, "web_killer_ghost_01", StringComparison.Ordinal);
+    }
+
+    private static bool HasWebKillerGhostTag(GameObject go)
+    {
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        return tag != null && !string.IsNullOrEmpty(tag.prefabTag)
+            && tag.prefabTag.StartsWith(WebKillerGhostTagPrefix, StringComparison.Ordinal);
+    }
+
+    private static bool ExportWebKillerGhostIfPresent(GameObject go, LayoutItemDto item)
+    {
+        var pid = !string.IsNullOrEmpty(item.prefabAssetPath)
+            ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+            : "";
+        var kgType = FindCustomStubType(go, "WebKillerGhost");
+        var hasComp = kgType != null && go.GetComponent(kgType) != null;
+        if (!IsWebKillerGhostPrefabId(pid) && !HasWebKillerGhostTag(go) && !hasComp)
+            return false;
+
+        item.stubKind = "WebKillerGhost";
+        var dto = new LayoutWebKillerGhostStubDto();
+        if (hasComp)
+        {
+            var comp = go.GetComponent(kgType);
+            dto.hitRadius = StubFloatOr(comp, "m_hitRadius", 0.45f);
+            dto.enabled = StubBoolOr(comp, "m_enabled", true);
+            var styleObj = GetStubField(comp, "m_style") as string;
+            if (!string.IsNullOrEmpty(styleObj))
+                dto.style = styleObj;
+        }
+        else if (HasWebKillerGhostTag(go))
+            ParseWebKillerGhostTag(go.GetComponent<SpecificPseudoPrefabTag>().prefabTag, dto);
+
+        ExportWebKillerGhostStyleFromScene(go, dto);
+        item.webKillerGhost = dto;
+        ExportPseudoPrefabGuidIfPresent(go, item);
+        return true;
+    }
+
+    private static void ExportWebKillerGhostStyleFromScene(GameObject go, LayoutWebKillerGhostStubDto dto)
+    {
+        var npc = go.GetComponent<PseudoPrefabNPCStub>();
+        if (npc == null || npc.pseudoPrefabSO == null)
+            return;
+        var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(npc.pseudoPrefabSO));
+        if (string.IsNullOrEmpty(guid))
+            return;
+        string style;
+        if (WebKillerGhostGuidToStyle.TryGetValue(guid, out style))
+            dto.style = style;
+    }
+
+    private static void ParseWebKillerGhostTag(string prefabTag, LayoutWebKillerGhostStubDto dto)
+    {
+        if (string.IsNullOrEmpty(prefabTag) || !prefabTag.StartsWith(WebKillerGhostTagPrefix, StringComparison.Ordinal))
+            return;
+        var payload = prefabTag.Substring(WebKillerGhostTagPrefix.Length);
+        var parts = payload.Split('|');
+        float r;
+        if (parts.Length >= 1 && float.TryParse(parts[0], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out r) && r >= 0.15f)
+            dto.hitRadius = Mathf.Clamp(r, 0.15f, 2f);
+        if (parts.Length >= 2)
+            dto.enabled = parts[1].Trim() != "0";
+        if (parts.Length >= 3 && !string.IsNullOrEmpty(parts[2].Trim()))
+            dto.style = NormalizeWebKillerGhostStyle(parts[2].Trim());
+    }
+
+    private static string NormalizeWebKillerGhostStyle(string style)
+    {
+        if (string.IsNullOrEmpty(style))
+            return WebKillerGhostDefaultStyle;
+        style = style.Trim();
+        return WebKillerGhostStyleAssetPaths.ContainsKey(style) ? style : WebKillerGhostDefaultStyle;
+    }
+
+    private static PseudoPrefabSO LoadWebKillerGhostVisualSO(string style)
+    {
+        string path;
+        if (!WebKillerGhostStyleAssetPaths.TryGetValue(NormalizeWebKillerGhostStyle(style), out path))
+            path = WebKillerGhostStyleAssetPaths[WebKillerGhostDefaultStyle];
+        return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+    }
+
+    private static void ApplyWebKillerGhostVisual(GameObject go, string style)
+    {
+        var so = LoadWebKillerGhostVisualSO(style);
+        if (so == null)
+            return;
+        var npc = go.GetComponent<PseudoPrefabNPCStub>();
+        if (npc == null)
+            return;
+        Undo.RecordObject(npc, "Layout Editor WebKillerGhost style");
+        npc.pseudoPrefabSO = so;
+    }
+
+    private static void ApplyWebKillerGhost(GameObject go, LayoutWebKillerGhostStubDto dto)
+    {
+        if (dto == null)
+            return;
+        dto.hitRadius = Mathf.Clamp(dto.hitRadius, 0.15f, 2f);
+        dto.style = NormalizeWebKillerGhostStyle(dto.style);
+        PromoteDerivedStub(go);
+        ApplyWebKillerGhostVisual(go, dto.style);
+
+        var type = FindCustomStubType(go, "WebKillerGhost");
+        if (type == null)
+        {
+            LayoutEditorLog.LogWarning("[WebKillerGhost] 关卡集缺 stub 程序集，仅写入 tag 载体: " + go.name);
+            var setName = LevelSetOfScenePath(go.scene.path);
+            if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                CustomStubCopyRequested(setName);
+        }
+        else
+        {
+            var comp = go.GetComponent(type);
+            if (comp == null)
+                comp = Undo.AddComponent(go, type);
+            else
+                Undo.RecordObject(comp, "Layout Editor WebKillerGhost");
+            SetStubField(comp, "m_hitRadius", dto.hitRadius);
+            SetStubField(comp, "m_enabled", dto.enabled);
+            SetStubField(comp, "m_style", dto.style);
+            InvokeWebKillerGhostPrepare(comp);
+            EditorUtility.SetDirty(comp);
+        }
+
+        SetCustomStubTag(go, BuildWebKillerGhostTag(dto));
+        EnsureWebKillerGhostVanillaCollider(go, dto.hitRadius, dto.enabled);
+        LayoutEditorLog.Log("[WebKillerGhost] Apply: " + go.name + " r=" + dto.hitRadius + " on=" + dto.enabled);
+    }
+
+    private static string BuildWebKillerGhostTag(LayoutWebKillerGhostStubDto dto)
+    {
+        return WebKillerGhostTagPrefix
+            + dto.hitRadius.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
+            + "|" + (dto.enabled ? "1" : "0")
+            + "|" + NormalizeWebKillerGhostStyle(dto.style);
+    }
+
+    private static void InvokeWebKillerGhostPrepare(Component comp)
+    {
+        if (comp == null)
+            return;
+        var m = comp.GetType().GetMethod("ApplyConfig",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+        if (m != null)
+            m.Invoke(comp, null);
+    }
+
+    private static void EnsureWebKillerGhostVanillaCollider(GameObject go, float radius, bool enabled)
+    {
+        var sphere = go.GetComponent<SphereCollider>();
+        if (sphere == null)
+            sphere = Undo.AddComponent<SphereCollider>(go);
+        else
+            Undo.RecordObject(sphere, "Layout Editor WebKillerGhost");
+        sphere.isTrigger = true;
+        sphere.radius = radius;
+        sphere.center = new Vector3(0f, 0.6f, 0f);
+        sphere.enabled = enabled;
+
+        var rb = go.GetComponent<Rigidbody>();
+        if (rb == null)
+            rb = Undo.AddComponent<Rigidbody>(go);
+        else
+            Undo.RecordObject(rb, "Layout Editor WebKillerGhost");
+        rb.isKinematic = true;
+        rb.useGravity = false;
+
+        var rc = FindVanillaMonoBehaviour(go, "RespawnCollider");
+        if (rc == null)
+        {
+            var rcType = ResolveVanillaType("RespawnCollider");
+            if (rcType != null)
+                rc = Undo.AddComponent(go, rcType) as MonoBehaviour;
+        }
+        if (rc != null)
+        {
+            Undo.RecordObject(rc, "Layout Editor WebKillerGhost");
+            var so = new SerializedObject(rc);
+            so.Update();
+            var rt = so.FindProperty("m_respawnType");
+            if (rt != null)
+                rt.enumValueIndex = 0;
+            var mask = so.FindProperty("m_respawnFilter");
+            if (mask != null)
+            {
+                var players = LayerMask.GetMask("Players");
+                mask.intValue = players != 0 ? players : 256;
+            }
+            var onlyR = so.FindProperty("m_onlyRespawnables");
+            if (onlyR != null)
+                onlyR.boolValue = false;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            var beh = rc as Behaviour;
+            if (beh != null)
+                beh.enabled = enabled;
+        }
+    }
+
+    private static MonoBehaviour FindVanillaMonoBehaviour(GameObject go, string typeName)
+    {
+        var comps = go.GetComponents<MonoBehaviour>();
+        for (int i = 0; i < comps.Length; i++)
+        {
+            if (comps[i] != null && comps[i].GetType().Name == typeName)
+                return comps[i];
+        }
+        return null;
+    }
+
+    private static System.Type ResolveVanillaType(string typeName)
+    {
+        foreach (var asm in System.AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var t = asm.GetType(typeName);
+            if (t != null)
+                return t;
+        }
+        return null;
     }
 
     // -------------------------------------------------------------
@@ -3419,6 +4181,13 @@ public static class LayoutEditorStubIO
                     SetCustomStubTag(go, "ConveyorDirectionSync|");
                     rewritten++;
                 }
+            }
+            else if (prefab.StartsWith("RandomTrigger|", StringComparison.Ordinal))
+            {
+                // 组件为权威（候选含嵌套参数 spec），整串重算；Inspector 手改后
+                // tag 漂移由本分支捕捉（内部比对，仅变化时写）。
+                if (RandomTriggerBakery.RefreshTagFromComponent(go))
+                    rewritten++;
             }
             // PushablePot| / CameraOffset|：payload 来自 soArray/摆放位（非组件字段），
             // 写回时已按最新格式烘焙，导出期不重算（避免误伤结构性数据）。

@@ -581,7 +581,7 @@ public class LayoutEditorHttpServer
 
                 // 写回强校验（web 侧同款规则的后端兜底，防绕过）：
                 // 普通食材箱（含背包）必须配 1 种食材；随机食材箱必须 ≥2 种候选。
-                var validationError = ValidateDispenserConfigs(doc);
+                var validationError = ValidateWebBackpackConfigs(doc) ?? ValidateDispenserConfigs(doc) ?? ValidateSpeedControlConfigs(doc);
                 if (validationError != null)
                 {
                     LayoutEditorLog.LogWarning("[随机箱链路] " + validationError);
@@ -603,6 +603,15 @@ public class LayoutEditorHttpServer
                 {
                     LayoutEditorLog.LogWarning("[LayoutEditor] " + slopeError);
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = slopeError }));
+                    return;
+                }
+                // 随机触发器强校验（web 侧同款规则的后端兜底）：候选 ≥2、信号名
+                // 非空、权重 ≥0、参数模式字段完整、目标不得指向自身节点。
+                var rtError = ValidateRandomTriggerConfigs(doc);
+                if (rtError != null)
+                {
+                    LayoutEditorLog.LogWarning("[LayoutEditor] " + rtError);
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = rtError }));
                     return;
                 }
                 // 分 P 不可逆守卫（后端兜底）：已保存的分 P 关卡不允许降级 / parts 清空。
@@ -1787,6 +1796,7 @@ public class LayoutEditorHttpServer
             LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
             LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
             LayoutEditorCatalogApi.SyncCookingStepsFromSelectedRecipes(levelInfo);
+            LayoutEditorCatalogApi.SyncWebBackpackOptionalItems(levelInfo, doc);
             LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
             LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
             EditorUtility.SetDirty(levelInfo);
@@ -1883,7 +1893,7 @@ public class LayoutEditorHttpServer
         {
             OpenSceneIfNeeded(args.assetPath);
             var document = SceneLayoutExporter.ExportActiveScene();
-            var error = ValidateDispenserConfigs(document) ?? ValidateTeleportalConfigs(document) ?? ValidateAirSlopeConfigs(document);
+            var error = ValidateWebBackpackConfigs(document) ?? ValidateDispenserConfigs(document) ?? ValidateTeleportalConfigs(document) ?? ValidateAirSlopeConfigs(document) ?? ValidateRandomTriggerConfigs(document) ?? ValidateSpeedControlConfigs(document);
             return "{\"valid\":" + (error == null ? "true" : "false") +
                 ",\"error\":" + (error == null ? "null" : JsonString(error)) + "}";
         }
@@ -1893,7 +1903,7 @@ public class LayoutEditorHttpServer
                 throw new InvalidOperationException("写回场景必须传 confirm=true");
             if (args.document == null)
                 throw new InvalidOperationException("缺少 document");
-            var validationError = ValidateDispenserConfigs(args.document) ?? ValidateTeleportalConfigs(args.document) ?? ValidateAirSlopeConfigs(args.document);
+            var validationError = ValidateWebBackpackConfigs(args.document) ?? ValidateDispenserConfigs(args.document) ?? ValidateTeleportalConfigs(args.document) ?? ValidateAirSlopeConfigs(args.document) ?? ValidateRandomTriggerConfigs(args.document) ?? ValidateSpeedControlConfigs(args.document);
             if (validationError != null)
                 throw new InvalidOperationException(validationError);
             OpenSceneIfNeeded(args.document.sceneAssetPath);
@@ -2115,6 +2125,122 @@ public class LayoutEditorHttpServer
         return "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray());
     }
 
+    /// <summary>Web 储物背包：capacity 枚举；initialFill ≤ capacity。
+    /// （3.8.10 起取出恒 FIFO：pickMode 一律归一，不再校验/阻断）</summary>
+    private static string ValidateWebBackpackConfigs(LayoutDocumentDto doc)
+    {
+        if (doc == null || doc.items == null)
+            return null;
+        var validCaps = new HashSet<int> { 1, 2, 4, 6, 9, 12, 16, 20, 25, 30 };
+        var problems = new List<string>();
+        foreach (var it in doc.items)
+        {
+            if (it == null || it.stubKind != "WebBackpack" || it.webBackpack == null)
+                continue;
+            var cap = it.webBackpack.capacity;
+            if (!validCaps.Contains(cap))
+            {
+                if (cap > 30)
+                    it.webBackpack.capacity = 30; // 历史兼容：曾支持 36（线上 >31 截断，3.8.17 收回）→ 归一
+                else
+                    problems.Add((it.displayName ?? "Web背包") + "：容量必须为 1/2/4/6/9/12/16/20/25/30");
+            }
+            it.webBackpack.pickMode = "fifo"; // 取出恒 FIFO（历史 random 值归一）
+            var fill = it.webBackpack.initialFillGuids != null ? it.webBackpack.initialFillGuids.Length : 0;
+            if (fill > cap)
+                problems.Add((it.displayName ?? "Web背包") + "：初始填充不能超过容量（" + fill + ">" + cap + "）");
+        }
+        if (problems.Count == 0)
+            return null;
+        return "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray());
+    }
+
+    /// <summary>写回强校验：按钮控速档位 ≥2 且全非 0；生成器批次参数归一
+    /// （batchCount 1~50、triggerTime>0、buttonCooldown≥0）。返回 null=通过。</summary>
+    private static float[] DefaultSpeedControlLevels(float baseSpeed)
+    {
+        if (Mathf.Approximately(baseSpeed, 0f))
+            return new[] { 1f, 2f };
+        return new[] { baseSpeed, baseSpeed * 2f };
+    }
+
+    private static string ValidateSpeedControlConfigs(LayoutDocumentDto doc)
+    {
+        if (doc == null || doc.items == null)
+            return null;
+        var problems = new List<string>();
+        foreach (var it in doc.items)
+        {
+            if (it == null)
+                continue;
+            if (it.stubKind != "Travelator" && it.travelator != null)
+                it.travelator.speedControl = null;
+            if (it.stubKind != "Conveyor" && it.conveyor != null)
+                it.conveyor.speedControl = null;
+            LayoutSpeedControlDto sc = null;
+            string label = null;
+            if (it.stubKind == "Travelator" && it.travelator != null &&
+                it.travelator.speedControl != null)
+            {
+                sc = it.travelator.speedControl;
+                label = "步带";
+            }
+            else if (it.stubKind == "Conveyor" && it.conveyor != null &&
+                     it.conveyor.speedControl != null)
+            {
+                sc = it.conveyor.speedControl;
+                label = "传送带";
+            }
+            if (sc != null && sc.enabled)
+            {
+                if (sc.levels == null || sc.levels.Length < 2)
+                {
+                    // 与前端 serialize 一致：启用但档位未落盘时按基准速度补默认两档，避免
+                    // 面板已展示档位、模型仍为 null/[] 时误阻断写回。
+                    var baseSpd = it.travelator != null ? it.travelator.speed
+                        : (it.conveyor != null ? it.conveyor.conveySpeed : 0.5f);
+                    sc.levels = DefaultSpeedControlLevels(baseSpd);
+                }
+                if (sc.levels == null || sc.levels.Length < 2)
+                {
+                    problems.Add(label + "「按钮控速」至少需要 2 个速度档位");
+                }
+                else
+                {
+                    for (int i = 0; i < sc.levels.Length; i++)
+                    {
+                        if (Mathf.Approximately(sc.levels[i], 0f))
+                        {
+                            problems.Add(label + "「按钮控速」第 " + (i + 1) + " 档速度为 0（无意义），请删除或修改");
+                            break;
+                        }
+                    }
+                    // 档位上限 8（规格 §1 列表 2~8 档；前端同款截断）
+                    if (sc.levels.Length > 8)
+                    {
+                        var trimmed = new float[8];
+                        System.Array.Copy(sc.levels, trimmed, 8);
+                        sc.levels = trimmed;
+                    }
+                }
+            }
+            if (it.foodSpawner != null && it.foodSpawner.startByButton)
+            {
+                var fs = it.foodSpawner;
+                fs.batchCount = Mathf.Clamp(fs.batchCount <= 0 ? 1 : fs.batchCount, 1, 50);
+                if (fs.triggerTime <= 0f)
+                    fs.triggerTime = 5f;
+                if (fs.buttonCooldown < 0f)
+                    fs.buttonCooldown = 0f;
+                // 互斥归一：按钮模式下开局不再自动送出（MCP 直传畸形文档兜底）
+                fs.triggerAtStart = false;
+            }
+        }
+        return problems.Count > 0
+            ? "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray())
+            : null;
+    }
+
     /// <summary>写回强校验：普通食材箱（含背包，不含饮料/酱料机）必须配 1 种食材；
     /// 随机食材箱（RandomDispenser 或携带随机配置）必须 ≥2 种候选。返回 null=通过。</summary>
     private static string ValidateDispenserConfigs(LayoutDocumentDto doc)
@@ -2149,6 +2275,126 @@ public class LayoutEditorHttpServer
         if (problems.Count == 0)
             return null;
         return "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray());
+    }
+
+    /// <summary>写回强校验：随机触发器（web 侧同款规则的后端兜底）。
+    ///  候选 ≥2、信号名非空、权重 ≥0、参数模式字段完整（候选模式 ≥1 个非空值、
+    ///  区间模式 min≠max）、目标引用不得指向自身节点（自环）、rt: 目标必须是
+    ///  文档内存在的其它节点。返回 null=通过。</summary>
+    private static string ValidateRandomTriggerConfigs(LayoutDocumentDto doc)
+    {
+        if (doc == null || doc.randomTriggers == null || doc.randomTriggers.links == null)
+            return null;
+        var problems = new List<string>();
+        var seenIds = new HashSet<string>(StringComparer.Ordinal);
+        // 全部节点 id 集合（先收集再校验：rt: 目标可引用任意顺序声明的节点）。
+        var linkIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var pre in doc.randomTriggers.links)
+        {
+            if (pre != null && !string.IsNullOrEmpty(pre.id))
+                linkIds.Add(pre.id);
+        }
+        foreach (var link in doc.randomTriggers.links)
+        {
+            if (link == null)
+                continue;
+            if (string.IsNullOrEmpty(link.id))
+            {
+                problems.Add("随机触发器：存在缺少 id 的节点");
+                continue;
+            }
+            if (!seenIds.Add(link.id))
+            {
+                problems.Add("随机触发器：「" + link.id + "」id 重复");
+                continue;
+            }
+            if (link.cooldownSeconds < 0f)
+                link.cooldownSeconds = 0f; // 负冷却无意义，归一
+            var entries = link.entries != null ? link.entries : new LayoutRandomTriggerEntryDto[0];
+            int valid = 0;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                if (entry == null)
+                    continue;
+                var label = "随机触发器「" + link.id + "」候选 #" + (i + 1);
+                if (string.IsNullOrEmpty((entry.trigger ?? "").Trim()))
+                {
+                    problems.Add(label + "：信号名为空");
+                    continue;
+                }
+                if (entry.weight < 0f)
+                {
+                    problems.Add(label + "：权重不能为负（" + entry.weight + "）");
+                    continue;
+                }
+                if (!string.IsNullOrEmpty(entry.targetRef) &&
+                    entry.targetRef.StartsWith("rt:", StringComparison.Ordinal))
+                {
+                    if (entry.targetRef == "rt:" + link.id)
+                    {
+                        problems.Add(label + "：目标不能指向自身节点（无限自环）");
+                        continue;
+                    }
+                    if (!linkIds.Contains(entry.targetRef.Substring(3)))
+                    {
+                        problems.Add(label + "：目标随机触发器节点不存在（已删？）" + entry.targetRef);
+                        continue;
+                    }
+                }
+                var perr = ValidateRandomTriggerParam(entry.param, label);
+                if (perr != null)
+                {
+                    problems.Add(perr);
+                    continue;
+                }
+                valid++;
+            }
+            if (valid < 2)
+                problems.Add("随机触发器「" + link.id + "」：有效候选不足 2 个（" + valid + "）");
+        }
+        if (problems.Count == 0)
+            return null;
+        return "写回被阻断（" + problems.Count + " 处），请修复后再试：" + string.Join("；", problems.ToArray());
+    }
+
+    private static string ValidateRandomTriggerParam(LayoutRandomTriggerParamDto p, string label)
+    {
+        if (p == null || p.mode == 0)
+            return null;
+        if (p.mode < 1 || p.mode > 5)
+            return label + "：未知参数模式 " + p.mode;
+        if (p.mode == 1 && string.IsNullOrEmpty((p.fixedValue ?? "").Trim()))
+            return label + "：固定参数值为空";
+        if (p.mode == 2)
+        {
+            var count = 0;
+            if (p.candidates != null)
+            {
+                for (int i = 0; i < p.candidates.Length; i++)
+                    if (!string.IsNullOrEmpty((p.candidates[i] ?? "").Trim()))
+                        count++;
+            }
+            if (count < 1)
+                return label + "：候选列表为空（至少 1 个非空候选）";
+        }
+        if (p.mode == 3)
+        {
+            if (p.stringLength < 1 || p.stringLength > 64)
+                return label + "：随机字符串长度须在 1~64（当前 " + p.stringLength + "）";
+            if (!string.IsNullOrEmpty(p.charset) && p.charset.Length < 2)
+                return label + "：自定义字符集至少 2 个字符";
+        }
+        if (p.mode == 4 && (p.digits < 1 || p.digits > 9))
+            return label + "：随机数值位数须在 1~9（当前 " + p.digits + "）";
+        if (p.mode == 5)
+        {
+            if (Mathf.Approximately(p.minValue, p.maxValue))
+                return label + "：数值区间最小值与最大值相等";
+            if (p.decimals < 0 || p.decimals > 6)
+                return label + "：小数位须在 0~6（当前 " + p.decimals + "）";
+        }
+        return null;
     }
 
     /// <summary>写回强校验：传送门方向。

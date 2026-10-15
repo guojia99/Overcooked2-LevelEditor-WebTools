@@ -33,6 +33,9 @@ import { palettePlaceCountFor } from "../palette";
 import { Scene3DCtx, itemByKey, floorByKey } from "./ctx";
 import { pickAll, pickItems, pickFloors, pickWaypoints, pickHandle, rayOnPlane, rayVerticalY } from "./picking";
 import { toSceneZ } from "./space";
+import { clearWorkstationOverlapAlert } from "../workstationOverlapAlert";
+import { hitTestLights } from "../renderLights";
+import { addNewLight, lightByPath, defaultLightHeight } from "../lightsUtil";
 import { itemBoxOf } from "./meshItems";
 import { floorSlabOf, gapBelowFor } from "./meshFloors";
 import { cornerAnchorForFloor, CornerEdge } from "./handles3d";
@@ -51,7 +54,8 @@ type DragKind =
   | "floor-resize"
   | "item-resize"
   | "item-height"
-  | "waypoint";
+  | "waypoint"
+  | "light-move";
 
 interface DragState {
   kind: DragKind;
@@ -118,15 +122,58 @@ function handleDown(ctx: Scene3DCtx, canvas: HTMLCanvasElement, e: MouseEvent): 
 
   // 中键 / 空格 / Alt = 平移视角；右键 = 环绕（松开若未拖动则弹右键菜单）。
   if (e.button === 1 || (e.button === 0 && (S.spaceHeld || e.altKey))) {
+    clearWorkstationOverlapAlert();
     drag.kind = "camera-pan";
     e.preventDefault();
     return;
   }
   if (e.button === 2) {
+    clearWorkstationOverlapAlert();
     drag.kind = "camera-orbit";
     return;
   }
   if (e.button !== 0) return;
+
+  clearWorkstationOverlapAlert();
+
+  if (S.currentLayer === "lights") {
+    hideDetail();
+    hideContextMenu();
+    clearSelection();
+    clearFloorSelection();
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const ground = rayOnPlane(ctx, e.clientX, e.clientY, currentGroundY());
+    const lHits = hitTestLights(mx, my);
+    if (lHits.length > 0) {
+      const l = lHits[0];
+      S.selectedLightPath = l.hierarchyPath;
+      S.dragSnapshot = snapshotState();
+      drag.kind = "light-move";
+      drag.key = l.hierarchyPath;
+      drag.startPointerY = my;
+      drag.startValue = l.position?.y ?? defaultLightHeight();
+      renderRightPanel();
+      draw();
+      return;
+    }
+    if (S.pendingNewLightType != null && ground) {
+      addNewLight(
+        S.pendingNewLightType,
+        snapValue(ground.x, S.freeSnapStep),
+        snapValue(ground.z, S.freeSnapStep)
+      );
+      S.pendingNewLightType = null;
+      renderRightPanel();
+      draw();
+      return;
+    }
+    S.selectedLightPath = null;
+    renderRightPanel();
+    draw();
+    return;
+  }
 
   // 拖动过程可能移出画布，捕获指针保证还能收到 move/up。
   const withId = e as MouseEvent & { pointerId?: number };
@@ -214,6 +261,7 @@ export function attachInput3D(ctx: Scene3DCtx): void {
 
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
+    clearWorkstationOverlapAlert();
     ctx.cam.zoomAt(e.deltaY, zoomPivot(ctx, e.clientX, e.clientY));
     ctx.invalidate();
   };
@@ -286,6 +334,9 @@ export function attachInput3D(ctx: Scene3DCtx): void {
       case "waypoint":
         dragWaypoint(ctx, e);
         return;
+      case "light-move":
+        dragLightMove(ctx, e);
+        return;
       default:
         return;
     }
@@ -350,6 +401,11 @@ export function attachInput3D(ctx: Scene3DCtx): void {
       S.draggingWaypointId = null;
       S.dirty = true;
       commitDragSnapshot();
+    }
+    if (kind === "light-move") {
+      S.dirty = true;
+      commitDragSnapshot();
+      renderRightPanel();
     }
 
     drag = freshDrag({});
@@ -824,6 +880,26 @@ function dragItemRotate(e: MouseEvent): void {
   const sign = drag.rotAxis === "y" ? 1 : -1;
   setItemRotationAxis(it, drag.rotAxis, drag.startRotDeg + sign * deltaDeg);
   S.dirty = true;
+  draw();
+}
+
+function dragLightMove(ctx: Scene3DCtx, e: MouseEvent): void {
+  const l = lightByPath(drag.key);
+  if (!l) return;
+  if (!l.position) l.position = { x: 0, y: 0, z: 0 };
+  if (e.shiftKey) {
+    const dy = -(e.clientY - drag.lastY) * 0.02;
+    l.position.y = Math.round((l.position.y + dy) * 1000) / 1000;
+  } else {
+    const hit = rayOnPlane(ctx, e.clientX, e.clientY, currentGroundY());
+    if (hit) {
+      l.position.x = snapValue(hit.x, S.freeSnapStep);
+      l.position.z = snapValue(hit.z, S.freeSnapStep);
+    }
+  }
+  l.positionEdited = true;
+  S.dirty = true;
+  ctx.invalidate();
   draw();
 }
 

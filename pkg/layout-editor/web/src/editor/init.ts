@@ -42,17 +42,20 @@ import { scopedSaveMeta } from "./serialize";
 import { partLevelActive, applyPartLevelEnable, openManageModal, renderPartBar } from "./partLevel";
 import { closeModal } from "../modals";
 import { markDirty } from "./historyOps";
+import { syncDayLightForChefHeadlights } from "./lightsUtil";
 import { openRecipesDialog } from "./ui/recipesDialogs";
 import { requestTestLayout } from "./testLayout";
 import { openUtensilManager } from "./ui/utensilManager";
 import { openCounterSkinManager, ensureCounter3dLoaded } from "./ui/counterSkinManager";
 import { openCameraLightModal } from "./cameraLight";
+import { buildLightPalette } from "./lightPalette";
 import {
   applyPanelCollapse,
   updatePanelTabButtons,
   renderRightPanel,
   initPanelResizer,
-  initPaletteResizer
+  initPaletteResizer,
+  initLayerVisBulkButtons,
 } from "./panels";
 import {
   clearSelection,
@@ -66,6 +69,7 @@ import { initContextMenuDrag } from "./ui/contextMenuChrome";
 import { initFloatingPanelDrag, pinCenteredBar } from "./ui/floatingPanelDrag";
 import { draw } from "./render";
 import { setupCanvas, resetOverlapMarqueePending } from "./input";
+import { clearWorkstationOverlapAlert } from "./workstationOverlapAlert";
 import { initCrossTabClipboardListener } from "./crossTabClipboard";
 import {
   goManage,
@@ -112,6 +116,7 @@ const LAYER_LABEL: Record<LayerKey, string> = {
   floor: "地板层",
   background: "背景层",
   anim: "动画层",
+  lights: "灯光层",
 };
 
 /** Reflect S.layerVisibility of the current layer into the popover checkboxes.
@@ -140,11 +145,56 @@ export function syncVisibilityPopover(): void {
   }
 }
 
+/** 将 S 中的视图/行为开关同步到「显示配置」弹出层（打开面板时调用）。 */
+function syncViewConfigPopover(): void {
+  const set = (id: string, checked: boolean) => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    if (el) el.checked = checked;
+  };
+  set("snap-grid", S.snapEnabled);
+  set("show-grid", S.showGrid);
+  set("counter-skin-paint", S.counterSkinPaint);
+  set("show-camera-fov", S.showCameraFov);
+  set("show-scene-lights", S.showSceneLights);
+  set("show-coords", S.showCoords);
+  set("allow-ws-overlap", S.allowWorkstationOverlap);
+  set("chk-auto-intermediates", S.autoIntermediates);
+}
+
+function wireViewConfigPopover(): void {
+  const btn = document.getElementById("btn-view-config");
+  const pop = document.getElementById("view-config-popover");
+  const visPop = document.getElementById("vis-popover");
+  btn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    visPop?.classList.add("hidden");
+    const opening = pop?.classList.contains("hidden");
+    pop?.classList.toggle("hidden");
+    if (opening) syncViewConfigPopover();
+    btn.classList.toggle("active", opening === true);
+  });
+  document.addEventListener("mousedown", (e) => {
+    if (
+      pop &&
+      !pop.classList.contains("hidden") &&
+      !pop.contains(e.target as Node) &&
+      e.target !== btn
+    ) {
+      pop.classList.add("hidden");
+      btn?.classList.remove("active");
+    }
+  });
+}
+
 function wireVisibilityPopover(): void {
   const btn = document.getElementById("btn-visibility");
   const pop = document.getElementById("vis-popover");
+  const configPop = document.getElementById("view-config-popover");
+  const configBtn = document.getElementById("btn-view-config");
   btn?.addEventListener("click", (e) => {
     e.stopPropagation();
+    configPop?.classList.add("hidden");
+    configBtn?.classList.remove("active");
     pop?.classList.toggle("hidden");
     syncVisibilityPopover();
   });
@@ -218,6 +268,7 @@ export function setLayer(layer: LayerKey): void {
     return;
   }
   if (layer === S.currentLayer) return;
+  clearWorkstationOverlapAlert();
   S.currentLayer = layer;
   document.querySelectorAll(".layer-tab").forEach((b) =>
     b.classList.toggle("active", (b as HTMLElement).dataset.layer === layer)
@@ -239,6 +290,12 @@ export function setLayer(layer: LayerKey): void {
   // Leaving the move layer cancels any member/waypoint pick mode.
   if (layer !== "anim") {
     S.animMode = "none";
+  }
+  if (layer === "lights") {
+    S.pendingNewLightType = null;
+    if (!S.selectedLightPath && S.lights.length > 0) {
+      S.selectedLightPath = S.lights[0].hierarchyPath;
+    }
   }
   if (layer === "anim") S.activeRightTab = "anim";
   updatePanelTabButtons();
@@ -269,6 +326,9 @@ export function setLayer(layer: LayerKey): void {
   } else if (layer === "anim") {
     searchEl.placeholder = "动画层：管理可移动物品组";
     dom.paletteCats.innerHTML = "";
+  } else if (layer === "lights") {
+    searchEl.placeholder = "灯光层";
+    buildLightPalette();
   } else if (layer === "decor") {
     searchEl.placeholder = "搜索装饰…";
     buildPalette(layoutCatalog, searchEl.value);
@@ -376,7 +436,7 @@ export async function init() {
 
   document.getElementById("palette-search")!.addEventListener("input", (e) => {
     const q = (e.target as HTMLInputElement).value;
-    if (S.currentLayer === "anim") return;
+    if (S.currentLayer === "anim" || S.currentLayer === "lights") return;
     if (S.currentLayer === "floor") buildFloorPalette(q, "floor");
     else if (S.currentLayer === "background") buildFloorPalette(q, "background");
     else buildPalette(catalog, q);
@@ -493,9 +553,20 @@ export async function init() {
       openConfigTabsModal(detail, S.currentLevelSet, () => {}, {
         ceilingHeight: S.ceilingHeight,
         hasCeilingHeight: S.hasCeilingHeight,
+        chefHeadLightsEnabled: S.chefHeadLightsEnabled,
+        chefHeadLightRange: S.chefHeadLightRange,
         onCeilingHeightChange: (value) => {
           S.ceilingHeight = value;
           S.hasCeilingHeight = true;
+          markDirty();
+        },
+        onChefHeadLightsChange: (enabled) => {
+          S.chefHeadLightsEnabled = enabled;
+          syncDayLightForChefHeadlights(enabled);
+          markDirty();
+        },
+        onChefHeadLightRangeChange: (range) => {
+          S.chefHeadLightRange = range;
           markDirty();
         },
         partLevel: {
@@ -579,6 +650,12 @@ export async function init() {
     draw();
   });
 
+  document.getElementById("show-scene-lights")!.addEventListener("change", (e) => {
+    S.showSceneLights = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("showSceneLights", S.showSceneLights ? "1" : "0");
+    draw();
+  });
+
   document.getElementById("show-coords")!.addEventListener("change", (e) => {
     S.showCoords = (e.target as HTMLInputElement).checked;
     if (!S.showCoords) {
@@ -657,7 +734,9 @@ export async function init() {
 
   initPanelResizer();
   initPaletteResizer();
+  initLayerVisBulkButtons();
   wireVisibilityPopover();
+  wireViewConfigPopover();
   setupCanvas();
   initContextMenuDrag();
   initFloatingPanelDrag(dom.detailEl, { draggingClass: "item-detail-dragging" });

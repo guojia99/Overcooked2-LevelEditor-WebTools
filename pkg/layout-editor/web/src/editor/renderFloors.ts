@@ -27,6 +27,7 @@ import {
 import { isSelected } from "./selection";
 import { effectiveMaterialTiling } from "./floors";
 import { itemInCurrentPart, floorInCurrentPart } from "./partLevel";
+import { isFloorHiddenBySceneGroup } from "./layerGroupVisibility";
 
 export function floorRectPx(f: EditorFloor) {
   const center = worldToCanvas(f._wx, f._wz);
@@ -333,6 +334,7 @@ export function drawFloorPlanes(highlight: boolean, kind: "floor" | "background"
     if (isBg !== (kind === "background")) continue;
     // 高度过滤：范围外的地板不绘制（也不可点选，见 hitTestFloorsAll）。
     if (kind === "floor" && !floorInHeightFilter(f)) continue;
+    if (isFloorHiddenBySceneGroup(f)) continue;
     const selected = highlight && S.selectedFloorKeys.has(f._key);
     drawFloorPlane(f, selected, false);
   }
@@ -420,6 +422,7 @@ export function hitTestFloorsAll(wx: number, wz: number): FloorHit[] {  const hi
     // 高度过滤：范围外的地板不参与点选/框选/拖动（「全部」时不过滤，
     // 多层重叠的地板仍按既有候选列表逻辑逐块选择）。
     if (!floorInHeightFilter(f)) continue;
+    if (isFloorHiddenBySceneGroup(f)) continue;
     const hw = (f._wCells * CELL) / 2;
     const hh = (f._dCells * CELL) / 2;
     const { lx, lz } = floorLocalPoint(f, wx, wz);

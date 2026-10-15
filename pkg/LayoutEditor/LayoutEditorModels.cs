@@ -52,6 +52,30 @@ public class LayoutDispenserStubDto
 }
 
 [Serializable]
+public class LayoutWebBackpackStubDto
+{
+    /// <summary>1 | 2 | 4 | 6 | 9 | 12 | 16 | 20 | 25 | 30（宫格列多行少；30 为线上协议上限内）</summary>
+    public int capacity = 4;
+    /// <summary>fifo | random</summary>
+    public string pickMode = "fifo";
+    /// <summary>开局预设填充（顺序槽，长度 ≤ capacity）。</summary>
+    public string[] initialFillGuids;
+}
+
+[Serializable]
+public class LayoutWebKillerGhostStubDto
+{
+    /// <summary>触碰致死触发球半径（米）。载体 tag WebKillerGhost|&lt;radius&gt;|&lt;1|0&gt;。</summary>
+    public float hitRadius = 0.45f;
+
+    /// <summary>false = 保留物件但不击杀。</summary>
+    public bool enabled = true;
+
+    /// <summary>视觉样式：npc_ghost | npc_keep | ghost_chef（见 web-killer-ghost-styles.json）。</summary>
+    public string style = "npc_ghost";
+}
+
+[Serializable]
 public class QuestionMarkStyleDto
 {
     public string name;
@@ -71,6 +95,18 @@ public class LayoutConveyorStubDto
     public float conveySpeed = 0.5f;
     /** 按钮动画旋转后刷新 ServerConveyorStation 的相邻接收器。 */
     public bool buttonControlled;
+    /** 按钮控速（null = 未配置）。权威=CustomStub.ButtonSpeedControl 组件 + tag
+     * "SpeedCtl|E:<1|0>|T:<目标路径>|N:<按钮路径,..>|L:<s1,s2,..>"；
+     * 触发源=switchLinks 直连本传送带的开关（vanilla 触发通道不用于 stub 目标）。 */
+    public LayoutSpeedControlDto speedControl;
+}
+
+[Serializable]
+public class LayoutSpeedControlDto
+{
+    public bool enabled = true;
+    /** 速度档位（每按一次按钮切下一档，尾档回卷首档；负值=反向）。≥2 档才有意义。 */
+    public float[] levels;
 }
 
 [Serializable]
@@ -123,6 +159,16 @@ public class LayoutFoodSpawnerStubDto
     public float[] weights;
     public float triggerTime = 5f;
     public bool triggerAtStart = true;
+    /** 按钮批次触发（2026-10-14）：true = 原生 TriggerTimer 自动循环停用，
+     *  由 CustomStub.ButtonSpawnerBatch 接管——每按一次按钮送出一批 batchCount 个
+     *  （第 1 个立刻、之后每隔 triggerTime 1 个；批次完成后冷却 buttonCooldown 秒，
+     *  期间按压无效）。权威=组件 + tag "SpawnerBatch|E:<1|0>|T:<目标路径>|N:<按钮路径,..>
+     *  |C:<count>|I:<interval>|D:<cooldown>"；触发源=switchLinks 直连本生成器的开关。 */
+    public bool startByButton;
+    /** 每批数量（1~50；1=纯按钮单发）。 */
+    public int batchCount = 1;
+    /** 批次完成后冷却秒数（默认 5；期间按压无效）。 */
+    public float buttonCooldown = 5f;
 }
 
 [Serializable]
@@ -146,6 +192,10 @@ public class LayoutTravelatorStubDto
     public float speed = 2.5f;
     /** 定时反转配置（null = 未配置，步道恒正向）。权威=CustomStub.TravelatorReverser 组件。 */
     public LayoutTravelatorReverseDto timedReverse;
+    /** 按钮控速（null = 未配置）。权威=CustomStub.ButtonSpeedControl 组件 + tag
+     * "SpeedCtl|E:<1|0>|T:<目标路径>|N:<按钮路径,..>|L:<s1,s2,..>"；
+     * 与 timedReverse 可共存（反转只动朝向、控速只动 m_speed/材质 _speed，互不干扰）。 */
+    public LayoutSpeedControlDto speedControl;
 }
 
 [Serializable]
@@ -395,6 +445,66 @@ public class LayoutCoaxialLinkDataDto
     public LayoutCoaxialLinkDto[] links;
 }
 
+/// <summary>RandomTrigger 参数值规则（可编程参数）。mode：0=无参数（只发信号名）
+///  1=固定字符串 fixedValue；2=候选列表 candidates 随机选一；3=随机字符串
+///  （stringLength 位 + 可选 charset，空=大小写字母+数字）；4=随机 digits 位整数；
+///  5=数值区间 [minValue,maxValue]（decimals 位小数，0=整数）。
+///  运行时对称：CustomStub.RandomTrigger.ParamSpec。</summary>
+[Serializable]
+public class LayoutRandomTriggerParamDto
+{
+    public int mode;
+    public string fixedValue;
+    public string[] candidates;
+    public int stringLength = 4;
+    public string charset;
+    public int digits = 1;
+    public float minValue;
+    public float maxValue = 1f;
+    public int decimals;
+}
+
+/// <summary>RandomTrigger 候选输出：信号名 + 参数规则 + 权重 + 目标。</summary>
+[Serializable]
+public class LayoutRandomTriggerEntryDto
+{
+    /** 信号名（非空；机器目标留空可由前端填原生触发名 Chop/Next/Launch）。 */
+    public string trigger;
+    /** 参数规则（null / mode=0 = 无参数，只发信号名）。 */
+    public LayoutRandomTriggerParamDto param;
+    /** 权重（≥0；全 0 视为等权）。 */
+    public float weight = 1f;
+    /** 目标引用："" = 发给节点自身物体；"u:&lt;instanceID&gt;" / "new:..." = 场景物品
+     *  伪根；"rt:&lt;linkId&gt;" = 其他随机触发器节点。 */
+    public string targetRef;
+}
+
+/// <summary>随机触发器（RandomTriggerBakery 烘焙为 Design/RandomTrigger Logic 下
+///  的隐藏逻辑物体，运行时 CustomStub.RandomTrigger）：一个信号输入（或源按钮
+///  按下）→ 按权重随机选一个候选发出；最终信号 = 信号名 + 分隔符（默认 ":"）
+///  + 可编程参数值；冷却限流 N 秒内只触发一次。</summary>
+[Serializable]
+public class LayoutRandomTriggerLinkDto
+{
+    public string id;
+    /** 源按钮 id 列表（可空 = 纯信号输入模式；任一按下即掷骰）。 */
+    public string[] sourceIds;
+    /** 输入信号名（空 = 匹配任意输入信号）。 */
+    public string inputTrigger;
+    /** 冷却限流秒数（≥0；0 = 不限流）。 */
+    public float cooldownSeconds;
+    /** 参数分隔符（默认 ":"；信号名与参数值之间的连接）。 */
+    public string separator = ":";
+    /** 候选列表（≥2 由前后端双校验）。 */
+    public LayoutRandomTriggerEntryDto[] entries;
+}
+
+[Serializable]
+public class LayoutRandomTriggerDataDto
+{
+    public LayoutRandomTriggerLinkDto[] links;
+}
+
 [Serializable]
 public class LayoutTerminalStubDto
 {
@@ -489,6 +599,8 @@ public class LayoutItemDto
     public string pseudoPrefabGuid;
     public LayoutCannonStubDto cannon;
     public LayoutDispenserStubDto dispenser;
+    public LayoutWebBackpackStubDto webBackpack;
+    public LayoutWebKillerGhostStubDto webKillerGhost;
     public LayoutConveyorStubDto conveyor;
     public LayoutTeleportalStubDto teleportal;
     public LayoutRatHeistStubDto ratHeist;
@@ -759,7 +871,9 @@ public class PartDto
     public string id;
     /** 作者可读名（如「开局」「一分钟后」）。 */
     public string label;
-    /** 停放方向（缺省 down/30）。P1 的 park 不生效（初始偏移恒 0）。 */
+    /** 停放方向（缺省 down/60，≈50 格——v3.4 由 30 上调，太近开局可见/转场穿模）
+     *  ＝本阶段退场去向：入场恒 park→0、退场恒 0→park。
+     * P1 初始在场偏移恒 0（默认态 Idle_Active），其 park 仅作 Exit 目的地。 */
     public PartParkDto park;
     /** 背景层是否随本 P 替换（默认 false：仅换桌台/地形时保持天空/海面不变）。 */
     public bool replaceBackground;
@@ -775,8 +889,9 @@ public class PartTransitionDto
     public string toPartId;
     /** 恒为 "partTransition"（与普通机关动画区分）。 */
     public string kind;
-    /** "sink_then_rise"（先后：out 完成后 in 开始）| "slide_cross"（并行）|
-     *  "wave_wipe"（slide 节奏 + 预置海浪物件包 + fx，素材见 docs/10 附录 B）。 */
+    /** "sink_then_rise"（先后：out 完成后 in 开始）| "slide_cross"（并行）。
+     *  wave_wipe 已下架（v3.4，以后再做）：烘焙按非 sink 即 slide 处理，
+     *  旧档残留值天然按 slide_cross 行为运行。 */
     public string preset;
     /** fromPart 的稳定时长（秒，唯一权威；>0）。 */
     public float stableSeconds;
@@ -786,12 +901,19 @@ public class PartTransitionDto
     public float inSeconds;
     /** 可选 fx 组 id（shake/flash，M3 绑定）。 */
     public string fxGroupId;
-    /** 转场结束、新 P 稳定后是否清理旧 P 内容物（TriggerKillAttachments，默认 true）。 */
+    /** 下一 P 上浮完成（Stable）后是否清理旧 P 内容物（TriggerKillAttachments，
+     *  默认 true）。v3.4/D16：散落食材销毁；锅/盘/脏盘/灭火器等带重生行为的道具
+     *  走原版重生、落到新 P 空闲站台（跨 P 携带，PartSlotRespawnGuard 拦停非在场
+     *  slot 站台）。 */
     public bool cleanupContents;
-    /** Stable 后延迟 N 秒再执行清理（默认 0）。 */
+    /** Stable（新 P 就位）后延迟 N 秒再执行清理（默认 0，烘焙按 0.1s 下限兜底——
+     *  ServerTriggerTimer 仅 m_timer>0 倒计时）。 */
     public float cleanupDelaySeconds;
-    /** Design 根 Loose-only 大扫除（全场散落食材，默认 true）。 */
+    /** 已废弃（v3.4/D15）：Design 根大扫除整段移除，base 层任何东西不清扫。
+     *  字段保留仅为旧档反序列化兼容，烘焙一律忽略。 */
     public bool killLooseEverywhere;
+    /** 已废弃（v3.4/D15）：同 killLooseEverywhere，烘焙一律忽略（D14 作废）。 */
+    public bool killAttachedEverywhere;
 }
 
 /** 分 P 顶层配置。运行时无循环（决策 Q2）——循环体验用「拷贝分 P」手动延长链。 */
@@ -829,6 +951,10 @@ public class LayoutDocumentDto
     /** CampaignGameEnvironment/KitchenLoaderManager ceiling height. */
     public bool hasCeilingHeight;
     public float ceilingHeight;
+    /** Chefs/Player N Container + HeadLight（对齐 s_oc1_story_4_2）；由 ChefHeadLightBakery 写回。 */
+    public bool chefHeadLightsEnabled;
+    /** 厨师头灯 Spot Light.range（缺省/0 = 10，与 OC1 4-2 一致）。 */
+    public float chefHeadLightRange;
     public LayoutItemDto[] items;
     /** Editable floor/background objects (plane floors + themed floor prefabs). */
     public FloorDto[] floors;
@@ -854,6 +980,8 @@ public class LayoutDocumentDto
     public LayoutButtonEventDataDto buttonEvents;
     /** 同轴按钮组（≥2 按钮时间窗内集齐才触发；仅全量写回携带）。 */
     public LayoutCoaxialLinkDataDto coaxialLinks;
+    /** 随机触发器（信号/按钮输入 → 按权重随机选一候选发出；仅全量写回携带）。 */
+    public LayoutRandomTriggerDataDto randomTriggers;
     /** 游戏相机（背景色 / FOV；仅全量写回携带）。 */
     public CameraInfoDto cameraInfo;
     /** Art/Lights 下非 prefab 灯光（颜色/强度/范围/启用；仅全量写回携带）。 */
@@ -893,8 +1021,21 @@ public class LightInfoDto
     public float range;
     public float spotAngle;
     public bool enabled;
-    /** 只读：世界欧拉角快照（度）。 */
+    /** 世界位置快照；positionEdited=true 时写回 transform.position。 */
+    public LayoutVector3 position;
+    /** true 才写回 position（防旧文档误移灯）。 */
+    public bool positionEdited;
+    /** 世界欧拉角快照（度）；rotationEdited=true 时写回 transform.eulerAngles。 */
     public LayoutVector3 eulerAngles;
+    /** true 才写回 eulerAngles。 */
+    public bool rotationEdited;
+    /** LightShadows：0=None 1=Hard 2=Soft。 */
+    public int shadows;
+    public float shadowStrength;
+    public float bounceIntensity;
+    public float innerSpotAngle;
+    /** LightmapBakeType 枚举整型（0=Realtime 1=Baked 2=Mixed 等）。 */
+    public int lightmapping;
 }
 
 /** A floor/background surface object in the scene. */
@@ -1521,8 +1662,8 @@ public class SetExportStartDto
     public List<string> setNames;
     /** 导出模式：levels（仅关卡集）| deps（仅依赖包）| all（全部一起，默认）。 */
     public string mode;
-    /** deps 模式：依赖包打包版本（独立于运行时 SSOT 版本与关卡集版本，默认 1.0.0）。
-     *  用于 zip 命名与包内 package_version.txt，不参与 requires.txt 门控。 */
+    /** deps 模式：依赖包打包版本（默认 = StubVersion.Value；建议与 runtimeVersion 一致）。
+     *  用于 zip 命名与 package_version.txt；关卡 requires.txt 仍写 runtimeVersion 门控。 */
     public string depsVersion;
     /** 逐关卡选择性导出（v1 仅单集导出有效；元素 = 场景名，即 LevelInfoSO.sceneName /
      *  scenes/ 下文件名去扩展）。null/空 = 全量导出（与历史行为一致）。部分导出时
@@ -1588,7 +1729,11 @@ public class DepsManifestDto
     public string runtimeState;
     /** 统一运行时 SSOT 版本（StubVersion.Value，requires.txt 门控用；与打包版本无关）。 */
     public string runtimeVersion;
-    /** 上次依赖包导出使用的打包版本（无记录 = ""，前端回落默认 v1.0.0）。 */
+    /** web/public/Loader.dll 的 PluginVersion（version.txt 或 Loader.cs）。 */
+    public string loaderVersion;
+    /** Loader.PluginVersion 与 runtimeVersion 一致（不一致时导出会阻断）。 */
+    public bool versionsAligned;
+    /** 上次依赖包导出使用的打包版本（无记录 = ""，前端回落 runtimeVersion）。 */
     public string lastDepsVersion;
     public List<DepsManifestEntryDto> entries;
 }

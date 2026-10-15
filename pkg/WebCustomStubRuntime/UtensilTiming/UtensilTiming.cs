@@ -45,8 +45,13 @@ namespace CustomStub
         private static int s_ticksSinceScene;
         private const int MinTicksBeforeEarlyStop = 3;
 
-        /// <summary>扫描绝对上限（tick 数；ticker 30 帧一次 ⇒ ~2Hz ⇒ 约 30s）。</summary>
-        private const int MaxTicksBeforeForceStop = 60;
+        /// <summary>扫描绝对上限（tick 数；ticker 30 帧一次 ⇒ ~2Hz ⇒ 约 8s）。</summary>
+        private const int MaxTicksBeforeForceStop = 16;
+
+        /// <summary>连续无新应用（applied==0）达此 tick 数则放弃未匹配配置并早停。</summary>
+        private const int MaxTicksNoProgressBeforeAbandon = 6;
+
+        private const string CloneSuffix = "(Clone)";
 
         /// <summary>全场景是否存在生效中的阈值接管配置（burn/overMix > 0）。
         /// HarmonyPatches 十个热路径前缀/后缀的首行快速放行依据（v5 性能优化）：
@@ -55,6 +60,12 @@ namespace CustomStub
         /// 场景切换时清零重估（见 OnSceneChanged；重估必然早于任何一次有效阈值
         /// 判定——煮糊/过混是秒级过程，Tick 0.5s 内即置位）。</summary>
         private static bool s_hasAnyActive;
+
+        private static System.Collections.Generic.List<WrapperConfig> s_cachedWrappers;
+        private static Component[] s_cachedCookingHandlers;
+        private static Component[] s_cachedMixingHandlers;
+        private static int s_ticksWithZeroProgress;
+        private static int s_lastTickApplied;
 
         internal static bool HasAnyActive
         {
@@ -71,9 +82,14 @@ namespace CustomStub
         {
             s_scanComplete = false;
             s_ticksSinceScene = 0;
+            s_ticksWithZeroProgress = 0;
+            s_lastTickApplied = 0;
             s_prevPrinted = "";
             s_hasAnyActive = false;
             s_applyFailWarned.Clear();
+            s_cachedWrappers = null;
+            s_cachedCookingHandlers = null;
+            s_cachedMixingHandlers = null;
         }
 
         internal static bool IsScanComplete()
@@ -102,27 +118,27 @@ namespace CustomStub
                 if (mix > 0f)
                     WriteHandlerField(utensilRoot, GameApi.MixingHandlerType, GameApi.MixingTimeField, mix);
 
-                if (burn > 0f || overMix > 0f)
+                var timing = utensilRoot.GetComponent<UtensilTiming>();
+                if (timing == null)
                 {
-                    var timing = utensilRoot.GetComponent<UtensilTiming>();
-                    if (timing == null)
-                    {
-                        timing = utensilRoot.AddComponent<UtensilTiming>();
+                    timing = utensilRoot.AddComponent<UtensilTiming>();
+                    if (burn > 0f || overMix > 0f)
                         StubLog.Dbg("[UtensilTiming] 已挂载: " + utensilRoot.name
                             + "（cook=" + cook + " burn=" + burn + " mix=" + mix + " over=" + overMix + "）");
-                    }
-                    timing.m_cookTime = cook;
-                    timing.m_burnTime = burn;
-                    timing.m_mixTime = mix;
-                    timing.m_overMixTime = overMix;
-                    // 阈值接管生效中：Harmony 前缀快速放行标志置位 + 确保补丁已装
+                }
+                timing.m_cookTime = cook;
+                timing.m_burnTime = burn;
+                timing.m_mixTime = mix;
+                timing.m_overMixTime = overMix;
+
+                if (burn > 0f || overMix > 0f)
+                {
                     s_hasAnyActive = true;
                     EntryPoint.EnsureUtensilTimingPatches();
                 }
             }
             catch (Exception ex)
             {
-                // ticker 每 ~0.3s 重试——同一失败只报一次（per 锅名）
                 if (s_applyFailWarned.Add(utensilRoot.name))
                     StubLog.LogWarn("[UtensilTiming] 应用失败 " + utensilRoot.name + ": " + ex.Message);
             }
@@ -138,7 +154,6 @@ namespace CustomStub
         {
             if (handlerType == null || field == null)
             {
-                // 反射缺失 = 配了时间但写不进去（静默失效），必须可见（只报一次）
                 if (!s_writeFieldReflectionWarned)
                 {
                     s_writeFieldReflectionWarned = true;
@@ -184,8 +199,57 @@ namespace CustomStub
                     + " CookTimeField=" + (GameApi.CookingTimeField != null)
                     + " MixTimeField=" + (GameApi.MixingTimeField != null));
             }
+            EnsureWrapperCache();
+            var wrappers = s_cachedWrappers;
+            if (wrappers == null)
+                wrappers = new System.Collections.Generic.List<WrapperConfig>();
+
+            RefreshHandlerCachesIfNeeded();
+
+            int tagHits = 0;
+            int applied = 0;
+            for (int i = 0; i < wrappers.Count; i++)
+                wrappers[i].Consumed = 0;
+
+            for (int i = 0; i < wrappers.Count; i++)
+            {
+                var cfg = wrappers[i];
+                if (!cfg.HasValue || cfg.Abandoned)
+                    continue;
+                tagHits++;
+                int n = ApplyToSubtree(cfg.Tag, GameApi.CookingHandlerType, cfg.Cook, cfg.Burn, cfg.Mix, cfg.Over);
+                n += ApplyToSubtree(cfg.Tag, GameApi.MixingHandlerType, cfg.Cook, cfg.Burn, cfg.Mix, cfg.Over);
+                cfg.Consumed = n;
+                applied += n;
+            }
+            int fallback = 0;
+            for (int i = 0; i < wrappers.Count; i++)
+            {
+                var cfg = wrappers[i];
+                if (!cfg.HasValue || cfg.Abandoned || cfg.Consumed > 0 || string.IsNullOrEmpty(cfg.PrefabName))
+                    continue;
+                int n = ApplyByName(cfg, wrappers);
+                fallback += n;
+                applied += n;
+                if (n > 0)
+                    cfg.Consumed = n;
+            }
+            var summary = "tag" + tagHits + "/apply" + applied + (fallback > 0 ? "(兜底" + fallback + ")" : "");
+            if (summary != s_prevPrinted)
+            {
+                s_prevPrinted = summary;
+                StubLog.Dbg("[UtensilTiming] 扫描: " + summary);
+            }
+            s_lastTickApplied = applied;
+            EvaluateScanComplete(wrappers, applied);
+        }
+
+        private static void EnsureWrapperCache()
+        {
+            if (s_cachedWrappers != null)
+                return;
+            s_cachedWrappers = new System.Collections.Generic.List<WrapperConfig>();
             var tags = UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>();
-            var wrappers = new System.Collections.Generic.List<WrapperConfig>();
             for (int i = 0; i < tags.Length; i++)
             {
                 var tag = tags[i];
@@ -204,59 +268,40 @@ namespace CustomStub
                 cfg.HasValue = cook > 0f || burn > 0f || mix > 0f || over > 0f;
                 if (burn > 0f || over > 0f)
                 {
-                    // tag 直接携带阈值配置（含烘焙组件已挂、ApplyToSubtree 幂等跳过
-                    // 的路径）——标志与补丁必须在此置位/确保，不能只靠 ApplyValues。
                     s_hasAnyActive = true;
                     EntryPoint.EnsureUtensilTimingPatches();
                 }
-                // 真实 prefab 名（宿主实例化子物体名）：按名兜底匹配用
                 var baseStub = tag.GetComponent<PseudoPrefabStub>();
                 cfg.PrefabName = (baseStub != null && baseStub.pseudoPrefabSO != null)
                     ? baseStub.pseudoPrefabSO.prefabName : null;
-                wrappers.Add(cfg);
+                s_cachedWrappers.Add(cfg);
             }
-            int tagHits = 0;
-            int applied = 0;
-            // Pass 1：子树主路径
-            for (int i = 0; i < wrappers.Count; i++)
-            {
-                var cfg = wrappers[i];
-                if (!cfg.HasValue)
-                    continue;
-                tagHits++;
-                int n = ApplyToSubtree(cfg.Tag, GameApi.CookingHandlerType, cfg.Cook, cfg.Burn, cfg.Mix, cfg.Over);
-                n += ApplyToSubtree(cfg.Tag, GameApi.MixingHandlerType, cfg.Cook, cfg.Burn, cfg.Mix, cfg.Over);
-                cfg.Consumed = n;
-                applied += n;
-            }
-            // Pass 2：按名兜底（子树未消费的配置）
-            int fallback = 0;
-            for (int i = 0; i < wrappers.Count; i++)
-            {
-                var cfg = wrappers[i];
-                if (!cfg.HasValue || cfg.Consumed > 0 || string.IsNullOrEmpty(cfg.PrefabName))
-                    continue;
-                int n = ApplyByName(cfg, wrappers);
-                fallback += n;
-                applied += n;
-            }
-            var summary = "tag" + tagHits + "/apply" + applied + (fallback > 0 ? "(兜底" + fallback + ")" : "");
-            if (summary != s_prevPrinted)
-            {
-                s_prevPrinted = summary;
-                StubLog.Dbg("[UtensilTiming] 扫描: " + summary);
-            }
-            EvaluateScanComplete(wrappers, applied);
         }
 
-        /// <summary>配置全部应用或场景无 tag 时早停 ticker（前 MinTicksBeforeEarlyStop 次不早停，等按名兜底）。
-        ///
-        /// v12 绝对上限：原实现只要还有「有配置但没被消费」的 tag 就永不早停——
-        /// prefab 名不符 / handler 类型反射失败 / 被 IsUnderAnyWrapper 挡住的配置
-        /// 会让本方法永远返回「未完成」，于是 2Hz 的全场景 FindObjectsOfType +
-        /// 每 tag 两次 GetComponentsInChildren + FindAll(handler) 跑满整局。
-        /// 现加 MaxTicksBeforeForceStop 兜底：到点强制停扫并报告未匹配数量
-        /// （诊断信息不丢，性能不再被拖死）。</summary>
+        private static void RefreshHandlerCachesIfNeeded()
+        {
+            bool refresh = s_ticksSinceScene <= 2 || s_lastTickApplied > 0
+                || s_cachedCookingHandlers == null || s_cachedMixingHandlers == null;
+            if (!refresh)
+                return;
+            s_cachedCookingHandlers = ToComponentArray(GameApi.FindAll(GameApi.CookingHandlerType));
+            s_cachedMixingHandlers = ToComponentArray(GameApi.FindAll(GameApi.MixingHandlerType));
+        }
+
+        private static Component[] ToComponentArray(UnityEngine.Object[] raw)
+        {
+            if (raw == null || raw.Length == 0)
+                return new Component[0];
+            var list = new System.Collections.Generic.List<Component>();
+            for (int i = 0; i < raw.Length; i++)
+            {
+                var c = raw[i] as Component;
+                if (c != null)
+                    list.Add(c);
+            }
+            return list.ToArray();
+        }
+
         private static void EvaluateScanComplete(System.Collections.Generic.List<WrapperConfig> wrappers, int applied)
         {
             s_ticksSinceScene++;
@@ -267,38 +312,116 @@ namespace CustomStub
                 s_scanComplete = true;
                 return;
             }
-            if (applied <= 0)
+            if (AllConfigsResolved(wrappers))
             {
-                var allConsumed = true;
-                for (int i = 0; i < wrappers.Count; i++)
-                {
-                    var cfg = wrappers[i];
-                    if (cfg.HasValue && cfg.Consumed <= 0)
-                    {
-                        allConsumed = false;
-                        break;
-                    }
-                }
-                if (allConsumed)
-                {
-                    s_scanComplete = true;
-                    return;
-                }
+                s_scanComplete = true;
+                return;
+            }
+            if (applied <= 0)
+                s_ticksWithZeroProgress++;
+            else
+                s_ticksWithZeroProgress = 0;
+
+            if (s_ticksWithZeroProgress >= MaxTicksNoProgressBeforeAbandon)
+            {
+                AbandonUnresolved(wrappers, false);
+                s_scanComplete = true;
+                return;
             }
             if (s_ticksSinceScene < MaxTicksBeforeForceStop)
                 return;
+            AbandonUnresolved(wrappers, true);
+            s_scanComplete = true;
+        }
+
+        private static bool AllConfigsResolved(System.Collections.Generic.List<WrapperConfig> wrappers)
+        {
+            for (int i = 0; i < wrappers.Count; i++)
+            {
+                var cfg = wrappers[i];
+                if (cfg.HasValue && !cfg.Abandoned && cfg.Consumed <= 0)
+                    return false;
+            }
+            return true;
+        }
+
+        private static void AbandonUnresolved(System.Collections.Generic.List<WrapperConfig> wrappers, bool forceCap)
+        {
             var unmatched = 0;
             for (int i = 0; i < wrappers.Count; i++)
             {
                 var cfg = wrappers[i];
-                if (cfg.HasValue && cfg.Consumed <= 0)
-                    unmatched++;
+                if (!cfg.HasValue || cfg.Abandoned || cfg.Consumed > 0)
+                    continue;
+                cfg.Abandoned = true;
+                unmatched++;
             }
-            s_scanComplete = true;
-            if (unmatched > 0)
+            if (unmatched <= 0)
+                return;
+            var detail = BuildUnmatchedDetail(wrappers, 3);
+            if (forceCap)
+            {
                 StubLog.LogWarn("[UtensilTiming] 扫描已达上限（约 " + (MaxTicksBeforeForceStop / 2)
                     + "s）强制停止：仍有 " + unmatched + " 个锅具时间配置未匹配到 handler"
-                    + "（这些锅具走原版时间）。常见原因：prefab 名与实例名不符 / handler 类型反射失败。");
+                    + "（这些锅具走原版时间）。常见原因：prefab 名与实例名不符 / handler 类型反射失败。"
+                    + detail);
+            }
+            else
+            {
+                StubLog.LogWarn("[UtensilTiming] 连续 " + MaxTicksNoProgressBeforeAbandon
+                    + " 次扫描无新匹配，放弃 " + unmatched + " 个未匹配锅具时间配置（走原版时间）。"
+                    + detail);
+            }
+        }
+
+        private static string BuildUnmatchedDetail(System.Collections.Generic.List<WrapperConfig> wrappers, int maxNames)
+        {
+            var sb = new System.Text.StringBuilder();
+            int shown = 0;
+            for (int i = 0; i < wrappers.Count && shown < maxNames; i++)
+            {
+                var cfg = wrappers[i];
+                if (!cfg.HasValue || !cfg.Abandoned)
+                    continue;
+                if (string.IsNullOrEmpty(cfg.PrefabName))
+                    continue;
+                if (sb.Length > 0)
+                    sb.Append("; ");
+                sb.Append(cfg.PrefabName);
+                sb.Append("(handler×");
+                sb.Append(CountHandlersMatchingPrefab(cfg.PrefabName));
+                sb.Append(")");
+                shown++;
+            }
+            if (sb.Length == 0)
+                return "";
+            return " 示例: " + sb.ToString();
+        }
+
+        private static int CountHandlersMatchingPrefab(string prefabName)
+        {
+            if (string.IsNullOrEmpty(prefabName))
+                return 0;
+            int n = 0;
+            n += CountMatchingInArray(s_cachedCookingHandlers, prefabName);
+            n += CountMatchingInArray(s_cachedMixingHandlers, prefabName);
+            return n;
+        }
+
+        private static int CountMatchingInArray(Component[] handlers, string prefabName)
+        {
+            if (handlers == null)
+                return 0;
+            int n = 0;
+            for (int i = 0; i < handlers.Length; i++)
+            {
+                var handler = handlers[i];
+                if (handler == null)
+                    continue;
+                if (NamesMatch(handler.gameObject.name, prefabName))
+                    n++;
+            }
+            return n;
         }
 
         private static string s_prevPrinted = "";
@@ -313,6 +436,7 @@ namespace CustomStub
             public float Over;
             public bool HasValue;
             public int Consumed;
+            public bool Abandoned;
             public string PrefabName;
         }
 
@@ -328,7 +452,6 @@ namespace CustomStub
                 var handler = handlers[i];
                 if (handler == null)
                     continue;
-                // 有标记组件 = 已应用过（配置变更由 ResetAllPseudoPrefabs 重建后重新走这里）
                 if (handler.GetComponent<UtensilTiming>() != null)
                     continue;
                 ApplyValues(handler.gameObject, cook, burn, mix, over);
@@ -344,28 +467,28 @@ namespace CustomStub
         {
             int applied = 0;
             if (cfg.Cook > 0f || cfg.Burn > 0f)
-                applied += ApplyByNameOfKind(GameApi.CookingHandlerType, cfg, wrappers);
+                applied += ApplyByNameOfKind(GameApi.CookingHandlerType, cfg, wrappers, s_cachedCookingHandlers);
             if (cfg.Mix > 0f || cfg.Over > 0f)
-                applied += ApplyByNameOfKind(GameApi.MixingHandlerType, cfg, wrappers);
+                applied += ApplyByNameOfKind(GameApi.MixingHandlerType, cfg, wrappers, s_cachedMixingHandlers);
             if (applied > 0)
                 StubLog.Dbg("[UtensilTiming] 兜底按 prefab 名匹配: " + cfg.PrefabName
                     + "（cook=" + cfg.Cook + " burn=" + cfg.Burn + "）× " + applied);
             return applied;
         }
 
-        private static int ApplyByNameOfKind(Type handlerType, WrapperConfig cfg, System.Collections.Generic.List<WrapperConfig> wrappers)
+        private static int ApplyByNameOfKind(Type handlerType, WrapperConfig cfg,
+            System.Collections.Generic.List<WrapperConfig> wrappers, Component[] handlers)
         {
-            if (handlerType == null)
+            if (handlerType == null || handlers == null)
                 return 0;
-            var handlers = GameApi.FindAll(handlerType);
             for (int i = 0; i < handlers.Length; i++)
             {
-                var handler = handlers[i] as Component;
+                var handler = handlers[i];
                 if (handler == null)
                     continue;
                 if (handler.GetComponent<UtensilTiming>() != null)
                     continue;
-                if (handler.gameObject.name != cfg.PrefabName)
+                if (!NamesMatch(handler.gameObject.name, cfg.PrefabName))
                     continue;
                 if (IsUnderAnyWrapper(handler.transform, wrappers))
                     continue;
@@ -373,6 +496,22 @@ namespace CustomStub
                 return 1;
             }
             return 0;
+        }
+
+        private static bool NamesMatch(string instanceName, string prefabName)
+        {
+            if (string.IsNullOrEmpty(instanceName) || string.IsNullOrEmpty(prefabName))
+                return false;
+            return NormalizeInstanceName(instanceName) == prefabName;
+        }
+
+        private static string NormalizeInstanceName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return name;
+            if (name.EndsWith(CloneSuffix, StringComparison.Ordinal))
+                return name.Substring(0, name.Length - CloneSuffix.Length);
+            return name;
         }
 
         /// <summary>是否处于任一带时间 tag 的包装子树内（受管领地，兜底不越界）。</summary>

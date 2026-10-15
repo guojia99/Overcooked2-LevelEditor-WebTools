@@ -24,8 +24,14 @@ import {
   finalizeFloor
 } from "./floors";
 import { raftPiecesForRect } from "../raft";
-import { STUB_KIND_BY_PREFAB_ID, isIngredientSprayId } from "./stubControls";
+import {
+  STUB_KIND_BY_PREFAB_ID,
+  isIngredientSprayId,
+  normalizeSpeedControlForDoc,
+  stripMisplacedSpeedControl,
+} from "./stubControls";
 import { partLevelActive, partIdOf } from "./partLevel";
+import { clampChefHeadLightRange } from "./lightsUtil";
 import type {
   LayoutItem,
   FloorObject,
@@ -33,7 +39,8 @@ import type {
   AnimControlData,
   ButtonLinkData,
   ButtonEventData,
-  CoaxialLinkData
+  CoaxialLinkData,
+  RandomTriggerData
 } from "../types";
 
 /** 分 P：P 层物件/生成物（木筏拼板、主题地板瓦片）写回 slot 根下的子目录。
@@ -100,6 +107,39 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
         startReversed: tr.startReversed === true,
         turnAngle: tr.turnAngle ?? 180,
       };
+    }
+  }
+  // 按钮控速（步带/传送带）：仅这两类物品允许携带；档位过滤 0 值、钳制 2~8 档
+  //（不足 2 档整体丢弃 = 未配置；后端写回同款校验）。
+  const scCarrier = rest.stubKind === "Travelator" ? rest.travelator : rest.stubKind === "Conveyor" ? rest.conveyor : null;
+  if (scCarrier?.speedControl) {
+    const baseSpeed =
+      rest.stubKind === "Travelator"
+        ? rest.travelator?.speed ?? 2.5
+        : rest.conveyor?.conveySpeed ?? 0.5;
+    const normalized = normalizeSpeedControlForDoc(scCarrier.speedControl, baseSpeed);
+    if (normalized) scCarrier.speedControl = normalized;
+    else delete scCarrier.speedControl;
+  } else if (rest.travelator?.speedControl && rest.stubKind !== "Travelator") {
+    delete rest.travelator.speedControl;
+  } else if (rest.conveyor?.speedControl && rest.stubKind !== "Conveyor") {
+    delete rest.conveyor.speedControl;
+  }
+  stripMisplacedSpeedControl(rest);
+  // 生成器按钮批次：仅 AttachingFoodSpawner 允许携带；数量 1~50、间隔 >0、冷却 ≥0。
+  if (rest.foodSpawner) {
+    if (rest.stubKind !== "AttachingFoodSpawner") {
+      delete rest.foodSpawner;
+    } else if (rest.foodSpawner.startByButton) {
+      rest.foodSpawner.startByButton = true;
+      rest.foodSpawner.batchCount = Math.min(50, Math.max(1, Math.round(rest.foodSpawner.batchCount ?? 1)));
+      rest.foodSpawner.buttonCooldown = Math.max(0, rest.foodSpawner.buttonCooldown ?? 5);
+      if (!((rest.foodSpawner.triggerTime ?? 0) > 0)) rest.foodSpawner.triggerTime = 5;
+      rest.foodSpawner.triggerAtStart = false;
+    } else {
+      delete rest.foodSpawner.startByButton;
+      delete rest.foodSpawner.batchCount;
+      delete rest.foodSpawner.buttonCooldown;
     }
   }
   if (rest.stubKind === "IngredientDecor" || rest.ingredientDecor) {
@@ -315,6 +355,12 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     return { links: S.coaxialLinks };
   };
 
+  // 随机触发器引用场景物品/其他节点，与 animControls 一样只在全量保存时携带。
+  const randomTriggerDoc = (): RandomTriggerData | undefined => {
+    if (only) return undefined;
+    return { links: S.randomTriggers };
+  };
+
   if (only === "items" || only === "decor") {
     return {
       sceneAssetPath: S.scenePath,
@@ -354,6 +400,9 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
         .concat(themedItems),
       floors: serializeFloorsForDoc(),
       animControls: animDoc(),
+      // 步带（floor 层）的按钮控速触发源在 switchLinks——floors 作用域必须携带，
+      // 否则 SpeedControlBakery 收到无触发源文档报「未绑定任何开关」并跳过烘焙。
+      switchLinks: S.switchLinks,
     };
   }
 
@@ -361,6 +410,8 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     sceneAssetPath: S.scenePath,
     hasCeilingHeight: S.hasCeilingHeight,
     ceilingHeight: Math.max(0, Math.min(10, S.ceilingHeight)),
+    chefHeadLightsEnabled: S.chefHeadLightsEnabled,
+    chefHeadLightRange: clampChefHeadLightRange(S.chefHeadLightRange),
     partLevel: S.partLevel ?? undefined,
     items: S.items.map(serializeItemForDoc).concat(raftItems).concat(themedItems),
     floors: serializeFloorsForDoc(),
@@ -369,6 +420,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     buttonLinks: buttonLinkDoc(),
     buttonEvents: buttonEventDoc(),
     coaxialLinks: coaxialLinkDoc(),
+    randomTriggers: randomTriggerDoc(),
     // 相机与灯光仅随全量写回（作用域保存不携带，Unity 侧 likewise no-op）。
     // cameraInfo 为 null 时省略字段（JSON.stringify 丢弃 undefined），
     // 后端 JsonUtility 对缺失字段得 null → ApplyCameraInfo no-op。
@@ -380,6 +432,13 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
 export function scopedSaveMeta(): { scope: SaveScope; label: string; title: string } {
   if (S.currentLayer === "anim") {
     return { scope: "", label: "🎬 动画组+全部", title: "动画层写回：连同物品/地板/背景一起保存（动画组需要完整文档）" };
+  }
+  if (S.currentLayer === "lights") {
+    return {
+      scope: "",
+      label: "💡 灯光+全部",
+      title: "灯光层写回：连同场景灯光、物品/地板/背景一起全量保存",
+    };
   }
   if (S.currentLayer === "decor") {
     return { scope: "decor", label: "🎯 仅装饰", title: "仅写回装饰（不修改物品、地板、背景）" };

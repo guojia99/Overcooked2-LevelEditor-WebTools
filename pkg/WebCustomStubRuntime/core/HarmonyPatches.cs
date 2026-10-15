@@ -42,7 +42,17 @@ namespace CustomStub
             try
             {
                 if (GameApi.GetComponent(_gameObject, GameApi.PlayerControlsType) != null)
+                {
                     PushableVoidFall.DetachPlayerFromVoidFallPots(_gameObject);
+                    // Web 背包落水清空：穿戴者落水 → 其背上的背包丢失全部存货
+                    var wornMarker = _gameObject.GetComponentInChildren<WebBackpackChild>(true);
+                    if (wornMarker != null && wornMarker.storage != null)
+                        wornMarker.storage.OnFellInWater();
+                }
+                // 背包本体落水（未穿戴时坠水）
+                var marker = _gameObject.GetComponent<WebBackpackChild>();
+                if (marker != null && marker.storage != null)
+                    marker.storage.OnFellInWater();
                 if (PushableVoidFall.ShouldIgnoreKillPlane(_gameObject))
                     return false;
             }
@@ -63,7 +73,126 @@ namespace CustomStub
         // 调用方 ReceivePickUpEvent 在 HandlePickup 返回后无任何后续动作，零副作用）；
         // 未命中/异常=放行原方法（原版行为；异常时空气退化为取出兜底食材一次）。
 
-        /// <summary>ServerPickupItemSpawner.HandlePickup 前缀。</summary>
+        // ============ Web 储物背包取出/放入拦截（WebBackpack，3.8.10） ============
+        //
+        // 取出：ServerBackpackDispenser.HandlePickup 前缀（空手 = 队首食材型节点）。
+        // 放入/盘接：ServerPlacementContainer.CanHandlePlacement + HandlePlacement 前缀
+        // （CanHandlePlacement 对 Web 背包为条件覆盖——原版 CanCombine 链不认空盘）。
+
+        private static bool ServerBackpackDispenserHandlePickupPrefix(object __instance, object _carrier, object _directionXZ)
+        {
+            try
+            {
+                var wb0 = WebBackpackStorage.FindForDispenser(__instance as Component);
+                if (wb0 == null)
+                {
+                    var missName = __instance is Component ? ((Component)__instance).name : "?";
+                    StubLog.Log("[WebBackpack] 取出前缀: 未命中背包表（原版行为）→ " + missName);
+                    return true;
+                }
+                if (wb0.TryDispense(_carrier, _directionXZ))
+                    return false;
+                if (wb0.IsWorn())
+                    return false;
+                var compName = __instance is Component ? ((Component)__instance).name : "?";
+                StubLog.Log("[WebBackpack] 取出前缀: 未背起，放行原版 → " + compName);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("wbPickup", "[CustomStub.Harmony] WebBackpack 取出前缀异常（放行原方法）: " + ex.Message);
+            }
+            return true;
+        }
+
+        /// <summary>容器组件 → WebBackpackStorage（层级无关）：先查 child 标记
+        /// （背包被背起后 child 挂在厨师身上，父级查找必然落空——2026-10-12
+        /// 17:46 场次放置探针实证），再退自身/父级。</summary>
+        private static WebBackpackStorage FindWebBackpack(Component comp)
+        {
+            if (comp == null)
+                return null;
+            var marker = comp.GetComponent<WebBackpackChild>();
+            if (marker != null && marker.storage != null)
+                return marker.storage;
+            var wb = comp.GetComponent<WebBackpackStorage>();
+            if (wb != null)
+                return wb;
+            return comp.GetComponentInParent<WebBackpackStorage>();
+        }
+
+        /// <summary>ServerPlacementContainer.CanHandlePlacement 前缀（3.8.10 起为
+        /// 条件覆盖）：Web 背包完全接管放置判定——原版 CanCombine 链不认「空盘
+        /// 接取出」，且组合节点的合并语义与离散格位不符。非背包容器照常放行。</summary>
+        private static float s_wbPlaceProbeNext;
+
+        private static bool ServerPlacementCanHandlePlacementPrefix(object __instance, object _carrier,
+            ref bool __result)
+        {
+            try
+            {
+                var comp = __instance as Component;
+                if (comp == null)
+                    return true;
+                var wb = FindWebBackpack(comp);
+                if (wb == null)
+                {
+                    // 交互路由探针：背包正被背着时发生的「非背包」放置交互——
+                    // 若玩家本意是放进背包，说明客户端没把背包列为放置目标。
+                    if (WebBackpackStorage.AnyWorn && Time.realtimeSinceStartup > s_wbPlaceProbeNext)
+                    {
+                        s_wbPlaceProbeNext = Time.realtimeSinceStartup + 2f;
+                        var probeItem = "";
+                        if (_carrier != null)
+                        {
+                            var inspect = _carrier.GetType().GetMethod("InspectCarriedItem",
+                                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                                null, System.Type.EmptyTypes, null);
+                            var carried = inspect != null ? inspect.Invoke(_carrier, null) as GameObject : null;
+                            probeItem = carried != null ? carried.name : "<空手>";
+                        }
+                        StubLog.Log("[WebBackpack] 放置探针: 交互→其它容器 " + comp.name
+                            + "（携带=" + probeItem + "；若预期目标是背包=客户端未把背包列为放置目标）");
+                    }
+                    WebBackpackStorage.WireServerPlacementReferences(comp.gameObject);
+                    return true;
+                }
+                WebBackpackStorage.WireServerPlacementReferences(comp.gameObject);
+                __result = wb.CanHandlePlacementCarrier(_carrier);
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("wbPlaceCan", "[CustomStub.Harmony] WebBackpack 放置判定前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        /// <summary>ServerPlacementContainer.HandlePlacement 前缀：Web 背包已背起时
+        /// 走统一放置入口（空盘接 / 盘装内容搬入 / 食材放入）。</summary>
+        private static bool ServerPlacementHandlePlacementPrefix(object __instance, object _carrier)
+        {
+            try
+            {
+                var comp = __instance as Component;
+                if (comp == null || _carrier == null)
+                    return true;
+                WebBackpackStorage.WireServerPlacementReferences(comp.gameObject);
+                var wb = FindWebBackpack(comp);
+                if (wb == null)
+                    return true;
+                if (!wb.IsWorn())
+                    return true;
+                if (wb.TryHandlePlacementCarrier(_carrier))
+                    return false;
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("wbPlacePre", "[CustomStub.Harmony] WebBackpack 放入前缀异常: " + ex.Message);
+            }
+            return true;
+        }
+
         private static bool ServerPickupHandlePickupPrefix(object __instance)
         {
             if (!RandomCrate.HasAnyAirPending)
@@ -123,6 +252,7 @@ namespace CustomStub
             {
                 int total, assembled;
                 PushablePot.FlushPendingAssemblies(out total, out assembled);
+                WebBackpackStorage.FlushPendingAssemblies();
                 if (total > 0)
                     NetDiagnostics.OnScanEntitiesBegin(total, assembled);
             }
@@ -223,6 +353,33 @@ namespace CustomStub
             get
             {
                 return typeof(HarmonyPatches).GetMethod("ServerPickupHandlePickupPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerBackpackDispenserHandlePickupPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("ServerBackpackDispenserHandlePickupPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPlacementCanHandlePlacementPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("ServerPlacementCanHandlePlacementPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPlacementHandlePlacementPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("ServerPlacementHandlePlacementPrefix",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
             }
         }
@@ -703,6 +860,44 @@ namespace CustomStub
         internal static System.Reflection.MethodInfo ClientTriggerQueueDoEventPostfixMethod
         {
             get { return typeof(HarmonyPatches).GetMethod("ClientTriggerQueueDoEventPostfix", BF); }
+        }
+
+        // ---- 饮料/酱料机 PseudoPrefabDispenser.Setup 前缀（无 ItemCrateCosmeticDecisions 时跳过） ----
+        // 写回路径会给饮料机挂 DispenserStub + 派生运行时；宿主 Setup 按食材箱画箱盖 UV，
+        // child 无 PickupItemSpawner / ItemCrateCosmeticDecisions → NRE 中断 ReloadPseudoAssetsFull。
+
+        private static System.Type s_itemCrateCosmeticDecisionsType;
+
+        private static bool PseudoPrefabDispenserSetupPrefix(object __instance)
+        {
+            try
+            {
+                if (__instance == null)
+                    return true;
+                var childField = __instance.GetType().GetField("childGameObject",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (childField == null)
+                    return true;
+                var child = childField.GetValue(__instance) as GameObject;
+                if (child == null)
+                    return true;
+                if (s_itemCrateCosmeticDecisionsType == null)
+                    s_itemCrateCosmeticDecisionsType = GameApi.Find("ItemCrateCosmeticDecisions");
+                if (s_itemCrateCosmeticDecisionsType == null)
+                    return true;
+                if (GameApi.GetComponent(child, s_itemCrateCosmeticDecisionsType) == null)
+                    return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("dispSetup", "[CustomStub.Harmony] PseudoPrefabDispenser.Setup 前缀异常（放行原方法）: " + ex.Message);
+            }
+            return true;
+        }
+
+        internal static System.Reflection.MethodInfo PseudoPrefabDispenserSetupPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("PseudoPrefabDispenserSetupPrefix", BF); }
         }
 
         // ---- 双 stub 自愈（2026-10-06 真机卡加载事故） ----

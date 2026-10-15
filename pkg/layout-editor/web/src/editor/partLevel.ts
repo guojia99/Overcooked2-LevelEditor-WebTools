@@ -11,7 +11,7 @@ import type { PartLevelConfig, PartConfig, PartParkConfig, PartTransitionConfig 
 import { openModal, closeModal, closeAllModals } from "../modals";
 import { draw } from "./render";
 import { setStatus } from "./status";
-import { pushHistory } from "./historyOps";
+import { pushHistory, markDirty } from "./historyOps";
 import { clearSelection, clearFloorSelection } from "./selection";
 import { hideDetail, hideContextMenu } from "./ui/overlay";
 import { setLayer } from "./init";
@@ -134,7 +134,8 @@ export function rebuildDefaultTransitions(pl: PartLevelConfig): void {
     kept.push(t);
   }
   pl.transitions = kept;
-  const preset = pl.defaultTransitionPreset ?? "sink_then_rise";
+  // wave_wipe（海浪拍击）已下架（v3.4，以后再做）——旧档残留按 slide_cross 归一。
+  const preset = pl.defaultTransitionPreset === "wave_wipe" ? "slide_cross" : (pl.defaultTransitionPreset ?? "sink_then_rise");
   for (let i = 0; i + 1 < pl.parts.length; i++) {
     const from = pl.parts[i];
     const to = pl.parts[i + 1];
@@ -154,7 +155,6 @@ export function rebuildDefaultTransitions(pl: PartLevelConfig): void {
       inSeconds,
       cleanupContents: true,
       cleanupDelaySeconds: 0,
-      killLooseEverywhere: true,
     });
   }
 }
@@ -195,11 +195,25 @@ export function openEnableWizard(): void {
   });
 }
 
+/** 停泊深度基数（决策 D13，v3.4 修订）：第 k 阶段停 k×基数（米），静止位互不重叠。
+ *  60m ≈ 50 格——基数 15 时停泊平台就在 base 边上，开局能直接看到下一 P、
+ *  退场/入场途中互相穿模（2026-10-15 实测）。 */
+const PARK_BASE = 60;
+
+/** 第 k（1 起）阶段的默认停泊深度。 */
+function defaultParkOffset(index1Based: number): number {
+  return Math.min(1000, PARK_BASE * index1Based);
+}
+
 /** 从关卡配置或启用向导提交：创建分 P 结构并归属存量物件。 */
 export function applyPartLevelEnable(count: number, assign: "base" | "p1"): void {
   const parts: PartConfig[] = [];
   for (let i = 1; i <= count; i++) {
-    parts.push({ id: `p${i}`, label: i === 1 ? "开局" : `阶段 ${i}` });
+    parts.push({
+      id: `p${i}`,
+      label: i === 1 ? "开局" : `阶段 ${i}`,
+      park: { axis: "down", offset: defaultParkOffset(i) },
+    });
   }
   const pl: PartLevelConfig = { enabled: true, parts, transitions: [] };
   rebuildDefaultTransitions(pl);
@@ -223,7 +237,11 @@ export function addPartInteractive(): void {
   if (!partLevelActive()) return;
   const pl = S.partLevel!;
   const id = nextPartId();
-  pl.parts.push({ id, label: `阶段 ${pl.parts.length + 1}` });
+  pl.parts.push({
+    id,
+    label: `阶段 ${pl.parts.length + 1}`,
+    park: { axis: "down", offset: defaultParkOffset(pl.parts.length + 1) },
+  });
   rebuildDefaultTransitions(pl);
   pushHistory();
   renderPartBar();
@@ -243,32 +261,41 @@ export function openManageModal(): void {
   if (!partLevelActive()) return;
   const pl = S.partLevel!;
   const axisLabel: Record<string, string> = { down: "↓ 下", up: "↑ 上", left: "← 左", right: "→ 右" };
+  // wave_wipe（海浪拍击）已下架（v3.4，以后再做）；旧档残留值在回读时归一为 slide_cross。
   const presetLabel: Record<string, string> = {
     sink_then_rise: "下沉再上浮（先后）",
     slide_cross: "平移接力（并行）",
-    wave_wipe: "海浪拍击（并行 + 海浪演出）",
   };
   const rows = pl.parts
-    .map((p) => {
+    .map((p, pi) => {
       const n = countPartObjects(p.id);
+      // park 未设置时按序号默认（k×基数）回显，与新开向导/一键一致。
+      const parkOff = p.park?.offset ?? defaultParkOffset(pi + 1);
+      const parkCell = `<span class="part-park-cell">
+            <select class="part-axis" style="width:80px">
+              ${["down", "up", "left", "right"].map((a) => `<option value="${a}"${(p.park?.axis ?? "down") === a ? " selected" : ""}>${axisLabel[a]}</option>`).join("")}
+            </select>
+            <input type="number" class="part-offset" min="5" max="1000" step="1" value="${parkOff}" style="width:62px" title="退场去向：本阶段被替换时 slot 根的下沉/平移距离（米，5~1000，建议 ≥60≈50 格——太近开局会看见停泊平台、转场互相穿模），入场恒从该位置回零${p.id === "p1" ? "；P1 开局在场（偏移 0），此值仅作其退场方向" : "；本阶段内物件相对高度不变"}" />
+            <span class="part-offset-unit">m</span>
+          </span>`;
       return `
       <tr data-pid="${p.id}">
         <td class="part-id">${p.id.toUpperCase()}</td>
         <td><input type="text" class="part-label" value="${p.label ?? ""}" placeholder="名称" style="width:130px" /></td>
-        <td>
-          <span class="part-park-cell">
-            <select class="part-axis" style="width:80px">
-              ${["down", "up", "left", "right"].map((a) => `<option value="${a}"${(p.park?.axis ?? "down") === a ? " selected" : ""}>${axisLabel[a]}</option>`).join("")}
-            </select>
-            <input type="number" class="part-offset" min="5" max="200" step="1" value="${p.park?.offset ?? 30}" style="width:62px" title="停放偏移（米，5~200）" />
-            <span class="part-offset-unit">m</span>
-          </span>
-        </td>
+        <td>${parkCell}</td>
         <td class="part-count">${n.items} 物品 / ${n.floors} 地板</td>
         <td>${p.id === "p1" ? '<span class="modal-hint" style="margin:0">开局段</span>' : mBtnHtml("删除", "small", { "data-del": p.id })}</td>
       </tr>`;
     })
     .join("");
+  const oneClickRow = `
+      <div class="part-oneclick" style="display:flex;align-items:center;gap:6px;margin:8px 0 2px;flex-wrap:wrap">
+        <span class="modal-hint" style="margin:0">⚡ 一键进退场：按序号错开停泊深度（第 k 阶段停 k×基数），静止位互不干扰</span>
+        <span class="part-offset-unit">基数</span>
+        <input type="number" class="oc-base" min="5" max="500" step="1" value="${PARK_BASE}" style="width:54px" title="停泊深度基数（米），5~500，建议 ≥60（≈50 格，太近开局会看见停泊平台）；例：基数 60 → P1 退 60m、P2 停 120m、P3 停 180m" />
+        <span class="part-offset-unit">m</span>
+        ${mBtnHtml("应用到全部阶段", "small", { "data-oneclick": "" })}
+      </div>`;
 
   // 转场卡片区（fx 组候选来自动画层的特效组）。
   const fxGroups = S.animControls.filter((g) => g.groupKind === "fx");
@@ -305,11 +332,10 @@ export function openManageModal(): void {
           <select class="t-fx" title="转场期的全屏特效（在动画层创建特效组后可选）">${fxOptions(t.fxGroupId)}</select>
         </label>
         <label class="m-field">清理延迟（秒）
-          <input type="number" class="t-delay" min="0" step="1" value="${t.cleanupDelaySeconds ?? 0}" title="新 P 稳定后延迟 N 秒再清理旧 P 内容物" />
+          <input type="number" class="t-delay" min="0" step="1" value="${t.cleanupDelaySeconds ?? 0}" title="新 P 上浮完成后延迟 N 秒再清理旧 P 内容物（锅/盘/灭火器等可重生道具随后落到新 P 的空闲站台=跨 P 携带）" />
         </label>
         <div class="part-check-row">
-          <label class="part-check"><input type="checkbox" class="t-cleanup"${t.cleanupContents !== false ? " checked" : ""} />转场后清理旧 P 内容物（盘上菜 / 锅内物 / 散落食材）</label>
-          <label class="part-check"><input type="checkbox" class="t-loose"${t.killLooseEverywhere !== false ? " checked" : ""} />全场散落食材大扫除</label>
+          <label class="part-check"><input type="checkbox" class="t-cleanup"${t.cleanupContents !== false ? " checked" : ""} title="新 P 上浮完成后清杀旧 P 子树内容物：散落食材销毁；锅具/盘子/脏盘/灭火器等带重生行为的道具走原版重生，落到新 P 的空闲站台（跨 P 携带）；玩家手持物与 base 层任何东西均不动" />新 P 就位后清理旧 P 内容物（食材销毁；锅/盘/灭火器落到新 P 站台）</label>
         </div>
       </div>
     </div>`
@@ -320,16 +346,17 @@ export function openManageModal(): void {
     pl.parts.length < 2
       ? `<div class="part-section-title">转场链<span class="part-section-hint">至少 2 个阶段才会生成转场</span></div>
          <p class="modal-hint">当前只有 1 个阶段：分 P 至少 2 个阶段才有切换玩法，可点顶栏「＋」添加。</p>`
-      : `<div class="part-section-title">转场链<span class="part-section-hint">线性推进 P1 → P2 → …；方向由各阶段的停放方向决定</span></div>
+      : `<div class="part-section-title">转场链<span class="part-section-hint">线性推进 P1 → P2 → …；方向由各阶段的退场去向（park）决定</span></div>
          ${transitionCards}`;
 
   const body = `
-    <p class="modal-hint" style="margin:0 0 8px">P1 为开局布局（停放不生效，初始偏移恒 0）；其余 P 的停放方向 = 转场退场后的去向与距离。保存后场景结构（slot 根/停放偏移）、转场动画与时间轴由写回链自动烘焙，无需手动衔接。</p>
+    <p class="modal-hint" style="margin:0 0 8px">退场去向 = 本阶段被替换时 slot 根的下沉/平移距离（入场恒从该位置回零）；P1 开局在场（偏移 0），其数值仅作退场方向。停泊位须互不重叠（否则转场时平台互相占据）——可用下方「一键进退场」按序号错开。须点「💾 写回 Unity」后才会更新 part_level.json 与场景转场烘焙。</p>
     <div class="part-section-title">阶段</div>
     <table class="part-table">
-      <thead><tr><th>阶段</th><th>名称</th><th>停放方向</th><th>内容量</th><th></th></tr></thead>
+      <thead><tr><th>阶段</th><th>名称</th><th>退场去向</th><th>内容量</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    ${oneClickRow}
     ${transitionsSection}
   `;
   const footer = modalFooterBtnsHtml("取消", "保存");
@@ -339,6 +366,16 @@ export function openManageModal(): void {
   root.querySelectorAll<HTMLButtonElement>("[data-del]").forEach((btn) => {
     btn.addEventListener("click", () => openDeleteConfirm(btn.dataset.del!));
   });
+  root.querySelector<HTMLButtonElement>("[data-oneclick]")?.addEventListener("click", () => {
+    const base = Math.max(5, Math.min(100, Number(root.querySelector<HTMLInputElement>(".oc-base")?.value ?? PARK_BASE) || PARK_BASE));
+    root.querySelectorAll<HTMLTableRowElement>("tr[data-pid]").forEach((tr, i) => {
+      const axisSel = tr.querySelector<HTMLSelectElement>(".part-axis");
+      const offInput = tr.querySelector<HTMLInputElement>(".part-offset");
+      if (axisSel) axisSel.value = "down";
+      if (offInput) offInput.value = String(Math.min(200, base * (i + 1)));
+    });
+    setStatus(`已按基数 ${base} 预填退场去向（P1=${base}m、P2=${base * 2}m…），点「保存」生效`, false);
+  });
   root.querySelector("[data-ok]")?.addEventListener("click", () => {
     root.querySelectorAll<HTMLTableRowElement>("tr[data-pid]").forEach((tr) => {
       const pid = tr.dataset.pid!;
@@ -346,16 +383,17 @@ export function openManageModal(): void {
       if (!p) return;
       const label = tr.querySelector<HTMLInputElement>(".part-label")?.value.trim();
       p.label = label || undefined;
+      // park 对全部阶段生效：P2+ = 停放/入场位，P1 = 退场去向（初始在场偏移恒 0）。
       const axis = (tr.querySelector<HTMLSelectElement>(".part-axis")?.value ?? "down") as PartParkConfig["axis"];
-      const offset = Math.max(5, Math.min(200, Number(tr.querySelector<HTMLInputElement>(".part-offset")?.value ?? 30) || 30));
-      if (pid === "p1") p.park = undefined;
-      else p.park = { axis, offset };
+      const offset = Math.max(5, Math.min(1000, Number(tr.querySelector<HTMLInputElement>(".part-offset")?.value ?? 60) || 60));
+      p.park = { axis, offset };
     });
     // 转场参数回读（钳制到合法区间）。
     root.querySelectorAll<HTMLElement>(".part-trans-card[data-tid]").forEach((card) => {
       const t = (pl.transitions ?? []).find((x) => x.id === card.dataset.tid);
       if (!t) return;
-      t.preset = (card.querySelector<HTMLSelectElement>(".t-preset")?.value ?? t.preset) as PartTransitionConfig["preset"];
+      const pv = card.querySelector<HTMLSelectElement>(".t-preset")?.value ?? t.preset;
+      t.preset = (pv === "wave_wipe" ? "slide_cross" : pv) as PartTransitionConfig["preset"];
       t.stableSeconds = Math.max(1, Number(card.querySelector<HTMLInputElement>(".t-stable")?.value ?? 60) || 60);
       t.outSeconds = Math.max(0.5, Number(card.querySelector<HTMLInputElement>(".t-out")?.value ?? 2) || 2);
       t.inSeconds = Math.max(0.5, Number(card.querySelector<HTMLInputElement>(".t-in")?.value ?? 3) || 3);
@@ -363,13 +401,13 @@ export function openManageModal(): void {
       const fx = card.querySelector<HTMLSelectElement>(".t-fx")?.value ?? "";
       t.fxGroupId = fx || undefined;
       t.cleanupContents = card.querySelector<HTMLInputElement>(".t-cleanup")?.checked !== false;
-      t.killLooseEverywhere = card.querySelector<HTMLInputElement>(".t-loose")?.checked !== false;
       t.cleanupDelaySeconds = Math.max(0, Number(card.querySelector<HTMLInputElement>(".t-delay")?.value ?? 0) || 0);
     });
     pushHistory();
+    markDirty();
     renderPartBar();
     closeModal();
-    setStatus("分 P 配置已更新（含转场参数）");
+    setStatus("分 P 配置已更新（含转场参数）；须「💾 写回 Unity」后才会落盘 part_level.json 与场景烘焙", false);
     draw();
   });
 }
@@ -473,7 +511,7 @@ export function renderPartBar(): void {
         `<button type="button" class="part-tab${S.currentPart === p.id ? " active" : ""}" data-part="${p.id}" title="${p.label ?? p.id}">${p.id.toUpperCase()}${p.label ? ` · ${p.label}` : ""}</button>`
     ),
     `<button type="button" class="part-tab part-add" id="part-add" title="添加阶段（自动衔接转场）">＋</button>`,
-    `<button type="button" class="part-tab part-manage" id="part-manage" title="分 P 管理：阶段 / 停放方向 / 转场节奏与清理">⚙</button>`,
+    `<button type="button" class="part-tab part-manage" id="part-manage" title="分 P 管理：阶段 / 退场去向 / 转场节奏与清理">⚙</button>`,
   ].join("");
   const refTargets: { pid: string; label: string }[] = [];
   if (S.currentPart !== BASE_PART) refTargets.push({ pid: BASE_PART, label: "基础层" });
@@ -575,6 +613,31 @@ export function validatePartLevelForSave(): { errors: string[]; warnings: string
   const pl = S.partLevel!;
   if (pl.parts.length === 0) errors.push("分 P 关卡必须定义至少一个阶段（parts 为空）");
   if (pl.parts.length === 1) warnings.push("只有 1 个阶段：分 P 至少 2 个阶段才有切换玩法（建议添加 P2）");
+  for (let i = 0; i < pl.parts.length; i++) {
+    const p = pl.parts[i];
+    if (!p) continue;
+    const off = p.park?.offset ?? 60;
+    if (off < 5 || off > 1000) {
+      errors.push(`${p.id.toUpperCase()} 退场距离须在 5~1000 米（当前 ${off}）`);
+    } else if (off < 60) {
+      warnings.push(`${p.id.toUpperCase()} 停泊距离 ${off}m 偏近（<60m≈50 格）：开局可能直接看见停泊平台，转场途中也易与 base 穿模（建议「一键进退场」按 60m 基数错开）`);
+    }
+  }
+  // 停泊位重叠：相同 (axis, offset) 的阶段在静止停泊时互相占据同一位置
+  // （P2 退场会撞上仍停在那里的 P3）——建议用「一键进退场」按序号错开。
+  const parkOwners = new Map<string, string[]>();
+  for (const p of pl.parts) {
+    if (!p) continue;
+    const key = `${p.park?.axis ?? "down"} ${p.park?.offset ?? 60}m`;
+    const list = parkOwners.get(key) ?? [];
+    list.push(p.id.toUpperCase());
+    parkOwners.set(key, list);
+  }
+  for (const [key, owners] of parkOwners) {
+    if (owners.length > 1) {
+      warnings.push(`停泊位重叠：${owners.join("、")} 共用「${key}」，转场时平台会互相占据同一位置（用「一键进退场」错开）`);
+    }
+  }
   const ids = new Set(pl.parts.map((p) => p.id));
   const seen = new Set<string>();
   for (const t of pl.transitions ?? []) {

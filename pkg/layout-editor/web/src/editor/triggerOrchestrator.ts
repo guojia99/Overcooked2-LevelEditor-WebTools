@@ -1,9 +1,10 @@
 import { S, EditorItem } from "./state";
 import { escHtml, prefabIdFromPath } from "./coords";
 import { itemLabel } from "./labels";
+import { mountSwitchLinkList, switchLinkTargetOptionsHtml } from "./switchLinkUi";
 import {
   stubKindOf,
-  isSwitchLinkTarget,
+  isButtonPollingStubTarget,
   nativeLinkTrigger
 } from "./stubControls";
 import {
@@ -24,7 +25,8 @@ import { setStatus } from "./status";
 import { draw } from "./render";
 import { setSelection } from "./selection";
 import { ensureItemVisible } from "./panels";
-import { smallBtnHtml, modalBtnHtml } from "../ui/views/button";
+import { smallBtnHtml } from "../ui/views/button";
+import { randomTriggerSectionHtml, wireRandomTriggerSection } from "./randomTriggerControls";
 
 /** 当前编排台正在编排的触发源实例 id（模式 B）。 */
 let currentSourceId: string | null = null;
@@ -118,61 +120,16 @@ function renderSwitchTargetSection(host: HTMLElement, item: EditorItem, rerender
   const myId = item.instanceId ?? "";
   const myLinks = () => S.switchLinks.filter((l) => l.switchId === myId);
 
-  const linkTargetOptsHtml = () => {
-    const linked = new Set(myLinks().map((l) => l.targetId));
-    const opts = S.items
-      .filter(
-        (i) =>
-          i.instanceId &&
-          i.instanceId !== myId &&
-          !linked.has(i.instanceId) &&
-          isSwitchLinkTarget(i)
-      )
-      .map((i) => `<option value="${escHtml(i.instanceId)}">${escHtml(itemLabel(i))}</option>`)
-      .join("");
-    return opts || '<option value="">— 无可联动目标（仅断头台/饮料机/酱料机/大炮） —</option>';
-  };
-
   host.innerHTML = `<p class="trig-hint">按下按钮时向这些机器广播触发消息（机器目标自动用原生触发名 Chop/Next/Launch，留空即可；同一开关的所有联动共享一个触发名）。事件组的目标只能从这里选。按钮被按的信号本身是游戏固定的 "Switch" 消息，无需配置；动画组/互锁联动的触发名由系统自动生成（BLP_/BLAdv_，全局唯一）。</p>
-    <div id="trig-sw-links" class="trig-list"></div>
-    <div class="trig-addrow"><select id="trig-sw-target" class="trig-select">${linkTargetOptsHtml()}</select>
+    <div id="trig-sw-links" class="switch-link-host"></div>
+    <div class="trig-addrow"><select id="trig-sw-target" class="trig-select">${switchLinkTargetOptionsHtml(myId, myId)}</select>
       ${smallBtnHtml("＋ 添加目标", "primary", { id: "trig-sw-add" })}</div>
     <label class="trig-field" id="trig-sw-trigger-field">触发消息 <input id="trig-sw-trigger" class="trig-input" value="${escHtml(myLinks()[0]?.trigger ?? "")}" placeholder="自动（机器目标用原生触发名）"/></label>`;
 
   const linksEl = host.querySelector<HTMLElement>("#trig-sw-links");
-
-  const bindUnlink = (container: HTMLElement) => {
-    container.querySelectorAll<HTMLButtonElement>("[data-unlink]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        pushHistory();
-        const tid = btn.dataset.unlink!;
-        S.switchLinks = S.switchLinks.filter((l) => !(l.switchId === myId && l.targetId === tid));
-        // 事件组目标仅限联动目标：联动被移除时同步丢弃对应事件后整体重绘
-        cleanOrphanedButtonEvents();
-        setStatus("已移除开关联动（写回后生效）");
-        rerender();
-      });
-    });
-  };
-
-  const renderRows = () => {
-    if (!linksEl) return;
-    const links = myLinks();
-    if (!links.length) {
-      linksEl.innerHTML = '<p class="trig-hint">未设置机器联动目标</p>';
-    } else {
-      linksEl.innerHTML = links
-        .map((l) => {
-          const target = S.items.find((i) => i.instanceId === l.targetId);
-          return `<div class="trig-step"><span class="trig-step-idx">→</span>
-            <span class="trig-step-label">${escHtml(target ? itemLabel(target) : l.targetId)}</span>
-            ${modalBtnHtml("移除", "btn-small blm-mini", { "data-unlink": l.targetId })}</div>`;
-        })
-        .join("");
-      bindUnlink(linksEl);
-    }
-  };
-  renderRows();
+  if (linksEl) {
+    mountSwitchLinkList(linksEl, { switchId: myId, variant: "dock", onChange: rerender });
+  }
 
   host.querySelector("#trig-sw-add")?.addEventListener("click", () => {
     const sel = host.querySelector<HTMLSelectElement>("#trig-sw-target");
@@ -181,11 +138,19 @@ function renderSwitchTargetSection(host: HTMLElement, item: EditorItem, rerender
     pushHistory();
     const trigInput = host.querySelector<HTMLInputElement>("#trig-sw-trigger");
     let trigger = trigInput?.value.trim() || "";
-    if (!trigger || trigger === "Switch") {
-      const target = S.items.find((i) => i.instanceId === tid);
+    const addTarget = S.items.find((i) => i.instanceId === tid);
+    // stub 轮询目标（控速/批次）触发名恒置空：不得继承共享输入框里机器联动
+    // 的触发名（混合机器目标时机器原生触发名不受影响）。
+    const addStubTarget = !!addTarget && isButtonPollingStubTarget(addTarget);
+    if (addStubTarget) {
+      trigger = "";
+    } else if (!trigger || trigger === "Switch") {
+      const target = addTarget;
       const native = target ? nativeLinkTrigger(target) : null;
       if (native) {
         trigger = native;
+      } else if (target && isButtonPollingStubTarget(target)) {
+        trigger = ""; // stub 轮询目标（控速/批次）：触发名无意义
       } else if (myLinks()[0]?.trigger) {
         trigger = myLinks()[0]!.trigger ?? "Switch";
       } else {
@@ -205,14 +170,20 @@ function renderSwitchTargetSection(host: HTMLElement, item: EditorItem, rerender
     const links = myLinks();
     if (!links.length) return;
     pushHistory();
-    // 留空 = 自动：每条联动取其目标的原生触发名（机器目标），非机器兜底 Switch。
+    // 留空 = 自动：每条联动取其目标的原生触发名（机器目标），stub 轮询目标
+    // （控速/批次）置空，非机器兜底 Switch。
     let resolved = raw;
     for (const l of links) {
+      const t = S.items.find((i) => i.instanceId === l.targetId);
+      // stub 轮询目标恒置空，不参与共享触发名改写
+      if (t && isButtonPollingStubTarget(t)) {
+        l.trigger = "";
+        continue;
+      }
       if (raw) {
         l.trigger = raw;
         continue;
       }
-      const t = S.items.find((i) => i.instanceId === l.targetId);
       l.trigger = (t ? nativeLinkTrigger(t) : null) ?? "Switch";
       if (!resolved) resolved = l.trigger;
     }
@@ -271,6 +242,8 @@ export function renderTriggerSourcePanel(body: HTMLElement): void {
         <div class="anim-empty-sub">先在核心层 · 机制中放置一个开关或压力开关，再回到这里编排它触发的事件与动画。</div></div>`
     );
   }
+  // 随机触发器节点管理区（🎲 与按钮触发源并列；详见 randomTriggerControls.ts）。
+  parts.push(randomTriggerSectionHtml());
   body.innerHTML = parts.join("");
 
   body.querySelectorAll<HTMLButtonElement>("[data-trigcfg]").forEach((btn) => {
@@ -289,4 +262,5 @@ export function renderTriggerSourcePanel(body: HTMLElement): void {
       draw();
     });
   });
+  wireRandomTriggerSection();
 }

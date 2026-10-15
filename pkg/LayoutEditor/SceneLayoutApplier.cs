@@ -192,8 +192,16 @@ public static class SceneLayoutApplier
                     if (!usedSceneObjectIds.Contains(objectId))
                     {
                         usedSceneObjectIds.Add(objectId);
+                    ReparentPartItem(t, item, assetPath);
                     Undo.RecordObject(t, "Layout Editor Move");
-                    if (worldPos.HasValue)
+                    if (PartTransitionBakery.HasPartScope(item.partId) && item.worldPosition != null)
+                    {
+                        var wpPart = item.worldPosition.ToVector3();
+                        wpPart.x = SnapScalar(wpPart.x, itemSnap);
+                        wpPart.z = SnapScalar(wpPart.z, itemSnap);
+                        t.position = wpPart;
+                    }
+                    else if (worldPos.HasValue)
                     {
                         t.position = worldPos.Value;
                     }
@@ -222,6 +230,8 @@ public static class SceneLayoutApplier
                     createdObjects[item.instanceId] = created;
             }
         }
+
+        EnsurePartScopedItemHierarchy(document, createdObjects);
 
         // Second pass: teleportal exit pairing and serving station plate return binding
         // need both referenced objects to exist.
@@ -267,6 +277,14 @@ public static class SceneLayoutApplier
         LayoutEditorStubIO.ApplySwitchLinks(document.switchLinks, createdObjects, document.buttonEvents);
         ConveyorAnimationBakery.Sync(scene, document, createdObjects);
 
+        if (only == null)
+        {
+            var headLightError = ChefHeadLightBakery.Sync(
+                scene, document.chefHeadLightsEnabled, document.chefHeadLightRange);
+            if (!string.IsNullOrEmpty(headLightError))
+                return headLightError;
+        }
+
         // 世界地图装饰（bundle map/ 家族，如 dlc08 绳栏）：烘焙运行时强制展开组件
         // （游戏编译，随场景保存）。全场景扫描、幂等，scoped writes 同样执行。
         LayoutEditorStubIO.BakeWorldMapDressing();
@@ -295,6 +313,11 @@ public static class SceneLayoutApplier
                     ? lightsError
                     : cameraLightError + "; " + lightsError;
             }
+
+            if (document.chefHeadLightsEnabled)
+                ChefDarkEnvironmentBakery.ApplyDark();
+            else if (ChefDarkEnvironmentBakery.NeedsTemplateEnvironmentRestore())
+                ChefDarkEnvironmentBakery.ApplyTemplateDefault();
         }
 
         // Bake animation groups into the scene — full writes only (scoped writes never
@@ -370,6 +393,33 @@ public static class SceneLayoutApplier
             {
                 LayoutEditorLog.LogWarning(coaxError);
                 bakeError = string.IsNullOrEmpty(bakeError) ? coaxError : bakeError + "; " + coaxError;
+            }
+        }
+
+        // 随机触发器：独立逻辑 helper（Design/RandomTrigger Logic），仅全量写回
+        // （scoped writes 不携带 randomTriggers，场景既有节点不动）。
+        if (only == null && document.randomTriggers != null)
+        {
+            var rtError = RandomTriggerBakery.Sync(scene, document, createdObjects);
+            if (!string.IsNullOrEmpty(rtError))
+            {
+                LayoutEditorLog.LogWarning(rtError);
+                bakeError = string.IsNullOrEmpty(bakeError) ? rtError : bakeError + "; " + rtError;
+            }
+        }
+
+        // 按钮控速 / 生成器批次：独立逻辑 helper（Design/Speed Logic）。数据在
+        // items（speedControl/startByButton）+ switchLinks（触发源）。步带属 floor
+        // 层（rides along floors 作用域文档），故 floors 作用域同样烘焙（前端该
+        // 作用域已携带 switchLinks）；decor 作用域不含任何目标层，跳过。
+        // CleanupStale 仅全量（部分文档≠删除意图）。
+        if (only == null || only == "items" || only == "floors")
+        {
+            var scError = SpeedControlBakery.Sync(scene, document, createdObjects, only == null);
+            if (!string.IsNullOrEmpty(scError))
+            {
+                LayoutEditorLog.LogWarning(scError);
+                bakeError = string.IsNullOrEmpty(bakeError) ? scError : bakeError + "; " + scError;
             }
         }
 
@@ -619,9 +669,27 @@ public static class SceneLayoutApplier
                 var go = new GameObject(string.IsNullOrEmpty(leafName) ? "Light" : leafName);
                 Undo.RegisterCreatedObjectUndo(go, "Layout Editor Light");
                 go.transform.SetParent(parent, false);
+                t = go.transform;
+                if (dto.position != null)
+                    t.position = dto.position.ToVector3();
                 if (dto.eulerAngles != null)
-                    go.transform.eulerAngles = dto.eulerAngles.ToVector3();
+                    t.eulerAngles = dto.eulerAngles.ToVector3();
                 light = go.AddComponent<Light>();
+            }
+            else
+            {
+                if (dto.positionEdited && dto.position != null)
+                {
+                    Undo.RecordObject(t, "Layout Editor Light");
+                    t.position = dto.position.ToVector3();
+                    EditorUtility.SetDirty(t);
+                }
+                if (dto.rotationEdited && dto.eulerAngles != null)
+                {
+                    Undo.RecordObject(t, "Layout Editor Light");
+                    t.eulerAngles = dto.eulerAngles.ToVector3();
+                    EditorUtility.SetDirty(t);
+                }
             }
 
             Undo.RecordObject(light, "Layout Editor Light");
@@ -634,8 +702,17 @@ public static class SceneLayoutApplier
             if (light.type == LightType.Spot || light.type == LightType.Point)
                 light.range = Mathf.Max(0.01f, dto.range);
             if (light.type == LightType.Spot)
+            {
                 light.spotAngle = Mathf.Clamp(dto.spotAngle, 1f, 179f);
+                LayoutEditorLightCompat.ApplyInnerSpotAngle(light, dto.innerSpotAngle);
+            }
             light.enabled = dto.enabled;
+            if (dto.shadows >= 0 && dto.shadows <= 2)
+                light.shadows = (LightShadows)dto.shadows;
+            light.shadowStrength = Mathf.Clamp01(dto.shadowStrength > 0f ? dto.shadowStrength : 1f);
+            light.bounceIntensity = Mathf.Max(0f, dto.bounceIntensity > 0f ? dto.bounceIntensity : 1f);
+            if (dto.lightmapping >= 0 && dto.lightmapping <= 4)
+                light.lightmapBakeType = (LightmapBakeType)dto.lightmapping;
             EditorUtility.SetDirty(light);
         }
 
@@ -903,9 +980,10 @@ public static class SceneLayoutApplier
             // Background planes are visual only — no walkable collider.
             if (floor.surfaceKind == "background")
                 continue;
-            // 分 P：阶段地板的可行走碰撞挂为 plane 子物体（plane 在 slot Ground 下，
-            // 碰撞随 slot 根移动），并给 plane 挂 ObjectContainer 供
-            // DynamicLandscapeParenting 把玩家/食材父挂到移动地板上。
+            // 分 P：可见 Plane 在 slot Ground 下（带 FloorScaleFromCells 缩放）；可行走
+            // Col_Floor 挂在 Ground 上与 Plane 同级（localScale=1），ObjectContainer
+            // 挂在 Col_Floor 上——勿挂在缩放过的 Plane 上，否则 DynamicLandscapeParenting
+            // 父挂载会继承非均匀 scale 导致厨师形变（与静态 Design/Collision 路径一致）。
             var partFloor = PartTransitionBakery.HasPartScope(floor.partId);
             if (partFloor)
             {
@@ -917,22 +995,38 @@ public static class SceneLayoutApplier
                 var partFloorGo = ResolveItemGo2(floor, createdObjects);
                 if (partFloorGo != null)
                 {
+                    var mountParent = partFloorGo.transform.parent;
+                    if (mountParent == null)
+                        mountParent = partFloorGo.transform;
                     for (int i = partFloorGo.transform.childCount - 1; i >= 0; i--)
                     {
                         var c = partFloorGo.transform.GetChild(i);
                         if (c != null && IsEditorFloorCollider(c.gameObject))
                             Undo.DestroyObjectImmediate(c.gameObject);
                     }
-                    float pcx = floor.worldPosition != null ? floor.worldPosition.x : (floor.localPosition != null ? floor.localPosition.x : 0f);
-                    float pcz = floor.worldPosition != null ? floor.worldPosition.z : (floor.localPosition != null ? floor.localPosition.z : 0f);
-                    pcx = SnapScalar(pcx, snapStep);
-                    pcz = SnapScalar(pcz, snapStep);
+                    var planeOc = partFloorGo.GetComponent<ObjectContainer>();
+                    if (planeOc != null)
+                        Undo.DestroyObjectImmediate(planeOc);
+                    var lp = floor.localPosition != null
+                        ? floor.localPosition.ToVector3()
+                        : partFloorGo.transform.localPosition;
+                    lp.x = SnapScalar(lp.x, snapStep);
+                    lp.z = SnapScalar(lp.z, snapStep);
+                    for (int i = mountParent.childCount - 1; i >= 0; i--)
+                    {
+                        var c = mountParent.GetChild(i);
+                        if (c == null || c == partFloorGo.transform)
+                            continue;
+                        if (!IsEditorFloorCollider(c.gameObject))
+                            continue;
+                        var clp = c.localPosition;
+                        if (Mathf.Abs(clp.x - lp.x) < 0.02f && Mathf.Abs(clp.z - lp.z) < 0.02f)
+                            Undo.DestroyObjectImmediate(c.gameObject);
+                    }
                     float pw = floor.widthUnits > 0f ? floor.widthUnits : (floor.widthCells > 0 ? floor.widthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
                     float pd = floor.depthUnits > 0f ? floor.depthUnits : (floor.depthCells > 0 ? floor.depthCells * LayoutEditorCatalogLookup.GridCellSize : 1.2f);
                     float pWalkY = FloorWalkY(floor.localPosition != null ? floor.localPosition.y : 0f);
-                    CreateColFloorOnItem(partFloorGo.transform, groundLayer, pcx, pcz, pw, pd, pWalkY, floor.localRotationY);
-                    if (partFloorGo.GetComponent<ObjectContainer>() == null)
-                        Undo.AddComponent<ObjectContainer>(partFloorGo);
+                    CreateColFloor(mountParent, groundLayer, lp.x, lp.z, pw, pd, pWalkY, floor.localRotationY);
                     continue;
                 }
                 // 解析失败退回静态路径兜底（下方公共路径）。
@@ -1144,7 +1238,11 @@ public static class SceneLayoutApplier
     private static void ApplyAirFloorCollider(FloorDto floor, float snapStep,
         LayoutDocumentDto document, Dictionary<string, GameObject> createdObjects)
     {
-        var parentPath = !string.IsNullOrEmpty(floor.parentPath) ? floor.parentPath : "Design/Collision";
+        var parentPath = ResolvePartFloorParentPath(floor);
+        // base 且 parentPath 缺省/被 slot 前缀污染（Resolve 返回 null）→ Design/Collision
+        // （与原 null 兜底一致；污染路径不再回吃 floor.parentPath）。
+        if (string.IsNullOrEmpty(parentPath))
+            parentPath = "Design/Collision";
         var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
         if (parent == null)
         {
@@ -1159,6 +1257,7 @@ public static class SceneLayoutApplier
         bool inMoveGroup = IsFloorInMoveGroup(floor, document);
         if (t != null)
         {
+            ReparentPartFloor(t, floor);
             Undo.RecordObject(t, "Layout Editor Air Floor");
             Undo.RecordObject(t.gameObject, "Layout Editor Air Floor");
             if (!inMoveGroup)
@@ -1497,6 +1596,7 @@ public static class SceneLayoutApplier
 
     private static void ApplyFloorTransform(Transform t, FloorDto floor, float snapStep)
     {
+        ReparentPartFloor(t, floor);
         Undo.RecordObject(t, "Layout Editor Floor");
         Undo.RecordObject(t.gameObject, "Layout Editor Floor");
         var pos = floor.localPosition != null ? floor.localPosition.ToVector3() : t.localPosition;
@@ -2261,7 +2361,12 @@ public static class SceneLayoutApplier
         if (floor != null && floor.surfaceKind == "raft")
             return;
 
-        var parentPath = !string.IsNullOrEmpty(floor.parentPath) ? floor.parentPath : "Art/Ground";
+        // part 感知父路径（与物件 CreateInstance 对称）：partId 进 slot、base 归
+        // Art/Ground 且 sanitize slot 前缀污染（v3.4；此前直接吃文档 parentPath，
+        // new: 地板会被建到陈旧 slot 路径下）。
+        var parentPath = ResolvePartFloorParentPath(floor);
+        if (string.IsNullOrEmpty(parentPath))
+            parentPath = "Art/Ground";
         var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
         if (parent == null)
             parent = LayoutEditorHierarchy.FindOrCreatePath("Art");
@@ -2838,11 +2943,176 @@ public static class SceneLayoutApplier
         mr.sharedMaterial = SlopeDebugMaterial(c);
     }
 
+    /// <summary>分 P 写回目标父路径：文档 parentPath 若仍指向 Design/Counters 等旧路径，
+    /// 强制解析为 Design/PartSlots/&lt;pid&gt;/…（与 web serialize 一致）。</summary>
+    private static string ResolvePartParentPath(string partId, string documentParentPath, string defaultParentPath)
+    {
+        if (!PartTransitionBakery.HasPartScope(partId))
+        {
+            // base：parentPath 被 slot 前缀污染（棘轮事故残留）→ 归位默认父路径；
+            // 缺省也回落默认父路径，配合 ReparentToLayoutParent 的 base 解锁分支
+            // 把错拖进 slot 的物件搬回（正常 base 物件不受影响——解锁分支只对
+            // 位于 slot 子树内的对象生效）。
+            var basePath = documentParentPath;
+            if (string.IsNullOrEmpty(basePath)
+                || basePath.StartsWith(PartTransitionBakery.SlotsRootPath + "/", StringComparison.Ordinal))
+                return defaultParentPath;
+            return basePath;
+        }
+        var slotPrefix = PartTransitionBakery.SlotsRootPath + "/" + partId + "/";
+        if (!string.IsNullOrEmpty(documentParentPath)
+            && documentParentPath.StartsWith(slotPrefix, StringComparison.Ordinal))
+            return documentParentPath;
+        if (string.IsNullOrEmpty(defaultParentPath))
+            defaultParentPath = "Art";
+        var sub = defaultParentPath;
+        const string designPrefix = "Design/";
+        if (defaultParentPath.StartsWith(designPrefix, StringComparison.Ordinal)
+            && defaultParentPath.Length > designPrefix.Length)
+            sub = defaultParentPath.Substring(designPrefix.Length);
+        return slotPrefix + sub;
+    }
+
+    private static string ResolvePartItemParentPath(LayoutItemDto item, string assetPath)
+    {
+        var catalogParent = LayoutEditorCatalogLookup.DefaultParentForAssetPath(assetPath);
+        return ResolvePartParentPath(item.partId, item.parentPath, catalogParent);
+    }
+
+    private static string ResolvePartFloorParentPath(FloorDto floor)
+    {
+        if (floor == null || !PartTransitionBakery.HasPartScope(floor.partId))
+        {
+            // base：parentPath 被 slot 前缀污染（棘轮事故残留/陈旧导出）→ 返回 null，
+            // 由调用方按各自语义兜底（可见地板 Art/Ground / 空气地板碰撞
+            // Design/Collision）；未污染则原样返回（含 null）。
+            var basePath = floor != null ? floor.parentPath : null;
+            if (!string.IsNullOrEmpty(basePath)
+                && basePath.StartsWith(PartTransitionBakery.SlotsRootPath + "/", StringComparison.Ordinal))
+                return null;
+            return basePath;
+        }
+        var slotPrefix = PartTransitionBakery.SlotsRootPath + "/" + floor.partId + "/";
+        if (!string.IsNullOrEmpty(floor.parentPath)
+            && floor.parentPath.StartsWith(slotPrefix, StringComparison.Ordinal))
+            return floor.parentPath;
+        return slotPrefix + "Ground";
+    }
+
+    private static bool IsTransformUnderPartSlot(Transform t, string partId)
+    {
+        if (t == null || string.IsNullOrEmpty(partId))
+            return false;
+        var needle = PartTransitionBakery.SlotsRootPath + "/" + partId + "/";
+        var path = LayoutEditorHierarchy.GetHierarchyPath(t);
+        return path != null && path.IndexOf(needle, StringComparison.Ordinal) >= 0;
+    }
+
+    /// <summary>对象是否位于任一阶段的 slot 子树内（base 棘轮解锁判定用）。</summary>
+    private static bool IsTransformUnderAnyPartSlot(Transform t)
+    {
+        if (t == null)
+            return false;
+        var path = LayoutEditorHierarchy.GetHierarchyPath(t);
+        return path != null
+            && path.IndexOf(PartTransitionBakery.SlotsRootPath + "/", StringComparison.Ordinal) >= 0;
+    }
+
+    private static void ReparentToLayoutParent(Transform t, string parentPath, string partId, string logLabel)
+    {
+        if (t == null || string.IsNullOrEmpty(parentPath))
+            return;
+        if (!PartTransitionBakery.HasPartScope(partId))
+        {
+            // base 条目对称改挂（v3.4 棘轮解锁）：此前 base 直接 return 只进不出——
+            // 物件/地板移入某 P 再移回 base 时场景对象永远滞留 slot 内随旧 P 下沉。
+            // 现仅在对象确实位于任一 slot 子树时才搬回文档父路径；正常 base 对象
+            // 不动（保持历史行为，避免 stale parentPath 误搬）。
+            if (!IsTransformUnderAnyPartSlot(t))
+                return;
+        }
+        var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
+        if (parent == null)
+        {
+            LayoutEditorLog.LogWarning("[PartLevel] 改挂失败：父路径不存在 \"" + parentPath + "\"（"
+                + (logLabel != null ? logLabel : t.name) + "）");
+            return;
+        }
+        if (t.parent == parent)
+            return;
+        Undo.RecordObject(t, "Layout Editor Part Reparent");
+        t.SetParent(parent, true);
+        LayoutEditorLog.Log("[PartLevel] 已改挂至 " + parentPath + "："
+            + (logLabel != null ? logLabel : t.name));
+    }
+
+    private static void ReparentPartItem(Transform t, LayoutItemDto item, string assetPath)
+    {
+        if (t == null || item == null)
+            return;
+        var parentPath = ResolvePartItemParentPath(item, assetPath);
+        ReparentToLayoutParent(t, parentPath, item.partId,
+            item.displayName != null ? item.displayName : item.instanceId);
+    }
+
+    private static void ReparentPartFloor(Transform t, FloorDto floor)
+    {
+        if (t == null || floor == null)
+            return;
+        var parentPath = ResolvePartFloorParentPath(floor);
+        if (string.IsNullOrEmpty(parentPath)
+            && !PartTransitionBakery.HasPartScope(floor.partId)
+            && IsTransformUnderAnyPartSlot(t))
+        {
+            // base 棘轮解锁兜底（文档 parentPath 缺省/污染）：可见地板归 Art/Ground，
+            // 空气地板碰撞归 Design/Collision。
+            parentPath = floor.airFloor ? "Design/Collision" : "Art/Ground";
+        }
+        ReparentToLayoutParent(t, parentPath, floor.partId,
+            floor.instanceId != null ? floor.instanceId : floor.hierarchyPath);
+    }
+
+    /// <summary>首轮写回后兜底：partId 已盖章但仍在 Design/Counters 等旧父下的物件迁入 slot。</summary>
+    private static void EnsurePartScopedItemHierarchy(LayoutDocumentDto document,
+        Dictionary<string, GameObject> createdObjects)
+    {
+        if (!PartTransitionBakery.IsPartEnabled(document) || document.items == null)
+            return;
+        for (int i = 0; i < document.items.Length; i++)
+        {
+            var item = document.items[i];
+            if (item == null || !PartTransitionBakery.HasPartScope(item.partId))
+                continue;
+            GameObject go;
+            if (createdObjects != null && !string.IsNullOrEmpty(item.instanceId)
+                && createdObjects.TryGetValue(item.instanceId, out go) && go != null)
+            {
+                if (IsTransformUnderPartSlot(go.transform, item.partId))
+                    continue;
+            }
+            else
+            {
+                var tr = FindItemTransform(item);
+                go = tr != null ? tr.gameObject : null;
+            }
+            if (go == null)
+                continue;
+            if (IsTransformUnderPartSlot(go.transform, item.partId))
+                continue;
+            var assetPath = item.prefabAssetPath;
+            if (string.IsNullOrEmpty(assetPath) && !string.IsNullOrEmpty(item.prefabGuid))
+                assetPath = AssetDatabase.GUIDToAssetPath(item.prefabGuid);
+            ReparentPartItem(go.transform, item, assetPath);
+        }
+    }
+
     private static GameObject CreateInstance(LayoutItemDto item, GameObject prefab, string assetPath, Vector3 pos, float rotY, Vector3? worldPos = null)
     {
+        var catalogParent = LayoutEditorCatalogLookup.DefaultParentForAssetPath(assetPath);
         var parentPath = item.parentPath;
         if (string.IsNullOrEmpty(parentPath))
-            parentPath = LayoutEditorCatalogLookup.DefaultParentForAssetPath(assetPath);
+            parentPath = catalogParent;
+        parentPath = ResolvePartParentPath(item.partId, parentPath, catalogParent);
 
         var parent = LayoutEditorHierarchy.FindOrCreatePath(parentPath);
         if (parent == null)

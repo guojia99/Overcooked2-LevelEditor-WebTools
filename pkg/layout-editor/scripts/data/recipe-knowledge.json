@@ -65,7 +65,7 @@
     "dlc11_optional_onions_ketchup_mustard",
     "dlc11_optional_onions_mustard",
     "dlc11_optionalhotdogs",
-    "dlc11_optionalsalad",
+    "DLC11_optionalsalad",
     "optional_chocolateorangefloat",
     "optional_chocolaterootfloat",
     "optional_vanillaorangefloat",
@@ -172,7 +172,7 @@
       "id": "Burger_Hawaiian",
       "step": "FryingPan",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "BurgerPineapple",
         "MeatSO",
         "MeatSO"
@@ -669,7 +669,7 @@
       "id": "chickenburger",
       "step": "FryingPan",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "dlc08_chicken"
       ]
     },
@@ -721,7 +721,7 @@
       ]
     },
     {
-      "id": "dlc08_friedchips",
+      "id": "DLC08_friedchips",
       "step": "DeepFatFryer",
       "ingredients": [
         "dlc08_potato"
@@ -1085,7 +1085,7 @@
       ]
     },
     {
-      "id": "dlc13_mixedfloureggchocolate",
+      "id": "DLC13_mixedfloureggchocolate",
       "step": "Mixer",
       "ingredients": [
         "dlc13_flour",
@@ -1094,7 +1094,7 @@
       ]
     },
     {
-      "id": "dlc13_mixedfloureggchocolatestrawberry",
+      "id": "DLC13_mixedfloureggchocolatestrawberry",
       "step": "Mixer",
       "ingredients": [
         "dlc13_flour",
@@ -1104,7 +1104,7 @@
       ]
     },
     {
-      "id": "dlc13_mixedfloureggstrawberries",
+      "id": "DLC13_mixedfloureggstrawberries",
       "step": "Mixer",
       "ingredients": [
         "dlc13_flour",
@@ -1113,7 +1113,7 @@
       ]
     },
     {
-      "id": "dlc13_mixedfloureggwatermelon",
+      "id": "DLC13_mixedfloureggwatermelon",
       "step": "Mixer",
       "ingredients": [
         "dlc13_flour",
@@ -1122,7 +1122,7 @@
       ]
     },
     {
-      "id": "dlc13_moonpie_chocolate",
+      "id": "DLC13_Moonpie_chocolate",
       "step": "OvenTray",
       "ingredients": [
         "dlc13_flour",
@@ -1131,11 +1131,11 @@
       ],
       "plating": "Plate",
       "composition": [
-        "dlc13_mixedfloureggchocolate"
+        "DLC13_mixedfloureggchocolate"
       ]
     },
     {
-      "id": "dlc13_moonpie_chocolatestrawberry",
+      "id": "DLC13_Moonpie_chocolatestrawberry",
       "step": "OvenTray",
       "ingredients": [
         "dlc13_flour",
@@ -1145,11 +1145,11 @@
       ],
       "plating": "Plate",
       "composition": [
-        "dlc13_mixedfloureggchocolatestrawberry"
+        "DLC13_mixedfloureggchocolatestrawberry"
       ]
     },
     {
-      "id": "dlc13_moonpie_strawberry",
+      "id": "DLC13_Moonpie_strawberry",
       "step": "OvenTray",
       "ingredients": [
         "dlc13_flour",
@@ -1158,11 +1158,11 @@
       ],
       "plating": "Plate",
       "composition": [
-        "dlc13_mixedfloureggstrawberries"
+        "DLC13_mixedfloureggstrawberries"
       ]
     },
     {
-      "id": "dlc13_moonpie_watermelon",
+      "id": "DLC13_Moonpie_watermelon",
       "step": "OvenTray",
       "ingredients": [
         "dlc13_flour",
@@ -1171,7 +1171,7 @@
       ],
       "plating": "Plate",
       "composition": [
-        "dlc13_mixedfloureggwatermelon"
+        "DLC13_mixedfloureggwatermelon"
       ]
     },
     {
@@ -1481,13 +1481,13 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "friedcheese_sticks",
         "drink03"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "friedcheese_sticks",
         "drink03"
@@ -1498,12 +1498,12 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "drink01"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "drink01"
       ]
@@ -1513,14 +1513,14 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips"
+        "DLC08_friedchips"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips"
+        "DLC08_friedchips"
       ]
     },
     {
@@ -1528,15 +1528,15 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "friedcheese_sticks"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "friedcheese_sticks"
       ]
     },
@@ -1545,15 +1545,15 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "drink02"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "drink02"
       ]
     },
@@ -1562,12 +1562,12 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "friedonion_rings"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "friedonion_rings"
       ]
@@ -1577,13 +1577,13 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "friedonion_rings",
         "friedcheese_sticks"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "friedonion_rings",
         "friedcheese_sticks"
@@ -1594,13 +1594,13 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "friedonion_rings",
         "drink01"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "friedonion_rings",
         "drink01"
@@ -1611,12 +1611,12 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "friedcheese_sticks"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "friedcheese_sticks"
       ]
@@ -1626,13 +1626,13 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "friedcheese_sticks",
         "drink02"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "friedcheese_sticks",
         "drink02"
@@ -1643,12 +1643,12 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "drink03"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "drink03"
       ]
@@ -1658,15 +1658,15 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "friedcheese_sticks"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "friedcheese_sticks"
       ]
     },
@@ -1675,15 +1675,15 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "drink03"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "drink03"
       ]
     },
@@ -1692,15 +1692,15 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "friedonion_rings"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "friedonion_rings"
       ]
     },
@@ -1709,12 +1709,12 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "friedonion_rings"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "friedonion_rings"
       ]
@@ -1724,13 +1724,13 @@
       "step": "",
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "friedonion_rings",
         "drink01"
       ],
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "friedchickenburger",
         "friedonion_rings",
         "drink01"
@@ -2474,7 +2474,7 @@
       "id": "DLC08_chickenburger",
       "step": "FryingPan",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "dlc08_chicken"
       ],
       "plating": "Plate",
@@ -2584,14 +2584,14 @@
       "id": "DLC08_MD_burger_cheesesticks_drink03",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "DLC08_friedcheese_sticks",
         "drink03"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "DLC08_friedcheese_sticks",
         "drink03"
@@ -2601,13 +2601,13 @@
       "id": "DLC08_MD_burger_drink01",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "drink01"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "drink01"
       ]
@@ -2616,31 +2616,31 @@
       "id": "DLC08_MD_burger_fries",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips"
+        "DLC08_friedchips"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips"
+        "DLC08_friedchips"
       ]
     },
     {
       "id": "DLC08_MD_burger_fries_cheesesticks",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "DLC08_friedcheese_sticks"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "DLC08_friedcheese_sticks"
       ]
     },
@@ -2648,16 +2648,16 @@
       "id": "DLC08_MD_burger_fries_drink02",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "drink02"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "drink02"
       ]
     },
@@ -2665,13 +2665,13 @@
       "id": "DLC08_MD_burger_onionrings",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "DLC08_friedonion_rings"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "DLC08_friedonion_rings"
       ]
@@ -2680,14 +2680,14 @@
       "id": "DLC08_MD_burger_onionrings_cheesesticks",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "DLC08_friedonion_rings",
         "DLC08_friedcheese_sticks"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "DLC08_friedonion_rings",
         "DLC08_friedcheese_sticks"
@@ -2697,14 +2697,14 @@
       "id": "DLC08_MD_burger_onionrings_drink01",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "DLC08_friedonion_rings",
         "drink01"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "FriedMeat",
         "DLC08_friedonion_rings",
         "drink01"
@@ -2714,13 +2714,13 @@
       "id": "DLC08_MD_c_burger_cheesesticks",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "DLC08_friedcheese_sticks"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "DLC08_friedcheese_sticks"
       ]
@@ -2729,14 +2729,14 @@
       "id": "DLC08_MD_c_burger_cheesesticks_drink02",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "DLC08_friedcheese_sticks",
         "drink02"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "DLC08_friedcheese_sticks",
         "drink02"
@@ -2746,13 +2746,13 @@
       "id": "DLC08_MD_c_burger_drink03",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "drink03"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "drink03"
       ]
@@ -2761,16 +2761,16 @@
       "id": "DLC08_MD_c_burger_fries_cheesesticks",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "DLC08_friedcheese_sticks"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "DLC08_friedcheese_sticks"
       ]
     },
@@ -2778,16 +2778,16 @@
       "id": "DLC08_MD_c_burger_fries_drink03",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "drink03"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "drink03"
       ]
     },
@@ -2795,16 +2795,16 @@
       "id": "DLC08_MD_c_burger_fries_onionrings",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "DLC08_friedonion_rings"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
-        "dlc08_friedchips",
+        "DLC08_friedchips",
         "DLC08_friedonion_rings"
       ]
     },
@@ -2812,13 +2812,13 @@
       "id": "DLC08_MD_c_burger_onionrings",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "DLC08_friedonion_rings"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "DLC08_friedonion_rings"
       ]
@@ -2827,14 +2827,14 @@
       "id": "DLC08_MD_c_burger_onionrings_drink01",
       "step": "",
       "ingredients": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "DLC08_friedonion_rings",
         "drink01"
       ],
       "plating": "Plate",
       "composition": [
-        "dlc08_choppedbun",
+        "DLC08_ChoppedBun",
         "DLC08_friedchickenburger",
         "DLC08_friedonion_rings",
         "drink01"

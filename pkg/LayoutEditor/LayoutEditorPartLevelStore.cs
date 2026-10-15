@@ -67,6 +67,7 @@ public static class LayoutEditorPartLevelStore
             if (string.IsNullOrEmpty(json))
                 return null;
             var store = JsonUtility.FromJson<PartLevelStoreDto>(json);
+            SanitizeStore(store);
             return store;
         }
         catch (System.Exception e)
@@ -155,6 +156,23 @@ public static class LayoutEditorPartLevelStore
             map[paths[i]] = parts[i];
         }
         return map;
+    }
+
+    /// <summary>净化历史存档：JsonUtility 无法表达 null 的 [Serializable] 类字段，
+    /// 旧版曾把 p1.park 置 null 落成 {axis:"", offset:0}（回读污染 UI、Exit 被压成
+    /// 5m）。axis 为空或 offset ≤ 0 一律视为「未设置」，恢复 park = null。</summary>
+    private static void SanitizeStore(PartLevelStoreDto store)
+    {
+        if (store == null || store.partLevel == null || store.partLevel.parts == null)
+            return;
+        for (var i = 0; i < store.partLevel.parts.Length; i++)
+        {
+            var part = store.partLevel.parts[i];
+            if (part == null)
+                continue;
+            if (part.park != null && (string.IsNullOrEmpty(part.park.axis) || part.park.offset <= 0f))
+                part.park = null;
+        }
     }
 
     /// <summary>不可逆守卫：已有 enabled 存档而新文档不带 enabled partLevel → 拒绝写回。

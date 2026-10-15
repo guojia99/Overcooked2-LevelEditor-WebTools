@@ -260,6 +260,9 @@ static class LayoutEditorCookingUtensilGuard
             try
             {
                 var go = runtime.gameObject;
+                string specialPid;
+                if (LayoutEditorStubIO.TryGetSpecialDispenserPrefabId(go, out specialPid))
+                    continue;
                 var stub = go.GetComponent<PseudoPrefabDispenserStub>();
                 if (stub == null || stub.spawnerItemPrefabSO == null ||
                     !RealPrefabIsSpawnableIngredient(stub.spawnerItemPrefabSO))

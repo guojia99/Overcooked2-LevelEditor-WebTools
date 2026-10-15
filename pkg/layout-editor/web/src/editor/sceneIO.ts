@@ -8,10 +8,20 @@ import { setStatus, setStatusTagged } from "./status";
 import { itemLayerOfIt, levelSetFromScenePath } from "./catalog";
 import { isPlayerItem } from "./renderItems";
 import { isTeleportalItem, teleportalEntrancesOf } from "./teleportalLinks";
-import { enrichItem, enrichFloor, checkPlayerCollisions, checkWorkstationCollisions, refreshUtensilStacks } from "./items";
-import { stubKindOf, normalizeMachineLinkTriggers } from "./stubControls";
+import {
+  enrichItem,
+  enrichFloor,
+  checkPlayerCollisions,
+  checkWorkstationCollisions,
+  findWorkstationCollisionPairs,
+  refreshUtensilStacks
+} from "./items";
+import { showWorkstationOverlapAlert, clearWorkstationOverlapAlert } from "./workstationOverlapAlert";
+import { clampChefHeadLightRange, normalizeLights, syncDayLightForChefHeadlights } from "./lightsUtil";
+import { stubKindOf, normalizeMachineLinkTriggers, normalizeWebBackpackCapacity } from "./stubControls";
 import { cleanOrphanedAnimControls, stopAnimPreview } from "./animControl";
 import { cleanOrphanedButtonLinks, cleanOrphanedCoaxialLinks } from "./buttonLinks";
+import { cleanOrphanedRandomTriggers } from "./randomTriggerControls";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
 import { cleanOrphanedStubRefs } from "./stubRefs";
 import { itemLabel } from "./labels";
@@ -23,6 +33,7 @@ import {
   finalizeFloor
 } from "./floors";
 import { refreshSceneItemList } from "./panels";
+import { clearAllHiddenSceneGroups, pruneHiddenSceneGroups } from "./layerGroupVisibility";
 import { buildFloorPalette } from "./floorPalette";
 import { buildDocument } from "./serialize";
 import { clearSelection, clearFloorSelection } from "./selection";
@@ -113,6 +124,11 @@ export function countDuplicateInstanceIds(list: LayoutItem[]): number {
 export async function loadScene(assetPath: string) {
   showBusy("加载场景…");
   try {
+    clearWorkstationOverlapAlert();
+    const prevPath = S.scenePath;
+    if (prevPath && prevPath !== assetPath) {
+      clearAllHiddenSceneGroups();
+    }
     S.scenePath = assetPath;
     S.currentLevelSet = levelSetFromScenePath(assetPath);
     // 严格路由：/layout/{set}/{sceneName}（场景文件名去 .unity）；set 解析失败时退回裸 /layout
@@ -178,7 +194,6 @@ export async function applyLayoutDocument(
   doc: LayoutDocument,
   opts?: ApplyDocOptions
 ): Promise<{ dupIds: number; dedupedStacks: number; recoveredFloors: number }> {
-  S.decorHiddenGroups.clear();
   const dupIds = countDuplicateInstanceIds(doc.items);
   // 分 P：先于 enrich 赋值——enrichItem 依赖 S.partLevel 判断 P 层物件取
   // localPosition（slot-local 设计坐标）而非含停放偏移的 worldPosition。
@@ -244,9 +259,14 @@ export async function applyLayoutDocument(
   S.cameraPosOrigin = doc.cameraInfo?.position
     ? { x: doc.cameraInfo.position.x, y: doc.cameraInfo.position.y, z: doc.cameraInfo.position.z }
     : null;
-  S.lights = doc.lights ?? [];
+  S.lights = normalizeLights(doc.lights ?? []);
+  S.selectedLightPath = null;
   S.hasCeilingHeight = doc.hasCeilingHeight === true;
   S.ceilingHeight = S.hasCeilingHeight ? Math.max(0, Math.min(10, doc.ceilingHeight ?? 2)) : 2;
+  S.chefHeadLightsEnabled = doc.chefHeadLightsEnabled === true;
+  S.chefHeadLightRange = clampChefHeadLightRange(doc.chefHeadLightRange);
+  if (S.chefHeadLightsEnabled) syncDayLightForChefHeadlights(true);
+  else syncDayLightForChefHeadlights(false);
   S.switchLinks = doc.switchLinks ?? [];
   // 旧式自定义触发名（switch_*）对机器目标已失效（真机不响应），归一化为原生触发名
   normalizeMachineLinkTriggers();
@@ -259,10 +279,19 @@ export async function applyLayoutDocument(
     targetIds: l.targetIds ?? [],
     triggers: l.triggers ?? [],
   }));
+  S.randomTriggers = (doc.randomTriggers?.links ?? []).map((l) => ({
+    ...l,
+    sourceIds: l.sourceIds ?? [],
+    inputTrigger: l.inputTrigger ?? "",
+    cooldownSeconds: Math.max(0, l.cooldownSeconds ?? 0),
+    separator: l.separator || ":",
+    entries: l.entries ?? [],
+  }));
   cleanOrphanedAnimControls();
   cleanOrphanedButtonLinks();
   cleanOrphanedButtonEvents();
   cleanOrphanedCoaxialLinks();
+  cleanOrphanedRandomTriggers();
   // 自动去重/导出变更会移除物品：同步清理开关联动与上菜台/传送门/终端/加热炉
   // 的悬空绑定引用（否则写回时被 Unity 侧静默丢弃 → 绑定失效要重新绑）。
   cleanOrphanedStubRefs();
@@ -313,6 +342,7 @@ export async function applyLayoutDocument(
   S.expandedMemberId = null;
   if (S.currentLayer === "anim") S.activeRightTab = "anim";
   updatePanelTabButtons();
+  pruneHiddenSceneGroups();
   draw();
   return { dupIds, dedupedStacks, recoveredFloors };
 }
@@ -400,6 +430,12 @@ export async function restoreWriteBackSnapshot(
       l.sourceIds = (l.sourceIds ?? []).map(mapId);
       l.targetIds = (l.targetIds ?? []).map(mapId);
     }
+    for (const rt of doc.randomTriggers?.links ?? []) {
+      rt.sourceIds = (rt.sourceIds ?? []).map(mapId);
+      for (const e of rt.entries ?? []) {
+        if (e.targetRef && !e.targetRef.startsWith("rt:")) e.targetRef = mapId(e.targetRef);
+      }
+    }
     pushHistory(); // 恢复前的画布状态入 undo 栈（Ctrl+Z 可撤回一次）
     await applyLayoutDocument(doc, { markDirtyAfter: true });
     setStatus(
@@ -440,11 +476,18 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       return false;
     }
 
-    const wsCollisions = checkWorkstationCollisions();
-    if (!S.allowWorkstationOverlap && wsCollisions.length > 0) {
-      setStatus(`写回取消：工作台之间存在重叠 — ${wsCollisions.join("；")}`, false);
+    const wsPairs = findWorkstationCollisionPairs();
+    if (!S.allowWorkstationOverlap && wsPairs.length > 0) {
+      const wsCollisions = checkWorkstationCollisions();
+      if (S.currentLayer !== "items") setLayer("items");
+      showWorkstationOverlapAlert(wsPairs);
+      setStatus(
+        `写回取消：工作台之间存在重叠（已在画布高亮） — ${wsCollisions.join("；")}`,
+        false
+      );
       return false;
     }
+    clearWorkstationOverlapAlert();
 
     // 写回前堆叠检测：同 guid 且 XYZ 完全同位（<0.01）的多条物品 = 重复数据
     //（画布上完全重叠、视觉不可见；历史导出/放置 bug 的残留）。直接写回会随
@@ -513,6 +556,64 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       }
     }
 
+    // 随机触发器校验（后端 400 同款前置阻断）：候选 ≥2、信号名非空、权重 ≥0、
+    // 参数模式字段完整、目标引用有效（物品在场景 / rt 节点在文档且非自身）。
+    {
+      const errs: string[] = [];
+      const linkIds = new Set(S.randomTriggers.map((l) => l.id));
+      for (const rt of S.randomTriggers) {
+        let valid = 0;
+        for (const [i, e] of (rt.entries ?? []).entries()) {
+          const label = `随机触发器 #${i + 1}`;
+          if (!e.trigger?.trim()) {
+            errs.push(`${label}：信号名为空`);
+            continue;
+          }
+          if (!(e.weight >= 0)) {
+            errs.push(`${label}：权重不能为负`);
+            continue;
+          }
+          const ref = e.targetRef ?? "";
+          if (ref.startsWith("rt:")) {
+            const targetId = ref.slice(3);
+            if (targetId === rt.id) errs.push(`${label}：目标不能指向自身节点`);
+            else if (!linkIds.has(targetId)) errs.push(`${label}：目标随机触发器节点不存在（已删？）`);
+          } else if (ref.startsWith("u:")) {
+            if (!S.items.some((it) => it.instanceId === ref)) errs.push(`${label}：目标物品不在场景中`);
+          } else if (ref && !ref.startsWith("new:")) {
+            errs.push(`${label}：目标引用格式非法（应为空 / u: / new: / rt: 前缀）`);
+          }
+          const p = e.param;
+          if (p && p.mode !== 0) {
+            if (p.mode === 1 && !p.fixedValue?.trim()) errs.push(`${label}：固定参数值为空`);
+            if (p.mode === 2 && !(p.candidates ?? []).some((c) => c?.trim())) {
+              errs.push(`${label}：候选列表为空（至少 1 个非空候选）`);
+            }
+            if (p.mode === 3) {
+              const len = p.stringLength ?? 4;
+              if (len < 1 || len > 64) errs.push(`${label}：随机字符串长度须在 1~64`);
+              if (p.charset && p.charset.length < 2) errs.push(`${label}：字符集至少 2 个字符`);
+            }
+            if (p.mode === 4) {
+              const d = p.digits ?? 1;
+              if (d < 1 || d > 9) errs.push(`${label}：随机数值位数须在 1~9`);
+            }
+            if (p.mode === 5) {
+              if (p.minValue === p.maxValue) errs.push(`${label}：数值区间最小值与最大值相等`);
+              const dec = p.decimals ?? 0;
+              if (dec < 0 || dec > 6) errs.push(`${label}：小数位须在 0~6`);
+            }
+          }
+          valid++;
+        }
+        if (valid < 2) errs.push(`随机触发器「${rt.id}」：有效候选不足 2 个（当前 ${valid}）`);
+      }
+      if (errs.length > 0) {
+        setStatus(`写回取消：随机触发器配置错误 — ${errs.slice(0, 6).join("；")}${errs.length > 6 ? " 等" : ""}`, false);
+        return false;
+      }
+    }
+
     if (only) {
       const warnings = await saveLayout(buildDocument(only), S.freeSnapStep, false, only);
       const scopeNote =
@@ -531,6 +632,23 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
     // 写回强校验：普通食材箱（含背包，不含饮料/酱料机）必须配 1 种食材；
     // 随机食材箱：真实食材 ≥1 且候选（含空气）≥2（空气不算真实食材）。
     // 违规阻断写回并列出明细（后端同款兜底）。
+    const wbViolations: string[] = [];
+    const validCaps = new Set([1, 2, 4, 6, 9, 12, 16, 20, 25, 30]);
+    for (const it of S.items) {
+      if (stubKindOf(it) !== "WebBackpack" || !it.webBackpack) continue;
+      const cap = normalizeWebBackpackCapacity(it.webBackpack.capacity);
+      it.webBackpack.capacity = cap;
+      if (!validCaps.has(cap)) wbViolations.push(`${itemLabel(it)}（容量无效）`);
+      // 3.8.10 起取出恒 FIFO：旧场景里的 pickMode 一律归一（随机模式已移除）
+      it.webBackpack.pickMode = "fifo";
+      const fill = it.webBackpack.initialFillGuids?.length ?? 0;
+      if (fill > cap) wbViolations.push(`${itemLabel(it)}（初始填充 ${fill} 超过容量 ${cap}）`);
+    }
+    if (wbViolations.length > 0) {
+      setStatus(`写回被阻断，请先修复 ${wbViolations.length} 处：${wbViolations.join("、")}`, true);
+      return false;
+    }
+
     const violations: string[] = [];
     for (const it of S.items) {
       if (stubKindOf(it) !== "Dispenser" || !it.dispenser) continue;

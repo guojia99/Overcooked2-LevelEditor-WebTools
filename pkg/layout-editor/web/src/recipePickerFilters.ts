@@ -15,7 +15,7 @@ export type RecipeWithGroups = RecipeEntry & { cookingGroups?: CookingGroup[] };
 
 function resolveGroups(r: RecipeWithGroups, allRecipes?: RecipeWithGroups[]): CookingGroup[] {
   if (r.cookingGroups?.length) {
-    return normalizeCookingGroups(r, r.cookingGroups);
+    return mergeFinalMarkers(normalizeCookingGroups(r, r.cookingGroups));
   }
   const norm = { ...r, intermediate: r.isCustom ? false : r.intermediate };
   return mergeFinalMarkers(normalizeCookingGroups(r, deriveCookingGroups(norm, allRecipes ?? [])));

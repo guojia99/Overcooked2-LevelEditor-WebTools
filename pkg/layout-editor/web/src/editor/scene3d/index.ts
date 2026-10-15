@@ -10,6 +10,7 @@
 
 import * as THREE from "three";
 import { dom } from "../dom";
+import { S } from "../state";
 import { setScene3DHandle, Scene3DHandle } from "../scene3dBridge";
 import { CAMERA_FAR } from "./constants";
 import { OrbitCam } from "./camera3d";
@@ -96,6 +97,7 @@ function loop(): void {
   raf = requestAnimationFrame(loop);
   if (!ctx) return;
   resize();
+  if (S.workstationOverlapAlertKeys?.size) dirty = true;
   if (!dirty) return;
   dirty = false;
   syncScene(ctx);

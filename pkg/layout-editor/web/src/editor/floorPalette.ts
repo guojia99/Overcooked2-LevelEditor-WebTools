@@ -459,7 +459,7 @@ export function updateFloorBar() {
     actions = `${pending}${killToggle}${walkToggle}${lotusRotBtn}`;
     hint = `<span class="fb-hint">框选 · 拖动 · 拖角缩放 · 右键地板编辑器 · Del 删除 · Esc 取消放置</span>`;
   } else {
-    actions = `${pending}<span class="fb-death-readonly" title="坠落类型由 Unity 场景 KillPlane 决定，在「相机/灯光」中查看相机背景色">坠落类型：<b>${deathLabelZh(S.deathInfo)}</b></span>`;
+    actions = `${pending}<span class="fb-death-readonly" title="坠落类型由 Unity 场景 KillPlane 决定，在「相机」弹窗中查看相机背景色">坠落类型：<b>${deathLabelZh(S.deathInfo)}</b></span>`;
     hint = `<span class="fb-hint">拖入背景卡片放置 · 单击卡片累加数量 · 拖角缩放 · 右键铺满关卡 · Del 删除</span>`;
   }
 

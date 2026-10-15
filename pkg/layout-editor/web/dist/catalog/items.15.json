@@ -3600,6 +3600,23 @@
       "icon": true
     },
     {
+      "id": "web_backpack_storage_01",
+      "guid": "b2c3d4e5f6789012345678901234abcd",
+      "assetPath": "Assets/commonW4/prefabs/mechanisms/web_backpack_storage_01.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "Web背包",
+      "nameEn": "Web Storage Backpack",
+      "icon": false
+    },
+    {
       "id": "workstation_blender_01",
       "guid": "0501e9378607c3a649732cdb944af6cb",
       "assetPath": "Assets/commonW1/prefabs/core/counters/workstation_blender_01.prefab",
@@ -4020,28 +4037,6 @@
       "ingredientGuid": "ff0a377cca6a00a45a5a5f13ac30098d",
       "nameZh": "菠萝（汉堡）",
       "nameEn": "Burger Pineapple",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "BurritoChickenSO",
-      "guid": "0de89655f2a84134e8f9acecd36b438b",
-      "assetPath": "Assets/commonW1/prefabs/core/decor/food/BurritoChickenSO.prefab",
-      "category": "decor/food",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.534,
-      "baseY": -0.076,
-      "layoutTier": "decor",
-      "ingredientDecor": true,
-      "ingredientGuid": "85bd4a3b88782714091204aeb3e85e6d",
-      "nameZh": "卷饼鸡肉",
-      "nameEn": "Burrito Chicken",
       "typeKind": "food_model",
       "usage": "dressing",
       "icon": true

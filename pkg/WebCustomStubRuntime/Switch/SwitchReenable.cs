@@ -22,6 +22,10 @@ namespace CustomStub
         /** 按压后自动复位延时（秒）。 */
         public float m_resetDelay = 0.35f;
 
+        /// <summary>外部挂起（ButtonSpawnerBatch 批次+冷却期间置 true）：按压不再
+        /// 自动复位，按钮保持置灰直到外部解除并补发 m_enableTrigger。</summary>
+        public bool m_suspended;
+
         /// <summary>tag 载体前缀。</summary>
         public const string TagPrefix = "SwitchReenable|";
 
@@ -103,6 +107,13 @@ namespace CustomStub
                 {
                     // 下降沿 = 按下 → 复位计时
                     yield return new WaitForSeconds(Mathf.Max(0.05f, m_resetDelay));
+                    if (m_suspended)
+                    {
+                        // 外部锁定期（ButtonSpawnerBatch 批次/冷却）：不自动复位，
+                        // 按钮保持置灰，由锁定方在冷却结束后补发复位触发。
+                        m_lastEnabled = m_watched != null && m_watched.enabled;
+                        continue;
+                    }
                     if (m_watched == null || !m_watched.enabled)
                     {
                         // 复查（绑定时刻可能早于 CannonGuard 发现该大炮）：大炮按钮的

@@ -244,7 +244,9 @@ public static class BurnerScheduleBakery
                 var timer = Undo.AddComponent<TriggerTimer>(helper);
                 timer.m_startTrigger = null;
                 timer.m_completeTrigger = FireTrigger;
-                timer.m_time = sequential ? t + p * stagger : t;
+                // ServerTriggerTimer 只在 m_timer > 0 时倒计时——startDelay=0 会让
+                // 首波永不触发，按 0.1s 下限兜底（分 P Kill 计时器同款教训）。
+                timer.m_time = Mathf.Max(0.1f, sequential ? t + p * stagger : t);
                 timer.m_startTiming = true;
                 timer.m_triggerAtStart = false;
             }

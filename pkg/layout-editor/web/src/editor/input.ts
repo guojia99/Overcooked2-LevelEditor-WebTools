@@ -1,7 +1,8 @@
 import {
   S,
   PickCandidate,
-  EditorItem
+  EditorItem,
+  PX_PER_UNIT
 } from "./state";
 import { dom } from "./dom";
 import {
@@ -37,6 +38,9 @@ import {
   showSurfaceOverlapPickTip,
   showAnimMemberOverlapPickTip,
 } from "./ui/pickOverlap";
+import { clearWorkstationOverlapAlert } from "./workstationOverlapAlert";
+import { hitTestLights } from "./renderLights";
+import { addNewLight, lightByPath } from "./lightsUtil";
 import { showBatchHeightMenu, showContextMenu, showWaypointContextMenu } from "./ui/contextMenu";
 import { selectionHeightTargetCount } from "./selectionHeight";
 import { batchNudgeSelected, batchRotateSelected, batchTransformCount } from "./selectionTransform";
@@ -355,6 +359,7 @@ function applySurfaceLayerGroupDelta(dx: number, dz: number): void {
 export function setupCanvas() {
   dom.canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
+    clearWorkstationOverlapAlert();
     const factor = e.deltaY > 0 ? 0.9 : 1.1;
     S.scale = clampCanvasScale(S.scale * factor);
     draw();
@@ -367,6 +372,7 @@ export function setupCanvas() {
     const { x: wx, z: wz } = canvasToWorld(mx, my);
 
     if (e.button === 1 || (e.button === 0 && e.altKey) || (e.button === 0 && S.spaceHeld)) {
+      clearWorkstationOverlapAlert();
       S.panning = true;
       if (S.spaceHeld) spacePanDragged = true;
       S.lastMx = mx;
@@ -381,6 +387,39 @@ export function setupCanvas() {
 
     resetOverlapMarqueePending();
     hidePickTip();
+    clearWorkstationOverlapAlert();
+
+    if (S.currentLayer === "lights") {
+      hideDetail();
+      hideContextMenu();
+      clearSelection();
+      clearFloorSelection();
+      const lHits = hitTestLights(mx, my);
+      if (lHits.length > 0) {
+        S.selectedLightPath = lHits[0].hierarchyPath;
+        S.dragSnapshot = snapshotState();
+        S.draggingLightPath = lHits[0].hierarchyPath;
+        S.lightDragLastY = my;
+        renderRightPanel();
+        draw();
+        return;
+      }
+      if (S.pendingNewLightType != null) {
+        addNewLight(
+          S.pendingNewLightType,
+          snapValue(wx, S.freeSnapStep),
+          snapValue(wz, S.freeSnapStep)
+        );
+        S.pendingNewLightType = null;
+        renderRightPanel();
+        draw();
+        return;
+      }
+      S.selectedLightPath = null;
+      renderRightPanel();
+      draw();
+      return;
+    }
 
     // Move control waypoint interactions: active on the dedicated move layer,
     // and on the floor layer while a move group is active.
@@ -973,7 +1012,15 @@ export function setupCanvas() {
       if (nx !== S.hoverCx || ny !== S.hoverCy) {
         S.hoverCx = nx;
         S.hoverCy = ny;
-        if (!S.marqueeing && !S.panning && !S.dragFloorKey && !S.dragItemKey && !shiftMarqueePending) draw();
+        if (
+          !S.marqueeing &&
+          !S.panning &&
+          !S.dragFloorKey &&
+          !S.dragItemKey &&
+          !S.draggingLightPath &&
+          !shiftMarqueePending
+        )
+          draw();
       }
     }
 
@@ -998,6 +1045,27 @@ export function setupCanvas() {
       S.panY += my - S.lastMy;
       S.lastMx = mx;
       S.lastMy = my;
+      draw();
+      return;
+    }
+
+    if (S.draggingLightPath) {
+      const l = lightByPath(S.draggingLightPath);
+      if (l) {
+        if (!l.position) l.position = { x: 0, y: 0, z: 0 };
+        if (e.shiftKey) {
+          const k = PX_PER_UNIT * S.scale;
+          const dy = -(my - S.lightDragLastY) / (k || 1);
+          l.position.y = Math.round((l.position.y + dy) * 1000) / 1000;
+        } else {
+          const { x, z } = canvasToWorld(mx, my);
+          l.position.x = snapValue(wx, S.freeSnapStep);
+          l.position.z = snapValue(wz, S.freeSnapStep);
+        }
+        l.positionEdited = true;
+        S.lightDragLastY = my;
+        S.dirty = true;
+      }
       draw();
       return;
     }
@@ -1121,6 +1189,13 @@ export function setupCanvas() {
     if (S.panning) {
       S.panning = false;
       updateCanvasCursor();
+    }
+    if (S.draggingLightPath) {
+      S.draggingLightPath = null;
+      S.dirty = true;
+      commitDragSnapshot();
+      renderRightPanel();
+      draw();
     }
     if (S.draggingWaypointId) {
       S.draggingWaypointId = null;

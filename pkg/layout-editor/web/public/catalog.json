@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-10T03:24:58.425Z",
+  "generatedAt": "2026-10-15T10:20:06.739Z",
   "schemaVersion": 10,
   "gridCellSize": 1.2,
-  "itemCount": 3481,
+  "itemCount": 3483,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -50,7 +50,7 @@
       "labelZh": "核心 · 出餐 / 加工",
       "labelEn": "Serving & processing",
       "layoutTier": "core",
-      "itemCount": 10
+      "itemCount": 11
     },
     {
       "key": "utensils/plates",
@@ -99,7 +99,7 @@
       "labelZh": "核心 · 机关",
       "labelEn": "Mechanisms",
       "layoutTier": "core",
-      "itemCount": 21
+      "itemCount": 22
     },
     {
       "key": "surface",

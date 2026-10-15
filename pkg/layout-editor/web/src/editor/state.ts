@@ -17,6 +17,7 @@ import type {
   LevelSetScene,
   LightInfo,
   AnimGroup,
+  RandomTriggerLink,
   RecipeEntry,
   SwitchLink,
   SwitchMaterialOption,
@@ -59,7 +60,19 @@ export interface ComboDef {
   link: (items: EditorItem[]) => void;
 }
 
-export type LayerKey = "items" | "decor" | "floor" | "background" | "anim";
+export type LayerKey = "items" | "decor" | "floor" | "background" | "anim" | "lights";
+
+/** Layers that use right-panel scene list group visibility (eye toggles). */
+export type SceneListLayer = "decor" | "floor" | "background" | "items";
+
+export function makeHiddenSceneGroups(): Record<SceneListLayer, Set<string>> {
+  return {
+    decor: new Set<string>(),
+    floor: new Set<string>(),
+    background: new Set<string>(),
+    items: new Set<string>(),
+  };
+}
 
 /** 视图模式：2D 俯视画布 / 3D 立体视口（共享同一份 state）。 */
 export type ViewMode = "2d" | "3d";
@@ -90,6 +103,7 @@ export function makeLayerVisibility(): Record<LayerKey, LayerVisibility> {
     floor: all,
     background: all,
     anim: noBg,
+    lights: noBg,
   };
 }
 
@@ -108,6 +122,8 @@ export interface EditorSnapshot {
   buttonEvents: ButtonEventLink[];
   /** 同轴按钮组（undo/redo 一并恢复）。 */
   coaxialLinks: CoaxialLink[];
+  /** 随机触发器节点（undo/redo 一并恢复）。 */
+  randomTriggers: RandomTriggerLink[];
   /** 相机（背景色/FOV，undo/redo 一并恢复）。 */
   cameraInfo: CameraInfo | null;
   /** Art/Lights 非 prefab 灯光（undo/redo 一并恢复）。 */
@@ -116,6 +132,8 @@ export interface EditorSnapshot {
   ceilingHeight: number;
   /** Whether the scene currently has OptionalFloat.m_hasValue enabled. */
   hasCeilingHeight: boolean;
+  chefHeadLightsEnabled: boolean;
+  chefHeadLightRange: number;
 }
 
 /** Move layer interaction mode. "members" = pick/box-select members (items + floors);
@@ -327,13 +345,25 @@ export const S = {
   cameraPosOrigin: null as LayoutVector3 | null,
   /** Art/Lights 非 prefab 灯光。 */
   lights: [] as LightInfo[],
+  /** 灯光层：当前选中的 hierarchyPath。 */
+  selectedLightPath: null as string | null,
+  /** 灯光层：正在拖拽移动（XZ 或 Shift+Y）。 */
+  draggingLightPath: null as string | null,
+  /** 灯光层：下一次画布点击放置的类型（null = 仅选择/拖拽）。 */
+  pendingNewLightType: null as number | null,
+  lightDragLastY: 0,
   ceilingHeight: 2,
   hasCeilingHeight: false,
+  chefHeadLightsEnabled: false,
+  chefHeadLightRange: 10,
   /** 画布上显示相机视野范围（FOV 视锥与地面交线）。 */
   showCameraFov: localStorage.getItem("showCameraFov") !== "0",
+  showSceneLights: localStorage.getItem("showSceneLights") !== "0",
   autoKillPlane: false,
   autoWalkable: true,
   allowWorkstationOverlap: false,
+  /** 写回阻断的工作台重叠告警：涉事 _editorKey，直到用户其他操作后清除。 */
+  workstationOverlapAlertKeys: null as Set<string> | null,
   floorMaterials: [] as FloorMaterial[],
   /** 实心地板材质选择器：上次选中的主题分类 tab。 */
   floorMaterialTabKey: "" as string,
@@ -371,8 +401,8 @@ export const S = {
   floorHeightPanelOpen: false,
   /** Per-layer canvas visibility of each content category. */
   layerVisibility: makeLayerVisibility(),
-  /** Decor layer: hidden display-name groups (view-only; cleared on scene load). */
-  decorHiddenGroups: new Set<string>(),
+  /** Per-layer hidden scene-list groups (view-only; cleared on scene switch). */
+  hiddenSceneGroups: makeHiddenSceneGroups(),
   scenePath: "",
   snapEnabled: true,
   showGrid: true,
@@ -385,6 +415,7 @@ export const S = {
   buttonLinks: [] as ButtonLink[],
   buttonEvents: [] as ButtonEventLink[],
   coaxialLinks: [] as CoaxialLink[],
+  randomTriggers: [] as RandomTriggerLink[],
   activeAnimGroupId: null as string | null,
   activeAnimEventIdx: null as number | null,
   selectedWaypointId: null as string | null,

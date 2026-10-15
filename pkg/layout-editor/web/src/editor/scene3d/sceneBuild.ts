@@ -36,10 +36,11 @@ import {
 import { buildFloorNode, floorSignature, floorDrawOrder } from "./meshFloors";
 import { toSceneZ, toSceneRotY, applySceneEuler } from "./space";
 import { rebuildOverlays } from "./overlays3d";
+import { rebuildSceneLights } from "./lights3d";
 import { rebuildAnim } from "./anim3d";
 import { rebuildHandles } from "./handles3d";
 import { itemInCurrentPart, floorInCurrentPart } from "../partLevel";
-import { isItemHiddenByDecorGroup } from "../decorLayerVisibility";
+import { isFloorHiddenBySceneGroup, isItemHiddenBySceneGroup } from "../layerGroupVisibility";
 
 /** 物件是否参与 3D 渲染（与 2D 的可见性口径一致）。 */
 export function itemVisible3D(it: Parameters<typeof itemCategoryOf>[0] & { localPosition?: { y: number } }): boolean {
@@ -47,7 +48,7 @@ export function itemVisible3D(it: Parameters<typeof itemCategoryOf>[0] & { local
   if (!itemInCurrentPart(it as { partId?: string })) return false;
   if (hideBackgroundContentOnFloorLayer(it)) return false;
   if (!categoryVisible(itemCategoryOf(it))) return false;
-  if (isItemHiddenByDecorGroup(it as EditorItem)) return false;
+  if (isItemHiddenBySceneGroup(it as EditorItem)) return false;
   return itemInHeightFilter(it as never);
 }
 
@@ -71,6 +72,7 @@ export function syncScene(ctx: Scene3DCtx): void {
     syncItems(ctx);
     syncFloors(ctx);
     rebuildOverlays(ctx);
+    rebuildSceneLights(ctx);
     rebuildAnim(ctx);
     rebuildHandles(ctx);
   } finally {
@@ -175,6 +177,7 @@ function syncFloors(ctx: Scene3DCtx): void {
     if (!floorInCurrentPart(f)) continue;
     if (!categoryVisible(floorCategoryOf(f))) continue;
     if (!floorInHeightFilter(f)) continue;
+    if (isFloorHiddenBySceneGroup(f)) continue;
     alive.add(f._key);
 
     const isBg = f.surfaceKind === "background";

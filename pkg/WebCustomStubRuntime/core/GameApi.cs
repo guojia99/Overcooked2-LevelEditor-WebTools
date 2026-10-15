@@ -485,6 +485,63 @@ namespace CustomStub
                     BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(int) }, null)
                 : null;
         });
+        public static readonly MethodInfo IngredientAddIngredientMethod = Safe(delegate
+        {
+            var nodeType = Find("AssembledDefinitionNode");
+            return ServerIngredientContainerType != null && nodeType != null
+                ? ServerIngredientContainerType.GetMethod("AddIngredient",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { nodeType }, null)
+                : null;
+        });
+        public static readonly MethodInfo IngredientRemoveIngredientMethod = Safe(delegate
+        {
+            return ServerIngredientContainerType != null
+                ? ServerIngredientContainerType.GetMethod("RemoveIngredient",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(int) }, null)
+                : null;
+        });
+        public static readonly MethodInfo IngredientCanAddIngredientMethod = Safe(delegate
+        {
+            var nodeType = Find("AssembledDefinitionNode");
+            return ServerIngredientContainerType != null && nodeType != null
+                ? ServerIngredientContainerType.GetMethod("CanAddIngredient",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { nodeType }, null)
+                : null;
+        });
+        public static readonly Type PlacementContainerType = Find("PlacementContainer");
+        public static readonly Type ServerPlacementContainerType = Find("ServerPlacementContainer");
+        public static readonly Type NetworkUtilsType = Find("NetworkUtils");
+        public static readonly MethodInfo ServerSpawnPrefabMethod = Safe(delegate
+        {
+            return NetworkUtilsType != null
+                ? NetworkUtilsType.GetMethod("ServerSpawnPrefab", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(GameObject), typeof(GameObject) }, null)
+                : null;
+        });
+        public static readonly MethodInfo GetPrefabForNodeMethod = Safe(delegate
+        {
+            // 不能引用后置声明的 OrderToPrefabLookupType（静态初始化按文本顺序，
+            // 初始化期必为 null——曾致本字段永久 null、节点→prefab 全灭）；此处自查。
+            var lookupType = Find("OrderToPrefabLookup");
+            return lookupType != null
+                ? lookupType.GetMethod("GetPrefabForNode",
+                    BindingFlags.Public | BindingFlags.Instance, null, new[] { Find("AssembledDefinitionNode") }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerBackpackDispenserHandlePickupMethod = Safe(delegate
+        {
+            var t = Find("ServerBackpackDispenser");
+            return t != null
+                ? t.GetMethod("HandlePickup", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+        public static readonly MethodInfo ServerPlacementHandlePlacementMethod = Safe(delegate
+        {
+            return ServerPlacementContainerType != null
+                ? ServerPlacementContainerType.GetMethod("HandlePlacement",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
         public static readonly MethodInfo IngredientCanTakeContentsMethod = Safe(delegate
         {
             var nodeType = Find("AssembledDefinitionNode");
@@ -837,6 +894,56 @@ namespace CustomStub
         // ---- 自动步道定时反转（TravelatorReverser；vanilla 类型） ----
         public static readonly Type TravelatorType = Find("Travelator");
 
+        // ---- 按钮控速（ButtonSpeedControl；vanilla 类型，2026-10-14） ----
+        //  Travelator.m_speed（public）+ 私有 SetSpeedOnMaterial()（改速后必须重写
+        //  材质 _speed，否则皮带纹理滚动与推人速度脱节）；ConveyorStation.
+        //  m_conveySpeed（public，ServerConveyorStation.RefreshStartConveying 每次
+        //  投递开始时读取 1/速度 为时长——运行时改写对在途投递零影响）。
+        public static readonly FieldInfo TravelatorSpeedField = Field(TravelatorType, "m_speed");
+        public static readonly MethodInfo TravelatorSetSpeedOnMaterialMethod = Safe(delegate
+        {
+            return TravelatorType != null
+                ? TravelatorType.GetMethod("SetSpeedOnMaterial",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly Type ConveyorStationType = Find("ConveyorStation");
+        public static readonly FieldInfo ConveyorSpeedField = Field(ConveyorStationType, "m_conveySpeed");
+
+        // ---- 按钮生成器批次（ButtonSpawnerBatch；vanilla 类型，2026-10-14） ----
+        //  守卫镜像 ServerTriggerAttachedSpawn.OnTrigger(:42)：落点站 HasItem() 或
+        //  IConveyenceReceiver.IsReceiving() 时不送。m_trigger 名从 TriggerAttachedSpawn
+        //  实例读（原生 prefab 默认值，绝不硬编码）。
+        public static readonly Type TriggerAttachedSpawnType = Find("TriggerAttachedSpawn");
+        public static readonly FieldInfo AttachedSpawnTriggerField = Field(TriggerAttachedSpawnType, "m_trigger");
+        public static readonly Type ServerTriggerAttachedSpawnType = Find("ServerTriggerAttachedSpawn");
+        public static readonly FieldInfo ServerAttachedSpawnStationField =
+            Field(ServerTriggerAttachedSpawnType, "m_attachStation");
+        public static readonly FieldInfo ServerAttachedSpawnReceiverField =
+            Field(ServerTriggerAttachedSpawnType, "m_conveyenceReceiver");
+        public static readonly Type ServerAttachStationType = Find("ServerAttachStation");
+        public static readonly MethodInfo AttachStationHasItemMethod = Safe(delegate
+        {
+            return ServerAttachStationType != null
+                ? ServerAttachStationType.GetMethod("HasItem",
+                    BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly Type ConveyenceReceiverInterface = Find("IConveyenceReceiver");
+        public static readonly MethodInfo ConveyenceIsReceivingMethod = Safe(delegate
+        {
+            return ConveyenceReceiverInterface != null
+                ? ConveyenceReceiverInterface.GetMethod("IsReceiving")
+                : null;
+        });
+        //  TriggerTimer 三个公开序列化字段：ButtonSpawnerBatch 绑定时停用原生
+        //  自动循环（防双送；见组件注释——写回烘焙不可行，Reload 会重建 child）。
+        public static readonly Type TriggerTimerType = Find("TriggerTimer");
+        public static readonly FieldInfo TriggerTimerStartTimingField = Field(TriggerTimerType, "m_startTiming");
+        public static readonly FieldInfo TriggerTimerStartTriggerField = Field(TriggerTimerType, "m_startTrigger");
+        public static readonly FieldInfo TriggerTimerAtStartField = Field(TriggerTimerType, "m_triggerAtStart");
+
         // ---- 传送门单向（TeleportalExitOnly；全部 vanilla 类型） ----
         //  Teleportal.m_exitPortal 是方向的唯一来源（public 字段）；
         //  Server/ClientTeleportal 在 StartSynchronising 里把出口的 receivers
@@ -848,6 +955,101 @@ namespace CustomStub
         public static readonly FieldInfo ServerTeleportalExitReceiversField = Field(ServerTeleportalType, "m_exitReceivers");
         public static readonly Type ClientTeleportalType = Find("ClientTeleportal");
         public static readonly FieldInfo ClientTeleportalExitReceiversField = Field(ClientTeleportalType, "m_exitReceivers");
+
+        // ---- Web 储物背包（WebBackpack，3.8.10）：spawnable 双端注册 / 订单节点
+        //      解析 / uID 识别 / 食材箱-切分链。字段一律引用本段之前声明的类型
+        //      （NetworkUtilsType/ServerIngredientContainerType/GameUtilsType 等），
+        //      静态初始化按文本顺序，禁止上移。 ----
+        public static readonly MethodInfo RegisterSpawnableMethod = Safe(delegate
+        {
+            return NetworkUtilsType != null
+                ? NetworkUtilsType.GetMethod("RegisterSpawnablePrefab", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(GameObject), typeof(GameObject) }, null)
+                : null;
+        });
+        public static readonly Type OrderDefinitionNodeType = Find("OrderDefinitionNode");
+        public static readonly MethodInfo NodeConvertMethod = Safe(delegate
+        {
+            return OrderDefinitionNodeType != null
+                ? OrderDefinitionNodeType.GetMethod("Convert", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly FieldInfo NodeUidField = Field(OrderDefinitionNodeType, "m_uID");
+        public static readonly MethodInfo GetAllOrderNodesMethod = Safe(delegate
+        {
+            return GameUtilsType != null
+                ? GameUtilsType.GetMethod("GetAllOrderNodes", BindingFlags.NonPublic | BindingFlags.Static,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly Type WorkableItemType = Find("WorkableItem");
+        public static readonly FieldInfo WorkableNextPrefabField = Field(WorkableItemType, "m_nextPrefab");
+        public static readonly Type PickupItemSpawnerType = Find("PickupItemSpawner");
+        public static readonly FieldInfo PickupItemPrefabField = Field(PickupItemSpawnerType, "m_itemPrefab");
+        public static readonly Type IngredientPropertiesType = Find("IngredientPropertiesComponent");
+        public static readonly MethodInfo IngredientEmptyMethod = Safe(delegate
+        {
+            return ServerIngredientContainerType != null
+                ? ServerIngredientContainerType.GetMethod("Empty", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        // IngredientAssembledNode 包裹的订单侧节点（宿主字段名即此拼写）与其 icon。
+        public static readonly FieldInfo IngredientAssembledOrderField =
+            Field(IngredientAssembledNodeType, "m_ingriedientOrderNode");
+        public static readonly Type IngredientOrderNodeType = Find("IngredientOrderNode");
+        public static readonly FieldInfo IngredientOrderIconField = Field(IngredientOrderNodeType, "m_iconSprite");
+        // 组合节点（成品菜/中间产物）的子节点数组（宫格图标回落用）。
+        public static readonly Type CompositeAssembledType = Find("CompositeAssembledNode");
+        public static readonly FieldInfo CompositeCompositionField = Field(CompositeAssembledType, "m_composition");
+        public static readonly FieldInfo CompositeOptionalField = Field(CompositeAssembledType, "m_optional");
+        public static readonly Type AssembledDefinitionNodeType = Find("AssembledDefinitionNode");
+        // ---- Web 背包宫格（vanilla 锅具 IngredientsContentsUI 驱动，3.8.11）----
+        public static readonly Type IngredientContentsUIContainerType = Find("IngredientContentsUIContainer");
+        // 盘族判定（盘子/杯子/马克杯/托盘共用 Plate 组件；面包皮/锅等非盘族容器
+        // 不得走「空X接」分支，否则会把背包节点注入面包皮拼成汉堡——2026-10-12 实测）。
+        public static readonly Type PlateType = Find("Plate");
+        public static readonly MethodInfo UiContainerSetOrderMethod = Safe(delegate
+        {
+            return IngredientContentsUIContainerType != null && AssembledDefinitionNodeType != null
+                ? IngredientContentsUIContainerType.GetMethod("SetOrder",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { AssembledDefinitionNodeType }, null)
+                : null;
+        });
+        public static readonly MethodInfo UiContainerSetMinimumSizeMethod = Safe(delegate
+        {
+            return IngredientContentsUIContainerType != null
+                ? IngredientContentsUIContainerType.GetMethod("SetMinimumSize",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(int) }, null)
+                : null;
+        });
+        // 宫格布局（原版 UI 序列化为固定 2 列——16 格会排成 2×8；按容量重设列数/格宽）
+        public static readonly Type AnchorGridLayoutGroupType =
+            Find("UnityEngine.UI.AnchorGridLayoutGroup");
+        public static readonly FieldInfo GridConstraintField = Safe(delegate
+        {
+            return AnchorGridLayoutGroupType != null
+                ? AnchorGridLayoutGroupType.GetField("m_Constraint",
+                    BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+        public static readonly FieldInfo GridConstraintCountField = Safe(delegate
+        {
+            return AnchorGridLayoutGroupType != null
+                ? AnchorGridLayoutGroupType.GetField("m_ConstraintCount",
+                    BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+        public static readonly FieldInfo GridCellSizeField = Safe(delegate
+        {
+            return AnchorGridLayoutGroupType != null
+                ? AnchorGridLayoutGroupType.GetField("m_CellSize",
+                    BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
 
         // ---- 锅具食材许可表（CookableContainer.m_approvedContentsList） ----
         public static readonly Type CookableContainerType = Find("CookableContainer");
@@ -1077,6 +1279,67 @@ namespace CustomStub
             return t != null
                 ? t.GetMethod("HandlePickup", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 : null;
+        });
+
+        // ---- Harmony 目标：分 P 道具重生守卫（PartSlotRespawnGuard；vanilla 类型） ----
+        public static readonly Type ServerPlateReturnStationType = Find("ServerPlateReturnStation");
+        public static readonly Type CleanPlateUtensilRespawnType = Find("ServerCleanPlateUtensilRespawnBehaviour");
+        /// <summary>ServerUtensilRespawnBehaviour 及 4 个派生类各自声明的
+        /// CanRespawnOnStation（DeclaredOnly——派生类均 override，取继承方法会对
+        /// 同一基类方法重复补丁）。锅/净盘/脏盘叠/灭火器重生选台全经此虚方法，
+        /// 基类扫描循环与脏盘叠的 IdealSpawnLocation 短路均调用它。</summary>
+        public static readonly MethodInfo[] UtensilCanRespawnOnStationMethods = Safe(delegate
+        {
+            if (ServerAttachStationType == null)
+                return null;
+            var names = new[]
+            {
+                "ServerUtensilRespawnBehaviour",
+                "ServerCookingUtensilRespawnBehaviour",
+                "ServerCleanPlateUtensilRespawnBehaviour",
+                "ServerDirtyPlateStackUtensilRespawnBehaviour",
+                "ServerAvoidStationUtensilRespawnBehaviour"
+            };
+            var list = new List<MethodInfo>();
+            for (int i = 0; i < names.Length; i++)
+            {
+                var t = Find(names[i]);
+                if (t == null)
+                    continue;
+                var m = t.GetMethod("CanRespawnOnStation",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly,
+                    null, new[] { ServerAttachStationType }, null);
+                if (m != null)
+                    list.Add(m);
+            }
+            return list.Count > 0 ? list.ToArray() : null;
+        });
+
+        /// <summary>GetStationRespawnPriority 的声明方法集（基类 + 锅具派生各自
+        /// 声明；净盘/脏盘叠/灭火器未 override，虚拟分发回落基类）。分 P 守卫
+        /// 给净盘补「归还台优先」惩罚用。</summary>
+        public static readonly MethodInfo[] UtensilStationPriorityMethods = Safe(delegate
+        {
+            if (ServerAttachStationType == null)
+                return null;
+            var names = new[]
+            {
+                "ServerUtensilRespawnBehaviour",
+                "ServerCookingUtensilRespawnBehaviour"
+            };
+            var list = new List<MethodInfo>();
+            for (int i = 0; i < names.Length; i++)
+            {
+                var t = Find(names[i]);
+                if (t == null)
+                    continue;
+                var m = t.GetMethod("GetStationRespawnPriority",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly,
+                    null, new[] { ServerAttachStationType }, null);
+                if (m != null)
+                    list.Add(m);
+            }
+            return list.Count > 0 ? list.ToArray() : null;
         });
         // ============ 运行时辅助（不缓存，静态只读之外的部分） ============
 
@@ -1710,6 +1973,78 @@ namespace CustomStub
             catch (Exception ex)
             {
                 RecordFindFailure((type != null ? type.Name : "<null>") + "." + propName, ex);
+                return null;
+            }
+        }
+
+        internal static GameObject ServerSpawnPrefab(GameObject spawner, GameObject prefab)
+        {
+            if (spawner == null || prefab == null || ServerSpawnPrefabMethod == null)
+                return null;
+            try
+            {
+                return ServerSpawnPrefabMethod.Invoke(null, new object[] { spawner, prefab }) as GameObject;
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[GameApi] ServerSpawnPrefab 异常: " + ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>NetworkUtils.RegisterSpawnablePrefab(spawner, prefab)——幂等
+        /// （SpawnableEntityCollection 内部 Contains 判重）。WebBackpack 双端取出
+        /// 前注册；失败返回 false 由调用方降级。</summary>
+        internal static bool RegisterSpawnable(GameObject spawner, GameObject prefab)
+        {
+            if (spawner == null || prefab == null || RegisterSpawnableMethod == null)
+                return false;
+            try
+            {
+                RegisterSpawnableMethod.Invoke(null, new object[] { spawner, prefab });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[GameApi] RegisterSpawnable 异常: " + ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>GameUtils.GetAllOrderNodes()（private static）——关卡菜谱匹配表
+        /// 的全部订单侧节点（含自定义菜谱经 optionalRecipeMatchListItems 注入的
+        /// 运行时转换结果）。按 uID 反查自定义初填节点用。</summary>
+        internal static object[] GetAllOrderNodes()
+        {
+            if (GetAllOrderNodesMethod == null)
+                return null;
+            try
+            {
+                return GetAllOrderNodesMethod.Invoke(null, null) as object[];
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[GameApi] GetAllOrderNodes 异常: " + ex.Message);
+                return null;
+            }
+        }
+
+        internal static object GetGlobalOrderToPrefabLookup()
+        {
+            var gu = Find("GameUtils");
+            if (gu == null)
+                return null;
+            var prop = gu.GetProperty("s_orderToPrefabLookup", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (prop == null)
+                prop = gu.GetProperty("OrderToPrefabLookup", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (prop == null)
+                return null;
+            try
+            {
+                return prop.GetValue(null, null);
+            }
+            catch
+            {
                 return null;
             }
         }

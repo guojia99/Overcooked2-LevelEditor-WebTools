@@ -124,18 +124,56 @@ export interface LayoutDispenserStub {
   questionMarkGuid?: string;
 }
 
+export interface LayoutWebBackpackStub {
+  /** 1 | 2 | 4 | 6 | 9 | 12 | 16 | 20 | 25 | 30（宫格列多行少；30 为线上协议上限内） */
+  capacity?: number;
+  /** @deprecated 3.8.10 起取出恒 FIFO（保留字段仅为旧场景 JSON 兼容，值恒 "fifo"） */
+  pickMode?: string;
+  /** 开局预设填充（顺序槽，长度 ≤ capacity；食材/中间产物/菜谱/自定义菜谱 guid 混排） */
+  initialFillGuids?: string[];
+}
+
+export interface LayoutWebKillerGhostStub {
+  /** 触碰致死触发球半径（米，0.15–2） */
+  hitRadius?: number;
+  /** false = 不击杀 */
+  enabled?: boolean;
+  /** npc_ghost | npc_keep | ghost_chef */
+  style?: string;
+}
+
 export interface LayoutFoodSpawnerStub {
   spawnInOrder?: boolean;
   attachmentPrefabGuids?: string[];
   weights?: number[];
   triggerTime?: number;
   triggerAtStart?: boolean;
+  /** 按钮批次触发：true = 原生自动循环停用，每按一次按钮送出一批 batchCount 个
+   *  （第 1 个立刻、之后每隔 triggerTime 1 个；批次完成后冷却 buttonCooldown 秒）。
+   *  权威 = CustomStub.ButtonSpawnerBatch（Design/Speed Logic/SpnB_ helper +
+   *  tag "SpawnerBatch|..."）；触发源 = switchLinks 直连本生成器的开关。 */
+  startByButton?: boolean;
+  /** 每批数量（1~50）。 */
+  batchCount?: number;
+  /** 批次完成后冷却秒数（期间按压无效）。 */
+  buttonCooldown?: number;
 }
 
 export interface LayoutConveyorStub {
   conveySpeed?: number;
   /** 由按钮动画组旋转时刷新服务端实际传送目标。 */
   buttonControlled?: boolean;
+  /** 按钮控速（缺省 = 未配置）。权威 = CustomStub.ButtonSpeedControl
+   *  （Design/Speed Logic/SpdCtl_ helper + tag "SpeedCtl|..."）；触发源 =
+   *  switchLinks 直连本传送带的开关（每按一次切下一档）。 */
+  speedControl?: LayoutSpeedControl;
+}
+
+export interface LayoutSpeedControl {
+  /** false = 配置保留但不生效 */
+  enabled: boolean;
+  /** 速度档位（≥2；负值 = 反向；尾档回卷首档） */
+  levels: number[];
 }
 
 export interface LayoutTeleportalStub {
@@ -169,6 +207,9 @@ export interface LayoutTravelatorStub {
   speed?: number;
   /** 定时反转配置（缺省 = 恒正向）。权威 = CustomStub.TravelatorReverser 组件。 */
   timedReverse?: LayoutTravelatorReverse;
+  /** 按钮控速（缺省 = 未配置；与定时反转可共存——反转只动朝向、控速只动速度）。
+   *  权威 = CustomStub.ButtonSpeedControl（Design/Speed Logic/SpdCtl_ helper）。 */
+  speedControl?: LayoutSpeedControl;
 }
 
 export interface LayoutTravelatorReverse {
@@ -340,6 +381,8 @@ export interface LayoutItem {
   /** 斜坡参数（airSlope=true 时有效；Unity 导出时从场景几何精确反推）。 */
   slope?: LayoutAirSlopeStub;
   dispenser?: LayoutDispenserStub;
+  webBackpack?: LayoutWebBackpackStub;
+  webKillerGhost?: LayoutWebKillerGhostStub;
   conveyor?: LayoutConveyorStub;
   teleportal?: LayoutTeleportalStub;
   ratHeist?: LayoutRatHeistStub;
@@ -572,6 +615,10 @@ export interface LayoutDocument {
   /** KitchenLoaderManager Ceiling Height; absent means keep the scene default. */
   hasCeilingHeight?: boolean;
   ceilingHeight?: number;
+  /** Chefs 下每位出生点的头灯（对齐 OC1_Story_4_2）；写回时由 ChefHeadLightBakery 烘焙。 */
+  chefHeadLightsEnabled?: boolean;
+  /** Spot Light range；缺省 10（与 OC1 4-2 一致）。 */
+  chefHeadLightRange?: number;
   items: LayoutItem[];
   /** Editable floor/background plane objects (scene-embedded). */
   floors?: FloorObject[];
@@ -595,6 +642,7 @@ export interface LayoutDocument {
   /** 同轴按钮组（≥2 按钮时间窗内集齐才触发目标）。
    *  仅全量保存携带（引用场景物品）。 */
   coaxialLinks?: CoaxialLinkData;
+  randomTriggers?: RandomTriggerData;
   /** 分 P（多阶段布局）配置；缺省或 enabled:false = 普通单阶段关卡。
    *  enabled 后不可逆（后端拒绝降级）。真源 = 桥侧 part_level~/part_level.json。 */
   partLevel?: PartLevelConfig;
@@ -620,7 +668,8 @@ export interface PartConfig {
   id: string;
   /** 作者可读名（如「开局」「一分钟后」）。 */
   label?: string;
-  /** 停放方向（缺省 down/30）。P1 的 park 不生效（初始偏移恒 0）。 */
+  /** 退场去向（缺省 down/30）：P2+ 兼作停放/入场位；P1 初始在场偏移恒 0，
+   *  其 park 仅作 Exit 目的地。 */
   park?: PartParkConfig;
   /** 背景层是否随本 P 替换（默认 false）。 */
   replaceBackground?: boolean;
@@ -634,8 +683,9 @@ export interface PartTransitionConfig {
   toPartId: string;
   /** 恒为 "partTransition"。 */
   kind: "partTransition";
-  /** "sink_then_rise"（先后）| "slide_cross"（并行）| "wave_wipe"（slide + 海浪物件包）。 */
-  preset: "sink_then_rise" | "slide_cross" | "wave_wipe";
+  /** "sink_then_rise"（先后）| "slide_cross"（并行）。
+   *  wave_wipe（海浪拍击）已下架（v3.4，以后再做）：旧档残留按 slide_cross 归一。 */
+  preset: "sink_then_rise" | "slide_cross";
   /** fromPart 的稳定时长（秒，唯一权威，>0）。 */
   stableSeconds: number;
   /** 转场总时长（秒，= out/in 编排结果）。 */
@@ -644,12 +694,17 @@ export interface PartTransitionConfig {
   inSeconds: number;
   /** 可选 fx 组 id（shake/flash，M3 绑定）。 */
   fxGroupId?: string;
-  /** 转场结束、新 P 稳定后清理旧 P 内容物（默认 true）。 */
+  /** 下一 P 上浮完成（Stable）后清理旧 P 内容物（默认 true）：散落食材销毁；
+   *  锅/盘/脏盘/灭火器等带重生行为的道具走原版重生、落到新 P 空闲站台
+   *  （跨 P 携带，v3.4/D16）。 */
   cleanupContents?: boolean;
-  /** Stable 后延迟 N 秒再清理（默认 0）。 */
+  /** Stable（新 P 就位）后延迟 N 秒再清理（默认 0）。 */
   cleanupDelaySeconds?: number;
-  /** Design 根 Loose-only 大扫除（全场散落食材，默认 true）。 */
+  /** @deprecated v3.4（D15）废除：Design 根大扫除整段移除，base 层任何东西不清扫。
+   *  字段保留仅为旧档反序列化兼容，烘焙一律忽略。 */
   killLooseEverywhere?: boolean;
+  /** @deprecated v3.4（D15）同 killLooseEverywhere，烘焙一律忽略。 */
+  killAttachedEverywhere?: boolean;
 }
 
 /** 分 P 顶层配置。运行时无循环（决策 Q2）——循环体验用「拷贝分 P」手动延长链。 */
@@ -690,8 +745,19 @@ export interface LightInfo {
   range: number;
   spotAngle: number;
   enabled: boolean;
-  /** 只读：世界欧拉角快照（度）。 */
+  /** 世界位置；positionEdited 为 true 时写回 Unity。 */
+  position?: LayoutVector3;
+  positionEdited?: boolean;
+  /** 世界欧拉角（度）；rotationEdited 为 true 时写回 Unity。 */
   eulerAngles: LayoutVector3;
+  rotationEdited?: boolean;
+  /** LightShadows：0=None 1=Hard 2=Soft */
+  shadows?: number;
+  shadowStrength?: number;
+  bounceIntensity?: number;
+  innerSpotAngle?: number;
+  /** LightmapBakeType 枚举整型 */
+  lightmapping?: number;
 }
 
 export interface SwitchLink {
@@ -787,6 +853,57 @@ export interface CoaxialLink {
 
 export interface CoaxialLinkData {
   links: CoaxialLink[];
+}
+
+// ---------- 随机触发器（信号/按钮输入 → 按权重随机选一候选发出） ----------
+
+/** 可编程参数值：mode 0=无参数（只发信号名） 1=固定字符串 fixedValue
+ *  2=候选列表 candidates 随机选一 3=随机字符串（stringLength 位 + 可选 charset）
+ *  4=随机 digits 位整数 5=数值区间 [minValue,maxValue]（decimals 位小数，0=整数）。 */
+export interface RandomTriggerParam {
+  mode: number;
+  fixedValue?: string;
+  candidates?: string[];
+  stringLength?: number;
+  charset?: string;
+  digits?: number;
+  minValue?: number;
+  maxValue?: number;
+  decimals?: number;
+}
+
+/** 候选输出：信号名 + 参数规则 + 权重 + 目标。 */
+export interface RandomTriggerEntry {
+  /** 信号名（非空；发出的最终信号 = 信号名 + 分隔符 + 参数值）。 */
+  trigger: string;
+  /** 参数规则（null / mode=0 = 无参数）。 */
+  param?: RandomTriggerParam | null;
+  /** 权重（≥0；全 0 视为等权）。 */
+  weight: number;
+  /** 目标引用：""（或缺省）= 发给节点自身物体；"u:<instanceID>" = 场景物品；
+   *  "rt:<linkId>" = 其他随机触发器节点。 */
+  targetRef?: string;
+}
+
+/** 随机触发器节点：一个信号输入（或任一源按钮按下）→ 按权重随机选一个候选
+ *  发出；冷却限流 N 秒内只触发一次（0=不限）。烘焙为 Design/RandomTrigger
+ *  Logic（CustomStub.RandomTrigger，文档级，仅全量保存携带）。 */
+export interface RandomTriggerLink {
+  id: string;
+  /** 源按钮 instanceId 列表（可空 = 纯信号输入模式；任一按下即掷骰）。 */
+  sourceIds?: string[];
+  /** 输入信号名（空 = 匹配任意输入信号）。 */
+  inputTrigger?: string;
+  /** 冷却限流秒数（≥0；0 = 不限流）。 */
+  cooldownSeconds?: number;
+  /** 参数分隔符（默认 ":"）。 */
+  separator?: string;
+  /** 候选列表（≥2）。 */
+  entries: RandomTriggerEntry[];
+}
+
+export interface RandomTriggerData {
+  links: RandomTriggerLink[];
 }
 
 export type SurfaceKind =
@@ -1271,7 +1388,11 @@ export interface DepsExportManifest {
   runtimeState: "fresh" | "stale" | "missing" | string;
   /** 统一运行时 SSOT 版本（requires.txt 门控用；与打包版本无关）。 */
   runtimeVersion: string;
-  /** 上次依赖包导出使用的打包版本（空 = 无记录，回落默认 v1.0.0）。 */
+  /** web/public/Loader.dll 的 PluginVersion。 */
+  loaderVersion: string;
+  /** Loader.PluginVersion 与 runtimeVersion 一致。 */
+  versionsAligned: boolean;
+  /** 上次依赖包导出使用的打包版本（空 = 无记录，前端回落 runtimeVersion）。 */
   lastDepsVersion: string;
   entries: DepsManifestEntry[];
 }
@@ -1832,7 +1953,7 @@ export interface BunUsage {
   isFinishedBurger: boolean;
   /** 组装定义子类（CustomRecipeOptionalBurgerSO）。 */
   isAssembly: boolean;
-  /** 当前面包皮 id（ChoppedBunSO / DLC02_ChoppedBun / dlc08_choppedbun）。 */
+  /** 当前面包皮 id（ChoppedBunSO / DLC02_ChoppedBun / DLC08_ChoppedBun）。 */
   bunId: string;
   bunGuid: string;
   /** compositionSOs 下标；-1 = 组装定义的 bunSO 字段。 */

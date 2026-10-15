@@ -652,7 +652,7 @@ export async function updateSetInfo(body: SetInfoUpdateBody): Promise<void> {
 /** 启动关卡集导出（打包 → zip）。setNames 传多个集名即合并导出到同一 zip
  *  （OC2DIYLevel/levels/<set1>/、<set2>/… 并列，依赖包只带一份）。
  *  mode：all（关卡+依赖，默认）| levels（仅关卡集）| deps（仅依赖包）。
- *  depsVersion：deps 模式的依赖包打包版本（独立于运行时/关卡集版本，默认 1.0.0）。
+ *  depsVersion：deps 模式的依赖包打包版本（默认 = StubVersion.Value，建议与 requires.txt 一致）。
  *  selectedLevels：逐关卡选择性导出（仅单集；元素 = 场景名 sceneName；省略/空 =
  *  全量导出）。部分导出时 info bundle 内 levelInfos 会被临时过滤为入选关卡，
  *  zip 只携带入选 s_* 场景 bundle（后端构建后自动还原源资产）。

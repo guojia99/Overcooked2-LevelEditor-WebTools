@@ -1,8 +1,30 @@
 {
   "schemaVersion": 10,
   "index": 17,
-  "itemCount": 81,
+  "itemCount": 83,
   "items": [
+    {
+      "id": "Smoothie_Mega",
+      "guid": "5a896822d197c6f6fa53ac4a88e0181d",
+      "assetPath": "Assets/commonW1/prefabs/dlc02/decor/recipes/Smoothie_Mega.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 1.011,
+      "baseY": 0.14,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "2fab439c889ab9f4eaaaf524717df134",
+      "nameZh": "什锦果汁",
+      "nameEn": "Mega Smoothie",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
     {
       "id": "Smoothie_Melon",
       "guid": "8dca04441438a0201dc9551e638ef2f0",
@@ -974,6 +996,22 @@
       },
       "nameZh": "火锅大锅（原版）",
       "nameEn": "Large Hot Pot (vanilla)",
+      "icon": false
+    },
+    {
+      "id": "web_killer_ghost_01",
+      "guid": "e5f6789012345678901234abcdef0123",
+      "assetPath": "Assets/commonW4/prefabs/mechanisms/web_killer_ghost_01.prefab",
+      "category": "mechanisms",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "致命鬼魂",
+      "nameEn": "Killer Ghost (Web)",
       "icon": false
     },
     {

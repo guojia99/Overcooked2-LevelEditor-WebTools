@@ -136,8 +136,13 @@ namespace CustomStub
         /// 由 loader 生成 "集|*|legacy" 兼容条目，本类对其维持 v3.4 行为（探测+
         /// 自愈+特征全开），已分发旧集无需重导出；4.0.0 起严格按清单。**
         /// TickProbe 30 秒探测通道在无约束模式与旧版兼容分支保留（新导出集的
-        /// 真机路径不再依赖名字子串探测）。</summary>
-        public const string Version = "v16(" + StubVersion.Value + ")";
+        /// 真机路径不再依赖名字子串探测）。
+        ///  v17（3.9.0）：RandomTrigger 随机触发器（信号输入/按钮直连 → 按权重
+        /// 随机选一个候选发出；信号名+分隔符+可编程参数值；冷却限流；服务端
+        /// 权威掷骰）。纯自治组件（事件驱动 + 可选低频轮询协程），不计入 ticker
+        /// 激活票数（TeleportalExitOnly 同款豁免），自愈挂载走 tag
+        /// RandomTrigger|I:..|C:..|S:..|N:..|E:..（%,;&gt;|/@ 转义）。</summary>
+        public const string Version = "v17(" + StubVersion.Value + ")";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -493,6 +498,7 @@ namespace CustomStub
                 // 场景加载之前安装（PseudoPrefabManagerStub.Awake 在场景加载窗口内跑）。
                 // 目标方法只在 OC2DIYLevel 加载 web 关卡时被调用，官方图零介入。
                 EnsureDualStubHealPatches();
+                EnsurePseudoPrefabDispenserSetupPatches();
 
                 // 反射自检汇总：列出游戏 AppDomain 里未命中的反射目标（直接定位
                 // 「反射了游戏侧不存在的类型」类事故）。
@@ -641,6 +647,42 @@ namespace CustomStub
         /// 官方图/主菜单零调用零开销。反射不到目标（OC2DIYLevel 缺失/改名）时
         /// 静默跳过（存量坏包需重导出，不炸宿主）。幂等；独立 Harmony id。</summary>
         private static bool s_dualStubHealPatched;
+
+        private static bool s_dispenserSetupPatched;
+
+        /// <summary>饮料/酱料机等无箱盖组件时跳过宿主 PseudoPrefabDispenser.Setup 的 UV 逻辑。</summary>
+        internal static void EnsurePseudoPrefabDispenserSetupPatches()
+        {
+            if (s_dispenserSetupPatched)
+                return;
+            try
+            {
+                var targetType = GameApi.Find("LevelEditor.PseudoPrefabDispenser");
+                if (targetType == null)
+                {
+                    StubLog.Dbg("[CustomStub] PseudoPrefabDispenser.Setup: 未找到类型（跳过）");
+                    s_dispenserSetupPatched = true;
+                    return;
+                }
+                var target = targetType.GetMethod("Setup",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null);
+                if (target == null)
+                {
+                    StubLog.Dbg("[CustomStub] PseudoPrefabDispenser.Setup: 未找到方法（跳过）");
+                    s_dispenserSetupPatched = true;
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".dispensersetup");
+                harmony.Patch(target, new HarmonyMethod(HarmonyPatches.PseudoPrefabDispenserSetupPrefixMethod));
+                s_dispenserSetupPatched = true;
+                StubLog.Log("[CustomStub] PseudoPrefabDispenser.Setup 前缀已装（饮料/酱料机 NRE 兜底）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] PseudoPrefabDispenser.Setup 补丁安装失败: " + ex.Message);
+            }
+        }
 
         internal static void EnsureDualStubHealPatches()
         {
@@ -856,6 +898,51 @@ namespace CustomStub
         /// ——无空气待取的原版箱子只多一次静态 bool 读取。</summary>
         private static bool s_airPickupPatched;
         private static bool s_airPickupPatchFailed;
+
+        private static bool s_webBackpackPatched;
+        private static bool s_webBackpackPatchFailed;
+
+        internal static void EnsureWebBackpackPatches()
+        {
+            if (s_webBackpackPatched || s_webBackpackPatchFailed)
+                return;
+            try
+            {
+                var harmony = new Harmony(HarmonyId + ".webbackpack");
+                var disp = GameApi.ServerBackpackDispenserHandlePickupMethod;
+                var dispPre = HarmonyPatches.ServerBackpackDispenserHandlePickupPrefixMethod;
+                var place = GameApi.ServerPlacementHandlePlacementMethod;
+                var placePre = HarmonyPatches.ServerPlacementHandlePlacementPrefixMethod;
+                var canPlace = GameApi.ServerPlacementContainerType != null
+                    ? GameApi.ServerPlacementContainerType.GetMethod("CanHandlePlacement",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                    : null;
+                var canPlacePre = HarmonyPatches.ServerPlacementCanHandlePlacementPrefixMethod;
+
+                bool dispOk = disp != null && dispPre != null;
+                if (dispOk)
+                    harmony.Patch(disp, new HarmonyMethod(dispPre));
+                bool placeOk = place != null && placePre != null;
+                if (placeOk)
+                    harmony.Patch(place, new HarmonyMethod(placePre));
+                bool canOk = canPlace != null && canPlacePre != null;
+                if (canOk)
+                    harmony.Patch(canPlace, new HarmonyMethod(canPlacePre));
+
+                s_webBackpackPatched = true;
+                StubLog.Log("[CustomStub] WebBackpack 补丁: 取出前缀=" + dispOk
+                    + " 放置前缀=" + placeOk + " 放置判定覆盖=" + canOk
+                    + "（任一 false = 对应交互失效，需查反射）");
+                if (!dispOk || !placeOk || !canOk)
+                    StubLog.LogWarn("[CustomStub] WebBackpack 补丁不全（disp=" + (disp != null)
+                        + " place=" + (place != null) + " canPlace=" + (canPlace != null) + "）——对应交互将不可用");
+            }
+            catch (Exception ex)
+            {
+                s_webBackpackPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] WebBackpack 补丁安装失败: " + ex.Message);
+            }
+        }
 
         internal static void EnsureAirPickupPatches()
         {
@@ -1113,6 +1200,7 @@ namespace CustomStub
             TerminalGuard.OnSceneChanged();
             CannonGuard.OnSceneChanged();
             RandomCrate.OnSceneChanged();
+            WebBackpackStorage.OnSceneChanged();
             RatHeist.OnSceneChanged();
             NetDiagnostics.OnSceneChanged();
         }
@@ -1136,6 +1224,7 @@ namespace CustomStub
                 var alreadyOk = 0;
                 var sawUtensilTiming = false;
                 var sawPushablePot = false;
+                var sawWebBackpack = false;
                 for (int i = 0; i < tags.Length; i++)
                 {
                     var tag = tags[i];
@@ -1146,13 +1235,17 @@ namespace CustomStub
                     stubTags++;
                     // 传送门单向是「自带低频协程、不用 ticker」的自治组件：不计入
                     // 激活票数，否则只放单向门的关卡会白跑全套 HotPot/VoidFall 扫描
-                    // （v12 三态门控的同一条性能约定）。
-                    if (!tag.prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal))
+                    // （v12 三态门控的同一条性能约定）。RandomTrigger 同款豁免
+                    //（事件驱动 + 可选低频轮询，零 ticker 零补丁）。
+                    if (!tag.prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal)
+                        && !tag.prefabTag.StartsWith(RandomTrigger.TagPrefix, StringComparison.Ordinal))
                         tickerTags++;
                     if (tag.prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal))
                         sawUtensilTiming = true;
                     if (tag.prefabTag.StartsWith(PushablePot.TagPrefix, StringComparison.Ordinal))
                         sawPushablePot = true;
+                    if (tag.prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal))
+                        sawWebBackpack = true;
                     try
                     {
                         var before = CountStubComponents(tag.gameObject);
@@ -1169,7 +1262,10 @@ namespace CustomStub
                 }
                 // 锅具时间补丁按需安装：扫到 UtensilTiming| tag 才 patch 宿主热方法
                 if (sawUtensilTiming)
+                {
                     EnsureUtensilTimingPatches();
+                    UtensilTiming.Tick();
+                }
                 // 实体扫描锚点 + KillPlane 按需安装：本场景有可移动火锅才 patch
                 // （v14 锚点；v16 KillPlane 拆出核心组，pushable 关卡专属）。
                 // 时序上安全——HealScene 跑在 sceneLoaded，而 ScanEntities 要等
@@ -1177,6 +1273,13 @@ namespace CustomStub
                 if (sawPushablePot)
                 {
                     EnsurePotAssemblyPatches();
+                    EnsureKillPlanePatches();
+                }
+                if (sawWebBackpack)
+                {
+                    EnsurePotAssemblyPatches();
+                    EnsureWebBackpackPatches();
+                    // 落水清空（穿戴者/背包本体 KillPlane）依赖同组前缀
                     EnsureKillPlanePatches();
                 }
                 // 关卡级门控（无约束模式的主通道；清单模式下此处恒已 Active）：
@@ -1190,6 +1293,14 @@ namespace CustomStub
                 // 节点环步数对账校正器（3.6.0 联机丢步修复）：Design/Animated Objects
                 // 组根补挂 NodeRingSync（免 tag，组件内按 BLPress 参数判定是否节点环）。
                 HealNodeRingSync();
+                // 分 P 道具重生守卫（3.10.0）：场景含 Design/PartSlots 才安装
+                // CanRespawnOnStation 后缀——锅/盘/脏盘叠/灭火器重生不选非在场
+                // slot 站台（旧 P 道具跨 P 携带到下一 P 的空闲站台，而非重生回
+                // 沉没/停泊站台）。免 tag，普通关卡 s_sceneHasSlots=0 首行放行。
+                var hasPartSlots = GameObject.Find("Design/PartSlots") != null;
+                PartSlotRespawnGuard.OnSceneChanged(hasPartSlots);
+                if (hasPartSlots)
+                    PartSlotRespawnGuard.EnsurePatches();
                 // 初始关闭开关开局关闭色（v3.4.0）：真机烘焙件是 Missing Script，
                 // 按 PseudoPrefabSwitchStub.startEnabled 扫描补挂（stub 组件随
                 // 场景序列化，sceneLoaded 时已在；child 实例化由组件内协程等待）。
@@ -1229,7 +1340,12 @@ namespace CustomStub
                  || prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(ConveyorDirectionSync.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith("BLRelay|", StringComparison.Ordinal)
-                 || prefabTag.StartsWith(CoaxialButtonGroup.TagPrefix, StringComparison.Ordinal);
+                 || prefabTag.StartsWith(CoaxialButtonGroup.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(RandomTrigger.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(ButtonSpeedControl.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(ButtonSpawnerBatch.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -1271,6 +1387,16 @@ namespace CustomStub
                 if (HasStubComponentNamed(go, "RandomCrate"))
                     return;
                 HealRandomCrate(go, prefabTag);
+                return;
+            }
+            if (prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal))
+            {
+                HealWebBackpack(go, prefabTag);
+                return;
+            }
+            if (prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal))
+            {
+                HealWebKillerGhost(go, prefabTag);
                 return;
             }
             if (prefabTag.StartsWith(TimedCookingSwitch.TagPrefix, StringComparison.Ordinal))
@@ -1376,6 +1502,24 @@ namespace CustomStub
                 if (HasStubComponentNamed(go, "CoaxialButtonGroup"))
                     return; // 同上：编辑器烘活组件在场则跳过，真机 Missing Script 补挂。
                 HealCoaxialButtonGroup(go, prefabTag);
+            }
+            else if (prefabTag.StartsWith(RandomTrigger.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "RandomTrigger"))
+                    return; // 同上：编辑器烘活组件在场则跳过，真机 Missing Script 补挂。
+                HealRandomTrigger(go, prefabTag);
+            }
+            else if (prefabTag.StartsWith(ButtonSpeedControl.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "ButtonSpeedControl"))
+                    return; // 同上：编辑器烘活组件在场则跳过，真机 Missing Script 补挂。
+                HealButtonSpeedControl(go, prefabTag);
+            }
+            else if (prefabTag.StartsWith(ButtonSpawnerBatch.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "ButtonSpawnerBatch"))
+                    return; // 同上：编辑器烘活组件在场则跳过，真机 Missing Script 补挂。
+                HealButtonSpawnerBatch(go, prefabTag);
             }
             else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
             {
@@ -1648,6 +1792,245 @@ namespace CustomStub
             return parts;
         }
 
+        /// <summary>RandomTrigger 自愈：tag 还原全配置（RandomTriggerBakery 编码对称）。
+        /// 格式（字段内 %,;&gt;|/@ 转 %XX，RandomTrigger 专用扩展集——比 BLRelay
+        /// 的 %,;&gt;| 多 '/' 与 '@'，因参数 spec 以二者做结构分隔）：
+        ///   RandomTrigger|I:&lt;输入&gt;|C:&lt;冷却&gt;|S:&lt;分隔符&gt;|N:&lt;按钮,..&gt;
+        ///   |E:&lt;信号&gt;,&lt;权重&gt;,&lt;目标&gt;[,&lt;参数spec&gt;];..
+        /// 参数 spec：f 固定 / p候选/候选 / s长度[@字符集] / d位数 / r最小/最大/小数位。</summary>
+        private static void HealRandomTrigger(GameObject go, string prefabTag)
+        {
+            try
+            {
+                var rt = go.AddComponent<RandomTrigger>();
+                rt.enabled = false;
+                ParseRandomTrigger(prefabTag.Substring(RandomTrigger.TagPrefix.Length), rt);
+                rt.enabled = true;
+                StubLog.Log("[CustomStub] 自愈 RandomTrigger: " + go.name + "（候选 " +
+                    (rt.m_entries != null ? rt.m_entries.Length : 0) + " 个｜按钮直连 " +
+                    (rt.m_buttonRootNames != null ? rt.m_buttonRootNames.Length : 0) +
+                    " 个｜冷却 " + rt.m_cooldownSeconds.ToString("0.##", CultureInfo.InvariantCulture) + "s）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] RandomTrigger 自愈失败 " + go.name + ": " + ex.Message);
+            }
+        }
+
+        /// <summary>SpeedCtl|E:&lt;1|0&gt;|T:&lt;目标名&gt;|N:&lt;按钮名,..&gt;|L:&lt;s1,s2,..&gt;
+        /// （%,;&gt;| %XX 转义；speeds 段内逗号分隔 invariant）。</summary>
+        private static void HealButtonSpeedControl(GameObject go, string prefabTag)
+        {
+            try
+            {
+                var parts = prefabTag.Split('|');
+                string e = null, t = null, n = null, l = null;
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    if (parts[i].StartsWith("E:", StringComparison.Ordinal)) e = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("T:", StringComparison.Ordinal)) t = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("N:", StringComparison.Ordinal)) n = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("L:", StringComparison.Ordinal)) l = parts[i].Substring(2);
+                }
+                var sc = go.AddComponent<ButtonSpeedControl>();
+                sc.enabled = false;
+                sc.m_enabled = e != "0";
+                sc.m_targetPath = UnescTag(t ?? "");
+                sc.m_buttonPaths = SplitUnesc(n, ',');
+                if (!string.IsNullOrEmpty(l))
+                {
+                    var speeds = new System.Collections.Generic.List<float>();
+                    var segs = l.Split(',');
+                    for (int i = 0; i < segs.Length; i++)
+                    {
+                        if (segs[i].Trim().Length == 0) continue;
+                        speeds.Add(ParseFloat(segs[i], 1f));
+                    }
+                    if (speeds.Count > 0)
+                        sc.m_speeds = speeds.ToArray();
+                }
+                sc.enabled = true;
+                StubLog.Log("[CustomStub] 自愈 ButtonSpeedControl: " + go.name + "（目标 " +
+                    sc.m_targetPath + "｜档位 " +
+                    (sc.m_speeds != null ? sc.m_speeds.Length : 0) + " 个｜按钮 " +
+                    (sc.m_buttonPaths != null ? sc.m_buttonPaths.Length : 0) + " 个）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] ButtonSpeedControl 自愈失败 " + go.name + ": " + ex.Message);
+            }
+        }
+
+        /// <summary>SpawnerBatch|E:&lt;1|0&gt;|T:&lt;目标名&gt;|N:&lt;按钮名,..&gt;|C:&lt;count&gt;
+        /// |I:&lt;interval&gt;|D:&lt;cooldown&gt;（%,;&gt;| %XX 转义；invariant）。</summary>
+        private static void HealButtonSpawnerBatch(GameObject go, string prefabTag)
+        {
+            try
+            {
+                var parts = prefabTag.Split('|');
+                string e = null, t = null, n = null, c = null, iv = null, d = null;
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    if (parts[i].StartsWith("E:", StringComparison.Ordinal)) e = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("T:", StringComparison.Ordinal)) t = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("N:", StringComparison.Ordinal)) n = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("C:", StringComparison.Ordinal)) c = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("I:", StringComparison.Ordinal)) iv = parts[i].Substring(2);
+                    else if (parts[i].StartsWith("D:", StringComparison.Ordinal)) d = parts[i].Substring(2);
+                }
+                var sb = go.AddComponent<ButtonSpawnerBatch>();
+                sb.enabled = false;
+                sb.m_enabled = e != "0";
+                sb.m_targetPath = UnescTag(t ?? "");
+                sb.m_buttonPaths = SplitUnesc(n, ',');
+                sb.m_count = ParseInt(c, 1);
+                sb.m_intervalSeconds = ParseFloat(iv, 5f);
+                sb.m_cooldownSeconds = ParseFloat(d, 5f);
+                sb.enabled = true;
+                StubLog.Log("[CustomStub] 自愈 ButtonSpawnerBatch: " + go.name + "（目标 " +
+                    sb.m_targetPath + "｜每批 " + sb.m_count + " 个｜间隔 " +
+                    sb.m_intervalSeconds.ToString("0.##", CultureInfo.InvariantCulture) +
+                    "s｜冷却 " + sb.m_cooldownSeconds.ToString("0.##", CultureInfo.InvariantCulture) +
+                    "s｜按钮 " + (sb.m_buttonPaths != null ? sb.m_buttonPaths.Length : 0) + " 个）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] ButtonSpawnerBatch 自愈失败 " + go.name + ": " + ex.Message);
+            }
+        }
+
+
+        private static void ParseRandomTrigger(string payload, RandomTrigger rt)
+        {
+            if (string.IsNullOrEmpty(payload))
+                return;
+            var parts = payload.Split('|');
+            string i = null, c = null, s = null, n = null, e = null;
+            for (int k = 0; k < parts.Length; k++)
+            {
+                if (parts[k].StartsWith("I:", StringComparison.Ordinal)) i = parts[k].Substring(2);
+                else if (parts[k].StartsWith("C:", StringComparison.Ordinal)) c = parts[k].Substring(2);
+                else if (parts[k].StartsWith("S:", StringComparison.Ordinal)) s = parts[k].Substring(2);
+                else if (parts[k].StartsWith("N:", StringComparison.Ordinal)) n = parts[k].Substring(2);
+                else if (parts[k].StartsWith("E:", StringComparison.Ordinal)) e = parts[k].Substring(2);
+            }
+            rt.m_inputTrigger = UnescRt(i);
+            rt.m_cooldownSeconds = Mathf.Max(0f, ParseFloat(c, 0f));
+            rt.m_separator = string.IsNullOrEmpty(s) ? ":" : UnescRt(s);
+            rt.m_buttonRootNames = SplitUnescRt(n, ',');
+            var entries = new List<RandomTrigger.Entry>();
+            var segs = (e ?? "").Split(';');
+            for (int k = 0; k < segs.Length; k++)
+            {
+                if (segs[k].Length == 0) continue;
+                var f = segs[k].Split(',');
+                if (f.Length < 1 || f[0].Length == 0) continue;
+                var entry = new RandomTrigger.Entry();
+                entry.triggerName = UnescRt(f[0]);
+                if (f.Length > 1) entry.weight = ParseFloat(f[1], 1f);
+                if (f.Length > 2) entry.targetName = UnescRt(f[2]);
+                if (f.Length > 3 && f[3].Length > 0)
+                    entry.param = ParseParamSpecRt(f[3]);
+                if (!string.IsNullOrEmpty(entry.triggerName))
+                    entries.Add(entry);
+            }
+            rt.m_entries = entries.ToArray();
+        }
+
+        /// <summary>解析参数 spec（结构字符先切分、值后解码；输入为已转义串）。</summary>
+        private static RandomTrigger.ParamSpec ParseParamSpecRt(string spec)
+        {
+            if (string.IsNullOrEmpty(spec))
+                return null;
+            var mode = spec[0];
+            var rest = spec.Length > 1 ? spec.Substring(1) : "";
+            var p = new RandomTrigger.ParamSpec();
+            switch (mode)
+            {
+                case 'f':
+                    p.mode = RandomTrigger.ParamFixed;
+                    p.fixedValue = UnescRt(rest);
+                    return p;
+                case 'p':
+                    {
+                        p.mode = RandomTrigger.ParamPick;
+                        var cands = rest.Split('/');
+                        var list = new List<string>();
+                        for (int i = 0; i < cands.Length; i++)
+                        {
+                            var v = UnescRt(cands[i]);
+                            if (v.Length > 0) list.Add(v);
+                        }
+                        p.candidates = list.ToArray();
+                        return p;
+                    }
+                case 's':
+                    {
+                        p.mode = RandomTrigger.ParamRandomString;
+                        int at = rest.IndexOf('@');
+                        if (at >= 0)
+                        {
+                            p.stringLength = ParseInt(rest.Substring(0, at), 4);
+                            p.charset = UnescRt(rest.Substring(at + 1));
+                        }
+                        else
+                        {
+                            p.stringLength = ParseInt(rest, 4);
+                        }
+                        return p;
+                    }
+                case 'd':
+                    p.mode = RandomTrigger.ParamDigits;
+                    p.digits = ParseInt(rest, 1);
+                    return p;
+                case 'r':
+                    {
+                        p.mode = RandomTrigger.ParamRange;
+                        var f = rest.Split('/');
+                        if (f.Length > 0) p.minValue = ParseFloat(f[0], 0f);
+                        if (f.Length > 1) p.maxValue = ParseFloat(f[1], 1f);
+                        if (f.Length > 2) p.decimals = ParseInt(f[2], 0);
+                        return p;
+                    }
+            }
+            return null;
+        }
+
+        private static string[] SplitUnescRt(string joined, char sep)
+        {
+            if (string.IsNullOrEmpty(joined))
+                return new string[0];
+            var parts = joined.Split(sep);
+            for (int i = 0; i < parts.Length; i++)
+                parts[i] = UnescRt(parts[i]);
+            return parts;
+        }
+
+        /// <summary>RandomTrigger tag 字段解码（与 RandomTriggerBakery.EscRt 对称；
+        /// 转义集 = BLRelay 的 %,;&gt;| + '/' '@'）。</summary>
+        private static string UnescRt(string s)
+        {
+            if (string.IsNullOrEmpty(s) || s.IndexOf('%') < 0)
+                return s;
+            var sb = new System.Text.StringBuilder(s.Length);
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (s[i] == '%' && i + 2 < s.Length)
+                {
+                    var hex = s.Substring(i + 1, 2);
+                    if (hex == "25") { sb.Append('%'); i += 2; continue; }
+                    if (hex == "2C") { sb.Append(','); i += 2; continue; }
+                    if (hex == "3B") { sb.Append(';'); i += 2; continue; }
+                    if (hex == "3E") { sb.Append('>'); i += 2; continue; }
+                    if (hex == "7C") { sb.Append('|'); i += 2; continue; }
+                    if (hex == "2F") { sb.Append('/'); i += 2; continue; }
+                    if (hex == "40") { sb.Append('@'); i += 2; continue; }
+                }
+                sb.Append(s[i]);
+            }
+            return sb.ToString();
+        }
+
         /// <summary>tag 字段解码（与 ButtonLinkBakery.EscTag 对称）。</summary>
         private static string UnescTag(string s)
         {
@@ -1733,6 +2116,87 @@ namespace CustomStub
             crate.m_questionMarkTexture = null;
             StubLog.Dbg("[CustomStub] 自愈 RandomCrate: " + go.name
                 + "（候选 " + count + (crate.m_airWeight >= 1f ? "，空气=" + crate.m_airWeight : "") + "）");
+        }
+
+        /// <summary>WebBackpack|&lt;capacity&gt;|fifo|（3.8.10 起取出恒 FIFO，mode 段
+        /// 仅作格式兼容；初填数据在组件 m_initialFillSOs / m_initialFillCustomUids）</summary>
+        private static void HealWebKillerGhost(GameObject go, string prefabTag)
+        {
+            WebKillerGhost kg;
+            try
+            {
+                kg = go.GetComponent<WebKillerGhost>();
+                if (kg == null)
+                    kg = go.AddComponent<WebKillerGhost>();
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 自愈 WebKillerGhost AddComponent 失败 " + go.name + ": " + ex.Message);
+                return;
+            }
+
+            var payload = prefabTag.Length > WebKillerGhost.TagPrefix.Length
+                ? prefabTag.Substring(WebKillerGhost.TagPrefix.Length)
+                : "";
+            var parts = payload.Split('|');
+            float radius = WebKillerGhost.DefaultHitRadius;
+            if (parts.Length >= 1)
+            {
+                float r;
+                if (float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out r) && r >= 0.15f)
+                    radius = r;
+            }
+            kg.m_hitRadius = radius;
+            kg.m_enabled = parts.Length < 2 || parts[1].Trim() != "0";
+            if (parts.Length >= 3 && !string.IsNullOrEmpty(parts[2].Trim()))
+                kg.m_style = parts[2].Trim();
+            kg.ApplyConfig();
+            StubLog.Dbg("[CustomStub] 自愈 WebKillerGhost: " + go.name + " r=" + radius + " on=" + kg.m_enabled
+                + " style=" + kg.m_style);
+        }
+
+        private static void HealWebBackpack(GameObject go, string prefabTag)
+        {
+            WebBackpackStorage wb;
+            try
+            {
+                wb = go.GetComponent<WebBackpackStorage>();
+                if (wb == null)
+                    wb = go.AddComponent<WebBackpackStorage>();
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 自愈 WebBackpack AddComponent 失败 " + go.name + ": " + ex.Message);
+                return;
+            }
+
+            var payload = prefabTag.Length > WebBackpackStorage.TagPrefix.Length
+                ? prefabTag.Substring(WebBackpackStorage.TagPrefix.Length)
+                : "";
+            var segs = payload.Split('|');
+            int cap = 4;
+            if (segs.Length > 0)
+                cap = WebBackpackStorage.NormalizeCapacity(ParseInt(segs[0], 4));
+            wb.m_capacity = cap;
+            // segs[1]（fifo|random）3.8.10 起忽略：取出恒 FIFO
+
+            var carrier = go.GetComponent<PseudoPrefabSOArray>();
+            if (carrier != null && carrier.pseudoPrefabSOs != null && carrier.pseudoPrefabSOs.Length > 0)
+                wb.m_initialFillSOs = carrier.pseudoPrefabSOs;
+            else
+                wb.m_initialFillSOs = new PseudoPrefabSO[0];
+
+            WebBackpackStorage.PrepareOnWrapper(go, wb);
+            StubLog.Log("[CustomStub] 自愈 WebBackpack: " + go.name + " cap=" + cap
+                + "（初填 SO=" + (wb.m_initialFillSOs != null ? wb.m_initialFillSOs.Length : 0)
+                + "，子背包=" + (go.GetComponentInChildren(GameApi.Find("Backpack"), true) != null ? "已在场景" : "未实例化（等待运行时）")
+                + "）");
+        }
+
+        private static int ParseInt(string s, int fallback)
+        {
+            int v;
+            return int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out v) ? v : fallback;
         }
 
         /// <summary>UtensilTiming|&lt;cook&gt;,&lt;burn&gt;,&lt;mix&gt;,&lt;over&gt;（invariant 浮点，
@@ -1858,6 +2322,8 @@ namespace CustomStub
 
         private static float ParseFloat(string s, float fallback)
         {
+            if (string.IsNullOrEmpty(s))
+                return fallback;
             float v;
             if (float.TryParse(s.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out v))
                 return v;

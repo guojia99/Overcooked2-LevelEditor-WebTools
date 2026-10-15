@@ -57,9 +57,9 @@ export function buildLayoutDom(): void {
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
       <button id="btn-counters" type="button" title="按桌台类型统一皮肤（如木纹·中秋），也可单独修改">🪵 桌台管理</button>
       <button id="btn-level-config" type="button" title="分数、环境（天花板/分 P）、音频与关卡截图">📊 关卡配置</button>
-      <button id="btn-camera-light" type="button" title="修改游戏相机背景色 / FOV 与 Art/Lights 灯光颜色、强度">🎥 相机/灯光</button>
+      <button id="btn-camera-light" type="button" title="修改游戏相机背景色、FOV 与出发点位置">🎥 相机</button>
       <button id="btn-tools-history" type="button" title="关卡工具、工作量推测与最近 15 次写回历史">🧰 工具与历史</button>
-      <button id="btn-part-level" type="button" class="hidden" title="分 P 管理：阶段 / 停放方向 / 转场节奏与清理">🔀 分P管理</button>
+      <button id="btn-part-level" type="button" class="hidden" title="分 P 管理：阶段 / 退场去向 / 转场节奏与清理">🔀 分P管理</button>
     </div>
     <div class="part-bar hidden" id="part-bar"></div>
     <div class="toolbar-row">
@@ -69,6 +69,7 @@ export function buildLayoutDom(): void {
         <button type="button" data-layer="floor" class="layer-tab">🗺️ 地板层</button>
         <button type="button" data-layer="background" class="layer-tab">🌊 背景层</button>
         <button type="button" data-layer="anim" class="layer-tab">🎬 动画层</button>
+        <button type="button" data-layer="lights" class="layer-tab">💡 灯光层</button>
       </div>
       <span class="toolbar-sep"></span>
       <div class="view-tabs" id="view-tabs" title="2D 俯视平面 / 3D 立体视口（共享同一份数据，随时切换）">
@@ -97,7 +98,19 @@ export function buildLayoutDom(): void {
           <div class="vis-note">关闭的类别将不显示、也不可点选（仅影响当前层）</div>
         </div>
       </div>
-      <label class="toolbar-check" title="距半格网格 0.1 内自动吸附到网格，其余位置按所选精度自由摆放"><input type="checkbox" id="snap-grid" checked /> 🧲 吸附格子</label>
+      <div class="vis-wrap config-wrap">
+        <button type="button" id="btn-view-config" title="吸附、网格、桌台皮肤、相机视野、坐标系、重叠与自动中间产物">显示配置</button>
+        <div id="view-config-popover" class="vis-popover view-config-popover hidden">
+          <label title="距半格网格 0.1 内自动吸附到网格，其余位置按所选精度自由摆放"><input type="checkbox" id="snap-grid" checked /> 🧲 吸附格子</label>
+          <label><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
+          <label title="画布桌台按所选皮肤材质主色着色（默认皮肤保持原配色；需先运行 Unity 菜单提取材质球）"><input type="checkbox" id="counter-skin-paint" /> 🎨 桌台皮肤</label>
+          <label title="在画布上显示游戏相机视野的大致范围（FOV 视锥与地面的交线，16:9 估算）"><input type="checkbox" id="show-camera-fov" ${S.showCameraFov ? "checked" : ""} /> 🎥 相机视野</label>
+          <label title="在画布上显示 Art/Lights 灯光位置与朝向（灯光层编辑时建议开启）"><input type="checkbox" id="show-scene-lights" ${S.showSceneLights ? "checked" : ""} /> 💡 场景灯光</label>
+          <label><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
+          <label title="勾选后允许工作台重叠时仍然写回"><input type="checkbox" id="allow-ws-overlap" /> ⚠ 允许工作台重叠</label>
+          <label title="补齐锅具时自动分配中间产物（煎肉排/面糊/炸物等）到对应锅具的 allowedIngredientSOs"><input type="checkbox" id="chk-auto-intermediates" ${S.autoIntermediates ? "checked" : ""} /> 🧩 自动中间产物</label>
+        </div>
+      </div>
       <label class="toolbar-check">🎯 精度
         <select id="snap-free-step" title="自由摆放 / 微移的精度">
           <option value="1">1.0</option>
@@ -108,12 +121,6 @@ export function buildLayoutDom(): void {
           <option value="0.001">0.001</option>
         </select>
       </label>
-      <label class="toolbar-check"><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
-      <label class="toolbar-check" title="画布桌台按所选皮肤材质主色着色（默认皮肤保持原配色；需先运行 Unity 菜单提取材质球）"><input type="checkbox" id="counter-skin-paint" /> 🎨 桌台皮肤</label>
-      <label class="toolbar-check" title="在画布上显示游戏相机视野的大致范围（FOV 视锥与地面的交线，16:9 估算）"><input type="checkbox" id="show-camera-fov" ${S.showCameraFov ? "checked" : ""} /> 🎥 相机视野</label>
-      <label class="toolbar-check"><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
-      <label class="toolbar-check" title="勾选后允许工作台重叠时仍然写回"><input type="checkbox" id="allow-ws-overlap" /> ⚠ 允许工作台重叠</label>
-      <label class="toolbar-check" title="补齐锅具时自动分配中间产物（煎肉排/面糊/炸物等）到对应锅具的 allowedIngredientSOs"><input type="checkbox" id="chk-auto-intermediates" ${S.autoIntermediates ? "checked" : ""} /> 🧩 自动中间产物</label>
     </div>
   </div>
   <div class="main">
@@ -179,6 +186,10 @@ export function buildLayoutDom(): void {
           <button type="button" data-tab="anim" class="panel-tab">🎬 动画组 <span id="anim-control-count" class="anim-control-count"></span></button>
           <button type="button" data-tab="triggers" class="panel-tab">🔘 触发源 <span id="triggers-count" class="anim-control-count"></span></button>
         </div>
+        <span id="layer-vis-bulk" class="layer-vis-bulk hidden" title="本层分组可见性">
+          <button type="button" id="layer-vis-show-all" class="layer-vis-bulk-btn">👁 全开</button>
+          <button type="button" id="layer-vis-hide-all" class="layer-vis-bulk-btn">👁‍🗨 全关</button>
+        </span>
         <span id="scene-items-count" class="scene-items-count"></span>
       </div>
       <div class="scene-items-body" id="scene-items-body"></div>

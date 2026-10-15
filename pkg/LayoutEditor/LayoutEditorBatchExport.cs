@@ -59,7 +59,7 @@ public static class LayoutEditorBatchExport
         var exitCode = 0;
         try
         {
-            var depsVersion = "3.8.8";
+            var depsVersion = LayoutEditorSetExporter.GetRuntimeSsotVersion();
             foreach (var arg in Environment.GetCommandLineArgs())
             {
                 if (arg.StartsWith("-depsVersion=", StringComparison.Ordinal))

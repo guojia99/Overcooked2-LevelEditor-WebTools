@@ -38,6 +38,15 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v3.10.0（2026-10-14 按钮控速 + 按钮生成器批次·版本对齐）：**loader 逻辑
+    ///     零变更**（新特征 speedctl/spawnerbatch 经 stub_levels.txt 原样透传，
+    ///     自愈在 CustomStub.EntryPoint 侧），仅与 StubVersion 3.10.0 对齐。
+    /// v3.9.1（2026-10-13 UtensilTiming 进图扫描性能·版本对齐）：**loader 逻辑
+    ///     零变更**（修复在 CustomStub.UtensilTiming），仅与 StubVersion 3.9.1 对齐。
+    /// v3.9.0（2026-10-13 随机触发器 RandomTrigger·版本对齐）：**loader 逻辑零变更**
+    ///     （新特征 randomtrigger 经 stub_levels.txt 原样透传，自愈/掷骰全在
+    ///     CustomStub.EntryPoint / RandomTrigger 侧），仅与 CustomStub 运行时 SSOT
+    ///     （StubVersion 3.9.0）对齐。
     /// v3.8.8（2026-10-11 真机 Harmony 摇杆交互补丁·版本对齐）：**loader 逻辑
     ///     零变更**，与 CustomStub 3.8.8（SetInteractionObjects 参数名真机修复）对齐。
     /// v3.8.7（2026-10-11 摇杆遥控地板/AnimGrid 系列·版本对齐）：**loader 逻辑
@@ -208,7 +217,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "3.8.8";
+        public const string PluginVersion = "3.10.2";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>

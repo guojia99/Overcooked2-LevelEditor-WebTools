@@ -8,6 +8,7 @@ import { buildComboPaletteGroup } from "./combos";
 import { variantBaseId, VARIANT_TO_BASE } from "./itemVariants";
 import { escHtml } from "./coords";
 import type { Catalog, CatalogItem } from "../types";
+import { bindPaletteCardTooltip, catalogPaletteTooltipContent } from "./paletteTooltip";
 
 function clampPaletteCount(n: number): number {
   if (!isFinite(n)) return 1;
@@ -251,8 +252,11 @@ export function buildPalette(catalog: Catalog, filter: string) {
           ? foodIconImg("recipes", it.id, true)
           : "";
       row.innerHTML = `${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}${stubBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
+      bindPaletteCardTooltip(
+        row,
+        catalogPaletteTooltipContent(it, { animDecor, skinCount: skins })
+      );
       if (animDecor) {
-        row.title = animDecor.title;
         const badgeEl = document.createElement("span");
         badgeEl.className = animDecor.kind === "npc" ? "npc-anim-badge" : "env-anim-badge";
         badgeEl.textContent = animDecor.emoji;

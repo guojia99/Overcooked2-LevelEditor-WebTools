@@ -121,9 +121,9 @@ public static class LayoutEditorSetExporter
     ///  新增 stub 类型时此处必须补前缀。</summary>
     private static readonly string[] CustomStubTagPrefixes =
     {
-        "RandomCrate|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
+        "RandomCrate|", "WebBackpack|", "WebKillerGhost|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
         "UtensilTiming|", "CameraOffset|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|",
-        "ConveyorDirectionSync|", "BLRelay|", "Coaxial|",
+        "ConveyorDirectionSync|", "BLRelay|", "Coaxial|", "RandomTrigger|", "SpeedCtl|", "SpawnerBatch|",
     };
 
     /// <summary>tag 前缀 → 清单特征（v3.5.0 stub_levels.txt 数据源之一）。
@@ -133,6 +133,8 @@ public static class LayoutEditorSetExporter
         new Dictionary<string, string>(StringComparer.Ordinal)
     {
         { "RandomCrate|", "crate" },
+        { "WebBackpack|", "webbackpack" },
+        { "WebKillerGhost|", "webkillerghost" },
         { "TimedSwitch|", "switch" },
         { "PushablePot|", "pushable" },
         { "SwitchReenable|", "switch" },
@@ -145,6 +147,9 @@ public static class LayoutEditorSetExporter
         { "ConveyorDirectionSync|", "conveyor" },
         { "BLRelay|", "blrelay" },
         { "Coaxial|", "coaxial" },
+        { "RandomTrigger|", "randomtrigger" },
+        { "SpeedCtl|", "speedctl" },
+        { "SpawnerBatch|", "spawnerbatch" },
     };
 
     /// <summary>CustomStub 命名空间组件名 → 清单特征（双通道兜底：tag 缺失/旧格式时
@@ -153,6 +158,8 @@ public static class LayoutEditorSetExporter
         new Dictionary<string, string>(StringComparer.Ordinal)
     {
         { "RandomCrate", "crate" },
+        { "WebBackpackStorage", "webbackpack" },
+        { "WebKillerGhost", "webkillerghost" },
         { "TimedCookingSwitch", "switch" },
         { "PushablePot", "pushable" },
         { "SwitchReenable", "switch" },
@@ -164,6 +171,9 @@ public static class LayoutEditorSetExporter
         { "ConveyorDirectionSync", "conveyor" },
         { "ButtonLogicRelay", "blrelay" },
         { "CoaxialButtonGroup", "coaxial" },
+        { "RandomTrigger", "randomtrigger" },
+        { "ButtonSpeedControl", "speedctl" },
+        { "ButtonSpawnerBatch", "spawnerbatch" },
         { "AnimGridMemberSync", "animgrid" },
         { "SwitchStartVisual", "startvisual" },
         { "AnimPilotFloorMarker", "terminal" },
@@ -440,6 +450,8 @@ public static class LayoutEditorSetExporter
             _fileCount = 0;
             _usesCustomStub = false;
             _mode = m;
+            if (m == "deps" && (depsVersion == null || depsVersion.Trim().Length == 0))
+                depsVersion = StubVersionValue();
             _depsVersion = NormalizeDepsVersion(m == "deps" ? depsVersion : null);
             _deferredCompile = false;
             _selectedLevels = sel;
@@ -836,6 +848,9 @@ public static class LayoutEditorSetExporter
                 EditorUtility.DisplayProgressBar("导出关卡集 " + joinedName,
                     "准备场景 " + i + "/" + totalScenes + "…", (float)i / (totalScenes + 1));
                 var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                // OpenScene 后 OnEnable 常 Init 挂上临时子物体；须在烘焙/落盘前强制 DeInit
+                //（与教程 Toggle ON 一致，且不因 prepareForBuilding 已为 true 而跳过）。
+                LayoutEditorPseudoReload.ForcePrepareForBuildingForExport();
                 var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
                 if (!string.IsNullOrEmpty(hudWarn))
                     Debug.LogWarning("[SetExporter] " + hudWarn);
@@ -844,7 +859,6 @@ public static class LayoutEditorSetExporter
                 var retagged = LayoutEditorStubIO.RefreshStubTagsInActiveScene();
                 if (retagged > 0)
                     Debug.Log("[SetExporter] 已重打 " + retagged + " 个 stub tag：" + scenePath);
-                LayoutEditorPseudoReload.EnsurePrepareForBuilding();
                 // v3.5.0 逐场景特征收集（stub_levels.txt 数据源；tag 重打之后扫，
                 // 与运行时自愈将看到的内容一致）。逐关卡导出时循环体只含入选场景
                 //（上方已过滤），被排除关卡自然不进清单、不进 zip。
@@ -863,8 +877,14 @@ public static class LayoutEditorSetExporter
                         Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件/无 tag 内容）：" + scenePath);
                     }
                 }
-                EditorSceneManager.MarkSceneDirty(scene);
-                EditorSceneManager.SaveScene(scene);
+                if (scene.isDirty || retagged > 0)
+                {
+                    if (!EditorSceneManager.SaveScene(scene))
+                        throw new Exception("SaveScene 失败（Console 可能有 Could not extract GUID / Broken PPtr）："
+                            + scenePath);
+                }
+                else
+                    Debug.Log("[SetExporter] 场景无磁盘变更，跳过 SaveScene：" + scenePath);
                 foreach (var w in ValidateSceneForPlayerBuild(scenePath))
                     Debug.LogWarning("[SetExporter] Player 构建校验: " + w);
                 var commonW1Info = DescribeCommonW1PrefabRefs(scenePath);
@@ -1456,8 +1476,10 @@ public static class LayoutEditorSetExporter
     {
         const string depDir = "OC2DIYLevelRuntimeWLoader/";
 
-        // Loader.dll（研发手动维护：layout-editor/web/public/Loader.dll，
-        // 更新时先编译 Assets/WebCustomStubRuntime/Loader~/ 再拷贝覆盖）
+        SyncLoaderDllForExport();
+        EnsureLoaderMatchesRuntime();
+
+        // Loader.dll（build.sh → bin/Release；导出前 SyncLoaderDllForExport 同步到 web/public）
         var loaderDllAbs = ProjectRootAbsPath() + "/layout-editor/web/public/Loader.dll";
         if (File.Exists(loaderDllAbs))
         {
@@ -1609,12 +1631,16 @@ public static class LayoutEditorSetExporter
         dto.ok = true;
         dto.runtimeState = RuntimeStageState != null ? RuntimeStageState() : "noStub";
         dto.runtimeVersion = StubVersionValue();
+        dto.loaderVersion = EffectiveLoaderVersion();
+        dto.versionsAligned = !string.IsNullOrEmpty(dto.runtimeVersion)
+            && dto.runtimeVersion == dto.loaderVersion;
         dto.lastDepsVersion = GetLastDepsVersion();
         var entries = new List<DepsManifestEntryDto>();
 
-        AddManifestFileEntry(entries, depDir + "Loader.dll",
+        var loaderNote = "BepInEx 插件（PluginVersion 须与运行时 SSOT v" + dto.runtimeVersion + " 一致）";
+        AddManifestLoaderEntry(entries, depDir + "Loader.dll",
             ProjectRootAbsPath() + "/layout-editor/web/public/Loader.dll",
-            "BepInEx 插件：加载依赖与统一运行时（web/public 手动维护副本）");
+            loaderNote, dto.versionsAligned);
         AddManifestFileEntry(entries, depDir + "version.txt",
             ProjectRootAbsPath() + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/version.txt",
             "Loader/debugLog 构建版本记录（build.sh 生成）");
@@ -1690,6 +1716,17 @@ public static class LayoutEditorSetExporter
             exists ? new FileInfo(sourceAbs).Length : 0);
     }
 
+    private static void AddManifestLoaderEntry(List<DepsManifestEntryDto> entries,
+        string zipPath, string sourceAbs, string note, bool versionAligned)
+    {
+        var exists = File.Exists(sourceAbs);
+        var state = "missing";
+        if (exists)
+            state = versionAligned ? "ok" : "stale";
+        AddManifestEntry(entries, zipPath, note, state,
+            exists ? new FileInfo(sourceAbs).Length : 0);
+    }
+
     private static void AddManifestEntry(List<DepsManifestEntryDto> entries,
         string zipPath, string note, string state, long sizeBytes)
     {
@@ -1703,7 +1740,7 @@ public static class LayoutEditorSetExporter
     }
 
     /// <summary>依赖包打包版本规范化：trim → 去前导 v/V → SanitizeVersion → 空/无效回落
-    ///  "1.0.0"。独立于运行时 SSOT 版本（requires.txt 门控）与关卡集版本。</summary>
+    ///  "1.0.0"。deps 模式未传参时 StartExport 已预填 StubVersion.Value。</summary>
     private static string NormalizeDepsVersion(string version)
     {
         var v = (version ?? "").Trim();
@@ -1879,6 +1916,115 @@ public static class LayoutEditorSetExporter
             Debug.LogWarning("[SetExporter] 计算 MD5 失败（" + absPath + "）: " + ex.Message);
             return null;
         }
+    }
+
+    /// <summary>统一运行时 SSOT 版本（CustomStub.StubVersion.Value；requires.txt 门控、
+    ///  deps 打包版本默认、Loader.PluginVersion 对齐基准）。</summary>
+    public static string GetRuntimeSsotVersion()
+    {
+        return StubVersionValue();
+    }
+
+    private static string LoaderDllBuildAbs()
+    {
+        return ProjectRootAbsPath() + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/Loader.dll";
+    }
+
+    private static string LoaderDllPublicAbs()
+    {
+        return ProjectRootAbsPath() + "/layout-editor/web/public/Loader.dll";
+    }
+
+    /// <summary>导出前：bin/Release/Loader.dll（build.sh）→ web/public + web/dist（及 version.txt）。</summary>
+    private static void SyncLoaderDllForExport()
+    {
+        var built = LoaderDllBuildAbs();
+        if (!File.Exists(built))
+        {
+            Debug.LogWarning("[SetExporter] 未找到 " + built
+                + "，请先执行 Assets/WebCustomStubRuntime/Loader~/build.sh。");
+            return;
+        }
+        var builtVer = ReadVersionTxtKey(
+            ProjectRootAbsPath() + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/version.txt",
+            "Loader");
+        if (string.IsNullOrEmpty(builtVer))
+            builtVer = LoaderBuildVersionFromSource("Loader");
+        var publicDll = LoaderDllPublicAbs();
+        var needCopy = !File.Exists(publicDll);
+        if (!needCopy && File.GetLastWriteTimeUtc(built) > File.GetLastWriteTimeUtc(publicDll))
+            needCopy = true;
+        var publicVer = EffectiveLoaderVersion();
+        if (!string.IsNullOrEmpty(builtVer) && builtVer != publicVer)
+            needCopy = true;
+        if (!needCopy)
+            return;
+        var publicDir = Path.GetDirectoryName(publicDll);
+        if (!string.IsNullOrEmpty(publicDir) && !Directory.Exists(publicDir))
+            Directory.CreateDirectory(publicDir);
+        File.Copy(built, publicDll, true);
+        var builtVersionTxt = ProjectRootAbsPath()
+            + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/version.txt";
+        CopyIfExists(builtVersionTxt, ProjectRootAbsPath() + "/layout-editor/web/public/version.txt");
+        CopyIfExists(built, ProjectRootAbsPath() + "/layout-editor/web/dist/Loader.dll");
+        CopyIfExists(builtVersionTxt, ProjectRootAbsPath() + "/layout-editor/web/dist/version.txt");
+        Debug.Log("[SetExporter] 已同步 Loader.dll → web/public（及 dist），版本 " + builtVer);
+    }
+
+    private static void CopyIfExists(string source, string dest)
+    {
+        if (!File.Exists(source))
+            return;
+        var dir = Path.GetDirectoryName(dest);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+        File.Copy(source, dest, true);
+    }
+
+    /// <summary>阻断导出：Loader.PluginVersion 必须等于 StubVersion（semver 门控 requires.txt）。</summary>
+    private static void EnsureLoaderMatchesRuntime()
+    {
+        var runtime = StubVersionValue();
+        var loader = EffectiveLoaderVersion();
+        if (string.IsNullOrEmpty(loader))
+            throw new Exception("Loader 版本未知：请先执行 Assets/WebCustomStubRuntime/Loader~/build.sh，"
+                + "并确认 layout-editor/web/public/Loader.dll 存在。");
+        if (loader != runtime)
+            throw new Exception("Loader.dll 版本（" + loader + "）与统一运行时 SSOT（" + runtime
+                + "）不一致。关卡 requires.txt 将写入 " + runtime
+                + "，已装 Loader 必须 ≥ 该版本才会加载 stub 清单。请 build.sh 编译后重新导出依赖包。");
+    }
+
+    private static string EffectiveLoaderVersion()
+    {
+        var fromPublic = ReadVersionTxtKey(
+            ProjectRootAbsPath() + "/layout-editor/web/public/version.txt", "Loader");
+        if (!string.IsNullOrEmpty(fromPublic))
+            return fromPublic;
+        var fromBuild = ReadVersionTxtKey(
+            ProjectRootAbsPath() + "/Assets/WebCustomStubRuntime/Loader~/bin/Release/version.txt",
+            "Loader");
+        if (!string.IsNullOrEmpty(fromBuild))
+            return fromBuild;
+        return LoaderBuildVersionFromSource("Loader");
+    }
+
+    private static string ReadVersionTxtKey(string path, string key)
+    {
+        try
+        {
+            if (!File.Exists(path))
+                return "";
+            var lines = File.ReadAllLines(path);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var line = (lines[i] ?? "").Trim();
+                if (line.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
+                    return line.Substring(key.Length + 1).Trim();
+            }
+        }
+        catch { }
+        return "";
     }
 
     /// <summary>统一运行时 SSOT 版本号（反射 CustomStub.StubVersion.Value，缺失回落）。</summary>

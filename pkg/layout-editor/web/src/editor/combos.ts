@@ -11,6 +11,7 @@ import { setStatus } from "./status";
 import { draw } from "./render";
 import { escHtml, prefabIdFromPath, uuid } from "./coords";
 import { applyInterlockSwitchVisuals, clearCoaxialGroupsForSwitches } from "./buttonLinks";
+import { bindPaletteCardTooltip, comboPaletteTooltipContent } from "./paletteTooltip";
 
 /** 上菜台 → 回收台（脏盘/脏杯/马克杯/餐盘）自动绑定。 */
 function linkServing(kind: ServingReturnKind) {
@@ -752,7 +753,6 @@ export function buildComboPaletteGroup(filter: string): HTMLElement | null {
     const disabled = disabledReason !== null;
     if (disabled) {
       row.classList.add("palette-card-disabled");
-      row.title = disabledReason ?? "";
     }
     row.draggable = !disabled;
     row.dataset.combo = def.id;
@@ -761,6 +761,7 @@ export function buildComboPaletteGroup(filter: string): HTMLElement | null {
       ? ` <span class="disabled-badge" title="${escHtml(disabledReason ?? "")}">⛔ 禁用</span>`
       : "";
     row.innerHTML = `<div class="zh">${escHtml(def.nameZh)} <span class="variant-badge">组合</span>${badge}</div><div class="id">${escHtml(partNames)}</div><div class="sub">${escHtml(def.hint)}</div>`;
+    bindPaletteCardTooltip(row, comboPaletteTooltipContent(def, disabledReason));
     if (!disabled) {
       row.addEventListener("dragstart", (e) => {
         S.dragCombo = def;

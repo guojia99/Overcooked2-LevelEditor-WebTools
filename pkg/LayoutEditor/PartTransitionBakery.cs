@@ -18,12 +18,23 @@ using UnityEngine.SceneManagement;
 ///    b. 每个 slot 根烘焙转场 Animator（自研 controller，非 AnimGroupBakery 产物）：
 ///       Idle_Park / Idle_Active 定持 + Entry(park→0) / Exit(0→park) 单成员位移动画，
 ///       触发器名 = PartSwitch_&lt;from&gt;_&lt;to&gt;（由时间轴中继 SetTrigger）。
-///    c. Design/PartTimeline 时间轴链（全原版组件，GameObject.SendTrigger 只达
-///       同物体接收器 → 全部 TriggerTimer/中继挂在同一个时间轴物体上）：
-///       稳定计时 → PartSwitch →（sink 再经 outSeconds 延时发 _in）→ Stable_&lt;to&gt;
-///       → 延迟 cleanupDelaySeconds → Kill_&lt;from&gt;（slot 根 TriggerKillAttachments
-///       清内容物）+ KillLoose_&lt;from&gt;（Design 根 Loose-only 全场散落食材大扫除）。
-///    d. 清理：已删阶段的 slot 根与动画资产、旧时间轴、旧 KillAttachments。
+    ///       P1 的 Exit 目的地 = 自身 park（缺省 down/60≈50 格）——初始在场偏移 0 由默认态
+///       Idle_Active 保证；若 P1 强制零 park，Exit 就是 0→0 空动画（P1 永不退场）。
+    ///    c. 每个 slot 根挂独立 QuadGridManager（原版移动地面同构，s_test_level_5 平台
+    ///       Area）：桌台 StaticGridLocation 沿父链找到本网格注册；网格坐标经
+    ///       transform.TransformPoint 随根移动，slot 升降后占格查询仍正确。不挂则
+    ///       parked 桌台注册进主网格（位置被 clamp 到错误格点），升起后不可交互。
+    ///       halfSize = 文档侧（items/floors，stub 物件场景侧不可见）∪ 场景侧
+    ///       （Renderer/Collider）包围盒换算 —— 两来源缺一不可。
+    ///    d. Design/PartTimeline 时间轴链（全原版组件，GameObject.SendTrigger 只达
+    ///       同物体接收器 → 全部 TriggerTimer/中继挂在同一个时间轴物体上）：
+    ///       稳定计时 → PartSwitch →（sink 再经 outSeconds 延时发 _in）→ Stable_<to>；
+    ///       清理 = Stable_<to> + cleanupDelaySeconds → Kill_<from>（slot 根
+    ///       TriggerKillAttachments 清内容物——时机为下一 P 上浮完成之后，
+    ///       v3.4/D16；被杀道具走原版重生、落到新 P 空闲站台 = 跨 P 携带）。
+    ///       v3.4（D15）废除 Design 根全场大扫除（KillLoose_*）：base 层任何东西
+    ///       不清扫；陈旧组件由 DestroyTimeline 的 KillLoose_ 前缀清理自愈。
+///    e. 清理：已删阶段的 slot 根与动画资产、旧时间轴、旧 KillAttachments。
 ///
 /// 资产命名：&lt;scene&gt;_partslot_&lt;pid&gt;.controller / *.anim（SlotAssetMarker 供
 /// AnimGroupBakery.CleanupStale 排除，避免误删）。导入器不受影响：slot 根无
@@ -103,8 +114,10 @@ public static class PartTransitionBakery
             var root = LayoutEditorHierarchy.FindOrCreatePath(SlotsRootPath + "/" + p.id);
             if (root == null)
                 continue;
-            // park：P1 恒 0；P2+ 停放于 park 偏移（子树随之移动）。
+            // park：P1 初始在场恒 0；P2+ 停放于 park 偏移（子树随之移动）。
             root.localPosition = ParkVector(p, i == 0);
+            // 移动平台独立网格（交互注册，见类头 c）。
+            EnsureSlotGrid(root, p.id, doc);
             slotRoots[p.id] = root;
         }
 
@@ -126,12 +139,17 @@ public static class PartTransitionBakery
         AssetDatabase.SaveAssets();
     }
 
-    /// <summary>park 偏移向量：down/up = ∓Y，left/right = ∓X（世界轴）；P1 恒零。</summary>
+    /// <summary>park 偏移向量：down/up = ∓Y，left/right = ∓X（世界轴）。
+    /// isFirst 仅用于 Sync 的初始摆放（P1 开局在场恒零）；BakeSlotAnimator 一律传
+    /// false —— Exit/Idle_Park 需要真实退场去向，P1 也不例外。
+    /// offset ≤ 0 视为未设置（历史档 JsonUtility null 塌陷值），按缺省 60 兜底
+    /// （≈50 格——更小会开局看见停泊平台/转场穿模，v3.4 修订；上限 1000）。</summary>
     private static Vector3 ParkVector(PartDto p, bool isFirst)
     {
         if (isFirst || p == null)
             return Vector3.zero;
-        var off = Mathf.Clamp(p.park != null ? p.park.offset : 30f, 5f, 200f);
+        var off = p.park != null && p.park.offset > 0f ? p.park.offset : 60f;
+        off = Mathf.Clamp(off, 5f, 1000f);
         var axis = p.park != null && !string.IsNullOrEmpty(p.park.axis) ? p.park.axis : "down";
         if (axis == "up")
             return new Vector3(0f, off, 0f);
@@ -142,13 +160,224 @@ public static class PartTransitionBakery
         return new Vector3(0f, -off, 0f);
     }
 
+    // ---------- slot 局部网格（移动平台桌台交互） ----------
+
+    /// <summary>slot 根挂独立 QuadGridManager：m_size=(1.2,1,1.2)、m_origin=0、
+    /// m_gridHalfSize 按内容包围盒自动计算（cell 1.2m 向上取整 +1 格余量）。
+    /// 原版先例：移动地面带桌台必须单独加网格（Docs/zh/tutorial「移动地面」、
+    /// s_test_level_5 各平台 Area）。幂等：已存在则仅刷新 halfSize；空 slot 移除。</summary>
+    private static void EnsureSlotGrid(Transform root, string pid, LayoutDocumentDto doc)
+    {
+        int halfX, halfZ;
+        if (!ComputeSlotHalfSize(root, doc, pid, out halfX, out halfZ))
+        {
+            var stale = root.GetComponent<QuadGridManager>();
+            if (stale != null)
+                Undo.DestroyObjectImmediate(stale);
+            return;
+        }
+
+        var grid = root.GetComponent<QuadGridManager>();
+        if (grid == null)
+            grid = Undo.AddComponent<QuadGridManager>(root.gameObject);
+
+        var so = new SerializedObject(grid);
+        so.Update();
+        var sizeProp = so.FindProperty("m_size");
+        if (sizeProp != null)
+            sizeProp.vector3Value = new Vector3(1.2f, 1f, 1.2f);
+        var originProp = so.FindProperty("m_origin");
+        if (originProp != null)
+            originProp.vector3Value = Vector3.zero;
+        WriteGridHalfSize(so, halfX, 1, halfZ);
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(grid);
+        LayoutEditorLog.Log("[PartLevel] slot 网格 " + pid + "：gridHalfSize=(" + halfX + ",1," + halfZ + ")");
+    }
+
+    /// <summary>m_gridHalfSize 双形态写入（Point3 相对属性 / Vector3 回退），
+    /// 与 LayoutEditorGridBake / GridReader 的读法保持一致。</summary>
+    private static void WriteGridHalfSize(SerializedObject so, int halfX, int halfY, int halfZ)
+    {
+        var half = so.FindProperty("m_gridHalfSize");
+        if (half == null)
+            half = so.FindProperty("gridHalfSize");
+        if (half == null)
+            return;
+        var x = half.FindPropertyRelative("X");
+        var y = half.FindPropertyRelative("Y");
+        var z = half.FindPropertyRelative("Z");
+        if (x != null && y != null && z != null)
+        {
+            x.intValue = halfX;
+            y.intValue = halfY;
+            z.intValue = halfZ;
+        }
+        else if (half.propertyType == SerializedPropertyType.Vector3)
+        {
+            half.vector3Value = new Vector3(halfX, halfY, halfZ);
+        }
+    }
+
+    /// <summary>slot 内容包围盒 → 网格半宽。两个来源取并集（stub 免疫）：
+    /// 1) 文档侧：partId == pid 的 items（worldPosition 点 ± 0.6m）与 floors
+    ///    （worldPosition + widthCells/depthCells × 1.2m）——桌台 prefab 是
+    ///    stub（无 Renderer/Collider），场景侧看不到，文档是唯一权威；
+    /// 2) 场景侧：根下 Renderer/Collider 世界包围盒（真实地板 Plane 等）。
+    /// park/转场只动根本身，坐标经 InverseTransformPoint 归一到根局部，
+    /// 与 park 轴/深度无关。返回 false = 空 slot（两侧都无内容）。</summary>
+    private static bool ComputeSlotHalfSize(Transform root, LayoutDocumentDto doc, string pid,
+        out int halfX, out int halfZ)
+    {
+        halfX = 0;
+        halfZ = 0;
+        Vector3 min = Vector3.zero;
+        Vector3 max = Vector3.zero;
+        bool found = false;
+
+        // ---- 文档侧 ----
+        if (doc != null && doc.items != null)
+        {
+            for (int i = 0; i < doc.items.Length; i++)
+            {
+                var it = doc.items[i];
+                if (it == null || it.partId != pid)
+                    continue;
+                // 布局期 slot 根归零 → 设计局部坐标 == 设计世界坐标；worldPosition
+                // 缺失（匹配既有物件的文档）时回退 localPosition，避免引入原点噪声。
+                var wp = it.worldPosition != null ? it.worldPosition.ToVector3()
+                    : (it.localPosition != null ? it.localPosition.ToVector3() : Vector3.zero);
+                AccumulateLocalSphere(root, wp, 0.6f, ref min, ref max, ref found);
+            }
+        }
+        if (doc != null && doc.floors != null)
+        {
+            for (int i = 0; i < doc.floors.Length; i++)
+            {
+                var f = doc.floors[i];
+                if (f == null || f.partId != pid)
+                    continue;
+                var wp = f.worldPosition != null ? f.worldPosition.ToVector3() : Vector3.zero;
+                var halfW = Mathf.Max(f.widthCells, 0) * 0.6f;
+                var halfD = Mathf.Max(f.depthCells, 0) * 0.6f;
+                if (halfW > 0f || halfD > 0f)
+                    AccumulateLocalBox(root, wp, halfW, halfD, ref min, ref max, ref found);
+                else
+                    AccumulateLocalSphere(root, wp, 0f, ref min, ref max, ref found);
+            }
+        }
+
+        // ---- 场景侧（真实 Plane / 碰撞体） ----
+        var renderers = root.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+                AccumulateLocalBounds(renderers[i].bounds, root, ref min, ref max, ref found);
+        }
+        var colliders = root.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null)
+                AccumulateLocalBounds(colliders[i].bounds, root, ref min, ref max, ref found);
+        }
+
+        if (!found)
+            return false;
+
+        // 网格以 slot 根为中心对称扩展（总格数 2N+1）；须覆盖全部桌台，
+        // 否则注册时 GetGridLocationFromPos 会把桌台 clamp 挤到边缘格点。
+        const float cell = 1.2f;
+        float extentX = Mathf.Max(Mathf.Abs(min.x), Mathf.Abs(max.x));
+        float extentZ = Mathf.Max(Mathf.Abs(min.z), Mathf.Abs(max.z));
+        halfX = Mathf.Clamp(Mathf.CeilToInt(extentX / cell) + 1, 1, 50);
+        halfZ = Mathf.Clamp(Mathf.CeilToInt(extentZ / cell) + 1, 1, 50);
+        return true;
+    }
+
+    /// <summary>世界坐标点 ± radius 并入根局部 min/max（桌台 stub 的近似占格）。</summary>
+    private static void AccumulateLocalSphere(Transform root, Vector3 world, float radius,
+        ref Vector3 min, ref Vector3 max, ref bool found)
+    {
+        var lp = root.InverseTransformPoint(world);
+        if (!found)
+        {
+            min = lp - new Vector3(radius, 0f, radius);
+            max = lp + new Vector3(radius, 0f, radius);
+            found = true;
+            return;
+        }
+        min = Vector3.Min(min, lp - new Vector3(radius, 0f, radius));
+        max = Vector3.Max(max, lp + new Vector3(radius, 0f, radius));
+    }
+
+    /// <summary>世界轴对齐盒（中心 + XZ 半宽）四角并入根局部 min/max（地板矩形）。</summary>
+    private static void AccumulateLocalBox(Transform root, Vector3 world, float halfW, float halfD,
+        ref Vector3 min, ref Vector3 max, ref bool found)
+    {
+        if (halfW <= 0f && halfD <= 0f)
+            return;
+        for (int cx = 0; cx < 2; cx++)
+        {
+            for (int cz = 0; cz < 2; cz++)
+            {
+                var corner = world + new Vector3(cx == 0 ? -halfW : halfW, 0f, cz == 0 ? -halfD : halfD);
+                var lp = root.InverseTransformPoint(corner);
+                if (!found)
+                {
+                    min = lp;
+                    max = lp;
+                    found = true;
+                }
+                else
+                {
+                    min = Vector3.Min(min, lp);
+                    max = Vector3.Max(max, lp);
+                }
+            }
+        }
+    }
+
+    /// <summary>世界包围盒 8 角点转根局部后并入 min/max（Bounds 直角近似足够：
+    /// 网格半宽只需覆盖，不需要紧贴）。</summary>
+    private static void AccumulateLocalBounds(Bounds world, Transform root,
+        ref Vector3 min, ref Vector3 max, ref bool found)
+    {
+        for (int cx = 0; cx < 2; cx++)
+        {
+            for (int cy = 0; cy < 2; cy++)
+            {
+                for (int cz = 0; cz < 2; cz++)
+                {
+                    var corner = new Vector3(
+                        cx == 0 ? world.min.x : world.max.x,
+                        cy == 0 ? world.min.y : world.max.y,
+                        cz == 0 ? world.min.z : world.max.z);
+                    var local = root.InverseTransformPoint(corner);
+                    if (!found)
+                    {
+                        min = local;
+                        max = local;
+                        found = true;
+                    }
+                    else
+                    {
+                        min = Vector3.Min(min, local);
+                        max = Vector3.Max(max, local);
+                    }
+                }
+            }
+        }
+    }
+
     // ---------- slot 转场 Animator ----------
 
     private static Animator BakeSlotAnimator(Scene scene, Transform root, PartLevelDto pl, int index,
         string animDir, string sceneName)
     {
         var pid = pl.parts[index].id;
-        var park = ParkVector(pl.parts[index], index == 0);
+        // park = 本阶段自身退场去向（P1 缺省 down/60）：Entry 恒 park→0、Exit 恒
+        // 0→park；P1 若沿用「初始在场偏移 0」当 park，Exit 会烘成 0→0 空动画。
+        var park = ParkVector(pl.parts[index], false);
         var baseName = sceneName + SlotAssetMarker + pid;
         var ctrlPath = animDir + "/" + baseName + ".controller";
 
@@ -275,7 +504,6 @@ public static class PartTransitionBakery
         var tl = LayoutEditorHierarchy.FindOrCreatePath(TimelinePath);
         if (tl == null)
             return;
-        var designRoot = FindSceneRoot("Design");
 
         for (int k = 0; k + 1 < pl.parts.Length; k++)
         {
@@ -321,7 +549,16 @@ public static class PartTransitionBakery
             if (slotAnims.TryGetValue(to.id, out toAnim))
                 AddAnimRelay(tl, sink ? swName + "_in" : swName, toAnim, swName);
 
-            // 5) 清理链：Stable 后延迟 → 杀旧 slot 内容物 +（可选）全场散落食材大扫除。
+            // 5) 清理链：新 P 就位（Stable_<to>）+ cleanupDelaySeconds → 杀旧 slot
+            //    内容物。时机 = 下一 P 上浮完成之后（v3.4/D16 用户决策），此时
+            //    新 P 已在场（Idle_Active），被 TakeItem 的锅/盘/灭火器等带重生
+            //    行为的道具走原版重生协程、respawnTime 后落到新 P 的空闲站台
+            //    ——跨 P 携带语义；非在场 slot 站台由 PartSlotRespawnGuard
+            //    （CustomStub Harmony）拦停，不会重生回沉没/停泊站台。
+            //    v3.4（D15）：Design 根全场大扫除（KillLoose_*、killLooseEverywhere/
+            //    killAttachedEverywhere）整段废除——base 层任何东西不清扫；
+            //    陈旧组件由 DestroyTimeline 的 KillLoose_ 前缀清理自愈，存量场景
+            //    下次写回自动摘除。手持物保留（Chefs 子树，D6b 不变）。
             Transform fromRoot;
             if (slotRoots.TryGetValue(from.id, out fromRoot))
             {
@@ -329,23 +566,13 @@ public static class PartTransitionBakery
                 {
                     var killTimer = Undo.AddComponent<TriggerTimer>(tl.gameObject);
                     killTimer.m_startTrigger = "Stable_" + to.id;
-                    killTimer.m_time = cleanupDelay;
+                    // ServerTriggerTimer 只在 m_timer > 0 时倒计时——cleanupDelay=0
+                    // 会让 Kill 永不触发（2026-10-15 实测：旧 P 道具全程留在沉没
+                    // 平台上），0 延迟按 0.1s 兜底（其余计时器均有同款下限）。
+                    killTimer.m_time = Mathf.Max(0.1f, cleanupDelay);
                     killTimer.m_completeTrigger = "Kill_" + from.id;
                     AddObjectRelay(tl, "Kill_" + from.id, fromRoot.gameObject);
                     EnsureKillAttachments(fromRoot.gameObject, "Kill_" + from.id, 3);
-                }
-                if (t == null || t.killLooseEverywhere)
-                {
-                    if (designRoot != null)
-                    {
-                        var looseName = "KillLoose_" + from.id;
-                        var looseTimer = Undo.AddComponent<TriggerTimer>(tl.gameObject);
-                        looseTimer.m_startTrigger = "Stable_" + to.id;
-                        looseTimer.m_time = cleanupDelay;
-                        looseTimer.m_completeTrigger = looseName;
-                        AddObjectRelay(tl, looseName, designRoot.gameObject);
-                        EnsureKillAttachments(designRoot.gameObject, looseName, 1);
-                    }
                 }
             }
         }
@@ -380,7 +607,9 @@ public static class PartTransitionBakery
         r.m_targetObjects = new GameObject[0];
     }
 
-    /// <summary>幂等挂 TriggerKillAttachments（killMode：3 = Loose|Attached 全杀，1 = 仅 Loose）。</summary>
+    /// <summary>幂等挂 TriggerKillAttachments。killMode 位掩码（KillMode.Loose=0
+    /// → 位0/值1 散落 IAttachment；Attached=1 → 位1/值2 站台 ServerAttachStation
+    /// TakeItem）：1 = 仅 Loose，2 = 仅 Attached，3 = 全杀。</summary>
     private static void EnsureKillAttachments(GameObject host, string trigger, int killMode)
     {
         var existing = host.GetComponents<TriggerKillAttachments>();

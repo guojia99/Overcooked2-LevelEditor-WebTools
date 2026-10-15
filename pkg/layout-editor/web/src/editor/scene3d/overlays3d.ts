@@ -45,6 +45,7 @@ export function rebuildOverlays(ctx: Scene3DCtx): void {
   addLinks(root);
   addDirectionArrows(root);
   if (S.showCameraFov) addCameraFrustum(root);
+  addWorkstationOverlapAlerts(root);
 
   root.traverse((o) => {
     o.userData.noPick = true;
@@ -170,6 +171,28 @@ function addKillPlanes(root: THREE.Group): void {
     mesh.renderOrder = ORDER.killPlane;
     root.add(mesh);
     root.add(outlineRect(kp.cx, -0.049, toSceneZ(kp.cz), kp.sx, kp.sz, 0xf28b82, 0.85, ORDER.killPlane));
+  }
+}
+
+function addWorkstationOverlapAlerts(root: THREE.Group): void {
+  const keys = S.workstationOverlapAlertKeys;
+  if (!keys?.size) return;
+  const pulse = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(performance.now() / 220));
+  for (const it of S.items) {
+    if (!keys.has(it._editorKey)) continue;
+    const box = itemBoxOf(it);
+    root.add(
+      outlineRect(
+        box.cx,
+        box.baseY + 0.04,
+        toSceneZ(box.cz),
+        box.w * 1.02,
+        box.d * 1.02,
+        0xff3030,
+        0.35 + pulse * 0.5,
+        ORDER.walkable + 2
+      )
+    );
   }
 }
 

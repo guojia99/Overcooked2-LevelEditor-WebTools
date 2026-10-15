@@ -53,7 +53,7 @@ interface MakerState {
 const FILLING_SOFT_LIMIT = 32;
 
 /** 面包层判定：后端给的 buns 候选集优先；兜底按 id 含 "choppedbun"
- *  （核心 ChoppedBunSO / DLC02_ChoppedBun / DLC8 dlc08_choppedbun 三种写法全覆盖，
+ *  （核心 ChoppedBunSO / DLC02_ChoppedBun / DLC8 DLC08_ChoppedBun 三种写法全覆盖，
  *  历史别名 dlc08_bun 已统一改名，无需特判）。 */
 function isBunId(id: string, bunIds: Set<string>): boolean {
   if (bunIds.has(id)) return true;

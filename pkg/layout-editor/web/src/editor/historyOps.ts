@@ -14,6 +14,7 @@ import {
 import { draw } from "./render";
 import { setStatus } from "./status";
 import { renderPartBar } from "./partLevel";
+import { clampChefHeadLightRange } from "./lightsUtil";
 
 export function snapshotState(): EditorSnapshot {
   return JSON.parse(JSON.stringify({
@@ -25,10 +26,13 @@ export function snapshotState(): EditorSnapshot {
     buttonLinks: S.buttonLinks,
     buttonEvents: S.buttonEvents,
     coaxialLinks: S.coaxialLinks,
+    randomTriggers: S.randomTriggers,
     cameraInfo: S.cameraInfo,
     lights: S.lights,
     ceilingHeight: S.ceilingHeight,
     hasCeilingHeight: S.hasCeilingHeight,
+    chefHeadLightsEnabled: S.chefHeadLightsEnabled,
+    chefHeadLightRange: S.chefHeadLightRange,
   })) as EditorSnapshot;
 }
 
@@ -63,10 +67,13 @@ export function applySnapshot(snap: EditorSnapshot): void {
   S.buttonLinks = snap.buttonLinks ?? [];
   S.buttonEvents = snap.buttonEvents ?? [];
   S.coaxialLinks = snap.coaxialLinks ?? [];
+  S.randomTriggers = snap.randomTriggers ?? [];
   S.cameraInfo = snap.cameraInfo ?? null;
   S.lights = snap.lights ?? [];
   S.ceilingHeight = snap.ceilingHeight ?? 2;
   S.hasCeilingHeight = snap.hasCeilingHeight ?? false;
+  S.chefHeadLightsEnabled = snap.chefHeadLightsEnabled ?? false;
+  S.chefHeadLightRange = clampChefHeadLightRange(snap.chefHeadLightRange);
   // Restore anim-group selection only when the group still exists.
   if (S.activeAnimGroupId && !S.animControls.some((g) => g.id === S.activeAnimGroupId)) {
     S.activeAnimGroupId = null;

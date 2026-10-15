@@ -93,6 +93,8 @@ public static class LayoutEditorCatalogApi
     {
         if (so == null || string.IsNullOrEmpty(fileId))
             return fileId;
+        if (fileId.IndexOf("ChoppedBun", StringComparison.OrdinalIgnoreCase) >= 0)
+            return fileId;
         var pn = so.prefabName;
         if (string.IsNullOrEmpty(pn) || pn == fileId)
             return fileId;
@@ -810,6 +812,87 @@ public static class LayoutEditorCatalogApi
             names.Add(s != null ? s.name : "?");
         LayoutEditorLog.Log("[Recipes] allCookingSteps 已按菜谱重建: " + info.name
             + " -> [" + string.Join(", ", names.ToArray()) + "]");
+    }
+
+    /// <summary>Web 背包自定义菜谱初填：把 doc 里 WebBackpack.initialFillGuids 中的
+    /// CustomRecipeSO（含嵌套自定义子菜谱）幂等注入 LevelInfoSO.optionalRecipeMatchListItems
+    /// ——运行时按 uID 从关卡匹配表解析节点（CustomRecipeSO 不在游戏 bundle，
+    /// 无法走 SO 加载路径）。纯追加去重，不做回收（多余条目只增识别能力，无害）。</summary>
+    public static void SyncWebBackpackOptionalItems(LevelInfoSO info, LayoutDocumentDto doc)
+    {
+        if (info == null || doc == null || doc.items == null)
+            return;
+        var wanted = new HashSet<ScriptableObject>();
+        foreach (var it in doc.items)
+        {
+            if (it == null || it.webBackpack == null || it.webBackpack.initialFillGuids == null)
+                continue;
+            foreach (var g in it.webBackpack.initialFillGuids)
+            {
+                if (string.IsNullOrEmpty(g))
+                    continue;
+                var path = AssetDatabase.GUIDToAssetPath(g);
+                if (string.IsNullOrEmpty(path))
+                    continue;
+                var custom = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
+                if (custom == null)
+                    continue;
+                CollectCustomRecipesRecursive(custom, wanted);
+            }
+        }
+        if (wanted.Count == 0)
+            return;
+        var oldItems = info.optionalRecipeMatchListItems ?? new ScriptableObject[0];
+        var merged = new List<ScriptableObject>();
+        var seen = new HashSet<ScriptableObject>();
+        int added = 0;
+        foreach (var so in wanted)
+        {
+            if (so != null && seen.Add(so))
+            {
+                merged.Add(so);
+                added++;
+            }
+        }
+        foreach (var old in oldItems)
+        {
+            if (old != null && seen.Add(old))
+                merged.Add(old);
+        }
+        if (added == 0)
+            return;
+        Undo.RecordObject(info, "Layout Editor Web Backpack Optional");
+        info.optionalRecipeMatchListItems = merged.ToArray();
+        EditorUtility.SetDirty(info);
+        var names = new List<string>();
+        foreach (var so in merged)
+            names.Add(so != null ? so.name : "?");
+        LayoutEditorLog.Log("[WebBackpack] 自定义初填已注入 optionalRecipeMatchListItems: "
+            + info.name + "（新增 " + added + " 条 -> [" + string.Join(", ", names.ToArray()) + "]）");
+    }
+
+    private static void CollectCustomRecipesRecursive(CustomRecipeSO so, HashSet<ScriptableObject> into)
+    {
+        if (so == null || !into.Add(so))
+            return;
+        if (so.compositionSOs != null)
+        {
+            foreach (var c in so.compositionSOs)
+            {
+                var sub = c as CustomRecipeSO;
+                if (sub != null)
+                    CollectCustomRecipesRecursive(sub, into);
+            }
+        }
+        if (so.optionalSOs != null)
+        {
+            foreach (var o in so.optionalSOs)
+            {
+                var sub = o as CustomRecipeSO;
+                if (sub != null)
+                    CollectCustomRecipesRecursive(sub, into);
+            }
+        }
     }
 
     private static void CollectCookingSteps(ScriptableObject so, HashSet<PseudoPrefabSO> steps, HashSet<ScriptableObject> visited)

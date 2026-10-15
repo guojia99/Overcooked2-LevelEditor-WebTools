@@ -46,7 +46,8 @@ import {
   isCollisionItem,
   isAirWallItem,
   isAirSlopeItem,
-  isLotusPressureSwitchItem
+  isLotusPressureSwitchItem,
+  stripMisplacedSpeedControl,
 } from "./stubControls";
 import { cleanOrphanedButtonLinks, cleanOrphanedCoaxialLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
@@ -73,6 +74,7 @@ import {
   trySnapUtensilToHost,
   isStackHostCatalog
 } from "../stacking";
+import { aabbOverlap3D, itemWorldYExtents } from "./itemBounds";
 import type {
   LayoutItem,
   FloorObject,
@@ -185,6 +187,7 @@ export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
     stubX = ed.x;
     stubZ = ed.z;
   }
+  stripMisplacedSpeedControl(raw);
   return {
     ...raw,
     _editorKey: editorKey,
@@ -447,7 +450,7 @@ export function checkPlayerCollisions(): string[] {
       !isCollisionItem(it) &&
       itemLayerOfIt(it) === "items"
   );
-  // 精确 AABB 相交（与 checkWorkstationCollisions 一致），而不是网格离散化：
+  // 精确 XZ AABB 相交（工作台写回校验另加 Y，见 checkWorkstationCollisions），而不是网格离散化：
   // 网格化在物体不在格子正中心时会多算相邻格子，造成假重叠。
   const EPS = 0.02;
   for (const p of players) {
@@ -493,8 +496,13 @@ export function itemWorldAABB(item: EditorItem): { minX: number; minZ: number; m
   };
 }
 
-export function checkWorkstationCollisions(): string[] {
-  const result: string[] = [];
+export interface WorkstationCollisionPair {
+  keyA: string;
+  keyB: string;
+}
+
+export function findWorkstationCollisionPairs(): WorkstationCollisionPair[] {
+  const pairs: WorkstationCollisionPair[] = [];
   const workstations = S.items.filter(
     (it) =>
       // 分 P：工作台重叠按 P 作用域校验。
@@ -504,17 +512,28 @@ export function checkWorkstationCollisions(): string[] {
   );
   const EPS = 0.02;
   for (let i = 0; i < workstations.length; i++) {
-    const a = itemWorldAABB(workstations[i]);
+    const xzA = itemWorldAABB(workstations[i]);
+    const yA = itemWorldYExtents(workstations[i]);
+    const a = { ...xzA, ...yA };
     for (let j = i + 1; j < workstations.length; j++) {
-      const b = itemWorldAABB(workstations[j]);
-      const overlapX = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX);
-      const overlapZ = Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ);
-      if (overlapX > EPS && overlapZ > EPS) {
-        result.push(`${itemLabel(workstations[i])} 与 ${itemLabel(workstations[j])} 重叠`);
+      const xzB = itemWorldAABB(workstations[j]);
+      const yB = itemWorldYExtents(workstations[j]);
+      const b = { ...xzB, ...yB };
+      if (aabbOverlap3D(a, b, EPS)) {
+        pairs.push({ keyA: workstations[i]._editorKey, keyB: workstations[j]._editorKey });
       }
     }
   }
-  return result;
+  return pairs;
+}
+
+export function checkWorkstationCollisions(): string[] {
+  return findWorkstationCollisionPairs().map((p) => {
+    const a = S.items.find((it) => it._editorKey === p.keyA);
+    const b = S.items.find((it) => it._editorKey === p.keyB);
+    if (!a || !b) return "工作台 与 工作台 重叠";
+    return `${itemLabel(a)} 与 ${itemLabel(b)} 重叠`;
+  });
 }
 
 /** Apply a width/depth (in grid cells) to a background plane item: writes the
@@ -766,6 +785,14 @@ export function addFromCatalog(
     y: baseY,
     z: u.z,
   };
+  if (cat.id === "web_backpack_storage_01") {
+    item.stubKind = "WebBackpack";
+    item.webBackpack = { capacity: 4, pickMode: "fifo", initialFillGuids: [] };
+  }
+  if (cat.id === "web_killer_ghost_01") {
+    item.stubKind = "WebKillerGhost";
+    item.webKillerGhost = { hitRadius: 0.45, enabled: true, style: "npc_ghost" };
+  }
   if (cat.id === "Dispenser") {
     item.stubKind = "Dispenser";
     item.dispenser = {};

@@ -456,7 +456,7 @@ public static class LayoutEditorRecipeKnowledge
         }
 
         bool flourBranch = false;
-        // 蛋糕/布丁同族：搅拌 + 烤箱（布丁自身步骤 Mixer 是搅拌+烤箱一体工作站）
+        string finalMarkerStep = "";
         var cakeLike = type == "cake" || type == "pudding";
         if (type == "sushi")
         {
@@ -534,26 +534,16 @@ public static class LayoutEditorRecipeKnowledge
         }
         else if (cakeLike || (ContainsAnyIngredient(ingredients, FlourIngredients) && finalStep != "Mixer" && finalStep != "MixingBowl"))
         {
-            // 蛋糕/布丁：面粉/蛋搅拌 + 其余进烤箱（保持原分组，勿动）。
-            // 面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，最终锅具退化为空标记组
+            // 蛋糕/布丁、面糊/面团（松饼/烧麦）：**全部食材一起进搅拌碗**，终锅退化为空标记组
             //   —— bundle 实测原版就是这条链：SteamedSpecial_Carrot ← MixedFlourCarrot
             //   （面粉+胡萝卜整体搅拌）→ Steamer；Pancake_Chocolate ← MixedFlourEggChocolate
             //   （面粉+蛋+巧克力整体搅拌）→ FryingPan。此前把非面粉食材丢进终锅，既让卡片
             //   显示成两个独立框，也让自动填充往蒸笼/煎锅塞生食材（顶掉原版 lookup）。
             // 面粉/蛋判定用全家族集合（FlourSO/dlc09/dlc13 变体）。
-            flourBranch = !cakeLike;
-            var cookStep = cakeLike ? "OvenTray" : (IsCookStep(finalStep) ? finalStep : "");
+            flourBranch = true;
+            finalMarkerStep = cakeLike ? "OvenTray" : (IsCookStep(finalStep) ? finalStep : "");
             foreach (var ing in ingredients)
-            {
-                if (prep.ContainsKey(ing))
-                    continue;
-                if (!cakeLike)
-                    prep[ing] = "MixingBowl";
-                else
-                    prep[ing] = (FlourIngredients.Contains(ing) || EggIngredients.Contains(ing))
-                        ? "MixingBowl"
-                        : cookStep;
-            }
+                prep[ing] = "MixingBowl";
         }
 
         bool anyAssigned = false;
@@ -593,8 +583,13 @@ public static class LayoutEditorRecipeKnowledge
             if (order[i] != "")
                 ordered.Add(order[i]);
         }
-        if ((flourBranch || interBranch) && IsCookStep(finalStep) && !groupMap.ContainsKey(finalStep) && order.Count > 0)
-            ordered.Add(finalStep);
+        string markerStep = "";
+        if (flourBranch && !string.IsNullOrEmpty(finalMarkerStep))
+            markerStep = finalMarkerStep;
+        else if ((flourBranch || interBranch) && IsCookStep(finalStep))
+            markerStep = finalStep;
+        if (!string.IsNullOrEmpty(markerStep) && IsCookStep(markerStep) && !groupMap.ContainsKey(markerStep) && order.Count > 0)
+            ordered.Add(markerStep);
 
         bool splitPerIngredient = (finalStep == "DeepFatFryer" && type != "donut") ||
             (type == "fry" && !IsCookStep(finalStep)) ||

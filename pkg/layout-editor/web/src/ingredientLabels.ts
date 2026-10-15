@@ -36,7 +36,7 @@ export function foodGroupBadge(group: FoodGroup | undefined): string {
 /** 展示层去重：
  *  1) 同 id 时隐藏通用内容项，保留 levelset 组条目；
  *  2) 同 guid（同一底层资产）时只保留首个，避免同一食材因 id 大小写不一致
- *     （如 DLC08_ChoppedBun 与 dlc08_choppedbun 同指 guid 965ff691…）在选择器里重复出现。
+ *     （如 DLC08_ChoppedBun 与 DLC08_ChoppedBun 同指 guid 965ff691…）在选择器里重复出现。
  *  仅作用于展示层，不改动已放置物品（物品按 guid 存储，两种 id 均解析到同一 guid）。 */
 export function visibleIngredients(ingredients: IngredientEntry[]): IngredientEntry[] {
   const levelsetIds = new Set(

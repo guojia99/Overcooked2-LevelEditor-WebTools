@@ -705,8 +705,8 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     `<p>将<b>重新打包</b>依赖包（<code>OC2DIYLevelRuntimeWLoader/</code>），<b>不含任何关卡</b>。导出前会<b>删除 commonW1/commonW2 旧构建产物并重新打包</b>（杜绝遗留）；两个 common 包<b>无条件全部携带</b>。解压到游戏 <code>BepInEx/plugins/</code> 目录即安装——<b>只要版本号不变，装一次即可长期复用</b>，之后更新关卡只需在关卡集上导出（可不带依赖）。</p>
      <div class="m-section-title">打包清单</div>
      <div class="deps-manifest" id="exp-deps-manifest"><p class="modal-hint">正在获取打包清单…</p></div>
-     <label class="m-field">打包版本 version<input type="text" id="exp-deps-version" autocomplete="off" placeholder="v1.0.0" value="v1.0.0"></label>
-     <p class="modal-hint" id="exp-deps-version-hint">打包版本独立于运行时版本与关卡集版本，仅用于依赖包命名与升级辨识——依赖内容变更时递增它，玩家即知需更新。</p>
+     <label class="m-field">打包版本 version<input type="text" id="exp-deps-version" autocomplete="off" placeholder="与运行时 SSOT 一致（如 v3.9.1）" value=""></label>
+     <p class="modal-hint" id="exp-deps-version-hint">关卡 requires.txt 写入运行时 SSOT 版本；Loader.PluginVersion 须与之完全一致。建议打包版本与 SSOT 相同（zip 命名用）。</p>
      <p class="modal-hint" id="exp-deps-zipname"></p>
      <div class="m-section-title">CustomStub 统一运行时</div>
      <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
@@ -733,7 +733,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     if (zipnameEl)
       zipnameEl.textContent = norm
         ? `zip 文件名：OC2DIYLevelRuntimeWLoader_v${norm}_${stamp}.zip`
-        : "请输入打包版本（如 v1.0.0）";
+        : "请输入打包版本（建议与运行时 SSOT 一致）";
   };
   versionInput?.addEventListener("input", updateZipPreview);
   updateZipPreview();
@@ -743,10 +743,20 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     if (!manifestEl) return;
     try {
       const m = await api.fetchDepsExportManifest();
-      manifestEl.innerHTML = renderDepsManifestRows(m.entries);
-      if (versionInput && m.lastDepsVersion) versionInput.value = `v${m.lastDepsVersion}`;
-      if (versionHintEl && m.runtimeVersion)
-        versionHintEl.textContent = `打包版本独立于运行时版本（当前 v${m.runtimeVersion}）与关卡集版本，仅用于依赖包命名与升级辨识——依赖内容变更时递增它，玩家即知需更新。`;
+      const alignWarn =
+        m.versionsAligned === false
+          ? `<p class="modal-hint warn">Loader.dll（v${esc(m.loaderVersion || "?")}）与运行时 SSOT（v${esc(m.runtimeVersion || "?")}）不一致：请执行 <code>Loader~/build.sh</code>；导出依赖包时会自动同步 bin/Release → public 并校验。</p>`
+          : "";
+      manifestEl.innerHTML = alignWarn + renderDepsManifestRows(m.entries);
+      if (versionInput) {
+        const prefill = m.lastDepsVersion || m.runtimeVersion;
+        if (prefill) versionInput.value = `v${prefill}`;
+      }
+      if (versionHintEl && m.runtimeVersion) {
+        const loader = m.loaderVersion ? `v${m.loaderVersion}` : "未知";
+        versionHintEl.textContent =
+          `requires.txt = v${m.runtimeVersion}；当前 Loader ${loader}。打包版本建议与 SSOT 相同（装包后 Loader 版本须 ≥ requires，且须能加载 stub 清单）。`;
+      }
       updateZipPreview();
     } catch (e) {
       manifestEl.innerHTML = `<p class="modal-hint">实时清单获取失败（${esc((e as Error).message)}），以下为默认打包内容：</p>${renderDepsManifestRows(DEPS_MANIFEST_FALLBACK)}`;
@@ -759,7 +769,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     if (okBtn) okBtn.disabled = true;
     const norm = normalizeDepsVersionInput(versionInput?.value ?? "");
     if (!norm) {
-      setStatus("请输入依赖包打包版本（如 v1.0.0）。", false);
+      setStatus("请输入依赖包打包版本（建议与运行时 SSOT 一致）。", false);
       if (okBtn) okBtn.disabled = false;
       return;
     }
@@ -1454,6 +1464,8 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
         sceneConfig = {
           ceilingHeight: Math.max(0, Math.min(10, doc.ceilingHeight ?? 2)),
           hasCeilingHeight: doc.hasCeilingHeight ?? true,
+          chefHeadLightsEnabled: doc.chefHeadLightsEnabled === true,
+          chefHeadLightRange: Math.max(0.01, Math.min(100, doc.chefHeadLightRange ?? 10)),
           ceilingReadOnly: true,
         };
       } catch {
@@ -1916,7 +1928,7 @@ function renderHistoryDetail(detail: WriteBackHistoryDetail): string {
       ${diffEntryRows(d.floorsAdded, "＋", "wb-add") || '<p class="muted">无新增</p>'}
       ${diffEntryRows(d.floorsRemoved, "－", "wb-del") || ""}
       ${changedEntryRows(d.floorsChanged, "✎", "wb-chg") || ""}
-      <h4>相机 / 灯光</h4>
+      <h4>相机 / 场景灯光</h4>
       <div class="wb-diff-row"><span class="wb-name">相机</span><span class="wb-val">${
         d.cameraChanged
           ? `<span class="wb-chg">有变化</span>${d.cameraDetail ? `<span class="muted"> ${esc(d.cameraDetail)}</span>` : ""}`
@@ -2406,6 +2418,10 @@ export interface SceneConfigOptions {
   ceilingHeight: number;
   hasCeilingHeight: boolean;
   onCeilingHeightChange?: (value: number) => void;
+  chefHeadLightsEnabled?: boolean;
+  chefHeadLightRange?: number;
+  onChefHeadLightsChange?: (enabled: boolean) => void;
+  onChefHeadLightRangeChange?: (range: number) => void;
   /** 关卡管理页：仅展示场景内当前值，须在布局编辑器中修改并写回。 */
   ceilingReadOnly?: boolean;
   partLevel?: {
@@ -2452,6 +2468,9 @@ function ceilingEnvPaneHtml(sceneConfig: SceneConfigOptions): string {
   const h = Math.max(0, Math.min(10, sceneConfig.ceilingHeight));
   const ro = sceneConfig.ceilingReadOnly;
   const dis = ro ? " disabled" : "";
+  const hlOn = sceneConfig.chefHeadLightsEnabled === true;
+  const hlRange = Math.max(0.01, Math.min(100, sceneConfig.chefHeadLightRange ?? 10));
+  const rangeDis = ro || !hlOn ? " disabled" : "";
   return `<p class="modal-hint">空气斜坡 · 天花板高度（KitchenLoaderManager）</p>
         <div class="cfg-ceiling-card">
           <div class="cfg-ceiling-row">
@@ -2470,7 +2489,29 @@ function ceilingEnvPaneHtml(sceneConfig: SceneConfigOptions): string {
               ? "此处为场景只读快照；修改请进入布局编辑并在「保存全部」后「写回 Unity」。"
               : "在「保存全部」后仍会写入画布状态，须再点「写回 Unity」才落盘场景。"
           }</p>
-        </div>`;
+        </div>
+        <p class="modal-hint" style="margin-top:14px">厨师头灯（对齐 OC1 4-2 暗关）</p>
+        <div class="cfg-headlight-card">
+          <label class="cfg-switch-row" for="cfg-chefHeadLights">
+            <span class="cfg-switch-label">为每位厨师出生点启用头灯（Container + HeadLight）</span>
+            <span class="cfg-switch">
+              <input type="checkbox" id="cfg-chefHeadLights" class="cfg-switch-input" role="switch"
+                aria-checked="${sceneConfig.chefHeadLightsEnabled ? "true" : "false"}"
+                ${sceneConfig.chefHeadLightsEnabled ? "checked" : ""}${dis} />
+              <span class="cfg-switch-track" aria-hidden="true"></span>
+            </span>
+          </label>
+          <label class="m-field cfg-headlight-range">
+            <span>灯光距离 Range</span>
+            <input type="number" id="cfg-chefHeadLightRange" class="cfg-ceiling-num" min="0.01" max="100" step="0.5"
+              value="${hlRange}"${rangeDis}${dis} aria-label="厨师头灯照射距离" />
+          </label>
+        </div>
+        <p class="muted small">参考关 <code>OC1_Story_4_2</code>：开启后写回同时套用暗关环境（环境光近黑、太阳光 <code>Art/Lights/day</code> 强度 0）；聚光灯随编辑预览中的厨师移动，Range 对应 Unity Light「范围」。关闭头灯时恢复模板环境与 Chefs 直下 Player 占位。${
+          ro
+            ? "此处为场景只读快照。"
+            : "修改后须「写回 Unity」才落盘场景。"
+        }</p>`;
 }
 
 function partLevelTabPaneHtml(part: NonNullable<SceneConfigOptions["partLevel"]>): string {
@@ -2495,7 +2536,7 @@ function partLevelTabPaneHtml(part: NonNullable<SceneConfigOptions["partLevel"]>
       <p class="muted small">同一关卡在一条时间轴上自动切换多套布局（P1 → P2 → …）。适合「前半段厨房 A、后半段厨房 B」一类关卡；场景结构、转场动画与时间轴由写回时自动烘焙。</p>
       <ul class="cfg-part-list muted small">
         <li>开启后现有物件默认归入<b>基础层</b>（推荐：全程常驻），或归入 <b>P1</b>（作为开局布局）。</li>
-        <li>各阶段玩法内容请分别移入 P1…Pn（右键「移到分 P」）；转场节奏、停放方向、清理策略在「分 P 管理」中调整。</li>
+        <li>各阶段玩法内容请分别移入 P1…Pn（右键「移到分 P」）；转场节奏、退场去向、清理策略在「分 P 管理」中调整。</li>
         <li>默认转场：每段稳定 60s + 下沉再上浮 5s，可在管理面板修改。</li>
       </ul>
       <p class="modal-hint">启用参数</p>
@@ -2672,6 +2713,14 @@ export async function openConfigTabsModal(
     document.querySelectorAll<HTMLButtonElement>("[data-ceiling-preset]").forEach((b) =>
       b.addEventListener("click", () => syncCeilingUi(Number(b.dataset.ceilingPreset ?? 2)))
     );
+    const syncHeadlightRangeDisabled = (): void => {
+      const sw = document.getElementById("cfg-chefHeadLights") as HTMLInputElement | null;
+      const rng = document.getElementById("cfg-chefHeadLightRange") as HTMLInputElement | null;
+      if (!rng || sceneConfig.ceilingReadOnly) return;
+      rng.disabled = !(sw != null && sw.checked);
+    };
+    document.getElementById("cfg-chefHeadLights")?.addEventListener("change", syncHeadlightRangeDisabled);
+    syncHeadlightRangeDisabled();
   }
   document.getElementById("cfg-part-manage")?.addEventListener("click", () => sceneConfig?.partLevel?.onManage());
   document.getElementById("cfg-part-enable")?.addEventListener("click", () => {
@@ -2851,6 +2900,15 @@ export async function openConfigTabsModal(
       if (ceilingInput && sceneConfig) {
         const ceilingHeight = Math.max(0, Math.min(10, Number(ceilingInput.value || 2)));
         sceneConfig.onCeilingHeightChange?.(ceilingHeight);
+      }
+      const headLightInput = document.getElementById("cfg-chefHeadLights") as HTMLInputElement | null;
+      if (headLightInput && sceneConfig && !sceneConfig.ceilingReadOnly) {
+        sceneConfig.onChefHeadLightsChange?.(headLightInput.checked);
+      }
+      const headLightRangeInput = document.getElementById("cfg-chefHeadLightRange") as HTMLInputElement | null;
+      if (headLightRangeInput && sceneConfig && !sceneConfig.ceilingReadOnly) {
+        const r = Math.max(0.01, Math.min(100, Number(headLightRangeInput.value || 10)));
+        sceneConfig.onChefHeadLightRangeChange?.(r);
       }
       await api.updateLevelInfo({
         assetPath: detail.levelInfoAssetPath,

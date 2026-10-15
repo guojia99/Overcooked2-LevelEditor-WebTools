@@ -38,7 +38,7 @@ import {
 
 /** Inline <img> for an ingredient/recipe: try the extracted icon PNG (unless explicitly known
  *  missing), else / on error fall back to the shared placeholder (MissingIngredient_Icon). */
-function iconImg(kind: "ingredients" | "recipes", id: string | undefined, hasIcon?: boolean): string {
+export function iconImg(kind: "ingredients" | "recipes", id: string | undefined, hasIcon?: boolean): string {
   const src = id && hasIcon !== false ? `/icons/${kind}/${id}.png` : "/icons/_placeholder.png";
   return `<img class="food-icon" loading="lazy" src="${src}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
 }
@@ -233,7 +233,7 @@ export function openFoodSpawnerEditor(
     "食材生成器 · 参数",
     `
     <label class="modal-check"><input type="checkbox" id="modal-spawn-order" ${fs.spawnInOrder !== false ? "checked" : ""} /> 按顺序生成 (spawnInOrder)</label>
-    <label class="modal-check"><input type="checkbox" id="modal-trigger-start" ${fs.triggerAtStart !== false ? "checked" : ""} /> 开局触发 (triggerAtStart)</label>
+    <label class="modal-check"><input type="checkbox" id="modal-trigger-start" ${fs.triggerAtStart !== false ? "checked" : ""} ${fs.startByButton ? "disabled" : ""} /> 开局触发 (triggerAtStart)${fs.startByButton ? "（按钮批次模式下不适用）" : ""}</label>
     <label class="modal-field">触发间隔 triggerTime (秒)<input type="number" id="modal-trigger-time" step="0.5" min="0" value="${fs.triggerTime ?? 5}" /></label>
     <p class="modal-hint">attachmentPrefabSOs（勾选食材，权重均分）</p>
     <div class="modal-scroll">${grid}</div>
@@ -790,6 +790,121 @@ export function openRecipePicker(
       guids.push(el.value);
     });
     onSave(guids);
+    closeModal();
+  });
+}
+
+/** Web 储物背包：按顺序多选初始填充（≤ capacity）。 */
+export function openWebBackpackFillModal(
+  ingredients: IngredientEntry[],
+  capacity: number,
+  selectedGuids: string[],
+  onSave: (guids: string[]) => void
+) {
+  const order: string[] = [...selectedGuids];
+  const cap = Math.max(1, capacity);
+  const byGuid = new Map(ingredients.map((i) => [i.guid, i]));
+
+  const nameOf = (guid: string): string => byGuid.get(guid)?.nameZh ?? "未知条目";
+  const iconOf = (guid: string): string => {
+    const ing = byGuid.get(guid);
+    return ing ? iconImg("ingredients", ing.id, ing.icon) : "";
+  };
+
+  const ingCard = (ing: IngredientEntry): string => {
+    const reason = ing.nodeOnly ? "node 型食材无法放入背包" : null;
+    const checked = !reason && order.includes(ing.guid);
+    const idx = order.indexOf(ing.guid);
+    const ord = idx >= 0 && !reason ? `<span class="pc-badge">${idx + 1}</span>` : "";
+    return `<label class="pick-card${checked ? " selected" : ""}${reason ? " pick-card-disabled" : ""}">
+      <input type="checkbox" value="${ing.guid}" ${checked ? "checked" : ""} ${reason ? "disabled" : ""}>
+      ${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${ord}</span></label>`;
+  };
+
+  const renderGrid = (keyword: string): string => {
+    if (ingredients.length === 0)
+      return `<p class="modal-hint">食材目录尚未加载（或为空）——请确认编辑器桥已连接后重试</p>`;
+    const kw = keyword.trim().toLowerCase();
+    const match = (i: IngredientEntry): boolean => {
+      if (!kw) return true;
+      return (
+        i.nameZh.toLowerCase().includes(kw) ||
+        (i.nameEn ?? "").toLowerCase().includes(kw) ||
+        (i.id ?? "").toLowerCase().includes(kw)
+      );
+    };
+    return ingredients.filter(match).map(ingCard).join("");
+  };
+
+  /** 已选清单（按格位顺序）：点 × 即从对应格位移除（支持历史菜谱条目）。 */
+  const renderSelected = (): string => {
+    if (order.length === 0)
+      return `<span class="modal-hint">尚未选择（最多 ${cap} 格，可留空）</span>`;
+    return order
+      .map(
+        (g, i) => `<span class="wb-selected-chip" data-wb-remove="${g}" title="点击移除第 ${i + 1} 格">
+          ${iconOf(g)}<span>${i + 1}. ${nameOf(g)}</span><b>×</b></span>`
+      )
+      .join("");
+  };
+
+  const refreshAll = (): void => {
+    const sel = document.querySelector("#wb-fill-selected");
+    if (sel) sel.innerHTML = renderSelected();
+    const grid = document.querySelector("#wb-fill-grid");
+    if (grid) {
+      const search = document.querySelector<HTMLInputElement>("#wb-fill-search");
+      grid.innerHTML = renderGrid(search ? search.value : "");
+    }
+    const ok = document.querySelector<HTMLButtonElement>("[data-ok]");
+    if (ok) ok.disabled = order.length > cap;
+  };
+
+  const body = `<p class="modal-hint">只能填充食材（整蔬菜/面包皮/冰块等源生物按加工链入包；煤块等不可加工物除外）；按勾选顺序填入格位（先进先出），最多 ${cap} 项，可留空</p>
+    <div class="wb-selected-bar"><span class="wb-selected-title">已选 ${order.length}/${cap}：</span><span id="wb-fill-selected">${renderSelected()}</span></div>
+    <div class="ing-filter-bar">
+      <input type="search" id="wb-fill-search" class="ing-search" placeholder="搜索食材…" />
+    </div>
+    <div class="modal-scroll"><div class="pick-grid" id="wb-fill-grid">${renderGrid("")}</div></div>`;
+
+  openModal("Web 背包 · 初始填充（仅食材）", body, `${cancelBtnHtml()} ${primaryBtnHtml("确定")}`, { panelClass: "wide" });
+
+  document.querySelector("#wb-fill-search")?.addEventListener("input", () => {
+    const grid = document.querySelector("#wb-fill-grid");
+    if (grid) grid.innerHTML = renderGrid("");
+  });
+
+  document.querySelector(".modal-scroll")?.addEventListener("change", (ev) => {
+    const t = ev.target as HTMLInputElement;
+    if (t.type !== "checkbox" || !t.value) return;
+    if (t.checked) {
+      if (order.length >= cap) {
+        t.checked = false;
+        return;
+      }
+      order.push(t.value);
+    } else {
+      const idx = order.indexOf(t.value);
+      if (idx >= 0) order.splice(idx, 1);
+    }
+    refreshAll();
+  });
+
+  // 已选清单点删：从对应格位移除（同 guid 多份时移除首个）
+  document.querySelector("#wb-fill-selected")?.addEventListener("click", (ev) => {
+    const chip = (ev.target as HTMLElement).closest<HTMLElement>("[data-wb-remove]");
+    if (!chip) return;
+    const g = chip.dataset.wbRemove;
+    if (!g) return;
+    const idx = order.indexOf(g);
+    if (idx >= 0) order.splice(idx, 1);
+    refreshAll();
+  });
+
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", () => {
+    if (order.length > cap) return;
+    onSave(order.slice(0, cap));
     closeModal();
   });
 }

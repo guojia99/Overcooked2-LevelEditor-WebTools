@@ -635,7 +635,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       // 进食材箱清单——半成品本身无实体食材条目，不能建箱（此前报「目录中找不到
       // 对应食材资产」），改由锅具装填（computeUtensilIngredientFill）分配到对应锅具。
       // crateIngredientId 同时做建箱等价替换，且**带菜谱上下文**：汉堡大全
-      // （commonW2，group="burger"）的成品推荐 DLC8 面皮 dlc08_choppedbun，其余
+      // （commonW2，group="burger"）的成品推荐 DLC8 面皮 DLC08_ChoppedBun，其余
       // 菜谱（官方汉堡/DLC8 套餐）的面皮归一到核心 ChoppedBunSO（uID 16088 等价）。
       (r.ingredients ?? []).forEach((i) =>
         leafIngredientIds(i).forEach((leaf) => reqIngs.add(crateIngredientId(leaf, r)))
@@ -1617,7 +1617,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     );
   };
 
-  /** 汉堡面包 id 判定：核心 ChoppedBunSO / DLC02_ChoppedBun / DLC8 dlc08_choppedbun
+  /** 汉堡面包 id 判定：核心 ChoppedBunSO / DLC02_ChoppedBun / DLC8 DLC08_ChoppedBun
    *  三种写法都含 "choppedbun"（历史别名 dlc08_bun 已统一改名，无需特判）。 */
   const isBurgerBunId = (id: string): boolean =>
     id === BUN_CORE_ID || id.toLowerCase().includes("choppedbun");
@@ -2098,7 +2098,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
   /** 递归推导一个菜谱涉及的 DLC 组。
    *  自定义/组合菜谱自身不带 DLC 归属（commonW2「Burger大全」group="burger"、
    *  关卡集 group="levelset"、common01 自定义 group="custom"），但其组成件可能来自
-   *  各 DLC —— 汉堡大全的成品就是典型：面皮来自 dlc08（dlc08_choppedbun）、菠萝来自
+   *  各 DLC —— 汉堡大全的成品就是典型：面皮来自 dlc08（DLC08_ChoppedBun）、菠萝来自
    *  dlc02（BurgerPineapple）、培根蛋来自 dlc05。只看菜谱自身 group 会漏掉它们，
    *  「按已选菜谱一键填充」对整个 Burger大全一个 matchlist 都勾不上。
    *  递归 compositionIds（夹心中间产物可再嵌套，如 PanfriedMeatEgg → MixedMeatEgg）
