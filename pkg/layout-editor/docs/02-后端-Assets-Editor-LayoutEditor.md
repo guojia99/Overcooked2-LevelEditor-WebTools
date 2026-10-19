@@ -60,6 +60,7 @@
 ├── LayoutEditorLog.cs                    持久日志 + 写回告警收集
 ├── LayoutEditorManualLookup.cs           中英文名词典查询
 ├── LayoutEditorModels.cs                 全部 DTO 数据模型 (1675 行)
+├── LayoutEditorConsoleLogCapture.cs      Console 常驻日志落盘 logs/console_log.log
 ├── LayoutEditorPaths.cs                  web dist 路径/URL 帮助
 ├── LayoutEditorPlayModeLogCapture.cs     Play 日志落盘 logs/
 ├── LayoutEditorPseudoReload.cs           伪预制件重载（Prepare/Reload 工作流）
@@ -308,7 +309,8 @@ flowchart TD
 | **LayoutEditorWorldMapDressingPatch.cs** | 含 WorldMapSceneryOptimizer 的旧场景装饰 Play 后强制 End(Unfold) |
 | **LayoutEditorHotPotDiagnostics.cs** | 0.5s 周期输出火锅链路状态（CookingRegion/TriggerRecorder/汤面 lookup） |
 | **LayoutEditorFlowStateProbe.cs** | "进 Play 没倒计时"探针：反射读 Server/ClientKitchenLoader 状态机、User.GameState、实体注册数 |
-| **LayoutEditorPlayModeLogCapture.cs** | Play 全量 Console（含堆栈）→ logs/playmode_*.log；EditorPrefs 跨域重载续写；同消息 ≤50 条防刷屏 |
+| **LayoutEditorPlayModeLogCapture.cs** | Play 全量 Console（含堆栈）→ logs/playmode_*.log；EditorPrefs 跨域重载续写；同消息 ≤50 条防刷屏；最多保留最近 10 个，多余自动删除 |
+| **LayoutEditorConsoleLogCapture.cs** | 常驻全量 Console（编辑模式+Play，含堆栈）→ logs/console_log.log 单文件；同消息 ≤50 条防刷屏；超 32MB 滚动截掉前 4MB 并打时间戳分隔行；菜单可开关（默认开） |
 
 ### 3.8 导出器与工具
 
@@ -465,4 +467,4 @@ flowchart TD
 4. **依赖只注册存在的 bundle**（BundleFileExists）——防宿主 KeyNotFoundException 的全链路守卫。
 5. **保存工作流统一**：`Prepare → SaveScene → ReloadPseudoAssetsFull`。
 6. **反射软依赖**：CustomStub 相关全部经静态钩子/反射，删除可选扩展文件后主体仍可编译。
-7. **诊断体系**：logs/layout_editor.log（金丝雀行/链路追踪）、写回告警透传、Play 日志捕获、flow-probe、写回历史 diff。
+7. **诊断体系**：logs/layout_editor.log（金丝雀行/链路追踪）、logs/console_log.log（常驻 Console 单文件，32MB 滚动）、写回告警透传、Play 日志捕获（最近 10 份）、flow-probe、写回历史 diff。

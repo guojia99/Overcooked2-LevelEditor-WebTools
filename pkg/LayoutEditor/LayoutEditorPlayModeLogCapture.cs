@@ -17,7 +17,8 @@ using UnityEngine;
 ///   - logMessageReceived 可能在任意线程触发，缓冲统一加锁；
 ///   - 刷屏防护：同一消息（type+文本）最多写 MaxIdenticalMessages 条，超出后
 ///     只记一条「后续省略」标记，避免 Animator 每帧警告把磁盘打爆；
-///   - 每 0.5s（或缓冲超 64KB）落盘一次；退出 Play / 回到编辑模式时强制落盘。
+///   - 每 0.5s（或缓冲超 64KB）落盘一次；退出 Play / 回到编辑模式时强制落盘；
+///   - playmode_*.log 最多保留最近 10 个，多余的旧文件在新会话开始时自动删除。
 /// 菜单：Layout Editor → 诊断 (Diagnostics) → Play 模式日志捕获 (Play Log Capture) 可开关，默认开启。
 /// </summary>
 [InitializeOnLoad]
@@ -29,6 +30,7 @@ public static class LayoutEditorPlayModeLogCapture
     private const int MaxIdenticalMessages = 50;
     private const double FlushIntervalSeconds = 0.5;
     private const int FlushBufferChars = 64 * 1024;
+    private const int MaxRetainedLogFiles = 10;
 
     private static readonly object Sync = new object();
     private static readonly StringBuilder Buffer = new StringBuilder();
@@ -126,7 +128,35 @@ public static class LayoutEditorPlayModeLogCapture
         var dir = LogsDir();
         if (!Directory.Exists(dir))
             Directory.CreateDirectory(dir);
-        return Path.Combine(dir, "playmode_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log");
+        var path = Path.Combine(dir, "playmode_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log");
+        PruneOldLogs(dir, path);
+        return path;
+    }
+
+    /// <summary>playmode_*.log 最多保留最近 MaxRetainedLogFiles 个，多余的按写入时间最旧先删。</summary>
+    private static void PruneOldLogs(string dir, string keepPath)
+    {
+        try
+        {
+            var files = new List<FileInfo>();
+            foreach (var f in Directory.GetFiles(dir, "playmode_*.log"))
+            {
+                if (string.Equals(f, keepPath, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                files.Add(new FileInfo(f));
+            }
+            files.Sort(delegate (FileInfo a, FileInfo b) { return b.LastWriteTime.CompareTo(a.LastWriteTime); });
+            // 新会话文件也算一份，旧文件最多留 MaxRetainedLogFiles - 1 个
+            for (var i = MaxRetainedLogFiles - 1; i < files.Count; i++)
+            {
+                try { files[i].Delete(); }
+                catch (Exception) { }
+            }
+        }
+        catch (Exception)
+        {
+            // 清理失败不影响日志捕获
+        }
     }
 
     private static void StartCapture(string path, bool writeHeader)
