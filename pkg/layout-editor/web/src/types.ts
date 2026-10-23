@@ -66,6 +66,9 @@ export interface CatalogItem {
   /** 需要 CustomStub runtime（Stub_<set>）才能完整运行的道具（随机箱/火锅家族/
    *  可移动火锅/dlc09 大炮/dlc08 map_* 装饰等）。导出时由 Unity 场景扫描兜底。 */
   needsStub?: boolean;
+  /** 动态自定义内容：放置后应使用的 stubKind（如 CookingUtensil）。 */
+  customStubKind?: string;
+  customKind?: string;
   /** 装饰层「按类型」分组（build-catalog.mjs 关键词规则打标）：建筑构件/地面铺装/
    *  植被/山石/家具陈设/灯具光源/水体/特效粒子/角色生物/食材成品菜模型/其他。 */
   typeKind?: string;
@@ -193,6 +196,12 @@ export interface LayoutTeleportalStub {
 export interface LayoutCookingUtensilStub {
   capacity?: number;
   allowedIngredientGuids?: string[];
+  /** 允许的站台类型（PseudoPrefabCookingUtensilStub.CookingStationType 名称）。 */
+  stationTypes?: string[];
+  /** 锅内食材展示模型（GameObject prefab guid，与额外食材顺序对应）。 */
+  modelGuids?: string[];
+  /** 锅内食材展示模型（PseudoPrefabSO guid，与额外食材顺序对应）。 */
+  modelSoGuids?: string[];
   /** 烹饪类锅具：煮熟秒数（写 CookingHandler.m_cookingtime；空 = prefab 默认） */
   cookTime?: number;
   /** 烹饪类锅具：煮糊秒数（空 = 默认 2×cookTime；配置后由 CustomStub.UtensilTiming + Harmony 生效） */
@@ -2086,4 +2095,158 @@ export interface BurgerProduct {
   score: number;
   /** compositionSOs 的资产 id 列表（含面包底）。 */
   compositionIds: string[];
+}
+
+// ---------- Custom Content Management ----------
+
+export interface CustomContentTemplate {
+  id: string;
+  kind: string;
+  labelZh: string;
+  labelEn: string;
+  assetPath: string;
+  nodePath?: string;
+  defaultFootprint?: string;
+}
+
+export interface CustomContentItem {
+  id: string;
+  kind: string;
+  nameZh: string;
+  nameEn: string;
+  templateId: string;
+  assetPath: string;
+  guid: string;
+  nodePath?: string;
+  iconUrl?: string;
+  bundleName?: string;
+  warnings?: string[];
+  orderUid?: number;
+  capacity?: number;
+  splitNum?: number;
+  allowedIngredientGuids?: string[];
+  stationTypes?: string[];
+  modelGuids?: string[];
+  modelSoGuids?: string[];
+  platingStepId?: string;
+  restrictionsGuid?: string;
+  cosmeticsPrefabGuid?: string;
+  nextPrefabGuid?: string;
+  progressUiGuid?: string;
+  fireEffectGuid?: string;
+  chopPfxGuid?: string;
+  tutorialIconGuid?: string;
+  ingredientContentUiGuid?: string;
+  sludgeGuid?: string;
+  spawnEffectGuid?: string;
+  washingPartPath?: string;
+  dryingPartPath?: string;
+  cleanPlateStackGuid?: string;
+  traySlotGuid?: string;
+  inputRecipeGuid?: string;
+  outputPrefabGuid?: string;
+  splitAudioTag?: string;
+}
+
+export interface CustomContentMeta {
+  stationTypes: { name: string; labelZh: string; labelEn: string }[];
+}
+
+export interface CustomContentEdit {
+  setName?: string;
+  kind: string;
+  id?: string;
+  assetPath?: string;
+  nameZh: string;
+  nameEn: string;
+  templateId?: string;
+  orderUid?: number;
+  score?: number;
+  platingStepId?: string;
+  restrictionsGuid?: string;
+  cosmeticsPrefabGuid?: string;
+  nextPrefabGuid?: string;
+  capacity?: number;
+  allowedIngredientGuids?: string[];
+  stationTypes?: string[];
+  modelGuids?: string[];
+  modelSoGuids?: string[];
+  flammable?: boolean;
+  choppingStation?: boolean;
+  washingPartPath?: string;
+  dryingPartPath?: string;
+  cleanPlateStackGuid?: string;
+  traySlotGuid?: string;
+  progressUiGuid?: string;
+  fireEffectGuid?: string;
+  chopPfxGuid?: string;
+  tutorialIconGuid?: string;
+  sludgeGuid?: string;
+  spawnEffectGuid?: string;
+  ingredientContentUiGuid?: string;
+  inputRecipeGuid?: string;
+  outputPrefabGuid?: string;
+  splitNum?: number;
+  splitterModelPaths?: string[];
+  splitAudioTag?: string;
+  iconBase64?: string;
+  iconFileName?: string;
+  modelFiles?: { fileName: string; base64: string }[];
+  modelScale?: number;
+  modelPositionX?: number;
+  modelPositionY?: number;
+  modelPositionZ?: number;
+  modelRotationX?: number;
+  modelRotationY?: number;
+  modelRotationZ?: number;
+  modelPivotX?: number;
+  modelPivotY?: number;
+  modelPivotZ?: number;
+}
+
+export interface CustomContentCatalogItem {
+  id: string;
+  guid: string;
+  assetPath: string;
+  category: string;
+  nameZh: string;
+  nameEn: string;
+  defaultParent: string;
+  footprint: { cellsX: number; cellsZ: number };
+  needsStub?: boolean;
+  customKind?: string;
+  customStubKind?: string;
+}
+
+export interface CustomContentModelSource {
+  dirAssetPath: string;
+  modelFile: string;
+  files: string[];
+}
+
+export interface CustomContentRef {
+  id: string;
+  nameZh: string;
+  nameEn?: string;
+  guid: string;
+  assetPath: string;
+  kind?: string;
+}
+
+export interface CustomContentOptions {
+  setName: string;
+  prefabs: CustomContentRef[];
+  soRefs: CustomContentRef[];
+  modelPrefabs: CustomContentRef[];
+  modelSOs: CustomContentRef[];
+  orderLists: CustomContentRef[];
+  lookups: CustomContentRef[];
+  recipes: CustomContentRef[];
+  plating: CustomContentRef[];
+  audioTags: string[];
+}
+
+export interface CustomContentHierarchy {
+  assetPath: string;
+  paths: string[];
 }

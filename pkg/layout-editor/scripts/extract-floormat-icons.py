@@ -29,13 +29,15 @@ OUT = os.path.join(ROOT, "layout-editor", "web", "public", "icons", "floor-mater
 SIZE = 128
 
 TEX_SLOT_RE = re.compile(
-    r"- _(?:DiffuseMap|MainTex):\s*\n\s*m_Texture: \{fileID: 2800000, guid: ([0-9a-f]{32}), type: 3\}"
+    r"^[ \t]*(?:- )?_(?:DiffuseMap|Diffuse_Map|MainTex):[ \t]*\n[ \t]*m_Texture: \{fileID: 2800000, guid: ([0-9a-f]{32}), type: 3\}",
+    re.M,
 )
 GUID_META_RE = re.compile(r"guid: ([0-9a-f]{32})")
 
 
 def material_roots():
-    """与 LayoutEditorFloorMaterialsApi.Scan / build-catalog scanFloorMaterials 同序。"""
+    """与 LayoutEditorFloorMaterialsApi.Scan / build-catalog scanFloorMaterials 同序。
+    commonW1/materials/oc2rebuild/ 等子目录也要覆盖（FindAssets 是递归的），故按目录递归收集。"""
     roots = []
     sets = os.path.join(ROOT, "Assets", "LevelSets")
     if os.path.isdir(sets):
@@ -48,6 +50,23 @@ def material_roots():
         if os.path.isdir(d):
             roots.append(d)
     return roots
+
+
+def iter_mat_files(roots):
+    """递归产出 (mat_id, path)，顶层优先（与旧版行为一致）。"""
+    seen_dirs = []
+    for root in roots:
+        for f in sorted(os.listdir(root)):
+            if f.endswith(".mat"):
+                yield f[:-4], os.path.join(root, f)
+        seen_dirs.append(root)
+    for root in roots:
+        for dp, _ds, fs in os.walk(root):
+            if dp == root:
+                continue
+            for f in sorted(fs):
+                if f.endswith(".mat"):
+                    yield f[:-4], os.path.join(dp, f)
 
 
 def build_tex_guid_index():
@@ -87,39 +106,35 @@ def main():
     tex_index = build_tex_guid_index()
     done, skipped, no_tex, written = [], [], [], 0
     seen_ids = set()
-    for root in material_roots():
-        for f in sorted(os.listdir(root)):
-            if not f.endswith(".mat"):
-                continue
-            mat_id = f[:-4]
-            if mat_id in seen_ids:
-                continue
-            seen_ids.add(mat_id)
-            txt = open(os.path.join(root, f), errors="ignore").read()
-            m = TEX_SLOT_RE.search(txt)
-            png = tex_index.get(m.group(1)) if m else None
-            if not png or not os.path.exists(png):
-                no_tex.append(mat_id)
-                continue
-            out_path = os.path.join(OUT, mat_id + ".png")
-            if os.path.exists(out_path):
-                done.append(mat_id)
-                continue
-            if check_only:
-                done.append(mat_id)
-                continue
-            try:
-                img = Image.open(png).convert("RGBA")
-                w, h = img.size
-                side = min(w, h)
-                img = img.crop(((w - side) // 2, (h - side) // 2,
-                                (w + side) // 2, (h + side) // 2))
-                img = img.resize((SIZE, SIZE), Image.LANCZOS)
-                img.save(out_path)
-                written += 1
-                done.append(mat_id)
-            except Exception as ex:
-                skipped.append((mat_id, repr(ex)[:80]))
+    for mat_id, mat_path in iter_mat_files(material_roots()):
+        if mat_id in seen_ids:
+            continue
+        seen_ids.add(mat_id)
+        txt = open(mat_path, errors="ignore").read()
+        m = TEX_SLOT_RE.search(txt)
+        png = tex_index.get(m.group(1)) if m else None
+        if not png or not os.path.exists(png):
+            no_tex.append(mat_id)
+            continue
+        out_path = os.path.join(OUT, mat_id + ".png")
+        if os.path.exists(out_path):
+            done.append(mat_id)
+            continue
+        if check_only:
+            done.append(mat_id)
+            continue
+        try:
+            img = Image.open(png).convert("RGBA")
+            w, h = img.size
+            side = min(w, h)
+            img = img.crop(((w - side) // 2, (h - side) // 2,
+                            (w + side) // 2, (h + side) // 2))
+            img = img.resize((SIZE, SIZE), Image.LANCZOS)
+            img.save(out_path)
+            written += 1
+            done.append(mat_id)
+        except Exception as ex:
+            skipped.append((mat_id, repr(ex)[:80]))
 
     total = len(seen_ids)
     print(f"材质总数: {total}  可出缩略图: {len(done)}  无贴图跳过: {len(no_tex)}  失败: {len(skipped)}")

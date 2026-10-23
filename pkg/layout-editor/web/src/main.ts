@@ -2,7 +2,7 @@ import "./styles/tokens.css";
 import "./style.css";
 import "./recipeList.css";
 import { initTheme } from "./theme";
-import { dom, buildLayoutDom, ROUTE, MANAGE_ACTIVE, DEPENDENCIES_ACTIVE, ASSIGNMENT_ACTIVE, CUSTOM_RECIPES_ACTIVE, BURGER_MAKER_ACTIVE, FILLING_MAKER_ACTIVE, GUIDE_ACTIVE, GUIDE_PAGE_ID } from "./editor/dom";
+import { dom, buildLayoutDom, ROUTE, MANAGE_ACTIVE, DEPENDENCIES_ACTIVE, ASSIGNMENT_ACTIVE, CUSTOM_RECIPES_ACTIVE, CUSTOM_CONTENT_ACTIVE, BURGER_MAKER_ACTIVE, FILLING_MAKER_ACTIVE, GUIDE_ACTIVE, GUIDE_PAGE_ID } from "./editor/dom";
 import { init } from "./editor/init";
 import { setRedraw } from "./editor/iconCaches";
 import { setRefreshHooks, draw } from "./editor/render";
@@ -29,6 +29,9 @@ if (GUIDE_ACTIVE) {
 } else if (CUSTOM_RECIPES_ACTIVE) {
   document.body.classList.add("manage-bg");
   void import("./customRecipes").then(m => m.renderCustomRecipesView(dom.app));
+} else if (CUSTOM_CONTENT_ACTIVE) {
+  document.body.classList.add("manage-bg");
+  void import("./customContent").then(m => m.renderCustomContentView(dom.app));
 } else if (BURGER_MAKER_ACTIVE) {
   document.body.classList.add("manage-bg");
   void import("./burgerMaker").then((m) => m.renderBurgerMakerView(dom.app));

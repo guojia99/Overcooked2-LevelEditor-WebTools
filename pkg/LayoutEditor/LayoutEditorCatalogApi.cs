@@ -33,7 +33,7 @@ public static class LayoutEditorCatalogApi
         return string.IsNullOrEmpty(after) ? metaGuid : after;
     }
 
-    public static IngredientCatalogDto ScanIngredients()
+    public static IngredientCatalogDto ScanIngredients(string levelSet = null)
     {
         var list = new List<IngredientEntryDto>();
         var roots = new List<string>
@@ -47,7 +47,7 @@ public static class LayoutEditorCatalogApi
             // 在桥在线时整体失效 → auditDispenserWhitelists 误报、选择弹窗退化为全食材）。
             "Assets/commonW1/pseudo_prefab_so/dlc11/food"
         };
-        roots.AddRange(LayoutEditorLevelAdminApi.LevelSetCustomIngredientFolders());
+        roots.AddRange(LayoutEditorLevelAdminApi.LevelSetCustomIngredientFolders(levelSet));
 
         var seen = new HashSet<string>();
 
@@ -125,7 +125,8 @@ public static class LayoutEditorCatalogApi
         // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：按通用内容处理
         // （无 dlc 目录 → core）。
         // 已拷入关卡集的自定义食材（与 custom_recipes 同机制打包）。
-        if (assetPath.IndexOf("/custom_ingredients/", StringComparison.Ordinal) >= 0)
+        if (assetPath.IndexOf("/custom_ingredients/", StringComparison.Ordinal) >= 0
+            || assetPath.IndexOf("/custom_content/", StringComparison.Ordinal) >= 0)
             return "levelset";
         if (assetPath.IndexOf("/CustomRecipes/", StringComparison.Ordinal) >= 0)
             return "custom";
@@ -288,7 +289,10 @@ public static class LayoutEditorCatalogApi
             "Assets/common01/food/CustomRecipes",
             "Assets/common02/food/Recipes",
             // 通用内容源库（Assets/common03）：与 common01/common02 同级直接扫描。
-            "Assets/common03/food/Recipes"
+            "Assets/common03/food/Recipes",
+            // 上游剧情菜谱/模型库（Recipes_Patch）：PseudoPrefabSORecipe 包裹游戏原
+            // orderdefinition；knowledge 缺条目时按原资产 score/id 回退展示。
+            "Assets/common03/food/Recipes_Patch"
         };
 
         if (!string.IsNullOrEmpty(levelSet))
@@ -397,9 +401,23 @@ public static class LayoutEditorCatalogApi
                     // 前端锅具装填的「组成 Cooked 中间产物双填」分支、菜谱卡片组成展开依赖
                     // compositionIds（如 md_* 套餐 = 面包+煎肉排+炸薯条节点），缺失会导致
                     // 汉堡套餐自动匹配锅具只剩生食材、漏掉全部中间产物节点。
-                    if (!LayoutEditorRecipeKnowledge.TryGetOriginalEntry(id, out step, out ings, out compositionIds, out originalPlating, out orderable) &&
-                        (original == null || !LayoutEditorRecipeKnowledge.TryGetOriginalEntry(original.prefabName + "_SO", out step, out ings, out compositionIds, out originalPlating, out orderable)))
-                        continue;
+                    var known = LayoutEditorRecipeKnowledge.TryGetOriginalEntry(
+                        id, out step, out ings, out compositionIds, out originalPlating, out orderable);
+                    if (!known && original != null)
+                        known = LayoutEditorRecipeKnowledge.TryGetOriginalEntry(
+                            original.prefabName + "_SO", out step, out ings, out compositionIds, out originalPlating, out orderable);
+                    if (!known)
+                    {
+                        if (original == null)
+                            continue;
+                        // 上游剧情菜谱/模型库的 knowledge 尚未收录：保留资产本身，按原
+                        // score/id 展示（步骤与组成留空，仍可在菜谱选择器中选用）。
+                        step = "";
+                        ings = new string[0];
+                        compositionIds = null;
+                        originalPlating = "";
+                        orderable = false;
+                    }
                     if (compositionIds != null && compositionIds.Length == 0)
                         compositionIds = null;
                     ingCount = ings.Length;
@@ -443,6 +461,49 @@ public static class LayoutEditorCatalogApi
                     mixing = isCustom && custom.type == CustomRecipeSO.RecipeType.Mixed,
                     optionalKind = custom is CustomRecipeOptionalBurgerSO ? "burger"
                         : custom is CustomRecipeOptionalPizzaSO ? "pizza" : ""
+                });
+            }
+        }
+
+        // 上游剧情菜谱/模型库（Recipes_Patch）：PseudoPrefabSO 包裹游戏原 orderdefinition。
+        // model_so/ 是模型包装，不是菜谱；只收 Recipes_Patch 根下的 orderdefinition 包装。
+        var patchRoot = "Assets/common03/food/Recipes_Patch";
+        if (LayoutEditorLevelAdminApi.AssetFolderExists(patchRoot))
+        {
+            foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(patchRoot, LayoutEditorLevelAdminApi.PseudoPrefabScriptGuid))
+            {
+                if (!seen.Add(asset.guid))
+                    continue;
+                var path = asset.assetPath.Replace("\\", "/");
+                if (path.IndexOf("/model_so/", StringComparison.Ordinal) >= 0)
+                    continue;
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+                if (so == null)
+                    continue;
+                var id = Path.GetFileNameWithoutExtension(path);
+                string zh, en;
+                LayoutEditorManualLookup.TryGet(id, out zh, out en);
+                list.Add(new RecipeEntryDto
+                {
+                    guid = HealGuidDesync(path, asset.guid),
+                    id = id,
+                    nameZh = zh,
+                    nameEn = en,
+                    assetPath = path,
+                    cookingStep = "",
+                    platingStep = "",
+                    ingredients = new string[0],
+                    compositionIds = null,
+                    ingredientCount = 0,
+                    cookingStepCount = 0,
+                    score = 0,
+                    isCustom = false,
+                    group = FoodGroupOf(path),
+                    type = RecipeTypeOf(id),
+                    subtype = "",
+                    intermediate = true,
+                    mixing = false,
+                    optionalKind = ""
                 });
             }
         }

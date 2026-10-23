@@ -590,6 +590,19 @@ public static class SceneLayoutExporter
         if (LayoutEditorCatalogLookup.TryGetFootprint(prefabId, out fp))
             return fp;
 
+        // 关卡集自定义内容：id 由用户命名，静态 footprint 表不可能预知，按 Config kind 查。
+        try
+        {
+            var prefabParent = PrefabUtility.GetPrefabParent(go);
+            var assetPath = prefabParent != null ? AssetDatabase.GetAssetPath(prefabParent) : "";
+            var customFp = LayoutEditorCustomContentApi.GetFootprintForAssetPath(assetPath);
+            if (customFp != null)
+                return customFp;
+        }
+        catch
+        {
+        }
+
         if (!string.IsNullOrEmpty(hierarchyPath) && hierarchyPath.StartsWith("Art/", System.StringComparison.Ordinal))
             return LayoutEditorFootprintMeasure.MeasureCells(go);
 

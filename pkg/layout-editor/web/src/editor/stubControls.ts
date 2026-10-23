@@ -91,6 +91,18 @@ export function normalizeWebKillerGhostStyle(style: string | undefined): string 
   return WEB_KILLER_GHOST_STYLES.some((x) => x.id === s) ? s : "npc_ghost";
 }
 
+/** PseudoPrefabCookingUtensilStub.CookingStationType ↔ 中文说明。
+ *  Invalid_FloorBurner 是上游 stub 枚举的历史命名，宿主对应 CookingStationType.FloorBurner。 */
+export const COOKING_STATION_TYPES: { name: string; zh: string; en: string }[] = [
+  { name: "Hob", zh: "灶台（Hob）", en: "Hob" },
+  { name: "Oven", zh: "烤箱/烤盘（Oven）", en: "Oven" },
+  { name: "DeepFatFryer", zh: "油炸锅（DeepFatFryer）", en: "Deep-fat fryer" },
+  { name: "FirePit", zh: "篝火/煎盘（FirePit）", en: "Fire pit / griddle" },
+  { name: "Flamethrower", zh: "喷火器（Flamethrower）", en: "Flamethrower" },
+  { name: "Barbeque", zh: "烧烤架/烤串（Barbeque）", en: "Barbeque" },
+  { name: "Invalid_FloorBurner", zh: "火锅（FloorBurner）", en: "Hotpot floor burner" },
+];
+
 export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   Dispenser: "Dispenser",
   RandomDispenser: "Dispenser",
@@ -297,6 +309,9 @@ export function stubKindOf(item: EditorItem): string {
     return item.stubKind;
   }
   const prefabId = prefabIdFromPath(item.prefabAssetPath);
+  const cat = S.catalogByGuid.get(item.prefabGuid);
+  if (cat?.customStubKind)
+    return cat.customStubKind;
   // 可移动火锅：stubKind 保持空（不挂 CookingUtensil stub，宿主 Setup NRE），
   // 但 UI 按锅具处理（右键「额外食材」等）。
   if (prefabId === "web_utensil_large_pot_01_pushable")
@@ -770,11 +785,24 @@ export function stubControlsHtml(item: EditorItem): string {
     case "CookingUtensil": {
       const cu = item.cookingUtensil ?? {};
       const allowed = (cu.allowedIngredientGuids ?? []).length;
+      const stations = new Set(cu.stationTypes ?? []);
+      const stationRows = COOKING_STATION_TYPES.map(
+        (s) => `<label class="ctx-stub-row" title="${escHtml(s.en)}">
+          <input type="checkbox" class="ctx-cu-station" data-station="${escHtml(s.name)}" ${stations.has(s.name) ? "checked" : ""}/>
+          ${escHtml(s.zh)}
+        </label>`
+      ).join("");
+      const modelCount = (cu.modelGuids ?? []).length + (cu.modelSoGuids ?? []).length;
       return `<div class="ctx-stub"><div class="ctx-stub-title">厨具参数</div>
         <label class="ctx-stub-row">最多食材数 <input type="number" id="ctx-cu-cap" class="ctx-input" min="0" step="1" value="${(cu.capacity ?? 0) > 0 ? cu.capacity : defaultUtensilCapacity(item)}"/></label>
         <div class="ctx-stub-row">${utensilTimingInputsHtml(item, "ctx-cu-", "ctx-stub")}</div>
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">时间留空 = 原版默认（按锅具：煮熟 10-12s，煮糊 = 2× 煮熟）；填写的特殊煮糊时间随关卡包分发</div>
-        <button type="button" class="ctx-btn" id="ctx-cu-ings">额外食材 (${allowed > 0 ? `${allowed} 种` : "无 · 处理所有主线食材"})…</button></div>`;
+        <div class="ctx-stub-title" style="margin-top:6px">允许站台（不勾 = 跟随 prefab 原生）</div>
+        ${stationRows}
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">火锅=FloorBurner，烤盘=Oven，煎盘/篝火=FirePit，烤串=Barbeque；多选=多站台通用。</div>
+        <button type="button" class="ctx-btn" id="ctx-cu-ings">额外食材 (${allowed > 0 ? `${allowed} 种` : "无 · 处理所有主线食材"})…</button>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">锅内食材模型：${modelCount > 0 ? `${modelCount} 个（在自定义锅具工作台管理）` : "未配置（使用 prefab 默认模型）"}</div>
+      </div>`;
     }
     case "Conveyor": {
       const sp = item.conveyor?.conveySpeed ?? 0.5;
@@ -1531,6 +1559,19 @@ export function wireStubControls(item: EditorItem) {
           ensure().capacity = v;
           setStatus(`锅具容量已设为 ${v}（写回后生效）`);
         }
+      });
+      document.querySelectorAll<HTMLInputElement>(".ctx-cu-station").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          pushHistory();
+          const cu = ensure();
+          const picked = Array.from(document.querySelectorAll<HTMLInputElement>(".ctx-cu-station"))
+            .filter((x) => x.checked)
+            .map((x) => x.dataset.station!)
+            .filter(Boolean);
+          cu.stationTypes = picked;
+          draw();
+          setStatus(picked.length ? `已设置锅具允许站台：${picked.join(" / ")}（写回后生效）` : "已恢复 prefab 原生站台（写回后生效）");
+        });
       });
       Object.keys(UTENSIL_TIME_KEYS).forEach((suffix) => {
         document.getElementById(`ctx-cu-${suffix}`)?.addEventListener("change", (e) => {

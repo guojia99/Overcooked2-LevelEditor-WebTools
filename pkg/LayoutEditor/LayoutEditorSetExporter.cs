@@ -276,7 +276,30 @@ public static class LayoutEditorSetExporter
         if (animatedRoot != null && animatedRoot.transform.childCount > 0)
             feats.Add("animgrid");
 
-        // ④ commonW 素材引用通道（2026-10-06 空清单休眠→进图卡加载事故）：场景引用了
+        // 上游自定义内容通道：SetupCustom* 组件 / 分料机 / DestroyComponentOfChildStub
+        // 以及 TriggerOnChild / Bellows / cobble 等伪 prefab 标签。运行时按特征挂载
+        // 对应的 SetupCustom / upstream-pseudo 自愈模块（无这些内容的关卡零介入）。
+        if (UnityEngine.Object.FindObjectsOfType<LevelEditorStub.SetupCustomPrefabStub>().Length > 0)
+            feats.Add("setupcustom");
+        if (UnityEngine.Object.FindObjectsOfType<LevelEditorStub.DestroyComponentOfChildStub>().Length > 0)
+            feats.Add("destroychild");
+        foreach (var mb in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
+        {
+            if (mb != null && mb.GetType().Name == "IngredientSplitter")
+            {
+                feats.Add("splitter");
+                break;
+            }
+        }
+        foreach (var tag in UnityEngine.Object.FindObjectsOfType<LevelEditorStub.SpecificPseudoPrefabTag>())
+        {
+            if (tag == null || string.IsNullOrEmpty(tag.prefabTag))
+                continue;
+            if (tag.prefabTag == "TriggerOnChild" || tag.prefabTag == "Bellows" || tag.prefabTag == "cobble")
+                feats.Add("upstreampseudo");
+        }
+
+        // ④ commonW/common04/custom_content 素材引用通道（2026-10-06 空清单休眠→进图卡加载事故）：场景引用了
         //    commonW1/W2/W3... 素材时标 "web" 特征——commonW 包只由 Loader 激活时加载，
         //    无 CustomStub 玩法的关卡不标特征会让清单为空 → 加载器休眠 → commonW 不加载
         //    → 场景外部引用（cab）无法解析 → 进图卡加载。web 特征仅作激活信号（运行时
@@ -294,9 +317,9 @@ public static class LayoutEditorSetExporter
         return new List<string>(feats);
     }
 
-    /// <summary>资产文本 guid 扫描：任一 guid 解析进 Assets/commonW*（素材/材质/网格/SO）
-    ///  即认为该资产需要 commonW 依赖包（stub_levels.txt "web" 特征数据源）。
-    ///  场景与 LevelInfoSO 通用。</summary>
+    /// <summary>资产文本 guid 扫描：任一 guid 解析进 Assets/commonW* / Assets/common04 /
+    ///  关卡集 custom_content（素材/材质/网格/SO）即认为该资产需要依赖包
+    ///  （stub_levels.txt "web" 特征数据源）。场景与 LevelInfoSO 通用。</summary>
     private static bool AssetTextReferencesCommonW(string assetPath)
     {
         if (string.IsNullOrEmpty(assetPath))
@@ -309,7 +332,11 @@ public static class LayoutEditorSetExporter
         foreach (Match m in Regex.Matches(text, @"guid:\s*([a-f0-9]{32})"))
         {
             var path = AssetDatabase.GUIDToAssetPath(m.Groups[1].Value);
-            if (!string.IsNullOrEmpty(path) && path.StartsWith("Assets/commonW", StringComparison.Ordinal))
+            if (string.IsNullOrEmpty(path))
+                continue;
+            if (path.StartsWith("Assets/commonW", StringComparison.Ordinal)
+                || path.StartsWith("Assets/common04", StringComparison.Ordinal)
+                || path.IndexOf("/custom_content/", StringComparison.Ordinal) >= 0)
                 return true;
         }
         return false;
@@ -324,12 +351,63 @@ public static class LayoutEditorSetExporter
             var info = LayoutEditorLevelInfoResolver.ResolveForScene(sceneAssetPath);
             if (info == null)
                 return false;
-            return AssetTextReferencesCommonW(AssetDatabase.GetAssetPath(info));
+            if (AssetTextReferencesCommonW(AssetDatabase.GetAssetPath(info)))
+                return true;
+            // 菜谱/食材资产内部引用 custom_content / common04（场景文本扫不到 GUID）。
+            return LevelInfoReferencesCustomContent(info);
         }
         catch
         {
             return false;
         }
+    }
+
+    private static bool LevelInfoReferencesCustomContent(LevelInfoSO info)
+    {
+        var seen = new HashSet<ScriptableObject>();
+        if (info.recipes != null)
+            foreach (var r in info.recipes)
+                if (ReferencesCustomContentDeep(r, seen)) return true;
+        if (info.allIngredients != null)
+            foreach (var r in info.allIngredients)
+                if (ReferencesCustomContentDeep(r, seen)) return true;
+        if (info.optionalRecipeMatchListItems != null)
+            foreach (var r in info.optionalRecipeMatchListItems)
+                if (ReferencesCustomContentDeep(r, seen)) return true;
+        return false;
+    }
+
+    private static bool ReferencesCustomContentDeep(ScriptableObject so, HashSet<ScriptableObject> seen)
+    {
+        if (so == null || !seen.Add(so))
+            return false;
+        var path = AssetDatabase.GetAssetPath(so);
+        if (!string.IsNullOrEmpty(path)
+            && (path.IndexOf("/custom_content/", StringComparison.Ordinal) >= 0
+                || path.StartsWith("Assets/common04", StringComparison.Ordinal)))
+            return true;
+        var pseudo = so as PseudoPrefabSO;
+        if (pseudo != null && pseudo.asset != null)
+        {
+            var assetPath = AssetDatabase.GetAssetPath(pseudo.asset);
+            if (!string.IsNullOrEmpty(assetPath)
+                && (assetPath.IndexOf("/custom_content/", StringComparison.Ordinal) >= 0
+                    || assetPath.StartsWith("Assets/common04", StringComparison.Ordinal)))
+                return true;
+        }
+        var custom = so as CustomRecipeSO;
+        if (custom == null)
+            return false;
+        if (custom.compositionSOs != null)
+            foreach (var c in custom.compositionSOs)
+                if (ReferencesCustomContentDeep(c, seen)) return true;
+        if (custom.optionalSOs != null)
+            foreach (var c in custom.optionalSOs)
+                if (ReferencesCustomContentDeep(c, seen)) return true;
+        if (ReferencesCustomContentDeep(custom.modelSO, seen)) return true;
+        if (ReferencesCustomContentDeep(custom.cookingStepSO, seen)) return true;
+        if (ReferencesCustomContentDeep(custom.platingStepSO, seen)) return true;
+        return false;
     }
 
     public static string ExportRootAbsPath()
@@ -1574,6 +1652,14 @@ public static class LayoutEditorSetExporter
                 Debug.LogWarning("[SetExporter] 未找到 commonw2 bundle（" + commonW2Abs + "）。");
         }
 
+        // 上游 common04：自定义食材/锅具/工作台模板与 supplies。存在构建产物即分发。
+        var common04Abs = AbsPath(BundlesRoot) + "/common04";
+        if (File.Exists(common04Abs))
+            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "common04", common04Abs));
+        else if (AssetDatabase.IsValidFolder("Assets/common04"))
+            Debug.LogWarning("[SetExporter] 未找到 common04 bundle（" + common04Abs
+                + "）——自定义食材/锅具/工作台的 supplies 可能缺失。");
+
         // commonW3 及以后为可选扩展包：只要构建产物存在就自动分发，Loader 会按数字顺序读取。
         try
         {
@@ -1678,6 +1764,11 @@ public static class LayoutEditorSetExporter
         AddManifestEntry(entries, depDir + "commonW2",
             "汉堡菜谱素材（依赖包通用，无条件携带；导出时删旧重打）",
             "ok", File.Exists(w2Abs) ? new FileInfo(w2Abs).Length : 0);
+        var c04Abs = AbsPath(BundlesRoot) + "/common04";
+        AddManifestEntry(entries, depDir + "common04",
+            "上游通用素材（自定义食材/锅具/工作台模板与 supplies；存在构建产物即携带）",
+            File.Exists(c04Abs) ? "ok" : "missing",
+            File.Exists(c04Abs) ? new FileInfo(c04Abs).Length : 0);
 
         // commonW3+：按源目录 Assets/commonW<数字> 判定（存在即导出时重建并携带）。
         try

@@ -214,12 +214,33 @@ namespace CustomStub
                 for (int i = 0; i < m_itemSOs.Length; i++)
                 {
                     var so = m_itemSOs[i];
-                    if (so == null || string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
+                    if (so == null)
+                    {
+                        LogWarn("[RandomCrate] 跳过空食材配置项 #" + i + ": " + name);
+                        continue;
+                    }
+                    float w = m_weights != null && i < m_weights.Length && m_weights[i] >= 1f ? m_weights[i] : 5f;
+                    // common04 / custom_content：PseudoPrefabSO.asset 直引（无需 bundle）。
+                    var direct = CustomStub.GameApi.GetPseudoPrefabDirectAsset(so) as GameObject;
+                    if (direct != null)
+                    {
+                        var directKey = "asset:" + direct.GetInstanceID();
+                        var directMerged = assetPaths.IndexOf(directKey);
+                        if (directMerged >= 0)
+                            _initial[directMerged] = _initial[directMerged] + w;
+                        else
+                        {
+                            assetPaths.Add(directKey);
+                            _prefabs.Add(direct);
+                            _initial.Add(w);
+                        }
+                        continue;
+                    }
+                    if (string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
                     {
                         LogWarn("[RandomCrate] 跳过无效食材配置项 #" + i + ": " + name);
                         continue;
                     }
-                    float w = m_weights != null && i < m_weights.Length && m_weights[i] >= 1f ? m_weights[i] : 5f;
                     AssetBundle bundle = null;
                     AssetBundleRequest request = null;
                     try

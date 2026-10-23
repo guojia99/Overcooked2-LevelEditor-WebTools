@@ -55,6 +55,7 @@ export const GUIDE_TREE: GuideNode[] = [
         ["🍽️ 自定义菜谱", "<code>/custom-recipes</code>", "按关卡集管理 CustomRecipeSO：组成、烹饪、装盘、图标与 3D 模型"],
         ["　🍔 汉堡组装工作台", "<code>/custom-recipes/burger-maker</code>", "用汉堡面包 + 夹心堆叠拼出成品汉堡菜谱（产出归属当前关卡集）"],
         ["　🥩 夹心工作台", "<code>/custom-recipes/filling-maker</code>", "制作 / 管理夹心（= 0 分自定义菜谱，需带 3D 模型才能在汉堡台选用）"],
+         ["🧩 自定义管理", "<code>/custom-content</code>", "按关卡集创建自定义食材/锅具/工作台/水槽/托盘/备餐容器/分料机"],
          ["📖 菜谱清单列表", "<code>/recipes</code>", "只读浏览全部菜谱与食材（筛选 / 去重 / 导出图片）"],
          ["📘 功能说明", "<code>/guide</code>", "本页：全部功能说明、概念区分与版本更新日志，按章节分页"],
          ["🤖 AI / MCP 指引", "<code>/guide/ai-mcp</code>", "为 AI 或 agent 提供关卡查询、场景草稿、验证、写回和导出调用规范"],

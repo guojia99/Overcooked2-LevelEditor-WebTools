@@ -3493,7 +3493,9 @@ public static class LayoutEditorLevelAdminApi
         var stepFolders = new[]
         {
             "Assets/common01/food/CookingSteps",
-            "Assets/common02/food/CookingSteps"
+            "Assets/common02/food/CookingSteps",
+            // 上游新增 common03 步骤：HotPot / RoastingTray（火锅 / 烤盘）。
+            "Assets/common03/food/CookingSteps"
         };
 
         foreach (var folder in stepFolders)
@@ -3587,6 +3589,42 @@ public static class LayoutEditorLevelAdminApi
                     nameZh = zh,
                     nameEn = en,
                     assetPath = modelPath
+                });
+            }
+        }
+
+        // 剧情菜谱/模型库（上游 common03/food/Recipes_Patch/model_so）：PseudoPrefabSO
+        // 包裹游戏原 bundle 模型，可直接作为自定义菜谱的可复用模型（modelSO 通道）。
+        var modelSoRoots = new[]
+        {
+            "Assets/common03/food/Recipes_Patch/model_so"
+        };
+        foreach (var root in modelSoRoots)
+        {
+            if (!AssetFolderExists(root))
+                continue;
+            foreach (var guid in AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { root }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+                if (so == null)
+                    continue;
+                var key = AssetDatabase.GetAssetPath(so.asset);
+                if (string.IsNullOrEmpty(key))
+                    key = so.bundleName + "|" + so.assetPath;
+                if (string.IsNullOrEmpty(key) || !modelSeen.Add(key))
+                    continue;
+                var id = Path.GetFileNameWithoutExtension(path);
+                string zh, en;
+                LayoutEditorManualLookup.TryGet(id, out zh, out en);
+                modelList.Add(new CustomRecipeReferenceEntryDto
+                {
+                    guid = guid,
+                    id = id,
+                    recipeId = "",
+                    nameZh = zh,
+                    nameEn = en,
+                    assetPath = path
                 });
             }
         }
@@ -4092,6 +4130,9 @@ public static class LayoutEditorLevelAdminApi
         var resolveErr = ResolveCompositionIds(dto.compositionIds, out resolvedComps);
         if (resolveErr != null)
             return resolveErr;
+        if ((dto.type == "Ingredient" || dto.type == "Item")
+            && (resolvedComps == null || resolvedComps.Length != 1 || !(resolvedComps[0] is PseudoPrefabSO)))
+            return "Ingredient / Item 类型必须且只能选择一个食材/道具 PseudoPrefabSO 作为组成项。";
 
         var categoryDir = recipesDir + "/" + category;
         if (!AssetFolderExists(categoryDir))
@@ -4127,6 +4168,18 @@ public static class LayoutEditorLevelAdminApi
         }
         else if (dto.type == "Mixed")
             so.type = CustomRecipeSO.RecipeType.Mixed;
+        else if (dto.type == "Ingredient")
+        {
+            so.type = CustomRecipeSO.RecipeType.Ingredient;
+            so.cookingStepSO = null;
+            so.cookingStepIconSO = null;
+        }
+        else if (dto.type == "Item")
+        {
+            so.type = CustomRecipeSO.RecipeType.Item;
+            so.cookingStepSO = null;
+            so.cookingStepIconSO = null;
+        }
         else
             so.type = CustomRecipeSO.RecipeType.Cooked;
 
@@ -4196,6 +4249,9 @@ public static class LayoutEditorLevelAdminApi
         var resolveErr = ResolveCompositionIds(dto.compositionIds, out resolvedComps);
         if (resolveErr != null)
             return resolveErr;
+        if ((dto.type == "Ingredient" || dto.type == "Item")
+            && (resolvedComps == null || resolvedComps.Length != 1 || !(resolvedComps[0] is PseudoPrefabSO)))
+            return "Ingredient / Item 类型必须且只能选择一个食材/道具 PseudoPrefabSO 作为组成项。";
 
         Undo.RecordObject(so, "Edit Custom Recipe");
         so.score = dto.score;
@@ -4212,6 +4268,18 @@ public static class LayoutEditorLevelAdminApi
         {
             // 搅拌菜：只有搅拌步骤，无需烹饪
             so.type = CustomRecipeSO.RecipeType.Mixed;
+            so.cookingStepSO = null;
+            so.cookingStepIconSO = null;
+        }
+        else if (dto.type == "Ingredient")
+        {
+            so.type = CustomRecipeSO.RecipeType.Ingredient;
+            so.cookingStepSO = null;
+            so.cookingStepIconSO = null;
+        }
+        else if (dto.type == "Item")
+        {
+            so.type = CustomRecipeSO.RecipeType.Item;
             so.cookingStepSO = null;
             so.cookingStepIconSO = null;
         }
@@ -5259,9 +5327,17 @@ public static class LayoutEditorLevelAdminApi
                 return _pseudoPrefabSearchFolders;
             var list = new List<string>(PseudoPrefabSearchFoldersCore);
             list.AddRange(CommonW1FoodFolders());
+            // 各关卡集 custom_content/ingredients（自定义食材 SO 直接引用）。
+            list.AddRange(LevelSetCustomIngredientFolders());
             _pseudoPrefabSearchFolders = list.ToArray();
             return _pseudoPrefabSearchFolders;
         }
+    }
+
+    /// <summary>自定义内容创建/删除后刷新 PseudoPrefabSO 搜索根缓存。</summary>
+    internal static void InvalidatePseudoPrefabSearchFolders()
+    {
+        _pseudoPrefabSearchFolders = null;
     }
 
     /// <summary>Assets/commonW1/pseudo_prefab_so/&lt;dlcNN&gt;/food 目录集合（存在才返回）。</summary>
@@ -5284,7 +5360,7 @@ public static class LayoutEditorLevelAdminApi
 
     /// <summary>全部关卡集的旧 custom_web/Ingredients 目录（Web 内置食材拷贝，
     ///  机制已废弃，仅为兼容读取历史数据保留）。</summary>
-    public static List<string> LevelSetCustomIngredientFolders()
+    public static List<string> LevelSetCustomIngredientFolders(string onlySet = null)
     {
         var folders = new List<string>();
         var setsRoot = LevelSetsRoot;
@@ -5293,9 +5369,19 @@ public static class LayoutEditorLevelAdminApi
             foreach (var dir in Directory.GetDirectories(AbsPath(setsRoot)))
             {
                 var setName = Path.GetFileName(dir);
+                if (!string.IsNullOrEmpty(onlySet) && !string.Equals(setName, onlySet, StringComparison.Ordinal))
+                    continue;
                 var ci = setsRoot + "/" + setName + "/custom_web/Ingredients";
                 if (AssetFolderExists(ci))
                     folders.Add(ci);
+                // 新自定义内容（每集 custom_content/ingredients 或 ingredient，
+                // 兼容两种目录命名；API 创建使用单数 kind 目录）。
+                var ccPlural = setsRoot + "/" + setName + "/custom_content/ingredients";
+                if (AssetFolderExists(ccPlural))
+                    folders.Add(ccPlural);
+                var ccSingular = setsRoot + "/" + setName + "/custom_content/ingredient";
+                if (AssetFolderExists(ccSingular))
+                    folders.Add(ccSingular);
             }
         }
         return folders;

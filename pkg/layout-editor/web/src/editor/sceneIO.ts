@@ -5,7 +5,10 @@ import {
 import { dom } from "./dom";
 import { uuid, prefabIdFromPath, escHtml, newEditorKey } from "./coords";
 import { setStatus, setStatusTagged } from "./status";
-import { itemLayerOfIt, levelSetFromScenePath } from "./catalog";
+import { itemLayerOfIt, levelSetFromScenePath, rebuildIngredientLookup } from "./catalog";
+import { fetchIngredients } from "../api";
+import { getActiveCatalog, mergeCustomContentIntoCatalog } from "./customContentCatalog";
+import { buildPalette } from "./palette";
 import { isPlayerItem } from "./renderItems";
 import { isTeleportalItem, teleportalEntrancesOf } from "./teleportalLinks";
 import {
@@ -131,6 +134,21 @@ export async function loadScene(assetPath: string) {
     }
     S.scenePath = assetPath;
     S.currentLevelSet = levelSetFromScenePath(assetPath);
+    if (S.currentLevelSet) {
+      const catalog = getActiveCatalog();
+      if (catalog) {
+        await mergeCustomContentIntoCatalog(catalog, S.currentLevelSet);
+        const search = (document.getElementById("palette-search") as HTMLInputElement | null)?.value ?? "";
+        buildPalette(catalog, search);
+      }
+      void fetchIngredients(S.currentLevelSet)
+        .then((list) => {
+          S.ingredientsCache = list;
+          rebuildIngredientLookup();
+          draw();
+        })
+        .catch(() => {});
+    }
     // 严格路由：/layout/{set}/{sceneName}（场景文件名去 .unity）；set 解析失败时退回裸 /layout
     const sceneName = (assetPath.replace(/\\/g, "/").split("/").pop() ?? "").replace(/\.unity$/i, "");
     window.history.replaceState(

@@ -382,7 +382,8 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/catalog/ingredients" && request.HttpMethod == "GET")
             {
-                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCatalogApi.ScanIngredients()));
+                var levelSet = request.QueryString["levelSet"] ?? string.Empty;
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCatalogApi.ScanIngredients(levelSet)));
                 return;
             }
 
@@ -1438,6 +1439,126 @@ public class LayoutEditorHttpServer
                     ? new WebRecipeUninstallResultDto { ok = false, error = "缺少参数。" }
                     : LayoutEditorCustomIngredients.UninstallRecipes(dto.setName, dto.ids);
                 WriteJson(response, result.ok ? 200 : 400, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            // ---------- Custom Content Management（食材/锅具/工作台/水槽/托盘/备餐/分料机） ----------
+
+            if (path == "/api/custom-content/templates" && request.HttpMethod == "GET")
+            {
+                var kind = request.QueryString["kind"] ?? "";
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCustomContentApi.GetTemplates(kind)));
+                return;
+            }
+
+            if (path == "/api/custom-content/meta" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCustomContentApi.GetMeta()));
+                return;
+            }
+
+            if (path == "/api/custom-content/list" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? "";
+                var kind = request.QueryString["kind"] ?? "";
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCustomContentApi.List(setName, kind)));
+                return;
+            }
+
+            if (path == "/api/custom-content/options" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? "";
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCustomContentApi.GetOptions(setName)));
+                return;
+            }
+
+            if (path == "/api/custom-content/hierarchy" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"] ?? "";
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCustomContentApi.GetHierarchy(assetPath)));
+                return;
+            }
+
+            if (path == "/api/custom-content/catalog" && request.HttpMethod == "GET")
+            {
+                var setName = request.QueryString["setName"] ?? "";
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCustomContentApi.GetCatalog(setName)));
+                return;
+            }
+
+            if (path == "/api/custom-content/icon" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"] ?? "";
+                string abs;
+                string contentType;
+                var err = LayoutEditorCustomContentApi.ResolveIconFile(assetPath, out abs, out contentType);
+                if (!string.IsNullOrEmpty(err) || !File.Exists(abs))
+                {
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = err ?? "图标文件不存在。" }));
+                    return;
+                }
+                var bytes = File.ReadAllBytes(abs);
+                _responseSent = true;
+                response.ContentType = contentType;
+                response.StatusCode = 200;
+                response.ContentLength64 = bytes.Length;
+                response.OutputStream.Write(bytes, 0, bytes.Length);
+                response.OutputStream.Close();
+                return;
+            }
+
+            if (path == "/api/custom-content/model-source" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"] ?? "";
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorCustomContentApi.GetModelSource(assetPath)));
+                return;
+            }
+
+            if (path == "/api/custom-content/model-file" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"] ?? "";
+                var fileName = request.QueryString["file"] ?? "";
+                string abs;
+                string contentType;
+                var err = LayoutEditorCustomContentApi.ResolveModelFile(assetPath, fileName, out abs, out contentType);
+                if (!string.IsNullOrEmpty(err) || !File.Exists(abs))
+                {
+                    WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = err ?? "模型文件不存在。" }));
+                    return;
+                }
+                var bytes = File.ReadAllBytes(abs);
+                _responseSent = true;
+                response.ContentType = contentType;
+                response.StatusCode = 200;
+                response.ContentLength64 = bytes.Length;
+                response.OutputStream.Write(bytes, 0, bytes.Length);
+                response.OutputStream.Close();
+                return;
+            }
+
+            if (path == "/api/custom-content/create" && request.HttpMethod == "POST")
+            {
+                var dto = JsonUtility.FromJson<CustomContentEditDto>(ReadBody(request));
+                var err = LayoutEditorCustomContentApi.Create(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-content/update" && request.HttpMethod == "POST")
+            {
+                var dto = JsonUtility.FromJson<CustomContentEditDto>(ReadBody(request));
+                var err = LayoutEditorCustomContentApi.Update(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/custom-content/delete" && request.HttpMethod == "POST")
+            {
+                var dto = JsonUtility.FromJson<CustomContentEditDto>(ReadBody(request));
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorCustomContentApi.Delete(dto.setName, dto.kind, dto.id);
+                WriteAdminResult(response, err);
                 return;
             }
 

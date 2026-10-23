@@ -24,6 +24,14 @@ import type {
   CustomRecipeEdit,
   CustomRecipeReferences,
   CustomRecipeSummary,
+  CustomContentCatalogItem,
+  CustomContentEdit,
+  CustomContentItem,
+  CustomContentMeta,
+  CustomContentHierarchy,
+  CustomContentModelSource,
+  CustomContentOptions,
+  CustomContentTemplate,
   DeathEffectCatalog,
   DepsExportManifest,
   FloorMaterial,
@@ -247,11 +255,13 @@ function dropLevelSetCopies<T extends { assetPath?: string }>(entries: T[], file
   return kept;
 }
 
-export async function fetchIngredients(): Promise<IngredientEntry[]> {
-  // 通用内容（common03）食材：后端动态接口直接下发（含 common01/02/common03），
-  // 失败时回退静态 ingredients.json。
+export async function fetchIngredients(levelSet?: string): Promise<IngredientEntry[]> {
+  // 通用内容（common03）食材：后端动态接口直接下发（含 common01/02/common03）；
+  // 传入 levelSet 时，只额外包含该关卡集 custom_content 的自定义食材。
   try {
-    const r = await fetch("/api/catalog/ingredients");
+    const q = new URLSearchParams();
+    if (levelSet) q.set("levelSet", levelSet);
+    const r = await fetch(`/api/catalog/ingredients${q.toString() ? `?${q}` : ""}`);
     const data = await readApiJson<{ ingredients?: IngredientEntry[] }>(r);
     return data.ingredients ?? [];
   } catch {
@@ -1529,3 +1539,86 @@ export async function fetchWriteBackHistoryDoc(
 }
 
 export { STALE_BRIDGE_MSG };
+
+// ---------- Custom Content Management ----------
+
+export async function fetchCustomContentTemplates(kind = ""): Promise<CustomContentTemplate[]> {
+  const q = new URLSearchParams();
+  if (kind) q.set("kind", kind);
+  const r = await fetch(`/api/custom-content/templates?${q}`);
+  const data = await readApiJson<{ templates?: CustomContentTemplate[] }>(r);
+  return data.templates ?? [];
+}
+
+export async function fetchCustomContentMeta(): Promise<CustomContentMeta> {
+  const r = await fetch("/api/custom-content/meta");
+  return readApiJson<CustomContentMeta>(r);
+}
+
+export async function fetchCustomContentList(setName: string, kind = ""): Promise<CustomContentItem[]> {
+  const q = new URLSearchParams({ setName });
+  if (kind) q.set("kind", kind);
+  const r = await fetch(`/api/custom-content/list?${q}`);
+  const data = await readApiJson<{ items?: CustomContentItem[] }>(r);
+  return data.items ?? [];
+}
+
+export async function fetchCustomContentCatalog(setName: string): Promise<CustomContentCatalogItem[]> {
+  const q = new URLSearchParams({ setName });
+  const r = await fetch(`/api/custom-content/catalog?${q}`);
+  const data = await readApiJson<{ items?: CustomContentCatalogItem[] }>(r);
+  return data.items ?? [];
+}
+
+export async function createCustomContent(body: CustomContentEdit): Promise<void> {
+  const r = await fetch("/api/custom-content/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  await readApiJson<{ ok?: boolean; error?: string }>(r);
+}
+
+export async function updateCustomContent(body: CustomContentEdit): Promise<void> {
+  const r = await fetch("/api/custom-content/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  await readApiJson<{ ok?: boolean; error?: string }>(r);
+}
+
+export async function fetchCustomContentOptions(setName: string): Promise<CustomContentOptions> {
+  const q = new URLSearchParams({ setName });
+  const r = await fetch(`/api/custom-content/options?${q}`);
+  return readApiJson<CustomContentOptions>(r);
+}
+
+export async function fetchCustomContentHierarchy(assetPath: string): Promise<CustomContentHierarchy> {
+  const q = new URLSearchParams({ assetPath });
+  const r = await fetch(`/api/custom-content/hierarchy?${q}`);
+  return readApiJson<CustomContentHierarchy>(r);
+}
+
+export async function fetchCustomContentModelSource(assetPath: string): Promise<CustomContentModelSource> {
+  const q = new URLSearchParams({ assetPath });
+  const r = await fetch(`/api/custom-content/model-source?${q}`);
+  return readApiJson<CustomContentModelSource>(r);
+}
+
+export function customContentModelFileUrl(assetPath: string, file: string): string {
+  return `/api/custom-content/model-file?assetPath=${encodeURIComponent(assetPath)}&file=${encodeURIComponent(file)}`;
+}
+
+export async function deleteCustomContent(setName: string, kind: string, id: string): Promise<void> {
+  const r = await fetch("/api/custom-content/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, kind, id }),
+  });
+  await readApiJson<{ ok?: boolean; error?: string }>(r);
+}
+
+export function customContentIconUrl(item: { assetPath: string }): string {
+  return `/api/custom-content/icon?assetPath=${encodeURIComponent(item.assetPath)}`;
+}

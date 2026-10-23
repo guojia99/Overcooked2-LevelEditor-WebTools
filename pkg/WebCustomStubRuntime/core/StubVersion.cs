@@ -438,6 +438,6 @@ namespace CustomStub
         ///    RespawnCollider Hit 触碰击杀；动画组负责位移；stub_levels webkillerghost。
         /// 3.10.2（2026-10-15 致命鬼魂多样式）：
         ///  - Web 右键切换 npc_ghost / npc_keep / ghost_chef（commonW4 视觉代理 SO）。
-        public const string Value = "3.10.2";
+        public const string Value = "3.11.0";
     }
 }

@@ -142,7 +142,7 @@ namespace CustomStub
         /// 权威掷骰）。纯自治组件（事件驱动 + 可选低频轮询协程），不计入 ticker
         /// 激活票数（TeleportalExitOnly 同款豁免），自愈挂载走 tag
         /// RandomTrigger|I:..|C:..|S:..|N:..|E:..（%,;&gt;|/@ 转义）。</summary>
-        public const string Version = "v17(" + StubVersion.Value + ")";
+        public const string Version = "v18(" + StubVersion.Value + ")";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -499,6 +499,11 @@ namespace CustomStub
                 // 目标方法只在 OC2DIYLevel 加载 web 关卡时被调用，官方图零介入。
                 EnsureDualStubHealPatches();
                 EnsurePseudoPrefabDispenserSetupPatches();
+                RecipeWidgetTileFollowInstaller.Install();
+                InstallRuntimeModules();
+                if (Type.GetType("LevelEditorStub.SetupCustomPrefabStub, LevelEditorStub") == null)
+                    StubLog.LogWarn("[CustomStub] 当前 LevelEditorStub.dll 较旧（缺 SetupCustomPrefabStub）——"
+                        + "自定义食材/锅具/工作台/分料机的真机字段可能不可用；请使用本轮导出的依赖包。");
 
                 // 反射自检汇总：列出游戏 AppDomain 里未命中的反射目标（直接定位
                 // 「反射了游戏侧不存在的类型」类事故）。
@@ -512,6 +517,34 @@ namespace CustomStub
             {
                 StubLog.LogWarn("[CustomStub " + Version + "] 安装异常: " + ex);
                 return false;
+            }
+        }
+
+        /// <summary>上游模块引导（IngredientSplitterRuntime 等，独立 DLL 由 loader 加载）。
+        /// 反射调用，缺失时完全跳过（旧依赖包/未启用模块零影响）。</summary>
+        private static void InstallRuntimeModules()
+        {
+            try
+            {
+                var type = GameApi.Find("IngredientSplitterRuntime.Bootstrap");
+                if (type == null)
+                {
+                    var asms = AppDomain.CurrentDomain.GetAssemblies();
+                    for (int i = 0; i < asms.Length && type == null; i++)
+                        type = asms[i].GetType("IngredientSplitterRuntime.Bootstrap");
+                }
+                if (type == null)
+                    return;
+                var install = type.GetMethod("Install", BindingFlags.Public | BindingFlags.Static);
+                if (install != null)
+                {
+                    install.Invoke(null, null);
+                    StubLog.Log("[CustomStub] 已引导运行时模块 IngredientSplitterRuntime");
+                }
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 运行时模块引导失败: " + ex.Message);
             }
         }
 
@@ -623,9 +656,14 @@ namespace CustomStub
                     HarmonyPatches.ServerPrepCanTransferPrefixMethod, null, ref skip);
                 ok += PatchPair(harmony, GameApi.ServerPrepTransferMethod,
                     HarmonyPatches.ServerPrepTransferPrefixMethod, null, ref skip);
+                // 上游备餐容器补丁（2+ 已烹饪食材完整转移 + Empty 清空）
+                ok += PatchPair(harmony, GameApi.PrepGetOrderDefinitionMethod,
+                    HarmonyPatches.PrepGetOrderDefinitionPrefixMethod, null, ref skip);
+                ok += PatchPair(harmony, GameApi.ServerPrepHandlePlacementMethod,
+                    null, HarmonyPatches.ServerPrepHandlePlacementPostfixMethod, ref skip);
                 s_containerTransferPatched = ok > 0;
                 if (ok > 0)
-                    StubLog.Log("[CustomStub] 容器转移补丁: 已装 " + ok + " 个（盘子/手持料 → 锅碗）");
+                    StubLog.Log("[CustomStub] 容器转移补丁: 已装 " + ok + " 个（盘子/手持料 → 锅碗，含备餐容器 2+ 食材）");
             }
             catch (Exception ex)
             {
@@ -1202,6 +1240,7 @@ namespace CustomStub
             RandomCrate.OnSceneChanged();
             WebBackpackStorage.OnSceneChanged();
             RatHeist.OnSceneChanged();
+            UpstreamPseudoHeal.OnSceneChanged();
             NetDiagnostics.OnSceneChanged();
         }
 
@@ -1217,6 +1256,7 @@ namespace CustomStub
                 // 扫描会重新注册）。不挂 ResetSceneTickers——该链在 HealScene 之后
                 // 跑，会把刚注册的相机清掉。
                 CameraAuthoredOffset.OnSceneChanged();
+                UpstreamPseudoHeal.OnSceneChanged();
                 var tags = UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>();
                 var stubTags = 0;
                 var tickerTags = 0;
@@ -1311,6 +1351,13 @@ namespace CustomStub
                         + "（摇杆遥控地板组）");
                 if (AnimPilotFloorDrive.ProbeHasAnimPilotFloor())
                     EnsureAnimPilotFloorPatches();
+                // 上游 PseudoPrefab 新标签（TriggerOnChild/Bellows/cobble）与
+                // DestroyComponentOfChildStub：游戏侧没有 LevelEditor.PseudoPrefab，
+                // 由运行时重放最小行为；无对应标签时仅一次 FindObjectsOfType。
+                if (HasFeature("upstreampseudo") || HasFeature("destroychild"))
+                    UpstreamPseudoHeal.Apply(scene);
+                if (HasFeature("setupcustom"))
+                    CustomSetupRuntime.Apply(scene);
                 if (stubTags > 0)
                 {
                     // 汇总：只在有 stub tag 的场景打（普通场景不打，避免刷屏）

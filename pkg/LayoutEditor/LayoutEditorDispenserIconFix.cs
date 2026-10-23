@@ -173,6 +173,12 @@ public static class LayoutEditorDispenserIconFix
     {
         if (so == null)
             return false;
+        var direct = so.asset as GameObject;
+        if (direct != null)
+        {
+            string directReason;
+            return NeedsSeed(direct, out directReason);
+        }
         AssetBundle bundle;
         try
         {
@@ -265,22 +271,26 @@ public static class LayoutEditorDispenserIconFix
             LayoutEditorLog.Log(Tag + "Seed: stub 的 pseudoPrefabSO 为空（跳过）");
             return false;
         }
-        AssetBundle bundle;
-        try
+        var prefab = so.asset as GameObject;
+        if (prefab == null)
         {
-            bundle = PseudoPrefabManager.GetAssetBundle(so.bundleName);
+            AssetBundle bundle;
+            try
+            {
+                bundle = PseudoPrefabManager.GetAssetBundle(so.bundleName);
+            }
+            catch
+            {
+                LayoutEditorLog.Log(Tag + "Seed: " + so.name + " 的 bundle 未加载（" + so.bundleName + "），本次不补种子");
+                return false; // bundle 未加载
+            }
+            if (bundle == null)
+            {
+                LayoutEditorLog.Log(Tag + "Seed: " + so.name + " 的 bundle 为 null（" + so.bundleName + "）");
+                return false;
+            }
+            prefab = bundle.LoadAsset<GameObject>(so.assetPath);
         }
-        catch
-        {
-            LayoutEditorLog.Log(Tag + "Seed: " + so.name + " 的 bundle 未加载（" + so.bundleName + "），本次不补种子");
-            return false; // bundle 未加载
-        }
-        if (bundle == null)
-        {
-            LayoutEditorLog.Log(Tag + "Seed: " + so.name + " 的 bundle 为 null（" + so.bundleName + "）");
-            return false;
-        }
-        var prefab = bundle.LoadAsset<GameObject>(so.assetPath);
         string reason;
         if (!NeedsSeed(prefab, out reason))
         {

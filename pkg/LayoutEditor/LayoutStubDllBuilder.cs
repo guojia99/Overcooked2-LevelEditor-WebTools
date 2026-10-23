@@ -108,6 +108,12 @@ public static class LayoutStubDllBuilder
         }
     }
 
+    /// <summary>batchmode/CI 用：无弹窗 staging（含模块 DLL）。</summary>
+    public static void StageRuntimeBatch()
+    {
+        StageRuntime(true);
+    }
+
     [MenuItem("Layout Editor/CustomStub（关卡代码分发）/编译打包 Runtime DLL (Stage Runtime DLL)", false, 1)]
     public static void StageRuntimeManual()
     {
@@ -240,6 +246,8 @@ public static class LayoutStubDllBuilder
         var dllTime = File.GetLastWriteTime(dllAbs);
         foreach (var f in Directory.GetFiles(RuntimeRoot, "*.cs", SearchOption.AllDirectories))
         {
+            if (IsIgnoredRuntimeSource(f))
+                continue;
             if (File.GetLastWriteTime(f) > dllTime.AddSeconds(2))
                 return "stale";
         }
@@ -322,6 +330,8 @@ public static class LayoutStubDllBuilder
             return 0;
         foreach (var f in Directory.GetFiles(RuntimeRoot, "*.cs", SearchOption.AllDirectories))
         {
+            if (IsIgnoredRuntimeSource(f))
+                continue;
             var ticks = File.GetLastWriteTime(f).Ticks;
             if (ticks > newest)
             {
@@ -345,6 +355,12 @@ public static class LayoutStubDllBuilder
     /// <summary>把 Library/ScriptAssemblies/WebCustomStubRuntime.dll staging 为
     /// .dll.bytes 并赋 bundle 名。throwOnStale=true（导出流程）：DLL 缺失/过期直接
     /// 抛错中断导出；false（手动/静默）：打警告返回。</summary>
+    private static bool IsIgnoredRuntimeSource(string path)
+    {
+        var p = path.Replace('\\', '/');
+        return p.Contains("/Loader~/") || p.Contains("/Modules~/") || p.Contains("/debugLog~/");
+    }
+
     public static void StageRuntime(bool throwOnStale)
     {
         var dllAbs = RuntimeDllAbs();
@@ -358,6 +374,8 @@ public static class LayoutStubDllBuilder
             var dllTime = File.GetLastWriteTime(dllAbs);
             foreach (var f in Directory.GetFiles(RuntimeRoot, "*.cs", SearchOption.AllDirectories))
             {
+                if (IsIgnoredRuntimeSource(f))
+                    continue;
                 if (File.GetLastWriteTime(f) > dllTime.AddSeconds(2))
                 {
                     error = "母本源码比 " + RuntimeAsmName + ".dll 新（编辑后尚未编译完成）。请等 Unity 编译结束后重试。";
@@ -386,5 +404,44 @@ public static class LayoutStubDllBuilder
         }
         Debug.Log("[LayoutEditor/CustomStub] 已打包统一运行时 " + RuntimeAsmName + ".dll → " + BytesAssetPath
             + "（bundle " + RuntimeBundleName + "）");
+
+        // 上游模块：新版 LevelEditorStub（SetupCustom*/OrderToPrefabListSO 等类型）
+        // + 分料机 Stub 组件 + 运行时模块 DLL（loader 按依赖顺序加载）。
+        StageModuleDll("LevelEditorStub",
+            ProjectRoot() + "/Library/ScriptAssemblies/LevelEditorStub.dll", false);
+        StageModuleDll("IngredientSplitterStub",
+            ProjectRoot() + "/Library/ScriptAssemblies/IngredientSplitterStub.dll", false);
+        StageModuleDll("IngredientSplitterRuntime",
+            ProjectRoot() + "/Assets/WebCustomStubRuntime/Modules~/IngredientSplitter/bin/Release/IngredientSplitterRuntime.dll", false);
+    }
+
+    private static void StageModuleDll(string asmName, string sourceAbs, bool throwOnMissing)
+    {
+        try
+        {
+            var bytesAsset = RuntimeDllDir + "/" + asmName + ".dll.bytes";
+            if (!File.Exists(sourceAbs))
+            {
+                if (throwOnMissing)
+                    throw new Exception("未找到模块 DLL: " + sourceAbs);
+                Debug.LogWarning("[LayoutEditor/CustomStub] 模块 DLL 未构建，跳过 staging: " + sourceAbs
+                    + "（分料机真机功能不可用；先构建 IngredientSplitterRuntime.csproj）");
+                return;
+            }
+            File.Copy(sourceAbs, ProjectRoot() + "/" + bytesAsset, true);
+            AssetDatabase.ImportAsset(bytesAsset, ImportAssetOptions.ForceUpdate);
+            var imp = AssetImporter.GetAtPath(bytesAsset);
+            if (imp != null && imp.assetBundleName != RuntimeBundleName)
+            {
+                imp.assetBundleName = RuntimeBundleName;
+                imp.SaveAndReimport();
+            }
+            Debug.Log("[LayoutEditor/CustomStub] 已打包模块 " + asmName + ".dll → " + bytesAsset);
+        }
+        catch (Exception ex)
+        {
+            if (throwOnMissing) throw;
+            Debug.LogWarning("[LayoutEditor/CustomStub] 模块 staging 失败 " + asmName + ": " + ex.Message);
+        }
     }
 }

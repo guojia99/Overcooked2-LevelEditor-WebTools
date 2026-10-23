@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-15T10:20:06.739Z",
+  "generatedAt": "2026-10-21T07:30:07.247Z",
   "schemaVersion": 10,
   "gridCellSize": 1.2,
-  "itemCount": 3483,
+  "itemCount": 3495,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -29,7 +29,7 @@
       "labelZh": "核心 · 台面 / 准备",
       "labelEn": "Countertops & prep",
       "layoutTier": "core",
-      "itemCount": 5
+      "itemCount": 8
     },
     {
       "key": "counters/cooking",
@@ -43,7 +43,7 @@
       "labelZh": "核心 · 水槽 / 清洁",
       "labelEn": "Sinks & cleaning",
       "layoutTier": "core",
-      "itemCount": 12
+      "itemCount": 13
     },
     {
       "key": "counters/service",
@@ -64,7 +64,7 @@
       "labelZh": "核心 · 锅具烤具",
       "labelEn": "Cooking utensils",
       "layoutTier": "core",
-      "itemCount": 9
+      "itemCount": 17
     },
     {
       "key": "hotpot/web",

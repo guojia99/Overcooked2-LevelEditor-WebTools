@@ -64,6 +64,19 @@ const NEEDS_STUB_PREFAB_IDS = new Set([
   // 见 Docs/2026-09-03-common3-upgrade.md 遗留事项 4）；dlc08 大炮走上游原生不需要
   "dlc09_cannon",
   "p_dlc09_button_cannon",
+  // 上游 common04 自定义模板：SetupCustom* 真机由 CustomStub 运行时等价执行。
+  "custom_counter",
+  "custom_counter_chopping",
+  "custom_counter_sink",
+  "custom_utensil_plate",
+  "custom_utensil_tray",
+  "custom_utensil_clean_plate_stack",
+  "custom_utensil_dirty_plate",
+  "custom_utensil_dirty_plate_stack",
+  "custom_utensil_clean_tray_stack",
+  "custom_utensil_dirty_tray",
+  "custom_utensil_dirty_tray_stack",
+  "custom_counter_ingredient_splitter",
 ]);
 
 /** 道具是否需要 CustomStub runtime（needsStub 标签）。 */
@@ -99,6 +112,19 @@ const FOOTPRINT_OVERRIDES = {
   // 正式版 common03 新增：洗杯/洗托盘水槽 2×1；上游空载具 Pushable_Object 2×2
   SinkMug: { cellsX: 2, cellsZ: 1 },
   SinkTray: { cellsX: 2, cellsZ: 1 },
+  // 上游 common04 自定义模板：工作台按 1×1，水槽/锅具按各自原生规则。
+  custom_counter: { cellsX: 1, cellsZ: 1 },
+  custom_counter_chopping: { cellsX: 1, cellsZ: 1 },
+  custom_counter_sink: { cellsX: 2, cellsZ: 1 },
+  custom_utensil_plate: { cellsX: 0.9, cellsZ: 0.9 },
+  custom_utensil_tray: { cellsX: 0.9, cellsZ: 0.9 },
+  custom_utensil_clean_plate_stack: { cellsX: 0.9, cellsZ: 0.9 },
+  custom_utensil_dirty_plate: { cellsX: 0.9, cellsZ: 0.9 },
+  custom_utensil_dirty_plate_stack: { cellsX: 0.9, cellsZ: 0.9 },
+  custom_utensil_clean_tray_stack: { cellsX: 0.9, cellsZ: 0.9 },
+  custom_utensil_dirty_tray: { cellsX: 0.9, cellsZ: 0.9 },
+  custom_utensil_dirty_tray_stack: { cellsX: 0.9, cellsZ: 0.9 },
+  custom_counter_ingredient_splitter: { cellsX: 1, cellsZ: 1 },
   Pushable_Object: { cellsX: 2, cellsZ: 2 },
   web_backpack_storage_01: { cellsX: 1, cellsZ: 1 },
   // DLC 大件：大莲花压力开关 2×2；火锅灶台铺满 2×2（大锅 2×2 锅沿外架其上）
@@ -820,6 +846,16 @@ function categorize(assetPath) {
   rel = rel.replace(/^(?:core|dlc\d+)\//, "");
   const seg = rel.split("/");
   const id = seg[seg.length - 1].replace(/\.prefab$/, "");
+  // 上游 common04 自定义模板 / 模块分料机（没有 prefabs/ 层级）。
+  if (assetPath.includes("/common04/custom_counter/")) {
+    return { category: id.includes("sink") ? "counters/sinks" : "counters/prep", theme: null };
+  }
+  if (assetPath.includes("/common04/custom_utensil/")) {
+    return { category: "utensils/cooking", theme: null };
+  }
+  if (assetPath.includes("/Modules/IngredientSplitter/")) {
+    return { category: "counters/prep", theme: null };
+  }
   // Web 火锅专区（commonW1/prefabs/web/hotpot/）：六件统一独占分组（与 common03 原版并存双轨）
   if (seg[0] === "web" && seg[1] === "hotpot") {
     return { category: "hotpot/web", theme: null };
@@ -1763,6 +1799,8 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
     "Assets/common01/food/CustomRecipes",
     "Assets/common02/food/Recipes",
     "Assets/common03/food/Recipes",
+    // 上游剧情菜谱/模型库（knowledge 未收录时按原资产回退展示）。
+    "Assets/common03/food/Recipes_Patch",
     "Assets/commonW1/pseudo_prefab_so/dlc11/food",
   ];
   const customByGuid = new Map();
@@ -1857,7 +1895,9 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
       skipped.push({ id, assetPath: entry.assetPath, reason: "knowledge skip" });
       continue;
     }
-    const k = knowledge.recipes[id] || knowledge.recipes[`${fields.prefabName}_SO`];
+    let k = knowledge.recipes[id] || knowledge.recipes[`${fields.prefabName}_SO`];
+    if (!k && entry.assetPath.includes("/Recipes_Patch/"))
+      k = { step: "", ingredients: [], plating: "", composition: [] };
     if (!k) {
       skipped.push({ id, assetPath: entry.assetPath, reason: "no composition info" });
       continue;
@@ -1893,6 +1933,38 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
       type: recipeTypeOf(id),
       intermediate: score <= 0 && !orderable,
     });
+  }
+
+  // 上游剧情菜谱/模型库（Recipes_Patch）：PseudoPrefabSO 包裹游戏原 orderdefinition。
+  // model_so/ 是模型包装，不是菜谱；只收 Recipes_Patch 根下的 orderdefinition 包装。
+  const patchRoot = path.join(repoRoot, "Assets/common03/food/Recipes_Patch");
+  const patchSeen = new Set();
+  if (fs.existsSync(patchRoot)) {
+    for (const file of listFilesRecursive(patchRoot, (n) => n.endsWith(".asset"))) {
+      const assetPath = toAssetPath(file).replace(/\\/g, "/");
+      if (assetPath.includes("/model_so/")) continue;
+      const fields = parseUnityAsset(file);
+      if (fields.scriptGuid !== SCRIPT_GUID.PseudoPrefabSO) continue;
+      const guid = readGuid(file + ".meta");
+      if (!guid || !patchSeen.add(guid)) continue;
+      const id = path.basename(file, ".asset");
+      list.push({
+        guid,
+        id,
+        ...lookupName(dictionary, idToRow, id),
+        assetPath,
+        cookingStep: "",
+        platingStep: "",
+        ingredients: [],
+        ingredientCount: 0,
+        cookingStepCount: 0,
+        score: 0,
+        isCustom: false,
+        group: foodGroupOf(assetPath),
+        type: recipeTypeOf(id),
+        intermediate: true,
+      });
+    }
   }
 
   for (const r of list) {
@@ -2320,9 +2392,21 @@ function main() {
   walkPrefabs(common03PrefabRoot, "Assets/common03/prefabs", items, measuredFootprints);
   const commonW1PrefabRoot = path.join(repoRoot, "Assets/commonW1/prefabs");
   walkPrefabs(commonW1PrefabRoot, "Assets/commonW1/prefabs", items, measuredFootprints);
+  // 上游 common04：自定义工作台 / 锅具模板（custom_ingredient 不进入摆放面板，
+  // 由“自定义管理”页作为食材模板管理）。
+  const common04Root = path.join(repoRoot, "Assets/common04");
+  for (const sub of ["custom_counter", "custom_utensil"]) {
+    const dir = path.join(common04Root, sub);
+    if (fs.existsSync(dir)) walkPrefabs(dir, `Assets/common04/${sub}`, items, measuredFootprints);
+  }
   const commonW4PrefabRoot = path.join(repoRoot, "Assets/commonW4/prefabs");
   if (fs.existsSync(commonW4PrefabRoot)) {
     walkPrefabs(commonW4PrefabRoot, "Assets/commonW4/prefabs", items, measuredFootprints);
+  }
+  // 上游模块：分料机（IngredientSplitter）模板/实例；自定义管理页克隆到关卡集。
+  const splitterRoot = path.join(repoRoot, "Assets/Modules/IngredientSplitter");
+  if (fs.existsSync(splitterRoot)) {
+    walkPrefabs(splitterRoot, "Assets/Modules/IngredientSplitter", items, measuredFootprints);
   }
   // commonW2 编辑器增量装饰（dlc-first：prefabs/<dlcXX|core>/art/<theme>/）。
   // 只收 art/（装饰层）；counters/utensils/mechanisms 不进调色板——核心层零新增，

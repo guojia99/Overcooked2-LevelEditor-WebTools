@@ -322,7 +322,7 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
     for (const c of refs?.platingContainers ?? []) platingNames.set(c.id, c.nameZh || c.id);
     let ingLoadFailed = false;
     const [ings, catalogFetched] = await Promise.all([
-      api.fetchIngredients().catch(() => {
+      api.fetchIngredients(scope.kind === "set" ? scope.setName : undefined).catch(() => {
         ingLoadFailed = true;
         return [] as IngredientEntry[];
       }),
@@ -483,7 +483,6 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
       const isAssembly = r.optionalKind === "burger" || r.optionalKind === "pizza";
       const isFinishedBurger = Boolean(r.isFinishedBurger);
       const gotoBurgerWorkbench = isAssembly || isFinishedBurger;
-      const burgerProductAttr = isFinishedBurger ? ` data-burger-product="${esc(r.id)}"` : "";
       return `
       <div class="cr-card-wrap">
         <div class="cr-card-inner">${cardHtml}</div>
@@ -1392,7 +1391,7 @@ export async function renderRecipeForm(
 
   try {
     [ingredients, refs, config] = await Promise.all([
-      api.fetchIngredients().catch(() => [] as IngredientEntry[]),
+      api.fetchIngredients(scope.kind === "set" ? scope.setName : undefined).catch(() => [] as IngredientEntry[]),
       isLibrary
         ? api.fetchLibraryCustomRecipeReferences(scope.libraryId).catch(() => EMPTY_REFS)
         : api.fetchCustomRecipeReferences(setName).catch(() => EMPTY_REFS),
@@ -1889,7 +1888,10 @@ export async function renderRecipeForm(
     const scoreVal = Number((document.getElementById("cr-score") as HTMLInputElement)?.value) || 0;
     const typeVal = (document.getElementById("cr-type") as HTMLSelectElement)?.value ?? "Composite";
     // Mixed 类型：烹饪步骤为所选步骤（保存同值），由 mixing 标记带出搅拌步骤
-    const cookStep = typeVal === "Composite" ? "" : (document.getElementById("cr-cook-step") as HTMLSelectElement)?.value ?? "";
+    const cookStep =
+      typeVal === "Composite" || typeVal === "Ingredient" || typeVal === "Item"
+        ? ""
+        : (document.getElementById("cr-cook-step") as HTMLSelectElement)?.value ?? "";
     const compIds = expandSelection();
     const preview: RecipeWithGroups = {
       guid: "",
@@ -1968,6 +1970,8 @@ export async function renderRecipeForm(
               <option value="Composite" ${type === "Composite" ? "selected" : ""}>Composite（组合）</option>
               <option value="Cooked" ${type === "Cooked" ? "selected" : ""}>Cooked（烹饪）</option>
               <option value="Mixed" ${type === "Mixed" ? "selected" : ""}>Mixed（搅拌）</option>
+              <option value="Ingredient" ${type === "Ingredient" ? "selected" : ""}>Ingredient（食材）</option>
+              <option value="Item" ${type === "Item" ? "selected" : ""}>Item（道具）</option>
             </select>
           </label>
           <label class="m-field">分数<input type="number" id="cr-score" value="${score}" min="0">
@@ -2153,7 +2157,14 @@ export async function renderRecipeForm(
   // ---- 交互 ----
 
   function updateTypeFields(): void {
-    // 类型只影响预览图标与保存字段，烹饪/搅拌参数始终同时展示
+    // Ingredient / Item 是单组成节点的「食材/道具」类型：不需要烹饪/搅拌参数。
+    const typeVal = (document.getElementById("cr-type") as HTMLSelectElement | null)?.value ?? "Composite";
+    const simple = typeVal === "Ingredient" || typeVal === "Item";
+    for (const id of ["cr-cook-step-field", "cr-cook-icon-field", "cr-cook-prog-field", "cr-mix-icon-field", "cr-mix-prog-field"]) {
+      document.getElementById(id)?.classList.toggle("hidden", simple);
+    }
+    const hint = document.getElementById("cr-comp-hint");
+    if (hint && simple) hint.textContent = "Ingredient / Item 只能选择 1 个组成节点";
     renderPreview();
   }
 
@@ -2480,6 +2491,10 @@ export async function renderRecipeForm(
     if (!IDENT_RE.test(rname)) return alert("标识符仅允许英文字母/数字/下划线，且不能以数字开头");
 
     const typeVal = (document.getElementById("cr-type") as HTMLSelectElement).value;
+    const composition = expandSelection();
+    if ((typeVal === "Ingredient" || typeVal === "Item") && composition.length !== 1) {
+      return alert("Ingredient / Item 类型必须且只能选择 1 个食材/道具组成节点");
+    }
     const savedT = readModelTransform();
     const dto: CustomRecipeEdit = {
       setName: isEdit ? undefined : setName,
@@ -2490,8 +2505,11 @@ export async function renderRecipeForm(
       category: (document.getElementById("cr-type-cat") as HTMLSelectElement).value,
       score: Number((document.getElementById("cr-score") as HTMLInputElement).value) || 0,
       type: typeVal,
-      compositionIds: expandSelection(),
-      cookingStepId: typeVal === "Composite" ? "" : (document.getElementById("cr-cook-step") as HTMLSelectElement)?.value ?? "",
+      compositionIds: composition,
+      cookingStepId:
+        typeVal === "Composite" || typeVal === "Ingredient" || typeVal === "Item"
+          ? ""
+          : (document.getElementById("cr-cook-step") as HTMLSelectElement)?.value ?? "",
       cookingStepIconId: (document.getElementById("cr-cook-icon") as HTMLSelectElement)?.value ?? "",
       platingStepId: (document.getElementById("cr-plate-step") as HTMLSelectElement)?.value ?? "",
       mixingIconId: (document.getElementById("cr-mix-icon") as HTMLSelectElement)?.value ?? "",

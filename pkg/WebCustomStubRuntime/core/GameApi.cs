@@ -424,6 +424,57 @@ namespace CustomStub
         public static readonly Type IngredientAssembledNodeType = Find("IngredientAssembledNode");
         public static readonly Type IIngredientContentsType = Find("IIngredientContents");
         public static readonly Type ICarrierPlacementType = Find("ICarrierPlacement");
+        public static readonly Type ICarrierType = Find("ICarrier");
+        public static readonly Type IBaseCookableType = Find("IBaseCookable");
+        public static readonly Type ContainerTransferBehaviourType = Find("IContainerTransferBehaviour");
+        public static readonly MethodInfo ICarrierInspectCarriedMethod = Safe(delegate
+        {
+            return ICarrierType != null
+                ? ICarrierType.GetMethod("InspectCarriedItem", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo PrepGetOrderDefinitionMethod = Safe(delegate
+        {
+            return PreparationContainerType != null && IIngredientContentsType != null && IBaseCookableType != null
+                ? PreparationContainerType.GetMethod("GetOrderDefinitionOfCarriedItem",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(GameObject), IIngredientContentsType, IBaseCookableType }, null)
+                : null;
+        });
+        public static readonly MethodInfo ServerPrepHandlePlacementMethod = Safe(delegate
+        {
+            var placementContextType = Find("PlacementContext");
+            return ServerPreparationContainerType != null && ICarrierPlacementType != null && placementContextType != null
+                ? ServerPreparationContainerType.GetMethod("HandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { ICarrierPlacementType, typeof(Vector2), placementContextType }, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientIngredientHasContentsMethod = Safe(delegate
+        {
+            var t = Find("ClientIngredientContainer");
+            return t != null
+                ? t.GetMethod("HasContents", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientCookableGetOrderCompositionMethod = Safe(delegate
+        {
+            var t = Find("ClientCookableContainer");
+            return t != null
+                ? t.GetMethod("GetOrderComposition", BindingFlags.Public | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientContainerCanTransferMethod = Safe(delegate
+        {
+            return ContainerTransferBehaviourType != null && IIngredientContentsType != null
+                ? ContainerTransferBehaviourType.GetMethod("CanTransferToContainer",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { IIngredientContentsType }, null)
+                : null;
+        });
 
         public static readonly FieldInfo ServerPlateIngredientField = Field(ServerPlateType, "m_ingredientContainer");
         public static readonly MethodInfo ServerPlateIsReservedMethod = Safe(delegate
@@ -1604,6 +1655,53 @@ namespace CustomStub
             return null;
         }
 
+        /// <summary>PseudoPrefabSO.asset 直引（common04 / 关卡集 custom_content 的
+        /// embedded/standalone SO 常见形态）。用反射读取，兼容旧版 LevelEditorStub
+        /// （旧 DLL 没有 asset 字段时返回 null，回落 bundleName/assetPath）。</summary>
+        internal static UnityEngine.Object GetPseudoPrefabDirectAsset(LevelEditorStub.PseudoPrefabSO so)
+        {
+            if (so == null)
+                return null;
+            try
+            {
+                var f = so.GetType().GetField("asset",
+                    BindingFlags.Public | BindingFlags.Instance);
+                return f != null ? f.GetValue(so) as UnityEngine.Object : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>加载 PseudoPrefabSO 指向的 GameObject：优先 asset 直引，其次 bundle。</summary>
+        internal static GameObject LoadPseudoPrefabObject(LevelEditorStub.PseudoPrefabSO so)
+        {
+            if (so == null)
+                return null;
+            var direct = GetPseudoPrefabDirectAsset(so) as GameObject;
+            if (direct != null)
+                return direct;
+            if (string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
+                return null;
+            var bundle = GetAssetBundle(so.bundleName);
+            return bundle != null ? bundle.LoadAsset<GameObject>(so.assetPath) : null;
+        }
+
+        /// <summary>加载 PseudoPrefabSO 指向的任意类型资产（asset 直引优先）。</summary>
+        internal static UnityEngine.Object LoadPseudoPrefabAsset(LevelEditorStub.PseudoPrefabSO so, Type type)
+        {
+            if (so == null || type == null)
+                return null;
+            var direct = GetPseudoPrefabDirectAsset(so);
+            if (direct != null && type.IsInstanceOfType(direct))
+                return direct;
+            if (string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
+                return null;
+            var bundle = GetAssetBundle(so.bundleName);
+            return bundle != null ? bundle.LoadAsset(so.assetPath, type) : null;
+        }
+
         /// <summary>GameObjectUtils.SendTrigger 等价（编译期不可引用扩展方法）。
         /// 异常加 once-flag（v12）：调用方 SwitchReenable 在轮询路径上，
         /// 持续性失败原本会逐次刷屏。</summary>
@@ -1678,7 +1776,7 @@ namespace CustomStub
 
         private static MethodInfo FindCanInteractMethod(Type interactableSyncType)
         {
-            return FindBoolMethodWithArity(interactableSyncType, "CanInteract", 1, PlayerControlsType);
+            return FindBoolMethodWithArity(interactableSyncType, "CanInteract", 1, Find("PlayerControls"));
         }
 
         internal static MethodInfo FindInstanceMethodByArity(Type declaringType, string methodName, int arity)

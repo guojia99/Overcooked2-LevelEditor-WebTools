@@ -1,8 +1,96 @@
 {
   "schemaVersion": 10,
   "index": 17,
-  "itemCount": 83,
+  "itemCount": 95,
   "items": [
+    {
+      "id": "Salad_Plain_SO",
+      "guid": "f7ea79f31eae8b855506355f304059f0",
+      "assetPath": "Assets/commonW1/prefabs/core/decor/recipes/Salad_Plain_SO.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.239,
+      "baseY": -0.032,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "09e46b6a76400d3a4015ad77928fe962",
+      "nameZh": "生菜沙拉",
+      "nameEn": "Lettuce Salad",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
+      "id": "Salad_Tomato_SO",
+      "guid": "d1b76a9c807435ac228c4e321c0fe1f9",
+      "assetPath": "Assets/commonW1/prefabs/core/decor/recipes/Salad_Tomato_SO.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.239,
+      "baseY": -0.032,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "d16dc53ea087e60e48efbc94b8ccd779",
+      "nameZh": "番茄沙拉",
+      "nameEn": "Tomato Salad",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
+      "id": "Smoothie_Banana",
+      "guid": "cd092261090cc72243a0e99490a30f69",
+      "assetPath": "Assets/commonW1/prefabs/dlc02/decor/recipes/Smoothie_Banana.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.997,
+      "baseY": 0.038,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "b91405d5821bbc7a5037d74dcee5c5c1",
+      "nameZh": "香蕉果汁",
+      "nameEn": "Banana Smoothie",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
+      "id": "Smoothie_BananaPineapple",
+      "guid": "3e1d3d918440130e77b9c0c5f2a66610",
+      "assetPath": "Assets/commonW1/prefabs/dlc02/decor/recipes/Smoothie_BananaPineapple.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.895,
+      "baseY": 0.14,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "1f65eb58b2662dc80a5145503b606c46",
+      "nameZh": "香蕉菠萝果汁",
+      "nameEn": "Banana Pineapple Smoothie",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
     {
       "id": "Smoothie_Mega",
       "guid": "5a896822d197c6f6fa53ac4a88e0181d",
@@ -1251,6 +1339,142 @@
       },
       "nameZh": "烘烤叉",
       "nameEn": "Toasting Fork",
+      "icon": false
+    },
+    {
+      "id": "custom_utensil_clean_plate_stack",
+      "guid": "4720bf1b02e845e428d2fd7d98f290f5",
+      "assetPath": "Assets/common04/custom_utensil/custom_utensil_clean_plate_stack.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_utensil_clean_plate_stack",
+      "nameEn": "custom_utensil_clean_plate_stack",
+      "icon": false
+    },
+    {
+      "id": "custom_utensil_clean_tray_stack",
+      "guid": "9b9c353be5cf44b4a8ba84b3eed4dc29",
+      "assetPath": "Assets/common04/custom_utensil/custom_utensil_clean_tray_stack.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_utensil_clean_tray_stack",
+      "nameEn": "custom_utensil_clean_tray_stack",
+      "icon": false
+    },
+    {
+      "id": "custom_utensil_dirty_plate",
+      "guid": "7fbee510d0bc50446bdac6760885dd93",
+      "assetPath": "Assets/common04/custom_utensil/custom_utensil_dirty_plate.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_utensil_dirty_plate",
+      "nameEn": "custom_utensil_dirty_plate",
+      "icon": false
+    },
+    {
+      "id": "custom_utensil_dirty_plate_stack",
+      "guid": "e8e751663bb29a24e942b1ae1a529045",
+      "assetPath": "Assets/common04/custom_utensil/custom_utensil_dirty_plate_stack.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_utensil_dirty_plate_stack",
+      "nameEn": "custom_utensil_dirty_plate_stack",
+      "icon": false
+    },
+    {
+      "id": "custom_utensil_dirty_tray",
+      "guid": "bc1e13c0673df1749aa3c60b5d282509",
+      "assetPath": "Assets/common04/custom_utensil/custom_utensil_dirty_tray.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_utensil_dirty_tray",
+      "nameEn": "custom_utensil_dirty_tray",
+      "icon": false
+    },
+    {
+      "id": "custom_utensil_dirty_tray_stack",
+      "guid": "a0f48a9811dd0504e8bbb4d355df2c62",
+      "assetPath": "Assets/common04/custom_utensil/custom_utensil_dirty_tray_stack.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_utensil_dirty_tray_stack",
+      "nameEn": "custom_utensil_dirty_tray_stack",
+      "icon": false
+    },
+    {
+      "id": "custom_utensil_plate",
+      "guid": "7330344a9d4cb9c4da2f2bc0358820b0",
+      "assetPath": "Assets/common04/custom_utensil/custom_utensil_plate.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_utensil_plate",
+      "nameEn": "custom_utensil_plate",
+      "icon": false
+    },
+    {
+      "id": "custom_utensil_tray",
+      "guid": "1a5142f3f3282bb48b52f9d95b0f699a",
+      "assetPath": "Assets/common04/custom_utensil/custom_utensil_tray.prefab",
+      "category": "utensils/cooking",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_utensil_tray",
+      "nameEn": "custom_utensil_tray",
       "icon": false
     },
     {

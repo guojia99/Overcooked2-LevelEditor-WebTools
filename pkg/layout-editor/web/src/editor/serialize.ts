@@ -56,6 +56,11 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
     ? planeCatalogFootprint(rest)
     : resolveFootprint(rest);
   const cat = S.catalogByGuid.get(rest.prefabGuid);
+  // 动态自定义内容：按 catalog 的 customStubKind 补默认（如 CookingUtensil）。
+  if (!rest.stubKind) {
+    const cc = S.catalogByGuid.get(rest.prefabGuid);
+    if (cc?.customStubKind) rest.stubKind = cc.customStubKind;
+  }
   // 新放置物品 stubKind 为空：按 prefab id 映射补默认 stubKind（回收台/容器堆等
   // wrapper 无专属 stub 的道具靠它让后端补挂组件），已显式设置的优先。
   if (!rest.stubKind) {

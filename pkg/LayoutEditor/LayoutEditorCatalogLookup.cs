@@ -11,6 +11,19 @@ public static class LayoutEditorCatalogLookup
         { "Sink", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "SinkMug", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "SinkTray", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        // 上游 common04 自定义模板
+        { "custom_counter", new LayoutFootprint { cellsX = 1, cellsZ = 1 } },
+        { "custom_counter_chopping", new LayoutFootprint { cellsX = 1, cellsZ = 1 } },
+        { "custom_counter_sink", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        { "custom_utensil_plate", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "custom_utensil_tray", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "custom_utensil_clean_plate_stack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "custom_utensil_dirty_plate", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "custom_utensil_dirty_plate_stack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "custom_utensil_clean_tray_stack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "custom_utensil_dirty_tray", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "custom_utensil_dirty_tray_stack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "custom_counter_ingredient_splitter", new LayoutFootprint { cellsX = 1, cellsZ = 1 } },
         { "Pushable_Object", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
         { "SinkGlass", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "workstation_sink_mug_01_wood", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
@@ -152,6 +165,26 @@ public static class LayoutEditorCatalogLookup
         // Web 火锅专区（commonW1/prefabs/web/hotpot/）
         if (assetPath.Contains("/prefabs/web/hotpot/"))
             return "Design/Counters";
+        // 上游 common04 自定义模板 / 模块分料机
+        if (assetPath.Contains("/common04/custom_counter/")
+            || assetPath.Contains("/Modules/IngredientSplitter/"))
+            return "Design/Counters";
+        if (assetPath.Contains("/common04/custom_utensil/"))
+            return "Design/Utensils";
+        // 关卡集自定义内容（custom_content/{counters|sinks|modules|utensils|trays}/）
+        if (assetPath.Contains("/custom_content/counters/")
+            || assetPath.Contains("/custom_content/counter/")
+            || assetPath.Contains("/custom_content/sinks/")
+            || assetPath.Contains("/custom_content/sink/")
+            || assetPath.Contains("/custom_content/modules/")
+            || assetPath.Contains("/custom_content/module/")
+            || assetPath.Contains("/custom_content/splitter/"))
+            return "Design/Counters";
+        if (assetPath.Contains("/custom_content/utensils/")
+            || assetPath.Contains("/custom_content/utensil/")
+            || assetPath.Contains("/custom_content/trays/")
+            || assetPath.Contains("/custom_content/tray/"))
+            return "Design/Utensils";
 
         // 兼容两代目录结构：prefabs/{category}/（common01/02）与
         // prefabs/{dlcXX|core}/{category}/（common03 通用内容按 dlc 分目录）。

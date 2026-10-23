@@ -125,6 +125,8 @@ AssetBundle assetBundle = AssetBundle.LoadFromFile(path);
 | **commonW1** | Web 版 + 编辑器自制**增量层**（火锅/问号/背景/材质/RandomDispenser/decor） | `commonW1`（五个顶层 meta 显式标记） | 24MB / 352 prefab / 241 SO / 309 mat |
 | **commonW2** | Burger 大全共享库（纯自定义菜谱数据） | `commonW2` | 5.7MB / 69 配方 / 14 模型 prefab |
 | **commonW3** | Web 扩展菜谱共享库（沙拉 / 果汁 / 炒饭 / 汤粥 / 冰淇淋 / 布丁 / 冰沙） | `commonW3` | 67 道（39 已有 + batch1 28） |
+| **common04** | 上游自定义内容模板与 supplies（食材/工作台/锅具/托盘，含 UI/PFX/PlatingStepData） | `common04` | 上游 2026-10 新增；随依赖包分发 |
+| **commonW4** | Web 储物背包等机制增量 | `commonW4` | 本仓库增量层 |
 
 > 分工速记：**common01/02 = 原版一代代理**（category-first）；**common03 = 上游正式版镜像**；**commonW1 = 上游没有/已删的编辑器增量**（dlc-first）；**commonW2/W3 = 纯数据包**。"镜像 vs 增量"的分离让同步上游变成机械操作（`b499bd15e` + `a66d607b5` 两个提交完成一次全量对齐）。
 

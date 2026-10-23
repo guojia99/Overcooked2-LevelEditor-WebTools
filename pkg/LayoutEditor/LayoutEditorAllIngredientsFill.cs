@@ -139,6 +139,12 @@ public static class LayoutEditorAllIngredientsFill
             // 汽水/饮料/酱料等机器产出食材：显式黑名单（assetPath 为 .prefab 的饮料会穿透后缀过滤）
             if (IsMachineOnlyIngredient(pseudo))
                 continue;
+            // common04 / custom_content：PseudoPrefabSO.asset 直引（assetPath 为空也合法）。
+            if (pseudo.asset is GameObject)
+            {
+                filtered.Add(pseudo);
+                continue;
+            }
             var bundlePath = pseudo.assetPath;
             if (string.IsNullOrEmpty(bundlePath))
                 continue;

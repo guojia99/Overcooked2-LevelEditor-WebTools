@@ -770,6 +770,7 @@ export function addFromCatalog(
     worldPosition: { x: 0, y: baseY, z: 0 },
     localRotationY: 0,
     footprint: cat.footprint,
+    stubKind: cat.customStubKind ?? "",
     _wx: stub.x,
     _wz: stub.z,
     _parentWx: 0,

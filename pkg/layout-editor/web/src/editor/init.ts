@@ -34,6 +34,7 @@ import {
 import { ingredientGuidById, rebuildIngredientLookup } from "./catalog";
 import { allDispenserPrefabIds, dispenserIngredientIds, utensilIntermediateRecipes } from "./recipeKnowledge";
 import { buildPalette } from "./palette";
+import { setActiveCatalog, mergeCustomContentIntoCatalog } from "./customContentCatalog";
 import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
 import { recoverFloorsFromWalkableIfNeeded } from "./floors";
 import { refreshSceneItemList } from "./panels";
@@ -373,12 +374,14 @@ export async function init() {
   const catalog = await loadCatalog();
   warnIfBridgeOutdated(healthInfo, catalog.schemaVersion ?? 1);
   layoutCatalog = catalog;
+  setActiveCatalog(catalog);
   for (const it of catalog.items) S.catalogByGuid.set(it.guid, it);
   // id → 目录条目（跳过 custom_web/custom_ingredients 拷贝路径），供按 prefab id 回退解析。
   for (const it of catalog.items) {
     if (/\/custom_(web|ingredients)\//.test(it.assetPath)) continue;
     if (!S.catalogById.has(it.id)) S.catalogById.set(it.id, it);
   }
+  if (ROUTE.setId) await mergeCustomContentIntoCatalog(catalog, ROUTE.setId);
   S.ingredientsCache = await fetchIngredients().catch(() => []);
   rebuildIngredientLookup();
   auditDispenserWhitelists();

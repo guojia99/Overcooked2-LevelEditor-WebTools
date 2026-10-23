@@ -4,21 +4,133 @@
   "itemCount": 16,
   "recipes": [
     {
-      "guid": "e235ed00068ae3845bd2d1dbdc25d8e0",
-      "id": "Pizza_Plain_60_SO",
-      "nameZh": "原味披萨（60 分）",
-      "nameEn": "Plain Pizza 60",
-      "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Plain_60_SO.asset",
+      "guid": "5b3d17ea5d6bc544b88181b1a621f99f",
+      "id": "Soup_TomatoEgg_SO",
+      "nameZh": "番茄蛋汤",
+      "nameEn": "Tomato Egg Soup",
+      "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_TomatoEgg_SO.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "TomatoSO",
+        "EggSO"
+      ],
+      "compositionIds": [
+        "TomatoSO",
+        "EggSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 40,
+      "isCustom": true,
+      "group": "custom",
+      "type": "soup",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "TomatoSO",
+            "EggSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f4341b4765fce7d4482fb0002ea8f101",
+      "id": "Soup_Tomato_SO",
+      "nameZh": "番茄汤",
+      "nameEn": "Tomato Soup",
+      "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Tomato_SO.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "TomatoSO",
+        "TomatoSO",
+        "TomatoSO"
+      ],
+      "compositionIds": [
+        "TomatoSO",
+        "TomatoSO",
+        "TomatoSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": true,
+      "group": "custom",
+      "type": "soup",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "TomatoSO",
+            "TomatoSO",
+            "TomatoSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4ec8a736936e7744c91d254705783c2c",
+      "id": "FriedMeat",
+      "nameZh": "煎肉排",
+      "nameEn": "Fried Meat",
+      "assetPath": "Assets/common01/food/CustomRecipes/Burger/FriedMeat.asset",
+      "cookingStep": "FryingPan",
+      "ingredients": [
+        "MeatSO"
+      ],
+      "compositionIds": [
+        "MeatSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": true,
+      "group": "custom",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "4636eea990e4c614b9b5fdb25effcd70",
+      "id": "Pizza_Peperoni_80_SO",
+      "nameZh": "辣香肠披萨（80 分）",
+      "nameEn": "Pepperoni Pizza 80",
+      "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Peperoni_80_SO.asset",
       "cookingStep": "OvenTray",
       "platingStep": "",
       "ingredients": [
         "DLC05_Dough",
         "TomatoSO",
-        "CheeseSO"
+        "CheeseSO",
+        "PepperoniSO"
       ],
-      "ingredientCount": 3,
+      "ingredientCount": 4,
       "cookingStepCount": 1,
-      "score": 60,
+      "score": 80,
       "isCustom": false,
       "group": "custom",
       "type": "pizza",
@@ -32,7 +144,90 @@
           "ingredients": [
             "DLC05_Dough",
             "TomatoSO",
-            "CheeseSO"
+            "CheeseSO",
+            "PepperoniSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "f7b67dbff5054ac4db04c5f7c32949bb",
+      "id": "Pizza_Mushroom_80_SO",
+      "nameZh": "蘑菇披萨",
+      "nameEn": "Mushroom Pizza",
+      "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Mushroom_80_SO.asset",
+      "cookingStep": "OvenTray",
+      "ingredients": [
+        "DoughSO",
+        "TomatoSO",
+        "CheeseSO",
+        "MushroomSO"
+      ],
+      "compositionIds": [
+        "DoughSO",
+        "TomatoSO",
+        "CheeseSO",
+        "MushroomSO"
+      ],
+      "ingredientCount": 4,
+      "cookingStepCount": 1,
+      "score": 80,
+      "isCustom": true,
+      "group": "custom",
+      "type": "pizza",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DoughSO",
+            "TomatoSO",
+            "CheeseSO",
+            "MushroomSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "df1cbeca261ab1646bd27c8cf7c3c1fc",
+      "id": "Soup_Mushroom_SO",
+      "nameZh": "蘑菇汤",
+      "nameEn": "Mushroom Soup",
+      "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Mushroom_SO.asset",
+      "cookingStep": "Pot",
+      "ingredients": [
+        "MushroomSO",
+        "MushroomSO",
+        "MushroomSO"
+      ],
+      "compositionIds": [
+        "MushroomSO",
+        "MushroomSO",
+        "MushroomSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": true,
+      "group": "custom",
+      "type": "soup",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "MushroomSO",
+            "MushroomSO",
+            "MushroomSO"
           ]
         }
       ],
@@ -64,6 +259,52 @@
           "utensils": [],
           "ingredients": [
             "MushroomSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "d1bce708a9311b94dbf8e6995d33e20a",
+      "id": "Burger_Lettuce_SO",
+      "nameZh": "生菜汉堡",
+      "nameEn": "Lettuce Burger",
+      "assetPath": "Assets/common01/food/CustomRecipes/Burger/Burger_Lettuce_SO.asset",
+      "cookingStep": "",
+      "ingredients": [
+        "ChoppedBunSO",
+        "LettuceSO",
+        "MeatSO"
+      ],
+      "compositionIds": [
+        "ChoppedBunSO",
+        "LettuceSO",
+        "FriedMeat"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": true,
+      "group": "custom",
+      "type": "burger",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "",
+          "utensils": [],
+          "ingredients": [
+            "ChoppedBunSO",
+            "LettuceSO"
+          ]
+        },
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "MeatSO"
           ]
         }
       ],
@@ -104,6 +345,41 @@
             "OnionSO",
             "OnionSO",
             "OnionSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
+      "guid": "e235ed00068ae3845bd2d1dbdc25d8e0",
+      "id": "Pizza_Plain_60_SO",
+      "nameZh": "原味披萨（60 分）",
+      "nameEn": "Plain Pizza 60",
+      "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Plain_60_SO.asset",
+      "cookingStep": "OvenTray",
+      "platingStep": "",
+      "ingredients": [
+        "DLC05_Dough",
+        "TomatoSO",
+        "CheeseSO"
+      ],
+      "ingredientCount": 3,
+      "cookingStepCount": 1,
+      "score": 60,
+      "isCustom": false,
+      "group": "custom",
+      "type": "pizza",
+      "intermediate": false,
+      "cookingGroups": [
+        {
+          "step": "OvenTray",
+          "utensils": [
+            "Oven"
+          ],
+          "ingredients": [
+            "DLC05_Dough",
+            "TomatoSO",
+            "CheeseSO"
           ]
         }
       ],
@@ -258,196 +534,6 @@
       "icon": true
     },
     {
-      "guid": "4ec8a736936e7744c91d254705783c2c",
-      "id": "FriedMeat",
-      "nameZh": "煎肉排",
-      "nameEn": "Fried Meat",
-      "assetPath": "Assets/common01/food/CustomRecipes/Burger/FriedMeat.asset",
-      "cookingStep": "FryingPan",
-      "ingredients": [
-        "MeatSO"
-      ],
-      "compositionIds": [
-        "MeatSO"
-      ],
-      "ingredientCount": 1,
-      "cookingStepCount": 1,
-      "score": 0,
-      "isCustom": true,
-      "group": "custom",
-      "type": "fry",
-      "intermediate": true,
-      "cookingGroups": [
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "MeatSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "d1bce708a9311b94dbf8e6995d33e20a",
-      "id": "Burger_Lettuce_SO",
-      "nameZh": "生菜汉堡",
-      "nameEn": "Lettuce Burger",
-      "assetPath": "Assets/common01/food/CustomRecipes/Burger/Burger_Lettuce_SO.asset",
-      "cookingStep": "",
-      "ingredients": [
-        "ChoppedBunSO",
-        "LettuceSO",
-        "MeatSO"
-      ],
-      "compositionIds": [
-        "ChoppedBunSO",
-        "LettuceSO",
-        "FriedMeat"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 60,
-      "isCustom": true,
-      "group": "custom",
-      "type": "burger",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "",
-          "utensils": [],
-          "ingredients": [
-            "ChoppedBunSO",
-            "LettuceSO"
-          ]
-        },
-        {
-          "step": "FryingPan",
-          "utensils": [
-            "Cooker",
-            "FryPan"
-          ],
-          "ingredients": [
-            "MeatSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "f4341b4765fce7d4482fb0002ea8f101",
-      "id": "Soup_Tomato_SO",
-      "nameZh": "番茄汤",
-      "nameEn": "Tomato Soup",
-      "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Tomato_SO.asset",
-      "cookingStep": "Pot",
-      "ingredients": [
-        "TomatoSO",
-        "TomatoSO",
-        "TomatoSO"
-      ],
-      "compositionIds": [
-        "TomatoSO",
-        "TomatoSO",
-        "TomatoSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 60,
-      "isCustom": true,
-      "group": "custom",
-      "type": "soup",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "TomatoSO",
-            "TomatoSO",
-            "TomatoSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "5b3d17ea5d6bc544b88181b1a621f99f",
-      "id": "Soup_TomatoEgg_SO",
-      "nameZh": "番茄蛋汤",
-      "nameEn": "Tomato Egg Soup",
-      "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_TomatoEgg_SO.asset",
-      "cookingStep": "Pot",
-      "ingredients": [
-        "TomatoSO",
-        "EggSO"
-      ],
-      "compositionIds": [
-        "TomatoSO",
-        "EggSO"
-      ],
-      "ingredientCount": 2,
-      "cookingStepCount": 1,
-      "score": 40,
-      "isCustom": true,
-      "group": "custom",
-      "type": "soup",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "TomatoSO",
-            "EggSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "b38643b6c45e859479f6105f5d0ec839",
-      "id": "Pizza_Optional_Cooked_SO",
-      "nameZh": "自选披萨（熟）",
-      "nameEn": "Optional Pizza (Cooked)",
-      "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Cooked_SO.asset",
-      "cookingStep": "OvenTray",
-      "ingredients": [
-        "DoughSO"
-      ],
-      "compositionIds": [
-        "DoughSO"
-      ],
-      "ingredientCount": 1,
-      "cookingStepCount": 1,
-      "score": 0,
-      "isCustom": true,
-      "group": "custom",
-      "type": "pizza",
-      "intermediate": true,
-      "cookingGroups": [
-        {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
-          "ingredients": [
-            "DoughSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
       "guid": "c8a3b9520d25f674a89e274226dee7cf",
       "id": "Pizza_Optional_Uncooked_SO",
       "nameZh": "自选披萨（生）",
@@ -481,31 +567,25 @@
       "icon": false
     },
     {
-      "guid": "f7b67dbff5054ac4db04c5f7c32949bb",
-      "id": "Pizza_Mushroom_80_SO",
-      "nameZh": "蘑菇披萨",
-      "nameEn": "Mushroom Pizza",
-      "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Mushroom_80_SO.asset",
+      "guid": "b38643b6c45e859479f6105f5d0ec839",
+      "id": "Pizza_Optional_Cooked_SO",
+      "nameZh": "自选披萨（熟）",
+      "nameEn": "Optional Pizza (Cooked)",
+      "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Optional_Cooked_SO.asset",
       "cookingStep": "OvenTray",
       "ingredients": [
-        "DoughSO",
-        "TomatoSO",
-        "CheeseSO",
-        "MushroomSO"
+        "DoughSO"
       ],
       "compositionIds": [
-        "DoughSO",
-        "TomatoSO",
-        "CheeseSO",
-        "MushroomSO"
+        "DoughSO"
       ],
-      "ingredientCount": 4,
+      "ingredientCount": 1,
       "cookingStepCount": 1,
-      "score": 80,
+      "score": 0,
       "isCustom": true,
       "group": "custom",
       "type": "pizza",
-      "intermediate": false,
+      "intermediate": true,
       "cookingGroups": [
         {
           "step": "OvenTray",
@@ -513,87 +593,7 @@
             "Oven"
           ],
           "ingredients": [
-            "DoughSO",
-            "TomatoSO",
-            "CheeseSO",
-            "MushroomSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "df1cbeca261ab1646bd27c8cf7c3c1fc",
-      "id": "Soup_Mushroom_SO",
-      "nameZh": "蘑菇汤",
-      "nameEn": "Mushroom Soup",
-      "assetPath": "Assets/common01/food/CustomRecipes/Soup/Soup_Mushroom_SO.asset",
-      "cookingStep": "Pot",
-      "ingredients": [
-        "MushroomSO",
-        "MushroomSO",
-        "MushroomSO"
-      ],
-      "compositionIds": [
-        "MushroomSO",
-        "MushroomSO",
-        "MushroomSO"
-      ],
-      "ingredientCount": 3,
-      "cookingStepCount": 1,
-      "score": 60,
-      "isCustom": true,
-      "group": "custom",
-      "type": "soup",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "Pot",
-          "utensils": [
-            "Cooker",
-            "Pot"
-          ],
-          "ingredients": [
-            "MushroomSO",
-            "MushroomSO",
-            "MushroomSO"
-          ]
-        }
-      ],
-      "icon": true
-    },
-    {
-      "guid": "4636eea990e4c614b9b5fdb25effcd70",
-      "id": "Pizza_Peperoni_80_SO",
-      "nameZh": "辣香肠披萨（80 分）",
-      "nameEn": "Pepperoni Pizza 80",
-      "assetPath": "Assets/common01/food/CustomRecipes/Pizza/Pizza_Peperoni_80_SO.asset",
-      "cookingStep": "OvenTray",
-      "platingStep": "",
-      "ingredients": [
-        "DLC05_Dough",
-        "TomatoSO",
-        "CheeseSO",
-        "PepperoniSO"
-      ],
-      "ingredientCount": 4,
-      "cookingStepCount": 1,
-      "score": 80,
-      "isCustom": false,
-      "group": "custom",
-      "type": "pizza",
-      "intermediate": false,
-      "cookingGroups": [
-        {
-          "step": "OvenTray",
-          "utensils": [
-            "Oven"
-          ],
-          "ingredients": [
-            "DLC05_Dough",
-            "TomatoSO",
-            "CheeseSO",
-            "PepperoniSO"
+            "DoughSO"
           ]
         }
       ],

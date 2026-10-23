@@ -157,6 +157,92 @@ namespace CustomStub
             }
         }
 
+        /// <summary>上游 PreparationContainer 补丁（Assembly-CSharp-Patch）：携带已烹饪
+        /// CookableContainer 时返回完整 ClientCookableContainer.GetOrderComposition()，
+        /// 而不是只取容器第 0 个食材。真机无源码覆盖，用前缀等价实现。</summary>
+        internal static bool PrepGetOrderDefinitionPrefix(object __instance, GameObject _carriedItem,
+            object _itemContainer, ref object __result)
+        {
+            try
+            {
+                if (_carriedItem == null || _itemContainer == null)
+                    return true;
+                if (GameApi.CookableContainerType == null
+                    || _carriedItem.GetComponent(GameApi.CookableContainerType) == null)
+                    return true;
+                if (GameApi.ClientIngredientHasContentsMethod == null
+                    || GameApi.ClientContainerCanTransferMethod == null
+                    || GameApi.ClientCookableGetOrderCompositionMethod == null
+                    || GameApi.AssembledDefinitionNodeType == null)
+                    return true;
+                var clientIngredient = _carriedItem.GetComponent("ClientIngredientContainer");
+                if (clientIngredient == null)
+                    return true;
+                if (!(bool)GameApi.ClientIngredientHasContentsMethod.Invoke(clientIngredient, null))
+                    return true;
+                var transfer = GetInterfaceComponent(_carriedItem, GameApi.ContainerTransferBehaviourType);
+                if (transfer == null)
+                    return true;
+                if (!(bool)GameApi.ClientContainerCanTransferMethod.Invoke(transfer, new[] { _itemContainer }))
+                    return true;
+                var cookable = _carriedItem.GetComponent("ClientCookableContainer");
+                if (cookable == null)
+                    return true;
+                var cooked = GameApi.ClientCookableGetOrderCompositionMethod.Invoke(cookable, null);
+                if (cooked == null)
+                    return true;
+                var arr = Array.CreateInstance(GameApi.AssembledDefinitionNodeType, 1);
+                arr.SetValue(cooked, 0);
+                __result = arr;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                WarnOnce("prepGetOrder", "[CustomStub] PreparationContainer.GetOrderDefinition 前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        /// <summary>上游 ServerPreparationContainer 补丁：已烹饪转移后调用 Empty() 清空
+        /// 全部内容（原版只 RemoveIngredient(0)，2+ 食材会残留）。原方法已先移除 1 个，
+        /// 这里后缀清空剩余内容，最终语义等价 Empty()。</summary>
+        internal static void ServerPrepHandlePlacementPostfix(object __instance, object _carrier)
+        {
+            try
+            {
+                if (_carrier == null || GameApi.ICarrierInspectCarriedMethod == null
+                    || GameApi.ServerIngredientContainerType == null
+                    || GameApi.IngredientEmptyMethod == null)
+                    return;
+                var carried = GameApi.ICarrierInspectCarriedMethod.Invoke(_carrier, null) as GameObject;
+                if (carried == null)
+                    return;
+                if (GameApi.CookableContainerType != null
+                    && carried.GetComponent(GameApi.CookableContainerType) == null)
+                    return;
+                var ingredientContainer = carried.GetComponent(GameApi.ServerIngredientContainerType);
+                if (ingredientContainer != null)
+                    GameApi.IngredientEmptyMethod.Invoke(ingredientContainer, null);
+            }
+            catch (Exception ex)
+            {
+                WarnOnce("prepHandlePlacement", "[CustomStub] ServerPreparationContainer.HandlePlacement 后缀异常（忽略）: " + ex.Message);
+            }
+        }
+
+        private static object GetInterfaceComponent(GameObject go, Type interfaceType)
+        {
+            if (go == null || interfaceType == null)
+                return null;
+            var comps = go.GetComponents<Component>();
+            for (int i = 0; i < comps.Length; i++)
+            {
+                if (comps[i] != null && interfaceType.IsInstanceOfType(comps[i]))
+                    return comps[i];
+            }
+            return null;
+        }
+
         private static int InvokeInt(object target, MethodInfo method, params object[] args)
         {
             if (method == null)

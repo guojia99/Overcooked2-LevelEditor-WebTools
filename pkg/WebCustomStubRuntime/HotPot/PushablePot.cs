@@ -266,6 +266,18 @@ namespace CustomStub
         {
             m_loadedPotPrefab = null;
 
+            // custom_content / common04：SO.asset 直引（无 bundleName/assetPath）。
+            var directSo = PotSO();
+            if (directSo != null)
+            {
+                var direct = GameApi.GetPseudoPrefabDirectAsset(directSo) as GameObject;
+                if (direct != null)
+                {
+                    m_loadedPotPrefab = direct;
+                    yield break;
+                }
+            }
+
             string bundleName;
             string assetPath;
             PseudoPrefabSO so;

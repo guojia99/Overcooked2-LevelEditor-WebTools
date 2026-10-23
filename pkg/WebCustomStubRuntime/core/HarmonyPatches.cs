@@ -1202,6 +1202,27 @@ namespace CustomStub
             get { return typeof(HarmonyPatches).GetMethod("ServerPrepTransferPrefix", BF); }
         }
 
+        private static bool PrepGetOrderDefinitionPrefix(object __instance, GameObject _carriedItem,
+            object _itemContainer, ref object __result)
+        {
+            return ContainerTransferSync.PrepGetOrderDefinitionPrefix(__instance, _carriedItem, _itemContainer, ref __result);
+        }
+
+        private static void ServerPrepHandlePlacementPostfix(object __instance, object _carrier)
+        {
+            ContainerTransferSync.ServerPrepHandlePlacementPostfix(__instance, _carrier);
+        }
+
+        internal static System.Reflection.MethodInfo PrepGetOrderDefinitionPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("PrepGetOrderDefinitionPrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPrepHandlePlacementPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPrepHandlePlacementPostfix", BF); }
+        }
+
         private const System.Reflection.BindingFlags BF =
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
     }

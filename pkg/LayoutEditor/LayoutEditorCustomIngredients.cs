@@ -42,6 +42,12 @@ public static class LayoutEditorCustomIngredients
     /// <summary>Web 储物背包等机制增量（打包为 commonW4 bundle）。</summary>
     public const string CommonW4Root = "Assets/commonW4";
 
+    /// <summary>上游通用素材库（自定义食材/锅具/工作台模板与 supplies，打包为 common04 bundle）。</summary>
+    public const string Common04Root = "Assets/common04";
+
+    /// <summary>关卡集自定义内容目录（custom_content，bundle 名 &lt;set&gt;/custom_content）。</summary>
+    public const string CustomContentDirName = "custom_content";
+
     /// <summary>旧 custom_web 拷贝目录名（机制已废弃，仅为兼容读取历史数据保留）。</summary>
     public const string CustomDirName = "custom_web";
 
@@ -59,9 +65,13 @@ public static class LayoutEditorCustomIngredients
 
     public const string CommonW4BundleName = "commonW4";
 
+    /// <summary>common04 bundle 名（folder meta assetBundleName）。</summary>
+    public const string Common04BundleName = "common04";
+
     /// <summary>场景保存时从 doc 收集到的 common03 引用所需游戏 bundle，
     ///  由随后 SyncLevelInfo → EnsureWebDependencies 一并注册。</summary>
     private static readonly HashSet<string> _pendingDocBundles = new HashSet<string>(StringComparer.Ordinal);
+    private static string _docLevelSet;
 
     /// <summary>旧 custom_web 拷贝目录（兼容读取历史数据用，新逻辑不再写入）。</summary>
     public static string CustomIngredientsDir(string levelSet)
@@ -263,6 +273,8 @@ public static class LayoutEditorCustomIngredients
         return IsCommon03Asset(assetPath)
             || IsCommonW1Asset(assetPath)
             || IsCommonW4Asset(assetPath)
+            || IsCommon04Asset(assetPath)
+            || IsCustomContentAsset(assetPath)
             || assetPath.IndexOf("/common01/", StringComparison.Ordinal) >= 0
             || assetPath.IndexOf("/common02/", StringComparison.Ordinal) >= 0;
     }
@@ -277,6 +289,7 @@ public static class LayoutEditorCustomIngredients
         if (doc == null || doc.items == null)
             return map;
         _pendingDocBundles.Clear();
+        _docLevelSet = levelSet;
         foreach (var it in doc.items)
         {
             if (it == null)
@@ -309,6 +322,14 @@ public static class LayoutEditorCustomIngredients
                     ValidateDocGuid(g);
             if (!string.IsNullOrEmpty(it.prefabAssetPath) && IsCommonW4Asset(it.prefabAssetPath))
                 _pendingDocBundles.Add(CommonW4BundleName);
+            if (!string.IsNullOrEmpty(it.prefabAssetPath) && IsCustomContentAsset(it.prefabAssetPath))
+            {
+                if (!string.IsNullOrEmpty(levelSet))
+                    _pendingDocBundles.Add(levelSet + "/" + CustomContentDirName);
+                _pendingDocBundles.Add(Common04BundleName);
+            }
+            if (!string.IsNullOrEmpty(it.prefabAssetPath) && IsCommon04Asset(it.prefabAssetPath))
+                _pendingDocBundles.Add(Common04BundleName);
         }
         return map;
     }
@@ -318,6 +339,21 @@ public static class LayoutEditorCustomIngredients
         if (string.IsNullOrEmpty(assetPath))
             return false;
         return assetPath.StartsWith(CommonW4Root + "/", StringComparison.Ordinal);
+    }
+
+    public static bool IsCommon04Asset(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        return assetPath.StartsWith(Common04Root + "/", StringComparison.Ordinal);
+    }
+
+    /// <summary>是否关卡集自定义内容目录（Assets/LevelSets/&lt;set&gt;/custom_content/）资产。</summary>
+    public static bool IsCustomContentAsset(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        return assetPath.IndexOf("/" + CustomContentDirName + "/", StringComparison.Ordinal) >= 0;
     }
 
     /// <summary>校验单个 doc 引用 guid：历史引用告警；common03 引用收集其游戏 bundle。</summary>
@@ -336,6 +372,16 @@ public static class LayoutEditorCustomIngredients
         if (path.IndexOf("/" + CustomDirName + "/", StringComparison.Ordinal) >= 0)
         {
             LayoutEditorLog.LogWarning("[通用内容] 场景仍引用已废弃的 custom_web 拷贝（请删除并重新放置为 common03 资产）: " + path);
+            return;
+        }
+        // 自定义内容（per-set custom_content）与上游 common04 supplies：依赖包/关卡
+        // 侧统一注册 common04；custom_content 本身由 item prefab 路径在
+        // EnsureDocCopies 里按 levelSet 注册。
+        if (IsCustomContentAsset(path) || IsCommon04Asset(path))
+        {
+            _pendingDocBundles.Add(Common04BundleName);
+            if (IsCustomContentAsset(path) && !string.IsNullOrEmpty(_docLevelSet))
+                _pendingDocBundles.Add(_docLevelSet + "/" + CustomContentDirName);
             return;
         }
         // 依赖注册仅针对本地源库资产（common03 / common01 / common02）：
@@ -432,6 +478,16 @@ public static class LayoutEditorCustomIngredients
             var customBundle = levelSet + "/custom_recipes";
             if (LayoutEditorCatalogApi.BundleFileExists(customBundle))
                 AddDependency(deps, customBundle);
+            var customContentBundle = levelSet + "/" + CustomContentDirName;
+            // 自定义内容可能刚创建、bundle 尚未构建：依赖必须先写入，导出时
+            // BuildAssetBundles 会产出该 bundle；否则导出后运行时缺依赖。
+            if (AssetDatabase.IsValidFolder("Assets/LevelSets/" + levelSet + "/" + CustomContentDirName))
+            {
+                if (!deps.Contains(customContentBundle))
+                    deps.Add(customContentBundle);
+                if (!deps.Contains(Common04BundleName))
+                    deps.Add(Common04BundleName);
+            }
             foreach (var r in info.recipes ?? new ScriptableObject[0])
             {
                 var custom = r as CustomRecipeSO;

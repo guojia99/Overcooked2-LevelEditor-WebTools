@@ -87,6 +87,21 @@ const toolDefinitions = [
         inputSchema: { type: "object", properties: { assetPath: { type: "string", minLength: 1 }, record: { type: "string", minLength: 1 } }, required: ["assetPath", "record"], additionalProperties: false },
     },
     {
+        name: "oc2_list_custom_content",
+        description: "列出关卡集的自定义食材/锅具/工作台/水槽/托盘/备餐容器/分料机条目。只读。",
+        inputSchema: { type: "object", properties: { setName: { type: "string", minLength: 1 }, kind: { type: "string" } }, required: ["setName"], additionalProperties: false },
+    },
+    {
+        name: "oc2_get_custom_content_templates",
+        description: "列出自定义内容可用模板（common04 / common03 / commonW1 / Modules）。只读。",
+        inputSchema: { type: "object", properties: { kind: { type: "string" } }, additionalProperties: false },
+    },
+    {
+        name: "oc2_get_custom_content_catalog",
+        description: "读取关卡集自定义内容的动态素材面板条目。只读。",
+        inputSchema: { type: "object", properties: { setName: { type: "string", minLength: 1 } }, required: ["setName"], additionalProperties: false },
+    },
+    {
         name: "oc2_start_export",
         description: "启动关卡集导出。立即返回，AI 必须使用 taskId 继续等待；通常 3-30 分钟。需要 confirm=true。",
         inputSchema: { type: "object", properties: { setNames: { type: "array", minItems: 1, items: { type: "string", minLength: 1 } }, mode: { type: "string", enum: ["all", "levels", "deps"] }, depsVersion: { type: "string" }, selectedLevels: { type: "array", items: { type: "string" } }, confirm: { type: "boolean", const: true } }, required: ["setNames", "confirm"], additionalProperties: false },
@@ -307,6 +322,19 @@ async function handle(name, input) {
         const assetPath = stringArg(input, "assetPath");
         const record = stringArg(input, "record");
         return result(name, await bridge.get(`/api/writeback/history/detail?assetPath=${encodeURIComponent(assetPath)}&record=${encodeURIComponent(record)}`), "read", "read", 5000, { sceneAssetPath: assetPath });
+    }
+    if (name === "oc2_list_custom_content") {
+        const setName = stringArg(input, "setName");
+        const kind = typeof input.kind === "string" ? input.kind : "";
+        return result(name, await bridge.get(`/api/custom-content/list?setName=${encodeURIComponent(setName)}&kind=${encodeURIComponent(kind)}`), "read", "read", 5000);
+    }
+    if (name === "oc2_get_custom_content_templates") {
+        const kind = typeof input.kind === "string" ? input.kind : "";
+        return result(name, await bridge.get(`/api/custom-content/templates?kind=${encodeURIComponent(kind)}`), "read", "read", 2000);
+    }
+    if (name === "oc2_get_custom_content_catalog") {
+        const setName = stringArg(input, "setName");
+        return result(name, await bridge.get(`/api/custom-content/catalog?setName=${encodeURIComponent(setName)}`), "read", "read", 5000);
     }
     if (name === "oc2_start_export") {
         if (input.confirm !== true)

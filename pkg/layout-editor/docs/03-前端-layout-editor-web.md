@@ -61,7 +61,7 @@ web/
 | 撤销 | 自写 `HistoryStack<T>`（限 20 步快照） |
 | 部署 | 静态 dist/ 提交 Git，由 Unity 内嵌 HTTP 服务器（8765）伺服；开发时 Vite 5173 + `/api` 代理 |
 
-**启动与路由**：`index.html` 内联脚本 + `route.ts migrateLegacyUrl()` 规范化 URL（旧 hash / `index.html` / 旧版 query 深链 `?scene=`、`?set=` 自动迁移）→ `editor/dom.ts` 解析路由（`parseRoute`，导出 `ROUTE`）→ `main.ts` 按路由懒加载页面视图或走编辑器 `init()`。**严格路由约定（2026-09-16）**：页面目标一律写进路径（`/xxxx/{集合ID}/{目标ID}`），页面加载按 URL id 自行请求数据，不再经 sessionStorage 交接（仅「工具与历史」一次性动作键保留）。整页跳转用 `location.assign`；同页子视图（custom-recipes 列表↔表单、deps 三级、guide 翻页）用 `history.pushState` + `popstate` 重分发；切集/载入目标等状态平移用 `replaceState`（不产生历史）。路由表：`/layout/{set}/{sceneName}`（裸 `/layout` → `/manage`）、`/manage[/{set}[/{levelId}[/summary]]]`（集列表 → 关卡列表 → 详细编辑；`/summary` 段 = 汇总页；与 custom-recipes 同款 popstate 重分发 + pushState 子视图，levelId = 关卡数据目录名，`summary` 为保留字）、`/dependencies[/{set}[/{levelId}]]`、`/assignment/{set}/{levelId}`（菜谱分工，关卡级；裸路径 → `/manage`）、`/custom-recipes`（选集）、`/custom-recipes/{set}`（列表）、`/custom-recipes/{set}/recipe/{id|new}`（编辑表单）、`/custom-recipes/burger-maker/{set}[/{burgerId}]`、`/custom-recipes/filling-maker/{set}[/{fillingId|new}]`、`/recipes`（独立 HTML）、`/guide/{id}`、`/changelog`；根 `/` 恒跳 `/manage`。编辑器顶栏「📋 汇总」与分工页「返回汇总」均整页跳转 `/manage/{set}/{levelId}/summary`。
+**启动与路由**：`index.html` 内联脚本 + `route.ts migrateLegacyUrl()` 规范化 URL（旧 hash / `index.html` / 旧版 query 深链 `?scene=`、`?set=` 自动迁移）→ `editor/dom.ts` 解析路由（`parseRoute`，导出 `ROUTE`）→ `main.ts` 按路由懒加载页面视图或走编辑器 `init()`。**严格路由约定（2026-09-16）**：页面目标一律写进路径（`/xxxx/{集合ID}/{目标ID}`），页面加载按 URL id 自行请求数据，不再经 sessionStorage 交接（仅「工具与历史」一次性动作键保留）。整页跳转用 `location.assign`；同页子视图（custom-recipes 列表↔表单、deps 三级、guide 翻页）用 `history.pushState` + `popstate` 重分发；切集/载入目标等状态平移用 `replaceState`（不产生历史）。路由表：`/layout/{set}/{sceneName}`（裸 `/layout` → `/manage`）、`/manage[/{set}[/{levelId}[/summary]]]`（集列表 → 关卡列表 → 详细编辑；`/summary` 段 = 汇总页；与 custom-recipes 同款 popstate 重分发 + pushState 子视图，levelId = 关卡数据目录名，`summary` 为保留字）、`/dependencies[/{set}[/{levelId}]]`、`/assignment/{set}/{levelId}`（菜谱分工，关卡级；裸路径 → `/manage`）、`/custom-recipes`（选集）、`/custom-content[/{set}[/{kind}[/{id|new}]]]`（自定义食材/锅具/工作台/水槽/托盘/备餐/分料机）、`/custom-recipes/{set}`（列表）、`/custom-recipes/{set}/recipe/{id|new}`（编辑表单）、`/custom-recipes/burger-maker/{set}[/{burgerId}]`、`/custom-recipes/filling-maker/{set}[/{fillingId|new}]`、`/recipes`（独立 HTML）、`/guide/{id}`、`/changelog`；根 `/` 恒跳 `/manage`。编辑器顶栏「📋 汇总」与分工页「返回汇总」均整页跳转 `/manage/{set}/{levelId}/summary`。
 
 **数据流**：
 
@@ -285,7 +285,7 @@ flowchart LR
 
 ### 5.4 自定义菜谱 / 汉堡
 
-`GET/POST /api/custom-recipes*`（config/list/references/create/update/delete/upload-icon/upload-model/model-files/diagnose/debug-scan/icon/category-*）、`GET /api/burger/definitions`、`POST /api/burger/create / definition/update`
+`GET/POST /api/custom-recipes*`（config/list/references/create/update/delete/upload-icon/upload-model/model-files/diagnose/debug-scan/icon/category-*）、`GET/POST /api/custom-content*`（templates/meta/list/catalog/icon/model-source/create/update/delete）、`GET /api/burger/definitions`、`POST /api/burger/create / definition/update`
 
 ### 5.5 静态数据（桥无关）
 

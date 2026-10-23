@@ -3426,6 +3426,57 @@
       "icon": false
     },
     {
+      "id": "custom_counter",
+      "guid": "5f7fbc025a4aecc48a12121e7c8f6c13",
+      "assetPath": "Assets/common04/custom_counter/custom_counter.prefab",
+      "category": "counters/prep",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_counter",
+      "nameEn": "custom_counter",
+      "icon": false
+    },
+    {
+      "id": "custom_counter_chopping",
+      "guid": "2a4eb3675f405e84bbcc56b8c36da256",
+      "assetPath": "Assets/common04/custom_counter/custom_counter_chopping.prefab",
+      "category": "counters/prep",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_counter_chopping",
+      "nameEn": "custom_counter_chopping",
+      "icon": false
+    },
+    {
+      "id": "custom_counter_ingredient_splitter",
+      "guid": "fd5cb3a092cbc8e4495e7f16c3817543",
+      "assetPath": "Assets/Modules/IngredientSplitter/custom_counter_ingredient_splitter.prefab",
+      "category": "counters/prep",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_counter_ingredient_splitter",
+      "nameEn": "custom_counter_ingredient_splitter",
+      "icon": false
+    },
+    {
       "id": "workstation_guillotine_01",
       "guid": "86c79362de3d2cca9fc4fe3a04838930",
       "assetPath": "Assets/common03/prefabs/counters/workstation_guillotine_01.prefab",
@@ -3722,6 +3773,23 @@
       "icon": false
     },
     {
+      "id": "custom_counter_sink",
+      "guid": "3450b7a900d0476408b36194458057a4",
+      "assetPath": "Assets/common04/custom_counter/custom_counter_sink.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "needsStub": true,
+      "nameZh": "custom_counter_sink",
+      "nameEn": "custom_counter_sink",
+      "icon": false
+    },
+    {
       "id": "dlc08_workstation_01_tray_sink_circus",
       "guid": "4194172f8b203c1b1ffe44a7ac2a85e4",
       "assetPath": "Assets/commonW1/prefabs/dlc08/counters/dlc08_workstation_01_tray_sink_circus.prefab",
@@ -3949,94 +4017,6 @@
       "ingredientGuid": "1e87aab4d91d5e2b460a8de8fe55b737",
       "nameZh": "黑莓",
       "nameEn": "Blackberry",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "Blueberry",
-      "guid": "be76b3a7a1b059346b6806465ff164e1",
-      "assetPath": "Assets/commonW1/prefabs/dlc05/decor/food/Blueberry.prefab",
-      "category": "decor/food",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.65,
-      "baseY": 0.055,
-      "layoutTier": "decor",
-      "ingredientDecor": true,
-      "ingredientGuid": "a192356a1fd01504eadf0d90ffa2de62",
-      "nameZh": "蓝莓",
-      "nameEn": "Blueberry",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "bokchoy",
-      "guid": "65cccf5953155874cb902af5b7c47c34",
-      "assetPath": "Assets/commonW1/prefabs/dlc04/decor/food/bokchoy.prefab",
-      "category": "decor/food",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.522,
-      "baseY": 0.065,
-      "layoutTier": "decor",
-      "ingredientDecor": true,
-      "ingredientGuid": "d141ea96f54b43c0843b7b7a4a195e92",
-      "nameZh": "小白菜",
-      "nameEn": "Bok Choy",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "broccoli",
-      "guid": "7493566f4dac47142addd72aff05059f",
-      "assetPath": "Assets/commonW1/prefabs/dlc07/decor/food/broccoli.prefab",
-      "category": "decor/food",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.684,
-      "baseY": 0.035,
-      "layoutTier": "decor",
-      "ingredientDecor": true,
-      "ingredientGuid": "4562e236d5380f78a99753febcfcf033",
-      "nameZh": "西兰花",
-      "nameEn": "Broccoli",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "BurgerPineapple",
-      "guid": "84235dc4b0983324a850a774eb9eb7f6",
-      "assetPath": "Assets/commonW1/prefabs/dlc02/decor/food/BurgerPineapple.prefab",
-      "category": "decor/food",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.865,
-      "baseY": -0.036,
-      "layoutTier": "decor",
-      "ingredientDecor": true,
-      "ingredientGuid": "ff0a377cca6a00a45a5a5f13ac30098d",
-      "nameZh": "菠萝（汉堡）",
-      "nameEn": "Burger Pineapple",
       "typeKind": "food_model",
       "usage": "dressing",
       "icon": true

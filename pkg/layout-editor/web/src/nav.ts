@@ -15,6 +15,7 @@ const GUIDE_FEATURES: [string, string, string][] = [
   ["📋", "关卡管理", "关卡集与关卡增删改，Bundle 依赖、1P~4P 人数配置、音频与菜谱绑定、导出 zip"],
   ["📖", "菜谱清单列表", "全部菜谱按类型分组陈列，搜索筛选，按烹饪步骤展示食材与锅具"],
   ["🍽️", "自定义菜谱", "按关卡集管理 CustomRecipeSO：组成、烹饪、装盘、图标与 3D 模型；汉堡请用工作台单独创建"],
+  ["🧩", "自定义管理", "按关卡集创建自定义食材/锅具/工作台/水槽/托盘/备餐容器/分料机；支持锅具站台与锅内模型"],
   ["📘", "功能说明", "全部功能说明与版本更新日志，按章节分页查阅"],
   ["⚙️", "与 Unity 无缝协作", "HTTP 桥接自动 Prepare For Building，资源目录一键生成"],
 ];
@@ -58,6 +59,7 @@ export function navHtml(active: NavPage): string {
     ${navLinkBtnHtml("🗺️ 关卡编辑器", active === "layout", { "data-nav": "layout" })}
     ${navLinkBtnHtml("📋 关卡管理", active === "manage", { "data-nav": "manage" })}
     ${navLinkBtnHtml("🍽️ 自定义菜谱", active === "custom-recipes", { "data-nav": "custom-recipes" })}
+    ${navLinkBtnHtml("🧩 自定义管理", active === "custom-content", { "data-nav": "custom-content" })}
     ${navLinkBtnHtml("📖 菜谱清单列表", active === "recipes", { "data-nav": "recipes" })}
     ${navLinkBtnHtml("📘 功能说明", active === "guide", { "data-nav": "guide" })}
     <span class="topnav-spacer"></span>

@@ -176,6 +176,14 @@ public class LayoutCookingUtensilStubDto
 {
     public int capacity;
     public string[] allowedIngredientGuids;
+    /** 允许的站台类型（PseudoPrefabCookingUtensilStub.CookingStationType 名称数组，保序）。
+     *  例：Hob / Oven / DeepFatFryer / FirePit / Flamethrower / Barbeque / Invalid_FloorBurner
+     *  （Invalid_FloorBurner = 宿主 CookingStationType.FloorBurner，火锅站台）。 */
+    public string[] stationTypes;
+    /** 锅内食材展示模型（GameObject prefab guid，与 allowedIngredientGuids 顺序对应）。 */
+    public string[] modelGuids;
+    /** 锅内食材展示模型（PseudoPrefabSO guid，与 allowedIngredientGuids 顺序对应）。 */
+    public string[] modelSoGuids;
     /** 烹饪类：煮熟秒数（0 = 未配置，保持 prefab 默认）。写 CookingHandler.m_cookingtime。 */
     public float cookTime;
     /** 烹饪类：煮糊秒数（0 = 默认 2×cookTime）。特殊值由 CustomStub.UtensilTiming + Harmony 生效。 */

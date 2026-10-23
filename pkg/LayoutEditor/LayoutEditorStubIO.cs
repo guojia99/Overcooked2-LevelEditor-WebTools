@@ -250,6 +250,35 @@ public static class LayoutEditorStubIO
 
                 udto.allowedIngredientGuids = guids.ToArray();
             }
+            if (utensil.allowedCookingStationTypes != null && utensil.allowedCookingStationTypes.Length > 0)
+            {
+                var stations = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < utensil.allowedCookingStationTypes.Length; i++)
+                    stations.Add(utensil.allowedCookingStationTypes[i].ToString());
+                udto.stationTypes = stations.ToArray();
+            }
+            if (utensil.models != null && utensil.models.Length > 0)
+            {
+                var guids = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < utensil.models.Length; i++)
+                {
+                    var model = utensil.models[i];
+                    if (model != null)
+                        guids.Add(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(model)));
+                }
+                udto.modelGuids = guids.ToArray();
+            }
+            if (utensil.modelSOs != null && utensil.modelSOs.Length > 0)
+            {
+                var guids = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < utensil.modelSOs.Length; i++)
+                {
+                    var so = utensil.modelSOs[i];
+                    if (so != null)
+                        guids.Add(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so)));
+                }
+                udto.modelSoGuids = guids.ToArray();
+            }
 
             item.cookingUtensil = udto;
             return;
@@ -1022,6 +1051,65 @@ public static class LayoutEditorStubIO
                 prop.arraySize = sos.Length;
                 for (int i = 0; i < sos.Length; i++)
                     prop.GetArrayElementAtIndex(i).objectReferenceValue = sos[i];
+                serialized.ApplyModifiedProperties();
+            }
+            // 站台类型（火锅=Invalid_FloorBurner / 烤盘=Oven / 煎盘=FirePit / 烤串=Barbeque…）
+            // 与锅内食材模型（models/modelSOs）。统一走 SerializedObject 写数组，
+            // 避免 Unity 2017 prefab 实例直接赋数组时的 Array.size 残留。
+            var stationNames = item.cookingUtensil.stationTypes;
+            var modelGuids = item.cookingUtensil.modelGuids;
+            var modelSoGuids = item.cookingUtensil.modelSoGuids;
+            if ((stationNames != null && stationNames.Length > 0)
+                || (modelGuids != null && modelGuids.Length > 0)
+                || (modelSoGuids != null && modelSoGuids.Length > 0))
+            {
+                var serialized = new SerializedObject(utensil);
+                if (stationNames != null)
+                {
+                    var prop = serialized.FindProperty("allowedCookingStationTypes");
+                    if (prop != null)
+                    {
+                        prop.arraySize = stationNames.Length;
+                        for (int i = 0; i < stationNames.Length; i++)
+                        {
+                            var parsed = LevelEditorStub.PseudoPrefabCookingUtensilStub.CookingStationType.Invalid;
+                            try
+                            {
+                                parsed = (LevelEditorStub.PseudoPrefabCookingUtensilStub.CookingStationType)
+                                    System.Enum.Parse(typeof(LevelEditorStub.PseudoPrefabCookingUtensilStub.CookingStationType),
+                                        stationNames[i], true);
+                            }
+                            catch
+                            {
+                            }
+                            prop.GetArrayElementAtIndex(i).enumValueIndex = (int)parsed;
+                        }
+                    }
+                }
+                if (modelGuids != null)
+                {
+                    var prop = serialized.FindProperty("models");
+                    if (prop != null)
+                    {
+                        prop.arraySize = modelGuids.Length;
+                        for (int i = 0; i < modelGuids.Length; i++)
+                        {
+                            var path = AssetDatabase.GUIDToAssetPath(modelGuids[i]);
+                            prop.GetArrayElementAtIndex(i).objectReferenceValue =
+                                string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                        }
+                    }
+                }
+                if (modelSoGuids != null)
+                {
+                    var prop = serialized.FindProperty("modelSOs");
+                    if (prop != null)
+                    {
+                        prop.arraySize = modelSoGuids.Length;
+                        for (int i = 0; i < modelSoGuids.Length; i++)
+                            prop.GetArrayElementAtIndex(i).objectReferenceValue = LoadPseudoPrefabSO(modelSoGuids[i]);
+                    }
+                }
                 serialized.ApplyModifiedProperties();
             }
 
@@ -2068,9 +2156,24 @@ public static class LayoutEditorStubIO
         if (string.IsNullOrEmpty(guid))
             return null;
         var path = AssetDatabase.GUIDToAssetPath(guid);
-        return string.IsNullOrEmpty(path)
-            ? null
-            : AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+        if (string.IsNullOrEmpty(path))
+            return null;
+        var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+        if (so != null)
+            return so;
+        // common04/自定义内容常用 embedded PseudoPrefabSO（挂在 prefab 文件里）：
+        // AssetDatabase.LoadAssetAtPath 只取主资产，需回退 LoadAllAssetsAtPath。
+        var all = AssetDatabase.LoadAllAssetsAtPath(path);
+        if (all != null)
+        {
+            for (int i = 0; i < all.Length; i++)
+            {
+                var candidate = all[i] as PseudoPrefabSO;
+                if (candidate != null)
+                    return candidate;
+            }
+        }
+        return null;
     }
 
     /// <summary>bundle:path → PseudoPrefabSO guid 反查（可移动火锅额外食材导出回 web；
@@ -2090,6 +2193,7 @@ public static class LayoutEditorStubIO
                 "Assets/common01/pseudo_prefab_so",
                 "Assets/common02/pseudo_prefab_so",
                 "Assets/common03/pseudo_prefab_so",
+                "Assets/common04",
                 "Assets/commonW1/pseudo_prefab_so",
                 "Assets/commonW2/pseudo_prefab_so",
             };

@@ -217,7 +217,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "3.10.2";
+        public const string PluginVersion = "3.11.0";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>
@@ -667,10 +667,9 @@ namespace OC2LevelRuntimeLoader
                     LoadedBundles.Add(op.Path);
                     var swProc = System.Diagnostics.Stopwatch.StartNew();
                     var loaded = 0;
-                    foreach (var assetPath in bundle.GetAllAssetNames())
+                    var dllPaths = CollectDllAssetPaths(bundle);
+                    foreach (var assetPath in dllPaths)
                     {
-                        if (!assetPath.EndsWith(".dll.bytes", StringComparison.OrdinalIgnoreCase))
-                            continue;
                         var asset = bundle.LoadAsset<TextAsset>(assetPath);
                         if (asset == null || asset.bytes == null || asset.bytes.Length == 0)
                         {
@@ -699,10 +698,8 @@ namespace OC2LevelRuntimeLoader
                     LogI("加载自定义 runtime: " + op.Path);
                     LoadedBundles.Add(op.Path);
                     var dllCount = 0;
-                    foreach (var assetPath in bundle.GetAllAssetNames())
+                    foreach (var assetPath in CollectDllAssetPaths(bundle))
                     {
-                        if (!assetPath.EndsWith(".dll.bytes", StringComparison.OrdinalIgnoreCase))
-                            continue;
                         var asset = bundle.LoadAsset<TextAsset>(assetPath);
                         if (asset == null || asset.bytes == null || asset.bytes.Length == 0)
                         {
@@ -1081,7 +1078,39 @@ namespace OC2LevelRuntimeLoader
 
         #endregion
 
-        /// <summary>发现自身目录下所有严格匹配 commonW+数字的 bundle。
+        /// <summary>收集 bundle 内 *.dll.bytes，并按程序集依赖顺序排序：
+        /// LevelEditorStub → IngredientSplitterStub → IngredientSplitterRuntime →
+        /// 其它 → WebCustomStubRuntime（EntryPoint 最后 Install，确保模块已就位）。</summary>
+        private static List<string> CollectDllAssetPaths(AssetBundle bundle)
+        {
+            var list = new List<string>();
+            var names = bundle.GetAllAssetNames();
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (names[i].EndsWith(".dll.bytes", StringComparison.OrdinalIgnoreCase))
+                    list.Add(names[i]);
+            }
+            list.Sort(delegate(string left, string right)
+            {
+                int pl = DllPriority(left), pr = DllPriority(right);
+                if (pl != pr) return pl.CompareTo(pr);
+                return string.CompareOrdinal(left, right);
+            });
+            return list;
+        }
+
+        private static int DllPriority(string assetPath)
+        {
+            var name = Path.GetFileName(assetPath);
+            if (name.StartsWith("LevelEditorStub", StringComparison.OrdinalIgnoreCase)) return 0;
+            if (name.StartsWith("IngredientSplitterStub", StringComparison.OrdinalIgnoreCase)) return 1;
+            if (name.StartsWith("IngredientSplitterRuntime", StringComparison.OrdinalIgnoreCase)) return 2;
+            if (name.StartsWith("WebCustomStubRuntime", StringComparison.OrdinalIgnoreCase)) return 9;
+            return 5;
+        }
+
+        /// <summary>发现自身目录下所有严格匹配 commonW+数字 / common0N（N≥4）的 bundle。
+        /// common01~03 属于游戏本体，绝不在此加载；common04 起是上游通用素材包。
         /// 采用数字排序，确保 commonW10 排在 commonW9 之后；扩展名文件不会被误加载。</summary>
         private static List<string> GetDependencyBundleNames(string dir)
         {
@@ -1092,26 +1121,34 @@ namespace OC2LevelRuntimeLoader
                 for (int i = 0; i < files.Length; i++)
                 {
                     var name = Path.GetFileName(files[i]);
-                    if (string.IsNullOrEmpty(name) || !name.StartsWith("commonW", StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrEmpty(name))
                         continue;
-                    var suffix = name.Substring("commonW".Length);
-                    if (suffix.Length == 0)
+                    if (name.StartsWith("commonW", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var suffix = name.Substring("commonW".Length);
+                        int number;
+                        if (suffix.Length > 0 && int.TryParse(suffix, out number) && number >= 1)
+                            result.Add("commonW" + number);
                         continue;
-                    int number;
-                    if (!int.TryParse(suffix, out number) || number < 1)
-                        continue;
-                    result.Add("commonW" + number);
+                    }
+                    if (name.StartsWith("common0", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var suffix = name.Substring("common0".Length);
+                        int number;
+                        if (suffix.Length > 0 && int.TryParse(suffix, out number) && number >= 4)
+                            result.Add("common0" + number);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                LogW("  扫描 commonW* 依赖包失败: " + ex.Message);
+                LogW("  扫描 commonW*/common0N 依赖包失败: " + ex.Message);
                 return result;
             }
 
             result.Sort(delegate(string left, string right)
             {
-                return ParseCommonWIndex(left).CompareTo(ParseCommonWIndex(right));
+                return ParseCommonBundleIndex(left).CompareTo(ParseCommonBundleIndex(right));
             });
             var unique = new List<string>();
             for (int i = 0; i < result.Count; i++)
@@ -1122,10 +1159,14 @@ namespace OC2LevelRuntimeLoader
             return unique;
         }
 
-        private static int ParseCommonWIndex(string name)
+        private static int ParseCommonBundleIndex(string name)
         {
             int number;
-            return int.TryParse(name.Substring("commonW".Length), out number) ? number : int.MaxValue;
+            if (name.StartsWith("commonW", StringComparison.OrdinalIgnoreCase))
+                return int.TryParse(name.Substring("commonW".Length), out number) ? number : int.MaxValue;
+            if (name.StartsWith("common0", StringComparison.OrdinalIgnoreCase))
+                return int.TryParse(name.Substring("common0".Length), out number) ? 1000 + number : int.MaxValue;
+            return int.MaxValue;
         }
 
         /// <summary>bundle 是否已在 Unity 全局表（按内部 name 匹配，大小写不敏感）。</summary>

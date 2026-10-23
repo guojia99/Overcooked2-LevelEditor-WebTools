@@ -659,6 +659,23 @@ namespace CustomStub
             prefab = null;
             node = null;
             failReason = null;
+            // common04 / custom_content：PseudoPrefabSO.asset 直引优先。
+            var direct = GameApi.GetPseudoPrefabDirectAsset(so);
+            if (direct != null)
+            {
+                prefab = direct as GameObject;
+                if (prefab != null)
+                {
+                    node = NodeFromPrefab(prefab);
+                    if (node != null)
+                        return true;
+                    failReason = "prefab 无 IOrderDefinition: " + prefab.name;
+                    return false;
+                }
+                node = ConvertOrderNode(direct);
+                if (node != null)
+                    return true;
+            }
             var bundle = GameApi.GetAssetBundle(so.bundleName);
             if (bundle == null)
             {
@@ -1288,10 +1305,13 @@ namespace CustomStub
         {
             if (so == null || GameApi.OrderDefinitionNodeType == null || GameApi.NodeConvertMethod == null)
                 return null;
-            if (string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
-                return null;
             try
             {
+                var direct = GameApi.GetPseudoPrefabDirectAsset(so);
+                if (direct != null && GameApi.OrderDefinitionNodeType.IsInstanceOfType(direct))
+                    return ConvertOrderNode(direct);
+                if (string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
+                    return null;
                 var bundle = GameApi.GetAssetBundle(so.bundleName);
                 if (bundle == null)
                     return null;
@@ -1580,7 +1600,12 @@ namespace CustomStub
 
         internal static GameObject LoadPrefabFromPseudoSo(PseudoPrefabSO so)
         {
-            if (so == null || string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
+            if (so == null)
+                return null;
+            var direct = GameApi.GetPseudoPrefabDirectAsset(so) as GameObject;
+            if (direct != null)
+                return direct;
+            if (string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
                 return null;
             var viaHost = LoadPrefabViaHostManager(so);
             if (viaHost != null)
