@@ -1,6 +1,6 @@
 all: run
 
-ZIP_NAME := OC2-Web-v0.10.0.zip
+ZIP_NAME := OC2-Web-v0.11.0-beta.zip
 INSTALLER_ZIP := OC2-Installer.zip
 
 .PHONY: all build run installer installer-zip
@@ -36,5 +36,10 @@ run:
 	cp -r ../Overcooked2-LevelEditor/Assets/commonW* ./pkg/
 	cp -r ../Overcooked2-LevelEditor/Assets/Editor/LayoutEditor ./pkg/
 
+	## 清理layout残余脚本
+	rm -rf ./pkg/layout-editor/mcp/node_modules/
+	rm -rf ./pkg/layout-editor/layout-editor/
+	rm -rf ./pkg/layout-editor/scripts/oc2-import/
+	rm -rf ./pkg/layout-editor/scripts/oc2-rebuild/
 	rm -rf ./pkg/layout-editor/web/node_modules/
 	rm -rf ./pkg/layout-editor/scripts/.venv-audio/
